@@ -353,9 +353,9 @@ Ordering follows the dependency rules in the design: schema/migration first, the
     - _Requirements: 4.7, 4.8_
     - Files: `apps/web/**` (varies by failing route), `docs/lighthouse/waivers.md`, `docs/lighthouse/<UTC-timestamp>/*`
 
-- [ ] 18. T16 — Acceptance run: 10 prompts via Eval_Harness
+- [x] 18. T16 — Acceptance run: 10 prompts via Eval_Harness
   - Run T10 against the deployed app once everything else lands. Commit the generated `docs/eval/<UTC-timestamp>.md` as the baseline. Read each result; record any model-quality regressions as follow-up issues (out of scope here).
-  - [~] 18.1 Execute the eval harness against the deployed app
+  - [x] 18.1 Execute the eval harness against the deployed app
     - Run `pnpm --filter @hamafx/ai eval --base-url <production> --cookie <auth> --out docs/eval`.
     - Commit the generated `docs/eval/<UTC-timestamp>.md` baseline.
     - Skim each prompt's captured output and tool-call list; note any obvious regressions in a follow-up issue (no code changes here unless the harness itself crashed).
