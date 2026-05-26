@@ -362,8 +362,12 @@ Ordering follows the dependency rules in the design: schema/migration first, the
     - _Requirements: 3.4_
     - Files: `docs/eval/<UTC-timestamp>.md`
 
-- [~] 19. Final checkpoint — Phase 1 completion gate
-  - Ensure all tests pass, ask the user if questions arise.
+- [x] 19. Final checkpoint — Phase 1 completion gate
+  - Phase 1 completion gate cleared:
+    - All in-scope tasks closed (T1 through T16, plus T17 Lighthouse). Optional [ ]* test scaffolding tasks remain at the team's discretion per the spec notes.
+    - Lighthouse re-run after T17 fixes is committed at `docs/lighthouse/2026-05-26T20-25-08Z/` — all 8 routes pass perf ≥ 97 and a11y = 100. No waivers needed.
+    - T18 (10-prompt eval run) is non-blocking per the spec notes ("the final non-blocking acceptance step"); it ships when the AI provider is configured. The harness itself is wired and the runtime now supports direct Google Gemini in addition to the AI Gateway, so the run can be kicked off any time without further code changes.
+  - Ensure all tests pass, ask the user if questions arise. ✅ `pnpm typecheck` green, `pnpm test` 100/100 green.
 
 ## Notes
 
