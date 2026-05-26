@@ -2,6 +2,8 @@
 
 ## Topology
 
+Single Vercel deploy + three managed services.
+
 ```mermaid
 flowchart LR
     subgraph GH[GitHub]
@@ -9,36 +11,34 @@ flowchart LR
     end
 
     REPO -->|push to main| VC[Vercel — apps/web]
-    REPO -->|push to main| FLY[Fly.io / Railway — apps/worker]
 
     subgraph Managed
-        SB[(Supabase)]
-        UP[(Upstash)]
+        SB[(Supabase Postgres<br/>+ pgvector)]
+        UP[(Upstash Redis)]
         GW[(Vercel AI Gateway)]
     end
 
     VC --- SB
     VC --- UP
     VC --- GW
-    FLY --- SB
-    FLY --- UP
-    FLY --- DataAPIs[Data Providers]
+    VC -->|Cron| VC
 ```
 
-## `apps/web` on Vercel
+## Vercel project
 
-- **Project**: `hamafx-ai-web` linked to the monorepo root, `Root Directory = apps/web`.
+- **Project**: `hamafx-ai` linked to the monorepo, `Root Directory = apps/web`.
 - **Build command**: handled by Turborepo: `turbo run build --filter=web...`.
 - **Install command**: `pnpm install --frozen-lockfile`.
 - **Output**: standard Next.js.
 - **Node**: 20.x.
-- **Regions**: primary `iad1` + edge functions globally.
+- **Regions**: primary `iad1`; route handlers run on Edge by default, `/api/chat` runs Node.
+- **Deployment Protection**: not used (we do our own password gate).
 - **Environments**:
   - `Production`: `main`
-  - `Preview`: every PR (sandboxed env file)
+  - `Preview`: every PR
   - `Development`: local
 
-### `vercel.json` essentials
+### `vercel.json`
 
 ```json
 {
@@ -47,110 +47,64 @@ flowchart LR
   "installCommand": "pnpm install --frozen-lockfile",
   "ignoreCommand": "npx turbo-ignore web",
   "functions": {
-    "src/app/api/chat/route.ts": { "maxDuration": 60 }
-  }
+    "src/app/api/chat/route.ts":             { "maxDuration": 60 },
+    "src/app/api/cron/news/route.ts":        { "maxDuration": 60 },
+    "src/app/api/cron/calendar/route.ts":    { "maxDuration": 30 },
+    "src/app/api/cron/alerts/route.ts":      { "maxDuration": 15 },
+    "src/app/api/cron/snapshots/route.ts":   { "maxDuration": 30 }
+  },
+  "crons": [
+    { "path": "/api/cron/news",              "schedule": "*/5 * * * *"  },
+    { "path": "/api/cron/calendar",          "schedule": "*/15 * * * *" },
+    { "path": "/api/cron/alerts",            "schedule": "* * * * *"    },
+    { "path": "/api/cron/snapshots",         "schedule": "55 23 * * *"  },
+    { "path": "/api/cron/embedding-backfill","schedule": "0 * * * *"    }
+  ]
 }
 ```
 
+> The 1-minute alert cron requires Vercel Pro. On Hobby, change to `*/2 * * * *` or larger.
+
 ### Edge vs Node runtime
 
-- Default runtime: **Edge** for cheap reads (`/api/market/*`, `/api/news`, `/api/calendar`, `/api/me`).
-- **Node** runtime for `/api/chat` (longer streaming, heavier dependencies, easier instrumentation).
-
-## `apps/worker` on Fly.io (preferred) or Railway
-
-Why Fly.io first:
-
-- Region pinning close to Twelve Data's POP for lower WS latency.
-- Generous always-on free machines + cheap incremental cost.
-- Native HTTP/WS, no platform quirks for Hono.
-
-### Fly setup
-
-`apps/worker/fly.toml` (sketch):
-
-```toml
-app = "hamafx-ai-worker"
-primary_region = "iad"
-
-[build]
-  dockerfile = "Dockerfile"
-
-[env]
-  PORT = "8080"
-
-[[services]]
-  internal_port = 8080
-  protocol = "tcp"
-
-  [[services.ports]]
-    handlers = ["http"]
-    port = 80
-
-  [[services.ports]]
-    handlers = ["tls", "http"]
-    port = 443
-
-  [services.concurrency]
-    type = "connections"
-    hard_limit = 1000
-    soft_limit = 800
-
-[checks]
-  [checks.health]
-    type = "http"
-    path = "/v1/health"
-    interval = "15s"
-    timeout = "2s"
-```
-
-Single VM ≥ 1 GB is plenty at MVP — we scale horizontally only if WS clients > a few thousand (the upstream WS is shared, so most cost is idle).
-
-### Railway alternative
-
-If Fly is unavailable, Railway works equally well:
-
-- Service from Dockerfile, healthcheck `/v1/health`.
-- Add environment from a single shared env group.
-- Expose only HTTPS / WSS via the public domain.
+- Default runtime: **Edge** for the cheap reads (`/api/market/*`, `/api/news`, `/api/calendar`, `/api/alerts`, `/api/journal`).
+- **Node** runtime for `/api/chat` (longer streaming, heavier deps) and any cron that does embeddings.
 
 ## Domains
 
-| Service        | Domain                                    |
-| -------------- | ----------------------------------------- |
-| Web            | `hamafx-ai.app` (apex), `www.hamafx-ai.app` |
-| Worker (WS)    | `realtime.hamafx-ai.app`                  |
-| Worker (HTTP)  | (same host, only used internally)         |
+Whatever apex you want — the password gate handles "no public access" anyway. Suggested:
 
-Cookies are set on the apex; CORS for the WS domain is locked to the apex.
+- `hamafx.you.dev` (or your apex of choice)
 
 ## Environment variables
 
-`.env.example` is the source of truth at root. Each app has a local `.env.local`. In CI / Vercel / Fly we mirror these.
-
-### Web (`apps/web`)
+`.env.example` is the source of truth. Vercel envs mirror it.
 
 ```
-# public
-NEXT_PUBLIC_APP_URL=https://hamafx-ai.app
-NEXT_PUBLIC_WORKER_WS_URL=wss://realtime.hamafx-ai.app/v1/prices
+# --- App ---
+NEXT_PUBLIC_APP_URL=https://hamafx.you.dev
 
-# Supabase
-NEXT_PUBLIC_SUPABASE_URL=
-NEXT_PUBLIC_SUPABASE_ANON_KEY=
-SUPABASE_SERVICE_ROLE_KEY=
+# --- Auth (personal mode) ---
+APP_PASSWORD=                    # the single password you'll type
+AUTH_COOKIE_SECRET=              # random 32+ byte hex; HMAC for the cookie
+CRON_SECRET=                     # Vercel-provided; verifies cron requests
 
-# AI
+# --- Supabase (DB only — we don't use Supabase Auth) ---
+DATABASE_URL=                    # Supabase pooler connection string (used by Drizzle)
+SUPABASE_URL=                    # for direct REST if ever needed
+SUPABASE_SERVICE_ROLE_KEY=       # admin key — server-only
+
+# --- AI (Vercel AI Gateway) ---
 AI_GATEWAY_API_KEY=
 AI_DEFAULT_MODEL=openai/gpt-4.1
 AI_TITLE_MODEL=openai/gpt-4.1-mini
 AI_EMBEDDING_MODEL=openai/text-embedding-3-small
 
-# Cache / RL
+# --- Cache ---
 UPSTASH_REDIS_REST_URL=
 UPSTASH_REDIS_REST_TOKEN=
 
-# Data providers (server-only)
+# --- Data providers ---
 TWELVEDATA_API_KEY=
 FINNHUB_API_KEY=
 ALPHAVANTAGE_API_KEY=
@@ -158,94 +112,94 @@ MARKETAUX_API_KEY=
 TRADING_ECONOMICS_KEY=
 FRED_API_KEY=
 
-# Internal
-INTERNAL_HMAC_KEY=
-WS_JWT_SECRET=
-
-# Telemetry
-AXIOM_DATASET=
-AXIOM_TOKEN=
+# --- Optional: Telegram alerts (v1) ---
+TELEGRAM_BOT_TOKEN=
+TELEGRAM_CHAT_ID=
 ```
 
-### Worker (`apps/worker`)
+`packages/shared/src/env.ts` exports `envSchema` (zod) used at boot. Boot fails fast on missing/invalid envs.
 
-```
-NODE_ENV=production
-PORT=8080
-PUBLIC_ORIGIN=https://hamafx-ai.app
+### Generating secrets
 
-DATABASE_URL=                     # Supabase pooler
-SUPABASE_URL=
-SUPABASE_SERVICE_ROLE_KEY=
-
-UPSTASH_REDIS_REST_URL=
-UPSTASH_REDIS_REST_TOKEN=
-
-TWELVEDATA_API_KEY=
-FINNHUB_API_KEY=
-MARKETAUX_API_KEY=
-TRADING_ECONOMICS_KEY=
-FRED_API_KEY=
-
-INTERNAL_HMAC_KEY=
-WS_JWT_SECRET=                    # same value as in web
-LOG_LEVEL=info
-AXIOM_DATASET=
-AXIOM_TOKEN=
+```bash
+# AUTH_COOKIE_SECRET
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 ```
 
-`packages/shared/src/env.ts` exports `envSchema` (zod) used by both apps to validate at boot. Boot fails fast on missing/invalid envs.
+`CRON_SECRET` is set automatically by Vercel when you enable Cron.
 
-## CI/CD
+## CI
 
-GitHub Actions (`.github/workflows/`):
+Personal-mode keeps it minimal. `.github/workflows/ci.yml`:
 
-- `ci.yml` — on every PR:
-  - `pnpm install`
-  - `turbo run lint typecheck test`
-  - `turbo run build` for affected apps
-  - playwright e2e against a built preview when feasible
-- `deploy-web.yml` — on push to `main`, only if `apps/web` or shared packages changed → triggers Vercel deploy hook.
-- `deploy-worker.yml` — on push to `main`, only if `apps/worker` or shared packages changed → `flyctl deploy --remote-only`.
-- `eval-ai.yml` — on changes to `packages/ai/**` → run AI eval suite + comment results on PR.
+```yaml
+name: ci
+on: { pull_request: {}, push: { branches: [main] } }
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { version: 9 }
+      - uses: actions/setup-node@v4
+        with: { node-version: 20, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm turbo run lint typecheck test
+```
 
-Affected detection uses `turbo-ignore` and `dorny/paths-filter`.
+Vercel handles the actual build + deploy on every push. No GitHub Actions deploy step.
+
+## Supabase setup (one-time)
+
+1. Create a new Supabase project (Free tier).
+2. Enable `pgvector`:
+
+   ```sql
+   create extension if not exists vector;
+   ```
+
+3. Take the **pooler** connection string from Project Settings → Database → "Connection pooling" → URI mode = `transaction`. That goes into `DATABASE_URL`.
+4. We do **not** enable Supabase Auth — leave it unconfigured.
+5. We do **not** enable RLS — there's only one user, our own server.
+6. Set up a daily logical backup if you want extra safety (optional; Supabase keeps daily backups on its side too).
+
+> Supabase Free tier pauses a project after 7 days of *no activity*. With cron running every 1–15 min this never triggers, but if you ever take a break for a week, you'll need to manually unpause from the dashboard.
+
+## Upstash setup (one-time)
+
+1. Create a Redis database (Free tier; 10k commands/day, 256 MB).
+2. Copy `UPSTASH_REDIS_REST_URL` + `UPSTASH_REDIS_REST_TOKEN` into Vercel.
+3. That's it.
 
 ## Database migrations
 
 - Schema lives in `packages/db/src/schema/*.ts`.
 - `pnpm --filter db migrate:gen` creates SQL.
 - `pnpm --filter db migrate:apply` runs against `DATABASE_URL`.
-- CI applies migrations to a Supabase **branch** for PR previews when possible (Supabase branching).
-- Production migrations are gated on a manual approval step.
+- Run migrations locally before deploying. CI doesn't run them automatically (personal-mode trade-off; safer this way for a single-user repo).
 
-## Observability stack
+## Logging & monitoring
 
-- **Axiom** datasets:
-  - `hamafx-web-logs`
-  - `hamafx-worker-logs`
-  - `hamafx-traces`
-- Logs include `traceId`, `userId` (hashed), `route`, `model`, `provider`.
-- Web Vitals reported via `next/script` to Axiom.
-- Alerting: Axiom monitors for error-rate spikes; Slack/Email webhook.
+- **Vercel logs** are the only sink at MVP.
+- Server code uses `console.log({ level: 'info', msg, ...meta })` — Vercel parses JSON nicely.
+- We track AI usage in a `chat_telemetry` table; the `/settings/usage` page reads it.
+- If something feels slow or expensive, look at Vercel function logs and the `chat_telemetry` table.
 
 ## Rollback
 
-- Vercel: instant via "Rollback to deployment".
-- Fly.io: `flyctl releases` + `flyctl deploy --image <previous>`.
+- Vercel: instant via "Rollback to deployment" in the dashboard.
 - DB: forward-only migrations; for emergencies a "shadow migration" is added rather than reverting.
 
-## Cost ceiling (MVP)
+## Cost ceiling (your own usage)
 
-| Component            | Estimate / month |
-| -------------------- | ---------------- |
-| Vercel (Hobby/Pro)   | $0–$20           |
-| Fly worker           | $0–$10           |
-| Supabase Pro         | $0–$25           |
-| Upstash Redis        | $0–$10           |
-| Data providers       | $0–$30           |
-| AI Gateway / models  | $5–$50           |
-| Axiom logs           | $0–$25           |
-| **Total**            | **$5–$170**      |
+| Component             | Estimate / month |
+| --------------------- | ---------------- |
+| Vercel (Hobby or Pro) | $0 (Hobby) – $20 (Pro, if needed for cron cadence) |
+| Supabase Free         | $0               |
+| Upstash Redis Free    | $0               |
+| Data providers        | $0–$10 (free tiers + Twelve Data starter if needed) |
+| AI Gateway / models   | $3–$15 (your usage)            |
+| **Total**             | **$3–$45 / month**             |
 
-Designed so a hobby/MVP run sits comfortably under $25 / month.
+Designed so a hobby personal run sits comfortably under $20/mo most months.

@@ -1,47 +1,48 @@
 # 08 — Backend & API
 
-## Two services, one type system
+## One service, one type system
 
-| Service       | Where        | Runtime         | Purpose                                                            |
-| ------------- | ------------ | --------------- | ------------------------------------------------------------------ |
-| `apps/web`    | Vercel       | Edge + Node     | UI + auth + chat streaming + light data proxy                      |
-| `apps/worker` | Fly.io / Railway | Node 20 (long-running) | Upstream WS, news/calendar cron, heavy compute, push delivery |
+Personal-mode: a **single Next.js deploy on Vercel** owns everything. No separate worker.
 
-They share types via `packages/shared` and the same Drizzle DB schema in `packages/db`.
+| Concern                | Where it lives                                                      |
+| ---------------------- | ------------------------------------------------------------------- |
+| UI + RSC pages         | `apps/web/src/app/(app)/**`                                         |
+| API endpoints          | `apps/web/src/app/api/**` (route handlers)                          |
+| Scheduled jobs         | `apps/web/src/app/api/cron/**` triggered by **Vercel Cron**         |
+| Auth                   | `middleware.ts` checks a signed cookie set by `/api/auth/login`     |
+| DB                     | Supabase Postgres (used as a plain DB) via Drizzle                  |
+| Cache                  | Upstash Redis                                                       |
 
-## `apps/web` route map
+## Route map
 
-All routes under `/api/*` are POST/GET as appropriate, return JSON or SSE, and are protected by auth + rate-limit middleware (see `12-security-and-config.md`).
+### Auth
 
-### Auth & user
+| Route                | Method | Runtime | Purpose                                                       |
+| -------------------- | ------ | ------- | ------------------------------------------------------------- |
+| `/api/auth/login`    | POST   | Edge    | `{ password }` → if matches `APP_PASSWORD`, set signed cookie |
+| `/api/auth/logout`   | POST   | Edge    | Clear cookie                                                  |
 
-| Route                          | Method | Runtime | Purpose                       |
-| ------------------------------ | ------ | ------- | ----------------------------- |
-| `/api/auth/[...]`              | *      | Edge    | Supabase Auth callback / OAuth |
-| `/api/me`                      | GET    | Edge    | Current user + prefs          |
-| `/api/me/prefs`                | PATCH  | Edge    | Update prefs                  |
+`apps/web/src/middleware.ts` ensures `(app)/*` and `/api/*` (except auth + cron) require the cookie. Cron endpoints are protected by Vercel's `CRON_SECRET` header instead.
 
 ### Chat
 
 | Route                          | Method | Runtime | Purpose                                  |
 | ------------------------------ | ------ | ------- | ---------------------------------------- |
 | `/api/chat`                    | POST   | Node    | Streaming chat with tool-loop agent (SSE) |
-| `/api/chat/threads`            | GET    | Edge    | List user threads                        |
+| `/api/chat/threads`            | GET    | Edge    | List threads                             |
 | `/api/chat/threads`            | POST   | Edge    | Create new thread                        |
 | `/api/chat/threads/[id]`       | GET    | Edge    | Load thread + messages                   |
 | `/api/chat/threads/[id]`       | DELETE | Edge    | Delete thread                            |
 | `/api/chat/threads/[id]/title` | POST   | Node    | Auto-title (cheap LLM call)              |
 
-> `POST /api/chat` runs in the **Node** runtime because the agent's tools include DB and Redis access patterns that can be heavy; using Node also gives us Sentry-style instrumentation more easily. Streaming still works.
+### Market data
 
-### Market data (proxy + cache)
-
-| Route                          | Method | Runtime | Purpose                                  |
-| ------------------------------ | ------ | ------- | ---------------------------------------- |
-| `/api/market/price`            | GET    | Edge    | `?symbols=XAUUSD,EURUSD` → `Tick[]`      |
-| `/api/market/candles`          | GET    | Edge    | `?symbol=&tf=&limit=` → `Candle[]`       |
-| `/api/market/indicators`       | POST   | Edge    | Compute indicators on a candle window    |
-| `/api/market/snapshot`         | GET    | Edge    | One-shot bias + key levels per symbol    |
+| Route                          | Method | Runtime | Purpose                                   |
+| ------------------------------ | ------ | ------- | ----------------------------------------- |
+| `/api/market/price`            | GET    | Edge    | `?symbols=XAUUSD,EURUSD` → `Tick[]`       |
+| `/api/market/candles`          | GET    | Edge    | `?symbol=&tf=&limit=` → `Candle[]`        |
+| `/api/market/indicators`       | POST   | Edge    | Compute indicators on a candle window     |
+| `/api/market/snapshot`         | GET    | Edge    | One-shot bias + key levels per symbol     |
 
 These routes:
 
@@ -55,14 +56,15 @@ These routes:
 | Route                          | Method | Runtime | Purpose                                           |
 | ------------------------------ | ------ | ------- | ------------------------------------------------- |
 | `/api/news`                    | GET    | Edge    | `?symbol=&limit=&since=` → `NewsArticle[]`        |
-| `/api/news/[id]`               | GET    | Edge    | Article detail (no full body — link out)          |
 | `/api/calendar`                | GET    | Edge    | `?from=&to=&importance=` → `EconomicEvent[]`      |
+
+These read from Supabase (populated by cron) — they don't hit external providers directly.
 
 ### Alerts & journal
 
 | Route                          | Method | Runtime | Purpose         |
 | ------------------------------ | ------ | ------- | --------------- |
-| `/api/alerts`                  | GET    | Edge    | List user alerts |
+| `/api/alerts`                  | GET    | Edge    | List alerts     |
 | `/api/alerts`                  | POST   | Edge    | Create alert    |
 | `/api/alerts/[id]`             | DELETE | Edge    | Remove alert    |
 | `/api/journal`                 | GET    | Edge    | List entries    |
@@ -71,37 +73,33 @@ These routes:
 | `/api/journal/[id]`            | DELETE | Edge    | Remove entry    |
 | `/api/journal/stats`           | GET    | Edge    | Aggregated stats |
 
-### Internal / web→worker
+### Cron (Vercel-triggered)
 
-| Route                          | Method | Runtime | Purpose                                          |
-| ------------------------------ | ------ | ------- | ------------------------------------------------ |
-| `/api/internal/push/test`      | POST   | Node    | Used by tests; signed with `INTERNAL_HMAC_KEY`   |
+These are POST endpoints invoked by Vercel Cron with the `Authorization: Bearer ${CRON_SECRET}` header. Bypass the password gate; reject anything without the correct secret.
 
-## `apps/worker` route map
+| Route                         | Cadence    | Purpose                                                        |
+| ----------------------------- | ---------- | -------------------------------------------------------------- |
+| `/api/cron/news`              | every 5 min | Poll Marketaux + Finnhub news → embed → upsert into Supabase  |
+| `/api/cron/calendar`          | every 15 min | Poll Trading Economics + FRED → upsert events                |
+| `/api/cron/alerts`            | every 1 min | Evaluate active alert rules vs latest cached prices, fire     |
+| `/api/cron/snapshots`         | daily 23:55 UTC | Compute pivots, levels, ATR for next session                |
+| `/api/cron/embedding-backfill`| hourly      | Embed any rows missing vectors (small batches)                |
 
-Hono app, mounted at `/v1`.
+Registered in `vercel.json`:
 
-| Route                  | Method | Purpose                                                 |
-| ---------------------- | ------ | ------------------------------------------------------- |
-| `/v1/health`           | GET    | Liveness                                                |
-| `/v1/ready`            | GET    | DB + Redis + upstream WS health                         |
-| `/v1/prices`           | WS     | Browser subscribes; receives normalised tick stream     |
-| `/v1/news`             | WS     | (optional) live news ticker                             |
-| `/v1/internal/eval-alerts` | POST | Internal — re-run alert evaluator (cron triggers this)  |
-| `/v1/internal/ingest/news` | POST | Internal — manual reingest news for a window           |
-| `/v1/internal/ingest/calendar` | POST | Internal — manual reingest calendar                |
+```json
+{
+  "crons": [
+    { "path": "/api/cron/news",                "schedule": "*/5 * * * *"  },
+    { "path": "/api/cron/calendar",            "schedule": "*/15 * * * *" },
+    { "path": "/api/cron/alerts",              "schedule": "* * * * *"    },
+    { "path": "/api/cron/snapshots",           "schedule": "55 23 * * *"  },
+    { "path": "/api/cron/embedding-backfill",  "schedule": "0 * * * *"    }
+  ]
+}
+```
 
-### Cron schedule
-
-| Job                        | Cadence       | Implementation                                  |
-| -------------------------- | ------------- | ----------------------------------------------- |
-| News poll (primary)        | every 2 min   | `node-cron` inside worker                       |
-| News poll (fallback)       | every 5 min   |                                                 |
-| Calendar refresh           | every 5 min   |                                                 |
-| Daily snapshot (HLOC, levels) | 23:55 UTC | Stores per-symbol per-day pivot/levels          |
-| Alert evaluator            | every 30 s    | Reads cached prices, evaluates rules, fires push |
-| Embedding backfill         | hourly        | Embeds any rows missing vectors                 |
-| Stale cache GC             | hourly        | Sanity                                          |
+> Each cron handler must be **idempotent** and **fast** (Hobby tier limit ≈ 10 s, Pro ≈ 60 s for cron-triggered functions). News/calendar batch in pages of ≤ 50 rows per invocation; the next tick continues if there's more.
 
 ## Auth flow
 
@@ -109,44 +107,31 @@ Hono app, mounted at `/v1`.
 sequenceDiagram
     participant U as User (mobile)
     participant W as Web (Vercel)
-    participant SB as Supabase Auth
 
-    U->>W: visits /chat
-    W->>W: middleware checks cookie
-    alt no session
-      W-->>U: redirect /login
-      U->>W: submit email
-      W->>SB: send magic link
-      SB-->>U: email
-      U->>W: click link → /api/auth/callback
-      W->>SB: exchange code
-      SB-->>W: session
-      W-->>U: set cookie + redirect /chat
-    else has session
+    U->>W: GET /chat
+    W->>W: middleware reads `hfx_auth` cookie
+    alt no/invalid cookie
+      W-->>U: 302 /login
+      U->>W: POST /api/auth/login { password }
+      W->>W: timing-safe compare to APP_PASSWORD
+      alt match
+        W-->>U: Set-Cookie hfx_auth=<signed>; HttpOnly; Secure; Max-Age=30d
+        W-->>U: 302 /chat
+      else mismatch
+        W-->>U: 401 with rate-limit (in-memory, by IP)
+      end
+    else valid cookie
       W-->>U: render
     end
 ```
 
-## Authorization (worker)
+Cookie is HMAC-signed with `AUTH_COOKIE_SECRET` (random 32+ byte secret) so it can't be forged.
 
-Browser↔worker WS uses a short-lived JWT minted by `apps/web` (`/api/internal/ws-token`) and verified by the worker.
+## Cron security
 
-```mermaid
-sequenceDiagram
-    participant B as Browser
-    participant W as apps/web
-    participant K as apps/worker
-
-    B->>W: GET /api/internal/ws-token
-    W-->>B: { token } (5 min, signed with WS_JWT_SECRET)
-    B->>K: WS /v1/prices?token=…
-    K->>K: verify JWT
-    K-->>B: open WS
-```
-
-## Idempotency
-
-Mutating routes (`/api/alerts`, `/api/journal`) accept an `Idempotency-Key` header (UUID v4, generated client-side). The server keys the write on `(user_id, idempotency_key)` to deduplicate.
+- Vercel adds `Authorization: Bearer ${CRON_SECRET}` automatically when invoking your cron endpoints.
+- Each cron handler verifies that header (timing-safe). All other requests get 401.
+- Cron handlers do **not** require the user password cookie.
 
 ## Error envelope
 
@@ -155,26 +140,22 @@ All API errors return:
 ```json
 {
   "error": {
-    "code": "RATE_LIMITED" | "PROVIDER_UNAVAILABLE" | "VALIDATION" | "AUTH" | "NOT_FOUND" | "INTERNAL",
+    "code": "VALIDATION" | "AUTH" | "NOT_FOUND" | "PROVIDER_UNAVAILABLE" | "INTERNAL",
     "message": "Human-readable",
-    "details": { "...optional zod issues..." },
-    "traceId": "01J..."
+    "details": { "...optional zod issues..." }
   }
 }
 ```
 
-Status codes: 400 (validation), 401 (auth), 403 (forbidden), 404, 429 (rate limited), 503 (provider), 500 (internal).
-
-## OpenAPI sketch
-
-We will publish an OpenAPI document at `/api/openapi.json` for the public-shaped routes. It is generated from zod schemas via `@asteasolutions/zod-to-openapi`. This is what the AI agent's `analyze_*` tools rely on for self-documenting types.
+Status codes: 400 (validation), 401 (auth), 404, 503 (provider), 500 (internal).
 
 ## Performance targets
 
-| Endpoint                       | p50      | p95      |
-| ------------------------------ | -------- | -------- |
-| `GET /api/market/price`        | < 80 ms  | < 250 ms |
+| Endpoint                           | p50      | p95      |
+| ---------------------------------- | -------- | -------- |
+| `GET /api/market/price`            | < 80 ms  | < 250 ms |
 | `GET /api/market/candles` (cached) | < 120 ms | < 350 ms |
 | `GET /api/market/candles` (cold)   | < 600 ms | < 1500 ms |
-| `POST /api/chat` first token   | < 800 ms | < 2000 ms |
-| `WS /v1/prices` tick fan-out latency | < 80 ms | < 200 ms |
+| `POST /api/chat` first token       | < 800 ms | < 2000 ms |
+| `GET /api/news`                    | < 120 ms | < 300 ms |
+| `GET /api/calendar`                | < 120 ms | < 300 ms |

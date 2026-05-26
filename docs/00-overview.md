@@ -2,66 +2,72 @@
 
 ## Vision
 
-HamaFX-Ai is a **focused, mobile-first AI trading copilot** for three instruments only:
+HamaFX-Ai is a **personal, mobile-first AI trading copilot** for three instruments only:
 
 1. **XAUUSD** (Gold vs USD) — primary
 2. **EURUSD**
 3. **GBPUSD**
 
-Instead of being a generic dashboard, it is a **conversation-first** product. The user talks to a single, expert AI agent that already has live charts, prices, indicators, news, and macro context loaded for those three pairs. The UI exists to make the conversation richer — not to replace it.
+This is a **single-user app** built for the repo owner. It is not a public SaaS. That framing changes a lot of decisions — see "Personal-mode constraints" below — but the *product* is no less ambitious. It's a deeply contextual chat-driven copilot with live charts, indicators, news, macro calendar, alerts, and a journal.
 
 > "What's gold doing right now and is the London session bias bullish?"
 > — and the agent should answer with a chart annotation, an indicator readout, today's relevant headlines, and a clear bias call with reasoning.
+
+## Personal-mode constraints (and what they unlock)
+
+| We do **not** need…                            | …so we drop                                                  |
+| ---------------------------------------------- | ------------------------------------------------------------ |
+| Multi-tenancy                                  | RLS, `user_id` columns, idempotency keys, per-user quotas    |
+| Public marketing                               | Landing page, OG images, sitemap/robots, analytics           |
+| Anyone-can-sign-up auth                        | Magic links, OAuth providers, password resets                |
+| Compliance / GDPR                              | Data exports, deletion flows, consent banners                |
+| Production observability                       | Axiom / Sentry / dashboards (Vercel logs are enough)         |
+| BYOK for users                                 | A whole settings surface for it                              |
+| Continuous AI evals                            | LLM-as-judge in CI                                           |
+
+In exchange we keep the budget for **cool features**: SMC structure, RAG, agent annotations, voice, briefings, vision, etc.
 
 ## Why narrow scope (only 3 pairs)?
 
 | Reason             | Effect                                                                |
 | ------------------ | --------------------------------------------------------------------- |
-| Lower data cost    | Free / cheap tiers of providers cover 3 symbols cleanly               |
-| Higher quality     | Agent prompt and prefetched context can be deeply specialised         |
+| Lower data cost    | Free tiers of providers easily cover 3 symbols                        |
+| Higher quality     | Agent prompt + prefetched context can be deeply specialised           |
 | Faster UX          | All needed data fits in cache; sub-second responses                   |
-| Better evaluations | Behaviour can be regression-tested against a small fixed surface area |
-
-## Target users
-
-- Discretionary forex / gold traders who want a "second brain" beside their main platform.
-- Learners who want explanations of structure, liquidity, news impact, and confluences.
-- Quants who want a chat interface to a normalised data layer they trust.
-
-**Not for**: stock pickers, options traders, DeFi yield, generic news readers.
+| Lower mental load  | A focused tool you actually use beats a sprawling one you don't       |
 
 ## Product principles
 
 1. **Chat is the primary surface.** Every feature must be reachable via chat or it doesn't ship.
-2. **Mobile-first, always.** Every layout is designed for a phone in landscape *and* portrait first; desktop is an enhancement.
-3. **Show the work.** When the agent gives an opinion it must show the indicators, candles, headlines, or calendar events that justify it.
+2. **Mobile-first, always.** Layouts are designed for a phone first; desktop is an enhancement.
+3. **Show the work.** When the agent gives an opinion it must show the indicators, candles, headlines, or events that justify it.
 4. **No hallucinated prices.** Numbers in answers are always tool-call results, never the model's free-form generation.
-5. **Customisable & legible.** Every default (model, indicator settings, sources, theme) is overridable from a single settings surface.
+5. **Customisable & legible.** Every default (model, indicator settings, sources, theme) is overridable.
 6. **AI-agent-friendly codebase.** File layout, naming, and docs are optimised for autonomous coding agents to extend safely.
 
 ## Success criteria (MVP)
 
-| Dimension       | Target                                                                          |
-| --------------- | ------------------------------------------------------------------------------- |
-| Time to first token (chat) | < 800 ms p50                                                         |
-| Chart load (cold)          | < 1.2 s p50 on 4G mobile                                             |
-| Tool-call freshness        | Price ≤ 5 s old, candles ≤ 1 min, news ≤ 5 min                       |
-| Mobile Lighthouse perf     | ≥ 90                                                                 |
-| Mobile Lighthouse a11y     | ≥ 95                                                                 |
-| Cost per active user / mo  | < $0.50 in API + LLM at MVP scale                                    |
-| Cold-start agent accuracy  | ≥ 95% correct symbol/timeframe routing on internal eval set          |
+| Dimension                   | Target                                                       |
+| --------------------------- | ------------------------------------------------------------ |
+| Time to first token (chat)  | < 800 ms p50                                                 |
+| Chart load (cold)           | < 1.2 s p50 on 4G mobile                                     |
+| Tool-call freshness         | Price ≤ 5 s old, candles ≤ 1 min, news ≤ 5 min               |
+| Mobile Lighthouse perf      | ≥ 90                                                         |
+| Mobile Lighthouse a11y      | ≥ 95                                                         |
+| Cost / month (your usage)   | < $20 (target ~$5–10) in API + LLM                           |
+| The "10 prompts" eval       | ≥ 9/10 pass on a manual run                                  |
 
 ## Non-goals (for v1)
 
 - Order execution / broker integration (read-only assistant only).
 - Backtesting engine UI (the agent can simulate, but no historical strategy lab).
-- Social / copy-trading.
 - More instruments (deferred to v2).
 - Native mobile app (PWA only at v1).
+- Anything multi-user.
 
-## Out-of-the-box scenarios the agent must handle
+## The "10 prompts" — the agent must handle these
 
-These are the **acceptance prompts** that will live in the eval suite (see `docs/07-ai-agent.md`):
+These are the manual acceptance prompts (no CI-graded eval — you just run them):
 
 1. _"Give me a top-down read on gold from 4H down to 15M."_
 2. _"What's the bias on EURUSD right now and why?"_

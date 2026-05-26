@@ -1,137 +1,130 @@
 # 12 — Security & Config
 
+> Personal-mode posture: this is **a single-user app with a single password**. We don't need RLS, GDPR, multi-tenant guardrails, or fancy observability. We *do* still want to keep API keys safe and prevent random people stumbling onto our deployment from running up the AI bill.
+
 ## Threat model (lightweight)
 
-We're a read-only assistant — no order placement, no payments — so the threat surface is mostly:
+Realistic threats for a personal deploy:
 
-1. **API key exfiltration** (provider keys, AI Gateway, internal HMAC).
-2. **Cost runaway** (free-tier abuse, prompt injection driving expensive tool loops).
-3. **Account takeover** (Supabase Auth weaknesses).
-4. **Provider TOS violations** that get our keys revoked.
-5. **Prompt-injection-driven data leakage** (the agent revealing other users' journals or alerts).
+1. **Public URL discovery + AI bill abuse.** Someone finds the deploy URL and pounds `/api/chat` until it costs us money.
+2. **API key exfiltration** (provider keys, AI Gateway).
+3. **Prompt-injection-driven over-spending** (the agent gets stuck in a tool loop).
+4. **Supply-chain compromise** (malicious dependency).
+
+Things that are **not** in scope: account takeover (no accounts), GDPR, DDoS, advanced persistent threats.
 
 ## Secrets & keys
 
-- **Never** stored in the repo, never in client bundle.
+- Never in the repo, never in client bundle.
 - `NEXT_PUBLIC_*` env vars are explicitly safe to expose; everything else is server-only.
-- Stored in:
-  - Vercel Environment Variables (per `Production` / `Preview`)
-  - Fly Secrets (`flyctl secrets set ...`)
-  - GitHub Actions Repository Secrets (only those CI needs)
-- Rotated quarterly or on incident.
+- Stored in Vercel Environment Variables and `.env.local`.
 - `packages/shared/src/env.ts` validates every required var at boot using zod and throws clearly if anything is missing.
+- Rotate `APP_PASSWORD`, `AUTH_COOKIE_SECRET`, and AI keys whenever you suspect leakage.
 
-## Auth
+## Auth: the password gate
 
-- **Supabase Auth** with email magic links + Google OAuth.
-- Session cookie is HttpOnly, Secure, SameSite=Lax, scoped to the apex.
-- Middleware (`apps/web/src/middleware.ts`) enforces:
-  - Authed-only `(app)/*` routes
-  - Redirect to `/login?next=...`
-  - Edge-fast cookie validation via Supabase server client
-- Worker WS uses short-lived JWT minted by web (see `08-backend-and-api.md` § Authorization).
+Personal-mode auth is a single shared password.
 
-## Authorization (RLS)
+### Setup
 
-Every user-owned table in Supabase has Row-Level Security on:
-
-```sql
--- example: chat_messages
-alter table chat_messages enable row level security;
-create policy "owner_can_select" on chat_messages
-  for select using (auth.uid() = user_id);
-create policy "owner_can_insert" on chat_messages
-  for insert with check (auth.uid() = user_id);
+```env
+APP_PASSWORD=<choose-a-strong-passphrase>
+AUTH_COOKIE_SECRET=<32+ random hex bytes>
 ```
 
-The agent **never** uses the service role key on user-scoped reads — it uses a per-request scoped client built from the user's JWT. Service role is only for cron in the worker.
+### Flow
 
-## Rate limiting
+1. Visiting any `(app)/*` route or non-public API hits `middleware.ts`, which checks the `hfx_auth` cookie.
+2. If invalid/missing → redirect to `/login`.
+3. `/login` posts `{ password }` to `/api/auth/login`.
+4. Server does a **timing-safe compare** against `APP_PASSWORD`.
+5. On match, sets `hfx_auth` cookie:
+   - Value: HMAC-signed token = `base64(payload).hmac(AUTH_COOKIE_SECRET)`
+   - Payload includes `iat` and `exp` (30 days)
+   - Flags: `HttpOnly`, `Secure`, `SameSite=Lax`, `Path=/`
 
-`@upstash/ratelimit` configured with sliding-window:
+```ts
+// pseudo
+const token = sign({ iat: Date.now(), exp: Date.now() + 30*86400_000 }, AUTH_COOKIE_SECRET);
+res.cookies.set('hfx_auth', token, { httpOnly: true, secure: true, sameSite: 'lax', path: '/' });
+```
 
-| Scope                    | Limit                  | Reason                                |
-| ------------------------ | ---------------------- | ------------------------------------- |
-| `/api/chat` per user     | 30 / minute            | Prevent runaway loops                 |
-| `/api/chat` global       | 600 / minute           | Cost ceiling                          |
-| `/api/market/*` per user | 240 / minute           | Generous, but bounded                 |
-| `/api/market/*` global   | provider-quota-aware   | Defends provider keys                 |
-| `/api/news` per user     | 60 / minute            |                                       |
-| Auth endpoints           | 10 / minute / IP       | Brute-force defence (Supabase also has) |
+### Login rate-limit
 
-When hit, return `429` with `Retry-After`. The chat UI surfaces this with a friendly "you're going fast — try again in N seconds".
+To slow down brute force, the `/api/auth/login` route is rate-limited by IP using an in-memory token bucket (or a simple Upstash counter): max 10 attempts per IP per 15 minutes. After that, return 429 with `Retry-After`.
 
-## Cost guardrails (LLM)
+### Logout
 
-In addition to rate limiting:
+`/api/auth/logout` clears the cookie. There is no "log out everywhere" — rotating `AUTH_COOKIE_SECRET` invalidates all existing cookies.
 
-- Token budget per turn (`MAX_TOKENS_INPUT`, `MAX_TOKENS_OUTPUT`).
-- Maximum tool-loop iterations: **6** per turn, then the agent is forced to summarise.
-- Daily $ budget per user (default $0.50 free tier) tracked in `chat_telemetry`. When exceeded, the chat is rate-limited harder and a friendly notice is shown.
-- Global daily budget kill-switch via Upstash counter — if exceeded, AI features degrade to "data-only" mode and notify ops.
+## Cron protection
+
+- Vercel Cron sends `Authorization: Bearer ${CRON_SECRET}`.
+- `/api/cron/*` handlers verify with timing-safe compare. Any other call returns 401.
+- The cookie middleware **skips** `/api/cron/*` since cron requests come from Vercel infra without a cookie.
+
+## DB: no RLS
+
+There's a single user. The Next.js server uses a service-role connection to Supabase Postgres. Tables have no `user_id` column. RLS is **not** enabled.
+
+If you ever decide to share with a friend or two, the migration path is:
+
+1. Add `user_id` columns + indexes.
+2. Switch auth to Supabase Auth or Clerk.
+3. Enable RLS with `auth.uid()` policies.
+
+Don't do this preemptively.
+
+## AI cost guardrails
+
+These exist to defend against the "URL is found and abused" failure mode and against runaway agent loops.
+
+1. **Login required** — the only public endpoints are `/api/auth/login` and `/api/cron/*` (cron-secret-protected).
+2. **Per-IP login throttle** as above.
+3. **Per-call token caps**: `MAX_TOKENS_INPUT`, `MAX_TOKENS_OUTPUT`, hard set in agent config.
+4. **Tool-loop iteration cap**: 6 tool calls per user message, then forced summary.
+5. **Daily $ ceiling**: a global daily counter in Upstash. When it crosses `MAX_DAILY_USD` (default $5), `/api/chat` returns a friendly 503 explaining we hit the cap; resets at UTC midnight. Adjust the cap per taste.
+6. **Telemetry table** (`chat_telemetry`) records (model, input/output tokens, ms, est-cost) per turn so you can audit later.
 
 ## Prompt injection defence
 
-Strategies, layered:
-
-1. **Tools, not prompts**, are the source of truth for prices/news. The model can't be tricked into hallucinating numbers because it must call a tool.
+1. **Tools, not prompts**, are the source of truth for prices/news. Numbers can't be hallucinated because the agent must call a tool.
 2. The system prompt sets a hard rule: external content (news bodies, article titles) is **data**, not instructions. We wrap any external text with explicit `<external_content>` markers.
-3. The agent has **no tool that mutates other users' data** — every tool is keyed by `user_id` server-side from the session, not from tool args.
-4. RAG retrieval is filtered server-side by `user_id` for personal sources; news is global but read-only.
+3. RAG retrieval is read-only; the agent never edits news rows.
+4. Tools that mutate (`set_alert`, `log_journal`) take stable identifiers from the server context, not from the model's free-form output.
 5. We never put unsanitised user-supplied URLs into the model context — only structured DTOs.
 
 ## Web security
 
-- Strict CSP (per `next.config.mjs`): default-src `'self'`, sensible allowlist for AI Gateway, Supabase, our worker WS, Twelve Data (only if directly fetched from browser — by default we proxy).
+- Strict CSP via `next.config.mjs`: `default-src 'self'` + allow-list for AI Gateway, Supabase, Upstash REST endpoints, and any specific provider domains we directly hit from the browser (none currently).
 - HSTS on apex.
-- `Permissions-Policy: camera=(), microphone=(self)`, `geolocation=()`, etc.
+- `Permissions-Policy: camera=(), microphone=(self)` (mic for voice input), `geolocation=()`.
 - `Referrer-Policy: strict-origin-when-cross-origin`.
-- COOP / COEP only enabled on routes that need them (none at MVP).
-- Subresource integrity for any third-party script we inject (e.g., TradingView Advanced Widget).
+- Subresource integrity on any third-party script we ever inject.
 
 ## CORS
 
-- Web API: same-origin only by default.
-- Worker WS: only allows `Origin: https://hamafx-ai.app` and the preview deploy origin pattern.
-
-## Data privacy
-
-- We collect: email (auth), prefs, chats, alerts, journal, basic telemetry (route, latency, hashed user id).
-- We **don't** collect: precise location, browser fingerprints.
-- Right to delete: a `Settings → Delete account` cascade deletes all user-owned rows + Supabase auth user.
-- Export: JSON dump endpoint downloads everything tied to the user.
-
-## PII & logs
-
-- Logs include hashed user id (`sha256(user_id + LOG_HASH_SALT)`), never the raw email.
-- Provider logs may include symbols + timeframes — no PII.
-- Prompt logs (when `LOG_PROMPTS=1` is briefly enabled) are redacted to mask names, emails, account numbers via a lightweight regex pass before transport.
+Same-origin only. No third party should call our API. If you ever build a Telegram or Shortcuts integration, mint a tiny dedicated endpoint with its own bearer token rather than opening CORS.
 
 ## Dependency hygiene
 
-- `pnpm audit` in CI; high/critical fail the build.
-- Renovate / Dependabot for weekly updates.
+- `pnpm audit` locally before publishing major updates.
+- Optional: enable Dependabot for weekly minor/patch bumps; ignore majors.
 - Lockfile committed; CI enforces frozen install.
 
-## Observability & alerting
+## Observability (light)
 
-| Signal                                    | Where     | Action                                      |
-| ----------------------------------------- | --------- | ------------------------------------------- |
-| `error_rate(/api/chat) > 5% / 5min`       | Axiom     | Slack `#hamafx-alerts`, page on-call        |
-| `provider.error_rate(twelve-data) > 10%` | Axiom     | Auto-disable primary, fall back; notify    |
-| `cost.daily.global > $X`                  | Worker    | Disable AI for new turns; notify           |
-| `worker.ws.connections > capacity`        | Fly       | Auto-scale recommendation                   |
-| `auth.failed_logins.spike`                | Supabase  | Slack notification                          |
+- Vercel logs are the only sink.
+- `console.log` JSON-shaped lines so Vercel's parser highlights them.
+- Critical errors → log with `level: 'error'` so they're easy to filter.
+- A small `/settings/usage` page in the app shows last-30-days token spend from `chat_telemetry`.
 
 ## Backup & recovery
 
-- Supabase: daily backups (Pro plan); PITR on (when enabled).
-- Drizzle migrations in repo are the second source of schema truth.
-- Upstash: ephemeral cache only — no backup needed.
-- News + embeddings: re-derivable from providers; we store a 60-day window; older rows are pruned.
+- Supabase Free has automatic daily backups (limited retention).
+- The DB schema is in the repo; restoring from backup + replaying migrations is the recovery story.
+- Periodically (monthly?), you can run `pg_dump` against the pooler to a local file as a belt-and-braces.
 
-## Compliance posture (informational)
+## Disclaimer
 
-- We are **not** a regulated financial entity; we display licensed read-only data and AI-generated commentary.
-- The UI carries a clear, persistent disclaimer: "Not financial advice. Information may be delayed or inaccurate."
-- We do not custody funds, do not place trades, do not solicit deposits.
+The app is for **your own** use; we're not making product claims. Still, on first run the chat shows a one-line note: "Information may be delayed or inaccurate. Decisions are yours." Dismissable, doesn't return.

@@ -2,43 +2,34 @@
 
 ## High-level view
 
-HamaFX-Ai is split into **three deployable units** plus shared packages:
-
-1. **`apps/web`** — Next.js 15 App Router (Vercel). UI + AI chat + light API routes.
-2. **`apps/worker`** — Hono (Node) service (Fly.io or Railway). WebSocket fan-out, cron ingestion, heavy compute.
-3. **External managed services** — Supabase (Postgres + Auth + Realtime + Storage), Upstash Redis, Vercel AI Gateway, data providers.
+HamaFX-Ai is a **single deployable unit** on Vercel that talks to a few managed services. There is **no separate worker** at MVP — Vercel Cron handles the scheduled jobs and the browser polls REST for live prices. We may add a worker on Fly.io later if we ever need a persistent upstream WebSocket — see "Future: optional worker" below.
 
 ```mermaid
 flowchart LR
     subgraph Client["📱 Client (PWA)"]
         UI["Next.js UI<br/>shadcn + Tailwind"]
-        Chart["lightweight-charts<br/>+ TV Widget"]
+        Chart["lightweight-charts"]
         Chat["AI Chat (useChat)"]
     end
 
-    subgraph Vercel["▲ Vercel — apps/web"]
-        RH["Route Handlers<br/>/api/chat<br/>/api/market/*<br/>/api/news/*"]
-        Edge["Edge Middleware<br/>auth, rate limit, geo"]
-        ISR["Static + ISR pages"]
-    end
-
-    subgraph Worker["🛠 apps/worker (Fly.io / Railway)"]
-        WS["WebSocket gateway<br/>Hono + ws"]
-        Cron["Cron jobs<br/>news, calendar, snapshots"]
-        Compute["Heavy compute<br/>indicators, backtests"]
+    subgraph Vercel["▲ Vercel — apps/web (single deploy)"]
+        RH["Route Handlers<br/>/api/chat<br/>/api/market/*<br/>/api/news/*<br/>/api/calendar/*"]
+        MW["Middleware<br/>password gate"]
+        Cron["Vercel Cron<br/>/api/cron/news<br/>/api/cron/calendar<br/>/api/cron/alerts"]
+        ISR["Static + RSC pages"]
     end
 
     subgraph Managed["☁ Managed services"]
-        SB[("Supabase<br/>Postgres + pgvector<br/>Auth · Storage")]
-        UP[("Upstash Redis<br/>cache + ratelimit + queue")]
+        SB[("Supabase Postgres<br/>+ pgvector<br/>(used as DB only)")]
+        UP[("Upstash Redis<br/>cache only")]
         GW["Vercel AI Gateway<br/>(OpenAI · Anthropic · Google)"]
     end
 
     subgraph Providers["🌐 Data providers"]
-        TD["Twelve Data<br/>FX + XAU REST/WS"]
-        FH["Finnhub<br/>news, calendar"]
-        AV["Alpha Vantage<br/>fallback FX"]
-        MX["Marketaux / finlight<br/>news + sentiment"]
+        TD["Twelve Data<br/>FX + XAU REST"]
+        FH["Finnhub<br/>news + fallback FX"]
+        AV["Alpha Vantage<br/>backup historical"]
+        MX["Marketaux<br/>news + sentiment"]
         TE["Trading Economics<br/>macro calendar"]
         FRED["FRED<br/>macro series"]
     end
@@ -46,43 +37,41 @@ flowchart LR
     UI --> Chat
     UI --> Chart
     Chat -->|SSE| RH
-    Chart -->|REST| RH
-    Chart -->|WS| WS
+    Chart -->|REST poll 1–2s| RH
     UI -.SWR.-> RH
+
+    MW --- RH
+    MW --- ISR
 
     RH --> GW
     RH --> SB
     RH --> UP
-    RH --> WS
+    RH --> TD
+    RH --> FH
+    RH --> AV
 
     Cron --> TD
-    Cron --> FH
     Cron --> MX
+    Cron --> FH
     Cron --> TE
     Cron --> FRED
     Cron --> SB
     Cron --> UP
-
-    WS --> TD
-    WS --> UP
-
-    Compute --> SB
 ```
 
-## Why two deployable units?
+## Why no worker at MVP?
 
-Vercel is excellent for the web app and short-lived AI streaming, but has constraints we need to escape for trading data:
+We considered a separate Hono service on Fly.io for persistent upstream WebSockets. For a **single-user app**, the math doesn't justify it:
 
-| Need                                        | Vercel? | Worker? |
-| ------------------------------------------- | ------- | ------- |
-| Persistent WebSocket to a price provider    | ❌       | ✅       |
-| Cron > a few minutes runtime                | ⚠️       | ✅       |
-| Long-lived in-memory caches (price tape)    | ❌       | ✅       |
-| Streaming SSE to browser (chat)             | ✅       | ✅       |
-| ISR / static pages, edge auth               | ✅       | ❌       |
-| Tight Next.js DX, zero-config previews      | ✅       | ❌       |
+| Need                                        | Vercel-only? | Trade-off accepted                                                         |
+| ------------------------------------------- | ------------ | -------------------------------------------------------------------------- |
+| Live prices                                 | ✅ via 1–2 s polling | Slightly worse latency, but provider quotas easily cover it for one user. |
+| Cron for news / calendar                    | ✅ Vercel Cron       | Limited to Vercel's cron cadence (≥ 1 min) — fine for our 2–5 min jobs.   |
+| Alert evaluator                             | ✅ Vercel Cron / 1 min | Slightly less responsive than a 30 s loop, fine.                         |
+| Long-lived in-memory caches                 | ❌                   | Use Upstash Redis instead (faster than free-tier Postgres).               |
+| Persistent upstream WebSocket               | ❌                   | We don't need it for one user; revisit if/when we do.                     |
 
-So we keep **stateless / request-scoped** logic on Vercel and put **stateful / connection-holding** logic on the worker.
+If we ever do need a worker, the migration path is clean: drop a Hono service into `apps/worker/`, move `/api/cron/*` into it, and that's it.
 
 ## Request flows (summary — full diagrams in `13-data-flow.md`)
 
@@ -97,10 +86,10 @@ sequenceDiagram
     participant S as Supabase
 
     U->>W: POST /api/chat (messages)
-    W->>S: load thread + user prefs
+    W->>S: load thread
     W->>G: streamText() with tools
     G-->>W: tool-call: getCandles(XAUUSD, 1H)
-    W->>T: getCandles → Twelve Data (cached)
+    W->>T: getCandles → Twelve Data (cached in Upstash)
     T-->>W: candles
     W-->>G: tool-result
     G-->>W: SSE stream tokens
@@ -114,32 +103,39 @@ sequenceDiagram
 sequenceDiagram
     participant U as User
     participant W as Web
-    participant K as Worker (WS gateway)
-    participant TD as Twelve Data WS
+    participant TD as Twelve Data REST
+    participant UP as Upstash
 
-    U->>W: open page
-    W->>K: WS connect /v1/prices?symbols=XAUUSD,EURUSD,GBPUSD
-    K->>TD: WS subscribe (single shared upstream)
-    TD-->>K: tick
-    K-->>U: ticks (multiplexed)
+    loop every 1.5s
+      U->>W: GET /api/market/price?symbols=XAUUSD,EURUSD,GBPUSD
+      W->>UP: GET prices:*
+      alt cache hit
+        UP-->>W: ticks
+      else miss
+        W->>TD: GET /price (multi)
+        TD-->>W: ticks
+        W->>UP: SET ticks ttl=3s
+      end
+      W-->>U: ticks JSON
+    end
 ```
 
-A single upstream WebSocket is shared across all connected users — drastically reducing provider quota usage.
-
-### C. News / calendar ingestion (cron)
+### C. News / calendar ingestion (Vercel Cron)
 
 ```mermaid
 sequenceDiagram
-    participant C as Cron (worker)
+    participant C as Vercel Cron
+    participant W as /api/cron/news
     participant N as News APIs
     participant E as Embedder
     participant S as Supabase
 
-    C->>N: poll every 2-5 min
-    N-->>C: articles
-    C->>C: filter for XAU/EUR/GBP/USD
-    C->>E: embed (text-embedding-3-small)
-    C->>S: upsert articles + vectors (pgvector)
+    C->>W: trigger (every 5 min)
+    W->>N: poll Marketaux + Finnhub
+    N-->>W: articles
+    W->>W: filter for XAU/EUR/GBP/USD
+    W->>E: embed (text-embedding-3-small)
+    W->>S: upsert articles + vectors (pgvector)
 ```
 
 The agent later does RAG against this table — see `07-ai-agent.md`.
@@ -158,7 +154,7 @@ flowchart TB
         D1[Provider adapters] --- D2[Cache layer] --- D3[Normalised DTOs]
     end
     subgraph L4["L4 — Infrastructure"]
-        I1[Supabase] --- I2[Upstash] --- I3[AI Gateway] --- I4[External APIs]
+        I1[Supabase Postgres] --- I2[Upstash] --- I3[AI Gateway] --- I4[External APIs]
     end
 
     L1 --> L2
@@ -174,10 +170,11 @@ flowchart TB
 
 - `Symbol` (`"XAUUSD" | "EURUSD" | "GBPUSD"`)
 - `Timeframe` (`"1m" | "5m" | "15m" | "30m" | "1h" | "4h" | "1d" | "1w"`)
-- `Candle`, `Tick`, `OrderBookLevel`
+- `Candle`, `Tick`
 - `IndicatorRequest`, `IndicatorResult`
 - `NewsArticle`, `EconomicEvent`
 - `ChatMessage`, `ToolName`, `ToolInput<T>`, `ToolOutput<T>`
+- `AlertRule`, `JournalEntry`
 
 The same schemas validate inputs at:
 
@@ -186,19 +183,27 @@ The same schemas validate inputs at:
 3. AI tool definitions
 4. DB write paths
 
-This is what makes the system safe for AI agents to refactor.
-
 ## Failure & resilience
 
 - **Provider failover**: each data type has primary + fallback adapter; on error or stale cache, we transparently fall back. See `06-data-sources.md`.
-- **Circuit breaker**: per-provider error rate triggers temporary disable (Upstash counter).
-- **Idempotent writes**: chat messages, alerts, journal entries use client-generated UUIDs.
+- **Stale-while-error**: if everything fails, we serve the last cached value and flag the freshness in the UI.
 - **Graceful degradation**: if charts API is down, chat still works with last cached snapshot and a warning banner.
-- **No silent staleness**: every tool result includes `fetchedAt` and `source`; the chat UI surfaces "data is N seconds old".
+- **No silent staleness**: every tool result includes `fetchedAt` and `source`; the UI surfaces "data is N seconds old".
 
-## Observability (sketch — full in `12-security-and-config.md`)
+## Observability (light)
 
-- Structured logs via `pino` on worker, `console` + Vercel logs on web.
-- Tracing: OpenTelemetry exporter to a single backend (Axiom or Better Stack — TBD).
-- Metrics: latency histograms for `chat.firstToken`, `tool.<name>.duration`, `provider.<name>.error`.
-- AI-specific: prompt version, model id, tool-call count, token usage per turn — persisted to a `chat_telemetry` table.
+Personal mode — we don't need a full observability stack:
+
+- Vercel built-in logs are the primary sink.
+- Server code uses simple structured `console.log({ level, msg, ...meta })`.
+- Cost tracking: a tiny `chat_telemetry` table records (model, input tokens, output tokens, tool calls, ms) per turn. A `/settings/usage` page shows last 30 days.
+
+## Future: optional worker
+
+If at v2 we want:
+
+- A persistent upstream WebSocket to Twelve Data (sub-second updates)
+- Heavy backtests / long-running computations
+- Telegram / native push fan-out
+
+…we'll add `apps/worker/` (Hono on Fly.io) and move the cron routes there. Until then, **single-deploy on Vercel**.

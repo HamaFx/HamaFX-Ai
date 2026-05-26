@@ -154,9 +154,9 @@ The primary surface — see `07-ai-agent.md` for internals.
 | S-02  | Model picker (per thread + default)| 🅼   | OpenAI / Anthropic / Google via Gateway.       |
 | S-03  | Indicator defaults                | 🅼    | EMA periods, RSI length, etc.                  |
 | S-04  | Time zone + session preferences   | 🅼    |                                                |
-| S-05  | Bring-your-own keys (BYOK)        | 🅑    | User can override AI / data keys.              |
-| S-06  | Notification preferences          | 🅑    |                                                |
-| S-07  | Export data                       | 🅑    | JSON dump of journal + alerts.                 |
+| S-05  | Notification preferences          | 🅑    |                                                |
+| S-06  | Usage / cost dashboard            | 🅼    | `chat_telemetry` summary, last 30 days.        |
+| S-07  | Local export (manual JSON dump)   | 🅑    | Button that downloads journal + alerts.        |
 
 ## Cross-cutting features
 
@@ -167,5 +167,4 @@ The primary surface — see `07-ai-agent.md` for internals.
 | X-03   | Keyboard shortcuts on desktop               | 🅑    |                                                  |
 | X-04   | Global "freshness" badge (data age)         | 🅼    |                                                  |
 | X-05   | Network-aware fallbacks                     | 🅼    | If WS down, poll REST.                           |
-| X-06   | i18n scaffolding (en first)                 | 🅑    | next-intl.                                       |
-| X-07   | Analytics (privacy-first, e.g. Plausible)   | 🅑    |                                                  |
+| X-06   | Telegram bot for alert delivery             | 🅑    | Cheaper + simpler than web push.                 |

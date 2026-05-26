@@ -21,19 +21,17 @@
 | AI SDK             | **Vercel AI SDK v5** (`ai`, `@ai-sdk/react`, `@ai-sdk/*`)       | Standard streaming + tool calling + `ToolLoopAgent`.         |
 | AI provider        | **Vercel AI Gateway** → OpenAI / Anthropic / Google             | One key, observability, fallback routing.                    |
 | Embeddings         | `text-embedding-3-small` (OpenAI) via Gateway                   | Cheap, good for news RAG.                                    |
-| DB                 | **Supabase Postgres** + `pgvector`                              | Auth + Postgres + Realtime + storage in one.                 |
+| DB                 | **Supabase Postgres** + `pgvector` (DB only — no Auth, no RLS)  | Free tier, has `pgvector`, easy dashboard.                   |
 | ORM                | **Drizzle ORM**                                                 | Lightweight, edge-compatible, great TS inference.            |
-| Cache / RL / Queue | **Upstash Redis** + `@upstash/ratelimit` + `@upstash/qstash`    | Serverless-friendly Redis; native rate-limit primitives.     |
-| Worker framework   | **Hono** on Node 20 (Bun later)                                 | Tiny, fast, Web-Standards APIs, native WS helper.            |
-| WebSocket          | `ws` on the worker, browser-native `WebSocket` on client        | Battle-tested.                                               |
-| Auth               | **Supabase Auth** (email + OAuth) +  Next.js middleware         | Already in Supabase; magic-link for mobile-first.            |
+| Cache              | **Upstash Redis** (caching only — no per-user rate limit, no queue) | Free tier; serverless-friendly.                          |
+| Cron               | **Vercel Cron Jobs** (built into the Vercel deploy)             | One less moving part than a worker.                          |
+| Auth               | **Single `APP_PASSWORD`** + HMAC-signed cookie + middleware     | Personal-mode; one user, one password.                       |
 | Validation         | **Zod**                                                         | Single schema source for API, AI tools, DB inputs.           |
 | Testing            | **Vitest** + **Playwright** + **MSW**                           | Vitest for unit, Playwright for e2e, MSW for provider mocks. |
 | Lint / format      | **ESLint flat config** + **Prettier** + **`@ianvs/prettier-plugin-sort-imports`** | Deterministic ordering = better AI patches.    |
 | Monorepo           | **pnpm workspaces** + **Turborepo**                             | Fast incremental builds, remote cache on Vercel.             |
-| Logging            | `pino` (worker), `next/log` (web), telemetry via OpenTelemetry  | One trace id end-to-end.                                     |
-| Tracing            | **Axiom** (preferred) or **Better Stack**                       | Cheap, log + trace + metrics in one.                         |
-| CI/CD              | GitHub Actions + Vercel + Fly/Railway                           | Standard.                                                    |
+| Logging            | `console.log` JSON-shaped → Vercel logs                         | Personal-mode: keep it simple.                               |
+| CI/CD              | GitHub Actions (`lint typecheck test`) + Vercel auto-deploy     | Minimal — Vercel does the heavy lifting.                     |
 | PWA                | `next-pwa` (or hand-rolled service worker)                      | Installable, offline shell.                                  |
 
 ## Rationale per choice
@@ -60,22 +58,23 @@
 - LangChain considered: too much abstraction churn, awkward in Next edge runtime.
 - Mastra considered: promising, but smaller ecosystem; revisit at v2.
 
-### Why Supabase + Drizzle (not Prisma + Neon)
+### Why Supabase + Drizzle (not raw Postgres + Prisma)
 
-- Auth + DB + storage + realtime in one console = less ops at MVP.
+- Free tier covers a personal app comfortably (500 MB DB, daily backups).
 - `pgvector` is built in for our news RAG.
+- We use Supabase **only as a Postgres host** — Auth and RLS stay off (single user). The Supabase dashboard is a nice bonus for inspecting tables.
 - Drizzle (instead of Prisma) because: (a) edge-compatible, (b) zero codegen step in CI, (c) AI agents read Drizzle schemas more accurately than Prisma's DSL.
 - Migration path: Supabase is just Postgres — we can lift-and-shift to Neon if needed.
 
-### Why a separate worker (Hono on Fly.io)
+### Why no separate worker (for MVP)
 
-See `01-architecture.md` § "Why two deployable units?". Short version: persistent WS, long crons, in-memory price tape.
+For a single-user app the math doesn't justify it. REST polling at 1–2 s for live prices uses an order of magnitude less of our provider quota than we have headroom for. Vercel Cron handles the news/calendar/alert jobs. If real-time WS ever matters, we drop in `apps/worker/` (Hono on Fly.io) and move the cron routes there — a clean migration.
 
 ### Why Upstash Redis (not Vercel KV / DragonflyDB)
 
 - Serverless, pay-per-request, free tier sufficient for MVP.
-- `@upstash/ratelimit` is a one-liner production-grade rate limiter.
-- `@upstash/qstash` gives us scheduled jobs without standing up a queue.
+- We use it only for caching (price/candle/news) and one global daily cost counter — no per-user rate limiting, no queue.
+- Atomic counters and TTLs are exactly the primitives we need.
 
 ### Why Zustand + nuqs (not Redux / Jotai)
 
@@ -105,8 +104,8 @@ zod: ^3.23
 @tanstack/react-query: ^5
 zustand: ^5
 nuqs: latest
-hono: ^4
-ws: ^8
+@upstash/redis: latest
+@supabase/supabase-js: ^2  # only used if we ever need Storage; not for auth
 ```
 
 (Pin exact versions in `package.json` at scaffold time and lock with `pnpm-lock.yaml`.)
