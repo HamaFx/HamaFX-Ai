@@ -3,7 +3,13 @@ const nextConfig = {
   reactStrictMode: true,
 
   // Workspace packages export TS source directly; Next must transpile them.
-  transpilePackages: ['@hamafx/shared', '@hamafx/db', '@hamafx/config'],
+  transpilePackages: [
+    '@hamafx/shared',
+    '@hamafx/db',
+    '@hamafx/data',
+    '@hamafx/indicators',
+    '@hamafx/config',
+  ],
 
   // Type-checking + linting are run separately in CI; don't block the build.
   typescript: { ignoreBuildErrors: false },

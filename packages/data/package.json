@@ -1,5 +1,5 @@
 {
-  "name": "@hamafx/shared",
+  "name": "@hamafx/data",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -7,18 +7,18 @@
   "types": "./src/index.ts",
   "exports": {
     ".": "./src/index.ts",
-    "./schemas/*": "./src/schemas/*.ts",
-    "./ai/*": "./src/ai/*.ts",
-    "./env": "./src/env.ts",
-    "./errors": "./src/errors.ts"
+    "./adapters/*": "./src/adapters/*.ts",
+    "./cache": "./src/cache/index.ts",
+    "./providers/*": "./src/providers/*/index.ts"
   },
   "scripts": {
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "test": "vitest --passWithNoTests",
+    "test": "vitest",
     "clean": "rm -rf node_modules .turbo"
   },
   "dependencies": {
+    "@hamafx/shared": "workspace:*",
     "zod": "^3.23.8"
   },
   "devDependencies": {

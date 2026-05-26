@@ -9,7 +9,7 @@ This is a **personal** AI trading copilot for **XAUUSD (primary), EURUSD, GBPUSD
 - Stack: Next.js 15 + Tailwind v4 + shadcn/ui on **Vercel** (single deploy).
 - Cron: **Vercel Cron Jobs** (no separate worker).
 - DB: **Supabase Postgres + pgvector** (used as a plain DB — Auth and RLS are **off**).
-- Cache: **Upstash Redis** (caching only — no per-user rate-limit, no queue).
+- Cache: **Next.js Data Cache** (`unstable_cache` + fetch-cache) behind a `Cache` interface in `packages/data/src/cache`. Upstash Redis env vars are accepted but optional and currently unused.
 - AI: Vercel AI SDK v5 via AI Gateway.
 - Auth: **single `APP_PASSWORD`** + HMAC-signed cookie + middleware.
 - Monorepo: pnpm workspaces + Turborepo.

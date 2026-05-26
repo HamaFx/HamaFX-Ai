@@ -145,11 +145,23 @@ type Options = {
 | Economic calendar (week)       | 15 min         | 6 h               |
 | FRED series                    | 6 h            | 7 days            |
 
-Implementation: Upstash Redis with a key scheme `hfx:<resource>:<symbol|null>:<tf|null>:<extra>`. See `packages/data/src/cache/`.
+Implementation: **Next.js Data Cache** (`unstable_cache` + fetch-cache) wrapped
+behind a `Cache` interface in `packages/data/src/cache/`. We picked this over
+Upstash Redis because: (a) it's free and persists across invocations on
+Vercel, (b) it has built-in single-flight + tag-based invalidation, (c) it
+removes one external dependency. The interface keeps the door open: if we
+ever need cross-region consistency or a separate worker on Fly.io, swapping
+in a Redis-backed `Cache` is a one-file change. Key scheme stays
+`hfx:<resource>:<symbol|null>:<tf|null>:<extra>`.
 
 ## Provider self-throttling
 
-We don't run a per-user rate limiter (single user). We do keep a small **global counter per provider** in Upstash so we never burn the free-tier quota by accident. When the budget is near zero, the adapter prefers cached/stale and tags the response with a yellow freshness — it never throws on you.
+We don't run a per-user rate limiter (single user). We do keep a small
+**per-provider in-memory token bucket** (`packages/data/src/cache/throttle.ts`)
+so we never burn the free-tier quota by accident. State is per Vercel
+function instance — for a single user that's accepted; the cache absorbs
+duplicates anyway. If we ever need a globally consistent counter, swap for
+an Upstash `INCR + EXPIRE` pair behind the same `tryReserve()` API.
 
 | Provider     | Max RPM (free) | Our internal cap |
 | ------------ | -------------- | ---------------- |
@@ -161,7 +173,7 @@ We don't run a per-user rate limiter (single user). We do keep a small **global 
 ## Live-price strategy (personal mode)
 
 - Browser **polls** `/api/market/price` every 1.5 s via TanStack Query while a relevant view is open.
-- The route handler reads from Upstash (3 s TTL); only one out of every ~2 polls actually hits the upstream provider.
+- The route handler reads from the Next.js Data Cache (3 s TTL); only ~one out of every two polls actually hits the upstream provider.
 - This uses far less of the free-tier quota than you'd expect because the cache absorbs the duplicate reads.
 - If polling ever becomes a constraint we add a worker with an upstream WS and fan-out — see `01-architecture.md` § "Future: optional worker".
 

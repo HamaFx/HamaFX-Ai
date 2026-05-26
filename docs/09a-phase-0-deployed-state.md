@@ -100,7 +100,7 @@ Phase 1 features as listed.
 | Integration | Phase | Where | Notes |
 | --- | --- | --- | --- |
 | **Vercel AI Gateway** | 1b (chat) | https://vercel.com/dashboard/ai-gateway | Generates `AI_GATEWAY_API_KEY`. One key, all providers. |
-| **Upstash Redis** | 1a (price cache) | Vercel Marketplace → Upstash → Redis | Auto-creates `UPSTASH_REDIS_REST_URL` + `_TOKEN`. Free tier covers personal use. |
+| ~~Upstash Redis~~ | ~~1a~~ | n/a | **Skipped.** Phase 1a switched to Next.js Data Cache — free, persistent on Vercel, single-flight built-in. Env vars `UPSTASH_REDIS_REST_*` are accepted but optional. |
 | **Twelve Data** | 1a (FX + XAU prices, candles) | https://twelvedata.com | `TWELVEDATA_API_KEY`. Free tier 800 reqs/day. |
 | **Marketaux** | 1c (news) | https://marketaux.com | `MARKETAUX_API_KEY`. Free tier 100 reqs/day. |
 | **Finnhub** | 1c (news fallback, FX fallback) | https://finnhub.io | `FINNHUB_API_KEY`. Free tier 60/min. |
