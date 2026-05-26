@@ -1,0 +1,24 @@
+name: cron-briefings
+on:
+  schedule:
+    - cron: '*/5 * * * *'   # UTC, 5-minute granularity covers the ±2m
+                            # window the route handler uses
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: cron-briefings
+  cancel-in-progress: false
+jobs:
+  fire:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Hit /api/cron/briefings
+        env:
+          URL: ${{ secrets.PRODUCTION_URL }}
+          TOKEN: ${{ secrets.CRON_SECRET }}
+        run: |
+          curl -fsS -X GET \
+            -H "Authorization: Bearer $TOKEN" \
+            "$URL/api/cron/briefings"

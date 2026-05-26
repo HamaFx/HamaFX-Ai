@@ -94,3 +94,20 @@ export {
   type SnapshotRow,
   type UpsertSnapshotArgs,
 } from './snapshots/persistence';
+
+// Briefings (Phase 2)
+export {
+  emitPreEvent,
+  emitPostEvent,
+  emitWeeklyReview,
+  type BriefingsEnv,
+} from './briefings/generate';
+export {
+  getOrCreateBriefingsThread,
+  wasEmitted,
+  recordEmitted,
+  findHighImpactEventsInWindow,
+} from './briefings/persistence';
+
+// Auto-Journal (Phase 2)
+export { parseJournalShortcut, type JournalShortcut } from './journal/auto-parse';
