@@ -87,10 +87,11 @@ export type AlertRule = z.infer<typeof AlertRuleSchema>;
 ## Tests
 
 - File naming: `<thing>.test.ts(x)` colocated, `<thing>.e2e.ts` under `apps/web/e2e/`.
-- Vitest for unit + integration; Playwright for e2e.
+- Vitest for unit + integration; Playwright for e2e (light usage in personal-mode).
 - MSW mocks for all provider HTTP in unit tests.
 - AI tools have a "tool-shape" test: input zod parses, output zod parses, given fixture inputs.
 - Snapshot tests are allowed only for stable layout / structured outputs, never for free-form LLM text.
+- The 10 acceptance prompts run **manually** via `pnpm --filter ai eval` — no CI gating.
 
 ## Git workflow
 
@@ -106,7 +107,7 @@ export type AlertRule = z.infer<typeof AlertRuleSchema>;
 ```
 
 `type` ∈ `feat | fix | chore | docs | refactor | test | perf | style | ci | build`
-`scope` is the affected package or area: `web`, `worker`, `ai`, `data`, `db`, `ui`, `shared`, `infra`, `docs`.
+`scope` is the affected package or area: `web`, `ai`, `data`, `db`, `ui`, `shared`, `infra`, `docs`.
 
 Examples:
 
@@ -116,20 +117,19 @@ Examples:
 
 ## PR checklist (auto-applied template)
 
-- [ ] Linked to an issue or roadmap item
+- [ ] Linked to a roadmap item
 - [ ] Schema changes in `packages/shared` reflected in tools + UI
-- [ ] Migrations included if DB schema changed
-- [ ] Tests added/updated
-- [ ] AI eval pass rate not regressed (CI shows delta)
+- [ ] Migrations included if DB schema changed (and applied locally)
+- [ ] Tests added/updated where it matters
+- [ ] Manual run of relevant acceptance prompts if AI behaviour changed
 - [ ] Lighthouse mobile not regressed for touched routes
 - [ ] No new env vars without `.env.example` entry
 
 ## Logging
 
-- Use `pino` everywhere.
-- Always include `traceId`. Use `getTrace()` helper that pulls from current async context.
-- Levels: `trace`, `debug`, `info`, `warn`, `error`. Default in prod: `info`.
-- Never log full LLM prompts in production by default — use `debug` and a `LOG_PROMPTS=1` env opt-in for short windows.
+- Use `console.log` with a JSON-shaped payload: `{ level, msg, ...meta }`. Vercel parses it nicely.
+- Levels: `debug`, `info`, `warn`, `error`. Default in prod: `info`.
+- Never log full LLM prompts in production by default — gate with a `LOG_PROMPTS=1` env var for short windows.
 
 ## Error handling
 

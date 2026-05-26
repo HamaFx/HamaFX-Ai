@@ -147,9 +147,9 @@ type Options = {
 
 Implementation: Upstash Redis with a key scheme `hfx:<resource>:<symbol|null>:<tf|null>:<extra>`. See `packages/data/src/cache/`.
 
-## Rate-limit budgets
+## Provider self-throttling
 
-We rate-limit ourselves to provider quotas using `@upstash/ratelimit` keyed by `provider:env`. If we hit the budget, we serve cached / stale and surface a yellow `freshness` badge — never throw on the user.
+We don't run a per-user rate limiter (single user). We do keep a small **global counter per provider** in Upstash so we never burn the free-tier quota by accident. When the budget is near zero, the adapter prefers cached/stale and tags the response with a yellow freshness — it never throws on you.
 
 | Provider     | Max RPM (free) | Our internal cap |
 | ------------ | -------------- | ---------------- |
@@ -158,32 +158,22 @@ We rate-limit ourselves to provider quotas using `@upstash/ratelimit` keyed by `
 | Marketaux    | ~100 / day      | 60 / day        |
 | Trading Econ.| 10 / min (guest)| 5 / min         |
 
-## WebSocket strategy (worker-only)
+## Live-price strategy (personal mode)
 
-- The worker maintains **one upstream WS** to Twelve Data (or fallback) per process.
-- It fans out to all connected browser clients via its own WS gateway.
-- On upstream disconnect: exponential backoff, then fall back to REST polling at 1 Hz.
-- Each tick is normalised and put on a Redis pub/sub channel `prices:<symbol>` so the chat tools can read latest tick from cache without the WS.
-
-```mermaid
-flowchart LR
-    TD[Twelve Data WS] -->|ticks| W[Worker]
-    W -->|pub| R[(Redis prices:*)]
-    W -->|fan-out WS| C1[Browser 1]
-    W --> C2[Browser 2]
-    W --> C3[Browser N]
-    AI[apps/web /api/chat] -->|read latest| R
-```
+- Browser **polls** `/api/market/price` every 1.5 s via TanStack Query while a relevant view is open.
+- The route handler reads from Upstash (3 s TTL); only one out of every ~2 polls actually hits the upstream provider.
+- This uses far less of the free-tier quota than you'd expect because the cache absorbs the duplicate reads.
+- If polling ever becomes a constraint we add a worker with an upstream WS and fan-out — see `01-architecture.md` § "Future: optional worker".
 
 ## News ingestion pipeline
 
-Cron (every 2 minutes for news, every 5 for calendar):
+**Vercel Cron** triggers `/api/cron/news` (every 5 min) and `/api/cron/calendar` (every 15 min):
 
 1. Pull from primary; on failure, pull from secondary.
 2. Filter: keep articles where any of `tags ∋ {XAU, gold, EUR, USD, GBP}` or text contains FX symbols / "ECB" / "Fed" / "BoE" / "NFP" / "CPI" / "FOMC" etc. (regex defined in `packages/data/src/providers/<x>/filter.ts`).
 3. Compute embeddings (`text-embedding-3-small`) on `title + summary`.
 4. Upsert to `news_articles` and `news_embeddings` (pgvector).
-5. Enqueue web-push for users subscribed to symbol if `importance === "high"`.
+5. If a high-impact event matches one of our 3 symbols, write a row that the alert evaluator picks up on its next cron tick (Telegram delivery in v2).
 
 ## Symbol mapping
 

@@ -155,19 +155,15 @@ The chat surface registers a renderer per `type` (`apps/web/src/components/chat/
 
 The full refusal patterns live in `packages/ai/src/prompts/refusals.md`.
 
-## Evaluation suite
+## Evaluation (manual)
 
-`packages/ai/src/eval/cases.json` contains the 10 acceptance prompts from `00-overview.md` plus regression cases. The runner:
+Personal-mode keeps this simple. `packages/ai/src/eval/prompts.json` holds the 10 acceptance prompts from `00-overview.md`. A small `pnpm --filter ai eval` script runs them sequentially against the local dev server and prints the model's responses, tool calls, and timings. **You** read the output and judge — no LLM-as-judge in CI.
 
-```mermaid
-flowchart LR
-    A[cases.json] --> R[runner.ts]
-    R --> M[Model under test]
-    M --> J[LLM-as-judge<br/>(rubric: tool calls, citations, invalidation)]
-    J --> S[scores.json]
-```
+Run it whenever:
 
-Run on PR via GitHub Actions (only on AI-affecting paths) with a fixed RNG seed and frozen mock provider data. Threshold: pass rate ≥ 90% to merge.
+- You change the system prompt.
+- You add or modify a tool.
+- You bump models.
 
 ## Cost / latency budgets
 
@@ -180,6 +176,7 @@ Run on PR via GitHub Actions (only on AI-affecting paths) with a fixed RNG seed 
 | p95 first token                       | ≤ 2 000 ms              |
 | p95 full answer (with 2 tool calls)   | ≤ 6 000 ms              |
 | Cost / turn (gpt-4.1 baseline)        | ≤ $0.012                |
+| **Daily $ ceiling** (global)          | **$5** default — rejects new turns past it; resets UTC midnight |
 
 Levers: trim system prompt, prune thread, prefer composite tools, cache candle/news reads.
 
