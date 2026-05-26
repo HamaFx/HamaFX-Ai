@@ -80,3 +80,17 @@ export {
   type ModelBreakdown,
   type DayBucket,
 } from './usage';
+
+// Snapshots (Phase 2)
+export {
+  computeDailySnapshot,
+  previousUtcMidnight,
+  type DailySnapshot,
+  type ComputeDailySnapshotArgs,
+} from './snapshots/compute';
+export {
+  upsertSnapshot,
+  getLatestSnapshot,
+  type SnapshotRow,
+  type UpsertSnapshotArgs,
+} from './snapshots/persistence';

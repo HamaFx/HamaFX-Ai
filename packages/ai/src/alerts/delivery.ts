@@ -39,12 +39,8 @@ export async function deliverAlert({ alert, reading, env }: DeliverArgs): Promis
       if (r.ok || r.message?.startsWith('not configured')) return r;
     }
     if (ch === 'telegram') {
-      return {
-        alertId: alert.id,
-        channel: 'telegram',
-        ok: false,
-        message: 'telegram delivery deferred to Phase 2',
-      };
+      const r = await deliverTelegram({ alert, reading, env });
+      if (r.ok || r.message?.startsWith('not configured')) return r;
     }
     if (ch === 'web-push') {
       return {
@@ -135,4 +131,86 @@ function renderEmailBody(alert: Alert, reading: RuleReading): string {
   }
   lines.push('', '— HamaFX-Ai');
   return lines.join('\n');
+}
+
+
+// ---------------------------------------------------------------------------
+// Telegram (Phase 2)
+// ---------------------------------------------------------------------------
+//
+// Same ordering contract as the email path: POST first, await the response,
+// only call `markFired` after a 2xx. On non-2xx the alert is left
+// un-marked-as-fired so the next cron tick retries.
+//
+// We use MarkdownV2 for formatting, which requires escaping a specific set
+// of reserved characters in any user-controlled text. `escapeMd` below
+// covers the full set listed in https://core.telegram.org/bots/api#markdownv2-style.
+
+const TELEGRAM_API = 'https://api.telegram.org';
+
+async function deliverTelegram({ alert, reading, env }: DeliverArgs): Promise<DeliveryResult> {
+  if (!env.TELEGRAM_BOT_TOKEN || !env.TELEGRAM_CHAT_ID) {
+    console.warn('[alerts] telegram channel not configured (TELEGRAM_*); skipping');
+    return {
+      alertId: alert.id,
+      channel: 'telegram',
+      ok: false,
+      message: 'not configured (TELEGRAM_BOT_TOKEN / TELEGRAM_CHAT_ID missing)',
+    };
+  }
+
+  const subject = describeRule(alert.rule);
+  const body = renderTelegramBody(alert, reading);
+  const text = `*${escapeMd(subject)}*\n\n${escapeMd(body)}`;
+
+  let res: Response;
+  try {
+    res = await fetch(`${TELEGRAM_API}/bot${env.TELEGRAM_BOT_TOKEN}/sendMessage`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        chat_id: env.TELEGRAM_CHAT_ID,
+        text,
+        parse_mode: 'MarkdownV2',
+      }),
+    });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : 'fetch failed';
+    console.error(`[alerts] telegram fetch failed for alert ${alert.id}: ${msg}`);
+    return { alertId: alert.id, channel: 'telegram', ok: false, message: msg };
+  }
+
+  if (!res.ok) {
+    const txt = await res.text().catch(() => '');
+    console.error(`[alerts] telegram HTTP ${res.status} for alert ${alert.id}: ${txt.slice(0, 200)}`);
+    return {
+      alertId: alert.id,
+      channel: 'telegram',
+      ok: false,
+      message: `telegram HTTP ${res.status}: ${txt.slice(0, 200)}`,
+    };
+  }
+
+  await markFired(alert.id);
+  return { alertId: alert.id, channel: 'telegram', ok: true };
+}
+
+function renderTelegramBody(alert: Alert, reading: RuleReading): string {
+  const lines = [
+    `Reading: ${reading.value} (${reading.source})`,
+    `Trigger: ${alert.rule.level}`,
+  ];
+  if (alert.note) {
+    lines.push('', alert.note);
+  }
+  return lines.join('\n');
+}
+
+/**
+ * Escape MarkdownV2 reserved characters per Telegram's spec. Apply to any
+ * user-controlled string before interpolating into a `parse_mode: MarkdownV2`
+ * message body.
+ */
+export function escapeMd(s: string): string {
+  return s.replace(/[\\_*\[\]()~`>#+\-=|{}.!]/g, '\\$&');
 }

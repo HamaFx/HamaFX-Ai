@@ -3,10 +3,17 @@
 // Mobile-first chat composer. Stays pinned above the bottom nav via the
 // chat surface's flex layout. Submits on Enter (without Shift), sends via
 // the `onSubmit` callback so the surface can talk to `useChat`.
-import { useRef, useState } from 'react';
+//
+// Phase 2 added voice input: a microphone button between the textarea and
+// the Send button. While a recognition session is active a pulsing red
+// dot indicates recording; interim transcripts stream into the textarea
+// so the user can see what's being captured. On session end the transcript
+// is left in the textarea — submission never auto-fires.
+import { useEffect, useRef, useState } from 'react';
 
-import { Button } from '@/components/ui/button';
+import { useVoiceInput } from '@/hooks/use-voice-input';
 import { cn } from '@/lib/cn';
+import { Button } from '@/components/ui/button';
 
 interface ComposerProps {
   onSubmit: (text: string) => void;
@@ -14,9 +21,33 @@ interface ComposerProps {
   placeholder?: string;
 }
 
+const DEFAULT_LANG = 'en-US';
+
 export function Composer({ onSubmit, disabled, placeholder = 'Ask anything…' }: ComposerProps) {
   const [value, setValue] = useState('');
   const ref = useRef<HTMLTextAreaElement>(null);
+
+  // Voice input — language defaults to the browser's preferred locale, falls
+  // back to en-US when navigator is absent (SSR boundary).
+  const [lang, setLang] = useState(DEFAULT_LANG);
+  useEffect(() => {
+    if (typeof navigator !== 'undefined' && navigator.language) {
+      setLang(navigator.language);
+    }
+  }, []);
+  const voice = useVoiceInput({
+    lang,
+    onText: (transcript) => {
+      setValue(transcript);
+      // Resize the textarea to fit the new content so long dictations don't clip.
+      requestAnimationFrame(() => {
+        const t = ref.current;
+        if (!t) return;
+        t.style.height = 'auto';
+        t.style.height = `${Math.min(t.scrollHeight, 160)}px`;
+      });
+    },
+  });
 
   function send() {
     const trimmed = value.trim();
@@ -58,9 +89,59 @@ export function Composer({ onSubmit, disabled, placeholder = 'Ask anything…' }
           }
         }}
       />
+
+      {voice.supported ? (
+        <button
+          type="button"
+          aria-label={voice.active ? 'Stop voice input' : 'Start voice input'}
+          aria-pressed={voice.active}
+          aria-busy={voice.active}
+          onClick={() => (voice.active ? voice.stop() : voice.start())}
+          disabled={disabled}
+          className={cn(
+            'border-border bg-bg-elev-2 inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-md border transition-colors',
+            'focus-visible:ring-brand/60 focus:outline-none focus-visible:ring-2',
+            voice.active ? 'text-bear' : 'text-fg-muted hover:text-fg',
+            disabled ? 'cursor-not-allowed opacity-60' : '',
+          )}
+        >
+          {voice.active ? <RecordingDot /> : <MicGlyph />}
+        </button>
+      ) : null}
+
       <Button type="submit" size="sm" disabled={disabled || value.trim().length === 0}>
         Send
       </Button>
     </form>
+  );
+}
+
+function MicGlyph() {
+  // Inline SVG to avoid an icon-lib dep. 16px square, currentColor.
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 16 16"
+      width="16"
+      height="16"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <rect x="6" y="2" width="4" height="8" rx="2" />
+      <path d="M3 8a5 5 0 0 0 10 0" />
+      <path d="M8 13v2" />
+    </svg>
+  );
+}
+
+function RecordingDot() {
+  return (
+    <span
+      aria-hidden="true"
+      className="bg-bear inline-block h-3 w-3 animate-pulse rounded-full shadow-[0_0_0_3px_rgba(240,89,74,0.25)]"
+    />
   );
 }

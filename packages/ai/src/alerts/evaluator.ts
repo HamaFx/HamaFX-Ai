@@ -187,6 +187,8 @@ export interface EvaluatorEnv {
   RESEND_API_KEY?: string | undefined;
   ALERT_FROM_EMAIL?: string | undefined;
   ALERT_TO_EMAIL?: string | undefined;
+  TELEGRAM_BOT_TOKEN?: string | undefined;
+  TELEGRAM_CHAT_ID?: string | undefined;
 }
 
 export interface EvaluationResult {
@@ -209,6 +211,8 @@ export async function evaluateAlerts(
     RESEND_API_KEY: process.env.RESEND_API_KEY ?? undefined,
     ALERT_FROM_EMAIL: process.env.ALERT_FROM_EMAIL ?? undefined,
     ALERT_TO_EMAIL: process.env.ALERT_TO_EMAIL ?? undefined,
+    TELEGRAM_BOT_TOKEN: process.env.TELEGRAM_BOT_TOKEN ?? undefined,
+    TELEGRAM_CHAT_ID: process.env.TELEGRAM_CHAT_ID ?? undefined,
   };
 
   let matched = 0;

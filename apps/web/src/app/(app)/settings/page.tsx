@@ -5,6 +5,7 @@ import { PageHeader } from '@/components/layout/page-header';
 
 import { LogoutButton } from './_components/logout-button';
 import { TestEmailButton } from './_components/test-email-button';
+import { TestTelegramButton } from './_components/test-telegram-button';
 
 export const metadata: Metadata = { title: 'Settings' };
 
@@ -23,6 +24,10 @@ export default function SettingsPage() {
           Send a one-off test email through Resend to confirm the alerts pipeline is wired up.
         </p>
         <TestEmailButton />
+        <p className="text-fg-subtle text-xs">
+          Or send a one-off Telegram message — fast mobile push without setting up web push.
+        </p>
+        <TestTelegramButton />
       </section>
 
       <section className="border-border bg-bg-elev-1 flex flex-col gap-3 rounded-lg border p-4">
