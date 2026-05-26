@@ -1,8 +1,5 @@
 {
   "framework": "nextjs",
-  "buildCommand": "pnpm dlx turbo run build --filter=@hamafx/web...",
-  "installCommand": "pnpm install --frozen-lockfile",
-  "ignoreCommand": "npx turbo-ignore @hamafx/web",
   "functions": {
     "src/app/api/chat/route.ts": { "maxDuration": 60 },
     "src/app/api/cron/news/route.ts": { "maxDuration": 60 },
