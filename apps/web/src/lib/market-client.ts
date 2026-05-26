@@ -5,7 +5,16 @@
 //   - response shape typing (no zod here — the routes already validate; we
 //     trust them and keep the client tiny)
 
-import type { Candle, IndicatorKind, IndicatorResult, Symbol, Tick, Timeframe } from '@hamafx/shared';
+import type {
+  Candle,
+  IndicatorKind,
+  IndicatorResult,
+  StructureKind,
+  StructureResult,
+  Symbol,
+  Tick,
+  Timeframe,
+} from '@hamafx/shared';
 
 export interface ApiError {
   code: string;
@@ -100,4 +109,33 @@ export async function fetchIndicators(
   const res = await fetch('/api/market/indicators', init);
   const body = await parse<{ results: IndicatorResult[] }>(res);
   return body.results;
+}
+
+export interface FetchStructureOptions extends FetchOptions {
+  count?: number;
+  kinds?: readonly StructureKind[];
+  /** Swing-pivot strictness (k bars on each side). Default 3. */
+  lookback?: number;
+}
+
+/** POST /api/market/structure — SMC events (swings, BOS/CHoCH, FVG, OB, liquidity). */
+export async function fetchStructure(
+  symbol: Symbol,
+  tf: Timeframe,
+  opts: FetchStructureOptions = {},
+): Promise<StructureResult> {
+  const init: RequestInit = {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({
+      symbol,
+      tf,
+      count: opts.count ?? 300,
+      ...(opts.kinds ? { kinds: opts.kinds } : {}),
+      lookback: opts.lookback ?? 3,
+    }),
+  };
+  if (opts.signal) init.signal = opts.signal;
+  const res = await fetch('/api/market/structure', init);
+  return parse<StructureResult>(res);
 }
