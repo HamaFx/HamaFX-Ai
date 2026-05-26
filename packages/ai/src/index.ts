@@ -69,3 +69,13 @@ export {
   type CreateJournalInput,
   type UpdateJournalInput,
 } from './journal/persistence';
+
+// Usage
+export {
+  listTelemetry,
+  computeUsage,
+  type TelemetryRow,
+  type UsageStats,
+  type ModelBreakdown,
+  type DayBucket,
+} from './usage';
