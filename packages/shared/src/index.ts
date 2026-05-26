@@ -11,6 +11,7 @@ export * from './schemas/tick';
 export * from './schemas/news';
 export * from './schemas/calendar';
 export * from './schemas/indicator';
+export * from './schemas/structure';
 export * from './schemas/chat';
 export * from './schemas/alerts';
 export * from './schemas/journal';
