@@ -1,8 +1,21 @@
-# 09a — Phase 0 Deployed State (snapshot)
+# 09a — Deployed State (snapshot)
 
-> Snapshot of what's actually live in production after the Phase 0 deploy.
-> If you (or another AI agent) want to know "what's already configured?",
-> read this. If you want the original plan, see `09-deployment.md`.
+> Snapshot of what's actually live. If you (or another AI agent) want to
+> know "what's already configured?", read this. The original deployment
+> plan is in `09-deployment.md`; per-phase progress is in `10-roadmap.md`.
+
+## Phase status
+
+- ✅ **Phase 0** — scaffold + auth + DB
+- ✅ **Phase 1a** — live data + chart (PR #4)
+- ✅ **Phase 1b** — chat agent + 7 tools + persistence + budget guardrail (PR #5)
+- ✅ **Phase 1c** — news + calendar ingestion + embeddings (PR #6)
+- ✅ **Phase 1d** — alerts evaluator + email + journal CRUD (PR #7)
+- ✅ **Phase 1e** — usage analytics + loading + error boundaries (PR #8)
+- ⏳ **Phase 2** — SMC indicators, Telegram, briefings, RAG, composite tools
+
+Pending real-world acceptance: re-run the 10 prompts from `00-overview.md`,
+use it daily for a week.
 
 ## Live URL
 
@@ -92,27 +105,59 @@ POST /api/auth/login (bad) → 401 { code:"AUTH" }
 GET  /api/cron/news (no auth) → 401 { code:"AUTH" }
 ```
 
-### ⚠️ Pending integrations (you sign up, paste keys, ship)
+### ⚠️ Pending integrations
 
-These are **not configured yet**. None are needed for Phase 0; they unblock
-Phase 1 features as listed.
+These configure features that already have code wired up. Setting the env
+var and redeploying is enough — no code changes needed.
 
-| Integration | Phase | Where | Notes |
+| Integration | Phase | Status | Notes |
 | --- | --- | --- | --- |
-| **Vercel AI Gateway** | 1b (chat) ✅ wired | https://vercel.com/dashboard/ai-gateway | `AI_GATEWAY_API_KEY`. `/api/chat` streams via this. |
+| **Vercel AI Gateway** | 1b (chat) | ✅ wired & key set | `AI_GATEWAY_API_KEY`. `/api/chat` streams via this. |
 | ~~Upstash Redis~~ | ~~1a~~ | n/a | **Skipped.** Phase 1a switched to Next.js Data Cache — free, persistent on Vercel, single-flight built-in. Env vars `UPSTASH_REDIS_REST_*` are accepted but optional. |
-| **Twelve Data** | 1a (FX + XAU prices, candles) ✅ wired | https://twelvedata.com | `TWELVEDATA_API_KEY`. Free tier 800 reqs/day. |
-| **Marketaux** | 1c (news) | https://marketaux.com | `MARKETAUX_API_KEY`. Free tier 100 reqs/day. |
-| **Finnhub** | 1c (news fallback, FX fallback) | https://finnhub.io | `FINNHUB_API_KEY`. Free tier 60/min. |
-| **Trading Economics** | 1c (calendar) | https://tradingeconomics.com/api | `TRADING_ECONOMICS_KEY`. Has limited free guest key. |
-| **FRED** | 1c (macro series) | https://fred.stlouisfed.org/docs/api | `FRED_API_KEY`. Free, registration only. |
-| **Alpha Vantage** | 1a (deep historicals) | https://www.alphavantage.co | Optional. `ALPHAVANTAGE_API_KEY`. Free 25/day. |
-| **Resend** | 1d (alert email) | https://resend.com | Optional alternative to Telegram. `RESEND_API_KEY`. |
-| **Telegram bot** | 2 (alert delivery) | https://t.me/BotFather | `TELEGRAM_BOT_TOKEN` + `TELEGRAM_CHAT_ID`. |
+| **Twelve Data** | 1a | ✅ wired & key set | `TWELVEDATA_API_KEY`. Free tier 800 reqs/day. |
+| **Marketaux** | 1c | ✅ wired & key set | `MARKETAUX_API_KEY`. Free tier 100 reqs/day. |
+| **FRED** | 1c | ✅ wired & key set | `FRED_API_KEY`. Free, registration only. |
+| **Finnhub** | 1c (news fallback) | ⚠️ optional | `FINNHUB_API_KEY`. Currently only the price-fallback path uses it; news fallback deferred to Phase 2. |
+| ~~Trading Economics~~ | ~~1c~~ | n/a | **Skipped.** FRED covers the calendar coverage we need; TE free guest tier is too thin to be useful. |
+| **Alpha Vantage** | 1a (deep historicals) | ⚠️ optional | `ALPHAVANTAGE_API_KEY`. Not wired in code yet. |
+| **Resend** | 1d (alert email) | ⚠️ **needed for alerts to email** | Set `RESEND_API_KEY`, `ALERT_FROM_EMAIL`, `ALERT_TO_EMAIL`. Without these, alerts evaluate + mark fired but no email goes out (logs a warning). |
+| **Telegram bot** | 2 | not yet | `TELEGRAM_BOT_TOKEN` + `TELEGRAM_CHAT_ID`. Alert delivery stub returns "deferred to Phase 2". |
 
 After signing up for any of the above, set the env vars on Vercel
 (**Settings → Environment Variables** for the project) — no redeploy needed,
 Vercel rebuilds automatically when production env changes.
+
+## Cron triggering (Hobby plan caveat)
+
+Vercel **Hobby** caps cron jobs at once-per-day. We don't have a `crons`
+block in `vercel.json`, so **none of the cron endpoints fire automatically**.
+The endpoints themselves work — they're just waiting for a trigger.
+
+Three options to fire on a useful cadence:
+
+1. **Pro upgrade** — re-add the `crons:` block to `vercel.json` per the
+   original `09-deployment.md` schedule.
+2. **External scheduler** — Fly.io tiny worker, GitHub Actions cron, or
+   [cron-job.org](https://cron-job.org) hitting:
+     ```
+     POST https://hama-fx-ai.vercel.app/api/cron/news
+     POST https://hama-fx-ai.vercel.app/api/cron/calendar
+     POST https://hama-fx-ai.vercel.app/api/cron/embedding-backfill
+     POST https://hama-fx-ai.vercel.app/api/cron/alerts
+     ```
+   each with `Authorization: Bearer ${CRON_SECRET}`.
+3. **Manual** — visit the empty-state UIs in `/news` / `/calendar` / `/alerts`
+   and copy the curl recipe shown there.
+
+Suggested cadences (when configured):
+
+| Endpoint | Cadence |
+| --- | --- |
+| `/api/cron/news` | every 5 min |
+| `/api/cron/embedding-backfill` | every 30 min |
+| `/api/cron/calendar` | every 15 min |
+| `/api/cron/alerts` | every 1–2 min |
+| `/api/cron/snapshots` | daily at 23:55 UTC (Phase 2 only) |
 
 ## Operational runbook
 

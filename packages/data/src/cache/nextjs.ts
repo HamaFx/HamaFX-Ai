@@ -29,10 +29,14 @@ async function loadNextCacheModule(): Promise<NextCacheModule | null> {
   if (nextMod) return nextMod;
   if (nextModLoadFailed) return null;
   try {
-    // Use a variable specifier so bundlers don't try to resolve `next/cache`
-    // statically when this package is consumed outside Next.
+    // The webpackIgnore comment tells webpack NOT to follow this dynamic
+    // import — it stays a runtime `import()` evaluated by Node. Without it
+    // we get a "Critical dependency: the request of a dependency is an
+    // expression" warning on every build. The package is consumed in Next
+    // (where `next/cache` resolves) and in Vitest (where it doesn't, and
+    // the catch below kicks in).
     const specifier = 'next/cache';
-    const mod = (await import(/* @vite-ignore */ specifier)) as NextCacheModule;
+    const mod = (await import(/* webpackIgnore: true */ specifier)) as NextCacheModule;
     nextMod = mod;
     return mod;
   } catch {

@@ -1,9 +1,11 @@
 // Finnhub REST client — fallback path for FX prices/candles.
 //
-// SCOPE: Phase 1a only ships the price endpoint. Full candle support and
-// 4h synthesis land in Phase 1c when we wire the news side of Finnhub too.
-// Calling `fetchCandles` today throws NO_PROVIDER_AVAILABLE so the adapter
-// failover treats Finnhub as candle-incapable and falls through correctly.
+// SCOPE: Phase 1a only ships the price endpoint. Full candle support (incl.
+// 4h synthesis from 1h bars) is deferred to Phase 2 — Twelve Data has been
+// covering the candle path comfortably and a fallback hasn't been needed in
+// practice. Calling `fetchCandles` today throws NO_PROVIDER_AVAILABLE so the
+// adapter failover treats Finnhub as candle-incapable and falls through
+// correctly.
 
 import type { Symbol } from '@hamafx/shared';
 import { z } from 'zod';
@@ -107,7 +109,7 @@ export function fetchCandles(): Promise<never> {
     new ProviderError(
       'NO_PROVIDER_AVAILABLE',
       PROVIDER,
-      'finnhub candle support is deferred to Phase 1c',
+      'finnhub candle support is deferred to Phase 2',
     ),
   );
 }
