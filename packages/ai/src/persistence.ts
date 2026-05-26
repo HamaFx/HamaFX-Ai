@@ -1,0 +1,180 @@
+// Chat persistence: load / save thread + messages, write per-turn telemetry.
+// Anything that touches Postgres lives here so route handlers stay thin.
+
+import { asc, desc, eq } from 'drizzle-orm';
+import type { ModelMessage, UIMessage } from 'ai';
+
+import { getDb, schema } from '@hamafx/db';
+import type { Symbol } from '@hamafx/shared';
+
+import { estimateCostUsd } from './cost';
+
+// ---------------------------------------------------------------------------
+// Threads
+// ---------------------------------------------------------------------------
+
+export interface DbThread {
+  id: string;
+  title: string | null;
+  pinnedSymbol: Symbol | null;
+  modelOverride: string | null;
+  createdAt: number;
+  updatedAt: number;
+}
+
+export async function listThreads(limit = 50): Promise<DbThread[]> {
+  const rows = await getDb()
+    .select()
+    .from(schema.chatThreads)
+    .orderBy(desc(schema.chatThreads.updatedAt))
+    .limit(limit);
+  return rows.map(rowToThread);
+}
+
+export async function getThread(id: string): Promise<DbThread | null> {
+  const rows = await getDb().select().from(schema.chatThreads).where(eq(schema.chatThreads.id, id)).limit(1);
+  const row = rows[0];
+  return row ? rowToThread(row) : null;
+}
+
+export async function createThread(opts: { pinnedSymbol?: Symbol | null } = {}): Promise<DbThread> {
+  const inserted = await getDb()
+    .insert(schema.chatThreads)
+    .values({
+      title: null,
+      pinnedSymbol: opts.pinnedSymbol ?? null,
+      modelOverride: null,
+    })
+    .returning();
+  const row = inserted[0]!;
+  return rowToThread(row);
+}
+
+export async function updateThreadTitle(id: string, title: string): Promise<void> {
+  await getDb().update(schema.chatThreads).set({ title }).where(eq(schema.chatThreads.id, id));
+}
+
+export async function deleteThread(id: string): Promise<void> {
+  await getDb().delete(schema.chatThreads).where(eq(schema.chatThreads.id, id));
+}
+
+function rowToThread(row: typeof schema.chatThreads.$inferSelect): DbThread {
+  return {
+    id: row.id,
+    title: row.title,
+    pinnedSymbol: row.pinnedSymbol as Symbol | null,
+    modelOverride: row.modelOverride,
+    createdAt: row.createdAt.getTime(),
+    updatedAt: row.updatedAt.getTime(),
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Messages
+// ---------------------------------------------------------------------------
+
+export interface DbMessage {
+  id: string;
+  threadId: string;
+  role: 'user' | 'assistant' | 'system' | 'tool';
+  content: string;
+  /** Vercel AI SDK v5 message-parts JSON (tool calls, tool results, etc.). */
+  parts: unknown;
+  createdAt: number;
+}
+
+export async function listMessages(threadId: string, limit = 200): Promise<DbMessage[]> {
+  const rows = await getDb()
+    .select()
+    .from(schema.chatMessages)
+    .where(eq(schema.chatMessages.threadId, threadId))
+    .orderBy(asc(schema.chatMessages.createdAt))
+    .limit(limit);
+  return rows.map((r) => ({
+    id: r.id,
+    threadId: r.threadId,
+    role: r.role as DbMessage['role'],
+    content: r.content,
+    parts: r.parts,
+    createdAt: r.createdAt.getTime(),
+  }));
+}
+
+export async function appendUserMessage(threadId: string, message: UIMessage): Promise<void> {
+  const text = extractText(message);
+  await getDb().insert(schema.chatMessages).values({
+    threadId,
+    role: 'user',
+    content: text,
+    parts: message.parts ?? null,
+  });
+  // Touch the thread so it sorts to the top of the list.
+  await getDb()
+    .update(schema.chatThreads)
+    .set({ updatedAt: new Date() })
+    .where(eq(schema.chatThreads.id, threadId));
+}
+
+export async function appendAssistantMessage(
+  threadId: string,
+  message: UIMessage,
+): Promise<{ messageId: string }> {
+  const text = extractText(message);
+  const inserted = await getDb()
+    .insert(schema.chatMessages)
+    .values({
+      threadId,
+      role: 'assistant',
+      content: text,
+      parts: message.parts ?? null,
+    })
+    .returning({ id: schema.chatMessages.id });
+  return { messageId: inserted[0]!.id };
+}
+
+/** Best-effort plain-text extraction from a UIMessage — used for search/title. */
+function extractText(m: UIMessage): string {
+  const parts = m.parts ?? [];
+  return parts
+    .map((p) => {
+      if (typeof p === 'object' && p !== null && 'type' in p) {
+        if ((p as { type: string }).type === 'text') {
+          return ((p as { text?: string }).text ?? '').trim();
+        }
+      }
+      return '';
+    })
+    .filter(Boolean)
+    .join('\n')
+    .trim();
+}
+
+// ---------------------------------------------------------------------------
+// Telemetry
+// ---------------------------------------------------------------------------
+
+export interface TelemetryInput {
+  threadId: string;
+  messageId: string | null;
+  model: string;
+  inputTokens: number;
+  outputTokens: number;
+  toolCalls: number;
+  ms: number;
+}
+
+export async function recordTelemetry(t: TelemetryInput): Promise<void> {
+  await getDb().insert(schema.chatTelemetry).values({
+    threadId: t.threadId,
+    messageId: t.messageId,
+    model: t.model,
+    inputTokens: t.inputTokens,
+    outputTokens: t.outputTokens,
+    toolCalls: t.toolCalls,
+    ms: t.ms,
+    estCostUsd: estimateCostUsd(t.model, t.inputTokens, t.outputTokens),
+  });
+}
+
+// Re-export so route handlers don't need to import directly from `ai`.
+export type { ModelMessage, UIMessage };
