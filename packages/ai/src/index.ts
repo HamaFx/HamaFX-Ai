@@ -33,3 +33,39 @@ export {
   type DbMessage,
   type TelemetryInput,
 } from './persistence';
+
+// Alerts
+export {
+  listAlerts,
+  listEvaluable,
+  getAlert,
+  createAlert,
+  updateAlert,
+  markFired,
+  deleteAlert,
+  type CreateAlertInput,
+  type UpdateAlertInput,
+} from './alerts/persistence';
+export {
+  evaluateAlerts,
+  decideMatch,
+  describeRule,
+  type EvaluatorEnv,
+  type EvaluationResult,
+  type RuleReading,
+} from './alerts/evaluator';
+export { deliverAlert, type DeliveryResult } from './alerts/delivery';
+
+// Journal
+export {
+  listEntries,
+  getEntry,
+  createEntry,
+  updateEntry,
+  deleteEntry,
+  computeRMultiple,
+  computeStats,
+  summarize,
+  type CreateJournalInput,
+  type UpdateJournalInput,
+} from './journal/persistence';
