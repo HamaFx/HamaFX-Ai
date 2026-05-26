@@ -78,7 +78,7 @@ export function EntryForm({ onCreated }: EntryFormProps) {
       onSubmit={submit}
       className="border-border bg-bg-elev-1 flex flex-col gap-3 rounded-lg border p-3"
     >
-      <h3 className="text-sm font-semibold">Log trade</h3>
+      <h2 className="text-sm font-semibold">Log trade</h2>
 
       <div className="flex gap-2">
         <Pills<Symbol>

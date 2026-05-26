@@ -88,6 +88,7 @@ function SentimentDot({ sentiment }: { sentiment: NewsSentiment | null }) {
     sentiment === 'positive' ? 'bg-bull' : sentiment === 'negative' ? 'bg-bear' : 'bg-fg-muted';
   return (
     <span
+      role="img"
       aria-label={`sentiment: ${sentiment}`}
       className={`mt-1.5 inline-block size-2 shrink-0 rounded-full ${color}`}
     />

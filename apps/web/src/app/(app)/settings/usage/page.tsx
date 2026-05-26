@@ -115,9 +115,13 @@ function DailyChart({ daily7 }: { daily7: DayBucket[] }) {
             >
               <span className="text-fg-subtle w-12 tabular-nums">{shortDate(d.date)}</span>
               <span
+                role="progressbar"
+                aria-valuenow={Math.round(pct)}
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-label={`${d.turns} turns, $${d.costUsd.toFixed(4)} spent`}
                 className="bg-brand block h-1.5 rounded-full"
                 style={{ width: `${pct}%` }}
-                aria-label={`${d.turns} turns, $${d.costUsd.toFixed(4)} spent`}
               />
               <span className="text-fg-muted w-20 text-right tabular-nums">
                 ${d.costUsd.toFixed(4)}

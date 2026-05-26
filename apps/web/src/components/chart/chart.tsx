@@ -120,6 +120,7 @@ export function Chart({
     >
       <div
         ref={containerRef}
+        role="img"
         className={cn('w-full', heightClass)}
         aria-label={`${symbol} ${tf} chart`}
       />

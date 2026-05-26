@@ -17,7 +17,7 @@ export const colors = {
   // text
   fg: 'oklch(96% 0.01 260)',
   fgMuted: 'oklch(72% 0.02 260)',
-  fgSubtle: 'oklch(55% 0.02 260)',
+  fgSubtle: 'oklch(70% 0.02 260)',
 
   // brand
   brand: 'oklch(72% 0.16 78)',
