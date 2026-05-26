@@ -4,12 +4,11 @@
 // Until that cron runs the table is empty and this tool returns an empty
 // array — that's fine, the model handles it gracefully.
 
+import { getDb, schema } from '@hamafx/db';
+import { SymbolSchema, type GetNewsOutput, type ToolNewsItem } from '@hamafx/shared';
 import { tool } from 'ai';
 import { and, desc, eq, gte, sql } from 'drizzle-orm';
 import { z } from 'zod';
-
-import { getDb, schema } from '@hamafx/db';
-import { type GetNewsOutput, SymbolSchema, type ToolNewsItem } from '@hamafx/shared';
 
 const InputSchema = z.object({
   /** Optional symbol filter. Omit to get cross-symbol macro coverage. */

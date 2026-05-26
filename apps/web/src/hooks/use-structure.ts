@@ -7,10 +7,8 @@
 // when bars close, so 30 s for intraday and 5 min for higher TFs is plenty.
 // We also pass the candle count down so the result aligns 1:1 with what
 // the chart's `useCandles` rendered.
-
-import { useQuery } from '@tanstack/react-query';
-
 import type { StructureKind, StructureResult, Symbol, Timeframe } from '@hamafx/shared';
+import { useQuery } from '@tanstack/react-query';
 
 import { fetchStructure } from '@/lib/market-client';
 
@@ -37,11 +35,7 @@ export interface UseStructureOptions {
   enabled?: boolean;
 }
 
-export function useStructure(
-  symbol: Symbol,
-  tf: Timeframe,
-  opts: UseStructureOptions = {},
-) {
+export function useStructure(symbol: Symbol, tf: Timeframe, opts: UseStructureOptions = {}) {
   const count = opts.count ?? 300;
   const lookback = opts.lookback ?? 3;
   // Stable key — order of kinds matters for the cache identity.

@@ -21,12 +21,12 @@ flowchart LR
 
 ## Model strategy
 
-| Use case                              | Model (default)                     | Rationale                              |
-| ------------------------------------- | ----------------------------------- | -------------------------------------- |
-| Main chat (TA + FA reasoning)         | `gpt-4.1` (or `claude-3.7-sonnet`)  | Strong tool-use + context.             |
-| Quick replies / titles                | `gpt-4.1-mini` / `gemini-flash`     | Cheap.                                 |
-| Embeddings                            | `text-embedding-3-small`            | Cheap, good for news.                  |
-| Vision (chart screenshot in v2)       | `gpt-4.1` / `claude-3.7-sonnet`     | Multimodal.                            |
+| Use case                        | Model (default)                    | Rationale                  |
+| ------------------------------- | ---------------------------------- | -------------------------- |
+| Main chat (TA + FA reasoning)   | `gpt-4.1` (or `claude-3.7-sonnet`) | Strong tool-use + context. |
+| Quick replies / titles          | `gpt-4.1-mini` / `gemini-flash`    | Cheap.                     |
+| Embeddings                      | `text-embedding-3-small`           | Cheap, good for news.      |
+| Vision (chart screenshot in v2) | `gpt-4.1` / `claude-3.7-sonnet`    | Multimodal.                |
 
 All routed via **Vercel AI Gateway** so swapping is one env variable.
 
@@ -34,22 +34,22 @@ All routed via **Vercel AI Gateway** so swapping is one env variable.
 
 Every tool is defined with **zod input + zod output**, a one-line description, and a `render` hint for the UI part. Tools live in `packages/ai/src/tools/`.
 
-| Tool                  | Input (zod)                                      | Output                                | UI part           |
-| --------------------- | ------------------------------------------------ | ------------------------------------- | ----------------- |
-| `get_price`           | `{ symbols: Symbol[] }`                          | `Tick[]`                              | inline price chip |
-| `get_candles`         | `{ symbol, tf, limit?, end? }`                   | `Candle[]`                            | mini chart card   |
-| `get_indicators`      | `{ symbol, tf, indicators: IndicatorReq[] }`     | `IndicatorResult[]`                   | indicator panel   |
-| `get_news`            | `{ symbol?, since?, limit?, query? }`            | `NewsArticle[]`                       | news list card    |
-| `get_calendar`        | `{ from, to, currencies?, importance? }`         | `EconomicEvent[]`                     | calendar table    |
-| `analyze_technical`   | `{ symbol, tfs: Timeframe[], style? }`           | structured analysis JSON              | analysis report   |
-| `analyze_fundamental` | `{ symbol, horizon? }`                           | structured analysis JSON              | analysis report   |
-| `search_knowledge`    | `{ query, k?, filter? }`                         | `RetrievedChunk[]`                    | citations strip   |
-| `annotate_chart`      | `{ symbol, tf, items: Annotation[] }`            | `{ annotationId }`                    | applied to chart  |
-| `set_alert`           | `{ rule: AlertRule, channel? }`                  | `{ alertId }`                         | alert receipt     |
-| `log_journal`         | `{ entry: JournalEntry }`                        | `{ entryId }`                         | journal receipt   |
-| `get_journal_stats`   | `{ from?, to?, symbol? }`                        | `JournalStats`                        | stats card        |
+| Tool                  | Input (zod)                                  | Output                   | UI part           |
+| --------------------- | -------------------------------------------- | ------------------------ | ----------------- |
+| `get_price`           | `{ symbols: Symbol[] }`                      | `Tick[]`                 | inline price chip |
+| `get_candles`         | `{ symbol, tf, limit?, end? }`               | `Candle[]`               | mini chart card   |
+| `get_indicators`      | `{ symbol, tf, indicators: IndicatorReq[] }` | `IndicatorResult[]`      | indicator panel   |
+| `get_news`            | `{ symbol?, since?, limit?, query? }`        | `NewsArticle[]`          | news list card    |
+| `get_calendar`        | `{ from, to, currencies?, importance? }`     | `EconomicEvent[]`        | calendar table    |
+| `analyze_technical`   | `{ symbol, tfs: Timeframe[], style? }`       | structured analysis JSON | analysis report   |
+| `analyze_fundamental` | `{ symbol, horizon? }`                       | structured analysis JSON | analysis report   |
+| `search_knowledge`    | `{ query, k?, filter? }`                     | `RetrievedChunk[]`       | citations strip   |
+| `annotate_chart`      | `{ symbol, tf, items: Annotation[] }`        | `{ annotationId }`       | applied to chart  |
+| `set_alert`           | `{ rule: AlertRule, channel? }`              | `{ alertId }`            | alert receipt     |
+| `log_journal`         | `{ entry: JournalEntry }`                    | `{ entryId }`            | journal receipt   |
+| `get_journal_stats`   | `{ from?, to?, symbol? }`                    | `JournalStats`           | stats card        |
 
-### Why these are *separate* tools
+### Why these are _separate_ tools
 
 Composing them is the LLM's job. By keeping each tool atomic and single-purpose:
 
@@ -65,13 +65,18 @@ Composing them is the LLM's job. By keeping each tool atomic and single-purpose:
 type TechnicalAnalysis = {
   symbol: Symbol;
   asOf: number;
-  bias: "bullish" | "bearish" | "neutral";
-  confidence: number;     // 0..1
+  bias: 'bullish' | 'bearish' | 'neutral';
+  confidence: number; // 0..1
   byTimeframe: Array<{
     tf: Timeframe;
-    structure: "uptrend" | "downtrend" | "range";
+    structure: 'uptrend' | 'downtrend' | 'range';
     keyLevels: { support: number[]; resistance: number[] };
-    indicators: { rsi?: number; ema50?: number; ema200?: number; macd?: { hist: number; signal: number } };
+    indicators: {
+      rsi?: number;
+      ema50?: number;
+      ema200?: number;
+      macd?: { hist: number; signal: number };
+    };
     pattern?: string | null;
     notes: string;
   }>;
@@ -92,7 +97,7 @@ Lives in `packages/ai/src/prompts/system.md`. Key directives (paraphrased — th
 4. State your time reference explicitly (e.g., "as of 2024-05-26 13:42 UTC").
 5. Distinguish **bias** (multi-day) from **setup** (intraday). Always give an invalidation level.
 6. Prefer concise structured answers on mobile; verbose only when asked.
-7. Do not provide financial advice; provide *analysis*. Use language like "scenario", "if X then Y", not "you should buy".
+7. Do not provide financial advice; provide _analysis_. Use language like "scenario", "if X then Y", not "you should buy".
 8. If the user asks for an alert / journal / annotation, **do** call the tool — don't just describe it.
 9. If a tool fails, surface the failure in plain language and offer alternatives.
 10. Match the user's language; default to English.
@@ -118,11 +123,12 @@ type ChatContext = {
   thread: { id: string; pinnedSymbol?: Symbol; modelOverride?: string };
   prefs: {
     defaultIndicators: IndicatorRequest[];
-    style: "concise" | "detailed";
+    style: 'concise' | 'detailed';
   };
-  liveSnapshot: {                   // small, fast — no tool call needed for ambient awareness
+  liveSnapshot: {
+    // small, fast — no tool call needed for ambient awareness
     prices: Record<Symbol, Tick>;
-    session: "asia" | "london" | "ny" | "off";
+    session: 'asia' | 'london' | 'ny' | 'off';
     nextHighImpactEvent?: EconomicEvent;
   };
 };
@@ -132,7 +138,7 @@ The snapshot is generated server-side in the route handler (cheap reads from Red
 
 ## Streaming UI parts
 
-Vercel AI SDK v5 supports custom message *parts*. Each tool maps to a part type:
+Vercel AI SDK v5 supports custom message _parts_. Each tool maps to a part type:
 
 ```ts
 type ChatPart =
@@ -167,16 +173,16 @@ Run it whenever:
 
 ## Cost / latency budgets
 
-| Metric                                | Target                  |
-| ------------------------------------- | ----------------------- |
-| Avg input tokens / turn               | ≤ 4 000                 |
-| Avg output tokens / turn              | ≤ 600                   |
-| Avg tool calls / turn                 | 1.6                     |
-| p50 first token                       | ≤ 800 ms                |
-| p95 first token                       | ≤ 2 000 ms              |
-| p95 full answer (with 2 tool calls)   | ≤ 6 000 ms              |
-| Cost / turn (gpt-4.1 baseline)        | ≤ $0.012                |
-| **Daily $ ceiling** (global)          | **$5** default — rejects new turns past it; resets UTC midnight |
+| Metric                              | Target                                                          |
+| ----------------------------------- | --------------------------------------------------------------- |
+| Avg input tokens / turn             | ≤ 4 000                                                         |
+| Avg output tokens / turn            | ≤ 600                                                           |
+| Avg tool calls / turn               | 1.6                                                             |
+| p50 first token                     | ≤ 800 ms                                                        |
+| p95 first token                     | ≤ 2 000 ms                                                      |
+| p95 full answer (with 2 tool calls) | ≤ 6 000 ms                                                      |
+| Cost / turn (gpt-4.1 baseline)      | ≤ $0.012                                                        |
+| **Daily $ ceiling** (global)        | **$5** default — rejects new turns past it; resets UTC midnight |
 
 Levers: trim system prompt, prune thread, prefer composite tools, cache candle/news reads.
 

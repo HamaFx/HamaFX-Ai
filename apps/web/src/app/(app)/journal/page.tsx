@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 
 import { PageHeader } from '@/components/layout/page-header';
+
 import { JournalView } from './_components/journal-view';
 
 export const metadata: Metadata = { title: 'Journal' };

@@ -156,9 +156,9 @@ Original Phase 1c plan was option 2 (Fly.io worker). Decision was deferred so we
 
 ## Definition of "done" per phase
 
-| Phase | Done when…                                                       |
-| ----- | ----------------------------------------------------------------- |
-| 0     | ✅ You can log into the deploy and see a styled empty shell.       |
+| Phase | Done when…                                                                            |
+| ----- | ------------------------------------------------------------------------------------- |
+| 0     | ✅ You can log into the deploy and see a styled empty shell.                          |
 | 1     | ✅ Feature-complete. Real-world acceptance still owed (re-run 10 prompts; daily use). |
-| 2     | You stopped using your old workflow because this is enough.       |
-| 3     | You drop chart screenshots and get useful analysis without typing.|
+| 2     | You stopped using your old workflow because this is enough.                           |
+| 3     | You drop chart screenshots and get useful analysis without typing.                    |

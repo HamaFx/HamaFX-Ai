@@ -2,16 +2,15 @@
 // and the AI `set_alert` tool. SQL stays here so all callers see the same
 // row → DTO mapping.
 
-import { and, asc, desc, eq, isNull } from 'drizzle-orm';
-
 import { getDb, schema } from '@hamafx/db';
 import {
+  AlertChannelSchema,
+  AlertRuleSchema,
   type Alert,
   type AlertChannel,
-  AlertRuleSchema,
   type AlertRule,
-  AlertChannelSchema,
 } from '@hamafx/shared';
+import { and, asc, desc, eq, isNull } from 'drizzle-orm';
 
 export interface CreateAlertInput {
   rule: AlertRule;
@@ -19,7 +18,9 @@ export interface CreateAlertInput {
   note?: string | null;
 }
 
-export async function listAlerts(opts: { activeOnly?: boolean; limit?: number } = {}): Promise<Alert[]> {
+export async function listAlerts(
+  opts: { activeOnly?: boolean; limit?: number } = {},
+): Promise<Alert[]> {
   const filters = [];
   if (opts.activeOnly) filters.push(eq(schema.alerts.active, true));
 

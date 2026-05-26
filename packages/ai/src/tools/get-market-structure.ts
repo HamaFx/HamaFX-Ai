@@ -6,18 +6,17 @@
 // per-candle scalars) so they live in their own envelope alongside the
 // existing get_indicators tool.
 
-import { tool } from 'ai';
-import { z } from 'zod';
-
 import { getCandles } from '@hamafx/data';
 import { computeStructure } from '@hamafx/indicators';
 import {
-  type GetMarketStructureOutput,
   StructureKindSchema,
-  type StructureResult,
   SymbolSchema,
   TimeframeSchema,
+  type GetMarketStructureOutput,
+  type StructureResult,
 } from '@hamafx/shared';
+import { tool } from 'ai';
+import { z } from 'zod';
 
 const InputSchema = z.object({
   symbol: SymbolSchema,

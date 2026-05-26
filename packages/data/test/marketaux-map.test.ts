@@ -65,7 +65,10 @@ describe('extractSymbols', () => {
 describe('aggregateSentiment', () => {
   it('returns null when no entity has a numeric score', () => {
     expect(
-      aggregateSentiment([{ symbol: 'EUR', type: 'currency' }, { symbol: 'USD', type: 'currency' }]),
+      aggregateSentiment([
+        { symbol: 'EUR', type: 'currency' },
+        { symbol: 'USD', type: 'currency' },
+      ]),
     ).toBeNull();
   });
 

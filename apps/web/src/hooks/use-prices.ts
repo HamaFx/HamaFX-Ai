@@ -5,10 +5,8 @@
 //
 // We use 1.5 s polling (same as docs/06-data-sources.md) when the tab is
 // visible; TanStack Query auto-pauses when offline / hidden.
-
-import { useQuery } from '@tanstack/react-query';
-
 import type { Symbol, Tick } from '@hamafx/shared';
+import { useQuery } from '@tanstack/react-query';
 
 import { fetchPrices } from '@/lib/market-client';
 

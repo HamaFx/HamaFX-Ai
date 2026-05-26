@@ -1,7 +1,6 @@
+import { isSymbol } from '@hamafx/shared';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-
-import { isSymbol } from '@hamafx/shared';
 
 import { ChartView } from './_components/chart-view';
 

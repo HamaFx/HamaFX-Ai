@@ -1,9 +1,9 @@
 // Shared ESLint flat config for HamaFX-Ai workspaces.
 // Apps and packages extend this by importing from "@hamafx/config/eslint".
 import js from '@eslint/js';
-import tseslint from 'typescript-eslint';
 import reactHooks from 'eslint-plugin-react-hooks';
 import globals from 'globals';
+import tseslint from 'typescript-eslint';
 
 /** @type {import("eslint").Linter.Config[]} */
 export default [

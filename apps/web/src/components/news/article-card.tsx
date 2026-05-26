@@ -25,9 +25,7 @@ export function ArticleCard({ article }: ArticleCardProps) {
       className="border-border bg-bg-elev-1 hover:bg-bg-elev-2 block rounded-lg border p-3 transition-colors"
     >
       <div className="flex items-start justify-between gap-3">
-        <h3 className="line-clamp-3 flex-1 text-sm font-semibold leading-snug">
-          {article.title}
-        </h3>
+        <h3 className="line-clamp-3 flex-1 text-sm font-semibold leading-snug">{article.title}</h3>
         {article.sentiment ? (
           <span
             className={cn('rounded-full px-1.5 py-0.5 text-[10px] font-medium', sentimentClass)}

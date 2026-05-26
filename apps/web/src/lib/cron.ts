@@ -4,8 +4,8 @@
 
 import { authError } from '@hamafx/shared';
 
-import { getAuthEnv } from './env';
 import { timingSafeEqual } from './auth';
+import { getAuthEnv } from './env';
 
 /**
  * Assert that the request carries the expected cron bearer token.
@@ -32,10 +32,7 @@ export async function withCronAuth(
     assertCronAuth(req);
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Unauthorized';
-    return Response.json(
-      { error: { code: 'AUTH', message } },
-      { status: 401 },
-    );
+    return Response.json({ error: { code: 'AUTH', message } }, { status: 401 });
   }
   try {
     const result = await fn();

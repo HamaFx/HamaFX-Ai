@@ -4,45 +4,45 @@
 
 Personal-mode: a **single Next.js deploy on Vercel** owns everything. No separate worker.
 
-| Concern                | Where it lives                                                      |
-| ---------------------- | ------------------------------------------------------------------- |
-| UI + RSC pages         | `apps/web/src/app/(app)/**`                                         |
-| API endpoints          | `apps/web/src/app/api/**` (route handlers)                          |
-| Scheduled jobs         | `apps/web/src/app/api/cron/**` triggered by **Vercel Cron**         |
-| Auth                   | `middleware.ts` checks a signed cookie set by `/api/auth/login`     |
-| DB                     | Supabase Postgres (used as a plain DB) via Drizzle                  |
-| Cache                  | Upstash Redis                                                       |
+| Concern        | Where it lives                                                  |
+| -------------- | --------------------------------------------------------------- |
+| UI + RSC pages | `apps/web/src/app/(app)/**`                                     |
+| API endpoints  | `apps/web/src/app/api/**` (route handlers)                      |
+| Scheduled jobs | `apps/web/src/app/api/cron/**` triggered by **Vercel Cron**     |
+| Auth           | `middleware.ts` checks a signed cookie set by `/api/auth/login` |
+| DB             | Supabase Postgres (used as a plain DB) via Drizzle              |
+| Cache          | Upstash Redis                                                   |
 
 ## Route map
 
 ### Auth
 
-| Route                | Method | Runtime | Purpose                                                       |
-| -------------------- | ------ | ------- | ------------------------------------------------------------- |
-| `/api/auth/login`    | POST   | Edge    | `{ password }` → if matches `APP_PASSWORD`, set signed cookie |
-| `/api/auth/logout`   | POST   | Edge    | Clear cookie                                                  |
+| Route              | Method | Runtime | Purpose                                                       |
+| ------------------ | ------ | ------- | ------------------------------------------------------------- |
+| `/api/auth/login`  | POST   | Edge    | `{ password }` → if matches `APP_PASSWORD`, set signed cookie |
+| `/api/auth/logout` | POST   | Edge    | Clear cookie                                                  |
 
 `apps/web/src/middleware.ts` ensures `(app)/*` and `/api/*` (except auth + cron) require the cookie. Cron endpoints are protected by Vercel's `CRON_SECRET` header instead.
 
 ### Chat
 
-| Route                          | Method | Runtime | Purpose                                  |
-| ------------------------------ | ------ | ------- | ---------------------------------------- |
+| Route                          | Method | Runtime | Purpose                                   |
+| ------------------------------ | ------ | ------- | ----------------------------------------- |
 | `/api/chat`                    | POST   | Node    | Streaming chat with tool-loop agent (SSE) |
-| `/api/chat/threads`            | GET    | Edge    | List threads                             |
-| `/api/chat/threads`            | POST   | Edge    | Create new thread                        |
-| `/api/chat/threads/[id]`       | GET    | Edge    | Load thread + messages                   |
-| `/api/chat/threads/[id]`       | DELETE | Edge    | Delete thread                            |
-| `/api/chat/threads/[id]/title` | POST   | Node    | Auto-title (cheap LLM call)              |
+| `/api/chat/threads`            | GET    | Edge    | List threads                              |
+| `/api/chat/threads`            | POST   | Edge    | Create new thread                         |
+| `/api/chat/threads/[id]`       | GET    | Edge    | Load thread + messages                    |
+| `/api/chat/threads/[id]`       | DELETE | Edge    | Delete thread                             |
+| `/api/chat/threads/[id]/title` | POST   | Node    | Auto-title (cheap LLM call)               |
 
 ### Market data
 
-| Route                          | Method | Runtime | Purpose                                   |
-| ------------------------------ | ------ | ------- | ----------------------------------------- |
-| `/api/market/price`            | GET    | Edge    | `?symbols=XAUUSD,EURUSD` → `Tick[]`       |
-| `/api/market/candles`          | GET    | Edge    | `?symbol=&tf=&limit=` → `Candle[]`        |
-| `/api/market/indicators`       | POST   | Edge    | Compute indicators on a candle window     |
-| `/api/market/snapshot`         | GET    | Edge    | One-shot bias + key levels per symbol     |
+| Route                    | Method | Runtime | Purpose                               |
+| ------------------------ | ------ | ------- | ------------------------------------- |
+| `/api/market/price`      | GET    | Edge    | `?symbols=XAUUSD,EURUSD` → `Tick[]`   |
+| `/api/market/candles`    | GET    | Edge    | `?symbol=&tf=&limit=` → `Candle[]`    |
+| `/api/market/indicators` | POST   | Edge    | Compute indicators on a candle window |
+| `/api/market/snapshot`   | GET    | Edge    | One-shot bias + key levels per symbol |
 
 These routes:
 
@@ -53,48 +53,48 @@ These routes:
 
 ### News & calendar
 
-| Route                          | Method | Runtime | Purpose                                           |
-| ------------------------------ | ------ | ------- | ------------------------------------------------- |
-| `/api/news`                    | GET    | Edge    | `?symbol=&limit=&since=` → `NewsArticle[]`        |
-| `/api/calendar`                | GET    | Edge    | `?from=&to=&importance=` → `EconomicEvent[]`      |
+| Route           | Method | Runtime | Purpose                                      |
+| --------------- | ------ | ------- | -------------------------------------------- |
+| `/api/news`     | GET    | Edge    | `?symbol=&limit=&since=` → `NewsArticle[]`   |
+| `/api/calendar` | GET    | Edge    | `?from=&to=&importance=` → `EconomicEvent[]` |
 
 These read from Supabase (populated by cron) — they don't hit external providers directly.
 
 ### Alerts & journal
 
-| Route                          | Method | Runtime | Purpose         |
-| ------------------------------ | ------ | ------- | --------------- |
-| `/api/alerts`                  | GET    | Edge    | List alerts     |
-| `/api/alerts`                  | POST   | Edge    | Create alert    |
-| `/api/alerts/[id]`             | DELETE | Edge    | Remove alert    |
-| `/api/journal`                 | GET    | Edge    | List entries    |
-| `/api/journal`                 | POST   | Edge    | Create entry    |
-| `/api/journal/[id]`            | PATCH  | Edge    | Edit entry      |
-| `/api/journal/[id]`            | DELETE | Edge    | Remove entry    |
-| `/api/journal/stats`           | GET    | Edge    | Aggregated stats |
+| Route                | Method | Runtime | Purpose          |
+| -------------------- | ------ | ------- | ---------------- |
+| `/api/alerts`        | GET    | Edge    | List alerts      |
+| `/api/alerts`        | POST   | Edge    | Create alert     |
+| `/api/alerts/[id]`   | DELETE | Edge    | Remove alert     |
+| `/api/journal`       | GET    | Edge    | List entries     |
+| `/api/journal`       | POST   | Edge    | Create entry     |
+| `/api/journal/[id]`  | PATCH  | Edge    | Edit entry       |
+| `/api/journal/[id]`  | DELETE | Edge    | Remove entry     |
+| `/api/journal/stats` | GET    | Edge    | Aggregated stats |
 
 ### Cron (Vercel-triggered)
 
 These are POST endpoints invoked by Vercel Cron with the `Authorization: Bearer ${CRON_SECRET}` header. Bypass the password gate; reject anything without the correct secret.
 
-| Route                         | Cadence    | Purpose                                                        |
-| ----------------------------- | ---------- | -------------------------------------------------------------- |
-| `/api/cron/news`              | every 5 min | Poll Marketaux + Finnhub news → embed → upsert into Supabase  |
-| `/api/cron/calendar`          | every 15 min | Poll Trading Economics + FRED → upsert events                |
-| `/api/cron/alerts`            | every 1 min | Evaluate active alert rules vs latest cached prices, fire     |
-| `/api/cron/snapshots`         | daily 23:55 UTC | Compute pivots, levels, ATR for next session                |
-| `/api/cron/embedding-backfill`| hourly      | Embed any rows missing vectors (small batches)                |
+| Route                          | Cadence         | Purpose                                                      |
+| ------------------------------ | --------------- | ------------------------------------------------------------ |
+| `/api/cron/news`               | every 5 min     | Poll Marketaux + Finnhub news → embed → upsert into Supabase |
+| `/api/cron/calendar`           | every 15 min    | Poll Trading Economics + FRED → upsert events                |
+| `/api/cron/alerts`             | every 1 min     | Evaluate active alert rules vs latest cached prices, fire    |
+| `/api/cron/snapshots`          | daily 23:55 UTC | Compute pivots, levels, ATR for next session                 |
+| `/api/cron/embedding-backfill` | hourly          | Embed any rows missing vectors (small batches)               |
 
 Registered in `vercel.json`:
 
 ```json
 {
   "crons": [
-    { "path": "/api/cron/news",                "schedule": "*/5 * * * *"  },
-    { "path": "/api/cron/calendar",            "schedule": "*/15 * * * *" },
-    { "path": "/api/cron/alerts",              "schedule": "* * * * *"    },
-    { "path": "/api/cron/snapshots",           "schedule": "55 23 * * *"  },
-    { "path": "/api/cron/embedding-backfill",  "schedule": "0 * * * *"    }
+    { "path": "/api/cron/news", "schedule": "*/5 * * * *" },
+    { "path": "/api/cron/calendar", "schedule": "*/15 * * * *" },
+    { "path": "/api/cron/alerts", "schedule": "* * * * *" },
+    { "path": "/api/cron/snapshots", "schedule": "55 23 * * *" },
+    { "path": "/api/cron/embedding-backfill", "schedule": "0 * * * *" }
   ]
 }
 ```
@@ -151,11 +151,11 @@ Status codes: 400 (validation), 401 (auth), 404, 503 (provider), 500 (internal).
 
 ## Performance targets
 
-| Endpoint                           | p50      | p95      |
-| ---------------------------------- | -------- | -------- |
-| `GET /api/market/price`            | < 80 ms  | < 250 ms |
-| `GET /api/market/candles` (cached) | < 120 ms | < 350 ms |
+| Endpoint                           | p50      | p95       |
+| ---------------------------------- | -------- | --------- |
+| `GET /api/market/price`            | < 80 ms  | < 250 ms  |
+| `GET /api/market/candles` (cached) | < 120 ms | < 350 ms  |
 | `GET /api/market/candles` (cold)   | < 600 ms | < 1500 ms |
 | `POST /api/chat` first token       | < 800 ms | < 2000 ms |
-| `GET /api/news`                    | < 120 ms | < 300 ms |
-| `GET /api/calendar`                | < 120 ms | < 300 ms |
+| `GET /api/news`                    | < 120 ms | < 300 ms  |
+| `GET /api/calendar`                | < 120 ms | < 300 ms  |

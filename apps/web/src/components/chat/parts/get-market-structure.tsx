@@ -51,8 +51,8 @@ export function GetMarketStructurePart({
   return (
     <div className="border-border bg-bg-elev-1 rounded-lg border p-3">
       <div className="text-fg-muted mb-2 text-xs">
-        <span className="text-fg font-medium">{output.symbol}</span> · {output.tf} ·
-        structure (<span className="tabular-nums">{output.bars}</span> bars)
+        <span className="text-fg font-medium">{output.symbol}</span> · {output.tf} · structure (
+        <span className="tabular-nums">{output.bars}</span> bars)
       </div>
 
       {output.summary ? (
@@ -60,8 +60,8 @@ export function GetMarketStructurePart({
       ) : null}
 
       <div className="text-fg-subtle mb-2 text-[11px] tabular-nums">
-        {swings.length} swings · {events.length} events · {fvgs.length} FVG ·{' '}
-        {obs.length} OB · {sweeps.length} sweeps
+        {swings.length} swings · {events.length} events · {fvgs.length} FVG · {obs.length} OB ·{' '}
+        {sweeps.length} sweeps
       </div>
 
       {lastEvents.length > 0 ? (
@@ -72,8 +72,7 @@ export function GetMarketStructurePart({
               className="flex min-h-[44px] items-center justify-between gap-2 text-sm"
             >
               <span className="text-fg-muted">
-                {e.kind.toUpperCase()} @ bar{' '}
-                <span className="tabular-nums">{e.brokenAt}</span>
+                {e.kind.toUpperCase()} @ bar <span className="tabular-nums">{e.brokenAt}</span>
               </span>
               <span className="flex items-baseline gap-2">
                 <span
@@ -103,11 +102,7 @@ export function GetMarketStructurePart({
                 swing-{s.type} @ bar <span className="tabular-nums">{s.index}</span>
               </span>
               <span
-                className={
-                  s.type === 'high'
-                    ? 'text-bull tabular-nums'
-                    : 'text-bear tabular-nums'
-                }
+                className={s.type === 'high' ? 'text-bull tabular-nums' : 'text-bear tabular-nums'}
               >
                 {s.price.toFixed(decimals)}
               </span>
@@ -131,10 +126,7 @@ function StructureSkeleton() {
       <div className="bg-bg-elev-2 mb-2 h-3 w-40 animate-pulse rounded" />
       <ul className="space-y-1">
         {[0, 1, 2].map((i) => (
-          <li
-            key={i}
-            className="flex min-h-[44px] items-center justify-between gap-2"
-          >
+          <li key={i} className="flex min-h-[44px] items-center justify-between gap-2">
             <span className="bg-bg-elev-2 h-4 w-24 animate-pulse rounded" />
             <span className="bg-bg-elev-2 h-4 w-20 animate-pulse rounded" />
           </li>

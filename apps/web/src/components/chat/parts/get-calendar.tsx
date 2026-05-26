@@ -42,10 +42,8 @@ export function GetCalendarPart({ output, state, errorMessage }: GetCalendarPart
   if (output.pipelinePending) {
     return (
       <div className="border-border bg-bg-elev-1 text-fg-muted rounded-lg border p-3 text-sm">
-        Calendar pipeline hasn&apos;t populated the DB yet. Trigger the
-        {' '}
-        <code className="bg-bg-elev-2 rounded px-1 py-0.5 text-[10px]">/api/cron/calendar</code>
-        {' '}
+        Calendar pipeline hasn&apos;t populated the DB yet. Trigger the{' '}
+        <code className="bg-bg-elev-2 rounded px-1 py-0.5 text-[10px]">/api/cron/calendar</code>{' '}
         cron once and try again.
       </div>
     );
@@ -83,10 +81,7 @@ function CalendarRow({ item }: { item: ToolCalendarItem }) {
       href={`/calendar?id=${encodeURIComponent(item.id)}`}
       className="focus-visible:ring-fg-muted hover:bg-bg-elev-2 flex min-h-[44px] items-center gap-2.5 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2"
     >
-      <time
-        dateTime={iso}
-        className="text-fg-muted w-12 shrink-0 text-xs tabular-nums"
-      >
+      <time dateTime={iso} className="text-fg-muted w-12 shrink-0 text-xs tabular-nums">
         {formatHHmmUtc(item.date)}
       </time>
 

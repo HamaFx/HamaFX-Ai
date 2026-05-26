@@ -2,10 +2,8 @@
 
 // Journal entries list. Open trades show a "Close…" button that pops the
 // inline close form. Closed trades show their R-multiple + outcome.
-
-import { useState } from 'react';
-
 import type { JournalEntry } from '@hamafx/shared';
+import { useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -83,7 +81,11 @@ function EntryRow({
 
   const sideColor = entry.side === 'long' ? 'text-bull' : 'text-bear';
   const outcomeColor =
-    entry.outcome === 'win' ? 'text-bull' : entry.outcome === 'loss' ? 'text-bear' : 'text-fg-muted';
+    entry.outcome === 'win'
+      ? 'text-bull'
+      : entry.outcome === 'loss'
+        ? 'text-bear'
+        : 'text-fg-muted';
 
   return (
     <li className="border-border bg-bg-elev-1 flex flex-col gap-2 rounded-lg border p-3">
@@ -136,7 +138,14 @@ function EntryRow({
               ) : null}
             </span>
           )}
-          <Button type="button" size="sm" variant="ghost" className="text-bear" onClick={remove} disabled={busy}>
+          <Button
+            type="button"
+            size="sm"
+            variant="ghost"
+            className="text-bear"
+            onClick={remove}
+            disabled={busy}
+          >
             ✕
           </Button>
         </div>
@@ -145,7 +154,10 @@ function EntryRow({
       {closing ? (
         <div className="border-border flex items-end gap-2 border-t pt-2">
           <div className="flex-1">
-            <label className="text-fg-subtle text-[11px] uppercase tracking-wide" htmlFor={`exit-${entry.id}`}>
+            <label
+              className="text-fg-subtle text-[11px] uppercase tracking-wide"
+              htmlFor={`exit-${entry.id}`}
+            >
               Exit price
             </label>
             <Input

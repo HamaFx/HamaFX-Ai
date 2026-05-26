@@ -11,9 +11,8 @@
 // throttle here. If we later need to cap spend on embeddings specifically,
 // add a counter alongside `chat_telemetry`.
 
-import { embedMany } from 'ai';
-
 import type { ServerEnv } from '@hamafx/shared';
+import { embedMany } from 'ai';
 
 const DEFAULT_MODEL = 'openai/text-embedding-3-small';
 

@@ -6,8 +6,6 @@
 // envelope from /api/market/indicators because SMC events are sparse —
 // see packages/shared/src/schemas/structure.ts for the rationale.
 
-import { z } from 'zod';
-
 import { getCandles } from '@hamafx/data';
 import { computeStructure } from '@hamafx/indicators';
 import {
@@ -16,6 +14,7 @@ import {
   SymbolSchema,
   TimeframeSchema,
 } from '@hamafx/shared';
+import { z } from 'zod';
 
 import { errorResponse, parseJsonBody } from '@/lib/api';
 

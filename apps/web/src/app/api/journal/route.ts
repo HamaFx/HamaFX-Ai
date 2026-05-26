@@ -1,9 +1,8 @@
 // /api/journal — list (with optional symbol filter) / create.
 
-import { z } from 'zod';
-
-import { SymbolSchema, TradeSideSchema } from '@hamafx/shared';
 import { computeStats, createEntry, listEntries } from '@hamafx/ai';
+import { SymbolSchema, TradeSideSchema } from '@hamafx/shared';
+import { z } from 'zod';
 
 import { errorResponse, parseJsonBody } from '@/lib/api';
 

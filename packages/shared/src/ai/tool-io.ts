@@ -25,7 +25,6 @@ import type { GetNewsOutputSchema } from '../schemas/tool-outputs/get-news';
 import type { GetPriceOutputSchema } from '../schemas/tool-outputs/get-price';
 import type { LogJournalOutputSchema } from '../schemas/tool-outputs/log-journal';
 import type { SetAlertOutputSchema } from '../schemas/tool-outputs/set-alert';
-
 import type { ToolName } from './tool-names';
 
 /**

@@ -12,9 +12,8 @@
 
 'use client';
 
-import Link from 'next/link';
-
 import type { SetAlertOutput } from '@hamafx/shared';
+import Link from 'next/link';
 
 interface SetAlertPartProps {
   /** Tool output, or `null` while streaming / before completion. */
@@ -41,9 +40,7 @@ export function SetAlertPart({ output, state, errorMessage }: SetAlertPartProps)
         </span>
         <div className="min-w-0 flex-1">
           <div className="text-fg-muted text-xs">Alert created</div>
-          <div className="text-fg mt-0.5 break-words text-sm font-medium">
-            {output.describes}
-          </div>
+          <div className="text-fg mt-0.5 break-words text-sm font-medium">{output.describes}</div>
         </div>
       </div>
       <Link
@@ -51,9 +48,9 @@ export function SetAlertPart({ output, state, errorMessage }: SetAlertPartProps)
         prefetch
         className={
           'focus-visible:ring-brand mt-2 inline-flex min-h-[44px] min-w-[44px] ' +
-          'items-center justify-center rounded-md px-3 text-sm font-medium ' +
-          'text-brand underline-offset-2 hover:underline ' +
-          'focus-visible:ring-2 focus-visible:outline-none'
+          'items-center justify-center rounded-md px-3 text-sm font-medium' +
+          'text-brand underline-offset-2 hover:underline' +
+          'focus-visible:outline-none focus-visible:ring-2'
         }
       >
         View in Alerts →

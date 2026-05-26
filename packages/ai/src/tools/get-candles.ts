@@ -4,11 +4,10 @@
 // `get_indicators` when they only need derived values — it's smaller in
 // the prompt and the model can't accidentally hallucinate over noisy bars.
 
+import { getCandles } from '@hamafx/data';
+import { SymbolSchema, TimeframeSchema, type GetCandlesOutput } from '@hamafx/shared';
 import { tool } from 'ai';
 import { z } from 'zod';
-
-import { getCandles } from '@hamafx/data';
-import { type GetCandlesOutput, SymbolSchema, TimeframeSchema } from '@hamafx/shared';
 
 const InputSchema = z.object({
   symbol: SymbolSchema,

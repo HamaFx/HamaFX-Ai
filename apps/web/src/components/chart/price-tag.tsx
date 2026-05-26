@@ -2,7 +2,6 @@
 
 // Live price readout for the chart header. Subscribes to the global price
 // poller so multiple tags on the same page share one upstream call.
-
 import { priceDecimals, type Symbol } from '@hamafx/shared';
 
 import { usePrice } from '@/hooks/use-prices';
@@ -23,9 +22,7 @@ export function PriceTag({ symbol, referencePrice, className }: PriceTagProps) {
   const decimals = priceDecimals(symbol);
 
   if (isLoading) {
-    return (
-      <span className={cn('text-fg-subtle text-xs tabular-nums', className)}>loading…</span>
-    );
+    return <span className={cn('text-fg-subtle text-xs tabular-nums', className)}>loading…</span>;
   }
   if (isError || !tick) {
     return (

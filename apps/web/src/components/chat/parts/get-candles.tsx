@@ -14,8 +14,8 @@
 
 import {
   priceDecimals,
-  type pipSize as sharedPipSize,
   type GetCandlesOutput,
+  type pipSize as sharedPipSize,
   type Symbol,
 } from '@hamafx/shared';
 
@@ -64,10 +64,7 @@ export function GetCandlesPart({ output, state, errorMessage }: GetCandlesPartPr
           <span className="text-fg font-medium">{output.symbol}</span> · {output.tf} · last{' '}
           {output.candles.length} {output.candles.length === 1 ? 'bar' : 'bars'}
         </span>
-        <time
-          dateTime={new Date(last.t).toISOString()}
-          className="text-fg-subtle tabular-nums"
-        >
+        <time dateTime={new Date(last.t).toISOString()} className="text-fg-subtle tabular-nums">
           {formatBarTime(last.t)}
         </time>
       </div>
@@ -99,9 +96,7 @@ export function GetCandlesPart({ output, state, errorMessage }: GetCandlesPartPr
                 <time dateTime={new Date(c.t).toISOString()} className="text-fg-subtle">
                   {formatBarTime(c.t)}
                 </time>
-                <span className={barBull ? 'text-bull' : 'text-bear'}>
-                  {c.c.toFixed(decimals)}
-                </span>
+                <span className={barBull ? 'text-bull' : 'text-bear'}>{c.c.toFixed(decimals)}</span>
               </li>
             );
           })}

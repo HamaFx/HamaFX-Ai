@@ -293,16 +293,16 @@ packages/config/
 
 ## Naming conventions (strict)
 
-| Scope                       | Convention                          | Example                          |
-| --------------------------- | ----------------------------------- | -------------------------------- |
-| Files (TS/TSX)              | `kebab-case.ts(x)`                  | `price-tile.tsx`                 |
-| React components            | `PascalCase`                        | `PriceTile`                      |
-| Hooks                       | `use-` prefix, file kebab           | `use-prices.ts` → `usePrices()`  |
-| Zod schemas                 | `XSchema`, type `X`                 | `CandleSchema`, `Candle`         |
-| Constants                   | `SCREAMING_SNAKE`                   | `DEFAULT_TIMEFRAME`              |
-| Env vars                    | `SCREAMING_SNAKE`, prefixed         | `NEXT_PUBLIC_*`                  |
-| Folder for vertical feature | singular noun                       | `chat/`, `journal/`              |
-| Test files                  | colocated `.test.ts(x)` or `.e2e.ts`| `price-tile.test.tsx`            |
+| Scope                       | Convention                           | Example                         |
+| --------------------------- | ------------------------------------ | ------------------------------- |
+| Files (TS/TSX)              | `kebab-case.ts(x)`                   | `price-tile.tsx`                |
+| React components            | `PascalCase`                         | `PriceTile`                     |
+| Hooks                       | `use-` prefix, file kebab            | `use-prices.ts` → `usePrices()` |
+| Zod schemas                 | `XSchema`, type `X`                  | `CandleSchema`, `Candle`        |
+| Constants                   | `SCREAMING_SNAKE`                    | `DEFAULT_TIMEFRAME`             |
+| Env vars                    | `SCREAMING_SNAKE`, prefixed          | `NEXT_PUBLIC_*`                 |
+| Folder for vertical feature | singular noun                        | `chat/`, `journal/`             |
+| Test files                  | colocated `.test.ts(x)` or `.e2e.ts` | `price-tile.test.tsx`           |
 
 ## Path aliases
 
@@ -312,13 +312,13 @@ In `tsconfig.base.json`:
 {
   "compilerOptions": {
     "paths": {
-      "@/*":          ["apps/web/src/*"],
-      "@ui/*":        ["packages/ui/src/*"],
-      "@shared/*":    ["packages/shared/src/*"],
-      "@ai/*":        ["packages/ai/src/*"],
-      "@data/*":      ["packages/data/src/*"],
-      "@indicators/*":["packages/indicators/src/*"],
-      "@db/*":        ["packages/db/src/*"]
+      "@/*": ["apps/web/src/*"],
+      "@ui/*": ["packages/ui/src/*"],
+      "@shared/*": ["packages/shared/src/*"],
+      "@ai/*": ["packages/ai/src/*"],
+      "@data/*": ["packages/data/src/*"],
+      "@indicators/*": ["packages/indicators/src/*"],
+      "@db/*": ["packages/db/src/*"]
     }
   }
 }
@@ -326,15 +326,15 @@ In `tsconfig.base.json`:
 
 Rule: **never** import across packages with relative `../../`. Always use the alias. Enforced via ESLint `no-restricted-imports`.
 
-## "Where do I put a new ___?" cheat sheet
+## "Where do I put a new \_\_\_?" cheat sheet
 
-| New thing                              | Goes in                                                |
-| -------------------------------------- | ------------------------------------------------------ |
-| New AI tool                            | `packages/ai/src/tools/<name>.ts` + register in index  |
-| New indicator                          | `packages/indicators/src/<name>.ts`                    |
-| New data provider                      | `packages/data/src/providers/<name>/`                  |
-| New DB table                           | `packages/db/src/schema/<name>.ts` + migration         |
-| New page                               | `apps/web/src/app/(app)/<route>/page.tsx`              |
-| New shared zod schema / type           | `packages/shared/src/schemas/<name>.ts`                |
-| New cron job                           | `apps/web/src/app/api/cron/<name>/route.ts` + register in `vercel.json` |
-| Project-wide tailwind token            | `packages/ui/src/tokens/<group>.ts`                    |
+| New thing                    | Goes in                                                                 |
+| ---------------------------- | ----------------------------------------------------------------------- |
+| New AI tool                  | `packages/ai/src/tools/<name>.ts` + register in index                   |
+| New indicator                | `packages/indicators/src/<name>.ts`                                     |
+| New data provider            | `packages/data/src/providers/<name>/`                                   |
+| New DB table                 | `packages/db/src/schema/<name>.ts` + migration                          |
+| New page                     | `apps/web/src/app/(app)/<route>/page.tsx`                               |
+| New shared zod schema / type | `packages/shared/src/schemas/<name>.ts`                                 |
+| New cron job                 | `apps/web/src/app/api/cron/<name>/route.ts` + register in `vercel.json` |
+| Project-wide tailwind token  | `packages/ui/src/tokens/<group>.ts`                                     |

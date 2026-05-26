@@ -20,7 +20,7 @@
   /* text */
   --color-fg: oklch(96% 0.01 260);
   --color-fg-muted: oklch(72% 0.02 260);
-  --color-fg-subtle: oklch(55% 0.02 260);
+  --color-fg-subtle: oklch(70% 0.02 260);
 
   /* brand */
   --color-brand: oklch(72% 0.16 78);
@@ -54,7 +54,7 @@
   --color-border: oklch(88% 0.005 260);
   --color-fg: oklch(22% 0.02 260);
   --color-fg-muted: oklch(45% 0.02 260);
-  --color-fg-subtle: oklch(60% 0.02 260);
+  --color-fg-subtle: oklch(48% 0.02 260);
 }
 
 /* -------------------------------------------------------------------------

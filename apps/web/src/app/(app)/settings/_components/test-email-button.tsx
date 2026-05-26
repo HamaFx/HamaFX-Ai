@@ -6,7 +6,6 @@
 //   - 200 { id }            -> "Sent · message id: <id>"
 //   - 503 { missing: [..] } -> "Missing env: A, B, C"
 //   - other non-2xx         -> "Error: <text>"
-
 import { useState, useTransition } from 'react';
 
 import { Button } from '@/components/ui/button';
@@ -90,16 +89,12 @@ export function TestEmailButton(): React.JSX.Element {
         onClick={send}
         loading={pending}
         aria-busy={pending}
-        className="min-h-[44px] min-w-[44px] focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-bg focus-visible:outline-none"
+        className="focus-visible:ring-brand focus-visible:ring-offset-bg min-h-[44px] min-w-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
       >
         {pending ? 'Sending…' : 'Send test alert email'}
       </Button>
 
-      <p
-        role="status"
-        aria-live="polite"
-        className="text-fg-muted min-h-[1.25rem] text-sm"
-      >
+      <p role="status" aria-live="polite" className="text-fg-muted min-h-[1.25rem] text-sm">
         {result.kind === 'sent' ? (
           <span className="text-fg-muted">
             Sent · message id: <span className="tabular-nums">{result.id}</span>

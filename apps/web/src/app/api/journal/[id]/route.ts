@@ -1,9 +1,8 @@
 // /api/journal/[id] — read / patch (close, edit) / delete.
 
-import { z } from 'zod';
-
-import { TradeOutcomeSchema } from '@hamafx/shared';
 import { deleteEntry, getEntry, updateEntry } from '@hamafx/ai';
+import { TradeOutcomeSchema } from '@hamafx/shared';
+import { z } from 'zod';
 
 import { errorResponse, parseJsonBody } from '@/lib/api';
 
@@ -19,7 +18,10 @@ export async function GET(_req: Request, ctx: Ctx): Promise<Response> {
     const { id } = await ctx.params;
     const entry = await getEntry(id);
     if (!entry) {
-      return Response.json({ error: { code: 'NOT_FOUND', message: 'entry not found' } }, { status: 404 });
+      return Response.json(
+        { error: { code: 'NOT_FOUND', message: 'entry not found' } },
+        { status: 404 },
+      );
     }
     return Response.json({ entry });
   } catch (err) {
@@ -44,7 +46,10 @@ export async function PATCH(req: Request, ctx: Ctx): Promise<Response> {
     const input = await parseJsonBody(req, PatchSchema);
     const entry = await updateEntry(id, input);
     if (!entry) {
-      return Response.json({ error: { code: 'NOT_FOUND', message: 'entry not found' } }, { status: 404 });
+      return Response.json(
+        { error: { code: 'NOT_FOUND', message: 'entry not found' } },
+        { status: 404 },
+      );
     }
     return Response.json({ entry });
   } catch (err) {

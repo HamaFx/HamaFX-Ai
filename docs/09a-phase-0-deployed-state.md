@@ -65,14 +65,14 @@ mode, `prepare: false` enforced by the Drizzle client).
 
 ### Extensions installed
 
-| Extension | Schema | Version |
-| --- | --- | --- |
-| `plpgsql` | `pg_catalog` | 1.0 |
-| `pgcrypto` | `extensions` | 1.3 |
-| `uuid-ossp` | `extensions` | 1.1 |
-| `vector` | `extensions` | 0.8.0 |
-| `pg_stat_statements` | `extensions` | 1.11 |
-| `supabase_vault` | `vault` | 0.3.1 |
+| Extension            | Schema       | Version |
+| -------------------- | ------------ | ------- |
+| `plpgsql`            | `pg_catalog` | 1.0     |
+| `pgcrypto`           | `extensions` | 1.3     |
+| `uuid-ossp`          | `extensions` | 1.1     |
+| `vector`             | `extensions` | 0.8.0   |
+| `pg_stat_statements` | `extensions` | 1.11    |
+| `supabase_vault`     | `vault`      | 0.3.1   |
 
 `vector` and `pgcrypto` are required by our schema; install via
 `pnpm --filter @hamafx/db migrate:setup-extensions` before the first
@@ -80,17 +80,17 @@ mode, `prepare: false` enforced by the Drizzle client).
 
 ### Schema (migration `0000_lazy_red_shift.sql`, applied)
 
-| Table | Purpose |
-| --- | --- |
-| `chat_threads`     | one row per conversation |
-| `chat_messages`    | per-turn messages (parts as JSONB for tool UI) |
-| `alerts`           | price / indicator / candle-close rules |
-| `journal_entries`  | manual trade entries (no `user_id`, single user) |
-| `news_articles`    | curated news, deduped by sha1(url) |
-| `news_embeddings`  | pgvector(1536) — cosine HNSW index for RAG |
-| `economic_events`  | macro calendar from TE + FRED |
-| `snapshots`        | daily HLOC / pivots / ATR per symbol |
-| `chat_telemetry`   | tokens + cost per chat turn (drives /settings/usage) |
+| Table             | Purpose                                              |
+| ----------------- | ---------------------------------------------------- |
+| `chat_threads`    | one row per conversation                             |
+| `chat_messages`   | per-turn messages (parts as JSONB for tool UI)       |
+| `alerts`          | price / indicator / candle-close rules               |
+| `journal_entries` | manual trade entries (no `user_id`, single user)     |
+| `news_articles`   | curated news, deduped by sha1(url)                   |
+| `news_embeddings` | pgvector(1536) — cosine HNSW index for RAG           |
+| `economic_events` | macro calendar from TE + FRED                        |
+| `snapshots`       | daily HLOC / pivots / ATR per symbol                 |
+| `chat_telemetry`  | tokens + cost per chat turn (drives /settings/usage) |
 
 17 indexes total, including the HNSW `news_embeddings_hnsw_idx` for vector
 similarity search.
@@ -110,18 +110,18 @@ GET  /api/cron/news (no auth) → 401 { code:"AUTH" }
 These configure features that already have code wired up. Setting the env
 var and redeploying is enough — no code changes needed.
 
-| Integration | Phase | Status | Notes |
-| --- | --- | --- | --- |
-| **Vercel AI Gateway** | 1b (chat) | ✅ wired & key set | `AI_GATEWAY_API_KEY`. `/api/chat` streams via this. |
-| ~~Upstash Redis~~ | ~~1a~~ | n/a | **Skipped.** Phase 1a switched to Next.js Data Cache — free, persistent on Vercel, single-flight built-in. Env vars `UPSTASH_REDIS_REST_*` are accepted but optional. |
-| **Twelve Data** | 1a | ✅ wired & key set | `TWELVEDATA_API_KEY`. Free tier 800 reqs/day. |
-| **Marketaux** | 1c | ✅ wired & key set | `MARKETAUX_API_KEY`. Free tier 100 reqs/day. |
-| **FRED** | 1c | ✅ wired & key set | `FRED_API_KEY`. Free, registration only. |
-| **Finnhub** | 1c (news fallback) | ⚠️ optional | `FINNHUB_API_KEY`. Currently only the price-fallback path uses it; news fallback deferred to Phase 2. |
-| ~~Trading Economics~~ | ~~1c~~ | n/a | **Skipped.** FRED covers the calendar coverage we need; TE free guest tier is too thin to be useful. |
-| **Alpha Vantage** | 1a (deep historicals) | ⚠️ optional | `ALPHAVANTAGE_API_KEY`. Not wired in code yet. |
-| **Resend** | 1d (alert email) | ⚠️ **needed for alerts to email** | Set `RESEND_API_KEY`, `ALERT_FROM_EMAIL`, `ALERT_TO_EMAIL`. Without these, alerts evaluate + mark fired but no email goes out (logs a warning). |
-| **Telegram bot** | 2 | not yet | `TELEGRAM_BOT_TOKEN` + `TELEGRAM_CHAT_ID`. Alert delivery stub returns "deferred to Phase 2". |
+| Integration           | Phase                 | Status                            | Notes                                                                                                                                                                 |
+| --------------------- | --------------------- | --------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Vercel AI Gateway** | 1b (chat)             | ✅ wired & key set                | `AI_GATEWAY_API_KEY`. `/api/chat` streams via this.                                                                                                                   |
+| ~~Upstash Redis~~     | ~~1a~~                | n/a                               | **Skipped.** Phase 1a switched to Next.js Data Cache — free, persistent on Vercel, single-flight built-in. Env vars `UPSTASH_REDIS_REST_*` are accepted but optional. |
+| **Twelve Data**       | 1a                    | ✅ wired & key set                | `TWELVEDATA_API_KEY`. Free tier 800 reqs/day.                                                                                                                         |
+| **Marketaux**         | 1c                    | ✅ wired & key set                | `MARKETAUX_API_KEY`. Free tier 100 reqs/day.                                                                                                                          |
+| **FRED**              | 1c                    | ✅ wired & key set                | `FRED_API_KEY`. Free, registration only.                                                                                                                              |
+| **Finnhub**           | 1c (news fallback)    | ⚠️ optional                       | `FINNHUB_API_KEY`. Currently only the price-fallback path uses it; news fallback deferred to Phase 2.                                                                 |
+| ~~Trading Economics~~ | ~~1c~~                | n/a                               | **Skipped.** FRED covers the calendar coverage we need; TE free guest tier is too thin to be useful.                                                                  |
+| **Alpha Vantage**     | 1a (deep historicals) | ⚠️ optional                       | `ALPHAVANTAGE_API_KEY`. Not wired in code yet.                                                                                                                        |
+| **Resend**            | 1d (alert email)      | ⚠️ **needed for alerts to email** | Set `RESEND_API_KEY`, `ALERT_FROM_EMAIL`, `ALERT_TO_EMAIL`. Without these, alerts evaluate + mark fired but no email goes out (logs a warning).                       |
+| **Telegram bot**      | 2                     | not yet                           | `TELEGRAM_BOT_TOKEN` + `TELEGRAM_CHAT_ID`. Alert delivery stub returns "deferred to Phase 2".                                                                         |
 
 After signing up for any of the above, set the env vars on Vercel
 (**Settings → Environment Variables** for the project) — no redeploy needed,
@@ -133,12 +133,12 @@ We've chosen **GitHub Actions external scheduler** over Vercel Pro. Configuratio
 
 ### Schedule
 
-| Endpoint                       | Workflow                            | Cadence (UTC)      | Per-hour |
-|--------------------------------|-------------------------------------|---------------------|---------:|
-| `/api/cron/news`               | `cron-news.yml`                     | `*/5 * * * *`       | 12       |
-| `/api/cron/calendar`           | `cron-calendar.yml`                 | `*/15 * * * *`      | 4        |
-| `/api/cron/alerts`             | `cron-alerts.yml`                   | `*/5 * * * *`       | 12       |
-| `/api/cron/embedding-backfill` | `cron-embedding-backfill.yml`       | `*/30 * * * *`      | 2        |
+| Endpoint                       | Workflow                      | Cadence (UTC)  | Per-hour |
+| ------------------------------ | ----------------------------- | -------------- | -------: |
+| `/api/cron/news`               | `cron-news.yml`               | `*/5 * * * *`  |       12 |
+| `/api/cron/calendar`           | `cron-calendar.yml`           | `*/15 * * * *` |        4 |
+| `/api/cron/alerts`             | `cron-alerts.yml`             | `*/5 * * * *`  |       12 |
+| `/api/cron/embedding-backfill` | `cron-embedding-backfill.yml` | `*/30 * * * *` |        2 |
 
 GitHub Actions cron has 5-minute minimum granularity; sub-5-minute cadences are not possible without an external scheduler.
 

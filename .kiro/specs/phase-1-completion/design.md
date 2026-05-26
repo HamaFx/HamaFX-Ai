@@ -134,16 +134,16 @@ import type { ServerEnv } from '@hamafx/shared';
 
 export interface GenerateTitleArgs {
   threadId: string;
-  firstUser: string;       // plain text of first user UIMessage
-  firstAssistant: string;  // plain text of first assistant UIMessage
+  firstUser: string; // plain text of first user UIMessage
+  firstAssistant: string; // plain text of first assistant UIMessage
   env: Pick<ServerEnv, 'AI_TITLE_MODEL' | 'MAX_DAILY_USD' | 'LOG_PROMPTS'>;
   signal?: AbortSignal;
 }
 
 export interface GenerateTitleResult {
-  title: string;                     // ≤ 60 codepoints, trimmed
+  title: string; // ≤ 60 codepoints, trimmed
   source: 'llm' | 'fallback';
-  reason?: 'budget' | 'empty' | 'error';   // populated only when source='fallback'
+  reason?: 'budget' | 'empty' | 'error'; // populated only when source='fallback'
 }
 
 export function generateTitle(args: GenerateTitleArgs): Promise<GenerateTitleResult>;
@@ -153,6 +153,7 @@ export function deterministicFallbackTitle(firstUser: string): string;
 ```
 
 **Behavior:**
+
 - If `dailySpendUsd() >= env.MAX_DAILY_USD` → return `{ source: 'fallback', reason: 'budget', title: deterministicFallbackTitle(firstUser) }`. Caller records telemetry with `kind='title_skipped_budget'`.
 - Otherwise call `generateText` (non-streaming, AI SDK v5) against `env.AI_TITLE_MODEL` via the existing AI Gateway plumbing (no provider SDK).
 - System prompt: `"Reply with a 3–7 word title for this conversation. No quotes. No trailing punctuation."`
@@ -220,20 +221,22 @@ apps/web/src/components/chat/parts/
 
 ```tsx
 // registry.tsx
-import type { ComponentType } from 'react';
 import type { ToolName } from '@hamafx/shared';
 import type { ToolOutput } from '@hamafx/shared/ai/tool-io';
+import type { ComponentType } from 'react';
 
-import { ToolCard } from '@/components/chat/tool-card';                  // existing fallback
-import { GetPricePart } from './get-price';
+import { ToolCard } from '@/components/chat/tool-card'; // existing fallback
+
 import { GetCandlesPart } from './get-candles';
+import { GetPricePart } from './get-price';
+
 // ... etc.
 
 export type ToolPartName = ToolName;
 export type ToolPartState = 'loading' | 'done' | 'error';
 
 export interface ToolPartProps<T extends ToolName> {
-  output: ToolOutput<T> | null;        // null while loading or on error
+  output: ToolOutput<T> | null; // null while loading or on error
   state: ToolPartState;
   errorMessage?: string;
 }
@@ -252,7 +255,7 @@ export const partRegistry: { [K in ToolName]: ComponentType<ToolPartProps<K>> } 
 };
 
 export function ChatToolPart<T extends ToolName>(props: {
-  name: string;                        // raw name from stream — could be unknown
+  name: string; // raw name from stream — could be unknown
   output: unknown;
   state: ToolPartState;
   errorMessage?: string;
@@ -270,6 +273,7 @@ export function ChatToolPart<T extends ToolName>(props: {
 ```
 
 **Per-part rules** (mobile-first, server components by default):
+
 - `get_price` / `get_candles` / `get_indicators` / `get_market_structure`: `.tabular-nums` + `text-bull` / `text-bear` for sign. Pure server components.
 - `get_news`: server component. List of `<NewsItemRow>` with title, source, ISO timestamp via `<time dateTime>`, sentiment dot, deep-link to `/news?id=...`.
 - `get_calendar`: server component. Country, time, impact pill, deep-link to `/calendar?id=...`.
@@ -282,11 +286,11 @@ export function ChatToolPart<T extends ToolName>(props: {
 ```ts
 // packages/ai/src/eval/runner.ts
 export interface EvalRunArgs {
-  baseUrl: string;       // default http://localhost:3000
-  cookie: string;        // hfx_auth=... full cookie string
-  outDir: string;        // default docs/eval/<UTC-timestamp>
-  promptsPath?: string;  // default ./prompts.json
-  timeoutMs?: number;    // default 120_000
+  baseUrl: string; // default http://localhost:3000
+  cookie: string; // hfx_auth=... full cookie string
+  outDir: string; // default docs/eval/<UTC-timestamp>
+  promptsPath?: string; // default ./prompts.json
+  timeoutMs?: number; // default 120_000
 }
 
 export interface PromptResult {
@@ -300,7 +304,9 @@ export interface PromptResult {
   error?: string;
 }
 
-export function runEvals(args: EvalRunArgs): Promise<{ results: PromptResult[]; reportPath: string }>;
+export function runEvals(
+  args: EvalRunArgs,
+): Promise<{ results: PromptResult[]; reportPath: string }>;
 ```
 
 CLI entry (registered as `"eval": "tsx src/eval/runner.ts"` in `packages/ai/package.json`):
@@ -330,12 +336,19 @@ Runner POSTs `{ threadId: <new uuid>, messages: [{ id, role: 'user', parts: [{ t
 // non-fatal so a single broken route does not lose the whole run).
 
 const LIGHTHOUSE_TARGETS = [
-  '/chat', '/chart/XAUUSD', '/news', '/calendar',
-  '/alerts', '/journal', '/settings', '/settings/usage',
+  '/chat',
+  '/chart/XAUUSD',
+  '/news',
+  '/calendar',
+  '/alerts',
+  '/journal',
+  '/settings',
+  '/settings/usage',
 ];
 ```
 
 Deps (added to root `package.json` devDependencies, node only):
+
 - `lighthouse` (programmatic API)
 - `chrome-launcher`
 
@@ -380,14 +393,14 @@ const CACHE_NAME = 'hamafx-shell-v__BUILD_ID__';
 
 #### Strategies (declarative table)
 
-| URL pattern                              | Strategy                          | Fallback                  |
-|------------------------------------------|-----------------------------------|---------------------------|
-| `/_next/static/*`                        | cache-first                       | network (no fallback)     |
-| `/icons/*`, `/favicon.ico`, `/manifest.webmanifest` | cache-first             | network                   |
-| navigation requests (`request.mode === 'navigate'`) | network-first w/ 3s timeout | cached `/chat` → cached `/offline` |
-| `/api/auth/*`, `/api/cron/*`, `/api/chat`, `/api/admin/*` | bypass (no SW handling) | n/a              |
-| `/api/market/*`                          | **bypass** (per user's decision)  | n/a                       |
-| everything else                          | network-only                      | n/a                       |
+| URL pattern                                               | Strategy                         | Fallback                           |
+| --------------------------------------------------------- | -------------------------------- | ---------------------------------- |
+| `/_next/static/*`                                         | cache-first                      | network (no fallback)              |
+| `/icons/*`, `/favicon.ico`, `/manifest.webmanifest`       | cache-first                      | network                            |
+| navigation requests (`request.mode === 'navigate'`)       | network-first w/ 3s timeout      | cached `/chat` → cached `/offline` |
+| `/api/auth/*`, `/api/cron/*`, `/api/chat`, `/api/admin/*` | bypass (no SW handling)          | n/a                                |
+| `/api/market/*`                                           | **bypass** (per user's decision) | n/a                                |
+| everything else                                           | network-only                     | n/a                                |
 
 #### Lifecycle
 
@@ -403,19 +416,25 @@ self.addEventListener('install', (event) => {
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k))),
-    ).then(() => self.clients.claim()),
+    caches
+      .keys()
+      .then((keys) =>
+        Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k))),
+      )
+      .then(() => self.clients.claim()),
   );
 });
 
-self.addEventListener('fetch', (event) => { /* strategies above */ });
+self.addEventListener('fetch', (event) => {
+  /* strategies above */
+});
 ```
 
 #### SW registration component — `apps/web/src/components/providers/sw-register.tsx`
 
 ```tsx
 'use client';
+
 import { useEffect } from 'react';
 
 export function SwRegister(): null {
@@ -423,9 +442,11 @@ export function SwRegister(): null {
     if (!('serviceWorker' in navigator)) return;
     if (!window.isSecureContext) return;
     // Defer until idle so we don't fight first paint.
-    const id = ('requestIdleCallback' in window
-      ? requestIdleCallback
-      : (cb: () => void) => setTimeout(cb, 200))(() => {
+    const id = (
+      'requestIdleCallback' in window
+        ? requestIdleCallback
+        : (cb: () => void) => setTimeout(cb, 200)
+    )(() => {
       navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch((err) => {
         console.warn('[sw] register failed', err);
       });
@@ -484,7 +505,7 @@ export async function POST(req: Request): Promise<Response> {
 
   // 3. Missing-env contract (503 with explicit list)
   const missing: string[] = [];
-  if (!env.RESEND_API_KEY)   missing.push('RESEND_API_KEY');
+  if (!env.RESEND_API_KEY) missing.push('RESEND_API_KEY');
   if (!env.ALERT_FROM_EMAIL) missing.push('ALERT_FROM_EMAIL');
   if (!env.ALERT_TO_EMAIL && !body.to) missing.push('ALERT_TO_EMAIL');
   if (missing.length) return Response.json({ missing }, { status: 503 });
@@ -541,7 +562,7 @@ Four workflow files, one per endpoint. Each:
 name: cron-news
 on:
   schedule:
-    - cron: '*/5 * * * *'   # UTC, 5-minute granularity (lowest GH Actions allows)
+    - cron: '*/5 * * * *' # UTC, 5-minute granularity (lowest GH Actions allows)
   workflow_dispatch:
 permissions: { contents: read }
 concurrency:
@@ -553,20 +574,20 @@ jobs:
     steps:
       - name: Hit /api/cron/news
         env:
-          URL:    ${{ secrets.PRODUCTION_URL }}
-          TOKEN:  ${{ secrets.CRON_SECRET }}
+          URL: ${{ secrets.PRODUCTION_URL }}
+          TOKEN: ${{ secrets.CRON_SECRET }}
         run: |
           curl -fsS -X GET -H "Authorization: Bearer $TOKEN" "$URL/api/cron/news"
 ```
 
 Cadences (all UTC):
 
-| Workflow                         | Cron expression  |
-|----------------------------------|------------------|
-| `cron-news.yml`                  | `*/5 * * * *`    |
-| `cron-calendar.yml`              | `*/15 * * * *`   |
-| `cron-alerts.yml`                | `*/5 * * * *`    |
-| `cron-embedding-backfill.yml`    | `*/30 * * * *`   |
+| Workflow                      | Cron expression |
+| ----------------------------- | --------------- |
+| `cron-news.yml`               | `*/5 * * * *`   |
+| `cron-calendar.yml`           | `*/15 * * * *`  |
+| `cron-alerts.yml`             | `*/5 * * * *`   |
+| `cron-embedding-backfill.yml` | `*/30 * * * *`  |
 
 Repo secrets required: `PRODUCTION_URL` (e.g. `https://hamafx-ai.vercel.app`), `CRON_SECRET` (matches Vercel env var of the same name).
 
@@ -578,13 +599,13 @@ Most of this spec is UI rendering, infrastructure wiring, configuration, and one
 
 ### Property 1: Deterministic title fallback truncation
 
-*For any* user message string `s`, `deterministicFallbackTitle(s)` returns a string whose Unicode codepoint length is at most 60, ends with `…` if and only if `Array.from(s.trim()).length > 60`, and is the trimmed prefix of `s` in codepoints when not truncated.
+_For any_ user message string `s`, `deterministicFallbackTitle(s)` returns a string whose Unicode codepoint length is at most 60, ends with `…` if and only if `Array.from(s.trim()).length > 60`, and is the trimmed prefix of `s` in codepoints when not truncated.
 
 **Validates: Requirements 1.4**
 
 ### Property 2: Tool part registry total dispatch
 
-*For any* `name: string`, `ChatToolPart({ name, ... })` renders `partRegistry[name]` when `name` is in `TOOL_NAMES`, and renders `Tool_Card_Generic` otherwise. (I.e. the dispatch function is total over the universe of strings, with the bespoke set being exactly the `ToolName` union.)
+_For any_ `name: string`, `ChatToolPart({ name, ... })` renders `partRegistry[name]` when `name` is in `TOOL_NAMES`, and renders `Tool_Card_Generic` otherwise. (I.e. the dispatch function is total over the universe of strings, with the bespoke set being exactly the `ToolName` union.)
 
 **Validates: Requirements 2.2, 2.3**
 
@@ -598,12 +619,12 @@ Per the user's decision, we do **not** upgrade to Vercel Pro. GitHub Actions ext
 
 ### Cadences (all UTC)
 
-| Endpoint                       | Workflow file                       | Cron        | Per-hour firings (best case) |
-|--------------------------------|-------------------------------------|-------------|------------------------------|
-| `/api/cron/news`               | `cron-news.yml`                     | `*/5 * * * *`  | 12                          |
-| `/api/cron/calendar`           | `cron-calendar.yml`                 | `*/15 * * * *` | 4                           |
-| `/api/cron/alerts`             | `cron-alerts.yml`                   | `*/5 * * * *`  | 12                          |
-| `/api/cron/embedding-backfill` | `cron-embedding-backfill.yml`       | `*/30 * * * *` | 2                           |
+| Endpoint                       | Workflow file                 | Cron           | Per-hour firings (best case) |
+| ------------------------------ | ----------------------------- | -------------- | ---------------------------- |
+| `/api/cron/news`               | `cron-news.yml`               | `*/5 * * * *`  | 12                           |
+| `/api/cron/calendar`           | `cron-calendar.yml`           | `*/15 * * * *` | 4                            |
+| `/api/cron/alerts`             | `cron-alerts.yml`             | `*/5 * * * *`  | 12                           |
+| `/api/cron/embedding-backfill` | `cron-embedding-backfill.yml` | `*/30 * * * *` | 2                            |
 
 GitHub Actions cron has 5-minute minimum granularity; sub-5-minute cadences are not possible.
 
@@ -754,7 +775,7 @@ Sidebar rendering rule: the thread list query already pulls `title`. After this 
   - empty LLM response → fallback,
   - thrown error → fallback,
   - budget guardrail triggers fallback path.
-  Plus the property test for `deterministicFallbackTitle` (Property 1) using `fast-check`.
+    Plus the property test for `deterministicFallbackTitle` (Property 1) using `fast-check`.
 - **Tool parts (`apps/web/src/components/chat/parts/__tests__/`):** RTL render tests per part with a known fixture payload from each `@hamafx/shared/schemas` schema. Snapshot-light: assert presence of key fields, semantic tokens, and `.tabular-nums`. Plus the registry-dispatch property test (Property 2) using `fast-check` over a bag of arbitrary strings + the `TOOL_NAMES` set.
 - **Email tester route (`apps/web/src/app/api/admin/test-alert-email/__tests__/route.test.ts`):** unit-level tests with `fetch` mocked. Cover 200, 401 (no session), 503 (each missing env, in isolation and combined), 502 (Resend 500).
 - **Eval_Harness:** smoke test only — `node packages/ai/src/eval/runner.ts --help` exits 0. The full run is a manual operation that hits a running app; not in CI.
@@ -782,17 +803,17 @@ Both deviations get a one-paragraph note in `docs/09a-phase-0-deployed-state.md`
 
 ## Risks & mitigations
 
-| Risk                                                                    | Likelihood | Impact | Mitigation                                                                                  |
-|-------------------------------------------------------------------------|------------|--------|---------------------------------------------------------------------------------------------|
-| GH Actions cron delayed 10–20 min during peak load                      | Medium     | Low    | Document in `docs/09a-phase-0-deployed-state.md`; offer cron-job.org as a parallel trigger. |
-| GH Actions cron disabled after 60 days repo inactivity                  | Low        | Med    | Already pushing weekly; add a calendar reminder. cron-job.org has no such pause.            |
-| SW shipped with stale precache list after a release                     | Low        | Med    | Cache name includes `BUILD_ID`; postbuild step regenerates the list and bumps the name.     |
-| SW caches a stale `/chat` document for too long                         | Low        | Med    | Navigation is network-first with 3s timeout; cache is fallback only.                        |
-| Title model returns garbage (e.g. "Sure! Here is your title: ...")      | Med        | Low    | System prompt explicitly forbids prefixes; we trim quotes; max length is enforced; fallback on empty. |
-| Resend API key leak via 503 response                                    | Low        | High   | 503 only echoes variable **names**, never values. Code review checks this contract.         |
-| Eval harness hits the running prod app and burns budget                 | Med        | Med    | `--base-url` flag + cookie required; default is localhost; the script logs which URL it targets and confirms before sending. |
-| Lighthouse runs spike Vercel function execution and bills                | Low        | Low    | Hits a local `next start` by default; production runs are opt-in via `--base-url`.          |
-| Sidebar shows the wrong title after a fallback row gets a real title later | Low     | Low    | `title_source='fallback'` rows can be safely overwritten by future Title_Generator runs if we add a "regenerate" UI; out of scope here. |
+| Risk                                                                       | Likelihood | Impact | Mitigation                                                                                                                              |
+| -------------------------------------------------------------------------- | ---------- | ------ | --------------------------------------------------------------------------------------------------------------------------------------- |
+| GH Actions cron delayed 10–20 min during peak load                         | Medium     | Low    | Document in `docs/09a-phase-0-deployed-state.md`; offer cron-job.org as a parallel trigger.                                             |
+| GH Actions cron disabled after 60 days repo inactivity                     | Low        | Med    | Already pushing weekly; add a calendar reminder. cron-job.org has no such pause.                                                        |
+| SW shipped with stale precache list after a release                        | Low        | Med    | Cache name includes `BUILD_ID`; postbuild step regenerates the list and bumps the name.                                                 |
+| SW caches a stale `/chat` document for too long                            | Low        | Med    | Navigation is network-first with 3s timeout; cache is fallback only.                                                                    |
+| Title model returns garbage (e.g. "Sure! Here is your title: ...")         | Med        | Low    | System prompt explicitly forbids prefixes; we trim quotes; max length is enforced; fallback on empty.                                   |
+| Resend API key leak via 503 response                                       | Low        | High   | 503 only echoes variable **names**, never values. Code review checks this contract.                                                     |
+| Eval harness hits the running prod app and burns budget                    | Med        | Med    | `--base-url` flag + cookie required; default is localhost; the script logs which URL it targets and confirms before sending.            |
+| Lighthouse runs spike Vercel function execution and bills                  | Low        | Low    | Hits a local `next start` by default; production runs are opt-in via `--base-url`.                                                      |
+| Sidebar shows the wrong title after a fallback row gets a real title later | Low        | Low    | `title_source='fallback'` rows can be safely overwritten by future Title_Generator runs if we add a "regenerate" UI; out of scope here. |
 
 ---
 

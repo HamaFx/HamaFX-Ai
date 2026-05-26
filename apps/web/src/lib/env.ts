@@ -7,9 +7,8 @@
 // We never throw at import time — errors surface on first call so a missing
 // env doesn't break unrelated routes during dev.
 
-import { z } from 'zod';
-
 import { parseServerEnv, type ServerEnv } from '@hamafx/shared';
+import { z } from 'zod';
 
 const AuthEnvSchema = z.object({
   APP_PASSWORD: z.string().min(8),

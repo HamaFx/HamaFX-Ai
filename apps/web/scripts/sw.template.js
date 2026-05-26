@@ -33,13 +33,7 @@ const NAV_TIMEOUT_MS = 3000;
  * stream. `/api/market/*` is intentionally bypassed per the user's
  * decision — Req 5 §10 (network-first cache for /api/market/quote) is OFF.
  */
-const BYPASS_PREFIXES = [
-  '/api/auth',
-  '/api/cron',
-  '/api/admin',
-  '/api/chat',
-  '/api/market',
-];
+const BYPASS_PREFIXES = ['/api/auth', '/api/cron', '/api/admin', '/api/chat', '/api/market'];
 
 /** Cache-first prefixes (single-character match against URL.pathname). */
 const CACHE_FIRST_PREFIXES = ['/_next/static/', '/icons/'];
@@ -79,9 +73,7 @@ self.addEventListener('activate', (event) => {
   event.waitUntil(
     (async () => {
       const keys = await caches.keys();
-      await Promise.all(
-        keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k)),
-      );
+      await Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k)));
       await self.clients.claim();
     })(),
   );

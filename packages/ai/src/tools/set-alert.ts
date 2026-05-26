@@ -3,10 +3,9 @@
 // Lets the model create a one-shot alert. Mirrors the AlertRule schema
 // directly so the tool input is the same shape the DB row stores.
 
+import { AlertChannelSchema, AlertRuleSchema, type SetAlertOutput } from '@hamafx/shared';
 import { tool } from 'ai';
 import { z } from 'zod';
-
-import { AlertChannelSchema, AlertRuleSchema, type SetAlertOutput } from '@hamafx/shared';
 
 import { createAlert } from '../alerts/persistence';
 

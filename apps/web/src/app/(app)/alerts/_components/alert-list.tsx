@@ -2,13 +2,12 @@
 
 // Client list with toggle-active + delete. Uses TanStack Query so the form
 // can invalidate after creating.
-
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-
 import type { Alert } from '@hamafx/shared';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/cn';
+
 import { AlertForm } from './alert-form';
 
 export const ALERTS_QUERY_KEY = ['alerts'] as const;

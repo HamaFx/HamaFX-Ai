@@ -69,7 +69,7 @@ const DEFAULT_OUT_DIR = 'docs/eval';
 export async function runEvals(args: RunEvalsArgs): Promise<RunEvalsResult> {
   const timeoutMs = args.timeoutMs ?? DEFAULT_TIMEOUT_MS;
   const promptsPath = args.promptsPath ?? defaultPromptsPath();
-  const log = args.onProgress ?? ((line: string): void => console.log(line));
+  const log = args.onProgress ?? ((line: string): void => console.info(line));
 
   const prompts = await loadPrompts(promptsPath);
   const total = prompts.length;
@@ -108,8 +108,26 @@ interface RunOnePromptArgs {
 
 async function runOnePrompt(args: RunOnePromptArgs): Promise<PromptResult> {
   const { prompt, baseUrl, cookie, timeoutMs } = args;
-  const threadId = randomUUID();
   const messageId = randomUUID();
+
+  // Create a fresh thread first so the FK from chat_messages.thread_id is
+  // satisfied. Sending an arbitrary UUID straight to /api/chat would 500
+  // because the foreign key references chat_threads(id).
+  let threadId: string;
+  try {
+    threadId = await createThread({ baseUrl, cookie, timeoutMs });
+  } catch (err) {
+    return {
+      id: prompt.id,
+      prompt: prompt.prompt,
+      ttftMs: null,
+      totalMs: 0,
+      text: '',
+      toolCalls: [],
+      ok: false,
+      error: err instanceof Error ? err.message : String(err),
+    };
+  }
 
   // The /api/chat route validates with zod:
   //   { threadId: uuid, messages: [{ id, role, parts: unknown[] }, ...] }
@@ -159,6 +177,18 @@ async function runOnePrompt(args: RunOnePromptArgs): Promise<PromptResult> {
     }
 
     const parsed = await consumeUIMessageStream(response, { startedAt });
+    if (parsed.errors.length > 0) {
+      return {
+        id: prompt.id,
+        prompt: prompt.prompt,
+        ttftMs: parsed.ttftMs,
+        totalMs: parsed.totalMs,
+        text: parsed.text,
+        toolCalls: parsed.toolCalls,
+        ok: false,
+        error: `stream error: ${parsed.errors.join('; ')}`,
+      };
+    }
     return {
       id: prompt.id,
       prompt: prompt.prompt,
@@ -196,6 +226,45 @@ async function safeReadText(response: Response): Promise<string> {
     return await response.text();
   } catch {
     return '';
+  }
+}
+
+interface CreateThreadArgs {
+  baseUrl: string;
+  cookie: string;
+  timeoutMs: number;
+}
+
+async function createThread(args: CreateThreadArgs): Promise<string> {
+  const { baseUrl, cookie, timeoutMs } = args;
+  const controller = new AbortController();
+  const timeoutHandle = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const response = await fetch(`${trimTrailingSlash(baseUrl)}/api/chat/threads`, {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        cookie,
+      },
+      body: '{}',
+      signal: controller.signal,
+    });
+    if (!response.ok) {
+      const text = await safeReadText(response);
+      throw new Error(
+        `failed to create thread: HTTP ${response.status} ${response.statusText}${
+          text ? `: ${text.slice(0, 500)}` : ''
+        }`,
+      );
+    }
+    const json = (await response.json()) as { thread?: { id?: unknown } };
+    const id = json.thread?.id;
+    if (typeof id !== 'string' || id.length === 0) {
+      throw new Error('thread create returned no id');
+    }
+    return id;
+  } finally {
+    clearTimeout(timeoutHandle);
   }
 }
 

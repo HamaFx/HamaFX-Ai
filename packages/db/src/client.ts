@@ -21,7 +21,9 @@ export function getDb(): ReturnType<typeof drizzle> {
   // provisions POSTGRES_URL on the transaction pooler).
   const url = process.env.DATABASE_URL || process.env.POSTGRES_URL;
   if (!url) {
-    throw new Error('Neither DATABASE_URL nor POSTGRES_URL is set — getDb() called without env config');
+    throw new Error(
+      'Neither DATABASE_URL nor POSTGRES_URL is set — getDb() called without env config',
+    );
   }
 
   // Supabase pooler in transaction mode requires `prepare: false`. The pooler

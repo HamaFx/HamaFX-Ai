@@ -14,8 +14,7 @@
 
 import type { Alert } from '@hamafx/shared';
 
-import { describeRule, type RuleReading } from './evaluator';
-import type { EvaluatorEnv } from './evaluator';
+import { describeRule, type EvaluatorEnv, type RuleReading } from './evaluator';
 import { markFired } from './persistence';
 
 export interface DeliveryResult {
@@ -108,9 +107,7 @@ async function deliverEmail({ alert, reading, env }: DeliverArgs): Promise<Deliv
     const truncated = text.slice(0, 200);
     // Log here so the failure is visible in Vercel function logs even though
     // the evaluator only surfaces the DeliveryResult upward.
-    console.error(
-      `[alerts] resend HTTP ${res.status} for alert ${alert.id}: ${truncated}`,
-    );
+    console.error(`[alerts] resend HTTP ${res.status} for alert ${alert.id}: ${truncated}`);
     return {
       alertId: alert.id,
       channel: 'email',

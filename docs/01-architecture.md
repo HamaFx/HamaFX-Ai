@@ -63,13 +63,13 @@ flowchart LR
 
 We considered a separate Hono service on Fly.io for persistent upstream WebSockets. For a **single-user app**, the math doesn't justify it:
 
-| Need                                        | Vercel-only? | Trade-off accepted                                                         |
-| ------------------------------------------- | ------------ | -------------------------------------------------------------------------- |
-| Live prices                                 | ✅ via 1–2 s polling | Slightly worse latency, but provider quotas easily cover it for one user. |
-| Cron for news / calendar                    | ✅ Vercel Cron       | Limited to Vercel's cron cadence (≥ 1 min) — fine for our 2–5 min jobs.   |
-| Alert evaluator                             | ✅ Vercel Cron / 1 min | Slightly less responsive than a 30 s loop, fine.                         |
-| Long-lived in-memory caches                 | ❌                   | Use Upstash Redis instead (faster than free-tier Postgres).               |
-| Persistent upstream WebSocket               | ❌                   | We don't need it for one user; revisit if/when we do.                     |
+| Need                          | Vercel-only?           | Trade-off accepted                                                        |
+| ----------------------------- | ---------------------- | ------------------------------------------------------------------------- |
+| Live prices                   | ✅ via 1–2 s polling   | Slightly worse latency, but provider quotas easily cover it for one user. |
+| Cron for news / calendar      | ✅ Vercel Cron         | Limited to Vercel's cron cadence (≥ 1 min) — fine for our 2–5 min jobs.   |
+| Alert evaluator               | ✅ Vercel Cron / 1 min | Slightly less responsive than a 30 s loop, fine.                          |
+| Long-lived in-memory caches   | ❌                     | Use Upstash Redis instead (faster than free-tier Postgres).               |
+| Persistent upstream WebSocket | ❌                     | We don't need it for one user; revisit if/when we do.                     |
 
 If we ever do need a worker, the migration path is clean: drop a Hono service into `apps/worker/`, move `/api/cron/*` into it, and that's it.
 

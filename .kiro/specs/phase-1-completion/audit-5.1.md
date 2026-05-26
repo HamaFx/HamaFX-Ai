@@ -40,33 +40,33 @@ Per Requirement 2.10 every tool's result payload must have a zod schema in
 
 ## Existing primitives in `packages/shared/src/schemas/`
 
-| File             | Exports (relevant)                                                                |
-| ---------------- | --------------------------------------------------------------------------------- |
-| `tick.ts`        | `TickSchema`, `Tick`                                                              |
-| `candle.ts`      | `CandleSchema`, `Candle`                                                          |
-| `indicator.ts`   | `IndicatorResultSchema`, `IndicatorKindSchema`, `IndicatorParamsSchema`           |
-| `structure.ts`   | `StructureResultSchema`, swing/event/FVG/OB/liquidity sub-schemas, `StructureKindSchema` |
-| `news.ts`        | `NewsArticleSchema`, `NewsSentimentSchema`                                        |
-| `calendar.ts`    | `EconomicEventSchema`, `ImportanceSchema`, `EventCurrencySchema`                  |
-| `alerts.ts`      | `AlertSchema`, `AlertRuleSchema`, `AlertChannelSchema`                            |
-| `journal.ts`     | `JournalEntrySchema`, `JournalStatsSchema`, `TradeSideSchema`, `TradeOutcomeSchema` |
-| `chat.ts`        | (chat thread / message — not relevant here)                                       |
+| File           | Exports (relevant)                                                                       |
+| -------------- | ---------------------------------------------------------------------------------------- |
+| `tick.ts`      | `TickSchema`, `Tick`                                                                     |
+| `candle.ts`    | `CandleSchema`, `Candle`                                                                 |
+| `indicator.ts` | `IndicatorResultSchema`, `IndicatorKindSchema`, `IndicatorParamsSchema`                  |
+| `structure.ts` | `StructureResultSchema`, swing/event/FVG/OB/liquidity sub-schemas, `StructureKindSchema` |
+| `news.ts`      | `NewsArticleSchema`, `NewsSentimentSchema`                                               |
+| `calendar.ts`  | `EconomicEventSchema`, `ImportanceSchema`, `EventCurrencySchema`                         |
+| `alerts.ts`    | `AlertSchema`, `AlertRuleSchema`, `AlertChannelSchema`                                   |
+| `journal.ts`   | `JournalEntrySchema`, `JournalStatsSchema`, `TradeSideSchema`, `TradeOutcomeSchema`      |
+| `chat.ts`      | (chat thread / message — not relevant here)                                              |
 
 Useful: every per-row primitive the tools return is already covered. The
 gap is the **envelope** each tool wraps those rows in.
 
 ## Per-tool gap table
 
-| # | Tool name              | Tool file                                                | Inline `Output` shape (today)                                                                                              | Schema in `@shared/schemas` for the **envelope**? | Gap | Recommended new schema location                          |
-|---|------------------------|----------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------|---|---|---------------------------------------------------------|
-| 1 | `get_price`            | `packages/ai/src/tools/get-price.ts`                     | `{ ticks: Tick[]; asOf: string }`                                                                                          | ❌ — only `TickSchema` exists | yes | `packages/shared/src/schemas/tool-outputs/get-price.ts` |
-| 2 | `get_candles`          | `packages/ai/src/tools/get-candles.ts`                   | `{ symbol: string; tf: string; candles: Candle[] }`                                                                        | ❌ — only `CandleSchema` exists | yes | `packages/shared/src/schemas/tool-outputs/get-candles.ts` |
-| 3 | `get_indicators`       | `packages/ai/src/tools/get-indicators.ts`                | `{ symbol: string; tf: string; results: IndicatorResult[] }` (each `results[i].values` truncated to last 30 points)         | ❌ — only `IndicatorResultSchema` exists | yes | `packages/shared/src/schemas/tool-outputs/get-indicators.ts` |
-| 4 | `get_market_structure` | `packages/ai/src/tools/get-market-structure.ts`          | `{ symbol; tf; bars; swings?; events?; fvg?; orderBlocks?; liquidity?; summary: string }`                                  | ❌ — `StructureResultSchema` covers most fields but not `summary` and the per-tool tail-trimmed envelope | yes | `packages/shared/src/schemas/tool-outputs/get-market-structure.ts` |
-| 5 | `get_news`             | `packages/ai/src/tools/get-news.ts`                      | `{ items: NewsItem[]; pipelinePending: boolean }` where `NewsItem` is its **own** flat shape (id, title, summary, url, source, publisher, publishedAt, sentiment, sentimentScore) | ❌ — `NewsArticleSchema` is similar but not identical (it has `symbols[]`, `topics[]` which the tool drops); the tool's `NewsItem` is a different DTO | yes | `packages/shared/src/schemas/tool-outputs/get-news.ts` (define `ToolNewsItemSchema` + envelope) |
-| 6 | `get_calendar`         | `packages/ai/src/tools/get-calendar.ts`                  | `{ items: CalendarItem[]; pipelinePending: boolean }` where `CalendarItem` mirrors most of `EconomicEvent` but loosens the `country` and `currency` types to plain `string \| null` | ❌ — `EconomicEventSchema` exists but the tool's `CalendarItem` is a slightly different DTO | yes | `packages/shared/src/schemas/tool-outputs/get-calendar.ts` |
-| 7 | `set_alert`            | `packages/ai/src/tools/set-alert.ts`                     | `{ alertId: string; describes: string }`                                                                                   | ❌ — no envelope schema; bears no resemblance to `AlertSchema` (this is the **acknowledgement** payload, not the alert row) | yes | `packages/shared/src/schemas/tool-outputs/set-alert.ts` |
-| 8 | `log_journal`          | `packages/ai/src/tools/log-journal.ts`                   | `{ entryId: string; summary: string }`                                                                                     | ❌ — no envelope schema; bears no resemblance to `JournalEntrySchema` (acknowledgement only) | yes | `packages/shared/src/schemas/tool-outputs/log-journal.ts` |
+| #   | Tool name              | Tool file                                       | Inline `Output` shape (today)                                                                                                                                                       | Schema in `@shared/schemas` for the **envelope**?                                                                                                     | Gap | Recommended new schema location                                                                 |
+| --- | ---------------------- | ----------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | --- | ----------------------------------------------------------------------------------------------- |
+| 1   | `get_price`            | `packages/ai/src/tools/get-price.ts`            | `{ ticks: Tick[]; asOf: string }`                                                                                                                                                   | ❌ — only `TickSchema` exists                                                                                                                         | yes | `packages/shared/src/schemas/tool-outputs/get-price.ts`                                         |
+| 2   | `get_candles`          | `packages/ai/src/tools/get-candles.ts`          | `{ symbol: string; tf: string; candles: Candle[] }`                                                                                                                                 | ❌ — only `CandleSchema` exists                                                                                                                       | yes | `packages/shared/src/schemas/tool-outputs/get-candles.ts`                                       |
+| 3   | `get_indicators`       | `packages/ai/src/tools/get-indicators.ts`       | `{ symbol: string; tf: string; results: IndicatorResult[] }` (each `results[i].values` truncated to last 30 points)                                                                 | ❌ — only `IndicatorResultSchema` exists                                                                                                              | yes | `packages/shared/src/schemas/tool-outputs/get-indicators.ts`                                    |
+| 4   | `get_market_structure` | `packages/ai/src/tools/get-market-structure.ts` | `{ symbol; tf; bars; swings?; events?; fvg?; orderBlocks?; liquidity?; summary: string }`                                                                                           | ❌ — `StructureResultSchema` covers most fields but not `summary` and the per-tool tail-trimmed envelope                                              | yes | `packages/shared/src/schemas/tool-outputs/get-market-structure.ts`                              |
+| 5   | `get_news`             | `packages/ai/src/tools/get-news.ts`             | `{ items: NewsItem[]; pipelinePending: boolean }` where `NewsItem` is its **own** flat shape (id, title, summary, url, source, publisher, publishedAt, sentiment, sentimentScore)   | ❌ — `NewsArticleSchema` is similar but not identical (it has `symbols[]`, `topics[]` which the tool drops); the tool's `NewsItem` is a different DTO | yes | `packages/shared/src/schemas/tool-outputs/get-news.ts` (define `ToolNewsItemSchema` + envelope) |
+| 6   | `get_calendar`         | `packages/ai/src/tools/get-calendar.ts`         | `{ items: CalendarItem[]; pipelinePending: boolean }` where `CalendarItem` mirrors most of `EconomicEvent` but loosens the `country` and `currency` types to plain `string \| null` | ❌ — `EconomicEventSchema` exists but the tool's `CalendarItem` is a slightly different DTO                                                           | yes | `packages/shared/src/schemas/tool-outputs/get-calendar.ts`                                      |
+| 7   | `set_alert`            | `packages/ai/src/tools/set-alert.ts`            | `{ alertId: string; describes: string }`                                                                                                                                            | ❌ — no envelope schema; bears no resemblance to `AlertSchema` (this is the **acknowledgement** payload, not the alert row)                           | yes | `packages/shared/src/schemas/tool-outputs/set-alert.ts`                                         |
+| 8   | `log_journal`          | `packages/ai/src/tools/log-journal.ts`          | `{ entryId: string; summary: string }`                                                                                                                                              | ❌ — no envelope schema; bears no resemblance to `JournalEntrySchema` (acknowledgement only)                                                          | yes | `packages/shared/src/schemas/tool-outputs/log-journal.ts`                                       |
 
 **Result: 8 tools, 8 gaps.** None of the 8 tools currently has a zod
 schema in `packages/shared/src/schemas/` describing its **output envelope**.
@@ -87,7 +87,7 @@ fix in task 5.2 is:
 2. Re-augment `ToolIOMap` in the tool file so `output` resolves to the
    schema-inferred type instead of the local interface (and delete the
    local `interface Output {...}` block in favour of `z.infer<typeof
-   XxxOutputSchema>`).
+XxxOutputSchema>`).
 3. The existing `ToolOutput<T>` helper in `@shared/ai/tool-io.ts` does **not
    need to change** — it already reads `ToolIOMap[T]['output']`, so once
    each tool augments with the zod-inferred type the chat-parts code can

@@ -4,20 +4,19 @@
 // `computeRMultiple(entry, stop, exit, side)` so the column is reliable.
 // Open trades have rMultiple=null and don't contribute to avgR/winRate.
 
-import { and, asc, desc, eq, lte, gte } from 'drizzle-orm';
-
 import { getDb, schema } from '@hamafx/db';
 import {
-  type JournalEntry,
   JournalEntrySchema,
+  SymbolSchema,
+  TradeOutcomeSchema,
+  TradeSideSchema,
+  type JournalEntry,
   type JournalStats,
   type Symbol,
-  SymbolSchema,
   type TradeOutcome,
-  TradeOutcomeSchema,
   type TradeSide,
-  TradeSideSchema,
 } from '@hamafx/shared';
+import { and, asc, desc, eq, gte, lte } from 'drizzle-orm';
 
 // ---------------------------------------------------------------------------
 // CRUD
@@ -35,7 +34,9 @@ export interface CreateJournalInput {
   tags?: string[];
 }
 
-export async function listEntries(opts: { limit?: number; symbol?: Symbol } = {}): Promise<JournalEntry[]> {
+export async function listEntries(
+  opts: { limit?: number; symbol?: Symbol } = {},
+): Promise<JournalEntry[]> {
   const filters = [];
   if (opts.symbol) filters.push(eq(schema.journalEntries.symbol, opts.symbol));
 
@@ -92,7 +93,10 @@ export interface UpdateJournalInput {
   tags?: string[] | undefined;
 }
 
-export async function updateEntry(id: string, input: UpdateJournalInput): Promise<JournalEntry | null> {
+export async function updateEntry(
+  id: string,
+  input: UpdateJournalInput,
+): Promise<JournalEntry | null> {
   const existing = await getEntry(id);
   if (!existing) return null;
 
@@ -196,7 +200,9 @@ export function summarize(entries: JournalEntry[]): JournalStats {
   };
 }
 
-export async function computeStats(opts: { sinceMs?: number; untilMs?: number } = {}): Promise<JournalStats> {
+export async function computeStats(
+  opts: { sinceMs?: number; untilMs?: number } = {},
+): Promise<JournalStats> {
   const filters = [];
   if (opts.sinceMs !== undefined)
     filters.push(gte(schema.journalEntries.openedAt, new Date(opts.sinceMs)));

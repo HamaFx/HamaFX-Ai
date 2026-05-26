@@ -8,9 +8,8 @@
 // canvas-painting code that's better isolated. Until then we still render
 // FVG midpoint markers so the user knows where they are.
 
-import type * as LightweightCharts from 'lightweight-charts';
-
 import type { StructureResult } from '@hamafx/shared';
+import type * as LightweightCharts from 'lightweight-charts';
 
 type UTCTimestamp = LightweightCharts.UTCTimestamp;
 

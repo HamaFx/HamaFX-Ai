@@ -7,7 +7,6 @@
 //
 // Personal-mode defaults: aggressive polling for live data, no retries that
 // would mask provider errors, garbage-collect after 5 min idle.
-
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useState } from 'react';
 

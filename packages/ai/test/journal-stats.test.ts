@@ -1,10 +1,9 @@
 // Pure-logic tests for journal stats math.
 
+import type { JournalEntry } from '@hamafx/shared';
 import { describe, expect, it } from 'vitest';
 
 import { computeRMultiple, summarize } from '../src/journal/persistence';
-
-import type { JournalEntry } from '@hamafx/shared';
 
 function entry(partial: Partial<JournalEntry>): JournalEntry {
   return {

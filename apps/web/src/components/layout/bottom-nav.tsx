@@ -119,9 +119,7 @@ export function BottomNav() {
     >
       <ul className="mx-auto flex max-w-2xl items-stretch justify-between px-2">
         {ITEMS.map((item) => {
-          const active = item.match.some(
-            (p) => pathname === p || pathname.startsWith(`${p}/`),
-          );
+          const active = item.match.some((p) => pathname === p || pathname.startsWith(`${p}/`));
           return (
             <li key={item.href} className="flex-1">
               <Link
@@ -134,10 +132,7 @@ export function BottomNav() {
                 )}
               >
                 <span
-                  className={cn(
-                    'rounded-full p-1.5',
-                    active ? 'bg-bg-elev-2' : 'bg-transparent',
-                  )}
+                  className={cn('rounded-full p-1.5', active ? 'bg-bg-elev-2' : 'bg-transparent')}
                 >
                   {item.icon}
                 </span>

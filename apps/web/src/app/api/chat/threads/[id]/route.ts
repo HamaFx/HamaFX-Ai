@@ -16,7 +16,10 @@ export async function GET(_req: Request, ctx: Ctx) {
     const { id } = await ctx.params;
     const thread = await getThread(id);
     if (!thread) {
-      return Response.json({ error: { code: 'NOT_FOUND', message: 'thread not found' } }, { status: 404 });
+      return Response.json(
+        { error: { code: 'NOT_FOUND', message: 'thread not found' } },
+        { status: 404 },
+      );
     }
     const messages = await listMessages(id);
     return Response.json({ thread, messages });

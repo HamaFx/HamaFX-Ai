@@ -29,15 +29,15 @@ This is a **personal** AI trading copilot for **XAUUSD (primary), EURUSD, GBPUSD
 
 ## File placement quick map
 
-| New thing                | Goes in                                              |
-| ------------------------ | ---------------------------------------------------- |
-| AI tool                  | `packages/ai/src/tools/<name>.ts`                    |
-| Indicator                | `packages/indicators/src/<name>.ts`                  |
-| Provider adapter         | `packages/data/src/providers/<name>/`                |
-| DB table + migration     | `packages/db/src/schema/<name>.ts`                   |
-| Page                     | `apps/web/src/app/(app)/<route>/page.tsx`            |
-| Shared schema / type     | `packages/shared/src/schemas/<name>.ts`              |
-| Cron job                 | `apps/web/src/app/api/cron/<name>/route.ts` + `vercel.json` |
+| New thing            | Goes in                                                     |
+| -------------------- | ----------------------------------------------------------- |
+| AI tool              | `packages/ai/src/tools/<name>.ts`                           |
+| Indicator            | `packages/indicators/src/<name>.ts`                         |
+| Provider adapter     | `packages/data/src/providers/<name>/`                       |
+| DB table + migration | `packages/db/src/schema/<name>.ts`                          |
+| Page                 | `apps/web/src/app/(app)/<route>/page.tsx`                   |
+| Shared schema / type | `packages/shared/src/schemas/<name>.ts`                     |
+| Cron job             | `apps/web/src/app/api/cron/<name>/route.ts` + `vercel.json` |
 
 ## Naming
 

@@ -12,17 +12,11 @@ export const alerts = pgTable(
     /** zod-validated AlertRule JSON — see packages/shared/src/schemas/alerts.ts */
     rule: jsonb('rule').notNull(),
     /** AlertChannel[] persisted as text[]. */
-    channels: text('channels')
-      .array()
-      .notNull()
-      .default(['email']),
+    channels: text('channels').array().notNull().default(['email']),
     note: text('note'),
     active: boolean('active').notNull().default(true),
     firedAt: timestamp('fired_at', { withTimezone: true }),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   },
-  (t) => [
-    index('alerts_active_idx').on(t.active),
-    index('alerts_fired_at_idx').on(t.firedAt),
-  ],
+  (t) => [index('alerts_active_idx').on(t.active), index('alerts_fired_at_idx').on(t.firedAt)],
 );

@@ -1,11 +1,10 @@
 // Chat persistence: load / save thread + messages, write per-turn telemetry.
 // Anything that touches Postgres lives here so route handlers stay thin.
 
-import { asc, desc, eq } from 'drizzle-orm';
-import type { ModelMessage, UIMessage } from 'ai';
-
 import { getDb, schema } from '@hamafx/db';
 import type { Symbol } from '@hamafx/shared';
+import type { ModelMessage, UIMessage } from 'ai';
+import { asc, desc, eq } from 'drizzle-orm';
 
 import { estimateCostUsd } from './cost';
 
@@ -38,7 +37,11 @@ export async function listThreads(limit = 50): Promise<DbThread[]> {
 }
 
 export async function getThread(id: string): Promise<DbThread | null> {
-  const rows = await getDb().select().from(schema.chatThreads).where(eq(schema.chatThreads.id, id)).limit(1);
+  const rows = await getDb()
+    .select()
+    .from(schema.chatThreads)
+    .where(eq(schema.chatThreads.id, id))
+    .limit(1);
   const row = rows[0];
   return row ? rowToThread(row) : null;
 }
@@ -129,12 +132,14 @@ export async function listMessages(threadId: string, limit = 200): Promise<DbMes
 
 export async function appendUserMessage(threadId: string, message: UIMessage): Promise<void> {
   const text = extractText(message);
-  await getDb().insert(schema.chatMessages).values({
-    threadId,
-    role: 'user',
-    content: text,
-    parts: message.parts ?? null,
-  });
+  await getDb()
+    .insert(schema.chatMessages)
+    .values({
+      threadId,
+      role: 'user',
+      content: text,
+      parts: message.parts ?? null,
+    });
   // Touch the thread so it sorts to the top of the list.
   await getDb()
     .update(schema.chatThreads)
@@ -197,17 +202,19 @@ export interface TelemetryInput {
 }
 
 export async function recordTelemetry(t: TelemetryInput): Promise<void> {
-  await getDb().insert(schema.chatTelemetry).values({
-    threadId: t.threadId,
-    messageId: t.messageId,
-    model: t.model,
-    inputTokens: t.inputTokens,
-    outputTokens: t.outputTokens,
-    toolCalls: t.toolCalls,
-    ms: t.ms,
-    estCostUsd: estimateCostUsd(t.model, t.inputTokens, t.outputTokens),
-    kind: t.kind ?? null,
-  });
+  await getDb()
+    .insert(schema.chatTelemetry)
+    .values({
+      threadId: t.threadId,
+      messageId: t.messageId,
+      model: t.model,
+      inputTokens: t.inputTokens,
+      outputTokens: t.outputTokens,
+      toolCalls: t.toolCalls,
+      ms: t.ms,
+      estCostUsd: estimateCostUsd(t.model, t.inputTokens, t.outputTokens),
+      kind: t.kind ?? null,
+    });
 }
 
 // Re-export so route handlers don't need to import directly from `ai`.

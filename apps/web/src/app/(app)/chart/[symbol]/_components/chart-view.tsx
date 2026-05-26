@@ -6,14 +6,16 @@
 //
 // Phase 2 added SMC overlays. The toggles live in the URL via nuqs so
 // refreshing the page keeps the chosen overlays.
-
-import { useMemo } from 'react';
-
 import type { Symbol } from '@hamafx/shared';
+import { useMemo } from 'react';
 
 import { Chart } from '@/components/chart/chart';
 import { OverlayToggle, useOverlayToggles } from '@/components/chart/overlay-toggle';
-import { buildOverlays, type OverlayPalette, type OverlayToggles } from '@/components/chart/overlays';
+import {
+  buildOverlays,
+  type OverlayPalette,
+  type OverlayToggles,
+} from '@/components/chart/overlays';
 import { PriceTag } from '@/components/chart/price-tag';
 import { SymbolPicker } from '@/components/chart/symbol-picker';
 import { TimeframePicker } from '@/components/chart/timeframe-picker';
@@ -83,15 +85,13 @@ export function ChartView({ symbol }: { symbol: Symbol }) {
       <div className="flex flex-wrap items-center justify-between gap-2">
         <OverlayToggle active={activeOverlays} onToggle={toggleOverlay} />
         {overlaysOn ? (
-          <span className="text-fg-subtle text-[11px] tabular-nums">
-            {summary(structure)}
-          </span>
+          <span className="text-fg-subtle text-[11px] tabular-nums">{summary(structure)}</span>
         ) : null}
       </div>
 
       <p className="text-fg-subtle text-[11px]">
-        Polling at 1.5 s for price, {tf} candles refresh per server cache TTL. Source: Twelve
-        Data (primary).
+        Polling at 1.5 s for price, {tf} candles refresh per server cache TTL. Source: Twelve Data
+        (primary).
       </p>
     </div>
   );

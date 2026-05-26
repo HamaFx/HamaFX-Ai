@@ -1,12 +1,5 @@
 import { sql } from 'drizzle-orm';
-import {
-  doublePrecision,
-  index,
-  pgTable,
-  text,
-  timestamp,
-  vector,
-} from 'drizzle-orm/pg-core';
+import { doublePrecision, index, pgTable, text, timestamp, vector } from 'drizzle-orm/pg-core';
 
 /**
  * Cached news articles. `id` is sha1(url) so we dedupe across providers.
@@ -24,11 +17,17 @@ export const newsArticles = pgTable(
     publisher: text('publisher'),
     publishedAt: timestamp('published_at', { withTimezone: true }).notNull(),
     /** SymbolOrCurrencyTag[] — keep as text[] for filter speed. */
-    symbols: text('symbols').array().notNull().default(sql`'{}'::text[]`),
+    symbols: text('symbols')
+      .array()
+      .notNull()
+      .default(sql`'{}'::text[]`),
     /** "positive" | "negative" | "neutral" | null */
     sentiment: text('sentiment'),
     sentimentScore: doublePrecision('sentiment_score'),
-    topics: text('topics').array().notNull().default(sql`'{}'::text[]`),
+    topics: text('topics')
+      .array()
+      .notNull()
+      .default(sql`'{}'::text[]`),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   },
   (t) => [
@@ -54,8 +53,5 @@ export const newsEmbeddings = pgTable(
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   },
   // HNSW index for fast cosine similarity search.
-  (t) => [
-    index('news_embeddings_hnsw_idx')
-      .using('hnsw', t.embedding.op('vector_cosine_ops')),
-  ],
+  (t) => [index('news_embeddings_hnsw_idx').using('hnsw', t.embedding.op('vector_cosine_ops'))],
 );

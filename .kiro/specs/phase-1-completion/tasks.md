@@ -44,13 +44,13 @@ Ordering follows the dependency rules in the design: schema/migration first, the
     - Re-export `generateTitle` from `packages/ai/src/index.ts`.
     - _Requirements: 1.1, 1.2, 1.4, 1.5, 1.6_
     - Files: `packages/ai/src/title.ts`, `packages/ai/src/index.ts`
-  - [ ]* 2.2 Write unit tests for `generateTitle`
+  - [ ]\* 2.2 Write unit tests for `generateTitle`
     - Mock `generateText` and `dailySpendUsd` to exercise: success path (LLM returns short string), empty response → fallback (`reason: 'empty'`), thrown error → fallback (`reason: 'error'`), budget block → fallback (`reason: 'budget'`).
     - Assert codepoint truncation and trailing `…` behavior on the success path with a long mocked response.
     - _Requirements: 1.1, 1.2, 1.4, 1.5_
     - Files: `packages/ai/test/title.test.ts`
     - Tests: `packages/ai/test/title.test.ts`
-  - [ ]* 2.3 Property test: `deterministicFallbackTitle` codepoint truncation invariant
+  - [ ]\* 2.3 Property test: `deterministicFallbackTitle` codepoint truncation invariant
     - **Property 1: Deterministic title fallback truncation** — for any input `s`, `Array.from(deterministicFallbackTitle(s)).length <= 60`, the result ends with `…` iff `Array.from(s.trim()).length > 60`, and is the trimmed codepoint prefix of `s` when not truncated.
     - **Validates: Requirements 1.4**
     - Use `fast-check` with `fc.string()` plus an arbitrary that injects multi-codepoint characters (emoji, combining marks) to exercise the codepoint path.
@@ -68,7 +68,7 @@ Ordering follows the dependency rules in the design: schema/migration first, the
     - Wrap the entire block in try/catch so any failure is logged and swallowed (chat UX must not regress).
     - _Requirements: 1.1, 1.3, 1.6, 1.7_
     - Files: `packages/ai/src/agent.ts`
-  - [ ]* 3.2 Unit test the onFinish title path
+  - [ ]\* 3.2 Unit test the onFinish title path
     - Drive `runChat`'s onFinish with a mocked thread row (`title: null`) and a stubbed `generateTitle`; assert `updateThreadTitle` is called with the expected `(id, title, source)` and `recordTelemetry` is called with the expected `kind`.
     - Add a second case where `thread.title` is already non-null: assert `generateTitle` is NOT called.
     - _Requirements: 1.1, 1.6, 1.7_
@@ -102,7 +102,7 @@ Ordering follows the dependency rules in the design: schema/migration first, the
     - No `any`. No `enum`. Alias-only imports.
     - _Requirements: 2.10_
     - Files: `packages/shared/src/schemas/*.ts`, `packages/shared/src/ai/tool-io.ts`, `packages/shared/src/index.ts`
-  - [ ]* 5.3 Fixture-parse tests for every tool output schema
+  - [ ]\* 5.3 Fixture-parse tests for every tool output schema
     - For each of the 8 tools, create a small JSON fixture representing a realistic tool result (XAUUSD where symbol is required) and assert `<ToolName>OutputSchema.parse(fixture)` succeeds.
     - Add at least one negative case per schema (missing required field) asserting `.safeParse(...).success === false`.
     - _Requirements: 2.10_
@@ -153,12 +153,12 @@ Ordering follows the dependency rules in the design: schema/migration first, the
     - Replace the direct `ToolCard` usage in the chat messages component (likely `apps/web/src/components/chat/messages.tsx` or the equivalent) with `ChatToolPart` so unknown tools fall back to `ToolCard` and known tools route to their bespoke parts.
     - _Requirements: 2.2, 2.3_
     - Files: `apps/web/src/components/chat/messages.tsx` (or the actual integration site located via grep)
-  - [ ]* 6.11 RTL render tests per part
+  - [ ]\* 6.11 RTL render tests per part
     - For each of the 8 parts, render with a fixture matching its `@hamafx/shared` schema and assert key fields are present, `.tabular-nums` is applied where required, and any link `href` resolves to the expected deep-link.
     - _Requirements: 2.1, 2.4, 2.5, 2.6, 2.7, 2.8_
     - Files: `apps/web/src/components/chat/parts/__tests__/get-price.test.tsx`, `get-candles.test.tsx`, `get-indicators.test.tsx`, `get-market-structure.test.tsx`, `get-news.test.tsx`, `get-calendar.test.tsx`, `set-alert.test.tsx`, `log-journal.test.tsx`
     - Tests: same as Files
-  - [ ]* 6.12 Property test: registry dispatch totality
+  - [ ]\* 6.12 Property test: registry dispatch totality
     - **Property 2: Tool part registry total dispatch** — for any string `name`, `ChatToolPart({ name, ... })` renders `partRegistry[name]` when `name ∈ TOOL_NAMES` and renders `Tool_Card_Generic` otherwise. The dispatch is total over the universe of strings.
     - **Validates: Requirements 2.2, 2.3**
     - Use `fast-check` with `fc.oneof(fc.constantFrom(...TOOL_NAMES), fc.string())` and assert the rendered tree contains either the matching bespoke part's test marker or the `ToolCard` fallback marker.
@@ -184,7 +184,7 @@ Ordering follows the dependency rules in the design: schema/migration first, the
     - Inspect `apps/web/src/middleware.ts`; confirm `/api/admin` is gated by the password cookie alongside the rest of `/api` (only `/api/auth` and `/api/cron` are bypassed). If not, extend the matcher and gating logic so `/api/admin/*` requires the password cookie.
     - _Requirements: 7.1, 7.7_
     - Files: `apps/web/src/middleware.ts` (only if a change is needed)
-  - [ ]* 8.3 Unit tests for the route handler
+  - [ ]\* 8.3 Unit tests for the route handler
     - Mock `fetch` and `requireSession`; cover: 200 success returns the Resend `id`, 401 with no session, 503 for each individual missing env (and the combined case), 502 on Resend 500.
     - Assert the 503 response body never contains a value (only variable names).
     - _Requirements: 7.1, 7.2, 7.3, 7.6_
@@ -211,7 +211,7 @@ Ordering follows the dependency rules in the design: schema/migration first, the
     - Otherwise: restructure so the Resend call resolves first; on non-2xx, log the status + (truncated) message and return without calling `markFired`. On 2xx, call `markFired` and return.
     - _Requirements: 7.5, 7.6_
     - Files: `packages/ai/src/alerts/delivery.ts` (modify only if the audit requires it)
-  - [ ]* 10.2 Unit test for delivery `markFired` ordering
+  - [ ]\* 10.2 Unit test for delivery `markFired` ordering
     - Mock `fetch` to return 200 and assert `markFired` is called exactly once. Mock `fetch` to return 500 and assert `markFired` is NOT called and the error is logged with the Resend status code.
     - _Requirements: 7.5, 7.6_
     - Files: `packages/ai/test/alerts-delivery.test.ts`
@@ -240,7 +240,7 @@ Ordering follows the dependency rules in the design: schema/migration first, the
     - Add `"eval": "tsx src/eval/runner.ts"` and add `tsx` to devDependencies if it isn't already present at the package or root level.
     - _Requirements: 3.2_
     - Files: `packages/ai/package.json`
-  - [ ]* 11.5 Smoke test: `--help` exits 0
+  - [ ]\* 11.5 Smoke test: `--help` exits 0
     - Add a tiny test or CI-style assertion that `node -e ...` (or `tsx src/eval/runner.ts --help`) prints usage and exits 0.
     - _Requirements: 3.2_
     - Files: `packages/ai/test/eval-cli.test.ts`
@@ -265,7 +265,7 @@ Ordering follows the dependency rules in the design: schema/migration first, the
     - Add `docs/lighthouse/.gitkeep` and `docs/eval/.gitkeep` for the output dirs.
     - _Requirements: 4.7_
     - Files: `tools/lighthouse/README.md`, `docs/lighthouse/waivers.md`, `docs/lighthouse/.gitkeep`, `docs/eval/.gitkeep`
-  - [ ]* 12.4 Smoke test: `--help` exits 0
+  - [ ]\* 12.4 Smoke test: `--help` exits 0
     - Add a tiny test asserting `node tools/lighthouse/run.mjs --help` prints usage and exits 0.
     - _Requirements: 4.1_
     - Files: `tools/lighthouse/__tests__/help.test.mjs` (or include in an existing root-level smoke test file)
@@ -327,7 +327,7 @@ Ordering follows the dependency rules in the design: schema/migration first, the
     - _Requirements: 6.7_
     - Files: `docs/09a-phase-0-deployed-state.md` (and optional `.github/cron-job-org.json` if option b is chosen)
 
-- [ ] 16. T15 — Update `docs/09a-phase-0-deployed-state.md`
+- [x] 16. T15 — Update `docs/09a-phase-0-deployed-state.md`
   - Replace the "three options" cron section with the chosen GitHub Actions strategy + cadences + caveats + optional cron-job.org belt-and-braces. Add the PWA smoke checklist (from 13.6). Add Lighthouse + eval harness usage docs. Note both deviations from requirements (alerts cadence ceiling, `/api/market/*` SW caching off).
   - [x] 16.1 Cron strategy section rewrite
     - Replace the "three options" subsection with the GH Actions chosen strategy table (workflows + cadences from design), risks (delay during high load, 60-day inactivity pause, no SLA), the cron-job.org belt-and-braces option, and where to find logs (Vercel function logs + GH Actions run history).
@@ -381,7 +381,10 @@ Ordering follows the dependency rules in the design: schema/migration first, the
     { "id": 0, "tasks": ["1.1", "1.2", "5.1", "11.1", "12.1", "12.3"] },
     { "id": 1, "tasks": ["1.3", "5.2", "11.2"] },
     { "id": 2, "tasks": ["1.4", "5.3", "8.2", "10.1", "11.3", "12.2", "13.1", "15.1", "16.1"] },
-    { "id": 3, "tasks": ["2.1", "4.1", "8.1", "10.2", "11.4", "12.4", "13.2", "13.4", "15.2", "15.3", "16.2"] },
+    {
+      "id": 3,
+      "tasks": ["2.1", "4.1", "8.1", "10.2", "11.4", "12.4", "13.2", "13.4", "15.2", "15.3", "16.2"]
+    },
     { "id": 4, "tasks": ["2.2", "2.3", "3.1", "4.2", "8.3", "9.1", "11.5", "13.3", "13.5"] },
     { "id": 5, "tasks": ["3.2", "6.1", "9.2", "13.6"] },
     { "id": 6, "tasks": ["6.2", "6.3", "6.4", "6.5", "6.6", "6.7", "6.8", "6.9"] },

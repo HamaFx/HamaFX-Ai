@@ -3,12 +3,11 @@
 // Queries the `economic_events` table populated by /api/cron/calendar.
 // Empty until Phase 1c — the tool handles that gracefully.
 
+import { getDb, schema } from '@hamafx/db';
+import type { GetCalendarOutput } from '@hamafx/shared';
 import { tool } from 'ai';
 import { and, asc, gte, inArray, lte, sql } from 'drizzle-orm';
 import { z } from 'zod';
-
-import { getDb, schema } from '@hamafx/db';
-import type { GetCalendarOutput } from '@hamafx/shared';
 
 const ImportanceSchema = z.enum(['low', 'medium', 'high']);
 const CurrencySchema = z.enum(['USD', 'EUR', 'GBP']);
@@ -41,9 +40,9 @@ export const getCalendarTool = tool({
     const fromDate = new Date(from ?? Date.now());
     const toDate = new Date(to ?? Date.now() + SEVEN_DAYS_MS);
 
-    const allowedImportance: Array<'low' | 'medium' | 'high'> = (['low', 'medium', 'high'] as const).filter(
-      (i) => IMPORTANCE_RANK[i] >= IMPORTANCE_RANK[minImportance],
-    );
+    const allowedImportance: Array<'low' | 'medium' | 'high'> = (
+      ['low', 'medium', 'high'] as const
+    ).filter((i) => IMPORTANCE_RANK[i] >= IMPORTANCE_RANK[minImportance]);
 
     const filters = [
       gte(schema.economicEvents.date, fromDate),

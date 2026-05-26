@@ -10,9 +10,8 @@
 // hasn't yet populated the DB on a fresh deploy — we surface a quiet status
 // line instead of an empty list (which would look like a bug).
 
-import Link from 'next/link';
-
 import type { GetNewsOutput, NewsSentiment } from '@hamafx/shared';
+import Link from 'next/link';
 
 interface GetNewsPartProps {
   /** Tool output, or `null` while streaming / before completion. */
@@ -35,9 +34,7 @@ export function GetNewsPart({ output, state, errorMessage }: GetNewsPartProps) {
   if (output.pipelinePending) {
     return (
       <div className="border-border bg-bg-elev-1 rounded-lg border p-3">
-        <p className="text-fg-muted text-sm">
-          News pipeline hasn&apos;t ingested yet.
-        </p>
+        <p className="text-fg-muted text-sm">News pipeline hasn&apos;t ingested yet.</p>
       </div>
     );
   }
@@ -65,15 +62,11 @@ export function GetNewsPart({ output, state, errorMessage }: GetNewsPartProps) {
               >
                 <div className="flex items-start gap-2">
                   <SentimentDot sentiment={item.sentiment} />
-                  <span className="text-fg line-clamp-2 font-medium">
-                    {item.title}
-                  </span>
+                  <span className="text-fg line-clamp-2 font-medium">{item.title}</span>
                 </div>
                 <div className="text-fg-muted flex items-center gap-1.5 text-xs">
                   <span className="truncate">
-                    {item.publisher
-                      ? `${item.source} · ${item.publisher}`
-                      : item.source}
+                    {item.publisher ? `${item.source} · ${item.publisher}` : item.source}
                   </span>
                   <span aria-hidden>·</span>
                   <time dateTime={iso} className="tabular-nums">
@@ -92,13 +85,10 @@ export function GetNewsPart({ output, state, errorMessage }: GetNewsPartProps) {
 function SentimentDot({ sentiment }: { sentiment: NewsSentiment | null }) {
   if (sentiment === null) return null;
   const color =
-    sentiment === 'positive'
-      ? 'bg-bull'
-      : sentiment === 'negative'
-        ? 'bg-bear'
-        : 'bg-fg-muted';
+    sentiment === 'positive' ? 'bg-bull' : sentiment === 'negative' ? 'bg-bear' : 'bg-fg-muted';
   return (
     <span
+      role="img"
       aria-label={`sentiment: ${sentiment}`}
       className={`mt-1.5 inline-block size-2 shrink-0 rounded-full ${color}`}
     />
@@ -114,10 +104,7 @@ function NewsCardSkeleton() {
     >
       <ul className="divide-border divide-y">
         {[0, 1, 2].map((i) => (
-          <li
-            key={i}
-            className="flex min-h-[44px] flex-col justify-center gap-1 py-2"
-          >
+          <li key={i} className="flex min-h-[44px] flex-col justify-center gap-1 py-2">
             <span className="bg-bg-elev-2 h-4 w-3/4 animate-pulse rounded" />
             <span className="bg-bg-elev-2 h-3 w-1/3 animate-pulse rounded" />
           </li>

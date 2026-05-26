@@ -4,9 +4,8 @@
 // modest in personal mode (low single digits of turns/day), so a 30-day
 // scan is well under 100 ms even cold.
 
-import { and, desc, gte, lte, sql } from 'drizzle-orm';
-
 import { getDb, schema } from '@hamafx/db';
+import { and, desc, gte, lte, sql } from 'drizzle-orm';
 
 export interface TelemetryRow {
   id: string;

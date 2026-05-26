@@ -33,7 +33,7 @@ export function ToolCard({ name, state, input, output, errorText }: ToolCardProp
 
   // Tiny one-liner summary so the card communicates without expanding.
   const summary = failed
-    ? errorText ?? 'tool failed'
+    ? (errorText ?? 'tool failed')
     : running
       ? 'running…'
       : oneLiner(label, output);

@@ -2,10 +2,8 @@
 
 // Three-segment switch for the supported symbols. Driven by the route, not
 // state — clicking navigates so the URL stays the source of truth.
-
-import Link from 'next/link';
-
 import { SYMBOLS, type Symbol } from '@hamafx/shared';
+import Link from 'next/link';
 
 import { useTimeframe } from '@/hooks/use-tf';
 import { cn } from '@/lib/cn';
@@ -29,9 +27,7 @@ export function SymbolPicker({ active }: { active: Symbol }) {
             href={`/chart/${s}?tf=${tf}`}
             className={cn(
               'rounded px-3 py-1.5 text-xs font-semibold tabular-nums transition-colors',
-              isActive
-                ? 'bg-bg-elev-2 text-fg'
-                : 'text-fg-muted hover:bg-bg-elev-2 hover:text-fg',
+              isActive ? 'bg-bg-elev-2 text-fg' : 'text-fg-muted hover:bg-bg-elev-2 hover:text-fg',
             )}
           >
             {s}

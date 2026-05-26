@@ -5,12 +5,7 @@
 
 import { createHash } from 'node:crypto';
 
-import {
-  type NewsArticle,
-  NewsArticleSchema,
-  SymbolSchema,
-  type Symbol,
-} from '@hamafx/shared';
+import { NewsArticleSchema, SymbolSchema, type NewsArticle, type Symbol } from '@hamafx/shared';
 
 import { ProviderError } from '../errors';
 import { runWithFailover, type ProviderAttempt } from '../failover';
@@ -98,8 +93,8 @@ export async function fetchNews(opts: FetchNewsOptions = {}): Promise<NewsArticl
   // Optional symbol filter applied AFTER mapping so we still benefit from
   // dedupe across symbols within a single fetch.
   if (opts.symbol) {
-    return value.filter((a) =>
-      a.symbols.includes(opts.symbol as Symbol) || a.symbols.includes('XAU'),
+    return value.filter(
+      (a) => a.symbols.includes(opts.symbol as Symbol) || a.symbols.includes('XAU'),
     );
   }
   return value;

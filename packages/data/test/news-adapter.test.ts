@@ -3,8 +3,8 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { _resetThrottle } from '../src/cache/throttle';
 import { articleIdFromUrl, fetchNews } from '../src/adapters/news';
+import { _resetThrottle } from '../src/cache/throttle';
 
 const ORIGINAL_FETCH = globalThis.fetch;
 
@@ -78,9 +78,7 @@ describe('fetchNews (marketaux)', () => {
       apiKeys: { marketaux: 'X' },
     });
     // Apple article filtered out.
-    expect(articles.map((a) => a.title)).toEqual([
-      'Gold rallies on Fed dovish signals',
-    ]);
+    expect(articles.map((a) => a.title)).toEqual(['Gold rallies on Fed dovish signals']);
   });
 
   it('throws when no provider key is configured', async () => {

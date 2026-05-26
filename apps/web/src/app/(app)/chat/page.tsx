@@ -7,9 +7,8 @@
 // always canonical for a thread; refreshing /chat keeps you on the same
 // thread between visits.
 
-import { redirect } from 'next/navigation';
-
 import { createThread, listThreads } from '@hamafx/ai';
+import { redirect } from 'next/navigation';
 
 export const dynamic = 'force-dynamic';
 

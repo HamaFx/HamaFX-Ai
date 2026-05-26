@@ -127,12 +127,12 @@ Tailwind v4 + CSS variables. Lives in `packages/ui/src/theme.css`.
   --fg-subtle: oklch(55% 0.02 260);
 
   /* brand */
-  --brand: oklch(72% 0.16 78);     /* warm gold */
+  --brand: oklch(72% 0.16 78); /* warm gold */
   --brand-fg: oklch(15% 0.02 260);
 
   /* states */
-  --bull: oklch(72% 0.18 150);     /* greener-than-default */
-  --bear: oklch(67% 0.22 25);      /* warmer red */
+  --bull: oklch(72% 0.18 150); /* greener-than-default */
+  --bear: oklch(67% 0.22 25); /* warmer red */
   --neutral: oklch(70% 0.02 260);
   --warn: oklch(78% 0.16 80);
   --info: oklch(72% 0.14 230);
@@ -143,7 +143,7 @@ Tailwind v4 + CSS variables. Lives in `packages/ui/src/theme.css`.
   --radius-lg: 16px;
 }
 
-[data-theme="light"] {
+[data-theme='light'] {
   --bg: oklch(99% 0.005 260);
   --bg-elev-1: oklch(96% 0.005 260);
   --bg-elev-2: oklch(94% 0.005 260);
@@ -170,12 +170,12 @@ Tailwind v4 + CSS variables. Lives in `packages/ui/src/theme.css`.
 
 ### Density
 
-| Token         | Mobile | Desktop |
-| ------------- | ------ | ------- |
-| Page padding  | 16px   | 24–32px |
-| Card padding  | 12px   | 16–20px |
-| Tap target    | 44×44  | 36×36   |
-| Stack gap     | 8 / 12 | 12 / 16 |
+| Token        | Mobile | Desktop |
+| ------------ | ------ | ------- |
+| Page padding | 16px   | 24–32px |
+| Card padding | 12px   | 16–20px |
+| Tap target   | 44×44  | 36×36   |
+| Stack gap    | 8 / 12 | 12 / 16 |
 
 ## Component inventory (shadcn baseline + custom)
 
