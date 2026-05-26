@@ -20,6 +20,7 @@
   "dependencies": {
     "@ai-sdk/gateway": "^1.0.0",
     "@ai-sdk/google": "^2.0.74",
+    "@ai-sdk/google-vertex": "3.0.139",
     "@hamafx/data": "workspace:*",
     "@hamafx/db": "workspace:*",
     "@hamafx/indicators": "workspace:*",

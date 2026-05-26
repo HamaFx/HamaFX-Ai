@@ -35,32 +35,45 @@ const DbEnv = z
     path: ['DATABASE_URL'],
   });
 
-// AI provider env. We support two modes:
+// AI provider env. We support three transports:
 //
-//   1. Vercel AI Gateway:    set `AI_GATEWAY_API_KEY`. Models are routed by
-//                            prefixed id (e.g. `openai/gpt-4.1`,
-//                            `google/gemini-2.5-flash`) and billed by Vercel.
-//   2. Direct Google Gemini: set `GOOGLE_GENERATIVE_AI_API_KEY`. The AI SDK
-//                            v5 picks up `@ai-sdk/google` automatically when
-//                            `AI_DEFAULT_MODEL` is `google/...`. Use this in
-//                            personal-mode when you have Gemini credits and
-//                            don't want to add a card to the gateway.
+//   1. Google Vertex AI (direct): set `GOOGLE_VERTEX_PROJECT`,
+//                                 `GOOGLE_VERTEX_LOCATION`, and either
+//                                 `GOOGLE_APPLICATION_CREDENTIALS_JSON`
+//                                 (full SA key JSON, single-line) or
+//                                 `GOOGLE_APPLICATION_CREDENTIALS` (path).
+//                                 Model ids must be prefixed `google-vertex/`.
+//                                 Billed against your GCP project.
+//   2. Vercel AI Gateway:         set `AI_GATEWAY_API_KEY`. Models routed by
+//                                 prefixed id (e.g. `openai/gpt-4.1`).
+//                                 Billed by Vercel.
+//   3. Direct Google Gemini API:  set `GOOGLE_GENERATIVE_AI_API_KEY`. Pair
+//                                 with a `google/...` model id. Free tier.
 //
-// At least one of the two must be set. The default model id below targets
-// Gemini, so out of the box this assumes mode 2.
+// At least one transport must be configured. The resolver in
+// packages/ai/src/model.ts picks per-call based on the model id prefix.
 const AiEnv = z
   .object({
     AI_GATEWAY_API_KEY: z.string().min(1).optional(),
     GOOGLE_GENERATIVE_AI_API_KEY: z.string().min(1).optional(),
-    AI_DEFAULT_MODEL: z.string().default('google/gemini-2.5-flash'),
-    AI_TITLE_MODEL: z.string().default('google/gemini-2.5-flash-lite'),
+    GOOGLE_VERTEX_PROJECT: z.string().min(1).optional(),
+    GOOGLE_VERTEX_LOCATION: z.string().min(1).optional(),
+    GOOGLE_APPLICATION_CREDENTIALS_JSON: z.string().min(1).optional(),
+    GOOGLE_APPLICATION_CREDENTIALS: z.string().min(1).optional(),
+    AI_DEFAULT_MODEL: z.string().default('google-vertex/gemini-2.5-flash'),
+    AI_TITLE_MODEL: z.string().default('google-vertex/gemini-2.5-flash-lite'),
     AI_EMBEDDING_MODEL: z.string().default('openai/text-embedding-3-small'),
   })
   .refine(
-    (v) => Boolean(v.AI_GATEWAY_API_KEY || v.GOOGLE_GENERATIVE_AI_API_KEY),
+    (v) =>
+      Boolean(
+        v.AI_GATEWAY_API_KEY ||
+          v.GOOGLE_GENERATIVE_AI_API_KEY ||
+          (v.GOOGLE_VERTEX_PROJECT && v.GOOGLE_VERTEX_LOCATION),
+      ),
     {
       message:
-        'Either AI_GATEWAY_API_KEY or GOOGLE_GENERATIVE_AI_API_KEY must be set',
+        'Configure one AI transport: GOOGLE_VERTEX_PROJECT+GOOGLE_VERTEX_LOCATION, AI_GATEWAY_API_KEY, or GOOGLE_GENERATIVE_AI_API_KEY',
       path: ['AI_GATEWAY_API_KEY'],
     },
   );
