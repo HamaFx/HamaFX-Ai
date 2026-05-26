@@ -1,19 +1,20 @@
-import type { Metadata } from 'next';
+// /chat — landing page.
+// Behaviour:
+//   - If there are existing threads, redirect to the most recently used one.
+//   - Otherwise create a fresh thread and redirect to it.
+//
+// We do this at the route level (not inside the chat surface) so the URL is
+// always canonical for a thread; refreshing /chat keeps you on the same
+// thread between visits.
 
-import { PageHeader } from '@/components/layout/page-header';
-import { Placeholder } from '@/components/layout/placeholder';
+import { redirect } from 'next/navigation';
 
-export const metadata: Metadata = { title: 'Chat' };
+import { createThread, listThreads } from '@hamafx/ai';
 
-export default function ChatHomePage() {
-  return (
-    <div className="flex flex-col gap-6">
-      <PageHeader title="Chat" description="Talk to your trading copilot." />
-      <Placeholder
-        phase="Phase 1b"
-        title="Chat is not wired up yet"
-        description="The agent, tools, and streaming UI land in Phase 1b — see docs/10-roadmap.md. For now this route exists so the app shell is reachable end-to-end after sign-in."
-      />
-    </div>
-  );
+export const dynamic = 'force-dynamic';
+
+export default async function ChatLanding() {
+  const threads = await listThreads(1);
+  const target = threads[0] ?? (await createThread());
+  redirect(`/chat/${target.id}`);
 }

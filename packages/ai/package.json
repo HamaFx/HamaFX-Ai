@@ -1,0 +1,36 @@
+{
+  "name": "@hamafx/ai",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./tools": "./src/tools/index.ts",
+    "./prompt": "./src/prompt/system.ts"
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest --passWithNoTests",
+    "clean": "rm -rf node_modules .turbo"
+  },
+  "dependencies": {
+    "@ai-sdk/gateway": "^1.0.0",
+    "@hamafx/data": "workspace:*",
+    "@hamafx/db": "workspace:*",
+    "@hamafx/indicators": "workspace:*",
+    "@hamafx/shared": "workspace:*",
+    "ai": "^5.0.0",
+    "drizzle-orm": "^0.38.3",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@hamafx/config": "workspace:*",
+    "@types/node": "^20.14.10",
+    "eslint": "^9.17.0",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  }
+}

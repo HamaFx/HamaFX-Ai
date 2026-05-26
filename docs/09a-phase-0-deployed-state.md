@@ -92,16 +92,16 @@ POST /api/auth/login (bad) → 401 { code:"AUTH" }
 GET  /api/cron/news (no auth) → 401 { code:"AUTH" }
 ```
 
-## Pending integrations (you sign up, paste keys, ship)
+### ⚠️ Pending integrations (you sign up, paste keys, ship)
 
 These are **not configured yet**. None are needed for Phase 0; they unblock
 Phase 1 features as listed.
 
 | Integration | Phase | Where | Notes |
 | --- | --- | --- | --- |
-| **Vercel AI Gateway** | 1b (chat) | https://vercel.com/dashboard/ai-gateway | Generates `AI_GATEWAY_API_KEY`. One key, all providers. |
+| **Vercel AI Gateway** | 1b (chat) ✅ wired | https://vercel.com/dashboard/ai-gateway | `AI_GATEWAY_API_KEY`. `/api/chat` streams via this. |
 | ~~Upstash Redis~~ | ~~1a~~ | n/a | **Skipped.** Phase 1a switched to Next.js Data Cache — free, persistent on Vercel, single-flight built-in. Env vars `UPSTASH_REDIS_REST_*` are accepted but optional. |
-| **Twelve Data** | 1a (FX + XAU prices, candles) | https://twelvedata.com | `TWELVEDATA_API_KEY`. Free tier 800 reqs/day. |
+| **Twelve Data** | 1a (FX + XAU prices, candles) ✅ wired | https://twelvedata.com | `TWELVEDATA_API_KEY`. Free tier 800 reqs/day. |
 | **Marketaux** | 1c (news) | https://marketaux.com | `MARKETAUX_API_KEY`. Free tier 100 reqs/day. |
 | **Finnhub** | 1c (news fallback, FX fallback) | https://finnhub.io | `FINNHUB_API_KEY`. Free tier 60/min. |
 | **Trading Economics** | 1c (calendar) | https://tradingeconomics.com/api | `TRADING_ECONOMICS_KEY`. Has limited free guest key. |

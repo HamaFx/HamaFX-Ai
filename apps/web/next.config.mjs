@@ -8,6 +8,7 @@ const nextConfig = {
     '@hamafx/db',
     '@hamafx/data',
     '@hamafx/indicators',
+    '@hamafx/ai',
     '@hamafx/config',
   ],
 
