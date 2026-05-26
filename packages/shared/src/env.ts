@@ -18,11 +18,22 @@ const AuthEnv = z.object({
   CRON_SECRET: z.string().min(16, 'CRON_SECRET must be at least 16 chars'),
 });
 
-const DbEnv = z.object({
-  DATABASE_URL: z.string().url(),
-  SUPABASE_URL: z.string().url().optional(),
-  SUPABASE_SERVICE_ROLE_KEY: z.string().optional(),
-});
+// We accept either DATABASE_URL or POSTGRES_URL — the Supabase Vercel
+// integration writes POSTGRES_URL (transaction pooler, prepare-statement-safe
+// when the client is configured with `prepare: false`). At consume time the
+// adapter resolves whichever is set; both being unset fails validation.
+const DbEnv = z
+  .object({
+    DATABASE_URL: z.string().url().optional(),
+    POSTGRES_URL: z.string().url().optional(),
+    SUPABASE_URL: z.string().url().optional(),
+    SUPABASE_SERVICE_ROLE_KEY: z.string().optional(),
+    SUPABASE_SECRET_KEY: z.string().optional(),
+  })
+  .refine((v) => Boolean(v.DATABASE_URL || v.POSTGRES_URL), {
+    message: 'Either DATABASE_URL or POSTGRES_URL must be set',
+    path: ['DATABASE_URL'],
+  });
 
 const AiEnv = z.object({
   AI_GATEWAY_API_KEY: z.string().min(1),
@@ -69,15 +80,26 @@ const RuntimeEnv = z.object({
     .transform((v) => v === '1'),
 });
 
-export const ServerEnvSchema = AuthEnv.merge(DbEnv)
-  .merge(AiEnv)
-  .merge(CacheEnv)
-  .merge(ProvidersEnv)
-  .merge(NotifyEnv)
-  .merge(PublicEnv)
-  .merge(RuntimeEnv);
+// `merge()` doesn't compose ZodEffects (refines), so we intersect DbEnv with
+// the rest. `intersection()` preserves both the inferred shape and the refine.
+export const ServerEnvSchema = z.intersection(
+  DbEnv,
+  AuthEnv.merge(AiEnv)
+    .merge(CacheEnv)
+    .merge(ProvidersEnv)
+    .merge(NotifyEnv)
+    .merge(PublicEnv)
+    .merge(RuntimeEnv),
+);
 
 export type ServerEnv = z.infer<typeof ServerEnvSchema>;
+
+/** Resolve the active Postgres connection string, preferring DATABASE_URL. */
+export function resolveDatabaseUrl(env: Pick<ServerEnv, 'DATABASE_URL' | 'POSTGRES_URL'>): string {
+  const url = env.DATABASE_URL || env.POSTGRES_URL;
+  if (!url) throw new Error('Neither DATABASE_URL nor POSTGRES_URL is set');
+  return url;
+}
 
 /**
  * Parse process.env into a typed env object. Throws a readable error listing

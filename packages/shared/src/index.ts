@@ -23,5 +23,5 @@ export * from './ai/tool-io';
 export * from './errors';
 
 // Env (server-only — do NOT import from client code)
-export { ServerEnvSchema, parseServerEnv } from './env';
+export { ServerEnvSchema, parseServerEnv, resolveDatabaseUrl } from './env';
 export type { ServerEnv } from './env';

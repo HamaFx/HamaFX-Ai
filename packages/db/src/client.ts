@@ -17,9 +17,11 @@ let _sql: ReturnType<typeof postgres> | null = null;
 export function getDb(): ReturnType<typeof drizzle> {
   if (_client) return _client;
 
-  const url = process.env.DATABASE_URL;
+  // Accept DATABASE_URL or POSTGRES_URL (the Supabase Vercel integration
+  // provisions POSTGRES_URL on the transaction pooler).
+  const url = process.env.DATABASE_URL || process.env.POSTGRES_URL;
   if (!url) {
-    throw new Error('DATABASE_URL is not set — getDb() called without env config');
+    throw new Error('Neither DATABASE_URL nor POSTGRES_URL is set — getDb() called without env config');
   }
 
   // Supabase pooler in transaction mode requires `prepare: false`. The pooler
