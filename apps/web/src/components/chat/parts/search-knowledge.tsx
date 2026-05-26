@@ -5,7 +5,6 @@
 // populated the index yet, we surface a quiet status line instead of an
 // empty list.
 
-import type { SearchKnowledgeOutput } from '@hamafx/shared';
 import Link from 'next/link';
 
 import type { ToolPartProps } from './registry';
