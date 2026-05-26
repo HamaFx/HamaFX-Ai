@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import { SymbolSchema } from '../symbols.js';
-import { TimeframeSchema } from '../timeframes.js';
+import { SymbolSchema } from '../symbols';
+import { TimeframeSchema } from '../timeframes';
 
 /**
  * Normalised OHLC candle. All providers map to this DTO at the adapter

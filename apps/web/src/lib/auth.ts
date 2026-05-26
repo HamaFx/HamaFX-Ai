@@ -19,21 +19,35 @@ export interface AuthPayload {
 
 /* --------------------------------------------------------------------------
  * base64url helpers (Edge-safe — uses btoa/atob, no Buffer)
+ *
+ * Helpers always allocate a fresh `ArrayBuffer`-backed `Uint8Array` so the
+ * result satisfies `BufferSource` (= `ArrayBufferView<ArrayBuffer>`) without
+ * casts. TS 5.9's lib.dom rejects `Uint8Array<ArrayBufferLike>` for crypto
+ * inputs because that union includes `SharedArrayBuffer`.
  * -------------------------------------------------------------------------- */
+
+type Bytes = Uint8Array<ArrayBuffer>;
+
+function utf8(s: string): Bytes {
+  const enc = new TextEncoder().encode(s);
+  const out = new Uint8Array(new ArrayBuffer(enc.byteLength));
+  out.set(enc);
+  return out;
+}
 
 function bytesToBase64Url(bytes: Uint8Array): string {
   let bin = '';
   for (let i = 0; i < bytes.length; i++) {
     bin += String.fromCharCode(bytes[i]!);
   }
-  return btoa(bin).replaceAll('+', '-').replaceAll('/', '_').replace(/=+$/, '');
+  return btoa(bin).replaceAll('+', '-').replaceAll('_', '/').replace(/=+$/, '');
 }
 
-function base64UrlToBytes(s: string): Uint8Array {
+function base64UrlToBytes(s: string): Bytes {
   const pad = '='.repeat((4 - (s.length % 4)) % 4);
   const b64 = (s + pad).replaceAll('-', '+').replaceAll('_', '/');
   const raw = atob(b64);
-  const out = new Uint8Array(raw.length);
+  const out = new Uint8Array(new ArrayBuffer(raw.length));
   for (let i = 0; i < raw.length; i++) out[i] = raw.charCodeAt(i);
   return out;
 }
@@ -45,7 +59,7 @@ function base64UrlToBytes(s: string): Uint8Array {
 async function getKey(secret: string): Promise<CryptoKey> {
   return crypto.subtle.importKey(
     'raw',
-    new TextEncoder().encode(secret),
+    utf8(secret),
     { name: 'HMAC', hash: 'SHA-256' },
     false,
     ['sign', 'verify'],
@@ -73,10 +87,12 @@ export function timingSafeEqual(a: string, b: string): boolean {
 export async function signAuthToken(secret: string, ttlMs: number = DEFAULT_TTL_MS): Promise<string> {
   const now = Date.now();
   const payload: AuthPayload = { iat: now, exp: now + ttlMs };
-  const payloadBytes = new TextEncoder().encode(JSON.stringify(payload));
+  const payloadBytes = utf8(JSON.stringify(payload));
   const key = await getKey(secret);
   const sigBuf = await crypto.subtle.sign('HMAC', key, payloadBytes);
-  return `${bytesToBase64Url(payloadBytes)}.${bytesToBase64Url(new Uint8Array(sigBuf))}`;
+  const sigBytes = new Uint8Array(new ArrayBuffer(sigBuf.byteLength));
+  sigBytes.set(new Uint8Array(sigBuf));
+  return `${bytesToBase64Url(payloadBytes)}.${bytesToBase64Url(sigBytes)}`;
 }
 
 export async function verifyAuthToken(
@@ -91,8 +107,8 @@ export async function verifyAuthToken(
   const payloadB64 = token.slice(0, dot);
   const sigB64 = token.slice(dot + 1);
 
-  let payloadBytes: Uint8Array;
-  let sigBytes: Uint8Array;
+  let payloadBytes: Bytes;
+  let sigBytes: Bytes;
   try {
     payloadBytes = base64UrlToBytes(payloadB64);
     sigBytes = base64UrlToBytes(sigB64);

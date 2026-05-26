@@ -2,7 +2,7 @@
 // presence of a valid `hfx_auth` cookie. Anything that needs to be reachable
 // without auth (login, auth API, cron) is excluded by `config.matcher` below.
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse, type NextRequest } from 'next/server';
 
 import { AUTH_COOKIE_NAME, verifyAuthToken } from '@/lib/auth';
 import { getAuthEnv } from '@/lib/env';

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { SymbolSchema } from '../symbols.js';
+import { SymbolSchema } from '../symbols';
 
 export const TickSchema = z.object({
   symbol: SymbolSchema,

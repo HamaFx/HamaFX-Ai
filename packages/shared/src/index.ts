@@ -2,26 +2,26 @@
 // the package — never reach into deep paths from consumers.
 
 // Domain primitives
-export * from './symbols.js';
-export * from './timeframes.js';
+export * from './symbols';
+export * from './timeframes';
 
 // Schemas (zod + inferred types)
-export * from './schemas/candle.js';
-export * from './schemas/tick.js';
-export * from './schemas/news.js';
-export * from './schemas/calendar.js';
-export * from './schemas/indicator.js';
-export * from './schemas/chat.js';
-export * from './schemas/alerts.js';
-export * from './schemas/journal.js';
+export * from './schemas/candle';
+export * from './schemas/tick';
+export * from './schemas/news';
+export * from './schemas/calendar';
+export * from './schemas/indicator';
+export * from './schemas/chat';
+export * from './schemas/alerts';
+export * from './schemas/journal';
 
 // AI tool plumbing
-export * from './ai/tool-names.js';
-export * from './ai/tool-io.js';
+export * from './ai/tool-names';
+export * from './ai/tool-io';
 
 // Errors
-export * from './errors.js';
+export * from './errors';
 
 // Env (server-only — do NOT import from client code)
-export { ServerEnvSchema, parseServerEnv } from './env.js';
-export type { ServerEnv } from './env.js';
+export { ServerEnvSchema, parseServerEnv } from './env';
+export type { ServerEnv } from './env';

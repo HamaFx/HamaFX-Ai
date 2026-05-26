@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { SymbolSchema } from '../symbols.js';
+import { SymbolSchema } from '../symbols';
 
 export const TradeSideSchema = z.enum(['long', 'short']);
 export type TradeSide = z.infer<typeof TradeSideSchema>;

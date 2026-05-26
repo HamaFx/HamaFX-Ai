@@ -41,7 +41,6 @@ export async function withCronAuth(
     const result = await fn();
     return Response.json({ ok: true, ...result });
   } catch (err) {
-    // eslint-disable-next-line no-console
     console.error('[cron] handler error', err);
     return Response.json(
       { error: { code: 'INTERNAL', message: 'Cron handler failed' } },

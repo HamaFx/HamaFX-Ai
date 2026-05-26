@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import { SymbolSchema } from '../symbols.js';
-import { TimeframeSchema } from '../timeframes.js';
+import { SymbolSchema } from '../symbols';
+import { TimeframeSchema } from '../timeframes';
 
 export const AlertChannelSchema = z.enum(['email', 'telegram', 'web-push']);
 export type AlertChannel = z.infer<typeof AlertChannelSchema>;

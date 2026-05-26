@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { SymbolSchema } from '../symbols.js';
+import { SymbolSchema } from '../symbols';
 
 export const ChatRoleSchema = z.enum(['user', 'assistant', 'system', 'tool']);
 export type ChatRole = z.infer<typeof ChatRoleSchema>;

@@ -1,7 +1,7 @@
 // Per-tool input/output type shells. Concrete schemas are wired in
 // `packages/ai/src/tools/<name>.ts` once tools are implemented.
 
-import type { ToolName } from './tool-names.js';
+import type { ToolName } from './tool-names';
 
 /**
  * Map tool name -> { input, output } types. Each tool augments this interface
