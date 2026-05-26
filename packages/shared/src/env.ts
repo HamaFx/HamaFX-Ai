@@ -35,12 +35,35 @@ const DbEnv = z
     path: ['DATABASE_URL'],
   });
 
-const AiEnv = z.object({
-  AI_GATEWAY_API_KEY: z.string().min(1),
-  AI_DEFAULT_MODEL: z.string().default('openai/gpt-4.1'),
-  AI_TITLE_MODEL: z.string().default('openai/gpt-4.1-mini'),
-  AI_EMBEDDING_MODEL: z.string().default('openai/text-embedding-3-small'),
-});
+// AI provider env. We support two modes:
+//
+//   1. Vercel AI Gateway:    set `AI_GATEWAY_API_KEY`. Models are routed by
+//                            prefixed id (e.g. `openai/gpt-4.1`,
+//                            `google/gemini-2.5-flash`) and billed by Vercel.
+//   2. Direct Google Gemini: set `GOOGLE_GENERATIVE_AI_API_KEY`. The AI SDK
+//                            v5 picks up `@ai-sdk/google` automatically when
+//                            `AI_DEFAULT_MODEL` is `google/...`. Use this in
+//                            personal-mode when you have Gemini credits and
+//                            don't want to add a card to the gateway.
+//
+// At least one of the two must be set. The default model id below targets
+// Gemini, so out of the box this assumes mode 2.
+const AiEnv = z
+  .object({
+    AI_GATEWAY_API_KEY: z.string().min(1).optional(),
+    GOOGLE_GENERATIVE_AI_API_KEY: z.string().min(1).optional(),
+    AI_DEFAULT_MODEL: z.string().default('google/gemini-2.5-flash'),
+    AI_TITLE_MODEL: z.string().default('google/gemini-2.5-flash-lite'),
+    AI_EMBEDDING_MODEL: z.string().default('openai/text-embedding-3-small'),
+  })
+  .refine(
+    (v) => Boolean(v.AI_GATEWAY_API_KEY || v.GOOGLE_GENERATIVE_AI_API_KEY),
+    {
+      message:
+        'Either AI_GATEWAY_API_KEY or GOOGLE_GENERATIVE_AI_API_KEY must be set',
+      path: ['AI_GATEWAY_API_KEY'],
+    },
+  );
 
 // Upstash Redis is intentionally OPTIONAL. Personal-mode caching uses Next.js's
 // built-in Data Cache (`fetch`-cache + `unstable_cache`) which is free, persists
@@ -86,12 +109,12 @@ const RuntimeEnv = z.object({
     .transform((v) => v === '1'),
 });
 
-// `merge()` doesn't compose ZodEffects (refines), so we intersect DbEnv with
-// the rest. `intersection()` preserves both the inferred shape and the refine.
+// `merge()` doesn't compose ZodEffects (refines). Both DbEnv and AiEnv are
+// refined, so we intersect them with the rest. `intersection()` preserves
+// each branch's inferred shape and validations.
 export const ServerEnvSchema = z.intersection(
-  DbEnv,
-  AuthEnv.merge(AiEnv)
-    .merge(CacheEnv)
+  z.intersection(DbEnv, AiEnv),
+  AuthEnv.merge(CacheEnv)
     .merge(ProvidersEnv)
     .merge(NotifyEnv)
     .merge(PublicEnv)

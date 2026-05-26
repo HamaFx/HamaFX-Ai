@@ -14,6 +14,7 @@ import {
 
 import { buildLiveSnapshot } from './context';
 import { enforceDailyBudget } from './cost';
+import { resolveModel } from './model';
 import {
   appendAssistantMessage,
   appendUserMessage,
@@ -33,7 +34,13 @@ export interface RunChatArgs {
   /** Whole env — caller passes the already-validated ServerEnv. */
   env: Pick<
     ServerEnv,
-    'AI_DEFAULT_MODEL' | 'AI_TITLE_MODEL' | 'MAX_DAILY_USD' | 'MAX_TOOL_ITERATIONS' | 'LOG_PROMPTS'
+    | 'AI_GATEWAY_API_KEY'
+    | 'GOOGLE_GENERATIVE_AI_API_KEY'
+    | 'AI_DEFAULT_MODEL'
+    | 'AI_TITLE_MODEL'
+    | 'MAX_DAILY_USD'
+    | 'MAX_TOOL_ITERATIONS'
+    | 'LOG_PROMPTS'
   >;
   /** Optional model override (e.g. coming from thread.modelOverride). */
   modelOverride?: string | null;
@@ -80,7 +87,8 @@ export async function runChat(args: RunChatArgs) {
     ),
   );
 
-  const model = modelOverride ?? env.AI_DEFAULT_MODEL;
+  const modelId = modelOverride ?? env.AI_DEFAULT_MODEL;
+  const model = resolveModel(modelId, env);
   const systemPrompt = buildSystemPrompt(snapshot);
 
   if (env.LOG_PROMPTS) {
@@ -115,7 +123,7 @@ export async function runChat(args: RunChatArgs) {
         await recordTelemetry({
           threadId,
           messageId,
-          model,
+          model: modelId,
           inputTokens: usage?.inputTokens ?? 0,
           outputTokens: usage?.outputTokens ?? 0,
           toolCalls: countToolCalls(response.messages),
@@ -147,6 +155,8 @@ export async function runChat(args: RunChatArgs) {
               firstUser,
               firstAssistant,
               env: {
+                AI_GATEWAY_API_KEY: env.AI_GATEWAY_API_KEY,
+                GOOGLE_GENERATIVE_AI_API_KEY: env.GOOGLE_GENERATIVE_AI_API_KEY,
                 AI_TITLE_MODEL: env.AI_TITLE_MODEL,
                 MAX_DAILY_USD: env.MAX_DAILY_USD,
                 LOG_PROMPTS: env.LOG_PROMPTS,

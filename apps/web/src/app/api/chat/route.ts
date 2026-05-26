@@ -59,6 +59,8 @@ export async function POST(req: Request): Promise<Response> {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       userMessage: last as any,
       env: {
+        AI_GATEWAY_API_KEY: env.AI_GATEWAY_API_KEY,
+        GOOGLE_GENERATIVE_AI_API_KEY: env.GOOGLE_GENERATIVE_AI_API_KEY,
         AI_DEFAULT_MODEL: env.AI_DEFAULT_MODEL,
         AI_TITLE_MODEL: env.AI_TITLE_MODEL,
         MAX_DAILY_USD: env.MAX_DAILY_USD,

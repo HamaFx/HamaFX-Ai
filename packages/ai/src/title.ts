@@ -10,6 +10,7 @@ import type { ServerEnv } from '@hamafx/shared';
 import { generateText } from 'ai';
 
 import { dailySpendUsd } from './cost';
+import { resolveModel } from './model';
 
 export interface GenerateTitleArgs {
   threadId: string;
@@ -17,7 +18,14 @@ export interface GenerateTitleArgs {
   firstUser: string;
   /** Plain text of the first assistant UIMessage. */
   firstAssistant: string;
-  env: Pick<ServerEnv, 'AI_TITLE_MODEL' | 'MAX_DAILY_USD' | 'LOG_PROMPTS'>;
+  env: Pick<
+    ServerEnv,
+    | 'AI_GATEWAY_API_KEY'
+    | 'GOOGLE_GENERATIVE_AI_API_KEY'
+    | 'AI_TITLE_MODEL'
+    | 'MAX_DAILY_USD'
+    | 'LOG_PROMPTS'
+  >;
   /** Aborts the LLM call when the originating request goes away. */
   signal?: AbortSignal;
 }
@@ -107,8 +115,9 @@ export async function generateTitle(args: GenerateTitleArgs): Promise<GenerateTi
   const startedAt = Date.now();
   try {
     const generateArgs: Parameters<typeof generateText>[0] = {
-      // AI Gateway model strings work directly when AI_GATEWAY_API_KEY is set.
-      model: env.AI_TITLE_MODEL,
+      // Resolve the id either to a gateway-routed string or a direct provider
+      // model instance, depending on which transport is configured.
+      model: resolveModel(env.AI_TITLE_MODEL, env),
       system: SYSTEM_PROMPT,
       prompt: userPrompt,
     };

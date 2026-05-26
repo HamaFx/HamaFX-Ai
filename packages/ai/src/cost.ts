@@ -29,6 +29,8 @@ const RATES: Record<string, ModelRate> = {
   'anthropic/claude-3.7-sonnet': { inputPerM: 3, outputPerM: 15 },
   'anthropic/claude-sonnet-4': { inputPerM: 3, outputPerM: 15 },
   'google/gemini-2.5-flash': { inputPerM: 0.3, outputPerM: 2.5 },
+  'google/gemini-2.5-flash-lite': { inputPerM: 0.1, outputPerM: 0.4 },
+  'google/gemini-2.5-pro': { inputPerM: 1.25, outputPerM: 10 },
 };
 
 const FALLBACK_RATE: ModelRate = { inputPerM: 5, outputPerM: 15 };

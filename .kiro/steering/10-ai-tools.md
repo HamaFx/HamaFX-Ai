@@ -20,11 +20,11 @@ When working in `packages/ai/**`:
 
 ## Models
 
-- Default chat: `openai/gpt-4.1` (or `anthropic/claude-3.7-sonnet`).
-- Titles / cheap calls: `openai/gpt-4.1-mini`.
-- Embeddings: `openai/text-embedding-3-small`.
+- Default chat: `google/gemini-2.5-flash` (or `openai/gpt-4.1` / `anthropic/claude-3.7-sonnet` via gateway).
+- Titles / cheap calls: `google/gemini-2.5-flash-lite`.
+- Embeddings: `openai/text-embedding-3-small` (1536-dim, matches the `news_embeddings` column).
 
-All routed through Vercel AI Gateway; never hit provider SDKs directly.
+All routed through Vercel AI Gateway when `AI_GATEWAY_API_KEY` is set; otherwise routed directly to Google via `@ai-sdk/google` when `GOOGLE_GENERATIVE_AI_API_KEY` is set and the model id starts with `google/`. Personal-mode permits the direct path so we can use the free Gemini tier without putting a card on the gateway. Never hit other provider SDKs directly.
 
 ## System prompt
 
