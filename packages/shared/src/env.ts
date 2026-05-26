@@ -42,9 +42,15 @@ const AiEnv = z.object({
   AI_EMBEDDING_MODEL: z.string().default('openai/text-embedding-3-small'),
 });
 
+// Upstash Redis is intentionally OPTIONAL. Personal-mode caching uses Next.js's
+// built-in Data Cache (`fetch`-cache + `unstable_cache`) which is free, persists
+// across invocations on Vercel, and covers our entire TTL policy. Setting these
+// vars is supported as a future swap-in but no code path requires them today.
+//
+// See docs/06-data-sources.md § "Cache layer" and packages/data/src/cache/.
 const CacheEnv = z.object({
-  UPSTASH_REDIS_REST_URL: z.string().url(),
-  UPSTASH_REDIS_REST_TOKEN: z.string().min(1),
+  UPSTASH_REDIS_REST_URL: z.string().url().optional(),
+  UPSTASH_REDIS_REST_TOKEN: z.string().min(1).optional(),
 });
 
 const ProvidersEnv = z.object({

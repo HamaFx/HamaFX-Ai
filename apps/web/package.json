@@ -9,11 +9,13 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
-    "test": "vitest",
+    "test": "vitest --passWithNoTests",
     "clean": "rm -rf node_modules .turbo .next"
   },
   "dependencies": {
+    "@hamafx/data": "workspace:*",
     "@hamafx/db": "workspace:*",
+    "@hamafx/indicators": "workspace:*",
     "@hamafx/shared": "workspace:*",
     "clsx": "^2.1.1",
     "next": "^15.1.4",

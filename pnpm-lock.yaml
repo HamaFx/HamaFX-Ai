@@ -29,9 +29,15 @@ importers:
 
   apps/web:
     dependencies:
+      '@hamafx/data':
+        specifier: workspace:*
+        version: link:../../packages/data
       '@hamafx/db':
         specifier: workspace:*
         version: link:../../packages/db
+      '@hamafx/indicators':
+        specifier: workspace:*
+        version: link:../../packages/indicators
       '@hamafx/shared':
         specifier: workspace:*
         version: link:../../packages/shared
@@ -103,6 +109,31 @@ importers:
         specifier: ^8.19.0
         version: 8.60.0(eslint@9.39.4(jiti@2.7.0))(typescript@5.9.3)
 
+  packages/data:
+    dependencies:
+      '@hamafx/shared':
+        specifier: workspace:*
+        version: link:../shared
+      zod:
+        specifier: ^3.23.8
+        version: 3.25.76
+    devDependencies:
+      '@hamafx/config':
+        specifier: workspace:*
+        version: link:../config
+      '@types/node':
+        specifier: ^20.14.10
+        version: 20.19.41
+      eslint:
+        specifier: ^9.17.0
+        version: 9.39.4(jiti@2.7.0)
+      typescript:
+        specifier: ^5.7.2
+        version: 5.9.3
+      vitest:
+        specifier: ^2.1.8
+        version: 2.1.9(@types/node@20.19.41)(lightningcss@1.32.0)
+
   packages/db:
     dependencies:
       '@hamafx/shared':
@@ -130,6 +161,31 @@ importers:
       typescript:
         specifier: ^5.7.2
         version: 5.9.3
+
+  packages/indicators:
+    dependencies:
+      '@hamafx/shared':
+        specifier: workspace:*
+        version: link:../shared
+      zod:
+        specifier: ^3.23.8
+        version: 3.25.76
+    devDependencies:
+      '@hamafx/config':
+        specifier: workspace:*
+        version: link:../config
+      '@types/node':
+        specifier: ^20.14.10
+        version: 20.19.41
+      eslint:
+        specifier: ^9.17.0
+        version: 9.39.4(jiti@2.7.0)
+      typescript:
+        specifier: ^5.7.2
+        version: 5.9.3
+      vitest:
+        specifier: ^2.1.8
+        version: 2.1.9(@types/node@20.19.41)(lightningcss@1.32.0)
 
   packages/shared:
     dependencies:
