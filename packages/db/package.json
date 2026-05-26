@@ -17,6 +17,7 @@
     "clean": "rm -rf node_modules .turbo dist",
     "migrate:gen": "drizzle-kit generate",
     "migrate:apply": "drizzle-kit migrate",
+    "migrate:setup-extensions": "node scripts/install-extensions.mjs",
     "studio": "drizzle-kit studio"
   },
   "dependencies": {

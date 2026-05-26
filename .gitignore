@@ -17,6 +17,9 @@ coverage/
 # env
 .env
 .env.local
+.env.production
+.env.development
+.env.preview
 .env.*.local
 !.env.example
 
