@@ -4,6 +4,7 @@
 import { getCalendarTool } from './get-calendar';
 import { getCandlesTool } from './get-candles';
 import { getIndicatorsTool } from './get-indicators';
+import { getMarketStructureTool } from './get-market-structure';
 import { getNewsTool } from './get-news';
 import { getPriceTool } from './get-price';
 import { logJournalTool } from './log-journal';
@@ -13,6 +14,7 @@ export const tools = {
   get_price: getPriceTool,
   get_candles: getCandlesTool,
   get_indicators: getIndicatorsTool,
+  get_market_structure: getMarketStructureTool,
   get_news: getNewsTool,
   get_calendar: getCalendarTool,
   set_alert: setAlertTool,

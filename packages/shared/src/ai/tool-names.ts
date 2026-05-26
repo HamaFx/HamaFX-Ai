@@ -12,6 +12,7 @@ export const TOOL_NAMES = [
   'get_price',
   'get_candles',
   'get_indicators',
+  'get_market_structure',
   'get_news',
   'get_calendar',
   'set_alert',
