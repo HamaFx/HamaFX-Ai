@@ -61,6 +61,7 @@ export async function POST(req: Request): Promise<Response> {
       userMessage: last as any,
       env: {
         AI_DEFAULT_MODEL: env.AI_DEFAULT_MODEL,
+        AI_TITLE_MODEL: env.AI_TITLE_MODEL,
         MAX_DAILY_USD: env.MAX_DAILY_USD,
         MAX_TOOL_ITERATIONS: env.MAX_TOOL_ITERATIONS,
         LOG_PROMPTS: env.LOG_PROMPTS,

@@ -15,8 +15,16 @@ import { type ServerEnv } from '@hamafx/shared';
 
 import { buildLiveSnapshot } from './context';
 import { enforceDailyBudget } from './cost';
-import { appendAssistantMessage, appendUserMessage, listMessages, recordTelemetry } from './persistence';
+import {
+  appendAssistantMessage,
+  appendUserMessage,
+  getThread,
+  listMessages,
+  recordTelemetry,
+  updateThreadTitle,
+} from './persistence';
 import { buildSystemPrompt } from './prompt/system';
+import { generateTitle } from './title';
 import { tools } from './tools';
 
 export interface RunChatArgs {
@@ -24,7 +32,10 @@ export interface RunChatArgs {
   /** Most recent user UIMessage to append + answer. */
   userMessage: UIMessage;
   /** Whole env — caller passes the already-validated ServerEnv. */
-  env: Pick<ServerEnv, 'AI_DEFAULT_MODEL' | 'MAX_DAILY_USD' | 'MAX_TOOL_ITERATIONS' | 'LOG_PROMPTS'>;
+  env: Pick<
+    ServerEnv,
+    'AI_DEFAULT_MODEL' | 'AI_TITLE_MODEL' | 'MAX_DAILY_USD' | 'MAX_TOOL_ITERATIONS' | 'LOG_PROMPTS'
+  >;
   /** Optional model override (e.g. coming from thread.modelOverride). */
   modelOverride?: string | null;
   /** Aborts streaming + tool calls when the client disconnects. */
@@ -117,6 +128,51 @@ export async function runChat(args: RunChatArgs) {
       } catch (err) {
         // Persistence failures must not crash the stream — log and move on.
         console.error('[ai] persistence/telemetry failed', err);
+      }
+
+      // Auto-title (first-turn only). Best-effort: any failure is swallowed
+      // so the chat UX never regresses on a title side-effect bug.
+      try {
+        const thread = await getThread(threadId);
+        if (thread && thread.title === null) {
+          const all = await listMessages(threadId, 50);
+          const firstUser = (all.find((m) => m.role === 'user')?.content ?? '').slice(0, 1024);
+          const firstAssistant = (all.find((m) => m.role === 'assistant')?.content ?? '').slice(0, 1024);
+          if (firstUser.length > 0 && firstAssistant.length > 0) {
+            const titleStartedAt = Date.now();
+            const titleArgs: Parameters<typeof generateTitle>[0] = {
+              threadId,
+              firstUser,
+              firstAssistant,
+              env: {
+                AI_TITLE_MODEL: env.AI_TITLE_MODEL,
+                MAX_DAILY_USD: env.MAX_DAILY_USD,
+                LOG_PROMPTS: env.LOG_PROMPTS,
+              },
+            };
+            if (signal) titleArgs.signal = signal;
+            const titleResult = await generateTitle(titleArgs);
+            await updateThreadTitle(threadId, titleResult.title, titleResult.source);
+            const kind: 'title_generated' | 'title_skipped_budget' | 'title_failed' =
+              titleResult.source === 'llm'
+                ? 'title_generated'
+                : titleResult.reason === 'budget'
+                  ? 'title_skipped_budget'
+                  : 'title_failed';
+            await recordTelemetry({
+              threadId,
+              messageId: null,
+              model: env.AI_TITLE_MODEL,
+              inputTokens: titleResult.inputTokens ?? 0,
+              outputTokens: titleResult.outputTokens ?? 0,
+              toolCalls: 0,
+              ms: titleResult.latencyMs ?? Date.now() - titleStartedAt,
+              kind,
+            });
+          }
+        }
+      } catch (err) {
+        console.error('[ai] auto-title failed', err);
       }
     },
   };

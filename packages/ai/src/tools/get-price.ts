@@ -8,25 +8,19 @@ import { tool } from 'ai';
 import { z } from 'zod';
 
 import { getPrice, ProviderError } from '@hamafx/data';
-import { SymbolSchema, type Tick } from '@hamafx/shared';
+import { type GetPriceOutput, SymbolSchema } from '@hamafx/shared';
 
 const InputSchema = z.object({
   symbols: z.array(SymbolSchema).min(1).max(3),
 });
 
-interface Output {
-  ticks: Tick[];
-  /** ISO timestamp the answer was assembled at (helps the model state freshness). */
-  asOf: string;
-}
-
-export type { Output as GetPriceOutput };
-
-// Module-augment the shared ToolIOMap so consumers (e.g. message-part
-// renderers) get strongly-typed inputs/outputs by tool name.
+// Module-augment the shared ToolIOMap so consumers get strongly-typed inputs
+// by tool name. Outputs are sourced centrally from `ToolOutputMap` in
+// `@shared/ai/tool-io` (driven by the per-tool zod schemas in
+// `@shared/schemas/tool-outputs/`), so we don't redeclare them here.
 declare module '@hamafx/shared' {
   interface ToolIOMap {
-    get_price: { input: z.infer<typeof InputSchema>; output: Output };
+    get_price: { input: z.infer<typeof InputSchema> };
   }
 }
 
@@ -34,7 +28,7 @@ export const getPriceTool = tool({
   description:
     'Fetch the most recent mid price for one or more supported symbols (XAUUSD, EURUSD, GBPUSD). Use only when the LIVE_SNAPSHOT in the system prompt is missing the symbol or older than 10 seconds.',
   inputSchema: InputSchema,
-  execute: async ({ symbols }): Promise<Output> => {
+  execute: async ({ symbols }): Promise<GetPriceOutput> => {
     const ticks = await Promise.all(
       symbols.map(async (s) => {
         try {

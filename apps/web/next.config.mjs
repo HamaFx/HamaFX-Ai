@@ -31,6 +31,22 @@ const nextConfig = {
           },
         ],
       },
+      // The service worker must never be cached by the browser HTTP cache —
+      // otherwise updated workers won't propagate within Phase 1's update
+      // window. `Service-Worker-Allowed: /` lets us register at root scope
+      // even though the file is served from `/sw.js` (no scope-setting
+      // header is strictly required at root, but it's explicit + future-proof).
+      {
+        source: '/sw.js',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'no-cache, no-store, must-revalidate',
+          },
+          { key: 'Service-Worker-Allowed', value: '/' },
+          { key: 'Content-Type', value: 'application/javascript; charset=utf-8' },
+        ],
+      },
     ];
   },
 

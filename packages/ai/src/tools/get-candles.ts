@@ -8,7 +8,7 @@ import { tool } from 'ai';
 import { z } from 'zod';
 
 import { getCandles } from '@hamafx/data';
-import { type Candle, SymbolSchema, TimeframeSchema } from '@hamafx/shared';
+import { type GetCandlesOutput, SymbolSchema, TimeframeSchema } from '@hamafx/shared';
 
 const InputSchema = z.object({
   symbol: SymbolSchema,
@@ -17,17 +17,9 @@ const InputSchema = z.object({
   count: z.number().int().min(10).max(500).default(120),
 });
 
-interface Output {
-  symbol: string;
-  tf: string;
-  candles: Candle[];
-}
-
-export type { Output as GetCandlesOutput };
-
 declare module '@hamafx/shared' {
   interface ToolIOMap {
-    get_candles: { input: z.infer<typeof InputSchema>; output: Output };
+    get_candles: { input: z.infer<typeof InputSchema> };
   }
 }
 
@@ -35,7 +27,7 @@ export const getCandlesTool = tool({
   description:
     'Fetch OHLC candles for one symbol at one timeframe (e.g. XAUUSD 1h). Use to confirm a recent swing high/low or to feed a pattern read. For RSI/MACD/EMA/etc. prefer get_indicators.',
   inputSchema: InputSchema,
-  execute: async ({ symbol, tf, count }): Promise<Output> => {
+  execute: async ({ symbol, tf, count }): Promise<GetCandlesOutput> => {
     const candles = await getCandles(symbol, tf, { count });
     return { symbol, tf, candles };
   },

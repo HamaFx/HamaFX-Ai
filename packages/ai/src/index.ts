@@ -10,6 +10,12 @@ export {
   enforceDailyBudget,
   BudgetExceededError,
 } from './cost';
+export {
+  generateTitle,
+  deterministicFallbackTitle,
+  type GenerateTitleArgs,
+  type GenerateTitleResult,
+} from './title';
 export { embedTexts, type EmbedTextsArgs, type EmbedResult } from './embeddings';
 export {
   upsertArticles,

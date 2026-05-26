@@ -12,10 +12,11 @@ import { z } from 'zod';
 import { getCandles } from '@hamafx/data';
 import { computeStructure } from '@hamafx/indicators';
 import {
+  type GetMarketStructureOutput,
   StructureKindSchema,
+  type StructureResult,
   SymbolSchema,
   TimeframeSchema,
-  type StructureResult,
 } from '@hamafx/shared';
 
 const InputSchema = z.object({
@@ -32,25 +33,9 @@ const InputSchema = z.object({
   lookback: z.number().int().min(2).max(10).default(3),
 });
 
-interface Output {
-  symbol: string;
-  tf: string;
-  bars: number;
-  /** Latest 30 of each list — older items are rarely actionable. */
-  swings?: StructureResult['swings'];
-  events?: StructureResult['events'];
-  fvg?: StructureResult['fvg'];
-  orderBlocks?: StructureResult['orderBlocks'];
-  liquidity?: StructureResult['liquidity'];
-  /** Quick prose summary the model can quote without reasoning over arrays. */
-  summary: string;
-}
-
-export type { Output as GetMarketStructureOutput };
-
 declare module '@hamafx/shared' {
   interface ToolIOMap {
-    get_market_structure: { input: z.infer<typeof InputSchema>; output: Output };
+    get_market_structure: { input: z.infer<typeof InputSchema> };
   }
 }
 
@@ -60,7 +45,7 @@ export const getMarketStructureTool = tool({
   description:
     'Detect SMC market structure on a (symbol, timeframe) window: swing pivots, break-of-structure / change-of-character events, fair value gaps, order blocks, and liquidity sweeps. Use when the user asks about trend bias, structural breaks, FVGs, OBs, or where stops likely got swept.',
   inputSchema: InputSchema,
-  execute: async ({ symbol, tf, count, kinds, lookback }): Promise<Output> => {
+  execute: async ({ symbol, tf, count, kinds, lookback }): Promise<GetMarketStructureOutput> => {
     const candles = await getCandles(symbol, tf, { count });
     const r = computeStructure({
       symbol,

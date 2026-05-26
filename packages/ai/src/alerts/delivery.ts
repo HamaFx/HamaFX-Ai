@@ -4,11 +4,19 @@
 //
 // We use plain fetch against Resend's API to avoid an extra dep; their API
 // is a single POST with a JSON body.
+//
+// Ordering contract (Requirements 7.5, 7.6):
+//   1. Build the email payload.
+//   2. POST to Resend and await the response.
+//   3. On 2xx → call markFired, then return ok.
+//   4. On non-2xx (or fetch error) → log the Resend status + truncated body
+//      and return without calling markFired so the next cron tick retries.
 
 import type { Alert } from '@hamafx/shared';
 
 import { describeRule, type RuleReading } from './evaluator';
 import type { EvaluatorEnv } from './evaluator';
+import { markFired } from './persistence';
 
 export interface DeliveryResult {
   alertId: string;
@@ -53,8 +61,10 @@ export async function deliverAlert({ alert, reading, env }: DeliverArgs): Promis
 
 async function deliverEmail({ alert, reading, env }: DeliverArgs): Promise<DeliveryResult> {
   if (!env.RESEND_API_KEY || !env.ALERT_FROM_EMAIL || !env.ALERT_TO_EMAIL) {
-    // Don't error — log + continue. Alert still gets marked fired so we don't
-    // re-fire next cron beat once delivery is configured.
+    // No Resend call happens, so there is no 2xx and we deliberately do NOT
+    // call markFired. The alert will keep matching every cron tick until the
+    // user either deactivates it or fills in the env vars — which is the
+    // signal the spec wants (Requirement 7.5 conditions on env vars present).
     console.warn('[alerts] email channel not configured (RESEND_*); skipping');
     return {
       alertId: alert.id,
@@ -83,23 +93,36 @@ async function deliverEmail({ alert, reading, env }: DeliverArgs): Promise<Deliv
       }),
     });
   } catch (err) {
+    const msg = err instanceof Error ? err.message : 'fetch failed';
+    console.error(`[alerts] resend fetch failed for alert ${alert.id}: ${msg}`);
     return {
       alertId: alert.id,
       channel: 'email',
       ok: false,
-      message: err instanceof Error ? err.message : 'fetch failed',
+      message: msg,
     };
   }
 
   if (!res.ok) {
     const text = await res.text().catch(() => '');
+    const truncated = text.slice(0, 200);
+    // Log here so the failure is visible in Vercel function logs even though
+    // the evaluator only surfaces the DeliveryResult upward.
+    console.error(
+      `[alerts] resend HTTP ${res.status} for alert ${alert.id}: ${truncated}`,
+    );
     return {
       alertId: alert.id,
       channel: 'email',
       ok: false,
-      message: `resend HTTP ${res.status}: ${text.slice(0, 200)}`,
+      message: `resend HTTP ${res.status}: ${truncated}`,
     };
   }
+
+  // 2xx response — only now do we mark the alert as fired. This is the single
+  // point where markFired is called for the email channel; the evaluator does
+  // not call it separately.
+  await markFired(alert.id);
   return { alertId: alert.id, channel: 'email', ok: true };
 }
 

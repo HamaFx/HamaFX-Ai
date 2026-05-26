@@ -1,5 +1,7 @@
 import { BottomNav } from '@/components/layout/bottom-nav';
+import { OfflineBanner } from '@/components/layout/offline-banner';
 import { TopBar } from '@/components/layout/top-bar';
+import { SwRegister } from '@/components/providers/sw-register';
 
 /**
  * Mobile-first shell shared by all authenticated pages.
@@ -15,6 +17,7 @@ import { TopBar } from '@/components/layout/top-bar';
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="bg-bg text-fg min-h-svh">
+      <SwRegister />
       <TopBar />
       <main
         className="mx-auto w-full max-w-2xl px-4 pt-4"
@@ -23,6 +26,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       >
         {children}
       </main>
+      <OfflineBanner />
       <BottomNav />
     </div>
   );

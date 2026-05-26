@@ -1,11 +1,12 @@
 // Renders one chat message — user or assistant. Iterates over UIMessage parts
-// and dispatches each to its dedicated renderer. Tool parts get the generic
-// ToolCard; text parts get plain prose.
+// and dispatches each to its dedicated renderer. Tool parts go through
+// `ChatToolPart`, which routes known tools to bespoke renderers and falls
+// back to the generic `ToolCard` for unknown tools.
 
 import type { UIMessage } from 'ai';
 
+import { ChatToolPart, type ToolPartState } from './parts/registry';
 import { TextPart } from './parts/text';
-import { ToolCard } from './parts/tool-card';
 import { cn } from '@/lib/cn';
 
 interface MessageProps {
@@ -28,6 +29,27 @@ export function Message({ message }: MessageProps) {
   );
 }
 
+/** AI SDK v5 streamed tool-part state vocabulary. */
+type StreamToolState =
+  | 'input-streaming'
+  | 'input-available'
+  | 'output-available'
+  | 'output-error';
+
+/** Translate AI SDK stream-part state to the registry's `ToolPartState`. */
+function toPartState(state: StreamToolState): ToolPartState {
+  if (state === 'output-available') return 'done';
+  if (state === 'output-error') return 'error';
+  return 'loading';
+}
+
+/** Narrow tool-part fields without resorting to `any`. */
+interface StreamToolPart {
+  state?: StreamToolState;
+  output?: unknown;
+  errorText?: string;
+}
+
 function renderPart(
   part: UIMessage['parts'][number],
   idx: number,
@@ -47,16 +69,17 @@ function renderPart(
   // Tool parts — `tool-<name>`. AI SDK v5 sends:
   //   { type: 'tool-<name>', toolCallId, state, input, output?, errorText? }
   if (part.type.startsWith('tool-')) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const p = part as any;
+    const p = part as StreamToolPart;
+    const name = part.type.slice('tool-'.length);
+    const streamState: StreamToolState = p.state ?? 'output-available';
+    const errorMessage = p.errorText;
     return (
-      <ToolCard
+      <ChatToolPart
         key={idx}
-        name={part.type}
-        state={p.state ?? 'output-available'}
-        input={p.input}
-        output={p.output}
-        errorText={p.errorText}
+        name={name}
+        output={p.output ?? null}
+        state={toPartState(streamState)}
+        {...(errorMessage !== undefined ? { errorMessage } : {})}
       />
     );
   }
