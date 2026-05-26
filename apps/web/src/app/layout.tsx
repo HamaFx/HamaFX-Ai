@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from 'next';
 import { Inter, JetBrains_Mono } from 'next/font/google';
 
+import { Providers } from '@/components/providers';
+
 import './globals.css';
 
 const inter = Inter({
@@ -44,7 +46,9 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${inter.variable} ${jetbrainsMono.variable}`} suppressHydrationWarning>
-      <body className="bg-bg text-fg min-h-svh antialiased">{children}</body>
+      <body className="bg-bg text-fg min-h-svh antialiased">
+        <Providers>{children}</Providers>
+      </body>
     </html>
   );
 }
