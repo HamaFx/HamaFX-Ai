@@ -4,13 +4,12 @@
 // Postgres, then hands off to the client `<ChatSurface>` for the streaming
 // `useChat` experience.
 
+import { getThread, listMessages } from '@hamafx/ai';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 
-import { getThread, listMessages } from '@hamafx/ai';
-
-import { PageHeader } from '@/components/layout/page-header';
 import { ChatSurface } from '@/components/chat/chat-surface';
+import { PageHeader } from '@/components/layout/page-header';
 
 export const dynamic = 'force-dynamic';
 
@@ -43,9 +42,10 @@ export default async function ChatThreadPage({ params }: PageProps) {
   const initialMessages = dbMessages.map((m) => ({
     id: m.id,
     role: m.role as 'user' | 'assistant' | 'system',
-    parts: Array.isArray(m.parts) && m.parts.length > 0
-      ? (m.parts as { type: string }[])
-      : ([{ type: 'text', text: m.content }] as { type: 'text'; text: string }[]),
+    parts:
+      Array.isArray(m.parts) && m.parts.length > 0
+        ? (m.parts as { type: string }[])
+        : ([{ type: 'text', text: m.content }] as { type: 'text'; text: string }[]),
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   })) as any[];
 

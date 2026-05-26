@@ -3,7 +3,6 @@
 // Auto-scrolls to the bottom whenever messages change OR a new tool part
 // streams in. Uses an IntersectionObserver-based "is the bottom visible?"
 // check so we don't snap-scroll if the user has scrolled up to read history.
-
 import type { UIMessage } from 'ai';
 import { useEffect, useRef } from 'react';
 
@@ -57,10 +56,10 @@ export function MessageList({ messages, isStreaming }: MessageListProps) {
 function EmptyState() {
   return (
     <div className="text-fg-muted mx-auto max-w-md py-12 text-center text-sm">
-      <p className="mb-3 text-base font-semibold text-fg">Ask about XAU, EUR, or GBP.</p>
+      <p className="text-fg mb-3 text-base font-semibold">Ask about XAU, EUR, or GBP.</p>
       <p>
-        Try: <em>“What&apos;s pushing gold today?”</em> ·{' '}
-        <em>“EMA 50 trend on EURUSD 1h”</em> · <em>“Daily pivots for XAU”</em>.
+        Try: <em>“What&apos;s pushing gold today?”</em> · <em>“EMA 50 trend on EURUSD 1h”</em> ·{' '}
+        <em>“Daily pivots for XAU”</em>.
       </p>
     </div>
   );

@@ -1,8 +1,8 @@
+import type { Candle } from '@hamafx/shared';
 import { describe, expect, it } from 'vitest';
 
 import { detectLiquiditySweeps } from '../src/smc/liquidity';
 import { findSwings } from '../src/smc/swings';
-import type { Candle } from '@hamafx/shared';
 
 function bar(i: number, o: number, h: number, l: number, c: number): Candle {
   return {

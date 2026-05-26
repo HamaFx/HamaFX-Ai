@@ -24,8 +24,7 @@ const BodySchema = z.object({ to: z.string().email().optional() });
 
 const RESEND_ENDPOINT = 'https://api.resend.com/emails';
 const SUBJECT = '[HamaFX-Ai] Test alert email';
-const TEXT_BODY =
-  'If you received this, the alerts pipeline is wired up correctly.\n\n— HamaFX-Ai';
+const TEXT_BODY = 'If you received this, the alerts pipeline is wired up correctly.\n\n— HamaFX-Ai';
 
 interface ResendCreateResponse {
   id?: string;
@@ -46,10 +45,7 @@ export async function POST(req: Request): Promise<Response> {
   const raw = await safeReadJson(req);
   const parsed = BodySchema.safeParse(raw);
   if (!parsed.success) {
-    return Response.json(
-      { error: 'invalid_body', issues: parsed.error.issues },
-      { status: 400 },
-    );
+    return Response.json({ error: 'invalid_body', issues: parsed.error.issues }, { status: 400 });
   }
   const body = parsed.data;
 

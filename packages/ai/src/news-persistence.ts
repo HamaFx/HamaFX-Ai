@@ -2,8 +2,6 @@
 // route file) so the same logic is reusable from a future Fly.io worker
 // without duplicating SQL.
 
-import { and, asc, desc, eq, gte, isNull, lte, sql } from 'drizzle-orm';
-
 import { getDb, schema } from '@hamafx/db';
 import {
   type EconomicEvent,
@@ -13,6 +11,7 @@ import {
   type NewsSentiment,
   type SymbolOrCurrencyTag,
 } from '@hamafx/shared';
+import { and, asc, desc, eq, gte, isNull, lte, sql } from 'drizzle-orm';
 
 import { embedTexts } from './embeddings';
 
@@ -85,9 +84,9 @@ function rowToNewsArticle(r: typeof schema.newsArticles.$inferSelect): NewsArtic
  * Read an upcoming-events window for the /calendar page. Default window
  * spans (-6h, +14d).
  */
-export async function listUpcomingEvents(opts: { fromMs?: number; toMs?: number; limit?: number } = {}): Promise<
-  EconomicEvent[]
-> {
+export async function listUpcomingEvents(
+  opts: { fromMs?: number; toMs?: number; limit?: number } = {},
+): Promise<EconomicEvent[]> {
   const fromMs = opts.fromMs ?? Date.now() - 6 * 60 * 60 * 1000;
   const toMs = opts.toMs ?? Date.now() + 14 * 24 * 60 * 60 * 1000;
   const rows = await getDb()
@@ -132,11 +131,13 @@ interface BackfillRow {
  * chunks. We cap total work per run with `maxRows` so the function stays
  * under Vercel's 60s timeout for cron handlers.
  */
-export async function backfillEmbeddings(opts: {
-  batchSize?: number;
-  maxRows?: number;
-  signal?: AbortSignal;
-} = {}): Promise<{ embedded: number; batches: number; totalTokens: number }> {
+export async function backfillEmbeddings(
+  opts: {
+    batchSize?: number;
+    maxRows?: number;
+    signal?: AbortSignal;
+  } = {},
+): Promise<{ embedded: number; batches: number; totalTokens: number }> {
   const batchSize = opts.batchSize ?? 32;
   const maxRows = opts.maxRows ?? 256;
 
@@ -147,10 +148,7 @@ export async function backfillEmbeddings(opts: {
       summary: schema.newsArticles.summary,
     })
     .from(schema.newsArticles)
-    .leftJoin(
-      schema.newsEmbeddings,
-      eq(schema.newsArticles.id, schema.newsEmbeddings.articleId),
-    )
+    .leftJoin(schema.newsEmbeddings, eq(schema.newsArticles.id, schema.newsEmbeddings.articleId))
     .where(isNull(schema.newsEmbeddings.articleId))
     .limit(maxRows);
 
@@ -189,10 +187,7 @@ export async function countPendingEmbeddings(): Promise<number> {
   const row = await getDb()
     .select({ n: sql<number>`count(*)` })
     .from(schema.newsArticles)
-    .leftJoin(
-      schema.newsEmbeddings,
-      eq(schema.newsArticles.id, schema.newsEmbeddings.articleId),
-    )
+    .leftJoin(schema.newsEmbeddings, eq(schema.newsArticles.id, schema.newsEmbeddings.articleId))
     .where(isNull(schema.newsEmbeddings.articleId));
   return Number(row[0]?.n ?? 0);
 }

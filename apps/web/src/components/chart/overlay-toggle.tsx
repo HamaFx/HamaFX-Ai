@@ -3,10 +3,8 @@
 // Compact segmented control to enable/disable each SMC overlay kind on
 // the chart. State lives in the URL via nuqs so refreshing keeps the
 // view, and a future "share my chart view" feature falls out for free.
-
-import { parseAsArrayOf, parseAsStringLiteral, useQueryState } from 'nuqs';
-
 import type { StructureKind } from '@hamafx/shared';
+import { parseAsArrayOf, parseAsStringLiteral, useQueryState } from 'nuqs';
 
 import { cn } from '@/lib/cn';
 
@@ -26,7 +24,11 @@ const overlayParser = parseAsArrayOf(parseAsStringLiteral(ALL_KINDS)).withDefaul
  * one kind at a time. URL representation is comma-separated, e.g.
  * `?overlays=bos_choch,fvg`.
  */
-export function useOverlayToggles(): [readonly StructureKind[], (k: StructureKind) => void, () => void] {
+export function useOverlayToggles(): [
+  readonly StructureKind[],
+  (k: StructureKind) => void,
+  () => void,
+] {
   const [active, setActive] = useQueryState('overlays', overlayParser);
   const toggle = (k: StructureKind) => {
     const next = active.includes(k) ? active.filter((x) => x !== k) : [...active, k];
@@ -58,9 +60,7 @@ export function OverlayToggle({ active, onToggle }: OverlayToggleProps) {
             onClick={() => onToggle(k)}
             className={cn(
               'rounded px-2 py-1 text-[11px] font-medium tabular-nums transition-colors',
-              on
-                ? 'bg-brand text-brand-fg'
-                : 'text-fg-muted hover:bg-bg-elev-1 hover:text-fg',
+              on ? 'bg-brand text-brand-fg' : 'text-fg-muted hover:bg-bg-elev-1 hover:text-fg',
             )}
           >
             {LABEL[k]}

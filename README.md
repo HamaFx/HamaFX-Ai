@@ -10,27 +10,27 @@ All architectural and implementation decisions live in [`/docs`](./docs).
 
 ## TL;DR
 
-| Concern             | Choice                                                                |
-| ------------------- | --------------------------------------------------------------------- |
-| Framework           | Next.js 15 (App Router) + React 19 + TypeScript                       |
-| Styling             | Tailwind CSS v4 + `shadcn/ui` (Radix) + `tailwind-variants`           |
-| Charts              | TradingView **lightweight-charts**                                    |
-| AI                  | Vercel **AI SDK v5** with tool-loop agent + AI Gateway                |
-| State (server)      | TanStack Query                                                        |
-| State (client)      | Zustand + URL state (`nuqs`)                                          |
-| Live prices         | TanStack Query polling REST every 1–2 s (no WS for MVP)               |
-| Market data         | Twelve Data (primary) + Finnhub (fallback) + Alpha Vantage (backup)   |
-| News                | Marketaux (primary) + Finnhub news                                    |
-| Macro / calendar    | Trading Economics + FRED                                              |
-| DB                  | **Supabase Postgres** (free tier) + `pgvector` — used as a plain DB   |
-| ORM                 | Drizzle                                                               |
-| Cache               | Upstash Redis (free tier) — caching only, no rate-limit / queue       |
-| Cron                | **Vercel Cron Jobs** for news + calendar ingestion                    |
-| Auth                | Single **`APP_PASSWORD`** env + custom login page → signed cookie     |
-| Hosting             | **Vercel** only — single deploy                                       |
-| Monorepo            | pnpm workspaces + Turborepo                                           |
+| Concern          | Choice                                                              |
+| ---------------- | ------------------------------------------------------------------- |
+| Framework        | Next.js 15 (App Router) + React 19 + TypeScript                     |
+| Styling          | Tailwind CSS v4 + `shadcn/ui` (Radix) + `tailwind-variants`         |
+| Charts           | TradingView **lightweight-charts**                                  |
+| AI               | Vercel **AI SDK v5** with tool-loop agent + AI Gateway              |
+| State (server)   | TanStack Query                                                      |
+| State (client)   | Zustand + URL state (`nuqs`)                                        |
+| Live prices      | TanStack Query polling REST every 1–2 s (no WS for MVP)             |
+| Market data      | Twelve Data (primary) + Finnhub (fallback) + Alpha Vantage (backup) |
+| News             | Marketaux (primary) + Finnhub news                                  |
+| Macro / calendar | Trading Economics + FRED                                            |
+| DB               | **Supabase Postgres** (free tier) + `pgvector` — used as a plain DB |
+| ORM              | Drizzle                                                             |
+| Cache            | Upstash Redis (free tier) — caching only, no rate-limit / queue     |
+| Cron             | **Vercel Cron Jobs** for news + calendar ingestion                  |
+| Auth             | Single **`APP_PASSWORD`** env + custom login page → signed cookie   |
+| Hosting          | **Vercel** only — single deploy                                     |
+| Monorepo         | pnpm workspaces + Turborepo                                         |
 
-> **No separate worker service** at MVP. We can add a Fly.io worker later *only if* we ever need a persistent upstream WebSocket.
+> **No separate worker service** at MVP. We can add a Fly.io worker later _only if_ we ever need a persistent upstream WebSocket.
 > **No per-user rate limiting, no RLS, no GDPR/exports, no analytics, no eval CI** — this is a single-user app.
 
 ---

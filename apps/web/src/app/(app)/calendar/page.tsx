@@ -2,10 +2,9 @@
 // FRED-only in Phase 1c; the schema has placeholders for actual / forecast /
 // previous which a future cron will populate from /fred/series/observations.
 
-import type { Metadata } from 'next';
-
 import { listUpcomingEvents } from '@hamafx/ai';
 import type { EconomicEvent } from '@hamafx/shared';
+import type { Metadata } from 'next';
 
 import { EventCard } from '@/components/calendar/event-card';
 import { PageHeader } from '@/components/layout/page-header';
@@ -37,7 +36,9 @@ export default async function CalendarPage() {
         <div className="flex flex-col gap-4">
           {[...groups.entries()].map(([day, items]) => (
             <section key={day} className="flex flex-col gap-2">
-              <h2 className="text-fg-subtle px-1 text-xs uppercase tracking-wide">{dayLabel(day)}</h2>
+              <h2 className="text-fg-subtle px-1 text-xs uppercase tracking-wide">
+                {dayLabel(day)}
+              </h2>
               <ul className="flex flex-col gap-2">
                 {items.map((e) => (
                   <li key={e.id}>

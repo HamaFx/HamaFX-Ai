@@ -1,4 +1,5 @@
 import { z } from 'zod';
+
 import { SymbolSchema } from '../symbols';
 
 export const TradeSideSchema = z.enum(['long', 'short']);

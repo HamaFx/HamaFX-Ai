@@ -2,12 +2,11 @@
 // Reads via @hamafx/ai's `listRecentArticles` (Postgres-backed, populated by
 // /api/cron/news) so the page is fast even on cold start.
 
+import { listRecentArticles } from '@hamafx/ai';
 import type { Metadata } from 'next';
 
-import { listRecentArticles } from '@hamafx/ai';
-
-import { ArticleCard } from '@/components/news/article-card';
 import { PageHeader } from '@/components/layout/page-header';
+import { ArticleCard } from '@/components/news/article-card';
 
 export const metadata: Metadata = { title: 'News' };
 export const dynamic = 'force-dynamic';
@@ -44,7 +43,8 @@ function EmptyState() {
       <p className="text-fg-subtle text-xs">
         Trigger the ingestion cron once via{' '}
         <code className="bg-bg-elev-2 rounded px-1 py-0.5 text-[10px]">
-          curl -H &quot;Authorization: Bearer $CRON_SECRET&quot; https://hama-fx-ai.vercel.app/api/cron/news
+          curl -H &quot;Authorization: Bearer $CRON_SECRET&quot;
+          https://hama-fx-ai.vercel.app/api/cron/news
         </code>
         , or wire a scheduler. See <code>docs/06-data-sources.md</code>.
       </p>

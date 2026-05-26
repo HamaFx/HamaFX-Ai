@@ -28,24 +28,17 @@ export function GetPricePart({ output, state, errorMessage }: GetPricePartProps)
 
   return (
     <div className="border-border bg-bg-elev-1 rounded-lg border p-3">
-      <div className="text-fg-muted mb-2 text-xs">
-        Live prices · {formatTime(output.asOf)}
-      </div>
+      <div className="text-fg-muted mb-2 text-xs">Live prices · {formatTime(output.asOf)}</div>
       <ul className="space-y-1.5">
         {output.ticks.map((t) => {
           const decimals = priceDecimals(t.symbol satisfies Symbol);
           const spread = t.ask - t.bid;
           return (
-            <li
-              key={t.symbol}
-              className="flex min-h-[44px] items-center justify-between gap-3"
-            >
+            <li key={t.symbol} className="flex min-h-[44px] items-center justify-between gap-3">
               <span className="text-fg font-medium">{t.symbol}</span>
               <div className="flex items-baseline gap-2 tabular-nums">
                 <span className="text-fg text-base">{t.mid.toFixed(decimals)}</span>
-                <span className="text-fg-muted text-xs">
-                  {spread.toFixed(decimals)} spread
-                </span>
+                <span className="text-fg-muted text-xs">{spread.toFixed(decimals)} spread</span>
               </div>
             </li>
           );

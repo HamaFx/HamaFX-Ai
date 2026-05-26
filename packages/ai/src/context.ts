@@ -29,7 +29,9 @@ function inferSession(now: Date): LiveSnapshot['session'] {
   return 'asia';
 }
 
-export async function buildLiveSnapshot(opts: { signal?: AbortSignal } = {}): Promise<LiveSnapshot> {
+export async function buildLiveSnapshot(
+  opts: { signal?: AbortSignal } = {},
+): Promise<LiveSnapshot> {
   const now = new Date();
   const prices: Partial<Record<Symbol, Tick>> = {};
 

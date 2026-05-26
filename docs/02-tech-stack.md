@@ -4,35 +4,35 @@
 
 ## At a glance
 
-| Layer              | Choice                                                          | Why (1-liner)                                                |
-| ------------------ | --------------------------------------------------------------- | ------------------------------------------------------------ |
-| Framework          | **Next.js 15** (App Router, RSC)                                | Best-in-class DX, edge + node runtimes, native streaming.    |
-| Language           | **TypeScript 5.x** strict                                       | Required for AI-agent legibility and zod-based contracts.    |
-| UI primitives      | **shadcn/ui** (Radix under the hood)                            | Copy-paste, no runtime lock-in, fully themeable.             |
-| Styling            | **Tailwind CSS v4** + `tailwind-variants` + `clsx`              | Speed, consistency, agent-friendly class predictability.     |
-| Icons              | **lucide-react**                                                | Pairs natively with shadcn; tree-shakable.                   |
-| Animations         | **Framer Motion** (`motion`)                                    | Industry standard; sparingly used.                           |
-| Charts (financial) | **TradingView lightweight-charts** (Apache-2.0)                 | Best-performing OHLC canvas lib, free, wide adoption.        |
-| Charts (advanced)  | **TradingView Advanced Charting Widget** (free, self-hosted JS) | Optional pro view with full indicators; embedded as iframe.  |
-| Charts (misc)      | **Recharts** for non-OHLC mini-stats                            | Declarative React, fine for sparkline/sentiment bars.        |
-| Server state       | **TanStack Query v5**                                           | Best cache, refetch, dedupe; pairs with RSC fine.            |
-| Client state       | **Zustand** + URL state (`nuqs`)                                | Minimal, no boilerplate; URL state for shareable views.      |
-| Forms              | **react-hook-form** + **zod** + `@hookform/resolvers`           | Schema-first; same zod schemas validate API + AI tools.      |
-| AI SDK             | **Vercel AI SDK v5** (`ai`, `@ai-sdk/react`, `@ai-sdk/*`)       | Standard streaming + tool calling + `ToolLoopAgent`.         |
-| AI provider        | **Vercel AI Gateway** → OpenAI / Anthropic / Google             | One key, observability, fallback routing.                    |
-| Embeddings         | `text-embedding-3-small` (OpenAI) via Gateway                   | Cheap, good for news RAG.                                    |
-| DB                 | **Supabase Postgres** + `pgvector` (DB only — no Auth, no RLS)  | Free tier, has `pgvector`, easy dashboard.                   |
-| ORM                | **Drizzle ORM**                                                 | Lightweight, edge-compatible, great TS inference.            |
-| Cache              | **Upstash Redis** (caching only — no per-user rate limit, no queue) | Free tier; serverless-friendly.                          |
-| Cron               | **Vercel Cron Jobs** (built into the Vercel deploy)             | One less moving part than a worker.                          |
-| Auth               | **Single `APP_PASSWORD`** + HMAC-signed cookie + middleware     | Personal-mode; one user, one password.                       |
-| Validation         | **Zod**                                                         | Single schema source for API, AI tools, DB inputs.           |
-| Testing            | **Vitest** + **Playwright** + **MSW**                           | Vitest for unit, Playwright for e2e, MSW for provider mocks. |
-| Lint / format      | **ESLint flat config** + **Prettier** + **`@ianvs/prettier-plugin-sort-imports`** | Deterministic ordering = better AI patches.    |
-| Monorepo           | **pnpm workspaces** + **Turborepo**                             | Fast incremental builds, remote cache on Vercel.             |
-| Logging            | `console.log` JSON-shaped → Vercel logs                         | Personal-mode: keep it simple.                               |
-| CI/CD              | GitHub Actions (`lint typecheck test`) + Vercel auto-deploy     | Minimal — Vercel does the heavy lifting.                     |
-| PWA                | `next-pwa` (or hand-rolled service worker)                      | Installable, offline shell.                                  |
+| Layer              | Choice                                                                            | Why (1-liner)                                                |
+| ------------------ | --------------------------------------------------------------------------------- | ------------------------------------------------------------ |
+| Framework          | **Next.js 15** (App Router, RSC)                                                  | Best-in-class DX, edge + node runtimes, native streaming.    |
+| Language           | **TypeScript 5.x** strict                                                         | Required for AI-agent legibility and zod-based contracts.    |
+| UI primitives      | **shadcn/ui** (Radix under the hood)                                              | Copy-paste, no runtime lock-in, fully themeable.             |
+| Styling            | **Tailwind CSS v4** + `tailwind-variants` + `clsx`                                | Speed, consistency, agent-friendly class predictability.     |
+| Icons              | **lucide-react**                                                                  | Pairs natively with shadcn; tree-shakable.                   |
+| Animations         | **Framer Motion** (`motion`)                                                      | Industry standard; sparingly used.                           |
+| Charts (financial) | **TradingView lightweight-charts** (Apache-2.0)                                   | Best-performing OHLC canvas lib, free, wide adoption.        |
+| Charts (advanced)  | **TradingView Advanced Charting Widget** (free, self-hosted JS)                   | Optional pro view with full indicators; embedded as iframe.  |
+| Charts (misc)      | **Recharts** for non-OHLC mini-stats                                              | Declarative React, fine for sparkline/sentiment bars.        |
+| Server state       | **TanStack Query v5**                                                             | Best cache, refetch, dedupe; pairs with RSC fine.            |
+| Client state       | **Zustand** + URL state (`nuqs`)                                                  | Minimal, no boilerplate; URL state for shareable views.      |
+| Forms              | **react-hook-form** + **zod** + `@hookform/resolvers`                             | Schema-first; same zod schemas validate API + AI tools.      |
+| AI SDK             | **Vercel AI SDK v5** (`ai`, `@ai-sdk/react`, `@ai-sdk/*`)                         | Standard streaming + tool calling + `ToolLoopAgent`.         |
+| AI provider        | **Vercel AI Gateway** → OpenAI / Anthropic / Google                               | One key, observability, fallback routing.                    |
+| Embeddings         | `text-embedding-3-small` (OpenAI) via Gateway                                     | Cheap, good for news RAG.                                    |
+| DB                 | **Supabase Postgres** + `pgvector` (DB only — no Auth, no RLS)                    | Free tier, has `pgvector`, easy dashboard.                   |
+| ORM                | **Drizzle ORM**                                                                   | Lightweight, edge-compatible, great TS inference.            |
+| Cache              | **Upstash Redis** (caching only — no per-user rate limit, no queue)               | Free tier; serverless-friendly.                              |
+| Cron               | **Vercel Cron Jobs** (built into the Vercel deploy)                               | One less moving part than a worker.                          |
+| Auth               | **Single `APP_PASSWORD`** + HMAC-signed cookie + middleware                       | Personal-mode; one user, one password.                       |
+| Validation         | **Zod**                                                                           | Single schema source for API, AI tools, DB inputs.           |
+| Testing            | **Vitest** + **Playwright** + **MSW**                                             | Vitest for unit, Playwright for e2e, MSW for provider mocks. |
+| Lint / format      | **ESLint flat config** + **Prettier** + **`@ianvs/prettier-plugin-sort-imports`** | Deterministic ordering = better AI patches.                  |
+| Monorepo           | **pnpm workspaces** + **Turborepo**                                               | Fast incremental builds, remote cache on Vercel.             |
+| Logging            | `console.log` JSON-shaped → Vercel logs                                           | Personal-mode: keep it simple.                               |
+| CI/CD              | GitHub Actions (`lint typecheck test`) + Vercel auto-deploy                       | Minimal — Vercel does the heavy lifting.                     |
+| PWA                | `next-pwa` (or hand-rolled service worker)                                        | Installable, offline shell.                                  |
 
 ## Rationale per choice
 
@@ -112,12 +112,12 @@ nuqs: latest
 
 ## What we deliberately did **not** pick
 
-| Tool                  | Why not                                                                |
-| --------------------- | ---------------------------------------------------------------------- |
-| Redux Toolkit         | Too much boilerplate for our state shape.                              |
-| Prisma                | Edge limitations + codegen step; Drizzle is the better fit.            |
-| Material UI / Chakra  | Heavier runtime, harder to tailor; shadcn wins for AI-friendly code.   |
-| Apollo / GraphQL      | Overkill — REST + zod is enough; we don't have third-party clients.    |
-| Highcharts / AG-Grid  | Licensing, weight, not needed at MVP scope.                            |
-| FastAPI / NestJS      | We want a single TS codebase end to end.                               |
-| OpenAI Assistants API | Vendor lock-in, weaker streaming UX than AI SDK.                       |
+| Tool                  | Why not                                                              |
+| --------------------- | -------------------------------------------------------------------- |
+| Redux Toolkit         | Too much boilerplate for our state shape.                            |
+| Prisma                | Edge limitations + codegen step; Drizzle is the better fit.          |
+| Material UI / Chakra  | Heavier runtime, harder to tailor; shadcn wins for AI-friendly code. |
+| Apollo / GraphQL      | Overkill — REST + zod is enough; we don't have third-party clients.  |
+| Highcharts / AG-Grid  | Licensing, weight, not needed at MVP scope.                          |
+| FastAPI / NestJS      | We want a single TS codebase end to end.                             |
+| OpenAI Assistants API | Vendor lock-in, weaker streaming UX than AI SDK.                     |

@@ -2,13 +2,12 @@
 // recent turns. Server component: pulls everything from the DB in one
 // pass per render. Personal-mode volume keeps the query trivial.
 
+import { computeUsage, listTelemetry, type DayBucket, type UsageStats } from '@hamafx/ai';
 import type { Metadata } from 'next';
 
-import { computeUsage, listTelemetry, type DayBucket, type UsageStats } from '@hamafx/ai';
-
 import { PageHeader } from '@/components/layout/page-header';
-import { getServerEnv } from '@/lib/env';
 import { cn } from '@/lib/cn';
+import { getServerEnv } from '@/lib/env';
 
 export const metadata: Metadata = { title: 'Usage' };
 export const dynamic = 'force-dynamic';
@@ -110,7 +109,10 @@ function DailyChart({ daily7 }: { daily7: DayBucket[] }) {
         {daily7.map((d) => {
           const pct = Math.max(1, (d.costUsd / max) * 100);
           return (
-            <li key={d.date} className="grid grid-cols-[auto_1fr_auto] items-center gap-2 text-[11px]">
+            <li
+              key={d.date}
+              className="grid grid-cols-[auto_1fr_auto] items-center gap-2 text-[11px]"
+            >
               <span className="text-fg-subtle w-12 tabular-nums">{shortDate(d.date)}</span>
               <span
                 className="bg-brand block h-1.5 rounded-full"
@@ -213,11 +215,11 @@ function RecentTurnsCard({ rows }: { rows: Awaited<ReturnType<typeof listTelemet
             key={r.id}
             className="grid grid-cols-[1fr_auto] items-baseline gap-3 text-xs tabular-nums"
           >
-            <div className="min-w-0 flex flex-col">
+            <div className="flex min-w-0 flex-col">
               <span className="text-fg truncate font-mono text-[11px]">{r.model}</span>
               <span className="text-fg-subtle text-[10px]">
-                {formatRelative(r.createdAt)} · {r.inputTokens}/{r.outputTokens} tok ·{' '}
-                {r.toolCalls} tools · {Math.round(r.ms / 100) / 10}s
+                {formatRelative(r.createdAt)} · {r.inputTokens}/{r.outputTokens} tok · {r.toolCalls}{' '}
+                tools · {Math.round(r.ms / 100) / 10}s
               </span>
             </div>
             <span className="text-fg w-16 text-right">${r.estCostUsd.toFixed(4)}</span>

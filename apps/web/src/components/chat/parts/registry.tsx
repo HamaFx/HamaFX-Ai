@@ -15,9 +15,6 @@
 //
 // Server component — no state, no events.
 
-import type { ComponentType, ReactElement } from 'react';
-import type { z } from 'zod';
-
 import {
   GetCalendarOutputSchema,
   GetCandlesOutputSchema,
@@ -31,6 +28,8 @@ import {
   type ToolName,
   type ToolOutput,
 } from '@hamafx/shared';
+import type { ComponentType, ReactElement } from 'react';
+import type { z } from 'zod';
 
 import { GetCalendarPart } from './get-calendar';
 import { GetCandlesPart } from './get-candles';
@@ -173,11 +172,7 @@ function renderBespoke<K extends ToolName>(
   // Loading and error states never render the payload, so we don't parse.
   if (state !== 'done' || output === null || output === undefined) {
     return (
-      <Part
-        output={null}
-        state={state}
-        {...(errorMessage !== undefined ? { errorMessage } : {})}
-      />
+      <Part output={null} state={state} {...(errorMessage !== undefined ? { errorMessage } : {})} />
     );
   }
 

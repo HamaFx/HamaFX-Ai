@@ -3,10 +3,8 @@
 // Mobile-first form for creating an alert. Three rule types share most
 // fields; we render conditional inputs for `tf` (candle/indicator) and
 // `indicator` (indicator-only).
-
-import { useState } from 'react';
-
 import { SYMBOLS, TIMEFRAMES, type Symbol, type Timeframe } from '@hamafx/shared';
+import { useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -71,7 +69,9 @@ export function AlertForm({ initialSymbol, onCreated }: AlertFormProps) {
         }),
       });
       if (!res.ok) {
-        const body = (await res.json().catch(() => null)) as { error?: { message?: string } } | null;
+        const body = (await res.json().catch(() => null)) as {
+          error?: { message?: string };
+        } | null;
         throw new Error(body?.error?.message ?? `HTTP ${res.status}`);
       }
       setLevel('');
@@ -211,7 +211,9 @@ function Segmented<T extends string>({ label, value, onChange, options }: Segmen
               onClick={() => onChange(opt.value)}
               className={cn(
                 'rounded px-2 py-1 text-[11px] font-medium tabular-nums transition-colors',
-                active ? 'bg-brand text-brand-fg' : 'text-fg-muted hover:bg-bg-elev-1 hover:text-fg',
+                active
+                  ? 'bg-brand text-brand-fg'
+                  : 'text-fg-muted hover:bg-bg-elev-1 hover:text-fg',
               )}
             >
               {opt.label}

@@ -1,4 +1,5 @@
 import { z } from 'zod';
+
 import { SymbolSchema } from '../symbols';
 
 export const ChatRoleSchema = z.enum(['user', 'assistant', 'system', 'tool']);
@@ -10,9 +11,7 @@ export type ChatRole = z.infer<typeof ChatRoleSchema>;
  * skipped, empty LLM reply, or LLM error). `null` is reserved for legacy
  * rows that pre-date the `title_source` column.
  */
-export const ChatTitleSourceSchema = z
-  .union([z.literal('llm'), z.literal('fallback')])
-  .nullable();
+export const ChatTitleSourceSchema = z.union([z.literal('llm'), z.literal('fallback')]).nullable();
 export type ChatTitleSource = z.infer<typeof ChatTitleSourceSchema>;
 
 /**

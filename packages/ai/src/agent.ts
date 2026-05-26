@@ -3,6 +3,7 @@
 // and the daily-budget guardrail in one place so route code stays a thin
 // HTTP shell.
 
+import { type ServerEnv } from '@hamafx/shared';
 import {
   convertToModelMessages,
   stepCountIs,
@@ -10,8 +11,6 @@ import {
   type ModelMessage,
   type UIMessage,
 } from 'ai';
-
-import { type ServerEnv } from '@hamafx/shared';
 
 import { buildLiveSnapshot } from './context';
 import { enforceDailyBudget } from './cost';
@@ -137,7 +136,10 @@ export async function runChat(args: RunChatArgs) {
         if (thread && thread.title === null) {
           const all = await listMessages(threadId, 50);
           const firstUser = (all.find((m) => m.role === 'user')?.content ?? '').slice(0, 1024);
-          const firstAssistant = (all.find((m) => m.role === 'assistant')?.content ?? '').slice(0, 1024);
+          const firstAssistant = (all.find((m) => m.role === 'assistant')?.content ?? '').slice(
+            0,
+            1024,
+          );
           if (firstUser.length > 0 && firstAssistant.length > 0) {
             const titleStartedAt = Date.now();
             const titleArgs: Parameters<typeof generateTitle>[0] = {

@@ -25,9 +25,9 @@ export function LoginForm({ next }: LoginFormProps) {
         body: JSON.stringify({ password }),
       });
       if (!res.ok) {
-        const body = (await res.json().catch(() => null)) as
-          | { error?: { message?: string } }
-          | null;
+        const body = (await res.json().catch(() => null)) as {
+          error?: { message?: string };
+        } | null;
         setError(body?.error?.message ?? `Login failed (${res.status})`);
         setSubmitting(false);
         return;

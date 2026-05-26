@@ -4,19 +4,18 @@
 // single call. Mirrors the /api/market/indicators route handler so the
 // chart UI and the AI agent always see identical numbers.
 
-import { tool } from 'ai';
-import { z } from 'zod';
-
 import { getCandles } from '@hamafx/data';
 import { computeIndicator } from '@hamafx/indicators';
 import {
-  type GetIndicatorsOutput,
   IndicatorKindSchema,
   IndicatorParamsSchema,
-  type IndicatorResult,
   SymbolSchema,
   TimeframeSchema,
+  type GetIndicatorsOutput,
+  type IndicatorResult,
 } from '@hamafx/shared';
+import { tool } from 'ai';
+import { z } from 'zod';
 
 const InputSchema = z.object({
   symbol: SymbolSchema,

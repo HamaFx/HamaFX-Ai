@@ -4,11 +4,10 @@
 // Calls into `packages/data` so the cache + provider failover apply
 // transparently — the AI never talks to a provider directly.
 
+import { getPrice, ProviderError } from '@hamafx/data';
+import { SymbolSchema, type GetPriceOutput } from '@hamafx/shared';
 import { tool } from 'ai';
 import { z } from 'zod';
-
-import { getPrice, ProviderError } from '@hamafx/data';
-import { type GetPriceOutput, SymbolSchema } from '@hamafx/shared';
 
 const InputSchema = z.object({
   symbols: z.array(SymbolSchema).min(1).max(3),

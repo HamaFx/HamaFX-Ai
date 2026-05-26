@@ -5,9 +5,10 @@
 
 import type { UIMessage } from 'ai';
 
+import { cn } from '@/lib/cn';
+
 import { ChatToolPart, type ToolPartState } from './parts/registry';
 import { TextPart } from './parts/text';
-import { cn } from '@/lib/cn';
 
 interface MessageProps {
   message: UIMessage;
@@ -30,11 +31,7 @@ export function Message({ message }: MessageProps) {
 }
 
 /** AI SDK v5 streamed tool-part state vocabulary. */
-type StreamToolState =
-  | 'input-streaming'
-  | 'input-available'
-  | 'output-available'
-  | 'output-error';
+type StreamToolState = 'input-streaming' | 'input-available' | 'output-available' | 'output-error';
 
 /** Translate AI SDK stream-part state to the registry's `ToolPartState`. */
 function toPartState(state: StreamToolState): ToolPartState {

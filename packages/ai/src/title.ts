@@ -6,9 +6,8 @@
 //
 // See .kiro/specs/phase-1-completion/design.md §1 for the full contract.
 
-import { generateText } from 'ai';
-
 import type { ServerEnv } from '@hamafx/shared';
+import { generateText } from 'ai';
 
 import { dailySpendUsd } from './cost';
 

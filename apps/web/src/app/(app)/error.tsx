@@ -3,7 +3,6 @@
 // Per-segment error boundary for the (app) group. Keeps the chrome (top bar
 // + bottom nav) intact while showing an inline failure card — better than
 // the root error.tsx which hides everything.
-
 import { useEffect } from 'react';
 
 import { Button } from '@/components/ui/button';

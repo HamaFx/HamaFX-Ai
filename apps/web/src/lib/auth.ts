@@ -57,13 +57,10 @@ function base64UrlToBytes(s: string): Bytes {
  * -------------------------------------------------------------------------- */
 
 async function getKey(secret: string): Promise<CryptoKey> {
-  return crypto.subtle.importKey(
-    'raw',
-    utf8(secret),
-    { name: 'HMAC', hash: 'SHA-256' },
-    false,
-    ['sign', 'verify'],
-  );
+  return crypto.subtle.importKey('raw', utf8(secret), { name: 'HMAC', hash: 'SHA-256' }, false, [
+    'sign',
+    'verify',
+  ]);
 }
 
 /* --------------------------------------------------------------------------
@@ -84,7 +81,10 @@ export function timingSafeEqual(a: string, b: string): boolean {
  * Sign / verify
  * -------------------------------------------------------------------------- */
 
-export async function signAuthToken(secret: string, ttlMs: number = DEFAULT_TTL_MS): Promise<string> {
+export async function signAuthToken(
+  secret: string,
+  ttlMs: number = DEFAULT_TTL_MS,
+): Promise<string> {
   const now = Date.now();
   const payload: AuthPayload = { iat: now, exp: now + ttlMs };
   const payloadBytes = utf8(JSON.stringify(payload));

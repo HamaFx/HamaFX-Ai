@@ -11,8 +11,7 @@
 // drowning in micro-pivots. Personal tuning: pass `lookback: 5` for cleaner
 // daily-bias swings.
 
-import type { Candle } from '@hamafx/shared';
-import type { SwingPoint } from '@hamafx/shared';
+import type { Candle, SwingPoint } from '@hamafx/shared';
 
 export interface FindSwingsOptions {
   /** Bars on each side that must be strictly lower (high) / higher (low). */

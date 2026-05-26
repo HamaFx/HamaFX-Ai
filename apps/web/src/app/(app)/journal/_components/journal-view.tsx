@@ -2,10 +2,8 @@
 
 // Wires the form, list, and stats summary together. Single TanStack Query
 // for /api/journal so the stats stay in sync with the list (one fetch).
-
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-
 import type { JournalEntry, JournalStats } from '@hamafx/shared';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { EntryForm } from './entry-form';
 import { EntryList } from './entry-list';

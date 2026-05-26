@@ -27,7 +27,12 @@ export const FRED_RELEASES: Record<number, FredReleaseMeta> = {
   // Consumer Price Index.
   10: { title: 'Consumer Price Index (CPI)', importance: 'high', currency: 'USD', country: 'US' },
   // Personal Income & Outlays (PCE inflation).
-  21: { title: 'Personal Income & Outlays (PCE)', importance: 'high', currency: 'USD', country: 'US' },
+  21: {
+    title: 'Personal Income & Outlays (PCE)',
+    importance: 'high',
+    currency: 'USD',
+    country: 'US',
+  },
   // Producer Price Index.
   46: { title: 'Producer Price Index (PPI)', importance: 'medium', currency: 'USD', country: 'US' },
   // GDP.

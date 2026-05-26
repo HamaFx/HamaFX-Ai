@@ -47,18 +47,18 @@ flowchart LR
   "installCommand": "pnpm install --frozen-lockfile",
   "ignoreCommand": "npx turbo-ignore web",
   "functions": {
-    "src/app/api/chat/route.ts":             { "maxDuration": 60 },
-    "src/app/api/cron/news/route.ts":        { "maxDuration": 60 },
-    "src/app/api/cron/calendar/route.ts":    { "maxDuration": 30 },
-    "src/app/api/cron/alerts/route.ts":      { "maxDuration": 15 },
-    "src/app/api/cron/snapshots/route.ts":   { "maxDuration": 30 }
+    "src/app/api/chat/route.ts": { "maxDuration": 60 },
+    "src/app/api/cron/news/route.ts": { "maxDuration": 60 },
+    "src/app/api/cron/calendar/route.ts": { "maxDuration": 30 },
+    "src/app/api/cron/alerts/route.ts": { "maxDuration": 15 },
+    "src/app/api/cron/snapshots/route.ts": { "maxDuration": 30 }
   },
   "crons": [
-    { "path": "/api/cron/news",              "schedule": "*/5 * * * *"  },
-    { "path": "/api/cron/calendar",          "schedule": "*/15 * * * *" },
-    { "path": "/api/cron/alerts",            "schedule": "* * * * *"    },
-    { "path": "/api/cron/snapshots",         "schedule": "55 23 * * *"  },
-    { "path": "/api/cron/embedding-backfill","schedule": "0 * * * *"    }
+    { "path": "/api/cron/news", "schedule": "*/5 * * * *" },
+    { "path": "/api/cron/calendar", "schedule": "*/15 * * * *" },
+    { "path": "/api/cron/alerts", "schedule": "* * * * *" },
+    { "path": "/api/cron/snapshots", "schedule": "55 23 * * *" },
+    { "path": "/api/cron/embedding-backfill", "schedule": "0 * * * *" }
   ]
 }
 ```
@@ -164,7 +164,7 @@ Vercel handles the actual build + deploy on every push. No GitHub Actions deploy
 5. We do **not** enable RLS — there's only one user, our own server.
 6. Set up a daily logical backup if you want extra safety (optional; Supabase keeps daily backups on its side too).
 
-> Supabase Free tier pauses a project after 7 days of *no activity*. With cron running every 1–15 min this never triggers, but if you ever take a break for a week, you'll need to manually unpause from the dashboard.
+> Supabase Free tier pauses a project after 7 days of _no activity_. With cron running every 1–15 min this never triggers, but if you ever take a break for a week, you'll need to manually unpause from the dashboard.
 
 ## Upstash setup (one-time)
 
@@ -193,13 +193,13 @@ Vercel handles the actual build + deploy on every push. No GitHub Actions deploy
 
 ## Cost ceiling (your own usage)
 
-| Component             | Estimate / month |
-| --------------------- | ---------------- |
-| Vercel (Hobby or Pro) | $0 (Hobby) – $20 (Pro, if needed for cron cadence) |
-| Supabase Free         | $0               |
-| Upstash Redis Free    | $0               |
+| Component             | Estimate / month                                    |
+| --------------------- | --------------------------------------------------- |
+| Vercel (Hobby or Pro) | $0 (Hobby) – $20 (Pro, if needed for cron cadence)  |
+| Supabase Free         | $0                                                  |
+| Upstash Redis Free    | $0                                                  |
 | Data providers        | $0–$10 (free tiers + Twelve Data starter if needed) |
-| AI Gateway / models   | $3–$15 (your usage)            |
-| **Total**             | **$3–$45 / month**             |
+| AI Gateway / models   | $3–$15 (your usage)                                 |
+| **Total**             | **$3–$45 / month**                                  |
 
 Designed so a hobby personal run sits comfortably under $20/mo most months.

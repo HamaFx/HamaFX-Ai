@@ -1,7 +1,7 @@
+import type { Candle } from '@hamafx/shared';
 import { describe, expect, it } from 'vitest';
 
 import { findSwings } from '../src/smc/swings';
-import type { Candle } from '@hamafx/shared';
 
 function bar(idx: number, h: number, l: number, c: number = (h + l) / 2): Candle {
   return {
@@ -21,9 +21,12 @@ function bar(idx: number, h: number, l: number, c: number = (h + l) / 2): Candle
 describe('findSwings', () => {
   it('returns empty when not enough bars to qualify a pivot', () => {
     expect(findSwings([bar(0, 1, 0)], { lookback: 3 })).toEqual([]);
-    expect(findSwings(Array.from({ length: 6 }, (_, i) => bar(i, 1, 0)), { lookback: 3 })).toEqual(
-      [],
-    );
+    expect(
+      findSwings(
+        Array.from({ length: 6 }, (_, i) => bar(i, 1, 0)),
+        { lookback: 3 },
+      ),
+    ).toEqual([]);
   });
 
   it('detects a clean swing high in the middle of a window', () => {

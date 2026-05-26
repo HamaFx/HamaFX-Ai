@@ -1,7 +1,7 @@
+import type { Candle } from '@hamafx/shared';
 import { describe, expect, it } from 'vitest';
 
 import { detectFvgs } from '../src/smc/fvg';
-import type { Candle } from '@hamafx/shared';
 
 function bar(i: number, o: number, h: number, l: number, c: number): Candle {
   return {
@@ -28,7 +28,11 @@ describe('detectFvgs', () => {
     // Bar 0: 1.0 - 2.0
     // Bar 1: huge bull (impulse): 2.0 - 5.0
     // Bar 2: 3.0 - 5.5  → low (3.0) > bar0 high (2.0) → bullish FVG
-    const candles = [bar(0, 1.5, 2.0, 1.0, 1.8), bar(1, 2.0, 5.0, 2.0, 4.8), bar(2, 4.8, 5.5, 3.0, 5.2)];
+    const candles = [
+      bar(0, 1.5, 2.0, 1.0, 1.8),
+      bar(1, 2.0, 5.0, 2.0, 4.8),
+      bar(2, 4.8, 5.5, 3.0, 5.2),
+    ];
     const fvgs = detectFvgs(candles);
     expect(fvgs).toHaveLength(1);
     expect(fvgs[0]).toMatchObject({
@@ -42,7 +46,11 @@ describe('detectFvgs', () => {
   });
 
   it('detects a bearish FVG: bar1.low > bar3.high', () => {
-    const candles = [bar(0, 4.5, 5.0, 4.0, 4.2), bar(1, 4.2, 4.2, 1.5, 1.8), bar(2, 1.8, 3.0, 1.0, 1.2)];
+    const candles = [
+      bar(0, 4.5, 5.0, 4.0, 4.2),
+      bar(1, 4.2, 4.2, 1.5, 1.8),
+      bar(2, 1.8, 3.0, 1.0, 1.2),
+    ];
     const fvgs = detectFvgs(candles);
     expect(fvgs).toHaveLength(1);
     expect(fvgs[0]).toMatchObject({ side: 'bearish', bottom: 3.0, top: 4.0 });

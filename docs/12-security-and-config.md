@@ -1,6 +1,6 @@
 # 12 — Security & Config
 
-> Personal-mode posture: this is **a single-user app with a single password**. We don't need RLS, GDPR, multi-tenant guardrails, or fancy observability. We *do* still want to keep API keys safe and prevent random people stumbling onto our deployment from running up the AI bill.
+> Personal-mode posture: this is **a single-user app with a single password**. We don't need RLS, GDPR, multi-tenant guardrails, or fancy observability. We _do_ still want to keep API keys safe and prevent random people stumbling onto our deployment from running up the AI bill.
 
 ## Threat model (lightweight)
 
@@ -45,7 +45,7 @@ AUTH_COOKIE_SECRET=<32+ random hex bytes>
 
 ```ts
 // pseudo
-const token = sign({ iat: Date.now(), exp: Date.now() + 30*86400_000 }, AUTH_COOKIE_SECRET);
+const token = sign({ iat: Date.now(), exp: Date.now() + 30 * 86400_000 }, AUTH_COOKIE_SECRET);
 res.cookies.set('hfx_auth', token, { httpOnly: true, secure: true, sameSite: 'lax', path: '/' });
 ```
 

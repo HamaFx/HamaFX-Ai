@@ -13,16 +13,14 @@
 // Phase 2 added optional SMC overlays (markers + price lines). They're
 // driven by a separate `overlays` prop so the parent owns the toggle UI;
 // the chart just renders what it's told.
-
+import { priceDecimals, type Candle, type Symbol, type Timeframe } from '@hamafx/shared';
 import type * as LightweightCharts from 'lightweight-charts';
 import { useEffect, useMemo, useRef } from 'react';
 
-import type { Candle, Symbol, Timeframe } from '@hamafx/shared';
-import { priceDecimals } from '@hamafx/shared';
-
-import type { OverlaySet } from './overlays';
 import { useCandles } from '@/hooks/use-candles';
 import { cn } from '@/lib/cn';
+
+import type { OverlaySet } from './overlays';
 
 type LcModule = typeof LightweightCharts;
 type UTCTimestamp = LightweightCharts.UTCTimestamp;

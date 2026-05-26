@@ -69,7 +69,7 @@ const DEFAULT_OUT_DIR = 'docs/eval';
 export async function runEvals(args: RunEvalsArgs): Promise<RunEvalsResult> {
   const timeoutMs = args.timeoutMs ?? DEFAULT_TIMEOUT_MS;
   const promptsPath = args.promptsPath ?? defaultPromptsPath();
-  const log = args.onProgress ?? ((line: string): void => console.log(line));
+  const log = args.onProgress ?? ((line: string): void => console.info(line));
 
   const prompts = await loadPrompts(promptsPath);
   const total = prompts.length;

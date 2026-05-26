@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 
 import { PageHeader } from '@/components/layout/page-header';
+
 import { LogoutButton } from './_components/logout-button';
 import { TestEmailButton } from './_components/test-email-button';
 

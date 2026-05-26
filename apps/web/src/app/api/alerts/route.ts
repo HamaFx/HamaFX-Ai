@@ -1,9 +1,8 @@
 // /api/alerts — list / create.
 
-import { z } from 'zod';
-
-import { AlertChannelSchema, AlertRuleSchema } from '@hamafx/shared';
 import { createAlert, listAlerts } from '@hamafx/ai';
+import { AlertChannelSchema, AlertRuleSchema } from '@hamafx/shared';
+import { z } from 'zod';
 
 import { errorResponse, parseJsonBody } from '@/lib/api';
 

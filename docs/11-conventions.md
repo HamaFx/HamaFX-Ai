@@ -12,23 +12,27 @@
 
 ```ts
 // good
-export const SYMBOLS = ["XAUUSD", "EURUSD", "GBPUSD"] as const;
+export const SYMBOLS = ['XAUUSD', 'EURUSD', 'GBPUSD'] as const;
 export type Symbol = (typeof SYMBOLS)[number];
 
 // bad
-export enum Symbol { XAUUSD, EURUSD, GBPUSD }
+export enum Symbol {
+  XAUUSD,
+  EURUSD,
+  GBPUSD,
+}
 ```
 
 ## File & folder naming
 
-| Kind                | Example                       |
-| ------------------- | ----------------------------- |
-| TS / TSX file       | `kebab-case.ts(x)`            |
-| React component     | `PriceTile` exported from `price-tile.tsx` |
-| Hook                | `use-prices.ts` → `usePrices()` |
-| Schema              | `CandleSchema` + `Candle` (inferred) |
-| Constant            | `DEFAULT_TIMEFRAME`           |
-| Folder              | singular kebab-case           |
+| Kind            | Example                                    |
+| --------------- | ------------------------------------------ |
+| TS / TSX file   | `kebab-case.ts(x)`                         |
+| React component | `PriceTile` exported from `price-tile.tsx` |
+| Hook            | `use-prices.ts` → `usePrices()`            |
+| Schema          | `CandleSchema` + `Candle` (inferred)       |
+| Constant        | `DEFAULT_TIMEFRAME`                        |
+| Folder          | singular kebab-case                        |
 
 One default export per file is forbidden — use named exports for grep-friendliness, except for Next.js page/layout/route files where the framework requires defaults.
 
@@ -72,7 +76,9 @@ export function PriceTile({ symbol, className }: PriceTileProps) {
 - Always export both the schema and the inferred type:
 
 ```ts
-export const AlertRuleSchema = z.object({ /* ... */ });
+export const AlertRuleSchema = z.object({
+  /* ... */
+});
 export type AlertRule = z.infer<typeof AlertRuleSchema>;
 ```
 

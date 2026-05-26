@@ -29,8 +29,7 @@ export class AppError extends Error {
 export const validationError = (message: string, details?: unknown): AppError =>
   new AppError('VALIDATION', message, 400, details);
 
-export const authError = (message = 'Unauthorized'): AppError =>
-  new AppError('AUTH', message, 401);
+export const authError = (message = 'Unauthorized'): AppError => new AppError('AUTH', message, 401);
 
 export const notFound = (message = 'Not found'): AppError =>
   new AppError('NOT_FOUND', message, 404);

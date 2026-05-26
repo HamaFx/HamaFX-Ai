@@ -15,9 +15,8 @@
 //
 // Server component on purpose — no state, no events, no browser-only APIs.
 
-import Link from 'next/link';
-
 import type { LogJournalOutput } from '@hamafx/shared';
+import Link from 'next/link';
 
 interface LogJournalPartProps {
   /** Tool output, or `null` while streaming / before completion. */

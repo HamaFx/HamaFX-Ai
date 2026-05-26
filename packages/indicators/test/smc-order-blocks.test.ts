@@ -1,7 +1,7 @@
+import type { Candle } from '@hamafx/shared';
 import { describe, expect, it } from 'vitest';
 
 import { detectOrderBlocks } from '../src/smc/order-blocks';
-import type { Candle } from '@hamafx/shared';
 
 function bar(i: number, o: number, h: number, l: number, c: number): Candle {
   return {

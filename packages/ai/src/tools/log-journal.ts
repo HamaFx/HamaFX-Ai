@@ -5,10 +5,9 @@
 // feature; this tool exposes the manual side of it now so the user can ask
 // the agent to log something directly.
 
+import { SymbolSchema, TradeSideSchema, type LogJournalOutput } from '@hamafx/shared';
 import { tool } from 'ai';
 import { z } from 'zod';
-
-import { type LogJournalOutput, SymbolSchema, TradeSideSchema } from '@hamafx/shared';
 
 import { createEntry } from '../journal/persistence';
 
@@ -49,9 +48,7 @@ export const logJournalTool = tool({
     });
     const summary = `${input.side} ${input.symbol} @ ${input.entry}${
       input.stop !== null && input.stop !== undefined ? `, stop ${input.stop}` : ''
-    }${
-      input.target !== null && input.target !== undefined ? `, target ${input.target}` : ''
-    }`;
+    }${input.target !== null && input.target !== undefined ? `, target ${input.target}` : ''}`;
     return { entryId: entry.id, summary };
   },
 });

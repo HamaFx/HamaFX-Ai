@@ -1,12 +1,5 @@
 import { sql } from 'drizzle-orm';
-import {
-  doublePrecision,
-  index,
-  pgTable,
-  text,
-  timestamp,
-  uuid,
-} from 'drizzle-orm/pg-core';
+import { doublePrecision, index, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 
 export const journalEntries = pgTable(
   'journal_entries',
@@ -28,17 +21,20 @@ export const journalEntries = pgTable(
     outcome: text('outcome').notNull().default('open'),
     rMultiple: doublePrecision('r_multiple'),
     notes: text('notes'),
-    tags: text('tags').array().notNull().default(sql`'{}'::text[]`),
+    tags: text('tags')
+      .array()
+      .notNull()
+      .default(sql`'{}'::text[]`),
     /** Storage paths; use Supabase Storage if/when we wire it. */
-    attachments: text('attachments').array().notNull().default(sql`'{}'::text[]`),
+    attachments: text('attachments')
+      .array()
+      .notNull()
+      .default(sql`'{}'::text[]`),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp('updated_at', { withTimezone: true })
       .defaultNow()
       .notNull()
       .$onUpdate(() => sql`now()`),
   },
-  (t) => [
-    index('journal_symbol_idx').on(t.symbol),
-    index('journal_opened_idx').on(t.openedAt),
-  ],
+  (t) => [index('journal_symbol_idx').on(t.symbol), index('journal_opened_idx').on(t.openedAt)],
 );

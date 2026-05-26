@@ -5,7 +5,7 @@
 // NFP?" and to render an upcoming-events list. Forecast/actual lookup is a
 // follow-up that pulls from `/fred/series/observations` after release.
 
-import { type EconomicEvent, EconomicEventSchema } from '@hamafx/shared';
+import { EconomicEventSchema, type EconomicEvent } from '@hamafx/shared';
 
 import { ProviderError } from '../errors';
 import { fetchReleaseDates, FRED_RELEASES, fredMeta } from '../providers/fred';

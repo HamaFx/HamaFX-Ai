@@ -46,7 +46,9 @@ export function EventCard({ event }: EventCardProps) {
 
         {(event.actual !== null || event.forecast !== null || event.previous !== null) && (
           <dl className="text-fg-muted mt-1 flex gap-4 text-[11px] tabular-nums">
-            {event.actual !== null && <Stat label="actual" value={event.actual} unit={event.unit} />}
+            {event.actual !== null && (
+              <Stat label="actual" value={event.actual} unit={event.unit} />
+            )}
             {event.forecast !== null && (
               <Stat label="forecast" value={event.forecast} unit={event.unit} />
             )}
@@ -73,7 +75,11 @@ function Stat({ label, value, unit }: { label: string; value: number; unit: stri
 }
 
 function timeLabel(d: Date): string {
-  return d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', timeZoneName: 'short' });
+  return d.toLocaleTimeString(undefined, {
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZoneName: 'short',
+  });
 }
 function dateLabel(d: Date): string {
   return d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });

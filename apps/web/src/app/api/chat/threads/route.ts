@@ -1,9 +1,8 @@
 // /api/chat/threads — list + create chat threads.
 
-import { z } from 'zod';
-
 import { createThread, listThreads } from '@hamafx/ai';
 import { SymbolSchema } from '@hamafx/shared';
+import { z } from 'zod';
 
 import { errorResponse, parseJsonBody } from '@/lib/api';
 

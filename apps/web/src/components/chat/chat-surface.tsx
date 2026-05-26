@@ -3,7 +3,6 @@
 // Top-level chat surface. Wraps `useChat` with our route + threadId, hands
 // the messages off to MessageList, and the composer to the SDK's
 // sendMessage. Used by /chat/[threadId]/page.tsx.
-
 import { useChat } from '@ai-sdk/react';
 import { DefaultChatTransport, type UIMessage } from 'ai';
 import { useMemo } from 'react';

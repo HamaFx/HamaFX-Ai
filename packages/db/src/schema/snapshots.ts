@@ -17,7 +17,5 @@ export const snapshots = pgTable(
     data: jsonb('data').notNull(),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   },
-  (t) => [
-    index('snapshots_symbol_kind_asof_idx').on(t.symbol, t.kind, t.asOf),
-  ],
+  (t) => [index('snapshots_symbol_kind_asof_idx').on(t.symbol, t.kind, t.asOf)],
 );

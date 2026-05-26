@@ -4,8 +4,8 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { _resetThrottle } from '../src/cache/throttle';
 import { fetchUpcomingEvents } from '../src/adapters/calendar';
+import { _resetThrottle } from '../src/cache/throttle';
 
 const ORIGINAL_FETCH = globalThis.fetch;
 
@@ -41,9 +41,7 @@ describe('fetchUpcomingEvents (fred)', () => {
   });
 
   it('throws when no FRED key is configured', async () => {
-    await expect(fetchUpcomingEvents({ apiKeys: {} })).rejects.toThrow(
-      /no calendar provider/,
-    );
+    await expect(fetchUpcomingEvents({ apiKeys: {} })).rejects.toThrow(/no calendar provider/);
   });
 
   it('events are sorted ascending by date', async () => {

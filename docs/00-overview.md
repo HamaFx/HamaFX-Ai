@@ -8,33 +8,33 @@ HamaFX-Ai is a **personal, mobile-first AI trading copilot** for three instrumen
 2. **EURUSD**
 3. **GBPUSD**
 
-This is a **single-user app** built for the repo owner. It is not a public SaaS. That framing changes a lot of decisions — see "Personal-mode constraints" below — but the *product* is no less ambitious. It's a deeply contextual chat-driven copilot with live charts, indicators, news, macro calendar, alerts, and a journal.
+This is a **single-user app** built for the repo owner. It is not a public SaaS. That framing changes a lot of decisions — see "Personal-mode constraints" below — but the _product_ is no less ambitious. It's a deeply contextual chat-driven copilot with live charts, indicators, news, macro calendar, alerts, and a journal.
 
 > "What's gold doing right now and is the London session bias bullish?"
 > — and the agent should answer with a chart annotation, an indicator readout, today's relevant headlines, and a clear bias call with reasoning.
 
 ## Personal-mode constraints (and what they unlock)
 
-| We do **not** need…                            | …so we drop                                                  |
-| ---------------------------------------------- | ------------------------------------------------------------ |
-| Multi-tenancy                                  | RLS, `user_id` columns, idempotency keys, per-user quotas    |
-| Public marketing                               | Landing page, OG images, sitemap/robots, analytics           |
-| Anyone-can-sign-up auth                        | Magic links, OAuth providers, password resets                |
-| Compliance / GDPR                              | Data exports, deletion flows, consent banners                |
-| Production observability                       | Axiom / Sentry / dashboards (Vercel logs are enough)         |
-| BYOK for users                                 | A whole settings surface for it                              |
-| Continuous AI evals                            | LLM-as-judge in CI                                           |
+| We do **not** need…      | …so we drop                                               |
+| ------------------------ | --------------------------------------------------------- |
+| Multi-tenancy            | RLS, `user_id` columns, idempotency keys, per-user quotas |
+| Public marketing         | Landing page, OG images, sitemap/robots, analytics        |
+| Anyone-can-sign-up auth  | Magic links, OAuth providers, password resets             |
+| Compliance / GDPR        | Data exports, deletion flows, consent banners             |
+| Production observability | Axiom / Sentry / dashboards (Vercel logs are enough)      |
+| BYOK for users           | A whole settings surface for it                           |
+| Continuous AI evals      | LLM-as-judge in CI                                        |
 
 In exchange we keep the budget for **cool features**: SMC structure, RAG, agent annotations, voice, briefings, vision, etc.
 
 ## Why narrow scope (only 3 pairs)?
 
-| Reason             | Effect                                                                |
-| ------------------ | --------------------------------------------------------------------- |
-| Lower data cost    | Free tiers of providers easily cover 3 symbols                        |
-| Higher quality     | Agent prompt + prefetched context can be deeply specialised           |
-| Faster UX          | All needed data fits in cache; sub-second responses                   |
-| Lower mental load  | A focused tool you actually use beats a sprawling one you don't       |
+| Reason            | Effect                                                          |
+| ----------------- | --------------------------------------------------------------- |
+| Lower data cost   | Free tiers of providers easily cover 3 symbols                  |
+| Higher quality    | Agent prompt + prefetched context can be deeply specialised     |
+| Faster UX         | All needed data fits in cache; sub-second responses             |
+| Lower mental load | A focused tool you actually use beats a sprawling one you don't |
 
 ## Product principles
 
@@ -47,15 +47,15 @@ In exchange we keep the budget for **cool features**: SMC structure, RAG, agent 
 
 ## Success criteria (MVP)
 
-| Dimension                   | Target                                                       |
-| --------------------------- | ------------------------------------------------------------ |
-| Time to first token (chat)  | < 800 ms p50                                                 |
-| Chart load (cold)           | < 1.2 s p50 on 4G mobile                                     |
-| Tool-call freshness         | Price ≤ 5 s old, candles ≤ 1 min, news ≤ 5 min               |
-| Mobile Lighthouse perf      | ≥ 90                                                         |
-| Mobile Lighthouse a11y      | ≥ 95                                                         |
-| Cost / month (your usage)   | < $20 (target ~$5–10) in API + LLM                           |
-| The "10 prompts" eval       | ≥ 9/10 pass on a manual run                                  |
+| Dimension                  | Target                                         |
+| -------------------------- | ---------------------------------------------- |
+| Time to first token (chat) | < 800 ms p50                                   |
+| Chart load (cold)          | < 1.2 s p50 on 4G mobile                       |
+| Tool-call freshness        | Price ≤ 5 s old, candles ≤ 1 min, news ≤ 5 min |
+| Mobile Lighthouse perf     | ≥ 90                                           |
+| Mobile Lighthouse a11y     | ≥ 95                                           |
+| Cost / month (your usage)  | < $20 (target ~$5–10) in API + LLM             |
+| The "10 prompts" eval      | ≥ 9/10 pass on a manual run                    |
 
 ## Non-goals (for v1)
 

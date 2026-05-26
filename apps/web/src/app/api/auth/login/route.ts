@@ -5,12 +5,7 @@
 
 import { z } from 'zod';
 
-import {
-  AUTH_COOKIE_NAME,
-  authCookieSerialized,
-  signAuthToken,
-  timingSafeEqual,
-} from '@/lib/auth';
+import { AUTH_COOKIE_NAME, authCookieSerialized, signAuthToken, timingSafeEqual } from '@/lib/auth';
 import { getAuthEnv } from '@/lib/env';
 
 export const runtime = 'nodejs';

@@ -3,6 +3,7 @@
 > Written **for AI coding agents** that will scaffold and extend HamaFX-Ai (Kiro, Cursor, Claude Code, OpenAI Codex, etc.). Humans should follow `11-conventions.md` instead.
 >
 > Personal-mode reminders:
+>
 > - **Single user**, single password. No multi-tenant code.
 > - **Single Vercel deploy**. No `apps/worker/` at MVP.
 > - **No `user_id` columns**, **no RLS**, **no per-user rate limit**.

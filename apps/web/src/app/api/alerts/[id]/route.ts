@@ -1,9 +1,8 @@
 // /api/alerts/[id] — read / patch / delete one alert.
 
-import { z } from 'zod';
-
-import { AlertChannelSchema, AlertRuleSchema } from '@hamafx/shared';
 import { deleteAlert, getAlert, updateAlert } from '@hamafx/ai';
+import { AlertChannelSchema, AlertRuleSchema } from '@hamafx/shared';
+import { z } from 'zod';
 
 import { errorResponse, parseJsonBody } from '@/lib/api';
 
@@ -19,7 +18,10 @@ export async function GET(_req: Request, ctx: Ctx): Promise<Response> {
     const { id } = await ctx.params;
     const alert = await getAlert(id);
     if (!alert) {
-      return Response.json({ error: { code: 'NOT_FOUND', message: 'alert not found' } }, { status: 404 });
+      return Response.json(
+        { error: { code: 'NOT_FOUND', message: 'alert not found' } },
+        { status: 404 },
+      );
     }
     return Response.json({ alert });
   } catch (err) {
@@ -42,7 +44,10 @@ export async function PATCH(req: Request, ctx: Ctx): Promise<Response> {
     const input = await parseJsonBody(req, PatchSchema);
     const alert = await updateAlert(id, input);
     if (!alert) {
-      return Response.json({ error: { code: 'NOT_FOUND', message: 'alert not found' } }, { status: 404 });
+      return Response.json(
+        { error: { code: 'NOT_FOUND', message: 'alert not found' } },
+        { status: 404 },
+      );
     }
     return Response.json({ alert });
   } catch (err) {

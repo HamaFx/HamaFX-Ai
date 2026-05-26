@@ -15,7 +15,10 @@ export default function MorePage() {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader title="More" />
-      <nav aria-label="More" className="border-border bg-bg-elev-1 flex flex-col divide-y divide-[var(--color-border)] rounded-lg border">
+      <nav
+        aria-label="More"
+        className="border-border bg-bg-elev-1 flex flex-col divide-y divide-[var(--color-border)] rounded-lg border"
+      >
         {ITEMS.map((item) => (
           <Link
             key={item.href}

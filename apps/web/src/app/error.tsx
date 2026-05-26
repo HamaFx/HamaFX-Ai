@@ -3,7 +3,6 @@
 // Root error boundary. Next.js renders this when any non-recoverable error
 // surfaces during rendering. We log + show a recover button so the user
 // isn't stuck on a blank screen.
-
 import { useEffect } from 'react';
 
 import { Button } from '@/components/ui/button';

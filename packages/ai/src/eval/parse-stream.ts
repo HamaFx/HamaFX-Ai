@@ -78,10 +78,7 @@ interface TextLikePart {
 }
 
 function isTextPart(part: UIMessage['parts'][number]): part is TextLikePart {
-  return (
-    part.type === 'text' &&
-    typeof (part as { text?: unknown }).text === 'string'
-  );
+  return part.type === 'text' && typeof (part as { text?: unknown }).text === 'string';
 }
 
 function hasNonEmptyText(message: UIMessage): boolean {
@@ -111,9 +108,7 @@ function extractToolCalls(message: UIMessage): ParsedToolCall[] {
     };
 
     const resultSummary =
-      p.state === 'output-available'
-        ? JSON.stringify(p.output ?? null).slice(0, 200)
-        : null;
+      p.state === 'output-available' ? JSON.stringify(p.output ?? null).slice(0, 200) : null;
 
     out.push({ name, args: p.input, resultSummary });
   }

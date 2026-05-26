@@ -7,10 +7,8 @@
 //   - `useState` would lose the timeframe on refresh.
 //   - `useSearchParams` is read-only; nuqs gives us setter + parse.
 //   - Other features (alerts list filters, news symbol filter) will reuse it.
-
-import { parseAsStringLiteral, useQueryState } from 'nuqs';
-
 import { DEFAULT_TIMEFRAME, TIMEFRAMES, type Timeframe } from '@hamafx/shared';
+import { parseAsStringLiteral, useQueryState } from 'nuqs';
 
 const tfParser = parseAsStringLiteral(TIMEFRAMES).withDefault(DEFAULT_TIMEFRAME);
 

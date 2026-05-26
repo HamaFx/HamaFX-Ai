@@ -21,8 +21,8 @@ import {
   type Timeframe,
 } from '@hamafx/shared';
 
-import { listEvaluable } from './persistence';
 import { deliverAlert, type DeliveryResult } from './delivery';
+import { listEvaluable } from './persistence';
 
 // ---------------------------------------------------------------------------
 // Rule decision: does this rule's reading meet the trigger?
@@ -45,7 +45,9 @@ export function decideMatch(direction: 'above' | 'below', value: number, level: 
 // Per-rule readings.
 // ---------------------------------------------------------------------------
 
-async function readPriceRule(rule: Extract<AlertRule, { type: 'priceCross' }>): Promise<RuleReading> {
+async function readPriceRule(
+  rule: Extract<AlertRule, { type: 'priceCross' }>,
+): Promise<RuleReading> {
   const tick: Tick = await getPrice(rule.symbol);
   return { value: tick.mid, source: tick.source };
 }
@@ -87,10 +89,12 @@ async function readIndicatorRule(
     if (v == null) continue;
     if (typeof v === 'number') return { value: v, source: `${parsed.kind}@${rule.tf}` };
     if (typeof v === 'object') {
-      if ('macd' in v && typeof v.macd === 'number') return { value: v.macd, source: `macd@${rule.tf}` };
+      if ('macd' in v && typeof v.macd === 'number')
+        return { value: v.macd, source: `macd@${rule.tf}` };
       if ('middle' in v && typeof v.middle === 'number')
         return { value: v.middle, source: `bollinger.middle@${rule.tf}` };
-      if ('pp' in v && typeof v.pp === 'number') return { value: v.pp, source: `pivots.pp@${rule.tf}` };
+      if ('pp' in v && typeof v.pp === 'number')
+        return { value: v.pp, source: `pivots.pp@${rule.tf}` };
     }
   }
   return null;
@@ -105,10 +109,21 @@ function parseIndicatorSpec(
 ): { kind: IndicatorKind; params: Record<string, number> } | null {
   const [head, tail] = spec.toLowerCase().split(':');
   if (!head) return null;
-  const known: readonly IndicatorKind[] = ['sma', 'ema', 'rsi', 'macd', 'atr', 'bollinger', 'pivots'];
+  const known: readonly IndicatorKind[] = [
+    'sma',
+    'ema',
+    'rsi',
+    'macd',
+    'atr',
+    'bollinger',
+    'pivots',
+  ];
   if (!known.includes(head as IndicatorKind)) return null;
   const kind = head as IndicatorKind;
-  const nums = (tail ?? '').split(',').map(Number).filter((n) => !Number.isNaN(n));
+  const nums = (tail ?? '')
+    .split(',')
+    .map(Number)
+    .filter((n) => !Number.isNaN(n));
 
   if (kind === 'macd') {
     return {
@@ -183,10 +198,12 @@ export interface EvaluationResult {
   deliveries: DeliveryResult[];
 }
 
-export async function evaluateAlerts(opts: {
-  env?: EvaluatorEnv;
-  signal?: AbortSignal;
-} = {}): Promise<EvaluationResult> {
+export async function evaluateAlerts(
+  opts: {
+    env?: EvaluatorEnv;
+    signal?: AbortSignal;
+  } = {},
+): Promise<EvaluationResult> {
   const alerts = await listEvaluable();
   const env: EvaluatorEnv = opts.env ?? {
     RESEND_API_KEY: process.env.RESEND_API_KEY ?? undefined,

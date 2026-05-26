@@ -7,9 +7,8 @@
 // Source of truth for the actual deployment ceiling is the env var
 // `MAX_DAILY_USD`. The check fires BEFORE we invoke the model.
 
-import { sql } from 'drizzle-orm';
-
 import { getDb, schema } from '@hamafx/db';
+import { sql } from 'drizzle-orm';
 
 interface ModelRate {
   /** USD per 1M input tokens. */

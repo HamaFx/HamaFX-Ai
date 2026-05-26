@@ -2,10 +2,8 @@
 
 // New journal-entry form. Mobile-first: stacked, tap targets >= 44px.
 // We require symbol/side/entry; stop/target/size/notes are optional.
-
-import { useState } from 'react';
-
 import { SYMBOLS, type Symbol, type TradeSide } from '@hamafx/shared';
+import { useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -57,7 +55,9 @@ export function EntryForm({ onCreated }: EntryFormProps) {
         }),
       });
       if (!res.ok) {
-        const body = (await res.json().catch(() => null)) as { error?: { message?: string } } | null;
+        const body = (await res.json().catch(() => null)) as {
+          error?: { message?: string };
+        } | null;
         throw new Error(body?.error?.message ?? `HTTP ${res.status}`);
       }
       setEntry('');
@@ -74,11 +74,18 @@ export function EntryForm({ onCreated }: EntryFormProps) {
   }
 
   return (
-    <form onSubmit={submit} className="border-border bg-bg-elev-1 flex flex-col gap-3 rounded-lg border p-3">
+    <form
+      onSubmit={submit}
+      className="border-border bg-bg-elev-1 flex flex-col gap-3 rounded-lg border p-3"
+    >
       <h3 className="text-sm font-semibold">Log trade</h3>
 
       <div className="flex gap-2">
-        <Pills<Symbol> value={symbol} onChange={setSymbol} options={SYMBOLS.map((s) => ({ value: s, label: s }))} />
+        <Pills<Symbol>
+          value={symbol}
+          onChange={setSymbol}
+          options={SYMBOLS.map((s) => ({ value: s, label: s }))}
+        />
       </div>
       <div>
         <Pills<TradeSide>
@@ -137,7 +144,13 @@ function Field({
       <label className="text-fg-subtle text-[11px] uppercase tracking-wide" htmlFor={id}>
         {label}
       </label>
-      <Input id={id} value={value} onChange={(e) => setValue(e.target.value)} inputMode="decimal" required={required} />
+      <Input
+        id={id}
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        inputMode="decimal"
+        required={required}
+      />
     </div>
   );
 }
