@@ -4,10 +4,6 @@
 //   3. is referenced by docs/07-ai-agent.md § Tools
 // Adding a new entry without all three is a steering violation.
 //
-// Phase-2 candidates (NOT in this list yet — implement first, then add):
-//   analyze_technical, analyze_fundamental, search_knowledge,
-//   annotate_chart, get_journal_stats.
-
 export const TOOL_NAMES = [
   'get_price',
   'get_candles',
@@ -17,6 +13,12 @@ export const TOOL_NAMES = [
   'get_calendar',
   'set_alert',
   'log_journal',
+  // Phase 2 tools
+  'search_knowledge',
+  'analyze_technical',
+  'analyze_fundamental',
+  'get_journal_stats',
+  'annotate_chart',
 ] as const;
 
 export type ToolName = (typeof TOOL_NAMES)[number];

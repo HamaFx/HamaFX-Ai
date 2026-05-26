@@ -22,6 +22,12 @@ export const economicEvents = pgTable(
     previous: doublePrecision('previous'),
     unit: text('unit'),
     source: text('source').notNull(),
+    /**
+     * Set by /api/cron/fred-actuals when it patches `actual` for a row
+     * that was previously null. Lets the backfill path stay idempotent
+     * (only patch rows where this is null on the next run).
+     */
+    actualsFilledAt: timestamp('actuals_filled_at', { withTimezone: true }),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   },
   (t) => [

@@ -9,3 +9,4 @@ export * from './news';
 export * from './calendar';
 export * from './snapshots';
 export * from './telemetry';
+export * from './briefings';

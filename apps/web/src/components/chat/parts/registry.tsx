@@ -16,13 +16,18 @@
 // Server component — no state, no events.
 
 import {
+  AnalyzeFundamentalOutputSchema,
+  AnalyzeTechnicalOutputSchema,
+  AnnotateChartOutputSchema,
   GetCalendarOutputSchema,
   GetCandlesOutputSchema,
   GetIndicatorsOutputSchema,
+  GetJournalStatsOutputSchema,
   GetMarketStructureOutputSchema,
   GetNewsOutputSchema,
   GetPriceOutputSchema,
   LogJournalOutputSchema,
+  SearchKnowledgeOutputSchema,
   SetAlertOutputSchema,
   TOOL_NAMES,
   type ToolName,
@@ -31,13 +36,18 @@ import {
 import type { ComponentType, ReactElement } from 'react';
 import type { z } from 'zod';
 
+import { AnalyzeFundamentalPart } from './analyze-fundamental';
+import { AnalyzeTechnicalPart } from './analyze-technical';
+import { AnnotateChartPart } from './annotate-chart';
 import { GetCalendarPart } from './get-calendar';
 import { GetCandlesPart } from './get-candles';
 import { GetIndicatorsPart } from './get-indicators';
+import { GetJournalStatsPart } from './get-journal-stats';
 import { GetMarketStructurePart } from './get-market-structure';
 import { GetNewsPart } from './get-news';
 import { GetPricePart } from './get-price';
 import { LogJournalPart } from './log-journal';
+import { SearchKnowledgePart } from './search-knowledge';
 import { SetAlertPart } from './set-alert';
 import { ToolCard } from './tool-card';
 
@@ -71,6 +81,12 @@ export const partRegistry: { [K in ToolName]: ComponentType<ToolPartProps<K>> } 
   get_calendar: GetCalendarPart,
   set_alert: SetAlertPart,
   log_journal: LogJournalPart,
+  // Phase 2 tools
+  search_knowledge: SearchKnowledgePart,
+  analyze_technical: AnalyzeTechnicalPart,
+  analyze_fundamental: AnalyzeFundamentalPart,
+  get_journal_stats: GetJournalStatsPart,
+  annotate_chart: AnnotateChartPart,
 };
 
 /**
@@ -90,6 +106,12 @@ const partSchemas: { [K in ToolName]: z.ZodType<ToolOutput<K>> } = {
   get_calendar: GetCalendarOutputSchema,
   set_alert: SetAlertOutputSchema,
   log_journal: LogJournalOutputSchema,
+  // Phase 2 tools
+  search_knowledge: SearchKnowledgeOutputSchema,
+  analyze_technical: AnalyzeTechnicalOutputSchema,
+  analyze_fundamental: AnalyzeFundamentalOutputSchema,
+  get_journal_stats: GetJournalStatsOutputSchema,
+  annotate_chart: AnnotateChartOutputSchema,
 };
 
 /** Type guard: is `s` a known `ToolName`? */

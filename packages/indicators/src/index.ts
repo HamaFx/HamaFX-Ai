@@ -16,3 +16,5 @@ export {
   detectLiquiditySweeps,
   type ComputeStructureArgs,
 } from './smc';
+export { computePdhPdl, type PdhPdl } from './smc/pdh-pdl';
+export { computeAsianRange, type AsianRange } from './smc/asian-range';

@@ -17,13 +17,18 @@
 
 import type { z } from 'zod';
 
+import type { AnalyzeFundamentalOutputSchema } from '../schemas/tool-outputs/analyze-fundamental';
+import type { AnalyzeTechnicalOutputSchema } from '../schemas/tool-outputs/analyze-technical';
+import type { AnnotateChartOutputSchema } from '../schemas/tool-outputs/annotate-chart';
 import type { GetCalendarOutputSchema } from '../schemas/tool-outputs/get-calendar';
 import type { GetCandlesOutputSchema } from '../schemas/tool-outputs/get-candles';
 import type { GetIndicatorsOutputSchema } from '../schemas/tool-outputs/get-indicators';
+import type { GetJournalStatsOutputSchema } from '../schemas/tool-outputs/get-journal-stats';
 import type { GetMarketStructureOutputSchema } from '../schemas/tool-outputs/get-market-structure';
 import type { GetNewsOutputSchema } from '../schemas/tool-outputs/get-news';
 import type { GetPriceOutputSchema } from '../schemas/tool-outputs/get-price';
 import type { LogJournalOutputSchema } from '../schemas/tool-outputs/log-journal';
+import type { SearchKnowledgeOutputSchema } from '../schemas/tool-outputs/search-knowledge';
 import type { SetAlertOutputSchema } from '../schemas/tool-outputs/set-alert';
 import type { ToolName } from './tool-names';
 
@@ -53,6 +58,12 @@ export interface ToolOutputMap {
   get_calendar: z.infer<typeof GetCalendarOutputSchema>;
   set_alert: z.infer<typeof SetAlertOutputSchema>;
   log_journal: z.infer<typeof LogJournalOutputSchema>;
+  // Phase 2 tools
+  search_knowledge: z.infer<typeof SearchKnowledgeOutputSchema>;
+  analyze_technical: z.infer<typeof AnalyzeTechnicalOutputSchema>;
+  analyze_fundamental: z.infer<typeof AnalyzeFundamentalOutputSchema>;
+  get_journal_stats: z.infer<typeof GetJournalStatsOutputSchema>;
+  annotate_chart: z.infer<typeof AnnotateChartOutputSchema>;
 }
 
 export type ToolInput<T extends ToolName> = T extends keyof ToolIOMap

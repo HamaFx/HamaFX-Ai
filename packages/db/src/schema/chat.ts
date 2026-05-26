@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm';
-import { index, jsonb, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import { boolean, index, jsonb, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 
 /**
  * Chat threads. One row per conversation. Personal-mode: no `user_id`.
@@ -15,6 +15,12 @@ export const chatThreads = pgTable(
     modelOverride: text('model_override'),
     /** How `title` was produced: `'llm' | 'fallback' | null` (legacy rows). */
     titleSource: text('title_source'),
+    /**
+     * True for the single thread reserved for cron-emitted briefings
+     * (pre-event / post-event / weekly review). The thread list pins it
+     * to the top. See packages/ai/src/briefings/persistence.ts.
+     */
+    isBriefings: boolean('is_briefings').notNull().default(false),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp('updated_at', { withTimezone: true })
       .defaultNow()

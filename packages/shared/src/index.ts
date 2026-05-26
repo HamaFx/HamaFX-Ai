@@ -25,6 +25,14 @@ export * from './schemas/tool-outputs/get-news';
 export * from './schemas/tool-outputs/get-calendar';
 export * from './schemas/tool-outputs/set-alert';
 export * from './schemas/tool-outputs/log-journal';
+// Phase 2 tools
+export * from './schemas/tool-outputs/search-knowledge';
+export * from './schemas/tool-outputs/analyze-technical';
+export * from './schemas/tool-outputs/analyze-fundamental';
+export * from './schemas/tool-outputs/get-journal-stats';
+export * from './schemas/tool-outputs/annotate-chart';
+// Briefings (cron-emitted assistant messages in the dedicated thread)
+export * from './schemas/briefings';
 
 // AI tool plumbing
 export * from './ai/tool-names';
