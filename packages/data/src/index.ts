@@ -3,6 +3,12 @@
 
 export { getPrice, type GetPriceOptions } from './adapters/price';
 export { getCandles, type GetCandlesOptions } from './adapters/candles';
+export { fetchNews, articleIdFromUrl, type FetchNewsOptions } from './adapters/news';
+export {
+  fetchUpcomingEvents,
+  CURATED_FRED_RELEASE_IDS,
+  type FetchCalendarOptions,
+} from './adapters/calendar';
 
 export {
   getDefaultCache,

@@ -10,6 +10,15 @@ export {
   enforceDailyBudget,
   BudgetExceededError,
 } from './cost';
+export { embedTexts, type EmbedTextsArgs, type EmbedResult } from './embeddings';
+export {
+  upsertArticles,
+  listRecentArticles,
+  listUpcomingEvents,
+  backfillEmbeddings,
+  countPendingEmbeddings,
+} from './news-persistence';
+export { upsertEvents } from './calendar-persistence';
 export {
   listThreads,
   getThread,

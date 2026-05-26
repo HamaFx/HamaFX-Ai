@@ -1,20 +1,32 @@
-// GET /api/cron/news — Vercel Cron, every 5 min.
+// GET /api/cron/news — pulls latest from Marketaux, upserts news_articles,
+// dedupes by sha1(url). Embeddings are intentionally NOT computed here so a
+// news-fetch failure doesn't block the embedding cron, and vice versa.
 //
-// Phase-0 stub: verifies the bearer token and exits 200. Real logic lands
-// in Phase 1c per docs/13-data-flow.md § "News ingestion pipeline":
-//   1. Pull primary (Marketaux) → fallback (Finnhub)
-//   2. Filter by symbol/currency/keyword
-//   3. Embed title+summary (text-embedding-3-small)
-//   4. Upsert news_articles + news_embeddings (pgvector)
+// Trigger options (Hobby plan caps Vercel cron at daily):
+//   - Pro: schedule via vercel.json (5-minute cadence is ideal)
+//   - Hobby: external scheduler (Fly.io worker, GitHub Actions, etc.) hits
+//     this URL with `Authorization: Bearer ${CRON_SECRET}`.
+
+import { upsertArticles } from '@hamafx/ai';
+import { fetchNews } from '@hamafx/data';
 
 import { withCronAuth } from '@/lib/cron';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
+// 60 s is the Hobby cap; we expect <10 s in practice.
+export const maxDuration = 60;
 
 export async function GET(req: Request): Promise<Response> {
-  return withCronAuth(req, async () => ({
-    processed: 0,
-    note: 'phase-0 stub — implement in Phase 1c',
-  }));
+  return withCronAuth(req, async () => {
+    // Look back 6 hours so we don't miss anything between cron beats while
+    // staying well clear of the page-size cap.
+    const publishedAfter = new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString();
+    const articles = await fetchNews({ publishedAfter, limit: 50 });
+    const { inserted, skipped } = await upsertArticles(articles);
+    return {
+      processed: articles.length,
+      note: `inserted=${inserted} skipped=${skipped}`,
+    };
+  });
 }
