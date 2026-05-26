@@ -9,7 +9,7 @@ import { and, desc, eq, gte, sql } from 'drizzle-orm';
 import { z } from 'zod';
 
 import { getDb, schema } from '@hamafx/db';
-import { SymbolSchema } from '@hamafx/shared';
+import { type GetNewsOutput, SymbolSchema, type ToolNewsItem } from '@hamafx/shared';
 
 const InputSchema = z.object({
   /** Optional symbol filter. Omit to get cross-symbol macro coverage. */
@@ -21,29 +21,9 @@ const InputSchema = z.object({
   minSentiment: z.number().min(0).max(1).optional(),
 });
 
-interface NewsItem {
-  id: string;
-  title: string;
-  summary: string | null;
-  url: string;
-  source: string;
-  publisher: string | null;
-  publishedAt: number;
-  sentiment: 'positive' | 'negative' | 'neutral' | null;
-  sentimentScore: number | null;
-}
-
-interface Output {
-  items: NewsItem[];
-  /** True if the news pipeline hasn't populated the DB yet. */
-  pipelinePending: boolean;
-}
-
-export type { NewsItem, Output as GetNewsOutput };
-
 declare module '@hamafx/shared' {
   interface ToolIOMap {
-    get_news: { input: z.infer<typeof InputSchema>; output: Output };
+    get_news: { input: z.infer<typeof InputSchema> };
   }
 }
 
@@ -53,7 +33,7 @@ export const getNewsTool = tool({
   description:
     'List recent financial news articles relevant to a symbol or the macro picture. Filtered by publishedAt and optional sentiment magnitude. Returns an empty list (with pipelinePending=true) if the news cron has not populated the DB yet.',
   inputSchema: InputSchema,
-  execute: async ({ symbol, since, limit, minSentiment }): Promise<Output> => {
+  execute: async ({ symbol, since, limit, minSentiment }): Promise<GetNewsOutput> => {
     const sinceDate = new Date(since ?? Date.now() - ONE_DAY_MS);
 
     const filters = [gte(schema.newsArticles.publishedAt, sinceDate)];
@@ -92,7 +72,7 @@ export const getNewsTool = tool({
         source: r.source,
         publisher: r.publisher,
         publishedAt: r.publishedAt.getTime(),
-        sentiment: (r.sentiment as NewsItem['sentiment']) ?? null,
+        sentiment: (r.sentiment as ToolNewsItem['sentiment']) ?? null,
         sentimentScore: r.sentimentScore,
       })),
     };

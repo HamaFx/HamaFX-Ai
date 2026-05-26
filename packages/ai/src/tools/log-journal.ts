@@ -8,7 +8,7 @@
 import { tool } from 'ai';
 import { z } from 'zod';
 
-import { SymbolSchema, TradeSideSchema } from '@hamafx/shared';
+import { type LogJournalOutput, SymbolSchema, TradeSideSchema } from '@hamafx/shared';
 
 import { createEntry } from '../journal/persistence';
 
@@ -25,17 +25,9 @@ const InputSchema = z.object({
   tags: z.array(z.string().max(40)).max(10).optional(),
 });
 
-interface Output {
-  entryId: string;
-  /** Echoes the canonical summary line for the assistant to confirm. */
-  summary: string;
-}
-
-export type { Output as LogJournalOutput };
-
 declare module '@hamafx/shared' {
   interface ToolIOMap {
-    log_journal: { input: z.infer<typeof InputSchema>; output: Output };
+    log_journal: { input: z.infer<typeof InputSchema> };
   }
 }
 
@@ -43,7 +35,7 @@ export const logJournalTool = tool({
   description:
     'Record a trade entry in the journal. Returns the new entry id + a summary line. Status is "open" until the user later marks it closed in /journal or via a follow-up tool call.',
   inputSchema: InputSchema,
-  execute: async (input): Promise<Output> => {
+  execute: async (input): Promise<LogJournalOutput> => {
     const entry = await createEntry({
       symbol: input.symbol,
       side: input.side,

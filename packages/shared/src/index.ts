@@ -16,6 +16,16 @@ export * from './schemas/chat';
 export * from './schemas/alerts';
 export * from './schemas/journal';
 
+// Per-tool output envelope schemas (consumed by chat parts via `safeParse`).
+export * from './schemas/tool-outputs/get-price';
+export * from './schemas/tool-outputs/get-candles';
+export * from './schemas/tool-outputs/get-indicators';
+export * from './schemas/tool-outputs/get-market-structure';
+export * from './schemas/tool-outputs/get-news';
+export * from './schemas/tool-outputs/get-calendar';
+export * from './schemas/tool-outputs/set-alert';
+export * from './schemas/tool-outputs/log-journal';
+
 // AI tool plumbing
 export * from './ai/tool-names';
 export * from './ai/tool-io';

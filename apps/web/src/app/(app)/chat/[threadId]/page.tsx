@@ -21,7 +21,11 @@ interface PageProps {
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { threadId } = await params;
   const t = await getThread(threadId);
-  return { title: t?.title ?? 'Chat' };
+  // Only display LLM-generated titles. Fallback / legacy (`null`) titles use
+  // a neutral placeholder so we never surface deterministic "first words"
+  // strings as if they were real titles.
+  const display = t && t.titleSource === 'llm' && t.title ? t.title : 'Chat';
+  return { title: display };
 }
 
 export default async function ChatThreadPage({ params }: PageProps) {
@@ -45,9 +49,15 @@ export default async function ChatThreadPage({ params }: PageProps) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   })) as any[];
 
+  // Same rule as `generateMetadata`: only render an LLM-produced title.
+  // Fallback (deterministic) and legacy (`null`) rows keep the original
+  // "New conversation" placeholder so the page header stays stable.
+  const headerTitle =
+    thread.titleSource === 'llm' && thread.title ? thread.title : 'New conversation';
+
   return (
     <div className="flex flex-col gap-3">
-      <PageHeader title={thread.title ?? 'New conversation'} description="HamaFX-Ai copilot" />
+      <PageHeader title={headerTitle} description="HamaFX-Ai copilot" />
       <ChatSurface threadId={thread.id} initialMessages={initialMessages} />
     </div>
   );

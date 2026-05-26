@@ -127,37 +127,51 @@ After signing up for any of the above, set the env vars on Vercel
 (**Settings → Environment Variables** for the project) — no redeploy needed,
 Vercel rebuilds automatically when production env changes.
 
-## Cron triggering (Hobby plan caveat)
+## Cron triggering — GitHub Actions
 
-Vercel **Hobby** caps cron jobs at once-per-day. We don't have a `crons`
-block in `vercel.json`, so **none of the cron endpoints fire automatically**.
-The endpoints themselves work — they're just waiting for a trigger.
+We've chosen **GitHub Actions external scheduler** over Vercel Pro. Configuration lives in `.github/workflows/cron-{news,calendar,alerts,embedding-backfill}.yml`. Each workflow `curl`s the corresponding `/api/cron/*` endpoint with `Authorization: Bearer ${{ secrets.CRON_SECRET }}` against `secrets.PRODUCTION_URL`.
 
-Three options to fire on a useful cadence:
+### Schedule
 
-1. **Pro upgrade** — re-add the `crons:` block to `vercel.json` per the
-   original `09-deployment.md` schedule.
-2. **External scheduler** — Fly.io tiny worker, GitHub Actions cron, or
-   [cron-job.org](https://cron-job.org) hitting:
-     ```
-     POST https://hama-fx-ai.vercel.app/api/cron/news
-     POST https://hama-fx-ai.vercel.app/api/cron/calendar
-     POST https://hama-fx-ai.vercel.app/api/cron/embedding-backfill
-     POST https://hama-fx-ai.vercel.app/api/cron/alerts
-     ```
-   each with `Authorization: Bearer ${CRON_SECRET}`.
-3. **Manual** — visit the empty-state UIs in `/news` / `/calendar` / `/alerts`
-   and copy the curl recipe shown there.
+| Endpoint                       | Workflow                            | Cadence (UTC)      | Per-hour |
+|--------------------------------|-------------------------------------|---------------------|---------:|
+| `/api/cron/news`               | `cron-news.yml`                     | `*/5 * * * *`       | 12       |
+| `/api/cron/calendar`           | `cron-calendar.yml`                 | `*/15 * * * *`      | 4        |
+| `/api/cron/alerts`             | `cron-alerts.yml`                   | `*/5 * * * *`       | 12       |
+| `/api/cron/embedding-backfill` | `cron-embedding-backfill.yml`       | `*/30 * * * *`      | 2        |
 
-Suggested cadences (when configured):
+GitHub Actions cron has 5-minute minimum granularity; sub-5-minute cadences are not possible without an external scheduler.
 
-| Endpoint | Cadence |
-| --- | --- |
-| `/api/cron/news` | every 5 min |
-| `/api/cron/embedding-backfill` | every 30 min |
-| `/api/cron/calendar` | every 15 min |
-| `/api/cron/alerts` | every 1–2 min |
-| `/api/cron/snapshots` | daily at 23:55 UTC (Phase 2 only) |
+### Required repo secrets
+
+Both secrets must be set on the GitHub repo (not the Vercel project) for the workflows to authenticate. Add them at **Settings → Secrets and variables → Actions → New repository secret** — direct link: <https://github.com/HamaFx/HamaFX-Ai/settings/secrets/actions>.
+
+- `PRODUCTION_URL` — base URL the workflows curl against, e.g. `https://hama-fx-ai.vercel.app` (no trailing slash).
+- `CRON_SECRET` — must match the value of the `CRON_SECRET` env var on the Vercel project. Rotate both at the same time if you ever change it.
+
+Without both secrets present, every scheduled run will fail with a 401 from the cron endpoint (visible in the workflow run logs).
+
+### Risks
+
+- **Delay during peak load:** Schedule events can be deferred 10–20 min during peak GitHub load.
+- **Pause after inactivity:** GitHub may pause scheduled workflows after ~60 days of repo inactivity. Mitigation: any push (even a docs commit) resets the timer.
+- **No SLA:** Personal-tier scheduling is best-effort.
+
+### Alerts cadence trade-off (decision: option a)
+
+**Decision:** ≥ 12 alerts cron firings/hour (5-min cadence via GitHub Actions). Requirement 6 §7's original ≥ 30/hour target was relaxed because GitHub Actions cannot schedule sub-5-minute jobs. The alerts pipeline still fires every 5 minutes, which is acceptable for the personal-mode use case (no day-trading off these notifications). See "Deviations from requirements" below for the requirement-level note.
+
+**Flip path (option b) if real-world latency feels bad:** add a free [cron-job.org](https://cron-job.org) trigger for `/api/cron/alerts` at 1-minute cadence with the same `Authorization: Bearer ${CRON_SECRET}` header. The endpoint is idempotent — alerts are marked fired only after Resend returns 2xx (see `packages/ai/src/alerts/delivery.ts` and Requirement 7 §5–§6) — so duplicate fires from GH Actions and cron-job.org are safe. If/when this is enabled, commit the cron-job.org job export to `.github/cron-job-org.json` (or a markdown record of the URL + headers configured).
+
+### Where to find logs
+
+- **Endpoint logs:** Vercel project → Functions → search by `/api/cron/<name>`.
+- **Scheduler logs:** GitHub repo → Actions tab → pick a workflow run.
+- **cron-job.org (if configured):** dashboard execution history.
+
+### Manual trigger
+
+Each workflow has `workflow_dispatch:` so you can run it on demand from the Actions tab without waiting for the scheduled time.
 
 ## Operational runbook
 
@@ -189,3 +203,58 @@ curl -X POST "https://api.vercel.com/v13/deployments?teamId=$TEAM&forceNew=1" \
 Use the Vercel dashboard → **Deployments** → pick a previous READY one →
 **Promote to Production**. No DB rollback needed since migrations are
 forward-only.
+
+## PWA smoke checklist
+
+Before declaring Phase 1 complete, verify the PWA manually:
+
+1. Production build (`pnpm --filter @hamafx/web build && pnpm --filter @hamafx/web start`) registers `/sw.js` after first paint (DevTools → Application → Service Workers).
+2. Toggle the browser to offline; reload `/chat` → cached `/chat` document renders with the offline banner visible.
+3. Toggle back online → banner disappears within ≤ 1s.
+4. "Add to Home Screen" works on Android Chrome (manifest icon appears, launches `/chat`).
+5. "Add to Home Screen" works on iOS Safari (apple-touch-icon used, launches `/chat`, splash image briefly shown on iPhone 14 Pro).
+
+## Lighthouse usage
+
+Mobile audits live in `tools/lighthouse/run.mjs` (see `tools/lighthouse/README.md`). Reports land in `docs/lighthouse/<UTC-timestamp>/`.
+
+```bash
+# Local production build
+pnpm --filter @hamafx/web build && pnpm --filter @hamafx/web start
+node tools/lighthouse/run.mjs \
+  --base-url http://localhost:3000 \
+  --cookie "hfx_auth=<value>" \
+  --out docs/lighthouse
+
+# Deployed Vercel URL
+node tools/lighthouse/run.mjs \
+  --base-url https://hama-fx-ai.vercel.app \
+  --cookie "hfx_auth=<value>" \
+  --out docs/lighthouse
+```
+
+Thresholds: Performance ≥ 90, Accessibility ≥ 95. Failures listed in stdout; the run exits non-zero. Document waivers in `docs/lighthouse/waivers.md`.
+
+## Eval harness usage
+
+Local-only; runs the 10 acceptance prompts (`packages/ai/src/eval/prompts.json`) against a running app. Report markdown lands in `docs/eval/<UTC-timestamp>.md`.
+
+```bash
+# Against the local dev server
+EVAL_COOKIE="hfx_auth=<value>" pnpm --filter @hamafx/ai eval --base-url http://localhost:3000
+
+# Against the deployed app
+pnpm --filter @hamafx/ai eval \
+  --base-url https://hama-fx-ai.vercel.app \
+  --cookie "hfx_auth=<value>" \
+  --out docs/eval
+```
+
+No LLM-as-judge, no CI gate. Quality grading is manual.
+
+## Deviations from requirements
+
+Two deviations are accepted with rationale:
+
+- **Requirement 6 §7 — alerts cron firing rate.** GitHub Actions cron has a 5-minute minimum granularity, so the alerts cron fires 12×/hour, not the 30 demanded by the requirement. We chose this trade-off over a Vercel Pro upgrade. Mitigation: optionally add a free [cron-job.org](https://cron-job.org) trigger pointed at `/api/cron/alerts` for sub-5-minute cadence.
+- **Requirement 5 §10 — `/api/market/*` SW caching.** The optional stale-while-revalidate cache for `/api/market/*` is intentionally NOT implemented. Market data is timing-sensitive; serving 60-second-stale prices during network transitions is worse than serving none. The Next.js Data Cache layer in `packages/data/src/cache` is the canonical freshness boundary.

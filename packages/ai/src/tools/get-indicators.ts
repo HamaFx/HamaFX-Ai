@@ -10,11 +10,12 @@ import { z } from 'zod';
 import { getCandles } from '@hamafx/data';
 import { computeIndicator } from '@hamafx/indicators';
 import {
+  type GetIndicatorsOutput,
   IndicatorKindSchema,
   IndicatorParamsSchema,
+  type IndicatorResult,
   SymbolSchema,
   TimeframeSchema,
-  type IndicatorResult,
 } from '@hamafx/shared';
 
 const InputSchema = z.object({
@@ -27,22 +28,9 @@ const InputSchema = z.object({
     .max(6),
 });
 
-interface Output {
-  symbol: string;
-  tf: string;
-  /**
-   * For prompt-economy each indicator's `values` array is truncated to the
-   * last 30 points — the model rarely needs more for "what's happening now".
-   * The chart UI fetches the full series via /api/market/indicators.
-   */
-  results: Array<Omit<IndicatorResult, 'values'> & { values: IndicatorResult['values'] }>;
-}
-
-export type { Output as GetIndicatorsOutput };
-
 declare module '@hamafx/shared' {
   interface ToolIOMap {
-    get_indicators: { input: z.infer<typeof InputSchema>; output: Output };
+    get_indicators: { input: z.infer<typeof InputSchema> };
   }
 }
 
@@ -52,7 +40,7 @@ export const getIndicatorsTool = tool({
   description:
     'Compute indicators (sma, ema, rsi, macd, atr, bollinger, pivots) on a (symbol, timeframe) window. Returns the last 30 points of each series — enough for "current value + recent slope" reasoning.',
   inputSchema: InputSchema,
-  execute: async ({ symbol, tf, count, indicators }): Promise<Output> => {
+  execute: async ({ symbol, tf, count, indicators }): Promise<GetIndicatorsOutput> => {
     const candles = await getCandles(symbol, tf, { count });
     const results = indicators.map(({ kind, params }) => {
       const full = computeIndicator({ symbol, tf, kind, params, candles });

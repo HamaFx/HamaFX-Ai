@@ -3,6 +3,7 @@ import Link from 'next/link';
 
 import { PageHeader } from '@/components/layout/page-header';
 import { LogoutButton } from './_components/logout-button';
+import { TestEmailButton } from './_components/test-email-button';
 
 export const metadata: Metadata = { title: 'Settings' };
 
@@ -13,6 +14,14 @@ export default function SettingsPage() {
 
       <section className="border-border bg-bg-elev-1 flex flex-col divide-y divide-[var(--color-border)] rounded-lg border">
         <Row href="/settings/usage" label="Usage" hint="Token spend, last 30 days" />
+      </section>
+
+      <section className="border-border bg-bg-elev-1 flex flex-col gap-3 rounded-lg border p-4">
+        <h2 className="text-fg-muted text-sm font-medium">Notifications</h2>
+        <p className="text-fg-subtle text-xs">
+          Send a one-off test email through Resend to confirm the alerts pipeline is wired up.
+        </p>
+        <TestEmailButton />
       </section>
 
       <section className="border-border bg-bg-elev-1 flex flex-col gap-3 rounded-lg border p-4">

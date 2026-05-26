@@ -8,6 +8,7 @@ import { and, asc, gte, inArray, lte, sql } from 'drizzle-orm';
 import { z } from 'zod';
 
 import { getDb, schema } from '@hamafx/db';
+import type { GetCalendarOutput } from '@hamafx/shared';
 
 const ImportanceSchema = z.enum(['low', 'medium', 'high']);
 const CurrencySchema = z.enum(['USD', 'EUR', 'GBP']);
@@ -23,31 +24,9 @@ const InputSchema = z.object({
   minImportance: ImportanceSchema.default('medium'),
 });
 
-interface CalendarItem {
-  id: string;
-  title: string;
-  country: string;
-  currency: string | null;
-  importance: 'low' | 'medium' | 'high';
-  date: number;
-  actual: number | null;
-  forecast: number | null;
-  previous: number | null;
-  unit: string | null;
-  source: string;
-}
-
-interface Output {
-  items: CalendarItem[];
-  /** True if the calendar pipeline hasn't populated the DB yet. */
-  pipelinePending: boolean;
-}
-
-export type { CalendarItem, Output as GetCalendarOutput };
-
 declare module '@hamafx/shared' {
   interface ToolIOMap {
-    get_calendar: { input: z.infer<typeof InputSchema>; output: Output };
+    get_calendar: { input: z.infer<typeof InputSchema> };
   }
 }
 
@@ -58,7 +37,7 @@ export const getCalendarTool = tool({
   description:
     'List upcoming or recent economic calendar events filtered by date window, importance, and currency. Returns empty (pipelinePending=true) if the calendar cron has not run yet.',
   inputSchema: InputSchema,
-  execute: async ({ from, to, currencies, minImportance }): Promise<Output> => {
+  execute: async ({ from, to, currencies, minImportance }): Promise<GetCalendarOutput> => {
     const fromDate = new Date(from ?? Date.now());
     const toDate = new Date(to ?? Date.now() + SEVEN_DAYS_MS);
 

@@ -21,7 +21,7 @@ import {
   type Timeframe,
 } from '@hamafx/shared';
 
-import { listEvaluable, markFired } from './persistence';
+import { listEvaluable } from './persistence';
 import { deliverAlert, type DeliveryResult } from './delivery';
 
 // ---------------------------------------------------------------------------
@@ -212,13 +212,13 @@ export async function evaluateAlerts(opts: {
       if (!isMatch) continue;
       matched += 1;
 
-      // Deliver across all configured channels. If everything fails we still
-      // mark fired so the alert doesn't keep firing every cron tick — the user
-      // sees firedAt + can resend manually.
+      // Deliver across all configured channels. The delivery layer owns the
+      // markFired call: it only marks the alert fired AFTER Resend returns
+      // 2xx (see Requirements 7.5, 7.6 and packages/ai/src/alerts/delivery.ts).
+      // If delivery fails, the alert stays active so the next cron tick retries.
       const result = await deliverAlert({ alert, reading, env });
       deliveries.push(result);
-      await markFired(alert.id);
-      fired += 1;
+      if (result.ok) fired += 1;
     } catch (err) {
       errors.push({
         alertId: alert.id,

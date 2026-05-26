@@ -31,6 +31,13 @@ export const metadata: Metadata = {
   },
   // No public crawling — personal app.
   robots: { index: false, follow: false },
+  icons: {
+    icon: [
+      { url: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
+      { url: '/icons/icon-512.png', sizes: '512x512', type: 'image/png' },
+    ],
+    apple: [{ url: '/icons/apple-touch-icon-180.png', sizes: '180x180', type: 'image/png' }],
+  },
 };
 
 export const viewport: Viewport = {
@@ -46,6 +53,13 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${inter.variable} ${jetbrainsMono.variable}`} suppressHydrationWarning>
+      <head>
+        <link
+          rel="apple-touch-startup-image"
+          media="(device-width: 393px) and (device-height: 852px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)"
+          href="/icons/apple-splash-1179x2556.png"
+        />
+      </head>
       <body className="bg-bg text-fg min-h-svh antialiased">
         <Providers>{children}</Providers>
       </body>

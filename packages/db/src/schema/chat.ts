@@ -13,6 +13,8 @@ export const chatThreads = pgTable(
     pinnedSymbol: text('pinned_symbol'),
     /** Provider/model id override, e.g. "anthropic/claude-3.7-sonnet". */
     modelOverride: text('model_override'),
+    /** How `title` was produced: `'llm' | 'fallback' | null` (legacy rows). */
+    titleSource: text('title_source'),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp('updated_at', { withTimezone: true })
       .defaultNow()

@@ -6,7 +6,7 @@
 import { tool } from 'ai';
 import { z } from 'zod';
 
-import { AlertChannelSchema, AlertRuleSchema } from '@hamafx/shared';
+import { AlertChannelSchema, AlertRuleSchema, type SetAlertOutput } from '@hamafx/shared';
 
 import { createAlert } from '../alerts/persistence';
 
@@ -16,17 +16,9 @@ const InputSchema = z.object({
   note: z.string().max(280).nullable().default(null),
 });
 
-interface Output {
-  alertId: string;
-  /** Human-readable rule label, e.g. "XAUUSD 1h close above 2400". */
-  describes: string;
-}
-
-export type { Output as SetAlertOutput };
-
 declare module '@hamafx/shared' {
   interface ToolIOMap {
-    set_alert: { input: z.infer<typeof InputSchema>; output: Output };
+    set_alert: { input: z.infer<typeof InputSchema> };
   }
 }
 
@@ -45,7 +37,7 @@ export const setAlertTool = tool({
   description:
     'Create a one-shot price / indicator / candle-close alert. Fires when the rule first matches and then deactivates. The user can resend by editing the alert in /alerts.',
   inputSchema: InputSchema,
-  execute: async ({ rule, channels, note }): Promise<Output> => {
+  execute: async ({ rule, channels, note }): Promise<SetAlertOutput> => {
     const alert = await createAlert({ rule, channels, note });
     return { alertId: alert.id, describes: describeRule(rule) };
   },
