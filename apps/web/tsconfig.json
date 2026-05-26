@@ -1,0 +1,22 @@
+{
+  "extends": "@hamafx/config/typescript/nextjs",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"],
+      "@shared/*": ["../../packages/shared/src/*"],
+      "@ai/*": ["../../packages/ai/src/*"],
+      "@data/*": ["../../packages/data/src/*"],
+      "@indicators/*": ["../../packages/indicators/src/*"],
+      "@db/*": ["../../packages/db/src/*"],
+      "@ui/*": ["../../packages/ui/src/*"]
+    }
+  },
+  "include": [
+    "next-env.d.ts",
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    ".next/types/**/*.ts"
+  ],
+  "exclude": ["node_modules", ".next", ".turbo", "dist"]
+}

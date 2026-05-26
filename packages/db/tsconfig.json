@@ -1,0 +1,4 @@
+{
+  "extends": "@hamafx/config/typescript/base",
+  "include": ["src/**/*.ts", "drizzle.config.ts"]
+}

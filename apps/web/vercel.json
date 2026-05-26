@@ -1,0 +1,21 @@
+{
+  "framework": "nextjs",
+  "buildCommand": "pnpm dlx turbo run build --filter=@hamafx/web...",
+  "installCommand": "pnpm install --frozen-lockfile",
+  "ignoreCommand": "npx turbo-ignore @hamafx/web",
+  "functions": {
+    "src/app/api/chat/route.ts": { "maxDuration": 60 },
+    "src/app/api/cron/news/route.ts": { "maxDuration": 60 },
+    "src/app/api/cron/calendar/route.ts": { "maxDuration": 30 },
+    "src/app/api/cron/alerts/route.ts": { "maxDuration": 15 },
+    "src/app/api/cron/snapshots/route.ts": { "maxDuration": 30 },
+    "src/app/api/cron/embedding-backfill/route.ts": { "maxDuration": 30 }
+  },
+  "crons": [
+    { "path": "/api/cron/news", "schedule": "*/5 * * * *" },
+    { "path": "/api/cron/calendar", "schedule": "*/15 * * * *" },
+    { "path": "/api/cron/alerts", "schedule": "* * * * *" },
+    { "path": "/api/cron/snapshots", "schedule": "55 23 * * *" },
+    { "path": "/api/cron/embedding-backfill", "schedule": "0 * * * *" }
+  ]
+}

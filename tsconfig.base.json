@@ -1,0 +1,39 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "jsx": "preserve",
+
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "noImplicitOverride": true,
+    "noFallthroughCasesInSwitch": true,
+    "forceConsistentCasingInFileNames": true,
+
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "verbatimModuleSyntax": false,
+
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "incremental": true,
+
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["apps/web/src/*"],
+      "@ui/*": ["packages/ui/src/*"],
+      "@shared/*": ["packages/shared/src/*"],
+      "@ai/*": ["packages/ai/src/*"],
+      "@data/*": ["packages/data/src/*"],
+      "@indicators/*": ["packages/indicators/src/*"],
+      "@db/*": ["packages/db/src/*"]
+    }
+  },
+  "exclude": ["node_modules", ".turbo", ".next", "dist", "coverage"]
+}
