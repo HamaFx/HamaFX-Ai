@@ -10,55 +10,55 @@ Tasks marked with `*` are optional (tests). Core implementation tasks are never 
 
 ## Tasks
 
-- [ ] 1. T1 — DB migration `0002_phase_2.sql`
+- [x] 1. T1 — DB migration `0002_phase_2.sql`
   - Two additive ALTERs plus one new `briefings_emitted` table. No behaviour change yet — downstream code switches over in subsequent tasks.
-  - [ ] 1.1 Add `is_briefings boolean not null default false` to `chat_threads`
+  - [x] 1.1 Add `is_briefings boolean not null default false` to `chat_threads`
     - Update `packages/db/src/schema/chat.ts` with the new column.
     - Update the inferred `ChatThread` type export.
     - _Requirements: 9.3_
     - Files: `packages/db/src/schema/chat.ts`
-  - [ ] 1.2 Add `actuals_filled_at timestamp with time zone` to `economic_events`
+  - [x] 1.2 Add `actuals_filled_at timestamp with time zone` to `economic_events`
     - Update `packages/db/src/schema/calendar.ts`.
     - _Requirements: 13.2_
     - Files: `packages/db/src/schema/calendar.ts`
-  - [ ] 1.3 Add `briefings_emitted` lookup table
+  - [x] 1.3 Add `briefings_emitted` lookup table
     - Create `packages/db/src/schema/briefings.ts` per design §"Migration".
     - Composite primary key `(event_id, kind)`. FK from `message_id` to `chat_messages.id` with `ON DELETE CASCADE`.
     - Re-export from `packages/db/src/schema/index.ts`.
     - _Requirements: 9.4_
     - Files: `packages/db/src/schema/briefings.ts`, `packages/db/src/schema/index.ts`
-  - [ ] 1.4 Generate and commit migration `0002_phase_2.sql`
+  - [x] 1.4 Generate and commit migration `0002_phase_2.sql`
     - Run `pnpm --filter @hamafx/db drizzle:generate`. If the auto-generated SQL diverges from the design's statements, hand-write the migration containing exactly the two `ALTER TABLE … ADD COLUMN` statements plus the `CREATE TABLE` and update the journal.
     - Verify against a fresh local Postgres + on Supabase preview that the migration applies cleanly and is idempotent on re-run.
     - _Requirements: 9.4, 13.2_
     - Files: `packages/db/drizzle/0002_phase_2.sql`, `packages/db/drizzle/meta/_journal.json`
 
-- [ ] 2. T2 — `@hamafx/shared` schemas (5 new files + barrel exports)
+- [x] 2. T2 — `@hamafx/shared` schemas (5 new files + barrel exports)
   - Define every schema before any consumer imports it. Each schema goes in its own file following the existing per-tool convention; `tool-io.ts` declaration-merging makes `ToolOutput<'<name>'>` resolve to the right type.
-  - [ ] 2.1 `search-knowledge.ts`
+  - [x] 2.1 `search-knowledge.ts`
     - Add `SearchKnowledgeInputSchema`, `SearchKnowledgeItemSchema`, `SearchKnowledgeOutputSchema` per design §"Schema additions".
     - Wire into `tool-io.ts` so `ToolOutput<'search_knowledge'>` resolves to the inferred output type.
     - Re-export from `packages/shared/src/index.ts`.
     - _Requirements: 1.1, 1.7_
     - Files: `packages/shared/src/schemas/search-knowledge.ts`, `packages/shared/src/ai/tool-io.ts`, `packages/shared/src/index.ts`
-  - [ ] 2.2 `analyze-technical.ts`
+  - [x] 2.2 `analyze-technical.ts`
     - Add `AnalyzeTechnicalInputSchema`, `PerTimeframeReadingSchema`, `AnalyzeTechnicalOutputSchema`. Wire `tool-io.ts`. Re-export.
     - _Requirements: 2.1, 2.7_
     - Files: `packages/shared/src/schemas/analyze-technical.ts`, `packages/shared/src/ai/tool-io.ts`, `packages/shared/src/index.ts`
-  - [ ] 2.3 `analyze-fundamental.ts`
+  - [x] 2.3 `analyze-fundamental.ts`
     - Add `AnalyzeFundamentalInputSchema`, `AnalyzeFundamentalOutputSchema`. Wire `tool-io.ts`. Re-export.
     - _Requirements: 3.1_
     - Files: `packages/shared/src/schemas/analyze-fundamental.ts`, `packages/shared/src/ai/tool-io.ts`, `packages/shared/src/index.ts`
-  - [ ] 2.4 `get-journal-stats.ts`
+  - [x] 2.4 `get-journal-stats.ts`
     - Add `GetJournalStatsInputSchema`, `StatBreakdownSchema`, `GetJournalStatsOutputSchema`. Wire `tool-io.ts`. Re-export.
     - _Requirements: 4.1, 4.5_
     - Files: `packages/shared/src/schemas/get-journal-stats.ts`, `packages/shared/src/ai/tool-io.ts`, `packages/shared/src/index.ts`
-  - [ ] 2.5 `annotate-chart.ts`
+  - [x] 2.5 `annotate-chart.ts`
     - Add `AnnotateChartKindSchema`, `AnnotateChartInputSchema`, `ChartMarkerSchema`, `ChartPriceLineSchema`, `AnnotateChartOutputSchema`. Wire `tool-io.ts`. Re-export.
     - **Important:** the chart consumer in `apps/web/src/components/chart/overlays.ts` should import these primitive types from `@hamafx/shared` (via aliased path) once the schemas land — refactor in T11.4.
     - _Requirements: 5.1, 5.5_
     - Files: `packages/shared/src/schemas/annotate-chart.ts`, `packages/shared/src/ai/tool-io.ts`, `packages/shared/src/index.ts`
-  - [ ] 2.6 `briefings.ts` (briefing message envelope)
+  - [x] 2.6 `briefings.ts` (briefing message envelope)
     - Add `BriefingKindSchema = z.union([z.literal('pre'), z.literal('post'), z.literal('weekly_review')])`.
     - Add `BriefingMessagePartSchema` describing the shape of the `parts` JSON written into `chat_messages` for a briefing message — at minimum `{ type: 'briefing', eventId: string | null, kind: BriefingKind, summary: string }`.
     - Re-export from barrel.
@@ -69,22 +69,22 @@ Tasks marked with `*` are optional (tests). Core implementation tasks are never 
     - _Requirements: 1.1, 2.1, 3.1, 4.1, 5.1, 9.2_
     - Files: `packages/shared/test/schemas.test.ts`
 
-- [ ] 3. T3 — `search_knowledge` tool + RAG SQL
+- [x] 3. T3 — `search_knowledge` tool + RAG SQL
   - Implements Requirement 1 end-to-end: tool, the SQL helper, and the bespoke chat part.
-  - [ ] 3.1 SQL helper `runRagQuery`
+  - [x] 3.1 SQL helper `runRagQuery`
     - Add `runRagQuery(args: { embedding: number[], limit: number, since?: number, symbol?: Symbol }): Promise<RagRow[]>` to `packages/ai/src/embeddings.ts` (or a new `packages/ai/src/rag.ts` if it grows).
     - Implementation per design §"SQL (`runRagQuery`)" — uses `<=>` cosine distance, joins to `news_articles`.
     - Add `countEmbeddings(): Promise<number>` to gate the empty-pipeline fast path.
     - _Requirements: 1.2, 1.3, 1.4_
     - Files: `packages/ai/src/rag.ts`
-  - [ ] 3.2 Tool body `search-knowledge.ts`
+  - [x] 3.2 Tool body `search-knowledge.ts`
     - Implement `searchKnowledgeTool` per design §1.
     - When `countEmbeddings() === 0`, return `{ items: [], model: defaultEmbeddingModel(), pipelinePending: true }` without calling `embedTexts`.
     - Otherwise embed the query (one embed call per invocation — Requirement 1.5), call `runRagQuery`, map rows to `SearchKnowledgeItem`.
     - Register in `packages/ai/src/tools/index.ts`.
     - _Requirements: 1.1, 1.2, 1.5_
     - Files: `packages/ai/src/tools/search-knowledge.ts`, `packages/ai/src/tools/index.ts`
-  - [ ] 3.3 Bespoke chat part
+  - [x] 3.3 Bespoke chat part
     - Server component at `apps/web/src/components/chat/parts/search-knowledge.tsx`.
     - Mirror `get-news.tsx` layout; add a `{Math.round(similarity * 100)}% match` pill on each row's right edge.
     - Deep link to `/news?id=<id>`.
@@ -97,18 +97,18 @@ Tasks marked with `*` are optional (tests). Core implementation tasks are never 
     - _Requirements: 1.2, 1.4, 1.5_
     - Files: `packages/ai/test/search-knowledge.test.ts`
 
-- [ ] 4. T4 — `analyze_technical` tool
+- [x] 4. T4 — `analyze_technical` tool
   - Implements Requirement 2.
-  - [ ] 4.1 `projectReading()` + `deterministicSummary()` helpers
+  - [x] 4.1 `projectReading()` + `deterministicSummary()` helpers
     - Pure functions in `packages/ai/src/tools/analyze-technical.ts` that collapse indicator/structure outputs to the typed `PerTimeframeReading` and template the summary string.
     - _Requirements: 2.1, 2.5, 2.6_
     - Files: `packages/ai/src/tools/analyze-technical.ts`
-  - [ ] 4.2 Tool body
+  - [x] 4.2 Tool body
     - `readOneTimeframe()` orchestrator + `analyzeTechnicalTool` per design §2. Failover-tolerant — wrap the per-tf fetch in try/catch and drop failing tfs from `perTimeframe`, set `partial: true`.
     - Register in `tools/index.ts`.
     - _Requirements: 2.2, 2.3_
     - Files: `packages/ai/src/tools/analyze-technical.ts`, `packages/ai/src/tools/index.ts`
-  - [ ] 4.3 Bespoke chat part
+  - [x] 4.3 Bespoke chat part
     - Server component at `apps/web/src/components/chat/parts/analyze-technical.tsx`.
     - Compact card per timeframe with `.tabular-nums`, `text-bull`/`text-bear` for direction; "view chart" link.
     - Add to `parts/registry.tsx`.
@@ -119,19 +119,19 @@ Tasks marked with `*` are optional (tests). Core implementation tasks are never 
     - _Requirements: 2.2, 2.3, 2.6_
     - Files: `packages/ai/test/analyze-technical.test.ts`
 
-- [ ] 5. T5 — `analyze_fundamental` tool
+- [x] 5. T5 — `analyze_fundamental` tool
   - Implements Requirement 3.
-  - [ ] 5.1 Currency mapping + window math
+  - [x] 5.1 Currency mapping + window math
     - Add `CURRENCIES_BY_SYMBOL` const (per design §3) and `eventsInWindow` query helper.
     - _Requirements: 3.2_
     - Files: `packages/ai/src/tools/analyze-fundamental.ts`
-  - [ ] 5.2 Tool body
+  - [x] 5.2 Tool body
     - Implement `analyzeFundamentalTool` per design §3. Three queries: events, news, sentiment counts. Templated `summary`.
     - Set `pipelinePending: true` only when both `events` and `headlines` are empty.
     - Register in `tools/index.ts`.
     - _Requirements: 3.1, 3.4, 3.6_
     - Files: `packages/ai/src/tools/analyze-fundamental.ts`, `packages/ai/src/tools/index.ts`
-  - [ ] 5.3 Bespoke chat part
+  - [x] 5.3 Bespoke chat part
     - Server component at `apps/web/src/components/chat/parts/analyze-fundamental.tsx`.
     - Event list + sentiment chip strip + deep link to `/calendar?symbol=<symbol>`.
     - Add to `parts/registry.tsx`.
@@ -142,18 +142,18 @@ Tasks marked with `*` are optional (tests). Core implementation tasks are never 
     - _Requirements: 3.3, 3.4_
     - Files: `packages/ai/test/analyze-fundamental.test.ts`
 
-- [ ] 6. T6 — `get_journal_stats` tool
+- [x] 6. T6 — `get_journal_stats` tool
   - Implements Requirement 4.
-  - [ ] 6.1 Per-symbol and per-tag SQL helpers
+  - [x] 6.1 Per-symbol and per-tag SQL helpers
     - `breakdownBySymbol(filters)` and `breakdownByTag(filters)` in `packages/ai/src/journal/persistence.ts` per design §4.
     - _Requirements: 4.2_
     - Files: `packages/ai/src/journal/persistence.ts`
-  - [ ] 6.2 Tool body
+  - [x] 6.2 Tool body
     - Implement `getJournalStatsTool` calling `computeStats` + the two breakdown helpers. Empty filters → empty arrays + zero stats; never throw.
     - Register in `tools/index.ts`.
     - _Requirements: 4.1, 4.3_
     - Files: `packages/ai/src/tools/get-journal-stats.ts`, `packages/ai/src/tools/index.ts`
-  - [ ] 6.3 Bespoke chat part
+  - [x] 6.3 Bespoke chat part
     - Server component at `apps/web/src/components/chat/parts/get-journal-stats.tsx`.
     - Global stats card + top-3 list per breakdown (linked to `/journal?symbol=<...>` / `/journal?tag=<...>`).
     - Add to `parts/registry.tsx`.
@@ -164,30 +164,30 @@ Tasks marked with `*` are optional (tests). Core implementation tasks are never 
     - _Requirements: 4.2, 4.3_
     - Files: `packages/ai/test/get-journal-stats.test.ts`
 
-- [ ] 7. T7 — `annotate_chart` tool + chart URL state
+- [x] 7. T7 — `annotate_chart` tool + chart URL state
   - Implements Requirement 5.
-  - [ ] 7.1 Move overlay primitive types to `@hamafx/shared`
+  - [x] 7.1 Move overlay primitive types to `@hamafx/shared`
     - Re-export `MarkerPrimitive` and `PriceLinePrimitive` from `packages/shared/src/schemas/annotate-chart.ts` (already added in T2.5).
     - Refactor `apps/web/src/components/chart/overlays.ts` to import them from `@hamafx/shared`.
     - _Requirements: 5.1, 5.5_
     - Files: `apps/web/src/components/chart/overlays.ts`
-  - [ ] 7.2 SMC compute helpers usable from the AI package
+  - [x] 7.2 SMC compute helpers usable from the AI package
     - Confirm `@hamafx/indicators/smc/{swings,structure,fvg,order-blocks,liquidity}` already export pure functions; if not, add a re-export from the package barrel so `packages/ai` can call them via aliased import.
     - Add `computePdhPdl(candles)` and `computeAsianRange(candles)` to `@hamafx/indicators/smc/`.
     - _Requirements: 5.2_
     - Files: `packages/indicators/src/smc/pdh-pdl.ts`, `packages/indicators/src/smc/asian-range.ts`, `packages/indicators/src/index.ts`
-  - [ ] 7.3 Tool body
+  - [x] 7.3 Tool body
     - Implement `annotateChartTool` per design §5. Compute requested kinds in parallel; collapse buckets to `markers` + `priceLines`. `countsByKind` accumulator for the summary header.
     - Register in `tools/index.ts`.
     - _Requirements: 5.1, 5.2_
     - Files: `packages/ai/src/tools/annotate-chart.ts`, `packages/ai/src/tools/index.ts`
-  - [ ] 7.4 Bespoke chat part
+  - [x] 7.4 Bespoke chat part
     - Server component at `apps/web/src/components/chat/parts/annotate-chart.tsx`.
     - Header line shows counts per kind; primary CTA is a deep link to `/chart/<symbol>?tf=<tf>&overlays=<comma-list>`.
     - Add to `parts/registry.tsx`.
     - _Requirements: 5.3_
     - Files: `apps/web/src/components/chat/parts/annotate-chart.tsx`, `apps/web/src/components/chat/parts/registry.tsx`
-  - [ ] 7.5 `?overlays=` URL state on the chart route
+  - [x] 7.5 `?overlays=` URL state on the chart route
     - Wire `useQueryState('overlays', parseAsArrayOf(parseAsString))` into the chart page so overlays toggle on first paint without a refetch.
     - _Requirements: 5.4_
     - Files: `apps/web/src/app/(app)/chart/[symbol]/page.tsx`, `apps/web/src/app/(app)/chart/[symbol]/_components/*` (overlay-toggle, if present)
@@ -196,25 +196,25 @@ Tasks marked with `*` are optional (tests). Core implementation tasks are never 
     - _Requirements: 5.2_
     - Files: `packages/ai/test/annotate-chart.test.ts`
 
-- [ ] 8. Checkpoint — Phase 2 tools complete
+- [x] 8. Checkpoint — Phase 2 tools complete
   - Run `pnpm typecheck` and `pnpm test` and confirm all green. Run a manual chat session against local dev hitting each new tool to confirm the bespoke parts render. Stop and ask the user if any tool's UX is rough before moving to crons + telegram.
 
-- [ ] 9. T8 — Snapshots cron + read API
+- [x] 9. T8 — Snapshots cron + read API
   - Implements Requirement 6.
-  - [ ] 9.1 `computeDailySnapshot` pure function
+  - [x] 9.1 `computeDailySnapshot` pure function
     - In `packages/ai/src/snapshots/compute.ts`. Inputs: candles + `asOf`. Outputs: the JSON described in Requirement 6.2.
     - _Requirements: 6.2_
     - Files: `packages/ai/src/snapshots/compute.ts`
-  - [ ] 9.2 `upsertSnapshot` + `getLatestSnapshot`
+  - [x] 9.2 `upsertSnapshot` + `getLatestSnapshot`
     - In `packages/ai/src/snapshots/persistence.ts`. ON CONFLICT DO UPDATE on `(symbol, kind, asOf)`. `getLatestSnapshot` is a one-row select.
     - Re-export from `packages/ai/src/index.ts`.
     - _Requirements: 6.1, 6.5_
     - Files: `packages/ai/src/snapshots/persistence.ts`, `packages/ai/src/index.ts`
-  - [ ] 9.3 Replace the cron stub
+  - [x] 9.3 Replace the cron stub
     - Replace `apps/web/src/app/api/cron/snapshots/route.ts` body per design §6.
     - _Requirements: 6.1, 6.3_
     - Files: `apps/web/src/app/api/cron/snapshots/route.ts`
-  - [ ] 9.4 Wire into `analyze_technical`, chart UI, and system prompt
+  - [x] 9.4 Wire into `analyze_technical`, chart UI, and system prompt
     - When `getLatestSnapshot('XAUUSD','daily')` returns a row, prefer those levels in `analyze_technical`'s `levels` block. Same for the chart-page fallback panel and the LIVE_SNAPSHOT block in the system prompt.
     - When the snapshot table is empty, callers SHALL fall back to on-demand computation silently.
     - _Requirements: 6.5, 6.6_
@@ -224,18 +224,18 @@ Tasks marked with `*` are optional (tests). Core implementation tasks are never 
     - _Requirements: 6.2_
     - Files: `packages/ai/test/snapshots-compute.test.ts`
 
-- [ ] 10. T9 — Telegram alert delivery + admin tester
+- [x] 10. T9 — Telegram alert delivery + admin tester
   - Implements Requirement 7.
-  - [ ] 10.1 Implement `deliverTelegram` in `delivery.ts`
+  - [x] 10.1 Implement `deliverTelegram` in `delivery.ts`
     - Per design §7. `markFired` ONLY after Resend-style 2xx ordering. MarkdownV2 escaping helper.
     - Replace the existing `'telegram delivery deferred to Phase 2'` stub.
     - _Requirements: 7.1, 7.3, 7.6_
     - Files: `packages/ai/src/alerts/delivery.ts`
-  - [ ] 10.2 `/api/admin/test-telegram` route
+  - [x] 10.2 `/api/admin/test-telegram` route
     - Near-clone of the existing `/api/admin/test-alert-email` route. 401 on no-session; 503 with `{ missing: string[] }` on missing env; 502 on Telegram non-2xx; 200 with `{ id }` on success.
     - _Requirements: 7.4, 7.5_
     - Files: `apps/web/src/app/api/admin/test-telegram/route.ts`
-  - [ ] 10.3 Settings UI button
+  - [x] 10.3 Settings UI button
     - `'use client'` `TestTelegramButton` near-clone of `TestEmailButton`. Mount under the Notifications section in `apps/web/src/app/(app)/settings/page.tsx`.
     - _Requirements: 7.4_
     - Files: `apps/web/src/app/(app)/settings/_components/test-telegram-button.tsx`, `apps/web/src/app/(app)/settings/page.tsx`
@@ -244,41 +244,41 @@ Tasks marked with `*` are optional (tests). Core implementation tasks are never 
     - _Requirements: 7.1, 7.3, 7.4_
     - Files: `packages/ai/test/alerts-telegram.test.ts`, `apps/web/src/app/api/admin/test-telegram/__tests__/route.test.ts`
 
-- [ ] 11. T10 — Voice input in chat composer
+- [x] 11. T10 — Voice input in chat composer
   - Implements Requirement 8.
-  - [ ] 11.1 `useVoiceInput` hook
+  - [x] 11.1 `useVoiceInput` hook
     - In `apps/web/src/hooks/use-voice-input.ts`. Per design §8.
     - _Requirements: 8.2, 8.3, 8.5, 8.6_
     - Files: `apps/web/src/hooks/use-voice-input.ts`
-  - [ ] 11.2 Microphone button + language dropdown in composer
+  - [x] 11.2 Microphone button + language dropdown in composer
     - Modify `apps/web/src/components/chat/composer.tsx` to render the mic button (44×44 tap target, focus ring, pulsing-red recording indicator) and a small language dropdown (Eng / Ar) defaulting from `navigator.language`.
     - Hide the button when `!supported` (no broken UI).
     - _Requirements: 8.1, 8.4, 8.5_
     - Files: `apps/web/src/components/chat/composer.tsx`
 
-- [ ] 12. Checkpoint — Cron + Telegram + voice in
+- [x] 12. Checkpoint — Cron + Telegram + voice in
   - Run `pnpm typecheck` and `pnpm test`. Smoke-test `/api/admin/test-telegram` against the deploy with the env vars set. Verify voice input on mobile Chrome and iOS Safari per the manual checklist below. Stop and confirm UX before adding briefings.
 
-- [ ] 13. T11 — Briefings cron + Briefings_Thread + idempotency
+- [x] 13. T11 — Briefings cron + Briefings_Thread + idempotency
   - Implements Requirement 9.
-  - [ ] 13.1 `Briefings_Thread` lookup helper
+  - [x] 13.1 `Briefings_Thread` lookup helper
     - `getOrCreateBriefingsThread()` in `packages/ai/src/briefings/persistence.ts`. Selects the single row where `is_briefings = true`; creates one if absent (then sets the column).
     - _Requirements: 9.3_
     - Files: `packages/ai/src/briefings/persistence.ts`
-  - [ ] 13.2 `briefings_emitted` upsert helpers
+  - [x] 13.2 `briefings_emitted` upsert helpers
     - `wasEmitted(eventId, kind): Promise<boolean>` and `recordEmitted(eventId, kind, messageId): Promise<void>`.
     - _Requirements: 9.4_
     - Files: `packages/ai/src/briefings/persistence.ts`
-  - [ ] 13.3 `emitPreEvent` + `emitPostEvent` generators
+  - [x] 13.3 `emitPreEvent` + `emitPostEvent` generators
     - In `packages/ai/src/briefings/generate.ts`. Per design §"Briefings cron" — LLM-authored when budget allows, deterministic fallback otherwise. Both functions are idempotent via `wasEmitted`.
     - _Requirements: 9.1, 9.2, 9.5, 9.7_
     - Files: `packages/ai/src/briefings/generate.ts`
-  - [ ] 13.4 `/api/cron/briefings` route
+  - [x] 13.4 `/api/cron/briefings` route
     - Window math: pre-event candidates = events with `date` ∈ [now+28m, now+32m]; post-event candidates = events with `date` ∈ [now-32m, now-28m] AND `actual IS NOT NULL`. Iterate, call `emitPreEvent` / `emitPostEvent`. Return `{ processed, emitted }`.
     - Validate `Authorization: Bearer ${CRON_SECRET}` via `withCronAuth`.
     - _Requirements: 9.1, 9.6_
     - Files: `apps/web/src/app/api/cron/briefings/route.ts`
-  - [ ] 13.5 Sidebar pin for `Briefings_Thread`
+  - [x] 13.5 Sidebar pin for `Briefings_Thread`
     - Modify the chat thread list query to surface `is_briefings` and pin the briefings thread to the top of the list.
     - Render a small "📅 Briefings" badge next to its title.
     - _Requirements: 9.3_
@@ -288,14 +288,14 @@ Tasks marked with `*` are optional (tests). Core implementation tasks are never 
     - _Requirements: 9.4_
     - Files: `packages/ai/test/briefings.test.ts`
 
-- [ ] 14. T12 — Auto-Journal parser
+- [x] 14. T12 — Auto-Journal parser
   - Implements Requirement 10.
-  - [ ] 14.1 Parser
+  - [x] 14.1 Parser
     - Pure function `parseJournalShortcut(text: string): { side, symbol, entry, stop, target } | null` in `packages/ai/src/journal/auto-parse.ts`.
     - Tolerant per Requirement 10.4 (long/short/buy/sell, SL/stop/stop loss, TP/target/take profit, comma/space separators, lowercase symbols).
     - _Requirements: 10.1, 10.4_
     - Files: `packages/ai/src/journal/auto-parse.ts`
-  - [ ] 14.2 Wire into `/api/chat`
+  - [x] 14.2 Wire into `/api/chat`
     - Before calling `runChat`, run the parser on the latest user message text. On success: call `createEntry()`, append a system message recapping the saved entry to the thread, then proceed to the LLM as normal.
     - Failure: untouched, normal LLM flow.
     - _Requirements: 10.2, 10.3, 10.5_
@@ -305,32 +305,32 @@ Tasks marked with `*` are optional (tests). Core implementation tasks are never 
     - _Requirements: 10.1, 10.4_
     - Files: `packages/ai/test/auto-journal-parser.test.ts`
 
-- [ ] 15. T13 — Weekly review cron
+- [x] 15. T13 — Weekly review cron
   - Implements Requirement 11.
-  - [ ] 15.1 `emitWeeklyReview` generator
+  - [x] 15.1 `emitWeeklyReview` generator
     - In `packages/ai/src/briefings/generate.ts`. Computes 7-day stats, top 3 win + top 3 loss entries, aggregates patterns. LLM-authored when budget allows; deterministic stats-only message otherwise. Empty journal → one-line message, no LLM call.
     - _Requirements: 11.1, 11.3, 11.4_
     - Files: `packages/ai/src/briefings/generate.ts`
-  - [ ] 15.2 `/api/cron/weekly-review` route
+  - [x] 15.2 `/api/cron/weekly-review` route
     - Calls `emitWeeklyReview()`. `withCronAuth`. Returns `{ ok, messageId? }`.
     - _Requirements: 11.1, 11.5_
     - Files: `apps/web/src/app/api/cron/weekly-review/route.ts`
 
-- [ ] 16. Checkpoint — Briefings + auto-journal + weekly review live
+- [x] 16. Checkpoint — Briefings + auto-journal + weekly review live
   - Run `pnpm typecheck` and `pnpm test`. Trigger `/api/cron/briefings` manually with `workflow_dispatch`. Inspect the resulting briefing message in `Briefings_Thread`. Stop and confirm tone/format before moving to data-layer fallbacks.
 
-- [ ] 17. T14 — Finnhub candle fallback
+- [x] 17. T14 — Finnhub candle fallback
   - Implements Requirement 12.
-  - [ ] 17.1 Finnhub candle adapter
+  - [x] 17.1 Finnhub candle adapter
     - `packages/data/src/providers/finnhub/candles.ts` per design §10. Map `Timeframe` → Finnhub `resolution`. `synth4HFrom1H` aggregator.
     - Throw `ProviderError('finnhub', 'PROVIDER_UNAVAILABLE', ...)` on non-2xx.
     - _Requirements: 12.1, 12.4_
     - Files: `packages/data/src/providers/finnhub/candles.ts`
-  - [ ] 17.2 Failover plan
+  - [x] 17.2 Failover plan
     - Update `packages/data/src/failover.ts` so the candle plan is `[twelve-data, finnhub]` for 1m/5m/15m/1h/4h. Fall back on `PROVIDER_QUOTA_EXCEEDED`, `PROVIDER_RATE_LIMITED`, `PROVIDER_UNAVAILABLE`.
     - _Requirements: 12.2_
     - Files: `packages/data/src/failover.ts`
-  - [ ] 17.3 Cache-key isolation
+  - [x] 17.3 Cache-key isolation
     - Confirm `packages/data/src/cache/keys.ts` already prefixes by provider. If not, prefix it. (Bug if not: a Twelve Data hit could shadow a Finnhub-shaped row.)
     - _Requirements: 12.3_
     - Files: `packages/data/src/cache/keys.ts`
@@ -339,17 +339,17 @@ Tasks marked with `*` are optional (tests). Core implementation tasks are never 
     - _Requirements: 12.5_
     - Files: `packages/data/test/finnhub-candles-map.test.ts`
 
-- [ ] 18. T15 — FRED actuals backfill
+- [x] 18. T15 — FRED actuals backfill
   - Implements Requirement 13.
-  - [ ] 18.1 FRED observation REST helper
+  - [x] 18.1 FRED observation REST helper
     - `getFredObservation(seriesId, date)` in `packages/data/src/providers/fred/rest.ts`. Wraps `/fred/series/observations?series_id=...&observation_start=...&observation_end=...`. Returns `{ value: number } | null`.
     - _Requirements: 13.1_
     - Files: `packages/data/src/providers/fred/rest.ts`
-  - [ ] 18.2 Calendar persistence helpers
+  - [x] 18.2 Calendar persistence helpers
     - `listFredEventsMissingActual({ until })` and `patchEventActual(id, value, filledAt)` in `packages/ai/src/calendar-persistence.ts`. Idempotent (`actuals_filled_at` only set when previously null).
     - _Requirements: 13.6_
     - Files: `packages/ai/src/calendar-persistence.ts`
-  - [ ] 18.3 Cron route
+  - [x] 18.3 Cron route
     - `/api/cron/fred-actuals/route.ts` per design §11. `withCronAuth`. Loop, look up observation per event series id, patch when found.
     - _Requirements: 13.1, 13.3, 13.5_
     - Files: `apps/web/src/app/api/cron/fred-actuals/route.ts`
@@ -358,9 +358,9 @@ Tasks marked with `*` are optional (tests). Core implementation tasks are never 
     - _Requirements: 13.5, 13.6_
     - Files: `packages/ai/test/fred-actuals.test.ts`
 
-- [ ] 19. T16 — GitHub Actions cron workflows (4 new files)
+- [x] 19. T16 — GitHub Actions cron workflows (4 new files)
   - Implements Requirement 6.4 + 9.6 + 11.2 + 13.4.
-  - [ ] 19.1 Author the four workflows
+  - [x] 19.1 Author the four workflows
     - `cron-snapshots.yml` (`5 0 * * *`)
     - `cron-briefings.yml` (`*/5 * * * *`)
     - `cron-weekly-review.yml` (`0 18 * * 0`)
@@ -369,39 +369,39 @@ Tasks marked with `*` are optional (tests). Core implementation tasks are never 
     - _Requirements: 6.4, 9.6, 11.2, 13.4_
     - Files: `.github/workflows/cron-snapshots.yml`, `.github/workflows/cron-briefings.yml`, `.github/workflows/cron-weekly-review.yml`, `.github/workflows/cron-fred-actuals.yml`
 
-- [ ] 20. T17 — Documentation updates
+- [x] 20. T17 — Documentation updates
   - Implements Requirement 14.
-  - [ ] 20.1 `docs/10-roadmap.md` Phase 2 status
+  - [x] 20.1 `docs/10-roadmap.md` Phase 2 status
     - Move every shipped Phase 2 item from `[ ]` to `[x]`.
     - Update Phase 3 "Next" header.
     - _Requirements: 14.1_
     - Files: `docs/10-roadmap.md`
-  - [ ] 20.2 `docs/09a-phase-0-deployed-state.md` Phase 2 subsection
+  - [x] 20.2 `docs/09a-phase-0-deployed-state.md` Phase 2 subsection
     - List the new env vars (`TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`).
     - List the new cron workflows + cadences.
     - List the migrations (`0002_phase_2.sql`).
     - Note Telegram delivery now active.
     - _Requirements: 14.2_
     - Files: `docs/09a-phase-0-deployed-state.md`
-  - [ ] 20.3 `docs/04-features.md` flips
+  - [x] 20.3 `docs/04-features.md` flips
     - Mark `F-08`, `F-09`, `X-06`, etc. as shipped.
     - _Requirements: 14.3_
     - Files: `docs/04-features.md`
-  - [ ] 20.4 `.kiro/steering/10-ai-tools.md` tools list
+  - [x] 20.4 `.kiro/steering/10-ai-tools.md` tools list
     - Add the five new tools (`search_knowledge`, `analyze_technical`, `analyze_fundamental`, `get_journal_stats`, `annotate_chart`) under "Tools".
     - _Requirements: 14.4_
     - Files: `.kiro/steering/10-ai-tools.md`
 
-- [ ] 21. T18 — Acceptance run
+- [x] 21. T18 — Acceptance run
   - Re-run the eval harness against production after Phase 2 deploys. The 10 prompts SHALL still pass with the new tools available. Note any model-quality regressions as follow-up issues (out of scope here unless the harness itself crashes).
-  - [ ] 21.1 Execute against the deployed app
+  - [x] 21.1 Execute against the deployed app
     - `pnpm --filter @hamafx/ai eval --base-url <production> --cookie <auth> --out docs/eval`.
     - Commit the new `docs/eval/<timestamp>.md`.
     - Check that at least one prompt invokes a Phase 2 composite tool (`analyze_technical` / `analyze_fundamental` / `search_knowledge`).
     - _Requirements: -_
     - Files: `docs/eval/<UTC-timestamp>.md`
 
-- [ ] 22. Final checkpoint — Phase 2 done
+- [x] 22. Final checkpoint — Phase 2 done
   - All tests green; all docs updated; Phase 2 acceptance run committed; ask the user if any feature warrants a follow-up issue.
 
 ## Notes
