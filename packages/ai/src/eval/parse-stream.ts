@@ -26,6 +26,13 @@ export interface ParsedStreamResult {
   text: string;
   /** One entry per `tool-*` part on the final assistant message. */
   toolCalls: ParsedToolCall[];
+  /**
+   * Stream-level errors emitted by the server (e.g. AI Gateway billing /
+   * upstream provider failures). Each entry is the verbatim `errorText` from
+   * a `type: 'error'` UI-message chunk. Empty when the stream completed
+   * cleanly.
+   */
+  errors: string[];
 }
 
 export interface ConsumeUIMessageStreamOptions {
@@ -55,19 +62,48 @@ export async function consumeUIMessageStream(
 
   let ttftMs: number | null = null;
   let lastMessage: UIMessage | null = null;
+  const errors: string[] = [];
 
-  for await (const message of readUIMessageStream({ stream: chunkStream })) {
+  // Tee the SSE-decoded chunk stream: one branch feeds `readUIMessageStream`
+  // for normal message reconstruction, the other surfaces `type: 'error'`
+  // chunks (AI Gateway billing failures, upstream provider errors, etc.) so
+  // the eval harness can flag them instead of silently reporting an empty
+  // success.
+  const [forUiStream, forErrors] = chunkStream.tee();
+
+  const errorReaderPromise = (async () => {
+    const reader = forErrors.getReader();
+    try {
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) return;
+        if (
+          value &&
+          typeof value === 'object' &&
+          (value as { type?: unknown }).type === 'error'
+        ) {
+          const text = (value as { errorText?: unknown }).errorText;
+          errors.push(typeof text === 'string' ? text : JSON.stringify(value));
+        }
+      }
+    } finally {
+      reader.releaseLock();
+    }
+  })();
+
+  for await (const message of readUIMessageStream({ stream: forUiStream })) {
     lastMessage = message;
     if (ttftMs === null && hasNonEmptyText(message)) {
       ttftMs = Date.now() - startedAt;
     }
   }
+  await errorReaderPromise;
 
   const totalMs = Date.now() - startedAt;
   const text = lastMessage ? extractText(lastMessage) : '';
   const toolCalls = lastMessage ? extractToolCalls(lastMessage) : [];
 
-  return { ttftMs, totalMs, text, toolCalls };
+  return { ttftMs, totalMs, text, toolCalls, errors };
 }
 
 // --- helpers ---------------------------------------------------------------
