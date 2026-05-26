@@ -114,23 +114,23 @@ Original Phase 1c plan was option 2 (Fly.io worker). Decision was deferred so we
 
 ---
 
-## Phase 2 — v1 (≈ 2–3 weeks)
+## Phase 2 — v1 (≈ 2–3 weeks) ✅ DONE
 
 **Goal**: depth where it matters — smart-money structure, RAG-grounded answers, voice, briefings.
 
-- [ ] SMC / ICT structure module: swings, BOS/CHoCH, order blocks, FVG, liquidity sweeps
-- [ ] Chart annotation overlays for the above (`annotate_chart` AI tool)
-- [ ] **Telegram bot** for alerts (faster than email, easier than web push)
-- [ ] Voice input (Web Speech API)
-- [ ] Pre-event and post-event briefings (cron + LLM, persisted as messages in a "briefings" thread)
-- [ ] Auto-fill journal from chat ("Journal: I shorted…")
-- [ ] Weekly review (LLM-authored from journal stats; runs Sunday)
-- [ ] Composite tools: `analyze_technical`, `analyze_fundamental`
-- [ ] RAG tool: `search_knowledge` (cosine similarity over `news_embeddings`)
-- [ ] Journal stats tool: `get_journal_stats`
-- [ ] Snapshots cron: precomputed daily HLOC / pivots / ATR per symbol
-- [ ] Finnhub candle fallback (synth 4h from 1h)
-- [ ] Backfill FRED actuals via `/fred/series/observations`
+- [x] SMC / ICT structure module: swings, BOS/CHoCH, order blocks, FVG, liquidity sweeps
+- [x] Chart annotation overlays for the above (`annotate_chart` AI tool)
+- [x] **Telegram bot** for alerts (faster than email, easier than web push)
+- [x] Voice input (Web Speech API)
+- [x] Pre-event and post-event briefings (cron + LLM, persisted as messages in a "briefings" thread)
+- [x] Auto-fill journal from chat ("Journal: I shorted…")
+- [x] Weekly review (LLM-authored from journal stats; runs Sunday)
+- [x] Composite tools: `analyze_technical`, `analyze_fundamental`
+- [x] RAG tool: `search_knowledge` (cosine similarity over `news_embeddings`)
+- [x] Journal stats tool: `get_journal_stats`
+- [x] Snapshots cron: precomputed daily HLOC / pivots / ATR per symbol
+- [x] Finnhub candle fallback (synth 4h from 1h)
+- [x] Backfill FRED actuals via `/fred/series/observations`
 
 ---
 

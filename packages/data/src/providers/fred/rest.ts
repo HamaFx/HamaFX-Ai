@@ -112,3 +112,111 @@ export async function fetchReleaseDates(params: FetchReleasesParams): Promise<Fr
   }
   return parsed.data.release_dates;
 }
+
+
+// ---------------------------------------------------------------------------
+// /fred/series/observations — used by the actuals backfill cron.
+// ---------------------------------------------------------------------------
+
+const ObservationSchema = z.object({
+  date: z.string(),  // YYYY-MM-DD
+  value: z.string(), // FRED returns "." for missing observations
+});
+
+const ObservationsResponseSchema = z.object({
+  observations: z.array(ObservationSchema),
+});
+
+export interface FetchObservationParams {
+  apiKey: string;
+  seriesId: string;
+  /** Lower bound on observation_start (inclusive). YYYY-MM-DD. */
+  start: string;
+  /** Upper bound on observation_end (inclusive). YYYY-MM-DD. */
+  end: string;
+  signal?: AbortSignal;
+  skipThrottle?: boolean;
+}
+
+export interface FredObservation {
+  date: string;
+  value: number;
+}
+
+/**
+ * Fetch observations for a single FRED series in `[start, end]`. Returns
+ * one entry per release date that actually has a numeric value (FRED's
+ * `"."` placeholder is dropped). Empty array when the series has nothing
+ * in the window.
+ */
+export async function fetchObservations(
+  params: FetchObservationParams,
+): Promise<FredObservation[]> {
+  if (!params.skipThrottle && !tryReserve(PROVIDER, THROTTLE)) {
+    throw new ProviderError(
+      'PROVIDER_QUOTA_EXCEEDED',
+      PROVIDER,
+      `Self-throttle: capped at ${THROTTLE.limit} req / ${THROTTLE.windowMs}ms`,
+    );
+  }
+
+  const url = new URL('/fred/series/observations', BASE_URL);
+  url.searchParams.set('api_key', params.apiKey);
+  url.searchParams.set('file_type', 'json');
+  url.searchParams.set('series_id', params.seriesId);
+  url.searchParams.set('observation_start', params.start);
+  url.searchParams.set('observation_end', params.end);
+
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(new Error('timeout')), DEFAULT_TIMEOUT_MS);
+  if (params.signal) {
+    if (params.signal.aborted) ctrl.abort(params.signal.reason);
+    else params.signal.addEventListener('abort', () => ctrl.abort(params.signal!.reason));
+  }
+
+  let res: Response;
+  try {
+    res = await fetch(url, { signal: ctrl.signal, cache: 'no-store' });
+  } catch (cause) {
+    clearTimeout(timer);
+    const isAbort = (cause as Error)?.name === 'AbortError';
+    throw new ProviderError(
+      isAbort ? 'PROVIDER_TIMEOUT' : 'PROVIDER_HTTP_ERROR',
+      PROVIDER,
+      isAbort ? 'request timed out' : 'fetch failed',
+      { cause },
+    );
+  }
+  clearTimeout(timer);
+
+  if (!res.ok) {
+    throw new ProviderError(
+      res.status === 429 ? 'PROVIDER_QUOTA_EXCEEDED' : 'PROVIDER_HTTP_ERROR',
+      PROVIDER,
+      `HTTP ${res.status} ${res.statusText}`,
+      { status: res.status },
+    );
+  }
+
+  let json: unknown;
+  try {
+    json = await res.json();
+  } catch (cause) {
+    throw new ProviderError('PROVIDER_PARSE_ERROR', PROVIDER, 'invalid JSON', { cause });
+  }
+  const parsed = ObservationsResponseSchema.safeParse(json);
+  if (!parsed.success) {
+    throw new ProviderError('PROVIDER_PARSE_ERROR', PROVIDER, 'unexpected shape', {
+      cause: parsed.error,
+    });
+  }
+
+  const out: FredObservation[] = [];
+  for (const o of parsed.data.observations) {
+    if (o.value === '.' || o.value.trim().length === 0) continue;
+    const v = Number(o.value);
+    if (!Number.isFinite(v)) continue;
+    out.push({ date: o.date, value: v });
+  }
+  return out;
+}

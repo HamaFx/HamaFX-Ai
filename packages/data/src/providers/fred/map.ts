@@ -15,6 +15,14 @@ export interface FredReleaseMeta {
   importance: Importance;
   currency: 'USD' | 'EUR' | 'GBP';
   country: 'US' | 'EZ' | 'UK';
+  /**
+   * FRED series id that carries the headline number for this release. Used
+   * by the actuals-backfill cron to look up the published value via
+   * `/fred/series/observations`. Releases with multiple headline series
+   * (e.g. CPI ≠ Core CPI) pick the one most-reported in news headlines.
+   * Omit when no canonical series exists (FOMC decision, etc.).
+   */
+  seriesId?: string;
 }
 
 /**
@@ -23,26 +31,69 @@ export interface FredReleaseMeta {
  */
 export const FRED_RELEASES: Record<number, FredReleaseMeta> = {
   // Bureau of Labor Statistics — Employment Situation (NFP, unemployment).
-  50: { title: 'Employment Situation (NFP)', importance: 'high', currency: 'USD', country: 'US' },
+  50: {
+    title: 'Employment Situation (NFP)',
+    importance: 'high',
+    currency: 'USD',
+    country: 'US',
+    seriesId: 'PAYEMS', // Total nonfarm payrolls
+  },
   // Consumer Price Index.
-  10: { title: 'Consumer Price Index (CPI)', importance: 'high', currency: 'USD', country: 'US' },
+  10: {
+    title: 'Consumer Price Index (CPI)',
+    importance: 'high',
+    currency: 'USD',
+    country: 'US',
+    seriesId: 'CPIAUCSL', // CPI-U all items SA
+  },
   // Personal Income & Outlays (PCE inflation).
   21: {
     title: 'Personal Income & Outlays (PCE)',
     importance: 'high',
     currency: 'USD',
     country: 'US',
+    seriesId: 'PCEPI', // Personal Consumption Expenditures Price Index
   },
   // Producer Price Index.
-  46: { title: 'Producer Price Index (PPI)', importance: 'medium', currency: 'USD', country: 'US' },
+  46: {
+    title: 'Producer Price Index (PPI)',
+    importance: 'medium',
+    currency: 'USD',
+    country: 'US',
+    seriesId: 'PPIACO', // Producer Price Index All Commodities
+  },
   // GDP.
-  53: { title: 'Gross Domestic Product (GDP)', importance: 'high', currency: 'USD', country: 'US' },
+  53: {
+    title: 'Gross Domestic Product (GDP)',
+    importance: 'high',
+    currency: 'USD',
+    country: 'US',
+    seriesId: 'GDP', // Real GDP, current-dollar
+  },
   // Retail Sales (Advance Monthly).
-  86: { title: 'Retail Sales', importance: 'medium', currency: 'USD', country: 'US' },
+  86: {
+    title: 'Retail Sales',
+    importance: 'medium',
+    currency: 'USD',
+    country: 'US',
+    seriesId: 'RSAFS', // Advance Retail Sales: Retail and Food Services
+  },
   // Industrial Production & Capacity Utilization.
-  20: { title: 'Industrial Production', importance: 'low', currency: 'USD', country: 'US' },
-  // FOMC Statement (release id of FOMC press release schedule).
-  101: { title: 'FOMC Decision', importance: 'high', currency: 'USD', country: 'US' },
+  20: {
+    title: 'Industrial Production',
+    importance: 'low',
+    currency: 'USD',
+    country: 'US',
+    seriesId: 'INDPRO',
+  },
+  // FOMC Statement — no canonical numeric series; actual is the rate decision.
+  101: {
+    title: 'FOMC Decision',
+    importance: 'high',
+    currency: 'USD',
+    country: 'US',
+    seriesId: 'DFEDTARU', // Federal Funds Target Range Upper Limit
+  },
 };
 
 export function fredImportance(releaseId: number): Importance {

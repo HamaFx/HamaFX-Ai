@@ -12,7 +12,42 @@
 - ✅ **Phase 1c** — news + calendar ingestion + embeddings (PR #6)
 - ✅ **Phase 1d** — alerts evaluator + email + journal CRUD (PR #7)
 - ✅ **Phase 1e** — usage analytics + loading + error boundaries (PR #8)
-- ⏳ **Phase 2** — SMC indicators, Telegram, briefings, RAG, composite tools
+- ✅ **Phase 2** — SMC composite tools, RAG, annotations, snapshots, Telegram, voice, briefings, weekly review, auto-journal, Finnhub fallback, FRED backfill
+
+## Phase 2 additions (live in production)
+
+| Surface           | Endpoint / module                                              | Notes                                                                                          |
+| ----------------- | -------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| AI tool           | `search_knowledge`                                             | pgvector cosine over `news_embeddings`; one embed call per invocation.                         |
+| AI tool           | `analyze_technical`                                            | Multi-timeframe trend / bias / momentum / structure / levels in one call.                      |
+| AI tool           | `analyze_fundamental`                                          | Currency-scoped calendar + news + sentiment buckets.                                           |
+| AI tool           | `get_journal_stats`                                            | Global stats + per-symbol + per-tag breakdowns.                                                |
+| AI tool           | `annotate_chart`                                               | Emits the chart's `OverlaySet` directly; deep-links into `/chart/<symbol>?overlays=…`.         |
+| Cron              | `/api/cron/snapshots` @ `5 0 * * *`                            | Daily HLOC + pivots + ATR + PDH/PDL + Asian range per symbol → `snapshots`.                    |
+| Cron              | `/api/cron/briefings` @ `*/5 * * * *`                          | Pre-event (now+30m±2m) + post-event (now-30m±2m + actual) → `Briefings_Thread` (idempotent).   |
+| Cron              | `/api/cron/weekly-review` @ `0 18 * * 0`                       | Sunday 18:00 UTC → 7-day journal review → `Briefings_Thread`.                                  |
+| Cron              | `/api/cron/fred-actuals` @ `30 1 * * *`                        | Backfills `economic_events.actual` from FRED `/series/observations` for past null rows.        |
+| Alerts            | Telegram delivery in `packages/ai/src/alerts/delivery.ts`      | Same Resend-style 2xx-then-`markFired` ordering; MarkdownV2 escaping helper.                   |
+| Admin             | `POST /api/admin/test-telegram`                                | One-shot send for the configured bot+chat; mirrors `test-alert-email` (200/401/503/502).       |
+| Settings UI       | `TestTelegramButton` in `_components/`                         | Same three-state result rendering (sent / missing-env / error) as the email tester.            |
+| Chat composer     | `useVoiceInput` hook + 44×44 mic button in `composer.tsx`      | Web Speech API; SSR-safe support probe; recording dot pulses while active.                     |
+| Chat surface      | Auto-Journal parser in `/api/chat`                             | Detects `Journal: …` shortcuts → `createEntry` server-side before delegating to the LLM.       |
+| Data layer        | Finnhub candle fallback (`packages/data/src/providers/finnhub`)| `forex/candle` for 1m–1h native, 4h synthesised from 1H. Cache keys are provider-prefixed.     |
+
+## Migrations applied
+
+- `0000_lazy_red_shift.sql` — initial schema.
+- `0001_phase_1_completion.sql` — `chat_threads.title_source`, `chat_telemetry.kind`.
+- `0002_phase_2.sql` — `chat_threads.is_briefings`, `economic_events.actuals_filled_at`, `briefings_emitted` lookup.
+
+## New env vars in Phase 2
+
+| Variable                              | Required for                                     | Notes                                                              |
+| ------------------------------------- | ------------------------------------------------ | ------------------------------------------------------------------ |
+| `TELEGRAM_BOT_TOKEN`                  | Telegram alert delivery + `/api/admin/test-telegram` | Set on Vercel project. Without it, the channel returns "not configured". |
+| `TELEGRAM_CHAT_ID`                    | Telegram alert delivery                          | Personal chat id (numeric). Tester accepts a per-call override.    |
+
+`FINNHUB_API_KEY` and `FRED_API_KEY` already exist from Phase 1; they unlock the new candle fallback and FRED backfill paths automatically.
 
 Pending real-world acceptance: re-run the 10 prompts from `00-overview.md`,
 use it daily for a week.
@@ -140,6 +175,10 @@ We've chosen **GitHub Actions external scheduler** over Vercel Pro. Configuratio
 | `/api/cron/calendar`           | `cron-calendar.yml`           | `*/15 * * * *` |        4 |
 | `/api/cron/alerts`             | `cron-alerts.yml`             | `*/5 * * * *`  |       12 |
 | `/api/cron/embedding-backfill` | `cron-embedding-backfill.yml` | `*/30 * * * *` |        2 |
+| `/api/cron/snapshots`          | `cron-snapshots.yml`          | `5 0 * * *`    |   1/day  |
+| `/api/cron/briefings`          | `cron-briefings.yml`          | `*/5 * * * *`  |       12 |
+| `/api/cron/weekly-review`      | `cron-weekly-review.yml`      | `0 18 * * 0`   |  1/week  |
+| `/api/cron/fred-actuals`       | `cron-fred-actuals.yml`       | `30 1 * * *`   |   1/day  |
 
 GitHub Actions cron has 5-minute minimum granularity; sub-5-minute cadences are not possible without an external scheduler.
 

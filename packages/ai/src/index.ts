@@ -19,7 +19,7 @@ export {
   backfillEmbeddings,
   countPendingEmbeddings,
 } from './news-persistence';
-export { upsertEvents } from './calendar-persistence';
+export { upsertEvents, listFredEventsMissingActual, patchEventActual, parseFredEventId } from './calendar-persistence';
 export {
   listThreads,
   getThread,

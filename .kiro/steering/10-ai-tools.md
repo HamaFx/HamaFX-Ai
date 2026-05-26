@@ -18,13 +18,35 @@ When working in `packages/ai/**`:
 5. Add an entry to `packages/ai/src/eval/cases.json` when adding a tool.
 6. Never log full prompts in production. Use `LOG_PROMPTS=1` for short debugging windows only.
 
+## Tools
+
+Phase 1 atomic tools (one data source / mutation each):
+
+- `get_price` · `get_candles` · `get_indicators` · `get_market_structure`
+- `get_news` · `get_calendar`
+- `set_alert` · `log_journal`
+
+Phase 2 composite + RAG + visual tools:
+
+- `search_knowledge` — pgvector cosine over `news_embeddings`; one embed call per invocation.
+- `analyze_technical` — multi-timeframe trend + bias + momentum + structure + levels in one call.
+- `analyze_fundamental` — currency-scoped calendar + news + sentiment buckets in one call.
+- `get_journal_stats` — global stats + per-symbol + per-tag breakdowns.
+- `annotate_chart` — emits the `OverlaySet` shape the chart UI consumes (markers + price lines).
+
 ## Models
 
-- Default chat: `google/gemini-2.5-flash` (or `openai/gpt-4.1` / `anthropic/claude-3.7-sonnet` via gateway).
-- Titles / cheap calls: `google/gemini-2.5-flash-lite`.
+- Default chat: `google-vertex/gemini-2.5-flash` (or any gateway-routed slug, see `resolveModel` in `packages/ai/src/model.ts`).
+- Titles / cheap calls: `google-vertex/gemini-2.5-flash-lite`.
 - Embeddings: `openai/text-embedding-3-small` (1536-dim, matches the `news_embeddings` column).
 
-All routed through Vercel AI Gateway when `AI_GATEWAY_API_KEY` is set; otherwise routed directly to Google via `@ai-sdk/google` when `GOOGLE_GENERATIVE_AI_API_KEY` is set and the model id starts with `google/`. Personal-mode permits the direct path so we can use the free Gemini tier without putting a card on the gateway. Never hit other provider SDKs directly.
+Three transports are supported:
+
+1. **Vercel AI Gateway** (`AI_GATEWAY_API_KEY`) — routes any prefixed model id (e.g. `openai/gpt-4.1`).
+2. **Direct Google Gemini** (`GOOGLE_GENERATIVE_AI_API_KEY`) — pair with a `google/...` id; free tier.
+3. **Direct Google Vertex** (`GOOGLE_VERTEX_PROJECT` + `GOOGLE_VERTEX_LOCATION` + `GOOGLE_APPLICATION_CREDENTIALS_JSON`) — pair with a `google-vertex/...` id; bills GCP, bypasses the gateway entirely.
+
+The resolver in `packages/ai/src/model.ts` picks per-call by model id prefix. Never hit non-Google provider SDKs directly.
 
 ## System prompt
 
