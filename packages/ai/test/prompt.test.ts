@@ -1,0 +1,55 @@
+import { describe, expect, it } from 'vitest';
+
+import { buildSystemPrompt } from '../src/prompt/system';
+
+describe('buildSystemPrompt', () => {
+  it('returns the base prompt when given no snapshot', () => {
+    const out = buildSystemPrompt(null);
+    expect(out).toContain('XAUUSD');
+    expect(out).toContain('Hard rules');
+    // The base prompt mentions LIVE_SNAPSHOT as a reference; only the
+    // injected header block uses "(auto-injected" — that's what should be absent.
+    expect(out).not.toContain('(auto-injected');
+  });
+
+  it('includes prices and session in the snapshot block', () => {
+    const out = buildSystemPrompt({
+      asOf: '2026-05-26T12:00:00.000Z',
+      session: 'london',
+      prices: {
+        XAUUSD: {
+          symbol: 'XAUUSD',
+          bid: 2345.6,
+          ask: 2345.6,
+          mid: 2345.6,
+          ts: 0,
+          source: 'twelve-data',
+        },
+      },
+    });
+    expect(out).toContain('LIVE_SNAPSHOT');
+    expect(out).toContain('Session: london');
+    expect(out).toContain('XAUUSD: 2345.6');
+    expect(out).toContain('twelve-data');
+  });
+
+  it('renders an "unavailable" line when no prices fetched', () => {
+    const out = buildSystemPrompt({
+      asOf: '2026-05-26T12:00:00.000Z',
+      session: 'off',
+      prices: {},
+    });
+    expect(out).toContain('(price feed unavailable)');
+  });
+
+  it('mentions the next high-impact event when provided', () => {
+    const out = buildSystemPrompt({
+      asOf: '2026-05-26T12:00:00.000Z',
+      session: 'ny',
+      prices: {},
+      nextHighImpactEvent: { title: 'NFP', whenIso: '2026-06-05T12:30:00Z', currency: 'USD' },
+    });
+    expect(out).toContain('NFP');
+    expect(out).toContain('USD');
+  });
+});
