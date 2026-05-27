@@ -1,6 +1,10 @@
 // GET /api/cron/fred-actuals — backfill `economic_events.actual` for FRED
 // rows whose value was null at ingestion time.
 //
+// Phase 8 PR-13: this route is now a **manual-fallback path**. The
+// scheduled invocation runs on the GCE worker via
+// `hamafx-job-fred-actuals.timer`.
+//
 // Cadence: 30 1 * * * UTC (just past midnight US east coast — most BLS
 // data has landed by this hour).
 //
