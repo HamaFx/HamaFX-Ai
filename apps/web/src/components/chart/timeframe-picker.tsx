@@ -1,9 +1,11 @@
 'use client';
 
 // Mobile-friendly segmented control for the 8 supported timeframes.
-// Compact enough to fit in the TopBar's right slot; uses brand colour for
-// the active segment so it pops without a heavy outline.
+// The active segment uses motion's layoutId so the highlight slides
+// between segments instead of snapping.
+
 import { TIMEFRAMES, type Timeframe } from '@hamafx/shared';
+import { m } from 'motion/react';
 
 import { cn } from '@/lib/cn';
 
@@ -22,7 +24,7 @@ export function TimeframePicker({ value, onChange, options = TIMEFRAMES }: Timef
     <div
       role="tablist"
       aria-label="Timeframe"
-      className="border-border bg-bg-elev-2 inline-flex items-center gap-0.5 rounded-md border p-0.5"
+      className="border-divider bg-bg-elev-2 inline-flex items-center gap-0.5 rounded-md border p-0.5"
     >
       {options.map((tf) => {
         const active = tf === value;
@@ -34,12 +36,19 @@ export function TimeframePicker({ value, onChange, options = TIMEFRAMES }: Timef
             aria-selected={active}
             onClick={() => onChange(tf)}
             className={cn(
-              'rounded px-2 py-1 text-[11px] font-medium tabular-nums transition-colors',
+              'relative rounded px-2 py-1 text-[11px] font-medium tabular-nums transition-colors',
               'min-w-[28px]',
-              active ? 'bg-brand text-brand-fg' : 'text-fg-muted hover:bg-bg-elev-1 hover:text-fg',
+              active ? 'text-brand-fg' : 'text-fg-muted hover:text-fg',
             )}
           >
-            {tf}
+            {active ? (
+              <m.span
+                layoutId="tf-indicator"
+                className="bg-brand absolute inset-0 -z-0 rounded"
+                transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+              />
+            ) : null}
+            <span className="relative z-10">{tf}</span>
           </button>
         );
       })}

@@ -1,5 +1,6 @@
 'use client';
 
+import { Check } from 'lucide-react';
 import { useState, type FormEvent } from 'react';
 
 import { Button } from '@/components/ui/button';
@@ -12,12 +13,12 @@ interface LoginFormProps {
 export function LoginForm({ next }: LoginFormProps) {
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
-  const [submitting, setSubmitting] = useState(false);
+  const [status, setStatus] = useState<'idle' | 'submitting' | 'success'>('idle');
 
   async function onSubmit(e: FormEvent<HTMLFormElement>): Promise<void> {
     e.preventDefault();
     setError(null);
-    setSubmitting(true);
+    setStatus('submitting');
     try {
       const res = await fetch('/api/auth/login', {
         method: 'POST',
@@ -29,16 +30,20 @@ export function LoginForm({ next }: LoginFormProps) {
           error?: { message?: string };
         } | null;
         setError(body?.error?.message ?? `Login failed (${res.status})`);
-        setSubmitting(false);
+        setStatus('idle');
         return;
       }
-      // Hard reload so middleware re-evaluates cleanly.
-      window.location.assign(next);
+      // Brief success flash before redirect.
+      setStatus('success');
+      setTimeout(() => window.location.assign(next), 350);
     } catch {
       setError('Network error — try again.');
-      setSubmitting(false);
+      setStatus('idle');
     }
   }
+
+  const submitting = status === 'submitting';
+  const success = status === 'success';
 
   return (
     <form onSubmit={onSubmit} className="flex w-full max-w-sm flex-col gap-4">
@@ -56,6 +61,7 @@ export function LoginForm({ next }: LoginFormProps) {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           aria-describedby={error ? 'login-error' : undefined}
+          disabled={submitting || success}
         />
       </div>
       {error ? (
@@ -63,8 +69,21 @@ export function LoginForm({ next }: LoginFormProps) {
           {error}
         </p>
       ) : null}
-      <Button type="submit" loading={submitting} disabled={!password || submitting}>
-        {submitting ? 'Signing in…' : 'Sign in'}
+      <Button
+        type="submit"
+        loading={submitting}
+        disabled={!password || submitting || success}
+        className={success ? '!bg-bull !text-bg transition-colors' : ''}
+      >
+        {success ? (
+          <>
+            <Check className="size-4" /> Welcome
+          </>
+        ) : submitting ? (
+          'Signing in…'
+        ) : (
+          'Sign in'
+        )}
       </Button>
     </form>
   );

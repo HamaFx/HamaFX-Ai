@@ -7,6 +7,7 @@ import type { Metadata } from 'next';
 
 import { PageHeader } from '@/components/layout/page-header';
 import { ArticleCard } from '@/components/news/article-card';
+import { LiveTimestamp } from '@/components/news/live-timestamp';
 
 import { RefreshButton } from './_components/refresh-button';
 
@@ -26,9 +27,11 @@ export default async function NewsPage() {
       />
 
       {lastUpdated ? (
-        <p className="text-fg-subtle text-xs">
-          Latest: {formatRelative(lastUpdated)}
-        </p>
+        <LiveTimestamp
+          ms={lastUpdated}
+          prefix="Latest:"
+          className="text-fg-subtle text-xs"
+        />
       ) : null}
 
       {articles.length === 0 ? (
@@ -46,20 +49,9 @@ export default async function NewsPage() {
   );
 }
 
-function formatRelative(ms: number): string {
-  const diff = Date.now() - ms;
-  const min = Math.round(diff / 60_000);
-  if (min < 1) return 'just now';
-  if (min < 60) return `${min}m ago`;
-  const hr = Math.round(min / 60);
-  if (hr < 24) return `${hr}h ago`;
-  const day = Math.round(hr / 24);
-  return `${day}d ago`;
-}
-
 function EmptyState() {
   return (
-    <div className="text-fg-muted border-border flex flex-col items-center gap-3 rounded-lg border border-dashed p-6 text-center text-sm">
+    <div className="text-fg-muted border-divider flex flex-col items-center gap-3 rounded-lg border border-dashed p-6 text-center text-sm">
       <p className="font-medium">No news articles yet.</p>
       <p className="text-fg-subtle text-xs">
         The cron fires every 5 minutes. Tap below to trigger manually.

@@ -1,7 +1,13 @@
 'use client';
 
+// Refresh button — calls the cron endpoint (session-cookie auth) then
+// asks Next to revalidate the server component. Confirmation/error
+// surface through sonner toasts (no inline status string).
+
+import { RefreshCw } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useState, useTransition } from 'react';
+import { useTransition } from 'react';
+import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
 
@@ -12,7 +18,6 @@ interface RefreshButtonProps {
 
 export function RefreshButton({ endpoint, label = 'Refresh now' }: RefreshButtonProps) {
   const [pending, startTransition] = useTransition();
-  const [result, setResult] = useState<'idle' | 'ok' | 'error'>('idle');
   const router = useRouter();
 
   function refresh() {
@@ -20,34 +25,36 @@ export function RefreshButton({ endpoint, label = 'Refresh now' }: RefreshButton
       try {
         const res = await fetch(endpoint);
         if (res.ok) {
-          setResult('ok');
+          const json = (await res.json().catch(() => ({}))) as {
+            processed?: number;
+            note?: string;
+          };
+          toast.success('Refreshed', {
+            description: json.note ?? `Processed ${json.processed ?? 0} items`,
+          });
           router.refresh();
         } else {
-          setResult('error');
+          toast.error('Refresh failed', { description: `HTTP ${res.status}` });
         }
-      } catch {
-        setResult('error');
+      } catch (err) {
+        toast.error('Refresh failed', {
+          description: err instanceof Error ? err.message : 'Network error',
+        });
       }
     });
   }
 
   return (
-    <div className="flex items-center gap-2">
-      <Button
-        type="button"
-        variant="secondary"
-        size="sm"
-        onClick={refresh}
-        loading={pending}
-        className="focus-visible:ring-brand min-h-[44px] min-w-[44px] focus-visible:ring-2"
-      >
-        {pending ? 'Loading…' : label}
-      </Button>
-      {result === 'ok' ? (
-        <span className="text-bull text-xs">Done — reloading…</span>
-      ) : result === 'error' ? (
-        <span className="text-bear text-xs">Failed — check API keys</span>
-      ) : null}
-    </div>
+    <Button
+      type="button"
+      variant="secondary"
+      size="sm"
+      onClick={refresh}
+      loading={pending}
+      className="focus-visible:ring-brand min-h-[44px] focus-visible:ring-2"
+    >
+      <RefreshCw className={`size-3.5 ${pending ? 'animate-spin' : ''}`} />
+      {pending ? 'Loading…' : label}
+    </Button>
   );
 }

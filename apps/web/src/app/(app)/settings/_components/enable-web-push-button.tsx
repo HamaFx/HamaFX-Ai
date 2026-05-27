@@ -16,6 +16,7 @@
 //   3. POST /api/push/unsubscribe { endpoint }
 
 import { useEffect, useState, useTransition } from 'react';
+import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
 
@@ -97,12 +98,17 @@ export function EnableWebPushButton(): React.JSX.Element {
         });
         if (!res.ok) {
           const text = await res.text().catch(() => '');
-          setStatus({ kind: 'error', message: `subscribe HTTP ${res.status}: ${text.slice(0, 120)}` });
+          const msg = `subscribe HTTP ${res.status}: ${text.slice(0, 120)}`;
+          setStatus({ kind: 'error', message: msg });
+          toast.error('Web push failed', { description: msg });
           return;
         }
         setStatus({ kind: 'subscribed' });
+        toast.success('Web push enabled', { description: 'Alerts will arrive on this device.' });
       } catch (err) {
-        setStatus({ kind: 'error', message: err instanceof Error ? err.message : 'unknown' });
+        const msg = err instanceof Error ? err.message : 'unknown';
+        setStatus({ kind: 'error', message: msg });
+        toast.error('Web push failed', { description: msg });
       }
     });
   }
@@ -124,8 +130,11 @@ export function EnableWebPushButton(): React.JSX.Element {
           body: JSON.stringify({ endpoint }),
         });
         setStatus({ kind: 'unsubscribed' });
+        toast.success('Web push disabled');
       } catch (err) {
-        setStatus({ kind: 'error', message: err instanceof Error ? err.message : 'unknown' });
+        const msg = err instanceof Error ? err.message : 'unknown';
+        setStatus({ kind: 'error', message: msg });
+        toast.error('Disable failed', { description: msg });
       }
     });
   }

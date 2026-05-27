@@ -2,9 +2,11 @@
 
 // Mobile-first form for creating an alert. Three rule types share most
 // fields; we render conditional inputs for `tf` (candle/indicator) and
-// `indicator` (indicator-only).
+// `indicator` (indicator-only). Phase 5: rendered inside a Drawer; the
+// outer card wrapping has been dropped so the drawer handles spacing.
 import { SYMBOLS, TIMEFRAMES, type Symbol, type Timeframe } from '@hamafx/shared';
 import { useState } from 'react';
+import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -76,21 +78,19 @@ export function AlertForm({ initialSymbol, onCreated }: AlertFormProps) {
       }
       setLevel('');
       setNote('');
+      toast.success('Alert created', { description: `${symbol} ${direction} ${numericLevel}` });
       onCreated?.();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Create failed');
+      const message = err instanceof Error ? err.message : 'Create failed';
+      toast.error('Create failed', { description: message });
+      setError(message);
     } finally {
       setSubmitting(false);
     }
   }
 
   return (
-    <form
-      onSubmit={submit}
-      className="border-border bg-bg-elev-1 flex flex-col gap-3 rounded-lg border p-3"
-    >
-      <h2 className="text-sm font-semibold">New alert</h2>
-
+    <form onSubmit={submit} className="flex flex-col gap-3 px-4 pb-2">
       <Segmented<RuleType>
         label="When"
         value={type}
@@ -183,7 +183,7 @@ export function AlertForm({ initialSymbol, onCreated }: AlertFormProps) {
 
       {error ? <p className="text-bear text-xs">{error}</p> : null}
 
-      <Button type="submit" disabled={submitting || !level} size="sm">
+      <Button type="submit" disabled={submitting || !level} size="md">
         {submitting ? 'Creating…' : 'Create alert'}
       </Button>
     </form>

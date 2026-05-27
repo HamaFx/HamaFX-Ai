@@ -5,6 +5,8 @@
 // sendMessage. Used by /chat/[threadId]/page.tsx.
 import { useChat } from '@ai-sdk/react';
 import { DefaultChatTransport, type UIMessage } from 'ai';
+import { RotateCcw } from 'lucide-react';
+import { AnimatePresence, m } from 'motion/react';
 import { useRef, useMemo } from 'react';
 
 import { Composer } from './composer';
@@ -42,17 +44,13 @@ export function ChatSurface({ threadId, initialMessages }: ChatSurfaceProps) {
 
   const isStreaming = status === 'submitted' || status === 'streaming';
 
-  function handleSend(text: string, images: Parameters<typeof sendMessage>[0] extends object ? never : never) {
-    lastUserTextRef.current = text;
-  }
-
   return (
-    <div className="border-border bg-bg flex h-[calc(100svh-9rem)] flex-col overflow-hidden rounded-lg border">
-      <div className="flex-1 overflow-y-auto">
+    <div className="border-divider bg-bg flex h-[calc(100svh-9rem)] flex-col overflow-hidden rounded-xl border">
+      <div className="scrollbar-hide flex-1 overflow-y-auto">
         <MessageList messages={messages} isStreaming={isStreaming} />
         {error ? (
-          <div className="bg-bear/10 text-bear mx-3 mb-2 flex items-center justify-between gap-2 rounded-md p-2 text-xs">
-            <span>{error.message}</span>
+          <div className="bg-bear/10 text-bear border-bear/30 mx-3 mb-2 flex items-center justify-between gap-2 rounded-lg border p-2.5 text-xs">
+            <span className="line-clamp-2 flex-1">{error.message}</span>
             <button
               type="button"
               onClick={() => {
@@ -60,22 +58,31 @@ export function ChatSurface({ threadId, initialMessages }: ChatSurfaceProps) {
                   void sendMessage({ text: lastUserTextRef.current });
                 }
               }}
-              className="bg-bear/20 hover:bg-bear/30 shrink-0 rounded px-2 py-1 text-[10px] font-medium"
+              className="bg-bear/20 hover:bg-bear/30 inline-flex shrink-0 items-center gap-1 rounded-md px-2 py-1 text-[10px] font-medium"
             >
-              Retry
+              <RotateCcw className="size-3" /> Retry
             </button>
           </div>
         ) : null}
       </div>
-      {messages.length <= 1 && !isStreaming ? (
-        <QuickPrompts
-          onSelect={(text) => {
-            lastUserTextRef.current = text;
-            void sendMessage({ text });
-          }}
-          disabled={isStreaming}
-        />
-      ) : null}
+      <AnimatePresence>
+        {messages.length <= 1 && !isStreaming ? (
+          <m.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 8 }}
+            transition={{ duration: 0.18 }}
+          >
+            <QuickPrompts
+              onSelect={(text) => {
+                lastUserTextRef.current = text;
+                void sendMessage({ text });
+              }}
+              disabled={isStreaming}
+            />
+          </m.div>
+        ) : null}
+      </AnimatePresence>
       <Composer
         onSubmit={(text, images) => {
           lastUserTextRef.current = text;

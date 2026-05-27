@@ -1,3 +1,4 @@
+import { Activity, Bell, ChevronRight, User } from 'lucide-react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 
@@ -5,6 +6,7 @@ import { PageHeader } from '@/components/layout/page-header';
 
 import { EnableWebPushButton } from './_components/enable-web-push-button';
 import { LogoutButton } from './_components/logout-button';
+import { SettingsSection } from './_components/settings-section';
 import { TestEmailButton } from './_components/test-email-button';
 import { TestTelegramButton } from './_components/test-telegram-button';
 
@@ -12,50 +14,46 @@ export const metadata: Metadata = { title: 'Settings' };
 
 export default function SettingsPage() {
   return (
-    <div className="flex flex-col gap-6">
-      <PageHeader title="Settings" description="Theme, model defaults, indicator defaults." />
+    <div className="flex flex-col gap-4">
+      <PageHeader title="Settings" description="Notifications, usage, session." />
 
-      <section className="border-border bg-bg-elev-1 flex flex-col divide-y divide-[var(--color-border)] rounded-lg border">
-        <Row href="/settings/usage" label="Usage" hint="Token spend, last 30 days" />
-      </section>
+      <SettingsSection icon={<Activity className="size-4" />} title="Usage">
+        <Link
+          href="/settings/usage"
+          className="hover:bg-bg-elev-2 -mx-1 flex items-center justify-between gap-4 rounded-lg px-3 py-2 transition-colors"
+        >
+          <div className="flex flex-col">
+            <span className="text-fg text-sm font-medium">Usage analytics</span>
+            <span className="text-fg-subtle text-xs">Token spend, last 30 days</span>
+          </div>
+          <ChevronRight className="text-fg-subtle size-4" />
+        </Link>
+      </SettingsSection>
 
-      <section className="border-border bg-bg-elev-1 flex flex-col gap-3 rounded-lg border p-4">
-        <h2 className="text-fg-muted text-sm font-medium">Notifications</h2>
-        <p className="text-fg-subtle text-xs">
-          Send a one-off test email through Resend to confirm the alerts pipeline is wired up.
-        </p>
-        <TestEmailButton />
-        <p className="text-fg-subtle text-xs">
-          Or send a one-off Telegram message — fast mobile push without setting up web push.
-        </p>
-        <TestTelegramButton />
-        <p className="text-fg-subtle text-xs">
-          Web push delivers alert notifications directly to this browser, even when the app is closed.
-        </p>
-        <EnableWebPushButton />
-      </section>
+      <SettingsSection
+        icon={<Bell className="size-4" />}
+        title="Notifications"
+        description="Test channels and enable web push"
+      >
+        <div className="flex flex-col gap-2">
+          <p className="text-fg-subtle text-xs">Send a one-off test email through Resend.</p>
+          <TestEmailButton />
+        </div>
+        <div className="flex flex-col gap-2">
+          <p className="text-fg-subtle text-xs">Send a one-off Telegram message.</p>
+          <TestTelegramButton />
+        </div>
+        <div className="flex flex-col gap-2">
+          <p className="text-fg-subtle text-xs">
+            Web push delivers alerts to this browser even when the app is closed.
+          </p>
+          <EnableWebPushButton />
+        </div>
+      </SettingsSection>
 
-      <section className="border-border bg-bg-elev-1 flex flex-col gap-3 rounded-lg border p-4">
-        <h2 className="text-fg-muted text-sm font-medium">Session</h2>
+      <SettingsSection icon={<User className="size-4" />} title="Session">
         <LogoutButton />
-      </section>
+      </SettingsSection>
     </div>
-  );
-}
-
-function Row({ href, label, hint }: { href: string; label: string; hint?: string }) {
-  return (
-    <Link
-      href={href}
-      className="hover:bg-bg-elev-2 flex items-center justify-between gap-4 px-4 py-3 transition-colors"
-    >
-      <div className="flex flex-col">
-        <span className="text-fg text-sm font-medium">{label}</span>
-        {hint ? <span className="text-fg-subtle text-xs">{hint}</span> : null}
-      </div>
-      <span aria-hidden="true" className="text-fg-subtle">
-        ›
-      </span>
-    </Link>
   );
 }

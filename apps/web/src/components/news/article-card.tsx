@@ -22,7 +22,7 @@ export function ArticleCard({ article }: ArticleCardProps) {
       href={article.url}
       target="_blank"
       rel="noopener noreferrer"
-      className="border-border bg-bg-elev-1 hover:bg-bg-elev-2 block rounded-lg border p-3 transition-colors"
+      className="border-divider bg-bg-elev-1 hover:bg-bg-elev-2 block rounded-lg border p-3 transition-all duration-200 md:hover:-translate-y-0.5 md:hover:shadow-lg md:hover:shadow-black/20"
     >
       <div className="flex items-start justify-between gap-3">
         <h3 className="line-clamp-3 flex-1 text-sm font-semibold leading-snug">{article.title}</h3>

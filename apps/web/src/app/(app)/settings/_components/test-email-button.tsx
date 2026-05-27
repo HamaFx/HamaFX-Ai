@@ -1,36 +1,26 @@
 'use client';
 
-// Client component for the settings page that triggers a one-shot test email
-// through `/api/admin/test-alert-email`. Renders inline status copy reflecting
-// each documented response from that route:
-//   - 200 { id }            -> "Sent · message id: <id>"
-//   - 503 { missing: [..] } -> "Missing env: A, B, C"
-//   - other non-2xx         -> "Error: <text>"
-import { useState, useTransition } from 'react';
+// Settings island for Resend email test. Uses sonner toasts for
+// confirmation/error rather than inline status text.
+
+import { Mail } from 'lucide-react';
+import { useTransition } from 'react';
+import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
-
-type Result =
-  | { kind: 'idle' }
-  | { kind: 'sent'; id: string }
-  | { kind: 'missing'; vars: string[] }
-  | { kind: 'error'; message: string };
 
 interface SuccessBody {
   id?: string | null;
 }
-
 interface MissingBody {
   missing?: unknown;
 }
-
 interface ErrorBody {
   error?: unknown;
 }
 
 export function TestEmailButton(): React.JSX.Element {
   const [pending, startTransition] = useTransition();
-  const [result, setResult] = useState<Result>({ kind: 'idle' });
 
   function send(): void {
     startTransition(async () => {
@@ -43,7 +33,9 @@ export function TestEmailButton(): React.JSX.Element {
 
         if (res.ok) {
           const json = (await res.json().catch(() => ({}))) as SuccessBody;
-          setResult({ kind: 'sent', id: json.id ?? 'unknown' });
+          toast.success('Email sent', {
+            description: `message id: ${json.id ?? 'unknown'}`,
+          });
           return;
         }
 
@@ -52,11 +44,12 @@ export function TestEmailButton(): React.JSX.Element {
           const vars = Array.isArray(json.missing)
             ? json.missing.filter((v): v is string => typeof v === 'string')
             : [];
-          setResult({ kind: 'missing', vars });
+          toast.error('Email not configured', {
+            description: `Missing: ${vars.join(', ')}`,
+          });
           return;
         }
 
-        // Other non-2xx — try JSON `{ error }` first, then plain text.
         let message = `HTTP ${res.status}`;
         const text = await res.text().catch(() => '');
         if (text) {
@@ -65,46 +58,32 @@ export function TestEmailButton(): React.JSX.Element {
             if (typeof parsed.error === 'string' && parsed.error) {
               message = parsed.error;
             } else {
-              message = text;
+              message = text.slice(0, 200);
             }
           } catch {
-            message = text;
+            message = text.slice(0, 200);
           }
         }
-        setResult({ kind: 'error', message: message.slice(0, 200) });
+        toast.error('Email failed', { description: message });
       } catch (err) {
-        setResult({
-          kind: 'error',
-          message: err instanceof Error ? err.message : 'unknown error',
+        toast.error('Email failed', {
+          description: err instanceof Error ? err.message : 'unknown error',
         });
       }
     });
   }
 
   return (
-    <div className="flex flex-col gap-2">
-      <Button
-        type="button"
-        variant="secondary"
-        onClick={send}
-        loading={pending}
-        aria-busy={pending}
-        className="focus-visible:ring-brand focus-visible:ring-offset-bg min-h-[44px] min-w-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
-      >
-        {pending ? 'Sending…' : 'Send test alert email'}
-      </Button>
-
-      <p role="status" aria-live="polite" className="text-fg-muted min-h-[1.25rem] text-sm">
-        {result.kind === 'sent' ? (
-          <span className="text-fg-muted">
-            Sent · message id: <span className="tabular-nums">{result.id}</span>
-          </span>
-        ) : result.kind === 'missing' ? (
-          <span className="text-warn">Missing env: {result.vars.join(', ')}</span>
-        ) : result.kind === 'error' ? (
-          <span className="text-bear">Error: {result.message}</span>
-        ) : null}
-      </p>
-    </div>
+    <Button
+      type="button"
+      variant="secondary"
+      onClick={send}
+      loading={pending}
+      aria-busy={pending}
+      className="focus-visible:ring-brand min-h-[44px] focus-visible:ring-2"
+    >
+      <Mail className="size-4" />
+      {pending ? 'Sending…' : 'Send test email'}
+    </Button>
   );
 }

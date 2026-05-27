@@ -21,10 +21,14 @@ export function EventCard({ event }: EventCardProps) {
   const sameDay = isToday(date);
 
   return (
-    <div className="border-border bg-bg-elev-1 flex items-start gap-3 rounded-lg border p-3">
+    <div className="border-divider bg-bg-elev-1 flex items-start gap-3 rounded-lg border p-3 transition-colors">
       <span
         aria-hidden
-        className={cn('mt-1.5 h-2 w-2 shrink-0 rounded-full', IMPORTANCE_DOT[event.importance])}
+        className={cn(
+          'mt-1.5 h-2 w-2 shrink-0 rounded-full',
+          IMPORTANCE_DOT[event.importance],
+          isImminent(date) && 'animate-pulse shadow-[0_0_0_3px] shadow-current/30',
+        )}
         title={`${event.importance} impact`}
       />
 
@@ -105,4 +109,9 @@ function isToday(d: Date): boolean {
     d.getMonth() === now.getMonth() &&
     d.getDate() === now.getDate()
   );
+}
+
+function isImminent(d: Date): boolean {
+  const diff = Math.abs(d.getTime() - Date.now());
+  return diff < 15 * 60_000; // ±15 minutes
 }

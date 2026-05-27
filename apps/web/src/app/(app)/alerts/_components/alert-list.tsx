@@ -1,11 +1,33 @@
 'use client';
 
-// Client list with toggle-active + delete. Uses TanStack Query so the form
-// can invalidate after creating.
+// Alerts list with FAB → Drawer for create. Uses lucide icons and toasts.
+// Empty state shows a faded BellOff with a primary CTA. Toggle/delete
+// actions use lucide icons inline.
 import type { Alert } from '@hamafx/shared';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  Activity,
+  BarChart3,
+  Bell,
+  BellOff,
+  BellRing,
+  Plus,
+  RotateCw,
+  Trash2,
+  TrendingUp,
+} from 'lucide-react';
+import { useState } from 'react';
+import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
+import {
+  Drawer,
+  DrawerContent,
+  DrawerDescription,
+  DrawerHeader,
+  DrawerTitle,
+} from '@/components/ui/drawer';
+import { Fab } from '@/components/ui/fab';
 import { cn } from '@/lib/cn';
 
 import { AlertForm } from './alert-form';
@@ -14,6 +36,8 @@ export const ALERTS_QUERY_KEY = ['alerts'] as const;
 
 export function AlertList() {
   const qc = useQueryClient();
+  const [open, setOpen] = useState(false);
+
   const { data, isLoading, isError, error } = useQuery<{ alerts: Alert[] }>({
     queryKey: ALERTS_QUERY_KEY,
     queryFn: async () => {
@@ -33,7 +57,11 @@ export function AlertList() {
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ALERTS_QUERY_KEY }),
+    onSuccess: (_, vars) => {
+      qc.invalidateQueries({ queryKey: ALERTS_QUERY_KEY });
+      toast.success(vars.active ? 'Re-armed' : 'Paused');
+    },
+    onError: (err) => toast.error('Update failed', { description: (err as Error).message }),
   });
 
   const remove = useMutation({
@@ -41,72 +69,154 @@ export function AlertList() {
       const res = await fetch(`/api/alerts/${id}`, { method: 'DELETE' });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ALERTS_QUERY_KEY }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ALERTS_QUERY_KEY });
+      toast.success('Alert deleted');
+    },
+    onError: (err) => toast.error('Delete failed', { description: (err as Error).message }),
   });
 
   return (
     <div className="flex flex-col gap-4">
-      <AlertForm onCreated={() => qc.invalidateQueries({ queryKey: ALERTS_QUERY_KEY })} />
-
       {isLoading ? (
         <p className="text-fg-muted text-xs">Loading…</p>
       ) : isError ? (
         <p className="text-bear text-xs">Failed to load: {(error as Error)?.message}</p>
       ) : data?.alerts.length === 0 ? (
-        <p className="text-fg-subtle text-xs">No alerts yet.</p>
+        <EmptyState onCreate={() => setOpen(true)} />
       ) : (
         <ul className="flex flex-col gap-2">
           {data?.alerts.map((a) => (
-            <li
+            <AlertRow
               key={a.id}
-              className={cn(
-                'border-border bg-bg-elev-1 flex items-start gap-3 rounded-lg border p-3',
-                !a.active && 'opacity-60',
-              )}
-            >
-              <span
-                aria-hidden
-                className={cn(
-                  'mt-1.5 h-2 w-2 shrink-0 rounded-full',
-                  a.active ? 'bg-bull' : a.firedAt ? 'bg-warn' : 'bg-fg-subtle',
-                )}
-                title={a.active ? 'armed' : a.firedAt ? 'fired' : 'paused'}
-              />
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium tabular-nums">{describe(a)}</p>
-                <p className="text-fg-subtle mt-0.5 truncate text-[11px]">
-                  {a.firedAt
-                    ? `fired ${formatRelative(a.firedAt)}`
-                    : `created ${formatRelative(a.createdAt)}`}
-                  {a.note ? ` · ${a.note}` : ''}
-                </p>
-              </div>
-              <div className="flex shrink-0 gap-1">
-                <Button
-                  type="button"
-                  size="sm"
-                  variant={a.active ? 'ghost' : 'secondary'}
-                  onClick={() => toggle.mutate({ id: a.id, active: !a.active })}
-                >
-                  {a.active ? 'Pause' : 'Re-arm'}
-                </Button>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => remove.mutate(a.id)}
-                  className="text-bear"
-                  aria-label="Delete alert"
-                >
-                  ✕
-                </Button>
-              </div>
-            </li>
+              alert={a}
+              onToggle={() => toggle.mutate({ id: a.id, active: !a.active })}
+              onDelete={() => remove.mutate(a.id)}
+            />
           ))}
         </ul>
       )}
+
+      <Drawer open={open} onOpenChange={setOpen}>
+        <DrawerContent>
+          <DrawerHeader>
+            <DrawerTitle>New alert</DrawerTitle>
+            <DrawerDescription>Set a price, indicator, or candle-close trigger.</DrawerDescription>
+          </DrawerHeader>
+          <AlertForm
+            onCreated={() => {
+              qc.invalidateQueries({ queryKey: ALERTS_QUERY_KEY });
+              setOpen(false);
+            }}
+          />
+        </DrawerContent>
+      </Drawer>
+
+      {data && data.alerts.length > 0 ? (
+        <Fab onClick={() => setOpen(true)} aria-label="Create alert">
+          <Plus className="size-6" />
+        </Fab>
+      ) : null}
     </div>
   );
+}
+
+interface AlertRowProps {
+  alert: Alert;
+  onToggle: () => void;
+  onDelete: () => void;
+}
+
+function AlertRow({ alert, onToggle, onDelete }: AlertRowProps) {
+  const RuleIcon = ruleIcon(alert);
+  const StatusIcon = alert.active ? Bell : alert.firedAt ? BellRing : BellOff;
+  const statusTone = alert.active ? 'text-bull' : alert.firedAt ? 'text-warn' : 'text-fg-subtle';
+
+  return (
+    <li
+      className={cn(
+        'border-divider bg-bg-elev-1 flex items-start gap-3 rounded-lg border p-3 transition-opacity',
+        !alert.active && 'opacity-70',
+      )}
+    >
+      <span
+        aria-hidden
+        className={cn(
+          'bg-bg-elev-2 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg',
+          statusTone,
+        )}
+      >
+        <StatusIcon className="size-4" />
+      </span>
+
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-1.5 text-fg text-sm font-medium tabular-nums">
+          <RuleIcon className="text-fg-muted size-3.5 shrink-0" />
+          <span className="truncate">{describe(alert)}</span>
+        </div>
+        <p className="text-fg-subtle mt-0.5 truncate text-[11px]">
+          {alert.firedAt
+            ? `fired ${formatRelative(alert.firedAt)}`
+            : `created ${formatRelative(alert.createdAt)}`}
+          {alert.note ? ` · ${alert.note}` : ''}
+        </p>
+      </div>
+
+      <div className="flex shrink-0 gap-1">
+        <Button
+          type="button"
+          size="sm"
+          variant="ghost"
+          onClick={onToggle}
+          aria-label={alert.active ? 'Pause alert' : 'Re-arm alert'}
+          className="!p-2"
+        >
+          {alert.active ? <BellOff className="size-4" /> : <RotateCw className="size-4" />}
+        </Button>
+        <Button
+          type="button"
+          size="sm"
+          variant="ghost"
+          onClick={onDelete}
+          aria-label="Delete alert"
+          className="text-bear !p-2"
+        >
+          <Trash2 className="size-4" />
+        </Button>
+      </div>
+    </li>
+  );
+}
+
+function EmptyState({ onCreate }: { onCreate: () => void }) {
+  return (
+    <div className="border-divider bg-bg-elev-1/50 flex flex-col items-center gap-4 rounded-2xl border border-dashed p-8 text-center">
+      <span className="bg-bg-elev-2 text-fg-subtle inline-flex h-16 w-16 items-center justify-center rounded-2xl">
+        <BellOff className="size-8" strokeWidth={1.5} />
+      </span>
+      <div className="flex flex-col gap-1">
+        <p className="text-fg text-base font-medium">No alerts yet</p>
+        <p className="text-fg-muted text-sm">
+          Get notified when a price level, indicator, or candle close triggers.
+        </p>
+      </div>
+      <Button type="button" onClick={onCreate}>
+        <Plus className="size-4" />
+        Create your first alert
+      </Button>
+    </div>
+  );
+}
+
+function ruleIcon(a: Alert) {
+  switch (a.rule.type) {
+    case 'priceCross':
+      return TrendingUp;
+    case 'indicatorCross':
+      return Activity;
+    case 'candleClose':
+      return BarChart3;
+  }
 }
 
 function describe(a: Alert): string {

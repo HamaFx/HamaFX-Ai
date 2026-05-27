@@ -4,16 +4,16 @@
 // component (so it can do `notFound()` based on the symbol) and delegates
 // the interactive surface to this component.
 //
-// Phase 2 added SMC overlays. The toggles live in the URL via nuqs so
-// refreshing the page keeps the chosen overlays.
-// Phase 3 added an opt-in "Pro" link to the TradingView Advanced
-// Charting Widget when NEXT_PUBLIC_TRADINGVIEW_ENABLED='1'.
+// Phase 5 polish: sticky glass sub-header below TopBar, overlay toggles
+// moved into a bottom sheet, animated price + TF picker, proper
+// loading/error/empty states (Phase 4).
 import type { Symbol } from '@hamafx/shared';
+import { Maximize2 } from 'lucide-react';
 import Link from 'next/link';
 import { useMemo } from 'react';
 
 import { Chart } from '@/components/chart/chart';
-import { OverlayToggle, useOverlayToggles } from '@/components/chart/overlay-toggle';
+import { useOverlayToggles } from '@/components/chart/overlay-toggle';
 import {
   buildOverlays,
   type OverlayPalette,
@@ -29,6 +29,7 @@ import { useTimeframe } from '@/hooks/use-tf';
 import { ChartEmpty } from './chart-empty';
 import { ChartError } from './chart-error';
 import { ChartSkeleton } from './chart-skeleton';
+import { OverlaySheet } from './overlay-sheet';
 
 const PALETTE: OverlayPalette = {
   bull: '#48d597',
@@ -42,17 +43,14 @@ export function ChartView({ symbol }: { symbol: Symbol }) {
   const [activeOverlays, toggleOverlay] = useOverlayToggles();
   const { data: candles, isLoading, error, refetch } = useCandles(symbol, tf);
 
-  // Only fetch structure when at least one overlay is on. This skips the
-  // upstream Twelve Data quota hit + DB cache write when the user just
-  // wants to see plain candles.
+  // Only fetch structure when at least one overlay is on.
   const overlaysOn = activeOverlays.length > 0;
   const { data: structure } = useStructure(symbol, tf, {
     enabled: overlaysOn,
     ...(overlaysOn ? { kinds: activeOverlays } : {}),
   });
 
-  // Reference price = previous closed bar's close. The most recent bar may
-  // still be in progress, so we use index `-2` when available.
+  // Reference price = previous closed bar's close.
   const referenceClose = useMemo(() => {
     if (!candles || candles.length < 2) return null;
     return candles.at(-2)?.c ?? null;
@@ -72,57 +70,60 @@ export function ChartView({ symbol }: { symbol: Symbol }) {
 
   const overlaySet = useMemo(() => {
     if (!structure || !candles) return null;
-    // Align the structure's bar indices to candle times.
     const times = candles.map((c) => c.t);
     return buildOverlays(structure, times, PALETTE, toggleRecord);
   }, [structure, candles, toggleRecord]);
 
   return (
-    <div className="flex flex-col gap-4">
-      <header className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-col gap-1">
-          <SymbolPicker active={symbol} />
-          <PriceTag symbol={symbol} referencePrice={referenceClose} />
-        </div>
-        <div className="flex items-center gap-2">
-          <TimeframePicker value={tf} onChange={setTf} />
-          {process.env.NEXT_PUBLIC_TRADINGVIEW_ENABLED === '1' ? (
-            <Link
-              href={`/chart/${symbol}/pro?tf=${tf}`}
-              className="border-border bg-bg-elev-2 text-fg-muted hover:text-fg focus-visible:ring-brand inline-flex h-9 min-w-[44px] items-center justify-center rounded-md border px-2 text-[11px] font-medium focus:outline-none focus-visible:ring-2"
-            >
-              Pro
-            </Link>
-          ) : null}
+    <div className="-mx-4 flex flex-col">
+      {/* Sticky glass sub-header — sits flush below the TopBar */}
+      <header className="border-divider bg-bg-elev-1/85 supports-[backdrop-filter]:bg-bg-elev-1/70 sticky top-12 z-20 border-b backdrop-blur-md">
+        <div className="flex flex-col gap-2 px-4 py-2.5">
+          <div className="flex items-center justify-between gap-3">
+            <SymbolPicker active={symbol} />
+            <PriceTag symbol={symbol} referencePrice={referenceClose} />
+          </div>
+          <div className="flex items-center justify-between gap-2">
+            <TimeframePicker value={tf} onChange={setTf} />
+            <div className="flex items-center gap-2">
+              <OverlaySheet active={activeOverlays} onToggle={toggleOverlay} />
+              {process.env.NEXT_PUBLIC_TRADINGVIEW_ENABLED === '1' ? (
+                <Link
+                  href={`/chart/${symbol}/pro?tf=${tf}`}
+                  aria-label="Pro chart"
+                  className="border-divider bg-bg-elev-2 text-fg-muted hover:text-fg focus-visible:ring-brand inline-flex h-9 w-9 items-center justify-center rounded-md border focus:outline-none focus-visible:ring-2"
+                >
+                  <Maximize2 className="size-3.5" />
+                </Link>
+              ) : null}
+            </div>
+          </div>
         </div>
       </header>
 
-      {isLoading ? (
-        <ChartSkeleton />
-      ) : error ? (
-        <ChartError error={error} onRetry={() => void refetch()} />
-      ) : !candles || candles.length === 0 ? (
-        <ChartEmpty symbol={symbol} tf={tf} onRetry={() => void refetch()} />
-      ) : (
-        <Chart symbol={symbol} tf={tf} overlays={overlaySet} />
-      )}
+      <div className="flex flex-col gap-4 px-4 py-4">
+        {isLoading ? (
+          <ChartSkeleton />
+        ) : error ? (
+          <ChartError error={error} onRetry={() => void refetch()} />
+        ) : !candles || candles.length === 0 ? (
+          <ChartEmpty symbol={symbol} tf={tf} onRetry={() => void refetch()} />
+        ) : (
+          <Chart symbol={symbol} tf={tf} overlays={overlaySet} />
+        )}
 
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <OverlayToggle active={activeOverlays} onToggle={toggleOverlay} />
         {overlaysOn ? (
-          <span className="text-fg-subtle text-[11px] tabular-nums">{summary(structure)}</span>
+          <p className="text-fg-subtle text-[11px] tabular-nums">{summary(structure)}</p>
         ) : null}
-      </div>
 
-      <p className="text-fg-subtle text-[11px]">
-        Polling at 1.5 s for price, {tf} candles refresh per server cache TTL. Source: Twelve Data
-        (primary).
-      </p>
+        <p className="text-fg-subtle text-[11px]">
+          Polling at 1.5s for price · {tf} candles per server cache TTL · Source: Twelve Data
+        </p>
+      </div>
     </div>
   );
 }
 
-/** Compact "X swings · Y FVG" summary shown next to the toggle. */
 function summary(s: ReturnType<typeof useStructure>['data']): string {
   if (!s) return '';
   const parts: string[] = [];

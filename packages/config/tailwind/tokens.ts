@@ -12,7 +12,10 @@ export const colors = {
   bg: 'oklch(15% 0.02 260)',
   bgElev1: 'oklch(18% 0.02 260)',
   bgElev2: 'oklch(22% 0.02 260)',
+  bgElev3: 'oklch(25% 0.02 260)',
   border: 'oklch(28% 0.02 260)',
+  divider: 'oklch(28% 0.01 260 / 0.6)',
+  overlay: 'oklch(8% 0.02 260 / 0.7)',
 
   // text
   fg: 'oklch(96% 0.01 260)',
@@ -37,6 +40,7 @@ export const radii = {
   sm: '6px',
   md: '10px',
   lg: '16px',
+  xl: '22px',
 } as const;
 
 export const motion = {

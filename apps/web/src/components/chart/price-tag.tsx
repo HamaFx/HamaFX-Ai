@@ -2,8 +2,15 @@
 
 // Live price readout for the chart header. Subscribes to the global price
 // poller so multiple tags on the same page share one upstream call.
-import { priceDecimals, type Symbol } from '@hamafx/shared';
+//
+// The price digits animate via `<AnimatedNumber>` (motion spring) so live
+// updates feel alive instead of snapping. Delta gets a TrendingUp/Down
+// icon for at-a-glance direction.
 
+import { priceDecimals, type Symbol } from '@hamafx/shared';
+import { Minus, TrendingDown, TrendingUp } from 'lucide-react';
+
+import { AnimatedNumber } from '@/components/ui/animated-number';
 import { usePrice } from '@/hooks/use-prices';
 import { cn } from '@/lib/cn';
 
@@ -40,24 +47,25 @@ export function PriceTag({ symbol, referencePrice, className }: PriceTagProps) {
 
   return (
     <span className={cn('flex items-baseline gap-2', className)}>
-      <span
+      <AnimatedNumber
+        value={tick.mid}
+        decimals={decimals}
         className={cn(
           'text-base font-semibold tabular-nums',
           bull && 'text-bull',
           bear && 'text-bear',
         )}
-      >
-        {tick.mid.toFixed(decimals)}
-      </span>
+      />
       {delta !== null ? (
         <span
           className={cn(
-            'text-xs tabular-nums',
+            'inline-flex items-center gap-0.5 text-xs tabular-nums',
             bull && 'text-bull',
             bear && 'text-bear',
             !bull && !bear && 'text-fg-muted',
           )}
         >
+          {bull ? <TrendingUp className="size-3" /> : bear ? <TrendingDown className="size-3" /> : <Minus className="size-3" />}
           {delta >= 0 ? '+' : ''}
           {delta.toFixed(decimals)}
         </span>

@@ -15,8 +15,9 @@ export function TopBar({ title, right }: TopBarProps) {
   return (
     <header
       className={cn(
-        'border-border bg-bg-elev-1/90 sticky top-0 z-30 border-b backdrop-blur',
-        'pt-[env(safe-area-inset-top)]',
+        'border-divider bg-bg-elev-1/85 sticky top-0 z-30 border-b',
+        'pt-[env(safe-area-inset-top)] backdrop-blur-md',
+        'supports-[backdrop-filter]:bg-bg-elev-1/70',
       )}
     >
       <div className="mx-auto flex h-12 max-w-2xl items-center justify-between gap-3 px-4">

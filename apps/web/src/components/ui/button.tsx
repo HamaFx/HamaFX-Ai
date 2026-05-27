@@ -1,3 +1,10 @@
+'use client';
+
+// Tap-responsive button. The whileTap scale-down comes from motion's
+// domAnimation features (already loaded by MotionRoot). Variants and sizes
+// match the original Tailwind-only button — visual API is stable.
+
+import { m } from 'motion/react';
 import { forwardRef, type ButtonHTMLAttributes } from 'react';
 
 import { cn } from '@/lib/cn';
@@ -25,25 +32,36 @@ const sizes: Record<Size, string> = {
 };
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(
-  { className, variant = 'primary', size = 'md', loading, disabled, children, ...rest },
+  { className, variant = 'primary', size = 'md', loading, disabled, children, type = 'button', ...rest },
   ref,
 ) {
+  const isDisabled = disabled || loading || false;
+  // Strip undefined entries — motion's HTMLMotionProps rejects exactOptionalPropertyTypes mismatches.
+  const cleanRest: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(rest)) {
+    if (v !== undefined) cleanRest[k] = v;
+  }
+  const motionProps: Record<string, unknown> = {
+    ref,
+    type,
+    disabled: isDisabled,
+    transition: { type: 'spring', stiffness: 400, damping: 30 },
+    className: cn(
+      'inline-flex items-center justify-center gap-2 rounded-md font-medium',
+      'transition-[background,opacity,transform] duration-150',
+      'disabled:cursor-not-allowed disabled:opacity-60',
+      variants[variant],
+      sizes[size],
+      className,
+    ),
+    ...cleanRest,
+  };
+  if (!isDisabled) motionProps.whileTap = { scale: 0.97 };
   return (
-    <button
-      ref={ref}
-      disabled={disabled || loading}
-      className={cn(
-        'inline-flex items-center justify-center gap-2 rounded-md font-medium',
-        'duration-140 transition-[background,opacity,transform]',
-        'disabled:cursor-not-allowed disabled:opacity-60',
-        variants[variant],
-        sizes[size],
-        className,
-      )}
-      {...rest}
-    >
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    <m.button {...(motionProps as any)}>
       {loading ? <span aria-hidden="true">…</span> : null}
       {children}
-    </button>
+    </m.button>
   );
 });

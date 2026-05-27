@@ -2,8 +2,10 @@
 
 // New journal-entry form. Mobile-first: stacked, tap targets >= 44px.
 // We require symbol/side/entry; stop/target/size/notes are optional.
+// Phase 5: rendered inside a Drawer; outer card wrapping dropped.
 import { SYMBOLS, type Symbol, type TradeSide } from '@hamafx/shared';
 import { useState } from 'react';
+import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -65,21 +67,19 @@ export function EntryForm({ onCreated }: EntryFormProps) {
       setTarget('');
       setSize('');
       setNotes('');
+      toast.success('Trade logged', { description: `${symbol} ${side} @ ${parsed.entry}` });
       onCreated?.();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Create failed');
+      const message = err instanceof Error ? err.message : 'Create failed';
+      toast.error('Save failed', { description: message });
+      setError(message);
     } finally {
       setBusy(false);
     }
   }
 
   return (
-    <form
-      onSubmit={submit}
-      className="border-border bg-bg-elev-1 flex flex-col gap-3 rounded-lg border p-3"
-    >
-      <h2 className="text-sm font-semibold">Log trade</h2>
-
+    <form onSubmit={submit} className="flex flex-col gap-3 px-4 pb-2">
       <div className="flex gap-2">
         <Pills<Symbol>
           value={symbol}
@@ -120,7 +120,7 @@ export function EntryForm({ onCreated }: EntryFormProps) {
 
       {error ? <p className="text-bear text-xs">{error}</p> : null}
 
-      <Button type="submit" size="sm" disabled={busy || !entry}>
+      <Button type="submit" size="md" disabled={busy || !entry}>
         {busy ? 'Saving…' : 'Save entry'}
       </Button>
     </form>

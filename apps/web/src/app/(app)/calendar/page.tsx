@@ -38,7 +38,7 @@ export default async function CalendarPage() {
         <div className="flex flex-col gap-4">
           {[...groups.entries()].map(([day, items]) => (
             <section key={day} className="flex flex-col gap-2">
-              <h2 className="text-fg-subtle px-1 text-xs uppercase tracking-wide">
+              <h2 className="bg-bg/95 supports-[backdrop-filter]:bg-bg/70 text-fg-subtle sticky top-12 z-10 -mx-4 px-5 py-2 text-xs font-medium uppercase tracking-wide backdrop-blur-md">
                 {dayLabel(day)}
               </h2>
               <ul className="flex flex-col gap-2">
@@ -67,7 +67,7 @@ function dayLabel(iso: string): string {
 
 function EmptyState() {
   return (
-    <div className="text-fg-muted border-border flex flex-col items-center gap-3 rounded-lg border border-dashed p-6 text-center text-sm">
+    <div className="text-fg-muted border-divider flex flex-col items-center gap-3 rounded-lg border border-dashed p-6 text-center text-sm">
       <p className="font-medium">No events scheduled in the next 14 days.</p>
       <p className="text-fg-subtle text-xs">
         The cron fires every 15 minutes. Tap below to trigger manually.

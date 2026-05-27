@@ -44,8 +44,18 @@ export function MessageList({ messages, isStreaming }: MessageListProps) {
         messages.map((m) => <Message key={m.id} message={m} />)
       )}
       {isStreaming ? (
-        <div className="text-fg-subtle px-3 text-xs">
-          <span className="inline-block animate-pulse">●●●</span>
+        <div className="flex justify-start">
+          <div className="bg-bg-elev-1 flex items-center gap-1 rounded-2xl rounded-bl-sm px-3.5 py-2.5">
+            <span className="bg-fg-muted size-1.5 animate-pulse rounded-full" />
+            <span
+              className="bg-fg-muted size-1.5 animate-pulse rounded-full"
+              style={{ animationDelay: '150ms' }}
+            />
+            <span
+              className="bg-fg-muted size-1.5 animate-pulse rounded-full"
+              style={{ animationDelay: '300ms' }}
+            />
+          </div>
         </div>
       ) : null}
       <div ref={bottomRef} aria-hidden />

@@ -15,7 +15,10 @@
   --color-bg: oklch(15% 0.02 260);
   --color-bg-elev-1: oklch(18% 0.02 260);
   --color-bg-elev-2: oklch(22% 0.02 260);
+  --color-bg-elev-3: oklch(25% 0.02 260);
   --color-border: oklch(28% 0.02 260);
+  --color-divider: oklch(28% 0.01 260 / 0.6);
+  --color-overlay: oklch(8% 0.02 260 / 0.7);
 
   /* text */
   --color-fg: oklch(96% 0.01 260);
@@ -37,10 +40,11 @@
   --radius-sm: 6px;
   --radius-md: 10px;
   --radius-lg: 16px;
+  --radius-xl: 22px;
 
   /* fonts */
-  --font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-sans: var(--font-sans), system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: var(--font-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
 
   /* motion */
   --ease-organic: cubic-bezier(0.2, 0.8, 0.2, 1);
@@ -51,7 +55,10 @@
   --color-bg: oklch(99% 0.005 260);
   --color-bg-elev-1: oklch(96% 0.005 260);
   --color-bg-elev-2: oklch(94% 0.005 260);
+  --color-bg-elev-3: oklch(92% 0.005 260);
   --color-border: oklch(88% 0.005 260);
+  --color-divider: oklch(88% 0.005 260 / 0.6);
+  --color-overlay: oklch(50% 0.02 260 / 0.5);
   --color-fg: oklch(22% 0.02 260);
   --color-fg-muted: oklch(45% 0.02 260);
   --color-fg-subtle: oklch(48% 0.02 260);
@@ -83,8 +90,47 @@
     border-radius: var(--radius-sm);
   }
 
-  /* Mobile: respect safe-area insets at the bottom (gestures / home indicator). */
-  body {
-    padding-bottom: env(safe-area-inset-bottom);
+  /* Hide scrollbars on mobile (gestures preferred); keep on desktop. */
+  @media (max-width: 767px) {
+    .scrollbar-hide {
+      scrollbar-width: none;
+    }
+    .scrollbar-hide::-webkit-scrollbar {
+      display: none;
+    }
+  }
+}
+
+/* -------------------------------------------------------------------------
+ * Utilities — safe-area helpers + reduced-motion overrides
+ * ------------------------------------------------------------------------- */
+@utility pt-safe {
+  padding-top: env(safe-area-inset-top);
+}
+@utility pb-safe {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+@utility pl-safe {
+  padding-left: env(safe-area-inset-left);
+}
+@utility pr-safe {
+  padding-right: env(safe-area-inset-right);
+}
+@utility bottom-safe {
+  bottom: env(safe-area-inset-bottom);
+}
+@utility top-safe {
+  top: env(safe-area-inset-top);
+}
+
+/* Respect prefers-reduced-motion globally. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

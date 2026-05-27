@@ -20,8 +20,10 @@ export function Message({ message }: MessageProps) {
     <div className={cn('flex w-full', isUser ? 'justify-end' : 'justify-start')}>
       <div
         className={cn(
-          'flex max-w-[85%] flex-col gap-1.5 rounded-lg px-3 py-2',
-          isUser ? 'bg-brand text-brand-fg' : 'bg-bg-elev-1 text-fg',
+          'flex max-w-[85%] flex-col gap-1.5 px-3.5 py-2.5',
+          isUser
+            ? 'bg-brand text-brand-fg rounded-2xl rounded-br-sm'
+            : 'bg-bg-elev-1 text-fg rounded-2xl rounded-bl-sm',
         )}
       >
         {message.parts.map((part, idx) => renderPart(part, idx, message.role))}
