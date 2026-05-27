@@ -45,6 +45,10 @@ interface ChatScreenProps {
   initialMessages: UIMessage[];
   initialThreads: ThreadSummary[];
   pinnedSymbol: 'XAUUSD' | 'EURUSD' | 'GBPUSD' | null;
+  /** Optional prompt to auto-submit on mount. Used by deep-link
+   *  affordances elsewhere in the app (Ask AI from a news article or
+   *  calendar event). Sent at most once per thread. */
+  autoSubmitPrompt?: string | null;
 }
 
 export function ChatScreen({
@@ -53,8 +57,10 @@ export function ChatScreen({
   initialMessages,
   initialThreads,
   pinnedSymbol,
+  autoSubmitPrompt,
 }: ChatScreenProps) {
   const lastUserTextRef = useRef<string>('');
+  const autoSubmittedRef = useRef<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const [showScrollDown, setShowScrollDown] = useState(false);
   const [title, setTitle] = useState(initialTitle);
@@ -87,6 +93,18 @@ export function ChatScreen({
     }
     return undefined;
   }, [messages]);
+
+  // Auto-submit a prompt passed via ?prompt= (Ask AI deep links).
+  // Fires once per thread, only on a fresh thread, never during streaming.
+  useEffect(() => {
+    if (!autoSubmitPrompt) return;
+    if (autoSubmittedRef.current === threadId) return;
+    if (messages.length > 0) return;
+    if (isStreaming) return;
+    autoSubmittedRef.current = threadId;
+    lastUserTextRef.current = autoSubmitPrompt;
+    void sendMessage({ text: autoSubmitPrompt });
+  }, [autoSubmitPrompt, threadId, messages.length, isStreaming, sendMessage]);
 
   // After streaming completes, re-fetch thread to pick up the LLM-
   // generated title.

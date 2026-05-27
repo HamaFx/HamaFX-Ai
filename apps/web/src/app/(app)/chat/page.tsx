@@ -1,18 +1,31 @@
-// /chat — landing page.
-// Behaviour:
-//   - If there are existing threads, redirect to the most recently used one.
-//   - Otherwise create a fresh thread and redirect to it.
+// /chat — landing route.
 //
-// We do this at the route level (not inside the chat surface) so the URL is
-// always canonical for a thread; refreshing /chat keeps you on the same
-// thread between visits.
+// Behaviour:
+//   - With ?prompt=… → always create a fresh thread and forward the
+//     prompt as a query param so the chat surface auto-sends it once
+//     the page mounts. Used by "Ask AI" affordances elsewhere
+//     (article cards, calendar events) to drop the user straight into
+//     a conversation about the thing they tapped.
+//   - Otherwise → redirect to the most recently used thread, or create
+//     a fresh one if none exist.
 
 import { createThread, listThreads } from '@hamafx/ai';
 import { redirect } from 'next/navigation';
 
 export const dynamic = 'force-dynamic';
 
-export default async function ChatLanding() {
+interface PageProps {
+  searchParams: Promise<{ prompt?: string }>;
+}
+
+export default async function ChatLanding({ searchParams }: PageProps) {
+  const { prompt } = await searchParams;
+
+  if (prompt && prompt.trim().length > 0) {
+    const fresh = await createThread();
+    redirect(`/chat/${fresh.id}?prompt=${encodeURIComponent(prompt)}`);
+  }
+
   const threads = await listThreads(1);
   const target = threads[0] ?? (await createThread());
   redirect(`/chat/${target.id}`);

@@ -1,24 +1,25 @@
 // /news — server-rendered list of recent articles tagged for our scope.
-// Reads via @hamafx/ai's `listRecentArticles` (Postgres-backed, populated by
-// /api/cron/news) so the page is fast even on cold start.
+// The page itself is a thin server wrapper: fetch + render the
+// SentimentSummary above the interactive <NewsView/> client component.
 
 import { listRecentArticles } from '@hamafx/ai';
 import { Newspaper } from 'lucide-react';
 import type { Metadata } from 'next';
 
 import { PageHeader } from '@/components/layout/page-header';
-import { ArticleCard } from '@/components/news/article-card';
-import { LiveTimestamp } from '@/components/news/live-timestamp';
 import { EmptyState } from '@/components/ui/empty-state';
 
 import { RefreshButton } from './_components/refresh-button';
+import { NewsView } from './_components/news-view';
+import { SentimentSummary } from './_components/sentiment-summary';
 
 export const metadata: Metadata = { title: 'News' };
 export const dynamic = 'force-dynamic';
 
 export default async function NewsPage() {
-  const articles = await listRecentArticles(50);
-  const lastUpdated = articles.length > 0 ? articles[0]!.publishedAt : null;
+  // Larger window now that the page can filter — gives the user real
+  // breadth to slice through.
+  const articles = await listRecentArticles(120);
 
   return (
     <div className="flex flex-col gap-4">
@@ -26,10 +27,6 @@ export default async function NewsPage() {
         title="News"
         description="Headlines tagged for XAU / EUR / GBP / USD — Finnhub primary, Marketaux fallback."
       />
-
-      {lastUpdated ? (
-        <LiveTimestamp ms={lastUpdated} prefix="Latest:" className="text-fg-subtle text-xs" />
-      ) : null}
 
       {articles.length === 0 ? (
         <EmptyState
@@ -40,13 +37,10 @@ export default async function NewsPage() {
           action={<RefreshButton endpoint="/api/cron/news" />}
         />
       ) : (
-        <ul className="flex flex-col gap-3">
-          {articles.map((a) => (
-            <li key={a.id}>
-              <ArticleCard article={a} />
-            </li>
-          ))}
-        </ul>
+        <>
+          <SentimentSummary articles={articles} />
+          <NewsView initialArticles={articles} />
+        </>
       )}
     </div>
   );

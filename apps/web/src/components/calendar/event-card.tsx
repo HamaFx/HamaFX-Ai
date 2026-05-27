@@ -1,12 +1,28 @@
-// Calendar event — premium glass card with importance dot, currency
-// chip, animated pulse for imminent events.
+'use client';
+
+// Calendar event card — premium, scannable, action-rich.
 //
-// Mobile-first geometry: card padding p-4 (16), gap-3 (12) between dot and
-// content, gap-2 (8) between title and meta. Importance dot is a 16×16
-// disc with the ▲/■/• glyph centered inside, replacing the previous
-// fragile dot-plus-absolute-symbol composition.
+// Layout:
+//
+//   ┌────────────────────────────────────────┐
+//   │ [▲]  USD · United States · 14:30 EST   │  meta strip
+//   │      in 4h 22m                          │  countdown
+//   │                                         │
+//   │ Big title (clamped 2)                   │  text-base, semibold
+//   │                                         │
+//   │ Forecast 0.3 · Prev 0.2 · Actual —      │  data row
+//   │                                         │
+//   │ ✦ Ask AI · 🔔 Remind me                │  action row (when future)
+//   └────────────────────────────────────────┘
+//
+// Vertical accent ribbon on the left encodes importance: red = high,
+// amber = medium, neutral = low. Same scannability cue as the news cards.
 
 import type { EconomicEvent } from '@hamafx/shared';
+import { Bell, Sparkles } from 'lucide-react';
+import Link from 'next/link';
+import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 
 import { cn } from '@/lib/cn';
 
@@ -16,94 +32,163 @@ interface EventCardProps {
 
 const IMPORTANCE: Record<
   EconomicEvent['importance'],
-  { ring: string; dot: string; symbol: string; label: string; symbolColor: string }
+  { ribbon: string; label: string; glyph: string; chipBg: string; chipText: string }
 > = {
   high: {
-    ring: 'ring-bear/30',
-    dot: 'bg-bear/15',
-    symbolColor: 'text-bear',
-    symbol: '▲',
+    ribbon: 'oklch(70% 0.22 25)',
     label: 'High impact',
+    glyph: '▲',
+    chipBg: 'bg-bear/10 ring-bear/30',
+    chipText: 'text-bear',
   },
   medium: {
-    ring: 'ring-warn/30',
-    dot: 'bg-warn/15',
-    symbolColor: 'text-warn',
-    symbol: '■',
+    ribbon: 'oklch(82% 0.14 80)',
     label: 'Medium impact',
+    glyph: '■',
+    chipBg: 'bg-warn/10 ring-warn/30',
+    chipText: 'text-warn',
   },
   low: {
-    ring: 'ring-divider',
-    dot: 'bg-bg-elev-2',
-    symbolColor: 'text-fg-subtle',
-    symbol: '•',
+    ribbon: 'oklch(28% 0 0)',
     label: 'Low impact',
+    glyph: '•',
+    chipBg: 'bg-bg-elev-2 ring-divider',
+    chipText: 'text-fg-subtle',
   },
 };
 
 export function EventCard({ event }: EventCardProps) {
+  const now = useNowTick();
   const date = new Date(event.date);
-  const sameDay = isToday(date);
   const importance = IMPORTANCE[event.importance];
+  const isFuture = event.date > now;
+  const isImminent = isFuture && event.date - now < 60 * 60_000;
+
+  const askPrompt = encodeURIComponent(
+    `What does ${event.title} (${event.currency ?? event.country}) at ${date.toUTCString()} usually mean for ${event.currency ?? 'USD'} and gold?`,
+  );
 
   return (
-    <div className="card-premium flex items-start gap-3 p-4">
+    <article
+      className={cn(
+        'card-premium relative overflow-hidden transition-colors duration-200',
+        isImminent && 'ring-warn/30 ring-1',
+      )}
+    >
+      {/* Importance ribbon */}
       <span
-        className={cn(
-          'mt-0.5 inline-flex size-6 shrink-0 items-center justify-center rounded-full ring-1',
-          importance.ring,
-          importance.dot,
-        )}
-        title={importance.label}
-      >
-        <span aria-hidden className={cn('text-[10px] leading-none', importance.symbolColor)}>
-          {importance.symbol}
-        </span>
-        <span className="sr-only">{importance.label}</span>
-      </span>
+        aria-hidden="true"
+        className="absolute inset-y-0 left-0 w-1"
+        style={{ background: importance.ribbon }}
+      />
 
-      <div className="min-w-0 flex-1">
-        <h3 className="text-fg text-sm font-semibold leading-snug">{event.title}</h3>
-
-        <div className="text-fg-subtle mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs tabular-nums">
-          {event.currency ? (
-            <span className="bg-bg-elev-2 text-fg-muted ring-divider rounded px-1.5 py-0.5 text-[10px] font-medium uppercase ring-1">
-              {event.currency}
-            </span>
-          ) : null}
-          <span className="font-medium">{event.country}</span>
-          <span aria-hidden className="opacity-50">·</span>
-          <time dateTime={date.toISOString()}>
-            {sameDay ? `today ${timeLabel(date)}` : `${dateLabel(date)} ${timeLabel(date)}`}
+      <div className="flex flex-col gap-3 px-4 py-3.5 pl-5">
+        {/* Meta strip */}
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] tabular-nums">
+          <span
+            className={cn(
+              'inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 font-bold uppercase ring-1',
+              importance.chipBg,
+              importance.chipText,
+            )}
+            title={importance.label}
+          >
+            <span aria-hidden>{importance.glyph}</span>
+            <span className="sr-only">{importance.label}</span>
+            {event.currency ?? event.country}
+          </span>
+          <span className="text-fg-muted">{event.country}</span>
+          <span aria-hidden className="text-fg-subtle opacity-50">·</span>
+          <time dateTime={date.toISOString()} className="text-fg-muted">
+            {timeLabel(date)}
           </time>
+          {isFuture ? (
+            <>
+              <span aria-hidden className="text-fg-subtle opacity-50">·</span>
+              <Countdown ms={event.date - now} imminent={isImminent} />
+            </>
+          ) : event.actual !== null ? (
+            <>
+              <span aria-hidden className="text-fg-subtle opacity-50">·</span>
+              <span className="text-fg-subtle">released</span>
+            </>
+          ) : null}
         </div>
 
+        {/* Title */}
+        <h3 className="text-fg line-clamp-2 text-[15px] font-semibold leading-snug">
+          {event.title}
+        </h3>
+
+        {/* Numbers — actual / forecast / previous in proper data hierarchy */}
         {(event.actual !== null || event.forecast !== null || event.previous !== null) && (
-          <dl className="text-fg-muted mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs tabular-nums">
-            {event.actual !== null && (
-              <Stat label="actual" value={event.actual} unit={event.unit} />
-            )}
-            {event.forecast !== null && (
-              <Stat label="forecast" value={event.forecast} unit={event.unit} />
-            )}
-            {event.actual !== null && event.forecast !== null && (
-              <BeatMiss actual={event.actual} forecast={event.forecast} />
-            )}
-            {event.previous !== null && (
-              <Stat label="prev" value={event.previous} unit={event.unit} />
-            )}
-          </dl>
+          <DataRow event={event} />
         )}
       </div>
-    </div>
+
+      {/* Action row — only render when it would be useful */}
+      {isFuture ? (
+        <div className="border-divider/60 flex items-center justify-between gap-2 border-t px-3 py-2">
+          <Link
+            href={`/chat?prompt=${askPrompt}`}
+            className="text-fg-muted hover:text-brand inline-flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-xs font-medium transition-colors"
+          >
+            <Sparkles className="size-3.5" />
+            Ask AI
+          </Link>
+          <RemindButton event={event} />
+        </div>
+      ) : null}
+    </article>
   );
 }
 
-function Stat({ label, value, unit }: { label: string; value: number; unit: string | null }) {
+// ---------------------------------------------------------------------------
+
+function DataRow({ event }: { event: EconomicEvent }) {
+  const beat = beatMiss(event);
+  return (
+    <dl className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[11px] tabular-nums">
+      {event.actual !== null && (
+        <Stat label="actual" value={event.actual} unit={event.unit} emphasis />
+      )}
+      {event.forecast !== null && (
+        <Stat label="forecast" value={event.forecast} unit={event.unit} />
+      )}
+      {event.previous !== null && (
+        <Stat label="prev" value={event.previous} unit={event.unit} />
+      )}
+      {beat ? (
+        <span
+          className={cn(
+            'ml-auto inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold ring-1',
+            beat === 'beat'
+              ? 'bg-bull/15 text-bull ring-bull/30'
+              : 'bg-bear/15 text-bear ring-bear/30',
+          )}
+        >
+          {beat === 'beat' ? '▲ beat' : '▼ miss'}
+        </span>
+      ) : null}
+    </dl>
+  );
+}
+
+function Stat({
+  label,
+  value,
+  unit,
+  emphasis,
+}: {
+  label: string;
+  value: number;
+  unit: string | null;
+  emphasis?: boolean;
+}) {
   return (
     <span className="flex items-baseline gap-1">
       <dt className="text-fg-subtle text-[10px] uppercase tracking-wide">{label}</dt>
-      <dd className="text-fg font-semibold">
+      <dd className={cn('font-semibold', emphasis ? 'text-fg' : 'text-fg-muted')}>
         {value}
         {unit ? <span className="text-fg-subtle ml-0.5 font-normal">{unit}</span> : null}
       </dd>
@@ -111,18 +196,25 @@ function Stat({ label, value, unit }: { label: string; value: number; unit: stri
   );
 }
 
-function BeatMiss({ actual, forecast }: { actual: number; forecast: number }) {
-  const delta = actual - forecast;
+function beatMiss(event: EconomicEvent): 'beat' | 'miss' | null {
+  if (event.actual === null || event.forecast === null) return null;
+  const delta = event.actual - event.forecast;
   if (delta === 0) return null;
-  const beat = delta > 0;
+  return delta > 0 ? 'beat' : 'miss';
+}
+
+function Countdown({ ms, imminent }: { ms: number; imminent: boolean }) {
+  if (ms <= 0) return <span className="text-bear font-semibold">Live now</span>;
+  const d = Math.floor(ms / (24 * 60 * 60_000));
+  const h = Math.floor((ms % (24 * 60 * 60_000)) / (60 * 60_000));
+  const m = Math.floor((ms % (60 * 60_000)) / 60_000);
+  const text =
+    d > 0 ? `in ${d}d ${h}h` : h > 0 ? `in ${h}h ${m}m` : `in ${m}m`;
   return (
     <span
-      className={cn(
-        'inline-flex items-center gap-0.5 rounded-full px-2 py-0.5 text-[10px] font-semibold ring-1',
-        beat ? 'bg-bull/15 text-bull ring-bull/30' : 'bg-bear/15 text-bear ring-bear/30',
-      )}
+      className={cn('font-semibold', imminent ? 'text-warn' : 'text-fg')}
     >
-      {beat ? '▲ beat' : '▼ miss'}
+      {text}
     </span>
   );
 }
@@ -134,14 +226,78 @@ function timeLabel(d: Date): string {
     timeZoneName: 'short',
   });
 }
-function dateLabel(d: Date): string {
-  return d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+
+function useNowTick(): number {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), 60_000);
+    return () => clearInterval(id);
+  }, []);
+  return now;
 }
-function isToday(d: Date): boolean {
-  const now = new Date();
+
+// ---------------------------------------------------------------------------
+// Local "Remind me" using the Notifications API. Personal app, no server
+// reminders queue — but a one-shot setTimeout fires a system notification
+// 5 minutes before the event so the user has time to flatten / sit out.
+
+function RemindButton({ event }: { event: EconomicEvent }) {
+  const [armed, setArmed] = useState(false);
+
+  async function arm() {
+    if (typeof window === 'undefined' || !('Notification' in window)) {
+      toast.error('Notifications unsupported on this device');
+      return;
+    }
+    let permission = Notification.permission;
+    if (permission === 'default') {
+      permission = await Notification.requestPermission();
+    }
+    if (permission !== 'granted') {
+      toast.error('Notifications denied', {
+        description: 'Enable notifications in your browser settings to set reminders.',
+      });
+      return;
+    }
+
+    const fireAt = event.date - 5 * 60_000;
+    const ms = fireAt - Date.now();
+    if (ms <= 0) {
+      toast.error('Too close to the event for a 5-minute reminder');
+      return;
+    }
+    setArmed(true);
+    toast.success('Reminder set', {
+      description: `5 minutes before ${event.title}`,
+    });
+    window.setTimeout(() => {
+      try {
+        new Notification(event.title, {
+          body: `${event.country} · ${timeLabel(new Date(event.date))} — in 5 minutes`,
+          icon: '/icons/icon-192.png',
+          tag: `cal-${event.id}`,
+        });
+      } catch {
+        /* tab gone */
+      }
+    }, ms);
+  }
+
   return (
-    d.getFullYear() === now.getFullYear() &&
-    d.getMonth() === now.getMonth() &&
-    d.getDate() === now.getDate()
+    <button
+      type="button"
+      onClick={arm}
+      disabled={armed}
+      aria-pressed={armed}
+      className={cn(
+        'inline-flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-xs font-medium transition-colors',
+        armed
+          ? 'text-brand bg-brand/10'
+          : 'text-fg-muted hover:text-fg hover:bg-bg-elev-2',
+      )}
+    >
+      <Bell className={cn('size-3.5', armed && 'fill-current')} />
+      {armed ? 'Reminded' : 'Remind me'}
+    </button>
   );
 }

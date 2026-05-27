@@ -2,8 +2,11 @@
 //
 // Server component: validates the thread, hydrates the message history from
 // Postgres, then hands off to the client `<ChatScreen>` for the streaming
-// `useChat` experience. No PageHeader; the chat takes the full visible
-// area and provides its own merged top bar.
+// `useChat` experience.
+//
+// `?prompt=` is honoured for "Ask AI" deep-links from elsewhere in the
+// app (article cards, calendar events). The chat surface auto-sends the
+// prompt once it mounts.
 
 import { getThread, listMessages, listThreads } from '@hamafx/ai';
 import type { Metadata } from 'next';
@@ -15,6 +18,7 @@ export const dynamic = 'force-dynamic';
 
 interface PageProps {
   params: Promise<{ threadId: string }>;
+  searchParams: Promise<{ prompt?: string }>;
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -24,8 +28,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   return { title: display };
 }
 
-export default async function ChatThreadPage({ params }: PageProps) {
+export default async function ChatThreadPage({ params, searchParams }: PageProps) {
   const { threadId } = await params;
+  const { prompt } = await searchParams;
 
   const [thread, dbMessages, allThreads] = await Promise.all([
     getThread(threadId),
@@ -59,6 +64,7 @@ export default async function ChatThreadPage({ params }: PageProps) {
         updatedAt: t.updatedAt,
       }))}
       pinnedSymbol={thread.pinnedSymbol}
+      autoSubmitPrompt={prompt && prompt.trim().length > 0 ? prompt : null}
     />
   );
 }
