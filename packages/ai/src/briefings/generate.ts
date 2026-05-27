@@ -215,17 +215,22 @@ const WEEKLY_REVIEW_KEY = 'weekly_review';
 
 export async function emitWeeklyReview(): Promise<{ emitted: boolean; reason?: string }> {
   const env = envFromProcess();
+  console.log('[wr] step:start');
   const thread = await getOrCreateBriefingsThread();
+  console.log('[wr] step:thread', thread.id);
 
   // Idempotency for the weekly review is keyed on the ISO week boundary
   // so re-running on the same Sunday is a no-op but next Sunday still fires.
   const weekKey = `${WEEKLY_REVIEW_KEY}:${isoWeekKey(new Date())}`;
   if (await wasEmitted(weekKey, 'weekly_review')) {
+    console.log('[wr] step:already-emitted');
     return { emitted: false, reason: 'already_emitted_this_week' };
   }
+  console.log('[wr] step:after-wasEmitted');
 
   const sinceMs = Date.now() - 7 * 24 * 60 * 60 * 1000;
   const stats = await computeStats({ sinceMs });
+  console.log('[wr] step:after-computeStats count=', stats.count);
   if (stats.count === 0) {
     const text = 'No journal entries in the last 7 days. Nothing to review — go log a trade.';
     const ui = {
