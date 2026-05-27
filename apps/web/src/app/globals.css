@@ -389,6 +389,18 @@
   }
 }
 
+/* User-forced reduced motion (settings preference). Mirrors the OS-level
+ * media query above so the rest of the codebase doesn't need to know
+ * about this toggle. Set on <html> by the preferences card. */
+html[data-reduce-motion='force'] *,
+html[data-reduce-motion='force'] *::before,
+html[data-reduce-motion='force'] *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}
+
 /* -------------------------------------------------------------------------
  * Markdown-light: applies to chat/parts/text.tsx output.
  * ------------------------------------------------------------------------- */

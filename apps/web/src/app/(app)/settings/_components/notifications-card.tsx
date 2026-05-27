@@ -1,0 +1,117 @@
+// Notifications card — Email / Telegram / Web push, in one structured
+// list with status indicators. Server component; the action islands are
+// the existing Test*Button / EnableWebPushButton client components.
+
+import { listPushSubscriptions } from '@hamafx/ai';
+import { Bell, Mail, Send } from 'lucide-react';
+
+import { cn } from '@/lib/cn';
+
+import { EnableWebPushButton } from './enable-web-push-button';
+import { TestEmailButton } from './test-email-button';
+import { TestTelegramButton } from './test-telegram-button';
+import { SettingsRow } from './settings-row';
+
+export async function NotificationsCard() {
+  const env = process.env;
+  const emailReady = Boolean(env.RESEND_API_KEY) && Boolean(env.ALERT_FROM_EMAIL);
+  const telegramReady = Boolean(env.TELEGRAM_BOT_TOKEN) && Boolean(env.TELEGRAM_CHAT_ID);
+  const pushReady = Boolean(env.VAPID_PUBLIC_KEY) && Boolean(env.VAPID_PRIVATE_KEY);
+
+  let pushDevices = 0;
+  try {
+    const subs = await listPushSubscriptions();
+    pushDevices = subs.length;
+  } catch {
+    /* db not reachable; render the rest anyway */
+  }
+
+  return (
+    <section
+      aria-labelledby="notifications-heading"
+      className="card-premium flex flex-col gap-1 p-4"
+    >
+      <header className="flex items-center gap-3 pb-2">
+        <h2
+          id="notifications-heading"
+          className="text-fg text-base font-semibold tracking-tight"
+        >
+          Notifications
+        </h2>
+        <p className="text-fg-subtle ml-auto text-[10px] uppercase tracking-wider">
+          Test channels
+        </p>
+      </header>
+
+      <SettingsRow
+        icon={<Mail className="size-4" />}
+        iconColor="oklch(78% 0.16 78 / 0.18)"
+        label="Email"
+        description={
+          <span className="flex items-center gap-2">
+            <StatusPill ready={emailReady} />
+            <span>One-off test through Resend</span>
+          </span>
+        }
+        stack
+        action={<TestEmailButton />}
+      />
+
+      <RowDivider />
+
+      <SettingsRow
+        icon={<Send className="size-4" />}
+        iconColor="oklch(74% 0.14 230 / 0.18)"
+        label="Telegram"
+        description={
+          <span className="flex items-center gap-2">
+            <StatusPill ready={telegramReady} />
+            <span>Send a test message to your bot</span>
+          </span>
+        }
+        stack
+        action={<TestTelegramButton />}
+      />
+
+      <RowDivider />
+
+      <SettingsRow
+        icon={<Bell className="size-4" />}
+        iconColor="oklch(70% 0.14 285 / 0.18)"
+        label="Web push"
+        description={
+          <span className="flex items-center gap-2">
+            <StatusPill ready={pushReady} />
+            <span>
+              {pushReady
+                ? `${pushDevices} device${pushDevices === 1 ? '' : 's'} subscribed`
+                : 'VAPID keys not configured'}
+            </span>
+          </span>
+        }
+        stack
+        action={<EnableWebPushButton />}
+      />
+    </section>
+  );
+}
+
+function RowDivider() {
+  return <div className="border-divider/60 -mx-4 my-1 border-t" />;
+}
+
+function StatusPill({ ready }: { ready: boolean }) {
+  return (
+    <span
+      className={cn(
+        'inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[9px] font-bold uppercase tabular-nums ring-1',
+        ready
+          ? 'bg-bull/10 text-bull ring-bull/30'
+          : 'bg-bg-elev-2 text-fg-subtle ring-divider',
+      )}
+    >
+      <span aria-hidden className={ready ? 'bg-bull size-1 rounded-full' : 'bg-fg-subtle size-1 rounded-full'} />
+      {ready ? 'Ready' : 'Off'}
+    </span>
+  );
+}
