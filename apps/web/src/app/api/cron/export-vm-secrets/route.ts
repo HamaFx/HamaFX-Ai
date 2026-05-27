@@ -1,4 +1,4 @@
-// GET /api/cron/_export-vm-secrets — one-shot route used while migrating
+// GET /api/cron/export-vm-secrets — one-shot route used while migrating
 // production secrets onto the GCE worker VM. Vercel CLI's `env pull` only
 // returns system bindings, not user-encrypted values, so the only way to
 // move them off Vercel without touching the dashboard manually is to
@@ -53,7 +53,7 @@ export async function GET(req: Request): Promise<Response> {
       }
     }
 
-    console.warn('[cron/_export-vm-secrets] exported', {
+    console.warn('[cron/export-vm-secrets] exported', {
       presentCount: present.length,
       missingCount: missing.length,
       present,
