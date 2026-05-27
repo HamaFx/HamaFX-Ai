@@ -6,7 +6,6 @@
 import { useChat } from '@ai-sdk/react';
 import { DefaultChatTransport, type UIMessage } from 'ai';
 import { RotateCcw } from 'lucide-react';
-import { AnimatePresence, m } from 'motion/react';
 import { useRef, useMemo } from 'react';
 
 import { Composer } from './composer';
@@ -45,7 +44,7 @@ export function ChatSurface({ threadId, initialMessages }: ChatSurfaceProps) {
   const isStreaming = status === 'submitted' || status === 'streaming';
 
   return (
-    <div className="card-premium flex h-[calc(100svh-9rem)] flex-col overflow-hidden">
+    <div className="card-premium flex h-[calc(100svh-11rem)] flex-col overflow-hidden">
       <div className="scrollbar-hide flex-1 overflow-y-auto">
         <MessageList messages={messages} isStreaming={isStreaming} />
         {error ? (
@@ -65,24 +64,15 @@ export function ChatSurface({ threadId, initialMessages }: ChatSurfaceProps) {
           </div>
         ) : null}
       </div>
-      <AnimatePresence>
-        {messages.length <= 1 && !isStreaming ? (
-          <m.div
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 8 }}
-            transition={{ duration: 0.18 }}
-          >
-            <QuickPrompts
-              onSelect={(text) => {
-                lastUserTextRef.current = text;
-                void sendMessage({ text });
-              }}
-              disabled={isStreaming}
-            />
-          </m.div>
-        ) : null}
-      </AnimatePresence>
+      {messages.length <= 1 && !isStreaming ? (
+        <QuickPrompts
+          onSelect={(text) => {
+            lastUserTextRef.current = text;
+            void sendMessage({ text });
+          }}
+          disabled={isStreaming}
+        />
+      ) : null}
       <Composer
         onSubmit={(text, images) => {
           lastUserTextRef.current = text;

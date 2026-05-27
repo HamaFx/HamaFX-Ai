@@ -8,7 +8,6 @@ import type { Metadata } from 'next';
 import { PageHeader } from '@/components/layout/page-header';
 import { ArticleCard } from '@/components/news/article-card';
 import { LiveTimestamp } from '@/components/news/live-timestamp';
-import { StaggerItem } from '@/components/ui/stagger-item';
 
 import { RefreshButton } from './_components/refresh-button';
 
@@ -39,11 +38,9 @@ export default async function NewsPage() {
         <EmptyState />
       ) : (
         <ul className="flex flex-col gap-2">
-          {articles.map((a, idx) => (
+          {articles.map((a) => (
             <li key={a.id}>
-              <StaggerItem index={idx}>
-                <ArticleCard article={a} />
-              </StaggerItem>
+              <ArticleCard article={a} />
             </li>
           ))}
         </ul>

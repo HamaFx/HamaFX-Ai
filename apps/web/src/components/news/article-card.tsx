@@ -24,21 +24,10 @@ export function ArticleCard({ article }: ArticleCardProps) {
       rel="noopener noreferrer"
       className={cn(
         'card-premium group relative block p-3.5',
-        'transition-all duration-300',
-        'md:hover:-translate-y-1 md:hover:shadow-xl md:hover:shadow-black/40',
-        'active:scale-[0.99]',
+        'transition-colors duration-200',
+        'md:hover:bg-bg-elev-2/40',
       )}
     >
-      {/* Subtle hover gradient sheen */}
-      <span
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-0 rounded-[inherit] opacity-0 transition-opacity duration-300 md:group-hover:opacity-100"
-        style={{
-          background:
-            'linear-gradient(135deg, oklch(78% 0.16 78 / 0.04) 0%, transparent 50%, oklch(72% 0.18 295 / 0.04) 100%)',
-        }}
-      />
-
       <div className="relative flex items-start justify-between gap-3">
         <h3 className="text-fg line-clamp-3 flex-1 text-sm font-semibold leading-snug">
           {article.title}

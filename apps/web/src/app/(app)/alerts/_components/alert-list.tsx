@@ -28,7 +28,6 @@ import {
   DrawerTitle,
 } from '@/components/ui/drawer';
 import { Fab } from '@/components/ui/fab';
-import { StaggerItem } from '@/components/ui/stagger-item';
 import { cn } from '@/lib/cn';
 
 import { AlertForm } from './alert-form';
@@ -87,14 +86,13 @@ export function AlertList() {
         <EmptyState onCreate={() => setOpen(true)} />
       ) : (
         <ul className="flex flex-col gap-2">
-          {data?.alerts.map((a, idx) => (
-            <StaggerItem key={a.id} index={idx}>
-              <AlertRow
-                alert={a}
-                onToggle={() => toggle.mutate({ id: a.id, active: !a.active })}
-                onDelete={() => remove.mutate(a.id)}
-              />
-            </StaggerItem>
+          {data?.alerts.map((a) => (
+            <AlertRow
+              key={a.id}
+              alert={a}
+              onToggle={() => toggle.mutate({ id: a.id, active: !a.active })}
+              onDelete={() => remove.mutate(a.id)}
+            />
           ))}
         </ul>
       )}
@@ -177,7 +175,7 @@ function AlertRow({ alert, onToggle, onDelete }: AlertRowProps) {
           type="button"
           onClick={onToggle}
           aria-label={alert.active ? 'Pause alert' : 'Re-arm alert'}
-          className="text-fg-muted hover:text-fg hover:bg-bg-elev-2 active:scale-95 inline-flex h-9 w-9 items-center justify-center rounded-lg transition-all"
+          className="text-fg-muted hover:text-fg hover:bg-bg-elev-2 inline-flex h-9 w-9 items-center justify-center rounded-lg transition-colors"
         >
           {alert.active ? <BellOff className="size-4" /> : <RotateCw className="size-4" />}
         </button>
@@ -185,7 +183,7 @@ function AlertRow({ alert, onToggle, onDelete }: AlertRowProps) {
           type="button"
           onClick={onDelete}
           aria-label="Delete alert"
-          className="text-bear/70 hover:text-bear hover:bg-bear/10 active:scale-95 inline-flex h-9 w-9 items-center justify-center rounded-lg transition-all"
+          className="text-bear/70 hover:text-bear hover:bg-bear/10 inline-flex h-9 w-9 items-center justify-center rounded-lg transition-colors"
         >
           <Trash2 className="size-4" />
         </button>

@@ -1,12 +1,6 @@
-'use client';
+// Static button — no scale/whileTap that can cause layout shift.
+// Opacity + color transitions only.
 
-// Premium tap-responsive button. Variants:
-//   primary   — brand gradient with subtle glow
-//   secondary — glass surface
-//   ghost     — text-only, hover background
-//   danger    — bear gradient
-
-import { m } from 'motion/react';
 import { forwardRef, type ButtonHTMLAttributes } from 'react';
 
 import { cn } from '@/lib/cn';
@@ -25,14 +19,14 @@ const variants: Record<Variant, string> = {
     'text-brand-fg font-semibold ' +
     '[background:linear-gradient(135deg,oklch(80%_0.16_78)_0%,oklch(74%_0.18_60)_100%)] ' +
     'shadow-[0_8px_24px_-6px_oklch(78%_0.16_78/0.5),inset_0_1px_0_0_oklch(100%_0_0/0.15)] ' +
-    'hover:shadow-[0_12px_32px_-6px_oklch(78%_0.16_78/0.6),inset_0_1px_0_0_oklch(100%_0_0/0.2)]',
-  secondary:
-    'glass-subtle text-fg hover:bg-bg-elev-2',
+    'hover:opacity-90',
+  secondary: 'glass-subtle text-fg hover:bg-bg-elev-2',
   ghost: 'text-fg hover:bg-bg-elev-1',
   danger:
     'text-bg font-semibold ' +
     '[background:linear-gradient(135deg,oklch(70%_0.24_25)_0%,oklch(64%_0.24_15)_100%)] ' +
-    'shadow-[0_8px_24px_-6px_oklch(68%_0.24_25/0.5),inset_0_1px_0_0_oklch(100%_0_0/0.15)]',
+    'shadow-[0_8px_24px_-6px_oklch(68%_0.24_25/0.5),inset_0_1px_0_0_oklch(100%_0_0/0.15)] ' +
+    'hover:opacity-90',
 };
 
 const sizes: Record<Size, string> = {
@@ -46,33 +40,24 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
   ref,
 ) {
   const isDisabled = disabled || loading || false;
-  const cleanRest: Record<string, unknown> = {};
-  for (const [k, v] of Object.entries(rest)) {
-    if (v !== undefined) cleanRest[k] = v;
-  }
-  const motionProps: Record<string, unknown> = {
-    ref,
-    type,
-    disabled: isDisabled,
-    transition: { type: 'spring', stiffness: 400, damping: 28 },
-    className: cn(
-      'inline-flex items-center justify-center gap-1.5 rounded-xl font-medium',
-      'transition-[background,opacity,transform,box-shadow] duration-200',
-      'disabled:cursor-not-allowed disabled:opacity-60 disabled:shadow-none',
-      'active:scale-[0.97]',
-      variants[variant],
-      sizes[size],
-      className,
-    ),
-    ...cleanRest,
-  };
-  if (!isDisabled) motionProps.whileTap = { scale: 0.97 };
   return (
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    <m.button {...(motionProps as any)}>
+    <button
+      ref={ref}
+      type={type}
+      disabled={isDisabled}
+      className={cn(
+        'inline-flex items-center justify-center gap-1.5 rounded-xl font-medium',
+        'transition-[background,opacity,color] duration-150',
+        'disabled:cursor-not-allowed disabled:opacity-60 disabled:shadow-none',
+        variants[variant],
+        sizes[size],
+        className,
+      )}
+      {...rest}
+    >
       {loading ? <Spinner /> : null}
       {children}
-    </m.button>
+    </button>
   );
 });
 

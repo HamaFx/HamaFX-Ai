@@ -25,7 +25,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <TopBar />
         <main
           className="mx-auto w-full max-w-2xl px-4 pt-4"
-          style={{ paddingBottom: 'calc(72px + env(safe-area-inset-bottom) + 24px)' }}
+          style={{ paddingBottom: 'calc(96px + env(safe-area-inset-bottom) + 16px)' }}
         >
           {children}
         </main>

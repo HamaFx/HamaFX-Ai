@@ -8,7 +8,6 @@ import type { Metadata } from 'next';
 
 import { EventCard } from '@/components/calendar/event-card';
 import { PageHeader } from '@/components/layout/page-header';
-import { StaggerItem } from '@/components/ui/stagger-item';
 
 import { RefreshButton } from '../news/_components/refresh-button';
 
@@ -39,15 +38,16 @@ export default async function CalendarPage() {
         <div className="flex flex-col gap-4">
           {[...groups.entries()].map(([day, items]) => (
             <section key={day} className="flex flex-col gap-2">
-              <h2 className="bg-bg/95 supports-[backdrop-filter]:bg-bg/70 text-fg-subtle sticky top-12 z-10 -mx-4 px-5 py-2 text-xs font-medium uppercase tracking-wide backdrop-blur-md">
+              <h2
+                className="bg-bg/95 supports-[backdrop-filter]:bg-bg/70 text-fg-subtle sticky z-10 -mx-4 px-5 py-2 text-xs font-medium uppercase tracking-wide backdrop-blur-md"
+                style={{ top: 'calc(48px + env(safe-area-inset-top))' }}
+              >
                 {dayLabel(day)}
               </h2>
               <ul className="flex flex-col gap-2">
-                {items.map((e, idx) => (
+                {items.map((e) => (
                   <li key={e.id} className={e.date < Date.now() ? 'opacity-60' : ''}>
-                    <StaggerItem index={idx}>
-                      <EventCard event={e} />
-                    </StaggerItem>
+                    <EventCard event={e} />
                   </li>
                 ))}
               </ul>

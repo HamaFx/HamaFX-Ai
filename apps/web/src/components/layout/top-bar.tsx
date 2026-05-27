@@ -26,7 +26,7 @@ export function TopBar({ title, right }: TopBarProps) {
         >
           <span
             aria-hidden="true"
-            className="relative inline-flex h-6 w-6 items-center justify-center rounded-md transition-transform group-hover:scale-110"
+            className="relative inline-flex h-6 w-6 items-center justify-center rounded-md"
             style={{
               background:
                 'linear-gradient(135deg, oklch(78% 0.16 78 / 1) 0%, oklch(72% 0.18 295 / 1) 100%)',

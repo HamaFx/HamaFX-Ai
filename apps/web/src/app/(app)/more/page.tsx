@@ -47,7 +47,7 @@ export default function MorePage() {
             <Link
               key={item.href}
               href={item.href}
-              className="card-premium group flex min-h-[68px] items-center gap-4 px-4 py-3.5 transition-all duration-200 active:scale-[0.99] md:hover:-translate-y-0.5 md:hover:shadow-lg"
+              className="card-premium group flex min-h-[68px] items-center gap-4 px-4 py-3.5 transition-colors duration-200 md:hover:bg-bg-elev-2/40"
             >
               <span
                 className="text-fg inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl"
@@ -62,7 +62,7 @@ export default function MorePage() {
                 <span className="text-fg block text-sm font-semibold">{item.label}</span>
                 <span className="text-fg-subtle block text-xs">{item.description}</span>
               </div>
-              <ChevronRight className="text-fg-subtle size-4 shrink-0 transition-transform group-hover:translate-x-0.5" />
+              <ChevronRight className="text-fg-subtle size-4 shrink-0" />
             </Link>
           );
         })}

@@ -77,7 +77,10 @@ export function ChartView({ symbol }: { symbol: Symbol }) {
   return (
     <div className="-mx-4 flex flex-col">
       {/* Sticky glass sub-header */}
-      <header className="glass-subtle sticky top-12 z-20 border-b border-divider">
+      <header
+        className="glass-subtle sticky z-20 border-b border-divider"
+        style={{ top: 'calc(48px + env(safe-area-inset-top))' }}
+      >
         <div className="flex flex-col gap-2.5 px-4 py-3">
           <div className="flex items-center justify-between gap-3">
             <SymbolPicker active={symbol} />

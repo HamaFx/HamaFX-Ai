@@ -70,10 +70,7 @@ export function BottomNav() {
                       />
                     ) : null}
                     <Icon
-                      className={cn(
-                        'relative size-[22px] transition-transform duration-200',
-                        active ? 'scale-110' : 'group-active:scale-90',
-                      )}
+                      className="relative size-[22px]"
                       strokeWidth={active ? 2 : 1.75}
                     />
                   </span>

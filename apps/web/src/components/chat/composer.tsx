@@ -11,7 +11,6 @@
 // Phase 5: focus-shadow lift, lucide icons, scale-pop on image add.
 
 import { ImagePlus, Mic, Send } from 'lucide-react';
-import { AnimatePresence, m } from 'motion/react';
 import { useEffect, useRef, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
@@ -129,43 +128,27 @@ export function Composer({ onSubmit, disabled, placeholder = 'Ask anything…' }
         send();
       }}
     >
-      <AnimatePresence>
-        {images.length > 0 ? (
-          <m.ul
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.18 }}
-            className="flex flex-wrap gap-2"
-            aria-label="Attached images"
-          >
-            {images.map((img, idx) => (
-              <m.li
-                key={img.id}
-                initial={{ opacity: 0, scale: 0.6 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.6 }}
-                transition={{ type: 'spring', stiffness: 400, damping: 28 }}
-                className="relative"
+      {images.length > 0 ? (
+        <ul className="flex flex-wrap gap-2" aria-label="Attached images">
+          {images.map((img, idx) => (
+            <li key={img.id} className="relative">
+              <img
+                src={img.dataUrl}
+                alt={`Attached chart image ${idx + 1} of ${images.length}`}
+                className="border-divider h-12 w-12 rounded-lg border object-cover"
+              />
+              <button
+                type="button"
+                aria-label={`Remove ${img.name}`}
+                onClick={() => removeImage(img.id)}
+                className="bg-bg-elev-3 text-fg border-border focus-visible:ring-brand absolute -right-1 -top-1 inline-flex h-5 w-5 items-center justify-center rounded-full border text-[10px] focus:outline-none focus-visible:ring-2"
               >
-                <img
-                  src={img.dataUrl}
-                  alt={`Attached chart image ${idx + 1} of ${images.length}`}
-                  className="border-divider h-12 w-12 rounded-lg border object-cover"
-                />
-                <button
-                  type="button"
-                  aria-label={`Remove ${img.name}`}
-                  onClick={() => removeImage(img.id)}
-                  className="bg-bg-elev-3 text-fg border-border focus-visible:ring-brand absolute -right-1 -top-1 inline-flex h-5 w-5 items-center justify-center rounded-full border text-[10px] focus:outline-none focus-visible:ring-2"
-                >
-                  ×
-                </button>
-              </m.li>
-            ))}
-          </m.ul>
-        ) : null}
-      </AnimatePresence>
+                ×
+              </button>
+            </li>
+          ))}
+        </ul>
+      ) : null}
 
       {imageError ? (
         <p role="alert" className="text-bear text-[11px]">
@@ -224,7 +207,7 @@ export function Composer({ onSubmit, disabled, placeholder = 'Ask anything…' }
             'focus-visible:ring-brand/60 focus:outline-none focus-visible:ring-2',
             disabled || images.length >= MAX_IMAGES
               ? 'text-fg-subtle cursor-not-allowed opacity-60'
-              : 'text-fg-muted hover:text-fg active:scale-95',
+              : 'text-fg-muted hover:text-fg',
           )}
         >
           <ImagePlus className="size-4" />
@@ -241,7 +224,7 @@ export function Composer({ onSubmit, disabled, placeholder = 'Ask anything…' }
             className={cn(
               'border-divider bg-bg-elev-2 inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border transition-colors',
               'focus-visible:ring-brand/60 focus:outline-none focus-visible:ring-2',
-              voice.active ? 'text-bear' : 'text-fg-muted hover:text-fg active:scale-95',
+              voice.active ? 'text-bear' : 'text-fg-muted hover:text-fg',
               disabled ? 'cursor-not-allowed opacity-60' : '',
             )}
           >

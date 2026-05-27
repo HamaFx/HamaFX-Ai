@@ -18,19 +18,10 @@ const IMPORTANCE_DOT: Record<EconomicEvent['importance'], string> = {
 export function EventCard({ event }: EventCardProps) {
   const date = new Date(event.date);
   const sameDay = isToday(date);
-  const imminent = isImminent(date);
 
   return (
     <div className="card-premium flex items-start gap-3 p-3.5">
       <span className="relative mt-1.5 inline-flex h-3 w-3 shrink-0 items-center justify-center">
-        {imminent ? (
-          <span
-            className={cn(
-              'absolute inset-0 rounded-full animate-ping opacity-60',
-              IMPORTANCE_DOT[event.importance].split(' ')[0],
-            )}
-          />
-        ) : null}
         <span
           aria-hidden
           className={cn(
@@ -123,9 +114,4 @@ function isToday(d: Date): boolean {
     d.getMonth() === now.getMonth() &&
     d.getDate() === now.getDate()
   );
-}
-
-function isImminent(d: Date): boolean {
-  const diff = Math.abs(d.getTime() - Date.now());
-  return diff < 15 * 60_000;
 }

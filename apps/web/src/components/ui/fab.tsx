@@ -1,29 +1,26 @@
 'use client';
 
-// Premium floating action button. Brand gradient surface, ambient glow,
-// satisfying spring-back on tap. Sits above the BottomNav with safe-area
-// clearance for the iPhone home indicator.
+// Floating action button. Static position, brand gradient with ambient glow.
+// No scale/translate animations — just opacity hover for stability.
 
-import { m } from 'motion/react';
-import { forwardRef, type ComponentProps } from 'react';
+import { forwardRef, type ButtonHTMLAttributes } from 'react';
 
 import { cn } from '@/lib/cn';
 
-type Props = Omit<ComponentProps<typeof m.button>, 'ref'>;
+type Props = ButtonHTMLAttributes<HTMLButtonElement>;
 
 export const Fab = forwardRef<HTMLButtonElement, Props>(function Fab(
-  { className, children, ...rest },
+  { className, children, type = 'button', ...rest },
   ref,
 ) {
   return (
-    <m.button
+    <button
       ref={ref}
-      whileTap={{ scale: 0.92 }}
-      whileHover={{ scale: 1.05 }}
-      transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+      type={type}
       className={cn(
         'fixed right-4 z-40 inline-flex h-14 w-14 items-center justify-center rounded-full',
-        'text-brand-fg font-semibold',
+        'text-brand-fg font-semibold transition-opacity duration-150',
+        'hover:opacity-90',
         'focus-visible:ring-brand focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-bg',
         'disabled:cursor-not-allowed disabled:opacity-60',
         className,
@@ -38,6 +35,6 @@ export const Fab = forwardRef<HTMLButtonElement, Props>(function Fab(
       {...rest}
     >
       {children}
-    </m.button>
+    </button>
   );
 });
