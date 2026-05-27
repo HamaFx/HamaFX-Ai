@@ -7,12 +7,11 @@
     "declaration": false,
     "declarationMap": false,
     "sourceMap": true,
-    // Override the inherited Bundler resolver: dist/ runs under raw Node
-    // ESM, which needs explicit .js extensions on relative imports.
-    // NodeNext + .js-suffixed imports satisfies both compile-time and
-    // runtime resolution.
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext"
+    // Use the same resolver as everything else in the monorepo. The .js
+    // suffixes on relative imports in src/ are accepted by Bundler too,
+    // and they keep runtime Node ESM happy.
+    "module": "ESNext",
+    "moduleResolution": "Bundler"
   },
   "include": ["src/**/*.ts"],
   "exclude": ["test", "dist", "node_modules"]

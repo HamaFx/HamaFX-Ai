@@ -19,6 +19,7 @@
     "@hamafx/db": "workspace:*",
     "@hamafx/indicators": "workspace:*",
     "@hamafx/shared": "workspace:*",
+    "@microsoft/signalr": "^8",
     "drizzle-orm": "^0.38.3",
     "postgres": "^3.4.5",
     "zod": "^3.23.8"
