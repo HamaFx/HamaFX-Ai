@@ -84,6 +84,7 @@ These are POST endpoints invoked by Vercel Cron with the `Authorization: Bearer 
 | `/api/cron/alerts`             | every 1 min     | Evaluate active alert rules vs latest cached prices, fire    |
 | `/api/cron/snapshots`          | daily 23:55 UTC | Compute pivots, levels, ATR for next session                 |
 | `/api/cron/embedding-backfill` | hourly          | Embed any rows missing vectors (small batches)               |
+| `/api/cron/warm-cache`         | every 2 min     | Pre-fetch the most-used `(symbol, tf)` keys so the first chat / chart load of the day is hot (Phase 7a) |
 
 Registered in `vercel.json`:
 

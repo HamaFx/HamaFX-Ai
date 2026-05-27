@@ -268,9 +268,13 @@ packages/shared/
 ```
 packages/ai/
 ├── src/
-│   ├── agent.ts                  # createTradingAgent()
-│   ├── prompts/{system,tools,refusals}.md
-│   ├── tools/
+│   ├── agent.ts                  # runChat() — entry point for /api/chat
+│   ├── routing.ts                # Phase 7a — domain-based model routing
+│   ├── planner.ts                # Phase 7c — plan-then-act
+│   ├── verification.ts           # Phase 7c — citation enforcement
+│   ├── catalogue.ts              # Phase 7c — schema-driven tool catalogue (powers /settings/agent)
+│   ├── prompt/system.ts          # canonical system prompt
+│   ├── tools/                    # 26 tools across phases 1, 2, 3, 7b, 7c
 │   │   ├── get-price.ts
 │   │   ├── get-candles.ts
 │   │   ├── get-indicators.ts
@@ -288,14 +292,28 @@ packages/ai/
 │   │   ├── set-alert.ts
 │   │   ├── log-journal.ts
 │   │   ├── share-snapshot.ts
+│   │   ├── compute-risk.ts             # Phase 7b
+│   │   ├── get-session-levels.ts       # Phase 7b
+│   │   ├── get-intermarket.ts          # Phase 7b
+│   │   ├── forecast-volatility.ts      # Phase 7b
+│   │   ├── get-seasonality.ts          # Phase 7b
+│   │   ├── compute-position-health.ts  # Phase 7b
+│   │   ├── replay-setup.ts             # Phase 7b
+│   │   ├── summarize-thread.ts         # Phase 7b
+│   │   ├── verify-call.ts              # Phase 7c
 │   │   └── index.ts
 │   ├── briefings/                # pre/post event LLM briefings
 │   ├── snapshots/                # daily HLOC / pivots / ATR
 │   ├── push/                     # Web Push delivery
-│   ├── memory/{thread,retrieval}.ts
+│   ├── memory/                   # Phase 7a/7b memory plumbing
+│   │   ├── thread-summary.ts     # rolling-window thread compaction (7a)
+│   │   └── memory-index.ts       # `memory_embeddings` upsert + search (7b)
+│   ├── rag.ts                    # hybrid retrieval (dense + Postgres FTS, RRF, time-decay)
+│   ├── embeddings.ts             # AI SDK embedMany wrapper
 │   ├── usage.ts                  # computeUsage / listTelemetry
 │   ├── cost.ts                   # daily budget cap
-│   ├── eval/{prompts.json,runner.ts}
+│   ├── eval/{prompts,cases}.json # acceptance prompts + Phase 7c assertions
+│   ├── eval/runner.ts            # CLI eval harness
 │   └── index.ts
 └── package.json
 ```
@@ -352,7 +370,9 @@ packages/db/
 │   │   ├── calendar.ts
 │   │   ├── snapshots.ts
 │   │   ├── push-subscriptions.ts
-│   │   ├── telemetry.ts          # chat_telemetry (token usage / cost)
+│   │   ├── telemetry.ts          # chat_telemetry (token usage / cost / routing breadcrumbs)
+│   │   ├── tool-telemetry.ts     # Phase 7b — chat_tool_telemetry (per-tool ms / ok / errors)
+│   │   ├── memory.ts             # Phase 7b — memory_embeddings (journal / briefing / thread synopses)
 │   │   └── briefings.ts
 │   ├── client.ts
 │   └── migrations/

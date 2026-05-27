@@ -108,13 +108,14 @@ export const EconomicEventSchema = z.object({
 
 ```mermaid
 flowchart LR
-    A[Adapter call] --> C{Cache hit?}
+    A[Adapter call] --> H[Sort by health score]
+    H --> C{Cache hit?}
     C -- yes --> R[Return cached]
-    C -- no --> P1[Primary provider]
+    C -- no --> P1[Healthiest provider]
     P1 -- ok --> S[(Cache + return)]
-    P1 -- error/timeout --> P2[Fallback provider]
+    P1 -- error/timeout --> P2[Next provider]
     P2 -- ok --> S
-    P2 -- error --> SC{Stale-cache acceptable?}
+    P2 -- error --> SC{Stale-while-error eligible?}
     SC -- yes --> RS[Return stale + flag]
     SC -- no --> ERR[Throw DataUnavailable]
 ```
@@ -123,12 +124,22 @@ Each adapter accepts:
 
 ```ts
 type Options = {
-  ttlMs?: number; // override per-call cache TTL
-  maxStaleMs?: number; // serve cached value up to this age on failure
-  tryProviders?: Array<'twelve-data' | 'finnhub' | 'alpha-vantage'>; // override order
+  ttlSeconds?: number;       // override per-call cache TTL
+  maxStaleSeconds?: number;  // SWR ceiling — serve cached value past TTL on producer failure
   signal?: AbortSignal;
+  apiKeys?: Partial<Record<string, string>>; // test override
 };
 ```
+
+Adapters expose a `*WithMeta` sibling (`getPriceWithMeta`, `getCandlesWithMeta`) that returns `{ value, stale, producedAt }` so route handlers can surface freshness to the UI. The default surface stays a clean `getPrice(symbol)` for callers that don't care.
+
+### Provider health (Phase 7a)
+
+`packages/data/src/health.ts` keeps a 5-minute rolling success/failure window per provider. `runWithFailover` reorders the caller's attempt list by health score (descending), preserving caller order on ties, so a provider that's been failing for the last few minutes gets deprioritised without being permanently sidelined.
+
+### Adaptive throttle (Phase 7a)
+
+`tryReserve(provider, cfg)` enforces a per-window cap. On HTTP 429 the provider client calls `noteBackoff(provider, cfg)` which lowers the effective cap to `cfg.backoffFraction × cfg.limit` (default 80 %) for `cfg.cooloffMs` (default 90 s), then recovers automatically. Wired into Twelve Data, Finnhub, Marketaux, and FRED clients.
 
 ## Cache TTL policy
 
@@ -146,13 +157,16 @@ type Options = {
 | FRED series                  | 6 h                     | 7 days            |
 
 Implementation: **Next.js Data Cache** (`unstable_cache` + fetch-cache) wrapped
-behind a `Cache` interface in `packages/data/src/cache/`. We picked this over
-Upstash Redis because: (a) it's free and persists across invocations on
-Vercel, (b) it has built-in single-flight + tag-based invalidation, (c) it
-removes one external dependency. The interface keeps the door open: if we
-ever need cross-region consistency or a separate worker on Fly.io, swapping
-in a Redis-backed `Cache` is a one-file change. Key scheme stays
-`hfx:<resource>:<symbol|null>:<tf|null>:<extra>`.
+behind a `Cache` interface in `packages/data/src/cache/`. The interface gained
+`fetchWithMeta` (Phase 7a) so adapters can opt into stale-while-revalidate:
+when `maxStaleSeconds > 0` and the producer fails, the most recent cached
+value is returned with `meta.stale = true` up to the SWR ceiling. We picked
+the Next Data Cache over Upstash Redis because: (a) it's free and persists
+across invocations on Vercel, (b) it has built-in single-flight + tag-based
+invalidation, (c) it removes one external dependency. The interface keeps
+the door open: if we ever need cross-region consistency or a separate
+worker on Fly.io, swapping in a Redis-backed `Cache` is a one-file change.
+Key scheme stays `hfx:<resource>:<symbol|null>:<tf|null>:<extra>`.
 
 ## Provider self-throttling
 

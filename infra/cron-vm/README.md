@@ -28,6 +28,7 @@ A lightweight GCE `e2-small` instance that fires all cron endpoints on schedule 
 | `/api/cron/fred-actuals` | 01:30 UTC daily | FRED actuals backfill |
 | `/api/cron/weekly-review` | Sunday 18:00 UTC | Weekly journal review |
 | `/api/cron/cot` | Friday 22:00 UTC | CFTC CoT ingestion |
+| `/api/cron/warm-cache` | Every 2 min | Pre-fetches the most-used market data so first chat / chart load is hot (Phase 7a) |
 
 ## Setup / Update
 

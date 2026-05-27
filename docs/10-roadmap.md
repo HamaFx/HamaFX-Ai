@@ -248,6 +248,70 @@ The GitHub Actions workflow files (`.github/workflows/cron-*.yml`) are kept as a
 - [x] Composer textarea uses `text-base` so iOS Safari does not auto-zoom on focus.
 - [x] Reduced-motion respected globally + user-forced override.
 
+## Phase 7 — Advanced reasoning, grounding, resilience ✅ DONE
+
+**Goal**: take the agent past atomic-tool reactive Q&A into a system that **plans, verifies, remembers**, and the data layer past best-effort failover into a system that **stays fresh under provider stress** — without violating personal-mode constraints (no multi-user, no worker, three symbols only).
+
+### Phase 7a — Foundations: data resilience + cost-aware routing ✅
+
+- [x] **Stale-while-revalidate** in the `Cache` interface — adapters can opt into serving cached values up to `maxStaleMs` past TTL when the upstream producer fails. Existing TTL policies in `cache/ttl.ts` already declare `maxStaleSeconds`; this turns those numbers on.
+- [x] **In-flight single-flight dedup** for cross-key concurrent producers (the polling thundering-herd at TTL boundary).
+- [x] **Per-provider health snapshot** — rolling success/error window keyed by provider name. `runWithFailover` consults it to deprioritise an upstream that's been failing recently rather than always trying the same primary first.
+- [x] **Adaptive self-throttle** — when an upstream returns 429 the in-memory bucket lowers its cap to ~80 % for the next window, then recovers.
+- [ ] **Alpha Vantage candle fallback** — third-tier provider so candles match price for resilience. _(Deferred — Twelve Data + Finnhub coverage is sufficient at MVP scale.)_
+- [ ] **`/api/market/price/stream` SSE endpoint** — single shared upstream poll per Vercel function instance fans out to N tabs. _(Deferred — REST polling at 1.5 s + SWR is enough for a single user; promote when multi-tab usage shows pressure.)_
+- [x] **`/api/cron/warm-cache`** every ~2 min — pre-fetches the most-used `(symbol, tf)` keys so the first chat of the day is hot.
+- [x] **Domain-based model routing** — the agent selects a model per turn based on intent classification:
+
+  | Domain | Default model | Env override |
+  | --- | --- | --- |
+  | Fundamental analysis | `google-vertex/gemini-3-pro` | `AI_FUNDAMENTAL_MODEL` |
+  | Technical analysis | `google-vertex/gemini-3-flash` | `AI_TECHNICAL_MODEL` |
+  | News / calendar / journal summary | `google-vertex/gemini-2.5-flash` | `AI_SUMMARY_MODEL` |
+  | Vision (image attached) | existing `AI_VISION_MODEL` | `AI_VISION_MODEL` |
+  | Generic fallback | existing `AI_DEFAULT_MODEL` | `AI_DEFAULT_MODEL` |
+  | Title | existing `AI_TITLE_MODEL` | `AI_TITLE_MODEL` |
+
+  Classification is a tiny rule-based pass over the user message + active tool hints; on ambiguity we fall back to `AI_DEFAULT_MODEL`. Logged to telemetry as `routing_<domain>` rows so the choice is auditable per turn.
+- [x] **Rolling thread summary** — once a thread crosses 30 messages, summarise older turns into a durable system message; keep the last 12 verbatim. Slashes input-token usage on long threads.
+- [x] **`X-Request-Id` end-to-end** — middleware mints, routes log, error envelope echoes. Makes Vercel logs correlatable with a UI bug report.
+
+### Phase 7b — New tools, hybrid RAG, persistent memory ✅
+
+- [x] **8 new atomic tools**, each schema-first with a chat part:
+  - `compute_risk` — pure-function position sizing.
+  - `get_session_levels` — Asia / London / NY ranges + opening prints per symbol.
+  - `get_intermarket` — DXY proxy + gold pulse + XAU↔DXY correlation + regime + regime-break flag.
+  - `forecast_volatility` — ATR-based forward-vol with event-multiplier when high-impact macro events land in the horizon.
+  - `get_seasonality` — per-month / per-weekday / per-hour median + IQR returns.
+  - `compute_position_health` — for each open journal entry: live P/L in pips/R, distance to stop/target.
+  - `replay_setup` — deterministic rule replay (EMA cross / RSI threshold) with ATR-multiple or fixed-pip exits.
+  - `summarize_thread` — synopsis + 3 durable insights, optionally embedded into the memory index.
+- [x] **Hybrid retrieval** in `search_knowledge` — dense cosine over `news_embeddings` plus Postgres FTS over `news_articles(title || summary)`, fused via reciprocal-rank fusion (RRF, k=60).
+- [x] **Time-decayed scoring** — multiply similarity by `exp(-ln2 · age / halflifeDays)` (default 7 d for news, 30 d for memory rows).
+- [x] **Unified `memory_embeddings` table** with a `kind` discriminator (`journal` / `briefing` / `thread_synopsis`). On every journal create / update and briefing emit we embed the body and upsert. `search_knowledge` accepts an optional `kinds: ('news' | 'journal' | 'briefing' | 'thread_synopsis')[]` filter so the agent can recall past trades and prior briefings.
+- [ ] **Lightweight reranker** — Gemini Flash-Lite second pass over top-K candidates. _(Deferred — RRF + time-decay already lifts quality; revisit if recall feels noisy.)_
+- [x] **Per-tool telemetry rows** — new `chat_tool_telemetry(thread_id, message_id, tool, ms, ok, error_code)` table. Drives `/settings/agent` to show which tool dominates latency and failure rate.
+
+### Phase 7c — Plan-then-act, verification, evals ✅
+
+- [x] **Plan-then-act for analytical turns** — the planner emits a JSON `{ steps[], expectedTools[], rationale }` for fundamental + technical domains, persists it as a sibling system message with a `data-plan` part, and the chat surface renders it as a collapsible "Thinking" pill above the assistant's answer. Trivial turns skip the planner. Failure falls back to a deterministic checklist; the chat UX never regresses.
+- [x] **`verify_call` warning tool** — re-checks (entry, stop, target) geometry and scans recent structure for the nearest opposing liquidity. Emits caveats inline with `agree: false` so the user sees the call AND the warnings together — never blocks.
+- [x] **Citation enforcement** — post-hoc heuristic check on assistant text: prices and event names without an attribution clue AND without a matching tool call raise a `data-citation-warning` part rendered as a tone-muted footer pill.
+- [x] **Regenerate with different model** — chat composer split-button reveals a four-tier menu (lite / flash 2.5 / flash 3 / pro 3) and re-issues the last turn against the chosen model via a one-shot override forwarded to the agent.
+- [x] **`cases.json` with tool-trace assertions** — extends `prompts.json` with `expectedTools`, `forbiddenTools`, `mustContainSubstrings`. The eval runner asserts these per case and writes pass/fail into the markdown report. CLI: `pnpm --filter ai eval -- --cases`.
+- [ ] **Local LLM-judge harness** — Gemini Flash-Lite scores adherence. _(Deferred — manual judge from the assertion report is sufficient for personal-mode review.)_
+- [ ] **Model-sweep CLI**. _(Deferred — `--prompts` + repeated runs with `--cases` already covers the manual workflow.)_
+- [x] **Tool ↔ part registry parity guard** — TS-level mapped-type guarantee from Phase 7b; reaffirmed by 7c additions. Adding a tool without its UI part fails typecheck.
+- [ ] **Provenance badges** — every tool-output chat part surfaces `source` + `fetchedAt` in a small footer pill. _(Deferred — tool DTOs already carry the metadata; uniform footer is a separate UI-polish PR.)_
+- [x] **`/settings/agent`** — schema-driven catalogue page that lists every registered tool, its description, and the last-24h invocation latencies + failure counts. Linked from the settings hub.
+
+### Definition of done
+
+- [x] All Phase 7a foundations shipped, tests passing, baseline eval re-runnable.
+- [x] Phase 7b: 8 new tools + hybrid RAG + memory index live and exercisable from the agent.
+- [x] Phase 7c: planner + verifier + citations rendered correctly in the chat UI; eval `cases.json` runs with tool-trace assertions.
+
 ## Stretch / parking lot
 
 - Add a separate **worker** on Fly.io if/when sub-second WS becomes worth it.
@@ -265,3 +329,4 @@ The GitHub Actions workflow files (`.github/workflows/cron-*.yml`) are kept as a
 | 3     | ✅ Drop chart screenshots and get useful analysis without typing.                     |
 | 5     | ✅ The whole UI looks polished — hand someone the phone and they don't ask "is this Bootstrap?". |
 | 6     | ✅ The UI feels premium-dark + scalable — single nav drawer, news/calendar/settings rebuilt as proper trading-desk surfaces. |
+| 7     | ✅ The agent **plans, verifies, remembers**; the data layer **stays fresh under provider stress**; per-domain models keep cost low without sacrificing depth where it matters. |

@@ -12,8 +12,11 @@ When working in `packages/data/**`:
 3. Every adapter call goes through:
    - Zod input validation
    - `Cache` (Next.js Data Cache by default — see `packages/data/src/cache/`), TTLs per `docs/06-data-sources.md`
+   - **Stale-while-revalidate** (Phase 7a): adapters set `maxStaleSeconds` to opt into serving cached values past TTL when the upstream producer fails. Use `*WithMeta` siblings (`getPriceWithMeta`, `getCandlesWithMeta`) when the route handler / UI needs the freshness flag.
+   - **Health-aware ordering** (Phase 7a): `runWithFailover` reorders attempts by per-provider success rate over a 5-minute rolling window. Caller order is preserved on score ties.
+   - **Adaptive throttle** (Phase 7a): when a provider returns 429 the client calls `noteBackoff(provider, cfg)`; the next reservation sees a tightened cap for `cfg.cooloffMs`. Wired into all four provider clients.
    - Primary provider → fallback on error
-   - Stale-while-error if `maxStaleMs > 0`
+   - Stale-while-error if `maxStaleSeconds > 0`
 4. Outputs are always normalised DTOs from `@shared/schemas/*`.
 5. Each result must include `source` and `fetchedAt`.
 6. Provider symbol mapping lives in `<provider>/map.ts` and is the only place mapping happens.

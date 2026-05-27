@@ -92,6 +92,12 @@ The primary surface — see `07-ai-agent.md` for the agent loop and `05-ui-ux.md
 | C-12 | Citations panel                  | ✅     | Source links surfaced from tool outputs.                       |
 | C-13 | Ask AI deep-link                 | ✅     | `/chat?prompt=…` → fresh thread that auto-submits the prompt.  |
 | C-14 | Auto-scroll only when at bottom  | ✅     | Smooth-scroll suppressed when user has scrolled up.            |
+| C-15 | Plan-then-act ("Thinking" pill)  | ✅     | Phase 7c — collapsible system message with the planner's steps + expected tools above analytical answers. |
+| C-16 | Citation warning footer          | ✅     | Phase 7c — heuristic post-finish flag on prices/events that aren't backed by a tool call. |
+| C-17 | Verify-call card                 | ✅     | Phase 7c — `verify_call` tool emits geometry + opposing-liquidity caveats inline with directional setups. |
+| C-18 | Regenerate with a different model | ✅    | Phase 7c — split-button menu offering 4 model tiers; one-shot override forwarded to the agent. |
+| C-19 | Domain-routed model selection    | ✅     | Phase 7a — fundamental → pro 3, technical → flash 3, summary → flash 2.5, vision → vision model. |
+| C-20 | Rolling thread summary           | ✅     | Phase 7a — past-30-message threads collapse older turns into a system note; saves input tokens. |
 
 ## Chart 📈
 
@@ -185,6 +191,7 @@ Six structured cards:
 | S-05 | Data & cache                      | ✅     | Clear bookmarks / reset prefs / wipe all `hamafx:*` keys (drawer-confirmed). |
 | S-06 | Session                           | ✅     | Drawer-confirmed sign-out + build-id footer for bug reports.     |
 | S-07 | Detailed usage page               | ✅     | `/settings/usage` — token spend, daily-budget gauge, model breakdown, recent turns. |
+| S-08 | Agent catalogue                   | ✅     | `/settings/agent` — schema-driven list of every registered tool with last-24h invocation / failure / p50 / p95 latencies (Phase 7c). |
 
 ## Cross-cutting features
 

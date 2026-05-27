@@ -96,9 +96,15 @@ SUPABASE_SERVICE_ROLE_KEY=       # admin key — server-only
 
 # --- AI (Vercel AI Gateway) ---
 AI_GATEWAY_API_KEY=
-AI_DEFAULT_MODEL=openai/gpt-4.1
-AI_TITLE_MODEL=openai/gpt-4.1-mini
+AI_DEFAULT_MODEL=google-vertex/gemini-2.5-flash
+AI_TITLE_MODEL=google-vertex/gemini-2.5-flash-lite
 AI_EMBEDDING_MODEL=openai/text-embedding-3-small
+AI_VISION_MODEL=google-vertex/gemini-2.5-pro
+
+# --- AI domain-routed models (Phase 7a) ---
+AI_FUNDAMENTAL_MODEL=google-vertex/gemini-3-pro
+AI_TECHNICAL_MODEL=google-vertex/gemini-3-flash
+AI_SUMMARY_MODEL=google-vertex/gemini-2.5-flash
 
 # --- Cache ---
 UPSTASH_REDIS_REST_URL=

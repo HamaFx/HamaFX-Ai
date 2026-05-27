@@ -21,71 +21,111 @@ flowchart LR
 
 ## Model strategy
 
-| Use case                        | Model (default)                    | Rationale                  |
-| ------------------------------- | ---------------------------------- | -------------------------- |
-| Main chat (TA + FA reasoning)   | `gpt-4.1` (or `claude-3.7-sonnet`) | Strong tool-use + context. |
-| Quick replies / titles          | `gpt-4.1-mini` / `gemini-flash`    | Cheap.                     |
-| Embeddings                      | `text-embedding-3-small`           | Cheap, good for news.      |
-| Vision (chart screenshot in v2) | `gpt-4.1` / `claude-3.7-sonnet`    | Multimodal.                |
+The agent picks a model **per turn** based on a domain classifier in
+`packages/ai/src/routing.ts`. Each call to `streamText` sees one of:
 
-All routed via **Vercel AI Gateway** so swapping is one env variable.
+| Domain | Default model | Env override | When |
+| --- | --- | --- | --- |
+| Fundamental | `google-vertex/gemini-3-pro` | `AI_FUNDAMENTAL_MODEL` | "why", "macro", news + events |
+| Technical | `google-vertex/gemini-3-flash` | `AI_TECHNICAL_MODEL` | structure, indicators, levels, top-down |
+| Summary | `google-vertex/gemini-2.5-flash` | `AI_SUMMARY_MODEL` | recap / list / "show me" |
+| Vision | `google-vertex/gemini-2.5-pro` | `AI_VISION_MODEL` | image attached |
+| Generic | `google-vertex/gemini-2.5-flash` | `AI_DEFAULT_MODEL` | everything else |
+| Title | `google-vertex/gemini-2.5-flash-lite` | `AI_TITLE_MODEL` | first-turn auto-title |
+| Embeddings | `openai/text-embedding-3-small` | `AI_EMBEDDING_MODEL` | news + memory index (1536-dim) |
+
+The model resolver in `packages/ai/src/model.ts` accepts three transports:
+direct Vertex AI, Vercel AI Gateway, or direct Google Gemini API. Set
+`AI_GATEWAY_API_KEY` for gateway routing; set
+`GOOGLE_VERTEX_PROJECT + GOOGLE_VERTEX_LOCATION + GOOGLE_APPLICATION_CREDENTIALS_JSON`
+for Vertex AI; set `GOOGLE_GENERATIVE_AI_API_KEY` for direct Gemini.
+
+The router writes a `routing_<domain>` row to `chat_telemetry` per turn so
+spend can be broken down by domain on `/settings/usage` later.
 
 ## Tools (the agent's only side effects)
 
-Every tool is defined with **zod input + zod output**, a one-line description, and a `render` hint for the UI part. Tools live in `packages/ai/src/tools/`.
+Every tool is defined with **zod input + zod output**, a one-line description,
+and a matching React part in `apps/web/src/components/chat/parts/<name>.tsx`.
+Tools live in `packages/ai/src/tools/`. The registry in
+`apps/web/src/components/chat/parts/registry.tsx` is a typed map keyed on
+`ToolName` — adding a tool to `TOOL_NAMES` without its UI part fails typecheck.
 
-| Tool                  | Input (zod)                                  | Output                   | UI part           |
-| --------------------- | -------------------------------------------- | ------------------------ | ----------------- |
-| `get_price`           | `{ symbols: Symbol[] }`                      | `Tick[]`                 | inline price chip |
-| `get_candles`         | `{ symbol, tf, limit?, end? }`               | `Candle[]`               | mini chart card   |
-| `get_indicators`      | `{ symbol, tf, indicators: IndicatorReq[] }` | `IndicatorResult[]`      | indicator panel   |
-| `get_news`            | `{ symbol?, since?, limit?, query? }`        | `NewsArticle[]`          | news list card    |
-| `get_calendar`        | `{ from, to, currencies?, importance? }`     | `EconomicEvent[]`        | calendar table    |
-| `analyze_technical`   | `{ symbol, tfs: Timeframe[], style? }`       | structured analysis JSON | analysis report   |
-| `analyze_fundamental` | `{ symbol, horizon? }`                       | structured analysis JSON | analysis report   |
-| `search_knowledge`    | `{ query, k?, filter? }`                     | `RetrievedChunk[]`       | citations strip   |
-| `annotate_chart`      | `{ symbol, tf, items: Annotation[] }`        | `{ annotationId }`       | applied to chart  |
-| `set_alert`           | `{ rule: AlertRule, channel? }`              | `{ alertId }`            | alert receipt     |
-| `log_journal`         | `{ entry: JournalEntry }`                    | `{ entryId }`            | journal receipt   |
-| `get_journal_stats`   | `{ from?, to?, symbol? }`                    | `JournalStats`           | stats card        |
+### Phase 1 — atomic data + mutating tools
+
+| Tool                  | Output                   | UI part           |
+| --------------------- | ------------------------ | ----------------- |
+| `get_price`           | `Tick[]`                 | inline price chip |
+| `get_candles`         | `Candle[]`               | mini chart card   |
+| `get_indicators`      | `IndicatorResult[]`      | indicator panel   |
+| `get_market_structure`| structure events JSON    | structure card    |
+| `get_news`            | `ToolNewsItem[]`         | news list card    |
+| `get_calendar`        | `EconomicEvent[]`        | calendar table    |
+| `set_alert`           | `{ alertId }`            | alert receipt     |
+| `log_journal`         | `{ entryId, summary }`   | journal receipt   |
+
+### Phase 2 — composite + RAG + visual tools
+
+| Tool                  | Output                   | UI part           |
+| --------------------- | ------------------------ | ----------------- |
+| `analyze_technical`   | per-tf reading + summary | analysis card     |
+| `analyze_fundamental` | events + sentiment + summary | FA card       |
+| `search_knowledge`    | top-K + similarity       | citations strip   |
+| `annotate_chart`      | OverlaySet (markers + lines) | applied to chart |
+| `get_journal_stats`   | global + per-symbol + per-tag breakdowns | stats card |
+
+### Phase 3 — multimodal + breadth
+
+| Tool                  | Output                   | UI part           |
+| --------------------- | ------------------------ | ----------------- |
+| `analyze_chart_image` | structured chart readout | analyse-image card |
+| `get_correlation`     | 3×3 corr matrix + DXY proxy | corr card     |
+| `get_cot`             | weekly CoT samples + net | cot card          |
+| `share_snapshot`      | signed `/share/[id]?t=` URL | share card     |
+
+### Phase 7b — risk + intermarket + memory tools
+
+| Tool                       | Output                       | UI part                     |
+| -------------------------- | ---------------------------- | --------------------------- |
+| `compute_risk`             | size / RR / pip distances    | risk card                   |
+| `get_session_levels`       | Asia / London / NY OHLC + forming flag | session-levels card |
+| `get_intermarket`          | DXY pulse + XAU↔DXY corr + regime | intermarket card     |
+| `forecast_volatility`      | ATR-based forward range      | forecast card               |
+| `get_seasonality`          | monthly / weekday / hourly buckets | seasonality card      |
+| `compute_position_health`  | live P/L per open trade      | position-health card        |
+| `replay_setup`             | rule replay trades + stats   | replay card                 |
+| `summarize_thread`         | synopsis + 3 insights, embedded | summary card             |
+
+### Phase 7c — verification
+
+| Tool          | Output                   | UI part           |
+| ------------- | ------------------------ | ----------------- |
+| `verify_call` | agree + caveats + nearest opposing liquidity | verify card |
 
 ### Why these are _separate_ tools
 
 Composing them is the LLM's job. By keeping each tool atomic and single-purpose:
 
-- They're cacheable in Redis with simple keys.
+- They're cacheable behind the same `Cache` interface in `packages/data/src/cache/`.
 - Their schemas are small enough for any model to use reliably.
-- Each maps 1:1 to a route handler + a UI part — easy to test and visualise.
+- Each maps 1:1 to a route handler / DB read + a UI part — easy to test and visualise.
+- The chat-part registry's typed map enforces parity at typecheck.
 
 ### Composite tools (`analyze_*`)
 
-`analyze_technical` and `analyze_fundamental` exist because asking the model to call `get_candles` 6 times across timeframes adds tokens and latency. The composite tools run the orchestration in TS, returning a single rich object:
+`analyze_technical` and `analyze_fundamental` exist because asking the model to call `get_candles` 6 times across timeframes adds tokens and latency. The composite tools run the orchestration in TS, returning a single rich object. The model receives this JSON and turns it into prose + decides which UI parts to render.
 
-```ts
-type TechnicalAnalysis = {
-  symbol: Symbol;
-  asOf: number;
-  bias: 'bullish' | 'bearish' | 'neutral';
-  confidence: number; // 0..1
-  byTimeframe: Array<{
-    tf: Timeframe;
-    structure: 'uptrend' | 'downtrend' | 'range';
-    keyLevels: { support: number[]; resistance: number[] };
-    indicators: {
-      rsi?: number;
-      ema50?: number;
-      ema200?: number;
-      macd?: { hist: number; signal: number };
-    };
-    pattern?: string | null;
-    notes: string;
-  }>;
-  invalidations: number[];
-  scenarios: Array<{ if: string; then: string; probability: number }>;
-};
-```
+## Plan-then-act (Phase 7c)
 
-The model receives this JSON and turns it into prose + decides which UI parts to render.
+For analytical turns (`routing.planRequired === true`, currently fundamental + technical) the agent runs `runPlanner()` BEFORE `streamText`. The planner uses the cheap summary model to produce JSON `{ steps[], expectedTools[], rationale }`. The plan is persisted as a sibling system message with a single `data-plan` UI part; the chat surface renders it as a collapsible "Thinking" pill above the assistant's answer. Trivial turns skip the planner. Failure falls back to a deterministic checklist; the chat UX never regresses on a planner side-effect bug.
+
+## Verification (Phase 7c)
+
+Two layers:
+
+1. **`verify_call` tool** — invoked by the model after it names a directional setup. Re-checks (entry, stop, target) geometry and scans recent structure for the nearest opposing liquidity. Emits caveats inline with `agree: false`. The chat part renders a tone-warning card next to the answer; the user sees the call AND the caveats together.
+
+2. **Citation enforcement** — post-finish heuristic in `packages/ai/src/verification.ts`. Scans the assistant's text for price-shaped tokens and macro event names; flags any that aren't backed by a tool call from the same turn AND don't carry an attribution clue. Emits a `data-citation-warning` part as a tone-muted footer pill. Stance is `'soft'` — false positives render quietly, never overshadow the answer.
 
 ## System prompt (canonical)
 
@@ -104,16 +144,19 @@ Lives in `packages/ai/src/prompts/system.md`. Key directives (paraphrased — th
 
 ## Memory model
 
-Three layers:
+Four layers (Phase 7a + 7b additions noted):
 
 1. **Working memory** — the current thread (last N messages, default 30) sent to the model each turn.
-2. **Thread metadata** — pinned symbol, user preferences (timezone, default model, indicator defaults), passed in the system context.
-3. **Long-term retrieval** — `search_knowledge` over:
-   - `news_articles` (pgvector embeddings)
-   - `journal_entries` (per-user)
-   - `saved_analyses` (per-user, when the user clicks "save this analysis")
+2. **Rolling thread summary** (Phase 7a) — once a thread crosses 30 messages, `compactThread()` collapses the older portion into a single durable system note and keeps the last 12 verbatim. The summary is digest-keyed so it isn't recomputed every turn. Budget-guarded with a deterministic fallback.
+3. **Thread metadata** — pinned symbol, user preferences (timezone, default model, indicator defaults), passed in the system context.
+4. **Long-term retrieval** — `search_knowledge` over the unified retrieval surface:
+   - `news_articles` + `news_embeddings` (pgvector cosine + Postgres FTS, fused via RRF)
+   - `memory_embeddings` table with `kind` discriminator (`journal`, `briefing`, `thread_synopsis`)
+   - Each row is similarity-ranked and time-decayed via `exp(-ln2 · age / halflifeDays)` (default 7d for news, 30d for memory rows)
 
-Vector similarity uses cosine, top-k = 6 default.
+Vector similarity uses cosine, top-k configurable (default 5). Hybrid retrieval combines dense + lexical signals so name-shaped queries ("FOMC minutes hawkish") work alongside thematic queries ("macro volatility tonight").
+
+`rememberJournalEntry`, `rememberBriefing`, and `rememberThreadSynopsis` are best-effort fire-and-forget upserts called from journal CRUD, briefings cron, and the `summarize_thread` tool respectively.
 
 ## Context payload sent each turn
 
@@ -134,23 +177,23 @@ type ChatContext = {
 };
 ```
 
-The snapshot is generated server-side in the route handler (cheap reads from Redis) and inlined into the system prompt as a small JSON block. This dramatically reduces "what's the price?" tool calls.
+The snapshot is generated server-side in the route handler (cheap reads from the data layer) and inlined into the system prompt as a small JSON block. This dramatically reduces "what's the price?" tool calls.
 
 ## Streaming UI parts
 
-Vercel AI SDK v5 supports custom message _parts_. Each tool maps to a part type:
+Vercel AI SDK v5 supports custom message _parts_. Each tool maps to a part type, and a typed `partRegistry: { [K in ToolName]: ComponentType<ToolPartProps<K>> }` map enforces "one part per tool" at typecheck:
 
 ```ts
 type ChatPart =
-  | { type: "text"; text: string }
-  | { type: "tool-get_candles"; data: ToolOutput<"get_candles">; state: "loading" | "done" | "error" }
-  | { type: "tool-get_news"; ... }
-  | { type: "tool-set_alert"; ... }
-  | { type: "tool-annotate_chart"; ... }
-  /* ... one per tool */;
+  | { type: 'text'; text: string }
+  | { type: `tool-${ToolName}`; output: ToolOutput<T>; state: 'loading' | 'done' | 'error' }
+  // Phase 7c — UI-only parts persisted into the message's `parts` JSON
+  | { type: 'data-plan'; ... }                  // collapsible "Thinking" pill
+  | { type: 'data-citation-warning'; ... }      // soft footer pill
+  | { type: 'data-verify-warning'; ... };       // tone-warning card
 ```
 
-The chat surface registers a renderer per `type` (`apps/web/src/components/chat/parts/<name>.tsx`).
+The chat surface registers a renderer per `type` (`apps/web/src/components/chat/parts/<name>.tsx`). Per-tool zod schemas in `partSchemas` validate raw stream payloads before they hand off to a bespoke renderer; on parse failure we fall back to the generic `ToolCard` rather than crashing the chat surface.
 
 ## Refusals & guardrails
 
@@ -161,30 +204,38 @@ The chat surface registers a renderer per `type` (`apps/web/src/components/chat/
 
 The full refusal patterns live in `packages/ai/src/prompts/refusals.md`.
 
-## Evaluation (manual)
+## Evaluation (manual + assertions)
 
-Personal-mode keeps this simple. `packages/ai/src/eval/prompts.json` holds the 10 acceptance prompts from `00-overview.md`. A small `pnpm --filter ai eval` script runs them sequentially against the local dev server and prints the model's responses, tool calls, and timings. **You** read the output and judge — no LLM-as-judge in CI.
+Personal-mode keeps CI off — runs are local + manual.
 
-Run it whenever:
+Two prompt files in `packages/ai/src/eval/`:
+
+- `prompts.json` — the original 10 acceptance prompts from `00-overview.md`. Run with `pnpm --filter ai eval -- --base-url ... --cookie ...`. Outputs a markdown report with TTFT, total ms, tool calls, and the streamed text.
+- `cases.json` (Phase 7c) — extends each entry with `expectedTools` / `forbiddenTools` / `mustContainSubstrings`. Run with `pnpm --filter ai eval -- --cases ...`. The runner asserts each case and writes pass/fail rows into the report; non-zero exit on any failure or assertion violation.
+
+Run either whenever:
 
 - You change the system prompt.
 - You add or modify a tool.
 - You bump models.
 
+`/settings/agent` exposes a live read of the per-tool telemetry table — invocations / failures / p50 / p95 over the last 24h — so you can spot regressions without re-running the eval.
+
 ## Cost / latency budgets
 
-| Metric                              | Target                                                          |
-| ----------------------------------- | --------------------------------------------------------------- |
-| Avg input tokens / turn             | ≤ 4 000                                                         |
-| Avg output tokens / turn            | ≤ 600                                                           |
-| Avg tool calls / turn               | 1.6                                                             |
-| p50 first token                     | ≤ 800 ms                                                        |
-| p95 first token                     | ≤ 2 000 ms                                                      |
-| p95 full answer (with 2 tool calls) | ≤ 6 000 ms                                                      |
-| Cost / turn (gpt-4.1 baseline)      | ≤ $0.012                                                        |
-| **Daily $ ceiling** (global)        | **$5** default — rejects new turns past it; resets UTC midnight |
+| Metric                                | Target                                                          |
+| ------------------------------------- | --------------------------------------------------------------- |
+| Avg input tokens / turn               | ≤ 4 000                                                         |
+| Avg output tokens / turn              | ≤ 600                                                           |
+| Avg tool calls / turn                 | 1.6                                                             |
+| p50 first token                       | ≤ 800 ms                                                        |
+| p95 first token                       | ≤ 2 000 ms                                                      |
+| p95 full answer (with 2 tool calls)   | ≤ 6 000 ms                                                      |
+| Cost / turn (flash-tier baseline)     | ≤ $0.005                                                        |
+| Cost / turn (pro-tier — fundamental)  | ≤ $0.020                                                        |
+| **Daily $ ceiling** (global)          | **$5** default — rejects new turns past it; resets UTC midnight |
 
-Levers: trim system prompt, prune thread, prefer composite tools, cache candle/news reads.
+Levers: domain routing (Phase 7a — pro only when fundamental analysis is needed), trim system prompt, prune thread via the rolling summary (Phase 7a), prefer composite tools, cache candle/news reads via the SWR `Cache` interface (Phase 7a).
 
 ## Why no agentic crew?
 

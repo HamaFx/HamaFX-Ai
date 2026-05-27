@@ -104,6 +104,9 @@ cat > /tmp/hamafx-crontab << 'CRONTAB'
 
 # CFTC CoT — Friday 22:00 UTC
 0 22 * * 5 /opt/hamafx/cron-fire.sh /api/cron/cot >> /var/log/hamafx-cron.log 2>&1
+
+# Cache warming (Phase 7a) — every 2 minutes during weekdays
+*/2 * * * * /opt/hamafx/cron-fire.sh /api/cron/warm-cache >> /var/log/hamafx-cron.log 2>&1
 CRONTAB
 
 crontab /tmp/hamafx-crontab
