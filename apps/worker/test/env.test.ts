@@ -49,13 +49,12 @@ describe('loadEnv', () => {
     expect(env.HC_BACKUP_DB_UUID).toBeUndefined();
   });
 
-  it('rejects HC UUIDs when present but empty', () => {
-    expect(() =>
-      loadEnv({
-        ...VALID,
-        HC_SIGNALR_UUID: '',
-      } as unknown as NodeJS.ProcessEnv),
-    ).toThrow(/Invalid worker environment/);
+  it('treats empty HC UUIDs as undefined (operator can leave the row blank)', () => {
+    const env = loadEnv({
+      ...VALID,
+      HC_SIGNALR_UUID: '',
+    } as unknown as NodeJS.ProcessEnv);
+    expect(env.HC_SIGNALR_UUID).toBeUndefined();
   });
 });
 

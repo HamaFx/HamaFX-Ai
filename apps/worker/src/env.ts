@@ -8,16 +8,33 @@
 // because the worker is a different runtime — it doesn't need APP_PASSWORD,
 // AUTH_COOKIE_SECRET, NEXT_PUBLIC_*, etc. Validating the smaller surface
 // keeps boot fast and the failure modes clear.
+//
+// Empty-string handling: when systemd's EnvironmentFile= loads
+// `KEY=`, the value arrives as the literal empty string. zod's
+// `.optional()` only short-circuits on `undefined`. We pre-process every
+// optional-string field via `coerceEmptyToUndefined` so the operator
+// can leave a row blank in `/opt/hamafx/.env` without tripping the
+// .min(1) check.
 
 import { z } from 'zod';
 
+const coerceEmptyToUndefined = z
+  .string()
+  .optional()
+  .transform((v) => (v === '' ? undefined : v));
+const optionalUrl = z.preprocess((v) => (v === '' ? undefined : v), z.string().url().optional());
+const optionalNonEmpty = z.preprocess(
+  (v) => (v === '' ? undefined : v),
+  z.string().min(1).optional(),
+);
+
 const WorkerEnvSchema = z.object({
   /** Either DATABASE_URL or POSTGRES_URL is required. */
-  DATABASE_URL: z.string().url().optional(),
-  POSTGRES_URL: z.string().url().optional(),
+  DATABASE_URL: optionalUrl,
+  POSTGRES_URL: optionalUrl,
 
   /** Optional override; defaults to https://biquote.io in the consumer. */
-  BIQUOTE_BASE_URL: z.string().url().optional(),
+  BIQUOTE_BASE_URL: optionalUrl,
   /** SignalR hub URL. Defaults to BiQuote's documented endpoint. */
   BIQUOTE_HUB_URL: z.string().url().default('https://biquote.io/hubs/tick'),
 
@@ -26,24 +43,24 @@ const WorkerEnvSchema = z.object({
    * no-ops so local dev / tests work without configuration. Production
    * sets all of these via /opt/hamafx/.env.
    */
-  HC_SIGNALR_UUID: z.string().min(1).optional(),
-  HC_BACKUP_DB_UUID: z.string().min(1).optional(),
-  HC_BACKUP_JOURNAL_UUID: z.string().min(1).optional(),
-  HC_VERIFY_RESTORE_UUID: z.string().min(1).optional(),
-  HC_UPDATE_UUID: z.string().min(1).optional(),
+  HC_SIGNALR_UUID: optionalNonEmpty,
+  HC_BACKUP_DB_UUID: optionalNonEmpty,
+  HC_BACKUP_JOURNAL_UUID: optionalNonEmpty,
+  HC_VERIFY_RESTORE_UUID: optionalNonEmpty,
+  HC_UPDATE_UUID: optionalNonEmpty,
   // Per-job heartbeat UUIDs. Each migrated heavy job gets its own.
-  HC_JOB_EMBEDDING_BACKFILL_UUID: z.string().min(1).optional(),
-  HC_JOB_BRIEFINGS_UUID: z.string().min(1).optional(),
-  HC_JOB_SNAPSHOTS_UUID: z.string().min(1).optional(),
-  HC_JOB_COT_UUID: z.string().min(1).optional(),
-  HC_JOB_FRED_ACTUALS_UUID: z.string().min(1).optional(),
-  HC_JOB_WEEKLY_REVIEW_UUID: z.string().min(1).optional(),
+  HC_JOB_EMBEDDING_BACKFILL_UUID: optionalNonEmpty,
+  HC_JOB_BRIEFINGS_UUID: optionalNonEmpty,
+  HC_JOB_SNAPSHOTS_UUID: optionalNonEmpty,
+  HC_JOB_COT_UUID: optionalNonEmpty,
+  HC_JOB_FRED_ACTUALS_UUID: optionalNonEmpty,
+  HC_JOB_WEEKLY_REVIEW_UUID: optionalNonEmpty,
 
   /**
    * Optional Sentry DSN — server-only. When unset, the worker logs to
    * stderr but does not phone home. Wired in PR-18.
    */
-  SENTRY_DSN: z.string().url().optional(),
+  SENTRY_DSN: optionalUrl,
 
   /**
    * Deployed commit SHA, written by `update.sh` to /opt/hamafx/.deployed-sha.
@@ -51,7 +68,7 @@ const WorkerEnvSchema = z.object({
    * Used as a Sentry tag and embedded in healthcheck POST bodies so we can
    * pinpoint a regression to a specific deploy.
    */
-  DEPLOYED_SHA: z.string().min(1).default('unknown'),
+  DEPLOYED_SHA: coerceEmptyToUndefined.pipe(z.string().min(1).optional()).default('unknown'),
 
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
 });
