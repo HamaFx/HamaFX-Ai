@@ -8,9 +8,15 @@
 //   - When the producer fails AND a recently-cached value exists within the
 //     SWR window, we return the stale value with `stale=true` and let the UI
 //     surface it via `<StaleIndicator/>`.
+//
+// Phase 8 PR-4:
+//   - BiQuote (free, no key) becomes the **first** attempt; Twelve Data
+//     drops to the second attempt as a transitional fallback. PR-19 deletes
+//     the Twelve Data path entirely once BiQuote has soaked.
 
 import { SymbolSchema, type Symbol, type Tick } from '@hamafx/shared';
 
+import * as biquote from '../providers/biquote';
 import { cacheKey, cacheTag, getDefaultCache, PRICE_TTL } from '../cache';
 import { runWithFailover, type ProviderAttempt } from '../failover';
 import * as finnhub from '../providers/finnhub';
@@ -26,10 +32,14 @@ export interface GetPriceOptions {
    * Adapter resolves API keys from env unless an injected `apiKeys` object is
    * provided — used by tests to avoid touching `process.env` and by the route
    * handler to centralise env access via `getServerEnv()`.
+   *
+   * `biquoteBaseUrl` is optional too — defaults to BIQUOTE_BASE_URL or the
+   * canonical https://biquote.io endpoint.
    */
   apiKeys?: Partial<{
     twelveData: string;
     finnhub: string;
+    biquoteBaseUrl: string;
   }>;
 }
 
@@ -46,6 +56,8 @@ function resolveKeys(opts: GetPriceOptions) {
   return {
     twelveData: opts.apiKeys?.twelveData ?? process.env.TWELVEDATA_API_KEY ?? '',
     finnhub: opts.apiKeys?.finnhub ?? process.env.FINNHUB_API_KEY ?? '',
+    biquoteBaseUrl:
+      opts.apiKeys?.biquoteBaseUrl ?? process.env.BIQUOTE_BASE_URL ?? 'https://biquote.io',
   };
 }
 
@@ -80,6 +92,21 @@ export async function getPriceWithMeta(
     key,
     async () => {
       const attempts: ProviderAttempt<{ price: number; provider: string }>[] = [];
+
+      // Phase 8 — BiQuote first. No key required, so it's always present.
+      attempts.push({
+        name: 'biquote',
+        run: async () => {
+          const tick = await biquote.fetchTick(symbol, {
+            baseUrl: keys.biquoteBaseUrl,
+            ...(opts.signal ? { signal: opts.signal } : {}),
+          });
+          // BiQuote's `last` mirrors the most recent traded price; for FX
+          // this equals mid in practice. We forward `last` so the synthesis
+          // below sees the freshest number.
+          return { price: tick.last, provider: 'biquote' };
+        },
+      });
 
       if (keys.twelveData) {
         attempts.push({

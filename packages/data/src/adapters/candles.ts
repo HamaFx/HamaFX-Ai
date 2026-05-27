@@ -11,6 +11,11 @@
 //
 // Phase 7a: opt-in SWR via TTL policy + `getCandlesWithMeta` for callers
 // that want to surface staleness.
+//
+// Phase 8 PR-4:
+//   - BiQuote becomes the **first** attempt for every TF except `1w`
+//     (BiQuote does not expose weekly bars). Twelve Data drops to second.
+//     PR-19 deletes the Twelve Data path entirely once BiQuote has soaked.
 
 import {
   CandleSchema,
@@ -20,6 +25,7 @@ import {
   type Timeframe,
 } from '@hamafx/shared';
 
+import * as biquote from '../providers/biquote';
 import { cacheKey, cacheTag, candleTtl, getDefaultCache } from '../cache';
 import { ProviderError } from '../errors';
 import { runWithFailover, type ProviderAttempt } from '../failover';
@@ -31,7 +37,7 @@ export interface GetCandlesOptions {
   signal?: AbortSignal;
   /** Number of bars to request (capped at 5000 by upstream). Default 300. */
   count?: number;
-  apiKeys?: Partial<{ twelveData: string; finnhub: string }>;
+  apiKeys?: Partial<{ twelveData: string; finnhub: string; biquoteBaseUrl: string }>;
 }
 
 export interface CandlesResult {
@@ -47,6 +53,8 @@ function resolveKeys(opts: GetCandlesOptions) {
   return {
     twelveData: opts.apiKeys?.twelveData ?? process.env.TWELVEDATA_API_KEY ?? '',
     finnhub: opts.apiKeys?.finnhub ?? process.env.FINNHUB_API_KEY ?? '',
+    biquoteBaseUrl:
+      opts.apiKeys?.biquoteBaseUrl ?? process.env.BIQUOTE_BASE_URL ?? 'https://biquote.io',
   };
 }
 
@@ -56,8 +64,8 @@ function resolveKeys(opts: GetCandlesOptions) {
  * Returns normalised `Candle[]` with `source` and `fetchedAt` tags. The
  * adapter never throws on partial data — if a provider returns fewer bars
  * than requested, that's what the caller gets. On a primary-provider
- * failure (quota, rate limit, HTTP), we fall back to Finnhub when its key
- * is configured. 4H is synthesised from 1H on the Finnhub side.
+ * failure (quota, rate limit, HTTP), we fall back to subsequent attempts.
+ * 4H is synthesised from 1H on the Finnhub side.
  */
 export async function getCandles(
   symbolInput: Symbol,
@@ -78,6 +86,9 @@ export async function getCandlesWithMeta(
   const count = Math.max(1, Math.min(opts.count ?? DEFAULT_COUNT, MAX_COUNT));
   const keys = resolveKeys(opts);
   const policy = candleTtl(tf, true);
+  // BiQuote tops out at 2000 bars per series; cap our request to it but let
+  // larger requests still flow through to Twelve Data / Finnhub.
+  const biquoteCount = Math.min(count, 2000);
 
   const cache = await getDefaultCache();
   const key = cacheKey({ resource: 'candles', symbol, tf, extra: `n${count}` });
@@ -87,6 +98,38 @@ export async function getCandlesWithMeta(
     key,
     async () => {
       const attempts: ProviderAttempt<Candle[]>[] = [];
+
+      // Phase 8 — BiQuote first (except 1w which it doesn't support).
+      if (tf !== '1w') {
+        attempts.push({
+          name: 'biquote',
+          run: async () => {
+            const raw = await biquote.fetchOhlc({
+              symbol,
+              tf,
+              count: biquoteCount,
+              baseUrl: keys.biquoteBaseUrl,
+              ...(opts.signal ? { signal: opts.signal } : {}),
+            });
+            const fetchedAt = Date.now();
+            return raw.map((bar) =>
+              CandleSchema.parse({
+                symbol,
+                tf,
+                t: Date.parse(bar.openTime),
+                o: bar.open,
+                h: bar.high,
+                l: bar.low,
+                c: bar.close,
+                // Forex volume is 0 from BiQuote; keep null in our DTO.
+                v: bar.volume > 0 ? bar.volume : null,
+                source: 'biquote',
+                fetchedAt,
+              }),
+            );
+          },
+        });
+      }
 
       if (keys.twelveData) {
         attempts.push({
@@ -150,7 +193,7 @@ export async function getCandlesWithMeta(
         throw new ProviderError(
           'NO_PROVIDER_AVAILABLE',
           'none',
-          'no candle provider configured (set TWELVEDATA_API_KEY or FINNHUB_API_KEY)',
+          'no candle provider configured (set TWELVEDATA_API_KEY or FINNHUB_API_KEY, or use BiQuote)',
         );
       }
 
