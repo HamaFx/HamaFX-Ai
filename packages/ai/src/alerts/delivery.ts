@@ -213,7 +213,7 @@ function renderTelegramBody(alert: Alert, reading: RuleReading): string {
  * message body.
  */
 export function escapeMd(s: string): string {
-  return s.replace(/[\\_*\[\]()~`>#+\-=|{}.!]/g, '\\$&');
+  return s.replace(/[\\_*[\]()~`>#+\-=|{}.!]/g, '\\$&');
 }
 
 

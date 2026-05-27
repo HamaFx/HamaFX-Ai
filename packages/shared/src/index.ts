@@ -36,6 +36,19 @@ export * from './schemas/tool-outputs/analyze-chart-image';
 export * from './schemas/tool-outputs/get-correlation';
 export * from './schemas/tool-outputs/get-cot';
 export * from './schemas/tool-outputs/share-snapshot';
+// Phase 7b tools
+export * from './schemas/tool-outputs/compute-risk';
+export * from './schemas/tool-outputs/get-session-levels';
+export * from './schemas/tool-outputs/get-intermarket';
+export * from './schemas/tool-outputs/forecast-volatility';
+export * from './schemas/tool-outputs/get-seasonality';
+export * from './schemas/tool-outputs/compute-position-health';
+export * from './schemas/tool-outputs/replay-setup';
+export * from './schemas/tool-outputs/summarize-thread';
+// Phase 7c tools
+export * from './schemas/tool-outputs/verify-call';
+// UI-only message parts (planner output, citation + verify warnings)
+export * from './schemas/ui-parts';
 // Briefings (cron-emitted assistant messages in the dedicated thread)
 export * from './schemas/briefings';
 

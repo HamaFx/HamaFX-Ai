@@ -346,13 +346,13 @@ function derToJoseEcdsaSig(der: Uint8Array, n: number): Uint8Array {
   if (der[i] !== 0x02) throw new Error('invalid DER (no INTEGER r)');
   const rLen = der[i + 1]!;
   let rStart = i + 2;
-  let rEnd = rStart + rLen;
+  const rEnd = rStart + rLen;
   while (der[rStart] === 0x00 && rEnd - rStart > n) rStart += 1;
   i = rEnd;
   if (der[i] !== 0x02) throw new Error('invalid DER (no INTEGER s)');
   const sLen = der[i + 1]!;
   let sStart = i + 2;
-  let sEnd = sStart + sLen;
+  const sEnd = sStart + sLen;
   while (der[sStart] === 0x00 && sEnd - sStart > n) sStart += 1;
 
   const out = new Uint8Array(n * 2);
