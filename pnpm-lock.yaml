@@ -150,6 +150,9 @@ importers:
       '@microsoft/signalr':
         specifier: ^8
         version: 8.0.17
+      '@opentelemetry/api':
+        specifier: ^1.9.0
+        version: 1.9.1
       '@sentry/node':
         specifier: ^10.54.0
         version: 10.54.0
