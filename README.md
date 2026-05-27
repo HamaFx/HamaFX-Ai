@@ -4,7 +4,7 @@
 
 Built for a single user. The agent has full context over live price action, multi-timeframe charts, technical indicators, fundamental data, curated news, your own journal, and prior briefings.
 
-**Status**: Phases 0 → 7 shipped. The agent now plans, verifies, and remembers; the data layer stays fresh under provider stress with stale-while-revalidate, health-aware failover, and adaptive throttling. See [`docs/10-roadmap.md`](./docs/10-roadmap.md) for the full feature ledger.
+**Status**: Phases 0 → 8 shipped. The agent now plans, verifies, and remembers; the data layer stays fresh under provider stress with stale-while-revalidate, health-aware failover, and adaptive throttling. Phase 8 added a GCE worker that holds a persistent BiQuote SignalR connection — sub-second prices in `live_ticks`, six heavy jobs migrated off Vercel onto systemd timers, nightly off-site backups + weekly verified restore, server-only Sentry on both deploys. See [`docs/10-roadmap.md`](./docs/10-roadmap.md) for the full feature ledger.
 
 ---
 
@@ -45,14 +45,14 @@ Built for a single user. The agent has full context over live price action, mult
 | AI               | Vercel **AI SDK v5** + Vercel AI Gateway / direct Vertex AI         |
 | State (server)   | TanStack Query                                                      |
 | State (client)   | Zustand + URL state (`nuqs`)                                        |
-| Live prices      | REST polling every 1.5 s with stale-while-revalidate cache (Phase 7a) |
-| Market data      | Twelve Data (primary) + Finnhub (fallback) — health-aware failover   |
+| Live prices      | Persistent BiQuote SignalR (worker) → `live_ticks` Postgres snapshot; REST polling fallback every 1.5s with stale-while-revalidate cache (Phase 8 PR-6/7/8) |
+| Market data      | BiQuote (primary) + Finnhub (fallback) — health-aware failover; Twelve Data retired in Phase 8 PR-19   |
 | News             | Finnhub news (primary) + Marketaux (fallback)                       |
 | Macro / calendar | FRED + Trading Economics                                            |
 | DB               | **Supabase Postgres** (free tier) + `pgvector`                      |
 | ORM              | Drizzle                                                             |
 | Cache            | Next.js Data Cache (no Upstash needed) with SWR + single-flight     |
-| Cron             | GCE-VM crontab fans into `/api/cron/*` (every 2-5 min)              |
+| Cron             | systemd timers on a GCE e2-medium worker VM; light `/api/cron/*` pokers + 6 heavy worker-resident jobs (Phase 8) |
 | Auth             | Single **`APP_PASSWORD`** env + HMAC-signed cookie + middleware     |
 | Hosting          | **Vercel** — single deploy                                          |
 | Monorepo         | pnpm workspaces + Turborepo                                         |

@@ -312,12 +312,71 @@ The GitHub Actions workflow files (`.github/workflows/cron-*.yml`) are kept as a
 - [x] Phase 7b: 8 new tools + hybrid RAG + memory index live and exercisable from the agent.
 - [x] Phase 7c: planner + verifier + citations rendered correctly in the chat UI; eval `cases.json` runs with tool-trace assertions.
 
+## Phase 8 — Backend reliability ✅ DONE
+
+**Goal**: free-tier upgrade of the data + scheduled-work paths so proactive features (setup scanner, prediction loop, paper-trading) can run on top with no further Vercel-Pro / Upstash-paid spend. Sub-second live prices, reliable jobs that aren't bound by Vercel's 60s ceiling, off-site backups, and per-domain alerting — all on a single GCE worker VM. Full design + implementation plan: [`docs/superpowers/specs/2026-05-27-phase-8-backend-reliability-design.md`](../docs/superpowers/specs/2026-05-27-phase-8-backend-reliability-design.md), [`docs/superpowers/specs/2026-05-27-phase-8-backend-reliability-plan.md`](../docs/superpowers/specs/2026-05-27-phase-8-backend-reliability-plan.md).
+
+### Foundations
+
+- [x] **VM upgrade** — `hamafx-cron` resized `e2-small` → `e2-medium` (4 GB RAM) for SignalR + heavy-job headroom.
+- [x] **BiQuote** ([https://biquote.io](https://biquote.io)) becomes the primary price + 1m-candle source. Free, no key, REST + SignalR. Twelve Data retired in PR-19.
+- [x] Wire-format zod schemas (`@hamafx/shared/schemas/biquote.ts`) + internal `LiveTickSchema`.
+- [x] BiQuote REST adapter (`packages/data/src/providers/biquote/`): `fetchTick`, `fetchLatest`, `fetchOhlc`. Self-throttled at 10 req/min total. Adaptive 429 backoff. SignalR client lives in the worker, not here (steering rule §7).
+
+### Persistence
+
+- [x] **`live_ticks`** snapshot table (one row per supported symbol). Worker UPSERTs at ≤1 Hz from the BiQuote SignalR hub.
+- [x] **`candles_1m`** table written by the worker's in-process aggregator on bar close. ON CONFLICT DO NOTHING for idempotent restarts. 14-day retention via the snapshots tail step.
+
+### Worker (`apps/worker/`)
+
+- [x] Always-on Node service. Phase 8 PR-5 scaffold + PR-6 SignalR consumer + PR-7 1m candle aggregator.
+- [x] **Heavy job migrations** — six oneshot systemd services + timers, each with its own healthcheck UUID:
+  - `embedding-backfill` (every 6h)
+  - `briefings` (every 5min, pre/post high-impact event)
+  - `snapshots` (00:05 UTC daily, plus the candles_1m prune)
+  - `cot` (Friday 22:00 UTC)
+  - `fred-actuals` (01:30 UTC daily)
+  - `weekly-review` (Sunday 18:00 UTC)
+- [x] Per-job CLI (`runner/cli.ts`): pings start/success/fail to healthchecks.io, forwards SIGTERM to AbortController, exits 0/1/2 with separated semantics.
+- [x] **Self-update** — `update.sh` runs every 5 min via systemd timer; on a SHA change it installs, builds, tests, and only restarts the worker if every step passes; rolls back to the previous SHA on failure. Sudoers entry grants the `hamafx` user the single `systemctl restart hamafx-worker.service` permission.
+
+### Read path
+
+- [x] **Pseudo-providers** in `packages/data/src/providers/{live-ticks,candles-1m}/`. The Vercel `/api/market/price` route reads from Postgres directly (zero outbound HTTP) when the worker is fresh, falls through to BiQuote REST → Finnhub when stale.
+
+### Reliability
+
+- [x] **systemd timers replace crontab** — every scheduled task on the VM is a `*.timer + *.service` pair (worker heavy jobs + light Vercel-poke crons). Legacy `cron` daemon stopped + disabled.
+- [x] **Nightly DB backups** to GCS in us-central1 (single-region; intra-region egress is free): `pg_dump --format=custom | gzip | gsutil cp -` at 03:00 UTC. 30-day retention via bucket lifecycle.
+- [x] **Nightly journal-only JSON export** (belt-and-suspenders) at 03:05 UTC. 90-day retention.
+- [x] **Weekly verify-restore** — Sunday 04:00 UTC pulls the latest dump, restores into a throwaway dockerised Postgres, asserts non-zero rows, writes `verify/last-success.txt`. A backup you've never restored isn't a backup.
+- [x] **Disaster-recovery runbook** — `infra/cron-vm/RECOVERY.md` covers five concrete scenarios with copy-pasteable commands.
+
+### Observability
+
+- [x] **Sentry server-only** — `@sentry/nextjs` in apps/web (Node + Edge runtimes; client SDK deliberately not registered) and `@sentry/node` in the worker. Events tagged `{ service, commit_sha, region/runtime, request_id }`. No-op when `SENTRY_DSN` is unset.
+- [x] **healthchecks.io** — every load-bearing process has a UUID. Per-job pings on each tick; the SignalR consumer pings every 30s with last-tick age in the body. Email alerts on missed pings.
+
+### Definition of done
+
+- [x] BiQuote serving the primary price/candle path with zero outbound HTTP when the worker is healthy.
+- [x] Six heavy jobs running on systemd timers, each below its old Vercel-route ceiling and each independently observable in healthchecks.io.
+- [x] Self-update timer in flight; merges to `main` reach the worker within 5 minutes with rollback-on-failure.
+- [x] Nightly off-site backups + weekly verified restore green.
+- [x] Twelve Data retired; provider matrix in `docs/06-data-sources.md` reflects the BiQuote-primary world.
+
 ## Stretch / parking lot
 
-- Add a separate **worker** on Fly.io if/when sub-second WS becomes worth it.
+- ~~Add a separate **worker** on Fly.io if/when sub-second WS becomes worth it.~~ **Done in Phase 8 — worker lives on the existing GCE VM, not Fly.io.**
 - Backtest narration tool (no full lab UI — just describe a rule, get historical performance).
 - Add USDJPY / AUDUSD / USDCAD if you actively trade them (still keep total ≤ 6 instruments).
 - Native mobile (Expo) reusing UI hooks.
+- **Phase 9 candidates** (now unblocked by Phase 8's reliability):
+  - Proactive setup scanner (every 15 min during London/NY).
+  - Live position monitor that pushes when stop is at 30% threat or target at 70% complete.
+  - Prediction logging + calibration footer.
+  - Paper-trading layer with `open_paper_trade` AI tool.
 
 ## Definition of "done" per phase
 
@@ -330,3 +389,4 @@ The GitHub Actions workflow files (`.github/workflows/cron-*.yml`) are kept as a
 | 5     | ✅ The whole UI looks polished — hand someone the phone and they don't ask "is this Bootstrap?". |
 | 6     | ✅ The UI feels premium-dark + scalable — single nav drawer, news/calendar/settings rebuilt as proper trading-desk surfaces. |
 | 7     | ✅ The agent **plans, verifies, remembers**; the data layer **stays fresh under provider stress**; per-domain models keep cost low without sacrificing depth where it matters. |
+| 8     | ✅ The backend stays reliable and free: BiQuote SignalR feeds Postgres → sub-second prices, six heavy jobs run on the worker with health pings + Sentry, nightly off-site backups + weekly verified restore. |

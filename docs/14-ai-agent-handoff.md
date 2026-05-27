@@ -109,11 +109,19 @@ Before adding a new icon, confirm `lucide-react` doesn't already have it. **No i
 
 ### F. Add a new cron job
 
-1. Create handler at `apps/web/src/app/api/cron/<name>/route.ts`.
-2. Verify `Authorization: Bearer ${CRON_SECRET}` via `withCronAuth(req, fn)` from `apps/web/src/lib/cron.ts`. Return 401 otherwise.
-3. Keep handler **idempotent** and **fast** (≤ 60 s on Pro, ≤ 10 s on Hobby).
-4. Add the schedule to the GCE-VM crontab (`infra/cron-vm/`) — that's the primary scheduler. The `vercel.json` `"crons"` block / GitHub Actions are fallbacks.
-5. Update `docs/08-backend-and-api.md` § Cron.
+Phase 8 split scheduled work into two homes:
+
+- **Heavy / scheduled work** lives on the worker as a oneshot systemd unit. Add the run function in `apps/worker/src/jobs/<name>.ts`, register it in `apps/worker/src/jobs/index.ts` + `JobName` in `types.ts` + the resolveHcUuid switch in `runner/cli.ts`. Drop a `infra/cron-vm/units/hamafx-job-<name>.{service,timer}` pair next to the others.
+- **Light Vercel-poke crons** stay as `apps/web/src/app/api/cron/<name>/route.ts`. Wrap with `withCronAuth(req, fn)` from `apps/web/src/lib/cron.ts`. Drop a `infra/cron-vm/units/hamafx-light-<name>.{service,timer}` pair so a systemd timer pokes the route on schedule.
+
+For both:
+
+1. Keep handlers **idempotent** and **fast**.
+2. Each route / job gets its own `HC_*_UUID` env var. The runner pings start/success/fail; the light unit's `ExecStartPost` pings success after the curl exits 0.
+3. Update `infra/cron-vm/README.md` schedule table.
+4. Update `docs/08-backend-and-api.md` § Cron.
+
+Heavy jobs should also keep a sibling `apps/web/src/app/api/cron/<name>/route.ts` as a manual-fallback path so an operator can hand-trigger via `curl -H "Authorization: Bearer $CRON_SECRET" …` during a worker outage.
 
 ### G. Touch the design tokens
 

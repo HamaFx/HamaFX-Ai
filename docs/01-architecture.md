@@ -2,7 +2,7 @@
 
 ## High-level view
 
-HamaFX-Ai is a **single deployable unit** on Vercel that talks to a few managed services. There is **no separate worker** at MVP — Vercel Cron handles the scheduled jobs and the browser polls REST for live prices. We may add a worker on Fly.io later if we ever need a persistent upstream WebSocket — see "Future: optional worker" below.
+HamaFX-Ai runs on **two co-operating deployments**: Vercel hosts the web app + chat + read APIs + light cron pokers, and a single GCE VM (`hamafx-cron`, e2-medium in `us-central1-a`) runs the always-on BiQuote SignalR consumer + heavy scheduled jobs. Phase 8 lifted the previous "single deployable unit" rule once we needed sub-second prices and heavy jobs that don't fit in Vercel Hobby's 60s function ceiling.
 
 ```mermaid
 flowchart LR
@@ -12,21 +12,31 @@ flowchart LR
         Chat["AI Chat (useChat)"]
     end
 
-    subgraph Vercel["▲ Vercel — apps/web (single deploy)"]
+    subgraph Vercel["▲ Vercel — apps/web"]
         RH["Route Handlers<br/>/api/chat<br/>/api/market/*<br/>/api/news/*<br/>/api/calendar/*"]
         MW["Middleware<br/>password gate"]
-        Cron["Vercel Cron<br/>/api/cron/news<br/>/api/cron/calendar<br/>/api/cron/alerts"]
         ISR["Static + RSC pages"]
+    end
+
+    subgraph VM["GCE — hamafx-cron (e2-medium)"]
+        SR["SignalR consumer<br/>(always-on Node)"]
+        Agg["1m candle aggregator"]
+        Heavy["Heavy job runner<br/>(embedding-backfill, briefings,<br/>snapshots, cot, fred-actuals,<br/>weekly-review)"]
+        Light["systemd timers<br/>poke /api/cron/* on Vercel"]
+        Updater["update.sh<br/>(self-pull every 5 min)"]
+        Backup["nightly pg_dump → GCS"]
     end
 
     subgraph Managed["☁ Managed services"]
         SB[("Supabase Postgres<br/>+ pgvector<br/>(used as DB only)")]
-        UP[("Upstash Redis<br/>cache only")]
+        GCS[("GCS bucket<br/>(backups)")]
+        HC[("healthchecks.io")]
+        Sentry[("Sentry")]
         GW["Vercel AI Gateway<br/>(OpenAI · Anthropic · Google)"]
     end
 
     subgraph Providers["🌐 Data providers"]
-        TD["Twelve Data<br/>FX + XAU REST"]
+        BQ["BiQuote<br/>FX + XAU REST + SignalR"]
         FH["Finnhub<br/>news + fallback FX"]
         AV["Alpha Vantage<br/>backup historical"]
         MX["Marketaux<br/>news + sentiment"]
