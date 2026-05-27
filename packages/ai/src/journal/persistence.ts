@@ -3,6 +3,11 @@
 // Stats math: realized R-multiple is computed at close time via
 // `computeRMultiple(entry, stop, exit, side)` so the column is reliable.
 // Open trades have rMultiple=null and don't contribute to avgR/winRate.
+//
+// Phase 7b: every successful create / update fires a best-effort
+// re-embedding of the entry into the memory index so `search_knowledge`
+// can recall journal context. The memory call is fire-and-forget — the
+// CRUD response never waits on it.
 
 import { getDb, schema } from '@hamafx/db';
 import {
@@ -17,6 +22,8 @@ import {
   type TradeSide,
 } from '@hamafx/shared';
 import { and, asc, desc, eq, gte, lte } from 'drizzle-orm';
+
+import { rememberJournalEntry } from '../memory/memory-index';
 
 // ---------------------------------------------------------------------------
 // CRUD
@@ -79,7 +86,15 @@ export async function createEntry(input: CreateJournalInput): Promise<JournalEnt
       tags: input.tags ?? [],
     })
     .returning();
-  return rowToEntry(inserted[0]!);
+  const entry = rowToEntry(inserted[0]!);
+
+  // Best-effort memory write so `search_knowledge` can recall this trade.
+  // Errors here must never block the journal-CRUD response.
+  void rememberJournalEntry({ entryId: entry.id }).catch((err) => {
+    console.warn('[journal] memory upsert failed', err);
+  });
+
+  return entry;
 }
 
 export interface UpdateJournalInput {
@@ -135,7 +150,16 @@ export async function updateEntry(
     .set(patch)
     .where(eq(schema.journalEntries.id, id))
     .returning();
-  return updated[0] ? rowToEntry(updated[0]) : null;
+  if (!updated[0]) return null;
+  const entry = rowToEntry(updated[0]);
+
+  // Re-embed: outcomes and notes change the natural-language summary
+  // we feed the memory index, so a stale row would mislead recall.
+  void rememberJournalEntry({ entryId: entry.id }).catch((err) => {
+    console.warn('[journal] memory upsert failed', err);
+  });
+
+  return entry;
 }
 
 export async function deleteEntry(id: string): Promise<void> {

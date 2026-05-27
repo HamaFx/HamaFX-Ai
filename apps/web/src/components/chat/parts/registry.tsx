@@ -20,20 +20,29 @@ import {
   AnalyzeFundamentalOutputSchema,
   AnalyzeTechnicalOutputSchema,
   AnnotateChartOutputSchema,
+  ComputePositionHealthOutputSchema,
+  ComputeRiskOutputSchema,
+  ForecastVolatilityOutputSchema,
   GetCalendarOutputSchema,
   GetCandlesOutputSchema,
   GetCorrelationOutputSchema,
   GetCoTOutputSchema,
   GetIndicatorsOutputSchema,
+  GetIntermarketOutputSchema,
   GetJournalStatsOutputSchema,
   GetMarketStructureOutputSchema,
   GetNewsOutputSchema,
   GetPriceOutputSchema,
+  GetSeasonalityOutputSchema,
+  GetSessionLevelsOutputSchema,
   LogJournalOutputSchema,
+  ReplaySetupOutputSchema,
   SearchKnowledgeOutputSchema,
   SetAlertOutputSchema,
   ShareSnapshotOutputSchema,
+  SummarizeThreadOutputSchema,
   TOOL_NAMES,
+  VerifyCallOutputSchema,
   type ToolName,
   type ToolOutput,
 } from '@hamafx/shared';
@@ -44,20 +53,29 @@ import { AnalyzeChartImagePart } from './analyze-chart-image';
 import { AnalyzeFundamentalPart } from './analyze-fundamental';
 import { AnalyzeTechnicalPart } from './analyze-technical';
 import { AnnotateChartPart } from './annotate-chart';
+import { ComputePositionHealthPart } from './compute-position-health';
+import { ComputeRiskPart } from './compute-risk';
+import { ForecastVolatilityPart } from './forecast-volatility';
 import { GetCalendarPart } from './get-calendar';
 import { GetCandlesPart } from './get-candles';
 import { GetCorrelationPart } from './get-correlation';
 import { GetCoTPart } from './get-cot';
 import { GetIndicatorsPart } from './get-indicators';
+import { GetIntermarketPart } from './get-intermarket';
 import { GetJournalStatsPart } from './get-journal-stats';
 import { GetMarketStructurePart } from './get-market-structure';
 import { GetNewsPart } from './get-news';
 import { GetPricePart } from './get-price';
+import { GetSeasonalityPart } from './get-seasonality';
+import { GetSessionLevelsPart } from './get-session-levels';
 import { LogJournalPart } from './log-journal';
+import { ReplaySetupPart } from './replay-setup';
 import { SearchKnowledgePart } from './search-knowledge';
 import { SetAlertPart } from './set-alert';
 import { ShareSnapshotPart } from './share-snapshot';
+import { SummarizeThreadPart } from './summarize-thread';
 import { ToolCard } from './tool-card';
+import { VerifyCallPart } from './verify-call';
 
 /** State a part is in for the duration of a streamed tool call. */
 export type ToolPartState = 'loading' | 'done' | 'error';
@@ -100,6 +118,17 @@ export const partRegistry: { [K in ToolName]: ComponentType<ToolPartProps<K>> } 
   get_correlation: GetCorrelationPart,
   get_cot: GetCoTPart,
   share_snapshot: ShareSnapshotPart,
+  // Phase 7b tools
+  compute_risk: ComputeRiskPart,
+  get_session_levels: GetSessionLevelsPart,
+  get_intermarket: GetIntermarketPart,
+  forecast_volatility: ForecastVolatilityPart,
+  get_seasonality: GetSeasonalityPart,
+  compute_position_health: ComputePositionHealthPart,
+  replay_setup: ReplaySetupPart,
+  summarize_thread: SummarizeThreadPart,
+  // Phase 7c tools
+  verify_call: VerifyCallPart,
 };
 
 /**
@@ -130,6 +159,17 @@ const partSchemas: { [K in ToolName]: z.ZodType<ToolOutput<K>> } = {
   get_correlation: GetCorrelationOutputSchema,
   get_cot: GetCoTOutputSchema,
   share_snapshot: ShareSnapshotOutputSchema,
+  // Phase 7b tools
+  compute_risk: ComputeRiskOutputSchema,
+  get_session_levels: GetSessionLevelsOutputSchema,
+  get_intermarket: GetIntermarketOutputSchema,
+  forecast_volatility: ForecastVolatilityOutputSchema,
+  get_seasonality: GetSeasonalityOutputSchema,
+  compute_position_health: ComputePositionHealthOutputSchema,
+  replay_setup: ReplaySetupOutputSchema,
+  summarize_thread: SummarizeThreadOutputSchema,
+  // Phase 7c tools
+  verify_call: VerifyCallOutputSchema,
 };
 
 /** Type guard: is `s` a known `ToolName`? */

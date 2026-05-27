@@ -43,8 +43,9 @@ Thumbs.db
 # vercel
 .vercel/
 
-# drizzle
-packages/db/drizzle/meta/
+# drizzle — keep the migration journal but ignore the heavy snapshots
+packages/db/drizzle/meta/*
+!packages/db/drizzle/meta/_journal.json
 
 # misc
 *.pem

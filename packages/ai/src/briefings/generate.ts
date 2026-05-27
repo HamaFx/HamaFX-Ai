@@ -19,12 +19,14 @@ import {
   type EconomicEvent,
   type EventCurrency,
   type Importance,
+  type Symbol,
 } from '@hamafx/shared';
 import { generateText } from 'ai';
 import { and, asc, eq } from 'drizzle-orm';
 
 import { dailySpendUsd } from '../cost';
 import { computeStats } from '../journal/persistence';
+import { rememberBriefing } from '../memory/memory-index';
 import { resolveModel } from '../model';
 import { appendAssistantMessage } from '../persistence';
 
@@ -106,6 +108,19 @@ async function emitEventBriefing(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { messageId } = await appendAssistantMessage(thread.id, ui as any);
   await recordEmitted(eventId, kind, messageId);
+
+  // Phase 7b — embed the briefing into the memory index so it's
+  // surfaceable later via `search_knowledge`. Best-effort.
+  void rememberBriefing({
+    messageId,
+    body: summary,
+    briefingKind: kind,
+    occurredAtMs: event.date,
+    ...(event.currency
+      ? { symbol: symbolFromCurrency(event.currency) }
+      : {}),
+  }).catch((err) => console.warn('[briefings] memory write failed', err));
+
   return { emitted: true };
 }
 
@@ -262,6 +277,15 @@ export async function emitWeeklyReview(): Promise<{ emitted: boolean; reason?: s
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { messageId } = await appendAssistantMessage(thread.id, ui as any);
   await recordEmitted(weekKey, 'weekly_review', messageId);
+
+  // Phase 7b — embed the weekly review for later memory recall.
+  void rememberBriefing({
+    messageId,
+    body: summary,
+    briefingKind: 'weekly_review',
+    occurredAtMs: Date.now(),
+  }).catch((err) => console.warn('[briefings] memory write failed', err));
+
   return { emitted: true };
 }
 
@@ -340,4 +364,16 @@ function isoWeekKey(d: Date): string {
   firstThursday.setUTCDate(firstThursday.getUTCDate() - firstDayNum + 3);
   const week = 1 + Math.round((target.getTime() - firstThursday.getTime()) / (7 * 24 * 60 * 60 * 1000));
   return `${target.getUTCFullYear()}-W${week.toString().padStart(2, '0')}`;
+}
+
+/**
+ * Map a CFD currency tag to one of our three supported pairs for the
+ * briefing's memory-index symbol context. USD-driven events get pinned
+ * to XAUUSD because gold is the most directly USD-exposed leg in our
+ * scope.
+ */
+function symbolFromCurrency(currency: EventCurrency): Symbol {
+  if (currency === 'EUR') return 'EURUSD';
+  if (currency === 'GBP') return 'GBPUSD';
+  return 'XAUUSD';
 }

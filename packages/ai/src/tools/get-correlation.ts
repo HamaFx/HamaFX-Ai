@@ -29,10 +29,11 @@ declare module '@hamafx/shared' {
   }
 }
 
-const FX_PAIRS_FOR_DXY: Array<{ symbol: Symbol; weight: number }> = [
+const _FX_PAIRS_FOR_DXY: Array<{ symbol: Symbol; weight: number }> = [
   { symbol: 'EURUSD', weight: 0.5 },
   { symbol: 'GBPUSD', weight: 0.5 },
 ];
+void _FX_PAIRS_FOR_DXY;
 
 const ONE_DAY_MS = 24 * 60 * 60 * 1000;
 
