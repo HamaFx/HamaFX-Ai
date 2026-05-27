@@ -44,7 +44,14 @@ export async function GET(req: Request): Promise<Response> {
     const missing: Array<string> = [];
 
     for (const key of ALLOWED_KEYS) {
-      const val = process.env[key];
+      let val = process.env[key];
+      // Fall through to a known alias when the canonical name is missing.
+      if (
+        (typeof val !== 'string' || val.length === 0) &&
+        key === 'SENTRY_DSN'
+      ) {
+        val = process.env.NEXT_PUBLIC_SENTRY_DSN;
+      }
       if (typeof val === 'string' && val.length > 0) {
         out[key] = val;
         present.push(key);
