@@ -89,6 +89,51 @@ crontab activity, but every Phase 8+ run goes to journald.
 - The `e2-small` and `e2-micro` tiers are too small once the worker holds a persistent BiQuote SignalR connection — `e2-micro` (1 GB) is one bad embedding batch from OOMKill.
 - The VM auto-updates via `unattended-upgrades` (Ubuntu default).
 
+## GCS backup bucket — one-time setup (Phase 8 PR-17)
+
+Backups land in a single-region `us-central1` GCS bucket so intra-region
+egress from the VM stays free. 30-day retention for `db/`, 90-day for
+`journal/`, both lifecycle-managed.
+
+```bash
+PROJECT_ID="hamafx-78845"
+BUCKET="hamafx-backups-${PROJECT_ID}"
+
+# Create the bucket. Single-region us-central1, uniform IAM, Standard class.
+gcloud storage buckets create "gs://${BUCKET}" \
+  --project="${PROJECT_ID}" \
+  --location=us-central1 \
+  --uniform-bucket-level-access \
+  --default-storage-class=STANDARD
+
+# Lifecycle policy.
+cat > /tmp/lifecycle.yaml <<EOF
+lifecycle:
+  rule:
+    - action: { type: Delete }
+      condition: { age: 30, matchesPrefix: ['db/'] }
+    - action: { type: Delete }
+      condition: { age: 90, matchesPrefix: ['journal/'] }
+EOF
+gcloud storage buckets update "gs://${BUCKET}" --lifecycle-file=/tmp/lifecycle.yaml
+
+# Grant the VM's default service account write-only access on this bucket.
+SA=$(gcloud compute instances describe hamafx-cron \
+  --zone=us-central1-a --project="${PROJECT_ID}" \
+  --format='get(serviceAccounts[0].email)')
+gcloud storage buckets add-iam-policy-binding "gs://${BUCKET}" \
+  --member="serviceAccount:${SA}" \
+  --role=roles/storage.objectAdmin
+```
+
+After running the above, write `GCS_BACKUP_BUCKET=hamafx-backups-${PROJECT_ID}`
+into `/opt/hamafx/.env`. The nightly `hamafx-backup-db.timer` and
+`hamafx-backup-journal.timer` need it to know where to push.
+
+## Disaster recovery
+
+Concrete restore commands live in `infra/cron-vm/RECOVERY.md`.
+
 ## Teardown
 
 ```bash

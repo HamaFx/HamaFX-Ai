@@ -1,0 +1,27 @@
+[Unit]
+Description=HamaFX-Ai nightly Postgres dump → GCS
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=hamafx
+Group=hamafx
+WorkingDirectory=/opt/hamafx
+EnvironmentFile=/opt/hamafx/.env
+ExecStart=/opt/hamafx/app/infra/cron-vm/scripts/backup-db.sh
+
+# A full dump of the existing schema is well under 1G; this leaves
+# headroom for embeddings growth.
+MemoryMax=1G
+TimeoutStartSec=1800
+
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/hamafx /tmp
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=hamafx-backup-db

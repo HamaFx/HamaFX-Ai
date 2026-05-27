@@ -34,7 +34,23 @@ fi
 
 log 'installing dependencies'
 apt-get update -qq
-apt-get install -y -qq curl logrotate sudo
+apt-get install -y -qq curl logrotate sudo postgresql-client docker.io
+
+log 'adding hamafx user to docker group (PR-17: verify-restore needs it)'
+if id hamafx >/dev/null 2>&1; then
+  usermod -aG docker hamafx || true
+fi
+
+log 'installing google-cloud CLI (gsutil) if not already present'
+if ! command -v gsutil >/dev/null 2>&1; then
+  apt-get install -y -qq apt-transport-https ca-certificates gnupg
+  echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" \
+    > /etc/apt/sources.list.d/google-cloud-sdk.list
+  curl -fsSL https://packages.cloud.google.com/apt/doc/apt-key.gpg \
+    | gpg --dearmor -o /usr/share/keyrings/cloud.google.gpg
+  apt-get update -qq
+  apt-get install -y -qq google-cloud-cli
+fi
 
 log 'installing sudoers entry for hamafx user (PR-16: self-update can restart the worker)'
 if [[ -f "$(dirname "$0")/sudoers.d/hamafx" ]]; then
@@ -43,7 +59,8 @@ if [[ -f "$(dirname "$0")/sudoers.d/hamafx" ]]; then
   visudo -c -f /etc/sudoers.d/hamafx >/dev/null
 fi
 
-log 'making update.sh executable'
+log 'making scripts executable'
+chmod +x "$(dirname "$0")"/scripts/*.sh 2>/dev/null || true
 chmod +x "$(dirname "$0")/update.sh" 2>/dev/null || true
 
 log "creating /opt/hamafx (env file, deployed-sha pointer)"

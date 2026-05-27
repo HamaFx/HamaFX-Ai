@@ -1,0 +1,11 @@
+[Unit]
+Description=Nightly journal export to GCS at 03:05 UTC
+
+[Timer]
+OnCalendar=*-*-* 03:05:00 UTC
+RandomizedDelaySec=60
+Persistent=true
+Unit=hamafx-backup-journal.service
+
+[Install]
+WantedBy=timers.target

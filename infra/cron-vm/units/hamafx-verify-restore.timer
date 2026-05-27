@@ -1,0 +1,11 @@
+[Unit]
+Description=Weekly DB-restore rehearsal — Sunday 04:00 UTC
+
+[Timer]
+OnCalendar=Sun *-*-* 04:00:00 UTC
+RandomizedDelaySec=120
+Persistent=true
+Unit=hamafx-verify-restore.service
+
+[Install]
+WantedBy=timers.target

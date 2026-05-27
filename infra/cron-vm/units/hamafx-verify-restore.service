@@ -1,0 +1,24 @@
+[Unit]
+Description=HamaFX-Ai weekly DB-restore rehearsal
+After=network-online.target docker.service
+Wants=network-online.target
+Requires=docker.service
+
+[Service]
+Type=oneshot
+User=hamafx
+Group=hamafx
+WorkingDirectory=/opt/hamafx
+EnvironmentFile=/opt/hamafx/.env
+ExecStart=/opt/hamafx/app/infra/cron-vm/scripts/verify-restore.sh
+
+MemoryMax=2G
+TimeoutStartSec=2400
+
+# Docker requires NoNewPrivileges=false; we rely on the docker-group
+# membership of the hamafx user (granted by setup.sh in PR-17).
+NoNewPrivileges=false
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=hamafx-verify-restore
