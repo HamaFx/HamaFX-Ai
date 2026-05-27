@@ -9,11 +9,11 @@ A lightweight GCE `e2-small` instance that fires all cron endpoints on schedule 
 | Name | `hamafx-cron` |
 | Project | `hamafx-78845` |
 | Zone | `us-central1-a` |
-| Machine type | `e2-small` (2 vCPU, 2 GB RAM) |
+| Machine type | `e2-medium` (2 vCPU, 4 GB RAM) |
 | OS | Ubuntu 24.04 LTS Minimal |
 | Disk | 10 GB pd-standard |
 | External IP | Ephemeral (check `gcloud compute instances describe hamafx-cron --zone=us-central1-a --format='get(networkInterfaces[0].accessConfigs[0].natIP)'`) |
-| Monthly cost | ~$6.11 (e2-small in us-central1, sustained use discount) |
+| Monthly cost | ~$15-17 (e2-medium in us-central1, sustained use discount) |
 
 ## Schedule
 
@@ -70,8 +70,8 @@ gcloud compute ssh hamafx-cron --zone=us-central1-a --command="crontab -l"
 
 ## Cost optimization
 
-- `e2-small` is in the GCP Always Free tier for the first 744 hours/month in us-central1 (but only for `e2-micro`). The `e2-small` costs ~$6.11/month with sustained use discount.
-- To reduce to $0: downgrade to `e2-micro` (0.25 vCPU, 1 GB RAM) — more than enough for curl-based crons.
+- `e2-medium` costs ~$15-17/month with sustained use discount in us-central1. This was upgraded from `e2-small` (~$6/mo) on 2026-05-27 to give the worker (Phase 8) headroom for the always-on SignalR consumer plus burst capacity for embedding-backfill and weekly nightly `pg_dump`.
+- The `e2-small` and `e2-micro` tiers are too small once the worker holds a persistent BiQuote SignalR connection — `e2-micro` (1 GB) is one bad embedding batch from OOMKill.
 - The VM auto-updates via `unattended-upgrades` (Ubuntu default).
 
 ## Teardown
