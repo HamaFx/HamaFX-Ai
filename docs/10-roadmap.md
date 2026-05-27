@@ -104,13 +104,14 @@ gantt
 
 ## Cron triggering (Phase 1 → Phase 2 deployment note)
 
-Vercel **Hobby** caps cron jobs at once-per-day. We don't have a `crons` block in `vercel.json`. Three options to actually fire the cron endpoints on a useful cadence:
+Vercel **Hobby** caps cron jobs at once-per-day. We don't have a `crons` block in `vercel.json`. Cron scheduling is handled by a dedicated **GCE VM** (`hamafx-cron`, `e2-small` in `us-central1-a`, project `hamafx-78845`):
 
-1. **Upgrade to Vercel Pro** — re-add the `crons` block per the original `09-deployment.md` schedule and you're done.
-2. **External scheduler** — Fly.io tiny worker, GitHub Actions on a schedule, or [cron-job.org](https://cron-job.org) hitting the URLs with `Authorization: Bearer ${CRON_SECRET}`.
-3. **Manual trigger** — visit the empty-state UIs in `/news` / `/calendar` / `/alerts` and copy the curl recipe shown there.
+- The VM runs system crontab entries that `curl` each `/api/cron/*` endpoint with `Authorization: Bearer ${CRON_SECRET}`.
+- High-frequency endpoints (news, alerts, briefings) fire every 5 minutes.
+- Setup, schedule, and monitoring docs: `infra/cron-vm/README.md`.
+- Monthly cost: ~$6 (or $0 if downgraded to `e2-micro` which is in the Always Free tier).
 
-Original Phase 1c plan was option 2 (Fly.io worker). Decision was deferred so we could ship the surfaces first and pick once you actually need sub-daily firing.
+The GitHub Actions workflow files (`.github/workflows/cron-*.yml`) are kept as a secondary fallback but are not the primary scheduler.
 
 ---
 

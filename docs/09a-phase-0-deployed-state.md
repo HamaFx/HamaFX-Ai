@@ -99,8 +99,16 @@ Aliases: `hama-fx-ai-mahamad-ahmads-projects.vercel.app`,
 - Node version: 24.x
 - SSO deployment protection: **disabled** (we have our own password gate)
 - `vercel.json`: framework + per-route function timeouts. **No crons** —
-  Hobby plan caps cron jobs at once-per-day; re-add the schedules block from
-  the original plan after upgrading to Pro or accepting daily-only cadence.
+  cron scheduling is handled by the GCE VM (see below).
+
+## Cron VM (GCE)
+
+- Instance: `hamafx-cron` in `us-central1-a`, project `hamafx-78845`
+- Machine type: `e2-small` (2 vCPU, 2 GB RAM, ~$6/month)
+- OS: Ubuntu 24.04 LTS Minimal
+- Fires all `/api/cron/*` endpoints via system crontab + curl
+- Docs: `infra/cron-vm/README.md`
+- Logs: `/var/log/hamafx-cron.log` on the VM
 
 ## Environment variables (production + preview)
 
