@@ -21,13 +21,12 @@ export interface JobResult {
 export type JobFn = (ctx: JobContext) => Promise<JobResult>;
 
 /**
- * The full set of jobs that can be invoked from the runner CLI. New jobs
- * land here as PRs 10..14 ship.
+ * The full set of jobs that can be invoked from the runner CLI.
  */
 export type JobName =
   | 'embedding-backfill'
   | 'briefings'
   | 'snapshots'
   | 'cot'
-  | 'fred-actuals';
-// PR-14 will add 'weekly-review'.
+  | 'fred-actuals'
+  | 'weekly-review';

@@ -111,8 +111,8 @@ cat > /tmp/hamafx-crontab << 'CRONTAB'
 # Phase 8 PR-13 — moved to hamafx-job-fred-actuals.timer
 # 30 1 * * * /opt/hamafx/cron-fire.sh /api/cron/fred-actuals >> /var/log/hamafx-cron.log 2>&1
 
-# weekly-review still on crontab; PR-14 migrates it.
-0 18 * * 0 /opt/hamafx/cron-fire.sh /api/cron/weekly-review >> /var/log/hamafx-cron.log 2>&1
+# Phase 8 PR-14 — moved to hamafx-job-weekly-review.timer
+# 0 18 * * 0 /opt/hamafx/cron-fire.sh /api/cron/weekly-review >> /var/log/hamafx-cron.log 2>&1
 CRONTAB
 
 crontab /tmp/hamafx-crontab

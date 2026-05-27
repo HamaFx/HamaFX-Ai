@@ -1,0 +1,27 @@
+[Unit]
+Description=HamaFX-Ai job — Sunday weekly journal review
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=hamafx
+Group=hamafx
+WorkingDirectory=/opt/hamafx/app/apps/worker
+EnvironmentFile=/opt/hamafx/.env
+ExecStartPre=/bin/sh -c 'echo "DEPLOYED_SHA=$(cat /opt/hamafx/.deployed-sha 2>/dev/null || echo unknown)" > /run/hamafx-job-weekly-review.env'
+EnvironmentFile=-/run/hamafx-job-weekly-review.env
+ExecStart=/usr/bin/node /opt/hamafx/app/apps/worker/dist/runner/cli.js weekly-review
+
+MemoryMax=512M
+TimeoutStartSec=300
+
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/hamafx /run/hamafx-job-weekly-review.env
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=hamafx-job-weekly-review

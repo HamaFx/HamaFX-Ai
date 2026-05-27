@@ -32,6 +32,8 @@ function resolveHcUuid(env: ReturnType<typeof loadEnv>, name: JobName): string |
       return env.HC_JOB_COT_UUID;
     case 'fred-actuals':
       return env.HC_JOB_FRED_ACTUALS_UUID;
+    case 'weekly-review':
+      return env.HC_JOB_WEEKLY_REVIEW_UUID;
   }
 }
 
