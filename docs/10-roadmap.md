@@ -265,8 +265,8 @@ The GitHub Actions workflow files (`.github/workflows/cron-*.yml`) are kept as a
 
   | Domain | Default model | Env override |
   | --- | --- | --- |
-  | Fundamental analysis | `google-vertex/gemini-3-pro` | `AI_FUNDAMENTAL_MODEL` |
-  | Technical analysis | `google-vertex/gemini-3-flash` | `AI_TECHNICAL_MODEL` |
+  | Fundamental analysis | `google-vertex/gemini-2.5-pro` | `AI_FUNDAMENTAL_MODEL` |
+  | Technical analysis | `google-vertex/gemini-2.5-flash` | `AI_TECHNICAL_MODEL` |
   | News / calendar / journal summary | `google-vertex/gemini-2.5-flash` | `AI_SUMMARY_MODEL` |
   | Vision (image attached) | existing `AI_VISION_MODEL` | `AI_VISION_MODEL` |
   | Generic fallback | existing `AI_DEFAULT_MODEL` | `AI_DEFAULT_MODEL` |

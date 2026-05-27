@@ -101,8 +101,18 @@ export async function runChat(args: RunChatArgs) {
   if (signal) compactArgs.signal = signal;
   const compaction = await compactThread(compactArgs);
 
+  // Gemini and most providers reject role: 'system' messages anywhere
+  // except the very first position. We carry two flavours of system rows
+  // in the thread: the rolling-summary note (already folded into the
+  // system prompt as `compaction.extraSystem`) and the planner's
+  // `data-plan` parts (Phase 7c). Both are UI / context-only — feeding
+  // them inline would crash the next turn with
+  // "system messages are only supported at the beginning of the conversation".
+  // Drop them here and rely on `streamText`'s `system` parameter instead.
+  const conversational = compaction.kept.filter((m) => m.role !== 'system');
+
   const modelMessages: ModelMessage[] = convertToModelMessages(
-    compaction.kept.map(
+    conversational.map(
       (m) =>
         ({
           id: m.id,
@@ -116,8 +126,22 @@ export async function runChat(args: RunChatArgs) {
   const routingArgs: Parameters<typeof routeTurn>[0] = { userMessage, env };
   if (modelOverride !== undefined) routingArgs.modelOverride = modelOverride;
   const routing: RoutingDecision = routeTurn(routingArgs);
-  const modelId = routing.modelId;
-  const model = resolveModel(modelId, env);
+
+  // Resolve the chosen model. If it fails (e.g. an env var pointed at a
+  // model id that doesn't exist on the configured transport), fall back
+  // to AI_DEFAULT_MODEL rather than crashing the whole turn. The user
+  // sees the answer; we log the fall-back for visibility.
+  let modelId = routing.modelId;
+  let model: ReturnType<typeof resolveModel>;
+  try {
+    model = resolveModel(modelId, env);
+  } catch (err) {
+    console.warn(
+      `[ai] resolve(${modelId}) failed (${err instanceof Error ? err.message : 'unknown'}); falling back to AI_DEFAULT_MODEL=${env.AI_DEFAULT_MODEL}`,
+    );
+    modelId = env.AI_DEFAULT_MODEL;
+    model = resolveModel(modelId, env);
+  }
 
   // 4b) Plan-then-act (Phase 7c). Runs only when `routing.planRequired`
   //     is true (fundamental + technical domains today). The planner

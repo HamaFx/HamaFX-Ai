@@ -4,9 +4,9 @@ import { routeTurn } from '../src/routing';
 
 const ENV = {
   AI_DEFAULT_MODEL: 'google-vertex/gemini-2.5-flash',
-  AI_FUNDAMENTAL_MODEL: 'google-vertex/gemini-3-pro',
-  AI_TECHNICAL_MODEL: 'google-vertex/gemini-3-flash',
-  AI_SUMMARY_MODEL: 'google-vertex/gemini-2.5-flash',
+  AI_FUNDAMENTAL_MODEL: 'google-vertex/gemini-2.5-pro',
+  AI_TECHNICAL_MODEL: 'google-vertex/gemini-2.5-flash',
+  AI_SUMMARY_MODEL: 'google-vertex/gemini-2.5-flash-lite',
   AI_VISION_MODEL: 'google-vertex/gemini-2.5-pro',
 } as const;
 

@@ -43,9 +43,8 @@ interface MessageProps {
  */
 const REGEN_MODELS: Array<{ id: string; label: string; tier: 'fast' | 'pro' }> = [
   { id: 'google-vertex/gemini-2.5-flash-lite', label: 'Lite (cheapest)', tier: 'fast' },
-  { id: 'google-vertex/gemini-2.5-flash', label: 'Flash 2.5', tier: 'fast' },
-  { id: 'google-vertex/gemini-3-flash', label: 'Flash 3 (technical)', tier: 'fast' },
-  { id: 'google-vertex/gemini-3-pro', label: 'Pro 3 (fundamental)', tier: 'pro' },
+  { id: 'google-vertex/gemini-2.5-flash', label: 'Flash (default)', tier: 'fast' },
+  { id: 'google-vertex/gemini-2.5-pro', label: 'Pro (deep)', tier: 'pro' },
 ];
 
 export function Message({ message, onCopy, onRegenerate }: MessageProps) {

@@ -60,8 +60,8 @@ Phase 7c verification tool:
 
 Per-turn model selection is handled by `routeTurn()` in `packages/ai/src/routing.ts`. Each chat turn picks one of:
 
-- **Fundamental** (`AI_FUNDAMENTAL_MODEL`, default `google-vertex/gemini-3-pro`) — macro / news / "why" reasoning.
-- **Technical** (`AI_TECHNICAL_MODEL`, default `google-vertex/gemini-3-flash`) — chart structure, indicators, levels, top-down reads.
+- **Fundamental** (`AI_FUNDAMENTAL_MODEL`, default `google-vertex/gemini-2.5-pro`) — macro / news / "why" reasoning.
+- **Technical** (`AI_TECHNICAL_MODEL`, default `google-vertex/gemini-2.5-flash`) — chart structure, indicators, levels, top-down reads.
 - **Summary** (`AI_SUMMARY_MODEL`, default `google-vertex/gemini-2.5-flash`) — news / calendar / journal recap, lists.
 - **Vision** (`AI_VISION_MODEL`, default `google-vertex/gemini-2.5-pro`) — image-attached turns.
 - **Generic** fallback (`AI_DEFAULT_MODEL`, default `google-vertex/gemini-2.5-flash`).

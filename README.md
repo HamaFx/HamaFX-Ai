@@ -23,8 +23,8 @@ Built for a single user. The agent has full context over live price action, mult
 
 | Turn type | Default model |
 | --- | --- |
-| Fundamental analysis | `google-vertex/gemini-3-pro` |
-| Technical analysis | `google-vertex/gemini-3-flash` |
+| Fundamental analysis | `google-vertex/gemini-2.5-pro` |
+| Technical analysis | `google-vertex/gemini-2.5-flash` |
 | News / calendar / journal summary | `google-vertex/gemini-2.5-flash` |
 | Vision | `google-vertex/gemini-2.5-pro` |
 | Title / generic | `google-vertex/gemini-2.5-flash-lite` / `2.5-flash` |

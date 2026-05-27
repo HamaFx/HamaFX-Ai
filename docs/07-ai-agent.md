@@ -26,8 +26,8 @@ The agent picks a model **per turn** based on a domain classifier in
 
 | Domain | Default model | Env override | When |
 | --- | --- | --- | --- |
-| Fundamental | `google-vertex/gemini-3-pro` | `AI_FUNDAMENTAL_MODEL` | "why", "macro", news + events |
-| Technical | `google-vertex/gemini-3-flash` | `AI_TECHNICAL_MODEL` | structure, indicators, levels, top-down |
+| Fundamental | `google-vertex/gemini-2.5-pro` | `AI_FUNDAMENTAL_MODEL` | "why", "macro", news + events |
+| Technical | `google-vertex/gemini-2.5-flash` | `AI_TECHNICAL_MODEL` | structure, indicators, levels, top-down |
 | Summary | `google-vertex/gemini-2.5-flash` | `AI_SUMMARY_MODEL` | recap / list / "show me" |
 | Vision | `google-vertex/gemini-2.5-pro` | `AI_VISION_MODEL` | image attached |
 | Generic | `google-vertex/gemini-2.5-flash` | `AI_DEFAULT_MODEL` | everything else |

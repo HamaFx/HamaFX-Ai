@@ -71,18 +71,20 @@ const AiEnv = z
     /** Vision-capable model used by `analyze_chart_image`. */
     AI_VISION_MODEL: z.string().default('google-vertex/gemini-2.5-pro'),
     /**
-     * Domain-routed models (Phase 7a). Each defaults to the canonical
-     * tier you described:
-     *   - Fundamental analysis → top-tier reasoning model.
-     *   - Technical analysis  → fast structured model.
-     *   - News / calendar / journal summary → cheapest fast model.
+     * Domain-routed models (Phase 7a). Defaults reflect the canonical
+     * Vertex AI catalogue as of mid-2026:
+     *   - Fundamental analysis → `gemini-2.5-pro` (deepest reasoning).
+     *   - Technical analysis  → `gemini-2.5-flash` (fast structured).
+     *   - News / calendar / journal summary → `gemini-2.5-flash-lite` (cheap).
      *
-     * The router falls back to AI_DEFAULT_MODEL for any domain whose env
-     * var is unset.
+     * Override per-deployment via env if newer model ids become available
+     * in your Vertex project / region. The router falls back to
+     * AI_DEFAULT_MODEL for any domain whose env var is unset OR fails to
+     * resolve at runtime.
      */
-    AI_FUNDAMENTAL_MODEL: z.string().default('google-vertex/gemini-3-pro'),
-    AI_TECHNICAL_MODEL: z.string().default('google-vertex/gemini-3-flash'),
-    AI_SUMMARY_MODEL: z.string().default('google-vertex/gemini-2.5-flash'),
+    AI_FUNDAMENTAL_MODEL: z.string().default('google-vertex/gemini-2.5-pro'),
+    AI_TECHNICAL_MODEL: z.string().default('google-vertex/gemini-2.5-flash'),
+    AI_SUMMARY_MODEL: z.string().default('google-vertex/gemini-2.5-flash-lite'),
   })
   .refine(
     (v) =>
