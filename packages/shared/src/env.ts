@@ -169,6 +169,12 @@ const RuntimeEnv = z.object({
     .union([z.literal('0'), z.literal('1')])
     .default('0')
     .transform((v) => v === '1'),
+  /**
+   * Phase 8 PR-18 — Sentry server-only. Optional. When unset, the
+   * instrumentation hook is a no-op. The web app NEVER includes the
+   * client SDK; client errors stay in Vercel logs / error boundaries.
+   */
+  SENTRY_DSN: z.string().url().optional(),
 });
 
 // `merge()` doesn't compose ZodEffects (refines). Both DbEnv and AiEnv are

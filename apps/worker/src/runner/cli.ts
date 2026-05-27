@@ -13,6 +13,7 @@ import { loadEnv } from '../env.js';
 import { ping, withHeartbeat } from '../healthchecks.js';
 import { JOBS, type JobName } from '../jobs/index.js';
 import { createLogger } from '../log.js';
+import { captureException, flushSentry, initSentry } from '../sentry.js';
 
 function isKnownJob(name: string): name is JobName {
   return name in JOBS;
@@ -64,6 +65,7 @@ async function main(): Promise<number> {
   }
 
   const log = createLogger({ service: `worker:job:${jobName}`, commit: env.DEPLOYED_SHA });
+  await initSentry(env, `worker:job:${jobName}`);
   const job = JOBS[jobName];
   const hcUuid = resolveHcUuid(env, jobName);
 
@@ -85,12 +87,14 @@ async function main(): Promise<number> {
     return 0;
   } catch (err) {
     log.error('job failed', { err: String(err) });
+    captureException(err, { job: jobName });
     // withHeartbeat already pinged fail; ping again with the message in
     // case the wrapper didn't (defensive).
     const msg = err instanceof Error ? err.message : String(err);
     await ping(hcUuid, 'fail', msg.slice(0, 1000));
     return 2;
   } finally {
+    await flushSentry(2_000);
     process.removeListener('SIGTERM', sigtermHandler);
     process.removeListener('SIGINT', sigtermHandler);
   }

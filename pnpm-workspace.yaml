@@ -1,3 +1,9 @@
 packages:
   - "apps/*"
   - "packages/*"
+
+# Phase 8 PR-18 — Sentry transitively pulls @opentelemetry/api 1.9.0,
+# while drizzle-orm wants 1.9.1. Pinning here forces a single copy
+# across the workspace.
+overrides:
+  "@opentelemetry/api": "1.9.1"

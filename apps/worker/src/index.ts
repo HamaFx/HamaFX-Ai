@@ -20,6 +20,7 @@ import { ping } from './healthchecks.js';
 import { createLogger, type Logger } from './log.js';
 import { flushClosedCandle } from './persistence/candles-1m.js';
 import { flushLiveTicks } from './persistence/live-ticks.js';
+import { captureException, flushSentry, initSentry } from './sentry.js';
 import {
   createDefaultBuildConnection,
   SignalRConsumer,
@@ -194,16 +195,31 @@ export async function main(): Promise<void> {
   const env = loadEnv();
   const log = createLogger({ service: 'worker', commit: env.DEPLOYED_SHA });
 
+  await initSentry(env, 'worker');
+
   log.info('worker starting', {
     nodeVersion: process.version,
     biquoteHubUrl: env.BIQUOTE_HUB_URL,
     healthchecksConfigured: Boolean(env.HC_SIGNALR_UUID),
+    sentryConfigured: Boolean(env.SENTRY_DSN),
+  });
+
+  // Send unhandled rejections / uncaught exceptions to Sentry before the
+  // process dies. Node's default is to crash; we want the report first.
+  process.on('unhandledRejection', (reason) => {
+    log.error('unhandledRejection', { reason: String(reason) });
+    captureException(reason, { kind: 'unhandledRejection' });
+  });
+  process.on('uncaughtException', (err) => {
+    log.error('uncaughtException', { err: String(err) });
+    captureException(err, { kind: 'uncaughtException' });
   });
 
   installSignalHandlers(log);
 
   const worker = await runWorker({ env, log });
   onShutdown(() => worker.stop());
+  onShutdown(() => flushSentry(2_000));
 
   log.info('worker running — feeding live_ticks from BiQuote SignalR');
 }

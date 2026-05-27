@@ -22,6 +22,7 @@
     "@hamafx/db": "workspace:*",
     "@hamafx/indicators": "workspace:*",
     "@hamafx/shared": "workspace:*",
+    "@sentry/nextjs": "^10.54.0",
     "@tanstack/react-query": "^5.62.7",
     "ai": "^5.0.0",
     "clsx": "^2.1.1",
