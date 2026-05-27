@@ -46,13 +46,25 @@ export function detectFvgs(candles: Candle[], opts: DetectFvgOptions = {}): FvgZ
 
     // Mitigation check: any later bar whose range touches [bottom, top]?
     let mitigated = false;
+    let maxPenetration = 0;
     for (let j = i + 2; j < candles.length; j += 1) {
       const b = candles[j]!;
       if (b.l <= top && b.h >= bottom) {
         mitigated = true;
-        break;
+        // Track deepest penetration into the gap
+        if (bullishGap) {
+          // Bearish retracement into bullish FVG: how far down from top
+          const penetration = top - b.l;
+          if (penetration > maxPenetration) maxPenetration = penetration;
+        } else {
+          // Bullish retracement into bearish FVG: how far up from bottom
+          const penetration = b.h - bottom;
+          if (penetration > maxPenetration) maxPenetration = penetration;
+        }
       }
     }
+
+    const percentFilled = gapSize > 0 ? Math.min(1, maxPenetration / gapSize) : 0;
 
     out.push({
       side: bullishGap ? 'bullish' : 'bearish',
@@ -63,6 +75,7 @@ export function detectFvgs(candles: Candle[], opts: DetectFvgOptions = {}): FvgZ
       top,
       bottom,
       mitigated,
+      percentFilled,
     });
   }
 

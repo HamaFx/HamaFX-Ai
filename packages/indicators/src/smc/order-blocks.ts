@@ -15,6 +15,8 @@ import type { Candle, OrderBlock } from '@hamafx/shared';
 export interface DetectOrderBlocksOptions {
   /** How many consecutive impulse bars must follow the OB. Default 2. */
   impulseBars?: number;
+  /** ATR(14) value for strength scoring. If not provided, strength defaults to 0. */
+  atr14?: number;
 }
 
 export function detectOrderBlocks(
@@ -22,6 +24,7 @@ export function detectOrderBlocks(
   opts: DetectOrderBlocksOptions = {},
 ): OrderBlock[] {
   const impulse = opts.impulseBars ?? 2;
+  const atr14 = opts.atr14 ?? 0;
   // Need 1 OB candle + `impulse` followers. Anything shorter can't form an OB.
   if (candles.length < impulse + 1) return [];
 
@@ -51,6 +54,7 @@ export function detectOrderBlocks(
         top: c.h,
         bottom: c.l,
         mitigated: isMitigated(candles, i + 1 + impulse, candles.length, c.l, c.h),
+        strength: computeStrength(c, followers, atr14, impulse),
       });
     } else if (isBullishCandle) {
       const allBear = followers.every((b) => b.c < b.o);
@@ -65,6 +69,7 @@ export function detectOrderBlocks(
         top: c.h,
         bottom: c.l,
         mitigated: isMitigated(candles, i + 1 + impulse, candles.length, c.l, c.h),
+        strength: computeStrength(c, followers, atr14, impulse),
       });
     }
   }
@@ -92,4 +97,21 @@ function prune(obs: OrderBlock[], perSide: number): OrderBlock[] {
   const bull = obs.filter((o) => o.side === 'bullish').slice(-perSide);
   const bear = obs.filter((o) => o.side === 'bearish').slice(-perSide);
   return [...bull, ...bear].sort((a, b) => a.index - b.index);
+}
+
+function computeStrength(
+  obCandle: Candle,
+  followers: Candle[],
+  atr14: number,
+  impulseCount: number,
+): number {
+  if (atr14 <= 0) return 0;
+  // Impulse magnitude: distance from OB candle close to last follower close
+  const lastFollower = followers[followers.length - 1]!;
+  const impulseMag = Math.abs(lastFollower.c - obCandle.c);
+  // Score components (0–1 each, weighted)
+  const magScore = Math.min(1, impulseMag / (atr14 * 2)) * 0.5;
+  const barScore = impulseCount >= 3 ? 0.3 : 0.15;
+  const trendScore = 0.2; // simplified: always give partial credit
+  return Math.min(1, magScore + barScore + trendScore);
 }

@@ -8,18 +8,28 @@ import type { Metadata } from 'next';
 import { PageHeader } from '@/components/layout/page-header';
 import { ArticleCard } from '@/components/news/article-card';
 
+import { RefreshButton } from './_components/refresh-button';
+
 export const metadata: Metadata = { title: 'News' };
 export const dynamic = 'force-dynamic';
 
 export default async function NewsPage() {
   const articles = await listRecentArticles(50);
 
+  const lastUpdated = articles.length > 0 ? articles[0]!.publishedAt : null;
+
   return (
     <div className="flex flex-col gap-4">
       <PageHeader
         title="News"
-        description="Headlines tagged for XAU / EUR / GBP / USD — Marketaux primary."
+        description="Headlines tagged for XAU / EUR / GBP / USD — Finnhub primary, Marketaux fallback."
       />
+
+      {lastUpdated ? (
+        <p className="text-fg-subtle text-xs">
+          Latest: {formatRelative(lastUpdated)}
+        </p>
+      ) : null}
 
       {articles.length === 0 ? (
         <EmptyState />
@@ -36,18 +46,25 @@ export default async function NewsPage() {
   );
 }
 
+function formatRelative(ms: number): string {
+  const diff = Date.now() - ms;
+  const min = Math.round(diff / 60_000);
+  if (min < 1) return 'just now';
+  if (min < 60) return `${min}m ago`;
+  const hr = Math.round(min / 60);
+  if (hr < 24) return `${hr}h ago`;
+  const day = Math.round(hr / 24);
+  return `${day}d ago`;
+}
+
 function EmptyState() {
   return (
-    <div className="text-fg-muted border-border rounded-lg border border-dashed p-6 text-center text-sm">
-      <p className="mb-1 font-medium">No news articles yet.</p>
+    <div className="text-fg-muted border-border flex flex-col items-center gap-3 rounded-lg border border-dashed p-6 text-center text-sm">
+      <p className="font-medium">No news articles yet.</p>
       <p className="text-fg-subtle text-xs">
-        Trigger the ingestion cron once via{' '}
-        <code className="bg-bg-elev-2 rounded px-1 py-0.5 text-[10px]">
-          curl -H &quot;Authorization: Bearer $CRON_SECRET&quot;
-          https://hama-fx-ai.vercel.app/api/cron/news
-        </code>
-        , or wire a scheduler. See <code>docs/06-data-sources.md</code>.
+        The cron fires every 5 minutes. Tap below to trigger manually.
       </p>
+      <RefreshButton endpoint="/api/cron/news" />
     </div>
   );
 }

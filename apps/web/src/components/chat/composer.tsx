@@ -42,6 +42,13 @@ export function Composer({ onSubmit, disabled, placeholder = 'Ask anything…' }
   const ref = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Auto-focus on mount (desktop) and after sending.
+  useEffect(() => {
+    if (ref.current && !disabled) {
+      ref.current.focus();
+    }
+  }, [disabled]);
+
   // Voice input.
   const [lang, setLang] = useState(DEFAULT_LANG);
   useEffect(() => {
@@ -117,11 +124,11 @@ export function Composer({ onSubmit, disabled, placeholder = 'Ask anything…' }
     >
       {images.length > 0 ? (
         <ul className="flex flex-wrap gap-2" aria-label="Attached images">
-          {images.map((img) => (
+          {images.map((img, idx) => (
             <li key={img.id} className="relative">
               <img
                 src={img.dataUrl}
-                alt={img.name}
+                alt={`Attached chart image ${idx + 1} of ${images.length}`}
                 className="border-border h-12 w-12 rounded border object-cover"
               />
               <button

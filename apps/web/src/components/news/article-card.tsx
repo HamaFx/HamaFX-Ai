@@ -31,6 +31,12 @@ export function ArticleCard({ article }: ArticleCardProps) {
             className={cn('rounded-full px-1.5 py-0.5 text-[10px] font-medium', sentimentClass)}
           >
             {article.sentiment}
+            {article.sentimentScore !== null ? (
+              <span className="ml-0.5 tabular-nums opacity-70">
+                {article.sentimentScore > 0 ? '+' : ''}
+                {article.sentimentScore.toFixed(2)}
+              </span>
+            ) : null}
           </span>
         ) : null}
       </div>

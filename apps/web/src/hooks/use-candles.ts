@@ -35,5 +35,7 @@ export function useCandles(symbol: Symbol, tf: Timeframe, count = 300) {
     refetchInterval: refetchIntervalFor(tf),
     refetchIntervalInBackground: false,
     staleTime: refetchIntervalFor(tf) / 2,
+    retry: 3,
+    retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 8000),
   });
 }

@@ -14,6 +14,7 @@ export {
   detectFvgs,
   detectOrderBlocks,
   detectLiquiditySweeps,
+  defaultSwingLookback,
   type ComputeStructureArgs,
 } from './smc';
 export { computePdhPdl, type PdhPdl } from './smc/pdh-pdl';

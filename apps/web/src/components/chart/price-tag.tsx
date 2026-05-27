@@ -22,7 +22,11 @@ export function PriceTag({ symbol, referencePrice, className }: PriceTagProps) {
   const decimals = priceDecimals(symbol);
 
   if (isLoading) {
-    return <span className={cn('text-fg-subtle text-xs tabular-nums', className)}>loading…</span>;
+    return (
+      <span className={cn('text-fg-subtle text-base tabular-nums animate-pulse', className)}>
+        —
+      </span>
+    );
   }
   if (isError || !tick) {
     return (

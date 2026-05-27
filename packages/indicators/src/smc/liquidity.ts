@@ -13,6 +13,8 @@ export interface DetectLiquiditySweepsOptions {
    * Older swings are usually too distant to be the actual liquidity. 200.
    */
   maxLookback?: number;
+  /** ATR(14) value for magnitude scoring. If not provided, magnitude defaults to 0. */
+  atr14?: number;
 }
 
 export function detectLiquiditySweeps(
@@ -21,6 +23,7 @@ export function detectLiquiditySweeps(
   opts: DetectLiquiditySweepsOptions = {},
 ): LiquiditySweep[] {
   const maxLookback = opts.maxLookback ?? 200;
+  const atr14 = opts.atr14 ?? 0;
   if (candles.length === 0 || swings.length === 0) return [];
 
   const out: LiquiditySweep[] = [];
@@ -41,7 +44,8 @@ export function detectLiquiditySweeps(
       if (sw.index >= i) continue; // can't sweep self
       if (i - sw.index > maxLookback) break;
       if (c.h > sw.price && c.c < sw.price) {
-        out.push({ side: 'high', index: i, time: c.t, level: sw.price, wick: c.h });
+        const extension = c.h - sw.price;
+        out.push({ side: 'high', index: i, time: c.t, level: sw.price, wick: c.h, magnitude: atr14 > 0 ? extension / atr14 : 0 });
         break; // one sweep per bar per side is enough
       }
     }
@@ -52,7 +56,8 @@ export function detectLiquiditySweeps(
       if (sw.index >= i) continue;
       if (i - sw.index > maxLookback) break;
       if (c.l < sw.price && c.c > sw.price) {
-        out.push({ side: 'low', index: i, time: c.t, level: sw.price, wick: c.l });
+        const extension = sw.price - c.l;
+        out.push({ side: 'low', index: i, time: c.t, level: sw.price, wick: c.l, magnitude: atr14 > 0 ? extension / atr14 : 0 });
         break;
       }
     }

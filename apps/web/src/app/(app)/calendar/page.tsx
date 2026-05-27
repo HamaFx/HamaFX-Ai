@@ -9,6 +9,8 @@ import type { Metadata } from 'next';
 import { EventCard } from '@/components/calendar/event-card';
 import { PageHeader } from '@/components/layout/page-header';
 
+import { RefreshButton } from '../news/_components/refresh-button';
+
 export const metadata: Metadata = { title: 'Calendar' };
 export const dynamic = 'force-dynamic';
 
@@ -41,7 +43,7 @@ export default async function CalendarPage() {
               </h2>
               <ul className="flex flex-col gap-2">
                 {items.map((e) => (
-                  <li key={e.id}>
+                  <li key={e.id} className={e.date < Date.now() ? 'opacity-60' : ''}>
                     <EventCard event={e} />
                   </li>
                 ))}
@@ -65,15 +67,12 @@ function dayLabel(iso: string): string {
 
 function EmptyState() {
   return (
-    <div className="text-fg-muted border-border rounded-lg border border-dashed p-6 text-center text-sm">
-      <p className="mb-1 font-medium">No events scheduled in the next 14 days.</p>
+    <div className="text-fg-muted border-border flex flex-col items-center gap-3 rounded-lg border border-dashed p-6 text-center text-sm">
+      <p className="font-medium">No events scheduled in the next 14 days.</p>
       <p className="text-fg-subtle text-xs">
-        Trigger ingestion once via{' '}
-        <code className="bg-bg-elev-2 rounded px-1 py-0.5 text-[10px]">
-          curl -H &quot;Authorization: Bearer $CRON_SECRET&quot; .../api/cron/calendar
-        </code>
-        .
+        The cron fires every 15 minutes. Tap below to trigger manually.
       </p>
+      <RefreshButton endpoint="/api/cron/calendar" />
     </div>
   );
 }

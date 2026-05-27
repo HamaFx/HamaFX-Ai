@@ -52,6 +52,9 @@ export function EventCard({ event }: EventCardProps) {
             {event.forecast !== null && (
               <Stat label="forecast" value={event.forecast} unit={event.unit} />
             )}
+            {event.actual !== null && event.forecast !== null && (
+              <BeatMiss actual={event.actual} forecast={event.forecast} />
+            )}
             {event.previous !== null && (
               <Stat label="prev" value={event.previous} unit={event.unit} />
             )}
@@ -70,6 +73,17 @@ function Stat({ label, value, unit }: { label: string; value: number; unit: stri
         {value}
         {unit ? <span className="text-fg-subtle ml-0.5">{unit}</span> : null}
       </dd>
+    </span>
+  );
+}
+
+function BeatMiss({ actual, forecast }: { actual: number; forecast: number }) {
+  const delta = actual - forecast;
+  if (delta === 0) return null;
+  const beat = delta > 0;
+  return (
+    <span className={cn('text-[10px] font-medium', beat ? 'text-bull' : 'text-bear')}>
+      {beat ? '▲ beat' : '▼ miss'}
     </span>
   );
 }

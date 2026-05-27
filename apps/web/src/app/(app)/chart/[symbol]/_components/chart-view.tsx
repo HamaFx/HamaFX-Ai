@@ -26,6 +26,10 @@ import { useCandles } from '@/hooks/use-candles';
 import { useStructure } from '@/hooks/use-structure';
 import { useTimeframe } from '@/hooks/use-tf';
 
+import { ChartEmpty } from './chart-empty';
+import { ChartError } from './chart-error';
+import { ChartSkeleton } from './chart-skeleton';
+
 const PALETTE: OverlayPalette = {
   bull: '#48d597',
   bear: '#f0594a',
@@ -36,7 +40,7 @@ const PALETTE: OverlayPalette = {
 export function ChartView({ symbol }: { symbol: Symbol }) {
   const [tf, setTf] = useTimeframe();
   const [activeOverlays, toggleOverlay] = useOverlayToggles();
-  const { data: candles } = useCandles(symbol, tf);
+  const { data: candles, isLoading, error, refetch } = useCandles(symbol, tf);
 
   // Only fetch structure when at least one overlay is on. This skips the
   // upstream Twelve Data quota hit + DB cache write when the user just
@@ -93,7 +97,15 @@ export function ChartView({ symbol }: { symbol: Symbol }) {
         </div>
       </header>
 
-      <Chart symbol={symbol} tf={tf} overlays={overlaySet} />
+      {isLoading ? (
+        <ChartSkeleton />
+      ) : error ? (
+        <ChartError error={error} onRetry={() => void refetch()} />
+      ) : !candles || candles.length === 0 ? (
+        <ChartEmpty symbol={symbol} tf={tf} onRetry={() => void refetch()} />
+      ) : (
+        <Chart symbol={symbol} tf={tf} overlays={overlaySet} />
+      )}
 
       <div className="flex flex-wrap items-center justify-between gap-2">
         <OverlayToggle active={activeOverlays} onToggle={toggleOverlay} />

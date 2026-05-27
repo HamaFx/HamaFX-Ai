@@ -7,6 +7,7 @@
 
 import type { Candle, StructureKind, StructureResult, Symbol, Timeframe } from '@hamafx/shared';
 
+import { defaultSwingLookback } from './defaults';
 import { detectFvgs, type DetectFvgOptions } from './fvg';
 import { detectLiquiditySweeps, type DetectLiquiditySweepsOptions } from './liquidity';
 import { detectOrderBlocks, type DetectOrderBlocksOptions } from './order-blocks';
@@ -18,6 +19,7 @@ export { detectStructure } from './structure';
 export { detectFvgs } from './fvg';
 export { detectOrderBlocks } from './order-blocks';
 export { detectLiquiditySweeps } from './liquidity';
+export { defaultSwingLookback } from './defaults';
 
 export interface ComputeStructureArgs {
   symbol: Symbol;
@@ -48,7 +50,10 @@ export function computeStructure(args: ComputeStructureArgs): StructureResult {
   // even if the caller didn't ask — but only emit them in the result if
   // they did.
   const needSwings = kinds.has('swings') || kinds.has('bos_choch') || kinds.has('liquidity');
-  const swings = needSwings ? findSwings(candles, args.swings) : [];
+  const swingOpts: FindSwingsOptions = {
+    lookback: args.swings?.lookback ?? defaultSwingLookback(tf),
+  };
+  const swings = needSwings ? findSwings(candles, swingOpts) : [];
 
   const result: StructureResult = {
     symbol,

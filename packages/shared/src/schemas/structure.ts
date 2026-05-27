@@ -82,6 +82,8 @@ export const FvgZoneSchema = z.object({
    * already-mitigated FVGs.
    */
   mitigated: z.boolean(),
+  /** 0–1: how much of the gap has been retraced. 1.0 = fully mitigated. */
+  percentFilled: z.number().min(0).max(1).optional(),
 });
 export type FvgZone = z.infer<typeof FvgZoneSchema>;
 
@@ -101,6 +103,8 @@ export const OrderBlockSchema = z.object({
   bottom: z.number(),
   /** True once a later candle wicked into the zone. */
   mitigated: z.boolean(),
+  /** Strength 0–1 based on impulse magnitude / ATR, bar count, trend alignment. */
+  strength: z.number().min(0).max(1).optional(),
 });
 export type OrderBlock = z.infer<typeof OrderBlockSchema>;
 
@@ -119,6 +123,8 @@ export const LiquiditySweepSchema = z.object({
   level: z.number(),
   /** The actual extreme (wick) that swept the level. */
   wick: z.number(),
+  /** Wick extension beyond the level as a multiple of ATR(14). Higher = stronger sweep. */
+  magnitude: z.number().min(0).optional(),
 });
 export type LiquiditySweep = z.infer<typeof LiquiditySweepSchema>;
 

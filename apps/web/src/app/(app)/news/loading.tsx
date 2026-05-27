@@ -1,18 +1,11 @@
-// Skeleton for the news list. Three shimmering rows match the typical
-// article-card height so the page doesn't reflow when content lands.
-
 export default function NewsLoading() {
   return (
     <div className="flex flex-col gap-4">
-      <div className="bg-bg-elev-2 h-12 w-2/3 animate-pulse rounded-md" />
-      <ul className="flex flex-col gap-2">
-        {Array.from({ length: 5 }).map((_, i) => (
-          <li
-            key={i}
-            className="border-border bg-bg-elev-1 h-[88px] animate-pulse rounded-lg border"
-          />
-        ))}
-      </ul>
+      <div className="h-8 w-48 animate-pulse rounded bg-bg-elev-2" />
+      <div className="h-4 w-72 animate-pulse rounded bg-bg-elev-2" />
+      {Array.from({ length: 6 }).map((_, i) => (
+        <div key={i} className="border-border bg-bg-elev-1 h-24 animate-pulse rounded-lg border" />
+      ))}
     </div>
   );
 }
