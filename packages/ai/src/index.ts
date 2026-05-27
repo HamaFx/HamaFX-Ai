@@ -111,3 +111,26 @@ export {
 
 // Auto-Journal (Phase 2)
 export { parseJournalShortcut, type JournalShortcut } from './journal/auto-parse';
+
+// Phase 3 — Sharable snapshots
+export {
+  signShareToken,
+  verifyShareToken,
+  type ShareTokenPayload,
+} from './share/sign';
+export {
+  createSnapshot,
+  getSnapshot,
+  getActiveSnapshot,
+  type SnapshotRow as ShareSnapshotRow,
+  type CreateSnapshotArgs as CreateShareSnapshotArgs,
+} from './share/persistence';
+
+// Phase 3 — CFTC CoT
+export {
+  upsertCoTReport,
+  listCoTSamples,
+  countCoTRows,
+  buildCoTId,
+  type UpsertCoTReportArgs,
+} from './cot/persistence';

@@ -1,11 +1,14 @@
 // Tool registry. Adding a new tool: implement it in a sibling file then
 // export it from here. Keep names in sync with `@hamafx/shared` TOOL_NAMES.
 
+import { analyzeChartImageTool } from './analyze-chart-image';
 import { analyzeFundamentalTool } from './analyze-fundamental';
 import { analyzeTechnicalTool } from './analyze-technical';
 import { annotateChartTool } from './annotate-chart';
 import { getCalendarTool } from './get-calendar';
 import { getCandlesTool } from './get-candles';
+import { getCorrelationTool } from './get-correlation';
+import { getCoTTool } from './get-cot';
 import { getIndicatorsTool } from './get-indicators';
 import { getJournalStatsTool } from './get-journal-stats';
 import { getMarketStructureTool } from './get-market-structure';
@@ -14,6 +17,7 @@ import { getPriceTool } from './get-price';
 import { logJournalTool } from './log-journal';
 import { searchKnowledgeTool } from './search-knowledge';
 import { setAlertTool } from './set-alert';
+import { shareSnapshotTool } from './share-snapshot';
 
 export const tools = {
   get_price: getPriceTool,
@@ -30,6 +34,11 @@ export const tools = {
   analyze_fundamental: analyzeFundamentalTool,
   get_journal_stats: getJournalStatsTool,
   annotate_chart: annotateChartTool,
+  // Phase 3 tools
+  analyze_chart_image: analyzeChartImageTool,
+  get_correlation: getCorrelationTool,
+  get_cot: getCoTTool,
+  share_snapshot: shareSnapshotTool,
 };
 
 export type ToolRegistry = typeof tools;

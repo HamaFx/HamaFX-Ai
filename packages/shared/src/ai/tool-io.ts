@@ -17,11 +17,14 @@
 
 import type { z } from 'zod';
 
+import type { AnalyzeChartImageOutputSchema } from '../schemas/tool-outputs/analyze-chart-image';
 import type { AnalyzeFundamentalOutputSchema } from '../schemas/tool-outputs/analyze-fundamental';
 import type { AnalyzeTechnicalOutputSchema } from '../schemas/tool-outputs/analyze-technical';
 import type { AnnotateChartOutputSchema } from '../schemas/tool-outputs/annotate-chart';
 import type { GetCalendarOutputSchema } from '../schemas/tool-outputs/get-calendar';
 import type { GetCandlesOutputSchema } from '../schemas/tool-outputs/get-candles';
+import type { GetCorrelationOutputSchema } from '../schemas/tool-outputs/get-correlation';
+import type { GetCoTOutputSchema } from '../schemas/tool-outputs/get-cot';
 import type { GetIndicatorsOutputSchema } from '../schemas/tool-outputs/get-indicators';
 import type { GetJournalStatsOutputSchema } from '../schemas/tool-outputs/get-journal-stats';
 import type { GetMarketStructureOutputSchema } from '../schemas/tool-outputs/get-market-structure';
@@ -30,6 +33,7 @@ import type { GetPriceOutputSchema } from '../schemas/tool-outputs/get-price';
 import type { LogJournalOutputSchema } from '../schemas/tool-outputs/log-journal';
 import type { SearchKnowledgeOutputSchema } from '../schemas/tool-outputs/search-knowledge';
 import type { SetAlertOutputSchema } from '../schemas/tool-outputs/set-alert';
+import type { ShareSnapshotOutputSchema } from '../schemas/tool-outputs/share-snapshot';
 import type { ToolName } from './tool-names';
 
 /**
@@ -64,6 +68,11 @@ export interface ToolOutputMap {
   analyze_fundamental: z.infer<typeof AnalyzeFundamentalOutputSchema>;
   get_journal_stats: z.infer<typeof GetJournalStatsOutputSchema>;
   annotate_chart: z.infer<typeof AnnotateChartOutputSchema>;
+  // Phase 3 tools
+  analyze_chart_image: z.infer<typeof AnalyzeChartImageOutputSchema>;
+  get_correlation: z.infer<typeof GetCorrelationOutputSchema>;
+  get_cot: z.infer<typeof GetCoTOutputSchema>;
+  share_snapshot: z.infer<typeof ShareSnapshotOutputSchema>;
 }
 
 export type ToolInput<T extends ToolName> = T extends keyof ToolIOMap

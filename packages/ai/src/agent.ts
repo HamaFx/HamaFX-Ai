@@ -25,6 +25,7 @@ import {
 } from './persistence';
 import { buildSystemPrompt } from './prompt/system';
 import { generateTitle } from './title';
+import { setAnalyzeChartImageContext } from './tools/analyze-chart-image';
 import { tools } from './tools';
 
 export interface RunChatArgs {
@@ -42,6 +43,7 @@ export interface RunChatArgs {
     | 'GOOGLE_APPLICATION_CREDENTIALS'
     | 'AI_DEFAULT_MODEL'
     | 'AI_TITLE_MODEL'
+    | 'AI_VISION_MODEL'
     | 'MAX_DAILY_USD'
     | 'MAX_TOOL_ITERATIONS'
     | 'LOG_PROMPTS'
@@ -94,6 +96,23 @@ export async function runChat(args: RunChatArgs) {
   const modelId = modelOverride ?? env.AI_DEFAULT_MODEL;
   const model = resolveModel(modelId, env);
   const systemPrompt = buildSystemPrompt(snapshot);
+
+  // Make the per-turn context available to image-aware tools that need
+  // to look up the latest user-attached image without it threading
+  // through the AI SDK tool-arg envelope.
+  setAnalyzeChartImageContext({
+    threadId,
+    env: {
+      AI_GATEWAY_API_KEY: env.AI_GATEWAY_API_KEY,
+      GOOGLE_GENERATIVE_AI_API_KEY: env.GOOGLE_GENERATIVE_AI_API_KEY,
+      GOOGLE_VERTEX_PROJECT: env.GOOGLE_VERTEX_PROJECT,
+      GOOGLE_VERTEX_LOCATION: env.GOOGLE_VERTEX_LOCATION,
+      GOOGLE_APPLICATION_CREDENTIALS_JSON: env.GOOGLE_APPLICATION_CREDENTIALS_JSON,
+      GOOGLE_APPLICATION_CREDENTIALS: env.GOOGLE_APPLICATION_CREDENTIALS,
+      AI_VISION_MODEL: env.AI_VISION_MODEL ?? 'google-vertex/gemini-2.5-pro',
+      LOG_PROMPTS: env.LOG_PROMPTS,
+    },
+  });
 
   if (env.LOG_PROMPTS) {
     console.info('[ai] system prompt:\n%s', systemPrompt);

@@ -6,7 +6,10 @@
 //
 // Phase 2 added SMC overlays. The toggles live in the URL via nuqs so
 // refreshing the page keeps the chosen overlays.
+// Phase 3 added an opt-in "Pro" link to the TradingView Advanced
+// Charting Widget when NEXT_PUBLIC_TRADINGVIEW_ENABLED='1'.
 import type { Symbol } from '@hamafx/shared';
+import Link from 'next/link';
 import { useMemo } from 'react';
 
 import { Chart } from '@/components/chart/chart';
@@ -77,7 +80,17 @@ export function ChartView({ symbol }: { symbol: Symbol }) {
           <SymbolPicker active={symbol} />
           <PriceTag symbol={symbol} referencePrice={referenceClose} />
         </div>
-        <TimeframePicker value={tf} onChange={setTf} />
+        <div className="flex items-center gap-2">
+          <TimeframePicker value={tf} onChange={setTf} />
+          {process.env.NEXT_PUBLIC_TRADINGVIEW_ENABLED === '1' ? (
+            <Link
+              href={`/chart/${symbol}/pro?tf=${tf}`}
+              className="border-border bg-bg-elev-2 text-fg-muted hover:text-fg focus-visible:ring-brand inline-flex h-9 min-w-[44px] items-center justify-center rounded-md border px-2 text-[11px] font-medium focus:outline-none focus-visible:ring-2"
+            >
+              Pro
+            </Link>
+          ) : null}
+        </div>
       </header>
 
       <Chart symbol={symbol} tf={tf} overlays={overlaySet} />

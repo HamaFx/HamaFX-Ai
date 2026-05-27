@@ -19,6 +19,11 @@ export const TOOL_NAMES = [
   'analyze_fundamental',
   'get_journal_stats',
   'annotate_chart',
+  // Phase 3 tools
+  'analyze_chart_image',
+  'get_correlation',
+  'get_cot',
+  'share_snapshot',
 ] as const;
 
 export type ToolName = (typeof TOOL_NAMES)[number];

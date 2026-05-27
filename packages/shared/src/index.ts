@@ -31,6 +31,11 @@ export * from './schemas/tool-outputs/analyze-technical';
 export * from './schemas/tool-outputs/analyze-fundamental';
 export * from './schemas/tool-outputs/get-journal-stats';
 export * from './schemas/tool-outputs/annotate-chart';
+// Phase 3 tools
+export * from './schemas/tool-outputs/analyze-chart-image';
+export * from './schemas/tool-outputs/get-correlation';
+export * from './schemas/tool-outputs/get-cot';
+export * from './schemas/tool-outputs/share-snapshot';
 // Briefings (cron-emitted assistant messages in the dedicated thread)
 export * from './schemas/briefings';
 

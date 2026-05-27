@@ -50,7 +50,25 @@ export function ChatSurface({ threadId, initialMessages }: ChatSurfaceProps) {
         ) : null}
       </div>
       <Composer
-        onSubmit={(text) => sendMessage({ text })}
+        onSubmit={(text, images) => {
+          // The AI SDK v5 helper accepts a multimodal envelope: a text
+          // string plus a `files` array (each entry becomes a `file`
+          // UIMessage part). We wire the composer's selected images into
+          // that shape so vision-capable tools/models receive them.
+          if (images.length === 0) {
+            void sendMessage({ text });
+            return;
+          }
+          void sendMessage({
+            text,
+            files: images.map((img) => ({
+              type: 'file' as const,
+              mediaType: img.mediaType,
+              url: img.dataUrl,
+              filename: img.name,
+            })),
+          });
+        }}
         disabled={isStreaming}
         placeholder="Ask about XAU, EUR, GBP…"
       />

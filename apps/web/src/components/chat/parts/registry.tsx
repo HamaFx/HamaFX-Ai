@@ -16,11 +16,14 @@
 // Server component — no state, no events.
 
 import {
+  AnalyzeChartImageOutputSchema,
   AnalyzeFundamentalOutputSchema,
   AnalyzeTechnicalOutputSchema,
   AnnotateChartOutputSchema,
   GetCalendarOutputSchema,
   GetCandlesOutputSchema,
+  GetCorrelationOutputSchema,
+  GetCoTOutputSchema,
   GetIndicatorsOutputSchema,
   GetJournalStatsOutputSchema,
   GetMarketStructureOutputSchema,
@@ -29,6 +32,7 @@ import {
   LogJournalOutputSchema,
   SearchKnowledgeOutputSchema,
   SetAlertOutputSchema,
+  ShareSnapshotOutputSchema,
   TOOL_NAMES,
   type ToolName,
   type ToolOutput,
@@ -36,11 +40,14 @@ import {
 import type { ComponentType, ReactElement } from 'react';
 import type { z } from 'zod';
 
+import { AnalyzeChartImagePart } from './analyze-chart-image';
 import { AnalyzeFundamentalPart } from './analyze-fundamental';
 import { AnalyzeTechnicalPart } from './analyze-technical';
 import { AnnotateChartPart } from './annotate-chart';
 import { GetCalendarPart } from './get-calendar';
 import { GetCandlesPart } from './get-candles';
+import { GetCorrelationPart } from './get-correlation';
+import { GetCoTPart } from './get-cot';
 import { GetIndicatorsPart } from './get-indicators';
 import { GetJournalStatsPart } from './get-journal-stats';
 import { GetMarketStructurePart } from './get-market-structure';
@@ -49,6 +56,7 @@ import { GetPricePart } from './get-price';
 import { LogJournalPart } from './log-journal';
 import { SearchKnowledgePart } from './search-knowledge';
 import { SetAlertPart } from './set-alert';
+import { ShareSnapshotPart } from './share-snapshot';
 import { ToolCard } from './tool-card';
 
 /** State a part is in for the duration of a streamed tool call. */
@@ -87,6 +95,11 @@ export const partRegistry: { [K in ToolName]: ComponentType<ToolPartProps<K>> } 
   analyze_fundamental: AnalyzeFundamentalPart,
   get_journal_stats: GetJournalStatsPart,
   annotate_chart: AnnotateChartPart,
+  // Phase 3 tools
+  analyze_chart_image: AnalyzeChartImagePart,
+  get_correlation: GetCorrelationPart,
+  get_cot: GetCoTPart,
+  share_snapshot: ShareSnapshotPart,
 };
 
 /**
@@ -112,6 +125,11 @@ const partSchemas: { [K in ToolName]: z.ZodType<ToolOutput<K>> } = {
   analyze_fundamental: AnalyzeFundamentalOutputSchema,
   get_journal_stats: GetJournalStatsOutputSchema,
   annotate_chart: AnnotateChartOutputSchema,
+  // Phase 3 tools
+  analyze_chart_image: AnalyzeChartImageOutputSchema,
+  get_correlation: GetCorrelationOutputSchema,
+  get_cot: GetCoTOutputSchema,
+  share_snapshot: ShareSnapshotOutputSchema,
 };
 
 /** Type guard: is `s` a known `ToolName`? */

@@ -63,6 +63,8 @@ const AiEnv = z
     AI_DEFAULT_MODEL: z.string().default('google-vertex/gemini-2.5-flash'),
     AI_TITLE_MODEL: z.string().default('google-vertex/gemini-2.5-flash-lite'),
     AI_EMBEDDING_MODEL: z.string().default('openai/text-embedding-3-small'),
+    /** Vision-capable model used by `analyze_chart_image`. */
+    AI_VISION_MODEL: z.string().default('google-vertex/gemini-2.5-pro'),
   })
   .refine(
     (v) =>
