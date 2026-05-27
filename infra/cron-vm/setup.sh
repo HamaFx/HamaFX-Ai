@@ -34,7 +34,17 @@ fi
 
 log 'installing dependencies'
 apt-get update -qq
-apt-get install -y -qq curl logrotate
+apt-get install -y -qq curl logrotate sudo
+
+log 'installing sudoers entry for hamafx user (PR-16: self-update can restart the worker)'
+if [[ -f "$(dirname "$0")/sudoers.d/hamafx" ]]; then
+  install -m 440 -o root -g root \
+    "$(dirname "$0")/sudoers.d/hamafx" /etc/sudoers.d/hamafx
+  visudo -c -f /etc/sudoers.d/hamafx >/dev/null
+fi
+
+log 'making update.sh executable'
+chmod +x "$(dirname "$0")/update.sh" 2>/dev/null || true
 
 log "creating /opt/hamafx (env file, deployed-sha pointer)"
 mkdir -p /opt/hamafx

@@ -1,0 +1,10 @@
+# Allow the `hamafx` user to restart the worker service without a
+# password. Required by infra/cron-vm/update.sh — the self-update timer
+# runs as `hamafx` but needs to bounce the long-running
+# `hamafx-worker.service`.
+#
+# Install path: /etc/sudoers.d/hamafx (mode 0440).
+# Validate before installing: `visudo -c -f infra/cron-vm/sudoers.d/hamafx`.
+
+hamafx ALL=(root) NOPASSWD: /bin/systemctl restart hamafx-worker.service
+hamafx ALL=(root) NOPASSWD: /bin/systemctl restart hamafx-worker

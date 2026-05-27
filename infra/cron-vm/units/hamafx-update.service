@@ -1,0 +1,20 @@
+[Unit]
+Description=HamaFX-Ai self-update (git pull + build + worker restart)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=hamafx
+Group=hamafx
+WorkingDirectory=/opt/hamafx/app
+ExecStart=/opt/hamafx/app/infra/cron-vm/update.sh
+TimeoutStartSec=600
+
+# Allow `sudo systemctl restart hamafx-worker` from this script — the
+# corresponding sudoers rule lives in `infra/cron-vm/sudoers.d/hamafx`.
+NoNewPrivileges=false
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=hamafx-update
