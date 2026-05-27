@@ -102,16 +102,15 @@ gantt
 
 ---
 
-## Cron triggering (Phase 1 → Phase 2 deployment note)
+## Cron triggering (Phase 1 → Phase 8 deployment note)
 
-Vercel **Hobby** caps cron jobs at once-per-day. We don't have a `crons` block in `vercel.json`. Cron scheduling is handled by a dedicated **GCE VM** (`hamafx-cron`, `e2-small` in `us-central1-a`, project `hamafx-78845`):
+Vercel **Hobby** caps cron jobs at once-per-day. We don't have a `crons` block in `vercel.json`. Cron scheduling is handled by a dedicated **GCE VM** (`hamafx-cron`, `e2-medium` in `us-central1-a`, project `hamafx-78845`) — see Phase 8 below for the full move.
 
-- The VM runs system crontab entries that `curl` each `/api/cron/*` endpoint with `Authorization: Bearer ${CRON_SECRET}`.
-- High-frequency endpoints (news, alerts, briefings) fire every 5 minutes.
-- Setup, schedule, and monitoring docs: `infra/cron-vm/README.md`.
-- Monthly cost: ~$6 (or $0 if downgraded to `e2-micro` which is in the Always Free tier).
+- Phase 8 retired the system `cron` daemon entirely. Every job now runs as a `hamafx-*.timer` + `hamafx-*.service` pair under systemd. Heavy work runs in-process inside `hamafx-worker.service`; light Vercel-poke crons fire `curl` against `/api/cron/*` with `Authorization: Bearer ${CRON_SECRET}`.
+- Setup, recovery, and monitoring docs: `infra/cron-vm/README.md`, `infra/cron-vm/RECOVERY.md`.
+- Monthly cost: ~$8 on `e2-medium` (the worker SignalR consumer + heavy job runner needs more headroom than `e2-small` allowed). All other infra stays on free tiers.
 
-The GitHub Actions workflow files (`.github/workflows/cron-*.yml`) are kept as a secondary fallback but are not the primary scheduler.
+The previous `.github/workflows/cron-*.yml` external trigger was removed in Phase 8 — see the note in `docs/09a-phase-0-deployed-state.md`. CI (`ci.yml`) remains the only GitHub Actions workflow.
 
 ---
 

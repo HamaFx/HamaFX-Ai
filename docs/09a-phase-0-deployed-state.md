@@ -201,50 +201,53 @@ After signing up for any of the above, set the env vars on Vercel
 (**Settings → Environment Variables** for the project) — no redeploy needed,
 Vercel rebuilds automatically when production env changes.
 
-## Cron triggering — GitHub Actions
+## Cron triggering — VM systemd timers (Phase 8)
 
-We've chosen **GitHub Actions external scheduler** over Vercel Pro. Configuration lives in `.github/workflows/cron-{news,calendar,alerts,embedding-backfill}.yml`. Each workflow `curl`s the corresponding `/api/cron/*` endpoint with `Authorization: Bearer ${{ secrets.CRON_SECRET }}` against `secrets.PRODUCTION_URL`.
+> **History.** Phase 0–7 used `.github/workflows/cron-*.yml` as the external scheduler. Phase 1 also added a parallel system-`cron` daemon on the GCE VM. Phase 8 unified everything onto **systemd timers on the VM** and removed both the GitHub Actions workflows and the system `cron` daemon. The `.github/workflows/cron-*.yml` files were deleted in Phase 8 PR-21.
+
+Cron scheduling is handled entirely by **`hamafx-cron`** (GCE `e2-medium`, `us-central1-a`, project `hamafx-78845`). Every job is a `hamafx-*.timer` + `hamafx-*.service` pair under systemd. Two flavours:
+
+- **Heavy jobs** (`hamafx-job-*.service`) run in-process inside the always-on `hamafx-worker.service`. They don't hit Vercel; they talk to Postgres and the AI Gateway directly.
+- **Light Vercel-poke crons** (`hamafx-light-*.service`) run a tiny `curl` against `https://hama-fx-ai.vercel.app/api/cron/<name>` with `Authorization: Bearer ${CRON_SECRET}` loaded from `/opt/hamafx/.env`.
+
+Both flavours `curl` healthchecks.io after a successful run via `ExecStartPost=…hc-ping.com/${HC_*_UUID}` so a stale or missed run pages immediately.
 
 ### Schedule
 
-| Endpoint                       | Workflow                      | Cadence (UTC)  | Per-hour |
-| ------------------------------ | ----------------------------- | -------------- | -------: |
-| `/api/cron/news`               | `cron-news.yml`               | `*/5 * * * *`  |       12 |
-| `/api/cron/calendar`           | `cron-calendar.yml`           | `*/15 * * * *` |        4 |
-| `/api/cron/alerts`             | `cron-alerts.yml`             | `*/5 * * * *`  |       12 |
-| `/api/cron/embedding-backfill` | `cron-embedding-backfill.yml` | `*/30 * * * *` |        2 |
-| `/api/cron/snapshots`          | `cron-snapshots.yml`          | `5 0 * * *`    |   1/day  |
-| `/api/cron/briefings`          | `cron-briefings.yml`          | `*/5 * * * *`  |       12 |
-| `/api/cron/weekly-review`      | `cron-weekly-review.yml`      | `0 18 * * 0`   |  1/week  |
-| `/api/cron/fred-actuals`       | `cron-fred-actuals.yml`       | `30 1 * * *`   |   1/day  |
+| Endpoint / Job                 | systemd unit                                  | Cadence (UTC)  |
+| ------------------------------ | --------------------------------------------- | -------------- |
+| `/api/cron/news`               | `hamafx-light-news.timer`                     | `*/5 * * * *`  |
+| `/api/cron/calendar`           | `hamafx-light-calendar.timer`                 | `*/15 * * * *` |
+| `/api/cron/alerts`             | `hamafx-light-alerts.timer`                   | `*/5 * * * *`  |
+| `/api/cron/warm-cache`         | `hamafx-light-warm-cache.timer`               | `*/2 * * * *`  |
+| embedding-backfill             | `hamafx-job-embedding-backfill.timer`         | every 6h       |
+| briefings                      | `hamafx-job-briefings.timer`                  | `*/5 * * * *`  |
+| snapshots + 1m-candle prune    | `hamafx-job-snapshots.timer`                  | `5 0 * * *`    |
+| cot                            | `hamafx-job-cot.timer`                        | `0 22 * * 5`   |
+| fred-actuals                   | `hamafx-job-fred-actuals.timer`               | `30 1 * * *`   |
+| weekly-review                  | `hamafx-job-weekly-review.timer`              | `0 18 * * 0`   |
+| db backup                      | `hamafx-backup-db.timer`                      | `0 3 * * *`    |
+| journal backup                 | `hamafx-backup-journal.timer`                 | `5 3 * * *`    |
+| verify-restore                 | `hamafx-verify-restore.timer`                 | `0 4 * * 0`    |
+| self-update                    | `hamafx-update.timer`                         | every 5 min    |
 
-GitHub Actions cron has 5-minute minimum granularity; sub-5-minute cadences are not possible without an external scheduler.
+systemd timers have no minimum granularity — the previous 5-minute floor came from GitHub Actions and no longer applies. All cadences here can be tightened in `infra/cron-vm/units/hamafx-*.timer` without any platform constraint.
 
-### Required repo secrets
+### Required env on the VM
 
-Both secrets must be set on the GitHub repo (not the Vercel project) for the workflows to authenticate. Add them at **Settings → Secrets and variables → Actions → New repository secret** — direct link: <https://github.com/HamaFx/HamaFX-Ai/settings/secrets/actions>.
-
-- `PRODUCTION_URL` — base URL the workflows curl against, e.g. `https://hama-fx-ai.vercel.app` (no trailing slash).
-- `CRON_SECRET` — must match the value of the `CRON_SECRET` env var on the Vercel project. Rotate both at the same time if you ever change it.
-
-Without both secrets present, every scheduled run will fail with a 401 from the cron endpoint (visible in the workflow run logs).
+The VM's `/opt/hamafx/.env` is the single source of truth. The Vercel project no longer needs `CRON_SECRET` to be a GitHub Actions secret — it just needs to match the value on the VM. See `infra/cron-vm/setup.sh` for the canonical list (`PRODUCTION_URL`, `CRON_SECRET`, `DATABASE_URL`, every `HC_*_UUID`, plus `BIQUOTE_BASE_URL` / `SENTRY_DSN` if overridden).
 
 ### Risks
 
-- **Delay during peak load:** Schedule events can be deferred 10–20 min during peak GitHub load.
-- **Pause after inactivity:** GitHub may pause scheduled workflows after ~60 days of repo inactivity. Mitigation: any push (even a docs commit) resets the timer.
-- **No SLA:** Personal-tier scheduling is best-effort.
+- **Single VM is a SPOF.** Mitigated by `hamafx-update.timer` (5-min self-update from `origin/main`), nightly off-site GCS backups, and a weekly verify-restore. Worst case is a few hours of missed jobs while a fresh VM is rebuilt from `RECOVERY.md`.
+- **No GitHub Actions cron fallback.** The legacy workflows were deleted in Phase 8 PR-21. If healthchecks.io reports a stale job, debug on the VM (`journalctl -u hamafx-<name>.service`).
 
-### Alerts cadence trade-off (decision: option a)
-
-**Decision:** ≥ 12 alerts cron firings/hour (5-min cadence via GitHub Actions). Requirement 6 §7's original ≥ 30/hour target was relaxed because GitHub Actions cannot schedule sub-5-minute jobs. The alerts pipeline still fires every 5 minutes, which is acceptable for the personal-mode use case (no day-trading off these notifications). See "Deviations from requirements" below for the requirement-level note.
-
-**Flip path (option b) if real-world latency feels bad:** add a free [cron-job.org](https://cron-job.org) trigger for `/api/cron/alerts` at 1-minute cadence with the same `Authorization: Bearer ${CRON_SECRET}` header. The endpoint is idempotent — alerts are marked fired only after Resend returns 2xx (see `packages/ai/src/alerts/delivery.ts` and Requirement 7 §5–§6) — so duplicate fires from GH Actions and cron-job.org are safe. If/when this is enabled, commit the cron-job.org job export to `.github/cron-job-org.json` (or a markdown record of the URL + headers configured).
+**Flip path if cadence floors ever bite:** systemd `OnCalendar=` accepts arbitrary precision down to seconds, so tightening any cadence is one PR away. The endpoints stay idempotent (alerts mark themselves fired only after Resend returns 2xx — see `packages/ai/src/alerts/delivery.ts` and Requirement 7 §5–§6), so transient duplicate fires during a unit-file rollout are safe.
 
 ### Where to find logs
 
 - **Endpoint logs:** Vercel project → Functions → search by `/api/cron/<name>`.
-- **Scheduler logs:** GitHub repo → Actions tab → pick a workflow run.
+- **Scheduler logs:** SSH into `hamafx-cron` and `journalctl -u hamafx-<name>.service`. `systemctl list-timers --all 'hamafx-*'` shows every scheduled job and its next fire time.
 - **cron-job.org (if configured):** dashboard execution history.
 
 ### Manual trigger
@@ -334,5 +337,5 @@ No LLM-as-judge, no CI gate. Quality grading is manual.
 
 Two deviations are accepted with rationale:
 
-- **Requirement 6 §7 — alerts cron firing rate.** GitHub Actions cron has a 5-minute minimum granularity, so the alerts cron fires 12×/hour, not the 30 demanded by the requirement. We chose this trade-off over a Vercel Pro upgrade. Mitigation: optionally add a free [cron-job.org](https://cron-job.org) trigger pointed at `/api/cron/alerts` for sub-5-minute cadence.
+- **Requirement 6 §7 — alerts cron firing rate.** Alerts now fire every 5 minutes via `hamafx-light-alerts.timer` on the VM, not the originally demanded 30/hour. The 5-minute floor came from GitHub Actions in Phase 0; Phase 8's systemd timers no longer constrain us, but the cadence is intentionally kept at 5 min to keep Vercel function invocations comfortably under the Hobby tier ceiling. Tightening to 1-min is a one-line change to `infra/cron-vm/units/hamafx-light-alerts.timer` if real-world latency ever feels bad.
 - **Requirement 5 §10 — `/api/market/*` SW caching.** The optional stale-while-revalidate cache for `/api/market/*` is intentionally NOT implemented. Market data is timing-sensitive; serving 60-second-stale prices during network transitions is worse than serving none. The Next.js Data Cache layer in `packages/data/src/cache` is the canonical freshness boundary.
