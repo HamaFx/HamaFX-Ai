@@ -8,6 +8,8 @@ export * from './timeframes';
 // Schemas (zod + inferred types)
 export * from './schemas/candle';
 export * from './schemas/tick';
+export * from './schemas/live-tick';
+export * from './schemas/biquote';
 export * from './schemas/news';
 export * from './schemas/calendar';
 export * from './schemas/indicator';
