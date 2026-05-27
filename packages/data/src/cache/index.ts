@@ -5,7 +5,7 @@
 import { MemoryCache } from './memory';
 import type { Cache } from './types';
 
-export type { Cache } from './types';
+export type { Cache, CacheEntryMeta, CacheFetchOptions } from './types';
 export { MemoryCache } from './memory';
 export { cacheKey, cacheTag, type CacheResource, type KeyParts } from './keys';
 export {
@@ -18,7 +18,7 @@ export {
   FRED_SERIES_TTL,
   type TtlPolicy,
 } from './ttl';
-export { tryReserve, type ThrottleConfig, _resetThrottle } from './throttle';
+export { tryReserve, noteBackoff, type ThrottleConfig, _resetThrottle } from './throttle';
 
 /**
  * Resolve the default cache implementation for the current runtime.

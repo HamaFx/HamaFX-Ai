@@ -12,7 +12,6 @@ import {
   NewsArticleSchema,
   SymbolSchema,
   type NewsArticle,
-  type NewsSentiment,
   type Symbol,
   type SymbolOrCurrencyTag,
 } from '@hamafx/shared';

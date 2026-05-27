@@ -1,6 +1,33 @@
 // Cache abstraction. Phase-1a uses the Next.js Data Cache (see ./nextjs.ts);
 // `MemoryCache` covers tests and non-Next contexts. A future Redis-backed
 // implementation would slot in here without touching adapter code.
+//
+// Phase 7a additions:
+//   - `maxStaleSeconds` — opt-in stale-while-revalidate. When set, a producer
+//     failure may resolve from the most recent cached value up to that age
+//     past `ttlSeconds`. The adapter sees an explicit `{ value, stale }`
+//     envelope when this kicks in.
+//   - `fetchWithMeta` — the same producer but returns metadata so adapters
+//     can stamp `source` / freshness onto DTOs.
+
+export interface CacheEntryMeta {
+  /** ms epoch UTC when the entry was produced. */
+  producedAt: number;
+  /** True iff this read came from a stale-while-error fallback. */
+  stale: boolean;
+}
+
+export interface CacheFetchOptions {
+  /** Soft TTL — cached value is served fresh for this long. */
+  ttlSeconds: number;
+  /**
+   * Hard ceiling for stale-while-error fallback past `ttlSeconds`. 0 (the
+   * default) disables the fallback — producer failures bubble up as before.
+   */
+  maxStaleSeconds?: number;
+  /** Optional cache tags for grouped revalidation. */
+  tags?: string[];
+}
 
 export interface Cache {
   /**
@@ -19,6 +46,18 @@ export interface Cache {
     producer: () => Promise<T>,
     tags?: string[],
   ): Promise<T>;
+
+  /**
+   * Same as `fetch` but with an explicit options envelope and freshness
+   * metadata. Adapters that need to surface staleness on the DTO use this
+   * variant; existing call sites that don't care about staleness can keep
+   * using `fetch`.
+   */
+  fetchWithMeta<T>(
+    key: string,
+    producer: () => Promise<T>,
+    options: CacheFetchOptions,
+  ): Promise<{ value: T; meta: CacheEntryMeta }>;
 
   /** Revalidate everything tagged with `tag`. No-op if not supported. */
   invalidateTag?(tag: string): Promise<void> | void;

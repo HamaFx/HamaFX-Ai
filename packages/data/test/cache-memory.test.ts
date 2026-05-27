@@ -57,3 +57,75 @@ describe('MemoryCache', () => {
     await expect(cache.fetch('k2', 60, producer, ['t2'])).resolves.toBe(2); // still cached
   });
 });
+
+describe('MemoryCache — Phase 7a SWR', () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('serves stale value when producer fails within maxStaleSeconds', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-05-26T00:00:00Z'));
+    const cache = new MemoryCache();
+
+    // First call seeds the entry.
+    let mode: 'ok' | 'fail' = 'ok';
+    const producer = async () => {
+      if (mode === 'fail') throw new Error('upstream down');
+      return 'fresh';
+    };
+
+    const a = await cache.fetchWithMeta('k', producer, {
+      ttlSeconds: 5,
+      maxStaleSeconds: 30,
+    });
+    expect(a.value).toBe('fresh');
+    expect(a.meta.stale).toBe(false);
+
+    // After TTL expiry, force the producer to fail; expect stale fallback.
+    vi.advanceTimersByTime(6_000);
+    mode = 'fail';
+    const b = await cache.fetchWithMeta('k', producer, {
+      ttlSeconds: 5,
+      maxStaleSeconds: 30,
+    });
+    expect(b.value).toBe('fresh');
+    expect(b.meta.stale).toBe(true);
+  });
+
+  it('throws when producer fails past the SWR ceiling', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-05-26T00:00:00Z'));
+    const cache = new MemoryCache();
+
+    let mode: 'ok' | 'fail' = 'ok';
+    const producer = async () => {
+      if (mode === 'fail') throw new Error('upstream down');
+      return 1;
+    };
+
+    await cache.fetchWithMeta('k', producer, { ttlSeconds: 5, maxStaleSeconds: 10 });
+    // Past TTL + maxStale.
+    vi.advanceTimersByTime(20_000);
+    mode = 'fail';
+    await expect(
+      cache.fetchWithMeta('k', producer, { ttlSeconds: 5, maxStaleSeconds: 10 }),
+    ).rejects.toThrow('upstream down');
+  });
+
+  it('rethrows producer error when SWR is disabled (maxStaleSeconds=0)', async () => {
+    const cache = new MemoryCache();
+
+    let mode: 'ok' | 'fail' = 'ok';
+    const producer = async () => {
+      if (mode === 'fail') throw new Error('cold');
+      return 'v';
+    };
+
+    // No prior cached value at all → should throw on miss + fail.
+    mode = 'fail';
+    await expect(
+      cache.fetchWithMeta('cold-k', producer, { ttlSeconds: 5 }),
+    ).rejects.toThrow('cold');
+  });
+});

@@ -87,3 +87,54 @@ describe('getPrice', () => {
     await expect(getPrice('XAUUSD', { apiKeys: {} })).rejects.toThrow(/no providers/);
   });
 });
+
+
+// Phase 7a — getPriceWithMeta + SWR fallback when both providers go down
+// briefly. We seed a fresh entry, advance past TTL, then make every fetch
+// fail; the adapter must serve the cached tick with stale=true.
+
+import { getPriceWithMeta } from '../src/adapters/price';
+import { _resetHealth } from '../src/health';
+
+describe('getPriceWithMeta — Phase 7a SWR', () => {
+  beforeEach(() => {
+    setDefaultCache(new MemoryCache());
+    _resetThrottle();
+    _resetHealth();
+  });
+
+  afterEach(() => {
+    globalThis.fetch = ORIGINAL_FETCH;
+    vi.restoreAllMocks();
+    vi.useRealTimers();
+  });
+
+  it('returns stale=false on the fresh fetch and stale=true on a fallback read', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-05-26T00:00:00Z'));
+
+    // First call: succeeds.
+    globalThis.fetch = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ price: '2345.6' }), {
+        status: 200,
+        headers: { 'content-type': 'application/json' },
+      }),
+    ) as unknown as typeof fetch;
+
+    const fresh = await getPriceWithMeta('XAUUSD', { apiKeys: { twelveData: 'X' } });
+    expect(fresh.stale).toBe(false);
+    expect(fresh.tick.mid).toBeCloseTo(2345.6);
+
+    // Past TTL (3s) but within SWR ceiling (30s).
+    vi.advanceTimersByTime(5_000);
+
+    // Now the next attempt should hit upstream and fail.
+    globalThis.fetch = vi.fn().mockResolvedValue(
+      new Response('upstream down', { status: 503 }),
+    ) as unknown as typeof fetch;
+
+    const stale = await getPriceWithMeta('XAUUSD', { apiKeys: { twelveData: 'X' } });
+    expect(stale.stale).toBe(true);
+    expect(stale.tick.mid).toBeCloseTo(2345.6);
+  });
+});

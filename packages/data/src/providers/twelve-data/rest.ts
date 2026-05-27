@@ -14,7 +14,7 @@
 import type { Symbol, Timeframe } from '@hamafx/shared';
 import { z } from 'zod';
 
-import { tryReserve, type ThrottleConfig } from '../../cache/throttle';
+import { noteBackoff, tryReserve, type ThrottleConfig } from '../../cache/throttle';
 import { ProviderError } from '../../errors';
 import { toTwelveDataInterval, toTwelveDataSymbol } from './map';
 
@@ -113,8 +113,9 @@ async function call<T>(
   clearTimeout(t);
 
   if (!res.ok) {
+    if (res.status === 429) noteBackoff(PROVIDER, THROTTLE);
     throw new ProviderError(
-      'PROVIDER_HTTP_ERROR',
+      res.status === 429 ? 'PROVIDER_QUOTA_EXCEEDED' : 'PROVIDER_HTTP_ERROR',
       PROVIDER,
       `HTTP ${res.status} ${res.statusText}`,
       { status: res.status },
@@ -132,6 +133,7 @@ async function call<T>(
   const errEnv = TdErrorEnvelopeSchema.safeParse(json);
   if (errEnv.success) {
     const isQuota = errEnv.data.code === 429 || /credit|limit|usage/i.test(errEnv.data.message);
+    if (isQuota) noteBackoff(PROVIDER, THROTTLE);
     throw new ProviderError(
       isQuota ? 'PROVIDER_QUOTA_EXCEEDED' : 'PROVIDER_HTTP_ERROR',
       PROVIDER,

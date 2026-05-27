@@ -1,9 +1,13 @@
 // Price adapter — public surface for "what's the latest mid price?".
 //
 // Pipeline:
-//   zod-validate → cache → primary (Twelve Data) → fallback (Finnhub) → DTO
+//   zod-validate → cache → primary → fallback (with health-aware ordering) → DTO
 //
-// All callers go through `getPrice()`. Routes/tools never touch providers.
+// Phase 7a:
+//   - Cache uses `fetchWithMeta` so adapters can surface `stale` to callers.
+//   - When the producer fails AND a recently-cached value exists within the
+//     SWR window, we return the stale value with `stale=true` and let the UI
+//     surface it via `<StaleIndicator/>`.
 
 import { SymbolSchema, type Symbol, type Tick } from '@hamafx/shared';
 
@@ -16,6 +20,8 @@ export interface GetPriceOptions {
   signal?: AbortSignal;
   /** Override TTL in seconds (defaults to 3 s per docs/06). */
   ttlSeconds?: number;
+  /** Override stale-while-error ceiling in seconds. Defaults to PRICE_TTL.maxStaleSeconds. */
+  maxStaleSeconds?: number;
   /**
    * Adapter resolves API keys from env unless an injected `apiKeys` object is
    * provided — used by tests to avoid touching `process.env` and by the route
@@ -25,6 +31,15 @@ export interface GetPriceOptions {
     twelveData: string;
     finnhub: string;
   }>;
+}
+
+export interface PriceResult {
+  /** Normalised tick. */
+  tick: Tick;
+  /** True iff served from a stale-while-error fallback. */
+  stale: boolean;
+  /** ms epoch UTC the upstream produced this value. */
+  producedAt: number;
 }
 
 function resolveKeys(opts: GetPriceOptions) {
@@ -40,17 +55,29 @@ function resolveKeys(opts: GetPriceOptions) {
  * 3 seconds across the entire deployment.
  */
 export async function getPrice(symbolInput: Symbol, opts: GetPriceOptions = {}): Promise<Tick> {
+  const r = await getPriceWithMeta(symbolInput, opts);
+  return r.tick;
+}
+
+/**
+ * Same as `getPrice` but returns SWR / freshness metadata so the route
+ * handler / chart UI can decide whether to flag staleness.
+ */
+export async function getPriceWithMeta(
+  symbolInput: Symbol,
+  opts: GetPriceOptions = {},
+): Promise<PriceResult> {
   const symbol = SymbolSchema.parse(symbolInput);
   const keys = resolveKeys(opts);
   const ttl = opts.ttlSeconds ?? PRICE_TTL.ttlSeconds;
+  const swr = opts.maxStaleSeconds ?? PRICE_TTL.maxStaleSeconds;
 
   const cache = await getDefaultCache();
   const key = cacheKey({ resource: 'price', symbol });
   const tags = [cacheTag('price'), cacheTag('price', symbol)];
 
-  return cache.fetch<Tick>(
+  const r = await cache.fetchWithMeta<Tick>(
     key,
-    ttl,
     async () => {
       const attempts: ProviderAttempt<{ price: number; provider: string }>[] = [];
 
@@ -92,8 +119,10 @@ export async function getPrice(symbolInput: Symbol, opts: GetPriceOptions = {}):
         mid: value.price,
         ts: fetchedAt,
         source: value.provider,
-      };
+      } satisfies Tick;
     },
-    tags,
+    { ttlSeconds: ttl, maxStaleSeconds: swr, tags },
   );
+
+  return { tick: r.value, stale: r.meta.stale, producedAt: r.meta.producedAt };
 }

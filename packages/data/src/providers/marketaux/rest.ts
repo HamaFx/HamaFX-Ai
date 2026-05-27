@@ -11,7 +11,7 @@
 
 import { z } from 'zod';
 
-import { tryReserve, type ThrottleConfig } from '../../cache/throttle';
+import { noteBackoff, tryReserve, type ThrottleConfig } from '../../cache/throttle';
 import { ProviderError } from '../../errors';
 
 const PROVIDER = 'marketaux';
@@ -125,6 +125,7 @@ export async function fetchLatest(params: FetchNewsParams): Promise<RawMarketaux
     const json: unknown = await res.json().catch(() => null);
     const errEnv = ErrorSchema.safeParse(json);
     const message = errEnv.success ? errEnv.data.error.message : `HTTP ${res.status}`;
+    if (res.status === 429) noteBackoff(PROVIDER, THROTTLE);
     throw new ProviderError(
       res.status === 429 ? 'PROVIDER_QUOTA_EXCEEDED' : 'PROVIDER_HTTP_ERROR',
       PROVIDER,

@@ -1,8 +1,11 @@
 // GET /api/market/candles?symbol=XAUUSD&tf=1h&count=300
 //
 // OHLC window for a single symbol/timeframe. Defaults: tf=1h, count=300.
+//
+// Phase 7a: response carries `stale: boolean` so the chart / hooks can
+// render `<StaleIndicator/>` when the data layer falls back to SWR.
 
-import { getCandles } from '@hamafx/data';
+import { getCandlesWithMeta } from '@hamafx/data';
 import { DEFAULT_TIMEFRAME, SymbolSchema, TimeframeSchema } from '@hamafx/shared';
 import { z } from 'zod';
 
@@ -20,9 +23,9 @@ const QuerySchema = z.object({
 export async function GET(req: Request): Promise<Response> {
   try {
     const { symbol, tf, count } = parseSearchParams(req, QuerySchema);
-    const candles = await getCandles(symbol, tf, { count });
+    const r = await getCandlesWithMeta(symbol, tf, { count });
     return Response.json(
-      { symbol, tf, candles },
+      { symbol, tf, candles: r.candles, stale: r.stale, producedAt: r.producedAt },
       {
         headers: {
           // 5 s for 1m last-bar tier; longer tfs are cached internally too,

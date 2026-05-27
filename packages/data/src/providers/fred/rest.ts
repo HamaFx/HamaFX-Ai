@@ -9,7 +9,7 @@
 
 import { z } from 'zod';
 
-import { tryReserve, type ThrottleConfig } from '../../cache/throttle';
+import { noteBackoff, tryReserve, type ThrottleConfig } from '../../cache/throttle';
 import { ProviderError } from '../../errors';
 
 const PROVIDER = 'fred';
@@ -89,6 +89,7 @@ export async function fetchReleaseDates(params: FetchReleasesParams): Promise<Fr
   clearTimeout(timer);
 
   if (!res.ok) {
+    if (res.status === 429) noteBackoff(PROVIDER, THROTTLE);
     throw new ProviderError(
       res.status === 429 ? 'PROVIDER_QUOTA_EXCEEDED' : 'PROVIDER_HTTP_ERROR',
       PROVIDER,
@@ -190,6 +191,7 @@ export async function fetchObservations(
   clearTimeout(timer);
 
   if (!res.ok) {
+    if (res.status === 429) noteBackoff(PROVIDER, THROTTLE);
     throw new ProviderError(
       res.status === 429 ? 'PROVIDER_QUOTA_EXCEEDED' : 'PROVIDER_HTTP_ERROR',
       PROVIDER,

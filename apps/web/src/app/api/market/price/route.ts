@@ -2,8 +2,12 @@
 //
 // Latest mid price for one or more symbols. Browser polls this every 1.5 s;
 // the data adapter caches at 3 s so most calls don't hit the upstream.
+//
+// Phase 7a: when the data layer falls back to a stale-while-error cached
+// value, the response carries `stale: true` per symbol AND a top-level
+// `anyStale` flag so the UI can show `<StaleIndicator/>` without iterating.
 
-import { getPrice } from '@hamafx/data';
+import { getPriceWithMeta } from '@hamafx/data';
 import { SYMBOLS, SymbolSchema, type Tick } from '@hamafx/shared';
 import { z } from 'zod';
 
@@ -31,6 +35,13 @@ const QuerySchema = z.object({
     }),
 });
 
+interface TickWithMeta extends Tick {
+  /** True iff served from a stale-while-error fallback. */
+  stale: boolean;
+  /** ms epoch UTC the upstream produced this value. */
+  producedAt: number;
+}
+
 export async function GET(req: Request): Promise<Response> {
   try {
     const url = new URL(req.url);
@@ -40,8 +51,17 @@ export async function GET(req: Request): Promise<Response> {
       symbol: repeated.length > 1 ? repeated : (url.searchParams.get('symbol') ?? undefined),
     });
 
-    const ticks: Tick[] = await Promise.all(params.symbol.map((s) => getPrice(s)));
-    return Response.json({ ticks }, { headers: cacheHeaders(3) });
+    const results = await Promise.all(params.symbol.map((s) => getPriceWithMeta(s)));
+    const ticks: TickWithMeta[] = results.map((r) => ({
+      ...r.tick,
+      stale: r.stale,
+      producedAt: r.producedAt,
+    }));
+    const anyStale = ticks.some((t) => t.stale);
+    return Response.json(
+      { ticks, anyStale },
+      { headers: cacheHeaders(3) },
+    );
   } catch (err) {
     return errorResponse(err);
   }

@@ -8,6 +8,9 @@
 // Phase 2 added Finnhub as a fallback. The cache entry is provider-agnostic
 // (one bucket per `(symbol, tf, count)` key), but the bars carry their own
 // `source` field so downstream consumers can tell where they came from.
+//
+// Phase 7a: opt-in SWR via TTL policy + `getCandlesWithMeta` for callers
+// that want to surface staleness.
 
 import {
   CandleSchema,
@@ -29,6 +32,12 @@ export interface GetCandlesOptions {
   /** Number of bars to request (capped at 5000 by upstream). Default 300. */
   count?: number;
   apiKeys?: Partial<{ twelveData: string; finnhub: string }>;
+}
+
+export interface CandlesResult {
+  candles: Candle[];
+  stale: boolean;
+  producedAt: number;
 }
 
 const DEFAULT_COUNT = 300;
@@ -55,6 +64,16 @@ export async function getCandles(
   tf: Timeframe,
   opts: GetCandlesOptions = {},
 ): Promise<Candle[]> {
+  const r = await getCandlesWithMeta(symbolInput, tf, opts);
+  return r.candles;
+}
+
+/** SWR-aware variant. */
+export async function getCandlesWithMeta(
+  symbolInput: Symbol,
+  tf: Timeframe,
+  opts: GetCandlesOptions = {},
+): Promise<CandlesResult> {
   const symbol = SymbolSchema.parse(symbolInput);
   const count = Math.max(1, Math.min(opts.count ?? DEFAULT_COUNT, MAX_COUNT));
   const keys = resolveKeys(opts);
@@ -64,9 +83,8 @@ export async function getCandles(
   const key = cacheKey({ resource: 'candles', symbol, tf, extra: `n${count}` });
   const tags = [cacheTag('candles'), cacheTag('candles', symbol)];
 
-  return cache.fetch<Candle[]>(
+  const r = await cache.fetchWithMeta<Candle[]>(
     key,
-    policy.ttlSeconds,
     async () => {
       const attempts: ProviderAttempt<Candle[]>[] = [];
 
@@ -139,6 +157,8 @@ export async function getCandles(
       const { value } = await runWithFailover(attempts);
       return value;
     },
-    tags,
+    { ttlSeconds: policy.ttlSeconds, maxStaleSeconds: policy.maxStaleSeconds, tags },
   );
+
+  return { candles: r.value, stale: r.meta.stale, producedAt: r.meta.producedAt };
 }
