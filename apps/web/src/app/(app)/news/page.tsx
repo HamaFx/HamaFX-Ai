@@ -8,6 +8,7 @@ import type { Metadata } from 'next';
 import { PageHeader } from '@/components/layout/page-header';
 import { ArticleCard } from '@/components/news/article-card';
 import { LiveTimestamp } from '@/components/news/live-timestamp';
+import { StaggerItem } from '@/components/ui/stagger-item';
 
 import { RefreshButton } from './_components/refresh-button';
 
@@ -38,9 +39,11 @@ export default async function NewsPage() {
         <EmptyState />
       ) : (
         <ul className="flex flex-col gap-2">
-          {articles.map((a) => (
+          {articles.map((a, idx) => (
             <li key={a.id}>
-              <ArticleCard article={a} />
+              <StaggerItem index={idx}>
+                <ArticleCard article={a} />
+              </StaggerItem>
             </li>
           ))}
         </ul>
@@ -51,11 +54,32 @@ export default async function NewsPage() {
 
 function EmptyState() {
   return (
-    <div className="text-fg-muted border-divider flex flex-col items-center gap-3 rounded-lg border border-dashed p-6 text-center text-sm">
-      <p className="font-medium">No news articles yet.</p>
-      <p className="text-fg-subtle text-xs">
-        The cron fires every 5 minutes. Tap below to trigger manually.
-      </p>
+    <div className="card-premium flex flex-col items-center gap-4 p-10 text-center">
+      <span
+        className="text-fg-subtle inline-flex h-16 w-16 items-center justify-center rounded-3xl"
+        style={{ background: 'oklch(70% 0.02 265 / 0.1)' }}
+      >
+        <svg
+          className="size-7"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth="1.75"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden="true"
+        >
+          <path d="M4 5h13a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5Z" />
+          <path d="M19 8h2v9a2 2 0 0 1-2 2" />
+          <path d="M8 9h7M8 13h7M8 17h4" />
+        </svg>
+      </span>
+      <div className="flex flex-col gap-1.5">
+        <p className="text-fg text-base font-semibold">No news yet</p>
+        <p className="text-fg-muted text-sm">
+          The cron fires every 5 minutes. Tap below to trigger manually.
+        </p>
+      </div>
       <RefreshButton endpoint="/api/cron/news" />
     </div>
   );

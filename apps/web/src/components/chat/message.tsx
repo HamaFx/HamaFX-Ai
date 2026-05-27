@@ -20,11 +20,21 @@ export function Message({ message }: MessageProps) {
     <div className={cn('flex w-full', isUser ? 'justify-end' : 'justify-start')}>
       <div
         className={cn(
-          'flex max-w-[85%] flex-col gap-1.5 px-3.5 py-2.5',
+          'flex max-w-[85%] flex-col gap-1.5 px-4 py-2.5 shadow-sm',
           isUser
-            ? 'bg-brand text-brand-fg rounded-2xl rounded-br-sm'
-            : 'bg-bg-elev-1 text-fg rounded-2xl rounded-bl-sm',
+            ? 'text-brand-fg rounded-3xl rounded-br-md font-medium'
+            : 'glass-subtle text-fg rounded-3xl rounded-bl-md',
         )}
+        style={
+          isUser
+            ? {
+                background:
+                  'linear-gradient(135deg, oklch(80% 0.16 78) 0%, oklch(74% 0.18 60) 100%)',
+                boxShadow:
+                  'inset 0 1px 0 0 oklch(100% 0 0 / 0.15), 0 4px 12px -4px oklch(78% 0.16 78 / 0.4)',
+              }
+            : undefined
+        }
       >
         {message.parts.map((part, idx) => renderPart(part, idx, message.role))}
       </div>

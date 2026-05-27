@@ -8,6 +8,7 @@ import type { Metadata } from 'next';
 
 import { EventCard } from '@/components/calendar/event-card';
 import { PageHeader } from '@/components/layout/page-header';
+import { StaggerItem } from '@/components/ui/stagger-item';
 
 import { RefreshButton } from '../news/_components/refresh-button';
 
@@ -42,9 +43,11 @@ export default async function CalendarPage() {
                 {dayLabel(day)}
               </h2>
               <ul className="flex flex-col gap-2">
-                {items.map((e) => (
+                {items.map((e, idx) => (
                   <li key={e.id} className={e.date < Date.now() ? 'opacity-60' : ''}>
-                    <EventCard event={e} />
+                    <StaggerItem index={idx}>
+                      <EventCard event={e} />
+                    </StaggerItem>
                   </li>
                 ))}
               </ul>
@@ -67,11 +70,31 @@ function dayLabel(iso: string): string {
 
 function EmptyState() {
   return (
-    <div className="text-fg-muted border-divider flex flex-col items-center gap-3 rounded-lg border border-dashed p-6 text-center text-sm">
-      <p className="font-medium">No events scheduled in the next 14 days.</p>
-      <p className="text-fg-subtle text-xs">
-        The cron fires every 15 minutes. Tap below to trigger manually.
-      </p>
+    <div className="card-premium flex flex-col items-center gap-4 p-10 text-center">
+      <span
+        className="text-fg-subtle inline-flex h-16 w-16 items-center justify-center rounded-3xl"
+        style={{ background: 'oklch(70% 0.02 265 / 0.1)' }}
+      >
+        <svg
+          className="size-7"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth="1.75"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden="true"
+        >
+          <rect x="3" y="5" width="18" height="16" rx="2" />
+          <path d="M3 10h18M8 3v4M16 3v4" />
+        </svg>
+      </span>
+      <div className="flex flex-col gap-1.5">
+        <p className="text-fg text-base font-semibold">No events scheduled</p>
+        <p className="text-fg-muted text-sm">
+          The cron fires every 15 minutes. Tap below to trigger manually.
+        </p>
+      </div>
       <RefreshButton endpoint="/api/cron/calendar" />
     </div>
   );

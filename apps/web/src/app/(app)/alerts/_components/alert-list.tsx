@@ -28,6 +28,7 @@ import {
   DrawerTitle,
 } from '@/components/ui/drawer';
 import { Fab } from '@/components/ui/fab';
+import { StaggerItem } from '@/components/ui/stagger-item';
 import { cn } from '@/lib/cn';
 
 import { AlertForm } from './alert-form';
@@ -86,13 +87,14 @@ export function AlertList() {
         <EmptyState onCreate={() => setOpen(true)} />
       ) : (
         <ul className="flex flex-col gap-2">
-          {data?.alerts.map((a) => (
-            <AlertRow
-              key={a.id}
-              alert={a}
-              onToggle={() => toggle.mutate({ id: a.id, active: !a.active })}
-              onDelete={() => remove.mutate(a.id)}
-            />
+          {data?.alerts.map((a, idx) => (
+            <StaggerItem key={a.id} index={idx}>
+              <AlertRow
+                alert={a}
+                onToggle={() => toggle.mutate({ id: a.id, active: !a.active })}
+                onDelete={() => remove.mutate(a.id)}
+              />
+            </StaggerItem>
           ))}
         </ul>
       )}
@@ -135,26 +137,34 @@ function AlertRow({ alert, onToggle, onDelete }: AlertRowProps) {
   return (
     <li
       className={cn(
-        'border-divider bg-bg-elev-1 flex items-start gap-3 rounded-lg border p-3 transition-opacity',
+        'card-premium flex items-start gap-3 p-3.5 transition-opacity',
         !alert.active && 'opacity-70',
       )}
     >
       <span
         aria-hidden
         className={cn(
-          'bg-bg-elev-2 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg',
+          'inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl',
           statusTone,
         )}
+        style={{
+          background: alert.active
+            ? 'oklch(74% 0.2 152 / 0.15)'
+            : alert.firedAt
+              ? 'oklch(80% 0.16 80 / 0.15)'
+              : 'oklch(70% 0.02 265 / 0.1)',
+          boxShadow: 'inset 0 1px 0 0 oklch(100% 0 0 / 0.06)',
+        }}
       >
-        <StatusIcon className="size-4" />
+        <StatusIcon className="size-4.5" strokeWidth={2} />
       </span>
 
       <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-1.5 text-fg text-sm font-medium tabular-nums">
+        <div className="flex items-center gap-1.5 text-fg text-sm font-semibold tabular-nums">
           <RuleIcon className="text-fg-muted size-3.5 shrink-0" />
           <span className="truncate">{describe(alert)}</span>
         </div>
-        <p className="text-fg-subtle mt-0.5 truncate text-[11px]">
+        <p className="text-fg-subtle mt-1 truncate text-[11px]">
           {alert.firedAt
             ? `fired ${formatRelative(alert.firedAt)}`
             : `created ${formatRelative(alert.createdAt)}`}
@@ -163,26 +173,22 @@ function AlertRow({ alert, onToggle, onDelete }: AlertRowProps) {
       </div>
 
       <div className="flex shrink-0 gap-1">
-        <Button
+        <button
           type="button"
-          size="sm"
-          variant="ghost"
           onClick={onToggle}
           aria-label={alert.active ? 'Pause alert' : 'Re-arm alert'}
-          className="!p-2"
+          className="text-fg-muted hover:text-fg hover:bg-bg-elev-2 active:scale-95 inline-flex h-9 w-9 items-center justify-center rounded-lg transition-all"
         >
           {alert.active ? <BellOff className="size-4" /> : <RotateCw className="size-4" />}
-        </Button>
-        <Button
+        </button>
+        <button
           type="button"
-          size="sm"
-          variant="ghost"
           onClick={onDelete}
           aria-label="Delete alert"
-          className="text-bear !p-2"
+          className="text-bear/70 hover:text-bear hover:bg-bear/10 active:scale-95 inline-flex h-9 w-9 items-center justify-center rounded-lg transition-all"
         >
           <Trash2 className="size-4" />
-        </Button>
+        </button>
       </div>
     </li>
   );
@@ -190,13 +196,21 @@ function AlertRow({ alert, onToggle, onDelete }: AlertRowProps) {
 
 function EmptyState({ onCreate }: { onCreate: () => void }) {
   return (
-    <div className="border-divider bg-bg-elev-1/50 flex flex-col items-center gap-4 rounded-2xl border border-dashed p-8 text-center">
-      <span className="bg-bg-elev-2 text-fg-subtle inline-flex h-16 w-16 items-center justify-center rounded-2xl">
-        <BellOff className="size-8" strokeWidth={1.5} />
+    <div className="card-premium flex flex-col items-center gap-5 p-10 text-center">
+      <span
+        className="text-brand inline-flex h-20 w-20 items-center justify-center rounded-3xl"
+        style={{
+          background:
+            'linear-gradient(135deg, oklch(78% 0.16 78 / 0.18) 0%, oklch(72% 0.18 295 / 0.18) 100%)',
+          boxShadow:
+            'inset 0 1px 0 0 oklch(100% 0 0 / 0.1), 0 0 40px -8px oklch(78% 0.16 78 / 0.4)',
+        }}
+      >
+        <BellOff className="size-10" strokeWidth={1.5} />
       </span>
-      <div className="flex flex-col gap-1">
-        <p className="text-fg text-base font-medium">No alerts yet</p>
-        <p className="text-fg-muted text-sm">
+      <div className="flex flex-col gap-1.5">
+        <p className="text-fg text-lg font-semibold tracking-tight">No alerts yet</p>
+        <p className="text-fg-muted text-sm leading-relaxed">
           Get notified when a price level, indicator, or candle close triggers.
         </p>
       </div>

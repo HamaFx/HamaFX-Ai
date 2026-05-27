@@ -35,20 +35,18 @@ export function OfflineBanner() {
     <div
       role="status"
       aria-live="polite"
-      // Sit above the 64px BottomNav (+ safe-area) with a small gap. Centered,
-      // pointer events isolated to the pill itself so the rest of the screen
-      // stays interactive.
       className="pointer-events-none fixed inset-x-0 z-40 flex justify-center px-4"
-      style={{ bottom: 'calc(64px + env(safe-area-inset-bottom) + 12px)' }}
+      style={{ bottom: 'calc(96px + env(safe-area-inset-bottom) + 12px)' }}
     >
-      <div className="border-border bg-bg-elev-2 text-fg pointer-events-auto flex items-center gap-3 rounded-full border px-4 py-2 shadow-lg">
-        <span className="text-bear text-sm font-medium">No network</span>
+      <div className="glass-strong text-fg pointer-events-auto flex items-center gap-3 rounded-full px-4 py-2.5">
+        <span className="bg-bear inline-block size-2 animate-pulse rounded-full" />
+        <span className="text-sm font-medium">No network</span>
         <button
           type="button"
           onClick={() => {
             window.location.reload();
           }}
-          className="border-border hover:bg-bg-elev-1 focus-visible:ring-brand inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-md border px-3 text-sm font-medium focus:outline-none focus-visible:ring-2"
+          className="text-fg-muted hover:text-fg focus-visible:ring-brand inline-flex min-h-[36px] items-center justify-center rounded-lg px-3 text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2"
         >
           Retry
         </button>

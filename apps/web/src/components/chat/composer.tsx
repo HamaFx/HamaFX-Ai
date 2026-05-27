@@ -121,8 +121,8 @@ export function Composer({ onSubmit, disabled, placeholder = 'Ask anything…' }
   return (
     <form
       className={cn(
-        'border-divider bg-bg-elev-1 sticky bottom-0 flex flex-col gap-2 border-t px-3 py-2 transition-shadow duration-200',
-        focused && 'shadow-[0_-12px_32px_-8px_rgba(0,0,0,0.4)]',
+        'glass-strong sticky bottom-0 flex flex-col gap-2 px-3 py-2.5 transition-shadow duration-200',
+        focused && 'shadow-[0_-16px_40px_-8px_oklch(78%_0.16_78/0.15)]',
       )}
       onSubmit={(e) => {
         e.preventDefault();

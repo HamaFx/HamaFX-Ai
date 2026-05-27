@@ -76,9 +76,9 @@ export function ChartView({ symbol }: { symbol: Symbol }) {
 
   return (
     <div className="-mx-4 flex flex-col">
-      {/* Sticky glass sub-header — sits flush below the TopBar */}
-      <header className="border-divider bg-bg-elev-1/85 supports-[backdrop-filter]:bg-bg-elev-1/70 sticky top-12 z-20 border-b backdrop-blur-md">
-        <div className="flex flex-col gap-2 px-4 py-2.5">
+      {/* Sticky glass sub-header */}
+      <header className="glass-subtle sticky top-12 z-20 border-b border-divider">
+        <div className="flex flex-col gap-2.5 px-4 py-3">
           <div className="flex items-center justify-between gap-3">
             <SymbolPicker active={symbol} />
             <PriceTag symbol={symbol} referencePrice={referenceClose} />
@@ -91,7 +91,7 @@ export function ChartView({ symbol }: { symbol: Symbol }) {
                 <Link
                   href={`/chart/${symbol}/pro?tf=${tf}`}
                   aria-label="Pro chart"
-                  className="border-divider bg-bg-elev-2 text-fg-muted hover:text-fg focus-visible:ring-brand inline-flex h-9 w-9 items-center justify-center rounded-md border focus:outline-none focus-visible:ring-2"
+                  className="glass-subtle text-fg-muted hover:text-fg focus-visible:ring-brand inline-flex h-9 w-9 items-center justify-center rounded-lg focus:outline-none focus-visible:ring-2"
                 >
                   <Maximize2 className="size-3.5" />
                 </Link>

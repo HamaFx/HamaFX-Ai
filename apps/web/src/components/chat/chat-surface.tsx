@@ -45,11 +45,11 @@ export function ChatSurface({ threadId, initialMessages }: ChatSurfaceProps) {
   const isStreaming = status === 'submitted' || status === 'streaming';
 
   return (
-    <div className="border-divider bg-bg flex h-[calc(100svh-9rem)] flex-col overflow-hidden rounded-xl border">
+    <div className="card-premium flex h-[calc(100svh-9rem)] flex-col overflow-hidden">
       <div className="scrollbar-hide flex-1 overflow-y-auto">
         <MessageList messages={messages} isStreaming={isStreaming} />
         {error ? (
-          <div className="bg-bear/10 text-bear border-bear/30 mx-3 mb-2 flex items-center justify-between gap-2 rounded-lg border p-2.5 text-xs">
+          <div className="bg-bear/10 text-bear ring-bear/30 mx-3 mb-2 flex items-center justify-between gap-2 rounded-xl p-3 text-xs ring-1 backdrop-blur">
             <span className="line-clamp-2 flex-1">{error.message}</span>
             <button
               type="button"
@@ -58,7 +58,7 @@ export function ChatSurface({ threadId, initialMessages }: ChatSurfaceProps) {
                   void sendMessage({ text: lastUserTextRef.current });
                 }
               }}
-              className="bg-bear/20 hover:bg-bear/30 inline-flex shrink-0 items-center gap-1 rounded-md px-2 py-1 text-[10px] font-medium"
+              className="bg-bear/20 hover:bg-bear/30 ring-bear/30 inline-flex shrink-0 items-center gap-1 rounded-lg px-2.5 py-1 text-[10px] font-medium ring-1"
             >
               <RotateCcw className="size-3" /> Retry
             </button>

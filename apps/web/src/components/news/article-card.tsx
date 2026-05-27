@@ -1,5 +1,5 @@
-// One news article row. External link, opens in a new tab. Designed for
-// dense mobile lists — title clamps at 3 lines, summary at 2.
+// One news article — premium glass card with subtle hover lift, gradient
+// border highlight, and animated sentiment chip.
 
 import type { NewsArticle } from '@hamafx/shared';
 
@@ -12,27 +12,47 @@ interface ArticleCardProps {
 export function ArticleCard({ article }: ArticleCardProps) {
   const sentimentClass =
     article.sentiment === 'positive'
-      ? 'bg-bull/15 text-bull'
+      ? 'bg-bull/15 text-bull ring-1 ring-bull/30'
       : article.sentiment === 'negative'
-        ? 'bg-bear/15 text-bear'
-        : 'bg-bg-elev-2 text-fg-muted';
+        ? 'bg-bear/15 text-bear ring-1 ring-bear/30'
+        : 'bg-bg-elev-2 text-fg-muted ring-1 ring-divider';
 
   return (
     <a
       href={article.url}
       target="_blank"
       rel="noopener noreferrer"
-      className="border-divider bg-bg-elev-1 hover:bg-bg-elev-2 block rounded-lg border p-3 transition-all duration-200 md:hover:-translate-y-0.5 md:hover:shadow-lg md:hover:shadow-black/20"
+      className={cn(
+        'card-premium group relative block p-3.5',
+        'transition-all duration-300',
+        'md:hover:-translate-y-1 md:hover:shadow-xl md:hover:shadow-black/40',
+        'active:scale-[0.99]',
+      )}
     >
-      <div className="flex items-start justify-between gap-3">
-        <h3 className="line-clamp-3 flex-1 text-sm font-semibold leading-snug">{article.title}</h3>
+      {/* Subtle hover gradient sheen */}
+      <span
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 rounded-[inherit] opacity-0 transition-opacity duration-300 md:group-hover:opacity-100"
+        style={{
+          background:
+            'linear-gradient(135deg, oklch(78% 0.16 78 / 0.04) 0%, transparent 50%, oklch(72% 0.18 295 / 0.04) 100%)',
+        }}
+      />
+
+      <div className="relative flex items-start justify-between gap-3">
+        <h3 className="text-fg line-clamp-3 flex-1 text-sm font-semibold leading-snug">
+          {article.title}
+        </h3>
         {article.sentiment ? (
           <span
-            className={cn('rounded-full px-1.5 py-0.5 text-[10px] font-medium', sentimentClass)}
+            className={cn(
+              'shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium',
+              sentimentClass,
+            )}
           >
             {article.sentiment}
             {article.sentimentScore !== null ? (
-              <span className="ml-0.5 tabular-nums opacity-70">
+              <span className="ml-1 tabular-nums opacity-80">
                 {article.sentimentScore > 0 ? '+' : ''}
                 {article.sentimentScore.toFixed(2)}
               </span>
@@ -42,23 +62,25 @@ export function ArticleCard({ article }: ArticleCardProps) {
       </div>
 
       {article.summary ? (
-        <p className="text-fg-muted mt-1.5 line-clamp-2 text-xs leading-snug">{article.summary}</p>
+        <p className="text-fg-muted relative mt-1.5 line-clamp-2 text-xs leading-relaxed">
+          {article.summary}
+        </p>
       ) : null}
 
-      <div className="text-fg-subtle mt-2 flex flex-wrap items-center gap-2 text-[10px]">
-        <span>{article.publisher ?? article.source}</span>
-        <span aria-hidden>·</span>
+      <div className="text-fg-subtle relative mt-2.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[10px]">
+        <span className="font-medium">{article.publisher ?? article.source}</span>
+        <span aria-hidden className="opacity-50">·</span>
         <time dateTime={new Date(article.publishedAt).toISOString()}>
           {formatRelative(article.publishedAt)}
         </time>
         {article.symbols.length > 0 ? (
           <>
-            <span aria-hidden>·</span>
+            <span aria-hidden className="opacity-50">·</span>
             <span className="flex flex-wrap gap-1">
               {article.symbols.map((s) => (
                 <span
                   key={s}
-                  className="border-border rounded border px-1 py-0.5 text-[9px] uppercase tabular-nums"
+                  className="bg-bg-elev-2 text-fg-muted ring-divider rounded px-1.5 py-0.5 text-[9px] uppercase tabular-nums ring-1"
                 >
                   {s}
                 </span>

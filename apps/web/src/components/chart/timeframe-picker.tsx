@@ -24,7 +24,7 @@ export function TimeframePicker({ value, onChange, options = TIMEFRAMES }: Timef
     <div
       role="tablist"
       aria-label="Timeframe"
-      className="border-divider bg-bg-elev-2 inline-flex items-center gap-0.5 rounded-md border p-0.5"
+      className="glass-subtle inline-flex items-center gap-0.5 rounded-xl p-0.5"
     >
       {options.map((tf) => {
         const active = tf === value;
@@ -36,7 +36,7 @@ export function TimeframePicker({ value, onChange, options = TIMEFRAMES }: Timef
             aria-selected={active}
             onClick={() => onChange(tf)}
             className={cn(
-              'relative rounded px-2 py-1 text-[11px] font-medium tabular-nums transition-colors',
+              'relative rounded-lg px-2.5 py-1.5 text-[11px] font-semibold tabular-nums transition-colors',
               'min-w-[28px]',
               active ? 'text-brand-fg' : 'text-fg-muted hover:text-fg',
             )}
@@ -44,7 +44,13 @@ export function TimeframePicker({ value, onChange, options = TIMEFRAMES }: Timef
             {active ? (
               <m.span
                 layoutId="tf-indicator"
-                className="bg-brand absolute inset-0 -z-0 rounded"
+                className="absolute inset-0 -z-0 rounded-lg"
+                style={{
+                  background:
+                    'linear-gradient(135deg, oklch(80% 0.16 78) 0%, oklch(74% 0.18 60) 100%)',
+                  boxShadow:
+                    'inset 0 1px 0 0 oklch(100% 0 0 / 0.15), 0 4px 12px -2px oklch(78% 0.16 78 / 0.4)',
+                }}
                 transition={{ type: 'spring', stiffness: 380, damping: 30 }}
               />
             ) : null}

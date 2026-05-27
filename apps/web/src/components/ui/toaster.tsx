@@ -32,8 +32,11 @@ export function Toaster() {
       toastOptions={{
         classNames: {
           toast:
-            'group !border !border-border !bg-bg-elev-2 !text-fg !shadow-lg !rounded-lg',
-          title: '!text-sm !font-medium',
+            'group !rounded-xl !backdrop-blur-xl !backdrop-saturate-150 !shadow-2xl ' +
+            '![background:linear-gradient(135deg,oklch(20%_0.022_265/0.85),oklch(17%_0.018_265/0.95))] ' +
+            '!border !border-divider !text-fg ' +
+            '![box-shadow:inset_0_1px_0_0_oklch(100%_0_0_/_0.06),0_25px_50px_-12px_oklch(0%_0_0_/_0.5)]',
+          title: '!text-sm !font-semibold',
           description: '!text-xs !text-fg-muted',
           success: '!border-bull/40',
           error: '!border-bear/40',
