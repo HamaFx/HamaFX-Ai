@@ -3,38 +3,24 @@
 // Chat top bar — replaces both the (app) TopBar and PageHeader for the
 // chat route. Glass surface with safe-area-top padding.
 //
-//   [☰ menu]   [title + status + symbol pill]   [+ new chat] [⋯ more]
+//   [☰ menu]  [title + status + symbol pill]  [+ new chat] [⋯ more]
 //
-// The menu trigger opens the global <NavDrawer> (same as the rest of the
-// app). The thread switcher moved to the overflow menu so the top bar
-// keeps a calm 4-button layout instead of crowding 5+.
+// The menu trigger uses the SAME shared <NavTrigger> as the global TopBar
+// — both call into the single <NavDrawer> instance via context. There is
+// only ever one drawer in the DOM, which fixes the "menu sometimes
+// doesn't open" intermittent bug caused by stacked drawer instances.
 
 import type { Symbol } from '@hamafx/shared';
-import {
-  Loader2,
-  MessagesSquare,
-  MoreHorizontal,
-  Plus,
-  Search,
-  Sparkles,
-  Trash2,
-} from 'lucide-react';
+import { Loader2, MessagesSquare, MoreHorizontal, Plus, Search, Sparkles, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useMemo, useState, useTransition } from 'react';
+import { useEffect, useMemo, useRef, useState, useTransition } from 'react';
 import { toast } from 'sonner';
 
-import { NavDrawer } from '@/components/layout/nav-drawer';
+import { NavTrigger } from '@/components/layout/nav-trigger';
 import { useConfirm } from '@/components/ui/confirm-drawer';
-import {
-  Drawer,
-  DrawerContent,
-  DrawerHeader,
-  DrawerTitle,
-} from '@/components/ui/drawer';
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from '@/components/ui/drawer';
 import { Tooltip } from '@/components/ui/tooltip';
 import { cn } from '@/lib/cn';
-
-import { NavTrigger } from './nav-trigger';
 
 export interface ThreadSummary {
   id: string;
@@ -51,18 +37,31 @@ interface ChatTopBarProps {
   isStreaming: boolean;
 }
 
-export function ChatTopBar({
-  threadId,
-  title,
-  pinnedSymbol,
-  threads,
-  isStreaming,
-}: ChatTopBarProps) {
+export function ChatTopBar({ threadId, title, pinnedSymbol, threads, isStreaming }: ChatTopBarProps) {
   const router = useRouter();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [pending, startTransition] = useTransition();
   const [confirmEl, confirm] = useConfirm();
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  // Click-out / escape close for the overflow menu.
+  useEffect(() => {
+    if (!menuOpen) return;
+    function onPointerDown(e: PointerEvent) {
+      if (!menuRef.current) return;
+      if (!menuRef.current.contains(e.target as Node)) setMenuOpen(false);
+    }
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') setMenuOpen(false);
+    }
+    window.addEventListener('pointerdown', onPointerDown);
+    window.addEventListener('keydown', onKey);
+    return () => {
+      window.removeEventListener('pointerdown', onPointerDown);
+      window.removeEventListener('keydown', onKey);
+    };
+  }, [menuOpen]);
 
   function newChat() {
     startTransition(async () => {
@@ -98,11 +97,8 @@ export function ChatTopBar({
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         toast.success('Deleted');
         const next = threads.find((t) => t.id !== threadId);
-        if (next) {
-          router.push(`/chat/${next.id}`);
-        } else {
-          router.push('/chat');
-        }
+        if (next) router.push(`/chat/${next.id}`);
+        else router.push('/chat');
       } catch (err) {
         toast.error('Delete failed', {
           description: err instanceof Error ? err.message : 'unknown',
@@ -120,10 +116,11 @@ export function ChatTopBar({
         className="mx-auto flex max-w-2xl items-center gap-1 px-2"
         style={{ height: 'var(--topbar-h)' }}
       >
-        {/* Left: nav drawer (global menu) */}
-        <NavDrawer trigger={<NavTrigger />} />
+        <NavTrigger />
 
-        {/* Center: title + status */}
+        {/* Center: title + status. min-w-0 + flex-1 + truncate makes long
+            LLM-generated titles ellipsize cleanly instead of pushing the
+            right-side controls off the edge. */}
         <div className="flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5">
           <div className="flex max-w-full items-center gap-1.5">
             <h1 className="text-fg truncate text-sm font-semibold tracking-tight">{title}</h1>
@@ -144,66 +141,61 @@ export function ChatTopBar({
           </p>
         </div>
 
-        {/* Right: new chat + menu */}
         <Tooltip label="New chat" side="bottom">
           <button
             type="button"
             onClick={newChat}
             disabled={pending}
             aria-label="New chat"
-            className="text-fg-muted hover:text-fg hover:bg-bg-elev-2 inline-flex size-11 shrink-0 items-center justify-center rounded-xl transition-colors disabled:opacity-50"
+            className="text-fg-muted hover:text-fg hover:bg-bg-elev-2 active:bg-bg-elev-3 inline-flex size-11 shrink-0 items-center justify-center rounded-xl transition-colors disabled:opacity-50"
           >
             {pending ? <Loader2 className="size-5 animate-spin" /> : <Plus className="size-5" />}
           </button>
         </Tooltip>
 
-        <div className="relative">
-          <Tooltip label="More" side="bottom">
-            <button
-              type="button"
-              onClick={() => setMenuOpen((v) => !v)}
-              aria-label="Conversation menu"
-              aria-expanded={menuOpen}
-              className="text-fg-muted hover:text-fg hover:bg-bg-elev-2 inline-flex size-11 shrink-0 items-center justify-center rounded-xl transition-colors"
-            >
-              <MoreHorizontal className="size-5" />
-            </button>
-          </Tooltip>
+        <div className="relative" ref={menuRef}>
+          <button
+            type="button"
+            onClick={() => setMenuOpen((v) => !v)}
+            aria-label="Conversation menu"
+            aria-expanded={menuOpen}
+            aria-haspopup="menu"
+            className="text-fg-muted hover:text-fg hover:bg-bg-elev-2 active:bg-bg-elev-3 inline-flex size-11 shrink-0 items-center justify-center rounded-xl transition-colors"
+          >
+            <MoreHorizontal className="size-5" />
+          </button>
           {menuOpen ? (
-            <>
-              <div
-                className="fixed inset-0 z-40"
-                onClick={() => setMenuOpen(false)}
-                aria-hidden="true"
-              />
-              <div className="glass-strong absolute right-0 top-12 z-50 w-56 overflow-hidden rounded-xl text-sm">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setMenuOpen(false);
-                    setDrawerOpen(true);
-                  }}
-                  className="text-fg hover:bg-bg-elev-2 flex min-h-[48px] w-full items-center gap-2 px-4 py-3 text-left"
-                >
-                  <MessagesSquare className="size-4" />
-                  Switch conversation
-                </button>
-                <div className="border-divider/60 border-t" />
-                <button
-                  type="button"
-                  onClick={() => void deleteCurrent()}
-                  className="text-bear hover:bg-bear/10 flex min-h-[48px] w-full items-center gap-2 px-4 py-3 text-left"
-                >
-                  <Trash2 className="size-4" />
-                  Delete conversation
-                </button>
-              </div>
-            </>
+            <div
+              role="menu"
+              className="glass-strong absolute right-0 top-12 z-50 w-56 overflow-hidden rounded-xl text-sm"
+            >
+              <button
+                role="menuitem"
+                type="button"
+                onClick={() => {
+                  setMenuOpen(false);
+                  setDrawerOpen(true);
+                }}
+                className="text-fg hover:bg-bg-elev-2 flex min-h-[48px] w-full items-center gap-2 px-4 py-3 text-left"
+              >
+                <MessagesSquare className="size-4" />
+                Switch conversation
+              </button>
+              <div className="border-divider/60 border-t" />
+              <button
+                role="menuitem"
+                type="button"
+                onClick={() => void deleteCurrent()}
+                className="text-bear hover:bg-bear/10 flex min-h-[48px] w-full items-center gap-2 px-4 py-3 text-left"
+              >
+                <Trash2 className="size-4" />
+                Delete conversation
+              </button>
+            </div>
           ) : null}
         </div>
       </div>
 
-      {/* Conversation switcher drawer (right-side action) */}
       <ThreadSwitcher
         open={drawerOpen}
         onOpenChange={setDrawerOpen}
@@ -230,13 +222,7 @@ interface ThreadSwitcherProps {
   onPickNew: () => void;
 }
 
-function ThreadSwitcher({
-  open,
-  onOpenChange,
-  threadId,
-  threads,
-  onPickNew,
-}: ThreadSwitcherProps) {
+function ThreadSwitcher({ open, onOpenChange, threadId, threads, onPickNew }: ThreadSwitcherProps) {
   const router = useRouter();
   const [query, setQuery] = useState('');
 
@@ -286,7 +272,7 @@ function ThreadSwitcher({
             <span
               aria-hidden="true"
               className="text-brand inline-flex size-10 items-center justify-center rounded-xl"
-              style={{ background: 'oklch(78% 0.16 78 / 0.18)' }}
+              style={{ background: 'oklch(82% 0.14 85 / 0.18)' }}
             >
               <Plus className="size-5" />
             </span>

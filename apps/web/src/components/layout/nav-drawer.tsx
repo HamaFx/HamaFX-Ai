@@ -1,20 +1,19 @@
 'use client';
 
-// <NavDrawer> — left-side bottom-sheet style nav. vaul's `direction="left"`
-// gives us a panel that slides in from the leading edge with focus trap +
-// swipe-to-dismiss + Escape-to-close out of the box. Idiomatic mobile
-// pattern: hamburger in the top bar opens this drawer, taps a destination,
-// drawer auto-closes.
+// <NavDrawer> — left-side slide-in nav. Single global instance, controlled
+// via <NavDrawerProvider> context. See nav-drawer-context.tsx for the
+// rationale.
 //
-// Contents:
-//   - Identity strip (brand mark + tagline)
-//   - Primary destinations (Chat, Chart, News, Calendar)
-//   - Secondary destinations (Alerts, Journal, Settings)
-//   - Footer (logout)
+// vaul gives us focus trap, swipe-to-dismiss, and Escape-to-close out of
+// the box. We add:
+//   - Auto-close on route change (so tapping a destination closes the
+//     drawer without each consumer needing to call setOpen(false)).
+//   - Reduced-motion friendly transitions (vaul respects the OS pref).
+//   - Sectioned destinations (Markets / Personal) + identity strip and
+//     a footer "Sign out" action.
 
+import { Menu } from 'lucide-react'; // re-exported for triggers
 import {
-  Activity,
-  BarChart3,
   Bell,
   BookOpen,
   Calendar,
@@ -27,18 +26,18 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { Drawer as DrawerPrimitive } from 'vaul';
 
 import { cn } from '@/lib/cn';
+
+import { useNavDrawer } from './nav-drawer-context';
 
 interface NavItem {
   href: string;
   label: string;
   icon: typeof MessageCircle;
-  /** Optional caption rendered under the label. */
   description?: string;
-  /** Path prefixes that should mark this item as active. Default: [href]. */
   match?: readonly string[];
 }
 
@@ -76,19 +75,15 @@ const SECONDARY: readonly NavItem[] = [
   { href: '/settings', label: 'Settings', icon: Cog, description: 'Notifications, usage' },
 ];
 
-interface NavDrawerProps {
-  trigger: React.ReactNode;
-}
-
-export function NavDrawer({ trigger }: NavDrawerProps) {
-  const [open, setOpen] = useState(false);
+export function NavDrawer() {
+  const { open, setOpen } = useNavDrawer();
   const pathname = usePathname();
   const router = useRouter();
 
-  // Auto-close on route change (after the user taps a destination).
+  // Auto-close on route change.
   useEffect(() => {
     setOpen(false);
-  }, [pathname]);
+  }, [pathname, setOpen]);
 
   function isActive(item: NavItem): boolean {
     const candidates = item.match ?? [item.href];
@@ -108,16 +103,14 @@ export function NavDrawer({ trigger }: NavDrawerProps) {
 
   return (
     <DrawerPrimitive.Root open={open} onOpenChange={setOpen} direction="left">
-      <DrawerPrimitive.Trigger asChild>{trigger}</DrawerPrimitive.Trigger>
       <DrawerPrimitive.Portal>
-        <DrawerPrimitive.Overlay className="bg-overlay fixed inset-0 z-50 backdrop-blur-sm" />
+        <DrawerPrimitive.Overlay className="bg-overlay fixed inset-0 z-[60] backdrop-blur-sm" />
         <DrawerPrimitive.Content
-          // The role + aria-label give SR users a navigation landmark even
-          // though vaul renders the panel as a plain div.
           aria-label="Primary navigation"
           className={cn(
-            'glass-strong fixed inset-y-0 left-0 z-50 flex w-[88vw] max-w-[340px] flex-col',
+            'glass-strong fixed inset-y-0 left-0 z-[60] flex w-[88vw] max-w-[340px] flex-col',
             'border-r border-divider rounded-r-3xl',
+            'paint-isolated',
             'focus-visible:outline-none',
           )}
           style={{
@@ -125,7 +118,7 @@ export function NavDrawer({ trigger }: NavDrawerProps) {
             paddingBottom: 'env(safe-area-inset-bottom)',
           }}
         >
-          {/* Vaul drag handle (vertical edge for left drawer). */}
+          {/* Vaul drag handle (vertical edge). */}
           <div
             aria-hidden="true"
             className="absolute right-2 top-1/2 h-12 w-1 -translate-y-1/2 rounded-full bg-fg-subtle/30"
@@ -185,7 +178,7 @@ export function NavDrawer({ trigger }: NavDrawerProps) {
               <span
                 aria-hidden="true"
                 className="text-fg-muted inline-flex size-9 items-center justify-center rounded-lg"
-                style={{ background: 'oklch(70% 0.02 265 / 0.1)' }}
+                style={{ background: 'oklch(20% 0 0 / 0.6)' }}
               >
                 <LogOut className="size-4" strokeWidth={2} />
               </span>
@@ -197,6 +190,9 @@ export function NavDrawer({ trigger }: NavDrawerProps) {
     </DrawerPrimitive.Root>
   );
 }
+
+// Convenience export so consumers don't need a second import for the icon.
+export { Menu };
 
 // ---------------------------------------------------------------------------
 
@@ -231,8 +227,8 @@ function NavLink({ item, active }: { item: NavItem; active: boolean }) {
           )}
           style={{
             background: active
-              ? 'oklch(78% 0.16 78 / 0.18)'
-              : 'oklch(70% 0.02 265 / 0.1)',
+              ? 'oklch(82% 0.14 85 / 0.18)'
+              : 'oklch(20% 0 0 / 0.6)',
             boxShadow: 'var(--shadow-inset-edge-soft)',
           }}
         >
@@ -257,6 +253,3 @@ function NavLink({ item, active }: { item: NavItem; active: boolean }) {
     </li>
   );
 }
-
-// Re-export icons for the trigger button if needed.
-export { Activity, BarChart3 };

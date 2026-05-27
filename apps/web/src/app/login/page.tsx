@@ -13,27 +13,25 @@ interface PageProps {
   searchParams: Promise<{ next?: string }>;
 }
 
+// Pure black canvas with a single warm orb behind the card. The previous
+// version painted three vivid orbs + a noise filter on top of a tinted-blue
+// surface — that read as "decorated dark blue" rather than "premium black".
 export default async function LoginPage({ searchParams }: PageProps) {
   const { next } = await searchParams;
   const safeNext = next && next.startsWith('/') && !next.startsWith('//') ? next : '/chat';
 
   return (
     <main
-      className="relative flex min-h-svh flex-col overflow-hidden px-6"
+      className="bg-bg relative flex min-h-svh flex-col overflow-hidden px-6"
       style={{
-        background: 'oklch(13% 0.018 265)',
         paddingTop: 'max(env(safe-area-inset-top), 24px)',
         paddingBottom: 'max(env(safe-area-inset-bottom), 24px)',
       }}
     >
-      {/* Reuses the shared ambient component; "vivid" intensity = brighter
-          orbs + slightly stronger noise for the login marquee. */}
       <AmbientBackground intensity="vivid" />
 
       {/* Mobile-first layout: header sits at top quarter, form is anchored
-          to the lower half so the CTA lands in the thumb zone on tall
-          phones. justify-between collapses to centered on short screens
-          (where padding alone keeps things readable). */}
+          to the lower half so the CTA lands in the thumb zone. */}
       <div className="relative z-10 mx-auto flex w-full max-w-sm flex-1 flex-col justify-between gap-12 py-8">
         <header className="flex flex-col items-center gap-4 text-center">
           <Image
@@ -41,7 +39,7 @@ export default async function LoginPage({ searchParams }: PageProps) {
             alt=""
             width={80}
             height={80}
-            className="rounded-2xl shadow-xl shadow-black/40"
+            className="rounded-2xl shadow-xl shadow-black/60"
             priority
           />
           <div className="flex flex-col gap-2">

@@ -5,24 +5,26 @@
 // Layout: fixed inset-0 with three rows:
 //
 //   ┌──────────────────────────────────┐
-//   │ ChatTopBar                       │ ← merged top bar (sticky, glass)
-//   │   ☰  · title · new · menu        │
+//   │ ChatTopBar    ☰ · title · + · ⋯ │  sticky, glass
 //   ├──────────────────────────────────┤
-//   │                                  │
-//   │  message scroll area             │ ← flex-1, scrollable
-//   │   (or empty state w/ prompts)    │
-//   │  + scroll-to-bottom pill         │
-//   │                                  │
+//   │  message scroll area             │  flex-1, no-overscroll
+//   │  (or empty state w/ prompts)     │
 //   ├──────────────────────────────────┤
-//   │ Composer                         │ ← sticky, glass, full width
+//   │ Composer                         │  sticky, glass
 //   └──────────────────────────────────┘
 //
-// New in this iteration:
-//   - Empty state lives inside the scroll body and embeds quick-prompts so
-//     there's one inviting surface, not two competing panels.
-//   - Composer can now stop streaming (wired to AI SDK's `stop()`).
-//   - Last assistant message gets a Regenerate affordance (`regenerate()`).
-//   - Initial mount auto-scrolls to bottom (no flash of older content).
+// Stability tweaks vs. previous iteration:
+//   - `paint-isolated` so the chat's full-bleed surface doesn't repaint
+//     when sibling routes update (eliminates a flash visible during route
+//     transitions on slow devices).
+//   - `no-overscroll` on the scroll container so iOS Safari doesn't bounce
+//     past the composer/top bar.
+//   - Auto-scroll only fires when the user is within 240px of the bottom
+//     and never scrolls during a streaming token tick (fixes "page
+//     jumps while reading").
+//   - Initial scroll uses an instant `scrollTop = scrollHeight`, never
+//     `behavior: 'smooth'` — smooth-scroll on mount is the source of the
+//     "drift" feeling.
 
 import { useChat } from '@ai-sdk/react';
 import { DefaultChatTransport, type UIMessage } from 'ai';
@@ -77,7 +79,7 @@ export function ChatScreen({
   const isStreaming = status === 'submitted' || status === 'streaming';
   const isEmpty = messages.length === 0;
 
-  // Last assistant message id — used to attach the Regenerate button.
+  // Last assistant message id — gets the Regenerate affordance.
   const lastAssistantId = useMemo(() => {
     for (let i = messages.length - 1; i >= 0; i -= 1) {
       const m = messages[i];
@@ -86,7 +88,8 @@ export function ChatScreen({
     return undefined;
   }, [messages]);
 
-  // After streaming completes, re-fetch thread to pick up the LLM-generated title.
+  // After streaming completes, re-fetch thread to pick up the LLM-
+  // generated title.
   useEffect(() => {
     if (status !== 'ready' || messages.length < 2) return;
     let cancelled = false;
@@ -105,7 +108,7 @@ export function ChatScreen({
           }
         }
       } catch {
-        /* silent — stay on the placeholder */
+        /* silent */
       }
     })();
     return () => {
@@ -113,8 +116,9 @@ export function ChatScreen({
     };
   }, [status, messages.length, threadId]);
 
-  // Track if user has scrolled away from the bottom — show the scroll-to-
-  // bottom button.
+  // Track whether the user has scrolled away from the bottom. The Latest
+  // pill only renders when the gap is >200px so it doesn't flicker on
+  // rounding errors.
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
@@ -128,18 +132,20 @@ export function ChatScreen({
     return () => el.removeEventListener('scroll', check);
   }, []);
 
-  // Initial scroll to bottom on mount (so we open at the latest message,
-  // not the first one) + auto-scroll on new messages if user is near
-  // bottom.
+  // Initial scroll-to-bottom. Instant, not smooth — smooth on mount is
+  // what produced the "drift" effect on slow devices.
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
-    // Initial pin to bottom — rAF lets the message list paint first.
     requestAnimationFrame(() => {
       el.scrollTop = el.scrollHeight;
     });
   }, [threadId]);
 
+  // Auto-scroll on new content, but only if the user is close to the
+  // bottom. Distance < 240 means "user is following the conversation" —
+  // we keep them at the bottom. Otherwise stay put so they can read
+  // older messages without the page yanking them back.
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
@@ -158,7 +164,7 @@ export function ChatScreen({
   }
 
   return (
-    <div className="bg-bg fixed inset-0 z-50 flex flex-col">
+    <div className="bg-bg paint-isolated fixed inset-0 z-50 flex flex-col">
       <ChatTopBar
         threadId={threadId}
         title={title}
@@ -167,7 +173,7 @@ export function ChatScreen({
         isStreaming={isStreaming}
       />
 
-      <div ref={scrollRef} className="scrollbar-hide relative flex-1 overflow-y-auto">
+      <div ref={scrollRef} className="scrollbar-hide no-overscroll relative flex-1 overflow-y-auto">
         <div className="mx-auto max-w-2xl">
           {isEmpty ? (
             <EmptyChatState
@@ -216,7 +222,6 @@ export function ChatScreen({
           ) : null}
         </div>
 
-        {/* Scroll-to-bottom pill — appears when scrolled up */}
         {showScrollDown ? (
           <button
             type="button"
@@ -252,9 +257,7 @@ export function ChatScreen({
           onStop={() => stop()}
           isStreaming={isStreaming}
           disabled={false}
-          placeholder={
-            pinnedSymbol ? `Ask about ${pinnedSymbol}…` : 'Ask about XAU, EUR, GBP…'
-          }
+          placeholder={pinnedSymbol ? `Ask about ${pinnedSymbol}…` : 'Ask about XAU, EUR, GBP…'}
         />
       </div>
     </div>
@@ -278,7 +281,7 @@ function EmptyChatState({ pinnedSymbol, disabled, onSelect }: EmptyChatStateProp
         style={{
           backgroundImage: 'var(--gradient-brand-soft)',
           boxShadow:
-            'inset 0 1px 0 0 oklch(100% 0 0 / 0.1), 0 0 40px -8px oklch(78% 0.16 78 / 0.4)',
+            'inset 0 1px 0 0 oklch(100% 0 0 / 0.08), 0 0 40px -8px oklch(82% 0.14 85 / 0.35)',
         }}
       >
         <Sparkles className="size-9" strokeWidth={1.75} />
@@ -298,7 +301,7 @@ function EmptyChatState({ pinnedSymbol, disabled, onSelect }: EmptyChatStateProp
 
       <p className="text-fg-subtle max-w-md text-[11px] leading-relaxed">
         Numbers come from live tools — prices, candles, news, and the calendar are
-        fetched on demand. The copilot will say so when something can't be checked.
+        fetched on demand. The copilot will say so when something can&apos;t be checked.
       </p>
     </div>
   );

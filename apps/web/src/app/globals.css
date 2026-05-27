@@ -1,92 +1,90 @@
 @import 'tailwindcss';
 
 /* -------------------------------------------------------------------------
- * Theme tokens — premium dark theme with glassmorphism support.
+ * Theme tokens — premium pure-black design system.
  *
- * Design system inspired by Linear, Arc, Vercel — deep cool blues with
- * a warm gold brand accent. Surfaces are layered with subtle elevation
- * via gradient borders and frosted-glass blur instead of flat fills.
+ * Surfaces: zero-chroma grayscale (oklch hue 0 chroma 0). The previous
+ * blue-tinted surfaces (chroma 0.018 hue 265) read as "dark blue" on most
+ * displays. Neutral surfaces read as "true dark" — closer to Linear, Vercel,
+ * Apple's deep dark mode.
  *
- * Contrast: --color-fg-subtle was bumped from 58% → 64% L so it clears
- * WCAG AA (≥4.5:1) on the default canvas at body-text sizes. Pair with
- * `text-[10px]`/`text-[11px]` only when secondary meta is decorative.
+ * Brand: warm champagne gold. Kept gold for personality but slightly higher
+ * luminance + lower chroma than the previous amber so it sits cleanly
+ * against pure black instead of competing.
+ *
+ * Contrast: --color-fg-subtle (60% L) clears WCAG AA for body text on
+ * the default canvas. Pair with `text-[10px]`/`text-[11px]` only when
+ * secondary meta is decorative.
  * ------------------------------------------------------------------------- */
 
 @theme {
-  /* surfaces — deeper, more saturated, with subtle blue tint */
-  --color-bg: oklch(13% 0.018 265);
-  --color-bg-elev-1: oklch(17% 0.018 265);
-  --color-bg-elev-2: oklch(21% 0.02 265);
-  --color-bg-elev-3: oklch(26% 0.022 265);
-  --color-border: oklch(30% 0.025 265);
-  --color-divider: oklch(35% 0.02 265 / 0.5);
-  --color-overlay: oklch(8% 0.02 265 / 0.75);
+  /* Surfaces — pure neutral grayscale */
+  --color-bg: oklch(8% 0 0);
+  --color-bg-elev-1: oklch(12% 0 0);
+  --color-bg-elev-2: oklch(16% 0 0);
+  --color-bg-elev-3: oklch(20% 0 0);
+  --color-border: oklch(22% 0 0);
+  --color-divider: oklch(28% 0 0 / 0.4);
+  --color-overlay: oklch(0% 0 0 / 0.75);
 
-  /* glass surface backgrounds — used with backdrop-blur */
-  --color-glass: oklch(22% 0.022 265 / 0.55);
-  --color-glass-strong: oklch(22% 0.022 265 / 0.75);
-  --color-glass-edge: oklch(80% 0.02 265 / 0.08);
+  /* Glass surfaces — black-tinted base for proper "dark glass" feel */
+  --color-glass: oklch(12% 0 0 / 0.6);
+  --color-glass-strong: oklch(12% 0 0 / 0.78);
+  --color-glass-edge: oklch(96% 0 0 / 0.06);
 
-  /* text */
-  --color-fg: oklch(97% 0.008 265);
-  --color-fg-muted: oklch(78% 0.022 265);
-  --color-fg-subtle: oklch(64% 0.022 265);
+  /* Text */
+  --color-fg: oklch(96% 0 0);
+  --color-fg-muted: oklch(76% 0 0);
+  --color-fg-subtle: oklch(60% 0 0);
 
-  /* brand — vibrant warm gold/amber, complements the cool surfaces */
-  --color-brand: oklch(78% 0.16 78);
-  --color-brand-fg: oklch(13% 0.018 265);
-  --color-brand-glow: oklch(78% 0.16 78 / 0.35);
+  /* Brand — refined champagne gold */
+  --color-brand: oklch(82% 0.14 85);
+  --color-brand-fg: oklch(8% 0 0);
+  --color-brand-glow: oklch(82% 0.14 85 / 0.3);
 
-  /* accent — subtle violet for secondary highlights */
-  --color-accent: oklch(72% 0.18 295);
-  --color-accent-glow: oklch(72% 0.18 295 / 0.3);
+  /* Accent — desaturated indigo, used very sparingly */
+  --color-accent: oklch(70% 0.14 285);
+  --color-accent-glow: oklch(70% 0.14 285 / 0.25);
 
-  /* market states — bull (green) and warn (amber) intentionally far apart
-   * in luminance so deuteranopes can still distinguish them. */
-  --color-bull: oklch(72% 0.2 152);
-  --color-bear: oklch(68% 0.24 25);
-  --color-neutral: oklch(70% 0.02 265);
-  --color-warn: oklch(82% 0.16 80);
-  --color-info: oklch(74% 0.16 230);
+  /* Market states — semantic, kept far apart in luminance */
+  --color-bull: oklch(72% 0.18 152);
+  --color-bear: oklch(70% 0.22 25);
+  --color-neutral: oklch(70% 0 0);
+  --color-warn: oklch(82% 0.14 80);
+  --color-info: oklch(74% 0.14 230);
 
-  /* radii */
+  /* Radii */
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 18px;
   --radius-xl: 24px;
   --radius-2xl: 32px;
 
-  /* shadows — premium layered drop shadows */
-  --shadow-sm: 0 1px 2px 0 oklch(0% 0 0 / 0.3);
-  --shadow-md: 0 4px 12px -2px oklch(0% 0 0 / 0.4), 0 1px 3px 0 oklch(0% 0 0 / 0.25);
+  /* Shadows — deeper to read against true black */
+  --shadow-sm: 0 1px 2px 0 oklch(0% 0 0 / 0.4);
+  --shadow-md: 0 4px 12px -2px oklch(0% 0 0 / 0.5), 0 1px 3px 0 oklch(0% 0 0 / 0.3);
   --shadow-lg:
-    0 10px 40px -10px oklch(0% 0 0 / 0.5), 0 4px 12px -2px oklch(0% 0 0 / 0.35);
+    0 10px 40px -10px oklch(0% 0 0 / 0.6), 0 4px 12px -2px oklch(0% 0 0 / 0.4);
   --shadow-xl:
-    0 25px 50px -12px oklch(0% 0 0 / 0.6), 0 10px 20px -8px oklch(0% 0 0 / 0.4);
-  --shadow-glow-brand: 0 0 32px -4px oklch(78% 0.16 78 / 0.4);
-  --shadow-glow-accent: 0 0 32px -4px oklch(72% 0.18 295 / 0.35);
+    0 25px 50px -12px oklch(0% 0 0 / 0.7), 0 10px 20px -8px oklch(0% 0 0 / 0.5);
+  --shadow-glow-brand: 0 0 32px -4px oklch(82% 0.14 85 / 0.35);
+  --shadow-glow-accent: 0 0 32px -4px oklch(70% 0.14 285 / 0.3);
 
-  /* fonts */
+  /* Fonts */
   --font-sans: var(--font-sans), system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   --font-mono: var(--font-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
 
-  /* motion */
   --ease-organic: cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 /* -------------------------------------------------------------------------
- * Layout tokens — referenced by JS calc() expressions and sticky offsets
- * so the chrome heights live in exactly one place. With the bottom nav
- * removed in favour of a left side drawer, only --topbar-h remains as a
- * shell-height token; FAB / toast clearances now reference the home
- * indicator only.
+ * Layout & spacing tokens
  * ------------------------------------------------------------------------- */
 :root {
   --topbar-h: 56px;
   --fab-bottom: calc(env(safe-area-inset-bottom) + 16px);
   --toast-bottom: calc(env(safe-area-inset-bottom) + 16px);
 
-  /* 8-point grid system. */
   --space-1: 4px;
   --space-2: 8px;
   --space-3: 12px;
@@ -98,44 +96,49 @@
   --space-9: 80px;
   --space-10: 96px;
 
-  /* Minimum interactive size (Apple HIG / Material). */
   --touch-min: 44px;
 }
 
 /* -------------------------------------------------------------------------
- * Themeable gradients & shadows.
+ * Themeable gradients & shadows. Use via
+ *   style={{ backgroundImage: 'var(--gradient-brand)' }}
+ * or the inline `@utility` definitions below.
  * ------------------------------------------------------------------------- */
 :root {
   --gradient-brand: linear-gradient(
     135deg,
-    oklch(80% 0.16 78) 0%,
-    oklch(74% 0.18 60) 100%
+    oklch(85% 0.14 85) 0%,
+    oklch(78% 0.15 70) 100%
   );
   --gradient-danger: linear-gradient(
     135deg,
-    oklch(70% 0.24 25) 0%,
-    oklch(64% 0.24 15) 100%
+    oklch(72% 0.22 25) 0%,
+    oklch(64% 0.22 15) 100%
   );
   --gradient-brand-soft: linear-gradient(
     135deg,
-    oklch(78% 0.16 78 / 0.18) 0%,
-    oklch(72% 0.18 295 / 0.18) 100%
+    oklch(82% 0.14 85 / 0.16) 0%,
+    oklch(70% 0.14 285 / 0.12) 100%
   );
   --gradient-accent: linear-gradient(
     135deg,
-    oklch(72% 0.18 295) 0%,
-    oklch(74% 0.16 230) 100%
+    oklch(70% 0.14 285) 0%,
+    oklch(74% 0.14 230) 100%
   );
 
-  --shadow-inset-edge: inset 0 1px 0 0 oklch(100% 0 0 / 0.15);
-  --shadow-inset-edge-soft: inset 0 1px 0 0 oklch(100% 0 0 / 0.08);
+  --shadow-inset-edge: inset 0 1px 0 0 oklch(100% 0 0 / 0.12);
+  --shadow-inset-edge-soft: inset 0 1px 0 0 oklch(100% 0 0 / 0.06);
 
-  --shadow-brand-press: 0 8px 24px -6px oklch(78% 0.16 78 / 0.5), var(--shadow-inset-edge);
+  --shadow-brand-press:
+    0 8px 24px -6px oklch(82% 0.14 85 / 0.45),
+    var(--shadow-inset-edge);
   --shadow-brand-press-strong:
-    0 12px 32px -8px oklch(78% 0.16 78 / 0.55),
-    0 0 0 1px oklch(78% 0.16 78 / 0.3),
-    inset 0 1px 0 0 oklch(100% 0 0 / 0.2);
-  --shadow-danger-press: 0 8px 24px -6px oklch(68% 0.24 25 / 0.5), var(--shadow-inset-edge);
+    0 12px 32px -8px oklch(82% 0.14 85 / 0.5),
+    0 0 0 1px oklch(82% 0.14 85 / 0.25),
+    inset 0 1px 0 0 oklch(100% 0 0 / 0.18);
+  --shadow-danger-press:
+    0 8px 24px -6px oklch(70% 0.22 25 / 0.45),
+    var(--shadow-inset-edge);
 }
 
 /* -------------------------------------------------------------------------
@@ -144,6 +147,9 @@
 @layer base {
   html {
     color-scheme: dark;
+    /* Stop iOS rubber-band reaching the html background colour and
+     * showing a brief stripe of "extra" canvas. */
+    overscroll-behavior-y: none;
   }
 
   html,
@@ -153,18 +159,9 @@
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
-    background-image:
-      radial-gradient(
-        ellipse 80% 60% at 50% -10%,
-        oklch(78% 0.16 78 / 0.06) 0%,
-        transparent 60%
-      ),
-      radial-gradient(
-        ellipse 70% 50% at 100% 100%,
-        oklch(72% 0.18 295 / 0.05) 0%,
-        transparent 60%
-      );
-    background-attachment: fixed;
+    /* Deliberately no background-image vignette — pure black canvas reads
+     * as truly premium. Ambient warmth is layered on top by
+     * <AmbientBackground/> at very low opacity. */
   }
 
   .tabular-nums {
@@ -179,7 +176,7 @@
   }
 
   ::selection {
-    background-color: oklch(78% 0.16 78 / 0.35);
+    background-color: oklch(82% 0.14 85 / 0.35);
     color: var(--color-fg);
   }
 
@@ -235,61 +232,61 @@
 }
 
 /* -------------------------------------------------------------------------
- * Component utilities
+ * Glass surface utilities — true-black-tinted glass for premium feel
  * ------------------------------------------------------------------------- */
 
 @utility glass {
   background: linear-gradient(
     135deg,
-    oklch(80% 0.02 265 / 0.07) 0%,
-    oklch(80% 0.02 265 / 0.02) 50%,
-    oklch(80% 0.02 265 / 0.05) 100%
+    oklch(96% 0 0 / 0.04) 0%,
+    oklch(96% 0 0 / 0.01) 50%,
+    oklch(96% 0 0 / 0.03) 100%
   ),
-  oklch(20% 0.022 265 / 0.55);
-  backdrop-filter: blur(20px) saturate(160%);
-  -webkit-backdrop-filter: blur(20px) saturate(160%);
-  border: 1px solid oklch(80% 0.02 265 / 0.1);
+  oklch(12% 0 0 / 0.55);
+  backdrop-filter: blur(20px) saturate(140%);
+  -webkit-backdrop-filter: blur(20px) saturate(140%);
+  border: 1px solid oklch(96% 0 0 / 0.08);
   box-shadow:
-    inset 0 1px 0 0 oklch(100% 0 0 / 0.06),
+    inset 0 1px 0 0 oklch(100% 0 0 / 0.05),
     var(--shadow-md);
 }
 
 @utility glass-strong {
   background: linear-gradient(
     135deg,
-    oklch(80% 0.02 265 / 0.1) 0%,
-    oklch(80% 0.02 265 / 0.04) 50%,
-    oklch(80% 0.02 265 / 0.08) 100%
+    oklch(96% 0 0 / 0.06) 0%,
+    oklch(96% 0 0 / 0.02) 50%,
+    oklch(96% 0 0 / 0.05) 100%
   ),
-  oklch(20% 0.022 265 / 0.78);
-  backdrop-filter: blur(28px) saturate(180%);
-  -webkit-backdrop-filter: blur(28px) saturate(180%);
-  border: 1px solid oklch(80% 0.02 265 / 0.12);
+  oklch(12% 0 0 / 0.78);
+  backdrop-filter: blur(28px) saturate(160%);
+  -webkit-backdrop-filter: blur(28px) saturate(160%);
+  border: 1px solid oklch(96% 0 0 / 0.1);
   box-shadow:
-    inset 0 1px 0 0 oklch(100% 0 0 / 0.08),
+    inset 0 1px 0 0 oklch(100% 0 0 / 0.07),
     var(--shadow-lg);
 }
 
 @utility glass-subtle {
-  background: oklch(20% 0.022 265 / 0.4);
+  background: oklch(14% 0 0 / 0.45);
   backdrop-filter: blur(12px) saturate(140%);
   -webkit-backdrop-filter: blur(12px) saturate(140%);
-  border: 1px solid oklch(80% 0.02 265 / 0.06);
+  border: 1px solid oklch(96% 0 0 / 0.06);
 }
 
 @utility card-premium {
   position: relative;
   background: linear-gradient(
     180deg,
-    oklch(20% 0.022 265 / 0.6) 0%,
-    oklch(17% 0.018 265 / 0.85) 100%
+    oklch(14% 0 0 / 0.7) 0%,
+    oklch(11% 0 0 / 0.85) 100%
   );
-  backdrop-filter: blur(16px) saturate(150%);
-  -webkit-backdrop-filter: blur(16px) saturate(150%);
-  border: 1px solid oklch(80% 0.02 265 / 0.08);
+  backdrop-filter: blur(16px) saturate(140%);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  border: 1px solid oklch(96% 0 0 / 0.07);
   border-radius: var(--radius-lg);
   box-shadow:
-    inset 0 1px 0 0 oklch(100% 0 0 / 0.05),
+    inset 0 1px 0 0 oklch(100% 0 0 / 0.04),
     var(--shadow-md);
 }
 
@@ -321,6 +318,24 @@
 }
 
 /* -------------------------------------------------------------------------
+ * Stability helpers — applied to scroll containers and overlay surfaces
+ * to prevent rubber-band leak, layout shift, and double-paint flicker.
+ * ------------------------------------------------------------------------- */
+
+/* Contain overscroll inside a scroller so iOS doesn't bounce the body. */
+.no-overscroll {
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Paint isolation for full-bleed surfaces (chat, drawers). Tells the
+ * browser this subtree paints independently — prevents flicker when a
+ * sibling repaints. */
+.paint-isolated {
+  contain: layout paint;
+}
+
+/* -------------------------------------------------------------------------
  * Keyframes
  * ------------------------------------------------------------------------- */
 
@@ -348,16 +363,15 @@
   animation: stale-pulse 1.4s ease-in-out infinite;
 }
 
-/* Mic recording — soft amber pulse ring around the trigger. */
 @keyframes mic-pulse {
   0% {
-    box-shadow: 0 0 0 0 oklch(68% 0.24 25 / 0.5);
+    box-shadow: 0 0 0 0 oklch(70% 0.22 25 / 0.45);
   }
   70% {
-    box-shadow: 0 0 0 12px oklch(68% 0.24 25 / 0);
+    box-shadow: 0 0 0 12px oklch(70% 0.22 25 / 0);
   }
   100% {
-    box-shadow: 0 0 0 0 oklch(68% 0.24 25 / 0);
+    box-shadow: 0 0 0 0 oklch(70% 0.22 25 / 0);
   }
 }
 .mic-pulse {
@@ -376,10 +390,7 @@
 }
 
 /* -------------------------------------------------------------------------
- * Markdown-light: minimal styling for the assistant's text part. We do
- * not parse HTML — the renderer in chat/parts/text.tsx walks tokens and
- * builds DOM nodes. These classes apply to that resulting tree so the
- * spacing/typography are consistent with the rest of the chat surface.
+ * Markdown-light: applies to chat/parts/text.tsx output.
  * ------------------------------------------------------------------------- */
 .md-prose {
   line-height: 1.6;
@@ -395,7 +406,7 @@
 .md-prose code {
   font-family: var(--font-mono);
   font-size: 0.875em;
-  background: oklch(20% 0.022 265 / 0.7);
+  background: oklch(16% 0 0 / 0.7);
   border: 1px solid var(--color-divider);
   border-radius: 6px;
   padding: 1px 5px;

@@ -1,13 +1,11 @@
 'use client';
 
-// Animated number — smooth spring tween between values. Used for live
-// price updates so the eye catches the move without a hard re-render.
+// Animated number — smooth tween between values for live price updates.
 //
-// Performance: the previous implementation kept a spring evaluating every
-// frame indefinitely (continuous useTransform subscription on a 1.5 s
-// poller = perpetual 60fps work). This version drives a single state via
-// `motionValue.on('change', ...)` so React only re-renders while the
-// spring is actually moving, then settles to a static string.
+// Implementation note: `useSpring`'s subscriber fires every animation
+// frame for the duration of the transition. We bail out of state updates
+// once the spring is within 1/(10^decimals) of the target so React
+// doesn't re-render every frame for the rest of eternity.
 
 import { useMotionValue, useSpring } from 'motion/react';
 import { useEffect, useState } from 'react';
@@ -20,7 +18,11 @@ interface AnimatedNumberProps {
 
 export function AnimatedNumber({ value, decimals = 2, className }: AnimatedNumberProps) {
   const motionValue = useMotionValue(value);
-  const spring = useSpring(motionValue, { stiffness: 100, damping: 30 });
+  const spring = useSpring(motionValue, {
+    stiffness: 100,
+    damping: 30,
+    restDelta: 0.5 / 10 ** decimals,
+  });
   const [display, setDisplay] = useState(value.toFixed(decimals));
 
   useEffect(() => {
@@ -28,10 +30,9 @@ export function AnimatedNumber({ value, decimals = 2, className }: AnimatedNumbe
   }, [motionValue, value]);
 
   useEffect(() => {
-    // Subscribe only while mounted; the callback fires until the spring
-    // settles. After settle, no further work is scheduled.
     const unsubscribe = spring.on('change', (latest) => {
-      setDisplay(latest.toFixed(decimals));
+      const next = latest.toFixed(decimals);
+      setDisplay((prev) => (prev === next ? prev : next));
     });
     return unsubscribe;
   }, [spring, decimals]);

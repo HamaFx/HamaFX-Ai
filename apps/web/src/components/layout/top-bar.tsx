@@ -1,30 +1,38 @@
 'use client';
 
 // Top app bar — sticky glass surface with three slots:
-//   [menu] [brand mark + title] [right slot]
+//   [☰ menu] [brand mark + title] [right slot]
 //
-// The menu trigger opens the <NavDrawer> (replacing the previous bottom
-// nav). On the chat route we render <ChatTopBar> instead, which has its
-// own copy of the same trigger.
+// The chat route renders its own <ChatTopBar>; we hide the global TopBar
+// there so we don't have two stacked headers (and so the global TopBar
+// doesn't catch focus or pointer events meant for the chat surface).
+//
+// usePathname makes this a client component, but the cost is one
+// useState read per navigation — negligible, and well worth the
+// simplicity vs. a route-group restructure.
 
-import { Menu } from 'lucide-react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 
-import { Tooltip } from '@/components/ui/tooltip';
 import { cn } from '@/lib/cn';
 
-import { NavDrawer } from './nav-drawer';
+import { NavTrigger } from './nav-trigger';
 
 interface TopBarProps {
   title?: string;
   /**
-   * Optional right-aligned slot — pass icons/buttons that vary per page
-   * (e.g. timeframe picker on /chart, thread switcher on /chat).
+   * Optional right-aligned slot — pass icons/buttons that vary per page.
    */
   right?: React.ReactNode;
 }
 
 export function TopBar({ title, right }: TopBarProps) {
+  const pathname = usePathname() ?? '';
+
+  // Chat brings its own top bar (ChatTopBar). Returning null here is the
+  // simplest way to suppress the global one without restructuring routes.
+  if (pathname.startsWith('/chat')) return null;
+
   return (
     <header
       className={cn(
@@ -36,19 +44,7 @@ export function TopBar({ title, right }: TopBarProps) {
         className="mx-auto flex max-w-2xl items-center gap-2 px-3"
         style={{ height: 'var(--topbar-h)' }}
       >
-        <NavDrawer
-          trigger={
-            <Tooltip label="Menu" side="bottom">
-              <button
-                type="button"
-                aria-label="Open menu"
-                className="text-fg-muted hover:text-fg hover:bg-bg-elev-2 inline-flex size-11 shrink-0 items-center justify-center rounded-xl transition-colors"
-              >
-                <Menu className="size-5" />
-              </button>
-            </Tooltip>
-          }
-        />
+        <NavTrigger />
 
         <Link
           href="/chat"
@@ -60,7 +56,7 @@ export function TopBar({ title, right }: TopBarProps) {
             className="relative inline-flex size-7 items-center justify-center rounded-md"
             style={{
               backgroundImage: 'var(--gradient-brand)',
-              boxShadow: '0 0 12px -2px oklch(78% 0.16 78 / 0.4)',
+              boxShadow: '0 0 12px -2px oklch(82% 0.14 85 / 0.4)',
             }}
           >
             <span className="text-bg text-xs font-bold">H</span>

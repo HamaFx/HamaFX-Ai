@@ -1,69 +1,69 @@
-// Static ambient background — three soft gradient orbs and a noise
-// overlay. No animation, no drift. Pure decoration that adds depth
-// without movement.
+// Static ambient background — a single, very subtle warm orb at the
+// top-right edge of the viewport. With the new pure-black canvas, heavy
+// gradient orbs read as "color-tinted" rather than "premium black", so
+// the default app shell now uses just enough warmth to add depth.
 //
-// Positioned `fixed inset-0 -z-10` so it sits behind all content but
-// stays in place when the page scrolls.
-//
-// `intensity` controls overall opacity so the same component can serve
-// the app shell ("subtle"), the chat surface ("subtle" — chat used to
-// double up its own copy, removed), and the login screen ("vivid").
+// `intensity="vivid"` brings back the three-orb composition for the
+// login surface, where chromatic interest is a feature.
 
 import { cn } from '@/lib/cn';
 
-type Intensity = 'subtle' | 'normal' | 'vivid';
+type Intensity = 'subtle' | 'vivid';
 
 interface AmbientBackgroundProps {
   intensity?: Intensity;
-  /** Render as a non-fixed (absolute) background — for self-contained
-   *  surfaces like the login card scene where the page itself is the
-   *  scrollable element. Default false (fixed). */
+  /** Render absolutely (inside a self-contained surface) instead of fixed. */
   contained?: boolean;
   className?: string;
 }
 
-const ORB_OPACITY: Record<Intensity, { tr: number; bl: number; mid: number; noise: number }> = {
-  subtle: { tr: 0.18, bl: 0.14, mid: 0.08, noise: 0.018 },
-  normal: { tr: 0.25, bl: 0.2, mid: 0.1, noise: 0.025 },
-  vivid: { tr: 0.3, bl: 0.22, mid: 0.16, noise: 0.04 },
-};
-
 export function AmbientBackground({
-  intensity = 'normal',
+  intensity = 'subtle',
   contained = false,
   className,
 }: AmbientBackgroundProps) {
-  const o = ORB_OPACITY[intensity];
+  const root = cn(
+    'pointer-events-none overflow-hidden',
+    contained ? 'absolute inset-0' : 'fixed inset-0 -z-10',
+    className,
+  );
+
+  if (intensity === 'subtle') {
+    // Default app shell: one tiny warm whisper. No noise filter — pure
+    // canvas reads cleaner and avoids feTurbulence's known iOS-Safari
+    // compositing cost.
+    return (
+      <div aria-hidden="true" className={root}>
+        <div
+          className="absolute -top-40 -right-40 h-[28rem] w-[28rem] rounded-full blur-[100px]"
+          style={{ background: 'oklch(82% 0.14 85 / 1)', opacity: 0.06 }}
+        />
+        <div
+          className="absolute -bottom-32 -left-32 h-[24rem] w-[24rem] rounded-full blur-[120px]"
+          style={{ background: 'oklch(70% 0.14 285 / 1)', opacity: 0.04 }}
+        />
+      </div>
+    );
+  }
+
+  // Vivid (login marquee): three orbs + faint noise.
   return (
-    <div
-      aria-hidden="true"
-      className={cn(
-        'pointer-events-none overflow-hidden',
-        contained ? 'absolute inset-0' : 'fixed inset-0 -z-10',
-        className,
-      )}
-    >
-      {/* Top-right amber orb */}
+    <div aria-hidden="true" className={root}>
       <div
         className="absolute -top-32 -right-32 h-[28rem] w-[28rem] rounded-full blur-[100px]"
-        style={{ background: 'oklch(78% 0.16 78 / 1)', opacity: o.tr }}
+        style={{ background: 'oklch(82% 0.14 85 / 1)', opacity: 0.18 }}
       />
-      {/* Bottom-left violet orb */}
       <div
         className="absolute -bottom-32 -left-32 h-[32rem] w-[32rem] rounded-full blur-[120px]"
-        style={{ background: 'oklch(72% 0.18 295 / 1)', opacity: o.bl }}
+        style={{ background: 'oklch(70% 0.14 285 / 1)', opacity: 0.14 }}
       />
-      {/* Center cyan orb */}
       <div
         className="absolute left-1/2 top-1/3 h-[24rem] w-[24rem] -translate-x-1/2 rounded-full blur-[110px]"
-        style={{ background: 'oklch(72% 0.16 200 / 1)', opacity: o.mid }}
+        style={{ background: 'oklch(74% 0.14 230 / 1)', opacity: 0.08 }}
       />
-      {/* Subtle noise texture for organic feel. We share a single SVG
-       *  filter id across mounts (intensity is encoded via opacity, not
-       *  filter params) so the GPU doesn't recompile per-page. */}
       <svg
         className="absolute inset-0 h-full w-full mix-blend-overlay"
-        style={{ opacity: o.noise }}
+        style={{ opacity: 0.04 }}
         xmlns="http://www.w3.org/2000/svg"
         aria-hidden="true"
       >
