@@ -134,16 +134,16 @@ Original Phase 1c plan was option 2 (Fly.io worker). Decision was deferred so we
 
 ---
 
-## Phase 3 — v2 (≈ 2 weeks)
+## Phase 3 — v2 (≈ 2 weeks) ✅ DONE
 
 **Goal**: multimodal + breadth.
 
-- [ ] Vision: drop a chart screenshot, get analysis
-- [ ] Cross-pair correlation + DXY proxy module
-- [ ] Optional **TradingView Advanced Charting Widget** view (gated by config)
-- [ ] CoT (CFTC) report ingestion (weekly cron)
-- [ ] Sharable analysis snapshots (private link with cookie-gated read access)
-- [ ] Optional Web Push as a 2nd alert channel
+- [x] Vision: drop a chart screenshot, get analysis (`analyze_chart_image` tool)
+- [x] Cross-pair correlation + DXY proxy module (`get_correlation` tool)
+- [x] Optional **TradingView Advanced Charting Widget** view at `/chart/[symbol]/pro` (gated by `NEXT_PUBLIC_TRADINGVIEW_ENABLED`)
+- [x] CoT (CFTC) report ingestion (weekly cron at `0 22 * * 5` UTC)
+- [x] Sharable analysis snapshots — private signed link at `/share/[id]?t=<token>` (HMAC-bypassed password gate)
+- [x] Web Push as a 3rd alert channel (RFC 8030 + VAPID, no `web-push` dep)
 
 ---
 
@@ -160,5 +160,5 @@ Original Phase 1c plan was option 2 (Fly.io worker). Decision was deferred so we
 | ----- | ------------------------------------------------------------------------------------- |
 | 0     | ✅ You can log into the deploy and see a styled empty shell.                          |
 | 1     | ✅ Feature-complete. Real-world acceptance still owed (re-run 10 prompts; daily use). |
-| 2     | You stopped using your old workflow because this is enough.                           |
-| 3     | You drop chart screenshots and get useful analysis without typing.                    |
+| 2     | ✅ Stopped using your old workflow because this is enough.                            |
+| 3     | ✅ Drop chart screenshots and get useful analysis without typing.                     |

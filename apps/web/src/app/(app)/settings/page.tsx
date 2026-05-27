@@ -3,6 +3,7 @@ import Link from 'next/link';
 
 import { PageHeader } from '@/components/layout/page-header';
 
+import { EnableWebPushButton } from './_components/enable-web-push-button';
 import { LogoutButton } from './_components/logout-button';
 import { TestEmailButton } from './_components/test-email-button';
 import { TestTelegramButton } from './_components/test-telegram-button';
@@ -28,6 +29,10 @@ export default function SettingsPage() {
           Or send a one-off Telegram message — fast mobile push without setting up web push.
         </p>
         <TestTelegramButton />
+        <p className="text-fg-subtle text-xs">
+          Web push delivers alert notifications directly to this browser, even when the app is closed.
+        </p>
+        <EnableWebPushButton />
       </section>
 
       <section className="border-border bg-bg-elev-1 flex flex-col gap-3 rounded-lg border p-4">

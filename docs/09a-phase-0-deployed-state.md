@@ -13,6 +13,7 @@
 - ✅ **Phase 1d** — alerts evaluator + email + journal CRUD (PR #7)
 - ✅ **Phase 1e** — usage analytics + loading + error boundaries (PR #8)
 - ✅ **Phase 2** — SMC composite tools, RAG, annotations, snapshots, Telegram, voice, briefings, weekly review, auto-journal, Finnhub fallback, FRED backfill
+- ✅ **Phase 3** — vision (`analyze_chart_image`), `get_correlation` + DXY proxy, `get_cot` + CFTC ingestion, `share_snapshot` + public `/share/[id]` route, TradingView Pro chart, web push as a 3rd alert channel
 
 ## Phase 2 additions (live in production)
 
@@ -39,6 +40,35 @@
 - `0000_lazy_red_shift.sql` — initial schema.
 - `0001_phase_1_completion.sql` — `chat_threads.title_source`, `chat_telemetry.kind`.
 - `0002_phase_2.sql` — `chat_threads.is_briefings`, `economic_events.actuals_filled_at`, `briefings_emitted` lookup.
+- `0003_phase_3.sql` — `cot_reports`, `shared_snapshots`, `push_subscriptions`.
+
+## Phase 3 additions (live in production)
+
+| Surface           | Endpoint / module                                              | Notes                                                                                          |
+| ----------------- | -------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| AI tool           | `analyze_chart_image`                                          | Vision tool. Reads the most recent user image part; structured output via `AI_VISION_MODEL`.   |
+| AI tool           | `get_correlation`                                              | Pearson correlation matrix over the 3 symbols + 50/50 EUR/GBP geometric DXY proxy.             |
+| AI tool           | `get_cot`                                                      | CFTC Commitment-of-Traders weekly samples; reads from `cot_reports` (cron populates).          |
+| AI tool           | `share_snapshot`                                               | Persists `(title, body, overlay?)` and returns a signed `/share/[id]?t=<token>` URL.           |
+| Cron              | `/api/cron/cot` @ `0 22 * * 5`                                 | Weekly CFTC ingestion via Socrata Disaggregated dataset; idempotent on `(symbol, report_date)`.|
+| Public route      | `/share/[id]?t=<token>`                                        | HMAC-bypassed password gate; 401 on bad token, 410 on expired, 404 on missing.                 |
+| Pro chart         | `/chart/[symbol]/pro`                                          | TradingView Advanced Charting Widget (gated by `NEXT_PUBLIC_TRADINGVIEW_ENABLED='1'`).         |
+| Alerts            | Web Push delivery in `packages/ai/src/alerts/delivery.ts`      | RFC 8030 + VAPID, no `web-push` dep. 410/404 → drop subscription; 2xx → `markFired`.           |
+| Push API          | `POST /api/push/subscribe` + `POST /api/push/unsubscribe`      | Both gated by middleware. Subscribe upserts on `endpoint`; unsubscribe is idempotent.          |
+| Settings UI       | `EnableWebPushButton` in `_components/`                        | Probes browser support, calls `pushManager.subscribe`, posts to `/api/push/subscribe`.         |
+| Service worker    | `push` + `notificationclick` listeners                         | Shows notification with `tag: 'hamafx-alert'`; click focuses or opens an existing tab.         |
+| Chat composer     | Image-attach button + thumbnail strip in `composer.tsx`        | 4 images per turn cap, 5MB per image; forwards as AI SDK `file` parts to `/api/chat`.          |
+
+## New env vars in Phase 3
+
+| Variable                            | Required for                                  | Notes                                                                |
+| ----------------------------------- | --------------------------------------------- | -------------------------------------------------------------------- |
+| `AI_VISION_MODEL`                   | `analyze_chart_image`                         | Defaults to `google-vertex/gemini-2.5-pro`. Any vision-capable id.   |
+| `VAPID_PUBLIC_KEY`                  | Web Push delivery                             | 65-byte uncompressed P-256 public key, base64url. Server + browser.  |
+| `VAPID_PRIVATE_KEY`                 | Web Push delivery                             | Raw 32-byte P-256 `d`, base64url. Server-only. Never expose.         |
+| `VAPID_SUBJECT`                     | Web Push delivery                             | Contact `mailto:` URL embedded in the VAPID JWT `sub` claim.         |
+| `NEXT_PUBLIC_VAPID_PUBLIC_KEY`      | `pushManager.subscribe` in the browser        | MUST equal `VAPID_PUBLIC_KEY` exactly.                               |
+| `NEXT_PUBLIC_TRADINGVIEW_ENABLED`   | Pro chart toggle                              | `'1'` shows the link/route; anything else hides it.                  |
 
 ## New env vars in Phase 2
 

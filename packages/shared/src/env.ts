@@ -106,10 +106,30 @@ const NotifyEnv = z.object({
   RESEND_API_KEY: z.string().optional(),
   ALERT_FROM_EMAIL: z.string().email().optional(),
   ALERT_TO_EMAIL: z.string().email().optional(),
+  /**
+   * Web Push (RFC 8030 + VAPID). All optional — when missing, the
+   * `web-push` alert channel returns "not configured" and skips delivery.
+   *
+   * The public key MUST also be exposed as NEXT_PUBLIC_VAPID_PUBLIC_KEY so
+   * the browser-side `pushManager.subscribe` call can pass it as the
+   * `applicationServerKey`. The two values must match exactly.
+   *
+   * Generate a fresh keypair with:
+   *   node -e "const {generateKeyPairSync} = require('crypto'); \
+   *     const {publicKey, privateKey} = generateKeyPairSync('ec', { namedCurve: 'P-256' }); \
+   *     console.log('PUB',  publicKey.export({format:'jwk'}).x + publicKey.export({format:'jwk'}).y); \
+   *     console.log('PRIV', privateKey.export({format:'jwk'}).d);"
+   */
+  VAPID_PUBLIC_KEY: z.string().optional(),
+  VAPID_PRIVATE_KEY: z.string().optional(),
+  /** Contact email or `mailto:` URL embedded in the VAPID JWT `sub` claim. */
+  VAPID_SUBJECT: z.string().optional(),
 });
 
 const PublicEnv = z.object({
   NEXT_PUBLIC_APP_URL: z.string().url().default('http://localhost:3000'),
+  /** Browser-readable VAPID public key. MUST equal `VAPID_PUBLIC_KEY`. */
+  NEXT_PUBLIC_VAPID_PUBLIC_KEY: z.string().optional(),
 });
 
 const RuntimeEnv = z.object({

@@ -185,3 +185,53 @@ function fetchWithTimeout(req, ms) {
       });
   });
 }
+
+// --- push (Phase 3) --------------------------------------------------------
+//
+// `push` payloads are JSON `{ title, body, url }`. Show a notification and
+// stash the click target in `notification.data.url` so the click handler
+// can focus an existing client or open a new one.
+
+self.addEventListener('push', (event) => {
+  /** @type {{ title?: string; body?: string; url?: string }} */
+  let data = {};
+  try {
+    data = event.data ? event.data.json() : {};
+  } catch {
+    data = { body: event.data ? event.data.text() : '' };
+  }
+  event.waitUntil(
+    self.registration.showNotification(data.title ?? 'HamaFX-Ai', {
+      body: data.body ?? '',
+      data: { url: data.url ?? '/alerts' },
+      icon: '/icons/icon-192.png',
+      badge: '/icons/icon-192.png',
+      tag: 'hamafx-alert',
+      renotify: true,
+    }),
+  );
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const target = (event.notification.data && event.notification.data.url) || '/alerts';
+  event.waitUntil(
+    (async () => {
+      const all = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+      for (const client of all) {
+        if ('focus' in client) {
+          await client.focus();
+          if ('navigate' in client) {
+            try {
+              await client.navigate(target);
+            } catch {
+              /* same-origin navigation may be blocked across tabs — ignore */
+            }
+          }
+          return;
+        }
+      }
+      await self.clients.openWindow(target);
+    })(),
+  );
+});

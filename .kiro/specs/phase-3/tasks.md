@@ -10,48 +10,48 @@ Tasks marked with `*` are optional (tests). Core implementation tasks are never 
 
 ## Tasks
 
-- [ ] 1. T1 — DB migration `0003_phase_3.sql`
+- [x] 1. T1 — DB migration `0003_phase_3.sql`
   - Three additive tables — `cot_reports`, `shared_snapshots`, `push_subscriptions`. No behaviour change yet; downstream code switches over in subsequent tasks.
-  - [ ] 1.1 Add `cot_reports` schema
+  - [x] 1.1 Add `cot_reports` schema
     - Create `packages/db/src/schema/cot.ts` per design §"Migration".
     - Re-export from `packages/db/src/schema/index.ts`.
     - _Requirements: 5.2_
     - Files: `packages/db/src/schema/cot.ts`, `packages/db/src/schema/index.ts`
-  - [ ] 1.2 Add `shared_snapshots` schema
+  - [x] 1.2 Add `shared_snapshots` schema
     - Create `packages/db/src/schema/share.ts`.
     - _Requirements: 6.2_
     - Files: `packages/db/src/schema/share.ts`, `packages/db/src/schema/index.ts`
-  - [ ] 1.3 Add `push_subscriptions` schema
+  - [x] 1.3 Add `push_subscriptions` schema
     - Create `packages/db/src/schema/push.ts`.
     - _Requirements: 7.1_
     - Files: `packages/db/src/schema/push.ts`, `packages/db/src/schema/index.ts`
-  - [ ] 1.4 Generate and commit migration `0003_phase_3.sql`
+  - [x] 1.4 Generate and commit migration `0003_phase_3.sql`
     - Run `pnpm --filter @hamafx/db migrate:gen`. If the auto-generated SQL diverges from the design's `CREATE TABLE` statements, hand-write `packages/db/drizzle/0003_phase_3.sql` matching the design.
     - Verify the migration applies cleanly against the production Supabase preview and is idempotent on re-run via the journal.
     - _Requirements: 5.2, 6.2, 7.1_
     - Files: `packages/db/drizzle/0003_phase_3.sql`, `packages/db/drizzle/meta/_journal.json`
 
-- [ ] 2. T2 — `@hamafx/shared` schemas (4 new tool output files + barrel exports)
+- [x] 2. T2 — `@hamafx/shared` schemas (4 new tool output files + barrel exports)
   - Define every schema before any consumer imports it. Each schema goes in its own file following the existing per-tool convention; `tool-io.ts` declaration-merging makes `ToolOutput<'<name>'>` resolve to the right type.
-  - [ ] 2.1 `analyze-chart-image.ts`
+  - [x] 2.1 `analyze-chart-image.ts`
     - Add `AnalyzeChartImageInputSchema`, `AnalyzedLevelSchema`, `AnalyzeChartImageOutputSchema` per design §"Schema additions".
     - Wire into `tool-io.ts` so `ToolOutput<'analyze_chart_image'>` resolves to the inferred output type.
     - Re-export from `packages/shared/src/index.ts`.
     - _Requirements: 2.7_
     - Files: `packages/shared/src/schemas/tool-outputs/analyze-chart-image.ts`, `packages/shared/src/ai/tool-io.ts`, `packages/shared/src/index.ts`
-  - [ ] 2.2 `get-correlation.ts`
+  - [x] 2.2 `get-correlation.ts`
     - Add `CorrelationCellSchema`, `GetCorrelationInputSchema`, `GetCorrelationOutputSchema`. Wire `tool-io.ts`. Re-export.
     - _Requirements: 3.7_
     - Files: `packages/shared/src/schemas/tool-outputs/get-correlation.ts`, `packages/shared/src/ai/tool-io.ts`, `packages/shared/src/index.ts`
-  - [ ] 2.3 `get-cot.ts`
+  - [x] 2.3 `get-cot.ts`
     - Add `CoTSampleSchema`, `GetCoTInputSchema`, `GetCoTOutputSchema`. Wire `tool-io.ts`. Re-export.
     - _Requirements: 5.6_
     - Files: `packages/shared/src/schemas/tool-outputs/get-cot.ts`, `packages/shared/src/ai/tool-io.ts`, `packages/shared/src/index.ts`
-  - [ ] 2.4 `share-snapshot.ts`
+  - [x] 2.4 `share-snapshot.ts`
     - Add `ShareSnapshotInputSchema`, `ShareSnapshotOutputSchema`. Wire `tool-io.ts`. Re-export.
     - _Requirements: 6.8_
     - Files: `packages/shared/src/schemas/tool-outputs/share-snapshot.ts`, `packages/shared/src/ai/tool-io.ts`, `packages/shared/src/index.ts`
-  - [ ] 2.5 Extend `TOOL_NAMES`
+  - [x] 2.5 Extend `TOOL_NAMES`
     - Add `'analyze_chart_image'`, `'get_correlation'`, `'get_cot'`, `'share_snapshot'` to `packages/shared/src/ai/tool-names.ts`.
     - _Requirements: 2.7, 3.7, 5.6, 6.8_
     - Files: `packages/shared/src/ai/tool-names.ts`
@@ -60,15 +60,15 @@ Tasks marked with `*` are optional (tests). Core implementation tasks are never 
     - _Requirements: 2.7, 3.7, 5.6, 6.8_
     - Files: `packages/shared/test/schemas.test.ts`
 
-- [ ] 3. T3 — `analyze_chart_image` tool + bespoke chat part
+- [x] 3. T3 — `analyze_chart_image` tool + bespoke chat part
   - Implements Requirement 2 end-to-end.
-  - [ ] 3.1 Tool body
+  - [x] 3.1 Tool body
     - Implement `analyzeChartImageTool` per design §1. The tool reads the most recent user `file` part with a `mediaType` starting with `image/` from the agent's request context (passed in via `runChat`'s tool-execution scope), hashes the bytes for the `sourceImageRef`, and calls `generateText` with `experimental_output` configured against `AnalyzeChartImageOutputSchema`.
     - When no image is present, return the no-image fast-path output without calling the model.
     - Register in `packages/ai/src/tools/index.ts`.
     - _Requirements: 2.1, 2.2, 2.3, 2.6_
     - Files: `packages/ai/src/tools/analyze-chart-image.ts`, `packages/ai/src/tools/index.ts`
-  - [ ] 3.2 Bespoke chat part
+  - [x] 3.2 Bespoke chat part
     - Server component at `apps/web/src/components/chat/parts/analyze-chart-image.tsx` per design §1.
     - Levels list, observed text, deep link to `/chart/<symbol>?tf=<tf>&overlays=<comma-list>` when overlay is present.
     - Add to `parts/registry.tsx` and `partSchemas`.
@@ -79,43 +79,43 @@ Tasks marked with `*` are optional (tests). Core implementation tasks are never 
     - _Requirements: 2.1, 2.2, 2.3_
     - Files: `packages/ai/test/analyze-chart-image.test.ts`
 
-- [ ] 4. T4 — Vision input on chat composer + `/api/chat` plumbing
+- [x] 4. T4 — Vision input on chat composer + `/api/chat` plumbing
   - Implements Requirement 1.
-  - [ ] 4.1 Image-attach button + thumbnails in composer
+  - [x] 4.1 Image-attach button + thumbnails in composer
     - Modify `apps/web/src/components/chat/composer.tsx` to render a 44×44 image-attach button alongside the mic, open the platform file picker filtered to `image/*`, and render thumbnails above the textarea with a remove control on each.
     - Reject files > 5 MB; reject non-image types. Cap at 4 images per turn.
     - _Requirements: 1.1, 1.2, 1.3, 1.8_
     - Files: `apps/web/src/components/chat/composer.tsx`
-  - [ ] 4.2 Forward image parts on submit
+  - [x] 4.2 Forward image parts on submit
     - Modify the chat surface (`apps/web/src/components/chat/chat-surface.tsx` if separate, otherwise the composer) so that on submit the parts array contains one `text` part plus one `file` part per attached image (`{ type: 'file', mediaType, url }` where `url` is a base64 data URL).
     - _Requirements: 1.4_
     - Files: `apps/web/src/components/chat/chat-surface.tsx` (or wherever `useChat` is wired)
-  - [ ] 4.3 Confirm `/api/chat` accepts multimodal parts unchanged
+  - [x] 4.3 Confirm `/api/chat` accepts multimodal parts unchanged
     - Audit `apps/web/src/app/api/chat/route.ts`. The body schema already declares `parts: z.array(z.unknown()).default([])`; verify no validation tightening regressed this in Phase 2.
     - _Requirements: 1.5_
     - Files: `apps/web/src/app/api/chat/route.ts` (audit only)
-  - [ ] 4.4 Confirm `runChat` passes parts through to the model
+  - [x] 4.4 Confirm `runChat` passes parts through to the model
     - Audit `packages/ai/src/agent.ts`'s `convertToModelMessages` step. The AI SDK already understands `file`/`image` parts; we need to make sure no Phase 2 message remapping stripped non-text parts.
     - _Requirements: 1.6_
     - Files: `packages/ai/src/agent.ts` (audit only)
-  - [ ] 4.5 Add `AI_VISION_MODEL` to env validation
+  - [x] 4.5 Add `AI_VISION_MODEL` to env validation
     - Add `AI_VISION_MODEL: z.string().default('google-vertex/gemini-2.5-pro')` to `packages/shared/src/env.ts`. Document in `.env.example`.
     - _Requirements: 2.2_
     - Files: `packages/shared/src/env.ts`, `.env.example`
 
-- [ ] 5. T5 — `get_correlation` tool + bespoke chat part
+- [x] 5. T5 — `get_correlation` tool + bespoke chat part
   - Implements Requirement 3.
-  - [ ] 5.1 Pearson + DXY proxy helpers
+  - [x] 5.1 Pearson + DXY proxy helpers
     - Pure functions in `packages/ai/src/tools/get-correlation.ts`. Pearson per design §2; DXY proxy `100 / (EUR^0.5 * GBP^0.5)`; `change24h` via lookup of the bar 24 h prior.
     - _Requirements: 3.2, 3.4, 3.5_
     - Files: `packages/ai/src/tools/get-correlation.ts`
-  - [ ] 5.2 Tool body
+  - [x] 5.2 Tool body
     - Implement `getCorrelationTool`. Pull `windowBars + 1` candles per symbol via the existing `getCandles` adapter, compute returns, build matrix + DXY proxy, return.
     - Skip pairs where either symbol has fewer than `windowBars + 1` bars; note skipped pairs in `dxyProxy.formula`.
     - Register in `tools/index.ts`.
     - _Requirements: 3.1, 3.3_
     - Files: `packages/ai/src/tools/get-correlation.ts`, `packages/ai/src/tools/index.ts`
-  - [ ] 5.3 Bespoke chat part
+  - [x] 5.3 Bespoke chat part
     - Server component at `apps/web/src/components/chat/parts/get-correlation.tsx`. 3×3 correlation table with `text-bull`/`text-bear` cells; small DXY proxy strip with the value and 24h change.
     - Add to `parts/registry.tsx` and `partSchemas`.
     - _Requirements: 3.6_
@@ -125,48 +125,48 @@ Tasks marked with `*` are optional (tests). Core implementation tasks are never 
     - _Requirements: 3.2, 3.4, 3.5_
     - Files: `packages/ai/test/get-correlation.test.ts`
 
-- [ ] 6. T6 — TradingView Pro chart route
+- [x] 6. T6 — TradingView Pro chart route
   - Implements Requirement 4.
-  - [ ] 6.1 Pro chart page + widget
+  - [x] 6.1 Pro chart page + widget
     - Create `apps/web/src/app/(app)/chart/[symbol]/pro/page.tsx`. Use Next.js `next/script` with strategy `afterInteractive` to load `https://s3.tradingview.com/tv.js`, then construct the widget in a `'use client'` component reading the `?tf=<tf>` URL state.
     - _Requirements: 4.1, 4.3, 4.4, 4.5, 4.6_
     - Files: `apps/web/src/app/(app)/chart/[symbol]/pro/page.tsx`, `apps/web/src/app/(app)/chart/[symbol]/pro/_components/tradingview-widget.tsx`
-  - [ ] 6.2 "Pro" link from main chart route
+  - [x] 6.2 "Pro" link from main chart route
     - Add a small "Pro" link in `chart-view.tsx` (or wherever the chart header lives) gated by `process.env.NEXT_PUBLIC_TRADINGVIEW_ENABLED === '1'`.
     - _Requirements: 4.2_
     - Files: `apps/web/src/app/(app)/chart/[symbol]/_components/chart-view.tsx`
-  - [ ] 6.3 Network-blocked fallback
+  - [x] 6.3 Network-blocked fallback
     - On the Pro page, render a graceful error message + back link if `tv.js` failed to load (e.g. `window.TradingView` is undefined after a generous timeout).
     - _Requirements: 4.7_
     - Files: `apps/web/src/app/(app)/chart/[symbol]/pro/_components/tradingview-widget.tsx`
-  - [ ] 6.4 Add `NEXT_PUBLIC_TRADINGVIEW_ENABLED` env entry
+  - [x] 6.4 Add `NEXT_PUBLIC_TRADINGVIEW_ENABLED` env entry
     - Document in `.env.example`. No env-validation entry needed since `NEXT_PUBLIC_*` is read directly.
     - _Requirements: 4.2_
     - Files: `.env.example`
 
-- [ ] 7. T7 — CFTC ingestion + `get_cot` tool
+- [x] 7. T7 — CFTC ingestion + `get_cot` tool
   - Implements Requirement 5.
-  - [ ] 7.1 CFTC provider adapter
+  - [x] 7.1 CFTC provider adapter
     - `packages/data/src/providers/cftc/rest.ts`: thin GET against the Socrata Disaggregated dataset endpoint with a `where` filter for the commodity name.
     - `packages/data/src/providers/cftc/map.ts`: symbol → commodity-name mapping (`XAUUSD` → "GOLD", `EURUSD` → "EURO FX", `GBPUSD` → "BRITISH POUND").
     - _Requirements: 5.1_
     - Files: `packages/data/src/providers/cftc/rest.ts`, `packages/data/src/providers/cftc/map.ts`, `packages/data/src/providers/cftc/index.ts`
-  - [ ] 7.2 Persistence
+  - [x] 7.2 Persistence
     - `packages/ai/src/cot/persistence.ts`: `upsertCoTReport`, `listCoTSamples({symbol, weeks})`, `parseCoTId(id)`. Idempotent upsert on `(id)` PK.
     - Re-export from `packages/ai/src/index.ts`.
     - _Requirements: 5.3_
     - Files: `packages/ai/src/cot/persistence.ts`, `packages/ai/src/index.ts`
-  - [ ] 7.3 Cron route
+  - [x] 7.3 Cron route
     - `apps/web/src/app/api/cron/cot/route.ts` — for each supported symbol, fetch the latest report row, upsert; tolerate per-symbol failures (log + continue).
     - Validate `Authorization: Bearer ${CRON_SECRET}` via `withCronAuth`.
     - _Requirements: 5.4_
     - Files: `apps/web/src/app/api/cron/cot/route.ts`
-  - [ ] 7.4 Tool body
+  - [x] 7.4 Tool body
     - Implement `getCoTTool` calling `listCoTSamples`. Empty table → `pipelinePending: true`. Templated summary string (no LLM second pass).
     - Register in `tools/index.ts`.
     - _Requirements: 5.6, 5.8_
     - Files: `packages/ai/src/tools/get-cot.ts`, `packages/ai/src/tools/index.ts`
-  - [ ] 7.5 Bespoke chat part
+  - [x] 7.5 Bespoke chat part
     - Server component at `apps/web/src/components/chat/parts/get-cot.tsx`. Compact bar/line of net positioning over the last N weeks; `.tabular-nums`; `text-bull`/`text-bear` colouring.
     - Add to `parts/registry.tsx` and `partSchemas`.
     - _Requirements: 5.7_
@@ -176,34 +176,34 @@ Tasks marked with `*` are optional (tests). Core implementation tasks are never 
     - _Requirements: 5.3_
     - Files: `packages/ai/test/cot.test.ts`
 
-- [ ] 8. Checkpoint — Phase 3 tools complete
+- [x] 8. Checkpoint — Phase 3 tools complete
   - Run `pnpm typecheck` and `pnpm test` and confirm all green. Run a manual chat session against local dev hitting each new tool to confirm the bespoke parts render. Stop and ask the user if any tool's UX is rough before moving to share + push.
 
-- [ ] 9. T8 — Sharable snapshots
+- [x] 9. T8 — Sharable snapshots
   - Implements Requirement 6.
-  - [ ] 9.1 Share-token sign + verify
+  - [x] 9.1 Share-token sign + verify
     - Pure HMAC-SHA-256 helpers at `packages/ai/src/share/sign.ts`. Mirror the auth-cookie scheme (`packages/web/src/lib/auth.ts`) — base64url payload + signature.
     - _Requirements: 6.3_
     - Files: `packages/ai/src/share/sign.ts`
-  - [ ] 9.2 Share persistence
+  - [x] 9.2 Share persistence
     - `packages/ai/src/share/persistence.ts`: `createSnapshot`, `getSnapshot(id)`, `getActiveSnapshot(id)` (filters by `expires_at > now()`).
     - _Requirements: 6.2, 6.5_
     - Files: `packages/ai/src/share/persistence.ts`, `packages/ai/src/index.ts`
-  - [ ] 9.3 Tool body
+  - [x] 9.3 Tool body
     - Implement `shareSnapshotTool`: persist → sign → return `{id, url, expiresAt}`. URL host pulls from `NEXT_PUBLIC_APP_URL`.
     - Register in `tools/index.ts`.
     - _Requirements: 6.1, 6.3_
     - Files: `packages/ai/src/tools/share-snapshot.ts`, `packages/ai/src/tools/index.ts`
-  - [ ] 9.4 Public read route at `/share/[id]`
+  - [x] 9.4 Public read route at `/share/[id]`
     - `apps/web/src/app/share/[id]/page.tsx` — server component. Reads `?t=<token>`, verifies signature against `AUTH_COOKIE_SECRET`, looks up the row, renders title/body/overlay.
     - 410 on expired, 404 on missing, 401 on bad/missing token.
     - _Requirements: 6.4, 6.5_
     - Files: `apps/web/src/app/share/[id]/page.tsx`
-  - [ ] 9.5 Middleware bypass
+  - [x] 9.5 Middleware bypass
     - Update `apps/web/src/middleware.ts` so `/share/*` skips the password gate. Other admin/api routes stay gated.
     - _Requirements: 6.6_
     - Files: `apps/web/src/middleware.ts`
-  - [ ] 9.6 Bespoke chat part
+  - [x] 9.6 Bespoke chat part
     - Server component at `apps/web/src/components/chat/parts/share-snapshot.tsx`. Title + copy-to-clipboard control for the URL, ≥ 44×44 tap target.
     - Add to `parts/registry.tsx` and `partSchemas`.
     - _Requirements: 6.7_
@@ -213,36 +213,36 @@ Tasks marked with `*` are optional (tests). Core implementation tasks are never 
     - _Requirements: 6.3_
     - Files: `packages/ai/test/share-sign.test.ts`
 
-- [ ] 10. T9 — Web Push delivery
+- [x] 10. T9 — Web Push delivery
   - Implements Requirement 7.
-  - [ ] 10.1 Push persistence
+  - [x] 10.1 Push persistence
     - `packages/ai/src/push/persistence.ts`: `listPushSubscriptions`, `savePushSubscription`, `deletePushSubscription(id)`, `deletePushSubscriptionByEndpoint(endpoint)`.
     - Re-export from `packages/ai/src/index.ts`.
     - _Requirements: 7.1, 7.7_
     - Files: `packages/ai/src/push/persistence.ts`, `packages/ai/src/index.ts`
-  - [ ] 10.2 Web-push client
+  - [x] 10.2 Web-push client
     - `packages/ai/src/push/send.ts`: `sendWebPush(sub, payload, env)` returning `{ ok, status }`. Implement RFC-8030 directly using Node `crypto` (ES256 JWT) + `crypto.subtle` (ECDH P-256 + AES-128-GCM).
     - _Requirements: 7.5, 7.6_
     - Files: `packages/ai/src/push/send.ts`
-  - [ ] 10.3 Wire `web-push` channel in delivery
+  - [x] 10.3 Wire `web-push` channel in delivery
     - Modify `packages/ai/src/alerts/delivery.ts` to add `deliverWebPush` per design §6. `markFired` only after every active subscription returned 2xx (or all returned 410, in which case the subscriptions are removed and the alert is still marked fired).
     - Extend `EvaluatorEnv` with `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`.
     - _Requirements: 7.5, 7.6, 7.7_
     - Files: `packages/ai/src/alerts/delivery.ts`, `packages/ai/src/alerts/evaluator.ts`
-  - [ ] 10.4 `/api/push/subscribe` + `/api/push/unsubscribe` routes
+  - [x] 10.4 `/api/push/subscribe` + `/api/push/unsubscribe` routes
     - Both Node-runtime, password-gated by middleware. Subscribe persists the row; unsubscribe deletes by endpoint.
     - _Requirements: 7.3, 7.4_
     - Files: `apps/web/src/app/api/push/subscribe/route.ts`, `apps/web/src/app/api/push/unsubscribe/route.ts`
-  - [ ] 10.5 Settings UI button
+  - [x] 10.5 Settings UI button
     - `'use client'` `EnableWebPushButton` in `_components/`. Calls `Notification.requestPermission` → `pushManager.subscribe({ applicationServerKey: <NEXT_PUBLIC_VAPID_PUBLIC_KEY> })` → POST to `/api/push/subscribe`.
     - Mount under the Notifications section in `apps/web/src/app/(app)/settings/page.tsx`.
     - _Requirements: 7.2_
     - Files: `apps/web/src/app/(app)/settings/_components/enable-web-push-button.tsx`, `apps/web/src/app/(app)/settings/page.tsx`
-  - [ ] 10.6 Service worker push listener
+  - [x] 10.6 Service worker push listener
     - Modify `apps/web/public/sw.js` to add `push` and `notificationclick` listeners per design §6.
     - _Requirements: 7.8_
     - Files: `apps/web/public/sw.js`
-  - [ ] 10.7 Env vars
+  - [x] 10.7 Env vars
     - Add `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `NEXT_PUBLIC_VAPID_PUBLIC_KEY` to `packages/shared/src/env.ts` (all optional; missing → push channel returns "not configured"). Document in `.env.example`.
     - _Requirements: 7.9_
     - Files: `packages/shared/src/env.ts`, `.env.example`
@@ -251,48 +251,48 @@ Tasks marked with `*` are optional (tests). Core implementation tasks are never 
     - _Requirements: 7.5, 7.6, 7.7_
     - Files: `packages/ai/test/push-delivery.test.ts`
 
-- [ ] 11. Checkpoint — Share + push live
+- [x] 11. Checkpoint — Share + push live
   - Run `pnpm typecheck` and `pnpm test`. Smoke-test the share route in production with a real signed link. Verify push subscribe + delivery on at least one device. Stop and confirm UX before continuing to docs.
 
-- [ ] 12. T10 — GitHub Actions cron workflow (`cron-cot.yml`)
+- [x] 12. T10 — GitHub Actions cron workflow (`cron-cot.yml`)
   - Implements Requirement 5.5.
-  - [ ] 12.1 Author the workflow
+  - [x] 12.1 Author the workflow
     - Create `.github/workflows/cron-cot.yml` at `0 22 * * 5` UTC. Use the existing template: `permissions: { contents: read }`, `concurrency.group: cron-cot`, `cancel-in-progress: false`, `workflow_dispatch:`, `curl -fsS -X GET -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" "${{ secrets.PRODUCTION_URL }}/api/cron/cot"`.
     - _Requirements: 5.5_
     - Files: `.github/workflows/cron-cot.yml`
 
-- [ ] 13. T11 — Documentation updates
+- [x] 13. T11 — Documentation updates
   - Implements Requirement 8.
-  - [ ] 13.1 `docs/10-roadmap.md` Phase 3 status
+  - [x] 13.1 `docs/10-roadmap.md` Phase 3 status
     - Move every shipped Phase 3 item from `[ ]` to `[x]`.
     - Update the "Stretch / parking lot" header.
     - _Requirements: 8.1_
     - Files: `docs/10-roadmap.md`
-  - [ ] 13.2 `docs/09a-phase-0-deployed-state.md` Phase 3 subsection
+  - [x] 13.2 `docs/09a-phase-0-deployed-state.md` Phase 3 subsection
     - List the new env vars (`AI_VISION_MODEL`, `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `NEXT_PUBLIC_TRADINGVIEW_ENABLED`).
     - List the new cron workflow + cadence.
     - List the migration applied (`0003_phase_3.sql`).
     - _Requirements: 8.2_
     - Files: `docs/09a-phase-0-deployed-state.md`
-  - [ ] 13.3 `docs/04-features.md` flips
+  - [x] 13.3 `docs/04-features.md` flips
     - Mark `CH-10`, `CH-11`, `M-05`, `M-06`, and any vision items as shipped.
     - _Requirements: 8.3_
     - Files: `docs/04-features.md`
-  - [ ] 13.4 `.kiro/steering/10-ai-tools.md` tools list
+  - [x] 13.4 `.kiro/steering/10-ai-tools.md` tools list
     - Add the four new tools (`analyze_chart_image`, `get_correlation`, `get_cot`, `share_snapshot`) under "Tools".
     - _Requirements: 8.4_
     - Files: `.kiro/steering/10-ai-tools.md`
 
-- [ ] 14. T12 — Acceptance run
+- [x] 14. T12 — Acceptance run
   - Re-run the eval harness against production after Phase 3 deploys. The 10 prompts SHALL still pass with the new tools available. Note any model-quality regressions as follow-up issues (out of scope here unless the harness itself crashes).
-  - [ ] 14.1 Execute against the deployed app
+  - [x] 14.1 Execute against the deployed app
     - `pnpm --filter @hamafx/ai eval --base-url <production> --cookie <auth> --out docs/eval`.
     - Commit the new `docs/eval/<timestamp>.md`.
     - Optionally craft one additional prompt that attaches a chart screenshot to invoke `analyze_chart_image`.
     - _Requirements: -_
     - Files: `docs/eval/<UTC-timestamp>.md`
 
-- [ ] 15. Final checkpoint — Phase 3 done
+- [x] 15. Final checkpoint — Phase 3 done
   - All tests green; all docs updated; Phase 3 acceptance run committed; ask the user if any feature warrants a follow-up issue.
 
 ## Notes

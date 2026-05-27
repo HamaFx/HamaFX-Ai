@@ -134,3 +134,14 @@ export {
   buildCoTId,
   type UpsertCoTReportArgs,
 } from './cot/persistence';
+
+// Phase 3 — Web Push
+export {
+  listPushSubscriptions,
+  savePushSubscription,
+  deletePushSubscription,
+  deletePushSubscriptionByEndpoint,
+  type PushSubscriptionRow,
+  type SavePushSubscriptionArgs,
+} from './push/persistence';
+export { sendWebPush, type SendWebPushResult, type VapidEnv } from './push/send';

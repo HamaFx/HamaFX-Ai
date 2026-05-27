@@ -73,6 +73,7 @@ The primary surface — see `07-ai-agent.md` for internals.
 | C-10 | Saved snippets / replies     | 🅑     | Reusable user prompts.                        |
 | C-11 | Citations panel              | 🅼     | Source links for any retrieved data.          |
 | C-12 | Tool-call replay             | 🅑     | Re-run a past tool with current data.         |
+| C-13 | Vision input (chart screenshots) | ✅     | Up to 4 images per turn; `analyze_chart_image` tool. |
 
 ## Chart 📈
 
@@ -87,8 +88,8 @@ The primary surface — see `07-ai-agent.md` for internals.
 | CH-07 | Pivot lines (D/W/M)                  | 🅼     | Auto-drawn.                               |
 | CH-08 | Order Blocks / FVG / liquidity (SMC) | ✅     | From `packages/indicators/structure`.     |
 | CH-09 | Save chart layout per pair           | 🅑     | Per user.                                 |
-| CH-10 | TradingView Advanced Widget view     | 🅒     | Pro mode toggle.                          |
-| CH-11 | Snapshot share (PNG)                 | 🅑     | OG image rendered server-side.            |
+| CH-10 | TradingView Advanced Widget view     | ✅     | Pro mode at `/chart/[symbol]/pro`, env-gated. |
+| CH-11 | Snapshot share (PNG)                 | ✅     | `share_snapshot` tool + signed `/share/[id]?t=` link. |
 
 ## Market 💱
 
@@ -98,8 +99,8 @@ The primary surface — see `07-ai-agent.md` for internals.
 | M-02 | Watchlist (3 fixed)    | 🅼     | Pinned tiles on home / chat header.           |
 | M-03 | Session badge          | 🅼     | Asia / London / NY current session indicator. |
 | M-04 | Pip-distance helper    | 🅼     | "from 1.0820 → 28 pips" inline calc utility.  |
-| M-05 | Cross-pair correlation | 🅑     | rolling 50-period.                            |
-| M-06 | DXY proxy panel        | 🅑     | derived USD strength.                         |
+| M-05 | Cross-pair correlation | ✅     | `get_correlation` tool — Pearson over windowBars. |
+| M-06 | DXY proxy panel        | ✅     | 50/50 EUR/GBP geometric proxy with 24h change. |
 
 ## News 📰
 
@@ -131,7 +132,7 @@ The primary surface — see `07-ai-agent.md` for internals.
 | A-02 | Indicator-cross alert (RSI, MA) | 🅼     |                                                      |
 | A-03 | Candle-close-above/below        | 🅼     | Per timeframe.                                       |
 | A-04 | News tag alert                  | 🅑     | "high-impact USD news" trigger.                      |
-| A-05 | Web Push delivery               | 🅑     | PWA push.                                            |
+| A-05 | Web Push delivery               | ✅     | RFC 8030 + VAPID. Settings → Enable web push.        |
 | A-06 | Email delivery                  | 🅼     | via Supabase / Resend.                               |
 | A-07 | AI-suggested alert from chat    | 🅑     | "Want me to alert if it closes below 1.0820?" → tap. |
 

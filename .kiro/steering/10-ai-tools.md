@@ -34,6 +34,13 @@ Phase 2 composite + RAG + visual tools:
 - `get_journal_stats` — global stats + per-symbol + per-tag breakdowns.
 - `annotate_chart` — emits the `OverlaySet` shape the chart UI consumes (markers + price lines).
 
+Phase 3 multimodal + breadth tools:
+
+- `analyze_chart_image` — vision: extracts symbol/tf/trend/levels + an optional `OverlaySet` from the most recent user-attached chart image.
+- `get_correlation` — Pearson rolling correlation matrix over the 3 supported symbols + a 50/50 EUR/GBP geometric DXY proxy with 24h change.
+- `get_cot` — CFTC Commitment-of-Traders weekly samples for the requested symbol; reads from `cot_reports` (populated by `/api/cron/cot`).
+- `share_snapshot` — persists a `(title, body, overlay?)` row and returns a signed `/share/[id]?t=<token>` URL that bypasses the password gate.
+
 ## Models
 
 - Default chat: `google-vertex/gemini-2.5-flash` (or any gateway-routed slug, see `resolveModel` in `packages/ai/src/model.ts`).

@@ -16,6 +16,11 @@ import type { Alert } from '@hamafx/shared';
 
 import { describeRule, type EvaluatorEnv, type RuleReading } from './evaluator';
 import { markFired } from './persistence';
+import {
+  deletePushSubscription,
+  listPushSubscriptions,
+} from '../push/persistence';
+import { sendWebPush } from '../push/send';
 
 export interface DeliveryResult {
   alertId: string;
@@ -43,12 +48,8 @@ export async function deliverAlert({ alert, reading, env }: DeliverArgs): Promis
       if (r.ok || r.message?.startsWith('not configured')) return r;
     }
     if (ch === 'web-push') {
-      return {
-        alertId: alert.id,
-        channel: 'web-push',
-        ok: false,
-        message: 'web-push delivery deferred to Phase 3',
-      };
+      const r = await deliverWebPush({ alert, reading, env });
+      if (r.ok || r.message?.startsWith('not configured')) return r;
     }
   }
   return { alertId: alert.id, channel: 'none', ok: false, message: 'no channels' };
@@ -214,3 +215,96 @@ function renderTelegramBody(alert: Alert, reading: RuleReading): string {
 export function escapeMd(s: string): string {
   return s.replace(/[\\_*\[\]()~`>#+\-=|{}.!]/g, '\\$&');
 }
+
+
+// ---------------------------------------------------------------------------
+// Web Push (Phase 3)
+// ---------------------------------------------------------------------------
+//
+// Same ordering contract as email/Telegram: we only call `markFired` after
+// every active subscription returned 2xx (or all returned 410/404, in
+// which case the dead subscriptions are removed and the alert is still
+// marked fired so the cron loop doesn't keep re-evaluating it).
+//
+// On a single non-2xx, non-410 response we leave the alert un-fired so the
+// next cron tick retries — matching the email/Telegram retry semantics.
+
+async function deliverWebPush({ alert, reading, env }: DeliverArgs): Promise<DeliveryResult> {
+  if (!env.VAPID_PUBLIC_KEY || !env.VAPID_PRIVATE_KEY) {
+    return {
+      alertId: alert.id,
+      channel: 'web-push',
+      ok: false,
+      message: 'not configured (VAPID_PUBLIC_KEY / VAPID_PRIVATE_KEY missing)',
+    };
+  }
+
+  const subs = await listPushSubscriptions();
+  if (subs.length === 0) {
+    return {
+      alertId: alert.id,
+      channel: 'web-push',
+      ok: false,
+      message: 'not configured (no push subscriptions registered)',
+    };
+  }
+
+  const payload = JSON.stringify({
+    title: `HamaFX-Ai · ${describeRule(alert.rule)}`,
+    body: renderEmailBody(alert, reading),
+    url: '/alerts',
+  });
+
+  let allOkOrGone = true;
+  let anyOk = false;
+  for (const sub of subs) {
+    const r = await sendWebPush(sub, payload, {
+      VAPID_PUBLIC_KEY: env.VAPID_PUBLIC_KEY,
+      VAPID_PRIVATE_KEY: env.VAPID_PRIVATE_KEY,
+      VAPID_SUBJECT: env.VAPID_SUBJECT,
+    });
+    if (r.ok) {
+      anyOk = true;
+      continue;
+    }
+    if (r.status === 410 || r.status === 404) {
+      // Dead subscription — drop it and keep going. We don't count this as
+      // a failure for the markFired decision; the alert was effectively
+      // delivered to every still-valid subscriber.
+      console.warn(
+        `[alerts] dropping dead push subscription ${sub.id} (HTTP ${r.status}) for alert ${alert.id}`,
+      );
+      await deletePushSubscription(sub.id);
+      continue;
+    }
+    allOkOrGone = false;
+    console.error(
+      `[alerts] web-push HTTP ${r.status} for alert ${alert.id} sub ${sub.id}: ${r.message ?? ''}`,
+    );
+  }
+
+  if (!allOkOrGone) {
+    return {
+      alertId: alert.id,
+      channel: 'web-push',
+      ok: false,
+      message: 'one or more pushes failed',
+    };
+  }
+
+  if (!anyOk) {
+    // Every active subscription returned 410/404 — none delivered. Still
+    // mark the alert fired so we don't re-evaluate it forever; the user
+    // can re-subscribe and the next matching alert will fire normally.
+    console.warn(
+      `[alerts] all push subscriptions were dead for alert ${alert.id}; marking fired anyway`,
+    );
+  }
+
+  await markFired(alert.id);
+  return { alertId: alert.id, channel: 'web-push', ok: true };
+}
+
+// Hoist renderEmailBody so deliverWebPush above can read it. It was already
+// defined as a function declaration earlier in the file, so this comment is
+// purely a reading-aid.

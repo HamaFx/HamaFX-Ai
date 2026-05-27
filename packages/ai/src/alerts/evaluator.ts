@@ -189,6 +189,10 @@ export interface EvaluatorEnv {
   ALERT_TO_EMAIL?: string | undefined;
   TELEGRAM_BOT_TOKEN?: string | undefined;
   TELEGRAM_CHAT_ID?: string | undefined;
+  /** VAPID keypair for the web-push channel (RFC 8292). */
+  VAPID_PUBLIC_KEY?: string | undefined;
+  VAPID_PRIVATE_KEY?: string | undefined;
+  VAPID_SUBJECT?: string | undefined;
 }
 
 export interface EvaluationResult {
@@ -213,6 +217,9 @@ export async function evaluateAlerts(
     ALERT_TO_EMAIL: process.env.ALERT_TO_EMAIL ?? undefined,
     TELEGRAM_BOT_TOKEN: process.env.TELEGRAM_BOT_TOKEN ?? undefined,
     TELEGRAM_CHAT_ID: process.env.TELEGRAM_CHAT_ID ?? undefined,
+    VAPID_PUBLIC_KEY: process.env.VAPID_PUBLIC_KEY ?? undefined,
+    VAPID_PRIVATE_KEY: process.env.VAPID_PRIVATE_KEY ?? undefined,
+    VAPID_SUBJECT: process.env.VAPID_SUBJECT ?? undefined,
   };
 
   let matched = 0;
