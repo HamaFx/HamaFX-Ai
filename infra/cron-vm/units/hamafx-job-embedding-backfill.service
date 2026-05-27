@@ -1,6 +1,6 @@
 [Unit]
 Description=HamaFX-Ai job — embedding-backfill
-Documentation=docs/superpowers/specs/2026-05-27-phase-8-backend-reliability-design.md
+Documentation=https://github.com/HamaFx/HamaFX-Ai/blob/main/docs/superpowers/specs/2026-05-27-phase-8-backend-reliability-design.md
 # We don't depend on the always-on worker — the job runs in its own
 # Node process and connects to Postgres / the AI Gateway directly.
 After=network-online.target
