@@ -1,29 +1,26 @@
 'use client';
 
-// Mobile-first chat composer.
+// Premium chat composer.
 //
-// Phase 1: textarea + Send.
-// Phase 2: voice input via Web Speech API.
-// Phase 3: image-attach via the platform file picker. The selected
-// images render as thumbnails above the textarea with a remove control;
-// on submit they're forwarded as `file` UIMessage parts (data URL +
-// mediaType) so the AI SDK can pass them straight to the vision model.
-// Phase 5: focus-shadow lift, lucide icons, scale-pop on image add.
+// Features:
+//   - Auto-grow textarea (up to 6 rows)
+//   - Image attach (file picker + drag-drop) — up to 4 images per turn
+//   - Voice input via Web Speech API
+//   - Character count when approaching the limit
+//   - Drag-over highlight + drop handling
+//   - Sticky-at-bottom with safe-area padding
+//   - Glass surface that lifts on focus
 
 import { ImagePlus, Mic, Send } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
-import { Button } from '@/components/ui/button';
 import { useVoiceInput } from '@/hooks/use-voice-input';
 import { cn } from '@/lib/cn';
 
 export interface ComposerImage {
   id: string;
-  /** base64 data URL, so the AI SDK can pass it as a `file` part. */
   dataUrl: string;
-  /** MIME type from the original file. */
   mediaType: string;
-  /** Display name for screen readers. */
   name: string;
 }
 
@@ -36,23 +33,27 @@ interface ComposerProps {
 const DEFAULT_LANG = 'en-US';
 const MAX_IMAGES = 4;
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
+const MAX_TEXT_CHARS = 8000;
+const SOFT_LIMIT_CHARS = 7500;
 
 export function Composer({ onSubmit, disabled, placeholder = 'Ask anything…' }: ComposerProps) {
   const [value, setValue] = useState('');
   const [images, setImages] = useState<ComposerImage[]>([]);
   const [imageError, setImageError] = useState<string | null>(null);
   const [focused, setFocused] = useState(false);
+  const [dragOver, setDragOver] = useState(false);
   const ref = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Auto-focus on mount (desktop) and after sending.
+  // Auto-focus on desktop after mount and after streaming completes.
   useEffect(() => {
     if (ref.current && !disabled) {
-      ref.current.focus();
+      // Don't steal focus on touch devices — iOS will pop the keyboard.
+      const isTouch = typeof window !== 'undefined' && 'ontouchstart' in window;
+      if (!isTouch) ref.current.focus();
     }
   }, [disabled]);
 
-  // Voice input.
   const [lang, setLang] = useState(DEFAULT_LANG);
   useEffect(() => {
     if (typeof navigator !== 'undefined' && navigator.language) {
@@ -63,32 +64,46 @@ export function Composer({ onSubmit, disabled, placeholder = 'Ask anything…' }
     lang,
     onText: (transcript) => {
       setValue(transcript);
-      requestAnimationFrame(() => {
-        const t = ref.current;
-        if (!t) return;
-        t.style.height = 'auto';
-        t.style.height = `${Math.min(t.scrollHeight, 160)}px`;
-      });
+      requestAnimationFrame(() => autoGrow());
     },
   });
+
+  function autoGrow() {
+    const t = ref.current;
+    if (!t) return;
+    t.style.height = 'auto';
+    // 6 rows ≈ 9rem at 1.5 line-height. Cap at 200px to be safe.
+    t.style.height = `${Math.min(t.scrollHeight, 200)}px`;
+  }
 
   function send() {
     const trimmed = value.trim();
     if (!trimmed || disabled) return;
+    if (trimmed.length > MAX_TEXT_CHARS) {
+      setImageError(`Message too long (max ${MAX_TEXT_CHARS} chars)`);
+      return;
+    }
     onSubmit(trimmed, images);
     setValue('');
     setImages([]);
     setImageError(null);
-    requestAnimationFrame(() => ref.current?.focus());
+    requestAnimationFrame(() => {
+      autoGrow();
+      ref.current?.focus();
+    });
   }
 
   function pickImages(files: FileList | null) {
     if (!files || files.length === 0) return;
     setImageError(null);
     const remaining = MAX_IMAGES - images.length;
+    if (remaining <= 0) {
+      setImageError(`Maximum ${MAX_IMAGES} images per message`);
+      return;
+    }
     for (const file of Array.from(files).slice(0, remaining)) {
       if (!file.type.startsWith('image/')) {
-        setImageError('only image files are accepted');
+        setImageError('Only image files are accepted');
         continue;
       }
       if (file.size > MAX_IMAGE_BYTES) {
@@ -102,7 +117,10 @@ export function Composer({ onSubmit, disabled, placeholder = 'Ask anything…' }
         setImages((prev) => [
           ...prev,
           {
-            id: typeof crypto !== 'undefined' ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`,
+            id:
+              typeof crypto !== 'undefined' && crypto.randomUUID
+                ? crypto.randomUUID()
+                : `${Date.now()}-${Math.random()}`,
             dataUrl: result,
             mediaType: file.type,
             name: file.name,
@@ -117,16 +135,52 @@ export function Composer({ onSubmit, disabled, placeholder = 'Ask anything…' }
     setImages((prev) => prev.filter((p) => p.id !== id));
   }
 
+  function handlePaste(e: React.ClipboardEvent<HTMLTextAreaElement>) {
+    const items = e.clipboardData?.items;
+    if (!items) return;
+    const files: File[] = [];
+    for (const item of Array.from(items)) {
+      if (item.kind === 'file') {
+        const f = item.getAsFile();
+        if (f) files.push(f);
+      }
+    }
+    if (files.length > 0) {
+      e.preventDefault();
+      const dt = new DataTransfer();
+      files.forEach((f) => dt.items.add(f));
+      pickImages(dt.files);
+    }
+  }
+
+  function handleDrop(e: React.DragEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setDragOver(false);
+    pickImages(e.dataTransfer.files);
+  }
+
+  const charCount = value.length;
+  const showCharCount = charCount > SOFT_LIMIT_CHARS;
+  const overLimit = charCount > MAX_TEXT_CHARS;
+
   return (
     <form
       className={cn(
         'glass-strong sticky bottom-0 flex flex-col gap-2 px-3 py-2.5 transition-shadow duration-200',
         focused && 'shadow-[0_-16px_40px_-8px_oklch(78%_0.16_78/0.15)]',
+        dragOver && 'ring-brand/50 ring-2 ring-inset',
       )}
+      style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 10px)' }}
       onSubmit={(e) => {
         e.preventDefault();
         send();
       }}
+      onDragOver={(e) => {
+        e.preventDefault();
+        setDragOver(true);
+      }}
+      onDragLeave={() => setDragOver(false)}
+      onDrop={handleDrop}
     >
       {images.length > 0 ? (
         <ul className="flex flex-wrap gap-2" aria-label="Attached images">
@@ -134,14 +188,14 @@ export function Composer({ onSubmit, disabled, placeholder = 'Ask anything…' }
             <li key={img.id} className="relative">
               <img
                 src={img.dataUrl}
-                alt={`Attached chart image ${idx + 1} of ${images.length}`}
-                className="border-divider h-12 w-12 rounded-lg border object-cover"
+                alt={`Attached image ${idx + 1} of ${images.length}`}
+                className="border-divider h-14 w-14 rounded-xl border object-cover"
               />
               <button
                 type="button"
                 aria-label={`Remove ${img.name}`}
                 onClick={() => removeImage(img.id)}
-                className="bg-bg-elev-3 text-fg border-border focus-visible:ring-brand absolute -right-1 -top-1 inline-flex h-5 w-5 items-center justify-center rounded-full border text-[10px] focus:outline-none focus-visible:ring-2"
+                className="bg-bg-elev-3 text-fg border-border focus-visible:ring-brand absolute -right-1.5 -top-1.5 inline-flex h-5 w-5 items-center justify-center rounded-full border text-[11px] leading-none focus:outline-none focus-visible:ring-2"
               >
                 ×
               </button>
@@ -157,34 +211,21 @@ export function Composer({ onSubmit, disabled, placeholder = 'Ask anything…' }
       ) : null}
 
       <div className="flex items-end gap-2">
-        <textarea
-          ref={ref}
-          value={value}
-          onChange={(e) => setValue(e.target.value)}
-          onFocus={() => setFocused(true)}
-          onBlur={() => setFocused(false)}
-          rows={1}
-          placeholder={placeholder}
-          disabled={disabled}
+        <button
+          type="button"
+          aria-label="Attach image"
+          onClick={() => fileInputRef.current?.click()}
+          disabled={disabled || images.length >= MAX_IMAGES}
           className={cn(
-            'border-divider bg-bg flex-1 resize-none rounded-xl border px-3.5 py-2.5 text-sm',
-            'focus-visible:ring-brand/60 max-h-[160px] min-h-[44px] focus:outline-none focus-visible:ring-2',
-            'placeholder:text-fg-subtle',
-            'transition-colors duration-150',
-            focused && 'border-brand/60',
+            'glass-subtle inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl transition-colors',
+            'focus-visible:ring-brand/60 focus:outline-none focus-visible:ring-2',
+            disabled || images.length >= MAX_IMAGES
+              ? 'text-fg-subtle cursor-not-allowed opacity-60'
+              : 'text-fg-muted hover:text-fg',
           )}
-          onInput={(e) => {
-            const t = e.currentTarget;
-            t.style.height = 'auto';
-            t.style.height = `${Math.min(t.scrollHeight, 160)}px`;
-          }}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
-              e.preventDefault();
-              send();
-            }
-          }}
-        />
+        >
+          <ImagePlus className="size-4.5" />
+        </button>
 
         <input
           ref={fileInputRef}
@@ -197,21 +238,45 @@ export function Composer({ onSubmit, disabled, placeholder = 'Ask anything…' }
             e.currentTarget.value = '';
           }}
         />
-        <button
-          type="button"
-          aria-label="Attach image"
-          onClick={() => fileInputRef.current?.click()}
-          disabled={disabled || images.length >= MAX_IMAGES}
-          className={cn(
-            'border-divider bg-bg-elev-2 inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border transition-colors',
-            'focus-visible:ring-brand/60 focus:outline-none focus-visible:ring-2',
-            disabled || images.length >= MAX_IMAGES
-              ? 'text-fg-subtle cursor-not-allowed opacity-60'
-              : 'text-fg-muted hover:text-fg',
-          )}
-        >
-          <ImagePlus className="size-4" />
-        </button>
+
+        <div className="relative flex-1">
+          <textarea
+            ref={ref}
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+            onFocus={() => setFocused(true)}
+            onBlur={() => setFocused(false)}
+            onPaste={handlePaste}
+            rows={1}
+            placeholder={placeholder}
+            disabled={disabled}
+            maxLength={MAX_TEXT_CHARS + 100}
+            className={cn(
+              'border-divider bg-bg-elev-1/60 backdrop-blur-sm w-full resize-none rounded-2xl border px-4 py-2.5 text-sm leading-relaxed',
+              'focus-visible:ring-brand/40 max-h-[200px] min-h-[44px] focus:outline-none focus-visible:ring-2',
+              'placeholder:text-fg-subtle text-fg',
+              'transition-colors duration-150',
+              focused && 'border-brand/50 bg-bg-elev-1/80',
+            )}
+            onInput={autoGrow}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                send();
+              }
+            }}
+          />
+          {showCharCount ? (
+            <span
+              className={cn(
+                'absolute bottom-1.5 right-3 text-[10px] tabular-nums',
+                overLimit ? 'text-bear font-semibold' : 'text-fg-subtle',
+              )}
+            >
+              {charCount}/{MAX_TEXT_CHARS}
+            </span>
+          ) : null}
+        </div>
 
         {voice.supported ? (
           <button
@@ -222,25 +287,35 @@ export function Composer({ onSubmit, disabled, placeholder = 'Ask anything…' }
             onClick={() => (voice.active ? voice.stop() : voice.start())}
             disabled={disabled}
             className={cn(
-              'border-divider bg-bg-elev-2 inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border transition-colors',
+              'glass-subtle inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl transition-colors',
               'focus-visible:ring-brand/60 focus:outline-none focus-visible:ring-2',
               voice.active ? 'text-bear' : 'text-fg-muted hover:text-fg',
               disabled ? 'cursor-not-allowed opacity-60' : '',
             )}
           >
-            {voice.active ? <RecordingDot /> : <Mic className="size-4" />}
+            {voice.active ? <RecordingDot /> : <Mic className="size-4.5" />}
           </button>
         ) : null}
 
-        <Button
+        <button
           type="submit"
-          size="sm"
-          disabled={disabled || value.trim().length === 0}
+          disabled={disabled || value.trim().length === 0 || overLimit}
           aria-label="Send message"
-          className="h-11 w-11 !p-0 rounded-xl"
+          className={cn(
+            'inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl font-semibold',
+            'text-brand-fg transition-opacity duration-150 hover:opacity-90',
+            'disabled:cursor-not-allowed disabled:opacity-40',
+            'focus-visible:ring-brand focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-bg',
+          )}
+          style={{
+            background:
+              'linear-gradient(135deg, oklch(80% 0.16 78) 0%, oklch(74% 0.18 60) 100%)',
+            boxShadow:
+              '0 8px 24px -8px oklch(78% 0.16 78 / 0.5), inset 0 1px 0 0 oklch(100% 0 0 / 0.18)',
+          }}
         >
-          <Send className="size-4" />
-        </Button>
+          <Send className="size-4.5" />
+        </button>
       </div>
     </form>
   );
@@ -250,7 +325,7 @@ function RecordingDot() {
   return (
     <span
       aria-hidden="true"
-      className="bg-bear inline-block h-3 w-3 animate-pulse rounded-full shadow-[0_0_0_3px_rgba(240,89,74,0.25)]"
+      className="bg-bear inline-block h-3.5 w-3.5 animate-pulse rounded-full shadow-[0_0_0_3px_rgba(240,89,74,0.25)]"
     />
   );
 }
