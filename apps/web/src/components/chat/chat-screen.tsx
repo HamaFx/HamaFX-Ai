@@ -6,29 +6,27 @@
 //
 //   ┌──────────────────────────────────┐
 //   │ ChatTopBar                       │ ← merged top bar (sticky, glass)
-//   │   ← back · title · thread menu   │   replaces both TopBar + PageHeader
+//   │   ☰  · title · new · menu        │
 //   ├──────────────────────────────────┤
 //   │                                  │
 //   │  message scroll area             │ ← flex-1, scrollable
-//   │  + scroll-to-bottom FAB          │
+//   │   (or empty state w/ prompts)    │
+//   │  + scroll-to-bottom pill         │
 //   │                                  │
 //   ├──────────────────────────────────┤
 //   │ Composer                         │ ← sticky, glass, full width
-//   │   pinned symbol · input · send   │
 //   └──────────────────────────────────┘
 //
-// Z-index: 50 to cover both the (app) layout's TopBar and BottomNav.
-// Safe-area: handled via env(safe-area-inset-top/bottom) on top + bottom rows.
-//
-// We do NOT mount a second AmbientBackground here — the (app) layout's
-// fixed `-z-10` ambient still shows through the chat surface (chat is a
-// stacking context but the ambient sits behind it on the body). Doubling
-// up cost a measurable iOS Safari paint when both `feTurbulence` filters
-// re-rendered on every scroll.
+// New in this iteration:
+//   - Empty state lives inside the scroll body and embeds quick-prompts so
+//     there's one inviting surface, not two competing panels.
+//   - Composer can now stop streaming (wired to AI SDK's `stop()`).
+//   - Last assistant message gets a Regenerate affordance (`regenerate()`).
+//   - Initial mount auto-scrolls to bottom (no flash of older content).
 
 import { useChat } from '@ai-sdk/react';
 import { DefaultChatTransport, type UIMessage } from 'ai';
-import { ArrowDown, RotateCcw } from 'lucide-react';
+import { ArrowDown, RotateCcw, Sparkles } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -70,13 +68,23 @@ export function ChatScreen({
     [threadId],
   );
 
-  const { messages, sendMessage, status, error } = useChat({
+  const { messages, sendMessage, regenerate, stop, status, error } = useChat({
     id: threadId,
     transport,
     messages: initialMessages,
   });
 
   const isStreaming = status === 'submitted' || status === 'streaming';
+  const isEmpty = messages.length === 0;
+
+  // Last assistant message id — used to attach the Regenerate button.
+  const lastAssistantId = useMemo(() => {
+    for (let i = messages.length - 1; i >= 0; i -= 1) {
+      const m = messages[i];
+      if (m && m.role === 'assistant') return m.id;
+    }
+    return undefined;
+  }, [messages]);
 
   // After streaming completes, re-fetch thread to pick up the LLM-generated title.
   useEffect(() => {
@@ -92,7 +100,6 @@ export function ChatScreen({
         const t = json.thread;
         if (t?.titleSource === 'llm' && t.title && !cancelled) {
           setTitle(t.title);
-          // Update the document title too.
           if (typeof document !== 'undefined') {
             document.title = `${t.title} · HamaFX-Ai`;
           }
@@ -106,7 +113,8 @@ export function ChatScreen({
     };
   }, [status, messages.length, threadId]);
 
-  // Track if user has scrolled away from the bottom — show the scroll-to-bottom button.
+  // Track if user has scrolled away from the bottom — show the scroll-to-
+  // bottom button.
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
@@ -120,7 +128,18 @@ export function ChatScreen({
     return () => el.removeEventListener('scroll', check);
   }, []);
 
-  // When new messages arrive, auto-scroll to bottom only if user was already near bottom.
+  // Initial scroll to bottom on mount (so we open at the latest message,
+  // not the first one) + auto-scroll on new messages if user is near
+  // bottom.
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    // Initial pin to bottom — rAF lets the message list paint first.
+    requestAnimationFrame(() => {
+      el.scrollTop = el.scrollHeight;
+    });
+  }, [threadId]);
+
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
@@ -150,14 +169,29 @@ export function ChatScreen({
 
       <div ref={scrollRef} className="scrollbar-hide relative flex-1 overflow-y-auto">
         <div className="mx-auto max-w-2xl">
-          <MessageList
-            messages={messages}
-            isStreaming={isStreaming}
-            onCopy={(text) => {
-              void navigator.clipboard.writeText(text);
-              toast.success('Copied');
-            }}
-          />
+          {isEmpty ? (
+            <EmptyChatState
+              pinnedSymbol={pinnedSymbol}
+              {...(isStreaming ? { disabled: true } : {})}
+              onSelect={(text) => {
+                lastUserTextRef.current = text;
+                void sendMessage({ text });
+              }}
+            />
+          ) : (
+            <MessageList
+              messages={messages}
+              isStreaming={isStreaming}
+              {...(lastAssistantId ? { lastAssistantId } : {})}
+              onCopy={(text) => {
+                void navigator.clipboard.writeText(text);
+                toast.success('Copied');
+              }}
+              onRegenerate={() => {
+                void regenerate();
+              }}
+            />
+          )}
           {error ? (
             <div
               role="alert"
@@ -189,25 +223,13 @@ export function ChatScreen({
             onClick={scrollToBottom}
             aria-label="Scroll to latest"
             className="glass-strong text-fg fixed left-1/2 z-30 inline-flex h-11 -translate-x-1/2 items-center gap-1.5 rounded-full px-4 text-xs font-medium"
-            style={{ bottom: 'var(--toast-bottom)' }}
+            style={{ bottom: 'calc(env(safe-area-inset-bottom) + 96px)' }}
           >
             <ArrowDown className="size-3.5" />
             Latest
           </button>
         ) : null}
       </div>
-
-      {messages.length <= 1 && !isStreaming ? (
-        <div className="mx-auto w-full max-w-2xl">
-          <QuickPrompts
-            onSelect={(text) => {
-              lastUserTextRef.current = text;
-              void sendMessage({ text });
-            }}
-            disabled={isStreaming}
-          />
-        </div>
-      ) : null}
 
       <div className="mx-auto w-full max-w-2xl">
         <Composer
@@ -227,12 +249,57 @@ export function ChatScreen({
               })),
             });
           }}
-          disabled={isStreaming}
+          onStop={() => stop()}
+          isStreaming={isStreaming}
+          disabled={false}
           placeholder={
             pinnedSymbol ? `Ask about ${pinnedSymbol}…` : 'Ask about XAU, EUR, GBP…'
           }
         />
       </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+
+interface EmptyChatStateProps {
+  pinnedSymbol: 'XAUUSD' | 'EURUSD' | 'GBPUSD' | null;
+  disabled?: boolean;
+  onSelect: (text: string) => void;
+}
+
+function EmptyChatState({ pinnedSymbol, disabled, onSelect }: EmptyChatStateProps) {
+  return (
+    <div className="flex min-h-[60svh] flex-col items-center justify-center gap-6 px-4 py-10 text-center">
+      <span
+        aria-hidden="true"
+        className="text-brand inline-flex size-20 items-center justify-center rounded-3xl"
+        style={{
+          backgroundImage: 'var(--gradient-brand-soft)',
+          boxShadow:
+            'inset 0 1px 0 0 oklch(100% 0 0 / 0.1), 0 0 40px -8px oklch(78% 0.16 78 / 0.4)',
+        }}
+      >
+        <Sparkles className="size-9" strokeWidth={1.75} />
+      </span>
+      <div className="flex max-w-md flex-col gap-2">
+        <h2 className="text-fg text-2xl font-bold tracking-tight">How can I help?</h2>
+        <p className="text-fg-muted text-sm leading-relaxed">
+          {pinnedSymbol
+            ? `Ask about ${pinnedSymbol} bias, structure, news, or set an alert.`
+            : 'Ask about gold, EUR, GBP — bias, structure, news, or set an alert.'}
+        </p>
+      </div>
+
+      <div className="w-full max-w-md">
+        <QuickPrompts onSelect={onSelect} {...(disabled ? { disabled: true } : {})} />
+      </div>
+
+      <p className="text-fg-subtle max-w-md text-[11px] leading-relaxed">
+        Numbers come from live tools — prices, candles, news, and the calendar are
+        fetched on demand. The copilot will say so when something can't be checked.
+      </p>
     </div>
   );
 }

@@ -2,17 +2,17 @@
 
 // Premium chat composer.
 //
-// Mobile-first features:
-//   - Auto-grow textarea (min-h 56, max ~200) so the first line is
-//     comfortable and 16px text size prevents iOS zoom-on-focus
-//   - Image attach (file picker + drag-drop) — up to 4 images per turn
-//   - Voice input via Web Speech API
-//   - Character count when approaching the limit
-//   - Drag-over highlight + drop handling
-//   - Sticky-at-bottom with safe-area padding
-//   - Glass surface that lifts on focus
+// New in this iteration:
+//   - When `isStreaming` is true the Send button morphs into a Stop button
+//     (square indicator + amber ring) wired to the AI SDK's `stop()`.
+//   - When voice input is active the mic gets a soft "mic-pulse" ring
+//     and a "Listening…" caption appears above the row so the user gets
+//     unambiguous state feedback.
+//   - Keyboard hint "Enter to send · Shift+Enter for new line" surfaces
+//     on focus (desktop only — hidden on touch).
+//   - Image thumbnail rail is keyboard-focusable for delete.
 
-import { ImagePlus, Mic, Send } from 'lucide-react';
+import { ArrowUp, ImagePlus, Mic, Square } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
 import { useVoiceInput } from '@/hooks/use-voice-input';
@@ -27,6 +27,8 @@ export interface ComposerImage {
 
 interface ComposerProps {
   onSubmit: (text: string, images: ComposerImage[]) => void;
+  onStop?: () => void;
+  isStreaming?: boolean;
   disabled?: boolean;
   placeholder?: string;
 }
@@ -37,23 +39,34 @@ const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 const MAX_TEXT_CHARS = 8000;
 const SOFT_LIMIT_CHARS = 7500;
 
-export function Composer({ onSubmit, disabled, placeholder = 'Ask anything…' }: ComposerProps) {
+export function Composer({
+  onSubmit,
+  onStop,
+  isStreaming,
+  disabled,
+  placeholder = 'Ask anything…',
+}: ComposerProps) {
   const [value, setValue] = useState('');
   const [images, setImages] = useState<ComposerImage[]>([]);
   const [imageError, setImageError] = useState<string | null>(null);
   const [focused, setFocused] = useState(false);
   const [dragOver, setDragOver] = useState(false);
+  const [isTouch, setIsTouch] = useState(false);
   const ref = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Detect touch once on mount so we can hide desktop-only affordances.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    setIsTouch('ontouchstart' in window);
+  }, []);
+
   // Auto-focus on desktop after mount and after streaming completes.
   useEffect(() => {
-    if (ref.current && !disabled) {
-      // Don't steal focus on touch devices — iOS will pop the keyboard.
-      const isTouch = typeof window !== 'undefined' && 'ontouchstart' in window;
-      if (!isTouch) ref.current.focus();
+    if (ref.current && !disabled && !isTouch) {
+      ref.current.focus();
     }
-  }, [disabled]);
+  }, [disabled, isTouch]);
 
   const [lang, setLang] = useState(DEFAULT_LANG);
   useEffect(() => {
@@ -73,14 +86,12 @@ export function Composer({ onSubmit, disabled, placeholder = 'Ask anything…' }
     const t = ref.current;
     if (!t) return;
     t.style.height = 'auto';
-    // Cap at 200px (~6 lines) — keeps the message visible above the
-    // composer even when expanded.
     t.style.height = `${Math.min(t.scrollHeight, 200)}px`;
   }
 
   function send() {
     const trimmed = value.trim();
-    if (!trimmed || disabled) return;
+    if (!trimmed || disabled || isStreaming) return;
     if (trimmed.length > MAX_TEXT_CHARS) {
       setImageError(`Message too long (max ${MAX_TEXT_CHARS} chars)`);
       return;
@@ -91,7 +102,7 @@ export function Composer({ onSubmit, disabled, placeholder = 'Ask anything…' }
     setImageError(null);
     requestAnimationFrame(() => {
       autoGrow();
-      ref.current?.focus();
+      if (!isTouch) ref.current?.focus();
     });
   }
 
@@ -164,6 +175,7 @@ export function Composer({ onSubmit, disabled, placeholder = 'Ask anything…' }
   const charCount = value.length;
   const showCharCount = charCount > SOFT_LIMIT_CHARS;
   const overLimit = charCount > MAX_TEXT_CHARS;
+  const canSend = !disabled && !isStreaming && value.trim().length > 0 && !overLimit;
 
   return (
     <form
@@ -184,6 +196,19 @@ export function Composer({ onSubmit, disabled, placeholder = 'Ask anything…' }
       onDragLeave={() => setDragOver(false)}
       onDrop={handleDrop}
     >
+      {/* Voice listening pill — appears above the row when active so the
+          user can see real-time STT state without losing the textarea. */}
+      {voice.active ? (
+        <div
+          role="status"
+          aria-live="polite"
+          className="bg-bear/10 ring-bear/30 text-bear mx-auto inline-flex items-center gap-2 self-center rounded-full px-3 py-1 text-[11px] font-medium ring-1"
+        >
+          <span className="bg-bear size-1.5 animate-pulse rounded-full" />
+          Listening…
+        </div>
+      ) : null}
+
       {images.length > 0 ? (
         <ul className="flex flex-wrap gap-2" aria-label="Attached images">
           {images.map((img, idx) => (
@@ -253,8 +278,6 @@ export function Composer({ onSubmit, disabled, placeholder = 'Ask anything…' }
             placeholder={placeholder}
             disabled={disabled}
             maxLength={MAX_TEXT_CHARS + 100}
-            // text-base = 16px so iOS Safari does not auto-zoom on focus.
-            // min-h matches the surrounding 48px button row (h-12).
             className={cn(
               'border-divider bg-bg-elev-1/60 backdrop-blur-sm w-full resize-none rounded-2xl border px-4 py-3 text-base leading-relaxed',
               'focus-visible:ring-brand/40 max-h-[200px] min-h-[48px] focus:outline-none focus-visible:ring-2',
@@ -293,41 +316,61 @@ export function Composer({ onSubmit, disabled, placeholder = 'Ask anything…' }
             className={cn(
               'glass-subtle inline-flex size-12 shrink-0 items-center justify-center rounded-xl transition-colors',
               'focus-visible:ring-brand/60 focus:outline-none focus-visible:ring-2',
-              voice.active ? 'text-bear' : 'text-fg-muted hover:text-fg',
+              voice.active ? 'text-bear mic-pulse' : 'text-fg-muted hover:text-fg',
               disabled ? 'cursor-not-allowed opacity-60' : '',
             )}
           >
-            {voice.active ? <RecordingDot /> : <Mic className="size-5" />}
+            <Mic className="size-5" />
           </button>
         ) : null}
 
-        <button
-          type="submit"
-          disabled={disabled || value.trim().length === 0 || overLimit}
-          aria-label="Send message"
-          className={cn(
-            'inline-flex size-12 shrink-0 items-center justify-center rounded-xl font-semibold',
-            'text-brand-fg transition-opacity duration-150 hover:opacity-90',
-            'disabled:cursor-not-allowed disabled:opacity-40',
-            'focus-visible:ring-brand focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-bg',
-          )}
-          style={{
-            backgroundImage: 'var(--gradient-brand)',
-            boxShadow: 'var(--shadow-brand-press)',
-          }}
-        >
-          <Send className="size-5" />
-        </button>
+        {/* Send / Stop morph. Single button; the icon and styling change
+            based on `isStreaming`. Wiring stop() to the same button means
+            the user's thumb stays in one place across the whole turn. */}
+        {isStreaming && onStop ? (
+          <button
+            type="button"
+            onClick={onStop}
+            aria-label="Stop generating"
+            className="bg-bear/15 text-bear ring-bear/40 inline-flex size-12 shrink-0 items-center justify-center rounded-xl ring-1 transition-opacity duration-150 hover:opacity-90 focus:outline-none focus-visible:ring-2"
+          >
+            <Square className="size-4 fill-current" strokeWidth={0} />
+          </button>
+        ) : (
+          <button
+            type="submit"
+            disabled={!canSend}
+            aria-label="Send message"
+            className={cn(
+              'inline-flex size-12 shrink-0 items-center justify-center rounded-xl font-semibold',
+              'text-brand-fg transition-opacity duration-150 hover:opacity-90',
+              'disabled:cursor-not-allowed disabled:opacity-40',
+              'focus-visible:ring-brand focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-bg',
+            )}
+            style={{
+              backgroundImage: 'var(--gradient-brand)',
+              boxShadow: 'var(--shadow-brand-press)',
+            }}
+          >
+            <ArrowUp className="size-5" strokeWidth={2.5} />
+          </button>
+        )}
       </div>
-    </form>
-  );
-}
 
-function RecordingDot() {
-  return (
-    <span
-      aria-hidden="true"
-      className="bg-bear inline-block size-3.5 animate-pulse rounded-full shadow-[0_0_0_3px_rgba(240,89,74,0.25)]"
-    />
+      {/* Desktop-only keyboard hint. Renders only after focus to avoid
+          adding noise to a quiet idle state. */}
+      {focused && !isTouch && !isStreaming ? (
+        <p className="text-fg-subtle px-1 text-[10px] tabular-nums">
+          <kbd className="bg-bg-elev-2 ring-divider rounded border ring-1 px-1.5 font-mono">
+            Enter
+          </kbd>{' '}
+          to send ·{' '}
+          <kbd className="bg-bg-elev-2 ring-divider rounded border ring-1 px-1.5 font-mono">
+            Shift + Enter
+          </kbd>{' '}
+          for new line
+        </p>
+      ) : null}
+    </form>
   );
 }

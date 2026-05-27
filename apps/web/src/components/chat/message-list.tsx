@@ -1,35 +1,41 @@
 'use client';
 
 // Message scroll body. Auto-scroll handled by the parent (chat-screen.tsx).
+// Empty state is rendered by chat-screen, not here — this file is concerned
+// only with rendering an existing message stream + the typing dots.
 
 import type { UIMessage } from 'ai';
-import { Sparkles } from 'lucide-react';
-
-import { EmptyState } from '@/components/ui/empty-state';
 
 import { Message } from './message';
 
 interface MessageListProps {
   messages: UIMessage[];
   isStreaming?: boolean;
+  /** Index of the last assistant message — gets the regenerate affordance. */
+  lastAssistantId?: string;
   onCopy?: (text: string) => void;
+  onRegenerate?: () => void;
 }
 
-export function MessageList({ messages, isStreaming, onCopy }: MessageListProps) {
+export function MessageList({
+  messages,
+  isStreaming,
+  lastAssistantId,
+  onCopy,
+  onRegenerate,
+}: MessageListProps) {
   return (
     <div className="flex flex-col gap-4 px-4 py-4">
-      {messages.length === 0 ? (
-        <EmptyState
-          bare
-          tone="brand"
-          icon={<Sparkles className="size-8" strokeWidth={1.75} />}
-          title="How can I help?"
-          description="Bias on gold, top-down read, today's news, or set an alert."
-          className="my-12"
+      {messages.map((m) => (
+        <Message
+          key={m.id}
+          message={m}
+          {...(onCopy ? { onCopy } : {})}
+          {...(onRegenerate && m.id === lastAssistantId && !isStreaming
+            ? { onRegenerate }
+            : {})}
         />
-      ) : (
-        messages.map((m) => <Message key={m.id} message={m} {...(onCopy ? { onCopy } : {})} />)
-      )}
+      ))}
       {isStreaming ? (
         <div className="flex justify-start">
           <div

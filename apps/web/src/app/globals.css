@@ -41,9 +41,8 @@
   --color-accent: oklch(72% 0.18 295);
   --color-accent-glow: oklch(72% 0.18 295 / 0.3);
 
-  /* market states — bull (green) and warn (amber) are intentionally far apart
-   * in luminance so deuteranopes can still distinguish them. Always pair with
-   * an icon/shape per UX rule §10 (color-not-only). */
+  /* market states — bull (green) and warn (amber) intentionally far apart
+   * in luminance so deuteranopes can still distinguish them. */
   --color-bull: oklch(72% 0.2 152);
   --color-bear: oklch(68% 0.24 25);
   --color-neutral: oklch(70% 0.02 265);
@@ -76,21 +75,18 @@
 }
 
 /* -------------------------------------------------------------------------
- * Layout tokens — referenced by JS calc() expressions and sticky offsets so
- * the chrome heights live in exactly one place.
+ * Layout tokens — referenced by JS calc() expressions and sticky offsets
+ * so the chrome heights live in exactly one place. With the bottom nav
+ * removed in favour of a left side drawer, only --topbar-h remains as a
+ * shell-height token; FAB / toast clearances now reference the home
+ * indicator only.
  * ------------------------------------------------------------------------- */
 :root {
-  /* App-shell chrome heights. Matches the rendered measurements of
-     <TopBar/> and <BottomNav/> on iPhone 14 Pro Max. */
-  --topbar-h: 48px;
-  --bottom-nav-h: 88px;
-  /* FAB clearance: BottomNav height + 8px gap. Steering rule 13. */
-  --fab-bottom: calc(var(--bottom-nav-h) + 8px + env(safe-area-inset-bottom));
-  /* Toast/banner clearance: above BottomNav home-indicator pad. */
-  --toast-bottom: calc(var(--bottom-nav-h) + 12px + env(safe-area-inset-bottom));
+  --topbar-h: 56px;
+  --fab-bottom: calc(env(safe-area-inset-bottom) + 16px);
+  --toast-bottom: calc(env(safe-area-inset-bottom) + 16px);
 
-  /* 8-point grid system. All component spacing should reference these so
-     visual rhythm stays consistent across breakpoints. */
+  /* 8-point grid system. */
   --space-1: 4px;
   --space-2: 8px;
   --space-3: 12px;
@@ -102,20 +98,12 @@
   --space-9: 80px;
   --space-10: 96px;
 
-  /* Minimum interactive size (Apple HIG / Material). Use as
-     `min-height: var(--touch-min)` rather than ad-hoc px values. */
+  /* Minimum interactive size (Apple HIG / Material). */
   --touch-min: 44px;
-
-  /* Type scale: documented in steering/30-ui.md. text-base is intentionally
-     16px (Tailwind default) — the steering doc previously said 15px. */
-  /* No overrides — kept here only for reference. */
 }
 
 /* -------------------------------------------------------------------------
- * Themeable gradients & shadows. Components reference these instead of
- * hard-coding OKLCH values inline so a future light-theme or rebrand
- * touches one file. Use via `bg-[image:var(--gradient-brand)]` in Tailwind
- * v4, or `style={{ backgroundImage: 'var(--gradient-brand)' }}`.
+ * Themeable gradients & shadows.
  * ------------------------------------------------------------------------- */
 :root {
   --gradient-brand: linear-gradient(
@@ -139,11 +127,9 @@
     oklch(74% 0.16 230) 100%
   );
 
-  /* Reusable inset highlight — gives buttons/pills the subtle top edge. */
   --shadow-inset-edge: inset 0 1px 0 0 oklch(100% 0 0 / 0.15);
   --shadow-inset-edge-soft: inset 0 1px 0 0 oklch(100% 0 0 / 0.08);
 
-  /* Brand-tinted cast shadow used by primary buttons and FAB. */
   --shadow-brand-press: 0 8px 24px -6px oklch(78% 0.16 78 / 0.5), var(--shadow-inset-edge);
   --shadow-brand-press-strong:
     0 12px 32px -8px oklch(78% 0.16 78 / 0.55),
@@ -167,7 +153,6 @@
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
-    /* Subtle vignette so the edges feel "lit" */
     background-image:
       radial-gradient(
         ellipse 80% 60% at 50% -10%,
@@ -182,26 +167,22 @@
     background-attachment: fixed;
   }
 
-  /* Tabular figures + stylistic set 01 for legible price readouts. */
   .tabular-nums {
     font-variant-numeric: tabular-nums;
     font-feature-settings: 'tnum', 'cv01';
   }
 
-  /* Visible focus rings, always. */
   :focus-visible {
     outline: 2px solid var(--color-brand);
     outline-offset: 2px;
     border-radius: var(--radius-sm);
   }
 
-  /* Selection highlight */
   ::selection {
     background-color: oklch(78% 0.16 78 / 0.35);
     color: var(--color-fg);
   }
 
-  /* Hide scrollbars on mobile (gestures preferred); keep on desktop. */
   @media (max-width: 767px) {
     .scrollbar-hide {
       scrollbar-width: none;
@@ -211,7 +192,6 @@
     }
   }
 
-  /* Refined desktop scrollbar */
   @media (min-width: 768px) {
     ::-webkit-scrollbar {
       width: 8px;
@@ -232,7 +212,6 @@
     }
   }
 
-  /* Skip-to-main link — visible only when focused. WCAG §2.4.1. */
   .skip-to-main {
     position: fixed;
     top: -100px;
@@ -256,7 +235,7 @@
 }
 
 /* -------------------------------------------------------------------------
- * Component utilities — glass surfaces and premium effects
+ * Component utilities
  * ------------------------------------------------------------------------- */
 
 @utility glass {
@@ -298,7 +277,6 @@
   border: 1px solid oklch(80% 0.02 265 / 0.06);
 }
 
-/* Card with gradient border + subtle inner glow */
 @utility card-premium {
   position: relative;
   background: linear-gradient(
@@ -315,7 +293,6 @@
     var(--shadow-md);
 }
 
-/* Animated brand glow (used on hover/active) */
 @utility glow-brand {
   box-shadow: var(--shadow-glow-brand);
 }
@@ -324,7 +301,6 @@
   box-shadow: var(--shadow-glow-accent);
 }
 
-/* Safe-area helpers */
 @utility pt-safe {
   padding-top: env(safe-area-inset-top);
 }
@@ -345,7 +321,7 @@
 }
 
 /* -------------------------------------------------------------------------
- * Keyframes — only what's still in use
+ * Keyframes
  * ------------------------------------------------------------------------- */
 
 @keyframes shimmer {
@@ -353,7 +329,6 @@
   100% { background-position: 200% 0; }
 }
 
-/* Skeleton shimmer */
 .shimmer {
   background: linear-gradient(
     90deg,
@@ -365,8 +340,6 @@
   animation: shimmer 1.8s infinite linear;
 }
 
-/* Subtle stale-indicator pulse — used by <StaleIndicator> when a query is
- * background-refetching. Distinct from .shimmer so it can stack. */
 @keyframes stale-pulse {
   0%, 100% { opacity: 0.4; }
   50% { opacity: 1; }
@@ -375,7 +348,22 @@
   animation: stale-pulse 1.4s ease-in-out infinite;
 }
 
-/* Respect prefers-reduced-motion globally. */
+/* Mic recording — soft amber pulse ring around the trigger. */
+@keyframes mic-pulse {
+  0% {
+    box-shadow: 0 0 0 0 oklch(68% 0.24 25 / 0.5);
+  }
+  70% {
+    box-shadow: 0 0 0 12px oklch(68% 0.24 25 / 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 oklch(68% 0.24 25 / 0);
+  }
+}
+.mic-pulse {
+  animation: mic-pulse 1.6s ease-out infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -385,4 +373,41 @@
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+}
+
+/* -------------------------------------------------------------------------
+ * Markdown-light: minimal styling for the assistant's text part. We do
+ * not parse HTML — the renderer in chat/parts/text.tsx walks tokens and
+ * builds DOM nodes. These classes apply to that resulting tree so the
+ * spacing/typography are consistent with the rest of the chat surface.
+ * ------------------------------------------------------------------------- */
+.md-prose {
+  line-height: 1.6;
+}
+.md-prose strong {
+  color: var(--color-fg);
+  font-weight: 600;
+}
+.md-prose em {
+  font-style: italic;
+  color: var(--color-fg);
+}
+.md-prose code {
+  font-family: var(--font-mono);
+  font-size: 0.875em;
+  background: oklch(20% 0.022 265 / 0.7);
+  border: 1px solid var(--color-divider);
+  border-radius: 6px;
+  padding: 1px 5px;
+}
+.md-prose ul {
+  margin: 8px 0;
+  padding-left: 18px;
+  list-style: disc;
+}
+.md-prose ul li {
+  margin-top: 4px;
+}
+.md-prose ul li::marker {
+  color: var(--color-fg-subtle);
 }

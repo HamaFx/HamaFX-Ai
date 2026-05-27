@@ -3,9 +3,9 @@
 // Floating action button. Static position, brand gradient with ambient glow.
 // No scale/translate animations — just opacity hover for stability.
 //
-// Positioning references the design tokens defined in globals.css:
-//   bottom = --fab-bottom = --bottom-nav-h + 8px + safe-area-inset-bottom
-// Update --bottom-nav-h in :root and every FAB shifts in lockstep.
+// Positioning references the --fab-bottom token defined in globals.css.
+// With the bottom nav removed, that token now equals the safe-area inset
+// plus a 16px breathing gap.
 
 import { forwardRef, type ButtonHTMLAttributes } from 'react';
 

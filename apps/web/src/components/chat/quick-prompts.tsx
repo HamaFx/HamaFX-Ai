@@ -1,15 +1,8 @@
 'use client';
 
-// Quick-prompt cards rendered when the thread is empty.
-//
-// Mobile-first sizing on the 8-pt grid:
-//   - card height:   64px (h-16) — comfortable thumb-zone target
-//   - icon tile:     40×40 (size-10) — clearly tappable
-//   - inner gap:     12 (gap-3)
-//   - outer gap:     8  (gap-2 in grid)
-//
-// Color is semantic, not decorative: bias→brand, structure→info,
-// calendar→accent, alert→warn.
+// Quick-prompt chips. Mounted inside the empty-state of the chat surface
+// rather than as a separate panel above the composer — the user sees one
+// inviting block instead of two competing surfaces.
 
 import { BarChart3, Bell, CalendarDays, LineChart, TrendingUp } from 'lucide-react';
 
@@ -62,7 +55,7 @@ const PROMPTS: readonly Prompt[] = [
 
 export function QuickPrompts({ onSelect, disabled }: QuickPromptsProps) {
   return (
-    <div className="grid grid-cols-2 gap-2 px-3 pb-3">
+    <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
       {PROMPTS.map((p) => {
         const Icon = p.icon;
         return (
@@ -71,7 +64,7 @@ export function QuickPrompts({ onSelect, disabled }: QuickPromptsProps) {
             type="button"
             disabled={disabled}
             onClick={() => onSelect(p.label)}
-            className="glass-subtle text-fg hover:bg-bg-elev-2 focus-visible:ring-brand flex h-16 items-center gap-3 rounded-2xl px-3 text-left text-xs font-medium transition-colors focus:outline-none focus-visible:ring-2 disabled:opacity-50"
+            className="glass-subtle text-fg hover:bg-bg-elev-2 focus-visible:ring-brand flex h-16 items-center gap-3 rounded-2xl px-3 text-left text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 disabled:opacity-50"
           >
             <span
               className={`shrink-0 inline-flex size-10 items-center justify-center rounded-xl ${p.fg}`}

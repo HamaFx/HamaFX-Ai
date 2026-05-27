@@ -1,5 +1,4 @@
 import { AmbientBackground } from '@/components/layout/ambient-background';
-import { BottomNav } from '@/components/layout/bottom-nav';
 import { OfflineBanner } from '@/components/layout/offline-banner';
 import { SkipToContent } from '@/components/layout/skip-to-content';
 import { TopBar } from '@/components/layout/top-bar';
@@ -8,18 +7,18 @@ import { MotionRoot } from '@/components/ui/motion-config';
 import { Toaster } from '@/components/ui/toaster';
 
 /**
- * Mobile-first shell shared by all authenticated pages.
+ * Mobile-first shell shared by all authenticated pages. Layout layers:
  *
- * Layout layers (back → front):
  *   1. <SkipToContent/>       a11y skip link, visible on focus only
  *   2. <AmbientBackground/>   fixed -z-10, three blurred orbs + noise
  *   3. main content           page body (id="main-content")
- *   4. <TopBar/>              sticky top, glass
- *   5. <BottomNav/>           fixed bottom, glass
- *   6. <Toaster/>             bottom-center toasts above nav
+ *   4. <TopBar/>              sticky top, glass — hosts the <NavDrawer/>
+ *   5. <Toaster/>             bottom-center toasts above safe-area
  *
- * Heights are driven by the layout tokens in globals.css:
- *   --topbar-h, --bottom-nav-h, --fab-bottom, --toast-bottom
+ * Bottom navigation has been removed: the nav drawer (left-side sheet)
+ * accessed from the top-bar Menu icon is the single primary navigation.
+ * That gives every page the full vertical canvas back — especially useful
+ * on tall iPhones where 88px of bottom chrome was eating real estate.
  */
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -33,15 +32,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           id="main-content"
           tabIndex={-1}
           className="mx-auto w-full max-w-2xl px-4 pt-4 focus:outline-none"
-          style={{
-            paddingBottom:
-              'calc(var(--bottom-nav-h) + env(safe-area-inset-bottom) + 24px)',
-          }}
+          style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 24px)' }}
         >
           {children}
         </main>
         <OfflineBanner />
-        <BottomNav />
         <Toaster />
       </div>
     </MotionRoot>

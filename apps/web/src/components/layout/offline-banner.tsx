@@ -4,9 +4,9 @@ import { WifiOff } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 /**
- * Sticky pill rendered above the BottomNav while the browser reports it is
- * offline. Renders nothing while online. Listens to `online`/`offline` events
- * to flip state. The Retry button calls `location.reload()`. See design §6.
+ * Sticky pill rendered above the home indicator while the browser reports
+ * it is offline. Renders nothing while online. Listens to `online`/`offline`
+ * events to flip state. The Retry button calls `location.reload()`.
  */
 export function OfflineBanner() {
   // Default to `true` so the banner does not flash during SSR/first paint;
