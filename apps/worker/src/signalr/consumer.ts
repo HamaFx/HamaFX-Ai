@@ -1,7 +1,7 @@
 // BiQuote SignalR consumer. Holds a single persistent hub connection,
 // subscribes to the three supported symbols, validates incoming ticks
-// against the BiquoteTick schema, normalises them to LiveTick shape, and
-// hands them to a caller-supplied `onTick` handler.
+// against the BiquoteSignalRTick schema, normalises them to LiveTick
+// shape, and hands them to a caller-supplied `onTick` handler.
 //
 // The hub client itself is injected via the `buildConnection` factory so
 // tests can stub `@microsoft/signalr` without monkey-patching modules. In
@@ -17,7 +17,13 @@
 // Phase 8 PR-6 — feeds `live_ticks` (this PR). PR-7 wires the same `onTick`
 // to the in-process 1m candle aggregator.
 
-import { BiquoteTickSchema, isSymbol, SYMBOLS, type Symbol } from '@hamafx/shared';
+import {
+  BiquoteSignalRTickSchema,
+  isSymbol,
+  SYMBOLS,
+  type BiquoteSignalRTick,
+  type Symbol,
+} from '@hamafx/shared';
 
 import type { Logger } from '../log.js';
 import { DEFAULT_RECONNECT_DELAYS } from './reconnect.js';
@@ -147,17 +153,23 @@ export class SignalRConsumer {
   }
 
   /**
-   * Handle one raw tick. Validates against BiquoteTickSchema, drops if the
-   * symbol isn't one of our three, normalises to a LiveTick-shaped DTO,
-   * and dispatches to `onTick`.
+   * Handle one raw tick. Validates against BiquoteSignalRTickSchema,
+   * drops if the symbol isn't one of our three, normalises to a
+   * LiveTick-shaped DTO, and dispatches to `onTick`.
    *
    * Exposed for tests; SignalR itself drives this via `on('ReceiveTick', ...)`.
    */
   handleTick(raw: unknown): void {
-    const parsed = BiquoteTickSchema.safeParse(raw);
+    const parsed = BiquoteSignalRTickSchema.safeParse(raw);
     if (!parsed.success) {
+      // Log the raw payload's keys (NOT values — they may contain bid/ask
+      // info we'd rather not splatter). The first time we see a new shape
+      // this catches it.
+      const keys =
+        raw !== null && typeof raw === 'object' ? Object.keys(raw as Record<string, unknown>) : [];
       this.opts.log.warn('signalr tick rejected: invalid shape', {
         issues: parsed.error.issues.slice(0, 3).map((i) => i.path.join('.')),
+        observedKeys: keys.slice(0, 12),
       });
       return;
     }
@@ -170,9 +182,11 @@ export class SignalRConsumer {
       return;
     }
 
-    const ts = Date.parse(tick.time);
-    if (Number.isNaN(ts)) {
-      this.opts.log.warn('signalr tick rejected: bad time', { time: tick.time });
+    const ts = parseTickTimestamp(tick.timestamp);
+    if (ts === null) {
+      this.opts.log.warn('signalr tick rejected: bad timestamp', {
+        timestamp: String(tick.timestamp).slice(0, 60),
+      });
       return;
     }
 
@@ -198,6 +212,24 @@ export class SignalRConsumer {
   isStarted(): boolean {
     return this.started;
   }
+}
+
+/**
+ * Parse a SignalR tick's `timestamp` field. Accepts:
+ *   - number: ms epoch UTC, returned as-is.
+ *   - string: ISO-8601 UTC; runs through `Date.parse` and returns ms epoch.
+ * Returns null on un-parseable input.
+ */
+function parseTickTimestamp(input: number | string): number | null {
+  if (typeof input === 'number') {
+    if (!Number.isFinite(input) || input < 0) return null;
+    // Heuristic: if the number is small (< 1e12), assume seconds and
+    // promote to ms. BiQuote pushes ms, but defending against any future
+    // server-side format change is cheap.
+    return input < 1_000_000_000_000 ? input * 1000 : input;
+  }
+  const t = Date.parse(input);
+  return Number.isNaN(t) ? null : t;
 }
 
 /**

@@ -18,9 +18,12 @@ const VALID_BIQUOTE_TICK = {
   ask: 2390.32,
   last: 2390.22,
   volume: 0,
-  time: '2026-05-27T18:35:01Z',
-  source: 'MT5',
-  type: 'Forex',
+  timestamp: 1748378101000,
+  source: 0,
+  high: 2392,
+  low: 2388,
+  direction: 1,
+  dayDiffPercent: 0.4,
 };
 
 interface FakeConnectionState {
@@ -148,7 +151,7 @@ describe('SignalRConsumer.handleTick', () => {
     expect(t.ask).toBeCloseTo(2390.32);
     expect(t.mid).toBeCloseTo(2390.22);
     expect(t.source).toBe('biquote-signalr');
-    expect(t.ts).toBe(Date.parse('2026-05-27T18:35:01Z'));
+    expect(t.ts).toBe(1748378101000);
   });
 
   it('drops ticks that fail schema validation (no onTick call)', async () => {
@@ -164,7 +167,8 @@ describe('SignalRConsumer.handleTick', () => {
 
     consumer.handleTick({ malformed: true });
     consumer.handleTick(null);
-    consumer.handleTick({ ...VALID_BIQUOTE_TICK, source: 'YAHOO' });
+    // missing required fields
+    consumer.handleTick({ symbol: 'XAUUSD' });
 
     expect(onTick).not.toHaveBeenCalled();
   });
@@ -180,8 +184,8 @@ describe('SignalRConsumer.handleTick', () => {
     });
     await consumer.start();
 
-    // BiquoteTickSchema accepts any string symbol, but our consumer drops
-    // anything that isn't one of XAUUSD/EURUSD/GBPUSD.
+    // BiquoteSignalRTickSchema accepts any string symbol, but our consumer
+    // drops anything that isn't one of XAUUSD/EURUSD/GBPUSD.
     consumer.handleTick({ ...VALID_BIQUOTE_TICK, symbol: 'BTCUSD' });
     expect(onTick).not.toHaveBeenCalled();
   });

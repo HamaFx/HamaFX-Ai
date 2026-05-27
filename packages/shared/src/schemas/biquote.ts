@@ -20,12 +20,14 @@
 import { z } from 'zod';
 
 /**
- * BiQuote tick payload — REST `GET /api/{symbol}` response and SignalR
- * `ReceiveTick` event share this shape.
+ * BiQuote tick payload — REST `GET /api/{symbol}` response.
  *
  * `time` is ISO-8601 UTC. `volume` is 0 for FX (BiQuote-side, not us).
  * `source` discriminates which upstream feed BiQuote used: `MT5` is their
  * MetaTrader 5 bridge, `MTX` is their Matriks feed.
+ *
+ * The SignalR push uses a slightly different shape — see
+ * `BiquoteSignalRTickSchema` below.
  */
 export const BiquoteTickSchema = z.object({
   symbol: z.string().min(1),
@@ -42,6 +44,45 @@ export const BiquoteTickSchema = z.object({
 });
 
 export type BiquoteTick = z.infer<typeof BiquoteTickSchema>;
+
+/**
+ * BiQuote SignalR `ReceiveTick` push payload. Differs from the REST
+ * shape:
+ *   - `timestamp` (ms epoch number), not `time` (ISO string).
+ *   - `source` is a numeric enum (0/1), not a string.
+ *   - `type` field is absent; the server stops sending it on the hot path.
+ *   - extra fields (`high`, `low`, `direction`, `dayDiffPercent`,
+ *     `description`) are forwarded but optional from our point of view.
+ *
+ * We map both shapes into the same internal `NormalizedTick` shape in
+ * the consumer.
+ */
+export const BiquoteSignalRTickSchema = z.object({
+  symbol: z.string().min(1),
+  bid: z.number().finite(),
+  ask: z.number().finite(),
+  last: z.number().finite(),
+  volume: z.number().finite(),
+  /**
+   * Per BiQuote's wire format, the SignalR push timestamp is either
+   * milliseconds since epoch (number) or an ISO string. Accept both so
+   * a future server-side change doesn't trip the consumer.
+   */
+  timestamp: z.union([z.number().int().nonnegative(), z.string().min(1)]),
+  /** Numeric enum or string — accept either. */
+  source: z.union([z.number().int(), z.string().min(1)]),
+  // Extras BiQuote forwards. We accept anything that's a finite number /
+  // string / null / missing — the consumer never reads them, but failing
+  // to validate them would drop every tick.
+  high: z.number().finite().nullable().optional(),
+  low: z.number().finite().nullable().optional(),
+  /** Direction is sometimes a number (1, 0, -1), sometimes a string. */
+  direction: z.union([z.number(), z.string(), z.null()]).optional(),
+  dayDiffPercent: z.number().finite().nullable().optional(),
+  description: z.string().nullable().optional(),
+});
+
+export type BiquoteSignalRTick = z.infer<typeof BiquoteSignalRTickSchema>;
 
 /**
  * BiQuote OHLC bar — `GET /api/{symbol}/ohlc?tf=&limit=` response item.
