@@ -1,15 +1,36 @@
 // End-to-end tests for the price adapter using a URL-routed mock fetch.
-// The price adapter now tries BiQuote first (Phase 8 PR-4), then Twelve
-// Data, then Finnhub — so tests need to be explicit about which provider
-// is expected to answer.
+// The price adapter now tries:
+//   1. live_ticks pseudo-provider (Phase 8 PR-8)
+//   2. BiQuote REST (Phase 8 PR-4)
+//   3. Twelve Data
+//   4. Finnhub
+// so tests need to be explicit about which provider is expected to answer.
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { ProviderError } from '../src/errors';
+
+// Auto-mock the live-ticks pseudo-provider for every test in this file —
+// most tests don't have a Postgres connection so we make the live_ticks
+// attempt always throw a ProviderError, which forces failover to the
+// network providers. Individual tests that DO want to exercise live_ticks
+// override this with `vi.mocked(fetchLiveTick).mockImplementationOnce(...)`.
+vi.mock('../src/providers/live-ticks', () => ({
+  fetchLiveTick: vi.fn().mockImplementation(() => {
+    throw new ProviderError(
+      'PROVIDER_HTTP_ERROR',
+      'live-ticks',
+      'live_ticks not configured (test default)',
+    );
+  }),
+}));
 
 import { getPrice, getPriceWithMeta } from '../src/adapters/price';
 import { setDefaultCache } from '../src/cache';
 import { MemoryCache } from '../src/cache/memory';
 import { _resetThrottle } from '../src/cache/throttle';
 import { _resetHealth } from '../src/health';
+import { fetchLiveTick } from '../src/providers/live-ticks';
 
 const ORIGINAL_FETCH = globalThis.fetch;
 
@@ -63,6 +84,16 @@ beforeEach(() => {
   setDefaultCache(new MemoryCache());
   _resetThrottle();
   _resetHealth();
+  // Reset the live_ticks mock to "throw ProviderError" so failover skips
+  // it and tests below this point exercise the network path. Tests that
+  // explicitly want a live_ticks hit re-set the implementation.
+  vi.mocked(fetchLiveTick).mockImplementation(() => {
+    throw new ProviderError(
+      'PROVIDER_HTTP_ERROR',
+      'live-ticks',
+      'live_ticks not configured (test default)',
+    );
+  });
 });
 
 afterEach(() => {
@@ -187,5 +218,39 @@ describe('getPriceWithMeta — Phase 7a SWR (still works post-PR-4)', () => {
     const stale = await getPriceWithMeta('XAUUSD');
     expect(stale.stale).toBe(true);
     expect(stale.tick.mid).toBeCloseTo(2345.6);
+  });
+});
+
+describe('getPrice — live_ticks pseudo-provider (Phase 8 PR-8)', () => {
+  it('serves from live_ticks when fresh, skipping every network provider', async () => {
+    const fetchSpy = vi.fn();
+    globalThis.fetch = fetchSpy as unknown as typeof fetch;
+
+    // Override the auto-mock to simulate a fresh live_ticks row.
+    vi.mocked(fetchLiveTick).mockImplementationOnce(async () => ({
+      price: 2390.5,
+      provider: 'biquote-signalr',
+      ts: Date.now(),
+    }));
+
+    const tick = await getPrice('XAUUSD');
+    expect(tick.source).toBe('biquote-signalr');
+    expect(tick.mid).toBe(2390.5);
+    // Crucially: zero outbound HTTP — the worker-served path is sub-ms.
+    expect(fetchSpy).not.toHaveBeenCalled();
+  });
+
+  it('falls through to BiQuote REST when live_ticks is stale / missing', async () => {
+    // Auto-mock already throws by default. Then BiQuote answers.
+    globalThis.fetch = createRoutedFetch([
+      {
+        match: (u) => u.includes('biquote.io/api/'),
+        respond: () => ({ body: VALID_BIQUOTE_TICK('XAUUSD', 2400) }),
+      },
+    ]);
+
+    const tick = await getPrice('XAUUSD');
+    expect(tick.source).toBe('biquote');
+    expect(tick.mid).toBe(2400);
   });
 });

@@ -251,9 +251,15 @@ importers:
 
   packages/data:
     dependencies:
+      '@hamafx/db':
+        specifier: workspace:*
+        version: link:../db
       '@hamafx/shared':
         specifier: workspace:*
         version: link:../shared
+      drizzle-orm:
+        specifier: ^0.38.3
+        version: 0.38.4(@opentelemetry/api@1.9.0)(@types/pg@8.6.1)(@types/react@19.2.15)(postgres@3.4.9)(react@19.2.6)
       zod:
         specifier: ^3.23.8
         version: 3.25.76

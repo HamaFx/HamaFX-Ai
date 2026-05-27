@@ -13,9 +13,11 @@
 // that want to surface staleness.
 //
 // Phase 8 PR-4:
-//   - BiQuote becomes the **first** attempt for every TF except `1w`
-//     (BiQuote does not expose weekly bars). Twelve Data drops to second.
-//     PR-19 deletes the Twelve Data path entirely once BiQuote has soaked.
+//   - BiQuote becomes the **first** REST attempt for every TF except `1w`.
+// Phase 8 PR-8:
+//   - For `tf === '1m'`, the worker-maintained `candles_1m` table jumps in
+//     front of BiQuote. The route handler is served from Postgres without
+//     any outbound API call when the worker is healthy.
 
 import {
   CandleSchema,
@@ -26,6 +28,7 @@ import {
 } from '@hamafx/shared';
 
 import * as biquote from '../providers/biquote';
+import { fetchCandles1m } from '../providers/candles-1m';
 import { cacheKey, cacheTag, candleTtl, getDefaultCache } from '../cache';
 import { ProviderError } from '../errors';
 import { runWithFailover, type ProviderAttempt } from '../failover';
@@ -98,6 +101,33 @@ export async function getCandlesWithMeta(
     key,
     async () => {
       const attempts: ProviderAttempt<Candle[]>[] = [];
+
+      // Phase 8 PR-8 — `candles_1m` (worker-maintained) is the freshest
+      // 1m source. Skip for non-1m timeframes (the table only stores 1m
+      // bars; higher TFs come from BiQuote).
+      if (tf === '1m') {
+        attempts.push({
+          name: 'candles-1m',
+          run: async () => {
+            const r = await fetchCandles1m({ symbol, count });
+            const fetchedAt = Date.now();
+            return r.bars.map((bar) =>
+              CandleSchema.parse({
+                symbol,
+                tf,
+                t: bar.t,
+                o: bar.o,
+                h: bar.h,
+                l: bar.l,
+                c: bar.c,
+                v: bar.v,
+                source: r.provider,
+                fetchedAt,
+              }),
+            );
+          },
+        });
+      }
 
       // Phase 8 — BiQuote first (except 1w which it doesn't support).
       if (tf !== '1w') {

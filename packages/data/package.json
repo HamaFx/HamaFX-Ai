@@ -18,7 +18,9 @@
     "clean": "rm -rf node_modules .turbo"
   },
   "dependencies": {
+    "@hamafx/db": "workspace:*",
     "@hamafx/shared": "workspace:*",
+    "drizzle-orm": "^0.38.3",
     "zod": "^3.23.8"
   },
   "devDependencies": {

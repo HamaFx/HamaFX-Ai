@@ -10,13 +10,19 @@
 //     surface it via `<StaleIndicator/>`.
 //
 // Phase 8 PR-4:
-//   - BiQuote (free, no key) becomes the **first** attempt; Twelve Data
+//   - BiQuote (free, no key) becomes the **first** REST attempt; Twelve Data
 //     drops to the second attempt as a transitional fallback. PR-19 deletes
 //     the Twelve Data path entirely once BiQuote has soaked.
+// Phase 8 PR-8:
+//   - `live-ticks` (the worker-maintained snapshot table) jumps in front of
+//     BiQuote. When a row exists with ts within the last 60s, the route
+//     handler skips every upstream call and serves directly from Postgres
+//     — sub-second freshness, 0 outbound API calls, dirt-cheap.
 
 import { SymbolSchema, type Symbol, type Tick } from '@hamafx/shared';
 
 import * as biquote from '../providers/biquote';
+import { fetchLiveTick } from '../providers/live-ticks';
 import { cacheKey, cacheTag, getDefaultCache, PRICE_TTL } from '../cache';
 import { runWithFailover, type ProviderAttempt } from '../failover';
 import * as finnhub from '../providers/finnhub';
@@ -93,7 +99,18 @@ export async function getPriceWithMeta(
     async () => {
       const attempts: ProviderAttempt<{ price: number; provider: string }>[] = [];
 
-      // Phase 8 — BiQuote first. No key required, so it's always present.
+      // Phase 8 PR-8 — `live_ticks` is the freshest source we have when
+      // the worker is healthy. If the row is stale or missing, this
+      // attempt throws and runWithFailover moves on.
+      attempts.push({
+        name: 'live-ticks',
+        run: async () => {
+          const r = await fetchLiveTick({ symbol });
+          return { price: r.price, provider: r.provider };
+        },
+      });
+
+      // Phase 8 PR-4 — BiQuote REST. Always present, no key required.
       attempts.push({
         name: 'biquote',
         run: async () => {
