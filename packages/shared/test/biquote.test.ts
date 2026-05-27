@@ -12,23 +12,36 @@ import {
 } from '../src';
 
 describe('BiquoteTickSchema', () => {
+  // Real-world REST shape. Note `last: 0` for FX, dot-separated `time`,
+  // free-form `source`, ISO `timestamp`, and the extras BiQuote forwards.
   const valid = {
-    symbol: 'XAUUSD',
-    description: 'Gold vs US Dollar',
-    bid: 2390.12,
-    ask: 2390.32,
-    last: 2390.22,
+    symbol: 'EURUSD',
+    bid: 1.16285,
+    ask: 1.16291,
+    mid: 1.16288,
+    last: 0,
     volume: 0,
-    time: '2026-05-27T18:35:01Z',
-    source: 'MT5',
-    type: 'Forex',
+    timestamp: '2026-05-27T22:09:20Z',
+    source: 'MetaTrader 5 (Broker 1)',
+    high: 1.16612,
+    low: 1.1622,
+    direction: 'FLAT',
+    dayDiffPercent: 0.2275,
+    description: 'Euro vs US Dollar',
+    time: '2026.05.27 22:09:20',
+    spread: 6e-5,
   };
 
-  it('accepts the documented happy path', () => {
+  it('accepts the live REST happy path', () => {
     expect(() => BiquoteTickSchema.parse(valid)).not.toThrow();
   });
 
-  it('treats description as optional / nullable (BiQuote omits it for some symbols)', () => {
+  it('accepts numeric direction (older shape)', () => {
+    expect(() => BiquoteTickSchema.parse({ ...valid, direction: 1 })).not.toThrow();
+    expect(() => BiquoteTickSchema.parse({ ...valid, direction: null })).not.toThrow();
+  });
+
+  it('treats description as optional / nullable', () => {
     const parsed = BiquoteTickSchema.parse({ ...valid, description: null });
     expect(parsed.description).toBeNull();
 
@@ -37,17 +50,18 @@ describe('BiquoteTickSchema', () => {
     expect(parsedAgain.description).toBeUndefined();
   });
 
-  it('rejects non-MT5/MTX sources (guards against silent provider regressions)', () => {
-    expect(() => BiquoteTickSchema.parse({ ...valid, source: 'YAHOO' })).toThrow();
-  });
-
   it('rejects non-finite numbers (NaN / Infinity poisoning)', () => {
     expect(() => BiquoteTickSchema.parse({ ...valid, bid: Number.NaN })).toThrow();
     expect(() => BiquoteTickSchema.parse({ ...valid, ask: Number.POSITIVE_INFINITY })).toThrow();
+    expect(() => BiquoteTickSchema.parse({ ...valid, mid: Number.NaN })).toThrow();
   });
 
-  it('rejects empty time string', () => {
-    expect(() => BiquoteTickSchema.parse({ ...valid, time: '' })).toThrow();
+  it('rejects empty timestamp', () => {
+    expect(() => BiquoteTickSchema.parse({ ...valid, timestamp: '' })).toThrow();
+  });
+
+  it('rejects empty source', () => {
+    expect(() => BiquoteTickSchema.parse({ ...valid, source: '' })).toThrow();
   });
 });
 

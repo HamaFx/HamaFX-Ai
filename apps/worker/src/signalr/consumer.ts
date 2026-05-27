@@ -21,7 +21,6 @@ import {
   BiquoteSignalRTickSchema,
   isSymbol,
   SYMBOLS,
-  type BiquoteSignalRTick,
   type Symbol,
 } from '@hamafx/shared';
 

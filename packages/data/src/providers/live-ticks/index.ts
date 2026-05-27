@@ -18,7 +18,7 @@
 import type { getDb } from '@hamafx/db';
 import { liveTicks } from '@hamafx/db/schema';
 import type { Symbol } from '@hamafx/shared';
-import { and, eq, gte, sql } from 'drizzle-orm';
+import { and, eq, gte } from 'drizzle-orm';
 
 import { ProviderError } from '../../errors';
 
@@ -63,7 +63,7 @@ export async function fetchLiveTick(args: FetchLiveTickArgs): Promise<LiveTickRe
       source: liveTicks.source,
     })
     .from(liveTicks)
-    .where(and(eq(liveTicks.symbol, args.symbol), gte(liveTicks.ts, sql`${cutoff}`)))
+    .where(and(eq(liveTicks.symbol, args.symbol), gte(liveTicks.ts, cutoff)))
     .limit(1);
 
   const row = rows[0];

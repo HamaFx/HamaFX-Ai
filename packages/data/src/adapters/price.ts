@@ -113,10 +113,10 @@ export async function getPriceWithMeta(
             baseUrl: keys.biquoteBaseUrl,
             ...(opts.signal ? { signal: opts.signal } : {}),
           });
-          // BiQuote's `last` mirrors the most recent traded price; for FX
-          // this equals mid in practice. We forward `last` so the synthesis
-          // below sees the freshest number.
-          return { price: tick.last, provider: 'biquote' };
+          // BiQuote suppresses `last` for FX (always 0). Use the
+          // server-computed `mid` instead — that's what we want
+          // downstream anyway.
+          return { price: tick.mid, provider: 'biquote' };
         },
       });
 

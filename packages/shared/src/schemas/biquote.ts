@@ -22,25 +22,43 @@ import { z } from 'zod';
 /**
  * BiQuote tick payload — REST `GET /api/{symbol}` response.
  *
- * `time` is ISO-8601 UTC. `volume` is 0 for FX (BiQuote-side, not us).
- * `source` discriminates which upstream feed BiQuote used: `MT5` is their
- * MetaTrader 5 bridge, `MTX` is their Matriks feed.
+ * The REST shape evolved from earlier docs:
+ *   - `time` is a dot-separated local-format string ("2026.05.27 22:09:20"),
+ *     NOT ISO. Don't `Date.parse` it. The `timestamp` field carries the
+ *     ISO-8601 UTC value we actually want.
+ *   - `source` is a free-form string like "MetaTrader 5 (Broker 1)" — not
+ *     the older 'MT5'|'MTX' enum.
+ *   - `last` is `0.0` for FX (BiQuote intentionally suppresses last-traded
+ *     price for spot markets); use `mid` for downstream consumers.
+ *   - `direction` is a string ('UP'|'DOWN'|'FLAT'), not a number.
  *
- * The SignalR push uses a slightly different shape — see
- * `BiquoteSignalRTickSchema` below.
+ * Permissive on extras so a future server-side schema tweak doesn't drop
+ * every tick.
  */
 export const BiquoteTickSchema = z.object({
   symbol: z.string().min(1),
-  description: z.string().nullable().optional(),
   bid: z.number().finite(),
   ask: z.number().finite(),
-  /** Last traded price. May equal mid for FX. */
+  /**
+   * Mid price. BiQuote computes this server-side, so callers should
+   * prefer `mid` over `last` (which is 0 for FX) or the bid/ask average.
+   */
+  mid: z.number().finite(),
+  /** Last traded price. 0 for FX (suppressed by BiQuote). */
   last: z.number().finite(),
   volume: z.number().finite(),
-  /** ISO-8601 UTC timestamp. */
-  time: z.string().min(1),
-  source: z.enum(['MT5', 'MTX']),
-  type: z.string().min(1),
+  /** ISO-8601 UTC. */
+  timestamp: z.string().min(1),
+  /** Free-form source label. */
+  source: z.string().min(1),
+  high: z.number().finite().nullable().optional(),
+  low: z.number().finite().nullable().optional(),
+  direction: z.union([z.string(), z.number(), z.null()]).optional(),
+  dayDiffPercent: z.number().finite().nullable().optional(),
+  description: z.string().nullable().optional(),
+  /** Dot-separated local-format time string. NOT parseable by Date.parse. */
+  time: z.string().optional(),
+  spread: z.number().finite().nullable().optional(),
 });
 
 export type BiquoteTick = z.infer<typeof BiquoteTickSchema>;

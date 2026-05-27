@@ -68,16 +68,22 @@ function createRoutedFetch(routes: RouteHandler[]): typeof fetch {
   }) as unknown as typeof fetch;
 }
 
-const VALID_BIQUOTE_TICK = (symbol: string, last: number) => ({
+const VALID_BIQUOTE_TICK = (symbol: string, mid: number) => ({
   symbol,
   description: '',
-  bid: last,
-  ask: last,
-  last,
+  bid: mid - 0.05,
+  ask: mid + 0.05,
+  mid,
+  last: 0,
   volume: 0,
-  time: '2026-05-27T18:35:01Z',
-  source: 'MT5',
-  type: 'Forex',
+  timestamp: '2026-05-27T18:35:01Z',
+  source: 'MetaTrader 5 (Broker 1)',
+  high: mid * 1.001,
+  low: mid * 0.999,
+  direction: 'FLAT',
+  dayDiffPercent: 0,
+  time: '2026.05.27 18:35:01',
+  spread: 0.1,
 });
 
 beforeEach(() => {

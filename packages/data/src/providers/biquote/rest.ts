@@ -47,7 +47,12 @@ const ErrorEnvelopeSchema = z.object({
 });
 
 const LatestArraySchema = z.array(BiquoteTickSchema);
-const OhlcArraySchema = z.array(BiquoteOhlcBarSchema);
+/** OHLC response is `{ symbol, interval, bars: [...] }` (was: flat array). */
+const OhlcEnvelopeSchema = z.object({
+  symbol: z.string().min(1),
+  interval: z.string().min(1),
+  bars: z.array(BiquoteOhlcBarSchema),
+});
 
 interface CallOptions {
   signal?: AbortSignal;
@@ -214,16 +219,20 @@ export async function fetchOhlc(args: FetchOhlcArgs): Promise<BiquoteOhlcBar[]> 
 
   const limit = Math.max(1, Math.min(args.count, 2000));
   const path = `/api/${toBiquoteSymbol(validated)}/ohlc`;
-  const raw = await call(path, { tf, limit: String(limit) }, OhlcArraySchema, args);
+  const env = await call(path, { tf, limit: String(limit) }, OhlcEnvelopeSchema, args);
+  const raw = env.bars;
 
-  const filtered = args.includeOpenBar ? raw : raw.filter((b) => !b.isOpen);
+  // BiQuote currently returns bars NEWEST-first; flip to oldest-first
+  // for downstream consumers (indicators, charts) that expect that order.
+  // Also drop the in-progress bar unless the caller asked to keep it.
+  const ascending = [...raw].reverse();
+  const filtered = args.includeOpenBar ? ascending : ascending.filter((b) => !b.isOpen);
   if (filtered.length === 0) {
     throw new ProviderError('PROVIDER_HTTP_ERROR', PROVIDER, 'empty candle response');
   }
 
-  // BiQuote returns oldest-first per the docs ("up to 2000 bars per series",
-  // openTime ascending). We assert that here so a regression on the upstream
-  // flips loudly instead of silently shipping reversed bars to indicators.
+  // Final monotonicity guard — if BiQuote ever flips ordering again,
+  // surface it loudly instead of shipping mixed-order bars to indicators.
   for (let i = 1; i < filtered.length; i += 1) {
     if (Date.parse(filtered[i]!.openTime) < Date.parse(filtered[i - 1]!.openTime)) {
       throw new ProviderError(
