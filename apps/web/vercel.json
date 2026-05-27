@@ -1,11 +1,26 @@
 {
   "framework": "nextjs",
+  "crons": [
+    { "path": "/api/cron/news", "schedule": "*/5 * * * *" },
+    { "path": "/api/cron/calendar", "schedule": "*/15 * * * *" },
+    { "path": "/api/cron/alerts", "schedule": "*/5 * * * *" },
+    { "path": "/api/cron/snapshots", "schedule": "5 0 * * *" },
+    { "path": "/api/cron/embedding-backfill", "schedule": "15 */6 * * *" },
+    { "path": "/api/cron/fred-actuals", "schedule": "30 1 * * *" },
+    { "path": "/api/cron/briefings", "schedule": "*/5 * * * *" },
+    { "path": "/api/cron/weekly-review", "schedule": "0 18 * * 0" },
+    { "path": "/api/cron/cot", "schedule": "0 22 * * 5" }
+  ],
   "functions": {
     "src/app/api/chat/route.ts": { "maxDuration": 60 },
     "src/app/api/cron/news/route.ts": { "maxDuration": 60 },
     "src/app/api/cron/calendar/route.ts": { "maxDuration": 30 },
     "src/app/api/cron/alerts/route.ts": { "maxDuration": 15 },
     "src/app/api/cron/snapshots/route.ts": { "maxDuration": 30 },
-    "src/app/api/cron/embedding-backfill/route.ts": { "maxDuration": 30 }
+    "src/app/api/cron/embedding-backfill/route.ts": { "maxDuration": 30 },
+    "src/app/api/cron/briefings/route.ts": { "maxDuration": 60 },
+    "src/app/api/cron/weekly-review/route.ts": { "maxDuration": 60 },
+    "src/app/api/cron/cot/route.ts": { "maxDuration": 30 },
+    "src/app/api/cron/fred-actuals/route.ts": { "maxDuration": 30 }
   }
 }
