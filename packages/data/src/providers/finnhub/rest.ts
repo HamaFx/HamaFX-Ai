@@ -255,3 +255,51 @@ function secondsForCount(tf: Timeframe, count: number): number {
   };
   return Math.ceil(TF_SEC[tf] * count * 1.25);
 }
+
+
+// ---------------------------------------------------------------------------
+// News (Phase 4 — primary news source)
+// ---------------------------------------------------------------------------
+//
+// Finnhub /news?category=forex returns general market news articles. The
+// response is a flat array of objects with headline, summary, source, url,
+// datetime (unix seconds), and image. No entity tagging or sentiment — the
+// AI agent infers sentiment from the text.
+//
+// Reference: https://finnhub.io/docs/api/market-news
+
+const FhNewsArticleSchema = z.object({
+  id: z.number(),
+  category: z.string(),
+  datetime: z.number(), // unix seconds
+  headline: z.string(),
+  image: z.string().optional(),
+  related: z.string().optional(), // comma-separated tickers
+  source: z.string(),
+  summary: z.string(),
+  url: z.string().url(),
+});
+
+export type FinnhubNewsArticle = z.infer<typeof FhNewsArticleSchema>;
+
+const FhNewsArraySchema = z.array(FhNewsArticleSchema);
+
+export interface FetchNewsArgs extends CallOptions {
+  /** News category. Default 'forex'. Options: general, forex, crypto, merger. */
+  category?: string;
+  /** Minimum article id (for pagination / dedup). */
+  minId?: number;
+}
+
+/**
+ * Fetch market news from Finnhub. Returns up to 100 articles per call
+ * (Finnhub's default page size). Articles are sorted newest-first.
+ */
+export async function fetchNews(args: FetchNewsArgs): Promise<FinnhubNewsArticle[]> {
+  const query: Record<string, string> = {
+    category: args.category ?? 'forex',
+  };
+  if (args.minId !== undefined) query.minId = String(args.minId);
+
+  return call('/news', query, FhNewsArraySchema, args);
+}
