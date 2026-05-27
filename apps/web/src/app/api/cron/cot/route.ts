@@ -1,5 +1,8 @@
 // GET /api/cron/cot — weekly CFTC Commitment-of-Traders ingestion.
 //
+// Phase 8 PR-12: this route is now a **manual-fallback path**. The
+// scheduled invocation runs on the GCE worker via `hamafx-job-cot.timer`.
+//
 // Runs Friday 22:00 UTC (just after CFTC's weekly publication window).
 // Idempotent: each `(symbol, report_date)` row is keyed by a deterministic
 // `cftc:<symbol>:<YYYY-MM-DD>` PK and upserted with ON CONFLICT DO UPDATE.
