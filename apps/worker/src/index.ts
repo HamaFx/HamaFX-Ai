@@ -14,9 +14,11 @@
 
 import { getDb } from '@hamafx/db';
 
+import { Candle1mAggregator, type ClosedCandle } from './aggregator/candle-1m.js';
 import { loadEnv, type WorkerEnv } from './env.js';
 import { ping } from './healthchecks.js';
 import { createLogger, type Logger } from './log.js';
+import { flushClosedCandle } from './persistence/candles-1m.js';
 import { flushLiveTicks } from './persistence/live-ticks.js';
 import {
   createDefaultBuildConnection,
@@ -88,6 +90,7 @@ export interface RunWorkerArgs {
 export interface RunningWorker {
   consumer: SignalRConsumer;
   buffer: TickBuffer;
+  aggregator: Candle1mAggregator;
   /** Idempotent. Cleanly tears down timers + the hub. */
   stop(): Promise<void>;
 }
@@ -101,10 +104,34 @@ export async function runWorker(args: RunWorkerArgs): Promise<RunningWorker> {
 
   let lastTickAt = 0;
 
+  // 1m candle aggregator — emits ClosedCandle events on minute rollover.
+  // We write each closed bar to `candles_1m` synchronously; failures are
+  // logged but do NOT throw, because a single failed insert shouldn't
+  // take down the consumer.
+  const aggregator = new Candle1mAggregator((bar: ClosedCandle) => {
+    void (async () => {
+      try {
+        await flushClosedCandle({ db, log, bar });
+        log.info('candle closed', {
+          symbol: bar.symbol,
+          t: new Date(bar.t).toISOString(),
+          o: bar.o,
+          h: bar.h,
+          l: bar.l,
+          c: bar.c,
+          ticks: bar.tickVolume,
+        });
+      } catch (err) {
+        log.error('flushClosedCandle failed', { err: String(err), symbol: bar.symbol });
+      }
+    })();
+  });
+
   const consumer = new SignalRConsumer({
     hubUrl: env.BIQUOTE_HUB_URL,
     onTick: (tick) => {
       buffer.push(tick);
+      aggregator.feed(tick);
       args.onTick?.(tick);
       lastTickAt = Date.now();
     },
@@ -154,9 +181,12 @@ export async function runWorker(args: RunWorkerArgs): Promise<RunningWorker> {
     } catch (err) {
       log.warn('final flush on stop failed', { err: String(err) });
     }
+    // Force-close the open 1m bar so we don't lose the partial bar at the
+    // edge. Idempotent if the aggregator is already empty.
+    aggregator.closeAll();
   };
 
-  return { consumer, buffer, stop };
+  return { consumer, buffer, aggregator, stop };
 }
 
 export async function main(): Promise<void> {
