@@ -148,6 +148,20 @@ The GitHub Actions workflow files (`.github/workflows/cron-*.yml`) are kept as a
 
 ---
 
+## Phase 5 — UI/UX Polish & Design System ✅ DONE
+
+**Goal**: turn the working but utilitarian UI into a polished, mobile-first experience that feels native on iPhone 14 Pro Max.
+
+- [x] Design tokens: `bgElev3`, `divider`, `overlay`; type scale; Inter Variable + JetBrains Mono Variable; safe-area utilities
+- [x] Motion: `motion/react` with LazyMotion, page transitions, button whileTap, animated numbers, layoutId tab indicators
+- [x] Icons: `lucide-react` exclusively (replaced all inline SVGs)
+- [x] Bottom sheets: `vaul`-based Drawer for alert/journal create forms + chart overlay toggles
+- [x] Toasts: `sonner` for write confirmations (no more inline status strings)
+- [x] FAB pattern for primary create actions (alerts, journal)
+- [x] Page-by-page polish: login (gradient glow), chat (iOS bubbles + typing as bubble), chart (sticky glass sub-header), news (live timestamp), calendar (sticky day headers + imminent-event pulse), alerts (FAB+drawer + lucide rule icons + empty state CTA), journal (2x2 stat-cards with sparklines), settings (sectioned with icons), more (lucide icons + 60px rows)
+- [x] All animations respect `prefers-reduced-motion`
+- [x] Eval still passes 10/10 after refactor
+
 ## Stretch / parking lot
 
 - Add a separate **worker** on Fly.io if/when sub-second WS becomes worth it.
