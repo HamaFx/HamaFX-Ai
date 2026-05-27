@@ -105,6 +105,15 @@ fi
 
 # Success path — record SHA, restart the worker, ping HC.
 echo "$NEW_SHA" > "$SHA_FILE"
+# Keep DEPLOYED_SHA in sync inside /opt/hamafx/.env so every systemd
+# unit's EnvironmentFile= directive picks up the new SHA. Worker reads
+# it at startup; jobs see it on the next invocation.
+ENV_FILE='/opt/hamafx/.env'
+if grep -q '^DEPLOYED_SHA=' "$ENV_FILE"; then
+  sed -i "s|^DEPLOYED_SHA=.*|DEPLOYED_SHA=$NEW_SHA|" "$ENV_FILE"
+else
+  echo "DEPLOYED_SHA=$NEW_SHA" >> "$ENV_FILE"
+fi
 sudo /bin/systemctl restart hamafx-worker.service || {
   rollback "systemctl restart hamafx-worker failed"
 }

@@ -12,8 +12,6 @@ User=hamafx
 Group=hamafx
 WorkingDirectory=/opt/hamafx/app/apps/worker
 EnvironmentFile=/opt/hamafx/.env
-ExecStartPre=/bin/sh -c 'echo "DEPLOYED_SHA=$(cat /opt/hamafx/.deployed-sha 2>/dev/null || echo unknown)" > /run/hamafx-job-embedding-backfill.env'
-EnvironmentFile=-/run/hamafx-job-embedding-backfill.env
 ExecStart=/usr/bin/node /opt/hamafx/app/apps/worker/dist/runner/cli.js embedding-backfill
 
 # Per-job memory cap. Embedding-backfill batches 32 articles at ~1.5 KB
@@ -26,7 +24,7 @@ NoNewPrivileges=true
 PrivateTmp=true
 ProtectSystem=strict
 ProtectHome=true
-ReadWritePaths=/opt/hamafx /run/hamafx-job-embedding-backfill.env
+ReadWritePaths=/opt/hamafx
 
 StandardOutput=journal
 StandardError=journal
