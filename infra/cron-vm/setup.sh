@@ -1,57 +1,81 @@
 #!/usr/bin/env bash
 # infra/cron-vm/setup.sh — Bootstrap the hamafx-cron GCE VM.
 #
-# This script is idempotent: re-running it updates the cron schedule and
-# env without breaking anything.
+# Phase 8 PR-15 — replaces the old `cron` daemon entirely with systemd
+# timers. Idempotent: re-running upgrades the unit files and restarts
+# every timer.
 #
-# What it installs:
-#   - curl (for HTTP cron calls)
-#   - /opt/hamafx/cron-fire.sh (the script cron invokes)
-#   - /opt/hamafx/.env (CRON_SECRET + PRODUCTION_URL)
-#   - System crontab entries at the correct cadences
-#   - Logrotate for /var/log/hamafx-cron.log
+# What this script does:
+#   - Installs curl + system packages.
+#   - Drops every /etc/systemd/system/hamafx-*.{service,timer} from
+#     infra/cron-vm/units/ into place.
+#   - Enables every *.timer (services are oneshot, run when the timer
+#     fires).
+#   - Stops + masks the legacy `cron` daemon. The repo no longer ships a
+#     crontab; if you need the manual-fallback paths (e.g. during a
+#     worker outage) issue them with `curl -H "Authorization: Bearer
+#     $CRON_SECRET" ...`.
 #
 # Usage (from your local machine):
-#   gcloud compute scp infra/cron-vm/setup.sh hamafx-cron:/tmp/setup.sh --zone=us-central1-a
-#   gcloud compute ssh hamafx-cron --zone=us-central1-a --command="sudo bash /tmp/setup.sh"
+#   gcloud compute scp -r infra/cron-vm hamafx-cron:/tmp/hamafx-cron --zone=us-central1-a
+#   gcloud compute ssh hamafx-cron --zone=us-central1-a --command="sudo bash /tmp/hamafx-cron/setup.sh"
 
 set -euo pipefail
 
-echo "[hamafx-cron] Installing dependencies..."
-apt-get update -qq
-apt-get install -y -qq curl cron logrotate
+readonly UNITS_DIR="$(dirname "$0")/units"
+readonly TARGET_DIR="/etc/systemd/system"
 
-echo "[hamafx-cron] Creating /opt/hamafx..."
-mkdir -p /opt/hamafx
+log() { printf '%s [setup] %s\n' "$(date -u +%FT%TZ)" "$*"; }
 
-echo "[hamafx-cron] Writing cron-fire.sh..."
-cat > /opt/hamafx/cron-fire.sh << 'SCRIPT'
-#!/usr/bin/env bash
-# Fires a single cron endpoint. Called by system crontab.
-# Usage: /opt/hamafx/cron-fire.sh <endpoint-path>
-# Example: /opt/hamafx/cron-fire.sh /api/cron/news
-set -euo pipefail
-
-ENDPOINT="${1:?Usage: cron-fire.sh /api/cron/<name>}"
-source /opt/hamafx/.env
-
-URL="${PRODUCTION_URL}${ENDPOINT}"
-TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-
-HTTP_CODE=$(curl -fsS -m 55 -o /tmp/cron-response.txt -w "%{http_code}" \
-  -H "Authorization: Bearer ${CRON_SECRET}" \
-  "$URL" 2>/tmp/cron-error.txt || true)
-
-if [ "$HTTP_CODE" = "200" ]; then
-  echo "${TIMESTAMP} OK ${ENDPOINT} $(cat /tmp/cron-response.txt | head -c 200)"
-else
-  echo "${TIMESTAMP} FAIL ${ENDPOINT} HTTP=${HTTP_CODE} $(cat /tmp/cron-error.txt | head -c 200)"
+if [[ "$EUID" -ne 0 ]]; then
+  echo "must run as root (sudo bash setup.sh)" >&2
+  exit 1
 fi
-SCRIPT
-chmod +x /opt/hamafx/cron-fire.sh
 
-echo "[hamafx-cron] Writing logrotate config..."
-cat > /etc/logrotate.d/hamafx-cron << 'LOGROTATE'
+log 'installing dependencies'
+apt-get update -qq
+apt-get install -y -qq curl logrotate
+
+log "creating /opt/hamafx (env file, deployed-sha pointer)"
+mkdir -p /opt/hamafx
+if [[ ! -f /opt/hamafx/.env ]]; then
+  log 'WARNING: /opt/hamafx/.env missing — write it before timers fire:'
+  cat <<'ENV_HINT'
+  PRODUCTION_URL=https://hama-fx-ai.vercel.app
+  CRON_SECRET=<your-cron-secret>
+  DATABASE_URL=<supabase pooler URL>
+  BIQUOTE_BASE_URL=https://biquote.io        # optional
+  HC_SIGNALR_UUID=<...>                       # optional, for healthchecks.io
+  HC_JOB_EMBEDDING_BACKFILL_UUID=<...>
+  HC_JOB_BRIEFINGS_UUID=<...>
+  HC_JOB_SNAPSHOTS_UUID=<...>
+  HC_JOB_COT_UUID=<...>
+  HC_JOB_FRED_ACTUALS_UUID=<...>
+  HC_JOB_WEEKLY_REVIEW_UUID=<...>
+  HC_LIGHT_NEWS_UUID=<...>
+  HC_LIGHT_CALENDAR_UUID=<...>
+  HC_LIGHT_ALERTS_UUID=<...>
+  HC_LIGHT_WARM_CACHE_UUID=<...>
+  HC_UPDATE_UUID=<...>
+  HC_BACKUP_DB_UUID=<...>
+  HC_BACKUP_JOURNAL_UUID=<...>
+  HC_VERIFY_RESTORE_UUID=<...>
+ENV_HINT
+fi
+chmod 600 /opt/hamafx/.env 2>/dev/null || true
+
+log 'tearing down legacy cron'
+if systemctl is-active --quiet cron 2>/dev/null; then
+  systemctl stop cron || true
+fi
+if systemctl is-enabled --quiet cron 2>/dev/null; then
+  systemctl disable cron || true
+fi
+# Remove any leftover hamafx entries from root's crontab.
+crontab -l 2>/dev/null | grep -v 'hamafx' | crontab - 2>/dev/null || true
+
+log 'logrotate config for /var/log/hamafx-cron.log (legacy log path)'
+cat > /etc/logrotate.d/hamafx-cron <<'LOGROTATE'
 /var/log/hamafx-cron.log {
     daily
     rotate 7
@@ -62,66 +86,27 @@ cat > /etc/logrotate.d/hamafx-cron << 'LOGROTATE'
 }
 LOGROTATE
 
-echo "[hamafx-cron] Installing crontab..."
-# Remove any existing hamafx entries
-crontab -l 2>/dev/null | grep -v 'hamafx' | crontab - 2>/dev/null || true
+log "installing systemd units from $UNITS_DIR"
+for unit in "$UNITS_DIR"/hamafx-*.{service,timer}; do
+  [[ -f "$unit" ]] || continue
+  install -m 644 "$unit" "$TARGET_DIR/$(basename "$unit")"
+done
+systemctl daemon-reload
 
-# Write the full schedule
-cat > /tmp/hamafx-crontab << 'CRONTAB'
-# HamaFX-Ai cron schedule — managed by infra/cron-vm/setup.sh
-# Logs: /var/log/hamafx-cron.log
-#
-# ┌─── minute
-# │  ┌─── hour
-# │  │  ┌─── day of month
-# │  │  │ ┌─── month
-# │  │  │ │ ┌─── day of week
-# │  │  │ │ │
+log 'enabling + starting timers'
+for timer in "$UNITS_DIR"/hamafx-*.timer; do
+  [[ -f "$timer" ]] || continue
+  name="$(basename "$timer")"
+  systemctl enable --now "$name"
+done
 
-# News ingestion — every 5 minutes
-*/5 * * * * /opt/hamafx/cron-fire.sh /api/cron/news >> /var/log/hamafx-cron.log 2>&1
+# Worker `hamafx-worker.service` is a long-running unit (Type=simple), so
+# enable + start it explicitly. Restart so unit-file changes take effect.
+if [[ -f "$UNITS_DIR/hamafx-worker.service" ]]; then
+  log 'enabling + (re)starting hamafx-worker.service'
+  systemctl enable hamafx-worker.service
+  systemctl restart hamafx-worker.service
+fi
 
-# Calendar ingestion — every 15 minutes
-*/15 * * * * /opt/hamafx/cron-fire.sh /api/cron/calendar >> /var/log/hamafx-cron.log 2>&1
-
-# Alert evaluation — every 5 minutes
-*/5 * * * * /opt/hamafx/cron-fire.sh /api/cron/alerts >> /var/log/hamafx-cron.log 2>&1
-
-# Cache warming (Phase 7a) — every 2 minutes during weekdays
-*/2 * * * * /opt/hamafx/cron-fire.sh /api/cron/warm-cache >> /var/log/hamafx-cron.log 2>&1
-
-# ============================================================================
-# Phase 8 — heavy jobs migrated to systemd timers on the worker.
-# Crontab lines below are commented out and only re-enabled during a
-# worker outage (each Vercel route is kept as a manual fallback path).
-# ============================================================================
-
-# Phase 8 PR-9 — moved to hamafx-job-embedding-backfill.timer
-# 15 */6 * * * /opt/hamafx/cron-fire.sh /api/cron/embedding-backfill >> /var/log/hamafx-cron.log 2>&1
-
-# Phase 8 PR-10 — moved to hamafx-job-briefings.timer
-# */5 * * * * /opt/hamafx/cron-fire.sh /api/cron/briefings >> /var/log/hamafx-cron.log 2>&1
-
-# Phase 8 PR-11 — moved to hamafx-job-snapshots.timer
-# 5 0 * * * /opt/hamafx/cron-fire.sh /api/cron/snapshots >> /var/log/hamafx-cron.log 2>&1
-
-# Phase 8 PR-12 — moved to hamafx-job-cot.timer
-# 0 22 * * 5 /opt/hamafx/cron-fire.sh /api/cron/cot >> /var/log/hamafx-cron.log 2>&1
-
-# Phase 8 PR-13 — moved to hamafx-job-fred-actuals.timer
-# 30 1 * * * /opt/hamafx/cron-fire.sh /api/cron/fred-actuals >> /var/log/hamafx-cron.log 2>&1
-
-# Phase 8 PR-14 — moved to hamafx-job-weekly-review.timer
-# 0 18 * * 0 /opt/hamafx/cron-fire.sh /api/cron/weekly-review >> /var/log/hamafx-cron.log 2>&1
-CRONTAB
-
-crontab /tmp/hamafx-crontab
-rm /tmp/hamafx-crontab
-
-echo "[hamafx-cron] Ensuring cron service is running..."
-systemctl enable cron
-systemctl restart cron
-
-echo "[hamafx-cron] Done. Verify with: crontab -l"
-echo "[hamafx-cron] Logs at: /var/log/hamafx-cron.log"
-echo "[hamafx-cron] IMPORTANT: Write /opt/hamafx/.env with CRON_SECRET and PRODUCTION_URL"
+log 'done — current timer state:'
+systemctl list-timers --all 'hamafx-*' --no-pager | head -30

@@ -1,0 +1,10 @@
+[Unit]
+Description=Light cron — calendar ingestion every 15 minutes
+
+[Timer]
+OnCalendar=*:0/15
+RandomizedDelaySec=30
+Unit=hamafx-light-calendar.service
+
+[Install]
+WantedBy=timers.target

@@ -1,0 +1,16 @@
+[Unit]
+Description=HamaFX-Ai light cron — POST /api/cron/news on Vercel
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+EnvironmentFile=/opt/hamafx/.env
+ExecStart=/usr/bin/curl -fsS -m 30 \
+  -H "Authorization: Bearer ${CRON_SECRET}" \
+  ${PRODUCTION_URL}/api/cron/news
+ExecStartPost=/bin/sh -c 'test -z "$HC_LIGHT_NEWS_UUID" || /usr/bin/curl -fsS -m 5 https://hc-ping.com/$HC_LIGHT_NEWS_UUID'
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=hamafx-light-news

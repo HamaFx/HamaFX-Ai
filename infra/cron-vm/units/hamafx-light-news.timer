@@ -1,0 +1,10 @@
+[Unit]
+Description=Light cron — news ingestion every 5 minutes
+
+[Timer]
+OnCalendar=*:0/5
+RandomizedDelaySec=15
+Unit=hamafx-light-news.service
+
+[Install]
+WantedBy=timers.target

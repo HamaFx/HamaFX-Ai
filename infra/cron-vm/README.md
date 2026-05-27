@@ -22,20 +22,29 @@ A lightweight GCE `e2-small` instance that fires all cron endpoints on schedule 
 | `/api/cron/news` | Every 5 min | Marketaux news ingestion |
 | `/api/cron/calendar` | Every 15 min | FRED calendar ingestion |
 | `/api/cron/alerts` | Every 5 min | Alert evaluation + delivery |
-| `/api/cron/briefings` | Every 5 min | Pre/post event briefings |
-| `/api/cron/snapshots` | 00:05 UTC daily | Daily HLOC/pivots/ATR |
-| `/api/cron/embedding-backfill` | Every 6 hours | News embedding computation |
-| `/api/cron/fred-actuals` | 01:30 UTC daily | FRED actuals backfill |
-| `/api/cron/weekly-review` | Sunday 18:00 UTC | Weekly journal review |
-| `/api/cron/cot` | Friday 22:00 UTC | CFTC CoT ingestion |
 | `/api/cron/warm-cache` | Every 2 min | Pre-fetches the most-used market data so first chat / chart load is hot (Phase 7a) |
+| **(worker)** `briefings` | Every 5 min | Pre/post event briefings (Phase 8 PR-10) |
+| **(worker)** `snapshots` | 00:05 UTC daily | Daily HLOC/pivots/ATR + candles_1m prune (Phase 8 PR-11) |
+| **(worker)** `embedding-backfill` | Every 6 hours | News embedding computation (Phase 8 PR-9) |
+| **(worker)** `fred-actuals` | 01:30 UTC daily | FRED actuals backfill (Phase 8 PR-13) |
+| **(worker)** `weekly-review` | Sunday 18:00 UTC | Weekly journal review (Phase 8 PR-14) |
+| **(worker)** `cot` | Friday 22:00 UTC | CFTC CoT ingestion (Phase 8 PR-12) |
+
+Phase 8 PR-15 — the legacy `cron` daemon is replaced by **systemd
+timers**. All timers are driven from `infra/cron-vm/units/*`. The light
+crons (top four rows above) still poke Vercel via curl. The heavy jobs
+(rows tagged "(worker)") run as systemd `oneshot` services on the VM
+itself; their Vercel route counterparts remain as manual-fallback paths.
 
 ## Setup / Update
 
 ```bash
-# From the repo root:
-gcloud compute scp infra/cron-vm/setup.sh hamafx-cron:/tmp/setup.sh --zone=us-central1-a --project=hamafx-78845
-gcloud compute ssh hamafx-cron --zone=us-central1-a --project=hamafx-78845 --command="sudo bash /tmp/setup.sh"
+# From the repo root — copies the entire cron-vm dir (units + setup.sh)
+gcloud compute scp -r infra/cron-vm hamafx-cron:/tmp/hamafx-cron \
+  --zone=us-central1-a --project=hamafx-78845
+gcloud compute ssh hamafx-cron \
+  --zone=us-central1-a --project=hamafx-78845 \
+  --command="sudo bash /tmp/hamafx-cron/setup.sh"
 ```
 
 ## Environment
@@ -58,15 +67,21 @@ EOF"
 ## Monitoring
 
 ```bash
-# View recent logs
-gcloud compute ssh hamafx-cron --zone=us-central1-a --command="tail -50 /var/log/hamafx-cron.log"
+# View recent journald output for any hamafx unit
+gcloud compute ssh hamafx-cron --zone=us-central1-a \
+  --command="sudo journalctl -u 'hamafx-*' -n 50 --no-pager"
 
-# Check cron is running
-gcloud compute ssh hamafx-cron --zone=us-central1-a --command="systemctl status cron"
+# Show every active hamafx timer + when it next fires
+gcloud compute ssh hamafx-cron --zone=us-central1-a \
+  --command="systemctl list-timers --all 'hamafx-*' --no-pager"
 
-# View the schedule
-gcloud compute ssh hamafx-cron --zone=us-central1-a --command="crontab -l"
+# Tail the always-on worker
+gcloud compute ssh hamafx-cron --zone=us-central1-a \
+  --command="sudo journalctl -u hamafx-worker -f"
 ```
+
+The legacy `tail /var/log/hamafx-cron.log` still works for any pre-PR-15
+crontab activity, but every Phase 8+ run goes to journald.
 
 ## Cost optimization
 
