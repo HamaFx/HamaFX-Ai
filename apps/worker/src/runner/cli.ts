@@ -21,12 +21,18 @@ function isKnownJob(name: string): name is JobName {
 function resolveHcUuid(env: ReturnType<typeof loadEnv>, name: JobName): string | undefined {
   // Map job name to its env var. Each job has its own UUID so we can wire
   // independent alerts in healthchecks.io.
-  const map: Record<JobName, string | undefined> = {
-    'embedding-backfill': env['HC_JOB_EMBEDDING_BACKFILL_UUID' as keyof typeof env] as
-      | string
-      | undefined,
-  };
-  return map[name];
+  switch (name) {
+    case 'embedding-backfill':
+      return env.HC_JOB_EMBEDDING_BACKFILL_UUID;
+    case 'briefings':
+      return env.HC_JOB_BRIEFINGS_UUID;
+    case 'snapshots':
+      return env.HC_JOB_SNAPSHOTS_UUID;
+    case 'cot':
+      return env.HC_JOB_COT_UUID;
+    case 'fred-actuals':
+      return env.HC_JOB_FRED_ACTUALS_UUID;
+  }
 }
 
 async function main(): Promise<number> {

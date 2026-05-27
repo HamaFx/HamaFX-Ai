@@ -87,29 +87,32 @@ cat > /tmp/hamafx-crontab << 'CRONTAB'
 # Alert evaluation — every 5 minutes
 */5 * * * * /opt/hamafx/cron-fire.sh /api/cron/alerts >> /var/log/hamafx-cron.log 2>&1
 
-# Briefings (pre/post event) — every 5 minutes
-*/5 * * * * /opt/hamafx/cron-fire.sh /api/cron/briefings >> /var/log/hamafx-cron.log 2>&1
-
-# Daily snapshot — 00:05 UTC
-5 0 * * * /opt/hamafx/cron-fire.sh /api/cron/snapshots >> /var/log/hamafx-cron.log 2>&1
-
-# FRED actuals backfill — 01:30 UTC daily
-30 1 * * * /opt/hamafx/cron-fire.sh /api/cron/fred-actuals >> /var/log/hamafx-cron.log 2>&1
-
-# Weekly review — Sunday 18:00 UTC
-0 18 * * 0 /opt/hamafx/cron-fire.sh /api/cron/weekly-review >> /var/log/hamafx-cron.log 2>&1
-
-# CFTC CoT — Friday 22:00 UTC
-0 22 * * 5 /opt/hamafx/cron-fire.sh /api/cron/cot >> /var/log/hamafx-cron.log 2>&1
-
 # Cache warming (Phase 7a) — every 2 minutes during weekdays
 */2 * * * * /opt/hamafx/cron-fire.sh /api/cron/warm-cache >> /var/log/hamafx-cron.log 2>&1
 
-# Phase 8 PR-9 onward — `embedding-backfill` is migrated to a worker
-# systemd timer (hamafx-job-embedding-backfill.timer). The Vercel route
-# remains as a manual-fallback path; only re-enable this crontab line
-# during a worker outage.
+# ============================================================================
+# Phase 8 — heavy jobs migrated to systemd timers on the worker.
+# Crontab lines below are commented out and only re-enabled during a
+# worker outage (each Vercel route is kept as a manual fallback path).
+# ============================================================================
+
+# Phase 8 PR-9 — moved to hamafx-job-embedding-backfill.timer
 # 15 */6 * * * /opt/hamafx/cron-fire.sh /api/cron/embedding-backfill >> /var/log/hamafx-cron.log 2>&1
+
+# Phase 8 PR-10 — moved to hamafx-job-briefings.timer
+# */5 * * * * /opt/hamafx/cron-fire.sh /api/cron/briefings >> /var/log/hamafx-cron.log 2>&1
+
+# Phase 8 PR-11 — moved to hamafx-job-snapshots.timer
+# 5 0 * * * /opt/hamafx/cron-fire.sh /api/cron/snapshots >> /var/log/hamafx-cron.log 2>&1
+
+# Phase 8 PR-12 — moved to hamafx-job-cot.timer
+# 0 22 * * 5 /opt/hamafx/cron-fire.sh /api/cron/cot >> /var/log/hamafx-cron.log 2>&1
+
+# Phase 8 PR-13 — moved to hamafx-job-fred-actuals.timer
+# 30 1 * * * /opt/hamafx/cron-fire.sh /api/cron/fred-actuals >> /var/log/hamafx-cron.log 2>&1
+
+# weekly-review still on crontab; PR-14 migrates it.
+0 18 * * 0 /opt/hamafx/cron-fire.sh /api/cron/weekly-review >> /var/log/hamafx-cron.log 2>&1
 CRONTAB
 
 crontab /tmp/hamafx-crontab

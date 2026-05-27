@@ -26,9 +26,8 @@ export type JobFn = (ctx: JobContext) => Promise<JobResult>;
  */
 export type JobName =
   | 'embedding-backfill'
-  // | 'briefings'        — PR-10
-  // | 'snapshots'        — PR-11
-  // | 'cot'              — PR-12
-  // | 'fred-actuals'     — PR-13
-  // | 'weekly-review'    — PR-14
-  ;
+  | 'briefings'
+  | 'snapshots'
+  | 'cot'
+  | 'fred-actuals';
+// PR-14 will add 'weekly-review'.

@@ -1,12 +1,18 @@
 // GET /api/cron/briefings — pre/post-event briefings.
 //
+// Phase 8 PR-10: this route is now a **manual-fallback path**. The
+// scheduled invocation runs on the GCE worker via
+// `hamafx-job-briefings.timer`. The route stays here so we can hand-trigger
+// during a worker outage:
+//
+//   curl -H "Authorization: Bearer $CRON_SECRET" $URL/api/cron/briefings
+//
 // Scans `economic_events` twice on each invocation:
 //   - pre-event:  events with `date` ∈ [now+28m, now+32m]  → emit
 //   - post-event: events with `date` ∈ [now-32m, now-28m] AND `actual IS NOT NULL` → emit
 //
 // Each emit is idempotent at the (eventId, kind) primary key on
-// `briefings_emitted`, so the 5-minute cron cadence on GitHub Actions
-// (with possible drift) is safe.
+// `briefings_emitted`.
 
 import {
   emitPostEvent,
