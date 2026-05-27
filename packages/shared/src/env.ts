@@ -52,6 +52,11 @@ const DbEnv = z
 //
 // At least one transport must be configured. The resolver in
 // packages/ai/src/model.ts picks per-call based on the model id prefix.
+//
+// Phase 7a: domain-based model routing. The agent classifies each user turn
+// into one of {fundamental, technical, summary, vision, generic} and picks
+// the model from the matching env var below. All defaults stay safe — if
+// you don't set the new vars, behaviour falls back to AI_DEFAULT_MODEL.
 const AiEnv = z
   .object({
     AI_GATEWAY_API_KEY: z.string().min(1).optional(),
@@ -65,6 +70,19 @@ const AiEnv = z
     AI_EMBEDDING_MODEL: z.string().default('openai/text-embedding-3-small'),
     /** Vision-capable model used by `analyze_chart_image`. */
     AI_VISION_MODEL: z.string().default('google-vertex/gemini-2.5-pro'),
+    /**
+     * Domain-routed models (Phase 7a). Each defaults to the canonical
+     * tier you described:
+     *   - Fundamental analysis → top-tier reasoning model.
+     *   - Technical analysis  → fast structured model.
+     *   - News / calendar / journal summary → cheapest fast model.
+     *
+     * The router falls back to AI_DEFAULT_MODEL for any domain whose env
+     * var is unset.
+     */
+    AI_FUNDAMENTAL_MODEL: z.string().default('google-vertex/gemini-3-pro'),
+    AI_TECHNICAL_MODEL: z.string().default('google-vertex/gemini-3-flash'),
+    AI_SUMMARY_MODEL: z.string().default('google-vertex/gemini-2.5-flash'),
   })
   .refine(
     (v) =>

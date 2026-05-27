@@ -196,9 +196,22 @@ export interface TelemetryInput {
   /**
    * Row marker for non-assistant-turn telemetry. Legacy assistant-turn callers
    * omit this and the column stays `null`. Title_Generator emits one of:
-   * `'title_generated' | 'title_failed' | 'title_skipped_budget'`.
+   * `'title_generated' | 'title_failed' | 'title_skipped_budget'`. The Phase
+   * 7a router emits `'routing_<domain>'`. The Phase 7c planner emits one of:
+   * `'plan_generated' | 'plan_skipped_budget' | 'plan_failed'`.
    */
-  kind?: 'title_generated' | 'title_failed' | 'title_skipped_budget';
+  kind?:
+    | 'title_generated'
+    | 'title_failed'
+    | 'title_skipped_budget'
+    | 'routing_fundamental'
+    | 'routing_technical'
+    | 'routing_summary'
+    | 'routing_vision'
+    | 'routing_generic'
+    | 'plan_generated'
+    | 'plan_skipped_budget'
+    | 'plan_failed';
 }
 
 export async function recordTelemetry(t: TelemetryInput): Promise<void> {
@@ -219,3 +232,35 @@ export async function recordTelemetry(t: TelemetryInput): Promise<void> {
 
 // Re-export so route handlers don't need to import directly from `ai`.
 export type { ModelMessage, UIMessage };
+
+
+// ---------------------------------------------------------------------------
+// Per-tool telemetry (Phase 7b)
+// ---------------------------------------------------------------------------
+
+export interface ToolTelemetryInput {
+  threadId: string | null;
+  messageId: string | null;
+  tool: string;
+  ms: number;
+  ok: boolean;
+  errorCode?: string | null;
+}
+
+export async function recordToolTelemetry(t: ToolTelemetryInput): Promise<void> {
+  try {
+    await getDb()
+      .insert(schema.chatToolTelemetry)
+      .values({
+        threadId: t.threadId,
+        messageId: t.messageId,
+        tool: t.tool,
+        ms: t.ms,
+        ok: t.ok,
+        errorCode: t.errorCode ?? null,
+      });
+  } catch (err) {
+    // Tool-telemetry failures must never crash a chat turn.
+    console.warn('[ai] tool telemetry insert failed', err);
+  }
+}

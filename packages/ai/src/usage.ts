@@ -89,12 +89,19 @@ export async function computeUsage(now = new Date()): Promise<UsageStats> {
     )
     .orderBy(desc(schema.chatTelemetry.createdAt));
 
+  // Routing breadcrumbs (Phase 7a) carry zero tokens / zero cost — they're
+  // useful for breakdowns but must not inflate "turns" counts. We exclude
+  // them from the rollup.
+  const turnRows = rows.filter(
+    (r) => r.kind === null || (!r.kind.startsWith('routing_') && !r.kind.startsWith('plan_')),
+  );
+
   let todayUsd = 0;
   let sevenDayUsd = 0;
   let thirtyDayUsd = 0;
   let inputTokens = 0;
   let outputTokens = 0;
-  const turns = rows.length;
+  const turns = turnRows.length;
   const byModelMap = new Map<string, ModelBreakdown>();
 
   // Initialise 7 daily buckets so the chart renders zeros for empty days.
@@ -105,7 +112,7 @@ export async function computeUsage(now = new Date()): Promise<UsageStats> {
     dailyMap.set(key, { date: key, turns: 0, costUsd: 0 });
   }
 
-  for (const r of rows) {
+  for (const r of turnRows) {
     const cost = Number(r.estCostUsd ?? 0);
     const inT = r.inputTokens ?? 0;
     const outT = r.outputTokens ?? 0;

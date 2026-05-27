@@ -17,6 +17,13 @@ export const dynamic = 'force-dynamic';
 // us) for the rest.
 const BodySchema = z.object({
   threadId: z.string().uuid(),
+  /**
+   * Phase 7c — optional one-shot model override forwarded from the chat
+   * surface's "Regenerate with…" picker. Wins over the router's per-domain
+   * choice for this turn only; the persisted thread.modelOverride is
+   * untouched.
+   */
+  modelOverride: z.string().min(1).max(120).nullable().optional(),
   messages: z
     .array(
       z.object({
@@ -65,6 +72,9 @@ export async function POST(req: Request): Promise<Response> {
       // forward the shape AI SDK already understands.
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       userMessage: last as any,
+      ...(body.modelOverride !== undefined && body.modelOverride !== null
+        ? { modelOverride: body.modelOverride }
+        : {}),
       env: {
         AI_GATEWAY_API_KEY: env.AI_GATEWAY_API_KEY,
         GOOGLE_GENERATIVE_AI_API_KEY: env.GOOGLE_GENERATIVE_AI_API_KEY,
@@ -75,6 +85,9 @@ export async function POST(req: Request): Promise<Response> {
         AI_DEFAULT_MODEL: env.AI_DEFAULT_MODEL,
         AI_TITLE_MODEL: env.AI_TITLE_MODEL,
         AI_VISION_MODEL: env.AI_VISION_MODEL,
+        AI_FUNDAMENTAL_MODEL: env.AI_FUNDAMENTAL_MODEL,
+        AI_TECHNICAL_MODEL: env.AI_TECHNICAL_MODEL,
+        AI_SUMMARY_MODEL: env.AI_SUMMARY_MODEL,
         MAX_DAILY_USD: env.MAX_DAILY_USD,
         MAX_TOOL_ITERATIONS: env.MAX_TOOL_ITERATIONS,
         LOG_PROMPTS: env.LOG_PROMPTS,

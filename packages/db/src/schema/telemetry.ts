@@ -11,12 +11,33 @@ import {
 /**
  * Discriminator for non-assistant-turn telemetry rows.
  *
- * Legacy assistant turns leave `kind` null; the auto-title path emits one of:
- * - `title_generated`       — Title_Generator produced an LLM title.
- * - `title_failed`          — Title_Generator LLM call errored; fallback persisted.
- * - `title_skipped_budget`  — Daily_Budget_Guardrail blocked the call; fallback persisted.
+ * Legacy assistant turns leave `kind` null; auxiliary paths emit one of:
+ * - Title_Generator outcomes:
+ *   - `title_generated`       — Title_Generator produced an LLM title.
+ *   - `title_failed`          — Title_Generator LLM call errored; fallback persisted.
+ *   - `title_skipped_budget`  — Daily_Budget_Guardrail blocked the call; fallback persisted.
+ * - Routing breadcrumbs (Phase 7a) — one row per chat turn that records
+ *   which domain the router picked. Used by `/settings/usage` to break
+ *   spend down by domain. The associated `model` column carries the
+ *   resolved model id.
+ *   - `routing_fundamental`
+ *   - `routing_technical`
+ *   - `routing_summary`
+ *   - `routing_vision`
+ *   - `routing_generic`
  */
-export type ChatTelemetryKind = 'title_generated' | 'title_failed' | 'title_skipped_budget';
+export type ChatTelemetryKind =
+  | 'title_generated'
+  | 'title_failed'
+  | 'title_skipped_budget'
+  | 'routing_fundamental'
+  | 'routing_technical'
+  | 'routing_summary'
+  | 'routing_vision'
+  | 'routing_generic'
+  | 'plan_generated'
+  | 'plan_skipped_budget'
+  | 'plan_failed';
 
 /**
  * Per-turn AI telemetry — drives /settings/usage and the daily $ ceiling.

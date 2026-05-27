@@ -14,6 +14,7 @@ import {
 
 import { buildLiveSnapshot } from './context';
 import { enforceDailyBudget } from './cost';
+import { compactThread } from './memory/thread-summary';
 import { resolveModel } from './model';
 import {
   appendAssistantMessage,
@@ -21,12 +22,17 @@ import {
   getThread,
   listMessages,
   recordTelemetry,
+  recordToolTelemetry,
   updateThreadTitle,
 } from './persistence';
+import { runPlanner } from './planner';
 import { buildSystemPrompt } from './prompt/system';
+import { routeTurn, type RoutingDecision } from './routing';
 import { generateTitle } from './title';
 import { setAnalyzeChartImageContext } from './tools/analyze-chart-image';
+import { setSummarizeThreadContext } from './tools/summarize-thread';
 import { tools } from './tools';
+import { enforceCitations } from './verification';
 
 export interface RunChatArgs {
   threadId: string;
@@ -44,6 +50,9 @@ export interface RunChatArgs {
     | 'AI_DEFAULT_MODEL'
     | 'AI_TITLE_MODEL'
     | 'AI_VISION_MODEL'
+    | 'AI_FUNDAMENTAL_MODEL'
+    | 'AI_TECHNICAL_MODEL'
+    | 'AI_SUMMARY_MODEL'
     | 'MAX_DAILY_USD'
     | 'MAX_TOOL_ITERATIONS'
     | 'LOG_PROMPTS'
@@ -58,9 +67,10 @@ export interface RunChatArgs {
  * Runs one chat turn end-to-end:
  *   1. Daily-budget guardrail.
  *   2. Persist incoming user message.
- *   3. Load history + build LIVE_SNAPSHOT.
- *   4. streamText with tools.
- *   5. On finish: persist assistant message + telemetry.
+ *   3. Load history, compact older messages into a summary, build LIVE_SNAPSHOT.
+ *   4. Route the turn → pick model + decide if a plan-then-act step is needed.
+ *   5. streamText with tools.
+ *   6. On finish: persist assistant message + telemetry (incl. routing).
  *
  * Returns the AI SDK stream result; the caller pipes it to the response via
  * `result.toUIMessageStreamResponse()`.
@@ -76,14 +86,23 @@ export async function runChat(args: RunChatArgs) {
   //    we still want the prompt in history so retries can resume.
   await appendUserMessage(threadId, userMessage);
 
-  // 3) Load history + ambient snapshot.
+  // 3) Load history + ambient snapshot in parallel; THEN apply rolling-summary
+  //    compaction once we know the message count.
   const [history, snapshot] = await Promise.all([
     listMessages(threadId, 60),
     buildLiveSnapshot(signal ? { signal } : {}),
   ]);
 
+  const compactArgs: Parameters<typeof compactThread>[0] = {
+    threadId,
+    history,
+    env,
+  };
+  if (signal) compactArgs.signal = signal;
+  const compaction = await compactThread(compactArgs);
+
   const modelMessages: ModelMessage[] = convertToModelMessages(
-    history.map(
+    compaction.kept.map(
       (m) =>
         ({
           id: m.id,
@@ -93,9 +112,82 @@ export async function runChat(args: RunChatArgs) {
     ),
   );
 
-  const modelId = modelOverride ?? env.AI_DEFAULT_MODEL;
+  // 4) Domain-based model routing — picks the best model for this turn.
+  const routingArgs: Parameters<typeof routeTurn>[0] = { userMessage, env };
+  if (modelOverride !== undefined) routingArgs.modelOverride = modelOverride;
+  const routing: RoutingDecision = routeTurn(routingArgs);
+  const modelId = routing.modelId;
   const model = resolveModel(modelId, env);
-  const systemPrompt = buildSystemPrompt(snapshot);
+
+  // 4b) Plan-then-act (Phase 7c). Runs only when `routing.planRequired`
+  //     is true (fundamental + technical domains today). The planner
+  //     persists a `data-plan` system-message right before the streaming
+  //     turn so the chat surface renders a collapsible "Thinking" pill
+  //     above the assistant's answer. Failures fall back deterministically
+  //     and never block the main streamText call.
+  let plannerStartedAt = 0;
+  let plannerResult: Awaited<ReturnType<typeof runPlanner>> | null = null;
+  if (routing.planRequired) {
+    plannerStartedAt = Date.now();
+    try {
+      plannerResult = await runPlanner({
+        threadId,
+        userMessage,
+        routing,
+        env: {
+          AI_GATEWAY_API_KEY: env.AI_GATEWAY_API_KEY,
+          GOOGLE_GENERATIVE_AI_API_KEY: env.GOOGLE_GENERATIVE_AI_API_KEY,
+          GOOGLE_VERTEX_PROJECT: env.GOOGLE_VERTEX_PROJECT,
+          GOOGLE_VERTEX_LOCATION: env.GOOGLE_VERTEX_LOCATION,
+          GOOGLE_APPLICATION_CREDENTIALS_JSON: env.GOOGLE_APPLICATION_CREDENTIALS_JSON,
+          GOOGLE_APPLICATION_CREDENTIALS: env.GOOGLE_APPLICATION_CREDENTIALS,
+          AI_SUMMARY_MODEL: env.AI_SUMMARY_MODEL,
+          AI_DEFAULT_MODEL: env.AI_DEFAULT_MODEL,
+          MAX_DAILY_USD: env.MAX_DAILY_USD,
+          LOG_PROMPTS: env.LOG_PROMPTS,
+        },
+        ...(signal ? { signal } : {}),
+      });
+      if (plannerResult.source === 'llm' && env.LOG_PROMPTS) {
+        console.info(
+          '[ai] planner ok (steps=%d, tools=%o)',
+          plannerResult.plan.steps.length,
+          plannerResult.plan.expectedTools,
+        );
+      }
+      // Telemetry — record a single row tagged `kind: 'plan_*'` so the
+      // /settings/usage page can see how often the planner runs and how
+      // much it costs. Best-effort; never blocks the chat.
+      void recordTelemetry({
+        threadId,
+        messageId: plannerResult.messageId,
+        model: env.AI_SUMMARY_MODEL ?? env.AI_DEFAULT_MODEL,
+        inputTokens: plannerResult.inputTokens,
+        outputTokens: plannerResult.outputTokens,
+        toolCalls: 0,
+        ms: plannerResult.ms,
+        kind:
+          plannerResult.source === 'llm'
+            ? 'plan_generated'
+            : plannerResult.reason === 'budget'
+              ? 'plan_skipped_budget'
+              : 'plan_failed',
+      });
+    } catch (err) {
+      console.warn('[ai] planner threw — falling back', err);
+    }
+  }
+  void plannerStartedAt;
+
+  // The base system prompt is unchanged; we prepend the (optional) thread
+  // summary as a system note so the model has continuity beyond the verbatim
+  // tail. The plan-then-act expansion (Phase 7c) lands here too — for now
+  // we just record `planRequired` in telemetry so routing decisions are
+  // auditable today.
+  const baseSystem = buildSystemPrompt(snapshot);
+  const systemPrompt = compaction.extraSystem
+    ? `${compaction.extraSystem}\n\n${baseSystem}`
+    : baseSystem;
 
   // Make the per-turn context available to image-aware tools that need
   // to look up the latest user-attached image without it threading
@@ -114,13 +206,59 @@ export async function runChat(args: RunChatArgs) {
     },
   });
 
+  // Phase 7b: same pattern for `summarize_thread` — it needs to know the
+  // active thread id and env without those coming through the tool-arg
+  // envelope.
+  setSummarizeThreadContext({
+    threadId,
+    env: {
+      AI_GATEWAY_API_KEY: env.AI_GATEWAY_API_KEY,
+      GOOGLE_GENERATIVE_AI_API_KEY: env.GOOGLE_GENERATIVE_AI_API_KEY,
+      GOOGLE_VERTEX_PROJECT: env.GOOGLE_VERTEX_PROJECT,
+      GOOGLE_VERTEX_LOCATION: env.GOOGLE_VERTEX_LOCATION,
+      GOOGLE_APPLICATION_CREDENTIALS_JSON: env.GOOGLE_APPLICATION_CREDENTIALS_JSON,
+      GOOGLE_APPLICATION_CREDENTIALS: env.GOOGLE_APPLICATION_CREDENTIALS,
+      AI_SUMMARY_MODEL: env.AI_SUMMARY_MODEL,
+      AI_DEFAULT_MODEL: env.AI_DEFAULT_MODEL,
+      AI_EMBEDDING_MODEL: 'openai/text-embedding-3-small',
+      MAX_DAILY_USD: env.MAX_DAILY_USD,
+      LOG_PROMPTS: env.LOG_PROMPTS,
+    },
+  });
+
   if (env.LOG_PROMPTS) {
+    console.info(
+      '[ai] routing domain=%s model=%s plan=%s rationale=%s',
+      routing.domain,
+      modelId,
+      routing.planRequired,
+      routing.rationale,
+    );
     console.info('[ai] system prompt:\n%s', systemPrompt);
-    console.info('[ai] history (%d msgs)', modelMessages.length);
+    console.info(
+      '[ai] history (%d msgs, compacted %d)',
+      modelMessages.length,
+      compaction.compacted,
+    );
   }
 
-  // 4) Stream. AI Gateway model strings ("openai/gpt-4.1") are accepted
+  // Telemetry breadcrumb for the routing decision — useful for /settings/usage
+  // breakdowns. Best-effort; failures here never block the chat.
+  void recordTelemetry({
+    threadId,
+    messageId: null,
+    model: modelId,
+    inputTokens: 0,
+    outputTokens: 0,
+    toolCalls: 0,
+    ms: 0,
+    kind: `routing_${routing.domain}` as const,
+  }).catch((err) => console.warn('[ai] routing telemetry failed', err));
+
+  // 5) Stream. AI Gateway model strings ("openai/gpt-4.1") are accepted
   //    directly when AI_GATEWAY_API_KEY is set.
+  const stepStart = new Map<string, number>();
+
   const streamArgs: Parameters<typeof streamText>[0] = {
     model,
     system: systemPrompt,
@@ -128,18 +266,93 @@ export async function runChat(args: RunChatArgs) {
     tools,
     stopWhen: stepCountIs(env.MAX_TOOL_ITERATIONS),
 
+    // Phase 7b: per-tool telemetry. The AI SDK fires `onStepFinish` once
+    // per model→tool→model hop with the tool call + tool result on the
+    // step's content. We map each pair to a single per-tool row.
+    onStepFinish: ({ response }) => {
+      try {
+        const last = response.messages.at(-1);
+        if (!last || !Array.isArray(last.content)) return;
+        for (const part of last.content) {
+          if (
+            part &&
+            typeof part === 'object' &&
+            'type' in part &&
+            (part as { type: string }).type === 'tool-result'
+          ) {
+            const toolName = (part as { toolName?: string }).toolName ?? 'unknown';
+            const callId = (part as { toolCallId?: string }).toolCallId;
+            const startedAt = callId ? stepStart.get(callId) : undefined;
+            const ms = startedAt ? Math.max(0, Date.now() - startedAt) : 0;
+            // The shape of `result` differs per tool; we only need to know
+            // whether it crashed. The AI SDK surfaces tool errors as a
+            // separate "tool-error" part when configured to; we treat
+            // anything we successfully streamed as `ok`.
+            const ok = !(part as { isError?: boolean }).isError;
+            void recordToolTelemetry({
+              threadId,
+              messageId: null,
+              tool: toolName,
+              ms,
+              ok,
+            });
+          } else if (
+            part &&
+            typeof part === 'object' &&
+            'type' in part &&
+            (part as { type: string }).type === 'tool-call'
+          ) {
+            const callId = (part as { toolCallId?: string }).toolCallId;
+            if (callId) stepStart.set(callId, Date.now());
+          }
+        }
+      } catch (err) {
+        console.warn('[ai] step telemetry failed', err);
+      }
+    },
+
     onFinish: async ({ usage, finishReason, response }) => {
       try {
         const assistantUiMsg = response.messages.at(-1);
         let messageId: string | null = null;
         if (assistantUiMsg && assistantUiMsg.role === 'assistant') {
           // Convert the model-shaped response back to a UIMessage shape.
+          const baseParts: UIMessage['parts'] = Array.isArray(assistantUiMsg.content)
+            ? (assistantUiMsg.content as UIMessage['parts'])
+            : [{ type: 'text', text: String(assistantUiMsg.content) }];
+
+          // Phase 7c: post-finish citation enforcement. We append a
+          // `data-citation-warning` part when the assistant's text quotes
+          // numbers / events that aren't backed by a tool call this turn.
+          // The check is heuristic and `stance: 'soft'` so false positives
+          // render as muted footer pills, not blocking errors.
+          let parts: UIMessage['parts'] = baseParts;
+          try {
+            const assistantText = baseParts
+              .filter(
+                (p): p is { type: 'text'; text: string } =>
+                  typeof p === 'object' &&
+                  p !== null &&
+                  (p as { type?: string }).type === 'text' &&
+                  typeof (p as { text?: unknown }).text === 'string',
+              )
+              .map((p) => p.text)
+              .join('\n');
+            const warning = enforceCitations({
+              text: assistantText,
+              responseMessages: response.messages,
+            });
+            if (warning) {
+              parts = [...baseParts, warning as unknown as UIMessage['parts'][number]];
+            }
+          } catch (err) {
+            console.warn('[ai] citation enforcer failed — skipping', err);
+          }
+
           const ui: UIMessage = {
             id: crypto.randomUUID(),
             role: 'assistant',
-            parts: Array.isArray(assistantUiMsg.content)
-              ? (assistantUiMsg.content as UIMessage['parts'])
-              : [{ type: 'text', text: String(assistantUiMsg.content) }],
+            parts,
           };
           ({ messageId } = await appendAssistantMessage(threadId, ui));
         }

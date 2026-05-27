@@ -21,19 +21,28 @@ import type { AnalyzeChartImageOutputSchema } from '../schemas/tool-outputs/anal
 import type { AnalyzeFundamentalOutputSchema } from '../schemas/tool-outputs/analyze-fundamental';
 import type { AnalyzeTechnicalOutputSchema } from '../schemas/tool-outputs/analyze-technical';
 import type { AnnotateChartOutputSchema } from '../schemas/tool-outputs/annotate-chart';
+import type { ComputePositionHealthOutputSchema } from '../schemas/tool-outputs/compute-position-health';
+import type { ComputeRiskOutputSchema } from '../schemas/tool-outputs/compute-risk';
+import type { ForecastVolatilityOutputSchema } from '../schemas/tool-outputs/forecast-volatility';
 import type { GetCalendarOutputSchema } from '../schemas/tool-outputs/get-calendar';
 import type { GetCandlesOutputSchema } from '../schemas/tool-outputs/get-candles';
 import type { GetCorrelationOutputSchema } from '../schemas/tool-outputs/get-correlation';
 import type { GetCoTOutputSchema } from '../schemas/tool-outputs/get-cot';
 import type { GetIndicatorsOutputSchema } from '../schemas/tool-outputs/get-indicators';
+import type { GetIntermarketOutputSchema } from '../schemas/tool-outputs/get-intermarket';
 import type { GetJournalStatsOutputSchema } from '../schemas/tool-outputs/get-journal-stats';
 import type { GetMarketStructureOutputSchema } from '../schemas/tool-outputs/get-market-structure';
 import type { GetNewsOutputSchema } from '../schemas/tool-outputs/get-news';
 import type { GetPriceOutputSchema } from '../schemas/tool-outputs/get-price';
+import type { GetSeasonalityOutputSchema } from '../schemas/tool-outputs/get-seasonality';
+import type { GetSessionLevelsOutputSchema } from '../schemas/tool-outputs/get-session-levels';
 import type { LogJournalOutputSchema } from '../schemas/tool-outputs/log-journal';
+import type { ReplaySetupOutputSchema } from '../schemas/tool-outputs/replay-setup';
 import type { SearchKnowledgeOutputSchema } from '../schemas/tool-outputs/search-knowledge';
 import type { SetAlertOutputSchema } from '../schemas/tool-outputs/set-alert';
 import type { ShareSnapshotOutputSchema } from '../schemas/tool-outputs/share-snapshot';
+import type { SummarizeThreadOutputSchema } from '../schemas/tool-outputs/summarize-thread';
+import type { VerifyCallOutputSchema } from '../schemas/tool-outputs/verify-call';
 import type { ToolName } from './tool-names';
 
 /**
@@ -73,6 +82,17 @@ export interface ToolOutputMap {
   get_correlation: z.infer<typeof GetCorrelationOutputSchema>;
   get_cot: z.infer<typeof GetCoTOutputSchema>;
   share_snapshot: z.infer<typeof ShareSnapshotOutputSchema>;
+  // Phase 7b tools
+  compute_risk: z.infer<typeof ComputeRiskOutputSchema>;
+  get_session_levels: z.infer<typeof GetSessionLevelsOutputSchema>;
+  get_intermarket: z.infer<typeof GetIntermarketOutputSchema>;
+  forecast_volatility: z.infer<typeof ForecastVolatilityOutputSchema>;
+  get_seasonality: z.infer<typeof GetSeasonalityOutputSchema>;
+  compute_position_health: z.infer<typeof ComputePositionHealthOutputSchema>;
+  replay_setup: z.infer<typeof ReplaySetupOutputSchema>;
+  summarize_thread: z.infer<typeof SummarizeThreadOutputSchema>;
+  // Phase 7c tools
+  verify_call: z.infer<typeof VerifyCallOutputSchema>;
 }
 
 export type ToolInput<T extends ToolName> = T extends keyof ToolIOMap

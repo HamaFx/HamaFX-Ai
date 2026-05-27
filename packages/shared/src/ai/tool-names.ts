@@ -24,6 +24,17 @@ export const TOOL_NAMES = [
   'get_correlation',
   'get_cot',
   'share_snapshot',
+  // Phase 7b tools
+  'compute_risk',
+  'get_session_levels',
+  'get_intermarket',
+  'forecast_volatility',
+  'get_seasonality',
+  'compute_position_health',
+  'replay_setup',
+  'summarize_thread',
+  // Phase 7c tools
+  'verify_call',
 ] as const;
 
 export type ToolName = (typeof TOOL_NAMES)[number];

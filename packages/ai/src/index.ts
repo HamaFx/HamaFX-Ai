@@ -30,9 +30,11 @@ export {
   appendUserMessage,
   appendAssistantMessage,
   recordTelemetry,
+  recordToolTelemetry,
   type DbThread,
   type DbMessage,
   type TelemetryInput,
+  type ToolTelemetryInput,
 } from './persistence';
 
 // Alerts
@@ -145,3 +147,29 @@ export {
   type SavePushSubscriptionArgs,
 } from './push/persistence';
 export { sendWebPush, type SendWebPushResult, type VapidEnv } from './push/send';
+
+
+// Phase 7a — domain routing + rolling thread summary
+export { routeTurn, type RoutingDecision, type RoutingDomain } from './routing';
+export { compactThread, type CompactResult } from './memory/thread-summary';
+
+// Phase 7b — memory index
+export {
+  rememberJournalEntry,
+  rememberBriefing,
+  rememberThreadSynopsis,
+  searchMemory,
+  countMemory,
+  type MemoryKind,
+  type MemoryRow,
+} from './memory/memory-index';
+export {
+  runMemoryQuery,
+  memoryRowToItem,
+  type RunMemoryQueryArgs,
+} from './rag';
+
+// Phase 7c — planner, citation enforcement, tool catalogue
+export { runPlanner, type PlanResult, type PlannerEnv } from './planner';
+export { enforceCitations } from './verification';
+export { buildToolCatalogue, type CatalogueEntry } from './catalogue';
