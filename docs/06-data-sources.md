@@ -9,14 +9,13 @@
 | Provider               | Tier                    | XAUUSD | EURUSD | GBPUSD | WS  | Use as                        |
 | ---------------------- | ----------------------- | :----: | :----: | :----: | :-: | ----------------------------- |
 | **BiQuote**            | Free, no key            |   ✅   |   ✅   |   ✅   | ✅  | **Primary (Phase 8)**         |
-| **Twelve Data**        | Free 800 reqs/day, paid |   ✅   |   ✅   |   ✅   | ✅  | Fallback (retired in PR-19)   |
 | **Finnhub**            | Free 60/min             |   ⚠️   |   ✅   |   ✅   | ✅  | Fallback FX                   |
 | **Alpha Vantage**      | Free 25/day, paid       |   ✅   |   ✅   |   ✅   | ❌  | Backup historical             |
 | **OANDA Exchange API** | Paid only               |   ✅   |   ✅   |   ✅   | ✅  | Production-grade upgrade path |
 | **FCS API**            | Cheap paid              |   ✅   |   ✅   |   ✅   | ✅  | Alternative primary           |
 | **EODHD**              | Paid                    |   ✅   |   ✅   |   ✅   | ⚠️  | EOD historical & dividends    |
 
-> **Rationale (Phase 8).** BiQuote is free and unauthenticated, covers all three symbols at REST + SignalR, and lets us hold a persistent live-tick stream from a single VM-hosted worker without paying for a Twelve Data tier. We keep Finnhub and Alpha Vantage in the failover chain so a BiQuote outage degrades to REST-cached values rather than going dark. Twelve Data stays wired as a transitional fallback while we soak BiQuote in production; PR-19 removes it entirely.
+> **Rationale (Phase 8).** BiQuote is free and unauthenticated, covers all three symbols at REST + SignalR, and lets us hold a persistent live-tick stream from a single VM-hosted worker without paying for a market-data tier. We keep Finnhub and Alpha Vantage in the failover chain so a BiQuote outage degrades to REST-cached values rather than going dark. Twelve Data was retired in Phase 8 PR-19 — it had been our primary since Phase 1a but BiQuote's free tier covers everything Twelve Data did with the added benefit of WebSocket support without per-day caps.
 
 ### News
 
@@ -60,7 +59,7 @@ export const CandleSchema = z.object({
   l: z.number(),
   c: z.number(),
   v: z.number().nullable(), // volume optional / synthetic for FX
-  source: z.string(), // "twelve-data"
+  source: z.string(), // "biquote", "biquote-signalr", "finnhub"
   fetchedAt: z.number().int(), // ms epoch UTC
 });
 

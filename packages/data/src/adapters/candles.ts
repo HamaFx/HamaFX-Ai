@@ -5,19 +5,15 @@
 // per (symbol, tf, count) bucket with TTL chosen by `lastBar=true` math
 // (i.e. assume the window includes the live bar).
 //
-// Phase 2 added Finnhub as a fallback. The cache entry is provider-agnostic
-// (one bucket per `(symbol, tf, count)` key), but the bars carry their own
-// `source` field so downstream consumers can tell where they came from.
-//
 // Phase 7a: opt-in SWR via TTL policy + `getCandlesWithMeta` for callers
 // that want to surface staleness.
 //
-// Phase 8 PR-4:
-//   - BiQuote becomes the **first** REST attempt for every TF except `1w`.
-// Phase 8 PR-8:
-//   - For `tf === '1m'`, the worker-maintained `candles_1m` table jumps in
-//     front of BiQuote. The route handler is served from Postgres without
-//     any outbound API call when the worker is healthy.
+// Phase 8 PR-8 final order:
+//   1m:    candles-1m  (worker-maintained)  →  biquote  →  finnhub
+//   ≥5m:                                       biquote  →  finnhub
+//   1w:                                                    finnhub  (biquote unsupported)
+//
+// PR-19 removed Twelve Data entirely.
 
 import {
   CandleSchema,
@@ -33,14 +29,12 @@ import { cacheKey, cacheTag, candleTtl, getDefaultCache } from '../cache';
 import { ProviderError } from '../errors';
 import { runWithFailover, type ProviderAttempt } from '../failover';
 import * as finnhub from '../providers/finnhub';
-import * as twelveData from '../providers/twelve-data';
-import { parseTwelveDataDate } from '../providers/twelve-data/map';
 
 export interface GetCandlesOptions {
   signal?: AbortSignal;
   /** Number of bars to request (capped at 5000 by upstream). Default 300. */
   count?: number;
-  apiKeys?: Partial<{ twelveData: string; finnhub: string; biquoteBaseUrl: string }>;
+  apiKeys?: Partial<{ finnhub: string; biquoteBaseUrl: string }>;
 }
 
 export interface CandlesResult {
@@ -54,7 +48,6 @@ const MAX_COUNT = 5000;
 
 function resolveKeys(opts: GetCandlesOptions) {
   return {
-    twelveData: opts.apiKeys?.twelveData ?? process.env.TWELVEDATA_API_KEY ?? '',
     finnhub: opts.apiKeys?.finnhub ?? process.env.FINNHUB_API_KEY ?? '',
     biquoteBaseUrl:
       opts.apiKeys?.biquoteBaseUrl ?? process.env.BIQUOTE_BASE_URL ?? 'https://biquote.io',
@@ -90,7 +83,7 @@ export async function getCandlesWithMeta(
   const keys = resolveKeys(opts);
   const policy = candleTtl(tf, true);
   // BiQuote tops out at 2000 bars per series; cap our request to it but let
-  // larger requests still flow through to Twelve Data / Finnhub.
+  // larger requests still flow through to Finnhub.
   const biquoteCount = Math.min(count, 2000);
 
   const cache = await getDefaultCache();
@@ -161,34 +154,6 @@ export async function getCandlesWithMeta(
         });
       }
 
-      if (keys.twelveData) {
-        attempts.push({
-          name: 'twelve-data',
-          run: async () => {
-            const raw = await twelveData.fetchCandles(symbol, tf, count, {
-              apiKey: keys.twelveData,
-              ...(opts.signal ? { signal: opts.signal } : {}),
-            });
-            const fetchedAt = Date.now();
-            return raw.map((bar) => {
-              const parsed = CandleSchema.parse({
-                symbol,
-                tf,
-                t: parseTwelveDataDate(bar.datetime),
-                o: Number(bar.open),
-                h: Number(bar.high),
-                l: Number(bar.low),
-                c: Number(bar.close),
-                v: bar.volume !== undefined ? Number(bar.volume) : null,
-                source: 'twelve-data',
-                fetchedAt,
-              });
-              return parsed;
-            });
-          },
-        });
-      }
-
       if (keys.finnhub) {
         attempts.push({
           name: 'finnhub',
@@ -223,7 +188,7 @@ export async function getCandlesWithMeta(
         throw new ProviderError(
           'NO_PROVIDER_AVAILABLE',
           'none',
-          'no candle provider configured (set TWELVEDATA_API_KEY or FINNHUB_API_KEY, or use BiQuote)',
+          'no candle provider configured (set FINNHUB_API_KEY or use BiQuote)',
         );
       }
 

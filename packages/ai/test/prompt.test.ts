@@ -23,14 +23,14 @@ describe('buildSystemPrompt', () => {
           ask: 2345.6,
           mid: 2345.6,
           ts: 0,
-          source: 'twelve-data',
+          source: 'biquote-signalr',
         },
       },
     });
     expect(out).toContain('LIVE_SNAPSHOT');
     expect(out).toContain('Session: london');
     expect(out).toContain('XAUUSD: 2345.6');
-    expect(out).toContain('twelve-data');
+    expect(out).toContain('biquote-signalr');
   });
 
   it('renders an "unavailable" line when no prices fetched', () => {

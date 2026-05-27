@@ -9,15 +9,16 @@
 //     SWR window, we return the stale value with `stale=true` and let the UI
 //     surface it via `<StaleIndicator/>`.
 //
-// Phase 8 PR-4:
-//   - BiQuote (free, no key) becomes the **first** REST attempt; Twelve Data
-//     drops to the second attempt as a transitional fallback. PR-19 deletes
-//     the Twelve Data path entirely once BiQuote has soaked.
-// Phase 8 PR-8:
-//   - `live-ticks` (the worker-maintained snapshot table) jumps in front of
-//     BiQuote. When a row exists with ts within the last 60s, the route
-//     handler skips every upstream call and serves directly from Postgres
-//     — sub-second freshness, 0 outbound API calls, dirt-cheap.
+// Phase 8 PR-8 final order:
+//   1. live-ticks   — Postgres snapshot table maintained by the worker.
+//                     When the row is fresh, /api/market/price is served
+//                     directly from Postgres with zero outbound HTTP.
+//   2. biquote      — REST fallback when the worker is down.
+//   3. finnhub      — third tier.
+//
+// PR-19 removed Twelve Data entirely. After two weeks of soak with
+// BiQuote as primary, the chat-telemetry showed Twelve Data was not
+// being selected, so the dependency + key + adapter were retired.
 
 import { SymbolSchema, type Symbol, type Tick } from '@hamafx/shared';
 
@@ -26,7 +27,6 @@ import { fetchLiveTick } from '../providers/live-ticks';
 import { cacheKey, cacheTag, getDefaultCache, PRICE_TTL } from '../cache';
 import { runWithFailover, type ProviderAttempt } from '../failover';
 import * as finnhub from '../providers/finnhub';
-import * as twelveData from '../providers/twelve-data';
 
 export interface GetPriceOptions {
   signal?: AbortSignal;
@@ -38,12 +38,8 @@ export interface GetPriceOptions {
    * Adapter resolves API keys from env unless an injected `apiKeys` object is
    * provided — used by tests to avoid touching `process.env` and by the route
    * handler to centralise env access via `getServerEnv()`.
-   *
-   * `biquoteBaseUrl` is optional too — defaults to BIQUOTE_BASE_URL or the
-   * canonical https://biquote.io endpoint.
    */
   apiKeys?: Partial<{
-    twelveData: string;
     finnhub: string;
     biquoteBaseUrl: string;
   }>;
@@ -60,7 +56,6 @@ export interface PriceResult {
 
 function resolveKeys(opts: GetPriceOptions) {
   return {
-    twelveData: opts.apiKeys?.twelveData ?? process.env.TWELVEDATA_API_KEY ?? '',
     finnhub: opts.apiKeys?.finnhub ?? process.env.FINNHUB_API_KEY ?? '',
     biquoteBaseUrl:
       opts.apiKeys?.biquoteBaseUrl ?? process.env.BIQUOTE_BASE_URL ?? 'https://biquote.io',
@@ -125,18 +120,6 @@ export async function getPriceWithMeta(
         },
       });
 
-      if (keys.twelveData) {
-        attempts.push({
-          name: 'twelve-data',
-          run: async () => ({
-            ...(await twelveData.fetchPrice(symbol, {
-              apiKey: keys.twelveData,
-              ...(opts.signal ? { signal: opts.signal } : {}),
-            })),
-            provider: 'twelve-data',
-          }),
-        });
-      }
       if (keys.finnhub) {
         attempts.push({
           name: 'finnhub',

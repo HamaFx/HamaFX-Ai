@@ -112,7 +112,14 @@ const CacheEnv = z.object({
 });
 
 const ProvidersEnv = z.object({
-  TWELVEDATA_API_KEY: z.string().min(1),
+  /**
+   * Phase 8 PR-19 retired Twelve Data — BiQuote is the primary source
+   * now and Finnhub is the fallback. The env var is kept as optional so
+   * legacy deployments don't fail validation, but the adapter is gone.
+   * Remove the row entirely once you've cleared it from your Vercel
+   * project envs.
+   */
+  TWELVEDATA_API_KEY: z.string().min(1).optional(),
   FINNHUB_API_KEY: z.string().min(1).optional(),
   ALPHAVANTAGE_API_KEY: z.string().min(1).optional(),
   MARKETAUX_API_KEY: z.string().min(1).optional(),

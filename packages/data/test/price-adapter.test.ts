@@ -111,7 +111,7 @@ describe('getPrice — provider order (Phase 8: biquote first)', () => {
       },
     ]);
 
-    const tick = await getPrice('XAUUSD', { apiKeys: { twelveData: 'X' } });
+    const tick = await getPrice('XAUUSD');
     expect(tick.source).toBe('biquote');
     expect(tick.mid).toBeCloseTo(2345.678);
     expect(tick.bid).toBe(tick.mid);
@@ -133,9 +133,8 @@ describe('getPrice — provider order (Phase 8: biquote first)', () => {
     expect((fetchSpy as unknown as ReturnType<typeof vi.fn>)).toHaveBeenCalledTimes(1);
   });
 
-  it('falls over from biquote → twelve-data → finnhub', async () => {
+  it('falls over from biquote → finnhub', async () => {
     let biquoteCalls = 0;
-    let twelveDataCalls = 0;
     let finnhubCalls = 0;
     globalThis.fetch = createRoutedFetch([
       {
@@ -143,14 +142,6 @@ describe('getPrice — provider order (Phase 8: biquote first)', () => {
         respond: () => {
           biquoteCalls += 1;
           return { status: 503, body: { message: 'down' } };
-        },
-      },
-      {
-        match: (u) => u.includes('twelvedata.com'),
-        respond: () => {
-          twelveDataCalls += 1;
-          // Twelve Data error envelope (200 OK but status:error).
-          return { body: { code: 429, message: 'limit', status: 'error' } };
         },
       },
       {
@@ -165,12 +156,11 @@ describe('getPrice — provider order (Phase 8: biquote first)', () => {
     ]);
 
     const tick = await getPrice('GBPUSD', {
-      apiKeys: { twelveData: 'X', finnhub: 'Y' },
+      apiKeys: { finnhub: 'Y' },
     });
     expect(tick.source).toBe('finnhub');
     expect(tick.mid).toBe(1.27);
     expect(biquoteCalls).toBe(1);
-    expect(twelveDataCalls).toBe(1);
     expect(finnhubCalls).toBe(1);
   });
 
