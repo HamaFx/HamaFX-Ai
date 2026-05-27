@@ -16,11 +16,13 @@ import { createThread, type DbThread } from '../persistence';
  */
 export async function getOrCreateBriefingsThread(): Promise<DbThread> {
   const db = getDb();
+  console.log('[bt] step:db');
   const existing = await db
     .select()
     .from(schema.chatThreads)
     .where(eq(schema.chatThreads.isBriefings, true))
     .limit(1);
+  console.log('[bt] step:select', existing.length);
 
   const found = existing[0];
   if (found) {
