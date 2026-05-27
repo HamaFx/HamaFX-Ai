@@ -86,7 +86,9 @@ async function main(): Promise<number> {
     log.info('job completed', { processed: result.processed, note: result.note });
     return 0;
   } catch (err) {
-    log.error('job failed', { err: String(err) });
+    const stack =
+      err instanceof Error && typeof err.stack === 'string' ? err.stack : String(err);
+    log.error('job failed', { err: String(err), stack });
     captureException(err, { job: jobName });
     // withHeartbeat already pinged fail; ping again with the message in
     // case the wrapper didn't (defensive).
