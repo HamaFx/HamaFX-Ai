@@ -25,7 +25,7 @@ const ITEMS: Array<{
     label: 'Journal',
     description: 'Trades, R-multiples, win-rate',
     icon: BookOpen,
-    iconBg: 'oklch(74% 0.2 152 / 0.18)',
+    iconBg: 'oklch(72% 0.2 152 / 0.18)',
   },
   {
     href: '/settings',
@@ -38,31 +38,32 @@ const ITEMS: Array<{
 
 export default function MorePage() {
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-6">
       <PageHeader title="More" />
-      <nav aria-label="More" className="flex flex-col gap-2">
+      <nav aria-label="More" className="flex flex-col gap-3">
         {ITEMS.map((item) => {
           const Icon = item.icon;
           return (
             <Link
               key={item.href}
               href={item.href}
-              className="card-premium group flex min-h-[68px] items-center gap-4 px-4 py-3.5 transition-colors duration-200 md:hover:bg-bg-elev-2/40"
+              className="card-premium group flex min-h-[72px] items-center gap-4 p-4 transition-colors duration-200 md:hover:bg-bg-elev-2/40"
             >
               <span
-                className="text-fg inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl"
+                aria-hidden="true"
+                className="text-fg inline-flex size-12 shrink-0 items-center justify-center rounded-2xl"
                 style={{
                   background: item.iconBg,
-                  boxShadow: 'inset 0 1px 0 0 oklch(100% 0 0 / 0.08)',
+                  boxShadow: 'var(--shadow-inset-edge-soft)',
                 }}
               >
-                <Icon className="size-5" strokeWidth={2} />
+                <Icon className="size-6" strokeWidth={2} />
               </span>
               <div className="min-w-0 flex-1">
-                <span className="text-fg block text-sm font-semibold">{item.label}</span>
-                <span className="text-fg-subtle block text-xs">{item.description}</span>
+                <span className="text-fg block text-base font-semibold">{item.label}</span>
+                <span className="text-fg-muted block text-xs">{item.description}</span>
               </div>
-              <ChevronRight className="text-fg-subtle size-4 shrink-0" />
+              <ChevronRight className="text-fg-subtle size-5 shrink-0" aria-hidden="true" />
             </Link>
           );
         })}

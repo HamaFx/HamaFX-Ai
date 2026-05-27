@@ -3,7 +3,8 @@
 // Sonner toaster. Mounted once in the (app) layout. Replaces inline
 // status strings on writes (alert created, journal saved, refresh ok).
 //
-// Mobile (≤767px): bottom-center, above BottomNav and home indicator.
+// Mobile (≤767px): bottom-center, above BottomNav and home indicator,
+// using the --toast-bottom CSS token.
 // Desktop (≥768px): bottom-right.
 
 import { useEffect, useState } from 'react';
@@ -24,7 +25,7 @@ export function Toaster() {
   return (
     <SonnerToaster
       position={position}
-      offset="calc(80px + env(safe-area-inset-bottom))"
+      offset="var(--toast-bottom)"
       duration={3000}
       gap={8}
       closeButton={false}

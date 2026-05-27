@@ -1,3 +1,8 @@
+// Mobile-first page header. Hierarchy: page title is the loudest thing on
+// the screen (text-2xl bold), description is one line of helper text in
+// muted color. Optional icon tile is 48×48 (size-12) so it reads as
+// scaffolding, not chrome.
+
 import type { ReactNode } from 'react';
 
 interface PageHeaderProps {
@@ -9,16 +14,16 @@ interface PageHeaderProps {
 
 export function PageHeader({ title, description, icon, children }: PageHeaderProps) {
   return (
-    <header className="flex flex-col gap-2 pb-1">
+    <header className="flex flex-col gap-2 pb-2">
       <div className="flex items-end justify-between gap-3">
         <div className="flex items-center gap-3">
           {icon ? (
             <span
-              className="text-fg inline-flex h-10 w-10 items-center justify-center rounded-2xl"
+              aria-hidden="true"
+              className="text-fg inline-flex size-12 items-center justify-center rounded-2xl"
               style={{
-                background:
-                  'linear-gradient(135deg, oklch(78% 0.16 78 / 0.18), oklch(72% 0.18 295 / 0.18))',
-                boxShadow: 'inset 0 1px 0 0 oklch(100% 0 0 / 0.08)',
+                backgroundImage: 'var(--gradient-brand-soft)',
+                boxShadow: 'var(--shadow-inset-edge-soft)',
               }}
             >
               {icon}

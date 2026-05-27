@@ -1,15 +1,16 @@
 'use client';
 
-// New journal-entry form. Mobile-first: stacked, tap targets >= 44px.
-// We require symbol/side/entry; stop/target/size/notes are optional.
-// Phase 5: rendered inside a Drawer; outer card wrapping dropped.
+// New journal-entry form. Mobile-first: stacked, all tap targets ≥ 44px,
+// CTA is the size-lg primary button so it sits in the thumb zone of the
+// drawer.
+
 import { SYMBOLS, type Symbol, type TradeSide } from '@hamafx/shared';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { cn } from '@/lib/cn';
+import { Segmented } from '@/components/ui/segmented';
 
 interface EntryFormProps {
   onCreated?: () => void;
@@ -42,6 +43,20 @@ export function EntryForm({ onCreated }: EntryFormProps) {
       setBusy(false);
       setError('Entry must be a number');
       return;
+    }
+
+    // Field-level sanity check: long stops must be below entry, short above.
+    if (parsed.stop !== null && Number.isFinite(parsed.stop)) {
+      if (side === 'long' && parsed.stop >= parsed.entry) {
+        setBusy(false);
+        setError('Long stop must be below entry');
+        return;
+      }
+      if (side === 'short' && parsed.stop <= parsed.entry) {
+        setBusy(false);
+        setError('Short stop must be above entry');
+        return;
+      }
     }
 
     try {
@@ -79,33 +94,38 @@ export function EntryForm({ onCreated }: EntryFormProps) {
   }
 
   return (
-    <form onSubmit={submit} className="flex flex-col gap-3 px-4 pb-2">
-      <div className="flex gap-2">
-        <Pills<Symbol>
-          value={symbol}
-          onChange={setSymbol}
-          options={SYMBOLS.map((s) => ({ value: s, label: s }))}
-        />
-      </div>
-      <div>
-        <Pills<TradeSide>
-          value={side}
-          onChange={setSide}
-          options={[
-            { value: 'long', label: 'long ↑', tone: 'bull' },
-            { value: 'short', label: 'short ↓', tone: 'bear' },
-          ]}
-        />
-      </div>
+    <form onSubmit={submit} className="flex flex-col gap-4 px-4 pb-4">
+      <Segmented<Symbol>
+        label="Symbol"
+        value={symbol}
+        onChange={setSymbol}
+        role="radiogroup"
+        variant="solid"
+        size="md"
+        options={SYMBOLS.map((s) => ({ value: s, label: s }))}
+      />
 
-      <div className="grid grid-cols-2 gap-2">
+      <Segmented<TradeSide>
+        label="Side"
+        value={side}
+        onChange={setSide}
+        role="radiogroup"
+        variant="tone"
+        size="md"
+        options={[
+          { value: 'long', label: 'long ↑', tone: 'bull' },
+          { value: 'short', label: 'short ↓', tone: 'bear' },
+        ]}
+      />
+
+      <div className="grid grid-cols-2 gap-3">
         <Field label="Entry" value={entry} setValue={setEntry} required />
         <Field label="Stop (optional)" value={stop} setValue={setStop} />
         <Field label="Target (optional)" value={target} setValue={setTarget} />
         <Field label="Size in lots (optional)" value={size} setValue={setSize} />
       </div>
 
-      <div>
+      <div className="flex flex-col gap-2">
         <label className="text-fg-subtle text-[11px] uppercase tracking-wide" htmlFor="notes">
           Notes (optional)
         </label>
@@ -118,9 +138,15 @@ export function EntryForm({ onCreated }: EntryFormProps) {
         />
       </div>
 
-      {error ? <p className="text-bear text-xs">{error}</p> : null}
+      {error ? <p className="text-bear text-sm">{error}</p> : null}
 
-      <Button type="submit" size="md" disabled={busy || !entry}>
+      <Button
+        type="submit"
+        size="lg"
+        disabled={busy || !entry}
+        loading={busy}
+        className="mt-2"
+      >
         {busy ? 'Saving…' : 'Save entry'}
       </Button>
     </form>
@@ -140,7 +166,7 @@ function Field({
 }) {
   const id = label.toLowerCase().replace(/[^a-z]/g, '-');
   return (
-    <div className="flex flex-col gap-1">
+    <div className="flex flex-col gap-2">
       <label className="text-fg-subtle text-[11px] uppercase tracking-wide" htmlFor={id}>
         {label}
       </label>
@@ -151,41 +177,6 @@ function Field({
         inputMode="decimal"
         required={required}
       />
-    </div>
-  );
-}
-
-interface PillsProps<T extends string> {
-  value: T;
-  onChange: (next: T) => void;
-  options: ReadonlyArray<{ value: T; label: string; tone?: 'bull' | 'bear' }>;
-}
-
-function Pills<T extends string>({ value, onChange, options }: PillsProps<T>) {
-  return (
-    <div className="border-border bg-bg-elev-2 inline-flex items-center gap-0.5 rounded-md border p-0.5">
-      {options.map((opt) => {
-        const active = opt.value === value;
-        return (
-          <button
-            key={opt.value}
-            type="button"
-            onClick={() => onChange(opt.value)}
-            className={cn(
-              'rounded px-2.5 py-1 text-[11px] font-medium tabular-nums transition-colors',
-              active
-                ? opt.tone === 'bull'
-                  ? 'bg-bull text-bg'
-                  : opt.tone === 'bear'
-                    ? 'bg-bear text-bg'
-                    : 'bg-brand text-brand-fg'
-                : 'text-fg-muted hover:bg-bg-elev-1 hover:text-fg',
-            )}
-          >
-            {opt.label}
-          </button>
-        );
-      })}
     </div>
   );
 }

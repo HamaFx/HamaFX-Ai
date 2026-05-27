@@ -19,21 +19,24 @@ export function TopBar({ title, right }: TopBarProps) {
         'pt-[env(safe-area-inset-top)]',
       )}
     >
-      <div className="mx-auto flex h-12 max-w-2xl items-center justify-between gap-3 px-4">
+      <div
+        className="mx-auto flex max-w-2xl items-center justify-between gap-3 px-4"
+        style={{ height: 'var(--topbar-h)' }}
+      >
         <Link
           href="/chat"
-          className="group flex items-center gap-2 text-sm font-semibold tracking-tight transition-opacity hover:opacity-80"
+          aria-label="HamaFX-Ai home"
+          className="group inline-flex h-11 items-center gap-2 px-1 text-sm font-semibold tracking-tight transition-opacity hover:opacity-80"
         >
           <span
             aria-hidden="true"
-            className="relative inline-flex h-6 w-6 items-center justify-center rounded-md"
+            className="relative inline-flex h-7 w-7 items-center justify-center rounded-md"
             style={{
-              background:
-                'linear-gradient(135deg, oklch(78% 0.16 78 / 1) 0%, oklch(72% 0.18 295 / 1) 100%)',
+              backgroundImage: 'var(--gradient-brand)',
               boxShadow: '0 0 12px -2px oklch(78% 0.16 78 / 0.4)',
             }}
           >
-            <span className="text-[11px] font-bold text-bg">H</span>
+            <span className="text-bg text-xs font-bold">H</span>
           </span>
           <span className="text-fg">
             {title ?? 'HamaFX'}

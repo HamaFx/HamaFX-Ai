@@ -1,12 +1,21 @@
 'use client';
 
-// Journal entries list. Open trades show a "Close…" button that pops the
-// inline close form. Closed trades show their R-multiple + outcome.
+// Journal entries list. Mobile-first:
+//   - card padding p-4 (16)
+//   - delete confirmation via <ConfirmDrawer>, never window.confirm
+//   - "close trade" inline form stacks vertically — three controls
+//     (label+input → save → cancel) on a 430px screen don't fit
+//     side-by-side and were causing the cancel button to wrap to a 2nd
+//     row anyway.
+
 import type { JournalEntry } from '@hamafx/shared';
+import { Trash2 } from 'lucide-react';
 import { useState } from 'react';
 
 import { Button } from '@/components/ui/button';
+import { useConfirm } from '@/components/ui/confirm-drawer';
 import { Input } from '@/components/ui/input';
+import { Tooltip } from '@/components/ui/tooltip';
 import { cn } from '@/lib/cn';
 
 interface EntryListProps {
@@ -16,26 +25,43 @@ interface EntryListProps {
 }
 
 export function EntryList({ entries, onClosed, onDeleted }: EntryListProps) {
+  const [confirmEl, confirm] = useConfirm();
+
   if (entries.length === 0) {
-    return <p className="text-fg-subtle text-xs">No entries yet — log your first trade above.</p>;
+    return (
+      <p className="text-fg-subtle text-sm">No entries yet — log your first trade above.</p>
+    );
   }
   return (
-    <ul className="flex flex-col gap-2">
-      {entries.map((e) => (
-        <EntryRow key={e.id} entry={e} onClosed={onClosed} onDeleted={onDeleted} />
-      ))}
-    </ul>
+    <>
+      <ul className="flex flex-col gap-3">
+        {entries.map((e) => (
+          <EntryRow
+            key={e.id}
+            entry={e}
+            onClosed={onClosed}
+            onDeleted={onDeleted}
+            confirm={confirm}
+          />
+        ))}
+      </ul>
+      {confirmEl}
+    </>
   );
 }
+
+type ConfirmFn = ReturnType<typeof useConfirm>[1];
 
 function EntryRow({
   entry,
   onClosed,
   onDeleted,
+  confirm,
 }: {
   entry: JournalEntry;
   onClosed: () => void;
   onDeleted: () => void;
+  confirm: ConfirmFn;
 }) {
   const [closing, setClosing] = useState(false);
   const [exit, setExit] = useState<string>('');
@@ -48,7 +74,7 @@ function EntryRow({
     const exitNum = Number(exit);
     if (!Number.isFinite(exitNum)) {
       setBusy(false);
-      setError('exit must be numeric');
+      setError('Exit must be a number');
       return;
     }
     try {
@@ -69,7 +95,13 @@ function EntryRow({
   }
 
   async function remove() {
-    if (!confirm('Delete this entry?')) return;
+    const ok = await confirm({
+      title: 'Delete this entry?',
+      description: `${entry.symbol} ${entry.side} @ ${entry.entry} will be permanently removed.`,
+      confirmLabel: 'Delete',
+      tone: 'danger',
+    });
+    if (!ok) return;
     setBusy(true);
     try {
       await fetch(`/api/journal/${entry.id}`, { method: 'DELETE' });
@@ -88,7 +120,7 @@ function EntryRow({
         : 'text-fg-muted';
 
   return (
-    <li className="border-border bg-bg-elev-1 flex flex-col gap-2 rounded-lg border p-3">
+    <li className="card-premium flex flex-col gap-3 p-4">
       <div className="flex items-start gap-3">
         <div className="min-w-0 flex-1">
           <p className="flex items-center gap-2 text-sm font-semibold tabular-nums">
@@ -96,7 +128,7 @@ function EntryRow({
             <span className={cn('uppercase', sideColor)}>{entry.side}</span>
             <span className="text-fg-muted">@ {entry.entry}</span>
           </p>
-          <p className="text-fg-subtle mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] tabular-nums">
+          <p className="text-fg-subtle mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs tabular-nums">
             <span>{relative(entry.openedAt)}</span>
             {entry.stop !== null ? (
               <>
@@ -117,13 +149,18 @@ function EntryRow({
               </>
             ) : null}
           </p>
-          {entry.notes ? <p className="text-fg-muted mt-1 text-xs">{entry.notes}</p> : null}
+          {entry.notes ? <p className="text-fg-muted mt-2 text-xs">{entry.notes}</p> : null}
         </div>
 
-        <div className="flex shrink-0 flex-col items-end gap-1">
+        <div className="flex shrink-0 flex-col items-end gap-2">
           {entry.outcome === 'open' ? (
             !closing ? (
-              <Button type="button" size="sm" variant="secondary" onClick={() => setClosing(true)}>
+              <Button
+                type="button"
+                size="sm"
+                variant="secondary"
+                onClick={() => setClosing(true)}
+              >
                 Close…
               </Button>
             ) : null
@@ -138,22 +175,23 @@ function EntryRow({
               ) : null}
             </span>
           )}
-          <Button
-            type="button"
-            size="sm"
-            variant="ghost"
-            className="text-bear"
-            onClick={remove}
-            disabled={busy}
-          >
-            ✕
-          </Button>
+          <Tooltip label="Delete">
+            <button
+              type="button"
+              aria-label="Delete entry"
+              onClick={() => void remove()}
+              disabled={busy}
+              className="text-bear/70 hover:text-bear hover:bg-bear/10 inline-flex size-11 items-center justify-center rounded-lg transition-colors disabled:opacity-50"
+            >
+              <Trash2 className="size-4" />
+            </button>
+          </Tooltip>
         </div>
       </div>
 
       {closing ? (
-        <div className="border-border flex items-end gap-2 border-t pt-2">
-          <div className="flex-1">
+        <div className="border-divider flex flex-col gap-3 border-t pt-3">
+          <div>
             <label
               className="text-fg-subtle text-[11px] uppercase tracking-wide"
               htmlFor={`exit-${entry.id}`}
@@ -166,25 +204,35 @@ function EntryRow({
               onChange={(ev) => setExit(ev.target.value)}
               inputMode="decimal"
               autoFocus
+              className="mt-1"
             />
-            {error ? <p className="text-bear mt-0.5 text-[11px]">{error}</p> : null}
+            {error ? <p className="text-bear mt-2 text-xs">{error}</p> : null}
           </div>
-          <Button type="button" size="sm" onClick={close} disabled={busy || !exit}>
-            Save
-          </Button>
-          <Button
-            type="button"
-            size="sm"
-            variant="ghost"
-            onClick={() => {
-              setClosing(false);
-              setExit('');
-              setError(null);
-            }}
-            disabled={busy}
-          >
-            Cancel
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              type="button"
+              size="md"
+              onClick={close}
+              disabled={busy || !exit}
+              className="flex-1"
+            >
+              Save
+            </Button>
+            <Button
+              type="button"
+              size="md"
+              variant="ghost"
+              onClick={() => {
+                setClosing(false);
+                setExit('');
+                setError(null);
+              }}
+              disabled={busy}
+              className="flex-1"
+            >
+              Cancel
+            </Button>
+          </div>
         </div>
       ) : null}
     </li>

@@ -14,23 +14,23 @@ export const metadata: Metadata = { title: 'Settings' };
 
 export default function SettingsPage() {
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-6">
       <PageHeader title="Settings" description="Notifications, usage, and session." />
 
       <SettingsSection
         icon={<Activity className="size-4" strokeWidth={2.25} />}
-        iconColor="oklch(74% 0.2 152 / 0.18)"
+        iconColor="oklch(72% 0.2 152 / 0.18)"
         title="Usage"
       >
         <Link
           href="/settings/usage"
-          className="hover:bg-bg-elev-2/50 -mx-2 flex items-center justify-between gap-4 rounded-lg px-3 py-2.5 transition-colors"
+          className="hover:bg-bg-elev-2/50 -mx-2 flex min-h-[56px] items-center justify-between gap-4 rounded-lg px-3 py-3 transition-colors"
         >
-          <div className="flex flex-col">
-            <span className="text-fg text-sm font-medium">Usage analytics</span>
-            <span className="text-fg-subtle text-xs">Token spend, last 30 days</span>
+          <div className="flex flex-col gap-0.5">
+            <span className="text-fg text-sm font-semibold">Usage analytics</span>
+            <span className="text-fg-muted text-xs">Token spend, last 30 days</span>
           </div>
-          <ChevronRight className="text-fg-subtle size-4" />
+          <ChevronRight className="text-fg-subtle size-5" aria-hidden="true" />
         </Link>
       </SettingsSection>
 
@@ -76,10 +76,10 @@ interface SettingRowProps {
 
 function SettingRow({ label, description, action }: SettingRowProps) {
   return (
-    <div className="flex flex-col gap-2">
-      <div className="flex flex-col">
-        <span className="text-fg text-sm font-medium">{label}</span>
-        {description ? <span className="text-fg-subtle text-xs">{description}</span> : null}
+    <div className="flex flex-col gap-3 py-2">
+      <div className="flex flex-col gap-0.5">
+        <span className="text-fg text-sm font-semibold">{label}</span>
+        {description ? <span className="text-fg-muted text-xs">{description}</span> : null}
       </div>
       <div className="flex flex-wrap gap-2">{action}</div>
     </div>

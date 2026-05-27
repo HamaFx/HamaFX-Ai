@@ -2,6 +2,10 @@
 
 // Floating action button. Static position, brand gradient with ambient glow.
 // No scale/translate animations — just opacity hover for stability.
+//
+// Positioning references the design tokens defined in globals.css:
+//   bottom = --fab-bottom = --bottom-nav-h + 8px + safe-area-inset-bottom
+// Update --bottom-nav-h in :root and every FAB shifts in lockstep.
 
 import { forwardRef, type ButtonHTMLAttributes } from 'react';
 
@@ -26,11 +30,9 @@ export const Fab = forwardRef<HTMLButtonElement, Props>(function Fab(
         className,
       )}
       style={{
-        background:
-          'linear-gradient(135deg, oklch(80% 0.16 78) 0%, oklch(74% 0.18 60) 100%)',
-        boxShadow:
-          '0 12px 32px -8px oklch(78% 0.16 78 / 0.55), 0 0 0 1px oklch(78% 0.16 78 / 0.3), inset 0 1px 0 0 oklch(100% 0 0 / 0.2)',
-        bottom: 'calc(96px + env(safe-area-inset-bottom))',
+        backgroundImage: 'var(--gradient-brand)',
+        boxShadow: 'var(--shadow-brand-press-strong)',
+        bottom: 'var(--fab-bottom)',
       }}
       {...rest}
     >

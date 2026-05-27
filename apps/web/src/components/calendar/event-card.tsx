@@ -1,5 +1,10 @@
 // Calendar event — premium glass card with importance dot, currency
 // chip, animated pulse for imminent events.
+//
+// Mobile-first geometry: card padding p-4 (16), gap-3 (12) between dot and
+// content, gap-2 (8) between title and meta. Importance dot is a 16×16
+// disc with the ▲/■/• glyph centered inside, replacing the previous
+// fragile dot-plus-absolute-symbol composition.
 
 import type { EconomicEvent } from '@hamafx/shared';
 
@@ -9,35 +14,60 @@ interface EventCardProps {
   event: EconomicEvent;
 }
 
-const IMPORTANCE_DOT: Record<EconomicEvent['importance'], string> = {
-  high: 'bg-bear shadow-[0_0_12px_oklch(68%_0.24_25_/_0.6)]',
-  medium: 'bg-warn shadow-[0_0_8px_oklch(80%_0.16_80_/_0.5)]',
-  low: 'bg-fg-subtle',
+const IMPORTANCE: Record<
+  EconomicEvent['importance'],
+  { ring: string; dot: string; symbol: string; label: string; symbolColor: string }
+> = {
+  high: {
+    ring: 'ring-bear/30',
+    dot: 'bg-bear/15',
+    symbolColor: 'text-bear',
+    symbol: '▲',
+    label: 'High impact',
+  },
+  medium: {
+    ring: 'ring-warn/30',
+    dot: 'bg-warn/15',
+    symbolColor: 'text-warn',
+    symbol: '■',
+    label: 'Medium impact',
+  },
+  low: {
+    ring: 'ring-divider',
+    dot: 'bg-bg-elev-2',
+    symbolColor: 'text-fg-subtle',
+    symbol: '•',
+    label: 'Low impact',
+  },
 };
 
 export function EventCard({ event }: EventCardProps) {
   const date = new Date(event.date);
   const sameDay = isToday(date);
+  const importance = IMPORTANCE[event.importance];
 
   return (
-    <div className="card-premium flex items-start gap-3 p-3.5">
-      <span className="relative mt-1.5 inline-flex h-3 w-3 shrink-0 items-center justify-center">
-        <span
-          aria-hidden
-          className={cn(
-            'relative h-2 w-2 rounded-full',
-            IMPORTANCE_DOT[event.importance],
-          )}
-          title={`${event.importance} impact`}
-        />
+    <div className="card-premium flex items-start gap-3 p-4">
+      <span
+        className={cn(
+          'mt-0.5 inline-flex size-6 shrink-0 items-center justify-center rounded-full ring-1',
+          importance.ring,
+          importance.dot,
+        )}
+        title={importance.label}
+      >
+        <span aria-hidden className={cn('text-[10px] leading-none', importance.symbolColor)}>
+          {importance.symbol}
+        </span>
+        <span className="sr-only">{importance.label}</span>
       </span>
 
       <div className="min-w-0 flex-1">
         <h3 className="text-fg text-sm font-semibold leading-snug">{event.title}</h3>
 
-        <div className="text-fg-subtle mt-1 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-[11px] tabular-nums">
+        <div className="text-fg-subtle mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs tabular-nums">
           {event.currency ? (
-            <span className="bg-bg-elev-2 text-fg-muted ring-divider rounded px-1.5 py-0.5 text-[9px] font-medium uppercase ring-1">
+            <span className="bg-bg-elev-2 text-fg-muted ring-divider rounded px-1.5 py-0.5 text-[10px] font-medium uppercase ring-1">
               {event.currency}
             </span>
           ) : null}
@@ -49,7 +79,7 @@ export function EventCard({ event }: EventCardProps) {
         </div>
 
         {(event.actual !== null || event.forecast !== null || event.previous !== null) && (
-          <dl className="text-fg-muted mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[11px] tabular-nums">
+          <dl className="text-fg-muted mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs tabular-nums">
             {event.actual !== null && (
               <Stat label="actual" value={event.actual} unit={event.unit} />
             )}
@@ -88,7 +118,7 @@ function BeatMiss({ actual, forecast }: { actual: number; forecast: number }) {
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[10px] font-semibold ring-1',
+        'inline-flex items-center gap-0.5 rounded-full px-2 py-0.5 text-[10px] font-semibold ring-1',
         beat ? 'bg-bull/15 text-bull ring-bull/30' : 'bg-bear/15 text-bear ring-bear/30',
       )}
     >

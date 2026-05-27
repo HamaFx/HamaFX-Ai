@@ -1,7 +1,8 @@
 'use client';
 
 // Chat top bar — replaces both the (app) TopBar and PageHeader for the
-// chat route. Glass surface with safe-area-top padding. Three slots:
+// chat route. Glass surface with safe-area-top padding. Mobile-first
+// layout: three slots, each icon button is 44×44 with tooltips.
 //
 //   [back/home]    [title + status + symbol pill]    [new chat · menu]
 //
@@ -19,12 +20,14 @@ import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
 import { toast } from 'sonner';
 
+import { useConfirm } from '@/components/ui/confirm-drawer';
 import {
   Drawer,
   DrawerContent,
   DrawerHeader,
   DrawerTitle,
 } from '@/components/ui/drawer';
+import { Tooltip } from '@/components/ui/tooltip';
 import { cn } from '@/lib/cn';
 
 export interface ThreadSummary {
@@ -53,6 +56,7 @@ export function ChatTopBar({
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [pending, startTransition] = useTransition();
+  const [confirmEl, confirm] = useConfirm();
 
   function newChat() {
     startTransition(async () => {
@@ -73,14 +77,20 @@ export function ChatTopBar({
     });
   }
 
-  function deleteCurrent() {
-    if (!confirm('Delete this conversation?')) return;
+  async function deleteCurrent() {
+    setMenuOpen(false);
+    const ok = await confirm({
+      title: 'Delete this conversation?',
+      description: 'Messages and tool calls in this thread will be removed permanently.',
+      confirmLabel: 'Delete',
+      tone: 'danger',
+    });
+    if (!ok) return;
     startTransition(async () => {
       try {
         const res = await fetch(`/api/chat/threads/${threadId}`, { method: 'DELETE' });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         toast.success('Deleted');
-        // Find next thread (excluding current) or create new
         const next = threads.find((t) => t.id !== threadId);
         if (next) {
           router.push(`/chat/${next.id}`);
@@ -100,31 +110,33 @@ export function ChatTopBar({
       className="glass-strong sticky top-0 z-30"
       style={{ paddingTop: 'env(safe-area-inset-top)' }}
     >
-      <div className="mx-auto flex h-14 max-w-2xl items-center gap-2 px-3">
+      <div className="mx-auto flex h-14 max-w-2xl items-center gap-1 px-2">
         {/* Left: thread switcher */}
-        <button
-          type="button"
-          onClick={() => setDrawerOpen(true)}
-          aria-label="Open chats"
-          className="text-fg-muted hover:text-fg hover:bg-bg-elev-2 inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-colors"
-        >
-          <PanelLeft className="size-5" />
-        </button>
+        <Tooltip label="Chats" side="bottom">
+          <button
+            type="button"
+            onClick={() => setDrawerOpen(true)}
+            aria-label="Open chats"
+            className="text-fg-muted hover:text-fg hover:bg-bg-elev-2 inline-flex size-11 shrink-0 items-center justify-center rounded-xl transition-colors"
+          >
+            <PanelLeft className="size-5" />
+          </button>
+        </Tooltip>
 
         {/* Center: title + status */}
-        <div className="flex min-w-0 flex-1 flex-col items-center justify-center">
+        <div className="flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5">
           <div className="flex max-w-full items-center gap-1.5">
             <h1 className="text-fg truncate text-sm font-semibold tracking-tight">{title}</h1>
             {pinnedSymbol ? (
-              <span className="bg-brand/15 text-brand ring-brand/30 shrink-0 rounded-full px-1.5 py-0.5 text-[9px] font-bold uppercase tabular-nums ring-1">
+              <span className="bg-brand/15 text-brand ring-brand/30 shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tabular-nums ring-1">
                 {pinnedSymbol}
               </span>
             ) : null}
           </div>
-          <p className="text-fg-subtle text-[10px] tabular-nums">
+          <p className="text-fg-subtle text-[11px] tabular-nums">
             {isStreaming ? (
               <span className="text-brand inline-flex items-center gap-1">
-                <Sparkles className="size-2.5 animate-pulse" /> thinking…
+                <Sparkles className="size-3 animate-pulse" /> thinking…
               </span>
             ) : (
               'HamaFX-Ai copilot'
@@ -133,26 +145,30 @@ export function ChatTopBar({
         </div>
 
         {/* Right: new chat + menu */}
-        <button
-          type="button"
-          onClick={newChat}
-          disabled={pending}
-          aria-label="New chat"
-          className="text-fg-muted hover:text-fg hover:bg-bg-elev-2 inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-colors disabled:opacity-50"
-        >
-          {pending ? <Loader2 className="size-5 animate-spin" /> : <Plus className="size-5" />}
-        </button>
-
-        <div className="relative">
+        <Tooltip label="New chat" side="bottom">
           <button
             type="button"
-            onClick={() => setMenuOpen((v) => !v)}
-            aria-label="Conversation menu"
-            aria-expanded={menuOpen}
-            className="text-fg-muted hover:text-fg hover:bg-bg-elev-2 inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-colors"
+            onClick={newChat}
+            disabled={pending}
+            aria-label="New chat"
+            className="text-fg-muted hover:text-fg hover:bg-bg-elev-2 inline-flex size-11 shrink-0 items-center justify-center rounded-xl transition-colors disabled:opacity-50"
           >
-            <MoreHorizontal className="size-5" />
+            {pending ? <Loader2 className="size-5 animate-spin" /> : <Plus className="size-5" />}
           </button>
+        </Tooltip>
+
+        <div className="relative">
+          <Tooltip label="More" side="bottom">
+            <button
+              type="button"
+              onClick={() => setMenuOpen((v) => !v)}
+              aria-label="Conversation menu"
+              aria-expanded={menuOpen}
+              className="text-fg-muted hover:text-fg hover:bg-bg-elev-2 inline-flex size-11 shrink-0 items-center justify-center rounded-xl transition-colors"
+            >
+              <MoreHorizontal className="size-5" />
+            </button>
+          </Tooltip>
           {menuOpen ? (
             <>
               {/* Click-out scrim */}
@@ -164,11 +180,8 @@ export function ChatTopBar({
               <div className="glass-strong absolute right-0 top-12 z-50 w-48 overflow-hidden rounded-xl text-sm">
                 <button
                   type="button"
-                  onClick={() => {
-                    setMenuOpen(false);
-                    deleteCurrent();
-                  }}
-                  className="text-bear hover:bg-bear/10 flex w-full items-center gap-2 px-3 py-2.5 text-left"
+                  onClick={() => void deleteCurrent()}
+                  className="text-bear hover:bg-bear/10 flex min-h-[48px] w-full items-center gap-2 px-4 py-3 text-left"
                 >
                   <Trash2 className="size-4" />
                   Delete conversation
@@ -191,21 +204,24 @@ export function ChatTopBar({
                 setDrawerOpen(false);
                 newChat();
               }}
-              className="text-fg hover:bg-bg-elev-2 flex items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-medium transition-colors"
+              className="text-fg hover:bg-bg-elev-2 flex min-h-[56px] items-center gap-3 rounded-xl px-3 py-3 text-left text-sm font-semibold transition-colors"
             >
               <span
-                className="text-brand inline-flex size-8 items-center justify-center rounded-lg"
+                aria-hidden="true"
+                className="text-brand inline-flex size-10 items-center justify-center rounded-xl"
                 style={{ background: 'oklch(78% 0.16 78 / 0.18)' }}
               >
-                <Plus className="size-4" />
+                <Plus className="size-5" />
               </span>
               New conversation
             </button>
           </div>
           <div className="border-divider border-t" />
-          <ul className="scrollbar-hide flex max-h-[60svh] flex-col gap-0.5 overflow-y-auto px-2 pb-4 pt-2">
+          <ul className="scrollbar-hide flex max-h-[60svh] flex-col gap-1 overflow-y-auto px-2 pb-4 pt-2">
             {threads.length === 0 ? (
-              <p className="text-fg-subtle px-3 py-4 text-center text-xs">No other conversations.</p>
+              <p className="text-fg-subtle px-3 py-4 text-center text-sm">
+                No other conversations.
+              </p>
             ) : (
               threads.map((t) => {
                 const isActive = t.id === threadId;
@@ -218,22 +234,22 @@ export function ChatTopBar({
                         if (!isActive) router.push(`/chat/${t.id}`);
                       }}
                       className={cn(
-                        'flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm transition-colors',
+                        'flex min-h-[56px] w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm transition-colors',
                         isActive
                           ? 'bg-bg-elev-3 text-fg'
                           : 'text-fg-muted hover:bg-bg-elev-2 hover:text-fg',
                       )}
                     >
                       <div className="min-w-0 flex-1">
-                        <span className="block truncate font-medium">
+                        <span className="block truncate font-semibold">
                           {t.title ?? 'New conversation'}
                         </span>
-                        <span className="text-fg-subtle block text-[10px] tabular-nums">
+                        <span className="text-fg-subtle mt-0.5 block text-[11px] tabular-nums">
                           {formatRelative(t.updatedAt)}
                         </span>
                       </div>
                       {t.pinnedSymbol ? (
-                        <span className="bg-brand/15 text-brand ring-brand/30 shrink-0 rounded-full px-1.5 py-0.5 text-[9px] font-bold tabular-nums ring-1">
+                        <span className="bg-brand/15 text-brand ring-brand/30 shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold tabular-nums ring-1">
                           {t.pinnedSymbol}
                         </span>
                       ) : null}
@@ -245,6 +261,8 @@ export function ChatTopBar({
           </ul>
         </DrawerContent>
       </Drawer>
+
+      {confirmEl}
     </header>
   );
 }

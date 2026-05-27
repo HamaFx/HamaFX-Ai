@@ -1,11 +1,20 @@
 // Static button — no scale/whileTap that can cause layout shift.
-// Opacity + color transitions only.
+// Opacity + color transitions only. Spinner uses lucide's Loader2 to
+// satisfy steering rule §10 ("lucide-react exclusively, no inline SVGs").
+//
+// Mobile-first sizes:
+//   sm = 40px (h-10) — fits in dense action rows; 4px below 44pt min so
+//                       only use sm where the button is in a row of icon
+//                       buttons that already have ≥44pt hit areas
+//   md = 48px (h-12) — default. Comfortable thumb-zone target.
+//   lg = 56px (h-14) — primary CTA on landing/empty states.
 
+import { Loader2 } from 'lucide-react';
 import { forwardRef, type ButtonHTMLAttributes } from 'react';
 
 import { cn } from '@/lib/cn';
 
-type Variant = 'primary' | 'secondary' | 'ghost' | 'danger';
+type Variant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'success';
 type Size = 'sm' | 'md' | 'lg';
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -14,39 +23,66 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   loading?: boolean;
 }
 
+// Primary/danger get their fills via inlineStyle below (theme tokens).
 const variants: Record<Variant, string> = {
-  primary:
-    'text-brand-fg font-semibold ' +
-    '[background:linear-gradient(135deg,oklch(80%_0.16_78)_0%,oklch(74%_0.18_60)_100%)] ' +
-    'shadow-[0_8px_24px_-6px_oklch(78%_0.16_78/0.5),inset_0_1px_0_0_oklch(100%_0_0/0.15)] ' +
-    'hover:opacity-90',
+  primary: 'text-brand-fg font-semibold hover:opacity-90',
   secondary: 'glass-subtle text-fg hover:bg-bg-elev-2',
   ghost: 'text-fg hover:bg-bg-elev-1',
-  danger:
-    'text-bg font-semibold ' +
-    '[background:linear-gradient(135deg,oklch(70%_0.24_25)_0%,oklch(64%_0.24_15)_100%)] ' +
-    'shadow-[0_8px_24px_-6px_oklch(68%_0.24_25/0.5),inset_0_1px_0_0_oklch(100%_0_0/0.15)] ' +
-    'hover:opacity-90',
+  danger: 'text-bg font-semibold hover:opacity-90',
+  success: 'bg-bull text-bg font-semibold hover:opacity-90',
 };
 
 const sizes: Record<Size, string> = {
-  sm: 'h-9 px-3.5 text-sm',
-  md: 'h-11 px-5 text-sm',
-  lg: 'h-12 px-6 text-base',
+  sm: 'h-10 px-4 text-sm',
+  md: 'h-12 px-5 text-sm',
+  lg: 'h-14 px-6 text-base',
 };
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(
-  { className, variant = 'primary', size = 'md', loading, disabled, children, type = 'button', ...rest },
+  {
+    className,
+    variant = 'primary',
+    size = 'md',
+    loading,
+    disabled,
+    children,
+    type = 'button',
+    style,
+    ...rest
+  },
   ref,
 ) {
   const isDisabled = disabled || loading || false;
+
+  // Variant-driven inline styles — use theme tokens (gradients/shadows
+  // defined in globals.css :root) so a future theme change touches one
+  // file, not every Button instance.
+  const inlineStyle: React.CSSProperties = (() => {
+    if (variant === 'primary') {
+      return {
+        backgroundImage: 'var(--gradient-brand)',
+        boxShadow: 'var(--shadow-brand-press)',
+        ...style,
+      };
+    }
+    if (variant === 'danger') {
+      return {
+        backgroundImage: 'var(--gradient-danger)',
+        boxShadow: 'var(--shadow-danger-press)',
+        ...style,
+      };
+    }
+    return style ?? {};
+  })();
+
   return (
     <button
       ref={ref}
       type={type}
       disabled={isDisabled}
+      style={inlineStyle}
       className={cn(
-        'inline-flex items-center justify-center gap-1.5 rounded-xl font-medium',
+        'inline-flex items-center justify-center gap-2 rounded-xl font-medium',
         'transition-[background,opacity,color] duration-150',
         'disabled:cursor-not-allowed disabled:opacity-60 disabled:shadow-none',
         variants[variant],
@@ -55,27 +91,8 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
       )}
       {...rest}
     >
-      {loading ? <Spinner /> : null}
+      {loading ? <Loader2 className="size-4 animate-spin" aria-hidden="true" /> : null}
       {children}
     </button>
   );
 });
-
-function Spinner() {
-  return (
-    <svg
-      aria-hidden="true"
-      className="size-4 animate-spin"
-      viewBox="0 0 24 24"
-      fill="none"
-    >
-      <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" opacity="0.25" />
-      <path
-        d="M22 12a10 10 0 0 1-10 10"
-        stroke="currentColor"
-        strokeWidth="3"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
-}

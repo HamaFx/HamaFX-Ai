@@ -1,8 +1,8 @@
 'use client';
 
-// Alerts list with FAB → Drawer for create. Uses lucide icons and toasts.
-// Empty state shows a faded BellOff with a primary CTA. Toggle/delete
-// actions use lucide icons inline.
+// Alerts list with FAB → Drawer for create. Mobile-first card layout:
+// p-4 (16px), gap-3 (12) between status badge and content, 44×44 action
+// buttons in a vertical stack on the right.
 import type { Alert } from '@hamafx/shared';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
@@ -20,6 +20,7 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
+import { useConfirm } from '@/components/ui/confirm-drawer';
 import {
   Drawer,
   DrawerContent,
@@ -27,7 +28,10 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from '@/components/ui/drawer';
+import { EmptyState } from '@/components/ui/empty-state';
 import { Fab } from '@/components/ui/fab';
+import { StaleIndicator } from '@/components/ui/stale-indicator';
+import { Tooltip } from '@/components/ui/tooltip';
 import { cn } from '@/lib/cn';
 
 import { AlertForm } from './alert-form';
@@ -37,8 +41,9 @@ export const ALERTS_QUERY_KEY = ['alerts'] as const;
 export function AlertList() {
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
+  const [confirmEl, confirm] = useConfirm();
 
-  const { data, isLoading, isError, error } = useQuery<{ alerts: Alert[] }>({
+  const { data, isLoading, isFetching, isError, error } = useQuery<{ alerts: Alert[] }>({
     queryKey: ALERTS_QUERY_KEY,
     queryFn: async () => {
       const res = await fetch('/api/alerts');
@@ -76,22 +81,46 @@ export function AlertList() {
     onError: (err) => toast.error('Delete failed', { description: (err as Error).message }),
   });
 
+  async function handleDelete(alert: Alert) {
+    const ok = await confirm({
+      title: 'Delete this alert?',
+      description: describe(alert),
+      confirmLabel: 'Delete',
+      tone: 'danger',
+    });
+    if (ok) remove.mutate(alert.id);
+  }
+
   return (
     <div className="flex flex-col gap-4">
+      <div className="flex items-center justify-end">
+        <StaleIndicator isFetching={isFetching && !isLoading} />
+      </div>
       {isLoading ? (
-        <p className="text-fg-muted text-xs">Loading…</p>
+        <p className="text-fg-muted text-sm">Loading…</p>
       ) : isError ? (
-        <p className="text-bear text-xs">Failed to load: {(error as Error)?.message}</p>
+        <p className="text-bear text-sm">Failed to load: {(error as Error)?.message}</p>
       ) : data?.alerts.length === 0 ? (
-        <EmptyState onCreate={() => setOpen(true)} />
+        <EmptyState
+          tone="brand"
+          icon={<BellOff className="size-10" strokeWidth={1.5} />}
+          title="No alerts yet"
+          description="Get notified when a price level, indicator, or candle close triggers."
+          action={
+            <Button type="button" onClick={() => setOpen(true)}>
+              <Plus className="size-4" />
+              Create your first alert
+            </Button>
+          }
+        />
       ) : (
-        <ul className="flex flex-col gap-2">
+        <ul className="flex flex-col gap-3">
           {data?.alerts.map((a) => (
             <AlertRow
               key={a.id}
               alert={a}
               onToggle={() => toggle.mutate({ id: a.id, active: !a.active })}
-              onDelete={() => remove.mutate(a.id)}
+              onDelete={() => void handleDelete(a)}
             />
           ))}
         </ul>
@@ -117,6 +146,8 @@ export function AlertList() {
           <Plus className="size-6" />
         </Fab>
       ) : null}
+
+      {confirmEl}
     </div>
   );
 }
@@ -135,34 +166,34 @@ function AlertRow({ alert, onToggle, onDelete }: AlertRowProps) {
   return (
     <li
       className={cn(
-        'card-premium flex items-start gap-3 p-3.5 transition-opacity',
+        'card-premium flex items-start gap-3 p-4 transition-opacity',
         !alert.active && 'opacity-70',
       )}
     >
       <span
         aria-hidden
         className={cn(
-          'inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl',
+          'inline-flex size-12 shrink-0 items-center justify-center rounded-xl',
           statusTone,
         )}
         style={{
           background: alert.active
-            ? 'oklch(74% 0.2 152 / 0.15)'
+            ? 'oklch(72% 0.2 152 / 0.15)'
             : alert.firedAt
-              ? 'oklch(80% 0.16 80 / 0.15)'
+              ? 'oklch(82% 0.16 80 / 0.15)'
               : 'oklch(70% 0.02 265 / 0.1)',
-          boxShadow: 'inset 0 1px 0 0 oklch(100% 0 0 / 0.06)',
+          boxShadow: 'var(--shadow-inset-edge-soft)',
         }}
       >
-        <StatusIcon className="size-4.5" strokeWidth={2} />
+        <StatusIcon className="size-5" strokeWidth={2} />
       </span>
 
       <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-1.5 text-fg text-sm font-semibold tabular-nums">
-          <RuleIcon className="text-fg-muted size-3.5 shrink-0" />
+        <div className="text-fg flex items-center gap-2 text-sm font-semibold tabular-nums">
+          <RuleIcon className="text-fg-muted size-4 shrink-0" aria-hidden="true" />
           <span className="truncate">{describe(alert)}</span>
         </div>
-        <p className="text-fg-subtle mt-1 truncate text-[11px]">
+        <p className="text-fg-subtle mt-1.5 truncate text-xs">
           {alert.firedAt
             ? `fired ${formatRelative(alert.firedAt)}`
             : `created ${formatRelative(alert.createdAt)}`}
@@ -170,53 +201,29 @@ function AlertRow({ alert, onToggle, onDelete }: AlertRowProps) {
         </p>
       </div>
 
-      <div className="flex shrink-0 gap-1">
-        <button
-          type="button"
-          onClick={onToggle}
-          aria-label={alert.active ? 'Pause alert' : 'Re-arm alert'}
-          className="text-fg-muted hover:text-fg hover:bg-bg-elev-2 inline-flex h-9 w-9 items-center justify-center rounded-lg transition-colors"
-        >
-          {alert.active ? <BellOff className="size-4" /> : <RotateCw className="size-4" />}
-        </button>
-        <button
-          type="button"
-          onClick={onDelete}
-          aria-label="Delete alert"
-          className="text-bear/70 hover:text-bear hover:bg-bear/10 inline-flex h-9 w-9 items-center justify-center rounded-lg transition-colors"
-        >
-          <Trash2 className="size-4" />
-        </button>
+      <div className="flex shrink-0 flex-col gap-1">
+        <Tooltip label={alert.active ? 'Pause' : 'Re-arm'}>
+          <button
+            type="button"
+            onClick={onToggle}
+            aria-label={alert.active ? 'Pause alert' : 'Re-arm alert'}
+            className="text-fg-muted hover:text-fg hover:bg-bg-elev-2 inline-flex size-11 items-center justify-center rounded-lg transition-colors"
+          >
+            {alert.active ? <BellOff className="size-4" /> : <RotateCw className="size-4" />}
+          </button>
+        </Tooltip>
+        <Tooltip label="Delete">
+          <button
+            type="button"
+            onClick={onDelete}
+            aria-label="Delete alert"
+            className="text-bear/70 hover:text-bear hover:bg-bear/10 inline-flex size-11 items-center justify-center rounded-lg transition-colors"
+          >
+            <Trash2 className="size-4" />
+          </button>
+        </Tooltip>
       </div>
     </li>
-  );
-}
-
-function EmptyState({ onCreate }: { onCreate: () => void }) {
-  return (
-    <div className="card-premium flex flex-col items-center gap-5 p-10 text-center">
-      <span
-        className="text-brand inline-flex h-20 w-20 items-center justify-center rounded-3xl"
-        style={{
-          background:
-            'linear-gradient(135deg, oklch(78% 0.16 78 / 0.18) 0%, oklch(72% 0.18 295 / 0.18) 100%)',
-          boxShadow:
-            'inset 0 1px 0 0 oklch(100% 0 0 / 0.1), 0 0 40px -8px oklch(78% 0.16 78 / 0.4)',
-        }}
-      >
-        <BellOff className="size-10" strokeWidth={1.5} />
-      </span>
-      <div className="flex flex-col gap-1.5">
-        <p className="text-fg text-lg font-semibold tracking-tight">No alerts yet</p>
-        <p className="text-fg-muted text-sm leading-relaxed">
-          Get notified when a price level, indicator, or candle close triggers.
-        </p>
-      </div>
-      <Button type="button" onClick={onCreate}>
-        <Plus className="size-4" />
-        Create your first alert
-      </Button>
-    </div>
   );
 }
 

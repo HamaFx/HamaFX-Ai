@@ -46,9 +46,9 @@ export function LoginForm({ next }: LoginFormProps) {
   const success = status === 'success';
 
   return (
-    <form onSubmit={onSubmit} className="flex w-full max-w-sm flex-col gap-4">
-      <div className="flex flex-col gap-1.5">
-        <label htmlFor="password" className="text-fg-muted text-sm font-medium">
+    <form onSubmit={onSubmit} className="flex w-full flex-col gap-5">
+      <div className="flex flex-col gap-2">
+        <label htmlFor="password" className="text-fg text-sm font-semibold">
           Password
         </label>
         <Input
@@ -71,13 +71,14 @@ export function LoginForm({ next }: LoginFormProps) {
       ) : null}
       <Button
         type="submit"
+        size="lg"
         loading={submitting}
         disabled={!password || submitting || success}
-        className={success ? '!bg-bull !text-bg transition-colors' : ''}
+        variant={success ? 'success' : 'primary'}
       >
         {success ? (
           <>
-            <Check className="size-4" /> Welcome
+            <Check className="size-5" /> Welcome
           </>
         ) : submitting ? (
           'Signing in…'

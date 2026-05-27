@@ -1,5 +1,8 @@
 // Premium stat card with glass surface, gradient tone glow, and optional
 // sparkline. Used by journal stats and any future numeric summary surface.
+//
+// Mobile-first: p-4 (16px) for comfortable thumb tap if/when the cards
+// become interactive, gap-2 (8px) vertical rhythm on the 8-pt grid.
 
 import type { ReactNode } from 'react';
 
@@ -29,17 +32,17 @@ const TONE_CLASS: Record<StatTone, string> = {
 
 const TONE_GLOW: Record<StatTone, string> = {
   fg: '',
-  bull: 'before:bg-[radial-gradient(ellipse_at_top_right,oklch(74%_0.2_152/0.15),transparent_60%)]',
+  bull: 'before:bg-[radial-gradient(ellipse_at_top_right,oklch(72%_0.2_152/0.15),transparent_60%)]',
   bear: 'before:bg-[radial-gradient(ellipse_at_top_right,oklch(68%_0.24_25/0.15),transparent_60%)]',
   muted: '',
-  warn: 'before:bg-[radial-gradient(ellipse_at_top_right,oklch(80%_0.16_80/0.15),transparent_60%)]',
+  warn: 'before:bg-[radial-gradient(ellipse_at_top_right,oklch(82%_0.16_80/0.15),transparent_60%)]',
 };
 
 export function StatCard({ icon, label, value, tone = 'fg', sparkline }: StatCardProps) {
   return (
     <div
       className={cn(
-        'card-premium relative flex flex-col gap-2 overflow-hidden p-3.5',
+        'card-premium relative flex flex-col gap-2 overflow-hidden p-4',
         'before:pointer-events-none before:absolute before:inset-0 before:opacity-100',
         TONE_GLOW[tone],
       )}
@@ -61,9 +64,9 @@ export function StatCard({ icon, label, value, tone = 'fg', sparkline }: StatCar
         {value}
       </div>
       {sparkline && sparkline.length >= 2 ? (
-        <Sparkline values={sparkline} className={cn('h-5 w-full opacity-70', TONE_CLASS[tone])} />
+        <Sparkline values={sparkline} className={cn('h-6 w-full opacity-70', TONE_CLASS[tone])} />
       ) : (
-        <div className="h-5" />
+        <div className="h-6" />
       )}
     </div>
   );

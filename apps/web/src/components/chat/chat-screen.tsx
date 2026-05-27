@@ -19,6 +19,12 @@
 //
 // Z-index: 50 to cover both the (app) layout's TopBar and BottomNav.
 // Safe-area: handled via env(safe-area-inset-top/bottom) on top + bottom rows.
+//
+// We do NOT mount a second AmbientBackground here — the (app) layout's
+// fixed `-z-10` ambient still shows through the chat surface (chat is a
+// stacking context but the ambient sits behind it on the body). Doubling
+// up cost a measurable iOS Safari paint when both `feTurbulence` filters
+// re-rendered on every scroll.
 
 import { useChat } from '@ai-sdk/react';
 import { DefaultChatTransport, type UIMessage } from 'ai';
@@ -134,21 +140,6 @@ export function ChatScreen({
 
   return (
     <div className="bg-bg fixed inset-0 z-50 flex flex-col">
-      {/* Static ambient orbs so the chat surface feels alive but doesn't drift */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-0 -z-10 overflow-hidden"
-      >
-        <div
-          className="absolute -top-40 -right-40 h-[28rem] w-[28rem] rounded-full opacity-20 blur-[100px]"
-          style={{ background: 'oklch(78% 0.16 78 / 1)' }}
-        />
-        <div
-          className="absolute -bottom-40 -left-40 h-[32rem] w-[32rem] rounded-full opacity-15 blur-[120px]"
-          style={{ background: 'oklch(72% 0.18 295 / 1)' }}
-        />
-      </div>
-
       <ChatTopBar
         threadId={threadId}
         title={title}
@@ -157,10 +148,7 @@ export function ChatScreen({
         isStreaming={isStreaming}
       />
 
-      <div
-        ref={scrollRef}
-        className="scrollbar-hide relative flex-1 overflow-y-auto"
-      >
+      <div ref={scrollRef} className="scrollbar-hide relative flex-1 overflow-y-auto">
         <div className="mx-auto max-w-2xl">
           <MessageList
             messages={messages}
@@ -172,6 +160,7 @@ export function ChatScreen({
           />
           {error ? (
             <div
+              role="alert"
               className={cn(
                 'bg-bear/10 text-bear ring-bear/30 mx-3 mb-2 flex items-center justify-between gap-2 rounded-xl p-3 text-xs ring-1 backdrop-blur',
               )}
@@ -184,9 +173,10 @@ export function ChatScreen({
                     void sendMessage({ text: lastUserTextRef.current });
                   }
                 }}
-                className="bg-bear/20 hover:bg-bear/30 ring-bear/30 inline-flex shrink-0 items-center gap-1 rounded-lg px-2.5 py-1 text-[10px] font-medium ring-1"
+                aria-label="Retry"
+                className="bg-bear/20 hover:bg-bear/30 ring-bear/30 inline-flex shrink-0 items-center gap-1 rounded-lg px-3 py-1.5 text-[11px] font-medium ring-1"
               >
-                <RotateCcw className="size-3" /> Retry
+                <RotateCcw className="size-3.5" /> Retry
               </button>
             </div>
           ) : null}
@@ -198,8 +188,8 @@ export function ChatScreen({
             type="button"
             onClick={scrollToBottom}
             aria-label="Scroll to latest"
-            className="glass-strong text-fg fixed left-1/2 z-30 inline-flex h-9 -translate-x-1/2 items-center gap-1.5 rounded-full px-3.5 text-[11px] font-medium"
-            style={{ bottom: 'calc(96px + env(safe-area-inset-bottom))' }}
+            className="glass-strong text-fg fixed left-1/2 z-30 inline-flex h-11 -translate-x-1/2 items-center gap-1.5 rounded-full px-4 text-xs font-medium"
+            style={{ bottom: 'var(--toast-bottom)' }}
           >
             <ArrowDown className="size-3.5" />
             Latest
@@ -239,9 +229,7 @@ export function ChatScreen({
           }}
           disabled={isStreaming}
           placeholder={
-            pinnedSymbol
-              ? `Ask about ${pinnedSymbol}…`
-              : 'Ask about XAU, EUR, GBP…'
+            pinnedSymbol ? `Ask about ${pinnedSymbol}…` : 'Ask about XAU, EUR, GBP…'
           }
         />
       </div>

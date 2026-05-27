@@ -3,11 +3,13 @@
 // /api/cron/news) so the page is fast even on cold start.
 
 import { listRecentArticles } from '@hamafx/ai';
+import { Newspaper } from 'lucide-react';
 import type { Metadata } from 'next';
 
 import { PageHeader } from '@/components/layout/page-header';
 import { ArticleCard } from '@/components/news/article-card';
 import { LiveTimestamp } from '@/components/news/live-timestamp';
+import { EmptyState } from '@/components/ui/empty-state';
 
 import { RefreshButton } from './_components/refresh-button';
 
@@ -16,7 +18,6 @@ export const dynamic = 'force-dynamic';
 
 export default async function NewsPage() {
   const articles = await listRecentArticles(50);
-
   const lastUpdated = articles.length > 0 ? articles[0]!.publishedAt : null;
 
   return (
@@ -27,17 +28,19 @@ export default async function NewsPage() {
       />
 
       {lastUpdated ? (
-        <LiveTimestamp
-          ms={lastUpdated}
-          prefix="Latest:"
-          className="text-fg-subtle text-xs"
-        />
+        <LiveTimestamp ms={lastUpdated} prefix="Latest:" className="text-fg-subtle text-xs" />
       ) : null}
 
       {articles.length === 0 ? (
-        <EmptyState />
+        <EmptyState
+          tone="muted"
+          icon={<Newspaper className="size-7" strokeWidth={1.75} />}
+          title="No news yet"
+          description="Headlines populate automatically every few minutes. Tap below to refresh now."
+          action={<RefreshButton endpoint="/api/cron/news" />}
+        />
       ) : (
-        <ul className="flex flex-col gap-2">
+        <ul className="flex flex-col gap-3">
           {articles.map((a) => (
             <li key={a.id}>
               <ArticleCard article={a} />
@@ -45,39 +48,6 @@ export default async function NewsPage() {
           ))}
         </ul>
       )}
-    </div>
-  );
-}
-
-function EmptyState() {
-  return (
-    <div className="card-premium flex flex-col items-center gap-4 p-10 text-center">
-      <span
-        className="text-fg-subtle inline-flex h-16 w-16 items-center justify-center rounded-3xl"
-        style={{ background: 'oklch(70% 0.02 265 / 0.1)' }}
-      >
-        <svg
-          className="size-7"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          strokeWidth="1.75"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          aria-hidden="true"
-        >
-          <path d="M4 5h13a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5Z" />
-          <path d="M19 8h2v9a2 2 0 0 1-2 2" />
-          <path d="M8 9h7M8 13h7M8 17h4" />
-        </svg>
-      </span>
-      <div className="flex flex-col gap-1.5">
-        <p className="text-fg text-base font-semibold">No news yet</p>
-        <p className="text-fg-muted text-sm">
-          The cron fires every 5 minutes. Tap below to trigger manually.
-        </p>
-      </div>
-      <RefreshButton endpoint="/api/cron/news" />
     </div>
   );
 }

@@ -14,6 +14,7 @@ import {
   DrawerTitle,
 } from '@/components/ui/drawer';
 import { Fab } from '@/components/ui/fab';
+import { StaleIndicator } from '@/components/ui/stale-indicator';
 
 import { EntryForm } from './entry-form';
 import { EntryList } from './entry-list';
@@ -29,7 +30,7 @@ interface JournalResponse {
 export function JournalView() {
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
-  const { data, isLoading, isError, error } = useQuery<JournalResponse>({
+  const { data, isLoading, isFetching, isError, error } = useQuery<JournalResponse>({
     queryKey: QKEY,
     queryFn: async () => {
       const res = await fetch('/api/journal');
@@ -43,6 +44,9 @@ export function JournalView() {
 
   return (
     <div className="flex flex-col gap-4">
+      <div className="flex items-center justify-end">
+        <StaleIndicator isFetching={isFetching && !isLoading} />
+      </div>
       {data?.stats ? <StatsSummary stats={data.stats} entries={data.entries} /> : null}
       {isLoading ? (
         <p className="text-fg-muted text-xs">Loading…</p>
@@ -56,7 +60,9 @@ export function JournalView() {
         <DrawerContent>
           <DrawerHeader>
             <DrawerTitle>Log trade</DrawerTitle>
-            <DrawerDescription>Record entry, stop, target. Stats compute on close.</DrawerDescription>
+            <DrawerDescription>
+              Record entry, stop, target. Stats compute on close.
+            </DrawerDescription>
           </DrawerHeader>
           <EntryForm
             onCreated={() => {

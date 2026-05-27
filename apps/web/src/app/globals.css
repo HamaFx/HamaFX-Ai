@@ -6,6 +6,10 @@
  * Design system inspired by Linear, Arc, Vercel — deep cool blues with
  * a warm gold brand accent. Surfaces are layered with subtle elevation
  * via gradient borders and frosted-glass blur instead of flat fills.
+ *
+ * Contrast: --color-fg-subtle was bumped from 58% → 64% L so it clears
+ * WCAG AA (≥4.5:1) on the default canvas at body-text sizes. Pair with
+ * `text-[10px]`/`text-[11px]` only when secondary meta is decorative.
  * ------------------------------------------------------------------------- */
 
 @theme {
@@ -25,8 +29,8 @@
 
   /* text */
   --color-fg: oklch(97% 0.008 265);
-  --color-fg-muted: oklch(75% 0.022 265);
-  --color-fg-subtle: oklch(58% 0.022 265);
+  --color-fg-muted: oklch(78% 0.022 265);
+  --color-fg-subtle: oklch(64% 0.022 265);
 
   /* brand — vibrant warm gold/amber, complements the cool surfaces */
   --color-brand: oklch(78% 0.16 78);
@@ -37,11 +41,13 @@
   --color-accent: oklch(72% 0.18 295);
   --color-accent-glow: oklch(72% 0.18 295 / 0.3);
 
-  /* market states — slightly more vivid */
-  --color-bull: oklch(74% 0.2 152);
+  /* market states — bull (green) and warn (amber) are intentionally far apart
+   * in luminance so deuteranopes can still distinguish them. Always pair with
+   * an icon/shape per UX rule §10 (color-not-only). */
+  --color-bull: oklch(72% 0.2 152);
   --color-bear: oklch(68% 0.24 25);
   --color-neutral: oklch(70% 0.02 265);
-  --color-warn: oklch(80% 0.16 80);
+  --color-warn: oklch(82% 0.16 80);
   --color-info: oklch(74% 0.16 230);
 
   /* radii */
@@ -67,6 +73,83 @@
 
   /* motion */
   --ease-organic: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* -------------------------------------------------------------------------
+ * Layout tokens — referenced by JS calc() expressions and sticky offsets so
+ * the chrome heights live in exactly one place.
+ * ------------------------------------------------------------------------- */
+:root {
+  /* App-shell chrome heights. Matches the rendered measurements of
+     <TopBar/> and <BottomNav/> on iPhone 14 Pro Max. */
+  --topbar-h: 48px;
+  --bottom-nav-h: 88px;
+  /* FAB clearance: BottomNav height + 8px gap. Steering rule 13. */
+  --fab-bottom: calc(var(--bottom-nav-h) + 8px + env(safe-area-inset-bottom));
+  /* Toast/banner clearance: above BottomNav home-indicator pad. */
+  --toast-bottom: calc(var(--bottom-nav-h) + 12px + env(safe-area-inset-bottom));
+
+  /* 8-point grid system. All component spacing should reference these so
+     visual rhythm stays consistent across breakpoints. */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+  --space-9: 80px;
+  --space-10: 96px;
+
+  /* Minimum interactive size (Apple HIG / Material). Use as
+     `min-height: var(--touch-min)` rather than ad-hoc px values. */
+  --touch-min: 44px;
+
+  /* Type scale: documented in steering/30-ui.md. text-base is intentionally
+     16px (Tailwind default) — the steering doc previously said 15px. */
+  /* No overrides — kept here only for reference. */
+}
+
+/* -------------------------------------------------------------------------
+ * Themeable gradients & shadows. Components reference these instead of
+ * hard-coding OKLCH values inline so a future light-theme or rebrand
+ * touches one file. Use via `bg-[image:var(--gradient-brand)]` in Tailwind
+ * v4, or `style={{ backgroundImage: 'var(--gradient-brand)' }}`.
+ * ------------------------------------------------------------------------- */
+:root {
+  --gradient-brand: linear-gradient(
+    135deg,
+    oklch(80% 0.16 78) 0%,
+    oklch(74% 0.18 60) 100%
+  );
+  --gradient-danger: linear-gradient(
+    135deg,
+    oklch(70% 0.24 25) 0%,
+    oklch(64% 0.24 15) 100%
+  );
+  --gradient-brand-soft: linear-gradient(
+    135deg,
+    oklch(78% 0.16 78 / 0.18) 0%,
+    oklch(72% 0.18 295 / 0.18) 100%
+  );
+  --gradient-accent: linear-gradient(
+    135deg,
+    oklch(72% 0.18 295) 0%,
+    oklch(74% 0.16 230) 100%
+  );
+
+  /* Reusable inset highlight — gives buttons/pills the subtle top edge. */
+  --shadow-inset-edge: inset 0 1px 0 0 oklch(100% 0 0 / 0.15);
+  --shadow-inset-edge-soft: inset 0 1px 0 0 oklch(100% 0 0 / 0.08);
+
+  /* Brand-tinted cast shadow used by primary buttons and FAB. */
+  --shadow-brand-press: 0 8px 24px -6px oklch(78% 0.16 78 / 0.5), var(--shadow-inset-edge);
+  --shadow-brand-press-strong:
+    0 12px 32px -8px oklch(78% 0.16 78 / 0.55),
+    0 0 0 1px oklch(78% 0.16 78 / 0.3),
+    inset 0 1px 0 0 oklch(100% 0 0 / 0.2);
+  --shadow-danger-press: 0 8px 24px -6px oklch(68% 0.24 25 / 0.5), var(--shadow-inset-edge);
 }
 
 /* -------------------------------------------------------------------------
@@ -147,6 +230,28 @@
       background: var(--color-bg-elev-3);
       background-clip: padding-box;
     }
+  }
+
+  /* Skip-to-main link — visible only when focused. WCAG §2.4.1. */
+  .skip-to-main {
+    position: fixed;
+    top: -100px;
+    left: 12px;
+    z-index: 100;
+    padding: 10px 16px;
+    background: var(--color-bg-elev-2);
+    color: var(--color-fg);
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    font-weight: 600;
+    box-shadow: var(--shadow-md);
+    transition: top 150ms ease-out;
+  }
+  .skip-to-main:focus,
+  .skip-to-main:focus-visible {
+    top: calc(env(safe-area-inset-top, 0px) + 12px);
+    outline: 2px solid var(--color-brand);
+    outline-offset: 2px;
   }
 }
 
@@ -258,6 +363,16 @@
   );
   background-size: 200% 100%;
   animation: shimmer 1.8s infinite linear;
+}
+
+/* Subtle stale-indicator pulse — used by <StaleIndicator> when a query is
+ * background-refetching. Distinct from .shimmer so it can stack. */
+@keyframes stale-pulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
+.stale-pulse {
+  animation: stale-pulse 1.4s ease-in-out infinite;
 }
 
 /* Respect prefers-reduced-motion globally. */

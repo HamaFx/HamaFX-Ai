@@ -9,6 +9,7 @@ import type { UIMessage } from 'ai';
 import { Check, Copy } from 'lucide-react';
 import { useState } from 'react';
 
+import { Tooltip } from '@/components/ui/tooltip';
 import { cn } from '@/lib/cn';
 
 import { ChatToolPart, type ToolPartState } from './parts/registry';
@@ -46,8 +47,7 @@ export function Message({ message, onCopy }: MessageProps) {
         style={
           isUser
             ? {
-                background:
-                  'linear-gradient(135deg, oklch(80% 0.16 78) 0%, oklch(74% 0.18 60) 100%)',
+                backgroundImage: 'var(--gradient-brand)',
                 boxShadow:
                   'inset 0 1px 0 0 oklch(100% 0 0 / 0.15), 0 4px 12px -4px oklch(78% 0.16 78 / 0.4)',
               }
@@ -58,24 +58,26 @@ export function Message({ message, onCopy }: MessageProps) {
 
         {/* Copy action — assistant only, hover-revealed, anchored bottom-right */}
         {!isUser && plainText.length > 0 ? (
-          <button
-            type="button"
-            onClick={copy}
-            aria-label={copied ? 'Copied' : 'Copy message'}
-            className={cn(
-              'glass-strong text-fg-muted hover:text-fg absolute -bottom-3 right-2',
-              'inline-flex h-7 w-7 items-center justify-center rounded-full',
-              'opacity-0 transition-opacity duration-150',
-              'group-hover:opacity-100 focus-visible:opacity-100',
-              'focus-visible:ring-brand focus:outline-none focus-visible:ring-2',
-            )}
-          >
-            {copied ? (
-              <Check className="text-bull size-3.5" />
-            ) : (
-              <Copy className="size-3.5" />
-            )}
-          </button>
+          <Tooltip label={copied ? 'Copied' : 'Copy'}>
+            <button
+              type="button"
+              onClick={copy}
+              aria-label={copied ? 'Copied' : 'Copy message'}
+              className={cn(
+                'glass-strong text-fg-muted hover:text-fg absolute -bottom-3 right-2',
+                'inline-flex h-9 w-9 items-center justify-center rounded-full',
+                'opacity-0 transition-opacity duration-150',
+                'group-hover:opacity-100 focus-visible:opacity-100',
+                'focus-visible:ring-brand focus:outline-none focus-visible:ring-2',
+              )}
+            >
+              {copied ? (
+                <Check className="text-bull size-3.5" />
+              ) : (
+                <Copy className="size-3.5" />
+              )}
+            </button>
+          </Tooltip>
         ) : null}
       </div>
     </div>
@@ -83,7 +85,11 @@ export function Message({ message, onCopy }: MessageProps) {
 }
 
 /** AI SDK v5 streamed tool-part state vocabulary. */
-type StreamToolState = 'input-streaming' | 'input-available' | 'output-available' | 'output-error';
+type StreamToolState =
+  | 'input-streaming'
+  | 'input-available'
+  | 'output-available'
+  | 'output-error';
 
 function toPartState(state: StreamToolState): ToolPartState {
   if (state === 'output-available') return 'done';

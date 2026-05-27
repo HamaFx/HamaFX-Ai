@@ -1,5 +1,8 @@
 // One news article — premium glass card with subtle hover lift, gradient
 // border highlight, and animated sentiment chip.
+//
+// Mobile-first padding p-4 on the 8-pt grid; vertical rhythm:
+//   title → 12px → summary → 12px → meta row.
 
 import type { NewsArticle } from '@hamafx/shared';
 
@@ -23,7 +26,7 @@ export function ArticleCard({ article }: ArticleCardProps) {
       target="_blank"
       rel="noopener noreferrer"
       className={cn(
-        'card-premium group relative block p-3.5',
+        'card-premium group relative block p-4',
         'transition-colors duration-200',
         'md:hover:bg-bg-elev-2/40',
       )}
@@ -51,12 +54,12 @@ export function ArticleCard({ article }: ArticleCardProps) {
       </div>
 
       {article.summary ? (
-        <p className="text-fg-muted relative mt-1.5 line-clamp-2 text-xs leading-relaxed">
+        <p className="text-fg-muted relative mt-3 line-clamp-2 text-xs leading-relaxed">
           {article.summary}
         </p>
       ) : null}
 
-      <div className="text-fg-subtle relative mt-2.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[10px]">
+      <div className="text-fg-subtle relative mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px]">
         <span className="font-medium">{article.publisher ?? article.source}</span>
         <span aria-hidden className="opacity-50">·</span>
         <time dateTime={new Date(article.publishedAt).toISOString()}>
@@ -69,7 +72,7 @@ export function ArticleCard({ article }: ArticleCardProps) {
               {article.symbols.map((s) => (
                 <span
                   key={s}
-                  className="bg-bg-elev-2 text-fg-muted ring-divider rounded px-1.5 py-0.5 text-[9px] uppercase tabular-nums ring-1"
+                  className="bg-bg-elev-2 text-fg-muted ring-divider rounded px-1.5 py-0.5 text-[10px] uppercase tabular-nums ring-1"
                 >
                   {s}
                 </span>

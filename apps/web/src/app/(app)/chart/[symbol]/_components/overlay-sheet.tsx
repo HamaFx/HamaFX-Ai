@@ -15,6 +15,7 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from '@/components/ui/drawer';
+import { Tooltip } from '@/components/ui/tooltip';
 import { cn } from '@/lib/cn';
 
 const ALL_KINDS = ['swings', 'bos_choch', 'fvg', 'order_blocks', 'liquidity'] as const;
@@ -45,14 +46,14 @@ export function OverlaySheet({ active, onToggle }: OverlaySheetProps) {
       <DrawerTrigger asChild>
         <button
           type="button"
-          aria-label="Chart overlays"
+          aria-label={`Chart overlays${enabledCount > 0 ? ` (${enabledCount} active)` : ''}`}
           className={cn(
-            'border-divider bg-bg-elev-2 inline-flex h-9 min-w-[44px] items-center justify-center gap-1.5 rounded-md border px-2 text-[11px] font-medium',
+            'border-divider bg-bg-elev-2 inline-flex h-11 min-w-[44px] items-center justify-center gap-1.5 rounded-md border px-2 text-[11px] font-medium',
             'focus-visible:ring-brand focus:outline-none focus-visible:ring-2',
             enabledCount > 0 ? 'text-fg' : 'text-fg-muted hover:text-fg',
           )}
         >
-          <Settings2 className="size-3.5" />
+          <Settings2 className="size-4" />
           {enabledCount > 0 ? <span className="tabular-nums">{enabledCount}</span> : null}
         </button>
       </DrawerTrigger>
@@ -62,12 +63,14 @@ export function OverlaySheet({ active, onToggle }: OverlaySheetProps) {
             <DrawerTitle>Overlays</DrawerTitle>
             <DrawerDescription>Toggle Smart Money Concepts visualizations.</DrawerDescription>
           </div>
-          <DrawerClose
-            className="text-fg-muted hover:text-fg inline-flex h-8 w-8 items-center justify-center rounded-md"
-            aria-label="Close"
-          >
-            <X className="size-4" />
-          </DrawerClose>
+          <Tooltip label="Close">
+            <DrawerClose
+              className="text-fg-muted hover:text-fg inline-flex h-11 w-11 items-center justify-center rounded-md"
+              aria-label="Close overlays sheet"
+            >
+              <X className="size-4" />
+            </DrawerClose>
+          </Tooltip>
         </DrawerHeader>
         <ul className="flex flex-col gap-1 px-2 pb-4">
           {ALL_KINDS.map((k) => {
@@ -79,7 +82,7 @@ export function OverlaySheet({ active, onToggle }: OverlaySheetProps) {
                   onClick={() => onToggle(k)}
                   aria-pressed={on}
                   className={cn(
-                    'flex w-full items-center justify-between gap-3 rounded-lg px-3 py-3 text-left transition-colors',
+                    'flex min-h-[56px] w-full items-center justify-between gap-3 rounded-lg px-3 py-3 text-left transition-colors',
                     on ? 'bg-bg-elev-3' : 'hover:bg-bg-elev-1',
                   )}
                 >
@@ -96,7 +99,7 @@ export function OverlaySheet({ active, onToggle }: OverlaySheetProps) {
                   >
                     <span
                       className={cn(
-                        'absolute h-5 w-5 rounded-full bg-fg shadow-sm transition-all',
+                        'bg-fg absolute h-5 w-5 rounded-full shadow-sm transition-all',
                         on ? 'left-[18px]' : 'left-[2px]',
                       )}
                     />

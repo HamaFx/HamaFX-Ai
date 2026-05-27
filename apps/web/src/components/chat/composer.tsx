@@ -2,8 +2,9 @@
 
 // Premium chat composer.
 //
-// Features:
-//   - Auto-grow textarea (up to 6 rows)
+// Mobile-first features:
+//   - Auto-grow textarea (min-h 56, max ~200) so the first line is
+//     comfortable and 16px text size prevents iOS zoom-on-focus
 //   - Image attach (file picker + drag-drop) — up to 4 images per turn
 //   - Voice input via Web Speech API
 //   - Character count when approaching the limit
@@ -72,7 +73,8 @@ export function Composer({ onSubmit, disabled, placeholder = 'Ask anything…' }
     const t = ref.current;
     if (!t) return;
     t.style.height = 'auto';
-    // 6 rows ≈ 9rem at 1.5 line-height. Cap at 200px to be safe.
+    // Cap at 200px (~6 lines) — keeps the message visible above the
+    // composer even when expanded.
     t.style.height = `${Math.min(t.scrollHeight, 200)}px`;
   }
 
@@ -166,11 +168,11 @@ export function Composer({ onSubmit, disabled, placeholder = 'Ask anything…' }
   return (
     <form
       className={cn(
-        'glass-strong sticky bottom-0 flex flex-col gap-2 px-3 py-2.5 transition-shadow duration-200',
+        'glass-strong sticky bottom-0 flex flex-col gap-2 px-3 py-3 transition-shadow duration-200',
         focused && 'shadow-[0_-16px_40px_-8px_oklch(78%_0.16_78/0.15)]',
         dragOver && 'ring-brand/50 ring-2 ring-inset',
       )}
-      style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 10px)' }}
+      style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 12px)' }}
       onSubmit={(e) => {
         e.preventDefault();
         send();
@@ -189,13 +191,13 @@ export function Composer({ onSubmit, disabled, placeholder = 'Ask anything…' }
               <img
                 src={img.dataUrl}
                 alt={`Attached image ${idx + 1} of ${images.length}`}
-                className="border-divider h-14 w-14 rounded-xl border object-cover"
+                className="border-divider size-16 rounded-xl border object-cover"
               />
               <button
                 type="button"
                 aria-label={`Remove ${img.name}`}
                 onClick={() => removeImage(img.id)}
-                className="bg-bg-elev-3 text-fg border-border focus-visible:ring-brand absolute -right-1.5 -top-1.5 inline-flex h-5 w-5 items-center justify-center rounded-full border text-[11px] leading-none focus:outline-none focus-visible:ring-2"
+                className="bg-bg-elev-3 text-fg border-border focus-visible:ring-brand absolute -right-2 -top-2 inline-flex size-6 items-center justify-center rounded-full border text-sm leading-none focus:outline-none focus-visible:ring-2"
               >
                 ×
               </button>
@@ -205,7 +207,7 @@ export function Composer({ onSubmit, disabled, placeholder = 'Ask anything…' }
       ) : null}
 
       {imageError ? (
-        <p role="alert" className="text-bear text-[11px]">
+        <p role="alert" className="text-bear text-xs">
           {imageError}
         </p>
       ) : null}
@@ -217,14 +219,14 @@ export function Composer({ onSubmit, disabled, placeholder = 'Ask anything…' }
           onClick={() => fileInputRef.current?.click()}
           disabled={disabled || images.length >= MAX_IMAGES}
           className={cn(
-            'glass-subtle inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl transition-colors',
+            'glass-subtle inline-flex size-12 shrink-0 items-center justify-center rounded-xl transition-colors',
             'focus-visible:ring-brand/60 focus:outline-none focus-visible:ring-2',
             disabled || images.length >= MAX_IMAGES
               ? 'text-fg-subtle cursor-not-allowed opacity-60'
               : 'text-fg-muted hover:text-fg',
           )}
         >
-          <ImagePlus className="size-4.5" />
+          <ImagePlus className="size-5" />
         </button>
 
         <input
@@ -251,9 +253,11 @@ export function Composer({ onSubmit, disabled, placeholder = 'Ask anything…' }
             placeholder={placeholder}
             disabled={disabled}
             maxLength={MAX_TEXT_CHARS + 100}
+            // text-base = 16px so iOS Safari does not auto-zoom on focus.
+            // min-h matches the surrounding 48px button row (h-12).
             className={cn(
-              'border-divider bg-bg-elev-1/60 backdrop-blur-sm w-full resize-none rounded-2xl border px-4 py-2.5 text-sm leading-relaxed',
-              'focus-visible:ring-brand/40 max-h-[200px] min-h-[44px] focus:outline-none focus-visible:ring-2',
+              'border-divider bg-bg-elev-1/60 backdrop-blur-sm w-full resize-none rounded-2xl border px-4 py-3 text-base leading-relaxed',
+              'focus-visible:ring-brand/40 max-h-[200px] min-h-[48px] focus:outline-none focus-visible:ring-2',
               'placeholder:text-fg-subtle text-fg',
               'transition-colors duration-150',
               focused && 'border-brand/50 bg-bg-elev-1/80',
@@ -269,7 +273,7 @@ export function Composer({ onSubmit, disabled, placeholder = 'Ask anything…' }
           {showCharCount ? (
             <span
               className={cn(
-                'absolute bottom-1.5 right-3 text-[10px] tabular-nums',
+                'absolute bottom-2 right-3 text-[11px] tabular-nums',
                 overLimit ? 'text-bear font-semibold' : 'text-fg-subtle',
               )}
             >
@@ -287,13 +291,13 @@ export function Composer({ onSubmit, disabled, placeholder = 'Ask anything…' }
             onClick={() => (voice.active ? voice.stop() : voice.start())}
             disabled={disabled}
             className={cn(
-              'glass-subtle inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl transition-colors',
+              'glass-subtle inline-flex size-12 shrink-0 items-center justify-center rounded-xl transition-colors',
               'focus-visible:ring-brand/60 focus:outline-none focus-visible:ring-2',
               voice.active ? 'text-bear' : 'text-fg-muted hover:text-fg',
               disabled ? 'cursor-not-allowed opacity-60' : '',
             )}
           >
-            {voice.active ? <RecordingDot /> : <Mic className="size-4.5" />}
+            {voice.active ? <RecordingDot /> : <Mic className="size-5" />}
           </button>
         ) : null}
 
@@ -302,19 +306,17 @@ export function Composer({ onSubmit, disabled, placeholder = 'Ask anything…' }
           disabled={disabled || value.trim().length === 0 || overLimit}
           aria-label="Send message"
           className={cn(
-            'inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl font-semibold',
+            'inline-flex size-12 shrink-0 items-center justify-center rounded-xl font-semibold',
             'text-brand-fg transition-opacity duration-150 hover:opacity-90',
             'disabled:cursor-not-allowed disabled:opacity-40',
             'focus-visible:ring-brand focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-bg',
           )}
           style={{
-            background:
-              'linear-gradient(135deg, oklch(80% 0.16 78) 0%, oklch(74% 0.18 60) 100%)',
-            boxShadow:
-              '0 8px 24px -8px oklch(78% 0.16 78 / 0.5), inset 0 1px 0 0 oklch(100% 0 0 / 0.18)',
+            backgroundImage: 'var(--gradient-brand)',
+            boxShadow: 'var(--shadow-brand-press)',
           }}
         >
-          <Send className="size-4.5" />
+          <Send className="size-5" />
         </button>
       </div>
     </form>
@@ -325,7 +327,7 @@ function RecordingDot() {
   return (
     <span
       aria-hidden="true"
-      className="bg-bear inline-block h-3.5 w-3.5 animate-pulse rounded-full shadow-[0_0_0_3px_rgba(240,89,74,0.25)]"
+      className="bg-bear inline-block size-3.5 animate-pulse rounded-full shadow-[0_0_0_3px_rgba(240,89,74,0.25)]"
     />
   );
 }
