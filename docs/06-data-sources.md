@@ -8,14 +8,15 @@
 
 | Provider               | Tier                    | XAUUSD | EURUSD | GBPUSD | WS  | Use as                        |
 | ---------------------- | ----------------------- | :----: | :----: | :----: | :-: | ----------------------------- |
-| **Twelve Data**        | Free 800 reqs/day, paid |   ✅   |   ✅   |   ✅   | ✅  | **Primary**                   |
+| **BiQuote**            | Free, no key            |   ✅   |   ✅   |   ✅   | ✅  | **Primary (Phase 8)**         |
+| **Twelve Data**        | Free 800 reqs/day, paid |   ✅   |   ✅   |   ✅   | ✅  | Fallback (retired in PR-19)   |
 | **Finnhub**            | Free 60/min             |   ⚠️   |   ✅   |   ✅   | ✅  | Fallback FX                   |
 | **Alpha Vantage**      | Free 25/day, paid       |   ✅   |   ✅   |   ✅   | ❌  | Backup historical             |
 | **OANDA Exchange API** | Paid only               |   ✅   |   ✅   |   ✅   | ✅  | Production-grade upgrade path |
 | **FCS API**            | Cheap paid              |   ✅   |   ✅   |   ✅   | ✅  | Alternative primary           |
 | **EODHD**              | Paid                    |   ✅   |   ✅   |   ✅   | ⚠️  | EOD historical & dividends    |
 
-> **Rationale.** Twelve Data covers all three symbols with REST + WebSocket on a generous free tier, plus a reasonable paid step. Finnhub is the cleanest fallback for FX and gives us news in the same key. We keep Alpha Vantage for deep historicals.
+> **Rationale (Phase 8).** BiQuote is free and unauthenticated, covers all three symbols at REST + SignalR, and lets us hold a persistent live-tick stream from a single VM-hosted worker without paying for a Twelve Data tier. We keep Finnhub and Alpha Vantage in the failover chain so a BiQuote outage degrades to REST-cached values rather than going dark. Twelve Data stays wired as a transitional fallback while we soak BiQuote in production; PR-19 removes it entirely.
 
 ### News
 

@@ -118,6 +118,13 @@ const ProvidersEnv = z.object({
   MARKETAUX_API_KEY: z.string().min(1).optional(),
   TRADING_ECONOMICS_KEY: z.string().min(1).optional(),
   FRED_API_KEY: z.string().min(1).optional(),
+  /**
+   * BiQuote (https://biquote.io) — free, no-key REST + SignalR market data.
+   * Phase 8 promotes BiQuote to the primary price/candle source. There is
+   * no API key; this var only overrides the base URL (e.g. for staging or a
+   * local mock during tests). Default: https://biquote.io.
+   */
+  BIQUOTE_BASE_URL: z.string().url().optional(),
 });
 
 const NotifyEnv = z.object({
