@@ -34,7 +34,7 @@ export const journalEntries = pgTable(
     updatedAt: timestamp('updated_at', { withTimezone: true })
       .defaultNow()
       .notNull()
-      .$onUpdate(() => sql`now()`),
+      .$onUpdate(() => new Date()),
   },
   (t) => [index('journal_symbol_idx').on(t.symbol), index('journal_opened_idx').on(t.openedAt)],
 );

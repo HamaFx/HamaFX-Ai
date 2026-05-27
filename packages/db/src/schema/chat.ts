@@ -1,4 +1,3 @@
-import { sql } from 'drizzle-orm';
 import { boolean, index, jsonb, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 
 /**
@@ -25,7 +24,7 @@ export const chatThreads = pgTable(
     updatedAt: timestamp('updated_at', { withTimezone: true })
       .defaultNow()
       .notNull()
-      .$onUpdate(() => sql`now()`),
+      .$onUpdate(() => new Date()),
   },
   (t) => [index('chat_threads_updated_at_idx').on(t.updatedAt)],
 );
