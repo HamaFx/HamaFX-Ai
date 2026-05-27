@@ -1,0 +1,107 @@
+[
+  {
+    "id": "p01",
+    "prompt": "Give me a top-down read on gold from 4H down to 15M.",
+    "expectedTools": ["analyze_technical"],
+    "forbiddenTools": [],
+    "mustContainSubstrings": ["XAUUSD"]
+  },
+  {
+    "id": "p02",
+    "prompt": "What's the bias on EURUSD right now and why?",
+    "expectedTools": ["analyze_technical"],
+    "forbiddenTools": [],
+    "mustContainSubstrings": ["EURUSD"]
+  },
+  {
+    "id": "p03",
+    "prompt": "Are there any high-impact USD events in the next 24h?",
+    "expectedTools": ["get_calendar"],
+    "forbiddenTools": [],
+    "mustContainSubstrings": []
+  },
+  {
+    "id": "p04",
+    "prompt": "Summarise today's gold-relevant news and tell me what to watch.",
+    "expectedTools": ["get_news"],
+    "forbiddenTools": [],
+    "mustContainSubstrings": []
+  },
+  {
+    "id": "p05",
+    "prompt": "Show RSI divergence on GBPUSD 1H if any.",
+    "expectedTools": ["get_indicators"],
+    "forbiddenTools": [],
+    "mustContainSubstrings": ["GBPUSD"]
+  },
+  {
+    "id": "p06",
+    "prompt": "Mark the previous day's high/low and Asian range on XAUUSD.",
+    "expectedTools": ["annotate_chart"],
+    "forbiddenTools": [],
+    "mustContainSubstrings": ["XAUUSD"]
+  },
+  {
+    "id": "p07",
+    "prompt": "If price breaks 2380 on gold, what's the next liquidity above?",
+    "expectedTools": ["get_market_structure"],
+    "forbiddenTools": [],
+    "mustContainSubstrings": []
+  },
+  {
+    "id": "p08",
+    "prompt": "Set an alert if EURUSD closes a 1H below 1.0820.",
+    "expectedTools": ["set_alert"],
+    "forbiddenTools": [],
+    "mustContainSubstrings": []
+  },
+  {
+    "id": "p09",
+    "prompt": "Journal: I shorted XAUUSD at 2392, SL 2398, TP 2378 — log it.",
+    "expectedTools": ["log_journal"],
+    "forbiddenTools": [],
+    "mustContainSubstrings": []
+  },
+  {
+    "id": "p10",
+    "prompt": "What did I trade last week and what was my win rate?",
+    "expectedTools": ["get_journal_stats"],
+    "forbiddenTools": [],
+    "mustContainSubstrings": []
+  },
+  {
+    "id": "p11",
+    "prompt": "I'm thinking long EURUSD at 1.0850 with a stop at 1.0815 and target 1.0920 on a 5k account at 1% risk. Size me up and verify.",
+    "expectedTools": ["compute_risk", "verify_call"],
+    "forbiddenTools": [],
+    "mustContainSubstrings": ["EURUSD"]
+  },
+  {
+    "id": "p12",
+    "prompt": "What's the dollar doing today and is gold tracking it?",
+    "expectedTools": ["get_intermarket"],
+    "forbiddenTools": [],
+    "mustContainSubstrings": []
+  },
+  {
+    "id": "p13",
+    "prompt": "Expected range for XAUUSD over the next 8 hours given today's events?",
+    "expectedTools": ["forecast_volatility"],
+    "forbiddenTools": [],
+    "mustContainSubstrings": ["XAUUSD"]
+  },
+  {
+    "id": "p14",
+    "prompt": "How are my open trades doing right now?",
+    "expectedTools": ["compute_position_health"],
+    "forbiddenTools": [],
+    "mustContainSubstrings": []
+  },
+  {
+    "id": "p15",
+    "prompt": "Has an EMA50/EMA200 cross with ATR-based stops actually worked on EURUSD 1H lately?",
+    "expectedTools": ["replay_setup"],
+    "forbiddenTools": [],
+    "mustContainSubstrings": ["EURUSD"]
+  }
+]

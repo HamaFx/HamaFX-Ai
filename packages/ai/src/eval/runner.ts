@@ -42,6 +42,21 @@ export interface RunEvalsArgs {
 export interface PromptDef {
   id: string;
   prompt: string;
+  /** Phase 7c — tool-trace assertions. Optional; when present the runner
+   *  evaluates them and surfaces pass/fail in the report.
+   *  - `expectedTools`: every tool listed must appear in the trace.
+   *  - `forbiddenTools`: none of these tools may appear in the trace.
+   *  - `mustContainSubstrings`: each substring (case-insensitive) must
+   *     appear in the streamed assistant text.
+   */
+  expectedTools?: string[];
+  forbiddenTools?: string[];
+  mustContainSubstrings?: string[];
+}
+
+export interface AssertionFailure {
+  kind: 'missing_tool' | 'forbidden_tool' | 'missing_substring';
+  detail: string;
 }
 
 export interface PromptResult {
@@ -53,6 +68,13 @@ export interface PromptResult {
   toolCalls: ParsedToolCall[];
   ok: boolean;
   error?: string;
+  /**
+   * Phase 7c — assertion failures collected from the case definition. The
+   * `ok` flag remains driven by transport / parse failures; assertion
+   * failures are reported separately so we don't conflate "the model
+   * crashed" with "the model picked a different tool".
+   */
+  assertions?: AssertionFailure[];
 }
 
 export interface RunEvalsResult {
@@ -84,8 +106,17 @@ export async function runEvals(args: RunEvalsArgs): Promise<RunEvalsResult> {
       cookie: args.cookie,
       timeoutMs,
     });
+    if (result.ok && (prompt.expectedTools || prompt.forbiddenTools || prompt.mustContainSubstrings)) {
+      result.assertions = evaluateAssertions(prompt, result);
+    }
     results.push(result);
-    log(`[${i + 1}/${total}] ${prompt.id} ${result.totalMs}ms`);
+    const failedAssertions = result.assertions?.length ?? 0;
+    const tag = !result.ok
+      ? 'FAIL'
+      : failedAssertions > 0
+        ? `OK (${failedAssertions} assertion fail${failedAssertions === 1 ? '' : 's'})`
+        : 'OK';
+    log(`[${i + 1}/${total}] ${prompt.id} ${result.totalMs}ms ${tag}`);
   }
 
   const reportPath = await writeReport({
@@ -290,8 +321,26 @@ async function loadPrompts(path: string): Promise<PromptDef[]> {
       typeof (item as { id: unknown }).id === 'string' &&
       typeof (item as { prompt: unknown }).prompt === 'string'
     ) {
-      const obj = item as { id: string; prompt: string };
-      out.push({ id: obj.id, prompt: obj.prompt });
+      const obj = item as {
+        id: string;
+        prompt: string;
+        expectedTools?: unknown;
+        forbiddenTools?: unknown;
+        mustContainSubstrings?: unknown;
+      };
+      const def: PromptDef = { id: obj.id, prompt: obj.prompt };
+      if (Array.isArray(obj.expectedTools)) {
+        def.expectedTools = obj.expectedTools.filter((s): s is string => typeof s === 'string');
+      }
+      if (Array.isArray(obj.forbiddenTools)) {
+        def.forbiddenTools = obj.forbiddenTools.filter((s): s is string => typeof s === 'string');
+      }
+      if (Array.isArray(obj.mustContainSubstrings)) {
+        def.mustContainSubstrings = obj.mustContainSubstrings.filter(
+          (s): s is string => typeof s === 'string',
+        );
+      }
+      out.push(def);
     } else {
       throw new Error(`prompts file ${path} contains an entry without {id, prompt}`);
     }
@@ -300,6 +349,30 @@ async function loadPrompts(path: string): Promise<PromptDef[]> {
     throw new Error(`prompts file ${path} is empty`);
   }
   return out;
+}
+
+// --- assertion evaluation --------------------------------------------------
+
+function evaluateAssertions(prompt: PromptDef, result: PromptResult): AssertionFailure[] {
+  const failures: AssertionFailure[] = [];
+  const calledTools = new Set(result.toolCalls.map((t) => t.name));
+  for (const t of prompt.expectedTools ?? []) {
+    if (!calledTools.has(t)) {
+      failures.push({ kind: 'missing_tool', detail: t });
+    }
+  }
+  for (const t of prompt.forbiddenTools ?? []) {
+    if (calledTools.has(t)) {
+      failures.push({ kind: 'forbidden_tool', detail: t });
+    }
+  }
+  const lowerText = result.text.toLowerCase();
+  for (const sub of prompt.mustContainSubstrings ?? []) {
+    if (!lowerText.includes(sub.toLowerCase())) {
+      failures.push({ kind: 'missing_substring', detail: sub });
+    }
+  }
+  return failures;
 }
 
 // --- report writing --------------------------------------------------------
@@ -335,6 +408,8 @@ function buildMarkdown(args: BuildMarkdownArgs): string {
   const total = results.length;
   const failed = results.filter((r) => !r.ok).length;
   const ok = total - failed;
+  const assertionsClean = results.filter((r) => r.ok && (!r.assertions || r.assertions.length === 0)).length;
+  const assertionsDirty = ok - assertionsClean;
   const ttftValues = results.filter((r) => r.ttftMs !== null).map((r) => r.ttftMs as number);
   const avgTtft = ttftValues.length > 0 ? Math.round(avg(ttftValues)) : null;
   const avgTotal = total > 0 ? Math.round(avg(results.map((r) => r.totalMs))) : null;
@@ -346,6 +421,10 @@ function buildMarkdown(args: BuildMarkdownArgs): string {
   lines.push(`- Prompts run: ${total}`);
   lines.push(`- Succeeded: ${ok}`);
   lines.push(`- Failed: ${failed}`);
+  lines.push(`- Assertion clean: ${assertionsClean}/${ok}`);
+  if (assertionsDirty > 0) {
+    lines.push(`- Assertion failures: ${assertionsDirty}`);
+  }
   lines.push(`- Avg TTFT: ${avgTtft === null ? 'n/a' : `${avgTtft}ms`}`);
   lines.push(`- Avg total: ${avgTotal === null ? 'n/a' : `${avgTotal}ms`}`);
   lines.push('');
@@ -392,6 +471,17 @@ function buildMarkdown(args: BuildMarkdownArgs): string {
       }
     }
     lines.push('');
+
+    if (r.assertions && r.assertions.length > 0) {
+      lines.push('**Assertion failures**');
+      lines.push('');
+      for (const a of r.assertions) {
+        if (a.kind === 'missing_tool') lines.push(`- expected tool not called: \`${a.detail}\``);
+        else if (a.kind === 'forbidden_tool') lines.push(`- forbidden tool was called: \`${a.detail}\``);
+        else lines.push(`- text missing substring: \`${a.detail}\``);
+      }
+      lines.push('');
+    }
     lines.push('**Output**');
     lines.push('');
     const truncated = r.text.length > MAX_OUTPUT_CHARS;
@@ -444,6 +534,8 @@ interface CliFlags {
   cookie: string;
   outDir: string;
   timeoutMs: number;
+  promptsPath: string | null;
+  useCases: boolean;
   help: boolean;
 }
 
@@ -453,6 +545,8 @@ function parseCliFlags(argv: string[]): CliFlags | { help: true } {
     cookie: process.env.EVAL_COOKIE ?? '',
     outDir: DEFAULT_OUT_DIR,
     timeoutMs: DEFAULT_TIMEOUT_MS,
+    promptsPath: null,
+    useCases: false,
     help: false,
   };
 
@@ -460,6 +554,10 @@ function parseCliFlags(argv: string[]): CliFlags | { help: true } {
     const arg = argv[i];
     if (arg === '--help' || arg === '-h') {
       flags.help = true;
+      continue;
+    }
+    if (arg === '--cases') {
+      flags.useCases = true;
       continue;
     }
     const next = argv[i + 1];
@@ -474,6 +572,10 @@ function parseCliFlags(argv: string[]): CliFlags | { help: true } {
     } else if (arg === '--out') {
       if (!next) throw new Error('--out requires a value');
       flags.outDir = next;
+      i++;
+    } else if (arg === '--prompts') {
+      if (!next) throw new Error('--prompts requires a value');
+      flags.promptsPath = next;
       i++;
     } else if (arg === '--timeout') {
       if (!next) throw new Error('--timeout requires a value');
@@ -501,11 +603,13 @@ function printUsage(): void {
       '  --cookie <value>   Full Cookie header value (or set EVAL_COOKIE)',
       '  --out <dir>        Directory for the markdown report (default: docs/eval)',
       '  --timeout <ms>     Per-prompt abort timeout in ms (default: 120000)',
+      '  --cases            Use cases.json (with assertions) instead of prompts.json',
+      '  --prompts <path>   Override the prompts file path explicitly',
       '  -h, --help         Print this message and exit',
       '',
-      'Reads prompts from packages/ai/src/eval/prompts.json. Writes',
-      '<out>/<UTC-timestamp>.md. Exits 0 when every prompt succeeds, non-zero',
-      'when one or more prompts failed or timed out.',
+      'Reads prompts from packages/ai/src/eval/prompts.json (or cases.json',
+      'with --cases). Writes <out>/<UTC-timestamp>.md. Exits 0 when every',
+      'prompt succeeds AND every assertion passes, non-zero otherwise.',
       '',
     ].join('\n'),
   );
@@ -534,19 +638,26 @@ async function main(): Promise<void> {
     process.exit(1);
   }
 
+  const promptsPath = f.promptsPath
+    ?? (f.useCases
+      ? fileURLToPath(new URL('./cases.json', import.meta.url))
+      : fileURLToPath(new URL('./prompts.json', import.meta.url)));
+
   const { results, reportPath } = await runEvals({
     baseUrl: f.baseUrl,
     cookie: f.cookie,
     outDir: f.outDir,
     timeoutMs: f.timeoutMs,
+    promptsPath,
   });
 
   const failed = results.filter((r) => !r.ok).length;
+  const dirty = results.filter((r) => r.ok && (r.assertions?.length ?? 0) > 0).length;
   process.stdout.write(`\nReport: ${reportPath}\n`);
   process.stdout.write(
-    `Done. ${results.length - failed}/${results.length} succeeded, ${failed} failed.\n`,
+    `Done. ${results.length - failed}/${results.length} succeeded, ${failed} failed${dirty > 0 ? `, ${dirty} with assertion failures` : ''}.\n`,
   );
-  process.exit(failed > 0 ? 1 : 0);
+  process.exit(failed > 0 || dirty > 0 ? 1 : 0);
 }
 
 // Only run main() when this file is executed directly (not when imported).

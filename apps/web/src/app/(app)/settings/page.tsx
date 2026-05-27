@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import { PageHeader } from '@/components/layout/page-header';
 
 import { AboutCard } from './_components/about-card';
+import { AgentCard } from './_components/agent-card';
 import { DataCard } from './_components/data-card';
 import { NotificationsCard } from './_components/notifications-card';
 import { PreferencesCard } from './_components/preferences-card';
@@ -24,6 +25,7 @@ export default function SettingsPage() {
 
       <SystemStatusCard />
       <UsageGlance />
+      <AgentCard />
       <NotificationsCard />
       <PreferencesCard />
       <DataCard />

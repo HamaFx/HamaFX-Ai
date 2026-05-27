@@ -14,7 +14,7 @@ interface MessageListProps {
   /** Index of the last assistant message — gets the regenerate affordance. */
   lastAssistantId?: string;
   onCopy?: (text: string) => void;
-  onRegenerate?: () => void;
+  onRegenerate?: (opts?: { modelOverride?: string }) => void;
 }
 
 export function MessageList({

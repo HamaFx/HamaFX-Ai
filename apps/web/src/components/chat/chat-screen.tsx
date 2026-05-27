@@ -65,13 +65,26 @@ export function ChatScreen({
   const [showScrollDown, setShowScrollDown] = useState(false);
   const [title, setTitle] = useState(initialTitle);
 
+  // One-shot model override — set right before calling regenerate() so the
+  // body builder picks it up. Cleared after the request resolves.
+  const modelOverrideRef = useRef<string | null>(null);
+
   const transport = useMemo(
     () =>
       new DefaultChatTransport({
         api: '/api/chat',
-        prepareSendMessagesRequest: ({ messages, id }) => ({
-          body: { threadId, id, messages },
-        }),
+        prepareSendMessagesRequest: ({ messages, id }) => {
+          const override = modelOverrideRef.current;
+          modelOverrideRef.current = null;
+          return {
+            body: {
+              threadId,
+              id,
+              messages,
+              ...(override ? { modelOverride: override } : {}),
+            },
+          };
+        },
       }),
     [threadId],
   );
@@ -211,7 +224,8 @@ export function ChatScreen({
                 void navigator.clipboard.writeText(text);
                 toast.success('Copied');
               }}
-              onRegenerate={() => {
+              onRegenerate={(opts) => {
+                if (opts?.modelOverride) modelOverrideRef.current = opts.modelOverride;
                 void regenerate();
               }}
             />

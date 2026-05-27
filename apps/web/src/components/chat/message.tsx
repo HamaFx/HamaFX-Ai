@@ -10,26 +10,72 @@
 //
 // Both controls are 32×32 pills that stack horizontally so they don't
 // require absolute layout gymnastics on narrow viewports.
+//
+// Phase 7c: a system-role message that carries a `data-plan` part is
+// rendered as a planner card (collapsible "Thinking" pill) at the chat-
+// thread top-level. System messages with only `text` (e.g. rolling-summary
+// system notes used internally) are NOT rendered to the user — they're
+// internal context.
 
 import type { UIMessage } from 'ai';
-import { Check, Copy, RotateCcw } from 'lucide-react';
+import { Check, ChevronDown, Copy, RotateCcw } from 'lucide-react';
 import { useState } from 'react';
 
 import { Tooltip } from '@/components/ui/tooltip';
 import { cn } from '@/lib/cn';
 
+import { CitationWarningPartView } from './parts/citation-warning';
 import { ChatToolPart, type ToolPartState } from './parts/registry';
+import { PlanPart } from './parts/plan';
 import { TextPart } from './parts/text';
 
 interface MessageProps {
   message: UIMessage;
   onCopy?: (text: string) => void;
-  onRegenerate?: () => void;
+  onRegenerate?: (opts?: { modelOverride?: string }) => void;
 }
+
+/**
+ * Shortcut model ids exposed in the "Regenerate with…" menu. Picked to
+ * line up with the per-domain defaults from `routeTurn` so the user can
+ * test all three tiers from a single click. Keeping this list short on
+ * purpose — full model selection lives in /settings.
+ */
+const REGEN_MODELS: Array<{ id: string; label: string; tier: 'fast' | 'pro' }> = [
+  { id: 'google-vertex/gemini-2.5-flash-lite', label: 'Lite (cheapest)', tier: 'fast' },
+  { id: 'google-vertex/gemini-2.5-flash', label: 'Flash 2.5', tier: 'fast' },
+  { id: 'google-vertex/gemini-3-flash', label: 'Flash 3 (technical)', tier: 'fast' },
+  { id: 'google-vertex/gemini-3-pro', label: 'Pro 3 (fundamental)', tier: 'pro' },
+];
 
 export function Message({ message, onCopy, onRegenerate }: MessageProps) {
   const isUser = message.role === 'user';
+  const isSystem = message.role === 'system';
   const [copied, setCopied] = useState(false);
+  const [modelMenuOpen, setModelMenuOpen] = useState(false);
+
+  // Phase 7c — system messages: render planner cards but suppress
+  // anything else (rolling-summary notes are internal context only).
+  if (isSystem) {
+    const planPart = (message.parts ?? []).find(
+      (p) =>
+        p !== null &&
+        typeof p === 'object' &&
+        (p as { type?: string }).type === 'data-plan',
+    );
+    if (planPart) {
+      return (
+        <div className="flex w-full justify-start">
+          <div className="w-full max-w-[88%]">
+            <PlanPart
+              plan={planPart as unknown as Parameters<typeof PlanPart>[0]['plan']}
+            />
+          </div>
+        </div>
+      );
+    }
+    return null;
+  }
 
   const plainText = extractText(message);
   const hasActions = !isUser && (plainText.length > 0 || onRegenerate);
@@ -91,16 +137,63 @@ export function Message({ message, onCopy, onRegenerate }: MessageProps) {
             </Tooltip>
           ) : null}
           {onRegenerate ? (
-            <Tooltip label="Regenerate">
-              <button
-                type="button"
-                onClick={onRegenerate}
-                aria-label="Regenerate response"
-                className="glass-subtle text-fg-muted hover:text-fg focus-visible:ring-brand inline-flex size-8 items-center justify-center rounded-lg transition-colors focus:outline-none focus-visible:ring-2"
-              >
-                <RotateCcw className="size-3.5" />
-              </button>
-            </Tooltip>
+            <div className="relative inline-flex">
+              <Tooltip label="Regenerate">
+                <button
+                  type="button"
+                  onClick={() => onRegenerate()}
+                  aria-label="Regenerate response"
+                  className="glass-subtle text-fg-muted hover:text-fg focus-visible:ring-brand inline-flex size-8 items-center justify-center rounded-l-lg transition-colors focus:outline-none focus-visible:ring-2"
+                >
+                  <RotateCcw className="size-3.5" />
+                </button>
+              </Tooltip>
+              <Tooltip label="Regenerate with…">
+                <button
+                  type="button"
+                  onClick={() => setModelMenuOpen((v) => !v)}
+                  aria-label="Regenerate with a different model"
+                  aria-haspopup="menu"
+                  aria-expanded={modelMenuOpen}
+                  className="glass-subtle text-fg-muted hover:text-fg focus-visible:ring-brand inline-flex size-8 items-center justify-center rounded-r-lg border-l border-divider/40 transition-colors focus:outline-none focus-visible:ring-2"
+                >
+                  <ChevronDown className="size-3.5" />
+                </button>
+              </Tooltip>
+              {modelMenuOpen ? (
+                <div
+                  role="menu"
+                  className="glass-strong border-divider/60 absolute bottom-full right-0 mb-2 flex flex-col gap-0.5 rounded-xl border p-1 shadow-xl"
+                  style={{ minWidth: '12rem' }}
+                  onMouseLeave={() => setModelMenuOpen(false)}
+                >
+                  {REGEN_MODELS.map((m) => (
+                    <button
+                      key={m.id}
+                      type="button"
+                      role="menuitem"
+                      onClick={() => {
+                        setModelMenuOpen(false);
+                        onRegenerate({ modelOverride: m.id });
+                      }}
+                      className="text-fg hover:bg-bg-elev-2 focus:bg-bg-elev-2 flex items-center justify-between gap-2 rounded-lg px-3 py-2 text-left text-xs transition-colors focus:outline-none"
+                    >
+                      <span>{m.label}</span>
+                      <span
+                        className={cn(
+                          'rounded-full px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide',
+                          m.tier === 'pro'
+                            ? 'bg-brand/15 text-brand'
+                            : 'bg-bg-elev-3 text-fg-muted',
+                        )}
+                      >
+                        {m.tier}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              ) : null}
+            </div>
           ) : null}
         </div>
       ) : null}
@@ -138,6 +231,49 @@ function renderPart(
   if (part.type === 'reasoning') return null;
   if (part.type.startsWith('source-') || part.type === 'file' || part.type === 'step-start')
     return null;
+
+  // Phase 7c — UI-only parts written into the assistant message after
+  // streamText finishes (citation warning, verify warning) or written
+  // into a sibling system message before the turn (data-plan, handled
+  // at the message level above).
+  if (part.type === 'data-citation-warning') {
+    // The persisted JSON shape matches `CitationWarningPart` exactly.
+    return (
+      <CitationWarningPartView
+        key={idx}
+        part={part as unknown as Parameters<typeof CitationWarningPartView>[0]['part']}
+      />
+    );
+  }
+  if (part.type === 'data-verify-warning') {
+    // For now reuse the citation warning's tone-styled card with a custom
+    // header; a bespoke verify-warning component can graduate later.
+    return (
+      <CitationWarningPartView
+        key={idx}
+        part={
+          {
+            type: 'data-citation-warning',
+            unsupportedClaims: ((part as unknown as { caveats?: string[] }).caveats ?? []),
+            toolsInvoked: [],
+            stance: 'strict',
+            createdAt:
+              (part as unknown as { createdAt?: number }).createdAt ?? Date.now(),
+          } as Parameters<typeof CitationWarningPartView>[0]['part']
+        }
+      />
+    );
+  }
+  if (part.type === 'data-plan') {
+    // Defensive fallback — the planner persists plans on a sibling
+    // system message and this branch is unreachable in practice.
+    return (
+      <PlanPart
+        key={idx}
+        plan={part as unknown as Parameters<typeof PlanPart>[0]['plan']}
+      />
+    );
+  }
 
   if (part.type.startsWith('tool-')) {
     const p = part as StreamToolPart;
