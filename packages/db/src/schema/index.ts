@@ -15,3 +15,6 @@ export * from './cot';
 export * from './share';
 export * from './push';
 export * from './memory';
+// Phase 8 — worker-driven persistence
+export * from './live-ticks';
+export * from './candles-1m';
