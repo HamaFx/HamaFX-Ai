@@ -16,10 +16,8 @@
 
 set -euo pipefail
 
-if [[ -f /opt/hamafx/.env ]]; then
-  # shellcheck disable=SC1091
-  source /opt/hamafx/.env
-fi
+# shellcheck source=./_load-env.sh
+source "$(dirname "${BASH_SOURCE[0]}")/_load-env.sh" /opt/hamafx/.env
 
 : "${GCS_BACKUP_BUCKET:?GCS_BACKUP_BUCKET must be set}"
 

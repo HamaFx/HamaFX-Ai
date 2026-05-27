@@ -24,12 +24,18 @@ readonly APP_DIR="/opt/hamafx/app"
 readonly SHA_FILE="/opt/hamafx/.deployed-sha"
 readonly LOCK_FILE="/run/hamafx-update.lock"
 
-# Pull env so HC_UPDATE_UUID is in scope.
+# Pull HC_UPDATE_UUID from the env file. We CANNOT just `source` the
+# file — Vercel-pulled env values like GOOGLE_APPLICATION_CREDENTIALS_JSON
+# contain unquoted whitespace + special chars (e.g. "PRIVATE KEY" inside
+# a JSON blob) that bash interprets as commands.
+#
+# systemd's EnvironmentFile= directive uses a stricter parser, so the
+# main worker + jobs are unaffected; this is purely about update.sh
+# itself.
+HC_UUID=''
 if [[ -f /opt/hamafx/.env ]]; then
-  # shellcheck disable=SC1091
-  source /opt/hamafx/.env
+  HC_UUID=$(grep -E '^HC_UPDATE_UUID=' /opt/hamafx/.env | cut -d= -f2- | tr -d '"' | tr -d "'")
 fi
-HC_UUID="${HC_UPDATE_UUID:-}"
 
 ping_hc() {
   local status="${1:-success}"
