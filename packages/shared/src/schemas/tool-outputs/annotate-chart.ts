@@ -50,24 +50,26 @@ export const ChartMarkerSchema = z.object({
     z.literal('square'),
   ]),
   text: z.string(),
-  size: z.number().int().min(0).max(4),
+  /** Size 0–4. Vertex AI rejects numeric literal enums, so we use string. */
+  size: z.union([z.literal('0'), z.literal('1'), z.literal('2'), z.literal('3'), z.literal('4')]),
 });
 export type ChartMarker = z.infer<typeof ChartMarkerSchema>;
 
 /**
  * Price-line primitive matching lightweight-charts CreatePriceLineOptions.
- * `lineStyle` is the LineStyle enum value (0 Solid … 4 SparseDotted).
+ * `lineStyle` is the LineStyle enum value (Solid/Dotted/Dashed/LargeDashed/SparseDotted).
+ * `lineWidth` 1–4. Both use string literals for Vertex AI compatibility.
  */
 export const ChartPriceLineSchema = z.object({
   price: z.number(),
   color: z.string(),
-  lineWidth: z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4)]),
+  lineWidth: z.union([z.literal('1'), z.literal('2'), z.literal('3'), z.literal('4')]),
   lineStyle: z.union([
-    z.literal(0),
-    z.literal(1),
-    z.literal(2),
-    z.literal(3),
-    z.literal(4),
+    z.literal('0'),
+    z.literal('1'),
+    z.literal('2'),
+    z.literal('3'),
+    z.literal('4'),
   ]),
   axisLabelVisible: z.boolean(),
   title: z.string(),

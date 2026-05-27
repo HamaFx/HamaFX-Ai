@@ -233,7 +233,9 @@ function createChart(lc: LcModule, container: HTMLElement, decimals: number): Ch
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const seriesAny = candleSeries as any;
       if (typeof seriesAny.setMarkers === 'function') {
-        seriesAny.setMarkers(overlays?.markers ?? []);
+        seriesAny.setMarkers(
+          (overlays?.markers ?? []).map((m) => ({ ...m, size: Number(m.size) })),
+        );
       }
 
       // Price lines — detach old, attach new.
@@ -246,7 +248,13 @@ function createChart(lc: LcModule, container: HTMLElement, decimals: number): Ch
       }
       priceLineHandles = [];
       for (const pl of overlays?.priceLines ?? []) {
-        priceLineHandles.push(candleSeries.createPriceLine(pl));
+        priceLineHandles.push(
+          candleSeries.createPriceLine({
+            ...pl,
+            lineWidth: Number(pl.lineWidth) as 1 | 2 | 3 | 4,
+            lineStyle: Number(pl.lineStyle) as 0 | 1 | 2 | 3 | 4,
+          }),
+        );
       }
     },
     resize(width, height) {

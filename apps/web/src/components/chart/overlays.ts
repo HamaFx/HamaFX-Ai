@@ -19,14 +19,17 @@ export interface MarkerPrimitive {
   color: string;
   shape: 'arrowUp' | 'arrowDown' | 'circle' | 'square';
   text: string;
-  size: number;
+  /** String-encoded integer 0–4 (Vertex AI rejects numeric literal enums). */
+  size: string | number;
 }
 
 export interface PriceLinePrimitive {
   price: number;
   color: string;
-  lineWidth: 1 | 2 | 3 | 4;
-  lineStyle: 0 | 1 | 2 | 3 | 4; // Solid, Dotted, Dashed, LargeDashed, SparseDotted
+  /** String-encoded 1–4 (Vertex AI compat). */
+  lineWidth: string | number;
+  /** String-encoded 0–4 (Solid, Dotted, Dashed, LargeDashed, SparseDotted). */
+  lineStyle: string | number;
   axisLabelVisible: boolean;
   title: string;
 }

@@ -85,7 +85,7 @@ export const annotateChartTool = tool({
             color: PALETTE.muted,
             shape: s.type === 'high' ? 'arrowDown' : 'arrowUp',
             text: '',
-            size: 1,
+            size: '1',
           });
         }
         counts.swings = r.swings.length;
@@ -103,13 +103,13 @@ export const annotateChartTool = tool({
             color,
             shape: e.direction === 'bullish' ? 'arrowUp' : 'arrowDown',
             text: tag,
-            size: 2,
+            size: '2',
           });
           priceLines.push({
             price: e.level,
             color,
-            lineWidth: 1,
-            lineStyle: e.kind === 'choch' ? 2 : 0,
+            lineWidth: '1',
+            lineStyle: e.kind === 'choch' ? '2' : '0',
             axisLabelVisible: true,
             title: `${tag} ${e.direction === 'bullish' ? '↑' : '↓'}`,
           });
@@ -130,13 +130,13 @@ export const annotateChartTool = tool({
             color,
             shape: 'square',
             text: 'FVG',
-            size: 1,
+            size: '1',
           });
           priceLines.push({
             price: mid,
             color,
-            lineWidth: 1,
-            lineStyle: 1,
+            lineWidth: '1',
+            lineStyle: '1',
             axisLabelVisible: true,
             title: `FVG ${z.bottom.toFixed(2)}-${z.top.toFixed(2)}`,
           });
@@ -157,13 +157,13 @@ export const annotateChartTool = tool({
             color,
             shape: 'square',
             text: 'OB',
-            size: 1,
+            size: '1',
           });
           priceLines.push({
             price: mid,
             color,
-            lineWidth: 1,
-            lineStyle: 1,
+            lineWidth: '1',
+            lineStyle: '1',
             axisLabelVisible: true,
             title: `OB ${ob.bottom.toFixed(2)}-${ob.top.toFixed(2)}`,
           });
@@ -181,7 +181,7 @@ export const annotateChartTool = tool({
             color: PALETTE.warn,
             shape: 'circle',
             text: '✶',
-            size: 1,
+            size: '1',
           });
         }
         counts.liquidity = r.liquidity.length;
@@ -194,16 +194,16 @@ export const annotateChartTool = tool({
         priceLines.push({
           price: pd.high,
           color: PALETTE.info,
-          lineWidth: 1,
-          lineStyle: 2,
+          lineWidth: '1',
+          lineStyle: '2',
           axisLabelVisible: true,
           title: `PDH ${pd.high.toFixed(2)}`,
         });
         priceLines.push({
           price: pd.low,
           color: PALETTE.info,
-          lineWidth: 1,
-          lineStyle: 2,
+          lineWidth: '1',
+          lineStyle: '2',
           axisLabelVisible: true,
           title: `PDL ${pd.low.toFixed(2)}`,
         });
@@ -217,16 +217,16 @@ export const annotateChartTool = tool({
         priceLines.push({
           price: ar.high,
           color: PALETTE.warn,
-          lineWidth: 1,
-          lineStyle: 3,
+          lineWidth: '1',
+          lineStyle: '3',
           axisLabelVisible: true,
           title: `Asia H ${ar.high.toFixed(2)}${ar.forming ? ' (forming)' : ''}`,
         });
         priceLines.push({
           price: ar.low,
           color: PALETTE.warn,
-          lineWidth: 1,
-          lineStyle: 3,
+          lineWidth: '1',
+          lineStyle: '3',
           axisLabelVisible: true,
           title: `Asia L ${ar.low.toFixed(2)}${ar.forming ? ' (forming)' : ''}`,
         });
