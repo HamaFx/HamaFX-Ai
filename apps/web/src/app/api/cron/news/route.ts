@@ -22,11 +22,18 @@ export async function GET(req: Request): Promise<Response> {
     // Look back 6 hours so we don't miss anything between cron beats while
     // staying well clear of the page-size cap.
     const publishedAfter = new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString();
-    const articles = await fetchNews({ publishedAfter, limit: 50 });
-    const { inserted, skipped } = await upsertArticles(articles);
-    return {
-      processed: articles.length,
-      note: `inserted=${inserted} skipped=${skipped}`,
-    };
+    try {
+      const articles = await fetchNews({ publishedAfter, limit: 50 });
+      const { inserted, skipped } = await upsertArticles(articles);
+      return {
+        processed: articles.length,
+        note: `inserted=${inserted} skipped=${skipped}`,
+      };
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.error('[cron/news] fetch failed:', message);
+      // Re-throw with the actual message so the response is useful for debugging
+      throw new Error(`news fetch failed: ${message}`);
+    }
   });
 }

@@ -72,9 +72,10 @@ export async function withCronAuth(
     const result = await fn();
     return Response.json({ ok: true, ...result });
   } catch (err) {
+    const message = err instanceof Error ? err.message : 'Cron handler failed';
     console.error('[cron] handler error', err);
     return Response.json(
-      { error: { code: 'INTERNAL', message: 'Cron handler failed' } },
+      { error: { code: 'INTERNAL', message } },
       { status: 500 },
     );
   }
