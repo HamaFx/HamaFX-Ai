@@ -1,13 +1,13 @@
 {
   "framework": "nextjs",
   "crons": [
-    { "path": "/api/cron/news", "schedule": "*/5 * * * *" },
-    { "path": "/api/cron/calendar", "schedule": "*/15 * * * *" },
-    { "path": "/api/cron/alerts", "schedule": "*/5 * * * *" },
+    { "path": "/api/cron/news", "schedule": "0 6 * * *" },
+    { "path": "/api/cron/calendar", "schedule": "0 7 * * *" },
+    { "path": "/api/cron/alerts", "schedule": "0 8 * * *" },
     { "path": "/api/cron/snapshots", "schedule": "5 0 * * *" },
-    { "path": "/api/cron/embedding-backfill", "schedule": "15 */6 * * *" },
+    { "path": "/api/cron/embedding-backfill", "schedule": "15 6 * * *" },
     { "path": "/api/cron/fred-actuals", "schedule": "30 1 * * *" },
-    { "path": "/api/cron/briefings", "schedule": "*/5 * * * *" },
+    { "path": "/api/cron/briefings", "schedule": "0 9 * * *" },
     { "path": "/api/cron/weekly-review", "schedule": "0 18 * * 0" },
     { "path": "/api/cron/cot", "schedule": "0 22 * * 5" }
   ],
