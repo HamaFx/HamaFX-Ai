@@ -17,12 +17,12 @@ HamaFX-Ai/
 │   ├── data/                # Provider adapters (Twelve Data, Finnhub, ...)
 │   ├── indicators/          # Pure-function technical analysis (RSI, MACD, SMC...)
 │   ├── db/                  # Drizzle schema, migrations, query helpers
-│   ├── ui/                  # shadcn components + design tokens (optional split)
 │   └── config/              # ESLint, TS, Tailwind, Prettier presets
 │
 ├── docs/                    # ← you are here
+├── infra/                   # GCE cron VM scripts (`cron-vm/`)
 ├── .kiro/                   # Steering files for AI coding agents
-├── .github/workflows/       # CI: just lint + typecheck + vitest
+├── .github/workflows/       # CI: lint + typecheck + vitest, plus cron fallbacks
 ├── .vscode/                 # Editor settings
 │
 ├── turbo.json
@@ -33,93 +33,199 @@ HamaFX-Ai/
 └── .env.example
 ```
 
-## `apps/web/` (Next.js)
+> Note: `packages/ui/` was planned in Phase 0 but the design system lives entirely under `apps/web/src/components/` since we have a single consumer. We promote to a shared package only if a second consumer ever exists.
+
+## `apps/web/` (Next.js 15)
 
 ```
 apps/web/
 ├── src/
 │   ├── app/
-│   │   ├── login/page.tsx                    # password gate (single APP_PASSWORD)
+│   │   ├── login/
+│   │   │   ├── page.tsx                    # password gate (single APP_PASSWORD)
+│   │   │   └── _components/
+│   │   │       └── login-form.tsx
 │   │   │
-│   │   ├── (app)/                            # gated app (route group)
-│   │   │   ├── layout.tsx                    # mobile shell: bottom nav + top bar
-│   │   │   ├── page.tsx                      # default → /chat
+│   │   ├── (app)/                          # gated app (route group)
+│   │   │   ├── layout.tsx                  # mobile shell: TopBar + main + Toaster
+│   │   │   ├── error.tsx                   # per-segment error boundary
 │   │   │   ├── chat/
+│   │   │   │   ├── layout.tsx              # passthrough; chat is full-bleed
+│   │   │   │   ├── page.tsx                # /chat → redirect to most recent thread
+│   │   │   │   └── [threadId]/page.tsx     # full-screen ChatScreen
+│   │   │   ├── chart/[symbol]/
+│   │   │   │   ├── page.tsx                # server wrapper
+│   │   │   │   ├── loading.tsx
+│   │   │   │   ├── pro/page.tsx            # TradingView Advanced widget (env-gated)
+│   │   │   │   └── _components/
+│   │   │   │       ├── chart-view.tsx      # client orchestration
+│   │   │   │       ├── chart-skeleton.tsx
+│   │   │   │       ├── chart-empty.tsx
+│   │   │   │       ├── chart-error.tsx
+│   │   │   │       └── overlay-sheet.tsx
+│   │   │   ├── news/
 │   │   │   │   ├── page.tsx
-│   │   │   │   ├── [threadId]/page.tsx
-│   │   │   │   └── _components/              # underscore = local-only
-│   │   │   ├── chart/[symbol]/page.tsx
-│   │   │   ├── news/page.tsx
-│   │   │   ├── calendar/page.tsx
-│   │   │   ├── alerts/page.tsx
-│   │   │   ├── journal/page.tsx
+│   │   │   │   ├── loading.tsx
+│   │   │   │   └── _components/
+│   │   │   │       ├── news-view.tsx
+│   │   │   │       ├── news-toolbar.tsx
+│   │   │   │       ├── sentiment-summary.tsx
+│   │   │   │       └── refresh-button.tsx
+│   │   │   ├── calendar/
+│   │   │   │   ├── page.tsx
+│   │   │   │   ├── loading.tsx
+│   │   │   │   └── _components/
+│   │   │   │       ├── calendar-view.tsx
+│   │   │   │       ├── calendar-toolbar.tsx
+│   │   │   │       └── calendar-hero.tsx
+│   │   │   ├── alerts/
+│   │   │   │   ├── page.tsx
+│   │   │   │   └── _components/
+│   │   │   │       ├── alert-list.tsx
+│   │   │   │       └── alert-form.tsx
+│   │   │   ├── journal/
+│   │   │   │   ├── page.tsx
+│   │   │   │   └── _components/
+│   │   │   │       ├── journal-view.tsx
+│   │   │   │       ├── entry-form.tsx
+│   │   │   │       ├── entry-list.tsx
+│   │   │   │       └── stats-summary.tsx
 │   │   │   └── settings/
 │   │   │       ├── page.tsx
-│   │   │       └── usage/page.tsx            # cost / token usage
+│   │   │       ├── usage/
+│   │   │       │   ├── page.tsx
+│   │   │       │   └── loading.tsx
+│   │   │       └── _components/
+│   │   │           ├── system-status-card.tsx
+│   │   │           ├── usage-glance.tsx
+│   │   │           ├── notifications-card.tsx
+│   │   │           ├── preferences-card.tsx
+│   │   │           ├── data-card.tsx
+│   │   │           ├── about-card.tsx
+│   │   │           ├── settings-row.tsx
+│   │   │           ├── enable-web-push-button.tsx
+│   │   │           ├── test-email-button.tsx
+│   │   │           ├── test-telegram-button.tsx
+│   │   │           └── logout-button.tsx
+│   │   │
+│   │   ├── share/[id]/page.tsx             # public signed-link snapshot view
+│   │   ├── offline/page.tsx                # service-worker fallback
 │   │   │
 │   │   ├── api/
-│   │   │   ├── auth/
-│   │   │   │   ├── login/route.ts            # POST { password } → set cookie
-│   │   │   │   └── logout/route.ts
-│   │   │   ├── chat/route.ts                 # POST: AI chat (streaming)
+│   │   │   ├── auth/{login,logout}/route.ts
+│   │   │   ├── chat/route.ts               # POST: AI chat (streaming)
 │   │   │   ├── chat/threads/route.ts
 │   │   │   ├── chat/threads/[id]/route.ts
-│   │   │   ├── market/
-│   │   │   │   ├── price/route.ts
-│   │   │   │   ├── candles/route.ts
-│   │   │   │   └── indicators/route.ts
-│   │   │   ├── news/route.ts
-│   │   │   ├── calendar/route.ts
+│   │   │   ├── market/{price,candles,indicators,structure}/route.ts
 │   │   │   ├── alerts/route.ts
+│   │   │   ├── alerts/[id]/route.ts
 │   │   │   ├── journal/route.ts
-│   │   │   └── cron/                         # Vercel Cron targets
-│   │   │       ├── news/route.ts
+│   │   │   ├── journal/[id]/route.ts
+│   │   │   ├── push/{subscribe,unsubscribe}/route.ts
+│   │   │   ├── admin/{test-alert-email,test-telegram}/route.ts
+│   │   │   └── cron/                       # Vercel Cron / GCE-VM targets
+│   │   │       ├── alerts/route.ts
+│   │   │       ├── briefings/route.ts
 │   │   │       ├── calendar/route.ts
-│   │   │       └── alerts/route.ts           # evaluator
+│   │   │       ├── cot/route.ts
+│   │   │       ├── embedding-backfill/route.ts
+│   │   │       ├── fred-actuals/route.ts
+│   │   │       ├── news/route.ts
+│   │   │       ├── snapshots/route.ts
+│   │   │       └── weekly-review/route.ts
 │   │   │
-│   │   ├── globals.css
-│   │   └── manifest.ts                       # PWA manifest
+│   │   ├── globals.css                     # Tailwind v4 @theme + utilities + tokens
+│   │   ├── layout.tsx                      # root layout (fonts, metadata, viewport)
+│   │   └── manifest.ts                     # PWA manifest
 │   │
 │   ├── components/
-│   │   ├── ui/                               # shadcn primitives
-│   │   ├── chat/                             # chat surface widgets
-│   │   ├── chart/                            # chart wrappers + overlays
-│   │   ├── market/                           # price tile, watchlist row
-│   │   ├── news/                             # article card, sentiment chip
-│   │   ├── calendar/                         # event row, impact badge
-│   │   └── layout/                           # nav, drawer, command palette
-│   │
-│   ├── features/                             # vertical slices (UI + hooks + types)
+│   │   ├── ui/                             # shared primitives
+│   │   │   ├── button.tsx
+│   │   │   ├── input.tsx
+│   │   │   ├── drawer.tsx                  # vaul wrapper
+│   │   │   ├── confirm-drawer.tsx          # ConfirmDrawer + useConfirm()
+│   │   │   ├── tooltip.tsx
+│   │   │   ├── switch.tsx
+│   │   │   ├── segmented.tsx
+│   │   │   ├── skeleton.tsx
+│   │   │   ├── empty-state.tsx
+│   │   │   ├── stale-indicator.tsx
+│   │   │   ├── stat-card.tsx
+│   │   │   ├── sparkline.tsx
+│   │   │   ├── animated-number.tsx
+│   │   │   ├── motion-config.tsx
+│   │   │   ├── toaster.tsx                 # sonner wrapper
+│   │   │   └── fab.tsx
+│   │   ├── layout/
+│   │   │   ├── top-bar.tsx                 # global TopBar (suppressed on /chat)
+│   │   │   ├── nav-trigger.tsx             # hamburger button
+│   │   │   ├── nav-drawer.tsx              # single global instance
+│   │   │   ├── nav-drawer-context.tsx      # state provider for the drawer
+│   │   │   ├── ambient-background.tsx      # subtle warm orb (vivid on /login)
+│   │   │   ├── offline-banner.tsx
+│   │   │   ├── page-header.tsx
+│   │   │   └── skip-to-content.tsx
 │   │   ├── chat/
+│   │   │   ├── chat-screen.tsx
+│   │   │   ├── chat-top-bar.tsx
+│   │   │   ├── composer.tsx
+│   │   │   ├── message-list.tsx
+│   │   │   ├── message.tsx
+│   │   │   ├── quick-prompts.tsx
+│   │   │   └── parts/                      # tool-part renderers
+│   │   │       ├── registry.tsx            # typed dispatch
+│   │   │       ├── text.tsx                # light Markdown
+│   │   │       └── <one file per tool>.tsx
 │   │   ├── chart/
-│   │   ├── alerts/
-│   │   ├── journal/
-│   │   └── settings/
-│   │
-│   ├── lib/
-│   │   ├── api-client.ts                     # typed fetch wrapper
-│   │   ├── format.ts                         # number, date, %, pip helpers
-│   │   ├── pip.ts                            # pip math per symbol
-│   │   ├── auth.ts                           # password cookie helpers
-│   │   └── env.ts                            # zod-validated env
+│   │   │   ├── chart.tsx                   # lightweight-charts wrapper
+│   │   │   ├── symbol-picker.tsx
+│   │   │   ├── timeframe-picker.tsx
+│   │   │   ├── overlay-toggle.tsx
+│   │   │   ├── overlays.ts
+│   │   │   └── price-tag.tsx
+│   │   ├── news/
+│   │   │   ├── article-card.tsx
+│   │   │   ├── live-timestamp.tsx
+│   │   │   └── use-bookmarks.tsx           # localStorage hook
+│   │   ├── calendar/
+│   │   │   └── event-card.tsx              # with RemindButton inside
+│   │   └── providers/
+│   │       ├── index.tsx                   # NuqsAdapter + QueryProvider
+│   │       ├── query-provider.tsx
+│   │       └── sw-register.tsx
 │   │
 │   ├── hooks/
-│   │   ├── use-prices.ts                     # TanStack Query polling
+│   │   ├── use-prices.ts
 │   │   ├── use-candles.ts
-│   │   ├── use-chat-thread.ts
-│   │   └── use-symbol.ts                     # selected symbol via nuqs
+│   │   ├── use-structure.ts
+│   │   ├── use-tf.ts                       # nuqs
+│   │   └── use-voice-input.ts
 │   │
-│   ├── styles/
-│   │   └── tokens.css                        # CSS variables (colors, spacing)
+│   ├── lib/
+│   │   ├── cn.ts                           # tailwind-merge + clsx
+│   │   ├── env.ts                          # zod-validated env
+│   │   ├── auth.ts                         # password cookie helpers
+│   │   ├── api.ts                          # error envelope helpers
+│   │   ├── cron.ts                         # withCronAuth(req, fn)
+│   │   └── market-client.ts                # fetchPrices/fetchCandles wrappers
 │   │
-│   └── middleware.ts                         # checks auth cookie, redirects to /login
+│   ├── middleware.ts                       # checks auth cookie, redirects to /login
+│   └── next-env.d.ts
 │
 ├── public/
-│   └── icons/                                # PWA icons
+│   ├── icons/                              # PWA icons + apple splash
+│   ├── sw.js                               # generated from scripts/sw.template.js
+│   └── sw-precache.json                    # generated
 │
+├── scripts/
+│   ├── generate-icons.mjs
+│   ├── generate-sw.mjs
+│   ├── set-build-id.mjs                    # writes apps/web/.build-id (used by AboutCard)
+│   └── sw.template.js
+│
+├── eslint.config.js
 ├── next.config.mjs
-├── tailwind.config.ts
-├── postcss.config.js
+├── postcss.config.mjs
 └── package.json
 ```
 
@@ -128,11 +234,9 @@ apps/web/
 - `(app)` keeps every authenticated page under one shared mobile shell layout, separate from `/login`.
 - A folder prefixed with `_` in the App Router is **opted-out of routing**, so we use it for page-local components without polluting the route tree.
 
-### `components/` vs `features/`
+### `components/` is not split into `components/` vs `features/`
 
-- `components/` = reusable UI building blocks, presentational.
-- `features/` = vertical slices that own state, data fetching, and orchestration.
-  Rule of thumb: a `feature` may import a `component`, never the other way around.
+Phase 0 planned a `features/` directory for vertical slices but we never needed one. Pages own their orchestration via their own `_components/` folder; the shared design system lives in `components/`. If a vertical slice grows (e.g. a future "backtesting" feature), it can graduate to `features/<name>/`.
 
 ## `packages/shared/`
 
@@ -149,11 +253,12 @@ packages/shared/
 │   │   ├── indicator.ts
 │   │   ├── chat.ts
 │   │   ├── alerts.ts
-│   │   └── journal.ts
+│   │   ├── journal.ts
+│   │   └── tool-outputs/         # one file per AI tool's output schema
 │   ├── ai/
-│   │   ├── tool-names.ts         # const ToolName
-│   │   └── tool-io.ts            # ToolInput<T>, ToolOutput<T>
-│   ├── env.ts                    # shared env zod schema
+│   │   ├── tool-names.ts
+│   │   └── tool-io.ts
+│   ├── env.ts
 │   └── index.ts
 └── package.json
 ```
@@ -164,29 +269,33 @@ packages/shared/
 packages/ai/
 ├── src/
 │   ├── agent.ts                  # createTradingAgent()
-│   ├── prompts/
-│   │   ├── system.md             # main system prompt (markdown for legibility)
-│   │   ├── tools.md
-│   │   └── refusals.md
+│   ├── prompts/{system,tools,refusals}.md
 │   ├── tools/
 │   │   ├── get-price.ts
 │   │   ├── get-candles.ts
 │   │   ├── get-indicators.ts
 │   │   ├── get-news.ts
 │   │   ├── get-calendar.ts
+│   │   ├── get-market-structure.ts
+│   │   ├── get-correlation.ts
+│   │   ├── get-cot.ts
+│   │   ├── get-journal-stats.ts
 │   │   ├── analyze-technical.ts
 │   │   ├── analyze-fundamental.ts
-│   │   ├── search-knowledge.ts   # RAG over news + saved analyses
+│   │   ├── analyze-chart-image.ts
 │   │   ├── annotate-chart.ts
+│   │   ├── search-knowledge.ts
 │   │   ├── set-alert.ts
 │   │   ├── log-journal.ts
+│   │   ├── share-snapshot.ts
 │   │   └── index.ts
-│   ├── memory/
-│   │   ├── thread.ts
-│   │   └── retrieval.ts
-│   ├── eval/
-│   │   ├── prompts.json          # 10 manual prompts from 00-overview
-│   │   └── runner.ts             # local-only manual runner; not in CI
+│   ├── briefings/                # pre/post event LLM briefings
+│   ├── snapshots/                # daily HLOC / pivots / ATR
+│   ├── push/                     # Web Push delivery
+│   ├── memory/{thread,retrieval}.ts
+│   ├── usage.ts                  # computeUsage / listTelemetry
+│   ├── cost.ts                   # daily budget cap
+│   ├── eval/{prompts.json,runner.ts}
 │   └── index.ts
 └── package.json
 ```
@@ -198,22 +307,13 @@ packages/data/
 ├── src/
 │   ├── providers/
 │   │   ├── twelve-data/
-│   │   │   ├── rest.ts
-│   │   │   └── map.ts            # raw → DTO normalisation
 │   │   ├── finnhub/
-│   │   ├── alpha-vantage/
 │   │   ├── marketaux/
-│   │   ├── trading-economics/
-│   │   └── fred/
-│   ├── adapters/                 # provider-agnostic facades
-│   │   ├── price.ts
-│   │   ├── candles.ts
-│   │   ├── news.ts
-│   │   └── calendar.ts
-│   ├── cache/
-│   │   ├── kv.ts                 # Upstash wrapper
-│   │   └── ttl.ts                # per-resource TTL policy
-│   ├── failover.ts               # primary/fallback strategy
+│   │   ├── fred/
+│   │   └── …
+│   ├── adapters/{price,candles,news,calendar}.ts
+│   ├── cache/                    # Next Data Cache facade (Upstash optional, unused)
+│   ├── failover.ts
 │   └── index.ts
 └── package.json
 ```
@@ -228,17 +328,13 @@ packages/indicators/
 │   ├── macd.ts
 │   ├── atr.ts
 │   ├── bollinger.ts
-│   ├── pivots.ts                 # daily / weekly / camarilla
+│   ├── pivots.ts
 │   ├── structure/                # SMC / ICT primitives
 │   │   ├── swings.ts
 │   │   ├── bos-choch.ts
 │   │   ├── order-blocks.ts
 │   │   ├── fvg.ts
 │   │   └── liquidity.ts
-│   ├── patterns/
-│   │   ├── divergence.ts
-│   │   ├── engulfing.ts
-│   │   └── pin-bar.ts
 │   └── index.ts
 └── package.json
 ```
@@ -253,31 +349,17 @@ packages/db/
 │   │   ├── alerts.ts
 │   │   ├── journal.ts
 │   │   ├── news.ts               # cached articles + embeddings
+│   │   ├── calendar.ts
 │   │   ├── snapshots.ts
-│   │   └── telemetry.ts          # chat_telemetry (token usage / cost)
-│   ├── client.ts                 # drizzle client
-│   └── migrations/               # generated SQL
+│   │   ├── push-subscriptions.ts
+│   │   ├── telemetry.ts          # chat_telemetry (token usage / cost)
+│   │   └── briefings.ts
+│   ├── client.ts
+│   └── migrations/
 └── drizzle.config.ts
 ```
 
-> Personal-mode note: tables have **no `user_id` column**. There's only one user.
-
-## `packages/ui/`
-
-```
-packages/ui/
-├── src/
-│   ├── primitives/               # shadcn-generated, lightly themed
-│   ├── tokens/
-│   │   ├── colors.ts
-│   │   ├── radii.ts
-│   │   └── motion.ts
-│   ├── theme.css
-│   └── index.ts
-└── package.json
-```
-
-> Optional: at MVP scale this can live inside `apps/web/src/components/ui` and we promote to a package only if we ever add `apps/worker` or another consumer.
+> Personal-mode reminder: tables have **no `user_id` column**. There's only one user.
 
 ## `packages/config/`
 
@@ -286,9 +368,7 @@ packages/config/
 ├── eslint/index.js
 ├── prettier/index.js
 ├── tailwind/preset.ts
-├── typescript/base.json
-├── typescript/nextjs.json
-└── typescript/node.json
+├── typescript/{base,nextjs,node}.json
 ```
 
 ## Naming conventions (strict)
@@ -313,7 +393,6 @@ In `tsconfig.base.json`:
   "compilerOptions": {
     "paths": {
       "@/*": ["apps/web/src/*"],
-      "@ui/*": ["packages/ui/src/*"],
       "@shared/*": ["packages/shared/src/*"],
       "@ai/*": ["packages/ai/src/*"],
       "@data/*": ["packages/data/src/*"],
@@ -326,15 +405,18 @@ In `tsconfig.base.json`:
 
 Rule: **never** import across packages with relative `../../`. Always use the alias. Enforced via ESLint `no-restricted-imports`.
 
-## "Where do I put a new \_\_\_?" cheat sheet
+## "Where do I put a new ___?" cheat sheet
 
 | New thing                    | Goes in                                                                 |
 | ---------------------------- | ----------------------------------------------------------------------- |
-| New AI tool                  | `packages/ai/src/tools/<name>.ts` + register in index                   |
+| New AI tool                  | `packages/ai/src/tools/<name>.ts` + register in `tools/index.ts`        |
+| New tool-part renderer       | `apps/web/src/components/chat/parts/<name>.tsx` + register in registry  |
 | New indicator                | `packages/indicators/src/<name>.ts`                                     |
 | New data provider            | `packages/data/src/providers/<name>/`                                   |
 | New DB table                 | `packages/db/src/schema/<name>.ts` + migration                          |
 | New page                     | `apps/web/src/app/(app)/<route>/page.tsx`                               |
+| New page-local component     | `apps/web/src/app/(app)/<route>/_components/<name>.tsx`                 |
 | New shared zod schema / type | `packages/shared/src/schemas/<name>.ts`                                 |
-| New cron job                 | `apps/web/src/app/api/cron/<name>/route.ts` + register in `vercel.json` |
-| Project-wide tailwind token  | `packages/ui/src/tokens/<group>.ts`                                     |
+| New cron job                 | `apps/web/src/app/api/cron/<name>/route.ts` + GCE-VM crontab + (optional) `vercel.json` |
+| New shared UI primitive      | `apps/web/src/components/ui/<name>.tsx`                                 |
+| New layout chrome component  | `apps/web/src/components/layout/<name>.tsx`                             |

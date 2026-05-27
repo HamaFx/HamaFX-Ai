@@ -15,8 +15,9 @@
 3. `docs/01-architecture.md`
 4. `docs/02-tech-stack.md`
 5. `docs/03-project-structure.md`
-6. `docs/11-conventions.md`
-7. The doc that matches the area you're touching (data, AI, UI, deploy…)
+6. `docs/05-ui-ux.md` — design tokens, primitives, surfaces
+7. `docs/11-conventions.md`
+8. The doc that matches the area you're touching (data, AI, UI, deploy…)
 
 If a doc contradicts code, **update the doc in the same PR**. Docs are a hard contract.
 
@@ -25,29 +26,55 @@ If a doc contradicts code, **update the doc in the same PR**. Docs are a hard co
 1. **Never invent file paths.** Place new files where `03-project-structure.md` says.
 2. **Never invent prices, candles, or news.** Data only enters the model via tool calls.
 3. **Never bypass the schemas in `packages/shared`.** Add a new schema there first, then use it.
-4. **Never put secrets in code.** Use `process.env` validated by `packages/shared/src/env.ts`.
+4. **Never put secrets in code.** Use `process.env` validated by `apps/web/src/lib/env.ts`.
 5. **Never break the layer rule** (UI → app → data → infra; never the other way).
-6. **Never add a worker / second deployable unit** without explicitly checking with the owner — the architecture intentionally avoids this for MVP.
-7. **Never re-introduce multi-user concepts** (`user_id`, RLS, BYOK, OAuth). Personal-mode is a hard requirement.
-8. **Always update `docs/`** if you change behaviour, structure, or an interface.
+6. **Never add a worker / second deployable unit** without explicitly checking with the owner.
+7. **Never re-introduce multi-user concepts** (`user_id`, RLS, BYOK, OAuth).
+8. **Never roll a new primitive when one of the canonical ones below already exists.**
+9. **Always update `docs/`** if you change behaviour, structure, or an interface.
+
+## Reach for the canonical primitive first
+
+Before writing a one-off button / drawer / segment / placeholder / confirm dialog, look here:
+
+| Need                            | Use                                                |
+| ------------------------------- | -------------------------------------------------- |
+| Button                          | `<Button/>` (`primary | secondary | ghost | danger | success`, sizes `sm/md/lg`) |
+| Text input                      | `<Input/>` (h-12, text-base — kills iOS auto-zoom) |
+| Bottom sheet / context-shift    | `<Drawer/>` (vaul wrapper)                         |
+| Destructive confirmation        | `<ConfirmDrawer/>` + `useConfirm()` — never `window.confirm()` |
+| Floating action                 | `<Fab/>` (positions via `--fab-bottom`)            |
+| Segmented control               | `<Segmented/>` — `gradient | solid | tone`         |
+| Toggle                          | `<Switch/>`                                        |
+| Tooltip on icon-only button     | `<Tooltip/>` (always pair with `aria-label`)       |
+| Loading placeholder             | `<Skeleton/>` / `<SkeletonCard/>` — never `animate-pulse` |
+| Empty / zero-data card          | `<EmptyState/>` — `tone="brand"` for CTA, `tone="muted"` for "no data" |
+| Background-refetch state        | `<StaleIndicator/>` (steering rule §6)             |
+| Numeric summary                 | `<StatCard/>` (with optional `<Sparkline/>`)       |
+| Live-updating number            | `<AnimatedNumber/>` (spring with `restDelta`)      |
+| Toast confirmation              | `toast.success()` / `toast.error()` via sonner    |
+| Live timestamp ("2m ago")       | `<LiveTimestamp/>` from `components/news/` (renamed-friendly) |
+| Page header                     | `<PageHeader/>` (suppress on /chat — use `<ChatTopBar/>`) |
+
+Before adding a new icon, confirm `lucide-react` doesn't already have it. **No inline SVGs in components** — the only intentional exception is the SVG `feTurbulence` filter inside `<AmbientBackground intensity="vivid">` rendered once on `/login`.
 
 ## Standard tasks — recipes
 
 ### A. Add a new AI tool
 
-1. Define input/output zod schemas in `packages/shared/src/schemas/`.
+1. Define input/output zod schemas in `packages/shared/src/schemas/tool-outputs/<name>.ts`.
 2. Implement the tool in `packages/ai/src/tools/<name>.ts` using `tool()` from the AI SDK.
-3. Register it in `packages/ai/src/tools/index.ts`.
+3. Register it in `packages/ai/src/tools/index.ts` and `packages/shared/src/ai/tool-names.ts`.
 4. Create a UI part in `apps/web/src/components/chat/parts/<name>.tsx`.
-5. Register the part in the chat parts registry.
-6. Add an example to `packages/ai/src/eval/prompts.json` (manual eval list).
-7. Update `docs/07-ai-agent.md` § Tools (the table).
+5. Register the part in `chat/parts/registry.tsx` (TypeScript will refuse to compile if you forget).
+6. Add an example to `packages/ai/src/eval/prompts.json`.
+7. Update `docs/04-features.md` and `docs/07-ai-agent.md`.
 
 ### B. Add a new data provider
 
 1. Create `packages/data/src/providers/<name>/{rest,map}.ts`.
 2. Wire it into the relevant adapter in `packages/data/src/adapters/`.
-3. Add provider key env var to `.env.example` and `packages/shared/src/env.ts`.
+3. Add provider key env var to `.env.example` and `apps/web/src/lib/env.ts`.
 4. Add it to the failover order in `packages/data/src/failover.ts`.
 5. Update `docs/06-data-sources.md` matrix.
 6. Add MSW mocks in tests.
@@ -57,16 +84,19 @@ If a doc contradicts code, **update the doc in the same PR**. Docs are a hard co
 1. Implement as a pure function in `packages/indicators/src/<name>.ts`.
 2. Export from `packages/indicators/src/index.ts`.
 3. Add a Vitest test with golden values from a known source.
-4. If user-facing, add an option in `apps/web/src/features/chart/`.
+4. If user-facing, add an option in `apps/web/src/components/chart/`.
 5. If the agent should know, list it in the `get_indicators` tool's enum.
 
 ### D. Add a new page
 
-1. Create `apps/web/src/app/(app)/<route>/page.tsx`.
-2. If the page has its own components, put them in the page's `_components/` folder.
-3. Use server components by default; only mark `"use client"` where you need state or events.
-4. Add the route to bottom nav / command palette if appropriate.
-5. Define `loading.tsx`, `error.tsx`, and a sensible empty state.
+1. Create `apps/web/src/app/(app)/<route>/page.tsx`. Server component by default.
+2. Page-local components go in the page's `_components/` folder.
+3. Use server components by default; only mark `"use client"` where you need state, events, or browser-only APIs.
+4. Add the route to `<NavDrawer/>` (in `components/layout/nav-drawer.tsx`) — pick Markets or Personal section.
+5. Define `loading.tsx` (use `<Skeleton/>` / `<SkeletonCard/>`).
+6. Define `<EmptyState/>` for the empty case.
+7. Surface `<StaleIndicator/>` if the page is query-driven.
+8. Sticky in-page headers should reference `var(--topbar-h)` for offset.
 
 ### E. Add a new DB table
 
@@ -80,10 +110,25 @@ If a doc contradicts code, **update the doc in the same PR**. Docs are a hard co
 ### F. Add a new cron job
 
 1. Create handler at `apps/web/src/app/api/cron/<name>/route.ts`.
-2. Verify `Authorization: Bearer ${CRON_SECRET}` (timing-safe). Return 401 otherwise.
+2. Verify `Authorization: Bearer ${CRON_SECRET}` via `withCronAuth(req, fn)` from `apps/web/src/lib/cron.ts`. Return 401 otherwise.
 3. Keep handler **idempotent** and **fast** (≤ 60 s on Pro, ≤ 10 s on Hobby).
-4. Register cadence in `vercel.json` `"crons"`.
-5. Add it to `docs/08-backend-and-api.md` § Cron.
+4. Add the schedule to the GCE-VM crontab (`infra/cron-vm/`) — that's the primary scheduler. The `vercel.json` `"crons"` block / GitHub Actions are fallbacks.
+5. Update `docs/08-backend-and-api.md` § Cron.
+
+### G. Touch the design tokens
+
+If you change `--color-bg` family, `--color-fg` family, brand, or layout heights:
+
+1. Update `apps/web/src/app/globals.css` only. Components reference these via custom-property `var(--…)` names, never inline OKLCH stops.
+2. If you bump `--topbar-h`, every sticky element re-aligns automatically.
+3. Update `docs/05-ui-ux.md` § Design tokens.
+
+### H. Add a new local-storage preference
+
+1. Use the `hamafx:` key prefix.
+2. Wrap reads/writes in a tiny `useX()` hook colocated with the consumer (see `components/news/use-bookmarks.tsx` for the pattern — `read()` / `write()` helpers + cross-tab `storage` listener).
+3. Add a row to the Preferences card in `apps/web/src/app/(app)/settings/_components/preferences-card.tsx`.
+4. Surface a "clear" affordance in `data-card.tsx` so the user can reset.
 
 ## Anti-patterns to refuse
 
@@ -91,13 +136,17 @@ When asked to do any of the following, push back:
 
 - "Add Supabase Auth / Clerk / NextAuth." — we use a single password gate.
 - "Add `user_id` columns." — there's one user.
-- "Add per-user rate limiting." — only global cost cap exists.
+- "Add per-user rate limiting." — only the global cost cap exists.
 - "Spin up a Fly.io / Railway service." — not for MVP.
 - "Add LLM-as-judge in CI." — manual eval only.
 - "Use `any`." — no.
 - "Drop zod, it's overkill." — no.
-- "Add a global Redux store." — Zustand + nuqs is enough.
+- "Add a global Redux store." — context + nuqs is enough.
 - "Cache AI responses keyed only by the user message" (without context hash).
+- "Bring back the bottom navigation." — Phase 6 retired it; `<NavDrawer/>` replaces it.
+- "Use `window.confirm()`." — `<ConfirmDrawer/>` exists for a reason.
+- "Inline an `<svg>` in a component." — `lucide-react` only.
+- "Roll a new segmented control / drawer / button." — see the canonical primitive table above.
 
 ## Operating envelope when scaffolding
 
@@ -114,6 +163,7 @@ If you are the agent doing the **initial scaffold** (Phase 0):
 - Match the phase to a checklist item in `10-roadmap.md`.
 - Don't combine multiple unrelated features in one PR.
 - If a request looks like it belongs in a later phase, surface that and ask whether to defer.
+- If you find yourself rolling a new "primitive" — drawer, button, segmented control, empty state, skeleton — stop and use the canonical one. Adding a thirteenth one-off button variant is the fastest way to fragment the design system.
 
 ## When in doubt
 
@@ -124,4 +174,9 @@ If you are the agent doing the **initial scaffold** (Phase 0):
 
 ## Steering files
 
-`.kiro/steering/` contains short, area-specific rules that AI agents should load when working on those areas. They mirror the long-form docs but are optimised for token economy. Keep them in sync.
+`.kiro/steering/` contains short, area-specific rules that AI agents should load when working on those areas:
+
+- `00-project.md` — always-on: stack, hard rules, file placement.
+- `30-ui.md` — auto-included when working in `apps/web/**`. Keeps in sync with `docs/05-ui-ux.md`.
+
+If you change rule structure in either file, change the other.

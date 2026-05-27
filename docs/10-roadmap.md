@@ -162,6 +162,92 @@ The GitHub Actions workflow files (`.github/workflows/cron-*.yml`) are kept as a
 - [x] All animations respect `prefers-reduced-motion`
 - [x] Eval still passes 10/10 after refactor
 
+## Phase 6 — Premium black + design-system rebuild ✅ DONE
+
+**Goal**: tighten the entire UX into a coherent, scalable system with a true premium-black aesthetic.
+
+### Theme & shell
+
+- [x] **Pure-black neutral grayscale** surfaces (oklch hue 0 chroma 0). The previous Phase 5 tokens read as "dark blue"; Phase 6 reads as true premium dark.
+- [x] **Refined champagne brand** (oklch 82% 0.14 85) — sits cleanly against pure black instead of competing.
+- [x] **Black-tinted glass** utilities (`glass`, `glass-strong`, `glass-subtle`, `card-premium`).
+- [x] **Themeable gradients/shadows** as CSS variables (`--gradient-brand`, `--gradient-danger`, `--gradient-brand-soft`, `--shadow-brand-press`, …) — components reference these instead of inlining OKLCH stops.
+- [x] **Single `<NavDrawer/>`** opened from a hamburger trigger in the top bar; replaces the bottom navigation entirely. Frees ~88px of vertical chrome on every page.
+- [x] **Context-controlled drawer state** (`<NavDrawerProvider>`) so both the global TopBar and the chat-specific ChatTopBar share one drawer instance. Fixes the "menu sometimes doesn't open" bug from competing instances.
+- [x] **Global TopBar suppressed on /chat** — no double headers.
+- [x] `/more` route deleted (covered by the drawer).
+
+### Stability
+
+- [x] `paint-isolated` (CSS `contain: layout paint`) on the chat full-bleed surface so route transitions don't flash.
+- [x] `no-overscroll` (`overscroll-behavior: contain`) on chat scroll container — no iOS Safari rubber-band past the composer.
+- [x] `html { overscroll-behavior-y: none }` at root.
+- [x] Initial-mount scroll uses instant `scrollTop = scrollHeight`, never `behavior: 'smooth'` — eliminates the "drift on entry" feeling.
+- [x] Auto-scroll only fires when user is within 240px of the bottom.
+- [x] `AnimatedNumber` adds `restDelta` so the spring stops scheduling frames once digits are visually identical.
+
+### Chat upgrades
+
+- [x] **Stop streaming**: send button morphs to a Stop button while a turn is in flight (wired to AI SDK's `stop()`).
+- [x] **Regenerate** the last assistant turn (drives `regenerate()`).
+- [x] **Light Markdown** rendering for assistant text — bold / italic / inline-code / fenced code blocks (with copy) / bullet/numbered lists / https links. DOM-built, no `dangerouslySetInnerHTML`.
+- [x] Empty state moved into the scroll body and embeds the quick-prompts grid — one inviting surface, not two competing panels.
+- [x] Voice input: pulsing "Listening…" pill + soft amber ring on the mic.
+- [x] Composer: keyboard hint (`Enter` / `Shift+Enter`) on focus for desktop.
+- [x] Code-block copy per fenced block.
+- [x] Thread switcher in overflow menu, with auto-search input when >5 threads.
+- [x] **Ask AI deep-link** contract: `/chat?prompt=…` creates a fresh thread and auto-submits the prompt once on mount.
+
+### News rebuild
+
+- [x] **News pulse** card at top — stacked sentiment bar + lean label.
+- [x] Live search across titles, summaries, publishers.
+- [x] Sentiment chip rail with arrow glyphs (▲/▼/·).
+- [x] Symbol chip rail derived from loaded set, sorted by frequency.
+- [x] **Local bookmarks** (`localStorage` with cross-tab sync) + saved-only filter.
+- [x] **Auto-refresh** every 5 minutes + manual refresh pill.
+- [x] **Time-bucketed sections** (Last hour / Today / Yesterday / This week / Older) with sticky headers.
+- [x] **Article card redesign**: 3px sentiment ribbon on the left edge, Ask AI deep-link, bookmark, open-in-new-tab.
+
+### Calendar rebuild
+
+- [x] **Hero countdown** to next high-impact event + Ask AI shortcut.
+- [x] **Impact distribution bar** for the next 14 days.
+- [x] Importance + currency chip rails + "Show past" toggle.
+- [x] Time-bucketed sections (Today / Tomorrow / Later this week / Later / Past).
+- [x] **Event card redesign**: importance ribbon, importance glyph (▲/■/•), inline countdown, beat/miss chip when actual+forecast both exist.
+- [x] **Remind me** button using browser Notifications API (5 min before event).
+
+### Settings rebuild
+
+- [x] **System status** card — Email / Telegram / Web push Ready/Off chips, DB connectivity probe, rollup pill.
+- [x] **Usage at a glance** — daily-budget gauge with bull/warn/bear tone, deep-links to /usage.
+- [x] **Notifications** — coherent list with per-channel status pills + test buttons.
+- [x] **Preferences** (new, local) — default symbol, time format, force-reduce-motion via `data-reduce-motion="force"` on `<html>`.
+- [x] **Data & cache** (new) — clear bookmarks, reset preferences, wipe all `hamafx:*` keys (drawer-confirmed).
+- [x] **Session** — drawer-confirmed sign-out + build-id footer.
+
+### New shared primitives
+
+- [x] `<NavDrawerProvider>` + `<NavDrawer/>` + `<NavTrigger/>`
+- [x] `<Segmented/>` (replaces 4 ad-hoc segment groups)
+- [x] `<Tooltip/>` (CSS-only)
+- [x] `<ConfirmDrawer/>` + `useConfirm()` (replaces `window.confirm()`)
+- [x] `<Skeleton/>` / `<SkeletonCard/>` (single shimmer placeholder)
+- [x] `<StaleIndicator/>` (background-refetch state)
+- [x] `<EmptyState/>` (single empty/zero-data card)
+- [x] `<Switch/>` (CSS-only toggle)
+- [x] `<SkipToContent/>` (WCAG §2.4.1)
+- [x] `<SettingsRow/>` (page-local settings primitive)
+
+### Accessibility
+
+- [x] Skip-to-content link mounted as the first focusable element.
+- [x] All interactive elements ≥ 44×44 tap target on mobile.
+- [x] Color-not-only: sentiment chips include arrow glyphs; importance dots include shape glyphs.
+- [x] Composer textarea uses `text-base` so iOS Safari does not auto-zoom on focus.
+- [x] Reduced-motion respected globally + user-forced override.
+
 ## Stretch / parking lot
 
 - Add a separate **worker** on Fly.io if/when sub-second WS becomes worth it.
@@ -177,3 +263,5 @@ The GitHub Actions workflow files (`.github/workflows/cron-*.yml`) are kept as a
 | 1     | ✅ Feature-complete. Real-world acceptance still owed (re-run 10 prompts; daily use). |
 | 2     | ✅ Stopped using your old workflow because this is enough.                            |
 | 3     | ✅ Drop chart screenshots and get useful analysis without typing.                     |
+| 5     | ✅ The whole UI looks polished — hand someone the phone and they don't ask "is this Bootstrap?". |
+| 6     | ✅ The UI feels premium-dark + scalable — single nav drawer, news/calendar/settings rebuilt as proper trading-desk surfaces. |

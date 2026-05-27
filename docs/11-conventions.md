@@ -159,7 +159,8 @@ These exist to make autonomous coding agents (Cursor / Kiro / Claude Code) work 
 4. **Schemas before code**. Define zod schemas in `packages/shared` first, then write the code that uses them.
 5. **No "magic" globals**. State is local; no `window.__APP__`, no global singletons except for the typed env object.
 6. **Side-effect-free pure modules** in `packages/indicators` and `packages/data/adapters` — easy to test and easy for an agent to refactor.
-7. **`docs/` is a hard contract**. If behaviour changes, update the doc in the same PR. CI fails if `docs/**` is more than 30 days older than significant code changes (advisory check).
+7. **`docs/` is a hard contract**. If behaviour changes, update the doc in the same PR.
 8. **Consistent agent-readable scripts**. Every package exposes the same script names: `dev`, `build`, `lint`, `typecheck`, `test`. No package-specific verbs.
-9. **`steering/` files** in `.kiro/steering/` describe per-area rules (e.g., "when adding a new tool, also add a UI part"); these are read by AI agents at task time.
+9. **`steering/` files** in `.kiro/steering/` describe per-area rules; these are read by AI agents at task time.
 10. **TODO-as-issue**. Anything more than one line of TODO becomes a GitHub issue with a `roadmap` label, linked in the comment.
+11. **Reach for the canonical primitive first.** See `docs/14-ai-agent-handoff.md` § "Reach for the canonical primitive first" — the most common mistake autonomous agents make in this repo is rolling a one-off Button/Drawer/Skeleton when one already exists. The cost of fragmenting the design system is far higher than the cost of looking the primitive up.
