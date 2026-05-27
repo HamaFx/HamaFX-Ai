@@ -22,7 +22,7 @@ set -euo pipefail
 
 readonly APP_DIR="/opt/hamafx/app"
 readonly SHA_FILE="/opt/hamafx/.deployed-sha"
-readonly LOCK_FILE="/run/hamafx-update.lock"
+readonly LOCK_FILE="/opt/hamafx/.update.lock"
 
 # Pull HC_UPDATE_UUID from the env file. We CANNOT just `source` the
 # file — Vercel-pulled env values like GOOGLE_APPLICATION_CREDENTIALS_JSON
