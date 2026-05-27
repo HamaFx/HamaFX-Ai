@@ -1,5 +1,5 @@
 {
-  "extends": "@hamafx/config/typescript/node",
+  "extends": "@hamafx/config/typescript/base",
   "compilerOptions": {
     "outDir": "dist",
     "rootDir": "src",
@@ -7,11 +7,11 @@
     "declaration": false,
     "declarationMap": false,
     "sourceMap": true,
-    // Use the same resolver as everything else in the monorepo. The .js
-    // suffixes on relative imports in src/ are accepted by Bundler too,
-    // and they keep runtime Node ESM happy.
     "module": "ESNext",
-    "moduleResolution": "Bundler"
+    "moduleResolution": "Bundler",
+    // Inherit DOM types so the data-package imports (which use the
+    // RequestInit { cache: 'no-store' } extension) typecheck cleanly.
+    "lib": ["ES2022", "DOM", "DOM.Iterable"]
   },
   "include": ["src/**/*.ts"],
   "exclude": ["test", "dist", "node_modules"]

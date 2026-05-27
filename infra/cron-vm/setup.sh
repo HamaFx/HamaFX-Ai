@@ -93,9 +93,6 @@ cat > /tmp/hamafx-crontab << 'CRONTAB'
 # Daily snapshot — 00:05 UTC
 5 0 * * * /opt/hamafx/cron-fire.sh /api/cron/snapshots >> /var/log/hamafx-cron.log 2>&1
 
-# Embedding backfill — every 6 hours
-15 */6 * * * /opt/hamafx/cron-fire.sh /api/cron/embedding-backfill >> /var/log/hamafx-cron.log 2>&1
-
 # FRED actuals backfill — 01:30 UTC daily
 30 1 * * * /opt/hamafx/cron-fire.sh /api/cron/fred-actuals >> /var/log/hamafx-cron.log 2>&1
 
@@ -107,6 +104,12 @@ cat > /tmp/hamafx-crontab << 'CRONTAB'
 
 # Cache warming (Phase 7a) — every 2 minutes during weekdays
 */2 * * * * /opt/hamafx/cron-fire.sh /api/cron/warm-cache >> /var/log/hamafx-cron.log 2>&1
+
+# Phase 8 PR-9 onward — `embedding-backfill` is migrated to a worker
+# systemd timer (hamafx-job-embedding-backfill.timer). The Vercel route
+# remains as a manual-fallback path; only re-enable this crontab line
+# during a worker outage.
+# 15 */6 * * * /opt/hamafx/cron-fire.sh /api/cron/embedding-backfill >> /var/log/hamafx-cron.log 2>&1
 CRONTAB
 
 crontab /tmp/hamafx-crontab

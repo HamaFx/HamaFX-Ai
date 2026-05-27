@@ -31,6 +31,13 @@ const WorkerEnvSchema = z.object({
   HC_BACKUP_JOURNAL_UUID: z.string().min(1).optional(),
   HC_VERIFY_RESTORE_UUID: z.string().min(1).optional(),
   HC_UPDATE_UUID: z.string().min(1).optional(),
+  // Per-job heartbeat UUIDs. Each migrated heavy job gets its own.
+  HC_JOB_EMBEDDING_BACKFILL_UUID: z.string().min(1).optional(),
+  HC_JOB_BRIEFINGS_UUID: z.string().min(1).optional(),
+  HC_JOB_SNAPSHOTS_UUID: z.string().min(1).optional(),
+  HC_JOB_COT_UUID: z.string().min(1).optional(),
+  HC_JOB_FRED_ACTUALS_UUID: z.string().min(1).optional(),
+  HC_JOB_WEEKLY_REVIEW_UUID: z.string().min(1).optional(),
 
   /**
    * Optional Sentry DSN — server-only. When unset, the worker logs to

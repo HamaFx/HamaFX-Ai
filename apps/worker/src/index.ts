@@ -23,6 +23,7 @@ import { flushLiveTicks } from './persistence/live-ticks.js';
 import {
   createDefaultBuildConnection,
   SignalRConsumer,
+  type BuildConnection,
   type NormalizedTick,
 } from './signalr/consumer.js';
 import { TickBuffer } from './signalr/tick-buffer.js';
@@ -75,7 +76,7 @@ export interface RunWorkerArgs {
   env: WorkerEnv;
   log: Logger;
   /** Override the SignalR factory (tests pass a fake builder). */
-  buildConnection?: import('./signalr/consumer.js').BuildConnection;
+  buildConnection?: BuildConnection;
   /** Override the flush loop interval (tests use a tiny number). */
   flushIntervalMs?: number;
   /** Override the heartbeat interval (tests use a tiny number or 0 to disable). */
@@ -220,7 +221,6 @@ const isEntryPoint = (() => {
 
 if (isEntryPoint) {
   main().catch((err: unknown) => {
-    // eslint-disable-next-line no-console
     console.error(
       JSON.stringify({
         ts: new Date().toISOString(),

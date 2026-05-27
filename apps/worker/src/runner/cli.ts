@@ -1,0 +1,106 @@
+// Heavy-job runner CLI. Invoked from systemd one-shot units:
+//
+//   ExecStart=/usr/bin/node /opt/hamafx/app/apps/worker/dist/runner/cli.js <name>
+//
+// Resolves env, builds a logger pre-tagged with the job name, pings
+// healthchecks.io start/success/fail, and runs the registered job
+// function. Exit codes:
+//   0  — success
+//   1  — env / argv error (job not found, env malformed)
+//   2  — job threw (already pinged fail)
+
+import { loadEnv } from '../env.js';
+import { ping, withHeartbeat } from '../healthchecks.js';
+import { JOBS, type JobName } from '../jobs/index.js';
+import { createLogger } from '../log.js';
+
+function isKnownJob(name: string): name is JobName {
+  return name in JOBS;
+}
+
+function resolveHcUuid(env: ReturnType<typeof loadEnv>, name: JobName): string | undefined {
+  // Map job name to its env var. Each job has its own UUID so we can wire
+  // independent alerts in healthchecks.io.
+  const map: Record<JobName, string | undefined> = {
+    'embedding-backfill': env['HC_JOB_EMBEDDING_BACKFILL_UUID' as keyof typeof env] as
+      | string
+      | undefined,
+  };
+  return map[name];
+}
+
+async function main(): Promise<number> {
+  const argv = process.argv.slice(2);
+  const jobName = argv[0];
+
+  if (!jobName) {
+    process.stderr.write(
+      `usage: runner <job-name>\n  available: ${Object.keys(JOBS).join(', ')}\n`,
+    );
+    return 1;
+  }
+
+  if (!isKnownJob(jobName)) {
+    process.stderr.write(
+      `unknown job: ${jobName}\n  available: ${Object.keys(JOBS).join(', ')}\n`,
+    );
+    return 1;
+  }
+
+  let env: ReturnType<typeof loadEnv>;
+  try {
+    env = loadEnv();
+  } catch (err) {
+    process.stderr.write(String(err) + '\n');
+    return 1;
+  }
+
+  const log = createLogger({ service: `worker:job:${jobName}`, commit: env.DEPLOYED_SHA });
+  const job = JOBS[jobName];
+  const hcUuid = resolveHcUuid(env, jobName);
+
+  // SIGTERM from systemd → AbortSignal so jobs can short-circuit cleanly.
+  const ac = new AbortController();
+  const sigtermHandler = (): void => {
+    log.warn('SIGTERM received — aborting job');
+    ac.abort(new Error('SIGTERM'));
+  };
+  process.on('SIGTERM', sigtermHandler);
+  process.on('SIGINT', sigtermHandler);
+
+  try {
+    const result = await withHeartbeat(hcUuid, async () => {
+      const r = await job.run({ log, signal: ac.signal });
+      return r;
+    });
+    log.info('job completed', { processed: result.processed, note: result.note });
+    return 0;
+  } catch (err) {
+    log.error('job failed', { err: String(err) });
+    // withHeartbeat already pinged fail; ping again with the message in
+    // case the wrapper didn't (defensive).
+    const msg = err instanceof Error ? err.message : String(err);
+    await ping(hcUuid, 'fail', msg.slice(0, 1000));
+    return 2;
+  } finally {
+    process.removeListener('SIGTERM', sigtermHandler);
+    process.removeListener('SIGINT', sigtermHandler);
+  }
+}
+
+// Entry-point detection so vitest can import without running.
+const isEntryPoint = (() => {
+  try {
+    const moduleUrl = new URL(import.meta.url).pathname;
+    const argv1 = process.argv[1];
+    return Boolean(argv1) && (moduleUrl === argv1 || moduleUrl.endsWith(argv1!));
+  } catch {
+    return false;
+  }
+})();
+
+if (isEntryPoint) {
+  void main().then((code) => {
+    process.exit(code);
+  });
+}
