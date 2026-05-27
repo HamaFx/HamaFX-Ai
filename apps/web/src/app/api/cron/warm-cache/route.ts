@@ -32,10 +32,9 @@ export async function GET(req: Request): Promise<Response> {
           await getPriceWithMeta(s);
           processed += 1;
         } catch (err) {
-          errors.push({
-            key: `price:${s}`,
-            message: err instanceof Error ? err.message : String(err),
-          });
+          const message = err instanceof Error ? err.message : String(err);
+          errors.push({ key: `price:${s}`, message });
+          console.warn(`[warm-cache] price:${s} failed: ${message}`);
         }
       }),
     );
@@ -47,17 +46,18 @@ export async function GET(req: Request): Promise<Response> {
           await getCandlesWithMeta(symbol, tf, { count: 200 });
           processed += 1;
         } catch (err) {
-          errors.push({
-            key: `candles:${symbol}:${tf}`,
-            message: err instanceof Error ? err.message : String(err),
-          });
+          const message = err instanceof Error ? err.message : String(err);
+          errors.push({ key: `candles:${symbol}:${tf}`, message });
+          console.warn(`[warm-cache] candles:${symbol}:${tf} failed: ${message}`);
         }
       }
     }
 
     return {
       processed,
-      ...(errors.length > 0 ? { note: `${errors.length} key(s) failed to warm` } : {}),
+      ...(errors.length > 0
+        ? { note: `${errors.length} key(s) failed: ${errors.map((e) => e.key).join(', ')}` }
+        : {}),
     };
   });
 }
