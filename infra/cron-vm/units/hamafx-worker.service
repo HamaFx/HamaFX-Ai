@@ -1,0 +1,45 @@
+[Unit]
+Description=HamaFX-Ai worker (BiQuote SignalR consumer + heavy job runner)
+Documentation=https://github.com/HamaFx/HamaFX-Ai
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=hamafx
+Group=hamafx
+WorkingDirectory=/opt/hamafx/app/apps/worker
+EnvironmentFile=/opt/hamafx/.env
+# DEPLOYED_SHA is written to disk by update.sh (PR-16); export it here so
+# the worker picks it up for tagging logs and Sentry events.
+ExecStartPre=/bin/sh -c 'echo "DEPLOYED_SHA=$(cat /opt/hamafx/.deployed-sha 2>/dev/null || echo unknown)" > /run/hamafx-worker.env'
+EnvironmentFile=-/run/hamafx-worker.env
+
+ExecStart=/usr/bin/node /opt/hamafx/app/apps/worker/dist/index.js
+
+# Resilience
+Restart=always
+RestartSec=5
+# Cgroup ceiling for the always-on consumer. The 4 GB host (e2-medium) keeps
+# the remaining ~2.5 GB free for transient one-shot jobs (embedding-backfill,
+# briefings) which run as their own systemd units in their own cgroups.
+MemoryMax=1.5G
+# WatchdogSec=120 + sd_notify("WATCHDOG=1") will be wired alongside the
+# SignalR consumer in PR-6. Until then we rely on Restart=always.
+TimeoutStartSec=30
+TimeoutStopSec=15
+
+# Hardening (non-exhaustive — keep simple for personal-mode)
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/hamafx /run/hamafx-worker.env
+
+# Logging — journald handles structured JSON natively
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=hamafx-worker
+
+[Install]
+WantedBy=multi-user.target

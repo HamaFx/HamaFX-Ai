@@ -1,0 +1,19 @@
+{
+  "extends": "@hamafx/config/typescript/node",
+  "compilerOptions": {
+    "outDir": "dist",
+    "rootDir": "src",
+    "noEmit": false,
+    "declaration": false,
+    "declarationMap": false,
+    "sourceMap": true,
+    // Override the inherited Bundler resolver: dist/ runs under raw Node
+    // ESM, which needs explicit .js extensions on relative imports.
+    // NodeNext + .js-suffixed imports satisfies both compile-time and
+    // runtime resolution.
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext"
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["test", "dist", "node_modules"]
+}

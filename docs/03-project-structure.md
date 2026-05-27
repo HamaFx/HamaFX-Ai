@@ -2,19 +2,23 @@
 
 > The folder layout is itself a piece of documentation. An AI agent that reads this file should be able to **place a new feature in the correct location without asking**.
 >
-> Personal-mode note: there is **no `apps/worker/`** at MVP. We have a single Next.js deploy. If we ever add a worker, it slots in under `apps/worker/` cleanly.
+> Personal-mode note (Phase 8): the previous "no `apps/worker/`" rule was lifted. The worker holds a persistent BiQuote SignalR connection (free, no key) and runs heavy scheduled jobs locally so they aren't bound by Vercel Hobby's 60-second function ceiling. See `docs/superpowers/specs/2026-05-27-phase-8-backend-reliability-design.md` for the full design.
 
 ## Top-level layout (pnpm workspace)
 
 ```
 HamaFX-Ai/
 ├── apps/
-│   └── web/                 # Next.js 15 app — the only deployable unit
+│   ├── web/                 # Next.js 15 app — chat surface, read APIs, light crons
+│   └── worker/              # Phase 8 — always-on Node service on the GCE VM
+│                            # (BiQuote SignalR consumer + 1m candle aggregator
+│                            #  + heavy job runner: embedding-backfill, briefings,
+│                            #  snapshots, cot, fred-actuals, weekly-review)
 │
 ├── packages/
 │   ├── shared/              # Zod schemas, TS types, domain constants
 │   ├── ai/                  # Agent definition, tools, prompts
-│   ├── data/                # Provider adapters (Twelve Data, Finnhub, ...)
+│   ├── data/                # Provider adapters (BiQuote, Twelve Data, Finnhub, ...)
 │   ├── indicators/          # Pure-function technical analysis (RSI, MACD, SMC...)
 │   ├── db/                  # Drizzle schema, migrations, query helpers
 │   └── config/              # ESLint, TS, Tailwind, Prettier presets
@@ -34,6 +38,25 @@ HamaFX-Ai/
 ```
 
 > Note: `packages/ui/` was planned in Phase 0 but the design system lives entirely under `apps/web/src/components/` since we have a single consumer. We promote to a shared package only if a second consumer ever exists.
+
+## `apps/worker/` (Phase 8 — Node service on GCE)
+
+```
+apps/worker/
+├── src/
+│   ├── index.ts             # bootstrap: env, logger, signal handlers, idle
+│   ├── env.ts               # zod-validated worker env (subset of ServerEnv)
+│   ├── log.ts               # JSON logger (journald-friendly) with .with() tagging
+│   ├── healthchecks.ts      # healthchecks.io ping + withHeartbeat wrapper
+│   ├── signalr/             # PR-6 — BiQuote hub consumer
+│   ├── aggregator/          # PR-7 — 1m candle builder + flush
+│   ├── persistence/         # PR-6/7 — live_ticks UPSERT + candles_1m INSERT
+│   └── jobs/                # PR-9..14 — heavy job runners
+├── test/
+└── package.json             # @hamafx/worker
+```
+
+The worker imports the same workspace packages as the web app (`@hamafx/shared`, `@hamafx/data`, `@hamafx/db`, `@hamafx/ai`, `@hamafx/indicators`) — single source of truth for schemas, providers, DB queries.
 
 ## `apps/web/` (Next.js 15)
 
