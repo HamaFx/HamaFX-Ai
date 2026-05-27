@@ -348,8 +348,11 @@ CREATE TABLE candles_1m (
 CREATE INDEX idx_candles_1m_symbol_t ON candles_1m (symbol, t DESC);
 ```
 
-Retention: `candles_1m` is pruned to last 14 days via the `snapshots`
-nightly job. 14d × 3 symbols × 1440 bars = 60,480 rows — trivial.
+Retention: a small `prune-candles-1m` step runs at the tail of the
+nightly `snapshots` job (same systemd unit, no extra timer) and
+`DELETE FROM candles_1m WHERE t < now_ms - 14d`. 14d × 3 symbols ×
+1440 bars = 60,480 rows max — trivial. The step is idempotent and
+re-entrant.
 
 ### 4.4 GCS backup target
 
@@ -484,10 +487,12 @@ Replaces the current crontab:
 
 ```
 /etc/systemd/system/
-  hamafx-worker.service           # Type=simple, ExecStart=/usr/bin/node /opt/hamafx/app/apps/worker/dist/index.js
+  hamafx-worker.service           # Type=notify, ExecStart=/usr/bin/node /opt/hamafx/app/apps/worker/dist/index.js
                                   # Restart=always, RestartSec=5
-                                  # MemoryMax=2G (cgroup OOM kill before host OOM)
-                                  # WatchdogSec=120 (worker pings sd_notify every 30s)
+                                  # MemoryMax=1.5G (cgroup ceiling for the always-on consumer; the 4 GB host
+                                  #                 keeps the remaining ~2.5 GB for transient one-shot jobs
+                                  #                 like embedding-backfill that run in their own cgroups)
+                                  # WatchdogSec=120 (worker emits sd_notify("WATCHDOG=1") every 30s)
 
   hamafx-job-embedding-backfill.service  # Type=oneshot, ExecStart=/usr/bin/node …/cli.js embedding-backfill
   hamafx-job-embedding-backfill.timer    # OnCalendar=0/6:00:00, RandomizedDelaySec=60
@@ -607,7 +612,9 @@ skill) will sequence this. The shape we're committing to:
    `candles_1m`.
 7. **Heavy job migration** — one job at a time. Each PR moves one job
    to the worker, keeps the Vercel route as fallback, adds the
-   healthcheck UUID. Six PRs total.
+   healthcheck UUID. Six PRs total. Each PR also removes the matching
+   entry from `vercel.json` `"crons"` (kept as fallback route, not
+   scheduler).
 8. **systemd timers + self-update** — replace crontab with systemd
    units. `update.sh` deployed last (it changes the deploy mechanism).
 9. **Backups + verification** — GCS bucket, IAM, pg_dump job, journal
@@ -649,8 +656,11 @@ Each step is independently shippable and reversible.
 
 - BiQuote's exact rate-limit policy: not documented. We'll observe and
   set our internal cap to half of whatever we see them tolerate.
-  Initial conservative cap: 10 REST/min per symbol. SignalR is one
-  persistent connection so it's not in the REST budget.
+  **Initial conservative cap: 10 REST requests/min, total across all
+  three symbols.** This is REST-only — the SignalR persistent connection
+  is a single, long-lived TCP socket and is not metered against the REST
+  budget. If BiQuote returns 429 we engage the existing Phase-7a
+  adaptive throttle (cap drops to 80% for 90s, recovers automatically).
 - Whether to expose `live_ticks` data in the chart page's
   `<StaleIndicator>`. Probably yes — the indicator already exists,
   we just need the worker's "last tick was Xs ago" signal exposed via
