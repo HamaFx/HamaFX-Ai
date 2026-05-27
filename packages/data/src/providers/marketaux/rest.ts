@@ -93,7 +93,11 @@ export async function fetchLatest(params: FetchNewsParams): Promise<RawMarketaux
   url.searchParams.set('language', 'en');
   url.searchParams.set('limit', String(params.limit ?? 50));
   url.searchParams.set('filter_entities', 'true');
-  if (params.publishedAfter) url.searchParams.set('published_after', params.publishedAfter);
+  if (params.publishedAfter) {
+    // Marketaux expects YYYY-MM-DDTHH:mm format (no seconds, no Z suffix).
+    const trimmed = params.publishedAfter.replace(/:\d{2}(\.\d+)?Z?$/, '').slice(0, 16);
+    url.searchParams.set('published_after', trimmed);
+  }
 
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(new Error('timeout')), DEFAULT_TIMEOUT_MS);
