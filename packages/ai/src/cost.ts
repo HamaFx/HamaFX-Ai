@@ -50,7 +50,7 @@ export async function dailySpendUsd(now = new Date()): Promise<number> {
   const rows = await getDb()
     .select({ total: sql<number>`coalesce(sum(${schema.chatTelemetry.estCostUsd}), 0)` })
     .from(schema.chatTelemetry)
-    .where(sql`${schema.chatTelemetry.createdAt} >= ${startUtc.toISOString()}`);
+    .where(sql`${schema.chatTelemetry.createdAt} >= ${startUtc}`);
   return Number(rows[0]?.total ?? 0);
 }
 
