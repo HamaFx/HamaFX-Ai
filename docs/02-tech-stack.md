@@ -23,8 +23,9 @@
 | Embeddings         | `text-embedding-3-small` (OpenAI) via Gateway                                     | Cheap, good for news RAG.                                    |
 | DB                 | **Supabase Postgres** + `pgvector` (DB only — no Auth, no RLS)                    | Free tier, has `pgvector`, easy dashboard.                   |
 | ORM                | **Drizzle ORM**                                                                   | Lightweight, edge-compatible, great TS inference.            |
-| Cache              | **Upstash Redis** (caching only — no per-user rate limit, no queue)               | Free tier; serverless-friendly.                              |
-| Cron               | **Vercel Cron Jobs** (built into the Vercel deploy)                               | One less moving part than a worker.                          |
+| Cache              | **Next.js Data Cache** (`unstable_cache` + fetch-cache) behind `packages/data/src/cache` | Free, persists across invocations on Vercel, single-flight built-in. Redis swap is a one-file change. |
+| Cron               | **systemd timers on the GCE VM** (heavy in-process jobs + light Vercel pokes)     | Single-user, two deploys; Vercel Hobby's 1-day cron floor doesn't apply. |
+| Worker             | **Node service on a GCE `e2-medium` VM** (`apps/worker`)                          | Holds the BiQuote SignalR connection + runs heavy jobs the 60s Vercel ceiling can't fit. |
 | Auth               | **Single `APP_PASSWORD`** + HMAC-signed cookie + middleware                       | Personal-mode; one user, one password.                       |
 | Validation         | **Zod**                                                                           | Single schema source for API, AI tools, DB inputs.           |
 | Testing            | **Vitest** + **Playwright** + **MSW**                                             | Vitest for unit, Playwright for e2e, MSW for provider mocks. |
@@ -66,15 +67,16 @@
 - Drizzle (instead of Prisma) because: (a) edge-compatible, (b) zero codegen step in CI, (c) AI agents read Drizzle schemas more accurately than Prisma's DSL.
 - Migration path: Supabase is just Postgres — we can lift-and-shift to Neon if needed.
 
-### Why no separate worker (for MVP)
+### Why a worker on a single GCE VM (Phase 8)
 
-For a single-user app the math doesn't justify it. REST polling at 1–2 s for live prices uses an order of magnitude less of our provider quota than we have headroom for. Vercel Cron handles the news/calendar/alert jobs. If real-time WS ever matters, we drop in `apps/worker/` (Hono on Fly.io) and move the cron routes there — a clean migration.
+The original "no worker" rule held until two needs forced our hand: a persistent BiQuote SignalR connection (sub-second prices, free tier, no auth) and heavy scheduled jobs that don't fit Vercel Hobby's 60s function ceiling. A single `e2-medium` VM in `us-central1-a` gives us both for ~$8/mo, vs. the $20/mo Vercel Pro upgrade plus a separate hosting bill for a worker. Fly.io / Railway were considered and rejected — adding a third deployable for one user buys nothing the existing GCE tenancy doesn't already cover.
 
-### Why Upstash Redis (not Vercel KV / DragonflyDB)
+### Why Next.js Data Cache (not Vercel KV / Upstash / DragonflyDB)
 
-- Serverless, pay-per-request, free tier sufficient for MVP.
-- We use it only for caching (price/candle/news) and one global daily cost counter — no per-user rate limiting, no queue.
-- Atomic counters and TTLs are exactly the primitives we need.
+- Free, no extra service, persists across invocations on Vercel.
+- Built-in single-flight via `unstable_cache` — duplicate concurrent fetches collapse to one upstream call.
+- Tag-based invalidation works with our existing `packages/data/src/cache` interface.
+- The `Cache` interface in `packages/data/src/cache/` keeps the door open: a Redis-backed implementation is a one-file change if cross-region consistency ever matters.
 
 ### Why Zustand + nuqs (not Redux / Jotai)
 

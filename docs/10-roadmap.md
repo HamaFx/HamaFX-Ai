@@ -257,7 +257,7 @@ The previous `.github/workflows/cron-*.yml` external trigger was removed in Phas
 - [x] **In-flight single-flight dedup** for cross-key concurrent producers (the polling thundering-herd at TTL boundary).
 - [x] **Per-provider health snapshot** — rolling success/error window keyed by provider name. `runWithFailover` consults it to deprioritise an upstream that's been failing recently rather than always trying the same primary first.
 - [x] **Adaptive self-throttle** — when an upstream returns 429 the in-memory bucket lowers its cap to ~80 % for the next window, then recovers.
-- [ ] **Alpha Vantage candle fallback** — third-tier provider so candles match price for resilience. _(Deferred — Twelve Data + Finnhub coverage is sufficient at MVP scale.)_
+- [ ] **Alpha Vantage candle fallback** — third-tier provider so candles match price for resilience. _(Deferred — BiQuote + Finnhub coverage is sufficient.)_
 - [ ] **`/api/market/price/stream` SSE endpoint** — single shared upstream poll per Vercel function instance fans out to N tabs. _(Deferred — REST polling at 1.5 s + SWR is enough for a single user; promote when multi-tab usage shows pressure.)_
 - [x] **`/api/cron/warm-cache`** every ~2 min — pre-fetches the most-used `(symbol, tf)` keys so the first chat of the day is hot.
 - [x] **Domain-based model routing** — the agent selects a model per turn based on intent classification:
@@ -364,6 +364,7 @@ The previous `.github/workflows/cron-*.yml` external trigger was removed in Phas
 - [x] Self-update timer in flight; merges to `main` reach the worker within 5 minutes with rollback-on-failure.
 - [x] Nightly off-site backups + weekly verified restore green.
 - [x] Twelve Data retired; provider matrix in `docs/06-data-sources.md` reflects the BiQuote-primary world.
+- [x] **Phase 8 stabilisation sweep (post-PR-21)** — fixed three bugs that surfaced once the worker had real load: a malformed `POSTGRES_URL` on the VM (was a base64 blob, replaced with the real `postgres://` URL), missing `@opentelemetry/api` declaration that broke every `runner/cli.js` heavy-job entrypoint with `ERR_MODULE_NOT_FOUND`, and a Drizzle `$onUpdate(() => sql\`now()\`)` mis-binding that crashed every UPDATE on `chat_threads` / `journal_entries` (switched to `() => new Date()`). Migrated all encrypted Vercel secrets onto `/opt/hamafx/.env` via a one-shot deployed route + bearer-gated download. Retired the `.github/workflows/cron-*.yml` workflows (replaced by the systemd timers since PR-15). Every heavy + light cron now runs end-to-end on the VM. See `docs/14-ai-agent-handoff.md` § Known gotchas.
 
 ## Stretch / parking lot
 

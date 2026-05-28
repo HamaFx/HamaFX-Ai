@@ -8,7 +8,7 @@ fileMatchPattern: 'packages/data/**'
 When working in `packages/data/**`:
 
 1. **Provider adapters live under** `packages/data/src/providers/<name>/{rest,map}.ts`.
-2. **Public API of the package is the adapters**, not the providers. UI / route handlers / AI tools call `adapters.candles.get(...)`, never `providers.twelveData.get(...)`.
+2. **Public API of the package is the adapters**, not the providers. UI / route handlers / AI tools call `adapters.candles.get(...)`, never `providers.biquote.get(...)`.
 3. Every adapter call goes through:
    - Zod input validation
    - `Cache` (Next.js Data Cache by default — see `packages/data/src/cache/`), TTLs per `docs/06-data-sources.md`

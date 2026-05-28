@@ -18,7 +18,7 @@ HamaFX-Ai/
 ├── packages/
 │   ├── shared/              # Zod schemas, TS types, domain constants
 │   ├── ai/                  # Agent definition, tools, prompts
-│   ├── data/                # Provider adapters (BiQuote, Twelve Data, Finnhub, ...)
+│   ├── data/                # Provider adapters (BiQuote, Finnhub, Alpha Vantage, Marketaux, ...)
 │   ├── indicators/          # Pure-function technical analysis (RSI, MACD, SMC...)
 │   ├── db/                  # Drizzle schema, migrations, query helpers
 │   └── config/              # ESLint, TS, Tailwind, Prettier presets
@@ -26,7 +26,7 @@ HamaFX-Ai/
 ├── docs/                    # ← you are here
 ├── infra/                   # GCE cron VM scripts (`cron-vm/`)
 ├── .kiro/                   # Steering files for AI coding agents
-├── .github/workflows/       # CI: lint + typecheck + vitest, plus cron fallbacks
+├── .github/workflows/       # CI: lint + typecheck + vitest (only — cron retired in Phase 8 PR-21)
 ├── .vscode/                 # Editor settings
 │
 ├── turbo.json
@@ -57,6 +57,29 @@ apps/worker/
 ```
 
 The worker imports the same workspace packages as the web app (`@hamafx/shared`, `@hamafx/data`, `@hamafx/db`, `@hamafx/ai`, `@hamafx/indicators`) — single source of truth for schemas, providers, DB queries.
+
+## `infra/cron-vm/` (Phase 8 — VM scaffolding)
+
+```
+infra/cron-vm/
+├── README.md               # human walkthrough: what's on the VM, how to ssh, how to read logs
+├── RECOVERY.md             # disaster-recovery playbook — five scenarios with paste-ready commands
+├── setup.sh                # idempotent one-shot bootstrap (run after gcloud scp)
+├── setup-worker.sh         # one-time: install Node 20 + pnpm + clone + build + register the unit
+├── _provision.sh           # full from-zero provisioner (calls setup.sh at the end)
+├── update.sh               # 5-min self-update: git pull → pnpm install → pnpm build → restart worker if SHA changed
+├── scripts/                # backup-db.sh, backup-journal.sh, verify-restore.sh
+├── sudoers.d/              # /etc/sudoers.d/hamafx — lets the hamafx user restart the worker
+└── units/                  # 14 systemd unit pairs (.service + .timer)
+    ├── hamafx-worker.service                  # always-on
+    ├── hamafx-update.{service,timer}          # 5-min self-update
+    ├── hamafx-light-{news,calendar,alerts,warm-cache}.{service,timer}   # curl /api/cron/* on Vercel
+    ├── hamafx-job-{briefings,cot,embedding-backfill,fred-actuals,snapshots,weekly-review}.{service,timer}  # heavy in-process jobs
+    ├── hamafx-backup-{db,journal}.{service,timer}                       # nightly pg_dump → GCS
+    └── hamafx-verify-restore.{service,timer}                            # weekly throwaway-Docker restore + assert
+```
+
+`setup.sh` is idempotent — re-running it upgrades unit files + restarts every timer. `update.sh` is the only path that touches code on the VM at runtime; everything else is unit/script changes that ship via the same `git pull`.
 
 ## `apps/web/` (Next.js 15)
 
@@ -146,16 +169,17 @@ apps/web/
 │   │   │   ├── journal/[id]/route.ts
 │   │   │   ├── push/{subscribe,unsubscribe}/route.ts
 │   │   │   ├── admin/{test-alert-email,test-telegram}/route.ts
-│   │   │   └── cron/                       # Vercel Cron / GCE-VM targets
+│   │   │   └── cron/                       # systemd-poked from the VM (Bearer ${CRON_SECRET})
 │   │   │       ├── alerts/route.ts
-│   │   │       ├── briefings/route.ts
+│   │   │       ├── briefings/route.ts      # manual fallback only — heavy job runs on the worker
 │   │   │       ├── calendar/route.ts
-│   │   │       ├── cot/route.ts
-│   │   │       ├── embedding-backfill/route.ts
-│   │   │       ├── fred-actuals/route.ts
+│   │   │       ├── cot/route.ts            # manual fallback only — heavy job runs on the worker
+│   │   │       ├── embedding-backfill/route.ts # manual fallback only — heavy job runs on the worker
+│   │   │       ├── fred-actuals/route.ts   # manual fallback only — heavy job runs on the worker
 │   │   │       ├── news/route.ts
-│   │   │       ├── snapshots/route.ts
-│   │   │       └── weekly-review/route.ts
+│   │   │       ├── snapshots/route.ts      # manual fallback only — heavy job runs on the worker
+│   │   │       ├── warm-cache/route.ts
+│   │   │       └── weekly-review/route.ts  # manual fallback only — heavy job runs on the worker
 │   │   │
 │   │   ├── globals.css                     # Tailwind v4 @theme + utilities + tokens
 │   │   ├── layout.tsx                      # root layout (fonts, metadata, viewport)
@@ -353,7 +377,7 @@ packages/data/
 │   │   ├── fred/
 │   │   └── …
 │   ├── adapters/{price,candles,news,calendar}.ts
-│   ├── cache/                    # Next Data Cache facade (Upstash optional, unused)
+│   ├── cache/                    # Next Data Cache facade (Cache interface — Redis swap is a one-file change)
 │   ├── failover.ts
 │   └── index.ts
 └── package.json

@@ -21,7 +21,7 @@ If you are an **AI agent about to write code**: read in order, then jump to [`14
 | 05  | [ui-ux](./05-ui-ux.md)                             | Mobile-first layout, theming, design tokens        |
 | 06  | [data-sources](./06-data-sources.md)               | API providers, endpoints, caching, fallbacks       |
 | 07  | [ai-agent](./07-ai-agent.md)                       | Agent loop, tools, prompts, memory, RAG            |
-| 08  | [backend-and-api](./08-backend-and-api.md)         | Route map, edge vs node, Vercel Cron               |
+| 08  | [backend-and-api](./08-backend-and-api.md)         | Route map, edge vs node, VM-driven cron            |
 | 09  | [deployment](./09-deployment.md)                   | Vercel + envs + minimal CI                         |
 | 10  | [roadmap](./10-roadmap.md)                         | Milestones (Phase 0 → Phase 3)                     |
 | 11  | [conventions](./11-conventions.md)                 | Code style, commits, AI-agent-friendly conventions |

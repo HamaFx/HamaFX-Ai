@@ -139,7 +139,7 @@ export function ChartView({ symbol }: { symbol: Symbol }) {
         ) : null}
 
         <p className="text-fg-subtle text-xs">
-          Polling at 1.5s for price · {tf} candles per server cache TTL · Source: Twelve Data
+          Polling at 1.5s for price · {tf} candles per server cache TTL · Source: BiQuote
         </p>
       </div>
     </div>

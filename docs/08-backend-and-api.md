@@ -8,10 +8,10 @@ Personal-mode: a **single Next.js deploy on Vercel** owns everything. No separat
 | -------------- | --------------------------------------------------------------- |
 | UI + RSC pages | `apps/web/src/app/(app)/**`                                     |
 | API endpoints  | `apps/web/src/app/api/**` (route handlers)                      |
-| Scheduled jobs | `apps/web/src/app/api/cron/**` triggered by **Vercel Cron**     |
+| Scheduled jobs | `apps/web/src/app/api/cron/**` (poked from the VM) + `apps/worker/src/jobs/**` (heavy, in-process) |
 | Auth           | `middleware.ts` checks a signed cookie set by `/api/auth/login` |
 | DB             | Supabase Postgres (used as a plain DB) via Drizzle              |
-| Cache          | Upstash Redis                                                   |
+| Cache          | Next.js Data Cache (`unstable_cache` + fetch-cache) via the `Cache` interface in `packages/data/src/cache` |
 
 ## Route map
 
@@ -47,7 +47,7 @@ Personal-mode: a **single Next.js deploy on Vercel** owns everything. No separat
 These routes:
 
 1. Validate input with zod.
-2. Hit Upstash cache.
+2. Hit the cache layer (`packages/data/src/cache` — Next.js Data Cache).
 3. On miss, call `packages/data` adapters (which apply failover).
 4. Return DTOs from `packages/shared`.
 
@@ -73,34 +73,32 @@ These read from Supabase (populated by cron) — they don't hit external provide
 | `/api/journal/[id]`  | DELETE | Edge    | Remove entry     |
 | `/api/journal/stats` | GET    | Edge    | Aggregated stats |
 
-### Cron (Vercel-triggered)
+### Cron (VM-triggered)
 
-These are POST endpoints invoked by Vercel Cron with the `Authorization: Bearer ${CRON_SECRET}` header. Bypass the password gate; reject anything without the correct secret.
+These endpoints are GET handlers invoked by `hamafx-light-*.service` units on the GCE worker VM, with `Authorization: Bearer ${CRON_SECRET}`. Use `withCronAuth(req, fn)` from `apps/web/src/lib/cron.ts`. Bypass the password gate; reject anything without the correct secret.
 
-| Route                          | Cadence         | Purpose                                                      |
-| ------------------------------ | --------------- | ------------------------------------------------------------ |
-| `/api/cron/news`               | every 5 min     | Poll Marketaux + Finnhub news → embed → upsert into Supabase |
-| `/api/cron/calendar`           | every 15 min    | Poll Trading Economics + FRED → upsert events                |
-| `/api/cron/alerts`             | every 1 min     | Evaluate active alert rules vs latest cached prices, fire    |
-| `/api/cron/snapshots`          | daily 23:55 UTC | Compute pivots, levels, ATR for next session                 |
-| `/api/cron/embedding-backfill` | hourly          | Embed any rows missing vectors (small batches)               |
-| `/api/cron/warm-cache`         | every 2 min     | Pre-fetch the most-used `(symbol, tf)` keys so the first chat / chart load of the day is hot (Phase 7a) |
+| Route                          | Cadence         | Driver                            | Purpose                                                      |
+| ------------------------------ | --------------- | --------------------------------- | ------------------------------------------------------------ |
+| `/api/cron/news`               | every 5 min     | `hamafx-light-news.timer`         | Poll Marketaux + Finnhub news → upsert into Supabase         |
+| `/api/cron/calendar`           | every 15 min    | `hamafx-light-calendar.timer`     | Poll Trading Economics + FRED → upsert events                |
+| `/api/cron/alerts`             | every 5 min     | `hamafx-light-alerts.timer`       | Evaluate active alert rules vs latest `live_ticks`, fire     |
+| `/api/cron/warm-cache`         | every 2 min     | `hamafx-light-warm-cache.timer`   | Pre-fetch the most-used `(symbol, tf)` keys so the first chat / chart load of the day is hot |
+| `/api/cron/snapshots`          | manual fallback | (heavy job runs on the worker)    | Daily HLOC + pivots + ATR for next session                   |
+| `/api/cron/briefings`          | manual fallback | (heavy job runs on the worker)    | Pre/post macro-event briefings                               |
+| `/api/cron/cot`                | manual fallback | (heavy job runs on the worker)    | Weekly CFTC Commitment-of-Traders ingestion                  |
+| `/api/cron/embedding-backfill` | manual fallback | (heavy job runs on the worker)    | Embed any rows missing vectors                               |
+| `/api/cron/fred-actuals`       | manual fallback | (heavy job runs on the worker)    | Backfill `economic_events.actual` once prints land           |
+| `/api/cron/weekly-review`      | manual fallback | (heavy job runs on the worker)    | Sunday weekly journal review                                 |
 
-Registered in `vercel.json`:
+The "manual fallback" routes still exist so an operator can hand-trigger any heavy job during a worker outage:
 
-```json
-{
-  "crons": [
-    { "path": "/api/cron/news", "schedule": "*/5 * * * *" },
-    { "path": "/api/cron/calendar", "schedule": "*/15 * * * *" },
-    { "path": "/api/cron/alerts", "schedule": "* * * * *" },
-    { "path": "/api/cron/snapshots", "schedule": "55 23 * * *" },
-    { "path": "/api/cron/embedding-backfill", "schedule": "0 * * * *" }
-  ]
-}
+```bash
+curl -fsS -H "Authorization: Bearer $CRON_SECRET" "$PRODUCTION_URL/api/cron/embedding-backfill"
 ```
 
-> Each cron handler must be **idempotent** and **fast** (Hobby tier limit ≈ 10 s, Pro ≈ 60 s for cron-triggered functions). News/calendar batch in pages of ≤ 50 rows per invocation; the next tick continues if there's more.
+Heavy jobs in `apps/worker/src/jobs/<name>.ts` run in-process inside `hamafx-worker.service` (no HTTP roundtrip; no 60 s ceiling). Their systemd units pair with timers in `infra/cron-vm/units/hamafx-job-<name>.{service,timer}` and ping `healthchecks.io` on start / success / fail.
+
+> Every cron handler must be **idempotent** and **fast**. Light routes batch in pages of ≤ 50 rows per invocation; the next tick continues if there's more.
 
 ## Auth flow
 

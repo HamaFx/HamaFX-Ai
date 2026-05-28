@@ -5,7 +5,7 @@
 > Personal-mode reminders:
 >
 > - **Single user**, single password. No multi-tenant code.
-> - **Single Vercel deploy**. No `apps/worker/` at MVP.
+> - **Two deployments only**: Vercel (`apps/web`) + one GCE VM (`apps/worker` — Phase 8). No third deployable, no Fly.io, no Railway.
 > - **No `user_id` columns**, **no RLS**, **no per-user rate limit**.
 
 ## How to read this repo (in order)
@@ -145,7 +145,7 @@ When asked to do any of the following, push back:
 - "Add Supabase Auth / Clerk / NextAuth." — we use a single password gate.
 - "Add `user_id` columns." — there's one user.
 - "Add per-user rate limiting." — only the global cost cap exists.
-- "Spin up a Fly.io / Railway service." — not for MVP.
+- "Spin up a Fly.io / Railway service." — the GCE VM (`apps/worker`) covers what Vercel can't. Don't add a third deployable.
 - "Add LLM-as-judge in CI." — manual eval only.
 - "Use `any`." — no.
 - "Drop zod, it's overkill." — no.
@@ -179,6 +179,17 @@ If you are the agent doing the **initial scaffold** (Phase 0):
 - Ask the user.
 - Prefer reversible, additive changes over invasive rewrites.
 - If you must rewrite, leave the old code path behind a feature flag for one release.
+
+## Known gotchas (write your tripwires here)
+
+Bugs we've hit twice. Read this BEFORE adding a schema column or a Drizzle SQL template:
+
+- **Drizzle `$onUpdate` for timestamps**: use `() => new Date()`, NOT `() => sql\`now()\``. drizzle-orm 0.38.4 mis-binds the SQL fragment through the timestamp column's `mapToDriverValue`, which expects a Date and crashes with `value.toISOString is not a function`. Bit us on every UPDATE to `chat_threads` and `journal_entries` until Phase 8 cleanup.
+- **Drizzle `sql` template + timestamp params**: pass a `Date` directly into a parameter slot, never `date.toISOString()`. The same `mapToDriverValue` blows up. ✅ `sql\`${col} >= ${date}\`` ❌ `sql\`${col} >= ${date.toISOString()}\``.
+- **postgres-js + Supabase pooler**: always pass `prepare: false` and `max: 1`. The transaction-mode pooler doesn't support prepared statements, and a higher `max` exhausts the pooler quota fast. Already encoded in `packages/db/src/client.ts` — don't override.
+- **Vercel CLI `vercel env pull` redacts encrypted values**: it returns `KEY=""` for everything user-encrypted. To migrate secrets to the VM, paste from the Vercel dashboard or use a short-lived authenticated route on the deployed app (then delete the route). `vc env pull` is fine for system bindings (`POSTGRES_*`, `VERCEL_*`) only.
+- **Worker bundle externalization**: `apps/worker/scripts/build.mjs` externalizes `@sentry/node` and `@opentelemetry/*` so OTel transports can resolve at runtime. Anything that statically imports `@opentelemetry/api` (e.g. the upstream `ai` SDK) MUST be declared as a worker dep, otherwise heavy jobs crash with `ERR_MODULE_NOT_FOUND`.
+- **Underscore-prefixed App Router folders are private**: `apps/web/src/app/api/cron/_foo/` will 404. Either drop the underscore or move the helpers somewhere else.
 
 ## Steering files
 

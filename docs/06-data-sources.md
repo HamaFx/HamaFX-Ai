@@ -139,7 +139,7 @@ Adapters expose a `*WithMeta` sibling (`getPriceWithMeta`, `getCandlesWithMeta`)
 
 ### Adaptive throttle (Phase 7a)
 
-`tryReserve(provider, cfg)` enforces a per-window cap. On HTTP 429 the provider client calls `noteBackoff(provider, cfg)` which lowers the effective cap to `cfg.backoffFraction × cfg.limit` (default 80 %) for `cfg.cooloffMs` (default 90 s), then recovers automatically. Wired into Twelve Data, Finnhub, Marketaux, and FRED clients.
+`tryReserve(provider, cfg)` enforces a per-window cap. On HTTP 429 the provider client calls `noteBackoff(provider, cfg)` which lowers the effective cap to `cfg.backoffFraction × cfg.limit` (default 80 %) for `cfg.cooloffMs` (default 90 s), then recovers automatically. Wired into BiQuote, Finnhub, Marketaux, and FRED clients.
 
 ## Cache TTL policy
 
@@ -161,11 +161,11 @@ behind a `Cache` interface in `packages/data/src/cache/`. The interface gained
 `fetchWithMeta` (Phase 7a) so adapters can opt into stale-while-revalidate:
 when `maxStaleSeconds > 0` and the producer fails, the most recent cached
 value is returned with `meta.stale = true` up to the SWR ceiling. We picked
-the Next Data Cache over Upstash Redis because: (a) it's free and persists
+the Next Data Cache over Redis because: (a) it's free and persists
 across invocations on Vercel, (b) it has built-in single-flight + tag-based
 invalidation, (c) it removes one external dependency. The interface keeps
-the door open: if we ever need cross-region consistency or a separate
-worker on Fly.io, swapping in a Redis-backed `Cache` is a one-file change.
+the door open: if we ever need cross-region consistency, swapping in a
+Redis-backed `Cache` is a one-file change.
 Key scheme stays `hfx:<resource>:<symbol|null>:<tf|null>:<extra>`.
 
 ## Provider self-throttling
@@ -174,42 +174,44 @@ We don't run a per-user rate limiter (single user). We do keep a small
 **per-provider in-memory token bucket** (`packages/data/src/cache/throttle.ts`)
 so we never burn the free-tier quota by accident. State is per Vercel
 function instance — for a single user that's accepted; the cache absorbs
-duplicates anyway. If we ever need a globally consistent counter, swap for
-an Upstash `INCR + EXPIRE` pair behind the same `tryReserve()` API.
+duplicates anyway. If we ever need a globally consistent counter, the same
+`tryReserve()` API can move into Postgres with an `INSERT ... ON CONFLICT`
+counter without changing call sites.
 
 | Provider      | Max RPM (free)    | Our internal cap |
 | ------------- | ----------------- | ---------------- |
-| Twelve Data   | ~8 / min (varies) | 6 / min          |
+| BiQuote       | unmetered         | 10 / min (self)  |
 | Finnhub       | 60 / min          | 30 / min         |
 | Marketaux     | ~100 / day        | 60 / day         |
 | Trading Econ. | 10 / min (guest)  | 5 / min          |
 
-## Live-price strategy (personal mode)
+## Live-price strategy (Phase 8)
 
-- Browser **polls** `/api/market/price` every 1.5 s via TanStack Query while a relevant view is open.
-- The route handler reads from the Next.js Data Cache (3 s TTL); only ~one out of every two polls actually hits the upstream provider.
-- This uses far less of the free-tier quota than you'd expect because the cache absorbs the duplicate reads.
-- If polling ever becomes a constraint we add a worker with an upstream WS and fan-out — see `01-architecture.md` § "Future: optional worker".
+- The worker holds a persistent BiQuote SignalR connection from `apps/worker/src/signalr/` and writes every tick into `live_ticks`.
+- Browser **polls** `/api/market/price` every 1.5 s. The route reads from `live_ticks` (Postgres) — sub-second freshness when the worker is healthy.
+- If `live_ticks.ts` falls outside the freshness window (worker behind / down), the route falls back to BiQuote REST and best-effort upserts the result, so the UI degrades to "polled REST" instead of going dark.
 
 ## News ingestion pipeline
 
-**Vercel Cron** triggers `/api/cron/news` (every 5 min) and `/api/cron/calendar` (every 15 min):
+A systemd timer on the VM (`hamafx-light-news.timer`) curls `/api/cron/news` every 5 min:
 
-1. Pull from primary; on failure, pull from secondary.
+1. Pull from primary (Marketaux); on failure, pull from secondary (Finnhub).
 2. Filter: keep articles where any of `tags ∋ {XAU, gold, EUR, USD, GBP}` or text contains FX symbols / "ECB" / "Fed" / "BoE" / "NFP" / "CPI" / "FOMC" etc. (regex defined in `packages/data/src/providers/<x>/filter.ts`).
-3. Compute embeddings (`text-embedding-3-small`) on `title + summary`.
-4. Upsert to `news_articles` and `news_embeddings` (pgvector).
+3. Upsert to `news_articles` (no embeddings here — fast 2xx).
+4. The worker's `hamafx-job-embedding-backfill.timer` (every 6 h) computes `text-embedding-3-small` for any rows still missing an embedding and updates `news_embeddings`.
 5. If a high-impact event matches one of our 3 symbols, write a row that the alert evaluator picks up on its next cron tick (Telegram delivery in v2).
+
+The split keeps the Vercel cron route under the 60 s ceiling and lets the embedding pass run on the VM without budget pressure.
 
 ## Symbol mapping
 
 Each provider has its own symbol code. We map at the adapter boundary:
 
-| Internal | Twelve Data | Finnhub         | Alpha Vantage | OANDA     |
-| -------- | ----------- | --------------- | ------------- | --------- |
-| XAUUSD   | `XAU/USD`   | `OANDA:XAU_USD` | `XAU` (alt)   | `XAU_USD` |
-| EURUSD   | `EUR/USD`   | `OANDA:EUR_USD` | `EUR/USD`     | `EUR_USD` |
-| GBPUSD   | `GBP/USD`   | `OANDA:GBP_USD` | `GBP/USD`     | `GBP_USD` |
+| Internal | BiQuote | Finnhub         | Alpha Vantage | OANDA     |
+| -------- | ------- | --------------- | ------------- | --------- |
+| XAUUSD   | `XAUUSD` | `OANDA:XAU_USD` | `XAU` (alt)   | `XAU_USD` |
+| EURUSD   | `EURUSD` | `OANDA:EUR_USD` | `EUR/USD`     | `EUR_USD` |
+| GBPUSD   | `GBPUSD` | `OANDA:GBP_USD` | `GBP/USD`     | `GBP_USD` |
 
 Mapping table lives in `packages/data/src/providers/<name>/map.ts` and is exported as `toProviderSymbol(internal): string`.
 

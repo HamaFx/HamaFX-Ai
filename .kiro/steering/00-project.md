@@ -6,10 +6,10 @@ inclusion: always
 
 This is a **personal** AI trading copilot for **XAUUSD (primary), EURUSD, GBPUSD only** — single user, single deploy.
 
-- Stack: Next.js 15 + Tailwind v4 + shadcn/ui on **Vercel** (single deploy).
-- Cron: **Vercel Cron Jobs** (no separate worker).
+- Stack: Next.js 15 + Tailwind v4 + shadcn/ui. Two deployments: **Vercel** (`apps/web`) + one **GCE VM** (`apps/worker`, e2-medium in `us-central1-a`).
+- Cron: **systemd timers on the VM** — heavy jobs run in-process inside `hamafx-worker.service`; light crons curl `/api/cron/*` on Vercel with `Authorization: Bearer ${CRON_SECRET}`. The `.github/workflows/cron-*.yml` workflows were retired in Phase 8 PR-21.
 - DB: **Supabase Postgres + pgvector** (used as a plain DB — Auth and RLS are **off**).
-- Cache: **Next.js Data Cache** (`unstable_cache` + fetch-cache) behind a `Cache` interface in `packages/data/src/cache`. Upstash Redis env vars are accepted but optional and currently unused.
+- Cache: **Next.js Data Cache** (`unstable_cache` + fetch-cache) behind a `Cache` interface in `packages/data/src/cache`.
 - AI: Vercel AI SDK v5 via AI Gateway.
 - Auth: **single `APP_PASSWORD`** + HMAC-signed cookie + middleware.
 - Monorepo: pnpm workspaces + Turborepo.

@@ -20,10 +20,10 @@ export const dynamic = 'force-dynamic';
 export const maxDuration = 30;
 
 /**
- * Tight scope on purpose. Twelve Data's free tier caps us at ~8 req/min
- * via an internal 6/min self-throttle; warming 3 symbols × 1 tf leaves
- * headroom for the live polling that follows. 4h is fetched lazily on
- * first chart visit.
+ * Tight scope on purpose. BiQuote's free tier covers FX + XAU at 10 req/min
+ * via our internal self-throttle; warming 3 symbols × 1 tf leaves headroom
+ * for the live polling that follows. 4h is fetched lazily on first chart
+ * visit.
  */
 const TIMEFRAMES_TO_WARM: Array<'1h'> = ['1h'];
 

@@ -51,7 +51,7 @@ res.cookies.set('hfx_auth', token, { httpOnly: true, secure: true, sameSite: 'la
 
 ### Login rate-limit
 
-To slow down brute force, the `/api/auth/login` route is rate-limited by IP using an in-memory token bucket (or a simple Upstash counter): max 10 attempts per IP per 15 minutes. After that, return 429 with `Retry-After`.
+To slow down brute force, the `/api/auth/login` route is rate-limited by IP using an in-memory token bucket: max 10 attempts per IP per 15 minutes. After that, return 429 with `Retry-After`. Personal-mode skips the cross-instance counter — there's only one user.
 
 ### Logout
 
@@ -59,9 +59,9 @@ To slow down brute force, the `/api/auth/login` route is rate-limited by IP usin
 
 ## Cron protection
 
-- Vercel Cron sends `Authorization: Bearer ${CRON_SECRET}`.
-- `/api/cron/*` handlers verify with timing-safe compare. Any other call returns 401.
-- The cookie middleware **skips** `/api/cron/*` since cron requests come from Vercel infra without a cookie.
+- Light Vercel-poke crons run as `hamafx-light-*.service` units on the VM and `curl` `/api/cron/*` with `Authorization: Bearer ${CRON_SECRET}`. Heavy in-process jobs on the worker authenticate to Postgres + the AI Gateway directly — they never hit the Vercel routes.
+- `/api/cron/*` handlers verify the bearer with `withCronAuth(req, fn)` (timing-safe compare). Any other call returns 401.
+- The cookie middleware **skips** `/api/cron/*` since cron requests come from the VM without a cookie.
 
 ## DB: no RLS
 
@@ -83,7 +83,7 @@ These exist to defend against the "URL is found and abused" failure mode and aga
 2. **Per-IP login throttle** as above.
 3. **Per-call token caps**: `MAX_TOKENS_INPUT`, `MAX_TOKENS_OUTPUT`, hard set in agent config.
 4. **Tool-loop iteration cap**: 6 tool calls per user message, then forced summary.
-5. **Daily $ ceiling**: a global daily counter in Upstash. When it crosses `MAX_DAILY_USD` (default $5), `/api/chat` returns a friendly 503 explaining we hit the cap; resets at UTC midnight. Adjust the cap per taste.
+5. **Daily $ ceiling**: a global daily counter in `chat_telemetry` (summed by UTC date in `dailySpendUsd()`). When it crosses `MAX_DAILY_USD` (default $5), `/api/chat` returns a friendly 503 explaining we hit the cap; resets at UTC midnight. Adjust the cap per taste.
 6. **Telemetry table** (`chat_telemetry`) records (model, input/output tokens, ms, est-cost) per turn so you can audit later.
 
 ## Prompt injection defence
@@ -96,7 +96,7 @@ These exist to defend against the "URL is found and abused" failure mode and aga
 
 ## Web security
 
-- Strict CSP via `next.config.mjs`: `default-src 'self'` + allow-list for AI Gateway, Supabase, Upstash REST endpoints, and any specific provider domains we directly hit from the browser (none currently).
+- Strict CSP via `next.config.mjs`: `default-src 'self'` + allow-list for AI Gateway, Supabase, BiQuote SignalR, and any specific provider domains we directly hit from the browser (none currently).
 - HSTS on apex.
 - `Permissions-Policy: camera=(), microphone=(self)` (mic for voice input), `geolocation=()`.
 - `Referrer-Policy: strict-origin-when-cross-origin`.

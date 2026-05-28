@@ -13,7 +13,7 @@ flowchart LR
     GW -->|tool-call| T[Tool registry]
     T -->|read| D[(packages/data)]
     T -->|read/write| DB[(Supabase)]
-    T -->|kv| R[(Upstash)]
+    T -->|cache| C[(Next.js Data Cache)]
     T -->|result| TLA
     TLA -->|SSE parts| UI[Browser useChat]
     TLA -->|persist| DB
