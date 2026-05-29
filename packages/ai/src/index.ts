@@ -4,6 +4,8 @@ export { runChat, type RunChatArgs } from './agent';
 export { tools, type ToolRegistry } from './tools';
 export { buildSystemPrompt, type LiveSnapshot } from './prompt/system';
 export { buildLiveSnapshot } from './context';
+export * from './wait-until';
+export * from './telegram/webhook';
 export {
   estimateCostUsd,
   dailySpendUsd,

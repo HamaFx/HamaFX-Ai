@@ -173,6 +173,17 @@ async function deliverTelegram({ alert, reading, env }: DeliverArgs): Promise<De
         chat_id: env.TELEGRAM_CHAT_ID,
         text,
         parse_mode: 'MarkdownV2',
+        reply_markup: {
+          inline_keyboard: [
+            [
+              { text: '📊 Analyze Setup', callback_data: `/committee ${'symbol' in alert.rule ? alert.rule.symbol : ''}` },
+              { text: '🔕 Snooze 1h', callback_data: `/snooze ${alert.id}` },
+            ],
+            [
+              { text: '📝 Log to Journal', callback_data: `/log ${'symbol' in alert.rule ? alert.rule.symbol : ''} triggered ${'level' in alert.rule ? alert.rule.level : ''}` }
+            ]
+          ]
+        }
       }),
     });
   } catch (err) {

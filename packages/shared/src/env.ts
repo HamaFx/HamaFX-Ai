@@ -135,6 +135,7 @@ const ProvidersEnv = z.object({
 const NotifyEnv = z.object({
   TELEGRAM_BOT_TOKEN: z.string().optional(),
   TELEGRAM_CHAT_ID: z.string().optional(),
+  TELEGRAM_SECRET_TOKEN: z.string().optional(),
   RESEND_API_KEY: z.string().optional(),
   ALERT_FROM_EMAIL: z.string().email().optional(),
   ALERT_TO_EMAIL: z.string().email().optional(),
