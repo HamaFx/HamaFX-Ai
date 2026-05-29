@@ -48,6 +48,8 @@ const DEFAULT_INDICATORS: ChartIndicators = {
   bollinger: false,
   rsi: false,
   macd: false,
+  atr: false,
+  pivots: false,
 };
 
 const DEFAULT_SETTINGS: ChartSettings = {
@@ -128,7 +130,9 @@ export function ChartView({ symbol }: { symbol: Symbol }) {
     if (indicators.sma100) list.push({ kind: 'sma', params: { period: 100 } });
     if (indicators.bollinger) list.push({ kind: 'bollinger', params: { period: 20, stdDev: 2 } });
     if (indicators.rsi) list.push({ kind: 'rsi', params: { period: 14 } });
-    if (indicators.macd) list.push({ kind: 'macd', params: { fastPeriod: 12, slowPeriod: 26, signalPeriod: 9 } });
+    if (indicators.macd) list.push({ kind: 'macd', params: { fast: 12, slow: 26, signal: 9 } });
+    if (indicators.atr) list.push({ kind: 'atr', params: { period: 14 } });
+    if (indicators.pivots) list.push({ kind: 'pivots', params: {} });
     return list;
   }, [indicators]);
 

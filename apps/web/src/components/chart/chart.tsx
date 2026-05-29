@@ -85,8 +85,10 @@ export function Chart({
   // Sub-pane instances and DOM refs
   const rsiChartRef = useRef<any>(null);
   const macdChartRef = useRef<any>(null);
+  const atrChartRef = useRef<any>(null);
   const rsiContainerRef = useRef<HTMLDivElement | null>(null);
   const macdContainerRef = useRef<HTMLDivElement | null>(null);
+  const atrContainerRef = useRef<HTMLDivElement | null>(null);
 
   const decimals = useMemo(() => priceDecimals(symbol), [symbol]);
 
@@ -186,6 +188,7 @@ export function Chart({
   // Extract off-chart oscillators
   const rsiResult = useMemo(() => indicatorResults?.find((r) => r.kind === 'rsi'), [indicatorResults]);
   const macdResult = useMemo(() => indicatorResults?.find((r) => r.kind === 'macd'), [indicatorResults]);
+  const atrResult = useMemo(() => indicatorResults?.find((r) => r.kind === 'atr'), [indicatorResults]);
 
   // RSI Sub-pane Lifecycle
   useEffect(() => {
@@ -406,6 +409,93 @@ export function Chart({
     };
   }, [macdResult, candles, settings?.theme, settings?.gridStyle]);
 
+  // ATR Sub-pane Lifecycle
+  useEffect(() => {
+    const el = atrContainerRef.current;
+    if (!el || !atrResult) {
+      if (atrChartRef.current) {
+        atrChartRef.current.remove();
+        atrChartRef.current = null;
+      }
+      return;
+    }
+
+    const colors = getThemeColors(settings?.theme ?? 'black');
+    const isNone = settings?.gridStyle === 'none';
+    const gridColor = isNone ? 'transparent' : colors.grid;
+    const gridStyle = settings?.gridStyle === 'dotted' ? 1 : 0;
+    
+    if (!atrChartRef.current) {
+      void import('lightweight-charts').then((lc) => {
+        if (!atrContainerRef.current) return;
+        
+        const createChartFn = ('createChart' in lc) ? lc.createChart : ((lc as any).default?.createChart as any);
+        const atrChart = createChartFn(atrContainerRef.current, {
+          layout: {
+            background: { color: colors.bg },
+            textColor: colors.text,
+            fontFamily: getComputedStyle(el).getPropertyValue('--font-sans') || 'Inter, system-ui, sans-serif',
+          },
+          grid: {
+            vertLines: { color: gridColor, style: gridStyle },
+            horzLines: { color: gridColor, style: gridStyle },
+          },
+          rightPriceScale: { borderColor: colors.grid, visible: true },
+          timeScale: { borderColor: colors.grid, visible: false },
+          crosshair: { mode: 1 },
+          autoSize: true,
+          handleScroll: { mouseWheel: false, pressedMouseMove: false, horzTouchDrag: false, vertTouchDrag: false },
+          handleScale: { mouseWheel: false, pinch: false, axisPressedMouseMove: { time: false, price: false } },
+        });
+
+        atrChartRef.current = atrChart;
+
+        const atrSeries = atrChart.addSeries(lc.LineSeries, {
+          color: '#eab308',
+          lineWidth: 1.5,
+          priceLineVisible: false,
+        });
+
+        const data = atrResult.values.map((v, idx) => {
+          if (v === null || v === undefined) return null;
+          const candle = candles[idx];
+          if (!candle) return null;
+          return {
+            time: Math.floor(candle.t / 1000) as unknown as UTCTimestamp,
+            value: typeof v === 'number' ? v : (v as any).value ?? null,
+          };
+        }).filter((d): d is { time: UTCTimestamp; value: number } => d !== null && d.value !== null);
+        atrSeries.setData(data);
+
+        // Sync timescale
+        const mainChart = chartRef.current?.getChartInstance();
+        if (mainChart) {
+          const range = mainChart.timeScale().getVisibleLogicalRange();
+          if (range) atrChart.timeScale().setVisibleLogicalRange(range);
+
+          mainChart.timeScale().subscribeVisibleLogicalRangeChange((range: any) => {
+            if (!range) return;
+            atrChart.timeScale().setVisibleLogicalRange(range);
+          });
+        }
+      });
+    } else {
+      const atrChart = atrChartRef.current;
+      atrChart.applyOptions({
+        layout: { background: { color: colors.bg }, textColor: colors.text },
+        grid: { vertLines: { color: gridColor, style: gridStyle }, horzLines: { color: gridColor, style: gridStyle } },
+        rightPriceScale: { borderColor: colors.grid },
+      });
+    }
+
+    return () => {
+      if (atrChartRef.current) {
+        atrChartRef.current.remove();
+        atrChartRef.current = null;
+      }
+    };
+  }, [atrResult, candles, settings?.theme, settings?.gridStyle]);
+
   // Resize on container changes — important on mobile rotation.
   useEffect(() => {
     const el = containerRef.current;
@@ -420,6 +510,9 @@ export function Chart({
       }
       if (macdChartRef.current && macdContainerRef.current) {
         macdChartRef.current.resize(macdContainerRef.current.clientWidth, macdContainerRef.current.clientHeight, true);
+      }
+      if (atrChartRef.current && atrContainerRef.current) {
+        atrChartRef.current.resize(atrContainerRef.current.clientWidth, atrContainerRef.current.clientHeight, true);
       }
     });
     ro.observe(el);
@@ -479,6 +572,16 @@ export function Chart({
           <div ref={macdContainerRef} className="h-full w-full" />
           <div className="absolute top-2 left-3 z-10 text-[9px] font-bold tracking-wider text-fg-subtle uppercase pointer-events-none">
             MACD (12, 26, 9)
+          </div>
+        </div>
+      )}
+
+      {/* ATR Volatility sub-pane */}
+      {atrResult && (
+        <div className="border-border bg-bg-elev-1 relative h-[120px] overflow-hidden rounded-lg border animate-in fade-in duration-200">
+          <div ref={atrContainerRef} className="h-full w-full" />
+          <div className="absolute top-2 left-3 z-10 text-[9px] font-bold tracking-wider text-fg-subtle uppercase pointer-events-none">
+            ATR (14)
           </div>
         </div>
       )}
@@ -728,6 +831,49 @@ function createChart(lc: LcModule, container: HTMLElement, decimals: number, set
           basisSeries.setData(basisData);
           upperSeries.setData(upperData);
           lowerSeries.setData(lowerData);
+        } else if (res.kind === 'pivots') {
+          const levels = ['pp', 'r1', 'r2', 'r3', 's1', 's2', 's3'] as const;
+          const pivotColors = {
+            pp: '#94a3b8',
+            r1: '#f87171',
+            r2: '#ef4444',
+            r3: '#b91c1c',
+            s1: '#34d399',
+            s2: '#10b981',
+            s3: '#047857',
+          };
+          const pivotTitles = {
+            pp: 'PP',
+            r1: 'R1',
+            r2: 'R2',
+            r3: 'R3',
+            s1: 'S1',
+            s2: 'S2',
+            s3: 'S3',
+          };
+
+          for (const lvl of levels) {
+            const series = chart.addSeries(lc.LineSeries, {
+              color: pivotColors[lvl],
+              lineWidth: lvl === 'pp' ? 1.5 : 1,
+              lineStyle: lvl === 'pp' ? 0 : 2,
+              title: pivotTitles[lvl],
+              priceLineVisible: false,
+            });
+            indicatorLineHandles.push(series);
+
+            const data = res.values.map((v, idx) => {
+              if (!v || typeof v !== 'object' || v[lvl] === null || v[lvl] === undefined) return null;
+              const candle = currentCandles[idx];
+              if (!candle) return null;
+              return {
+                time: Math.floor(candle.t / 1000) as unknown as UTCTimestamp,
+                value: v[lvl] as number,
+              };
+            }).filter((d): d is { time: UTCTimestamp; value: number } => d !== null);
+
+            series.setData(data);
+          }
         }
       }
     },

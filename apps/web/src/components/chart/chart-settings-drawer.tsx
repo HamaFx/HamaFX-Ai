@@ -24,6 +24,8 @@ export interface ChartIndicators {
   bollinger: boolean;
   rsi: boolean;
   macd: boolean;
+  atr: boolean;
+  pivots: boolean;
 }
 
 interface ChartSettingsDrawerProps {
@@ -241,6 +243,22 @@ export function ChartSettingsDrawer({
                 />
               </div>
 
+              {/* Pivot Points */}
+              <div className="flex items-center justify-between p-3.5 border-b border-glass-edge/40">
+                <div className="flex items-center gap-3">
+                  <div className="size-2.5 rounded-full bg-cyan-500 shadow-md animate-pulse" />
+                  <div className="flex flex-col">
+                    <span className="text-sm font-semibold">Pivot Points</span>
+                    <span className="text-[10px] text-fg-muted mt-0.5">Classic daily floor-trader pivots (PP, S/R levels)</span>
+                  </div>
+                </div>
+                <Switch
+                  checked={indicators.pivots}
+                  onCheckedChange={() => toggleIndicator('pivots')}
+                  srLabel="Toggle Pivot Points"
+                />
+              </div>
+
               {/* RSI Pane */}
               <div className="flex items-center justify-between p-3.5 border-b border-glass-edge/40 bg-purple-500/5">
                 <div className="flex items-center gap-3">
@@ -258,7 +276,7 @@ export function ChartSettingsDrawer({
               </div>
 
               {/* MACD Pane */}
-              <div className="flex items-center justify-between p-3.5 bg-blue-500/5">
+              <div className="flex items-center justify-between p-3.5 border-b border-glass-edge/40 bg-blue-500/5">
                 <div className="flex items-center gap-3">
                   <div className="size-2.5 rounded-full bg-blue-400 shadow-md animate-pulse" />
                   <div className="flex flex-col">
@@ -270,6 +288,22 @@ export function ChartSettingsDrawer({
                   checked={indicators.macd}
                   onCheckedChange={() => toggleIndicator('macd')}
                   srLabel="Toggle MACD Pane"
+                />
+              </div>
+
+              {/* ATR Pane */}
+              <div className="flex items-center justify-between p-3.5 bg-yellow-500/5">
+                <div className="flex items-center gap-3">
+                  <div className="size-2.5 rounded-full bg-yellow-400 shadow-md animate-pulse" />
+                  <div className="flex flex-col">
+                    <span className="text-sm font-semibold text-yellow-200">ATR Volatility Pane</span>
+                    <span className="text-[10px] text-yellow-400/80 mt-0.5">Synchronized Average True Range (14)</span>
+                  </div>
+                </div>
+                <Switch
+                  checked={indicators.atr}
+                  onCheckedChange={() => toggleIndicator('atr')}
+                  srLabel="Toggle ATR Pane"
                 />
               </div>
 
