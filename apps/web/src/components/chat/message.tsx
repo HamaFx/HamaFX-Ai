@@ -51,8 +51,10 @@ const REGEN_MODELS: Array<{ id: string; label: string; tier: 'fast' | 'pro' }> =
 export function Message({ message, onCopy, onRegenerate, onEdit }: MessageProps) {
   const isUser = message.role === 'user';
   const isSystem = message.role === 'system';
+  const plainText = extractText(message);
   const [copied, setCopied] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [editValue, setEditValue] = useState(plainText);
 
   // Phase 7c — system messages: render planner cards but suppress
   // anything else (rolling-summary notes are internal context only).
@@ -77,10 +79,7 @@ export function Message({ message, onCopy, onRegenerate, onEdit }: MessageProps)
     return null;
   }
 
-  const plainText = extractText(message);
   const hasActions = (!isUser && (plainText.length > 0 || onRegenerate)) || (isUser && onEdit);
-
-  const [editValue, setEditValue] = useState(plainText);
 
   function copy() {
     if (!plainText) return;
