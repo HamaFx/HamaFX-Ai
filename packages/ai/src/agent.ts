@@ -269,6 +269,8 @@ export async function runChat(args: RunChatArgs) {
       AI_VISION_MODEL: env.AI_VISION_MODEL ?? 'google-vertex/gemini-2.5-pro',
       AI_SUMMARY_MODEL: env.AI_SUMMARY_MODEL,
       AI_EMBEDDING_MODEL: 'openai/text-embedding-3-small',
+      AI_FUNDAMENTAL_MODEL: env.AI_FUNDAMENTAL_MODEL,
+      AI_TECHNICAL_MODEL: env.AI_TECHNICAL_MODEL,
       MAX_DAILY_USD: env.MAX_DAILY_USD,
       LOG_PROMPTS: env.LOG_PROMPTS,
     },

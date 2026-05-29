@@ -31,6 +31,8 @@ export type ToolEnv = Pick<
   | 'AI_VISION_MODEL'
   | 'AI_SUMMARY_MODEL'
   | 'AI_EMBEDDING_MODEL'
+  | 'AI_FUNDAMENTAL_MODEL'
+  | 'AI_TECHNICAL_MODEL'
   | 'MAX_DAILY_USD'
   | 'LOG_PROMPTS'
 >;
