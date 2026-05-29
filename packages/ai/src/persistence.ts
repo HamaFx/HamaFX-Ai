@@ -82,6 +82,10 @@ export async function deleteThread(id: string): Promise<void> {
   await getDb().delete(schema.chatThreads).where(eq(schema.chatThreads.id, id));
 }
 
+export async function deleteAllThreads(): Promise<void> {
+  await getDb().delete(schema.chatThreads);
+}
+
 function rowToThread(row: typeof schema.chatThreads.$inferSelect): DbThread {
   // `title_source` is a free-text column at the DB layer; narrow it here so
   // every consumer sees the canonical `'llm' | 'fallback' | null` union.
@@ -250,6 +254,7 @@ function extractText(m: UIMessage): string {
     .trim();
   
   if (fromParts) return fromParts;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return ((m as any).content || (m as any).text || '').trim();
 }
 

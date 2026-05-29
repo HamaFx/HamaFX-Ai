@@ -59,6 +59,21 @@ export async function POST(req: Request): Promise<Response> {
     return errorResponse(err);
   }
 
+  // Parse client AI preferences if provided
+  const aiPrefsHeader = req.headers.get('X-AI-Prefs');
+  let customInstructions: string | undefined;
+  if (aiPrefsHeader) {
+    try {
+      const prefs = JSON.parse(aiPrefsHeader);
+      if (prefs.fundamentalModel) env.AI_FUNDAMENTAL_MODEL = prefs.fundamentalModel;
+      if (prefs.technicalModel) env.AI_TECHNICAL_MODEL = prefs.technicalModel;
+      if (prefs.summaryModel) env.AI_SUMMARY_MODEL = prefs.summaryModel;
+      if (prefs.customInstructions) customInstructions = prefs.customInstructions;
+    } catch (e) {
+      // ignore invalid json
+    }
+  }
+
   // Auto-Journal — the chat route used to regex-parse `Journal: …` shortcuts
   // and call `createEntry` server-side, but the same user message was then
   // forwarded to the model verbatim, which has a `log_journal` tool and
@@ -76,6 +91,7 @@ export async function POST(req: Request): Promise<Response> {
       ...(body.modelOverride !== undefined && body.modelOverride !== null
         ? { modelOverride: body.modelOverride }
         : {}),
+      customInstructions,
       env: {
         AI_GATEWAY_API_KEY: env.AI_GATEWAY_API_KEY,
         GOOGLE_GENERATIVE_AI_API_KEY: env.GOOGLE_GENERATIVE_AI_API_KEY,

@@ -64,6 +64,8 @@ export interface RunChatArgs {
   >;
   /** Optional model override (e.g. coming from thread.modelOverride). */
   modelOverride?: string | null;
+  /** Custom instructions to append to the system prompt. */
+  customInstructions?: string;
   /** Aborts streaming + tool calls when the client disconnects. */
   signal?: AbortSignal;
 }
@@ -81,7 +83,7 @@ export interface RunChatArgs {
  * `result.toUIMessageStreamResponse()`.
  */
 export async function runChat(args: RunChatArgs) {
-  const { threadId, userMessage, env, modelOverride, signal } = args;
+  const { threadId, userMessage, env, modelOverride, customInstructions, signal } = args;
   const startedAt = Date.now();
 
   // 1) Hard ceiling — atomic reservation against today's running counter.
@@ -132,6 +134,7 @@ export async function runChat(args: RunChatArgs) {
           role: m.role,
           parts: (Array.isArray(m.parts) && m.parts.length > 0
             ? m.parts
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             : [{ type: 'text', text: (m as any).content || (m as any).text || '' }]) as UIMessage['parts'],
         }) as UIMessage,
     ),
@@ -224,9 +227,13 @@ export async function runChat(args: RunChatArgs) {
   // we just record `planRequired` in telemetry so routing decisions are
   // auditable today.
   const baseSystem = buildSystemPrompt(snapshot);
-  const systemPrompt = compaction.extraSystem
+  let systemPrompt = compaction.extraSystem
     ? `${compaction.extraSystem}\n\n${baseSystem}`
     : baseSystem;
+
+  if (customInstructions && customInstructions.trim().length > 0) {
+    systemPrompt += `\n\n<USER_CUSTOM_INSTRUCTIONS>\n${customInstructions}\n</USER_CUSTOM_INSTRUCTIONS>`;
+  }
 
   // Phase 3 hardening §1 — `withToolContext` replaces the per-module
   // setter pattern (`setAnalyzeChartImageContext`,

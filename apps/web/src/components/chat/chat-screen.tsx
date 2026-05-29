@@ -77,14 +77,21 @@ export function ChatScreen({
           const override = modelOverrideRef.current;
           modelOverrideRef.current = null;
           const csrf = getCsrfToken();
+          const prefsJson = typeof window !== 'undefined' ? window.localStorage.getItem('hamafx:ai-prefs') : null;
+          
           const reqBody = {
             modelOverride: override ?? undefined,
             threadId,
             id,
             messages,
           };
-          return csrf
-            ? { headers: { 'X-CSRF-Token': csrf }, body: reqBody }
+
+          const headers: Record<string, string> = {};
+          if (csrf) headers['X-CSRF-Token'] = csrf;
+          if (prefsJson) headers['X-AI-Prefs'] = prefsJson;
+
+          return Object.keys(headers).length > 0
+            ? { headers, body: reqBody }
             : { body: reqBody };
         },
       }),

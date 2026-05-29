@@ -36,6 +36,7 @@ export {
   createThread,
   updateThreadTitle,
   deleteThread,
+  deleteAllThreads,
   listMessages,
   appendUserMessage,
   appendAssistantMessage,

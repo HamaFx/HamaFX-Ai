@@ -4,13 +4,14 @@
 // bookmarks and prefs in localStorage; this card lets the user clear
 // individual keys or wipe everything stored on this device.
 
-import { Bookmark, RotateCcw, Trash2 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { Bookmark, MessageSquare, RotateCcw, Trash2 } from 'lucide-react';
+import { useEffect, useState, useTransition } from 'react';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
 import { useConfirm } from '@/components/ui/confirm-drawer';
 
+import { clearChatHistoryAction } from '../actions';
 import { SettingsRow } from './settings-row';
 
 const KEY_BOOKMARKS = 'hamafx:news:bookmarks';
@@ -41,9 +42,10 @@ function readCounts(): Counts {
   return { bookmarks, storage };
 }
 
-export function DataCard() {
+  export function DataCard() {
   const [counts, setCounts] = useState<Counts>({ bookmarks: 0, storage: 0 });
   const [confirmEl, confirm] = useConfirm();
+  const [isPending, startTransition] = useTransition();
 
   useEffect(() => {
     setCounts(readCounts());
@@ -53,6 +55,25 @@ export function DataCard() {
     window.addEventListener('storage', onStorage);
     return () => window.removeEventListener('storage', onStorage);
   }, []);
+
+  async function clearChatHistory() {
+    const ok = await confirm({
+      title: 'Clear chat history?',
+      description: 'This will permanently delete all conversations from the server. This action cannot be undone.',
+      confirmLabel: 'Delete all',
+      tone: 'danger',
+    });
+    if (!ok) return;
+
+    startTransition(async () => {
+      const result = await clearChatHistoryAction();
+      if (result.ok) {
+        toast.success('Chat history cleared');
+      } else {
+        toast.error('Failed to clear chat history', { description: result.error });
+      }
+    });
+  }
 
   async function clearBookmarks() {
     const ok = await confirm({
@@ -111,6 +132,26 @@ export function DataCard() {
           Data & cache
         </h2>
       </header>
+
+      <SettingsRow
+        icon={<MessageSquare className="size-4" />}
+        label="Chat history"
+        description="Permanently delete all server-side conversations"
+        action={
+          <Button
+            type="button"
+            size="sm"
+            variant="danger"
+            onClick={() => void clearChatHistory()}
+            disabled={isPending}
+          >
+            <Trash2 className="size-3.5" />
+            Delete all
+          </Button>
+        }
+      />
+
+      <RowDivider />
 
       <SettingsRow
         icon={<Bookmark className="size-4" />}

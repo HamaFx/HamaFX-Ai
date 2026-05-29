@@ -4,6 +4,7 @@ import { PageHeader } from '@/components/layout/page-header';
 
 import { AboutCard } from './_components/about-card';
 import { AgentCard } from './_components/agent-card';
+import { AIPrefsCard } from './_components/ai-prefs-card';
 import { DataCard } from './_components/data-card';
 import { NotificationsCard } from './_components/notifications-card';
 import { PreferencesCard } from './_components/preferences-card';
@@ -26,6 +27,7 @@ export default function SettingsPage() {
       <SystemStatusCard />
       <UsageGlance />
       <AgentCard />
+      <AIPrefsCard />
       <NotificationsCard />
       <PreferencesCard />
       <DataCard />
