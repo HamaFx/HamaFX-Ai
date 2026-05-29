@@ -236,7 +236,7 @@ function stripPartsForStorage(parts: unknown): unknown {
 /** Best-effort plain-text extraction from a UIMessage — used for search/title. */
 function extractText(m: UIMessage): string {
   const parts = m.parts ?? [];
-  return parts
+  const fromParts = parts
     .map((p) => {
       if (typeof p === 'object' && p !== null && 'type' in p) {
         if ((p as { type: string }).type === 'text') {
@@ -248,6 +248,9 @@ function extractText(m: UIMessage): string {
     .filter(Boolean)
     .join('\n')
     .trim();
+  
+  if (fromParts) return fromParts;
+  return ((m as any).content || (m as any).text || '').trim();
 }
 
 // ---------------------------------------------------------------------------

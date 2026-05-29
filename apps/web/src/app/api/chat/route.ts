@@ -29,6 +29,7 @@ const BodySchema = z.object({
       z.object({
         id: z.string(),
         role: z.enum(['user', 'assistant', 'system']),
+        content: z.string().default(''),
         parts: z.array(z.unknown()).default([]),
       }),
     )

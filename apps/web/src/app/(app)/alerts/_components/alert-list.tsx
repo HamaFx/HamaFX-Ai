@@ -1,8 +1,5 @@
 'use client';
 
-// Alerts list with FAB → Drawer for create. Mobile-first card layout:
-// p-4 (16px), gap-3 (12) between status badge and content, 44×44 action
-// buttons in a vertical stack on the right.
 import type { Alert } from '@hamafx/shared';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
@@ -11,8 +8,10 @@ import {
   Bell,
   BellOff,
   BellRing,
+  Mail,
   Plus,
   RotateCw,
+  Send,
   Trash2,
   TrendingUp,
 } from 'lucide-react';
@@ -30,6 +29,7 @@ import {
 } from '@/components/ui/drawer';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Fab } from '@/components/ui/fab';
+import { Segmented } from '@/components/ui/segmented';
 import { StaleIndicator } from '@/components/ui/stale-indicator';
 import { Tooltip } from '@/components/ui/tooltip';
 import { cn } from '@/lib/cn';
@@ -42,6 +42,7 @@ export const ALERTS_QUERY_KEY = ['alerts'] as const;
 export function AlertList() {
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
+  const [filter, setFilter] = useState<'all' | 'active' | 'past'>('all');
   const [confirmEl, confirm] = useConfirm();
 
   const { data, isLoading, isFetching, isError, error } = useQuery<{ alerts: Alert[] }>({
@@ -92,15 +93,35 @@ export function AlertList() {
     if (ok) remove.mutate(alert.id);
   }
 
+  const filteredAlerts = data?.alerts.filter((a) => {
+    if (filter === 'active') return a.active && !a.firedAt;
+    if (filter === 'past') return !!a.firedAt || !a.active;
+    return true;
+  });
+
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex items-center justify-end">
+      <div className="flex items-center justify-between">
+        <div className="w-[200px]">
+          <Segmented<'all' | 'active' | 'past'>
+            value={filter}
+            onChange={setFilter}
+            options={[
+              { value: 'all', label: 'All' },
+              { value: 'active', label: 'Active' },
+              { value: 'past', label: 'Past' },
+            ]}
+            variant="solid"
+            size="sm"
+          />
+        </div>
         <StaleIndicator isFetching={isFetching && !isLoading} />
       </div>
+
       {isLoading ? (
-        <p className="text-fg-muted text-sm">Loading…</p>
+        <p className="text-fg-muted text-sm px-1">Loading…</p>
       ) : isError ? (
-        <p className="text-bear text-sm">Failed to load: {(error as Error)?.message}</p>
+        <p className="text-bear text-sm px-1">Failed to load: {(error as Error)?.message}</p>
       ) : data?.alerts.length === 0 ? (
         <EmptyState
           tone="brand"
@@ -114,9 +135,13 @@ export function AlertList() {
             </Button>
           }
         />
+      ) : filteredAlerts?.length === 0 ? (
+        <div className="py-12 text-center text-sm text-fg-muted">
+          No {filter} alerts found.
+        </div>
       ) : (
         <ul className="flex flex-col gap-3">
-          {data?.alerts.map((a) => (
+          {filteredAlerts?.map((a) => (
             <AlertRow
               key={a.id}
               alert={a}
@@ -162,43 +187,63 @@ interface AlertRowProps {
 function AlertRow({ alert, onToggle, onDelete }: AlertRowProps) {
   const RuleIcon = ruleIcon(alert);
   const StatusIcon = alert.active ? Bell : alert.firedAt ? BellRing : BellOff;
-  const statusTone = alert.active ? 'text-bull' : alert.firedAt ? 'text-warn' : 'text-fg-subtle';
+  const statusTone = alert.active ? 'text-brand' : alert.firedAt ? 'text-warn' : 'text-fg-subtle';
 
   return (
     <li
       className={cn(
-        'card-premium flex items-start gap-3 p-4 transition-opacity',
-        !alert.active && 'opacity-70',
+        'card-premium flex items-start gap-3 p-4 transition-all duration-200 hover:shadow-lg',
+        !alert.active && 'opacity-60 saturate-50',
       )}
     >
-      <span
-        aria-hidden
-        className={cn(
-          'inline-flex size-12 shrink-0 items-center justify-center rounded-xl',
-          statusTone,
+      <div className="relative">
+        <span
+          aria-hidden
+          className={cn(
+            'inline-flex size-12 shrink-0 items-center justify-center rounded-2xl',
+            statusTone,
+          )}
+          style={{
+            background: alert.active
+              ? 'var(--gradient-brand-soft)'
+              : alert.firedAt
+                ? 'oklch(82% 0.16 80 / 0.15)'
+                : 'oklch(70% 0.02 265 / 0.1)',
+            boxShadow: 'var(--shadow-inset-edge-soft)',
+          }}
+        >
+          <StatusIcon className="size-5" strokeWidth={1.75} />
+        </span>
+        {alert.active && !alert.firedAt && (
+          <span className="absolute -top-1 -right-1 flex h-3 w-3">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-3 w-3 bg-brand border-2 border-bg"></span>
+          </span>
         )}
-        style={{
-          background: alert.active
-            ? 'oklch(72% 0.2 152 / 0.15)'
-            : alert.firedAt
-              ? 'oklch(82% 0.16 80 / 0.15)'
-              : 'oklch(70% 0.02 265 / 0.1)',
-          boxShadow: 'var(--shadow-inset-edge-soft)',
-        }}
-      >
-        <StatusIcon className="size-5" strokeWidth={2} />
-      </span>
+      </div>
 
-      <div className="min-w-0 flex-1">
-        <div className="text-fg flex items-center gap-2 text-sm font-semibold tabular-nums">
-          <RuleIcon className="text-fg-muted size-4 shrink-0" aria-hidden="true" />
-          <span className="truncate">{describe(alert)}</span>
+      <div className="min-w-0 flex-1 py-0.5">
+        <div className="flex items-center gap-2">
+          <div className="text-fg flex items-center gap-1.5 text-sm font-semibold tabular-nums">
+            <RuleIcon className="text-fg-muted size-4 shrink-0" aria-hidden="true" />
+            <span className="truncate">{describe(alert)}</span>
+          </div>
+          <div className="flex items-center gap-1 ml-1.5">
+            {alert.channels.includes('email') && (
+              <Mail className="text-fg-muted size-3.5" strokeWidth={2} />
+            )}
+            {alert.channels.includes('telegram') && (
+              <Send className="text-brand size-3.5" strokeWidth={2} />
+            )}
+          </div>
         </div>
-        <p className="text-fg-subtle mt-1.5 truncate text-xs">
+        <p className="text-fg-subtle mt-1.5 truncate text-xs font-medium">
           {alert.firedAt
-            ? `fired ${formatRelative(alert.firedAt)}`
-            : `created ${formatRelative(alert.createdAt)}`}
-          {alert.note ? ` · ${alert.note}` : ''}
+            ? `Triggered ${formatRelative(alert.firedAt)}`
+            : alert.active 
+              ? `Watching since ${formatRelative(alert.createdAt)}`
+              : `Paused`}
+          {alert.note ? <span className="text-fg-muted"> · {alert.note}</span> : ''}
         </p>
       </div>
 
@@ -208,7 +253,7 @@ function AlertRow({ alert, onToggle, onDelete }: AlertRowProps) {
             type="button"
             onClick={onToggle}
             aria-label={alert.active ? 'Pause alert' : 'Re-arm alert'}
-            className="text-fg-muted hover:text-fg hover:bg-bg-elev-2 inline-flex size-11 items-center justify-center rounded-full transition-colors"
+            className="text-fg-muted hover:text-fg hover:bg-bg-elev-2 inline-flex size-10 items-center justify-center rounded-full transition-colors"
           >
             {alert.active ? <BellOff className="size-4" /> : <RotateCw className="size-4" />}
           </button>
@@ -218,7 +263,7 @@ function AlertRow({ alert, onToggle, onDelete }: AlertRowProps) {
             type="button"
             onClick={onDelete}
             aria-label="Delete alert"
-            className="text-bear/70 hover:text-bear hover:bg-bear/10 inline-flex size-11 items-center justify-center rounded-full transition-colors"
+            className="text-bear/70 hover:text-bear hover:bg-bear/10 inline-flex size-10 items-center justify-center rounded-full transition-colors"
           >
             <Trash2 className="size-4" />
           </button>

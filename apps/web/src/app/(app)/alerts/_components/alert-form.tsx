@@ -39,6 +39,8 @@ export function AlertForm({ initialSymbol, onCreated }: AlertFormProps) {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const [channels, setChannels] = useState<('email'|'telegram')[]>(['email']);
+
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setSubmitting(true);
@@ -71,7 +73,7 @@ export function AlertForm({ initialSymbol, onCreated }: AlertFormProps) {
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
           rule,
-          channels: ['email'],
+          channels: channels.length > 0 ? channels : ['email'],
           note: note.trim() || null,
         }),
       });
@@ -184,6 +186,36 @@ export function AlertForm({ initialSymbol, onCreated }: AlertFormProps) {
           inputMode="decimal"
           placeholder={symbol === 'XAUUSD' ? 'e.g. 2400' : 'e.g. 1.0850'}
         />
+      </div>
+
+      <div className="flex flex-col gap-2">
+        <span className="text-fg-subtle text-[11px] uppercase tracking-wide">Delivery Methods</span>
+        <div className="flex gap-4">
+          <label className="flex items-center gap-2 text-sm text-fg cursor-pointer">
+            <input
+              type="checkbox"
+              className="accent-brand size-4 cursor-pointer"
+              checked={channels.includes('email')}
+              onChange={(e) => {
+                const c = 'email';
+                setChannels(e.target.checked ? [...channels, c] : channels.filter((x) => x !== c));
+              }}
+            />
+            Email
+          </label>
+          <label className="flex items-center gap-2 text-sm text-fg cursor-pointer">
+            <input
+              type="checkbox"
+              className="accent-brand size-4 cursor-pointer"
+              checked={channels.includes('telegram')}
+              onChange={(e) => {
+                const c = 'telegram';
+                setChannels(e.target.checked ? [...channels, c] : channels.filter((x) => x !== c));
+              }}
+            />
+            Telegram
+          </label>
+        </div>
       </div>
 
       <div className="flex flex-col gap-2">

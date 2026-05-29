@@ -130,7 +130,9 @@ export async function runChat(args: RunChatArgs) {
         ({
           id: m.id,
           role: m.role,
-          parts: (m.parts ?? [{ type: 'text', text: m.content }]) as UIMessage['parts'],
+          parts: (Array.isArray(m.parts) && m.parts.length > 0
+            ? m.parts
+            : [{ type: 'text', text: (m as any).content || (m as any).text || '' }]) as UIMessage['parts'],
         }) as UIMessage,
     ),
   );

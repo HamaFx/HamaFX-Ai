@@ -39,7 +39,12 @@ export async function buildLiveSnapshot(
   await Promise.all(
     SYMBOLS.map(async (s) => {
       try {
-        prices[s] = await getPrice(s, opts.signal ? { signal: opts.signal } : {});
+        const timeoutMs = 800;
+        const fetchPromise = getPrice(s, opts.signal ? { signal: opts.signal } : {});
+        const timeoutPromise = new Promise<never>((_, reject) => 
+          setTimeout(() => reject(new Error('timeout')), timeoutMs)
+        );
+        prices[s] = await Promise.race([fetchPromise, timeoutPromise]);
       } catch {
         // Swallow — missing prices are signalled to the model by absence.
       }

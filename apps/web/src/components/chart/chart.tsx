@@ -187,7 +187,14 @@ function readThemeColors(el: HTMLElement) {
 function createChart(lc: LcModule, container: HTMLElement, decimals: number): ChartHandle {
   const colors = readThemeColors(container);
 
-  const chart = lc.createChart(container, {
+  // Handle ES module interop safely for Next.js dynamic imports
+  const createChartFn = ('createChart' in lc) 
+    ? lc.createChart 
+    : ((lc as any).default?.createChart as any);
+
+  if (!createChartFn) throw new Error("Could not find createChart function in imported module");
+
+  const chart = createChartFn(container, {
     layout: {
       background: { color: colors.bg },
       textColor: colors.text,
