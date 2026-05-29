@@ -129,7 +129,7 @@ export function NavDrawer() {
             <div className="flex items-center gap-3 px-5 pt-6 pb-5">
               <span
                 aria-hidden="true"
-                className="inline-flex size-11 items-center justify-center rounded-2xl"
+                className="inline-flex size-11 items-center justify-center rounded-full"
                 style={{
                   backgroundImage: 'var(--gradient-brand)',
                   boxShadow: 'var(--shadow-brand-press-strong)',
@@ -173,11 +173,11 @@ export function NavDrawer() {
             <button
               type="button"
               onClick={() => void logout()}
-              className="text-fg-muted hover:text-fg hover:bg-bg-elev-2 flex min-h-[48px] w-full items-center gap-3 rounded-xl px-3 text-left text-sm font-medium transition-colors"
+              className="text-fg-muted hover:text-fg hover:bg-bg-elev-2 flex min-h-[48px] w-full items-center gap-3 rounded-full px-3 text-left text-sm font-medium transition-colors"
             >
               <span
                 aria-hidden="true"
-                className="text-fg-muted inline-flex size-9 items-center justify-center rounded-lg"
+                className="text-fg-muted inline-flex size-9 items-center justify-center rounded-full"
                 style={{ background: 'oklch(20% 0 0 / 0.6)' }}
               >
                 <LogOut className="size-4" strokeWidth={2} />
@@ -215,14 +215,14 @@ function NavLink({ item, active }: { item: NavItem; active: boolean }) {
         href={item.href}
         aria-current={active ? 'page' : undefined}
         className={cn(
-          'group/nav relative flex min-h-[56px] items-center gap-3 rounded-xl px-3 transition-colors',
-          active ? 'bg-bg-elev-3 text-fg' : 'text-fg-muted hover:bg-bg-elev-2 hover:text-fg',
+          'group/nav relative flex min-h-[56px] items-center gap-3 rounded-full px-3 transition-colors',
+          active ? 'bg-bg-elev-3 text-fg shadow-sm' : 'text-fg-muted hover:bg-bg-elev-2 hover:text-fg',
         )}
       >
         <span
           aria-hidden="true"
           className={cn(
-            'inline-flex size-9 items-center justify-center rounded-lg transition-colors',
+            'inline-flex size-9 items-center justify-center rounded-full transition-colors',
             active ? 'text-brand' : 'text-fg-muted group-hover/nav:text-fg',
           )}
           style={{

@@ -71,6 +71,12 @@ export function PriceTile({ symbol, className }: PriceTileProps) {
 - Group classes using the official ordering plugin: layout → flex/grid → spacing → sizing → typography → background → border → effects → animation.
 - Never use raw color values; always semantic tokens (e.g., `bg-bg-elev-1`, `text-fg-muted`).
 
+## UI Shapes and Design System
+
+- **Unified Box**: Input surfaces (like the Chat Composer) must be encapsulated within a single cohesive, rounded container (`rounded-[28px]` or `rounded-3xl`). Action rows should sit cleanly at the bottom of the container.
+- **Dynamic Island**: Headers and sticky context containers should center important metadata (like titles and AI status) in a premium, translucent pill (`rounded-full` with glass effects).
+- **Circular Utility Icons**: All utility buttons and navigation icons must use perfectly circular hit targets (`rounded-full`) rather than standard squares with rounded corners, matching modern iPadOS/iOS native aesthetics.
+
 ## Zod schemas
 
 - Always export both the schema and the inferred type:

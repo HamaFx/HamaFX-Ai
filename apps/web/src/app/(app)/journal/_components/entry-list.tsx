@@ -182,7 +182,7 @@ function EntryRow({
               aria-label="Delete entry"
               onClick={() => void remove()}
               disabled={busy}
-              className="text-bear/70 hover:text-bear hover:bg-bear/10 inline-flex size-11 items-center justify-center rounded-lg transition-colors disabled:opacity-50"
+              className="text-bear/70 hover:text-bear hover:bg-bear/10 inline-flex size-11 items-center justify-center rounded-full transition-colors disabled:opacity-50"
             >
               <Trash2 className="size-4" />
             </button>

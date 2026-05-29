@@ -90,17 +90,17 @@ export function ChartView({ symbol }: { symbol: Symbol }) {
 
   return (
     <div className="-mx-4 flex flex-col">
-      {/* Sticky glass sub-header — mobile-first stacked layout. */}
-      <header
-        className="glass-subtle sticky z-20 border-b border-divider"
+      {/* Sticky floating sub-header (Dynamic Island style) */}
+      <div
+        className="sticky z-20 px-4 pt-3 pb-2 transition-all"
         style={{ top: 'calc(var(--topbar-h) + env(safe-area-inset-top))' }}
       >
-        <div className="flex flex-col gap-3 px-4 py-3">
-          <div className="flex flex-wrap items-center justify-between gap-3">
+        <header className="glass-strong border-divider/30 flex flex-col gap-3 rounded-[28px] border p-3 shadow-sm backdrop-blur-xl">
+          <div className="flex flex-wrap items-center justify-between gap-3 px-1">
             <SymbolPicker active={symbol} />
             <PriceTag symbol={symbol} referencePrice={referenceClose} />
           </div>
-          <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="flex flex-wrap items-center justify-between gap-2 px-1">
             <div className="scrollbar-hide -mx-1 flex-1 overflow-x-auto px-1">
               <TimeframePicker value={tf} onChange={setTf} />
             </div>
@@ -112,7 +112,7 @@ export function ChartView({ symbol }: { symbol: Symbol }) {
                   <Link
                     href={`/chart/${symbol}/pro?tf=${tf}`}
                     aria-label="Pro chart"
-                    className="glass-subtle text-fg-muted hover:text-fg focus-visible:ring-brand inline-flex size-11 items-center justify-center rounded-lg focus:outline-none focus-visible:ring-2"
+                    className="glass-subtle text-fg-muted hover:text-fg focus-visible:ring-brand inline-flex size-11 items-center justify-center rounded-full focus:outline-none focus-visible:ring-2"
                   >
                     <Maximize2 className="size-4" />
                   </Link>
@@ -120,8 +120,8 @@ export function ChartView({ symbol }: { symbol: Symbol }) {
               ) : null}
             </div>
           </div>
-        </div>
-      </header>
+        </header>
+      </div>
 
       <div className="flex flex-col gap-4 px-4 py-4">
         {isLoading ? (

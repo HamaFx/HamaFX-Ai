@@ -97,8 +97,7 @@ Implementation: `vaul` Drawer with `direction="left"`, mounted once in `(app)/la
 
 ```
 ┌────────────────────────────────────────────┐
-│ [☰]   New conversation [GOLD]   [+] [⋯]    │  ChatTopBar (h=56, glass)
-│       HamaFX-Ai copilot                    │
+│ [☰]   ( ✦ HamaFX-Ai copilot )   [+] [⋯]    │  ChatTopBar (h=56, glass, dynamic island)
 ├────────────────────────────────────────────┤
 │                                            │
 │           ✦                                │  Empty state: 80×80 sparkle
@@ -117,15 +116,20 @@ Implementation: `vaul` Drawer with `direction="left"`, mounted once in `(app)/la
 │  └────────────────┘            │            │
 │                                            │
 ├────────────────────────────────────────────┤
-│ [📷]  Type a message…   [🎤]  [↑/■]        │  Composer (sticky, glass)
-│   Enter to send · Shift+Enter for new line │
+│ ┌────────────────────────────────────────┐ │
+│ │ [📷]                     [🎤] [↑/■] │ │
+│ │ Type a message…                        │ │
+│ └────────────────────────────────────────┘ │  Composer (Unified Box, floating pill)
 └────────────────────────────────────────────┘
 ```
 
 Tool calls render as **typed inline parts** via `packages/ai/src/tools/*` ↔ `apps/web/src/components/chat/parts/*`; see `07-ai-agent.md`.
 
-### Chat features (Phase 5–6)
+### Chat features (Phase 6 Modernization)
 
+- **Unified Box Composer**: The chat input is a single, encapsulating rounded container (`rounded-[28px]`). The textarea spans full width at the top, and utility icons (Attach, Voice, Send) sit in a dedicated bottom row, improving readability for long prompts.
+- **Dynamic Island Header**: The chat title and AI status are enclosed in a perfectly centered `rounded-full` pill in the header, keeping the context strongly visually grounded.
+- **Circular Utility Iconography**: Header action buttons (Menu, New Chat, More) and composer utilities use perfectly circular `rounded-full` tap targets, mirroring modern native iOS aesthetics.
 - **Stop streaming**: send button morphs into a Stop button while a turn is in flight (wired to AI SDK's `stop()`).
 - **Regenerate**: hover/focus the last assistant message to reveal a Regenerate affordance (drives `regenerate()`).
 - **Light Markdown**: bold / italic / inline-code / fenced blocks (with copy) / bullets / numbered lists / https links. DOM-built in `chat/parts/text.tsx`, no `dangerouslySetInnerHTML` — no injection sink.

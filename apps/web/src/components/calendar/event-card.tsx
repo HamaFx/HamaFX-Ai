@@ -71,7 +71,7 @@ export function EventCard({ event }: EventCardProps) {
   return (
     <article
       className={cn(
-        'card-premium relative overflow-hidden transition-colors duration-200',
+        'card-premium relative overflow-hidden rounded-3xl transition-colors duration-200',
         isImminent && 'ring-warn/30 ring-1',
       )}
     >
@@ -87,7 +87,7 @@ export function EventCard({ event }: EventCardProps) {
         <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] tabular-nums">
           <span
             className={cn(
-              'inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 font-bold uppercase ring-1',
+              'inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-bold uppercase ring-1 text-[10px]',
               importance.chipBg,
               importance.chipText,
             )}
@@ -131,7 +131,7 @@ export function EventCard({ event }: EventCardProps) {
         <div className="border-divider/60 flex items-center justify-between gap-2 border-t px-3 py-2">
           <Link
             href={`/chat?prompt=${askPrompt}`}
-            className="text-fg-muted hover:text-brand inline-flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-xs font-medium transition-colors"
+            className="text-fg-muted hover:text-brand inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-colors"
           >
             <Sparkles className="size-3.5" />
             Ask AI
@@ -290,7 +290,7 @@ function RemindButton({ event }: { event: EconomicEvent }) {
       disabled={armed}
       aria-pressed={armed}
       className={cn(
-        'inline-flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-xs font-medium transition-colors',
+        'inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-colors',
         armed
           ? 'text-brand bg-brand/10'
           : 'text-fg-muted hover:text-fg hover:bg-bg-elev-2',

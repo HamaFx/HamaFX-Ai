@@ -142,7 +142,7 @@ export function AlertForm({ initialSymbol, onCreated }: AlertFormProps) {
                 type="button"
                 onClick={() => setIndicator(ind)}
                 className={cn(
-                  'border-border inline-flex min-h-[44px] items-center justify-center rounded-lg border px-3 text-xs font-medium transition-colors',
+                  'border-border inline-flex min-h-[44px] items-center justify-center rounded-full border px-4 text-xs font-medium transition-colors',
                   indicator === ind
                     ? 'bg-brand text-brand-fg border-brand'
                     : 'bg-bg-elev-2 text-fg-muted hover:text-fg',

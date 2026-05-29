@@ -112,7 +112,7 @@ export async function SystemStatusCard() {
             <span
               aria-hidden="true"
               className={cn(
-                'inline-flex size-7 shrink-0 items-center justify-center rounded-lg',
+                'inline-flex size-7 shrink-0 items-center justify-center rounded-full',
                 c.ready
                   ? 'bg-bull/15 text-bull'
                   : 'bg-bg-elev-2 text-fg-subtle',

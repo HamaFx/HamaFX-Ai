@@ -41,7 +41,7 @@ export function SettingsRow({
       {icon ? (
         <span
           aria-hidden="true"
-          className="text-fg-muted inline-flex size-9 shrink-0 items-center justify-center rounded-lg"
+          className="text-fg-muted inline-flex size-9 shrink-0 items-center justify-center rounded-full"
           style={{
             background: iconColor,
             boxShadow: 'var(--shadow-inset-edge-soft)',

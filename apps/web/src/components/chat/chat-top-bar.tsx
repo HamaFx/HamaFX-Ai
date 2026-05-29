@@ -109,7 +109,7 @@ export function ChatTopBar({ threadId, title, pinnedSymbol, threads, isStreaming
 
   return (
     <header
-      className="glass-strong sticky top-0 z-30"
+      className="glass-strong sticky top-0 z-30 border-b border-divider/30 shadow-sm transition-all duration-300"
       style={{ paddingTop: 'env(safe-area-inset-top)' }}
     >
       <div
@@ -118,27 +118,27 @@ export function ChatTopBar({ threadId, title, pinnedSymbol, threads, isStreaming
       >
         <NavTrigger />
 
-        {/* Center: title + status. min-w-0 + flex-1 + truncate makes long
-            LLM-generated titles ellipsize cleanly instead of pushing the
-            right-side controls off the edge. */}
-        <div className="flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5">
-          <div className="flex max-w-full items-center gap-1.5">
-            <h1 className="text-fg truncate text-sm font-semibold tracking-tight">{title}</h1>
-            {pinnedSymbol ? (
-              <span className="bg-brand/15 text-brand ring-brand/30 shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tabular-nums ring-1">
-                {pinnedSymbol}
-              </span>
-            ) : null}
+        {/* Center "Dynamic Island": Encapsulates title + status */}
+        <div className="flex min-w-0 flex-1 items-center justify-center">
+          <div className="bg-bg-elev-1/40 ring-divider/50 shadow-sm backdrop-blur-md flex max-w-[90%] flex-col items-center justify-center rounded-full px-4 py-1 ring-1">
+            <div className="flex max-w-full items-center gap-1.5">
+              <h1 className="text-fg truncate text-[13px] font-semibold tracking-tight">{title}</h1>
+              {pinnedSymbol ? (
+                <span className="bg-brand/15 text-brand ring-brand/30 shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tabular-nums ring-1">
+                  {pinnedSymbol}
+                </span>
+              ) : null}
+            </div>
+            <p className="text-fg-subtle text-[10px] tabular-nums">
+              {isStreaming ? (
+                <span className="text-brand inline-flex items-center gap-1 font-medium">
+                  <Sparkles className="size-2.5 animate-pulse" /> thinking…
+                </span>
+              ) : (
+                'HamaFX-Ai copilot'
+              )}
+            </p>
           </div>
-          <p className="text-fg-subtle text-[11px] tabular-nums">
-            {isStreaming ? (
-              <span className="text-brand inline-flex items-center gap-1">
-                <Sparkles className="size-3 animate-pulse" /> thinking…
-              </span>
-            ) : (
-              'HamaFX-Ai copilot'
-            )}
-          </p>
         </div>
 
         <Tooltip label="New chat" side="bottom">
@@ -147,7 +147,7 @@ export function ChatTopBar({ threadId, title, pinnedSymbol, threads, isStreaming
             onClick={newChat}
             disabled={pending}
             aria-label="New chat"
-            className="text-fg-muted hover:text-fg hover:bg-bg-elev-2 active:bg-bg-elev-3 inline-flex size-11 shrink-0 items-center justify-center rounded-xl transition-colors disabled:opacity-50"
+            className="text-fg-muted hover:text-fg hover:bg-bg-elev-2 active:bg-bg-elev-3 inline-flex size-11 shrink-0 items-center justify-center rounded-full transition-colors disabled:opacity-50"
           >
             {pending ? <Loader2 className="size-5 animate-spin" /> : <Plus className="size-5" />}
           </button>
@@ -160,7 +160,7 @@ export function ChatTopBar({ threadId, title, pinnedSymbol, threads, isStreaming
             aria-label="Conversation menu"
             aria-expanded={menuOpen}
             aria-haspopup="menu"
-            className="text-fg-muted hover:text-fg hover:bg-bg-elev-2 active:bg-bg-elev-3 inline-flex size-11 shrink-0 items-center justify-center rounded-xl transition-colors"
+            className="text-fg-muted hover:text-fg hover:bg-bg-elev-2 active:bg-bg-elev-3 inline-flex size-11 shrink-0 items-center justify-center rounded-full transition-colors"
           >
             <MoreHorizontal className="size-5" />
           </button>

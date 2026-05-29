@@ -208,7 +208,7 @@ function AlertRow({ alert, onToggle, onDelete }: AlertRowProps) {
             type="button"
             onClick={onToggle}
             aria-label={alert.active ? 'Pause alert' : 'Re-arm alert'}
-            className="text-fg-muted hover:text-fg hover:bg-bg-elev-2 inline-flex size-11 items-center justify-center rounded-lg transition-colors"
+            className="text-fg-muted hover:text-fg hover:bg-bg-elev-2 inline-flex size-11 items-center justify-center rounded-full transition-colors"
           >
             {alert.active ? <BellOff className="size-4" /> : <RotateCw className="size-4" />}
           </button>
@@ -218,7 +218,7 @@ function AlertRow({ alert, onToggle, onDelete }: AlertRowProps) {
             type="button"
             onClick={onDelete}
             aria-label="Delete alert"
-            className="text-bear/70 hover:text-bear hover:bg-bear/10 inline-flex size-11 items-center justify-center rounded-lg transition-colors"
+            className="text-bear/70 hover:text-bear hover:bg-bear/10 inline-flex size-11 items-center justify-center rounded-full transition-colors"
           >
             <Trash2 className="size-4" />
           </button>

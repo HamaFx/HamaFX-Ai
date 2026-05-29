@@ -36,7 +36,7 @@ export function TopBar({ title, right }: TopBarProps) {
   return (
     <header
       className={cn(
-        'glass-strong sticky top-0 z-30 border-b border-divider',
+        'glass-strong sticky top-0 z-30 border-b border-divider/40 shadow-sm',
         'pt-[env(safe-area-inset-top)]',
       )}
     >

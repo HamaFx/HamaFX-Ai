@@ -21,7 +21,7 @@ export function NavTrigger() {
       type="button"
       aria-label="Open menu"
       onClick={() => setOpen(true)}
-      className="text-fg-muted hover:text-fg hover:bg-bg-elev-2 active:bg-bg-elev-3 inline-flex size-11 shrink-0 items-center justify-center rounded-xl transition-colors"
+      className="text-fg-muted hover:text-fg hover:bg-bg-elev-2 active:bg-bg-elev-3 inline-flex size-11 shrink-0 items-center justify-center rounded-full transition-colors"
     >
       <Menu className="size-5" />
     </button>

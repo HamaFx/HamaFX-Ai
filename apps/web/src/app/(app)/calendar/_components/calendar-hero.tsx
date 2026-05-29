@@ -45,14 +45,14 @@ export function CalendarHero({ events }: CalendarHeroProps) {
   return (
     <section
       aria-label="Calendar overview"
-      className="card-premium relative flex flex-col gap-4 overflow-hidden p-4"
+      className="card-premium relative flex flex-col gap-4 overflow-hidden rounded-[28px] p-4"
     >
       {/* Countdown row */}
       {nextHigh ? (
         <div className="flex items-start gap-3">
           <span
             aria-hidden="true"
-            className="text-bear inline-flex size-12 shrink-0 items-center justify-center rounded-2xl"
+            className="text-bear inline-flex size-12 shrink-0 items-center justify-center rounded-full"
             style={{
               background: 'oklch(70% 0.22 25 / 0.15)',
               boxShadow: 'var(--shadow-inset-edge-soft)',
@@ -76,7 +76,7 @@ export function CalendarHero({ events }: CalendarHeroProps) {
             href={`/chat?prompt=${encodeURIComponent(
               `What does ${nextHigh.title} mean for ${nextHigh.currency ?? 'the dollar'} and gold?`,
             )}`}
-            className="text-fg-muted hover:text-brand active:bg-bg-elev-3 inline-flex size-9 shrink-0 items-center justify-center rounded-lg transition-colors"
+            className="text-fg-muted hover:text-brand active:bg-bg-elev-3 inline-flex size-9 shrink-0 items-center justify-center rounded-full transition-colors"
             aria-label="Ask AI about this event"
           >
             <Sparkles className="size-4" />

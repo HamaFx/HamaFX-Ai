@@ -214,95 +214,67 @@ export function Composer({
   const canSend = !disabled && !isStreaming && value.trim().length > 0 && !overLimit;
 
   return (
-    <form
-      className={cn(
-        'glass-strong sticky bottom-0 flex flex-col gap-2 px-3 py-3 transition-shadow duration-200',
-        focused && 'shadow-[0_-16px_40px_-8px_oklch(78%_0.16_78/0.15)]',
-        dragOver && 'ring-brand/50 ring-2 ring-inset',
-      )}
-      style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 12px)' }}
-      onSubmit={(e) => {
-        e.preventDefault();
-        send();
-      }}
-      onDragOver={(e) => {
-        e.preventDefault();
-        setDragOver(true);
-      }}
-      onDragLeave={() => setDragOver(false)}
-      onDrop={handleDrop}
-    >
-      {/* Voice listening pill — appears above the row when active so the
-          user can see real-time STT state without losing the textarea. */}
-      {voice.active ? (
-        <div
-          role="status"
-          aria-live="polite"
-          className="bg-bear/10 ring-bear/30 text-bear mx-auto inline-flex items-center gap-2 self-center rounded-full px-3 py-1 text-[11px] font-medium ring-1"
-        >
-          <span className="bg-bear size-1.5 animate-pulse rounded-full" />
-          Listening…
-        </div>
-      ) : null}
+    <div className="sticky bottom-0 px-3 pb-[max(env(safe-area-inset-bottom),12px)] transition-all duration-300 w-full max-w-4xl mx-auto z-20">
+      <form
+        className={cn(
+          'glass-strong relative flex w-full flex-col overflow-hidden rounded-[28px] border border-divider/60 bg-bg-elev-1/60 shadow-lg transition-all duration-300',
+          focused && 'border-brand/40 bg-bg-elev-1/80 shadow-[0_8px_32px_-8px_oklch(78%_0.16_78/0.2)] ring-1 ring-brand/30',
+          dragOver && 'bg-brand/5 ring-2 ring-inset ring-brand/50',
+        )}
+        onSubmit={(e) => {
+          e.preventDefault();
+          send();
+        }}
+        onDragOver={(e) => {
+          e.preventDefault();
+          setDragOver(true);
+        }}
+        onDragLeave={() => setDragOver(false)}
+        onDrop={handleDrop}
+      >
+        {/* Voice listening pill */}
+        {voice.active ? (
+          <div
+            role="status"
+            aria-live="polite"
+            className="text-bear ring-bear/30 mx-auto mt-3 inline-flex items-center gap-2 self-center rounded-full bg-bear/10 px-3 py-1 text-[11px] font-medium ring-1"
+          >
+            <span className="bg-bear size-1.5 animate-pulse rounded-full" />
+            Listening…
+          </div>
+        ) : null}
 
-      {images.length > 0 ? (
-        <ul className="flex flex-wrap gap-2" aria-label="Attached images">
-          {images.map((img, idx) => (
-            <li key={img.id} className="relative">
-              <img
-                src={img.url}
-                alt={`Attached image ${idx + 1} of ${images.length}`}
-                className="border-divider size-16 rounded-xl border object-cover"
-              />
-              <button
-                type="button"
-                aria-label={`Remove ${img.name}`}
-                onClick={() => removeImage(img.id)}
-                className="bg-bg-elev-3 text-fg border-border focus-visible:ring-brand absolute -right-2 -top-2 inline-flex size-6 items-center justify-center rounded-full border text-sm leading-none focus:outline-none focus-visible:ring-2"
-              >
-                ×
-              </button>
-            </li>
-          ))}
-        </ul>
-      ) : null}
+        {/* Attached Images */}
+        {images.length > 0 ? (
+          <ul className="flex flex-wrap gap-2 px-5 pb-1 pt-4" aria-label="Attached images">
+            {images.map((img, idx) => (
+              <li key={img.id} className="relative">
+                <img
+                  src={img.url}
+                  alt={`Attached image ${idx + 1} of ${images.length}`}
+                  className="border-divider size-14 rounded-xl border object-cover"
+                />
+                <button
+                  type="button"
+                  aria-label={`Remove ${img.name}`}
+                  onClick={() => removeImage(img.id)}
+                  className="bg-bg-elev-3 text-fg border-border focus-visible:ring-brand absolute -right-2 -top-2 inline-flex size-5 items-center justify-center rounded-full border text-[10px] leading-none focus:outline-none focus-visible:ring-2"
+                >
+                  ×
+                </button>
+              </li>
+            ))}
+          </ul>
+        ) : null}
 
-      {imageError ? (
-        <p role="alert" className="text-bear text-xs">
-          {imageError}
-        </p>
-      ) : null}
+        {imageError ? (
+          <p role="alert" className="text-bear px-5 pt-2 text-xs">
+            {imageError}
+          </p>
+        ) : null}
 
-      <div className="flex items-end gap-2">
-        <button
-          type="button"
-          aria-label="Attach image"
-          onClick={() => fileInputRef.current?.click()}
-          disabled={disabled || images.length >= MAX_IMAGES}
-          className={cn(
-            'glass-subtle inline-flex size-12 shrink-0 items-center justify-center rounded-xl transition-colors',
-            'focus-visible:ring-brand/60 focus:outline-none focus-visible:ring-2',
-            disabled || images.length >= MAX_IMAGES
-              ? 'text-fg-subtle cursor-not-allowed opacity-60'
-              : 'text-fg-muted hover:text-fg',
-          )}
-        >
-          <ImagePlus className="size-5" />
-        </button>
-
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/*"
-          multiple
-          className="hidden"
-          onChange={(e) => {
-            void pickImages(e.currentTarget.files);
-            e.currentTarget.value = '';
-          }}
-        />
-
-        <div className="relative flex-1">
+        {/* Textarea */}
+        <div className="relative w-full">
           <textarea
             ref={ref}
             value={value}
@@ -315,11 +287,9 @@ export function Composer({
             disabled={disabled}
             maxLength={MAX_TEXT_CHARS}
             className={cn(
-              'border-divider bg-bg-elev-1/60 backdrop-blur-sm w-full resize-none rounded-2xl border px-4 py-3 text-base leading-relaxed',
-              'focus-visible:ring-brand/40 max-h-[30dvh] min-h-[48px] focus:outline-none focus-visible:ring-2',
-              'placeholder:text-fg-subtle text-fg',
-              'transition-colors duration-150',
-              focused && 'border-brand/50 bg-bg-elev-1/80',
+              'text-fg placeholder:text-fg-subtle w-full resize-none bg-transparent px-5 pb-2 text-[15px] leading-relaxed focus:outline-none',
+              'max-h-[40dvh] min-h-[56px] transition-colors duration-150',
+              images.length > 0 ? 'pt-1' : 'pt-4',
               '[field-sizing:content]',
             )}
             onKeyDown={(e) => {
@@ -329,96 +299,127 @@ export function Composer({
               }
             }}
           />
-          {showCharCount ? (
-            <span
-              className={cn(
-                'absolute bottom-2 right-3 text-[11px] tabular-nums',
-                overLimit ? 'text-bear font-semibold' : 'text-fg-subtle',
-              )}
-            >
-              {charCount}/{MAX_TEXT_CHARS}
-            </span>
-          ) : null}
         </div>
 
-        {voice.supported ? (
-          <button
-            type="button"
-            aria-label={voice.active ? 'Stop voice input' : 'Start voice input'}
-            aria-pressed={voice.active}
-            aria-busy={voice.active}
-            onClick={() => (voice.active ? voice.stop() : voice.start())}
-            disabled={disabled}
-            className={cn(
-              'glass-subtle inline-flex size-12 shrink-0 items-center justify-center rounded-xl transition-colors',
-              'focus-visible:ring-brand/60 focus:outline-none focus-visible:ring-2',
-              voice.active ? 'text-bear mic-pulse' : 'text-fg-muted hover:text-fg',
-              disabled ? 'cursor-not-allowed opacity-60' : '',
-            )}
-          >
-            <Mic className="size-5" />
-          </button>
-        ) : null}
-
-        {/* Send / Stop morph. Single button space; the icon and styling change
-            based on `isStreaming` with a physical spring animation. */}
-        <AnimatePresence mode="popLayout" initial={false}>
-          {isStreaming && onStop ? (
-            <motion.button
-              key="stop"
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.8 }}
-              transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+        {/* Action Row */}
+        <div className="flex items-end justify-between px-2 pb-2">
+          {/* Left Actions (Attach, Voice) */}
+          <div className="flex items-center gap-1">
+            <button
               type="button"
-              onClick={onStop}
-              aria-label="Stop generating"
-              className="bg-bear/15 text-bear ring-bear/40 inline-flex size-12 shrink-0 items-center justify-center rounded-xl ring-1 focus:outline-none focus-visible:ring-2"
-            >
-              <Square className="size-4 fill-current" strokeWidth={0} />
-            </motion.button>
-          ) : (
-            <motion.button
-              key="send"
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.8 }}
-              whileTap={{ scale: 0.9 }}
-              transition={{ type: 'spring', stiffness: 400, damping: 25 }}
-              type="submit"
-              disabled={!canSend}
-              aria-label="Send message"
+              aria-label="Attach image"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={disabled || images.length >= MAX_IMAGES}
               className={cn(
-                'inline-flex size-12 shrink-0 items-center justify-center rounded-xl font-semibold',
-                'text-brand-fg',
-                'disabled:cursor-not-allowed disabled:opacity-40',
-                'focus-visible:ring-brand focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-bg',
+                'inline-flex size-10 shrink-0 items-center justify-center rounded-full transition-colors',
+                'focus-visible:ring-brand/60 focus:outline-none focus-visible:ring-2',
+                disabled || images.length >= MAX_IMAGES
+                  ? 'text-fg-subtle cursor-not-allowed opacity-60'
+                  : 'text-fg-muted hover:bg-bg-elev-2/50 hover:text-fg',
               )}
-              style={{
-                backgroundImage: 'var(--gradient-brand)',
-                boxShadow: 'var(--shadow-brand-press)',
-              }}
             >
-              <ArrowUp className="size-5" strokeWidth={2.5} />
-            </motion.button>
-          )}
-        </AnimatePresence>
-      </div>
+              <ImagePlus className="size-[22px]" strokeWidth={1.5} />
+            </button>
 
-      {/* Desktop-only keyboard hint. Renders only after focus to avoid
-          adding noise to a quiet idle state. */}
-      {focused && !isTouch && !isStreaming ? (
-        <p className="text-fg-subtle px-1 text-[10px] tabular-nums">
-          <kbd className="bg-bg-elev-2 ring-divider rounded border ring-1 px-1.5 font-mono">
-            Enter
-          </kbd>{' '}
-          to send ·{' '}
-          <kbd className="bg-bg-elev-2 ring-divider rounded border ring-1 px-1.5 font-mono">
-            Shift + Enter
-          </kbd>{' '}
-          for new line
-        </p>
-      ) : null}
-    </form>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              multiple
+              className="hidden"
+              onChange={(e) => {
+                void pickImages(e.currentTarget.files);
+                e.currentTarget.value = '';
+              }}
+            />
+
+            {voice.supported ? (
+              <button
+                type="button"
+                aria-label={voice.active ? 'Stop voice input' : 'Start voice input'}
+                aria-pressed={voice.active}
+                aria-busy={voice.active}
+                onClick={() => (voice.active ? voice.stop() : voice.start())}
+                disabled={disabled}
+                className={cn(
+                  'inline-flex size-10 shrink-0 items-center justify-center rounded-full transition-colors',
+                  'focus-visible:ring-brand/60 focus:outline-none focus-visible:ring-2',
+                  voice.active
+                    ? 'text-bear mic-pulse bg-bear/10'
+                    : 'text-fg-muted hover:bg-bg-elev-2/50 hover:text-fg',
+                  disabled ? 'cursor-not-allowed opacity-60' : '',
+                )}
+              >
+                <Mic className="size-[22px]" strokeWidth={1.5} />
+              </button>
+            ) : null}
+          </div>
+
+          {/* Right Actions (Submit, Stop, Char Count) */}
+          <div className="flex items-center gap-3">
+            {showCharCount ? (
+              <span
+                className={cn(
+                  'tabular-nums text-[11px]',
+                  overLimit ? 'text-bear font-semibold' : 'text-fg-subtle',
+                )}
+              >
+                {charCount}/{MAX_TEXT_CHARS}
+              </span>
+            ) : null}
+
+            {focused && !isTouch && !isStreaming ? (
+              <p className="text-fg-subtle hidden pr-1 text-[10px] tabular-nums sm:block">
+                <kbd className="bg-bg-elev-2 ring-divider rounded border px-1.5 font-mono ring-1">
+                  Enter
+                </kbd>{' '}
+                to send
+              </p>
+            ) : null}
+
+            <AnimatePresence mode="popLayout" initial={false}>
+              {isStreaming && onStop ? (
+                <motion.button
+                  key="stop"
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.8 }}
+                  transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+                  type="button"
+                  onClick={onStop}
+                  aria-label="Stop generating"
+                  className="text-bear ring-bear/40 inline-flex size-[36px] shrink-0 items-center justify-center rounded-full bg-bear/15 focus:outline-none focus-visible:ring-2 ring-1"
+                >
+                  <Square className="size-[14px] fill-current" strokeWidth={0} />
+                </motion.button>
+              ) : (
+                <motion.button
+                  key="send"
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.8 }}
+                  whileTap={{ scale: 0.9 }}
+                  transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+                  type="submit"
+                  disabled={!canSend}
+                  aria-label="Send message"
+                  className={cn(
+                    'text-brand-fg inline-flex size-[36px] shrink-0 items-center justify-center rounded-full font-semibold',
+                    'disabled:cursor-not-allowed disabled:opacity-40 disabled:grayscale',
+                    'focus-visible:ring-brand focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-bg',
+                  )}
+                  style={{
+                    backgroundImage: 'var(--gradient-brand)',
+                    boxShadow: canSend ? 'var(--shadow-brand-press)' : 'none',
+                  }}
+                >
+                  <ArrowUp className="size-5" strokeWidth={2.5} />
+                </motion.button>
+              )}
+            </AnimatePresence>
+          </div>
+        </div>
+      </form>
+    </div>
   );
 }

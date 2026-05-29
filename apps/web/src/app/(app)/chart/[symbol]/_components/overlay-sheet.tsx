@@ -48,7 +48,7 @@ export function OverlaySheet({ active, onToggle }: OverlaySheetProps) {
           type="button"
           aria-label={`Chart overlays${enabledCount > 0 ? ` (${enabledCount} active)` : ''}`}
           className={cn(
-            'border-divider bg-bg-elev-2 inline-flex h-11 min-w-[44px] items-center justify-center gap-1.5 rounded-md border px-2 text-[11px] font-medium',
+            'border-divider bg-bg-elev-2 inline-flex h-11 min-w-[44px] items-center justify-center gap-1.5 rounded-full border px-3 text-[11px] font-medium transition-colors shadow-sm',
             'focus-visible:ring-brand focus:outline-none focus-visible:ring-2',
             enabledCount > 0 ? 'text-fg' : 'text-fg-muted hover:text-fg',
           )}
@@ -65,7 +65,7 @@ export function OverlaySheet({ active, onToggle }: OverlaySheetProps) {
           </div>
           <Tooltip label="Close">
             <DrawerClose
-              className="text-fg-muted hover:text-fg inline-flex h-11 w-11 items-center justify-center rounded-md"
+              className="text-fg-muted hover:text-fg hover:bg-bg-elev-1 inline-flex h-11 w-11 items-center justify-center rounded-full transition-colors"
               aria-label="Close overlays sheet"
             >
               <X className="size-4" />

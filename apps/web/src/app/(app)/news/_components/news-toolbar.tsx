@@ -58,14 +58,14 @@ export function NewsToolbar({
           onChange={(e) => onQuery(e.target.value)}
           placeholder="Search headlines…"
           aria-label="Search headlines"
-          className="bg-bg-elev-1/60 text-fg placeholder:text-fg-subtle focus:border-brand/60 border-divider h-11 w-full rounded-xl border pl-10 pr-10 text-sm focus:outline-none"
+          className="bg-bg-elev-1/60 text-fg placeholder:text-fg-subtle focus:border-brand/60 border-divider h-11 w-full rounded-full border pl-10 pr-10 text-sm focus:outline-none"
         />
         {query ? (
           <button
             type="button"
             aria-label="Clear search"
             onClick={() => onQuery('')}
-            className="text-fg-subtle hover:text-fg absolute right-2 top-1/2 inline-flex size-7 -translate-y-1/2 items-center justify-center rounded-md transition-colors"
+            className="text-fg-subtle hover:text-fg absolute right-2 top-1/2 inline-flex size-7 -translate-y-1/2 items-center justify-center rounded-full transition-colors"
           >
             <X className="size-4" />
           </button>

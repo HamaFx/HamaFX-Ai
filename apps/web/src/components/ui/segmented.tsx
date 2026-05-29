@@ -108,15 +108,15 @@ export function Segmented<T extends string>(props: SegmentedProps<T>) {
         aria-label={label}
         className={cn(
           variant === 'gradient'
-            ? 'glass-subtle inline-flex items-center gap-0.5 rounded-xl p-0.5'
-            : 'border-border bg-bg-elev-2 inline-flex flex-wrap items-center gap-0.5 rounded-md border p-0.5',
+            ? 'glass-subtle inline-flex items-center gap-0.5 rounded-full p-0.5'
+            : 'border-border bg-bg-elev-2 inline-flex flex-wrap items-center gap-0.5 rounded-full border p-0.5',
           className,
         )}
       >
         {options.map((opt) => {
           const active = opt.value === value;
           const baseItem = cn(
-            'relative inline-flex min-w-[44px] items-center justify-center rounded-lg font-semibold tabular-nums transition-colors',
+            'relative inline-flex min-w-[44px] items-center justify-center rounded-full font-semibold tabular-nums transition-colors',
             'focus-visible:ring-brand focus:outline-none focus-visible:ring-2',
             ITEM_PAD[size],
             SIZE[size],
@@ -130,7 +130,7 @@ export function Segmented<T extends string>(props: SegmentedProps<T>) {
             active && variant === 'gradient' ? (
               <m.span
                 layoutId={layoutId}
-                className="absolute inset-0 -z-0 rounded-lg"
+                className="absolute inset-0 -z-0 rounded-full"
                 style={{
                   backgroundImage: 'var(--gradient-brand)',
                   boxShadow:

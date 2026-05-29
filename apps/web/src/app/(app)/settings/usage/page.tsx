@@ -51,7 +51,7 @@ function BudgetCard({ stats, maxDailyUsd }: { stats: UsageStats; maxDailyUsd: nu
   return (
     <section
       aria-labelledby="usage-budget-heading"
-      className="border-border bg-bg-elev-1 flex flex-col gap-3 rounded-lg border p-4"
+      className="card-premium flex flex-col gap-3 p-4"
     >
       <header className="flex items-baseline justify-between gap-3">
         <h2 id="usage-budget-heading" className="text-fg-muted text-sm font-medium">
@@ -100,7 +100,7 @@ function DailyChart({ daily7 }: { daily7: DayBucket[] }) {
   return (
     <section
       aria-labelledby="usage-daily-heading"
-      className="border-border bg-bg-elev-1 flex flex-col gap-3 rounded-lg border p-4"
+      className="card-premium flex flex-col gap-3 p-4"
     >
       <h2 id="usage-daily-heading" className="text-fg-muted text-sm font-medium">
         Last 7 days
@@ -148,7 +148,7 @@ function ModelBreakdownCard({ stats }: { stats: UsageStats }) {
     return (
       <section
         aria-labelledby="usage-models-heading"
-        className="border-border bg-bg-elev-1 flex flex-col gap-2 rounded-lg border p-4"
+        className="card-premium flex flex-col gap-2 p-4"
       >
         <h2 id="usage-models-heading" className="text-fg-muted text-sm font-medium">
           By model (30d)
@@ -160,7 +160,7 @@ function ModelBreakdownCard({ stats }: { stats: UsageStats }) {
   return (
     <section
       aria-labelledby="usage-models-heading"
-      className="border-border bg-bg-elev-1 flex flex-col gap-3 rounded-lg border p-4"
+      className="card-premium flex flex-col gap-3 p-4"
     >
       <h2 id="usage-models-heading" className="text-fg-muted text-sm font-medium">
         By model (30d)
@@ -193,7 +193,7 @@ function RecentTurnsCard({ rows }: { rows: Awaited<ReturnType<typeof listTelemet
     return (
       <section
         aria-labelledby="usage-recent-heading"
-        className="border-border bg-bg-elev-1 flex flex-col gap-2 rounded-lg border p-4"
+        className="card-premium flex flex-col gap-2 p-4"
       >
         <h2 id="usage-recent-heading" className="text-fg-muted text-sm font-medium">
           Recent turns
@@ -208,7 +208,7 @@ function RecentTurnsCard({ rows }: { rows: Awaited<ReturnType<typeof listTelemet
   return (
     <section
       aria-labelledby="usage-recent-heading"
-      className="border-border bg-bg-elev-1 flex flex-col gap-3 rounded-lg border p-4"
+      className="card-premium flex flex-col gap-3 p-4"
     >
       <h2 id="usage-recent-heading" className="text-fg-muted text-sm font-medium">
         Recent turns

@@ -50,7 +50,7 @@ export function ArticleCard({ article }: ArticleCardProps) {
   return (
     <article
       className={cn(
-        'animate-reveal @container card-premium group relative overflow-hidden',
+        'animate-reveal @container card-premium group relative overflow-hidden rounded-3xl',
         'transition-colors duration-200 md:hover:bg-bg-elev-2/40',
       )}
     >
@@ -106,14 +106,14 @@ export function ArticleCard({ article }: ArticleCardProps) {
           <ul className="mt-3 flex flex-wrap gap-1.5" aria-label="Tags">
             {article.symbols.map((s) => (
               <li key={`sym-${s}`}>
-                <span className="bg-brand/10 text-brand ring-brand/30 rounded-md px-1.5 py-0.5 text-[10px] font-bold uppercase tabular-nums ring-1">
+                <span className="bg-brand/10 text-brand ring-brand/30 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tabular-nums ring-1">
                   {s}
                 </span>
               </li>
             ))}
             {article.topics.slice(0, 4).map((t) => (
               <li key={`topic-${t}`}>
-                <span className="bg-bg-elev-2 text-fg-muted ring-divider rounded-md px-1.5 py-0.5 text-[10px] lowercase ring-1">
+                <span className="bg-bg-elev-2 text-fg-muted ring-divider rounded-full px-2 py-0.5 text-[10px] lowercase ring-1">
                   #{t}
                 </span>
               </li>
@@ -126,7 +126,7 @@ export function ArticleCard({ article }: ArticleCardProps) {
       <div className="border-divider/60 flex items-center justify-between gap-2 border-t px-3 py-2">
         <a
           href={`/chat?prompt=${askPrompt}`}
-          className="text-fg-muted hover:text-brand inline-flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-xs font-medium transition-colors"
+          className="text-fg-muted hover:text-brand inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-colors"
         >
           <Sparkles className="size-3.5" />
           Ask AI
@@ -143,7 +143,7 @@ export function ArticleCard({ article }: ArticleCardProps) {
             aria-label={saved ? 'Remove bookmark' : 'Bookmark article'}
             aria-pressed={saved}
             className={cn(
-              'inline-flex size-8 items-center justify-center rounded-lg transition-colors',
+              'inline-flex size-8 items-center justify-center rounded-full transition-colors',
               saved
                 ? 'text-brand bg-brand/10'
                 : 'text-fg-muted hover:text-fg hover:bg-bg-elev-2',
@@ -156,7 +156,7 @@ export function ArticleCard({ article }: ArticleCardProps) {
             target="_blank"
             rel="noopener noreferrer"
             aria-label="Open article in new tab"
-            className="text-fg-muted hover:text-fg hover:bg-bg-elev-2 inline-flex size-8 items-center justify-center rounded-lg transition-colors"
+            className="text-fg-muted hover:text-fg hover:bg-bg-elev-2 inline-flex size-8 items-center justify-center rounded-full transition-colors"
           >
             <ExternalLink className="size-3.5" />
           </a>
