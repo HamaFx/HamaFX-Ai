@@ -1,0 +1,264 @@
+import { getDb, schema } from '@hamafx/db';
+import {
+  ConveneCommitteeInputSchema,
+  type CommitteeVerdict,
+  type ConveneCommitteeOutput,
+  type Symbol,
+} from '@hamafx/shared';
+import { tool, generateText } from 'ai';
+import type { z } from 'zod';
+
+import { getToolContext, type ToolEnv } from '../tool-context';
+import { resolveModel, getVertexGoogleSearchTool } from '../model';
+
+import { analyzeFundamentalTool } from './analyze-fundamental';
+import { analyzeTechnicalTool } from './analyze-technical';
+import { getJournalStatsTool } from './get-journal-stats';
+import { computeRiskTool } from './compute-risk';
+
+const InputSchema = ConveneCommitteeInputSchema;
+
+declare module '@hamafx/shared' {
+  interface ToolIOMap {
+    convene_committee: { input: z.infer<typeof InputSchema> };
+  }
+}
+
+export const conveneCommitteeTool = tool({
+  description:
+    "Convene a Multi-Agent Trading Committee (Economist, Technician, Risk Manager) to evaluate a trade setup. Use whenever the user asks 'Should I take this trade?' or provides a setup with an entry and stop loss.",
+  inputSchema: InputSchema,
+  execute: async (input): Promise<ConveneCommitteeOutput> => {
+    const ctx = getToolContext();
+    const { symbol, side, entry, stop, target } = input;
+
+    // 1. Pre-fetch context data in parallel
+    const [fundamentalData, technicalData, journalData, riskData] = await Promise.all([
+      analyzeFundamentalTool.execute!({ symbol, horizonHours: 48 }, { toolCallId: 'internal', messages: [] } as any),
+      analyzeTechnicalTool.execute!({ symbol, timeframes: ['1d', '4h', '1h', '15m'] }, { toolCallId: 'internal', messages: [] } as any),
+      getJournalStatsTool.execute!({ symbol }, { toolCallId: 'internal', messages: [] } as any),
+      stop ? computeRiskTool.execute!({ symbol, side, entry, stop, target: target ?? undefined, accountUsd: 1000, riskPct: 1 }, { toolCallId: 'internal', messages: [] } as any) : Promise.resolve(null),
+    ]);
+
+    // 2. Run the 3 Personas in parallel
+    const [economist, technician, riskManager] = await Promise.all([
+      runEconomist(input, fundamentalData, ctx.env),
+      runTechnician(input, technicalData, ctx.env),
+      runRiskManager(input, journalData, riskData, ctx.env),
+    ]);
+
+    // 3. Run the Moderator
+    const { grade, goNoGo, consensus } = await runModerator(input, economist, technician, riskManager, ctx.env);
+
+    return {
+      symbol,
+      side,
+      entry,
+      stop,
+      target,
+      verdicts: [economist, technician, riskManager],
+      grade,
+      goNoGo,
+      consensus,
+    };
+  },
+});
+
+// ---------------------------------------------------------------------------
+// Persona Runners
+// ---------------------------------------------------------------------------
+
+async function runEconomist(input: any, data: any, env: ToolEnv): Promise<CommitteeVerdict> {
+  const prompt = `You are The Economist on a trading committee. Evaluate this trade:
+Symbol: ${input.symbol}
+Side: ${input.side}
+Entry: ${input.entry}
+
+Recent Fundamental Data:
+${JSON.stringify(data, null, 2)}
+
+Use the googleSearch tool to find any breaking news or macroeconomic drivers from the last 24 hours that might impact this trade.
+
+Output ONLY a JSON object:
+{
+  "verdict": "bullish" | "bearish" | "neutral",
+  "confidence": <number 1-10>,
+  "keyPoints": ["<string>", ...],
+  "risk": "<string>",
+  "recommendation": "<string>"
+}
+No markdown fences, no preamble.`;
+
+  try {
+    const { text, steps } = await generateText({
+      model: resolveModel(env.AI_FUNDAMENTAL_MODEL || 'google-vertex/gemini-2.5-flash', env),
+      system: "You are an expert forex macroeconomic analyst. Always output raw JSON.",
+      prompt,
+      tools: { googleSearch: getVertexGoogleSearchTool(env as any) },
+    });
+
+    const parsed = parseJson<Omit<CommitteeVerdict, 'persona' | 'sources'>>(text);
+    if (!parsed) throw new Error('Parse failed');
+
+    // Extract citations from the tool calls if available
+    let sources: string[] = [];
+    for (const step of steps) {
+      if (step.toolResults) {
+        for (const res of step.toolResults) {
+          if (res.toolName === 'googleSearch') {
+             // We just add a generic source tag since raw parsing of grounding results is complex.
+             // The frontend will render them if present.
+             sources.push('Google Search Grounding');
+          }
+        }
+      }
+    }
+
+    return {
+      persona: 'economist',
+      verdict: parsed.verdict ?? 'neutral',
+      confidence: parsed.confidence ?? 5,
+      keyPoints: parsed.keyPoints ?? ['No key points provided.'],
+      risk: parsed.risk ?? 'Unknown macro risk.',
+      recommendation: parsed.recommendation ?? 'No recommendation.',
+      sources: sources.length > 0 ? sources : undefined,
+    };
+  } catch (err) {
+    console.error('Economist failed:', err);
+    return fallbackVerdict('economist');
+  }
+}
+
+async function runTechnician(input: any, data: any, env: ToolEnv): Promise<CommitteeVerdict> {
+  const prompt = `You are The Technician on a trading committee. Evaluate this trade:
+Symbol: ${input.symbol}
+Side: ${input.side}
+Entry: ${input.entry}
+
+Multi-Timeframe Technical Data:
+${JSON.stringify(data, null, 2)}
+
+Evaluate the trend alignment, momentum, and structure.
+Output ONLY a JSON object:
+{
+  "verdict": "bullish" | "bearish" | "neutral",
+  "confidence": <number 1-10>,
+  "keyPoints": ["<string>", ...],
+  "risk": "<string>",
+  "recommendation": "<string>"
+}
+No markdown fences, no preamble.`;
+
+  try {
+    const { text } = await generateText({
+      model: resolveModel(env.AI_TECHNICAL_MODEL || 'google-vertex/gemini-2.5-flash', env),
+      system: "You are an expert forex technical analyst. Always output raw JSON.",
+      prompt,
+    });
+    const parsed = parseJson<Omit<CommitteeVerdict, 'persona'>>(text);
+    if (!parsed) throw new Error('Parse failed');
+    return { persona: 'technician', ...parsed } as CommitteeVerdict;
+  } catch (err) {
+    console.error('Technician failed:', err);
+    return fallbackVerdict('technician');
+  }
+}
+
+async function runRiskManager(input: any, journalData: any, riskData: any, env: ToolEnv): Promise<CommitteeVerdict> {
+  const prompt = `You are The Risk Manager on a trading committee. Evaluate this trade:
+Symbol: ${input.symbol}
+Side: ${input.side}
+Entry: ${input.entry}
+Stop: ${input.stop || 'None'}
+Target: ${input.target || 'None'}
+
+User's Journal Stats for ${input.symbol}:
+${JSON.stringify(journalData.bySymbol || [], null, 2)}
+
+Position Sizing & Risk Profile:
+${JSON.stringify(riskData || 'No stop loss provided, extreme risk.', null, 2)}
+
+Evaluate the R:R ratio, stop loss distance (ATR), and the user's historical win rate on this pair.
+Output ONLY a JSON object:
+{
+  "verdict": "bullish" | "bearish" | "neutral",
+  "confidence": <number 1-10>,
+  "keyPoints": ["<string>", ...],
+  "risk": "<string>",
+  "recommendation": "<string>"
+}
+No markdown fences, no preamble.`;
+
+  try {
+    const { text } = await generateText({
+      model: resolveModel(env.AI_DEFAULT_MODEL || 'google-vertex/gemini-2.5-flash', env),
+      system: "You are an expert risk manager. Always output raw JSON.",
+      prompt,
+    });
+    const parsed = parseJson<Omit<CommitteeVerdict, 'persona'>>(text);
+    if (!parsed) throw new Error('Parse failed');
+    return { persona: 'risk_manager', ...parsed } as CommitteeVerdict;
+  } catch (err) {
+    console.error('Risk Manager failed:', err);
+    return fallbackVerdict('risk_manager');
+  }
+}
+
+async function runModerator(input: any, e: CommitteeVerdict, t: CommitteeVerdict, r: CommitteeVerdict, env: ToolEnv) {
+  const prompt = `You are the Committee Moderator. You have received three reports for a ${input.side} trade on ${input.symbol} at ${input.entry}.
+
+Economist: ${e.verdict} (${e.confidence}/10) - ${e.recommendation}
+Technician: ${t.verdict} (${t.confidence}/10) - ${t.recommendation}
+Risk Manager: ${r.verdict} (${r.confidence}/10) - ${r.recommendation}
+
+Synthesize these into a final consensus.
+Output ONLY a JSON object:
+{
+  "grade": "A" | "B" | "C" | "D" | "F",
+  "goNoGo": "go" | "caution" | "no-go",
+  "consensus": "<2-3 sentence summary>"
+}
+No markdown fences, no preamble.`;
+
+  try {
+    const { text } = await generateText({
+      model: resolveModel(env.AI_DEFAULT_MODEL || 'google-vertex/gemini-2.5-flash', env),
+      system: "You are the head trader. Always output raw JSON.",
+      prompt,
+    });
+    const parsed = parseJson<any>(text);
+    if (!parsed) throw new Error('Parse failed');
+    return {
+      grade: parsed.grade ?? 'C',
+      goNoGo: parsed.goNoGo ?? 'caution',
+      consensus: parsed.consensus ?? 'The committee was unable to reach a firm consensus. Proceed with caution.',
+    };
+  } catch (err) {
+    console.error('Moderator failed:', err);
+    return { grade: 'C', goNoGo: 'caution', consensus: 'Moderator analysis failed. Proceed with caution.' };
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+function parseJson<T>(text: string): T | null {
+  try {
+    const cleaned = text.trim().replace(/^```json\s*/, '').replace(/```$/, '').trim();
+    return JSON.parse(cleaned);
+  } catch {
+    return null;
+  }
+}
+
+function fallbackVerdict(persona: CommitteeVerdict['persona']): CommitteeVerdict {
+  return {
+    persona,
+    verdict: 'neutral',
+    confidence: 1,
+    keyPoints: ['Analysis failed or timed out.'],
+    risk: 'Unknown',
+    recommendation: 'Proceed with caution.',
+  };
+}

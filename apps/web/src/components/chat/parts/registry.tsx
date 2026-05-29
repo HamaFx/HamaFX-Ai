@@ -22,6 +22,7 @@ import {
   AnnotateChartOutputSchema,
   ComputePositionHealthOutputSchema,
   ComputeRiskOutputSchema,
+  ConveneCommitteeOutputSchema,
   ForecastVolatilityOutputSchema,
   GetCalendarOutputSchema,
   GetCandlesOutputSchema,
@@ -55,6 +56,7 @@ import { AnalyzeTechnicalPart } from './analyze-technical';
 import { AnnotateChartPart } from './annotate-chart';
 import { ComputePositionHealthPart } from './compute-position-health';
 import { ComputeRiskPart } from './compute-risk';
+import { ConveneCommitteePart } from './convene-committee';
 import { ForecastVolatilityPart } from './forecast-volatility';
 import { GetCalendarPart } from './get-calendar';
 import { GetCandlesPart } from './get-candles';
@@ -129,6 +131,7 @@ export const partRegistry: { [K in ToolName]: ComponentType<ToolPartProps<K>> } 
   summarize_thread: SummarizeThreadPart,
   // Phase 7c tools
   verify_call: VerifyCallPart,
+  convene_committee: ConveneCommitteePart,
 };
 
 /**
@@ -170,6 +173,7 @@ const partSchemas: { [K in ToolName]: z.ZodType<ToolOutput<K>> } = {
   summarize_thread: SummarizeThreadOutputSchema,
   // Phase 7c tools
   verify_call: VerifyCallOutputSchema,
+  convene_committee: ConveneCommitteeOutputSchema,
 };
 
 /** Type guard: is `s` a known `ToolName`? */

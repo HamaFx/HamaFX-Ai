@@ -21,7 +21,7 @@ import {
   tryReserveBudget,
 } from './cost';
 import { compactThread } from './memory/thread-summary';
-import { resolveModel } from './model';
+import { resolveModel, getVertexGoogleSearchTool } from './model';
 import {
   appendAssistantMessage,
   appendUserMessage,
@@ -150,6 +150,18 @@ export async function runChat(args: RunChatArgs) {
   // to AI_DEFAULT_MODEL rather than crashing the whole turn. The user
   // sees the answer; we log the fall-back for visibility.
   let modelId = routing.modelId;
+
+  // Phase 4 Option 2: Grounded Trading Assistant
+  // If the query is fundamental (live market conditions, news, macro data),
+  // we force the request through Vertex AI natively to utilize the $1,000 Agent Builder credit
+  // via Google Search Grounding.
+  let useSearchGrounding = false;
+  if (routing.domain === 'fundamental') {
+    const bareModel = modelId.includes('/') ? modelId.split('/').pop() : modelId;
+    modelId = `google-vertex/${bareModel}`;
+    useSearchGrounding = true;
+  }
+
   let model: ReturnType<typeof resolveModel>;
   try {
     model = resolveModel(modelId, env);
@@ -310,7 +322,9 @@ export async function runChat(args: RunChatArgs) {
     model,
     system: systemPrompt,
     messages: modelMessages,
-    tools,
+    tools: useSearchGrounding 
+      ? { ...tools, googleSearch: getVertexGoogleSearchTool(env) } 
+      : tools,
     stopWhen: stepCountIs(env.MAX_TOOL_ITERATIONS),
 
     onFinish: async ({ usage, finishReason, response }) => {

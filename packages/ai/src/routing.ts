@@ -153,6 +153,7 @@ const FUNDAMENTAL_PATTERNS: Array<{ re: RegExp; weight: number }> = [
   { re: /\b(real yield|yields|10y|treasury|treasuries|dxy|dollar index)\b/, weight: 2 },
   { re: /\b(geopolit|war|tariff|sanction|risk-?on|risk-?off)\b/, weight: 2 },
   { re: /\b(scenario|outlook|forecast|expect)\b/, weight: 1 },
+  { re: /\b(committee|review my trade|rate my setup|should i take|trade idea)\b/, weight: 3 },
 ];
 
 const TECHNICAL_PATTERNS: Array<{ re: RegExp; weight: number }> = [

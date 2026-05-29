@@ -119,3 +119,11 @@ export function resolveModel(modelId: string, env: ResolveModelEnv): LanguageMod
     `Cannot resolve model "${modelId}". Use a "google-vertex/..." id with GOOGLE_VERTEX_PROJECT+GOOGLE_VERTEX_LOCATION, set AI_GATEWAY_API_KEY for gateway routing, or use a "google/..." id with GOOGLE_GENERATIVE_AI_API_KEY.`,
   );
 }
+
+/**
+ * Returns the Google Search grounding tool via the Vertex AI provider.
+ * This tool must be used with a `google-vertex/` model.
+ */
+export function getVertexGoogleSearchTool(env: ResolveModelEnv) {
+  return getVertex(env).tools.googleSearch({});
+}

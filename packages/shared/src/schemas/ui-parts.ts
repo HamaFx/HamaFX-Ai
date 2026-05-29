@@ -83,6 +83,35 @@ export const VerifyWarningPartSchema = z.object({
 export type VerifyWarningPart = z.infer<typeof VerifyWarningPartSchema>;
 
 // ---------------------------------------------------------------------------
+// data-committee-report — emitted by the convene_committee tool
+// ---------------------------------------------------------------------------
+
+export const CommitteeVerdictSchema = z.object({
+  persona: z.enum(['economist', 'technician', 'risk_manager']),
+  verdict: z.enum(['bullish', 'bearish', 'neutral']),
+  confidence: z.number().min(1).max(10),
+  keyPoints: z.array(z.string()).max(5),
+  risk: z.string(),
+  recommendation: z.string(),
+  sources: z.array(z.string()).max(5).optional(),
+});
+export type CommitteeVerdict = z.infer<typeof CommitteeVerdictSchema>;
+
+export const CommitteeReportPartSchema = z.object({
+  type: z.literal('data-committee-report'),
+  symbol: SymbolSchema,
+  side: z.enum(['long', 'short']),
+  entry: z.number(),
+  stop: z.number().optional(),
+  verdicts: z.array(CommitteeVerdictSchema).length(3),
+  grade: z.enum(['A', 'B', 'C', 'D', 'F']),
+  goNoGo: z.enum(['go', 'caution', 'no-go']),
+  consensus: z.string(),
+  createdAt: z.number().int(),
+});
+export type CommitteeReportPart = z.infer<typeof CommitteeReportPartSchema>;
+
+// ---------------------------------------------------------------------------
 // Union for the chat-surface dispatcher
 // ---------------------------------------------------------------------------
 
@@ -90,6 +119,7 @@ export const UiPartSchema = z.discriminatedUnion('type', [
   UserPlanPartSchema,
   CitationWarningPartSchema,
   VerifyWarningPartSchema,
+  CommitteeReportPartSchema,
 ]);
 export type UiPart = z.infer<typeof UiPartSchema>;
 

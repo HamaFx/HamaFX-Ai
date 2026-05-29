@@ -35,6 +35,7 @@ export const TOOL_NAMES = [
   'summarize_thread',
   // Phase 7c tools
   'verify_call',
+  'convene_committee',
 ] as const;
 
 export type ToolName = (typeof TOOL_NAMES)[number];

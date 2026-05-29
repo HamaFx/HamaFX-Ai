@@ -34,6 +34,7 @@ import { shareSnapshotTool } from './share-snapshot';
 import { summarizeThreadTool } from './summarize-thread';
 import { verifyCallTool } from './verify-call';
 import { withTelemetry } from './with-telemetry';
+import { conveneCommitteeTool } from './convene-committee';
 
 export const tools = {
   get_price: withTelemetry('get_price', getPriceTool),
@@ -68,6 +69,7 @@ export const tools = {
   summarize_thread: withTelemetry('summarize_thread', summarizeThreadTool as any),
   // Phase 7c tools
   verify_call: withTelemetry('verify_call', verifyCallTool),
+  convene_committee: withTelemetry('convene_committee', conveneCommitteeTool),
 };
 
 export type ToolRegistry = typeof tools;
