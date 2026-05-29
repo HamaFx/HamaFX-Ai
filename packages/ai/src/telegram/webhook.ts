@@ -2,6 +2,8 @@ import { type ServerEnv } from '@hamafx/shared';
 import type { UIMessage } from 'ai';
 import { runChat } from '../agent';
 import * as crypto from 'crypto';
+import { getDb, schema } from '@hamafx/db';
+import { eq } from 'drizzle-orm';
 
 export interface TelegramUpdate {
   update_id: number;
@@ -73,6 +75,25 @@ export async function handleTelegramWebhook(update: TelegramUpdate, env: ServerE
   };
 
   try {
+    // Ensure the chat thread exists in the database
+    const existingThread = await getDb()
+      .select()
+      .from(schema.chatThreads)
+      .where(eq(schema.chatThreads.id, threadId))
+      .limit(1);
+
+    if (existingThread.length === 0) {
+      await getDb()
+        .insert(schema.chatThreads)
+        .values({
+          id: threadId,
+          title: `Telegram Chat (${chatId})`,
+          titleSource: 'fallback',
+          pinnedSymbol: null,
+          modelOverride: null,
+        });
+    }
+
     // Send a "Typing..." action to Telegram
     if (env.TELEGRAM_BOT_TOKEN) {
       await fetch(`https://api.telegram.org/bot${env.TELEGRAM_BOT_TOKEN}/sendChatAction`, {
