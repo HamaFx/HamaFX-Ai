@@ -1,8 +1,7 @@
 'use client';
 
-import { Bot, Save } from 'lucide-react';
+import { Bot } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { toast } from 'sonner';
 
 import { SettingsRow } from './settings-row';
 

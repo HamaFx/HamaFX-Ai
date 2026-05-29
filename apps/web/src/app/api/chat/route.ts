@@ -69,7 +69,7 @@ export async function POST(req: Request): Promise<Response> {
       if (prefs.technicalModel) env.AI_TECHNICAL_MODEL = prefs.technicalModel;
       if (prefs.summaryModel) env.AI_SUMMARY_MODEL = prefs.summaryModel;
       if (prefs.customInstructions) customInstructions = prefs.customInstructions;
-    } catch (e) {
+    } catch {
       // ignore invalid json
     }
   }
