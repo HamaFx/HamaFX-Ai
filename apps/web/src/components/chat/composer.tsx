@@ -130,7 +130,6 @@ export function Composer({
       try {
         const fd = new FormData();
         fd.append('file', file, file.name);
-        // eslint-disable-next-line no-await-in-loop
         const res = await fetchCsrf('/api/upload', { method: 'POST', body: fd });
         if (!res.ok) {
           const text = await res.text().catch(() => '');

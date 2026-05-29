@@ -91,7 +91,7 @@ export function ChatScreen({
     [threadId],
   );
 
-  const { messages, setMessages, append, sendMessage, regenerate, stop, status, error } = useChat({
+  const { messages, setMessages, sendMessage, regenerate, stop, status, error } = useChat({
     id: threadId,
     transport,
     messages: initialMessages,
@@ -219,7 +219,7 @@ export function ChatScreen({
                 if (idx === -1) return;
                 const sliced = messages.slice(0, idx);
                 setMessages(sliced);
-                void append({ role: 'user', content: newText });
+                void sendMessage({ text: newText });
               }}
             />
           )}
