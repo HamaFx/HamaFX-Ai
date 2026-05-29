@@ -16,7 +16,7 @@
 import type { Symbol } from '@hamafx/shared';
 import { Maximize2 } from 'lucide-react';
 import { Link } from 'next-view-transitions';
-import { useMemo } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { Chart } from '@/components/chart/chart';
 import { useOverlayToggles } from '@/components/chart/overlay-toggle';
@@ -49,13 +49,28 @@ const PALETTE: OverlayPalette = {
 export function ChartView({ symbol }: { symbol: Symbol }) {
   const [tf, setTf] = useTimeframe();
   const [activeOverlays, toggleOverlay] = useOverlayToggles();
+
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const [visible, setVisible] = useState(true);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el || typeof IntersectionObserver === 'undefined') return;
+    const obs = new IntersectionObserver(
+      ([entry]) => setVisible(Boolean(entry?.isIntersecting)),
+      { rootMargin: '128px' },
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
+
   const {
     data: candles,
     isLoading,
     isFetching,
     error,
     refetch,
-  } = useCandles(symbol, tf);
+  } = useCandles(symbol, tf, 300, { enabled: visible });
 
   // Only fetch structure when at least one overlay is on.
   const overlaysOn = activeOverlays.length > 0;
@@ -89,7 +104,7 @@ export function ChartView({ symbol }: { symbol: Symbol }) {
   }, [structure, candles, toggleRecord]);
 
   return (
-    <div className="-mx-4 flex flex-col">
+    <div ref={containerRef} className="-mx-4 flex flex-col">
       {/* Sticky floating sub-header (Dynamic Island style) */}
       <div
         className="sticky z-20 px-4 pt-3 pb-2 transition-all"
@@ -131,7 +146,7 @@ export function ChartView({ symbol }: { symbol: Symbol }) {
         ) : !candles || candles.length === 0 ? (
           <ChartEmpty symbol={symbol} tf={tf} onRetry={() => void refetch()} />
         ) : (
-          <Chart symbol={symbol} tf={tf} overlays={overlaySet} />
+          <Chart symbol={symbol} tf={tf} candles={candles} overlays={overlaySet} />
         )}
 
         {overlaysOn ? (

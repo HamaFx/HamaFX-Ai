@@ -15,9 +15,8 @@
 // the chart just renders what it's told.
 import { priceDecimals, type Candle, type Symbol, type Timeframe } from '@hamafx/shared';
 import type * as LightweightCharts from 'lightweight-charts';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 
-import { useCandles } from '@/hooks/use-candles';
 import { cn } from '@/lib/cn';
 
 import type { OverlaySet } from './overlays';
@@ -28,8 +27,8 @@ type UTCTimestamp = LightweightCharts.UTCTimestamp;
 interface ChartProps {
   symbol: Symbol;
   tf: Timeframe;
-  /** How many bars to fetch. Default 300 covers most indicator windows. */
-  count?: number;
+  /** Candle data passed from the parent. */
+  candles: Candle[];
   /** Tailwind height class; defaults to a mobile-first 60svh. */
   heightClass?: string;
   className?: string;
@@ -44,7 +43,7 @@ interface ChartProps {
 export function Chart({
   symbol,
   tf,
-  count = 300,
+  candles,
   heightClass = 'h-[60svh]',
   className,
   overlays,
@@ -54,26 +53,6 @@ export function Chart({
   // handles, never rendered, and React 19's effect timing means storing them
   // in state would cause a churn of re-renders on every call to setData.
   const chartRef = useRef<ChartHandle | null>(null);
-
-  // Phase 3 hardening §8 — pause polling when the chart is offscreen.
-  // Once visible the first time we keep `everVisible` true so the
-  // initial fetch isn't replayed on every scroll-back; we only stop
-  // the refetch interval, not the cached data.
-  const [visible, setVisible] = useState(true);
-  useEffect(() => {
-    const el = containerRef.current;
-    if (!el || typeof IntersectionObserver === 'undefined') return;
-    const obs = new IntersectionObserver(
-      ([entry]) => setVisible(Boolean(entry?.isIntersecting)),
-      { rootMargin: '128px' },
-    );
-    obs.observe(el);
-    return () => obs.disconnect();
-  }, []);
-
-  const { data: candles, isLoading, isError, error } = useCandles(symbol, tf, count, {
-    enabled: visible,
-  });
 
   const decimals = useMemo(() => priceDecimals(symbol), [symbol]);
 
@@ -156,18 +135,6 @@ export function Chart({
         className={cn('w-full', heightClass)}
         aria-label={`${symbol} ${tf} chart`}
       />
-      {isLoading ? (
-        <div className="text-fg-muted absolute inset-0 grid place-items-center text-sm">
-          Loading…
-        </div>
-      ) : null}
-      {isError ? (
-        <div className="absolute inset-0 grid place-items-center p-4 text-center">
-          <p className="text-bear text-sm">
-            Couldn&apos;t load chart: {(error as Error)?.message ?? 'unknown error'}
-          </p>
-        </div>
-      ) : null}
     </div>
   );
 }
