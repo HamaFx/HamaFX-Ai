@@ -23,6 +23,17 @@ export interface TelegramUpdate {
   };
 }
 
+function stringToUUID(str: string): string {
+  const hash = crypto.createHash('sha256').update(str).digest('hex');
+  return [
+    hash.substring(0, 8),
+    hash.substring(8, 12),
+    '4' + hash.substring(13, 16),
+    '8' + hash.substring(17, 20),
+    hash.substring(20, 32)
+  ].join('-');
+}
+
 export async function handleTelegramWebhook(update: TelegramUpdate, env: ServerEnv) {
   const chatId = update.message?.chat.id || update.callback_query?.message?.chat.id;
   const text = update.message?.text || update.callback_query?.data;
@@ -53,7 +64,7 @@ export async function handleTelegramWebhook(update: TelegramUpdate, env: ServerE
   // We map the telegram chat ID to a deterministic thread ID. 
   // In a real multi-user app we'd look up the user, but this is a single-user app.
   // We'll use a specific thread ID prefix to keep telegram separate, or just use a daily thread.
-  const threadId = `tg-${chatId}-default`;
+  const threadId = stringToUUID(`tg-${chatId}-default`);
 
   const userMessage: UIMessage = {
     id: crypto.randomUUID(),
