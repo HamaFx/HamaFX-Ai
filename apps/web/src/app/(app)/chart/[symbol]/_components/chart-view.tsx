@@ -95,7 +95,7 @@ export function ChartView({ symbol }: { symbol: Symbol }) {
         className="sticky z-20 px-4 pt-3 pb-2 transition-all"
         style={{ top: 'calc(var(--topbar-h) + env(safe-area-inset-top))' }}
       >
-        <header className="glass-strong border-divider/30 flex flex-col gap-3 rounded-[28px] border p-3 shadow-sm backdrop-blur-xl">
+        <header className="card-premium flex flex-col gap-3 p-3">
           <div className="flex flex-wrap items-center justify-between gap-3 px-1">
             <SymbolPicker active={symbol} />
             <PriceTag symbol={symbol} referencePrice={referenceClose} />

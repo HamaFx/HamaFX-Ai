@@ -57,3 +57,4 @@ apps/web/public/sw-precache.json
 .vercel
 .env*.local
 .tmp/
+.env*

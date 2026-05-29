@@ -273,52 +273,24 @@ export function Composer({
           </p>
         ) : null}
 
-        {/* Textarea */}
-        <div className="relative w-full">
-          <textarea
-            ref={ref}
-            value={value}
-            onChange={(e) => setValue(e.target.value)}
-            onFocus={() => setFocused(true)}
-            onBlur={() => setFocused(false)}
-            onPaste={handlePaste}
-            rows={1}
-            placeholder={placeholder}
-            disabled={disabled}
-            maxLength={MAX_TEXT_CHARS}
-            className={cn(
-              'text-fg placeholder:text-fg-subtle w-full resize-none bg-transparent px-5 pb-2 text-[15px] leading-relaxed focus:outline-none',
-              'max-h-[40dvh] min-h-[56px] transition-colors duration-150',
-              images.length > 0 ? 'pt-1' : 'pt-4',
-              '[field-sizing:content]',
-            )}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                send();
-              }
-            }}
-          />
-        </div>
-
-        {/* Action Row */}
-        <div className="flex items-end justify-between px-2 pb-2">
+        {/* Textarea & Actions Row */}
+        <div className="flex items-end gap-2 px-2 pb-2 pt-2">
           {/* Left Actions (Attach, Voice) */}
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1 pb-0.5">
             <button
               type="button"
               aria-label="Attach image"
               onClick={() => fileInputRef.current?.click()}
               disabled={disabled || images.length >= MAX_IMAGES}
               className={cn(
-                'inline-flex size-10 shrink-0 items-center justify-center rounded-full transition-colors',
+                'inline-flex size-[36px] shrink-0 items-center justify-center rounded-full transition-colors',
                 'focus-visible:ring-brand/60 focus:outline-none focus-visible:ring-2',
                 disabled || images.length >= MAX_IMAGES
                   ? 'text-fg-subtle cursor-not-allowed opacity-60'
                   : 'text-fg-muted hover:bg-bg-elev-2/50 hover:text-fg',
               )}
             >
-              <ImagePlus className="size-[22px]" strokeWidth={1.5} />
+              <ImagePlus className="size-[20px]" strokeWidth={1.5} />
             </button>
 
             <input
@@ -342,7 +314,7 @@ export function Composer({
                 onClick={() => (voice.active ? voice.stop() : voice.start())}
                 disabled={disabled}
                 className={cn(
-                  'inline-flex size-10 shrink-0 items-center justify-center rounded-full transition-colors',
+                  'inline-flex size-[36px] shrink-0 items-center justify-center rounded-full transition-colors',
                   'focus-visible:ring-brand/60 focus:outline-none focus-visible:ring-2',
                   voice.active
                     ? 'text-bear mic-pulse bg-bear/10'
@@ -350,13 +322,40 @@ export function Composer({
                   disabled ? 'cursor-not-allowed opacity-60' : '',
                 )}
               >
-                <Mic className="size-[22px]" strokeWidth={1.5} />
+                <Mic className="size-[20px]" strokeWidth={1.5} />
               </button>
             ) : null}
           </div>
 
+          {/* Textarea */}
+          <div className="relative flex-1">
+            <textarea
+              ref={ref}
+              value={value}
+              onChange={(e) => setValue(e.target.value)}
+              onFocus={() => setFocused(true)}
+              onBlur={() => setFocused(false)}
+              onPaste={handlePaste}
+              rows={1}
+              placeholder={placeholder}
+              disabled={disabled}
+              maxLength={MAX_TEXT_CHARS}
+              className={cn(
+                'text-fg placeholder:text-fg-subtle w-full resize-none bg-transparent px-2 py-2.5 text-[15px] leading-relaxed focus:outline-none',
+                'max-h-[40dvh] min-h-[44px] transition-colors duration-150',
+                '[field-sizing:content]',
+              )}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  send();
+                }
+              }}
+            />
+          </div>
+
           {/* Right Actions (Submit, Stop, Char Count) */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 pb-0.5 pr-1">
             {showCharCount ? (
               <span
                 className={cn(
@@ -413,7 +412,7 @@ export function Composer({
                     boxShadow: canSend ? 'var(--shadow-brand-press)' : 'none',
                   }}
                 >
-                  <ArrowUp className="size-5" strokeWidth={2.5} />
+                  <ArrowUp className="size-[18px]" strokeWidth={2.5} />
                 </motion.button>
               )}
             </AnimatePresence>

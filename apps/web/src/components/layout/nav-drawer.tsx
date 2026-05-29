@@ -215,8 +215,8 @@ function NavLink({ item, active }: { item: NavItem; active: boolean }) {
         href={item.href}
         aria-current={active ? 'page' : undefined}
         className={cn(
-          'group/nav relative flex min-h-[56px] items-center gap-3 rounded-full px-3 transition-colors',
-          active ? 'bg-bg-elev-3 text-fg shadow-sm' : 'text-fg-muted hover:bg-bg-elev-2 hover:text-fg',
+          'group/nav relative flex min-h-[56px] items-center gap-3 rounded-full px-3 transition-all',
+          active ? 'bg-brand/10 ring-1 ring-brand/30 text-fg shadow-[0_4px_24px_-4px_oklch(78%_0.16_78/0.2)]' : 'text-fg-muted hover:bg-bg-elev-2 hover:text-fg',
         )}
       >
         <span
@@ -242,13 +242,6 @@ function NavLink({ item, active }: { item: NavItem; active: boolean }) {
             </span>
           ) : null}
         </div>
-        {active ? (
-          <span
-            aria-hidden="true"
-            className="bg-brand absolute right-3 top-1/2 size-1.5 -translate-y-1/2 rounded-full"
-            style={{ boxShadow: '0 0 8px var(--color-brand)' }}
-          />
-        ) : null}
       </Link>
     </li>
   );

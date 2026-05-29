@@ -36,13 +36,18 @@ export function TopBar({ title, right }: TopBarProps) {
   return (
     <header
       className={cn(
-        'glass-strong sticky top-0 z-30 border-b border-divider/40 shadow-sm',
-        'pt-[env(safe-area-inset-top)]',
+        'sticky top-0 z-30 flex justify-center pointer-events-none',
+        'pt-[calc(env(safe-area-inset-top)+12px)] px-3 pb-2',
       )}
     >
       <div
-        className="mx-auto flex max-w-2xl items-center gap-2 px-3"
-        style={{ height: 'var(--topbar-h)' }}
+        className={cn(
+          'glass-strong pointer-events-auto flex w-full max-w-[400px] items-center gap-2 rounded-full border border-divider/60 px-2 shadow-lg transition-all',
+        )}
+        style={{
+          height: 'var(--topbar-h)',
+          boxShadow: 'var(--shadow-inset-edge-soft), 0 8px 32px -8px oklch(78% 0.16 85 / 0.15)',
+        }}
       >
         <NavTrigger />
 

@@ -109,12 +109,19 @@ export function ChatTopBar({ threadId, title, pinnedSymbol, threads, isStreaming
 
   return (
     <header
-      className="glass-strong sticky top-0 z-30 border-b border-divider/30 shadow-sm transition-all duration-300"
-      style={{ paddingTop: 'env(safe-area-inset-top)' }}
+      className={cn(
+        'sticky top-0 z-30 flex justify-center pointer-events-none transition-all duration-300',
+        'pt-[calc(env(safe-area-inset-top)+12px)] px-3 pb-2',
+      )}
     >
       <div
-        className="mx-auto flex max-w-2xl items-center gap-1 px-2"
-        style={{ height: 'var(--topbar-h)' }}
+        className={cn(
+          'glass-strong pointer-events-auto flex w-full max-w-[600px] items-center gap-1 rounded-full border border-divider/60 px-2 shadow-lg',
+        )}
+        style={{
+          height: 'var(--topbar-h)',
+          boxShadow: 'var(--shadow-inset-edge-soft), 0 8px 32px -8px oklch(78% 0.16 85 / 0.15)',
+        }}
       >
         <NavTrigger />
 
