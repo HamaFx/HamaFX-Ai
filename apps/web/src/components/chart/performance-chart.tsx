@@ -1,0 +1,185 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+'use client';
+
+// Premium Cumulative R-Multiple Performance Chart using lightweight-charts.
+// Visualizes equity growth over time with clean canvas styling and champagne gold gradient fills.
+
+import type { JournalEntry } from '@hamafx/shared';
+import type * as LightweightCharts from 'lightweight-charts';
+import { TrendingUp, Award } from 'lucide-react';
+import { useEffect, useMemo, useRef } from 'react';
+
+import { getThemeColors } from './chart';
+
+type UTCTimestamp = LightweightCharts.UTCTimestamp;
+
+interface PerformanceChartProps {
+  entries: JournalEntry[];
+  theme?: 'slate' | 'navy' | 'black' | 'classic';
+  height?: number;
+}
+
+export function PerformanceChart({
+  entries,
+  theme = 'black',
+  height = 220,
+}: PerformanceChartProps) {
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const chartRef = useRef<any>(null);
+  const seriesRef = useRef<any>(null);
+
+  // Filter closed trades and calculate cumulative R-multiple series chronologically
+  const chartData = useMemo(() => {
+    const closed = entries
+      .filter(
+        (e): e is JournalEntry & { closedAt: number; rMultiple: number } =>
+          e.closedAt !== null && e.rMultiple !== null && e.rMultiple !== undefined
+      )
+      .sort((a, b) => a.openedAt - b.openedAt); // order by trade entry/opened date
+
+    let sum = 0;
+    const result: { time: UTCTimestamp; value: number }[] = [];
+
+    closed.forEach((e) => {
+      sum += e.rMultiple;
+      const t = Math.floor(e.closedAt / 1000);
+
+      // Lightweight-charts requires strictly increasing times
+      const last = result[result.length - 1];
+      const time = last && t <= (last.time as unknown as number)
+        ? ((last.time as unknown as number) + 1) as unknown as UTCTimestamp
+        : t as unknown as UTCTimestamp;
+
+      result.push({ time, value: sum });
+    });
+
+    return result;
+  }, [entries]);
+
+  const totalR = useMemo(() => {
+    if (chartData.length === 0) return 0;
+    return chartData[chartData.length - 1]!.value;
+  }, [chartData]);
+
+  // Handle Chart Lifecycle
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el || chartData.length === 0) return;
+
+    let cancelled = false;
+    let chart: any = null;
+
+    void import('lightweight-charts').then((lc) => {
+      if (cancelled || !containerRef.current) return;
+
+      const colors = getThemeColors(theme);
+      
+      const createChartFn = ('createChart' in lc) 
+        ? lc.createChart 
+        : ((lc as any).default?.createChart as any);
+
+      chart = createChartFn(containerRef.current, {
+        height,
+        layout: {
+          background: { color: 'transparent' }, // Glassmorphic clean transparent canvas
+          textColor: colors.text,
+          fontFamily: getComputedStyle(el).getPropertyValue('--font-sans') || 'Inter, system-ui, sans-serif',
+        },
+        grid: {
+          vertLines: { color: 'transparent' },
+          horzLines: { color: colors.grid, style: 2 /* Dotted */ },
+        },
+        rightPriceScale: {
+          borderColor: 'transparent',
+          visible: true,
+        },
+        timeScale: {
+          borderColor: 'transparent',
+          timeVisible: true,
+          secondsVisible: false,
+        },
+        crosshair: {
+          mode: 1, // Magnet
+          vertLine: { color: colors.text, style: 3 /* Dashed */ },
+          horzLine: { color: colors.text, style: 3 },
+        },
+        autoSize: true,
+        handleScroll: false, // Static aesthetic tracking curve
+        handleScale: false,
+      });
+
+      chartRef.current = chart;
+
+      // Add Area Series with champagne gold tones
+      const areaSeries = chart.addSeries(lc.AreaSeries, {
+        lineColor: totalR >= 0 ? '#eab308' : '#f0594a', // Gold if green, Red if negative
+        topColor: totalR >= 0 ? 'rgba(234, 179, 8, 0.2)' : 'rgba(240, 89, 74, 0.2)',
+        bottomColor: 'rgba(0, 0, 0, 0)',
+        lineWidth: 2,
+        priceLineVisible: false,
+        lastValueVisible: true,
+      });
+
+      seriesRef.current = areaSeries;
+      areaSeries.setData(chartData);
+      chart.timeScale().fitContent();
+    });
+
+    return () => {
+      cancelled = true;
+      chart?.remove();
+      chartRef.current = null;
+    };
+  }, [chartData, theme, height, totalR]);
+
+  // Keep colors updated when theme dynamically changes
+  useEffect(() => {
+    const chart = chartRef.current;
+    if (!chart) return;
+    const colors = getThemeColors(theme);
+    chart.applyOptions({
+      layout: { textColor: colors.text },
+      grid: { horzLines: { color: colors.grid } },
+    });
+  }, [theme]);
+
+  if (chartData.length < 2) {
+    return (
+      <div className="card-premium flex h-[220px] flex-col items-center justify-center gap-2 p-6 text-center">
+        <div className="rounded-full bg-brand/10 p-3 text-brand">
+          <TrendingUp className="size-6 animate-pulse" />
+        </div>
+        <p className="text-sm font-semibold text-fg">Performance Curve Loading</p>
+        <p className="max-w-[280px] text-xs text-fg-subtle">
+          Close at least two trades to begin plotting your cumulative R-multiple performance curve.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="card-premium relative overflow-hidden p-4 flex flex-col gap-3">
+      <div className="flex items-center justify-between px-1">
+        <div className="flex items-center gap-2">
+          <div className="rounded-lg bg-brand/10 p-2 text-brand">
+            <Award className="size-4" />
+          </div>
+          <div>
+            <h4 className="text-xs font-bold uppercase tracking-wider text-fg-subtle">Performance Curve</h4>
+            <p className="text-[10px] text-fg-muted mt-0.5">Cumulative R-Multiple Growth</p>
+          </div>
+        </div>
+        <div className="text-right">
+          <span className="text-[10px] text-fg-muted font-medium uppercase tracking-wide">Net R-Score</span>
+          <p className={`text-xl font-bold tracking-tight tabular-nums ${totalR >= 0 ? 'text-bull' : 'text-bear'}`}>
+            {totalR >= 0 ? '+' : ''}{totalR.toFixed(2)}R
+          </p>
+        </div>
+      </div>
+
+      <div className="relative w-full overflow-hidden rounded-lg mt-1 bg-black/10">
+        <div ref={containerRef} className="w-full" />
+      </div>
+    </div>
+  );
+}

@@ -1,9 +1,12 @@
 'use client';
 
-// Wires the form (in a Drawer), list, and stats summary together.
+// Wires the form (in a Drawer), list, stats summary, and performance curve together.
+// Implements an advanced, responsive two-column grid on desktop, showing the equity curve and list
+// on the left, and stats summary / analytics on the right.
+
 import type { JournalEntry, JournalStats } from '@hamafx/shared';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Plus } from 'lucide-react';
+import { Plus, BookOpen, Activity, RefreshCw } from 'lucide-react';
 import { useState } from 'react';
 
 import {
@@ -13,8 +16,8 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from '@/components/ui/drawer';
-import { Fab } from '@/components/ui/fab';
 import { StaleIndicator } from '@/components/ui/stale-indicator';
+import { PerformanceChart } from '@/components/chart/performance-chart';
 
 import { EntryForm } from './entry-form';
 import { EntryList } from './entry-list';
@@ -43,25 +46,80 @@ export function JournalView() {
   const refresh = () => qc.invalidateQueries({ queryKey: QKEY });
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex items-center justify-end">
-        <StaleIndicator isFetching={isFetching && !isLoading} />
-      </div>
-      {data?.stats ? <StatsSummary stats={data.stats} entries={data.entries} /> : null}
+    <div className="flex flex-col gap-6 animate-in fade-in duration-300">
+      {/* Sticky header controls */}
+      <header className="card-premium flex flex-wrap items-center justify-between gap-4 p-4">
+        <div className="flex items-center gap-3">
+          <div className="rounded-full bg-brand/10 p-3 text-brand">
+            <BookOpen className="size-5" />
+          </div>
+          <div>
+            <h1 className="text-lg font-black tracking-tight text-fg">Trading Journal</h1>
+            <p className="text-[11px] text-fg-subtle mt-0.5">Track, analyze, and optimize your trading performance</p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <StaleIndicator isFetching={isFetching && !isLoading} />
+          
+          <button
+            onClick={refresh}
+            className="glass-subtle size-10 flex items-center justify-center rounded-full text-fg-muted hover:text-fg transition-all cursor-pointer"
+            title="Refresh logs"
+          >
+            <RefreshCw className={cn("size-4", isFetching && "animate-spin")} />
+          </button>
+
+          <button
+            onClick={() => setOpen(true)}
+            className="inline-flex h-10 items-center justify-center gap-2 rounded-full bg-brand px-4 text-xs font-bold text-brand-fg shadow-glow-brand/15 hover:opacity-90 transition-all cursor-pointer"
+          >
+            <Plus className="size-4" />
+            <span>Log Trade</span>
+          </button>
+        </div>
+      </header>
+
+      {/* Main Responsive Grid Layout */}
       {isLoading ? (
-        <p className="text-fg-muted text-xs">Loading…</p>
+        <div className="flex flex-col items-center justify-center h-[350px] gap-2.5">
+          <Activity className="size-6 text-brand animate-pulse" />
+          <p className="text-xs font-bold uppercase tracking-wider text-fg-muted">Loading your metrics...</p>
+        </div>
       ) : isError ? (
-        <p className="text-bear text-xs">Failed to load: {(error as Error)?.message}</p>
+        <div className="card-premium p-6 border-bear/20 bg-bear/5 text-center flex flex-col items-center justify-center gap-2">
+          <p className="text-sm font-semibold text-bear">Failed to load journal portfolio</p>
+          <p className="text-xs text-fg-subtle">{(error as Error)?.message || 'Unknown network error'}</p>
+        </div>
       ) : (
-        <EntryList entries={data?.entries ?? []} onClosed={refresh} onDeleted={refresh} />
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+          {/* Left Column: Equity curve and entries list (occupies 2/3 of desktop width) */}
+          <div className="lg:col-span-2 flex flex-col gap-6">
+            {/* Cum R Equity Curve */}
+            <PerformanceChart entries={data?.entries ?? []} />
+
+            {/* Structured Trade logs list */}
+            <EntryList entries={data?.entries ?? []} onClosed={refresh} onDeleted={refresh} />
+          </div>
+
+          {/* Right Column: Key performance metrics & analytics (occupies 1/3 of desktop width) */}
+          <div className="lg:col-span-1">
+            {data?.stats ? (
+              <div className="sticky top-[calc(var(--topbar-h)+24px)] flex flex-col gap-6">
+                <StatsSummary stats={data.stats} entries={data.entries} />
+              </div>
+            ) : null}
+          </div>
+        </div>
       )}
 
+      {/* Slide-over Trade entry Logger Drawer */}
       <Drawer open={open} onOpenChange={setOpen}>
-        <DrawerContent>
-          <DrawerHeader>
-            <DrawerTitle>Log trade</DrawerTitle>
-            <DrawerDescription>
-              Record entry, stop, target. Stats compute on close.
+        <DrawerContent className="max-h-[85svh]">
+          <DrawerHeader className="pb-2">
+            <DrawerTitle className="text-lg font-black tracking-tight text-fg">Log New Position</DrawerTitle>
+            <DrawerDescription className="text-xs text-fg-subtle">
+              Record entry, size, stop-loss, and target. Outcome stats calculate automatically upon trade closure.
             </DrawerDescription>
           </DrawerHeader>
           <EntryForm
@@ -72,10 +130,12 @@ export function JournalView() {
           />
         </DrawerContent>
       </Drawer>
-
-      <Fab onClick={() => setOpen(true)} aria-label="Log new trade">
-        <Plus className="size-6" />
-      </Fab>
     </div>
   );
 }
+
+// Inline class merge helper to prevent typescript lint dependencies
+function cn(...classes: unknown[]) {
+  return classes.filter(Boolean).join(' ');
+}
+

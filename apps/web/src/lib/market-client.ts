@@ -111,6 +111,37 @@ export async function fetchIndicators(
   return body.results;
 }
 
+export interface ChartDataResponse {
+  symbol: Symbol;
+  tf: Timeframe;
+  count: number;
+  candles: Candle[];
+  results: IndicatorResult[];
+}
+
+/** POST /api/market/indicators — returns both candles and calculated indicators in one payload */
+export async function fetchChartData(
+  symbol: Symbol,
+  tf: Timeframe,
+  indicators: readonly IndicatorRequest[],
+  count = 300,
+  opts: FetchOptions = {},
+): Promise<ChartDataResponse> {
+  const init: RequestInit = {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({
+      symbol,
+      tf,
+      count,
+      indicators: indicators.map((i) => ({ kind: i.kind, params: i.params ?? {} })),
+    }),
+  };
+  if (opts.signal) init.signal = opts.signal;
+  const res = await fetch('/api/market/indicators', init);
+  return parse<ChartDataResponse>(res);
+}
+
 export interface FetchStructureOptions extends FetchOptions {
   count?: number;
   kinds?: readonly StructureKind[];

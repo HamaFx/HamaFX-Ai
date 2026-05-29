@@ -4,7 +4,7 @@
 // Client orchestration for the upgraded chart page.
 // Combines dynamic price feeds, structure events, active indicators, and customized styling.
 
-import type { Symbol } from '@hamafx/shared';
+import type { Symbol, Candle, Timeframe } from '@hamafx/shared';
 import { Maximize2, SlidersHorizontal } from 'lucide-react';
 import { Link } from 'next-view-transitions';
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -22,8 +22,8 @@ import { SymbolPicker } from '@/components/chart/symbol-picker';
 import { TimeframePicker } from '@/components/chart/timeframe-picker';
 import { StaleIndicator } from '@/components/ui/stale-indicator';
 import { Tooltip } from '@/components/ui/tooltip';
-import { useCandles } from '@/hooks/use-candles';
-import { useIndicators } from '@/hooks/use-indicators';
+import { useChartData } from '@/hooks/use-chart-data';
+import { usePrice } from '@/hooks/use-prices';
 import { useStructure } from '@/hooks/use-structure';
 import { useTimeframe } from '@/hooks/use-tf';
 
@@ -56,6 +56,19 @@ const DEFAULT_SETTINGS: ChartSettings = {
   theme: 'black',
   gridStyle: 'solid',
 };
+
+function timeframeToMs(tf: Timeframe): number {
+  switch (tf) {
+    case '1m': return 60_000;
+    case '5m': return 300_000;
+    case '15m': return 900_000;
+    case '30m': return 1_800_000;
+    case '1h': return 3_600_000;
+    case '4h': return 14_400_000;
+    case '1d': return 86_400_000;
+    case '1w': return 604_800_000;
+  }
+}
 
 export function ChartView({ symbol }: { symbol: Symbol }) {
   const [tf, setTf] = useTimeframe();
@@ -136,16 +149,56 @@ export function ChartView({ symbol }: { symbol: Symbol }) {
     return list;
   }, [indicators]);
 
+  // Unified chart data load (candles and indicators in one request)
   const {
-    data: candles,
+    candles,
+    indicatorResults,
     isLoading,
     isFetching,
     error,
     refetch,
-  } = useCandles(symbol, tf, 300, { enabled: visible });
+  } = useChartData(symbol, tf, activeIndicatorsRequest, 300, { enabled: visible });
 
-  // Fetch active indicators
-  const { data: indicatorResults } = useIndicators(symbol, tf, activeIndicatorsRequest, 300);
+  // Stream live prices tick-by-tick into the current candle
+  const { tick } = usePrice(symbol);
+
+  const candlesWithLive = useMemo(() => {
+    if (!candles || candles.length === 0) return candles;
+    if (!tick) return candles;
+
+    const tfMs = timeframeToMs(tf);
+    const lastCandle = candles[candles.length - 1]!;
+    
+    // Calculate the start time of the timeframe bucket that this tick belongs to.
+    const barTime = Math.floor(tick.ts / tfMs) * tfMs;
+
+    if (barTime === lastCandle.t) {
+      const updatedLast: Candle = {
+        ...lastCandle,
+        h: Math.max(lastCandle.h, tick.mid),
+        l: Math.min(lastCandle.l, tick.mid),
+        c: tick.mid,
+        fetchedAt: Date.now(),
+      };
+      return [...candles.slice(0, -1), updatedLast];
+    } else if (barTime > lastCandle.t) {
+      const newCandle: Candle = {
+        symbol: lastCandle.symbol,
+        tf: lastCandle.tf,
+        t: barTime,
+        o: tick.mid,
+        h: tick.mid,
+        l: tick.mid,
+        c: tick.mid,
+        v: null,
+        source: 'live',
+        fetchedAt: Date.now(),
+      };
+      return [...candles, newCandle];
+    }
+
+    return candles;
+  }, [candles, tick, tf]);
 
   // Only fetch structure when at least one overlay is on.
   const overlaysOn = activeOverlays.length > 0;
@@ -173,10 +226,10 @@ export function ChartView({ symbol }: { symbol: Symbol }) {
   );
 
   const overlaySet = useMemo(() => {
-    if (!structure || !candles) return null;
-    const times = candles.map((c) => c.t);
+    if (!structure || !candlesWithLive) return null;
+    const times = candlesWithLive.map((c) => c.t);
     return buildOverlays(structure, times, PALETTE, toggleRecord);
-  }, [structure, candles, toggleRecord]);
+  }, [structure, candlesWithLive, toggleRecord]);
 
   return (
     <div ref={containerRef} className="-mx-4 flex flex-col animate-in fade-in duration-300">
@@ -241,13 +294,13 @@ export function ChartView({ symbol }: { symbol: Symbol }) {
           <ChartSkeleton />
         ) : error ? (
           <ChartError error={error} onRetry={() => void refetch()} />
-        ) : !candles || candles.length === 0 ? (
+        ) : !candlesWithLive || candlesWithLive.length === 0 ? (
           <ChartEmpty symbol={symbol} tf={tf} onRetry={() => void refetch()} />
         ) : (
           <Chart
             symbol={symbol}
             tf={tf}
-            candles={candles}
+            candles={candlesWithLive}
             indicatorResults={indicatorResults}
             settings={settings}
             overlays={overlaySet}

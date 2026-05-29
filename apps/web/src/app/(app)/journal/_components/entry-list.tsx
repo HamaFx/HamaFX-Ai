@@ -1,21 +1,17 @@
 'use client';
 
-// Journal entries list. Mobile-first:
-//   - card padding p-4 (16)
-//   - delete confirmation via <ConfirmDrawer>, never window.confirm
-//   - "close trade" inline form stacks vertically — three controls
-//     (label+input → save → cancel) on a 430px screen don't fit
-//     side-by-side and were causing the cancel button to wrap to a 2nd
-//     row anyway.
+// Advanced trade list with real-time price tracking, dynamic PnL sliders,
+// and powerful tabs/filters (Active, Closed, All, symbols, sides, text searches).
 
-import type { JournalEntry } from '@hamafx/shared';
-import { Trash2 } from 'lucide-react';
-import { useState } from 'react';
+import type { JournalEntry, Symbol, TradeSide } from '@hamafx/shared';
+import { Trash2, Search, SlidersHorizontal, ArrowUpRight, ArrowDownRight, Compass, Play } from 'lucide-react';
+import { useState, useMemo } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { useConfirm } from '@/components/ui/confirm-drawer';
 import { Input } from '@/components/ui/input';
 import { Tooltip } from '@/components/ui/tooltip';
+import { usePrices } from '@/hooks/use-prices';
 import { cn } from '@/lib/cn';
 import { fetchCsrf } from '@/lib/csrf';
 
@@ -28,26 +24,197 @@ interface EntryListProps {
 export function EntryList({ entries, onClosed, onDeleted }: EntryListProps) {
   const [confirmEl, confirm] = useConfirm();
 
-  if (entries.length === 0) {
-    return (
-      <p className="text-fg-subtle text-sm">No entries yet — log your first trade above.</p>
-    );
-  }
+  // State for Tabs & Filters
+  const [tab, setTab] = useState<'active' | 'closed' | 'all'>('active');
+  const [symbolFilter, setSymbolFilter] = useState<'ALL' | Symbol>('ALL');
+  const [sideFilter, setSideFilter] = useState<'ALL' | TradeSide>('ALL');
+  const [search, setSearch] = useState('');
+  const [showFilters, setShowFilters] = useState(false);
+
+  // Extract all symbols from open/active trades to subscribe to the price feed
+  const activeSymbols = useMemo(() => {
+    const symbolsSet = new Set<Symbol>();
+    entries.forEach((e) => {
+      if (e.outcome === 'open') {
+        symbolsSet.add(e.symbol);
+      }
+    });
+    return Array.from(symbolsSet);
+  }, [entries]);
+
+  // Hook live prices (polls every 1.5s)
+  const { data: ticks } = usePrices(activeSymbols);
+
+  const priceMap = useMemo(() => {
+    const map = new Map<Symbol, number>();
+    ticks?.forEach((t) => map.set(t.symbol, t.mid));
+    return map;
+  }, [ticks]);
+
+  // Filter entries based on active tab
+  const tabEntries = useMemo(() => {
+    return entries.filter((e) => {
+      if (tab === 'active') return e.outcome === 'open';
+      if (tab === 'closed') return e.outcome !== 'open';
+      return true; // 'all'
+    });
+  }, [entries, tab]);
+
+  // Apply symbol, side and text search filters
+  const filteredEntries = useMemo(() => {
+    return tabEntries.filter((e) => {
+      if (symbolFilter !== 'ALL' && e.symbol !== symbolFilter) return false;
+      if (sideFilter !== 'ALL' && e.side !== sideFilter) return false;
+      if (search.trim()) {
+        const query = search.toLowerCase();
+        const matchesNote = e.notes?.toLowerCase().includes(query) ?? false;
+        const matchesTag = e.tags?.some((t) => t.toLowerCase().includes(query)) ?? false;
+        const matchesSymbol = e.symbol.toLowerCase().includes(query);
+        if (!matchesNote && !matchesTag && !matchesSymbol) return false;
+      }
+      return true;
+    });
+  }, [tabEntries, symbolFilter, sideFilter, search]);
+
+  const activeCount = entries.filter((e) => e.outcome === 'open').length;
+  const closedCount = entries.filter((e) => e.outcome !== 'open').length;
+
   return (
-    <>
-      <ul className="flex flex-col gap-3">
-        {entries.map((e) => (
-          <EntryRow
-            key={e.id}
-            entry={e}
-            onClosed={onClosed}
-            onDeleted={onDeleted}
-            confirm={confirm}
-          />
-        ))}
-      </ul>
+    <div className="flex flex-col gap-4">
+      {/* Visual Tab Switcher */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-glass-edge/40 pb-2">
+        <div className="flex p-0.5 rounded-xl bg-bg-elev-2/60 border border-glass-edge/40 self-start">
+          <button
+            onClick={() => setTab('active')}
+            className={cn(
+              'px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all relative flex items-center gap-1.5 cursor-pointer',
+              tab === 'active' ? 'bg-brand text-brand-fg shadow-glow-brand/10' : 'text-fg-muted hover:text-fg'
+            )}
+          >
+            Active Positions
+            {activeCount > 0 && (
+              <span className={cn(
+                'size-2 rounded-full',
+                tab === 'active' ? 'bg-brand-fg animate-ping' : 'bg-brand animate-pulse'
+              )} />
+            )}
+          </button>
+          <button
+            onClick={() => setTab('closed')}
+            className={cn(
+              'px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer',
+              tab === 'closed' ? 'bg-brand text-brand-fg shadow-glow-brand/10' : 'text-fg-muted hover:text-fg'
+            )}
+          >
+            Closed History
+            <span className="text-[10px] opacity-70 ml-1">({closedCount})</span>
+          </button>
+          <button
+            onClick={() => setTab('all')}
+            className={cn(
+              'px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer',
+              tab === 'all' ? 'bg-brand text-brand-fg shadow-glow-brand/10' : 'text-fg-muted hover:text-fg'
+            )}
+          >
+            All Logs
+          </button>
+        </div>
+
+        {/* Filter Trigger & Search Bar */}
+        <div className="flex items-center gap-2">
+          <div className="relative flex-1 sm:w-64">
+            <Search className="absolute left-3.5 top-3 size-3.5 text-fg-muted" />
+            <input
+              type="text"
+              placeholder="Search notes, tags, symbol..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full pl-9 pr-4 py-2 text-xs rounded-xl bg-bg-elev-2/45 border border-glass-edge/40 focus:outline-none focus:border-brand/70 transition-all text-fg"
+            />
+          </div>
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            className={cn(
+              'p-2.5 rounded-xl border border-glass-edge/40 bg-bg-elev-2/45 text-fg-muted hover:text-fg transition-all cursor-pointer',
+              showFilters && 'border-brand text-brand bg-brand/5'
+            )}
+            title="Toggle advanced filters"
+          >
+            <SlidersHorizontal className="size-4" />
+          </button>
+        </div>
+      </div>
+
+      {/* Advanced Filter Panel */}
+      {showFilters && (
+        <div className="card-premium p-4 grid grid-cols-2 gap-4 animate-in slide-in-from-top-2 duration-200">
+          <div className="flex flex-col gap-1.5">
+            <label className="text-[10px] font-bold uppercase tracking-wider text-fg-subtle">Asset Class</label>
+            <div className="flex flex-wrap gap-1">
+              {(['ALL', 'XAUUSD', 'EURUSD', 'GBPUSD'] as const).map((sym) => (
+                <button
+                  key={sym}
+                  onClick={() => setSymbolFilter(sym)}
+                  className={cn(
+                    'px-2.5 py-1 text-xs font-semibold rounded-lg border border-glass-edge bg-bg-elev-3/50 hover:bg-bg-elev-3 cursor-pointer',
+                    symbolFilter === sym && 'border-brand bg-brand/10 text-brand'
+                  )}
+                >
+                  {sym}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <label className="text-[10px] font-bold uppercase tracking-wider text-fg-subtle">Direction</label>
+            <div className="flex flex-wrap gap-1">
+              {(['ALL', 'long', 'short'] as const).map((side) => (
+                <button
+                  key={side}
+                  onClick={() => setSideFilter(side)}
+                  className={cn(
+                    'px-2.5 py-1 text-xs font-semibold rounded-lg border border-glass-edge bg-bg-elev-3/50 hover:bg-bg-elev-3 cursor-pointer',
+                    sideFilter === side && 'border-brand bg-brand/10 text-brand'
+                  )}
+                >
+                  {side === 'ALL' ? 'ALL' : side === 'long' ? 'Buy ↑' : 'Sell ↓'}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Entries List */}
+      {filteredEntries.length === 0 ? (
+        <div className="card-premium p-8 text-center flex flex-col items-center justify-center gap-2">
+          <div className="size-10 rounded-full bg-glass border border-glass-edge flex items-center justify-center text-fg-muted">
+            <Compass className="size-5" />
+          </div>
+          <p className="text-sm font-semibold text-fg">No entries found</p>
+          <p className="text-xs text-fg-subtle max-w-[280px]">
+            {search || symbolFilter !== 'ALL' || sideFilter !== 'ALL'
+              ? 'Try modifying your search query or filters.'
+              : 'Log your first trade to activate your portfolio analytics.'}
+          </p>
+        </div>
+      ) : (
+        <ul className="flex flex-col gap-3.5">
+          {filteredEntries.map((e) => (
+            <EntryRow
+              key={e.id}
+              entry={e}
+              livePrice={priceMap.get(e.symbol)}
+              onClosed={onClosed}
+              onDeleted={onDeleted}
+              confirm={confirm}
+            />
+          ))}
+        </ul>
+      )}
       {confirmEl}
-    </>
+    </div>
   );
 }
 
@@ -55,11 +222,13 @@ type ConfirmFn = ReturnType<typeof useConfirm>[1];
 
 function EntryRow({
   entry,
+  livePrice,
   onClosed,
   onDeleted,
   confirm,
 }: {
   entry: JournalEntry;
+  livePrice?: number | undefined;
   onClosed: () => void;
   onDeleted: () => void;
   confirm: ConfirmFn;
@@ -112,92 +281,251 @@ function EntryRow({
     }
   }
 
+  // Calculate Real-Time Live Profit / Loss Metrics
+  const liveStats = useMemo(() => {
+    if (entry.outcome !== 'open' || !livePrice) return null;
+
+    const diff = entry.side === 'long' ? livePrice - entry.entry : entry.entry - livePrice;
+    
+    // Pip calculations: Gold uses *10, Forex uses *10000
+    const pipMultiplier = entry.symbol === 'XAUUSD' ? 10 : 10000;
+    const pips = diff * pipMultiplier;
+
+    // USD Cash calculations (size = lots)
+    let cashPnl = 0;
+    if (entry.size !== null) {
+      const contractSize = entry.symbol === 'XAUUSD' ? 100 : 100000;
+      cashPnl = entry.size * contractSize * diff;
+    }
+
+    // R-multiple calculations
+    let rMultiple = 0;
+    if (entry.stop !== null) {
+      const risk = entry.side === 'long' ? entry.entry - entry.stop : entry.stop - entry.entry;
+      rMultiple = risk > 0 ? diff / risk : 0;
+    }
+
+    return { pips, cashPnl, rMultiple };
+  }, [entry, livePrice]);
+
+  // Compute horizontal slider positioning for Stop Loss and Target
+  const sliderPosition = useMemo(() => {
+    if (!livePrice || entry.stop === null || entry.target === null) return null;
+
+    const stopPrice = entry.stop;
+    const targetPrice = entry.target;
+
+    let percentage = 0;
+
+    if (entry.side === 'long') {
+      const range = targetPrice - stopPrice;
+      percentage = range > 0 ? ((livePrice - stopPrice) / range) * 100 : 50;
+    } else {
+      // Short
+      const range = stopPrice - targetPrice;
+      percentage = range > 0 ? ((stopPrice - livePrice) / range) * 100 : 50;
+    }
+
+    // Clamp between 1% and 99% for visual boundary protection
+    return Math.min(Math.max(percentage, 2), 98);
+  }, [entry, livePrice]);
+
   const sideColor = entry.side === 'long' ? 'text-bull' : 'text-bear';
-  const outcomeColor =
-    entry.outcome === 'win'
-      ? 'text-bull'
-      : entry.outcome === 'loss'
-        ? 'text-bear'
-        : 'text-fg-muted';
+  const sideBg = entry.side === 'long' ? 'bg-bull/10 border-bull/20' : 'bg-bear/10 border-bear/20';
+  
+  const isWin = entry.outcome === 'win' || (liveStats && liveStats.rMultiple > 0);
+  const isLoss = entry.outcome === 'loss' || (liveStats && liveStats.rMultiple < 0);
+
+  const outcomeColor = isWin ? 'text-bull' : isLoss ? 'text-bear' : 'text-fg-muted';
 
   return (
-    <li className="card-premium flex flex-col gap-3 p-4">
-      <div className="flex items-start gap-3">
-        <div className="min-w-0 flex-1">
-          <p className="flex items-center gap-2 text-sm font-semibold tabular-nums">
-            <span className="text-fg">{entry.symbol}</span>
-            <span className={cn('uppercase', sideColor)}>{entry.side}</span>
-            <span className="text-fg-muted">@ {entry.entry}</span>
+    <li className="card-premium flex flex-col gap-3.5 p-4 hover:border-glass-edge-hover hover:shadow-glow-brand/5 transition-all duration-200">
+      <div className="flex items-start gap-4">
+        <div className="min-w-0 flex-1 flex flex-col gap-1.5">
+          {/* Header Row */}
+          <div className="flex flex-wrap items-center gap-2 text-sm font-bold tabular-nums">
+            <span className={cn(
+              'px-2 py-0.5 text-[10px] font-black uppercase tracking-wider rounded border',
+              sideBg,
+              sideColor
+            )}>
+              {entry.side}
+            </span>
+            <span className="text-fg text-base tracking-tight">{entry.symbol}</span>
+            <span className="text-fg-muted font-medium text-xs">at</span>
+            <span className="text-fg font-extrabold">{entry.entry}</span>
+
+            {/* Sizing lot indicator */}
+            {entry.size !== null && (
+              <span className="text-[10px] font-medium text-fg-subtle px-1.5 py-0.5 rounded-full bg-bg-elev-3 border border-glass-edge/40">
+                {entry.size} Lots
+              </span>
+            )}
+          </div>
+
+          {/* Opened & Closed Dates */}
+          <p className="text-fg-subtle flex flex-wrap items-center gap-x-2 gap-y-1 text-xs font-semibold">
+            <span>Opened {relative(entry.openedAt)}</span>
+            {entry.closedAt && (
+              <>
+                <span className="text-fg-muted/50">·</span>
+                <span>Closed {relative(entry.closedAt)}</span>
+              </>
+            )}
           </p>
-          <p className="text-fg-subtle mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs tabular-nums">
-            <span>{relative(entry.openedAt)}</span>
-            {entry.stop !== null ? (
-              <>
-                <span aria-hidden>·</span>
-                <span>stop {entry.stop}</span>
-              </>
-            ) : null}
-            {entry.target !== null ? (
-              <>
-                <span aria-hidden>·</span>
-                <span>target {entry.target}</span>
-              </>
-            ) : null}
-            {entry.size !== null ? (
-              <>
-                <span aria-hidden>·</span>
-                <span>{entry.size} lots</span>
-              </>
-            ) : null}
-          </p>
-          {entry.notes ? <p className="text-fg-muted mt-2 text-xs">{entry.notes}</p> : null}
+
+          {/* Tags Strip */}
+          {entry.tags && entry.tags.length > 0 && (
+            <div className="flex flex-wrap gap-1 mt-1">
+              {entry.tags.map((t) => (
+                <span
+                  key={t}
+                  className="px-2 py-0.5 text-[9px] font-black uppercase tracking-wider rounded-md bg-brand/5 border border-brand/20 text-brand"
+                >
+                  #{t}
+                </span>
+              ))}
+            </div>
+          )}
+
+          {/* Notes display */}
+          {entry.notes && (
+            <p className="text-fg-muted text-xs leading-relaxed mt-1.5 border-l-2 border-glass-edge/70 pl-2.5 py-0.5">
+              {entry.notes}
+            </p>
+          )}
         </div>
 
-        <div className="flex shrink-0 flex-col items-end gap-2">
+        {/* Action Panel / Metrics on Right Side */}
+        <div className="flex shrink-0 flex-col items-end gap-2.5">
+          {/* Outcome realization display */}
           {entry.outcome === 'open' ? (
-            !closing ? (
+            liveStats ? (
+              <div className="flex flex-col items-end gap-0.5">
+                {/* Live R Multiple */}
+                {entry.stop !== null && (
+                  <span className={cn('text-sm font-extrabold tabular-nums flex items-center gap-0.5', outcomeColor)}>
+                    {liveStats.rMultiple >= 0 ? <ArrowUpRight className="size-4" /> : <ArrowDownRight className="size-4" />}
+                    {liveStats.rMultiple >= 0 ? '+' : ''}{liveStats.rMultiple.toFixed(2)}R
+                  </span>
+                )}
+                {/* Live cash value or Pip distance */}
+                <span className="text-[10px] font-bold text-fg-muted tracking-wide tabular-nums">
+                  {entry.size !== null 
+                    ? `${liveStats.cashPnl >= 0 ? '+' : ''}$${liveStats.cashPnl.toFixed(2)}`
+                    : `${liveStats.pips >= 0 ? '+' : ''}${liveStats.pips.toFixed(1)} Pips`
+                  }
+                </span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-1.5 text-brand font-bold text-xs animate-pulse">
+                <Play className="size-3 fill-brand" />
+                <span>Live polling...</span>
+              </div>
+            )
+          ) : (
+            <div className="flex flex-col items-end">
+              <span className={cn('text-xs font-black uppercase tracking-wider px-2 py-0.5 rounded bg-bg-elev-3 border border-glass-edge/40', outcomeColor)}>
+                {entry.outcome}
+              </span>
+              {entry.rMultiple !== null && (
+                <span className={cn('text-sm font-extrabold mt-1 tabular-nums', outcomeColor)}>
+                  {entry.rMultiple >= 0 ? '+' : ''}{entry.rMultiple.toFixed(2)}R
+                </span>
+              )}
+            </div>
+          )}
+
+          {/* CTA controls */}
+          <div className="flex items-center gap-1">
+            {entry.outcome === 'open' && !closing && (
               <Button
                 type="button"
                 size="sm"
                 variant="secondary"
                 onClick={() => setClosing(true)}
+                className="cursor-pointer"
               >
-                Close…
+                Close...
               </Button>
-            ) : null
-          ) : (
-            <span className={cn('text-xs font-semibold uppercase', outcomeColor)}>
-              {entry.outcome}
-              {entry.rMultiple !== null ? (
-                <span className="text-fg-muted ml-1 tabular-nums">
-                  {entry.rMultiple >= 0 ? '+' : ''}
-                  {entry.rMultiple.toFixed(2)}R
-                </span>
-              ) : null}
-            </span>
-          )}
-          <Tooltip label="Delete">
-            <button
-              type="button"
-              aria-label="Delete entry"
-              onClick={() => void remove()}
-              disabled={busy}
-              className="text-bear/70 hover:text-bear hover:bg-bear/10 inline-flex size-11 items-center justify-center rounded-full transition-colors disabled:opacity-50"
-            >
-              <Trash2 className="size-4" />
-            </button>
-          </Tooltip>
+            )}
+            
+            <Tooltip label="Delete Log">
+              <button
+                type="button"
+                aria-label="Delete entry"
+                onClick={() => void remove()}
+                disabled={busy}
+                className="text-bear/75 hover:text-bear hover:bg-bear/10 inline-flex size-9 items-center justify-center rounded-full transition-colors disabled:opacity-50 cursor-pointer"
+              >
+                <Trash2 className="size-4" />
+              </button>
+            </Tooltip>
+          </div>
         </div>
       </div>
 
-      {closing ? (
+      {/* Real-time Visual SL-to-TP Slider Bar */}
+      {entry.outcome === 'open' && entry.stop !== null && entry.target !== null && livePrice && sliderPosition !== null && (
+        <div className="border-t border-glass-edge/30 pt-3 flex flex-col gap-1.5 animate-in fade-in duration-200">
+          <div className="flex items-center justify-between text-[9px] font-bold uppercase tracking-wider text-fg-subtle">
+            <span className="text-bear">SL: {entry.stop}</span>
+            <span className="text-fg-muted">Entry: {entry.entry}</span>
+            <span className="text-bull">Target: {entry.target}</span>
+          </div>
+
+          <div className="relative h-2 w-full rounded-full bg-bg-elev-3 border border-glass-edge/20 overflow-visible mt-1 flex items-center">
+            {/* Entry Line Indicator */}
+            <div
+              style={{
+                left: entry.side === 'long'
+                  ? `${((entry.entry - entry.stop) / (entry.target - entry.stop)) * 100}%`
+                  : `${((entry.stop - entry.entry) / (entry.stop - entry.target)) * 100}%`
+              }}
+              className="absolute h-4 w-0.5 bg-yellow-500/80 z-10"
+              title="Entry Price Level"
+            />
+
+            {/* Glowing Live Dot */}
+            <div
+              style={{ left: `${sliderPosition}%` }}
+              className={cn(
+                'absolute size-3 rounded-full -translate-x-1/2 z-20 shadow-md border border-fg transition-all duration-300',
+                isWin ? 'bg-bull shadow-glow-bull/30 animate-pulse' : isLoss ? 'bg-bear shadow-glow-bear/30' : 'bg-fg-muted'
+              )}
+              title={`Live Price: ${livePrice}`}
+            />
+
+            {/* Profitable Region Shade */}
+            <div
+              style={{
+                left: entry.side === 'long'
+                  ? `${((entry.entry - entry.stop) / (entry.target - entry.stop)) * 100}%`
+                  : '50%',
+                width: entry.side === 'long'
+                  ? `${(Math.max(sliderPosition - ((entry.entry - entry.stop) / (entry.target - entry.stop)) * 100, 0))}%`
+                  : '0%' // simplistic represent, can detail further
+              }}
+              className="absolute h-full bg-bull/10 rounded-r-full"
+            />
+          </div>
+          <div className="flex justify-between items-center text-[9px] text-fg-muted font-semibold mt-0.5">
+            <span>Stop Loss boundary</span>
+            <span className={cn('font-bold', outcomeColor)}>Live Price: {livePrice}</span>
+            <span>Target boundary</span>
+          </div>
+        </div>
+      )}
+
+      {/* Manual close input stack */}
+      {closing && (
         <div className="border-divider flex flex-col gap-3 border-t pt-3">
           <div>
             <label
-              className="text-fg-subtle text-[11px] uppercase tracking-wide"
+              className="text-fg-subtle text-[10px] font-bold uppercase tracking-wider"
               htmlFor={`exit-${entry.id}`}
             >
-              Exit price
+              Exit Price (Close Trade)
             </label>
             <Input
               id={`exit-${entry.id}`}
@@ -205,9 +533,9 @@ function EntryRow({
               onChange={(ev) => setExit(ev.target.value)}
               inputMode="decimal"
               autoFocus
-              className="mt-1"
+              className="mt-1.5 focus:border-brand/70"
             />
-            {error ? <p className="text-bear mt-2 text-xs">{error}</p> : null}
+            {error ? <p className="text-bear mt-2 text-xs font-semibold">{error}</p> : null}
           </div>
           <div className="flex gap-2">
             <Button
@@ -235,7 +563,7 @@ function EntryRow({
             </Button>
           </div>
         </div>
-      ) : null}
+      )}
     </li>
   );
 }

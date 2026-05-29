@@ -366,11 +366,12 @@ export function Chart({
           if (v.macd !== null && v.macd !== undefined) macdData.push({ time: t, value: v.macd });
           if (v.signal !== null && v.signal !== undefined) signalData.push({ time: t, value: v.signal });
           
-          if (v.histogram !== null && v.histogram !== undefined) {
-            const isUp = v.histogram >= 0;
+          const histVal = v.hist !== undefined ? v.hist : v.histogram;
+          if (histVal !== null && histVal !== undefined) {
+            const isUp = histVal >= 0;
             histData.push({
               time: t,
-              value: v.histogram,
+              value: histVal,
               color: isUp ? '#48d597' : '#f0594a', // Up green, down red
             });
           }
@@ -823,7 +824,8 @@ function createChart(lc: LcModule, container: HTMLElement, decimals: number, set
             const candle = currentCandles[idx];
             if (!candle) return;
             const t = Math.floor(candle.t / 1000) as unknown as UTCTimestamp;
-            if (v.basis !== null && v.basis !== undefined) basisData.push({ time: t, value: v.basis });
+            const basisVal = v.middle !== undefined ? v.middle : v.basis;
+            if (basisVal !== null && basisVal !== undefined) basisData.push({ time: t, value: basisVal });
             if (v.upper !== null && v.upper !== undefined) upperData.push({ time: t, value: v.upper });
             if (v.lower !== null && v.lower !== undefined) lowerData.push({ time: t, value: v.lower });
           });

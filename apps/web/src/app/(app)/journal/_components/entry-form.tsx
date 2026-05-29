@@ -24,6 +24,7 @@ export function EntryForm({ onCreated }: EntryFormProps) {
   const [target, setTarget] = useState<string>('');
   const [size, setSize] = useState<string>('');
   const [notes, setNotes] = useState<string>('');
+  const [tagsInput, setTagsInput] = useState<string>('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -59,6 +60,11 @@ export function EntryForm({ onCreated }: EntryFormProps) {
       }
     }
 
+    const tags = tagsInput
+      .split(',')
+      .map((t) => t.trim())
+      .filter((t) => t.length > 0);
+
     try {
       const res = await fetchCsrf('/api/journal', {
         method: 'POST',
@@ -69,6 +75,7 @@ export function EntryForm({ onCreated }: EntryFormProps) {
           openedAt: Date.now(),
           ...parsed,
           notes: notes.trim() || null,
+          tags,
         }),
       });
       if (!res.ok) {
@@ -82,6 +89,7 @@ export function EntryForm({ onCreated }: EntryFormProps) {
       setTarget('');
       setSize('');
       setNotes('');
+      setTagsInput('');
       toast.success('Trade logged', { description: `${symbol} ${side} @ ${parsed.entry}` });
       onCreated?.();
     } catch (err) {
@@ -135,6 +143,19 @@ export function EntryForm({ onCreated }: EntryFormProps) {
           onChange={(e) => setNotes(e.target.value)}
           placeholder="thesis, news context, levels of interest…"
           maxLength={2000}
+        />
+      </div>
+
+      <div className="flex flex-col gap-2">
+        <label className="text-fg-subtle text-[11px] uppercase tracking-wide" htmlFor="tags">
+          Tags (optional, comma-separated)
+        </label>
+        <Input
+          id="tags"
+          value={tagsInput}
+          onChange={(e) => setTagsInput(e.target.value)}
+          placeholder="SMC, FOMC, Breakout..."
+          maxLength={500}
         />
       </div>
 

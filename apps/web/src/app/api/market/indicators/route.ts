@@ -40,7 +40,7 @@ export async function POST(req: Request): Promise<Response> {
       computeIndicator({ symbol, tf, kind, params, candles }),
     );
 
-    return Response.json({ symbol, tf, count: candles.length, results });
+    return Response.json({ symbol, tf, count: candles.length, candles, results });
   } catch (err) {
     return errorResponse(err);
   }
