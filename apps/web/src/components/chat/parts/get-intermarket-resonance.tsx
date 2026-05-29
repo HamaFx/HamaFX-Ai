@@ -5,7 +5,6 @@
 // Client component. Renders an elegant intermarket gauge mapping the gold/yield
 // divergence z-score alongside a historical timeline.
 
-import type { ResonanceObservation } from '@hamafx/shared';
 import { TrendingDown, TrendingUp, HelpCircle } from 'lucide-react';
 import type { ToolPartProps } from './registry';
 
