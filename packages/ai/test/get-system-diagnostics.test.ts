@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any */
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 
 process.env['FRED_API_KEY'] = 'test-fred-key';

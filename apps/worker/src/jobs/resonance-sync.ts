@@ -146,7 +146,6 @@ export async function runResonanceSync(ctx: JobContext): Promise<JobResult> {
 
   // 6. Generate rows to persist
   const dbRows = aligned.map((pt, i) => {
-    const expected = a + b * pt.realYield;
     const residual = residuals[i]!;
     // Standardized z-score representing the institutional safe-haven premium divergence.
     const divergenceScore = residual / stdDevResidual;

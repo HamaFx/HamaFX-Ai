@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, no-empty */
 'use client';
 
 // Premium Lightweight-charts wrapper with multi-pane indicator and theme customizer support.

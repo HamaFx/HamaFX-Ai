@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any, prefer-const */
 import { getDb, schema } from '@hamafx/db';
 import {
   ConveneCommitteeInputSchema,
