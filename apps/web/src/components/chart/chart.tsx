@@ -190,6 +190,7 @@ function createChart(lc: LcModule, container: HTMLElement, decimals: number): Ch
   // Handle ES module interop safely for Next.js dynamic imports
   const createChartFn = ('createChart' in lc) 
     ? lc.createChart 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     : ((lc as any).default?.createChart as any);
 
   if (!createChartFn) throw new Error("Could not find createChart function in imported module");
