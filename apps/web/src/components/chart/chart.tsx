@@ -75,6 +75,9 @@ export function Chart({
       handle = createChart(lc, el, decimals);
       chartRef.current = handle;
 
+      // Immediately resize to the current container dimensions to prevent 0x0 canvas sizing bugs
+      handle.resize(el.clientWidth, el.clientHeight);
+
       // Immediately populate candles and overlays if already loaded to resolve race conditions
       if (candlesRef.current && candlesRef.current.length > 0) {
         handle.setCandles(candlesRef.current);
@@ -155,7 +158,30 @@ interface ChartHandle {
 // hard-coding hex values. Falls back to dark-theme defaults on SSR.
 function readThemeColors(el: HTMLElement) {
   const cs = getComputedStyle(el);
-  const get = (v: string, fallback: string) => cs.getPropertyValue(v).trim() || fallback;
+  const get = (v: string, fallback: string) => {
+    const val = cs.getPropertyValue(v).trim();
+    if (!val) return fallback;
+    // If the browser returns an OKLCH value, fall back to our safe HEX equivalents.
+    // lightweight-charts Canvas drawing does not support OKLCH strings.
+    if (val.startsWith('oklch')) {
+      switch (v) {
+        case '--color-bg-elev-1':
+          return '#0c0c0c'; // Pure neutral dark background
+        case '--color-border':
+          return '#1f1f1f'; // Subtle refined border grid
+        case '--color-fg-muted':
+          return '#a1a8b3'; // Sleek muted text gray
+        case '--color-bull':
+          return '#48d597'; // Emerald bull candles
+        case '--color-bear':
+          return '#f0594a'; // Coral bear candles
+        default:
+          return fallback;
+      }
+    }
+    return val;
+  };
+  
   return {
     bg: get('--color-bg-elev-1', '#0e1118'),
     grid: get('--color-border', '#262a35'),
