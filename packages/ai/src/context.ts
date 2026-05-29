@@ -6,7 +6,9 @@
 // Missing entries silently drop out of the snapshot.
 
 import { getPrice } from '@hamafx/data';
+import { getDb, schema } from '@hamafx/db';
 import { SYMBOLS, type Symbol, type Tick } from '@hamafx/shared';
+import { desc } from 'drizzle-orm';
 
 import type { LiveSnapshot } from './prompt/system';
 
@@ -34,10 +36,37 @@ export async function buildLiveSnapshot(
 ): Promise<LiveSnapshot> {
   const now = new Date();
   const prices: Partial<Record<Symbol, Tick>> = {};
+  let copilotHealth: LiveSnapshot['copilotHealth'] = undefined;
+
+  const healthPromise = (async () => {
+    try {
+      const dbStart = Date.now();
+      const db = getDb();
+      const recentRows = await db
+        .select({ date: schema.intermarketResonance.date })
+        .from(schema.intermarketResonance)
+        .orderBy(desc(schema.intermarketResonance.date))
+        .limit(1);
+      const dbLatencyMs = Date.now() - dbStart;
+      const lastResonanceSync = recentRows[0]?.date ?? null;
+      copilotHealth = {
+        status: dbLatencyMs > 250 ? 'degraded' : 'healthy',
+        dbLatencyMs,
+        lastResonanceSync,
+      };
+    } catch {
+      copilotHealth = {
+        status: 'unhealthy',
+        dbLatencyMs: -1,
+        lastResonanceSync: null,
+      };
+    }
+  })();
 
   // Parallel fetch; per-symbol timeouts via the global AbortSignal.
-  await Promise.all(
-    SYMBOLS.map(async (s) => {
+  await Promise.all([
+    healthPromise,
+    ...SYMBOLS.map(async (s) => {
       try {
         const timeoutMs = 800;
         const fetchPromise = getPrice(s, opts.signal ? { signal: opts.signal } : {});
@@ -49,11 +78,12 @@ export async function buildLiveSnapshot(
         // Swallow — missing prices are signalled to the model by absence.
       }
     }),
-  );
+  ]);
 
   return {
     asOf: now.toISOString(),
     session: inferSession(now),
     prices,
+    ...(copilotHealth ? { copilotHealth } : {}),
   };
 }

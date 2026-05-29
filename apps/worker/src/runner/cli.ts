@@ -35,6 +35,8 @@ function resolveHcUuid(env: ReturnType<typeof loadEnv>, name: JobName): string |
       return env.HC_JOB_FRED_ACTUALS_UUID;
     case 'weekly-review':
       return env.HC_JOB_WEEKLY_REVIEW_UUID;
+    case 'resonance-sync':
+      return env.HC_JOB_RESONANCE_SYNC_UUID;
   }
 }
 

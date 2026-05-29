@@ -9,6 +9,7 @@ import { runEmbeddingBackfill } from './embedding-backfill.js';
 import { runFredActuals } from './fred-actuals.js';
 import { runSnapshots } from './snapshots.js';
 import { runWeeklyReview } from './weekly-review.js';
+import { runResonanceSync } from './resonance-sync.js';
 import type { JobFn, JobName } from './types.js';
 
 export const JOBS: Record<JobName, { run: JobFn; description: string }> = {
@@ -39,6 +40,10 @@ export const JOBS: Record<JobName, { run: JobFn; description: string }> = {
   'weekly-review': {
     run: runWeeklyReview,
     description: 'Sunday weekly review — emits a single agent-authored journal review. Phase 8 PR-14.',
+  },
+  'resonance-sync': {
+    run: runResonanceSync,
+    description: 'Daily intermarket resonance sync — computes and stores real yield and DXY gold divergences.',
   },
 };
 

@@ -35,6 +35,9 @@ import { summarizeThreadTool } from './summarize-thread';
 import { verifyCallTool } from './verify-call';
 import { withTelemetry } from './with-telemetry';
 import { conveneCommitteeTool } from './convene-committee';
+import { getIntermarketResonanceTool } from './get-intermarket-resonance';
+import { getSystemDiagnosticsTool } from './get-system-diagnostics';
+import { runSystemActionTool } from './run-system-action';
 
 export const tools = {
   get_price: withTelemetry('get_price', getPriceTool),
@@ -70,6 +73,9 @@ export const tools = {
   // Phase 7c tools
   verify_call: withTelemetry('verify_call', verifyCallTool),
   convene_committee: withTelemetry('convene_committee', conveneCommitteeTool),
+  get_intermarket_resonance: withTelemetry('get_intermarket_resonance', getIntermarketResonanceTool),
+  get_system_diagnostics: withTelemetry('get_system_diagnostics', getSystemDiagnosticsTool),
+  run_system_action: withTelemetry('run_system_action', runSystemActionTool),
 };
 
 export type ToolRegistry = typeof tools;

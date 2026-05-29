@@ -29,4 +29,5 @@ export type JobName =
   | 'snapshots'
   | 'cot'
   | 'fred-actuals'
-  | 'weekly-review';
+  | 'weekly-review'
+  | 'resonance-sync';

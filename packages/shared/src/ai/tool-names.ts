@@ -36,6 +36,9 @@ export const TOOL_NAMES = [
   // Phase 7c tools
   'verify_call',
   'convene_committee',
+  'get_intermarket_resonance',
+  'get_system_diagnostics',
+  'run_system_action',
 ] as const;
 
 export type ToolName = (typeof TOOL_NAMES)[number];

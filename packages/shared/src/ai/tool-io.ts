@@ -44,6 +44,9 @@ import type { ShareSnapshotOutputSchema } from '../schemas/tool-outputs/share-sn
 import type { SummarizeThreadOutputSchema } from '../schemas/tool-outputs/summarize-thread';
 import type { VerifyCallOutputSchema } from '../schemas/tool-outputs/verify-call';
 import type { ConveneCommitteeOutputSchema } from '../schemas/tool-outputs/convene-committee';
+import type { GetIntermarketResonanceOutputSchema } from '../schemas/tool-outputs/get-intermarket-resonance';
+import type { GetSystemDiagnosticsOutputSchema } from '../schemas/tool-outputs/get-system-diagnostics';
+import type { RunSystemActionOutputSchema } from '../schemas/tool-outputs/run-system-action';
 import type { ToolName } from './tool-names';
 
 /**
@@ -95,6 +98,9 @@ export interface ToolOutputMap {
   // Phase 7c tools
   verify_call: z.infer<typeof VerifyCallOutputSchema>;
   convene_committee: z.infer<typeof ConveneCommitteeOutputSchema>;
+  get_intermarket_resonance: z.infer<typeof GetIntermarketResonanceOutputSchema>;
+  get_system_diagnostics: z.infer<typeof GetSystemDiagnosticsOutputSchema>;
+  run_system_action: z.infer<typeof RunSystemActionOutputSchema>;
 }
 
 export type ToolInput<T extends ToolName> = T extends keyof ToolIOMap

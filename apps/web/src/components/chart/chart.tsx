@@ -77,6 +77,12 @@ export function Chart({
 
   const decimals = useMemo(() => priceDecimals(symbol), [symbol]);
 
+  const candlesRef = useRef(candles);
+  candlesRef.current = candles;
+
+  const overlaysRef = useRef(overlays);
+  overlaysRef.current = overlays;
+
   // Create the chart exactly once per mount.
   useEffect(() => {
     const el = containerRef.current;
@@ -89,6 +95,14 @@ export function Chart({
       if (cancelled || !containerRef.current) return;
       handle = createChart(lc, el, decimals);
       chartRef.current = handle;
+
+      // Immediately populate candles and overlays if already loaded to resolve race conditions
+      if (candlesRef.current && candlesRef.current.length > 0) {
+        handle.setCandles(candlesRef.current);
+      }
+      if (overlaysRef.current) {
+        handle.setOverlays(overlaysRef.current);
+      }
     });
 
     return () => {

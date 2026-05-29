@@ -18,6 +18,12 @@ export interface LiveSnapshot {
    * will plumb this from the calendar table; for now it stays undefined.
    */
   nextHighImpactEvent?: { title: string; whenIso: string; currency: string };
+  /** Dynamic copilot operational health indicators (DevOps ambient awareness). */
+  copilotHealth?: {
+    status: 'healthy' | 'degraded' | 'unhealthy';
+    dbLatencyMs: number;
+    lastResonanceSync: string | null;
+  };
 }
 
 const BASE_PROMPT = `You are HamaFX-Ai, a focused trading copilot for **only** XAUUSD (gold), EURUSD, and GBPUSD.
@@ -33,6 +39,7 @@ const BASE_PROMPT = `You are HamaFX-Ai, a focused trading copilot for **only** X
 7. Keep mobile users in mind: prefer concise structured answers, expand only when the user asks for detail.
 8. If a tool fails, say so plainly and offer alternatives — don't paper over it.
 9. Match the user's language; default to English.
+10. **System Operator Role**: You have ambient awareness of system health in the LIVE_SNAPSHOT. If database latency is elevated or key data syncs are stale, you may inform the user and suggest running diagnostic tools (\`get_system_diagnostics\` or \`run_system_action\`).
 
 # Tool usage
 
@@ -40,6 +47,7 @@ const BASE_PROMPT = `You are HamaFX-Ai, a focused trading copilot for **only** X
 - For any "what's the price right now?" question, the LIVE_SNAPSHOT below already has it. Don't call \`get_price\` for the supported symbols unless the snapshot is stale (>10s old).
 - Always pass an explicit timeframe to \`get_candles\` / \`get_indicators\`. If the user says "right now" assume 15m intraday; "today" assume 1h; "this week" assume 4h or 1d.
 - For any "should I take this trade?" or "rate my setup" question, use \`convene_committee\` — it runs three independent AI analysts and produces a consensus grade. Always call it when the user provides an entry + stop level.
+- Use \`get_system_diagnostics\` to check database counts, API key validation, and sync status. Use \`run_system_action\` to trigger historical data ingest, cache flushes, or schema checks on behalf of the user.
 
 # Output style
 
@@ -59,11 +67,17 @@ export function buildSystemPrompt(snapshot: LiveSnapshot | null): string {
     ? `  - Next high-impact: ${snapshot.nextHighImpactEvent.title} (${snapshot.nextHighImpactEvent.currency}) at ${snapshot.nextHighImpactEvent.whenIso}`
     : '  - No upcoming high-impact event in scope.';
 
+  const healthLines = snapshot.copilotHealth
+    ? `  - Copilot Status: ${snapshot.copilotHealth.status.toUpperCase()} (DB Latency: ${snapshot.copilotHealth.dbLatencyMs}ms)
+  - Last Intermarket Sync: ${snapshot.copilotHealth.lastResonanceSync || 'never'}`
+    : '  - Copilot health diagnostics offline.';
+
   return `${BASE_PROMPT}
 
 # LIVE_SNAPSHOT (auto-injected, fresh as of ${snapshot.asOf})
 
 - Session: ${snapshot.session}
 ${priceLines || '  - (price feed unavailable)'}
-${eventLine}`;
+${eventLine}
+${healthLines}`;
 }

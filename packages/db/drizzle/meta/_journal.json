@@ -57,6 +57,13 @@
       "when": 1780006312616,
       "tag": "0007_high_gateway",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1780077331639,
+      "tag": "0008_glamorous_lorna_dane",
+      "breakpoints": true
     }
   ]
 }

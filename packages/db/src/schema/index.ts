@@ -20,3 +20,4 @@ export * from './daily-ai-spend';
 export * from './live-ticks';
 export * from './candles-1m';
 export * from './throttle';
+export * from './intermarket-resonance';

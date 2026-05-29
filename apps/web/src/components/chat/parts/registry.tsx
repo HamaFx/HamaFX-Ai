@@ -30,6 +30,9 @@ import {
   GetCoTOutputSchema,
   GetIndicatorsOutputSchema,
   GetIntermarketOutputSchema,
+  GetIntermarketResonanceOutputSchema,
+  GetSystemDiagnosticsOutputSchema,
+  RunSystemActionOutputSchema,
   GetJournalStatsOutputSchema,
   GetMarketStructureOutputSchema,
   GetNewsOutputSchema,
@@ -78,6 +81,9 @@ import { ShareSnapshotPart } from './share-snapshot';
 import { SummarizeThreadPart } from './summarize-thread';
 import { ToolCard } from './tool-card';
 import { VerifyCallPart } from './verify-call';
+import { GetIntermarketResonancePart } from './get-intermarket-resonance';
+import { GetSystemDiagnosticsPart } from './get-system-diagnostics';
+import { RunSystemActionPart } from './run-system-action';
 
 /** State a part is in for the duration of a streamed tool call. */
 export type ToolPartState = 'loading' | 'done' | 'error';
@@ -132,6 +138,9 @@ export const partRegistry: { [K in ToolName]: ComponentType<ToolPartProps<K>> } 
   // Phase 7c tools
   verify_call: VerifyCallPart,
   convene_committee: ConveneCommitteePart,
+  get_intermarket_resonance: GetIntermarketResonancePart,
+  get_system_diagnostics: GetSystemDiagnosticsPart,
+  run_system_action: RunSystemActionPart,
 };
 
 /**
@@ -174,6 +183,9 @@ const partSchemas: { [K in ToolName]: z.ZodType<ToolOutput<K>> } = {
   // Phase 7c tools
   verify_call: VerifyCallOutputSchema,
   convene_committee: ConveneCommitteeOutputSchema,
+  get_intermarket_resonance: GetIntermarketResonanceOutputSchema,
+  get_system_diagnostics: GetSystemDiagnosticsOutputSchema,
+  run_system_action: RunSystemActionOutputSchema,
 };
 
 /** Type guard: is `s` a known `ToolName`? */
