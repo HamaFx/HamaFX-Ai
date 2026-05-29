@@ -77,15 +77,15 @@ export function ChatScreen({
           const override = modelOverrideRef.current;
           modelOverrideRef.current = null;
           const csrf = getCsrfToken();
-          return {
-            headers: csrf ? { 'X-CSRF-Token': csrf } : undefined,
-            body: {
-              threadId,
-              id,
-              messages,
-              ...(override ? { modelOverride: override } : {}),
-            },
+          const reqBody = {
+            modelOverride: override ?? undefined,
+            threadId,
+            id,
+            messages,
           };
+          return csrf
+            ? { headers: { 'X-CSRF-Token': csrf }, body: reqBody }
+            : { body: reqBody };
         },
       }),
     [threadId],
