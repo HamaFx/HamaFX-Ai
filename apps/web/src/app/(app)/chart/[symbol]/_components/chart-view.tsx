@@ -1,24 +1,15 @@
 'use client';
 
-// Client orchestration for the chart page.
-//
-// Mobile-first sticky sub-header layout — three stacked rows on phone:
-//   row 1: symbol picker (full width on mobile)
-//   row 2: live price tag (right-aligned for the eye-flow F-pattern)
-//   row 3: timeframe picker (full width, scrolls horizontally if needed)
-//          + overlays + pro-chart shortcut
-// On md+ the symbol picker and price tag share a row to save vertical
-// space.
-//
-// Sticky offset references --topbar-h so updating the shell height lifts
-// every sticky element in lockstep.
+// Client orchestration for the upgraded chart page.
+// Combines dynamic price feeds, structure events, active indicators, and customized styling.
 
 import type { Symbol } from '@hamafx/shared';
-import { Maximize2 } from 'lucide-react';
+import { Maximize2, SlidersHorizontal } from 'lucide-react';
 import { Link } from 'next-view-transitions';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
-import { Chart } from '@/components/chart/chart';
+import { Chart, type ChartSettings } from '@/components/chart/chart';
+import { ChartSettingsDrawer, type ChartIndicators } from '@/components/chart/chart-settings-drawer';
 import { useOverlayToggles } from '@/components/chart/overlay-toggle';
 import {
   buildOverlays,
@@ -31,6 +22,7 @@ import { TimeframePicker } from '@/components/chart/timeframe-picker';
 import { StaleIndicator } from '@/components/ui/stale-indicator';
 import { Tooltip } from '@/components/ui/tooltip';
 import { useCandles } from '@/hooks/use-candles';
+import { useIndicators } from '@/hooks/use-indicators';
 import { useStructure } from '@/hooks/use-structure';
 import { useTimeframe } from '@/hooks/use-tf';
 
@@ -46,12 +38,73 @@ const PALETTE: OverlayPalette = {
   muted: '#7d8693',
 };
 
+const DEFAULT_INDICATORS: ChartIndicators = {
+  ema20: false,
+  ema50: false,
+  ema200: false,
+  sma50: false,
+  sma100: false,
+  bollinger: false,
+  rsi: false,
+  macd: false,
+};
+
+const DEFAULT_SETTINGS: ChartSettings = {
+  theme: 'black',
+  gridStyle: 'solid',
+};
+
 export function ChartView({ symbol }: { symbol: Symbol }) {
   const [tf, setTf] = useTimeframe();
   const [activeOverlays, toggleOverlay] = useOverlayToggles();
 
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [visible, setVisible] = useState(true);
+
+  // Indicators and customizer settings state
+  const [indicators, setIndicators] = useState<ChartIndicators>(DEFAULT_INDICATORS);
+  const [settings, setSettings] = useState<ChartSettings>(DEFAULT_SETTINGS);
+  const [hydrated, setHydrated] = useState(false);
+
+  // Load preferences from localStorage on mount
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('hfx_chart_config');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (parsed.indicators) setIndicators(parsed.indicators);
+        if (parsed.settings) setSettings(parsed.settings);
+      }
+    } catch (e) {
+      console.error('Failed to load chart preferences', e);
+    }
+    setHydrated(true);
+  }, []);
+
+  // Save preferences when they change
+  const handleIndicatorsChange = (nextIndicators: ChartIndicators) => {
+    setIndicators(nextIndicators);
+    try {
+      localStorage.setItem(
+        'hfx_chart_config',
+        JSON.stringify({ indicators: nextIndicators, settings })
+      );
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleSettingsChange = (nextSettings: ChartSettings) => {
+    setSettings(nextSettings);
+    try {
+      localStorage.setItem(
+        'hfx_chart_config',
+        JSON.stringify({ indicators, settings: nextSettings })
+      );
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
   useEffect(() => {
     const el = containerRef.current;
@@ -64,6 +117,20 @@ export function ChartView({ symbol }: { symbol: Symbol }) {
     return () => obs.disconnect();
   }, []);
 
+  // Compute indicators query requests based on toggles
+  const activeIndicatorsRequest = useMemo(() => {
+    const list: any[] = [];
+    if (indicators.ema20) list.push({ kind: 'ema', params: { period: 20 } });
+    if (indicators.ema50) list.push({ kind: 'ema', params: { period: 50 } });
+    if (indicators.ema200) list.push({ kind: 'ema', params: { period: 200 } });
+    if (indicators.sma50) list.push({ kind: 'sma', params: { period: 50 } });
+    if (indicators.sma100) list.push({ kind: 'sma', params: { period: 100 } });
+    if (indicators.bollinger) list.push({ kind: 'bollinger', params: { period: 20, stdDev: 2 } });
+    if (indicators.rsi) list.push({ kind: 'rsi', params: { period: 14 } });
+    if (indicators.macd) list.push({ kind: 'macd', params: { fastPeriod: 12, slowPeriod: 26, signalPeriod: 9 } });
+    return list;
+  }, [indicators]);
+
   const {
     data: candles,
     isLoading,
@@ -71,6 +138,9 @@ export function ChartView({ symbol }: { symbol: Symbol }) {
     error,
     refetch,
   } = useCandles(symbol, tf, 300, { enabled: visible });
+
+  // Fetch active indicators
+  const { data: indicatorResults } = useIndicators(symbol, tf, activeIndicatorsRequest, 300);
 
   // Only fetch structure when at least one overlay is on.
   const overlaysOn = activeOverlays.length > 0;
@@ -104,7 +174,7 @@ export function ChartView({ symbol }: { symbol: Symbol }) {
   }, [structure, candles, toggleRecord]);
 
   return (
-    <div ref={containerRef} className="-mx-4 flex flex-col">
+    <div ref={containerRef} className="-mx-4 flex flex-col animate-in fade-in duration-300">
       {/* Sticky floating sub-header (Dynamic Island style) */}
       <div
         className="sticky z-20 px-4 pt-3 pb-2 transition-all"
@@ -121,7 +191,30 @@ export function ChartView({ symbol }: { symbol: Symbol }) {
             </div>
             <div className="flex shrink-0 items-center gap-2">
               <StaleIndicator isFetching={isFetching && !isLoading} />
+              
+              {/* Overlays Sheet */}
               <OverlaySheet active={activeOverlays} onToggle={toggleOverlay} />
+              
+              {/* Premium preferences & indicators Customizer */}
+              {hydrated && (
+                <ChartSettingsDrawer
+                  settings={settings}
+                  onSettingsChange={handleSettingsChange}
+                  indicators={indicators}
+                  onIndicatorsChange={handleIndicatorsChange}
+                  trigger={
+                    <Tooltip label="Preferences">
+                      <button
+                        aria-label="Preferences"
+                        className="glass-subtle text-fg-muted hover:text-fg focus-visible:ring-brand inline-flex size-11 items-center justify-center rounded-full focus:outline-none focus-visible:ring-2 cursor-pointer"
+                      >
+                        <SlidersHorizontal className="size-4" />
+                      </button>
+                    </Tooltip>
+                  }
+                />
+              )}
+
               {process.env.NEXT_PUBLIC_TRADINGVIEW_ENABLED === '1' ? (
                 <Tooltip label="Pro chart">
                   <Link
@@ -146,7 +239,14 @@ export function ChartView({ symbol }: { symbol: Symbol }) {
         ) : !candles || candles.length === 0 ? (
           <ChartEmpty symbol={symbol} tf={tf} onRetry={() => void refetch()} />
         ) : (
-          <Chart symbol={symbol} tf={tf} candles={candles} overlays={overlaySet} />
+          <Chart
+            symbol={symbol}
+            tf={tf}
+            candles={candles}
+            indicatorResults={indicatorResults}
+            settings={settings}
+            overlays={overlaySet}
+          />
         )}
 
         {overlaysOn ? (

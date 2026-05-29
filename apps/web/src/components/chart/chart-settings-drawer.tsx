@@ -1,0 +1,283 @@
+'use client';
+
+// Dynamic glassmorphic customizer and indicator selection drawer.
+// Allows real-time toggling of moving averages, oscillators, theme canvasses, and grid styles.
+
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from '@/components/ui/drawer';
+import { Switch } from '@/components/ui/switch';
+import { Palette, Activity, Grid3X3, Check } from 'lucide-react';
+import { cn } from '@/lib/cn';
+import type { ChartSettings } from './chart';
+
+export interface ChartIndicators {
+  ema20: boolean;
+  ema50: boolean;
+  ema200: boolean;
+  sma50: boolean;
+  sma100: boolean;
+  bollinger: boolean;
+  rsi: boolean;
+  macd: boolean;
+}
+
+interface ChartSettingsDrawerProps {
+  settings: ChartSettings;
+  onSettingsChange: (settings: ChartSettings) => void;
+  indicators: ChartIndicators;
+  onIndicatorsChange: (indicators: ChartIndicators) => void;
+  trigger: React.ReactNode;
+}
+
+export function ChartSettingsDrawer({
+  settings,
+  onSettingsChange,
+  indicators,
+  onIndicatorsChange,
+  trigger,
+}: ChartSettingsDrawerProps) {
+  const themes = [
+    { id: 'black', label: 'True Black', desc: 'Zero-chroma pure black' },
+    { id: 'slate', label: 'Slate Dark', desc: 'Neutral slate canvas' },
+    { id: 'navy', label: 'Space Navy', desc: 'Deep cosmic dark blue' },
+    { id: 'classic', label: 'Classic Dark', desc: 'Hama legacy background' },
+  ] as const;
+
+  const grids = [
+    { id: 'solid', label: 'Solid Grid' },
+    { id: 'dotted', label: 'Dotted Grid' },
+    { id: 'none', label: 'No Grid' },
+  ] as const;
+
+  const toggleIndicator = (key: keyof ChartIndicators) => {
+    onIndicatorsChange({
+      ...indicators,
+      [key]: !indicators[key],
+    });
+  };
+
+  const updateTheme = (theme: ChartSettings['theme']) => {
+    onSettingsChange({
+      ...settings,
+      theme,
+    });
+  };
+
+  const updateGrid = (gridStyle: ChartSettings['gridStyle']) => {
+    onSettingsChange({
+      ...settings,
+      gridStyle,
+    });
+  };
+
+  return (
+    <Drawer>
+      <DrawerTrigger asChild>{trigger}</DrawerTrigger>
+      <DrawerContent className="max-h-[85svh] px-4">
+        <DrawerHeader className="px-0">
+          <DrawerTitle className="text-xl font-bold tracking-tight">Chart Preferences</DrawerTitle>
+        </DrawerHeader>
+
+        <div className="scrollbar-hide flex-1 overflow-y-auto py-2 pb-6 flex flex-col gap-6">
+          
+          {/* Section 1: Themes */}
+          <div className="flex flex-col gap-2.5">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-fg-subtle flex items-center gap-1.5 px-0.5">
+              <Palette className="size-3.5" />
+              Theme Canvas
+            </h3>
+            <div className="grid grid-cols-2 gap-2">
+              {themes.map((t) => (
+                <button
+                  key={t.id}
+                  onClick={() => updateTheme(t.id)}
+                  className={cn(
+                    'flex flex-col text-left p-3 rounded-xl border border-glass-edge bg-bg-elev-2/50 transition-all hover:bg-bg-elev-3 cursor-pointer relative',
+                    settings.theme === t.id && 'border-brand/70 bg-brand/5 shadow-glow-brand/10'
+                  )}
+                >
+                  <span className="text-sm font-semibold">{t.label}</span>
+                  <span className="text-[10px] text-fg-muted mt-0.5">{t.desc}</span>
+                  {settings.theme === t.id && (
+                    <Check className="size-4 text-brand absolute right-3 top-3.5" />
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Section 2: Grid Lines */}
+          <div className="flex flex-col gap-2.5">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-fg-subtle flex items-center gap-1.5 px-0.5">
+              <Grid3X3 className="size-3.5" />
+              Grid Styles
+            </h3>
+            <div className="grid grid-cols-3 gap-2">
+              {grids.map((g) => (
+                <button
+                  key={g.id}
+                  onClick={() => updateGrid(g.id)}
+                  className={cn(
+                    'text-center py-2.5 text-xs font-semibold rounded-xl border border-glass-edge bg-bg-elev-2/50 transition-all hover:bg-bg-elev-3 cursor-pointer relative',
+                    settings.gridStyle === g.id && 'border-brand/70 bg-brand/5'
+                  )}
+                >
+                  {g.label}
+                  {settings.gridStyle === g.id && (
+                    <Check className="size-3 text-brand absolute right-2 top-2.5" />
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Section 3: Indicators */}
+          <div className="flex flex-col gap-2.5">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-fg-subtle flex items-center gap-1.5 px-0.5">
+              <Activity className="size-3.5" />
+              Indicator Layers
+            </h3>
+            
+            <div className="flex flex-col gap-1 rounded-2xl border border-glass-edge bg-bg-elev-2/40 overflow-hidden">
+              
+              {/* EMA 20 */}
+              <div className="flex items-center justify-between p-3.5 border-b border-glass-edge/40">
+                <div className="flex items-center gap-3">
+                  <div className="size-2.5 rounded-full bg-blue-500 shadow-md" />
+                  <div className="flex flex-col">
+                    <span className="text-sm font-semibold">EMA 20</span>
+                    <span className="text-[10px] text-fg-muted mt-0.5">Exponential moving average (20 period)</span>
+                  </div>
+                </div>
+                <Switch
+                  checked={indicators.ema20}
+                  onCheckedChange={() => toggleIndicator('ema20')}
+                  srLabel="Toggle EMA 20"
+                />
+              </div>
+
+              {/* EMA 50 */}
+              <div className="flex items-center justify-between p-3.5 border-b border-glass-edge/40">
+                <div className="flex items-center gap-3">
+                  <div className="size-2.5 rounded-full bg-purple-500 shadow-md" />
+                  <div className="flex flex-col">
+                    <span className="text-sm font-semibold">EMA 50</span>
+                    <span className="text-[10px] text-fg-muted mt-0.5">Exponential moving average (50 period)</span>
+                  </div>
+                </div>
+                <Switch
+                  checked={indicators.ema50}
+                  onCheckedChange={() => toggleIndicator('ema50')}
+                  srLabel="Toggle EMA 50"
+                />
+              </div>
+
+              {/* EMA 200 */}
+              <div className="flex items-center justify-between p-3.5 border-b border-glass-edge/40">
+                <div className="flex items-center gap-3">
+                  <div className="size-2.5 rounded-full bg-yellow-500 shadow-md" />
+                  <div className="flex flex-col">
+                    <span className="text-sm font-semibold">EMA 200</span>
+                    <span className="text-[10px] text-fg-muted mt-0.5">Exponential moving average (200 period)</span>
+                  </div>
+                </div>
+                <Switch
+                  checked={indicators.ema200}
+                  onCheckedChange={() => toggleIndicator('ema200')}
+                  srLabel="Toggle EMA 200"
+                />
+              </div>
+
+              {/* SMA 50 */}
+              <div className="flex items-center justify-between p-3.5 border-b border-glass-edge/40">
+                <div className="flex items-center gap-3">
+                  <div className="size-2.5 rounded-full bg-emerald-500 shadow-md" />
+                  <div className="flex flex-col">
+                    <span className="text-sm font-semibold">SMA 50</span>
+                    <span className="text-[10px] text-fg-muted mt-0.5">Simple moving average (50 period)</span>
+                  </div>
+                </div>
+                <Switch
+                  checked={indicators.sma50}
+                  onCheckedChange={() => toggleIndicator('sma50')}
+                  srLabel="Toggle SMA 50"
+                />
+              </div>
+
+              {/* SMA 100 */}
+              <div className="flex items-center justify-between p-3.5 border-b border-glass-edge/40">
+                <div className="flex items-center gap-3">
+                  <div className="size-2.5 rounded-full bg-pink-500 shadow-md" />
+                  <div className="flex flex-col">
+                    <span className="text-sm font-semibold">SMA 100</span>
+                    <span className="text-[10px] text-fg-muted mt-0.5">Simple moving average (100 period)</span>
+                  </div>
+                </div>
+                <Switch
+                  checked={indicators.sma100}
+                  onCheckedChange={() => toggleIndicator('sma100')}
+                  srLabel="Toggle SMA 100"
+                />
+              </div>
+
+              {/* Bollinger Bands */}
+              <div className="flex items-center justify-between p-3.5 border-b border-glass-edge/40">
+                <div className="flex items-center gap-3">
+                  <div className="size-2.5 rounded-full bg-amber-500 shadow-md animate-pulse" />
+                  <div className="flex flex-col">
+                    <span className="text-sm font-semibold">Bollinger Bands</span>
+                    <span className="text-[10px] text-fg-muted mt-0.5">Volatity envelopes (20, 2)</span>
+                  </div>
+                </div>
+                <Switch
+                  checked={indicators.bollinger}
+                  onCheckedChange={() => toggleIndicator('bollinger')}
+                  srLabel="Toggle Bollinger Bands"
+                />
+              </div>
+
+              {/* RSI Pane */}
+              <div className="flex items-center justify-between p-3.5 border-b border-glass-edge/40 bg-purple-500/5">
+                <div className="flex items-center gap-3">
+                  <div className="size-2.5 rounded-full bg-purple-400 shadow-md animate-pulse" />
+                  <div className="flex flex-col">
+                    <span className="text-sm font-semibold text-purple-200">RSI Oscillator Pane</span>
+                    <span className="text-[10px] text-purple-400/80 mt-0.5">Synchronized Relative Strength Index (14)</span>
+                  </div>
+                </div>
+                <Switch
+                  checked={indicators.rsi}
+                  onCheckedChange={() => toggleIndicator('rsi')}
+                  srLabel="Toggle RSI Pane"
+                />
+              </div>
+
+              {/* MACD Pane */}
+              <div className="flex items-center justify-between p-3.5 bg-blue-500/5">
+                <div className="flex items-center gap-3">
+                  <div className="size-2.5 rounded-full bg-blue-400 shadow-md animate-pulse" />
+                  <div className="flex flex-col">
+                    <span className="text-sm font-semibold text-blue-200">MACD Oscillator Pane</span>
+                    <span className="text-[10px] text-blue-400/80 mt-0.5">Moving average convergence divergence (12, 26, 9)</span>
+                  </div>
+                </div>
+                <Switch
+                  checked={indicators.macd}
+                  onCheckedChange={() => toggleIndicator('macd')}
+                  srLabel="Toggle MACD Pane"
+                />
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+      </DrawerContent>
+    </Drawer>
+  );
+}
