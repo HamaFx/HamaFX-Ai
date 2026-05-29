@@ -18,7 +18,7 @@ export async function POST(req: Request): Promise<Response> {
   try {
     update = await req.json();
   } catch (err) {
-    console.error('[telegram-webhook] Failed to parse JSON body');
+    console.error('[telegram-webhook] Failed to parse JSON body', err);
     return new Response('Bad Request', { status: 400 });
   }
 
