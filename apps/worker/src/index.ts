@@ -34,6 +34,7 @@ import {
   type NormalizedTick,
 } from './signalr/consumer.js';
 import { TickBuffer } from './signalr/tick-buffer.js';
+import { startMT5Server } from './mt5-server.js';
 
 interface ShutdownState {
   shuttingDown: boolean;
@@ -112,6 +113,15 @@ export async function runWorker(args: RunWorkerArgs): Promise<RunningWorker> {
 
   let lastTickAt = 0;
 
+  // Shared tick handler to push ticks to database buffer, trigger 1m candle aggregations, and notify watchdog
+  const handleIncomingTick = (tick: NormalizedTick) => {
+    buffer.push(tick);
+    aggregator.feed(tick);
+    args.onTick?.(tick);
+    lastTickAt = Date.now();
+    notifyWatchdog();
+  };
+
   // 1m candle aggregator — emits ClosedCandle events on minute rollover.
   // We write each closed bar to `candles_1m` synchronously; failures are
   // logged but do NOT throw, because a single failed insert shouldn't
@@ -137,18 +147,16 @@ export async function runWorker(args: RunWorkerArgs): Promise<RunningWorker> {
 
   const consumer = new SignalRConsumer({
     hubUrl: env.BIQUOTE_HUB_URL,
-    onTick: (tick) => {
-      buffer.push(tick);
-      aggregator.feed(tick);
-      args.onTick?.(tick);
-      lastTickAt = Date.now();
-      // Phase 2 hardening §1 — keep the systemd watchdog alive while
-      // ticks are flowing. Internally throttled to once per 30 s so we
-      // don't fork `systemd-notify` per tick.
-      notifyWatchdog();
-    },
+    onTick: handleIncomingTick,
     buildConnection,
     log: log.with({ module: 'signalr' }),
+  });
+
+  // Start the Headless MT5 TCP bridge server on the whitelisted local loopback port
+  const mt5Server = startMT5Server({
+    port: env.MT5_BRIDGE_PORT,
+    log: log.with({ module: 'mt5-server' }),
+    onTick: handleIncomingTick,
   });
 
   await consumer.start();
@@ -192,7 +200,13 @@ export async function runWorker(args: RunWorkerArgs): Promise<RunningWorker> {
     notifyStopping();
     clearInterval(flushTimer);
     if (heartbeatTimer) clearInterval(heartbeatTimer);
-    await consumer.stop();
+    
+    // Gracefully shut down both services in parallel
+    await Promise.all([
+      mt5Server.stop(),
+      consumer.stop(),
+    ]);
+
     // Drain anything buffered after the last interval tick — best-effort.
     try {
       await flushLiveTicks({ db, buffer, log });

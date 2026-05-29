@@ -71,6 +71,9 @@ const WorkerEnvSchema = z.object({
    */
   DEPLOYED_SHA: coerceEmptyToUndefined.pipe(z.string().min(1).optional()).default('unknown'),
 
+  /** Port for local MT5 bridge server. Defaults to 8080. */
+  MT5_BRIDGE_PORT: z.coerce.number().int().min(1024).max(65535).default(8080),
+
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
 });
 
