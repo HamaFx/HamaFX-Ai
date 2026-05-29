@@ -44,7 +44,7 @@ function isoDate(d: Date): string {
 }
 
 export async function fetchReleaseDates(params: FetchReleasesParams): Promise<FredReleaseDate[]> {
-  if (!params.skipThrottle && !tryReserve(PROVIDER, THROTTLE)) {
+  if (!params.skipThrottle && !(await tryReserve(PROVIDER, THROTTLE))) {
     throw new ProviderError(
       'PROVIDER_QUOTA_EXCEEDED',
       PROVIDER,
@@ -89,7 +89,7 @@ export async function fetchReleaseDates(params: FetchReleasesParams): Promise<Fr
   clearTimeout(timer);
 
   if (!res.ok) {
-    if (res.status === 429) noteBackoff(PROVIDER, THROTTLE);
+    if (res.status === 429) await noteBackoff(PROVIDER, THROTTLE);
     throw new ProviderError(
       res.status === 429 ? 'PROVIDER_QUOTA_EXCEEDED' : 'PROVIDER_HTTP_ERROR',
       PROVIDER,
@@ -153,7 +153,7 @@ export interface FredObservation {
 export async function fetchObservations(
   params: FetchObservationParams,
 ): Promise<FredObservation[]> {
-  if (!params.skipThrottle && !tryReserve(PROVIDER, THROTTLE)) {
+  if (!params.skipThrottle && !(await tryReserve(PROVIDER, THROTTLE))) {
     throw new ProviderError(
       'PROVIDER_QUOTA_EXCEEDED',
       PROVIDER,
@@ -191,7 +191,7 @@ export async function fetchObservations(
   clearTimeout(timer);
 
   if (!res.ok) {
-    if (res.status === 429) noteBackoff(PROVIDER, THROTTLE);
+    if (res.status === 429) await noteBackoff(PROVIDER, THROTTLE);
     throw new ProviderError(
       res.status === 429 ? 'PROVIDER_QUOTA_EXCEEDED' : 'PROVIDER_HTTP_ERROR',
       PROVIDER,

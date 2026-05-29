@@ -1,14 +1,18 @@
-// Alert evaluator. Pure-ish core (decideMatch) + an orchestrator
+// Alert evaluator. Pure-ish core (decideMatch/decideCross) + an orchestrator
 // (evaluateAlerts) that fans out data fetches and writes back to the DB.
 //
-// Semantics: LEVEL alerts (one-shot). When the latest reading meets the
-// rule, we fire once, set firedAt, deactivate. Re-arming is the user's call
-// (toggle active or edit). This sidesteps the cross-detection complexity
-// (no need to track previous state) and matches how a user phrases "alert
-// me when X hits Y".
+// Semantics:
+//   - priceCross / candleClose — LEVEL alerts (one-shot). Fire the moment the
+//     latest reading meets the rule, then deactivate.
+//   - indicatorCross — true CROSSING semantics. We need the previous-tick
+//     reading to detect a transition through the level; that baseline lives
+//     on the rule itself (`rule.previousValue`). On the first tick it is
+//     null and the alert never fires immediately on creation, even when
+//     the indicator already sits past the threshold.
 //
-// A future Phase 2 follow-up can add proper crossing semantics by storing
-// the previous-tick value in the rule JSON.
+// In both flavours, delivery owns the `markFired` write; the alert stays
+// active until a channel returns 2xx so transient delivery errors retry on
+// the next cron tick.
 
 import { getCandles, getPrice } from '@hamafx/data';
 import { computeIndicator } from '@hamafx/indicators';
@@ -22,7 +26,7 @@ import {
 } from '@hamafx/shared';
 
 import { deliverAlert, type DeliveryResult } from './delivery';
-import { listEvaluable } from './persistence';
+import { listEvaluable, setRulePreviousValue } from './persistence';
 
 // ---------------------------------------------------------------------------
 // Rule decision: does this rule's reading meet the trigger?
@@ -41,89 +45,59 @@ export function decideMatch(direction: 'above' | 'below', value: number, level: 
   return direction === 'above' ? value >= level : value <= level;
 }
 
+/**
+ * Crossing detection. Returns true iff the indicator value transitioned
+ * through `level` between the previous evaluator tick and the current one.
+ *
+ *   above: prev <  level  AND  curr >= level
+ *   below: prev >  level  AND  curr <= level
+ *
+ * On the first tick (no baseline yet) the function returns false — the
+ * caller is expected to seed `previousValue` with `curr` and wait for the
+ * next tick. This is what stops an `RSI > 70` alert from firing on an
+ * already-overbought instrument the moment it's created.
+ */
+export function decideCross(
+  direction: 'above' | 'below',
+  prev: number | null | undefined,
+  curr: number,
+  level: number,
+): boolean {
+  if (prev === null || prev === undefined) return false;
+  return direction === 'above' ? prev < level && curr >= level : prev > level && curr <= level;
+}
+
 // ---------------------------------------------------------------------------
 // Per-rule readings.
 // ---------------------------------------------------------------------------
 
-async function readPriceRule(
-  rule: Extract<AlertRule, { type: 'priceCross' }>,
-): Promise<RuleReading> {
-  const tick: Tick = await getPrice(rule.symbol);
-  return { value: tick.mid, source: tick.source };
-}
-
-async function readCandleRule(
-  rule: Extract<AlertRule, { type: 'candleClose' }>,
-): Promise<RuleReading | null> {
-  // We need the most recent CLOSED bar. Twelve Data's `time_series` includes
-  // the in-progress bar at the tail; we drop it by checking whether the bar's
-  // open time + tf duration is in the past. Fetch a couple extra so we
-  // always have a closed bar to look at.
-  const candles = await getCandles(rule.symbol, rule.tf, { count: 4 });
-  const last = lastClosedBar(candles, rule.tf);
-  if (!last) return null;
-  return { value: last.c, source: last.source };
-}
-
-async function readIndicatorRule(
-  rule: Extract<AlertRule, { type: 'indicatorCross' }>,
-): Promise<RuleReading | null> {
-  const parsed = parseIndicatorSpec(rule.indicator);
-  if (!parsed) return null;
-  const candles = await getCandles(rule.symbol, rule.tf, { count: 250 });
-  if (candles.length === 0) return null;
-
-  const result = computeIndicator({
-    symbol: rule.symbol,
-    tf: rule.tf,
-    kind: parsed.kind,
-    params: parsed.params,
-    candles,
-  });
-
-  // Take the latest non-null point. For composite indicators (macd/bollinger/
-  // pivots) we pick a sensible default scalar: macd line, bollinger middle,
-  // pivot point.
-  for (let i = result.values.length - 1; i >= 0; i -= 1) {
-    const v = result.values[i];
-    if (v == null) continue;
-    if (typeof v === 'number') return { value: v, source: `${parsed.kind}@${rule.tf}` };
-    if (typeof v === 'object') {
-      if ('macd' in v && typeof v.macd === 'number')
-        return { value: v.macd, source: `macd@${rule.tf}` };
-      if ('middle' in v && typeof v.middle === 'number')
-        return { value: v.middle, source: `bollinger.middle@${rule.tf}` };
-      if ('pp' in v && typeof v.pp === 'number')
-        return { value: v.pp, source: `pivots.pp@${rule.tf}` };
-    }
-  }
-  return null;
-}
-
 /**
- * Parse a free-form indicator spec like "rsi:14", "ema:50", "macd:12,26,9".
- * Returns null on garbage so a misconfigured rule doesn't crash the cron.
+ * Parse a strict indicator spec into an `(kind, params)` pair.
+ *
+ *   sma | ema | rsi | atr           → optional `:n`
+ *   macd                            → optional `:fast,slow,signal`
+ *   bollinger                       → optional `:period,multiplier`
+ *   pivots                          → no params
+ *
+ * Returns null if the input doesn't match the regex above. The previous
+ * permissive parser silently dropped trailing junk (e.g. "rsi:14:bogus"
+ * became `rsi(14)`), which produced alerts that didn't match the user's
+ * stated intent.
  */
-function parseIndicatorSpec(
+const INDICATOR_SPEC_RE = /^(sma|ema|rsi|atr|macd|bollinger|pivots)(?::([0-9]+(?:,[0-9]+){0,2}))?$/i;
+
+export function parseIndicatorSpec(
   spec: string,
 ): { kind: IndicatorKind; params: Record<string, number> } | null {
-  const [head, tail] = spec.toLowerCase().split(':');
-  if (!head) return null;
-  const known: readonly IndicatorKind[] = [
-    'sma',
-    'ema',
-    'rsi',
-    'macd',
-    'atr',
-    'bollinger',
-    'pivots',
-  ];
-  if (!known.includes(head as IndicatorKind)) return null;
-  const kind = head as IndicatorKind;
-  const nums = (tail ?? '')
+  if (typeof spec !== 'string') return null;
+  const m = INDICATOR_SPEC_RE.exec(spec.trim());
+  if (!m) return null;
+  const kind = m[1]!.toLowerCase() as IndicatorKind;
+  const nums = (m[2] ?? '')
     .split(',')
-    .map(Number)
-    .filter((n) => !Number.isNaN(n));
+    .filter((s) => s.length > 0)
+    .map(Number);
+  if (nums.some((n) => !Number.isFinite(n) || n <= 0)) return null;
 
   if (kind === 'macd') {
     return {
@@ -139,9 +113,11 @@ function parseIndicatorSpec(
     return { kind, params: { period: nums[0] ?? 20, multiplier: nums[1] ?? 2 } };
   }
   if (kind === 'pivots') {
+    if (nums.length > 0) return null;
     return { kind, params: {} };
   }
-  // sma, ema, rsi, atr — single period.
+  // sma, ema, rsi, atr — single optional period.
+  if (nums.length > 1) return null;
   return { kind, params: { period: nums[0] ?? defaultPeriod(kind) } };
 }
 
@@ -170,13 +146,112 @@ function tfMs(tf: Timeframe): number {
   }
 }
 
-function lastClosedBar(candles: Candle[], tf: Timeframe): Candle | null {
-  const cutoff = Date.now() - tfMs(tf);
+export function lastClosedBar(candles: Candle[], tf: Timeframe): Candle | null {
+  // A bar is closed iff its open time + timeframe duration is in the past
+  // (i.e. the next bar has already opened). The previous implementation
+  // looked for bars whose OPEN time was ≥ 1 timeframe ago, which returned
+  // the bar BEFORE the most recently closed one — alerts on a 1h chart
+  // compared against a candle that closed roughly 2h ago.
+  const tfDur = tfMs(tf);
+  const now = Date.now();
   for (let i = candles.length - 1; i >= 0; i -= 1) {
     const bar = candles[i]!;
-    if (bar.t <= cutoff) return bar;
+    if (bar.t + tfDur <= now) return bar;
   }
   return null;
+}
+
+type AlertObj = { id: string; rule: AlertRule };
+
+async function readReadingsBatch(alerts: AlertObj[]): Promise<Map<string, RuleReading | null | Error>> {
+  // 1. Group dependencies
+  const neededPrices = new Set<Symbol>();
+  const neededCandles = new Map<string, { symbol: Symbol; tf: Timeframe; count: number }>();
+  
+  for (const a of alerts) {
+    const { rule } = a;
+    if (rule.type === 'priceCross') neededPrices.add(rule.symbol);
+    else if (rule.type === 'candleClose') {
+      const key = `${rule.symbol}-${rule.tf}`;
+      const existing = neededCandles.get(key);
+      neededCandles.set(key, { symbol: rule.symbol, tf: rule.tf, count: Math.max(existing?.count ?? 0, 4) });
+    } else if (rule.type === 'indicatorCross') {
+      if (!parseIndicatorSpec(rule.indicator)) continue;
+      const key = `${rule.symbol}-${rule.tf}`;
+      const existing = neededCandles.get(key);
+      neededCandles.set(key, { symbol: rule.symbol, tf: rule.tf, count: Math.max(existing?.count ?? 0, 250) });
+    }
+  }
+
+  // 2. Pre-fetch all dependencies in parallel
+  const priceCache = new Map<Symbol, Tick | Error>();
+  const candleCache = new Map<string, Candle[] | Error>();
+
+  const fetches: Promise<void>[] = [];
+  
+  for (const sym of neededPrices) {
+    fetches.push(getPrice(sym).then(t => { priceCache.set(sym, t); }).catch(e => { priceCache.set(sym, e instanceof Error ? e : new Error(String(e))); }));
+  }
+  for (const [key, req] of neededCandles.entries()) {
+    fetches.push(getCandles(req.symbol, req.tf, { count: req.count }).then(c => { candleCache.set(key, c); }).catch(e => { candleCache.set(key, e instanceof Error ? e : new Error(String(e))); }));
+  }
+
+  await Promise.all(fetches);
+
+  // 3. Evaluate each rule purely from the prefetched cache
+  const results = new Map<string, RuleReading | null | Error>();
+
+  for (const a of alerts) {
+    const { rule } = a;
+    try {
+      if (rule.type === 'priceCross') {
+        const tick = priceCache.get(rule.symbol);
+        if (tick instanceof Error) throw tick;
+        if (!tick) { results.set(a.id, null); continue; }
+        results.set(a.id, { value: tick.mid, source: tick.source });
+      } else if (rule.type === 'candleClose') {
+        const key = `${rule.symbol}-${rule.tf}`;
+        const candles = candleCache.get(key);
+        if (candles instanceof Error) throw candles;
+        if (!candles || candles.length === 0) { results.set(a.id, null); continue; }
+        const last = lastClosedBar(candles, rule.tf);
+        if (!last) results.set(a.id, null);
+        else results.set(a.id, { value: last.c, source: last.source });
+      } else if (rule.type === 'indicatorCross') {
+        const parsed = parseIndicatorSpec(rule.indicator);
+        if (!parsed) { results.set(a.id, null); continue; }
+        const key = `${rule.symbol}-${rule.tf}`;
+        const candles = candleCache.get(key);
+        if (candles instanceof Error) throw candles;
+        if (!candles || candles.length === 0) { results.set(a.id, null); continue; }
+        
+        const result = computeIndicator({
+          symbol: rule.symbol,
+          tf: rule.tf,
+          kind: parsed.kind,
+          params: parsed.params,
+          candles,
+        });
+
+        let found: RuleReading | null = null;
+        for (let i = result.values.length - 1; i >= 0; i -= 1) {
+          const v = result.values[i];
+          if (v == null) continue;
+          if (typeof v === 'number') { found = { value: v, source: `${parsed.kind}@${rule.tf}` }; break; }
+          if (typeof v === 'object') {
+            if ('macd' in v && typeof v.macd === 'number') { found = { value: v.macd, source: `macd@${rule.tf}` }; break; }
+            if ('middle' in v && typeof v.middle === 'number') { found = { value: v.middle, source: `bollinger.middle@${rule.tf}` }; break; }
+            if ('pp' in v && typeof v.pp === 'number') { found = { value: v.pp, source: `pivots.pp@${rule.tf}` }; break; }
+          }
+        }
+        results.set(a.id, found);
+      }
+    } catch (err) {
+      results.set(a.id, err instanceof Error ? err : new Error(String(err)));
+    }
+  }
+
+  return results;
 }
 
 // ---------------------------------------------------------------------------
@@ -228,16 +303,58 @@ export async function evaluateAlerts(
   const errors: EvaluationResult['errors'] = [];
   const deliveries: DeliveryResult[] = [];
 
-  for (const alert of alerts) {
+  // Phase 2 hardening §9 — read all rules' inputs in parallel. 
+  // We group dependencies (symbol, tf) and pre-fetch them concurrently
+  // so we never execute duplicated upstream calls in this worker boundary.
+  const batchMap = await readReadingsBatch(alerts);
+
+  const readings = alerts.map((alert) => {
+    const res = batchMap.get(alert.id);
+    if (res instanceof Error) {
+      return { alert, reading: null, error: res };
+    }
+    return { alert, reading: res ?? null, error: null };
+  });
+
+  for (const { alert, reading, error } of readings) {
     if (opts.signal?.aborted) break;
+    if (error) {
+      errors.push({
+        alertId: alert.id,
+        message: error.message,
+      });
+      continue;
+    }
     try {
-      const reading = await readRule(alert.rule);
       if (!reading) {
         skipped += 1;
         continue;
       }
-      const isMatch = decideMatch(alert.rule.direction, reading.value, alert.rule.level);
-      if (!isMatch) continue;
+
+      // indicatorCross uses true crossing semantics: compare the previous
+      // baseline (persisted on the rule) against the current value. If
+      // there's no baseline yet, seed it and skip — the alert never fires
+      // immediately on creation.
+      let isMatch: boolean;
+      if (alert.rule.type === 'indicatorCross') {
+        const prev = alert.rule.previousValue ?? null;
+        isMatch = decideCross(alert.rule.direction, prev, reading.value, alert.rule.level);
+        if (!isMatch) {
+          // Seed / refresh the baseline so the next tick has the right
+          // anchor. Best-effort: failures here just mean the next tick
+          // re-seeds.
+          try {
+            await setRulePreviousValue(alert.id, alert.rule, reading.value);
+          } catch (err) {
+            console.warn('[alerts] setRulePreviousValue failed', { id: alert.id, err });
+          }
+          continue;
+        }
+      } else {
+        isMatch = decideMatch(alert.rule.direction, reading.value, alert.rule.level);
+        if (!isMatch) continue;
+      }
+
       matched += 1;
 
       // Deliver across all configured channels. The delivery layer owns the
@@ -256,17 +373,6 @@ export async function evaluateAlerts(
   }
 
   return { total: alerts.length, matched, fired, skipped, errors, deliveries };
-}
-
-async function readRule(rule: AlertRule): Promise<RuleReading | null> {
-  switch (rule.type) {
-    case 'priceCross':
-      return readPriceRule(rule);
-    case 'candleClose':
-      return readCandleRule(rule);
-    case 'indicatorCross':
-      return readIndicatorRule(rule);
-  }
 }
 
 // Re-exports so callers can run the orchestrator AND build human-readable

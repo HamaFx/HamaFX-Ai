@@ -64,6 +64,21 @@ export async function listRecentArticles(limit = 50): Promise<NewsArticle[]> {
   return rows.map(rowToNewsArticle);
 }
 
+/**
+ * High-water mark over `news_articles.published_at`, ms epoch UTC.
+ * Returns `null` when the table is empty.
+ *
+ * Used by the news cron (`/api/cron/news`) to backfill any articles
+ * published while the cron was paused. Phase 3 hardening §13.
+ */
+export async function latestArticleTimestampMs(): Promise<number | null> {
+  const rows = await getDb()
+    .select({ max: sql<Date | null>`max(${schema.newsArticles.publishedAt})` })
+    .from(schema.newsArticles);
+  const m = rows[0]?.max ?? null;
+  return m ? m.getTime() : null;
+}
+
 function rowToNewsArticle(r: typeof schema.newsArticles.$inferSelect): NewsArticle {
   return {
     id: r.id,

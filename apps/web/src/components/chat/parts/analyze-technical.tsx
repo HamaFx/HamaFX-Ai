@@ -6,7 +6,7 @@
 // was dropped due to a fetch failure.
 
 import type { AnalyzeTechnicalOutput, PerTimeframeReading } from '@hamafx/shared';
-import Link from 'next/link';
+import { Link } from 'next-view-transitions';
 
 import type { ToolPartProps } from './registry';
 

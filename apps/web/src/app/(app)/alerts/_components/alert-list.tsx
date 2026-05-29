@@ -33,6 +33,7 @@ import { Fab } from '@/components/ui/fab';
 import { StaleIndicator } from '@/components/ui/stale-indicator';
 import { Tooltip } from '@/components/ui/tooltip';
 import { cn } from '@/lib/cn';
+import { fetchCsrf } from '@/lib/csrf';
 
 import { AlertForm } from './alert-form';
 
@@ -55,7 +56,7 @@ export function AlertList() {
 
   const toggle = useMutation({
     mutationFn: async ({ id, active }: { id: string; active: boolean }) => {
-      const res = await fetch(`/api/alerts/${id}`, {
+      const res = await fetchCsrf(`/api/alerts/${id}`, {
         method: 'PATCH',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ active, firedAt: active ? null : undefined }),
@@ -71,7 +72,7 @@ export function AlertList() {
 
   const remove = useMutation({
     mutationFn: async (id: string) => {
-      const res = await fetch(`/api/alerts/${id}`, { method: 'DELETE' });
+      const res = await fetchCsrf(`/api/alerts/${id}`, { method: 'DELETE' });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
     },
     onSuccess: () => {

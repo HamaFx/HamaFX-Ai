@@ -121,7 +121,14 @@ export function useVoiceInput({ lang, onText }: UseVoiceInputArgs): UseVoiceInpu
   }, [lang, onText]);
 
   const stop = useCallback(() => {
+    // Phase 3 hardening §10 — optimistic flip. iOS Safari's
+    // SpeechRecognition.stop() doesn't reliably fire `onend` (sometimes
+    // late, sometimes never), which left the "Listening…" pill stuck
+    // on screen. We flip `active` to false immediately so the UI
+    // dismisses the pill within the next paint; the eventual `onend`
+    // (if it arrives) is a no-op because `active` is already false.
     ref.current?.stop();
+    setActive(false);
   }, []);
 
   return { supported, active, start, stop };

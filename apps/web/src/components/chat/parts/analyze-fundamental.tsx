@@ -5,7 +5,7 @@
 // deep link to the calendar filtered to the symbol.
 
 import type { AnalyzeFundamentalOutput } from '@hamafx/shared';
-import Link from 'next/link';
+import { Link } from 'next-view-transitions';
 
 import type { ToolPartProps } from './registry';
 

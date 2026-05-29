@@ -25,7 +25,7 @@ import {
 } from '@hamafx/shared';
 
 import type { Logger } from '../log.js';
-import { DEFAULT_RECONNECT_DELAYS } from './reconnect.js';
+import { DEFAULT_RECONNECT_DELAYS, jitteredDelay } from './reconnect.js';
 
 export interface NormalizedTick {
   symbol: Symbol;
@@ -78,6 +78,18 @@ export class SignalRConsumer {
   private subscribedSymbols: Symbol[] = [];
   /** True after `start()` resolves and until `stop()` runs. */
   private started = false;
+  /**
+   * Phase 2 hardening §1 — manual reconnect state. Once SignalR's own
+   * automatic reconnect schedule is exhausted, the SDK fires `onclose`
+   * and stops trying. Without this loop the worker process keeps
+   * running with no SignalR connection and tick ingestion is silently
+   * dead until the next deploy or manual restart.
+   */
+  private stopping = false;
+  private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+  private reconnectAttempt = 0;
+  /** Cap the manual rebuild backoff so we never sleep more than a minute. */
+  private static readonly MAX_REBUILD_BACKOFF_MS = 60_000;
 
   constructor(opts: ConsumerOptions) {
     this.opts = opts;
@@ -112,6 +124,9 @@ export class SignalRConsumer {
         err: err ? String(err) : 'no error',
       });
       this.started = false;
+      // Phase 2 hardening §1 — schedule a manual rebuild instead of
+      // letting the worker silently sit with no connection.
+      if (!this.stopping) this.scheduleReconnect();
     });
 
     this.opts.log.info('signalr starting', {
@@ -125,6 +140,11 @@ export class SignalRConsumer {
   }
 
   async stop(): Promise<void> {
+    this.stopping = true;
+    if (this.reconnectTimer) {
+      clearTimeout(this.reconnectTimer);
+      this.reconnectTimer = null;
+    }
     if (!this.connection) return;
     try {
       await this.unsubscribe(this.subscribedSymbols);
@@ -138,6 +158,48 @@ export class SignalRConsumer {
     }
     this.connection = null;
     this.started = false;
+  }
+
+  /**
+   * Manual rebuild loop. Triggered when the SignalR SDK's own
+   * `withAutomaticReconnect` schedule has been exhausted (it stops
+   * trying after the array runs out). We cap the backoff at 60 s and
+   * use jitter so workers restarting in lockstep don't synchronise
+   * their reconnect attempts.
+   */
+  private scheduleReconnect(): void {
+    if (this.stopping || this.reconnectTimer) return;
+    this.reconnectAttempt += 1;
+    const baseMs = Math.min(
+      SignalRConsumer.MAX_REBUILD_BACKOFF_MS,
+      2_000 * Math.pow(2, this.reconnectAttempt - 1),
+    );
+    const delay = jitteredDelay(baseMs);
+    this.opts.log.warn('signalr scheduling manual rebuild', {
+      attempt: this.reconnectAttempt,
+      delayMs: Math.round(delay),
+    });
+    this.reconnectTimer = setTimeout(() => {
+      this.reconnectTimer = null;
+      void this.rebuild();
+    }, delay);
+  }
+
+  private async rebuild(): Promise<void> {
+    if (this.stopping) return;
+    // The previous connection is dead — drop the reference so `start()`
+    // builds a fresh one. `started` is already false from `onclose`.
+    this.connection = null;
+    try {
+      await this.start();
+      this.opts.log.info('signalr manual rebuild succeeded', {
+        attempts: this.reconnectAttempt,
+      });
+      this.reconnectAttempt = 0;
+    } catch (err) {
+      this.opts.log.error('signalr manual rebuild failed', { err: String(err) });
+      this.scheduleReconnect();
+    }
   }
 
   /** Public for tests; production code calls it via start()/onreconnected. */

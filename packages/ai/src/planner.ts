@@ -22,6 +22,7 @@ import { generateText, type UIMessage } from 'ai';
 
 import { dailySpendUsd } from './cost';
 import { resolveModel } from './model';
+import { maybeGetToolContext } from './tool-context';
 import type { RoutingDecision } from './routing';
 
 export type PlannerEnv = Pick<
@@ -115,9 +116,14 @@ export async function runPlanner(args: RunPlannerArgs): Promise<PlanResult> {
 
   // Hard budget guard — never spend on a planner side-effect when the
   // daily ceiling has been crossed. Fall back to deterministic copy.
+  //
+  // Phase 3 hardening §4 — read the cached snapshot from the per-turn
+  // tool context when available so the planner doesn't double-up on
+  // the title generator's `dailySpendUsd()` query.
   let llmAllowed = true;
   try {
-    const spent = await dailySpendUsd();
+    const ctx = maybeGetToolContext();
+    const spent = ctx ? ctx.budget.spent : await dailySpendUsd();
     if (spent >= args.env.MAX_DAILY_USD) llmAllowed = false;
   } catch {
     llmAllowed = false;

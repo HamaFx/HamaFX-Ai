@@ -11,7 +11,6 @@
 // deterministic fallback synopsis pulled from the most recent messages
 // rather than spending more on a memory side-effect.
 
-import type { ServerEnv } from '@hamafx/shared';
 import {
   SummarizeThreadInputSchema,
   SymbolSchema,
@@ -22,10 +21,10 @@ import {
 import { generateText } from 'ai';
 import type { z } from 'zod';
 
-import { dailySpendUsd } from '../cost';
 import { rememberThreadSynopsis } from '../memory/memory-index';
 import { resolveModel } from '../model';
 import { listMessages } from '../persistence';
+import { maybeGetToolContext } from '../tool-context';
 
 const InputSchema = SummarizeThreadInputSchema;
 
@@ -35,30 +34,8 @@ declare module '@hamafx/shared' {
   }
 }
 
-interface SummarizeThreadContext {
-  threadId: string;
-  env: Pick<
-    ServerEnv,
-    | 'AI_GATEWAY_API_KEY'
-    | 'GOOGLE_GENERATIVE_AI_API_KEY'
-    | 'GOOGLE_VERTEX_PROJECT'
-    | 'GOOGLE_VERTEX_LOCATION'
-    | 'GOOGLE_APPLICATION_CREDENTIALS_JSON'
-    | 'GOOGLE_APPLICATION_CREDENTIALS'
-    | 'AI_SUMMARY_MODEL'
-    | 'AI_DEFAULT_MODEL'
-    | 'AI_EMBEDDING_MODEL'
-    | 'MAX_DAILY_USD'
-    | 'LOG_PROMPTS'
-  >;
-}
-
-let context: SummarizeThreadContext | null = null;
-
-/** Set by the agent before `streamText`. Idempotent on null reset. */
-export function setSummarizeThreadContext(ctx: SummarizeThreadContext | null): void {
-  context = ctx;
-}
+// Phase 3 hardening §1 — context flows in via AsyncLocalStorage. The
+// legacy `setSummarizeThreadContext()` was removed.
 
 const SYSTEM_PROMPT =
   'You synthesise the active trading-chat thread into JSON. Output JSON ONLY: { "synopsis": "<3-5 sentence paragraph>", "insights": [{ "text": "<short imperative>", "symbol": "XAUUSD"|"EURUSD"|"GBPUSD"|null }, ...] }. Provide 3 insights. No greetings, no preamble, no markdown fences.';
@@ -76,8 +53,9 @@ export const summarizeThreadTool = {
     "One-paragraph synopsis of the active chat thread plus three durable insights. Use when the user asks 'wrap this up', 'TL;DR what we just discussed', or wants to save the conclusion for later. With `remember=true` the synopsis is embedded into the memory index so future turns can retrieve it via `search_knowledge`.",
   inputSchema: InputSchema,
   execute: async (input: z.infer<typeof InputSchema>): Promise<SummarizeThreadOutput> => {
-    if (!context) return NO_CONTEXT_OUTPUT('');
-    const { threadId, env } = context;
+    const ctx = maybeGetToolContext();
+    if (!ctx) return NO_CONTEXT_OUTPUT('');
+    const { threadId, env, budget } = ctx;
     const messages = await listMessages(threadId, input.messageWindow);
     if (messages.length === 0) {
       return {
@@ -97,13 +75,11 @@ export const summarizeThreadTool = {
     let synopsis = '';
     let insights: ThreadInsight[] = [];
 
-    let llmAllowed = true;
-    try {
-      const spent = await dailySpendUsd();
-      if (spent >= env.MAX_DAILY_USD) llmAllowed = false;
-    } catch {
-      llmAllowed = false;
-    }
+    // Phase 3 hardening §4 — read the cached budget snapshot from
+    // context instead of issuing another `dailySpendUsd()` query. The
+    // turn already paid for one read in `runChat` when it took its
+    // reservation.
+    const llmAllowed = budget.spent < budget.max;
 
     if (llmAllowed) {
       try {

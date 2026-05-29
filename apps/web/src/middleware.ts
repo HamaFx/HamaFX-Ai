@@ -29,6 +29,22 @@ export async function middleware(req: NextRequest): Promise<NextResponse> {
     return redirect;
   }
 
+  // Phase 3 hardening §22 — CSRF double-submit cookie pattern.
+  let csrfToken = req.cookies.get('hfx_csrf')?.value;
+  if (!csrfToken) {
+    csrfToken = crypto.randomUUID();
+  }
+
+  // Enforce CSRF on state-changing endpoints under /api/*
+  // (Note: /api/cron/* is exempted by config.matcher).
+  const isStateChanging = ['POST', 'PUT', 'DELETE', 'PATCH'].includes(req.method);
+  if (isStateChanging && req.nextUrl.pathname.startsWith('/api/')) {
+    const headerToken = req.headers.get('x-csrf-token');
+    if (!headerToken || headerToken !== csrfToken) {
+      return new NextResponse('Forbidden - CSRF token missing or invalid', { status: 403 });
+    }
+  }
+
   // Forward the id downstream so route handlers can read it from
   // `req.headers.get('x-request-id')`.
   const next = NextResponse.next({
@@ -41,6 +57,16 @@ export async function middleware(req: NextRequest): Promise<NextResponse> {
     },
   });
   next.headers.set(REQUEST_ID_HEADER, requestId);
+  
+  // Set the CSRF cookie on the response if we minted a new one.
+  if (!req.cookies.has('hfx_csrf')) {
+    next.cookies.set('hfx_csrf', csrfToken, {
+      path: '/',
+      sameSite: 'lax',
+      secure: process.env.NODE_ENV === 'production',
+    });
+  }
+
   return next;
 }
 

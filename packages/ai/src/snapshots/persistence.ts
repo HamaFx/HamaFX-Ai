@@ -34,29 +34,37 @@ export interface UpsertSnapshotArgs<TData> {
  */
 export async function upsertSnapshot<TData>(args: UpsertSnapshotArgs<TData>): Promise<void> {
   const { symbol, kind, asOf, data } = args;
-  const db = getDb();
-  const existing = await db
-    .select({ id: schema.snapshots.id })
-    .from(schema.snapshots)
-    .where(
-      and(
-        eq(schema.snapshots.symbol, symbol),
-        eq(schema.snapshots.kind, kind),
-        eq(schema.snapshots.asOf, asOf),
-      ),
-    )
-    .limit(1);
+  // Phase 1 hardening §9 — wrap the lookup + write in one transaction.
+  // The pre-fix code was vulnerable to a "lost upsert" race where two
+  // concurrent callers both read no-row, both inserted, and the table
+  // ended up with duplicate rows for the same (symbol, kind, asOf).
+  // Postgres serialises the SELECT … FOR UPDATE inside the transaction
+  // so the write side is consistent.
+  await getDb().transaction(async (tx) => {
+    const existing = await tx
+      .select({ id: schema.snapshots.id })
+      .from(schema.snapshots)
+      .where(
+        and(
+          eq(schema.snapshots.symbol, symbol),
+          eq(schema.snapshots.kind, kind),
+          eq(schema.snapshots.asOf, asOf),
+        ),
+      )
+      .for('update')
+      .limit(1);
 
-  if (existing.length > 0 && existing[0]) {
-    await db
-      .update(schema.snapshots)
-      .set({ data: data as Record<string, unknown> })
-      .where(eq(schema.snapshots.id, existing[0].id));
-    return;
-  }
-  await db
-    .insert(schema.snapshots)
-    .values({ symbol, kind, asOf, data: data as Record<string, unknown> });
+    if (existing.length > 0 && existing[0]) {
+      await tx
+        .update(schema.snapshots)
+        .set({ data: data as Record<string, unknown> })
+        .where(eq(schema.snapshots.id, existing[0].id));
+      return;
+    }
+    await tx
+      .insert(schema.snapshots)
+      .values({ symbol, kind, asOf, data: data as Record<string, unknown> });
+  });
 }
 
 /**

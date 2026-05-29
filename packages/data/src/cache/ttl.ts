@@ -19,7 +19,12 @@ const MINUTE = 60;
 const HOUR = 60 * MINUTE;
 const DAY = 24 * HOUR;
 
-export const PRICE_TTL: TtlPolicy = { ttlSeconds: 3 * SECOND, maxStaleSeconds: 30 * SECOND };
+// Phase 3 hardening §9 — `maxStaleSeconds` lowered from 30 s to 10 s.
+// 30 s of stale tolerance let the chart show a noticeably stale price
+// while still claiming to be live. With Phase 2 §3's tick-age plumbing
+// the UI surfaces a clearer chip when the value is stale, so we don't
+// need the long fallback window any more.
+export const PRICE_TTL: TtlPolicy = { ttlSeconds: 3 * SECOND, maxStaleSeconds: 10 * SECOND };
 
 /**
  * Candle TTL depends on whether we're requesting the in-progress (last) bar

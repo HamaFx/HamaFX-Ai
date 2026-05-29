@@ -49,7 +49,7 @@ export interface FetchLatestArgs {
 }
 
 export async function fetchLatestRows(args: FetchLatestArgs): Promise<CftcRow[]> {
-  if (!args.skipThrottle && !tryReserve(PROVIDER, THROTTLE)) {
+  if (!args.skipThrottle && !(await tryReserve(PROVIDER, THROTTLE))) {
     throw new ProviderError(
       'PROVIDER_QUOTA_EXCEEDED',
       PROVIDER,

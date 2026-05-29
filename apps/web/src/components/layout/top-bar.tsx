@@ -11,7 +11,7 @@
 // useState read per navigation — negligible, and well worth the
 // simplicity vs. a route-group restructure.
 
-import Link from 'next/link';
+import { Link } from 'next-view-transitions';
 import { usePathname } from 'next/navigation';
 
 import { cn } from '@/lib/cn';

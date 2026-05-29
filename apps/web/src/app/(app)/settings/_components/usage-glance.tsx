@@ -4,7 +4,7 @@
 
 import { computeUsage } from '@hamafx/ai';
 import { ChevronRight } from 'lucide-react';
-import Link from 'next/link';
+import { Link } from 'next-view-transitions';
 
 import { getServerEnv } from '@/lib/env';
 import { cn } from '@/lib/cn';

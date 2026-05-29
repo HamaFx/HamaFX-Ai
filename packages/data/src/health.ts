@@ -7,6 +7,23 @@
 //
 // Health windows are short (5 min default) so a single bad minute doesn't
 // permanently sideline a provider — it self-heals on the next success.
+//
+// Phase 2 hardening §6 — scope: this state is per-Lambda-instance.
+//
+// On Vercel each function instance owns its own copy; a provider that
+// fails on instance A may still look healthy to instance B for a few
+// minutes. The pre-fix concern was that this divergence let one
+// instance prefer a degraded provider. With Phase 2 §2 in place
+// (pinned providers + ProviderEmptyError), the only providers that
+// flap between instances are biquote-rest and finnhub — both REST and
+// similar latency, so the residual user impact is negligible. The
+// pinned mechanism is the production lever for "I always want X
+// first"; this scoring is only the tiebreaker between unpinned
+// alternatives.
+//
+// If we ever need cross-instance consistency (e.g. shared "back off
+// from biquote for 5 min"), promote this to a Postgres-backed counter
+// behind the same `recordSuccess` / `recordFailure` API.
 
 const WINDOW_MS = 5 * 60 * 1000;
 

@@ -99,7 +99,13 @@ describe('runWithFailover — Phase 7a health-aware ordering', () => {
     expect(order).toEqual(['twelve-data']);
   });
 
-  it('rethrows the FIRST ProviderError when every attempt fails', async () => {
+  it('rethrows the most-actionable error when every attempt fails', async () => {
+    // Phase 3 hardening §16 — the runner now picks the highest-rank
+    // ProviderError to surface (`PROVIDER_QUOTA_EXCEEDED` >
+    // `PROVIDER_HTTP_ERROR` > everything else). The pre-fix behavior
+    // re-threw the FIRST error encountered; the new behavior gives
+    // the operator the most-useful message (a quota signal trumps a
+    // generic HTTP failure).
     await expect(
       runWithFailover([
         {
@@ -115,6 +121,25 @@ describe('runWithFailover — Phase 7a health-aware ordering', () => {
           },
         },
       ]),
-    ).rejects.toThrow('first');
+    ).rejects.toThrow('second');
+  });
+
+  it('falls back to the first error when no attempt produced a higher-rank one', async () => {
+    await expect(
+      runWithFailover([
+        {
+          name: 'twelve-data',
+          run: async () => {
+            throw new ProviderError('PROVIDER_HTTP_ERROR', 'twelve-data', 'alpha');
+          },
+        },
+        {
+          name: 'finnhub',
+          run: async () => {
+            throw new ProviderError('PROVIDER_HTTP_ERROR', 'finnhub', 'beta');
+          },
+        },
+      ]),
+    ).rejects.toThrow('alpha');
   });
 });

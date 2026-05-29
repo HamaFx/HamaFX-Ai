@@ -52,6 +52,13 @@ export interface PriceResult {
   stale: boolean;
   /** ms epoch UTC the upstream produced this value. */
   producedAt: number;
+  /**
+   * Phase 2 hardening §3 — milliseconds since the worker observed the
+   * tick. Only meaningful when the live-ticks provider served the
+   * value; for REST fallbacks (`biquote` / `finnhub`) this is `null`
+   * because we don't get a server-side observation timestamp.
+   */
+  ageMs: number | null;
 }
 
 function resolveKeys(opts: GetPriceOptions) {
@@ -89,19 +96,26 @@ export async function getPriceWithMeta(
   const key = cacheKey({ resource: 'price', symbol });
   const tags = [cacheTag('price'), cacheTag('price', symbol)];
 
-  const r = await cache.fetchWithMeta<Tick>(
+  const r = await cache.fetchWithMeta<{ tick: Tick; ageMs: number | null }>(
     key,
     async () => {
-      const attempts: ProviderAttempt<{ price: number; provider: string }>[] = [];
+      const attempts: ProviderAttempt<{ price: number; provider: string; ageMs: number | null }>[] = [];
 
       // Phase 8 PR-8 — `live_ticks` is the freshest source we have when
       // the worker is healthy. If the row is stale or missing, this
-      // attempt throws and runWithFailover moves on.
+      // attempt throws `ProviderEmptyError` and `runWithFailover` moves
+      // on without recording a health failure.
+      //
+      // Phase 2 hardening §2 — `pinned: true` keeps live-ticks first
+      // regardless of recent score so a transient empty result during a
+      // worker restart doesn't permanently demote the SignalR pipeline
+      // below the BiQuote REST fallback.
       attempts.push({
         name: 'live-ticks',
+        pinned: true,
         run: async () => {
           const r = await fetchLiveTick({ symbol });
-          return { price: r.price, provider: r.provider };
+          return { price: r.price, provider: r.provider, ageMs: r.ageMs };
         },
       });
 
@@ -116,7 +130,7 @@ export async function getPriceWithMeta(
           // BiQuote suppresses `last` for FX (always 0). Use the
           // server-computed `mid` instead — that's what we want
           // downstream anyway.
-          return { price: tick.mid, provider: 'biquote' };
+          return { price: tick.mid, provider: 'biquote', ageMs: null };
         },
       });
 
@@ -129,6 +143,7 @@ export async function getPriceWithMeta(
               ...(opts.signal ? { signal: opts.signal } : {}),
             })),
             provider: 'finnhub',
+            ageMs: null,
           }),
         });
       }
@@ -139,17 +154,23 @@ export async function getPriceWithMeta(
       // Personal-mode: providers don't expose bid/ask on free tiers, so we
       // synthesise a ±0.5 pip spread around mid so downstream chart/UI code
       // doesn't have to special-case nullable bid/ask.
-      return {
+      const tick: Tick = {
         symbol,
         bid: value.price,
         ask: value.price,
         mid: value.price,
         ts: fetchedAt,
         source: value.provider,
-      } satisfies Tick;
+      };
+      return { tick, ageMs: value.ageMs };
     },
     { ttlSeconds: ttl, maxStaleSeconds: swr, tags },
   );
 
-  return { tick: r.value, stale: r.meta.stale, producedAt: r.meta.producedAt };
+  return {
+    tick: r.value.tick,
+    stale: r.meta.stale,
+    producedAt: r.meta.producedAt,
+    ageMs: r.value.ageMs,
+  };
 }

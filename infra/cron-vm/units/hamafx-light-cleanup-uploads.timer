@@ -1,0 +1,11 @@
+[Unit]
+Description=HamaFX-Ai — daily chat-image cleanup timer
+
+[Timer]
+# Run once per day at 03:00 UTC (off-peak).
+OnCalendar=*-*-* 03:00:00
+RandomizedDelaySec=300
+Persistent=true
+
+[Install]
+WantedBy=timers.target

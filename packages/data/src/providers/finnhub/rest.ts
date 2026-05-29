@@ -54,7 +54,7 @@ async function call<T>(
   schema: z.ZodSchema<T>,
   opts: CallOptions,
 ): Promise<T> {
-  if (!opts.skipThrottle && !tryReserve(PROVIDER, THROTTLE)) {
+  if (!opts.skipThrottle && !(await tryReserve(PROVIDER, THROTTLE))) {
     throw new ProviderError(
       'PROVIDER_QUOTA_EXCEEDED',
       PROVIDER,
@@ -89,7 +89,7 @@ async function call<T>(
   clearTimeout(timer);
 
   if (!res.ok) {
-    if (res.status === 429) noteBackoff(PROVIDER, THROTTLE);
+    if (res.status === 429) await noteBackoff(PROVIDER, THROTTLE);
     throw new ProviderError(
       res.status === 429 ? 'PROVIDER_QUOTA_EXCEEDED' : 'PROVIDER_HTTP_ERROR',
       PROVIDER,

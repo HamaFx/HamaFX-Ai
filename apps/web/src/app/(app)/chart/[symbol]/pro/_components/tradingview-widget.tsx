@@ -13,7 +13,7 @@
 //     block s3.tradingview.com).
 
 import type { Symbol, Timeframe } from '@hamafx/shared';
-import Link from 'next/link';
+import { Link } from 'next-view-transitions';
 import Script from 'next/script';
 import { useEffect, useRef, useState } from 'react';
 

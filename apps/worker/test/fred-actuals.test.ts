@@ -6,13 +6,19 @@ vi.mock('@hamafx/ai', () => ({
   patchEventActual: vi.fn(),
 }));
 
-vi.mock('@hamafx/data/providers/fred', () => ({
-  fetchObservations: vi.fn(),
-  fredMeta: vi.fn(),
+// Phase 3 hardening §19 — `apps/worker/src/jobs/fred-actuals.ts` now
+// imports the FRED helpers via `import { fred } from '@hamafx/data'`
+// instead of the deep `@hamafx/data/providers/fred` path. Match the
+// new import shape so vitest's module resolver finds the mock.
+vi.mock('@hamafx/data', () => ({
+  fred: {
+    fetchObservations: vi.fn(),
+    fredMeta: vi.fn(),
+  },
 }));
 
 import * as ai from '@hamafx/ai';
-import * as fred from '@hamafx/data/providers/fred';
+import { fred } from '@hamafx/data';
 
 import { runFredActuals } from '../src/jobs/fred-actuals';
 import { createLogger } from '../src/log';

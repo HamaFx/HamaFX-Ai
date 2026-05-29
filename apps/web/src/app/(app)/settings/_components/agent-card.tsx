@@ -4,7 +4,7 @@
 
 import { buildToolCatalogue } from '@hamafx/ai';
 import { Bot, ChevronRight } from 'lucide-react';
-import Link from 'next/link';
+import { Link } from 'next-view-transitions';
 
 export async function AgentCard() {
   const entries = await buildToolCatalogue().catch(() => []);

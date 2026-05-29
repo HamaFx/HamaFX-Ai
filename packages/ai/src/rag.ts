@@ -18,7 +18,7 @@ import { getDb, schema } from '@hamafx/db';
 import type { NewsSentiment, SearchKnowledgeItem, Symbol } from '@hamafx/shared';
 import { sql } from 'drizzle-orm';
 
-import { embedTexts } from './embeddings';
+import { embedTexts, vectorLiteral } from './embeddings';
 import { searchMemory, type MemoryKind, type MemoryRow } from './memory/memory-index';
 
 interface RagRow {
@@ -86,7 +86,7 @@ interface SubQueryArgs {
 
 async function runDenseNewsQuery(args: SubQueryArgs): Promise<RagRow[]> {
   const { embedding, limit, since, symbol } = args;
-  const vec = `[${embedding.join(',')}]`;
+  const vec = vectorLiteral(embedding);
   const sinceClause =
     since !== undefined ? sql`AND na.published_at >= ${new Date(since)}` : sql``;
   const symbolClause =

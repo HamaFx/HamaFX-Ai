@@ -15,8 +15,8 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Segmented } from '@/components/ui/segmented';
+import { fetchCsrf } from '@/lib/csrf';
 import { cn } from '@/lib/cn';
-
 type RuleType = 'priceCross' | 'candleClose' | 'indicatorCross';
 
 interface AlertFormProps {
@@ -66,7 +66,7 @@ export function AlertForm({ initialSymbol, onCreated }: AlertFormProps) {
             };
 
     try {
-      const res = await fetch('/api/alerts', {
+      const res = await fetchCsrf('/api/alerts', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({

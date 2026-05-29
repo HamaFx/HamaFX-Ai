@@ -79,7 +79,7 @@ export interface FetchNewsParams {
  * keep this single-page since the cron runs frequently and we trust the
  * default sort (published_at desc). */
 export async function fetchLatest(params: FetchNewsParams): Promise<RawMarketauxArticle[]> {
-  if (!params.skipThrottle && !tryReserve(PROVIDER, THROTTLE)) {
+  if (!params.skipThrottle && !(await tryReserve(PROVIDER, THROTTLE))) {
     throw new ProviderError(
       'PROVIDER_QUOTA_EXCEEDED',
       PROVIDER,
@@ -125,7 +125,7 @@ export async function fetchLatest(params: FetchNewsParams): Promise<RawMarketaux
     const json: unknown = await res.json().catch(() => null);
     const errEnv = ErrorSchema.safeParse(json);
     const message = errEnv.success ? errEnv.data.error.message : `HTTP ${res.status}`;
-    if (res.status === 429) noteBackoff(PROVIDER, THROTTLE);
+    if (res.status === 429) await noteBackoff(PROVIDER, THROTTLE);
     throw new ProviderError(
       res.status === 429 ? 'PROVIDER_QUOTA_EXCEEDED' : 'PROVIDER_HTTP_ERROR',
       PROVIDER,

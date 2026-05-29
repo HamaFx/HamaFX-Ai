@@ -9,15 +9,19 @@
 //   - "Healthy" when the newest bar for the symbol is within 90s of now
 //     (1.5× the bar size, so a single missed minute on the worker doesn't
 //     trip the fallthrough).
-//   - On stale or missing data, throws ProviderError so runWithFailover
-//     falls through to BiQuote REST → Twelve Data → Finnhub.
+//   - On stale or missing data, throws `ProviderEmptyError` so
+//     `runWithFailover` falls through without recording a health
+//     failure. Phase 2 hardening §2 — the previous `ProviderError` path
+//     dinged the per-provider health score during normal worker
+//     restarts and demoted the worker-fed pipeline below the REST
+//     fallback.
 
 import type { getDb } from '@hamafx/db';
 import { candles1m } from '@hamafx/db/schema';
 import type { Symbol } from '@hamafx/shared';
 import { asc, eq } from 'drizzle-orm';
 
-import { ProviderError } from '../../errors';
+import { ProviderEmptyError } from '../../errors';
 
 const PROVIDER = 'candles-1m';
 const FRESHNESS_WINDOW_MS = 90_000;
@@ -50,7 +54,9 @@ export interface FetchCandles1mResult {
 
 /**
  * Read the latest `count` 1m bars for `symbol`, oldest-first. Throws
- * ProviderError if no bars exist or the freshest bar is stale.
+ * `ProviderEmptyError` (NOT `ProviderError`) if no bars exist or the
+ * freshest bar is stale, so the failover runner falls through without
+ * recording a health failure.
  */
 export async function fetchCandles1m(args: FetchCandles1mArgs): Promise<FetchCandles1mResult> {
   const db = args.db ?? (await loadDb());
@@ -76,25 +82,20 @@ export async function fetchCandles1m(args: FetchCandles1mArgs): Promise<FetchCan
     .orderBy(asc(candles1m.t));
 
   if (rows.length === 0) {
-    throw new ProviderError(
-      'PROVIDER_HTTP_ERROR',
-      PROVIDER,
-      `no candles_1m rows for ${args.symbol}`,
-    );
+    throw new ProviderEmptyError(PROVIDER, `no candles_1m rows for ${args.symbol}`);
   }
 
   const newestRow = rows[rows.length - 1];
   if (!newestRow) {
     // unreachable given the length check above, but keeps tsc happy under
     // noUncheckedIndexedAccess.
-    throw new ProviderError('PROVIDER_HTTP_ERROR', PROVIDER, 'unexpected empty rows');
+    throw new ProviderEmptyError(PROVIDER, 'unexpected empty rows');
   }
 
   const newest = newestRow.t.getTime();
   const ageMs = Date.now() - newest;
   if (ageMs > window) {
-    throw new ProviderError(
-      'PROVIDER_HTTP_ERROR',
+    throw new ProviderEmptyError(
       PROVIDER,
       `candles_1m stale for ${args.symbol}: newest bar ${ageMs}ms ago`,
     );

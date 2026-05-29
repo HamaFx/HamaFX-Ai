@@ -25,10 +25,34 @@ const IndicatorCrossRule = z.object({
   type: z.literal('indicatorCross'),
   symbol: SymbolSchema,
   tf: TimeframeSchema,
-  /** e.g. "rsi:14", "ema:50". Free string — interpreted by the evaluator. */
-  indicator: z.string(),
+  /**
+   * Strict spec format: `<kind>` or `<kind>:<n>(,n)(,n)`.
+   * Kinds: sma, ema, rsi, atr, macd, bollinger, pivots. The evaluator
+   * re-validates with the same regex; `parseIndicatorSpec` returns null on
+   * any deviation so a rule that previously slipped through (e.g.
+   * "rsi:14:bogus") is now filtered before delivery.
+   */
+  indicator: z
+    .string()
+    .regex(
+      /^(?:sma|ema|rsi|atr|macd|bollinger|pivots)(?::[0-9]+(?:,[0-9]+){0,2})?$/i,
+      'indicator must match `<kind>` or `<kind>:n[,n[,n]]`',
+    ),
   level: z.number(),
   direction: z.enum(['above', 'below']),
+  /**
+   * Latest observed indicator value from the previous evaluation tick.
+   * Cross detection requires a baseline:
+   *
+   *   - direction "above" fires iff `prev < level AND curr >= level`
+   *   - direction "below" fires iff `prev > level AND curr <= level`
+   *
+   * On the first tick `previousValue === null`, so the alert never fires
+   * immediately on creation when the indicator already sits past the
+   * threshold. The evaluator writes the current sample back as the new
+   * baseline whenever it doesn't fire.
+   */
+  previousValue: z.number().nullable().optional(),
 });
 
 export const AlertRuleSchema = z.discriminatedUnion('type', [

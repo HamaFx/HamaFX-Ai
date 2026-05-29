@@ -22,6 +22,7 @@
 
 import type { NewsArticle } from '@hamafx/shared';
 import { Bookmark, ExternalLink, Sparkles } from 'lucide-react';
+import { motion } from 'motion/react';
 
 import { cn } from '@/lib/cn';
 
@@ -49,7 +50,7 @@ export function ArticleCard({ article }: ArticleCardProps) {
   return (
     <article
       className={cn(
-        'card-premium group relative overflow-hidden',
+        'animate-reveal @container card-premium group relative overflow-hidden',
         'transition-colors duration-200 md:hover:bg-bg-elev-2/40',
       )}
     >
@@ -89,7 +90,7 @@ export function ArticleCard({ article }: ArticleCardProps) {
         </div>
 
         {/* Headline */}
-        <h3 className="text-fg mt-2.5 line-clamp-3 text-[15px] font-semibold leading-snug">
+        <h3 className="text-fg mt-2.5 line-clamp-3 text-[15px] font-semibold leading-snug @xs:text-base">
           {article.title}
         </h3>
 
@@ -131,10 +132,12 @@ export function ArticleCard({ article }: ArticleCardProps) {
           Ask AI
         </a>
         <div className="flex items-center gap-0.5">
-          <button
+          <motion.button
             type="button"
+            whileTap={{ scale: 0.85 }}
             onClick={(e) => {
               e.preventDefault();
+              if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate(50);
               toggle(article.id);
             }}
             aria-label={saved ? 'Remove bookmark' : 'Bookmark article'}
@@ -147,7 +150,7 @@ export function ArticleCard({ article }: ArticleCardProps) {
             )}
           >
             <Bookmark className={cn('size-3.5', saved && 'fill-current')} />
-          </button>
+          </motion.button>
           <a
             href={article.url}
             target="_blank"

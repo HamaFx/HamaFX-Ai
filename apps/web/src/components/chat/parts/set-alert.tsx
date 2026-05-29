@@ -13,7 +13,7 @@
 'use client';
 
 import type { SetAlertOutput } from '@hamafx/shared';
-import Link from 'next/link';
+import { Link } from 'next-view-transitions';
 
 interface SetAlertPartProps {
   /** Tool output, or `null` while streaming / before completion. */

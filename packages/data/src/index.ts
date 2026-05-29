@@ -25,7 +25,7 @@ export {
   type TtlPolicy,
 } from './cache';
 
-export { ProviderError, toAppError, type DataErrorCode } from './errors';
+export { ProviderError, ProviderEmptyError, toAppError, type DataErrorCode } from './errors';
 export { runWithFailover, type ProviderAttempt } from './failover';
 export {
   getHealth,
@@ -35,3 +35,11 @@ export {
   type HealthSnapshot,
   _resetHealth,
 } from './health';
+
+// Phase 3 hardening §19 — re-export the worker-only providers so jobs
+// don't have to deep-import past the package boundary. These pseudo-
+// adapters don't expose a unified DTO (each is provider-specific), so
+// we surface them under a namespace per provider rather than the
+// adapter-style flat re-exports above.
+export * as cftc from './providers/cftc';
+export * as fred from './providers/fred';

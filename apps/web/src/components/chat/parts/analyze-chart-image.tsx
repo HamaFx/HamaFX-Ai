@@ -6,7 +6,7 @@
 // an overlay shape we can re-render via the existing OverlaySet pipeline.
 
 import { priceDecimals, type AnalyzeChartImageOutput, type AnnotateChartKind } from '@hamafx/shared';
-import Link from 'next/link';
+import { Link } from 'next-view-transitions';
 
 import type { ToolPartProps } from './registry';
 

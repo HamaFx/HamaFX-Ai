@@ -22,10 +22,12 @@ export const maxDuration = 30;
 /**
  * Tight scope on purpose. BiQuote's free tier covers FX + XAU at 10 req/min
  * via our internal self-throttle; warming 3 symbols × 1 tf leaves headroom
- * for the live polling that follows. 4h is fetched lazily on first chart
- * visit.
+ * for the live polling that follows. 1h on every tick; 4h every 10 minutes
+ * (low-frequency tier — see Phase 3 hardening §14).
  */
 const TIMEFRAMES_TO_WARM: Array<'1h'> = ['1h'];
+/** Less-hot timeframes warmed only on every 10th cron tick. */
+const SLOW_TIMEFRAMES_EVERY_10_MIN: Array<'4h'> = ['4h'];
 
 /** Stagger candle requests so the throttle sees them spread out. */
 const STAGGER_MS = 1500;
@@ -51,8 +53,17 @@ export async function GET(req: Request): Promise<Response> {
 
     // Candles: serialise with a small stagger so the per-provider throttle
     // sees the requests spread out across the window rather than a burst.
+    //
+    // Phase 3 hardening §14 — `4h` is warmed every ~10 cron ticks
+    // instead of every tick. The 4h chart is opened rarely enough that
+    // a 10-minute "first visit is slow" tax is invisible, but warming
+    // it every 2 min would burn meaningful quota.
+    const minute = new Date().getUTCMinutes();
+    const slowTfs: ReadonlyArray<'4h'> = minute % 10 === 0 ? SLOW_TIMEFRAMES_EVERY_10_MIN : [];
+    const tfs: ReadonlyArray<'1h' | '4h'> = [...TIMEFRAMES_TO_WARM, ...slowTfs];
+
     for (const symbol of SYMBOLS) {
-      for (const tf of TIMEFRAMES_TO_WARM) {
+      for (const tf of tfs) {
         try {
           await getCandlesWithMeta(symbol, tf, { count: 200 });
           processed += 1;

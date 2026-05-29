@@ -7,7 +7,9 @@
 // `actuals_filled_at IS NULL`.
 
 import { listFredEventsMissingActual, parseFredEventId, patchEventActual } from '@hamafx/ai';
-import { fetchObservations, fredMeta } from '@hamafx/data/providers/fred';
+import { fred } from '@hamafx/data';
+
+const { fetchObservations, fredMeta } = fred;
 
 import type { JobContext, JobResult } from './types.js';
 

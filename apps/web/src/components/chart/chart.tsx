@@ -15,7 +15,7 @@
 // the chart just renders what it's told.
 import { priceDecimals, type Candle, type Symbol, type Timeframe } from '@hamafx/shared';
 import type * as LightweightCharts from 'lightweight-charts';
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { useCandles } from '@/hooks/use-candles';
 import { cn } from '@/lib/cn';
@@ -55,7 +55,25 @@ export function Chart({
   // in state would cause a churn of re-renders on every call to setData.
   const chartRef = useRef<ChartHandle | null>(null);
 
-  const { data: candles, isLoading, isError, error } = useCandles(symbol, tf, count);
+  // Phase 3 hardening §8 — pause polling when the chart is offscreen.
+  // Once visible the first time we keep `everVisible` true so the
+  // initial fetch isn't replayed on every scroll-back; we only stop
+  // the refetch interval, not the cached data.
+  const [visible, setVisible] = useState(true);
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el || typeof IntersectionObserver === 'undefined') return;
+    const obs = new IntersectionObserver(
+      ([entry]) => setVisible(Boolean(entry?.isIntersecting)),
+      { rootMargin: '128px' },
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
+
+  const { data: candles, isLoading, isError, error } = useCandles(symbol, tf, count, {
+    enabled: visible,
+  });
 
   const decimals = useMemo(() => priceDecimals(symbol), [symbol]);
 

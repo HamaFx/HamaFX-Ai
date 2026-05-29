@@ -5,7 +5,7 @@
 // populated the index yet, we surface a quiet status line instead of an
 // empty list.
 
-import Link from 'next/link';
+import { Link } from 'next-view-transitions';
 
 import type { ToolPartProps } from './registry';
 

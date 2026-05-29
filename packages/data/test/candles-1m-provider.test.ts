@@ -2,7 +2,7 @@
 
 import { describe, expect, it, vi } from 'vitest';
 
-import { ProviderError } from '../src/errors';
+import { ProviderEmptyError } from '../src/errors';
 import { fetchCandles1m } from '../src/providers/candles-1m';
 
 interface FakeRow {
@@ -56,14 +56,14 @@ describe('fetchCandles1m', () => {
     expect(r.provider).toBe('biquote-signalr');
   });
 
-  it('throws ProviderError when no rows exist', async () => {
+  it('throws ProviderEmptyError when no rows exist', async () => {
     const db = makeFakeDb([]);
     await expect(
       fetchCandles1m({ symbol: 'XAUUSD', count: 100, db }),
-    ).rejects.toBeInstanceOf(ProviderError);
+    ).rejects.toBeInstanceOf(ProviderEmptyError);
   });
 
-  it('throws ProviderError when the freshest bar is older than the freshness window', async () => {
+  it('throws ProviderEmptyError when the freshest bar is older than the freshness window', async () => {
     const stale = bar(new Date(Date.now() - 5 * 60_000).toISOString(), 2390);
     const db = makeFakeDb([stale]);
     await expect(

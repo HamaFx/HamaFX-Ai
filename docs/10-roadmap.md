@@ -378,6 +378,17 @@ The previous `.github/workflows/cron-*.yml` external trigger was removed in Phas
   - Prediction logging + calibration footer.
   - Paper-trading layer with `open_paper_trade` AI tool.
 
+## Hardening roadmap (post-Phase-8)
+
+After Phase 8 stabilised, a senior-engineer review surfaced 44 items grouped into three hardening phases. They run **before** Phase 9 because new features should land on a known-correct, known-reliable base.
+
+- [`15-hardening-phase-1-correctness.md`](./15-hardening-phase-1-correctness.md) — 12 bug-class fixes (auth cookie, double-saves, off-by-one alerts, payload caps, atomic budget, transactional persistence). 3-4 days.
+- [`16-hardening-phase-2-reliability.md`](./16-hardening-phase-2-reliability.md) — 9 reliability items (worker reconnect + watchdog, failover priority pinning, DB pool, single-layer cache rewrite, parallel alert eval). 5-6 days.
+- [`17-hardening-phase-3-quality.md`](./17-hardening-phase-3-quality.md) — 23 polish items (per-request context, tool telemetry wrapper, citation precision, image upload, CSRF, cleanup). 5 days.
+- [`18-hardening-roadmap.md`](./18-hardening-roadmap.md) — index, sequencing, and cross-cutting themes.
+
+Total ≈ 5 weeks calendar with 1-week soak windows between phases.
+
 ## Definition of "done" per phase
 
 | Phase | Done when…                                                                            |

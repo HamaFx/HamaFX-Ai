@@ -21,7 +21,7 @@ import { useConfirm } from '@/components/ui/confirm-drawer';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from '@/components/ui/drawer';
 import { Tooltip } from '@/components/ui/tooltip';
 import { cn } from '@/lib/cn';
-
+import { fetchCsrf } from '@/lib/csrf';
 export interface ThreadSummary {
   id: string;
   title: string | null;
@@ -66,7 +66,7 @@ export function ChatTopBar({ threadId, title, pinnedSymbol, threads, isStreaming
   function newChat() {
     startTransition(async () => {
       try {
-        const res = await fetch('/api/chat/threads', {
+        const res = await fetchCsrf('/api/chat/threads', {
           method: 'POST',
           headers: { 'content-type': 'application/json' },
           body: '{}',
@@ -93,7 +93,7 @@ export function ChatTopBar({ threadId, title, pinnedSymbol, threads, isStreaming
     if (!ok) return;
     startTransition(async () => {
       try {
-        const res = await fetch(`/api/chat/threads/${threadId}`, { method: 'DELETE' });
+        const res = await fetchCsrf(`/api/chat/threads/${threadId}`, { method: 'DELETE' });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         toast.success('Deleted');
         const next = threads.find((t) => t.id !== threadId);

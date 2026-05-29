@@ -11,6 +11,7 @@ import { generateText } from 'ai';
 
 import { dailySpendUsd } from './cost';
 import { resolveModel } from './model';
+import { maybeGetToolContext } from './tool-context';
 
 export interface GenerateTitleArgs {
   threadId: string;
@@ -99,10 +100,17 @@ function clipToCodepoints(s: string): string {
 export async function generateTitle(args: GenerateTitleArgs): Promise<GenerateTitleResult> {
   const { firstUser, firstAssistant, env, signal } = args;
 
-  // Hard ceiling. We deliberately read spend here (separate from the chat
-  // turn's own enforceDailyBudget call) so the title is skipped even if the
+  // Hard ceiling. We deliberately probe the budget here (separate from
+  // the chat turn's own reservation) so a title is skipped even if the
   // assistant turn was the one that pushed us over.
-  const spent = await dailySpendUsd();
+  //
+  // Phase 3 hardening §4 — prefer the cached snapshot from
+  // AsyncLocalStorage so a turn that runs both the planner and title
+  // generator does at most one `dailySpendUsd` query. When the title
+  // generator is invoked outside `withToolContext` (e.g. a future
+  // ad-hoc backfill script) we fall back to the live query.
+  const ctx = maybeGetToolContext();
+  const spent = ctx ? ctx.budget.spent : await dailySpendUsd();
   if (spent >= env.MAX_DAILY_USD) {
     return {
       title: deterministicFallbackTitle(firstUser),

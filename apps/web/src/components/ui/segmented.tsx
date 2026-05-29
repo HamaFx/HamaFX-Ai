@@ -16,7 +16,7 @@
 // keeps URL state). Pass `as="link"` + `hrefFor` to opt into Link mode.
 
 import { m } from 'motion/react';
-import Link from 'next/link';
+import { Link } from 'next-view-transitions';
 import { useId } from 'react';
 
 import { cn } from '@/lib/cn';

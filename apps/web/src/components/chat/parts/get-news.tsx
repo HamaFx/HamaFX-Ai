@@ -11,7 +11,7 @@
 // line instead of an empty list (which would look like a bug).
 
 import type { GetNewsOutput, NewsSentiment } from '@hamafx/shared';
-import Link from 'next/link';
+import { Link } from 'next-view-transitions';
 
 interface GetNewsPartProps {
   /** Tool output, or `null` while streaming / before completion. */

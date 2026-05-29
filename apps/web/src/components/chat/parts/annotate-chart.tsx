@@ -4,7 +4,7 @@
 // deep link into /chart/<symbol> with the relevant overlays pre-toggled.
 
 import type { AnnotateChartKind } from '@hamafx/shared';
-import Link from 'next/link';
+import { Link } from 'next-view-transitions';
 
 import type { ToolPartProps } from './registry';
 

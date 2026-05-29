@@ -52,12 +52,29 @@ export class MemoryCache implements Cache {
       return { value: hit.value, meta: { producedAt: hit.producedAt, stale: false } };
     }
 
+    // Phase 2 hardening §7 — concurrent callers riding the in-flight
+    // promise also need the SWR fallback. The pre-fix code awaited the
+    // existing promise and re-threw on rejection; if a stale value was
+    // available it never made it back to the second caller. The fix:
+    // attach the same try/catch to both the producer-owner and the
+    // followers, so all of them either get the fresh value or the
+    // SWR-eligible cached value.
     const existing = this.inflight.get(key) as Promise<T> | undefined;
     if (existing) {
-      const value = await existing;
-      const fresh = this.store.get(key) as Entry<T> | undefined;
-      const producedAt = fresh?.producedAt ?? Date.now();
-      return { value, meta: { producedAt, stale: false } };
+      try {
+        const value = await existing;
+        const fresh = this.store.get(key) as Entry<T> | undefined;
+        const producedAt = fresh?.producedAt ?? Date.now();
+        return { value, meta: { producedAt, stale: false } };
+      } catch (err) {
+        if (hit && swrMs > 0 && hit.hardExpiresAt > now) {
+          return {
+            value: hit.value,
+            meta: { producedAt: hit.producedAt, stale: true },
+          };
+        }
+        throw err;
+      }
     }
 
     const promise = (async () => {

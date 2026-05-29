@@ -15,7 +15,7 @@
 
 import type { Symbol } from '@hamafx/shared';
 import { Maximize2 } from 'lucide-react';
-import Link from 'next/link';
+import { Link } from 'next-view-transitions';
 import { useMemo } from 'react';
 
 import { Chart } from '@/components/chart/chart';

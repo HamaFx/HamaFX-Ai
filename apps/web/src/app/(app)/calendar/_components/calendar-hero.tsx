@@ -10,7 +10,7 @@
 
 import type { EconomicEvent } from '@hamafx/shared';
 import { Clock, Sparkles, Zap } from 'lucide-react';
-import Link from 'next/link';
+import { Link } from 'next-view-transitions';
 import { useEffect, useState } from 'react';
 
 import { cn } from '@/lib/cn';

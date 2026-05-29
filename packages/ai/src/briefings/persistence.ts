@@ -7,12 +7,17 @@
 import { getDb, schema } from '@hamafx/db';
 import { and, eq } from 'drizzle-orm';
 
-import { createThread, type DbThread } from '../persistence';
+import { type DbThread } from '../persistence';
 
 /**
  * Returns the singleton `Briefings_Thread`, creating one if absent. Cron
  * handlers call this once per invocation; on a fresh DB it inserts the
  * first row, on subsequent invocations it returns the same row.
+ *
+ * Phase 1 hardening §9 — the create + promote pair runs in one
+ * transaction so a crash between the INSERT and the
+ * `set({ isBriefings: true, ... })` UPDATE can't leave a sibling thread
+ * row orphaned (which would silently break the sidebar pin).
  */
 export async function getOrCreateBriefingsThread(): Promise<DbThread> {
   const db = getDb();
@@ -38,16 +43,29 @@ export async function getOrCreateBriefingsThread(): Promise<DbThread> {
     };
   }
 
-  const fresh = await createThread();
-  // Promote the just-created row to the briefings thread. We patch
-  // `title` + `title_source` so the sidebar shows a stable badge instead
-  // of the auto-title path picking it up later.
-  await db
-    .update(schema.chatThreads)
-    .set({ isBriefings: true, title: 'Briefings', titleSource: 'llm' })
-    .where(eq(schema.chatThreads.id, fresh.id));
-
-  return { ...fresh, title: 'Briefings', titleSource: 'llm' };
+  return db.transaction(async (tx) => {
+    const inserted = await tx
+      .insert(schema.chatThreads)
+      .values({
+        title: 'Briefings',
+        titleSource: 'llm',
+        isBriefings: true,
+        pinnedSymbol: null,
+        modelOverride: null,
+      })
+      .returning();
+    const row = inserted[0]!;
+    return {
+      id: row.id,
+      title: row.title,
+      titleSource:
+        row.titleSource === 'llm' || row.titleSource === 'fallback' ? row.titleSource : 'llm',
+      pinnedSymbol: row.pinnedSymbol as DbThread['pinnedSymbol'],
+      modelOverride: row.modelOverride,
+      createdAt: row.createdAt.getTime(),
+      updatedAt: row.updatedAt.getTime(),
+    };
+  });
 }
 
 /** True when a briefing of `(eventId, kind)` has already been emitted. */

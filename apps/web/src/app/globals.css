@@ -74,6 +74,11 @@
   --font-sans: var(--font-sans), system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   --font-mono: var(--font-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
 
+  /* Fluid Typography */
+  --text-sm: clamp(0.8rem, 0.7rem + 0.5vw, 0.875rem);
+  --text-base: clamp(0.95rem, 0.85rem + 0.5vw, 1rem);
+  --text-lg: clamp(1rem, 0.9rem + 0.6vw, 1.125rem);
+
   --ease-organic: cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
@@ -238,13 +243,13 @@
 @utility glass {
   background: linear-gradient(
     135deg,
-    oklch(96% 0 0 / 0.04) 0%,
-    oklch(96% 0 0 / 0.01) 50%,
-    oklch(96% 0 0 / 0.03) 100%
+    oklch(96% 0 0 / 0.03) 0%,
+    oklch(96% 0 0 / 0.00) 50%,
+    oklch(96% 0 0 / 0.02) 100%
   ),
-  oklch(12% 0 0 / 0.55);
-  backdrop-filter: blur(20px) saturate(140%);
-  -webkit-backdrop-filter: blur(20px) saturate(140%);
+  oklch(12% 0 0 / 0.45);
+  backdrop-filter: blur(24px) saturate(160%);
+  -webkit-backdrop-filter: blur(24px) saturate(160%);
   border: 1px solid oklch(96% 0 0 / 0.08);
   box-shadow:
     inset 0 1px 0 0 oklch(100% 0 0 / 0.05),
@@ -254,13 +259,13 @@
 @utility glass-strong {
   background: linear-gradient(
     135deg,
-    oklch(96% 0 0 / 0.06) 0%,
-    oklch(96% 0 0 / 0.02) 50%,
-    oklch(96% 0 0 / 0.05) 100%
+    oklch(96% 0 0 / 0.05) 0%,
+    oklch(96% 0 0 / 0.01) 50%,
+    oklch(96% 0 0 / 0.04) 100%
   ),
-  oklch(12% 0 0 / 0.78);
-  backdrop-filter: blur(28px) saturate(160%);
-  -webkit-backdrop-filter: blur(28px) saturate(160%);
+  oklch(12% 0 0 / 0.70);
+  backdrop-filter: blur(40px) saturate(200%);
+  -webkit-backdrop-filter: blur(40px) saturate(200%);
   border: 1px solid oklch(96% 0 0 / 0.1);
   box-shadow:
     inset 0 1px 0 0 oklch(100% 0 0 / 0.07),
@@ -433,4 +438,54 @@ html[data-reduce-motion='force'] *::after {
 }
 .md-prose ul li::marker {
   color: var(--color-fg-subtle);
+}
+
+.md-prose p {
+  text-wrap: pretty;
+}
+
+.md-prose h1,
+.md-prose h2,
+.md-prose h3,
+.md-prose h4,
+.md-prose h5,
+.md-prose h6 {
+  text-wrap: balance;
+}
+
+@keyframes reveal {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@utility animate-reveal {
+  animation: reveal linear both;
+  animation-timeline: view();
+  animation-range: entry 5% cover 25%;
+}
+
+@keyframes scroll-fab {
+  0%, 95% {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translate(-50%, 0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    pointer-events: none;
+    transform: translate(-50%, 20px) scale(0.95);
+  }
+}
+
+@utility scroll-fab {
+  opacity: 0;
+  pointer-events: none;
+  animation: scroll-fab linear both;
+  animation-timeline: scroll(nearest block);
 }

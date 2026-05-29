@@ -25,13 +25,13 @@ import {
   AnalyzeChartImageInputSchema,
   AnalyzeChartImageOutputSchema,
   type AnalyzeChartImageOutput,
-  type ServerEnv,
 } from '@hamafx/shared';
 import { generateText, type ModelMessage } from 'ai';
 import { and, desc, eq } from 'drizzle-orm';
 import type { z } from 'zod';
 
 import { resolveModel } from '../model';
+import { maybeGetToolContext } from '../tool-context';
 
 const InputSchema = AnalyzeChartImageInputSchema;
 
@@ -48,35 +48,9 @@ interface ImagePartShape {
   data?: unknown;
 }
 
-interface AnalyzeChartImageContext {
-  threadId: string;
-  env: Pick<
-    ServerEnv,
-    | 'AI_GATEWAY_API_KEY'
-    | 'GOOGLE_GENERATIVE_AI_API_KEY'
-    | 'GOOGLE_VERTEX_PROJECT'
-    | 'GOOGLE_VERTEX_LOCATION'
-    | 'GOOGLE_APPLICATION_CREDENTIALS_JSON'
-    | 'GOOGLE_APPLICATION_CREDENTIALS'
-    | 'AI_VISION_MODEL'
-    | 'LOG_PROMPTS'
-  >;
-}
-
-/**
- * Per-turn context. The agent (`packages/ai/src/agent.ts`) writes to this
- * via `setAnalyzeChartImageContext` before calling `streamText` so the
- * tool's `execute` can find the right thread + env without us threading
- * those values through the AI SDK tool-arg envelope.
- *
- * One global ref is fine because each chat turn runs in its own Vercel
- * function invocation.
- */
-let context: AnalyzeChartImageContext | null = null;
-
-export function setAnalyzeChartImageContext(ctx: AnalyzeChartImageContext | null): void {
-  context = ctx;
-}
+// Phase 3 hardening §1 — context flows in via AsyncLocalStorage now,
+// not via a module-scoped setter. The legacy
+// `setAnalyzeChartImageContext()` was removed.
 
 const SYSTEM_PROMPT =
   'You are HamaFX-Ai analysing a chart screenshot. Return ONLY structured output matching the schema. Be terse — labels are short ("PDH", "weekly H", etc.); the observed paragraph is one to three sentences.';
@@ -108,8 +82,9 @@ export const analyzeChartImageTool = {
     "Run a structured technical readout on the most recent chart screenshot the user attached this turn. Returns a typed observation: identified symbol/timeframe, trend, bias, labelled price levels, and an English observation paragraph. Use whenever the user attaches an image and asks anything chart-shaped. Returns observed='no image attached' if there's no image to analyse.",
   inputSchema: InputSchema,
   execute: async (input: z.infer<typeof InputSchema>): Promise<AnalyzeChartImageOutput> => {
-    if (!context) return NO_CONTEXT;
-    const { threadId, env } = context;
+    const ctx = maybeGetToolContext();
+    if (!ctx) return NO_CONTEXT;
+    const { threadId, env } = ctx;
 
     const imagePart = await findLatestImagePart(threadId);
     if (!imagePart) return NO_IMAGE;

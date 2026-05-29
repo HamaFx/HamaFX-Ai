@@ -40,6 +40,13 @@ interface TickWithMeta extends Tick {
   stale: boolean;
   /** ms epoch UTC the upstream produced this value. */
   producedAt: number;
+  /**
+   * Phase 2 hardening §3 — milliseconds since the worker observed the
+   * tick. Only meaningful when the live-ticks provider served the
+   * value; `null` for REST fallbacks. The chart UI / chat tools
+   * should refuse to quote a value with `ageMs > 5000` as live.
+   */
+  ageMs: number | null;
 }
 
 export async function GET(req: Request): Promise<Response> {
@@ -56,6 +63,7 @@ export async function GET(req: Request): Promise<Response> {
       ...r.tick,
       stale: r.stale,
       producedAt: r.producedAt,
+      ageMs: r.ageMs,
     }));
     const anyStale = ticks.some((t) => t.stale);
     return Response.json(

@@ -11,7 +11,7 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Segmented } from '@/components/ui/segmented';
-
+import { fetchCsrf } from '@/lib/csrf';
 interface EntryFormProps {
   onCreated?: () => void;
 }
@@ -60,7 +60,7 @@ export function EntryForm({ onCreated }: EntryFormProps) {
     }
 
     try {
-      const res = await fetch('/api/journal', {
+      const res = await fetchCsrf('/api/journal', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({

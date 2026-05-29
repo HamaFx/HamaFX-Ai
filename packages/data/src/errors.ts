@@ -32,6 +32,29 @@ export class ProviderError extends Error {
   }
 }
 
+/**
+ * Sentinel for "this provider has nothing fresh to offer" — distinct from
+ * `ProviderError` because it must NOT count as a health failure.
+ *
+ * Phase 2 hardening §2 — the live-ticks pseudo-provider used to throw a
+ * regular `ProviderError` when the worker hadn't flushed in the last few
+ * seconds (a normal occurrence during boot or restart). The failure
+ * recorded a hit against the health window, the score dropped below
+ * BiQuote REST's neutral 0.5, and from then on REST was tried first —
+ * defeating the entire SignalR pipeline. The new `runWithFailover`
+ * inspects this type and skips the health write when it's seen.
+ */
+export class ProviderEmptyError extends Error {
+  readonly provider: string;
+  readonly code = 'PROVIDER_EMPTY' as const;
+
+  constructor(provider: string, message: string) {
+    super(message);
+    this.name = 'ProviderEmptyError';
+    this.provider = provider;
+  }
+}
+
 /** Lift a ProviderError to the public AppError envelope. */
 export function toAppError(err: ProviderError): ReturnType<typeof providerUnavailable> {
   return providerUnavailable(`Data provider failed: ${err.provider} (${err.code})`, {

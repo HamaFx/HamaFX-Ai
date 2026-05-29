@@ -40,7 +40,10 @@ function bytesToBase64Url(bytes: Uint8Array): string {
   for (let i = 0; i < bytes.length; i++) {
     bin += String.fromCharCode(bytes[i]!);
   }
-  return btoa(bin).replaceAll('+', '-').replaceAll('_', '/').replace(/=+$/, '');
+  // base64url: replace `+` → `-` and `/` → `_`. `btoa` never emits `_` itself,
+  // so the second substitution must target `/` (the original code targeted `_`,
+  // leaving raw `/` characters in the token).
+  return btoa(bin).replaceAll('+', '-').replaceAll('/', '_').replace(/=+$/, '');
 }
 
 function base64UrlToBytes(s: string): Bytes {

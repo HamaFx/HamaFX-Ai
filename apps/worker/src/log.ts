@@ -64,6 +64,14 @@ function makeLogger(baseTags: Record<string, unknown>, pretty: boolean): Logger 
 export function createLogger(opts: LoggerOptions): Logger {
   const baseTags: Record<string, unknown> = { service: opts.service };
   if (opts.commit) baseTags['commit'] = opts.commit;
-  const pretty = !opts.forceJson && process.env.NODE_ENV !== 'production';
+  // Phase 3 hardening §12 — defence in depth. The systemd unit sets
+  // `NODE_ENV=production`, but if a future operator forgets to do
+  // that for a new unit we still want JSON output under journald.
+  // systemd exports `JOURNAL_STREAM=<dev>:<inode>` for any service
+  // whose stdout/stderr is connected to journald, which covers every
+  // unit in `infra/cron-vm/units/`.
+  const underJournald = Boolean(process.env.JOURNAL_STREAM);
+  const pretty =
+    !opts.forceJson && !underJournald && process.env.NODE_ENV !== 'production';
   return makeLogger(baseTags, pretty);
 }

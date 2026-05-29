@@ -20,6 +20,12 @@ import { ping } from './healthchecks.js';
 import { createLogger, type Logger } from './log.js';
 import { flushClosedCandle } from './persistence/candles-1m.js';
 import { flushLiveTicks } from './persistence/live-ticks.js';
+import {
+  notifyReady,
+  notifyStatus,
+  notifyStopping,
+  notifyWatchdog,
+} from './sd-notify.js';
 import { captureException, flushSentry, initSentry } from './sentry.js';
 import {
   createDefaultBuildConnection,
@@ -136,12 +142,21 @@ export async function runWorker(args: RunWorkerArgs): Promise<RunningWorker> {
       aggregator.feed(tick);
       args.onTick?.(tick);
       lastTickAt = Date.now();
+      // Phase 2 hardening §1 — keep the systemd watchdog alive while
+      // ticks are flowing. Internally throttled to once per 30 s so we
+      // don't fork `systemd-notify` per tick.
+      notifyWatchdog();
     },
     buildConnection,
     log: log.with({ module: 'signalr' }),
   });
 
   await consumer.start();
+  // The consumer is connected and subscribed — tell systemd we're done
+  // bootstrapping. Pair with `Type=notify` in hamafx-worker.service so
+  // the unit only enters `active (running)` once we're ready.
+  notifyReady();
+  notifyStatus('signalr connected; tick stream active');
 
   const flushIntervalMs = args.flushIntervalMs ?? 1_000;
   const flushTimer = setInterval(() => {
@@ -174,6 +189,7 @@ export async function runWorker(args: RunWorkerArgs): Promise<RunningWorker> {
   }
 
   const stop = async (): Promise<void> => {
+    notifyStopping();
     clearInterval(flushTimer);
     if (heartbeatTimer) clearInterval(heartbeatTimer);
     await consumer.stop();

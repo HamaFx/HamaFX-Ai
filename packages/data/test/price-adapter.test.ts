@@ -8,17 +8,17 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { ProviderError } from '../src/errors';
+import { ProviderEmptyError } from '../src/errors';
 
 // Auto-mock the live-ticks pseudo-provider for every test in this file —
 // most tests don't have a Postgres connection so we make the live_ticks
-// attempt always throw a ProviderError, which forces failover to the
-// network providers. Individual tests that DO want to exercise live_ticks
+// attempt always throw a `ProviderEmptyError`, which lets failover skip
+// to the network providers without recording a health failure (Phase 2
+// hardening §2). Individual tests that DO want to exercise live_ticks
 // override this with `vi.mocked(fetchLiveTick).mockImplementationOnce(...)`.
 vi.mock('../src/providers/live-ticks', () => ({
   fetchLiveTick: vi.fn().mockImplementation(() => {
-    throw new ProviderError(
-      'PROVIDER_HTTP_ERROR',
+    throw new ProviderEmptyError(
       'live-ticks',
       'live_ticks not configured (test default)',
     );
@@ -90,12 +90,12 @@ beforeEach(() => {
   setDefaultCache(new MemoryCache());
   _resetThrottle();
   _resetHealth();
-  // Reset the live_ticks mock to "throw ProviderError" so failover skips
-  // it and tests below this point exercise the network path. Tests that
-  // explicitly want a live_ticks hit re-set the implementation.
+  // Reset the live_ticks mock to "throw ProviderEmptyError" so failover
+  // skips it (without health penalty) and tests below this point
+  // exercise the network path. Tests that explicitly want a live_ticks
+  // hit re-set the implementation.
   vi.mocked(fetchLiveTick).mockImplementation(() => {
-    throw new ProviderError(
-      'PROVIDER_HTTP_ERROR',
+    throw new ProviderEmptyError(
       'live-ticks',
       'live_ticks not configured (test default)',
     );
@@ -227,6 +227,7 @@ describe('getPrice — live_ticks pseudo-provider (Phase 8 PR-8)', () => {
       price: 2390.5,
       provider: 'biquote-signalr',
       ts: Date.now(),
+      ageMs: 250,
     }));
 
     const tick = await getPrice('XAUUSD');

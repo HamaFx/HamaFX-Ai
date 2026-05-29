@@ -14,13 +14,20 @@
 
 import { ArrowUp, ImagePlus, Mic, Square } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
+import { AnimatePresence, motion } from 'motion/react';
 
 import { useVoiceInput } from '@/hooks/use-voice-input';
 import { cn } from '@/lib/cn';
+import { fetchCsrf } from '@/lib/csrf';
 
 export interface ComposerImage {
   id: string;
-  dataUrl: string;
+  /**
+   * Public URL returned by `/api/upload`. The chat-screen ships this
+   * to the model in the message's `files` array; pre-Phase-3 this
+   * was a `data:` URL embedded inline.
+   */
+  url: string;
   mediaType: string;
   name: string;
 }
@@ -56,9 +63,10 @@ export function Composer({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Detect touch once on mount so we can hide desktop-only affordances.
+  // Using pointer: coarse correctly targets mobile devices and ignores touch-enabled laptops.
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    setIsTouch('ontouchstart' in window);
+    setIsTouch(window.matchMedia('(pointer: coarse)').matches);
   }, []);
 
   // Auto-focus on desktop after mount and after streaming completes.
@@ -78,16 +86,8 @@ export function Composer({
     lang,
     onText: (transcript) => {
       setValue(transcript);
-      requestAnimationFrame(() => autoGrow());
     },
   });
-
-  function autoGrow() {
-    const t = ref.current;
-    if (!t) return;
-    t.style.height = 'auto';
-    t.style.height = `${Math.min(t.scrollHeight, 200)}px`;
-  }
 
   function send() {
     const trimmed = value.trim();
@@ -100,13 +100,17 @@ export function Composer({
     setValue('');
     setImages([]);
     setImageError(null);
-    requestAnimationFrame(() => {
-      autoGrow();
-      if (!isTouch) ref.current?.focus();
-    });
+    if (!isTouch) {
+      requestAnimationFrame(() => ref.current?.focus());
+    }
   }
 
-  function pickImages(files: FileList | null) {
+  // Phase 3 hardening §7 — images are pre-uploaded to Supabase
+  // Storage via `/api/upload` and only the public URL ships in the
+  // chat message. The pre-fix code base64-embedded each image
+  // inline, which capped at one small image per Vercel's 4.5 MB body
+  // limit.
+  async function pickImages(files: FileList | null): Promise<void> {
     if (!files || files.length === 0) return;
     setImageError(null);
     const remaining = MAX_IMAGES - images.length;
@@ -123,10 +127,22 @@ export function Composer({
         setImageError(`"${file.name}" exceeds 5 MB`);
         continue;
       }
-      const reader = new FileReader();
-      reader.onload = () => {
-        const result = reader.result;
-        if (typeof result !== 'string') return;
+      try {
+        const fd = new FormData();
+        fd.append('file', file, file.name);
+        // eslint-disable-next-line no-await-in-loop
+        const res = await fetchCsrf('/api/upload', { method: 'POST', body: fd });
+        if (!res.ok) {
+          const text = await res.text().catch(() => '');
+          setImageError(`Upload failed: ${res.status} ${text.slice(0, 80)}`);
+          continue;
+        }
+        const json = (await res.json()) as { url?: string; mediaType?: string };
+        const url = typeof json.url === 'string' ? json.url : null;
+        if (!url) {
+          setImageError('Upload returned no URL');
+          continue;
+        }
         setImages((prev) => [
           ...prev,
           {
@@ -134,13 +150,15 @@ export function Composer({
               typeof crypto !== 'undefined' && crypto.randomUUID
                 ? crypto.randomUUID()
                 : `${Date.now()}-${Math.random()}`,
-            dataUrl: result,
-            mediaType: file.type,
+            url,
+            mediaType: json.mediaType ?? file.type,
             name: file.name,
           },
         ]);
-      };
-      reader.readAsDataURL(file);
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'unknown error';
+        setImageError(`Upload failed: ${message}`);
+      }
     }
   }
 
@@ -162,14 +180,33 @@ export function Composer({
       e.preventDefault();
       const dt = new DataTransfer();
       files.forEach((f) => dt.items.add(f));
-      pickImages(dt.files);
+      void pickImages(dt.files);
+      return;
+    }
+
+    // Phase 1 hardening §12 — clamp pasted text to MAX_TEXT_CHARS so the
+    // counter can't pretend the user is "over the cap" while the textarea
+    // still accepts more. The textarea's own `maxLength` is now strict,
+    // but Safari + some IMEs ignore `maxLength` on paste, so we enforce
+    // it here too.
+    const pasted = e.clipboardData?.getData('text');
+    if (pasted) {
+      const target = e.currentTarget;
+      const start = target.selectionStart ?? value.length;
+      const end = target.selectionEnd ?? value.length;
+      const next = `${value.slice(0, start)}${pasted}${value.slice(end)}`;
+      if (next.length > MAX_TEXT_CHARS) {
+        e.preventDefault();
+        setValue(next.slice(0, MAX_TEXT_CHARS));
+        setImageError(`Message clipped to ${MAX_TEXT_CHARS} chars`);
+      }
     }
   }
 
   function handleDrop(e: React.DragEvent<HTMLFormElement>) {
     e.preventDefault();
     setDragOver(false);
-    pickImages(e.dataTransfer.files);
+    void pickImages(e.dataTransfer.files);
   }
 
   const charCount = value.length;
@@ -214,7 +251,7 @@ export function Composer({
           {images.map((img, idx) => (
             <li key={img.id} className="relative">
               <img
-                src={img.dataUrl}
+                src={img.url}
                 alt={`Attached image ${idx + 1} of ${images.length}`}
                 className="border-divider size-16 rounded-xl border object-cover"
               />
@@ -261,7 +298,7 @@ export function Composer({
           multiple
           className="hidden"
           onChange={(e) => {
-            pickImages(e.currentTarget.files);
+            void pickImages(e.currentTarget.files);
             e.currentTarget.value = '';
           }}
         />
@@ -277,15 +314,15 @@ export function Composer({
             rows={1}
             placeholder={placeholder}
             disabled={disabled}
-            maxLength={MAX_TEXT_CHARS + 100}
+            maxLength={MAX_TEXT_CHARS}
             className={cn(
               'border-divider bg-bg-elev-1/60 backdrop-blur-sm w-full resize-none rounded-2xl border px-4 py-3 text-base leading-relaxed',
-              'focus-visible:ring-brand/40 max-h-[200px] min-h-[48px] focus:outline-none focus-visible:ring-2',
+              'focus-visible:ring-brand/40 max-h-[30dvh] min-h-[48px] focus:outline-none focus-visible:ring-2',
               'placeholder:text-fg-subtle text-fg',
               'transition-colors duration-150',
               focused && 'border-brand/50 bg-bg-elev-1/80',
+              '[field-sizing:content]',
             )}
-            onInput={autoGrow}
             onKeyDown={(e) => {
               if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
@@ -324,37 +361,49 @@ export function Composer({
           </button>
         ) : null}
 
-        {/* Send / Stop morph. Single button; the icon and styling change
-            based on `isStreaming`. Wiring stop() to the same button means
-            the user's thumb stays in one place across the whole turn. */}
-        {isStreaming && onStop ? (
-          <button
-            type="button"
-            onClick={onStop}
-            aria-label="Stop generating"
-            className="bg-bear/15 text-bear ring-bear/40 inline-flex size-12 shrink-0 items-center justify-center rounded-xl ring-1 transition-opacity duration-150 hover:opacity-90 focus:outline-none focus-visible:ring-2"
-          >
-            <Square className="size-4 fill-current" strokeWidth={0} />
-          </button>
-        ) : (
-          <button
-            type="submit"
-            disabled={!canSend}
-            aria-label="Send message"
-            className={cn(
-              'inline-flex size-12 shrink-0 items-center justify-center rounded-xl font-semibold',
-              'text-brand-fg transition-opacity duration-150 hover:opacity-90',
-              'disabled:cursor-not-allowed disabled:opacity-40',
-              'focus-visible:ring-brand focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-bg',
-            )}
-            style={{
-              backgroundImage: 'var(--gradient-brand)',
-              boxShadow: 'var(--shadow-brand-press)',
-            }}
-          >
-            <ArrowUp className="size-5" strokeWidth={2.5} />
-          </button>
-        )}
+        {/* Send / Stop morph. Single button space; the icon and styling change
+            based on `isStreaming` with a physical spring animation. */}
+        <AnimatePresence mode="popLayout" initial={false}>
+          {isStreaming && onStop ? (
+            <motion.button
+              key="stop"
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.8 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+              type="button"
+              onClick={onStop}
+              aria-label="Stop generating"
+              className="bg-bear/15 text-bear ring-bear/40 inline-flex size-12 shrink-0 items-center justify-center rounded-xl ring-1 focus:outline-none focus-visible:ring-2"
+            >
+              <Square className="size-4 fill-current" strokeWidth={0} />
+            </motion.button>
+          ) : (
+            <motion.button
+              key="send"
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.8 }}
+              whileTap={{ scale: 0.9 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+              type="submit"
+              disabled={!canSend}
+              aria-label="Send message"
+              className={cn(
+                'inline-flex size-12 shrink-0 items-center justify-center rounded-xl font-semibold',
+                'text-brand-fg',
+                'disabled:cursor-not-allowed disabled:opacity-40',
+                'focus-visible:ring-brand focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-bg',
+              )}
+              style={{
+                backgroundImage: 'var(--gradient-brand)',
+                boxShadow: 'var(--shadow-brand-press)',
+              }}
+            >
+              <ArrowUp className="size-5" strokeWidth={2.5} />
+            </motion.button>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* Desktop-only keyboard hint. Renders only after focus to avoid

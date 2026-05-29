@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import { Inter, JetBrains_Mono } from 'next/font/google';
+import { ViewTransitions } from 'next-view-transitions';
 
 import { Providers } from '@/components/providers';
 
@@ -66,7 +67,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body className="bg-bg text-fg min-h-svh antialiased">
-        <Providers>{children}</Providers>
+        <ViewTransitions>
+          <Providers>{children}</Providers>
+        </ViewTransitions>
       </body>
     </html>
   );

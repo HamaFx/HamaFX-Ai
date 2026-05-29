@@ -4,7 +4,7 @@
 // target, and an "about to hit" chip when ≤ 5 pips out. Empty state when
 // no positions are open.
 
-import Link from 'next/link';
+import { Link } from 'next-view-transitions';
 
 import type { ToolPartProps } from './registry';
 

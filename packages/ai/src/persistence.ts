@@ -132,19 +132,23 @@ export async function listMessages(threadId: string, limit = 200): Promise<DbMes
 
 export async function appendUserMessage(threadId: string, message: UIMessage): Promise<void> {
   const text = extractText(message);
-  await getDb()
-    .insert(schema.chatMessages)
-    .values({
+  // Phase 1 hardening §9 — a connection drop between the INSERT and the
+  // sidebar-touching UPDATE used to leave the message persisted while
+  // the thread's `updatedAt` stayed stale, which broke sidebar sort.
+  // Wrap the pair in a transaction so either both writes land or both
+  // roll back.
+  await getDb().transaction(async (tx) => {
+    await tx.insert(schema.chatMessages).values({
       threadId,
       role: 'user',
       content: text,
-      parts: message.parts ?? null,
+      parts: stripPartsForStorage(message.parts ?? null),
     });
-  // Touch the thread so it sorts to the top of the list.
-  await getDb()
-    .update(schema.chatThreads)
-    .set({ updatedAt: new Date() })
-    .where(eq(schema.chatThreads.id, threadId));
+    await tx
+      .update(schema.chatThreads)
+      .set({ updatedAt: new Date() })
+      .where(eq(schema.chatThreads.id, threadId));
+  });
 }
 
 export async function appendAssistantMessage(
@@ -152,16 +156,81 @@ export async function appendAssistantMessage(
   message: UIMessage,
 ): Promise<{ messageId: string }> {
   const text = extractText(message);
-  const inserted = await getDb()
-    .insert(schema.chatMessages)
-    .values({
-      threadId,
-      role: 'assistant',
-      content: text,
-      parts: message.parts ?? null,
-    })
-    .returning({ id: schema.chatMessages.id });
-  return { messageId: inserted[0]!.id };
+  // Phase 1 hardening §9 — same transactional pairing as the user-side
+  // helper above. The sidebar sort cares about `updatedAt`, and the
+  // telemetry caller relies on the returned `messageId` to attach
+  // post-finish metrics.
+  return getDb().transaction(async (tx) => {
+    const inserted = await tx
+      .insert(schema.chatMessages)
+      .values({
+        threadId,
+        role: 'assistant',
+        content: text,
+        parts: stripPartsForStorage(message.parts ?? null),
+      })
+      .returning({ id: schema.chatMessages.id });
+    await tx
+      .update(schema.chatThreads)
+      .set({ updatedAt: new Date() })
+      .where(eq(schema.chatThreads.id, threadId));
+    return { messageId: inserted[0]!.id };
+  });
+}
+
+/**
+ * Phase 3 hardening §21 — strip oversize fields before persisting the
+ * `parts` JSONB. The model's `tool-result` parts can balloon when a
+ * tool returns a base64 image (`analyze_chart_image` re-runs on the
+ * user's attachment) or a long candle window. Trimming the obvious
+ * offenders keeps the per-row size bounded so the chat sidebar
+ * `SELECT *` query stays cheap and the JSON column doesn't grow into
+ * the multi-MB range.
+ *
+ * Strategy: for each `tool-result` part, replace any field on
+ * `output` whose name matches a known offender with `'[stripped]'`.
+ * We don't try to recurse — the targets are flat keys today, and a
+ * recursive walker would slow this hot path for marginal benefit.
+ */
+const STRIP_FIELDS: ReadonlySet<string> = new Set([
+  // Base64 image payloads from analyze_chart_image / share_snapshot.
+  'imageDataUrl',
+  'image',
+  'data',
+  // Whole candle windows from analyze_technical / annotate_chart —
+  // useful to the model in-flight, not useful in the persisted history.
+  'candles',
+  // Raw response bodies a tool may have buffered for debugging.
+  'rawResponse',
+]);
+
+function stripPartsForStorage(parts: unknown): unknown {
+  if (!Array.isArray(parts)) return parts;
+  return parts.map((p) => {
+    if (
+      p === null ||
+      typeof p !== 'object' ||
+      !('type' in (p as Record<string, unknown>))
+    ) {
+      return p;
+    }
+    const part = p as { type: unknown; output?: unknown };
+    if (part.type !== 'tool-result' || typeof part.output !== 'object' || part.output === null) {
+      return p;
+    }
+    const output = part.output as Record<string, unknown>;
+    let modified = false;
+    const next: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(output)) {
+      if (STRIP_FIELDS.has(k)) {
+        next[k] = '[stripped]';
+        modified = true;
+        continue;
+      }
+      next[k] = v;
+    }
+    return modified ? { ...part, output: next } : p;
+  });
 }
 
 /** Best-effort plain-text extraction from a UIMessage — used for search/title. */

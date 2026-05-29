@@ -12,6 +12,10 @@ User=hamafx
 Group=hamafx
 WorkingDirectory=/opt/hamafx/app/apps/worker
 EnvironmentFile=/opt/hamafx/.env
+# Phase 2 hardening §4 — pick worker-flavoured pool defaults in @hamafx/db.
+Environment="HAMAFX_RUNTIME=worker"
+# Phase 3 hardening §12 — force JSON logger output under journald.
+Environment="NODE_ENV=production"
 ExecStart=/usr/bin/node /opt/hamafx/app/apps/worker/dist/runner/cli.js embedding-backfill
 
 # Per-job memory cap. Embedding-backfill batches 32 articles at ~1.5 KB

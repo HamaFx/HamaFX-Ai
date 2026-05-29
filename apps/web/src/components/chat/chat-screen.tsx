@@ -33,6 +33,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
 import { cn } from '@/lib/cn';
+import { getCsrfToken } from '@/lib/csrf';
 
 import { ChatTopBar, type ThreadSummary } from './chat-top-bar';
 import { Composer } from './composer';
@@ -62,7 +63,6 @@ export function ChatScreen({
   const lastUserTextRef = useRef<string>('');
   const autoSubmittedRef = useRef<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const [showScrollDown, setShowScrollDown] = useState(false);
   const [title, setTitle] = useState(initialTitle);
 
   // One-shot model override — set right before calling regenerate() so the
@@ -76,7 +76,9 @@ export function ChatScreen({
         prepareSendMessagesRequest: ({ messages, id }) => {
           const override = modelOverrideRef.current;
           modelOverrideRef.current = null;
+          const csrf = getCsrfToken();
           return {
+            headers: csrf ? { 'X-CSRF-Token': csrf } : undefined,
             body: {
               threadId,
               id,
@@ -89,7 +91,7 @@ export function ChatScreen({
     [threadId],
   );
 
-  const { messages, sendMessage, regenerate, stop, status, error } = useChat({
+  const { messages, setMessages, append, sendMessage, regenerate, stop, status, error } = useChat({
     id: threadId,
     transport,
     messages: initialMessages,
@@ -146,22 +148,6 @@ export function ChatScreen({
       cancelled = true;
     };
   }, [status, messages.length, threadId]);
-
-  // Track whether the user has scrolled away from the bottom. The Latest
-  // pill only renders when the gap is >200px so it doesn't flicker on
-  // rounding errors.
-  useEffect(() => {
-    const el = scrollRef.current;
-    if (!el) return;
-    function check() {
-      if (!el) return;
-      const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
-      setShowScrollDown(distanceFromBottom > 200);
-    }
-    check();
-    el.addEventListener('scroll', check, { passive: true });
-    return () => el.removeEventListener('scroll', check);
-  }, []);
 
   // Initial scroll-to-bottom. Instant, not smooth — smooth on mount is
   // what produced the "drift" effect on slow devices.
@@ -228,6 +214,13 @@ export function ChatScreen({
                 if (opts?.modelOverride) modelOverrideRef.current = opts.modelOverride;
                 void regenerate();
               }}
+              onEdit={(messageId, newText) => {
+                const idx = messages.findIndex((m) => m.id === messageId);
+                if (idx === -1) return;
+                const sliced = messages.slice(0, idx);
+                setMessages(sliced);
+                void append({ role: 'user', content: newText });
+              }}
             />
           )}
           {error ? (
@@ -254,18 +247,16 @@ export function ChatScreen({
           ) : null}
         </div>
 
-        {showScrollDown ? (
-          <button
-            type="button"
-            onClick={scrollToBottom}
-            aria-label="Scroll to latest"
-            className="glass-strong text-fg fixed left-1/2 z-30 inline-flex h-11 -translate-x-1/2 items-center gap-1.5 rounded-full px-4 text-xs font-medium"
-            style={{ bottom: 'calc(env(safe-area-inset-bottom) + 96px)' }}
-          >
-            <ArrowDown className="size-3.5" />
-            Latest
-          </button>
-        ) : null}
+        <button
+          type="button"
+          onClick={scrollToBottom}
+          aria-label="Scroll to latest"
+          className="scroll-fab glass-strong text-fg fixed left-1/2 z-30 inline-flex h-11 -translate-x-1/2 items-center gap-1.5 rounded-full px-4 text-xs font-medium"
+          style={{ bottom: 'calc(env(safe-area-inset-bottom) + 96px)' }}
+        >
+          <ArrowDown className="size-3.5" />
+          Latest
+        </button>
       </div>
 
       <div className="mx-auto w-full max-w-2xl">
@@ -281,7 +272,7 @@ export function ChatScreen({
               files: images.map((img) => ({
                 type: 'file' as const,
                 mediaType: img.mediaType,
-                url: img.dataUrl,
+                url: img.url,
                 filename: img.name,
               })),
             });

@@ -18,7 +18,7 @@
 // internal context.
 
 import type { UIMessage } from 'ai';
-import { Check, ChevronDown, Copy, RotateCcw } from 'lucide-react';
+import { Check, ChevronDown, Copy, Pencil, RotateCcw } from 'lucide-react';
 import { useState } from 'react';
 
 import { Tooltip } from '@/components/ui/tooltip';
@@ -33,6 +33,7 @@ interface MessageProps {
   message: UIMessage;
   onCopy?: (text: string) => void;
   onRegenerate?: (opts?: { modelOverride?: string }) => void;
+  onEdit?: (messageId: string, newText: string) => void;
 }
 
 /**
@@ -47,11 +48,11 @@ const REGEN_MODELS: Array<{ id: string; label: string; tier: 'fast' | 'pro' }> =
   { id: 'google-vertex/gemini-2.5-pro', label: 'Pro (deep)', tier: 'pro' },
 ];
 
-export function Message({ message, onCopy, onRegenerate }: MessageProps) {
+export function Message({ message, onCopy, onRegenerate, onEdit }: MessageProps) {
   const isUser = message.role === 'user';
   const isSystem = message.role === 'system';
   const [copied, setCopied] = useState(false);
-  const [modelMenuOpen, setModelMenuOpen] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
 
   // Phase 7c — system messages: render planner cards but suppress
   // anything else (rolling-summary notes are internal context only).
@@ -77,7 +78,9 @@ export function Message({ message, onCopy, onRegenerate }: MessageProps) {
   }
 
   const plainText = extractText(message);
-  const hasActions = !isUser && (plainText.length > 0 || onRegenerate);
+  const hasActions = (!isUser && (plainText.length > 0 || onRegenerate)) || (isUser && onEdit);
+
+  const [editValue, setEditValue] = useState(plainText);
 
   function copy() {
     if (!plainText) return;
@@ -85,6 +88,40 @@ export function Message({ message, onCopy, onRegenerate }: MessageProps) {
     onCopy?.(plainText);
     setCopied(true);
     setTimeout(() => setCopied(false), 1200);
+  }
+
+  if (isUser && isEditing) {
+    return (
+      <div className="mb-2 mt-1 flex w-full justify-end">
+        <div className="flex w-full max-w-[88%] flex-col gap-2 rounded-3xl rounded-br-md border border-brand/50 bg-bg-elev-1/80 p-3 shadow-md focus-within:ring-2 focus-within:ring-brand">
+          <textarea
+            className="w-full resize-none bg-transparent text-sm text-fg outline-none [field-sizing:content]"
+            value={editValue}
+            onChange={(e) => setEditValue(e.target.value)}
+            autoFocus
+          />
+          <div className="mt-1 flex justify-end gap-2">
+            <button
+              type="button"
+              onClick={() => setIsEditing(false)}
+              className="rounded-full bg-bg-elev-2 px-3 py-1 text-xs text-fg-muted transition-colors hover:text-fg"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setIsEditing(false);
+                onEdit?.(message.id, editValue);
+              }}
+              className="rounded-full bg-brand px-3 py-1 text-xs text-brand-fg transition-colors hover:brightness-110"
+            >
+              Send
+            </button>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -135,6 +172,21 @@ export function Message({ message, onCopy, onRegenerate }: MessageProps) {
               </button>
             </Tooltip>
           ) : null}
+          {isUser && onEdit ? (
+            <Tooltip label="Edit prompt">
+              <button
+                type="button"
+                onClick={() => {
+                  setEditValue(plainText);
+                  setIsEditing(true);
+                }}
+                aria-label="Edit prompt"
+                className="glass-subtle text-fg-muted hover:text-fg focus-visible:ring-brand inline-flex size-8 items-center justify-center rounded-lg transition-colors focus:outline-none focus-visible:ring-2"
+              >
+                <Pencil className="size-3.5" />
+              </button>
+            </Tooltip>
+          ) : null}
           {onRegenerate ? (
             <div className="relative inline-flex">
               <Tooltip label="Regenerate">
@@ -150,48 +202,52 @@ export function Message({ message, onCopy, onRegenerate }: MessageProps) {
               <Tooltip label="Regenerate with…">
                 <button
                   type="button"
-                  onClick={() => setModelMenuOpen((v) => !v)}
+                  popoverTarget={`regen-menu-${message.id}`}
                   aria-label="Regenerate with a different model"
-                  aria-haspopup="menu"
-                  aria-expanded={modelMenuOpen}
                   className="glass-subtle text-fg-muted hover:text-fg focus-visible:ring-brand inline-flex size-8 items-center justify-center rounded-r-lg border-l border-divider/40 transition-colors focus:outline-none focus-visible:ring-2"
+                  style={{ anchorName: `--regen-btn-${message.id}` } as React.CSSProperties}
                 >
                   <ChevronDown className="size-3.5" />
                 </button>
               </Tooltip>
-              {modelMenuOpen ? (
-                <div
-                  role="menu"
-                  className="glass-strong border-divider/60 absolute bottom-full right-0 mb-2 flex flex-col gap-0.5 rounded-xl border p-1 shadow-xl"
-                  style={{ minWidth: '12rem' }}
-                  onMouseLeave={() => setModelMenuOpen(false)}
-                >
-                  {REGEN_MODELS.map((m) => (
-                    <button
-                      key={m.id}
-                      type="button"
-                      role="menuitem"
-                      onClick={() => {
-                        setModelMenuOpen(false);
-                        onRegenerate({ modelOverride: m.id });
-                      }}
-                      className="text-fg hover:bg-bg-elev-2 focus:bg-bg-elev-2 flex items-center justify-between gap-2 rounded-lg px-3 py-2 text-left text-xs transition-colors focus:outline-none"
+              <div
+                id={`regen-menu-${message.id}`}
+                popover="auto"
+                role="menu"
+                className="glass-strong border-divider/60 m-0 flex-col gap-0.5 rounded-xl border p-1 shadow-xl"
+                style={{ 
+                  minWidth: '12rem',
+                  positionAnchor: `--regen-btn-${message.id}`,
+                  bottom: 'calc(anchor(top) + 8px)',
+                  right: 'anchor(right)',
+                  position: 'fixed'
+                } as React.CSSProperties}
+              >
+                {REGEN_MODELS.map((m) => (
+                  <button
+                    key={m.id}
+                    type="button"
+                    role="menuitem"
+                    onClick={(e) => {
+                      (e.currentTarget.closest('[popover]') as HTMLElement)?.hidePopover();
+                      onRegenerate({ modelOverride: m.id });
+                    }}
+                    className="text-fg hover:bg-bg-elev-2 focus:bg-bg-elev-2 flex w-full items-center justify-between gap-2 rounded-lg px-3 py-2 text-left text-xs transition-colors focus:outline-none"
+                  >
+                    <span>{m.label}</span>
+                    <span
+                      className={cn(
+                        'rounded-full px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide',
+                        m.tier === 'pro'
+                          ? 'bg-brand/15 text-brand'
+                          : 'bg-bg-elev-3 text-fg-muted',
+                      )}
                     >
-                      <span>{m.label}</span>
-                      <span
-                        className={cn(
-                          'rounded-full px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide',
-                          m.tier === 'pro'
-                            ? 'bg-brand/15 text-brand'
-                            : 'bg-bg-elev-3 text-fg-muted',
-                        )}
-                      >
-                        {m.tier}
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              ) : null}
+                      {m.tier}
+                    </span>
+                  </button>
+                ))}
+              </div>
             </div>
           ) : null}
         </div>

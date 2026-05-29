@@ -55,3 +55,14 @@ export async function embedTexts(args: EmbedTextsArgs): Promise<EmbedResult> {
     inputTokens: result.usage?.tokens ?? 0,
   };
 }
+
+/**
+ * Format an embedding as the `pgvector` literal `[v1,v2,…,vN]`. Used by
+ * `searchMemory` and `runDenseNewsQuery` when binding the vector into a
+ * `<=>` (cosine-distance) operator. Centralised here (Phase 3 hardening
+ * §20) so the format stays consistent if pgvector ever tightens its
+ * grammar — and so a typo doesn't drift between the two call sites.
+ */
+export function vectorLiteral(embedding: readonly number[]): string {
+  return `[${embedding.join(',')}]`;
+}

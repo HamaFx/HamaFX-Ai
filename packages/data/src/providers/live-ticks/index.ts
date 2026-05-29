@@ -3,13 +3,13 @@
 //
 // Behaviour:
 //   - "Healthy" when a row for the requested symbol exists with
-//     ts >= now - 60s.
-//   - On stale or missing data, throws ProviderError so runWithFailover
-//     falls through to the BiQuote REST adapter (and Finnhub / Alpha
-//     Vantage after that).
-//   - Returns the wire-shape `{ price, provider }` so it can be plugged
-//     into the price adapter's existing failover ladder without
-//     restructuring the call site.
+//     ts >= now - MAX_AGE_MS.
+//   - On stale or missing data, throws ProviderEmptyError so
+//     runWithFailover falls through to the BiQuote REST adapter without
+//     dinging the live-ticks health score (Phase 2 hardening §2).
+//   - Returns the wire-shape `{ price, provider, ts, ageMs }` so the
+//     price adapter can surface tick age to the UI / tools (Phase 2
+//     hardening §3).
 //
 // This module sits in `packages/data/src/providers/live-ticks/` for
 // parity with the other providers; the actual schema lives in
@@ -20,16 +20,21 @@ import { liveTicks } from '@hamafx/db/schema';
 import type { Symbol } from '@hamafx/shared';
 import { and, eq, gte } from 'drizzle-orm';
 
-import { ProviderError } from '../../errors';
+import { ProviderEmptyError } from '../../errors';
 
 const PROVIDER = 'live-ticks';
 /**
  * Maximum age of a `live_ticks` row before we consider the snapshot
- * stale and fall through to the next provider. 60 s is comfortably
- * longer than the worker's 1 Hz flush cadence, so a momentary worker
- * hiccup doesn't cause flapping.
+ * stale and fall through to the next provider. 5 s is well over the
+ * worker's 1 Hz flush cadence — a row older than that means the
+ * worker is missing flushes, not just running a beat behind.
+ *
+ * Phase 2 hardening §3 — the previous 60 s window let the agent quote
+ * a 50-second-old price as if it were live. The lower threshold puts
+ * a hard ceiling on tick-age that the route handler can surface via
+ * the `ageMs` field below.
  */
-const MAX_AGE_MS = 60_000;
+const MAX_AGE_MS = 5_000;
 
 export interface FetchLiveTickArgs {
   symbol: Symbol;
@@ -45,16 +50,21 @@ export interface LiveTickResult {
   provider: string;
   /** When the worker observed this tick, ms epoch UTC. */
   ts: number;
+  /** Milliseconds since the worker observed the tick. Always >= 0. */
+  ageMs: number;
 }
 
 /**
- * Read the freshest `live_ticks` row for `symbol`. Throws ProviderError
- * if no row exists or the row is older than `maxAgeMs`.
+ * Read the freshest `live_ticks` row for `symbol`. Throws
+ * `ProviderEmptyError` (NOT `ProviderError`) if no fresh row exists, so
+ * the failover runner falls through without recording a health
+ * failure — see Phase 2 hardening §2.
  */
 export async function fetchLiveTick(args: FetchLiveTickArgs): Promise<LiveTickResult> {
   const db = args.db ?? (await loadDb());
   const maxAgeMs = args.maxAgeMs ?? MAX_AGE_MS;
-  const cutoff = new Date(Date.now() - maxAgeMs);
+  const now = Date.now();
+  const cutoff = new Date(now - maxAgeMs);
 
   const rows = await db
     .select({
@@ -68,20 +78,21 @@ export async function fetchLiveTick(args: FetchLiveTickArgs): Promise<LiveTickRe
 
   const row = rows[0];
   if (!row) {
-    throw new ProviderError(
-      'PROVIDER_HTTP_ERROR',
+    throw new ProviderEmptyError(
       PROVIDER,
       `no fresh live_ticks row for ${args.symbol} (max age ${maxAgeMs}ms)`,
     );
   }
 
+  const ts = row.ts.getTime();
   return {
     price: row.mid,
     // Forward the worker's source tag rather than overwriting it with
     // 'live-ticks' so consumers see whether the underlying tick came from
     // BiQuote SignalR vs. a REST fallback path.
     provider: row.source,
-    ts: row.ts.getTime(),
+    ts,
+    ageMs: Math.max(0, now - ts),
   };
 }
 

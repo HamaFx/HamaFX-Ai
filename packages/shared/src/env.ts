@@ -112,14 +112,12 @@ const CacheEnv = z.object({
 });
 
 const ProvidersEnv = z.object({
-  /**
-   * Phase 8 PR-19 retired Twelve Data — BiQuote is the primary source
-   * now and Finnhub is the fallback. The env var is kept as optional so
-   * legacy deployments don't fail validation, but the adapter is gone.
-   * Remove the row entirely once you've cleared it from your Vercel
-   * project envs.
-   */
-  TWELVEDATA_API_KEY: z.string().min(1).optional(),
+  // Phase 8 PR-19 retired Twelve Data; Phase 3 hardening §18 removed
+  // the leftover env field. BiQuote is the primary; Finnhub is the
+  // fallback. If a deployment still has `TWELVEDATA_API_KEY` set in
+  // Vercel envs, the value is now ignored — it doesn't cause
+  // validation to fail because Zod's strict mode isn't on for this
+  // schema.
   FINNHUB_API_KEY: z.string().min(1).optional(),
   ALPHAVANTAGE_API_KEY: z.string().min(1).optional(),
   MARKETAUX_API_KEY: z.string().min(1).optional(),

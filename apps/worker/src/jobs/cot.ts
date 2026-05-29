@@ -8,8 +8,10 @@
 // thing.
 
 import { upsertCoTReport } from '@hamafx/ai';
-import { fetchLatestRows, parseCftcInt, toCftcName } from '@hamafx/data/providers/cftc';
+import { cftc } from '@hamafx/data';
 import { SYMBOLS, type Symbol } from '@hamafx/shared';
+
+const { fetchLatestRows, parseCftcInt, toCftcName } = cftc;
 
 import type { JobContext, JobResult } from './types.js';
 

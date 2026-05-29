@@ -17,6 +17,7 @@ import { useConfirm } from '@/components/ui/confirm-drawer';
 import { Input } from '@/components/ui/input';
 import { Tooltip } from '@/components/ui/tooltip';
 import { cn } from '@/lib/cn';
+import { fetchCsrf } from '@/lib/csrf';
 
 interface EntryListProps {
   entries: JournalEntry[];
@@ -78,7 +79,7 @@ function EntryRow({
       return;
     }
     try {
-      const res = await fetch(`/api/journal/${entry.id}`, {
+      const res = await fetchCsrf(`/api/journal/${entry.id}`, {
         method: 'PATCH',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ exit: exitNum, closedAt: Date.now() }),
@@ -104,7 +105,7 @@ function EntryRow({
     if (!ok) return;
     setBusy(true);
     try {
-      await fetch(`/api/journal/${entry.id}`, { method: 'DELETE' });
+      await fetchCsrf(`/api/journal/${entry.id}`, { method: 'DELETE' });
       onDeleted();
     } finally {
       setBusy(false);

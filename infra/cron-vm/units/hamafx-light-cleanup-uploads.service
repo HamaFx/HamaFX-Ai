@@ -1,0 +1,17 @@
+[Unit]
+Description=HamaFX-Ai light cron — delete chat-image blobs older than 7 days
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+EnvironmentFile=/opt/hamafx/.env
+ExecStart=/usr/bin/curl -fsS -m 60 \
+  -H "Authorization: Bearer ${CRON_SECRET}" \
+  "${PRODUCTION_URL}/api/cron/cleanup-uploads"
+ExecStartPost=/usr/bin/curl -fsS -m 5 \
+  "https://hc-ping.com/${HC_CLEANUP_UPLOADS_UUID}/0" || true
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=hamafx-light-cleanup-uploads

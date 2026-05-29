@@ -20,7 +20,7 @@
 
 import type { EconomicEvent } from '@hamafx/shared';
 import { Bell, Sparkles } from 'lucide-react';
-import Link from 'next/link';
+import { Link } from 'next-view-transitions';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 

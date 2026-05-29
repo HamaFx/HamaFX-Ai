@@ -15,6 +15,8 @@ export * from './cot';
 export * from './share';
 export * from './push';
 export * from './memory';
+export * from './daily-ai-spend';
 // Phase 8 — worker-driven persistence
 export * from './live-ticks';
 export * from './candles-1m';
+export * from './throttle';

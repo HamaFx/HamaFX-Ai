@@ -2,7 +2,7 @@
 // requests by redirecting to /login, so this page is reached only when
 // authed users hit a typo'd URL.
 
-import Link from 'next/link';
+import { Link } from 'next-view-transitions';
 
 export default function NotFound() {
   return (

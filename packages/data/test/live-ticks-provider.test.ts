@@ -3,7 +3,7 @@
 
 import { describe, expect, it, vi } from 'vitest';
 
-import { ProviderError } from '../src/errors';
+import { ProviderEmptyError } from '../src/errors';
 import { fetchLiveTick } from '../src/providers/live-ticks';
 
 function makeFakeDb(rows: Array<{ mid: number; ts: Date; source: string }>) {
@@ -19,7 +19,7 @@ function makeFakeDb(rows: Array<{ mid: number; ts: Date; source: string }>) {
 }
 
 describe('fetchLiveTick', () => {
-  it('returns the latest mid + worker source when a fresh row exists', async () => {
+  it('returns the latest mid + worker source + ageMs when a fresh row exists', async () => {
     const ts = new Date();
     const db = makeFakeDb([{ mid: 2390.5, ts, source: 'biquote-signalr' }]);
 
@@ -27,13 +27,15 @@ describe('fetchLiveTick', () => {
     expect(r.price).toBe(2390.5);
     expect(r.provider).toBe('biquote-signalr');
     expect(r.ts).toBe(ts.getTime());
+    expect(r.ageMs).toBeGreaterThanOrEqual(0);
+    expect(r.ageMs).toBeLessThan(1_000);
   });
 
-  it('throws ProviderError when no row matches (stale or missing)', async () => {
+  it('throws ProviderEmptyError (not ProviderError) when no fresh row exists', async () => {
     const db = makeFakeDb([]);
 
     await expect(fetchLiveTick({ symbol: 'XAUUSD', db })).rejects.toBeInstanceOf(
-      ProviderError,
+      ProviderEmptyError,
     );
   });
 

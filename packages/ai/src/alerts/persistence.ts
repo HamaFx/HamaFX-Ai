@@ -31,17 +31,43 @@ export async function listAlerts(
     .orderBy(desc(schema.alerts.createdAt))
     .limit(opts.limit ?? 100);
 
-  return rows.map(rowToAlert);
+  // Skip rows with rules we can no longer parse (e.g. legacy malformed
+  // indicator specs). The cron evaluator does the same in `listEvaluable`.
+  const out: Alert[] = [];
+  for (const row of rows) {
+    try {
+      out.push(rowToAlert(row));
+    } catch (err) {
+      console.warn('[alerts] skipping unparseable rule', { id: row.id, err });
+    }
+  }
+  return out;
 }
 
-/** Active and not-yet-fired — what the cron evaluator iterates over. */
+/**
+ * Active and not-yet-fired — what the cron evaluator iterates over.
+ *
+ * Phase 1 hardening §11 — invalid `indicatorCross.indicator` strings
+ * (legacy "rsi:14:bogus" style) used to silently behave as `rsi(14)`.
+ * The schema is now strict, so a row with a malformed indicator throws
+ * during `rowToAlert`. We catch that here and skip the row instead of
+ * crashing the cron tick — the user can fix the rule in the UI.
+ */
 export async function listEvaluable(): Promise<Alert[]> {
   const rows = await getDb()
     .select()
     .from(schema.alerts)
     .where(and(eq(schema.alerts.active, true), isNull(schema.alerts.firedAt)))
     .orderBy(asc(schema.alerts.createdAt));
-  return rows.map(rowToAlert);
+  const out: Alert[] = [];
+  for (const row of rows) {
+    try {
+      out.push(rowToAlert(row));
+    } catch (err) {
+      console.warn('[alerts] skipping unparseable rule', { id: row.id, err });
+    }
+  }
+  return out;
 }
 
 export async function getAlert(id: string): Promise<Alert | null> {
@@ -104,6 +130,25 @@ export async function markFired(id: string, when = new Date()): Promise<void> {
   await getDb()
     .update(schema.alerts)
     .set({ firedAt: when, active: false })
+    .where(eq(schema.alerts.id, id));
+}
+
+/**
+ * Update the cached `previousValue` on an indicatorCross rule so the next
+ * evaluator tick can detect crossings. The full rule is rewritten to
+ * preserve the discriminated-union shape — Drizzle's JSONB column doesn't
+ * support partial paths.
+ */
+export async function setRulePreviousValue(id: string, rule: AlertRule, value: number): Promise<void> {
+  if (rule.type !== 'indicatorCross') return;
+  const next = { ...rule, previousValue: value };
+  // Re-validate: if the rule was edited concurrently, the in-memory copy
+  // we patched may be stale, but the schema check still keeps malformed
+  // shapes from landing in the DB.
+  const validated = AlertRuleSchema.parse(next);
+  await getDb()
+    .update(schema.alerts)
+    .set({ rule: validated })
     .where(eq(schema.alerts.id, id));
 }
 

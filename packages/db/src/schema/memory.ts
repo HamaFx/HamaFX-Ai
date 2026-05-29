@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm';
-import { index, jsonb, pgTable, text, timestamp, uuid, vector } from 'drizzle-orm/pg-core';
+import { index, jsonb, pgTable, text, timestamp, unique, uuid, vector } from 'drizzle-orm/pg-core';
 
 /**
  * Unified memory index. Phase 7b additions:
@@ -52,6 +52,11 @@ export const memoryEmbeddings = pgTable(
     index('memory_symbol_idx').on(t.symbol),
     index('memory_occurred_idx').on(t.occurredAt),
     index('memory_embeddings_hnsw_idx').using('hnsw', t.embedding.op('vector_cosine_ops')),
+    // Phase 1 hardening §8 — required by the new ON CONFLICT upsert path
+    // in `memory-index.ts`. The pre-fix DELETE+INSERT pair could leak rows
+    // on a crash between the two statements; this constraint makes the
+    // insert idempotent and lets us write a single statement.
+    unique('memory_embeddings_kind_source_uk').on(t.kind, t.sourceId),
   ],
 );
 

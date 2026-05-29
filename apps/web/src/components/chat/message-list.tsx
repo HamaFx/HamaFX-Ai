@@ -15,6 +15,7 @@ interface MessageListProps {
   lastAssistantId?: string;
   onCopy?: (text: string) => void;
   onRegenerate?: (opts?: { modelOverride?: string }) => void;
+  onEdit?: (messageId: string, newText: string) => void;
 }
 
 export function MessageList({
@@ -23,6 +24,7 @@ export function MessageList({
   lastAssistantId,
   onCopy,
   onRegenerate,
+  onEdit,
 }: MessageListProps) {
   return (
     <div className="flex flex-col gap-4 px-4 py-4">
@@ -34,6 +36,7 @@ export function MessageList({
           {...(onRegenerate && m.id === lastAssistantId && !isStreaming
             ? { onRegenerate }
             : {})}
+          {...(onEdit ? { onEdit } : {})}
         />
       ))}
       {isStreaming ? (

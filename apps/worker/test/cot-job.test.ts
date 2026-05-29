@@ -4,14 +4,20 @@ vi.mock('@hamafx/ai', () => ({
   upsertCoTReport: vi.fn(),
 }));
 
-vi.mock('@hamafx/data/providers/cftc', () => ({
-  fetchLatestRows: vi.fn(),
-  parseCftcInt: (s: string | undefined) => (s == null || s === '' ? null : Number.parseInt(s, 10)),
-  toCftcName: (s: string) => `cftc:${s}`,
+// Phase 3 hardening §19 — `apps/worker/src/jobs/cot.ts` now imports
+// the CFTC helpers via `import { cftc } from '@hamafx/data'`. Match
+// the new namespace shape so vitest's module resolver finds the mock.
+vi.mock('@hamafx/data', () => ({
+  cftc: {
+    fetchLatestRows: vi.fn(),
+    parseCftcInt: (s: string | undefined) =>
+      s == null || s === '' ? null : Number.parseInt(s, 10),
+    toCftcName: (s: string) => `cftc:${s}`,
+  },
 }));
 
 import * as ai from '@hamafx/ai';
-import * as cftc from '@hamafx/data/providers/cftc';
+import { cftc } from '@hamafx/data';
 
 import { runCoT } from '../src/jobs/cot';
 import { createLogger } from '../src/log';

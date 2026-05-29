@@ -17,10 +17,10 @@
 
 import { getDb, schema } from '@hamafx/db';
 import type { ServerEnv, Symbol, ThreadInsight } from '@hamafx/shared';
-import { and, desc, eq, gte, sql } from 'drizzle-orm';
+import { desc, eq, gte, sql } from 'drizzle-orm';
 
 import { dailySpendUsd } from '../cost';
-import { embedTexts } from '../embeddings';
+import { embedTexts, vectorLiteral } from '../embeddings';
 
 export type MemoryKind = 'journal' | 'briefing' | 'thread_synopsis';
 
@@ -83,28 +83,38 @@ async function upsertMemory(args: {
   }
 
   const db = getDb();
+  // Atomic upsert (Phase 1 hardening §8). The previous DELETE + INSERT
+  // pair left rows missing forever if the process crashed between the
+  // two statements, and concurrent re-embeddings of the same source
+  // could collide on the unique constraint. The single `ON CONFLICT`
+  // statement keeps the insert and the body refresh in one transaction
+  // and matches the (kind, source_id) unique key added in 0006.
   await db
-    .delete(schema.memoryEmbeddings)
-    .where(
-      and(
-        eq(schema.memoryEmbeddings.kind, args.kind),
-        eq(schema.memoryEmbeddings.sourceId, args.sourceId),
-      ),
-    );
-  await db.insert(schema.memoryEmbeddings).values({
-    kind: args.kind,
-    sourceId: args.sourceId,
-    symbol: args.symbol,
-    text,
-    model,
-    // pgvector accepts a string-formatted array literal for INSERT.
-    // drizzle's vector column accepts number[], but on some driver builds
-    // the cast is happier as a literal — this keeps insert + search
-    // operations consistent.
-    embedding,
-    meta: args.meta as never,
-    occurredAt: args.occurredAt,
-  });
+    .insert(schema.memoryEmbeddings)
+    .values({
+      kind: args.kind,
+      sourceId: args.sourceId,
+      symbol: args.symbol,
+      text,
+      model,
+      embedding,
+      meta: args.meta as never,
+      occurredAt: args.occurredAt,
+    })
+    .onConflictDoUpdate({
+      target: [schema.memoryEmbeddings.kind, schema.memoryEmbeddings.sourceId],
+      set: {
+        symbol: args.symbol,
+        text,
+        model,
+        embedding,
+        meta: args.meta as never,
+        occurredAt: args.occurredAt,
+        // createdAt stays at the original insert time — pgvector cosine
+        // results don't depend on it, and consumers prefer the original
+        // ingestion timestamp for audit trails.
+      },
+    });
 
   return { stored: true };
 }
@@ -234,7 +244,7 @@ export interface SearchMemoryArgs {
  */
 export async function searchMemory(args: SearchMemoryArgs): Promise<MemoryRow[]> {
   const { embedding, limit, kinds, symbol, since } = args;
-  const vec = `[${embedding.join(',')}]`;
+  const vec = vectorLiteral(embedding);
 
   // Build dynamic WHERE clauses while keeping drizzle's parametrisation.
   const kindClause =

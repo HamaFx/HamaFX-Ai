@@ -12,28 +12,28 @@ describe('tryReserve', () => {
     vi.useRealTimers();
   });
 
-  it('allows up to limit calls per window then denies', () => {
+  it('allows up to limit calls per window then denies', async () => {
     const cfg = { limit: 3, windowMs: 1000 };
-    expect(tryReserve('p', cfg)).toBe(true);
-    expect(tryReserve('p', cfg)).toBe(true);
-    expect(tryReserve('p', cfg)).toBe(true);
-    expect(tryReserve('p', cfg)).toBe(false);
+    expect(await tryReserve('p', cfg)).toBe(true);
+    expect(await tryReserve('p', cfg)).toBe(true);
+    expect(await tryReserve('p', cfg)).toBe(true);
+    expect(await tryReserve('p', cfg)).toBe(false);
   });
 
-  it('rolls the window forward', () => {
+  it('rolls the window forward', async () => {
     const cfg = { limit: 1, windowMs: 1000 };
-    expect(tryReserve('p', cfg)).toBe(true);
-    expect(tryReserve('p', cfg)).toBe(false);
+    expect(await tryReserve('p', cfg)).toBe(true);
+    expect(await tryReserve('p', cfg)).toBe(false);
     vi.advanceTimersByTime(1001);
-    expect(tryReserve('p', cfg)).toBe(true);
+    expect(await tryReserve('p', cfg)).toBe(true);
   });
 
-  it('keeps separate buckets per provider', () => {
+  it('keeps separate buckets per provider', async () => {
     const cfg = { limit: 1, windowMs: 1000 };
-    expect(tryReserve('a', cfg)).toBe(true);
-    expect(tryReserve('b', cfg)).toBe(true);
-    expect(tryReserve('a', cfg)).toBe(false);
-    expect(tryReserve('b', cfg)).toBe(false);
+    expect(await tryReserve('a', cfg)).toBe(true);
+    expect(await tryReserve('b', cfg)).toBe(true);
+    expect(await tryReserve('a', cfg)).toBe(false);
+    expect(await tryReserve('b', cfg)).toBe(false);
   });
 });
 
@@ -53,22 +53,22 @@ describe('adaptive throttle — Phase 7a backoff', () => {
     const cfg = { limit: 10, windowMs: 60_000, backoffFraction: 0.5, cooloffMs: 30_000 };
     // Plain limit allows 10 calls.
     let allowed = 0;
-    for (let i = 0; i < 12; i += 1) if (tryReserve('p', cfg)) allowed += 1;
+    for (let i = 0; i < 12; i += 1) if (await tryReserve('p', cfg)) allowed += 1;
     expect(allowed).toBe(10);
 
     // Reset, then signal backoff — limit should fall to 5.
     _resetThrottle();
-    noteBackoff('p', cfg);
+    await noteBackoff('p', cfg);
     let allowedAfter = 0;
-    for (let i = 0; i < 12; i += 1) if (tryReserve('p', cfg)) allowedAfter += 1;
+    for (let i = 0; i < 12; i += 1) if (await tryReserve('p', cfg)) allowedAfter += 1;
     expect(allowedAfter).toBe(5);
 
     // Past cooloff, the cap recovers.
     _resetThrottle();
-    noteBackoff('p', cfg);
+    await noteBackoff('p', cfg);
     vi.advanceTimersByTime(31_000);
     let allowedRecovered = 0;
-    for (let i = 0; i < 12; i += 1) if (tryReserve('p', cfg)) allowedRecovered += 1;
+    for (let i = 0; i < 12; i += 1) if (await tryReserve('p', cfg)) allowedRecovered += 1;
     expect(allowedRecovered).toBe(10);
   });
 });

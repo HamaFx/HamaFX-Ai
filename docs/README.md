@@ -28,6 +28,10 @@ If you are an **AI agent about to write code**: read in order, then jump to [`14
 | 12  | [security-and-config](./12-security-and-config.md) | Secrets, auth, rate limits, observability          |
 | 13  | [data-flow](./13-data-flow.md)                     | Sequence diagrams for key flows                    |
 | 14  | [ai-agent-handoff](./14-ai-agent-handoff.md)       | Instructions for AI agents extending this repo     |
+| 15  | [hardening-phase-1-correctness](./15-hardening-phase-1-correctness.md) | Bug-class fixes — wrong behavior, wrong data, security |
+| 16  | [hardening-phase-2-reliability](./16-hardening-phase-2-reliability.md) | Outage recovery, concurrency, DB pool, cache rewrite   |
+| 17  | [hardening-phase-3-quality](./17-hardening-phase-3-quality.md)         | DX, observability, UI polish, cleanup                  |
+| 18  | [hardening-roadmap](./18-hardening-roadmap.md)                         | Index for the three hardening phases above             |
 
 ## Diagram conventions
 

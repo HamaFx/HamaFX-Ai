@@ -4,7 +4,7 @@
 // breakdown. Empty stats render a quiet "no trades" card.
 
 import type { StatBreakdown } from '@hamafx/shared';
-import Link from 'next/link';
+import { Link } from 'next-view-transitions';
 
 import type { ToolPartProps } from './registry';
 

@@ -13,7 +13,13 @@ import {
 } from 'ai';
 
 import { buildLiveSnapshot } from './context';
-import { enforceDailyBudget } from './cost';
+import {
+  applyBudgetDelta,
+  BudgetExceededError,
+  DEFAULT_TURN_ESTIMATE_USD,
+  estimateCostUsd,
+  tryReserveBudget,
+} from './cost';
 import { compactThread } from './memory/thread-summary';
 import { resolveModel } from './model';
 import {
@@ -22,17 +28,16 @@ import {
   getThread,
   listMessages,
   recordTelemetry,
-  recordToolTelemetry,
   updateThreadTitle,
 } from './persistence';
 import { runPlanner } from './planner';
 import { buildSystemPrompt } from './prompt/system';
 import { routeTurn, type RoutingDecision } from './routing';
 import { generateTitle } from './title';
-import { setAnalyzeChartImageContext } from './tools/analyze-chart-image';
-import { setSummarizeThreadContext } from './tools/summarize-thread';
+import { withToolContext, type ToolContext } from './tool-context';
 import { tools } from './tools';
 import { enforceCitations } from './verification';
+import { waitUntil } from './wait-until';
 
 export interface RunChatArgs {
   threadId: string;
@@ -79,8 +84,16 @@ export async function runChat(args: RunChatArgs) {
   const { threadId, userMessage, env, modelOverride, signal } = args;
   const startedAt = Date.now();
 
-  // 1) Hard ceiling. Throws BudgetExceededError → route handler maps to 503.
-  await enforceDailyBudget(env.MAX_DAILY_USD);
+  // 1) Hard ceiling — atomic reservation against today's running counter.
+  //    Two concurrent turns sitting at 99% of the cap can't both pass:
+  //    Postgres serialises the row-level UPDATE so exactly one wins. A
+  //    `recordTelemetry` call at the end reconciles the reservation with
+  //    the actual cost (delta between estimated and observed).
+  const reservation = await tryReserveBudget(DEFAULT_TURN_ESTIMATE_USD, env.MAX_DAILY_USD);
+  if (!reservation.ok) {
+    throw new BudgetExceededError(reservation.spent, reservation.max);
+  }
+  const reservedUsd = DEFAULT_TURN_ESTIMATE_USD;
 
   // 2) Persist the user message before we start streaming. If the model fails
   //    we still want the prompt in history so retries can resume.
@@ -213,10 +226,16 @@ export async function runChat(args: RunChatArgs) {
     ? `${compaction.extraSystem}\n\n${baseSystem}`
     : baseSystem;
 
-  // Make the per-turn context available to image-aware tools that need
-  // to look up the latest user-attached image without it threading
-  // through the AI SDK tool-arg envelope.
-  setAnalyzeChartImageContext({
+  // Phase 3 hardening §1 — `withToolContext` replaces the per-module
+  // setter pattern (`setAnalyzeChartImageContext`,
+  // `setSummarizeThreadContext`). Async-local storage means concurrent
+  // turns on the same warm Lambda see their own context and can't
+  // overwrite each other's threadId. The signal is piped through so
+  // long-running tools can short-circuit when the user closes the tab
+  // (Phase 3 §3). The budget snapshot is cached so multiple LLM-side
+  // helpers (planner, title, summarize_thread) don't each issue their
+  // own SUM query (Phase 3 §4).
+  const toolContext: ToolContext = {
     threadId,
     env: {
       AI_GATEWAY_API_KEY: env.AI_GATEWAY_API_KEY,
@@ -225,30 +244,19 @@ export async function runChat(args: RunChatArgs) {
       GOOGLE_VERTEX_LOCATION: env.GOOGLE_VERTEX_LOCATION,
       GOOGLE_APPLICATION_CREDENTIALS_JSON: env.GOOGLE_APPLICATION_CREDENTIALS_JSON,
       GOOGLE_APPLICATION_CREDENTIALS: env.GOOGLE_APPLICATION_CREDENTIALS,
-      AI_VISION_MODEL: env.AI_VISION_MODEL ?? 'google-vertex/gemini-2.5-pro',
-      LOG_PROMPTS: env.LOG_PROMPTS,
-    },
-  });
-
-  // Phase 7b: same pattern for `summarize_thread` — it needs to know the
-  // active thread id and env without those coming through the tool-arg
-  // envelope.
-  setSummarizeThreadContext({
-    threadId,
-    env: {
-      AI_GATEWAY_API_KEY: env.AI_GATEWAY_API_KEY,
-      GOOGLE_GENERATIVE_AI_API_KEY: env.GOOGLE_GENERATIVE_AI_API_KEY,
-      GOOGLE_VERTEX_PROJECT: env.GOOGLE_VERTEX_PROJECT,
-      GOOGLE_VERTEX_LOCATION: env.GOOGLE_VERTEX_LOCATION,
-      GOOGLE_APPLICATION_CREDENTIALS_JSON: env.GOOGLE_APPLICATION_CREDENTIALS_JSON,
-      GOOGLE_APPLICATION_CREDENTIALS: env.GOOGLE_APPLICATION_CREDENTIALS,
-      AI_SUMMARY_MODEL: env.AI_SUMMARY_MODEL,
       AI_DEFAULT_MODEL: env.AI_DEFAULT_MODEL,
+      AI_VISION_MODEL: env.AI_VISION_MODEL ?? 'google-vertex/gemini-2.5-pro',
+      AI_SUMMARY_MODEL: env.AI_SUMMARY_MODEL,
       AI_EMBEDDING_MODEL: 'openai/text-embedding-3-small',
       MAX_DAILY_USD: env.MAX_DAILY_USD,
       LOG_PROMPTS: env.LOG_PROMPTS,
     },
-  });
+    signal: signal ?? null,
+    // The reservation we just took is the freshest budget snapshot we
+    // can offer. Helpers that need a stricter "have we crossed the
+    // cap?" probe still hit the DB.
+    budget: { spent: reservation.spent, max: env.MAX_DAILY_USD },
+  };
 
   if (env.LOG_PROMPTS) {
     console.info(
@@ -281,7 +289,13 @@ export async function runChat(args: RunChatArgs) {
 
   // 5) Stream. AI Gateway model strings ("openai/gpt-4.1") are accepted
   //    directly when AI_GATEWAY_API_KEY is set.
-  const stepStart = new Map<string, number>();
+  //
+  // Phase 3 hardening §2 — per-tool telemetry now lives in
+  // `withTelemetry()` on each tool, NOT in `onStepFinish` here. The
+  // step-finish hook is left empty so we still have a hook point for
+  // future SDK-side step instrumentation, but it no longer parses
+  // content parts to derive tool-call timing — that's fragile and
+  // duplicates the wrapper.
 
   const streamArgs: Parameters<typeof streamText>[0] = {
     model,
@@ -289,51 +303,6 @@ export async function runChat(args: RunChatArgs) {
     messages: modelMessages,
     tools,
     stopWhen: stepCountIs(env.MAX_TOOL_ITERATIONS),
-
-    // Phase 7b: per-tool telemetry. The AI SDK fires `onStepFinish` once
-    // per model→tool→model hop with the tool call + tool result on the
-    // step's content. We map each pair to a single per-tool row.
-    onStepFinish: ({ response }) => {
-      try {
-        const last = response.messages.at(-1);
-        if (!last || !Array.isArray(last.content)) return;
-        for (const part of last.content) {
-          if (
-            part &&
-            typeof part === 'object' &&
-            'type' in part &&
-            (part as { type: string }).type === 'tool-result'
-          ) {
-            const toolName = (part as { toolName?: string }).toolName ?? 'unknown';
-            const callId = (part as { toolCallId?: string }).toolCallId;
-            const startedAt = callId ? stepStart.get(callId) : undefined;
-            const ms = startedAt ? Math.max(0, Date.now() - startedAt) : 0;
-            // The shape of `result` differs per tool; we only need to know
-            // whether it crashed. The AI SDK surfaces tool errors as a
-            // separate "tool-error" part when configured to; we treat
-            // anything we successfully streamed as `ok`.
-            const ok = !(part as { isError?: boolean }).isError;
-            void recordToolTelemetry({
-              threadId,
-              messageId: null,
-              tool: toolName,
-              ms,
-              ok,
-            });
-          } else if (
-            part &&
-            typeof part === 'object' &&
-            'type' in part &&
-            (part as { type: string }).type === 'tool-call'
-          ) {
-            const callId = (part as { toolCallId?: string }).toolCallId;
-            if (callId) stepStart.set(callId, Date.now());
-          }
-        }
-      } catch (err) {
-        console.warn('[ai] step telemetry failed', err);
-      }
-    },
 
     onFinish: async ({ usage, finishReason, response }) => {
       try {
@@ -389,6 +358,18 @@ export async function runChat(args: RunChatArgs) {
           toolCalls: countToolCalls(response.messages),
           ms: Date.now() - startedAt,
         });
+        // Reconcile the budget reservation with the actual post-call cost.
+        // Positive delta = we underestimated; negative = release. Keeps
+        // the running counter in `daily_ai_spend` aligned with the audit
+        // SUM in `chat_telemetry`.
+        const actualCost = estimateCostUsd(
+          modelId,
+          usage?.inputTokens ?? 0,
+          usage?.outputTokens ?? 0,
+        );
+        await applyBudgetDelta(actualCost - reservedUsd).catch((err) =>
+          console.warn('[ai] applyBudgetDelta failed', err),
+        );
         if (env.LOG_PROMPTS) {
           console.info('[ai] finish reason=%s tokens=%o', finishReason, usage);
         }
@@ -397,66 +378,87 @@ export async function runChat(args: RunChatArgs) {
         console.error('[ai] persistence/telemetry failed', err);
       }
 
-      // Auto-title (first-turn only). Best-effort: any failure is swallowed
-      // so the chat UX never regresses on a title side-effect bug.
-      try {
-        const thread = await getThread(threadId);
-        if (thread && thread.title === null) {
-          const all = await listMessages(threadId, 50);
-          const firstUser = (all.find((m) => m.role === 'user')?.content ?? '').slice(0, 1024);
-          const firstAssistant = (all.find((m) => m.role === 'assistant')?.content ?? '').slice(
-            0,
-            1024,
-          );
-          if (firstUser.length > 0 && firstAssistant.length > 0) {
-            const titleStartedAt = Date.now();
-            const titleArgs: Parameters<typeof generateTitle>[0] = {
-              threadId,
-              firstUser,
-              firstAssistant,
-              env: {
-                AI_GATEWAY_API_KEY: env.AI_GATEWAY_API_KEY,
-                GOOGLE_GENERATIVE_AI_API_KEY: env.GOOGLE_GENERATIVE_AI_API_KEY,
-                GOOGLE_VERTEX_PROJECT: env.GOOGLE_VERTEX_PROJECT,
-                GOOGLE_VERTEX_LOCATION: env.GOOGLE_VERTEX_LOCATION,
-                GOOGLE_APPLICATION_CREDENTIALS_JSON: env.GOOGLE_APPLICATION_CREDENTIALS_JSON,
-                GOOGLE_APPLICATION_CREDENTIALS: env.GOOGLE_APPLICATION_CREDENTIALS,
-                AI_TITLE_MODEL: env.AI_TITLE_MODEL,
-                MAX_DAILY_USD: env.MAX_DAILY_USD,
-                LOG_PROMPTS: env.LOG_PROMPTS,
-              },
-            };
-            if (signal) titleArgs.signal = signal;
-            const titleResult = await generateTitle(titleArgs);
-            await updateThreadTitle(threadId, titleResult.title, titleResult.source);
-            const kind: 'title_generated' | 'title_skipped_budget' | 'title_failed' =
-              titleResult.source === 'llm'
-                ? 'title_generated'
-                : titleResult.reason === 'budget'
-                  ? 'title_skipped_budget'
-                  : 'title_failed';
-            await recordTelemetry({
-              threadId,
-              messageId: null,
-              model: env.AI_TITLE_MODEL,
-              inputTokens: titleResult.inputTokens ?? 0,
-              outputTokens: titleResult.outputTokens ?? 0,
-              toolCalls: 0,
-              ms: titleResult.latencyMs ?? Date.now() - titleStartedAt,
-              kind,
-            });
-          }
-        }
-      } catch (err) {
-        console.error('[ai] auto-title failed', err);
-      }
+      // Phase 2 hardening §8 — auto-title is the slow tail of onFinish:
+      // a 1-3 s LLM call that the user doesn't need to see before the
+      // streaming dots disappear. Hand it off to `waitUntil` so Vercel
+      // keeps the function alive long enough for the title to land,
+      // but the response stream closes immediately. Outside Vercel
+      // (worker / tests) `waitUntil` is a fire-and-forget shim.
+      waitUntil(runAutoTitleBackground({ threadId, env, signal: signal ?? null }));
     },
   };
   if (signal) streamArgs.abortSignal = signal;
 
-  const result = streamText(streamArgs);
-
+  // Phase 3 hardening §1 — wrap the `streamText` invocation in a
+  // `withToolContext` scope so every tool's `execute` callback (and
+  // every `onStepFinish` / `onFinish` hook) inherits the context via
+  // AsyncLocalStorage. The synchronous return is fine: AsyncLocalStorage
+  // tracks the async-hook chain captured when work is scheduled, so
+  // promises chained off this `run()` keep the context even after we
+  // return the stream result to the caller.
+  const result = withToolContext(toolContext, () => Promise.resolve(streamText(streamArgs)));
   return result;
+}
+
+/**
+ * Slow tail of `onFinish` (Phase 2 hardening §8). Runs the auto-title
+ * generator on first turn and persists the result; failures are logged
+ * but never crash the stream because the response is already closed by
+ * the time we reach this code.
+ */
+async function runAutoTitleBackground(args: {
+  threadId: string;
+  env: RunChatArgs['env'];
+  signal: AbortSignal | null;
+}): Promise<void> {
+  const { threadId, env, signal } = args;
+  try {
+    const thread = await getThread(threadId);
+    if (!thread || thread.title !== null) return;
+    const all = await listMessages(threadId, 50);
+    const firstUser = (all.find((m) => m.role === 'user')?.content ?? '').slice(0, 1024);
+    const firstAssistant = (all.find((m) => m.role === 'assistant')?.content ?? '').slice(0, 1024);
+    if (firstUser.length === 0 || firstAssistant.length === 0) return;
+
+    const titleStartedAt = Date.now();
+    const titleArgs: Parameters<typeof generateTitle>[0] = {
+      threadId,
+      firstUser,
+      firstAssistant,
+      env: {
+        AI_GATEWAY_API_KEY: env.AI_GATEWAY_API_KEY,
+        GOOGLE_GENERATIVE_AI_API_KEY: env.GOOGLE_GENERATIVE_AI_API_KEY,
+        GOOGLE_VERTEX_PROJECT: env.GOOGLE_VERTEX_PROJECT,
+        GOOGLE_VERTEX_LOCATION: env.GOOGLE_VERTEX_LOCATION,
+        GOOGLE_APPLICATION_CREDENTIALS_JSON: env.GOOGLE_APPLICATION_CREDENTIALS_JSON,
+        GOOGLE_APPLICATION_CREDENTIALS: env.GOOGLE_APPLICATION_CREDENTIALS,
+        AI_TITLE_MODEL: env.AI_TITLE_MODEL,
+        MAX_DAILY_USD: env.MAX_DAILY_USD,
+        LOG_PROMPTS: env.LOG_PROMPTS,
+      },
+    };
+    if (signal) titleArgs.signal = signal;
+    const titleResult = await generateTitle(titleArgs);
+    await updateThreadTitle(threadId, titleResult.title, titleResult.source);
+    const kind: 'title_generated' | 'title_skipped_budget' | 'title_failed' =
+      titleResult.source === 'llm'
+        ? 'title_generated'
+        : titleResult.reason === 'budget'
+          ? 'title_skipped_budget'
+          : 'title_failed';
+    await recordTelemetry({
+      threadId,
+      messageId: null,
+      model: env.AI_TITLE_MODEL,
+      inputTokens: titleResult.inputTokens ?? 0,
+      outputTokens: titleResult.outputTokens ?? 0,
+      toolCalls: 0,
+      ms: titleResult.latencyMs ?? Date.now() - titleStartedAt,
+      kind,
+    });
+  } catch (err) {
+    console.error('[ai] auto-title (background) failed', err);
+  }
 }
 
 function countToolCalls(messages: readonly { content: unknown }[]): number {

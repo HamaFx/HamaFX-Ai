@@ -86,9 +86,19 @@ async function emitEventBriefing(
   if (!event) return { emitted: false, reason: 'event_not_found' };
 
   const env = envFromProcess();
-  const thread = await getOrCreateBriefingsThread();
 
   const summary = await composeEventSummary(event, kind, env);
+
+  // Phase 1 hardening §10 — refuse to burn the (eventId, kind) idempotency
+  // slot on a stub. If the LLM and the deterministic fallback both
+  // produced a near-empty body, leave the row off `briefings_emitted` so
+  // the next cron tick retries. The minimum length floor is conservative
+  // (50 chars) — both deterministic paths produce well over that.
+  if (summary.trim().length < 50) {
+    return { emitted: false, reason: 'summary_too_short' };
+  }
+
+  const thread = await getOrCreateBriefingsThread();
   const part: BriefingMessagePart = {
     type: 'briefing',
     eventId,
@@ -261,6 +271,10 @@ export async function emitWeeklyReview(): Promise<{ emitted: boolean; reason?: s
   void entries;
 
   const summary = await composeWeeklyReviewSummary(stats, env);
+  // Phase 1 hardening §10 — same idempotency-protection as event briefings.
+  if (summary.trim().length < 50) {
+    return { emitted: false, reason: 'summary_too_short' };
+  }
   const ui = {
     id: crypto.randomUUID(),
     role: 'assistant' as const,

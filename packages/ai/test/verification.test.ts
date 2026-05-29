@@ -56,8 +56,12 @@ describe('citation enforcement — Phase 7c', () => {
       text: 'The next FOMC will likely move the dollar a lot.',
       responseMessages: [],
     });
+    // Phase 3 hardening §5 — the warning is now a single muted footer
+    // line, not a per-claim list. The headline message is the first
+    // (and currently only) entry.
     expect(r).not.toBeNull();
-    expect(r?.unsupportedClaims.some((c) => /FOMC/.test(c))).toBe(true);
+    expect(r?.unsupportedClaims).toHaveLength(1);
+    expect(r?.unsupportedClaims[0]).toMatch(/weren't verified/);
   });
 
   it('passes events through when get_calendar was invoked', () => {

@@ -93,7 +93,7 @@ export default async function ShareSnapshotPage({ params, searchParams }: PagePr
 
 function ShareShell({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <main className="bg-bg text-fg mx-auto flex min-h-screen max-w-2xl flex-col gap-3 p-4">
+    <main className="bg-bg text-fg mx-auto flex min-h-svh max-w-2xl flex-col gap-3 p-4">
       <header>
         <h1 className="text-fg text-base font-semibold">{title}</h1>
       </header>

@@ -3,6 +3,12 @@
 // Fetches and auto-refreshes the candle window for a (symbol, tf) pair.
 // Refresh cadence is per-timeframe — the UI doesn't need to repaint a 1-day
 // chart every 5 s, and we don't want to pay quota on it either.
+//
+// Phase 3 hardening §8 — the hook now accepts an `enabled` flag so a
+// chart that's mounted but offscreen (in a tab, behind a drawer,
+// scrolled past) stops polling. Pair with an `IntersectionObserver`
+// in the consumer.
+
 import type { Candle, Symbol, Timeframe } from '@hamafx/shared';
 import { useQuery } from '@tanstack/react-query';
 
@@ -28,11 +34,31 @@ function refetchIntervalFor(tf: Timeframe): number {
   }
 }
 
-export function useCandles(symbol: Symbol, tf: Timeframe, count = 300) {
+export interface UseCandlesOptions {
+  /**
+   * When false, the hook keeps the cached value but stops the polling
+   * timer. Useful when the chart is offscreen — pair with an
+   * `IntersectionObserver` (`{ enabled: visible }`).
+   */
+  enabled?: boolean;
+}
+
+export function useCandles(
+  symbol: Symbol,
+  tf: Timeframe,
+  count = 300,
+  opts: UseCandlesOptions = {},
+) {
+  const enabled = opts.enabled ?? true;
   return useQuery<Candle[]>({
     queryKey: ['market', 'candles', symbol, tf, count],
     queryFn: ({ signal }) => fetchCandles(symbol, tf, count, { signal }),
-    refetchInterval: refetchIntervalFor(tf),
+    enabled,
+    // `false` here AND `enabled: false` together stop polling completely.
+    // Setting just `enabled: false` would also block the initial fetch;
+    // we want the hook to fetch once when first enabled, then only
+    // refetch while visible.
+    refetchInterval: enabled ? refetchIntervalFor(tf) : false,
     refetchIntervalInBackground: false,
     staleTime: refetchIntervalFor(tf) / 2,
     retry: 3,

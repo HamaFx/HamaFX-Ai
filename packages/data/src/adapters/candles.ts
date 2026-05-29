@@ -98,9 +98,14 @@ export async function getCandlesWithMeta(
       // Phase 8 PR-8 — `candles_1m` (worker-maintained) is the freshest
       // 1m source. Skip for non-1m timeframes (the table only stores 1m
       // bars; higher TFs come from BiQuote).
+      //
+      // Phase 2 hardening §2 — pinned so a transient empty result during
+      // worker restart doesn't permanently demote this attempt below the
+      // BiQuote REST fallback in the health-aware reorder.
       if (tf === '1m') {
         attempts.push({
           name: 'candles-1m',
+          pinned: true,
           run: async () => {
             const r = await fetchCandles1m({ symbol, count });
             const fetchedAt = Date.now();

@@ -4,7 +4,16 @@ export { runChat, type RunChatArgs } from './agent';
 export { tools, type ToolRegistry } from './tools';
 export { buildSystemPrompt, type LiveSnapshot } from './prompt/system';
 export { buildLiveSnapshot } from './context';
-export { estimateCostUsd, dailySpendUsd, enforceDailyBudget, BudgetExceededError } from './cost';
+export {
+  estimateCostUsd,
+  dailySpendUsd,
+  reservedSpendUsd,
+  enforceDailyBudget,
+  tryReserveBudget,
+  applyBudgetDelta,
+  DEFAULT_TURN_ESTIMATE_USD,
+  BudgetExceededError,
+} from './cost';
 export {
   generateTitle,
   deterministicFallbackTitle,
@@ -16,6 +25,7 @@ export {
   upsertArticles,
   listRecentArticles,
   listUpcomingEvents,
+  latestArticleTimestampMs,
   backfillEmbeddings,
   countPendingEmbeddings,
 } from './news-persistence';
@@ -111,8 +121,10 @@ export {
   findHighImpactEventsInWindow,
 } from './briefings/persistence';
 
-// Auto-Journal (Phase 2)
-export { parseJournalShortcut, type JournalShortcut } from './journal/auto-parse';
+// Auto-Journal — the regex-based shortcut parser was removed in Phase 1
+// hardening (§2). The model handles "Journal: …" and unstructured trade
+// language alike via the `log_journal` tool, which avoids the duplicate
+// double-save the parser caused. See docs/15-hardening-phase-1-correctness.md.
 
 // Phase 3 — Sharable snapshots
 export {

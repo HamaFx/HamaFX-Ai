@@ -19,7 +19,7 @@ import { useEffect, useState, useTransition } from 'react';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
-
+import { fetchCsrf } from '@/lib/csrf';
 type Status =
   | { kind: 'idle' }
   | { kind: 'subscribed' }
@@ -88,7 +88,7 @@ export function EnableWebPushButton(): React.JSX.Element {
           applicationServerKey: urlBase64ToUint8Array(vapidKey),
         });
         const key = sub.toJSON();
-        const res = await fetch('/api/push/subscribe', {
+        const res = await fetchCsrf('/api/push/subscribe', {
           method: 'POST',
           headers: { 'content-type': 'application/json' },
           body: JSON.stringify({
@@ -124,7 +124,7 @@ export function EnableWebPushButton(): React.JSX.Element {
         }
         const endpoint = sub.endpoint;
         await sub.unsubscribe();
-        await fetch('/api/push/unsubscribe', {
+        await fetchCsrf('/api/push/unsubscribe', {
           method: 'POST',
           headers: { 'content-type': 'application/json' },
           body: JSON.stringify({ endpoint }),

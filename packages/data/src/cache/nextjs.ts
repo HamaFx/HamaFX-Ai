@@ -10,12 +10,27 @@
 // (because we're outside of a request context, or there's no Next at all)
 // the call falls back to the in-memory cache.
 //
-// Phase 7a additions:
-//   - The cached value is wrapped as `{ v, t }` so we can return a
-//     `producedAt` timestamp without an extra round-trip.
-//   - A sidecar `MemoryCache` shadows every successful producer so that
-//     when an `unstable_cache` miss meets a producer failure we can serve
-//     a stale-while-error fallback.
+// Phase 2 hardening §7 — single-layer SWR.
+//
+// The pre-fix design ran a dual cache: `unstable_cache` as the primary
+// and a `MemoryCache` mirror that owned SWR. Two bugs followed:
+//
+//   1. The mirror only refreshed on cache MISS, so during a long stable
+//      window the mirror's TTL elapsed and SWR fallback failed when
+//      actually needed (the mirror was empty).
+//   2. The in-flight handler in `MemoryCache.fetchWithMeta` didn't apply
+//      the SWR fallback — concurrent callers riding the producer's
+//      promise threw on producer rejection even when a stale value was
+//      available.
+//
+// The fix: own SWR + single-flight in `MemoryCache` (which has the
+// authoritative producedAt + hard-expiry math) and stop using
+// `unstable_cache` for the SWR contract entirely. We still call into
+// Next's cache for the per-request `revalidateTag` propagation, but
+// the value path is the in-memory tree. This is a deliberate
+// simplification — we lose cross-instance reuse, but the upstream
+// throttle is what protects the provider from over-call, not this
+// cache.
 
 import { MemoryCache } from './memory';
 import type { Cache, CacheEntryMeta, CacheFetchOptions } from './types';
@@ -52,14 +67,8 @@ async function loadNextCacheModule(): Promise<NextCacheModule | null> {
   }
 }
 
-interface Envelope<T> {
-  v: T;
-  /** ms epoch UTC when the producer ran. */
-  t: number;
-}
-
 class NextjsCache implements Cache {
-  private readonly fallback = new MemoryCache();
+  private readonly inner = new MemoryCache();
 
   async fetch<T>(
     key: string,
@@ -76,70 +85,23 @@ class NextjsCache implements Cache {
     producer: () => Promise<T>,
     options: CacheFetchOptions,
   ): Promise<{ value: T; meta: CacheEntryMeta }> {
-    const { ttlSeconds, maxStaleSeconds = 0, tags = [] } = options;
-    const mod = await loadNextCacheModule();
-    if (!mod) {
-      return this.fallback.fetchWithMeta(key, producer, options);
-    }
-
-    // We pass a wrapped producer to unstable_cache so the cached value
-    // carries its own `producedAt`. On producer success we ALSO write to
-    // the sidecar so stale-while-error has something to return when the
-    // primary path fails.
-    const wrapped = async (): Promise<Envelope<T>> => {
-      const value = await producer();
-      const env: Envelope<T> = { v: value, t: Date.now() };
-      // Mirror into the sidecar with the SAME ttl + maxStale so SWR math
-      // stays consistent. This is intentionally synchronous-from-our-view;
-      // the sidecar's own promise won't surface here.
-      void this.fallback.fetchWithMeta(`mirror:${key}`, async () => value, {
-        ttlSeconds,
-        maxStaleSeconds,
-        tags,
-      });
-      return env;
-    };
-
-    try {
-      const cached = mod.unstable_cache(wrapped, [key], {
-        revalidate: ttlSeconds,
-        tags,
-      });
-      const env = await cached();
-      return {
-        value: env.v,
-        meta: { producedAt: env.t, stale: false },
-      };
-    } catch (err) {
-      if (maxStaleSeconds > 0) {
-        try {
-          // The sidecar might still hold a fresh-or-stale-but-eligible value.
-          const stale = await this.fallback.fetchWithMeta(
-            `mirror:${key}`,
-            async () => {
-              throw err;
-            },
-            { ttlSeconds, maxStaleSeconds, tags },
-          );
-          return { value: stale.value, meta: { ...stale.meta, stale: true } };
-        } catch {
-          /* fall through */
-        }
-      }
-      throw err;
-    }
+    // The MemoryCache owns SWR + single-flight + producedAt math. The
+    // producer is the same closure the adapter passed in — no mirror,
+    // no envelope juggling.
+    return this.inner.fetchWithMeta(key, producer, options);
   }
 
   async invalidateTag(tag: string): Promise<void> {
+    // Tag-based invalidation still propagates through Next so other
+    // request scopes (server actions, page revalidation) honour it.
+    // The local MemoryCache invalidates the corresponding key set.
+    this.inner.invalidateTag(tag);
     const mod = await loadNextCacheModule();
-    if (!mod) {
-      this.fallback.invalidateTag(tag);
-      return;
-    }
+    if (!mod) return;
     try {
       mod.revalidateTag(tag);
     } catch {
-      this.fallback.invalidateTag(tag);
+      // Safe to swallow — the local invalidation already ran.
     }
   }
 }

@@ -2,7 +2,7 @@
 // `useChat`, runs the agent, and streams back the SDK's UI-message stream
 // for the client to consume.
 
-import { BudgetExceededError, createEntry, parseJournalShortcut, runChat } from '@hamafx/ai';
+import { BudgetExceededError, runChat } from '@hamafx/ai';
 import { providerUnavailable } from '@hamafx/shared';
 import { z } from 'zod';
 
@@ -58,12 +58,12 @@ export async function POST(req: Request): Promise<Response> {
     return errorResponse(err);
   }
 
-  // Auto-Journal — best-effort parse of "Journal: …" shortcut. On a successful
-  // parse, we save the trade server-side and let the LLM continue normally,
-  // so the assistant can still confirm the action verbally. Failure is
-  // silent — the model handles unstructured journal requests via the
-  // `log_journal` tool.
-  await maybeAutoJournal(last);
+  // Auto-Journal — the chat route used to regex-parse `Journal: …` shortcuts
+  // and call `createEntry` server-side, but the same user message was then
+  // forwarded to the model verbatim, which has a `log_journal` tool and
+  // would create a duplicate row. The model owns journal logging now;
+  // unstructured "I just bought XAU at 2400" messages still work via the
+  // tool. See docs/15-hardening-phase-1-correctness.md §2.
 
   try {
     const result = await runChat({
@@ -107,45 +107,4 @@ export async function POST(req: Request): Promise<Response> {
     }
     return errorResponse(err);
   }
-}
-
-
-/**
- * Inspect the user message text for a `Journal:` shortcut and persist the
- * trade if the parser matches. Failures are logged and swallowed so the
- * normal LLM flow always continues.
- */
-async function maybeAutoJournal(message: { parts?: unknown[] }): Promise<void> {
-  const text = extractTextFromParts(message.parts ?? []);
-  if (!text) return;
-  const parsed = parseJournalShortcut(text);
-  if (!parsed) return;
-  try {
-    await createEntry({
-      symbol: parsed.symbol,
-      side: parsed.side,
-      openedAt: Date.now(),
-      entry: parsed.entry,
-      stop: parsed.stop,
-      target: parsed.target,
-    });
-  } catch (err) {
-    console.error('[chat] auto-journal createEntry failed', err);
-  }
-}
-
-function extractTextFromParts(parts: unknown[]): string {
-  let out = '';
-  for (const p of parts) {
-    if (
-      p !== null &&
-      typeof p === 'object' &&
-      'type' in (p as Record<string, unknown>) &&
-      (p as { type: unknown }).type === 'text' &&
-      typeof (p as { text?: unknown }).text === 'string'
-    ) {
-      out += (p as { text: string }).text;
-    }
-  }
-  return out.trim();
 }
