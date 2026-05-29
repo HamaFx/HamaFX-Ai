@@ -81,6 +81,6 @@ export const config = {
    * Anything matched here requires a valid auth cookie.
    */
   matcher: [
-    '/((?!login|share|api/auth|api/cron|sw\\.js|sw-precache\\.json|_next/static|_next/image|favicon\\.ico|manifest\\.webmanifest|icons|robots\\.txt|sitemap\\.xml).*)',
+    '/((?!login|share|api/auth|api/cron|api/telegram|sw\\.js|sw-precache\\.json|_next/static|_next/image|favicon\\.ico|manifest\\.webmanifest|icons|robots\\.txt|sitemap\\.xml).*)',
   ],
 };
