@@ -11,7 +11,7 @@ import { parseServerEnv, type ServerEnv } from '@hamafx/shared';
 import { z } from 'zod';
 
 const AuthEnvSchema = z.object({
-  APP_PASSWORD: z.string().min(8),
+  APP_PASSWORD: z.string().min(4),
   AUTH_COOKIE_SECRET: z.string().min(32),
   CRON_SECRET: z.string().min(16),
   NEXT_PUBLIC_APP_URL: z.string().url().default('http://localhost:3000'),

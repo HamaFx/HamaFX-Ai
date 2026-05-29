@@ -13,7 +13,7 @@ import { z } from 'zod';
  *   - CRON_SECRET: bearer token Vercel uses to invoke /api/cron/*.
  */
 const AuthEnv = z.object({
-  APP_PASSWORD: z.string().min(8, 'APP_PASSWORD must be at least 8 characters'),
+  APP_PASSWORD: z.string().min(4, 'APP_PASSWORD must be at least 4 characters'),
   AUTH_COOKIE_SECRET: z.string().min(32, 'AUTH_COOKIE_SECRET must be at least 32 chars'),
   CRON_SECRET: z.string().min(16, 'CRON_SECRET must be at least 16 chars'),
 });
