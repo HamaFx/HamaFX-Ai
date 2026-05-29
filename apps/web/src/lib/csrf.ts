@@ -7,7 +7,7 @@
 export function getCsrfToken(): string | undefined {
   if (typeof document === 'undefined') return undefined;
   const match = document.cookie.match(/(?:^|;\s*)hfx_csrf=([^;]*)/);
-  return match ? decodeURIComponent(match[1]) : undefined;
+  return match && match[1] !== undefined ? decodeURIComponent(match[1]) : undefined;
 }
 
 /**
