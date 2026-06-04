@@ -219,7 +219,7 @@ export async function fetchOhlc(args: FetchOhlcArgs): Promise<BiquoteOhlcBar[]> 
 
   const limit = Math.max(1, Math.min(args.count, 2000));
   const path = `/api/${toBiquoteSymbol(validated)}/ohlc`;
-  const env = await call(path, { tf, limit: String(limit) }, OhlcEnvelopeSchema, args);
+  const env = await call(path, { interval: tf, limit: String(limit) }, OhlcEnvelopeSchema, args);
   const raw = env.bars;
 
   // BiQuote currently returns bars NEWEST-first; flip to oldest-first

@@ -128,14 +128,14 @@ describe('BiquoteSymbolSchema', () => {
 
 describe('BiquoteTimeframeSchema', () => {
   it('accepts every documented timeframe', () => {
-    for (const tf of ['M1', 'M5', 'M15', 'M30', 'H1', 'H4', 'D1'] as const) {
+    for (const tf of ['1m', '5m', '15m', '30m', '1h', '4h', '1d'] as const) {
       expect(() => BiquoteTimeframeSchema.parse(tf)).not.toThrow();
     }
   });
 
   it('rejects timeframes BiQuote does not document (e.g. weekly)', () => {
-    expect(() => BiquoteTimeframeSchema.parse('W1')).toThrow();
-    expect(() => BiquoteTimeframeSchema.parse('1m')).toThrow(); // wrong case
+    expect(() => BiquoteTimeframeSchema.parse('1w')).toThrow();
+    expect(() => BiquoteTimeframeSchema.parse('M1')).toThrow(); // wrong case
   });
 });
 

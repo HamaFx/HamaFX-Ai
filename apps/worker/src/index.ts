@@ -112,13 +112,26 @@ export async function runWorker(args: RunWorkerArgs): Promise<RunningWorker> {
   const db = getDb();
 
   let lastTickAt = 0;
+  let lastMt5TickAt = 0;
 
   // Shared tick handler to push ticks to database buffer, trigger 1m candle aggregations, and notify watchdog
   const handleIncomingTick = (tick: NormalizedTick) => {
+    const now = Date.now();
+    
+    // MT5 as primary, BiQuote as fallback
+    if (tick.source === 'mt5-local') {
+      lastMt5TickAt = now;
+    } else if (tick.source === 'biquote-signalr') {
+      // Drop BiQuote ticks if MT5 is actively sending data (within the last 15 seconds)
+      if (now - lastMt5TickAt < 15_000) {
+        return;
+      }
+    }
+
     buffer.push(tick);
     aggregator.feed(tick);
     args.onTick?.(tick);
-    lastTickAt = Date.now();
+    lastTickAt = now;
     notifyWatchdog();
   };
 

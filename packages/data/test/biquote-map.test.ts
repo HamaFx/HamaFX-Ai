@@ -18,13 +18,13 @@ describe('biquote map', () => {
   });
 
   it('maps every BiQuote-supported timeframe', () => {
-    expect(toBiquoteTimeframe('1m')).toBe('M1');
-    expect(toBiquoteTimeframe('5m')).toBe('M5');
-    expect(toBiquoteTimeframe('15m')).toBe('M15');
-    expect(toBiquoteTimeframe('30m')).toBe('M30');
-    expect(toBiquoteTimeframe('1h')).toBe('H1');
-    expect(toBiquoteTimeframe('4h')).toBe('H4');
-    expect(toBiquoteTimeframe('1d')).toBe('D1');
+    expect(toBiquoteTimeframe('1m')).toBe('1m');
+    expect(toBiquoteTimeframe('5m')).toBe('5m');
+    expect(toBiquoteTimeframe('15m')).toBe('15m');
+    expect(toBiquoteTimeframe('30m')).toBe('30m');
+    expect(toBiquoteTimeframe('1h')).toBe('1h');
+    expect(toBiquoteTimeframe('4h')).toBe('4h');
+    expect(toBiquoteTimeframe('1d')).toBe('1d');
   });
 
   it('returns null for weekly (BiQuote does not support W1)', () => {

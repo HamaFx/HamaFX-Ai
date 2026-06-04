@@ -24,13 +24,13 @@ const TO_BIQUOTE_SYMBOL: Record<Symbol, string> = {
  * different provider for weekly bars (Twelve Data / Alpha Vantage).
  */
 const TO_BIQUOTE_TIMEFRAME: Record<Exclude<Timeframe, '1w'>, BiquoteTimeframe> = {
-  '1m': 'M1',
-  '5m': 'M5',
-  '15m': 'M15',
-  '30m': 'M30',
-  '1h': 'H1',
-  '4h': 'H4',
-  '1d': 'D1',
+  '1m': '1m',
+  '5m': '5m',
+  '15m': '15m',
+  '30m': '30m',
+  '1h': '1h',
+  '4h': '4h',
+  '1d': '1d',
 };
 
 export function toBiquoteSymbol(symbol: Symbol): string {
