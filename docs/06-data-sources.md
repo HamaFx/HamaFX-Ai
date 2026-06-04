@@ -185,11 +185,12 @@ counter without changing call sites.
 | Marketaux     | ~100 / day        | 60 / day         |
 | Trading Econ. | 10 / min (guest)  | 5 / min          |
 
-## Live-price strategy (Phase 8)
+## Live-price strategy (Phase 8 update)
 
-- The worker holds a persistent BiQuote SignalR connection from `apps/worker/src/signalr/` and writes every tick into `live_ticks`.
+- The worker prioritizes live ticks from the local **MT5 Headless Client** (via TCP bridge) and writes every tick into `live_ticks`.
+- The worker also holds a persistent BiQuote SignalR connection as a **fallback**. If MT5 is silent for >15 seconds, it automatically accepts BiQuote ticks.
 - Browser **polls** `/api/market/price` every 1.5 s. The route reads from `live_ticks` (Postgres) — sub-second freshness when the worker is healthy.
-- If `live_ticks.ts` falls outside the freshness window (worker behind / down), the route falls back to BiQuote REST and best-effort upserts the result, so the UI degrades to "polled REST" instead of going dark.
+- If `live_ticks.ts` falls outside the freshness window (worker behind / down entirely), the route falls back to BiQuote REST and best-effort upserts the result, so the UI degrades to "polled REST" instead of going dark.
 
 ## News ingestion pipeline
 
