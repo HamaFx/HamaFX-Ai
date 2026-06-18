@@ -4,7 +4,7 @@
 import { getDb, schema } from '@hamafx/db';
 import type { Symbol } from '@hamafx/shared';
 import type { ModelMessage, UIMessage } from 'ai';
-import { asc, desc, eq } from 'drizzle-orm';
+import { and, asc, desc, eq } from 'drizzle-orm';
 
 import { estimateCostUsd } from './cost';
 
@@ -27,29 +27,36 @@ export interface DbThread {
   updatedAt: number;
 }
 
-export async function listThreads(limit = 50): Promise<DbThread[]> {
+export async function listThreads(userId: string, limit = 50): Promise<DbThread[]> {
   const rows = await getDb()
     .select()
     .from(schema.chatThreads)
+    .where(eq(schema.chatThreads.userId, userId))
     .orderBy(desc(schema.chatThreads.updatedAt))
     .limit(limit);
   return rows.map(rowToThread);
 }
 
-export async function getThread(id: string): Promise<DbThread | null> {
+export async function getThread(userId: string, id: string): Promise<DbThread | null> {
+  // Phase B — IDOR fix. Filter on (id, userId) so a logged-in user can
+  // never read another user's thread, even if they guess the UUID.
   const rows = await getDb()
     .select()
     .from(schema.chatThreads)
-    .where(eq(schema.chatThreads.id, id))
+    .where(and(eq(schema.chatThreads.id, id), eq(schema.chatThreads.userId, userId)))
     .limit(1);
   const row = rows[0];
   return row ? rowToThread(row) : null;
 }
 
-export async function createThread(opts: { pinnedSymbol?: Symbol | null } = {}): Promise<DbThread> {
+export async function createThread(
+  userId: string,
+  opts: { pinnedSymbol?: Symbol | null } = {},
+): Promise<DbThread> {
   const inserted = await getDb()
     .insert(schema.chatThreads)
     .values({
+      userId,
       title: null,
       pinnedSymbol: opts.pinnedSymbol ?? null,
       modelOverride: null,
@@ -78,8 +85,12 @@ export async function updateThreadTitle(
     .where(eq(schema.chatThreads.id, id));
 }
 
-export async function deleteThread(id: string): Promise<void> {
-  await getDb().delete(schema.chatThreads).where(eq(schema.chatThreads.id, id));
+export async function deleteThread(userId: string, id: string): Promise<void> {
+  // Phase B — IDOR fix. Filter on userId so a user can only delete
+  // their own threads.
+  await getDb()
+    .delete(schema.chatThreads)
+    .where(and(eq(schema.chatThreads.id, id), eq(schema.chatThreads.userId, userId)));
 }
 
 export async function deleteAllThreads(): Promise<void> {
@@ -117,7 +128,11 @@ export interface DbMessage {
   createdAt: number;
 }
 
-export async function listMessages(threadId: string, limit = 200): Promise<DbMessage[]> {
+export async function listMessages(userId: string, threadId: string, limit = 200): Promise<DbMessage[]> {
+  // Phase B — IDOR fix. Verify the thread belongs to the user before
+  // returning any messages.
+  const thread = await getThread(userId, threadId);
+  if (!thread) return [];
   const rows = await getDb()
     .select()
     .from(schema.chatMessages)
@@ -264,6 +279,8 @@ function extractText(m: UIMessage): string {
 
 export interface TelemetryInput {
   threadId: string;
+  /** Phase A — the owning user. */
+  userId?: string | null;
   messageId: string | null;
   model: string;
   inputTokens: number;
@@ -295,6 +312,7 @@ export async function recordTelemetry(t: TelemetryInput): Promise<void> {
   await getDb()
     .insert(schema.chatTelemetry)
     .values({
+      userId: t.userId ?? null,
       threadId: t.threadId,
       messageId: t.messageId,
       model: t.model,
@@ -317,6 +335,8 @@ export type { ModelMessage, UIMessage };
 
 export interface ToolTelemetryInput {
   threadId: string | null;
+  /** Phase A — the owning user. */
+  userId?: string | null;
   messageId: string | null;
   tool: string;
   ms: number;
@@ -329,6 +349,7 @@ export async function recordToolTelemetry(t: ToolTelemetryInput): Promise<void> 
     await getDb()
       .insert(schema.chatToolTelemetry)
       .values({
+        userId: t.userId ?? null,
         threadId: t.threadId,
         messageId: t.messageId,
         tool: t.tool,

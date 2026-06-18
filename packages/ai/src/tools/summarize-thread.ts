@@ -56,7 +56,7 @@ export const summarizeThreadTool = {
     const ctx = maybeGetToolContext();
     if (!ctx) return NO_CONTEXT_OUTPUT('');
     const { threadId, env, budget } = ctx;
-    const messages = await listMessages(threadId, input.messageWindow);
+    const messages = await listMessages(ctx.userId, threadId, input.messageWindow);
     if (messages.length === 0) {
       return {
         threadId,

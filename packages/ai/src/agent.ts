@@ -21,7 +21,7 @@ import {
   tryReserveBudget,
 } from './cost';
 import { compactThread } from './memory/thread-summary';
-import { resolveModel, getVertexGoogleSearchTool } from './model';
+import { resolveUserModel, getVertexGoogleSearchTool } from './model';
 import {
   appendAssistantMessage,
   appendUserMessage,
@@ -38,9 +38,13 @@ import { withToolContext, type ToolContext } from './tool-context';
 import { tools } from './tools';
 import { enforceCitations } from './verification';
 import { waitUntil } from './wait-until';
+import { getDb, schema } from '@hamafx/db';
+import { eq } from 'drizzle-orm';
 
 export interface RunChatArgs {
   threadId: string;
+  /** Phase A — the authenticated user owning this chat turn. */
+  userId: string;
   /** Most recent user UIMessage to append + answer. */
   userMessage: UIMessage;
   /** Whole env — caller passes the already-validated ServerEnv. */
@@ -83,15 +87,26 @@ export interface RunChatArgs {
  * `result.toUIMessageStreamResponse()`.
  */
 export async function runChat(args: RunChatArgs) {
-  const { threadId, userMessage, env, modelOverride, customInstructions, signal } = args;
+  const { threadId, userId, userMessage, env, modelOverride, customInstructions, signal } = args;
   const startedAt = Date.now();
+
+  const db = getDb();
+  const [userSettings] = await db.select()
+    .from(schema.userSettings)
+    .where(eq(schema.userSettings.userId, userId));
+
+  if (!userSettings) {
+    throw new Error('User settings not found. Please complete onboarding.');
+  }
+
+  const maxDailyUsd = userSettings.maxDailyUsd ?? env.MAX_DAILY_USD;
 
   // 1) Hard ceiling — atomic reservation against today's running counter.
   //    Two concurrent turns sitting at 99% of the cap can't both pass:
   //    Postgres serialises the row-level UPDATE so exactly one wins. A
   //    `recordTelemetry` call at the end reconciles the reservation with
   //    the actual cost (delta between estimated and observed).
-  const reservation = await tryReserveBudget(DEFAULT_TURN_ESTIMATE_USD, env.MAX_DAILY_USD);
+  const reservation = await tryReserveBudget(userId, DEFAULT_TURN_ESTIMATE_USD, maxDailyUsd);
   if (!reservation.ok) {
     throw new BudgetExceededError(reservation.spent, reservation.max);
   }
@@ -104,7 +119,7 @@ export async function runChat(args: RunChatArgs) {
   // 3) Load history + ambient snapshot in parallel; THEN apply rolling-summary
   //    compaction once we know the message count.
   const [history, snapshot] = await Promise.all([
-    listMessages(threadId, 60),
+    listMessages(userId, threadId, 60),
     buildLiveSnapshot(signal ? { signal } : {}),
   ]);
 
@@ -145,32 +160,20 @@ export async function runChat(args: RunChatArgs) {
   if (modelOverride !== undefined) routingArgs.modelOverride = modelOverride;
   const routing: RoutingDecision = routeTurn(routingArgs);
 
-  // Resolve the chosen model. If it fails (e.g. an env var pointed at a
-  // model id that doesn't exist on the configured transport), fall back
-  // to AI_DEFAULT_MODEL rather than crashing the whole turn. The user
-  // sees the answer; we log the fall-back for visibility.
-  let modelId = routing.modelId;
-
-  // Phase 4 Option 2: Grounded Trading Assistant
-  // If the query is fundamental (live market conditions, news, macro data),
-  // we force the request through Vertex AI natively to utilize the $1,000 Agent Builder credit
-  // via Google Search Grounding.
-  let useSearchGrounding = false;
-  if (routing.domain === 'fundamental') {
-    const bareModel = modelId.includes('/') ? modelId.split('/').pop() : modelId;
-    modelId = `google-vertex/${bareModel}`;
-    useSearchGrounding = true;
-  }
-
-  let model: ReturnType<typeof resolveModel>;
+  let model;
+  let modelId: string = env.AI_DEFAULT_MODEL;
   try {
-    model = resolveModel(modelId, env);
+    const domainArg = routing.domain === 'generic' ? 'default' : routing.domain;
+    const res = resolveUserModel(userSettings, domainArg, env);
+    model = res.model;
+    modelId = res.modelId;
   } catch (err) {
     console.warn(
-      `[ai] resolve(${modelId}) failed (${err instanceof Error ? err.message : 'unknown'}); falling back to AI_DEFAULT_MODEL=${env.AI_DEFAULT_MODEL}`,
+      `[ai] resolveUserModel failed for domain ${routing.domain} (${err instanceof Error ? err.message : 'unknown'}); falling back to AI_DEFAULT_MODEL=${env.AI_DEFAULT_MODEL}`,
     );
-    modelId = env.AI_DEFAULT_MODEL;
-    model = resolveModel(modelId, env);
+    // If BYOK resolution fails, we shouldn't fallback to the global gateway unless we want to,
+    // but right now BYOK is required. If they don't have keys, we throw.
+    throw err;
   }
 
   // 4b) Plan-then-act (Phase 7c). Runs only when `routing.planRequired`
@@ -213,6 +216,7 @@ export async function runChat(args: RunChatArgs) {
       // /settings/usage page can see how often the planner runs and how
       // much it costs. Best-effort; never blocks the chat.
       void recordTelemetry({
+        userId,
         threadId,
         messageId: plannerResult.messageId,
         model: env.AI_SUMMARY_MODEL ?? env.AI_DEFAULT_MODEL,
@@ -258,6 +262,7 @@ export async function runChat(args: RunChatArgs) {
   // own SUM query (Phase 3 §4).
   const toolContext: ToolContext = {
     threadId,
+    userId,
     env: {
       AI_GATEWAY_API_KEY: env.AI_GATEWAY_API_KEY,
       GOOGLE_GENERATIVE_AI_API_KEY: env.GOOGLE_GENERATIVE_AI_API_KEY,
@@ -278,7 +283,8 @@ export async function runChat(args: RunChatArgs) {
     // The reservation we just took is the freshest budget snapshot we
     // can offer. Helpers that need a stricter "have we crossed the
     // cap?" probe still hit the DB.
-    budget: { spent: reservation.spent, max: env.MAX_DAILY_USD },
+    budget: { spent: reservation.spent, max: maxDailyUsd },
+    userSettings,
   };
 
   if (env.LOG_PROMPTS) {
@@ -300,6 +306,7 @@ export async function runChat(args: RunChatArgs) {
   // Telemetry breadcrumb for the routing decision — useful for /settings/usage
   // breakdowns. Best-effort; failures here never block the chat.
   void recordTelemetry({
+    userId,
     threadId,
     messageId: null,
     model: modelId,
@@ -324,7 +331,7 @@ export async function runChat(args: RunChatArgs) {
     model,
     system: systemPrompt,
     messages: modelMessages,
-    tools: useSearchGrounding 
+    tools: routing.domain === 'fundamental' && env.GOOGLE_VERTEX_PROJECT
       ? { ...tools, googleSearch: getVertexGoogleSearchTool(env) } 
       : tools,
     stopWhen: stepCountIs(env.MAX_TOOL_ITERATIONS),
@@ -375,6 +382,7 @@ export async function runChat(args: RunChatArgs) {
           ({ messageId } = await appendAssistantMessage(threadId, ui));
         }
         await recordTelemetry({
+          userId,
           threadId,
           messageId,
           model: modelId,
@@ -392,7 +400,7 @@ export async function runChat(args: RunChatArgs) {
           usage?.inputTokens ?? 0,
           usage?.outputTokens ?? 0,
         );
-        await applyBudgetDelta(actualCost - reservedUsd).catch((err) =>
+        await applyBudgetDelta(userId, actualCost - reservedUsd).catch((err) =>
           console.warn('[ai] applyBudgetDelta failed', err),
         );
         if (env.LOG_PROMPTS) {
@@ -409,7 +417,7 @@ export async function runChat(args: RunChatArgs) {
       // keeps the function alive long enough for the title to land,
       // but the response stream closes immediately. Outside Vercel
       // (worker / tests) `waitUntil` is a fire-and-forget shim.
-      waitUntil(runAutoTitleBackground({ threadId, env, signal: signal ?? null }));
+      waitUntil(runAutoTitleBackground({ threadId, userId, env, signal: signal ?? null }));
     },
   };
   if (signal) streamArgs.abortSignal = signal;
@@ -433,14 +441,15 @@ export async function runChat(args: RunChatArgs) {
  */
 async function runAutoTitleBackground(args: {
   threadId: string;
+  userId: string;
   env: RunChatArgs['env'];
   signal: AbortSignal | null;
 }): Promise<void> {
-  const { threadId, env, signal } = args;
+  const { threadId, userId, env, signal } = args;
   try {
-    const thread = await getThread(threadId);
+    const thread = await getThread(userId, threadId);
     if (!thread || thread.title !== null) return;
-    const all = await listMessages(threadId, 50);
+    const all = await listMessages(userId, threadId, 50);
     const firstUser = (all.find((m) => m.role === 'user')?.content ?? '').slice(0, 1024);
     const firstAssistant = (all.find((m) => m.role === 'assistant')?.content ?? '').slice(0, 1024);
     if (firstUser.length === 0 || firstAssistant.length === 0) return;
@@ -472,6 +481,7 @@ async function runAutoTitleBackground(args: {
           ? 'title_skipped_budget'
           : 'title_failed';
     await recordTelemetry({
+      userId,
       threadId,
       messageId: null,
       model: env.AI_TITLE_MODEL,
