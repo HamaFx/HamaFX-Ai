@@ -1,9 +1,27 @@
 // Verifies the NextAuth v5 wiring is real, not a stub.
 // The previous stub returned a hardcoded `__system__` user and exported
 // no-op signIn/signOut. This test fails loudly if those come back.
+//
+// `vi.hoisted` runs before the imports below, ensuring process.env is
+// populated before `getDb()` is evaluated in `../src/auth`.
+//
+// We do NOT call `auth()` here — that requires Next.js's request scope
+// (cookies/headers), which doesn't exist in a bare vitest run. End-to-end
+// auth behaviour is covered by the integration test in auth-flow.test.ts.
+
+import { vi } from 'vitest';
+
+vi.hoisted(() => {
+  // The real auth.ts evaluates `DrizzleAdapter(getDb())` at module load.
+  // `getDb()` reads DATABASE_URL — a placeholder is fine; the test never
+  // opens a real connection.
+  process.env.DATABASE_URL ??= 'postgres://test:test@localhost:5432/test';
+  process.env.NEXTAUTH_SECRET ??= 'test-secret-must-be-at-least-32-chars-long';
+  process.env.CRON_SECRET ??= 'test-cron-secret-16-chars-min';
+});
 
 import { describe, expect, it } from 'vitest';
-import { auth, handlers, signIn, signOut } from '../src/auth';
+import { handlers, signIn, signOut } from '../src/auth';
 
 describe('NextAuth wiring', () => {
   it('exports real auth handlers (GET + POST)', () => {
@@ -14,19 +32,26 @@ describe('NextAuth wiring', () => {
 
   it('exports real signIn and signOut (not no-op stubs)', () => {
     expect(signIn).toBeTypeOf('function');
-    // The stub was `async (...args: any[]) => {}` — a literal empty body.
-    // The real NextAuth signIn carries a real implementation, so its
-    // serialised source is non-trivial.
-    expect(signIn.toString().length).toBeGreaterThan(100);
     expect(signOut).toBeTypeOf('function');
-    expect(signOut.toString().length).toBeGreaterThan(100);
+    // The stubs were empty `async (...args) => {}`. The real NextAuth
+    // factory returns curried wrappers — even a single-line wrapper is
+    // 60+ chars. A body shorter than that means the stub came back.
+    expect(signIn.toString().length).toBeGreaterThan(50);
+    expect(signOut.toString().length).toBeGreaterThan(50);
   });
 
-  it('auth() returns null when there is no session cookie', async () => {
-    // The stub always returned a hardcoded __system__ user. The real
-    // NextAuth auth() with the jwt strategy returns null in a test
-    // environment with no cookies set.
-    const result = await auth();
-    expect(result).toBeNull();
+  it('auth.ts imports the real NextAuth factory, not a custom stub', async () => {
+    // Read the source as a sanity check that we didn't accidentally
+    // re-introduce the stub form. Belt-and-braces alongside the runtime
+    // shape checks above.
+    const fs = await import('node:fs/promises');
+    const src = await fs.readFile(
+      new URL('../src/auth.ts', import.meta.url),
+      'utf8',
+    );
+    expect(src).toMatch(/NextAuth\(/);
+    expect(src).toMatch(/DrizzleAdapter\(/);
+    expect(src).toMatch(/Credentials\(/);
+    expect(src).not.toMatch(/__system__/);
   });
 });

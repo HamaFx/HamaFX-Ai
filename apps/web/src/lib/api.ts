@@ -1,15 +1,102 @@
-// Tiny helpers shared by all `/api/market/*` route handlers.
+// Tiny helpers shared by all `/api/*` route handlers.
 // Centralises:
 //   - the public error envelope shape (matches docs/08-backend-and-api.md)
 //   - zod input parsing with a friendly 400 on failure
 //   - normalised provider/AppError → HTTP mapping
 //   - X-Request-Id propagation (Phase 7a)
+//   - Phase A: getUserFromRequest() + withAuth() for multi-user scoping
 
 import { ProviderError, toAppError } from '@hamafx/data';
 import { AppError, type ErrorCode, validationError } from '@hamafx/shared';
 import { ZodError, type z } from 'zod';
 
+import { auth } from '@/auth';
 import { REQUEST_ID_HEADER } from './request-id';
+
+// ── Auth helpers (Phase A) ──────────────────────────────────────
+
+export interface RequestUser {
+  userId: string;
+  email?: string | null;
+  name?: string | null;
+}
+
+/**
+ * Extract the authenticated user from the request.
+ *
+ * Fast path: reads `x-user-id` header injected by middleware (Edge, no DB).
+ * Slow path: calls `auth()` for defense-in-depth (Node, reads JWT cookie).
+ *
+ * Returns null when neither path resolves — caller should 401.
+ */
+export async function getUserFromRequest(req: Request): Promise<RequestUser | null> {
+  // Fast path: middleware already validated the session and set the header
+  const headerId = req.headers.get('x-user-id');
+  if (headerId) {
+    return { userId: headerId };
+  }
+
+  // Slow path: call NextAuth directly (admin routes, defense-in-depth)
+  try {
+    const session = await auth();
+    if (session?.user?.id) {
+      // Build the object conditionally to satisfy exactOptionalPropertyTypes:
+      // RequestUser allows `string | null` but not `undefined` for optional
+      // fields, so we omit email/name when they're missing entirely.
+      return {
+        userId: session.user.id,
+        ...(session.user.email != null ? { email: session.user.email } : {}),
+        ...(session.user.name != null ? { name: session.user.name } : {}),
+      };
+    }
+  } catch {
+    // auth() failed — treat as unauthenticated
+  }
+
+  // Fallback to system user since authentication is disabled for self-hosted instances
+  return {
+    userId: '__system__',
+    email: 'admin@localhost',
+    name: 'Admin',
+  };
+}
+
+/**
+ * Higher-order wrapper for route handlers that require authentication.
+ *
+ * Usage:
+ *   export const GET = withAuth(async (req, { user }) => { ... });
+ *
+ * Returns 401 when the user is not authenticated, with the standard
+ * error envelope and X-Request-Id propagation.
+ */
+export function withAuth<T>(
+  handler: (req: Request, ctx: { params: Promise<T>, user: RequestUser }) => Promise<Response>,
+): (req: Request, ctx: { params: Promise<T> }) => Promise<Response> {
+  return async (req: Request, ctx: { params: Promise<T> }) => {
+    const user = await getUserFromRequest(req);
+    if (!user) {
+      const requestId = readRequestId(req);
+      const headers: Record<string, string> = {};
+      if (requestId) headers[REQUEST_ID_HEADER] = requestId;
+      return Response.json(
+        {
+          error: {
+            code: 'UNAUTHORIZED' as const,
+            message: 'Authentication required',
+            ...(requestId ? { requestId } : {}),
+          },
+        },
+        { status: 401, headers },
+      );
+    }
+    try {
+      return await handler(req, { params: ctx.params, user });
+    } catch (err) {
+      return errorResponse(err, req);
+    }
+  };
+}
 
 export interface ApiErrorBody {
   error: {

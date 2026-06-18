@@ -1,0 +1,76 @@
+// NextAuth v5 — full configuration (Node.js runtime only).
+//
+// The Edge-compatible `authConfig` (imported from `./auth.config`) carries
+// session strategy, callbacks, and the page paths. This file layers on
+// the database adapter and providers, so the Edge bundle stays slim.
+//
+// Splitting like this is the canonical NextAuth v5 pattern: see
+// https://authjs.dev/guides/edge-compatibility — the middleware uses the
+// bare `authConfig` via `NextAuth(authConfig).auth`, while route handlers
+// and server actions use the full config exported here.
+
+import NextAuth from 'next-auth';
+import Credentials from 'next-auth/providers/credentials';
+import { DrizzleAdapter } from '@auth/drizzle-adapter';
+import bcrypt from 'bcryptjs';
+import { eq } from 'drizzle-orm';
+
+import { authConfig } from './auth.config';
+import { getDb, schema } from '@hamafx/db';
+
+// `NextAuth()` returns a value whose inferred type carries deep paths into
+// `@auth/core/providers`. That inferred type isn't portable across pnpm
+// store layouts (TS error TS2742). We side-step the portability error by
+// typing the destructured exports with the structural shape we need,
+// rather than re-naming the inferred type. The @ts-ignore on the right-hand
+// side suppresses the only error TS reports; consumers re-narrow as needed.
+// See: https://github.com/nextauthjs/next-auth/discussions/9138
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const _nextAuth = NextAuth as any;
+export const { handlers, auth, signIn, signOut } = _nextAuth({
+  ...authConfig,
+  adapter: DrizzleAdapter(getDb()),
+  providers: [
+    Credentials({
+      name: 'Email + Password',
+      credentials: {
+        email: { label: 'Email', type: 'email' },
+        password: { label: 'Password', type: 'password' },
+      },
+      async authorize(credentials) {
+        const email =
+          typeof credentials?.email === 'string' ? credentials.email.toLowerCase().trim() : '';
+        const password = typeof credentials?.password === 'string' ? credentials.password : '';
+        if (!email || !password) return null;
+
+        const db = getDb();
+        const rows = await db
+          .select()
+          .from(schema.users)
+          .where(eq(schema.users.email, email))
+          .limit(1);
+
+        const user = rows[0];
+        if (!user || !user.hashedPassword) return null;
+
+        const ok = await bcrypt.compare(password, user.hashedPassword);
+        if (!ok) return null;
+
+        // The shape NextAuth expects from authorize(): the returned object
+        // gets folded into the JWT by the `jwt` callback in auth.config.ts.
+        // With `exactOptionalPropertyTypes: true`, optional fields must be
+        // either omitted entirely or set to a non-undefined value. We omit
+        // `name` when missing rather than passing `undefined`.
+        return {
+          id: user.id,
+          email: user.email,
+          ...(user.name ? { name: user.name } : {}),
+        };
+      },
+    }),
+  ],
+  // session.strategy is 'jwt' from authConfig — keeps the Edge-safe
+  // middleware path working without a DB roundtrip. The DrizzleAdapter
+  // is still wired for the OAuth case (user/account/verification tables)
+  // even though we only use Credentials today.
+});
