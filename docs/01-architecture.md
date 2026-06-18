@@ -1,5 +1,20 @@
 # 01 — System Architecture
 
+> **New to the project?** Start with [AGENTS.md](./AGENTS.md) for a quick overview.
+> Deep dives: [02-codebase.md](./02-codebase.md), [03-ai-agent.md](./03-ai-agent.md), [04-data-layer.md](./04-data-layer.md), [07-worker.md](./07-worker.md).
+
+## Deployment modes
+
+HamaFX-Ai supports three deployment targets with the same source code:
+
+| Mode | Database | Scheduler | Setup |
+|------|----------|-----------|-------|
+| **Local native** | PGlite (embedded Postgres) | node-cron (embedded) | `pnpm dev:local` |
+| **Local Docker** | Postgres 16 + pgvector | node-cron (embedded) | `docker compose up` |
+| **Production** | Supabase Postgres | systemd timers (GCE VM) | Vercel + GCE |
+
+This document describes the production cloud architecture. See [08-deployment.md](./08-deployment.md) for details.
+
 ## High-level view
 
 HamaFX-Ai runs on **two co-operating deployments**: Vercel hosts the web app + chat + read APIs + light cron pokers, and a single GCE VM (`hamafx-cron`, e2-medium in `us-central1-a`) runs the always-on BiQuote SignalR consumer + heavy scheduled jobs. Phase 8 lifted the previous "single deployable unit" rule once we needed sub-second prices and heavy jobs that don't fit in Vercel Hobby's 60s function ceiling.
