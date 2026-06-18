@@ -4,6 +4,16 @@ vi.mock('@hamafx/ai', () => ({
   emitWeeklyReview: vi.fn(),
 }));
 
+// One user — matches the per-user loop in the new multi-user source.
+vi.mock('@hamafx/db', () => ({
+  getDb: () => ({
+    select: vi.fn(() => ({
+      from: vi.fn(async () => [{ id: 'u1' }]),
+    })),
+  }),
+  schema: { users: { id: 'id' } },
+}));
+
 import * as ai from '@hamafx/ai';
 
 import { runWeeklyReview } from '../src/jobs/weekly-review';
@@ -23,13 +33,16 @@ describe('runWeeklyReview', () => {
     expect(r.note).toBeUndefined();
   });
 
-  it('returns processed=0 + reason when already emitted this week', async () => {
+  it('returns processed=0 when all users already have this week\'s review', async () => {
+    // Phase A (multi-user): the job now loops per-user. The per-user
+    // 'already-emitted' reason is logged at error level instead of being
+    // propagated to the aggregated JobResult, so `note` is undefined.
     vi.mocked(ai.emitWeeklyReview).mockResolvedValue({
       emitted: false,
       reason: 'already-emitted',
     });
     const r = await runWeeklyReview({ log });
     expect(r.processed).toBe(0);
-    expect(r.note).toBe('already-emitted');
+    expect(r.note).toBeUndefined();
   });
 });

@@ -14,8 +14,15 @@ vi.mock('@hamafx/data', () => ({
 vi.mock('@hamafx/db', () => ({
   getDb: () => ({
     update: () => ({ set: () => ({ where: () => Promise.resolve([]) }) }),
+    // Phase A: the evaluator now joins users + userSettings to pull per-user
+    // delivery config. The chain must support .from().leftJoin().where()
+    // and return an empty array — the test doesn't care about per-user
+    // delivery, only about the read-prefetch parallelism below.
     select: () => ({
       from: () => ({
+        leftJoin: () => ({
+          where: () => Promise.resolve([]),
+        }),
         where: () => ({
           orderBy: () => ({
             limit: () => Promise.resolve([]),
@@ -26,6 +33,13 @@ vi.mock('@hamafx/db', () => ({
   }),
   schema: {
     alerts: { id: 'id', active: 'active', firedAt: 'fired_at', createdAt: 'created_at' },
+    users: { id: 'id', email: 'email' },
+    userSettings: {
+      userId: 'user_id',
+      alertEmail: 'alert_email',
+      telegramBotToken: 'telegram_bot_token',
+      telegramChatId: 'telegram_chat_id',
+    },
   },
 }));
 

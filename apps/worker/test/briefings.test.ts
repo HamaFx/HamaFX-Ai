@@ -6,6 +6,17 @@ vi.mock('@hamafx/ai', () => ({
   findHighImpactEventsInWindow: vi.fn(),
 }));
 
+// One user — matches the per-user loop in the new multi-user source.
+// These tests count emits per (event × user), not per event alone.
+vi.mock('@hamafx/db', () => ({
+  getDb: () => ({
+    select: vi.fn(() => ({
+      from: vi.fn(async () => [{ id: 'u1' }]),
+    })),
+  }),
+  schema: { users: { id: 'id' } },
+}));
+
 import * as ai from '@hamafx/ai';
 
 import { runBriefings } from '../src/jobs/briefings';
