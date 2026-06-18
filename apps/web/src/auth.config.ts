@@ -4,7 +4,16 @@
 
 import type { NextAuthConfig } from 'next-auth';
 
+const nextAuthSecret =
+  process.env.NEXTAUTH_SECRET ?? process.env.AUTH_SECRET;
+
 export const authConfig: NextAuthConfig = {
+  // NextAuth v5 requires an explicit secret for JWT signing. Without
+  // this, every /api/auth/* call throws MissingSecret. We set it
+  // unconditionally here — the value may be `undefined` if neither
+  // env var is set, in which case NextAuth falls back to reading
+  // AUTH_SECRET itself.
+  ...(nextAuthSecret ? { secret: nextAuthSecret } : {}),
   session: { strategy: 'jwt' },
   pages: {
     signIn: '/login',
