@@ -1,5 +1,9 @@
 # 09 — Deployment
 
+> **For local development:** see the [Quickstart section in README](../README.md#quickstart)
+> — zero-config native (`pnpm dev:local`) or one-command Docker (`docker compose up`).
+> This document covers production cloud deployment only.
+
 ## Topology
 
 Two deployments, one user, one push-to-main pipeline.

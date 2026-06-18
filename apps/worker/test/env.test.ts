@@ -25,8 +25,17 @@ describe('loadEnv', () => {
     expect(env.POSTGRES_URL).toBe('postgres://user:pw@localhost:5432/db');
   });
 
-  it('throws when neither DATABASE_URL nor POSTGRES_URL is set', () => {
-    expect(() => loadEnv({} as NodeJS.ProcessEnv)).toThrow(/DATABASE_URL or POSTGRES_URL/);
+  it('throws when neither DATABASE_URL nor POSTGRES_URL is set in production', () => {
+    expect(() =>
+      loadEnv({ NODE_ENV: 'production' } as unknown as NodeJS.ProcessEnv),
+    ).toThrow(/DATABASE_URL or POSTGRES_URL/);
+  });
+
+  it('allows missing DATABASE_URL in development (PGlite mode)', () => {
+    const env = loadEnv({ NODE_ENV: 'development' } as unknown as NodeJS.ProcessEnv);
+    expect(env.DATABASE_URL).toBeUndefined();
+    expect(env.POSTGRES_URL).toBeUndefined();
+    expect(env.NODE_ENV).toBe('development');
   });
 
   it('rejects malformed URLs', () => {

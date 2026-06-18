@@ -62,14 +62,42 @@ Built for a single user. The agent has full context over live price action, mult
 
 ---
 
-## Quickstart (for the owner)
+## Quickstart
+
+### Option 1: Docker (recommended — everything included)
 
 ```bash
-pnpm install
-cp .env.example .env.local      # fill in the secrets
-pnpm --filter db migrate:apply
-pnpm --filter web dev           # http://localhost:3000
+git clone https://github.com/HamaFx/HamaFX-Ai
+cd HamaFX-Ai
+cp .env.example .env          # add your API keys
+docker compose up -d           # starts Postgres + app
+# Open http://localhost:3000
 ```
+
+Includes Postgres + pgvector — no external database needed. All features work.
+
+### Option 2: Native (zero setup, no Docker)
+
+```bash
+git clone https://github.com/HamaFx/HamaFX-Ai
+cd HamaFX-Ai
+pnpm install
+pnpm dev:local                 # one command — DB auto-creates
+# Open http://localhost:3000
+```
+
+Uses embedded PGlite (Postgres in-process). No Postgres install needed.  
+Migrations run automatically on first boot. Everything just works.
+
+### Option 3: Production (Vercel + GCE VM)
+
+See [`docs/09-deployment.md`](./docs/09-deployment.md) for the full cloud deployment guide.
+
+---
+
+**What you need to provide:** API keys for AI (Gemini/OpenAI) and data providers  
+(Finnhub is free). Copy `.env.example` to `.env` and fill in what you have — the  
+app tells you which keys are missing at startup.
 
 **Type-check + test + lint everything**:
 

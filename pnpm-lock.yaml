@@ -159,9 +159,15 @@ importers:
       '@sentry/node':
         specifier: ^10.54.0
         version: 10.54.0
+      '@types/node-cron':
+        specifier: ^3.0.11
+        version: 3.0.11
       drizzle-orm:
         specifier: ^0.38.3
-        version: 0.38.4(@opentelemetry/api@1.9.1)(@types/pg@8.6.1)(@types/react@19.2.15)(postgres@3.4.9)(react@19.2.6)
+        version: 0.38.4(@electric-sql/pglite@0.5.3)(@opentelemetry/api@1.9.1)(@types/pg@8.6.1)(@types/react@19.2.15)(postgres@3.4.9)(react@19.2.6)
+      node-cron:
+        specifier: ^4.3.0
+        version: 4.3.0
       postgres:
         specifier: ^3.4.5
         version: 3.4.9
@@ -219,7 +225,7 @@ importers:
         version: 5.0.192(zod@3.25.76)
       drizzle-orm:
         specifier: ^0.38.3
-        version: 0.38.4(@opentelemetry/api@1.9.1)(@types/pg@8.6.1)(@types/react@19.2.15)(postgres@3.4.9)(react@19.2.6)
+        version: 0.38.4(@electric-sql/pglite@0.5.3)(@opentelemetry/api@1.9.1)(@types/pg@8.6.1)(@types/react@19.2.15)(postgres@3.4.9)(react@19.2.6)
       zod:
         specifier: ^3.23.8
         version: 3.25.76
@@ -274,7 +280,7 @@ importers:
         version: link:../shared
       drizzle-orm:
         specifier: ^0.38.3
-        version: 0.38.4(@opentelemetry/api@1.9.1)(@types/pg@8.6.1)(@types/react@19.2.15)(postgres@3.4.9)(react@19.2.6)
+        version: 0.38.4(@electric-sql/pglite@0.5.3)(@opentelemetry/api@1.9.1)(@types/pg@8.6.1)(@types/react@19.2.15)(postgres@3.4.9)(react@19.2.6)
       zod:
         specifier: ^3.23.8
         version: 3.25.76
@@ -297,12 +303,15 @@ importers:
 
   packages/db:
     dependencies:
+      '@electric-sql/pglite':
+        specifier: ^0.5.3
+        version: 0.5.3
       '@hamafx/shared':
         specifier: workspace:*
         version: link:../shared
       drizzle-orm:
         specifier: ^0.38.3
-        version: 0.38.4(@opentelemetry/api@1.9.1)(@types/pg@8.6.1)(@types/react@19.2.15)(postgres@3.4.9)(react@19.2.6)
+        version: 0.38.4(@electric-sql/pglite@0.5.3)(@opentelemetry/api@1.9.1)(@types/pg@8.6.1)(@types/react@19.2.15)(postgres@3.4.9)(react@19.2.6)
       postgres:
         specifier: ^3.4.5
         version: 3.4.9
@@ -511,6 +520,9 @@ packages:
 
   '@drizzle-team/brocli@0.10.2':
     resolution: {integrity: sha512-z33Il7l5dKjUgGULTqBsQBQwckHh5AbIuxhdsIxDDiZAzBOrZO6q9ogcWC65kU382AfynTfgNumVcNIjuIua6w==}
+
+  '@electric-sql/pglite@0.5.3':
+    resolution: {integrity: sha512-iTTYbA5Uesrl+N7zss0J5LopT7KE4j9aymYo+EZZh+rZbARQCUQOs+n2pay64JRUpc3fCkpfrniTNJnvYzOE+g==}
 
   '@emnapi/core@1.10.0':
     resolution: {integrity: sha512-yq6OkJ4p82CAfPl0u9mQebQHKPJkY7WrIuk205cTYnYe+k2Z8YBh11FrbRG/H6ihirqcacOgl2BIO8oyMQLeXw==}
@@ -2306,6 +2318,9 @@ packages:
 
   '@types/mysql@2.15.26':
     resolution: {integrity: sha512-DSLCOXhkvfS5WNNPbfn2KdICAmk8lLc+/PNvnPnF7gOdMZCxopXduqv0OQ13y/yA/zXTSikZZqVgybUxOEg6YQ==}
+
+  '@types/node-cron@3.0.11':
+    resolution: {integrity: sha512-0ikrnug3/IyneSHqCBeslAhlK2aBfYek1fGo4bP4QnZPmiqSGRK+Oy7ZMisLWkesffJvQ1cqAcBnJC+8+nxIAg==}
 
   '@types/node@20.19.41':
     resolution: {integrity: sha512-ECymXOukMnOoVkC2bb1Vc/w/836DXncOg5m8Xj1RH7xSHZJWNYY6Zh7EH477vcnD5egKNNfy2RpNOmuChhFPgQ==}
@@ -4134,6 +4149,10 @@ packages:
       sass:
         optional: true
 
+  node-cron@4.3.0:
+    resolution: {integrity: sha512-NeTIPjUfndOkKQnWCBJIfx44BZX7GiXe7KJq7Y2bwc96v/4+CMwuzwOLkAk+4nu6eSNcatoLFCDXcn4QNph/Rw==}
+    engines: {node: '>=20'}
+
   node-domexception@1.0.0:
     resolution: {integrity: sha512-/jKZoMpw0F8GRwl4/eLROPA3cfcXtLApP0QzLmUT/HuPCZWyB7IY9ZrMeKw2O/nFIqPQB3PVM9aYm0F312AXDQ==}
     engines: {node: '>=10.5.0'}
@@ -5360,6 +5379,8 @@ snapshots:
       '@babel/helper-validator-identifier': 7.29.7
 
   '@drizzle-team/brocli@0.10.2': {}
+
+  '@electric-sql/pglite@0.5.3': {}
 
   '@emnapi/core@1.10.0':
     dependencies:
@@ -6853,6 +6874,8 @@ snapshots:
     dependencies:
       '@types/node': 20.19.41
 
+  '@types/node-cron@3.0.11': {}
+
   '@types/node@20.19.41':
     dependencies:
       undici-types: 6.21.0
@@ -7599,8 +7622,9 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  drizzle-orm@0.38.4(@opentelemetry/api@1.9.1)(@types/pg@8.6.1)(@types/react@19.2.15)(postgres@3.4.9)(react@19.2.6):
+  drizzle-orm@0.38.4(@electric-sql/pglite@0.5.3)(@opentelemetry/api@1.9.1)(@types/pg@8.6.1)(@types/react@19.2.15)(postgres@3.4.9)(react@19.2.6):
     optionalDependencies:
+      '@electric-sql/pglite': 0.5.3
       '@opentelemetry/api': 1.9.1
       '@types/pg': 8.6.1
       '@types/react': 19.2.15
@@ -8847,6 +8871,8 @@ snapshots:
     transitivePeerDependencies:
       - '@babel/core'
       - babel-plugin-macros
+
+  node-cron@4.3.0: {}
 
   node-domexception@1.0.0: {}
 

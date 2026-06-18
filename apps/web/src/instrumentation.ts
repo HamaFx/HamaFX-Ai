@@ -11,6 +11,30 @@
 // preview deploys without the env var work the same as before.
 
 export async function register(): Promise<void> {
+  // ── Local dev: initialize embedded PGlite ──────────────────────
+  // When neither DATABASE_URL nor POSTGRES_URL is set AND we're in
+  // Node.js runtime, boot PGlite and apply migrations automatically.
+  // The Edge runtime never hits this path (no fs access).
+  if (
+    process.env.NEXT_RUNTIME === 'nodejs' &&
+    !process.env.DATABASE_URL &&
+    !process.env.POSTGRES_URL
+  ) {
+    try {
+      const { ensureMigrations } = await import(
+        /* webpackIgnore: true */
+        '@hamafx/db/local-db'
+      );
+      await ensureMigrations();
+      console.log('[boot] PGlite database ready (embedded Postgres)');
+    } catch (err) {
+      console.warn(
+        '[boot] Could not initialize PGlite — some features may be unavailable:',
+        (err as Error).message,
+      );
+    }
+  }
+
   const dsn = process.env.SENTRY_DSN;
   if (!dsn) return;
 

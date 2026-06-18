@@ -1,0 +1,46 @@
+# HamaFX-Ai — one-command Docker deployment
+#
+# Usage:
+#   cp .env.example .env   # fill in your API keys
+#   docker compose up -d
+#   # Open http://localhost:3000
+#
+# The Postgres container includes pgvector for full feature support.
+# All data persists in Docker volumes across restarts.
+
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_DB: hamafx
+      POSTGRES_USER: hamafx
+      POSTGRES_PASSWORD: hamafx
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U hamafx -d hamafx"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: postgres://hamafx:hamafx@db:5432/hamafx
+      NODE_ENV: production
+    env_file:
+      - .env
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  pgdata:

@@ -1,5 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Standalone output for Docker/local builds. Vercel ignores this — they
+  // use their own build pipeline. Gated so it doesn't affect Vercel deploys.
+  output: process.env.VERCEL ? undefined : 'standalone',
+
   reactStrictMode: true,
 
   // Workspace packages export TS source directly; Next must transpile them.
