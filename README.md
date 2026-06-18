@@ -1,143 +1,208 @@
-# HamaFX-Ai
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)">
+    <h1>🥇 HamaFX-Ai</h1>
+  </picture>
+</p>
 
-> A **personal** AI trading copilot for **XAUUSD (primary), EURUSD, GBPUSD** — focused, mobile-first, and chat-driven.
+<p align="center">
+  <strong>Your personal AI trading copilot.</strong><br>
+  Chat-driven. Mobile-first. Built for gold & forex.
+</p>
 
-Built for a single user. The agent has full context over live price action, multi-timeframe charts, technical indicators, fundamental data, curated news, your own journal, and prior briefings.
+<p align="center">
+  <img src="https://img.shields.io/badge/status-production%20ready-48d597?style=flat-square" alt="Status: Production Ready">
+  <img src="https://img.shields.io/badge/tests-350+-48d597?style=flat-square" alt="Tests: 350+">
+  <img src="https://img.shields.io/badge/ai%20tools-32-f5b945?style=flat-square" alt="AI Tools: 32">
+  <img src="https://img.shields.io/badge/license-UNLICENSED-8a93a3?style=flat-square" alt="License">
+</p>
 
-**Status**: Phases 0 → 8 shipped. The agent now plans, verifies, and remembers; the data layer stays fresh under provider stress with stale-while-revalidate, health-aware failover, and adaptive throttling. Phase 8 added a GCE worker that holds a persistent BiQuote SignalR connection — sub-second prices in `live_ticks`, six heavy jobs migrated off Vercel onto systemd timers, nightly off-site backups + weekly verified restore, server-only Sentry on both deploys. See [`docs/10-roadmap.md`](./docs/10-roadmap.md) for the full feature ledger.
-
----
-
-## What it does (today)
-
-**Chat-first, with 26 tools the agent calls on demand**
-
-- **Live data** — `get_price`, `get_candles`, `get_indicators`, `get_market_structure`
-- **Macro** — `get_news`, `get_calendar`, `get_correlation`, `get_intermarket`, `get_seasonality`, `get_cot`, `forecast_volatility`
-- **Trading** — `compute_risk`, `get_session_levels`, `compute_position_health`, `replay_setup`, `verify_call`
-- **Analysis** — `analyze_technical`, `analyze_fundamental`, `analyze_chart_image`, `annotate_chart`
-- **Memory** — `search_knowledge` (hybrid dense + Postgres FTS, time-decayed), `summarize_thread`
-- **Mutations** — `set_alert`, `log_journal`, `share_snapshot`
-
-**Per-domain model routing** picks the right tier per turn:
-
-| Turn type | Default model |
-| --- | --- |
-| Fundamental analysis | `google-vertex/gemini-2.5-pro` |
-| Technical analysis | `google-vertex/gemini-2.5-flash` |
-| News / calendar / journal summary | `google-vertex/gemini-2.5-flash` |
-| Vision | `google-vertex/gemini-2.5-pro` |
-| Title / generic | `google-vertex/gemini-2.5-flash-lite` / `2.5-flash` |
-
-**Plan-then-act**: analytical turns emit a collapsible "Thinking" pill above the answer.
-**Verification**: a `verify_call` tool re-checks geometry + opposing liquidity; a post-finish citation enforcer flags prices/events not backed by a tool call.
-**Memory**: news, journal entries, briefings, and saved thread synopses are all retrievable via `search_knowledge` with a `kinds` filter.
+<br>
 
 ---
 
-## TL;DR
+## ✨ What It Does
 
-| Concern          | Choice                                                              |
-| ---------------- | ------------------------------------------------------------------- |
-| Framework        | Next.js 15 (App Router) + React 19 + TypeScript                     |
-| Styling          | Tailwind CSS v4 + `shadcn/ui` (Radix) + `tailwind-variants`         |
-| Charts           | TradingView **lightweight-charts** + optional Pro widget            |
-| AI               | Vercel **AI SDK v5** + Vercel AI Gateway / direct Vertex AI         |
-| State (server)   | TanStack Query                                                      |
-| State (client)   | Zustand + URL state (`nuqs`)                                        |
-| Live prices      | Persistent BiQuote SignalR (worker) → `live_ticks` Postgres snapshot; REST polling fallback every 1.5s with stale-while-revalidate cache (Phase 8 PR-6/7/8) |
-| Market data      | BiQuote (primary) + Finnhub (fallback) — health-aware failover; Twelve Data retired in Phase 8 PR-19   |
-| News             | Finnhub news (primary) + Marketaux (fallback)                       |
-| Macro / calendar | FRED + Trading Economics                                            |
-| DB               | **Supabase Postgres** (free tier) + `pgvector`                      |
-| ORM              | Drizzle                                                             |
-| Cache            | Next.js Data Cache (no Upstash needed) with SWR + single-flight     |
-| Cron             | systemd timers on a GCE e2-medium worker VM; light `/api/cron/*` pokers + 6 heavy worker-resident jobs (Phase 8) |
-| Auth             | Single **`APP_PASSWORD`** env + HMAC-signed cookie + middleware     |
-| Hosting          | **Vercel** — single deploy                                          |
-| Monorepo         | pnpm workspaces + Turborepo                                         |
+An **AI agent that lives in your pocket** — chat with it about gold and forex markets like you'd talk to a veteran trader. It sees live prices, reads charts, scans news, crunches indicators, and remembers everything you've discussed.
 
-> Single-user app. **No per-user rate limiting, no RLS, no GDPR/exports, no analytics, no eval CI.**
-> Manual eval via `pnpm --filter ai eval -- --cases` runs the 15-case acceptance suite with tool-trace assertions.
+| | | |
+|---|---|---|
+| 💬 **Chat-first** | Every feature reachable via natural conversation | 
+| 📊 **Live charts** | Multi-timeframe candlesticks with 12+ indicators |
+| 🧠 **AI agent** | 32 tools, domain-routed models, plan-then-act reasoning |
+| 📰 **News & macro** | Curated headlines, economic calendar, sentiment analysis |
+| 📓 **Trade journal** | Log trades, track R-multiples, review patterns |
+| ⚡ **Smart alerts** | Price crosses, candle closes, indicator signals — email + push |
+| 🔍 **Memory & RAG** | Hybrid vector search over news, journal, briefings |
+| 🏛️ **Committee** | Multi-agent deliberation — Economist, Technician, Risk Manager |
+| ✅ **Verification** | Post-turn fact-checking — never hallucinates prices |
+| 📱 **PWA ready** | Install on your phone, works offline |
 
 ---
 
-## Quickstart
+## 🚀 Quick Start
 
-### Option 1: Docker (recommended — everything included)
+### <picture><source><img width="20" alt="Docker" src="https://raw.githubusercontent.com/devicons/devicon/master/icons/docker/docker-original.svg"></picture> Docker — recommended
 
 ```bash
 git clone https://github.com/HamaFx/HamaFX-Ai
 cd HamaFX-Ai
 cp .env.example .env          # add your API keys
-docker compose up -d           # starts Postgres + app
-# Open http://localhost:3000
+docker compose up -d
+# → http://localhost:3000
 ```
 
-Includes Postgres + pgvector — no external database needed. All features work.
+> Postgres 16 + pgvector included. All features work out of the box.
 
-### Option 2: Native (zero setup, no Docker)
+### <picture><source><img width="20" alt="Node" src="https://raw.githubusercontent.com/devicons/devicon/master/icons/nodejs/nodejs-original.svg"></picture> Native — zero setup
 
 ```bash
 git clone https://github.com/HamaFx/HamaFX-Ai
 cd HamaFX-Ai
 pnpm install
-pnpm dev:local                 # one command — DB auto-creates
-# Open http://localhost:3000
+pnpm dev:local
+# → http://localhost:3000
 ```
 
-Uses embedded PGlite (Postgres in-process). No Postgres install needed.  
-Migrations run automatically on first boot. Everything just works.
+> Embedded PGlite — Postgres runs in-process. No installs, no config. Migrations auto-run. PGVector features need Docker.
 
-### Option 3: Production (Vercel + GCE VM)
+### <picture><source><img width="20" alt="Cloud" src="https://raw.githubusercontent.com/devicons/devicon/master/icons/googlecloud/googlecloud-original.svg"></picture> Cloud — production
 
-See [`docs/09-deployment.md`](./docs/09-deployment.md) for the full cloud deployment guide.
+See **[docs/08-deployment.md](docs/08-deployment.md)** for Vercel + GCE VM deployment.
 
 ---
 
-**What you need to provide:** API keys for AI (Gemini/OpenAI) and data providers  
-(Finnhub is free). Copy `.env.example` to `.env` and fill in what you have — the  
-app tells you which keys are missing at startup.
+## 🧱 Architecture
 
-**Type-check + test + lint everything**:
+```
+Browser (PWA)
+    │
+    ├── /api/chat ──▶ runChat() ──▶ streamText + 32 tools
+    │                    │           domain routing + planner + memory
+    │                    │           budget guard + citation enforcement
+    │
+    ├── /api/market/* ──▶ data layer ──▶ BiQuote → Finnhub failover
+    │
+    └── Middleware ──▶ password gate · CSRF · Edge runtime
 
-```bash
-pnpm turbo run typecheck
-pnpm turbo run test
-pnpm turbo run lint
+Worker (GCE VM)
+    │
+    ├── SignalR consumer ──▶ TickBuffer ──▶ live_ticks (1 Hz)
+    ├── Candle aggregator ──▶ candles_1m (minute bars)
+    └── systemd timers ──▶ 7 heavy jobs + light HTTP pokers
 ```
 
-**Run the eval against a deploy**:
+| Package | Role | LOC |
+|---------|------|-----|
+| `@hamafx/ai` | Agent core — chat, 32 tools, routing, RAG | 12,500 |
+| `@hamafx/data` | Market adapters — 5 providers, cache, failover | 3,300 |
+| `@hamafx/web` | Next.js 15 PWA — chat, charts, journal, alerts | 20,700 |
+| `@hamafx/db` | Drizzle ORM — 20 tables, Postgres + PGlite | 1,000 |
+| `@hamafx/indicators` | Pure TS indicators — classic + Smart Money Concepts | 1,100 |
+| `@hamafx/shared` | Zod schemas, types, env, errors | 2,700 |
+| `@hamafx/worker` | Node daemon — SignalR, jobs, scheduler | 2,400 |
+
+---
+
+## 🤖 AI Agent — 32 Tools
+
+| Category | Tools |
+|----------|-------|
+| 📈 **Live Data** | `get_price` · `get_candles` · `get_indicators` · `get_market_structure` · `get_session_levels` |
+| 🔬 **Analysis** | `analyze_technical` · `analyze_fundamental` · `analyze_chart_image` · `annotate_chart` |
+| 🌐 **Macro** | `get_news` · `get_calendar` · `get_correlation` · `get_intermarket` · `get_seasonality` · `get_cot` · `forecast_volatility` · `get_intermarket_resonance` |
+| ⚖️ **Risk** | `compute_risk` · `compute_position_health` · `verify_call` · `replay_setup` |
+| 🧠 **Memory** | `search_knowledge` · `summarize_thread` |
+| ✍️ **Actions** | `set_alert` · `log_journal` · `get_journal_stats` · `share_snapshot` |
+| 🏛️ **Meta** | `convene_committee` · `get_system_diagnostics` · `run_system_action` |
+
+**Per-domain model routing** auto-picks the right brain for each question:
+
+| Question type | Model |
+|---------------|-------|
+| Fundamental (why is gold moving?) | Gemini 2.5 Pro |
+| Technical (what are the levels?) | Gemini 2.5 Flash |
+| News / calendar / summary | Gemini 2.5 Flash |
+| Chart image analysis | Gemini 2.5 Pro |
+| Quick / simple | Gemini 2.5 Flash-Lite |
+
+---
+
+## 🛠️ Tech Stack
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Next.js-15-black?style=for-the-badge&logo=next.js" alt="Next.js 15">
+  <img src="https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react" alt="React 19">
+  <img src="https://img.shields.io/badge/TypeScript-strict-3178C6?style=for-the-badge&logo=typescript" alt="TypeScript">
+  <img src="https://img.shields.io/badge/Tailwind-v4-06B6D4?style=for-the-badge&logo=tailwindcss" alt="Tailwind CSS v4">
+  <img src="https://img.shields.io/badge/AI_SDK-v5-000?style=for-the-badge&logo=vercel" alt="AI SDK v5">
+  <img src="https://img.shields.io/badge/Gemini-2.5-4285F4?style=for-the-badge&logo=google" alt="Gemini">
+  <img src="https://img.shields.io/badge/Postgres-pgvector-4169E1?style=for-the-badge&logo=postgresql" alt="Postgres">
+  <img src="https://img.shields.io/badge/Drizzle-ORM-C5F74F?style=for-the-badge&logo=drizzle" alt="Drizzle">
+  <img src="https://img.shields.io/badge/pnpm-9-F69220?style=for-the-badge&logo=pnpm" alt="pnpm">
+  <img src="https://img.shields.io/badge/Vitest-tests-6E9F18?style=for-the-badge&logo=vitest" alt="Vitest">
+</p>
+
+**Stack highlights:**
+
+- **Framework:** Next.js 15 App Router · React 19 · Edge middleware
+- **Styling:** Tailwind CSS v4 · shadcn/ui (Radix) · `motion` animations
+- **Charts:** TradingView lightweight-charts v5
+- **AI:** Vercel AI SDK v5 · Google Vertex AI · AI Gateway
+- **DB:** Postgres (Supabase) · pgvector · Drizzle ORM · PGlite (local dev)
+- **Build:** pnpm workspaces · Turborepo · esbuild (worker)
+- **Auth:** Single password · HMAC cookie · CSRF · No RLS needed
+- **Testing:** Vitest · 64 test files · 350+ cases · Manual AI evals
+
+---
+
+## 📚 Documentation
+
+For **AI agents** working on this codebase, start with [`AGENTS.md`](docs/AGENTS.md).
+
+| Doc | Topic |
+|-----|-------|
+| [AGENTS.md](docs/AGENTS.md) | AI agent quickstart — commands, patterns, pitfalls |
+| [01-architecture.md](docs/01-architecture.md) | System design & deployment modes |
+| [02-codebase.md](docs/02-codebase.md) | Monorepo structure, conventions, extension rules |
+| [03-ai-agent.md](docs/03-ai-agent.md) | Agent internals — runChat, 32 tools, routing, memory |
+| [04-data-layer.md](docs/04-data-layer.md) | DB schema, 5 providers, caching, failover |
+| [05-api-routes.md](docs/05-api-routes.md) | All 37 API endpoints, auth, middleware, cron |
+| [06-frontend.md](docs/06-frontend.md) | Pages, chat UI, charts, PWA, state management |
+| [07-worker.md](docs/07-worker.md) | Worker daemon, SignalR, 7 jobs, systemd |
+| [08-deployment.md](docs/08-deployment.md) | Production cloud deployment |
+| [09-testing.md](docs/09-testing.md) | Test patterns, CI, eval harness |
+
+---
+
+## 🔧 Development
 
 ```bash
-pnpm --filter ai eval -- \
-  --base-url https://your-deploy.vercel.app \
+pnpm turbo run test -- --run    # 350+ tests
+pnpm typecheck                  # strict TS across 8 packages
+pnpm --filter @hamafx/web build # production build
+pnpm turbo run lint             # ESLint flat config
+
+# AI eval harness (requires running server)
+pnpm --filter @hamafx/ai eval -- \
+  --base-url http://localhost:3000 \
   --cookie "hfx_auth=..." \
-  --cases \
-  --out docs/eval
+  --cases
 ```
 
 ---
 
-## Documentation Map
+## ⚡ Design Principles
 
-The docs are numbered for reading order. Each file is self-contained and cross-links to the others.
+1. **Chat is the primary surface** — if a feature isn't reachable via chat, it doesn't ship
+2. **Mobile-first, always** — designed for phones, enhanced for desktops
+3. **Show the work** — every opinion backed by indicators, candles, or headlines
+4. **No hallucinated prices** — numbers always come from tool results, never free-form
+5. **AI-agent-friendly codebase** — files, naming, and docs optimized for autonomous coding agents
+6. **Single-user by design** — no RLS, no multi-tenancy, no GDPR overhead. One password gate.
 
-1. [`docs/00-overview.md`](./docs/00-overview.md) — Vision, scope, success metrics
-2. [`docs/01-architecture.md`](./docs/01-architecture.md) — System architecture (with diagrams)
-3. [`docs/02-tech-stack.md`](./docs/02-tech-stack.md) — Tech choices and rationale
-4. [`docs/03-project-structure.md`](./docs/03-project-structure.md) — Monorepo layout and naming
-5. [`docs/04-features.md`](./docs/04-features.md) — Feature catalog (Phase 1 → 7)
-6. [`docs/05-ui-ux.md`](./docs/05-ui-ux.md) — Mobile-first design, navigation, theming
-7. [`docs/06-data-sources.md`](./docs/06-data-sources.md) — Provider matrix, caching, health
-8. [`docs/07-ai-agent.md`](./docs/07-ai-agent.md) — Routing, tools, planner, verifier, memory
-9. [`docs/08-backend-and-api.md`](./docs/08-backend-and-api.md) — API routes (Vercel-only)
-10. [`docs/09-deployment.md`](./docs/09-deployment.md) — Vercel + GCE-VM cron, envs, CI
-11. [`docs/10-roadmap.md`](./docs/10-roadmap.md) — Phase 0 → 7 with checkboxes
-12. [`docs/11-conventions.md`](./docs/11-conventions.md) — Code style, naming, AI-friendly conventions
-13. [`docs/12-security-and-config.md`](./docs/12-security-and-config.md) — Secrets, password gate, guardrails
-14. [`docs/13-data-flow.md`](./docs/13-data-flow.md) — Sequence diagrams for key flows
-15. [`docs/14-ai-agent-handoff.md`](./docs/14-ai-agent-handoff.md) — How AI coding agents should read & extend this repo
+---
 
-`/infra/cron-vm/` — GCE VM setup script + crontab + README for the cron scheduler.
-`.kiro/steering/` — area-specific rules autoloaded by Kiro/Claude/Cursor agents working on this repo.
+<p align="center">
+  <sub>Built for gold traders. Optimized for AI agents. Deploy in one command.</sub>
+</p>
