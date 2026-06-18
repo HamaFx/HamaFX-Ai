@@ -11,7 +11,7 @@ export async function completeOnboardingAction(formData: FormData) {
   // Capture once so the narrowing survives inside the transaction callback.
   const userId = session.user.id;
 
-  const name = formData.get('name') as string;
+  // const _name = formData.get('name') as string;
   const timezone = formData.get('timezone') as string;
   const defaultSymbol = formData.get('defaultSymbol') as string;
 

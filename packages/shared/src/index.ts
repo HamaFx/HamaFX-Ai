@@ -64,6 +64,10 @@ export * from './ai/tool-io';
 
 // Errors
 export * from './errors';
+// BYOK encryption is server-only (uses node:crypto) — import directly
+// from '@hamafx/shared/encryption' instead. Re-exporting it here would
+// pull node:crypto into any client component that imports the barrel.
+export {} from './encryption';
 
 // Env (server-only — do NOT import from client code)
 export { ServerEnvSchema, parseServerEnv, resolveDatabaseUrl } from './env';

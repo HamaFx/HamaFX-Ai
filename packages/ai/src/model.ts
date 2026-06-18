@@ -127,3 +127,50 @@ export function resolveModel(modelId: string, env: ResolveModelEnv): LanguageMod
 export function getVertexGoogleSearchTool(env: ResolveModelEnv) {
   return getVertex(env).tools.googleSearch({});
 }
+
+import { decryptByok } from '@hamafx/shared/encryption';
+import type { UserSettingsRow } from '@hamafx/db/schema';
+
+import { createGoogleGenerativeAI } from '@ai-sdk/google';
+
+/**
+ * Resolves a BYOK model based on the user's available encrypted API keys.
+ * Will prefer the explicitly requested provider/model if available, falling back
+ * to whatever the user has keys for.
+ */
+export function resolveUserModel(
+  userSettings: Pick<UserSettingsRow, 'aiApiKeys'>,
+  domain: 'default' | 'vision' | 'summary' | 'embedding' | 'fundamental' | 'technical',
+  env: ResolveModelEnv
+): { model: LanguageModel; modelId: string } {
+  const keys = decryptByok(userSettings.aiApiKeys);
+  
+  if (!keys || Object.keys(keys).length === 0) {
+    throw new Error('No AI API keys configured. Please add your keys in Settings.');
+  }
+
+  // TODO: we could read preferences if the user wants to force a specific provider,
+  // but for now we just try them in a preference order if they have multiple.
+  
+  // Create provider instances dynamically using their keys
+  // For Gemini:
+  if (keys.google) {
+    const googleProvider = createGoogleGenerativeAI({ apiKey: keys.google });
+    // In a real app we'd map domains to specific models, here we just use defaults
+    const modelMap: Record<string, string> = {
+      default: 'gemini-2.5-flash',
+      vision: 'gemini-2.5-pro',
+      summary: 'gemini-2.5-flash',
+      embedding: 'text-embedding-004',
+      fundamental: 'gemini-2.5-pro',
+      technical: 'gemini-2.5-flash',
+    };
+    const modelId = modelMap[domain] || 'gemini-2.5-flash';
+    return { model: googleProvider(modelId), modelId: `google/${modelId}` };
+  }
+
+  // If we had OpenAI/Anthropic providers imported, we'd do the same here.
+  // For now, if they don't have google but have something else, we can't route yet
+  // since only google is imported in this file.
+  throw new Error('Only Google (Gemini) keys are currently fully wired in resolveUserModel.');
+}

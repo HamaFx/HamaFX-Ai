@@ -1,42 +1,37 @@
-// Edge middleware — runs on every matched request. Personal-mode auth gate:
-// presence of a valid `hfx_auth` cookie. Anything that needs to be reachable
-// without auth (login, auth API, cron) is excluded by `config.matcher` below.
+// Edge middleware — runs on every matched request.
 //
-// Phase 7a: every request is stamped with `X-Request-Id`. Inbound id from
-// the client (curl, upstream proxy) is honoured if present; otherwise we
-// mint a fresh UUID. Both the request that the route handler sees AND the
-// outbound response carry the header so logs and UI bug reports correlate.
+// Uses NextAuth v5's Edge-safe auth() wrapper. The full config (with the
+// DrizzleAdapter and Credentials provider) lives in `auth.ts` (Node only);
+// the middleware only needs the JWT verifier and the `authorized` callback
+// from `auth.config.ts`, so the Edge bundle stays slim.
+//
+// What this does, in order:
+//   1. Mint/refresh the CSRF double-submit cookie.
+//   2. Enforce CSRF on state-changing /api/* requests.
+//   3. NextAuth validates the session cookie and populates `req.auth`.
+//      The `authorized` callback in auth.config.ts handles the redirect
+//      to /login for unauthenticated requests on protected routes.
+//   4. Stamp the request id downstream (visible to route handlers).
+//   5. Inject `x-user-id` from the JWT for downstream handlers that read
+//      it via `getUserIdFromRequest()` (lib/api.ts) instead of re-decoding
+//      the JWT themselves.
 
-import { NextResponse, type NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
+import NextAuth from 'next-auth';
 
-import { AUTH_COOKIE_NAME, verifyAuthToken } from '@/lib/auth';
-import { getAuthEnv } from '@/lib/env';
-import { readOrCreateRequestId, REQUEST_ID_HEADER } from '@/lib/request-id';
+import { authConfig } from './auth.config';
+import { REQUEST_ID_HEADER, readOrCreateRequestId } from '@/lib/request-id';
 
-export async function middleware(req: NextRequest): Promise<NextResponse> {
-  const env = getAuthEnv();
-  const token = req.cookies.get(AUTH_COOKIE_NAME)?.value;
-  const payload = await verifyAuthToken(token, env.AUTH_COOKIE_SECRET);
+const { auth } = NextAuth(authConfig);
+
+export default auth((req) => {
   const requestId = readOrCreateRequestId(req);
 
-  if (!payload) {
-    const url = req.nextUrl.clone();
-    const next = `${req.nextUrl.pathname}${req.nextUrl.search}`;
-    url.pathname = '/login';
-    url.search = next && next !== '/' ? `?next=${encodeURIComponent(next)}` : '';
-    const redirect = NextResponse.redirect(url);
-    redirect.headers.set(REQUEST_ID_HEADER, requestId);
-    return redirect;
-  }
-
-  // Phase 3 hardening §22 — CSRF double-submit cookie pattern.
+  // ── CSRF double-submit cookie (state-changing /api/*) ───────────
   let csrfToken = req.cookies.get('hfx_csrf')?.value;
   if (!csrfToken) {
     csrfToken = crypto.randomUUID();
   }
-
-  // Enforce CSRF on state-changing endpoints under /api/*
-  // (Note: /api/cron/* is exempted by config.matcher).
   const isStateChanging = ['POST', 'PUT', 'DELETE', 'PATCH'].includes(req.method);
   if (isStateChanging && req.nextUrl.pathname.startsWith('/api/')) {
     const headerToken = req.headers.get('x-csrf-token');
@@ -45,20 +40,29 @@ export async function middleware(req: NextRequest): Promise<NextResponse> {
     }
   }
 
-  // Forward the id downstream so route handlers can read it from
-  // `req.headers.get('x-request-id')`.
-  const next = NextResponse.next({
-    request: {
-      headers: (() => {
-        const h = new Headers(req.headers);
-        h.set(REQUEST_ID_HEADER, requestId);
-        return h;
-      })(),
-    },
-  });
+  // ── Auth gate (handled by `authorized` callback in auth.config) ──
+  // `req.auth` is the JWT session (set by NextAuth's `auth()` wrapper).
+  // The `authorized` callback has already redirected unauthed users on
+  // protected routes, so by here `req.auth?.user` is either valid or
+  // the request has been redirected to /login. We only need the userId
+  // to inject as a header for downstream route handlers.
+  const userId = req.auth?.user?.id ?? null;
+
+  const headers = new Headers(req.headers);
+  headers.set(REQUEST_ID_HEADER, requestId);
+  if (userId) {
+    headers.set('x-user-id', userId);
+  } else {
+    // We deliberately do NOT inject the legacy '__system__' fallback
+    // here. Route handlers that require auth check the header themselves
+    // and return 401 if absent (see lib/api.ts::getUserIdFromRequest).
+    // Hiding auth in a fake header would defeat the gate.
+    headers.delete('x-user-id');
+  }
+
+  const next = NextResponse.next({ request: { headers } });
   next.headers.set(REQUEST_ID_HEADER, requestId);
-  
-  // Set the CSRF cookie on the response if we minted a new one.
+
   if (!req.cookies.has('hfx_csrf')) {
     next.cookies.set('hfx_csrf', csrfToken, {
       path: '/',
@@ -66,21 +70,14 @@ export async function middleware(req: NextRequest): Promise<NextResponse> {
       secure: process.env.NODE_ENV === 'production',
     });
   }
-
   return next;
-}
+});
 
 export const config = {
-  /**
-   * Run middleware on everything EXCEPT:
-   *   - /login                         (the login surface itself)
-   *   - /api/auth/*                    (login + logout endpoints)
-   *   - /api/cron/*                    (cron-secret-protected internally)
-   *   - Static files / Next internals  (_next, favicon, icons, manifest, robots)
-   *
-   * Anything matched here requires a valid auth cookie.
-   */
+  // Same exclusions as before — /api/auth is NextAuth's catch-all,
+  // /api/cron is cron-secret-protected, /share is public, /auth is the
+  // login surface.
   matcher: [
-    '/((?!login|share|api/auth|api/cron|api/telegram|sw\\.js|sw-precache\\.json|_next/static|_next/image|favicon\\.ico|manifest\\.webmanifest|icons|robots\\.txt|sitemap\\.xml).*)',
+    '/((?!auth|share|api/auth|api/cron|api/telegram|sw\\.js|sw-precache\\.json|_next/static|_next/image|favicon\\.ico|manifest\\.webmanifest|icons|robots\\.txt|sitemap\\.xml).*)',
   ],
 };

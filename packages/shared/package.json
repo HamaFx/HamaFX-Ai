@@ -10,7 +10,8 @@
     "./schemas/*": "./src/schemas/*.ts",
     "./ai/*": "./src/ai/*.ts",
     "./env": "./src/env.ts",
-    "./errors": "./src/errors.ts"
+    "./errors": "./src/errors.ts",
+    "./encryption": "./src/encryption.ts"
   },
   "scripts": {
     "lint": "eslint .",
@@ -19,6 +20,7 @@
     "clean": "rm -rf node_modules .turbo"
   },
   "dependencies": {
+    "server-only": "^0.0.1",
     "zod": "^3.23.8"
   },
   "devDependencies": {
