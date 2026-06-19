@@ -28,7 +28,7 @@
     "ai": "^5.0.0",
     "bcryptjs": "^3.0.3",
     "clsx": "^2.1.1",
-    "drizzle-orm": "^0.38.3",
+    "drizzle-orm": "^0.45.2",
     "lightweight-charts": "^5.0.4",
     "lucide-react": "^1.16.0",
     "motion": "^12.40.0",
