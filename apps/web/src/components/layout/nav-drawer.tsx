@@ -75,7 +75,7 @@ const SECONDARY: readonly NavItem[] = [
   { href: '/settings', label: 'Settings', icon: Cog, description: 'Notifications, usage' },
 ];
 
-export function NavDrawer({ isMobile, isDesktop }: { isMobile?: boolean; isDesktop?: boolean }) {
+export function NavDrawer({ isMobile }: { isMobile?: boolean; isDesktop?: boolean }) {
   const pathname = usePathname();
   const router = useRouter();
 
