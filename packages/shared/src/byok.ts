@@ -44,3 +44,28 @@ export interface ByokPayload {
   xai?: string;
   deepseek?: string;
 }
+
+/**
+ * Pricing tier for a provider — used by the UI to group free vs paid
+ * cards and show appropriate cost hints.
+ */
+export type ProviderPricingTier = 'free' | 'low' | 'medium' | 'high';
+
+/**
+ * Client-safe subset of the runtime `ByokProviderSpec` from
+ * `@hamafx/ai`. Stripped of `factory` (function — can't cross the
+ * RSC server→client boundary) and `defaultModels` (server-only
+ * defaults — only the agent needs them). The server component
+ * projects the full spec into this shape before passing props.
+ *
+ * Keep this in sync with the prop types accepted by client
+ * components (ApiKeyCard, OnboardingWizard provider picker).
+ */
+export interface ProviderMeta {
+  id: string;
+  displayName: string;
+  familyName: string;
+  keyHint: string;
+  description: string;
+  pricingTier: ProviderPricingTier;
+}

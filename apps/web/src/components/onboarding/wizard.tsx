@@ -21,20 +21,12 @@ import { useRouter } from 'next/navigation';
 import { Check, ChevronRight, Eye, EyeOff, Loader2, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import type { ProviderMeta, ProviderPricingTier } from '@hamafx/shared';
 import { completeOnboardingAction } from '@/app/onboarding/actions';
-
-interface ProviderOption {
-  id: string;
-  displayName: string;
-  familyName: string;
-  keyHint: string;
-  description: string;
-  pricingTier: 'free' | 'low' | 'medium' | 'high';
-}
 
 interface OnboardingWizardProps {
   initialName: string;
-  providers: ProviderOption[];
+  providers: ProviderMeta[];
 }
 
 export function OnboardingWizard({ initialName, providers }: OnboardingWizardProps) {
@@ -106,7 +98,7 @@ export function OnboardingWizard({ initialName, providers }: OnboardingWizardPro
   }
 
   // Pricing labels shown on the provider cards.
-  const tierLabel = (tier: ProviderOption['pricingTier']) => {
+  const tierLabel = (tier: ProviderPricingTier) => {
     switch (tier) {
       case 'free': return 'Free tier';
       case 'low': return 'Low cost';

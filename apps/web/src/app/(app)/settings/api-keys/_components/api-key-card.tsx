@@ -20,10 +20,10 @@ import { useState, useTransition } from 'react';
 import { Eye, EyeOff, Loader2, CheckCircle2, XCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import type { ByokProviderSpec } from '@hamafx/ai';
+import type { ProviderMeta } from '@hamafx/shared';
 
 interface ApiKeyCardProps {
-  provider: ByokProviderSpec;
+  provider: ProviderMeta;
   currentValue: string;
 }
 

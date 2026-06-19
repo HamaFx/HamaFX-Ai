@@ -89,6 +89,15 @@ export {} from './encryption';
 // Env (server-only — do NOT import from client code)
 export { ServerEnvSchema, parseServerEnv, resolveDatabaseUrl } from './env';
 export type { ServerEnv } from './env';
+// BYOK type re-exports (intentionally NOT pulling node:crypto into
+// the client bundle).
+export {
+  PROVIDER_IDS,
+  type ByokPayload,
+  type ProviderId,
+  type ProviderMeta,
+  type ProviderPricingTier,
+} from './byok';
 // Secret helpers (env-secrets.ts) intentionally NOT re-exported from the
 // barrel — importing them pulls node:crypto + `server-only` into the
 // client bundle. Consumers must import directly:

@@ -66,14 +66,24 @@ export default async function ApiKeysSettingsPage() {
     .where(eq(schema.userSettings.userId, session.user.id));
 
   const decrypted = settings?.aiApiKeys ? decryptByok(settings.aiApiKeys) : null;
-  // Group providers: free / paid so the UI tells the user which keys have
-  // no ongoing cost. The registry defines `pricingTier` per provider.
+
+  // Strip server-only fields (factory, defaultModels) before crossing the
+  // server→client boundary. RSC serializes props; functions can't be
+  // sent. Group by pricing tier for the UI.
+  const toClientMeta = (p: (typeof BYOK_PROVIDERS_LIST)[number]) => ({
+    id: p.id,
+    displayName: p.displayName,
+    familyName: p.familyName,
+    keyHint: p.keyHint,
+    description: p.description,
+    pricingTier: p.pricingTier,
+  });
   const freeProviders = BYOK_PROVIDERS_LIST.filter(
     (p) => p.pricingTier === 'free',
-  );
+  ).map(toClientMeta);
   const paidProviders = BYOK_PROVIDERS_LIST.filter(
     (p) => p.pricingTier !== 'free',
-  );
+  ).map(toClientMeta);
 
   return (
     <div className="flex flex-col gap-6 max-w-2xl">
