@@ -103,8 +103,22 @@ export async function applyMigrations(): Promise<void> {
     const statements = rawSql.split('--> statement-breakpoint');
 
     for (const stmt of statements) {
-      const trimmed = stmt.trim();
-      if (!trimmed || trimmed.startsWith('--')) continue;
+      let trimmed = stmt.trim();
+      if (!trimmed) continue;
+
+      // Strip leading `--` comment lines AND blank lines from the chunk.
+      // Drizzle's statement-breakpoint separates executable statements,
+      // but the preceding lines are usually a `-- comment block` followed
+      // by a blank line before the actual statement. Skip both.
+      const lines = trimmed.split('\n');
+      while (
+        lines.length > 0 &&
+        (lines[0]!.trim() === '' || lines[0]!.trim().startsWith('--'))
+      ) {
+        lines.shift();
+      }
+      trimmed = lines.join('\n').trim();
+      if (!trimmed) continue;
 
       const safeStmt = sanitizeStatement(trimmed);
 
@@ -112,12 +126,18 @@ export async function applyMigrations(): Promise<void> {
         await db.execute(safeStmt);
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
-        // Silently skip pgvector-related failures
+        // Silently skip pgvector-related failures (PGlite lacks the
+        // vector extension; the schema has a `real[]` fallback).
         if (msg.includes('vector') || msg.includes('hnsw') || msg.includes('extension')) {
           continue;
         }
-        // Log but don't crash on other errors
-        console.warn(`[pglite] statement in ${entry.tag} failed: ${msg.slice(0, 80)}`);
+        // Anything else is a real bug — surface it so the dev sees
+        // the problem instead of a silently-broken DB.
+        // (Previously this branch swallowed the error, which is how
+        // we ended up with `_migrationsApplied=true` and zero tables.)
+        throw new Error(
+          `[pglite] statement in ${entry.tag} failed: ${msg.slice(0, 200)}`,
+        );
       }
     }
 
