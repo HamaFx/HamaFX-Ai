@@ -60,11 +60,12 @@ docker compose up -d
 git clone https://github.com/HamaFx/HamaFX-Ai
 cd HamaFX-Ai
 pnpm install
+echo 'GOOGLE_GENERATIVE_AI_API_KEY=*** >> .env.local
 pnpm dev:local
 # → http://localhost:3000
 ```
 
-> Embedded PGlite — Postgres runs in-process. No installs, no config. Migrations auto-run. PGVector features need Docker.
+> Embedded PGlite — Postgres runs in-process. No installs, no config. Migrations auto-run. **Secrets are auto-generated on first boot** — only `GOOGLE_GENERATIVE_AI_API_KEY` (or any AI provider key) is required to get a working chat. Sign up via `/auth/register` then connect a provider at `/onboarding`. PGVector features need Docker.
 
 ### <picture><source><img width="20" alt="Cloud" src="https://raw.githubusercontent.com/devicons/devicon/master/icons/googlecloud/googlecloud-original.svg"></picture> Cloud — production
 

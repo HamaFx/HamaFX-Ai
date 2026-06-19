@@ -203,3 +203,4 @@ For fundamental/technical turns: cheap model generates JSON plan, persisted as s
 - `docs/08-deployment.md` — production cloud deployment (Vercel + GCE)
 - `docs/09-testing.md` — test infrastructure, patterns
 - `docs/10-security.md` — auth, secrets, CSRF, middleware
+- `docs/14-first-run-setup.md` — new user onboarding, dev-secret autogen, BYOK registry
