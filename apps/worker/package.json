@@ -25,7 +25,7 @@
     "drizzle-orm": "^0.38.3",
     "node-cron": "^4.3.0",
     "postgres": "^3.4.5",
-    "zod": "^3.23.8"
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@hamafx/config": "workspace:*",
