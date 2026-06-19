@@ -16,31 +16,85 @@
  * limitations under the License.
  */
 
-import { useState } from 'react';
+import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
+import { Check, ChevronRight, Eye, EyeOff, Loader2, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Check, ChevronRight } from 'lucide-react';
 import { completeOnboardingAction } from '@/app/onboarding/actions';
 
-export function OnboardingWizard({ initialName }: { initialName: string }) {
+interface ProviderOption {
+  id: string;
+  displayName: string;
+  familyName: string;
+  keyHint: string;
+  description: string;
+  pricingTier: 'free' | 'low' | 'medium' | 'high';
+}
+
+interface OnboardingWizardProps {
+  initialName: string;
+  providers: ProviderOption[];
+}
+
+export function OnboardingWizard({ initialName, providers }: OnboardingWizardProps) {
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
   const [name, setName] = useState(initialName);
-  const [timezone, setTimezone] = useState(Intl.DateTimeFormat().resolvedOptions().timeZone);
+  const [timezone, setTimezone] = useState(
+    Intl.DateTimeFormat().resolvedOptions().timeZone,
+  );
   const [defaultSymbol, setDefaultSymbol] = useState('XAUUSD');
+  const [selectedProvider, setSelectedProvider] = useState<string | null>(null);
+  const [apiKey, setApiKey] = useState('');
+  const [revealed, setRevealed] = useState(false);
+  const [testState, setTestState] = useState<
+    { kind: 'idle' } | { kind: 'pending' } | { kind: 'ok' } | { kind: 'err'; message: string }
+  >({ kind: 'idle' });
+  const [, startTest] = useTransition();
 
   const handleNext = () => setStep((s) => s + 1);
+  const handleBack = () => setStep((s) => s - 1);
 
-  const handleSubmit = async () => {
+  function handleTestKey() {
+    if (!selectedProvider || apiKey.trim().length < 8) return;
+    setTestState({ kind: 'pending' });
+    startTest(async () => {
+      try {
+        const res = await fetch('/api/settings/test-provider', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ provider: selectedProvider, apiKey: apiKey.trim() }),
+        });
+        const data = (await res.json()) as { ok: boolean; error?: string };
+        if (!res.ok || !data.ok) {
+          setTestState({ kind: 'err', message: data.error ?? `HTTP ${res.status}` });
+        } else {
+          setTestState({ kind: 'ok' });
+        }
+      } catch (err) {
+        setTestState({
+          kind: 'err',
+          message: err instanceof Error ? err.message : String(err),
+        });
+      }
+    });
+  }
+
+  async function handleSubmit() {
     setLoading(true);
+    const payload = {
+      displayName: name,
+      timezone,
+      defaultSymbol,
+      apiKeys: selectedProvider && apiKey.trim().length > 0
+        ? { [selectedProvider]: apiKey.trim() }
+        : {},
+    };
     const fd = new FormData();
-    fd.append('name', name);
-    fd.append('timezone', timezone);
-    fd.append('defaultSymbol', defaultSymbol);
-
+    fd.append('payload', JSON.stringify(payload));
     try {
       await completeOnboardingAction(fd);
       router.push('/chat');
@@ -49,12 +103,23 @@ export function OnboardingWizard({ initialName }: { initialName: string }) {
       console.error(err);
       setLoading(false);
     }
+  }
+
+  // Pricing labels shown on the provider cards.
+  const tierLabel = (tier: ProviderOption['pricingTier']) => {
+    switch (tier) {
+      case 'free': return 'Free tier';
+      case 'low': return 'Low cost';
+      case 'medium': return 'Paid';
+      case 'high': return 'Premium';
+    }
   };
 
   return (
     <div className="card-premium p-6">
+      {/* Stepper */}
       <div className="mb-8 flex items-center justify-between">
-        {[1, 2, 3].map((i) => (
+        {[1, 2, 3, 4].map((i) => (
           <div key={i} className="flex items-center gap-2">
             <div
               className={`flex size-8 items-center justify-center rounded-full text-sm font-semibold transition-colors ${
@@ -63,9 +128,9 @@ export function OnboardingWizard({ initialName }: { initialName: string }) {
             >
               {step > i ? <Check className="size-4" /> : i}
             </div>
-            {i < 3 && (
+            {i < 4 && (
               <div
-                className={`h-px w-12 sm:w-24 transition-colors ${
+                className={`h-px w-12 sm:w-20 transition-colors ${
                   step > i ? 'bg-brand' : 'bg-surface-elevated'
                 }`}
               />
@@ -123,7 +188,7 @@ export function OnboardingWizard({ initialName }: { initialName: string }) {
             </select>
           </div>
           <div className="flex gap-4">
-            <Button variant="secondary" className="flex-1" onClick={() => setStep(1)}>
+            <Button variant="secondary" className="flex-1" onClick={handleBack}>
               Back
             </Button>
             <Button className="flex-1" onClick={handleNext}>
@@ -136,27 +201,166 @@ export function OnboardingWizard({ initialName }: { initialName: string }) {
       {step === 3 && (
         <div className="flex flex-col gap-6 animate-in fade-in slide-in-from-right-4">
           <div>
-            <h2 className="text-xl font-semibold text-fg mb-1">Bring Your Own Key (BYOK)</h2>
+            <h2 className="text-xl font-semibold text-fg mb-1">Connect an AI Provider</h2>
             <p className="text-sm text-fg-subtle">
-              HamaFX-Ai is BYOK. You'll need to provide your own API keys for the AI models (OpenAI, Anthropic, or Google) to use the copilot features. You can set this up later in Settings.
+              HamaFX-Ai is BYOK (Bring Your Own Key). Pick a provider below and paste
+              your API key. You can add more or change providers later in Settings.
             </p>
           </div>
-          
-          <div className="rounded-lg border border-surface-elevated bg-surface p-4">
-            <p className="text-sm text-fg font-medium mb-2">We'll head to the Settings page next.</p>
-            <ul className="list-disc list-inside text-sm text-fg-subtle space-y-1">
-              <li>Add your API keys securely</li>
-              <li>Configure Telegram alerts</li>
-              <li>Customize your watchlist</li>
-            </ul>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-64 overflow-y-auto pr-1">
+            {providers.map((p) => {
+              const selected = selectedProvider === p.id;
+              return (
+                <button
+                  key={p.id}
+                  type="button"
+                  onClick={() => {
+                    setSelectedProvider(p.id);
+                    setTestState({ kind: 'idle' });
+                  }}
+                  className={`text-left rounded-lg border p-3 transition-colors ${
+                    selected
+                      ? 'border-brand bg-brand/10 ring-1 ring-brand'
+                      : 'border-surface-elevated bg-surface hover:border-fg-subtle'
+                  }`}
+                >
+                  <div className="flex items-baseline justify-between gap-2">
+                    <div className="text-sm font-medium text-fg">{p.displayName}</div>
+                    <div className="text-xs text-fg-subtle">{tierLabel(p.pricingTier)}</div>
+                  </div>
+                  <div className="mt-1 text-xs text-fg-subtle line-clamp-2">
+                    {p.description}
+                  </div>
+                </button>
+              );
+            })}
           </div>
 
+          {selectedProvider && (
+            <div className="flex flex-col gap-3 animate-in fade-in slide-in-from-top-2">
+              <label className="text-sm font-medium text-fg">
+                API Key for {providers.find((p) => p.id === selectedProvider)?.displayName}
+              </label>
+              <div className="relative">
+                <Input
+                  type={revealed ? 'text' : 'password'}
+                  value={apiKey}
+                  onChange={(e) => {
+                    setApiKey(e.target.value);
+                    if (testState.kind !== 'idle') setTestState({ kind: 'idle' });
+                  }}
+                  placeholder={providers.find((p) => p.id === selectedProvider)?.keyHint}
+                  autoComplete="off"
+                  spellCheck={false}
+                  className="pr-20"
+                />
+                <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={() => setRevealed((r) => !r)}
+                    className="p-1 text-fg-subtle hover:text-fg transition-colors"
+                    aria-label={revealed ? 'Hide key' : 'Show key'}
+                  >
+                    {revealed ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                  </button>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  disabled={apiKey.trim().length < 8 || testState.kind === 'pending'}
+                  onClick={handleTestKey}
+                >
+                  {testState.kind === 'pending' ? (
+                    <>
+                      <Loader2 className="mr-1 size-3 animate-spin" />
+                      Testing
+                    </>
+                  ) : (
+                    'Test Connection'
+                  )}
+                </Button>
+                {testState.kind === 'ok' && (
+                  <span className="flex items-center gap-1 text-xs text-emerald-400">
+                    <Check className="size-3" /> Key looks valid
+                  </span>
+                )}
+                {testState.kind === 'err' && (
+                  <span className="text-xs text-red-400">{testState.message}</span>
+                )}
+              </div>
+            </div>
+          )}
+
+          {!selectedProvider && (
+            <p className="text-xs text-fg-subtle">
+              Tip: choose a free-tier provider to try things out without spending.
+            </p>
+          )}
+
           <div className="flex gap-4">
-            <Button variant="secondary" className="flex-1" onClick={() => setStep(2)}>
+            <Button variant="secondary" className="flex-1" onClick={handleBack}>
               Back
             </Button>
-            <Button className="flex-1" onClick={handleSubmit} loading={loading}>
-              Finish Setup
+            <Button
+              className="flex-1"
+              onClick={handleNext}
+              disabled={!selectedProvider || apiKey.trim().length < 8}
+            >
+              Continue <ChevronRight className="ml-2 size-4" />
+            </Button>
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              setSelectedProvider(null);
+              setApiKey('');
+              setTestState({ kind: 'idle' });
+              handleNext();
+            }}
+            className="text-xs text-fg-subtle hover:text-fg transition-colors"
+          >
+            Skip for now (configure later in Settings)
+          </button>
+        </div>
+      )}
+
+      {step === 4 && (
+        <div className="flex flex-col gap-6 animate-in fade-in slide-in-from-right-4">
+          <div>
+            <h2 className="text-xl font-semibold text-fg mb-1">All set!</h2>
+            <p className="text-sm text-fg-subtle">
+              Here's what we'll configure for you:
+            </p>
+          </div>
+          <ul className="list-disc list-inside text-sm text-fg space-y-1">
+            <li>Display name: <span className="text-fg-subtle">{name || '—'}</span></li>
+            <li>Timezone: <span className="text-fg-subtle">{timezone}</span></li>
+            <li>Default symbol: <span className="text-fg-subtle">{defaultSymbol}</span></li>
+            <li>
+              AI provider:{' '}
+              <span className="text-fg-subtle">
+                {selectedProvider
+                  ? `${providers.find((p) => p.id === selectedProvider)?.displayName} (key saved)`
+                  : 'skipped — set up later'}
+              </span>
+            </li>
+            <li>Watchlist seeded with XAUUSD, EURUSD, GBPUSD</li>
+          </ul>
+          <div className="flex gap-4">
+            <Button variant="secondary" className="flex-1" onClick={handleBack}>
+              Back
+            </Button>
+            <Button
+              className="flex-1"
+              onClick={handleSubmit}
+              loading={loading}
+              disabled={loading}
+            >
+              <Sparkles className="mr-1 size-4" /> Finish Setup
             </Button>
           </div>
         </div>

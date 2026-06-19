@@ -23,6 +23,16 @@ export { buildLiveSnapshot } from './context';
 export * from './wait-until';
 export * from './telegram/webhook';
 export {
+  BYOK_PROVIDERS,
+  BYOK_PROVIDERS_LIST,
+  getProvider,
+  defaultModelFor,
+  type ByokProviderSpec,
+  type ByokProviderModels,
+  type ModelDomain,
+} from './byok-providers';
+export { resolveUserModel, testProviderKey, type ResolveUserDomain } from './model';
+export {
   estimateCostUsd,
   dailySpendUsd,
   reservedSpendUsd,

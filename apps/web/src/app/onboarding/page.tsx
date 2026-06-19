@@ -19,6 +19,7 @@ import { auth } from '@/auth';
 import { getDb, schema } from '@hamafx/db';
 import { eq } from 'drizzle-orm';
 import { OnboardingWizard } from '@/components/onboarding/wizard';
+import { BYOK_PROVIDERS_LIST } from '@hamafx/ai';
 
 export default async function OnboardingPage() {
   const session = await auth();
@@ -36,13 +37,28 @@ export default async function OnboardingPage() {
     redirect('/chat');
   }
 
+  // Build the provider list for the wizard. We strip the factory
+  // function because it's a server-only import and the client component
+  // only needs the metadata.
+  const providers = BYOK_PROVIDERS_LIST.map((p) => ({
+    id: p.id,
+    displayName: p.displayName,
+    familyName: p.familyName,
+    keyHint: p.keyHint,
+    description: p.description,
+    pricingTier: p.pricingTier,
+  }));
+
   return (
     <div className="flex flex-col gap-8">
       <div className="text-center">
         <h1 className="text-3xl font-bold tracking-tight text-white mb-2">Welcome to HamaFX-Ai</h1>
         <p className="text-fg-subtle">Let's configure your workspace.</p>
       </div>
-      <OnboardingWizard initialName={session.user.name || ''} />
+      <OnboardingWizard
+        initialName={session.user.name || ''}
+        providers={providers}
+      />
     </div>
   );
 }

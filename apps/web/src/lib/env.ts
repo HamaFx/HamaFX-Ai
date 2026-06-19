@@ -38,12 +38,11 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import {
+  generateSecret,
   AUTO_GENERATED_SECRETS,
   SECRET_MIN_BYTES,
-  generateSecret,
-  parseServerEnv,
-  type ServerEnv,
-} from '@hamafx/shared';
+} from '@hamafx/shared/env-secrets';
+import { parseServerEnv, type ServerEnv } from '@hamafx/shared';
 import { z } from 'zod';
 
 const AuthEnvSchema = z.object({

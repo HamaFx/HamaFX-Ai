@@ -19,8 +19,8 @@ import {
   AUTO_GENERATED_SECRETS,
   SECRET_MIN_BYTES,
   generateSecret,
-  parseServerEnv,
-} from '../src/env';
+} from '../src/env-secrets';
+import { parseServerEnv } from '../src/env';
 
 const MINIMAL_ENV = {
   // At least one AI transport AND one DB URL must be configured.

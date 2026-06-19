@@ -229,6 +229,9 @@ importers:
 
   packages/ai:
     dependencies:
+      '@ai-sdk/anthropic':
+        specifier: ^2.0.79
+        version: 2.0.79(zod@3.25.76)
       '@ai-sdk/gateway':
         specifier: ^1.0.0
         version: 1.0.41(zod@3.25.76)
@@ -238,6 +241,9 @@ importers:
       '@ai-sdk/google-vertex':
         specifier: 3.0.139
         version: 3.0.139(zod@3.25.76)
+      '@ai-sdk/openai-compatible':
+        specifier: ^1.0.39
+        version: 1.0.39(zod@3.25.76)
       '@hamafx/data':
         specifier: workspace:*
         version: link:../data

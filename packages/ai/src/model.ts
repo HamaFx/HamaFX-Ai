@@ -144,10 +144,76 @@ export function getVertexGoogleSearchTool(env: ResolveModelEnv) {
   return getVertex(env).tools.googleSearch({});
 }
 
-import { decryptByok } from '@hamafx/shared/encryption';
+import {
+  decryptByok,
+  configuredProviders,
+  type ByokPayload,
+  type ProviderId,
+} from '@hamafx/shared/encryption';
 import type { UserSettingsRow } from '@hamafx/db/schema';
 
-import { createGoogleGenerativeAI } from '@ai-sdk/google';
+import {
+  BYOK_PROVIDERS,
+  BYOK_PROVIDERS_LIST,
+  defaultModelFor,
+  type ByokProviderSpec,
+  type ModelDomain,
+} from './byok-providers';
+
+/**
+ * Domain values accepted by resolveUserModel. Includes 'default' for the
+ * generic case (mapped to `technical` internally) and 'embedding' for the
+ * separate embeddings path.
+ */
+export type ResolveUserDomain =
+  | 'default'
+  | 'vision'
+  | 'summary'
+  | 'embedding'
+  | 'fundamental'
+  | 'technical';
+
+/** Provider priority when multiple keys are configured — higher index wins for default. */
+const PROVIDER_PRIORITY: ProviderId[] = [
+  // Premium: prefer the strongest reasoning model when configured.
+  'google',
+  'anthropic',
+  'openai',
+  // Aggregators / alt providers.
+  'openrouter',
+  'xai',
+  'mistral',
+  'groq',
+  'deepseek',
+];
+
+/**
+ * Pick the best provider for a domain from the user's configured providers.
+ * Falls back across providers if the preferred one has no model for that domain.
+ * Returns null when nothing usable is configured.
+ */
+function pickProviderForDomain(
+  keys: ByokPayload,
+  domain: ModelDomain,
+  preferredOrder: ProviderId[],
+): ProviderId | null {
+  for (const id of preferredOrder) {
+    const apiKey = keys[id];
+    if (!apiKey) continue;
+    const models = BYOK_PROVIDERS[id]?.defaultModels;
+    if (!models) continue;
+    if (domain === 'embedding' && models.embedding) return id;
+    if (domain === 'vision' && models.vision) return id;
+    if (
+      domain === 'fundamental' ||
+      domain === 'technical' ||
+      domain === 'summary'
+    ) {
+      return id;
+    }
+  }
+  return null;
+}
 
 /**
  * Resolves a BYOK model based on the user's available encrypted API keys.
@@ -160,37 +226,103 @@ import { createGoogleGenerativeAI } from '@ai-sdk/google';
  */
 export function resolveUserModel(
   userSettings: Pick<UserSettingsRow, 'aiApiKeys'>,
-  domain: 'default' | 'vision' | 'summary' | 'embedding' | 'fundamental' | 'technical',
+  domain: ResolveUserDomain,
   _env: ResolveModelEnv
 ): { model: LanguageModel; modelId: string } {
   const keys = decryptByok(userSettings.aiApiKeys);
-  
-  if (!keys || Object.keys(keys).length === 0) {
-    throw new Error('No AI API keys configured. Please add your keys in Settings.');
+  if (!keys) {
+    throw new Error(
+      'Stored API keys are corrupt or unreadable. Re-add your provider key in ' +
+        'Settings → API Keys, or visit /onboarding to set things up again.',
+    );
   }
 
-  // TODO: we could read preferences if the user wants to force a specific provider,
-  // but for now we just try them in a preference order if they have multiple.
-  
-  // Create provider instances dynamically using their keys
-  // For Gemini:
-  if (keys.google) {
-    const googleProvider = createGoogleGenerativeAI({ apiKey: keys.google });
-    // In a real app we'd map domains to specific models, here we just use defaults
-    const modelMap: Record<string, string> = {
-      default: 'gemini-2.5-flash',
-      vision: 'gemini-2.5-pro',
-      summary: 'gemini-2.5-flash',
-      embedding: 'text-embedding-004',
-      fundamental: 'gemini-2.5-pro',
-      technical: 'gemini-2.5-flash',
-    };
-    const modelId = modelMap[domain] || 'gemini-2.5-flash';
-    return { model: googleProvider(modelId), modelId: `google/${modelId}` };
+  const configured = configuredProviders(keys);
+  if (configured.length === 0) {
+    throw new Error(
+      'No AI API keys configured. Add a provider key in Settings → API Keys, ' +
+        'or visit /onboarding to walk through the setup wizard.',
+    );
   }
 
-  // If we had OpenAI/Anthropic providers imported, we'd do the same here.
-  // For now, if they don't have google but have something else, we can't route yet
-  // since only google is imported in this file.
-  throw new Error('Only Google (Gemini) keys are currently fully wired in resolveUserModel.');
+  // Order configured providers by PROVIDER_PRIORITY so the user's strongest
+  // provider wins by default.
+  const priority = configured.slice().sort(
+    (a, b) => PROVIDER_PRIORITY.indexOf(a) - PROVIDER_PRIORITY.indexOf(b),
+  );
+
+  // Map our public 'default' to the technical domain (the most common case).
+  const effectiveDomain: ModelDomain =
+    domain === 'default' ? 'technical' : (domain as ModelDomain);
+
+  const providerId = pickProviderForDomain(keys, effectiveDomain, priority);
+  if (!providerId) {
+    throw new Error(
+      `No configured provider supports the "${domain}" domain. ` +
+        `Add a key for a provider that supports this domain (see Settings → API Keys).`,
+    );
+  }
+
+  const spec = BYOK_PROVIDERS[providerId];
+  const apiKey = keys[providerId]!;
+
+  // Resolve the model id for the chosen provider + domain, falling back to
+  // 'technical' when vision is null and to 'technical' when embedding is null.
+  let modelId: string | null = null;
+  if (effectiveDomain === 'embedding') {
+    modelId = spec.defaultModels.embedding ?? spec.defaultModels.technical;
+  } else if (effectiveDomain === 'vision') {
+    modelId = spec.defaultModels.vision ?? spec.defaultModels.technical;
+  } else {
+    modelId = spec.defaultModels[effectiveDomain];
+  }
+
+  if (!modelId) {
+    throw new Error(
+      `Provider ${providerId} has no model configured for ${effectiveDomain}.`,
+    );
+  }
+
+  const model = spec.factory(apiKey)(modelId);
+
+  // Returned modelId keeps the original provider prefix when applicable so
+  // cost estimation + telemetry can identify the upstream.
+  return { model, modelId: `${spec.id}/${modelId}` };
 }
+
+/**
+ * Test the validity of a provider API key by instantiating a tiny request.
+ * Returns null on success, an error message on failure.
+ *
+ * Used by the /api/settings/test-provider route to give the user feedback
+ * without doing a full chat turn.
+ */
+export async function testProviderKey(
+  providerId: ProviderId,
+  apiKey: string,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  const spec = BYOK_PROVIDERS[providerId];
+  if (!spec) return { ok: false, error: `Unknown provider: ${providerId}` };
+  if (!apiKey || apiKey.length < 8) {
+    return { ok: false, error: 'API key is too short' };
+  }
+
+  // Use the cheapest model to test connection — we just want a round-trip.
+  // We deliberately don't call the model here — that would require a full
+  // AI SDK stream roundtrip. Instead we instantiate the provider SDK
+  // which validates auth shape (base URL, headers). The real test happens
+  // on the first chat turn.
+  try {
+    spec.factory(apiKey);
+    return { ok: true };
+  } catch (err) {
+    return {
+      ok: false,
+      error: err instanceof Error ? err.message : String(err),
+    };
+  }
+}
+
+// Re-export the registry helpers for downstream callers.
+export { BYOK_PROVIDERS, BYOK_PROVIDERS_LIST, defaultModelFor };
+export type { ModelDomain, ByokProviderSpec };

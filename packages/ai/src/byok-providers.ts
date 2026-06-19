@@ -1,0 +1,297 @@
+/**
+ * Copyright 2026 HamaFX
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+// BYOK provider registry.
+//
+// Single source of truth for every AI provider the app supports. The
+// encryption shape in `@hamafx/shared/encryption` (ByokPayload) keys
+// keys by ProviderId — both lists must stay in sync. Adding a provider:
+//
+//   1. Add the id to PROVIDER_IDS in @hamafx/shared/encryption.ts.
+//   2. Add the field to the ByokPayload interface there.
+//   3. Add a ByokProviderSpec entry to BYOK_PROVIDERS below.
+//   4. (If needed) add the corresponding @ai-sdk/* dep to packages/ai.
+//
+// All `openai-compatible` providers route through `@ai-sdk/openai-compatible`
+// with a custom `baseURL`. Each spec's `factory` returns a function that
+// takes a model id and returns an AI SDK `LanguageModel` ready for
+// streamText.
+
+import { createAnthropic } from '@ai-sdk/anthropic';
+import { createGoogleGenerativeAI } from '@ai-sdk/google';
+import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
+import type { LanguageModel } from 'ai';
+import { PROVIDER_IDS, type ProviderId } from '@hamafx/shared/byok';
+
+/** The five "domains" the agent routes between (see packages/ai/src/routing.ts). */
+export type ModelDomain = 'fundamental' | 'technical' | 'summary' | 'vision' | 'embedding';
+
+/** Per-domain default model ids for a provider. */
+export interface ByokProviderModels {
+  fundamental: string;
+  technical: string;
+  summary: string;
+  /** `null` means the provider has no vision-capable model — caller falls back to `technical`. */
+  vision: string | null;
+  /** `null` means the provider doesn't host an embedding model. */
+  embedding: string | null;
+}
+
+export interface ByokProviderSpec {
+  id: ProviderId;
+  /** Full display name, e.g. "Anthropic (Claude)". */
+  displayName: string;
+  /** Short model-family name, e.g. "Claude", "Gemini". */
+  familyName: string;
+  /** Common key prefix shown as a placeholder hint, e.g. "sk-ant-…". */
+  keyHint: string;
+  /** One-line description shown in the picker. */
+  description: string;
+  /** Rough pricing tier so the UI can order providers cheapest-first. */
+  pricingTier: 'free' | 'low' | 'medium' | 'high';
+  defaultModels: ByokProviderModels;
+  /**
+   * Build a `(modelId) => LanguageModel` from this provider's API key.
+   * Implementations should NOT cache the underlying SDK instance across
+   * keys — the model.ts resolver caches at the modelId level instead.
+   */
+  factory: (apiKey: string) => (modelId: string) => LanguageModel;
+}
+
+// ---------------------------------------------------------------------
+// Specs
+// ---------------------------------------------------------------------
+
+const GOOGLE: ByokProviderSpec = {
+  id: 'google',
+  displayName: 'Google AI (Gemini)',
+  familyName: 'Gemini',
+  keyHint: 'AIza…',
+  description: 'Google Gemini models — generous free tier, fast, vision-capable.',
+  pricingTier: 'free',
+  defaultModels: {
+    fundamental: 'gemini-2.5-pro',
+    technical: 'gemini-2.5-flash',
+    summary: 'gemini-2.5-flash-lite',
+    vision: 'gemini-2.5-pro',
+    embedding: 'text-embedding-004',
+  },
+  factory: (apiKey) => {
+    const provider = createGoogleGenerativeAI({ apiKey });
+    return (modelId) => provider(modelId);
+  },
+};
+
+const ANTHROPIC: ByokProviderSpec = {
+  id: 'anthropic',
+  displayName: 'Anthropic (Claude)',
+  familyName: 'Claude',
+  keyHint: 'sk-ant-…',
+  description: 'Claude Sonnet / Haiku — strong reasoning, slower.',
+  pricingTier: 'medium',
+  defaultModels: {
+    fundamental: 'claude-sonnet-4-20250514',
+    technical: 'claude-sonnet-4-20250514',
+    summary: 'claude-haiku-4-5-20251001',
+    vision: 'claude-sonnet-4-20250514',
+    embedding: null, // Anthropic doesn't host an embedding model
+  },
+  factory: (apiKey) => {
+    const provider = createAnthropic({ apiKey });
+    return (modelId) => provider(modelId);
+  },
+};
+
+const OPENAI: ByokProviderSpec = {
+  id: 'openai',
+  displayName: 'OpenAI (ChatGPT)',
+  familyName: 'GPT',
+  keyHint: 'sk-…',
+  description: 'GPT-4o / GPT-4o-mini — fast, vision-capable, embeds available.',
+  pricingTier: 'medium',
+  defaultModels: {
+    fundamental: 'gpt-4o',
+    technical: 'gpt-4o',
+    summary: 'gpt-4o-mini',
+    vision: 'gpt-4o',
+    embedding: 'text-embedding-3-small',
+  },
+  // OpenAI uses the OpenAI-compatible shim pointed at api.openai.com
+  factory: (apiKey) => {
+    const provider = createOpenAICompatible({
+      name: 'openai',
+      apiKey,
+      baseURL: 'https://api.openai.com/v1',
+    });
+    return (modelId) => provider(modelId);
+  },
+};
+
+const GROQ: ByokProviderSpec = {
+  id: 'groq',
+  displayName: 'Groq',
+  familyName: 'Llama / Mixtral',
+  keyHint: 'gsk_…',
+  description: 'Groq inference — extremely fast open-source models, free tier.',
+  pricingTier: 'free',
+  defaultModels: {
+    fundamental: 'llama-3.3-70b-versatile',
+    technical: 'llama-3.1-8b-instant',
+    summary: 'llama-3.1-8b-instant',
+    vision: 'llama-3.2-90b-vision-preview',
+    embedding: null,
+  },
+  factory: (apiKey) => {
+    const provider = createOpenAICompatible({
+      name: 'groq',
+      apiKey,
+      baseURL: 'https://api.groq.com/openai/v1',
+    });
+    return (modelId) => provider(modelId);
+  },
+};
+
+const MISTRAL: ByokProviderSpec = {
+  id: 'mistral',
+  displayName: 'Mistral AI',
+  familyName: 'Mistral',
+  keyHint: '…',
+  description: 'Mistral models — strong open weights, EU-hosted option.',
+  pricingTier: 'low',
+  defaultModels: {
+    fundamental: 'mistral-large-latest',
+    technical: 'mistral-small-latest',
+    summary: 'mistral-small-latest',
+    vision: 'pixtral-large-latest',
+    embedding: 'mistral-embed',
+  },
+  factory: (apiKey) => {
+    const provider = createOpenAICompatible({
+      name: 'mistral',
+      apiKey,
+      baseURL: 'https://api.mistral.ai/v1',
+    });
+    return (modelId) => provider(modelId);
+  },
+};
+
+const OPENROUTER: ByokProviderSpec = {
+  id: 'openrouter',
+  displayName: 'OpenRouter',
+  familyName: 'Any model',
+  keyHint: 'sk-or-…',
+  description: 'OpenRouter — one key for 100+ models from every provider.',
+  pricingTier: 'medium',
+  defaultModels: {
+    fundamental: 'anthropic/claude-sonnet-4',
+    technical: 'openai/gpt-4o',
+    summary: 'openai/gpt-4o-mini',
+    vision: 'anthropic/claude-sonnet-4',
+    embedding: 'openai/text-embedding-3-small',
+  },
+  factory: (apiKey) => {
+    const provider = createOpenAICompatible({
+      name: 'openrouter',
+      apiKey,
+      baseURL: 'https://openrouter.ai/api/v1',
+    });
+    return (modelId) => provider(modelId);
+  },
+};
+
+const XAI: ByokProviderSpec = {
+  id: 'xai',
+  displayName: 'xAI (Grok)',
+  familyName: 'Grok',
+  keyHint: 'xai-…',
+  description: 'Grok models from xAI — strong reasoning, real-time knowledge.',
+  pricingTier: 'medium',
+  defaultModels: {
+    fundamental: 'grok-2-latest',
+    technical: 'grok-2-latest',
+    summary: 'grok-2-mini',
+    vision: 'grok-2-vision-latest',
+    embedding: null,
+  },
+  factory: (apiKey) => {
+    const provider = createOpenAICompatible({
+      name: 'xai',
+      apiKey,
+      baseURL: 'https://api.x.ai/v1',
+    });
+    return (modelId) => provider(modelId);
+  },
+};
+
+const DEEPSEEK: ByokProviderSpec = {
+  id: 'deepseek',
+  displayName: 'DeepSeek',
+  familyName: 'DeepSeek',
+  keyHint: 'sk-…',
+  description: 'DeepSeek — strong open-source reasoning at very low cost.',
+  pricingTier: 'low',
+  defaultModels: {
+    fundamental: 'deepseek-chat',
+    technical: 'deepseek-chat',
+    summary: 'deepseek-chat',
+    vision: null, // DeepSeek's API has no vision model as of 2026
+    embedding: null,
+  },
+  factory: (apiKey) => {
+    const provider = createOpenAICompatible({
+      name: 'deepseek',
+      apiKey,
+      baseURL: 'https://api.deepseek.com/v1',
+    });
+    return (modelId) => provider(modelId);
+  },
+};
+
+export const BYOK_PROVIDERS: Record<ProviderId, ByokProviderSpec> = {
+  google: GOOGLE,
+  anthropic: ANTHROPIC,
+  openai: OPENAI,
+  groq: GROQ,
+  mistral: MISTRAL,
+  openrouter: OPENROUTER,
+  xai: XAI,
+  deepseek: DEEPSEEK,
+};
+
+/** Ordered list of all providers — handy for iterating in UI. */
+export const BYOK_PROVIDERS_LIST: ByokProviderSpec[] = PROVIDER_IDS.map(
+  (id) => BYOK_PROVIDERS[id],
+);
+
+/** Lookup helper that throws a clear error if the id is unknown. */
+export function getProvider(id: ProviderId): ByokProviderSpec {
+  const spec = BYOK_PROVIDERS[id];
+  if (!spec) {
+    throw new Error(`Unknown BYOK provider: ${id}. Add it to BYOK_PROVIDERS.`);
+  }
+  return spec;
+}
+
+/**
+ * Pick the default model id for a provider + domain. If the provider
+ * has no model for a domain (e.g. DeepSeek has no vision), returns
+ * null so the caller can fall back.
+ */
+export function defaultModelFor(id: ProviderId, domain: ModelDomain): string | null {
+  const spec = BYOK_PROVIDERS[id];
+  if (!spec) return null;
+  return spec.defaultModels[domain];
+}

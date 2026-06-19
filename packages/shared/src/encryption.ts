@@ -28,7 +28,10 @@
 // pointing the developer at whichever client import is the culprit.
 //
 // Design:
-//   - Plaintext shape: { openai?: string; anthropic?: string; google?: string }
+//   - Plaintext shape: { [providerId]: apiKey } — see PROVIDER_IDS for the
+//     exhaustive list of supported keys. Adding a provider means adding
+//     one field here plus a matching entry in the BYOK registry in
+//     @hamafx/ai (packages/ai/src/byok-providers.ts).
 //   - Encrypted format: hex(iv) + "." + hex(ciphertext) + "." + hex(authTag)
 //   - Never log plaintext keys. Errors reference field names only.
 
@@ -40,12 +43,17 @@ const ALGORITHM = 'aes-256-gcm';
 const IV_LENGTH = 12; // 96 bits, standard for GCM
 const AUTH_TAG_LENGTH = 16; // 128 bits
 
-/** Shape of the decrypted BYOK payload stored in user_settings.ai_api_keys. */
-export interface ByokPayload {
-  openai?: string;
-  anthropic?: string;
-  google?: string;
-}
+/**
+ * Canonical list of BYOK provider ids. The encryption payload is keyed
+ * by these strings. The runtime registry lives in
+ * `@hamafx/ai/src/byok-providers.ts` — keep the two in sync.
+ *
+ * The types live in `./byok.ts` so test files can reference them
+ * without pulling node:crypto / `server-only` into the test bundle.
+ * Re-exported here for the existing import path.
+ */
+export { PROVIDER_IDS, type ByokPayload, type ProviderId } from './byok';
+import { PROVIDER_IDS, type ByokPayload, type ProviderId } from './byok';
 
 function getEncryptionKey(): Buffer {
   const secret = process.env.ENCRYPTION_SECRET;
@@ -120,4 +128,13 @@ export function describeByok(payload: ByokPayload | null): string {
     .filter(([, v]) => typeof v === 'string' && v.length > 0)
     .map(([k]) => k);
   return providers.length > 0 ? providers.join(', ') : 'none';
+}
+
+/** List provider ids that have a non-empty key in the given payload. */
+export function configuredProviders(payload: ByokPayload | null): ProviderId[] {
+  if (!payload) return [];
+  return PROVIDER_IDS.filter((id) => {
+    const v = payload[id];
+    return typeof v === 'string' && v.length > 0;
+  });
 }

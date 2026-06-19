@@ -8,7 +8,9 @@
     ".": "./src/index.ts",
     "./schemas/*": "./src/schemas/*.ts",
     "./ai/*": "./src/ai/*.ts",
+    "./byok": "./src/byok.ts",
     "./env": "./src/env.ts",
+    "./env-secrets": "./src/env-secrets.ts",
     "./errors": "./src/errors.ts",
     "./encryption": "./src/encryption.ts",
     "./logger": "./src/logger.ts"
