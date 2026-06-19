@@ -51,7 +51,7 @@ const LOGIN_RATE_LIMIT = Number(process.env.LOGIN_RATE_LIMIT ?? '10');
 const _nextAuth = NextAuth as any;
 export const { handlers, auth, signIn, signOut } = _nextAuth({
   ...authConfig,
-  adapter: DrizzleAdapter(getDb()),
+  ...(process.env.DATABASE_URL || process.env.POSTGRES_URL ? { adapter: DrizzleAdapter(getDb()) } : {}),
   providers: [
     Credentials({
       name: 'Email + Password',
