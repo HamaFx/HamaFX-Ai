@@ -12,9 +12,9 @@
  * luminance + lower chroma than the previous amber so it sits cleanly
  * against pure black instead of competing.
  *
- * Contrast: --color-fg-subtle (60% L) clears WCAG AA for body text on
- * the default canvas. Pair with `text-[10px]`/`text-[11px]` only when
- * secondary meta is decorative.
+ * Contrast: --color-fg-subtle bumped from 60% to 68% L in R1 of the frontend
+ * redesign (PLAN.md §2.1) — the previous value cleared AA on bg-elev-1 by a
+ * hair and failed AA on bg-elev-2. 68% L clears both with margin.
  * ------------------------------------------------------------------------- */
 
 @theme {
@@ -35,7 +35,7 @@
   /* Text */
   --color-fg: oklch(96% 0 0);
   --color-fg-muted: oklch(76% 0 0);
-  --color-fg-subtle: oklch(60% 0 0);
+  --color-fg-subtle: oklch(68% 0 0);
 
   /* Brand — refined champagne gold */
   --color-brand: oklch(82% 0.14 85);
@@ -53,12 +53,13 @@
   --color-warn: oklch(82% 0.14 80);
   --color-info: oklch(74% 0.14 230);
 
-  /* Radii */
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 18px;
-  --radius-xl: 24px;
-  --radius-2xl: 32px;
+  /* Radii - Refined for terminal aesthetic */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-2xl: 20px;
+  --radius-pill: 999px;
 
   /* Shadows — deeper to read against true black */
   --shadow-sm: 0 1px 2px 0 oklch(0% 0 0 / 0.4);
@@ -78,6 +79,30 @@
   --text-sm: clamp(0.8rem, 0.7rem + 0.5vw, 0.875rem);
   --text-base: clamp(0.95rem, 0.85rem + 0.5vw, 1rem);
   --text-lg: clamp(1rem, 0.9rem + 0.6vw, 1.125rem);
+
+  /* Display scale — page titles, hero numbers, section heads.
+   * Tighter tracking at larger sizes for a deliberate, crafted feel.
+   * Apply via `text-display-{size}` utility (declared below). */
+  --text-display-2xl: clamp(2.25rem, 1.5rem + 3.5vw, 3.5rem);
+  --text-display-xl: clamp(1.75rem, 1.2rem + 2.5vw, 2.5rem);
+  --text-display-lg: clamp(1.375rem, 1rem + 1.5vw, 1.75rem);
+  --text-display-md: clamp(1.125rem, 1rem + 0.5vw, 1.25rem);
+
+  /* Body scale — replaces ad-hoc `text-[11px]`, `text-[10px]`, `text-xs`
+   * across the codebase. `text-body-sm` is the workhorse for meta, helper,
+   * and dense lists. */
+  --text-body-lg: 1.0625rem;
+  --text-body: 0.9375rem;
+  --text-body-sm: 0.8125rem;
+
+  /* Caption — uppercase eyebrow labels, section dividers. */
+  --text-caption: 0.6875rem;
+
+  /* Numeric scale — separate from the prose scale so prices and headings
+   * can both feel intentional. Always pair with `tabular-nums`. */
+  --text-numeric-xl: 1.5rem;
+  --text-numeric-lg: 1.125rem;
+  --text-numeric: 0.875rem;
 
   --ease-organic: cubic-bezier(0.2, 0.8, 0.2, 1);
 }
