@@ -39,11 +39,13 @@ vi.hoisted(() => {
   process.env.CRON_SECRET='idor-t...-min';
 });
 
+import type * as DbModule from '@hamafx/db';
+
 // Replace `getDb()` with a function that returns the active PGlite
 // instance. The test sets up PGlite in `beforeAll`, then swaps the
 // `getDb` symbol on every persistence call to read from the same DB.
 vi.mock('@hamafx/db', async () => {
-  const actual = await vi.importActual<typeof import('@hamafx/db')>('@hamafx/db');
+  const actual = await vi.importActual<typeof DbModule>('@hamafx/db');
   let activeDb: unknown = null;
   return {
     ...actual,
@@ -65,7 +67,6 @@ vi.mock('@hamafx/db', async () => {
 });
 
 import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import { eq } from 'drizzle-orm';
 
 import { getLocalDb, ensureMigrations } from '@hamafx/db/local-db';
 import * as dbModule from '@hamafx/db';

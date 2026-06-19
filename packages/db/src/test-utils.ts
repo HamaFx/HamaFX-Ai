@@ -15,7 +15,6 @@
  */
 
 import { getDb } from './client';
-import { sql } from 'drizzle-orm';
 
 /**
  * Executes a test block inside a rolled-back transaction.
@@ -23,15 +22,17 @@ import { sql } from 'drizzle-orm';
  *
  * @param testFn The test logic to execute with the transaction DB client
  */
-export async function withIsolatedDb(testFn: (tx: ReturnType<typeof getDb>) => Promise<void>) {
+export async function withIsolatedDb(
+  testFn: (tx: ReturnType<typeof getDb>) => Promise<void>,
+) {
   try {
     const db = getDb();
     await db.transaction(async (tx) => {
-      await testFn(tx as any);
+      await testFn(tx as unknown as ReturnType<typeof getDb>);
       throw new Error('ROLLBACK_FOR_TESTING');
     });
-  } catch (err: any) {
-    if (err.message !== 'ROLLBACK_FOR_TESTING') {
+  } catch (err) {
+    if (err instanceof Error && err.message !== 'ROLLBACK_FOR_TESTING') {
       throw err;
     }
   }

@@ -6,8 +6,8 @@ const tables = await sql`
   WHERE schemaname = 'public'
   ORDER BY tablename
 `;
-console.log(`public tables (${tables.length}):`);
-for (const r of tables) console.log('  •', r.tablename);
+console.info(`public tables (${tables.length}):`);
+for (const r of tables) console.info('  •', r.tablename);
 
 const indexes = await sql`
   SELECT indexname, tablename
@@ -15,7 +15,7 @@ const indexes = await sql`
   WHERE schemaname = 'public' AND indexname NOT LIKE '%_pkey'
   ORDER BY tablename, indexname
 `;
-console.log(`\npublic indexes (${indexes.length}):`);
-for (const r of indexes) console.log(`  • ${r.tablename}.${r.indexname}`);
+console.info(`\npublic indexes (${indexes.length}):`);
+for (const r of indexes) console.info(`  • ${r.tablename}.${r.indexname}`);
 
 await sql.end();

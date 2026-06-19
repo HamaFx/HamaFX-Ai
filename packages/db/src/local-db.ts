@@ -27,7 +27,6 @@ import {
   applyMigrations as applyPGliteMigrations,
   closePGliteDb,
 } from './pglite-client';
-import * as schema from './schema/index';
 
 type AnyDb = ReturnType<typeof getDb> | Awaited<ReturnType<typeof getPGliteDb>>;
 

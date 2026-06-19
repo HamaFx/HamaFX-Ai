@@ -35,7 +35,7 @@ async function main() {
   const secretToken = process.env.TELEGRAM_SECRET_TOKEN || crypto.randomBytes(32).toString('hex');
   const url = `https://${domain.replace(/^https?:\/\//, '')}/api/telegram/webhook`;
 
-  console.log(`Setting webhook to: ${url}`);
+  console.info(`Setting webhook to: ${url}`);
   
   const response = await fetch(`https://api.telegram.org/bot${botToken}/setWebhook`, {
     method: 'POST',
@@ -52,11 +52,11 @@ async function main() {
   const data = await response.json();
 
   if (data.ok) {
-    console.log('✅ Webhook successfully set!');
-    console.log('\n--- IMPORTANT ---');
-    console.log('You must now add this secret token to your Vercel Environment Variables:');
-    console.log(`TELEGRAM_SECRET_TOKEN=${secretToken}`);
-    console.log('-----------------\n');
+    console.info('✅ Webhook successfully set!');
+    console.info('\n--- IMPORTANT ---');
+    console.info('You must now add this secret token to your Vercel Environment Variables:');
+    console.info(`TELEGRAM_SECRET_TOKEN=${secretToken}`);
+    console.info('-----------------\n');
   } else {
     console.error('❌ Failed to set webhook:', data);
   }

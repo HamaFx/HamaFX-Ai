@@ -35,7 +35,7 @@ async function run() {
   const db = drizzle(queryClient, { schema });
 
   const adminEmail = process.env.ADMIN_EMAIL || 'admin@localhost';
-  console.log(`Using default admin email: ${adminEmail}`);
+  console.info(`Using default admin email: ${adminEmail}`);
 
   // 1. Ensure user exists
   let user = await db.query.users.findFirst({
@@ -43,7 +43,7 @@ async function run() {
   });
 
   if (!user) {
-    console.log(`Creating default user ${adminEmail}...`);
+    console.info(`Creating default user ${adminEmail}...`);
     const [newUser] = await db
       .insert(schema.users)
       .values({
@@ -55,7 +55,7 @@ async function run() {
   }
 
   const userId = user.id;
-  console.log(`Default user ID: ${userId}`);
+  console.info(`Default user ID: ${userId}`);
 
   // 2. Backfill tables
   const tablesWithUserId = [
@@ -72,7 +72,7 @@ async function run() {
     schema.toolTelemetry,
   ];
 
-  console.log('Starting backfill...');
+  console.info('Starting backfill...');
   for (const table of tablesWithUserId) {
     try {
       const result = await db
@@ -83,13 +83,13 @@ async function run() {
         .where(isNull(table.userId))
         .returning({ id: table.userId }); // Returning something to count rows
 
-      console.log(`Updated ${result.length} rows in table`);
+      console.info(`Updated ${result.length} rows in table`);
     } catch (err) {
       console.warn(`Could not update table. It may not exist or has a different schema structure. Error: ${err}`);
     }
   }
 
-  console.log('Migration complete. You may now safely run migrations that make user_id NOT NULL.');
+  console.info('Migration complete. You may now safely run migrations that make user_id NOT NULL.');
   process.exit(0);
 }
 

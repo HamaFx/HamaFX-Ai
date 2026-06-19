@@ -38,7 +38,6 @@ import {
   text,
   timestamp,
 } from 'drizzle-orm/pg-core';
-import { users } from './auth';
 
 /**
  * Rate-limit counters per (user, endpoint_group, 1-minute window).

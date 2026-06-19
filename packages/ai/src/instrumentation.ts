@@ -51,7 +51,7 @@ export function initLangfuse(): void {
   // Silently skip when not configured — no crash, no env validation.
   if (!publicKey || !secretKey || !baseUrl) {
     if (process.env.NODE_ENV === 'development') {
-      console.log(
+      console.info(
         '[langfuse] skipping — LANGFUSE_PUBLIC_KEY, LANGFUSE_SECRET_KEY, or LANGFUSE_BASE_URL not set',
       );
     }
@@ -71,7 +71,7 @@ export function initLangfuse(): void {
   });
 
   _sdk.start();
-  console.log('[langfuse] OpenTelemetry tracing enabled → %s', baseUrl);
+  console.info('[langfuse] OpenTelemetry tracing enabled → %s', baseUrl);
 }
 
 /**
@@ -84,7 +84,7 @@ export async function shutdownLangfuse(): Promise<void> {
   if (!_sdk) return;
   try {
     await _sdk.shutdown();
-    console.log('[langfuse] tracing shut down cleanly');
+    console.info('[langfuse] tracing shut down cleanly');
   } catch (err) {
     console.warn('[langfuse] shutdown failed (non-fatal)', err);
   }

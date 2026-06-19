@@ -22,7 +22,7 @@
 // mode — they require API keys that most local dev users won't have.
 
 import cron from 'node-cron';
-import { JOBS, type JobName } from '../jobs/index.js';
+import { JOBS } from '../jobs/index.js';
 import type { Logger } from '../log.js';
 
 interface ScheduleEntry {

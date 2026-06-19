@@ -25,7 +25,7 @@ async function main() {
 
   const model = vertex('gemini-2.5-flash');
   
-  console.log('Sending request...');
+  console.info('Sending request...');
   const result = await generateText({
     model,
     tools: {
@@ -34,8 +34,8 @@ async function main() {
     prompt: 'What are the top news stories about EUR/USD today? Be brief.',
   });
 
-  console.log(result.text);
-  console.log('Tool calls:', result.toolCalls);
+  console.info(result.text);
+  console.info('Tool calls:', result.toolCalls);
 }
 
 main().catch(console.error);

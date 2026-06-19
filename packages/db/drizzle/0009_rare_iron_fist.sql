@@ -75,8 +75,11 @@ CREATE TABLE "rate_limits" (
 	CONSTRAINT "rate_limits_user_id_endpoint_group_window_start_pk" PRIMARY KEY("user_id","endpoint_group","window_start")
 );
 --> statement-breakpoint
-ALTER TABLE "onchain_signals" DISABLE ROW LEVEL SECURITY;--> statement-breakpoint
-DROP TABLE "onchain_signals" CASCADE;--> statement-breakpoint
+DO $$ BEGIN
+  ALTER TABLE "onchain_signals" DISABLE ROW LEVEL SECURITY;
+EXCEPTION WHEN undefined_table THEN NULL;
+END $$;--> statement-breakpoint
+DROP TABLE IF EXISTS "onchain_signals" CASCADE;--> statement-breakpoint
 ALTER TABLE "briefings_emitted" DROP CONSTRAINT "briefings_emitted_event_id_kind_pk";--> statement-breakpoint
 /* 
     Unfortunately in current drizzle-kit version we can't automatically get name for primary key.

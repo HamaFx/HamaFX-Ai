@@ -102,7 +102,6 @@ export async function applyMigrations(): Promise<void> {
   const applied = new Set(rows.map((r: Record<string, unknown>) => String(r.hash)));
 
   let ok = 0;
-  let skip = 0;
 
   for (const entry of journal) {
     if (applied.has(entry.tag)) continue;
@@ -166,7 +165,7 @@ export async function applyMigrations(): Promise<void> {
   }
 
   _migrationsApplied = true;
-  console.log(`[pglite] migrations: ${ok} applied, vector features skipped`);
+  console.info(`[pglite] migrations: ${ok} applied, vector features skipped`);
 }
 
 /**

@@ -153,11 +153,15 @@ import { createGoogleGenerativeAI } from '@ai-sdk/google';
  * Resolves a BYOK model based on the user's available encrypted API keys.
  * Will prefer the explicitly requested provider/model if available, falling back
  * to whatever the user has keys for.
+ *
+ * Note: `env` is reserved for a future "global fallback when the user has no
+ * BYOK keys" path. Today we require BYOK to be configured and ignore env —
+ * until that fallback ships the parameter is explicitly unused.
  */
 export function resolveUserModel(
   userSettings: Pick<UserSettingsRow, 'aiApiKeys'>,
   domain: 'default' | 'vision' | 'summary' | 'embedding' | 'fundamental' | 'technical',
-  env: ResolveModelEnv
+  _env: ResolveModelEnv
 ): { model: LanguageModel; modelId: string } {
   const keys = decryptByok(userSettings.aiApiKeys);
   

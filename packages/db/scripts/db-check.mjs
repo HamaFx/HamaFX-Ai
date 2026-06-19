@@ -3,24 +3,24 @@ import postgres from 'postgres';
 
 const sql = postgres(process.env.POSTGRES_URL, { prepare: false, max: 1 });
 
-console.log('=== installed extensions ===');
+console.info('=== installed extensions ===');
 const exts = await sql`SELECT extname, extnamespace::regnamespace::text AS schema, extversion FROM pg_extension ORDER BY extname`;
-console.table(exts);
+console.info(JSON.stringify(exts, null, 2));
 
-console.log('=== pgvector available? ===');
+console.info('=== pgvector available? ===');
 const avail = await sql`SELECT name, default_version, installed_version FROM pg_available_extensions WHERE name = 'vector'`;
-console.table(avail);
+console.info(JSON.stringify(avail, null, 2));
 
-console.log('=== current search_path ===');
+console.info('=== current search_path ===');
 const sp = await sql`SHOW search_path`;
-console.log(sp[0]);
+console.info(sp[0]);
 
-console.log('=== try to use vector type ===');
+console.info('=== try to use vector type ===');
 try {
   const r = await sql`SELECT '[1,2,3]'::vector(3) AS v`;
-  console.log('OK:', r[0]);
+  console.info('OK:', r[0]);
 } catch (e) {
-  console.log('FAIL:', e.message);
+  console.info('FAIL:', e.message);
 }
 
 await sql.end();
