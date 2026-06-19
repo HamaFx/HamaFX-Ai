@@ -173,7 +173,8 @@ export type ResolveUserDomain =
   | 'fundamental'
   | 'technical';
 
-/** Provider priority when multiple keys are configured — higher index wins for default. */
+/**
+ * Provider priority when multiple keys are configured — higher index wins for default. */
 const PROVIDER_PRIORITY: ProviderId[] = [
   // Premium: prefer the strongest reasoning model when configured.
   'google',
@@ -186,6 +187,24 @@ const PROVIDER_PRIORITY: ProviderId[] = [
   'groq',
   'deepseek',
 ];
+
+/**
+ * Surface operator-provided AI keys (env vars) as a synthetic BYOK payload.
+ * The actual BYOK storage takes precedence when both are set, but if the
+ * user hasn't gone through onboarding yet, this gives single-tenant
+ * deployments a working chat out of the box.
+ *
+ * Currently surfaces Google (direct Gemini API). Vertex + AI Gateway
+ * paths are handled by `resolveModel()` (the env-only resolver) — that
+ * is a different code path and doesn't use BYOK.
+ */
+function envFallbackKeys(env: ResolveModelEnv): ByokPayload {
+  const out: ByokPayload = {};
+  if (env.GOOGLE_GENERATIVE_AI_API_KEY) {
+    out.google = env.GOOGLE_GENERATIVE_AI_API_KEY;
+  }
+  return out;
+}
 
 /**
  * Pick the best provider for a domain from the user's configured providers.
@@ -227,15 +246,20 @@ function pickProviderForDomain(
 export function resolveUserModel(
   userSettings: Pick<UserSettingsRow, 'aiApiKeys'>,
   domain: ResolveUserDomain,
-  _env: ResolveModelEnv
+  env: ResolveModelEnv
 ): { model: LanguageModel; modelId: string } {
-  const keys = decryptByok(userSettings.aiApiKeys);
-  if (!keys) {
-    throw new Error(
-      'Stored API keys are corrupt or unreadable. Re-add your provider key in ' +
-        'Settings → API Keys, or visit /onboarding to set things up again.',
-    );
-  }
+  const stored = decryptByok(userSettings.aiApiKeys);
+
+  // Merge BYOK keys with operator-provided env vars. When the user has
+  // not yet configured a BYOK key for a provider but the operator did
+  // (e.g. GOOGLE_GENERATIVE_AI_API_KEY in .env.production), we fall back
+  // to the env value so single-tenant deployments keep working without
+  // forcing every user through onboarding. A user-saved BYOK key
+  // always wins over the env value for the same provider.
+  const keys: ByokPayload = {
+    ...envFallbackKeys(env),
+    ...(stored ?? {}),
+  };
 
   const configured = configuredProviders(keys);
   if (configured.length === 0) {

@@ -26,6 +26,9 @@ export default defineConfig({
   test: {
     environment: 'node',
     include: ['test/**/*.test.ts'],
+    // Polyfill `crypto.subtle` so Edge-only auth code can be tested in
+    // Node. See ./test/vitest.setup.ts for the rationale.
+    setupFiles: ['./test/vitest.setup.ts'],
     // NextAuth v5 imports `next/server` (no extension) which vitest's
     // strict ESM resolver rejects — Next.js webpack tolerates it but
     // vitest does not. Inlining the package tells vitest to process
