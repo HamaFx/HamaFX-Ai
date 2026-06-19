@@ -30,7 +30,7 @@ export async function GET() {
       status: 'ok',
       timestamp: new Date().toISOString()
     }, { status: 200 });
-  } catch (error) {
+  } catch {
     return NextResponse.json({
       status: 'error',
       message: 'Database connection failed',

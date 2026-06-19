@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+/* eslint-disable no-console */
+
 // Phase 8 PR-18 — Next.js instrumentation hook. Runs once per server
 // process (Node + Edge runtimes) before the first request lands.
 //
