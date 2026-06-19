@@ -5,6 +5,7 @@
 // awareness without burning tokens on tool calls for trivial questions.
 
 import type { Symbol, Tick } from '@hamafx/shared';
+import type { UserSettingsRow } from '@hamafx/db/schema';
 
 export interface LiveSnapshot {
   /** ISO-8601 UTC timestamp the snapshot was generated at. */
@@ -24,6 +25,21 @@ export interface LiveSnapshot {
     dbLatencyMs: number;
     lastResonanceSync: string | null;
   };
+}
+
+/**
+ * Per-user context that's safe to inject into the system prompt.
+ * Avoid putting anything that would leak across users or grow large.
+ */
+export interface UserPromptContext {
+  /** Display name (or email local-part if name missing). Falls back to empty. */
+  displayName: string;
+  /** User's preferred default symbol from their settings (e.g. 'XAUUSD'). */
+  defaultSymbol: Symbol;
+  /** User's IANA timezone string, e.g. 'America/New_York'. */
+  timezone: string;
+  /** Locale code, e.g. 'en', 'zh'. Used to hint language matching. */
+  language: string;
 }
 
 const BASE_PROMPT = `You are HamaFX-Ai, a focused trading copilot for **only** XAUUSD (gold), EURUSD, and GBPUSD.
@@ -55,8 +71,19 @@ const BASE_PROMPT = `You are HamaFX-Ai, a focused trading copilot for **only** X
 - Levels: use bullet lists, label each (S1, R1, daily pivot, weekly high, etc.).
 - When you make a directional call: state {bias, setup, invalidation, two scenarios with rough probabilities}.`;
 
-export function buildSystemPrompt(snapshot: LiveSnapshot | null): string {
-  if (!snapshot) return BASE_PROMPT;
+export function buildSystemPrompt(
+  snapshot: LiveSnapshot | null,
+  user?: UserPromptContext,
+): string {
+  // Phase B — per-user personalisation. Inject the user's display name
+  // so the model addresses them correctly, and use their preferred
+  // default symbol + timezone when relevant. Falls back gracefully if
+  // the user context is missing (cron jobs, anonymous smoke tests).
+  const userBlock = user
+    ? `\n# USER CONTEXT\n- Display name: ${user.displayName || '(unset)'}\n- Preferred default symbol: ${user.defaultSymbol}\n- Timezone: ${user.timezone}\n- Locale: ${user.language}\n\nWhen the user asks a general question without specifying a symbol, default to ${user.defaultSymbol}. Use ${user.timezone} when discussing times.\n`
+    : '';
+
+  if (!snapshot) return `${BASE_PROMPT}${userBlock}`;
 
   const priceLines = Object.entries(snapshot.prices)
     .map(([sym, tick]) => (tick ? `  - ${sym}: ${tick.mid} (${tick.source})` : null))
@@ -68,16 +95,31 @@ export function buildSystemPrompt(snapshot: LiveSnapshot | null): string {
     : '  - No upcoming high-impact event in scope.';
 
   const healthLines = snapshot.copilotHealth
-    ? `  - Copilot Status: ${snapshot.copilotHealth.status.toUpperCase()} (DB Latency: ${snapshot.copilotHealth.dbLatencyMs}ms)
-  - Last Intermarket Sync: ${snapshot.copilotHealth.lastResonanceSync || 'never'}`
+    ? `  - Copilot Status: ${snapshot.copilotHealth.status.toUpperCase()} (DB Latency: ${snapshot.copilotHealth.dbLatencyMs}ms)\n  - Last Intermarket Sync: ${snapshot.copilotHealth.lastResonanceSync || 'never'}`
     : '  - Copilot health diagnostics offline.';
 
-  return `${BASE_PROMPT}
-
+  return `${BASE_PROMPT}${userBlock}
 # LIVE_SNAPSHOT (auto-injected, fresh as of ${snapshot.asOf})
 
 - Session: ${snapshot.session}
 ${priceLines || '  - (price feed unavailable)'}
 ${eventLine}
 ${healthLines}`;
+}
+
+/**
+ * Build a UserPromptContext from a UserSettingsRow + display name.
+ * Returns null if no settings row (caller should pass undefined to
+ * buildSystemPrompt so it skips the personalisation block).
+ */
+export function userContextFromSettings(
+  displayName: string | null,
+  settings: Pick<UserSettingsRow, 'defaultSymbol' | 'timezone' | 'language'>,
+): UserPromptContext {
+  return {
+    displayName: displayName ?? '',
+    defaultSymbol: settings.defaultSymbol as Symbol,
+    timezone: settings.timezone,
+    language: settings.language,
+  };
 }

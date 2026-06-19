@@ -11,7 +11,7 @@ import { getPriceWithMeta } from '@hamafx/data';
 import { SYMBOLS, SymbolSchema, type Tick } from '@hamafx/shared';
 import { z } from 'zod';
 
-import { errorResponse } from '@/lib/api';
+import { errorResponse, withAuth } from '@/lib/api';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -49,7 +49,10 @@ interface TickWithMeta extends Tick {
   ageMs: number | null;
 }
 
-export async function GET(req: Request): Promise<Response> {
+// Phase B: auth-gate. Market data is shared, but the gate prevents
+// anonymous scraping. The authenticated `user` is not used inside the
+// handler — it's the requirement to log in that matters.
+export const GET = withAuth<void>(async (req) => {
   try {
     const url = new URL(req.url);
     // Repeated params: collect all `symbol` entries.
@@ -73,7 +76,7 @@ export async function GET(req: Request): Promise<Response> {
   } catch (err) {
     return errorResponse(err);
   }
-}
+});
 
 /** CDN-friendly cache headers — short TTL aligned with the data layer. */
 function cacheHeaders(ttlSeconds: number): Record<string, string> {

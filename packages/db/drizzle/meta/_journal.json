@@ -78,6 +78,13 @@
       "when": 1781822000000,
       "tag": "0010_user_id_not_null",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1781823000000,
+      "tag": "0011_rate_limits",
+      "breakpoints": true
     }
   ]
 }

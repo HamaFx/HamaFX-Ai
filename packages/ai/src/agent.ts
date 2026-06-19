@@ -31,7 +31,7 @@ import {
   updateThreadTitle,
 } from './persistence';
 import { runPlanner } from './planner';
-import { buildSystemPrompt } from './prompt/system';
+import { buildSystemPrompt, userContextFromSettings } from './prompt/system';
 import { routeTurn, type RoutingDecision } from './routing';
 import { generateTitle } from './title';
 import { withToolContext, type ToolContext } from './tool-context';
@@ -91,13 +91,26 @@ export async function runChat(args: RunChatArgs) {
   const startedAt = Date.now();
 
   const db = getDb();
-  const [userSettings] = await db.select()
-    .from(schema.userSettings)
-    .where(eq(schema.userSettings.userId, userId));
+  const [userSettings, userRow] = await Promise.all([
+    db.select()
+      .from(schema.userSettings)
+      .where(eq(schema.userSettings.userId, userId))
+      .then((rows) => rows[0]),
+    db.select({ name: schema.users.name, email: schema.users.email })
+      .from(schema.users)
+      .where(eq(schema.users.id, userId))
+      .then((rows) => rows[0]),
+  ]);
 
   if (!userSettings) {
     throw new Error('User settings not found. Please complete onboarding.');
   }
+
+  // Phase B — pick the display name from the user row, falling back to
+  // the email local-part (the bit before @) if name is unset.
+  const displayName =
+    userRow?.name?.trim() ||
+    (userRow?.email ? userRow.email.split('@')[0] : null);
 
   const maxDailyUsd = userSettings.maxDailyUsd ?? env.MAX_DAILY_USD;
 
@@ -242,7 +255,10 @@ export async function runChat(args: RunChatArgs) {
   // tail. The plan-then-act expansion (Phase 7c) lands here too — for now
   // we just record `planRequired` in telemetry so routing decisions are
   // auditable today.
-  const baseSystem = buildSystemPrompt(snapshot);
+  const baseSystem = buildSystemPrompt(
+    snapshot,
+    userContextFromSettings(displayName ?? null, userSettings),
+  );
   let systemPrompt = compaction.extraSystem
     ? `${compaction.extraSystem}\n\n${baseSystem}`
     : baseSystem;

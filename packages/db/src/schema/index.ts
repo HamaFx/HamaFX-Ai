@@ -1,6 +1,9 @@
 // Barrel for all tables. drizzle.config.ts points its `schema` field here.
 // Order matters only for readability; FKs are resolved by name.
 
+// Phase A (multi-user) — auth tables must come first because other tables
+// reference users.id via foreign keys.
+export * from './auth';
 export * from './_extensions';
 export * from './chat';
 export * from './alerts';
@@ -16,6 +19,7 @@ export * from './share';
 export * from './push';
 export * from './memory';
 export * from './daily-ai-spend';
+export * from './rate-limits';
 // Phase 8 — worker-driven persistence
 export * from './live-ticks';
 export * from './candles-1m';

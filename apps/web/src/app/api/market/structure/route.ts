@@ -16,7 +16,7 @@ import {
 } from '@hamafx/shared';
 import { z } from 'zod';
 
-import { errorResponse, parseJsonBody } from '@/lib/api';
+import { errorResponse, parseJsonBody, withAuth } from '@/lib/api';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -30,7 +30,10 @@ const BodySchema = z.object({
   lookback: z.number().int().min(1).max(20).default(3),
 });
 
-export async function POST(req: Request): Promise<Response> {
+// Phase B: auth-gate. The authenticated `user` is not used inside the
+// handler — SMC structures are computed on shared market data — but
+// the gate prevents anonymous scraping.
+export const POST = withAuth<void>(async (req) => {
   try {
     const { symbol, tf, count, kinds, lookback } = await parseJsonBody(req, BodySchema);
     const candles = await getCandles(symbol, tf, { count });
@@ -45,4 +48,4 @@ export async function POST(req: Request): Promise<Response> {
   } catch (err) {
     return errorResponse(err);
   }
-}
+});

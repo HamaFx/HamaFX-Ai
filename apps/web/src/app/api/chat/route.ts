@@ -1,28 +1,27 @@
 // /api/chat — streaming chat endpoint. Receives a UI messages array from
 // `useChat`, runs the agent, and streams back the SDK's UI-message stream
 // for the client to consume.
+//
+// Phase A: extracts userId from the NextAuth session and passes it to runChat.
+// Phase B: per-user rate limit on chat (default: 30 turns / minute).
 
 import { BudgetExceededError, runChat } from '@hamafx/ai';
 import { providerUnavailable } from '@hamafx/shared';
+import { withRateLimit } from '@hamafx/db';
 import { z } from 'zod';
 
-import { errorResponse, parseJsonBody } from '@/lib/api';
+import { errorResponse, parseJsonBody, withAuth } from '@/lib/api';
 import { getServerEnv } from '@/lib/env';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-// We only validate the parts of the body we care about. The full UIMessage
-// shape is large + provider-specific, so we trust the client (which is also
-// us) for the rest.
+// Phase B: 30 chat turns per minute per user is the default. Tunable
+// via env if the deployment needs a different ceiling.
+const CHAT_RATE_LIMIT = Number(process.env.AI_CHAT_RATE_LIMIT ?? '30');
+
 const BodySchema = z.object({
   threadId: z.string().uuid(),
-  /**
-   * Phase 7c — optional one-shot model override forwarded from the chat
-   * surface's "Regenerate with…" picker. Wins over the router's per-domain
-   * choice for this turn only; the persisted thread.modelOverride is
-   * untouched.
-   */
   modelOverride: z.string().min(1).max(120).nullable().optional(),
   messages: z
     .array(
@@ -36,7 +35,29 @@ const BodySchema = z.object({
     .min(1),
 });
 
-export async function POST(req: Request): Promise<Response> {
+export const POST = withAuth<void>(async (req, { user }) => {
+  // Phase B — per-user rate limit. Counts rejected attempts too so a
+  // bursty client can't avoid the cap by retrying.
+  const rl = await withRateLimit(user.userId, 'ai_chat', CHAT_RATE_LIMIT);
+  if (!rl.allowed) {
+    return Response.json(
+      {
+        error: {
+          code: 'RATE_LIMITED',
+          message: `Too many chat turns (${rl.count}/${rl.limit} per minute). Slow down.`,
+        },
+      },
+      {
+        status: 429,
+        headers: {
+          'Retry-After': '60',
+          'X-RateLimit-Limit': String(rl.limit),
+          'X-RateLimit-Remaining': '0',
+        },
+      },
+    );
+  }
+
   let body: z.infer<typeof BodySchema>;
   try {
     body = await parseJsonBody(req, BodySchema);
@@ -74,18 +95,10 @@ export async function POST(req: Request): Promise<Response> {
     }
   }
 
-  // Auto-Journal — the chat route used to regex-parse `Journal: …` shortcuts
-  // and call `createEntry` server-side, but the same user message was then
-  // forwarded to the model verbatim, which has a `log_journal` tool and
-  // would create a duplicate row. The model owns journal logging now;
-  // unstructured "I just bought XAU at 2400" messages still work via the
-  // tool. See docs/15-hardening-phase-1-correctness.md §2.
-
   try {
     const result = await runChat({
       threadId: body.threadId,
-      // The client-side cast to UIMessage is safe enough here — we only
-      // forward the shape AI SDK already understands.
+      userId: user.userId,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       userMessage: last as any,
       ...(body.modelOverride !== undefined && body.modelOverride !== null
@@ -124,4 +137,4 @@ export async function POST(req: Request): Promise<Response> {
     }
     return errorResponse(err);
   }
-}
+});

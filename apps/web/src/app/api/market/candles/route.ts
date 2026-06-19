@@ -9,7 +9,7 @@ import { getCandlesWithMeta } from '@hamafx/data';
 import { DEFAULT_TIMEFRAME, SymbolSchema, TimeframeSchema } from '@hamafx/shared';
 import { z } from 'zod';
 
-import { errorResponse, parseSearchParams } from '@/lib/api';
+import { errorResponse, parseSearchParams, withAuth } from '@/lib/api';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -20,7 +20,10 @@ const QuerySchema = z.object({
   count: z.coerce.number().int().min(1).max(5000).default(300),
 });
 
-export async function GET(req: Request): Promise<Response> {
+// Phase B: auth-gate. Market data is shared, but the gate prevents
+// anonymous scraping. The authenticated `user` is not used inside the
+// handler.
+export const GET = withAuth<void>(async (req) => {
   try {
     const { symbol, tf, count } = parseSearchParams(req, QuerySchema);
     const r = await getCandlesWithMeta(symbol, tf, { count });
@@ -37,4 +40,4 @@ export async function GET(req: Request): Promise<Response> {
   } catch (err) {
     return errorResponse(err);
   }
-}
+});

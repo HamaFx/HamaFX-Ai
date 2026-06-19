@@ -18,6 +18,12 @@ import { eq } from 'drizzle-orm';
 import { authConfig } from './auth.config';
 import { getDb, schema } from '@hamafx/db';
 
+// Phase B — brute-force protection on login.
+// 10 attempts per email per minute is the default. Tunable via env.
+// We key on the lowercased email so `Foo@x.com` and `foo@x.com` share
+// the same bucket (the email is also normalised before lookup).
+const LOGIN_RATE_LIMIT = Number(process.env.LOGIN_RATE_LIMIT ?? '10');
+
 // `NextAuth()` returns a value whose inferred type carries deep paths into
 // `@auth/core/providers`. That inferred type isn't portable across pnpm
 // store layouts (TS error TS2742). We side-step the portability error by
@@ -42,6 +48,15 @@ export const { handlers, auth, signIn, signOut } = _nextAuth({
           typeof credentials?.email === 'string' ? credentials.email.toLowerCase().trim() : '';
         const password = typeof credentials?.password === 'string' ? credentials.password : '';
         if (!email || !password) return null;
+
+        // Phase B — per-email brute-force throttle. Counts failed
+        // attempts too (because we run this before the bcrypt check).
+        // Returns null on rate-limit hit so NextAuth treats it as a
+        // generic auth failure (no info leak about whether the email
+        // exists or how many tries remain).
+        const { withRateLimit } = await import('@hamafx/db');
+        const rl = await withRateLimit(`login:${email}`, 'auth_login', LOGIN_RATE_LIMIT);
+        if (!rl.allowed) return null;
 
         const db = getDb();
         const rows = await db
