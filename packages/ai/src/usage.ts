@@ -1,3 +1,19 @@
+/**
+ * Copyright 2026 HamaFX
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 // Usage analytics — read-side helpers for /settings/usage.
 //
 // We recompute everything from `chat_telemetry` on demand. Volume stays
@@ -5,7 +21,7 @@
 // scan is well under 100 ms even cold.
 
 import { getDb, schema } from '@hamafx/db';
-import { and, desc, gte, lte, sql } from 'drizzle-orm';
+import { and, desc, eq, gte, lte, sql } from 'drizzle-orm';
 
 export interface TelemetryRow {
   id: string;
@@ -21,10 +37,11 @@ export interface TelemetryRow {
 }
 
 /** Last N telemetry rows, newest-first. Used for the recent-turns panel. */
-export async function listTelemetry(limit = 30): Promise<TelemetryRow[]> {
+export async function listTelemetry(userId: string, limit = 30): Promise<TelemetryRow[]> {
   const rows = await getDb()
     .select()
     .from(schema.chatTelemetry)
+    .where(eq(schema.chatTelemetry.userId, userId))
     .orderBy(desc(schema.chatTelemetry.createdAt))
     .limit(limit);
   return rows.map(rowToTelemetry);
@@ -73,7 +90,7 @@ function startOfUtcDay(d: Date): Date {
  * Aggregate the last 30 days of telemetry into `UsageStats`. Single SELECT,
  * client-side reduce — keeps the page snappy on cold start.
  */
-export async function computeUsage(now = new Date()): Promise<UsageStats> {
+export async function computeUsage(userId: string, now = new Date()): Promise<UsageStats> {
   const todayStart = startOfUtcDay(now);
   const sevenStart = new Date(todayStart.getTime() - 6 * DAY_MS);
   const thirtyStart = new Date(todayStart.getTime() - 29 * DAY_MS);
@@ -83,6 +100,7 @@ export async function computeUsage(now = new Date()): Promise<UsageStats> {
     .from(schema.chatTelemetry)
     .where(
       and(
+        eq(schema.chatTelemetry.userId, userId),
         gte(schema.chatTelemetry.createdAt, thirtyStart),
         lte(schema.chatTelemetry.createdAt, now),
       ),

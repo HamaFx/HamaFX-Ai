@@ -1,3 +1,19 @@
+/**
+ * Copyright 2026 HamaFX
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 // Edge middleware — runs on every matched request.
 //
 // Uses NextAuth v5's Edge-safe auth() wrapper. The full config (with the
@@ -26,6 +42,16 @@ const { auth } = NextAuth(authConfig);
 
 export default auth((req) => {
   const requestId = readOrCreateRequestId(req);
+
+  // ── Legacy Mode Fallback ─────────────────────────────────────────
+  if (process.env.AUTH_MODE === 'legacy') {
+    const headers = new Headers(req.headers);
+    headers.set(REQUEST_ID_HEADER, requestId);
+    headers.set('x-user-id', '__system__');
+    const next = NextResponse.next({ request: { headers } });
+    next.headers.set(REQUEST_ID_HEADER, requestId);
+    return next;
+  }
 
   // ── CSRF double-submit cookie (state-changing /api/*) ───────────
   let csrfToken = req.cookies.get('hfx_csrf')?.value;

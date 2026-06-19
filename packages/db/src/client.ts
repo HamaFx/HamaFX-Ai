@@ -1,3 +1,19 @@
+/**
+ * Copyright 2026 HamaFX
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 // Drizzle client. Node runtime only — postgres-js does not work on Edge.
 // Routes that touch this module must export `runtime = 'nodejs'`.
 
@@ -31,6 +47,9 @@ const DEFAULT_WEB_POOL_MAX = 5;
 const DEFAULT_WORKER_POOL_MAX = 3;
 
 function resolvePoolMax(): number {
+  // Limit pool to 1 during test execution to prevent exhausting transaction poolers
+  if (process.env.NODE_ENV === 'test') return 1;
+
   // Workers set `HAMAFX_RUNTIME=worker` in the systemd unit's
   // environment file so we can pick the right default without
   // pulling Vercel-specific env vars into @hamafx/db.
@@ -73,6 +92,9 @@ export function getDb(): ReturnType<typeof drizzle> {
     // pool can't slowly burn into Supabase's per-database connection
     // ceiling on a never-restarted Lambda.
     max_lifetime: 60 * 30,
+    connection: {
+      statement_timeout: 15000, // 15 seconds to prevent rogue queries
+    },
   });
 
   _client = drizzle(_sql, { schema });

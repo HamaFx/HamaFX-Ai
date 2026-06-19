@@ -1,0 +1,11 @@
+# docker-compose.override.yml — gitignored, local overrides.
+# Copy this to set real secrets without touching docker-compose.yml.
+#
+# Generate secrets:
+#   node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+
+services:
+  langfuse:
+    environment:
+      NEXTAUTH_SECRET: replace-with-32-byte-hex
+      SALT: replace-with-16-byte-hex

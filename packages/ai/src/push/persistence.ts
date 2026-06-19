@@ -1,3 +1,19 @@
+/**
+ * Copyright 2026 HamaFX
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 // Web-push subscription persistence.
 //
 // Single-user app, but the user can subscribe from multiple devices. We
@@ -13,6 +29,7 @@ import { eq } from 'drizzle-orm';
 
 export interface PushSubscriptionRow {
   id: string;
+  userId: string | null;
   endpoint: string;
   p256dh: string;
   auth: string;
@@ -21,6 +38,7 @@ export interface PushSubscriptionRow {
 }
 
 export interface SavePushSubscriptionArgs {
+  userId: string;
   endpoint: string;
   p256dh: string;
   auth: string;
@@ -30,6 +48,7 @@ export interface SavePushSubscriptionArgs {
 function rowToSub(row: typeof schema.pushSubscriptions.$inferSelect): PushSubscriptionRow {
   return {
     id: row.id,
+    userId: row.userId,
     endpoint: row.endpoint,
     p256dh: row.p256dh,
     auth: row.auth,
@@ -39,8 +58,12 @@ function rowToSub(row: typeof schema.pushSubscriptions.$inferSelect): PushSubscr
 }
 
 /** All active subscriptions. The delivery loop fans out across this list. */
-export async function listPushSubscriptions(): Promise<PushSubscriptionRow[]> {
-  const rows = await getDb().select().from(schema.pushSubscriptions);
+export async function listPushSubscriptions(userId?: string): Promise<PushSubscriptionRow[]> {
+  const query = getDb().select().from(schema.pushSubscriptions);
+  if (userId) {
+    query.where(eq(schema.pushSubscriptions.userId, userId));
+  }
+  const rows = await query;
   return rows.map(rowToSub);
 }
 
@@ -54,6 +77,7 @@ export async function savePushSubscription(
   const inserted = await getDb()
     .insert(schema.pushSubscriptions)
     .values({
+      userId: args.userId,
       endpoint: args.endpoint,
       p256dh: args.p256dh,
       auth: args.auth,
@@ -62,6 +86,7 @@ export async function savePushSubscription(
     .onConflictDoUpdate({
       target: schema.pushSubscriptions.endpoint,
       set: {
+        userId: args.userId,
         p256dh: args.p256dh,
         auth: args.auth,
         userAgent: args.userAgent ?? null,
@@ -71,11 +96,13 @@ export async function savePushSubscription(
   return rowToSub(inserted[0]!);
 }
 
-export async function deletePushSubscription(id: string): Promise<void> {
-  await getDb().delete(schema.pushSubscriptions).where(eq(schema.pushSubscriptions.id, id));
+export async function deletePushSubscription(userId: string, id: string): Promise<void> {
+  await getDb()
+    .delete(schema.pushSubscriptions)
+    .where(eq(schema.pushSubscriptions.id, id));
 }
 
-export async function deletePushSubscriptionByEndpoint(endpoint: string): Promise<void> {
+export async function deletePushSubscriptionByEndpoint(userId: string, endpoint: string): Promise<void> {
   await getDb()
     .delete(schema.pushSubscriptions)
     .where(eq(schema.pushSubscriptions.endpoint, endpoint));

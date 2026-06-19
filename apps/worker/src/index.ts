@@ -1,3 +1,19 @@
+/**
+ * Copyright 2026 HamaFX
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 // HamaFX-Ai worker entry point.
 //
 // Phase 8 PR-6: the worker now holds a persistent BiQuote SignalR
@@ -13,6 +29,8 @@
 //   5. heartbeat to healthchecks.io every 30s while the consumer is alive.
 
 import { getDb } from '@hamafx/db';
+import { initLangfuse, shutdownLangfuse } from '@hamafx/ai';
+import * as http from 'http';
 
 import { Candle1mAggregator, type ClosedCandle } from './aggregator/candle-1m.js';
 import { loadEnv, type WorkerEnv } from './env.js';
@@ -35,6 +53,7 @@ import {
 } from './signalr/consumer.js';
 import { TickBuffer } from './signalr/tick-buffer.js';
 import { startMT5Server } from './mt5-server.js';
+import { SymbolManager } from './symbol-manager.js';
 
 interface ShutdownState {
   shuttingDown: boolean;
@@ -163,6 +182,15 @@ export async function runWorker(args: RunWorkerArgs): Promise<RunningWorker> {
     onTick: handleIncomingTick,
     buildConnection,
     log: log.with({ module: 'signalr' }),
+    // Default to empty; SymbolManager will immediately populate it
+    symbols: [],
+  });
+
+  const symbolManager = new SymbolManager(log.with({ module: 'symbol-manager' }));
+  symbolManager.on('symbolsChanged', ({ added, removed }) => {
+    if (consumer.isStarted()) {
+      void consumer.updateSubscriptions(added, removed);
+    }
   });
 
   // Start the Headless MT5 TCP bridge server on the whitelisted local loopback port
@@ -173,6 +201,7 @@ export async function runWorker(args: RunWorkerArgs): Promise<RunningWorker> {
   });
 
   await consumer.start();
+  symbolManager.start();
   // The consumer is connected and subscribed — tell systemd we're done
   // bootstrapping. Pair with `Type=notify` in hamafx-worker.service so
   // the unit only enters `active (running)` once we're ready.
@@ -213,6 +242,7 @@ export async function runWorker(args: RunWorkerArgs): Promise<RunningWorker> {
     notifyStopping();
     clearInterval(flushTimer);
     if (heartbeatTimer) clearInterval(heartbeatTimer);
+    symbolManager.stop();
     
     // Gracefully shut down both services in parallel
     await Promise.all([
@@ -234,18 +264,29 @@ export async function runWorker(args: RunWorkerArgs): Promise<RunningWorker> {
   return { consumer, buffer, aggregator, stop };
 }
 
+import { startScheduler } from './scheduler.js';
+
 export async function main(): Promise<void> {
   const env = loadEnv();
   const log = createLogger({ service: 'worker', commit: env.DEPLOYED_SHA });
 
   await initSentry(env, 'worker');
 
+  // ── Langfuse LLM Observability ──────────────────────────────
+  // Silently skipped when LANGFUSE_* env vars are not set.
+  initLangfuse();
+
   log.info('worker starting', {
     nodeVersion: process.version,
     biquoteHubUrl: env.BIQUOTE_HUB_URL,
     healthchecksConfigured: Boolean(env.HC_SIGNALR_UUID),
     sentryConfigured: Boolean(env.SENTRY_DSN),
+    workerMode: env.WORKER_MODE,
   });
+
+  if (env.WORKER_MODE === 'docker') {
+    startScheduler(log);
+  }
 
   // Send unhandled rejections / uncaught exceptions to Sentry before the
   // process dies. Node's default is to crash; we want the report first.
@@ -261,8 +302,28 @@ export async function main(): Promise<void> {
   installSignalHandlers(log);
 
   const worker = await runWorker({ env, log });
-  onShutdown(() => worker.stop());
+  
+  // Start HTTP Health Server for Docker orchestration
+  const healthServer = http.createServer((req, res) => {
+    if (req.url === '/health' || req.url === '/api/health' || req.url === '/') {
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ status: 'ok' }));
+    } else {
+      res.writeHead(404);
+      res.end();
+    }
+  });
+
+  healthServer.listen(8081, '0.0.0.0', () => {
+    log.info('Health server listening on port 8081');
+  });
+
+  onShutdown(() => {
+    healthServer.close();
+    return worker.stop();
+  });
   onShutdown(() => flushSentry(2_000));
+  onShutdown(() => shutdownLangfuse());
 
   log.info('worker running — feeding live_ticks from BiQuote SignalR');
 }

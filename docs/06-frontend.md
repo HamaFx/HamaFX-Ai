@@ -2,7 +2,7 @@
 
 ## Overview
 
-The HamaFX-Ai frontend is a Next.js 15 App Router application (`apps/web/`) using React 19, Tailwind CSS v4, and TanStack Query. It is a personal-mode PWA — optimized for mobile-first use, installable to the home screen, and protected by a cookie-based auth gate in edge middleware.
+The HamaFX-Ai frontend is a Next.js 15 App Router application (`apps/web/`) using React 19, Tailwind CSS v4, and TanStack Query. It is a multi-tenant PWA — optimized for mobile-first use, installable to the home screen, and protected by a NextAuth session gate in edge middleware.
 
 All source lives under `apps/web/src/`:
 
@@ -14,7 +14,7 @@ apps/web/src/
 │   ├── globals.css          # Design tokens, glass utilities, keyframes
 │   ├── manifest.ts          # PWA manifest (standalone, portrait, black theme)
 │   ├── not-found.tsx        # 404 page
-│   ├── login/               # /login — password gate
+│   ├── (auth)/              # /login, /register, /forgot-password — NextAuth forms
 │   ├── share/[id]/          # /share/[id] — public share w/ HMAC verification
 │   └── (app)/               # Authenticated route group
 │       ├── layout.tsx        # App shell: TopBar, NavDrawer, Toaster, etc.
@@ -45,7 +45,7 @@ apps/web/src/
 | Route | Type | Auth | Description |
 |---|---|---|---|
 | `/` | Server Component | No | Redirects to `/chat` |
-| `/login` | Client Component | No | Password gate form, redirects to `?next=` after success |
+| `/login` | Client/Server Component | No | NextAuth sign-in form, redirects to `callbackUrl` after success |
 | `/chat` | Server Component | Yes | Landing — redirects to the most recent thread |
 | `/chat/[threadId]` | Hybrid (RSC hydrate) | Yes | Full-screen chat: server loads thread+messages, client mounts `ChatScreen` with `useChat` |
 | `/chart/[symbol]` | Hybrid | Yes | lightweight-charts candlestick + SMC overlays + indicators |
@@ -315,7 +315,7 @@ Left slide-in drawer powered by **vaul** (DrawerPrimitive.Root with `direction="
 - Auto-closes on route change (`useEffect` on `pathname`)
 - Active route: brand-tinted background with ring + glow
 - Identity strip: brand logo, "HamaFX·Ai" + subtitle
-- Footer: "Sign out" button — calls `POST /api/auth/logout`, redirects to `/login`
+- Footer: "Sign out" button — calls NextAuth `signOut()`, redirects to `/login`
 - Safe-area aware (top/bottom insets)
 - Rounded right edge (`rounded-r-3xl`)
 - Focus trap, swipe-to-dismiss, Escape-to-close (vaul built-in)
@@ -508,7 +508,7 @@ Set via `next.config.mjs` `headers()`:
 
 **CSRF Protection**: Double-submit cookie pattern. Edge middleware sets `hfx_csrf` cookie; state-changing requests must include `X-CSRF-Token` header matching the cookie value.
 
-**Auth Gate**: Edge middleware validates `hfx_auth` cookie (HMAC JWT). Exempt paths: `/login`, `/api/auth/*`, `/api/cron/*`, `/api/telegram/*`, `/share/*`, static files.
+**Auth Gate**: Edge middleware validates the NextAuth session token. Exempt paths: `/login`, `/api/auth/*`, `/api/health`, `/api/cron/*`, `/api/telegram/*`, `/share/*`, static files.
 
 ---
 

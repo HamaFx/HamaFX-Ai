@@ -68,22 +68,8 @@
     {
       "idx": 9,
       "version": "7",
-      "when": 1780250000000,
-      "tag": "0009_phase_a_multi_user",
-      "breakpoints": true
-    },
-    {
-      "idx": 10,
-      "version": "7",
-      "when": 1781822000000,
-      "tag": "0010_user_id_not_null",
-      "breakpoints": true
-    },
-    {
-      "idx": 11,
-      "version": "7",
-      "when": 1781823000000,
-      "tag": "0011_rate_limits",
+      "when": 1781833529700,
+      "tag": "0009_rare_iron_fist",
       "breakpoints": true
     }
   ]

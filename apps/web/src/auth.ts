@@ -1,3 +1,19 @@
+/**
+ * Copyright 2026 HamaFX
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 // NextAuth v5 — full configuration (Node.js runtime only).
 //
 // The Edge-compatible `authConfig` (imported from `./auth.config`) carries
@@ -16,7 +32,7 @@ import bcrypt from 'bcryptjs';
 import { eq } from 'drizzle-orm';
 
 import { authConfig } from './auth.config';
-import { getDb, schema } from '@hamafx/db';
+import { getDb, schema, withRateLimit } from '@hamafx/db';
 
 // Phase B — brute-force protection on login.
 // 10 attempts per email per minute is the default. Tunable via env.
@@ -54,9 +70,11 @@ export const { handlers, auth, signIn, signOut } = _nextAuth({
         // Returns null on rate-limit hit so NextAuth treats it as a
         // generic auth failure (no info leak about whether the email
         // exists or how many tries remain).
-        const { withRateLimit } = await import('@hamafx/db');
         const rl = await withRateLimit(`login:${email}`, 'auth_login', LOGIN_RATE_LIMIT);
-        if (!rl.allowed) return null;
+        if (!rl.allowed) {
+          console.error(`[auth] Rate limit exceeded for ${email}`);
+          return null;
+        }
 
         const db = getDb();
         const rows = await db
@@ -66,10 +84,16 @@ export const { handlers, auth, signIn, signOut } = _nextAuth({
           .limit(1);
 
         const user = rows[0];
-        if (!user || !user.hashedPassword) return null;
+        if (!user || !user.hashedPassword) {
+          console.error(`[auth] User not found or missing password for ${email}`);
+          return null;
+        }
 
         const ok = await bcrypt.compare(password, user.hashedPassword);
-        if (!ok) return null;
+        if (!ok) {
+          console.error(`[auth] Invalid password for ${email}`);
+          return null;
+        }
 
         // The shape NextAuth expects from authorize(): the returned object
         // gets folded into the JWT by the `jwt` callback in auth.config.ts.

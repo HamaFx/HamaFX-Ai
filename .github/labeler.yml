@@ -1,0 +1,31 @@
+# Core components
+"area: web":
+  - any:
+    - "apps/web/**/*"
+
+"area: worker":
+  - any:
+    - "apps/worker/**/*"
+
+"area: db":
+  - any:
+    - "packages/db/**/*"
+
+"area: ai":
+  - any:
+    - "packages/ai/**/*"
+
+# Types of changes
+"type: documentation":
+  - any:
+    - "**/*.md"
+    - "docs/**/*"
+
+"type: ci":
+  - any:
+    - ".github/**/*"
+
+"type: config":
+  - any:
+    - "packages/config/**/*"
+    - "packages/shared/src/env.ts"

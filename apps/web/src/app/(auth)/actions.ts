@@ -1,0 +1,119 @@
+'use server';
+
+/**
+ * Copyright 2026 HamaFX
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+import bcrypt from 'bcryptjs';
+import { eq } from 'drizzle-orm';
+import { AuthError } from 'next-auth';
+import { z } from 'zod';
+
+import { getDb, schema } from '@hamafx/db';
+import { signIn } from '@/auth';
+
+const loginSchema = z.object({
+  email: z.string().email('Invalid email address'),
+  password: z.string().min(1, 'Password is required'),
+  next: z.string().optional(),
+});
+
+export async function loginAction(prevState: unknown, formData: FormData) {
+  const parsed = loginSchema.safeParse(Object.fromEntries(formData));
+  if (!parsed.success) {
+    return { error: parsed.error.errors[0]?.message ?? 'Validation failed' };
+  }
+
+  const { email, password, next } = parsed.data;
+
+  try {
+    await signIn('credentials', {
+      email,
+      password,
+      redirectTo: next && next.startsWith('/') ? next : '/chat',
+    });
+    return { success: true };
+  } catch (error) {
+    if (error instanceof AuthError) {
+      switch (error.type) {
+        case 'CredentialsSignin':
+          return { error: 'Invalid email or password' };
+        default:
+          return { error: 'An error occurred during sign in' };
+      }
+    }
+    throw error; // Let Next.js handle redirect errors from signIn
+  }
+}
+
+const registerSchema = z.object({
+  name: z.string().min(2, 'Name must be at least 2 characters'),
+  email: z.string().email('Invalid email address'),
+  password: z.string().min(8, 'Password must be at least 8 characters'),
+});
+
+export async function registerAction(prevState: unknown, formData: FormData) {
+  const parsed = registerSchema.safeParse(Object.fromEntries(formData));
+  if (!parsed.success) {
+    return { error: parsed.error.errors[0]?.message ?? 'Validation failed' };
+  }
+
+  const { name, email, password } = parsed.data;
+  const db = getDb();
+  
+  // Check if user exists
+  const existingUser = await db.select().from(schema.users).where(eq(schema.users.email, email)).limit(1);
+  if (existingUser.length > 0) {
+    return { error: 'An account with this email already exists' };
+  }
+
+  // Hash password
+  const hashedPassword = await bcrypt.hash(password, 10);
+
+  // Insert user
+  const [newUser] = await db.insert(schema.users).values({
+    id: crypto.randomUUID(),
+    name,
+    email: email.toLowerCase(),
+    hashedPassword,
+    image: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(name)}`,
+  }).returning();
+
+  if (!newUser) {
+    return { error: 'Failed to create user' };
+  }
+
+  // Create default user settings (required for onboarding flow)
+  await db.insert(schema.userSettings).values({
+    userId: newUser.id,
+    onboardingCompleted: false,
+    defaultSymbol: 'XAUUSD',
+  });
+
+  // Login the newly registered user
+  try {
+    await signIn('credentials', {
+      email,
+      password,
+      redirectTo: '/onboarding',
+    });
+    return { success: true };
+  } catch (error) {
+    if (error instanceof AuthError) {
+      return { error: 'Account created, but failed to automatically sign in' };
+    }
+    throw error;
+  }
+}

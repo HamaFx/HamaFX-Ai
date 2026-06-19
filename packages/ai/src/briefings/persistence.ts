@@ -1,13 +1,35 @@
+/**
+ * Copyright 2026 HamaFX
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 // Briefings persistence — locate or create the dedicated `Briefings_Thread`
 // + idempotency helpers for `briefings_emitted`.
 //
 // We keep ONE Briefings_Thread for life: the cron handlers always reuse it,
 // and the chat sidebar pins it to the top via the `is_briefings` column.
+//
+// Phase A: added userId parameter. Briefings are still system-scoped (single
+// user), but the schema now requires user_id. Pass a constant system user ID
+// until Phase D implements per-user briefings.
 
 import { getDb, schema } from '@hamafx/db';
 import { and, eq } from 'drizzle-orm';
 
 import { type DbThread } from '../persistence';
+
+
 
 /**
  * Returns the singleton `Briefings_Thread`, creating one if absent. Cron
@@ -19,12 +41,12 @@ import { type DbThread } from '../persistence';
  * `set({ isBriefings: true, ... })` UPDATE can't leave a sibling thread
  * row orphaned (which would silently break the sidebar pin).
  */
-export async function getOrCreateBriefingsThread(): Promise<DbThread> {
+export async function getOrCreateBriefingsThread(userId: string): Promise<DbThread> {
   const db = getDb();
   const existing = await db
     .select()
     .from(schema.chatThreads)
-    .where(eq(schema.chatThreads.isBriefings, true))
+    .where(and(eq(schema.chatThreads.isBriefings, true), eq(schema.chatThreads.userId, userId)))
     .limit(1);
 
   const found = existing[0];
@@ -47,6 +69,7 @@ export async function getOrCreateBriefingsThread(): Promise<DbThread> {
     const inserted = await tx
       .insert(schema.chatThreads)
       .values({
+        userId,
         title: 'Briefings',
         titleSource: 'llm',
         isBriefings: true,
@@ -70,6 +93,7 @@ export async function getOrCreateBriefingsThread(): Promise<DbThread> {
 
 /** True when a briefing of `(eventId, kind)` has already been emitted. */
 export async function wasEmitted(
+  userId: string,
   eventId: string,
   kind: 'pre' | 'post' | 'weekly_review',
 ): Promise<boolean> {
@@ -78,6 +102,7 @@ export async function wasEmitted(
     .from(schema.briefingsEmitted)
     .where(
       and(
+        eq(schema.briefingsEmitted.userId, userId),
         eq(schema.briefingsEmitted.eventId, eventId),
         eq(schema.briefingsEmitted.kind, kind),
       ),
@@ -88,19 +113,26 @@ export async function wasEmitted(
 
 /**
  * Record that a briefing has been emitted, linking back to the message row
- * that carries the body. The (eventId, kind) primary key gives us idempotency
- * for free at the DB layer — a parallel emit will throw, which we catch
- * upstream and treat as "already emitted by another runner".
+ * that carries the body. The (userId, eventId, kind) primary key gives us
+ * idempotency for free at the DB layer — a parallel emit will throw, which
+ * we catch upstream and treat as "already emitted by another runner".
  */
 export async function recordEmitted(
+  userId: string,
   eventId: string,
   kind: 'pre' | 'post' | 'weekly_review',
   messageId: string,
 ): Promise<void> {
   await getDb()
     .insert(schema.briefingsEmitted)
-    .values({ eventId, kind, messageId })
-    .onConflictDoNothing({ target: [schema.briefingsEmitted.eventId, schema.briefingsEmitted.kind] });
+    .values({ userId, eventId, kind, messageId })
+    .onConflictDoNothing({
+      target: [
+        schema.briefingsEmitted.userId,
+        schema.briefingsEmitted.eventId,
+        schema.briefingsEmitted.kind,
+      ],
+    });
 }
 
 

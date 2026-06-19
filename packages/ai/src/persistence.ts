@@ -1,3 +1,19 @@
+/**
+ * Copyright 2026 HamaFX
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 // Chat persistence: load / save thread + messages, write per-turn telemetry.
 // Anything that touches Postgres lives here so route handlers stay thin.
 
@@ -312,7 +328,7 @@ export async function recordTelemetry(t: TelemetryInput): Promise<void> {
   await getDb()
     .insert(schema.chatTelemetry)
     .values({
-      userId: t.userId ?? null,
+      userId: t.userId ?? '__system__',
       threadId: t.threadId,
       messageId: t.messageId,
       model: t.model,
@@ -349,7 +365,7 @@ export async function recordToolTelemetry(t: ToolTelemetryInput): Promise<void> 
     await getDb()
       .insert(schema.chatToolTelemetry)
       .values({
-        userId: t.userId ?? null,
+        userId: t.userId ?? '__system__',
         threadId: t.threadId,
         messageId: t.messageId,
         tool: t.tool,

@@ -28,17 +28,16 @@
 
 ### 1.1 Overview
 
-Personal-mode, single-user. No accounts table, no sessions DB, no OAuth.
-One password (`APP_PASSWORD`) gates the entire app. On successful login a
-signed cookie (`hfx_auth`) is set. Every subsequent request is gated by
-Edge middleware that verifies the cookie HMAC.
+### 1.1 Overview
+
+Multi-tenant authentication managed by **NextAuth.js** (Auth.js). Supports multiple providers (Google, GitHub, Credentials). 
+Sessions are stored securely via cookies and backed by the database (`users`, `accounts`, `sessions` tables). Every subsequent request is gated by Edge middleware that checks the NextAuth session.
 
 ### 1.2 Middleware (src/middleware.ts)
 
 - **Runtime**: Edge (Web Crypto only — no Node APIs, no `postgres-js`).
-- **Cookie check**: Reads `hfx_auth`, calls `verifyAuthToken()` via Web
-  Crypto HMAC-SHA-256. If invalid or missing, redirects to `/login` with a
-  `?next=` query param pointing back to the original URL.
+- **Session check**: Reads NextAuth session cookies. If invalid or missing, redirects to `/auth/login` with a
+  `callbackUrl` query param pointing back to the original URL.
 - **CSRF**: Double-submit cookie pattern. A `hfx_csrf` cookie (random UUID)
   is minted if absent and echoed on every response. State-changing requests
   (`POST`, `PUT`, `DELETE`, `PATCH`) under `/api/*` must carry an
@@ -59,16 +58,12 @@ Edge middleware that verifies the cookie HMAC.
   | `/share/*`          | Future public-share pages                   |
   | `_next/*`, static   | Next.js internals, favicon, manifest, icons |
 
-### 1.3 Cookie Token Format
+### 1.3 NextAuth Configuration
 
-```
-base64url({ iat: number, exp: number }) + "." + base64url(HMAC-SHA-256)
-```
-
-- Signed with `AUTH_COOKIE_SECRET` (min 32 chars).
-- Default TTL: 30 days (`Max-Age=2592000`).
-- Cookie flags: `Path=/; HttpOnly; SameSite=Lax; Secure` (Secure only in
-  production).
+- Defined in `apps/web/src/lib/auth.ts`.
+- Uses Drizzle adapter to persist users and sessions.
+- Exposes `session.user.id` to API routes for multi-tenant data isolation.
+- Cookie flags: `Path=/; HttpOnly; SameSite=Lax; Secure` (Secure only in production).
 
 ### 1.4 CSRF Double-Submit Detail
 
@@ -138,7 +133,7 @@ flavours:
    systemd timers on the GCE VM and Vercel cron scheduler. Constant-time
    compare via `timingSafeEqual()`.
 
-2. **Session cookie** — the `hfx_auth` cookie. Lets the operator
+2. **Session cookie** — the NextAuth session cookie. Lets the operator
    hand-trigger a cron from the admin dashboard without pasting
    `CRON_SECRET` into the client.
 
@@ -151,7 +146,7 @@ status 500.
 
 | Function        | Scope                         | Where safe                 |
 |-----------------|-------------------------------|----------------------------|
-| `getAuthEnv()`  | `APP_PASSWORD`, `AUTH_COOKIE_SECRET`, `CRON_SECRET`, `NEXT_PUBLIC_APP_URL` | Edge middleware + Node routes |
+| `getAuthEnv()`  | `NEXTAUTH_SECRET`, `CRON_SECRET`, `NEXT_PUBLIC_APP_URL` | Edge middleware + Node routes |
 | `getServerEnv()`| Full `ServerEnv` (AI keys, DB URL, provider keys, etc.) | Node routes only          |
 
 Both are lazily cached — validation runs on first call, cached thereafter.
@@ -160,37 +155,13 @@ Both are lazily cached — validation runs on first call, cached thereafter.
 
 ## 3. Auth Routes
 
-### `POST /api/auth/login`
+### `GET/POST /api/auth/*`
 
-Password gate. Constant-time compare against `APP_PASSWORD`.
-
-**Runtime**: nodejs
-
-**Rate limit**: 10 attempts per 15-minute window per IP (in-memory, per
-function-instance — a deterrent, not a real defense). On limit: `429` with
-`Retry-After` header.
-
-| Field       | Type     | Required |
-|-------------|----------|----------|
-| `password`  | string   | Yes      |
-
-**Responses**:
-
-| Status | Body                                        |
-|--------|---------------------------------------------|
-| 200    | `{ "ok": true }` + `Set-Cookie: hfx_auth=…` |
-| 400    | `{ "error": { "code": "VALIDATION", … } }`  |
-| 401    | `{ "error": { "code": "AUTH", "message": "Incorrect password" } }` |
-| 429    | `{ "error": { "code": "AUTH", "message": "Too many attempts…" } }` |
-
-### `POST /api/auth/logout`
-
-Clears the `hfx_auth` cookie. No body, idempotent.
+Managed entirely by NextAuth.js. Handles provider sign-in, callbacks, and session retrieval.
 
 **Runtime**: nodejs
 
-**Response**: Always `200 { "ok": true }` with `Set-Cookie: hfx_auth=;
-Max-Age=0`.
+**Response**: Varies by NextAuth endpoint (e.g., `200 OK` for session, `302 Found` for redirects).
 
 ---
 

@@ -1,3 +1,19 @@
+/**
+ * Copyright 2026 HamaFX
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 // GET /api/cron/briefings — pre/post-event briefings.
 //
 // Phase 8 PR-10: this route is now a **manual-fallback path**. The
@@ -39,15 +55,6 @@ export async function GET(req: Request): Promise<Response> {
     });
 
     let preEmitted = 0;
-    for (const c of preCandidates) {
-      try {
-        const r = await emitPreEvent(c.id);
-        if (r.emitted) preEmitted += 1;
-      } catch (err) {
-        console.error(`[cron briefings] pre ${c.id} failed`, err);
-      }
-    }
-
     // --- Post-event window: [now-32m, now-28m] AND actual IS NOT NULL ---
     const postCandidates = await findHighImpactEventsInWindow({
       fromMs: now - PRE_OFFSET_MS - WINDOW_MS / 2,
@@ -56,12 +63,27 @@ export async function GET(req: Request): Promise<Response> {
     });
 
     let postEmitted = 0;
-    for (const c of postCandidates) {
-      try {
-        const r = await emitPostEvent(c.id);
-        if (r.emitted) postEmitted += 1;
-      } catch (err) {
-        console.error(`[cron briefings] post ${c.id} failed`, err);
+
+    // Temporary: Iterate over system user until NextAuth is implemented
+    const activeUsers = ['__system__'];
+
+    for (const userId of activeUsers) {
+      for (const c of preCandidates) {
+        try {
+          const r = await emitPreEvent(userId, c.id);
+          if (r.emitted) preEmitted += 1;
+        } catch (err) {
+          console.error(`[cron briefings] pre ${c.id} for user ${userId} failed`, err);
+        }
+      }
+
+      for (const c of postCandidates) {
+        try {
+          const r = await emitPostEvent(userId, c.id);
+          if (r.emitted) postEmitted += 1;
+        } catch (err) {
+          console.error(`[cron briefings] post ${c.id} for user ${userId} failed`, err);
+        }
       }
     }
 

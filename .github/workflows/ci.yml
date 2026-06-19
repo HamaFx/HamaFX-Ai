@@ -4,40 +4,84 @@ on:
   pull_request:
   push:
     branches: [main]
+  schedule:
+    - cron: '0 0 * * *' # Nightly
 
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  check:
-    name: lint · typecheck · test
+  lint-and-typecheck:
+    name: Lint & Typecheck
     runs-on: ubuntu-latest
-    timeout-minutes: 15
-
+    timeout-minutes: 10
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
         with:
           version: 9
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm turbo run lint
+      - run: pnpm turbo run typecheck
 
-      - name: Install
-        run: pnpm install --frozen-lockfile
+  unit-tests:
+    name: Unit & Integration Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm turbo run test -- --coverage
+      - name: Report Coverage
+        uses: davelosert/vitest-coverage-report-action@v2
+        if: github.event_name == 'pull_request'
+        with:
+          vite-config-path: packages/data/vite.config.ts # Optional depending on setup
 
-      - name: Lint
-        run: pnpm turbo run lint
+  e2e-tests:
+    name: E2E Playwright Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps
+        working-directory: ./apps/web
+      - run: pnpm exec playwright test
+        working-directory: ./apps/web
 
-      - name: Typecheck
-        run: pnpm turbo run typecheck
-
-      - name: Test
-        run: pnpm turbo run test
+  nightly-eval:
+    name: AI Eval Harness
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm turbo run eval

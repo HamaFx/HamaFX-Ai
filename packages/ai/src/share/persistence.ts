@@ -1,3 +1,19 @@
+/**
+ * Copyright 2026 HamaFX
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 // Share-snapshot persistence.
 //
 // The `share_snapshot` tool inserts a row, then signs an HMAC token of
@@ -10,6 +26,7 @@ import type { AnnotateChartOutput, Symbol, Timeframe } from '@hamafx/shared';
 import { eq } from 'drizzle-orm';
 
 export interface CreateSnapshotArgs {
+  userId: string;
   title: string;
   body: string;
   overlay?: AnnotateChartOutput | undefined;
@@ -46,6 +63,7 @@ export async function createSnapshot(args: CreateSnapshotArgs): Promise<Snapshot
   const inserted = await getDb()
     .insert(schema.sharedSnapshots)
     .values({
+      userId: args.userId,
       title: args.title,
       body: args.body,
       overlay: (args.overlay ?? null) as Record<string, unknown> | null,

@@ -6,7 +6,7 @@
 </p>
 
 <p align="center">
-  <strong>Your personal AI trading copilot.</strong><br>
+  <strong>The Open-Source, Multi-User AI Trading Platform.</strong><br>
   Chat-driven. Mobile-first. Built for gold & forex.
 </p>
 
@@ -14,7 +14,7 @@
   <img src="https://img.shields.io/badge/status-production%20ready-48d597?style=flat-square" alt="Status: Production Ready">
   <img src="https://img.shields.io/badge/tests-350+-48d597?style=flat-square" alt="Tests: 350+">
   <img src="https://img.shields.io/badge/ai%20tools-32-f5b945?style=flat-square" alt="AI Tools: 32">
-  <img src="https://img.shields.io/badge/license-UNLICENSED-8a93a3?style=flat-square" alt="License">
+  <img src="https://img.shields.io/badge/license-Apache%202.0-8a93a3?style=flat-square" alt="License">
 </p>
 
 <br>
@@ -151,8 +151,8 @@ Worker (GCE VM)
 - **AI:** Vercel AI SDK v5 · Google Vertex AI · AI Gateway
 - **DB:** Postgres (Supabase) · pgvector · Drizzle ORM · PGlite (local dev)
 - **Build:** pnpm workspaces · Turborepo · esbuild (worker)
-- **Auth:** Single password · HMAC cookie · CSRF · No RLS needed
-- **Testing:** Vitest · 64 test files · 350+ cases · Manual AI evals
+- **Auth:** NextAuth.js v5 · CSRF · BYOK (Bring Your Own Key) per user
+- **Testing:** Vitest · Playwright · 64 test files · 350+ cases
 
 ---
 
@@ -172,6 +172,14 @@ For **AI agents** working on this codebase, start with [`AGENTS.md`](docs/AGENTS
 | [07-worker.md](docs/07-worker.md) | Worker daemon, SignalR, 7 jobs, systemd |
 | [08-deployment.md](docs/08-deployment.md) | Production cloud deployment |
 | [09-testing.md](docs/09-testing.md) | Test patterns, CI, eval harness |
+| [10-self-hosting.md](docs/10-self-hosting.md) | Multi-tenant Self-hosting guide |
+| [11-contributing-guide.md](docs/11-contributing-guide.md) | Architecture deep dive for contributors |
+
+---
+
+## 🤝 Contributing
+
+We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) and [Code of Conduct](CODE_OF_CONDUCT.md) for more details on how to get started.
 
 ---
 
@@ -199,7 +207,7 @@ pnpm --filter @hamafx/ai eval -- \
 3. **Show the work** — every opinion backed by indicators, candles, or headlines
 4. **No hallucinated prices** — numbers always come from tool results, never free-form
 5. **AI-agent-friendly codebase** — files, naming, and docs optimized for autonomous coding agents
-6. **Single-user by design** — no RLS, no multi-tenancy, no GDPR overhead. One password gate.
+6. **Multi-user by design** — BYOK architecture with strict tenant isolation.
 
 ---
 

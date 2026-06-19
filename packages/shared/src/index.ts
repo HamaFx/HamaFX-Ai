@@ -1,3 +1,19 @@
+/**
+ * Copyright 2026 HamaFX
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 // Public barrel for @hamafx/shared. Anything not exported here is private to
 // the package — never reach into deep paths from consumers.
 
@@ -62,8 +78,9 @@ export * from './schemas/briefings';
 export * from './ai/tool-names';
 export * from './ai/tool-io';
 
-// Errors
+// Errors & Logging
 export * from './errors';
+export * from './logger';
 // BYOK encryption is server-only (uses node:crypto) — import directly
 // from '@hamafx/shared/encryption' instead. Re-exporting it here would
 // pull node:crypto into any client component that imports the barrel.

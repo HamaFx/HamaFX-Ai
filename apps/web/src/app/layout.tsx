@@ -1,3 +1,19 @@
+/**
+ * Copyright 2026 HamaFX
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 import type { Metadata, Viewport } from 'next';
 import { Inter, JetBrains_Mono } from 'next/font/google';
 import { ViewTransitions } from 'next-view-transitions';
@@ -23,15 +39,13 @@ export const metadata: Metadata = {
     default: 'HamaFX-Ai',
     template: '%s · HamaFX-Ai',
   },
-  description: 'Personal AI trading copilot for XAUUSD, EURUSD, GBPUSD.',
+  description: 'AI trading copilot for forex & commodities.',
   applicationName: 'HamaFX-Ai',
   formatDetection: {
     telephone: false,
     address: false,
     email: false,
   },
-  // No public crawling — personal app.
-  robots: { index: false, follow: false },
   icons: {
     icon: [
       { url: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },

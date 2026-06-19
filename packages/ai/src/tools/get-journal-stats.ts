@@ -1,3 +1,19 @@
+/**
+ * Copyright 2026 HamaFX
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 // Tool: get_journal_stats.
 //
 // Reuses `computeStats` for the global block and adds per-symbol +
@@ -15,6 +31,7 @@ import { and, eq, gte, lte, sql, type SQL } from 'drizzle-orm';
 import type { z } from 'zod';
 
 import { computeStats } from '../journal/persistence';
+import { getToolContext } from '../tool-context';
 
 const InputSchema = GetJournalStatsInputSchema;
 
@@ -29,12 +46,14 @@ export const getJournalStatsTool = tool({
     "Compute journal stats — count, win rate, average R-multiple, total R — globally and broken down by symbol and by tag. Optional filters: time window (`sinceMs`/`untilMs`, ms epoch), `symbol`, `side`. Use for any 'how am I doing on X' or 'win rate this month' prompt. Returns top breakdowns sorted by trade count.",
   inputSchema: InputSchema,
   execute: async ({ sinceMs, untilMs, symbol, side }): Promise<GetJournalStatsOutput> => {
-    const stats = await computeStats({
+    const userId = getToolContext().userId;
+
+    const stats = await computeStats(userId, {
       ...(sinceMs !== undefined ? { sinceMs } : {}),
       ...(untilMs !== undefined ? { untilMs } : {}),
     });
 
-    const filters: SQL[] = [];
+    const filters: SQL[] = [eq(schema.journalEntries.userId, userId)];
     if (sinceMs !== undefined) filters.push(gte(schema.journalEntries.openedAt, new Date(sinceMs)));
     if (untilMs !== undefined) filters.push(lte(schema.journalEntries.openedAt, new Date(untilMs)));
     if (symbol !== undefined) filters.push(eq(schema.journalEntries.symbol, symbol));

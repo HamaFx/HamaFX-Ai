@@ -60,6 +60,33 @@ expect(result.ticks).toHaveLength(1);
 expect(result.ticks[0].symbol).toBe('XAUUSD');
 ```
 
+### Database Testing (Isolated Transactions)
+Use `packages/db/src/test-utils.ts` to run database tests within an isolated transaction that rolls back after each test. This ensures a clean state without truncating tables:
+
+```typescript
+import { withIsolatedTx } from '@hamafx/db/test-utils';
+
+it('creates a user', async () => {
+  await withIsolatedTx(async (tx) => {
+    const user = await tx.insert(users).values({...}).returning();
+    expect(user).toBeDefined();
+  });
+});
+```
+
+### NextAuth Session Mocking
+For testing API routes or components that require a user session, use the helpers in `apps/web/test/auth-helpers.ts`:
+
+```typescript
+import { mockSession } from '@hamafx/web/test/auth-helpers';
+
+it('returns user data', async () => {
+  mockSession({ user: { id: 'user-123' } });
+  const response = await GET(req);
+  expect(response.status).toBe(200);
+});
+```
+
 ### Worker Jobs
 Jobs are tested by calling their `run()` function with a mock context:
 
@@ -122,20 +149,28 @@ pnpm --filter @hamafx/ai eval -- \
 }
 ```
 
+## E2E Testing
+
+Playwright is used for End-to-End testing.
+
+```bash
+pnpm --filter @hamafx/web test:e2e
+```
+
 ## What to Test When Adding Features
 
 1. **New AI tool**: Test the execute function. Test that telemetry records. Test input validation.
-2. **New API route**: Integration test with HTTP request. Test auth (200 with cookie, 401 without). Test error responses.
+2. **New API route**: Integration test with HTTP request. Test NextAuth session mock (200 with session, 401 without). Test error responses.
 3. **New provider**: Test map/transform functions. Test empty response handling. Test error handling.
-4. **New DB schema**: Test that migrations apply cleanly. Test both Postgres and PGlite. Test CRUD operations.
+4. **New DB schema**: Test that migrations apply cleanly. Test CRUD operations using `withIsolatedTx`.
 5. **New worker job**: Test the run function. Test idempotency. Test abort signal handling.
 
 ## CI
 
-`.github/workflows/ci.yml` runs on every PR and push to main:
-1. `pnpm install --frozen-lockfile`
-2. `pnpm turbo run lint`
-3. `pnpm turbo run typecheck`
-4. `pnpm turbo run test`
+`.github/workflows/ci.yml` runs on every PR and push to main. The pipeline is parallelized for speed:
+
+1. `lint-and-typecheck`: `pnpm turbo run lint typecheck`
+2. `unit-tests`: `pnpm turbo run test`
+3. `e2e-tests`: Playwright tests
 
 15-minute timeout. No deploy step (Vercel handles that). No eval step (manual only).

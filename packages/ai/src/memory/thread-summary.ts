@@ -1,3 +1,19 @@
+/**
+ * Copyright 2026 HamaFX
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 // Rolling thread summary.
 //
 // Long threads send every prior message back to the model on every turn
@@ -23,6 +39,7 @@ import { and, desc, eq } from 'drizzle-orm';
 
 import { dailySpendUsd } from '../cost';
 import { resolveModel } from '../model';
+import { maybeGetToolContext } from '../tool-context';
 import type { DbMessage } from '../persistence';
 
 const KEEP_VERBATIM = 12;
@@ -170,7 +187,8 @@ async function generateSummary(
   // Hard budget guard — never spend on a memory side-effect we can do without.
   let allowed = true;
   try {
-    const spent = await dailySpendUsd();
+    const ctx = maybeGetToolContext();
+    const spent = await dailySpendUsd(ctx?.userId ?? '__system__');
     if (spent >= env.MAX_DAILY_USD) allowed = false;
   } catch {
     allowed = false;

@@ -1,3 +1,19 @@
+/**
+ * Copyright 2026 HamaFX
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 // Helpers for Vercel-Cron-triggered route handlers.
 //
 // Vercel sends `Authorization: Bearer ${CRON_SECRET}` on every cron
@@ -50,7 +66,7 @@ export async function withCronAuth(
     const cookieHeader = req.headers.get('cookie') ?? '';
     const token = readCookie(cookieHeader, AUTH_COOKIE_NAME);
     if (token) {
-      const payload = await verifyAuthToken(token, env.AUTH_COOKIE_SECRET);
+      const payload = await verifyAuthToken(token, env.AUTH_COOKIE_SECRET ?? '');
       hasSessionAuth = payload !== null;
     }
   }

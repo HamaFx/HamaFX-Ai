@@ -1,5 +1,22 @@
+/**
+ * Copyright 2026 HamaFX
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 import { sql } from 'drizzle-orm';
 import { index, jsonb, pgTable, text, timestamp, unique, uuid, vector } from 'drizzle-orm/pg-core';
+import { users } from './auth';
 
 /**
  * Unified memory index. Phase 7b additions:
@@ -24,11 +41,16 @@ import { index, jsonb, pgTable, text, timestamp, unique, uuid, vector } from 'dr
  *   `meta` is a tiny JSON envelope for per-kind extras (e.g. `symbol`,
  *   `outcome`, `eventId`). Keep payloads small — the embedding does the
  *   heavy lifting.
+ *
+ * Phase A: added user_id so memory is isolated per user. Shared news
+ * embeddings remain in the separate `news_embeddings` table.
  */
 export const memoryEmbeddings = pgTable(
   'memory_embeddings',
   {
     id: uuid('id').primaryKey().defaultRandom(),
+    /** Phase A — multi-user. References the NextAuth users table. */
+    userId: text('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
     /** "journal" | "briefing" | "thread_synopsis" — discriminator. */
     kind: text('kind').notNull(),
     /** Originating row id (journal_entries.id, chat_messages.id, ...). */
@@ -46,7 +68,7 @@ export const memoryEmbeddings = pgTable(
     occurredAt: timestamp('occurred_at', { withTimezone: true }).notNull(),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   },
-  (t) => [
+  (t) => [index('memory_embeddings_user_id_idx').on(t.userId), 
     index('memory_kind_idx').on(t.kind),
     index('memory_source_idx').on(t.kind, t.sourceId),
     index('memory_symbol_idx').on(t.symbol),

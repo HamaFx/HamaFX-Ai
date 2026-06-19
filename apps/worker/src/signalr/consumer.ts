@@ -1,3 +1,19 @@
+/**
+ * Copyright 2026 HamaFX
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 // BiQuote SignalR consumer. Holds a single persistent hub connection,
 // subscribes to the three supported symbols, validates incoming ticks
 // against the BiquoteSignalRTick schema, normalises them to LiveTick
@@ -75,7 +91,7 @@ export class SignalRConsumer {
   private readonly opts: ConsumerOptions;
   private connection: MinimalHubConnection | null = null;
   /** Symbols we've asked the hub to subscribe to; resent on reconnect. */
-  private subscribedSymbols: Symbol[] = [];
+  private subscribedSymbols: string[] = [];
   /** True after `start()` resolves and until `stop()` runs. */
   private started = false;
   /**
@@ -124,8 +140,6 @@ export class SignalRConsumer {
         err: err ? String(err) : 'no error',
       });
       this.started = false;
-      // Phase 2 hardening §1 — schedule a manual rebuild instead of
-      // letting the worker silently sit with no connection.
       if (!this.stopping) this.scheduleReconnect();
     });
 
@@ -160,13 +174,6 @@ export class SignalRConsumer {
     this.started = false;
   }
 
-  /**
-   * Manual rebuild loop. Triggered when the SignalR SDK's own
-   * `withAutomaticReconnect` schedule has been exhausted (it stops
-   * trying after the array runs out). We cap the backoff at 60 s and
-   * use jitter so workers restarting in lockstep don't synchronise
-   * their reconnect attempts.
-   */
   private scheduleReconnect(): void {
     if (this.stopping || this.reconnectTimer) return;
     this.reconnectAttempt += 1;
@@ -187,8 +194,6 @@ export class SignalRConsumer {
 
   private async rebuild(): Promise<void> {
     if (this.stopping) return;
-    // The previous connection is dead — drop the reference so `start()`
-    // builds a fresh one. `started` is already false from `onclose`.
     this.connection = null;
     try {
       await this.start();
@@ -202,15 +207,28 @@ export class SignalRConsumer {
     }
   }
 
-  /** Public for tests; production code calls it via start()/onreconnected. */
-  async subscribe(symbols: Symbol[]): Promise<void> {
+  async subscribe(symbols: string[]): Promise<void> {
     if (!this.connection || symbols.length === 0) return;
     await this.connection.invoke('Subscribe', symbols);
   }
 
-  async unsubscribe(symbols: Symbol[]): Promise<void> {
+  async unsubscribe(symbols: string[]): Promise<void> {
     if (!this.connection || symbols.length === 0) return;
     await this.connection.invoke('Unsubscribe', symbols);
+  }
+
+  /**
+   * Update active subscriptions dynamically.
+   */
+  async updateSubscriptions(added: string[], removed: string[]): Promise<void> {
+    if (added.length > 0) {
+      this.subscribedSymbols.push(...added);
+      await this.subscribe(added);
+    }
+    if (removed.length > 0) {
+      this.subscribedSymbols = this.subscribedSymbols.filter((s) => !removed.includes(s));
+      await this.unsubscribe(removed);
+    }
   }
 
   /**

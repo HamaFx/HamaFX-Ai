@@ -1,11 +1,27 @@
+/**
+ * Copyright 2026 HamaFX
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 // /settings/usage — token spend, daily-budget gauge, model breakdown,
 // recent turns. Server component: pulls everything from the DB in one
 // pass per render. Personal-mode volume keeps the query trivial.
 
 import { computeUsage, listTelemetry, type DayBucket, type UsageStats } from '@hamafx/ai';
+import { auth } from '@/auth';
 import type { Metadata } from 'next';
 
-import { PageHeader } from '@/components/layout/page-header';
 import { cn } from '@/lib/cn';
 import { getServerEnv } from '@/lib/env';
 
@@ -22,13 +38,16 @@ export default async function UsagePage() {
     /* ignore — env may not be fully populated in dev */
   }
 
-  const [stats, recent] = await Promise.all([computeUsage(), listTelemetry(20)]);
+  const session = await auth();
+  if (!session?.user?.id) return null;
+
+  const [stats, recent] = await Promise.all([
+    computeUsage(session.user.id), 
+    listTelemetry(session.user.id, 20)
+  ]);
 
   return (
-    <div className="flex flex-col gap-4">
-      <PageHeader title="Usage" description="AI cost and token spend over the last 30 days." />
-
-      <BudgetCard stats={stats} maxDailyUsd={maxDailyUsd} />
+    <div className="flex flex-col gap-4">      <BudgetCard stats={stats} maxDailyUsd={maxDailyUsd} />
 
       <DailyChart daily7={stats.daily7} />
 

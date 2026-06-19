@@ -1,3 +1,19 @@
+/**
+ * Copyright 2026 HamaFX
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 // Tool: compute_position_health.
 //
 // Joins open journal entries to live mid prices and emits per-position
@@ -18,6 +34,7 @@ import { tool } from 'ai';
 import type { z } from 'zod';
 
 import { listEntries } from '../journal/persistence';
+import { getToolContext } from '../tool-context';
 
 const InputSchema = ComputePositionHealthInputSchema;
 
@@ -34,7 +51,7 @@ export const computePositionHealthTool = tool({
     'For each currently-open journal entry, compute live P/L in pips and R-multiples plus distance to stop and target. Use when the user asks "how are my open trades", "anything close to stopping out", or wants a live P/L pulse. Skips closed trades; sets `empty: true` when no positions are open and `partial: true` when at least one row was dropped due to a price-fetch failure.',
   inputSchema: InputSchema,
   execute: async ({ symbol, limit }): Promise<ComputePositionHealthOutput> => {
-    const all = await listEntries({ limit: 200, ...(symbol ? { symbol } : {}) });
+    const all = await listEntries(getToolContext().userId, { limit: 200, ...(symbol ? { symbol } : {}) });
     const open = all.filter((e) => e.outcome === 'open').slice(0, limit);
 
     if (open.length === 0) {

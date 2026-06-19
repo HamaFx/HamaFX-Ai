@@ -1,3 +1,19 @@
+/**
+ * Copyright 2026 HamaFX
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 // POST /api/push/subscribe
 //
 // Persists a browser-issued PushSubscription. Idempotent on `endpoint`
@@ -12,8 +28,7 @@
 import { savePushSubscription } from '@hamafx/ai';
 import { z } from 'zod';
 
-import { AUTH_COOKIE_NAME, verifyAuthToken } from '@/lib/auth';
-import { getAuthEnv } from '@/lib/env';
+import { withAuth } from '@/lib/api';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -26,16 +41,7 @@ const BodySchema = z.object({
   }),
 });
 
-export async function POST(req: Request): Promise<Response> {
-  // Defense-in-depth recheck (middleware already gates this).
-  const cookieHeader = req.headers.get('cookie') ?? '';
-  const token = readCookie(cookieHeader, AUTH_COOKIE_NAME);
-  const env = getAuthEnv();
-  const session = await verifyAuthToken(token, env.AUTH_COOKIE_SECRET);
-  if (!session) {
-    return Response.json({ error: 'unauthorized' }, { status: 401 });
-  }
-
+export const POST = withAuth<void>(async (req, { user }) => {
   const missing: string[] = [];
   if (!process.env.VAPID_PUBLIC_KEY) missing.push('VAPID_PUBLIC_KEY');
   if (!process.env.VAPID_PRIVATE_KEY) missing.push('VAPID_PRIVATE_KEY');
@@ -56,6 +62,7 @@ export async function POST(req: Request): Promise<Response> {
 
   const userAgent = req.headers.get('user-agent') ?? null;
   const row = await savePushSubscription({
+    userId: user.userId,
     endpoint: parsed.data.endpoint,
     p256dh: parsed.data.keys.p256dh,
     auth: parsed.data.keys.auth,
@@ -63,14 +70,4 @@ export async function POST(req: Request): Promise<Response> {
   });
 
   return Response.json({ id: row.id }, { status: 200 });
-}
-
-function readCookie(header: string, name: string): string | undefined {
-  if (!header) return undefined;
-  for (const part of header.split(';')) {
-    const eq = part.indexOf('=');
-    if (eq < 0) continue;
-    if (part.slice(0, eq).trim() === name) return part.slice(eq + 1).trim();
-  }
-  return undefined;
-}
+});

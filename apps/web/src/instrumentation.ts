@@ -1,3 +1,19 @@
+/**
+ * Copyright 2026 HamaFX
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 // Phase 8 PR-18 — Next.js instrumentation hook. Runs once per server
 // process (Node + Edge runtimes) before the first request lands.
 //
@@ -9,6 +25,10 @@
 //
 // When SENTRY_DSN is absent the whole hook is a no-op so local dev /
 // preview deploys without the env var work the same as before.
+//
+// Phase A: legacy admin auto-creation. When APP_PASSWORD is set and the
+// users table is empty, we create a default admin user with hashed
+// password so the single-user → multi-user migration is seamless.
 
 export async function register(): Promise<void> {
   // ── Local dev: initialize embedded PGlite ──────────────────────
@@ -30,6 +50,131 @@ export async function register(): Promise<void> {
     } catch (err) {
       console.warn(
         '[boot] Could not initialize PGlite — some features may be unavailable:',
+        (err as Error).message,
+      );
+    }
+  }
+
+  // ── Phase A: legacy admin auto-creation ────────────────────────
+  // When APP_PASSWORD is set and no users exist yet, create a default
+  // admin user with the hashed password. This lets single-user
+  // deployments upgrade to NextAuth without manual DB seeding.
+  if (
+    process.env.NEXT_RUNTIME === 'nodejs' &&
+    process.env.APP_PASSWORD
+  ) {
+    try {
+      const { getDb, schema } = await import(
+        /* webpackIgnore: true */
+        '@hamafx/db'
+      );
+      const bcrypt = await import('bcryptjs');
+
+      const db = getDb();
+      const rows = await db.select({ cnt: schema.users.id }).from(schema.users).limit(1);
+
+      if (rows.length === 0) {
+        const adminEmail = process.env.ADMIN_EMAIL || 'admin@localhost';
+        const hashedPassword = await bcrypt.hash(process.env.APP_PASSWORD, 12);
+
+        // Auto-generate a UUID for the admin user (NextAuth convention)
+        const { randomUUID } = await import('node:crypto');
+        const userId = randomUUID();
+
+        await db.insert(schema.users).values({
+          id: userId,
+          email: adminEmail,
+          name: 'Admin',
+          hashedPassword,
+          role: 'user',
+        });
+
+        await db.insert(schema.userSettings).values({
+          userId,
+          defaultSymbol: 'XAUUSD',
+          timezone: 'UTC',
+          language: 'en',
+          onboardingCompleted: false,
+        });
+
+        // Add default watchlist symbols
+        const defaultSymbols = ['XAUUSD', 'EURUSD', 'GBPUSD'];
+        await db.insert(schema.userSymbols).values(
+          defaultSymbols.map((sym, i) => ({
+            userId,
+            symbol: sym,
+            displayOrder: i,
+          })),
+        );
+
+        console.log(
+          `[boot] Legacy admin user created: ${adminEmail} (${defaultSymbols.length} default symbols)`,
+        );
+
+        // Backfill user_id on existing data — all legacy rows belong to
+        // this admin user. This is safe because the user_id column is
+        // nullable; rows without user_id will be invisible to queries
+        // that filter by user_id until backfilled.
+        const tablesToBackfill = [
+          'chat_threads',
+          'alerts',
+          'journal_entries',
+          'push_subscriptions',
+          'shared_snapshots',
+          'chat_telemetry',
+          'chat_tool_telemetry',
+        ] as const;
+
+        for (const table of tablesToBackfill) {
+          try {
+            await db.execute(
+              `UPDATE "${table}" SET "user_id" = '${userId}' WHERE "user_id" IS NULL`,
+            );
+          } catch {
+            // Table might not exist yet (fresh DB) — skip
+          }
+        }
+
+        // For daily_ai_spend and briefings_emitted, add PK columns
+        try {
+          await db.execute(
+            `UPDATE "daily_ai_spend" SET "user_id" = '${userId}' WHERE "user_id" IS NULL`,
+          );
+        } catch { /* skip */ }
+        try {
+          await db.execute(
+            `UPDATE "briefings_emitted" SET "user_id" = '${userId}' WHERE "user_id" IS NULL`,
+          );
+        } catch { /* skip */ }
+        try {
+          await db.execute(
+            `UPDATE "memory_embeddings" SET "user_id" = '${userId}' WHERE "user_id" IS NULL`,
+          );
+        } catch { /* skip */ }
+
+        console.log('[boot] Legacy data backfilled to admin user');
+      }
+    } catch (err) {
+      console.warn(
+        '[boot] Legacy admin creation failed (non-fatal):',
+        (err as Error).message,
+      );
+    }
+  }
+
+  // ── Langfuse LLM Observability ──────────────────────────────────
+  // Node runtime only — OpenTelemetry SDK uses Node APIs.
+  // Silently skipped when LANGFUSE_* env vars are not set.
+  if (process.env.NEXT_RUNTIME === 'nodejs') {
+    try {
+      const { initLangfuse } = await import(
+        /* webpackIgnore: true */
+        '@hamafx/ai'
+      );
+      initLangfuse();
+    } catch (err) {
+      console.warn(
+        '[boot] Langfuse init failed (non-fatal):',
         (err as Error).message,
       );
     }

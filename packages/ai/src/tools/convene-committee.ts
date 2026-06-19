@@ -1,3 +1,19 @@
+/**
+ * Copyright 2026 HamaFX
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 /* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any, prefer-const */
 import { getDb, schema } from '@hamafx/db';
 import {
@@ -9,8 +25,8 @@ import {
 import { tool, generateText } from 'ai';
 import type { z } from 'zod';
 
-import { getToolContext, type ToolEnv } from '../tool-context';
-import { resolveModel, getVertexGoogleSearchTool } from '../model';
+import { getToolContext, type ToolContext } from '../tool-context';
+import { resolveUserModel, getVertexGoogleSearchTool } from '../model';
 
 import { analyzeFundamentalTool } from './analyze-fundamental';
 import { analyzeTechnicalTool } from './analyze-technical';
@@ -43,13 +59,13 @@ export const conveneCommitteeTool = tool({
 
     // 2. Run the 3 Personas in parallel
     const [economist, technician, riskManager] = await Promise.all([
-      runEconomist(input, fundamentalData, ctx.env),
-      runTechnician(input, technicalData, ctx.env),
-      runRiskManager(input, journalData, riskData, ctx.env),
+      runEconomist(input, fundamentalData, ctx),
+      runTechnician(input, technicalData, ctx),
+      runRiskManager(input, journalData, riskData, ctx),
     ]);
 
     // 3. Run the Moderator
-    const { grade, goNoGo, consensus } = await runModerator(input, economist, technician, riskManager, ctx.env);
+    const { grade, goNoGo, consensus } = await runModerator(input, economist, technician, riskManager, ctx);
 
     return {
       symbol,
@@ -69,7 +85,7 @@ export const conveneCommitteeTool = tool({
 // Persona Runners
 // ---------------------------------------------------------------------------
 
-async function runEconomist(input: any, data: any, env: ToolEnv): Promise<CommitteeVerdict> {
+async function runEconomist(input: any, data: any, ctx: ToolContext): Promise<CommitteeVerdict> {
   const prompt = `You are The Economist on a trading committee. Evaluate this trade:
 Symbol: ${input.symbol}
 Side: ${input.side}
@@ -91,11 +107,13 @@ Output ONLY a JSON object:
 No markdown fences, no preamble.`;
 
   try {
+    // Only pass tools if the vertex env is available (which we check via a fallback, but for now we skip googleSearch tool if no vertex)
+    const tools = ctx.env.GOOGLE_VERTEX_PROJECT ? { googleSearch: getVertexGoogleSearchTool(ctx.env as any) } : undefined;
     const { text, steps } = await generateText({
-      model: resolveModel(env.AI_FUNDAMENTAL_MODEL || 'google-vertex/gemini-2.5-flash', env),
+      model: resolveUserModel(ctx.userSettings, 'fundamental', ctx.env).model,
       system: "You are an expert forex macroeconomic analyst. Always output raw JSON.",
       prompt,
-      tools: { googleSearch: getVertexGoogleSearchTool(env as any) },
+      ...(tools ? { tools } : {}),
     });
 
     const parsed = parseJson<Omit<CommitteeVerdict, 'persona' | 'sources'>>(text);
@@ -130,7 +148,7 @@ No markdown fences, no preamble.`;
   }
 }
 
-async function runTechnician(input: any, data: any, env: ToolEnv): Promise<CommitteeVerdict> {
+async function runTechnician(input: any, data: any, ctx: ToolContext): Promise<CommitteeVerdict> {
   const prompt = `You are The Technician on a trading committee. Evaluate this trade:
 Symbol: ${input.symbol}
 Side: ${input.side}
@@ -152,7 +170,7 @@ No markdown fences, no preamble.`;
 
   try {
     const { text } = await generateText({
-      model: resolveModel(env.AI_TECHNICAL_MODEL || 'google-vertex/gemini-2.5-flash', env),
+      model: resolveUserModel(ctx.userSettings, 'technical', ctx.env).model,
       system: "You are an expert forex technical analyst. Always output raw JSON.",
       prompt,
     });
@@ -165,7 +183,7 @@ No markdown fences, no preamble.`;
   }
 }
 
-async function runRiskManager(input: any, journalData: any, riskData: any, env: ToolEnv): Promise<CommitteeVerdict> {
+async function runRiskManager(input: any, journalData: any, riskData: any, ctx: ToolContext): Promise<CommitteeVerdict> {
   const prompt = `You are The Risk Manager on a trading committee. Evaluate this trade:
 Symbol: ${input.symbol}
 Side: ${input.side}
@@ -192,7 +210,7 @@ No markdown fences, no preamble.`;
 
   try {
     const { text } = await generateText({
-      model: resolveModel(env.AI_DEFAULT_MODEL || 'google-vertex/gemini-2.5-flash', env),
+      model: resolveUserModel(ctx.userSettings, 'default', ctx.env).model,
       system: "You are an expert risk manager. Always output raw JSON.",
       prompt,
     });
@@ -205,7 +223,7 @@ No markdown fences, no preamble.`;
   }
 }
 
-async function runModerator(input: any, e: CommitteeVerdict, t: CommitteeVerdict, r: CommitteeVerdict, env: ToolEnv) {
+async function runModerator(input: any, e: CommitteeVerdict, t: CommitteeVerdict, r: CommitteeVerdict, ctx: ToolContext) {
   const prompt = `You are the Committee Moderator. You have received three reports for a ${input.side} trade on ${input.symbol} at ${input.entry}.
 
 Economist: ${e.verdict} (${e.confidence}/10) - ${e.recommendation}
@@ -223,7 +241,7 @@ No markdown fences, no preamble.`;
 
   try {
     const { text } = await generateText({
-      model: resolveModel(env.AI_DEFAULT_MODEL || 'google-vertex/gemini-2.5-flash', env),
+      model: resolveUserModel(ctx.userSettings, 'default', ctx.env).model,
       system: "You are the head trader. Always output raw JSON.",
       prompt,
     });

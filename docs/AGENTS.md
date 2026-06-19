@@ -57,6 +57,10 @@ pnpm --filter @hamafx/db migrate:apply   # apply to DATABASE_URL
 
 # AI Evals
 pnpm --filter @hamafx/ai eval -- --base-url http://localhost:3000 --cookie "hfx_auth=..." --cases
+
+# Langfuse (LLM Observability)
+docker compose up -d              # start Postgres + Langfuse
+open http://localhost:3001         # Langfuse dashboard
 ```
 
 ## Monorepo Structure
@@ -170,6 +174,14 @@ For fundamental/technical turns: cheap model generates JSON plan, persisted as s
 - Always use `-- --run` flag with vitest to avoid watch mode
 - `pnpm turbo run test -- --run` runs all packages
 - Individual: `pnpm --filter @hamafx/worker test -- --run`
+
+### Langfuse Tracing
+- Self-hosted at http://localhost:3001 (docker compose up)
+- Tracing is OPTIONAL — when LANGFUSE_* env vars are unset, the app
+  boots normally with no tracing overhead.
+- API keys are created in the Langfuse UI after first boot (Settings → API Keys)
+- The AI SDK auto-emits OTel spans — no manual instrumentation needed.
+- Coexists with Sentry: Sentry uses its own SDK, Langfuse uses OTel.
 
 ## What NOT to Change
 

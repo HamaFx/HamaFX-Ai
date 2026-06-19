@@ -1,3 +1,19 @@
+/**
+ * Copyright 2026 HamaFX
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 // Alert evaluator. Pure-ish core (decideMatch/decideCross) + an orchestrator
 // (evaluateAlerts) that fans out data fetches and writes back to the DB.
 //
@@ -14,6 +30,8 @@
 // active until a channel returns 2xx so transient delivery errors retry on
 // the next cron tick.
 
+import { getDb, schema } from '@hamafx/db';
+import { eq, inArray } from 'drizzle-orm';
 import { getCandles, getPrice } from '@hamafx/data';
 import { computeIndicator } from '@hamafx/indicators';
 import {
@@ -286,16 +304,43 @@ export async function evaluateAlerts(
   } = {},
 ): Promise<EvaluationResult> {
   const alerts = await listEvaluable();
-  const env: EvaluatorEnv = opts.env ?? {
+  const globalEnv: EvaluatorEnv = opts.env ?? {
     RESEND_API_KEY: process.env.RESEND_API_KEY ?? undefined,
     ALERT_FROM_EMAIL: process.env.ALERT_FROM_EMAIL ?? undefined,
-    ALERT_TO_EMAIL: process.env.ALERT_TO_EMAIL ?? undefined,
+    ALERT_TO_EMAIL: process.env.ALERT_TO_EMAIL ?? undefined, // Fallback
     TELEGRAM_BOT_TOKEN: process.env.TELEGRAM_BOT_TOKEN ?? undefined,
     TELEGRAM_CHAT_ID: process.env.TELEGRAM_CHAT_ID ?? undefined,
     VAPID_PUBLIC_KEY: process.env.VAPID_PUBLIC_KEY ?? undefined,
     VAPID_PRIVATE_KEY: process.env.VAPID_PRIVATE_KEY ?? undefined,
     VAPID_SUBJECT: process.env.VAPID_SUBJECT ?? undefined,
   };
+
+  const db = getDb();
+  const userIds = Array.from(new Set(alerts.map((a) => a.userId)));
+  const userEnvMap = new Map<string, EvaluatorEnv>();
+
+  if (userIds.length > 0) {
+    const userRows = await db
+      .select({
+        id: schema.users.id,
+        email: schema.users.email,
+        alertEmail: schema.userSettings.alertEmail,
+        telegramBotToken: schema.userSettings.telegramBotToken,
+        telegramChatId: schema.userSettings.telegramChatId,
+      })
+      .from(schema.users)
+      .leftJoin(schema.userSettings, eq(schema.users.id, schema.userSettings.userId))
+      .where(inArray(schema.users.id, userIds));
+
+    for (const row of userRows) {
+      userEnvMap.set(row.id, {
+        ...globalEnv,
+        ALERT_TO_EMAIL: row.alertEmail || row.email || globalEnv.ALERT_TO_EMAIL,
+        TELEGRAM_BOT_TOKEN: row.telegramBotToken || globalEnv.TELEGRAM_BOT_TOKEN,
+        TELEGRAM_CHAT_ID: row.telegramChatId || globalEnv.TELEGRAM_CHAT_ID,
+      });
+    }
+  }
 
   let matched = 0;
   let fired = 0;
@@ -361,7 +406,8 @@ export async function evaluateAlerts(
       // markFired call: it only marks the alert fired AFTER Resend returns
       // 2xx (see Requirements 7.5, 7.6 and packages/ai/src/alerts/delivery.ts).
       // If delivery fails, the alert stays active so the next cron tick retries.
-      const result = await deliverAlert({ alert, reading, env });
+      const alertEnv = userEnvMap.get(alert.userId) ?? globalEnv;
+      const result = await deliverAlert({ alert, reading, env: alertEnv });
       deliveries.push(result);
       if (result.ok) fired += 1;
     } catch (err) {

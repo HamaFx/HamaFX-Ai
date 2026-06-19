@@ -6,7 +6,7 @@
 
 ## Topology
 
-Two deployments, one user, one push-to-main pipeline.
+Two deployments, multi-user architecture, one push-to-main pipeline.
 
 ```mermaid
 flowchart LR
@@ -51,7 +51,7 @@ The web app is one Vercel deploy and the worker is one VM. Both pull from the sa
 - **Output**: standard Next.js.
 - **Node**: 20.x.
 - **Regions**: primary `iad1`; `/api/chat` runs Node, light reads run Edge.
-- **Deployment Protection**: not used (we do our own password gate).
+- **Deployment Protection**: not used (NextAuth protects the routes).
 - **Environments**: `Production` (`main`), `Preview` (PRs), `Development` (local).
 
 ### `vercel.json`
@@ -92,7 +92,7 @@ Bootstrap is `infra/cron-vm/setup.sh` (drops every unit into `/etc/systemd/syste
 
 ## Domains
 
-Whatever apex you want — the password gate handles "no public access" anyway. Production currently lives at `hama-fx-ai.vercel.app`.
+Whatever apex you want — NextAuth handles authentication and protects all routes. Production currently lives at `hama-fx-ai.vercel.app`.
 
 ## Environment variables
 
@@ -103,10 +103,21 @@ Whatever apex you want — the password gate handles "no public access" anyway. 
 NEXT_PUBLIC_APP_URL=https://hama-fx-ai.vercel.app
 PRODUCTION_URL=https://hama-fx-ai.vercel.app                 # VM only — what the light crons curl
 
-# --- Auth (personal mode) ---
-APP_PASSWORD=                    # the single password you'll type
-AUTH_COOKIE_SECRET=              # random 32+ byte hex; HMAC for the cookie
+# --- Auth (NextAuth Multi-tenant) ---
+NEXTAUTH_URL=https://hama-fx-ai.vercel.app
+NEXTAUTH_SECRET=                 # run: openssl rand -base64 32
 CRON_SECRET=                     # set on Vercel + on VM; used for /api/cron/* bearer
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+GITHUB_CLIENT_ID=
+GITHUB_CLIENT_SECRET=
+ENCRYPTION_SECRET=               # random 32-byte hex for data encryption
+
+# --- Feature Flags ---
+MULTI_USER_ENABLED=true
+BYOK_ENABLED=true
+UNLIMITED_SYMBOLS=true
+PER_USER_BRIEFINGS=true
 
 # --- Supabase (DB only — we don't use Supabase Auth) ---
 DATABASE_URL=                    # Supabase pooler (transaction mode)
@@ -177,7 +188,7 @@ HC_VERIFY_RESTORE_UUID=
 ### Generating secrets
 
 ```bash
-# AUTH_COOKIE_SECRET
+# NEXTAUTH_SECRET and ENCRYPTION_SECRET
 node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 
 # CRON_SECRET — must match between Vercel and /opt/hamafx/.env
@@ -200,8 +211,8 @@ node -e "console.log(require('crypto').randomBytes(24).toString('hex'))"
    create extension if not exists vector;
    ```
 3. Copy the **pooler** connection string (Transaction mode) from Project Settings → Database → "Connection pooling". That goes into `DATABASE_URL` (and `POSTGRES_URL`).
-4. We do **not** enable Supabase Auth — leave it unconfigured.
-5. We do **not** enable RLS — there's only one user, our own server.
+4. We do **not** enable Supabase Auth — we use NextAuth directly with our own Postgres tables.
+5. We handle data isolation in the application layer (row-level checks on `userId`) rather than Postgres RLS.
 
 > Supabase Free tier pauses a project after 7 days of _no activity_. With the worker hitting the DB every second and the timers firing every few minutes, this never triggers. If you ever take a long break, manually unpause from the dashboard.
 
@@ -217,7 +228,7 @@ node -e "console.log(require('crypto').randomBytes(24).toString('hex'))"
 - Schema lives in `packages/db/src/schema/*.ts`.
 - `pnpm --filter db migrate:gen` creates SQL.
 - `pnpm --filter db migrate:apply` runs against `DATABASE_URL`.
-- Run migrations locally before deploying. CI doesn't run them automatically (personal-mode trade-off; safer this way for a single-user repo).
+- Run migrations locally before deploying. CI doesn't run them automatically (safer this way).
 
 ## Logging & monitoring
 

@@ -1,3 +1,19 @@
+/**
+ * Copyright 2026 HamaFX
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 // POST /api/push/unsubscribe
 //
 // Deletes a browser-issued PushSubscription by its `endpoint`. Always
@@ -9,8 +25,7 @@
 import { deletePushSubscriptionByEndpoint } from '@hamafx/ai';
 import { z } from 'zod';
 
-import { AUTH_COOKIE_NAME, verifyAuthToken } from '@/lib/auth';
-import { getAuthEnv } from '@/lib/env';
+import { withAuth } from '@/lib/api';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -19,15 +34,7 @@ const BodySchema = z.object({
   endpoint: z.string().url(),
 });
 
-export async function POST(req: Request): Promise<Response> {
-  const cookieHeader = req.headers.get('cookie') ?? '';
-  const token = readCookie(cookieHeader, AUTH_COOKIE_NAME);
-  const env = getAuthEnv();
-  const session = await verifyAuthToken(token, env.AUTH_COOKIE_SECRET);
-  if (!session) {
-    return Response.json({ error: 'unauthorized' }, { status: 401 });
-  }
-
+export const POST = withAuth<void>(async (req, { user }) => {
   let raw: unknown;
   try {
     raw = await req.json();
@@ -39,16 +46,6 @@ export async function POST(req: Request): Promise<Response> {
     return Response.json({ error: 'invalid_body', issues: parsed.error.issues }, { status: 400 });
   }
 
-  await deletePushSubscriptionByEndpoint(parsed.data.endpoint);
+  await deletePushSubscriptionByEndpoint(user.userId, parsed.data.endpoint);
   return Response.json({ ok: true }, { status: 200 });
-}
-
-function readCookie(header: string, name: string): string | undefined {
-  if (!header) return undefined;
-  for (const part of header.split(';')) {
-    const eq = part.indexOf('=');
-    if (eq < 0) continue;
-    if (part.slice(0, eq).trim() === name) return part.slice(eq + 1).trim();
-  }
-  return undefined;
-}
+});

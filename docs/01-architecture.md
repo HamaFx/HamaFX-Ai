@@ -10,7 +10,7 @@ HamaFX-Ai supports three deployment targets with the same source code:
 | Mode | Database | Scheduler | Setup |
 |------|----------|-----------|-------|
 | **Local native** | PGlite (embedded Postgres) | node-cron (embedded) | `pnpm dev:local` |
-| **Local Docker** | Postgres 16 + pgvector | node-cron (embedded) | `docker compose up` |
+| **Local Docker** | Postgres 16 + pgvector | node-cron (embedded) | `docker compose -f docker-compose.prod.yml up -d` |
 | **Production** | Supabase Postgres | systemd timers (GCE VM) | Vercel + GCE |
 
 This document describes the production cloud architecture. See [08-deployment.md](./08-deployment.md) for details.
@@ -29,7 +29,7 @@ flowchart LR
 
     subgraph Vercel["▲ Vercel — apps/web"]
         RH["Route Handlers<br/>/api/chat<br/>/api/market/*<br/>/api/news/*<br/>/api/calendar/*<br/>/api/cron/* (poked by VM)"]
-        MW["Middleware<br/>password gate"]
+        MW["Middleware<br/>NextAuth Session"]
         ISR["Static + RSC pages"]
     end
 
@@ -118,7 +118,8 @@ sequenceDiagram
     participant S as Supabase
 
     U->>W: POST /api/chat (messages)
-    W->>S: load thread
+    W->>W: validate NextAuth session
+    W->>S: load thread (scoped by userId)
     W->>G: streamText() with tools
     G-->>W: tool-call: getCandles(XAUUSD, 1H)
     W->>T: getCandles → BiQuote (cached via Next Data Cache)
@@ -126,7 +127,7 @@ sequenceDiagram
     W-->>G: tool-result
     G-->>W: SSE stream tokens
     W-->>U: stream + tool UI parts
-    W->>S: persist messages
+    W->>S: persist messages (with userId)
 ```
 
 ### B. Live price tile
@@ -236,8 +237,6 @@ The same schemas validate inputs at:
 - **No silent staleness**: every tool result includes `fetchedAt` and `source`; the UI surfaces "data is N seconds old".
 
 ## Observability
-
-Personal mode — small but actually wired:
 
 - **Vercel logs** for the web app + every `/api/cron/*` call. JSON-structured (`console.log({ level, msg, ...meta })`).
 - **journald** on the VM, queryable via `sudo journalctl -u hamafx-<unit>.service`. Same JSON shape.

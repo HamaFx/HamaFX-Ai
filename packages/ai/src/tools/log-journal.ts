@@ -1,3 +1,19 @@
+/**
+ * Copyright 2026 HamaFX
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 // Tool: log_journal.
 //
 // Lets the model record a trade entry from chat ("Journal: I shorted EURUSD
@@ -10,6 +26,7 @@ import { tool } from 'ai';
 import { z } from 'zod';
 
 import { createEntry } from '../journal/persistence';
+import { getToolContext } from '../tool-context';
 
 const InputSchema = z.object({
   symbol: SymbolSchema,
@@ -45,6 +62,7 @@ export const logJournalTool = tool({
       size: input.size ?? null,
       notes: input.notes ?? null,
       tags: input.tags ?? [],
+      userId: getToolContext().userId,
     });
     const summary = `${input.side} ${input.symbol} @ ${input.entry}${
       input.stop !== null && input.stop !== undefined ? `, stop ${input.stop}` : ''

@@ -1,3 +1,19 @@
+/**
+ * Copyright 2026 HamaFX
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 // Per-model cost estimation + the daily-budget guardrail.
 //
 // We don't try to be exact — providers shift prices and the gateway adds a
@@ -7,14 +23,8 @@
 // Source of truth for the actual deployment ceiling is the env var
 // `MAX_DAILY_USD`. The check fires BEFORE we invoke the model.
 //
-// Phase 1 hardening (§7) — `tryReserveBudget()` replaces the old
-// `enforceDailyBudget()` "sum-then-compare" pattern. The previous flow read
-// `SUM(est_cost_usd)`, decided, then ran the model; two concurrent requests
-// at 99% of the cap could both pass the gate. The new flow issues an
-// atomic `UPDATE` against `daily_ai_spend` that only succeeds when the
-// reservation fits under the cap, so concurrent callers serialise at the
-// row-level lock. `recordTelemetry` reconciles the counter with the actual
-// post-call cost.
+// Phase A: budget is now per-user. All functions accept `userId` and scope
+// queries to the user's row in `daily_ai_spend` (composite PK: user_id, day).
 
 import { getDb, schema } from '@hamafx/db';
 import { sql } from 'drizzle-orm';
@@ -26,11 +36,6 @@ interface ModelRate {
   outputPerM: number;
 }
 
-/**
- * Conservative per-model rates. Update when the AI Gateway price page changes
- * (https://vercel.com/dashboard/ai-gateway/models). When a model isn't here
- * we use the highest known rate as a safety default.
- */
 const RATES: Record<string, ModelRate> = {
   'openai/gpt-4.1': { inputPerM: 5, outputPerM: 15 },
   'openai/gpt-4.1-mini': { inputPerM: 0.4, outputPerM: 1.6 },
@@ -44,13 +49,6 @@ const RATES: Record<string, ModelRate> = {
 
 const FALLBACK_RATE: ModelRate = { inputPerM: 5, outputPerM: 15 };
 
-/**
- * Default per-turn estimate used when `tryReserveBudget()` is called without
- * an explicit number. Conservative — tuned so a typical chat turn lands
- * under this estimate so the post-call reconcile usually rebates a small
- * amount. Override on a per-call basis when a turn is known to be cheap
- * (e.g. title generation) or expensive.
- */
 export const DEFAULT_TURN_ESTIMATE_USD = 0.01;
 
 /** Estimate USD cost from token counts. Always >= 0. */
@@ -64,59 +62,48 @@ function utcDayKey(now = new Date()): string {
 }
 
 /**
- * Sum of `est_cost_usd` from `chat_telemetry` for the current UTC day.
- * Returns 0 if the table is empty.
- *
- * This still exists as the audit query for `/settings/usage`. The
- * authoritative running counter for the budget gate is
- * `daily_ai_spend.total_usd_cents`.
+ * Sum of `est_cost_usd` from `chat_telemetry` for the current UTC day,
+ * scoped to a specific user. Returns 0 if no rows exist.
  */
-export async function dailySpendUsd(now = new Date()): Promise<number> {
+export async function dailySpendUsd(userId: string, now = new Date()): Promise<number> {
   const startUtc = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
   const rows = await getDb()
     .select({ total: sql<number>`coalesce(sum(${schema.chatTelemetry.estCostUsd}), 0)` })
     .from(schema.chatTelemetry)
-    .where(sql`${schema.chatTelemetry.createdAt} >= ${startUtc}`);
+    .where(
+      sql`${schema.chatTelemetry.userId} = ${userId} AND ${schema.chatTelemetry.createdAt} >= ${startUtc}`,
+    );
   return Number(rows[0]?.total ?? 0);
 }
 
 /**
- * Read the authoritative running counter for today. Useful for
- * `/settings/usage` and the audit reconciliation log.
+ * Read the authoritative running counter for today for a specific user.
  */
-export async function reservedSpendUsd(now = new Date()): Promise<number> {
+export async function reservedSpendUsd(userId: string, now = new Date()): Promise<number> {
   const day = utcDayKey(now);
   const rows = await getDb()
     .select({ cents: schema.dailyAiSpend.totalUsdCents })
     .from(schema.dailyAiSpend)
-    .where(sql`${schema.dailyAiSpend.day} = ${day}`)
+    .where(
+      sql`${schema.dailyAiSpend.userId} = ${userId} AND ${schema.dailyAiSpend.day} = ${day}`,
+    )
     .limit(1);
   return Number(rows[0]?.cents ?? 0) / 100;
 }
 
 export interface BudgetReservation {
-  /** True iff the reservation fits under the cap (and the row was updated). */
   ok: boolean;
-  /** Running total **after** the reservation (or current total if `ok=false`), in USD. */
   spent: number;
-  /** Cap in USD as seen at the time of the reservation. */
   max: number;
 }
 
 /**
- * Atomically reserve `estimatedUsd` against today's running counter. Returns
- * `{ ok: true }` iff the reservation fits under `capUsd`; the chat turn may
- * proceed. Returns `{ ok: false }` (no row updated) when the reservation
- * would exceed the cap; the caller MUST NOT invoke the model.
- *
- * Implementation: a single `INSERT … ON CONFLICT DO UPDATE WHERE …` so the
- * cap check, increment, and write are one statement under one row lock.
- * Concurrent callers at 99% of the cap will see exactly one success.
- *
- * The post-call `recordTelemetry()` reconciles the actual cost via
- * `applyBudgetDelta()`.
+ * Atomically reserve `estimatedUsd` against today's running counter for
+ * the given user. Returns `{ ok: true }` iff the reservation fits under
+ * `capUsd`. Phase A: PK is now (user_id, day).
  */
 export async function tryReserveBudget(
+  userId: string,
   estimatedUsd: number,
   capUsd: number,
   now = new Date(),
@@ -125,20 +112,16 @@ export async function tryReserveBudget(
   const estCents = Math.max(0, Math.ceil(estimatedUsd * 100));
   const capCents = Math.max(0, Math.ceil(capUsd * 100));
 
-  // The UPDATE branch's WHERE clause keeps the increment from blowing past
-  // the cap. The INSERT branch only runs when no row exists yet for today;
-  // we still gate it on the cap so a fresh day starting at 0 can't be
-  // jumped past in one shot if the estimate is somehow > capUsd.
   if (estCents > capCents) {
-    const spent = await reservedSpendUsd(now);
+    const spent = await reservedSpendUsd(userId, now);
     return { ok: false, spent, max: capUsd };
   }
 
   const rows = await getDb().execute<{ total_usd_cents: number | string }>(
     sql`
-      INSERT INTO daily_ai_spend (day, total_usd_cents)
-      VALUES (${day}, ${estCents})
-      ON CONFLICT (day) DO UPDATE
+      INSERT INTO daily_ai_spend (user_id, day, total_usd_cents)
+      VALUES (${userId}, ${day}, ${estCents})
+      ON CONFLICT (user_id, day) DO UPDATE
         SET total_usd_cents = daily_ai_spend.total_usd_cents + ${estCents}
         WHERE daily_ai_spend.total_usd_cents + ${estCents} <= ${capCents}
       RETURNING total_usd_cents
@@ -147,7 +130,7 @@ export async function tryReserveBudget(
   const list = Array.isArray(rows) ? rows : (rows as { rows?: unknown[] }).rows ?? [];
   const first = (list as Array<{ total_usd_cents: number | string }>)[0];
   if (!first) {
-    const spent = await reservedSpendUsd(now);
+    const spent = await reservedSpendUsd(userId, now);
     return { ok: false, spent, max: capUsd };
   }
   return { ok: true, spent: Number(first.total_usd_cents) / 100, max: capUsd };
@@ -155,43 +138,35 @@ export async function tryReserveBudget(
 
 /**
  * Reconcile a previously-reserved estimate with the actual post-call cost.
- * Pass the signed delta in USD: positive when the call cost more than we
- * reserved (correct an underestimate), negative when it cost less (release
- * the over-reservation).
- *
- * Best-effort: the audit query `dailySpendUsd()` is still authoritative
- * for billing. This counter is only used to gate the next reservation, so
- * a small drift between the two never matters in practice.
+ * Phase A: scoped to userId.
  */
-export async function applyBudgetDelta(deltaUsd: number, now = new Date()): Promise<void> {
+export async function applyBudgetDelta(
+  userId: string,
+  deltaUsd: number,
+  now = new Date(),
+): Promise<void> {
   if (!Number.isFinite(deltaUsd) || deltaUsd === 0) return;
   const day = utcDayKey(now);
   const cents = Math.round(deltaUsd * 100);
   if (cents === 0) return;
-  // GREATEST(0, …) keeps the counter clamped on releases that are bigger
-  // than the reservation (e.g. a tool-call that errored before any tokens
-  // were billed). The cap check is the caller's responsibility — by the
-  // time we're applying a post-call delta, the reservation already passed.
   await getDb().execute(
     sql`
-      INSERT INTO daily_ai_spend (day, total_usd_cents)
-      VALUES (${day}, GREATEST(0, ${cents}))
-      ON CONFLICT (day) DO UPDATE
+      INSERT INTO daily_ai_spend (user_id, day, total_usd_cents)
+      VALUES (${userId}, ${day}, GREATEST(0, ${cents}))
+      ON CONFLICT (user_id, day) DO UPDATE
         SET total_usd_cents = GREATEST(0, daily_ai_spend.total_usd_cents + ${cents})
     `,
   );
 }
 
 /**
- * Throw if today's spend has already crossed `maxUsd`. This is the legacy
- * path — kept as a no-reservation pre-check that callers (e.g. the title
- * generator) use to gate on whether the budget has any room left at all.
- *
- * The chat turn itself uses `tryReserveBudget()` so concurrent callers
- * can't both pass at 99% of the cap.
+ * Throw if today's spend has already crossed `maxUsd` for the given user.
  */
-export async function enforceDailyBudget(maxUsd: number): Promise<{ spent: number; max: number }> {
-  const spent = await reservedSpendUsd();
+export async function enforceDailyBudget(
+  userId: string,
+  maxUsd: number,
+): Promise<{ spent: number; max: number }> {
+  const spent = await reservedSpendUsd(userId);
   if (spent >= maxUsd) {
     throw new BudgetExceededError(spent, maxUsd);
   }

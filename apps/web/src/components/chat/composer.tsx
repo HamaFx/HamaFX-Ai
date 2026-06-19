@@ -1,5 +1,21 @@
 'use client';
 
+/**
+ * Copyright 2026 HamaFX
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 // Premium chat composer.
 //
 // New in this iteration:
@@ -14,7 +30,7 @@
 
 import { ArrowUp, ImagePlus, Mic, Square } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
-import { AnimatePresence, motion } from 'motion/react';
+import { AnimatePresence, m } from 'motion/react';
 
 import { useVoiceInput } from '@/hooks/use-voice-input';
 import { cn } from '@/lib/cn';
@@ -378,7 +394,7 @@ export function Composer({
 
             <AnimatePresence mode="popLayout" initial={false}>
               {isStreaming && onStop ? (
-                <motion.button
+                <m.button
                   key="stop"
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ opacity: 1, scale: 1 }}
@@ -390,9 +406,9 @@ export function Composer({
                   className="text-bear ring-bear/40 inline-flex size-[36px] shrink-0 items-center justify-center rounded-full bg-bear/15 focus:outline-none focus-visible:ring-2 ring-1"
                 >
                   <Square className="size-[14px] fill-current" strokeWidth={0} />
-                </motion.button>
+                </m.button>
               ) : (
-                <motion.button
+                <m.button
                   key="send"
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ opacity: 1, scale: 1 }}
@@ -413,7 +429,7 @@ export function Composer({
                   }}
                 >
                   <ArrowUp className="size-[18px]" strokeWidth={2.5} />
-                </motion.button>
+                </m.button>
               )}
             </AnimatePresence>
           </div>

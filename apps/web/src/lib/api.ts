@@ -1,3 +1,19 @@
+/**
+ * Copyright 2026 HamaFX
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 // Tiny helpers shared by all `/api/*` route handlers.
 // Centralises:
 //   - the public error envelope shape (matches docs/08-backend-and-api.md)
@@ -7,7 +23,7 @@
 //   - Phase A: getUserFromRequest() + withAuth() for multi-user scoping
 
 import { ProviderError, toAppError } from '@hamafx/data';
-import { AppError, type ErrorCode, validationError } from '@hamafx/shared';
+import { AppError, type ErrorCode, validationError, formatErrorResponse } from '@hamafx/shared';
 import { ZodError, type z } from 'zod';
 
 import { auth } from '@/auth';
@@ -120,41 +136,19 @@ export function errorResponse(err: unknown, req?: Request): Response {
   const requestId = readRequestId(req);
   const headers: Record<string, string> = {};
   if (requestId) headers[REQUEST_ID_HEADER] = requestId;
+  const options = { ...(requestId ? { requestId } : {}), headers };
 
   if (err instanceof AppError) {
-    const body: ApiErrorBody = {
-      error: {
-        code: err.code,
-        message: err.message,
-        ...(err.details !== undefined ? { details: err.details } : {}),
-        ...(requestId ? { requestId } : {}),
-      },
-    };
-    return Response.json(body, { status: err.status, headers });
+    return formatErrorResponse(err, options);
   }
   if (err instanceof ProviderError) {
-    return errorResponse(toAppError(err), req);
+    return formatErrorResponse(toAppError(err), options);
   }
   if (err instanceof ZodError) {
-    const body: ApiErrorBody = {
-      error: {
-        code: 'VALIDATION',
-        message: 'Invalid request',
-        details: err.flatten(),
-        ...(requestId ? { requestId } : {}),
-      },
-    };
-    return Response.json(body, { status: 400, headers });
+    return formatErrorResponse(validationError('Invalid request', err.flatten()), options);
   }
   console.error('[api] unhandled error', { err, requestId });
-  const body: ApiErrorBody = {
-    error: {
-      code: 'INTERNAL',
-      message: 'Internal error',
-      ...(requestId ? { requestId } : {}),
-    },
-  };
-  return Response.json(body, { status: 500, headers });
+  return formatErrorResponse(err, options);
 }
 
 /** Parse `URLSearchParams` against a zod schema, throwing on invalid input. */

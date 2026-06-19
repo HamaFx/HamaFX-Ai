@@ -1,3 +1,19 @@
+/**
+ * Copyright 2026 HamaFX
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 // Server-only environment validation. Imported at boot in apps/web (route
 // handlers + middleware) and in any package that touches secrets.
 //
@@ -13,8 +29,9 @@ import { z } from 'zod';
  *   - CRON_SECRET: bearer token Vercel uses to invoke /api/cron/*.
  */
 const AuthEnv = z.object({
-  APP_PASSWORD: z.string().min(4, 'APP_PASSWORD must be at least 4 characters'),
-  AUTH_COOKIE_SECRET: z.string().min(32, 'AUTH_COOKIE_SECRET must be at least 32 chars'),
+  NEXTAUTH_SECRET: z.string().min(32, 'NEXTAUTH_SECRET must be at least 32 chars'),
+  NEXTAUTH_URL: z.string().url().optional(),
+  ENCRYPTION_SECRET: z.string().min(32, 'ENCRYPTION_SECRET must be at least 32 chars'),
   CRON_SECRET: z.string().min(16, 'CRON_SECRET must be at least 16 chars'),
 });
 
@@ -181,6 +198,24 @@ const RuntimeEnv = z.object({
    * client SDK; client errors stay in Vercel logs / error boundaries.
    */
   SENTRY_DSN: z.string().url().optional(),
+  /** Langfuse LLM observability. Optional — omitted = tracing disabled. */
+  LANGFUSE_PUBLIC_KEY: z.string().optional(),
+  LANGFUSE_SECRET_KEY: z.string().optional(),
+  LANGFUSE_BASE_URL: z.string().url().optional(),
+
+  // Feature Flags
+  MULTI_USER_ENABLED: z.union([z.literal('0'), z.literal('1'), z.literal('true'), z.literal('false')])
+    .default('0')
+    .transform((v) => v === '1' || v === 'true'),
+  BYOK_ENABLED: z.union([z.literal('0'), z.literal('1'), z.literal('true'), z.literal('false')])
+    .default('0')
+    .transform((v) => v === '1' || v === 'true'),
+  UNLIMITED_SYMBOLS: z.union([z.literal('0'), z.literal('1'), z.literal('true'), z.literal('false')])
+    .default('0')
+    .transform((v) => v === '1' || v === 'true'),
+  PER_USER_BRIEFINGS: z.union([z.literal('0'), z.literal('1'), z.literal('true'), z.literal('false')])
+    .default('0')
+    .transform((v) => v === '1' || v === 'true'),
 });
 
 // `merge()` doesn't compose ZodEffects (refines). Both DbEnv and AiEnv are

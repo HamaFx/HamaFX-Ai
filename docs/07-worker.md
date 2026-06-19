@@ -51,6 +51,7 @@ The HamaFX-Ai worker (`apps/worker/`) is a persistent Node.js daemon that runs o
 │  │ │(UPSERT)  │ │ (INSERT)     │                      │   │
 │  │ └──────────┘ └──────────────┘                      │   │
 │  │                                                     │   │
+│  │  HTTP Healthcheck (Port 8081) /health               │   │
 │  │  Heartbeat → healthchecks.io every 30s              │   │
 │  └──────────────────────────────────────────────────────┘   │
 │                                                              │
@@ -118,7 +119,8 @@ Pipeline steps:
 6. **Notify systemd** — `notifyReady()` + `notifyStatus('signalr connected; tick stream active')` so the unit transitions to `active (running)`.
 7. **1 Hz flush loop** — `setInterval` drains `TickBuffer` and UPSERTs into `live_ticks` every 1000ms.
 8. **30 s heartbeat** — `setInterval` pings healthchecks.io with `success` if a tick arrived in the last 60 s, or `fail` otherwise.
-9. **Returns `RunningWorker`** with `{ consumer, buffer, aggregator, stop() }`. The `stop()` method drains the buffer, force-closes all open candles, and tears down both connections.
+9. **HTTP Healthcheck** — A simple HTTP server listens on port `8081` responding to `/health` with `{"status":"ok"}`. This is used by Docker liveness probes.
+10. **Returns `RunningWorker`** with `{ consumer, buffer, aggregator, stop() }`. The `stop()` method drains the buffer, force-closes all open candles, and tears down both connections.
 
 ## SignalR Consumer
 

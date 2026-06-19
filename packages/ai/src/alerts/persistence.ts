@@ -1,3 +1,19 @@
+/**
+ * Copyright 2026 HamaFX
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 // Alert CRUD + read helpers. Used by route handlers, the cron evaluator,
 // and the AI `set_alert` tool. SQL stays here so all callers see the same
 // row → DTO mapping.
@@ -13,15 +29,17 @@ import {
 import { and, asc, desc, eq, isNull } from 'drizzle-orm';
 
 export interface CreateAlertInput {
+  userId: string;
   rule: AlertRule;
   channels?: AlertChannel[];
   note?: string | null;
 }
 
 export async function listAlerts(
+  userId: string,
   opts: { activeOnly?: boolean; limit?: number } = {},
 ): Promise<Alert[]> {
-  const filters = [];
+  const filters = [eq(schema.alerts.userId, userId)];
   if (opts.activeOnly) filters.push(eq(schema.alerts.active, true));
 
   const rows = await getDb()
@@ -70,8 +88,8 @@ export async function listEvaluable(): Promise<Alert[]> {
   return out;
 }
 
-export async function getAlert(id: string): Promise<Alert | null> {
-  const rows = await getDb().select().from(schema.alerts).where(eq(schema.alerts.id, id)).limit(1);
+export async function getAlert(userId: string, id: string): Promise<Alert | null> {
+  const rows = await getDb().select().from(schema.alerts).where(and(eq(schema.alerts.id, id), eq(schema.alerts.userId, userId))).limit(1);
   const row = rows[0];
   return row ? rowToAlert(row) : null;
 }
@@ -85,6 +103,7 @@ export async function createAlert(input: CreateAlertInput): Promise<Alert> {
   const inserted = await getDb()
     .insert(schema.alerts)
     .values({
+      userId: input.userId,
       rule,
       channels,
       note: input.note ?? null,
@@ -104,7 +123,7 @@ export interface UpdateAlertInput {
   firedAt?: number | null | undefined;
 }
 
-export async function updateAlert(id: string, input: UpdateAlertInput): Promise<Alert | null> {
+export async function updateAlert(userId: string, id: string, input: UpdateAlertInput): Promise<Alert | null> {
   const patch: Partial<typeof schema.alerts.$inferInsert> = {};
   if (input.rule !== undefined) patch.rule = AlertRuleSchema.parse(input.rule);
   if (input.channels !== undefined)
@@ -115,12 +134,12 @@ export async function updateAlert(id: string, input: UpdateAlertInput): Promise<
     patch.firedAt = input.firedAt === null ? null : new Date(input.firedAt);
   }
 
-  if (Object.keys(patch).length === 0) return getAlert(id);
+  if (Object.keys(patch).length === 0) return getAlert(userId, id);
 
   const updated = await getDb()
     .update(schema.alerts)
     .set(patch)
-    .where(eq(schema.alerts.id, id))
+    .where(and(eq(schema.alerts.id, id), eq(schema.alerts.userId, userId)))
     .returning();
   return updated[0] ? rowToAlert(updated[0]) : null;
 }
@@ -152,8 +171,8 @@ export async function setRulePreviousValue(id: string, rule: AlertRule, value: n
     .where(eq(schema.alerts.id, id));
 }
 
-export async function deleteAlert(id: string): Promise<void> {
-  await getDb().delete(schema.alerts).where(eq(schema.alerts.id, id));
+export async function deleteAlert(userId: string, id: string): Promise<void> {
+  await getDb().delete(schema.alerts).where(and(eq(schema.alerts.id, id), eq(schema.alerts.userId, userId)));
 }
 
 function rowToAlert(row: typeof schema.alerts.$inferSelect): Alert {
@@ -166,6 +185,7 @@ function rowToAlert(row: typeof schema.alerts.$inferSelect): Alert {
     note: row.note,
     active: row.active,
     firedAt: row.firedAt ? row.firedAt.getTime() : null,
+    userId: row.userId!,
     createdAt: row.createdAt.getTime(),
   };
 }

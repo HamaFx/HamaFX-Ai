@@ -1,10 +1,28 @@
+/**
+ * Copyright 2026 HamaFX
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 // Stable error codes used in the API error envelope (see docs/08-backend-and-api.md).
 // Add new codes here, not inline.
 
 export const ERROR_CODES = [
   'VALIDATION',
-  'AUTH',
+  'UNAUTHORIZED',
+  'FORBIDDEN',
   'NOT_FOUND',
+  'RATE_LIMITED',
   'PROVIDER_UNAVAILABLE',
   'BUDGET_EXCEEDED',
   'INTERNAL',
@@ -29,7 +47,14 @@ export class AppError extends Error {
 export const validationError = (message: string, details?: unknown): AppError =>
   new AppError('VALIDATION', message, 400, details);
 
-export const authError = (message = 'Unauthorized'): AppError => new AppError('AUTH', message, 401);
+export const unauthorized = (message = 'Unauthorized'): AppError =>
+  new AppError('UNAUTHORIZED', message, 401);
+
+export const forbidden = (message = 'Forbidden'): AppError =>
+  new AppError('FORBIDDEN', message, 403);
+
+export const rateLimited = (message = 'Too Many Requests'): AppError =>
+  new AppError('RATE_LIMITED', message, 429);
 
 export const notFound = (message = 'Not found'): AppError =>
   new AppError('NOT_FOUND', message, 404);
@@ -42,3 +67,36 @@ export const budgetExceeded = (message = 'Daily AI budget exceeded'): AppError =
 
 export const internalError = (message = 'Internal error', details?: unknown): AppError =>
   new AppError('INTERNAL', message, 500, details);
+
+export function formatErrorResponse(
+  error: unknown,
+  options?: { requestId?: string; headers?: Record<string, string> }
+) {
+  const baseHeaders = { 'Content-Type': 'application/json', ...(options?.headers || {}) };
+
+  if (error instanceof AppError) {
+    return new Response(
+      JSON.stringify({
+        error: {
+          code: error.code,
+          message: error.message,
+          ...(error.details !== undefined ? { details: error.details } : {}),
+          ...(options?.requestId ? { requestId: options.requestId } : {}),
+        },
+      }),
+      { status: error.status, headers: baseHeaders },
+    );
+  }
+  
+  // Fallback for unhandled errors
+  return new Response(
+    JSON.stringify({
+      error: {
+        code: 'INTERNAL',
+        message: error instanceof Error ? error.message : 'Unknown error occurred',
+        ...(options?.requestId ? { requestId: options.requestId } : {}),
+      },
+    }),
+    { status: 500, headers: baseHeaders },
+  );
+}

@@ -1,3 +1,19 @@
+/**
+ * Copyright 2026 HamaFX
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 // Briefings generators — pre-event, post-event, weekly review.
 //
 // Each function:
@@ -66,19 +82,20 @@ function envFromProcess(): BriefingsEnv {
 // Pre / Post event briefings
 // ---------------------------------------------------------------------------
 
-export async function emitPreEvent(eventId: string): Promise<{ emitted: boolean; reason?: string }> {
-  return emitEventBriefing(eventId, 'pre');
+export async function emitPreEvent(userId: string, eventId: string): Promise<{ emitted: boolean; reason?: string }> {
+  return emitEventBriefing(userId, eventId, 'pre');
 }
 
-export async function emitPostEvent(eventId: string): Promise<{ emitted: boolean; reason?: string }> {
-  return emitEventBriefing(eventId, 'post');
+export async function emitPostEvent(userId: string, eventId: string): Promise<{ emitted: boolean; reason?: string }> {
+  return emitEventBriefing(userId, eventId, 'post');
 }
 
 async function emitEventBriefing(
+  userId: string,
   eventId: string,
   kind: 'pre' | 'post',
 ): Promise<{ emitted: boolean; reason?: string }> {
-  if (await wasEmitted(eventId, kind)) {
+  if (await wasEmitted(userId, eventId, kind)) {
     return { emitted: false, reason: 'already_emitted' };
   }
 
@@ -98,7 +115,7 @@ async function emitEventBriefing(
     return { emitted: false, reason: 'summary_too_short' };
   }
 
-  const thread = await getOrCreateBriefingsThread();
+  const thread = await getOrCreateBriefingsThread(userId);
   const part: BriefingMessagePart = {
     type: 'briefing',
     eventId,
@@ -117,7 +134,7 @@ async function emitEventBriefing(
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { messageId } = await appendAssistantMessage(thread.id, ui as any);
-  await recordEmitted(eventId, kind, messageId);
+  await recordEmitted(userId, eventId, kind, messageId);
 
   // Phase 7b — embed the briefing into the memory index so it's
   // surfaceable later via `search_knowledge`. Best-effort.
@@ -142,7 +159,7 @@ async function composeEventSummary(
   // Hard budget guard before any model call.
   let llmAllowed = true;
   try {
-    const spent = await dailySpendUsd();
+    const spent = await dailySpendUsd('__system__');
     if (spent >= env.MAX_DAILY_USD) llmAllowed = false;
   } catch {
     // If we can't compute spend, fall back to deterministic copy — never block.
@@ -223,19 +240,19 @@ function surpriseLabel(event: EconomicEvent): string {
 
 const WEEKLY_REVIEW_KEY = 'weekly_review';
 
-export async function emitWeeklyReview(): Promise<{ emitted: boolean; reason?: string }> {
+export async function emitWeeklyReview(userId: string): Promise<{ emitted: boolean; reason?: string }> {
   const env = envFromProcess();
-  const thread = await getOrCreateBriefingsThread();
+  const thread = await getOrCreateBriefingsThread(userId);
 
   // Idempotency for the weekly review is keyed on the ISO week boundary
   // so re-running on the same Sunday is a no-op but next Sunday still fires.
   const weekKey = `${WEEKLY_REVIEW_KEY}:${isoWeekKey(new Date())}`;
-  if (await wasEmitted(weekKey, 'weekly_review')) {
+  if (await wasEmitted(userId, weekKey, 'weekly_review')) {
     return { emitted: false, reason: 'already_emitted_this_week' };
   }
 
   const sinceMs = Date.now() - 7 * 24 * 60 * 60 * 1000;
-  const stats = await computeStats({ sinceMs });
+  const stats = await computeStats(userId, { sinceMs });
   if (stats.count === 0) {
     const text = 'No journal entries in the last 7 days. Nothing to review — go log a trade.';
     const ui = {
@@ -253,7 +270,7 @@ export async function emitWeeklyReview(): Promise<{ emitted: boolean; reason?: s
     };
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { messageId } = await appendAssistantMessage(thread.id, ui as any);
-    await recordEmitted(weekKey, 'weekly_review', messageId);
+    await recordEmitted(userId, weekKey, 'weekly_review', messageId);
     return { emitted: true };
   }
 
@@ -290,7 +307,7 @@ export async function emitWeeklyReview(): Promise<{ emitted: boolean; reason?: s
   };
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { messageId } = await appendAssistantMessage(thread.id, ui as any);
-  await recordEmitted(weekKey, 'weekly_review', messageId);
+  await recordEmitted(userId, weekKey, 'weekly_review', messageId);
 
   // Phase 7b — embed the weekly review for later memory recall.
   void rememberBriefing({
@@ -311,7 +328,7 @@ async function composeWeeklyReviewSummary(
 
   let llmAllowed = true;
   try {
-    const spent = await dailySpendUsd();
+    const spent = await dailySpendUsd('__system__');
     if (spent >= env.MAX_DAILY_USD) llmAllowed = false;
   } catch {
     llmAllowed = false;

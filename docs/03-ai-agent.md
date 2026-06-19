@@ -37,7 +37,7 @@ Every chat turn flows through a sequence of 6 steps:
 
 ```
 ┌───────────────────────────────────────────────────────────┐
-│  runChat(threadId, userMessage, env)                       │
+│  runChat({ threadId, userId, userMessage, env })          │
 │                                                           │
 │  1. tryReserveBudget() ── atomic gate, $0.01 reserve      │
 │  2. appendUserMessage() ── persist user prompt immediately │

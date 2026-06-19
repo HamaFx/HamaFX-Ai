@@ -1,3 +1,19 @@
+/**
+ * Copyright 2026 HamaFX
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 // Phase 7b — unified memory index over journal entries, briefings, and
 // thread synopses produced by `summarize_thread`. `news_embeddings`
 // remains the dedicated index for news (its tighter schema buys cheaper
@@ -52,6 +68,8 @@ async function upsertMemory(args: {
   text: string;
   meta: unknown;
   occurredAt: Date;
+  /** Phase A — the owning user. Optional; falls back to tool context or system. */
+  userId?: string;
   env?: Partial<EmbedEnv>;
 }): Promise<{ stored: boolean; reason?: string }> {
   const text = args.text.trim();
@@ -60,7 +78,7 @@ async function upsertMemory(args: {
   const env = args.env ?? {};
   if (env.MAX_DAILY_USD !== undefined) {
     try {
-      const spent = await dailySpendUsd();
+      const spent = await dailySpendUsd(args.userId ?? '__system__');
       if (spent >= env.MAX_DAILY_USD) return { stored: false, reason: 'budget' };
     } catch {
       // proceed — budget probe failed; the chat-level guardrail still applies.
@@ -92,6 +110,7 @@ async function upsertMemory(args: {
   await db
     .insert(schema.memoryEmbeddings)
     .values({
+      userId: args.userId ?? '__system__',
       kind: args.kind,
       sourceId: args.sourceId,
       symbol: args.symbol,
@@ -110,6 +129,7 @@ async function upsertMemory(args: {
         embedding,
         meta: args.meta as never,
         occurredAt: args.occurredAt,
+        userId: args.userId ?? '__system__',
         // createdAt stays at the original insert time — pgvector cosine
         // results don't depend on it, and consumers prefer the original
         // ingestion timestamp for audit trails.
@@ -156,6 +176,7 @@ export async function rememberJournalEntry(
       tags: row.tags,
     },
     occurredAt: row.openedAt,
+    ...(row.userId ? { userId: row.userId } : {}),
     ...(args.env ? { env: args.env } : {}),
   });
 }
@@ -235,6 +256,8 @@ export interface SearchMemoryArgs {
   symbol?: Symbol;
   /** ms epoch lower bound on occurredAt. */
   since?: number;
+  /** Phase A — multi-tenant scope. Required unless explicitly skipping. */
+  userId: string;
 }
 
 /**
@@ -257,6 +280,7 @@ export async function searchMemory(args: SearchMemoryArgs): Promise<MemoryRow[]>
   const symbolClause = symbol ? sql`AND symbol = ${symbol}` : sql``;
   const sinceClause =
     since !== undefined ? sql`AND occurred_at >= ${new Date(since)}` : sql``;
+  const userClause = sql`AND user_id = ${args.userId}`;
 
   const result = await getDb().execute(sql`
     SELECT
@@ -274,6 +298,7 @@ export async function searchMemory(args: SearchMemoryArgs): Promise<MemoryRow[]>
       ${kindClause}
       ${symbolClause}
       ${sinceClause}
+      ${userClause}
     ORDER BY embedding <=> ${vec}::vector
     LIMIT ${limit}
   `);

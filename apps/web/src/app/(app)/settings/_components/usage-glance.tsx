@@ -1,8 +1,25 @@
+/**
+ * Copyright 2026 HamaFX
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 // Usage at a glance — shows today's spend + 7d/30d totals + a daily-budget
 // gauge, with a deep-link to /settings/usage for the full breakdown.
 // Server component.
 
 import { computeUsage } from '@hamafx/ai';
+import { auth } from '@/auth';
 import { ChevronRight } from 'lucide-react';
 import { Link } from 'next-view-transitions';
 
@@ -17,9 +34,12 @@ export async function UsageGlance() {
     /* env not fully populated in dev */
   }
 
+  const session = await auth();
+  if (!session?.user?.id) return null;
+
   let stats: Awaited<ReturnType<typeof computeUsage>> | null = null;
   try {
-    stats = await computeUsage();
+    stats = await computeUsage(session.user.id);
   } catch {
     return null;
   }

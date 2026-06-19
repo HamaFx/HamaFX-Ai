@@ -1,7 +1,6 @@
 {
   "name": "@hamafx/ai",
   "version": "0.0.0",
-  "private": true,
   "type": "module",
   "main": "./src/index.ts",
   "types": "./src/index.ts",
@@ -25,16 +24,21 @@
     "@hamafx/db": "workspace:*",
     "@hamafx/indicators": "workspace:*",
     "@hamafx/shared": "workspace:*",
+    "@langfuse/otel": "^5.5.3",
+    "@opentelemetry/api": "^1.9.0",
+    "@opentelemetry/sdk-node": "^0.219.0",
     "ai": "^5.0.0",
     "drizzle-orm": "^0.38.3",
     "zod": "^3.23.8"
   },
   "devDependencies": {
     "@hamafx/config": "workspace:*",
+    "@opentelemetry/shim-opencensus": "^0.219.0",
     "@types/node": "^20.14.10",
     "eslint": "^9.17.0",
     "tsx": "^4.22.3",
     "typescript": "^5.7.2",
     "vitest": "^2.1.8"
-  }
+  },
+  "license": "Apache-2.0"
 }

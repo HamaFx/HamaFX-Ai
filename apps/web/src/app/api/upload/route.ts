@@ -1,3 +1,19 @@
+/**
+ * Copyright 2026 HamaFX
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 // POST /api/upload — chat-attachment image uploads.
 //
 // Phase 3 hardening §7. Replaces the old "base64 the file into the
@@ -14,7 +30,7 @@
 
 import { validationError, providerUnavailable } from '@hamafx/shared';
 
-import { errorResponse } from '@/lib/api';
+import { errorResponse, withAuth } from '@/lib/api';
 import { getServerEnv } from '@/lib/env';
 import {
   CHAT_IMAGE_MAX_BYTES,
@@ -37,7 +53,7 @@ const ALLOWED_MEDIA_TYPES = new Set<string>([
   'image/heif',
 ]);
 
-export async function POST(req: Request): Promise<Response> {
+export const POST = withAuth<void>(async (req, { user }) => {
   try {
     // Pre-check the content-length header so an oversize request is
     // rejected before we read the form. The body-size guard in
@@ -84,6 +100,7 @@ export async function POST(req: Request): Promise<Response> {
         SUPABASE_SERVICE_ROLE_KEY: env.SUPABASE_SERVICE_ROLE_KEY,
       },
       {
+        userId: user.userId,
         body: buffer,
         mediaType,
         filename: file.name || 'attachment',
@@ -99,4 +116,4 @@ export async function POST(req: Request): Promise<Response> {
   } catch (err) {
     return errorResponse(err, req);
   }
-}
+});

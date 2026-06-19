@@ -1,3 +1,19 @@
+/**
+ * Copyright 2026 HamaFX
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 // Journal CRUD + stats. Single user, no per-user filter.
 //
 // Stats math: realized R-multiple is computed at close time via
@@ -39,12 +55,14 @@ export interface CreateJournalInput {
   size?: number | null;
   notes?: string | null;
   tags?: string[];
+  userId: string;
 }
 
 export async function listEntries(
+  userId: string,
   opts: { limit?: number; symbol?: Symbol } = {},
 ): Promise<JournalEntry[]> {
-  const filters = [];
+  const filters = [eq(schema.journalEntries.userId, userId)];
   if (opts.symbol) filters.push(eq(schema.journalEntries.symbol, opts.symbol));
 
   const rows = await getDb()
@@ -57,11 +75,11 @@ export async function listEntries(
   return rows.map(rowToEntry);
 }
 
-export async function getEntry(id: string): Promise<JournalEntry | null> {
+export async function getEntry(userId: string, id: string): Promise<JournalEntry | null> {
   const rows = await getDb()
     .select()
     .from(schema.journalEntries)
-    .where(eq(schema.journalEntries.id, id))
+    .where(and(eq(schema.journalEntries.id, id), eq(schema.journalEntries.userId, userId)))
     .limit(1);
   const row = rows[0];
   return row ? rowToEntry(row) : null;
@@ -74,6 +92,7 @@ export async function createEntry(input: CreateJournalInput): Promise<JournalEnt
   const inserted = await getDb()
     .insert(schema.journalEntries)
     .values({
+      userId: input.userId,
       symbol,
       side,
       openedAt: new Date(input.openedAt),
@@ -109,10 +128,11 @@ export interface UpdateJournalInput {
 }
 
 export async function updateEntry(
+  userId: string,
   id: string,
   input: UpdateJournalInput,
 ): Promise<JournalEntry | null> {
-  const existing = await getEntry(id);
+  const existing = await getEntry(userId, id);
   if (!existing) return null;
 
   const patch: Partial<typeof schema.journalEntries.$inferInsert> = {};
@@ -148,7 +168,7 @@ export async function updateEntry(
   const updated = await getDb()
     .update(schema.journalEntries)
     .set(patch)
-    .where(eq(schema.journalEntries.id, id))
+    .where(and(eq(schema.journalEntries.id, id), eq(schema.journalEntries.userId, userId)))
     .returning();
   if (!updated[0]) return null;
   const entry = rowToEntry(updated[0]);
@@ -162,8 +182,8 @@ export async function updateEntry(
   return entry;
 }
 
-export async function deleteEntry(id: string): Promise<void> {
-  await getDb().delete(schema.journalEntries).where(eq(schema.journalEntries.id, id));
+export async function deleteEntry(userId: string, id: string): Promise<void> {
+  await getDb().delete(schema.journalEntries).where(and(eq(schema.journalEntries.id, id), eq(schema.journalEntries.userId, userId)));
 }
 
 // ---------------------------------------------------------------------------
@@ -225,9 +245,10 @@ export function summarize(entries: JournalEntry[]): JournalStats {
 }
 
 export async function computeStats(
+  userId: string,
   opts: { sinceMs?: number; untilMs?: number } = {},
 ): Promise<JournalStats> {
-  const filters = [];
+  const filters = [eq(schema.journalEntries.userId, userId)];
   if (opts.sinceMs !== undefined)
     filters.push(gte(schema.journalEntries.openedAt, new Date(opts.sinceMs)));
   if (opts.untilMs !== undefined)
@@ -262,6 +283,7 @@ function rowToEntry(row: typeof schema.journalEntries.$inferSelect): JournalEntr
     notes: row.notes,
     tags: row.tags ?? [],
     attachments: row.attachments ?? [],
+    userId: row.userId,
     createdAt: row.createdAt.getTime(),
     updatedAt: row.updatedAt.getTime(),
   });

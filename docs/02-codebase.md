@@ -205,6 +205,12 @@ Uses `@t3-oss/env-core` + Zod. Validates at startup. Covers:
 - `HEALTHCHECKS_URL`
 - `OPENAI_API_KEY`, `ANTHROPIC_API_KEY` (model providers)
 - `PGLITE_DATA_DIR` (local dev DB path)
+- `NEXTAUTH_URL`, `NEXTAUTH_SECRET` (Authentication)
+- `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET` (OAuth)
+- `ENCRYPTION_SECRET`
+- Feature flags: `MULTI_USER_ENABLED`, `BYOK_ENABLED`, `UNLIMITED_SYMBOLS`, `PER_USER_BRIEFINGS`
+
+All env vars must be strictly validated in `packages/shared/src/env.ts`.
 
 **Error Codes:**
 
@@ -254,7 +260,7 @@ db/
 | OHLCV | `candles_1m`, `candles_5m`, `candles_15m`, `candles_30m`, `candles_1h`, `candles_4h`, `candles_1d`, `candles_1w`, `live_ticks` |
 | Indicators | `sma_values`, `ema_values`, `rsi_values`, `macd_values`, `smc_swings`, `smc_fvg`, `smc_order_blocks`, `smc_liquidity` |
 | Agent | `chat_threads`, `chat_messages`, `tool_calls`, `briefings`, `evals` |
-| Admin | `users`, `sessions` |
+| Admin | `users`, `accounts`, `sessions`, `verification_tokens` |
 | External | `economic_events`, `cot_reports` |
 
 **Client Factories:**
@@ -653,10 +659,10 @@ Key route groups:
 
 **Auth:**
 
-- Password-based authentication (bcrypt hashed).
-- Session stored as httpOnly cookie.
-- No OAuth, no multi-tenancy, no public signup.
-- Single-tenant design: one admin user, zero or more viewer users.
+- NextAuth.js based multi-tenant authentication.
+- Supports OAuth (Google, GitHub) and Credentials providers.
+- Session stored securely.
+- Multi-tenant design: users have isolated data access (scoped via `userId`).
 
 **Frontend Stack:**
 
@@ -755,7 +761,7 @@ worker/
 
 | Job | Schedule | Description |
 |---|---|---|
-| `briefings` | Daily, 07:00 UTC | Generate morning market briefing |
+| `briefings` | Daily, 07:00 UTC | Generate morning market briefing (impacted by `PER_USER_BRIEFINGS`) |
 | `snapshots` | Every 5 min | Snapshot current OHLCV for all symbols/timeframes |
 | `cot` | Weekly, Fri 20:30 UTC | Fetch CFTC Commitment of Traders report |
 | `fred-actuals` | Daily, 14:00 UTC | Update FRED macro indicators |
@@ -769,6 +775,7 @@ worker/
 - `start` signal at boot; `fail` signal on crash.
 - Configurable via `HEALTHCHECKS_URL` env var.
 - Separate check slugs per job for granular monitoring.
+- Exposes an HTTP healthcheck on port `8081` for Docker liveness checks.
 
 **Sentry (`sentry.ts`):**
 
@@ -894,10 +901,7 @@ When extending this codebase as an AI agent, follow these rules precisely. Viola
 
 ### Hard Constraints
 
-1. **NEVER add multi-tenancy, OAuth, RLS, or public signup.**
-   The system is single-tenant by design. Auth is a single password + cookie session. Adding multi-tenancy would require a complete architectural overhaul. Do not attempt it.
-
-2. **NEVER import `@hamafx/db` in Edge/middleware.**
+1. **NEVER import `@hamafx/db` in Edge/middleware.**
    `apps/web/src/middleware.ts` runs at the Edge. The Edge runtime does not support Node.js native modules (`pg`, `better-sqlite3`). Middleware must be lightweight — session cookie validation only.
 
 3. **NEVER add direct provider calls.**
