@@ -16,25 +16,29 @@
  * limitations under the License.
  */
 
-// Premium news article card — vertical hierarchy:
+// Premium news article card — three-zone hierarchy:
 //
 //   ┌────────────────────────────────────────┐
-//   │ [pub · time · symbols]  ▲ +0.45        │  meta strip with sentiment chip
-//   │                                         │
-//   │ Big headline title with strong          │  text-base/lg, leading-snug
-//   │ visual weight, line-clamp 3             │
-//   │                                         │
-//   │ Optional summary, line-clamp 2          │  text-sm muted
-//   │                                         │
-//   │ #cpi  #fed  #rates                      │  topic chips
-//   │ ──────────────────────────────────────  │  divider
-//   │ ✦ Ask AI · 🔖 Save · ↗ Open            │  action row
+//   │ [Headline — line-clamp 3, weight 600]  │  zone 1
+//   │ [Meta inline — pub · time · ▲ score]  │  zone 2
+//   │ [Summary — line-clamp 2, muted]        │  zone 3
 //   └────────────────────────────────────────┘
 //
-// A 3px-wide vertical accent ribbon on the left edge encodes sentiment:
-// green = bullish, red = bearish, neutral surface = neutral/none. That's
-// the "scannable at a glance" signal even before the user reads the
-// title.
+// Tags (symbols + topics) fold INTO the meta inline when their total
+// count is small (≤4). Otherwise they're suppressed — the agent can
+// surface them in chat if the user asks.
+//
+// A 1px-wide vertical accent ribbon on the left edge encodes sentiment:
+// green = bullish, red = bearish, no ribbon = neutral. Kept as the
+// "scannable at a glance" signal even before the user reads the title.
+//
+// Action row (Ask AI, Bookmark, Open) lives in a hover overlay on desktop
+// (revealed on card hover or keyboard focus). On touch devices, the row
+// is permanently visible — touch affordances don't have hover. This keeps
+// the resting card body to three clean zones without losing the three
+// primary actions.
+//
+// Per PLAN.md §2.4 + §2.6 + §4.4 — anti-pattern 4 fix.
 
 import type { NewsArticle } from '@hamafx/shared';
 import { Bookmark, ExternalLink, Sparkles } from 'lucide-react';
@@ -47,6 +51,12 @@ import { useBookmarks } from './use-bookmarks';
 interface ArticleCardProps {
   article: NewsArticle;
 }
+
+const SENTIMENT_GLYPH = {
+  positive: '▲',
+  negative: '▼',
+  neutral: '·',
+} as const;
 
 export function ArticleCard({ article }: ArticleCardProps) {
   const { has, toggle } = useBookmarks();
@@ -63,14 +73,27 @@ export function ArticleCard({ article }: ArticleCardProps) {
     `What does this headline mean for my trading?\n\n${article.title}\n${article.url}`,
   );
 
+  const totalTags = article.symbols.length + article.topics.length;
+  const showTagsInline = totalTags > 0 && totalTags <= 4;
+
+  // Touch devices get the action row permanently visible — they don't
+  // have hover. The hover/focus-reveal pattern is for pointer + keyboard
+  // users only.
+  const overlayVisibility =
+    'opacity-0 transition-opacity duration-150 ' +
+    'group-hover:pointer-events-auto group-hover:opacity-100 ' +
+    'group-focus-within:pointer-events-auto group-focus-within:opacity-100 ' +
+    '[@media(hover:none)]:opacity-100 [@media(hover:none)]:pointer-events-auto';
+
   return (
     <article
       className={cn(
-        'animate-reveal @container card-premium group relative overflow-hidden rounded-3xl',
-        'transition-colors duration-200 md:hover:bg-bg-elev-2/40',
+        'group relative overflow-hidden rounded-lg',
+        'border border-divider bg-bg-elev-1',
+        'transition-colors duration-200 md:hover:bg-bg-elev-2/60',
       )}
     >
-      {/* Sentiment accent ribbon */}
+      {/* Sentiment accent ribbon — kept as the scannable-at-a-glance signal */}
       {sentimentColor ? (
         <span
           aria-hidden="true"
@@ -83,74 +106,74 @@ export function ArticleCard({ article }: ArticleCardProps) {
         href={article.url}
         target="_blank"
         rel="noopener noreferrer"
-        className="block px-4 pb-3 pt-4 pl-5"
+        className="block px-4 py-4 pl-5"
       >
-        {/* Meta strip */}
-        <div className="text-fg-subtle flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px]">
-          <span className="text-fg-muted font-semibold">
-            {article.publisher ?? article.source}
-          </span>
-          <span aria-hidden className="opacity-50">·</span>
-          <time
-            dateTime={new Date(article.publishedAt).toISOString()}
-            className="tabular-nums"
-          >
-            {formatRelative(article.publishedAt)}
-          </time>
-          {article.sentiment ? (
-            <SentimentChip
-              sentiment={article.sentiment}
-              score={article.sentimentScore}
-            />
-          ) : null}
-        </div>
-
-        {/* Headline */}
-        <h3 className="text-fg mt-2.5 line-clamp-3 text-[15px] font-semibold leading-snug @xs:text-base">
+        {/* Zone 1 — Headline */}
+        <h3 className="text-fg line-clamp-3 text-body font-semibold leading-snug">
           {article.title}
         </h3>
 
-        {/* Summary */}
+        {/* Zone 2 — Meta inline: publisher · time · sentiment score · (tags if small) */}
+        <div className="text-fg-subtle mt-2 flex flex-wrap items-center gap-x-2 text-body-sm tabular-nums">
+          <span className="text-fg-muted font-medium">
+            {article.publisher ?? article.source}
+          </span>
+          <span aria-hidden className="opacity-50">·</span>
+          <time dateTime={new Date(article.publishedAt).toISOString()}>
+            {formatRelative(article.publishedAt)}
+          </time>
+          {article.sentiment && article.sentimentScore !== null ? (
+            <>
+              <span aria-hidden className="opacity-50">·</span>
+              <span
+                className={cn(
+                  'inline-flex items-center gap-1 font-semibold',
+                  article.sentiment === 'positive' ? 'text-bull' : 'text-bear',
+                )}
+              >
+                <span aria-hidden>
+                  {SENTIMENT_GLYPH[article.sentiment as keyof typeof SENTIMENT_GLYPH]}
+                </span>
+                {article.sentimentScore > 0 ? '+' : ''}
+                {article.sentimentScore.toFixed(2)}
+              </span>
+            </>
+          ) : null}
+          {showTagsInline
+            ? renderInlineTags(article.symbols, article.topics)
+            : null}
+        </div>
+
+        {/* Zone 3 — Summary */}
         {article.summary ? (
-          <p className="text-fg-muted mt-2 line-clamp-2 text-xs leading-relaxed">
+          <p className="text-fg-muted mt-2 line-clamp-2 text-body-sm leading-relaxed">
             {article.summary}
           </p>
         ) : null}
-
-        {/* Tags row — symbols + topics combined */}
-        {article.symbols.length + article.topics.length > 0 ? (
-          <ul className="mt-3 flex flex-wrap gap-1.5" aria-label="Tags">
-            {article.symbols.map((s) => (
-              <li key={`sym-${s}`}>
-                <span className="bg-brand/10 text-brand ring-brand/30 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tabular-nums ring-1">
-                  {s}
-                </span>
-              </li>
-            ))}
-            {article.topics.slice(0, 4).map((t) => (
-              <li key={`topic-${t}`}>
-                <span className="bg-bg-elev-2 text-fg-muted ring-divider rounded-full px-2 py-0.5 text-[10px] lowercase ring-1">
-                  #{t}
-                </span>
-              </li>
-            ))}
-          </ul>
-        ) : null}
       </a>
 
-      {/* Action row */}
-      <div className="border-divider/60 flex items-center justify-between gap-2 border-t px-3 py-2">
+      {/* Action overlay — hover/focus on pointer devices, always-visible
+       * on touch devices. Sits over the bottom of the card so it doesn't
+       * push content down. */}
+      <div
+        className={cn(
+          'pointer-events-none absolute inset-x-0 bottom-0',
+          'flex items-center justify-between gap-1 px-3 pb-2',
+          overlayVisibility,
+        )}
+      >
         <a
           href={`/chat?prompt=${askPrompt}`}
-          className="text-fg-muted hover:text-brand inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-colors"
+          onClick={(e) => e.stopPropagation()}
+          className="bg-bg-elev-2 text-fg-muted hover:text-brand pointer-events-auto inline-flex items-center gap-1 rounded-pill px-3 py-1.5 text-body-sm font-medium transition-colors"
         >
           <Sparkles className="size-3.5" />
           Ask AI
         </a>
-        <div className="flex items-center gap-0.5">
+        <div className="pointer-events-auto flex items-center gap-0.5">
           <m.button
             type="button"
-            whileTap={{ scale: 0.85 }}
+            whileTap={{ scale: 0.97 }}
             onClick={(e) => {
               e.preventDefault();
               if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate(50);
@@ -165,16 +188,17 @@ export function ArticleCard({ article }: ArticleCardProps) {
                 : 'text-fg-muted hover:text-fg hover:bg-bg-elev-2',
             )}
           >
-            <Bookmark className={cn('size-3.5', saved && 'fill-current')} />
+            <Bookmark className={cn('size-4', saved && 'fill-current')} />
           </m.button>
           <a
             href={article.url}
             target="_blank"
             rel="noopener noreferrer"
             aria-label="Open article in new tab"
+            onClick={(e) => e.stopPropagation()}
             className="text-fg-muted hover:text-fg hover:bg-bg-elev-2 inline-flex size-8 items-center justify-center rounded-full transition-colors"
           >
-            <ExternalLink className="size-3.5" />
+            <ExternalLink className="size-4" />
           </a>
         </div>
       </div>
@@ -184,37 +208,30 @@ export function ArticleCard({ article }: ArticleCardProps) {
 
 // ---------------------------------------------------------------------------
 
-function SentimentChip({
-  sentiment,
-  score,
-}: {
-  sentiment: NonNullable<NewsArticle['sentiment']>;
-  score: NewsArticle['sentimentScore'];
-}) {
-  const cls =
-    sentiment === 'positive'
-      ? 'bg-bull/10 text-bull ring-bull/30'
-      : sentiment === 'negative'
-        ? 'bg-bear/10 text-bear ring-bear/30'
-        : 'bg-bg-elev-2 text-fg-muted ring-divider';
-  const arrow = sentiment === 'positive' ? '▲' : sentiment === 'negative' ? '▼' : '·';
+function renderInlineTags(
+  symbols: readonly string[],
+  topics: readonly string[],
+) {
+  const items: Array<{ key: string; kind: 'symbol' | 'topic'; value: string }> = [
+    ...symbols.slice(0, 2).map((s) => ({ key: `sym-${s}`, kind: 'symbol' as const, value: s })),
+    ...topics.slice(0, 2).map((t) => ({ key: `topic-${t}`, kind: 'topic' as const, value: t })),
+  ];
   return (
-    <span
-      className={cn(
-        'ml-auto inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold ring-1',
-        cls,
-      )}
-    >
-      <span aria-hidden>{arrow}</span>
-      {score !== null ? (
-        <span className="tabular-nums">
-          {score > 0 ? '+' : ''}
-          {score.toFixed(2)}
+    <>
+      {items.map((item) => (
+        <span key={item.key} className="inline-flex items-center gap-x-2">
+          <span aria-hidden className="opacity-50">·</span>
+          <span
+            className={cn(
+              'font-medium',
+              item.kind === 'symbol' ? 'uppercase' : 'opacity-75',
+            )}
+          >
+            {item.kind === 'topic' ? `#${item.value}` : item.value}
+          </span>
         </span>
-      ) : (
-        sentiment
-      )}
-    </span>
+      ))}
+    </>
   );
 }
 
