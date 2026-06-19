@@ -53,12 +53,12 @@
   --color-warn: oklch(82% 0.14 80);
   --color-info: oklch(74% 0.14 230);
 
-  /* Radii */
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 18px;
-  --radius-xl: 24px;
-  --radius-2xl: 32px;
+  /* Radii - Refined for terminal aesthetic */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-2xl: 20px;
 
   /* Shadows — deeper to read against true black */
   --shadow-sm: 0 1px 2px 0 oklch(0% 0 0 / 0.4);
@@ -281,18 +281,9 @@
 
 @utility card-premium {
   position: relative;
-  background: linear-gradient(
-    180deg,
-    oklch(14% 0 0 / 0.7) 0%,
-    oklch(11% 0 0 / 0.85) 100%
-  );
-  backdrop-filter: blur(16px) saturate(140%);
-  -webkit-backdrop-filter: blur(16px) saturate(140%);
-  border: 1px solid oklch(96% 0 0 / 0.07);
-  border-radius: var(--radius-2xl);
-  box-shadow:
-    inset 0 1px 0 0 oklch(100% 0 0 / 0.04),
-    var(--shadow-md);
+  background: var(--color-bg-elev-1);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
 }
 
 @utility glow-brand {

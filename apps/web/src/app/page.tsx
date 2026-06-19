@@ -22,7 +22,7 @@ import { auth } from '@/auth';
 export default async function RootPage() {
   const session = await auth();
   if (!session?.user?.id) {
-    redirect('/chat');
+    redirect('/dashboard');
   }
 
   const db = getDb();
@@ -35,5 +35,5 @@ export default async function RootPage() {
     redirect('/onboarding');
   }
 
-  redirect('/chat');
+  redirect('/dashboard');
 }

@@ -248,7 +248,7 @@ export function ChartView({ symbol }: { symbol: Symbol }) {
   }, [structure, candlesWithLive, toggleRecord]);
 
   return (
-    <div ref={containerRef} className="-mx-4 flex flex-col animate-in fade-in duration-300">
+    <div ref={containerRef} className="-mx-4 flex flex-1 flex-col animate-in fade-in duration-300">
       {/* Sticky floating sub-header (Dynamic Island style) */}
       <div
         className="sticky z-20 px-4 pt-3 pb-2 transition-all"
@@ -305,7 +305,10 @@ export function ChartView({ symbol }: { symbol: Symbol }) {
         </header>
       </div>
 
-      <div className="flex flex-col gap-4 px-4 py-4">
+      <div 
+        className="flex flex-col flex-1 gap-4 px-4 py-4 min-h-[400px] h-full w-full"
+        style={{ contain: 'layout paint' }}
+      >
         {isLoading ? (
           <ChartSkeleton />
         ) : error ? (

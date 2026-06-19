@@ -143,20 +143,11 @@ export function Message({ message, onCopy, onRegenerate, onEdit }: MessageProps)
     <div className={cn('group flex w-full flex-col gap-2', isUser ? 'items-end' : 'items-start')}>
       <div
         className={cn(
-          'relative flex max-w-[88%] flex-col gap-2 px-4 py-3',
+          'relative flex w-full max-w-[95%] sm:max-w-[88%] flex-col gap-2 px-4 py-3 border',
           isUser
-            ? 'text-brand-fg rounded-3xl rounded-br-md font-medium shadow-sm'
-            : 'glass-subtle text-fg rounded-3xl rounded-bl-md',
+            ? 'border-brand/30 bg-brand/5 text-fg rounded-lg rounded-br-sm font-medium shadow-sm'
+            : 'border-divider bg-bg-elev-1/60 text-fg rounded-lg rounded-bl-sm',
         )}
-        style={
-          isUser
-            ? {
-                backgroundImage: 'var(--gradient-brand)',
-                boxShadow:
-                  'inset 0 1px 0 0 oklch(100% 0 0 / 0.15), 0 4px 12px -4px oklch(78% 0.16 78 / 0.4)',
-              }
-            : undefined
-        }
       >
         {message.parts.map((part, idx) => renderPart(part, idx, message.role))}
       </div>

@@ -16,7 +16,6 @@
 
 import { AmbientBackground } from '@/components/layout/ambient-background';
 import { NavDrawer } from '@/components/layout/nav-drawer';
-import { NavDrawerProvider } from '@/components/layout/nav-drawer-context';
 import { OfflineBanner } from '@/components/layout/offline-banner';
 import { SkipToContent } from '@/components/layout/skip-to-content';
 import { TopBar } from '@/components/layout/top-bar';
@@ -41,25 +40,35 @@ import { Toaster } from '@/components/ui/toaster';
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <MotionRoot>
-      <NavDrawerProvider>
-        <div className="text-fg relative min-h-svh">
-          <SkipToContent />
-          <AmbientBackground />
-          <SwRegister />
+      <div className="text-fg relative min-h-svh md:flex md:flex-row bg-bg">
+        <SkipToContent />
+        <AmbientBackground />
+        <SwRegister />
+        
+        {/* Desktop Sidebar (hidden on mobile) */}
+        <div className="hidden md:block shrink-0">
+          <NavDrawer isDesktop />
+        </div>
+
+        <div className="flex flex-1 flex-col min-w-0">
           <TopBar />
           <main
             id="main-content"
             tabIndex={-1}
-            className="mx-auto w-full max-w-2xl px-4 pt-4 focus:outline-none"
-            style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 24px)' }}
+            className="flex-1 w-full max-w-7xl mx-auto px-4 pt-4 pb-24 md:pb-8 focus:outline-none"
           >
             {children}
           </main>
-          <NavDrawer />
-          <OfflineBanner />
-          <Toaster />
         </div>
-      </NavDrawerProvider>
+
+        {/* Mobile Bottom Nav (hidden on desktop) */}
+        <div className="md:hidden">
+          <NavDrawer isMobile />
+        </div>
+        
+        <OfflineBanner />
+        <Toaster />
+      </div>
     </MotionRoot>
   );
 }
