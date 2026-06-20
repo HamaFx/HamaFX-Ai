@@ -14,6 +14,9 @@ build/
 coverage/
 .nyc_output/
 
+# one-off debugging scripts (kept locally for reference, not part of the build)
+scripts/scratch/
+
 # env
 .env
 .env.local

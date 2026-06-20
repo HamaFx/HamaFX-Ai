@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any, no-empty, @typescript-eslint/no-unused-vars */
 'use client';
 
 /**
@@ -39,7 +38,6 @@ export interface ChartMACDProps {
   onReady?: (host: MainChartInstance) => void;
 }
 
-type LcModule = typeof LightweightCharts;
 type UTCTimestamp = LightweightCharts.UTCTimestamp;
 
 export function ChartMACD({ result, candles, mainChart, settings, onReady }: ChartMACDProps) {
@@ -55,7 +53,11 @@ export function ChartMACD({ result, candles, mainChart, settings, onReady }: Cha
 
     void import('lightweight-charts').then((lc) => {
       if (cancelled || !hostRef.current) return;
-      const createChartFn = ('createChart' in lc) ? lc.createChart : (lc as any).default?.createChart;
+      const createChartFn =
+        'createChart' in lc
+          ? lc.createChart
+          : // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (lc as any).default?.createChart;
       if (!createChartFn) return;
 
       const chart = createChartFn(el, {
@@ -76,7 +78,16 @@ export function ChartMACD({ result, candles, mainChart, settings, onReady }: Cha
       const signalSeries = chart.addSeries(lc.LineSeries, { color: SERIES_SIGNAL_HEX, lineWidth: 1.5, priceLineVisible: false });
       const histSeries = chart.addSeries(lc.HistogramSeries, { color: SERIES_BULL_HEX, priceFormat: { type: 'volume' }, priceLineVisible: false });
 
-      const macdData: any[] = [], signalData: any[] = [], histData: any[] = [];
+      // Intermediate LineSeries data arrays. Typed loosely because
+      // lightweight-charts' LineData/HistogramData types are not
+      // exported from this module's surface; the runtime shape is
+      // just { time: UTCTimestamp, value: number }.
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const macdData: any[] = [],
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        signalData: any[] = [],
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        histData: any[] = [];
       result.values.forEach((v, idx) => {
         if (!v || typeof v !== 'object') return;
         const candle = candles[idx];
@@ -84,7 +95,11 @@ export function ChartMACD({ result, candles, mainChart, settings, onReady }: Cha
         const t = Math.floor(candle.t / 1000) as unknown as UTCTimestamp;
         if (v.macd !== null && v.macd !== undefined) macdData.push({ time: t, value: v.macd });
         if (v.signal !== null && v.signal !== undefined) signalData.push({ time: t, value: v.signal });
-        const histVal = v.hist !== undefined ? v.hist : (v as any).histogram;
+        const histVal =
+          v.hist !== undefined
+            ? v.hist
+            : // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              (v as any).histogram;
         if (histVal !== null && histVal !== undefined) {
           histData.push({
             time: t,

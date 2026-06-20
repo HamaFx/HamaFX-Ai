@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any, no-empty, @typescript-eslint/no-unused-vars */
 'use client';
 
 /**
@@ -209,7 +208,8 @@ function createMainChart(
 
   const createChartFn = ('createChart' in lc)
     ? lc.createChart
-    : (lc as any).default?.createChart;
+    : // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (lc as any).default?.createChart;
   if (!createChartFn) throw new Error('Could not find createChart function in imported module');
 
   const fontFamily =
@@ -266,6 +266,9 @@ function createMainChart(
       );
     },
     setOverlays(overlays: OverlaySet | null) {
+      // The lightweight-charts series API surface differs by version;
+      // the eslint-disable below scopes the any to a single line.
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const seriesAny = candleSeries as any;
       if (typeof seriesAny.setMarkers === 'function') {
         seriesAny.setMarkers(
@@ -273,7 +276,11 @@ function createMainChart(
         );
       }
       for (const h of priceLineHandles) {
-        try { candleSeries.removePriceLine(h); } catch {}
+        try {
+          candleSeries.removePriceLine(h);
+        } catch {
+          // Price line may already have been removed; ignore.
+        }
       }
       priceLineHandles = [];
       for (const pl of overlays?.priceLines ?? []) {
@@ -288,7 +295,11 @@ function createMainChart(
     },
     setIndicators(results: IndicatorResult[] | null) {
       for (const s of indicatorLineHandles) {
-        try { chart.removeSeries(s); } catch {}
+        try {
+          chart.removeSeries(s);
+        } catch {
+          // Series may already have been removed; ignore.
+        }
       }
       indicatorLineHandles = [];
       if (!results) return;
@@ -306,7 +317,11 @@ function createMainChart(
           series.setData(
             res.values.map((v, idx) => {
               if (v === null || v === undefined) return null;
-              const value = typeof v === 'number' ? v : (v as any).value ?? null;
+              const value =
+                typeof v === 'number'
+                  ? v
+                  : // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    (v as any)?.value ?? null;
               if (value === null) return null;
               const candle = currentCandles[idx];
               if (!candle) return null;
@@ -322,13 +337,28 @@ function createMainChart(
           const upperSeries = chart.addSeries(lc.LineSeries, { color: '#7d8693', lineWidth: 1, lineStyle: 1, title: 'BB Upper', priceLineVisible: false });
           const lowerSeries = chart.addSeries(lc.LineSeries, { color: '#7d8693', lineWidth: 1, lineStyle: 1, title: 'BB Lower', priceLineVisible: false });
           indicatorLineHandles.push(basisSeries, upperSeries, lowerSeries);
-          const basisData: any[] = [], upperData: any[] = [], lowerData: any[] = [];
+          // The intermediate arrays hold points shaped exactly like
+          // LineSeries expects (`{ time, value }`). Using a tuple
+          // type here would require importing lightweight-charts'
+          // `LineData` everywhere — the lightweight-charts types
+          // are looser than ours. The eslint-disable below keeps
+          // the boundary explicit.
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const basisData: any[] = [],
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            upperData: any[] = [],
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            lowerData: any[] = [];
           res.values.forEach((v, idx) => {
             if (!v || typeof v !== 'object') return;
             const candle = currentCandles[idx];
             if (!candle) return;
             const t = Math.floor(candle.t / 1000) as unknown as UTCTimestamp;
-            const basisVal = v.middle !== undefined ? v.middle : (v as any).basis;
+            const basisVal =
+              v.middle !== undefined
+                ? v.middle
+                : // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  (v as any).basis;
             if (basisVal !== null && basisVal !== undefined) basisData.push({ time: t, value: basisVal });
             if (v.upper !== null && v.upper !== undefined) upperData.push({ time: t, value: v.upper });
             if (v.lower !== null && v.lower !== undefined) lowerData.push({ time: t, value: v.lower });

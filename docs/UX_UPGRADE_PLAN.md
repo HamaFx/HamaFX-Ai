@@ -6,6 +6,30 @@ identified in the analysis session. Each item below is self-contained:
 problem, goal, scope, implementation steps, edge cases, tests,
 acceptance criteria, and explicit out-of-scope notes.
 
+STATUS (as of 2026-06-20)
+-------------------------
+
+  Phase A (items 1–7)   ✅ DONE — commit 237969b
+  Phase B (items 8–15)  ✅ DONE — commit 52d189a
+  Phase C (items 16–19) ✅ DONE — commits a9c7b15 (16+18),
+                                          205b632 (17),
+                                          694ffb5 (19)
+
+  Deferred (20–22)      📋 parked — not scheduled
+  Not doing (23–25)     🚫 out of scope — see end of doc
+
+  Test count grew 451 → 561 (+110 across 4 packages) over the
+  three phases. See `docs/USER_FLOW.md` section 7 for the
+  resulting flows.
+
+  Items remaining as a follow-up:
+    - Item 8 popover UI extension (dynamic provider tabs from
+      /api/me/keys — backend `resolveOverrideModel` is shipped,
+      the popover itself is still a hardcoded REGEN_MODELS list).
+    - Item 20: email verification
+    - Item 21: bulk journal import (CSV)
+    - Item 22: thread-level public share (read-only HMAC)
+
 Plan conventions
 ----------------
 

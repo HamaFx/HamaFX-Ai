@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any, no-empty, @typescript-eslint/no-unused-vars */
 'use client';
 
 /**
@@ -40,7 +39,6 @@ export interface ChartRSIProps {
   onReady?: (host: MainChartInstance) => void;
 }
 
-type LcModule = typeof LightweightCharts;
 type UTCTimestamp = LightweightCharts.UTCTimestamp;
 
 export function ChartRSI({ result, candles, mainChart, settings, onReady }: ChartRSIProps) {
@@ -56,7 +54,11 @@ export function ChartRSI({ result, candles, mainChart, settings, onReady }: Char
 
     void import('lightweight-charts').then((lc) => {
       if (cancelled || !hostRef.current) return;
-      const createChartFn = ('createChart' in lc) ? lc.createChart : (lc as any).default?.createChart;
+      const createChartFn =
+        'createChart' in lc
+          ? lc.createChart
+          : // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (lc as any).default?.createChart;
       if (!createChartFn) return;
 
       const chart = createChartFn(el, {
@@ -88,7 +90,11 @@ export function ChartRSI({ result, candles, mainChart, settings, onReady }: Char
           if (!candle) return null;
           return {
             time: Math.floor(candle.t / 1000) as unknown as UTCTimestamp,
-            value: typeof v === 'number' ? v : (v as any).value ?? null,
+            value:
+              typeof v === 'number'
+                ? v
+                : // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  (v as any)?.value ?? null,
           };
         }).filter((d): d is { time: UTCTimestamp; value: number } => d !== null && d.value !== null),
       );

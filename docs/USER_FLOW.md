@@ -1240,4 +1240,375 @@ B. Chat-driven (natural language)
   Worker daemon       apps/worker/src/ (SignalR, cron, jobs)
 
 
+====================================================================
+7. UX Upgrades — Phase A/B/C Additions
+====================================================================
+
+After the multi-tenant migration (Phases A+B), the UX_UPGRADE_PLAN
+spelled out 25 items across three phases. Phases A, B, and C are
+complete and shipped; this section documents the resulting user
+flows that didn't exist when sections 1-6 were written.
+
+The plan itself is `docs/UX_UPGRADE_PLAN.md`; this section is a
+flow-level summary.
+
+7.1 Composer Surface (Phase A — items 1, 2, 3, 6)
+-------------------------------------------------
+
+Character count, prompt presets, and quick prompts. All four live
+in `apps/web/components/chat/composer.tsx`.
+
+  (start) Focus on the composer
+     |
+     v
+  [charCount visible in bottom-right, always]
+     - 0..2,400 chars   : muted gray ("1248 / 4000")
+     - 2,400..3,800     : amber ("3588 / 4000")
+     - 3,800..4,000     : red  ("3912 / 4000")
+     - >4,000           : blocked, send button disabled
+     |
+     v
+  [Quick prompts above composer, context-aware]
+     - Pinned symbol (XAUUSD) -> 4 prompts (RSI, structure, news, levels)
+     - Session (asian/london/ny/closed) -> session-specific prompts
+     - 30 prompts in 10 sets total, keyed by (session, pin)
+     |
+     v
+  [Custom instructions chips in /settings/agent]
+     - "Be concise" / "Be technical" / "Challenge my bias" / "Cite inline"
+     - Click to toggle, persisted to userSettings.customInstructions
+     |
+     v
+  [Submit -> /api/chat]
+
+
+7.2 Thread Sidebar (Phase A — items 4, 5, 7)
+--------------------------------------------
+
+Pin symbols, bulk delete, and the provider health badge.
+
+  (start) Sidebar in chat-top-bar.tsx
+     |
+     v
+  [Symbol pin affordance]
+     - Each thread shows its pinnedSymbol (or "—")
+     - Click to unpin; the chip at top is clickable on chart pages
+     |
+     v
+  [Multi-select mode]
+     - "Select" button in the sidebar header
+     - Tap any thread to mark it (checkbox appears)
+     - "Delete selected" enabled at 1+ selection
+     - 50 thread cap (zod), 10 deletes/min rate limit
+     |
+     v
+  [Provider health badge in /settings/api-keys]
+     - 8x8px dot next to provider name
+     - Green (<1h ago, ok) / amber (<24h) / red (>24h) / gray (never tested)
+     - Reads from provider_tests table
+
+
+7.3 Onboarding Wizard (Phase A + Phase C — items 4, 16)
+------------------------------------------------------
+
+The 4-step wizard and the per-provider tooltip.
+
+  (start) /onboarding (first login)
+     |
+     v
+  [Step 1: name + timezone] -> [Step 2: default symbol]
+     |
+     v
+  [Step 3: pick a provider]
+     - 8 providers, each card shows displayName + description
+     - <ProviderInfoDot> icon next to name; hover for tooltip
+       "Best for: <bestFor> · Supports: Vision, Embeddings"
+     - <HealthBadge> dot on previously-tested providers
+     |
+     v
+  [Step 4: API key entry]
+     - Input with keyHint placeholder (e.g. "AIza…")
+     - Reveal/hide toggle
+     - "Test connection" button -> POST /api/settings/test-provider
+       - 200 ok -> "Looks valid" pill
+       - 4xx -> inline error with retry
+     |
+     v
+  [Complete -> redirect to /chat]
+
+
+7.4 Power-User Tools (Phase B — items 11, 12, 14)
+--------------------------------------------------
+
+The cmd-K palette, PWA install nudge, and thread export.
+
+  (start) Anywhere on the app
+     |
+     v
+  [Press Cmd+K (mac) / Ctrl+K (windows)]
+     |
+     v
+  [Command palette opens]
+     - Fuzzy-matched list of ~25 commands
+     - Groups: Navigation / New chat / Settings
+     - Up/Down to navigate, Enter to run, Esc to close
+     - Touch fallback: floating action button bottom-right
+     |
+     v
+  [/chat/$threadId → open thread menu]
+     - "Export as Markdown" -> GET /api/chat/threads/[id]/export
+       - text/markdown, attachment disposition
+       - Rate-limited (10/min), 500-msg cap with truncation note
+     |
+     v
+  [PWA install nudge]
+     - Chrome on Android/desktop: listens for beforeinstallprompt
+     - iOS Safari: text-only hint with Share -> Add to Home Screen
+     - Dismiss cap = 3; after 3 dismisses the nudge stops
+
+
+7.5 Model Override + Auto-Fallback (Phase B — items 8, 15)
+---------------------------------------------------------
+
+The "Regenerate with..." popover and the fallback marker.
+
+  (start) Assistant message hover
+     |
+     v
+  [Click chevron on the right side of the regenerate button]
+     |
+     v
+  [Popover shows 3 hardcoded REGEN_MODELS]
+     - Currently: gemini-3.1-pro / gemini-3.5-flash / gemini-2.5-flash
+     - <-- TODO: dynamic provider tabs from /api/me/keys
+     |
+     v
+  [User picks a model]
+     |
+     v
+  [resolveOverrideModel(override) called in agent.ts]
+     - "provider:model" or "provider" syntax
+     - Looks up BYOK key + env fallback
+     - Returns LanguageModel + modelId
+     |
+     v
+  [streamText starts. On recoverable failure:]
+     - classifyStreamError() — 401/403/429/5xx/timeout are recoverable
+     - Falls back to AI_DEFAULT_MODEL
+     - Appends data-fallback part to the assistant message
+     - UI shows amber card: "Override unavailable, used gemini-2.5-flash"
+     - User sees which provider failed and which one answered
+
+
+7.6 Citation Drill-Down (Phase B — item 9)
+------------------------------------------
+
+The inline findings list inside citation warning cards.
+
+  (start) Assistant turn ends
+     |
+     v
+  [enforceCitations() runs in agent.ts onFinish]
+     - Scans the streamed text for unsupported claims
+     - Calls collectFindings() — per-claim { text, supported, supportingTool }
+     |
+     v
+  [If claims are unsupported: append data-citation-warning part]
+     - Schema: { kind, summary, findings?[] }
+     - findings optional for backward compat with old data
+     |
+     v
+  [CitationWarningPartView renders the findings list]
+     - Each row: claim text, "supported" / "no tool source" pill
+     - Collapsed by default; click to expand
+     - Thread export renders findings as a markdown bullet checklist
+
+
+7.7 Alert Preview (Phase B — item 10)
+-------------------------------------
+
+"Would this have fired?" — a debounced live preview.
+
+  (start) /alerts/new
+     |
+     v
+  [User picks rule type, symbol, timeframe, level]
+     |
+     v
+  [400ms debounce -> POST /api/alerts/preview]
+     - priceCross + candleClose: scanned over candles_1m
+     - indicatorCross: returns { unsupported: true } (v1 best-effort)
+     - Returns { count, avgHoldMs }
+     |
+     v
+  [PreviewCallout renders below the form]
+     - "Fires ~X times in the last Y days, avg hold 2h 14m"
+     - "Preview unavailable for indicator rules (v1)" for unsupported
+     - Loading spinner during the 400ms debounce
+
+
+7.8 Journal Stats Depth (Phase B — item 13)
+-------------------------------------------
+
+The new stats tiles and per-day-of-week chart on /journal.
+
+  (start) /journal
+     |
+     v
+  [GET /api/journal?stats=1]
+     - summarize() computes the extended metrics:
+       longestWinStreak, longestLossStreak, maxDrawdownR,
+       profitFactor, avgHoldMs, perDayOfWeek
+     - profitFactor = null when only wins (no losses) — not Infinity
+     - avgHoldMs = 0 when no closed trades
+     |
+     v
+  [StatsSummary renders 3 new tiles + DoW chart]
+     - "Win Streak"  — longest consecutive wins (breakevens don't reset)
+     - "Loss Streak" — longest consecutive losses
+     - "Avg Hold"    — formatted as 14m / 2h 14m / 3d
+     - 7-bar chart "Closed by day of week"
+     - Hidden when the migration hasn't run yet (hasExtendedStats check)
+
+
+7.9 Reduced Motion (Phase C — item 18)
+---------------------------------------
+
+The OS-level override + motion-safe: tagging convention.
+
+  (start) User enables "Reduce motion" at OS level
+            OR sets the in-app /settings/agent preference
+     |
+     v
+  [globals.css: prefers-reduced-motion: reduce media query]
+     - All animations/iterations reduced to 0.01ms
+     - Transitions reduced to 0.01ms
+     - scroll-behavior: auto
+     |
+     v
+  [User-forced toggle: data-reduce-motion="force" on <html>]
+     - Same CSS rules apply
+     - Set via the preferences card in /settings/agent
+     |
+     v
+  [Convention for new animations (docs/15-motion-conventions.md)]
+     - Decorative: prepend motion-safe: (e.g. motion-safe:animate-pulse)
+     - Functional: gate on useReducedMotion() and short-circuit to instant
+     - Grep guard: any animate-* without motion-safe: is flagged
+
+
+7.10 Alert Snooze (Phase C — item 17)
+-------------------------------------
+
+The snooze field and the cron re-fire logic.
+
+  (start) /alerts/new or existing alert
+     |
+     v
+  [User sets "Re-arm after (hours, 0 = one-shot)"]
+     - 0 = one-shot (legacy behavior)
+     - 1..168 = re-fire window
+     - 168 = 1 week max
+     |
+     v
+  [POST /api/alerts with snoozeHours in the body]
+     - zod schema: 0..168 integer
+     - createAlert clamps + writes
+     - Migration 0011_alert_snooze.sql adds the columns
+     |
+     v
+  [Cron evaluates as before]
+     - listEvaluable pulls active + unfired rows
+     - isInSnooze(alert, now) filters dormant alerts
+       (lastFiredAt + snoozeHours interval > now)
+     |
+     v
+  [On a recoverable fire: markFiredForAlert()]
+     - snoozeHours === 0: markFired() — sets firedAt, deactivates (legacy)
+     - snoozeHours >  0: markFiredSnoozed() — sets lastFiredAt, keeps active
+     |
+     v
+  [Snoozed alert becomes eligible to re-fire after the window]
+     - Next listEvaluable tick includes it again
+     - User gets re-notified, repeat cycle continues
+
+
+7.11 Edit-in-Place Fork (Phase C — item 19)
+-------------------------------------------
+
+Editing a non-last user message creates a new thread.
+
+  (start) User hovers a non-last user message
+     |
+     v
+  [Click pencil icon]
+     |
+     v
+  [Edit textarea opens with the current text]
+     - User edits the text
+     - Clicks "Save & Submit"
+     |
+     v
+  [ChatScreen onEdit handler runs]
+     - Checks if edited message is the LAST message
+     - LAST: legacy in-place (slice + sendMessage)
+     - NOT LAST: POST /api/chat/threads/fork
+       - sourceThreadId, atMessageId, newText
+       - csrf token required
+     |
+     v
+  [forkThread() in packages/ai]
+     - IDOR-checked source fetch (scoped by userId)
+     - Verifies atMessageId is a user-role message
+     - Transactional: creates new thread + copies messages
+       up to and including the edit point
+     - newText replaces the edited message content
+     - Original thread is NEVER mutated
+     - Title derived from newText (truncated to 80 chars)
+     |
+     v
+  [Client receives { threadId: newId }]
+     - toast.success('Forked into a new thread')
+     - router.push(`/chat/${newId}`)
+     |
+     v
+  [User is on the new thread; original stays in the sidebar]
+
+
+7.12 Tooltips on Provider Cards (Phase C — item 16)
+---------------------------------------------------
+
+The small (i) icon next to each provider name.
+
+  (start) /onboarding (step 3) OR /settings/api-keys
+     |
+     v
+  [ProviderInfoDot rendered next to each name]
+     - Icon = <Info size={12} />
+     - aria-label = full tooltip text (period-separated for SR)
+     - onClick stopPropagation (doesn't trigger card button)
+     |
+     v
+  [Tooltip text format:]
+     "Best for: <bestFor> · Supports: Vision, Embeddings"
+     - bestFor from BYOK_PROVIDERS (e.g. "Free tier + vision")
+     - Supports listed only when at least one flag is true
+     - Falls back to description when both are absent
+     - Order: Vision first, then Embeddings
+
+
+Cross-references
+----------------
+
+  - docs/UX_UPGRADE_PLAN.md — full plan, status table, deferred items
+  - docs/15-motion-conventions.md — item 18 developer convention
+  - apps/web/components/ui/provider-info-dot.tsx — item 16 component
+  - apps/web/src/app/api/chat/threads/{fork,[id]/export} — items 14, 19
+  - apps/web/src/components/layout/command-palette.tsx — item 11
+  - apps/web/src/components/layout/install-nudge.tsx — item 12
+  - apps/web/src/components/chat/quick-prompts.tsx — item 3
+  - packages/ai/src/alerts/persistence.ts — items 7, 17
+  - packages/ai/src/journal/persistence.ts — item 13
+
+
 End of document.

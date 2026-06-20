@@ -7,7 +7,7 @@
 
 **HamaFX-Ai** is a multi-tenant, chat-driven AI trading copilot for three forex instruments: **XAUUSD** (primary), **EURUSD**, **GBPUSD**. It runs as a Next.js 15 PWA with a persistent Node.js worker daemon. The AI agent uses Vercel AI SDK v5 with 32 tools, domain-based model routing, and multi-agent committee deliberation.
 
-- **Status**: Phases 0-9 shipped (incl. multi-tenant v2.0). Hardening complete. In production on Vercel + GCE VM.
+- **Status**: Phases 0-9 shipped (incl. multi-tenant v2.0). Hardening complete. UX Upgrade Plan Phases A/B/C shipped (561 tests, items 1-19 done; items 20-25 parked). In production on Vercel + GCE VM.
 - **Principle**: Multi-tenant via NextAuth.js v5 + Drizzle adapter. BYOK per user (8-provider registry). Strict userId scoping on all user-data tables.
 - **License**: Apache-2.0
 
@@ -25,7 +25,7 @@
 | DB | Postgres (Supabase) + pgvector. Drizzle ORM |
 | Local DB | PGlite (embedded Postgres, zero setup) |
 | Charts | TradingView lightweight-charts v5 |
-| Tests | Vitest. 72 test files, 394 cases. `pnpm turbo run test -- --run` |
+| Tests | Vitest. 85 test files, 561 cases (Phase A→C grew from 451 → 561). `pnpm turbo run test -- --run` |
 | Lint | ESLint flat config in `packages/config/eslint` |
 | TypeScript | Strict mode. `exactOptionalPropertyTypes`, `noUncheckedIndexedAccess` |
 
@@ -202,3 +202,6 @@ For fundamental/technical turns: cheap model generates JSON plan, persisted as s
 - `docs/09-testing.md` — test infrastructure, patterns
 - `docs/10-security.md` — auth, secrets, CSRF, middleware
 - `docs/14-first-run-setup.md` — new user onboarding, dev-secret autogen, BYOK registry
+- `docs/15-motion-conventions.md` — animation conventions (motion-safe: convention for decorative, useReducedMotion for functional)
+- `docs/USER_FLOW.md` — comprehensive user flow reference (sections 1-7)
+- `docs/UX_UPGRADE_PLAN.md` — 25-item UX plan, status table at the top

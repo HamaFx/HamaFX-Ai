@@ -341,7 +341,13 @@ type PreviewState =
   | { kind: 'empty' }
   | { kind: 'ok'; count: number; avgHoldMs: number };
 
-function buildRule(p: PreviewCalloutProps): unknown | null {
+function buildRule(p: {
+  type: RuleType;
+  symbol: Symbol;
+  tf: Timeframe;
+  direction: 'above' | 'below';
+  level: string;
+}): unknown | null {
   const numericLevel = Number(p.level);
   if (!Number.isFinite(numericLevel)) return null;
   if (p.type === 'priceCross') {
@@ -357,17 +363,20 @@ function PreviewCallout(props: PreviewCalloutProps) {
   const [state, setState] = useState<PreviewState>({ kind: 'idle' });
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // Destructure so the useEffect deps array is unambiguous.
+  const { type, symbol, tf, direction, level } = props;
+
   useEffect(() => {
     // Cancel any pending fetch when the inputs change.
     if (timerRef.current) {
       clearTimeout(timerRef.current);
       timerRef.current = null;
     }
-    if (props.type === 'indicatorCross') {
+    if (type === 'indicatorCross') {
       setState({ kind: 'unsupported' });
       return;
     }
-    const rule = buildRule(props);
+    const rule = buildRule({ type, symbol, tf, direction, level });
     if (!rule) {
       setState({ kind: 'idle' });
       return;
@@ -412,7 +421,7 @@ function PreviewCallout(props: PreviewCalloutProps) {
         timerRef.current = null;
       }
     };
-  }, [props.type, props.symbol, props.tf, props.direction, props.level]);
+  }, [type, symbol, tf, direction, level]);
 
   if (state.kind === 'idle' || state.kind === 'loading') return null;
 

@@ -12,7 +12,7 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/status-production%20ready-48d597?style=flat-square" alt="Status: Production Ready">
-  <img src="https://img.shields.io/badge/tests-350+-48d597?style=flat-square" alt="Tests: 350+">
+  <img src="https://img.shields.io/badge/tests-561-48d597?style=flat-square" alt="Tests: 561">
   <img src="https://img.shields.io/badge/ai%20tools-32-f5b945?style=flat-square" alt="AI Tools: 32">
   <img src="https://img.shields.io/badge/license-Apache%202.0-8a93a3?style=flat-square" alt="License">
 </p>
@@ -187,7 +187,7 @@ We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) a
 ## 🔧 Development
 
 ```bash
-pnpm turbo run test -- --run    # 350+ tests
+pnpm turbo run test -- --run    # 561 tests
 pnpm typecheck                  # strict TS across 8 packages
 pnpm --filter @hamafx/web build # production build
 pnpm turbo run lint             # ESLint flat config
