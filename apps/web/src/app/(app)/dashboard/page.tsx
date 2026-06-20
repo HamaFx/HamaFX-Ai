@@ -1,5 +1,3 @@
-import { Suspense } from 'react';
-import { Sparkline } from '@/components/ui/sparkline';
 import { StatCard } from '@/components/ui/stat-card';
 import { TrendingUp, Activity, DollarSign, Clock } from 'lucide-react';
 import { cn } from '@/lib/cn';
