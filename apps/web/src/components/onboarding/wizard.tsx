@@ -108,7 +108,7 @@ export function OnboardingWizard({ initialName, providers }: OnboardingWizardPro
   };
 
   return (
-    <div className="card-premium p-6">
+    <div className="border border-divider bg-bg-elev-1 rounded-lg p-6">
       {/* Stepper */}
       <div className="mb-8 flex items-center justify-between">
         {[1, 2, 3, 4].map((i) => (
