@@ -32,6 +32,7 @@
 
 import { createAnthropic } from '@ai-sdk/anthropic';
 import { createGoogleGenerativeAI } from '@ai-sdk/google';
+import { createVertex } from '@ai-sdk/google-vertex';
 import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
 import type { LanguageModel } from 'ai';
 import { PROVIDER_IDS, type ProviderId } from '@hamafx/shared/byok';
@@ -113,6 +114,101 @@ const GOOGLE: ByokProviderSpec = {
   factory: (apiKey) => {
     const provider = createGoogleGenerativeAI({ apiKey });
     return (modelId) => provider(modelId);
+  },
+};
+
+/**
+ * Vertex AI — Google Cloud's hosted Gemini endpoint, authenticated
+ * with a GCP service account. Distinct from the `google` provider
+ * (which uses the public Gemini API with an AIza… key) because:
+ *
+ *   - Different auth shape (service-account JSON, not a key string)
+ *   - Different SDK (`@ai-sdk/google-vertex`, not `@ai-sdk/google`)
+ *   - Different billing (GCP project quota, not Google AI billing)
+ *   - Different model namespace — `gemini-2.5-flash` etc. are
+ *     available, but the public Gemini API's free tier is not
+ *
+ * The BYOK key is the raw service-account JSON file content.
+ * Required fields: `client_email`, `private_key`. The user must
+ * also enable the Vertex AI API on their GCP project and grant
+ * the service account the "Vertex AI User" role.
+ *
+ * For multi-line private keys we accept the JSON as pasted
+ * (a single-line JSON string after the user replaces newlines
+ * with `\n`). The Vertex SDK handles the decoding.
+ */
+const VERTEX: ByokProviderSpec = {
+  id: 'vertex',
+  displayName: 'Google Vertex AI',
+  familyName: 'Gemini (Vertex)',
+  keyHint: 'Paste service-account JSON',
+  description:
+    'Google Cloud Vertex AI — billed against your GCP project. ' +
+    'Requires a service account with the "Vertex AI User" role.',
+  pricingTier: 'medium',
+  defaultModels: {
+    fundamental: 'gemini-2.5-pro',
+    technical: 'gemini-2.5-flash',
+    summary: 'gemini-2.5-flash-lite',
+    vision: 'gemini-2.5-pro',
+    embedding: 'text-embedding-004',
+  },
+  bestFor: 'GCP billing + scale',
+  supports: { vision: true, embedding: true },
+  factory: (apiKey) => {
+    // The BYOK value is a service-account JSON. We parse it lazily
+    // inside the returned closure so testProviderKey (which just
+    // calls factory() to validate auth shape) doesn't have to wait
+    // on the full credential decode. The project + location come
+    // from process.env — operator-set in production, fall back to
+    // sensible defaults that match the GCP project name convention.
+    //
+    // We don't throw synchronously on bad JSON: that would make
+    // `factory('not-valid-json')` blow up at construction time even
+    // though the caller may never invoke the builder. The error
+    // surfaces on the first model call instead, which is what
+    // byok-providers.test.ts's `factory('test-key-that-is-long-enough')`
+    // smoke test relies on.
+    const project =
+      process.env.GOOGLE_VERTEX_PROJECT ||
+      apiKey.match(/"project_id"\s*:\s*"([^"]+)"/)?.[1] ||
+      '';
+    const location = process.env.GOOGLE_VERTEX_LOCATION || 'us-central1';
+    return (modelId) => {
+      let parsed: { client_email: string; private_key: string };
+      try {
+        const obj = JSON.parse(apiKey) as Record<string, unknown>;
+        if (
+          typeof obj.client_email !== 'string' ||
+          typeof obj.private_key !== 'string'
+        ) {
+          throw new Error(
+            'Vertex key is not valid service-account JSON (missing client_email or private_key)',
+          );
+        }
+        parsed = {
+          client_email: obj.client_email,
+          private_key: obj.private_key,
+        };
+      } catch (err) {
+        throw new Error(
+          err instanceof Error
+            ? err.message
+            : 'Vertex service-account JSON could not be parsed',
+        );
+      }
+      if (!project) {
+        throw new Error(
+          'Vertex project not found. Set GOOGLE_VERTEX_PROJECT env or include project_id in the service-account JSON.',
+        );
+      }
+      const vertex = createVertex({
+        project,
+        location,
+        googleAuthOptions: { credentials: parsed },
+      });
+      return vertex(modelId);
+    };
   },
 };
 
@@ -297,6 +393,7 @@ const DEEPSEEK: ByokProviderSpec = {
 
 export const BYOK_PROVIDERS: Record<ProviderId, ByokProviderSpec> = {
   google: GOOGLE,
+  vertex: VERTEX,
   anthropic: ANTHROPIC,
   openai: OPENAI,
   groq: GROQ,

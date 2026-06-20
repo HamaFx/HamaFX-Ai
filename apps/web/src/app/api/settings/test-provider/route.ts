@@ -24,9 +24,12 @@ import { z } from 'zod';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
+// Vertex service-account JSON files are typically 1.5-2.5 KB; the
+// `private_key` field alone is ~1.6 KB after newline escapes. 8 KB
+// covers every realistic key size.
 const BodySchema = z.object({
   provider: z.enum(PROVIDER_IDS as readonly [ProviderId, ...ProviderId[]]),
-  apiKey: z.string().min(8, 'API key is too short').max(512),
+  apiKey: z.string().min(8).max(8192),
 });
 
 export const POST = withAuth<void>(async (req, { user }) => {

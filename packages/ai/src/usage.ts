@@ -55,6 +55,24 @@ export interface ModelBreakdown {
   costUsd: number;
 }
 
+export interface ProviderBreakdown {
+  /**
+   * Provider id derived from the model id prefix (everything before
+   * the first `/`). Examples:
+   *   'google-vertex/gemini-2.5-flash' -> 'google-vertex'
+   *   'anthropic/claude-sonnet-4-...`  -> 'anthropic'
+   *   'openai/gpt-4o'                   -> 'openai'
+   *   'gemini-2.5-flash'               -> '' (no prefix, BYOK google)
+   */
+  provider: string;
+  /** Whether this provider maps to one of our 9 BYOK providers. */
+  byokProviderId: string | null;
+  turns: number;
+  inputTokens: number;
+  outputTokens: number;
+  costUsd: number;
+}
+
 export interface DayBucket {
   /** ISO YYYY-MM-DD (UTC). */
   date: string;
@@ -76,11 +94,57 @@ export interface UsageStats {
   thirtyDayTurns: number;
   /** Per-model totals across the 30-day window, sorted by cost desc. */
   byModel: ModelBreakdown[];
+  /** Per-provider totals across the 30-day window, sorted by cost desc. */
+  byProvider: ProviderBreakdown[];
   /** Daily totals for the last 7 days (UTC), oldest-first. Includes empty days. */
   daily7: DayBucket[];
 }
 
 const DAY_MS = 24 * 60 * 60 * 1000;
+
+/**
+ * Phase D — api-keys page overhaul.
+ *
+ * Convert an AI SDK model id like `google-vertex/gemini-2.5-flash`
+ * into a provider id (the segment before the first `/`) and then
+ * map it back to one of our 9 known BYOK providers.
+ *
+ * Why the mapping matters: the agent persists the literal model id
+ * it streams with (including the gateway/vertex prefix), but the
+ * api-keys page groups usage by BYOK provider id. Without this map
+ * we'd get "google-vertex" / "openai" / "anthropic" / "" all
+ * appearing as separate providers in the breakdown even though
+ * the user only configured 2 BYOK keys.
+ */
+export function providerIdFromModel(modelId: string): string {
+  const slash = modelId.indexOf('/');
+  if (slash === -1) return '';
+  return modelId.slice(0, slash);
+}
+
+const KNOWN_BYOK_PROVIDERS = new Set([
+  'google',
+  'vertex',
+  'anthropic',
+  'openai',
+  'groq',
+  'mistral',
+  'openrouter',
+  'xai',
+  'deepseek',
+]);
+
+/**
+ * Map a raw provider prefix (from a model id) to a canonical BYOK
+ * id. `google-vertex` -> `vertex` (Vertex AI). Empty string (no
+ * prefix) -> `google` (BYOK google uses bare model ids).
+ */
+function canonicalizeProviderId(prefix: string): string | null {
+  if (prefix === '') return 'google';
+  if (prefix === 'google-vertex') return 'vertex';
+  if (KNOWN_BYOK_PROVIDERS.has(prefix)) return prefix;
+  return null;
+}
 
 function startOfUtcDay(d: Date): Date {
   return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
@@ -121,6 +185,9 @@ export async function computeUsage(userId: string, now = new Date()): Promise<Us
   let outputTokens = 0;
   const turns = turnRows.length;
   const byModelMap = new Map<string, ModelBreakdown>();
+  // Phase D — per-provider aggregation. Keyed by the canonical
+  // BYOK id (e.g. 'vertex' for the 'google-vertex/' model prefix).
+  const byProviderMap = new Map<string, ProviderBreakdown>();
 
   // Initialise 7 daily buckets so the chart renders zeros for empty days.
   const dailyMap = new Map<string, DayBucket>();
@@ -156,6 +223,25 @@ export async function computeUsage(userId: string, now = new Date()): Promise<Us
     m.costUsd += cost;
     byModelMap.set(r.model, m);
 
+    // Per-provider (canonicalised).
+    const rawPrefix = providerIdFromModel(r.model);
+    const byokId = canonicalizeProviderId(rawPrefix);
+    if (byokId) {
+      const p = byProviderMap.get(byokId) ?? {
+        provider: rawPrefix || 'google',
+        byokProviderId: byokId,
+        turns: 0,
+        inputTokens: 0,
+        outputTokens: 0,
+        costUsd: 0,
+      };
+      p.turns += 1;
+      p.inputTokens += inT;
+      p.outputTokens += outT;
+      p.costUsd += cost;
+      byProviderMap.set(byokId, p);
+    }
+
     // Daily bucket
     if (t >= sevenStart.getTime()) {
       const key = r.createdAt.toISOString().slice(0, 10);
@@ -168,6 +254,7 @@ export async function computeUsage(userId: string, now = new Date()): Promise<Us
   }
 
   const byModel = [...byModelMap.values()].sort((a, b) => b.costUsd - a.costUsd);
+  const byProvider = [...byProviderMap.values()].sort((a, b) => b.costUsd - a.costUsd);
   const daily7 = [...dailyMap.values()].sort((a, b) => a.date.localeCompare(b.date));
 
   return {
@@ -178,6 +265,7 @@ export async function computeUsage(userId: string, now = new Date()): Promise<Us
     thirtyDayOutputTokens: outputTokens,
     thirtyDayTurns: turns,
     byModel,
+    byProvider,
     daily7,
   };
 }

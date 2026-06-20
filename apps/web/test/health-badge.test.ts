@@ -16,7 +16,7 @@
 
 import { describe, expect, it } from 'vitest';
 
-import { getHealthTone } from '../src/app/(app)/settings/api-keys/_components/api-key-card';
+import { getHealthTone } from '../src/components/ui/health-tone';
 
 const NOW = new Date('2026-06-20T12:00:00.000Z');
 const HOUR = 3_600_000;

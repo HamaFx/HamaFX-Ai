@@ -54,15 +54,23 @@ describe('BYOK_PROVIDERS', () => {
 
   it('factory returns a function that builds a language model', () => {
     for (const spec of BYOK_PROVIDERS_LIST) {
-      // We can't actually call the AI SDK without a valid key, but the
-      // factory itself must accept a string and return a function.
+      // Vertex is special-cased: the factory returns a closure
+      // that parses the JSON key INSIDE the inner call. Other
+      // providers defer auth errors to the actual API call.
+      // We can't easily generate a valid service-account JSON
+      // in this test, so we only verify the smoke-test path
+      // for non-vertex providers.
+      if (spec.id === 'vertex') continue;
       const builder = spec.factory('test-key-that-is-long-enough');
       expect(typeof builder).toBe('function');
-      // Calling the builder with a model id should not throw synchronously
-      // for the providers we wire (most SDKs defer auth errors to the
-      // actual API call).
       expect(() => builder('test-model')).not.toThrow();
     }
+  });
+
+  it('vertex factory parses the JSON key lazily (inside the closure)', () => {
+    const builder = BYOK_PROVIDERS.vertex.factory('not-valid-json');
+    expect(typeof builder).toBe('function');
+    expect(() => builder('gemini-2.5-flash')).toThrow(/JSON/);
   });
 });
 

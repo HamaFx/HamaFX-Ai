@@ -130,9 +130,11 @@ export {
 export {
   listTelemetry,
   computeUsage,
+  providerIdFromModel,
   type TelemetryRow,
   type UsageStats,
   type ModelBreakdown,
+  type ProviderBreakdown,
   type DayBucket,
 } from './usage';
 

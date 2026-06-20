@@ -328,8 +328,52 @@ export async function testProviderKey(
 ): Promise<{ ok: true } | { ok: false; error: string }> {
   const spec = BYOK_PROVIDERS[providerId];
   if (!spec) return { ok: false, error: `Unknown provider: ${providerId}` };
-  if (!apiKey || apiKey.length < 8) {
+
+  // Length floor depends on the key shape. Most providers use opaque
+  // strings >= 16 chars. Vertex is a service-account JSON document
+  // (>= 512 chars typically). We pick the right floor per provider.
+  const minLen = providerId === 'vertex' ? 256 : 8;
+  if (!apiKey || apiKey.length < minLen) {
+    if (providerId === 'vertex') {
+      return {
+        ok: false,
+        error: 'Vertex service-account JSON looks too short. Did you paste the whole file?',
+      };
+    }
     return { ok: false, error: 'API key is too short' };
+  }
+
+  // Provider-specific shape validation BEFORE we call factory() —
+  // factory() throws on bad JSON for vertex but we want a friendlier
+  // error message that names the field that's missing.
+  if (providerId === 'vertex') {
+    try {
+      const obj = JSON.parse(apiKey) as Record<string, unknown>;
+      if (typeof obj.client_email !== 'string') {
+        return { ok: false, error: 'Service account JSON is missing client_email' };
+      }
+      if (typeof obj.private_key !== 'string') {
+        return { ok: false, error: 'Service account JSON is missing private_key' };
+      }
+      if (!obj.client_email.includes('@')) {
+        return { ok: false, error: 'Service account JSON client_email is not an email' };
+      }
+      if (!obj.private_key.includes('BEGIN PRIVATE KEY')) {
+        return { ok: false, error: 'Service account private_key is not a PEM key' };
+      }
+      if (!process.env.GOOGLE_VERTEX_PROJECT && typeof obj.project_id !== 'string') {
+        return {
+          ok: false,
+          error:
+            'Set GOOGLE_VERTEX_PROJECT env or include project_id in the service-account JSON',
+        };
+      }
+    } catch (err) {
+      return {
+        ok: false,
+        error: `Service account JSON could not be parsed: ${err instanceof Error ? err.message : 'unknown error'}`,
+      };
+    }
   }
 
   // Use the cheapest model to test connection — we just want a round-trip.

@@ -1611,4 +1611,155 @@ Cross-references
   - packages/ai/src/journal/persistence.ts — item 13
 
 
+7.13 Provider Key Management Overhaul (Phase D)
+------------------------------------------------
+
+Phase D extends the api-keys page with three new flows: Vertex AI
+BYOK (GCP service-account JSON), per-provider usage breakdown, and
+a one-click "Test all" button. Plus an aesthetic pass that splits
+the page into "Configured" and "Available" sections.
+
+  (start) /settings/api-keys
+     |
+     v
+  [Page renders three sources in parallel]
+     - userSettings.aiApiKeys (decrypted) -> which keys are set
+     - providerTests rows                 -> latest health snapshot
+                                            per (user, provider)
+     - computeUsage(userId)               -> byProvider breakdown
+                                            (turns + costUsd per
+                                            canonical BYOK id)
+     |
+     v
+  [Header chips]
+     - "N / 9 configured"
+     - "M failing" (only when M > 0)
+     - "T turns · $X this month"  (last 30 days, all providers)
+     - "Test all" button  -> POST /api/settings/bulk-test
+                              (rate-limited 2/5min/user)
+     |
+     v
+  [Empty state when 0 keys configured]
+     - Friendly CTA pointing at the free-tier providers
+     - "Google Gemini · free" + "Groq · free" pills
+     - "+ 7 paid options"
+     - Skipped automatically when at least 1 key is set
+     |
+     v
+  [Configured section]
+     - One card per provider that has a saved key
+     - Each card shows:
+        * <StatusPill>          (OK / Failed / Not set / Saved)
+        * <ProviderInfoDot>     (Phase C tooltip)
+        * <UsageBadge>          (turns + cost from computeUsage)
+     - <BulkTestButton> overlay in the header runs the same
+       bulk endpoint
+     |
+     v
+  [Available section]
+     - One card per provider without a saved key
+     - Same card layout (StatusPill shows "Not set")
+     - Empty input, ready for paste
+
+
+7.14 Vertex AI as BYOK Provider (Phase D — Vertex)
+--------------------------------------------------
+
+Vertex AI is the 9th BYOK provider. Distinct from `google` (the
+public Gemini API) because:
+
+  - Auth: GCP service-account JSON (not an AIza… key)
+  - SDK: @ai-sdk/google-vertex (not @ai-sdk/google)
+  - Billing: GCP project quota (not Google AI billing)
+  - Models: same gemini-2.5-pro / -flash / -flash-lite / etc.
+
+  (start) User picks "Google Vertex AI" on /settings/api-keys
+     |
+     v
+  [Card renders a textarea instead of an input]
+     - placeholder shows a fully-formed service-account JSON skeleton
+     - monospace font, 6 rows, resize-y enabled
+     |
+     v
+  [User pastes the service-account JSON file content]
+     - The card parses it live and shows preview chips:
+       client_email: <value>  (monospace)
+       project_id:    <value>  (monospace)
+     - If JSON is invalid, the preview shows the parse error
+     - If client_email / project_id are both missing, the preview
+       shows a "missing X and Y" hint
+     |
+     v
+  [User clicks "Test connection"]
+     - POST /api/settings/test-provider with provider='vertex'
+     - Zod min length = 256 chars (real SA JSON is ~2 KB)
+     - Server-side shape validation in testProviderKey:
+        * parse JSON -> 400 if not parseable
+        * require client_email + '@'                -> 400
+        * require private_key with "BEGIN PRIVATE KEY" -> 400
+        * require project_id or GOOGLE_VERTEX_PROJECT env -> 400
+     - Returns 200 ok or 4xx with the specific missing field
+     |
+     v
+  [User clicks "Save Keys"]
+     - The textarea content (raw JSON) is encrypted with the
+       rest of the BYOK payload (AES-256-GCM)
+     - Subsequent chat turns route through Vertex when the model
+       id prefix is 'google-vertex/' (handled in packages/ai/
+       src/agent.ts via resolveOverrideModel + the default
+       routing path)
+
+
+7.15 Bulk-Test All Providers (Phase D — Bulk Test)
+---------------------------------------------------
+
+  (start) User clicks "Test all" on /settings/api-keys
+     |
+     v
+  [POST /api/settings/bulk-test]
+     - Rate-limited: 2 calls / 5 minutes / user
+     - Iterates every PROVIDER_ID in declaration order
+     - Skips providers without a saved key (status='missing')
+     - Runs testProviderKey for each configured key in parallel
+       via Promise.all
+     - Persists the result by upserting the provider_tests table
+       (wipe + insert per user — snapshot semantics, not event log)
+     |
+     v
+  [BulkTestButton parses the response]
+     - summary.ok === 0           -> toast.error("N providers failed")
+     - summary.failed === 0       -> toast.success("All N providers ok")
+     - summary.ok > 0 && failed > 0 -> toast.warning("M ok, N failed")
+     - Inline next to the button: "M/(N-M) ok" with a green/red dot
+     |
+     v
+  [Server action runs in parallel to persist health rows]
+     - The button triggers the page server action `bulkTestAll`
+       (re-validates the path so each <StatusPill> re-renders)
+     - Page re-renders with the new health snapshots
+
+
+Cross-references (Phase D)
+---------------------------
+
+  - docs/UX_UPGRADE_PLAN.md — full plan, status table, deferred items
+  - docs/15-motion-conventions.md — item 18 developer convention
+  - apps/web/components/ui/provider-info-dot.tsx — item 16 component
+  - apps/web/components/ui/health-tone.ts — pure tone decider
+                              (Phase D — status pill rules)
+  - apps/web/app/api/settings/{catalog,usage-by-provider,
+                              bulk-test,test-provider}/route.ts
+  - apps/web/app/(app)/settings/api-keys/_components/
+      api-key-card.tsx          — per-provider card
+      bulk-test-button.tsx      — "Test all" button
+  - packages/ai/src/byok-providers.ts — 9-provider registry
+  - packages/ai/src/usage.ts — providerIdFromModel helper +
+                                 per-provider aggregation in
+                                 computeUsage
+  - packages/ai/src/model.ts — testProviderKey with vertex-specific
+                               shape validation
+  - packages/shared/src/byok.ts — PROVIDER_IDS now 9 entries;
+                                    vertex?: string in ByokPayload
+
+
 End of document.

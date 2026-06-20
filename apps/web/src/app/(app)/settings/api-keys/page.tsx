@@ -27,9 +27,14 @@ import {
   type ProviderId,
   type ByokPayload,
 } from '@hamafx/shared/encryption';
-import { BYOK_PROVIDERS, BYOK_PROVIDERS_LIST } from '@hamafx/ai';
+import {
+  computeUsage,
+  BYOK_PROVIDERS_LIST,
+  type ProviderBreakdown,
+} from '@hamafx/ai';
 import { ApiKeyCard } from './_components/api-key-card';
 import { ApiKeysLandingBanner } from './_components/api-keys-landing-banner';
+import { BulkTestButton } from './_components/bulk-test-button';
 
 async function updateApiKeys(formData: FormData) {
   'use server';
@@ -55,6 +60,58 @@ async function updateApiKeys(formData: FormData) {
     })
     .where(eq(schema.userSettings.userId, session.user.id));
 
+  revalidatePath('/settings/api-keys');
+}
+
+/**
+ * Phase D — server action: run a bulk test across every configured
+ * BYOK provider. Called from the page-level "Test all" button.
+ *
+ * Delegates to /api/settings/bulk-test (re-uses the same code path
+ * as the standalone route). We can't import the route handler
+ * directly across the server/client boundary, so we re-implement
+ * the trivial bits here. The route remains the single source of
+ * truth for the per-provider test logic.
+ */
+async function bulkTestAll() {
+  'use server';
+  const session = await auth();
+  if (!session?.user?.id) throw new Error('Not authenticated');
+
+  const { withRateLimit } = await import('@hamafx/db');
+  const rate = await withRateLimit(session.user.id, 'bulk_test', 2, 5 * 60_000);
+  if (!rate.allowed) {
+    throw new Error('Bulk test rate-limited. Try again in a few minutes.');
+  }
+
+  const { testProviderKey } = await import('@hamafx/ai');
+  const db = getDb();
+  const [settings] = await db
+    .select({ aiApiKeys: schema.userSettings.aiApiKeys })
+    .from(schema.userSettings)
+    .where(eq(schema.userSettings.userId, session.user.id));
+  const decrypted = settings?.aiApiKeys ? decryptByok(settings.aiApiKeys) : null;
+  const testedAt = new Date();
+
+  const rows: Array<typeof schema.providerTests.$inferInsert> = [];
+  for (const providerId of PROVIDER_IDS) {
+    const key = decrypted?.[providerId];
+    if (typeof key !== 'string' || key.trim().length === 0) continue;
+    const r = await testProviderKey(providerId, key);
+    rows.push({
+      userId: session.user.id,
+      providerId,
+      ok: r.ok,
+      error: r.ok ? null : r.error ?? 'unknown error',
+      testedAt: testedAt.toISOString(),
+    });
+  }
+  if (rows.length > 0) {
+    await db
+      .delete(schema.providerTests)
+      .where(eq(schema.providerTests.userId, session.user.id));
+    await db.insert(schema.providerTests).values(rows);
+  }
   revalidatePath('/settings/api-keys');
 }
 
@@ -108,6 +165,20 @@ export default async function ApiKeysSettingsPage({
     ]),
   );
 
+  // Phase D — per-provider usage. We computeUsage once here and
+  // map the breakdown by BYOK id so each card receives just the
+  // turns + cost for its own provider. No N+1 queries.
+  const usage = await computeUsage(session.user.id);
+  const usageByProvider = new Map<string, { turns: number; costUsd: number }>();
+  for (const p of usage.byProvider as ProviderBreakdown[]) {
+    if (p.byokProviderId) {
+      usageByProvider.set(p.byokProviderId, {
+        turns: p.turns,
+        costUsd: p.costUsd,
+      });
+    }
+  }
+
   // Strip server-only fields (factory, defaultModels) before crossing the
   // server→client boundary. RSC serializes props; functions can't be
   // sent. Group by pricing tier for the UI.
@@ -124,12 +195,21 @@ export default async function ApiKeysSettingsPage({
     ...(p.bestFor !== undefined ? { bestFor: p.bestFor } : {}),
     supports: p.supports,
   });
-  const freeProviders = BYOK_PROVIDERS_LIST.filter(
-    (p) => p.pricingTier === 'free',
-  ).map(toClientMeta);
-  const paidProviders = BYOK_PROVIDERS_LIST.filter(
-    (p) => p.pricingTier !== 'free',
-  ).map(toClientMeta);
+
+  // Phase D — group providers into "configured" and "available" so
+  // the page can show a clear CTA section when no keys are set.
+  // We split rather than render all 9 in one long list so the
+  // empty state (no keys at all) feels intentional.
+  const configured = BYOK_PROVIDERS_LIST.filter(
+    (p) => typeof decrypted?.[p.id as ProviderId] === 'string' &&
+      (decrypted?.[p.id as ProviderId] ?? '').trim().length > 0,
+  );
+  const available = BYOK_PROVIDERS_LIST.filter((p) => !configured.includes(p));
+
+  const totalConfigured = configured.length;
+  const totalFailed = Array.from(healthByProvider.values()).filter((h) => !h.ok).length;
+  const totalTurns = usage.thirtyDayTurns;
+  const totalCost = usage.thirtyDayUsd;
 
   return (
     <div className="flex flex-col gap-6 max-w-2xl">
@@ -139,6 +219,7 @@ export default async function ApiKeysSettingsPage({
         />
       ) : null}
 
+      {/* Header */}
       <div>
         <h2 className="text-lg font-semibold text-fg">API Keys</h2>
         <p className="text-sm text-fg-subtle">
@@ -147,40 +228,92 @@ export default async function ApiKeysSettingsPage({
         </p>
       </div>
 
-      <form action={updateApiKeys} className="flex flex-col gap-8">
-        <section className="flex flex-col gap-3">
-          <h3 className="text-sm font-medium text-fg-subtle uppercase tracking-wide">
-            Free tier
-          </h3>
-          {freeProviders.map((p) => {
-            const health = healthByProvider.get(p.id);
-            return (
-              <ApiKeyCard
-                key={p.id}
-                provider={p}
-                currentValue={decrypted?.[p.id as ProviderId] ?? ''}
-                {...(health ? { health } : {})}
-              />
-            );
-          })}
-        </section>
+      {/* Summary chips — quick at-a-glance state. */}
+      <div className="border border-divider bg-bg-elev-1 rounded-lg p-3 flex flex-wrap items-center gap-2 text-caption">
+        <span className="rounded-full bg-brand/15 px-2.5 py-1 font-medium text-brand tabular-nums">
+          {totalConfigured} / {BYOK_PROVIDERS_LIST.length} configured
+        </span>
+        {totalFailed > 0 ? (
+          <span className="rounded-full bg-bear/15 px-2.5 py-1 font-medium text-bear tabular-nums">
+            {totalFailed} failing
+          </span>
+        ) : null}
+        <span className="rounded-full bg-bg-elev-2 px-2.5 py-1 font-medium text-fg-subtle tabular-nums">
+          {totalTurns} turns · ${totalCost.toFixed(2)} this month
+        </span>
+        <span className="ml-auto">
+          <BulkTestButton action={bulkTestAll} disabled={totalConfigured === 0} />
+        </span>
+      </div>
 
-        <section className="flex flex-col gap-3">
-          <h3 className="text-sm font-medium text-fg-subtle uppercase tracking-wide">
-            Paid tier
-          </h3>
-          {paidProviders.map((p) => {
-            const health = healthByProvider.get(p.id);
-            return (
-              <ApiKeyCard
-                key={p.id}
-                provider={p}
-                currentValue={decrypted?.[p.id as ProviderId] ?? ''}
-                {...(health ? { health } : {})}
-              />
-            );
-          })}
-        </section>
+      {/* Empty state when no providers are configured. */}
+      {totalConfigured === 0 ? (
+        <div className="border border-divider bg-bg-elev-1 rounded-lg p-6 flex flex-col items-center text-center gap-3">
+          <div className="text-3xl">🔑</div>
+          <div>
+            <h3 className="text-sm font-semibold text-fg">No API keys configured yet</h3>
+            <p className="text-caption text-fg-subtle mt-1 max-w-md">
+              Pick a provider below and paste your API key. The free tier
+              (Google Gemini or Groq) is a good starting point — the chat
+              works as soon as one key is saved.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2 justify-center">
+            <span className="rounded-full bg-bull/15 px-2.5 py-1 text-caption font-medium text-bull">
+              Google Gemini · free
+            </span>
+            <span className="rounded-full bg-bull/15 px-2.5 py-1 text-caption font-medium text-bull">
+              Groq · free
+            </span>
+            <span className="rounded-full bg-bg-elev-2 px-2.5 py-1 text-caption font-medium text-fg-subtle">
+              + 7 paid options
+            </span>
+          </div>
+        </div>
+      ) : null}
+
+      <form action={updateApiKeys} className="flex flex-col gap-8">
+        {configured.length > 0 ? (
+          <section className="flex flex-col gap-3">
+            <h3 className="text-sm font-medium text-fg-subtle uppercase tracking-wide">
+              Configured
+            </h3>
+            {configured.map((p) => {
+              const health = healthByProvider.get(p.id);
+              const u = usageByProvider.get(p.id);
+              return (
+                <ApiKeyCard
+                  key={p.id}
+                  provider={toClientMeta(p)}
+                  currentValue={decrypted?.[p.id as ProviderId] ?? ''}
+                  {...(health ? { health } : {})}
+                  {...(u ? { usage: u } : {})}
+                />
+              );
+            })}
+          </section>
+        ) : null}
+
+        {available.length > 0 ? (
+          <section className="flex flex-col gap-3">
+            <h3 className="text-sm font-medium text-fg-subtle uppercase tracking-wide">
+              {configured.length > 0 ? 'Add another' : 'Pick a provider'}
+            </h3>
+            {available.map((p) => {
+              const health = healthByProvider.get(p.id);
+              const u = usageByProvider.get(p.id);
+              return (
+                <ApiKeyCard
+                  key={p.id}
+                  provider={toClientMeta(p)}
+                  currentValue=""
+                  {...(health ? { health } : {})}
+                  {...(u ? { usage: u } : {})}
+                />
+              );
+            })}
+          </section>
+        ) : null}
 
         <div className="flex justify-end gap-2">
           {fromChat && preservedPrompt ? (
@@ -197,7 +330,3 @@ export default async function ApiKeysSettingsPage({
     </div>
   );
 }
-
-// Silence the unused-import warning for BYOK_PROVIDERS (kept for
-// future per-provider filtering — e.g. disabled-by-feature-flag).
-void BYOK_PROVIDERS;
