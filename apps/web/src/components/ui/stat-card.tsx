@@ -14,11 +14,14 @@
  * limitations under the License.
  */
 
-// Premium stat card with glass surface, gradient tone glow, and optional
-// sparkline. Used by journal stats and any future numeric summary surface.
+// Premium stat card with solid surface and optional sparkline. Used by
+// journal stats and any future numeric summary surface.
 //
 // Mobile-first: p-4 (16px) for comfortable thumb tap if/when the cards
 // become interactive, gap-2 (8px) vertical rhythm on the 8-pt grid.
+//
+// Per PLAN.md §2.4 + §2.5 — solid bg-elev-1 surface (no card-premium),
+// R1 numeric scale for the value, R1 type tokens throughout.
 
 import type { ReactNode } from 'react';
 
@@ -46,24 +49,24 @@ const TONE_CLASS: Record<StatTone, string> = {
   warn: 'text-warn',
 };
 
-const TONE_GLOW: Record<StatTone, string> = {
+const TONE_TINT: Record<StatTone, string> = {
   fg: '',
-  bull: 'before:bg-[radial-gradient(ellipse_at_top_right,oklch(72%_0.2_152/0.15),transparent_60%)]',
-  bear: 'before:bg-[radial-gradient(ellipse_at_top_right,oklch(68%_0.24_25/0.15),transparent_60%)]',
+  bull: 'border-l-bull/40',
+  bear: 'border-l-bear/40',
   muted: '',
-  warn: 'before:bg-[radial-gradient(ellipse_at_top_right,oklch(82%_0.16_80/0.15),transparent_60%)]',
+  warn: 'border-l-warn/40',
 };
 
 export function StatCard({ icon, label, value, tone = 'fg', sparkline }: StatCardProps) {
   return (
     <div
       className={cn(
-        'card-premium relative flex flex-col gap-2 overflow-hidden p-4',
-        'before:pointer-events-none before:absolute before:inset-0 before:opacity-100',
-        TONE_GLOW[tone],
+        'relative flex flex-col gap-2 overflow-hidden rounded-lg',
+        'border border-divider border-l-2 bg-bg-elev-1 p-4',
+        TONE_TINT[tone],
       )}
     >
-      <div className="text-fg-subtle relative flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider">
+      <div className="text-fg-subtle relative flex items-center gap-1.5 text-caption font-semibold uppercase tracking-wider">
         {icon ? (
           <span className={cn('inline-flex h-4 w-4 items-center justify-center', TONE_CLASS[tone])}>
             {icon}
@@ -73,7 +76,7 @@ export function StatCard({ icon, label, value, tone = 'fg', sparkline }: StatCar
       </div>
       <div
         className={cn(
-          'text-2xl font-bold tabular-nums leading-none tracking-tight',
+          'text-numeric-xl font-bold tabular-nums leading-none tracking-tight',
           TONE_CLASS[tone],
         )}
       >
