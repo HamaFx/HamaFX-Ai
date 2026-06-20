@@ -46,7 +46,7 @@ export default async function ProfileSettingsPage() {
         <p className="text-sm text-fg-subtle">Manage your public profile and identity.</p>
       </div>
 
-      <form action={updateProfile} className="card-premium p-4 flex flex-col gap-4">
+      <form action={updateProfile} className="border border-divider bg-bg-elev-1 rounded-lg p-4 flex flex-col gap-4">
         <div className="flex flex-col gap-2">
           <label className="text-sm font-medium text-fg">Email</label>
           <Input 
@@ -55,7 +55,7 @@ export default async function ProfileSettingsPage() {
             disabled 
             className="opacity-50"
           />
-          <p className="text-[11px] text-fg-subtle">Your email address cannot be changed right now.</p>
+          <p className="text-body-sm text-fg-subtle">Your email address cannot be changed right now.</p>
         </div>
 
         <div className="flex flex-col gap-2">

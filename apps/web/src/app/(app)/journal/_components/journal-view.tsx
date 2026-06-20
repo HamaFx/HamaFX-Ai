@@ -64,14 +64,14 @@ export function JournalView() {
   return (
     <div className="flex flex-col gap-6 animate-in fade-in duration-300">
       {/* Sticky header controls */}
-      <header className="card-premium flex flex-wrap items-center justify-between gap-4 p-4">
+      <header className="border border-divider bg-bg-elev-1 rounded-lg flex flex-wrap items-center justify-between gap-4 p-4">
         <div className="flex items-center gap-3">
           <div className="rounded-full bg-brand/10 p-3 text-brand">
             <BookOpen className="size-5" />
           </div>
           <div>
             <h1 className="text-lg font-black tracking-tight text-fg">Trading Journal</h1>
-            <p className="text-[11px] text-fg-subtle mt-0.5">Track, analyze, and optimize your trading performance</p>
+            <p className="text-body-sm text-fg-subtle mt-0.5">Track, analyze, and optimize your trading performance</p>
           </div>
         </div>
 
@@ -80,7 +80,7 @@ export function JournalView() {
           
           <button
             onClick={refresh}
-            className="glass-subtle size-10 flex items-center justify-center rounded-full text-fg-muted hover:text-fg transition-all cursor-pointer"
+            className="bg-bg-elev-1 border border-divider size-10 flex items-center justify-center rounded-full text-fg-muted hover:text-fg transition-all cursor-pointer"
             title="Refresh logs"
           >
             <RefreshCw className={cn("size-4", isFetching && "animate-spin")} />
@@ -103,7 +103,7 @@ export function JournalView() {
           <p className="text-xs font-bold uppercase tracking-wider text-fg-muted">Loading your metrics...</p>
         </div>
       ) : isError ? (
-        <div className="card-premium p-6 border-bear/20 bg-bear/5 text-center flex flex-col items-center justify-center gap-2">
+        <div className="border border-divider bg-bg-elev-1 rounded-lg p-6 border-bear/20 bg-bear/5 text-center flex flex-col items-center justify-center gap-2">
           <p className="text-sm font-semibold text-bear">Failed to load journal portfolio</p>
           <p className="text-xs text-fg-subtle">{(error as Error)?.message || 'Unknown network error'}</p>
         </div>

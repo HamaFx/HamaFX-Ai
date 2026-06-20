@@ -92,7 +92,7 @@ export default async function SymbolsSettingsPage() {
         <p className="text-sm text-fg-subtle">Manage the instruments you want to track.</p>
       </div>
 
-      <div className="card-premium p-4 flex flex-col gap-4">
+      <div className="border border-divider bg-bg-elev-1 rounded-lg p-4 flex flex-col gap-4">
         <ul className="flex flex-col gap-2">
           {symbols.map((s) => (
             <li key={s.symbol} className="flex items-center justify-between p-3 rounded-md bg-surface border border-surface-elevated">

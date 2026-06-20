@@ -52,10 +52,10 @@ export async function UsageGlance() {
     <Link
       href="/settings/usage"
       aria-label="Open detailed usage"
-      className="card-premium group flex flex-col gap-3 p-4 transition-colors md:hover:bg-bg-elev-2/40"
+      className="border border-divider bg-bg-elev-1 rounded-lg group flex flex-col gap-3 p-4 transition-colors md:hover:bg-bg-elev-2/40"
     >
       <header className="flex items-baseline justify-between gap-3">
-        <h2 className="text-fg-subtle text-[10px] font-semibold uppercase tracking-wider">
+        <h2 className="text-fg-subtle text-caption font-semibold uppercase tracking-wider">
           Today (UTC)
         </h2>
         <span className="text-fg-subtle text-xs tabular-nums">
@@ -91,7 +91,7 @@ export async function UsageGlance() {
 function Stat({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex flex-col gap-0.5">
-      <dt className="text-fg-subtle text-[10px] uppercase tracking-wide">{label}</dt>
+      <dt className="text-fg-subtle text-caption uppercase tracking-wide">{label}</dt>
       <dd className="text-fg font-semibold">{value}</dd>
     </div>
   );

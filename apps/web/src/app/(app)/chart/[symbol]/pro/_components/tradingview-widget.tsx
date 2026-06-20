@@ -152,7 +152,7 @@ export function TradingViewWidget({ symbol, tf }: TradingViewWidgetProps) {
           aria-label={`${symbol} ${tf} chart (TradingView)`}
         />
       )}
-      <p className="text-fg-subtle pt-2 text-[10px]">Powered by TradingView</p>
+      <p className="text-fg-subtle pt-2 text-caption">Powered by TradingView</p>
     </>
   );
 }

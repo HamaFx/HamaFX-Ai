@@ -210,7 +210,7 @@ function AlertRow({ alert, onToggle, onDelete }: AlertRowProps) {
   return (
     <li
       className={cn(
-        'card-premium flex items-start gap-3 p-4 transition-all duration-200 hover:shadow-lg',
+        'border border-divider bg-bg-elev-1 rounded-lg flex items-start gap-3 p-4 transition-all duration-200 hover:shadow-lg',
         !alert.active && 'opacity-60 saturate-50',
       )}
     >

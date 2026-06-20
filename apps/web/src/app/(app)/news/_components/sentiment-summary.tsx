@@ -58,13 +58,13 @@ export function SentimentSummary({ articles }: SentimentSummaryProps) {
   return (
     <section
       aria-labelledby="news-pulse-heading"
-      className="card-premium relative flex flex-col gap-3 p-4"
+      className="border border-divider bg-bg-elev-1 rounded-lg relative flex flex-col gap-3 p-4"
     >
       <header className="flex items-baseline justify-between gap-3">
         <div className="flex flex-col gap-0.5">
           <h2
             id="news-pulse-heading"
-            className="text-fg-subtle text-[10px] font-semibold uppercase tracking-wider"
+            className="text-fg-subtle text-caption font-semibold uppercase tracking-wider"
           >
             News pulse
           </h2>
@@ -73,7 +73,7 @@ export function SentimentSummary({ articles }: SentimentSummaryProps) {
           </p>
         </div>
         <span
-          className={cn('text-[11px] font-semibold uppercase tracking-wide', leanTone)}
+          className={cn('text-body-sm font-semibold uppercase tracking-wide', leanTone)}
         >
           {leanLabel}
         </span>
@@ -114,7 +114,7 @@ export function SentimentSummary({ articles }: SentimentSummaryProps) {
       {/* Counts row */}
       <ul
         aria-label="Sentiment breakdown"
-        className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] tabular-nums"
+        className="flex flex-wrap items-center gap-x-4 gap-y-1 text-body-sm tabular-nums"
       >
         <Count tone="bull" label="Bullish" count={counts.positive} pct={pct(counts.positive)} />
         <Count tone="bear" label="Bearish" count={counts.negative} pct={pct(counts.negative)} />

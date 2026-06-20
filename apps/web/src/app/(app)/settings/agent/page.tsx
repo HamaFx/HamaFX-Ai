@@ -39,7 +39,7 @@ export default async function AgentCataloguePage() {
     <main id="main-content" className="mx-auto flex w-full max-w-2xl flex-col gap-4 px-4 py-4">
       <header className="flex items-baseline justify-between gap-2">
         <h1 className="text-fg text-xl font-bold">Agent</h1>
-        <span className="text-fg-subtle text-[11px] tabular-nums">
+        <span className="text-fg-subtle text-body-sm tabular-nums">
           last 24h · {totalInvocations} invocation{totalInvocations === 1 ? '' : 's'} ·{' '}
           {totalFailures} failure{totalFailures === 1 ? '' : 's'}
         </span>
@@ -61,7 +61,7 @@ export default async function AgentCataloguePage() {
           >
             <div className="flex flex-wrap items-baseline justify-between gap-2">
               <code className="text-fg font-mono text-sm font-semibold">{e.name}</code>
-              <div className="flex items-center gap-1.5 text-[10px] tabular-nums">
+              <div className="flex items-center gap-1.5 text-caption tabular-nums">
                 <Pill label={`${e.invocations24h}×`} tone="muted" />
                 {e.failures24h > 0 ? (
                   <Pill label={`${e.failures24h} fail`} tone="bear" />
@@ -88,6 +88,6 @@ function Pill({ label, tone }: { label: string; tone: 'muted' | 'bear' | 'bull' 
         ? 'bg-bull/15 text-bull'
         : 'bg-bg-elev-2 text-fg-muted';
   return (
-    <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-medium ${cls}`}>{label}</span>
+    <span className={`rounded-full px-1.5 py-0.5 text-caption font-medium ${cls}`}>{label}</span>
   );
 }
