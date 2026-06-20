@@ -83,11 +83,11 @@ export default async function ShareSnapshotPage({ params, searchParams }: PagePr
             <h2 className="text-fg-muted text-sm font-medium">
               {snap.symbol} · {snap.tf}
             </h2>
-            <span className="text-fg-subtle text-[10px] tabular-nums">
+            <span className="text-fg-subtle text-caption tabular-nums">
               {snap.overlay.markers.length}m / {snap.overlay.priceLines.length}l
             </span>
           </header>
-          <ul className="text-fg-muted flex flex-wrap gap-1.5 text-[11px]">
+          <ul className="text-fg-muted flex flex-wrap gap-1.5 text-body-sm">
             {snap.overlay.priceLines.slice(0, 8).map((line, i) => (
               <li
                 key={`${line.title}-${i}`}
@@ -100,7 +100,7 @@ export default async function ShareSnapshotPage({ params, searchParams }: PagePr
           </ul>
         </section>
       ) : null}
-      <footer className="text-fg-subtle mt-4 text-[10px]">
+      <footer className="text-fg-subtle mt-4 text-caption">
         HamaFX-Ai · expires {new Date(snap.expiresAt).toISOString().slice(0, 16).replace('T', ' ')}Z
       </footer>
     </ShareShell>

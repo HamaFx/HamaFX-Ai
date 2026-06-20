@@ -16,23 +16,28 @@
  * limitations under the License.
  */
 
-// Calendar event card — premium, scannable, action-rich.
+// Calendar event card — data-first, scannable at a glance.
 //
 // Layout:
 //
 //   ┌────────────────────────────────────────┐
-//   │ [▲]  USD · United States · 14:30 EST   │  meta strip
-//   │      in 4h 22m                          │  countdown
+//   │ [USD] · United States · 14:30 EST      │  meta strip (currency + country + time)
+//   │         in 4h 22m                       │  countdown (future) or "released" (past)
 //   │                                         │
-//   │ Big title (clamped 2)                   │  text-base, semibold
+//   │ Big title (clamped 2)                   │  text-body, semibold
 //   │                                         │
-//   │ Forecast 0.3 · Prev 0.2 · Actual —      │  data row
+//   │ actual 0.3 · forecast 0.2 · prev 0.2    │  data row (only when present)
 //   │                                         │
-//   │ ✦ Ask AI · 🔔 Remind me                │  action row (when future)
+//   │              [Ask AI]  [Remind me]      │  hover-reveal actions (always-visible on touch)
 //   └────────────────────────────────────────┘
 //
 // Vertical accent ribbon on the left encodes importance: red = high,
-// amber = medium, neutral = low. Same scannability cue as the news cards.
+// amber = medium, low = no ribbon (only shown when paired with a
+// contrasting surface tone). Same scannability cue as the news cards.
+//
+// Per PLAN.md §2.4 + §2.6 — sharpen radii, adopt R1 typography tokens,
+// kill the ring-1 chip pattern, surface-align with ArticleCard refactor
+// (commit 1992755) so news and calendar read as one design system.
 
 import type { EconomicEvent } from '@hamafx/shared';
 import { Bell, Sparkles } from 'lucide-react';
@@ -46,32 +51,26 @@ interface EventCardProps {
   event: EconomicEvent;
 }
 
-const IMPORTANCE: Record<
-  EconomicEvent['importance'],
-  { ribbon: string; label: string; glyph: string; chipBg: string; chipText: string }
-> = {
+const IMPORTANCE = {
   high: {
     ribbon: 'oklch(70% 0.22 25)',
     label: 'High impact',
     glyph: '▲',
-    chipBg: 'bg-bear/10 ring-bear/30',
-    chipText: 'text-bear',
   },
   medium: {
     ribbon: 'oklch(82% 0.14 80)',
     label: 'Medium impact',
     glyph: '■',
-    chipBg: 'bg-warn/10 ring-warn/30',
-    chipText: 'text-warn',
   },
   low: {
-    ribbon: 'oklch(28% 0 0)',
+    ribbon: 'oklch(28% 0 0 / 0)',
     label: 'Low impact',
     glyph: '•',
-    chipBg: 'bg-bg-elev-2 ring-divider',
-    chipText: 'text-fg-subtle',
   },
-};
+} as const satisfies Record<
+  EconomicEvent['importance'],
+  { ribbon: string; label: string; glyph: string }
+>;
 
 export function EventCard({ event }: EventCardProps) {
   const now = useNowTick();
@@ -79,40 +78,51 @@ export function EventCard({ event }: EventCardProps) {
   const importance = IMPORTANCE[event.importance];
   const isFuture = event.date > now;
   const isImminent = isFuture && event.date - now < 60 * 60_000;
+  const hasRibbon = event.importance !== 'low';
 
   const askPrompt = encodeURIComponent(
     `What does ${event.title} (${event.currency ?? event.country}) at ${date.toUTCString()} usually mean for ${event.currency ?? 'USD'} and gold?`,
   );
 
+  const overlayVisibility =
+    'opacity-0 transition-opacity duration-150 ' +
+    'group-hover:pointer-events-auto group-hover:opacity-100 ' +
+    'group-focus-within:pointer-events-auto group-focus-within:opacity-100 ' +
+    '[@media(hover:none)]:opacity-100 [@media(hover:none)]:pointer-events-auto';
+
   return (
     <article
       className={cn(
-        'card-premium relative overflow-hidden rounded-3xl transition-colors duration-200',
-        isImminent && 'ring-warn/30 ring-1',
+        'group relative overflow-hidden rounded-lg',
+        'border border-divider bg-bg-elev-1',
+        'transition-colors duration-200 md:hover:bg-bg-elev-2/60',
+        isImminent && 'border-warn/40',
       )}
     >
-      {/* Importance ribbon */}
-      <span
-        aria-hidden="true"
-        className="absolute inset-y-0 left-0 w-1"
-        style={{ background: importance.ribbon }}
-      />
+      {/* Importance ribbon — suppressed for low-importance events; the
+       * subdued bg-elev-1 surface already conveys "less prominent". */}
+      {hasRibbon ? (
+        <span
+          aria-hidden="true"
+          className="absolute inset-y-0 left-0 w-1"
+          style={{ background: importance.ribbon }}
+        />
+      ) : null}
 
-      <div className="flex flex-col gap-3 px-4 py-3.5 pl-5">
-        {/* Meta strip */}
-        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] tabular-nums">
+      <div className="flex flex-col gap-2.5 px-4 py-3.5 pl-5">
+        {/* Meta strip — currency glyph + country + time + countdown */}
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-body-sm tabular-nums">
           <span
-            className={cn(
-              'inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-bold uppercase ring-1 text-[10px]',
-              importance.chipBg,
-              importance.chipText,
-            )}
+            className="text-brand font-bold uppercase tabular-nums"
             title={importance.label}
+            aria-label={importance.label}
           >
-            <span aria-hidden>{importance.glyph}</span>
-            <span className="sr-only">{importance.label}</span>
+            <span aria-hidden className="mr-1">
+              {importance.glyph}
+            </span>
             {event.currency ?? event.country}
           </span>
+          <span aria-hidden className="text-fg-subtle opacity-50">·</span>
           <span className="text-fg-muted">{event.country}</span>
           <span aria-hidden className="text-fg-subtle opacity-50">·</span>
           <time dateTime={date.toISOString()} className="text-fg-muted">
@@ -132,22 +142,29 @@ export function EventCard({ event }: EventCardProps) {
         </div>
 
         {/* Title */}
-        <h3 className="text-fg line-clamp-2 text-[15px] font-semibold leading-snug">
+        <h3 className="text-fg line-clamp-2 text-body font-semibold leading-snug">
           {event.title}
         </h3>
 
-        {/* Numbers — actual / forecast / previous in proper data hierarchy */}
+        {/* Data row — actual / forecast / previous + beat/miss */}
         {(event.actual !== null || event.forecast !== null || event.previous !== null) && (
           <DataRow event={event} />
         )}
       </div>
 
-      {/* Action row — only render when it would be useful */}
+      {/* Action overlay — hover/focus on pointer devices, always visible on
+       * touch. Sits over the bottom of the card so it doesn't push content. */}
       {isFuture ? (
-        <div className="border-divider/60 flex items-center justify-between gap-2 border-t px-3 py-2">
+        <div
+          className={cn(
+            'pointer-events-none absolute inset-x-0 bottom-0',
+            'flex items-center justify-between gap-1 px-3 pb-2',
+            overlayVisibility,
+          )}
+        >
           <Link
             href={`/chat?prompt=${askPrompt}`}
-            className="text-fg-muted hover:text-brand inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-colors"
+            className="bg-bg-elev-2 text-fg-muted hover:text-brand pointer-events-auto inline-flex items-center gap-1 rounded-pill px-3 py-1.5 text-body-sm font-medium transition-colors"
           >
             <Sparkles className="size-3.5" />
             Ask AI
@@ -164,7 +181,7 @@ export function EventCard({ event }: EventCardProps) {
 function DataRow({ event }: { event: EconomicEvent }) {
   const beat = beatMiss(event);
   return (
-    <dl className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[11px] tabular-nums">
+    <dl className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-body-sm tabular-nums">
       {event.actual !== null && (
         <Stat label="actual" value={event.actual} unit={event.unit} emphasis />
       )}
@@ -177,10 +194,8 @@ function DataRow({ event }: { event: EconomicEvent }) {
       {beat ? (
         <span
           className={cn(
-            'ml-auto inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold ring-1',
-            beat === 'beat'
-              ? 'bg-bull/15 text-bull ring-bull/30'
-              : 'bg-bear/15 text-bear ring-bear/30',
+            'ml-auto inline-flex items-center gap-1 px-1.5 text-caption font-bold uppercase tabular-nums',
+            beat === 'beat' ? 'text-bull' : 'text-bear',
           )}
         >
           {beat === 'beat' ? '▲ beat' : '▼ miss'}
@@ -203,10 +218,14 @@ function Stat({
 }) {
   return (
     <span className="flex items-baseline gap-1">
-      <dt className="text-fg-subtle text-[10px] uppercase tracking-wide">{label}</dt>
+      <dt className="text-fg-subtle text-caption uppercase tracking-wide">
+        {label}
+      </dt>
       <dd className={cn('font-semibold', emphasis ? 'text-fg' : 'text-fg-muted')}>
         {value}
-        {unit ? <span className="text-fg-subtle ml-0.5 font-normal">{unit}</span> : null}
+        {unit ? (
+          <span className="text-fg-subtle ml-0.5 font-normal">{unit}</span>
+        ) : null}
       </dd>
     </span>
   );
@@ -227,9 +246,7 @@ function Countdown({ ms, imminent }: { ms: number; imminent: boolean }) {
   const text =
     d > 0 ? `in ${d}d ${h}h` : h > 0 ? `in ${h}h ${m}m` : `in ${m}m`;
   return (
-    <span
-      className={cn('font-semibold', imminent ? 'text-warn' : 'text-fg')}
-    >
+    <span className={cn('font-semibold', imminent ? 'text-warn' : 'text-fg')}>
       {text}
     </span>
   );
@@ -306,10 +323,10 @@ function RemindButton({ event }: { event: EconomicEvent }) {
       disabled={armed}
       aria-pressed={armed}
       className={cn(
-        'inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-colors',
+        'pointer-events-auto inline-flex items-center gap-1 rounded-pill px-3 py-1.5 text-body-sm font-medium transition-colors',
         armed
           ? 'text-brand bg-brand/10'
-          : 'text-fg-muted hover:text-fg hover:bg-bg-elev-2',
+          : 'text-fg-muted hover:text-fg bg-bg-elev-2',
       )}
     >
       <Bell className={cn('size-3.5', armed && 'fill-current')} />

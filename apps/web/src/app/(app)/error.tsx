@@ -40,7 +40,7 @@ export default function AppError({ error, reset }: AppErrorProps) {
         {error.message || 'Something went wrong while rendering.'}
       </p>
       {error.digest ? (
-        <p className="text-fg-subtle text-[10px] tabular-nums">digest: {error.digest}</p>
+        <p className="text-fg-subtle text-caption tabular-nums">digest: {error.digest}</p>
       ) : null}
       <div>
         <Button type="button" onClick={() => reset()} size="sm" variant="secondary">

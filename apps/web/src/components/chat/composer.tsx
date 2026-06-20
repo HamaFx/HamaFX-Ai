@@ -233,8 +233,8 @@ export function Composer({
     <div className="sticky bottom-0 px-3 pb-[max(env(safe-area-inset-bottom),12px)] transition-all duration-300 w-full max-w-4xl mx-auto z-20">
       <form
         className={cn(
-          'glass-strong relative flex w-full flex-col overflow-hidden rounded-[28px] border border-divider/60 bg-bg-elev-1/60 shadow-lg transition-all duration-300',
-          focused && 'border-brand/40 bg-bg-elev-1/80 shadow-[0_8px_32px_-8px_oklch(78%_0.16_78/0.2)] ring-1 ring-brand/30',
+          'bg-bg-elev-1 border border-divider relative flex w-full flex-col overflow-hidden rounded-xl shadow-md transition-all duration-300',
+          focused && 'border-brand/40 shadow-[0_8px_32px_-8px_oklch(78%_0.16_78/0.2)] ring-1 ring-brand/30',
           dragOver && 'bg-brand/5 ring-2 ring-inset ring-brand/50',
         )}
         onSubmit={(e) => {
@@ -253,7 +253,7 @@ export function Composer({
           <div
             role="status"
             aria-live="polite"
-            className="text-bear ring-bear/30 mx-auto mt-3 inline-flex items-center gap-2 self-center rounded-full bg-bear/10 px-3 py-1 text-[11px] font-medium ring-1"
+            className="text-bear ring-bear/30 mx-auto mt-3 inline-flex items-center gap-2 self-center rounded-full bg-bear/10 px-3 py-1 text-body-sm font-medium ring-1"
           >
             <span className="bg-bear size-1.5 animate-pulse rounded-full" />
             Listening…
@@ -274,7 +274,7 @@ export function Composer({
                   type="button"
                   aria-label={`Remove ${img.name}`}
                   onClick={() => removeImage(img.id)}
-                  className="bg-bg-elev-3 text-fg border-border focus-visible:ring-brand absolute -right-2 -top-2 inline-flex size-5 items-center justify-center rounded-full border text-[10px] leading-none focus:outline-none focus-visible:ring-2"
+                  className="bg-bg-elev-3 text-fg border-border focus-visible:ring-brand absolute -right-2 -top-2 inline-flex size-5 items-center justify-center rounded-full border text-caption leading-none focus:outline-none focus-visible:ring-2"
                 >
                   ×
                 </button>
@@ -357,7 +357,7 @@ export function Composer({
               disabled={disabled}
               maxLength={MAX_TEXT_CHARS}
               className={cn(
-                'text-fg placeholder:text-fg-subtle w-full resize-none bg-transparent px-2 py-2.5 text-[15px] leading-relaxed focus:outline-none',
+                'text-fg placeholder:text-fg-subtle w-full resize-none bg-transparent px-2 py-2.5 text-body leading-relaxed focus:outline-none',
                 'max-h-[40dvh] min-h-[44px] transition-colors duration-150',
                 '[field-sizing:content]',
               )}
@@ -375,7 +375,7 @@ export function Composer({
             {showCharCount ? (
               <span
                 className={cn(
-                  'tabular-nums text-[11px]',
+                  'tabular-nums text-body-sm',
                   overLimit ? 'text-bear font-semibold' : 'text-fg-subtle',
                 )}
               >
@@ -384,7 +384,7 @@ export function Composer({
             ) : null}
 
             {focused && !isTouch && !isStreaming ? (
-              <p className="text-fg-subtle hidden pr-1 text-[10px] tabular-nums sm:block">
+              <p className="text-fg-subtle hidden pr-1 text-caption tabular-nums sm:block">
                 <kbd className="bg-bg-elev-2 ring-divider rounded border px-1.5 font-mono ring-1">
                   Enter
                 </kbd>{' '}
@@ -413,19 +413,20 @@ export function Composer({
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.8 }}
-                  whileTap={{ scale: 0.9 }}
+                  whileTap={{ scale: 0.97 }}
                   transition={{ type: 'spring', stiffness: 400, damping: 25 }}
                   type="submit"
                   disabled={!canSend}
                   aria-label="Send message"
                   className={cn(
-                    'text-brand-fg inline-flex size-[36px] shrink-0 items-center justify-center rounded-full font-semibold',
+                    'text-brand-fg bg-brand hover:brightness-110 inline-flex size-[36px] shrink-0 items-center justify-center rounded-full font-semibold',
                     'disabled:cursor-not-allowed disabled:opacity-40 disabled:grayscale',
                     'focus-visible:ring-brand focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-bg',
                   )}
                   style={{
-                    backgroundImage: 'var(--gradient-brand)',
-                    boxShadow: canSend ? 'var(--shadow-brand-press)' : 'none',
+                    boxShadow: canSend
+                      ? 'inset 0 1px 0 0 oklch(100% 0 0 / 0.18), 0 4px 12px -4px oklch(78% 0.16 78 / 0.4)'
+                      : 'none',
                   }}
                 >
                   <ArrowUp className="size-[18px]" strokeWidth={2.5} />

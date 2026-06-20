@@ -88,18 +88,18 @@ export async function SystemStatusCard() {
   return (
     <section
       aria-labelledby="system-status-heading"
-      className="card-premium relative flex flex-col gap-4 overflow-hidden p-4"
+      className="border border-divider bg-bg-elev-1 rounded-lg relative flex flex-col gap-4 overflow-hidden p-4"
     >
       <header className="flex items-center justify-between gap-3">
         <h2
           id="system-status-heading"
-          className="text-fg-subtle text-[10px] font-semibold uppercase tracking-wider"
+          className="text-fg-subtle text-caption font-semibold uppercase tracking-wider"
         >
           System status
         </h2>
         <span
           className={cn(
-            'inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ring-1',
+            'inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-caption font-bold uppercase tracking-wide ring-1',
             allReady
               ? 'bg-bull/10 text-bull ring-bull/30'
               : 'bg-warn/10 text-warn ring-warn/30',
@@ -142,13 +142,13 @@ export async function SystemStatusCard() {
             </span>
             <div className="flex min-w-0 flex-1 flex-col">
               <span className="text-fg text-sm font-semibold">{c.label}</span>
-              <span className="text-fg-subtle truncate text-[11px] tabular-nums">
+              <span className="text-fg-subtle truncate text-body-sm tabular-nums">
                 {c.detail}
               </span>
             </div>
             <span
               className={cn(
-                'rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tabular-nums ring-1',
+                'rounded-full px-2 py-0.5 text-caption font-bold uppercase tabular-nums ring-1',
                 c.ready
                   ? 'bg-bull/10 text-bull ring-bull/30'
                   : 'bg-bg-elev-2 text-fg-muted ring-divider',
@@ -180,7 +180,7 @@ export async function SystemStatusCard() {
           </span>
           <div className="flex min-w-0 flex-1 flex-col">
             <span className="text-fg text-sm font-semibold">Database</span>
-            <span className="text-fg-subtle text-[11px]">
+            <span className="text-fg-subtle text-body-sm">
               {databaseConnected ? 'Postgres + pgvector reachable' : 'Connection failed'}
             </span>
           </div>

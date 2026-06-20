@@ -59,7 +59,7 @@ export function SearchKnowledgePart({
 
   return (
     <div className="border-border bg-bg-elev-1 rounded-lg border p-3">
-      <header className="text-fg-muted mb-2 flex items-baseline justify-between text-[11px]">
+      <header className="text-fg-muted mb-2 flex items-baseline justify-between text-body-sm">
         <span>Top {items.length} matches</span>
         <span className="font-mono">{output.model}</span>
       </header>
@@ -86,7 +86,7 @@ export function SearchKnowledgePart({
                   </div>
                 </div>
                 <span
-                  className="bg-bg-elev-2 text-fg-muted shrink-0 rounded-full px-2 py-1 text-[10px] font-semibold tabular-nums"
+                  className="bg-bg-elev-2 text-fg-muted shrink-0 rounded-full px-2 py-1 text-caption font-semibold tabular-nums"
                   aria-label={`similarity ${sim} percent`}
                 >
                   {sim}%

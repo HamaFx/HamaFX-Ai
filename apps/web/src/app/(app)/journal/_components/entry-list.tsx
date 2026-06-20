@@ -123,7 +123,7 @@ export function EntryList({ entries, onClosed, onDeleted }: EntryListProps) {
             )}
           >
             Closed History
-            <span className="text-[10px] opacity-70 ml-1">({closedCount})</span>
+            <span className="text-caption opacity-70 ml-1">({closedCount})</span>
           </button>
           <button
             onClick={() => setTab('all')}
@@ -163,9 +163,9 @@ export function EntryList({ entries, onClosed, onDeleted }: EntryListProps) {
 
       {/* Advanced Filter Panel */}
       {showFilters && (
-        <div className="card-premium p-4 grid grid-cols-2 gap-4 animate-in slide-in-from-top-2 duration-200">
+        <div className="border border-divider bg-bg-elev-1 rounded-lg p-4 grid grid-cols-2 gap-4 animate-in slide-in-from-top-2 duration-200">
           <div className="flex flex-col gap-1.5">
-            <label className="text-[10px] font-bold uppercase tracking-wider text-fg-subtle">Asset Class</label>
+            <label className="text-caption font-bold uppercase tracking-wider text-fg-subtle">Asset Class</label>
             <div className="flex flex-wrap gap-1">
               {(['ALL', 'XAUUSD', 'EURUSD', 'GBPUSD'] as const).map((sym) => (
                 <button
@@ -183,7 +183,7 @@ export function EntryList({ entries, onClosed, onDeleted }: EntryListProps) {
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label className="text-[10px] font-bold uppercase tracking-wider text-fg-subtle">Direction</label>
+            <label className="text-caption font-bold uppercase tracking-wider text-fg-subtle">Direction</label>
             <div className="flex flex-wrap gap-1">
               {(['ALL', 'long', 'short'] as const).map((side) => (
                 <button
@@ -204,7 +204,7 @@ export function EntryList({ entries, onClosed, onDeleted }: EntryListProps) {
 
       {/* Entries List */}
       {filteredEntries.length === 0 ? (
-        <div className="card-premium p-8 text-center flex flex-col items-center justify-center gap-2">
+        <div className="border border-divider bg-bg-elev-1 rounded-lg p-8 text-center flex flex-col items-center justify-center gap-2">
           <div className="size-10 rounded-full bg-glass border border-glass-edge flex items-center justify-center text-fg-muted">
             <Compass className="size-5" />
           </div>
@@ -355,13 +355,13 @@ function EntryRow({
   const outcomeColor = isWin ? 'text-bull' : isLoss ? 'text-bear' : 'text-fg-muted';
 
   return (
-    <li className="card-premium flex flex-col gap-3.5 p-4 hover:border-glass-edge-hover hover:shadow-glow-brand/5 transition-all duration-200">
+    <li className="border border-divider bg-bg-elev-1 rounded-lg flex flex-col gap-3.5 p-4 hover:border-glass-edge-hover hover:shadow-glow-brand/5 transition-all duration-200">
       <div className="flex items-start gap-4">
         <div className="min-w-0 flex-1 flex flex-col gap-1.5">
           {/* Header Row */}
           <div className="flex flex-wrap items-center gap-2 text-sm font-bold tabular-nums">
             <span className={cn(
-              'px-2 py-0.5 text-[10px] font-black uppercase tracking-wider rounded border',
+              'px-2 py-0.5 text-caption font-black uppercase tracking-wider rounded border',
               sideBg,
               sideColor
             )}>
@@ -373,7 +373,7 @@ function EntryRow({
 
             {/* Sizing lot indicator */}
             {entry.size !== null && (
-              <span className="text-[10px] font-medium text-fg-subtle px-1.5 py-0.5 rounded-full bg-bg-elev-3 border border-glass-edge/40">
+              <span className="text-caption font-medium text-fg-subtle px-1.5 py-0.5 rounded-full bg-bg-elev-3 border border-glass-edge/40">
                 {entry.size} Lots
               </span>
             )}
@@ -426,7 +426,7 @@ function EntryRow({
                   </span>
                 )}
                 {/* Live cash value or Pip distance */}
-                <span className="text-[10px] font-bold text-fg-muted tracking-wide tabular-nums">
+                <span className="text-caption font-bold text-fg-muted tracking-wide tabular-nums">
                   {entry.size !== null 
                     ? `${liveStats.cashPnl >= 0 ? '+' : ''}$${liveStats.cashPnl.toFixed(2)}`
                     : `${liveStats.pips >= 0 ? '+' : ''}${liveStats.pips.toFixed(1)} Pips`
@@ -538,7 +538,7 @@ function EntryRow({
         <div className="border-divider flex flex-col gap-3 border-t pt-3">
           <div>
             <label
-              className="text-fg-subtle text-[10px] font-bold uppercase tracking-wider"
+              className="text-fg-subtle text-caption font-bold uppercase tracking-wider"
               htmlFor={`exit-${entry.id}`}
             >
               Exit Price (Close Trade)

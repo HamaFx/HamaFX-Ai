@@ -23,13 +23,13 @@
 //   gap-5 (20px)        between text block and action
 //
 // Tone:
-//   brand → soft amber/violet gradient, used for "primary" empty states
+//   brand → soft brand tint, used for "primary" empty states
 //           (welcome, "log your first trade")
 //   muted → neutral elev surface, used for "no data yet" states where the
 //           absence is informational, not a call-to-action
 //
-// Wrap inside `card-premium` if the surrounding page benefits from card
-// chrome; for in-flow placeholders pass `bare` to drop the card.
+// Per PLAN.md §2.4 + §2.5 — solid surface (no card-premium), sharper radii
+// (rounded-3xl → rounded-lg), no glow shadow on the icon container.
 
 import type { ReactNode } from 'react';
 
@@ -59,35 +59,23 @@ export function EmptyState({
     <div
       className={cn(
         'flex flex-col items-center gap-5 px-6 py-10 text-center',
-        !bare && 'card-premium',
+        !bare && 'border border-divider bg-bg-elev-1 rounded-lg',
         className,
       )}
     >
       <span
         aria-hidden="true"
         className={cn(
-          'inline-flex items-center justify-center rounded-3xl',
-          tone === 'brand' ? 'text-brand h-20 w-20' : 'text-fg-muted h-16 w-16',
+          'inline-flex items-center justify-center rounded-lg',
+          tone === 'brand' ? 'text-brand bg-brand/10 h-20 w-20' : 'text-fg-muted bg-bg-elev-2 h-16 w-16',
         )}
-        style={
-          tone === 'brand'
-            ? {
-                backgroundImage: 'var(--gradient-brand-soft)',
-                boxShadow:
-                  'inset 0 1px 0 0 oklch(100% 0 0 / 0.1), 0 0 40px -8px oklch(78% 0.16 78 / 0.4)',
-              }
-            : {
-                background: 'oklch(70% 0.02 265 / 0.1)',
-                boxShadow: 'var(--shadow-inset-edge-soft)',
-              }
-        }
       >
         {icon}
       </span>
       <div className="flex max-w-xs flex-col gap-2">
-        <p className="text-fg text-base font-semibold tracking-tight">{title}</p>
+        <p className="text-fg text-body font-semibold tracking-tight">{title}</p>
         {description ? (
-          <p className="text-fg-muted text-sm leading-relaxed">{description}</p>
+          <p className="text-fg-muted text-body-sm leading-relaxed">{description}</p>
         ) : null}
       </div>
       {action ? <div className="flex items-center justify-center gap-2">{action}</div> : null}

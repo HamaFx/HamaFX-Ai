@@ -278,14 +278,14 @@ function CodeBlock({ code, lang }: { code: string; lang: string }) {
       )}
     >
       <div className="border-divider/60 bg-bg-elev-2/60 flex items-center justify-between border-b px-3 py-2">
-        <span className="text-fg-subtle font-mono text-[10px] uppercase tracking-wider">
+        <span className="text-fg-subtle font-mono text-caption uppercase tracking-wider">
           {lang || 'code'}
         </span>
         <button
           type="button"
           onClick={copy}
           aria-label={copied ? 'Copied' : 'Copy code'}
-          className="text-fg-muted hover:text-fg inline-flex items-center gap-1 rounded-md px-2 py-1 text-[10px] font-medium transition-colors"
+          className="text-fg-muted hover:text-fg inline-flex items-center gap-1 rounded-md px-2 py-1 text-caption font-medium transition-colors"
         >
           {copied ? (
             <>
@@ -298,7 +298,7 @@ function CodeBlock({ code, lang }: { code: string; lang: string }) {
           )}
         </button>
       </div>
-      <pre className="scrollbar-hide overflow-x-auto p-3 font-mono text-[11px] leading-relaxed">
+      <pre className="scrollbar-hide overflow-x-auto p-3 font-mono text-body-sm leading-relaxed">
         <code>{code}</code>
       </pre>
     </div>

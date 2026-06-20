@@ -64,7 +64,7 @@ export function OverlaySheet({ active, onToggle }: OverlaySheetProps) {
           type="button"
           aria-label={`Chart overlays${enabledCount > 0 ? ` (${enabledCount} active)` : ''}`}
           className={cn(
-            'border-divider bg-bg-elev-2 inline-flex h-11 min-w-[44px] items-center justify-center gap-1.5 rounded-full border px-3 text-[11px] font-medium transition-colors shadow-sm',
+            'border-divider bg-bg-elev-2 inline-flex h-11 min-w-[44px] items-center justify-center gap-1.5 rounded-full border px-3 text-body-sm font-medium transition-colors shadow-sm',
             'focus-visible:ring-brand focus:outline-none focus-visible:ring-2',
             enabledCount > 0 ? 'text-fg' : 'text-fg-muted hover:text-fg',
           )}

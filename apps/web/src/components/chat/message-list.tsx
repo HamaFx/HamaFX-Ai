@@ -58,7 +58,7 @@ export function MessageList({
       {isStreaming ? (
         <div className="flex justify-start">
           <div
-            className="glass-subtle text-fg flex items-center gap-1 rounded-3xl rounded-bl-md px-4 py-3"
+            className="bg-bg-elev-1 border border-divider text-fg flex items-center gap-1 rounded-3xl rounded-bl-md px-4 py-3"
             role="status"
             aria-label="Assistant is responding"
           >

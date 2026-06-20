@@ -65,7 +65,7 @@ export function AnnotateChartPart({
         <h3 className="text-fg text-sm font-semibold">
           {output.symbol} · {output.tf} · annotated
         </h3>
-        <span className="text-fg-muted font-mono text-[10px] tabular-nums">
+        <span className="text-fg-muted font-mono text-caption tabular-nums">
           {output.markers.length}m / {output.priceLines.length}l
         </span>
       </header>
@@ -77,7 +77,7 @@ export function AnnotateChartPart({
           return (
             <li
               key={k}
-              className="bg-bg-elev-2 text-fg-muted rounded-full px-2 py-0.5 text-[11px] font-medium tabular-nums"
+              className="bg-bg-elev-2 text-fg-muted rounded-full px-2 py-0.5 text-body-sm font-medium tabular-nums"
             >
               {KIND_LABELS[k]} · {c}
             </li>
@@ -87,7 +87,7 @@ export function AnnotateChartPart({
 
       <Link
         href={`/chart/${output.symbol}?tf=${output.tf}${overlayParam ? `&overlays=${overlayParam}` : ''}`}
-        className="text-brand focus-visible:ring-brand mt-3 block min-h-[36px] text-right text-[11px] font-medium underline-offset-2 outline-none hover:underline focus-visible:ring-2"
+        className="text-brand focus-visible:ring-brand mt-3 block min-h-[36px] text-right text-body-sm font-medium underline-offset-2 outline-none hover:underline focus-visible:ring-2"
       >
         open in chart →
       </Link>

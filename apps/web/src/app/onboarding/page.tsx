@@ -52,7 +52,7 @@ export default async function OnboardingPage() {
   return (
     <div className="flex flex-col gap-8">
       <div className="text-center">
-        <h1 className="text-3xl font-bold tracking-tight text-white mb-2">Welcome to HamaFX-Ai</h1>
+        <h1 className="text-fg text-2xl font-bold tracking-tight sm:text-3xl mb-2">Welcome to HamaFX-Ai</h1>
         <p className="text-fg-subtle">Let's configure your workspace.</p>
       </div>
       <OnboardingWizard

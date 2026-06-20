@@ -254,7 +254,7 @@ export function ChartView({ symbol }: { symbol: Symbol }) {
         className="sticky z-20 px-4 pt-3 pb-2 transition-all"
         style={{ top: 'calc(var(--topbar-h) + env(safe-area-inset-top))' }}
       >
-        <header className="card-premium flex flex-col gap-3 p-3">
+        <header className="border border-divider bg-bg-elev-1 rounded-lg flex flex-col gap-3 p-3">
           <div className="flex flex-wrap items-center justify-between gap-3 px-1">
             <SymbolPicker active={symbol} />
             <PriceTag symbol={symbol} referencePrice={referenceClose} />
@@ -280,7 +280,7 @@ export function ChartView({ symbol }: { symbol: Symbol }) {
                     <Tooltip label="Preferences">
                       <button
                         aria-label="Preferences"
-                        className="glass-subtle text-fg-muted hover:text-fg focus-visible:ring-brand inline-flex size-11 items-center justify-center rounded-full focus:outline-none focus-visible:ring-2 cursor-pointer"
+                        className="bg-bg-elev-1 border border-divider text-fg-muted hover:text-fg focus-visible:ring-brand inline-flex size-11 items-center justify-center rounded-full focus:outline-none focus-visible:ring-2 cursor-pointer"
                       >
                         <SlidersHorizontal className="size-4" />
                       </button>
@@ -294,7 +294,7 @@ export function ChartView({ symbol }: { symbol: Symbol }) {
                   <Link
                     href={`/chart/${symbol}/pro?tf=${tf}`}
                     aria-label="Pro chart"
-                    className="glass-subtle text-fg-muted hover:text-fg focus-visible:ring-brand inline-flex size-11 items-center justify-center rounded-full focus:outline-none focus-visible:ring-2"
+                    className="bg-bg-elev-1 border border-divider text-fg-muted hover:text-fg focus-visible:ring-brand inline-flex size-11 items-center justify-center rounded-full focus:outline-none focus-visible:ring-2"
                   >
                     <Maximize2 className="size-4" />
                   </Link>

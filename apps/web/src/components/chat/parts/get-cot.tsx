@@ -63,7 +63,7 @@ export function GetCoTPart({ output, state, errorMessage }: ToolPartProps<'get_c
 
       <ul className="flex flex-col gap-1.5">
         {nets.map((row, i) => (
-          <li key={row.dateIso} className="grid grid-cols-[auto_1fr_auto] items-center gap-2 text-[11px]">
+          <li key={row.dateIso} className="grid grid-cols-[auto_1fr_auto] items-center gap-2 text-body-sm">
             <span className="text-fg-subtle w-16 tabular-nums">{row.dateIso.slice(5)}</span>
             <Bar value={row.leveraged} max={max} />
             <span
@@ -76,13 +76,13 @@ export function GetCoTPart({ output, state, errorMessage }: ToolPartProps<'get_c
         ))}
       </ul>
 
-      <p className="text-fg-subtle text-[10px]">Bars show leveraged-fund net positioning.</p>
+      <p className="text-fg-subtle text-caption">Bars show leveraged-fund net positioning.</p>
     </div>
   );
 }
 
 function Bar({ value, max }: { value: number | null; max: number }) {
-  if (value === null) return <span className="text-fg-subtle text-[10px]">—</span>;
+  if (value === null) return <span className="text-fg-subtle text-caption">—</span>;
   const pct = Math.max(2, Math.abs(value) / max * 100);
   const tone = value >= 0 ? 'bg-bull' : 'bg-bear';
   return <span className={`block h-1.5 rounded-full ${tone}`} style={{ width: `${pct}%` }} />;

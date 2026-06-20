@@ -44,7 +44,7 @@ export function ComputePositionHealthPart({
     <div className="border-border bg-bg-elev-1 flex flex-col gap-2 rounded-lg border p-3">
       <header className="flex items-baseline justify-between gap-2">
         <h3 className="text-fg text-sm font-semibold">Open positions</h3>
-        <span className="text-fg-subtle font-mono text-[10px]">
+        <span className="text-fg-subtle font-mono text-caption">
           {new Date(output.asOf).toISOString().slice(11, 16)}Z
         </span>
       </header>
@@ -56,7 +56,7 @@ export function ComputePositionHealthPart({
           return (
             <li
               key={r.entryId}
-              className="border-divider/40 flex flex-col gap-0.5 rounded-md border p-2 text-[11px] tabular-nums"
+              className="border-divider/40 flex flex-col gap-0.5 rounded-md border p-2 text-body-sm tabular-nums"
             >
               <div className="flex items-baseline justify-between gap-2">
                 <span className="text-fg font-semibold">
@@ -99,7 +99,7 @@ export function ComputePositionHealthPart({
       {output.partial ? (
         <p
           role="note"
-          className="text-warn border-warn/30 bg-warn/5 rounded-md border px-2 py-1 text-[11px]"
+          className="text-warn border-warn/30 bg-warn/5 rounded-md border px-2 py-1 text-body-sm"
         >
           One or more positions skipped due to a price-fetch failure.
         </p>

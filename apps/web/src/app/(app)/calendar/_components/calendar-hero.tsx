@@ -61,7 +61,7 @@ export function CalendarHero({ events }: CalendarHeroProps) {
   return (
     <section
       aria-label="Calendar overview"
-      className="card-premium relative flex flex-col gap-4 overflow-hidden rounded-[28px] p-4"
+      className="border border-divider bg-bg-elev-1 rounded-lg relative flex flex-col gap-4 overflow-hidden rounded-[28px] p-4"
     >
       {/* Countdown row */}
       {nextHigh ? (
@@ -77,7 +77,7 @@ export function CalendarHero({ events }: CalendarHeroProps) {
             <Zap className="size-5" strokeWidth={2} />
           </span>
           <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-            <p className="text-fg-subtle text-[10px] font-semibold uppercase tracking-wider">
+            <p className="text-fg-subtle text-caption font-semibold uppercase tracking-wider">
               Next high-impact
             </p>
             <p className="text-fg truncate text-base font-bold">{nextHigh.title}</p>
@@ -107,7 +107,7 @@ export function CalendarHero({ events }: CalendarHeroProps) {
 
       {/* Distribution bar — shows the impact mix for the next two weeks */}
       <div className="flex flex-col gap-2">
-        <div className="text-fg-subtle flex items-baseline justify-between text-[11px]">
+        <div className="text-fg-subtle flex items-baseline justify-between text-body-sm">
           <span className="font-semibold uppercase tracking-wider">Next 14 days</span>
           <span className="tabular-nums">
             {todayCount > 0 ? `${todayCount} today · ` : ''}
@@ -137,7 +137,7 @@ export function CalendarHero({ events }: CalendarHeroProps) {
             />
           ) : null}
         </div>
-        <ul className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] tabular-nums">
+        <ul className="flex flex-wrap items-center gap-x-3 gap-y-1 text-body-sm tabular-nums">
           <Tag dot="bg-bear" tone="text-bear" label="High" count={counts.high} />
           <Tag dot="bg-warn" tone="text-warn" label="Medium" count={counts.medium} />
           <Tag dot="bg-fg-subtle" tone="text-fg-muted" label="Low" count={counts.low} />
@@ -184,7 +184,7 @@ function CountryChip({
 }) {
   const label = currency ?? country;
   return (
-    <span className="bg-bg-elev-2 ring-divider rounded px-1.5 py-0.5 text-[10px] font-bold uppercase tabular-nums ring-1">
+    <span className="bg-bg-elev-2 ring-divider rounded px-1.5 py-0.5 text-caption font-bold uppercase tabular-nums ring-1">
       {label}
     </span>
   );

@@ -1,0 +1,5 @@
+{
+  "framework": "nextjs",
+  "outputDirectory": "apps/web/.next",
+  "buildCommand": "npx turbo run build --filter=@hamafx/web"
+}

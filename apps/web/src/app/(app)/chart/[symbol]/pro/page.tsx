@@ -73,7 +73,7 @@ export default async function ProChartPage({ params, searchParams }: PageProps) 
       >
         <Link
           href={`/chart/${symbol}?tf=${tf}`}
-          className="border-border bg-bg-elev-2 text-fg-muted hover:text-fg focus-visible:ring-brand inline-flex h-9 min-w-[44px] items-center justify-center rounded-md border px-2 text-[11px] font-medium focus:outline-none focus-visible:ring-2"
+          className="border-border bg-bg-elev-2 text-fg-muted hover:text-fg focus-visible:ring-brand inline-flex h-9 min-w-[44px] items-center justify-center rounded-md border px-2 text-body-sm font-medium focus:outline-none focus-visible:ring-2"
         >
           back to bundled
         </Link>

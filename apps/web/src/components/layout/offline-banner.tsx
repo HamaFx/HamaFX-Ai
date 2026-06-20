@@ -57,13 +57,13 @@ export function OfflineBanner() {
     >
       <div className="glass-strong text-fg pointer-events-auto flex items-center gap-3 rounded-full px-4 py-2.5">
         <WifiOff className="text-bear size-4" aria-hidden="true" strokeWidth={2.25} />
-        <span className="text-sm font-medium">No network</span>
+        <span className="text-body-sm font-medium">No network</span>
         <button
           type="button"
           onClick={() => {
             window.location.reload();
           }}
-          className="text-fg-muted hover:text-fg focus-visible:ring-brand inline-flex min-h-[44px] items-center justify-center rounded-lg px-3 text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2"
+          className="text-fg-muted hover:text-fg focus-visible:ring-brand inline-flex min-h-[44px] items-center justify-center rounded-lg px-3 text-body-sm font-medium transition-colors focus:outline-none focus-visible:ring-2"
         >
           Retry
         </button>

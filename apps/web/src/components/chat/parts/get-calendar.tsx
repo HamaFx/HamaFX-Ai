@@ -59,7 +59,7 @@ export function GetCalendarPart({ output, state, errorMessage }: GetCalendarPart
     return (
       <div className="border-border bg-bg-elev-1 text-fg-muted rounded-lg border p-3 text-sm">
         Calendar pipeline hasn&apos;t populated the DB yet. Trigger the{' '}
-        <code className="bg-bg-elev-2 rounded px-1 py-0.5 text-[10px]">/api/cron/calendar</code>{' '}
+        <code className="bg-bg-elev-2 rounded px-1 py-0.5 text-caption">/api/cron/calendar</code>{' '}
         cron once and try again.
       </div>
     );
@@ -108,7 +108,7 @@ function CalendarRow({ item }: { item: ToolCalendarItem }) {
       <span className="text-fg min-w-0 flex-1 truncate font-medium">{item.title}</span>
 
       <span
-        className={`shrink-0 text-[10px] uppercase ${IMPACT_TEXT[item.importance]}`}
+        className={`shrink-0 text-caption uppercase ${IMPACT_TEXT[item.importance]}`}
         title={`${item.importance} impact`}
       >
         {IMPACT_LABEL[item.importance]}

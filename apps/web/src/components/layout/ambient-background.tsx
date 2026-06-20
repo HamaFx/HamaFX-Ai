@@ -19,6 +19,11 @@
 // gradient orbs read as "color-tinted" rather than "premium black", so
 // the default app shell now uses just enough warmth to add depth.
 //
+// Per PLAN.md §2.6 — single orb at top-right only. The previous
+// bottom-left orb is removed (competed with the brand canvas instead of
+// complementing it). Opacity dropped from 0.06 → 0.04 for an even
+// quieter rest state.
+//
 // `intensity="vivid"` brings back the three-orb composition for the
 // login surface, where chromatic interest is a feature.
 
@@ -45,18 +50,14 @@ export function AmbientBackground({
   );
 
   if (intensity === 'subtle') {
-    // Default app shell: one tiny warm whisper. No noise filter — pure
-    // canvas reads cleaner and avoids feTurbulence's known iOS-Safari
-    // compositing cost.
+    // Default app shell: one tiny warm whisper, top-right only. No noise
+    // filter — pure canvas reads cleaner and avoids feTurbulence's known
+    // iOS-Safari compositing cost.
     return (
       <div aria-hidden="true" className={root}>
         <div
           className="absolute -top-40 -right-40 h-[28rem] w-[28rem] rounded-full blur-[100px]"
-          style={{ background: 'oklch(82% 0.14 85 / 1)', opacity: 0.06 }}
-        />
-        <div
-          className="absolute -bottom-32 -left-32 h-[24rem] w-[24rem] rounded-full blur-[120px]"
-          style={{ background: 'oklch(70% 0.14 285 / 1)', opacity: 0.04 }}
+          style={{ background: 'oklch(82% 0.14 85 / 1)', opacity: 0.04 }}
         />
       </div>
     );

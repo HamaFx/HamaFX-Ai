@@ -15,9 +15,11 @@
  */
 
 // Mobile-first page header. Hierarchy: page title is the loudest thing on
-// the screen (text-2xl bold), description is one line of helper text in
-// muted color. Optional icon tile is 48×48 (size-12) so it reads as
-// scaffolding, not chrome.
+// the screen (display scale, weight 700), description is one line of helper
+// text in muted color. Optional icon tile is 48×48 (size-12), solid brand
+// tint, no gradient — keeps the page quiet until the user reads the title.
+//
+// Per PLAN.md §2.4 + §3 — R1 display type tokens, sharper radii.
 
 import type { ReactNode } from 'react';
 
@@ -36,21 +38,19 @@ export function PageHeader({ title, description, icon, children }: PageHeaderPro
           {icon ? (
             <span
               aria-hidden="true"
-              className="text-fg inline-flex size-12 items-center justify-center rounded-2xl"
-              style={{
-                backgroundImage: 'var(--gradient-brand-soft)',
-                boxShadow: 'var(--shadow-inset-edge-soft)',
-              }}
+              className="text-brand bg-brand/10 inline-flex size-12 items-center justify-center rounded-lg"
             >
               {icon}
             </span>
           ) : null}
-          <h1 className="text-fg text-2xl font-bold tracking-tight">{title}</h1>
+          <h1 className="text-fg text-display-lg font-bold tracking-tight">
+            {title}
+          </h1>
         </div>
         {children ? <div className="flex items-center gap-2">{children}</div> : null}
       </div>
       {description ? (
-        <p className="text-fg-muted text-sm leading-relaxed">{description}</p>
+        <p className="text-fg-muted text-body-sm leading-relaxed">{description}</p>
       ) : null}
     </header>
   );

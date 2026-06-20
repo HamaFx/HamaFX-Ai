@@ -53,7 +53,7 @@ export function AnalyzeFundamentalPart({
         <h3 className="text-fg text-sm font-semibold">
           {output.symbol} · fundamental
         </h3>
-        <span className="text-fg-muted font-mono text-[10px] tabular-nums">
+        <span className="text-fg-muted font-mono text-caption tabular-nums">
           {output.currencies.join(' · ')}
         </span>
       </header>
@@ -72,7 +72,7 @@ export function AnalyzeFundamentalPart({
               <li key={e.id} className="flex items-center justify-between gap-3 py-1.5">
                 <div className="flex min-w-0 flex-col">
                   <span className="text-fg truncate text-xs font-medium">{e.title}</span>
-                  <span className="text-fg-muted text-[10px]">
+                  <span className="text-fg-muted text-caption">
                     {e.country}
                     {e.currency ? ` · ${e.currency}` : ''} ·{' '}
                     <time dateTime={iso} className="tabular-nums">
@@ -81,7 +81,7 @@ export function AnalyzeFundamentalPart({
                   </span>
                 </div>
                 <span
-                  className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide ${impactClass(e.importance)}`}
+                  className={`shrink-0 rounded-full px-2 py-0.5 text-caption font-medium uppercase tracking-wide ${impactClass(e.importance)}`}
                 >
                   {e.importance}
                 </span>
@@ -93,7 +93,7 @@ export function AnalyzeFundamentalPart({
 
       <Link
         href={`/calendar?symbol=${output.symbol}`}
-        className="text-brand focus-visible:ring-brand mt-3 block min-h-[24px] text-right text-[11px] font-medium underline-offset-2 outline-none hover:underline focus-visible:ring-2"
+        className="text-brand focus-visible:ring-brand mt-3 block min-h-[24px] text-right text-body-sm font-medium underline-offset-2 outline-none hover:underline focus-visible:ring-2"
       >
         open calendar →
       </Link>
@@ -110,7 +110,7 @@ function SentimentStrip({
   if (total === 0) return null;
   const pct = (n: number) => Math.round((n / total) * 100);
   return (
-    <div className="flex items-center gap-2 text-[10px] tabular-nums">
+    <div className="flex items-center gap-2 text-caption tabular-nums">
       <span className="text-bull bg-bull/10 rounded-full px-2 py-0.5 font-medium">
         ↑ {sentiment.positive} ({pct(sentiment.positive)}%)
       </span>

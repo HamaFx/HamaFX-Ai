@@ -152,7 +152,7 @@ export function AlertForm({ initialSymbol, onCreated }: AlertFormProps) {
 
       {type === 'indicatorCross' ? (
         <div className="flex flex-col gap-2">
-          <span className="text-fg-subtle text-[11px] uppercase tracking-wide">Indicator</span>
+          <span className="text-fg-subtle text-body-sm uppercase tracking-wide">Indicator</span>
           <div className="flex flex-wrap gap-2">
             {COMMON_INDICATORS.map((ind) => (
               <button
@@ -192,7 +192,7 @@ export function AlertForm({ initialSymbol, onCreated }: AlertFormProps) {
       />
 
       <div className="flex flex-col gap-2">
-        <label className="text-fg-subtle text-[11px] uppercase tracking-wide" htmlFor="alert-level">
+        <label className="text-fg-subtle text-body-sm uppercase tracking-wide" htmlFor="alert-level">
           Level
         </label>
         <Input
@@ -205,7 +205,7 @@ export function AlertForm({ initialSymbol, onCreated }: AlertFormProps) {
       </div>
 
       <div className="flex flex-col gap-2">
-        <span className="text-fg-subtle text-[11px] uppercase tracking-wide">Delivery Methods</span>
+        <span className="text-fg-subtle text-body-sm uppercase tracking-wide">Delivery Methods</span>
         <div className="flex gap-4">
           <label className="flex items-center gap-2 text-sm text-fg cursor-pointer">
             <input
@@ -235,7 +235,7 @@ export function AlertForm({ initialSymbol, onCreated }: AlertFormProps) {
       </div>
 
       <div className="flex flex-col gap-2">
-        <label className="text-fg-subtle text-[11px] uppercase tracking-wide" htmlFor="alert-note">
+        <label className="text-fg-subtle text-body-sm uppercase tracking-wide" htmlFor="alert-note">
           Note (optional)
         </label>
         <Input

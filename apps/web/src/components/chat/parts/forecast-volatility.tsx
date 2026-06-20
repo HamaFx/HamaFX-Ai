@@ -36,13 +36,13 @@ export function ForecastVolatilityPart({
           {output.symbol} · {output.horizonHours}h forward vol
         </h3>
         {output.eventAdjusted ? (
-          <span className="bg-warn/15 text-warn rounded-full px-2 py-0.5 text-[10px] font-semibold">
+          <span className="bg-warn/15 text-warn rounded-full px-2 py-0.5 text-caption font-semibold">
             Event-adjusted ×{output.eventMultiplier.toFixed(1)}
           </span>
         ) : null}
       </header>
 
-      <dl className="grid grid-cols-3 gap-2 text-[11px] tabular-nums">
+      <dl className="grid grid-cols-3 gap-2 text-body-sm tabular-nums">
         <Stat k={`ATR (${output.tf})`} v={`${output.atrPips.toFixed(1)} pips`} />
         <Stat
           k="ATR · 30d avg"
@@ -81,7 +81,7 @@ export function ForecastVolatilityPart({
 function Stat({ k, v }: { k: string; v: string }) {
   return (
     <div className="border-divider/40 flex flex-col rounded-md border p-2">
-      <span className="text-fg-subtle text-[10px] uppercase tracking-wide">{k}</span>
+      <span className="text-fg-subtle text-caption uppercase tracking-wide">{k}</span>
       <span className="text-fg font-semibold">{v}</span>
     </div>
   );

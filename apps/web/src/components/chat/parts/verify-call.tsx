@@ -56,7 +56,7 @@ export function VerifyCallPart({ output, state, errorMessage }: ToolPartProps<'v
           {output.caveats.map((c, i) => (
             <li
               key={i}
-              className="border-warn/30 bg-warn/5 flex items-baseline gap-2 rounded-md border px-2 py-1.5 text-[11px]"
+              className="border-warn/30 bg-warn/5 flex items-baseline gap-2 rounded-md border px-2 py-1.5 text-body-sm"
             >
               <span className="text-warn font-semibold">{CAVEAT_GLYPH[c.code] ?? '!'}</span>
               <span className="text-fg flex-1">{c.message}</span>
@@ -66,7 +66,7 @@ export function VerifyCallPart({ output, state, errorMessage }: ToolPartProps<'v
       ) : null}
 
       {output.nearestOpposingLiquidity ? (
-        <p className="text-fg-subtle text-[11px] tabular-nums">
+        <p className="text-fg-subtle text-body-sm tabular-nums">
           Nearest opposing{' '}
           {output.nearestOpposingLiquidity.kind === 'swing_high' ? 'swing high' : 'swing low'}:{' '}
           <span className="text-fg-muted font-medium">
