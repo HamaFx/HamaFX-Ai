@@ -20,6 +20,7 @@ import { useState, useTransition } from 'react';
 import { Eye, EyeOff, Loader2, CheckCircle2, XCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { ProviderInfoDot } from '@/components/ui/provider-info-dot';
 import type { ProviderMeta } from '@hamafx/shared';
 
 interface ApiKeyCardProps {
@@ -87,6 +88,7 @@ export function ApiKeyCard({ provider, currentValue, health }: ApiKeyCardProps) 
               {provider.displayName}
             </label>
             <HealthBadge health={health} />
+            <ProviderInfoDot provider={provider} side="top" />
           </div>
           <p className="text-xs text-fg-subtle">{provider.description}</p>
         </div>

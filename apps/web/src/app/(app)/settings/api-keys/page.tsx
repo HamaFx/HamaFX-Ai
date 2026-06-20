@@ -111,6 +111,9 @@ export default async function ApiKeysSettingsPage({
   // Strip server-only fields (factory, defaultModels) before crossing the
   // server→client boundary. RSC serializes props; functions can't be
   // sent. Group by pricing tier for the UI.
+  // Phase C — UX_UPGRADE_PLAN.md item 16: pass `bestFor` and
+  // `supports` through so the api-keys card tooltip can show them.
+  // Conditional spread keeps strict-optional fields happy.
   const toClientMeta = (p: (typeof BYOK_PROVIDERS_LIST)[number]) => ({
     id: p.id,
     displayName: p.displayName,
@@ -118,6 +121,8 @@ export default async function ApiKeysSettingsPage({
     keyHint: p.keyHint,
     description: p.description,
     pricingTier: p.pricingTier,
+    ...(p.bestFor !== undefined ? { bestFor: p.bestFor } : {}),
+    supports: p.supports,
   });
   const freeProviders = BYOK_PROVIDERS_LIST.filter(
     (p) => p.pricingTier === 'free',

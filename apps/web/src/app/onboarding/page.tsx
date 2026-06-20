@@ -37,9 +37,11 @@ export default async function OnboardingPage() {
     redirect('/chat');
   }
 
-  // Build the provider list for the wizard. We strip the factory
-  // function because it's a server-only import and the client component
-  // only needs the metadata.
+  // Phase C — UX_UPGRADE_PLAN.md item 16: pass `bestFor` and
+  // `supports` through so the wizard tooltip can show them.
+  // Conditional spreads keep the object compatible with the
+  // strict-optional fields on `ProviderMeta` under
+  // exactOptionalPropertyTypes.
   const providers = BYOK_PROVIDERS_LIST.map((p) => ({
     id: p.id,
     displayName: p.displayName,
@@ -47,6 +49,8 @@ export default async function OnboardingPage() {
     keyHint: p.keyHint,
     description: p.description,
     pricingTier: p.pricingTier,
+    ...(p.bestFor !== undefined ? { bestFor: p.bestFor } : {}),
+    supports: p.supports,
   }));
 
   return (

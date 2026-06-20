@@ -68,4 +68,18 @@ export interface ProviderMeta {
   keyHint: string;
   description: string;
   pricingTier: ProviderPricingTier;
+  /**
+   * Phase C — UX_UPGRADE_PLAN.md item 16. Short tag describing
+   * what the provider is best suited for, shown in the
+   * onboarding tooltip and api-keys card.
+   */
+  bestFor?: string;
+  /**
+   * Phase C — UX_UPGRADE_PLAN.md item 16. Capability flags so
+   * the UI can label providers by what they support.
+   */
+  supports?: {
+    vision: boolean;
+    embedding: boolean;
+  };
 }

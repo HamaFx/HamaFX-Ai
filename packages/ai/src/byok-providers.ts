@@ -69,6 +69,25 @@ export interface ByokProviderSpec {
    * keys — the model.ts resolver caches at the modelId level instead.
    */
   factory: (apiKey: string) => (modelId: string) => LanguageModel;
+  /**
+   * Phase C — UX_UPGRADE_PLAN.md item 16.
+   * Short tag describing what this provider is best suited for.
+   * Shown in the onboarding wizard tooltip and in the api-keys
+   * card header. Optional — providers that don't have a clear
+   * specialisation can leave it undefined.
+   */
+  bestFor?: string;
+  /**
+   * Phase C — UX_UPGRADE_PLAN.md item 16.
+   * Capability flags the user can use to filter or label providers
+   * in the UI. The onboarding tooltip reads these directly.
+   */
+  supports: {
+    /** Can the provider serve chat-vision requests (image input)? */
+    vision: boolean;
+    /** Can the provider produce text embeddings? */
+    embedding: boolean;
+  };
 }
 
 // ---------------------------------------------------------------------
@@ -89,6 +108,8 @@ const GOOGLE: ByokProviderSpec = {
     vision: 'gemini-2.5-pro',
     embedding: 'text-embedding-004',
   },
+  bestFor: 'Free tier + vision',
+  supports: { vision: true, embedding: true },
   factory: (apiKey) => {
     const provider = createGoogleGenerativeAI({ apiKey });
     return (modelId) => provider(modelId);
@@ -109,6 +130,8 @@ const ANTHROPIC: ByokProviderSpec = {
     vision: 'claude-sonnet-4-20250514',
     embedding: null, // Anthropic doesn't host an embedding model
   },
+  bestFor: 'Deep reasoning',
+  supports: { vision: true, embedding: false },
   factory: (apiKey) => {
     const provider = createAnthropic({ apiKey });
     return (modelId) => provider(modelId);
@@ -129,6 +152,8 @@ const OPENAI: ByokProviderSpec = {
     vision: 'gpt-4o',
     embedding: 'text-embedding-3-small',
   },
+  bestFor: 'General purpose',
+  supports: { vision: true, embedding: true },
   // OpenAI uses the OpenAI-compatible shim pointed at api.openai.com
   factory: (apiKey) => {
     const provider = createOpenAICompatible({
@@ -154,6 +179,8 @@ const GROQ: ByokProviderSpec = {
     vision: 'llama-3.2-90b-vision-preview',
     embedding: null,
   },
+  bestFor: 'Speed (free)',
+  supports: { vision: true, embedding: false },
   factory: (apiKey) => {
     const provider = createOpenAICompatible({
       name: 'groq',
@@ -178,6 +205,8 @@ const MISTRAL: ByokProviderSpec = {
     vision: 'pixtral-large-latest',
     embedding: 'mistral-embed',
   },
+  bestFor: 'Low cost + EU',
+  supports: { vision: true, embedding: true },
   factory: (apiKey) => {
     const provider = createOpenAICompatible({
       name: 'mistral',
@@ -202,6 +231,8 @@ const OPENROUTER: ByokProviderSpec = {
     vision: 'anthropic/claude-sonnet-4',
     embedding: 'openai/text-embedding-3-small',
   },
+  bestFor: '100+ models, 1 key',
+  supports: { vision: true, embedding: true },
   factory: (apiKey) => {
     const provider = createOpenAICompatible({
       name: 'openrouter',
@@ -226,6 +257,8 @@ const XAI: ByokProviderSpec = {
     vision: 'grok-2-vision-latest',
     embedding: null,
   },
+  bestFor: 'Real-time knowledge',
+  supports: { vision: true, embedding: false },
   factory: (apiKey) => {
     const provider = createOpenAICompatible({
       name: 'xai',
@@ -250,6 +283,8 @@ const DEEPSEEK: ByokProviderSpec = {
     vision: null, // DeepSeek's API has no vision model as of 2026
     embedding: null,
   },
+  bestFor: 'Cheap reasoning',
+  supports: { vision: false, embedding: false },
   factory: (apiKey) => {
     const provider = createOpenAICompatible({
       name: 'deepseek',

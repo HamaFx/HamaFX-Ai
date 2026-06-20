@@ -62,13 +62,13 @@ export function MessageList({
             role="status"
             aria-label="Assistant is responding"
           >
-            <span className="bg-brand size-1.5 animate-pulse rounded-full" />
+            <span className="bg-brand motion-safe:animate-pulse size-1.5 rounded-full" />
             <span
-              className="bg-brand size-1.5 animate-pulse rounded-full"
+              className="bg-brand motion-safe:animate-pulse size-1.5 rounded-full"
               style={{ animationDelay: '150ms' }}
             />
             <span
-              className="bg-brand size-1.5 animate-pulse rounded-full"
+              className="bg-brand motion-safe:animate-pulse size-1.5 rounded-full"
               style={{ animationDelay: '300ms' }}
             />
           </div>

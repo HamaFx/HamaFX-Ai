@@ -271,7 +271,7 @@ export function Composer({
             aria-live="polite"
             className="text-bear ring-bear/30 mx-auto mt-3 inline-flex items-center gap-2 self-center rounded-full bg-bear/10 px-3 py-1 text-body-sm font-medium ring-1"
           >
-            <span className="bg-bear size-1.5 animate-pulse rounded-full" />
+            <span className="bg-bear motion-safe:animate-pulse size-1.5 rounded-full" />
             Listening…
           </div>
         ) : null}

@@ -21,6 +21,7 @@ import { useRouter } from 'next/navigation';
 import { Check, ChevronRight, Eye, EyeOff, Loader2, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { ProviderInfoDot } from '@/components/ui/provider-info-dot';
 import type { ProviderMeta, ProviderPricingTier } from '@hamafx/shared';
 import { completeOnboardingAction } from '@/app/onboarding/actions';
 
@@ -132,7 +133,7 @@ export function OnboardingWizard({ initialName, providers }: OnboardingWizardPro
       </div>
 
       {step === 1 && (
-        <div className="flex flex-col gap-6 animate-in fade-in slide-in-from-right-4">
+        <div className="flex flex-col gap-6 motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-right-4">
           <div>
             <h2 className="text-xl font-semibold text-fg mb-1">Let's get to know you</h2>
             <p className="text-sm text-fg-subtle">What should your AI copilot call you?</p>
@@ -153,7 +154,7 @@ export function OnboardingWizard({ initialName, providers }: OnboardingWizardPro
       )}
 
       {step === 2 && (
-        <div className="flex flex-col gap-6 animate-in fade-in slide-in-from-right-4">
+        <div className="flex flex-col gap-6 motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-right-4">
           <div>
             <h2 className="text-xl font-semibold text-fg mb-1">Trading Preferences</h2>
             <p className="text-sm text-fg-subtle">Set up your local timezone and primary market.</p>
@@ -191,7 +192,7 @@ export function OnboardingWizard({ initialName, providers }: OnboardingWizardPro
       )}
 
       {step === 3 && (
-        <div className="flex flex-col gap-6 animate-in fade-in slide-in-from-right-4">
+        <div className="flex flex-col gap-6 motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-right-4">
           <div>
             <h2 className="text-xl font-semibold text-fg mb-1">Connect an AI Provider</h2>
             <p className="text-sm text-fg-subtle">
@@ -218,7 +219,10 @@ export function OnboardingWizard({ initialName, providers }: OnboardingWizardPro
                   }`}
                 >
                   <div className="flex items-baseline justify-between gap-2">
-                    <div className="text-sm font-medium text-fg">{p.displayName}</div>
+                    <div className="flex items-center gap-1.5">
+                      <div className="text-sm font-medium text-fg">{p.displayName}</div>
+                      <ProviderInfoDot provider={p} />
+                    </div>
                     <div className="text-xs text-fg-subtle">{tierLabel(p.pricingTier)}</div>
                   </div>
                   <div className="mt-1 text-xs text-fg-subtle line-clamp-2">
@@ -230,7 +234,7 @@ export function OnboardingWizard({ initialName, providers }: OnboardingWizardPro
           </div>
 
           {selectedProvider && (
-            <div className="flex flex-col gap-3 animate-in fade-in slide-in-from-top-2">
+            <div className="flex flex-col gap-3 motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-top-2">
               <label className="text-sm font-medium text-fg">
                 API Key for {providers.find((p) => p.id === selectedProvider)?.displayName}
               </label>
@@ -321,7 +325,7 @@ export function OnboardingWizard({ initialName, providers }: OnboardingWizardPro
       )}
 
       {step === 4 && (
-        <div className="flex flex-col gap-6 animate-in fade-in slide-in-from-right-4">
+        <div className="flex flex-col gap-6 motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-right-4">
           <div>
             <h2 className="text-xl font-semibold text-fg mb-1">All set!</h2>
             <p className="text-sm text-fg-subtle">
