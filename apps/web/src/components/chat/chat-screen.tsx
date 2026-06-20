@@ -45,6 +45,7 @@
 import { useChat } from '@ai-sdk/react';
 import { DefaultChatTransport, type UIMessage } from 'ai';
 import { ArrowDown, RotateCcw, Sparkles } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -79,6 +80,7 @@ export function ChatScreen({
   const lastUserTextRef = useRef<string>('');
   const autoSubmittedRef = useRef<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
   const [title, setTitle] = useState(initialTitle);
 
   // One-shot model override — set right before calling regenerate() so the
@@ -237,9 +239,66 @@ export function ChatScreen({
                 if (opts?.modelOverride) modelOverrideRef.current = opts.modelOverride;
                 void regenerate();
               }}
-              onEdit={(messageId, newText) => {
+              onEdit={async (messageId, newText) => {
                 const idx = messages.findIndex((m) => m.id === messageId);
                 if (idx === -1) return;
+                // Phase C — UX_UPGRADE_PLAN.md item 19.
+                //
+                // Editing a NON-last user message used to silently
+                // truncate the conversation (slicing the array and
+                // streaming a fresh response), which orphaned all
+                // later assistant messages. The conventional AI chat
+                // UX (ChatGPT, Claude) is to FORK: create a new
+                // thread that contains the messages up to and
+                // including the edit, with the user's new text.
+                // The original thread stays as-is for reference.
+                const isLastMessage = idx === messages.length - 1;
+                if (!isLastMessage) {
+                  try {
+                    const csrf = getCsrfToken();
+                    const res = await fetch('/api/chat/threads/fork', {
+                      method: 'POST',
+                      headers: {
+                        'content-type': 'application/json',
+                        'x-csrf-token': csrf ?? '',
+                      },
+                      body: JSON.stringify({
+                        sourceThreadId: threadId,
+                        atMessageId: messageId,
+                        newText,
+                      }),
+                    });
+                    if (!res.ok) {
+                      const body = (await res.json().catch(() => null)) as {
+                        error?: { message?: string };
+                      } | null;
+                      throw new Error(
+                        body?.error?.message ?? `HTTP ${res.status}`,
+                      );
+                    }
+                    const { threadId: newThreadId } = (await res.json()) as {
+                      threadId: string;
+                    };
+                    toast.success('Forked into a new thread');
+                    // Navigate to the new thread. We don't try to
+                    // stream the response from the fork — the user
+                    // can send their message once they're on the
+                    // new thread. (ChatGPT does the same: the
+                    // edit-submit-on-fork step is two clicks.)
+                    router.push(`/chat/${newThreadId}`);
+                  } catch (err) {
+                    toast.error(
+                      err instanceof Error
+                        ? err.message
+                        : 'Could not fork thread',
+                    );
+                  }
+                  return;
+                }
+                // Last message: legacy in-place behavior. The
+                // composer takes care of persisting the new text;
+                // here we just slice to before the edit point and
+                // stream the new message.
                 const sliced = messages.slice(0, idx);
                 setMessages(sliced);
                 void sendMessage({ text: newText });

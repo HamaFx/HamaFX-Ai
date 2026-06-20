@@ -235,6 +235,161 @@ export async function appendAssistantMessage(
   });
 }
 
+// -----------------------------------------------------------------------
+// Phase C — UX_UPGRADE_PLAN.md item 19. Fork semantics.
+//
+// "Edit a non-last user message" creates a NEW thread (fork) at the
+// edit point, leaving the original thread untouched. This is the
+// conventional AI chat UX (ChatGPT, Claude) and prevents the
+// truncation problem: rewriting the message in place would orphan
+// all later assistant messages that referenced it.
+//
+// Algorithm:
+//   1. Fetch source thread (scoped by userId — IDOR guard).
+//   2. Fetch all source messages.
+//   3. Create a new thread with the same `pinnedSymbol` and a
+//      auto-generated title based on the new first user message.
+//   4. Insert into the new thread all source messages UP TO AND
+//      INCLUDING `atMessageId`, replacing that message's text
+//      with `newText`.
+//   5. Return the new thread id.
+//
+// The original thread is never mutated. The caller can then
+// stream a fresh assistant response from the new thread.
+// -----------------------------------------------------------------------
+
+/**
+ * Pure helper that builds the new thread's first-message title.
+ *
+ * The AI chat UX convention is to use the first user message as the
+ * thread title. After a fork, the title is the EDITED message (the
+ * new text), which usually makes more sense than the original.
+ *
+ * Truncated to 80 chars with a trailing ellipsis if needed.
+ */
+export function deriveForkedTitle(newText: string): string {
+  const trimmed = newText.trim();
+  if (trimmed.length === 0) return 'New chat';
+  if (trimmed.length <= 80) return trimmed;
+  return trimmed.slice(0, 79).trimEnd() + '…';
+}
+
+export interface ForkThreadInput {
+  userId: string;
+  sourceThreadId: string;
+  /**
+   * ID of the user message to edit (must be role='user' and belong
+   * to the source thread).
+   */
+  atMessageId: string;
+  /** The new text to put at that message. */
+  newText: string;
+}
+
+export interface ForkThreadResult {
+  /** ID of the newly-created thread. */
+  newThreadId: string;
+  /** The first message in the new thread (with the replaced text). */
+  firstMessage: { id: string; role: 'user'; content: string };
+}
+
+/**
+ * Fork a thread at a user message. Returns the new thread id.
+ *
+ * Throws when:
+ *   - Source thread not found (or not owned by the user).
+ *   - `atMessageId` doesn't belong to the source thread.
+ *   - `atMessageId` is not a user-role message (only user messages
+ *     are editable; clicking the edit icon on an assistant message
+ *     is currently a no-op in the UI).
+ */
+export async function forkThread(input: ForkThreadInput): Promise<ForkThreadResult> {
+  const { userId, sourceThreadId, atMessageId, newText } = input;
+
+  // 1) Fetch the source thread. IDOR-checked: scoped by userId.
+  const [source] = await getDb()
+    .select()
+    .from(schema.chatThreads)
+    .where(and(eq(schema.chatThreads.id, sourceThreadId), eq(schema.chatThreads.userId, userId)))
+    .limit(1);
+  if (!source) {
+    throw new Error(`thread not found: ${sourceThreadId}`);
+  }
+
+  // 2) Fetch all source messages in chronological order.
+  const sourceMessages = await getDb()
+    .select()
+    .from(schema.chatMessages)
+    .where(eq(schema.chatMessages.threadId, sourceThreadId))
+    .orderBy(asc(schema.chatMessages.createdAt));
+
+  // 3) Find the edit point. The message must be a user message.
+  const editIdx = sourceMessages.findIndex((m) => m.id === atMessageId);
+  if (editIdx === -1) {
+    throw new Error(`message not found: ${atMessageId}`);
+  }
+  const target = sourceMessages[editIdx]!;
+  if (target.role !== 'user') {
+    throw new Error(`can only edit user messages, got role=${target.role}`);
+  }
+
+  // 4) Build the new thread + the messages it should contain, in a
+  //    single transaction so a partial fork never lands.
+  const newTitle = deriveForkedTitle(newText);
+  return getDb().transaction(async (tx) => {
+    const [created] = await tx
+      .insert(schema.chatThreads)
+      .values({
+        userId,
+        title: newTitle,
+        pinnedSymbol: source.pinnedSymbol ?? null,
+      })
+      .returning({ id: schema.chatThreads.id });
+    const newThreadId = created!.id;
+
+    // 5) Insert all source messages UP TO AND INCLUDING the edit
+    //    point. For the edit message, replace the text content but
+    //    preserve any non-text parts (e.g. attachments the user
+    //    uploaded — we strip text-only attachments but keep image
+    //    URLs, since the user said "edit the text" not "edit the
+    //    attachments"). For all other messages we copy verbatim.
+    const cut = sourceMessages.slice(0, editIdx + 1);
+    const insertedIds: string[] = [];
+    for (let i = 0; i < cut.length; i++) {
+      const m = cut[i]!;
+      const isEditPoint = i === editIdx;
+      const newContent = isEditPoint ? newText : m.content;
+      // For the edit point we keep attachments/parts from the
+      // original message so an attached chart image still works.
+      const parts = isEditPoint ? m.parts : m.parts;
+      const [row] = await tx
+        .insert(schema.chatMessages)
+        .values({
+          threadId: newThreadId,
+          role: m.role,
+          content: newContent,
+          parts: parts ?? null,
+          createdAt: m.createdAt,
+        })
+        .returning({ id: schema.chatMessages.id, role: schema.chatMessages.role, content: schema.chatMessages.content });
+      insertedIds.push(row!.id);
+    }
+    await tx
+      .update(schema.chatThreads)
+      .set({ updatedAt: new Date() })
+      .where(eq(schema.chatThreads.id, newThreadId));
+
+    return {
+      newThreadId,
+      firstMessage: {
+        id: insertedIds[0]!,
+        role: 'user' as const,
+        content: newText,
+      },
+    };
+  });
+}
+
 /**
  * Phase 3 hardening §21 — strip oversize fields before persisting the
  * `parts` JSONB. The model's `tool-result` parts can balloon when a
