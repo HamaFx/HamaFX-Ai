@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-import { Bot } from 'lucide-react';
+import { Bot, Sparkles, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 import { SettingsRow } from './settings-row';
@@ -29,6 +29,69 @@ export interface AIPrefs {
 }
 
 export const AI_PREFS_STORAGE_KEY = 'hamafx:ai-prefs';
+
+/**
+ * Phase A — UX_UPGRADE_PLAN.md item 6.
+ * Preset prompts the user can apply with one tap. Each preset
+ * REPLACES the current `customInstructions` field (with a confirm
+ * if the field is non-empty) and writes through `update()` so the
+ * change persists to localStorage immediately.
+ *
+ * Append mode (`appendPreset`) joins the preset text to the existing
+ * value with a blank line separator — used by the "Append" button
+ * next to each chip.
+ */
+export interface InstructionPreset {
+  id: 'concise' | 'technical' | 'challenge' | 'sources' | 'risk';
+  label: string;
+  prompt: string;
+}
+
+export const INSTRUCTION_PRESETS: readonly InstructionPreset[] = [
+  {
+    id: 'concise',
+    label: 'Be concise',
+    prompt: 'Reply in 2-3 sentences max. Lead with the answer.',
+  },
+  {
+    id: 'technical',
+    label: 'Be technical',
+    prompt:
+      'Use precise terminology. Cite indicator names and timeframes explicitly. Show your reasoning.',
+  },
+  {
+    id: 'challenge',
+    label: 'Challenge my bias',
+    prompt:
+      'When I state a directional view, give me the strongest counter-argument before agreeing.',
+  },
+  {
+    id: 'sources',
+    label: 'Cite sources inline',
+    prompt:
+      'After every factual claim, cite the tool or data point that supports it.',
+  },
+  {
+    id: 'risk',
+    label: 'Risk-first',
+    prompt:
+      'For any trade idea, lead with position sizing, stop placement, and R:R. Bias toward capital preservation.',
+  },
+] as const;
+
+/** Find a preset by id; returns null when not found. */
+export function getPreset(id: string): InstructionPreset | null {
+  return INSTRUCTION_PRESETS.find((p) => p.id === id) ?? null;
+}
+
+/** Join a preset's prompt to existing instructions with a blank line. */
+export function appendPreset(current: string, presetId: string): string {
+  const p = getPreset(presetId);
+  if (!p) return current;
+  const trimmed = current.trim();
+  if (trimmed.length === 0) return p.prompt;
+  return `${trimmed}\n\n${p.prompt}`;
+}
 
 const DEFAULTS: AIPrefs = {
   fundamentalModel: 'google-vertex/gemini-3.1-pro',
@@ -176,6 +239,50 @@ export function AIPrefsCard() {
         <p className="text-fg-muted text-xs">
           Appended to the AI's core instructions. Use this to change its formatting, personality, or behavior.
         </p>
+
+        {/* Phase A — UX_UPGRADE_PLAN.md item 6.
+            Preset chips. Each chip replaces the textarea content
+            (after a confirm if non-empty); the + button on the chip
+            appends instead. The Clear button empties the field. */}
+        <div className="flex flex-wrap items-center gap-2">
+          {INSTRUCTION_PRESETS.map((preset) => (
+            <div
+              key={preset.id}
+              className="border-divider bg-bg-elev-2 inline-flex items-center overflow-hidden rounded-full border text-caption"
+            >
+              <button
+                type="button"
+                onClick={() => applyPreset(preset.id, 'replace')}
+                aria-label={`Apply preset "${preset.label}" (replace existing instructions)`}
+                className="hover:bg-bg-elev-3 text-fg-muted hover:text-fg px-3 py-1 transition-colors"
+              >
+                <Sparkles className="mr-1 inline size-3 align-text-bottom" aria-hidden="true" />
+                {preset.label}
+              </button>
+              <button
+                type="button"
+                onClick={() => applyPreset(preset.id, 'append')}
+                aria-label={`Append preset "${preset.label}" to existing instructions`}
+                title="Append to existing"
+                className="border-divider/60 text-fg-subtle hover:text-fg hover:bg-bg-elev-3 -ml-px border-l px-2 py-1 transition-colors"
+              >
+                +
+              </button>
+            </div>
+          ))}
+          {prefs.customInstructions.length > 0 ? (
+            <button
+              type="button"
+              onClick={() => update('customInstructions', '')}
+              className="text-fg-subtle hover:text-fg ml-1 inline-flex items-center gap-1 px-2 py-1 text-caption transition-colors"
+              aria-label="Clear custom instructions"
+            >
+              <X className="size-3" aria-hidden="true" />
+              Clear
+            </button>
+          ) : null}
+        </div>
+
         <textarea
           id="custom-instructions"
           value={prefs.customInstructions}
@@ -187,6 +294,26 @@ export function AIPrefsCard() {
       </div>
     </section>
   );
+
+  /**
+   * Apply a preset. `mode === 'replace'` overwrites the textarea
+   * (with a confirm prompt if the field is non-empty). `mode ===
+   * 'append'` joins the preset text to the existing value.
+   */
+  function applyPreset(presetId: string, mode: 'replace' | 'append') {
+    if (mode === 'append') {
+      update('customInstructions', appendPreset(prefs.customInstructions, presetId));
+      return;
+    }
+    if (
+      prefs.customInstructions.trim().length > 0 &&
+      !window.confirm('Replace your existing custom instructions with this preset?')
+    ) {
+      return;
+    }
+    const preset = getPreset(presetId);
+    if (preset) update('customInstructions', preset.prompt);
+  }
 }
 
 function RowDivider() {

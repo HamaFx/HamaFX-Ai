@@ -42,3 +42,4 @@ export * from './candles-1m';
 export * from './throttle';
 export * from './intermarket-resonance';
 export * from './audit';
+export * from './provider-tests';

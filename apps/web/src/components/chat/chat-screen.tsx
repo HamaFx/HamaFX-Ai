@@ -342,7 +342,11 @@ function EmptyChatState({ pinnedSymbol, disabled, onSelect }: EmptyChatStateProp
       </div>
 
       <div className="w-full max-w-md">
-        <QuickPrompts onSelect={onSelect} {...(disabled ? { disabled: true } : {})} />
+        <QuickPrompts
+          onSelect={onSelect}
+          {...(pinnedSymbol !== undefined ? { pinnedSymbol } : {})}
+          {...(disabled ? { disabled: true } : {})}
+        />
       </div>
 
       <p className="text-fg-subtle max-w-md text-body-sm leading-relaxed">

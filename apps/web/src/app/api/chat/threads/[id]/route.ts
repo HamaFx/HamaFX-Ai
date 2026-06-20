@@ -25,9 +25,11 @@
 // the JWT. A user with a valid session for User A can never read or
 // delete User B's thread, even if they guess the UUID.
 
-import { deleteThread, getThread, listMessages } from '@hamafx/ai';
+import { deleteThread, getThread, listMessages, updateThreadPinnedSymbol } from '@hamafx/ai';
+import { SymbolSchema } from '@hamafx/shared';
+import { z } from 'zod';
 
-import { errorResponse, withAuth } from '@/lib/api';
+import { errorResponse, parseJsonBody, withAuth } from '@/lib/api';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -65,6 +67,38 @@ export const DELETE = withAuth<{ id: string }>(async (_req, { params, user }) =>
     // for threads the user doesn't own.
     await deleteThread(user.userId, id);
     return Response.json({ ok: true });
+  } catch (err) {
+    return errorResponse(err);
+  }
+});
+
+// Phase A — UX_UPGRADE_PLAN.md item 1. PATCH supports only the
+// pinnedSymbol field today. Other thread fields (title, modelOverride)
+// are mutated server-side by their own flows (auto-title generator,
+// initial creation) — keep this surface narrow so a future change
+// can extend it without re-litigating what PATCH means.
+const PatchBodySchema = z.object({
+  pinnedSymbol: SymbolSchema.nullable(),
+});
+
+export const PATCH = withAuth<{ id: string }>(async (req, { params, user }) => {
+  try {
+    const { id } = await params;
+    const body = await parseJsonBody(req, PatchBodySchema);
+    const ok = await updateThreadPinnedSymbol(user.userId, id, body.pinnedSymbol);
+    if (!ok) {
+      // 404 (not 403) so we don't leak that the thread exists for
+      // another user — matches the GET handler above.
+      return Response.json(
+        { error: { code: 'NOT_FOUND', message: 'thread not found' } },
+        { status: 404 },
+      );
+    }
+    // Re-read so the client gets the canonical updated row including
+    // the bumped updatedAt. One extra round-trip is fine for a
+    // user-initiated, low-frequency operation.
+    const thread = await getThread(user.userId, id);
+    return Response.json({ thread });
   } catch (err) {
     return errorResponse(err);
   }

@@ -36,6 +36,13 @@ import { useVoiceInput } from '@/hooks/use-voice-input';
 import { cn } from '@/lib/cn';
 import { fetchCsrf } from '@/lib/csrf';
 
+import {
+  MAX_TEXT_CHARS,
+  SOFT_LIMIT_CHARS,
+  formatCharCount,
+  getCharCountTone,
+} from './composer-helpers';
+
 export interface ComposerImage {
   id: string;
   /**
@@ -59,8 +66,9 @@ interface ComposerProps {
 const DEFAULT_LANG = 'en-US';
 const MAX_IMAGES = 4;
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
-const MAX_TEXT_CHARS = 8000;
-const SOFT_LIMIT_CHARS = 7500;
+// MAX_TEXT_CHARS and SOFT_LIMIT_CHARS are imported from ./composer-helpers
+// so the thresholds can be unit-tested and shared with the route layer if
+// the cap ever needs server-side enforcement.
 
 export function Composer({
   onSubmit,
@@ -225,9 +233,18 @@ export function Composer({
   }
 
   const charCount = value.length;
-  const showCharCount = charCount > SOFT_LIMIT_CHARS;
   const overLimit = charCount > MAX_TEXT_CHARS;
   const canSend = !disabled && !isStreaming && value.trim().length > 0 && !overLimit;
+
+  // Char-count tone — pure helper from composer-helpers so the
+  // thresholds are unit-tested in test/composer-helpers.test.ts.
+  const charCountTone = getCharCountTone(charCount);
+  const charCountClass =
+    charCountTone === 'danger'
+      ? 'text-bear font-semibold'
+      : charCountTone === 'warn'
+        ? 'text-amber-400 font-medium'
+        : 'text-fg-subtle';
 
   return (
     <div className="sticky bottom-0 px-3 pb-[max(env(safe-area-inset-bottom),12px)] transition-all duration-300 w-full max-w-4xl mx-auto z-20">
@@ -372,16 +389,20 @@ export function Composer({
 
           {/* Right Actions (Submit, Stop, Char Count) */}
           <div className="flex items-center gap-3 pb-0.5 pr-1">
-            {showCharCount ? (
-              <span
-                className={cn(
-                  'tabular-nums text-body-sm',
-                  overLimit ? 'text-bear font-semibold' : 'text-fg-subtle',
-                )}
-              >
-                {charCount}/{MAX_TEXT_CHARS}
-              </span>
-            ) : null}
+            {/*
+              Char count — visible always per UX_UPGRADE_PLAN.md item 2.
+              Tone shifts at the SOFT_LIMIT_CHARS threshold so the
+              user gets advance notice before hitting MAX_TEXT_CHARS.
+              `aria-live="polite"` so screen readers announce the
+              threshold cross without spamming every keystroke.
+            */}
+            <span
+              aria-live="polite"
+              aria-label={`${charCount} of ${MAX_TEXT_CHARS} characters used`}
+              className={cn('tabular-nums text-body-sm', charCountClass)}
+            >
+              {formatCharCount(charCount)}
+            </span>
 
             {focused && !isTouch && !isStreaming ? (
               <p className="text-fg-subtle hidden pr-1 text-caption tabular-nums sm:block">

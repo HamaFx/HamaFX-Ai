@@ -63,6 +63,7 @@ export {
   getThread,
   createThread,
   updateThreadTitle,
+  updateThreadPinnedSymbol,
   deleteThread,
   deleteAllThreads,
   listMessages,

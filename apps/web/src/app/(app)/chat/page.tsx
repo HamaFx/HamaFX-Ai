@@ -22,13 +22,22 @@
 //     the page mounts. Used by "Ask AI" affordances elsewhere
 //     (article cards, calendar events) to drop the user straight into
 //     a conversation about the thing they tapped.
-//   - Otherwise → redirect to the most recently used thread, or create
-//     a fresh one if none exist.
+//   - With ?prompt= AND no AI provider configured → still create a
+//     fresh thread but redirect to /settings/api-keys?from=chat&prompt=…
+//     so the user can configure a key, then the prompt is preserved
+//     (api-keys banner reads it and offers "Continue to chat").
+//   - Otherwise → check that the user has at least one AI provider
+//     configured (Phase A item 4). If not, redirect to
+//     /settings/api-keys?from=chat. Otherwise redirect to the most
+//     recently used thread, or create a fresh one if none exist.
 
+import { configuredProviders, decryptByok } from '@hamafx/shared/encryption';
 import { createThread, listThreads } from '@hamafx/ai';
 import { redirect } from 'next/navigation';
 
 import { auth } from '@/auth';
+import { getDb, schema } from '@hamafx/db';
+import { eq } from 'drizzle-orm';
 
 export const dynamic = 'force-dynamic';
 
@@ -42,6 +51,22 @@ export default async function ChatLanding({ searchParams }: PageProps) {
   if (!userId) redirect('/login');
 
   const { prompt } = await searchParams;
+
+  // Phase A item 4 — auto-redirect to api-keys when the user has no
+  // configured provider. We check aiApiKeys on the user's settings
+  // row, decrypt, and ask `configuredProviders()` whether any key is
+  // present. A single DB round-trip; the helper is pure.
+  const db = getDb();
+  const [settings] = await db
+    .select({ aiApiKeys: schema.userSettings.aiApiKeys })
+    .from(schema.userSettings)
+    .where(eq(schema.userSettings.userId, userId));
+  const providers = configuredProviders(decryptByok(settings?.aiApiKeys));
+  if (providers.length === 0) {
+    const params = new URLSearchParams({ from: 'chat' });
+    if (prompt && prompt.trim().length > 0) params.set('prompt', prompt);
+    redirect(`/settings/api-keys?${params.toString()}`);
+  }
 
   if (prompt && prompt.trim().length > 0) {
     const fresh = await createThread(userId);

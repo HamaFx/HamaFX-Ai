@@ -71,6 +71,13 @@
       "when": 1781833529700,
       "tag": "0009_rare_iron_fist",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1782000000000,
+      "tag": "0010_provider_tests",
+      "breakpoints": true
     }
   ]
 }

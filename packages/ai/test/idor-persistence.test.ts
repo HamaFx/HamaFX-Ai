@@ -76,6 +76,7 @@ import {
   deleteThread,
   getThread,
   listMessages,
+  updateThreadPinnedSymbol,
 } from '../src/persistence';
 
 // The mock in the hoisted block exposes `__setDb` so we can register
@@ -170,5 +171,51 @@ describe('Phase B IDOR fix — getThread / listMessages / deleteThread', () => {
     const fake = '00000000-0000-0000-0000-deadbeef0000';
     const result = await getThread(USER_A, fake);
     expect(result).toBeNull();
+  });
+});
+
+describe('Phase A item 1 — updateThreadPinnedSymbol IDOR + behavior', () => {
+  it('User A can set a pinned symbol on their own thread', async () => {
+    await seedUser(USER_A, 'a@example.com');
+    const aThread = await createThread(USER_A);
+    expect(aThread.pinnedSymbol).toBeNull();
+
+    const ok = await updateThreadPinnedSymbol(USER_A, aThread.id, 'XAUUSD');
+    expect(ok).toBe(true);
+
+    const after = await getThread(USER_A, aThread.id);
+    expect(after?.pinnedSymbol).toBe('XAUUSD');
+  });
+
+  it('User A can clear their own thread pin (pinnedSymbol -> null)', async () => {
+    await seedUser(USER_A, 'a@example.com');
+    const aThread = await createThread(USER_A, { pinnedSymbol: 'EURUSD' });
+
+    const ok = await updateThreadPinnedSymbol(USER_A, aThread.id, null);
+    expect(ok).toBe(true);
+
+    const after = await getThread(USER_A, aThread.id);
+    expect(after?.pinnedSymbol).toBeNull();
+  });
+
+  it('User B cannot change User A\'s thread pin (returns false, no mutation)', async () => {
+    await seedUser(USER_A, 'a@example.com');
+    await seedUser(USER_B, 'b@example.com');
+    const aThread = await createThread(USER_A, { pinnedSymbol: 'XAUUSD' });
+
+    const ok = await updateThreadPinnedSymbol(USER_B, aThread.id, 'GBPUSD');
+    // The boolean return is what the route handler maps to a 404.
+    expect(ok).toBe(false);
+
+    // A's thread is unchanged.
+    const after = await getThread(USER_A, aThread.id);
+    expect(after?.pinnedSymbol).toBe('XAUUSD');
+  });
+
+  it('returns false (not throws) for a non-existent thread id', async () => {
+    await seedUser(USER_A, 'a@example.com');
+    const fake = '00000000-0000-0000-0000-deadbeef0000';
+    const ok = await updateThreadPinnedSymbol(USER_A, fake, 'XAUUSD');
+    expect(ok).toBe(false);
   });
 });

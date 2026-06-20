@@ -36,6 +36,7 @@ import {
 import { PriceTag } from '@/components/chart/price-tag';
 import { SymbolPicker } from '@/components/chart/symbol-picker';
 import { TimeframePicker } from '@/components/chart/timeframe-picker';
+import { PinToChat } from '@/components/chart/pin-to-chat';
 import { StaleIndicator } from '@/components/ui/stale-indicator';
 import { Tooltip } from '@/components/ui/tooltip';
 import { useChartData } from '@/hooks/use-chart-data';
@@ -265,7 +266,11 @@ export function ChartView({ symbol }: { symbol: Symbol }) {
             </div>
             <div className="flex shrink-0 items-center gap-2">
               <StaleIndicator isFetching={isFetching && !isLoading} />
-              
+
+              {/* Phase A — UX_UPGRADE_PLAN.md item 1: Pin the current
+                  symbol to a new chat thread and deep-link into it. */}
+              <PinToChat symbol={symbol} />
+
               {/* Overlays Sheet */}
               <OverlaySheet active={activeOverlays} onToggle={toggleOverlay} />
               

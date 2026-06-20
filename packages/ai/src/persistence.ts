@@ -101,6 +101,28 @@ export async function updateThreadTitle(
     .where(eq(schema.chatThreads.id, id));
 }
 
+/**
+ * Set or clear the pinnedSymbol on a thread.
+ *
+ * Phase A — UX_UPGRADE_PLAN.md item 1. Scoped by userId so a caller
+ * can never mutate another user's thread, even if they hold a valid
+ * session and guess the UUID. Returns true when a row was updated,
+ * false when the thread does not exist or is not owned by userId
+ * (the route handler maps the false case to a 404).
+ */
+export async function updateThreadPinnedSymbol(
+  userId: string,
+  id: string,
+  pinnedSymbol: Symbol | null,
+): Promise<boolean> {
+  const updated = await getDb()
+    .update(schema.chatThreads)
+    .set({ pinnedSymbol, updatedAt: new Date() })
+    .where(and(eq(schema.chatThreads.id, id), eq(schema.chatThreads.userId, userId)))
+    .returning({ id: schema.chatThreads.id });
+  return updated.length > 0;
+}
+
 export async function deleteThread(userId: string, id: string): Promise<void> {
   // Phase B — IDOR fix. Filter on userId so a user can only delete
   // their own threads.

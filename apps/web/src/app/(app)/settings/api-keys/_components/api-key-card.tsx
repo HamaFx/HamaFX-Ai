@@ -25,11 +25,23 @@ import type { ProviderMeta } from '@hamafx/shared';
 interface ApiKeyCardProps {
   provider: ProviderMeta;
   currentValue: string;
+  /**
+   * Optional latest health snapshot from the server. Used to render
+   * the badge in the card header. When undefined, the card omits the
+   * badge (no test has been run yet).
+   *
+   * Phase A — UX_UPGRADE_PLAN.md item 7.
+   */
+  health?: {
+    ok: boolean;
+    error: string | null;
+    testedAt: string;
+  };
 }
 
 type TestState = { kind: 'idle' } | { kind: 'pending' } | { kind: 'ok' } | { kind: 'err'; message: string };
 
-export function ApiKeyCard({ provider, currentValue }: ApiKeyCardProps) {
+export function ApiKeyCard({ provider, currentValue, health }: ApiKeyCardProps) {
   const [revealed, setRevealed] = useState(false);
   const [value, setValue] = useState(currentValue);
   const [test, setTest] = useState<TestState>({ kind: 'idle' });
@@ -67,12 +79,15 @@ export function ApiKeyCard({ provider, currentValue }: ApiKeyCardProps) {
     <div className="border border-divider bg-bg-elev-1 rounded-lg p-4 flex flex-col gap-3">
       <div className="flex items-baseline justify-between gap-4">
         <div className="flex flex-col gap-1">
-          <label
-            htmlFor={`key-${provider.id}`}
-            className="text-sm font-medium text-fg"
-          >
-            {provider.displayName}
-          </label>
+          <div className="flex items-center gap-2">
+            <label
+              htmlFor={`key-${provider.id}`}
+              className="text-sm font-medium text-fg"
+            >
+              {provider.displayName}
+            </label>
+            <HealthBadge health={health} />
+          </div>
           <p className="text-xs text-fg-subtle">{provider.description}</p>
         </div>
         {isSet && test.kind !== 'pending' && (
@@ -145,4 +160,82 @@ export function ApiKeyCard({ provider, currentValue }: ApiKeyCardProps) {
       )}
     </div>
   );
+}
+
+/**
+ * <HealthBadge> — colored dot showing the latest test result for a
+ * provider. Pure presentation; tone logic lives in `getHealthTone`
+ * below so it can be unit-tested without rendering React.
+ *
+ * Phase A — UX_UPGRADE_PLAN.md item 7.
+ */
+export type HealthTone = 'green' | 'yellow' | 'red' | 'grey';
+
+interface HealthBadgeProps {
+  health?: ApiKeyCardProps['health'];
+}
+
+/**
+ * Pure helper — maps a health snapshot to a tone. Exported for tests.
+ *   - undefined / no test  -> 'grey'  (never tested)
+ *   - ok=true, fresh (<24h) -> 'green'
+ *   - ok=true, stale (24-168h) -> 'yellow'
+ *   - ok=true, very stale (>168h) -> 'grey' (treat as unknown)
+ *   - ok=false, any time   -> 'red'
+ */
+export function getHealthTone(
+  health: HealthBadgeProps['health'],
+  now: Date = new Date(),
+): HealthTone {
+  if (!health) return 'grey';
+  if (!health.ok) return 'red';
+  const tested = new Date(health.testedAt);
+  const ageMs = now.getTime() - tested.getTime();
+  if (ageMs < 24 * 3600_000) return 'green';
+  if (ageMs < 168 * 3600_000) return 'yellow';
+  return 'grey';
+}
+
+function HealthBadge({ health }: HealthBadgeProps) {
+  const tone = getHealthTone(health);
+  const colorClass =
+    tone === 'green'
+      ? 'bg-bull'
+      : tone === 'yellow'
+        ? 'bg-warn'
+        : tone === 'red'
+          ? 'bg-bear'
+          : 'bg-fg-subtle/40';
+
+  const label =
+    !health
+      ? 'Not yet tested'
+      : !health.ok
+        ? `Test failed${health.error ? `: ${health.error}` : ''}`
+        : `Last tested ${formatRelative(new Date(health.testedAt))}`;
+
+  return (
+    <span
+      aria-label={label}
+      title={label}
+      className="inline-flex items-center"
+    >
+      <span
+        aria-hidden="true"
+        className={`inline-block size-2 rounded-full ${colorClass}`}
+      />
+    </span>
+  );
+}
+
+function formatRelative(ms: number | Date): string {
+  const date = typeof ms === 'number' ? new Date(ms) : ms;
+  const diff = Date.now() - date.getTime();
+  const min = Math.round(diff / 60_000);
+  if (min < 1) return 'just now';
+  if (min < 60) return `${min}m ago`;
+  const hr = Math.round(min / 60);
+  if (hr < 24) return `${hr}h ago`;
+  const day = Math.round(hr / 24);
+  return `${day}d ago`;
 }

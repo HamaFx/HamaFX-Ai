@@ -27,7 +27,7 @@
 // doesn't open" intermittent bug caused by stacked drawer instances.
 
 import type { Symbol } from '@hamafx/shared';
-import { Loader2, MessagesSquare, MoreHorizontal, Plus, Search, Sparkles, Trash2 } from 'lucide-react';
+import { Loader2, MessagesSquare, MoreHorizontal, Plus, Search, Sparkles, Trash2, Check } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useRef, useState, useTransition } from 'react';
 import { toast } from 'sonner';
@@ -38,6 +38,7 @@ import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from '@/components/u
 import { Tooltip } from '@/components/ui/tooltip';
 import { cn } from '@/lib/cn';
 import { fetchCsrf } from '@/lib/csrf';
+import { SymbolChip } from '@/components/ui/symbol-chip';
 export interface ThreadSummary {
   id: string;
   title: string | null;
@@ -58,6 +59,7 @@ export function ChatTopBar({ threadId, title, pinnedSymbol, threads, isStreaming
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [pending, startTransition] = useTransition();
+  const [unpinning, setUnpinning] = useState(false);
   const [confirmEl, confirm] = useConfirm();
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -123,6 +125,33 @@ export function ChatTopBar({ threadId, title, pinnedSymbol, threads, isStreaming
     });
   }
 
+  /**
+   * Phase A — UX_UPGRADE_PLAN.md item 1.
+   * Clear the thread's pinnedSymbol via PATCH. The placeholder in
+   * the composer updates on the next render (parent passes the
+   * updated thread down via router.refresh()).
+   */
+  async function clearPin() {
+    if (unpinning) return;
+    setUnpinning(true);
+    try {
+      const res = await fetchCsrf(`/api/chat/threads/${threadId}`, {
+        method: 'PATCH',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ pinnedSymbol: null }),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      toast.success('Pin cleared');
+      router.refresh();
+    } catch (err) {
+      toast.error('Could not clear pin', {
+        description: err instanceof Error ? err.message : 'unknown',
+      });
+    } finally {
+      setUnpinning(false);
+    }
+  }
+
   return (
     <header
       className={cn(
@@ -147,9 +176,11 @@ export function ChatTopBar({ threadId, title, pinnedSymbol, threads, isStreaming
             <div className="flex max-w-full items-center gap-1.5">
               <h1 className="text-fg truncate text-body-sm font-semibold tracking-tight">{title}</h1>
               {pinnedSymbol ? (
-                <span className="bg-brand/15 text-brand ring-brand/30 shrink-0 rounded-full px-2 py-0.5 text-caption font-bold uppercase tabular-nums ring-1">
-                  {pinnedSymbol}
-                </span>
+                <SymbolChip
+                  symbol={pinnedSymbol}
+                  clearing={unpinning}
+                  onClear={() => void clearPin()}
+                />
               ) : null}
             </div>
             <p className="text-fg-subtle text-caption tabular-nums">
@@ -248,6 +279,12 @@ interface ThreadSwitcherProps {
 function ThreadSwitcher({ open, onOpenChange, threadId, threads, onPickNew }: ThreadSwitcherProps) {
   const router = useRouter();
   const [query, setQuery] = useState('');
+  // Phase A — UX_UPGRADE_PLAN.md item 5.
+  // Bulk-select mode. Only enabled when there are >5 threads so
+  // users with small thread lists aren't shown UI they don't need.
+  const [selectMode, setSelectMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [deleting, setDeleting] = useState(false);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -256,12 +293,82 @@ function ThreadSwitcher({ open, onOpenChange, threadId, threads, onPickNew }: Th
   }, [query, threads]);
 
   const showSearch = threads.length > 5;
+  const showSelectToggle = threads.length > 5;
+
+  function toggleSelected(id: string) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  function exitSelectMode() {
+    setSelectMode(false);
+    setSelectedIds(new Set());
+  }
+
+  async function bulkDelete() {
+    if (selectedIds.size === 0 || deleting) return;
+    const ids = Array.from(selectedIds);
+    const ok = window.confirm(
+      `Delete ${ids.length} conversation${ids.length === 1 ? '' : 's'}? This cannot be undone.`,
+    );
+    if (!ok) return;
+    setDeleting(true);
+    try {
+      const res = await fetchCsrf('/api/chat/threads/bulk-delete', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ ids }),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const json = (await res.json()) as { deleted?: number };
+      toast.success(`Deleted ${json.deleted ?? ids.length}`);
+      // If the active thread was deleted, jump to /chat (the
+      // landing route will pick the next-most-recent or create
+      // a fresh one). Otherwise stay put.
+      if (selectedIds.has(threadId)) {
+        const remaining = threads.find((t) => !selectedIds.has(t.id));
+        router.push(remaining ? `/chat/${remaining.id}` : '/chat');
+      } else {
+        router.refresh();
+      }
+      exitSelectMode();
+      onOpenChange(false);
+    } catch (err) {
+      toast.error('Bulk delete failed', {
+        description: err instanceof Error ? err.message : 'unknown',
+      });
+    } finally {
+      setDeleting(false);
+    }
+  }
 
   return (
-    <Drawer open={open} onOpenChange={onOpenChange}>
+    <Drawer
+      open={open}
+      onOpenChange={(v) => {
+        if (!v) exitSelectMode();
+        onOpenChange(v);
+      }}
+    >
       <DrawerContent>
         <DrawerHeader>
-          <DrawerTitle>Conversations</DrawerTitle>
+          <div className="flex items-center justify-between gap-2">
+            <DrawerTitle>Conversations</DrawerTitle>
+            {showSelectToggle ? (
+              <button
+                type="button"
+                onClick={() => (selectMode ? exitSelectMode() : setSelectMode(true))}
+                aria-pressed={selectMode}
+                className="text-fg-muted hover:text-fg border-divider/60 hover:bg-bg-elev-2 inline-flex h-9 items-center gap-1.5 rounded-full border px-3 text-caption font-medium"
+              >
+                {selectMode ? 'Cancel' : 'Select'}
+              </button>
+            ) : null}
+          </div>
         </DrawerHeader>
 
         {showSearch ? (
@@ -311,21 +418,41 @@ function ThreadSwitcher({ open, onOpenChange, threadId, threads, onPickNew }: Th
           ) : (
             filtered.map((t) => {
               const isActive = t.id === threadId;
+              const isSelected = selectedIds.has(t.id);
               return (
                 <li key={t.id}>
                   <button
                     type="button"
                     onClick={() => {
+                      if (selectMode) {
+                        toggleSelected(t.id);
+                        return;
+                      }
                       onOpenChange(false);
                       if (!isActive) router.push(`/chat/${t.id}`);
                     }}
+                    aria-pressed={selectMode ? isSelected : undefined}
                     className={cn(
                       'flex min-h-[56px] w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm transition-colors',
-                      isActive
+                      isActive && !selectMode
                         ? 'bg-bg-elev-3 text-fg'
                         : 'text-fg-muted hover:bg-bg-elev-2 hover:text-fg',
+                      isSelected && 'ring-1 ring-brand/40 bg-brand/10 text-fg',
                     )}
                   >
+                    {selectMode ? (
+                      <span
+                        aria-hidden="true"
+                        className={cn(
+                          'inline-flex size-5 shrink-0 items-center justify-center rounded-md border',
+                          isSelected ? 'bg-brand border-brand text-bg' : 'border-divider/80 bg-bg-elev-1',
+                        )}
+                      >
+                        {isSelected ? (
+                          <Check className="size-3" strokeWidth={3} />
+                        ) : null}
+                      </span>
+                    ) : null}
                     <div className="min-w-0 flex-1">
                       <span className="block truncate font-semibold">
                         {t.title ?? 'New conversation'}
@@ -345,6 +472,41 @@ function ThreadSwitcher({ open, onOpenChange, threadId, threads, onPickNew }: Th
             })
           )}
         </ul>
+
+        {selectMode ? (
+          <div
+            role="toolbar"
+            aria-label="Bulk actions"
+            className="border-divider bg-bg-elev-1 sticky bottom-0 flex items-center justify-between gap-2 border-t p-3"
+          >
+            <span className="text-fg-muted text-caption">
+              {selectedIds.size} selected
+            </span>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={exitSelectMode}
+                className="text-fg-muted hover:text-fg border-divider/60 hover:bg-bg-elev-2 inline-flex h-9 items-center rounded-full border px-3 text-caption font-medium"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => void bulkDelete()}
+                disabled={selectedIds.size === 0 || deleting}
+                aria-label={`Delete ${selectedIds.size} selected conversation${selectedIds.size === 1 ? '' : 's'}`}
+                className="text-bear border-bear/40 hover:bg-bear/15 inline-flex h-9 items-center gap-1.5 rounded-full border px-3 text-caption font-semibold disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {deleting ? (
+                  <Loader2 className="size-3 animate-spin" aria-hidden="true" />
+                ) : (
+                  <Trash2 className="size-3.5" aria-hidden="true" />
+                )}
+                Delete selected ({selectedIds.size})
+              </button>
+            </div>
+          </div>
+        ) : null}
       </DrawerContent>
     </Drawer>
   );

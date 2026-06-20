@@ -18,6 +18,7 @@ import { auth } from '@/auth';
 import { getDb, schema } from '@hamafx/db';
 import { eq } from 'drizzle-orm';
 import { Button } from '@/components/ui/button';
+import Link from 'next/link';
 import { revalidatePath } from 'next/cache';
 import {
   encryptByok,
@@ -28,6 +29,7 @@ import {
 } from '@hamafx/shared/encryption';
 import { BYOK_PROVIDERS, BYOK_PROVIDERS_LIST } from '@hamafx/ai';
 import { ApiKeyCard } from './_components/api-key-card';
+import { ApiKeysLandingBanner } from './_components/api-keys-landing-banner';
 
 async function updateApiKeys(formData: FormData) {
   'use server';
@@ -56,9 +58,22 @@ async function updateApiKeys(formData: FormData) {
   revalidatePath('/settings/api-keys');
 }
 
-export default async function ApiKeysSettingsPage() {
+export default async function ApiKeysSettingsPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ from?: string; prompt?: string }>;
+}) {
   const session = await auth();
   if (!session?.user?.id) return null;
+
+  // Phase A — UX_UPGRADE_PLAN.md item 4. When the user lands here
+  // from /chat with no AI provider configured, surface a dismissible
+  // banner that explains what to do. The banner also offers a deep
+  // link back to /chat carrying the original ?prompt= if any, so
+  // "Ask AI" affordances don't lose the user's intent.
+  const sp = (await searchParams) ?? {};
+  const fromChat = sp.from === 'chat';
+  const preservedPrompt = sp.prompt && sp.prompt.trim().length > 0 ? sp.prompt : null;
 
   const db = getDb();
   const [settings] = await db.select({ aiApiKeys: schema.userSettings.aiApiKeys })
@@ -66,6 +81,32 @@ export default async function ApiKeysSettingsPage() {
     .where(eq(schema.userSettings.userId, session.user.id));
 
   const decrypted = settings?.aiApiKeys ? decryptByok(settings.aiApiKeys) : null;
+
+  // Phase A — UX_UPGRADE_PLAN.md item 7. Load the latest health
+  // snapshot per provider so the badge can render without waiting
+  // for the user to click "Test". Single round-trip; the row PK
+  // is (userId, providerId) so the result is naturally keyed.
+  const healthRows = await db
+    .select({
+      providerId: schema.providerTests.providerId,
+      ok: schema.providerTests.ok,
+      error: schema.providerTests.error,
+      testedAt: schema.providerTests.testedAt,
+    })
+    .from(schema.providerTests)
+    .where(eq(schema.providerTests.userId, session.user.id));
+  const healthByProvider = new Map(
+    healthRows.map((h) => [
+      h.providerId,
+      {
+        ok: h.ok,
+        error: h.error,
+        // testedAt has `mode: 'string'` in the schema, so the value
+        // is always a string already — no Date coercion needed.
+        testedAt: h.testedAt,
+      },
+    ]),
+  );
 
   // Strip server-only fields (factory, defaultModels) before crossing the
   // server→client boundary. RSC serializes props; functions can't be
@@ -87,6 +128,12 @@ export default async function ApiKeysSettingsPage() {
 
   return (
     <div className="flex flex-col gap-6 max-w-2xl">
+      {fromChat ? (
+        <ApiKeysLandingBanner
+          {...(preservedPrompt ? { prompt: preservedPrompt } : {})}
+        />
+      ) : null}
+
       <div>
         <h2 className="text-lg font-semibold text-fg">API Keys</h2>
         <p className="text-sm text-fg-subtle">
@@ -100,29 +147,45 @@ export default async function ApiKeysSettingsPage() {
           <h3 className="text-sm font-medium text-fg-subtle uppercase tracking-wide">
             Free tier
           </h3>
-          {freeProviders.map((p) => (
-            <ApiKeyCard
-              key={p.id}
-              provider={p}
-              currentValue={decrypted?.[p.id as ProviderId] ?? ''}
-            />
-          ))}
+          {freeProviders.map((p) => {
+            const health = healthByProvider.get(p.id);
+            return (
+              <ApiKeyCard
+                key={p.id}
+                provider={p}
+                currentValue={decrypted?.[p.id as ProviderId] ?? ''}
+                {...(health ? { health } : {})}
+              />
+            );
+          })}
         </section>
 
         <section className="flex flex-col gap-3">
           <h3 className="text-sm font-medium text-fg-subtle uppercase tracking-wide">
             Paid tier
           </h3>
-          {paidProviders.map((p) => (
-            <ApiKeyCard
-              key={p.id}
-              provider={p}
-              currentValue={decrypted?.[p.id as ProviderId] ?? ''}
-            />
-          ))}
+          {paidProviders.map((p) => {
+            const health = healthByProvider.get(p.id);
+            return (
+              <ApiKeyCard
+                key={p.id}
+                provider={p}
+                currentValue={decrypted?.[p.id as ProviderId] ?? ''}
+                {...(health ? { health } : {})}
+              />
+            );
+          })}
         </section>
 
-        <div className="flex justify-end">
+        <div className="flex justify-end gap-2">
+          {fromChat && preservedPrompt ? (
+            <Link
+              href={`/chat?prompt=${encodeURIComponent(preservedPrompt)}`}
+              className="border border-divider bg-bg-elev-2 text-fg hover:bg-bg-elev-3 inline-flex h-12 items-center justify-center rounded-lg px-4 text-sm font-medium"
+            >
+              Skip and continue to chat
+            </Link>
+          ) : null}
           <Button type="submit">Save Keys</Button>
         </div>
       </form>
