@@ -85,7 +85,7 @@
    * Apply via `text-display-{size}` utility (declared below). */
   --text-display-2xl: clamp(2.25rem, 1.5rem + 3.5vw, 3.5rem);
   --text-display-xl: clamp(1.75rem, 1.2rem + 2.5vw, 2.5rem);
-  --text-display-lg: clamp(1.375rem, 1rem + 1.5vw, 1.75rem);
+  --text-display-lg: clamp(1.25rem, 1rem + 1vw, 1.5rem);
   --text-display-md: clamp(1.125rem, 1rem + 0.5vw, 1.25rem);
 
   /* Body scale — replaces ad-hoc `text-[11px]`, `text-[10px]`, `text-xs`

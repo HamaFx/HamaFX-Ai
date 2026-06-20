@@ -76,7 +76,7 @@ export function StatCard({ icon, label, value, tone = 'fg', sparkline }: StatCar
       </div>
       <div
         className={cn(
-          'text-numeric-xl font-bold tabular-nums leading-none tracking-tight',
+          'text-numeric-lg font-bold tabular-nums leading-none tracking-tight',
           TONE_CLASS[tone],
         )}
       >

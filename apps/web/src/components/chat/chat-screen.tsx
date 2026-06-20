@@ -333,7 +333,7 @@ function EmptyChatState({ pinnedSymbol, disabled, onSelect }: EmptyChatStateProp
         <Sparkles className="size-9" strokeWidth={1.75} />
       </span>
       <div className="flex max-w-md flex-col gap-2">
-        <h2 className="text-fg text-2xl font-bold tracking-tight">How can I help?</h2>
+        <h2 className="text-fg text-xl font-bold tracking-tight">How can I help?</h2>
         <p className="text-fg-muted text-sm leading-relaxed">
           {pinnedSymbol
             ? `Ask about ${pinnedSymbol} bias, structure, news, or set an alert.`

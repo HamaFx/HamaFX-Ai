@@ -48,7 +48,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
             priority
           />
           <div className="flex flex-col gap-2">
-            <h1 className="text-fg text-3xl font-bold tracking-tight">
+            <h1 className="text-fg text-2xl font-bold tracking-tight sm:text-3xl">
               Hama<span className="text-brand">FX</span>
               <span className="text-fg-subtle font-normal">·Ai</span>
             </h1>
