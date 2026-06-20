@@ -17,8 +17,6 @@
 import { auth } from '@/auth';
 import { getDb, schema } from '@hamafx/db';
 import { eq } from 'drizzle-orm';
-import { Button } from '@/components/ui/button';
-import Link from 'next/link';
 import { revalidatePath } from 'next/cache';
 import {
   encryptByok,
@@ -35,32 +33,63 @@ import {
 import { ApiKeyCard } from './_components/api-key-card';
 import { ApiKeysLandingBanner } from './_components/api-keys-landing-banner';
 import { BulkTestButton } from './_components/bulk-test-button';
+import { SaveBar } from './_components/save-bar';
 
-async function updateApiKeys(formData: FormData) {
+/**
+ * Phase D — server action result type. The client reads this via
+ * useActionState to show "saving…" → "Saved!" feedback and any
+ * error toast on failure.
+ */
+export type SaveKeysResult =
+  | { status: 'idle' }
+  | { status: 'success'; savedCount: number; clearedCount: number; at: number }
+  | { status: 'error'; message: string };
+
+async function updateApiKeys(
+  _prevState: SaveKeysResult,
+  formData: FormData,
+): Promise<SaveKeysResult> {
   'use server';
   const session = await auth();
-  if (!session?.user?.id) throw new Error('Not authenticated');
+  if (!session?.user?.id) {
+    return { status: 'error', message: 'Not authenticated' };
+  }
 
   // Build the encrypted payload from the submitted keys. Empty
   // strings clear a previously stored key (don't keep stale entries).
   const keys: ByokPayload = {};
+  let clearedCount = 0;
   for (const id of PROVIDER_IDS) {
     const raw = formData.get(id);
     if (typeof raw === 'string' && raw.trim().length > 0) {
       keys[id] = raw.trim();
+    } else {
+      clearedCount += 1;
     }
   }
 
-  const db = getDb();
-  await db.update(schema.userSettings)
-    .set({
-      // Always store the payload — even an empty object — so a "clear
-      // all" action works by submitting the form with empty fields.
-      aiApiKeys: Object.keys(keys).length > 0 ? encryptByok(keys) : null,
-    })
-    .where(eq(schema.userSettings.userId, session.user.id));
-
-  revalidatePath('/settings/api-keys');
+  try {
+    const db = getDb();
+    await db.update(schema.userSettings)
+      .set({
+        // Always store the payload — even an empty object — so a "clear
+        // all" action works by submitting the form with empty fields.
+        aiApiKeys: Object.keys(keys).length > 0 ? encryptByok(keys) : null,
+      })
+      .where(eq(schema.userSettings.userId, session.user.id));
+    revalidatePath('/settings/api-keys');
+    return {
+      status: 'success',
+      savedCount: Object.keys(keys).length,
+      clearedCount,
+      at: Date.now(),
+    };
+  } catch (err) {
+    return {
+      status: 'error',
+      message: err instanceof Error ? err.message : String(err),
+    };
+  }
 }
 
 /**
@@ -272,7 +301,10 @@ export default async function ApiKeysSettingsPage({
         </div>
       ) : null}
 
-      <form action={updateApiKeys} className="flex flex-col gap-8">
+      <SaveBar
+        action={updateApiKeys}
+        {...(fromChat && preservedPrompt ? { preservedPrompt } : {})}
+      >
         {configured.length > 0 ? (
           <section className="flex flex-col gap-3">
             <h3 className="text-sm font-medium text-fg-subtle uppercase tracking-wide">
@@ -314,19 +346,7 @@ export default async function ApiKeysSettingsPage({
             })}
           </section>
         ) : null}
-
-        <div className="flex justify-end gap-2">
-          {fromChat && preservedPrompt ? (
-            <Link
-              href={`/chat?prompt=${encodeURIComponent(preservedPrompt)}`}
-              className="border border-divider bg-bg-elev-2 text-fg hover:bg-bg-elev-3 inline-flex h-12 items-center justify-center rounded-lg px-4 text-sm font-medium"
-            >
-              Skip and continue to chat
-            </Link>
-          ) : null}
-          <Button type="submit">Save Keys</Button>
-        </div>
-      </form>
+      </SaveBar>
     </div>
   );
 }

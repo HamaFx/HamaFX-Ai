@@ -159,6 +159,7 @@ import {
   type ByokProviderSpec,
   type ModelDomain,
 } from './byok-providers';
+import { generateText } from 'ai';
 import { PROVIDER_IDS } from '@hamafx/shared/byok';
 
 /**
@@ -376,20 +377,63 @@ export async function testProviderKey(
     }
   }
 
-  // Use the cheapest model to test connection — we just want a round-trip.
-  // We deliberately don't call the model here — that would require a full
-  // AI SDK stream roundtrip. Instead we instantiate the provider SDK
-  // which validates auth shape (base URL, headers). The real test happens
-  // on the first chat turn.
+  // Phase D — bug fix: the previous version of this function only
+  // instantiated `spec.factory(apiKey)`, which for the OpenAI-compatible
+  // shim (Mistral/OpenRouter/xAI/DeepSeek/Groq) and the Anthropic SDK is a
+  // pure local construction — it stores the key in a closure and returns a
+  // builder without ever contacting the provider. That meant the test
+  // returned `ok: true` for any well-formed string, even complete junk.
+  // Users saw "key works" and the actual chat then failed with a 401.
+  //
+  // The fix: actually call the provider with the cheapest model we know.
+  // We budget `maxOutputTokens: 1` so the round-trip costs pennies, and we
+  // use `fundamental` because every BYOK spec defines one (chat-capable).
+  // Vertex is special-cased — the SA JSON is parsed locally for shape
+  // before we even reach here (above), and we still call the model to
+  // prove the credentials are accepted by the GCP IAM endpoint.
   try {
-    spec.factory(apiKey);
+    const builder = spec.factory(apiKey);
+    const modelId = spec.defaultModels.fundamental;
+    const model = builder(modelId);
+    await generateText({
+      model,
+      prompt: 'ping',
+      maxOutputTokens: 1,
+      // Abort quickly on auth failures — most providers respond in <1s
+      // with 401/403; if we time out, the test was 5s of waiting.
+      abortSignal: AbortSignal.timeout(5_000),
+    });
     return { ok: true };
   } catch (err) {
-    return {
-      ok: false,
-      error: err instanceof Error ? err.message : String(err),
-    };
+    // AI SDK wraps provider errors with statusCode + responseBody. Pull
+    // the most useful line out for the UI to display. Example shapes:
+    //   APICallError: "Provider API error: 401 Unauthorized" (OpenAI)
+    //   APICallError: "Provider returned error 401 from ... "
+    //   InvalidResponseDataError: ...
+    //   plain Error: "fetch failed" (network down)
+    const message =
+      err instanceof Error
+        ? // APICallError exposes .statusCode and .responseBody
+          (err as { statusCode?: number; responseBody?: string }).statusCode !==
+          undefined
+          ? `HTTP ${(err as { statusCode?: number }).statusCode} — ${extractErrorMessage(err.message)}`
+          : extractErrorMessage(err.message)
+        : String(err);
+    return { ok: false, error: message };
   }
+}
+
+/**
+ * Strip a verbose AI SDK error down to the user-facing sentence.
+ * The SDK often appends stack-trace-style noise (URLs, provider
+ * name in brackets). For the api-keys card we want a single line.
+ */
+function extractErrorMessage(raw: string): string {
+  // Take only the first line; most error messages from the SDK are
+  // newline-free but `APICallError` sometimes embeds a JSON blob.
+  const firstLine = raw.split('\n')[0]?.trim() ?? raw;
+  // Trim trailing dots for consistency (UI will append its own).
+  return firstLine.replace(/\.+$/, '').slice(0, 160);
 }
 
 // Re-export the registry helpers for downstream callers.
