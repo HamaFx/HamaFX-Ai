@@ -14,13 +14,19 @@
  * limitations under the License.
  */
 
-import { boolean, index, jsonb, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import { boolean, index, integer, jsonb, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { users } from './auth';
 
 /**
  * Alerts. The `rule` column holds the discriminated-union AlertRule schema
  * (see @hamafx/shared/schemas/alerts) as JSONB so we can evolve rule shapes
  * without migrations.
+ *
+ * Phase C — UX_UPGRADE_PLAN.md item 17. Snooze support:
+ *   - `snoozeHours` (int, 0..168): when an alert fires and snooze is
+ *     set, the cron defers re-firing until lastFiredAt + interval.
+ *   - `lastFiredAt` (timestamptz): the previous fire time used as
+ *     the snooze baseline. NULL = never fired.
  */
 export const alerts = pgTable(
   'alerts',
@@ -35,7 +41,28 @@ export const alerts = pgTable(
     note: text('note'),
     active: boolean('active').notNull().default(true),
     firedAt: timestamp('fired_at', { withTimezone: true }),
+    /**
+     * Phase C — item 17. When the alert fires, the cron writes the
+     * current evaluation time here. Subsequent scans check
+     * `lastFiredAt + snoozeHours interval` to decide whether to
+     * re-fire. NULL = never fired, so the cron uses
+     * `firedAt IS NULL` as the "ready to fire for the first time"
+     * predicate.
+     */
+    lastFiredAt: timestamp('last_fired_at', { withTimezone: true }),
+    /**
+     * Phase C — item 17. Snooze in hours (0..168). 0 = no snooze
+     * (one-shot, the legacy behavior). Any value > 0 means: after
+     * firing, the alert goes dormant for that many hours before
+     * becoming eligible to re-fire.
+     */
+    snoozeHours: integer('snooze_hours').notNull().default(0),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   },
-  (t) => [index('alerts_user_id_idx').on(t.userId), index('alerts_active_idx').on(t.active), index('alerts_fired_at_idx').on(t.firedAt)],
+  (t) => [
+    index('alerts_user_id_idx').on(t.userId),
+    index('alerts_active_idx').on(t.active),
+    index('alerts_fired_at_idx').on(t.firedAt),
+    index('alerts_last_fired_at_idx').on(t.lastFiredAt),
+  ],
 );

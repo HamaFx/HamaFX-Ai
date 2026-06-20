@@ -31,7 +31,7 @@
 import type { Alert } from '@hamafx/shared';
 
 import { describeRule, type EvaluatorEnv, type RuleReading } from './evaluator';
-import { markFired } from './persistence';
+import { markFiredForAlert as markFired } from './persistence';
 import {
   deletePushSubscription,
   listPushSubscriptions,
@@ -132,7 +132,7 @@ async function deliverEmail({ alert, reading, env }: DeliverArgs): Promise<Deliv
   // 2xx response — only now do we mark the alert as fired. This is the single
   // point where markFired is called for the email channel; the evaluator does
   // not call it separately.
-  await markFired(alert.id);
+  await markFired(alert);
   return { alertId: alert.id, channel: 'email', ok: true };
 }
 
@@ -219,7 +219,7 @@ async function deliverTelegram({ alert, reading, env }: DeliverArgs): Promise<De
     };
   }
 
-  await markFired(alert.id);
+  await markFired(alert);
   return { alertId: alert.id, channel: 'telegram', ok: true };
 }
 
@@ -328,7 +328,7 @@ async function deliverWebPush({ alert, reading, env }: DeliverArgs): Promise<Del
     );
   }
 
-  await markFired(alert.id);
+  await markFired(alert);
   return { alertId: alert.id, channel: 'web-push', ok: true };
 }
 

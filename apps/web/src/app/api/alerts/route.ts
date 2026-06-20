@@ -40,6 +40,12 @@ const CreateSchema = z.object({
   rule: AlertRuleSchema,
   channels: z.array(AlertChannelSchema).default(['email']),
   note: z.string().max(280).nullable().default(null),
+  /**
+   * Phase C — UX_UPGRADE_PLAN.md item 17. Snooze in hours
+   * (0..168). 0 = one-shot (legacy). Default 0 so existing
+   * callers don't need to change.
+   */
+  snoozeHours: z.number().int().min(0).max(168).default(0),
 });
 
 export const POST = withAuth<void>(async (req, { user }) => {

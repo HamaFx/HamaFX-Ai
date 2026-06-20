@@ -56,6 +56,10 @@ export function AlertForm({ initialSymbol, onCreated }: AlertFormProps) {
   const [error, setError] = useState<string | null>(null);
 
   const [channels, setChannels] = useState<('email'|'telegram')[]>(['email']);
+  // Phase C — UX_UPGRADE_PLAN.md item 17. Snooze window in hours
+  // (0 = one-shot). Stored as a string so the input can show an
+  // empty placeholder; parsed at submit time.
+  const [snoozeHours, setSnoozeHours] = useState<string>('');
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -83,6 +87,15 @@ export function AlertForm({ initialSymbol, onCreated }: AlertFormProps) {
               direction,
             };
 
+    // Phase C — UX_UPGRADE_PLAN.md item 17. Parse the snooze
+    // input. Empty string = no snooze (one-shot). Out-of-range
+    // values fall back to 0; the server schema re-validates.
+    const parsedSnooze = Number(snoozeHours);
+    const safeSnooze =
+      Number.isFinite(parsedSnooze) && parsedSnooze >= 0 && parsedSnooze <= 168
+        ? Math.trunc(parsedSnooze)
+        : 0;
+
     try {
       const res = await fetchCsrf('/api/alerts', {
         method: 'POST',
@@ -91,6 +104,7 @@ export function AlertForm({ initialSymbol, onCreated }: AlertFormProps) {
           rule,
           channels: channels.length > 0 ? channels : ['email'],
           note: note.trim() || null,
+          snoozeHours: safeSnooze,
         }),
       });
       if (!res.ok) {
@@ -257,6 +271,32 @@ export function AlertForm({ initialSymbol, onCreated }: AlertFormProps) {
           onChange={(e) => setNote(e.target.value)}
           placeholder="why am I watching this level?"
           maxLength={280}
+        />
+      </div>
+
+      {/*
+        Phase C — UX_UPGRADE_PLAN.md item 17. Snooze: if the
+        alert fires, re-arm it after N hours instead of going
+        inactive. Empty = one-shot (legacy default). 0 = also
+        one-shot. The input is opt-in by design — most users
+        won't change it; the placeholders guide the rest.
+      */}
+      <div className="flex flex-col gap-2">
+        <label
+          className="text-fg-subtle text-body-sm uppercase tracking-wide"
+          htmlFor="alert-snooze"
+        >
+          Re-arm after (hours, 0 = one-shot)
+        </label>
+        <Input
+          id="alert-snooze"
+          type="number"
+          min={0}
+          max={168}
+          step={1}
+          value={snoozeHours}
+          onChange={(e) => setSnoozeHours(e.target.value)}
+          placeholder="leave empty for one-shot"
         />
       </div>
 

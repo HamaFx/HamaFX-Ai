@@ -88,6 +88,19 @@ export const AlertSchema = z.object({
   active: z.boolean().default(true),
   /** Set once when fired; one-shot alerts go inactive after firing. */
   firedAt: z.number().int().nullable(),
+  /**
+   * Phase C — UX_UPGRADE_PLAN.md item 17. When the alert last
+   * fired, in epoch ms. Used by the cron as the snooze baseline:
+   * a re-fire is eligible only when `now >= lastFiredAt + snoozeHours`.
+   * Null = never fired.
+   */
+  lastFiredAt: z.number().int().nullable().optional(),
+  /**
+   * Phase C — UX_UPGRADE_PLAN.md item 17. Snooze window in hours
+   * (0..168). 0 = one-shot (legacy behavior). Values > 0 cause the
+   * alert to re-arm `snoozeHours` after firing.
+   */
+  snoozeHours: z.number().int().min(0).max(168).default(0),
   createdAt: z.number().int(),
 });
 export type Alert = z.infer<typeof AlertSchema>;
