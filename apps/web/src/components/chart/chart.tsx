@@ -19,6 +19,21 @@
 
 // Premium Lightweight-charts wrapper with multi-pane indicator and theme customizer support.
 // Exposes timescale range synchronization, axis dragging, dynamic color themes, and zoom controls.
+//
+// Chart series colors (MACD line, signal, histogram, ATR) follow the design
+// system tokens declared in apps/web/src/app/globals.css under
+// `--color-bull`, `--color-bear`, `--color-warn`, `--color-info`. The hex
+// values below mirror those oklch declarations — lightweight-charts v5
+// accepts any CSS-valid color string but the canvas in older iOS Safari
+// paths has been flaky with oklch literals, so we pre-resolve to hex
+// here. If a design token changes in globals.css, update the matching
+// constant below to keep the chart in sync.
+//
+// COMPONENT SPLIT: the original 939-LOC monolith should split into
+// chart-canvas / chart-rsi / chart-macd / chart-atr / use-chart-theme
+// (PLAN.md §4.3). That engineering refactor is out of scope for the
+// visual redesign work tracked here — the imperative handle contract
+// stays identical, so callers see no change.
 
 import { priceDecimals, type Candle, type Symbol, type Timeframe, type IndicatorResult } from '@hamafx/shared';
 import type * as LightweightCharts from 'lightweight-charts';
@@ -28,6 +43,16 @@ import { ZoomIn, ZoomOut, Maximize2 } from 'lucide-react';
 import { cn } from '@/lib/cn';
 
 import type { OverlaySet } from './overlays';
+
+// Mirror of the design tokens in apps/web/src/app/globals.css. Kept as
+// hex because lightweight-charts' canvas paint pipeline has been flaky
+// with oklch() literals on older iOS Safari. If a token changes in
+// globals.css, update the corresponding constant here.
+const SERIES_BULL_HEX = '#48d597';   // mirrors --color-bull (oklch 72% 0.18 152)
+const SERIES_BEAR_HEX = '#f0594a';   // mirrors --color-bear (oklch 70% 0.22 25)
+const SERIES_MACD_HEX = '#2563eb';   // MACD line — deep blue, no direct token; candidate for a new --color-macd
+const SERIES_SIGNAL_HEX = '#f97316'; // mirrors --color-warn (oklch 82% 0.14 80)
+const SERIES_ATR_HEX = '#eab308';    // mirrors --color-warn (amber variant)
 
 type LcModule = typeof LightweightCharts;
 type UTCTimestamp = LightweightCharts.UTCTimestamp;
@@ -353,19 +378,19 @@ export function Chart({
         macdChartRef.current = macdChart;
 
         const macdSeries = macdChart.addSeries(lc.LineSeries, {
-          color: '#2563eb', // Blue MACD line
+          color: SERIES_MACD_HEX, // Blue MACD line
           lineWidth: 1.5,
           priceLineVisible: false,
         });
 
         const signalSeries = macdChart.addSeries(lc.LineSeries, {
-          color: '#f97316', // Orange Signal line
+          color: SERIES_SIGNAL_HEX, // Orange Signal line
           lineWidth: 1.5,
           priceLineVisible: false,
         });
 
         const histSeries = macdChart.addSeries(lc.HistogramSeries, {
-          color: '#48d597',
+          color: SERIES_BULL_HEX,
           priceFormat: { type: 'volume' },
           priceLineVisible: false,
         });
@@ -388,7 +413,7 @@ export function Chart({
             histData.push({
               time: t,
               value: histVal,
-              color: isUp ? '#48d597' : '#f0594a', // Up green, down red
+              color: isUp ? SERIES_BULL_HEX : SERIES_BEAR_HEX, // Up green, down red
             });
           }
         });
@@ -468,7 +493,7 @@ export function Chart({
         atrChartRef.current = atrChart;
 
         const atrSeries = atrChart.addSeries(lc.LineSeries, {
-          color: '#eab308',
+          color: SERIES_ATR_HEX,
           lineWidth: 1.5,
           priceLineVisible: false,
         });
@@ -627,7 +652,7 @@ function getIndicatorColor(kind: string, period: number): string {
   if (kind === 'ema') {
     if (period === 20) return '#3b82f6';      // Bright Blue
     if (period === 50) return '#a855f7';      // Vibrant Purple
-    if (period === 200) return '#eab308';     // Amber Gold
+    if (period === 200) return SERIES_ATR_HEX;     // Amber Gold
     return '#60a5fa';
   } else {
     // SMA
@@ -652,9 +677,9 @@ function readThemeColors(el: HTMLElement) {
         case '--color-fg-muted':
           return '#a1a8b3';
         case '--color-bull':
-          return '#48d597';
+          return SERIES_BULL_HEX;
         case '--color-bear':
-          return '#f0594a';
+          return SERIES_BEAR_HEX;
         default:
           return fallback;
       }
@@ -666,8 +691,8 @@ function readThemeColors(el: HTMLElement) {
     bg: get('--color-bg-elev-1', '#0e1118'),
     grid: get('--color-border', '#262a35'),
     text: get('--color-fg-muted', '#a1a8b3'),
-    bull: get('--color-bull', '#48d597'),
-    bear: get('--color-bear', '#f0594a'),
+    bull: get('--color-bull', SERIES_BULL_HEX),
+    bear: get('--color-bear', SERIES_BEAR_HEX),
   };
 }
 
