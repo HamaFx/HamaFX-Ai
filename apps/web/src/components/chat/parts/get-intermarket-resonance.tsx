@@ -74,7 +74,7 @@ export function GetIntermarketResonancePart({
     <div className="border-border bg-bg-elev-1 flex flex-col gap-4 rounded-xl border p-4 shadow-md backdrop-blur">
       <header className="flex items-center justify-between border-b border-divider/40 pb-2">
         <div className="flex flex-col">
-          <span className="text-fg-subtle text-[10px] uppercase font-bold tracking-wider">
+          <span className="text-fg-subtle text-caption uppercase font-bold tracking-wider">
             Intermarket resonance radar
           </span>
           <h3 className="text-fg text-sm font-bold mt-0.5">
@@ -131,10 +131,10 @@ export function GetIntermarketResonancePart({
 
       {/* Historical observations list */}
       <div className="flex flex-col gap-2 mt-1">
-        <h4 className="text-fg text-[11px] font-bold uppercase tracking-wider">Historical Resonance Log</h4>
+        <h4 className="text-fg text-body-sm font-bold uppercase tracking-wider">Historical Resonance Log</h4>
         <ul className="flex flex-col gap-1 border-t border-divider/20 pt-2">
           {output.observations.slice(-5).reverse().map((obs) => (
-            <li key={obs.date} className="flex items-center justify-between text-[11px] py-0.5">
+            <li key={obs.date} className="flex items-center justify-between text-body-sm py-0.5">
               <span className="text-fg-subtle tabular-nums">{obs.date}</span>
               <div className="flex items-center gap-4">
                 <span className="text-fg-muted tabular-nums">Yield: {obs.realYieldPct?.toFixed(2)}%</span>

@@ -35,19 +35,19 @@ export function GetSeasonalityPart({
         <h3 className="text-fg text-sm font-semibold">
           {output.symbol} · seasonality · {output.granularity}
         </h3>
-        <span className="text-fg-subtle text-[10px]">{output.sampleSize} samples</span>
+        <span className="text-fg-subtle text-caption">{output.sampleSize} samples</span>
       </header>
 
       {output.thin ? (
         <p
           role="note"
-          className="text-warn border-warn/30 bg-warn/5 rounded-md border px-2 py-1 text-[11px]"
+          className="text-warn border-warn/30 bg-warn/5 rounded-md border px-2 py-1 text-body-sm"
         >
           Thin sample — interpret as directional, not statistically significant.
         </p>
       ) : null}
 
-      <ul className="grid grid-cols-2 gap-1 text-[11px] tabular-nums sm:grid-cols-3">
+      <ul className="grid grid-cols-2 gap-1 text-body-sm tabular-nums sm:grid-cols-3">
         {output.buckets.map((b) => {
           const tone = b.medianReturnPct >= 0 ? 'text-bull' : 'text-bear';
           return (
@@ -60,7 +60,7 @@ export function GetSeasonalityPart({
                 {b.medianReturnPct >= 0 ? '+' : ''}
                 {b.medianReturnPct.toFixed(2)}%
               </span>
-              <span className="text-fg-subtle text-[10px]">
+              <span className="text-fg-subtle text-caption">
                 {(b.winRate * 100).toFixed(0)}% win · n={b.count}
               </span>
             </li>

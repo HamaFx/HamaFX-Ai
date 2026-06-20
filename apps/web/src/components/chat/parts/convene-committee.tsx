@@ -146,10 +146,10 @@ function VerdictCard({ verdict }: { verdict: CommitteeVerdict }) {
           <span className="text-fg text-xs font-semibold">{meta.label}</span>
         </div>
         <div className="flex items-center gap-3">
-          <span className={`text-[11px] font-medium uppercase ${tone}`}>
+          <span className={`text-body-sm font-medium uppercase ${tone}`}>
             {verdict.verdict}
           </span>
-          <span className="bg-bg-elev-1 border-border text-fg-subtle rounded border px-1.5 py-0.5 text-[10px] tabular-nums">
+          <span className="bg-bg-elev-1 border-border text-fg-subtle rounded border px-1.5 py-0.5 text-caption tabular-nums">
             Conf: {verdict.confidence}/10
           </span>
           <ChevronDown className="text-fg-subtle size-3.5 transition-transform group-open:rotate-180" />
@@ -201,7 +201,7 @@ function VerdictCard({ verdict }: { verdict: CommitteeVerdict }) {
                           href={src}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-brand inline-block max-w-[200px] align-bottom text-[11px] hover:underline truncate"
+                          className="text-brand inline-block max-w-[200px] align-bottom text-body-sm hover:underline truncate"
                         >
                           {host}
                         </a>

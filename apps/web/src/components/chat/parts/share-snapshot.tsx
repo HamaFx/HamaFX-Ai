@@ -53,18 +53,18 @@ export function ShareSnapshotPart({
     <div className="border-border bg-bg-elev-1 flex flex-col gap-2 rounded-lg border p-3">
       <header className="flex items-baseline justify-between gap-2">
         <h3 className="text-fg text-sm font-semibold">Snapshot ready</h3>
-        <span className="text-fg-subtle text-[10px] tabular-nums">{formatExpiry(output.expiresAt)}</span>
+        <span className="text-fg-subtle text-caption tabular-nums">{formatExpiry(output.expiresAt)}</span>
       </header>
 
       <div className="flex items-stretch gap-2">
-        <code className="border-border bg-bg-elev-2 text-fg-muted flex-1 truncate rounded border px-2 py-2 text-[11px]">
+        <code className="border-border bg-bg-elev-2 text-fg-muted flex-1 truncate rounded border px-2 py-2 text-body-sm">
           {output.url}
         </code>
         <button
           type="button"
           onClick={() => copy(output.url)}
           aria-label="Copy share link"
-          className="border-border bg-bg-elev-2 text-fg-muted hover:text-fg focus-visible:ring-brand inline-flex h-11 min-w-[44px] items-center justify-center rounded-md border px-3 text-[11px] font-medium focus:outline-none focus-visible:ring-2"
+          className="border-border bg-bg-elev-2 text-fg-muted hover:text-fg focus-visible:ring-brand inline-flex h-11 min-w-[44px] items-center justify-center rounded-md border px-3 text-body-sm font-medium focus:outline-none focus-visible:ring-2"
         >
           {copied ? 'copied' : 'copy'}
         </button>
@@ -74,7 +74,7 @@ export function ShareSnapshotPart({
         href={output.url}
         target="_blank"
         rel="noreferrer"
-        className="text-brand text-right text-[11px] font-medium underline-offset-2 hover:underline"
+        className="text-brand text-right text-body-sm font-medium underline-offset-2 hover:underline"
       >
         open in new tab →
       </a>

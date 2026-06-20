@@ -34,11 +34,11 @@ export function SummarizeThreadPart({
       <header className="flex items-baseline justify-between gap-2">
         <h3 className="text-fg text-sm font-semibold">Thread synopsis</h3>
         {output.remembered ? (
-          <span className="bg-bull/15 text-bull rounded-full px-2 py-0.5 text-[10px] font-semibold">
+          <span className="bg-bull/15 text-bull rounded-full px-2 py-0.5 text-caption font-semibold">
             Saved to memory
           </span>
         ) : (
-          <span className="text-fg-subtle text-[10px]">Not saved</span>
+          <span className="text-fg-subtle text-caption">Not saved</span>
         )}
       </header>
 
@@ -46,7 +46,7 @@ export function SummarizeThreadPart({
 
       {output.insights.length > 0 ? (
         <section>
-          <h4 className="text-fg-subtle mb-1 text-[11px] uppercase tracking-wide">Key insights</h4>
+          <h4 className="text-fg-subtle mb-1 text-body-sm uppercase tracking-wide">Key insights</h4>
           <ul className="flex flex-col gap-1">
             {output.insights.map((ins, i) => (
               <li
@@ -56,7 +56,7 @@ export function SummarizeThreadPart({
                 <span className="text-fg-muted">→</span>
                 <span className="text-fg flex-1">{ins.text}</span>
                 {ins.symbol ? (
-                  <span className="bg-bg-elev-2 text-fg-muted rounded px-1.5 py-0.5 text-[10px] font-medium">
+                  <span className="bg-bg-elev-2 text-fg-muted rounded px-1.5 py-0.5 text-caption font-medium">
                     {ins.symbol}
                   </span>
                 ) : null}

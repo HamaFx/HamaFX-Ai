@@ -107,7 +107,7 @@ export function GetCandlesPart({ output, state, errorMessage }: GetCandlesPartPr
             return (
               <li
                 key={c.t}
-                className="text-fg-muted flex items-center justify-between text-[11px] tabular-nums"
+                className="text-fg-muted flex items-center justify-between text-body-sm tabular-nums"
               >
                 <time dateTime={new Date(c.t).toISOString()} className="text-fg-subtle">
                   {formatBarTime(c.t)}
@@ -125,7 +125,7 @@ export function GetCandlesPart({ output, state, errorMessage }: GetCandlesPartPr
 function Stat({ label, value, tone }: { label: string; value: string; tone?: string }) {
   return (
     <div className="flex flex-col">
-      <dt className="text-fg-subtle text-[10px] uppercase tracking-wide">{label}</dt>
+      <dt className="text-fg-subtle text-caption uppercase tracking-wide">{label}</dt>
       <dd className={cn('text-fg text-sm font-medium', tone)}>{value}</dd>
     </div>
   );

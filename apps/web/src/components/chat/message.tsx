@@ -168,7 +168,7 @@ export function Message({ message, onCopy, onRegenerate, onEdit }: MessageProps)
                 type="button"
                 onClick={copy}
                 aria-label={copied ? 'Copied' : 'Copy message'}
-                className="glass-subtle text-fg-muted hover:text-fg focus-visible:ring-brand inline-flex size-8 items-center justify-center rounded-lg transition-colors focus:outline-none focus-visible:ring-2"
+                className="bg-bg-elev-1 border border-divider text-fg-muted hover:text-fg focus-visible:ring-brand inline-flex size-8 items-center justify-center rounded-lg transition-colors focus:outline-none focus-visible:ring-2"
               >
                 {copied ? (
                   <Check className="text-bull size-3.5" />
@@ -187,7 +187,7 @@ export function Message({ message, onCopy, onRegenerate, onEdit }: MessageProps)
                   setIsEditing(true);
                 }}
                 aria-label="Edit prompt"
-                className="glass-subtle text-fg-muted hover:text-fg focus-visible:ring-brand inline-flex size-8 items-center justify-center rounded-lg transition-colors focus:outline-none focus-visible:ring-2"
+                className="bg-bg-elev-1 border border-divider text-fg-muted hover:text-fg focus-visible:ring-brand inline-flex size-8 items-center justify-center rounded-lg transition-colors focus:outline-none focus-visible:ring-2"
               >
                 <Pencil className="size-3.5" />
               </button>
@@ -200,7 +200,7 @@ export function Message({ message, onCopy, onRegenerate, onEdit }: MessageProps)
                   type="button"
                   onClick={() => onRegenerate()}
                   aria-label="Regenerate response"
-                  className="glass-subtle text-fg-muted hover:text-fg focus-visible:ring-brand inline-flex size-8 items-center justify-center rounded-l-lg transition-colors focus:outline-none focus-visible:ring-2"
+                  className="bg-bg-elev-1 border border-divider text-fg-muted hover:text-fg focus-visible:ring-brand inline-flex size-8 items-center justify-center rounded-l-lg transition-colors focus:outline-none focus-visible:ring-2"
                 >
                   <RotateCcw className="size-3.5" />
                 </button>
@@ -210,7 +210,7 @@ export function Message({ message, onCopy, onRegenerate, onEdit }: MessageProps)
                   type="button"
                   popoverTarget={`regen-menu-${message.id}`}
                   aria-label="Regenerate with a different model"
-                  className="glass-subtle text-fg-muted hover:text-fg focus-visible:ring-brand inline-flex size-8 items-center justify-center rounded-r-lg border-l border-divider/40 transition-colors focus:outline-none focus-visible:ring-2"
+                  className="bg-bg-elev-1 border border-divider text-fg-muted hover:text-fg focus-visible:ring-brand inline-flex size-8 items-center justify-center rounded-r-lg border-l border-divider/40 transition-colors focus:outline-none focus-visible:ring-2"
                   style={{ anchorName: `--regen-btn-${message.id}` } as React.CSSProperties}
                 >
                   <ChevronDown className="size-3.5" />
@@ -220,7 +220,7 @@ export function Message({ message, onCopy, onRegenerate, onEdit }: MessageProps)
                 id={`regen-menu-${message.id}`}
                 popover="auto"
                 role="menu"
-                className="glass-strong border-divider/60 m-0 flex-col gap-0.5 rounded-xl border p-1 shadow-xl"
+                className="bg-bg-elev-1 border border-divider border-divider/60 m-0 flex-col gap-0.5 rounded-xl border p-1 shadow-xl"
                 style={{ 
                   minWidth: '12rem',
                   positionAnchor: `--regen-btn-${message.id}`,

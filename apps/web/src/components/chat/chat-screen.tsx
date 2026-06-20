@@ -262,7 +262,7 @@ export function ChatScreen({
                   }
                 }}
                 aria-label="Retry"
-                className="bg-bear/20 hover:bg-bear/30 ring-bear/30 inline-flex shrink-0 items-center gap-1 rounded-lg px-3 py-1.5 text-[11px] font-medium ring-1"
+                className="bg-bear/20 hover:bg-bear/30 ring-bear/30 inline-flex shrink-0 items-center gap-1 rounded-lg px-3 py-1.5 text-body-sm font-medium ring-1"
               >
                 <RotateCcw className="size-3.5" /> Retry
               </button>
@@ -274,7 +274,7 @@ export function ChatScreen({
           type="button"
           onClick={scrollToBottom}
           aria-label="Scroll to latest"
-          className="scroll-fab glass-strong text-fg fixed left-1/2 z-30 inline-flex h-11 -translate-x-1/2 items-center gap-1.5 rounded-full px-4 text-xs font-medium"
+          className="scroll-fab glass-strong text-fg fixed left-1/2 z-30 inline-flex h-11 -translate-x-1/2 items-center gap-1.5 rounded-full px-4 text-body-sm font-medium"
           style={{ bottom: 'calc(env(safe-area-inset-bottom) + 96px)' }}
         >
           <ArrowDown className="size-3.5" />
@@ -345,7 +345,7 @@ function EmptyChatState({ pinnedSymbol, disabled, onSelect }: EmptyChatStateProp
         <QuickPrompts onSelect={onSelect} {...(disabled ? { disabled: true } : {})} />
       </div>
 
-      <p className="text-fg-subtle max-w-md text-[11px] leading-relaxed">
+      <p className="text-fg-subtle max-w-md text-body-sm leading-relaxed">
         Numbers come from live tools — prices, candles, news, and the calendar are
         fetched on demand. The copilot will say so when something can&apos;t be checked.
       </p>

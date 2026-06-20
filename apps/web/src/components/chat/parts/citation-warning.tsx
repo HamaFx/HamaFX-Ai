@@ -45,7 +45,7 @@ export function CitationWarningPartView({ part }: CitationWarningProps) {
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
-        className="hover:text-fg flex items-center gap-2 text-left text-[11px] font-medium focus:outline-none"
+        className="hover:text-fg flex items-center gap-2 text-left text-body-sm font-medium focus:outline-none"
       >
         {open ? <ChevronDown className="size-3.5" /> : <ChevronRight className="size-3.5" />}
         <Quote className="size-3.5" />
@@ -56,7 +56,7 @@ export function CitationWarningPartView({ part }: CitationWarningProps) {
       </button>
 
       {open ? (
-        <ul className="ml-6 flex flex-col gap-1 text-[11px]">
+        <ul className="ml-6 flex flex-col gap-1 text-body-sm">
           {part.unsupportedClaims.map((c, i) => (
             <li key={i} className="text-fg-subtle">
               · {c}

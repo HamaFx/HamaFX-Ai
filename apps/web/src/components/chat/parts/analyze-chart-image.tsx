@@ -52,7 +52,7 @@ export function AnalyzeChartImagePart({
         <h3 className="text-fg text-sm font-semibold">
           {output.symbol ?? 'Chart'} {output.tf ? `· ${output.tf}` : ''} · vision
         </h3>
-        <span className="text-fg-subtle font-mono text-[10px]">{shortRef(output.sourceImageRef)}</span>
+        <span className="text-fg-subtle font-mono text-caption">{shortRef(output.sourceImageRef)}</span>
       </header>
 
       {output.observed ? (
@@ -64,7 +64,7 @@ export function AnalyzeChartImagePart({
       {output.overlay && output.symbol && output.tf ? (
         <Link
           href={buildOverlayHref(output)}
-          className="text-brand focus-visible:ring-brand text-right text-[11px] font-medium underline-offset-2 outline-none hover:underline focus-visible:ring-2"
+          className="text-brand focus-visible:ring-brand text-right text-body-sm font-medium underline-offset-2 outline-none hover:underline focus-visible:ring-2"
         >
           apply on chart →
         </Link>
@@ -76,7 +76,7 @@ export function AnalyzeChartImagePart({
 function LevelsList({ output }: { output: AnalyzeChartImageOutput }) {
   const decimals = output.symbol ? priceDecimals(output.symbol) : 4;
   return (
-    <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-[11px] tabular-nums">
+    <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-body-sm tabular-nums">
       {output.levels.map((l, i) => (
         <Row key={`${l.label}-${l.price}-${i}`} label={l.label} value={l.price.toFixed(decimals)} />
       ))}

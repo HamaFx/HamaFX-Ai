@@ -132,7 +132,7 @@ export function ChatTopBar({ threadId, title, pinnedSymbol, threads, isStreaming
     >
       <div
         className={cn(
-          'glass-strong pointer-events-auto flex w-full max-w-[600px] items-center gap-1 rounded-full border border-divider/60 px-2 shadow-lg',
+          'glass-strong pointer-events-auto flex w-full max-w-[600px] items-center gap-1 rounded-full px-2 shadow-lg',
         )}
         style={{
           height: 'var(--topbar-h)',
@@ -145,14 +145,14 @@ export function ChatTopBar({ threadId, title, pinnedSymbol, threads, isStreaming
         <div className="flex min-w-0 flex-1 items-center justify-center">
           <div className="bg-bg-elev-1/40 ring-divider/50 shadow-sm backdrop-blur-md flex max-w-[90%] flex-col items-center justify-center rounded-full px-4 py-1 ring-1">
             <div className="flex max-w-full items-center gap-1.5">
-              <h1 className="text-fg truncate text-[13px] font-semibold tracking-tight">{title}</h1>
+              <h1 className="text-fg truncate text-body-sm font-semibold tracking-tight">{title}</h1>
               {pinnedSymbol ? (
-                <span className="bg-brand/15 text-brand ring-brand/30 shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tabular-nums ring-1">
+                <span className="bg-brand/15 text-brand ring-brand/30 shrink-0 rounded-full px-2 py-0.5 text-caption font-bold uppercase tabular-nums ring-1">
                   {pinnedSymbol}
                 </span>
               ) : null}
             </div>
-            <p className="text-fg-subtle text-[10px] tabular-nums">
+            <p className="text-fg-subtle text-caption tabular-nums">
               {isStreaming ? (
                 <span className="text-brand inline-flex items-center gap-1 font-medium">
                   <Sparkles className="size-2.5 animate-pulse" /> thinking…
@@ -190,7 +190,7 @@ export function ChatTopBar({ threadId, title, pinnedSymbol, threads, isStreaming
           {menuOpen ? (
             <div
               role="menu"
-              className="glass-strong absolute right-0 top-12 z-50 w-56 overflow-hidden rounded-xl text-sm"
+              className="glass-strong absolute right-0 top-12 z-50 w-56 overflow-hidden rounded-xl text-body-sm"
             >
               <button
                 role="menuitem"
@@ -330,12 +330,12 @@ function ThreadSwitcher({ open, onOpenChange, threadId, threads, onPickNew }: Th
                       <span className="block truncate font-semibold">
                         {t.title ?? 'New conversation'}
                       </span>
-                      <span className="text-fg-subtle mt-0.5 block text-[11px] tabular-nums">
+                      <span className="text-fg-subtle mt-0.5 block text-body-sm tabular-nums">
                         {formatRelative(t.updatedAt)}
                       </span>
                     </div>
                     {t.pinnedSymbol ? (
-                      <span className="bg-brand/15 text-brand ring-brand/30 shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold tabular-nums ring-1">
+                      <span className="bg-brand/15 text-brand ring-brand/30 shrink-0 rounded-full px-2 py-0.5 text-caption font-bold tabular-nums ring-1">
                         {t.pinnedSymbol}
                       </span>
                     ) : null}
