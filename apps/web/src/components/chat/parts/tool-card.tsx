@@ -95,7 +95,7 @@ function Section({ label, data }: { label: string; data: unknown }) {
   return (
     <div>
       <div className="text-fg-subtle mb-0.5 uppercase tracking-wide">{label}</div>
-      <pre className="bg-bg max-h-40 overflow-auto rounded p-2 text-[10px] leading-tight">
+      <pre className="bg-bg max-h-40 overflow-auto rounded p-2 text-caption leading-tight">
         {safeStringify(data)}
       </pre>
     </div>

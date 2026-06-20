@@ -52,14 +52,14 @@ export function GetIntermarketPart({
       <header className="flex flex-wrap items-baseline justify-between gap-2">
         <h3 className="text-fg text-sm font-semibold">Intermarket · {output.tf}</h3>
         <span
-          className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${tone.bg} ${tone.fg}`}
+          className={`rounded-full px-2 py-0.5 text-caption font-semibold ${tone.bg} ${tone.fg}`}
         >
           {tone.label}
           {output.regimeBreak ? ' · regime break' : ''}
         </span>
       </header>
 
-      <dl className="grid grid-cols-3 gap-2 text-[11px] tabular-nums">
+      <dl className="grid grid-cols-3 gap-2 text-body-sm tabular-nums">
         <Stat
           k="DXY proxy"
           v={output.dxyProxy.value.toFixed(4)}
@@ -89,7 +89,7 @@ export function GetIntermarketPart({
       </dl>
 
       <p className="text-fg-muted text-xs">{output.notes}</p>
-      <p className="text-fg-subtle font-mono text-[10px]">{output.dxyProxy.formula}</p>
+      <p className="text-fg-subtle font-mono text-caption">{output.dxyProxy.formula}</p>
     </div>
   );
 }
@@ -97,9 +97,9 @@ export function GetIntermarketPart({
 function Stat({ k, v, sub, tone }: { k: string; v: string; sub?: string; tone?: string }) {
   return (
     <div className="border-divider/40 flex flex-col rounded-md border p-2">
-      <span className="text-fg-subtle text-[10px] uppercase tracking-wide">{k}</span>
+      <span className="text-fg-subtle text-caption uppercase tracking-wide">{k}</span>
       <span className={`text-fg font-semibold ${tone ?? ''}`}>{v}</span>
-      {sub ? <span className="text-fg-subtle text-[10px]">{sub}</span> : null}
+      {sub ? <span className="text-fg-subtle text-caption">{sub}</span> : null}
     </div>
   );
 }

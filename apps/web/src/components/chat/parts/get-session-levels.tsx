@@ -50,7 +50,7 @@ export function GetSessionLevelsPart({
     <div className="border-border bg-bg-elev-1 flex flex-col gap-3 rounded-lg border p-3">
       <header className="flex items-baseline justify-between gap-2">
         <h3 className="text-fg text-sm font-semibold">{output.symbol} · session levels</h3>
-        <span className="text-fg-subtle font-mono text-[10px]">
+        <span className="text-fg-subtle font-mono text-caption">
           {new Date(output.asOf).toISOString().slice(11, 16)}Z
         </span>
       </header>
@@ -64,12 +64,12 @@ export function GetSessionLevelsPart({
 function SessionList({ rows, title }: { rows: SessionRange[]; title: string }) {
   return (
     <section>
-      <h4 className="text-fg-subtle mb-1 text-[11px] uppercase tracking-wide">{title}</h4>
+      <h4 className="text-fg-subtle mb-1 text-body-sm uppercase tracking-wide">{title}</h4>
       <ul className="flex flex-col gap-1">
         {rows.map((r) => (
           <li
             key={`${r.session}-${r.fromMs}`}
-            className="flex items-baseline justify-between gap-2 text-[11px] tabular-nums"
+            className="flex items-baseline justify-between gap-2 text-body-sm tabular-nums"
           >
             <span className="text-fg w-14 font-semibold">{SESSION_LABEL[r.session]}</span>
             <span className="text-fg-muted flex-1">

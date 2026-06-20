@@ -80,7 +80,7 @@ export function QuickPrompts({ onSelect, disabled }: QuickPromptsProps) {
             type="button"
             disabled={disabled}
             onClick={() => onSelect(p.label)}
-            className="glass-subtle text-fg hover:bg-bg-elev-2 focus-visible:ring-brand flex h-16 items-center gap-3 rounded-2xl px-3 text-left text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 disabled:opacity-50"
+            className="bg-bg-elev-1 border border-divider text-fg hover:bg-bg-elev-2 focus-visible:ring-brand flex h-16 items-center gap-3 rounded-2xl px-3 text-left text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 disabled:opacity-50"
           >
             <span
               className={`shrink-0 inline-flex size-10 items-center justify-center rounded-xl ${p.fg}`}

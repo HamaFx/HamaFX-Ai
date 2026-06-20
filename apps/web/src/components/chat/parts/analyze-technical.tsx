@@ -44,13 +44,13 @@ export function AnalyzeTechnicalPart({
         <h3 className="text-fg text-sm font-semibold">
           {output.symbol} · technical
         </h3>
-        <span className="text-fg-muted font-mono text-[10px]">
+        <span className="text-fg-muted font-mono text-caption">
           {new Date(output.asOf).toISOString().slice(0, 16).replace('T', ' ')}Z
         </span>
       </header>
 
       {output.partial ? (
-        <p className="text-warn mb-2 text-[11px]">⚠ Some timeframes unavailable.</p>
+        <p className="text-warn mb-2 text-body-sm">⚠ Some timeframes unavailable.</p>
       ) : null}
 
       <p className="text-fg-muted mb-3 text-xs leading-snug">{output.summary}</p>
@@ -90,10 +90,10 @@ function TfCard({
         <span className="text-fg text-xs font-semibold uppercase tracking-wide">
           {reading.tf}
         </span>
-        <span className={`text-[11px] font-medium ${trendTone}`}>{reading.trend}</span>
+        <span className={`text-body-sm font-medium ${trendTone}`}>{reading.trend}</span>
       </div>
 
-      <dl className="grid grid-cols-2 gap-x-2 gap-y-0.5 text-[11px] tabular-nums">
+      <dl className="grid grid-cols-2 gap-x-2 gap-y-0.5 text-body-sm tabular-nums">
         <dt className="text-fg-subtle">bias</dt>
         <dd className={`text-right font-medium ${biasTone}`}>{reading.bias}</dd>
 
@@ -123,7 +123,7 @@ function TfCard({
         {reading.structure.latestStructureEvent ? (
           <>
             <dt className="text-fg-subtle">struct</dt>
-            <dd className="text-fg text-right text-[10px]">
+            <dd className="text-fg text-right text-caption">
               {reading.structure.latestStructureEvent}
             </dd>
           </>
@@ -132,7 +132,7 @@ function TfCard({
 
       <Link
         href={`/chart/${symbol}?tf=${reading.tf}`}
-        className="text-brand focus-visible:ring-brand mt-1 block min-h-[24px] text-right text-[11px] font-medium underline-offset-2 outline-none hover:underline focus-visible:ring-2"
+        className="text-brand focus-visible:ring-brand mt-1 block min-h-[24px] text-right text-body-sm font-medium underline-offset-2 outline-none hover:underline focus-visible:ring-2"
       >
         view chart →
       </Link>

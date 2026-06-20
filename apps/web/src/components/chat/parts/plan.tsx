@@ -55,7 +55,7 @@ export function PlanPart({ plan }: PlanPartProps) {
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
-        className="text-fg-muted hover:text-fg flex items-center gap-2 text-left text-[11px] font-medium tabular-nums focus:outline-none"
+        className="text-fg-muted hover:text-fg flex items-center gap-2 text-left text-body-sm font-medium tabular-nums focus:outline-none"
       >
         {open ? (
           <ChevronDown className="size-3.5" />
@@ -74,7 +74,7 @@ export function PlanPart({ plan }: PlanPartProps) {
             <ol className="text-fg-muted ml-6 flex flex-col gap-1 text-xs">
               {plan.steps.map((s, i) => (
                 <li key={i} className="flex items-baseline gap-2">
-                  <span className="text-fg-subtle font-mono text-[10px] tabular-nums">
+                  <span className="text-fg-subtle font-mono text-caption tabular-nums">
                     {String(i + 1).padStart(2, '0')}
                   </span>
                   <span>{s}</span>
@@ -86,12 +86,12 @@ export function PlanPart({ plan }: PlanPartProps) {
           )}
 
           {plan.expectedTools.length > 0 ? (
-            <p className="text-fg-subtle ml-6 text-[10px]">
+            <p className="text-fg-subtle ml-6 text-caption">
               Expected tools:{' '}
               {plan.expectedTools.map((t, i) => (
                 <span
                   key={`${t}-${i}`}
-                  className="bg-bg-elev-2 text-fg-muted ml-1 rounded px-1.5 py-0.5 font-mono text-[10px]"
+                  className="bg-bg-elev-2 text-fg-muted ml-1 rounded px-1.5 py-0.5 font-mono text-caption"
                 >
                   {t}
                 </span>

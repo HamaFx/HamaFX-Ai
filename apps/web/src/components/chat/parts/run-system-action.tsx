@@ -86,7 +86,7 @@ export function RunSystemActionPart({
       </div>
 
       {/* Action Summary Message */}
-      <div className={`rounded-lg p-2.5 text-[11px] leading-relaxed border ${
+      <div className={`rounded-lg p-2.5 text-body-sm leading-relaxed border ${
         isSuccess ? 'bg-bull/5 border-bull/20 text-fg' : 'bg-bear/5 border-bear/20 text-bear'
       }`}>
         {message}

@@ -55,12 +55,12 @@ export function GetCorrelationPart({
         <h3 className="text-fg text-sm font-semibold">
           Correlation · {output.tf} · {output.windowBars} bars
         </h3>
-        <span className="text-fg-subtle font-mono text-[10px]">
+        <span className="text-fg-subtle font-mono text-caption">
           {new Date(output.asOf).toISOString().slice(11, 16)}Z
         </span>
       </header>
 
-      <table className="w-full border-separate border-spacing-1 text-[11px] tabular-nums">
+      <table className="w-full border-separate border-spacing-1 text-body-sm tabular-nums">
         <thead>
           <tr>
             <th className="text-fg-subtle text-left font-medium" />
@@ -92,12 +92,12 @@ export function GetCorrelationPart({
       <section className="border-border border-t pt-2">
         <header className="flex items-baseline justify-between gap-2">
           <span className="text-fg text-xs font-semibold">DXY proxy</span>
-          <span className={`text-[11px] tabular-nums ${dxy.change24h >= 0 ? 'text-bull' : 'text-bear'}`}>
+          <span className={`text-body-sm tabular-nums ${dxy.change24h >= 0 ? 'text-bull' : 'text-bear'}`}>
             {dxy.value.toFixed(4)} ({dxy.change24h >= 0 ? '+' : ''}
             {dxy.change24h.toFixed(2)}% 24h)
           </span>
         </header>
-        <p className="text-fg-subtle mt-1 font-mono text-[10px]">{dxy.formula}</p>
+        <p className="text-fg-subtle mt-1 font-mono text-caption">{dxy.formula}</p>
       </section>
     </div>
   );

@@ -37,7 +37,7 @@ export function ComputeRiskPart({ output, state, errorMessage }: ToolPartProps<'
         </h3>
         {output.rrRatio !== null ? (
           <span
-            className={`text-[11px] tabular-nums ${output.rrRatio >= 1 ? 'text-bull' : 'text-bear'}`}
+            className={`text-body-sm tabular-nums ${output.rrRatio >= 1 ? 'text-bull' : 'text-bear'}`}
           >
             RR {output.rrRatio.toFixed(2)}
           </span>
@@ -66,7 +66,7 @@ export function ComputeRiskPart({ output, state, errorMessage }: ToolPartProps<'
       {output.invalidDirection ? (
         <p
           role="alert"
-          className="text-warn border-warn/30 bg-warn/5 rounded-md border px-2 py-1 text-[11px]"
+          className="text-warn border-warn/30 bg-warn/5 rounded-md border px-2 py-1 text-body-sm"
         >
           Stop is on the wrong side of entry for this direction — the agent suggested an inverted
           setup.

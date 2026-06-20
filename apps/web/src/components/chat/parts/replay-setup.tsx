@@ -35,10 +35,10 @@ export function ReplaySetupPart({
         <h3 className="text-fg text-sm font-semibold">
           Replay · {output.symbol} {output.tf}
         </h3>
-        <span className="text-fg-subtle text-[10px]">{output.ruleLabel}</span>
+        <span className="text-fg-subtle text-caption">{output.ruleLabel}</span>
       </header>
 
-      <dl className="grid grid-cols-4 gap-2 text-[11px] tabular-nums">
+      <dl className="grid grid-cols-4 gap-2 text-body-sm tabular-nums">
         <Stat k="Trades" v={String(output.count)} />
         <Stat
           k="Win rate"
@@ -60,15 +60,15 @@ export function ReplaySetupPart({
       {output.thin ? (
         <p
           role="note"
-          className="text-warn border-warn/30 bg-warn/5 rounded-md border px-2 py-1 text-[11px]"
+          className="text-warn border-warn/30 bg-warn/5 rounded-md border px-2 py-1 text-body-sm"
         >
           Thin sample — fewer than 5 trades. Treat as illustrative.
         </p>
       ) : null}
 
       {output.trades.length > 0 ? (
-        <div className="text-[11px] tabular-nums">
-          <div className="text-fg-subtle grid grid-cols-5 px-2 py-1 text-[10px] uppercase tracking-wide">
+        <div className="text-body-sm tabular-nums">
+          <div className="text-fg-subtle grid grid-cols-5 px-2 py-1 text-caption uppercase tracking-wide">
             <span>Side</span>
             <span>Entry</span>
             <span>Exit</span>
@@ -102,7 +102,7 @@ export function ReplaySetupPart({
 function Stat({ k, v, tone }: { k: string; v: string; tone?: string }) {
   return (
     <div className="border-divider/40 flex flex-col rounded-md border p-2">
-      <span className="text-fg-subtle text-[10px] uppercase tracking-wide">{k}</span>
+      <span className="text-fg-subtle text-caption uppercase tracking-wide">{k}</span>
       <span className={`text-fg font-semibold ${tone ?? ''}`}>{v}</span>
     </div>
   );

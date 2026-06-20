@@ -75,7 +75,7 @@ export function GetMarketStructurePart({
         <p className="text-fg-muted mb-2 whitespace-pre-line text-sm">{output.summary}</p>
       ) : null}
 
-      <div className="text-fg-subtle mb-2 text-[11px] tabular-nums">
+      <div className="text-fg-subtle mb-2 text-body-sm tabular-nums">
         {swings.length} swings · {events.length} events · {fvgs.length} FVG · {obs.length} OB ·{' '}
         {sweeps.length} sweeps
       </div>

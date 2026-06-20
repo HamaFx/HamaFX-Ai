@@ -60,7 +60,7 @@ export function GetSystemDiagnosticsPart({
       {/* Header */}
       <header className="flex items-center justify-between border-b border-divider/40 pb-2">
         <div className="flex flex-col">
-          <span className="text-fg-subtle text-[10px] uppercase font-bold tracking-wider">
+          <span className="text-fg-subtle text-caption uppercase font-bold tracking-wider">
             Copilot Diagnostic Node
           </span>
           <h3 className="text-fg text-sm font-bold mt-0.5">
@@ -101,7 +101,7 @@ export function GetSystemDiagnosticsPart({
       {/* Database Record Volumes */}
       <div className="flex flex-col gap-2">
         <h4 className="text-fg-subtle text-[9px] font-bold uppercase tracking-wider">Database Segment Volumes</h4>
-        <div className="grid grid-cols-2 gap-2 border-t border-divider/20 pt-2 text-[10px]">
+        <div className="grid grid-cols-2 gap-2 border-t border-divider/20 pt-2 text-caption">
           <div className="flex justify-between py-0.5">
             <span className="text-fg-muted">Journal Entries:</span>
             <span className="text-fg font-medium tabular-nums">{database.journalEntriesCount}</span>
@@ -139,7 +139,7 @@ export function GetSystemDiagnosticsPart({
       {/* Background Jobs Sync Log */}
       <div className="flex flex-col gap-2">
         <h4 className="text-fg-subtle text-[9px] font-bold uppercase tracking-wider">Background Sync Status</h4>
-        <div className="flex flex-col gap-1 border-t border-divider/20 pt-2 text-[10px]">
+        <div className="flex flex-col gap-1 border-t border-divider/20 pt-2 text-caption">
           <div className="flex justify-between py-0.5">
             <span className="text-fg-muted">FRED Opportunity Cost Sync:</span>
             <span className="text-fg font-semibold tabular-nums">
@@ -155,7 +155,7 @@ export function GetSystemDiagnosticsPart({
         </div>
       </div>
 
-      <p className="text-fg-muted text-[11px] leading-normal border-t border-divider/20 pt-2.5">
+      <p className="text-fg-muted text-body-sm leading-normal border-t border-divider/20 pt-2.5">
         {narrative}
       </p>
       <footer className="text-fg-subtle text-[8px] text-right mt-[-4px]">
