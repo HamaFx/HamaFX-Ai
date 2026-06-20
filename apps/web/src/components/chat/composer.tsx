@@ -38,7 +38,6 @@ import { fetchCsrf } from '@/lib/csrf';
 
 import {
   MAX_TEXT_CHARS,
-  SOFT_LIMIT_CHARS,
   formatCharCount,
   getCharCountTone,
 } from './composer-helpers';
