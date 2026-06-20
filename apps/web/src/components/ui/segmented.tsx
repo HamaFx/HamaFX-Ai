@@ -81,9 +81,9 @@ const SIZE: Record<NonNullable<SegmentedBaseProps<string>['size']>, string> = {
   // sm = 40px (h-10) so the inner button still clears 44pt when the
   // segmented sits inside a row that already has a tap-target frame
   // (e.g. chart sub-header where the wrapper is 44+).
-  sm: 'h-10 text-[11px]',
+  sm: 'h-10 text-body-sm',
   // md = 48px — default for forms. Sits in the thumb zone of bottom drawers.
-  md: 'h-12 text-sm',
+  md: 'h-12 text-body-sm',
 };
 
 const ITEM_PAD: Record<NonNullable<SegmentedBaseProps<string>['size']>, string> = {
@@ -112,7 +112,7 @@ export function Segmented<T extends string>(props: SegmentedProps<T>) {
       {label ? (
         <span
           className={cn(
-            'text-fg-subtle text-[11px] uppercase tracking-wide',
+            'text-fg-subtle text-body-sm uppercase tracking-wide',
             srLabel && 'sr-only',
           )}
         >
@@ -124,7 +124,7 @@ export function Segmented<T extends string>(props: SegmentedProps<T>) {
         aria-label={label}
         className={cn(
           variant === 'gradient'
-            ? 'glass-subtle inline-flex items-center gap-0.5 rounded-full p-0.5'
+            ? 'border-border bg-bg-elev-2 inline-flex items-center gap-0.5 rounded-full border p-0.5'
             : 'border-border bg-bg-elev-2 inline-flex flex-wrap items-center gap-0.5 rounded-full border p-0.5',
           className,
         )}

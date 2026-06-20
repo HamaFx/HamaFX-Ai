@@ -42,7 +42,7 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 // Primary/danger get their fills via inlineStyle below (theme tokens).
 const variants: Record<Variant, string> = {
   primary: 'text-brand-fg font-semibold hover:opacity-90',
-  secondary: 'glass-subtle text-fg hover:bg-bg-elev-2',
+  secondary: 'border border-divider bg-bg-elev-2 text-fg hover:bg-bg-elev-3',
   ghost: 'text-fg hover:bg-bg-elev-1',
   danger: 'text-bg font-semibold hover:opacity-90',
   success: 'bg-bull text-bg font-semibold hover:opacity-90',

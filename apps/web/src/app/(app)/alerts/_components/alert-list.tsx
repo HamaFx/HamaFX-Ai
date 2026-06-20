@@ -44,7 +44,6 @@ import {
   DrawerTitle,
 } from '@/components/ui/drawer';
 import { EmptyState } from '@/components/ui/empty-state';
-import { Fab } from '@/components/ui/fab';
 import { Segmented } from '@/components/ui/segmented';
 import { StaleIndicator } from '@/components/ui/stale-indicator';
 import { Tooltip } from '@/components/ui/tooltip';
@@ -184,9 +183,12 @@ export function AlertList() {
       </Drawer>
 
       {data && data.alerts.length > 0 ? (
-        <Fab onClick={() => setOpen(true)} aria-label="Create alert">
-          <Plus className="size-6" />
-        </Fab>
+        <div className="flex justify-end">
+          <Button type="button" onClick={() => setOpen(true)}>
+            <Plus className="size-4" />
+            New alert
+          </Button>
+        </div>
       ) : null}
 
       {confirmEl}
