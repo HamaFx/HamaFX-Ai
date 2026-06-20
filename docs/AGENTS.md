@@ -54,6 +54,9 @@ pnpm --filter @hamafx/web build
 # Migrations
 pnpm --filter @hamafx/db migrate:gen     # generate from schema changes
 pnpm --filter @hamafx/db migrate:apply   # apply to DATABASE_URL
+# Vercel prod deploys run scripts/predeploy-migrate.mjs before
+# next build, so prod migrations happen automatically. No manual
+# step required.
 
 # AI Evals
 pnpm --filter @hamafx/ai eval -- --base-url http://localhost:3000 --cookie "hfx_auth=..." --cases

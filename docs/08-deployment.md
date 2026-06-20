@@ -226,9 +226,18 @@ node -e "console.log(require('crypto').randomBytes(24).toString('hex'))"
 ## Database migrations
 
 - Schema lives in `packages/db/src/schema/*.ts`.
-- `pnpm --filter db migrate:gen` creates SQL.
-- `pnpm --filter db migrate:apply` runs against `DATABASE_URL`.
-- Run migrations locally before deploying. CI doesn't run them automatically (safer this way).
+- `pnpm --filter @hamafx/db migrate:gen` creates SQL.
+- `pnpm --filter @hamafx/db migrate:apply` runs against `DATABASE_URL`.
+- **Migrations are now automatic on Vercel.** The `vercel.json`
+  `buildCommand` runs `node scripts/predeploy-migrate.mjs` BEFORE
+  `next build`. The script applies pending migrations against the
+  production database via `POSTGRES_URL_NON_POOLING` and exits
+  non-zero on failure — so a bad migration blocks the deploy
+  instead of failing page renders. Preview deploys (`VERCEL_ENV=preview`)
+  skip migrations; configure a per-preview DB if you want them
+  to migrate against a non-prod target.
+- **Manual one-liner** (still works for non-Vercel deploys):
+  `POSTGRES_URL_NON_POOLING=… node scripts/predeploy-migrate.mjs`
 
 ## Logging & monitoring
 

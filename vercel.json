@@ -1,5 +1,5 @@
 {
   "framework": "nextjs",
   "outputDirectory": "apps/web/.next",
-  "buildCommand": "npx turbo run build --filter=@hamafx/web"
+  "buildCommand": "node scripts/predeploy-migrate.mjs && npx turbo run build --filter=@hamafx/web"
 }
