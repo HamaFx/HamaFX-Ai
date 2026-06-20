@@ -82,6 +82,25 @@ export const CitationWarningPartSchema = z.object({
    */
   stance: z.enum(['soft', 'strict']),
   createdAt: z.number().int(),
+  /**
+   * Phase B — UX_UPGRADE_PLAN.md item 9.
+   * Structured per-claim findings. Optional for backward
+   * compatibility with parts persisted before this field landed —
+   * the chat UI must handle the absence gracefully (the legacy
+   * `unsupportedClaims[0]` summary line still renders).
+   */
+  findings: z
+    .array(
+      z.object({
+        /** A short text fragment of the claim. */
+        text: z.string(),
+        /** Whether the claim was backed by a tool call. */
+        supported: z.boolean(),
+        /** Name of the tool that supports the claim, if any. */
+        supportingTool: z.string().nullable().optional(),
+      }),
+    )
+    .optional(),
 });
 export type CitationWarningPart = z.infer<typeof CitationWarningPartSchema>;
 

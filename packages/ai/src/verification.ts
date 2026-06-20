@@ -81,49 +81,81 @@ const SUMMARY_MESSAGE = (
   "Numbers in this answer weren't verified against a tool call this turn."
 );
 
-/** Aggregate per-claim findings into a single warning part, or null. */
-export function enforceCitations(args: EnforceArgs): CitationWarningPart | null {
+/**
+ * Per-claim finding exposed on the warning part. Phase B — item 9.
+ */
+export interface CitationFinding {
+  text: string;
+  supported: boolean;
+  supportingTool: string | null;
+}
+
+/**
+ * Phase B — UX_UPGRADE_PLAN.md item 9.
+ * Internal type returned by `collectFindings`. The public API
+ * (the one called by the agent) is still `enforceCitations` which
+ * returns a flat `CitationWarningPart` (with the new optional
+ * `findings` field populated for downstream drill-down).
+ */
+export interface CitationFindingReport {
+  findings: CitationFinding[];
+  toolsInvoked: string[];
+}
+
+/** Internal: per-claim analysis without the legacy summary line. */
+export function collectFindings(args: EnforceArgs): CitationFindingReport | null {
   const text = args.text.trim();
   if (text.length === 0) return null;
-
   const toolsInvoked = readToolCallNames(args.responseMessages);
+  const findings: CitationFinding[] = [];
 
-  const unsupported: string[] = [];
-
-  // Price-shaped tokens: only flag when the surrounding sentence has no
-  // attribution clue AND the relevant tool wasn't called.
   if (!hasAny(toolsInvoked, NUMERIC_TOOLS)) {
     const priceMatches = uniqueMatches(text, PRICE_TOKEN);
     for (const m of priceMatches) {
-      // For attribution lookups, use the full sentence so words like
-      // "According to" don't get clipped by the smaller display window.
       const sentence = containingSentence(text, m);
       if (ATTRIBUTION_TOKEN.test(sentence)) continue;
-      unsupported.push(surroundingPhrase(text, m, 80));
-      if (unsupported.length >= 3) break;
+      findings.push({
+        text: surroundingPhrase(text, m, 80),
+        supported: false,
+        supportingTool: null,
+      });
+      if (findings.length >= 8) break;
     }
   }
 
-  // Event names without a calendar/news/RAG tool call.
   if (!hasAny(toolsInvoked, NEWS_OR_EVENT_TOOLS)) {
     const eventMatches = uniqueMatches(text, EVENT_TOKEN);
     for (const m of eventMatches) {
-      unsupported.push(surroundingPhrase(text, m, 80));
-      if (unsupported.length >= 5) break;
+      findings.push({
+        text: surroundingPhrase(text, m, 80),
+        supported: false,
+        supportingTool: null,
+      });
+      if (findings.length >= 8) break;
     }
   }
 
-  if (unsupported.length === 0) return null;
+  if (findings.length === 0) return null;
+  return { findings, toolsInvoked: [...toolsInvoked] };
+}
 
+/**
+ * Public entry point. Aggregates the structured findings into a
+ * single warning part. `unsupportedClaims[0]` carries the legacy
+ * summary line; the per-claim drill-down lives in the new
+ * `findings` field. Both shapes are persisted so a future reader
+ * that doesn't know about `findings` still gets the headline.
+ */
+export function enforceCitations(args: EnforceArgs): CitationWarningPart | null {
+  const report = collectFindings(args);
+  if (!report) return null;
   return {
     type: 'data-citation-warning',
-    // Single summary line so a noisy assistant doesn't produce a wall.
-    // The raw claims are still listed for the chat UI to render in a
-    // disclosure if it wants — `unsupportedClaims[0]` is the headline.
     unsupportedClaims: [SUMMARY_MESSAGE],
-    toolsInvoked: [...toolsInvoked].slice(0, 20),
+    toolsInvoked: report.toolsInvoked.slice(0, 20),
     stance: 'soft',
     createdAt: Date.now(),
+    findings: report.findings,
   };
 }
 

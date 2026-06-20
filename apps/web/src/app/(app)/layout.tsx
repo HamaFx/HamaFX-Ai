@@ -15,6 +15,8 @@
  */
 
 import { AmbientBackground } from '@/components/layout/ambient-background';
+import { CommandPalette } from '@/components/layout/command-palette';
+import { InstallNudge } from '@/components/layout/install-nudge';
 import { NavDrawer } from '@/components/layout/nav-drawer';
 import { NavDrawerProvider } from '@/components/layout/nav-drawer-context';
 import { OfflineBanner } from '@/components/layout/offline-banner';
@@ -53,10 +55,19 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             className="mx-auto w-full max-w-2xl px-4 pt-4 focus:outline-none"
             style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 24px)' }}
           >
+            {/* Phase B — UX_UPGRADE_PLAN.md item 12. PWA install hint.
+                Sticky-positioned below the top bar (drawn here so it
+                sits at the top of the page, above page content but
+                below the nav drawer overlay). */}
+            <InstallNudge />
             {children}
           </main>
           <NavDrawer />
           <OfflineBanner />
+          {/* Phase B — UX_UPGRADE_PLAN.md item 11. Global ⌘K / Ctrl-K
+              launcher. Self-contained: keyboard listener, vaul drawer,
+              floating touch button. */}
+          <CommandPalette />
           <Toaster />
         </div>
       </NavDrawerProvider>

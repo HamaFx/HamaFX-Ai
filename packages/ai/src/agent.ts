@@ -36,8 +36,9 @@ import {
   estimateCostUsd,
   tryReserveBudget,
 } from './cost';
+import { classifyStreamError, makeFallbackPart, type FallbackPartPayload } from './fallback';
 import { compactThread } from './memory/thread-summary';
-import { resolveUserModel, getVertexGoogleSearchTool } from './model';
+import { resolveOverrideModel, resolveUserModel, getVertexGoogleSearchTool } from './model';
 import {
   appendAssistantMessage,
   appendUserMessage,
@@ -189,20 +190,83 @@ export async function runChat(args: RunChatArgs) {
   if (modelOverride !== undefined) routingArgs.modelOverride = modelOverride;
   const routing: RoutingDecision = routeTurn(routingArgs);
 
-  let model;
+  // Phase B — UX_UPGRADE_PLAN.md item 8 + 15.
+  // The user picks a model override (or we go to the default).
+  // If they picked one:
+  //   - Try to resolve it against BYOK (resolveOverrideModel).
+  //   - On success, use the resolved model directly. No fallback.
+  //   - On failure, capture the override and try the default
+  //     domain; on a recoverable failure during that path, append
+  //     a `data-fallback` part to the assistant message so the UI
+  //     can show "Override unavailable, used <default>."
+  // If no override was passed, the default-domain path is the only
+  // path and any failure surfaces to the user as today.
+  let fallbackInfo: FallbackPartPayload | null = null;
+  let model: Awaited<ReturnType<typeof resolveUserModel>>['model'] | null = null;
   let modelId: string = env.AI_DEFAULT_MODEL;
-  try {
-    const domainArg = routing.domain === 'generic' ? 'default' : routing.domain;
-    const res = resolveUserModel(userSettings, domainArg, env);
-    model = res.model;
-    modelId = res.modelId;
-  } catch (err) {
-    console.warn(
-      `[ai] resolveUserModel failed for domain ${routing.domain} (${err instanceof Error ? err.message : 'unknown'}); falling back to AI_DEFAULT_MODEL=${env.AI_DEFAULT_MODEL}`,
-    );
-    // If BYOK resolution fails, we shouldn't fallback to the global gateway unless we want to,
-    // but right now BYOK is required. If they don't have keys, we throw.
-    throw err;
+
+  // Happy path: explicit override that resolved.
+  if (typeof modelOverride === 'string' && modelOverride.length > 0) {
+    const resolved = resolveOverrideModel({
+      override: modelOverride,
+      userSettings,
+      env,
+    });
+    if (resolved) {
+      model = resolved.model;
+      modelId = resolved.modelId;
+    } else {
+      // Override was specified but didn't resolve. Try the default
+      // domain; on a recoverable failure here we set fallbackInfo.
+      const domainArg = routing.domain === 'generic' ? 'default' : routing.domain;
+      try {
+        const res = resolveUserModel(userSettings, domainArg, env);
+        model = res.model;
+        modelId = res.modelId;
+      } catch (err) {
+        const decision = classifyStreamError(err);
+        if (decision.fallback) {
+          console.warn(
+            `[ai] model override "${modelOverride}" failed (${decision.reason}: ${decision.message}); falling back to AI_DEFAULT_MODEL=${env.AI_DEFAULT_MODEL}`,
+          );
+          fallbackInfo = makeFallbackPart(modelOverride, decision);
+          try {
+            const fallbackRes = resolveUserModel(userSettings, 'default', env);
+            model = fallbackRes.model;
+            modelId = fallbackRes.modelId;
+          } catch (fallbackErr) {
+            console.error(
+              `[ai] fallback to AI_DEFAULT_MODEL also failed: ${fallbackErr instanceof Error ? fallbackErr.message : 'unknown'}`,
+            );
+            throw err;
+          }
+        } else {
+          console.warn(
+            `[ai] resolveUserModel failed for domain ${routing.domain} (${err instanceof Error ? err.message : 'unknown'}); falling back to AI_DEFAULT_MODEL=${env.AI_DEFAULT_MODEL}`,
+          );
+          throw err;
+        }
+      }
+    }
+  } else {
+    // No override — straight to default domain.
+    try {
+      const domainArg = routing.domain === 'generic' ? 'default' : routing.domain;
+      const res = resolveUserModel(userSettings, domainArg, env);
+      model = res.model;
+      modelId = res.modelId;
+    } catch (err) {
+      console.warn(
+        `[ai] resolveUserModel failed for domain ${routing.domain} (${err instanceof Error ? err.message : 'unknown'}); falling back to AI_DEFAULT_MODEL=${env.AI_DEFAULT_MODEL}`,
+      );
+      throw err;
+    }
+  }
+
+  // Narrow the type — at this point `model` is guaranteed non-null
+  // because every path above either assigns it or throws.
+  if (!model) {
+    throw new Error('model resolution produced a null model — this is a bug');
   }
 
   // 4b) Plan-then-act (Phase 7c). Runs only when `routing.planRequired`
@@ -404,6 +468,16 @@ export async function runChat(args: RunChatArgs) {
             }
           } catch (err) {
             console.warn('[ai] citation enforcer failed — skipping', err);
+          }
+
+          // Phase B — UX_UPGRADE_PLAN.md item 15.
+          // Append the fallback marker so the chat surface can show
+          // "Override unavailable, used <default>." inline with the
+          // assistant's reply. The renderer (apps/web) already
+          // understands `data-fallback` from the markdown export
+          // pipeline so we reuse the same shape.
+          if (fallbackInfo) {
+            parts = [...parts, fallbackInfo as unknown as UIMessage['parts'][number]];
           }
 
           const ui: UIMessage = {

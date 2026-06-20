@@ -214,23 +214,109 @@ export function summarize(entries: JournalEntry[]): JournalStats {
   let totalR = 0;
   let countWithR = 0;
 
-  for (const e of entries) {
+  // Phase B — UX_UPGRADE_PLAN.md item 13.
+  // Trackers for the extended metrics. Initialised to safe defaults
+  // so the legacy return shape (without the optional fields) is
+  // preserved when entries is empty.
+  let sumWinningR = 0;
+  let sumLosingR = 0;
+  let longestWinStreak = 0;
+  let longestLossStreak = 0;
+  let currentStreak: 'win' | 'loss' | null = null;
+  let currentStreakLen = 0;
+  let totalHoldMs = 0;
+  let holdCount = 0;
+
+  // Per-day-of-week: count entries whose closedAt falls on each
+  // weekday. Sunday = 0 in JS Date.getDay(). We use closedAt when
+  // available, otherwise fall back to openedAt so the chart still
+  // has data for trades that are still open.
+  const perDow = {
+    sunday: 0,
+    monday: 0,
+    tuesday: 0,
+    wednesday: 0,
+    thursday: 0,
+    friday: 0,
+    saturday: 0,
+  };
+
+  // Max drawdown: walk entries in time order, accumulate a peak,
+  // track the largest (peak − current) drop.
+  const ordered = [...entries].sort((a, b) => a.openedAt - b.openedAt);
+  let cumulativeR = 0;
+  let peakR = 0;
+  let maxDrawdown = 0;
+
+  for (const e of ordered) {
     if (e.outcome === 'open') {
       open += 1;
       continue;
     }
-    if (e.outcome === 'win') wins += 1;
-    else if (e.outcome === 'loss') losses += 1;
-    else breakevens += 1;
+    if (e.outcome === 'win') {
+      wins += 1;
+      if (e.rMultiple !== null) sumWinningR += e.rMultiple;
+      if (currentStreak === 'win') {
+        currentStreakLen += 1;
+      } else {
+        currentStreak = 'win';
+        currentStreakLen = 1;
+      }
+      if (currentStreakLen > longestWinStreak) longestWinStreak = currentStreakLen;
+    } else if (e.outcome === 'loss') {
+      losses += 1;
+      if (e.rMultiple !== null) sumLosingR += e.rMultiple;
+      if (currentStreak === 'loss') {
+        currentStreakLen += 1;
+      } else {
+        currentStreak = 'loss';
+        currentStreakLen = 1;
+      }
+      if (currentStreakLen > longestLossStreak) longestLossStreak = currentStreakLen;
+    } else {
+      breakevens += 1;
+      // A breakeven doesn't extend a streak in either direction.
+      // It also doesn't reset — win/loss streaks continue across
+      // breakevens, matching how traders typically think about it.
+    }
     if (e.rMultiple !== null) {
       totalR += e.rMultiple;
       countWithR += 1;
+
+      cumulativeR += e.rMultiple;
+      if (cumulativeR > peakR) peakR = cumulativeR;
+      const dd = peakR - cumulativeR;
+      if (dd > maxDrawdown) maxDrawdown = dd;
+    }
+    if (e.closedAt !== null) {
+      totalHoldMs += e.closedAt - e.openedAt;
+      holdCount += 1;
+      const d = new Date(e.closedAt);
+      const dow = d.getUTCDay();
+      switch (dow) {
+        case 0: perDow.sunday += 1; break;
+        case 1: perDow.monday += 1; break;
+        case 2: perDow.tuesday += 1; break;
+        case 3: perDow.wednesday += 1; break;
+        case 4: perDow.thursday += 1; break;
+        case 5: perDow.friday += 1; break;
+        case 6: perDow.saturday += 1; break;
+      }
     }
   }
 
   const closed = wins + losses + breakevens;
   const winRate = closed === 0 ? 0 : wins / closed;
   const avgR = countWithR === 0 ? 0 : totalR / countWithR;
+  const avgHoldMs = holdCount === 0 ? 0 : totalHoldMs / holdCount;
+  // Profit factor: gross wins / |gross losses|. Return null when
+  // there are no losses (Infinity is not meaningful in the UI).
+  const profitFactor: number | null =
+    sumLosingR === 0
+      ? sumWinningR > 0
+        ? null
+        : 0
+      : sumWinningR / Math.abs(sumLosingR);
 
   return {
     count: entries.length,
@@ -241,6 +327,12 @@ export function summarize(entries: JournalEntry[]): JournalStats {
     winRate,
     avgR,
     totalR,
+    maxDrawdown,
+    longestWinStreak,
+    longestLossStreak,
+    profitFactor,
+    avgHoldMs,
+    perDayOfWeek: perDow,
   };
 }
 

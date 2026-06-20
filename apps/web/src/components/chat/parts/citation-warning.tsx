@@ -22,8 +22,14 @@
 // with an expandable list of unsupported claim phrases. We deliberately
 // keep this quiet — the enforcer is heuristic and `stance: 'soft'` so
 // we never want to overshadow the assistant's actual answer.
+//
+// Phase B — UX_UPGRADE_PLAN.md item 9.
+// When the warning part carries a structured `findings` array, we
+// render each finding as its own row with a "supported" / "no tool
+// source" pill. The legacy flat `unsupportedClaims` list is still
+// rendered for parts persisted before the findings field landed.
 
-import { Quote, ChevronDown, ChevronRight } from 'lucide-react';
+import { Quote, ChevronDown, ChevronRight, Check, X } from 'lucide-react';
 import { useState } from 'react';
 
 import type { CitationWarningPart } from '@hamafx/shared';
@@ -39,6 +45,22 @@ export function CitationWarningPartView({ part }: CitationWarningProps) {
       ? 'border-warn/40 bg-warn/5 text-warn'
       : 'border-divider/60 bg-bg-elev-1/60 text-fg-muted';
 
+  const hasFindings = (part.findings?.length ?? 0) > 0;
+  // Backward compat: parts without `findings` get one synthetic
+  // finding per `unsupportedClaims` entry so the old layout still
+  // works.
+  const rows = hasFindings
+    ? part.findings!.map((f) => ({
+        text: f.text,
+        supported: f.supported,
+        supportingTool: f.supportingTool ?? null,
+      }))
+    : part.unsupportedClaims.map((text) => ({
+        text,
+        supported: false,
+        supportingTool: null as string | null,
+      }));
+
   return (
     <div className={`flex flex-col gap-1 rounded-2xl border px-3 py-2 ${tone}`}>
       <button
@@ -50,16 +72,31 @@ export function CitationWarningPartView({ part }: CitationWarningProps) {
         {open ? <ChevronDown className="size-3.5" /> : <ChevronRight className="size-3.5" />}
         <Quote className="size-3.5" />
         <span>
-          {part.unsupportedClaims.length} statement
-          {part.unsupportedClaims.length === 1 ? '' : 's'} without a tool source
+          {rows.length} statement{rows.length === 1 ? '' : 's'} without a tool source
         </span>
       </button>
 
       {open ? (
         <ul className="ml-6 flex flex-col gap-1 text-body-sm">
-          {part.unsupportedClaims.map((c, i) => (
-            <li key={i} className="text-fg-subtle">
-              · {c}
+          {rows.map((row, i) => (
+            <li key={i} className="text-fg-subtle flex items-start gap-2">
+              {row.supported ? (
+                <Check
+                  className="text-bull mt-0.5 size-3.5 shrink-0"
+                  aria-label="supported"
+                />
+              ) : (
+                <X
+                  className="text-warn mt-0.5 size-3.5 shrink-0"
+                  aria-label="no tool source"
+                />
+              )}
+              <span className="flex-1">{row.text}</span>
+              {row.supportingTool ? (
+                <span className="text-fg-subtle ml-2 font-mono text-caption">
+                  {row.supportingTool}
+                </span>
+              ) : null}
             </li>
           ))}
         </ul>

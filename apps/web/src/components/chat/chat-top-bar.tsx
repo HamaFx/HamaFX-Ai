@@ -27,7 +27,7 @@
 // doesn't open" intermittent bug caused by stacked drawer instances.
 
 import type { Symbol } from '@hamafx/shared';
-import { Loader2, MessagesSquare, MoreHorizontal, Plus, Search, Sparkles, Trash2, Check } from 'lucide-react';
+import { Loader2, MessagesSquare, MoreHorizontal, Plus, Search, Sparkles, Trash2, Check, FileDown } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useRef, useState, useTransition } from 'react';
 import { toast } from 'sonner';
@@ -123,6 +123,22 @@ export function ChatTopBar({ threadId, title, pinnedSymbol, threads, isStreaming
         });
       }
     });
+  }
+
+  /**
+   * Phase B — UX_UPGRADE_PLAN.md item 14.
+   * Trigger a Markdown export download. The browser handles the
+   * download because the route returns Content-Disposition:
+   * attachment; we just open the URL in the same tab.
+   */
+  function exportThread() {
+    setMenuOpen(false);
+    // We can't POST a download via fetchCsrf and stream the result
+    // back to the user as a file in a portable way across browsers.
+    // Opening the URL in a new tab is the standard pattern: the
+    // browser sees the Content-Disposition header and saves the
+    // file instead of navigating.
+    window.open(`/api/chat/threads/${threadId}/export`, '_blank', 'noopener,noreferrer');
   }
 
   /**
@@ -234,6 +250,16 @@ export function ChatTopBar({ threadId, title, pinnedSymbol, threads, isStreaming
               >
                 <MessagesSquare className="size-4" />
                 Switch conversation
+              </button>
+              <div className="border-divider/60 border-t" />
+              <button
+                role="menuitem"
+                type="button"
+                onClick={exportThread}
+                className="text-fg hover:bg-bg-elev-2 flex min-h-[48px] w-full items-center gap-2 px-4 py-3 text-left"
+              >
+                <FileDown className="size-4" />
+                Export as Markdown
               </button>
               <div className="border-divider/60 border-t" />
               <button

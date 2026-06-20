@@ -30,6 +30,9 @@ import {
   Percent,
   Award,
   TrendingDown,
+  Flame,
+  Clock,
+  CalendarDays,
 } from 'lucide-react';
 import { useMemo } from 'react';
 
@@ -311,6 +314,142 @@ export function StatsSummary({ stats, entries = [] }: StatsSummaryProps) {
           <span className="text-[9px] text-fg-muted font-medium">Single maximum R loss</span>
         </div>
       </div>
+
+      {/* Phase B — UX_UPGRADE_PLAN.md item 13. Extended stats
+          surface. Three new tiles + a per-day-of-week bar chart.
+          All values are pre-computed by the server-side
+          summarize() so we don't have to re-derive them here. */}
+      {hasExtendedStats(stats) ? (
+        <>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+            <div className="border border-divider bg-bg-elev-1 rounded-lg p-3.5 flex flex-col gap-1">
+              <div className="flex items-center justify-between">
+                <span className="text-caption font-bold uppercase tracking-wider text-fg-subtle">Win Streak</span>
+                <Flame className="size-3.5 text-bull/70" />
+              </div>
+              <p className="text-lg font-bold tracking-tight mt-1.5 text-bull tabular-nums">
+                {stats.longestWinStreak}
+              </p>
+              <span className="text-[9px] text-fg-muted font-medium">Longest consecutive wins (across breakevens)</span>
+            </div>
+
+            <div className="border border-divider bg-bg-elev-1 rounded-lg p-3.5 flex flex-col gap-1">
+              <div className="flex items-center justify-between">
+                <span className="text-caption font-bold uppercase tracking-wider text-fg-subtle">Loss Streak</span>
+                <Flame className="size-3.5 text-bear/70" />
+              </div>
+              <p className="text-lg font-bold tracking-tight mt-1.5 text-bear/80 tabular-nums">
+                {stats.longestLossStreak}
+              </p>
+              <span className="text-[9px] text-fg-muted font-medium">Longest consecutive losses</span>
+            </div>
+
+            <div className="border border-divider bg-bg-elev-1 rounded-lg p-3.5 flex flex-col gap-1">
+              <div className="flex items-center justify-between">
+                <span className="text-caption font-bold uppercase tracking-wider text-fg-subtle">Avg Hold</span>
+                <Clock className="size-3.5 text-info/70" />
+              </div>
+              <p className="text-lg font-bold tracking-tight mt-1.5 text-fg tabular-nums">
+                {(stats.avgHoldMs ?? 0) > 0 ? formatHoldTime(stats.avgHoldMs!) : '—'}
+              </p>
+              <span className="text-[9px] text-fg-muted font-medium">Average trade duration (closed)</span>
+            </div>
+          </div>
+
+          {stats.perDayOfWeek ? (
+            <div className="border border-divider bg-bg-elev-1 rounded-lg p-3.5 flex flex-col gap-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <CalendarDays className="size-3.5 text-fg-muted" />
+                  <span className="text-caption font-bold uppercase tracking-wider text-fg-subtle">
+                    Closed by day of week
+                  </span>
+                </div>
+                <span className="text-caption text-fg-subtle tabular-nums">
+                  {Object.values(stats.perDayOfWeek).reduce((a, b) => a + b, 0)} trades
+                </span>
+              </div>
+              <DayOfWeekChart perDayOfWeek={stats.perDayOfWeek} />
+            </div>
+          ) : null}
+        </>
+      ) : null}
     </div>
   );
+}
+
+/**
+ * Phase B — UX_UPGRADE_PLAN.md item 13.
+ * The extended stats are optional on the schema (for backward
+ * compat with data persisted before item 13). We check for the
+ * presence of the marker field so the new tiles only render when
+ * the server actually computed them.
+ */
+function hasExtendedStats(stats: JournalStats): boolean {
+  return (
+    stats.maxDrawdown !== undefined ||
+    stats.longestWinStreak !== undefined ||
+    stats.profitFactor !== undefined
+  );
+}
+
+/**
+ * 7-bar monochrome bar chart. Height proportional to the max
+ * weekday so the busiest day fills the row. Each bar is labelled
+ * with the 3-letter day abbreviation and the count.
+ */
+const DOW_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] as const;
+type DowKey = keyof JournalStats['perDayOfWeek'] extends never
+  ? 'sunday' | 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday'
+  : NonNullable<JournalStats['perDayOfWeek']> extends Record<infer K, number>
+    ? K & string
+    : string;
+const DOW_KEYS: DowKey[] = [
+  'sunday',
+  'monday',
+  'tuesday',
+  'wednesday',
+  'thursday',
+  'friday',
+  'saturday',
+];
+
+function DayOfWeekChart({
+  perDayOfWeek,
+}: {
+  perDayOfWeek: NonNullable<JournalStats['perDayOfWeek']>;
+}) {
+  const counts = DOW_KEYS.map((k) => perDayOfWeek[k] ?? 0);
+  const max = Math.max(1, ...counts); // avoid div-by-zero
+  return (
+    <div className="flex items-end gap-2 h-16">
+      {counts.map((n, i) => {
+        const heightPct = (n / max) * 100;
+        return (
+          <div key={DOW_KEYS[i]} className="flex flex-1 flex-col items-center gap-1">
+            <span className="text-fg-subtle text-[10px] tabular-nums">{n}</span>
+            <div className="bg-bg-elev-2 flex h-full w-full items-end overflow-hidden rounded">
+              <div
+                className="bg-brand w-full"
+                style={{ height: `${heightPct}%`, minHeight: n > 0 ? '4px' : '0' }}
+                aria-label={`${DOW_LABELS[i]}: ${n}`}
+              />
+            </div>
+            <span className="text-fg-muted text-[10px] uppercase tracking-wider">
+              {DOW_LABELS[i]}
+            </span>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function formatHoldTime(ms: number): string {
+  const min = Math.round(ms / 60_000);
+  if (min < 60) return `${min}m`;
+  const hr = Math.round(min / 60);
+  if (hr < 48) return `${hr}h`;
+  const day = Math.round(hr / 24);
+  return `${day}d`;
 }

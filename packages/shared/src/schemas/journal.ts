@@ -59,5 +59,27 @@ export const JournalStatsSchema = z.object({
   winRate: z.number().min(0).max(1),
   avgR: z.number(),
   totalR: z.number(),
+  /**
+   * Phase B — UX_UPGRADE_PLAN.md item 13.
+   * Optional extended metrics. Older callers (pre-Phase B) may
+   * not produce these — the chat UI handles the absence
+   * gracefully (renders — instead of a value).
+   */
+  maxDrawdown: z.number().optional(),
+  longestWinStreak: z.number().int().optional(),
+  longestLossStreak: z.number().int().optional(),
+  profitFactor: z.number().nullable().optional(),
+  avgHoldMs: z.number().optional(),
+  perDayOfWeek: z
+    .object({
+      sunday: z.number(),
+      monday: z.number(),
+      tuesday: z.number(),
+      wednesday: z.number(),
+      thursday: z.number(),
+      friday: z.number(),
+      saturday: z.number(),
+    })
+    .optional(),
 });
 export type JournalStats = z.infer<typeof JournalStatsSchema>;

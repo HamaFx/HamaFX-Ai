@@ -41,6 +41,7 @@ import { Tooltip } from '@/components/ui/tooltip';
 import { cn } from '@/lib/cn';
 
 import { CitationWarningPartView } from './parts/citation-warning';
+import { FallbackPartView } from './parts/fallback';
 import { ChatToolPart, type ToolPartState } from './parts/registry';
 import { PlanPart } from './parts/plan';
 import { TextPart } from './parts/text';
@@ -341,6 +342,21 @@ function renderPart(
       <PlanPart
         key={idx}
         plan={part as unknown as Parameters<typeof PlanPart>[0]['plan']}
+      />
+    );
+  }
+
+  // Phase B — UX_UPGRADE_PLAN.md item 15. Inline card explaining
+  // that the requested model override failed and the default was
+  // used instead. The amber tone is distinct from citation
+  // warnings (bear) so the user can tell them apart at a glance.
+  if (part.type === 'data-fallback') {
+    return (
+      <FallbackPartView
+        key={idx}
+        part={
+          part as unknown as Parameters<typeof FallbackPartView>[0]['part']
+        }
       />
     );
   }

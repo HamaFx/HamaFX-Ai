@@ -25,7 +25,7 @@
 // (h-12) primary button so it lives in the thumb zone at the bottom of
 // the drawer.
 import { SYMBOLS, TIMEFRAMES, type Symbol, type Timeframe } from '@hamafx/shared';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
@@ -204,6 +204,19 @@ export function AlertForm({ initialSymbol, onCreated }: AlertFormProps) {
         />
       </div>
 
+      {/* Phase B — UX_UPGRADE_PLAN.md item 10. Live preview of how
+          often this rule would have fired historically. Debounced
+          400ms so a power user typing the level doesn't spam the
+          preview endpoint. The preview is informational only — it
+          never blocks the create button. */}
+      <PreviewCallout
+        type={type}
+        symbol={symbol}
+        tf={tf}
+        direction={direction}
+        level={level}
+      />
+
       <div className="flex flex-col gap-2">
         <span className="text-fg-subtle text-body-sm uppercase tracking-wide">Delivery Methods</span>
         <div className="flex gap-4">
@@ -260,4 +273,150 @@ export function AlertForm({ initialSymbol, onCreated }: AlertFormProps) {
       </Button>
     </form>
   );
+}
+
+// ----------------------------------------------------------------------
+// <PreviewCallout> — debounced live preview of the rule.
+//
+// Phase B — UX_UPGRADE_PLAN.md item 10.
+// Pure presentation; the actual simulation lives in
+// packages/ai/src/alerts/simulate.ts and runs server-side via
+// /api/alerts/preview. We send the candidate rule on every input
+// change but debounce the fetch by 400ms so a power user typing
+// the level doesn't hammer the endpoint.
+// ----------------------------------------------------------------------
+
+interface PreviewCalloutProps {
+  type: RuleType;
+  symbol: Symbol;
+  tf: Timeframe;
+  direction: 'above' | 'below';
+  level: string;
+}
+
+type PreviewState =
+  | { kind: 'idle' }
+  | { kind: 'loading' }
+  | { kind: 'unsupported' }
+  | { kind: 'empty' }
+  | { kind: 'ok'; count: number; avgHoldMs: number };
+
+function buildRule(p: PreviewCalloutProps): unknown | null {
+  const numericLevel = Number(p.level);
+  if (!Number.isFinite(numericLevel)) return null;
+  if (p.type === 'priceCross') {
+    return { type: 'priceCross', symbol: p.symbol, level: numericLevel, direction: p.direction };
+  }
+  if (p.type === 'candleClose') {
+    return { type: 'candleClose', symbol: p.symbol, tf: p.tf, level: numericLevel, direction: p.direction };
+  }
+  return null;
+}
+
+function PreviewCallout(props: PreviewCalloutProps) {
+  const [state, setState] = useState<PreviewState>({ kind: 'idle' });
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    // Cancel any pending fetch when the inputs change.
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+    if (props.type === 'indicatorCross') {
+      setState({ kind: 'unsupported' });
+      return;
+    }
+    const rule = buildRule(props);
+    if (!rule) {
+      setState({ kind: 'idle' });
+      return;
+    }
+    setState({ kind: 'loading' });
+    timerRef.current = setTimeout(async () => {
+      try {
+        const res = await fetchCsrf('/api/alerts/preview', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ rule, lookbackDays: 90 }),
+        });
+        if (!res.ok) {
+          setState({ kind: 'empty' });
+          return;
+        }
+        const data = (await res.json()) as {
+          count?: number;
+          avgHoldMs?: number;
+          unsupported?: boolean;
+        };
+        if (data.unsupported) {
+          setState({ kind: 'unsupported' });
+          return;
+        }
+        if (typeof data.count !== 'number' || data.count === 0) {
+          setState({ kind: 'empty' });
+          return;
+        }
+        setState({
+          kind: 'ok',
+          count: data.count,
+          avgHoldMs: typeof data.avgHoldMs === 'number' ? data.avgHoldMs : 0,
+        });
+      } catch {
+        setState({ kind: 'empty' });
+      }
+    }, 400);
+    return () => {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+        timerRef.current = null;
+      }
+    };
+  }, [props.type, props.symbol, props.tf, props.direction, props.level]);
+
+  if (state.kind === 'idle' || state.kind === 'loading') return null;
+
+  return (
+    <div
+      role="status"
+      aria-live="polite"
+      className={cn(
+        'rounded-lg border p-3 text-body-sm',
+        state.kind === 'ok'
+          ? 'border-info/30 bg-info/10 text-fg-muted'
+          : 'border-divider/60 bg-bg-elev-1/40 text-fg-subtle',
+      )}
+    >
+      {state.kind === 'unsupported' ? (
+        <p>Preview unavailable for indicator rules (v1).</p>
+      ) : state.kind === 'empty' ? (
+        <p>No historical fires in the last 90 days for this level.</p>
+      ) : (
+        <p>
+          Would have fired{' '}
+          <span className="text-fg font-semibold tabular-nums">{state.count}</span>{' '}
+          time{state.count === 1 ? '' : 's'} in the last 90 days.
+          {state.avgHoldMs > 0 ? (
+            <>
+              {' '}
+              Average hold:{' '}
+              <span className="text-fg tabular-nums">
+                {formatDuration(state.avgHoldMs)}
+              </span>
+              .
+            </>
+          ) : null}
+        </p>
+      )}
+    </div>
+  );
+}
+
+function formatDuration(ms: number): string {
+  const min = Math.round(ms / 60_000);
+  if (min < 60) return `${min}m`;
+  const hr = Math.round(min / 60);
+  if (hr < 48) return `${hr}h`;
+  const day = Math.round(hr / 24);
+  return `${day}d`;
 }

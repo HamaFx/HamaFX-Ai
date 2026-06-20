@@ -98,6 +98,12 @@ export {
   type RuleReading,
 } from './alerts/evaluator';
 export { deliverAlert, type DeliveryResult } from './alerts/delivery';
+export {
+  simulateAlert,
+  type SimCandle,
+  type SimFire,
+  type SimResult,
+} from './alerts/simulate';
 
 // Journal
 export {

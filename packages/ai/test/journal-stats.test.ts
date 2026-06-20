@@ -98,3 +98,124 @@ describe('summarize', () => {
     expect(s.totalR).toBeCloseTo(1);
   });
 });
+
+describe('Phase B item 13 — extended journal stats', () => {
+  it('reports zero for all extended metrics on empty input', () => {
+    const s = summarize([]);
+    expect(s.maxDrawdown).toBe(0);
+    expect(s.longestWinStreak).toBe(0);
+    expect(s.longestLossStreak).toBe(0);
+    expect(s.profitFactor).toBe(0);
+    expect(s.avgHoldMs).toBe(0);
+    expect(s.perDayOfWeek).toEqual({
+      sunday: 0,
+      monday: 0,
+      tuesday: 0,
+      wednesday: 0,
+      thursday: 0,
+      friday: 0,
+      saturday: 0,
+    });
+  });
+
+  it('computes max drawdown from a sequence of R-multiples', () => {
+    // 1R, 1R, 1R (peak=3), -2R, -2R (drawdown from peak 3 to -1 = 4)
+    const s = summarize([
+      entry({ openedAt: 1, closedAt: 2, outcome: 'win', rMultiple: 1 }),
+      entry({ openedAt: 3, closedAt: 4, outcome: 'win', rMultiple: 1 }),
+      entry({ openedAt: 5, closedAt: 6, outcome: 'win', rMultiple: 1 }),
+      entry({ openedAt: 7, closedAt: 8, outcome: 'loss', rMultiple: -2 }),
+      entry({ openedAt: 9, closedAt: 10, outcome: 'loss', rMultiple: -2 }),
+    ]);
+    expect(s.maxDrawdown).toBeCloseTo(4);
+  });
+
+  it('tracks the longest win and loss streaks (breakevens do not reset)', () => {
+    const s = summarize([
+      entry({ outcome: 'win', rMultiple: 1 }),
+      entry({ outcome: 'win', rMultiple: 1 }),
+      entry({ outcome: 'breakeven', rMultiple: 0 }),
+      entry({ outcome: 'win', rMultiple: 1 }),
+      entry({ outcome: 'win', rMultiple: 1 }),
+      entry({ outcome: 'win', rMultiple: 1 }),
+      entry({ outcome: 'loss', rMultiple: -1 }),
+      entry({ outcome: 'loss', rMultiple: -1 }),
+    ]);
+    // Breakevens do not break a streak — the 2 wins + breakeven +
+    // 3 wins form a single 5-win streak. The 2 consecutive losses
+    // at the tail form the longest loss streak.
+    expect(s.longestWinStreak).toBe(5);
+    expect(s.longestLossStreak).toBe(2);
+  });
+
+  it('a loss does break a win streak', () => {
+    const s = summarize([
+      entry({ outcome: 'win', rMultiple: 1 }),
+      entry({ outcome: 'win', rMultiple: 1 }),
+      entry({ outcome: 'loss', rMultiple: -1 }),
+      entry({ outcome: 'win', rMultiple: 1 }),
+    ]);
+    expect(s.longestWinStreak).toBe(2);
+  });
+
+  it('computes profit factor as gross wins / |gross losses|', () => {
+    const s = summarize([
+      entry({ outcome: 'win', rMultiple: 2 }),
+      entry({ outcome: 'win', rMultiple: 1 }),
+      entry({ outcome: 'loss', rMultiple: -0.5 }),
+    ]);
+    // (2 + 1) / 0.5 = 6
+    expect(s.profitFactor).toBeCloseTo(6);
+  });
+
+  it('returns null profit factor when there are wins but no losses', () => {
+    const s = summarize([
+      entry({ outcome: 'win', rMultiple: 1 }),
+      entry({ outcome: 'win', rMultiple: 1 }),
+    ]);
+    expect(s.profitFactor).toBeNull();
+  });
+
+  it('returns 0 profit factor when there are no wins and no losses', () => {
+    const s = summarize([entry({ outcome: 'breakeven', rMultiple: 0 })]);
+    expect(s.profitFactor).toBe(0);
+  });
+
+  it('computes avg hold time from closedAt - openedAt', () => {
+    const s = summarize([
+      entry({ openedAt: 0, closedAt: 60_000, outcome: 'win', rMultiple: 1 }),
+      entry({ openedAt: 0, closedAt: 120_000, outcome: 'loss', rMultiple: -1 }),
+    ]);
+    expect(s.avgHoldMs).toBe(90_000);
+  });
+
+  it('groups entries by day of week (UTC) of closedAt', () => {
+    // 2026-06-21 is a Sunday (UTC). 2026-06-15 is a Monday.
+    // 2026-06-17 is a Wednesday.
+    const sunday = Date.UTC(2026, 5, 21, 12, 0, 0); // Sun
+    const monday = Date.UTC(2026, 5, 15, 12, 0, 0); // Mon
+    const wednesday = Date.UTC(2026, 5, 17, 12, 0, 0); // Wed
+    const s = summarize([
+      entry({ openedAt: sunday, closedAt: sunday + 1, outcome: 'win', rMultiple: 1 }),
+      entry({ openedAt: monday, closedAt: monday + 1, outcome: 'win', rMultiple: 1 }),
+      entry({ openedAt: wednesday, closedAt: wednesday + 1, outcome: 'loss', rMultiple: -1 }),
+    ]);
+    expect(s.perDayOfWeek).toEqual({
+      sunday: 1,
+      monday: 1,
+      tuesday: 0,
+      wednesday: 1,
+      thursday: 0,
+      friday: 0,
+      saturday: 0,
+    });
+  });
+
+  it('open trades do not contribute to per-day-of-week counts', () => {
+    const monday = Date.UTC(2026, 5, 15, 12, 0, 0);
+    const s = summarize([
+      entry({ openedAt: monday, closedAt: null, outcome: 'open', rMultiple: null }),
+    ]);
+    expect(s.perDayOfWeek?.monday).toBe(0);
+  });
+});
