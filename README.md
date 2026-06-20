@@ -95,13 +95,13 @@ Worker (GCE VM)
 
 | Package | Role | LOC |
 |---------|------|-----|
-| `@hamafx/ai` | Agent core — chat, 32 tools, routing, RAG | 12,500 |
-| `@hamafx/data` | Market adapters — 5 providers, cache, failover | 3,300 |
-| `@hamafx/web` | Next.js 15 PWA — chat, charts, journal, alerts | 20,700 |
-| `@hamafx/db` | Drizzle ORM — 20 tables, Postgres + PGlite | 1,000 |
-| `@hamafx/indicators` | Pure TS indicators — classic + Smart Money Concepts | 1,100 |
-| `@hamafx/shared` | Zod schemas, types, env, errors | 2,700 |
-| `@hamafx/worker` | Node daemon — SignalR, jobs, scheduler | 2,400 |
+| `@hamafx/ai` | Agent core — chat, 32 tools, routing, RAG | 16,957 |
+| `@hamafx/data` | Market adapters — 5 providers, cache, failover | 5,920 |
+| `@hamafx/web` | Next.js 15 PWA — chat, charts, journal, alerts | 26,434 |
+| `@hamafx/db` | Drizzle ORM — 22 tables, Postgres + PGlite | 2,178 |
+| `@hamafx/indicators` | Pure TS indicators — classic + Smart Money Concepts | 2,271 |
+| `@hamafx/shared` | Zod schemas, types, env, errors | 4,276 |
+| `@hamafx/worker` | Node daemon — SignalR, jobs, scheduler | 4,896 |
 
 ---
 
@@ -153,7 +153,7 @@ Worker (GCE VM)
 - **DB:** Postgres (Supabase) · pgvector · Drizzle ORM · PGlite (local dev)
 - **Build:** pnpm workspaces · Turborepo · esbuild (worker)
 - **Auth:** NextAuth.js v5 · CSRF · BYOK (Bring Your Own Key) per user
-- **Testing:** Vitest · Playwright · 64 test files · 350+ cases
+- **Testing:** Vitest · Playwright · 72 test files · 394 cases
 
 ---
 
