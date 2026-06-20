@@ -29,7 +29,7 @@ export default function DashboardPage() {
         
         {/* Main Chart Area - Takes up more space */}
         <div className="col-span-2 @3xl:col-span-3 @3xl:row-span-2 min-h-[300px] @3xl:min-h-[400px]">
-          <div className="card-premium h-full w-full flex flex-col p-4" style={{ contentVisibility: 'auto' }}>
+          <div className="border border-divider bg-bg-elev-1 rounded-lg h-full w-full flex flex-col p-4" style={{ contentVisibility: 'auto' }}>
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-sm font-semibold tracking-tight">Market Overview</h2>
               <span className="text-xs text-fg-muted">XAUUSD</span>
@@ -42,7 +42,7 @@ export default function DashboardPage() {
         
         {/* Recent Activity / News - Side column */}
         <div className="col-span-2 @3xl:col-span-1 @3xl:row-span-2 min-h-[300px]">
-          <div className="card-premium h-full w-full flex flex-col p-4" style={{ contentVisibility: 'auto' }}>
+          <div className="border border-divider bg-bg-elev-1 rounded-lg h-full w-full flex flex-col p-4" style={{ contentVisibility: 'auto' }}>
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-sm font-semibold tracking-tight">Recent Activity</h2>
             </div>

@@ -169,7 +169,7 @@ export function StatsSummary({ stats, entries = [] }: StatsSummaryProps) {
     <div className="flex flex-col gap-4">
       {/* Visual Outcome Distribution Bar */}
       {entries.length > 0 && (
-        <div className="card-premium p-4 flex flex-col gap-2.5">
+        <div className="border border-divider bg-bg-elev-1 rounded-lg p-4 flex flex-col gap-2.5">
           <div className="flex items-center justify-between text-xs font-semibold text-fg-subtle">
             <span className="uppercase tracking-wider">Outcome Distribution</span>
             <span className="tabular-nums text-fg-muted">{entries.length} Total Trades logged</span>
@@ -206,7 +206,7 @@ export function StatsSummary({ stats, entries = [] }: StatsSummaryProps) {
             )}
           </div>
 
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 mt-0.5 text-[10px] font-semibold text-fg-subtle">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 mt-0.5 text-caption font-semibold text-fg-subtle">
             <div className="flex items-center gap-1.5">
               <span className="size-2 rounded-full bg-bull" />
               <span>Wins ({distribution.raw.win})</span>
@@ -261,9 +261,9 @@ export function StatsSummary({ stats, entries = [] }: StatsSummaryProps) {
       {/* Advanced Institutional Metrics Grid */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-2">
         {/* Profit Factor */}
-        <div className="card-premium p-3.5 flex flex-col gap-1 relative overflow-hidden group hover:border-brand/40 transition-all">
+        <div className="border border-divider bg-bg-elev-1 rounded-lg p-3.5 flex flex-col gap-1 relative overflow-hidden group hover:border-brand/40 transition-all">
           <div className="flex items-center justify-between">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-fg-subtle">Profit Factor</span>
+            <span className="text-caption font-bold uppercase tracking-wider text-fg-subtle">Profit Factor</span>
             <Percent className="size-3.5 text-brand/70" />
           </div>
           <p className={cn(
@@ -276,9 +276,9 @@ export function StatsSummary({ stats, entries = [] }: StatsSummaryProps) {
         </div>
 
         {/* Max Drawdown */}
-        <div className="card-premium p-3.5 flex flex-col gap-1 relative overflow-hidden group hover:border-bear/40 transition-all">
+        <div className="border border-divider bg-bg-elev-1 rounded-lg p-3.5 flex flex-col gap-1 relative overflow-hidden group hover:border-bear/40 transition-all">
           <div className="flex items-center justify-between">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-fg-subtle">Max R DD</span>
+            <span className="text-caption font-bold uppercase tracking-wider text-fg-subtle">Max R DD</span>
             <ShieldAlert className="size-3.5 text-bear/70" />
           </div>
           <p className="text-lg font-bold tracking-tight mt-1.5 text-bear tabular-nums">
@@ -288,9 +288,9 @@ export function StatsSummary({ stats, entries = [] }: StatsSummaryProps) {
         </div>
 
         {/* Best Trade Win */}
-        <div className="card-premium p-3.5 flex flex-col gap-1 relative overflow-hidden group hover:border-bull/40 transition-all">
+        <div className="border border-divider bg-bg-elev-1 rounded-lg p-3.5 flex flex-col gap-1 relative overflow-hidden group hover:border-bull/40 transition-all">
           <div className="flex items-center justify-between">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-fg-subtle">Best Trade</span>
+            <span className="text-caption font-bold uppercase tracking-wider text-fg-subtle">Best Trade</span>
             <Award className="size-3.5 text-bull/70" />
           </div>
           <p className="text-lg font-bold tracking-tight mt-1.5 text-bull tabular-nums">
@@ -300,9 +300,9 @@ export function StatsSummary({ stats, entries = [] }: StatsSummaryProps) {
         </div>
 
         {/* Worst Trade Loss */}
-        <div className="card-premium p-3.5 flex flex-col gap-1 relative overflow-hidden group hover:border-bear/30 transition-all">
+        <div className="border border-divider bg-bg-elev-1 rounded-lg p-3.5 flex flex-col gap-1 relative overflow-hidden group hover:border-bear/30 transition-all">
           <div className="flex items-center justify-between">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-fg-subtle">Worst Trade</span>
+            <span className="text-caption font-bold uppercase tracking-wider text-fg-subtle">Worst Trade</span>
             <TrendingDown className="size-3.5 text-bear/70" />
           </div>
           <p className="text-lg font-bold tracking-tight mt-1.5 text-bear/80 tabular-nums">

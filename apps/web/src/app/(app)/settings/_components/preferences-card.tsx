@@ -107,7 +107,7 @@ export function PreferencesCard() {
   return (
     <section
       aria-labelledby="prefs-heading"
-      className="card-premium flex flex-col gap-1 p-4"
+      className="border border-divider bg-bg-elev-1 rounded-lg flex flex-col gap-1 p-4"
     >
       <header className="flex items-center gap-3 pb-2">
         <h2
@@ -116,7 +116,7 @@ export function PreferencesCard() {
         >
           Preferences
         </h2>
-        <p className="text-fg-subtle ml-auto text-[10px] uppercase tracking-wider">
+        <p className="text-fg-subtle ml-auto text-caption uppercase tracking-wider">
           Saved on this device
         </p>
       </header>

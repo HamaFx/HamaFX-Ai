@@ -150,7 +150,7 @@ export function EntryForm({ onCreated }: EntryFormProps) {
       </div>
 
       <div className="flex flex-col gap-2">
-        <label className="text-fg-subtle text-[11px] uppercase tracking-wide" htmlFor="notes">
+        <label className="text-fg-subtle text-body-sm uppercase tracking-wide" htmlFor="notes">
           Notes (optional)
         </label>
         <Input
@@ -163,7 +163,7 @@ export function EntryForm({ onCreated }: EntryFormProps) {
       </div>
 
       <div className="flex flex-col gap-2">
-        <label className="text-fg-subtle text-[11px] uppercase tracking-wide" htmlFor="tags">
+        <label className="text-fg-subtle text-body-sm uppercase tracking-wide" htmlFor="tags">
           Tags (optional, comma-separated)
         </label>
         <Input
@@ -204,7 +204,7 @@ function Field({
   const id = label.toLowerCase().replace(/[^a-z]/g, '-');
   return (
     <div className="flex flex-col gap-2">
-      <label className="text-fg-subtle text-[11px] uppercase tracking-wide" htmlFor={id}>
+      <label className="text-fg-subtle text-body-sm uppercase tracking-wide" htmlFor={id}>
         {label}
       </label>
       <Input

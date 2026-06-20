@@ -185,7 +185,7 @@ export function NewsView({ initialArticles }: NewsViewProps) {
           {buckets.map(([label, items]) => (
             <section key={label} className="flex flex-col gap-3">
               <h2
-                className="bg-bg/95 supports-[backdrop-filter]:bg-bg/70 text-fg-subtle sticky z-10 -mx-4 flex items-baseline gap-2 px-5 py-2 text-[10px] font-semibold uppercase tracking-wider backdrop-blur-md"
+                className="bg-bg/95 supports-[backdrop-filter]:bg-bg/70 text-fg-subtle sticky z-10 -mx-4 flex items-baseline gap-2 px-5 py-2 text-caption font-semibold uppercase tracking-wider backdrop-blur-md"
                 style={{ top: 'calc(var(--topbar-h) + env(safe-area-inset-top))' }}
               >
                 {label}

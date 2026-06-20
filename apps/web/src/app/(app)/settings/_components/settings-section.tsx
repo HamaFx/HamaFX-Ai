@@ -36,7 +36,7 @@ export function SettingsSection({
   return (
     <section
       aria-labelledby={`section-${title.toLowerCase().replace(/\s+/g, '-')}`}
-      className="card-premium flex flex-col gap-4 p-4"
+      className="border border-divider bg-bg-elev-1 rounded-lg flex flex-col gap-4 p-4"
     >
       <header className="flex items-center gap-3">
         {icon ? (

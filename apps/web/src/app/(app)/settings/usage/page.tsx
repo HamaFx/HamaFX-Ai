@@ -70,7 +70,7 @@ function BudgetCard({ stats, maxDailyUsd }: { stats: UsageStats; maxDailyUsd: nu
   return (
     <section
       aria-labelledby="usage-budget-heading"
-      className="card-premium flex flex-col gap-3 p-4"
+      className="border border-divider bg-bg-elev-1 rounded-lg flex flex-col gap-3 p-4"
     >
       <header className="flex items-baseline justify-between gap-3">
         <h2 id="usage-budget-heading" className="text-fg-muted text-sm font-medium">
@@ -102,7 +102,7 @@ function BudgetCard({ stats, maxDailyUsd }: { stats: UsageStats; maxDailyUsd: nu
 function Stat({ label, value }: { label: string; value: string | number }) {
   return (
     <div className="flex flex-col">
-      <dt className="text-fg-subtle text-[10px] uppercase tracking-wide">{label}</dt>
+      <dt className="text-fg-subtle text-caption uppercase tracking-wide">{label}</dt>
       <dd className="text-fg font-semibold">{value}</dd>
     </div>
   );
@@ -119,7 +119,7 @@ function DailyChart({ daily7 }: { daily7: DayBucket[] }) {
   return (
     <section
       aria-labelledby="usage-daily-heading"
-      className="card-premium flex flex-col gap-3 p-4"
+      className="border border-divider bg-bg-elev-1 rounded-lg flex flex-col gap-3 p-4"
     >
       <h2 id="usage-daily-heading" className="text-fg-muted text-sm font-medium">
         Last 7 days
@@ -130,7 +130,7 @@ function DailyChart({ daily7 }: { daily7: DayBucket[] }) {
           return (
             <li
               key={d.date}
-              className="grid grid-cols-[auto_1fr_auto] items-center gap-2 text-[11px]"
+              className="grid grid-cols-[auto_1fr_auto] items-center gap-2 text-body-sm"
             >
               <span className="text-fg-subtle w-12 tabular-nums">{shortDate(d.date)}</span>
               <span
@@ -167,7 +167,7 @@ function ModelBreakdownCard({ stats }: { stats: UsageStats }) {
     return (
       <section
         aria-labelledby="usage-models-heading"
-        className="card-premium flex flex-col gap-2 p-4"
+        className="border border-divider bg-bg-elev-1 rounded-lg flex flex-col gap-2 p-4"
       >
         <h2 id="usage-models-heading" className="text-fg-muted text-sm font-medium">
           By model (30d)
@@ -179,7 +179,7 @@ function ModelBreakdownCard({ stats }: { stats: UsageStats }) {
   return (
     <section
       aria-labelledby="usage-models-heading"
-      className="card-premium flex flex-col gap-3 p-4"
+      className="border border-divider bg-bg-elev-1 rounded-lg flex flex-col gap-3 p-4"
     >
       <h2 id="usage-models-heading" className="text-fg-muted text-sm font-medium">
         By model (30d)
@@ -190,7 +190,7 @@ function ModelBreakdownCard({ stats }: { stats: UsageStats }) {
             key={m.model}
             className="grid grid-cols-[1fr_auto_auto_auto] items-baseline gap-3 text-xs tabular-nums"
           >
-            <span className="text-fg truncate font-mono text-[11px]">{m.model}</span>
+            <span className="text-fg truncate font-mono text-body-sm">{m.model}</span>
             <span className="text-fg-subtle">{m.turns} turns</span>
             <span className="text-fg-subtle">
               {(m.inputTokens + m.outputTokens).toLocaleString()} tok
@@ -212,7 +212,7 @@ function RecentTurnsCard({ rows }: { rows: Awaited<ReturnType<typeof listTelemet
     return (
       <section
         aria-labelledby="usage-recent-heading"
-        className="card-premium flex flex-col gap-2 p-4"
+        className="border border-divider bg-bg-elev-1 rounded-lg flex flex-col gap-2 p-4"
       >
         <h2 id="usage-recent-heading" className="text-fg-muted text-sm font-medium">
           Recent turns
@@ -227,7 +227,7 @@ function RecentTurnsCard({ rows }: { rows: Awaited<ReturnType<typeof listTelemet
   return (
     <section
       aria-labelledby="usage-recent-heading"
-      className="card-premium flex flex-col gap-3 p-4"
+      className="border border-divider bg-bg-elev-1 rounded-lg flex flex-col gap-3 p-4"
     >
       <h2 id="usage-recent-heading" className="text-fg-muted text-sm font-medium">
         Recent turns
@@ -239,8 +239,8 @@ function RecentTurnsCard({ rows }: { rows: Awaited<ReturnType<typeof listTelemet
             className="grid grid-cols-[1fr_auto] items-baseline gap-3 text-xs tabular-nums"
           >
             <div className="flex min-w-0 flex-col">
-              <span className="text-fg truncate font-mono text-[11px]">{r.model}</span>
-              <span className="text-fg-subtle text-[10px]">
+              <span className="text-fg truncate font-mono text-body-sm">{r.model}</span>
+              <span className="text-fg-subtle text-caption">
                 {formatRelative(r.createdAt)} · {r.inputTokens}/{r.outputTokens} tok · {r.toolCalls}{' '}
                 tools · {Math.round(r.ms / 100) / 10}s
               </span>

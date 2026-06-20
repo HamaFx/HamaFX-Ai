@@ -64,7 +64,7 @@ export function ApiKeyCard({ provider, currentValue }: ApiKeyCardProps) {
   }
 
   return (
-    <div className="card-premium p-4 flex flex-col gap-3">
+    <div className="border border-divider bg-bg-elev-1 rounded-lg p-4 flex flex-col gap-3">
       <div className="flex items-baseline justify-between gap-4">
         <div className="flex flex-col gap-1">
           <label
