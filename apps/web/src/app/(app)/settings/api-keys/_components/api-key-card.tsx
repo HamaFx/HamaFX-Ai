@@ -28,6 +28,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ProviderInfoDot } from '@/components/ui/provider-info-dot';
+import { withCsrf } from '@/lib/csrf';
 import type { ProviderMeta } from '@hamafx/shared';
 
 interface ApiKeyCardProps {
@@ -92,17 +93,42 @@ export function ApiKeyCard({ provider, currentValue, health, usage }: ApiKeyCard
     setTest({ kind: 'pending' });
     startTransition(async () => {
       try {
+        // Phase D — bug fix: the test endpoint sits behind the
+        // CSRF double-submit middleware (apps/web/src/middleware.ts),
+        // which checks `x-csrf-token` against the `hfx_csrf` cookie.
+        // Without the header, the middleware returns 403 plain text
+        // and the JSON parse below throws a misleading SyntaxError.
+        // `withCsrf` adds the header when the cookie is present.
         const res = await fetch('/api/settings/test-provider', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ provider: provider.id, apiKey: value.trim() }),
+          ...withCsrf({
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ provider: provider.id, apiKey: value.trim() }),
+          }),
         });
-        const data = (await res.json()) as { ok: boolean; error?: string };
-        if (!res.ok || !data.ok) {
-          setTest({ kind: 'err', message: data.error ?? `HTTP ${res.status}` });
+        // Guard against non-JSON responses (403 from the middleware,
+        // 502 from Vercel, etc.). Read the body as text first and
+        // only attempt JSON when it looks parseable, then fall back
+        // to a useful "HTTP <code>" message.
+        const text = await res.text();
+        const looksLikeJson = text.trimStart().startsWith('{');
+        let errorMessage: string;
+        if (looksLikeJson) {
+          try {
+            const data = JSON.parse(text) as { ok: boolean; error?: string };
+            if (!res.ok || !data.ok) {
+              errorMessage = data.error ?? `HTTP ${res.status}`;
+            } else {
+              setTest({ kind: 'ok' });
+              return;
+            }
+          } catch {
+            errorMessage = `HTTP ${res.status}: ${text.slice(0, 120)}`;
+          }
         } else {
-          setTest({ kind: 'ok' });
+          errorMessage = `HTTP ${res.status}: ${text.slice(0, 120)}`;
         }
+        setTest({ kind: 'err', message: errorMessage });
       } catch (err) {
         setTest({
           kind: 'err',

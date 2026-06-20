@@ -20,6 +20,7 @@ import { useState, useTransition } from 'react';
 import { CheckCircle2, Loader2, Play, XCircle } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
+import { withCsrf } from '@/lib/csrf';
 import { toast } from 'sonner';
 
 interface BulkTestButtonProps {
@@ -67,8 +68,12 @@ export function BulkTestButton({ action, disabled }: BulkTestButtonProps) {
       try {
         // Call the API directly so we can read the response. The
         // server action runs the same code path on the server.
+        // `withCsrf` injects the double-submit CSRF header — the
+        // middleware (apps/web/src/middleware.ts) rejects
+        // state-changing /api/* requests without it.
         const res = await fetch('/api/settings/bulk-test', {
           method: 'POST',
+          ...withCsrf(),
         });
         if (!res.ok) {
           const body = (await res.json().catch(() => null)) as {
