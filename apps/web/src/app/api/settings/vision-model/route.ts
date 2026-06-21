@@ -14,17 +14,22 @@
  * limitations under the License.
  */
 
-// /api/settings/chat-model — Phase F single-model picker.
+// /api/settings/vision-model — Phase D2 user-pickable vision model.
 //
-//   GET    /api/settings/chat-model
-//     → { chatModel: "<providerId>:<bareModelId>" | null }
+// Mirrors the chat-model endpoint exactly but writes to
+// user_settings.vision_model. The PUT handler additionally validates
+// that the chosen provider supports vision (provider.supports.vision)
+// and that the model is in the provider's spec catalog.
 //
-//   PUT    /api/settings/chat-model
-//     body: { providerId: ProviderId, modelId: string }
-//     → { ok: true, chatModel: "<providerId>:<modelId>" }
+//   GET    /api/settings/vision-model
+//     → { visionModel: "<providerId>:<bareModelId>" | null }
 //
-//   DELETE /api/settings/chat-model
-//     → { ok: true, chatModel: null }   (falls back to spec defaults)
+//   PUT    /api/settings/vision-model
+//     body: { providerId, modelId }
+//     → { ok: true, visionModel: "<providerId>:<modelId>" }
+//
+//   DELETE /api/settings/vision-model
+//     → { ok: true, visionModel: null }
 //
 // Auth: NextAuth session gate. Per-user data only.
 
@@ -34,11 +39,7 @@ import { PROVIDER_IDS, type ProviderId } from '@hamafx/shared/encryption';
 import { eq } from 'drizzle-orm';
 import { z } from 'zod';
 
-import {
-  errorResponse,
-  parseJsonBody,
-  withAuth,
-} from '@/lib/api';
+import { errorResponse, parseJsonBody, withAuth } from '@/lib/api';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -52,10 +53,10 @@ export const GET = withAuth<void>(async (_req, { user }) => {
   try {
     const db = getDb();
     const [row] = await db
-      .select({ chatModel: schema.userSettings.chatModel })
+      .select({ visionModel: schema.userSettings.visionModel })
       .from(schema.userSettings)
       .where(eq(schema.userSettings.userId, user.userId));
-    return Response.json({ chatModel: row?.chatModel ?? null });
+    return Response.json({ visionModel: row?.visionModel ?? null });
   } catch (err) {
     return errorResponse(err);
   }
@@ -76,36 +77,31 @@ export const PUT = withAuth<void>(async (req, { user }) => {
       { status: 400 },
     );
   }
-  // Models with provider prefix (OpenRouter, Vertex) come in as
-  // "<provider>/<bare>" — strip the prefix before lookup so the spec
-  // catalog (which stores bare ids) matches.
-  const bareModelId = body.modelId.includes('/')
-    ? body.modelId.split('/').slice(1).join('/')
-    : body.modelId;
-  // Phase D2 — defense in depth. The picker UI filters out tier:
-  // 'embedding' models, but a direct API call could still store one.
-  // Chat turns can't consume an embedding model (different capability,
-  // different dimension space) so reject the save up front.
-  const pickedModel = (spec.models ?? []).find(
-    (m: { modelId: string; tier?: string }) => m.modelId === bareModelId,
-  );
-  if (!pickedModel) {
+  // Defense in depth — vision tools can only consume vision-capable
+  // models. The picker UI already filters by supports.vision, but
+  // validate again here so a direct API call can't store a non-
+  // vision model in the user's vision column.
+  if (!spec.supports.vision) {
     return Response.json(
       {
         error: {
-          message: `Model ${body.modelId} is not in the ${body.providerId} catalog`,
+          message: `Provider ${body.providerId} does not support vision`,
         },
       },
       { status: 400 },
     );
   }
-  if (pickedModel.tier === 'embedding') {
+  const bareModelId = body.modelId.includes('/')
+    ? body.modelId.split('/').slice(1).join('/')
+    : body.modelId;
+  const known = (spec.models ?? []).some(
+    (m: { modelId: string }) => m.modelId === bareModelId,
+  );
+  if (!known) {
     return Response.json(
       {
         error: {
-          message:
-            `${body.modelId} is an embedding-only model and can't be used as a chat model. ` +
-            `Pick a chat-capable model (flagship / pro / fast / lite) instead.`,
+          message: `Model ${body.modelId} is not in the ${body.providerId} catalog`,
         },
       },
       { status: 400 },
@@ -117,9 +113,9 @@ export const PUT = withAuth<void>(async (req, { user }) => {
     const db = getDb();
     await db
       .update(schema.userSettings)
-      .set({ chatModel: value })
+      .set({ visionModel: value })
       .where(eq(schema.userSettings.userId, user.userId));
-    return Response.json({ ok: true, chatModel: value });
+    return Response.json({ ok: true, visionModel: value });
   } catch (err) {
     return errorResponse(err);
   }
@@ -130,9 +126,9 @@ export const DELETE = withAuth<void>(async (_req, { user }) => {
     const db = getDb();
     await db
       .update(schema.userSettings)
-      .set({ chatModel: null })
+      .set({ visionModel: null })
       .where(eq(schema.userSettings.userId, user.userId));
-    return Response.json({ ok: true, chatModel: null });
+    return Response.json({ ok: true, visionModel: null });
   } catch (err) {
     return errorResponse(err);
   }

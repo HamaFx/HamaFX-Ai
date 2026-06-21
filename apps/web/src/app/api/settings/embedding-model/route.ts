@@ -14,17 +14,22 @@
  * limitations under the License.
  */
 
-// /api/settings/chat-model — Phase F single-model picker.
+// /api/settings/embedding-model — Phase D2 user-pickable embedding model.
 //
-//   GET    /api/settings/chat-model
-//     → { chatModel: "<providerId>:<bareModelId>" | null }
+// Same shape as chat-model + vision-model. PUT validates that the
+// provider supports embedding AND the model is in the spec catalog.
 //
-//   PUT    /api/settings/chat-model
-//     body: { providerId: ProviderId, modelId: string }
-//     → { ok: true, chatModel: "<providerId>:<modelId>" }
+//   GET    /api/settings/embedding-model
+//     → { embeddingModel: "<providerId>:<bareModelId>" | null }
 //
-//   DELETE /api/settings/chat-model
-//     → { ok: true, chatModel: null }   (falls back to spec defaults)
+//   PUT    /api/settings/embedding-model
+//     body: { providerId, modelId }
+//     → { ok: true, embeddingModel: "<providerId>:<modelId>" }
+//
+//   DELETE /api/settings/embedding-model
+//     → { ok: true, embeddingModel: null }   (falls back to operator
+//                                             env.AI_EMBEDDING_MODEL
+//                                             or the hardcoded default)
 //
 // Auth: NextAuth session gate. Per-user data only.
 
@@ -34,11 +39,7 @@ import { PROVIDER_IDS, type ProviderId } from '@hamafx/shared/encryption';
 import { eq } from 'drizzle-orm';
 import { z } from 'zod';
 
-import {
-  errorResponse,
-  parseJsonBody,
-  withAuth,
-} from '@/lib/api';
+import { errorResponse, parseJsonBody, withAuth } from '@/lib/api';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -52,10 +53,10 @@ export const GET = withAuth<void>(async (_req, { user }) => {
   try {
     const db = getDb();
     const [row] = await db
-      .select({ chatModel: schema.userSettings.chatModel })
+      .select({ embeddingModel: schema.userSettings.embeddingModel })
       .from(schema.userSettings)
       .where(eq(schema.userSettings.userId, user.userId));
-    return Response.json({ chatModel: row?.chatModel ?? null });
+    return Response.json({ embeddingModel: row?.embeddingModel ?? null });
   } catch (err) {
     return errorResponse(err);
   }
@@ -76,36 +77,30 @@ export const PUT = withAuth<void>(async (req, { user }) => {
       { status: 400 },
     );
   }
-  // Models with provider prefix (OpenRouter, Vertex) come in as
-  // "<provider>/<bare>" — strip the prefix before lookup so the spec
-  // catalog (which stores bare ids) matches.
-  const bareModelId = body.modelId.includes('/')
-    ? body.modelId.split('/').slice(1).join('/')
-    : body.modelId;
-  // Phase D2 — defense in depth. The picker UI filters out tier:
-  // 'embedding' models, but a direct API call could still store one.
-  // Chat turns can't consume an embedding model (different capability,
-  // different dimension space) so reject the save up front.
-  const pickedModel = (spec.models ?? []).find(
-    (m: { modelId: string; tier?: string }) => m.modelId === bareModelId,
-  );
-  if (!pickedModel) {
+  // Defense in depth — embeddings only work on embedding-capable
+  // providers. (Some providers host embedding models without
+  // exposes them in the spec; this guards against a typo.)
+  if (!spec.supports.embedding) {
     return Response.json(
       {
         error: {
-          message: `Model ${body.modelId} is not in the ${body.providerId} catalog`,
+          message: `Provider ${body.providerId} does not support embedding`,
         },
       },
       { status: 400 },
     );
   }
-  if (pickedModel.tier === 'embedding') {
+  const bareModelId = body.modelId.includes('/')
+    ? body.modelId.split('/').slice(1).join('/')
+    : body.modelId;
+  const known = (spec.models ?? []).some(
+    (m: { modelId: string }) => m.modelId === bareModelId,
+  );
+  if (!known) {
     return Response.json(
       {
         error: {
-          message:
-            `${body.modelId} is an embedding-only model and can't be used as a chat model. ` +
-            `Pick a chat-capable model (flagship / pro / fast / lite) instead.`,
+          message: `Model ${body.modelId} is not in the ${body.providerId} catalog`,
         },
       },
       { status: 400 },
@@ -117,9 +112,9 @@ export const PUT = withAuth<void>(async (req, { user }) => {
     const db = getDb();
     await db
       .update(schema.userSettings)
-      .set({ chatModel: value })
+      .set({ embeddingModel: value })
       .where(eq(schema.userSettings.userId, user.userId));
-    return Response.json({ ok: true, chatModel: value });
+    return Response.json({ ok: true, embeddingModel: value });
   } catch (err) {
     return errorResponse(err);
   }
@@ -130,9 +125,9 @@ export const DELETE = withAuth<void>(async (_req, { user }) => {
     const db = getDb();
     await db
       .update(schema.userSettings)
-      .set({ chatModel: null })
+      .set({ embeddingModel: null })
       .where(eq(schema.userSettings.userId, user.userId));
-    return Response.json({ ok: true, chatModel: null });
+    return Response.json({ ok: true, embeddingModel: null });
   } catch (err) {
     return errorResponse(err);
   }
