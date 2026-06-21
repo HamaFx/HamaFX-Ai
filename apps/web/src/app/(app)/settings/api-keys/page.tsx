@@ -94,58 +94,9 @@ async function updateApiKeys(
 }
 
 /**
- * Phase D — server action: run a bulk test across every configured
- * BYOK provider.
- *
- * Currently unused: BulkTestButton now posts directly to
- * /api/settings/bulk-test (the single source of truth for testing
- * + persistence) and calls `router.refresh()` to invalidate the
- * RSC payload. Kept exported in case a future surface (CLI, admin
- * page) wants a server-side bulk-test entry point that doesn't go
- * through the fetch boundary.
+ * Default export — the page component. Server-component shell that
+ * fetches the catalog and renders the BYOK cards + bulk-test button.
  */
-async function bulkTestAll() {
-  'use server';
-  const session = await auth();
-  if (!session?.user?.id) throw new Error('Not authenticated');
-
-  const { withRateLimit } = await import('@hamafx/db');
-  const rate = await withRateLimit(session.user.id, 'bulk_test', 2, 5 * 60_000);
-  if (!rate.allowed) {
-    throw new Error('Bulk test rate-limited. Try again in a few minutes.');
-  }
-
-  const { testProviderKey } = await import('@hamafx/ai');
-  const db = getDb();
-  const [settings] = await db
-    .select({ aiApiKeys: schema.userSettings.aiApiKeys })
-    .from(schema.userSettings)
-    .where(eq(schema.userSettings.userId, session.user.id));
-  const decrypted = settings?.aiApiKeys ? decryptByok(settings.aiApiKeys) : null;
-  const testedAt = new Date();
-
-  const rows: Array<typeof schema.providerTests.$inferInsert> = [];
-  for (const providerId of PROVIDER_IDS) {
-    const key = decrypted?.[providerId];
-    if (typeof key !== 'string' || key.trim().length === 0) continue;
-    const r = await testProviderKey(providerId, key);
-    rows.push({
-      userId: session.user.id,
-      providerId,
-      ok: r.ok,
-      error: r.ok ? null : r.error ?? 'unknown error',
-      testedAt: testedAt.toISOString(),
-    });
-  }
-  if (rows.length > 0) {
-    await db
-      .delete(schema.providerTests)
-      .where(eq(schema.providerTests.userId, session.user.id));
-    await db.insert(schema.providerTests).values(rows);
-  }
-  revalidatePath('/settings/api-keys');
-}
-
 export default async function ApiKeysSettingsPage({
   searchParams,
 }: {
