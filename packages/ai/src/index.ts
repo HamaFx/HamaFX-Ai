@@ -34,10 +34,14 @@ export {
 } from './byok-providers';
 export {
   resolveChatModel,
+  resolveVisionModel,
+  resolveEmbeddingModel,
   derivePlannerModel,
   deriveTitleModel,
   testProviderKey,
   type ChatModelResolution,
+  type VisionModelResolution,
+  type EmbeddingModelResolution,
 } from './model';
 export {
   estimateCostUsd,

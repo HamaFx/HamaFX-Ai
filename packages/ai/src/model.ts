@@ -46,6 +46,20 @@ export interface ResolveModelEnv {
   GOOGLE_VERTEX_LOCATION?: string | undefined;
   GOOGLE_APPLICATION_CREDENTIALS_JSON?: string | undefined;
   GOOGLE_APPLICATION_CREDENTIALS?: string | undefined;
+  /**
+   * Phase D2 — operator-set platform default for the vision model
+   * (used by `analyze_chart_image` when the user hasn't picked one).
+   * Still relevant as a fallback because BYOK users may not have
+   * configured a vision-capable provider yet.
+   */
+  AI_VISION_MODEL?: string | undefined;
+  /**
+   * Phase D2 — operator-set platform default for the embedding model
+   * (RAG / memory / news embeddings). The default
+   * `openai/text-embedding-3-small` works for most deployments
+   * because it can route through the AI Gateway.
+   */
+  AI_EMBEDDING_MODEL?: string | undefined;
 }
 
 interface VertexCredentials {
@@ -436,6 +450,198 @@ export function resolveChatModel(
     providerId,
     bareModelId,
   };
+}
+
+/**
+ * Phase D2 — result of resolving the user's "default vision model".
+ * Used by `analyze_chart_image` and any other vision-capable tools.
+ * Same shape as `ChatModelResolution` so callers can pass `.model`
+ * straight into `generateText({ model })`.
+ */
+export interface VisionModelResolution {
+  model: LanguageModel;
+  /** Qualified id "google-vertex/gemini-2.5-pro". */
+  modelId: string;
+  providerId: ProviderId;
+  bareModelId: string;
+}
+
+/**
+ * Resolve the user's default vision model.
+ *
+ * Decision tree:
+ *   1. If `userSettings.visionModel` is set + valid (provider supports
+ *      vision AND model is in the spec catalog) → use it.
+ *   2. Else if `env.AI_VISION_MODEL` is set (operator override) →
+ *      resolve via `resolveModel` and return.
+ *   3. Else pick the highest-priority configured provider's
+ *      `spec.defaultModels.vision`. (Vision is a rarer capability
+ *      than chat; if the user's primary BYOK doesn't declare a vision
+ *      model, the resolver falls back to the next configured provider.)
+ *   4. Else throw.
+ *
+ * Note: a user with Google + Anthropic keys (no Vertex) can still
+ * pick `google-vertex:gemini-2.5-pro` for vision even though their
+ * chat model is Anthropic. The pick is independent.
+ */
+export function resolveVisionModel(
+  userSettings: Pick<UserSettingsRow, 'aiApiKeys' | 'visionModel'>,
+  env: ResolveModelEnv,
+): VisionModelResolution {
+  const stored = decryptByok(userSettings.aiApiKeys);
+  const keys: ByokPayload = {
+    ...envFallbackKeys(env),
+    ...(stored ?? {}),
+  };
+
+  // 1. User's explicit pick.
+  if (typeof userSettings.visionModel === 'string' && userSettings.visionModel.length > 0) {
+    const parsed = parsePickedModelId(userSettings.visionModel, keys);
+    if (parsed && parsed.spec.supports.vision) {
+      return {
+        model: parsed.spec.factory(parsed.apiKey)(parsed.bareModelId),
+        modelId: `${parsed.spec.id}/${parsed.bareModelId}`,
+        providerId: parsed.providerId,
+        bareModelId: parsed.bareModelId,
+      };
+    }
+    // Fall through silently on invalid pick — same UX as chat.
+  }
+
+  // 2. Operator-set env fallback.
+  if (typeof env.AI_VISION_MODEL === 'string' && env.AI_VISION_MODEL.length > 0) {
+    // Operator-set IDs are unqualified bare model ids; route through
+    // the configured provider that has them. Fall through to the
+    // spec default if the bare id doesn't match any spec.
+    // (resolveModel handles the provider-prefix routing internally.)
+    const model = resolveModel(env.AI_VISION_MODEL, env);
+    return {
+      model: typeof model === 'string' ? (model as never) : model,
+      modelId: env.AI_VISION_MODEL,
+      providerId: 'google', // operator fallback is always Vertex/Gemini by convention
+      bareModelId: env.AI_VISION_MODEL.replace(/^.*\//, ''),
+    };
+  }
+
+  // 3. Highest-priority configured provider that declares a vision model.
+  const priority = configuredProviders(keys).slice().sort(
+    (a, b) => PROVIDER_PRIORITY.indexOf(a) - PROVIDER_PRIORITY.indexOf(b),
+  );
+  for (const providerId of priority) {
+    const spec = BYOK_PROVIDERS[providerId];
+    if (!spec?.supports.vision) continue;
+    const vision = spec.defaultModels.vision;
+    if (!vision) continue;
+    const apiKey = keys[providerId];
+    if (typeof apiKey !== 'string' || apiKey.length === 0) continue;
+    return {
+      model: spec.factory(apiKey)(vision),
+      modelId: `${spec.id}/${vision}`,
+      providerId,
+      bareModelId: vision,
+    };
+  }
+
+  throw new Error(
+    'No vision-capable model available. Add a key for a provider that supports vision ' +
+      '(e.g. Google, Vertex, Anthropic, OpenAI, Mistral) in Settings → API Keys, ' +
+      'or pick one in Settings → Models → Advanced.',
+  );
+}
+
+/**
+ * Phase D2 — result of resolving the user's default embedding model.
+ * Returns the qualified model id string only (e.g.
+ * `"openai/text-embedding-3-small"`) — embeddings don't go through
+ * the BYOK factory path because the AI SDK's `embedMany` handles
+ * provider routing by id prefix when a gateway key is configured.
+ */
+export type EmbeddingModelResolution = string;
+
+/**
+ * Resolve the user's default embedding model.
+ *
+ * Decision tree:
+ *   1. If `userSettings.embeddingModel` is set + valid → use it.
+ *   2. Else if `env.AI_EMBEDDING_MODEL` is set (operator override) →
+ *      use it. The default is `openai/text-embedding-3-small` which
+ *      routes through the AI Gateway.
+ *   3. Else pick the highest-priority configured provider's
+ *      `spec.defaultModels.embedding`.
+ *   4. Else return the hardcoded universal default
+ *      `openai/text-embedding-3-small` (works across providers via
+ *      the AI Gateway; OpenAI's text-embedding-3-small has the
+ *      widest cross-vendor compatibility).
+ */
+export function resolveEmbeddingModel(
+  userSettings: Pick<UserSettingsRow, 'aiApiKeys' | 'embeddingModel'>,
+  env: ResolveModelEnv,
+): EmbeddingModelResolution {
+  const stored = decryptByok(userSettings.aiApiKeys);
+  const keys: ByokPayload = {
+    ...envFallbackKeys(env),
+    ...(stored ?? {}),
+  };
+
+  // 1. User's explicit pick.
+  if (
+    typeof userSettings.embeddingModel === 'string' &&
+    userSettings.embeddingModel.length > 0
+  ) {
+    const parsed = parsePickedModelId(userSettings.embeddingModel, keys);
+    if (parsed && parsed.spec.supports.embedding) {
+      return `${parsed.spec.id}/${parsed.bareModelId}`;
+    }
+    // Fall through silently on invalid pick — same UX as chat/vision.
+  }
+
+  // 2. Operator-set env fallback.
+  if (typeof env.AI_EMBEDDING_MODEL === 'string' && env.AI_EMBEDDING_MODEL.length > 0) {
+    return env.AI_EMBEDDING_MODEL;
+  }
+
+  // 3. Highest-priority configured provider that declares an embedding model.
+  const priority = configuredProviders(keys).slice().sort(
+    (a, b) => PROVIDER_PRIORITY.indexOf(a) - PROVIDER_PRIORITY.indexOf(b),
+  );
+  for (const providerId of priority) {
+    const spec = BYOK_PROVIDERS[providerId];
+    if (!spec?.supports.embedding) continue;
+    const embedding = spec.defaultModels.embedding;
+    if (!embedding) continue;
+    return `${spec.id}/${embedding}`;
+  }
+
+  // 4. Universal default — works via AI Gateway to OpenAI's embedding API.
+  return 'openai/text-embedding-3-small';
+}
+
+/**
+ * Internal helper — parse a stored "<providerId>:<bareModelId>" string
+ * and verify it's resolvable with the merged BYOK payload. Returns the
+ * validated provider spec + apiKey + bareModelId on success, or null
+ * on any validation failure. Shared between chat / vision / embedding
+ * resolvers so the parse + verify logic stays in one place.
+ */
+function parsePickedModelId(
+  value: string,
+  keys: ByokPayload,
+): { providerId: ProviderId; bareModelId: string; spec: typeof BYOK_PROVIDERS[ProviderId]; apiKey: string } | null {
+  const sep = value.indexOf(':');
+  if (sep < 0) return null;
+  const providerIdRaw = value.slice(0, sep);
+  const bareModelId = value.slice(sep + 1);
+  if (!PROVIDER_IDS.includes(providerIdRaw as ProviderId)) return null;
+  const providerId = providerIdRaw as ProviderId;
+  const apiKey = keys[providerId];
+  if (typeof apiKey !== 'string' || apiKey.length === 0) return null;
+  const spec = BYOK_PROVIDERS[providerId];
+  if (!spec) return null;
+  const known = (spec.models ?? []).some(
+    (m: { modelId: string }) => m.modelId === bareModelId,
+  );
+  if (!known) return null;
+  return { providerId, bareModelId, spec, apiKey };
 }
 
 /**
