@@ -237,7 +237,9 @@ export const ServerEnvSchema = z.intersection(
     Boolean(env.NEXTAUTH_SECRET && env.CRON_SECRET && env.ENCRYPTION_SECRET),
   {
     message:
-      'In production, NEXTAUTH_SECRET, CRON_SECRET, and ENCRYPTION_SECRET are all required',
+      'In production, NEXTAUTH_SECRET, CRON_SECRET, and ENCRYPTION_SECRET are all required. ' +
+      'Set them in your Vercel project (Settings → Environment Variables) for Production ' +
+      '+ Preview scopes, or in your local .env.local for `pnpm dev:local`.',
     path: ['NEXTAUTH_SECRET'],
   },
 );
