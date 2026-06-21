@@ -99,6 +99,13 @@
       "when": 1782000000003,
       "tag": "0013_chat_model",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1782200000004,
+      "tag": "0014_vision_embedding_model",
+      "breakpoints": true
     }
   ]
 }

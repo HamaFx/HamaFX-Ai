@@ -175,6 +175,23 @@ export const userSettings = pgTable('user_settings', {
    * convene-committee still consumes it for its per-role picks.
    */
   chatModel: text('chat_model'),
+  /**
+   * Phase D2 — user-pickable vision model for the
+   * `analyze_chart_image` tool. Same shape as `chatModel`:
+   * `"<providerId>:<bareModelId>"` (e.g. `"google-vertex:gemini-2.5-pro"`).
+   * Nullable; when null the resolver falls back to the user's chat
+   * provider's `spec.defaultModels.vision`, then to env.AI_VISION_MODEL
+   * (operator-set platform default), then to the hardcoded default.
+   */
+  visionModel: text('vision_model'),
+  /**
+   * Phase D2 — user-pickable embedding model for RAG / memory / news
+   * embeddings. Same shape as `chatModel`. Nullable; when null the
+   * resolver falls back to env.AI_EMBEDDING_MODEL (operator-set; the
+   * platform default is `openai/text-embedding-3-small`), then to
+   * the user's chat provider's `spec.defaultModels.embedding`.
+   */
+  embeddingModel: text('embedding_model'),
   /** Max daily USD spend for this user. Overrides global MAX_DAILY_USD. */
   maxDailyUsd: integer('max_daily_usd'),
   /** Whether onboarding has been completed. */
