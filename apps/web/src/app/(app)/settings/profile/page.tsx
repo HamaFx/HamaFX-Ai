@@ -15,23 +15,40 @@
  */
 
 import { auth } from '@/auth';
+import { getDb, schema } from '@hamafx/db';
+import { eq } from 'drizzle-orm';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { revalidatePath } from 'next/cache';
 
-async function updateProfile(_formData: FormData) {
+const NAME_MIN = 1;
+const NAME_MAX = 80;
+
+async function updateProfile(formData: FormData) {
   'use server';
   const session = await auth();
   if (!session?.user?.id) throw new Error('Not authenticated');
 
-  // Phase A: name updates are disabled in self-hosted mode.
-  // const _name = formData.get('name') as string;
-  // const _db = getDb();
-  // if (_name && _name !== session.user.name) {
-  //   await _db.update(schema.users)
-  //     .set({ name: _name })
-  //     .where(eq(schema.users.id, session.user.id));
-  // }
+  // Display name is user-editable; email is intentionally read-only
+  // (the NextAuth Credentials provider uses email as the login
+  // identifier, so changing it would require a re-link flow).
+  const raw = formData.get('name');
+  const name = typeof raw === 'string' ? raw.trim() : '';
+  if (name.length < NAME_MIN || name.length > NAME_MAX) {
+    throw new Error(`Name must be between ${NAME_MIN} and ${NAME_MAX} characters`);
+  }
+  if (name === session.user.name) {
+    // No change — skip the DB write but still revalidate so the
+    // form's optimistic state lands cleanly.
+    revalidatePath('/settings/profile');
+    return;
+  }
+
+  const db = getDb();
+  await db
+    .update(schema.users)
+    .set({ name })
+    .where(eq(schema.users.id, session.user.id));
 
   revalidatePath('/settings/profile');
 }
