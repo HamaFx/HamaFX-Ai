@@ -12,7 +12,7 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/status-production%20ready-48d597?style=flat-square" alt="Status: Production Ready">
-  <img src="https://img.shields.io/badge/tests-561-48d597?style=flat-square" alt="Tests: 561">
+  <img src="https://img.shields.io/badge/tests-590-48d597?style=flat-square" alt="Tests: 590">
   <img src="https://img.shields.io/badge/ai%20tools-32-f5b945?style=flat-square" alt="AI Tools: 32">
   <img src="https://img.shields.io/badge/license-Apache%202.0-8a93a3?style=flat-square" alt="License">
 </p>
@@ -84,7 +84,7 @@ Browser (PWA)
     │
     ├── /api/market/* ──▶ data layer ──▶ BiQuote → Finnhub failover
     │
-    └── Middleware ──▶ password gate · CSRF · Edge runtime
+    └── Middleware ──▶ NextAuth v5 (multi-tenant) · CSRF · Edge runtime
 
 Worker (GCE VM)
     │
@@ -95,12 +95,12 @@ Worker (GCE VM)
 
 | Package | Role | LOC |
 |---------|------|-----|
-| `@hamafx/ai` | Agent core — chat, 32 tools, routing, RAG | 16,957 |
+| `@hamafx/ai` | Agent core — chat, 32 tools, routing, RAG | 20,203 |
 | `@hamafx/data` | Market adapters — 5 providers, cache, failover | 5,920 |
-| `@hamafx/web` | Next.js 15 PWA — chat, charts, journal, alerts | 26,434 |
-| `@hamafx/db` | Drizzle ORM — 22 tables, Postgres + PGlite | 2,178 |
+| `@hamafx/web` | Next.js 15 PWA — chat, charts, journal, alerts | 33,366 |
+| `@hamafx/db` | Drizzle ORM — 27 tables, Postgres + PGlite | 2,276 |
 | `@hamafx/indicators` | Pure TS indicators — classic + Smart Money Concepts | 2,271 |
-| `@hamafx/shared` | Zod schemas, types, env, errors | 4,276 |
+| `@hamafx/shared` | Zod schemas, types, env, errors | 4,442 |
 | `@hamafx/worker` | Node daemon — SignalR, jobs, scheduler | 4,896 |
 
 ---
@@ -153,7 +153,7 @@ Worker (GCE VM)
 - **DB:** Postgres (Supabase) · pgvector · Drizzle ORM · PGlite (local dev)
 - **Build:** pnpm workspaces · Turborepo · esbuild (worker)
 - **Auth:** NextAuth.js v5 · CSRF · BYOK (Bring Your Own Key) per user
-- **Testing:** Vitest · Playwright · 72 test files · 394 cases
+- **Testing:** Vitest · Playwright · 90 test files · 590 cases
 
 ---
 
@@ -168,7 +168,7 @@ For **AI agents** working on this codebase, start with [`AGENTS.md`](docs/AGENTS
 | [02-codebase.md](docs/02-codebase.md) | Monorepo structure, conventions, extension rules |
 | [03-ai-agent.md](docs/03-ai-agent.md) | Agent internals — runChat, 32 tools, routing, memory |
 | [04-data-layer.md](docs/04-data-layer.md) | DB schema, 5 providers, caching, failover |
-| [05-api-routes.md](docs/05-api-routes.md) | All 37 API endpoints, auth, middleware, cron |
+| [05-api-routes.md](docs/05-api-routes.md) | All 40 API routes, auth, middleware, cron |
 | [06-frontend.md](docs/06-frontend.md) | Pages, chat UI, charts, PWA, state management |
 | [07-worker.md](docs/07-worker.md) | Worker daemon, SignalR, 7 jobs, systemd |
 | [08-deployment.md](docs/08-deployment.md) | Production cloud deployment |
@@ -187,7 +187,7 @@ We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) a
 ## 🔧 Development
 
 ```bash
-pnpm turbo run test -- --run    # 561 tests
+pnpm turbo run test -- --run    # 590 tests
 pnpm typecheck                  # strict TS across 8 packages
 pnpm --filter @hamafx/web build # production build
 pnpm turbo run lint             # ESLint flat config
