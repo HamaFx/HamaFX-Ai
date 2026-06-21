@@ -92,6 +92,13 @@
       "when": 1782000000002,
       "tag": "0012_default_models",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1782000000003,
+      "tag": "0013_chat_model",
+      "breakpoints": true
     }
   ]
 }

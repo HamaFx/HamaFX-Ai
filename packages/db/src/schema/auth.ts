@@ -150,6 +150,11 @@ export const userSettings = pgTable('user_settings', {
    *                    vision?: ..., embedding?: ... }
    * The resolver checks this before falling back to the provider
    * spec defaults in BYOK_PROVIDERS.defaultModels.
+   *
+   * Phase F — superseded by `chat_model` (single-string default) for
+   * the main chat surface. Kept for the convene-committee tool which
+   * calls `resolveUserModel` per role. Will be dropped once the
+   * committee path moves to `resolveChatModel` too.
    */
   defaultModels: jsonb('default_models').$type<{
     fundamental?: string;
@@ -158,6 +163,18 @@ export const userSettings = pgTable('user_settings', {
     vision?: string;
     embedding?: string;
   }>(),
+  /**
+   * Phase F — the single "default chat model" picker.
+   * Shape: "<providerId>:<bareModelId>" (e.g. "google-vertex:gemini-2.5-pro").
+   * Nullable; when null the resolver falls back to the provider's
+   * spec.defaultModels.technical of the highest-priority configured
+   * provider (PROVIDER_PRIORITY in packages/ai/src/model.ts).
+   *
+   * This is the canonical per-user model choice. The pre-F multi-domain
+   * `defaultModels` JSONB column above is retained only because
+   * convene-committee still consumes it for its per-role picks.
+   */
+  chatModel: text('chat_model'),
   /** Max daily USD spend for this user. Overrides global MAX_DAILY_USD. */
   maxDailyUsd: integer('max_daily_usd'),
   /** Whether onboarding has been completed. */
