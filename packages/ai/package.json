@@ -31,12 +31,14 @@
     "@opentelemetry/sdk-node": "^0.219.0",
     "ai": "^5.0.0",
     "drizzle-orm": "^0.38.3",
+    "react": "^19.0.0",
     "zod": "^3.23.8"
   },
   "devDependencies": {
     "@hamafx/config": "workspace:*",
     "@opentelemetry/shim-opencensus": "^0.219.0",
     "@types/node": "^20.14.10",
+    "@types/react": "^19.0.0",
     "eslint": "^9.17.0",
     "tsx": "^4.22.3",
     "typescript": "^5.7.2",
