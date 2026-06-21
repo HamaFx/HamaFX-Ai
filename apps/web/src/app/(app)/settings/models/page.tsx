@@ -20,25 +20,38 @@ import Link from 'next/link';
 import { auth } from '@/auth';
 import { buildCatalogForUser } from '@/lib/catalog-server';
 
-import { ChatModelPicker } from './_components/chat-model-picker';
+import {
+  ChatModelPicker,
+  EmbeddingModelPicker,
+  VisionModelPicker,
+} from './_components/model-picker';
 
 export const dynamic = 'force-dynamic';
 
 export const metadata = {
   title: 'Models · HamaFX-Ai',
-  description: 'Pick the default model that handles every chat turn.',
+  description: 'Pick the default chat, vision, and embedding models.',
 };
 
 /**
- * Phase F — collapsed the 5-domain picker into a single
- * "default chat model" dropdown. The previous per-domain browser
- * is preserved behind an Advanced disclosure for power users
- * (see _components/advanced-models.tsx).
+ * Phase D2 — single-page models settings.
  *
- * The catalog endpoint is the source of truth for everything you
- * see. The page is a thin server shell that does the auth check
- * and fetches the catalog; the picker itself is a small client
- * component that hits /api/settings/chat-model.
+ * The chat picker is the only surface most users touch (top section,
+ * always visible). Vision + embedding pickers live under an
+ * <details> Advanced disclosure because:
+ *   - Most users don't think about which model analyses chart
+ *     screenshots or which model embeds their journal entries.
+ *   - The defaults are usually fine (operator env + spec defaults).
+ *   - Showing 3 dropdowns up front pushes the important one down.
+ *
+ * Each picker filters the catalog to its own capability:
+ *   - chat:      any non-embedding model from any configured provider
+ *   - vision:    non-embedding model from a vision-capable provider
+ *   - embedding: embedding model from an embedding-capable provider
+ *
+ * RSC pages can't fetch() their own host without a full URL
+ * (and APP_URL isn't always set on Vercel), so we share the
+ * server-side `buildCatalogForUser` helper.
  */
 export default async function ModelsSettingsPage() {
   const session = await auth();
@@ -46,14 +59,11 @@ export default async function ModelsSettingsPage() {
     redirect('/auth/login');
   }
 
-  // RSC pages can't fetch() their own host without a full URL
-  // (and APP_URL isn't always set on Vercel), so we share the
-  // server-side `buildCatalogForUser` helper.
   const catalog = await buildCatalogForUser(session.user.id);
 
-  // The picker only renders for providers the user has a key for.
-  // Keeping the full catalog would surface "pick a Google model" when
-  // the user has no Google key, which silently no-ops on save.
+  // The pickers only render for providers the user has a key for.
+  // Showing "pick a Google model" when the user has no Google key
+  // would silently no-op on save.
   const configured = catalog.providers.filter((p) => p.hasKey);
 
   return (
@@ -74,10 +84,25 @@ export default async function ModelsSettingsPage() {
         </Link>
       </div>
 
-      <ChatModelPicker
-        initialChatModel={null}
-        providers={configured}
-      />
+      <ChatModelPicker initialValue={null} providers={configured} />
+
+      <details className="border border-divider bg-bg-elev-1 rounded-lg overflow-hidden">
+        <summary className="cursor-pointer select-none px-4 py-3 flex items-center justify-between gap-3 hover:bg-bg-elev-2 transition-colors">
+          <div className="flex flex-col">
+            <span className="text-sm font-medium text-fg">
+              Advanced
+            </span>
+            <span className="text-caption text-fg-subtle">
+              Pick vision + embedding models independently of chat.
+            </span>
+          </div>
+          <span className="text-caption text-fg-subtle">▾</span>
+        </summary>
+        <div className="border-t border-divider p-4 flex flex-col gap-4">
+          <VisionModelPicker providers={configured} />
+          <EmbeddingModelPicker providers={configured} />
+        </div>
+      </details>
 
       <p className="text-caption text-fg-subtle text-center">
         {catalog.total} providers · {catalog.totalModels} models in
