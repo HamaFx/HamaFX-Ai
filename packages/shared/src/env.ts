@@ -92,25 +92,15 @@ const AiEnv = z
     GOOGLE_APPLICATION_CREDENTIALS_JSON: z.string().min(1).optional(),
     GOOGLE_APPLICATION_CREDENTIALS: z.string().min(1).optional(),
     AI_DEFAULT_MODEL: z.string().default('google-vertex/gemini-2.5-flash'),
+    /**
+     * Auto-title generator (first-turn thread title) and operator-set
+     * fallback for the planner-style cheap model. Per-user picks come
+     * from `user_settings.chat_model` + `derivePlannerModel` / `deriveTitleModel`.
+     */
     AI_TITLE_MODEL: z.string().default('google-vertex/gemini-2.5-flash-lite'),
     AI_EMBEDDING_MODEL: z.string().default('openai/text-embedding-3-small'),
     /** Vision-capable model used by `analyze_chart_image`. */
     AI_VISION_MODEL: z.string().default('google-vertex/gemini-2.5-pro'),
-    /**
-     * Domain-routed models (Phase 7a). Defaults reflect the canonical
-     * Vertex AI catalogue as of mid-2026:
-     *   - Fundamental analysis → `gemini-2.5-pro` (deepest reasoning).
-     *   - Technical analysis  → `gemini-2.5-flash` (fast structured).
-     *   - News / calendar / journal summary → `gemini-2.5-flash-lite` (cheap).
-     *
-     * Override per-deployment via env if newer model ids become available
-     * in your Vertex project / region. The router falls back to
-     * AI_DEFAULT_MODEL for any domain whose env var is unset OR fails to
-     * resolve at runtime.
-     */
-    AI_FUNDAMENTAL_MODEL: z.string().default('google-vertex/gemini-2.5-pro'),
-    AI_TECHNICAL_MODEL: z.string().default('google-vertex/gemini-2.5-flash'),
-    AI_SUMMARY_MODEL: z.string().default('google-vertex/gemini-2.5-flash-lite'),
   })
   .refine(
     (v) =>

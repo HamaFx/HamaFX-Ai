@@ -61,14 +61,11 @@ const ENV = {
   GOOGLE_APPLICATION_CREDENTIALS_JSON: '',
   GOOGLE_APPLICATION_CREDENTIALS: '',
   AI_DEFAULT_MODEL: 'gemini-2.5-flash',
-  AI_FUNDAMENTAL_MODEL: '',
-  AI_TECHNICAL_MODEL: '',
-  AI_SUMMARY_MODEL: '',
   AI_VISION_MODEL: '',
   MAX_DAILY_USD: 0,
   MAX_TOOL_ITERATIONS: 0,
   LOG_PROMPTS: false,
-} as const;
+};
 
 function settingsWithKeys(
   keys: Partial<Record<string, string>>,
