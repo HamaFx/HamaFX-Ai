@@ -42,11 +42,17 @@ async function addSymbol(formData: FormData) {
   const nextOrder = existing.length > 0 ? (existing[existing.length - 1]?.displayOrder ?? 0) + 1 : 0;
 
   try {
+    // user_symbols has a composite PK on (userId, symbol). The
+    // explicit conflict target matches that PK so adding a symbol
+    // the user already has is a no-op (and other unique-constraint
+    // additions later won't silently change this behaviour).
     await db.insert(schema.userSymbols).values({
       userId: session.user.id,
       symbol,
       displayOrder: nextOrder,
-    }).onConflictDoNothing();
+    }).onConflictDoNothing({
+      target: [schema.userSymbols.userId, schema.userSymbols.symbol],
+    });
   } catch {
     // ignore
   }
@@ -70,8 +76,7 @@ async function removeSymbol(formData: FormData) {
         eq(schema.userSymbols.symbol, symbol)
       )
     );
-    
-  // Since we only have `eq`, we'll need to drop down to sql`...` or use `and` from drizzle-orm
+
   revalidatePath('/settings/symbols');
 }
 
