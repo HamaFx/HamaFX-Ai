@@ -478,6 +478,172 @@ export { BYOK_PROVIDERS, BYOK_PROVIDERS_LIST, defaultModelFor };
 export type { ModelDomain, ByokProviderSpec };
 
 // -----------------------------------------------------------------------
+// Phase F — single-model resolution
+// -----------------------------------------------------------------------
+
+/**
+ * Result of resolving the user's "default chat model" — the single
+ * model that handles every main chat turn unless overridden per-thread
+ * via `resolveOverrideModel`.
+ *
+ * `model` is the AI-SDK `LanguageModel` instance ready to pass to
+ * `streamText` / `generateText`. `modelId` is the qualified
+ * `"<provider>/<bare>"` string used for telemetry and cost attribution.
+ * `providerId` and `bareModelId` are split out so callers don't have
+ * to re-parse the modelId.
+ */
+export interface ChatModelResolution {
+  model: LanguageModel;
+  /** Qualified id "google-vertex/gemini-2.5-pro". */
+  modelId: string;
+  providerId: ProviderId;
+  bareModelId: string;
+}
+
+/**
+ * Resolve the user's single default chat model.
+ *
+ * Decision tree:
+ *   1. If `userSettings.chatModel` is set, parse it as
+ *      `"<providerId>:<bareModelId>"` and verify both are known.
+ *   2. Else fall back to the highest-priority configured provider's
+ *      `spec.defaultModels.technical`.
+ *
+ * The merged BYOK payload (decrypted + env fallback) determines
+ * which providers are "configured". The picked provider must have
+ * a key — otherwise we throw a clear error pointing at the UI.
+ *
+ * This replaces the previous per-domain `defaultModels` lookup in
+ * the chat path. The legacy JSONB column is still consumed by
+ * `convene-committee` (which keeps its per-role picks); see
+ * `resolveUserModel` below.
+ */
+export function resolveChatModel(
+  userSettings: Pick<UserSettingsRow, 'aiApiKeys' | 'chatModel'>,
+  env: ResolveModelEnv,
+): ChatModelResolution {
+  const stored = decryptByok(userSettings.aiApiKeys);
+  const keys: ByokPayload = {
+    ...envFallbackKeys(env),
+    ...(stored ?? {}),
+  };
+  const configured = configuredProviders(keys);
+  if (configured.length === 0) {
+    throw new Error(
+      'No AI API keys configured. Add a provider key in Settings → API Keys, ' +
+        'or visit /onboarding to walk through the setup wizard.',
+    );
+  }
+
+  // Honor the user's explicit pick if present and valid.
+  if (typeof userSettings.chatModel === 'string' && userSettings.chatModel.length > 0) {
+    const value = userSettings.chatModel;
+    const sep = value.indexOf(':');
+    if (sep >= 0) {
+      const providerIdRaw = value.slice(0, sep);
+      const bareModelId = value.slice(sep + 1);
+      if (PROVIDER_IDS.includes(providerIdRaw as ProviderId)) {
+        const providerId = providerIdRaw as ProviderId;
+        const apiKey = keys[providerId];
+        if (typeof apiKey === 'string' && apiKey.length > 0) {
+          const spec = BYOK_PROVIDERS[providerId];
+          if (spec) {
+            // The bare model id is checked against the spec's full
+            // catalog so a typo in the stored value fails loud instead
+            // of silently picking the provider's technical default.
+            const known = (spec.models ?? []).some(
+              (m: { modelId: string }) => m.modelId === bareModelId,
+            );
+            if (known) {
+              return {
+                model: spec.factory(apiKey)(bareModelId),
+                modelId: `${spec.id}/${bareModelId}`,
+                providerId,
+                bareModelId,
+              };
+            }
+          }
+        }
+      }
+    }
+    // Invalid stored value — fall through to spec defaults below
+    // rather than throwing. Logging would be useful here in future.
+  }
+
+  // No explicit pick: use the priority-ordered first configured
+  // provider's `technical` model. This is the path single-tenant
+  // installs and brand-new users hit.
+  const priority = configured.slice().sort(
+    (a, b) => PROVIDER_PRIORITY.indexOf(a) - PROVIDER_PRIORITY.indexOf(b),
+  );
+  const providerId = priority[0];
+  if (!providerId) {
+    throw new Error('No configured provider available.');
+  }
+  const spec = BYOK_PROVIDERS[providerId];
+  const apiKey = keys[providerId]!;
+  const bareModelId = spec.defaultModels.technical;
+  if (!bareModelId) {
+    throw new Error(
+      `Provider ${providerId} has no default technical model configured.`,
+    );
+  }
+  return {
+    model: spec.factory(apiKey)(bareModelId),
+    modelId: `${spec.id}/${bareModelId}`,
+    providerId,
+    bareModelId,
+  };
+}
+
+/**
+ * Pick the model the plan-then-act planner should use. The planner
+ * runs a cheap pre-step for every fundamental/technical turn, so we
+ * want a small/cheap model from the same provider as the user's chat.
+ *
+ * Logic:
+ *   - Use the user's chat provider's `spec.defaultModels.summary`
+ *     (e.g. claude-haiku for Anthropic, flash-lite for Google).
+ *   - If the chat provider has no summary declared, fall back to the
+ *     chat model itself (cheapest available is the one we have).
+ *   - If `userSettings.chatModel` is unset (fallback path used), the
+ *     resolver already chose the right provider's `technical`, so the
+ *     same summary-derivation applies.
+ *   - If everything fails (no summary, no chat provider), returns
+ *     null so the caller can use `AI_DEFAULT_MODEL` instead.
+ */
+export function derivePlannerModel(
+  userSettings: Pick<UserSettingsRow, 'aiApiKeys' | 'chatModel'>,
+  env: ResolveModelEnv,
+): string | null {
+  try {
+    const chat = resolveChatModel(userSettings, env);
+    const spec = BYOK_PROVIDERS[chat.providerId];
+    const summary = spec?.defaultModels.summary;
+    if (summary) {
+      return `${chat.providerId}/${summary}`;
+    }
+    return chat.modelId;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Pick the model title generation should use. Title is a tiny
+ * 3-7-word summary call — same cheap-model preference as the
+ * planner. Currently identical to `derivePlannerModel`; kept as a
+ * separate symbol so future tuning (e.g. "title should be even
+ * cheaper than the planner") doesn't fork the planner path.
+ */
+export function deriveTitleModel(
+  userSettings: Pick<UserSettingsRow, 'aiApiKeys' | 'chatModel'>,
+  env: ResolveModelEnv,
+): string | null {
+  return derivePlannerModel(userSettings, env);
+}
+
+// -----------------------------------------------------------------------
 // Phase B — UX_UPGRADE_PLAN.md item 8.
 //
 // Explicit model override resolution. The user picks a provider from

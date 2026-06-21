@@ -32,7 +32,15 @@ export {
   type ModelDomain,
   type ModelSpec,
 } from './byok-providers';
-export { resolveUserModel, testProviderKey, type ResolveUserDomain } from './model';
+export {
+  resolveUserModel,
+  resolveChatModel,
+  derivePlannerModel,
+  deriveTitleModel,
+  testProviderKey,
+  type ResolveUserDomain,
+  type ChatModelResolution,
+} from './model';
 export {
   estimateCostUsd,
   dailySpendUsd,
