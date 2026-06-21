@@ -163,19 +163,6 @@ import { generateText } from 'ai';
 import { PROVIDER_IDS } from '@hamafx/shared/byok';
 
 /**
- * Domain values accepted by resolveUserModel. Includes 'default' for the
- * generic case (mapped to `technical` internally) and 'embedding' for the
- * separate embeddings path.
- */
-export type ResolveUserDomain =
-  | 'default'
-  | 'vision'
-  | 'summary'
-  | 'embedding'
-  | 'fundamental'
-  | 'technical';
-
-/**
  * Provider priority when multiple keys are configured — higher index wins for default. */
 const PROVIDER_PRIORITY: ProviderId[] = [
   // Premium: prefer the strongest reasoning model when configured.
@@ -206,151 +193,6 @@ function envFallbackKeys(env: ResolveModelEnv): ByokPayload {
     out.google = env.GOOGLE_GENERATIVE_AI_API_KEY;
   }
   return out;
-}
-
-/**
- * Pick the best provider for a domain from the user's configured providers.
- * Falls back across providers if the preferred one has no model for that domain.
- * Returns null when nothing usable is configured.
- */
-function pickProviderForDomain(
-  keys: ByokPayload,
-  domain: ModelDomain,
-  preferredOrder: ProviderId[],
-): ProviderId | null {
-  for (const id of preferredOrder) {
-    const apiKey = keys[id];
-    if (!apiKey) continue;
-    const models = BYOK_PROVIDERS[id]?.defaultModels;
-    if (!models) continue;
-    if (domain === 'embedding' && models.embedding) return id;
-    if (domain === 'vision' && models.vision) return id;
-    if (
-      domain === 'fundamental' ||
-      domain === 'technical' ||
-      domain === 'summary'
-    ) {
-      return id;
-    }
-  }
-  return null;
-}
-
-/**
- * Resolves a BYOK model based on the user's available encrypted API keys.
- * Will prefer the explicitly requested provider/model if available, falling back
- * to whatever the user has keys for.
- *
- * Note: `env` is reserved for a future "global fallback when the user has no
- * BYOK keys" path. Today we require BYOK to be configured and ignore env —
- * until that fallback ships the parameter is explicitly unused.
- */
-export function resolveUserModel(
-  userSettings: Pick<UserSettingsRow, 'aiApiKeys' | 'defaultModels'>,
-  domain: ResolveUserDomain,
-  env: ResolveModelEnv
-): { model: LanguageModel; modelId: string } {
-  const stored = decryptByok(userSettings.aiApiKeys);
-
-  // Merge BYOK keys with operator-provided env vars. When the user has
-  // not yet configured a BYOK key for a provider but the operator did
-  // (e.g. GOOGLE_GENERATIVE_AI_API_KEY in .env.production), we fall back
-  // to the env value so single-tenant deployments keep working without
-  // forcing every user through onboarding. A user-saved BYOK key
-  // always wins over the env value for the same provider.
-  const keys: ByokPayload = {
-    ...envFallbackKeys(env),
-    ...(stored ?? {}),
-  };
-
-  const configured = configuredProviders(keys);
-  if (configured.length === 0) {
-    throw new Error(
-      'No AI API keys configured. Add a provider key in Settings → API Keys, ' +
-        'or visit /onboarding to walk through the setup wizard.',
-    );
-  }
-
-  // Order configured providers by PROVIDER_PRIORITY so the user's strongest
-  // provider wins by default.
-  const priority = configured.slice().sort(
-    (a, b) => PROVIDER_PRIORITY.indexOf(a) - PROVIDER_PRIORITY.indexOf(b),
-  );
-
-  // Map our public 'default' to the technical domain (the most common case).
-  const effectiveDomain: ModelDomain =
-    domain === 'default' ? 'technical' : (domain as ModelDomain);
-
-  const providerId = pickProviderForDomain(keys, effectiveDomain, priority);
-  if (!providerId) {
-    throw new Error(
-      `No configured provider supports the "${domain}" domain. ` +
-        `Add a key for a provider that supports this domain (see Settings → API Keys).`,
-    );
-  }
-
-  const spec = BYOK_PROVIDERS[providerId];
-  const apiKey = keys[providerId]!;
-
-  // Phase E — user-set per-domain overrides win over the spec
-  // defaults. Override format is "<providerId>:<modelId>". A user
-  // can override to a different provider (e.g. pick Anthropic as the
-  // default for "technical" while their primary key is OpenAI), but
-  // in that case the override only takes effect for THIS routing
-  // decision — the picked provider still needs a configured key.
-  const userOverrides = (userSettings.defaultModels ?? {}) as Record<string, string | undefined>;
-  const overrideValue = userOverrides[effectiveDomain];
-  let overrideProvider: ProviderId | null = null;
-  let overrideModelId: string | null = null;
-  if (overrideValue && typeof overrideValue === 'string' && overrideValue.includes(':')) {
-    const sep = overrideValue.indexOf(':');
-    const p = overrideValue.slice(0, sep) as ProviderId;
-    const m = overrideValue.slice(sep + 1);
-    // The override's provider must be configured with a key, otherwise
-    // we fall back to the spec defaults below.
-    if (keys[p]) {
-      overrideProvider = p;
-      overrideModelId = m;
-    }
-  }
-
-  // Resolve the model id for the chosen provider + domain, falling back to
-  // 'technical' when vision is null and to 'technical' when embedding is null.
-  let modelId: string | null = null;
-  let resolvedProviderId: ProviderId = providerId;
-  if (overrideProvider && overrideModelId) {
-    resolvedProviderId = overrideProvider;
-    modelId = overrideModelId;
-  } else if (effectiveDomain === 'embedding') {
-    modelId = spec.defaultModels.embedding ?? spec.defaultModels.technical;
-  } else if (effectiveDomain === 'vision') {
-    modelId = spec.defaultModels.vision ?? spec.defaultModels.technical;
-  } else {
-    modelId = spec.defaultModels[effectiveDomain];
-  }
-
-  if (!modelId) {
-    throw new Error(
-      `Provider ${providerId} has no model configured for ${effectiveDomain}.`,
-    );
-  }
-
-  // When the user picked an override whose provider is the same as the
-  // routed provider, `resolvedProviderId === providerId` and `spec`
-  // is correct. When the user picked an override pointing at a
-  // different provider (e.g. routing is OpenAI but user set the
-  // technical default to Anthropic), we look up the override's
-  // provider and use ITS api key + factory.
-  const finalSpec =
-    resolvedProviderId === providerId ? spec : BYOK_PROVIDERS[resolvedProviderId];
-  const finalApiKey =
-    resolvedProviderId === providerId ? apiKey : keys[resolvedProviderId]!;
-
-  const model = finalSpec.factory(finalApiKey)(modelId);
-
-  // Returned modelId keeps the original provider prefix when applicable so
-  // cost estimation + telemetry can identify the upstream.
-  return { model, modelId: `${finalSpec.id}/${modelId}` };
 }
 
 /**
@@ -514,9 +356,9 @@ export interface ChatModelResolution {
  * a key — otherwise we throw a clear error pointing at the UI.
  *
  * This replaces the previous per-domain `defaultModels` lookup in
- * the chat path. The legacy JSONB column is still consumed by
- * `convene-committee` (which keeps its per-role picks); see
- * `resolveUserModel` below.
+ * the chat path. The legacy JSONB column is still in the schema
+ * (consumed by convene-committee for per-role picks) but no UI
+ * surface mutates it any more.
  */
 export function resolveChatModel(
   userSettings: Pick<UserSettingsRow, 'aiApiKeys' | 'chatModel'>,

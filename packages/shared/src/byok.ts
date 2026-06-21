@@ -160,19 +160,11 @@ export interface CatalogResponse {
   totalModels: number;
 }
 
-/** Per-domain model overrides (matches the JSONB column shape). */
-export interface DefaultModels {
-  fundamental?: string;
-  technical?: string;
-  summary?: string;
-  vision?: string;
-  embedding?: string;
-}
-
-/** Response from GET /api/settings/default-model. */
-export interface DefaultModelResponse {
-  defaults: DefaultModels;
-}
-
-/** The five domains the agent routes between. */
+/**
+ * The five domains used in the per-provider spec catalog. Phase F
+ * collapsed the user-facing model picker to a single chat_model
+ * (`user_settings.chat_model`), so `ModelDomain` no longer drives any
+ * UI surface — it only labels which spec.defaultModels slot a
+ * particular model fills (e.g. `defaultFor: 'technical'`).
+ */
 export type ModelDomain = 'fundamental' | 'technical' | 'summary' | 'vision' | 'embedding';

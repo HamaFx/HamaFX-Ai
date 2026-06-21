@@ -33,12 +33,10 @@ export {
   type ModelSpec,
 } from './byok-providers';
 export {
-  resolveUserModel,
   resolveChatModel,
   derivePlannerModel,
   deriveTitleModel,
   testProviderKey,
-  type ResolveUserDomain,
   type ChatModelResolution,
 } from './model';
 export {
