@@ -95,13 +95,14 @@ async function updateApiKeys(
 
 /**
  * Phase D — server action: run a bulk test across every configured
- * BYOK provider. Called from the page-level "Test all" button.
+ * BYOK provider.
  *
- * Delegates to /api/settings/bulk-test (re-uses the same code path
- * as the standalone route). We can't import the route handler
- * directly across the server/client boundary, so we re-implement
- * the trivial bits here. The route remains the single source of
- * truth for the per-provider test logic.
+ * Currently unused: BulkTestButton now posts directly to
+ * /api/settings/bulk-test (the single source of truth for testing
+ * + persistence) and calls `router.refresh()` to invalidate the
+ * RSC payload. Kept exported in case a future surface (CLI, admin
+ * page) wants a server-side bulk-test entry point that doesn't go
+ * through the fetch boundary.
  */
 async function bulkTestAll() {
   'use server';
@@ -257,7 +258,7 @@ export default async function ApiKeysSettingsPage({
           {totalTurns} turns · ${totalCost.toFixed(2)} this month
         </span>
         <span className="ml-auto">
-          <BulkTestButton action={bulkTestAll} disabled={totalConfigured === 0} />
+          <BulkTestButton disabled={totalConfigured === 0} />
         </span>
       </div>
 

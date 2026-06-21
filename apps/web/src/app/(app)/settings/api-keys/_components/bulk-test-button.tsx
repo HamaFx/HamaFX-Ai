@@ -17,6 +17,7 @@
  */
 
 import { useState, useTransition } from 'react';
+import { useRouter } from 'next/navigation';
 import { CheckCircle2, Loader2, Play, XCircle } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -24,12 +25,6 @@ import { withCsrf } from '@/lib/csrf';
 import { toast } from 'sonner';
 
 interface BulkTestButtonProps {
-  /**
-   * Server action returned by the page component. Calls
-   * /api/settings/bulk-test under the hood and persists the
-   * resulting health snapshots.
-   */
-  action: () => Promise<void>;
   /** Disable when there are no keys configured. */
   disabled?: boolean;
 }
@@ -44,18 +39,17 @@ interface BulkTestSummary {
 /**
  * <BulkTestButton> — Phase D api-keys page overhaul.
  *
- * Submits the bulk-test server action, parses the resulting
- * page re-render to surface a toast summarising how many
- * providers passed / failed. The page revalidation inside the
- * action refreshes each card's <StatusPill> automatically.
+ * Posts to /api/settings/bulk-test, which is the single source of
+ * truth for the test + persist path. After a successful response we
+ * call `router.refresh()` so the server-component page re-fetches
+ * the latest provider_tests rows — no second writer, no race.
  *
- * We can't read the action's return value directly because Next
- * 15 server actions return void. Instead we re-fetch the catalog
- * endpoint to read the updated health snapshots. (The action's
- * `revalidatePath('/settings/api-keys')` causes the page props
- * to refresh too, but we need the data on the client for the toast.)
+ * (Earlier revisions also called a `bulkTestAll` server action that
+ * re-wrote the same rows. That double-write could race with the API
+ * route's delete-then-insert and silently drop the new rows.)
  */
-export function BulkTestButton({ action, disabled }: BulkTestButtonProps) {
+export function BulkTestButton({ disabled }: BulkTestButtonProps) {
+  const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [running, setRunning] = useState(false);
   const [summary, setSummary] = useState<BulkTestSummary | null>(null);
@@ -66,11 +60,6 @@ export function BulkTestButton({ action, disabled }: BulkTestButtonProps) {
     setSummary(null);
     startTransition(async () => {
       try {
-        // Call the API directly so we can read the response. The
-        // server action runs the same code path on the server.
-        // `withCsrf` injects the double-submit CSRF header — the
-        // middleware (apps/web/src/middleware.ts) rejects
-        // state-changing /api/* requests without it.
         const res = await fetch('/api/settings/bulk-test', {
           method: 'POST',
           ...withCsrf(),
@@ -99,17 +88,9 @@ export function BulkTestButton({ action, disabled }: BulkTestButtonProps) {
             `${body.summary.ok} ok, ${body.summary.failed} failed.`,
           );
         }
-        // Tell the server action to run too — it persists the
-        // health snapshot rows that the page reads from. The two
-        // writes are idempotent (the API also writes; the action
-        // writes the same data again). If the server action is
-        // racey with the API write, the worst case is one extra
-        // identical row, which is harmless.
-        try {
-          await action();
-        } catch {
-          /* page still refreshes via API write */
-        }
+        // Refresh the RSC tree so the per-card health badges reflect
+        // the new provider_tests rows without a manual reload.
+        router.refresh();
       } catch (err) {
         toast.error(
           err instanceof Error ? err.message : 'Bulk test failed',
