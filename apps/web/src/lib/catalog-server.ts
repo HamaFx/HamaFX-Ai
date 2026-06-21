@@ -16,10 +16,7 @@
 
 import 'server-only';
 
-import {
-  BYOK_PROVIDERS,
-  BYOK_PROVIDERS_LIST,
-} from '@hamafx/ai';
+import { BYOK_PROVIDERS_LIST } from '@hamafx/ai';
 import { getDb, schema } from '@hamafx/db';
 import { decryptByok } from '@hamafx/shared/encryption';
 import {
@@ -30,12 +27,19 @@ import {
 import { eq } from 'drizzle-orm';
 
 /**
- * Phase E — the catalog body that the `/api/settings/catalog` route
- * returns. Also imported by RSC server components (the api-keys
- * page, the onboarding page, the new /settings/models page) so
- * the data shape and per-user merging logic live in exactly one
- * place. RSC pages can't fetch() their own host without a full
- * URL — calling this directly is the only way to share the data.
+ * Phase F — the catalog body that `/api/settings/catalog` returns.
+ * Also imported by RSC server components (the api-keys page, the
+ * new /settings/models page) so the data shape and per-user
+ * filtering logic live in exactly one place. RSC pages can't fetch()
+ * their own host without a full URL — calling this directly is the
+ * only way to share the data.
+ *
+ * Phase F simplification: dropped the per-domain `defaultModels`
+ * merging (the JSONB column is still in the schema but no UI
+ * mutates it any more — convene-committee is the lone consumer
+ * via resolveUserModel). The provider's hardcoded `defaultModels`
+ * still surfaces as the "defaultFor" annotation on each model so
+ * the regen-model-picker can highlight recommended picks.
  *
  * `server-only` import makes sure this never accidentally ends up
  * in a client bundle.
@@ -45,17 +49,10 @@ export async function buildCatalogForUser(
 ): Promise<CatalogResponse> {
   const db = getDb();
   const [settings] = await db
-    .select({
-      aiApiKeys: schema.userSettings.aiApiKeys,
-      defaultModels: schema.userSettings.defaultModels,
-    })
+    .select({ aiApiKeys: schema.userSettings.aiApiKeys })
     .from(schema.userSettings)
     .where(eq(schema.userSettings.userId, userId));
   const decrypted = settings?.aiApiKeys ? decryptByok(settings.aiApiKeys) : null;
-  const userDefaultModels = (settings?.defaultModels ?? {}) as Record<
-    string,
-    string | null | undefined
-  >;
 
   // Latest health snapshot per provider (one row per (user, provider)
   // so this is a single round-trip).
@@ -71,26 +68,16 @@ export async function buildCatalogForUser(
   const healthByProvider = new Map(healthRows.map((h) => [h.providerId, h]));
 
   const providers = BYOK_PROVIDERS_LIST.map((p) => {
-    // Apply user override on top of provider defaults. A user-set
-    // "<provider>:<modelId>" pair (or just "<modelId>" from a
-    // different provider) wins for that domain.
-    const effectiveDefaults: Record<ModelDomain, string | null> = {
+    // Provider's hardcoded spec defaults per domain — used for the
+    // `defaultFor` annotation on each model so the UI can highlight
+    // the provider's recommended pick for each task type.
+    const specDefaults: Record<ModelDomain, string | null> = {
       fundamental: p.defaultModels.fundamental,
       technical: p.defaultModels.technical,
       summary: p.defaultModels.summary,
       vision: p.defaultModels.vision,
       embedding: p.defaultModels.embedding,
     };
-    for (const [domain, value] of Object.entries(userDefaultModels)) {
-      if (!value || typeof value !== 'string') continue;
-      const sep = value.indexOf(':');
-      if (sep < 0) continue;
-      const pickedProvider = value.slice(0, sep);
-      const pickedModel = value.slice(sep + 1);
-      if (pickedProvider === p.id) {
-        effectiveDefaults[domain as ModelDomain] = pickedModel;
-      }
-    }
 
     const models = (p.models ?? []).map((m) => {
       const qualifiedId =
@@ -99,9 +86,9 @@ export async function buildCatalogForUser(
           : p.id === 'openrouter'
             ? m.modelId
             : `${p.id}/${m.modelId}`;
-      // Is this model the default for any domain?
+      // Is this model the default for any domain? (per-provider spec)
       const defaultFor = (
-        Object.entries(effectiveDefaults) as [ModelDomain, string | null][]
+        Object.entries(specDefaults) as [ModelDomain, string | null][]
       ).find(([, id]) => id === m.modelId)?.[0];
       return {
         ...m,
@@ -120,7 +107,11 @@ export async function buildCatalogForUser(
       pricingTier: p.pricingTier,
       ...(p.bestFor !== undefined ? { bestFor: p.bestFor } : {}),
       supports: p.supports,
-      defaultModels: effectiveDefaults,
+      // Surface the per-provider hardcoded defaults so the regen-model-picker
+      // can label "provider's recommended for technical: claude-haiku-4-5"
+      // without a separate fetch. The UI treats these as hints, not user
+      // picks (the user pick lives in user_settings.chat_model).
+      defaultModels: specDefaults,
       models,
       hasKey: Boolean(decrypted?.[p.id as ProviderId]),
       health: healthByProvider.get(p.id) ?? null,
@@ -156,30 +147,8 @@ export async function buildCatalogForUser(
         description: 'Semantic search, journal clustering.',
       },
     ],
-    // All configured providers — pre-sorted cheapest-first so the
-    // /settings/models "By purpose" tab can render provider sections
-    // in a consistent order without a client sort.
     providers,
     total: providers.length,
     totalModels: providers.reduce((sum, p) => sum + p.models.length, 0),
   };
 }
-
-/**
- * Phase E — the user's per-domain default-models map. Same shape
- * as the JSONB column. Re-exported here so RSC pages can read
- * the current values without a fetch.
- */
-export async function getDefaultModelsForUser(
-  userId: string,
-): Promise<Record<ModelDomain, string | undefined>> {
-  const db = getDb();
-  const [row] = await db
-    .select({ defaultModels: schema.userSettings.defaultModels })
-    .from(schema.userSettings)
-    .where(eq(schema.userSettings.userId, userId));
-  return (row?.defaultModels ?? {}) as Record<ModelDomain, string | undefined>;
-}
-
-// silence the unused-import warning when this file is bundled in isolation
-void BYOK_PROVIDERS;
