@@ -19,9 +19,8 @@
 import { useEffect, useState } from 'react';
 import { CheckCircle2, Loader2 } from 'lucide-react';
 
-import { cn } from '@/lib/cn';
 import { withCsrf } from '@/lib/csrf';
-import type { CatalogResponse, DefaultModels, ModelDomain } from '@hamafx/shared';
+import type { CatalogResponse } from '@hamafx/shared';
 
 interface RegenModelPickerProps {
   popoverId: string;
@@ -34,57 +33,37 @@ interface RegenModelPickerProps {
   onPick: (modelId: string) => void;
 }
 
-const DOMAIN_LABELS: Record<ModelDomain, string> = {
-  fundamental: 'Deep reasoning',
-  technical: 'Technical',
-  summary: 'Quick summary',
-  vision: 'Vision',
-  embedding: 'Embedding',
-};
-
-const DOMAIN_ORDER: ModelDomain[] = [
-  'fundamental',
-  'technical',
-  'summary',
-  'vision',
-  'embedding',
-];
-
 /**
- * Phase E — replaces the hardcoded `REGEN_MODELS` array in
- * `message.tsx`. Pulls the full catalog from `/api/settings/catalog`
- * (and the user's per-domain defaults from
- * `/api/settings/default-model`) and renders an organised popover:
- *
- *   - Quick picks: "Use my defaults" — four pre-set domain defaults
- *     (fundamental / technical / summary / vision).
- *   - Per-provider list: every model from every provider that has a
- *     key, labelled with the model name, tier, and price.
- *   - Active row gets a check.
+ * Phase F — replaces the 5-domain picker with a single chat_model
+ * picker. The "My default" section is now just one row (the user's
+ * saved chat_model). The per-provider full list is unchanged so
+ * the user can override per-turn without losing access to the rest.
  *
  * Fetched lazily on first open so we don't block the chat thread.
  */
 export function RegenModelPicker({ popoverId, activeModelId, onPick }: RegenModelPickerProps) {
   const [catalog, setCatalog] = useState<CatalogResponse | null>(null);
-  const [defaults, setDefaults] = useState<DefaultModels>({});
+  const [chatModel, setChatModel] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   // We re-fetch on every mount (popover-open). The catalog endpoint
-  // is `force-dynamic` so it always reflects the current saved
-  // keys and per-domain defaults.
+  // is `force-dynamic` so it always reflects the current saved keys.
   useEffect(() => {
     let cancelled = false;
     async function load() {
       try {
-        const [catRes, defRes] = await Promise.all([
+        const [catRes, modelRes] = await Promise.all([
           fetch('/api/settings/catalog', { ...withCsrf(), cache: 'no-store' }),
-          fetch('/api/settings/default-model', { ...withCsrf(), cache: 'no-store' }),
+          fetch('/api/settings/chat-model', {
+            ...withCsrf(),
+            cache: 'no-store',
+          }),
         ]);
         if (cancelled) return;
         if (catRes.ok) setCatalog(await catRes.json());
-        if (defRes.ok) {
-          const data = await defRes.json();
-          setDefaults(data.defaults ?? {});
+        if (modelRes.ok) {
+          const data = (await modelRes.json()) as { chatModel: string | null };
+          setChatModel(data.chatModel);
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -119,14 +98,7 @@ export function RegenModelPicker({ popoverId, activeModelId, onPick }: RegenMode
     );
   }
 
-  // Split the catalog into "configured" (have a key) vs not.
-  // Only configured providers can actually serve a request, so
-  // we hide unconfigured ones from this menu.
   const configured = catalog.providers.filter((p) => p.hasKey);
-  const sortedDomains = [...catalog.domains].sort(
-    (a, b) => DOMAIN_ORDER.indexOf(a.id) - DOMAIN_ORDER.indexOf(b.id),
-  );
-
   if (configured.length === 0) {
     return (
       <div className="px-3 py-2 text-xs text-fg-subtle">
@@ -135,44 +107,50 @@ export function RegenModelPicker({ popoverId, activeModelId, onPick }: RegenMode
     );
   }
 
+  // Find the chat-model row by parsing "<providerId>:<bareModelId>"
+  // and matching against the configured providers' full catalog.
+  const chatModelParts = chatModel?.split(':');
+  const chatProvider = chatModelParts
+    ? configured.find((p) => p.id === chatModelParts[0])
+    : undefined;
+  const chatBare = chatModelParts?.[1];
+  const chatCatalogModel = chatProvider?.models.find((m) => {
+    const bare = m.modelId.includes('/')
+      ? m.modelId.split('/').slice(1).join('/')
+      : m.modelId;
+    return bare === chatBare;
+  });
+  const chatFullyQualified =
+    chatProvider && chatBare
+      ? `${chatProvider.id}/${bareModelId(chatBare)}`
+      : null;
+
   return (
     <div className="flex flex-col gap-2 max-h-96 overflow-y-auto min-w-72">
-      {/* Quick picks — user's per-domain defaults */}
+      {/* My default — the chat_model the user saved in /settings/models */}
       <section className="flex flex-col gap-0.5">
         <div className="px-2 py-1 text-caption uppercase tracking-wide text-fg-subtle">
-          My defaults
+          My default
         </div>
-        {sortedDomains
-          .filter((d) => defaults[d.id])
-          .map((d) => {
-            const value = defaults[d.id];
-            if (!value) return null;
-            const [providerId, modelId] = value.split(':');
-            const provider = catalog.providers.find((p) => p.id === providerId);
-            const model = provider?.models.find((m) => {
-              const bare = m.modelId.includes('/')
-                ? m.modelId.split('/').slice(1).join('/')
-                : m.modelId;
-              return bare === modelId;
-            });
-            if (!provider || !model) return null;
-            const fullyQualified = `${provider.id}/${bareModelId(model.modelId)}`;
-            return (
-              <RegenRow
-                key={d.id}
-                label={`${DOMAIN_LABELS[d.id]}`}
-                sublabel={`${provider.displayName} · ${model.label ?? modelId}`}
-                fullyQualified={fullyQualified}
-                isActive={activeModelId === fullyQualified}
-                onClick={() => pick(fullyQualified)}
-              />
-            );
-          })}
-        {Object.keys(defaults).length === 0 ? (
+        {chatProvider && chatCatalogModel && chatFullyQualified ? (
+          <RegenRow
+            label={`${chatProvider.displayName} · ${chatCatalogModel.label ?? chatBare}`}
+            fullyQualified={chatFullyQualified}
+            isActive={activeModelId === chatFullyQualified}
+            onClick={() => pick(chatFullyQualified)}
+          />
+        ) : (
           <div className="px-2 py-1 text-caption text-fg-subtle italic">
-            No overrides set. Pick defaults in Settings → Models.
+            No default set.{' '}
+            <a
+              href="/settings/models"
+              className="text-brand hover:underline not-italic"
+            >
+              Pick one in Settings → Models
+            </a>
+            .
           </div>
-        ) : null}
+        )}
       </section>
 
       {/* Per-provider model list */}
@@ -191,7 +169,6 @@ export function RegenModelPicker({ popoverId, activeModelId, onPick }: RegenMode
                 <RegenRow
                   key={`${p.id}/${m.modelId}`}
                   label={m.label ?? bareModelId(m.modelId)}
-                  sublabel={m.tier ? tierLabel(m.tier) : undefined}
                   fullyQualified={fullyQualified}
                   isActive={activeModelId === fullyQualified}
                   onClick={() => pick(fullyQualified)}
@@ -209,19 +186,13 @@ function bareModelId(modelId: string): string {
   return modelId.includes('/') ? modelId.split('/').slice(1).join('/') : modelId;
 }
 
-function tierLabel(tier: 'flagship' | 'pro' | 'fast' | 'lite' | 'embedding'): string {
-  return tier.charAt(0).toUpperCase() + tier.slice(1);
-}
-
 function RegenRow({
   label,
-  sublabel,
   fullyQualified,
   isActive,
   onClick,
 }: {
   label: string;
-  sublabel?: string | undefined;
   fullyQualified: string;
   isActive: boolean;
   onClick: () => void;
@@ -234,20 +205,14 @@ function RegenRow({
       onClick={onClick}
       className="text-fg hover:bg-bg-elev-2 focus:bg-bg-elev-2 flex w-full items-center justify-between gap-2 rounded-lg px-3 py-1.5 text-left text-xs transition-colors focus:outline-none"
     >
-      <span className="flex flex-col min-w-0">
-        <span className="truncate">{label}</span>
-        {sublabel ? (
-          <span className="text-caption text-fg-subtle truncate">{sublabel}</span>
-        ) : null}
-      </span>
+      <span className="truncate">{label}</span>
       {isActive ? (
-        <CheckCircle2 size={14} className="text-bull shrink-0" aria-hidden="true" />
+        <CheckCircle2
+          size={14}
+          className="text-bull shrink-0"
+          aria-hidden="true"
+        />
       ) : null}
     </button>
   );
 }
-
-export const _regenPickerInternals = {
-  DOMAIN_LABELS,
-  cn,
-};
