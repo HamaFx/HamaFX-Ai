@@ -97,6 +97,11 @@ export {
   type ProviderId,
   type ProviderMeta,
   type ProviderPricingTier,
+  type ModelDomain,
+  type CatalogModel,
+  type CatalogResponse,
+  type DefaultModels,
+  type DefaultModelResponse,
 } from './byok';
 // Secret helpers (env-secrets.ts) intentionally NOT re-exported from the
 // barrel — importing them pulls node:crypto + `server-only` into the

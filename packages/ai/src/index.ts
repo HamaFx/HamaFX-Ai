@@ -30,6 +30,7 @@ export {
   type ByokProviderSpec,
   type ByokProviderModels,
   type ModelDomain,
+  type ModelSpec,
 } from './byok-providers';
 export { resolveUserModel, testProviderKey, type ResolveUserDomain } from './model';
 export {

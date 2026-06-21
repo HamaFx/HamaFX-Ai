@@ -54,16 +54,14 @@ interface MessageProps {
 }
 
 /**
- * Shortcut model ids exposed in the "Regenerate with…" menu. Picked to
- * line up with the per-domain defaults from `routeTurn` so the user can
- * test all three tiers from a single click. Keeping this list short on
- * purpose — full model selection lives in /settings.
+ * Phase E — the "Regenerate with…" popover used to be a hardcoded
+ * 3-Gemini-options list. Now it's a full picker sourced from the
+ * live `/api/settings/catalog` + `/api/settings/default-model`
+ * endpoints via `<RegenModelPicker>`. The picker renders only
+ * models from providers the user has a key for, grouped by provider
+ * and tagged with tier + price.
  */
-const REGEN_MODELS: Array<{ id: string; label: string; tier: 'fast' | 'pro' }> = [
-  { id: 'google-vertex/gemini-2.5-flash-lite', label: 'Lite (cheapest)', tier: 'fast' },
-  { id: 'google-vertex/gemini-2.5-flash', label: 'Flash (default)', tier: 'fast' },
-  { id: 'google-vertex/gemini-2.5-pro', label: 'Pro (deep)', tier: 'pro' },
-];
+import { RegenModelPicker } from './_components/regen-model-picker';
 
 export function Message({ message, onCopy, onRegenerate, onEdit }: MessageProps) {
   const isUser = message.role === 'user';
@@ -230,7 +228,7 @@ export function Message({ message, onCopy, onRegenerate, onEdit }: MessageProps)
                 id={`regen-menu-${message.id}`}
                 popover="auto"
                 role="menu"
-                className="bg-bg-elev-1 border border-divider border-divider/60 m-0 flex-col gap-0.5 rounded-xl border p-1 shadow-xl"
+                className="bg-bg-elev-1 border border-divider border-divider/60 m-0 rounded-xl border p-1 shadow-xl"
                 style={{ 
                   minWidth: '12rem',
                   positionAnchor: `--regen-btn-${message.id}`,
@@ -239,30 +237,11 @@ export function Message({ message, onCopy, onRegenerate, onEdit }: MessageProps)
                   position: 'fixed'
                 } as React.CSSProperties}
               >
-                {REGEN_MODELS.map((m) => (
-                  <button
-                    key={m.id}
-                    type="button"
-                    role="menuitem"
-                    onClick={(e) => {
-                      (e.currentTarget.closest('[popover]') as HTMLElement)?.hidePopover();
-                      onRegenerate({ modelOverride: m.id });
-                    }}
-                    className="text-fg hover:bg-bg-elev-2 focus:bg-bg-elev-2 flex w-full items-center justify-between gap-2 rounded-lg px-3 py-2 text-left text-xs transition-colors focus:outline-none"
-                  >
-                    <span>{m.label}</span>
-                    <span
-                      className={cn(
-                        'rounded-full px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide',
-                        m.tier === 'pro'
-                          ? 'bg-brand/15 text-brand'
-                          : 'bg-bg-elev-3 text-fg-muted',
-                      )}
-                    >
-                      {m.tier}
-                    </span>
-                  </button>
-                ))}
+                <RegenModelPicker
+                  popoverId={`regen-menu-${message.id}`}
+                  activeModelId={null}
+                  onPick={(modelId) => onRegenerate({ modelOverride: modelId })}
+                />
               </div>
             </div>
           ) : null}

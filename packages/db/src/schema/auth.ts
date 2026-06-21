@@ -29,6 +29,7 @@
 import {
   boolean,
   integer,
+  jsonb,
   pgTable,
   primaryKey,
   text,
@@ -142,6 +143,21 @@ export const userSettings = pgTable('user_settings', {
    * Shape when decrypted: { openai?: string; anthropic?: string; google?: string }
    */
   aiApiKeys: text('ai_api_keys'),
+  /**
+   * Phase E — per-user per-domain default model overrides.
+   * Shape (JSONB): { fundamental?: "<provider>:<modelId>",
+   *                    technical?: ..., summary?: ...,
+   *                    vision?: ..., embedding?: ... }
+   * The resolver checks this before falling back to the provider
+   * spec defaults in BYOK_PROVIDERS.defaultModels.
+   */
+  defaultModels: jsonb('default_models').$type<{
+    fundamental?: string;
+    technical?: string;
+    summary?: string;
+    vision?: string;
+    embedding?: string;
+  }>(),
   /** Max daily USD spend for this user. Overrides global MAX_DAILY_USD. */
   maxDailyUsd: integer('max_daily_usd'),
   /** Whether onboarding has been completed. */

@@ -1762,4 +1762,141 @@ Cross-references (Phase D)
                                     vertex?: string in ByokPayload
 
 
+=================================================================
+7.16 Model Picker Overhaul (Phase E)
+=================================================================
+
+The model picker used to be a hardcoded list of three Gemini
+variants in the chat regen popover. It's now a structured
+picker backed by the full provider × model catalog with
+per-domain defaults.
+
+  (start) User navigates to /settings/models
+     |
+     v
+  [Catalog endpoint hits]
+     - GET /api/settings/catalog
+       • Returns every provider × model pair (60+ models across 9
+         providers) with full metadata: context window, USD/Mtok
+         pricing, capability flags (vision / tools / jsonMode /
+         streaming), release date, tier (flagship / pro / fast /
+         lite / embedding)
+       • Per-provider key-presence + latest health snapshot from
+         provider_tests (no need to re-probe every model)
+       • Per-domain default (already merged with user override)
+     - GET /api/settings/default-model
+       • Returns user's per-domain override map
+     |
+     v
+  [ModelsBrowser renders two tabs]
+     - "By purpose" tab — 5 sections (deep reasoning / technical /
+       quick summary / vision / embeddings), each a grid of model
+       cards from every provider that supports that domain.
+       Sorted: provider-with-key first, then by tier order.
+     - "By provider" tab — 9 collapsible provider cards, each
+       showing every model that provider serves.
+     - Search bar filters across model id / label / description /
+       provider name
+     |
+     v
+  [User picks "Set as default for technical"]
+     - POST /api/settings/default-model
+       body: { action: "set", domain, providerId, modelId }
+     - Server validates the model id exists in the catalog
+     - Persists to user_settings.default_models (JSONB column)
+     - Returns { defaults: { technical: "anthropic:claude-sonnet-4-5" } }
+     |
+     v
+  [UI updates inline — "✓ Active" pill, "Reset" link]
+     |
+     v
+  [Next chat turn resolves via resolveUserModel]
+     - Reads userSettings.defaultModels[domain] FIRST
+     - If user override exists AND override's provider has a key,
+       uses that model
+     - Otherwise falls back to the spec default for the routed
+       provider
+     |
+     v
+  (end) Future chat turns route through the user's chosen default
+
+
+7.17 Chat Regen Popover (Phase E)
+---------------------------------
+
+The "Regenerate with…" popover on each assistant message used
+to show three fixed Gemini options. It now uses the same
+`<RegenModelPicker>` client component, populated live from the
+catalog endpoint:
+
+  (start) User hovers an assistant message → clicks chevron
+     |
+     v
+  [Popover opens with two sections]
+     - "My defaults" — the user's per-domain overrides rendered
+       as one-click shortcuts ("Deep reasoning → Anthropic
+       Claude Sonnet 4.5" etc.)
+     - "All configured models" — every model from every provider
+       the user has a key for, grouped by provider, with tier label
+       and price. Only configured providers appear (you can't pick
+       a model you can't actually call).
+     |
+     v
+  [User clicks a row]
+     - onPick(modelId) → calls chat-screen's onRegenerate handler
+       with { modelOverride: modelId }
+     - Popover dismisses
+     - Next chat turn uses the picked model for that thread
+     |
+     v
+  (end) The original thread stays in the sidebar with its prior
+        model — regen only affects new turns
+
+
+Backend architecture
+--------------------
+
+  packages/ai/src/byok-providers.ts
+    - ByokProviderSpec now carries a `models?: ModelSpec[]` field
+      listing every model the provider serves with metadata
+      (pricing, context window, capabilities, release date, tier)
+    - All 9 providers are populated. OpenRouter has a curated
+      subset of cross-provider models (Claude Sonnet 4.5 via
+      Anthropic, GPT-4.1 via OpenAI, etc.).
+  packages/ai/src/model.ts
+    - resolveUserModel now takes userSettings with `defaultModels`
+    - User overrides win over spec defaults when both are present
+    - Overrides can point at a different provider than the one the
+      routing picks — as long as that provider has a configured key,
+      the resolver uses it. Otherwise it falls back to the routed
+      provider's spec default.
+  packages/shared/src/byok.ts
+    - New client-safe types: CatalogResponse, ProviderMeta,
+      CatalogModel, DefaultModels, DefaultModelResponse
+    - The ProviderMeta.defaultModels field now reflects user
+      overrides merged with spec defaults (server-side)
+  apps/web/src/app/api/settings/catalog/route.ts
+    - GET returns the rich catalog (providers + domains + model lists)
+  apps/web/src/app/api/settings/default-model/route.ts (NEW)
+    - GET  → user's per-domain override map
+    - POST → set a default (validated against the catalog)
+    - DELETE → clear a single override (query param `domain`)
+
+Frontend architecture
+---------------------
+
+  apps/web/src/app/(app)/settings/models/page.tsx (NEW)
+    - Server shell: auth + parallel fetch of catalog + defaults
+    - Hands off to <ModelsBrowser>
+  apps/web/src/app/(app)/settings/models/_components/models-browser.tsx (NEW)
+    - Client component: tabs, search, model cards, set-default action
+    - <ProviderCard>, <ModelCard>, <ActivePill>, <EmptyState>
+  apps/web/src/components/chat/_components/regen-model-picker.tsx (NEW)
+    - Lazy-fetches the catalog on popover-open
+    - Renders user defaults + per-provider model list
+  apps/web/src/components/chat/message.tsx
+    - REGEN_MODELS hardcoded array removed
+    - Popover body now hosts <RegenModelPicker>
+
+
 End of document.

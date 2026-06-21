@@ -59,7 +59,7 @@ describe('resolveUserModel — env-key fallback', () => {
     // Use a fake key long enough to satisfy any length check.
     const fakeKey = 'a'.repeat(40);
     const { model, modelId } = resolveUserModel(
-      { aiApiKeys: null },
+      { aiApiKeys: null, defaultModels: {} },
       'technical',
       { ...ENV, GOOGLE_GENERATIVE_AI_API_KEY: fakeKey },
     );
@@ -76,7 +76,7 @@ describe('resolveUserModel — env-key fallback', () => {
     // docs that merging happens via spread. This is an indirect test —
     // see the integration comment for the precedence proof.
     const { modelId } = resolveUserModel(
-      { aiApiKeys: null },
+      { aiApiKeys: null, defaultModels: {} },
       'technical',
       { ...ENV, GOOGLE_GENERATIVE_AI_API_KEY: envKey },
     );
@@ -89,7 +89,11 @@ describe('resolveUserModel — env-key fallback', () => {
 
   it('throws when both BYOK and env keys are empty', () => {
     expect(() =>
-      resolveUserModel({ aiApiKeys: null }, 'technical', { ...ENV }),
+      resolveUserModel(
+      { aiApiKeys: null, defaultModels: {} },
+      'technical',
+      { ...ENV },
+    ),
     ).toThrow(/No AI API keys configured/);
   });
 });

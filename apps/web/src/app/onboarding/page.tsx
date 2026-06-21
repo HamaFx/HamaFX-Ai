@@ -15,11 +15,14 @@
  */
 
 import { redirect } from 'next/navigation';
+import { eq } from 'drizzle-orm';
+import { headers } from 'next/headers';
+
+import type { CatalogResponse } from '@hamafx/shared';
+
 import { auth } from '@/auth';
 import { getDb, schema } from '@hamafx/db';
-import { eq } from 'drizzle-orm';
 import { OnboardingWizard } from '@/components/onboarding/wizard';
-import { BYOK_PROVIDERS_LIST } from '@hamafx/ai';
 
 export default async function OnboardingPage() {
   const session = await auth();
@@ -37,21 +40,20 @@ export default async function OnboardingPage() {
     redirect('/chat');
   }
 
-  // Phase C — UX_UPGRADE_PLAN.md item 16: pass `bestFor` and
-  // `supports` through so the wizard tooltip can show them.
-  // Conditional spreads keep the object compatible with the
-  // strict-optional fields on `ProviderMeta` under
-  // exactOptionalPropertyTypes.
-  const providers = BYOK_PROVIDERS_LIST.map((p) => ({
-    id: p.id,
-    displayName: p.displayName,
-    familyName: p.familyName,
-    keyHint: p.keyHint,
-    description: p.description,
-    pricingTier: p.pricingTier,
-    ...(p.bestFor !== undefined ? { bestFor: p.bestFor } : {}),
-    supports: p.supports,
-  }));
+  // Phase E — provider list comes from the catalog endpoint now, but
+// for the onboarding picker we only need the lightweight metadata
+// (id/displayName/keyHint/etc.). The wizard accepts a wider
+// ProviderMeta shape; pass it through so the per-domain model
+// preview later in the flow stays type-safe.
+const headersList = await headers();
+const catalogRes = await fetch(`${process.env.APP_URL ?? ''}/api/settings/catalog`, {
+  headers: { cookie: headersList.get('cookie') ?? '' },
+  cache: 'no-store',
+});
+const catalog: CatalogResponse | null = catalogRes.ok
+  ? await catalogRes.json()
+  : null;
+const providers = catalog?.providers ?? [];
 
   return (
     <div className="flex flex-col gap-8">

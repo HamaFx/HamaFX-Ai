@@ -7,7 +7,7 @@
 
 **HamaFX-Ai** is a multi-tenant, chat-driven AI trading copilot for three forex instruments: **XAUUSD** (primary), **EURUSD**, **GBPUSD**. It runs as a Next.js 15 PWA with a persistent Node.js worker daemon. The AI agent uses Vercel AI SDK v5 with 32 tools, domain-based model routing, and multi-agent committee deliberation.
 
-- **Status**: Phases 0-9 shipped (incl. multi-tenant v2.0). Hardening complete. UX Upgrade Plan Phases A/B/C shipped (561 tests, items 1-19 done). Phase D shipped (Vertex AI BYOK + api-keys page overhaul + bulk test + per-provider usage). Items 20-25 parked. In production on Vercel + GCE VM.
+- **Status**: Phases 0-9 shipped (incl. multi-tenant v2.0). Hardening complete. UX Upgrade Plan Phases A/B/C shipped (561 tests, items 1-19 done). Phase D shipped (Vertex AI BYOK + api-keys page overhaul + bulk test + per-provider usage). Phase E shipped (model picker overhaul — full provider×model catalog with per-domain defaults, /settings/models browser, regenerated chat popover). Items 20-25 parked. In production on Vercel + GCE VM.
 - **Principle**: Multi-tenant via NextAuth.js v5 + Drizzle adapter. BYOK per user (9-provider registry: google, vertex, anthropic, openai, groq, mistral, openrouter, xai, deepseek). Strict userId scoping on all user-data tables.
 - **License**: Apache-2.0
 
@@ -25,7 +25,7 @@
 | DB | Postgres (Supabase) + pgvector. Drizzle ORM |
 | Local DB | PGlite (embedded Postgres, zero setup) |
 | Charts | TradingView lightweight-charts v5 |
-| Tests | Vitest. ~88 test files, 561 cases (Phase A→C grew from 451 → 561; Phase D vertex + per-provider usage added more). `pnpm turbo run test -- --run` |
+| Tests | Vitest. ~90 test files, 587 cases (Phase A→C grew from 451 → 561; Phase D vertex + per-provider usage added more; Phase E model picker overhaul added 7 more). `pnpm turbo run test -- --run` |
 | Lint | ESLint flat config in `packages/config/eslint` |
 | TypeScript | Strict mode. `exactOptionalPropertyTypes`, `noUncheckedIndexedAccess` |
 

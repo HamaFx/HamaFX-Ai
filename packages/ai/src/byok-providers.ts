@@ -40,6 +40,47 @@ import { PROVIDER_IDS, type ProviderId } from '@hamafx/shared/byok';
 /** The five "domains" the agent routes between (see packages/ai/src/routing.ts). */
 export type ModelDomain = 'fundamental' | 'technical' | 'summary' | 'vision' | 'embedding';
 
+/**
+ * Rich metadata for a single model. Surfaced to the UI so the user
+ * can compare models across providers without leaving /settings/models.
+ *
+ * Conventions:
+ *   - `modelId` is the **bare** id (no provider prefix). When the
+ *     user picks a model, the resolver prefixes the id with the
+ *     provider name automatically (e.g. `openai/gpt-4o` for
+ *     OpenRouter, `google-vertex/gemini-2.5-pro` for Vertex).
+ *   - Pricing is in USD per 1M tokens. `null` means "free" (e.g.
+ *     DeepSeek chat, Groq Llama 3.1 8b).
+ *   - `capabilities` mirrors the spec-level `supports` but per-model:
+ *     not every "vision-capable" provider has every vision model
+ *     enabled (e.g. DeepSeek has none).
+ */
+export interface ModelSpec {
+  /** Bare model id, e.g. "gpt-4o", "claude-sonnet-4-5", "mistral-large-latest". */
+  modelId: string;
+  /** Short label shown in the picker. Falls back to modelId when missing. */
+  label?: string;
+  /** One-line description shown in the expanded row. */
+  description?: string;
+  /** USD per 1M input tokens. `null` = free or unknown. */
+  inputPerMTokUsd?: number | null;
+  /** USD per 1M output tokens. `null` = free or unknown. */
+  outputPerMTokUsd?: number | null;
+  /** Context window in tokens (input). */
+  contextTokens?: number;
+  /** Per-model capabilities. Defaults to the provider-level set when missing. */
+  capabilities?: {
+    vision?: boolean;
+    tools?: boolean;
+    jsonMode?: boolean;
+    streaming?: boolean;
+  };
+  /** Friendly release date, e.g. "2025-04". Helps users gauge freshness. */
+  released?: string;
+  /** Optional tier tag for sorting ("flagship", "fast", "lite"). */
+  tier?: 'flagship' | 'pro' | 'fast' | 'lite' | 'embedding';
+}
+
 /** Per-domain default model ids for a provider. */
 export interface ByokProviderModels {
   fundamental: string;
@@ -64,6 +105,21 @@ export interface ByokProviderSpec {
   /** Rough pricing tier so the UI can order providers cheapest-first. */
   pricingTier: 'free' | 'low' | 'medium' | 'high';
   defaultModels: ByokProviderModels;
+  /**
+   * Phase E — full per-model catalog. Every model the provider
+   * serves is listed here with metadata (context window, pricing,
+   * capabilities, release date, tier). Surfaced via the catalog
+   * endpoint to /settings/models and the chat regen popover.
+   *
+   * `defaultModels` is a subset (one model per domain). The agent
+   * router still uses `defaultModels` for speed (no extra lookup);
+   * the picker uses `models` to show options.
+   *
+   * Optional for legacy/test specs that only declare defaults.
+   * New specs must include this — the catalog endpoint will surface
+   * an empty list for missing entries, which looks broken to users.
+   */
+  models?: ModelSpec[];
   /**
    * Build a `(modelId) => LanguageModel` from this provider's API key.
    * Implementations should NOT cache the underlying SDK instance across
@@ -111,6 +167,63 @@ const GOOGLE: ByokProviderSpec = {
   },
   bestFor: 'Free tier + vision',
   supports: { vision: true, embedding: true },
+  models: [
+    {
+      modelId: 'gemini-2.5-pro',
+      label: 'Gemini 2.5 Pro',
+      description: 'Best reasoning, deep analysis. 1M context.',
+      tier: 'flagship',
+      inputPerMTokUsd: 1.25,
+      outputPerMTokUsd: 10,
+      contextTokens: 1_000_000,
+      capabilities: { vision: true, tools: true, jsonMode: true, streaming: true },
+      released: '2025-04',
+    },
+    {
+      modelId: 'gemini-2.5-flash',
+      label: 'Gemini 2.5 Flash',
+      description: 'Balanced price/perf, 1M context, vision.',
+      tier: 'pro',
+      inputPerMTokUsd: 0.30,
+      outputPerMTokUsd: 2.50,
+      contextTokens: 1_000_000,
+      capabilities: { vision: true, tools: true, jsonMode: true, streaming: true },
+      released: '2025-04',
+    },
+    {
+      modelId: 'gemini-2.5-flash-lite',
+      label: 'Gemini 2.5 Flash-Lite',
+      description: 'Cheapest, fastest, low latency summaries.',
+      tier: 'lite',
+      inputPerMTokUsd: 0.10,
+      outputPerMTokUsd: 0.40,
+      contextTokens: 1_000_000,
+      capabilities: { vision: true, tools: true, jsonMode: true, streaming: true },
+      released: '2025-07',
+    },
+    {
+      modelId: 'gemini-2.0-flash',
+      label: 'Gemini 2.0 Flash',
+      description: 'Stable workhorse, multimodal.',
+      tier: 'fast',
+      inputPerMTokUsd: 0.10,
+      outputPerMTokUsd: 0.40,
+      contextTokens: 1_000_000,
+      capabilities: { vision: true, tools: true, jsonMode: true, streaming: true },
+      released: '2025-02',
+    },
+    {
+      modelId: 'text-embedding-004',
+      label: 'Embedding 004',
+      description: '768-dim text embeddings, 2k-token input.',
+      tier: 'embedding',
+      inputPerMTokUsd: 0.025,
+      outputPerMTokUsd: null,
+      contextTokens: 2_048,
+      capabilities: {},
+      released: '2024-04',
+    },
+  ],
   factory: (apiKey) => {
     const provider = createGoogleGenerativeAI({ apiKey });
     return (modelId) => provider(modelId);
@@ -155,6 +268,63 @@ const VERTEX: ByokProviderSpec = {
   },
   bestFor: 'GCP billing + scale',
   supports: { vision: true, embedding: true },
+  models: [
+    {
+      modelId: 'gemini-2.5-pro',
+      label: 'Gemini 2.5 Pro (Vertex)',
+      description: 'Best reasoning, deep analysis. 1M context. GCP quota.',
+      tier: 'flagship',
+      inputPerMTokUsd: 1.25,
+      outputPerMTokUsd: 10,
+      contextTokens: 1_000_000,
+      capabilities: { vision: true, tools: true, jsonMode: true, streaming: true },
+      released: '2025-04',
+    },
+    {
+      modelId: 'gemini-2.5-flash',
+      label: 'Gemini 2.5 Flash (Vertex)',
+      description: 'Balanced price/perf, vision. GCP billing.',
+      tier: 'pro',
+      inputPerMTokUsd: 0.30,
+      outputPerMTokUsd: 2.50,
+      contextTokens: 1_000_000,
+      capabilities: { vision: true, tools: true, jsonMode: true, streaming: true },
+      released: '2025-04',
+    },
+    {
+      modelId: 'gemini-2.5-flash-lite',
+      label: 'Gemini 2.5 Flash-Lite (Vertex)',
+      description: 'Cheapest Gemini on Vertex.',
+      tier: 'lite',
+      inputPerMTokUsd: 0.10,
+      outputPerMTokUsd: 0.40,
+      contextTokens: 1_000_000,
+      capabilities: { vision: true, tools: true, jsonMode: true, streaming: true },
+      released: '2025-07',
+    },
+    {
+      modelId: 'gemini-2.0-flash',
+      label: 'Gemini 2.0 Flash (Vertex)',
+      description: 'Stable Vertex workhorse.',
+      tier: 'fast',
+      inputPerMTokUsd: 0.10,
+      outputPerMTokUsd: 0.40,
+      contextTokens: 1_000_000,
+      capabilities: { vision: true, tools: true, jsonMode: true, streaming: true },
+      released: '2025-02',
+    },
+    {
+      modelId: 'text-embedding-005',
+      label: 'Embedding 005 (Vertex)',
+      description: 'Vertex text embedding (768d).',
+      tier: 'embedding',
+      inputPerMTokUsd: 0.025,
+      outputPerMTokUsd: null,
+      contextTokens: 2_048,
+      capabilities: {},
+      released: '2025-04',
+    },
+  ],
   factory: (apiKey) => {
     // The BYOK value is a service-account JSON. We parse it lazily
     // inside the returned closure so testProviderKey (which just
@@ -217,17 +387,63 @@ const ANTHROPIC: ByokProviderSpec = {
   displayName: 'Anthropic (Claude)',
   familyName: 'Claude',
   keyHint: 'sk-ant-…',
-  description: 'Claude Sonnet / Haiku — strong reasoning, slower.',
+  description: 'Claude Opus / Sonnet / Haiku — strong reasoning, long context.',
   pricingTier: 'medium',
   defaultModels: {
-    fundamental: 'claude-sonnet-4-20250514',
-    technical: 'claude-sonnet-4-20250514',
-    summary: 'claude-haiku-4-5-20251001',
-    vision: 'claude-sonnet-4-20250514',
+    fundamental: 'claude-sonnet-4-5',
+    technical: 'claude-sonnet-4-5',
+    summary: 'claude-haiku-4-5',
+    vision: 'claude-sonnet-4-5',
     embedding: null, // Anthropic doesn't host an embedding model
   },
   bestFor: 'Deep reasoning',
   supports: { vision: true, embedding: false },
+  models: [
+    {
+      modelId: 'claude-opus-4-1',
+      label: 'Claude Opus 4.1',
+      description: 'Most capable, deep reasoning, 200k context.',
+      tier: 'flagship',
+      inputPerMTokUsd: 15,
+      outputPerMTokUsd: 75,
+      contextTokens: 200_000,
+      capabilities: { tools: true, jsonMode: true, streaming: true },
+      released: '2025-08',
+    },
+    {
+      modelId: 'claude-sonnet-4-5',
+      label: 'Claude Sonnet 4.5',
+      description: 'Best balance of intelligence, speed, cost.',
+      tier: 'pro',
+      inputPerMTokUsd: 3,
+      outputPerMTokUsd: 15,
+      contextTokens: 200_000,
+      capabilities: { vision: true, tools: true, jsonMode: true, streaming: true },
+      released: '2025-09',
+    },
+    {
+      modelId: 'claude-haiku-4-5',
+      label: 'Claude Haiku 4.5',
+      description: 'Cheap, fast, near-Sonnet quality.',
+      tier: 'fast',
+      inputPerMTokUsd: 0.80,
+      outputPerMTokUsd: 4,
+      contextTokens: 200_000,
+      capabilities: { vision: true, tools: true, jsonMode: true, streaming: true },
+      released: '2025-09',
+    },
+    {
+      modelId: 'claude-3-5-haiku-latest',
+      label: 'Claude 3.5 Haiku',
+      description: 'Previous-gen fast model.',
+      tier: 'lite',
+      inputPerMTokUsd: 0.80,
+      outputPerMTokUsd: 4,
+      contextTokens: 200_000,
+      capabilities: { tools: true, jsonMode: true, streaming: true },
+      released: '2024-11',
+    },
+  ],
   factory: (apiKey) => {
     const provider = createAnthropic({ apiKey });
     return (modelId) => provider(modelId);
@@ -239,7 +455,7 @@ const OPENAI: ByokProviderSpec = {
   displayName: 'OpenAI (ChatGPT)',
   familyName: 'GPT',
   keyHint: 'sk-…',
-  description: 'GPT-4o / GPT-4o-mini — fast, vision-capable, embeds available.',
+  description: 'GPT-4o / GPT-4.1 / o-series — fast, vision-capable, embeds available.',
   pricingTier: 'medium',
   defaultModels: {
     fundamental: 'gpt-4o',
@@ -250,6 +466,74 @@ const OPENAI: ByokProviderSpec = {
   },
   bestFor: 'General purpose',
   supports: { vision: true, embedding: true },
+  models: [
+    {
+      modelId: 'gpt-4.1',
+      label: 'GPT-4.1',
+      description: 'Latest flagship, 1M context, strong coding.',
+      tier: 'flagship',
+      inputPerMTokUsd: 3,
+      outputPerMTokUsd: 12,
+      contextTokens: 1_047_576,
+      capabilities: { vision: true, tools: true, jsonMode: true, streaming: true },
+      released: '2025-04',
+    },
+    {
+      modelId: 'gpt-4o',
+      label: 'GPT-4o',
+      description: 'Previous flagship, multimodal.',
+      tier: 'pro',
+      inputPerMTokUsd: 2.50,
+      outputPerMTokUsd: 10,
+      contextTokens: 128_000,
+      capabilities: { vision: true, tools: true, jsonMode: true, streaming: true },
+      released: '2024-08',
+    },
+    {
+      modelId: 'o4-mini',
+      label: 'o4-mini (reasoning)',
+      description: 'Reasoning model, cheap, chain-of-thought.',
+      tier: 'fast',
+      inputPerMTokUsd: 1.10,
+      outputPerMTokUsd: 4.40,
+      contextTokens: 200_000,
+      capabilities: { vision: true, tools: true, jsonMode: true, streaming: true },
+      released: '2025-04',
+    },
+    {
+      modelId: 'gpt-4o-mini',
+      label: 'GPT-4o mini',
+      description: 'Cheap, fast, decent quality.',
+      tier: 'lite',
+      inputPerMTokUsd: 0.15,
+      outputPerMTokUsd: 0.60,
+      contextTokens: 128_000,
+      capabilities: { vision: true, tools: true, jsonMode: true, streaming: true },
+      released: '2024-07',
+    },
+    {
+      modelId: 'text-embedding-3-small',
+      label: 'Embedding 3 small',
+      description: '1536-dim text embeddings.',
+      tier: 'embedding',
+      inputPerMTokUsd: 0.02,
+      outputPerMTokUsd: null,
+      contextTokens: 8_191,
+      capabilities: {},
+      released: '2024-01',
+    },
+    {
+      modelId: 'text-embedding-3-large',
+      label: 'Embedding 3 large',
+      description: '3072-dim text embeddings, best quality.',
+      tier: 'embedding',
+      inputPerMTokUsd: 0.13,
+      outputPerMTokUsd: null,
+      contextTokens: 8_191,
+      capabilities: {},
+      released: '2024-01',
+    },
+  ],
   // OpenAI uses the OpenAI-compatible shim pointed at api.openai.com
   factory: (apiKey) => {
     const provider = createOpenAICompatible({
@@ -277,6 +561,52 @@ const GROQ: ByokProviderSpec = {
   },
   bestFor: 'Speed (free)',
   supports: { vision: true, embedding: false },
+  models: [
+    {
+      modelId: 'llama-3.3-70b-versatile',
+      label: 'Llama 3.3 70B Versatile',
+      description: 'Open-source 70B, fastest inference.',
+      tier: 'flagship',
+      inputPerMTokUsd: 0.59,
+      outputPerMTokUsd: 0.79,
+      contextTokens: 128_000,
+      capabilities: { tools: true, jsonMode: true, streaming: true },
+      released: '2024-12',
+    },
+    {
+      modelId: 'llama-3.1-8b-instant',
+      label: 'Llama 3.1 8B Instant',
+      description: 'Tiny, sub-millisecond latency.',
+      tier: 'lite',
+      inputPerMTokUsd: 0.05,
+      outputPerMTokUsd: 0.08,
+      contextTokens: 128_000,
+      capabilities: { tools: true, jsonMode: true, streaming: true },
+      released: '2024-07',
+    },
+    {
+      modelId: 'llama-3.2-90b-vision-preview',
+      label: 'Llama 3.2 90B Vision',
+      description: 'Vision-capable open model.',
+      tier: 'pro',
+      inputPerMTokUsd: 0.90,
+      outputPerMTokUsd: 0.90,
+      contextTokens: 128_000,
+      capabilities: { vision: true, tools: true, jsonMode: true, streaming: true },
+      released: '2024-11',
+    },
+    {
+      modelId: 'mixtral-8x7b-32768',
+      label: 'Mixtral 8x7B',
+      description: 'Mistral MoE, 32k context.',
+      tier: 'fast',
+      inputPerMTokUsd: 0.24,
+      outputPerMTokUsd: 0.24,
+      contextTokens: 32_768,
+      capabilities: { tools: true, jsonMode: true, streaming: true },
+      released: '2023-12',
+    },
+  ],
   factory: (apiKey) => {
     const provider = createOpenAICompatible({
       name: 'groq',
@@ -303,6 +633,63 @@ const MISTRAL: ByokProviderSpec = {
   },
   bestFor: 'Low cost + EU',
   supports: { vision: true, embedding: true },
+  models: [
+    {
+      modelId: 'mistral-large-latest',
+      label: 'Mistral Large',
+      description: 'Flagship reasoning, 128k context.',
+      tier: 'flagship',
+      inputPerMTokUsd: 2,
+      outputPerMTokUsd: 6,
+      contextTokens: 128_000,
+      capabilities: { tools: true, jsonMode: true, streaming: true },
+      released: '2024-11',
+    },
+    {
+      modelId: 'mistral-small-latest',
+      label: 'Mistral Small',
+      description: 'Cheap, fast, 32k context.',
+      tier: 'fast',
+      inputPerMTokUsd: 0.20,
+      outputPerMTokUsd: 0.60,
+      contextTokens: 32_000,
+      capabilities: { tools: true, jsonMode: true, streaming: true },
+      released: '2025-03',
+    },
+    {
+      modelId: 'pixtral-large-latest',
+      label: 'Pixtral Large (vision)',
+      description: 'Vision-capable Mistral.',
+      tier: 'pro',
+      inputPerMTokUsd: 2,
+      outputPerMTokUsd: 6,
+      contextTokens: 128_000,
+      capabilities: { vision: true, tools: true, jsonMode: true, streaming: true },
+      released: '2024-11',
+    },
+    {
+      modelId: 'ministral-8b-latest',
+      label: 'Ministral 8B',
+      description: 'Tiny edge model.',
+      tier: 'lite',
+      inputPerMTokUsd: 0.10,
+      outputPerMTokUsd: 0.10,
+      contextTokens: 128_000,
+      capabilities: { tools: true, jsonMode: true, streaming: true },
+      released: '2024-10',
+    },
+    {
+      modelId: 'mistral-embed',
+      label: 'Mistral Embed',
+      description: '1024-dim text embeddings.',
+      tier: 'embedding',
+      inputPerMTokUsd: 0.10,
+      outputPerMTokUsd: null,
+      contextTokens: 8_192,
+      capabilities: {},
+      released: '2024-01',
+    },
+  ],
   factory: (apiKey) => {
     const provider = createOpenAICompatible({
       name: 'mistral',
@@ -329,6 +716,89 @@ const OPENROUTER: ByokProviderSpec = {
   },
   bestFor: '100+ models, 1 key',
   supports: { vision: true, embedding: true },
+  // OpenRouter is a meta-provider — we list a curated subset here
+  // that covers the same domain slots as our other providers, plus
+  // a few of the most popular cross-provider models. OpenRouter
+  // supports hundreds more; this is a sensible default.
+  models: [
+    {
+      modelId: 'anthropic/claude-sonnet-4-5',
+      label: 'Claude Sonnet 4.5 (via OpenRouter)',
+      description: 'Top reasoning, 200k context.',
+      tier: 'flagship',
+      inputPerMTokUsd: 3,
+      outputPerMTokUsd: 15,
+      contextTokens: 200_000,
+      capabilities: { vision: true, tools: true, jsonMode: true, streaming: true },
+      released: '2025-09',
+    },
+    {
+      modelId: 'openai/gpt-4.1',
+      label: 'GPT-4.1 (via OpenRouter)',
+      description: 'OpenAI flagship, 1M context.',
+      tier: 'flagship',
+      inputPerMTokUsd: 3,
+      outputPerMTokUsd: 12,
+      contextTokens: 1_047_576,
+      capabilities: { vision: true, tools: true, jsonMode: true, streaming: true },
+      released: '2025-04',
+    },
+    {
+      modelId: 'google/gemini-2.5-pro',
+      label: 'Gemini 2.5 Pro (via OpenRouter)',
+      description: 'Google reasoning, 1M context.',
+      tier: 'flagship',
+      inputPerMTokUsd: 1.25,
+      outputPerMTokUsd: 10,
+      contextTokens: 1_000_000,
+      capabilities: { vision: true, tools: true, jsonMode: true, streaming: true },
+      released: '2025-04',
+    },
+    {
+      modelId: 'openai/gpt-4o-mini',
+      label: 'GPT-4o mini (via OpenRouter)',
+      description: 'Cheap, fast, multimodal.',
+      tier: 'lite',
+      inputPerMTokUsd: 0.15,
+      outputPerMTokUsd: 0.60,
+      contextTokens: 128_000,
+      capabilities: { vision: true, tools: true, jsonMode: true, streaming: true },
+      released: '2024-07',
+    },
+    {
+      modelId: 'google/gemini-2.5-flash',
+      label: 'Gemini 2.5 Flash (via OpenRouter)',
+      description: 'Google balanced price/perf.',
+      tier: 'pro',
+      inputPerMTokUsd: 0.30,
+      outputPerMTokUsd: 2.50,
+      contextTokens: 1_000_000,
+      capabilities: { vision: true, tools: true, jsonMode: true, streaming: true },
+      released: '2025-04',
+    },
+    {
+      modelId: 'meta-llama/llama-3.3-70b-instruct',
+      label: 'Llama 3.3 70B (via OpenRouter)',
+      description: 'Open-source 70B.',
+      tier: 'fast',
+      inputPerMTokUsd: 0.10,
+      outputPerMTokUsd: 0.10,
+      contextTokens: 128_000,
+      capabilities: { tools: true, jsonMode: true, streaming: true },
+      released: '2024-12',
+    },
+    {
+      modelId: 'openai/text-embedding-3-small',
+      label: 'Embedding 3 small (via OpenRouter)',
+      description: '1536-dim text embeddings.',
+      tier: 'embedding',
+      inputPerMTokUsd: 0.02,
+      outputPerMTokUsd: null,
+      contextTokens: 8_191,
+      capabilities: {},
+      released: '2024-01',
+    },
+  ],
   factory: (apiKey) => {
     const provider = createOpenAICompatible({
       name: 'openrouter',
@@ -355,6 +825,41 @@ const XAI: ByokProviderSpec = {
   },
   bestFor: 'Real-time knowledge',
   supports: { vision: true, embedding: false },
+  models: [
+    {
+      modelId: 'grok-2-latest',
+      label: 'Grok 2',
+      description: 'Latest Grok, 128k context.',
+      tier: 'flagship',
+      inputPerMTokUsd: 2,
+      outputPerMTokUsd: 10,
+      contextTokens: 128_000,
+      capabilities: { tools: true, jsonMode: true, streaming: true },
+      released: '2024-12',
+    },
+    {
+      modelId: 'grok-2-vision-latest',
+      label: 'Grok 2 Vision',
+      description: 'Vision-capable Grok.',
+      tier: 'pro',
+      inputPerMTokUsd: 2,
+      outputPerMTokUsd: 10,
+      contextTokens: 32_000,
+      capabilities: { vision: true, tools: true, jsonMode: true, streaming: true },
+      released: '2024-12',
+    },
+    {
+      modelId: 'grok-2-mini',
+      label: 'Grok 2 mini',
+      description: 'Cheap, fast.',
+      tier: 'lite',
+      inputPerMTokUsd: 0.20,
+      outputPerMTokUsd: 1,
+      contextTokens: 128_000,
+      capabilities: { tools: true, jsonMode: true, streaming: true },
+      released: '2024-12',
+    },
+  ],
   factory: (apiKey) => {
     const provider = createOpenAICompatible({
       name: 'xai',
@@ -381,6 +886,41 @@ const DEEPSEEK: ByokProviderSpec = {
   },
   bestFor: 'Cheap reasoning',
   supports: { vision: false, embedding: false },
+  models: [
+    {
+      modelId: 'deepseek-chat',
+      label: 'DeepSeek Chat (V3)',
+      description: 'Strong open-source reasoning, very cheap.',
+      tier: 'flagship',
+      inputPerMTokUsd: 0.27,
+      outputPerMTokUsd: 1.10,
+      contextTokens: 64_000,
+      capabilities: { tools: true, jsonMode: true, streaming: true },
+      released: '2024-12',
+    },
+    {
+      modelId: 'deepseek-reasoner',
+      label: 'DeepSeek Reasoner (R1)',
+      description: 'Chain-of-thought reasoning, 64k context.',
+      tier: 'flagship',
+      inputPerMTokUsd: 0.55,
+      outputPerMTokUsd: 2.19,
+      contextTokens: 64_000,
+      capabilities: { tools: true, jsonMode: true, streaming: true },
+      released: '2025-01',
+    },
+    {
+      modelId: 'deepseek-coder',
+      label: 'DeepSeek Coder',
+      description: 'Code-specialised, 16k context.',
+      tier: 'fast',
+      inputPerMTokUsd: 0.14,
+      outputPerMTokUsd: 0.28,
+      contextTokens: 16_000,
+      capabilities: { tools: true, jsonMode: true, streaming: true },
+      released: '2024-05',
+    },
+  ],
   factory: (apiKey) => {
     const provider = createOpenAICompatible({
       name: 'deepseek',

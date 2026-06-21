@@ -74,12 +74,25 @@ export type ProviderPricingTier = 'free' | 'low' | 'medium' | 'high';
  * components (ApiKeyCard, OnboardingWizard provider picker).
  */
 export interface ProviderMeta {
-  id: string;
+  id: ProviderId;
   displayName: string;
   familyName: string;
   keyHint: string;
   description: string;
   pricingTier: ProviderPricingTier;
+  /**
+   * Phase E — per-domain defaults already applied with user overrides
+   * server-side in the catalog endpoint; surfaced as-is here.
+   * Keys: fundamental, technical, summary, vision, embedding. Values
+   * are bare model ids (no provider prefix).
+   */
+  defaultModels: {
+    fundamental: string;
+    technical: string;
+    summary: string;
+    vision: string | null;
+    embedding: string | null;
+  };
   /**
    * Phase C — UX_UPGRADE_PLAN.md item 16. Short tag describing
    * what the provider is best suited for, shown in the
@@ -90,8 +103,76 @@ export interface ProviderMeta {
    * Phase C — UX_UPGRADE_PLAN.md item 16. Capability flags so
    * the UI can label providers by what they support.
    */
-  supports?: {
+  supports: {
     vision: boolean;
     embedding: boolean;
   };
+  /** Phase E — full per-model catalog. */
+  models: CatalogModel[];
+  /** Whether the user has saved a key for this provider. */
+  hasKey: boolean;
+  /** Latest health snapshot for this provider (from provider_tests). */
+  health: { ok: boolean; error: string | null; testedAt: string } | null;
 }
+
+/** Single model entry in the catalog response. */
+export interface CatalogModel {
+  /** Fully-qualified id used by resolveOverrideModel + AI SDK paths. */
+  id: string;
+  /** Provider this model belongs to. */
+  providerId: ProviderId;
+  /** Bare model id (no provider prefix). */
+  modelId: string;
+  /** Short label shown in the picker. */
+  label?: string;
+  /** One-line description shown in the expanded row. */
+  description?: string;
+  /** USD per 1M input tokens. null = free or unknown. */
+  inputPerMTokUsd?: number | null;
+  /** USD per 1M output tokens. null = free or unknown. */
+  outputPerMTokUsd?: number | null;
+  /** Context window in tokens. */
+  contextTokens?: number;
+  /** Per-model capability flags. */
+  capabilities?: {
+    vision?: boolean;
+    tools?: boolean;
+    jsonMode?: boolean;
+    streaming?: boolean;
+  };
+  /** Friendly release date. */
+  released?: string;
+  /** Tier tag for sorting. */
+  tier?: 'flagship' | 'pro' | 'fast' | 'lite' | 'embedding';
+  /** Which domain this model is the default for, if any. */
+  defaultFor?: ModelDomain;
+}
+
+/** Full /api/settings/catalog response. */
+export interface CatalogResponse {
+  domains: Array<{
+    id: ModelDomain;
+    label: string;
+    description: string;
+  }>;
+  providers: ProviderMeta[];
+  total: number;
+  totalModels: number;
+}
+
+/** Per-domain model overrides (matches the JSONB column shape). */
+export interface DefaultModels {
+  fundamental?: string;
+  technical?: string;
+  summary?: string;
+  vision?: string;
+  embedding?: string;
+}
+
+/** Response from GET /api/settings/default-model. */
+export interface DefaultModelResponse {
+  defaults: DefaultModels;
+}
+
+/** The five domains the agent routes between. */
+export type ModelDomain = 'fundamental' | 'technical' | 'summary' | 'vision' | 'embedding';

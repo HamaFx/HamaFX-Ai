@@ -246,7 +246,7 @@ function pickProviderForDomain(
  * until that fallback ships the parameter is explicitly unused.
  */
 export function resolveUserModel(
-  userSettings: Pick<UserSettingsRow, 'aiApiKeys'>,
+  userSettings: Pick<UserSettingsRow, 'aiApiKeys' | 'defaultModels'>,
   domain: ResolveUserDomain,
   env: ResolveModelEnv
 ): { model: LanguageModel; modelId: string } {
@@ -292,10 +292,36 @@ export function resolveUserModel(
   const spec = BYOK_PROVIDERS[providerId];
   const apiKey = keys[providerId]!;
 
+  // Phase E — user-set per-domain overrides win over the spec
+  // defaults. Override format is "<providerId>:<modelId>". A user
+  // can override to a different provider (e.g. pick Anthropic as the
+  // default for "technical" while their primary key is OpenAI), but
+  // in that case the override only takes effect for THIS routing
+  // decision — the picked provider still needs a configured key.
+  const userOverrides = (userSettings.defaultModels ?? {}) as Record<string, string | undefined>;
+  const overrideValue = userOverrides[effectiveDomain];
+  let overrideProvider: ProviderId | null = null;
+  let overrideModelId: string | null = null;
+  if (overrideValue && typeof overrideValue === 'string' && overrideValue.includes(':')) {
+    const sep = overrideValue.indexOf(':');
+    const p = overrideValue.slice(0, sep) as ProviderId;
+    const m = overrideValue.slice(sep + 1);
+    // The override's provider must be configured with a key, otherwise
+    // we fall back to the spec defaults below.
+    if (keys[p]) {
+      overrideProvider = p;
+      overrideModelId = m;
+    }
+  }
+
   // Resolve the model id for the chosen provider + domain, falling back to
   // 'technical' when vision is null and to 'technical' when embedding is null.
   let modelId: string | null = null;
-  if (effectiveDomain === 'embedding') {
+  let resolvedProviderId: ProviderId = providerId;
+  if (overrideProvider && overrideModelId) {
+    resolvedProviderId = overrideProvider;
+    modelId = overrideModelId;
+  } else if (effectiveDomain === 'embedding') {
     modelId = spec.defaultModels.embedding ?? spec.defaultModels.technical;
   } else if (effectiveDomain === 'vision') {
     modelId = spec.defaultModels.vision ?? spec.defaultModels.technical;
@@ -309,11 +335,22 @@ export function resolveUserModel(
     );
   }
 
-  const model = spec.factory(apiKey)(modelId);
+  // When the user picked an override whose provider is the same as the
+  // routed provider, `resolvedProviderId === providerId` and `spec`
+  // is correct. When the user picked an override pointing at a
+  // different provider (e.g. routing is OpenAI but user set the
+  // technical default to Anthropic), we look up the override's
+  // provider and use ITS api key + factory.
+  const finalSpec =
+    resolvedProviderId === providerId ? spec : BYOK_PROVIDERS[resolvedProviderId];
+  const finalApiKey =
+    resolvedProviderId === providerId ? apiKey : keys[resolvedProviderId]!;
+
+  const model = finalSpec.factory(finalApiKey)(modelId);
 
   // Returned modelId keeps the original provider prefix when applicable so
   // cost estimation + telemetry can identify the upstream.
-  return { model, modelId: `${spec.id}/${modelId}` };
+  return { model, modelId: `${finalSpec.id}/${modelId}` };
 }
 
 /**

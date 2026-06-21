@@ -72,7 +72,7 @@ const ENV = {
 
 function settingsWithKeys(
   keys: Partial<Record<string, string>>,
-): { aiApiKeys: string | null } {
+): { aiApiKeys: string | null; defaultModels: Record<string, never> } {
   // Encrypt a real payload via the encryption module so we can
   // exercise the actual decryption path.
   // For tests we cheat: store the keys in plaintext inside a fake
@@ -81,7 +81,7 @@ function settingsWithKeys(
   // verify behavior assuming empty BYOK — the resolution path
   // returns null for empty BYOK in that case.
   void keys;
-  return { aiApiKeys: null };
+  return { aiApiKeys: null, defaultModels: {} };
 }
 
 describe('Phase B item 8 — resolveOverrideModel', () => {

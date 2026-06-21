@@ -19,7 +19,7 @@
 import type { ReactNode } from 'react';
 import { usePathname } from 'next/navigation';
 import { Link } from 'next-view-transitions';
-import { User, Key, List, Activity, Settings } from 'lucide-react';
+import { User, Key, List, Activity, Settings, Brain } from 'lucide-react';
 import { PageHeader } from '@/components/layout/page-header';
 import { cn } from '@/lib/cn';
 
@@ -27,6 +27,7 @@ const NAV_ITEMS = [
   { href: '/settings', label: 'General', icon: Settings, exact: true },
   { href: '/settings/profile', label: 'Profile', icon: User },
   { href: '/settings/api-keys', label: 'API Keys', icon: Key },
+  { href: '/settings/models', label: 'Models', icon: Brain },
   { href: '/settings/symbols', label: 'Symbols', icon: List },
   { href: '/settings/usage', label: 'Usage', icon: Activity },
 ];

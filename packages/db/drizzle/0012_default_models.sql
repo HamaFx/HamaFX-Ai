@@ -1,0 +1,3 @@
+ALTER TABLE "user_settings" ADD COLUMN "default_models" jsonb DEFAULT '{}'::jsonb;--> statement-breakpoint
+COMMENT ON COLUMN "user_settings"."default_models" IS
+  'Per-user per-domain default model overrides. Shape: { "fundamental"?: "<provider>:<modelId>", "technical"?: ..., "summary"?: ..., "vision"?: ..., "embedding"?: ... }. The resolver consults these before falling back to the provider spec defaults in BYOK_PROVIDERS.defaultModels.';

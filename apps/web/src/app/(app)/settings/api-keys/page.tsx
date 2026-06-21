@@ -14,6 +14,9 @@
  * limitations under the License.
  */
 
+import type { CatalogResponse } from '@hamafx/shared';
+
+import { headers } from 'next/headers';
 import { auth } from '@/auth';
 import { getDb, schema } from '@hamafx/db';
 import { eq } from 'drizzle-orm';
@@ -208,35 +211,30 @@ export default async function ApiKeysSettingsPage({
     }
   }
 
-  // Strip server-only fields (factory, defaultModels) before crossing the
-  // server→client boundary. RSC serializes props; functions can't be
-  // sent. Group by pricing tier for the UI.
-  // Phase C — UX_UPGRADE_PLAN.md item 16: pass `bestFor` and
-  // `supports` through so the api-keys card tooltip can show them.
-  // Conditional spread keeps strict-optional fields happy.
-  const toClientMeta = (p: (typeof BYOK_PROVIDERS_LIST)[number]) => ({
-    id: p.id,
-    displayName: p.displayName,
-    familyName: p.familyName,
-    keyHint: p.keyHint,
-    description: p.description,
-    pricingTier: p.pricingTier,
-    ...(p.bestFor !== undefined ? { bestFor: p.bestFor } : {}),
-    supports: p.supports,
+  // Phase E — fetch the rich catalog (per-provider model lists, user
+  // default overrides, key-presence, health) from the catalog
+  // endpoint instead of re-projecting BYOK_PROVIDERS here. The
+  // endpoint is already auth-gated; we reuse the in-flight session.
+  const headersList = await headers();
+  const catalogRes = await fetch(`${process.env.APP_URL ?? ''}/api/settings/catalog`, {
+    headers: {
+      // Forward the cookie so the route's withAuth() succeeds.
+      cookie: headersList.get('cookie') ?? '',
+    },
+    cache: 'no-store',
   });
+  const catalog: CatalogResponse = catalogRes.ok
+    ? await catalogRes.json()
+    : { providers: [], domains: [], total: 0, totalModels: 0 };
 
-  // Phase D — group providers into "configured" and "available" so
-  // the page can show a clear CTA section when no keys are set.
-  // We split rather than render all 9 in one long list so the
-  // empty state (no keys at all) feels intentional.
-  const configured = BYOK_PROVIDERS_LIST.filter(
-    (p) => typeof decrypted?.[p.id as ProviderId] === 'string' &&
-      (decrypted?.[p.id as ProviderId] ?? '').trim().length > 0,
-  );
-  const available = BYOK_PROVIDERS_LIST.filter((p) => !configured.includes(p));
+  // The catalog endpoint already does the user-overrides merge for
+  // defaultModels and the per-provider key/health check. We just
+  // filter into configured vs available here.
+  const configured = catalog.providers.filter((p) => p.hasKey);
+  const available = catalog.providers.filter((p) => !p.hasKey);
 
   const totalConfigured = configured.length;
-  const totalFailed = Array.from(healthByProvider.values()).filter((h) => !h.ok).length;
+  const totalFailed = catalog.providers.filter((p) => p.health && !p.health.ok).length;
   const totalTurns = usage.thirtyDayTurns;
   const totalCost = usage.thirtyDayUsd;
 
@@ -316,7 +314,7 @@ export default async function ApiKeysSettingsPage({
               return (
                 <ApiKeyCard
                   key={p.id}
-                  provider={toClientMeta(p)}
+                  provider={p}
                   currentValue={decrypted?.[p.id as ProviderId] ?? ''}
                   {...(health ? { health } : {})}
                   {...(u ? { usage: u } : {})}
@@ -337,7 +335,7 @@ export default async function ApiKeysSettingsPage({
               return (
                 <ApiKeyCard
                   key={p.id}
-                  provider={toClientMeta(p)}
+                  provider={p}
                   currentValue=""
                   {...(health ? { health } : {})}
                   {...(u ? { usage: u } : {})}

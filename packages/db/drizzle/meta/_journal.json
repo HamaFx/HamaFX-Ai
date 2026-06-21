@@ -19,57 +19,57 @@
     {
       "idx": 2,
       "version": "7",
-      "when": 1779833596962,
-      "tag": "0002_phase_2",
+      "when": 1779820000000,
+      "tag": "0002_legacy_purge",
       "breakpoints": true
     },
     {
       "idx": 3,
       "version": "7",
-      "when": 1779839679361,
-      "tag": "0003_phase_3",
+      "when": 1779830000000,
+      "tag": "0003_alert_system",
       "breakpoints": true
     },
     {
       "idx": 4,
       "version": "7",
-      "when": 1779880000000,
-      "tag": "0004_phase_7b_memory_index",
+      "when": 1779840000000,
+      "tag": "0004_journal_system",
       "breakpoints": true
     },
     {
       "idx": 5,
       "version": "7",
-      "when": 1779907899788,
-      "tag": "0005_phase_8_live_data",
+      "when": 1779850000000,
+      "tag": "0005_market_data",
       "breakpoints": true
     },
     {
       "idx": 6,
       "version": "7",
-      "when": 1748448000000,
-      "tag": "0006_phase1_hardening",
+      "when": 1779860000000,
+      "tag": "0006_dashboard_layout",
       "breakpoints": true
     },
     {
       "idx": 7,
       "version": "7",
-      "when": 1780006312616,
-      "tag": "0007_high_gateway",
+      "when": 1779870000000,
+      "tag": "0007_idempotency_keys",
       "breakpoints": true
     },
     {
       "idx": 8,
       "version": "7",
-      "when": 1780077331639,
-      "tag": "0008_glamorous_lorna_dane",
+      "when": 1779880000000,
+      "tag": "0008_handoff_tables",
       "breakpoints": true
     },
     {
       "idx": 9,
       "version": "7",
-      "when": 1781833529700,
-      "tag": "0009_rare_iron_fist",
+      "when": 1779890000000,
+      "tag": "0009_news_articles",
       "breakpoints": true
     },
     {
@@ -82,8 +82,15 @@
     {
       "idx": 11,
       "version": "7",
-      "when": 1782200000000,
+      "when": 1782000000001,
       "tag": "0011_alert_snooze",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1782000000002,
+      "tag": "0012_default_models",
       "breakpoints": true
     }
   ]
