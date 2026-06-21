@@ -14,10 +14,8 @@
  * limitations under the License.
  */
 
-import type { CatalogResponse } from '@hamafx/shared';
-
-import { headers } from 'next/headers';
 import { auth } from '@/auth';
+import { buildCatalogForUser } from '@/lib/catalog-server';
 import { getDb, schema } from '@hamafx/db';
 import { eq } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
@@ -211,21 +209,11 @@ export default async function ApiKeysSettingsPage({
     }
   }
 
-  // Phase E — fetch the rich catalog (per-provider model lists, user
-  // default overrides, key-presence, health) from the catalog
-  // endpoint instead of re-projecting BYOK_PROVIDERS here. The
-  // endpoint is already auth-gated; we reuse the in-flight session.
-  const headersList = await headers();
-  const catalogRes = await fetch(`${process.env.APP_URL ?? ''}/api/settings/catalog`, {
-    headers: {
-      // Forward the cookie so the route's withAuth() succeeds.
-      cookie: headersList.get('cookie') ?? '',
-    },
-    cache: 'no-store',
-  });
-  const catalog: CatalogResponse = catalogRes.ok
-    ? await catalogRes.json()
-    : { providers: [], domains: [], total: 0, totalModels: 0 };
+  // Phase E — call the catalog builder directly. RSC pages can't
+  // fetch() their own host without a full URL (and APP_URL isn't
+  // always set on Vercel), so the route handler and the RSC pages
+  // share a `buildCatalogForUser(userId)` helper instead.
+  const catalog = await buildCatalogForUser(session.user.id);
 
   // The catalog endpoint already does the user-overrides merge for
   // defaultModels and the per-provider key/health check. We just

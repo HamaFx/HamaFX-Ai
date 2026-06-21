@@ -16,11 +16,9 @@
 
 import { redirect } from 'next/navigation';
 import { eq } from 'drizzle-orm';
-import { headers } from 'next/headers';
-
-import type { CatalogResponse } from '@hamafx/shared';
 
 import { auth } from '@/auth';
+import { buildCatalogForUser } from '@/lib/catalog-server';
 import { getDb, schema } from '@hamafx/db';
 import { OnboardingWizard } from '@/components/onboarding/wizard';
 
@@ -40,20 +38,12 @@ export default async function OnboardingPage() {
     redirect('/chat');
   }
 
-  // Phase E — provider list comes from the catalog endpoint now, but
-// for the onboarding picker we only need the lightweight metadata
-// (id/displayName/keyHint/etc.). The wizard accepts a wider
-// ProviderMeta shape; pass it through so the per-domain model
-// preview later in the flow stays type-safe.
-const headersList = await headers();
-const catalogRes = await fetch(`${process.env.APP_URL ?? ''}/api/settings/catalog`, {
-  headers: { cookie: headersList.get('cookie') ?? '' },
-  cache: 'no-store',
-});
-const catalog: CatalogResponse | null = catalogRes.ok
-  ? await catalogRes.json()
-  : null;
-const providers = catalog?.providers ?? [];
+  // Phase E — call the catalog builder directly instead of fetching
+// our own host (RSC can't self-fetch without a full URL, and
+// APP_URL isn't always set on Vercel). The wizard accepts the
+// wider ProviderMeta shape so we pass it through as-is.
+const catalog = await buildCatalogForUser(session.user.id);
+const providers = catalog.providers;
 
   return (
     <div className="flex flex-col gap-8">

@@ -15,15 +15,15 @@
  */
 
 import { redirect } from 'next/navigation';
-import { headers } from 'next/headers';
 import Link from 'next/link';
 
 import { auth } from '@/auth';
+import {
+  buildCatalogForUser,
+  getDefaultModelsForUser,
+} from '@/lib/catalog-server';
 import type {
   CatalogModel,
-  CatalogResponse,
-  DefaultModelResponse,
-  DefaultModels,
   ModelDomain,
   ProviderMeta,
 } from '@hamafx/shared';
@@ -54,41 +54,14 @@ export default async function ModelsSettingsPage() {
     redirect('/auth/login');
   }
 
-  // Fetch catalog + current defaults in parallel.
-  const headersList = await headers();
-  const cookie = headersList.get('cookie') ?? '';
-  const origin =
-    process.env.APP_URL ?? `http://localhost:${process.env.PORT ?? 3000}`;
-
-  const [catalogRes, defaultsRes] = await Promise.all([
-    fetch(`${origin}/api/settings/catalog`, {
-      headers: { cookie },
-      cache: 'no-store',
-    }),
-    fetch(`${origin}/api/settings/default-model`, {
-      headers: { cookie },
-      cache: 'no-store',
-    }),
+  // Phase E — call the catalog builder + default-model reader
+  // directly. RSC pages can't fetch() their own host without a
+  // full URL (and APP_URL isn't always set on Vercel), so we share
+  // a server-side helper.
+  const [catalog, defaults] = await Promise.all([
+    buildCatalogForUser(session.user.id),
+    getDefaultModelsForUser(session.user.id),
   ]);
-
-  const catalog: CatalogResponse = catalogRes.ok
-    ? await catalogRes.json()
-    : { domains: [], providers: [], total: 0, totalModels: 0 };
-  const defaults: DefaultModels =
-    defaultsRes.ok
-      ? ((await defaultsRes.json()) as DefaultModelResponse).defaults
-      : {};
-
-  // Fallback: when the catalog endpoint is unreachable (e.g. self-hosted
-  // without the API server reachable from the server component), still
-  // render the page so the user sees an empty state with a clear
-  // hint instead of a 500.
-  const safeCatalog = catalog ?? {
-    domains: [],
-    providers: [],
-    total: 0,
-    totalModels: 0,
-  };
 
   return (
     <div className="flex flex-col gap-6 max-w-4xl">
@@ -110,8 +83,12 @@ export default async function ModelsSettingsPage() {
       </div>
 
       <ModelsBrowser
-        catalog={safeCatalog as CatalogResponse}
-        defaults={defaults}
+        catalog={catalog}
+        defaults={Object.fromEntries(
+          Object.entries(defaults).filter(
+            (entry): entry is [string, string] => entry[1] !== undefined,
+          ),
+        ) as { fundamental?: string; technical?: string; summary?: string; vision?: string; embedding?: string }}
       />
 
       <p className="text-caption text-fg-subtle text-center">

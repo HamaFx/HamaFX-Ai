@@ -87,9 +87,9 @@ export interface ProviderMeta {
    * are bare model ids (no provider prefix).
    */
   defaultModels: {
-    fundamental: string;
-    technical: string;
-    summary: string;
+    fundamental: string | null;
+    technical: string | null;
+    summary: string | null;
     vision: string | null;
     embedding: string | null;
   };
