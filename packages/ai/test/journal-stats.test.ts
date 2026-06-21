@@ -17,7 +17,28 @@
 // Pure-logic tests for journal stats math.
 
 import type { JournalEntry } from '@hamafx/shared';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
+
+// Phase D2 — journal/persistence.ts → memory/memory-index.ts →
+// embeddings.ts → resolveEmbeddingModel → @hamafx/shared/encryption
+// which imports `server-only`. Mock the encryption module so this
+// pure-logic test doesn't drag in the server-only runtime check.
+vi.mock('@hamafx/shared/encryption', () => ({
+  decryptByok: () => null,
+  encryptByok: () => '',
+  configuredProviders: () => [],
+  PROVIDER_IDS: [
+    'google',
+    'vertex',
+    'anthropic',
+    'openai',
+    'groq',
+    'mistral',
+    'openrouter',
+    'xai',
+    'deepseek',
+  ],
+}));
 
 import { computeRMultiple, summarize } from '../src/journal/persistence';
 

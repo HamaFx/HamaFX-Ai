@@ -33,6 +33,7 @@
 
 import { getDb, schema } from '@hamafx/db';
 import type { ServerEnv, Symbol, ThreadInsight } from '@hamafx/shared';
+import type { UserSettingsRow } from '@hamafx/db/schema';
 import { desc, eq, gte, sql } from 'drizzle-orm';
 
 import { dailySpendUsd } from '../cost';
@@ -57,6 +58,9 @@ type EmbedEnv = Pick<
   'AI_GATEWAY_API_KEY' | 'GOOGLE_GENERATIVE_AI_API_KEY' | 'AI_EMBEDDING_MODEL' | 'MAX_DAILY_USD'
 >;
 
+/** Phase D2 — user-pickable embedding model slice. */
+type EmbedUserSettings = Pick<UserSettingsRow, 'aiApiKeys' | 'embeddingModel'>;
+
 /**
  * Embed `text` and upsert into `memory_embeddings`. Skips silently when
  * the daily AI budget is exhausted. Idempotent on (kind, sourceId).
@@ -71,6 +75,11 @@ async function upsertMemory(args: {
   /** Phase A — the owning user. Optional; falls back to tool context or system. */
   userId?: string;
   env?: Partial<EmbedEnv>;
+  /**
+   * Phase D2 — user's embedding model pick. When supplied, takes
+   * precedence over env.AI_EMBEDDING_MODEL.
+   */
+  userSettings?: EmbedUserSettings;
 }): Promise<{ stored: boolean; reason?: string }> {
   const text = args.text.trim();
   if (text.length === 0) return { stored: false, reason: 'empty' };
@@ -90,6 +99,7 @@ async function upsertMemory(args: {
   try {
     const result = await embedTexts({
       texts: [text],
+      ...(args.userSettings ? { userSettings: args.userSettings } : {}),
       ...(env.AI_EMBEDDING_MODEL ? { env: { AI_EMBEDDING_MODEL: env.AI_EMBEDDING_MODEL } } : {}),
     });
     const e = result.embeddings[0];
@@ -146,6 +156,8 @@ async function upsertMemory(args: {
 export interface RememberJournalArgs {
   entryId: string;
   env?: Partial<EmbedEnv>;
+  /** Phase D2 — user's embedding pick. */
+  userSettings?: EmbedUserSettings;
 }
 
 /**
@@ -178,6 +190,7 @@ export async function rememberJournalEntry(
     occurredAt: row.openedAt,
     ...(row.userId ? { userId: row.userId } : {}),
     ...(args.env ? { env: args.env } : {}),
+    ...(args.userSettings ? { userSettings: args.userSettings } : {}),
   });
 }
 
@@ -225,6 +238,8 @@ export interface RememberThreadSynopsisArgs {
   synopsis: string;
   insights: ThreadInsight[];
   env?: Partial<EmbedEnv>;
+  /** Phase D2 — user's embedding pick. */
+  userSettings?: EmbedUserSettings;
 }
 
 export async function rememberThreadSynopsis(
@@ -242,6 +257,7 @@ export async function rememberThreadSynopsis(
     meta: { insights: args.insights },
     occurredAt: new Date(),
     ...(args.env ? { env: args.env } : {}),
+    ...(args.userSettings ? { userSettings: args.userSettings } : {}),
   });
 }
 

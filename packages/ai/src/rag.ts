@@ -330,14 +330,19 @@ export function memoryRowToItem(r: MemoryRow): SearchKnowledgeItem {
 
 /**
  * Embed a query string with the same model id stored alongside the corpus
- * (defaults to `AI_EMBEDDING_MODEL` when env is supplied).
+ * (defaults to `AI_EMBEDDING_MODEL` when env is supplied; honours the
+ * user's per-user pick from user_settings.embedding_model).
  */
 export async function embedQuery(
   query: string,
-  env?: { AI_EMBEDDING_MODEL?: string },
+  options?: {
+    aiEmbeddingModel?: string;
+    userSettings?: Parameters<typeof embedTexts>[0]['userSettings'];
+  },
 ): Promise<{ embedding: number[]; model: string }> {
   const args: Parameters<typeof embedTexts>[0] = { texts: [query] };
-  if (env && env.AI_EMBEDDING_MODEL) args.env = { AI_EMBEDDING_MODEL: env.AI_EMBEDDING_MODEL };
+  if (options?.userSettings) args.userSettings = options.userSettings;
+  if (options?.aiEmbeddingModel) args.env = { AI_EMBEDDING_MODEL: options.aiEmbeddingModel };
   const r = await embedTexts(args);
   const e = r.embeddings[0];
   if (!e) throw new Error('embedQuery: provider returned no embedding');

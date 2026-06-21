@@ -28,18 +28,31 @@
 // add a counter alongside `chat_telemetry`.
 
 import type { ServerEnv } from '@hamafx/shared';
+import type { UserSettingsRow } from '@hamafx/db/schema';
 import { embedMany } from 'ai';
+
+import { resolveEmbeddingModel } from './model';
 
 const DEFAULT_MODEL = 'openai/text-embedding-3-small';
 
 export interface EmbedTextsArgs {
   texts: string[];
   /**
-   * Override the model. Defaults to env.AI_EMBEDDING_MODEL or
-   * "openai/text-embedding-3-small". Caller is responsible for ensuring
-   * the dimension matches the DB column when changing models.
+   * Explicit model override (takes precedence over userSettings +
+   * env). The caller is responsible for ensuring the dimension
+   * matches the DB column when changing models.
    */
   model?: string;
+  /**
+   * Phase D2 — user's embedding model from
+   * /settings/models → Advanced. When provided, the resolver picks
+   * this over env.AI_EMBEDDING_MODEL and the hardcoded default.
+   */
+  userSettings?: Pick<UserSettingsRow, 'aiApiKeys' | 'embeddingModel'>;
+  /**
+   * Legacy fallback — operator-set AI_EMBEDDING_MODEL. Used when
+   * no userSettings are provided.
+   */
   env?: Pick<ServerEnv, 'AI_EMBEDDING_MODEL'>;
   signal?: AbortSignal;
 }
@@ -53,7 +66,22 @@ export interface EmbedResult {
 }
 
 export async function embedTexts(args: EmbedTextsArgs): Promise<EmbedResult> {
-  const model = args.model ?? args.env?.AI_EMBEDDING_MODEL ?? DEFAULT_MODEL;
+  // Resolution priority:
+  //   1. args.model (explicit caller override)
+  //   2. resolveEmbeddingModel(userSettings, env) — Phase D2 user pick
+  //   3. env.AI_EMBEDDING_MODEL (legacy operator fallback)
+  //   4. DEFAULT_MODEL
+  const model =
+    args.model ??
+    (args.userSettings
+      ? resolveEmbeddingModel(args.userSettings, {
+          ...(args.env?.AI_EMBEDDING_MODEL !== undefined
+            ? { AI_EMBEDDING_MODEL: args.env.AI_EMBEDDING_MODEL }
+            : {}),
+        })
+      : null) ??
+    args.env?.AI_EMBEDDING_MODEL ??
+    DEFAULT_MODEL;
 
   // AI SDK v5 expects either a model instance or a model string when the
   // gateway is configured globally via AI_GATEWAY_API_KEY.

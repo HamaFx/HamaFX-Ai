@@ -48,7 +48,7 @@ import {
   runRagQuery,
 } from '../rag';
 import { countMemory, type MemoryKind } from '../memory/memory-index';
-import { getToolContext } from '../tool-context';
+import { getToolContext, maybeGetToolContext } from '../tool-context';
 
 // We extend the published input schema with the optional `kinds` filter
 // without breaking existing callers — the original input parses fine
@@ -111,7 +111,20 @@ export const searchKnowledgeTool = tool({
       return { items: [], model: FALLBACK_MODEL, pipelinePending: true };
     }
 
-    const { embedding, model } = await embedQuery(query);
+    const ctx = maybeGetToolContext();
+    const { embedding, model } = await embedQuery(query, {
+      ...(ctx?.userSettings
+        ? {
+            userSettings: {
+              aiApiKeys: ctx.userSettings.aiApiKeys,
+              embeddingModel: ctx.userSettings.embeddingModel,
+            },
+          }
+        : {}),
+      ...(ctx?.env?.AI_EMBEDDING_MODEL
+        ? { aiEmbeddingModel: ctx.env.AI_EMBEDDING_MODEL }
+        : {}),
+    });
 
     const [newsRows, memoryRows] = await Promise.all([
       wantsNews && newsCount > 0

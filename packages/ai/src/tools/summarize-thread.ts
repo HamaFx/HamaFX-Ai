@@ -126,11 +126,20 @@ export const summarizeThreadTool = {
     let remembered = false;
     if (input.remember) {
       try {
+        const ctx = maybeGetToolContext();
         await rememberThreadSynopsis({
           threadId,
           synopsis,
           insights,
           env,
+          ...(ctx?.userSettings
+            ? {
+                userSettings: {
+                  aiApiKeys: ctx.userSettings.aiApiKeys,
+                  embeddingModel: ctx.userSettings.embeddingModel,
+                },
+              }
+            : {}),
         });
         remembered = true;
       } catch (err) {

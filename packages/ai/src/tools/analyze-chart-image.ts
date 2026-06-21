@@ -46,7 +46,7 @@ import { generateText, type ModelMessage } from 'ai';
 import { and, desc, eq } from 'drizzle-orm';
 import type { z } from 'zod';
 
-import { resolveModel } from '../model';
+import { resolveModel, resolveVisionModel } from '../model';
 import { maybeGetToolContext } from '../tool-context';
 
 const InputSchema = AnalyzeChartImageInputSchema;
@@ -128,9 +128,28 @@ export const analyzeChartImageTool = {
     ];
 
     try {
-      const modelId = env.AI_VISION_MODEL ?? 'google-vertex/gemini-2.5-pro';
+      // Phase D2 — the vision model now respects the user's pick from
+      // /settings/models → Advanced. Falls back to env.AI_VISION_MODEL,
+      // then to the highest-priority configured provider's spec default.
+      // If the toolContext is missing (test/CI edge case), we fall
+      // back to the legacy env.AI_VISION_MODEL path so the tool still
+      // works in isolation.
+      const ctx = maybeGetToolContext();
+      let vision;
+      if (ctx) {
+        vision = resolveVisionModel(ctx.userSettings, env);
+      } else {
+        // No toolContext (tests, one-off scripts) — use env fallback only.
+        const modelId = env.AI_VISION_MODEL ?? 'google-vertex/gemini-2.5-pro';
+        vision = {
+          model: resolveModel(modelId, env),
+          modelId,
+          providerId: 'google' as const,
+          bareModelId: modelId.replace(/^.*\//, ''),
+        };
+      }
       const { text } = await generateText({
-        model: resolveModel(modelId, env),
+        model: vision.model,
         system: SYSTEM_PROMPT,
         messages,
       });
