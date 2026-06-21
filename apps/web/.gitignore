@@ -1,2 +1,7 @@
 .vercel
 .env*.local
+
+# Playwright run artifacts
+playwright.pid
+playwright-report/
+test-results/

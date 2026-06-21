@@ -62,6 +62,7 @@ import { tools } from './tools';
 import { enforceCitations } from './verification';
 import { waitUntil } from './wait-until';
 import { getDb, schema } from '@hamafx/db';
+import type { UserSettingsRow } from '@hamafx/db/schema';
 import { eq } from 'drizzle-orm';
 
 export interface RunChatArgs {
@@ -543,7 +544,7 @@ export async function runChat(args: RunChatArgs) {
 async function runAutoTitleBackground(args: {
   threadId: string;
   userId: string;
-  userSettings: import('@hamafx/db/schema').UserSettingsRow;
+  userSettings: UserSettingsRow;
   env: RunChatArgs['env'];
   signal: AbortSignal | null;
 }): Promise<void> {

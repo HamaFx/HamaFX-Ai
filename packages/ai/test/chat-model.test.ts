@@ -55,11 +55,9 @@ const ENV = {
 } as const;
 
 // Reach into the mock to set the BYOK payload for each test.
-let __setByok!: (p: Record<string, string>) => void;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mod = await import('@hamafx/shared/encryption' as any);
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-__setByok = (mod as any).__setByok;
+const __setByok = (mod as { __setByok: (p: Record<string, string>) => void }).__setByok;
 
 beforeEach(() => {
   __setByok({});

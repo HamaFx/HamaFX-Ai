@@ -8,7 +8,7 @@ HamaFX-Ai is built as a Turborepo. Our packages are intentionally decoupled:
 
 - **`apps/web`**: Next.js 15 application. Handles the UI, API routes, NextAuth integration, and chat interactions.
 - **`apps/worker`**: Node.js worker that connects to SignalR for tick data, and runs `systemd`-like scheduled jobs (cron) for per-user briefings and alerts.
-- **`packages/ai`**: The Vercel AI SDK wrapper. This contains the `runChat` orchestrator and the 32 AI tools. It is heavily scoped by `userId` to ensure data isolation.
+- **`packages/ai`**: The Vercel AI SDK wrapper. This contains the `runChat` orchestrator and the 30 AI tools. It is heavily scoped by `userId` to ensure data isolation.
 - **`packages/data`**: Market data integrations (Finnhub, BiQuote, Marketaux). It handles failover logic and intelligent caching.
 - **`packages/db`**: The Drizzle ORM schema and clients. This is the source of truth for all database tables and relations.
 - **`packages/indicators`**: Pure TypeScript implementations of financial indicators (RSI, MACD, SMC).

@@ -5,7 +5,7 @@
 
 ## Project Identity
 
-**HamaFX-Ai** is a multi-tenant, chat-driven AI trading copilot for three forex instruments: **XAUUSD** (primary), **EURUSD**, **GBPUSD**. It runs as a Next.js 15 PWA with a persistent Node.js worker daemon. The AI agent uses Vercel AI SDK v5 with 32 tools, domain-based model routing, and multi-agent committee deliberation.
+**HamaFX-Ai** is a multi-tenant, chat-driven AI trading copilot for three forex instruments: **XAUUSD** (primary), **EURUSD**, **GBPUSD**. It runs as a Next.js 15 PWA with a persistent Node.js worker daemon. The AI agent uses Vercel AI SDK v5 with 30 tools, domain-based model routing, and multi-agent committee deliberation.
 
 - **Status**: Phases 0-9 shipped (incl. multi-tenant v2.0). Hardening complete. UX Upgrade Plan Phases A/B/C shipped (items 1-19 done). Phase D shipped (Vertex AI BYOK + api-keys page overhaul + bulk test + per-provider usage). Phase E shipped (model picker overhaul — full provider×model catalog with per-domain defaults, /settings/models browser, regenerated chat popover). Items 20-25 parked. In production on Vercel + GCE VM.
 - **Principle**: Multi-tenant via NextAuth.js v5 + Drizzle adapter. BYOK per user (9-provider registry: google, vertex, anthropic, openai, groq, mistral, openrouter, xai, deepseek). Strict userId scoping on all user-data tables.
@@ -74,7 +74,7 @@ HamaFX-Ai/
 │   ├── web/              # Next.js 15 PWA (frontend + API routes)
 │   └── worker/           # Node.js daemon (SignalR consumer, tick processing, job runner)
 ├── packages/
-│   ├── ai/               # AI agent core — chat, 32 tools, routing, memory, persistence
+│   ├── ai/               # AI agent core — chat, 30 tools, routing, memory, persistence
 │   ├── data/             # Market data adapters — price, candles, news, failover, caching
 │   ├── db/               # Drizzle schema (27 tables) + Postgres/PGlite client
 │   ├── indicators/       # Technical indicators — SMA, EMA, RSI, MACD, SMC structure
@@ -93,7 +93,7 @@ HamaFX-Ai/
 ```
 Browser (PWA)
     │
-    ├── /api/chat ──▶ runChat() ──▶ streamText + 32 tools
+    ├── /api/chat ──▶ runChat() ──▶ streamText + 30 tools
     │                    │
     │                    ├── routeTurn() ──▶ pick model (fundamental/technical/summary/vision)
     │                    ├── runPlanner() ──▶ plan-then-act pre-step

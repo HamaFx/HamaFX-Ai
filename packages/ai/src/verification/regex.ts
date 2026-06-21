@@ -55,8 +55,8 @@
  */
 export const PRICE_TOKEN = new RegExp(
   String.raw`(?<!\d\.)(?<!\d)\b(` +
-    // gold band
-    String.raw`[1-4]\d{3}\.\d{1,2}` +
+    // gold band: 1000.00 – 49999.99 (4–5 integer digits, covers a spike)
+    String.raw`[1-4]\d{3,4}\.\d{1,2}` +
     `|` +
     // FX bands
     String.raw`[01]\.\d{4,5}` +

@@ -13,7 +13,7 @@
 <p align="center">
   <img src="https://img.shields.io/badge/status-production%20ready-48d597?style=flat-square" alt="Status: Production Ready">
   <img src="https://img.shields.io/badge/tests-590-48d597?style=flat-square" alt="Tests: 590">
-  <img src="https://img.shields.io/badge/ai%20tools-32-f5b945?style=flat-square" alt="AI Tools: 32">
+  <img src="https://img.shields.io/badge/ai%20tools-30-f5b945?style=flat-square" alt="AI Tools: 30">
   <img src="https://img.shields.io/badge/license-Apache%202.0-8a93a3?style=flat-square" alt="License">
 </p>
 
@@ -29,7 +29,7 @@ An **AI agent that lives in your pocket** — chat with it about gold and forex 
 |---|---|---|
 | 💬 **Chat-first** | Every feature reachable via natural conversation | 
 | 📊 **Live charts** | Multi-timeframe candlesticks with 12+ indicators |
-| 🧠 **AI agent** | 32 tools, domain-routed models, plan-then-act reasoning |
+| 🧠 **AI agent** | 30 tools, domain-routed models, plan-then-act reasoning |
 | 📰 **News & macro** | Curated headlines, economic calendar, sentiment analysis |
 | 📓 **Trade journal** | Log trades, track R-multiples, review patterns |
 | ⚡ **Smart alerts** | Price crosses, candle closes, indicator signals — email + push |
@@ -60,7 +60,7 @@ docker compose up -d
 git clone https://github.com/HamaFx/HamaFX-Ai
 cd HamaFX-Ai
 pnpm install
-echo 'GOOGLE_GENERATIVE_AI_API_KEY=*** >> .env.local
+echo 'GOOGLE_GENERATIVE_AI_API_KEY=your-key-here' >> .env.local
 pnpm dev:local
 # → http://localhost:3000
 ```
@@ -78,7 +78,7 @@ See **[docs/08-deployment.md](docs/08-deployment.md)** for Vercel + GCE VM deplo
 ```
 Browser (PWA)
     │
-    ├── /api/chat ──▶ runChat() ──▶ streamText + 32 tools
+    ├── /api/chat ──▶ runChat() ──▶ streamText + 30 tools
     │                    │           domain routing + planner + memory
     │                    │           budget guard + citation enforcement
     │
@@ -95,7 +95,7 @@ Worker (GCE VM)
 
 | Package | Role | LOC |
 |---------|------|-----|
-| `@hamafx/ai` | Agent core — chat, 32 tools, routing, RAG | 20,203 |
+| `@hamafx/ai` | Agent core — chat, 30 tools, routing, RAG | 20,203 |
 | `@hamafx/data` | Market adapters — 5 providers, cache, failover | 5,920 |
 | `@hamafx/web` | Next.js 15 PWA — chat, charts, journal, alerts | 33,366 |
 | `@hamafx/db` | Drizzle ORM — 27 tables, Postgres + PGlite | 2,276 |
@@ -105,7 +105,7 @@ Worker (GCE VM)
 
 ---
 
-## 🤖 AI Agent — 32 Tools
+## 🤖 AI Agent — 30 Tools
 
 | Category | Tools |
 |----------|-------|
@@ -166,7 +166,7 @@ For **AI agents** working on this codebase, start with [`AGENTS.md`](docs/AGENTS
 | [AGENTS.md](docs/AGENTS.md) | AI agent quickstart — commands, patterns, pitfalls |
 | [01-architecture.md](docs/01-architecture.md) | System design & deployment modes |
 | [02-codebase.md](docs/02-codebase.md) | Monorepo structure, conventions, extension rules |
-| [03-ai-agent.md](docs/03-ai-agent.md) | Agent internals — runChat, 32 tools, routing, memory |
+| [03-ai-agent.md](docs/03-ai-agent.md) | Agent internals — runChat, 30 tools, routing, memory |
 | [04-data-layer.md](docs/04-data-layer.md) | DB schema, 5 providers, caching, failover |
 | [05-api-routes.md](docs/05-api-routes.md) | All 40 API routes, auth, middleware, cron |
 | [06-frontend.md](docs/06-frontend.md) | Pages, chat UI, charts, PWA, state management |

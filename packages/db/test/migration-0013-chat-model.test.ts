@@ -57,20 +57,10 @@ async function applyOne(
 ): Promise<void> {
   const rawSql = readFileSync(join(DRIZZLE_DIR, `${tag}.sql`), 'utf-8');
   for (const stmt of rawSql.split('--> statement-breakpoint')) {
-    let trimmed = stripComments(stmt.trim());
+    const trimmed = stripComments(stmt.trim());
     if (!trimmed) continue;
     const safe = sanitizeStatement(trimmed);
     await db.execute(safe);
-  }
-}
-
-async function applyUpTo(
-  db: Awaited<ReturnType<typeof getPGliteDb>>,
-  untilTag: string,
-): Promise<void> {
-  for (const entry of JOURNAL.entries) {
-    await applyOne(db, entry.tag);
-    if (entry.tag === untilTag) return;
   }
 }
 
