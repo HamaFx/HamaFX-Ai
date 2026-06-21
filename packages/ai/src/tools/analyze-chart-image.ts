@@ -129,22 +129,26 @@ export const analyzeChartImageTool = {
 
     try {
       // Phase D2 — the vision model now respects the user's pick from
-      // /settings/models → Advanced. Falls back to env.AI_VISION_MODEL,
-      // then to the highest-priority configured provider's spec default.
+      // /settings/models → Advanced. The resolver walks:
+      //   1. user_settings.vision_model (if set + valid)
+      //   2. spec.defaultModels.vision of the priority-ordered
+      //      configured provider (with vision support)
+      //   3. throws with a UI-friendly error
       // If the toolContext is missing (test/CI edge case), we fall
-      // back to the legacy env.AI_VISION_MODEL path so the tool still
-      // works in isolation.
+      // back to AI_DEFAULT_MODEL + the configured provider's default
+      // vision so the tool still works in isolation.
       const ctx = maybeGetToolContext();
       let vision;
       if (ctx) {
         vision = resolveVisionModel(ctx.userSettings, env);
       } else {
-        // No toolContext (tests, one-off scripts) — use env fallback only.
-        const modelId = env.AI_VISION_MODEL ?? 'google-vertex/gemini-2.5-pro';
+        // No toolContext — use AI_DEFAULT_MODEL as a generic fallback
+        // for the bare model id.
+        const modelId = env.AI_DEFAULT_MODEL;
         vision = {
           model: resolveModel(modelId, env),
           modelId,
-          providerId: 'google' as const,
+          providerId: 'google',
           bareModelId: modelId.replace(/^.*\//, ''),
         };
       }

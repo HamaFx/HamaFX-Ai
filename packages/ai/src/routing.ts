@@ -56,7 +56,6 @@ export interface RoutingDecision {
 type RouterEnv = Pick<
   ServerEnv,
   | 'AI_DEFAULT_MODEL'
-  | 'AI_VISION_MODEL'
 >;
 
 /**

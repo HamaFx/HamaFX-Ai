@@ -14,7 +14,6 @@ import { routeTurn } from '../src/routing';
 
 const ENV = {
   AI_DEFAULT_MODEL: 'google-vertex/gemini-2.5-flash',
-  AI_VISION_MODEL: 'google-vertex/gemini-2.5-pro',
 } as const;
 
 function userText(text: string): Parameters<typeof routeTurn>[0]['userMessage'] {

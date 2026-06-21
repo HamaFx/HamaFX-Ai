@@ -36,7 +36,6 @@ function makeContext(threadId: string, spent = 0): ToolContext {
       GOOGLE_APPLICATION_CREDENTIALS_JSON: undefined,
       GOOGLE_APPLICATION_CREDENTIALS: undefined,
       AI_DEFAULT_MODEL: 'google/gemini-2.5-flash',
-      AI_VISION_MODEL: 'google/gemini-2.5-pro',
       AI_EMBEDDING_MODEL: 'openai/text-embedding-3-small',
       MAX_DAILY_USD: 5,
       LOG_PROMPTS: false,

@@ -47,13 +47,6 @@ export interface ResolveModelEnv {
   GOOGLE_APPLICATION_CREDENTIALS_JSON?: string | undefined;
   GOOGLE_APPLICATION_CREDENTIALS?: string | undefined;
   /**
-   * Phase D2 — operator-set platform default for the vision model
-   * (used by `analyze_chart_image` when the user hasn't picked one).
-   * Still relevant as a fallback because BYOK users may not have
-   * configured a vision-capable provider yet.
-   */
-  AI_VISION_MODEL?: string | undefined;
-  /**
    * Phase D2 — operator-set platform default for the embedding model
    * (RAG / memory / news embeddings). The default
    * `openai/text-embedding-3-small` works for most deployments
@@ -472,17 +465,20 @@ export interface VisionModelResolution {
  * Decision tree:
  *   1. If `userSettings.visionModel` is set + valid (provider supports
  *      vision AND model is in the spec catalog) → use it.
- *   2. Else if `env.AI_VISION_MODEL` is set (operator override) →
- *      resolve via `resolveModel` and return.
- *   3. Else pick the highest-priority configured provider's
+ *   2. Else pick the highest-priority configured provider's
  *      `spec.defaultModels.vision`. (Vision is a rarer capability
  *      than chat; if the user's primary BYOK doesn't declare a vision
  *      model, the resolver falls back to the next configured provider.)
- *   4. Else throw.
+ *   3. Else throw.
  *
  * Note: a user with Google + Anthropic keys (no Vertex) can still
  * pick `google-vertex:gemini-2.5-pro` for vision even though their
  * chat model is Anthropic. The pick is independent.
+ *
+ * Phase D2 — AI_VISION_MODEL env var was removed. Operators no
+ * longer override the vision model; BYOK users own this choice.
+ * (Embedding still has AI_EMBEDDING_MODEL as the gateway fallback
+ * because embeddings are cross-vendor via OpenAI's embedding API.)
  */
 export function resolveVisionModel(
   userSettings: Pick<UserSettingsRow, 'aiApiKeys' | 'visionModel'>,
@@ -508,22 +504,7 @@ export function resolveVisionModel(
     // Fall through silently on invalid pick — same UX as chat.
   }
 
-  // 2. Operator-set env fallback.
-  if (typeof env.AI_VISION_MODEL === 'string' && env.AI_VISION_MODEL.length > 0) {
-    // Operator-set IDs are unqualified bare model ids; route through
-    // the configured provider that has them. Fall through to the
-    // spec default if the bare id doesn't match any spec.
-    // (resolveModel handles the provider-prefix routing internally.)
-    const model = resolveModel(env.AI_VISION_MODEL, env);
-    return {
-      model: typeof model === 'string' ? (model as never) : model,
-      modelId: env.AI_VISION_MODEL,
-      providerId: 'google', // operator fallback is always Vertex/Gemini by convention
-      bareModelId: env.AI_VISION_MODEL.replace(/^.*\//, ''),
-    };
-  }
-
-  // 3. Highest-priority configured provider that declares a vision model.
+  // 2. Highest-priority configured provider that declares a vision model.
   const priority = configuredProviders(keys).slice().sort(
     (a, b) => PROVIDER_PRIORITY.indexOf(a) - PROVIDER_PRIORITY.indexOf(b),
   );

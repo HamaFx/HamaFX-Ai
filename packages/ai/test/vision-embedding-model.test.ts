@@ -49,7 +49,6 @@ const ENV = {
   GOOGLE_VERTEX_LOCATION: '',
   GOOGLE_APPLICATION_CREDENTIALS_JSON: '',
   GOOGLE_APPLICATION_CREDENTIALS: '',
-  AI_VISION_MODEL: '',
   AI_EMBEDDING_MODEL: '',
 } as const;
 
@@ -74,24 +73,6 @@ describe('resolveVisionModel — Phase D2 user-pickable vision', () => {
     expect(result.providerId).toBe('google');
     expect(result.bareModelId).toBe('gemini-2.5-pro');
     expect(result.modelId).toBe('google/gemini-2.5-pro');
-  });
-
-  it('falls back to env.AI_VISION_MODEL when no user pick', () => {
-    // Operator-set vision id uses the AI_GATEWAY_API_KEY or Vertex
-    // path. Use a Vertex-prefixed id (no GOOGLE_GENERATIVE_AI_API_KEY
-    // needed) so resolveModel can route via the configured provider.
-    __setByok({ vertex: 'sa-json-blob' });
-    const result = resolveVisionModel(
-      { aiApiKeys: 'encrypted' as never, visionModel: null },
-      {
-        ...ENV,
-        GOOGLE_VERTEX_PROJECT: 'fake-project',
-        GOOGLE_VERTEX_LOCATION: 'us-central1',
-        GOOGLE_APPLICATION_CREDENTIALS_JSON: '{"client_email":"x","private_key":"y"}',
-        AI_VISION_MODEL: 'google-vertex/gemini-2.5-pro',
-      },
-    );
-    expect(result.bareModelId).toBe('gemini-2.5-pro');
   });
 
   it('falls back to spec.defaultModels.vision of the priority-ordered configured provider', () => {
