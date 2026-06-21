@@ -27,12 +27,13 @@ import { PGlite } from '@electric-sql/pglite';
 import { drizzle, type PgliteDatabase } from 'drizzle-orm/pglite';
 import * as schema from './schema/index';
 
-const DATA_DIR = resolve('.hamafx/data');
+const DEFAULT_DATA_DIR = resolve('.hamafx/data');
 const MIGRATIONS_DIR = new URL('../drizzle', import.meta.url).pathname;
 
 let _pglite: PGlite | null = null;
 let _db: PgliteDatabase<typeof schema> | null = null;
 let _migrationsApplied = false;
+let _activeDataDir: string | null = null;
 
 /**
  * Strip pgvector-specific statements from SQL.
@@ -64,12 +65,54 @@ function readJournal(): Array<{ tag: string }> {
 }
 
 /**
- * Get a PGlite drizzle instance.
+ * Tag alias map for migration renames.
+ *
+ * The PGlite runner keys migrations by `journal.tag` (the SQL filename
+ * prefix). When a migration file is renamed in a later commit, the
+ * journal entry updates but any persisted PGlite DB still records the
+ * OLD tag in `__drizzle_migrations`. Without this map the runner would
+ * try to re-apply the new file and fail with "relation already exists".
+ *
+ * This map documents those renames so the runner can recognise an OLD
+ * tag as equivalent to its NEW replacement. Add a new entry here when
+ * renaming a migration file in a future commit — keep the old name as
+ * the key, the new name as the value.
+ *
+ * History:
+ *   fd346ce — synced migration file names with their journal entries
+ *             (e.g. 0003_phase_3 → 0003_alert_system). Persisted
+ *             PGlite DBs from before that commit still hold the OLD
+ *             hashes; this map makes the rename transparent.
  */
-export async function getPGliteDb(): Promise<PgliteDatabase<typeof schema>> {
-  if (_db) return _db;
-  mkdirSync(DATA_DIR, { recursive: true });
-  _pglite = new PGlite(DATA_DIR);
+const TAG_ALIASES: Record<string, string> = {
+  '0003_phase_3': '0003_alert_system',
+  '0004_phase_7b_memory_index': '0004_journal_system',
+  '0005_phase_8_live_data': '0005_market_data',
+  '0006_phase1_hardening': '0006_dashboard_layout',
+  '0007_high_gateway': '0007_idempotency_keys',
+  '0008_glamorous_lorna_dane': '0008_handoff_tables',
+  '0009_rare_iron_fist': '0009_news_articles',
+};
+
+/**
+ * Get a PGlite drizzle instance. Pass `dataDir` to override the
+ * default `.hamafx/data/` location (used by tests to isolate state).
+ */
+export async function getPGliteDb(
+  dataDir: string = DEFAULT_DATA_DIR,
+): Promise<PgliteDatabase<typeof schema>> {
+  if (_db && _activeDataDir === dataDir) return _db;
+  // Reset module state when switching to a different data dir so the
+  // singleton doesn't leak across test boundaries.
+  if (_pglite && _activeDataDir !== dataDir) {
+    await _pglite.close().catch(() => {});
+    _pglite = null;
+    _db = null;
+    _migrationsApplied = false;
+  }
+  _activeDataDir = dataDir;
+  mkdirSync(dataDir, { recursive: true });
+  _pglite = new PGlite(dataDir);
   _db = drizzle(_pglite, { schema });
   return _db;
 }
@@ -79,11 +122,25 @@ export async function getPGliteDb(): Promise<PgliteDatabase<typeof schema>> {
  * Splits drizzle migration files on '--> statement-breakpoint'
  * and executes each chunk individually, silently skipping
  * any statement that references pgvector features.
+ *
+ * Pass `dataDir` to isolate state from the default `.hamafx/data/`
+ * location (used by tests).
  */
-export async function applyMigrations(): Promise<void> {
+export async function applyMigrations(dataDir?: string): Promise<void> {
+  if (dataDir) {
+    // Bypass the singleton cache so tests can target a temp dir.
+    _migrationsApplied = false;
+    if (_pglite && _activeDataDir !== dataDir) {
+      await _pglite.close().catch(() => {});
+      _pglite = null;
+      _db = null;
+    }
+    _activeDataDir = dataDir;
+  }
+
   if (_migrationsApplied) return;
 
-  const db = await getPGliteDb();
+  const db = await getPGliteDb(dataDir);
   const journal = readJournal();
 
   // Create tracking table
@@ -100,6 +157,22 @@ export async function applyMigrations(): Promise<void> {
     'SELECT hash FROM "__drizzle_migrations"',
   );
   const applied = new Set(rows.map((r: Record<string, unknown>) => String(r.hash)));
+
+  // Self-heal renames: if any OLD alias tag is in `applied`, insert the
+  // NEW tag (idempotent) so future runs use the canonical name. This
+  // handles the fd346ce migration-file rename for users (and tests)
+  // who already applied the old hashes to a persisted PGlite DB.
+  for (const oldTag of Object.keys(TAG_ALIASES)) {
+    if (applied.has(oldTag) && !applied.has(TAG_ALIASES[oldTag]!)) {
+      const newTag = TAG_ALIASES[oldTag]!;
+      await db.execute(
+        `INSERT INTO "__drizzle_migrations" (hash, created_at)
+         VALUES ('${newTag}', ${Date.now()})
+         ON CONFLICT DO NOTHING`,
+      );
+      applied.add(newTag);
+    }
+  }
 
   let ok = 0;
 
