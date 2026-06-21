@@ -16,15 +16,12 @@
  * limitations under the License.
  */
 
-import { Bot, Sparkles, X } from 'lucide-react';
+import { Sparkles, X } from 'lucide-react';
+import Link from 'next/link';
 import { useEffect, useState } from 'react';
 
-import { SettingsRow } from './settings-row';
-
 export interface AIPrefs {
-  fundamentalModel: string;
-  technicalModel: string;
-  summaryModel: string;
+  /** Free-form instructions appended to the AI's system prompt. */
   customInstructions: string;
 }
 
@@ -94,9 +91,6 @@ export function appendPreset(current: string, presetId: string): string {
 }
 
 const DEFAULTS: AIPrefs = {
-  fundamentalModel: 'google-vertex/gemini-3.1-pro',
-  technicalModel: 'google-vertex/gemini-3.5-flash',
-  summaryModel: 'google-vertex/gemini-2.5-flash',
   customInstructions: '',
 };
 
@@ -105,12 +99,21 @@ export function readAIPrefs(): AIPrefs {
   try {
     const raw = window.localStorage.getItem(AI_PREFS_STORAGE_KEY);
     if (!raw) return DEFAULTS;
-    const parsed = JSON.parse(raw) as Partial<AIPrefs>;
+    const parsed = JSON.parse(raw) as Partial<AIPrefs> & {
+      // Legacy fields from the older 4-key shape — ignored on read
+      // so old localStorage values don't break the new card.
+      fundamentalModel?: unknown;
+      technicalModel?: unknown;
+      summaryModel?: unknown;
+    };
+    void parsed.fundamentalModel;
+    void parsed.technicalModel;
+    void parsed.summaryModel;
     return {
-      fundamentalModel: parsed.fundamentalModel || DEFAULTS.fundamentalModel,
-      technicalModel: parsed.technicalModel || DEFAULTS.technicalModel,
-      summaryModel: parsed.summaryModel || DEFAULTS.summaryModel,
-      customInstructions: parsed.customInstructions || '',
+      customInstructions:
+        typeof parsed.customInstructions === 'string'
+          ? parsed.customInstructions
+          : '',
     };
   } catch {
     return DEFAULTS;
@@ -120,18 +123,32 @@ export function readAIPrefs(): AIPrefs {
 function writeAIPrefs(prefs: AIPrefs) {
   if (typeof window === 'undefined') return;
   try {
-    window.localStorage.setItem(AI_PREFS_STORAGE_KEY, JSON.stringify(prefs));
+    window.localStorage.setItem(
+      AI_PREFS_STORAGE_KEY,
+      JSON.stringify(prefs),
+    );
   } catch {
     /* quota */
   }
 }
 
-const MODEL_OPTIONS = [
-  { value: 'google-vertex/gemini-3.1-pro', label: 'Gemini 3.1 Pro' },
-  { value: 'google-vertex/gemini-3.5-flash', label: 'Gemini 3.5 Flash' },
-  { value: 'google-vertex/gemini-2.5-flash', label: 'Gemini 2.5 Flash' },
-];
-
+/**
+ * Card on /settings → "AI Preferences".
+ *
+ * Owns two distinct concerns:
+ *   1. Custom instructions — appended to the AI's system prompt on
+ *      every chat turn. Works today.
+ *   2. (No longer here) Per-domain model selectors. The previous
+ *      version of this card exposed fundamentalModel / technicalModel
+ *      / summaryModel selectors, but those values were only consumed
+ *      by the plan-then-act planner and the title-generation path —
+ *      not the main chat turn. The actual chat-turn model lives in
+ *      `user_settings.default_models` (DB) and is set via the
+ *      /settings/models browser.
+ *
+ *      Removing the misleading selectors here; users who want to
+ *      change the chat model follow the "Manage models →" link below.
+ */
 export function AIPrefsCard() {
   const [prefs, setPrefs] = useState<AIPrefs>(DEFAULTS);
   const [hydrated, setHydrated] = useState(false);
@@ -152,92 +169,42 @@ export function AIPrefsCard() {
   return (
     <section
       aria-labelledby="ai-prefs-heading"
-      className="border border-divider bg-bg-elev-1 rounded-lg flex flex-col gap-1 p-4"
+      className="border border-divider bg-bg-elev-1 rounded-lg flex flex-col gap-3 p-4"
     >
-      <header className="flex items-center gap-3 pb-2">
+      <header className="flex items-center gap-3 pb-1">
         <h2
           id="ai-prefs-heading"
           className="text-fg text-base font-semibold tracking-tight"
         >
           AI Preferences
         </h2>
-        <p className="text-fg-subtle ml-auto text-caption uppercase tracking-wider">
-          Saved on this device
-        </p>
+        <Link
+          href="/settings/models"
+          className="text-fg-subtle hover:text-fg ml-auto inline-flex items-center gap-1 text-caption font-medium transition-colors"
+        >
+          Manage models
+          <span aria-hidden="true">→</span>
+        </Link>
       </header>
 
-      <SettingsRow
-        icon={<Bot className="size-4" />}
-        label="Fundamental Model"
-        description="Used for complex reasoning and macro news."
-        stack
-        action={
-          <select
-            value={prefs.fundamentalModel}
-            onChange={(e) => update('fundamentalModel', e.target.value)}
-            className="border-divider/60 bg-bg-elev-2 text-fg rounded-lg border px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand"
-          >
-            {MODEL_OPTIONS.map((o) => (
-              <option key={o.value} value={o.value}>
-                {o.label}
-              </option>
-            ))}
-          </select>
-        }
-      />
+      <p className="text-fg-muted text-xs">
+        To pick which AI model handles each kind of turn, use{' '}
+        <Link href="/settings/models" className="text-brand hover:underline">
+          Settings → Models
+        </Link>
+        . The choices there are server-side and apply to every chat turn.
+      </p>
 
-      <RowDivider />
-
-      <SettingsRow
-        icon={<Bot className="size-4" />}
-        label="Technical Model"
-        description="Used for chart analysis and indicators."
-        stack
-        action={
-          <select
-            value={prefs.technicalModel}
-            onChange={(e) => update('technicalModel', e.target.value)}
-            className="border-divider/60 bg-bg-elev-2 text-fg rounded-lg border px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand"
-          >
-            {MODEL_OPTIONS.map((o) => (
-              <option key={o.value} value={o.value}>
-                {o.label}
-              </option>
-            ))}
-          </select>
-        }
-      />
-
-      <RowDivider />
-
-      <SettingsRow
-        icon={<Bot className="size-4" />}
-        label="Summary Model"
-        description="Used for simple list formatting and summaries."
-        stack
-        action={
-          <select
-            value={prefs.summaryModel}
-            onChange={(e) => update('summaryModel', e.target.value)}
-            className="border-divider/60 bg-bg-elev-2 text-fg rounded-lg border px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand"
-          >
-            {MODEL_OPTIONS.map((o) => (
-              <option key={o.value} value={o.value}>
-                {o.label}
-              </option>
-            ))}
-          </select>
-        }
-      />
-
-      <RowDivider />
-
-      <div className="flex flex-col gap-2 pt-2 pb-1">
-        <label htmlFor="custom-instructions" className="text-fg text-sm font-medium">
-          Custom Instructions
+      <div className="flex flex-col gap-2 pt-1 pb-1">
+        <label
+          htmlFor="custom-instructions"
+          className="text-fg text-sm font-medium"
+        >
+          Custom instructions
         </label>
         <p className="text-fg-muted text-xs">
-          Appended to the AI's core instructions. Use this to change its formatting, personality, or behavior.
+          Appended to the AI&rsquo;s core instructions on every turn.
+          Use this to change formatting, personality, or behaviour.
         </p>
 
         {/* Phase A — UX_UPGRADE_PLAN.md item 6.
@@ -292,12 +259,16 @@ export function AIPrefsCard() {
           className="border-divider/60 bg-bg-elev-2 text-fg placeholder:text-fg-muted rounded-lg border p-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand resize-none"
         />
       </div>
+
+      <p className="text-fg-subtle text-caption uppercase tracking-wider">
+        Saved on this device
+      </p>
     </section>
   );
 
   /**
    * Apply a preset. `mode === 'replace'` overwrites the textarea
-   * (with a confirm prompt if the field is non-empty). `mode ===
+   * (with a confirm prompt if the field is non-empty). `mode ===`
    * 'append'` joins the preset text to the existing value.
    */
   function applyPreset(presetId: string, mode: 'replace' | 'append') {
@@ -314,8 +285,4 @@ export function AIPrefsCard() {
     const preset = getPreset(presetId);
     if (preset) update('customInstructions', preset.prompt);
   }
-}
-
-function RowDivider() {
-  return <div className="border-divider/60 -mx-4 my-1 border-t" />;
 }

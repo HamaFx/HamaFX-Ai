@@ -96,16 +96,28 @@ export const POST = withAuth<void>(async (req, { user }) => {
     return errorResponse(err);
   }
 
-  // Parse client AI preferences if provided
+  // Parse client AI preferences if provided. Only `customInstructions`
+  // is honoured — the older `fundamentalModel` / `technicalModel` /
+  // `summaryModel` fields were planner-only overrides (see the
+  // routing.ts comments) and have been removed from the General
+  // Settings card; the canonical per-turn model lives in
+  // `user_settings.default_models` (set via /settings/models).
+  // We still accept the legacy keys so an old localStorage value
+  // doesn't crash the parser; we just ignore them.
   const aiPrefsHeader = req.headers.get('X-AI-Prefs');
   let customInstructions: string | undefined;
   if (aiPrefsHeader) {
     try {
-      const prefs = JSON.parse(aiPrefsHeader);
-      if (prefs.fundamentalModel) env.AI_FUNDAMENTAL_MODEL = prefs.fundamentalModel;
-      if (prefs.technicalModel) env.AI_TECHNICAL_MODEL = prefs.technicalModel;
-      if (prefs.summaryModel) env.AI_SUMMARY_MODEL = prefs.summaryModel;
-      if (prefs.customInstructions) customInstructions = prefs.customInstructions;
+      const prefs = JSON.parse(aiPrefsHeader) as {
+        customInstructions?: unknown;
+        // Legacy fields — read and discarded.
+        fundamentalModel?: unknown;
+        technicalModel?: unknown;
+        summaryModel?: unknown;
+      };
+      if (typeof prefs.customInstructions === 'string') {
+        customInstructions = prefs.customInstructions;
+      }
     } catch {
       // ignore invalid json
     }
