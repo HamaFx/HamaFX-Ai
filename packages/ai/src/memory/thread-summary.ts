@@ -54,8 +54,7 @@ type SummaryEnv = Pick<
   | 'GOOGLE_VERTEX_LOCATION'
   | 'GOOGLE_APPLICATION_CREDENTIALS_JSON'
   | 'GOOGLE_APPLICATION_CREDENTIALS'
-  | 'AI_SUMMARY_MODEL'
-  | 'AI_TITLE_MODEL'
+  | 'AI_DEFAULT_MODEL'
   | 'MAX_DAILY_USD'
   | 'LOG_PROMPTS'
 >;
@@ -80,6 +79,12 @@ export async function compactThread(args: {
   threadId: string;
   history: DbMessage[];
   env: SummaryEnv;
+  /**
+   * Phase F — the model id (qualified `"<provider>/<bare>"`) the
+   * compaction call should use. Resolved by `derivePlannerModel`
+   * in the agent caller; compactThread no longer reads AI_TITLE_MODEL.
+   */
+  compactionModelId: string;
   signal?: AbortSignal;
 }): Promise<CompactResult> {
   const { threadId, history, env } = args;
@@ -100,7 +105,7 @@ export async function compactThread(args: {
   if (persisted && persisted.digest === digest) {
     summaryBody = persisted.body;
   } else {
-    summaryBody = await generateSummary(older, env, args.signal);
+    summaryBody = await generateSummary(older, env, args.compactionModelId, args.signal);
     if (summaryBody) {
       await saveSummary(threadId, summaryBody, digest);
     }
@@ -182,6 +187,7 @@ function readSummaryMeta(parts: unknown): { digest: string } | null {
 async function generateSummary(
   older: DbMessage[],
   env: SummaryEnv,
+  compactionModelId: string,
   signal?: AbortSignal,
 ): Promise<string | null> {
   // Hard budget guard — never spend on a memory side-effect we can do without.
@@ -201,10 +207,8 @@ async function generateSummary(
     .slice(0, 8_000);
 
   try {
-    const modelId =
-      env.AI_SUMMARY_MODEL ?? env.AI_TITLE_MODEL ?? 'google-vertex/gemini-2.5-flash-lite';
     const callArgs: Parameters<typeof generateText>[0] = {
-      model: resolveModel(modelId, env),
+      model: resolveModel(compactionModelId, env),
       system:
         "You compress chat history into a 4-bullet system note for a trading copilot. Capture: (1) the symbol(s) under discussion, (2) the user's active question/setup, (3) any prior facts or numbers cited, (4) any open follow-up. No greetings, no filler.",
       prompt: transcript,

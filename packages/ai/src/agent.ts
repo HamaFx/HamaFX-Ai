@@ -38,7 +38,13 @@ import {
 } from './cost';
 import { classifyStreamError, makeFallbackPart, type FallbackPartPayload } from './fallback';
 import { compactThread } from './memory/thread-summary';
-import { resolveOverrideModel, resolveUserModel, getVertexGoogleSearchTool } from './model';
+import {
+  derivePlannerModel,
+  deriveTitleModel,
+  resolveChatModel,
+  resolveOverrideModel,
+  getVertexGoogleSearchTool,
+} from './model';
 import {
   appendAssistantMessage,
   appendUserMessage,
@@ -74,11 +80,7 @@ export interface RunChatArgs {
     | 'GOOGLE_APPLICATION_CREDENTIALS_JSON'
     | 'GOOGLE_APPLICATION_CREDENTIALS'
     | 'AI_DEFAULT_MODEL'
-    | 'AI_TITLE_MODEL'
     | 'AI_VISION_MODEL'
-    | 'AI_FUNDAMENTAL_MODEL'
-    | 'AI_TECHNICAL_MODEL'
-    | 'AI_SUMMARY_MODEL'
     | 'MAX_DAILY_USD'
     | 'MAX_TOOL_ITERATIONS'
     | 'LOG_PROMPTS'
@@ -90,7 +92,6 @@ export interface RunChatArgs {
   /** Aborts streaming + tool calls when the client disconnects. */
   signal?: AbortSignal;
 }
-
 /**
  * Runs one chat turn end-to-end:
  *   1. Daily-budget guardrail.
@@ -153,10 +154,15 @@ export async function runChat(args: RunChatArgs) {
     buildLiveSnapshot(signal ? { signal } : {}),
   ]);
 
+  // Phase F — compaction uses the same cheap-model derivation as
+  // the planner. Resolved once up front so the call site stays clean.
+  const compactionModelId =
+    derivePlannerModel(userSettings, env) ?? env.AI_DEFAULT_MODEL;
   const compactArgs: Parameters<typeof compactThread>[0] = {
     threadId,
     history,
     env,
+    compactionModelId,
   };
   if (signal) compactArgs.signal = signal;
   const compaction = await compactThread(compactArgs);
@@ -185,24 +191,17 @@ export async function runChat(args: RunChatArgs) {
     ),
   );
 
-  // 4) Domain-based model routing — picks the best model for this turn.
+  // 4) Model resolution — Phase F collapses the per-domain picker into
+  // a single chat_model. The override path stays the same (per-thread
+  // pick from the regen-model-picker); the default path is now just
+  // resolveChatModel which honours user_settings.chatModel (or the
+  // highest-priority configured provider's spec defaults).
   const routingArgs: Parameters<typeof routeTurn>[0] = { userMessage, env };
   if (modelOverride !== undefined) routingArgs.modelOverride = modelOverride;
   const routing: RoutingDecision = routeTurn(routingArgs);
 
-  // Phase B — UX_UPGRADE_PLAN.md item 8 + 15.
-  // The user picks a model override (or we go to the default).
-  // If they picked one:
-  //   - Try to resolve it against BYOK (resolveOverrideModel).
-  //   - On success, use the resolved model directly. No fallback.
-  //   - On failure, capture the override and try the default
-  //     domain; on a recoverable failure during that path, append
-  //     a `data-fallback` part to the assistant message so the UI
-  //     can show "Override unavailable, used <default>."
-  // If no override was passed, the default-domain path is the only
-  // path and any failure surfaces to the user as today.
   let fallbackInfo: FallbackPartPayload | null = null;
-  let model: Awaited<ReturnType<typeof resolveUserModel>>['model'] | null = null;
+  let model: Awaited<ReturnType<typeof resolveChatModel>>['model'] | null = null;
   let modelId: string = env.AI_DEFAULT_MODEL;
 
   // Happy path: explicit override that resolved.
@@ -216,48 +215,32 @@ export async function runChat(args: RunChatArgs) {
       model = resolved.model;
       modelId = resolved.modelId;
     } else {
-      // Override was specified but didn't resolve. Try the default
-      // domain; on a recoverable failure here we set fallbackInfo.
-      const domainArg = routing.domain === 'generic' ? 'default' : routing.domain;
+      // Override was specified but didn't resolve (unknown provider,
+      // no key, gateway-style id, etc). Fall back to the user's chat
+      // model and append a `data-fallback` part so the UI can show
+      // "Override unavailable, used <default>.".
       try {
-        const res = resolveUserModel(userSettings, domainArg, env);
+        const res = resolveChatModel(userSettings, env);
         model = res.model;
         modelId = res.modelId;
       } catch (err) {
         const decision = classifyStreamError(err);
-        if (decision.fallback) {
-          console.warn(
-            `[ai] model override "${modelOverride}" failed (${decision.reason}: ${decision.message}); falling back to AI_DEFAULT_MODEL=${env.AI_DEFAULT_MODEL}`,
-          );
-          fallbackInfo = makeFallbackPart(modelOverride, decision);
-          try {
-            const fallbackRes = resolveUserModel(userSettings, 'default', env);
-            model = fallbackRes.model;
-            modelId = fallbackRes.modelId;
-          } catch (fallbackErr) {
-            console.error(
-              `[ai] fallback to AI_DEFAULT_MODEL also failed: ${fallbackErr instanceof Error ? fallbackErr.message : 'unknown'}`,
-            );
-            throw err;
-          }
-        } else {
-          console.warn(
-            `[ai] resolveUserModel failed for domain ${routing.domain} (${err instanceof Error ? err.message : 'unknown'}); falling back to AI_DEFAULT_MODEL=${env.AI_DEFAULT_MODEL}`,
-          );
-          throw err;
-        }
+        console.warn(
+          `[ai] model override "${modelOverride}" failed (${decision.reason}: ${decision.message}); falling back to AI_DEFAULT_MODEL=${env.AI_DEFAULT_MODEL}`,
+        );
+        fallbackInfo = makeFallbackPart(modelOverride, decision);
+        throw err;
       }
     }
   } else {
-    // No override — straight to default domain.
+    // No override — straight to chat model.
     try {
-      const domainArg = routing.domain === 'generic' ? 'default' : routing.domain;
-      const res = resolveUserModel(userSettings, domainArg, env);
+      const res = resolveChatModel(userSettings, env);
       model = res.model;
       modelId = res.modelId;
     } catch (err) {
       console.warn(
-        `[ai] resolveUserModel failed for domain ${routing.domain} (${err instanceof Error ? err.message : 'unknown'}); falling back to AI_DEFAULT_MODEL=${env.AI_DEFAULT_MODEL}`,
+        `[ai] resolveChatModel failed (${err instanceof Error ? err.message : 'unknown'}); falling back to AI_DEFAULT_MODEL=${env.AI_DEFAULT_MODEL}`,
       );
       throw err;
     }
@@ -278,20 +261,27 @@ export async function runChat(args: RunChatArgs) {
   let plannerStartedAt = 0;
   let plannerResult: Awaited<ReturnType<typeof runPlanner>> | null = null;
   if (routing.planRequired) {
+    // Phase F — derive the planner model from the chat model rather
+    // than reading env.AI_SUMMARY_MODEL (which no longer exists).
+    // The planner is a separate cheap-model call, so we use the same
+    // provider's spec.defaultModels.summary tier.
+    const plannerModelId =
+      derivePlannerModel(userSettings, env) ?? env.AI_DEFAULT_MODEL;
     plannerStartedAt = Date.now();
     try {
       plannerResult = await runPlanner({
         threadId,
         userMessage,
         routing,
+        plannerModelId,
         env: {
           AI_GATEWAY_API_KEY: env.AI_GATEWAY_API_KEY,
           GOOGLE_GENERATIVE_AI_API_KEY: env.GOOGLE_GENERATIVE_AI_API_KEY,
           GOOGLE_VERTEX_PROJECT: env.GOOGLE_VERTEX_PROJECT,
           GOOGLE_VERTEX_LOCATION: env.GOOGLE_VERTEX_LOCATION,
-          GOOGLE_APPLICATION_CREDENTIALS_JSON: env.GOOGLE_APPLICATION_CREDENTIALS_JSON,
+          GOOGLE_APPLICATION_CREDENTIALS_JSON:
+            env.GOOGLE_APPLICATION_CREDENTIALS_JSON,
           GOOGLE_APPLICATION_CREDENTIALS: env.GOOGLE_APPLICATION_CREDENTIALS,
-          AI_SUMMARY_MODEL: env.AI_SUMMARY_MODEL,
           AI_DEFAULT_MODEL: env.AI_DEFAULT_MODEL,
           MAX_DAILY_USD: env.MAX_DAILY_USD,
           LOG_PROMPTS: env.LOG_PROMPTS,
@@ -312,7 +302,7 @@ export async function runChat(args: RunChatArgs) {
         userId,
         threadId,
         messageId: plannerResult.messageId,
-        model: env.AI_SUMMARY_MODEL ?? env.AI_DEFAULT_MODEL,
+        model: plannerModelId,
         inputTokens: plannerResult.inputTokens,
         outputTokens: plannerResult.outputTokens,
         toolCalls: 0,
@@ -368,10 +358,7 @@ export async function runChat(args: RunChatArgs) {
       GOOGLE_APPLICATION_CREDENTIALS: env.GOOGLE_APPLICATION_CREDENTIALS,
       AI_DEFAULT_MODEL: env.AI_DEFAULT_MODEL,
       AI_VISION_MODEL: env.AI_VISION_MODEL ?? 'google-vertex/gemini-2.5-pro',
-      AI_SUMMARY_MODEL: env.AI_SUMMARY_MODEL,
       AI_EMBEDDING_MODEL: 'openai/text-embedding-3-small',
-      AI_FUNDAMENTAL_MODEL: env.AI_FUNDAMENTAL_MODEL,
-      AI_TECHNICAL_MODEL: env.AI_TECHNICAL_MODEL,
       MAX_DAILY_USD: env.MAX_DAILY_USD,
       LOG_PROMPTS: env.LOG_PROMPTS,
     },
@@ -523,7 +510,15 @@ export async function runChat(args: RunChatArgs) {
       // keeps the function alive long enough for the title to land,
       // but the response stream closes immediately. Outside Vercel
       // (worker / tests) `waitUntil` is a fire-and-forget shim.
-      waitUntil(runAutoTitleBackground({ threadId, userId, env, signal: signal ?? null }));
+      waitUntil(
+        runAutoTitleBackground({
+          threadId,
+          userId,
+          userSettings,
+          env,
+          signal: signal ?? null,
+        }),
+      );
     },
   };
   if (signal) streamArgs.abortSignal = signal;
@@ -548,10 +543,11 @@ export async function runChat(args: RunChatArgs) {
 async function runAutoTitleBackground(args: {
   threadId: string;
   userId: string;
+  userSettings: import('@hamafx/db/schema').UserSettingsRow;
   env: RunChatArgs['env'];
   signal: AbortSignal | null;
 }): Promise<void> {
-  const { threadId, userId, env, signal } = args;
+  const { threadId, userId, userSettings, env, signal } = args;
   try {
     const thread = await getThread(userId, threadId);
     if (!thread || thread.title !== null) return;
@@ -561,10 +557,17 @@ async function runAutoTitleBackground(args: {
     if (firstUser.length === 0 || firstAssistant.length === 0) return;
 
     const titleStartedAt = Date.now();
+    // Phase F — derive the title model from the user's chat model
+    // (cheapest tier of the same provider, falling back to
+    // AI_DEFAULT_MODEL on miss). Removes the per-deployment
+    // AI_TITLE_MODEL env-var dependency.
+    const titleModelId =
+      deriveTitleModel(userSettings, env) ?? env.AI_DEFAULT_MODEL;
     const titleArgs: Parameters<typeof generateTitle>[0] = {
       threadId,
       firstUser,
       firstAssistant,
+      titleModelId,
       env: {
         AI_GATEWAY_API_KEY: env.AI_GATEWAY_API_KEY,
         GOOGLE_GENERATIVE_AI_API_KEY: env.GOOGLE_GENERATIVE_AI_API_KEY,
@@ -572,7 +575,7 @@ async function runAutoTitleBackground(args: {
         GOOGLE_VERTEX_LOCATION: env.GOOGLE_VERTEX_LOCATION,
         GOOGLE_APPLICATION_CREDENTIALS_JSON: env.GOOGLE_APPLICATION_CREDENTIALS_JSON,
         GOOGLE_APPLICATION_CREDENTIALS: env.GOOGLE_APPLICATION_CREDENTIALS,
-        AI_TITLE_MODEL: env.AI_TITLE_MODEL,
+        AI_DEFAULT_MODEL: env.AI_DEFAULT_MODEL,
         MAX_DAILY_USD: env.MAX_DAILY_USD,
         LOG_PROMPTS: env.LOG_PROMPTS,
       },
@@ -590,7 +593,7 @@ async function runAutoTitleBackground(args: {
       userId,
       threadId,
       messageId: null,
-      model: env.AI_TITLE_MODEL,
+      model: titleModelId,
       inputTokens: titleResult.inputTokens ?? 0,
       outputTokens: titleResult.outputTokens ?? 0,
       toolCalls: 0,

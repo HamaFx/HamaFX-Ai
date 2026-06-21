@@ -26,7 +26,7 @@ import { tool, generateText } from 'ai';
 import type { z } from 'zod';
 
 import { getToolContext, type ToolContext } from '../tool-context';
-import { resolveUserModel, getVertexGoogleSearchTool } from '../model';
+import { resolveChatModel, getVertexGoogleSearchTool } from '../model';
 
 import { analyzeFundamentalTool } from './analyze-fundamental';
 import { analyzeTechnicalTool } from './analyze-technical';
@@ -110,7 +110,7 @@ No markdown fences, no preamble.`;
     // Only pass tools if the vertex env is available (which we check via a fallback, but for now we skip googleSearch tool if no vertex)
     const tools = ctx.env.GOOGLE_VERTEX_PROJECT ? { googleSearch: getVertexGoogleSearchTool(ctx.env as any) } : undefined;
     const { text, steps } = await generateText({
-      model: resolveUserModel(ctx.userSettings, 'fundamental', ctx.env).model,
+      model: resolveChatModel(ctx.userSettings, ctx.env).model,
       system: "You are an expert forex macroeconomic analyst. Always output raw JSON.",
       prompt,
       ...(tools ? { tools } : {}),
@@ -170,7 +170,7 @@ No markdown fences, no preamble.`;
 
   try {
     const { text } = await generateText({
-      model: resolveUserModel(ctx.userSettings, 'technical', ctx.env).model,
+      model: resolveChatModel(ctx.userSettings, ctx.env).model,
       system: "You are an expert forex technical analyst. Always output raw JSON.",
       prompt,
     });
@@ -210,7 +210,7 @@ No markdown fences, no preamble.`;
 
   try {
     const { text } = await generateText({
-      model: resolveUserModel(ctx.userSettings, 'default', ctx.env).model,
+      model: resolveChatModel(ctx.userSettings, ctx.env).model,
       system: "You are an expert risk manager. Always output raw JSON.",
       prompt,
     });
@@ -241,7 +241,7 @@ No markdown fences, no preamble.`;
 
   try {
     const { text } = await generateText({
-      model: resolveUserModel(ctx.userSettings, 'default', ctx.env).model,
+      model: resolveChatModel(ctx.userSettings, ctx.env).model,
       system: "You are the head trader. Always output raw JSON.",
       prompt,
     });

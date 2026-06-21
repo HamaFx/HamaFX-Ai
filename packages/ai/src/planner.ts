@@ -49,7 +49,6 @@ export type PlannerEnv = Pick<
   | 'GOOGLE_VERTEX_LOCATION'
   | 'GOOGLE_APPLICATION_CREDENTIALS_JSON'
   | 'GOOGLE_APPLICATION_CREDENTIALS'
-  | 'AI_SUMMARY_MODEL'
   | 'AI_DEFAULT_MODEL'
   | 'MAX_DAILY_USD'
   | 'LOG_PROMPTS'
@@ -60,6 +59,12 @@ export interface RunPlannerArgs {
   /** Latest user message — drives the planner prompt. */
   userMessage: UIMessage;
   routing: RoutingDecision;
+  /**
+   * Phase F — the model id (qualified `"<provider>/<bare>"`) the planner
+   * should use. Resolved by `derivePlannerModel(userSettings, env)` in
+   * the agent caller; the planner no longer reads an env var itself.
+   */
+  plannerModelId: string;
   env: PlannerEnv;
   signal?: AbortSignal;
 }
@@ -168,8 +173,7 @@ export async function runPlanner(args: RunPlannerArgs): Promise<PlanResult> {
   ].join('\n');
 
   try {
-    const modelId =
-      args.env.AI_SUMMARY_MODEL ?? args.env.AI_DEFAULT_MODEL ?? 'google-vertex/gemini-2.5-flash';
+    const modelId = args.plannerModelId;
     const callArgs: Parameters<typeof generateText>[0] = {
       model: resolveModel(modelId, args.env),
       system: SYSTEM_PROMPT,

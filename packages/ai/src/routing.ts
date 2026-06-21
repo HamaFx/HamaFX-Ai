@@ -44,8 +44,6 @@ export type RoutingDomain =
 
 export interface RoutingDecision {
   domain: RoutingDomain;
-  /** Resolved model id. */
-  modelId: string;
   /**
    * True for domains that benefit from a visible plan-then-act step.
    * Currently fundamental + technical; summary/vision/generic skip the plan.
@@ -58,9 +56,6 @@ export interface RoutingDecision {
 type RouterEnv = Pick<
   ServerEnv,
   | 'AI_DEFAULT_MODEL'
-  | 'AI_FUNDAMENTAL_MODEL'
-  | 'AI_TECHNICAL_MODEL'
-  | 'AI_SUMMARY_MODEL'
   | 'AI_VISION_MODEL'
 >;
 
@@ -77,12 +72,12 @@ export function routeTurn(args: {
   env: RouterEnv;
   modelOverride?: string | null;
 }): RoutingDecision {
-  const { userMessage, env, modelOverride } = args;
+  const { userMessage, modelOverride } = args;
+  void args.env; // kept for future use; not currently consumed.
 
   if (modelOverride && modelOverride.length > 0) {
     return {
       domain: 'generic',
-      modelId: modelOverride,
       planRequired: false,
       rationale: `explicit override: ${modelOverride}`,
     };
@@ -94,7 +89,6 @@ export function routeTurn(args: {
   if (hasImage) {
     return {
       domain: 'vision',
-      modelId: env.AI_VISION_MODEL ?? env.AI_DEFAULT_MODEL,
       planRequired: false,
       rationale: 'image attached → vision model',
     };
@@ -104,7 +98,6 @@ export function routeTurn(args: {
   if (text.length < 4) {
     return {
       domain: 'generic',
-      modelId: env.AI_DEFAULT_MODEL,
       planRequired: false,
       rationale: 'too short to classify',
     };
@@ -125,7 +118,6 @@ export function routeTurn(args: {
   if (max === 0) {
     return {
       domain: 'generic',
-      modelId: env.AI_DEFAULT_MODEL,
       planRequired: false,
       rationale: 'no domain keywords matched',
     };
@@ -134,7 +126,6 @@ export function routeTurn(args: {
   if (fundamentalScore === max) {
     return {
       domain: 'fundamental',
-      modelId: env.AI_FUNDAMENTAL_MODEL ?? env.AI_DEFAULT_MODEL,
       planRequired: true,
       rationale: `fundamental keywords (score ${fundamentalScore})`,
     };
@@ -142,14 +133,12 @@ export function routeTurn(args: {
   if (technicalScore === max) {
     return {
       domain: 'technical',
-      modelId: env.AI_TECHNICAL_MODEL ?? env.AI_DEFAULT_MODEL,
       planRequired: true,
       rationale: `technical keywords (score ${technicalScore})`,
     };
   }
   return {
     domain: 'summary',
-    modelId: env.AI_SUMMARY_MODEL ?? env.AI_DEFAULT_MODEL,
     planRequired: false,
     rationale: `summary keywords (score ${summaryScore})`,
   };

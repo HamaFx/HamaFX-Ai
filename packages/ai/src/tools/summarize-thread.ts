@@ -38,7 +38,7 @@ import { generateText } from 'ai';
 import type { z } from 'zod';
 
 import { rememberThreadSynopsis } from '../memory/memory-index';
-import { resolveModel } from '../model';
+import { resolveModel, derivePlannerModel } from '../model';
 import { listMessages } from '../persistence';
 import { maybeGetToolContext } from '../tool-context';
 
@@ -99,8 +99,10 @@ export const summarizeThreadTool = {
 
     if (llmAllowed) {
       try {
+        // Phase F — pick the same cheap model the planner uses so
+        // summarisation costs track the chat-model choice.
         const modelId =
-          env.AI_SUMMARY_MODEL ?? env.AI_DEFAULT_MODEL ?? 'google-vertex/gemini-2.5-flash';
+          derivePlannerModel(ctx.userSettings, env) ?? env.AI_DEFAULT_MODEL;
         const { text } = await generateText({
           model: resolveModel(modelId, env),
           system: SYSTEM_PROMPT,

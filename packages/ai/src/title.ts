@@ -43,10 +43,18 @@ export interface GenerateTitleArgs {
     | 'GOOGLE_VERTEX_LOCATION'
     | 'GOOGLE_APPLICATION_CREDENTIALS_JSON'
     | 'GOOGLE_APPLICATION_CREDENTIALS'
-    | 'AI_TITLE_MODEL'
+    | 'AI_DEFAULT_MODEL'
     | 'MAX_DAILY_USD'
     | 'LOG_PROMPTS'
   >;
+  /**
+   * Phase F — the model id (qualified `"<provider>/<bare>"`) the title
+   * generator should use. Resolved by `deriveTitleModel(userSettings, env)`
+   * in the agent caller; title.ts no longer reads AI_TITLE_MODEL itself.
+   * (AI_TITLE_MODEL remains in ServerEnv as an operator-set fallback for
+   * the very rare case where the resolver returns null.)
+   */
+  titleModelId: string;
   /** Aborts the LLM call when the originating request goes away. */
   signal?: AbortSignal;
 }
@@ -146,7 +154,7 @@ export async function generateTitle(args: GenerateTitleArgs): Promise<GenerateTi
     const generateArgs: Parameters<typeof generateText>[0] = {
       // Resolve the id either to a gateway-routed string or a direct provider
       // model instance, depending on which transport is configured.
-      model: resolveModel(env.AI_TITLE_MODEL, env),
+      model: resolveModel(args.titleModelId, env),
       system: SYSTEM_PROMPT,
       prompt: userPrompt,
     };

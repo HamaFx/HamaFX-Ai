@@ -6,12 +6,6 @@
  * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
  */
 
 import { describe, expect, it } from 'vitest';
@@ -20,9 +14,6 @@ import { routeTurn } from '../src/routing';
 
 const ENV = {
   AI_DEFAULT_MODEL: 'google-vertex/gemini-2.5-flash',
-  AI_FUNDAMENTAL_MODEL: 'google-vertex/gemini-2.5-pro',
-  AI_TECHNICAL_MODEL: 'google-vertex/gemini-2.5-flash',
-  AI_SUMMARY_MODEL: 'google-vertex/gemini-2.5-flash-lite',
   AI_VISION_MODEL: 'google-vertex/gemini-2.5-pro',
 } as const;
 
@@ -46,40 +37,36 @@ function userImage(): Parameters<typeof routeTurn>[0]['userMessage'] {
 }
 
 describe('routeTurn — Phase 7a domain routing', () => {
-  it('falls back to AI_DEFAULT_MODEL on empty/short input', () => {
+  it('falls back to generic on empty/short input', () => {
     const r = routeTurn({ userMessage: userText('hi'), env: ENV });
     expect(r.domain).toBe('generic');
-    expect(r.modelId).toBe(ENV.AI_DEFAULT_MODEL);
     expect(r.planRequired).toBe(false);
   });
 
-  it('routes fundamental analysis prompts to the pro model', () => {
+  it('routes fundamental analysis prompts to the fundamental domain', () => {
     const r = routeTurn({
       userMessage: userText('Why is gold selling off after the FOMC minutes? Macro view?'),
       env: ENV,
     });
     expect(r.domain).toBe('fundamental');
-    expect(r.modelId).toBe(ENV.AI_FUNDAMENTAL_MODEL);
     expect(r.planRequired).toBe(true);
   });
 
-  it('routes technical analysis prompts to the technical model', () => {
+  it('routes technical analysis prompts to the technical domain', () => {
     const r = routeTurn({
       userMessage: userText('Top-down read on EURUSD with RSI and EMA50 across 4H and 1H'),
       env: ENV,
     });
     expect(r.domain).toBe('technical');
-    expect(r.modelId).toBe(ENV.AI_TECHNICAL_MODEL);
     expect(r.planRequired).toBe(true);
   });
 
-  it('routes news/calendar/journal summaries to the cheap summary model', () => {
+  it('routes news/calendar/journal summaries to the summary domain', () => {
     const r1 = routeTurn({
       userMessage: userText("Summarise today's gold-relevant news"),
       env: ENV,
     });
     expect(r1.domain).toBe('summary');
-    expect(r1.modelId).toBe(ENV.AI_SUMMARY_MODEL);
     expect(r1.planRequired).toBe(false);
 
     const r2 = routeTurn({
@@ -89,10 +76,9 @@ describe('routeTurn — Phase 7a domain routing', () => {
     expect(r2.domain).toBe('summary');
   });
 
-  it('routes image-attached turns to the vision model regardless of text', () => {
+  it('routes image-attached turns to the vision domain', () => {
     const r = routeTurn({ userMessage: userImage(), env: ENV });
     expect(r.domain).toBe('vision');
-    expect(r.modelId).toBe(ENV.AI_VISION_MODEL);
   });
 
   it('explicit modelOverride wins over the classifier', () => {
@@ -102,7 +88,7 @@ describe('routeTurn — Phase 7a domain routing', () => {
       modelOverride: 'openai/gpt-4.1',
     });
     expect(r.domain).toBe('generic');
-    expect(r.modelId).toBe('openai/gpt-4.1');
+    expect(r.rationale).toContain('openai/gpt-4.1');
   });
 
   it('null modelOverride is ignored (treated as no override)', () => {
@@ -112,15 +98,5 @@ describe('routeTurn — Phase 7a domain routing', () => {
       modelOverride: null,
     });
     expect(r.domain).toBe('fundamental');
-  });
-
-  it('falls back to AI_DEFAULT_MODEL when domain env var is unset', () => {
-    const partial = { ...ENV, AI_TECHNICAL_MODEL: undefined } as never;
-    const r = routeTurn({
-      userMessage: userText('RSI divergence on GBPUSD 1H'),
-      env: partial,
-    });
-    expect(r.domain).toBe('technical');
-    expect(r.modelId).toBe(ENV.AI_DEFAULT_MODEL);
   });
 });
