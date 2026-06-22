@@ -37,7 +37,7 @@ async function applyOne(
 ): Promise<void> {
   const rawSql = readFileSync(join(DRIZZLE_DIR, `${tag}.sql`), 'utf-8');
   for (const stmt of rawSql.split('--> statement-breakpoint')) {
-    let trimmed = stripComments(stmt.trim());
+    const trimmed = stripComments(stmt.trim());
     if (!trimmed) continue;
     // Strip pgvector-only DDL so PGlite can run the rest of the schema.
     // (PGlite doesn't ship pgvector; news_embeddings lives behind an

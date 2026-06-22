@@ -38,4 +38,25 @@ describe('estimateCostUsd', () => {
     const mini = estimateCostUsd('openai/gpt-4.1-mini', 100_000, 50_000);
     expect(mini).toBeLessThan(main / 5);
   });
+
+  it('prices Vertex-prefixed Gemini at the same rate as the gateway id', () => {
+    // Regression: the agent streams with `google-vertex/...` ids by default,
+    // but RATES is keyed by `google/...`. Without normalization this fell
+    // through to the $5/$15 fallback — a ~10x overcharge against the budget.
+    const vertex = estimateCostUsd('google-vertex/gemini-2.5-flash', 1_000_000, 1_000_000);
+    const gateway = estimateCostUsd('google/gemini-2.5-flash', 1_000_000, 1_000_000);
+    expect(vertex).toBeCloseTo(gateway, 6);
+    // And explicitly NOT the $5/$15 fallback.
+    expect(vertex).toBeLessThan(5);
+  });
+
+  it('prices bare BYOK Gemini id like the gateway id', () => {
+    const bare = estimateCostUsd('gemini-2.5-pro', 1_000_000, 0);
+    const gateway = estimateCostUsd('google/gemini-2.5-pro', 1_000_000, 0);
+    expect(bare).toBeCloseTo(gateway, 6);
+  });
+
+  it('still falls back for genuinely unknown providers', () => {
+    expect(estimateCostUsd('does-not-exist/x', 1_000_000, 1_000_000)).toBeCloseTo(20, 6);
+  });
 });

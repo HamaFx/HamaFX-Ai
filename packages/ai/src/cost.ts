@@ -51,9 +51,28 @@ const FALLBACK_RATE: ModelRate = { inputPerM: 5, outputPerM: 15 };
 
 export const DEFAULT_TURN_ESTIMATE_USD = 0.01;
 
+/**
+ * Normalize a streamed model id to a `RATES` key. The agent persists the
+ * literal id it streamed with — which is Vertex-prefixed by default
+ * (`google-vertex/gemini-2.5-flash`) — but the RATES table is keyed by the
+ * gateway form (`google/gemini-2.5-flash`). Vertex and the AI Gateway bill
+ * the same Google list price, so we collapse the prefix. Bare ids (no slash,
+ * BYOK Google) get the `google/` prefix added.
+ */
+function rateKeyForModel(model: string): string {
+  if (model.startsWith('google-vertex/')) {
+    return `google/${model.slice('google-vertex/'.length)}`;
+  }
+  // Bare Gemini id from BYOK google (e.g. 'gemini-2.5-flash').
+  if (!model.includes('/') && model.startsWith('gemini-')) {
+    return `google/${model}`;
+  }
+  return model;
+}
+
 /** Estimate USD cost from token counts. Always >= 0. */
 export function estimateCostUsd(model: string, inputTokens: number, outputTokens: number): number {
-  const rate = RATES[model] ?? FALLBACK_RATE;
+  const rate = RATES[rateKeyForModel(model)] ?? FALLBACK_RATE;
   return (inputTokens / 1_000_000) * rate.inputPerM + (outputTokens / 1_000_000) * rate.outputPerM;
 }
 

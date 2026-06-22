@@ -92,7 +92,7 @@ Authenticated (under /(app)/):
     Cares about regenerate-with-different-model.
 
   Analyst / power user
-    Uses all 32 tools. Reads committee deliberation. Cross-references
+    Uses all 30 tools. Reads committee deliberation. Cross-references
     intermarket data. Logs trades with full annotations. Shares
     analysis links to colleagues.
 
@@ -365,7 +365,7 @@ Purpose: user asks a question, agent streams an answer.
           persisted as system message
           rendered as collapsible "Thinking" pill in UI
 
-     STAGE 6 — streamText() with 32 tools
+     STAGE 6 — streamText() with 30 tools
         AsyncLocalStorage withToolContext({ threadId, env, signal,
                                             budgetSnapshot })
         stopWhen: stepCountIs(MAX_TOOL_ITERATIONS)
@@ -626,7 +626,7 @@ B. Chat-driven (natural language)
          → revalidatePath
 
   /settings/agent
-     - table of all 32 tools + last-24h count / failures / p50/p95
+     - table of all 30 tools + last-24h count / failures / p50/p95
      - diagnostic value for power users
 
   /settings/usage
@@ -897,7 +897,7 @@ B. Chat-driven (natural language)
      |--5b--> runPlanner() ---<planRequired?>---yes---> JSON plan
      |                                              (system message + UI pill)
      |
-     |--6--> streamText() with 32 tools
+     |--6--> streamText() with 30 tools
      |       |
      |       v
      |   [tool call loop] (≤ MAX_TOOL_ITERATIONS)

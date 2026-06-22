@@ -22,8 +22,12 @@
 //   3. On ProviderError, log + record failure + continue.
 //   4. On success, record success against the chosen provider.
 //   5. Re-throw the FIRST error if all fail.
-//   6. PROVIDER_QUOTA_EXCEEDED also nudges the adaptive throttle so the
-//      next reservation against this provider sees a tighter cap.
+//   6. On PROVIDER_QUOTA_EXCEEDED we still try the next provider (it may be
+//      on a different quota) and re-throw the quota error preferentially
+//      (see rankProviderError) because it's the most actionable signal.
+//      NOTE: this runner does not itself touch the adaptive throttle —
+//      throttle reservations live in packages/data/src/cache/throttle.ts and
+//      are applied at the adapter layer, not here.
 //
 // Phase 2 hardening §2 — `pinned: true` keeps an attempt in its
 // caller-specified position regardless of health. The live-ticks /
@@ -108,8 +112,8 @@ export async function runWithFailover<T>(
       if (!bestError || rankProviderError(err) > rankProviderError(bestError)) {
         bestError = err;
       }
-      // Quota errors are sticky — but we still try the next provider since
-      // the next one may be on a different quota.
+      // We still try the next provider since the next one may be on a
+      // different quota.
     }
   }
   throw bestError ?? firstError ?? new ProviderError('NO_PROVIDER_AVAILABLE', 'none', 'all providers failed');

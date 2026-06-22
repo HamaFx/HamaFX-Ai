@@ -96,6 +96,31 @@ describe('PRICE_TOKEN — band-specific matching', () => {
     });
     expect(r).toBeNull();
   });
+
+  it('matches 5-digit gold prices (>= 5000) within the [1-4]xxxx band', () => {
+    // Regression: the band was [1-4]\d{3} (4 digits only), so a black-swan
+    // gold spike like 41000.00 escaped verification despite the docstring
+    // promising coverage up to 4xxxx.xx.
+    const spike = enforceCitations({
+      text: 'Gold spiked to 41000.00 today on the news.',
+      responseMessages: noTools(),
+    });
+    expect(spike).not.toBeNull();
+
+    const fiveDigit = enforceCitations({
+      text: 'The model printed 12345.67 as the target.',
+      responseMessages: noTools(),
+    });
+    expect(fiveDigit).not.toBeNull();
+  });
+
+  it('still rejects version strings and dotted timestamps after widening', () => {
+    const r = enforceCitations({
+      text: 'Version 1.0.0 released on 2026.05.27 went smoothly.',
+      responseMessages: noTools(),
+    });
+    expect(r).toBeNull();
+  });
 });
 
 describe('ATTRIBUTION_TOKEN — strict reference verbs', () => {

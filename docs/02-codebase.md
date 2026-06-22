@@ -191,7 +191,7 @@ shared/
 
 **Tool Names Registry:**
 
-A string literal union type `ToolName` enumerating all 32 AI tools registered in `@hamafx/ai`. This is the canonical list — adding a tool in `@hamafx/ai` requires adding its name here.
+A string literal union type `ToolName` enumerating all 30 AI tools registered in `@hamafx/ai`. This is the canonical list — adding a tool in `@hamafx/ai` requires adding its name here.
 
 **Environment (env.ts):**
 
@@ -418,7 +418,7 @@ async function runWithFailover<T>(
 ```
 ai/
 ├── src/
-│   ├── tools/            # 32 AI tool implementations
+│   ├── tools/            # 30 AI tool implementations
 │   │   ├── market/       # getCandles, getQuote, getTick, getSpread, ...
 │   │   ├── indicators/   # getSMA, getRSI, getMACD, getBollinger, getATR, ...
 │   │   ├── smc/          # getSwings, getStructure, getFVG, getOrderBlocks, getLiquidity, ...
@@ -444,7 +444,7 @@ ai/
 │   └── index.ts          # Barrel
 ```
 
-**32 Tools (categorized):**
+**30 Tools (categorized):**
 
 | Category | Count | Tools |
 |---|---|---|

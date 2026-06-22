@@ -44,7 +44,9 @@ export const dynamic = 'force-dynamic';
 
 export const POST = withAuth<void>(async (_req, { user }) => {
   try {
-    const rate = await withRateLimit(user.userId, 'bulk_test', 2, 5 * 60_000);
+    // Window is fixed at 1 minute by the limiter (the rate_limits PK is
+    // minute-aligned). The previous 4th arg (5 min) was never honored.
+    const rate = await withRateLimit(user.userId, 'bulk_test', 2);
     if (!rate.allowed) {
       return Response.json(
         { error: { message: 'Bulk test rate-limited. Try again in a few minutes.' } },

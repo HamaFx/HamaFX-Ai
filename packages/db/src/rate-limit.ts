@@ -17,7 +17,7 @@
 // Phase B — Postgres-backed per-user rate limiter.
 //
 // Usage in a Next.js route handler:
-//   const allowed = await withRateLimit(user.userId, 'ai_chat', 30, 60_000);
+//   const allowed = await withRateLimit(user.userId, 'ai_chat', 30);
 //   if (!allowed) return new Response('Too Many Requests', { status: 429 });
 //
 // Window is fixed at 1 minute (the rate_limits PK is keyed on a
@@ -52,17 +52,11 @@ export async function withRateLimit(
   userId: string,
   endpointGroup: string,
   limit: number,
-  windowMs = 60_000,
 ): Promise<RateLimitResult> {
   const db = getDb();
-  // Convert ms → seconds for the date_trunc bucket.
-  // 60_000 ms = 1 minute, which is the rate_limits window. We accept
-  // other values but only multiples of 60_000 are honored; for anything
-  // else we fall back to 1 minute.
-  const bucket =
-    windowMs === 60_000
-      ? sql`date_trunc('minute', now())`
-      : sql`date_trunc('minute', now())`;
+  // Fixed 1-minute window — the rate_limits PK is keyed on a minute-aligned
+  // window_start. Longer/shorter windows require a schema change.
+  const bucket = sql`date_trunc('minute', now())`;
 
   // Use the `rate_limits` table via schema export.
   const rows = await db.execute<{ request_count: number }>(sql`
@@ -73,10 +67,14 @@ export async function withRateLimit(
     RETURNING "request_count"
   `);
 
-  // postgres-js / drizzle execute returns rows in `.rows` for tagged
-  // templates (or under different keys depending on driver). Normalize.
-  const rawRows = (rows as unknown as { rows?: Array<{ request_count: number }> }).rows ?? [];
-  const count = rawRows[0]?.request_count ?? 0;
+  // Driver-shape normalization: postgres-js (prod) returns a Result that
+  // *extends Array* (no `.rows`); PGlite (dev/tests) returns `{ rows }`.
+  // Read both shapes or the counter silently reads 0 in production and the
+  // limit never fires. See cost.ts for the same pattern.
+  const rawRows = (
+    Array.isArray(rows) ? rows : ((rows as { rows?: Array<{ request_count: number }> }).rows ?? [])
+  ) as Array<{ request_count: number }>;
+  const count = Number(rawRows[0]?.request_count ?? 0);
 
   return {
     allowed: count <= limit,
