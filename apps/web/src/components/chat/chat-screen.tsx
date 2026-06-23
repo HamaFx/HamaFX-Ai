@@ -44,9 +44,9 @@
 
 import { useChat } from '@ai-sdk/react';
 import { DefaultChatTransport, type UIMessage } from 'ai';
-import { ArrowDown, RotateCcw, Sparkles } from 'lucide-react';
+import { ArrowDown, RotateCcw, Sparkles, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
 import { cn } from '@/lib/cn';
@@ -87,13 +87,16 @@ export function ChatScreen({
   // body builder picks it up. Cleared after the request resolves.
   const modelOverrideRef = useRef<string | null>(null);
 
+  const [showScrollFab, setShowScrollFab] = useState(false);
+  const [dismissedError, setDismissedError] = useState(false);
+  const titleFetchedRef = useRef<Record<string, boolean>>({});
+
   const transport = useMemo(
     () =>
       new DefaultChatTransport({
         api: '/api/chat',
         prepareSendMessagesRequest: ({ messages, id }) => {
           const override = modelOverrideRef.current;
-          modelOverrideRef.current = null;
           const csrf = getCsrfToken();
           const prefsJson = typeof window !== 'undefined' ? window.localStorage.getItem('hamafx:ai-prefs') : null;
           
@@ -122,6 +125,62 @@ export function ChatScreen({
     messages: initialMessages,
   });
 
+  const handleCopy = useCallback((text: string) => {
+    void navigator.clipboard.writeText(text);
+    toast.success('Copied');
+  }, []);
+
+  const handleRegenerate = useCallback((opts?: { modelOverride?: string }) => {
+    if (opts?.modelOverride) modelOverrideRef.current = opts.modelOverride;
+    void regenerate();
+  }, [regenerate]);
+
+  const handleEdit = useCallback(async (messageId: string, newText: string) => {
+    const idx = messages.findIndex((m) => m.id === messageId);
+    if (idx === -1) return;
+    const isLastMessage = idx === messages.length - 1;
+    if (!isLastMessage) {
+      try {
+        const csrf = getCsrfToken();
+        const res = await fetch('/api/chat/threads/fork', {
+          method: 'POST',
+          headers: {
+            'content-type': 'application/json',
+            'x-csrf-token': csrf ?? '',
+          },
+          body: JSON.stringify({
+            sourceThreadId: threadId,
+            atMessageId: messageId,
+            newText,
+          }),
+        });
+        if (!res.ok) {
+          const body = (await res.json().catch(() => null)) as {
+            error?: { message?: string };
+          } | null;
+          throw new Error(
+            body?.error?.message ?? `HTTP ${res.status}`,
+          );
+        }
+        const { threadId: newThreadId } = (await res.json()) as {
+          threadId: string;
+        };
+        toast.success('Forked into a new thread');
+        router.push(`/chat/${newThreadId}`);
+      } catch (err) {
+        toast.error(
+          err instanceof Error
+            ? err.message
+            : 'Could not fork thread',
+        );
+      }
+      return;
+    }
+    const sliced = messages.slice(0, idx);
+    setMessages(sliced);
+    void sendMessage({ text: newText });
+  }, [messages, threadId, router, sendMessage, setMessages]);
+
   const isStreaming = status === 'submitted' || status === 'streaming';
   const isEmpty = messages.length === 0;
 
@@ -146,10 +205,38 @@ export function ChatScreen({
     void sendMessage({ text: autoSubmitPrompt });
   }, [autoSubmitPrompt, threadId, messages.length, isStreaming, sendMessage]);
 
+  // Clear model override only after successful stream ready
+  useEffect(() => {
+    if (status === 'ready' && !error) {
+      modelOverrideRef.current = null;
+    }
+  }, [status, error]);
+
+  // Reset error dismissal when new stream starts
+  useEffect(() => {
+    if (isStreaming) {
+      setDismissedError(false);
+    }
+  }, [isStreaming]);
+
+  // Track scroll position to show/hide the "Scroll to Bottom" FAB
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const handleScroll = () => {
+      const dist = el.scrollHeight - el.scrollTop - el.clientHeight;
+      setShowScrollFab(dist > 240);
+    };
+    el.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll();
+    return () => el.removeEventListener('scroll', handleScroll);
+  }, [messages]);
+
   // After streaming completes, re-fetch thread to pick up the LLM-
   // generated title.
   useEffect(() => {
     if (status !== 'ready' || messages.length < 2) return;
+    if (titleFetchedRef.current[threadId]) return;
     let cancelled = false;
     void (async () => {
       try {
@@ -161,6 +248,7 @@ export function ChatScreen({
         const t = json.thread;
         if (t?.titleSource === 'llm' && t.title && !cancelled) {
           setTitle(t.title);
+          titleFetchedRef.current[threadId] = true;
           if (typeof document !== 'undefined') {
             document.title = `${t.title} · HamaFX-Ai`;
           }
@@ -230,82 +318,15 @@ export function ChatScreen({
             <MessageList
               messages={messages}
               isStreaming={isStreaming}
+              showTypingIndicator={status === 'submitted'}
+              scrollContainerRef={scrollRef}
               {...(lastAssistantId ? { lastAssistantId } : {})}
-              onCopy={(text) => {
-                void navigator.clipboard.writeText(text);
-                toast.success('Copied');
-              }}
-              onRegenerate={(opts) => {
-                if (opts?.modelOverride) modelOverrideRef.current = opts.modelOverride;
-                void regenerate();
-              }}
-              onEdit={async (messageId, newText) => {
-                const idx = messages.findIndex((m) => m.id === messageId);
-                if (idx === -1) return;
-                // Phase C — UX_UPGRADE_PLAN.md item 19.
-                //
-                // Editing a NON-last user message used to silently
-                // truncate the conversation (slicing the array and
-                // streaming a fresh response), which orphaned all
-                // later assistant messages. The conventional AI chat
-                // UX (ChatGPT, Claude) is to FORK: create a new
-                // thread that contains the messages up to and
-                // including the edit, with the user's new text.
-                // The original thread stays as-is for reference.
-                const isLastMessage = idx === messages.length - 1;
-                if (!isLastMessage) {
-                  try {
-                    const csrf = getCsrfToken();
-                    const res = await fetch('/api/chat/threads/fork', {
-                      method: 'POST',
-                      headers: {
-                        'content-type': 'application/json',
-                        'x-csrf-token': csrf ?? '',
-                      },
-                      body: JSON.stringify({
-                        sourceThreadId: threadId,
-                        atMessageId: messageId,
-                        newText,
-                      }),
-                    });
-                    if (!res.ok) {
-                      const body = (await res.json().catch(() => null)) as {
-                        error?: { message?: string };
-                      } | null;
-                      throw new Error(
-                        body?.error?.message ?? `HTTP ${res.status}`,
-                      );
-                    }
-                    const { threadId: newThreadId } = (await res.json()) as {
-                      threadId: string;
-                    };
-                    toast.success('Forked into a new thread');
-                    // Navigate to the new thread. We don't try to
-                    // stream the response from the fork — the user
-                    // can send their message once they're on the
-                    // new thread. (ChatGPT does the same: the
-                    // edit-submit-on-fork step is two clicks.)
-                    router.push(`/chat/${newThreadId}`);
-                  } catch (err) {
-                    toast.error(
-                      err instanceof Error
-                        ? err.message
-                        : 'Could not fork thread',
-                    );
-                  }
-                  return;
-                }
-                // Last message: legacy in-place behavior. The
-                // composer takes care of persisting the new text;
-                // here we just slice to before the edit point and
-                // stream the new message.
-                const sliced = messages.slice(0, idx);
-                setMessages(sliced);
-                void sendMessage({ text: newText });
-              }}
+              onCopy={handleCopy}
+              onRegenerate={handleRegenerate}
+              onEdit={handleEdit}
             />
           )}
-          {error ? (
+          {error && !dismissedError ? (
             <div
               role="alert"
               className={cn(
@@ -313,32 +334,44 @@ export function ChatScreen({
               )}
             >
               <span className="line-clamp-2 flex-1">{error.message}</span>
-              <button
-                type="button"
-                onClick={() => {
-                  if (lastUserTextRef.current) {
-                    void sendMessage({ text: lastUserTextRef.current });
-                  }
-                }}
-                aria-label="Retry"
-                className="bg-bear/20 hover:bg-bear/30 ring-bear/30 inline-flex shrink-0 items-center gap-1 rounded-lg px-3 py-1.5 text-body-sm font-medium ring-1"
-              >
-                <RotateCcw className="size-3.5" /> Retry
-              </button>
+              <div className="flex items-center gap-1.5 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (lastUserTextRef.current) {
+                      void sendMessage({ text: lastUserTextRef.current });
+                    }
+                  }}
+                  aria-label="Retry"
+                  className="bg-bear/20 hover:bg-bear/30 ring-bear/30 inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-body-sm font-medium ring-1"
+                >
+                  <RotateCcw className="size-3.5" /> Retry
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setDismissedError(true)}
+                  aria-label="Dismiss error"
+                  className="hover:bg-bear/10 text-bear/80 hover:text-bear inline-flex size-7 items-center justify-center rounded-lg transition-colors"
+                >
+                  <X className="size-4" />
+                </button>
+              </div>
             </div>
           ) : null}
         </div>
 
-        <button
-          type="button"
-          onClick={scrollToBottom}
-          aria-label="Scroll to latest"
-          className="scroll-fab glass-strong text-fg fixed left-1/2 z-30 inline-flex h-11 -translate-x-1/2 items-center gap-1.5 rounded-full px-4 text-body-sm font-medium"
-          style={{ bottom: 'calc(env(safe-area-inset-bottom) + 96px)' }}
-        >
-          <ArrowDown className="size-3.5" />
-          Latest
-        </button>
+        {showScrollFab && (
+          <button
+            type="button"
+            onClick={scrollToBottom}
+            aria-label="Scroll to latest"
+            className="scroll-fab glass-strong text-fg fixed left-1/2 z-30 inline-flex h-11 -translate-x-1/2 items-center gap-1.5 rounded-full px-4 text-body-sm font-medium transition-all"
+            style={{ bottom: 'calc(env(safe-area-inset-bottom) + 96px)' }}
+          >
+            <ArrowDown className="size-3.5" />
+            Latest
+          </button>
+        )}
       </div>
 
       <div className="mx-auto w-full max-w-2xl">
@@ -361,7 +394,7 @@ export function ChatScreen({
           }}
           onStop={() => stop()}
           isStreaming={isStreaming}
-          disabled={false}
+          disabled={isStreaming}
           placeholder={pinnedSymbol ? `Ask about ${pinnedSymbol}…` : 'Ask about XAU, EUR, GBP…'}
         />
       </div>

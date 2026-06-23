@@ -47,7 +47,7 @@ export function TopBar({ title, right }: TopBarProps) {
 
   // Chat brings its own top bar (ChatTopBar). Returning null here is the
   // simplest way to suppress the global one without restructuring routes.
-  if (pathname.startsWith('/chat')) return null;
+  if (pathname === '/chat' || pathname.startsWith('/chat/')) return null;
 
   return (
     <header

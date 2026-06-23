@@ -22,7 +22,7 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: 'HamaFX-Ai',
     short_name: 'HamaFX',
-    description: 'Personal AI trading copilot for XAUUSD, EURUSD, GBPUSD.',
+    description: 'AI trading copilot for forex & commodities',
     start_url: '/chat',
     display: 'standalone',
     orientation: 'portrait',

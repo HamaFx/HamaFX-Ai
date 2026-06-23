@@ -56,7 +56,7 @@ export const metadata = {
 export default async function ModelsSettingsPage() {
   const session = await auth();
   if (!session?.user?.id) {
-    redirect('/auth/login');
+    redirect('/login');
   }
 
   const catalog = await buildCatalogForUser(session.user.id);

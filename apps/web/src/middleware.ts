@@ -54,15 +54,19 @@ export default auth((req) => {
   }
 
   // ── CSRF double-submit cookie (state-changing /api/*) ───────────
-  let csrfToken = req.cookies.get('hfx_csrf')?.value;
+  const cookieToken = req.cookies.get('hfx_csrf')?.value;
+  let csrfToken = cookieToken;
   if (!csrfToken) {
     csrfToken = crypto.randomUUID();
   }
   const isStateChanging = ['POST', 'PUT', 'DELETE', 'PATCH'].includes(req.method);
   if (isStateChanging && req.nextUrl.pathname.startsWith('/api/')) {
-    const headerToken = req.headers.get('x-csrf-token');
-    if (!headerToken || headerToken !== csrfToken) {
-      return new NextResponse('Forbidden - CSRF token missing or invalid', { status: 403 });
+    // Only validate if a CSRF cookie was already established on the client
+    if (cookieToken) {
+      const headerToken = req.headers.get('x-csrf-token');
+      if (!headerToken || headerToken !== cookieToken) {
+        return new NextResponse('Forbidden - CSRF token missing or invalid', { status: 403 });
+      }
     }
   }
 

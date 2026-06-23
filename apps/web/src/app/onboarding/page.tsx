@@ -25,7 +25,7 @@ import { OnboardingWizard } from '@/components/onboarding/wizard';
 export default async function OnboardingPage() {
   const session = await auth();
   if (!session?.user?.id) {
-    redirect('/auth/login');
+    redirect('/login');
   }
 
   const db = getDb();

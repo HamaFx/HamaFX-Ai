@@ -27,7 +27,7 @@ import {
   type NewsSentiment,
   type SymbolOrCurrencyTag,
 } from '@hamafx/shared';
-import { and, asc, desc, eq, gte, isNull, lte, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, gte, ilike, isNull, lte, or, sql } from 'drizzle-orm';
 
 import { embedTexts } from './embeddings';
 
@@ -71,12 +71,60 @@ export async function upsertArticles(
  * Read recent articles for the /news page. Server-only — pages call this
  * from `getServerSideProps`-style server components.
  */
-export async function listRecentArticles(limit = 50): Promise<NewsArticle[]> {
-  const rows = await getDb()
+export async function listRecentArticles(
+  limit = 50,
+  offset = 0,
+  filters?: {
+    sentiment?: string;
+    symbol?: string;
+    query?: string;
+  }
+): Promise<NewsArticle[]> {
+  const db = getDb();
+  const selectQuery = db
     .select()
-    .from(schema.newsArticles)
+    .from(schema.newsArticles);
+
+  const conditions = [];
+
+  if (filters?.sentiment && filters.sentiment !== 'all') {
+    if (filters.sentiment === 'neutral') {
+      conditions.push(
+        or(
+          eq(schema.newsArticles.sentiment, 'neutral'),
+          isNull(schema.newsArticles.sentiment)
+        )
+      );
+    } else {
+      conditions.push(eq(schema.newsArticles.sentiment, filters.sentiment));
+    }
+  }
+
+  if (filters?.symbol && filters.symbol !== 'all') {
+    conditions.push(sql`${schema.newsArticles.symbols} @> ARRAY[${filters.symbol}]::text[]`);
+  }
+
+  if (filters?.query) {
+    const q = `%${filters.query}%`;
+    conditions.push(
+      or(
+        ilike(schema.newsArticles.title, q),
+        ilike(schema.newsArticles.summary, q),
+        ilike(schema.newsArticles.publisher, q),
+        ilike(schema.newsArticles.source, q)
+      )
+    );
+  }
+
+  if (conditions.length > 0) {
+    selectQuery.where(and(...conditions));
+  }
+
+  const rows = await selectQuery
     .orderBy(desc(schema.newsArticles.publishedAt))
-    .limit(limit);
+    .limit(limit)
+    .offset(offset);
+
   return rows.map(rowToNewsArticle);
 }
 

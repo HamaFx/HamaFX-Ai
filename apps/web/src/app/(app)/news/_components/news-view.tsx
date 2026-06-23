@@ -32,14 +32,17 @@
 
 import type { NewsArticle, SymbolOrCurrencyTag } from '@hamafx/shared';
 import { Bookmark, BookmarkCheck, RotateCw } from 'lucide-react';
-import { useEffect, useMemo, useState, useTransition } from 'react';
+import { useEffect, useMemo, useState, useTransition, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
+import { useInfiniteQuery } from '@tanstack/react-query';
+import { useQueryState } from 'nuqs';
 
 import { ArticleCard } from '@/components/news/article-card';
 import { useBookmarks } from '@/components/news/use-bookmarks';
 import { EmptyState } from '@/components/ui/empty-state';
 import { cn } from '@/lib/cn';
+import { formatRelative } from '@/lib/format';
 
 import { NewsToolbar, type SentimentFilter, type SymbolFilter } from './news-toolbar';
 
@@ -52,12 +55,41 @@ const AUTO_REFRESH_MS = 5 * 60_000;
 export function NewsView({ initialArticles }: NewsViewProps) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
-  const [query, setQuery] = useState('');
-  const [sentiment, setSentiment] = useState<SentimentFilter>('all');
-  const [symbol, setSymbol] = useState<SymbolFilter>('all');
+  const [query, setQuery] = useQueryState('q', { defaultValue: '' });
+  const [sentiment, setSentiment] = useQueryState('sentiment', { defaultValue: 'all' }) as [SentimentFilter, (val: SentimentFilter) => void];
+  const [symbol, setSymbol] = useQueryState('symbol', { defaultValue: 'all' }) as [SymbolFilter, (val: SymbolFilter) => void];
   const [savedOnly, setSavedOnly] = useState(false);
   const [lastRefreshed, setLastRefreshed] = useState(Date.now());
   const { count: savedCount, list: savedIds } = useBookmarks();
+
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage } = useInfiniteQuery({
+    queryKey: ['news', { sentiment, symbol, query }] as const,
+    queryFn: async ({ pageParam = 0 }) => {
+      const params = new URLSearchParams();
+      params.set('offset', String(pageParam));
+      params.set('limit', '20');
+      if (sentiment && sentiment !== 'all') params.set('sentiment', sentiment);
+      if (symbol && symbol !== 'all') params.set('symbol', symbol);
+      if (query) params.set('q', query);
+
+      const r = await fetch(`/api/news?${params.toString()}`);
+      if (!r.ok) throw new Error('Failed to fetch news');
+      return r.json() as Promise<{ items: NewsArticle[]; hasMore: boolean; nextOffset: number }>;
+    },
+    getNextPageParam: (last: { hasMore: boolean; nextOffset: number }) => last.hasMore ? last.nextOffset : undefined,
+    initialPageParam: 0,
+    ...((sentiment === 'all' && symbol === 'all' && !query) ? {
+      initialData: {
+        pages: [{ items: initialArticles, hasMore: initialArticles.length >= 120, nextOffset: initialArticles.length }],
+        pageParams: [0]
+      }
+    } : {}),
+  });
+
+  const allArticles = useMemo(() => {
+    if (!data) return initialArticles;
+    return data.pages.flatMap((page) => page.items);
+  }, [data, initialArticles]);
 
   // Auto-refresh every 5 minutes (the cron usually runs faster than this
   // upstream, but a soft visual heartbeat keeps the page feeling alive).
@@ -90,7 +122,7 @@ export function NewsView({ initialArticles }: NewsViewProps) {
   // Distinct tags actually present in the loaded set, sorted by frequency.
   const symbolOptions = useMemo(() => {
     const counts = new Map<SymbolOrCurrencyTag, number>();
-    for (const a of initialArticles) {
+    for (const a of allArticles) {
       for (const s of a.symbols) {
         counts.set(s, (counts.get(s) ?? 0) + 1);
       }
@@ -98,31 +130,33 @@ export function NewsView({ initialArticles }: NewsViewProps) {
     return [...counts.entries()]
       .sort((a, b) => b[1] - a[1])
       .map(([tag]) => tag);
-  }, [initialArticles]);
+  }, [allArticles]);
 
-  // Apply filters in priority order: savedOnly → search → sentiment → symbol.
   const filtered = useMemo(() => {
     const savedSet = new Set(savedIds);
-    const q = query.trim().toLowerCase();
-    return initialArticles.filter((a) => {
+    return allArticles.filter((a) => {
       if (savedOnly && !savedSet.has(a.id)) return false;
-      if (sentiment !== 'all') {
-        if (sentiment === 'neutral') {
-          if (a.sentiment !== 'neutral' && a.sentiment !== null) return false;
-        } else if (a.sentiment !== sentiment) return false;
-      }
-      if (symbol !== 'all') {
-        if (!a.symbols.includes(symbol)) return false;
-      }
-      if (q) {
-        const haystack = `${a.title} ${a.summary ?? ''} ${a.publisher ?? a.source}`.toLowerCase();
-        if (!haystack.includes(q)) return false;
-      }
       return true;
     });
-  }, [initialArticles, sentiment, symbol, query, savedOnly, savedIds]);
+  }, [allArticles, savedOnly, savedIds]);
 
   const buckets = useMemo(() => bucketByTime(filtered), [filtered]);
+
+  const sentinelRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting && hasNextPage && !isFetchingNextPage) {
+          fetchNextPage();
+        }
+      },
+      { rootMargin: '200px' }
+    );
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
 
   return (
     <div className="flex flex-col gap-4">
@@ -135,7 +169,7 @@ export function NewsView({ initialArticles }: NewsViewProps) {
         onSymbol={setSymbol}
         symbolOptions={symbolOptions}
         visibleCount={filtered.length}
-        totalCount={initialArticles.length}
+        totalCount={allArticles.length}
       />
 
       {/* Saved-only toggle + manual refresh row */}
@@ -200,6 +234,12 @@ export function NewsView({ initialArticles }: NewsViewProps) {
               </ul>
             </section>
           ))}
+          {/* Infinite scroll sentinel */}
+          <div ref={sentinelRef} className="h-10 flex items-center justify-center">
+            {isFetchingNextPage && (
+              <span className="text-xs text-fg-muted">Loading more articles...</span>
+            )}
+          </div>
         </div>
       )}
     </div>
@@ -247,13 +287,4 @@ function startOfDay(ms: number): number {
   const d = new Date(ms);
   d.setHours(0, 0, 0, 0);
   return d.getTime();
-}
-
-function formatRelative(ms: number): string {
-  const diff = Date.now() - ms;
-  const min = Math.round(diff / 60_000);
-  if (min < 1) return 'just now';
-  if (min < 60) return `${min}m ago`;
-  const hr = Math.round(min / 60);
-  return `${hr}h ago`;
 }

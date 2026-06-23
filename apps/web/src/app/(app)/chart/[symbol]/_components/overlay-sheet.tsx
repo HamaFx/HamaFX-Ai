@@ -33,22 +33,7 @@ import {
 } from '@/components/ui/drawer';
 import { Tooltip } from '@/components/ui/tooltip';
 import { cn } from '@/lib/cn';
-
-const ALL_KINDS = ['swings', 'bos_choch', 'fvg', 'order_blocks', 'liquidity'] as const;
-const LABEL: Record<StructureKind, string> = {
-  swings: 'Swings',
-  bos_choch: 'BOS / CHoCH',
-  fvg: 'Fair Value Gaps',
-  order_blocks: 'Order Blocks',
-  liquidity: 'Liquidity sweeps',
-};
-const HINT: Record<StructureKind, string> = {
-  swings: 'Local pivot highs/lows',
-  bos_choch: 'Break of structure / change of character',
-  fvg: '3-bar imbalance zones',
-  order_blocks: 'Last opposing candle before impulse',
-  liquidity: 'Wick spike + close-back-inside',
-};
+import { ALL_KINDS, FULL_LABEL as LABEL, HINT } from '@/components/chart/overlay-constants';
 
 interface OverlaySheetProps {
   active: readonly StructureKind[];

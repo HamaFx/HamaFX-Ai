@@ -87,58 +87,73 @@ export function TradingViewWidget({ symbol, tf }: TradingViewWidgetProps) {
   const containerId = `tv-${symbol}-${tf}`;
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [loadFailed, setLoadFailed] = useState(false);
+  const [scriptLoaded, setScriptLoaded] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
-    const start = Date.now();
 
-    const tryInit = () => {
-      if (cancelled) return;
-      const tv = typeof window !== 'undefined' ? window.TradingView : undefined;
-      if (tv) {
-        try {
-          new tv.widget({
-            container_id: containerId,
-            symbol: SYMBOL_TO_TV[symbol],
-            interval: TF_TO_TV_INTERVAL[tf],
-            theme: 'dark',
-            timezone: 'Etc/UTC',
-            locale: 'en',
-            style: '1',
-            enable_publishing: false,
-            hide_top_toolbar: false,
-            hide_legend: false,
-            withdateranges: true,
-            allow_symbol_change: false,
-            autosize: true,
-          });
-        } catch (err) {
-          console.warn('[pro-chart] TradingView widget construct failed', err);
-          setLoadFailed(true);
-        }
-        return;
-      }
-      if (Date.now() - start > LOAD_TIMEOUT_MS) {
+    const tv = typeof window !== 'undefined' ? window.TradingView : undefined;
+    if (tv) {
+      initWidget(tv);
+      return;
+    }
+
+    if (loadFailed) return;
+
+    if (scriptLoaded) {
+      const tvNew = typeof window !== 'undefined' ? window.TradingView : undefined;
+      if (tvNew) {
+        initWidget(tvNew);
+      } else {
         setLoadFailed(true);
-        return;
       }
-      setTimeout(tryInit, 250);
-    };
-    tryInit();
+      return;
+    }
 
+    const timer = setTimeout(() => {
+      const tvCheck = typeof window !== 'undefined' ? window.TradingView : undefined;
+      if (!cancelled && !tvCheck) {
+        setLoadFailed(true);
+      }
+    }, LOAD_TIMEOUT_MS);
+
+    function initWidget(tv: TradingViewGlobal) {
+      try {
+        new tv.widget({
+          container_id: containerId,
+          symbol: SYMBOL_TO_TV[symbol],
+          interval: TF_TO_TV_INTERVAL[tf],
+          theme: 'dark',
+          timezone: 'Etc/UTC',
+          locale: 'en',
+          style: '1',
+          enable_publishing: false,
+          hide_top_toolbar: false,
+          hide_legend: false,
+          withdateranges: true,
+          allow_symbol_change: false,
+          autosize: true,
+        });
+      } catch (err) {
+        console.warn('[pro-chart] TradingView widget construct failed', err);
+        setLoadFailed(true);
+      }
+    }
+
+    const currentContainer = containerRef.current;
     return () => {
       cancelled = true;
-      // eslint-disable-next-line react-hooks/exhaustive-deps -- ref pointer is fine to read at cleanup time
-      const node = containerRef.current;
-      if (node) node.innerHTML = '';
+      clearTimeout(timer);
+      if (currentContainer) currentContainer.innerHTML = '';
     };
-  }, [containerId, symbol, tf]);
+  }, [containerId, symbol, tf, scriptLoaded, loadFailed]);
 
   return (
     <>
       <Script
         src="https://s3.tradingview.com/tv.js"
         strategy="afterInteractive"
+        onLoad={() => setScriptLoaded(true)}
         onError={() => setLoadFailed(true)}
       />
       {loadFailed ? (

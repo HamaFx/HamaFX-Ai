@@ -172,8 +172,19 @@ export function CommandPalette({ onNewChat }: CommandPaletteProps) {
 
   // Clamp activeIdx when the result set changes.
   useEffect(() => {
-    if (activeIdx >= flatRows.length) setActiveIdx(0);
+    if (flatRows.length > 0 && activeIdx >= flatRows.length) {
+      setActiveIdx(0);
+    }
   }, [flatRows.length, activeIdx]);
+
+  // Scroll active item into view when activeIdx changes.
+  useEffect(() => {
+    if (!open) return;
+    const activeEl = document.querySelector(`[data-command-idx="${activeIdx}"]`);
+    if (activeEl) {
+      activeEl.scrollIntoView({ block: 'nearest' });
+    }
+  }, [activeIdx, open]);
 
   function onInputKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
     if (e.key === 'ArrowDown') {
@@ -258,6 +269,7 @@ export function CommandPalette({ onNewChat }: CommandPaletteProps) {
                           <li key={command.id}>
                             <button
                               type="button"
+                              data-command-idx={flatIndex}
                               onClick={() => runCommand(command)}
                               onMouseEnter={() => setActiveIdx(flatIndex)}
                               className={cn(
@@ -329,7 +341,7 @@ function HighlightedLabel({ label, indices }: { label: string; indices: number[]
         </mark>,
       );
     } else {
-      out.push(ch);
+      out.push(<span key={i}>{ch}</span>);
     }
   }
   return <>{out}</>;

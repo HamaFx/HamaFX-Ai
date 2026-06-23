@@ -31,9 +31,9 @@
 
 import { type Symbol } from '@hamafx/shared';
 import { Clock, Sparkles, TrendingUp } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { toast } from 'sonner';
-
+import { useLocalStorage } from '@/hooks/use-local-storage';
 import { Segmented } from '@/components/ui/segmented';
 import { Switch } from '@/components/ui/switch';
 
@@ -53,55 +53,18 @@ const DEFAULTS: Prefs = {
   reduceMotion: false,
 };
 
-function read(): Prefs {
-  if (typeof window === 'undefined') return DEFAULTS;
-  try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) return DEFAULTS;
-    const parsed = JSON.parse(raw) as Partial<Prefs>;
-    return {
-      defaultSymbol:
-        parsed.defaultSymbol === 'XAUUSD' ||
-        parsed.defaultSymbol === 'EURUSD' ||
-        parsed.defaultSymbol === 'GBPUSD'
-          ? parsed.defaultSymbol
-          : DEFAULTS.defaultSymbol,
-      timeFormat: parsed.timeFormat === '12h' ? '12h' : '24h',
-      reduceMotion: parsed.reduceMotion === true,
-    };
-  } catch {
-    return DEFAULTS;
-  }
-}
-
-function write(prefs: Prefs) {
-  if (typeof window === 'undefined') return;
-  try {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(prefs));
-    // Apply the reduce-motion override immediately by toggling a body
-    // attribute that the global CSS can read.
-    document.documentElement.dataset.reduceMotion = prefs.reduceMotion ? 'force' : 'auto';
-  } catch {
-    /* quota */
-  }
-}
-
 export function PreferencesCard() {
-  const [prefs, setPrefs] = useState<Prefs>(DEFAULTS);
-  const [hydrated, setHydrated] = useState(false);
+  const [prefs, setPrefs, hydrated] = useLocalStorage<Prefs>(STORAGE_KEY, DEFAULTS);
 
+  // Apply on mount and updates so a hard refresh and cross-tab sync respect the saved value.
   useEffect(() => {
-    const initial = read();
-    setPrefs(initial);
-    setHydrated(true);
-    // Apply on mount so a hard refresh respects the saved value.
-    document.documentElement.dataset.reduceMotion = initial.reduceMotion ? 'force' : 'auto';
-  }, []);
+    if (hydrated) {
+      document.documentElement.dataset.reduceMotion = prefs.reduceMotion ? 'force' : 'auto';
+    }
+  }, [prefs.reduceMotion, hydrated]);
 
   function update<K extends keyof Prefs>(key: K, value: Prefs[K]) {
-    const next = { ...prefs, [key]: value };
-    setPrefs(next);
-    write(next);
+    setPrefs((prev) => ({ ...prev, [key]: value }));
   }
 
   return (

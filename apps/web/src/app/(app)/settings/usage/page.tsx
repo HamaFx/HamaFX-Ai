@@ -21,9 +21,13 @@
 import { computeUsage, listTelemetry, type DayBucket, type UsageStats } from '@hamafx/ai';
 import { auth } from '@/auth';
 import type { Metadata } from 'next';
+import { Link } from 'next-view-transitions';
+import { BarChart3 } from 'lucide-react';
 
+import { EmptyState } from '@/components/ui/empty-state';
 import { cn } from '@/lib/cn';
 import { getServerEnv } from '@/lib/env';
+import { formatRelative } from '@/lib/format';
 
 export const metadata: Metadata = { title: 'Usage' };
 export const dynamic = 'force-dynamic';
@@ -46,8 +50,29 @@ export default async function UsagePage() {
     listTelemetry(session.user.id, 20)
   ]);
 
+  if (stats.thirtyDayTurns === 0) {
+    return (
+      <div className="flex flex-col gap-4">
+        <EmptyState
+          icon={<BarChart3 className="size-6" />}
+          title="No usage recorded yet"
+          description="Start interacting with the AI to see token usage, spend, and cost analysis here."
+          action={
+            <Link
+              href="/chat"
+              className="bg-brand text-brand-fg inline-flex h-9 items-center rounded-md px-3 text-sm font-medium hover:opacity-90"
+            >
+              Start chatting
+            </Link>
+          }
+        />
+      </div>
+    );
+  }
+
   return (
-    <div className="flex flex-col gap-4">      <BudgetCard stats={stats} maxDailyUsd={maxDailyUsd} />
+    <div className="flex flex-col gap-4">
+      <BudgetCard stats={stats} maxDailyUsd={maxDailyUsd} />
 
       <DailyChart daily7={stats.daily7} />
 
@@ -114,7 +139,11 @@ function Stat({ label, value }: { label: string; value: string | number }) {
 // ---------------------------------------------------------------------------
 
 function DailyChart({ daily7 }: { daily7: DayBucket[] }) {
-  const max = Math.max(0.0001, ...daily7.map((d) => d.costUsd));
+  const activeDays = daily7.filter((d) => d.costUsd > 0 || d.turns > 0);
+  if (activeDays.length === 0) {
+    return null;
+  }
+  const max = Math.max(0.0001, ...activeDays.map((d) => d.costUsd));
 
   return (
     <section
@@ -125,7 +154,7 @@ function DailyChart({ daily7 }: { daily7: DayBucket[] }) {
         Last 7 days
       </h2>
       <ul className="flex flex-col gap-1.5">
-        {daily7.map((d) => {
+        {activeDays.map((d) => {
           const pct = Math.max(1, (d.costUsd / max) * 100);
           return (
             <li
@@ -253,13 +282,3 @@ function RecentTurnsCard({ rows }: { rows: Awaited<ReturnType<typeof listTelemet
   );
 }
 
-function formatRelative(ms: number): string {
-  const diff = Date.now() - ms;
-  const min = Math.round(diff / 60_000);
-  if (min < 1) return 'just now';
-  if (min < 60) return `${min}m ago`;
-  const hr = Math.round(min / 60);
-  if (hr < 24) return `${hr}h ago`;
-  const day = Math.round(hr / 24);
-  return `${day}d ago`;
-}

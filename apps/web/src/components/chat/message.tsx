@@ -35,10 +35,12 @@
 
 import type { UIMessage } from 'ai';
 import { Check, ChevronDown, Copy, Pencil, RotateCcw } from 'lucide-react';
-import { useState } from 'react';
+import { memo, useEffect, useMemo, useState } from 'react';
+import { useCopied } from '@/hooks/use-copied';
 
 import { Tooltip } from '@/components/ui/tooltip';
 import { cn } from '@/lib/cn';
+import { MAX_TEXT_CHARS } from './composer-helpers';
 
 import { CitationWarningPartView } from './parts/citation-warning';
 import { FallbackPartView } from './parts/fallback';
@@ -63,13 +65,36 @@ interface MessageProps {
  */
 import { RegenModelPicker } from './_components/regen-model-picker';
 
-export function Message({ message, onCopy, onRegenerate, onEdit }: MessageProps) {
+function MessageImpl({ message, onCopy, onRegenerate, onEdit }: MessageProps) {
   const isUser = message.role === 'user';
   const isSystem = message.role === 'system';
-  const plainText = extractText(message);
-  const [copied, setCopied] = useState(false);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const plainText = useMemo(() => extractText(message), [message.parts]);
+  const [copied, triggerCopy] = useCopied(1200);
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(plainText);
+  const [hasPopoverSupport, setHasPopoverSupport] = useState(true);
+  const [isOpenFallback, setIsOpenFallback] = useState(false);
+
+  useEffect(() => {
+    setHasPopoverSupport(
+      typeof HTMLElement !== 'undefined' && 'popover' in HTMLElement.prototype
+    );
+  }, []);
+
+  useEffect(() => {
+    if (hasPopoverSupport || !isOpenFallback) return;
+    const handleOutsideClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      const insideMenu = target.closest(`#regen-menu-${message.id}`);
+      const insideBtn = target.closest(`button[aria-label="Regenerate with a different model"]`);
+      if (!insideMenu && !insideBtn) {
+        setIsOpenFallback(false);
+      }
+    };
+    document.addEventListener('click', handleOutsideClick);
+    return () => document.removeEventListener('click', handleOutsideClick);
+  }, [hasPopoverSupport, isOpenFallback, message.id]);
 
   // Phase 7c — system messages: render planner cards but suppress
   // anything else (rolling-summary notes are internal context only).
@@ -100,8 +125,7 @@ export function Message({ message, onCopy, onRegenerate, onEdit }: MessageProps)
     if (!plainText) return;
     void navigator.clipboard.writeText(plainText);
     onCopy?.(plainText);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1200);
+    triggerCopy();
   }
 
   if (isUser && isEditing) {
@@ -112,6 +136,7 @@ export function Message({ message, onCopy, onRegenerate, onEdit }: MessageProps)
             className="w-full resize-none bg-transparent text-sm text-fg outline-none [field-sizing:content]"
             value={editValue}
             onChange={(e) => setEditValue(e.target.value)}
+            maxLength={MAX_TEXT_CHARS}
             autoFocus
           />
           <div className="mt-1 flex justify-end gap-2">
@@ -166,8 +191,7 @@ export function Message({ message, onCopy, onRegenerate, onEdit }: MessageProps)
         <div
           className={cn(
             'mr-2 flex items-center gap-1 transition-opacity duration-150',
-            'opacity-0 group-hover:opacity-100 focus-within:opacity-100',
-            'sm:opacity-0', // re-assert in case base opacity was bumped
+            'opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:focus-within:opacity-100',
           )}
         >
           {plainText.length > 0 ? (
@@ -216,31 +240,47 @@ export function Message({ message, onCopy, onRegenerate, onEdit }: MessageProps)
               <Tooltip label="Regenerate with…">
                 <button
                   type="button"
-                  popoverTarget={`regen-menu-${message.id}`}
+                  popoverTarget={hasPopoverSupport ? `regen-menu-${message.id}` : undefined}
+                  onClick={hasPopoverSupport ? undefined : () => setIsOpenFallback(!isOpenFallback)}
                   aria-label="Regenerate with a different model"
                   className="bg-bg-elev-1 border border-divider text-fg-muted hover:text-fg focus-visible:ring-brand inline-flex size-8 items-center justify-center rounded-r-lg border-l border-divider/40 transition-colors focus:outline-none focus-visible:ring-2"
-                  style={{ anchorName: `--regen-btn-${message.id}` } as React.CSSProperties}
+                  style={
+                    hasPopoverSupport
+                      ? ({ anchorName: `--regen-btn-${message.id}` } as React.CSSProperties)
+                      : undefined
+                  }
                 >
                   <ChevronDown className="size-3.5" />
                 </button>
               </Tooltip>
               <div
                 id={`regen-menu-${message.id}`}
-                popover="auto"
+                popover={hasPopoverSupport ? "auto" : undefined}
                 role="menu"
-                className="bg-bg-elev-1 border border-divider border-divider/60 m-0 rounded-xl border p-1 shadow-xl"
-                style={{ 
-                  minWidth: '12rem',
-                  positionAnchor: `--regen-btn-${message.id}`,
-                  bottom: 'calc(anchor(top) + 8px)',
-                  right: 'anchor(right)',
-                  position: 'fixed'
-                } as React.CSSProperties}
+                className={cn(
+                  "bg-bg-elev-1 border border-divider border-divider/60 m-0 rounded-xl border p-1 shadow-xl",
+                  !hasPopoverSupport && "absolute bottom-full right-0 mb-2 z-50",
+                  !hasPopoverSupport && !isOpenFallback && "hidden"
+                )}
+                style={
+                  hasPopoverSupport
+                    ? ({ 
+                        minWidth: '12rem',
+                        positionAnchor: `--regen-btn-${message.id}`,
+                        bottom: 'calc(anchor(top) + 8px)',
+                        right: 'anchor(right)',
+                        position: 'fixed'
+                      } as React.CSSProperties)
+                    : { minWidth: '12rem' }
+                }
               >
                 <RegenModelPicker
                   popoverId={`regen-menu-${message.id}`}
-                  activeModelId={null}
-                  onPick={(modelId) => onRegenerate({ modelOverride: modelId })}
+                  activeModelId={(message as unknown as { metadata?: { model?: string } }).metadata?.model ?? null}
+                  onPick={(modelId) => {
+                    onRegenerate({ modelOverride: modelId });
+                    setIsOpenFallback(false);
+                  }}
                 />
               </div>
             </div>
@@ -250,6 +290,23 @@ export function Message({ message, onCopy, onRegenerate, onEdit }: MessageProps)
     </div>
   );
 }
+
+export const Message = memo(MessageImpl, (prev, next) => {
+  if (prev.message.id !== next.message.id) return false;
+  if (prev.onRegenerate !== next.onRegenerate) return false;
+  if (prev.onEdit !== next.onEdit) return false;
+  if (prev.onCopy !== next.onCopy) return false;
+  
+  // Compare parts array
+  if (prev.message.parts !== next.message.parts) {
+    if (!prev.message.parts || !next.message.parts) return false;
+    if (prev.message.parts.length !== next.message.parts.length) return false;
+    for (let i = 0; i < prev.message.parts.length; i++) {
+      if (prev.message.parts[i] !== next.message.parts[i]) return false;
+    }
+  }
+  return true;
+});
 
 /** AI SDK v5 streamed tool-part state vocabulary. */
 type StreamToolState =

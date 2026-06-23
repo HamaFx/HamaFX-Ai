@@ -32,7 +32,8 @@ export const dynamic = 'force-dynamic';
 
 export default function SettingsPage() {
   return (
-    <div className="flex flex-col gap-4">      <SystemStatusCard />
+    <div className="flex flex-col gap-4">
+      <SystemStatusCard />
       <UsageGlance />
       <AgentCard />
       <AIPrefsCard />

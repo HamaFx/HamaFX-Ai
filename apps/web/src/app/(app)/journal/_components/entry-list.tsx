@@ -21,7 +21,8 @@
 
 import type { JournalEntry, Symbol, TradeSide } from '@hamafx/shared';
 import { Trash2, Search, SlidersHorizontal, ArrowUpRight, ArrowDownRight, Compass, Play } from 'lucide-react';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef } from 'react';
+import { useVirtualizer } from '@tanstack/react-virtual';
 
 import { Button } from '@/components/ui/button';
 import { useConfirm } from '@/components/ui/confirm-drawer';
@@ -91,6 +92,14 @@ export function EntryList({ entries, onClosed, onDeleted }: EntryListProps) {
       return true;
     });
   }, [tabEntries, symbolFilter, sideFilter, search]);
+
+  const parentRef = useRef<HTMLDivElement>(null);
+  const virtualizer = useVirtualizer({
+    count: filteredEntries.length,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => 120,
+    overscan: 5,
+  });
 
   const activeCount = entries.filter((e) => e.outcome === 'open').length;
   const closedCount = entries.filter((e) => e.outcome !== 'open').length;
@@ -216,18 +225,47 @@ export function EntryList({ entries, onClosed, onDeleted }: EntryListProps) {
           </p>
         </div>
       ) : (
-        <ul className="flex flex-col gap-3.5">
-          {filteredEntries.map((e) => (
-            <EntryRow
-              key={e.id}
-              entry={e}
-              livePrice={priceMap.get(e.symbol)}
-              onClosed={onClosed}
-              onDeleted={onDeleted}
-              confirm={confirm}
-            />
-          ))}
-        </ul>
+        <div
+          ref={parentRef}
+          className="scrollbar-thin scrollbar-thumb-divider overflow-y-auto pr-1"
+          style={{ maxHeight: '750px' }}
+        >
+          <div
+            style={{
+              height: `${virtualizer.getTotalSize()}px`,
+              width: '100%',
+              position: 'relative',
+            }}
+          >
+            {virtualizer.getVirtualItems().map((item) => {
+              const e = filteredEntries[item.index];
+              if (!e) return null;
+              return (
+                <div
+                  key={item.key}
+                  data-index={item.index}
+                  ref={virtualizer.measureElement}
+                  style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    width: '100%',
+                    transform: `translateY(${item.start}px)`,
+                  }}
+                  className="py-1.5"
+                >
+                  <EntryRow
+                    entry={e}
+                    livePrice={priceMap.get(e.symbol)}
+                    onClosed={onClosed}
+                    onDeleted={onDeleted}
+                    confirm={confirm}
+                  />
+                </div>
+              );
+            })}
+          </div>
+        </div>
       )}
       {confirmEl}
     </div>

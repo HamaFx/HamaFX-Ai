@@ -191,10 +191,6 @@ export async function register(): Promise<void> {
     Sentry.init({
       dsn,
       tracesSampleRate: 0,
-      // Server-only: do not auto-enable any browser-side transport.
-      // (`@sentry/nextjs` only ships the browser bundle when the
-      // matching `sentry.client.config.ts` exists; we deliberately
-      // never create one.)
       environment: process.env.NODE_ENV,
       initialScope: {
         tags: {
@@ -204,10 +200,19 @@ export async function register(): Promise<void> {
         },
       },
       ignoreErrors: [
-        // Client-side aborts that bubble through SSE — not our bugs.
         /AbortError/i,
         /aborted/i,
       ],
+      beforeSend(event) {
+        if (event.request?.headers) {
+          delete event.request.headers.authorization;
+          delete event.request.headers.cookie;
+        }
+        if (event.user?.email) {
+          delete event.user.email;
+        }
+        return event;
+      },
     });
   } else if (process.env.NEXT_RUNTIME === 'edge') {
     const Sentry = await import('@sentry/nextjs');
@@ -220,6 +225,16 @@ export async function register(): Promise<void> {
           service: 'web-edge',
           commit_sha: process.env.VERCEL_GIT_COMMIT_SHA ?? 'unknown',
         },
+      },
+      beforeSend(event) {
+        if (event.request?.headers) {
+          delete event.request.headers.authorization;
+          delete event.request.headers.cookie;
+        }
+        if (event.user?.email) {
+          delete event.user.email;
+        }
+        return event;
       },
     });
   }

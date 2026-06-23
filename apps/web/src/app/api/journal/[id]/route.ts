@@ -72,7 +72,13 @@ export const PATCH = withAuth<{ id: string }>(async (req, { params, user }) => {
 export const DELETE = withAuth<{ id: string }>(async (_req, { params, user }) => {
   try {
     const { id } = await params;
-    await deleteEntry(user.userId, id);
+    const deleted = await deleteEntry(user.userId, id);
+    if (!deleted) {
+      return Response.json(
+        { error: { code: 'NOT_FOUND', message: 'entry not found' } },
+        { status: 404 },
+      );
+    }
     return Response.json({ ok: true });
   } catch (err) {
     return errorResponse(err);

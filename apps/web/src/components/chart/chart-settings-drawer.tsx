@@ -249,7 +249,7 @@ export function ChartSettingsDrawer({
                   <div className="size-2.5 rounded-full bg-amber-500 shadow-md animate-pulse" />
                   <div className="flex flex-col">
                     <span className="text-sm font-semibold">Bollinger Bands</span>
-                    <span className="text-[10px] text-fg-muted mt-0.5">Volatity envelopes (20, 2)</span>
+                    <span className="text-[10px] text-fg-muted mt-0.5">Volatility envelopes (20, 2)</span>
                   </div>
                 </div>
                 <Switch

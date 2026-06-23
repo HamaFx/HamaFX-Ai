@@ -145,8 +145,20 @@ export function PerformanceChart({
       cancelled = true;
       chart?.remove();
       chartRef.current = null;
+      seriesRef.current = null;
     };
-  }, [chartData, theme, height, totalR]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [chartData, theme, height]);
+
+  // Keep colors updated when totalR changes
+  useEffect(() => {
+    const series = seriesRef.current;
+    if (!series) return;
+    series.applyOptions({
+      lineColor: totalR >= 0 ? '#eab308' : '#f0594a',
+      topColor: totalR >= 0 ? 'rgba(234, 179, 8, 0.2)' : 'rgba(240, 89, 74, 0.2)',
+    });
+  }, [totalR]);
 
   // Keep colors updated when theme dynamically changes
   useEffect(() => {

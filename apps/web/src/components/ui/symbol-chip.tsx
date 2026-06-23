@@ -72,9 +72,10 @@ export function SymbolChip({
           disabled={clearing}
           aria-label={`Clear pinned symbol ${symbol}`}
           className={cn(
-            '-mr-1 ml-0.5 inline-flex size-4 items-center justify-center rounded-full transition-colors',
+            'relative -mr-1 ml-0.5 inline-flex size-4 items-center justify-center rounded-full transition-colors',
             'hover:bg-brand/25 focus-visible:bg-brand/25 focus-visible:ring-2 focus-visible:ring-brand/40 focus:outline-none',
             'disabled:cursor-not-allowed disabled:opacity-60',
+            'after:absolute after:left-1/2 after:top-1/2 after:size-[44px] after:-translate-x-1/2 after:-translate-y-1/2 after:content-[""]',
           )}
         >
           <X className="size-2.5" strokeWidth={3} />

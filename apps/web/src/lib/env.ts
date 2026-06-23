@@ -162,3 +162,13 @@ export function getServerEnv(): ServerEnv {
   _serverEnv = parseServerEnv();
   return _serverEnv;
 }
+
+// Trigger validation immediately at startup (skip in test runner and build phase)
+if (
+  process.env.NODE_ENV !== 'test' &&
+  !process.env.VITEST &&
+  process.env.NEXT_PHASE !== 'phase-production-build'
+) {
+  getAuthEnv();
+  getServerEnv();
+}

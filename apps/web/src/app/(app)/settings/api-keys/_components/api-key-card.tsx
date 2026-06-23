@@ -21,7 +21,6 @@ import {
   CheckCircle2,
   Eye,
   EyeOff,
-  Info,
   Loader2,
   XCircle,
 } from 'lucide-react';
@@ -408,7 +407,3 @@ function formatAge(iso: string): string {
   const d = Math.floor(h / 24);
   return `${d}d ago`;
 }
-
-// Re-export the Info icon so it's available to the file but tree-shaken
-// if unused (it isn't used here directly; the ProviderInfoDot is).
-void Info;

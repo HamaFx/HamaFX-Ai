@@ -31,6 +31,7 @@
 import { ArrowUp, ImagePlus, Mic, Square } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, m } from 'motion/react';
+import { toast } from 'sonner';
 
 import { useVoiceInput } from '@/hooks/use-voice-input';
 import { cn } from '@/lib/cn';
@@ -78,7 +79,7 @@ export function Composer({
 }: ComposerProps) {
   const [value, setValue] = useState('');
   const [images, setImages] = useState<ComposerImage[]>([]);
-  const [imageError, setImageError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const [focused, setFocused] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const [isTouch, setIsTouch] = useState(false);
@@ -110,19 +111,22 @@ export function Composer({
     onText: (transcript) => {
       setValue(transcript);
     },
+    onError: (msg) => {
+      toast.error(msg);
+    },
   });
 
   function send() {
     const trimmed = value.trim();
     if (!trimmed || disabled || isStreaming) return;
     if (trimmed.length > MAX_TEXT_CHARS) {
-      setImageError(`Message too long (max ${MAX_TEXT_CHARS} chars)`);
+      setError(`Message too long (max ${MAX_TEXT_CHARS} chars)`);
       return;
     }
     onSubmit(trimmed, images);
     setValue('');
     setImages([]);
-    setImageError(null);
+    setError(null);
     if (!isTouch) {
       requestAnimationFrame(() => ref.current?.focus());
     }
@@ -135,52 +139,66 @@ export function Composer({
   // limit.
   async function pickImages(files: FileList | null): Promise<void> {
     if (!files || files.length === 0) return;
-    setImageError(null);
+    setError(null);
     const remaining = MAX_IMAGES - images.length;
     if (remaining <= 0) {
-      setImageError(`Maximum ${MAX_IMAGES} images per message`);
+      setError(`Maximum ${MAX_IMAGES} images per message`);
       return;
     }
-    for (const file of Array.from(files).slice(0, remaining)) {
+
+    const chosenFiles = Array.from(files).slice(0, remaining);
+    
+    // Create upload promises
+    const uploadPromises = chosenFiles.map(async (file) => {
       if (!file.type.startsWith('image/')) {
-        setImageError('Only image files are accepted');
-        continue;
+        throw new Error('Only image files are accepted');
       }
       if (file.size > MAX_IMAGE_BYTES) {
-        setImageError(`"${file.name}" exceeds 5 MB`);
-        continue;
+        throw new Error(`"${file.name}" exceeds 5 MB`);
       }
-      try {
-        const fd = new FormData();
-        fd.append('file', file, file.name);
-        const res = await fetchCsrf('/api/upload', { method: 'POST', body: fd });
-        if (!res.ok) {
-          const text = await res.text().catch(() => '');
-          setImageError(`Upload failed: ${res.status} ${text.slice(0, 80)}`);
-          continue;
-        }
-        const json = (await res.json()) as { url?: string; mediaType?: string };
-        const url = typeof json.url === 'string' ? json.url : null;
-        if (!url) {
-          setImageError('Upload returned no URL');
-          continue;
-        }
-        setImages((prev) => [
-          ...prev,
-          {
-            id:
-              typeof crypto !== 'undefined' && crypto.randomUUID
-                ? crypto.randomUUID()
-                : `${Date.now()}-${Math.random()}`,
-            url,
-            mediaType: json.mediaType ?? file.type,
-            name: file.name,
-          },
-        ]);
-      } catch (err) {
-        const message = err instanceof Error ? err.message : 'unknown error';
-        setImageError(`Upload failed: ${message}`);
+      
+      const fd = new FormData();
+      fd.append('file', file, file.name);
+      const res = await fetchCsrf('/api/upload', { method: 'POST', body: fd });
+      if (!res.ok) {
+        const text = await res.text().catch(() => '');
+        throw new Error(`Upload failed for "${file.name}": ${res.status} ${text.slice(0, 80)}`);
       }
+      const json = (await res.json()) as { url?: string; mediaType?: string };
+      const url = typeof json.url === 'string' ? json.url : null;
+      if (!url) {
+        throw new Error(`Upload returned no URL for "${file.name}"`);
+      }
+      
+      return {
+        id:
+          typeof crypto !== 'undefined' && crypto.randomUUID
+            ? crypto.randomUUID()
+            : `${Date.now()}-${Math.random()}`,
+        url,
+        mediaType: json.mediaType ?? file.type,
+        name: file.name,
+      };
+    });
+
+    const results = await Promise.allSettled(uploadPromises);
+    
+    const succeeded: ComposerImage[] = [];
+    const uploadErrors: string[] = [];
+    
+    for (const result of results) {
+      if (result.status === 'fulfilled') {
+        succeeded.push(result.value);
+      } else {
+        uploadErrors.push(result.reason instanceof Error ? result.reason.message : String(result.reason));
+      }
+    }
+    
+    if (succeeded.length > 0) {
+      setImages((prev) => [...prev, ...succeeded]);
+    }
+    if (uploadErrors.length > 0) {
+      setError(uploadErrors.join(', '));
     }
   }
 
@@ -220,7 +238,14 @@ export function Composer({
       if (next.length > MAX_TEXT_CHARS) {
         e.preventDefault();
         setValue(next.slice(0, MAX_TEXT_CHARS));
-        setImageError(`Message clipped to ${MAX_TEXT_CHARS} chars`);
+        setError(`Message clipped to ${MAX_TEXT_CHARS} chars`);
+        
+        const cursorPosition = Math.min(start + pasted.length, MAX_TEXT_CHARS);
+        requestAnimationFrame(() => {
+          if (ref.current) {
+            ref.current.setSelectionRange(cursorPosition, cursorPosition);
+          }
+        });
       }
     }
   }
@@ -299,9 +324,9 @@ export function Composer({
           </ul>
         ) : null}
 
-        {imageError ? (
+        {error ? (
           <p role="alert" className="text-bear px-5 pt-2 text-xs">
-            {imageError}
+            {error}
           </p>
         ) : null}
 
@@ -363,6 +388,7 @@ export function Composer({
           <div className="relative flex-1">
             <textarea
               ref={ref}
+              aria-label="Chat message input"
               value={value}
               onChange={(e) => setValue(e.target.value)}
               onFocus={() => setFocused(true)}

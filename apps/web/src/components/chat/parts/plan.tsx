@@ -55,7 +55,7 @@ export function PlanPart({ plan }: PlanPartProps) {
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
-        className="text-fg-muted hover:text-fg flex items-center gap-2 text-left text-body-sm font-medium tabular-nums focus:outline-none"
+        className="text-fg-muted hover:text-fg focus-visible:ring-2 focus-visible:ring-brand rounded-md flex items-center gap-2 text-left text-body-sm font-medium tabular-nums focus:outline-none"
       >
         {open ? (
           <ChevronDown className="size-3.5" />

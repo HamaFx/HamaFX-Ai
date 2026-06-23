@@ -54,24 +54,107 @@ DrawerOverlay.displayName = 'DrawerOverlay';
 const DrawerContent = React.forwardRef<
   React.ComponentRef<typeof DrawerPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof DrawerPrimitive.Content>
->(({ className, children, ...props }, ref) => (
-  <DrawerPortal>
-    <DrawerOverlay />
-    <DrawerPrimitive.Content
-      ref={ref}
-      className={cn(
-        'glass-strong fixed inset-x-0 bottom-0 z-50 mt-24 flex h-auto max-h-[92svh] flex-col rounded-t-xl border-b-0',
-        'pb-[max(env(safe-area-inset-bottom),16px)]',
-        'focus-visible:outline-none',
-        className,
-      )}
-      {...props}
-    >
-      <div className="mx-auto mt-3 mb-2 h-1.5 w-12 rounded-full bg-fg-subtle/40" aria-hidden="true" />
-      {children}
-    </DrawerPrimitive.Content>
-  </DrawerPortal>
-)) as React.ForwardRefExoticComponent<
+>(({ className, children, ...props }, ref) => {
+  const contentRef = React.useRef<HTMLDivElement | null>(null);
+
+  const setRefs = React.useCallback(
+    (node: HTMLDivElement | null) => {
+      contentRef.current = node;
+      if (typeof ref === 'function') {
+        ref(node);
+      } else if (ref) {
+        (ref as React.MutableRefObject<HTMLDivElement | null>).current = node;
+      }
+    },
+    [ref],
+  );
+
+  React.useEffect(() => {
+    const el = contentRef.current;
+    if (!el) return;
+
+    // 1. Store previously focused element
+    const previousFocus = document.activeElement as HTMLElement | null;
+
+    // 2. Focus drawer/content or first focusable child on open
+    const focusableSelector = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
+    const getFocusableElements = () => {
+      if (!el) return [];
+      return Array.from(el.querySelectorAll<HTMLElement>(focusableSelector)).filter(
+        (node) => !node.hasAttribute('disabled') && node.getAttribute('aria-hidden') !== 'true',
+      );
+    };
+
+    const focusables = getFocusableElements();
+    const firstFocusable = focusables[0];
+    if (firstFocusable) {
+      firstFocusable.focus();
+    } else {
+      el.focus();
+    }
+
+    // 3. Tab cycling within drawer
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== 'Tab') return;
+
+      const currentFocusables = getFocusableElements();
+      if (currentFocusables.length === 0) {
+        e.preventDefault();
+        return;
+      }
+
+      const first = currentFocusables[0];
+      const last = currentFocusables[currentFocusables.length - 1];
+      if (!first || !last) return;
+
+      if (e.shiftKey) {
+        // Shift + Tab: cycle backwards
+        if (document.activeElement === first || document.activeElement === el) {
+          last.focus();
+          e.preventDefault();
+        }
+      } else {
+        // Tab: cycle forwards
+        if (document.activeElement === last) {
+          first.focus();
+          e.preventDefault();
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+
+    // 4. Restore focus on close
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      if (previousFocus && typeof previousFocus.focus === 'function') {
+        requestAnimationFrame(() => {
+          previousFocus.focus();
+        });
+      }
+    };
+  }, []);
+
+  return (
+    <DrawerPortal>
+      <DrawerOverlay />
+      <DrawerPrimitive.Content
+        ref={setRefs}
+        tabIndex={-1}
+        className={cn(
+          'glass-strong fixed inset-x-0 bottom-0 z-50 mt-24 flex h-auto max-h-[92svh] flex-col rounded-t-xl border-b-0',
+          'pb-[max(env(safe-area-inset-bottom),16px)]',
+          'focus-visible:outline-none',
+          className,
+        )}
+        {...props}
+      >
+        <div className="mx-auto mt-3 mb-2 h-1.5 w-12 rounded-full bg-fg-subtle/40" aria-hidden="true" />
+        {children}
+      </DrawerPrimitive.Content>
+    </DrawerPortal>
+  );
+}) as React.ForwardRefExoticComponent<
   React.ComponentPropsWithoutRef<typeof DrawerPrimitive.Content> & React.RefAttributes<HTMLDivElement>
 >;
 DrawerContent.displayName = 'DrawerContent';

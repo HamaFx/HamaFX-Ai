@@ -69,10 +69,11 @@ export function InstallNudge() {
       return;
     }
 
-    // iOS detection: userAgent contains iPhone/iPad/iPod AND not
-    // running in a desktop browser pretending to be iOS.
+    // iOS/iPadOS 13+ detection: userAgent contains iPhone/iPad/iPod OR Macintosh with touch support
     const ua = navigator.userAgent;
-    const isiOS = /iPhone|iPad|iPod/.test(ua) && !('MSStream' in window);
+    const isMac = /Macintosh/.test(ua);
+    const isTouch = 'ontouchend' in window || navigator.maxTouchPoints > 0;
+    const isiOS = /iPhone|iPad|iPod/.test(ua) || (isMac && isTouch);
     setIsIOS(isiOS);
 
     // Dismiss cap.

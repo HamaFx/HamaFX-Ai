@@ -1,21 +1,5 @@
 'use client';
 
-/**
- * Copyright 2026 HamaFX
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { CheckCircle2, Loader2, Play, XCircle } from 'lucide-react';
@@ -36,28 +20,18 @@ interface BulkTestSummary {
   total: number;
 }
 
-/**
- * <BulkTestButton> — Phase D api-keys page overhaul.
- *
- * Posts to /api/settings/bulk-test, which is the single source of
- * truth for the test + persist path. After a successful response we
- * call `router.refresh()` so the server-component page re-fetches
- * the latest provider_tests rows — no second writer, no race.
- *
- * (Earlier revisions also called a `bulkTestAll` server action that
- * re-wrote the same rows. That double-write could race with the API
- * route's delete-then-insert and silently drop the new rows.)
- */
 export function BulkTestButton({ disabled }: BulkTestButtonProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [running, setRunning] = useState(false);
   const [summary, setSummary] = useState<BulkTestSummary | null>(null);
+  const [progress, setProgress] = useState<{ current: number; total: number } | null>(null);
 
   function handleClick() {
     if (running) return;
     setRunning(true);
     setSummary(null);
+    setProgress(null);
     startTransition(async () => {
       try {
         const res = await fetch('/api/settings/bulk-test', {
@@ -70,26 +44,49 @@ export function BulkTestButton({ disabled }: BulkTestButtonProps) {
           } | null;
           throw new Error(body?.error?.message ?? `HTTP ${res.status}`);
         }
-        const body = (await res.json()) as {
-          summary: BulkTestSummary;
-          results: Array<{ provider: string; status: string; error?: string }>;
-        };
-        setSummary(body.summary);
-        if (body.summary.failed === 0) {
-          toast.success(
-            `All ${body.summary.ok} configured providers are valid.`,
-          );
-        } else if (body.summary.ok === 0) {
-          toast.error(
-            `${body.summary.failed} providers failed. Check the errors below.`,
-          );
-        } else {
-          toast.warning(
-            `${body.summary.ok} ok, ${body.summary.failed} failed.`,
-          );
+
+        const reader = res.body?.getReader();
+        if (!reader) {
+          throw new Error('Streaming not supported by browser');
         }
-        // Refresh the RSC tree so the per-card health badges reflect
-        // the new provider_tests rows without a manual reload.
+
+        const decoder = new TextDecoder();
+        let buffer = '';
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split('\n');
+          buffer = lines.pop() ?? '';
+
+          for (const line of lines) {
+            if (!line.trim()) continue;
+            const parsed = JSON.parse(line);
+            if (parsed.type === 'progress') {
+              setProgress({ current: parsed.current, total: parsed.total });
+            } else if (parsed.type === 'done') {
+              setSummary(parsed.summary);
+              if (parsed.summary.failed === 0) {
+                toast.success(
+                  `All ${parsed.summary.ok} configured providers are valid.`,
+                );
+              } else if (parsed.summary.ok === 0) {
+                toast.error(
+                  `${parsed.summary.failed} providers failed. Check the errors below.`,
+                );
+              } else {
+                toast.warning(
+                  `${parsed.summary.ok} ok, ${parsed.summary.failed} failed.`,
+                );
+              }
+            } else if (parsed.type === 'error') {
+              throw new Error(parsed.message);
+            }
+          }
+        }
+
         router.refresh();
       } catch (err) {
         toast.error(
@@ -97,9 +94,12 @@ export function BulkTestButton({ disabled }: BulkTestButtonProps) {
         );
       } finally {
         setRunning(false);
+        setProgress(null);
       }
     });
   }
+
+  const isLoading = running || isPending;
 
   return (
     <div className="flex items-center gap-2">
@@ -108,13 +108,13 @@ export function BulkTestButton({ disabled }: BulkTestButtonProps) {
         variant="secondary"
         size="sm"
         onClick={handleClick}
-        disabled={disabled || running || isPending}
-        loading={running || isPending}
+        disabled={disabled || isLoading}
+        loading={isLoading}
       >
-        {running || isPending ? (
+        {isLoading ? (
           <>
             <Loader2 className="size-3 animate-spin" />
-            Testing all…
+            {progress ? `Testing (${progress.current}/${progress.total})…` : 'Testing all…'}
           </>
         ) : (
           <>

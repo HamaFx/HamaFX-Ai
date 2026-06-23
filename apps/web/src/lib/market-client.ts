@@ -52,9 +52,38 @@ export class MarketApiError extends Error {
   }
 }
 
+async function safeFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
+  try {
+    return await fetch(input, init);
+  } catch (e) {
+    if (e instanceof Error && e.name === 'AbortError') {
+      throw e;
+    }
+    throw new Error('Network connection error: failed to fetch market data. Please verify your connection.');
+  }
+}
+
 async function parse<T>(res: Response): Promise<T> {
-  const text = await res.text();
-  const json: unknown = text ? JSON.parse(text) : null;
+  let text = '';
+  try {
+    text = await res.text();
+  } catch (e) {
+    throw new Error(`Failed to read response body: ${e instanceof Error ? e.message : String(e)}`);
+  }
+
+  let json: unknown;
+  try {
+    json = text ? JSON.parse(text) : null;
+  } catch (e) {
+    if (!res.ok) {
+      throw new MarketApiError(res.status, {
+        code: 'HTTP_ERROR',
+        message: `HTTP ${res.status}: ${text.slice(0, 100) || 'unknown error'}`,
+      });
+    }
+    throw new Error(`Failed to parse response JSON: ${e instanceof Error ? e.message : String(e)}`);
+  }
+
   if (!res.ok) {
     const err = (json as { error?: ApiError } | null)?.error ?? {
       code: 'UNKNOWN',
@@ -78,7 +107,7 @@ export async function fetchPrices(
   for (const s of symbols) params.append('symbol', s);
   const init: RequestInit = { cache: 'no-store' };
   if (opts.signal) init.signal = opts.signal;
-  const res = await fetch(`/api/market/price?${params.toString()}`, init);
+  const res = await safeFetch(`/api/market/price?${params.toString()}`, init);
   const body = await parse<{ ticks: Tick[] }>(res);
   return body.ticks;
 }
@@ -93,7 +122,7 @@ export async function fetchCandles(
   const params = new URLSearchParams({ symbol, tf, count: String(count) });
   const init: RequestInit = { cache: 'no-store' };
   if (opts.signal) init.signal = opts.signal;
-  const res = await fetch(`/api/market/candles?${params.toString()}`, init);
+  const res = await safeFetch(`/api/market/candles?${params.toString()}`, init);
   const body = await parse<{ symbol: Symbol; tf: Timeframe; candles: Candle[] }>(res);
   return body.candles;
 }
@@ -122,7 +151,7 @@ export async function fetchIndicators(
     }),
   };
   if (opts.signal) init.signal = opts.signal;
-  const res = await fetch('/api/market/indicators', init);
+  const res = await safeFetch('/api/market/indicators', init);
   const body = await parse<{ results: IndicatorResult[] }>(res);
   return body.results;
 }
@@ -154,7 +183,7 @@ export async function fetchChartData(
     }),
   };
   if (opts.signal) init.signal = opts.signal;
-  const res = await fetch('/api/market/indicators', init);
+  const res = await safeFetch('/api/market/indicators', init);
   return parse<ChartDataResponse>(res);
 }
 
@@ -183,6 +212,6 @@ export async function fetchStructure(
     }),
   };
   if (opts.signal) init.signal = opts.signal;
-  const res = await fetch('/api/market/structure', init);
+  const res = await safeFetch('/api/market/structure', init);
   return parse<StructureResult>(res);
 }

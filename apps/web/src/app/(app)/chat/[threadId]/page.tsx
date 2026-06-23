@@ -15,6 +15,7 @@
  */
 
 import type { UIMessage } from 'ai';
+import { z } from 'zod';
 // /chat/[threadId] — full-screen chat surface for a specific thread.
 //
 // Server component: validates the thread, hydrates the message history from
@@ -34,6 +35,14 @@ interface PageProps {
   params: Promise<{ threadId: string }>;
   searchParams: Promise<{ prompt?: string }>;
 }
+
+const uiMessageSchema = z.object({
+  id: z.string(),
+  role: z.enum(['user', 'assistant', 'system', 'data']),
+  content: z.string(),
+  parts: z.array(z.any()),
+  createdAt: z.union([z.date(), z.string(), z.number()]).optional().nullable(),
+});
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { threadId } = await params;
@@ -59,13 +68,19 @@ export default async function ChatThreadPage({ params, searchParams }: PageProps
   ]);
   if (!thread) notFound();
 
-  const initialMessages = dbMessages.map((m) => ({
-    id: m.id,
-    role: m.role as 'user' | 'assistant' | 'system',
-    parts: Array.isArray(m.parts) ? m.parts : [],
-    content: m.content ?? '',
-    createdAt: m.createdAt,
-  }));
+  const initialMessages = dbMessages
+    .map((m) => {
+      const msg = {
+        id: m.id,
+        role: m.role,
+        parts: Array.isArray(m.parts) ? m.parts : [],
+        content: m.content ?? '',
+        createdAt: m.createdAt,
+      };
+      const parsed = uiMessageSchema.safeParse(msg);
+      return parsed.success ? (parsed.data as UIMessage) : null;
+    })
+    .filter((m): m is UIMessage => m !== null);
 
   const { prompt } = await searchParams;
 
@@ -73,7 +88,7 @@ export default async function ChatThreadPage({ params, searchParams }: PageProps
     <ChatScreen
       threadId={thread.id}
       initialTitle={thread.title ?? 'New Chat'}
-      initialMessages={initialMessages as UIMessage[]}
+      initialMessages={initialMessages}
       initialThreads={allThreads.map((t) => ({
         id: t.id,
         title: t.title,

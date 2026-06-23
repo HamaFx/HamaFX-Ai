@@ -39,8 +39,8 @@ export function StaleIndicator({ isFetching, label, className }: StaleIndicatorP
   if (!isFetching) return null;
   return (
     <span
-      role="status"
-      aria-live="polite"
+      role="alert"
+      aria-live="assertive"
       className={cn(
         'text-fg-subtle stale-pulse inline-flex items-center gap-1 text-[10px] font-medium tabular-nums uppercase tracking-wide',
         className,

@@ -131,8 +131,10 @@ export async function deleteThread(userId: string, id: string): Promise<void> {
     .where(and(eq(schema.chatThreads.id, id), eq(schema.chatThreads.userId, userId)));
 }
 
-export async function deleteAllThreads(): Promise<void> {
-  await getDb().delete(schema.chatThreads);
+export async function deleteAllThreads(userId: string): Promise<void> {
+  await getDb()
+    .delete(schema.chatThreads)
+    .where(eq(schema.chatThreads.userId, userId));
 }
 
 function rowToThread(row: typeof schema.chatThreads.$inferSelect): DbThread {

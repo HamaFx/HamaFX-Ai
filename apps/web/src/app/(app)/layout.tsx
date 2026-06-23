@@ -22,7 +22,6 @@ import { NavDrawerProvider } from '@/components/layout/nav-drawer-context';
 import { OfflineBanner } from '@/components/layout/offline-banner';
 import { SkipToContent } from '@/components/layout/skip-to-content';
 import { TopBar } from '@/components/layout/top-bar';
-import { SwRegister } from '@/components/providers/sw-register';
 import { MotionRoot } from '@/components/ui/motion-config';
 import { Toaster } from '@/components/ui/toaster';
 
@@ -47,7 +46,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <div className="text-fg relative min-h-svh">
           <SkipToContent />
           <AmbientBackground />
-          <SwRegister />
           <TopBar />
           <main
             id="main-content"

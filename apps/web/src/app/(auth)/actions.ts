@@ -37,10 +37,11 @@ export async function loginAction(prevState: unknown, formData: FormData) {
   }
 
   const { email, password, next } = parsed.data;
+  const normalizedEmail = email.trim().toLowerCase();
 
   try {
     await signIn('credentials', {
-      email,
+      email: normalizedEmail,
       password,
       redirectTo: next && next.startsWith('/') ? next : '/chat',
     });
@@ -61,7 +62,11 @@ export async function loginAction(prevState: unknown, formData: FormData) {
 const registerSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
   email: z.string().email('Invalid email address'),
-  password: z.string().min(8, 'Password must be at least 8 characters'),
+  password: z.string()
+    .min(8, 'Password must be at least 8 characters')
+    .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
+    .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
+    .regex(/[0-9]/, 'Password must contain at least one number'),
 });
 
 export async function registerAction(prevState: unknown, formData: FormData) {
@@ -71,10 +76,11 @@ export async function registerAction(prevState: unknown, formData: FormData) {
   }
 
   const { name, email, password } = parsed.data;
+  const normalizedEmail = email.trim().toLowerCase();
   const db = getDb();
   
   // Check if user exists
-  const existingUser = await db.select().from(schema.users).where(eq(schema.users.email, email)).limit(1);
+  const existingUser = await db.select().from(schema.users).where(eq(schema.users.email, normalizedEmail)).limit(1);
   if (existingUser.length > 0) {
     return { error: 'An account with this email already exists' };
   }
@@ -86,7 +92,7 @@ export async function registerAction(prevState: unknown, formData: FormData) {
   const [newUser] = await db.insert(schema.users).values({
     id: crypto.randomUUID(),
     name,
-    email: email.toLowerCase(),
+    email: normalizedEmail,
     hashedPassword,
     image: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(name)}`,
   }).returning();
@@ -105,7 +111,7 @@ export async function registerAction(prevState: unknown, formData: FormData) {
   // Login the newly registered user
   try {
     await signIn('credentials', {
-      email,
+      email: normalizedEmail,
       password,
       redirectTo: '/onboarding',
     });

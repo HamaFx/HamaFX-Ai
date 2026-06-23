@@ -44,9 +44,23 @@ import { eq } from 'drizzle-orm';
  * `server-only` import makes sure this never accidentally ends up
  * in a client bundle.
  */
+interface CacheEntry {
+  catalog: CatalogResponse;
+  expiresAt: number;
+}
+
+const catalogCache = new Map<string, CacheEntry>();
+const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+
 export async function buildCatalogForUser(
   userId: string,
 ): Promise<CatalogResponse> {
+  const now = Date.now();
+  const cached = catalogCache.get(userId);
+  if (cached && cached.expiresAt > now) {
+    return cached.catalog;
+  }
+
   const db = getDb();
   const [settings] = await db
     .select({ aiApiKeys: schema.userSettings.aiApiKeys })
@@ -118,7 +132,7 @@ export async function buildCatalogForUser(
     };
   });
 
-  return {
+  const catalog: CatalogResponse = {
     domains: [
       {
         id: 'fundamental',
@@ -151,4 +165,11 @@ export async function buildCatalogForUser(
     total: providers.length,
     totalModels: providers.reduce((sum, p) => sum + p.models.length, 0),
   };
+
+  catalogCache.set(userId, {
+    catalog,
+    expiresAt: Date.now() + CACHE_TTL_MS,
+  });
+
+  return catalog;
 }

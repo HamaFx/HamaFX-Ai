@@ -99,7 +99,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
       style={inlineStyle}
       className={cn(
         'inline-flex items-center justify-center gap-2 rounded-xl font-medium',
-        'transition-[background,opacity,color] duration-150',
+        'transition-colors duration-150',
         'disabled:cursor-not-allowed disabled:opacity-60 disabled:shadow-none',
         variants[variant],
         sizes[size],

@@ -20,8 +20,8 @@
 // surfaces during rendering. We log + show a recover button so the user
 // isn't stuck on a blank screen.
 import { useEffect } from 'react';
-
 import { Button } from '@/components/ui/button';
+import { Link } from 'next-view-transitions';
 
 interface ErrorPageProps {
   error: Error & { digest?: string };
@@ -35,18 +35,26 @@ export default function ErrorPage({ error, reset }: ErrorPageProps) {
 
   return (
     <main className="bg-bg text-fg flex min-h-svh flex-col items-center justify-center gap-4 px-6 text-center">
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-2 text-center items-center">
         <h1 className="text-lg font-semibold">Something broke.</h1>
-        <p className="text-fg-muted text-sm">
+        <p className="text-fg-muted text-sm max-w-sm">
           {error.message || 'An unexpected error occurred while rendering the page.'}
         </p>
-        {error.digest ? (
-          <p className="text-fg-subtle text-[10px] tabular-nums">digest: {error.digest}</p>
-        ) : null}
+        <p className="text-fg-subtle text-[11px] tabular-nums">
+          Error ID: {error.digest || 'N/A'}
+        </p>
       </div>
-      <Button type="button" onClick={() => reset()} size="sm">
-        Try again
-      </Button>
+      <div className="flex gap-3">
+        <Button type="button" onClick={() => reset()} size="sm">
+          Try again
+        </Button>
+        <Link
+          href="/dashboard"
+          className="border border-border bg-transparent text-fg hover:bg-muted/30 inline-flex h-9 items-center justify-center rounded-md px-4 text-sm font-medium transition-colors"
+        >
+          Go to dashboard
+        </Link>
+      </div>
     </main>
   );
 }

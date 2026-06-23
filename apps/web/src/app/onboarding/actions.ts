@@ -41,77 +41,98 @@ export interface OnboardingPayload {
  */
 export async function completeOnboardingAction(formData: FormData) {
   const session = await auth();
-  if (!session?.user?.id) throw new Error('Not authenticated');
+  if (!session?.user?.id) {
+    return { ok: false as const, error: 'Not authenticated' };
+  }
   const userId = session.user.id;
 
-  const payload: OnboardingPayload = JSON.parse(
-    (formData.get('payload') as string) || '{}',
-  );
+  let payload: OnboardingPayload;
+  try {
+    payload = JSON.parse((formData.get('payload') as string) || '{}');
+  } catch {
+    return { ok: false as const, error: 'Invalid preferences data' };
+  }
 
-  const db = getDb();
-  await db.transaction(async (tx) => {
-    // 1. Merge API keys — keep existing ones for providers not in the payload.
-    const [existing] = await tx
-      .select({ aiApiKeys: schema.userSettings.aiApiKeys })
-      .from(schema.userSettings)
-      .where(eq(schema.userSettings.userId, userId));
-    const currentKeys = decryptByok(existing?.aiApiKeys) ?? {};
-    const merged: ByokPayload = { ...currentKeys };
-    if (payload.apiKeys) {
-      for (const [id, raw] of Object.entries(payload.apiKeys)) {
-        const value = (raw ?? '').trim();
-        if (value.length > 0) {
-          merged[id as keyof ByokPayload] = value;
-        }
-        // Empty string = leave existing key in place (no-op). Use a
-        // dedicated "clear" flow if the user wants to remove a key.
+  try {
+    const db = getDb();
+    await db.transaction(async (tx) => {
+      // Save displayName to users table if provided
+      if (payload.displayName && typeof payload.displayName === 'string') {
+        await tx
+          .update(schema.users)
+          .set({ name: payload.displayName.trim().slice(0, 100) })
+          .where(eq(schema.users.id, userId));
       }
-    }
 
-    // 2. Upsert user settings.
-    const encryptedKeys = encryptByok(merged);
-    const existingSettings = await tx
-      .select({ userId: schema.userSettings.userId })
-      .from(schema.userSettings)
-      .where(eq(schema.userSettings.userId, userId));
+      // 1. Merge API keys — keep existing ones for providers not in the payload.
+      const [existing] = await tx
+        .select({ aiApiKeys: schema.userSettings.aiApiKeys })
+        .from(schema.userSettings)
+        .where(eq(schema.userSettings.userId, userId));
+      const currentKeys = decryptByok(existing?.aiApiKeys) ?? {};
+      const merged: ByokPayload = { ...currentKeys };
+      if (payload.apiKeys) {
+        for (const [id, raw] of Object.entries(payload.apiKeys)) {
+          const value = (raw ?? '').trim();
+          if (value.length > 0) {
+            merged[id as keyof ByokPayload] = value;
+          }
+          // Empty string = leave existing key in place (no-op). Use a
+          // dedicated "clear" flow if the user wants to remove a key.
+        }
+      }
 
-    if (existingSettings.length === 0) {
-      await tx.insert(schema.userSettings).values({
-        userId,
-        defaultSymbol: payload.defaultSymbol || 'XAUUSD',
-        timezone: payload.timezone || 'UTC',
-        aiApiKeys: encryptedKeys,
-        onboardingCompleted: true,
-      });
-    } else {
-      await tx
-        .update(schema.userSettings)
-        .set({
+      // 2. Upsert user settings.
+      const encryptedKeys = encryptByok(merged);
+      const existingSettings = await tx
+        .select({ userId: schema.userSettings.userId })
+        .from(schema.userSettings)
+        .where(eq(schema.userSettings.userId, userId));
+
+      if (existingSettings.length === 0) {
+        await tx.insert(schema.userSettings).values({
+          userId,
           defaultSymbol: payload.defaultSymbol || 'XAUUSD',
           timezone: payload.timezone || 'UTC',
           aiApiKeys: encryptedKeys,
           onboardingCompleted: true,
-        })
-        .where(eq(schema.userSettings.userId, userId));
-    }
+        });
+      } else {
+        await tx
+          .update(schema.userSettings)
+          .set({
+            defaultSymbol: payload.defaultSymbol || 'XAUUSD',
+            timezone: payload.timezone || 'UTC',
+            aiApiKeys: encryptedKeys,
+            onboardingCompleted: true,
+          })
+          .where(eq(schema.userSettings.userId, userId));
+      }
 
-    // 3. Add default watchlist.
-    try {
-      await tx
-        .insert(schema.userSymbols)
-        .values(
-          ['XAUUSD', 'EURUSD', 'GBPUSD'].map((symbol, i) => ({
-            userId,
-            symbol,
-            displayOrder: i,
-          })),
-        )
-        .onConflictDoNothing();
-    } catch {
-      // ignore — symbols table may not exist in every schema version
-    }
-  });
+      // 3. Add default watchlist.
+      try {
+        await tx
+          .insert(schema.userSymbols)
+          .values(
+            ['XAUUSD', 'EURUSD', 'GBPUSD'].map((symbol, i) => ({
+              userId,
+              symbol,
+              displayOrder: i,
+            })),
+          )
+          .onConflictDoNothing();
+      } catch {
+        // ignore — symbols table may not exist in every schema version
+      }
+    });
 
-  revalidatePath('/');
-  return { success: true };
+    revalidatePath('/');
+    return { ok: true as const, success: true as const };
+  } catch (err) {
+    console.error('[onboarding] completeOnboardingAction failed', err);
+    return {
+      ok: false as const,
+      error: err instanceof Error ? err.message : 'Unknown error',
+    };
+  }
 }

@@ -23,15 +23,7 @@ import type { StructureKind } from '@hamafx/shared';
 import { parseAsArrayOf, parseAsStringLiteral, useQueryState } from 'nuqs';
 
 import { cn } from '@/lib/cn';
-
-const ALL_KINDS = ['swings', 'bos_choch', 'fvg', 'order_blocks', 'liquidity'] as const;
-const LABEL: Record<StructureKind, string> = {
-  swings: 'swings',
-  bos_choch: 'BOS/CHoCH',
-  fvg: 'FVG',
-  order_blocks: 'OB',
-  liquidity: 'sweeps',
-};
+import { ALL_KINDS, SHORT_LABEL } from './overlay-constants';
 
 const overlayParser = parseAsArrayOf(parseAsStringLiteral(ALL_KINDS)).withDefault([]);
 
@@ -79,7 +71,7 @@ export function OverlayToggle({ active, onToggle }: OverlayToggleProps) {
               on ? 'bg-brand text-brand-fg' : 'text-fg-muted hover:bg-bg-elev-1 hover:text-fg',
             )}
           >
-            {LABEL[k]}
+            {SHORT_LABEL[k]}
           </button>
         );
       })}

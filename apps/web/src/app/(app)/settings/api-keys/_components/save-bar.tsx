@@ -1,22 +1,6 @@
 'use client';
 
-/**
- * Copyright 2026 HamaFX
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-import { useActionState, useEffect, useRef } from 'react';
+import { useActionState, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { CheckCircle2, Loader2, Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -42,19 +26,6 @@ interface SaveBarProps {
   children: React.ReactNode;
 }
 
-/**
- * Phase D — gives the Save button the feedback it's been missing.
- *
- *   - "Saving…" with a spinner while the action is in flight
- *   - "Saved" toast on success (with the count of providers saved)
- *   - Error toast on failure
- *   - Inline "Saved" check next to the button
- *
- * Implementation note: the parent page is a server component, so we
- * can't use `useActionState` directly there. We pass the server action
- * down as a prop, and this small client component owns the form +
- * the pending/error/success lifecycle.
- */
 export function SaveBar({ action, preservedPrompt, children }: SaveBarProps) {
   const [state, formAction, isPending] = useActionState<SaveKeysResult, FormData>(
     action,
@@ -62,6 +33,7 @@ export function SaveBar({ action, preservedPrompt, children }: SaveBarProps) {
   );
   const lastSeenAt = useRef<number | null>(null);
   const lastErrorSeen = useRef<string | null>(null);
+  const [isDirty, setIsDirty] = useState(false);
 
   // Success toast — dedupe so React strict-mode re-renders don't toast twice.
   useEffect(() => {
@@ -69,7 +41,6 @@ export function SaveBar({ action, preservedPrompt, children }: SaveBarProps) {
     if (lastSeenAt.current === state.at) return;
     lastSeenAt.current = state.at;
     if (state.savedCount === 0 && state.clearedCount === 0) {
-      // Form was submitted but nothing changed. Don't toast.
       return;
     }
     if (state.savedCount === 0) {
@@ -83,6 +54,7 @@ export function SaveBar({ action, preservedPrompt, children }: SaveBarProps) {
         `Saved ${state.savedCount} provider${state.savedCount === 1 ? '' : 's'}${clearedSuffix}`,
       );
     }
+    setIsDirty(false);
   }, [state]);
 
   // Error toast.
@@ -93,8 +65,32 @@ export function SaveBar({ action, preservedPrompt, children }: SaveBarProps) {
     toast.error(`Save failed: ${state.message}`);
   }, [state]);
 
+  // Unsaved changes beforeunload warning
+  useEffect(() => {
+    if (!isDirty) return;
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = 'You have unsaved changes. Are you sure you want to leave?';
+      return e.returnValue;
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [isDirty]);
+
+  const handleFormChange = () => {
+    setIsDirty(true);
+  };
+
+  const handleDiscard = () => {
+    window.location.reload();
+  };
+
   return (
-    <form action={formAction} className="flex flex-col gap-8">
+    <form
+      action={formAction}
+      onChange={handleFormChange}
+      className="flex flex-col gap-8"
+    >
       {children}
       <div className="flex items-center gap-3 justify-end">
         {state.status === 'success' ? (
@@ -103,6 +99,17 @@ export function SaveBar({ action, preservedPrompt, children }: SaveBarProps) {
             Saved
           </span>
         ) : null}
+        {isDirty && (
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={handleDiscard}
+            disabled={isPending}
+            className="text-fg-muted hover:text-fg"
+          >
+            Discard
+          </Button>
+        )}
         {preservedPrompt ? (
           <Link
             href={`/chat?prompt=${encodeURIComponent(preservedPrompt)}`}

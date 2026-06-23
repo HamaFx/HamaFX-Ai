@@ -58,7 +58,7 @@ function readCounts(): Counts {
   return { bookmarks, storage };
 }
 
-  export function DataCard() {
+export function DataCard() {
   const [counts, setCounts] = useState<Counts>({ bookmarks: 0, storage: 0 });
   const [confirmEl, confirm] = useConfirm();
   const [isPending, startTransition] = useTransition();

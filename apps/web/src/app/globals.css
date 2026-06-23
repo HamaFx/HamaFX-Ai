@@ -111,6 +111,7 @@
  * Layout & spacing tokens
  * ------------------------------------------------------------------------- */
 :root {
+  color-scheme: dark;
   --topbar-h: 56px;
   --fab-bottom: calc(env(safe-area-inset-bottom) + 16px);
   --toast-bottom: calc(env(safe-area-inset-bottom) + 16px);
@@ -127,6 +128,10 @@
   --space-10: 96px;
 
   --touch-min: 44px;
+}
+
+html {
+  color-scheme: dark;
 }
 
 /* -------------------------------------------------------------------------
@@ -514,3 +519,49 @@ html[data-reduce-motion='force'] *::after {
   animation: scroll-fab linear both;
   animation-timeline: scroll(nearest block);
 }
+
+@keyframes float-slow {
+  0%, 100% {
+    transform: translate(0, 0);
+  }
+  50% {
+    transform: translate(12px, -8px);
+  }
+}
+@keyframes float-medium {
+  0%, 100% {
+    transform: translate(0, 0);
+  }
+  50% {
+    transform: translate(-16px, 12px);
+  }
+}
+@keyframes float-fast {
+  0%, 100% {
+    transform: translate(0, 0);
+  }
+  50% {
+    transform: translate(8px, 16px);
+  }
+}
+
+.float-orb-1 {
+  will-change: transform;
+  animation: float-slow 15s ease-in-out infinite;
+}
+.float-orb-2 {
+  will-change: transform;
+  animation: float-medium 20s ease-in-out infinite;
+}
+.float-orb-3 {
+  will-change: transform;
+  animation: float-fast 18s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .float-orb-1, .float-orb-2, .float-orb-3 {
+    animation: none !important;
+    will-change: auto !important;
+  }
+}
+

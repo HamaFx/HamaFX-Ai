@@ -60,54 +60,60 @@ function normalize(s: string): string {
 
 export function fuzzyMatch(query: string, target: string): FuzzyMatch | null {
   if (query.length === 0) {
-    // Empty query matches everything with a baseline score. We use 1
-    // so the caller can sort by score and keep the original order
-    // (stable sort is assumed).
-    return target.length > 0 ? { score: 1, indices: [] } : null;
+    if (target.length === 0) {
+      return { score: -1, indices: [] };
+    }
+    return { score: 0, indices: [] };
+  }
+
+  if (target.length === 0) {
+    return { score: -1, indices: [] };
   }
 
   const q = normalize(query);
   const t = normalize(target);
 
-  // Greedy walk over the target. We record an index every time a
-  // query character matches a target character. Score bonuses fire
-  // when a match happens at a word boundary or right after the
-  // previous match (consecutive).
+  // Greedy walk to find indices and check if it matches
   const indices: number[] = [];
-  let score = 0;
   let qIdx = 0;
   let prevMatched = false;
-  let lastWasBoundary = false;
-  let consecutive = 0;
+  let walkScore = 0;
 
   for (let tIdx = 0; tIdx < t.length && qIdx < q.length; tIdx += 1) {
     if (t[tIdx] !== q[qIdx]) {
       prevMatched = false;
-      lastWasBoundary = false;
       continue;
     }
     indices.push(tIdx);
     qIdx += 1;
-    const atWordStart = tIdx === 0 || /[\s/_\-:]/.test(t[tIdx - 1] ?? '');
-    if (atWordStart) score += 500;
-    if (lastWasBoundary) score += 50;
-    if (prevMatched) consecutive += 1;
-    score += prevMatched ? 50 : 100;
+    if (prevMatched) {
+      walkScore += 50;
+    }
+    walkScore += 10;
     prevMatched = true;
-    lastWasBoundary = atWordStart;
   }
 
-  // Prefix bonus (only if the query fully matched).
-  if (qIdx === q.length) {
-    if (t.startsWith(q)) score += 1000;
-    // Tie-breaker: shorter targets win. Negative so shorter = larger.
-    score -= target.length;
-  } else {
-    // Query not fully consumed → no match.
+  if (qIdx !== q.length) {
     return null;
   }
 
-  void consecutive; // reserved for future tighter scoring
+  // Determine final score based on match type
+  let score = 0;
+  if (q === t) {
+    score = 1000;
+  } else if (t.startsWith(q)) {
+    score = 500;
+  } else if (t.includes(q)) {
+    const startIdx = t.indexOf(q);
+    const atWordStart = startIdx === 0 || /[\s/_\-:]/.test(t[startIdx - 1] ?? '');
+    score = 250 + (atWordStart ? 50 : 0);
+  } else {
+    score = walkScore;
+  }
+
+  // Tie-breaker: shorter targets win
+  score -= target.length;
+
   return { score, indices };
 }
 

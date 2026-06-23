@@ -43,7 +43,7 @@ const PRETTY_NAME: Record<string, string> = {
 
 export function ToolCard({ name, state, input, output, errorText }: ToolCardProps) {
   const [expanded, setExpanded] = useState(false);
-  const label = PRETTY_NAME[name] ?? name.replace(/^tool-/, '');
+  const label = PRETTY_NAME[name] ?? name.replace(/^tool-/, '').replace(/_/g, ' ');
   const running = state === 'input-streaming' || state === 'input-available';
   const failed = state === 'output-error';
 
@@ -104,9 +104,17 @@ function Section({ label, data }: { label: string; data: unknown }) {
 
 function safeStringify(v: unknown): string {
   try {
-    return JSON.stringify(v, null, 2);
+    const str = JSON.stringify(v, null, 2);
+    if (str.length > 5000) {
+      return str.slice(0, 5000) + '\n... (truncated)';
+    }
+    return str;
   } catch {
-    return String(v);
+    const str = String(v);
+    if (str.length > 5000) {
+      return str.slice(0, 5000) + '\n... (truncated)';
+    }
+    return str;
   }
 }
 

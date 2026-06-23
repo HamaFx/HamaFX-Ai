@@ -31,7 +31,7 @@ import { Sparkline } from './sparkline';
 
 export type StatTone = 'fg' | 'bull' | 'bear' | 'muted' | 'warn';
 
-interface StatCardProps {
+export interface StatCardProps {
   /** Lucide icon (or any 14–16px ReactNode). */
   icon?: ReactNode;
   label: string;
@@ -60,6 +60,7 @@ const TONE_TINT: Record<StatTone, string> = {
 export function StatCard({ icon, label, value, tone = 'fg', sparkline }: StatCardProps) {
   return (
     <div
+      aria-label={`${label}: ${value}`}
       className={cn(
         'relative flex flex-col gap-2 overflow-hidden rounded-lg',
         'border border-divider border-l-2 bg-bg-elev-1 p-4',
@@ -83,7 +84,7 @@ export function StatCard({ icon, label, value, tone = 'fg', sparkline }: StatCar
         {value}
       </div>
       {sparkline && sparkline.length >= 2 ? (
-        <Sparkline values={sparkline} className={cn('h-6 w-full opacity-70', TONE_CLASS[tone])} />
+        <Sparkline values={sparkline} label={label} className={cn('h-6 w-full opacity-70', TONE_CLASS[tone])} />
       ) : (
         <div className="h-6" />
       )}

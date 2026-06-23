@@ -38,7 +38,7 @@
 //    its own portal-mounted drawer.
 
 import { AlertTriangle } from 'lucide-react';
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 
 import {
   Drawer,
@@ -58,11 +58,11 @@ interface ConfirmDrawerProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   title: string;
-  description?: string;
-  confirmLabel?: string;
-  cancelLabel?: string;
-  tone?: Tone;
-  busy?: boolean;
+  description?: string | undefined;
+  confirmLabel?: string | undefined;
+  cancelLabel?: string | undefined;
+  tone?: Tone | undefined;
+  busy?: boolean | undefined;
   onConfirm: () => void | Promise<void>;
 }
 
@@ -132,15 +132,10 @@ export function ConfirmDrawer({
 
 interface ConfirmOptions {
   title: string;
-  description?: string;
-  confirmLabel?: string;
-  cancelLabel?: string;
-  tone?: Tone;
-}
-
-interface ConfirmState extends ConfirmOptions {
-  open: boolean;
-  resolve?: (v: boolean) => void;
+  description?: string | undefined;
+  confirmLabel?: string | undefined;
+  cancelLabel?: string | undefined;
+  tone?: Tone | undefined;
 }
 
 /**
@@ -148,50 +143,48 @@ interface ConfirmState extends ConfirmOptions {
  * call `await confirm({ ... })` anywhere to prompt and await user choice.
  */
 export function useConfirm(): readonly [React.ReactNode, (opts: ConfirmOptions) => Promise<boolean>] {
-  const [state, setState] = useState<ConfirmState>({ open: false, title: '' });
+  const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [options, setOptions] = useState<ConfirmOptions>({ title: '' });
+  const resolveRef = useRef<((v: boolean) => void) | null>(null);
 
   const confirm = useCallback((opts: ConfirmOptions): Promise<boolean> => {
-    return new Promise<boolean>((resolve) => {
-      setState({ ...opts, open: true, resolve });
+    setOptions(opts);
+    setBusy(false);
+    setOpen(true);
+    return new Promise<boolean>((res) => {
+      resolveRef.current = res;
     });
   }, []);
 
-  const handleOpenChange = useCallback(
-    (open: boolean) => {
-      if (!open) {
-        state.resolve?.(false);
-        setState((s) => {
-          const { resolve: _drop, ...rest } = s;
-          return { ...rest, open: false };
-        });
-      }
-    },
-    [state],
-  );
+  const handleOpenChange = useCallback((nextOpen: boolean) => {
+    if (!nextOpen) {
+      resolveRef.current?.(false);
+      resolveRef.current = null;
+      setOpen(false);
+    }
+  }, []);
 
   const handleConfirm = useCallback(async () => {
     setBusy(true);
     try {
-      state.resolve?.(true);
+      resolveRef.current?.(true);
+      resolveRef.current = null;
     } finally {
       setBusy(false);
-      setState((s) => {
-        const { resolve: _drop, ...rest } = s;
-        return { ...rest, open: false };
-      });
+      setOpen(false);
     }
-  }, [state]);
+  }, []);
 
   const node = (
     <ConfirmDrawer
-      open={state.open}
+      open={open}
       onOpenChange={handleOpenChange}
-      title={state.title}
-      {...(state.description !== undefined ? { description: state.description } : {})}
-      {...(state.confirmLabel !== undefined ? { confirmLabel: state.confirmLabel } : {})}
-      {...(state.cancelLabel !== undefined ? { cancelLabel: state.cancelLabel } : {})}
-      {...(state.tone !== undefined ? { tone: state.tone } : {})}
+      title={options.title}
+      description={options.description}
+      confirmLabel={options.confirmLabel}
+      cancelLabel={options.cancelLabel}
+      tone={options.tone}
       busy={busy}
       onConfirm={handleConfirm}
     />

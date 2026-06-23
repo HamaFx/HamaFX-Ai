@@ -49,6 +49,7 @@ import { StaleIndicator } from '@/components/ui/stale-indicator';
 import { Tooltip } from '@/components/ui/tooltip';
 import { cn } from '@/lib/cn';
 import { fetchCsrf } from '@/lib/csrf';
+import { formatRelative } from '@/lib/format';
 
 import { AlertForm } from './alert-form';
 
@@ -139,14 +140,14 @@ export function AlertList() {
         <p className="text-bear text-sm px-1">Failed to load: {(error as Error)?.message}</p>
       ) : data?.alerts.length === 0 ? (
         <EmptyState
-          tone="brand"
-          icon={<BellOff className="size-10" strokeWidth={1.5} />}
-          title="No alerts yet"
-          description="Get notified when a price level, indicator, or candle close triggers."
+          tone="muted"
+          icon={<Bell className="size-7" strokeWidth={1.75} />}
+          title="No alerts configured"
+          description="Create price alerts to get notified when the market hits your targets."
           action={
             <Button type="button" onClick={() => setOpen(true)}>
               <Plus className="size-4" />
-              Create your first alert
+              Create alert
             </Button>
           }
         />
@@ -312,15 +313,4 @@ function describe(a: Alert): string {
     case 'indicatorCross':
       return `${r.symbol} ${r.tf} ${r.indicator} ${r.direction} ${r.level}`;
   }
-}
-
-function formatRelative(ms: number): string {
-  const diff = Date.now() - ms;
-  const min = Math.round(diff / 60_000);
-  if (min < 1) return 'just now';
-  if (min < 60) return `${min}m ago`;
-  const hr = Math.round(min / 60);
-  if (hr < 24) return `${hr}h ago`;
-  const day = Math.round(hr / 24);
-  return `${day}d ago`;
 }

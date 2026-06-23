@@ -23,11 +23,23 @@
 import { SYMBOLS, type Symbol, type TradeSide } from '@hamafx/shared';
 import { useState } from 'react';
 import { toast } from 'sonner';
+import { z } from 'zod';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Segmented } from '@/components/ui/segmented';
 import { fetchCsrf } from '@/lib/csrf';
+
+const entrySchema = z.object({
+  symbol: z.string().min(1, 'Symbol is required'),
+  side: z.enum(['long', 'short']),
+  entry: z.number({ invalid_type_error: 'Entry price must be a number' }).positive('Entry price must be positive'),
+  stop: z.number().positive('Stop loss must be positive').nullable().optional(),
+  target: z.number().positive('Target must be positive').nullable().optional(),
+  size: z.number().positive('Size must be positive').nullable().optional(),
+  notes: z.string().max(5000, 'Notes must be under 5000 characters').nullable().optional(),
+  tags: z.array(z.string()).optional(),
+});
 interface EntryFormProps {
   onCreated?: () => void;
 }
@@ -50,48 +62,56 @@ export function EntryForm({ onCreated }: EntryFormProps) {
     setError(null);
 
     const parsed = {
-      entry: Number(entry),
+      symbol,
+      side,
+      entry: entry ? Number(entry) : NaN,
       stop: stop ? Number(stop) : null,
       target: target ? Number(target) : null,
       size: size ? Number(size) : null,
+      notes: notes.trim() || null,
+      tags: tagsInput
+        .split(',')
+        .map((t) => t.trim())
+        .filter((t) => t.length > 0),
     };
 
-    if (!Number.isFinite(parsed.entry)) {
+    const validation = entrySchema.safeParse(parsed);
+    if (!validation.success) {
       setBusy(false);
-      setError('Entry must be a number');
+      setError(validation.error.errors[0]?.message ?? 'Invalid input');
       return;
     }
 
+    const data = validation.data;
+
     // Field-level sanity check: long stops must be below entry, short above.
-    if (parsed.stop !== null && Number.isFinite(parsed.stop)) {
-      if (side === 'long' && parsed.stop >= parsed.entry) {
+    if (data.stop !== null && data.stop !== undefined) {
+      if (side === 'long' && data.stop >= data.entry) {
         setBusy(false);
         setError('Long stop must be below entry');
         return;
       }
-      if (side === 'short' && parsed.stop <= parsed.entry) {
+      if (side === 'short' && data.stop <= data.entry) {
         setBusy(false);
         setError('Short stop must be above entry');
         return;
       }
     }
 
-    const tags = tagsInput
-      .split(',')
-      .map((t) => t.trim())
-      .filter((t) => t.length > 0);
-
     try {
       const res = await fetchCsrf('/api/journal', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
-          symbol,
-          side,
+          symbol: data.symbol,
+          side: data.side,
           openedAt: Date.now(),
-          ...parsed,
-          notes: notes.trim() || null,
-          tags,
+          entry: data.entry,
+          stop: data.stop,
+          target: data.target,
+          size: data.size,
+          notes: data.notes,
+          tags: data.tags,
         }),
       });
       if (!res.ok) {
@@ -106,7 +126,7 @@ export function EntryForm({ onCreated }: EntryFormProps) {
       setSize('');
       setNotes('');
       setTagsInput('');
-      toast.success('Trade logged', { description: `${symbol} ${side} @ ${parsed.entry}` });
+      toast.success('Trade logged', { description: `${symbol} ${side} @ ${data.entry}` });
       onCreated?.();
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Create failed';
@@ -158,7 +178,7 @@ export function EntryForm({ onCreated }: EntryFormProps) {
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
           placeholder="thesis, news context, levels of interest…"
-          maxLength={2000}
+          maxLength={5000}
         />
       </div>
 

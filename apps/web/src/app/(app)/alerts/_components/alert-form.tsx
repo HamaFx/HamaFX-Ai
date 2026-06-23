@@ -27,13 +27,44 @@
 import { SYMBOLS, TIMEFRAMES, type Symbol, type Timeframe } from '@hamafx/shared';
 import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
+import { z } from 'zod';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Segmented } from '@/components/ui/segmented';
 import { fetchCsrf } from '@/lib/csrf';
 import { cn } from '@/lib/cn';
+
 type RuleType = 'priceCross' | 'candleClose' | 'indicatorCross';
+
+const alertSchema = z.object({
+  rule: z.discriminatedUnion('type', [
+    z.object({
+      type: z.literal('priceCross'),
+      symbol: z.string().min(1, 'Symbol is required'),
+      level: z.number({ invalid_type_error: 'Level must be a number' }).positive('Level must be positive'),
+      direction: z.enum(['above', 'below']),
+    }),
+    z.object({
+      type: z.literal('candleClose'),
+      symbol: z.string().min(1, 'Symbol is required'),
+      tf: z.string().min(1, 'Timeframe is required'),
+      level: z.number({ invalid_type_error: 'Level must be a number' }).positive('Level must be positive'),
+      direction: z.enum(['above', 'below']),
+    }),
+    z.object({
+      type: z.literal('indicatorCross'),
+      symbol: z.string().min(1, 'Symbol is required'),
+      tf: z.string().min(1, 'Timeframe is required'),
+      indicator: z.string().min(1, 'Indicator is required'),
+      level: z.number({ invalid_type_error: 'Level must be a number' }).positive('Level must be positive'),
+      direction: z.enum(['above', 'below']),
+    }),
+  ]),
+  channels: z.array(z.enum(['email', 'telegram'])).min(1, 'At least one notification channel is required'),
+  note: z.string().max(1000, 'Note must be under 1000 characters').nullable().optional(),
+  snoozeHours: z.number().min(0).max(168).optional(),
+});
 
 interface AlertFormProps {
   /** Defaults to the first symbol — most users land here from /chart and
@@ -66,45 +97,45 @@ export function AlertForm({ initialSymbol, onCreated }: AlertFormProps) {
     setSubmitting(true);
     setError(null);
 
-    const numericLevel = Number(level);
-    if (!Number.isFinite(numericLevel)) {
-      setSubmitting(false);
-      setError('Level must be a number');
-      return;
-    }
-
-    const rule =
+    const parsedSnooze = snoozeHours ? Number(snoozeHours) : 0;
+    const ruleObj =
       type === 'priceCross'
-        ? { type: 'priceCross' as const, symbol, level: numericLevel, direction }
+        ? { type: 'priceCross' as const, symbol, level: level ? Number(level) : NaN, direction }
         : type === 'candleClose'
-          ? { type: 'candleClose' as const, symbol, tf, level: numericLevel, direction }
+          ? { type: 'candleClose' as const, symbol, tf, level: level ? Number(level) : NaN, direction }
           : {
               type: 'indicatorCross' as const,
               symbol,
               tf,
               indicator,
-              level: numericLevel,
+              level: level ? Number(level) : NaN,
               direction,
             };
 
-    // Phase C — UX_UPGRADE_PLAN.md item 17. Parse the snooze
-    // input. Empty string = no snooze (one-shot). Out-of-range
-    // values fall back to 0; the server schema re-validates.
-    const parsedSnooze = Number(snoozeHours);
-    const safeSnooze =
-      Number.isFinite(parsedSnooze) && parsedSnooze >= 0 && parsedSnooze <= 168
-        ? Math.trunc(parsedSnooze)
-        : 0;
+    const validation = alertSchema.safeParse({
+      rule: ruleObj,
+      channels,
+      note: note.trim() || null,
+      snoozeHours: parsedSnooze,
+    });
+
+    if (!validation.success) {
+      setSubmitting(false);
+      setError(validation.error.errors[0]?.message ?? 'Invalid input');
+      return;
+    }
+
+    const data = validation.data;
 
     try {
       const res = await fetchCsrf('/api/alerts', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
-          rule,
-          channels: channels.length > 0 ? channels : ['email'],
-          note: note.trim() || null,
-          snoozeHours: safeSnooze,
+          rule: data.rule,
+          channels: data.channels,
+          note: data.note,
+          snoozeHours: data.snoozeHours,
         }),
       });
       if (!res.ok) {
@@ -115,7 +146,7 @@ export function AlertForm({ initialSymbol, onCreated }: AlertFormProps) {
       }
       setLevel('');
       setNote('');
-      toast.success('Alert created', { description: `${symbol} ${direction} ${numericLevel}` });
+      toast.success('Alert created', { description: `${symbol} ${direction} ${data.rule.level}` });
       onCreated?.();
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Create failed';

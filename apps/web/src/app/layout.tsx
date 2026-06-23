@@ -74,9 +74,40 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       suppressHydrationWarning
     >
       <head>
+        {/* iPhone 14 & 15 Pro */}
         <link
           rel="apple-touch-startup-image"
           media="(device-width: 393px) and (device-height: 852px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)"
+          href="/icons/apple-splash-1179x2556.png"
+        />
+        {/* iPhone 14 & 15 Pro Max */}
+        <link
+          rel="apple-touch-startup-image"
+          media="(device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)"
+          href="/icons/apple-splash-1179x2556.png"
+        />
+        {/* iPhone 12 & 13 Pro, iPhone 14 */}
+        <link
+          rel="apple-touch-startup-image"
+          media="(device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)"
+          href="/icons/apple-splash-1179x2556.png"
+        />
+        {/* iPhone 12 & 13 Pro Max, iPhone 14 Plus */}
+        <link
+          rel="apple-touch-startup-image"
+          media="(device-width: 428px) and (device-height: 926px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)"
+          href="/icons/apple-splash-1179x2556.png"
+        />
+        {/* iPad Pro 12.9" */}
+        <link
+          rel="apple-touch-startup-image"
+          media="(device-width: 1024px) and (device-height: 1366px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)"
+          href="/icons/apple-splash-1179x2556.png"
+        />
+        {/* iPad Pro 11" */}
+        <link
+          rel="apple-touch-startup-image"
+          media="(device-width: 834px) and (device-height: 1194px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)"
           href="/icons/apple-splash-1179x2556.png"
         />
       </head>

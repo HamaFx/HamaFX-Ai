@@ -57,6 +57,8 @@ export function EmptyState({
 }: EmptyStateProps) {
   return (
     <div
+      role="status"
+      aria-label={title}
       className={cn(
         'flex flex-col items-center gap-5 px-6 py-10 text-center',
         !bare && 'border border-divider bg-bg-elev-1 rounded-lg',

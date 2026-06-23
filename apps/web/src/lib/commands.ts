@@ -104,5 +104,23 @@ export function findCommand(id: string): CommandItem | null {
   return COMMANDS.find((c) => c.id === id) ?? null;
 }
 
-/** The icon component type is exported so the palette can type its props without re-importing lucide. */
+import { z } from 'zod';
+
+export const commandSchema = z.object({
+  id: z.string().min(1, 'Command ID is required'),
+  group: z.enum(['navigation', 'create', 'settings']),
+  label: z.string().min(1, 'Label is required'),
+  keywords: z.array(z.string()).optional(),
+  icon: z.any(),
+  href: z.string().optional(),
+  action: z.function().optional(),
+  shortcut: z.string().optional(),
+});
+
+export type Command = CommandItem;
+
+export function validateCommand(command: unknown): Command {
+  return commandSchema.parse(command) as Command;
+}
+
 export type { ComponentType };

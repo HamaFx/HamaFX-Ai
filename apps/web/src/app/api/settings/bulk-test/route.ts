@@ -44,8 +44,6 @@ export const dynamic = 'force-dynamic';
 
 export const POST = withAuth<void>(async (_req, { user }) => {
   try {
-    // Window is fixed at 1 minute by the limiter (the rate_limits PK is
-    // minute-aligned). The previous 4th arg (5 min) was never honored.
     const rate = await withRateLimit(user.userId, 'bulk_test', 2);
     if (!rate.allowed) {
       return Response.json(
@@ -61,54 +59,108 @@ export const POST = withAuth<void>(async (_req, { user }) => {
       .where(eq(schema.userSettings.userId, user.userId));
     const decrypted = settings?.aiApiKeys ? decryptByok(settings.aiApiKeys) : null;
 
-    // Iterate PROVIDER_IDS in declaration order. Providers without
-    // a saved key are reported as 'missing' rather than 'failed' so
-    // the UI can label them differently ("no key" vs "key invalid").
     const testedAt = new Date();
-    const results: Array<{
-      provider: string;
-      status: 'ok' | 'failed' | 'missing';
-      error?: string;
-    }> = await Promise.all(
-      PROVIDER_IDS.map(async (providerId) => {
-        const key = decrypted?.[providerId];
-        if (typeof key !== 'string' || key.trim().length === 0) {
-          return { provider: providerId, status: 'missing' as const };
+    const encoder = new TextEncoder();
+
+    const stream = new ReadableStream({
+      async start(controller) {
+        try {
+          const results: Array<{
+            provider: string;
+            status: 'ok' | 'failed' | 'missing';
+            error?: string;
+          }> = [];
+
+          const activeProviders = PROVIDER_IDS.filter((id) => {
+            const key = decrypted?.[id];
+            return typeof key === 'string' && key.trim().length > 0;
+          });
+
+          const total = activeProviders.length;
+          let current = 0;
+
+          // Fill in missing ones first
+          for (const id of PROVIDER_IDS) {
+            const key = decrypted?.[id];
+            if (typeof key !== 'string' || key.trim().length === 0) {
+              results.push({ provider: id, status: 'missing' as const });
+            }
+          }
+
+          // Test active ones sequentially
+          for (const providerId of activeProviders) {
+            current += 1;
+            controller.enqueue(
+              encoder.encode(
+                JSON.stringify({
+                  type: 'progress',
+                  current,
+                  total,
+                  provider: providerId,
+                }) + '\n',
+              ),
+            );
+
+            const key = decrypted?.[providerId] ?? '';
+            const r = await testProviderKey(providerId, key);
+            const status = r.ok ? ('ok' as const) : ('failed' as const);
+            results.push({
+              provider: providerId,
+              status,
+              ...(r.ok ? {} : { error: r.error }),
+            });
+          }
+
+          // Persist health snapshots
+          const rows = results
+            .filter((r) => r.status !== 'missing')
+            .map((r) => ({
+              userId: user.userId,
+              providerId: r.provider,
+              ok: r.status === 'ok',
+              error: r.status === 'failed' ? r.error ?? 'unknown error' : null,
+              testedAt: testedAt.toISOString(),
+            }));
+          if (rows.length > 0) {
+            await db
+              .delete(schema.providerTests)
+              .where(eq(schema.providerTests.userId, user.userId));
+            await db.insert(schema.providerTests).values(rows);
+          }
+
+          const ok = results.filter((r) => r.status === 'ok').length;
+          const failed = results.filter((r) => r.status === 'failed').length;
+          const missing = results.filter((r) => r.status === 'missing').length;
+
+          controller.enqueue(
+            encoder.encode(
+              JSON.stringify({
+                type: 'done',
+                results,
+                summary: { ok, failed, missing, total: results.length, testedAt: testedAt.toISOString() },
+              }) + '\n',
+            ),
+          );
+        } catch (e) {
+          controller.enqueue(
+            encoder.encode(
+              JSON.stringify({
+                type: 'error',
+                message: e instanceof Error ? e.message : 'Testing failed',
+              }) + '\n',
+            ),
+          );
+        } finally {
+          controller.close();
         }
-        const r = await testProviderKey(providerId, key);
-        return r.ok
-          ? { provider: providerId, status: 'ok' as const }
-          : { provider: providerId, status: 'failed' as const, error: r.error };
-      }),
-    );
+      },
+    });
 
-    // Persist health snapshots so the per-card badge on the page
-    // reflects the new test results without the user clicking
-    // individual "Test" buttons.
-    const rows = results
-      .filter((r) => r.status !== 'missing')
-      .map((r) => ({
-        userId: user.userId,
-        providerId: r.provider,
-        ok: r.status === 'ok',
-        error: r.status === 'failed' ? r.error ?? 'unknown error' : null,
-        testedAt: testedAt.toISOString(),
-      }));
-    if (rows.length > 0) {
-      // Wipe prior rows for this user and re-insert. We treat the
-      // health table as a snapshot, not an event log.
-      await db
-        .delete(schema.providerTests)
-        .where(eq(schema.providerTests.userId, user.userId));
-      await db.insert(schema.providerTests).values(rows);
-    }
-
-    const ok = results.filter((r) => r.status === 'ok').length;
-    const failed = results.filter((r) => r.status === 'failed').length;
-    const missing = results.filter((r) => r.status === 'missing').length;
-    return Response.json({
-      results,
-      summary: { ok, failed, missing, total: results.length, testedAt: testedAt.toISOString() },
+    return new Response(stream, {
+      headers: {
+        'content-type': 'application/x-ndjson',
+        'cache-control': 'no-cache',
+      },
     });
   } catch (err) {
     return errorResponse(err);

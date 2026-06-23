@@ -253,7 +253,8 @@ function Countdown({ ms, imminent }: { ms: number; imminent: boolean }) {
 }
 
 function timeLabel(d: Date): string {
-  return d.toLocaleTimeString(undefined, {
+  return d.toLocaleString(undefined, {
+    weekday: 'short',
     hour: '2-digit',
     minute: '2-digit',
     timeZoneName: 'short',

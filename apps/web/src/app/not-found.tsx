@@ -30,10 +30,10 @@ export default function NotFound() {
         </p>
       </div>
       <Link
-        href="/chat"
+        href="/dashboard"
         className="bg-brand text-brand-fg inline-flex h-9 items-center rounded-md px-3 text-sm font-medium hover:opacity-90"
       >
-        Open chat
+        Go to dashboard
       </Link>
     </main>
   );

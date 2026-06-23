@@ -27,6 +27,7 @@ import { registerAction } from '../actions';
 export default function RegisterPage() {
   const [state, action, pending] = useActionState(registerAction, { error: '' });
   const [success, setSuccess] = useState(false);
+  const [password, setPassword] = useState('');
 
   useEffect(() => {
     if (state.success) {
@@ -79,7 +80,37 @@ export default function RegisterPage() {
               required
               minLength={8}
               disabled={pending || success}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
             />
+            {password.length > 0 && (
+              <div className="text-xs text-fg-subtle grid grid-cols-2 gap-1 mt-1">
+                <div className="flex items-center gap-1">
+                  <span className={password.length >= 8 ? "text-bull" : "text-bear"}>
+                    {password.length >= 8 ? "✓" : "✗"}
+                  </span>
+                  <span>Min 8 characters</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <span className={/[A-Z]/.test(password) ? "text-bull" : "text-bear"}>
+                    {/[A-Z]/.test(password) ? "✓" : "✗"}
+                  </span>
+                  <span>One uppercase letter</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <span className={/[a-z]/.test(password) ? "text-bull" : "text-bear"}>
+                    {/[a-z]/.test(password) ? "✓" : "✗"}
+                  </span>
+                  <span>One lowercase letter</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <span className={/[0-9]/.test(password) ? "text-bull" : "text-bear"}>
+                    {/[0-9]/.test(password) ? "✓" : "✗"}
+                  </span>
+                  <span>One number</span>
+                </div>
+              </div>
+            )}
           </div>
 
           {state?.error ? (

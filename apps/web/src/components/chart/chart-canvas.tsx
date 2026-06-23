@@ -23,7 +23,7 @@
 // Per PLAN.md §4.3 — extracted from the 939-LOC chart.tsx monolith.
 
 import type * as LightweightCharts from 'lightweight-charts';
-import { useEffect, useImperativeHandle, useRef, type Ref } from 'react';
+import { useEffect, useImperativeHandle, useRef, useState, type Ref } from 'react';
 
 import {
   SERIES_ATR_HEX,
@@ -70,7 +70,7 @@ function getIndicatorColor(kind: string, period: number): string {
 }
 
 export function ChartCanvas({
-  symbol: _symbol,
+  symbol,
   candles,
   indicatorResults,
   overlays,
@@ -78,9 +78,9 @@ export function ChartCanvas({
   heightClass = 'h-[60svh]',
   handleRef,
 }: ChartCanvasProps) {
-  const containerRef = useRef<HTMLDivElement | null>(null);
+  const [containerEl, setContainerEl] = useState<HTMLDivElement | null>(null);
   const instanceRef = useRef<MainChartInstance | null>(null);
-  const theme = useChartTheme(containerRef.current, settings);
+  const theme = useChartTheme(containerEl, settings);
 
   const candlesRef = useRef(candles);
   candlesRef.current = candles;
@@ -91,14 +91,14 @@ export function ChartCanvas({
 
   // Build the chart once on mount. Theme is re-applied below.
   useEffect(() => {
-    const el = containerRef.current;
+    const el = containerEl;
     if (!el) return;
 
     let cancelled = false;
     let instance: MainChartInstance | null = null;
 
     void import('lightweight-charts').then((lc) => {
-      if (cancelled || !containerRef.current) return;
+      if (cancelled || !containerEl) return;
       instance = createMainChart(lc, el, settings ?? null);
       instanceRef.current = instance;
       // Force initial resize so canvas isn't 0×0.
@@ -114,12 +114,11 @@ export function ChartCanvas({
       instanceRef.current = null;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [containerEl]);
 
   // Push fresh candle data whenever the query refetches.
   useEffect(() => {
-    if (!candles || candles.length === 0) return;
-    instanceRef.current?.setCandles(candles);
+    instanceRef.current?.setCandles(candles || []);
   }, [candles]);
 
   // Push overlays whenever they change.
@@ -147,18 +146,7 @@ export function ChartCanvas({
       rightPriceScale: { borderColor: theme.colors.grid },
       timeScale: { borderColor: theme.colors.grid },
     });
-  }, [theme, candles]);
-
-  // Resize on container changes (mobile rotation).
-  useEffect(() => {
-    const el = containerRef.current;
-    if (!el) return;
-    const ro = new ResizeObserver(() => {
-      instanceRef.current?.resize(el.clientWidth, el.clientHeight);
-    });
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, []);
+  }, [theme]);
 
   useImperativeHandle(
     handleRef,
@@ -180,10 +168,10 @@ export function ChartCanvas({
 
   return (
     <div
-      ref={containerRef}
+      ref={setContainerEl}
       role="img"
       className={`w-full ${heightClass}`}
-      aria-label={`${_symbol} chart`}
+      aria-label={`${symbol} chart`}
     />
   );
 }
@@ -266,14 +254,20 @@ function createMainChart(
       );
     },
     setOverlays(overlays: OverlaySet | null) {
-      // The lightweight-charts series API surface differs by version;
-      // the eslint-disable below scopes the any to a single line.
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const seriesAny = candleSeries as any;
-      if (typeof seriesAny.setMarkers === 'function') {
-        seriesAny.setMarkers(
-          (overlays?.markers ?? []).map((m) => ({ ...m, size: Number(m.size) })),
-        );
+      const chartAny = chart as unknown as {
+        setMarkers?: (
+          series: LightweightCharts.ISeriesApi<LightweightCharts.SeriesType>,
+          markers: unknown[]
+        ) => void;
+      };
+      const seriesAny = candleSeries as unknown as {
+        setMarkers?: (markers: unknown[]) => void;
+      };
+      const markers = (overlays?.markers ?? []).map((m) => ({ ...m, size: Number(m.size) }));
+      if (typeof chartAny.setMarkers === 'function') {
+        chartAny.setMarkers(candleSeries, markers);
+      } else if (typeof seriesAny.setMarkers === 'function') {
+        seriesAny.setMarkers(markers);
       }
       for (const h of priceLineHandles) {
         try {

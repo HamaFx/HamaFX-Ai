@@ -36,7 +36,7 @@ export default async function AgentCataloguePage() {
   const totalFailures = entries.reduce((s, e) => s + e.failures24h, 0);
 
   return (
-    <main id="main-content" className="mx-auto flex w-full max-w-2xl flex-col gap-4 px-4 py-4">
+    <main className="mx-auto flex w-full max-w-2xl flex-col gap-4 px-4 py-4">
       <header className="flex items-baseline justify-between gap-2">
         <h1 className="text-fg text-xl font-bold">Agent</h1>
         <span className="text-fg-subtle text-body-sm tabular-nums">

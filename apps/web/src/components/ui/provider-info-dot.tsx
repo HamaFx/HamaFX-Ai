@@ -79,7 +79,7 @@ export function ProviderInfoDot({
   className,
 }: ProviderInfoDotProps): ReactElement {
   const label = buildProviderTooltip(provider);
-  const ariaLabel = buildProviderAriaLabel(provider);
+  const ariaLabel = `${provider.displayName} — ${buildProviderAriaLabel(provider)}`;
 
   return (
     <Tooltip label={label} side={side}>
@@ -93,6 +93,7 @@ export function ProviderInfoDot({
         onClick={(e) => e.stopPropagation()}
       >
         <Info className="size-3" aria-hidden="true" />
+        <span className="sr-only">{provider.displayName} info</span>
       </span>
     </Tooltip>
   );

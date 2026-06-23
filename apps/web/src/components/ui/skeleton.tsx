@@ -54,7 +54,7 @@ export function SkeletonCard({ className, lines = 2, ...rest }: SkeletonCardProp
       {Array.from({ length: lines }).map((_, i) => (
         <Skeleton
           key={i}
-          className="h-3 w-full"
+          className="h-3"
           style={{ width: `${100 - i * 18}%` }}
         />
       ))}

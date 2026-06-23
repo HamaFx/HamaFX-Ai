@@ -69,12 +69,9 @@ export async function getUserFromRequest(req: Request): Promise<RequestUser | nu
     // auth() failed — treat as unauthenticated
   }
 
-  // Fallback to system user since authentication is disabled for self-hosted instances
-  return {
-    userId: '__system__',
-    email: 'admin@localhost',
-    name: 'Admin',
-  };
+  // No authenticated user found — do NOT fall back to a system user.
+  // Return null so withAuth() can properly reject the request with 401.
+  return null;
 }
 
 /**

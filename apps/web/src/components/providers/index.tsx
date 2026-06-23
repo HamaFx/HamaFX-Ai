@@ -22,11 +22,15 @@
 import { NuqsAdapter } from 'nuqs/adapters/next/app';
 
 import { QueryProvider } from './query-provider';
+import { SwRegister } from './sw-register';
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
-    <NuqsAdapter>
-      <QueryProvider>{children}</QueryProvider>
-    </NuqsAdapter>
+    <QueryProvider>
+      <NuqsAdapter>
+        <SwRegister />
+        {children}
+      </NuqsAdapter>
+    </QueryProvider>
   );
 }

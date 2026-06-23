@@ -65,6 +65,7 @@ export interface UseVoiceInputArgs {
   lang: string;
   /** Called with the rolling transcript as the user speaks. */
   onText: (transcript: string) => void;
+  onError?: (message: string) => void;
 }
 
 export interface UseVoiceInputResult {
@@ -74,10 +75,16 @@ export interface UseVoiceInputResult {
   stop: () => void;
 }
 
-export function useVoiceInput({ lang, onText }: UseVoiceInputArgs): UseVoiceInputResult {
+export function useVoiceInput({ lang, onText, onError }: UseVoiceInputArgs): UseVoiceInputResult {
   const [active, setActive] = useState(false);
   const ref = useRef<SpeechRecognitionLike | null>(null);
   const [supported, setSupported] = useState(false);
+
+  const onTextRef = useRef(onText);
+  onTextRef.current = onText;
+
+  const onErrorRef = useRef(onError);
+  onErrorRef.current = onError;
 
   // `window` access is gated to the client effect to keep this safe in SSR.
   useEffect(() => {
@@ -111,7 +118,7 @@ export function useVoiceInput({ lang, onText }: UseVoiceInputArgs): UseVoiceInpu
         const r = results[i];
         if (r && r[0]?.transcript) transcript += r[0].transcript;
       }
-      onText(transcript);
+      onTextRef.current(transcript);
     };
     rec.onend = () => {
       setActive(false);
@@ -121,6 +128,19 @@ export function useVoiceInput({ lang, onText }: UseVoiceInputArgs): UseVoiceInpu
       console.warn('[voice-input] recognition error', e);
       setActive(false);
       ref.current = null;
+      
+      const errName = (e as Record<string, unknown> | null)?.error;
+      let userMsg = 'Voice recognition error';
+      if (errName === 'not-allowed') {
+        userMsg = 'Microphone permission denied';
+      } else if (errName === 'network') {
+        userMsg = 'Network error during voice recognition';
+      } else if (errName === 'no-speech') {
+        userMsg = 'No speech detected';
+      } else if (typeof errName === 'string') {
+        userMsg = `Voice error: ${errName}`;
+      }
+      onErrorRef.current?.(userMsg);
     };
 
     ref.current = rec;
@@ -134,7 +154,7 @@ export function useVoiceInput({ lang, onText }: UseVoiceInputArgs): UseVoiceInpu
       ref.current = null;
       setActive(false);
     }
-  }, [lang, onText]);
+  }, [lang]);
 
   const stop = useCallback(() => {
     // Phase 3 hardening §10 — optimistic flip. iOS Safari's

@@ -19,26 +19,15 @@
 // TextPart — light Markdown renderer for the assistant's text segments.
 //
 // We deliberately do not pull in `react-markdown` or `marked`: the model is
-// instructed to emit a small, predictable subset (headings → no, code
-// blocks → yes, bold/italic, inline code, bullet/numbered lists, links).
+// instructed to emit a small, predictable subset (headings, code
+// blocks, bold/italic, inline code, bullet/numbered lists, links, blockquotes, hrs).
 // Implementing those by hand keeps the bundle small and side-steps an
 // HTML-injection sink — every output node is constructed via React, never
 // dangerouslySetInnerHTML.
-//
-// Supported syntax:
-//   **bold**             → <strong>
-//   *italic* / _italic_  → <em>
-//   `inline code`        → <code>
-//   ```...```            → fenced code block with copy-to-clipboard button
-//   - bullet line        → <ul><li>
-//   1. numbered line     → <ol><li>
-//   [text](url)          → <a> (only http(s) links accepted)
-//
-// Anything unrecognized renders as plain text (preserving newlines via
-// whitespace-pre-line).
 
 import { Check, Copy } from 'lucide-react';
-import { useState, type ReactNode } from 'react';
+import { useState, type ReactNode, useCallback } from 'react';
+import { useCopied } from '@/hooks/use-copied';
 
 import { cn } from '@/lib/cn';
 
@@ -64,6 +53,9 @@ export function TextPart({ text, role }: TextPartProps) {
 
 type Block =
   | { kind: 'paragraph'; text: string }
+  | { kind: 'heading'; level: number; text: string }
+  | { kind: 'blockquote'; text: string }
+  | { kind: 'hr' }
   | { kind: 'code'; lang: string; text: string }
   | { kind: 'list'; ordered: boolean; items: string[] };
 
@@ -74,6 +66,36 @@ function parseBlocks(text: string): Block[] {
 
   while (i < lines.length) {
     const line = lines[i] ?? '';
+
+    // Horizontal rule: --- or ***
+    if (/^\s*(?:-{3,}|\*{3,})\s*$/.test(line)) {
+      blocks.push({ kind: 'hr' });
+      i += 1;
+      continue;
+    }
+
+    // Heading: #, ##, ###
+    const headingMatch = /^\s*(#{1,3})\s+(.*)$/.exec(line);
+    if (headingMatch) {
+      const level = headingMatch[1]?.length ?? 1;
+      blocks.push({ kind: 'heading', level, text: headingMatch[2] ?? '' });
+      i += 1;
+      continue;
+    }
+
+    // Blockquote: collect consecutive blockquote lines starting with >
+    if (/^\s*>\s*(.*)$/.test(line)) {
+      const buf: string[] = [];
+      while (i < lines.length) {
+        const cur = lines[i] ?? '';
+        const m = /^\s*>\s*(.*)$/.exec(cur);
+        if (!m) break;
+        buf.push(m[1] ?? '');
+        i += 1;
+      }
+      blocks.push({ kind: 'blockquote', text: buf.join('\n') });
+      continue;
+    }
 
     // Fenced code block: ``` or ```lang
     const fenceMatch = /^```(\w*)\s*$/.exec(line);
@@ -118,7 +140,10 @@ function parseBlocks(text: string): Block[] {
       lines[i]?.trim() !== '' &&
       !/^```/.test(lines[i] ?? '') &&
       !/^\s*[-*]\s+/.test(lines[i] ?? '') &&
-      !/^\s*\d+\.\s+/.test(lines[i] ?? '')
+      !/^\s*\d+\.\s+/.test(lines[i] ?? '') &&
+      !/^\s*(?:-{3,}|\*{3,})\s*$/.test(lines[i] ?? '') &&
+      !/^\s*(#{1,3})\s+/.test(lines[i] ?? '') &&
+      !/^\s*>\s*/.test(lines[i] ?? '')
     ) {
       paraBuf.push(lines[i] ?? '');
       i += 1;
@@ -137,6 +162,31 @@ function renderMarkdown(text: string): ReactNode {
     <>
       {blocks.map((block, idx) => {
         switch (block.kind) {
+          case 'heading': {
+            const HeadingTag = `h${block.level}` as 'h1' | 'h2' | 'h3';
+            const sizeClass =
+              block.level === 1
+                ? 'text-lg font-bold mt-4 mb-2'
+                : block.level === 2
+                  ? 'text-base font-semibold mt-3 mb-1.5'
+                  : 'text-sm font-medium mt-2 mb-1';
+            return (
+              <HeadingTag key={idx} className={sizeClass}>
+                {renderInline(block.text)}
+              </HeadingTag>
+            );
+          }
+          case 'blockquote':
+            return (
+              <blockquote
+                key={idx}
+                className="border-brand/40 text-fg-muted my-2 border-l-3 pl-3 italic"
+              >
+                {renderInline(block.text)}
+              </blockquote>
+            );
+          case 'hr':
+            return <hr key={idx} className="border-divider my-4" />;
           case 'paragraph':
             return (
               <p key={idx} className="whitespace-pre-line leading-relaxed">
@@ -148,7 +198,7 @@ function renderMarkdown(text: string): ReactNode {
           case 'list': {
             const ListTag = block.ordered ? 'ol' : 'ul';
             return (
-              <ListTag key={idx} className={block.ordered ? 'list-decimal pl-5' : ''}>
+              <ListTag key={idx} className={block.ordered ? 'list-decimal pl-5' : 'list-disc pl-5'}>
                 {block.items.map((item, j) => (
                   <li key={j}>{renderInline(item)}</li>
                 ))}
@@ -163,12 +213,8 @@ function renderMarkdown(text: string): ReactNode {
 
 // ---------------------------------------------------------------------------
 // Inline parsing — bold / italic / inline code / links.
-//
-// Strategy: walk the string char by char, accumulating a plain-text run,
-// and consume whichever inline construct opens next. Each construct hands
-// back its closing index; we recurse into its content for nested inlines.
 
-function renderInline(text: string): ReactNode {
+function renderInline(text: string, inLink = false): ReactNode {
   const out: ReactNode[] = [];
   let buf = '';
   let i = 0;
@@ -184,6 +230,13 @@ function renderInline(text: string): ReactNode {
   while (i < text.length) {
     const ch = text[i];
     const next = text[i + 1];
+
+    // Escape character: \ followed by any char
+    if (ch === '\\' && i + 1 < text.length) {
+      buf += text[i + 1];
+      i += 2;
+      continue;
+    }
 
     // Inline code: `…`
     if (ch === '`') {
@@ -203,7 +256,7 @@ function renderInline(text: string): ReactNode {
       const end = text.indexOf('**', i + 2);
       if (end > i) {
         flush();
-        out.push(<strong key={key++}>{renderInline(text.slice(i + 2, end))}</strong>);
+        out.push(<strong key={key++}>{renderInline(text.slice(i + 2, end), inLink)}</strong>);
         i = end + 2;
         continue;
       }
@@ -215,14 +268,14 @@ function renderInline(text: string): ReactNode {
       // Don't grab if the inner span is empty or has a newline.
       if (end > i + 1 && !text.slice(i + 1, end).includes('\n')) {
         flush();
-        out.push(<em key={key++}>{renderInline(text.slice(i + 1, end))}</em>);
+        out.push(<em key={key++}>{renderInline(text.slice(i + 1, end), inLink)}</em>);
         i = end + 1;
         continue;
       }
     }
 
     // Link: [label](url)
-    if (ch === '[') {
+    if (ch === '[' && !inLink) {
       const close = text.indexOf(']', i + 1);
       if (close > i && text[close + 1] === '(') {
         const urlEnd = text.indexOf(')', close + 2);
@@ -239,7 +292,7 @@ function renderInline(text: string): ReactNode {
                 rel="noopener noreferrer"
                 className="text-brand underline-offset-2 hover:underline"
               >
-                {renderInline(label)}
+                {renderInline(label, true)}
               </a>,
             );
             i = urlEnd + 1;
@@ -249,7 +302,7 @@ function renderInline(text: string): ReactNode {
       }
     }
 
-    buf += ch;
+    buf += ch ?? '';
     i += 1;
   }
 
@@ -258,18 +311,20 @@ function renderInline(text: string): ReactNode {
 }
 
 // ---------------------------------------------------------------------------
-// Code block with copy button. Static — no syntax highlighting; the model
-// rarely emits long blocks and bringing in shiki/prism would balloon the
-// bundle.
+// Code block with copy button and optional truncation.
 
 function CodeBlock({ code, lang }: { code: string; lang: string }) {
-  const [copied, setCopied] = useState(false);
+  const [copied, triggerCopy] = useCopied(1500);
+  const [expanded, setExpanded] = useState(false);
 
-  function copy() {
+  const copy = useCallback(() => {
     void navigator.clipboard.writeText(code);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1500);
-  }
+    triggerCopy();
+  }, [code, triggerCopy]);
+
+  const lines = code.split('\n');
+  const shouldTruncate = lines.length > 100;
+  const displayCode = shouldTruncate && !expanded ? lines.slice(0, 100).join('\n') : code;
 
   return (
     <div
@@ -299,8 +354,19 @@ function CodeBlock({ code, lang }: { code: string; lang: string }) {
         </button>
       </div>
       <pre className="scrollbar-hide overflow-x-auto p-3 font-mono text-body-sm leading-relaxed">
-        <code>{code}</code>
+        <code>{displayCode}</code>
       </pre>
+      {shouldTruncate && (
+        <div className="border-divider/40 bg-bg-elev-2/30 flex justify-center border-t py-1.5">
+          <button
+            type="button"
+            onClick={() => setExpanded(!expanded)}
+            className="text-brand hover:text-brand-hover text-caption font-semibold transition-colors"
+          >
+            {expanded ? 'Collapse code' : `Show all ${lines.length} lines`}
+          </button>
+        </div>
+      )}
     </div>
   );
 }

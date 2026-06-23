@@ -21,6 +21,7 @@ import { Check, ChevronDown, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
+import { SkeletonCard } from '@/components/ui/skeleton';
 import { withCsrf } from '@/lib/csrf';
 
 import type { ProviderMeta } from '@hamafx/shared';
@@ -215,6 +216,10 @@ export function ModelPicker({
         tier: model.tier ?? 'flagship',
       });
     }
+  }
+
+  if (!hydrated) {
+    return <SkeletonCard lines={3} />;
   }
 
   if (providers.length === 0 || options.length === 0) {

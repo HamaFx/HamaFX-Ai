@@ -22,7 +22,7 @@
 
 import { RefreshCw } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useTransition } from 'react';
+import { useState, useTransition } from 'react';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
@@ -34,9 +34,13 @@ interface RefreshButtonProps {
 
 export function RefreshButton({ endpoint, label = 'Refresh now' }: RefreshButtonProps) {
   const [pending, startTransition] = useTransition();
+  const [refreshing, setRefreshing] = useState(false);
   const router = useRouter();
 
+  const isLoading = refreshing || pending;
+
   function refresh() {
+    setRefreshing(true);
     startTransition(async () => {
       try {
         const res = await fetch(endpoint);
@@ -56,6 +60,8 @@ export function RefreshButton({ endpoint, label = 'Refresh now' }: RefreshButton
         toast.error('Refresh failed', {
           description: err instanceof Error ? err.message : 'Network error',
         });
+      } finally {
+        setRefreshing(false);
       }
     });
   }
@@ -66,11 +72,11 @@ export function RefreshButton({ endpoint, label = 'Refresh now' }: RefreshButton
       variant="secondary"
       size="sm"
       onClick={refresh}
-      loading={pending}
+      loading={isLoading}
       className="focus-visible:ring-brand min-h-[44px] focus-visible:ring-2"
     >
-      <RefreshCw className={`size-3.5 ${pending ? 'animate-spin' : ''}`} />
-      {pending ? 'Loading…' : label}
+      <RefreshCw className={`size-3.5 ${isLoading ? 'animate-spin' : ''}`} />
+      {isLoading ? 'Loading…' : label}
     </Button>
   );
 }

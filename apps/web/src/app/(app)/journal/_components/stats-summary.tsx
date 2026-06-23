@@ -33,10 +33,12 @@ import {
   Flame,
   Clock,
   CalendarDays,
+  BookOpen,
 } from 'lucide-react';
 import { useMemo } from 'react';
 
 import { StatCard, type StatTone } from '@/components/ui/stat-card';
+import { EmptyState } from '@/components/ui/empty-state';
 import { cn } from '@/lib/cn';
 
 interface StatsSummaryProps {
@@ -167,6 +169,18 @@ export function StatsSummary({ stats, entries = [] }: StatsSummaryProps) {
   const avgRTone: StatTone = stats.avgR > 0.05 ? 'bull' : stats.avgR < -0.05 ? 'bear' : 'muted';
   const winTone: StatTone = stats.winRate >= 0.5 ? 'bull' : stats.winRate > 0 ? 'muted' : 'bear';
   const totalTone: StatTone = stats.totalR > 0 ? 'bull' : stats.totalR < 0 ? 'bear' : 'muted';
+  if (entries.length === 0) {
+    return (
+      <div className="border border-divider bg-bg-elev-1 rounded-lg p-6">
+        <EmptyState
+          tone="muted"
+          icon={<BookOpen className="size-7" strokeWidth={1.75} />}
+          title="No journal entries yet"
+          description="Start logging your trades to see statistics here."
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-4">

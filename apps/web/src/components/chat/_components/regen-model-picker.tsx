@@ -16,11 +16,20 @@
  * limitations under the License.
  */
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { CheckCircle2, Loader2 } from 'lucide-react';
 
 import { withCsrf } from '@/lib/csrf';
 import type { CatalogResponse } from '@hamafx/shared';
+
+interface CacheData {
+  catalog: CatalogResponse | null;
+  chatModel: string | null;
+  fetchedAt: number;
+}
+
+let moduleCache: CacheData | null = null;
+const CACHE_TTL_MS = 60000; // 1 minute
 
 interface RegenModelPickerProps {
   popoverId: string;
@@ -45,12 +54,31 @@ export function RegenModelPicker({ popoverId, activeModelId, onPick }: RegenMode
   const [catalog, setCatalog] = useState<CatalogResponse | null>(null);
   const [chatModel, setChatModel] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   // We re-fetch on every mount (popover-open). The catalog endpoint
   // is `force-dynamic` so it always reflects the current saved keys.
   useEffect(() => {
     let cancelled = false;
+
     async function load() {
+      const now = Date.now();
+
+      // If we have cache and it's not stale, use it and finish
+      if (moduleCache && now - moduleCache.fetchedAt < CACHE_TTL_MS) {
+        setCatalog(moduleCache.catalog);
+        setChatModel(moduleCache.chatModel);
+        setLoading(false);
+        return;
+      }
+
+      // If we have a stale cache, show it immediately (stale-while-revalidate)
+      if (moduleCache) {
+        setCatalog(moduleCache.catalog);
+        setChatModel(moduleCache.chatModel);
+        setLoading(false);
+      }
+
       try {
         const [catRes, modelRes] = await Promise.all([
           fetch('/api/settings/catalog', { ...withCsrf(), cache: 'no-store' }),
@@ -60,11 +88,27 @@ export function RegenModelPicker({ popoverId, activeModelId, onPick }: RegenMode
           }),
         ]);
         if (cancelled) return;
-        if (catRes.ok) setCatalog(await catRes.json());
+
+        let fetchedCatalog: CatalogResponse | null = null;
+        let fetchedChatModel: string | null = null;
+
+        if (catRes.ok) {
+          fetchedCatalog = await catRes.json();
+          setCatalog(fetchedCatalog);
+        }
         if (modelRes.ok) {
           const data = (await modelRes.json()) as { chatModel: string | null };
-          setChatModel(data.chatModel);
+          fetchedChatModel = data.chatModel;
+          setChatModel(fetchedChatModel);
         }
+
+        moduleCache = {
+          catalog: fetchedCatalog || (moduleCache ? moduleCache.catalog : null),
+          chatModel: fetchedChatModel || (moduleCache ? moduleCache.chatModel : null),
+          fetchedAt: Date.now(),
+        };
+      } catch (err) {
+        console.error('Error fetching model picker data', err);
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -74,6 +118,68 @@ export function RegenModelPicker({ popoverId, activeModelId, onPick }: RegenMode
       cancelled = true;
     };
   }, []);
+
+  // Keyboard navigation and initial focus
+  useEffect(() => {
+    if (!loading && containerRef.current) {
+      const items = Array.from(
+        containerRef.current.querySelectorAll<HTMLButtonElement>('button[role="menuitem"]')
+      );
+      const activeItem = items.find((item) => item.getAttribute('data-model-id') === activeModelId);
+      if (activeItem) {
+        activeItem.focus();
+      } else if (items[0]) {
+        items[0].focus();
+      }
+    }
+  }, [loading, activeModelId]);
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (!containerRef.current) return;
+    const items = Array.from(
+      containerRef.current.querySelectorAll<HTMLButtonElement>('button[role="menuitem"]')
+    );
+    if (items.length === 0) return;
+
+    const activeEl = document.activeElement as HTMLButtonElement;
+    const currentIndex = items.indexOf(activeEl);
+
+    switch (e.key) {
+      case 'ArrowDown': {
+        e.preventDefault();
+        const nextIndex = (currentIndex + 1) % items.length;
+        items[nextIndex]?.focus();
+        break;
+      }
+      case 'ArrowUp': {
+        e.preventDefault();
+        const prevIndex = (currentIndex - 1 + items.length) % items.length;
+        items[prevIndex]?.focus();
+        break;
+      }
+      case 'Home': {
+        e.preventDefault();
+        items[0]?.focus();
+        break;
+      }
+      case 'End': {
+        e.preventDefault();
+        items[items.length - 1]?.focus();
+        break;
+      }
+      case 'Escape': {
+        e.preventDefault();
+        const popover = document.getElementById(popoverId);
+        (popover as HTMLElement | null)?.hidePopover?.();
+        // Return focus to the trigger button if it exists
+        const trigger = document.querySelector(`[popovertarget="${popoverId}"]`) as HTMLElement | null;
+        trigger?.focus();
+        break;
+      }
+      default:
+        break;
+    }
+  };
 
   function pick(modelId: string) {
     onPick(modelId);
@@ -126,7 +232,13 @@ export function RegenModelPicker({ popoverId, activeModelId, onPick }: RegenMode
       : null;
 
   return (
-    <div className="flex flex-col gap-2 max-h-96 overflow-y-auto min-w-72">
+    <div
+      ref={containerRef}
+      onKeyDown={handleKeyDown}
+      role="menu"
+      tabIndex={-1}
+      className="flex flex-col gap-2 max-h-96 overflow-y-auto min-w-72 focus:outline-none"
+    >
       {/* My default — the chat_model the user saved in /settings/models */}
       <section className="flex flex-col gap-0.5">
         <div className="px-2 py-1 text-caption uppercase tracking-wide text-fg-subtle">

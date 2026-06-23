@@ -19,6 +19,7 @@
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { Check, ChevronRight, Eye, EyeOff, Loader2, Sparkles } from 'lucide-react';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ProviderInfoDot } from '@/components/ui/provider-info-dot';
@@ -89,11 +90,17 @@ export function OnboardingWizard({ initialName, providers }: OnboardingWizardPro
     const fd = new FormData();
     fd.append('payload', JSON.stringify(payload));
     try {
-      await completeOnboardingAction(fd);
-      router.push('/chat');
-      router.refresh();
+      const res = await completeOnboardingAction(fd);
+      if (res.ok) {
+        router.push('/chat');
+        router.refresh();
+      } else {
+        toast.error(res.error || 'Failed to complete onboarding');
+        setLoading(false);
+      }
     } catch (err) {
       console.error(err);
+      toast.error('An unexpected error occurred');
       setLoading(false);
     }
   }

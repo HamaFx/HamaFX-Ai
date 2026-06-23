@@ -120,7 +120,7 @@ function StatusPill({ ready }: { ready: boolean }) {
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[9px] font-bold uppercase tabular-nums ring-1',
+        'inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[10px] font-bold uppercase tabular-nums ring-1',
         ready
           ? 'bg-bull/10 text-bull ring-bull/30'
           : 'bg-bg-elev-2 text-fg-subtle ring-divider',

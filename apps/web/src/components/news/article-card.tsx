@@ -38,13 +38,15 @@
 // the resting card body to three clean zones without losing the three
 // primary actions.
 //
-// Per PLAN.md §2.4 + §2.6 + §4.4 — anti-pattern 4 fix.
+// Action overlay is memoized to avoid re-rendering untouched cards when bookmark updates.
 
 import type { NewsArticle } from '@hamafx/shared';
 import { Bookmark, ExternalLink, Sparkles } from 'lucide-react';
 import { m } from 'motion/react';
+import { memo } from 'react';
 
 import { cn } from '@/lib/cn';
+import { formatRelative } from '@/lib/format';
 
 import { useBookmarks } from './use-bookmarks';
 
@@ -58,152 +60,162 @@ const SENTIMENT_GLYPH = {
   neutral: '·',
 } as const;
 
+const ArticleCardInner = memo(
+  function ArticleCardInner({
+    article,
+    saved,
+    onToggle,
+  }: {
+    article: NewsArticle;
+    saved: boolean;
+    onToggle: (id: string) => void;
+  }) {
+    const sentimentColor =
+      article.sentiment === 'positive'
+        ? 'oklch(72% 0.18 152)'
+        : article.sentiment === 'negative'
+          ? 'oklch(70% 0.22 25)'
+          : null;
+
+    const askPrompt = encodeURIComponent(
+      `What does this headline mean for my trading?\n\n${article.title}\n${article.url}`,
+    );
+
+    const totalTags = article.symbols.length + article.topics.length;
+    const showTagsInline = totalTags > 0 && totalTags <= 4;
+
+    const overlayVisibility =
+      'opacity-0 transition-opacity duration-150 ' +
+      'group-hover:pointer-events-auto group-hover:opacity-100 ' +
+      'group-focus-within:pointer-events-auto group-focus-within:opacity-100 ' +
+      '[@media(hover:none)]:opacity-100 [@media(hover:none)]:pointer-events-auto';
+
+    return (
+      <article
+        className={cn(
+          'group relative overflow-hidden rounded-lg',
+          'border border-divider bg-bg-elev-1',
+          'transition-colors duration-200 md:hover:bg-bg-elev-2/60',
+        )}
+      >
+        {sentimentColor ? (
+          <span
+            aria-hidden="true"
+            className="absolute inset-y-0 left-0 w-1"
+            style={{ background: sentimentColor }}
+          />
+        ) : null}
+
+        <a
+          href={article.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="block px-4 py-4 pl-5"
+        >
+          <h3 className="text-fg line-clamp-3 text-body font-semibold leading-snug">
+            {article.title}
+          </h3>
+
+          <div className="text-fg-subtle mt-2 flex flex-wrap items-center gap-x-2 text-body-sm tabular-nums">
+            <span className="text-fg-muted font-medium">
+              {article.publisher ?? article.source}
+            </span>
+            <span aria-hidden className="opacity-50">·</span>
+            <time dateTime={new Date(article.publishedAt).toISOString()}>
+              {formatRelative(article.publishedAt)}
+            </time>
+            {article.sentiment && article.sentimentScore !== null ? (
+              <>
+                <span aria-hidden className="opacity-50">·</span>
+                <span
+                  className={cn(
+                    'inline-flex items-center gap-1 font-semibold',
+                    article.sentiment === 'positive' ? 'text-bull' : 'text-bear',
+                  )}
+                >
+                  <span aria-hidden>
+                    {SENTIMENT_GLYPH[article.sentiment as keyof typeof SENTIMENT_GLYPH]}
+                  </span>
+                  {article.sentimentScore > 0 ? '+' : ''}
+                  {article.sentimentScore.toFixed(2)}
+                </span>
+              </>
+            ) : null}
+            {showTagsInline
+              ? renderInlineTags(article.symbols, article.topics)
+              : null}
+          </div>
+
+          {article.summary ? (
+            <p className="text-fg-muted mt-2 line-clamp-2 text-body-sm leading-relaxed">
+              {article.summary}
+            </p>
+          ) : null}
+        </a>
+
+        <div
+          className={cn(
+            'pointer-events-none absolute inset-x-0 bottom-0',
+            'flex items-center justify-between gap-1 px-3 pb-2',
+            overlayVisibility,
+          )}
+        >
+          <a
+            href={`/chat?prompt=${askPrompt}`}
+            onClick={(e) => e.stopPropagation()}
+            className="bg-bg-elev-2 text-fg-muted hover:text-brand pointer-events-auto inline-flex items-center gap-1 rounded-pill px-3 py-1.5 text-body-sm font-medium transition-colors"
+          >
+            <Sparkles className="size-3.5" />
+            Ask AI
+          </a>
+          <div className="pointer-events-auto flex items-center gap-0.5">
+            <m.button
+              type="button"
+              whileTap={{ scale: 0.97 }}
+              onClick={(e) => {
+                e.preventDefault();
+                if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate(50);
+                onToggle(article.id);
+              }}
+              aria-label={saved ? 'Remove bookmark' : 'Bookmark article'}
+              aria-pressed={saved}
+              className={cn(
+                'inline-flex size-8 items-center justify-center rounded-full transition-colors',
+                saved
+                  ? 'text-brand bg-brand/10'
+                  : 'text-fg-muted hover:text-fg hover:bg-bg-elev-2',
+              )}
+            >
+              <Bookmark className={cn('size-4', saved && 'fill-current')} />
+            </m.button>
+            <a
+              href={article.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Open article in new tab"
+              onClick={(e) => e.stopPropagation()}
+              className="text-fg-muted hover:text-fg hover:bg-bg-elev-2 inline-flex size-8 items-center justify-center rounded-full transition-colors"
+            >
+              <ExternalLink className="size-4" />
+            </a>
+          </div>
+        </div>
+      </article>
+    );
+  },
+  (prev, next) => {
+    if (prev.article.id !== next.article.id) return false;
+    if (prev.article.title !== next.article.title) return false;
+    if (prev.saved !== next.saved) return false;
+    return true;
+  },
+);
+
 export function ArticleCard({ article }: ArticleCardProps) {
   const { has, toggle } = useBookmarks();
   const saved = has(article.id);
 
-  const sentimentColor =
-    article.sentiment === 'positive'
-      ? 'oklch(72% 0.18 152)'
-      : article.sentiment === 'negative'
-        ? 'oklch(70% 0.22 25)'
-        : null;
-
-  const askPrompt = encodeURIComponent(
-    `What does this headline mean for my trading?\n\n${article.title}\n${article.url}`,
-  );
-
-  const totalTags = article.symbols.length + article.topics.length;
-  const showTagsInline = totalTags > 0 && totalTags <= 4;
-
-  // Touch devices get the action row permanently visible — they don't
-  // have hover. The hover/focus-reveal pattern is for pointer + keyboard
-  // users only.
-  const overlayVisibility =
-    'opacity-0 transition-opacity duration-150 ' +
-    'group-hover:pointer-events-auto group-hover:opacity-100 ' +
-    'group-focus-within:pointer-events-auto group-focus-within:opacity-100 ' +
-    '[@media(hover:none)]:opacity-100 [@media(hover:none)]:pointer-events-auto';
-
-  return (
-    <article
-      className={cn(
-        'group relative overflow-hidden rounded-lg',
-        'border border-divider bg-bg-elev-1',
-        'transition-colors duration-200 md:hover:bg-bg-elev-2/60',
-      )}
-    >
-      {/* Sentiment accent ribbon — kept as the scannable-at-a-glance signal */}
-      {sentimentColor ? (
-        <span
-          aria-hidden="true"
-          className="absolute inset-y-0 left-0 w-1"
-          style={{ background: sentimentColor }}
-        />
-      ) : null}
-
-      <a
-        href={article.url}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="block px-4 py-4 pl-5"
-      >
-        {/* Zone 1 — Headline */}
-        <h3 className="text-fg line-clamp-3 text-body font-semibold leading-snug">
-          {article.title}
-        </h3>
-
-        {/* Zone 2 — Meta inline: publisher · time · sentiment score · (tags if small) */}
-        <div className="text-fg-subtle mt-2 flex flex-wrap items-center gap-x-2 text-body-sm tabular-nums">
-          <span className="text-fg-muted font-medium">
-            {article.publisher ?? article.source}
-          </span>
-          <span aria-hidden className="opacity-50">·</span>
-          <time dateTime={new Date(article.publishedAt).toISOString()}>
-            {formatRelative(article.publishedAt)}
-          </time>
-          {article.sentiment && article.sentimentScore !== null ? (
-            <>
-              <span aria-hidden className="opacity-50">·</span>
-              <span
-                className={cn(
-                  'inline-flex items-center gap-1 font-semibold',
-                  article.sentiment === 'positive' ? 'text-bull' : 'text-bear',
-                )}
-              >
-                <span aria-hidden>
-                  {SENTIMENT_GLYPH[article.sentiment as keyof typeof SENTIMENT_GLYPH]}
-                </span>
-                {article.sentimentScore > 0 ? '+' : ''}
-                {article.sentimentScore.toFixed(2)}
-              </span>
-            </>
-          ) : null}
-          {showTagsInline
-            ? renderInlineTags(article.symbols, article.topics)
-            : null}
-        </div>
-
-        {/* Zone 3 — Summary */}
-        {article.summary ? (
-          <p className="text-fg-muted mt-2 line-clamp-2 text-body-sm leading-relaxed">
-            {article.summary}
-          </p>
-        ) : null}
-      </a>
-
-      {/* Action overlay — hover/focus on pointer devices, always-visible
-       * on touch devices. Sits over the bottom of the card so it doesn't
-       * push content down. */}
-      <div
-        className={cn(
-          'pointer-events-none absolute inset-x-0 bottom-0',
-          'flex items-center justify-between gap-1 px-3 pb-2',
-          overlayVisibility,
-        )}
-      >
-        <a
-          href={`/chat?prompt=${askPrompt}`}
-          onClick={(e) => e.stopPropagation()}
-          className="bg-bg-elev-2 text-fg-muted hover:text-brand pointer-events-auto inline-flex items-center gap-1 rounded-pill px-3 py-1.5 text-body-sm font-medium transition-colors"
-        >
-          <Sparkles className="size-3.5" />
-          Ask AI
-        </a>
-        <div className="pointer-events-auto flex items-center gap-0.5">
-          <m.button
-            type="button"
-            whileTap={{ scale: 0.97 }}
-            onClick={(e) => {
-              e.preventDefault();
-              if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate(50);
-              toggle(article.id);
-            }}
-            aria-label={saved ? 'Remove bookmark' : 'Bookmark article'}
-            aria-pressed={saved}
-            className={cn(
-              'inline-flex size-8 items-center justify-center rounded-full transition-colors',
-              saved
-                ? 'text-brand bg-brand/10'
-                : 'text-fg-muted hover:text-fg hover:bg-bg-elev-2',
-            )}
-          >
-            <Bookmark className={cn('size-4', saved && 'fill-current')} />
-          </m.button>
-          <a
-            href={article.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="Open article in new tab"
-            onClick={(e) => e.stopPropagation()}
-            className="text-fg-muted hover:text-fg hover:bg-bg-elev-2 inline-flex size-8 items-center justify-center rounded-full transition-colors"
-          >
-            <ExternalLink className="size-4" />
-          </a>
-        </div>
-      </div>
-    </article>
-  );
+  return <ArticleCardInner article={article} saved={saved} onToggle={toggle} />;
 }
 
 // ---------------------------------------------------------------------------
@@ -233,15 +245,4 @@ function renderInlineTags(
       ))}
     </>
   );
-}
-
-function formatRelative(ms: number): string {
-  const diff = Date.now() - ms;
-  const min = Math.round(diff / 60_000);
-  if (min < 1) return 'just now';
-  if (min < 60) return `${min}m ago`;
-  const hr = Math.round(min / 60);
-  if (hr < 24) return `${hr}h ago`;
-  const day = Math.round(hr / 24);
-  return `${day}d ago`;
 }

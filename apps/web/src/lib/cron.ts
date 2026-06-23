@@ -97,3 +97,18 @@ function readCookie(header: string, name: string): string | undefined {
   }
   return undefined;
 }
+
+export async function runCronJob(name: string, fn: () => Promise<void>, options: { timeout?: number } = {}): Promise<Response> {
+  const startTime = Date.now();
+  try {
+    const timeout = options.timeout ?? 30_000;
+    await Promise.race([
+      fn(),
+      new Promise<never>((_, reject) => setTimeout(() => reject(new Error(`Cron job ${name} timed out`)), timeout)),
+    ]);
+    return Response.json({ ok: true, duration: Date.now() - startTime });
+  } catch (error) {
+    console.error(`[cron] ${name} failed:`, error);
+    return Response.json({ ok: false, error: error instanceof Error ? error.message : 'Unknown error' }, { status: 500 });
+  }
+}

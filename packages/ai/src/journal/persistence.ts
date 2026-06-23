@@ -182,8 +182,12 @@ export async function updateEntry(
   return entry;
 }
 
-export async function deleteEntry(userId: string, id: string): Promise<void> {
-  await getDb().delete(schema.journalEntries).where(and(eq(schema.journalEntries.id, id), eq(schema.journalEntries.userId, userId)));
+export async function deleteEntry(userId: string, id: string): Promise<boolean> {
+  const result = await getDb()
+    .delete(schema.journalEntries)
+    .where(and(eq(schema.journalEntries.id, id), eq(schema.journalEntries.userId, userId)))
+    .returning({ id: schema.journalEntries.id });
+  return result.length > 0;
 }
 
 // ---------------------------------------------------------------------------

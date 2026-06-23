@@ -32,3 +32,14 @@ export function readOrCreateRequestId(req: Request): string {
 }
 
 export const REQUEST_ID_HEADER = HEADER_NAME;
+
+export function getRequestId(source: Request | Headers): string | null {
+  const headers = source instanceof Request ? source.headers : source;
+  const id = headers.get(HEADER_NAME);
+  return id && VALID.test(id) ? id : null;
+}
+
+export function setRequestId(target: Response | Headers, id: string): void {
+  const headers = target instanceof Response ? target.headers : target;
+  headers.set(HEADER_NAME, id);
+}

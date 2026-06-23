@@ -160,66 +160,79 @@ export function renderThreadToMarkdown(
     return header + '_No messages in this thread._\n';
   }
 
-  const body = slice
-    .map((m) => {
-      const ts = m.createdAt;
-      const role = m.role.charAt(0).toUpperCase() + m.role.slice(1);
-      const heading = `## ${role} · ${ts}\n\n`;
+  const maxBytes = 5 * 1024 * 1024; // 5MB limit
+  let currentLength = header.length;
+  const blocks: string[] = [];
+  let sizeTruncated = false;
+  let messagesCount = 0;
 
-      if (!m.parts || m.parts.length === 0) {
-        const fallback = (m.content ?? '').trim();
-        return heading + (fallback ? `${escapeInline(fallback)}\n` : '_(empty)_\n');
-      }
+  for (let i = 0; i < slice.length; i++) {
+    const m = slice[i]!;
+    const ts = m.createdAt;
+    const role = m.role.charAt(0).toUpperCase() + m.role.slice(1);
+    const heading = `## ${role} · ${ts}\n\n`;
 
-      const blocks: string[] = [];
+    let inner = '';
+    if (!m.parts || m.parts.length === 0) {
+      const fallback = (m.content ?? '').trim();
+      inner = fallback ? `${escapeInline(fallback)}\n` : '_(empty)_\n';
+    } else {
+      const msgBlocks: string[] = [];
       for (const p of m.parts) {
         const t = p.type;
         if (t === 'text') {
           const text = partText(p).trim();
-          if (text) blocks.push(`${escapeInline(text)}`);
+          if (text) msgBlocks.push(`${escapeInline(text)}`);
         } else if (t === 'reasoning' || t === 'source-document' || t === 'source-url') {
-          // Internal model reasoning + source citations — skip
-          // from the export. They are not user-facing in the chat
-          // UI either.
+          // skip internal reasoning & sources
         } else if (t && t.startsWith('tool-')) {
           const toolName = t.slice('tool-'.length);
-          blocks.push(`> tool: ${toolName}\n${partBlockquote(p)}`);
+          msgBlocks.push(`> tool: ${toolName}\n${partBlockquote(p)}`);
         } else if (t === 'data-citation-warning' || t === 'data-verify-warning') {
           const reason = typeof p.reason === 'string' ? p.reason : 'unsupported claim';
-          // Phase B — UX_UPGRADE_PLAN.md item 9. When the part
-          // carries structured findings, list them as bullet
-          // claims instead of the legacy one-line summary so the
-          // exported Markdown is actionable.
           const findings = Array.isArray(p.findings) ? p.findings : null;
           if (findings && findings.length > 0) {
             const lines = findings.map(
               (f) =>
                 `> - [ ] ${f.supported ? '✓' : '✗'} ${typeof f.text === 'string' ? f.text : JSON.stringify(f)}`,
             );
-            blocks.push(`> **citation warning:** ${reason}\n${lines.join('\n')}`);
+            msgBlocks.push(`> **citation warning:** ${reason}\n${lines.join('\n')}`);
           } else {
-            blocks.push(`> **citation warning:** ${reason}`);
+            msgBlocks.push(`> **citation warning:** ${reason}`);
           }
         } else if (t === 'data-fallback') {
           const reason = typeof p.reason === 'string' ? p.reason : 'override unavailable';
-          blocks.push(`> **fallback:** ${escapeInline(reason)}`);
+          msgBlocks.push(`> **fallback:** ${escapeInline(reason)}`);
         } else if (t === 'file' || t === 'step-start') {
-          // File metadata / multi-step boundary — skip from export.
+          // skip
         } else {
-          // Unknown part shape — keep raw JSON in a fenced block so
-          // the export is lossless and a future reader can inspect.
-          blocks.push('```json\n' + JSON.stringify(p, null, 2) + '\n```');
+          msgBlocks.push('```json\n' + JSON.stringify(p, null, 2) + '\n```');
         }
       }
+      inner = msgBlocks.length > 0 ? msgBlocks.join('\n\n') + '\n' : '_(empty)_\n';
+    }
 
-      const inner = blocks.length > 0 ? blocks.join('\n\n') + '\n' : '_(empty)_\n';
-      return heading + inner;
-    })
-    .join('\n');
+    const messageMarkdown = heading + inner;
+    const potentialTrailer = `\n_(truncated due to size limit: omitted ${messages.length - messagesCount} messages)_\n`;
 
-  const trailer = truncated
-    ? `\n_(truncated to ${max} of ${messages.length} messages)_\n`
-    : '';
+    if (currentLength + messageMarkdown.length + potentialTrailer.length > maxBytes) {
+      sizeTruncated = true;
+      break;
+    }
+
+    blocks.push(messageMarkdown);
+    currentLength += messageMarkdown.length + 1; // plus joint character length (newline)
+    messagesCount++;
+  }
+
+  const body = blocks.join('\n');
+  let trailer = '';
+  if (truncated) {
+    trailer = `\n_(truncated to ${max} of ${messages.length} messages)_\n`;
+  } else if (sizeTruncated) {
+    const totalRemaining = messages.length - messagesCount;
+    trailer = `\n_(truncated due to size limit: omitted ${totalRemaining} messages)_\n`;
+  }
 
   return header + body + trailer;
 }

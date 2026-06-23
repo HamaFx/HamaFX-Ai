@@ -39,6 +39,7 @@ import { Tooltip } from '@/components/ui/tooltip';
 import { cn } from '@/lib/cn';
 import { fetchCsrf } from '@/lib/csrf';
 import { SymbolChip } from '@/components/ui/symbol-chip';
+import { formatRelative } from '@/lib/format';
 export interface ThreadSummary {
   id: string;
   title: string | null;
@@ -62,16 +63,28 @@ export function ChatTopBar({ threadId, title, pinnedSymbol, threads, isStreaming
   const [unpinning, setUnpinning] = useState(false);
   const [confirmEl, confirm] = useConfirm();
   const menuRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
 
   // Click-out / escape close for the overflow menu.
   useEffect(() => {
     if (!menuOpen) return;
+    
+    // Focus first element on open
+    const focusable = menuRef.current?.querySelectorAll<HTMLButtonElement>('[role="menuitem"]');
+    const firstItem = focusable?.[0];
+    if (firstItem) {
+      firstItem.focus();
+    }
+
     function onPointerDown(e: PointerEvent) {
       if (!menuRef.current) return;
       if (!menuRef.current.contains(e.target as Node)) setMenuOpen(false);
     }
     function onKey(e: KeyboardEvent) {
-      if (e.key === 'Escape') setMenuOpen(false);
+      if (e.key === 'Escape') {
+        setMenuOpen(false);
+        triggerRef.current?.focus();
+      }
     }
     window.addEventListener('pointerdown', onPointerDown);
     window.addEventListener('keydown', onKey);
@@ -91,6 +104,7 @@ export function ChatTopBar({ threadId, title, pinnedSymbol, threads, isStreaming
         });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const json = (await res.json()) as { thread: { id: string } };
+        router.refresh();
         router.push(`/chat/${json.thread.id}`);
       } catch (err) {
         toast.error('Failed to create chat', {
@@ -133,12 +147,19 @@ export function ChatTopBar({ threadId, title, pinnedSymbol, threads, isStreaming
    */
   function exportThread() {
     setMenuOpen(false);
-    // We can't POST a download via fetchCsrf and stream the result
-    // back to the user as a file in a portable way across browsers.
-    // Opening the URL in a new tab is the standard pattern: the
-    // browser sees the Content-Disposition header and saves the
-    // file instead of navigating.
-    window.open(`/api/chat/threads/${threadId}/export`, '_blank', 'noopener,noreferrer');
+    const exportUrl = `/api/chat/threads/${threadId}/export`;
+    const newWindow = window.open(exportUrl, '_blank', 'noopener,noreferrer');
+    if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
+      toast.error('Pop-up blocked. Click here to download', {
+        duration: 8000,
+        action: {
+          label: 'Download',
+          onClick: () => {
+            window.location.href = exportUrl;
+          },
+        },
+      });
+    }
   }
 
   /**
@@ -225,6 +246,7 @@ export function ChatTopBar({ threadId, title, pinnedSymbol, threads, isStreaming
 
         <div className="relative" ref={menuRef}>
           <button
+            ref={triggerRef}
             type="button"
             onClick={() => setMenuOpen((v) => !v)}
             aria-label="Conversation menu"
@@ -237,6 +259,34 @@ export function ChatTopBar({ threadId, title, pinnedSymbol, threads, isStreaming
           {menuOpen ? (
             <div
               role="menu"
+              onKeyDown={(e) => {
+                const focusable = menuRef.current?.querySelectorAll<HTMLButtonElement>('[role="menuitem"]');
+                if (!focusable || focusable.length === 0) return;
+                const elements = Array.from(focusable);
+                const activeIndex = elements.indexOf(document.activeElement as HTMLButtonElement);
+                if (e.key === 'ArrowDown') {
+                  e.preventDefault();
+                  const nextIdx = (activeIndex + 1) % elements.length;
+                  elements[nextIdx]?.focus();
+                } else if (e.key === 'ArrowUp') {
+                  e.preventDefault();
+                  const prevIdx = (activeIndex - 1 + elements.length) % elements.length;
+                  elements[prevIdx]?.focus();
+                } else if (e.key === 'Escape') {
+                  e.preventDefault();
+                  setMenuOpen(false);
+                  triggerRef.current?.focus();
+                } else if (e.key === 'Tab') {
+                  const isShift = e.shiftKey;
+                  if (isShift && activeIndex === 0) {
+                    e.preventDefault();
+                    elements[elements.length - 1]?.focus();
+                  } else if (!isShift && activeIndex === elements.length - 1) {
+                    e.preventDefault();
+                    elements[0]?.focus();
+                  }
+                }
+              }}
               className="glass-strong absolute right-0 top-12 z-50 w-56 overflow-hidden rounded-xl text-body-sm"
             >
               <button
@@ -311,6 +361,17 @@ function ThreadSwitcher({ open, onOpenChange, threadId, threads, onPickNew }: Th
   const [selectMode, setSelectMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [deleting, setDeleting] = useState(false);
+  const [confirmEl, confirm] = useConfirm();
+
+  const [now, setNow] = useState(Date.now());
+
+  useEffect(() => {
+    if (!open) return;
+    const interval = setInterval(() => {
+      setNow(Date.now());
+    }, 60000);
+    return () => clearInterval(interval);
+  }, [open]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -338,9 +399,12 @@ function ThreadSwitcher({ open, onOpenChange, threadId, threads, onPickNew }: Th
   async function bulkDelete() {
     if (selectedIds.size === 0 || deleting) return;
     const ids = Array.from(selectedIds);
-    const ok = window.confirm(
-      `Delete ${ids.length} conversation${ids.length === 1 ? '' : 's'}? This cannot be undone.`,
-    );
+    const ok = await confirm({
+      title: `Delete ${ids.length} conversation${ids.length === 1 ? '' : 's'}?`,
+      description: 'This cannot be undone.',
+      confirmLabel: 'Delete',
+      tone: 'danger',
+    });
     if (!ok) return;
     setDeleting(true);
     try {
@@ -484,7 +548,7 @@ function ThreadSwitcher({ open, onOpenChange, threadId, threads, onPickNew }: Th
                         {t.title ?? 'New conversation'}
                       </span>
                       <span className="text-fg-subtle mt-0.5 block text-body-sm tabular-nums">
-                        {formatRelative(t.updatedAt)}
+                        {formatRelative(t.updatedAt, now)}
                       </span>
                     </div>
                     {t.pinnedSymbol ? (
@@ -533,18 +597,8 @@ function ThreadSwitcher({ open, onOpenChange, threadId, threads, onPickNew }: Th
             </div>
           </div>
         ) : null}
+        {confirmEl}
       </DrawerContent>
     </Drawer>
   );
-}
-
-function formatRelative(ms: number): string {
-  const diff = Date.now() - ms;
-  const min = Math.round(diff / 60_000);
-  if (min < 1) return 'just now';
-  if (min < 60) return `${min}m ago`;
-  const hr = Math.round(min / 60);
-  if (hr < 24) return `${hr}h ago`;
-  const day = Math.round(hr / 24);
-  return `${day}d ago`;
 }

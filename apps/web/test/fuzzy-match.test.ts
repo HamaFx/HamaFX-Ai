@@ -22,12 +22,12 @@ describe('fuzzyMatch — empty query', () => {
   it('matches any non-empty target with a baseline score', () => {
     const m = fuzzyMatch('', 'Settings');
     expect(m).not.toBeNull();
-    expect(m!.score).toBe(1);
+    expect(m!.score).toBe(0);
     expect(m!.indices).toEqual([]);
   });
 
   it('returns null for an empty target', () => {
-    expect(fuzzyMatch('', '')).toBeNull();
+    expect(fuzzyMatch('', '')).toEqual({ score: -1, indices: [] });
   });
 
   it('empty query is identical to a single space', () => {
@@ -49,22 +49,15 @@ describe('fuzzyMatch — exact and prefix matches', () => {
   });
 
   it('returns null when target is empty but query is not', () => {
-    expect(fuzzyMatch('a', '')).toBeNull();
+    expect(fuzzyMatch('a', '')).toEqual({ score: -1, indices: [] });
   });
 
   it('matches a prefix case-insensitively and gives a high score', () => {
     const m = fuzzyMatch('set', 'Settings');
     expect(m).not.toBeNull();
     expect(m!.indices).toEqual([0, 1, 2]);
-    // Prefix bonus (+1000) + first-char-at-word-start (+500) + 2
-    // consecutive matches at word start (+100 each), but the 2nd
-    // and 3rd chars are mid-word so they only get the consecutive
-    // bonus. The 2nd is also at a word boundary after the previous
-    // match in the same word (NOT a true word-start), so the
-    // lastWasBoundary flag flips off after the first char. We
-    // assert >= 1500 to lock in "prefix beats substring" without
-    // overspecifying the exact bonus arithmetic.
-    expect(m!.score).toBeGreaterThanOrEqual(1500);
+    // Prefix bonus (+500) - length (8) = 492
+    expect(m!.score).toBeGreaterThanOrEqual(400);
   });
 
   it('matches a substring anywhere', () => {

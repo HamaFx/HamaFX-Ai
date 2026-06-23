@@ -16,17 +16,19 @@
  * limitations under the License.
  */
 
-// Message scroll body. Auto-scroll handled by the parent (chat-screen.tsx).
-// Empty state is rendered by chat-screen, not here — this file is concerned
-// only with rendering an existing message stream + the typing dots.
+// Message scroll body. Virtualized using @tanstack/react-virtual to handle
+// large threads efficiently, rendering only the visible messages in the DOM.
 
 import type { UIMessage } from 'ai';
-
+import { memo } from 'react';
+import { useVirtualizer } from '@tanstack/react-virtual';
 import { Message } from './message';
 
 interface MessageListProps {
   messages: UIMessage[];
   isStreaming?: boolean;
+  showTypingIndicator?: boolean;
+  scrollContainerRef?: React.RefObject<HTMLDivElement | null>;
   /** Index of the last assistant message — gets the regenerate affordance. */
   lastAssistantId?: string;
   onCopy?: (text: string) => void;
@@ -34,46 +36,98 @@ interface MessageListProps {
   onEdit?: (messageId: string, newText: string) => void;
 }
 
-export function MessageList({
+export const MessageList = memo(function MessageList({
   messages,
   isStreaming,
+  showTypingIndicator,
+  scrollContainerRef,
   lastAssistantId,
   onCopy,
   onRegenerate,
   onEdit,
 }: MessageListProps) {
+  const count = messages.length + (showTypingIndicator ? 1 : 0);
+
+  const rowVirtualizer = useVirtualizer({
+    count,
+    getScrollElement: () => scrollContainerRef?.current ?? null,
+    estimateSize: () => 180,
+    overscan: 5,
+  });
+
   return (
-    <div className="flex flex-col gap-4 px-4 py-4">
-      {messages.map((m) => (
-        <Message
-          key={m.id}
-          message={m}
-          {...(onCopy ? { onCopy } : {})}
-          {...(onRegenerate && m.id === lastAssistantId && !isStreaming
-            ? { onRegenerate }
-            : {})}
-          {...(onEdit ? { onEdit } : {})}
-        />
-      ))}
-      {isStreaming ? (
-        <div className="flex justify-start">
+    <div
+      className="relative w-full px-4 py-4"
+      style={{
+        height: `${rowVirtualizer.getTotalSize()}px`,
+      }}
+    >
+      {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+        const isTypingRow = virtualRow.index === messages.length;
+
+        if (isTypingRow) {
+          return (
+            <div
+              key={virtualRow.key}
+              data-index={virtualRow.index}
+              ref={rowVirtualizer.measureElement}
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                width: 'calc(100% - 2rem)', // Account for px-4 padding (1rem on each side)
+                transform: `translateY(${virtualRow.start}px)`,
+              }}
+              className="py-2"
+            >
+              <div className="flex justify-start">
+                <div
+                  className="bg-bg-elev-1 border border-divider text-fg flex items-center gap-1 rounded-3xl rounded-bl-md px-4 py-3"
+                  role="status"
+                  aria-label="Assistant is responding"
+                >
+                  <span className="bg-brand motion-safe:animate-bounce size-1.5 rounded-full" />
+                  <span
+                    className="bg-brand motion-safe:animate-bounce size-1.5 rounded-full"
+                    style={{ animationDelay: '150ms' }}
+                  />
+                  <span
+                    className="bg-brand motion-safe:animate-bounce size-1.5 rounded-full"
+                    style={{ animationDelay: '300ms' }}
+                  />
+                </div>
+              </div>
+            </div>
+          );
+        }
+
+        const m = messages[virtualRow.index];
+        if (!m) return null;
+
+        return (
           <div
-            className="bg-bg-elev-1 border border-divider text-fg flex items-center gap-1 rounded-3xl rounded-bl-md px-4 py-3"
-            role="status"
-            aria-label="Assistant is responding"
+            key={virtualRow.key}
+            data-index={virtualRow.index}
+            ref={rowVirtualizer.measureElement}
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: 'calc(100% - 2rem)', // Account for px-4 padding (1rem on each side)
+              transform: `translateY(${virtualRow.start}px)`,
+            }}
           >
-            <span className="bg-brand motion-safe:animate-pulse size-1.5 rounded-full" />
-            <span
-              className="bg-brand motion-safe:animate-pulse size-1.5 rounded-full"
-              style={{ animationDelay: '150ms' }}
-            />
-            <span
-              className="bg-brand motion-safe:animate-pulse size-1.5 rounded-full"
-              style={{ animationDelay: '300ms' }}
+            <Message
+              message={m}
+              {...(onCopy ? { onCopy } : {})}
+              {...(onRegenerate && m.id === lastAssistantId && !isStreaming
+                ? { onRegenerate }
+                : {})}
+              {...(onEdit ? { onEdit } : {})}
             />
           </div>
-        </div>
-      ) : null}
+        );
+      })}
     </div>
   );
-}
+});

@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-import { WifiOff } from 'lucide-react';
+import { WifiOff, Loader2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 /**
@@ -28,6 +28,7 @@ export function OfflineBanner() {
   // Default to `true` so the banner does not flash during SSR/first paint;
   // the effect below reconciles with `navigator.onLine` on mount.
   const [online, setOnline] = useState(true);
+  const [retrying, setRetrying] = useState(false);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -60,11 +61,14 @@ export function OfflineBanner() {
         <span className="text-body-sm font-medium">No network</span>
         <button
           type="button"
+          disabled={retrying}
           onClick={() => {
+            setRetrying(true);
             window.location.reload();
           }}
-          className="text-fg-muted hover:text-fg focus-visible:ring-brand inline-flex min-h-[44px] items-center justify-center rounded-lg px-3 text-body-sm font-medium transition-colors focus:outline-none focus-visible:ring-2"
+          className="text-fg-muted hover:text-fg focus-visible:ring-brand inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-lg px-3 text-body-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 disabled:opacity-60"
         >
+          {retrying && <Loader2 className="size-3 animate-spin" />}
           Retry
         </button>
       </div>

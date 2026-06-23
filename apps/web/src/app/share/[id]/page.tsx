@@ -27,6 +27,7 @@
 
 import { getActiveSnapshot, verifyShareToken } from '@hamafx/ai';
 import type { Metadata } from 'next';
+import { notFound } from 'next/navigation';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -38,6 +39,10 @@ interface PageProps {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { id } = await params;
+  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+  if (!isUuid) {
+    return { title: 'Not Found' };
+  }
   return { title: `Shared analysis · ${id.slice(0, 8)}` };
 }
 
@@ -46,27 +51,20 @@ export default async function ShareSnapshotPage({ params, searchParams }: PagePr
   const sp = await searchParams;
   const token = sp.t ?? '';
 
+  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+  if (!isUuid) {
+    notFound();
+  }
+
   const secret = process.env.AUTH_COOKIE_SECRET ?? '';
   const payload = secret ? verifyShareToken(token, secret) : null;
   if (!payload || payload.id !== id) {
-    return (
-      <ShareShell title="Link expired or invalid">
-        <p className="text-fg-muted text-sm">
-          This share link couldn&apos;t be verified. It may be expired or tampered with.
-        </p>
-      </ShareShell>
-    );
+    notFound();
   }
 
   const snap = await getActiveSnapshot(id);
   if (!snap) {
-    return (
-      <ShareShell title="Snapshot not available">
-        <p className="text-fg-muted text-sm">
-          This snapshot has expired or been removed.
-        </p>
-      </ShareShell>
-    );
+    notFound();
   }
 
   return (

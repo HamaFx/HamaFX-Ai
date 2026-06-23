@@ -75,3 +75,16 @@ export function getSessionInfo(d: Date): SessionInfo {
   if (hour >= 12 && hour < 17) return { session: 'ny', label: 'NY', weekday };
   return { session: 'closed', label: 'Closed', weekday };
 }
+
+export function isMarketOpen(now: Date = new Date()): boolean {
+  const day = now.getUTCDay();
+  const hour = now.getUTCHours();
+  const month = now.getUTCMonth();
+  const isUsDst = month >= 2 && month <= 10;
+  const closeHour = isUsDst ? 21 : 22;
+  const openHour = isUsDst ? 21 : 22;
+  if (day === 5 && hour >= closeHour) return false;
+  if (day === 6) return false;
+  if (day === 0 && hour < openHour) return false;
+  return true;
+}

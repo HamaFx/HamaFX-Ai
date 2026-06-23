@@ -27,9 +27,11 @@ interface SparklineProps {
   className?: string;
   /** Optional override stroke; defaults to currentColor so it inherits tone. */
   stroke?: string;
+  /** Optional label for accessibility. */
+  label?: string;
 }
 
-export function Sparkline({ values, className, stroke }: SparklineProps) {
+export function Sparkline({ values, className, stroke, label }: SparklineProps) {
   if (values.length < 2) {
     return (
       <div
@@ -52,12 +54,16 @@ export function Sparkline({ values, className, stroke }: SparklineProps) {
     })
     .join(' ');
 
+  const start = values[0];
+  const end = values[values.length - 1];
+
   return (
     <svg
       viewBox="0 0 100 100"
       preserveAspectRatio="none"
       className={cn('h-4 w-full', className)}
-      aria-hidden="true"
+      role="img"
+      aria-label={label ? `${label} trend: ${start} to ${end}` : `Trend: ${start} to ${end}`}
     >
       <path
         d={path}

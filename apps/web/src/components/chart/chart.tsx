@@ -34,9 +34,10 @@
 //   - use-chart-theme.ts — theme hook
 
 import { Maximize2, ZoomIn, ZoomOut } from 'lucide-react';
-import { useMemo, useRef } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import { cn } from '@/lib/cn';
+import { priceDecimals } from '@hamafx/shared';
 
 import { ChartATR } from './chart-atr';
 import { ChartCanvas, type ChartCanvasHandle } from './chart-canvas';
@@ -56,7 +57,14 @@ export function Chart({
   overlays,
   settings,
 }: ChartProps) {
-  const canvasHandleRef = useRef<ChartCanvasHandle | null>(null);
+  const [mainChart, setMainChart] = useState<ChartCanvasHandle | null>(null);
+
+  // Apply decimals on mount / symbol change
+  useEffect(() => {
+    if (mainChart) {
+      mainChart.applyDecimals(priceDecimals(symbol));
+    }
+  }, [mainChart, symbol]);
 
   const rsiResult = useMemo(() => indicatorResults?.find((r) => r.kind === 'rsi'), [indicatorResults]);
   const macdResult = useMemo(() => indicatorResults?.find((r) => r.kind === 'macd'), [indicatorResults]);
@@ -73,13 +81,13 @@ export function Chart({
           {...(overlays !== undefined ? { overlays } : {})}
           settings={settings ?? null}
           heightClass={heightClass}
-          handleRef={canvasHandleRef}
+          handleRef={setMainChart}
         />
 
         {/* Floating zoom and pan controls overlay */}
         <div className="border-glass-edge bg-glass absolute right-4 bottom-4 z-10 flex items-center gap-1 rounded-full border p-1 shadow-lg backdrop-blur-md">
           <button
-            onClick={() => canvasHandleRef.current?.zoomIn()}
+            onClick={() => mainChart?.zoomIn()}
             className="text-fg-muted hover:bg-bg-elev-3 hover:text-fg flex size-8 cursor-pointer items-center justify-center rounded-full transition-all"
             title="Zoom In"
             type="button"
@@ -87,7 +95,7 @@ export function Chart({
             <ZoomIn className="size-4" />
           </button>
           <button
-            onClick={() => canvasHandleRef.current?.zoomOut()}
+            onClick={() => mainChart?.zoomOut()}
             className="text-fg-muted hover:bg-bg-elev-3 hover:text-fg flex size-8 cursor-pointer items-center justify-center rounded-full transition-all"
             title="Zoom Out"
             type="button"
@@ -95,7 +103,7 @@ export function Chart({
             <ZoomOut className="size-4" />
           </button>
           <button
-            onClick={() => canvasHandleRef.current?.resetView()}
+            onClick={() => mainChart?.resetView()}
             className="text-fg-muted hover:bg-bg-elev-3 hover:text-fg flex size-8 cursor-pointer items-center justify-center rounded-full transition-all"
             title="Reset View"
             type="button"
@@ -111,7 +119,7 @@ export function Chart({
           <ChartRSI
             result={rsiResult}
             candles={candles}
-            mainChart={canvasHandleRef.current}
+            mainChart={mainChart}
             settings={settings ?? null}
           />
           <div className="text-fg-subtle pointer-events-none absolute top-2 left-3 z-10 text-caption font-bold uppercase tracking-wider">
@@ -126,7 +134,7 @@ export function Chart({
           <ChartMACD
             result={macdResult}
             candles={candles}
-            mainChart={canvasHandleRef.current}
+            mainChart={mainChart}
             settings={settings ?? null}
           />
           <div className="text-fg-subtle pointer-events-none absolute top-2 left-3 z-10 text-caption font-bold uppercase tracking-wider">
@@ -141,7 +149,7 @@ export function Chart({
           <ChartATR
             result={atrResult}
             candles={candles}
-            mainChart={canvasHandleRef.current}
+            mainChart={mainChart}
             settings={settings ?? null}
           />
           <div className="text-fg-subtle pointer-events-none absolute top-2 left-3 z-10 text-caption font-bold uppercase tracking-wider">

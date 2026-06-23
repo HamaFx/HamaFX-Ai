@@ -20,10 +20,10 @@
 // Client orchestration for the upgraded chart page.
 // Combines dynamic price feeds, structure events, active indicators, and customized styling.
 
-import type { Symbol, Candle, Timeframe } from '@hamafx/shared';
+import { type Symbol, type Candle, msPerTimeframe } from '@hamafx/shared';
 import { Maximize2, SlidersHorizontal } from 'lucide-react';
 import { Link } from 'next-view-transitions';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 
 import { Chart, type ChartSettings } from '@/components/chart/chart';
 import { ChartSettingsDrawer, type ChartIndicators } from '@/components/chart/chart-settings-drawer';
@@ -43,11 +43,42 @@ import { useChartData } from '@/hooks/use-chart-data';
 import { usePrice } from '@/hooks/use-prices';
 import { useStructure } from '@/hooks/use-structure';
 import { useTimeframe } from '@/hooks/use-tf';
+import { useLocalStorage } from '@/hooks/use-local-storage';
 
 import { ChartEmpty } from './chart-empty';
 import { ChartError } from './chart-error';
 import { ChartSkeleton } from './chart-skeleton';
 import { OverlaySheet } from './overlay-sheet';
+
+class ChartErrorBoundary extends React.Component<
+  { children: React.ReactNode },
+  { hasError: boolean; error: Error | null }
+> {
+  constructor(props: { children: React.ReactNode }) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error };
+  }
+
+  override componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.error('[chart-error-boundary] Caught chart error:', error, errorInfo);
+  }
+
+  override render() {
+    if (this.state.hasError) {
+      return (
+        <ChartError
+          error={this.state.error ?? new Error('Chart rendering failed')}
+          onRetry={() => this.setState({ hasError: false, error: null })}
+        />
+      );
+    }
+    return this.props.children;
+  }
+}
 
 const PALETTE: OverlayPalette = {
   bull: '#48d597',
@@ -74,17 +105,9 @@ const DEFAULT_SETTINGS: ChartSettings = {
   gridStyle: 'solid',
 };
 
-function timeframeToMs(tf: Timeframe): number {
-  switch (tf) {
-    case '1m': return 60_000;
-    case '5m': return 300_000;
-    case '15m': return 900_000;
-    case '30m': return 1_800_000;
-    case '1h': return 3_600_000;
-    case '4h': return 14_400_000;
-    case '1d': return 86_400_000;
-    case '1w': return 604_800_000;
-  }
+interface ChartConfig {
+  indicators: ChartIndicators;
+  settings: ChartSettings;
 }
 
 export function ChartView({ symbol }: { symbol: Symbol }) {
@@ -94,49 +117,21 @@ export function ChartView({ symbol }: { symbol: Symbol }) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [visible, setVisible] = useState(true);
 
-  // Indicators and customizer settings state
-  const [indicators, setIndicators] = useState<ChartIndicators>(DEFAULT_INDICATORS);
-  const [settings, setSettings] = useState<ChartSettings>(DEFAULT_SETTINGS);
-  const [hydrated, setHydrated] = useState(false);
+  // Indicators and customizer settings state backed by useLocalStorage
+  const [config, setConfig] = useLocalStorage<ChartConfig>('hfx_chart_config', {
+    indicators: DEFAULT_INDICATORS,
+    settings: DEFAULT_SETTINGS,
+  });
 
-  // Load preferences from localStorage on mount
-  useEffect(() => {
-    try {
-      const stored = localStorage.getItem('hfx_chart_config');
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        if (parsed.indicators) setIndicators(parsed.indicators);
-        if (parsed.settings) setSettings(parsed.settings);
-      }
-    } catch (e) {
-      console.error('Failed to load chart preferences', e);
-    }
-    setHydrated(true);
-  }, []);
+  const indicators = config.indicators;
+  const settings = config.settings;
 
-  // Save preferences when they change
   const handleIndicatorsChange = (nextIndicators: ChartIndicators) => {
-    setIndicators(nextIndicators);
-    try {
-      localStorage.setItem(
-        'hfx_chart_config',
-        JSON.stringify({ indicators: nextIndicators, settings })
-      );
-    } catch (e) {
-      console.error(e);
-    }
+    setConfig((prev) => ({ ...prev, indicators: nextIndicators }));
   };
 
   const handleSettingsChange = (nextSettings: ChartSettings) => {
-    setSettings(nextSettings);
-    try {
-      localStorage.setItem(
-        'hfx_chart_config',
-        JSON.stringify({ indicators, settings: nextSettings })
-      );
-    } catch (e) {
-      console.error(e);
-    }
+    setConfig((prev) => ({ ...prev, settings: nextSettings }));
   };
 
   useEffect(() => {
@@ -183,11 +178,18 @@ export function ChartView({ symbol }: { symbol: Symbol }) {
     if (!candles || candles.length === 0) return candles;
     if (!tick) return candles;
 
-    const tfMs = timeframeToMs(tf);
+    const tfMs = msPerTimeframe(tf);
     const lastCandle = candles[candles.length - 1]!;
     
     // Calculate the start time of the timeframe bucket that this tick belongs to.
     const barTime = Math.floor(tick.ts / tfMs) * tfMs;
+
+    // Guard 1: Verify tick is for correct symbol
+    if (tick.symbol && tick.symbol !== symbol) return candles;
+    // Guard 2: Reject stale ticks
+    if (barTime < lastCandle.t) return candles;
+    // Guard 3: Reject far-future ticks (clock skew)
+    if (barTime > lastCandle.t + tfMs * 2) return candles;
 
     if (barTime === lastCandle.t) {
       const updatedLast: Candle = {
@@ -215,7 +217,7 @@ export function ChartView({ symbol }: { symbol: Symbol }) {
     }
 
     return candles;
-  }, [candles, tick, tf]);
+  }, [candles, tick, tf, symbol]);
 
   // Only fetch structure when at least one overlay is on.
   const overlaysOn = activeOverlays.length > 0;
@@ -243,10 +245,10 @@ export function ChartView({ symbol }: { symbol: Symbol }) {
   );
 
   const overlaySet = useMemo(() => {
-    if (!structure || !candlesWithLive) return null;
-    const times = candlesWithLive.map((c) => c.t);
+    if (!structure || !candles) return null;
+    const times = candles.map((c) => c.t);
     return buildOverlays(structure, times, PALETTE, toggleRecord);
-  }, [structure, candlesWithLive, toggleRecord]);
+  }, [structure, candles, toggleRecord]);
 
   return (
     <div ref={containerRef} className="-mx-4 flex flex-col animate-in fade-in duration-300">
@@ -275,24 +277,22 @@ export function ChartView({ symbol }: { symbol: Symbol }) {
               <OverlaySheet active={activeOverlays} onToggle={toggleOverlay} />
               
               {/* Premium preferences & indicators Customizer */}
-              {hydrated && (
-                <ChartSettingsDrawer
-                  settings={settings}
-                  onSettingsChange={handleSettingsChange}
-                  indicators={indicators}
-                  onIndicatorsChange={handleIndicatorsChange}
-                  trigger={
-                    <Tooltip label="Preferences">
-                      <button
-                        aria-label="Preferences"
-                        className="bg-bg-elev-1 border border-divider text-fg-muted hover:text-fg focus-visible:ring-brand inline-flex size-11 items-center justify-center rounded-full focus:outline-none focus-visible:ring-2 cursor-pointer"
-                      >
-                        <SlidersHorizontal className="size-4" />
-                      </button>
-                    </Tooltip>
-                  }
-                />
-              )}
+              <ChartSettingsDrawer
+                settings={settings}
+                onSettingsChange={handleSettingsChange}
+                indicators={indicators}
+                onIndicatorsChange={handleIndicatorsChange}
+                trigger={
+                  <Tooltip label="Preferences">
+                    <button
+                      aria-label="Preferences"
+                      className="bg-bg-elev-1 border border-divider text-fg-muted hover:text-fg focus-visible:ring-brand inline-flex size-11 items-center justify-center rounded-full focus:outline-none focus-visible:ring-2 cursor-pointer"
+                    >
+                      <SlidersHorizontal className="size-4" />
+                    </button>
+                  </Tooltip>
+                }
+              />
 
               {process.env.NEXT_PUBLIC_TRADINGVIEW_ENABLED === '1' ? (
                 <Tooltip label="Pro chart">
@@ -318,14 +318,16 @@ export function ChartView({ symbol }: { symbol: Symbol }) {
         ) : !candlesWithLive || candlesWithLive.length === 0 ? (
           <ChartEmpty symbol={symbol} tf={tf} onRetry={() => void refetch()} />
         ) : (
-          <Chart
-            symbol={symbol}
-            tf={tf}
-            candles={candlesWithLive}
-            indicatorResults={indicatorResults}
-            settings={settings}
-            overlays={overlaySet}
-          />
+          <ChartErrorBoundary>
+            <Chart
+              symbol={symbol}
+              tf={tf}
+              candles={candlesWithLive}
+              indicatorResults={indicatorResults}
+              settings={settings}
+              overlays={overlaySet}
+            />
+          </ChartErrorBoundary>
         )}
 
         {overlaysOn ? (

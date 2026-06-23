@@ -32,8 +32,6 @@ interface SentimentSummaryProps {
 }
 
 export function SentimentSummary({ articles }: SentimentSummaryProps) {
-  if (articles.length === 0) return null;
-
   const counts = { positive: 0, negative: 0, neutral: 0, none: 0 };
   for (const a of articles) {
     if (a.sentiment === 'positive') counts.positive += 1;
@@ -42,18 +40,19 @@ export function SentimentSummary({ articles }: SentimentSummaryProps) {
     else counts.none += 1;
   }
   const total = articles.length;
-  const pct = (n: number) => Math.max(0, (n / total) * 100);
+  const pct = (n: number) => (total > 0 ? Math.max(0, (n / total) * 100) : 0);
 
-  // Visual lean — bias the bar towards bullish when positive > negative
-  // and vice versa. Used for the gradient glow underneath the bar.
-  const lean = counts.positive - counts.negative;
+  // Calculate and clamp sentiment score to [-1, 1]
+  const rawScore = total > 0 ? (counts.positive - counts.negative) / total : 0;
+  const score = Math.max(-1, Math.min(1, rawScore));
+
   const leanLabel =
-    lean > total * 0.2
-      ? 'Bullish lean'
-      : lean < -total * 0.2
-        ? 'Bearish lean'
-        : 'Mixed';
-  const leanTone = lean > 0 ? 'text-bull' : lean < 0 ? 'text-bear' : 'text-fg-muted';
+    score > 0.15
+      ? 'Bullish'
+      : score < -0.15
+        ? 'Bearish'
+        : 'Neutral';
+  const leanTone = score > 0.15 ? 'text-bull' : score < -0.15 ? 'text-bear' : 'text-fg-muted';
 
   return (
     <section

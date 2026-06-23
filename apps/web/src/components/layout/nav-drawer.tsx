@@ -28,7 +28,6 @@
 //   - Sectioned destinations (Markets / Personal) + identity strip and
 //     a footer "Sign out" action.
 
-import { Menu } from 'lucide-react'; // re-exported for triggers
 import {
   Bell,
   BookOpen,
@@ -44,8 +43,11 @@ import { Link } from 'next-view-transitions';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { Drawer as DrawerPrimitive } from 'vaul';
+import { useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 
 import { cn } from '@/lib/cn';
+import { withCsrf } from '@/lib/csrf';
 
 import { useNavDrawer } from './nav-drawer-context';
 
@@ -106,15 +108,22 @@ export function NavDrawer() {
     return candidates.some((p) => pathname === p || pathname.startsWith(`${p}/`));
   }
 
+  const queryClient = useQueryClient();
+
   async function logout() {
     try {
-      await fetch('/api/auth/logout', { method: 'POST' });
+      const res = await fetch('/api/auth/signout', { method: 'POST', ...withCsrf() });
+      if (!res.ok) {
+        toast.error('Failed to log out. Please try again.');
+        return;
+      }
+      queryClient.clear();
+      setOpen(false);
+      router.push('/login');
+      router.refresh();
     } catch {
-      /* best effort */
+      toast.error('Failed to log out. Please check your network connection.');
     }
-    setOpen(false);
-    router.push('/login');
-    router.refresh();
   }
 
   return (
@@ -207,8 +216,7 @@ export function NavDrawer() {
   );
 }
 
-// Convenience export so consumers don't need a second import for the icon.
-export { Menu };
+
 
 // ---------------------------------------------------------------------------
 

@@ -23,10 +23,11 @@
 // --toast-bottom (= safe-area-inset + 16px). Desktop (≥768px): bottom-right.
 
 import { useEffect, useState } from 'react';
-import { Toaster as SonnerToaster } from 'sonner';
+import { Toaster as SonnerToaster, toast } from 'sonner';
 
 export function Toaster() {
   const [position, setPosition] = useState<'bottom-center' | 'bottom-right'>('bottom-center');
+  const [announcement, setAnnouncement] = useState('');
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -37,29 +38,52 @@ export function Toaster() {
     return () => mq.removeEventListener('change', update);
   }, []);
 
+  useEffect(() => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const unsubscribe = (toast as any).subscribe((toasts: any[]) => {
+      const activeToasts = toasts.filter((t) => !t.delete);
+      if (activeToasts.length > 0) {
+        const latest = activeToasts[activeToasts.length - 1];
+        const titleText = typeof latest.title === 'string' ? latest.title : '';
+        const descText = typeof latest.description === 'string' ? latest.description : '';
+        const text = [titleText, descText].filter(Boolean).join(': ');
+        if (text) {
+          // Add a tiny random suffix or just update state to force screen reader announcement
+          setAnnouncement(text);
+        }
+      }
+    });
+    return () => unsubscribe();
+  }, []);
+
   return (
-    <SonnerToaster
-      position={position}
-      offset="var(--toast-bottom)"
-      duration={3000}
-      gap={8}
-      closeButton={false}
-      richColors={false}
-      toastOptions={{
-        classNames: {
-          toast:
-            'group !rounded-xl !backdrop-blur-xl !backdrop-saturate-150 !shadow-2xl ' +
-            '![background:linear-gradient(135deg,oklch(20%_0.022_265/0.85),oklch(17%_0.018_265/0.95))] ' +
-            '!border !border-divider !text-fg ' +
-            '![box-shadow:inset_0_1px_0_0_oklch(100%_0_0_/_0.06),0_25px_50px_-12px_oklch(0%_0_0_/_0.5)]',
-          title: '!text-sm !font-semibold',
-          description: '!text-xs !text-fg-muted',
-          success: '!border-bull/40',
-          error: '!border-bear/40',
-          info: '!border-info/40',
-          warning: '!border-warn/40',
-        },
-      }}
-    />
+    <>
+      <SonnerToaster
+        position={position}
+        offset="var(--toast-bottom)"
+        duration={3000}
+        gap={8}
+        closeButton={false}
+        richColors={true}
+        toastOptions={{
+          classNames: {
+            toast:
+              'group !rounded-xl !backdrop-blur-xl !backdrop-saturate-150 !shadow-2xl ' +
+              '![background:linear-gradient(135deg,oklch(20%_0.022_265/0.85),oklch(17%_0.018_265/0.95))] ' +
+              '!border !border-divider !text-fg ' +
+              '![box-shadow:inset_0_1px_0_0_oklch(100%_0_0_/_0.06),0_25px_50px_-12px_oklch(0%_0_0_/_0.5)]',
+            title: '!text-sm !font-semibold',
+            description: '!text-xs !text-fg-muted',
+            success: '!border-bull/40',
+            error: '!border-bear/40',
+            info: '!border-info/40',
+            warning: '!border-warn/40',
+          },
+        }}
+      />
+      <div className="sr-only" aria-live="polite" aria-atomic="true">
+        {announcement}
+      </div>
+    </>
   );
 }

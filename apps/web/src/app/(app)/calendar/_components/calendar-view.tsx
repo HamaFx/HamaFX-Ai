@@ -20,14 +20,18 @@
 // today / tomorrow / this-week / later-this-month / past sections.
 
 import type { EconomicEvent } from '@hamafx/shared';
-import { Filter, RotateCw } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { Filter, RotateCw, CalendarX } from 'lucide-react';
 import { useEffect, useMemo, useState, useTransition } from 'react';
 import { toast } from 'sonner';
+import { useQuery } from '@tanstack/react-query';
+import { useQueryState } from 'nuqs';
 
 import { EventCard } from '@/components/calendar/event-card';
 import { EmptyState } from '@/components/ui/empty-state';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/cn';
+import { formatRelative } from '@/lib/format';
 
 import {
   CalendarToolbar,
@@ -42,23 +46,30 @@ interface CalendarViewProps {
 const AUTO_REFRESH_MS = 5 * 60_000;
 
 export function CalendarView({ initialEvents }: CalendarViewProps) {
-  const router = useRouter();
   const [pending, startTransition] = useTransition();
-  const [importance, setImportance] = useState<ImportanceFilter>('all');
-  const [currency, setCurrency] = useState<CurrencyFilter>('all');
+  const [importance, setImportance] = useQueryState('importance', { defaultValue: 'all' }) as [ImportanceFilter, (val: ImportanceFilter) => void];
+  const [currency, setCurrency] = useQueryState('currency', { defaultValue: 'all' }) as [CurrencyFilter, (val: CurrencyFilter) => void];
   const [showPast, setShowPast] = useState(false);
   const [lastRefreshed, setLastRefreshed] = useState(Date.now());
+
+  const { data: events = initialEvents, isLoading, isError, error, refetch } = useQuery<EconomicEvent[]>({
+    queryKey: ['calendar'],
+    queryFn: async () => {
+      const res = await fetch('/api/calendar');
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return (await res.json()) as EconomicEvent[];
+    },
+    initialData: initialEvents,
+  });
 
   // Soft auto-refresh — keeps countdowns/relative times accurate.
   useEffect(() => {
     const id = setInterval(() => {
-      startTransition(() => {
-        router.refresh();
-        setLastRefreshed(Date.now());
-      });
+      refetch();
+      setLastRefreshed(Date.now());
     }, AUTO_REFRESH_MS);
     return () => clearInterval(id);
-  }, [router]);
+  }, [refetch]);
 
   function manualRefresh() {
     startTransition(async () => {
@@ -66,7 +77,7 @@ export function CalendarView({ initialEvents }: CalendarViewProps) {
         const res = await fetch('/api/cron/calendar');
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         toast.success('Calendar refreshed');
-        router.refresh();
+        refetch();
         setLastRefreshed(Date.now());
       } catch (err) {
         toast.error('Refresh failed', {
@@ -78,15 +89,39 @@ export function CalendarView({ initialEvents }: CalendarViewProps) {
 
   const filtered = useMemo(() => {
     const now = Date.now();
-    return initialEvents.filter((e) => {
+    return events.filter((e) => {
       if (!showPast && e.date < now) return false;
       if (importance !== 'all' && e.importance !== importance) return false;
       if (currency !== 'all' && e.currency !== currency) return false;
       return true;
     });
-  }, [initialEvents, importance, currency, showPast]);
+  }, [events, importance, currency, showPast]);
 
   const sections = useMemo(() => bucket(filtered), [filtered]);
+
+  if (isLoading) {
+    return (
+      <div className="space-y-3 mt-4">
+        {Array.from({ length: 5 }).map((_, i) => (
+          <Skeleton key={i} className="h-20 w-full" />
+        ))}
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="mt-4">
+        <EmptyState
+          tone="muted"
+          icon={<CalendarX className="size-7" />}
+          title="Failed to load calendar"
+          description={error instanceof Error ? error.message : 'Unknown error'}
+          action={<Button onClick={() => refetch()}>Retry</Button>}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-4">
@@ -98,7 +133,7 @@ export function CalendarView({ initialEvents }: CalendarViewProps) {
         showPast={showPast}
         onShowPast={setShowPast}
         visibleCount={filtered.length}
-        totalCount={initialEvents.length}
+        totalCount={events.length}
       />
 
       <div className="flex items-center justify-end">
@@ -190,13 +225,4 @@ function startOfDay(ms: number): number {
   const d = new Date(ms);
   d.setHours(0, 0, 0, 0);
   return d.getTime();
-}
-
-function formatRelative(ms: number): string {
-  const diff = Date.now() - ms;
-  const min = Math.round(diff / 60_000);
-  if (min < 1) return 'just now';
-  if (min < 60) return `${min}m ago`;
-  const hr = Math.round(min / 60);
-  return `${hr}h ago`;
 }

@@ -154,3 +154,24 @@ function bytesToHex(bytes: Uint8Array): string {
 
 export const CHAT_IMAGE_BUCKET_NAME = CHAT_IMAGES_BUCKET;
 export const CHAT_IMAGE_MAX_BYTES = MAX_UPLOAD_BYTES;
+
+export function safeGetItem<T>(key: string, fallback: T): T {
+  try {
+    if (typeof window === 'undefined') return fallback;
+    const item = localStorage.getItem(key);
+    return item === null ? fallback : (JSON.parse(item) as T);
+  } catch {
+    return fallback;
+  }
+}
+
+export function safeSetItem<T>(key: string, value: T): boolean {
+  try {
+    if (typeof window === 'undefined') return false;
+    localStorage.setItem(key, JSON.stringify(value));
+    return true;
+  } catch (e) {
+    console.error(`[storage] Failed to set ${key}:`, e);
+    return false;
+  }
+}

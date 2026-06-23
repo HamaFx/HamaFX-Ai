@@ -17,6 +17,7 @@
  */
 
 import { useEffect } from 'react';
+import { toast } from 'sonner';
 
 /**
  * Registers the service worker once, deferred until the browser is idle so we
@@ -30,9 +31,30 @@ export function SwRegister(): null {
     if (!window.isSecureContext) return;
 
     const register = (): void => {
-      navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch((err: unknown) => {
-        console.warn('[sw] register failed', err);
-      });
+      navigator.serviceWorker
+        .register('/sw.js', { scope: '/' })
+        .then((reg) => {
+          reg.addEventListener('updatefound', () => {
+            const newWorker = reg.installing;
+            newWorker?.addEventListener('statechange', () => {
+              if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                toast.info('Update available', {
+                  action: {
+                    label: 'Reload',
+                    onClick: () => {
+                      newWorker.postMessage({ type: 'SKIP_WAITING' });
+                      window.location.reload();
+                    },
+                  },
+                  duration: Infinity,
+                });
+              }
+            });
+          });
+        })
+        .catch((err: unknown) => {
+          console.warn('[sw] register failed', err);
+        });
     };
 
     if (typeof window.requestIdleCallback === 'function') {

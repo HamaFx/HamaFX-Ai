@@ -18,7 +18,9 @@
 
 import { Sparkles, X } from 'lucide-react';
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useLocalStorage } from '@/hooks/use-local-storage';
+
+import { useConfirm } from '@/components/ui/confirm-drawer';
 
 export interface AIPrefs {
   /** Free-form instructions appended to the AI's system prompt. */
@@ -86,51 +88,14 @@ export function appendPreset(current: string, presetId: string): string {
   const p = getPreset(presetId);
   if (!p) return current;
   const trimmed = current.trim();
-  if (trimmed.length === 0) return p.prompt;
-  return `${trimmed}\n\n${p.prompt}`;
+  const safeCurrent = typeof current === 'string' ? trimmed : '';
+  if (safeCurrent.length === 0) return p.prompt;
+  return `${safeCurrent}\n\n${p.prompt}`;
 }
 
 const DEFAULTS: AIPrefs = {
   customInstructions: '',
 };
-
-export function readAIPrefs(): AIPrefs {
-  if (typeof window === 'undefined') return DEFAULTS;
-  try {
-    const raw = window.localStorage.getItem(AI_PREFS_STORAGE_KEY);
-    if (!raw) return DEFAULTS;
-    const parsed = JSON.parse(raw) as Partial<AIPrefs> & {
-      // Legacy fields from the older 4-key shape — ignored on read
-      // so old localStorage values don't break the new card.
-      fundamentalModel?: unknown;
-      technicalModel?: unknown;
-      summaryModel?: unknown;
-    };
-    void parsed.fundamentalModel;
-    void parsed.technicalModel;
-    void parsed.summaryModel;
-    return {
-      customInstructions:
-        typeof parsed.customInstructions === 'string'
-          ? parsed.customInstructions
-          : '',
-    };
-  } catch {
-    return DEFAULTS;
-  }
-}
-
-function writeAIPrefs(prefs: AIPrefs) {
-  if (typeof window === 'undefined') return;
-  try {
-    window.localStorage.setItem(
-      AI_PREFS_STORAGE_KEY,
-      JSON.stringify(prefs),
-    );
-  } catch {
-    /* quota */
-  }
-}
 
 /**
  * Card on /settings → "AI Preferences".
@@ -150,18 +115,13 @@ function writeAIPrefs(prefs: AIPrefs) {
  *      change the chat model follow the "Manage models →" link below.
  */
 export function AIPrefsCard() {
-  const [prefs, setPrefs] = useState<AIPrefs>(DEFAULTS);
-  const [hydrated, setHydrated] = useState(false);
+  const [prefs, setPrefs, hydrated] = useLocalStorage<AIPrefs>(AI_PREFS_STORAGE_KEY, DEFAULTS);
+  const [confirmEl, confirm] = useConfirm();
 
-  useEffect(() => {
-    setPrefs(readAIPrefs());
-    setHydrated(true);
-  }, []);
+  const customInstructions = prefs?.customInstructions ?? '';
 
   function update<K extends keyof AIPrefs>(key: K, value: AIPrefs[K]) {
-    const next = { ...prefs, [key]: value };
-    setPrefs(next);
-    writeAIPrefs(next);
+    setPrefs((prev) => ({ ...prev, [key]: value }));
   }
 
   if (!hydrated) return null;
@@ -237,7 +197,7 @@ export function AIPrefsCard() {
               </button>
             </div>
           ))}
-          {prefs.customInstructions.length > 0 ? (
+          {customInstructions.length > 0 ? (
             <button
               type="button"
               onClick={() => update('customInstructions', '')}
@@ -252,7 +212,7 @@ export function AIPrefsCard() {
 
         <textarea
           id="custom-instructions"
-          value={prefs.customInstructions}
+          value={customInstructions}
           onChange={(e) => update('customInstructions', e.target.value)}
           placeholder="e.g. Always respond in bullet points. Do not use emojis."
           rows={3}
@@ -263,6 +223,7 @@ export function AIPrefsCard() {
       <p className="text-fg-subtle text-caption uppercase tracking-wider">
         Saved on this device
       </p>
+      {confirmEl}
     </section>
   );
 
@@ -271,16 +232,19 @@ export function AIPrefsCard() {
    * (with a confirm prompt if the field is non-empty). `mode ===`
    * 'append'` joins the preset text to the existing value.
    */
-  function applyPreset(presetId: string, mode: 'replace' | 'append') {
+  async function applyPreset(presetId: string, mode: 'replace' | 'append') {
     if (mode === 'append') {
-      update('customInstructions', appendPreset(prefs.customInstructions, presetId));
+      update('customInstructions', appendPreset(customInstructions, presetId));
       return;
     }
-    if (
-      prefs.customInstructions.trim().length > 0 &&
-      !window.confirm('Replace your existing custom instructions with this preset?')
-    ) {
-      return;
+    if (customInstructions.trim().length > 0) {
+      const ok = await confirm({
+        title: 'Replace custom instructions?',
+        description: 'Replace your existing custom instructions with this preset?',
+        confirmLabel: 'Replace',
+        tone: 'danger',
+      });
+      if (!ok) return;
     }
     const preset = getPreset(presetId);
     if (preset) update('customInstructions', preset.prompt);

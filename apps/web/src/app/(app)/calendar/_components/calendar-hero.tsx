@@ -32,10 +32,10 @@ import { useEffect, useState } from 'react';
 import { cn } from '@/lib/cn';
 
 interface CalendarHeroProps {
-  events: readonly EconomicEvent[];
+  events?: readonly EconomicEvent[];
 }
 
-export function CalendarHero({ events }: CalendarHeroProps) {
+export function CalendarHero({ events = [] }: CalendarHeroProps) {
   const now = useNowTick();
 
   // Next high-impact event in the future.

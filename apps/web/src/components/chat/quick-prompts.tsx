@@ -32,6 +32,7 @@
  * and client-rendered copies match exactly.
  */
 
+import { useMemo, memo } from 'react';
 import type { Symbol } from '@hamafx/shared';
 import { BarChart3, Bell, CalendarDays, LineChart, TrendingUp } from 'lucide-react';
 
@@ -93,8 +94,46 @@ const NO_PIN_PROMPTS: Record<TradingSession, readonly Prompt[]> = {
   ],
 };
 
+const GOLD_PROMPTS: Record<TradingSession, readonly Prompt[]> = {
+  asian: [
+    { icon: TrendingUp, label: "Gold Asian range and key levels", bg: 'oklch(78% 0.16 78 / 0.18)', fg: 'text-brand' },
+    { icon: CalendarDays, label: "Gold news impact today", bg: 'oklch(72% 0.18 295 / 0.18)', fg: 'text-accent' },
+    { icon: LineChart, label: 'Top-down XAUUSD 4H→15M', bg: 'oklch(74% 0.16 230 / 0.15)', fg: 'text-info' },
+    { icon: BarChart3, label: 'XAUUSD Asian session structure', bg: 'oklch(74% 0.16 230 / 0.15)', fg: 'text-info' },
+    { icon: Bell, label: 'Alert gold break of recent high', bg: 'oklch(82% 0.16 80 / 0.15)', fg: 'text-warn' },
+  ],
+  london: [
+    { icon: TrendingUp, label: 'London open bias for XAUUSD', bg: 'oklch(78% 0.16 78 / 0.18)', fg: 'text-brand' },
+    { icon: LineChart, label: 'Top-down XAUUSD 4H→15M', bg: 'oklch(74% 0.16 230 / 0.15)', fg: 'text-info' },
+    { icon: BarChart3, label: 'London session gold key levels', bg: 'oklch(74% 0.16 230 / 0.15)', fg: 'text-info' },
+    { icon: CalendarDays, label: "European news affecting gold", bg: 'oklch(72% 0.18 295 / 0.18)', fg: 'text-accent' },
+    { icon: Bell, label: 'Alert gold below London low', bg: 'oklch(82% 0.16 80 / 0.15)', fg: 'text-warn' },
+  ],
+  ny: [
+    { icon: TrendingUp, label: 'NY session plan for XAUUSD', bg: 'oklch(78% 0.16 78 / 0.18)', fg: 'text-brand' },
+    { icon: LineChart, label: 'Top-down XAUUSD 4H→15M', bg: 'oklch(74% 0.16 230 / 0.15)', fg: 'text-info' },
+    { icon: BarChart3, label: 'Gold news & DXY correlation', bg: 'oklch(74% 0.16 230 / 0.15)', fg: 'text-info' },
+    { icon: CalendarDays, label: "NY session calendar for USD", bg: 'oklch(72% 0.18 295 / 0.18)', fg: 'text-accent' },
+    { icon: Bell, label: 'Alert gold above 2400', bg: 'oklch(82% 0.16 80 / 0.15)', fg: 'text-warn' },
+  ],
+  closed: [
+    { icon: BarChart3, label: 'How did gold close today?', bg: 'oklch(74% 0.16 230 / 0.15)', fg: 'text-info' },
+    { icon: TrendingUp, label: 'XAUUSD daily bias recap', bg: 'oklch(78% 0.16 78 / 0.18)', fg: 'text-brand' },
+    { icon: LineChart, label: 'Top-down gold 4H→15M', bg: 'oklch(74% 0.16 230 / 0.15)', fg: 'text-info' },
+    { icon: CalendarDays, label: "Tomorrow's gold news outlook", bg: 'oklch(72% 0.18 295 / 0.18)', fg: 'text-accent' },
+    { icon: Bell, label: 'Set an alert for gold tomorrow', bg: 'oklch(82% 0.16 80 / 0.15)', fg: 'text-warn' },
+  ],
+  weekend: [
+    { icon: TrendingUp, label: 'Gold weekly bias & structure', bg: 'oklch(78% 0.16 78 / 0.18)', fg: 'text-brand' },
+    { icon: BarChart3, label: 'Weekly gold COT report check', bg: 'oklch(74% 0.16 230 / 0.15)', fg: 'text-info' },
+    { icon: CalendarDays, label: 'Next week USD key events', bg: 'oklch(72% 0.18 295 / 0.18)', fg: 'text-accent' },
+    { icon: LineChart, label: 'Gold key levels to watch next week', bg: 'oklch(74% 0.16 230 / 0.15)', fg: 'text-info' },
+    { icon: Bell, label: 'Set gold alert for Sunday open', bg: 'oklch(82% 0.16 80 / 0.15)', fg: 'text-warn' },
+  ],
+};
+
 const PINNED_PROMPTS: Record<Symbol, Record<TradingSession, readonly Prompt[]>> = {
-  XAUUSD: NO_PIN_PROMPTS, // gold prompts are the default; pin picks the gold variants by default
+  XAUUSD: GOLD_PROMPTS,
   EURUSD: {
     asian: [
       { icon: TrendingUp, label: 'EURUSD Asia session read', bg: 'oklch(78% 0.16 78 / 0.18)', fg: 'text-brand' },
@@ -171,12 +210,18 @@ const PINNED_PROMPTS: Record<Symbol, Record<TradingSession, readonly Prompt[]>> 
   },
 };
 
-export function QuickPrompts({ onSelect, disabled, pinnedSymbol, now }: QuickPromptsProps) {
-  const session = getSessionInfo(now ?? new Date()).session;
-  const prompts =
-    pinnedSymbol && PINNED_PROMPTS[pinnedSymbol]
+export const QuickPrompts = memo(function QuickPrompts({
+  onSelect,
+  disabled,
+  pinnedSymbol,
+  now,
+}: QuickPromptsProps) {
+  const session = useMemo(() => getSessionInfo(now ?? new Date()).session, [now]);
+  const prompts = useMemo(() => {
+    return pinnedSymbol && PINNED_PROMPTS[pinnedSymbol]
       ? PINNED_PROMPTS[pinnedSymbol][session]
       : NO_PIN_PROMPTS[session];
+  }, [pinnedSymbol, session]);
 
   return (
     <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
@@ -205,4 +250,6 @@ export function QuickPrompts({ onSelect, disabled, pinnedSymbol, now }: QuickPro
       })}
     </div>
   );
-}
+});
+
+QuickPrompts.displayName = 'QuickPrompts';

@@ -56,7 +56,7 @@ export function AmbientBackground({
     return (
       <div aria-hidden="true" className={root}>
         <div
-          className="absolute -top-40 -right-40 h-[28rem] w-[28rem] rounded-full blur-[100px]"
+          className="absolute -top-40 -right-40 h-[28rem] w-[28rem] rounded-full blur-[100px] float-orb-1"
           style={{ background: 'oklch(82% 0.14 85 / 1)', opacity: 0.04 }}
         />
       </div>
@@ -67,17 +67,19 @@ export function AmbientBackground({
   return (
     <div aria-hidden="true" className={root}>
       <div
-        className="absolute -top-32 -right-32 h-[28rem] w-[28rem] rounded-full blur-[100px]"
+        className="absolute -top-32 -right-32 h-[28rem] w-[28rem] rounded-full blur-[100px] float-orb-1"
         style={{ background: 'oklch(82% 0.14 85 / 1)', opacity: 0.18 }}
       />
       <div
-        className="absolute -bottom-32 -left-32 h-[32rem] w-[32rem] rounded-full blur-[120px]"
+        className="absolute -bottom-32 -left-32 h-[32rem] w-[32rem] rounded-full blur-[120px] float-orb-2"
         style={{ background: 'oklch(70% 0.14 285 / 1)', opacity: 0.14 }}
       />
-      <div
-        className="absolute left-1/2 top-1/3 h-[24rem] w-[24rem] -translate-x-1/2 rounded-full blur-[110px]"
-        style={{ background: 'oklch(74% 0.14 230 / 1)', opacity: 0.08 }}
-      />
+      <div className="absolute left-1/2 top-1/3 -translate-x-1/2 float-orb-3">
+        <div
+          className="h-[24rem] w-[24rem] rounded-full blur-[110px]"
+          style={{ background: 'oklch(74% 0.14 230 / 1)', opacity: 0.08 }}
+        />
+      </div>
       <svg
         className="absolute inset-0 h-full w-full mix-blend-overlay"
         style={{ opacity: 0.04 }}

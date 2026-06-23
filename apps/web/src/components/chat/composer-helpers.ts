@@ -66,5 +66,5 @@ export function getCharCountTone(count: number): CharCountTone {
  * The max is not localised — it is a constant identifier.
  */
 export function formatCharCount(count: number): string {
-  return `${count.toLocaleString()} / ${MAX_TEXT_CHARS}`;
+  return `${count.toLocaleString('en-US')} / ${MAX_TEXT_CHARS}`;
 }

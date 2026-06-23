@@ -15,25 +15,13 @@
  */
 
 import { redirect } from 'next/navigation';
-import { getDb, schema } from '@hamafx/db';
-import { eq } from 'drizzle-orm';
 import { auth } from '@/auth';
 
 export default async function RootPage() {
   const session = await auth();
-  if (!session?.user?.id) {
-    redirect('/chat');
+  if (session?.user) {
+    redirect('/dashboard');
+  } else {
+    redirect('/login');
   }
-
-  const db = getDb();
-  const [settings] = await db
-    .select({ onboardingCompleted: schema.userSettings.onboardingCompleted })
-    .from(schema.userSettings)
-    .where(eq(schema.userSettings.userId, session.user.id));
-
-  if (!settings?.onboardingCompleted) {
-    redirect('/onboarding');
-  }
-
-  redirect('/chat');
 }
