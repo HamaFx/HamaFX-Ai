@@ -23,11 +23,12 @@
 // --toast-bottom (= safe-area-inset + 16px). Desktop (≥768px): bottom-right.
 
 import { useEffect, useState } from 'react';
-import { Toaster as SonnerToaster, toast } from 'sonner';
+import { Toaster as SonnerToaster, useSonner } from 'sonner';
 
 export function Toaster() {
   const [position, setPosition] = useState<'bottom-center' | 'bottom-right'>('bottom-center');
   const [announcement, setAnnouncement] = useState('');
+  const { toasts } = useSonner();
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -39,22 +40,19 @@ export function Toaster() {
   }, []);
 
   useEffect(() => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const unsubscribe = (toast as any).subscribe((toasts: any[]) => {
-      const activeToasts = toasts.filter((t) => !t.delete);
-      if (activeToasts.length > 0) {
-        const latest = activeToasts[activeToasts.length - 1];
-        const titleText = typeof latest.title === 'string' ? latest.title : '';
-        const descText = typeof latest.description === 'string' ? latest.description : '';
-        const text = [titleText, descText].filter(Boolean).join(': ');
-        if (text) {
-          // Add a tiny random suffix or just update state to force screen reader announcement
-          setAnnouncement(text);
-        }
-      }
-    });
-    return () => unsubscribe();
-  }, []);
+    // Screen-reader announcement for the most recent visible toast.
+    // useSonner() already filters out dismissed toasts; we read the
+    // public hook instead of the removed internal `toast.subscribe` API.
+    const activeToasts = toasts.filter((t) => !t.delete);
+    const latest = activeToasts[activeToasts.length - 1];
+    if (!latest) return;
+    const titleText = typeof latest.title === 'string' ? latest.title : '';
+    const descText = typeof latest.description === 'string' ? latest.description : '';
+    const text = [titleText, descText].filter(Boolean).join(': ');
+    if (text) {
+      setAnnouncement(text);
+    }
+  }, [toasts]);
 
   return (
     <>
