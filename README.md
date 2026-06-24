@@ -1,217 +1,274 @@
 <p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)">
-    <h1>🥇 HamaFX-Ai</h1>
-  </picture>
+  <img src="./docs/assets/dashboard_preview.jpg" alt="HamaFX-Ai Premium Dashboard Preview" width="100%">
 </p>
 
 <p align="center">
-  <strong>The Open-Source, Multi-User AI Trading Platform.</strong><br>
-  Chat-driven. Mobile-first. Built for gold & forex.
+  <h1 align="center">🥇 HamaFX-Ai</h1>
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/status-production%20ready-48d597?style=flat-square" alt="Status: Production Ready">
-  <img src="https://img.shields.io/badge/tests-590-48d597?style=flat-square" alt="Tests: 590">
-  <img src="https://img.shields.io/badge/ai%20tools-30-f5b945?style=flat-square" alt="AI Tools: 30">
-  <img src="https://img.shields.io/badge/license-Apache%202.0-8a93a3?style=flat-square" alt="License">
+  <strong>The Open-Source, Multi-Tenant AI Trading Platform.</strong><br>
+  Chat-driven. Mobile-first. Domain-routed Multi-Agent Deliberation.
 </p>
 
-<br>
+<p align="center">
+  <a href="https://github.com/HamaFx/HamaFX-Ai/actions"><img src="https://img.shields.io/badge/status-production%20ready-48d597?style=for-the-badge" alt="Status: Production Ready"></a>
+  <a href="https://github.com/HamaFx/HamaFX-Ai/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-Apache%202.0-8a93a3?style=for-the-badge" alt="License"></a>
+  <a href="https://vitest.dev"><img src="https://img.shields.io/badge/tests-590--passed-48d597?style=for-the-badge&logo=vitest&logoColor=white" alt="Tests: 590 Passed"></a>
+  <a href="https://nextjs.org"><img src="https://img.shields.io/badge/Next.js-15-black?style=for-the-badge&logo=next.js" alt="Next.js 15"></a>
+</p>
+
+<p align="center">
+  <a href="#-core-highlights">✨ Highlights</a> ·
+  <a href="#-quick-start">🚀 Quick Start</a> ·
+  <a href="#-monorepo-architecture">🧱 Monorepo Architecture</a> ·
+  <a href="#-ai-agent--routing">🤖 AI Agent & Routing</a> ·
+  <a href="#-product-documentation">📚 Documentation Index</a> ·
+  <a href="#-maintenance-commands">🔧 CLI Tools</a>
+</p>
 
 ---
 
-## ✨ What It Does
+## ✨ Core Highlights
 
-An **AI agent that lives in your pocket** — chat with it about gold and forex markets like you'd talk to a veteran trader. It sees live prices, reads charts, scans news, crunches indicators, and remembers everything you've discussed.
+HamaFX-Ai is an **autonomous AI trading companion that lives in your pocket**. Chat with it about gold (XAU/USD) and forex markets like you'd talk to a seasoned macro fund trader. It operates as a continuous, intelligent copilot: monitoring live tick feeds, executing structural charting math, checking macroeconomic event calendars, and drafting secure order executions with rigorous real-time verification checks.
 
-| | | |
-|---|---|---|
-| 💬 **Chat-first** | Every feature reachable via natural conversation | 
-| 📊 **Live charts** | Multi-timeframe candlesticks with 12+ indicators |
-| 🧠 **AI agent** | 30 tools, domain-routed models, plan-then-act reasoning |
-| 📰 **News & macro** | Curated headlines, economic calendar, sentiment analysis |
-| 📓 **Trade journal** | Log trades, track R-multiples, review patterns |
-| ⚡ **Smart alerts** | Price crosses, candle closes, indicator signals — email + push |
-| 🔍 **Memory & RAG** | Hybrid vector search over news, journal, briefings |
-| 🏛️ **Committee** | Multi-agent deliberation — Economist, Technician, Risk Manager |
-| ✅ **Verification** | Post-turn fact-checking — never hallucinates prices |
-| 📱 **PWA ready** | Install on your phone, works offline |
+*   💬 **Chat-First Workflow:** Every feature—from chart drawing to alert configuration—is controllable through fluid conversation. Deep-linked system prompts start target market analyses instantly.
+*   📊 **Hybrid Charting Engine:** Toggles on the fly between a high-performance **TradingView Pro** widget and **Lightweight-charts SMC** (Smart Money Concepts) indicator overlay charts.
+*   🧠 **Plan-Then-Act Reasoning:** Analytical instructions generate clear, chronological execution stages displayed as an interactive "Thinking" workflow pill before calling model tools.
+*   🏛️ **Multi-Agent Committee:** Convenes a panel of virtual experts (**Economist**, **Technician**, and **Risk Manager**) to parallel-evaluate market patterns and return a consolidated grade consensus (A/B/C/D/F).
+*   🔒 **Bring Your Own Key (BYOK):** Zero platform vendor lock-in. Connect Gemini, Claude, OpenAI, Groq, DeepSeek, or Mistral keys securely stored and encrypted client-side using **AES-256-GCM**.
+*   📱 **Progressive Web App (PWA):** Mobile-first design that installs natively on iOS and Android. Sub-second page loads, virtualized feeds via TanStack Virtual, and optimized SWR local query caching.
+*   🟢 **Zero-Database Dev Hook:** Uses native PGlite (in-process Postgres) to boot the entire stack in under 5 seconds with zero local database instances to install or configure.
 
 ---
 
 ## 🚀 Quick Start
 
-### <picture><source><img width="20" alt="Docker" src="https://raw.githubusercontent.com/devicons/devicon/master/icons/docker/docker-original.svg"></picture> Docker — recommended
+Ensure you have [Node.js v20+](https://nodejs.org/), [pnpm v9+](https://pnpm.io/), and optionally [Docker](https://www.docker.com/) installed.
+
+### 1. 🟢 Native PGlite (Zero-Setup Local Dev)
+
+Perfect for rapid local testing. This mode runs Postgres entirely in-process (`PGlite`) with zero databases to set up or configure.
 
 ```bash
+# Clone the repository
 git clone https://github.com/HamaFx/HamaFX-Ai
 cd HamaFX-Ai
-cp .env.example .env          # add your API keys
-docker compose up -d
-# → http://localhost:3000
-```
 
-> Postgres 16 + pgvector included. All features work out of the box.
-
-### <picture><source><img width="20" alt="Node" src="https://raw.githubusercontent.com/devicons/devicon/master/icons/nodejs/nodejs-original.svg"></picture> Native — zero setup
-
-```bash
-git clone https://github.com/HamaFx/HamaFX-Ai
-cd HamaFX-Ai
+# Install workspace dependencies
 pnpm install
-echo 'GOOGLE_GENERATIVE_AI_API_KEY=your-key-here' >> .env.local
+
+# Set up local key (Any supported AI API key)
+echo 'GOOGLE_GENERATIVE_AI_API_KEY=your-gemini-key-here' >> .env.local
+
+# Run developer loop
 pnpm dev:local
-# → http://localhost:3000
+
+# Open: http://localhost:3000
 ```
 
-> Embedded PGlite — Postgres runs in-process. No installs, no config. Migrations auto-run. **Secrets are auto-generated on first boot** — only `GOOGLE_GENERATIVE_AI_API_KEY` (or any AI provider key) is required to get a working chat. Sign up via `/auth/register` then connect a provider at `/onboarding`. PGVector features need Docker.
-
-### <picture><source><img width="20" alt="Cloud" src="https://raw.githubusercontent.com/devicons/devicon/master/icons/googlecloud/googlecloud-original.svg"></picture> Cloud — production
-
-See **[docs/08-deployment.md](docs/08-deployment.md)** for Vercel + GCE VM deployment.
+> [!TIP]
+> Sign up at `/auth/register` and connect your API keys on the `/onboarding` screen. Database credentials, session encryption keys, and cron authentication secrets are automatically generated and stored under `.hamafx/dev-secrets.json` on first boot.
 
 ---
 
-## 🧱 Architecture
+### 2. 🐳 Docker Compose (Production Ready)
 
-```
-Browser (PWA)
-    │
-    ├── /api/chat ──▶ runChat() ──▶ streamText + 30 tools
-    │                    │           domain routing + planner + memory
-    │                    │           budget guard + citation enforcement
-    │
-    ├── /api/market/* ──▶ data layer ──▶ BiQuote → Finnhub failover
-    │
-    └── Middleware ──▶ NextAuth v5 (multi-tenant) · CSRF · Edge runtime
-
-Worker (GCE VM)
-    │
-    ├── SignalR consumer ──▶ TickBuffer ──▶ live_ticks (1 Hz)
-    ├── Candle aggregator ──▶ candles_1m (minute bars)
-    └── systemd timers ──▶ 7 heavy jobs + light HTTP pokers
-```
-
-| Package | Role | LOC |
-|---------|------|-----|
-| `@hamafx/ai` | Agent core — chat, 30 tools, routing, RAG | 20,203 |
-| `@hamafx/data` | Market adapters — 5 providers, cache, failover | 5,920 |
-| `@hamafx/web` | Next.js 15 PWA — chat, charts, journal, alerts | 33,366 |
-| `@hamafx/db` | Drizzle ORM — 27 tables, Postgres + PGlite | 2,276 |
-| `@hamafx/indicators` | Pure TS indicators — classic + Smart Money Concepts | 2,271 |
-| `@hamafx/shared` | Zod schemas, types, env, errors | 4,442 |
-| `@hamafx/worker` | Node daemon — SignalR, jobs, scheduler | 4,896 |
-
----
-
-## 🤖 AI Agent — 30 Tools
-
-| Category | Tools |
-|----------|-------|
-| 📈 **Live Data** | `get_price` · `get_candles` · `get_indicators` · `get_market_structure` · `get_session_levels` |
-| 🔬 **Analysis** | `analyze_technical` · `analyze_fundamental` · `analyze_chart_image` · `annotate_chart` |
-| 🌐 **Macro** | `get_news` · `get_calendar` · `get_correlation` · `get_intermarket` · `get_seasonality` · `get_cot` · `forecast_volatility` · `get_intermarket_resonance` |
-| ⚖️ **Risk** | `compute_risk` · `compute_position_health` · `verify_call` · `replay_setup` |
-| 🧠 **Memory** | `search_knowledge` · `summarize_thread` |
-| ✍️ **Actions** | `set_alert` · `log_journal` · `get_journal_stats` · `share_snapshot` |
-| 🏛️ **Meta** | `convene_committee` · `get_system_diagnostics` · `run_system_action` |
-
-**Per-domain model routing** auto-picks the right brain for each question:
-
-| Question type | Model |
-|---------------|-------|
-| Fundamental (why is gold moving?) | Gemini 2.5 Pro |
-| Technical (what are the levels?) | Gemini 2.5 Flash |
-| News / calendar / summary | Gemini 2.5 Flash |
-| Chart image analysis | Gemini 2.5 Pro |
-| Quick / simple | Gemini 2.5 Flash-Lite |
-
----
-
-## 🛠️ Tech Stack
-
-<p align="center">
-  <img src="https://img.shields.io/badge/Next.js-15-black?style=for-the-badge&logo=next.js" alt="Next.js 15">
-  <img src="https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react" alt="React 19">
-  <img src="https://img.shields.io/badge/TypeScript-strict-3178C6?style=for-the-badge&logo=typescript" alt="TypeScript">
-  <img src="https://img.shields.io/badge/Tailwind-v4-06B6D4?style=for-the-badge&logo=tailwindcss" alt="Tailwind CSS v4">
-  <img src="https://img.shields.io/badge/AI_SDK-v5-000?style=for-the-badge&logo=vercel" alt="AI SDK v5">
-  <img src="https://img.shields.io/badge/Gemini-2.5-4285F4?style=for-the-badge&logo=google" alt="Gemini">
-  <img src="https://img.shields.io/badge/Postgres-pgvector-4169E1?style=for-the-badge&logo=postgresql" alt="Postgres">
-  <img src="https://img.shields.io/badge/Drizzle-ORM-C5F74F?style=for-the-badge&logo=drizzle" alt="Drizzle">
-  <img src="https://img.shields.io/badge/pnpm-9-F69220?style=for-the-badge&logo=pnpm" alt="pnpm">
-  <img src="https://img.shields.io/badge/Vitest-tests-6E9F18?style=for-the-badge&logo=vitest" alt="Vitest">
-</p>
-
-**Stack highlights:**
-
-- **Framework:** Next.js 15 App Router · React 19 · Edge middleware
-- **Styling:** Tailwind CSS v4 · shadcn/ui (Radix) · `motion` animations
-- **Charts:** TradingView lightweight-charts v5
-- **AI:** Vercel AI SDK v5 · Google Vertex AI · AI Gateway
-- **DB:** Postgres (Supabase) · pgvector · Drizzle ORM · PGlite (local dev)
-- **Build:** pnpm workspaces · Turborepo · esbuild (worker)
-- **Auth:** NextAuth.js v5 · CSRF · BYOK (Bring Your Own Key) per user
-- **Testing:** Vitest · Playwright · 90 test files · 590 cases
-
----
-
-## 📚 Documentation
-
-For **AI agents** working on this codebase, start with [`AGENTS.md`](docs/AGENTS.md).
-
-| Doc | Topic |
-|-----|-------|
-| [AGENTS.md](docs/AGENTS.md) | AI agent quickstart — commands, patterns, pitfalls |
-| [01-architecture.md](docs/01-architecture.md) | System design & deployment modes |
-| [02-codebase.md](docs/02-codebase.md) | Monorepo structure, conventions, extension rules |
-| [03-ai-agent.md](docs/03-ai-agent.md) | Agent internals — runChat, 30 tools, routing, memory |
-| [04-data-layer.md](docs/04-data-layer.md) | DB schema, 5 providers, caching, failover |
-| [05-api-routes.md](docs/05-api-routes.md) | All 40 API routes, auth, middleware, cron |
-| [06-frontend.md](docs/06-frontend.md) | Pages, chat UI, charts, PWA, state management |
-| [07-worker.md](docs/07-worker.md) | Worker daemon, SignalR, 7 jobs, systemd |
-| [08-deployment.md](docs/08-deployment.md) | Production cloud deployment |
-| [09-testing.md](docs/09-testing.md) | Test patterns, CI, eval harness |
-| [10-self-hosting.md](docs/10-self-hosting.md) | Multi-tenant Self-hosting guide |
-| [11-contributing-guide.md](docs/11-contributing-guide.md) | Architecture deep dive for contributors |
-
----
-
-## 🤝 Contributing
-
-We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) and [Code of Conduct](CODE_OF_CONDUCT.md) for more details on how to get started.
-
----
-
-## 🔧 Development
+Enables full production services, including a persistent PostgreSQL 16 database, custom vector embeddings via `pgvector` for memory/RAG, and the background daemon worker.
 
 ```bash
-pnpm turbo run test -- --run    # 590 tests
-pnpm typecheck                  # strict TS across 8 packages
-pnpm --filter @hamafx/web build # production build
-pnpm turbo run lint             # ESLint flat config
+# Set up production environment configuration
+cp .env.example .env
 
-# AI eval harness (requires running server)
-pnpm --filter @hamafx/ai eval -- \
-  --base-url http://localhost:3000 \
-  --cookie "hfx_auth=..." \
-  --cases
+# Edit .env to add your production generative AI keys and credentials
+nano .env
+
+# Spin up services in detached mode
+docker compose up -d
+
+# Open: http://localhost:3000
+```
+
+> [!NOTE]
+> Docker Compose boots PostgreSQL 16 with `pgvector` enabled out-of-the-box. Vector features are disabled under the PGlite local developer script.
+
+---
+
+## 🧱 Monorepo Architecture
+
+HamaFX-Ai is structured as a monorepo utilizing Turborepo to coordinate fast builds, linting, and multi-package testing pipelines.
+
+```mermaid
+graph TD
+    classDef client fill:#10b981,stroke:#047857,stroke-width:2px,color:#fff;
+    classDef platform fill:#3b82f6,stroke:#1d4ed8,stroke-width:2px,color:#fff;
+    classDef daemon fill:#f59e0b,stroke:#b45309,stroke-width:2px,color:#fff;
+    classDef db fill:#8b5cf6,stroke:#6d28d9,stroke-width:2px,color:#fff;
+
+    subgraph ClientLayer ["Client Layer"]
+        web["@hamafx/web <br/> (Next.js 15 PWA - 33k LOC)"]:::client
+    end
+
+    subgraph PlatformPackages ["Platform Packages"]
+        ai["@hamafx/ai <br/> (Agent Core - 20k LOC)"]:::platform
+        data["@hamafx/data <br/> (Market Adapters - 6k LOC)"]:::platform
+        ind["@hamafx/indicators <br/> (TS SMC Math - 2k LOC)"]:::platform
+        shared["@hamafx/shared <br/> (Zod Schemas - 4k LOC)"]:::platform
+    end
+
+    subgraph DaemonLayer ["Daemon Layer"]
+        worker["@hamafx/worker <br/> (Node Daemon - 5k LOC)"]:::daemon
+    end
+
+    subgraph DbLayer ["Storage Layer"]
+        db["@hamafx/db <br/> (Drizzle ORM - 2k LOC)"]:::db
+    end
+
+    web --> ai
+    web --> data
+    ai --> db
+    ai --> shared
+    data --> db
+    data --> ind
+    worker --> db
+```
+
+### Monorepo Directory Layout
+
+| Package / App | Location | Purpose | Lines of Code (LOC) |
+|:---|:---|:---|:---|
+| **`@hamafx/web`** | [`apps/web`](./apps/web) | Next.js 15 App Router client app (Chat, Charts, Journal, Settings, PWA configuration). | ~33,300 |
+| **`@hamafx/worker`**| [`apps/worker`](./apps/worker) | Node daemon consuming ticks at 1Hz, caching candles, checking systemd cron timers. | ~4,900 |
+| **`@hamafx/ai`** | [`packages/ai`](./packages/ai) | Core prompt compilation, classification routing, RAG pipeline, and AI tool bindings. | ~20,200 |
+| **`@hamafx/data`** | [`packages/data`](./packages/data) | Market data integrations with automatic failover (BiQuote primary, Finnhub fallback). | ~5,900 |
+| **`@hamafx/indicators`**| [`packages/indicators`](./packages/indicators) | Pure mathematics for indicators (EMA, SMA, Bollinger Bands) and Smart Money Concepts. | ~2,300 |
+| **`@hamafx/db`** | [`packages/db`](./packages/db) | Multi-tenant schema definition and Drizzle ORM migration harness. | ~2,300 |
+| **`@hamafx/shared`** | [`packages/shared`](./packages/shared) | Shared validation schemas, error definitions, and AES-256-GCM encryption helpers. | ~4,400 |
+
+---
+
+## 🤖 AI Agent & Routing
+
+HamaFX-Ai routes incoming user queries to specific model domains based on task complexity, cost budget constraints, and model capabilities.
+
+```
+Incoming Turn
+     │
+     ├── Classify Intent
+     │     ├─► Fundamental (Weekly macro recaps, news events) ──► Gemini 2.5 Pro (Search Grounding)
+     │     ├─► Technical (Indicators math, structure drawings) ──► Gemini 2.5 Flash
+     │     ├─► Summary (Brief chats, alert status checks)      ──► Gemini 2.5 Flash
+     │     ├─► Vision (Chart screenshots uploaded)             ──► Gemini 2.5 Pro
+     │     └─► Simple (Generic conversational fallback)         ──► Gemini 2.5 Flash-Lite
+     │
+     └── Execute Plan (Interactive "Thinking" pill) 
+           └─► Assemble Context ──► Pull Memory/RAG ──► Run Verification Warnings
+```
+
+### The 30 AI Tools Registry
+
+The agent core accesses a suite of 30 specialized tools to analyze and interact with market data.
+
+<details>
+<summary><b>🔍 Expand to View the Full 30 Tools Matrix</b></summary>
+
+| Domain | Tools | Description |
+|:---|:---|:---|
+| **📈 Live Data** | `get_price` <br> `get_candles` <br> `get_indicators` <br> `get_market_structure` <br> `get_session_levels` | Fetches real-time price ticks, historical candles, indicators math, SMC structures, and key daily/weekly session ranges. |
+| **🔬 Analysis** | `analyze_technical` <br> `analyze_fundamental` <br> `analyze_chart_image` <br> `annotate_chart` | Initiates technical scans, macroeconomic evaluations, vision screenshot reads, and adds visual markers onto charts. |
+| **🌐 Macro & Vol** | `get_news` <br> `get_calendar` <br> `get_correlation` <br> `get_intermarket` <br> `get_seasonality` <br> `get_cot` <br> `forecast_volatility` <br> `get_intermarket_resonance` | Inspects macro news, economic events, symbol cross-correlations, asset seasonalities, COT reports, and forecasts market volatility. |
+| **⚖️ Risk & Backtest** | `compute_risk` <br> `compute_position_health` <br> `verify_call` <br> `replay_setup` | Calculates position sizes, reviews current trade health, verifies order compliance, and replays historical setups. |
+| **🧠 Memory & RAG** | `search_knowledge` <br> `summarize_thread` | Searches PGVector embeddings for historical context, and compacts long conversation histories. |
+| **✍️ Write Actions** | `set_alert` <br> `log_journal` <br> `get_journal_stats` <br> `share_snapshot` | Creates price/macro alerts, records journals, retrieves performance stats, and exports chart snaps. |
+| **🏛️ Deliberation** | `convene_committee` <br> `get_system_diagnostics` <br> `run_system_action` | Triggers parallel expert agents, evaluates diagnostics, and executes verified actions. |
+
+</details>
+
+---
+
+## ⚙️ Environmental Configurations
+
+During local development and testing, `NEXTAUTH_SECRET`, `ENCRYPTION_SECRET`, and `CRON_SECRET` are automatically generated if missing and stored in `.hamafx/dev-secrets.json`. In production, all secrets **must** be set explicitly.
+
+### Configuration Reference Table
+
+| Variable | Scope / Value | Required | Purpose |
+|:---|:---|:---|:---|
+| `DATABASE_URL` | PostgreSQL URI | Production | Connects to PostgreSQL. (PGlite is used locally instead if not set). |
+| `NEXTAUTH_URL` | URL | Production | The base URL of the client app (e.g. `https://hamafx.com`). |
+| `NEXTAUTH_SECRET` | String (>=32 chars) | Production | Key used to sign JWTs for user authentication session management. |
+| `ENCRYPTION_SECRET` | Hex String (32 bytes) | Production | Key used to encrypt client-side BYOK credentials via AES-256-GCM. |
+| `CRON_SECRET` | String (>=16 chars) | Production | Bearer token required to invoke cron trigger routes at `/api/cron/*`. |
+| `GOOGLE_GENERATIVE_AI_API_KEY` | Gemini Key | Option | API Key for Google generative models (default routing option). |
+| `BIQUOTE_API_KEY` | BiQuote Forex Key | Option | Live tick feed primary provider credentials. |
+| `FINNHUB_API_KEY` | Finnhub Stock Key | Option | Macroeconomic calendar and news feed credentials. |
+
+---
+
+## 📚 Product Documentation
+
+See [`AGENTS.md`](./docs/AGENTS.md) first if you are an AI agent writing code on this codebase.
+
+### Core Architecture & System Layout
+*   [**01 - Architecture**](./docs/01-architecture.md): System layout, database topologies, multi-tenant boundaries, and deployment schemes.
+*   [**02 - Codebase**](./docs/02-codebase.md): Coding guidelines, directory conventions, custom TS rules, and scripts configurations.
+*   [**03 - AI Agent**](./docs/03-ai-agent.md): Routing logic, RAG pipelines, verification engines, and detailed descriptions of all 30 tools.
+*   [**04 - Data Layer**](./docs/04-data-layer.md): Schemas, cache policies, market provider mappings, and failovers.
+*   [**05 - API Routes**](./docs/05-api-routes.md): Comprehensive routing registry (authentication, charts, cron triggers).
+
+### Frontend & Daemon Layer
+*   [**06 - Frontend**](./docs/06-frontend.md): Pages layout, Tailwind design variables, component primitives, and client states.
+*   [**07 - Worker**](./docs/07-worker.md): Nodes daemon internals, tick ingestion buffers, and timers scheduler.
+*   [**15 - Motion Conventions**](./docs/15-motion-conventions.md): UI transitions, animations, layouts, and responsive state policies.
+*   [**USER_FLOW.md**](./docs/USER_FLOW.md): UI/UX pathways, navigation maps, Pro chart views, and SMC analysis layout.
+*   [**UX_UPGRADE_PLAN.md**](./docs/UX_UPGRADE_PLAN.md): Progressive upgrades to visual layouts, themes, responsive drawers, and loading states.
+
+### Deployment & Security Operations
+*   [**08 - Deployment**](./docs/08-deployment.md): Hosting guides for Vercel + GCE (Google Compute Engine) VM instances.
+*   [**10 - Self-Hosting**](./docs/10-self-hosting.md): Steps for deploying your own multi-tenant clone of HamaFX-Ai.
+*   [**12 - Security**](./docs/12-security.md): Client-side BYOK safety boundaries, data storage sanitizations, and access controls.
+
+### Maintenance, Setup & Contributions
+*   [**09 - Testing**](./docs/09-testing.md): Automated tests, mock setups, playbooks, and CLI benchmarks.
+*   [**14 - First-Run Setup**](./docs/14-first-run-setup.md): Comprehensive details on what gets auto-generated and how to configure providers.
+*   [**11 - Contributing Guide**](./docs/11-contributing-guide.md): Standard onboarding, issue reporting, and pull request structures.
+*   [**13 - Roadmap**](./docs/13-roadmap.md): Historical progress milestones and future feature directions.
+
+---
+
+## 🔧 Maintenance Commands
+
+Manage the workspace build, testing, and formatting with standard Turborepo and package commands.
+
+```bash
+# Execute local unit/integration tests
+pnpm test
+
+# Run typescript compilation audits globally
+pnpm typecheck
+
+# Audit ESLint configuration rules
+pnpm turbo run lint
+
+# Compile production bundles
+pnpm --filter @hamafx/web build
+
+# Format entire codebase
+pnpm format
+
+# Run AI Evaluation cases (Requires running server)
+pnpm --filter @hamafx/ai eval -- --base-url http://localhost:3000 --cookie "hfx_auth=..." --cases
 ```
 
 ---
 
-## ⚡ Design Principles
+## ⚖️ License & Contributing
 
-1. **Chat is the primary surface** — if a feature isn't reachable via chat, it doesn't ship
-2. **Mobile-first, always** — designed for phones, enhanced for desktops
-3. **Show the work** — every opinion backed by indicators, candles, or headlines
-4. **No hallucinated prices** — numbers always come from tool results, never free-form
-5. **AI-agent-friendly codebase** — files, naming, and docs optimized for autonomous coding agents
-6. **Multi-user by design** — BYOK architecture with strict tenant isolation.
+Licensed under the [Apache License, Version 2.0](LICENSE). 
 
----
+Before submitting Pull Requests, please review the [Contributing Guidelines](CONTRIBUTING.md) and the [Code of Conduct](CODE_OF_CONDUCT.md).
 
 <p align="center">
-  <sub>Built for gold traders. Optimized for AI agents. Deploy in one command.</sub>
+  <sub>Built for gold and forex traders. Optimized for autonomous coding agents.</sub>
 </p>
