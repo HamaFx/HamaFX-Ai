@@ -19,7 +19,7 @@ apps/web/src/
 │   └── (app)/               # Authenticated route group
 │       ├── layout.tsx        # App shell: TopBar, NavDrawer, Toaster, etc.
 │       ├── chat/             # /chat and /chat/[threadId]
-│       ├── chart/[symbol]/   # /chart/[symbol] and /chart/[symbol]/pro
+│       ├── chart/[symbol]/   # /chart/[symbol] (TradingView Pro) and /chart/[symbol]/structure (Lightweight-charts SMC)
 │       ├── news/             # /news — news feed with sentiment
 │       ├── calendar/         # /calendar — economic calendar
 │       ├── alerts/           # /alerts — alert management
@@ -48,8 +48,8 @@ apps/web/src/
 | `/login` | Client/Server Component | No | NextAuth sign-in form, redirects to `callbackUrl` after success |
 | `/chat` | Server Component | Yes | Landing — redirects to the most recent thread |
 | `/chat/[threadId]` | Hybrid (RSC hydrate) | Yes | Full-screen chat: server loads thread+messages, client mounts `ChatScreen` with `useChat` |
-| `/chart/[symbol]` | Hybrid | Yes | lightweight-charts candlestick + SMC overlays + indicators |
-| `/chart/[symbol]/pro` | Client Component | Yes | TradingView Advanced Charting Widget (gated by `NEXT_PUBLIC_TRADINGVIEW_ENABLED=1`) |
+| `/chart/[symbol]` | Hybrid | Yes | TradingView Pro Chart (default view, redirects to `/chart/[symbol]/structure` if `NEXT_PUBLIC_TRADINGVIEW_ENABLED !== '1'`) |
+| `/chart/[symbol]/structure` | Hybrid | Yes | Lightweight-charts candlestick + SMC overlays + indicators |
 | `/news` | Client Component | Yes | News feed with sentiment filter, bookmarks |
 | `/calendar` | Client Component | Yes | Economic calendar with event cards |
 | `/alerts` | Client Component | Yes | Alert CRUD list + form |
@@ -290,9 +290,13 @@ Translates `StructureResult` into lightweight-charts marker/price-line primitive
 | Order Blocks | Square with "OB" tag | Dotted line at OB midpoint (unmitigated only) |
 | Liquidity | Circle with star at sweep point | None |
 
-### Pro Chart (`/chart/[symbol]/pro`)
+### Chart views (`/chart/[symbol]` & `/chart/[symbol]/structure`)
 
-TradingView Advanced Charting Widget. Embeds an iframe with `widget.tv` — dark theme, symbol mapping, timeframe toolbar. Gated by env var.
+HamaFX-Ai uses a hybrid route partitioning layout for charts:
+- **TradingView Pro Chart (`/chart/[symbol]`)**: The default high-performance view leveraging the TradingView Advanced Charting Widget. Renders with full drawing tools, symbol catalog compatibility, and configured timeframe toolbars. Redirects automatically to the Structure view if `NEXT_PUBLIC_TRADINGVIEW_ENABLED !== '1'`.
+- **SMC Structure Chart (`/chart/[symbol]/structure`)**: Served by `lightweight-charts`. Renders specialized Smart Money Concept overlays (swings, BOS/CHoCH, FVG, order blocks, liquidity sweeps) alongside standard indicators (EMA, SMA, Bollinger, RSI, MACD, ATR, pivots).
+
+A premium segmented control ("TradingView" | "Structure") is integrated in the header of both pages for smooth, responsive transitions between views.
 
 ---
 

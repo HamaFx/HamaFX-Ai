@@ -140,7 +140,7 @@ The previous `.github/workflows/cron-*.yml` external trigger was removed in Phas
 
 - [x] Vision: drop a chart screenshot, get analysis (`analyze_chart_image` tool)
 - [x] Cross-pair correlation + DXY proxy module (`get_correlation` tool)
-- [x] Optional **TradingView Advanced Charting Widget** view at `/chart/[symbol]/pro` (gated by `NEXT_PUBLIC_TRADINGVIEW_ENABLED`)
+- [x] Optional **TradingView Advanced Charting Widget** view at `/chart/[symbol]` (with structured SMC route fallback at `/chart/[symbol]/structure`, gated by `NEXT_PUBLIC_TRADINGVIEW_ENABLED`)
 - [x] CoT (CFTC) report ingestion (weekly cron at `0 22 * * 5` UTC)
 - [x] Sharable analysis snapshots — private signed link at `/share/[id]?t=<token>` (HMAC-bypassed password gate)
 - [x] Web Push as a 3rd alert channel (RFC 8030 + VAPID, no `web-push` dep)

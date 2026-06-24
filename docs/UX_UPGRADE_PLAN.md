@@ -1491,7 +1491,7 @@ NOT DOING
 
 24. Multi-symbol chart overlay
     Complex (multiple data series, different precisions, scale
-    modes). The /chart/[symbol]/pro TradingView widget already
+    modes). The /chart/[symbol] TradingView widget already
     gives power users this. Skip.
 
 25. Telegram deep-link outbound

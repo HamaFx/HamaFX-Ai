@@ -37,8 +37,8 @@ Authenticated (under /(app)/):
   /                            Redirect to /chat (or /onboarding)
   /chat                        Redirect to most-recent thread
   /chat/[threadId]?prompt=...   Full-screen chat surface
-  /chart/[symbol]              Candlesticks + indicators + SMC
-  /chart/[symbol]/pro          TradingView advanced widget (env-gated)
+  /chart/[symbol]              TradingView advanced widget (default view, env-gated)
+  /chart/[symbol]/structure    Candlesticks + indicators + SMC (lightweight-charts)
   /news                        Headline feed w/ sentiment filter
   /calendar                    Economic event list
   /alerts                      Alert CRUD
@@ -486,7 +486,7 @@ Purpose: user asks a question, agent streams an answer.
      StaleIndicator → pulses while fetching
      OverlaySheet   → SMC overlays: swings, BOS/CHoCH, FVG, OB, liquidity
      ChartSettings  → indicators + theme + grid
-     "Pro" link     → /chart/[symbol]/pro (TradingView widget)
+     "TradingView / Structure" toggle → /chart/[symbol] (TradingView) | /chart/[symbol]/structure (Structure)
 
   Error states:
     - chart-empty.tsx → no data yet, friendly prompt
@@ -1182,8 +1182,8 @@ B. Chat-driven (natural language)
   /onboarding                  | onboarding/page.tsx + wizard     | 4 steps
   /chat                        | (app)/chat/page.tsx              | redirect
   /chat/[threadId]             | (app)/chat/[threadId]/page.tsx  | ChatScreen
-  /chart/[symbol]              | (app)/chart/[symbol]/page.tsx    | ChartView
-  /chart/[symbol]/pro          | chart/[symbol]/pro/page.tsx      | TradingView widget
+  /chart/[symbol]              | (app)/chart/[symbol]/page.tsx    | ProChartView (TradingView)
+  /chart/[symbol]/structure    | chart/[symbol]/structure/page.tsx | ChartView (SMC / indicators)
   /news                        | (app)/news/page.tsx              | NewsView
   /calendar                    | (app)/calendar/page.tsx          | EventList
   /alerts                      | (app)/alerts/page.tsx            | AlertList + form
