@@ -62,7 +62,7 @@ export const POST = withAuth<void>(async (req, { user }) => {
     ok: result.ok,
     error: result.ok ? null : (result.error ?? 'unknown error'),
     testedAt: testedAt.toISOString(),
-    rateLimit: result.ok ? (result as any).rateLimit : undefined,
+    rateLimit: result.ok ? ((result as Record<string, unknown>).rateLimit as { remainingRequests?: number; remainingTokens?: number; resetRequests?: string; resetTokens?: string; } | null) : undefined,
   });
 
   if (!result.ok) {

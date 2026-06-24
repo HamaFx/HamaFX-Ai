@@ -23,7 +23,7 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { withCsrf } from '@/lib/csrf';
 import type { ProviderMeta } from '@hamafx/shared';
-import type { ProviderId } from '@hamafx/shared/encryption';
+
 
 interface FallbackChainPickerProps {
   initialChain: string[];
@@ -53,7 +53,7 @@ export function FallbackChainPicker({
           throw new Error(`HTTP ${res.status}`);
         }
         toast.success('Fallback chain updated');
-      } catch (err) {
+      } catch {
         toast.error('Failed to update fallback chain');
         // Revert to old chain on failure
         setChain(chain);

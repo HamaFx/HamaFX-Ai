@@ -462,7 +462,7 @@ export async function checkBudgetAlertsAndThresholds(
   if (stateChanged) {
     await db
       .update(schema.userSettings)
-      .set({ spendAlertsState: state as any })
+      .set({ spendAlertsState: state as { monthKey?: string; alerted50?: boolean; alerted80?: boolean; alerted100?: boolean; providerAlerted?: string[]; } | null })
       .where(eq(schema.userSettings.userId, userId));
   }
 

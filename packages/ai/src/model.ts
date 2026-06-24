@@ -213,7 +213,7 @@ function envFallbackKeys(env: ResolveModelEnv): ByokPayload {
 export async function testProviderKey(
   providerId: ProviderId,
   apiKey: string,
-): Promise<{ ok: true; rateLimit?: any } | { ok: false; error: string }> {
+): Promise<{ ok: true; rateLimit?: unknown } | { ok: false; error: string }> {
   const spec = BYOK_PROVIDERS[providerId];
   if (!spec) return { ok: false, error: `Unknown provider: ${providerId}` };
 

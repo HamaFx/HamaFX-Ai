@@ -33,7 +33,7 @@ import { TradingViewWidget } from './tradingview-widget';
 
 export function ProChartView({ symbol, watchlist }: { symbol: Symbol; watchlist: string[] }) {
   const [tf, setTf] = useTimeframe();
-  const [settings] = useLocalStorage<ChartSettings>('hamafx-chart-settings', {
+  const [_settings] = useLocalStorage<ChartSettings>('hamafx-chart-settings', {
     theme: 'black',
     gridStyle: 'solid',
   });

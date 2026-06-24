@@ -48,7 +48,7 @@ import {
   resolveModelForProvider,
   getVertexGoogleSearchTool,
 } from './model';
-import { decryptByok, type ByokPayload, type ProviderId } from '@hamafx/shared/encryption';
+import { decryptByok, type ProviderId } from '@hamafx/shared/encryption';
 import { PROVIDER_IDS } from '@hamafx/shared/byok';
 import { BYOK_PROVIDERS } from './byok-providers';
 import {
@@ -486,8 +486,8 @@ export async function runChat(args: RunChatArgs) {
 
     const activeTools = { ...tools };
     if (nonEssentialDisabled) {
-      delete (activeTools as any).convene_committee;
-      delete (activeTools as any).replay_setup;
+      delete (activeTools as Record<string, unknown>).convene_committee;
+      delete (activeTools as Record<string, unknown>).replay_setup;
     }
 
     const streamArgs: Parameters<typeof streamText>[0] = {
@@ -571,7 +571,7 @@ export async function runChat(args: RunChatArgs) {
                 ok: true,
                 error: null,
                 testedAt: new Date().toISOString(),
-                rateLimit: rateLimit as any,
+                rateLimit: rateLimit as { remainingRequests?: number; remainingTokens?: number; resetRequests?: string; resetTokens?: string; } | null,
               });
             } catch (err) {
               console.warn('[ai] failed to save provider test rate limits', err);

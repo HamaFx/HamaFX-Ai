@@ -241,7 +241,7 @@ export function ApiKeyCard({ provider, currentValue, health, usage, keyUpdatedAt
       try {
         await navigator.clipboard.writeText(value.trim());
         toast.success('API Key copied to clipboard');
-      } catch (err) {
+      } catch {
         toast.error('Failed to copy to clipboard');
       }
     }

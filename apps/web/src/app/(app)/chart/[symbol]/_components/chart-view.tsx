@@ -21,7 +21,7 @@
 // Combines dynamic price feeds, structure events, active indicators, and customized styling.
 
 import { type Symbol, type Candle, msPerTimeframe } from '@hamafx/shared';
-import { Maximize2, SlidersHorizontal } from 'lucide-react';
+import { SlidersHorizontal } from 'lucide-react';
 import { Link } from 'next-view-transitions';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 

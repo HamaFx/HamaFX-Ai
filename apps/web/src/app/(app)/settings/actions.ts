@@ -19,7 +19,7 @@
 import { deleteAllThreads } from '@hamafx/ai';
 import { auth } from '@/auth';
 import { getDb, schema } from '@hamafx/db';
-import { eq, asc, and, sql } from 'drizzle-orm';
+import { eq, and, sql } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import {
   encryptByok,
@@ -344,7 +344,7 @@ export async function importKeysAction(payload: string, password: string) {
   }
 
   try {
-    const decryptedKeys = decryptWithPassword(payload, password) as any;
+    const decryptedKeys = decryptWithPassword(payload, password) as Record<string, unknown>;
     if (!decryptedKeys || typeof decryptedKeys !== 'object') {
       return { ok: false as const, error: 'Invalid backup payload or incorrect password' };
     }

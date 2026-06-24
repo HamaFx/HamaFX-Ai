@@ -81,7 +81,7 @@ export function OnboardingWizard({ initialName, providers, symbolsCatalog }: Onb
     try {
       const state = { step, name, timezone, defaultSymbol, selectedProvider, apiKey, tradingStyle, selectedSymbols };
       sessionStorage.setItem('hfx_onboarding_wizard', JSON.stringify(state));
-    } catch (e) {
+    } catch {
       // ignore
     }
   }, [step, name, timezone, defaultSymbol, selectedProvider, apiKey, tradingStyle, selectedSymbols]);
@@ -129,7 +129,7 @@ export function OnboardingWizard({ initialName, providers, symbolsCatalog }: Onb
         reduceMotion: currentPrefs.reduceMotion || false,
         tradingStyle: tradingStyle,
       }));
-    } catch (e) {
+    } catch {
       // ignore
     }
 
@@ -247,7 +247,7 @@ export function OnboardingWizard({ initialName, providers, symbolsCatalog }: Onb
                 <button
                   key={style.id}
                   type="button"
-                  onClick={() => setTradingStyle(style.id as any)}
+                  onClick={() => setTradingStyle(style.id as 'scalper' | 'day_trader' | 'swing' | 'position')}
                   className={`text-left rounded-xl border p-4 transition-all hover:bg-bg-elev-2 flex flex-col gap-1.5 cursor-pointer relative ${
                     active
                       ? 'border-brand bg-brand/5 ring-1 ring-brand shadow-glow-brand/5'

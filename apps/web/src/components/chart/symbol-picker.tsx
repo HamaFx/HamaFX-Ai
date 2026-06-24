@@ -20,7 +20,7 @@
 // shared <Segmented> primitive so the URL stays in sync (cheap deep links
 // to /chart/XAUUSD?tf=4h etc).
 
-import { SYMBOLS, type Symbol } from '@hamafx/shared';
+import { type Symbol } from '@hamafx/shared';
 
 import { Segmented } from '@/components/ui/segmented';
 import { useTimeframe } from '@/hooks/use-tf';

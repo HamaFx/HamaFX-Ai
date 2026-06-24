@@ -31,7 +31,7 @@ const PROVIDER = 'biquote';
 
 export function assertSupportedSymbol(symbol: string): Symbol {
   const isUnlimited = process.env.UNLIMITED_SYMBOLS === 'true' || process.env.UNLIMITED_SYMBOLS === '1';
-  if (!isSymbol(symbol) || (!isUnlimited && !SYMBOLS.includes(symbol as any))) {
+  if (!isSymbol(symbol) || (!isUnlimited && !SYMBOLS.includes(symbol as typeof SYMBOLS[number]))) {
     throw new ProviderError(
       'PROVIDER_HTTP_ERROR',
       PROVIDER,
