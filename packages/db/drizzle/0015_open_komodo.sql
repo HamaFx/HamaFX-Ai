@@ -19,7 +19,7 @@ CREATE TABLE "symbol_catalog" (
 	"sort_order" integer DEFAULT 0
 );
 --> statement-breakpoint
-ALTER TABLE "rate_limits" DROP CONSTRAINT "rate_limits_user_id_user_id_fk";
+ALTER TABLE "rate_limits" DROP CONSTRAINT IF EXISTS "rate_limits_user_id_user_id_fk";
 --> statement-breakpoint
 ALTER TABLE "audit_logs" ADD CONSTRAINT "audit_logs_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 CREATE INDEX "audit_logs_user_id_idx" ON "audit_logs" USING btree ("user_id");--> statement-breakpoint
