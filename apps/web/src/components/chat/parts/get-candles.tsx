@@ -30,8 +30,8 @@
 
 import {
   priceDecimals,
+  pipSize as sharedPipSize,
   type GetCandlesOutput,
-  type pipSize as sharedPipSize,
   type Symbol,
 } from '@hamafx/shared';
 
@@ -170,13 +170,7 @@ function CandlesCardError({ message }: { message?: string }) {
  * diverge that's a project-level bug, not a render-time one.
  */
 function pipSize(symbol: Symbol): number {
-  switch (symbol) {
-    case 'XAUUSD':
-      return 0.1;
-    case 'EURUSD':
-    case 'GBPUSD':
-      return 0.0001;
-  }
+  return sharedPipSize(symbol);
 }
 
 // Compile-time guarantee that the local helper agrees with `@hamafx/shared`.

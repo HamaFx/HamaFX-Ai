@@ -166,6 +166,7 @@ import {
   type ByokProviderSpec,
   type ModelDomain,
 } from './byok-providers';
+import { extractRateLimits } from './rate-limits';
 import { generateText } from 'ai';
 import { PROVIDER_IDS } from '@hamafx/shared/byok';
 
@@ -212,7 +213,7 @@ function envFallbackKeys(env: ResolveModelEnv): ByokPayload {
 export async function testProviderKey(
   providerId: ProviderId,
   apiKey: string,
-): Promise<{ ok: true } | { ok: false; error: string }> {
+): Promise<{ ok: true; rateLimit?: any } | { ok: false; error: string }> {
   const spec = BYOK_PROVIDERS[providerId];
   if (!spec) return { ok: false, error: `Unknown provider: ${providerId}` };
 
@@ -281,7 +282,7 @@ export async function testProviderKey(
     const builder = spec.factory(apiKey);
     const modelId = spec.defaultModels.fundamental;
     const model = builder(modelId);
-    await generateText({
+    const result = await generateText({
       model,
       prompt: 'ping',
       maxOutputTokens: 1,
@@ -289,7 +290,8 @@ export async function testProviderKey(
       // with 401/403; if we time out, the test was 5s of waiting.
       abortSignal: AbortSignal.timeout(5_000),
     });
-    return { ok: true };
+    const rateLimit = extractRateLimits(result.response?.headers);
+    return { ok: true, rateLimit };
   } catch (err) {
     // AI SDK wraps provider errors with statusCode + responseBody. Pull
     // the most useful line out for the UI to display. Example shapes:
@@ -431,6 +433,41 @@ export function resolveChatModel(
   }
   const spec = BYOK_PROVIDERS[providerId];
   const apiKey = keys[providerId]!;
+  const bareModelId = spec.defaultModels.technical;
+  if (!bareModelId) {
+    throw new Error(
+      `Provider ${providerId} has no default technical model configured.`,
+    );
+  }
+  return {
+    model: spec.factory(apiKey)(bareModelId),
+    modelId: `${spec.id}/${bareModelId}`,
+    providerId,
+    bareModelId,
+  };
+}
+
+/**
+ * Resolve a model specifically for a given provider ID.
+ */
+export function resolveModelForProvider(
+  providerId: ProviderId,
+  userSettings: Pick<UserSettingsRow, 'aiApiKeys'>,
+  env: ResolveModelEnv,
+): ChatModelResolution {
+  const stored = decryptByok(userSettings.aiApiKeys);
+  const keys: ByokPayload = {
+    ...envFallbackKeys(env),
+    ...(stored ?? {}),
+  };
+  const apiKey = keys[providerId];
+  if (!apiKey) {
+    throw new Error(`No API key configured for provider: ${providerId}`);
+  }
+  const spec = BYOK_PROVIDERS[providerId];
+  if (!spec) {
+    throw new Error(`Unknown provider: ${providerId}`);
+  }
   const bareModelId = spec.defaultModels.technical;
   if (!bareModelId) {
     throw new Error(

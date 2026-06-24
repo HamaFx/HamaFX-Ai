@@ -95,11 +95,11 @@ function Row({ label, value }: { label: string; value: string }) {
 
 function buildOverlayHref(output: AnalyzeChartImageOutput): string {
   const overlay = output.overlay;
-  if (!overlay) return `/chart/${output.symbol}`;
+  if (!overlay) return `/chart/${output.symbol}/structure`;
   const kinds = TOGGLEABLE.filter((k) => (overlay.countsByKind[k] ?? 0) > 0).join(',');
   const params = [`tf=${output.tf}`];
   if (kinds) params.push(`overlays=${kinds}`);
-  return `/chart/${output.symbol}?${params.join('&')}`;
+  return `/chart/${output.symbol}/structure?${params.join('&')}`;
 }
 
 function shortRef(s: string): string {

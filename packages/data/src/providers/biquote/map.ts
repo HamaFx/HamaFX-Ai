@@ -50,7 +50,7 @@ const TO_BIQUOTE_TIMEFRAME: Record<Exclude<Timeframe, '1w'>, BiquoteTimeframe> =
 };
 
 export function toBiquoteSymbol(symbol: Symbol): string {
-  return TO_BIQUOTE_SYMBOL[symbol];
+  return TO_BIQUOTE_SYMBOL[symbol] || symbol;
 }
 
 /**

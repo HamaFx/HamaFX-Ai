@@ -52,16 +52,70 @@ export class MarketApiError extends Error {
   }
 }
 
+async function fetchWithTimeout(
+  input: RequestInfo | URL,
+  init?: RequestInit & { timeout?: number },
+): Promise<Response> {
+  const timeout = init?.timeout ?? 10000; // default 10s
+  const controller = new AbortController();
+  const signal = controller.signal;
+
+  if (init?.signal) {
+    init.signal.addEventListener('abort', () => controller.abort());
+  }
+
+  const timeoutId = setTimeout(() => controller.abort(), timeout);
+
+  try {
+    const res = await fetch(input, { ...init, signal });
+    clearTimeout(timeoutId);
+    return res;
+  } catch (e) {
+    clearTimeout(timeoutId);
+    if (e instanceof Error && e.name === 'AbortError') {
+      if (init?.signal?.aborted) {
+        throw e;
+      }
+      throw new Error(`Request timed out after ${timeout}ms`);
+    }
+    throw e;
+  }
+}
+
+async function fetchWithRetry(
+  input: RequestInfo | URL,
+  init?: RequestInit & { timeout?: number; retries?: number },
+): Promise<Response> {
+  const maxRetries = init?.retries ?? 2;
+  let delay = 500;
+
+  for (let i = 0; i <= maxRetries; i++) {
+    try {
+      return await fetchWithTimeout(input, init);
+    } catch (err) {
+      const isAbort = err instanceof Error && err.name === 'AbortError' && init?.signal?.aborted;
+      if (isAbort || i === maxRetries) {
+        throw err;
+      }
+      console.warn(`[market-client] Fetch failed (attempt ${i + 1}/${maxRetries + 1}). Retrying in ${delay}ms...`, err);
+      await new Promise((resolve) => setTimeout(resolve, delay));
+      delay *= 2;
+    }
+  }
+  throw new Error('All retries failed');
+}
+
 async function safeFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
   try {
-    return await fetch(input, init);
+    return await fetchWithRetry(input, init);
   } catch (e) {
     if (e instanceof Error && e.name === 'AbortError') {
       throw e;
     }
-    throw new Error('Network connection error: failed to fetch market data. Please verify your connection.');
+    throw new Error(`Network connection error: ${e instanceof Error ? e.message : 'failed to fetch market data'}. Please verify your connection.`);
   }
 }
+
 
 async function parse<T>(res: Response): Promise<T> {
   let text = '';

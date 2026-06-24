@@ -15,16 +15,12 @@
  */
 
 // Bespoke renderer for the `get_correlation` tool part.
-//
-// Server component. Renders the 3×3 correlation matrix with text-bull /
+// Renders the correlation matrix dynamically with text-bull /
 // text-bear cells and a small DXY proxy strip with the value and 24h
-// change. The formula is shown verbatim under the strip so the user can
-// spot-check the math.
+// change.
 
 import {
-  SYMBOLS,
   type CorrelationCell,
-  type Symbol,
 } from '@hamafx/shared';
 
 import type { ToolPartProps } from './registry';
@@ -47,6 +43,15 @@ export function GetCorrelationPart({
     lookup.set(`${c.b}|${c.a}`, { a: c.b, b: c.a, r: c.r });
   }
 
+  // Extract all unique symbols present in the matrix dynamically
+  const uniqueSymbols = Array.from(
+    new Set(output.matrix.flatMap((cell) => [cell.a, cell.b]))
+  ).sort();
+
+  if (uniqueSymbols.length === 0) {
+    uniqueSymbols.push('XAUUSD', 'EURUSD', 'GBPUSD');
+  }
+
   const dxy = output.dxyProxy;
 
   return (
@@ -60,34 +65,36 @@ export function GetCorrelationPart({
         </span>
       </header>
 
-      <table className="w-full border-separate border-spacing-1 text-body-sm tabular-nums">
-        <thead>
-          <tr>
-            <th className="text-fg-subtle text-left font-medium" />
-            {SYMBOLS.map((s) => (
-              <th key={s} className="text-fg-muted text-center font-medium">
-                {s}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {SYMBOLS.map((row) => (
-            <tr key={row}>
-              <th className="text-fg-muted text-left font-medium">{row}</th>
-              {SYMBOLS.map((col) => (
-                <td key={col} className="text-center">
-                  {row === col ? (
-                    <span className="text-fg-subtle">·</span>
-                  ) : (
-                    <Cell row={row} col={col} lookup={lookup} />
-                  )}
-                </td>
+      <div className="overflow-x-auto">
+        <table className="w-full border-separate border-spacing-1 text-body-sm tabular-nums">
+          <thead>
+            <tr>
+              <th className="text-fg-subtle text-left font-medium pr-2" />
+              {uniqueSymbols.map((s) => (
+                <th key={s} className="text-fg-muted text-center font-semibold text-xs py-1 px-2 min-w-[60px]">
+                  {s}
+                </th>
               ))}
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {uniqueSymbols.map((row) => (
+              <tr key={row}>
+                <td className="text-fg-muted text-left font-semibold text-xs py-1 px-2">{row}</td>
+                {uniqueSymbols.map((col) => (
+                  <td key={col} className="text-center py-1 px-2">
+                    {row === col ? (
+                      <span className="text-fg-subtle/40 font-mono">1.00</span>
+                    ) : (
+                      <Cell row={row} col={col} lookup={lookup} />
+                    )}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
 
       <section className="border-border border-t pt-2">
         <header className="flex items-baseline justify-between gap-2">
@@ -108,8 +115,8 @@ function Cell({
   col,
   lookup,
 }: {
-  row: Symbol;
-  col: Symbol;
+  row: string;
+  col: string;
   lookup: Map<string, CorrelationCell>;
 }) {
   const cell = lookup.get(`${row}|${col}`);

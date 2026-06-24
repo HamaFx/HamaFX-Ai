@@ -26,6 +26,7 @@ import {
   streamText,
   type ModelMessage,
   type UIMessage,
+  type LanguageModel,
 } from 'ai';
 
 import { buildLiveSnapshot } from './context';
@@ -35,6 +36,7 @@ import {
   DEFAULT_TURN_ESTIMATE_USD,
   estimateCostUsd,
   tryReserveBudget,
+  checkBudgetAlertsAndThresholds,
 } from './cost';
 import { classifyStreamError, makeFallbackPart, type FallbackPartPayload } from './fallback';
 import { compactThread } from './memory/thread-summary';
@@ -43,8 +45,12 @@ import {
   deriveTitleModel,
   resolveChatModel,
   resolveOverrideModel,
+  resolveModelForProvider,
   getVertexGoogleSearchTool,
 } from './model';
+import { decryptByok, type ByokPayload, type ProviderId } from '@hamafx/shared/encryption';
+import { PROVIDER_IDS } from '@hamafx/shared/byok';
+import { BYOK_PROVIDERS } from './byok-providers';
 import {
   appendAssistantMessage,
   appendUserMessage,
@@ -63,7 +69,8 @@ import { enforceCitations } from './verification';
 import { waitUntil } from './wait-until';
 import { getDb, schema } from '@hamafx/db';
 import type { UserSettingsRow } from '@hamafx/db/schema';
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
+import { extractRateLimits } from './rate-limits';
 
 export interface RunChatArgs {
   threadId: string;
@@ -152,8 +159,9 @@ export async function runChat(args: RunChatArgs) {
   //    compaction once we know the message count.
   const [history, snapshot] = await Promise.all([
     listMessages(userId, threadId, 60),
-    buildLiveSnapshot(signal ? { signal } : {}),
+    buildLiveSnapshot({ signal, userId }),
   ]);
+
 
   // Phase F — compaction uses the same cheap-model derivation as
   // the planner. Resolved once up front so the call site stays clean.
@@ -202,336 +210,472 @@ export async function runChat(args: RunChatArgs) {
   const routing: RoutingDecision = routeTurn(routingArgs);
 
   let fallbackInfo: FallbackPartPayload | null = null;
-  let model: Awaited<ReturnType<typeof resolveChatModel>>['model'] | null = null;
-  let modelId: string = env.AI_DEFAULT_MODEL;
+  let attempts = 0;
+  const maxAttempts = 5;
+  let lastError: unknown = null;
+  let currentModelOverride = modelOverride;
+  let nonEssentialDisabled = false;
 
-  // Happy path: explicit override that resolved.
-  if (typeof modelOverride === 'string' && modelOverride.length > 0) {
-    const resolved = resolveOverrideModel({
-      override: modelOverride,
-      userSettings,
-      env,
-    });
-    if (resolved) {
-      model = resolved.model;
-      modelId = resolved.modelId;
-    } else {
-      // Override was specified but didn't resolve (unknown provider,
-      // no key, gateway-style id, etc). Fall back to the user's chat
-      // model and append a `data-fallback` part so the UI can show
-      // "Override unavailable, used <default>.".
-      try {
-        const res = resolveChatModel(userSettings, env);
-        model = res.model;
-        modelId = res.modelId;
-      } catch (err) {
-        const decision = classifyStreamError(err);
-        console.warn(
-          `[ai] model override "${modelOverride}" failed (${decision.reason}: ${decision.message}); falling back to AI_DEFAULT_MODEL=${env.AI_DEFAULT_MODEL}`,
-        );
-        fallbackInfo = makeFallbackPart(modelOverride, decision);
-        throw err;
-      }
-    }
-  } else {
-    // No override — straight to chat model.
+  while (attempts < maxAttempts) {
+    attempts++;
+    let resolvedModel: LanguageModel;
+    let resolvedModelId: string;
+    let providerId: ProviderId;
+
     try {
-      const res = resolveChatModel(userSettings, env);
-      model = res.model;
-      modelId = res.modelId;
-    } catch (err) {
-      console.warn(
-        `[ai] resolveChatModel failed (${err instanceof Error ? err.message : 'unknown'}); falling back to AI_DEFAULT_MODEL=${env.AI_DEFAULT_MODEL}`,
-      );
-      throw err;
-    }
-  }
-
-  // Narrow the type — at this point `model` is guaranteed non-null
-  // because every path above either assigns it or throws.
-  if (!model) {
-    throw new Error('model resolution produced a null model — this is a bug');
-  }
-
-  // 4b) Plan-then-act (Phase 7c). Runs only when `routing.planRequired`
-  //     is true (fundamental + technical domains today). The planner
-  //     persists a `data-plan` system-message right before the streaming
-  //     turn so the chat surface renders a collapsible "Thinking" pill
-  //     above the assistant's answer. Failures fall back deterministically
-  //     and never block the main streamText call.
-  let plannerStartedAt = 0;
-  let plannerResult: Awaited<ReturnType<typeof runPlanner>> | null = null;
-  if (routing.planRequired) {
-    // Phase F — derive the planner model from the chat model rather
-    // than reading env.AI_SUMMARY_MODEL (which no longer exists).
-    // The planner is a separate cheap-model call, so we use the same
-    // provider's spec.defaultModels.summary tier.
-    const plannerModelId =
-      derivePlannerModel(userSettings, env) ?? env.AI_DEFAULT_MODEL;
-    plannerStartedAt = Date.now();
-    try {
-      plannerResult = await runPlanner({
-        threadId,
-        userMessage,
-        routing,
-        plannerModelId,
-        env: {
-          AI_GATEWAY_API_KEY: env.AI_GATEWAY_API_KEY,
-          GOOGLE_GENERATIVE_AI_API_KEY: env.GOOGLE_GENERATIVE_AI_API_KEY,
-          GOOGLE_VERTEX_PROJECT: env.GOOGLE_VERTEX_PROJECT,
-          GOOGLE_VERTEX_LOCATION: env.GOOGLE_VERTEX_LOCATION,
-          GOOGLE_APPLICATION_CREDENTIALS_JSON:
-            env.GOOGLE_APPLICATION_CREDENTIALS_JSON,
-          GOOGLE_APPLICATION_CREDENTIALS: env.GOOGLE_APPLICATION_CREDENTIALS,
-          AI_DEFAULT_MODEL: env.AI_DEFAULT_MODEL,
-          MAX_DAILY_USD: env.MAX_DAILY_USD,
-          LOG_PROMPTS: env.LOG_PROMPTS,
-        },
-        ...(signal ? { signal } : {}),
-      });
-      if (plannerResult.source === 'llm' && env.LOG_PROMPTS) {
-        console.info(
-          '[ai] planner ok (steps=%d, tools=%o)',
-          plannerResult.plan.steps.length,
-          plannerResult.plan.expectedTools,
-        );
-      }
-      // Telemetry — record a single row tagged `kind: 'plan_*'` so the
-      // /settings/usage page can see how often the planner runs and how
-      // much it costs. Best-effort; never blocks the chat.
-      void recordTelemetry({
-        userId,
-        threadId,
-        messageId: plannerResult.messageId,
-        model: plannerModelId,
-        inputTokens: plannerResult.inputTokens,
-        outputTokens: plannerResult.outputTokens,
-        toolCalls: 0,
-        ms: plannerResult.ms,
-        kind:
-          plannerResult.source === 'llm'
-            ? 'plan_generated'
-            : plannerResult.reason === 'budget'
-              ? 'plan_skipped_budget'
-              : 'plan_failed',
-      });
-    } catch (err) {
-      console.warn('[ai] planner threw — falling back', err);
-    }
-  }
-  void plannerStartedAt;
-
-  // The base system prompt is unchanged; we prepend the (optional) thread
-  // summary as a system note so the model has continuity beyond the verbatim
-  // tail. The plan-then-act expansion (Phase 7c) lands here too — for now
-  // we just record `planRequired` in telemetry so routing decisions are
-  // auditable today.
-  const baseSystem = buildSystemPrompt(
-    snapshot,
-    userContextFromSettings(displayName ?? null, userSettings),
-  );
-  let systemPrompt = compaction.extraSystem
-    ? `${compaction.extraSystem}\n\n${baseSystem}`
-    : baseSystem;
-
-  if (customInstructions && customInstructions.trim().length > 0) {
-    systemPrompt += `\n\n<USER_CUSTOM_INSTRUCTIONS>\n${customInstructions}\n</USER_CUSTOM_INSTRUCTIONS>`;
-  }
-
-  // Phase 3 hardening §1 — `withToolContext` replaces the per-module
-  // setter pattern (`setAnalyzeChartImageContext`,
-  // `setSummarizeThreadContext`). Async-local storage means concurrent
-  // turns on the same warm Lambda see their own context and can't
-  // overwrite each other's threadId. The signal is piped through so
-  // long-running tools can short-circuit when the user closes the tab
-  // (Phase 3 §3). The budget snapshot is cached so multiple LLM-side
-  // helpers (planner, title, summarize_thread) don't each issue their
-  // own SUM query (Phase 3 §4).
-  const toolContext: ToolContext = {
-    threadId,
-    userId,
-    env: {
-      AI_GATEWAY_API_KEY: env.AI_GATEWAY_API_KEY,
-      GOOGLE_GENERATIVE_AI_API_KEY: env.GOOGLE_GENERATIVE_AI_API_KEY,
-      GOOGLE_VERTEX_PROJECT: env.GOOGLE_VERTEX_PROJECT,
-      GOOGLE_VERTEX_LOCATION: env.GOOGLE_VERTEX_LOCATION,
-      GOOGLE_APPLICATION_CREDENTIALS_JSON: env.GOOGLE_APPLICATION_CREDENTIALS_JSON,
-      GOOGLE_APPLICATION_CREDENTIALS: env.GOOGLE_APPLICATION_CREDENTIALS,
-      AI_DEFAULT_MODEL: env.AI_DEFAULT_MODEL,
-      AI_EMBEDDING_MODEL: env.AI_EMBEDDING_MODEL,
-      MAX_DAILY_USD: env.MAX_DAILY_USD,
-      LOG_PROMPTS: env.LOG_PROMPTS,
-    },
-    signal: signal ?? null,
-    // The reservation we just took is the freshest budget snapshot we
-    // can offer. Helpers that need a stricter "have we crossed the
-    // cap?" probe still hit the DB.
-    budget: { spent: reservation.spent, max: maxDailyUsd },
-    userSettings,
-  };
-
-  if (env.LOG_PROMPTS) {
-    console.info(
-      '[ai] routing domain=%s model=%s plan=%s rationale=%s',
-      routing.domain,
-      modelId,
-      routing.planRequired,
-      routing.rationale,
-    );
-    console.info('[ai] system prompt:\n%s', systemPrompt);
-    console.info(
-      '[ai] history (%d msgs, compacted %d)',
-      modelMessages.length,
-      compaction.compacted,
-    );
-  }
-
-  // Telemetry breadcrumb for the routing decision — useful for /settings/usage
-  // breakdowns. Best-effort; failures here never block the chat.
-  void recordTelemetry({
-    userId,
-    threadId,
-    messageId: null,
-    model: modelId,
-    inputTokens: 0,
-    outputTokens: 0,
-    toolCalls: 0,
-    ms: 0,
-    kind: `routing_${routing.domain}` as const,
-  }).catch((err) => console.warn('[ai] routing telemetry failed', err));
-
-  // 5) Stream. AI Gateway model strings ("openai/gpt-4.1") are accepted
-  //    directly when AI_GATEWAY_API_KEY is set.
-  //
-  // Phase 3 hardening §2 — per-tool telemetry now lives in
-  // `withTelemetry()` on each tool, NOT in `onStepFinish` here. The
-  // step-finish hook is left empty so we still have a hook point for
-  // future SDK-side step instrumentation, but it no longer parses
-  // content parts to derive tool-call timing — that's fragile and
-  // duplicates the wrapper.
-
-  const streamArgs: Parameters<typeof streamText>[0] = {
-    model,
-    system: systemPrompt,
-    messages: modelMessages,
-    tools: routing.domain === 'fundamental' && env.GOOGLE_VERTEX_PROJECT
-      ? { ...tools, googleSearch: getVertexGoogleSearchTool(env) } 
-      : tools,
-    stopWhen: stepCountIs(env.MAX_TOOL_ITERATIONS),
-
-    onFinish: async ({ usage, finishReason, response }) => {
-      try {
-        const assistantUiMsg = response.messages.at(-1);
-        let messageId: string | null = null;
-        if (assistantUiMsg && assistantUiMsg.role === 'assistant') {
-          // Convert the model-shaped response back to a UIMessage shape.
-          const baseParts: UIMessage['parts'] = Array.isArray(assistantUiMsg.content)
-            ? (assistantUiMsg.content as UIMessage['parts'])
-            : [{ type: 'text', text: String(assistantUiMsg.content) }];
-
-          // Phase 7c: post-finish citation enforcement. We append a
-          // `data-citation-warning` part when the assistant's text quotes
-          // numbers / events that aren't backed by a tool call this turn.
-          // The check is heuristic and `stance: 'soft'` so false positives
-          // render as muted footer pills, not blocking errors.
-          let parts: UIMessage['parts'] = baseParts;
-          try {
-            const assistantText = baseParts
-              .filter(
-                (p): p is { type: 'text'; text: string } =>
-                  typeof p === 'object' &&
-                  p !== null &&
-                  (p as { type?: string }).type === 'text' &&
-                  typeof (p as { text?: unknown }).text === 'string',
-              )
-              .map((p) => p.text)
-              .join('\n');
-            const warning = enforceCitations({
-              text: assistantText,
-              responseMessages: response.messages,
-            });
-            if (warning) {
-              parts = [...baseParts, warning as unknown as UIMessage['parts'][number]];
-            }
-          } catch (err) {
-            console.warn('[ai] citation enforcer failed — skipping', err);
-          }
-
-          // Phase B — UX_UPGRADE_PLAN.md item 15.
-          // Append the fallback marker so the chat surface can show
-          // "Override unavailable, used <default>." inline with the
-          // assistant's reply. The renderer (apps/web) already
-          // understands `data-fallback` from the markdown export
-          // pipeline so we reuse the same shape.
-          if (fallbackInfo) {
-            parts = [...parts, fallbackInfo as unknown as UIMessage['parts'][number]];
-          }
-
-          const ui: UIMessage = {
-            id: crypto.randomUUID(),
-            role: 'assistant',
-            parts,
-          };
-          ({ messageId } = await appendAssistantMessage(threadId, ui));
-        }
-        await recordTelemetry({
-          userId,
-          threadId,
-          messageId,
-          model: modelId,
-          inputTokens: usage?.inputTokens ?? 0,
-          outputTokens: usage?.outputTokens ?? 0,
-          toolCalls: countToolCalls(response.messages),
-          ms: Date.now() - startedAt,
-        });
-        // Reconcile the budget reservation with the actual post-call cost.
-        // Positive delta = we underestimated; negative = release. Keeps
-        // the running counter in `daily_ai_spend` aligned with the audit
-        // SUM in `chat_telemetry`.
-        const actualCost = estimateCostUsd(
-          modelId,
-          usage?.inputTokens ?? 0,
-          usage?.outputTokens ?? 0,
-        );
-        await applyBudgetDelta(userId, actualCost - reservedUsd).catch((err) =>
-          console.warn('[ai] applyBudgetDelta failed', err),
-        );
-        if (env.LOG_PROMPTS) {
-          console.info('[ai] finish reason=%s tokens=%o', finishReason, usage);
-        }
-      } catch (err) {
-        // Persistence failures must not crash the stream — log and move on.
-        console.error('[ai] persistence/telemetry failed', err);
-      }
-
-      // Phase 2 hardening §8 — auto-title is the slow tail of onFinish:
-      // a 1-3 s LLM call that the user doesn't need to see before the
-      // streaming dots disappear. Hand it off to `waitUntil` so Vercel
-      // keeps the function alive long enough for the title to land,
-      // but the response stream closes immediately. Outside Vercel
-      // (worker / tests) `waitUntil` is a fire-and-forget shim.
-      waitUntil(
-        runAutoTitleBackground({
-          threadId,
-          userId,
+      if (typeof currentModelOverride === 'string' && currentModelOverride.length > 0) {
+        const resolved = resolveOverrideModel({
+          override: currentModelOverride,
           userSettings,
           env,
-          signal: signal ?? null,
-        }),
-      );
-    },
-  };
-  if (signal) streamArgs.abortSignal = signal;
+        });
+        if (resolved) {
+          resolvedModel = resolved.model;
+          resolvedModelId = resolved.modelId;
+          providerId = resolved.providerId;
+        } else {
+          // If override couldn't be resolved, try resolving model for the override provider ID if it is one of PROVIDER_IDS
+          const sep = currentModelOverride.indexOf(':');
+          const possibleProviderId = (sep >= 0 ? currentModelOverride.slice(0, sep) : currentModelOverride) as ProviderId;
+          if (PROVIDER_IDS.includes(possibleProviderId)) {
+            const res = resolveModelForProvider(possibleProviderId, userSettings, env);
+            resolvedModel = res.model;
+            resolvedModelId = res.modelId;
+            providerId = res.providerId;
+          } else {
+            const res = resolveChatModel(userSettings, env);
+            resolvedModel = res.model;
+            resolvedModelId = res.modelId;
+            providerId = res.providerId;
+          }
+        }
+      } else {
+        const res = resolveChatModel(userSettings, env);
+        resolvedModel = res.model;
+        resolvedModelId = res.modelId;
+        providerId = res.providerId;
+      }
+      
+      const budgetCheck = await checkBudgetAlertsAndThresholds(userId, providerId);
+      if (budgetCheck.blocked) {
+        if (budgetCheck.blockedReason?.includes('Monthly budget limit reached')) {
+          throw new Error(budgetCheck.blockedReason);
+        } else {
+          throw new Error(`PROVIDER_THRESHOLD_EXCEEDED: ${budgetCheck.blockedReason}`);
+        }
+      }
+      nonEssentialDisabled = budgetCheck.nonEssentialDisabled;
+    } catch (err) {
+      lastError = err;
+      const isProviderThresholdErr = err instanceof Error && err.message.startsWith('PROVIDER_THRESHOLD_EXCEEDED');
+      const decision = isProviderThresholdErr
+        ? { fallback: true, reason: 'rate-limit' as const, message: err.message }
+        : classifyStreamError(err);
+      if (!decision.fallback) {
+        throw err;
+      }
 
-  // Phase 3 hardening §1 — wrap the `streamText` invocation in a
-  // `withToolContext` scope so every tool's `execute` callback (and
-  // every `onStepFinish` / `onFinish` hook) inherits the context via
-  // AsyncLocalStorage. The synchronous return is fine: AsyncLocalStorage
-  // tracks the async-hook chain captured when work is scheduled, so
-  // promises chained off this `run()` keep the context even after we
-  // return the stream result to the caller.
-  const result = withToolContext(toolContext, () => Promise.resolve(streamText(streamArgs)));
-  return result;
+
+      // Fallback! Get next provider from chain
+      const chain = userSettings.aiFallbackChain ?? [];
+      let nextProviderId: ProviderId | null = null;
+      
+      // If we don't have a provider ID yet because resolution failed, default to the first in the chain
+      const currentProvider: ProviderId = (typeof currentModelOverride === 'string' && currentModelOverride.length > 0)
+        ? (currentModelOverride.includes(':') ? currentModelOverride.split(':')[0] : currentModelOverride) as ProviderId
+        : 'google'; // default fallback starting point if resolution fails completely
+
+      const idx = chain.indexOf(currentProvider);
+      const stored = decryptByok(userSettings.aiApiKeys);
+      for (let i = idx + 1; i < chain.length; i++) {
+        const pid = chain[i] as ProviderId;
+        const key = stored?.[pid] || (pid === 'google' ? env.GOOGLE_GENERATIVE_AI_API_KEY : undefined);
+        if (typeof key === 'string' && key.trim().length > 0) {
+          nextProviderId = pid;
+          break;
+        }
+      }
+
+      if (!nextProviderId) {
+        throw err;
+      }
+
+      console.warn(
+        `[ai] Fallback triggered! Model resolution failed. Trying next fallback provider: "${nextProviderId}"`,
+      );
+
+      fallbackInfo = makeFallbackPart(
+        currentModelOverride ?? 'default',
+        decision
+      );
+
+      const nextSpec = BYOK_PROVIDERS[nextProviderId];
+      if (nextSpec && nextSpec.defaultModels.technical) {
+        currentModelOverride = `${nextProviderId}:${nextSpec.defaultModels.technical}`;
+      } else {
+        currentModelOverride = nextProviderId;
+      }
+      continue;
+    }
+
+    // 4b) Plan-then-act (Phase 7c). Runs only when `routing.planRequired`
+    //     is true (fundamental + technical domains today). The planner
+    //     persists a `data-plan` system-message right before the streaming
+    //     turn so the chat surface renders a collapsible "Thinking" pill
+    //     above the assistant's answer. Failures fall back deterministically
+    //     and never block the main streamText call.
+    let plannerStartedAt = 0;
+    let plannerResult: Awaited<ReturnType<typeof runPlanner>> | null = null;
+    const parts = resolvedModelId.split('/');
+    const bareModelId = parts.length > 1 ? parts[1] : resolvedModelId;
+
+    if (routing.planRequired) {
+      // Phase F — derive the planner model from the chat model rather
+      // than reading env.AI_SUMMARY_MODEL (which no longer exists).
+      // The planner is a separate cheap-model call, so we use the same
+      // provider's spec.defaultModels.summary tier.
+      const plannerModelId =
+        derivePlannerModel(
+          {
+            aiApiKeys: userSettings.aiApiKeys,
+            chatModel: `${providerId}:${bareModelId}`,
+          },
+          env
+        ) ?? env.AI_DEFAULT_MODEL;
+      plannerStartedAt = Date.now();
+      try {
+        plannerResult = await runPlanner({
+          threadId,
+          userMessage,
+          routing,
+          plannerModelId,
+          env: {
+            AI_GATEWAY_API_KEY: env.AI_GATEWAY_API_KEY,
+            GOOGLE_GENERATIVE_AI_API_KEY: env.GOOGLE_GENERATIVE_AI_API_KEY,
+            GOOGLE_VERTEX_PROJECT: env.GOOGLE_VERTEX_PROJECT,
+            GOOGLE_VERTEX_LOCATION: env.GOOGLE_VERTEX_LOCATION,
+            GOOGLE_APPLICATION_CREDENTIALS_JSON:
+              env.GOOGLE_APPLICATION_CREDENTIALS_JSON,
+            GOOGLE_APPLICATION_CREDENTIALS: env.GOOGLE_APPLICATION_CREDENTIALS,
+            AI_DEFAULT_MODEL: env.AI_DEFAULT_MODEL,
+            MAX_DAILY_USD: env.MAX_DAILY_USD,
+            LOG_PROMPTS: env.LOG_PROMPTS,
+          },
+          ...(signal ? { signal } : {}),
+        });
+        if (plannerResult.source === 'llm' && env.LOG_PROMPTS) {
+          console.info(
+            '[ai] planner ok (steps=%d, tools=%o)',
+            plannerResult.plan.steps.length,
+            plannerResult.plan.expectedTools,
+          );
+        }
+        // Telemetry — record a single row tagged `kind: 'plan_*'` so the
+        // /settings/usage page can see how often the planner runs and how
+        // much it costs. Best-effort; never blocks the chat.
+        void recordTelemetry({
+          userId,
+          threadId,
+          messageId: plannerResult.messageId,
+          model: plannerModelId,
+          inputTokens: plannerResult.inputTokens,
+          outputTokens: plannerResult.outputTokens,
+          toolCalls: 0,
+          ms: plannerResult.ms,
+          kind:
+            plannerResult.source === 'llm'
+              ? 'plan_generated'
+              : plannerResult.reason === 'budget'
+                ? 'plan_skipped_budget'
+                : 'plan_failed',
+        });
+      } catch (err) {
+        console.warn('[ai] planner threw — falling back', err);
+      }
+    }
+    void plannerStartedAt;
+
+    // The base system prompt is unchanged; we prepend the (optional) thread
+    // summary as a system note so the model has continuity beyond the verbatim
+    // tail. The plan-then-act expansion (Phase 7c) lands here too — for now
+    // we just record `planRequired` in telemetry so routing decisions are
+    // auditable today.
+    const baseSystem = buildSystemPrompt(
+      snapshot,
+      userContextFromSettings(displayName ?? null, userSettings),
+    );
+    let systemPrompt = compaction.extraSystem
+      ? `${compaction.extraSystem}\n\n${baseSystem}`
+      : baseSystem;
+
+    if (customInstructions && customInstructions.trim().length > 0) {
+      systemPrompt += `\n\n<USER_CUSTOM_INSTRUCTIONS>\n${customInstructions}\n</USER_CUSTOM_INSTRUCTIONS>`;
+    }
+
+    // Phase 3 hardening §1 — `withToolContext` replaces the per-module
+    // setter pattern (`setAnalyzeChartImageContext`,
+    // `setSummarizeThreadContext`). Async-local storage means concurrent
+    // turns on the same warm Lambda see their own context and can't
+    // overwrite each other's threadId. The signal is piped through so
+    // long-running tools can short-circuit when the user closes the tab
+    // (Phase 3 §3). The budget snapshot is cached so multiple LLM-side
+    // helpers (planner, title, summarize_thread) don't each issue their
+    // own SUM query (Phase 3 §4).
+    const toolContext: ToolContext = {
+      threadId,
+      userId,
+      env: {
+        AI_GATEWAY_API_KEY: env.AI_GATEWAY_API_KEY,
+        GOOGLE_GENERATIVE_AI_API_KEY: env.GOOGLE_GENERATIVE_AI_API_KEY,
+        GOOGLE_VERTEX_PROJECT: env.GOOGLE_VERTEX_PROJECT,
+        GOOGLE_VERTEX_LOCATION: env.GOOGLE_VERTEX_LOCATION,
+        GOOGLE_APPLICATION_CREDENTIALS_JSON: env.GOOGLE_APPLICATION_CREDENTIALS_JSON,
+        GOOGLE_APPLICATION_CREDENTIALS: env.GOOGLE_APPLICATION_CREDENTIALS,
+        AI_DEFAULT_MODEL: env.AI_DEFAULT_MODEL,
+        AI_EMBEDDING_MODEL: env.AI_EMBEDDING_MODEL,
+        MAX_DAILY_USD: env.MAX_DAILY_USD,
+        LOG_PROMPTS: env.LOG_PROMPTS,
+      },
+      signal: signal ?? null,
+      // The reservation we just took is the freshest budget snapshot we
+      // can offer. Helpers that need a stricter "have we crossed the
+      // cap?" probe still hit the DB.
+      budget: { spent: reservation.spent, max: maxDailyUsd },
+      userSettings,
+    };
+
+    if (env.LOG_PROMPTS) {
+      console.info(
+        '[ai] routing domain=%s model=%s plan=%s rationale=%s',
+        routing.domain,
+        resolvedModelId,
+        routing.planRequired,
+        routing.rationale,
+      );
+      console.info('[ai] system prompt:\n%s', systemPrompt);
+      console.info(
+        '[ai] history (%d msgs, compacted %d)',
+        modelMessages.length,
+        compaction.compacted,
+      );
+    }
+
+    // Telemetry breadcrumb for the routing decision — useful for /settings/usage
+    // breakdowns. Best-effort; failures here never block the chat.
+    void recordTelemetry({
+      userId,
+      threadId,
+      messageId: null,
+      model: resolvedModelId,
+      inputTokens: 0,
+      outputTokens: 0,
+      toolCalls: 0,
+      ms: 0,
+      kind: `routing_${routing.domain}` as const,
+    }).catch((err) => console.warn('[ai] routing telemetry failed', err));
+
+    // 5) Stream. AI Gateway model strings ("openai/gpt-4.1") are accepted
+    //    directly when AI_GATEWAY_API_KEY is set.
+    //
+    // Phase 3 hardening §2 — per-tool telemetry now lives in
+    // `withTelemetry()` on each tool, NOT in `onStepFinish` here. The
+    // step-finish hook is left empty so we still have a hook point for
+    // future SDK-side step instrumentation, but it no longer parses
+    // content parts to derive tool-call timing — that's fragile and
+    // duplicates the wrapper.
+
+    const activeTools = { ...tools };
+    if (nonEssentialDisabled) {
+      delete (activeTools as any).convene_committee;
+      delete (activeTools as any).replay_setup;
+    }
+
+    const streamArgs: Parameters<typeof streamText>[0] = {
+      model: resolvedModel,
+      system: systemPrompt,
+      messages: modelMessages,
+      tools: routing.domain === 'fundamental' && env.GOOGLE_VERTEX_PROJECT
+        ? { ...activeTools, googleSearch: getVertexGoogleSearchTool(env) } 
+        : activeTools,
+      stopWhen: stepCountIs(env.MAX_TOOL_ITERATIONS),
+
+      onFinish: async ({ usage, finishReason, response }) => {
+        try {
+          const assistantUiMsg = response.messages.at(-1);
+          let messageId: string | null = null;
+          if (assistantUiMsg && assistantUiMsg.role === 'assistant') {
+            // Convert the model-shaped response back to a UIMessage shape.
+            const baseParts: UIMessage['parts'] = Array.isArray(assistantUiMsg.content)
+              ? (assistantUiMsg.content as UIMessage['parts'])
+              : [{ type: 'text', text: String(assistantUiMsg.content) }];
+
+            // Phase 7c: post-finish citation enforcement. We append a
+            // `data-citation-warning` part when the assistant's text quotes
+            // numbers / events that aren't backed by a tool call this turn.
+            // The check is heuristic and `stance: 'soft'` so false positives
+            // render as muted footer pills, not blocking errors.
+            let parts: UIMessage['parts'] = baseParts;
+            try {
+              const assistantText = baseParts
+                .filter(
+                  (p): p is { type: 'text'; text: string } =>
+                    typeof p === 'object' &&
+                    p !== null &&
+                    (p as { type?: string }).type === 'text' &&
+                    typeof (p as { text?: unknown }).text === 'string',
+                )
+                .map((p) => p.text)
+                .join('\n');
+              const warning = enforceCitations({
+                text: assistantText,
+                responseMessages: response.messages,
+              });
+              if (warning) {
+                parts = [...baseParts, warning as unknown as UIMessage['parts'][number]];
+              }
+            } catch (err) {
+              console.warn('[ai] citation enforcer failed — skipping', err);
+            }
+
+            // Phase B — UX_UPGRADE_PLAN.md item 15.
+            // Append the fallback marker so the chat surface can show
+            // "Override unavailable, used <default>." inline with the
+            // assistant's reply. The renderer (apps/web) already
+            // understands `data-fallback` from the markdown export
+            // pipeline so we reuse the same shape.
+            if (fallbackInfo) {
+              parts = [...parts, fallbackInfo as unknown as UIMessage['parts'][number]];
+            }
+
+            const ui: UIMessage = {
+              id: crypto.randomUUID(),
+              role: 'assistant',
+              parts,
+            };
+            ({ messageId } = await appendAssistantMessage(threadId, ui));
+          }
+          const rateLimit = extractRateLimits(response.headers);
+          if (rateLimit) {
+            try {
+              await db
+                .delete(schema.providerTests)
+                .where(
+                  and(
+                    eq(schema.providerTests.userId, userId),
+                    eq(schema.providerTests.providerId, providerId),
+                  ),
+                );
+              await db.insert(schema.providerTests).values({
+                userId,
+                providerId,
+                ok: true,
+                error: null,
+                testedAt: new Date().toISOString(),
+                rateLimit: rateLimit as any,
+              });
+            } catch (err) {
+              console.warn('[ai] failed to save provider test rate limits', err);
+            }
+          }
+          await recordTelemetry({
+            userId,
+            threadId,
+            messageId,
+            model: resolvedModelId,
+            inputTokens: usage?.inputTokens ?? 0,
+            outputTokens: usage?.outputTokens ?? 0,
+            toolCalls: countToolCalls(response.messages),
+            ms: Date.now() - startedAt,
+          });
+          // Reconcile the budget reservation with the actual post-call cost.
+          // Positive delta = we underestimated; negative = release. Keeps
+          // the running counter in `daily_ai_spend` aligned with the audit
+          // SUM in `chat_telemetry`.
+          const actualCost = estimateCostUsd(
+            resolvedModelId,
+            usage?.inputTokens ?? 0,
+            usage?.outputTokens ?? 0,
+          );
+          await applyBudgetDelta(userId, actualCost - reservedUsd).catch((err) =>
+            console.warn('[ai] applyBudgetDelta failed', err),
+          );
+          if (env.LOG_PROMPTS) {
+            console.info('[ai] finish reason=%s tokens=%o', finishReason, usage);
+          }
+        } catch (err) {
+          // Persistence failures must not crash the stream — log and move on.
+          console.error('[ai] persistence/telemetry failed', err);
+        }
+
+        // Phase 2 hardening §8 — auto-title is the slow tail of onFinish:
+        // a 1-3 s LLM call that the user doesn't need to see before the
+        // streaming dots disappear. Hand it off to `waitUntil` so Vercel
+        // keeps the function alive long enough for the title to land,
+        // but the response stream closes immediately. Outside Vercel
+        // (worker / tests) `waitUntil` is a fire-and-forget shim.
+        waitUntil(
+          runAutoTitleBackground({
+            threadId,
+            userId,
+            userSettings: {
+              ...userSettings,
+              chatModel: `${providerId}:${bareModelId}`,
+            },
+            env,
+            signal: signal ?? null,
+          }),
+        );
+      },
+    };
+    if (signal) streamArgs.abortSignal = signal;
+
+    try {
+      const result = await withToolContext(toolContext, () => Promise.resolve(streamText(streamArgs)));
+      return result;
+    } catch (err) {
+      lastError = err;
+      const decision = classifyStreamError(err);
+      if (!decision.fallback) {
+        throw err;
+      }
+
+      // Fallback! Get next provider from chain
+      const chain = userSettings.aiFallbackChain ?? [];
+      let nextProviderId: ProviderId | null = null;
+      const idx = chain.indexOf(providerId);
+      const stored = decryptByok(userSettings.aiApiKeys);
+      for (let i = idx + 1; i < chain.length; i++) {
+        const pid = chain[i] as ProviderId;
+        const key = stored?.[pid] || (pid === 'google' ? env.GOOGLE_GENERATIVE_AI_API_KEY : undefined);
+        if (typeof key === 'string' && key.trim().length > 0) {
+          nextProviderId = pid;
+          break;
+        }
+      }
+
+      if (!nextProviderId) {
+        throw err;
+      }
+
+      console.warn(
+        `[ai] Fallback triggered! Provider "${providerId}" failed (${decision.reason}: ${decision.message}). Trying next fallback provider: "${nextProviderId}"`,
+      );
+
+      fallbackInfo = makeFallbackPart(
+        currentModelOverride ?? `${providerId}:${bareModelId}`,
+        decision
+      );
+
+      const nextSpec = BYOK_PROVIDERS[nextProviderId];
+      if (nextSpec && nextSpec.defaultModels.technical) {
+        currentModelOverride = `${nextProviderId}:${nextSpec.defaultModels.technical}`;
+      } else {
+        currentModelOverride = nextProviderId;
+      }
+    }
+  }
+
+  throw lastError ?? new Error('All fallback attempts failed');
 }
 
 /**

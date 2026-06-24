@@ -1,0 +1,1 @@
+ALTER TABLE "user_settings" ADD COLUMN "ai_api_keys_updated_at" jsonb;

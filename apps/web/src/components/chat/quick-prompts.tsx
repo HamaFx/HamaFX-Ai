@@ -94,121 +94,51 @@ const NO_PIN_PROMPTS: Record<TradingSession, readonly Prompt[]> = {
   ],
 };
 
-const GOLD_PROMPTS: Record<TradingSession, readonly Prompt[]> = {
-  asian: [
-    { icon: TrendingUp, label: "Gold Asian range and key levels", bg: 'oklch(78% 0.16 78 / 0.18)', fg: 'text-brand' },
-    { icon: CalendarDays, label: "Gold news impact today", bg: 'oklch(72% 0.18 295 / 0.18)', fg: 'text-accent' },
-    { icon: LineChart, label: 'Top-down XAUUSD 4H→15M', bg: 'oklch(74% 0.16 230 / 0.15)', fg: 'text-info' },
-    { icon: BarChart3, label: 'XAUUSD Asian session structure', bg: 'oklch(74% 0.16 230 / 0.15)', fg: 'text-info' },
-    { icon: Bell, label: 'Alert gold break of recent high', bg: 'oklch(82% 0.16 80 / 0.15)', fg: 'text-warn' },
-  ],
-  london: [
-    { icon: TrendingUp, label: 'London open bias for XAUUSD', bg: 'oklch(78% 0.16 78 / 0.18)', fg: 'text-brand' },
-    { icon: LineChart, label: 'Top-down XAUUSD 4H→15M', bg: 'oklch(74% 0.16 230 / 0.15)', fg: 'text-info' },
-    { icon: BarChart3, label: 'London session gold key levels', bg: 'oklch(74% 0.16 230 / 0.15)', fg: 'text-info' },
-    { icon: CalendarDays, label: "European news affecting gold", bg: 'oklch(72% 0.18 295 / 0.18)', fg: 'text-accent' },
-    { icon: Bell, label: 'Alert gold below London low', bg: 'oklch(82% 0.16 80 / 0.15)', fg: 'text-warn' },
-  ],
-  ny: [
-    { icon: TrendingUp, label: 'NY session plan for XAUUSD', bg: 'oklch(78% 0.16 78 / 0.18)', fg: 'text-brand' },
-    { icon: LineChart, label: 'Top-down XAUUSD 4H→15M', bg: 'oklch(74% 0.16 230 / 0.15)', fg: 'text-info' },
-    { icon: BarChart3, label: 'Gold news & DXY correlation', bg: 'oklch(74% 0.16 230 / 0.15)', fg: 'text-info' },
-    { icon: CalendarDays, label: "NY session calendar for USD", bg: 'oklch(72% 0.18 295 / 0.18)', fg: 'text-accent' },
-    { icon: Bell, label: 'Alert gold above 2400', bg: 'oklch(82% 0.16 80 / 0.15)', fg: 'text-warn' },
-  ],
-  closed: [
-    { icon: BarChart3, label: 'How did gold close today?', bg: 'oklch(74% 0.16 230 / 0.15)', fg: 'text-info' },
-    { icon: TrendingUp, label: 'XAUUSD daily bias recap', bg: 'oklch(78% 0.16 78 / 0.18)', fg: 'text-brand' },
-    { icon: LineChart, label: 'Top-down gold 4H→15M', bg: 'oklch(74% 0.16 230 / 0.15)', fg: 'text-info' },
-    { icon: CalendarDays, label: "Tomorrow's gold news outlook", bg: 'oklch(72% 0.18 295 / 0.18)', fg: 'text-accent' },
-    { icon: Bell, label: 'Set an alert for gold tomorrow', bg: 'oklch(82% 0.16 80 / 0.15)', fg: 'text-warn' },
-  ],
-  weekend: [
-    { icon: TrendingUp, label: 'Gold weekly bias & structure', bg: 'oklch(78% 0.16 78 / 0.18)', fg: 'text-brand' },
-    { icon: BarChart3, label: 'Weekly gold COT report check', bg: 'oklch(74% 0.16 230 / 0.15)', fg: 'text-info' },
-    { icon: CalendarDays, label: 'Next week USD key events', bg: 'oklch(72% 0.18 295 / 0.18)', fg: 'text-accent' },
-    { icon: LineChart, label: 'Gold key levels to watch next week', bg: 'oklch(74% 0.16 230 / 0.15)', fg: 'text-info' },
-    { icon: Bell, label: 'Set gold alert for Sunday open', bg: 'oklch(82% 0.16 80 / 0.15)', fg: 'text-warn' },
-  ],
-};
-
-const PINNED_PROMPTS: Record<Symbol, Record<TradingSession, readonly Prompt[]>> = {
-  XAUUSD: GOLD_PROMPTS,
-  EURUSD: {
-    asian: [
-      { icon: TrendingUp, label: 'EURUSD Asia session read', bg: 'oklch(78% 0.16 78 / 0.18)', fg: 'text-brand' },
-      { icon: LineChart, label: 'Top-down EURUSD 4H→15M', bg: 'oklch(74% 0.16 230 / 0.15)', fg: 'text-info' },
-      { icon: BarChart3, label: 'Show me the structure', bg: 'oklch(74% 0.16 230 / 0.15)', fg: 'text-info' },
-      { icon: CalendarDays, label: 'EUR calendar today', bg: 'oklch(72% 0.18 295 / 0.18)', fg: 'text-accent' },
-      { icon: Bell, label: 'Alert EURUSD above 1.0900', bg: 'oklch(82% 0.16 80 / 0.15)', fg: 'text-warn' },
-    ],
-    london: [
-      { icon: TrendingUp, label: 'London open plan for EURUSD', bg: 'oklch(78% 0.16 78 / 0.18)', fg: 'text-brand' },
-      { icon: LineChart, label: 'Top-down EURUSD 4H→15M', bg: 'oklch(74% 0.16 230 / 0.15)', fg: 'text-info' },
-      { icon: BarChart3, label: 'Show me the structure', bg: 'oklch(74% 0.16 230 / 0.15)', fg: 'text-info' },
-      { icon: CalendarDays, label: "EUR session calendar", bg: 'oklch(72% 0.18 295 / 0.18)', fg: 'text-accent' },
-      { icon: Bell, label: 'Alert EURUSD above 1.0900', bg: 'oklch(82% 0.16 80 / 0.15)', fg: 'text-warn' },
-    ],
-    ny: [
-      { icon: TrendingUp, label: 'NY open plan for EURUSD', bg: 'oklch(78% 0.16 78 / 0.18)', fg: 'text-brand' },
-      { icon: LineChart, label: 'Top-down EURUSD 4H→15M', bg: 'oklch(74% 0.16 230 / 0.15)', fg: 'text-info' },
-      { icon: BarChart3, label: 'Show me the structure', bg: 'oklch(74% 0.16 230 / 0.15)', fg: 'text-info' },
-      { icon: CalendarDays, label: "NY session calendar", bg: 'oklch(72% 0.18 295 / 0.18)', fg: 'text-accent' },
-      { icon: Bell, label: 'Alert EURUSD above 1.0900', bg: 'oklch(82% 0.16 80 / 0.15)', fg: 'text-warn' },
-    ],
-    closed: [
-      { icon: BarChart3, label: 'EURUSD daily recap', bg: 'oklch(74% 0.16 230 / 0.15)', fg: 'text-info' },
-      { icon: TrendingUp, label: 'EURUSD daily bias', bg: 'oklch(78% 0.16 78 / 0.18)', fg: 'text-brand' },
-      { icon: LineChart, label: 'Top-down EURUSD 4H→15M', bg: 'oklch(74% 0.16 230 / 0.15)', fg: 'text-info' },
-      { icon: CalendarDays, label: "Tomorrow's EUR calendar", bg: 'oklch(72% 0.18 295 / 0.18)', fg: 'text-accent' },
-      { icon: Bell, label: 'Set EURUSD alert for tomorrow', bg: 'oklch(82% 0.16 80 / 0.15)', fg: 'text-warn' },
-    ],
-    weekend: [
-      { icon: TrendingUp, label: 'EURUSD weekly bias', bg: 'oklch(78% 0.16 78 / 0.18)', fg: 'text-brand' },
-      { icon: BarChart3, label: 'EURUSD weekly structure', bg: 'oklch(74% 0.16 230 / 0.15)', fg: 'text-info' },
-      { icon: CalendarDays, label: 'Next week EUR calendar', bg: 'oklch(72% 0.18 295 / 0.18)', fg: 'text-accent' },
-      { icon: LineChart, label: 'EURUSD key levels', bg: 'oklch(74% 0.16 230 / 0.15)', fg: 'text-info' },
-      { icon: Bell, label: 'Set EURUSD alert for Sunday open', bg: 'oklch(82% 0.16 80 / 0.15)', fg: 'text-warn' },
-    ],
-  },
-  GBPUSD: {
-    asian: [
-      { icon: TrendingUp, label: 'GBPUSD Asia session read', bg: 'oklch(78% 0.16 78 / 0.18)', fg: 'text-brand' },
-      { icon: LineChart, label: 'Top-down GBPUSD 4H→15M', bg: 'oklch(74% 0.16 230 / 0.15)', fg: 'text-info' },
-      { icon: BarChart3, label: 'Show me the structure', bg: 'oklch(74% 0.16 230 / 0.15)', fg: 'text-info' },
-      { icon: CalendarDays, label: 'GBP calendar today', bg: 'oklch(72% 0.18 295 / 0.18)', fg: 'text-accent' },
-      { icon: Bell, label: 'Alert GBPUSD above 1.2700', bg: 'oklch(82% 0.16 80 / 0.15)', fg: 'text-warn' },
-    ],
-    london: [
-      { icon: TrendingUp, label: 'London open plan for GBPUSD', bg: 'oklch(78% 0.16 78 / 0.18)', fg: 'text-brand' },
-      { icon: LineChart, label: 'Top-down GBPUSD 4H→15M', bg: 'oklch(74% 0.16 230 / 0.15)', fg: 'text-info' },
-      { icon: BarChart3, label: 'Show me the structure', bg: 'oklch(74% 0.16 230 / 0.15)', fg: 'text-info' },
-      { icon: CalendarDays, label: "GBP session calendar", bg: 'oklch(72% 0.18 295 / 0.18)', fg: 'text-accent' },
-      { icon: Bell, label: 'Alert GBPUSD above 1.2700', bg: 'oklch(82% 0.16 80 / 0.15)', fg: 'text-warn' },
-    ],
-    ny: [
-      { icon: TrendingUp, label: 'NY open plan for GBPUSD', bg: 'oklch(78% 0.16 78 / 0.18)', fg: 'text-brand' },
-      { icon: LineChart, label: 'Top-down GBPUSD 4H→15M', bg: 'oklch(74% 0.16 230 / 0.15)', fg: 'text-info' },
-      { icon: BarChart3, label: 'Show me the structure', bg: 'oklch(74% 0.16 230 / 0.15)', fg: 'text-info' },
-      { icon: CalendarDays, label: "NY session calendar", bg: 'oklch(72% 0.18 295 / 0.18)', fg: 'text-accent' },
-      { icon: Bell, label: 'Alert GBPUSD above 1.2700', bg: 'oklch(82% 0.16 80 / 0.15)', fg: 'text-warn' },
-    ],
-    closed: [
-      { icon: BarChart3, label: 'GBPUSD daily recap', bg: 'oklch(74% 0.16 230 / 0.15)', fg: 'text-info' },
-      { icon: TrendingUp, label: 'GBPUSD daily bias', bg: 'oklch(78% 0.16 78 / 0.18)', fg: 'text-brand' },
-      { icon: LineChart, label: 'Top-down GBPUSD 4H→15M', bg: 'oklch(74% 0.16 230 / 0.15)', fg: 'text-info' },
-      { icon: CalendarDays, label: "Tomorrow's GBP calendar", bg: 'oklch(72% 0.18 295 / 0.18)', fg: 'text-accent' },
-      { icon: Bell, label: 'Set GBPUSD alert for tomorrow', bg: 'oklch(82% 0.16 80 / 0.15)', fg: 'text-warn' },
-    ],
-    weekend: [
-      { icon: TrendingUp, label: 'GBPUSD weekly bias', bg: 'oklch(78% 0.16 78 / 0.18)', fg: 'text-brand' },
-      { icon: BarChart3, label: 'GBPUSD weekly structure', bg: 'oklch(74% 0.16 230 / 0.15)', fg: 'text-info' },
-      { icon: CalendarDays, label: 'Next week GBP calendar', bg: 'oklch(72% 0.18 295 / 0.18)', fg: 'text-accent' },
-      { icon: LineChart, label: 'GBPUSD key levels', bg: 'oklch(74% 0.16 230 / 0.15)', fg: 'text-info' },
-      { icon: Bell, label: 'Set GBPUSD alert for Sunday open', bg: 'oklch(82% 0.16 80 / 0.15)', fg: 'text-warn' },
-    ],
-  },
-};
+function generatePinnedPrompts(symbol: string, session: TradingSession): readonly Prompt[] {
+  const s = symbol.toUpperCase();
+  switch (session) {
+    case 'asian':
+      return [
+        { icon: TrendingUp, label: `${s} Asian range and key levels`, bg: 'oklch(78% 0.16 78 / 0.18)', fg: 'text-brand' },
+        { icon: CalendarDays, label: `${s} news impact today`, bg: 'oklch(72% 0.18 295 / 0.18)', fg: 'text-accent' },
+        { icon: LineChart, label: `Top-down ${s} 4H→15M`, bg: 'oklch(74% 0.16 230 / 0.15)', fg: 'text-info' },
+        { icon: BarChart3, label: `${s} Asian session structure`, bg: 'oklch(74% 0.16 230 / 0.15)', fg: 'text-info' },
+        { icon: Bell, label: `Alert ${s} break of recent high`, bg: 'oklch(82% 0.16 80 / 0.15)', fg: 'text-warn' },
+      ];
+    case 'london':
+      return [
+        { icon: TrendingUp, label: `London open bias for ${s}`, bg: 'oklch(78% 0.16 78 / 0.18)', fg: 'text-brand' },
+        { icon: LineChart, label: `Top-down ${s} 4H→15M`, bg: 'oklch(74% 0.16 230 / 0.15)', fg: 'text-info' },
+        { icon: BarChart3, label: `London session ${s} key levels`, bg: 'oklch(74% 0.16 230 / 0.15)', fg: 'text-info' },
+        { icon: CalendarDays, label: `European news affecting ${s}`, bg: 'oklch(72% 0.18 295 / 0.18)', fg: 'text-accent' },
+        { icon: Bell, label: `Alert ${s} below London low`, bg: 'oklch(82% 0.16 80 / 0.15)', fg: 'text-warn' },
+      ];
+    case 'ny':
+      return [
+        { icon: TrendingUp, label: `NY session plan for ${s}`, bg: 'oklch(78% 0.16 78 / 0.18)', fg: 'text-brand' },
+        { icon: LineChart, label: `Top-down ${s} 4H→15M`, bg: 'oklch(74% 0.16 230 / 0.15)', fg: 'text-info' },
+        { icon: BarChart3, label: `${s} news & market correlation`, bg: 'oklch(74% 0.16 230 / 0.15)', fg: 'text-info' },
+        { icon: CalendarDays, label: `NY session calendar for USD`, bg: 'oklch(72% 0.18 295 / 0.18)', fg: 'text-accent' },
+        { icon: Bell, label: `Alert ${s} break of high`, bg: 'oklch(82% 0.16 80 / 0.15)', fg: 'text-warn' },
+      ];
+    case 'closed':
+      return [
+        { icon: BarChart3, label: `How did ${s} close today?`, bg: 'oklch(74% 0.16 230 / 0.15)', fg: 'text-info' },
+        { icon: TrendingUp, label: `${s} daily bias recap`, bg: 'oklch(78% 0.16 78 / 0.18)', fg: 'text-brand' },
+        { icon: LineChart, label: `Top-down ${s} 4H→15M`, bg: 'oklch(74% 0.16 230 / 0.15)', fg: 'text-info' },
+        { icon: CalendarDays, label: `Tomorrow's ${s} news outlook`, bg: 'oklch(72% 0.18 295 / 0.18)', fg: 'text-accent' },
+        { icon: Bell, label: `Set an alert for ${s} tomorrow`, bg: 'oklch(82% 0.16 80 / 0.15)', fg: 'text-warn' },
+      ];
+    case 'weekend':
+      return [
+        { icon: TrendingUp, label: `${s} weekly bias & structure`, bg: 'oklch(78% 0.16 78 / 0.18)', fg: 'text-brand' },
+        { icon: BarChart3, label: `Weekly ${s} sentiment & COT check`, bg: 'oklch(74% 0.16 230 / 0.15)', fg: 'text-info' },
+        { icon: CalendarDays, label: `Next week ${s} news calendar`, bg: 'oklch(72% 0.18 295 / 0.18)', fg: 'text-accent' },
+        { icon: LineChart, label: `${s} key levels to watch next week`, bg: 'oklch(74% 0.16 230 / 0.15)', fg: 'text-info' },
+        { icon: Bell, label: `Set ${s} alert for Sunday open`, bg: 'oklch(82% 0.16 80 / 0.15)', fg: 'text-warn' },
+      ];
+  }
+}
 
 export const QuickPrompts = memo(function QuickPrompts({
   onSelect,
@@ -218,10 +148,11 @@ export const QuickPrompts = memo(function QuickPrompts({
 }: QuickPromptsProps) {
   const session = useMemo(() => getSessionInfo(now ?? new Date()).session, [now]);
   const prompts = useMemo(() => {
-    return pinnedSymbol && PINNED_PROMPTS[pinnedSymbol]
-      ? PINNED_PROMPTS[pinnedSymbol][session]
+    return pinnedSymbol
+      ? generatePinnedPrompts(pinnedSymbol, session)
       : NO_PIN_PROMPTS[session];
   }, [pinnedSymbol, session]);
+
 
   return (
     <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">

@@ -16,22 +16,48 @@
 
 import { isSymbol } from '@hamafx/shared';
 import type { Metadata } from 'next';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 
-import { ChartView } from './_components/chart-view';
+import { auth } from '@/auth';
+import { getDb, schema } from '@hamafx/db';
+import { eq, asc } from 'drizzle-orm';
+import { ProChartView } from './_components/pro-chart-view';
 
 interface PageProps {
   params: Promise<{ symbol: string }>;
+  searchParams: Promise<{ tf?: string }>;
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { symbol } = await params;
-  return { title: isSymbol(symbol) ? symbol : 'Chart' };
+  return { title: isSymbol(symbol) ? `${symbol} · Chart` : 'Chart' };
 }
 
-export default async function ChartPage({ params }: PageProps) {
+export default async function ChartPage({ params, searchParams }: PageProps) {
   const { symbol } = await params;
   if (!isSymbol(symbol)) notFound();
 
-  return <ChartView symbol={symbol} />;
+  const sp = await searchParams;
+  const tf = sp.tf;
+
+  if (process.env.NEXT_PUBLIC_TRADINGVIEW_ENABLED !== '1') {
+    const dest = `/chart/${symbol}/structure` + (tf ? `?tf=${tf}` : '');
+    redirect(dest);
+  }
+
+  const session = await auth();
+  const db = getDb();
+  
+  let userSymbolsList: string[] = [];
+  if (session?.user?.id) {
+    const list = await db.select({ symbol: schema.userSymbols.symbol })
+      .from(schema.userSymbols)
+      .where(eq(schema.userSymbols.userId, session.user.id))
+      .orderBy(asc(schema.userSymbols.displayOrder));
+    userSymbolsList = list.map((item) => item.symbol);
+  }
+
+  const watchlist = userSymbolsList.length > 0 ? userSymbolsList : ['XAUUSD', 'EURUSD', 'GBPUSD'];
+
+  return <ProChartView symbol={symbol} watchlist={watchlist} />;
 }

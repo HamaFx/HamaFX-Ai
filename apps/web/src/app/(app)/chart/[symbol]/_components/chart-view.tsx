@@ -110,7 +110,7 @@ interface ChartConfig {
   settings: ChartSettings;
 }
 
-export function ChartView({ symbol }: { symbol: Symbol }) {
+export function ChartView({ symbol, watchlist }: { symbol: Symbol; watchlist: string[] }) {
   const [tf, setTf] = useTimeframe();
   const [activeOverlays, toggleOverlay] = useOverlayToggles();
 
@@ -259,7 +259,7 @@ export function ChartView({ symbol }: { symbol: Symbol }) {
       >
         <header className="border border-divider bg-bg-elev-1 rounded-lg flex flex-col gap-3 p-3">
           <div className="flex flex-wrap items-center justify-between gap-3 px-1">
-            <SymbolPicker active={symbol} />
+            <SymbolPicker active={symbol} watchlist={watchlist} />
             <PriceTag symbol={symbol} referencePrice={referenceClose} />
           </div>
           <div className="flex flex-wrap items-center justify-between gap-2 px-1">
@@ -295,15 +295,17 @@ export function ChartView({ symbol }: { symbol: Symbol }) {
               />
 
               {process.env.NEXT_PUBLIC_TRADINGVIEW_ENABLED === '1' ? (
-                <Tooltip label="Pro chart">
+                <div className="flex bg-bg-elev-2 p-0.5 rounded-lg border border-divider">
                   <Link
-                    href={`/chart/${symbol}/pro?tf=${tf}`}
-                    aria-label="Pro chart"
-                    className="bg-bg-elev-1 border border-divider text-fg-muted hover:text-fg focus-visible:ring-brand inline-flex size-11 items-center justify-center rounded-full focus:outline-none focus-visible:ring-2"
+                    href={`/chart/${symbol}?tf=${tf}`}
+                    className="px-3 py-1.5 text-xs font-medium rounded-md text-fg-muted hover:text-fg transition-colors"
                   >
-                    <Maximize2 className="size-4" />
+                    TradingView
                   </Link>
-                </Tooltip>
+                  <span className="px-3 py-1.5 text-xs font-semibold rounded-md bg-bg-elev-1 text-fg shadow-sm">
+                    Structure
+                  </span>
+                </div>
               ) : null}
             </div>
           </div>

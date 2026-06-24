@@ -55,6 +55,7 @@ export interface ByokPayload {
   openrouter?: string;
   xai?: string;
   deepseek?: string;
+  finnhub?: string;
 }
 
 /**

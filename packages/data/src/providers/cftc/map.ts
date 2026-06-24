@@ -30,5 +30,5 @@ const TO_CFTC_NAME: Record<Symbol, string> = {
 };
 
 export function toCftcName(symbol: Symbol): string {
-  return TO_CFTC_NAME[symbol];
+  return TO_CFTC_NAME[symbol] || '';
 }

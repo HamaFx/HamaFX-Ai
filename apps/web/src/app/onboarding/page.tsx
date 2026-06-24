@@ -39,11 +39,17 @@ export default async function OnboardingPage() {
   }
 
   // Phase E — call the catalog builder directly instead of fetching
-// our own host (RSC can't self-fetch without a full URL, and
-// APP_URL isn't always set on Vercel). The wizard accepts the
-// wider ProviderMeta shape so we pass it through as-is.
-const catalog = await buildCatalogForUser(session.user.id);
-const providers = catalog.providers;
+  // our own host (RSC can't self-fetch without a full URL, and
+  // APP_URL isn't always set on Vercel). The wizard accepts the
+  // wider ProviderMeta shape so we pass it through as-is.
+  const catalog = await buildCatalogForUser(session.user.id);
+  const providers = catalog.providers;
+
+  const symbolsCatalog = await db
+    .select()
+    .from(schema.symbolCatalog)
+    .where(eq(schema.symbolCatalog.isActive, true))
+    .orderBy(schema.symbolCatalog.sortOrder);
 
   return (
     <div className="flex flex-col gap-8">
@@ -54,6 +60,7 @@ const providers = catalog.providers;
       <OnboardingWizard
         initialName={session.user.name || ''}
         providers={providers}
+        symbolsCatalog={symbolsCatalog}
       />
     </div>
   );

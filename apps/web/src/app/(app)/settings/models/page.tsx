@@ -19,12 +19,15 @@ import Link from 'next/link';
 
 import { auth } from '@/auth';
 import { buildCatalogForUser } from '@/lib/catalog-server';
+import { getDb, schema } from '@hamafx/db';
+import { eq } from 'drizzle-orm';
 
 import {
   ChatModelPicker,
   EmbeddingModelPicker,
   VisionModelPicker,
 } from './_components/model-picker';
+import { FallbackChainPicker } from './_components/fallback-chain-picker';
 
 export const dynamic = 'force-dynamic';
 
@@ -59,12 +62,19 @@ export default async function ModelsSettingsPage() {
     redirect('/login');
   }
 
+  const db = getDb();
+  const [userRow] = await db
+    .select({ aiFallbackChain: schema.userSettings.aiFallbackChain })
+    .from(schema.userSettings)
+    .where(eq(schema.userSettings.userId, session.user.id));
+
   const catalog = await buildCatalogForUser(session.user.id);
 
   // The pickers only render for providers the user has a key for.
   // Showing "pick a Google model" when the user has no Google key
   // would silently no-op on save.
   const configured = catalog.providers.filter((p) => p.hasKey);
+  const initialChain = userRow?.aiFallbackChain ?? [];
 
   return (
     <div className="flex flex-col gap-6 max-w-2xl">
@@ -85,6 +95,8 @@ export default async function ModelsSettingsPage() {
       </div>
 
       <ChatModelPicker initialValue={null} providers={configured} />
+
+      <FallbackChainPicker initialChain={initialChain} configuredProviders={configured} />
 
       <details className="border border-divider bg-bg-elev-1 rounded-lg overflow-hidden">
         <summary className="cursor-pointer select-none px-4 py-3 flex items-center justify-between gap-3 hover:bg-bg-elev-2 transition-colors">

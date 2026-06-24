@@ -67,7 +67,7 @@ export const analyzeFundamentalTool = tool({
     "Aggregate the upcoming high/medium-impact macro events for a symbol's currencies plus the most recent news, with a sentiment chip strip. Use for any 'what's the fundamental backdrop on X' or 'are there any catalysts in the next N hours' prompt. Window is `horizonHours` (default 24h). Sentiment buckets are read from news_articles.sentiment; no inference. Sets `pipelinePending: true` when both events and headlines are empty.",
   inputSchema: InputSchema,
   execute: async ({ symbol, horizonHours }): Promise<AnalyzeFundamentalOutput> => {
-    const currencies = CURRENCIES_BY_SYMBOL[symbol];
+    const currencies = CURRENCIES_BY_SYMBOL[symbol] || ['USD'];
     const now = Date.now();
     const windowToMs = now + horizonHours * 60 * 60 * 1000;
 

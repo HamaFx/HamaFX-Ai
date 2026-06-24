@@ -43,3 +43,4 @@ export * from './throttle';
 export * from './intermarket-resonance';
 export * from './audit';
 export * from './provider-tests';
+export * from './symbol-catalog';

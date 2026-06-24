@@ -59,6 +59,7 @@ export interface GetPriceOptions {
     finnhub: string;
     biquoteBaseUrl: string;
   }>;
+  marketDataProvider?: string;
 }
 
 export interface PriceResult {
@@ -122,7 +123,7 @@ export async function getPriceWithMeta(
       // attempt throws `ProviderEmptyError` and `runWithFailover` moves
       // on without recording a health failure.
       //
-      // Phase 2 hardening §2 — `pinned: true` keeps live-ticks first
+      // Phase 2 hardening §2 — pinned: true keeps live-ticks first
       // regardless of recent score so a transient empty result during a
       // worker restart doesn't permanently demote the SignalR pipeline
       // below the BiQuote REST fallback.
@@ -162,6 +163,17 @@ export async function getPriceWithMeta(
             ageMs: null,
           }),
         });
+      }
+
+      if (opts.marketDataProvider) {
+        attempts.forEach((attempt) => {
+          if (attempt.name === opts.marketDataProvider) {
+            attempt.pinned = true;
+          } else {
+            attempt.pinned = false;
+          }
+        });
+        attempts.sort((a, b) => (a.pinned === b.pinned ? 0 : a.pinned ? -1 : 1));
       }
 
       const { value } = await runWithFailover(attempts);

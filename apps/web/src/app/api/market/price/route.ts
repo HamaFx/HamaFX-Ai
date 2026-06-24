@@ -25,6 +25,9 @@
 
 import { getPriceWithMeta } from '@hamafx/data';
 import { SYMBOLS, SymbolSchema, type Tick } from '@hamafx/shared';
+import { decryptByok } from '@hamafx/shared/encryption';
+import { getDb, schema } from '@hamafx/db';
+import { eq } from 'drizzle-orm';
 import { z } from 'zod';
 
 import { errorResponse, withAuth } from '@/lib/api';
@@ -66,9 +69,8 @@ interface TickWithMeta extends Tick {
 }
 
 // Phase B: auth-gate. Market data is shared, but the gate prevents
-// anonymous scraping. The authenticated `user` is not used inside the
-// handler — it's the requirement to log in that matters.
-export const GET = withAuth<void>(async (req) => {
+// anonymous scraping. The authenticated `user` is used to load provider preferences.
+export const GET = withAuth<void>(async (req, { user }) => {
   try {
     const url = new URL(req.url);
     // Repeated params: collect all `symbol` entries.
@@ -77,7 +79,27 @@ export const GET = withAuth<void>(async (req) => {
       symbol: repeated.length > 1 ? repeated : (url.searchParams.get('symbol') ?? undefined),
     });
 
-    const results = await Promise.all(params.symbol.map((s) => getPriceWithMeta(s)));
+    const db = getDb();
+    const [settings] = await db
+      .select({
+        aiApiKeys: schema.userSettings.aiApiKeys,
+        marketDataProvider: schema.userSettings.marketDataProvider,
+      })
+      .from(schema.userSettings)
+      .where(eq(schema.userSettings.userId, user.userId));
+
+    const decrypted = settings?.aiApiKeys ? decryptByok(settings.aiApiKeys) : null;
+    const finnhubKey = decrypted?.finnhub ?? '';
+    const marketDataProvider = settings?.marketDataProvider ?? 'biquote';
+
+    const results = await Promise.all(
+      params.symbol.map((s) =>
+        getPriceWithMeta(s, {
+          apiKeys: { finnhub: finnhubKey },
+          marketDataProvider,
+        })
+      )
+    );
     const ticks: TickWithMeta[] = results.map((r) => ({
       ...r.tick,
       stale: r.stale,

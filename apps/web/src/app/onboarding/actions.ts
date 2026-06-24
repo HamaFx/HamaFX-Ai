@@ -30,6 +30,7 @@ export interface OnboardingPayload {
   displayName?: string;
   timezone?: string;
   defaultSymbol?: string;
+  symbols?: string[];
   /** Map of provider id → plaintext API key. Empty string = don't change. */
   apiKeys?: Partial<Record<(typeof PROVIDER_IDS)[number], string>>;
 }
@@ -109,20 +110,26 @@ export async function completeOnboardingAction(formData: FormData) {
           .where(eq(schema.userSettings.userId, userId));
       }
 
-      // 3. Add default watchlist.
+      // 3. Add default or custom watchlist.
       try {
+        const watchSymbols = payload.symbols && Array.isArray(payload.symbols) && payload.symbols.length > 0
+          ? payload.symbols
+          : ['XAUUSD', 'EURUSD', 'GBPUSD'];
+
+        await tx.delete(schema.userSymbols).where(eq(schema.userSymbols.userId, userId));
+
         await tx
           .insert(schema.userSymbols)
           .values(
-            ['XAUUSD', 'EURUSD', 'GBPUSD'].map((symbol, i) => ({
+            watchSymbols.map((symbol, i) => ({
               userId,
               symbol,
               displayOrder: i,
             })),
           )
           .onConflictDoNothing();
-      } catch {
-        // ignore — symbols table may not exist in every schema version
+      } catch (err) {
+        console.error('[onboarding] failed to seed watchlist', err);
       }
     });
 

@@ -1,0 +1,1 @@
+ALTER TABLE "provider_tests" ADD COLUMN "rate_limit" jsonb;

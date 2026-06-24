@@ -59,3 +59,10 @@ export {
 // adapter-style flat re-exports above.
 export * as cftc from './providers/cftc';
 export * as fred from './providers/fred';
+export { type MarketDataProvider } from './providers/market-data-provider';
+export {
+  MARKET_DATA_PROVIDERS,
+  biquoteProvider,
+  finnhubProvider,
+  liveTicksProvider,
+} from './providers/market-data-providers';

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { boolean, index, pgTable, text, timestamp } from 'drizzle-orm/pg-core';
+import { boolean, index, pgTable, text, timestamp, jsonb } from 'drizzle-orm/pg-core';
 
 import { users } from './auth';
 
@@ -47,6 +47,13 @@ export const providerTests = pgTable(
     testedAt: timestamp('tested_at', { withTimezone: true, mode: 'string' })
       .notNull()
       .defaultNow(),
+    /** Rate limit information extracted from response headers. */
+    rateLimit: jsonb('rate_limit').$type<{
+      remainingRequests?: number;
+      remainingTokens?: number;
+      resetRequests?: string;
+      resetTokens?: string;
+    }>(),
   },
   (t) => ({
     pk: index('provider_tests_user_provider_idx').on(t.userId, t.providerId),

@@ -192,8 +192,28 @@ export const userSettings = pgTable('user_settings', {
    * the user's chat provider's `spec.defaultModels.embedding`.
    */
   embeddingModel: text('embedding_model'),
+  /** Fallback chain of provider IDs, e.g. ["openai", "google", "groq"] */
+  aiFallbackChain: jsonb('ai_fallback_chain').$type<string[]>(),
   /** Max daily USD spend for this user. Overrides global MAX_DAILY_USD. */
   maxDailyUsd: integer('max_daily_usd'),
+  /** Max monthly USD spend for this user. */
+  monthlyBudgetLimit: integer('monthly_budget_limit'),
+  /** Per-provider spending thresholds in USD. e.g. { "openai": 10, "google": 5 } */
+  providerSpendingThresholds: jsonb('provider_spending_thresholds').$type<Record<string, number>>(),
+  /** Spend alerts channel configuration. e.g. { email: true, telegram: true } */
+  spendAlertsConfig: jsonb('spend_alerts_config').$type<{ email?: boolean; telegram?: boolean }>(),
+  /** Spend alert state to prevent duplicate alerts within the same month. */
+  spendAlertsState: jsonb('spend_alerts_state').$type<{
+    monthKey?: string;
+    alerted50?: boolean;
+    alerted80?: boolean;
+    alerted100?: boolean;
+    providerAlerted?: string[];
+  }>(),
+  /** Map of providerId to last update ISO timestamp string, for key rotation reminders. */
+  aiApiKeysUpdatedAt: jsonb('ai_api_keys_updated_at').$type<Record<string, string>>(),
+  /** Selected market data provider (e.g. 'biquote', 'finnhub', 'live-ticks'). */
+  marketDataProvider: text('market_data_provider').notNull().default('biquote'),
   /** Whether onboarding has been completed. */
   onboardingCompleted: boolean('onboarding_completed').notNull().default(false),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),

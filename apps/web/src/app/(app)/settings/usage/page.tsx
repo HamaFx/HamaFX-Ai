@@ -18,7 +18,15 @@
 // recent turns. Server component: pulls everything from the DB in one
 // pass per render. Personal-mode volume keeps the query trivial.
 
-import { computeUsage, listTelemetry, type DayBucket, type UsageStats } from '@hamafx/ai';
+import {
+  computeUsage,
+  listTelemetry,
+  type DayBucket,
+  type UsageStats,
+  getMonthlySpend,
+  providerIdFromModel,
+  BYOK_PROVIDERS_LIST,
+} from '@hamafx/ai';
 import { auth } from '@/auth';
 import type { Metadata } from 'next';
 import { Link } from 'next-view-transitions';
@@ -28,6 +36,9 @@ import { EmptyState } from '@/components/ui/empty-state';
 import { cn } from '@/lib/cn';
 import { getServerEnv } from '@/lib/env';
 import { formatRelative } from '@/lib/format';
+import { getDb, schema } from '@hamafx/db';
+import { eq, gte, and } from 'drizzle-orm';
+import { UsageLimitsForm } from './_components/usage-limits-form';
 
 export const metadata: Metadata = { title: 'Usage' };
 export const dynamic = 'force-dynamic';
@@ -45,14 +56,92 @@ export default async function UsagePage() {
   const session = await auth();
   if (!session?.user?.id) return null;
 
-  const [stats, recent] = await Promise.all([
-    computeUsage(session.user.id), 
-    listTelemetry(session.user.id, 20)
+  const db = getDb();
+  const startOfMonth = new Date(Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth(), 1));
+
+  const [stats, recent, settings, mtdRows, monthlySpend] = await Promise.all([
+    computeUsage(session.user.id),
+    listTelemetry(session.user.id, 20),
+    db
+      .select({
+        monthlyBudgetLimit: schema.userSettings.monthlyBudgetLimit,
+        providerSpendingThresholds: schema.userSettings.providerSpendingThresholds,
+        spendAlertsConfig: schema.userSettings.spendAlertsConfig,
+      })
+      .from(schema.userSettings)
+      .where(eq(schema.userSettings.userId, session.user.id))
+      .then((rows) => rows[0] ?? null),
+    db
+      .select({
+        model: schema.chatTelemetry.model,
+        estCostUsd: schema.chatTelemetry.estCostUsd,
+      })
+      .from(schema.chatTelemetry)
+      .where(
+        and(
+          eq(schema.chatTelemetry.userId, session.user.id),
+          gte(schema.chatTelemetry.createdAt, startOfMonth)
+        )
+      ),
+    getMonthlySpend(session.user.id),
   ]);
 
-  if (stats.thirtyDayTurns === 0) {
-    return (
-      <div className="flex flex-col gap-4">
+  const KNOWN_BYOK_PROVIDERS = new Set([
+    'google',
+    'vertex',
+    'anthropic',
+    'openai',
+    'groq',
+    'mistral',
+    'openrouter',
+    'xai',
+    'deepseek',
+  ]);
+
+  const canonicalizeProviderId = (prefix: string) => {
+    if (prefix === '') return 'google';
+    if (prefix === 'google-vertex') return 'vertex';
+    if (KNOWN_BYOK_PROVIDERS.has(prefix)) return prefix;
+    return null;
+  };
+
+  const spendByProvider: Record<string, number> = {};
+  for (const r of mtdRows) {
+    const rawPrefix = providerIdFromModel(r.model);
+    const byokId = canonicalizeProviderId(rawPrefix);
+    if (byokId) {
+      spendByProvider[byokId] = (spendByProvider[byokId] ?? 0) + Number(r.estCostUsd ?? 0);
+    }
+  }
+
+  const providers = BYOK_PROVIDERS_LIST.map((p) => {
+    return {
+      id: p.id,
+      displayName: p.displayName,
+      currentSpend: spendByProvider[p.id] ?? 0,
+      threshold: settings?.providerSpendingThresholds?.[p.id] ?? null,
+    };
+  });
+
+  return (
+    <div className="flex flex-col gap-4">
+      <BudgetCard
+        stats={stats}
+        maxDailyUsd={maxDailyUsd}
+        monthlySpend={monthlySpend}
+        monthlyLimit={settings?.monthlyBudgetLimit ?? null}
+      />
+
+      <UsageLimitsForm
+        initialMonthlyLimit={settings?.monthlyBudgetLimit ?? null}
+        initialAlertConfig={{
+          email: !!settings?.spendAlertsConfig?.email,
+          telegram: !!settings?.spendAlertsConfig?.telegram,
+        }}
+        providers={providers}
+      />
+
+      {stats.thirtyDayTurns === 0 ? (
         <EmptyState
           icon={<BarChart3 className="size-6" />}
           title="No usage recorded yet"
@@ -66,31 +155,38 @@ export default async function UsagePage() {
             </Link>
           }
         />
-      </div>
-    );
-  }
-
-  return (
-    <div className="flex flex-col gap-4">
-      <BudgetCard stats={stats} maxDailyUsd={maxDailyUsd} />
-
-      <DailyChart daily7={stats.daily7} />
-
-      <ModelBreakdownCard stats={stats} />
-
-      <RecentTurnsCard rows={recent} />
+      ) : (
+        <>
+          <DailyChart daily7={stats.daily7} />
+          <ModelBreakdownCard stats={stats} />
+          <RecentTurnsCard rows={recent} />
+        </>
+      )}
     </div>
   );
 }
 
 // ---------------------------------------------------------------------------
-// Today's spend + daily-budget gauge
+// Today's spend + daily-budget gauge + monthly budget limit and projection
 // ---------------------------------------------------------------------------
 
-function BudgetCard({ stats, maxDailyUsd }: { stats: UsageStats; maxDailyUsd: number }) {
+function BudgetCard({
+  stats,
+  maxDailyUsd,
+  monthlySpend,
+  monthlyLimit,
+}: {
+  stats: UsageStats;
+  maxDailyUsd: number;
+  monthlySpend: number;
+  monthlyLimit: number | null;
+}) {
   const pct = Math.min(100, (stats.todayUsd / maxDailyUsd) * 100);
   const tone = pct >= 90 ? 'bear' : pct >= 60 ? 'warn' : 'bull';
   const toneClass = tone === 'bear' ? 'bg-bear' : tone === 'warn' ? 'bg-warn' : 'bg-bull';
+
+  const projection = (stats.sevenDayUsd / 7) * 30;
+  const isProjectedExceeded = monthlyLimit ? projection > monthlyLimit : false;
 
   return (
     <section
@@ -115,11 +211,31 @@ function BudgetCard({ stats, maxDailyUsd }: { stats: UsageStats; maxDailyUsd: nu
       >
         <div className={cn('h-full transition-all', toneClass)} style={{ width: `${pct}%` }} />
       </div>
-      <dl className="grid grid-cols-3 gap-3 pt-1 text-xs tabular-nums">
+      <dl className="grid grid-cols-3 gap-3 pt-1 text-xs tabular-nums border-b border-divider/40 pb-3">
         <Stat label="last 7d" value={`$${stats.sevenDayUsd.toFixed(4)}`} />
         <Stat label="last 30d" value={`$${stats.thirtyDayUsd.toFixed(4)}`} />
         <Stat label="turns" value={stats.thirtyDayTurns} />
       </dl>
+
+      <div className="flex flex-col gap-2">
+        <div className="flex justify-between items-baseline text-xs">
+          <span className="text-fg-muted">Current Month Spend (MTD)</span>
+          <span className="font-semibold text-fg font-mono tabular-nums">
+            ${monthlySpend.toFixed(2)} {monthlyLimit ? `/ $${monthlyLimit.toFixed(2)}` : ''}
+          </span>
+        </div>
+        <div className="flex justify-between items-baseline text-xs">
+          <span className="text-fg-muted">Estimated Month Projection (based on 7d)</span>
+          <span className={cn("font-semibold font-mono tabular-nums", isProjectedExceeded ? "text-warn" : "text-fg")}>
+            ${projection.toFixed(2)}
+          </span>
+        </div>
+        {isProjectedExceeded && (
+          <div className="bg-warn/5 border border-warn/25 rounded-md p-2.5 text-caption text-warn mt-1">
+            ⚠️ Based on the last 7 days of usage, you are projected to exceed your monthly budget limit of ${monthlyLimit?.toFixed(2)}. Consider reviewing your active tools or adjusting your budget.
+          </div>
+        )}
+      </div>
     </section>
   );
 }

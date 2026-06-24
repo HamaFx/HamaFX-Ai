@@ -29,13 +29,9 @@ import { ProviderError } from '../../errors';
 
 const PROVIDER = 'biquote';
 
-/**
- * Throw `ProviderError` if `symbol` is anything other than one of the
- * three supported instruments. Returns the symbol unchanged on success so
- * call sites can chain `assertSupportedSymbol(s)` directly.
- */
 export function assertSupportedSymbol(symbol: string): Symbol {
-  if (!isSymbol(symbol)) {
+  const isUnlimited = process.env.UNLIMITED_SYMBOLS === 'true' || process.env.UNLIMITED_SYMBOLS === '1';
+  if (!isSymbol(symbol) || (!isUnlimited && !SYMBOLS.includes(symbol as any))) {
     throw new ProviderError(
       'PROVIDER_HTTP_ERROR',
       PROVIDER,
@@ -44,3 +40,4 @@ export function assertSupportedSymbol(symbol: string): Symbol {
   }
   return symbol;
 }
+

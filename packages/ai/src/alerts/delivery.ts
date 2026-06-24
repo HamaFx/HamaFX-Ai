@@ -332,6 +332,64 @@ async function deliverWebPush({ alert, reading, env }: DeliverArgs): Promise<Del
   return { alertId: alert.id, channel: 'web-push', ok: true };
 }
 
+export async function sendDirectNotification(
+  subject: string,
+  body: string,
+  env: {
+    RESEND_API_KEY?: string;
+    ALERT_FROM_EMAIL?: string;
+    ALERT_TO_EMAIL?: string;
+    TELEGRAM_BOT_TOKEN?: string;
+    TELEGRAM_CHAT_ID?: string;
+  },
+  channels: ('email' | 'telegram')[]
+): Promise<{ emailSent: boolean; telegramSent: boolean }> {
+  let emailSent = false;
+  let telegramSent = false;
+
+  if (channels.includes('email') && env.RESEND_API_KEY && env.ALERT_FROM_EMAIL && env.ALERT_TO_EMAIL) {
+    try {
+      const res = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          authorization: `Bearer ${env.RESEND_API_KEY}`,
+        },
+        body: JSON.stringify({
+          from: env.ALERT_FROM_EMAIL,
+          to: [env.ALERT_TO_EMAIL],
+          subject,
+          text: body,
+        }),
+      });
+      emailSent = res.ok;
+    } catch (err) {
+      console.error('[alerts] direct email delivery failed', err);
+    }
+  }
+
+  if (channels.includes('telegram') && env.TELEGRAM_BOT_TOKEN && env.TELEGRAM_CHAT_ID) {
+    try {
+      const text = `*${escapeMd(subject)}*\n\n${escapeMd(body)}`;
+      const res = await fetch(`${TELEGRAM_API}/bot${env.TELEGRAM_BOT_TOKEN}/sendMessage`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: env.TELEGRAM_CHAT_ID,
+          text,
+          parse_mode: 'MarkdownV2',
+        }),
+      });
+      telegramSent = res.ok;
+    } catch (err) {
+      console.error('[alerts] direct telegram delivery failed', err);
+    }
+  }
+
+  return { emailSent, telegramSent };
+}
+
+
 // Hoist renderEmailBody so deliverWebPush above can read it. It was already
 // defined as a function declaration earlier in the file, so this comment is
 // purely a reading-aid.

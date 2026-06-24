@@ -1,0 +1,1 @@
+ALTER TABLE "user_settings" ADD COLUMN "market_data_provider" text DEFAULT 'biquote' NOT NULL;

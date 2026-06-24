@@ -201,8 +201,8 @@ describe('SignalRConsumer.handleTick', () => {
     await consumer.start();
 
     // BiquoteSignalRTickSchema accepts any string symbol, but our consumer
-    // drops anything that isn't one of XAUUSD/EURUSD/GBPUSD.
-    consumer.handleTick({ ...VALID_BIQUOTE_TICK, symbol: 'BTCUSD' });
+    // drops anything that does not satisfy isSymbol (length constraints).
+    consumer.handleTick({ ...VALID_BIQUOTE_TICK, symbol: 'A' });
     expect(onTick).not.toHaveBeenCalled();
   });
 

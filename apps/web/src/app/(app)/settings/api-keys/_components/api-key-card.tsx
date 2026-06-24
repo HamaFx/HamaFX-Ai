@@ -23,41 +23,31 @@ import {
   EyeOff,
   Loader2,
   XCircle,
+  Copy,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ProviderInfoDot } from '@/components/ui/provider-info-dot';
 import { withCsrf } from '@/lib/csrf';
+import { useConfirm } from '@/components/ui/confirm-drawer';
+import { toast } from 'sonner';
 import type { ProviderMeta } from '@hamafx/shared';
 
 interface ApiKeyCardProps {
   provider: ProviderMeta;
-  /**
-   * The current BYOK value for this provider. Empty string when the
-   * user hasn't saved a key yet.
-   *
-   * For Vertex this is the raw service-account JSON (a long single
-   * line after the user pasted the file). For all other providers
-   * it's the opaque API key string.
-   */
   currentValue: string;
-  /**
-   * Optional latest health snapshot from the server. Used to render
-   * the badge in the card header. When undefined, the card omits the
-   * badge (no test has been run yet).
-   *
-   * Phase A — UX_UPGRADE_PLAN.md item 7.
-   */
+  keyUpdatedAt?: string | undefined;
   health?: {
     ok: boolean;
     error: string | null;
     testedAt: string;
+    rateLimit?: {
+      remainingRequests?: number;
+      remainingTokens?: number;
+      resetRequests?: string;
+      resetTokens?: string;
+    } | null;
   } | undefined;
-  /**
-   * Phase D — api-keys page overhaul. Per-provider usage summary
-   * for the last 30 days. When undefined (no usage yet, or the
-   * provider hasn't been used), the card omits the usage widget.
-   */
   usage?: {
     turns: number;
     costUsd: number;
@@ -70,34 +60,139 @@ type TestState =
   | { kind: 'ok' }
   | { kind: 'err'; message: string };
 
-/**
- * Per-provider card on /settings/api-keys.
- *
- * Phase D — api-keys page overhaul: vertex uses a textarea (for the
- * JSON service account) instead of an input. The form action is the
- * same single FormData submit; the difference is local to this card.
- */
-export function ApiKeyCard({ provider, currentValue, health, usage }: ApiKeyCardProps) {
+const SETUP_INSTRUCTIONS: Record<string, {
+  dashboardUrl: string;
+  freeTier: string;
+  rateLimits: string;
+  howToGet: string;
+}> = {
+  google: {
+    dashboardUrl: 'https://aistudio.google.com/',
+    freeTier: 'Yes, generous free tier for Gemini Flash, Pro, and Flash-Lite models.',
+    rateLimits: '15 RPM / 1.5M TPM (Flash), 2 RPM / 32k TPM (Pro) under free tier.',
+    howToGet: 'Go to Google AI Studio, sign in with your Google account, and click "Get API key".',
+  },
+  vertex: {
+    dashboardUrl: 'https://console.cloud.google.com/vertex-ai',
+    freeTier: 'No free tier. Billed directly to your Google Cloud Project Project.',
+    rateLimits: 'Determined by your GCP project quota limits.',
+    howToGet: 'Create a Service Account in your GCP console, grant it the "Vertex AI User" role, create a JSON private key, and paste the entire JSON file content here.',
+  },
+  anthropic: {
+    dashboardUrl: 'https://console.anthropic.com/',
+    freeTier: 'No free tier, but new accounts sometimes receive $5 of trial credit.',
+    rateLimits: 'Varies by tier. Tier 1 starts at 50 RPM / 20k TPM.',
+    howToGet: 'Log in to the Anthropic Console, navigate to API Keys, and generate a new key.',
+  },
+  openai: {
+    dashboardUrl: 'https://platform.openai.com/api-keys',
+    freeTier: 'No free tier, requires a funded developer account.',
+    rateLimits: 'Varies by tier. Tier 1 starts at 500 RPM / 20k TPM.',
+    howToGet: 'Go to OpenAI Developer Platform, navigate to API Keys, and click "Create new secret key".',
+  },
+  groq: {
+    dashboardUrl: 'https://console.groq.com/keys',
+    freeTier: 'Yes, free tier is standard with requests per minute limits.',
+    rateLimits: 'Varies per model. Typically 30 RPM / 14,400 RPD for large models.',
+    howToGet: 'Create an account on the Groq Console, navigate to API Keys, and generate a key.',
+  },
+  mistral: {
+    dashboardUrl: 'https://console.mistral.ai/api-keys/',
+    freeTier: 'Free trial credits on sign up, then pay-as-you-go.',
+    rateLimits: 'Starts at 5 requests/sec for trial tiers.',
+    howToGet: 'Log in to Mistral Console, go to API Keys, and create a new key.',
+  },
+  openrouter: {
+    dashboardUrl: 'https://openrouter.ai/keys',
+    freeTier: 'Provides access to both free open-source models and premium models.',
+    rateLimits: 'Varies depending on model and account credits.',
+    howToGet: 'Go to OpenRouter, sign in, go to API keys under Settings, and create a key.',
+  },
+  xai: {
+    dashboardUrl: 'https://console.x.ai/',
+    freeTier: 'No free tier. Requires adding payment details.',
+    rateLimits: 'Standard developer rate limits apply.',
+    howToGet: 'Go to xAI Console, generate a new API key, and configure billing.',
+  },
+  deepseek: {
+    dashboardUrl: 'https://platform.deepseek.com/api_keys',
+    freeTier: 'No free tier, but extremely low pricing (under $0.30 per 1M tokens).',
+    rateLimits: 'Standard limits are very generous.',
+    howToGet: 'Create a DeepSeek account, go to API Keys in the developer dashboard, and create a key.',
+  },
+};
+
+function ProviderLogo({ id }: { id: string }) {
+  const baseClass = "size-5 text-brand shrink-0";
+  switch (id) {
+    case 'google':
+    case 'vertex':
+      return (
+        <svg viewBox="0 0 24 24" className={baseClass} fill="currentColor">
+          <path d="M12.24 10.285V13.4h6.887c-.275 1.565-1.88 4.604-6.887 4.604-4.33 0-7.859-3.578-7.859-8s3.53-8 7.859-8c2.46 0 4.102 1.025 5.042 1.926l2.427-2.334C18.155 2.502 15.46 1 12.24 1 5.92 1 1 5.92 1 12.24s4.92 11.24 11.24 11.24c6.6 0 11-4.64 11-11.24 0-.756-.08-1.334-.18-1.955H12.24z" />
+        </svg>
+      );
+    case 'openai':
+      return (
+        <svg viewBox="0 0 24 24" className={baseClass} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="12" cy="12" r="10" />
+          <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+          <path d="M2 12h20" />
+        </svg>
+      );
+    case 'anthropic':
+      return (
+        <svg viewBox="0 0 24 24" className={baseClass} fill="currentColor">
+          <path d="M12.4 3h-1.6L5.3 21h1.9l1.6-4.9h6.4l1.6 4.9h1.9L12.4 3zm-3.1 11.5l2.7-8.1 2.7 8.1H9.3z" />
+        </svg>
+      );
+    case 'groq':
+      return (
+        <svg viewBox="0 0 24 24" className={baseClass} fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+        </svg>
+      );
+    case 'mistral':
+      return (
+        <svg viewBox="0 0 24 24" className={baseClass} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M9.5 20H4V4h5.5l2.5 4 2.5-4H20v16h-5.5L12 16l-2.5 4z" />
+        </svg>
+      );
+    default:
+      return (
+        <svg viewBox="0 0 24 24" className={baseClass} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+          <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+        </svg>
+      );
+  }
+}
+
+export function ApiKeyCard({ provider, currentValue, health, usage, keyUpdatedAt }: ApiKeyCardProps) {
   const [revealed, setRevealed] = useState(false);
   const [value, setValue] = useState(currentValue);
   const [test, setTest] = useState<TestState>({ kind: 'idle' });
   const [, startTransition] = useTransition();
+  const [confirmNode, confirm] = useConfirm();
 
   const isVertex = provider.id === 'vertex';
   const dirty = value.trim() !== currentValue;
   const isSet = value.trim().length > 0;
+
+  let keyAgeDays: number | null = null;
+  if (keyUpdatedAt && isSet) {
+    const t = new Date(keyUpdatedAt).getTime();
+    if (Number.isFinite(t)) {
+      const diffMs = Date.now() - t;
+      keyAgeDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    }
+  }
 
   function handleTest() {
     if (!isSet) return;
     setTest({ kind: 'pending' });
     startTransition(async () => {
       try {
-        // Phase D — bug fix: the test endpoint sits behind the
-        // CSRF double-submit middleware (apps/web/src/middleware.ts),
-        // which checks `x-csrf-token` against the `hfx_csrf` cookie.
-        // Without the header, the middleware returns 403 plain text
-        // and the JSON parse below throws a misleading SyntaxError.
-        // `withCsrf` adds the header when the cookie is present.
         const res = await fetch('/api/settings/test-provider', {
           method: 'POST',
           ...withCsrf({
@@ -105,10 +200,6 @@ export function ApiKeyCard({ provider, currentValue, health, usage }: ApiKeyCard
             body: JSON.stringify({ provider: provider.id, apiKey: value.trim() }),
           }),
         });
-        // Guard against non-JSON responses (403 from the middleware,
-        // 502 from Vercel, etc.). Read the body as text first and
-        // only attempt JSON when it looks parseable, then fall back
-        // to a useful "HTTP <code>" message.
         const text = await res.text();
         const looksLikeJson = text.trimStart().startsWith('{');
         let errorMessage: string;
@@ -137,22 +228,59 @@ export function ApiKeyCard({ provider, currentValue, health, usage }: ApiKeyCard
     });
   }
 
-  // Vertex key preview — show the project_id + client_email from the
-  // parsed JSON to give the user a sanity check before they save.
+  async function handleCopy() {
+    if (!isSet) return;
+    const ok = await confirm({
+      title: 'Copy API Key to Clipboard?',
+      description: 'API keys are highly sensitive. Storing them in the system clipboard makes them accessible to other applications running on your device. Proceed with caution.',
+      confirmLabel: 'Copy Key',
+      cancelLabel: 'Cancel',
+      tone: 'default',
+    });
+    if (ok) {
+      try {
+        await navigator.clipboard.writeText(value.trim());
+        toast.success('API Key copied to clipboard');
+      } catch (err) {
+        toast.error('Failed to copy to clipboard');
+      }
+    }
+  }
+
+  // Vertex key preview
   const vertexPreview = isVertex && isSet ? previewVertexJson(value.trim()) : null;
+  const instructions = SETUP_INSTRUCTIONS[provider.id];
 
   return (
-    <div className="border border-divider bg-bg-elev-1 rounded-lg p-4 flex flex-col gap-3">
+    <div
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === 't' || e.key === 'T') {
+          if (document.activeElement?.tagName === 'INPUT' || document.activeElement?.tagName === 'TEXTAREA') {
+            return;
+          }
+          e.preventDefault();
+          handleTest();
+        }
+      }}
+      className="border border-divider bg-bg-elev-1 rounded-lg p-4 flex flex-col gap-3 focus:outline-none focus:ring-2 focus:ring-brand/40"
+    >
       {/* Header */}
       <div className="flex items-baseline justify-between gap-4">
         <div className="flex flex-col gap-1 flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
+            <ProviderLogo id={provider.id} />
             <label
               htmlFor={`key-${provider.id}`}
               className="text-sm font-medium text-fg"
             >
               {provider.displayName}
             </label>
+            {provider.pricingTier === 'free' && (
+              <span className="rounded-full bg-bull/15 px-2 py-0.5 text-[10px] font-semibold text-bull">
+                Free
+              </span>
+            )}
             <StatusPill
               isSet={isSet}
               health={health}
@@ -176,6 +304,51 @@ export function ApiKeyCard({ provider, currentValue, health, usage }: ApiKeyCard
           </span>
         ) : null}
       </div>
+
+      {keyAgeDays !== null && keyAgeDays >= 90 && (
+        <div className="border border-warn/20 bg-warn/5 rounded-lg p-3 text-caption text-warn flex items-start gap-2.5">
+          <span className="shrink-0 text-sm">⚠️</span>
+          <div className="flex flex-col gap-0.5">
+            <span className="font-semibold text-fg">Consider rotating your API key</span>
+            <p className="text-fg-subtle text-[11px]">
+              This key was last updated {keyAgeDays} days ago. Regular key rotation increases security.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {health?.rateLimit && (
+        <div className="border border-divider/60 bg-bg-elev-2/40 rounded-lg p-3 text-caption text-fg-subtle flex flex-col gap-1.5 shadow-sm">
+          <div className="font-semibold text-fg flex items-center gap-1.5">
+            <span>⏱️</span>
+            <span>API Rate Limits</span>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-[11px] mt-0.5">
+            {health.rateLimit.remainingRequests !== undefined && (
+              <div className="flex flex-col gap-0.5">
+                <span className="text-fg-muted font-medium">Requests Remaining</span>
+                <span className="font-mono text-fg font-semibold tabular-nums text-sm">
+                  {health.rateLimit.remainingRequests}
+                </span>
+                {health.rateLimit.resetRequests && (
+                  <span className="opacity-60 text-[10px]">Resets in {health.rateLimit.resetRequests}</span>
+                )}
+              </div>
+            )}
+            {health.rateLimit.remainingTokens !== undefined && (
+              <div className="flex flex-col gap-0.5">
+                <span className="text-fg-muted font-medium">Tokens Remaining</span>
+                <span className="font-mono text-fg font-semibold tabular-nums text-sm">
+                  {health.rateLimit.remainingTokens.toLocaleString()}
+                </span>
+                {health.rateLimit.resetTokens && (
+                  <span className="opacity-60 text-[10px]">Resets in {health.rateLimit.resetTokens}</span>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Vertex-specific JSON preview (when a value is entered). */}
       {isVertex && vertexPreview ? (
@@ -217,6 +390,16 @@ export function ApiKeyCard({ provider, currentValue, health, usage }: ApiKeyCard
             rows={6}
             className="border border-divider bg-bg-elev-2 placeholder:text-fg-muted text-fg font-mono text-caption w-full rounded-md px-3 py-2 focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand/40 resize-y"
           />
+          {isSet && (
+            <button
+              type="button"
+              onClick={handleCopy}
+              className="text-fg-muted hover:text-fg absolute right-3 bottom-3 inline-flex h-7 w-7 items-center justify-center rounded transition-colors hover:bg-bg-elev-3 border border-divider"
+              aria-label="Copy key to clipboard"
+            >
+              <Copy className="size-3.5" />
+            </button>
+          )}
         </div>
       ) : (
         <div className="relative">
@@ -232,16 +415,28 @@ export function ApiKeyCard({ provider, currentValue, health, usage }: ApiKeyCard
             placeholder={provider.keyHint}
             autoComplete="off"
             spellCheck={false}
-            className="pr-20 font-mono"
+            className="pr-24 font-mono"
           />
-          <button
-            type="button"
-            onClick={() => setRevealed((r) => !r)}
-            className="text-fg-muted hover:text-fg absolute right-2 top-1/2 -translate-y-1/2 inline-flex h-7 w-7 items-center justify-center rounded transition-colors"
-            aria-label={revealed ? 'Hide key' : 'Show key'}
-          >
-            {revealed ? <EyeOff className="size-3.5" /> : <Eye className="size-3.5" />}
-          </button>
+          <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-0.5">
+            {isSet && (
+              <button
+                type="button"
+                onClick={handleCopy}
+                className="text-fg-muted hover:text-fg inline-flex h-7 w-7 items-center justify-center rounded transition-colors"
+                aria-label="Copy key to clipboard"
+              >
+                <Copy className="size-3.5" />
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() => setRevealed((r) => !r)}
+              className="text-fg-muted hover:text-fg inline-flex h-7 w-7 items-center justify-center rounded transition-colors"
+              aria-label={revealed ? 'Hide key' : 'Show key'}
+            >
+              {revealed ? <EyeOff className="size-3.5" /> : <Eye className="size-3.5" />}
+            </button>
+          </div>
         </div>
       )}
 
@@ -259,13 +454,49 @@ export function ApiKeyCard({ provider, currentValue, health, usage }: ApiKeyCard
         </div>
       ) : null}
 
+      {/* Expandable setup instructions details. */}
+      {instructions && (
+        <details className="text-xs border border-divider/40 rounded-md overflow-hidden bg-bg-elev-2/30">
+          <summary className="cursor-pointer select-none px-3 py-1.5 font-medium text-fg-subtle hover:text-fg transition-colors flex items-center justify-between">
+            <span>Setup Instructions & Limits</span>
+            <span className="text-[10px]">▼</span>
+          </summary>
+          <div className="p-3 border-t border-divider/40 flex flex-col gap-2 bg-bg-elev-2/10">
+            <div>
+              <span className="font-semibold text-fg-muted">How to get:</span>{' '}
+              <span className="text-fg-subtle">{instructions.howToGet}</span>
+            </div>
+            <div className="flex flex-wrap gap-x-4 gap-y-1">
+              <div>
+                <span className="font-semibold text-fg-muted">Free tier:</span>{' '}
+                <span className="text-fg-subtle">{instructions.freeTier}</span>
+              </div>
+              <div>
+                <span className="font-semibold text-fg-muted">Rate limits:</span>{' '}
+                <span className="text-fg-subtle">{instructions.rateLimits}</span>
+              </div>
+            </div>
+            <div className="mt-1">
+              <a
+                href={instructions.dashboardUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center text-brand hover:underline font-semibold"
+              >
+                Go to {provider.displayName} Dashboard →
+              </a>
+            </div>
+          </div>
+        </details>
+      )}
+
       {/* Action row: test button. */}
       <div className="flex items-center justify-between gap-2">
         <span className="text-caption text-fg-subtle">
           {isVertex ? (
             <>Paste the service-account JSON from the GCP IAM console.</>
           ) : (
-            <>Key is encrypted at rest with AES-256-GCM.</>
+            <>Key is encrypted at rest with AES-256-GCM. Press <kbd className="bg-bg-elev-2 border border-divider px-1.5 py-0.5 rounded text-[10px]">T</kbd> to test.</>
           )}
         </span>
         <Button
@@ -286,6 +517,7 @@ export function ApiKeyCard({ provider, currentValue, health, usage }: ApiKeyCard
           )}
         </Button>
       </div>
+      {confirmNode}
     </div>
   );
 }

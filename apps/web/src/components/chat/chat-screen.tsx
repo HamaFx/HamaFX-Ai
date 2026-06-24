@@ -43,6 +43,7 @@
 //     "drift" feeling.
 
 import { useChat } from '@ai-sdk/react';
+import type { Symbol } from '@hamafx/shared';
 import { DefaultChatTransport, type UIMessage } from 'ai';
 import { ArrowDown, RotateCcw, Sparkles, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -62,7 +63,7 @@ interface ChatScreenProps {
   initialTitle: string;
   initialMessages: UIMessage[];
   initialThreads: ThreadSummary[];
-  pinnedSymbol: 'XAUUSD' | 'EURUSD' | 'GBPUSD' | null;
+  pinnedSymbol: Symbol | null;
   /** Optional prompt to auto-submit on mount. Used by deep-link
    *  affordances elsewhere in the app (Ask AI from a news article or
    *  calendar event). Sent at most once per thread. */
@@ -405,7 +406,7 @@ export function ChatScreen({
 // ---------------------------------------------------------------------------
 
 interface EmptyChatStateProps {
-  pinnedSymbol: 'XAUUSD' | 'EURUSD' | 'GBPUSD' | null;
+  pinnedSymbol: Symbol | null;
   disabled?: boolean;
   onSelect: (text: string) => void;
 }

@@ -14,6 +14,11 @@
  * limitations under the License.
  */
 
+import { redirect } from 'next/navigation';
+import { eq } from 'drizzle-orm';
+import { auth } from '@/auth';
+import { getDb, schema } from '@hamafx/db';
+
 import { AmbientBackground } from '@/components/layout/ambient-background';
 import { CommandPalette } from '@/components/layout/command-palette';
 import { InstallNudge } from '@/components/layout/install-nudge';
@@ -39,7 +44,21 @@ import { Toaster } from '@/components/ui/toaster';
  *   7. <OfflineBanner/>       sticky network-state pill
  *   8. <Toaster/>             bottom-center sonner
  */
-export default function AppLayout({ children }: { children: React.ReactNode }) {
+export default async function AppLayout({ children }: { children: React.ReactNode }) {
+  if (process.env.AUTH_MODE !== 'legacy') {
+    const session = await auth();
+    if (session?.user?.id) {
+      const db = getDb();
+      const [settings] = await db
+        .select({ onboardingCompleted: schema.userSettings.onboardingCompleted })
+        .from(schema.userSettings)
+        .where(eq(schema.userSettings.userId, session.user.id));
+      if (!settings?.onboardingCompleted) {
+        redirect('/onboarding');
+      }
+    }
+  }
+
   return (
     <MotionRoot>
       <NavDrawerProvider>

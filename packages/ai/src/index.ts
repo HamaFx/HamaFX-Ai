@@ -34,6 +34,7 @@ export {
 } from './byok-providers';
 export {
   resolveChatModel,
+  resolveModelForProvider,
   resolveVisionModel,
   resolveEmbeddingModel,
   derivePlannerModel,
@@ -50,6 +51,9 @@ export {
   enforceDailyBudget,
   tryReserveBudget,
   applyBudgetDelta,
+  getMonthlySpend,
+  getProviderMonthlySpend,
+  checkBudgetAlertsAndThresholds,
   DEFAULT_TURN_ESTIMATE_USD,
   BudgetExceededError,
 } from './cost';
@@ -115,7 +119,7 @@ export {
   type EvaluationResult,
   type RuleReading,
 } from './alerts/evaluator';
-export { deliverAlert, type DeliveryResult } from './alerts/delivery';
+export { deliverAlert, sendDirectNotification, type DeliveryResult } from './alerts/delivery';
 export {
   simulateAlert,
   type SimCandle,
@@ -244,3 +248,6 @@ export { buildToolCatalogue, type CatalogueEntry } from './catalogue';
 
 // Langfuse / OpenTelemetry instrumentation
 export { initLangfuse, shutdownLangfuse } from './instrumentation';
+
+export { extractRateLimits, type RateLimitData } from './rate-limits';
+

@@ -39,7 +39,11 @@ const TO_FINNHUB_RESOLUTION: Record<Timeframe, string> = {
 };
 
 export function toFinnhubSymbol(symbol: Symbol): string {
-  return TO_FINNHUB_SYMBOL[symbol];
+  if (TO_FINNHUB_SYMBOL[symbol]) return TO_FINNHUB_SYMBOL[symbol];
+  if (symbol.length === 6 && !symbol.includes(':')) {
+    return `OANDA:${symbol.slice(0, 3)}_${symbol.slice(3)}`;
+  }
+  return symbol;
 }
 
 export function toFinnhubResolution(tf: Timeframe): string {

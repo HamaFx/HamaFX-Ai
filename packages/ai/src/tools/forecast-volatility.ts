@@ -85,7 +85,7 @@ export const forecastVolatilityTool = tool({
 
     // High-impact events inside the horizon window.
     const events = await listHighImpactEventsInWindow({
-      currencies: CURRENCIES_BY_SYMBOL[symbol],
+      currencies: CURRENCIES_BY_SYMBOL[symbol] || ['USD'],
       fromMs: now,
       toMs: now + horizonHours * 60 * 60 * 1000,
     });

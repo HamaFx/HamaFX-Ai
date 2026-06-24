@@ -86,7 +86,7 @@ export function AnnotateChartPart({
       </ul>
 
       <Link
-        href={`/chart/${output.symbol}?tf=${output.tf}${overlayParam ? `&overlays=${overlayParam}` : ''}`}
+        href={`/chart/${output.symbol}/structure?tf=${output.tf}${overlayParam ? `&overlays=${overlayParam}` : ''}`}
         className="text-brand focus-visible:ring-brand mt-3 block min-h-[36px] text-right text-body-sm font-medium underline-offset-2 outline-none hover:underline focus-visible:ring-2"
       >
         open in chart →

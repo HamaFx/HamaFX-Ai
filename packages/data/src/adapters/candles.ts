@@ -51,6 +51,7 @@ export interface GetCandlesOptions {
   /** Number of bars to request (capped at 5000 by upstream). Default 300. */
   count?: number;
   apiKeys?: Partial<{ finnhub: string; biquoteBaseUrl: string }>;
+  marketDataProvider?: string;
 }
 
 export interface CandlesResult {
@@ -211,6 +212,17 @@ export async function getCandlesWithMeta(
           'none',
           'no candle provider configured (set FINNHUB_API_KEY or use BiQuote)',
         );
+      }
+
+      if (opts.marketDataProvider) {
+        attempts.forEach((attempt) => {
+          if (attempt.name === opts.marketDataProvider) {
+            attempt.pinned = true;
+          } else {
+            attempt.pinned = false;
+          }
+        });
+        attempts.sort((a, b) => (a.pinned === b.pinned ? 0 : a.pinned ? -1 : 1));
       }
 
       const { value } = await runWithFailover(attempts);

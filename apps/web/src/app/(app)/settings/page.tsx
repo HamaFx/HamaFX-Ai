@@ -16,6 +16,9 @@
 
 import type { Metadata } from 'next';
 
+import { auth } from '@/auth';
+import { getDb, schema } from '@hamafx/db';
+import { eq, asc } from 'drizzle-orm';
 import { AboutCard } from './_components/about-card';
 import { AgentCard } from './_components/agent-card';
 import { AIPrefsCard } from './_components/ai-prefs-card';
@@ -30,7 +33,20 @@ export const metadata: Metadata = { title: 'Settings' };
 // usage stats), so we need a fresh render on every visit.
 export const dynamic = 'force-dynamic';
 
-export default function SettingsPage() {
+export default async function SettingsPage() {
+  const session = await auth();
+  const db = getDb();
+  let watchlist: string[] = ['XAUUSD', 'EURUSD', 'GBPUSD'];
+  if (session?.user?.id) {
+    const list = await db.select({ symbol: schema.userSymbols.symbol })
+      .from(schema.userSymbols)
+      .where(eq(schema.userSymbols.userId, session.user.id))
+      .orderBy(asc(schema.userSymbols.displayOrder));
+    if (list.length > 0) {
+      watchlist = list.map((item) => item.symbol);
+    }
+  }
+
   return (
     <div className="flex flex-col gap-4">
       <SystemStatusCard />
@@ -38,7 +54,7 @@ export default function SettingsPage() {
       <AgentCard />
       <AIPrefsCard />
       <NotificationsCard />
-      <PreferencesCard />
+      <PreferencesCard watchlist={watchlist} />
       <DataCard />
       <AboutCard />
     </div>

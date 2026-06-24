@@ -565,3 +565,20 @@ html[data-reduce-motion='force'] *::after {
   }
 }
 
+/* Shiki overrides to match design system code blocks */
+.shiki {
+  margin: 0 !important;
+  background-color: transparent !important;
+  padding: 0.75rem !important;
+  font-family: inherit !important;
+  font-size: inherit !important;
+  line-height: inherit !important;
+  overflow-x: auto;
+}
+.shiki code {
+  background-color: transparent !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+}
+
+

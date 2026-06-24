@@ -190,21 +190,33 @@ function VerdictCard({ verdict }: { verdict: CommitteeVerdict }) {
                 <ul className="mt-1 flex flex-wrap gap-2">
                   {verdict.sources.map((src, i) => {
                     let host = src;
+                    let isUrl = false;
+                    let href = src;
                     try {
-                      host = new URL(src).hostname.replace('www.', '');
+                      if (/^(?:https?:\/\/)?(?:[\w-]+\.)+[\w-]+(?:\/[\w- ./?%&=]*)?$/i.test(src)) {
+                        isUrl = true;
+                        if (!/^https?:\/\//i.test(src)) {
+                          href = 'https://' + src;
+                        }
+                        host = new URL(href).hostname.replace('www.', '');
+                      }
                     } catch {
-                      // fallback to raw src
+                      isUrl = false;
                     }
                     return (
                       <li key={i}>
-                        <a
-                          href={src}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-brand inline-block max-w-[200px] align-bottom text-body-sm hover:underline truncate"
-                        >
-                          {host}
-                        </a>
+                        {isUrl ? (
+                          <a
+                            href={href}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-brand inline-block max-w-[200px] align-bottom text-body-sm hover:underline truncate"
+                          >
+                            {host}
+                          </a>
+                        ) : (
+                          <span className="text-fg-subtle text-body-sm">{src}</span>
+                        )}
                       </li>
                     );
                   })}

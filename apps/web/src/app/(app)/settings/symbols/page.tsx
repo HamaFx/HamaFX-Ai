@@ -24,19 +24,40 @@ export default async function SymbolsSettingsPage() {
   if (!session?.user?.id) return null;
 
   const db = getDb();
-  const symbols = await db.select()
+  
+  // Fetch the active symbol catalog for the search/combobox options
+  const catalog = await db.select()
+    .from(schema.symbolCatalog)
+    .where(eq(schema.symbolCatalog.isActive, true))
+    .orderBy(schema.symbolCatalog.sortOrder);
+
+  // Fetch the user's watchlist with catalog metadata
+  const symbols = await db.select({
+    symbol: schema.symbolCatalog.symbol,
+    name: schema.symbolCatalog.name,
+    category: schema.symbolCatalog.category,
+    exchange: schema.symbolCatalog.exchange,
+    tvTicker: schema.symbolCatalog.tvTicker,
+    pipSize: schema.symbolCatalog.pipSize,
+    priceDecimals: schema.symbolCatalog.priceDecimals,
+    currencyTags: schema.symbolCatalog.currencyTags,
+    isActive: schema.symbolCatalog.isActive,
+    displayOrder: schema.userSymbols.displayOrder,
+  })
     .from(schema.userSymbols)
+    .innerJoin(schema.symbolCatalog, eq(schema.userSymbols.symbol, schema.symbolCatalog.symbol))
     .where(eq(schema.userSymbols.userId, session.user.id))
     .orderBy(asc(schema.userSymbols.displayOrder));
 
   return (
-    <div className="flex flex-col gap-6 max-w-xl">
+    <div className="flex flex-col gap-6 max-w-2xl">
       <div>
         <h2 className="text-lg font-semibold text-fg">Symbols Watchlist</h2>
-        <p className="text-sm text-fg-subtle">Manage the instruments you want to track.</p>
+        <p className="text-sm text-fg-subtle">Manage and reorder the instruments you want to track across the app.</p>
       </div>
 
-      <SymbolsForm initialSymbols={symbols} />
+      <SymbolsForm initialSymbols={symbols} catalog={catalog} />
     </div>
   );
 }
+

@@ -25,7 +25,7 @@ import { SYMBOLS, type Symbol } from '@hamafx/shared';
 import { Segmented } from '@/components/ui/segmented';
 import { useTimeframe } from '@/hooks/use-tf';
 
-export function SymbolPicker({ active }: { active: Symbol }) {
+export function SymbolPicker({ active, watchlist }: { active: Symbol; watchlist: string[] }) {
   const [tf] = useTimeframe();
   return (
     <Segmented<Symbol>
@@ -37,7 +37,7 @@ export function SymbolPicker({ active }: { active: Symbol }) {
       variant="gradient"
       groupId="symbol-indicator"
       hrefFor={(s) => `/chart/${s}?tf=${tf}`}
-      options={SYMBOLS.map((s) => ({ value: s, label: s }))}
+      options={watchlist.map((s) => ({ value: s, label: s }))}
     />
   );
 }

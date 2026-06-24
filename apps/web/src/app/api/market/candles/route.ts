@@ -23,6 +23,9 @@
 
 import { getCandlesWithMeta } from '@hamafx/data';
 import { DEFAULT_TIMEFRAME, SymbolSchema, TimeframeSchema } from '@hamafx/shared';
+import { decryptByok } from '@hamafx/shared/encryption';
+import { getDb, schema } from '@hamafx/db';
+import { eq } from 'drizzle-orm';
 import { z } from 'zod';
 
 import { errorResponse, parseSearchParams, withAuth } from '@/lib/api';
@@ -37,12 +40,29 @@ const QuerySchema = z.object({
 });
 
 // Phase B: auth-gate. Market data is shared, but the gate prevents
-// anonymous scraping. The authenticated `user` is not used inside the
-// handler.
-export const GET = withAuth<void>(async (req) => {
+// anonymous scraping. The authenticated `user` is used to load provider preferences.
+export const GET = withAuth<void>(async (req, { user }) => {
   try {
     const { symbol, tf, count } = parseSearchParams(req, QuerySchema);
-    const r = await getCandlesWithMeta(symbol, tf, { count });
+
+    const db = getDb();
+    const [settings] = await db
+      .select({
+        aiApiKeys: schema.userSettings.aiApiKeys,
+        marketDataProvider: schema.userSettings.marketDataProvider,
+      })
+      .from(schema.userSettings)
+      .where(eq(schema.userSettings.userId, user.userId));
+
+    const decrypted = settings?.aiApiKeys ? decryptByok(settings.aiApiKeys) : null;
+    const finnhubKey = decrypted?.finnhub ?? '';
+    const marketDataProvider = settings?.marketDataProvider ?? 'biquote';
+
+    const r = await getCandlesWithMeta(symbol, tf, {
+      count,
+      apiKeys: { finnhub: finnhubKey },
+      marketDataProvider,
+    });
     return Response.json(
       { symbol, tf, candles: r.candles, stale: r.stale, producedAt: r.producedAt },
       {

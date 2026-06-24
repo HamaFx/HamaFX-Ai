@@ -29,7 +29,7 @@
 // More toggles can land here without touching the layout — the
 // SettingsRow primitive handles all the geometry.
 
-import { type Symbol } from '@hamafx/shared';
+import { isSymbol, type Symbol } from '@hamafx/shared';
 import { Clock, Sparkles, TrendingUp } from 'lucide-react';
 import { useEffect } from 'react';
 import { toast } from 'sonner';
@@ -53,15 +53,24 @@ const DEFAULTS: Prefs = {
   reduceMotion: false,
 };
 
-export function PreferencesCard() {
+export function PreferencesCard({ watchlist = ['XAUUSD', 'EURUSD', 'GBPUSD'] }: { watchlist?: string[] }) {
   const [prefs, setPrefs, hydrated] = useLocalStorage<Prefs>(STORAGE_KEY, DEFAULTS);
 
   // Apply on mount and updates so a hard refresh and cross-tab sync respect the saved value.
   useEffect(() => {
     if (hydrated) {
       document.documentElement.dataset.reduceMotion = prefs.reduceMotion ? 'force' : 'auto';
+      
+      // Sanitize defaultSymbol from localStorage using isSymbol and ensuring it is present in the watchlist
+      if (!isSymbol(prefs.defaultSymbol) || !watchlist.includes(prefs.defaultSymbol)) {
+        const defaultSym = watchlist.includes('XAUUSD') ? 'XAUUSD' : (watchlist[0] || DEFAULTS.defaultSymbol);
+        // Avoid infinite updates if it is already matching
+        if (prefs.defaultSymbol !== defaultSym) {
+          update('defaultSymbol', defaultSym);
+        }
+      }
     }
-  }, [prefs.reduceMotion, hydrated]);
+  }, [prefs.reduceMotion, prefs.defaultSymbol, hydrated, watchlist]);
 
   function update<K extends keyof Prefs>(key: K, value: Prefs[K]) {
     setPrefs((prev) => ({ ...prev, [key]: value }));
@@ -96,11 +105,7 @@ export function PreferencesCard() {
             role="radiogroup"
             variant="solid"
             size="sm"
-            options={[
-              { value: 'XAUUSD', label: 'XAU' },
-              { value: 'EURUSD', label: 'EUR' },
-              { value: 'GBPUSD', label: 'GBP' },
-            ]}
+            options={watchlist.map((s) => ({ value: s, label: s.replace('USD', '') }))}
           />
         }
       />

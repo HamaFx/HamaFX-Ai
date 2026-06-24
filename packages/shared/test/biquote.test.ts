@@ -175,9 +175,9 @@ describe('LiveTickSchema', () => {
     expect(() => LiveTickSchema.parse({ ...valid, source: 'alpha-vantage' })).not.toThrow();
   });
 
-  it('rejects symbols outside the supported set (single-currency-app guard)', () => {
-    expect(() => LiveTickSchema.parse({ ...valid, symbol: 'USDJPY' })).toThrow();
-    expect(() => LiveTickSchema.parse({ ...valid, symbol: 'BTCUSD' })).toThrow();
+  it('rejects invalid format symbols (length constraints)', () => {
+    expect(() => LiveTickSchema.parse({ ...valid, symbol: 'A' })).toThrow();
+    expect(() => LiveTickSchema.parse({ ...valid, symbol: 'A'.repeat(21) })).toThrow();
   });
 
   it('rejects negative timestamps', () => {

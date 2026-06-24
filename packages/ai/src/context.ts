@@ -24,7 +24,7 @@
 import { getPrice } from '@hamafx/data';
 import { getDb, schema } from '@hamafx/db';
 import { SYMBOLS, type Symbol, type Tick } from '@hamafx/shared';
-import { desc } from 'drizzle-orm';
+import { desc, eq, asc } from 'drizzle-orm';
 
 import type { LiveSnapshot } from './prompt/system';
 
@@ -48,16 +48,20 @@ function inferSession(now: Date): LiveSnapshot['session'] {
 }
 
 export async function buildLiveSnapshot(
-  opts: { signal?: AbortSignal } = {},
+  opts: { signal?: AbortSignal | undefined; userId?: string | undefined } = {},
 ): Promise<LiveSnapshot> {
+
   const now = new Date();
   const prices: Partial<Record<Symbol, Tick>> = {};
   let copilotHealth: LiveSnapshot['copilotHealth'] = undefined;
 
+  let activeSymbols: string[] = [...SYMBOLS];
+
+  const db = getDb();
+
   const healthPromise = (async () => {
     try {
       const dbStart = Date.now();
-      const db = getDb();
       const recentRows = await db
         .select({ date: schema.intermarketResonance.date })
         .from(schema.intermarketResonance)
@@ -79,22 +83,41 @@ export async function buildLiveSnapshot(
     }
   })();
 
-  // Parallel fetch; per-symbol timeouts via the global AbortSignal.
-  await Promise.all([
-    healthPromise,
-    ...SYMBOLS.map(async (s) => {
+  // Retrieve user's watchlist symbols if authenticated
+  const watchlistPromise = (async () => {
+    if (!opts.userId) return;
+    try {
+      const list = await db
+        .select({ symbol: schema.userSymbols.symbol })
+        .from(schema.userSymbols)
+        .where(eq(schema.userSymbols.userId, opts.userId))
+        .orderBy(asc(schema.userSymbols.displayOrder));
+      if (list.length > 0) {
+        activeSymbols = list.map((item) => item.symbol);
+      }
+    } catch (err) {
+      console.warn('[context] failed to load user symbols for snapshot', err);
+    }
+  })();
+
+  // Run DB fetches in parallel
+  await Promise.all([healthPromise, watchlistPromise]);
+
+  // Parallel fetch prices; per-symbol timeouts via the global AbortSignal.
+  await Promise.all(
+    activeSymbols.map(async (s) => {
       try {
         const timeoutMs = 800;
         const fetchPromise = getPrice(s, opts.signal ? { signal: opts.signal } : {});
-        const timeoutPromise = new Promise<never>((_, reject) => 
+        const timeoutPromise = new Promise<never>((_, reject) =>
           setTimeout(() => reject(new Error('timeout')), timeoutMs)
         );
         prices[s] = await Promise.race([fetchPromise, timeoutPromise]);
       } catch {
         // Swallow — missing prices are signalled to the model by absence.
       }
-    }),
-  ]);
+    })
+  );
 
   return {
     asOf: now.toISOString(),
@@ -103,3 +126,4 @@ export async function buildLiveSnapshot(
     ...(copilotHealth ? { copilotHealth } : {}),
   };
 }
+
