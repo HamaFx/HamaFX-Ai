@@ -21,12 +21,12 @@
 //
 // NEVER import this from Edge/middleware routes — it's Node-only.
 
-import { getDb, closeDb } from './client';
+import { getDb, closeDb } from './client.js';
 import {
   getPGliteDb,
   applyMigrations as applyPGliteMigrations,
   closePGliteDb,
-} from './pglite-client';
+} from './pglite-client.js';
 
 type AnyDb = ReturnType<typeof getDb> | Awaited<ReturnType<typeof getPGliteDb>>;
 

@@ -15,7 +15,7 @@
  */
 
 import { bigint, date, pgTable, primaryKey, text } from 'drizzle-orm/pg-core';
-import { users } from './auth';
+import { users } from './auth.js';
 
 /**
  * Atomic daily AI-spend counter (Phase 1 hardening §7).

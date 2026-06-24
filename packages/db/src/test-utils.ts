@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { getDb } from './client';
+import { getDb } from './client.js';
 
 /**
  * Executes a test block inside a rolled-back transaction.

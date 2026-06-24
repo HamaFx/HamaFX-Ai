@@ -15,7 +15,7 @@
  */
 
 import { boolean, index, jsonb, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
-import { users } from './auth';
+import { users } from './auth.js';
 
 /**
  * Chat threads. One row per conversation. Personal-mode: no `user_id`.

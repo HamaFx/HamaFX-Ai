@@ -15,7 +15,7 @@
  */
 
 import { boolean, index, integer, jsonb, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
-import { users } from './auth';
+import { users } from './auth.js';
 
 /**
  * Alerts. The `rule` column holds the discriminated-union AlertRule schema

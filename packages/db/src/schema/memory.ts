@@ -16,7 +16,7 @@
 
 import { sql } from 'drizzle-orm';
 import { index, jsonb, pgTable, text, timestamp, unique, uuid, vector } from 'drizzle-orm/pg-core';
-import { users } from './auth';
+import { users } from './auth.js';
 
 /**
  * Unified memory index. Phase 7b additions:

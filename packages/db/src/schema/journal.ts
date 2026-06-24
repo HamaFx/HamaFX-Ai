@@ -16,7 +16,7 @@
 
 import { sql } from 'drizzle-orm';
 import { doublePrecision, index, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
-import { users } from './auth';
+import { users } from './auth.js';
 
 export const journalEntries = pgTable(
   'journal_entries',

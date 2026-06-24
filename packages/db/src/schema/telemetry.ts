@@ -23,7 +23,7 @@ import {
   timestamp,
   uuid,
 } from 'drizzle-orm/pg-core';
-import { users } from './auth';
+import { users } from './auth.js';
 
 /**
  * Discriminator for non-assistant-turn telemetry rows.
