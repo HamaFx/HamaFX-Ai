@@ -99,39 +99,31 @@ docker compose up -d
 
 HamaFX-Ai is structured as a monorepo utilizing Turborepo to coordinate fast builds, linting, and multi-package testing pipelines.
 
-```mermaid
-graph TD
-    classDef client fill:#10b981,stroke:#047857,stroke-width:2px,color:#fff;
-    classDef platform fill:#3b82f6,stroke:#1d4ed8,stroke-width:2px,color:#fff;
-    classDef daemon fill:#f59e0b,stroke:#b45309,stroke-width:2px,color:#fff;
-    classDef db fill:#8b5cf6,stroke:#6d28d9,stroke-width:2px,color:#fff;
-
-    subgraph ClientLayer ["Client Layer"]
-        web["@hamafx/web <br/> (Next.js 15 PWA - 33k LOC)"]:::client
-    end
-
-    subgraph PlatformPackages ["Platform Packages"]
-        ai["@hamafx/ai <br/> (Agent Core - 20k LOC)"]:::platform
-        data["@hamafx/data <br/> (Market Adapters - 6k LOC)"]:::platform
-        ind["@hamafx/indicators <br/> (TS SMC Math - 2k LOC)"]:::platform
-        shared["@hamafx/shared <br/> (Zod Schemas - 4k LOC)"]:::platform
-    end
-
-    subgraph DaemonLayer ["Daemon Layer"]
-        worker["@hamafx/worker <br/> (Node Daemon - 5k LOC)"]:::daemon
-    end
-
-    subgraph DbLayer ["Storage Layer"]
-        db["@hamafx/db <br/> (Drizzle ORM - 2k LOC)"]:::db
-    end
-
-    web --> ai
-    web --> data
-    ai --> db
-    ai --> shared
-    data --> db
-    data --> ind
-    worker --> db
+```text
+                            +-----------------------------------+
+                            |           CLIENT LAYER            |
+                            |  @hamafx/web (Next.js - 33k LOC)  |
+                            +─────────┬───────────────┬─────────+
+                                      │               │
+                                      ▼               ▼
+                            +──────────────────+ +──────────────────+
+                            |    AGENT CORE    | |  MARKET ADAPTERS  |
+                            | @hamafx/ai (20k) | | @hamafx/data (6k) |
+                            +─────────┬────────+ +────────┬─────────+
+                                      │                   │
+                     +────────────────┼───────────────────┤
+                     │                │                   │
+                     ▼                ▼                   ▼
+            +──────────────────+ +──────────────────+ +──────────────────+
+            |  SHARED SCHEMAS  | |  STORAGE LAYER   | |     SMC MATH     |
+            |@hamafx/shared(4k)| | @hamafx/db (2k)  | |@hamafx/indicators|
+            +──────────────────+ +────────▲─────────+ +──────(2k)────────+
+                                          │
+                                          │
+                            +─────────────┴─────+
+                            |   DAEMON LAYER    |
+                            | @hamafx/worker(5k)|
+                            +-------------------+
 ```
 
 ### Monorepo Directory Layout
