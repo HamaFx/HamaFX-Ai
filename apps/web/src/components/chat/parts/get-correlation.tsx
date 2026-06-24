@@ -65,7 +65,7 @@ export function GetCorrelationPart({
         </span>
       </header>
 
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto scrollbar-hide scroll-shadows-x">
         <table className="w-full border-separate border-spacing-1 text-body-sm tabular-nums">
           <thead>
             <tr>

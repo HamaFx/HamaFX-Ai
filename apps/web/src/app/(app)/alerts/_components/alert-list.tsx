@@ -31,7 +31,7 @@ import {
   Trash2,
   TrendingUp,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
@@ -208,85 +208,179 @@ function AlertRow({ alert, onToggle, onDelete }: AlertRowProps) {
   const StatusIcon = alert.active ? Bell : alert.firedAt ? BellRing : BellOff;
   const statusTone = alert.active ? 'text-brand' : alert.firedAt ? 'text-warn' : 'text-fg-subtle';
 
-  return (
-    <li
-      className={cn(
-        'border border-divider bg-bg-elev-1 rounded-lg flex items-start gap-3 p-4 transition-all duration-200 hover:shadow-lg',
-        !alert.active && 'opacity-60 saturate-50',
-      )}
-    >
-      <div className="relative">
-        <span
-          aria-hidden
-          className={cn(
-            'inline-flex size-12 shrink-0 items-center justify-center rounded-2xl',
-            statusTone,
-          )}
-          style={{
-            background: alert.active
-              ? 'var(--gradient-brand-soft)'
-              : alert.firedAt
-                ? 'oklch(82% 0.16 80 / 0.15)'
-                : 'oklch(70% 0.02 265 / 0.1)',
-            boxShadow: 'var(--shadow-inset-edge-soft)',
-          }}
-        >
-          <StatusIcon className="size-5" strokeWidth={1.75} />
-        </span>
-        {alert.active && !alert.firedAt && (
-          <span className="absolute -top-1 -right-1 flex h-3 w-3">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-3 w-3 bg-brand border-2 border-bg"></span>
-          </span>
-        )}
-      </div>
+  const trackRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
 
-      <div className="min-w-0 flex-1 py-0.5">
-        <div className="flex items-center gap-2">
-          <div className="text-fg flex items-center gap-1.5 text-sm font-semibold tabular-nums">
-            <RuleIcon className="text-fg-muted size-4 shrink-0" aria-hidden="true" />
-            <span className="truncate">{describe(alert)}</span>
+  useEffect(() => {
+    const track = trackRef.current;
+    const content = contentRef.current;
+    if (!track || !content) return;
+
+    const initialScroll = () => {
+      track.scrollLeft = track.clientWidth;
+    };
+
+    initialScroll();
+
+    const resizeOb = new ResizeObserver(() => {
+      initialScroll();
+    });
+    resizeOb.observe(track);
+
+    let isTriggered = false;
+    let timer: NodeJS.Timeout;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[entries.length - 1];
+        if (!entry) return;
+        const ratio = entry.intersectionRatio;
+
+        if (ratio > 0.95) {
+          isTriggered = false;
+          return;
+        }
+
+        const commitThreshold = 0.3;
+        if (ratio < commitThreshold && !isTriggered) {
+          isTriggered = true;
+          const direction = (entry.boundingClientRect.x - entry.rootBounds!.x) > 0 ? 'left' : 'right';
+
+          if (direction === 'left') {
+            onToggle();
+          } else {
+            onDelete();
+          }
+
+          timer = setTimeout(() => {
+            track.scrollTo({ left: track.clientWidth, behavior: 'smooth' });
+          }, 300);
+        }
+      },
+      {
+        root: track,
+        threshold: [0.3, 0.95],
+      }
+    );
+
+    observer.observe(content);
+
+    return () => {
+      resizeOb.disconnect();
+      observer.disconnect();
+      clearTimeout(timer);
+    };
+  }, [onToggle, onDelete]);
+
+  return (
+    <li className="relative overflow-hidden rounded-lg border border-divider bg-bg-elev-1 transition-all duration-200 hover:shadow-lg">
+      <div
+        ref={trackRef}
+        className="grid overflow-x-auto scrollbar-none overscroll-behavior-x-none select-none"
+        style={{
+          gridTemplateColumns: '100% 100% 100%',
+          scrollSnapType: 'x mandatory',
+        }}
+      >
+        {/* Left Option (Re-arm / Pause) */}
+        <div 
+          className="flex w-full items-center justify-start pl-6 bg-brand/10 text-brand"
+          style={{ scrollSnapAlign: 'start' }}
+        >
+          <StatusIcon className="size-5 animate-pulse" />
+        </div>
+
+        {/* Content (Main Alert Card) */}
+        <div
+          ref={contentRef}
+          className={cn(
+            'flex w-full items-start gap-3 p-4 bg-bg-elev-1 transition-opacity duration-200',
+            !alert.active && 'opacity-60 saturate-50',
+          )}
+          style={{ scrollSnapAlign: 'center' }}
+        >
+          <div className="relative">
+            <span
+              aria-hidden
+              className={cn(
+                'inline-flex size-12 shrink-0 items-center justify-center rounded-2xl',
+                statusTone,
+              )}
+              style={{
+                background: alert.active
+                  ? 'var(--gradient-brand-soft)'
+                  : alert.firedAt
+                    ? 'oklch(82% 0.16 80 / 0.15)'
+                    : 'oklch(70% 0.02 265 / 0.1)',
+                boxShadow: 'var(--shadow-inset-edge-soft)',
+              }}
+            >
+              <StatusIcon className="size-5" strokeWidth={1.75} />
+            </span>
+            {alert.active && !alert.firedAt && (
+              <span className="absolute -top-1 -right-1 flex h-3 w-3">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-brand border-2 border-bg"></span>
+              </span>
+            )}
           </div>
-          <div className="flex items-center gap-1 ml-1.5">
-            {alert.channels.includes('email') && (
-              <Mail className="text-fg-muted size-3.5" strokeWidth={2} />
-            )}
-            {alert.channels.includes('telegram') && (
-              <Send className="text-brand size-3.5" strokeWidth={2} />
-            )}
+
+          <div className="min-w-0 flex-1 py-0.5">
+            <div className="flex items-center gap-2">
+              <div className="text-fg flex items-center gap-1.5 text-sm font-semibold tabular-nums">
+                <RuleIcon className="text-fg-muted size-4 shrink-0" aria-hidden="true" />
+                <span className="truncate">{describe(alert)}</span>
+              </div>
+              <div className="flex items-center gap-1 ml-1.5">
+                {alert.channels.includes('email') && (
+                  <Mail className="text-fg-muted size-3.5" strokeWidth={2} />
+                )}
+                {alert.channels.includes('telegram') && (
+                  <Send className="text-brand size-3.5" strokeWidth={2} />
+                )}
+              </div>
+            </div>
+            <p className="text-fg-subtle mt-1.5 truncate text-xs font-medium">
+              {alert.firedAt
+                ? `Triggered ${formatRelative(alert.firedAt)}`
+                : alert.active
+                  ? `Watching since ${formatRelative(alert.createdAt)}`
+                  : `Paused`}
+              {alert.note ? <span className="text-fg-muted"> · {alert.note}</span> : ''}
+            </p>
+          </div>
+
+          <div className="flex shrink-0 gap-1 md:flex">
+            <Tooltip label={alert.active ? 'Pause' : 'Re-arm'}>
+              <button
+                type="button"
+                onClick={onToggle}
+                aria-label={alert.active ? 'Pause alert' : 'Re-arm alert'}
+                className="text-fg-muted hover:text-fg hover:bg-bg-elev-2 inline-flex size-10 items-center justify-center rounded-full transition-colors"
+              >
+                {alert.active ? <BellOff className="size-4" /> : <RotateCw className="size-4" />}
+              </button>
+            </Tooltip>
+            <Tooltip label="Delete">
+              <button
+                type="button"
+                onClick={onDelete}
+                aria-label="Delete alert"
+                className="text-bear/70 hover:text-bear hover:bg-bear/10 inline-flex size-10 items-center justify-center rounded-full transition-colors"
+              >
+                <Trash2 className="size-4" />
+              </button>
+            </Tooltip>
           </div>
         </div>
-        <p className="text-fg-subtle mt-1.5 truncate text-xs font-medium">
-          {alert.firedAt
-            ? `Triggered ${formatRelative(alert.firedAt)}`
-            : alert.active 
-              ? `Watching since ${formatRelative(alert.createdAt)}`
-              : `Paused`}
-          {alert.note ? <span className="text-fg-muted"> · {alert.note}</span> : ''}
-        </p>
-      </div>
 
-      <div className="flex shrink-0 flex-col gap-1">
-        <Tooltip label={alert.active ? 'Pause' : 'Re-arm'}>
-          <button
-            type="button"
-            onClick={onToggle}
-            aria-label={alert.active ? 'Pause alert' : 'Re-arm alert'}
-            className="text-fg-muted hover:text-fg hover:bg-bg-elev-2 inline-flex size-10 items-center justify-center rounded-full transition-colors"
-          >
-            {alert.active ? <BellOff className="size-4" /> : <RotateCw className="size-4" />}
-          </button>
-        </Tooltip>
-        <Tooltip label="Delete">
-          <button
-            type="button"
-            onClick={onDelete}
-            aria-label="Delete alert"
-            className="text-bear/70 hover:text-bear hover:bg-bear/10 inline-flex size-10 items-center justify-center rounded-full transition-colors"
-          >
-            <Trash2 className="size-4" />
-          </button>
-        </Tooltip>
+        {/* Right Option (Delete) */}
+        <div 
+          className="flex w-full items-center justify-end pr-6 bg-bear/10 text-bear"
+          style={{ scrollSnapAlign: 'end' }}
+        >
+          <Trash2 className="size-5 animate-pulse" />
+        </div>
       </div>
     </li>
   );

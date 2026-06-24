@@ -581,4 +581,51 @@ html[data-reduce-motion='force'] *::after {
   border-radius: 0 !important;
 }
 
+/* -------------------------------------------------------------------------
+ * Scroll Overflow Shadows & Indicators
+ * ------------------------------------------------------------------------- */
+.scroll-shadows-x {
+  background:
+    linear-gradient(to right, var(--color-bg-elev-1) 30%, rgba(12, 12, 12, 0)),
+    linear-gradient(to right, rgba(12, 12, 12, 0), var(--color-bg-elev-1) 70%) 100% 0,
+    radial-gradient(farthest-side at 0 50%, rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0)),
+    radial-gradient(farthest-side at 100% 50%, rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0)) 100% 0;
+  background-repeat: no-repeat;
+  background-size: 40px 100%, 40px 100%, 14px 100%, 14px 100%;
+  background-attachment: local, local, scroll, scroll;
+}
+
+/* -------------------------------------------------------------------------
+ * Same-Document View Transitions
+ * ------------------------------------------------------------------------- */
+.chat-screen-composer {
+  view-transition-name: chat-composer;
+}
+.chat-planner-pill {
+  view-transition-name: chat-planner;
+}
+.alert-row-transition {
+  view-transition-name: alert-row-active;
+}
+
+/* -------------------------------------------------------------------------
+ * Resilient Overlays & Anchor Positioning
+ * ------------------------------------------------------------------------- */
+[popover] {
+  position-try-options: flip-block, flip-inline;
+  transition: opacity 0.15s ease, scale 0.15s ease;
+}
+
+/* -------------------------------------------------------------------------
+ * Visually Stable Font Fallbacks (reduce CLS before custom fonts render)
+ * ------------------------------------------------------------------------- */
+@font-face {
+  font-family: 'Inter Fallback';
+  src: local('Arial');
+  size-adjust: 97%;
+  ascent-override: 95%;
+  descent-override: 20%;
+  line-gap-override: 0%;
+}
+
 
