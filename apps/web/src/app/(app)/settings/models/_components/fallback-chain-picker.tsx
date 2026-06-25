@@ -1,24 +1,25 @@
 'use client';
 
-/**
- * Copyright 2026 HamaFX
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 import { useState, useTransition } from 'react';
-import { ArrowDown, ArrowUp, Plus, Trash2, ShieldAlert, Loader2 } from 'lucide-react';
+import { Plus, Trash2, GripVertical, ShieldAlert, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+  arrayMove,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 import { Button } from '@/components/ui/button';
 import { withCsrf } from '@/lib/csrf';
@@ -30,6 +31,73 @@ interface FallbackChainPickerProps {
   configuredProviders: ProviderMeta[];
 }
 
+function SortableItem({
+  id,
+  index,
+  displayName,
+  disabled,
+  onRemove,
+}: {
+  id: string;
+  index: number;
+  displayName: string;
+  disabled: boolean;
+  onRemove: () => void;
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`flex items-center justify-between gap-3 border bg-bg-elev-2 rounded-lg p-2.5 transition-all ${
+        isDragging
+          ? 'border-brand shadow-lg z-10 opacity-90'
+          : 'border-divider/60 hover:border-divider'
+      }`}
+    >
+      <div className="flex items-center gap-2 min-w-0">
+        <button
+          type="button"
+          className="size-6 flex items-center justify-center text-fg-muted hover:text-fg cursor-grab active:cursor-grabbing touch-none shrink-0"
+          aria-label={`Drag to reorder ${displayName}`}
+          {...attributes}
+          {...listeners}
+        >
+          <GripVertical className="size-3.5" />
+        </button>
+        <span className="text-caption font-semibold bg-bg-elev-3 border border-divider/80 size-5 rounded-full inline-flex items-center justify-center text-fg-muted shrink-0">
+          {index + 1}
+        </span>
+        <span className="text-sm font-medium text-fg truncate">{displayName}</span>
+      </div>
+      <Button
+        type="button"
+        variant="ghost"
+        size="sm"
+        onClick={onRemove}
+        disabled={disabled}
+        className="size-7 p-0 flex items-center justify-center text-bear hover:bg-bear/10 hover:text-bear shrink-0"
+        aria-label={`Remove ${displayName} from chain`}
+      >
+        <Trash2 className="size-3.5" />
+      </Button>
+    </div>
+  );
+}
+
 export function FallbackChainPicker({
   initialChain,
   configuredProviders,
@@ -37,6 +105,11 @@ export function FallbackChainPicker({
   const [chain, setChain] = useState<string[]>(initialChain);
   const [pending, startTransition] = useTransition();
   const [selectedToAdd, setSelectedToAdd] = useState<string>('');
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
 
   async function saveChain(newChain: string[]) {
     setChain(newChain);
@@ -55,11 +128,22 @@ export function FallbackChainPicker({
         toast.success('Fallback chain updated');
       } catch {
         toast.error('Failed to update fallback chain');
-        // Revert to old chain on failure
         setChain(chain);
       }
     });
   }
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    const oldIndex = chain.indexOf(String(active.id));
+    const newIndex = chain.indexOf(String(over.id));
+    if (oldIndex === -1 || newIndex === -1) return;
+
+    const newChain = arrayMove(chain, oldIndex, newIndex);
+    saveChain(newChain);
+  };
 
   const handleAdd = () => {
     if (!selectedToAdd || chain.includes(selectedToAdd)) return;
@@ -73,25 +157,6 @@ export function FallbackChainPicker({
     saveChain(newChain);
   };
 
-  const handleMoveUp = (index: number) => {
-    if (index === 0) return;
-    const newChain = [...chain];
-    const temp = newChain[index - 1]!;
-    newChain[index - 1] = newChain[index]!;
-    newChain[index] = temp;
-    saveChain(newChain);
-  };
-
-  const handleMoveDown = (index: number) => {
-    if (index === chain.length - 1) return;
-    const newChain = [...chain];
-    const temp = newChain[index + 1]!;
-    newChain[index + 1] = newChain[index]!;
-    newChain[index] = temp;
-    saveChain(newChain);
-  };
-
-  // Find remaining configured providers that aren't already in the chain
   const availableToAdd = configuredProviders.filter(
     (p) => !chain.includes(p.id)
   );
@@ -104,65 +169,38 @@ export function FallbackChainPicker({
           Provider Fallback Chain
         </span>
         <span className="text-caption text-fg-subtle">
-          Configure the order in which providers are tried if your primary choice encounters a rate limit, timeout, or upstream failure.
+          Drag to reorder. Configure the order in which providers are tried if your primary choice encounters a rate limit, timeout, or upstream failure.
         </span>
       </div>
 
       {chain.length > 0 ? (
-        <div className="flex flex-col gap-2">
-          {chain.map((providerId, index) => {
-            const provider = configuredProviders.find((p) => p.id === providerId);
-            const displayName = provider?.displayName ?? providerId;
-            return (
-              <div
-                key={providerId}
-                className="flex items-center justify-between gap-3 border border-divider/60 bg-bg-elev-2 rounded-lg p-2.5 hover:border-divider transition-all"
-              >
-                <div className="flex items-center gap-2">
-                  <span className="text-caption font-semibold bg-bg-elev-3 border border-divider/80 size-5 rounded-full inline-flex items-center justify-center text-fg-muted">
-                    {index + 1}
-                  </span>
-                  <span className="text-sm font-medium text-fg">{displayName}</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleMoveUp(index)}
-                    disabled={index === 0 || pending}
-                    className="size-7 p-0 flex items-center justify-center"
-                    aria-label="Move up"
-                  >
-                    <ArrowUp className="size-3.5" />
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleMoveDown(index)}
-                    disabled={index === chain.length - 1 || pending}
-                    className="size-7 p-0 flex items-center justify-center"
-                    aria-label="Move down"
-                  >
-                    <ArrowDown className="size-3.5" />
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleRemove(index)}
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
+        >
+          <SortableContext
+            items={chain}
+            strategy={verticalListSortingStrategy}
+          >
+            <div className="flex flex-col gap-2">
+              {chain.map((providerId, index) => {
+                const provider = configuredProviders.find((p) => p.id === providerId);
+                const displayName = provider?.displayName ?? providerId;
+                return (
+                  <SortableItem
+                    key={providerId}
+                    id={providerId}
+                    index={index}
+                    displayName={displayName}
                     disabled={pending}
-                    className="size-7 p-0 flex items-center justify-center text-bear hover:bg-bear/10 hover:text-bear"
-                    aria-label="Remove from chain"
-                  >
-                    <Trash2 className="size-3.5" />
-                  </Button>
-                </div>
-              </div>
-            );
-          })}
-        </div>
+                    onRemove={() => handleRemove(index)}
+                  />
+                );
+              })}
+            </div>
+          </SortableContext>
+        </DndContext>
       ) : (
         <div className="text-center py-6 border border-dashed border-divider bg-bg-elev-2/40 rounded-lg text-caption text-fg-subtle">
           No fallback chain configured. If a model call fails, the request will immediately fail.
@@ -175,6 +213,7 @@ export function FallbackChainPicker({
             value={selectedToAdd}
             onChange={(e) => setSelectedToAdd(e.target.value)}
             disabled={pending}
+            aria-label="Select a provider to add to fallback chain"
             className="flex-1 appearance-none border border-divider bg-bg-elev-2 text-fg rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand disabled:opacity-60"
           >
             <option value="" disabled>

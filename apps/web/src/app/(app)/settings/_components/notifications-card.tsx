@@ -22,24 +22,25 @@ import { listPushSubscriptions } from '@hamafx/ai';
 import { Bell, Mail, Send } from 'lucide-react';
 
 import { cn } from '@/lib/cn';
+import { getServerEnv } from '@/lib/env';
 
 import { EnableWebPushButton } from './enable-web-push-button';
 import { TestEmailButton } from './test-email-button';
 import { TestTelegramButton } from './test-telegram-button';
 import { SettingsRow } from './settings-row';
 
-export async function NotificationsCard() {
-  const env = process.env;
+export async function NotificationsCard({ userId }: { userId: string }) {
+  const env = getServerEnv();
   const emailReady = Boolean(env.RESEND_API_KEY) && Boolean(env.ALERT_FROM_EMAIL);
   const telegramReady = Boolean(env.TELEGRAM_BOT_TOKEN) && Boolean(env.TELEGRAM_CHAT_ID);
   const pushReady = Boolean(env.VAPID_PUBLIC_KEY) && Boolean(env.VAPID_PRIVATE_KEY);
 
   let pushDevices = 0;
   try {
-    const subs = await listPushSubscriptions();
+    const subs = await listPushSubscriptions(userId);
     pushDevices = subs.length;
   } catch {
-    /* db not reachable; render the rest anyway */
+    console.error('[settings] failed to list push subscriptions');
   }
 
   return (

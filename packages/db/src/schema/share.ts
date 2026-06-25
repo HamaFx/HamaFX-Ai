@@ -15,7 +15,7 @@
  */
 
 import { index, jsonb, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
-import { users } from './auth.js';
+import { users } from './auth';
 
 /**
  * One-off shareable analysis snapshots. Reachable via `/share/<id>?t=<token>`

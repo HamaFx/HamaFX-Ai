@@ -25,7 +25,7 @@ import { existsSync, mkdirSync, readFileSync, readdirSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { PGlite } from '@electric-sql/pglite';
 import { drizzle, type PgliteDatabase } from 'drizzle-orm/pglite';
-import * as schema from './schema/index.js';
+import * as schema from './schema/index';
 
 const DEFAULT_DATA_DIR = resolve('.hamafx/data');
 const MIGRATIONS_DIR = new URL('../drizzle', import.meta.url).pathname;

@@ -16,6 +16,7 @@
 
 import 'server-only';
 
+import { cache } from 'react';
 import { BYOK_PROVIDERS_LIST } from '@hamafx/ai';
 import { getDb, schema } from '@hamafx/db';
 import { decryptByok } from '@hamafx/shared/encryption';
@@ -34,32 +35,13 @@ import { eq } from 'drizzle-orm';
  * their own host without a full URL — calling this directly is the
  * only way to share the data.
  *
- * Phase F simplification: dropped the per-domain `defaultModels`
- * merging (the JSONB column is still in the schema but no UI
- * mutates it any more — convene-committee is the lone consumer
- * via resolveUserModel). The provider's hardcoded `defaultModels`
- * still surfaces as the "defaultFor" annotation on each model so
- * the regen-model-picker can highlight recommended picks.
- *
  * `server-only` import makes sure this never accidentally ends up
  * in a client bundle.
  */
-interface CacheEntry {
-  catalog: CatalogResponse;
-  expiresAt: number;
-}
 
-const catalogCache = new Map<string, CacheEntry>();
-const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
-
-export async function buildCatalogForUser(
+export const buildCatalogForUser = cache(async function buildCatalogForUser(
   userId: string,
 ): Promise<CatalogResponse> {
-  const now = Date.now();
-  const cached = catalogCache.get(userId);
-  if (cached && cached.expiresAt > now) {
-    return cached.catalog;
-  }
 
   const db = getDb();
   const [settings] = await db
@@ -166,10 +148,5 @@ export async function buildCatalogForUser(
     totalModels: providers.reduce((sum, p) => sum + p.models.length, 0),
   };
 
-  catalogCache.set(userId, {
-    catalog,
-    expiresAt: Date.now() + CACHE_TTL_MS,
-  });
-
   return catalog;
-}
+});

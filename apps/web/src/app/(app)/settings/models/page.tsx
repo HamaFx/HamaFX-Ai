@@ -29,7 +29,7 @@ import {
 } from './_components/model-picker';
 import { FallbackChainPicker } from './_components/fallback-chain-picker';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 60;
 
 export const metadata = {
   title: 'Models · HamaFX-Ai',
@@ -64,7 +64,12 @@ export default async function ModelsSettingsPage() {
 
   const db = getDb();
   const [userRow] = await db
-    .select({ aiFallbackChain: schema.userSettings.aiFallbackChain })
+    .select({
+      aiFallbackChain: schema.userSettings.aiFallbackChain,
+      chatModel: schema.userSettings.chatModel,
+      visionModel: schema.userSettings.visionModel,
+      embeddingModel: schema.userSettings.embeddingModel,
+    })
     .from(schema.userSettings)
     .where(eq(schema.userSettings.userId, session.user.id));
 
@@ -75,6 +80,9 @@ export default async function ModelsSettingsPage() {
   // would silently no-op on save.
   const configured = catalog.providers.filter((p) => p.hasKey);
   const initialChain = userRow?.aiFallbackChain ?? [];
+  const initialChatModel = userRow?.chatModel ?? null;
+  const initialVisionModel = userRow?.visionModel ?? null;
+  const initialEmbeddingModel = userRow?.embeddingModel ?? null;
 
   return (
     <div className="flex flex-col gap-6 max-w-2xl">
@@ -94,12 +102,12 @@ export default async function ModelsSettingsPage() {
         </Link>
       </div>
 
-      <ChatModelPicker initialValue={null} providers={configured} />
+      <ChatModelPicker initialValue={initialChatModel} providers={configured} />
 
       <FallbackChainPicker initialChain={initialChain} configuredProviders={configured} />
 
       <details className="border border-divider bg-bg-elev-1 rounded-lg overflow-hidden">
-        <summary className="cursor-pointer select-none px-4 py-3 flex items-center justify-between gap-3 hover:bg-bg-elev-2 transition-colors">
+        <summary aria-label="Toggle advanced model settings" className="cursor-pointer select-none px-4 py-3 flex items-center justify-between gap-3 hover:bg-bg-elev-2 transition-colors">
           <div className="flex flex-col">
             <span className="text-sm font-medium text-fg">
               Advanced
@@ -111,8 +119,8 @@ export default async function ModelsSettingsPage() {
           <span className="text-caption text-fg-subtle">▾</span>
         </summary>
         <div className="border-t border-divider p-4 flex flex-col gap-4">
-          <VisionModelPicker providers={configured} />
-          <EmbeddingModelPicker providers={configured} />
+          <VisionModelPicker initialValue={initialVisionModel} providers={configured} />
+          <EmbeddingModelPicker initialValue={initialEmbeddingModel} providers={configured} />
         </div>
       </details>
 

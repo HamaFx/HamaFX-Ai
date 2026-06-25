@@ -15,7 +15,7 @@
  */
 
 import { boolean, index, integer, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
-import { users } from './auth.js';
+import { users } from './auth';
 
 /**
  * Per-tool execution telemetry — Phase 7b.

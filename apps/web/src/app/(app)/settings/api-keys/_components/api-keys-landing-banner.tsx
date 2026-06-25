@@ -52,7 +52,7 @@ export function ApiKeysLandingBanner({ prompt }: ApiKeysLandingBannerProps) {
         setDismissed(true);
       }
     } catch {
-      /* localStorage may be unavailable in private mode */
+      console.warn('[settings] localStorage unavailable in private mode');
     }
   }, []);
 
@@ -63,7 +63,7 @@ export function ApiKeysLandingBanner({ prompt }: ApiKeysLandingBannerProps) {
     try {
       window.localStorage.setItem(STORAGE_KEY, '1');
     } catch {
-      /* ignore */
+      console.warn('[settings] failed to persist banner dismiss');
     }
   }
 

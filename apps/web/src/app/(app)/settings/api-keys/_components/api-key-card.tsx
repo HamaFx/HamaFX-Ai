@@ -31,6 +31,7 @@ import { ProviderInfoDot } from '@/components/ui/provider-info-dot';
 import { withCsrf } from '@/lib/csrf';
 import { useConfirm } from '@/components/ui/confirm-drawer';
 import { toast } from 'sonner';
+import { formatRelative } from '@/lib/format';
 import type { ProviderMeta } from '@hamafx/shared';
 
 interface ApiKeyCardProps {
@@ -457,7 +458,7 @@ export function ApiKeyCard({ provider, currentValue, health, usage, keyUpdatedAt
       {/* Expandable setup instructions details. */}
       {instructions && (
         <details className="text-xs border border-divider/40 rounded-md overflow-hidden bg-bg-elev-2/30">
-          <summary className="cursor-pointer select-none px-3 py-1.5 font-medium text-fg-subtle hover:text-fg transition-colors flex items-center justify-between">
+          <summary aria-label="Toggle setup instructions and limits" className="cursor-pointer select-none px-3 py-1.5 font-medium text-fg-subtle hover:text-fg transition-colors flex items-center justify-between">
             <span>Setup Instructions & Limits</span>
             <span className="text-[10px]">▼</span>
           </summary>
@@ -568,13 +569,13 @@ function StatusPill({
   if (!health.ok) {
     return (
       <span className="rounded-full bg-bear/15 px-2 py-0.5 text-caption font-medium text-bear">
-        Failed <span className="opacity-60">·</span> {formatAge(health.testedAt)}
+        Failed <span className="opacity-60">·</span> {formatRelative(health.testedAt)}
       </span>
     );
   }
   return (
     <span className="rounded-full bg-bull/15 px-2 py-0.5 text-caption font-medium text-bull">
-      OK <span className="opacity-60">·</span> {formatAge(health.testedAt)}
+      OK <span className="opacity-60">·</span> {formatRelative(health.testedAt)}
     </span>
   );
 }
@@ -623,19 +624,3 @@ function previewVertexJson(
   }
 }
 
-/**
- * Convert an ISO timestamp to a short "5m ago" / "2h ago" / "3d ago"
- * label. Used in the status pill.
- */
-function formatAge(iso: string): string {
-  const t = new Date(iso).getTime();
-  if (!Number.isFinite(t)) return '';
-  const diffMs = Date.now() - t;
-  const m = Math.floor(diffMs / 60_000);
-  if (m < 1) return 'just now';
-  if (m < 60) return `${m}m ago`;
-  const h = Math.floor(m / 60);
-  if (h < 24) return `${h}h ago`;
-  const d = Math.floor(h / 24);
-  return `${d}d ago`;
-}

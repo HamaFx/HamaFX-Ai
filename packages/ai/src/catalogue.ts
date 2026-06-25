@@ -63,7 +63,7 @@ const ONE_DAY_MS = 24 * 60 * 60 * 1000;
  * worth a wrapper.
  */
 export const buildToolCatalogue = cache(
-  async (): Promise<CatalogueEntry[]> => {
+  async (disabledTools?: string[]): Promise<CatalogueEntry[]> => {
     const since = new Date(Date.now() - ONE_DAY_MS);
     const result = await getDb()
       .select({
@@ -86,7 +86,9 @@ export const buildToolCatalogue = cache(
     const stats = new Map<string, RawAgg>();
     for (const r of result) stats.set(r.tool, r as unknown as RawAgg);
 
-    return TOOL_NAMES.map((name): CatalogueEntry => {
+    return TOOL_NAMES
+      .filter((name) => !disabledTools?.includes(name))
+      .map((name): CatalogueEntry => {
       const tool = tools[name as keyof typeof tools] as { description?: string } | undefined;
       const desc = tool?.description ?? '(no description)';
       const agg = stats.get(name);

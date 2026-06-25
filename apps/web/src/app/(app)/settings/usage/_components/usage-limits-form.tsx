@@ -46,7 +46,7 @@ export function UsageLimitsForm({
     async (prevState: { error: string; ok: boolean }, formData: FormData) => {
       const res = await updateUsageSettingsAction(formData);
       return {
-        error: res.error || '',
+        error: 'error' in res ? (res.error ?? '') : '',
         ok: res.ok,
       };
     },
@@ -174,6 +174,7 @@ export function UsageLimitsForm({
                       step="0.01"
                       placeholder="None"
                       defaultValue={p.threshold ?? ''}
+                      aria-label={`Spending threshold for ${p.displayName}`}
                       className="pl-6 text-right font-mono text-xs h-8 pr-2"
                     />
                   </div>

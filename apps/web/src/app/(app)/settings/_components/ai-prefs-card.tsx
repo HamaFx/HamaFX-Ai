@@ -18,12 +18,12 @@
 
 import { Sparkles, X } from 'lucide-react';
 import Link from 'next/link';
-import { useLocalStorage } from '@/hooks/use-local-storage';
 
+import { useLocalStorage } from '@/hooks/use-local-storage';
 import { useConfirm } from '@/components/ui/confirm-drawer';
+import { updateAiPrefsAction } from '../actions';
 
 export interface AIPrefs {
-  /** Free-form instructions appended to the AI's system prompt. */
   customInstructions: string;
 }
 
@@ -114,14 +114,26 @@ const DEFAULTS: AIPrefs = {
  *      Removing the misleading selectors here; users who want to
  *      change the chat model follow the "Manage models →" link below.
  */
-export function AIPrefsCard() {
+let _aiSyncTimer: ReturnType<typeof setTimeout> | undefined;
+
+export function AIPrefsCard({ initialCustomInstructions }: { initialCustomInstructions?: string | null }) {
   const [prefs, setPrefs, hydrated] = useLocalStorage<AIPrefs>(AI_PREFS_STORAGE_KEY, DEFAULTS);
   const [confirmEl, confirm] = useConfirm();
 
-  const customInstructions = prefs?.customInstructions ?? '';
+  const customInstructions = hydrated
+    ? (prefs?.customInstructions ?? '')
+    : (initialCustomInstructions ?? '');
 
   function update<K extends keyof AIPrefs>(key: K, value: AIPrefs[K]) {
     setPrefs((prev) => ({ ...prev, [key]: value }));
+  }
+
+  function handleInstructionsChange(value: string) {
+    update('customInstructions', value);
+    if (_aiSyncTimer) clearTimeout(_aiSyncTimer);
+    _aiSyncTimer = setTimeout(() => {
+      updateAiPrefsAction(value);
+    }, 500);
   }
 
   if (!hydrated) return null;
@@ -200,7 +212,7 @@ export function AIPrefsCard() {
           {customInstructions.length > 0 ? (
             <button
               type="button"
-              onClick={() => update('customInstructions', '')}
+              onClick={() => { update('customInstructions', ''); updateAiPrefsAction(''); }}
               className="text-fg-subtle hover:text-fg ml-1 inline-flex items-center gap-1 px-2 py-1 text-caption transition-colors"
               aria-label="Clear custom instructions"
             >
@@ -213,7 +225,7 @@ export function AIPrefsCard() {
         <textarea
           id="custom-instructions"
           value={customInstructions}
-          onChange={(e) => update('customInstructions', e.target.value)}
+          onChange={(e) => handleInstructionsChange(e.target.value)}
           placeholder="e.g. Always respond in bullet points. Do not use emojis."
           rows={3}
           className="border-divider/60 bg-bg-elev-2 text-fg placeholder:text-fg-muted rounded-lg border p-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand resize-none"
@@ -221,7 +233,7 @@ export function AIPrefsCard() {
       </div>
 
       <p className="text-fg-subtle text-caption uppercase tracking-wider">
-        Saved on this device
+        Saved to account
       </p>
       {confirmEl}
     </section>
@@ -233,20 +245,23 @@ export function AIPrefsCard() {
    * 'append'` joins the preset text to the existing value.
    */
   async function applyPreset(presetId: string, mode: 'replace' | 'append') {
+    let newValue: string;
     if (mode === 'append') {
-      update('customInstructions', appendPreset(customInstructions, presetId));
-      return;
+      newValue = appendPreset(customInstructions, presetId);
+    } else {
+      if (customInstructions.trim().length > 0) {
+        const ok = await confirm({
+          title: 'Replace custom instructions?',
+          description: 'Replace your existing custom instructions with this preset?',
+          confirmLabel: 'Replace',
+          tone: 'danger',
+        });
+        if (!ok) return;
+      }
+      const preset = getPreset(presetId);
+      newValue = preset ? preset.prompt : customInstructions;
     }
-    if (customInstructions.trim().length > 0) {
-      const ok = await confirm({
-        title: 'Replace custom instructions?',
-        description: 'Replace your existing custom instructions with this preset?',
-        confirmLabel: 'Replace',
-        tone: 'danger',
-      });
-      if (!ok) return;
-    }
-    const preset = getPreset(presetId);
-    if (preset) update('customInstructions', preset.prompt);
+    update('customInstructions', newValue);
+    await updateAiPrefsAction(newValue);
   }
 }

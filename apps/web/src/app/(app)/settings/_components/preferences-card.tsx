@@ -16,28 +16,16 @@
  * limitations under the License.
  */
 
-// Preferences card — local, browser-scoped settings. Personal app, no
-// per-user DB row needed — these live in localStorage and are read by
-// the relevant surfaces on demand.
-//
-// Currently exposes:
-//   - Default symbol (XAUUSD / EURUSD / GBPUSD) → seeds /chart on first
-//     visit and the chat composer placeholder
-//   - Time format (12h vs 24h)
-//   - Reduced motion override (auto vs always reduced)
-//
-// More toggles can land here without touching the layout — the
-// SettingsRow primitive handles all the geometry.
-
 import { isSymbol, type Symbol } from '@hamafx/shared';
 import { Clock, Sparkles, TrendingUp } from 'lucide-react';
-import { useEffect } from 'react';
+import { useCallback, useEffect } from 'react';
 import { toast } from 'sonner';
 import { useLocalStorage } from '@/hooks/use-local-storage';
 import { Segmented } from '@/components/ui/segmented';
 import { Switch } from '@/components/ui/switch';
 
 import { SettingsRow } from './settings-row';
+import { updateUIPrefsAction } from '../actions';
 
 interface Prefs {
   defaultSymbol: Symbol;
@@ -53,8 +41,33 @@ const DEFAULTS: Prefs = {
   reduceMotion: false,
 };
 
-export function PreferencesCard({ watchlist = ['XAUUSD', 'EURUSD', 'GBPUSD'] }: { watchlist?: string[] }) {
+export function PreferencesCard({
+  watchlist = ['XAUUSD', 'EURUSD', 'GBPUSD'],
+  initialPrefs,
+}: {
+  watchlist?: string[];
+  initialPrefs?: { defaultSymbol?: string | null; timeFormat?: string | null; reduceMotion?: boolean | null };
+}) {
   const [prefs, setPrefs, hydrated] = useLocalStorage<Prefs>(STORAGE_KEY, DEFAULTS);
+
+  // Seed localStorage from server value on first hydration if no local data
+  useEffect(() => {
+    if (hydrated && initialPrefs) {
+      const stored = window.localStorage.getItem(STORAGE_KEY);
+      if (!stored) {
+        const merged: Prefs = {
+          defaultSymbol: (initialPrefs.defaultSymbol ?? DEFAULTS.defaultSymbol) as Symbol,
+          timeFormat: (initialPrefs.timeFormat ?? DEFAULTS.timeFormat) as '12h' | '24h',
+          reduceMotion: initialPrefs.reduceMotion ?? DEFAULTS.reduceMotion,
+        };
+        setPrefs(merged);
+      }
+    }
+  }, [hydrated, initialPrefs, setPrefs]);
+
+  const update = useCallback(<K extends keyof Prefs>(key: K, value: Prefs[K]) => {
+    setPrefs((prev) => ({ ...prev, [key]: value }));
+  }, [setPrefs]);
 
   // Apply on mount and updates so a hard refresh and cross-tab sync respect the saved value.
   useEffect(() => {
@@ -70,10 +83,13 @@ export function PreferencesCard({ watchlist = ['XAUUSD', 'EURUSD', 'GBPUSD'] }: 
         }
       }
     }
-  }, [prefs.reduceMotion, prefs.defaultSymbol, hydrated, watchlist]);
+  }, [prefs.reduceMotion, prefs.defaultSymbol, hydrated, watchlist, update]);
 
-  function update<K extends keyof Prefs>(key: K, value: Prefs[K]) {
-    setPrefs((prev) => ({ ...prev, [key]: value }));
+  function syncToDb<K extends keyof Prefs>(key: K, value: Prefs[K]) {
+    update(key, value);
+    const payload: Record<string, unknown> = {};
+    payload[key] = value;
+    updateUIPrefsAction(payload as Parameters<typeof updateUIPrefsAction>[0]);
   }
 
   return (
@@ -89,7 +105,7 @@ export function PreferencesCard({ watchlist = ['XAUUSD', 'EURUSD', 'GBPUSD'] }: 
           Preferences
         </h2>
         <p className="text-fg-subtle ml-auto text-caption uppercase tracking-wider">
-          Saved on this device
+          Saved to account
         </p>
       </header>
 
@@ -101,7 +117,7 @@ export function PreferencesCard({ watchlist = ['XAUUSD', 'EURUSD', 'GBPUSD'] }: 
         action={
           <Segmented<Symbol>
             value={prefs.defaultSymbol}
-            onChange={(s) => update('defaultSymbol', s)}
+            onChange={(s) => syncToDb('defaultSymbol', s)}
             role="radiogroup"
             variant="solid"
             size="sm"
@@ -120,7 +136,7 @@ export function PreferencesCard({ watchlist = ['XAUUSD', 'EURUSD', 'GBPUSD'] }: 
         action={
           <Segmented<'12h' | '24h'>
             value={prefs.timeFormat}
-            onChange={(t) => update('timeFormat', t)}
+            onChange={(t) => syncToDb('timeFormat', t)}
             role="radiogroup"
             variant="solid"
             size="sm"
@@ -142,7 +158,7 @@ export function PreferencesCard({ watchlist = ['XAUUSD', 'EURUSD', 'GBPUSD'] }: 
           <Switch
             checked={prefs.reduceMotion}
             onCheckedChange={(v) => {
-              update('reduceMotion', v);
+              syncToDb('reduceMotion', v);
               if (hydrated) {
                 toast.success(v ? 'Motion reduced' : 'Motion restored');
               }

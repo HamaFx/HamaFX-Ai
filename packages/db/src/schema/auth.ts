@@ -28,6 +28,7 @@
 
 import {
   boolean,
+  index,
   integer,
   jsonb,
   pgTable,
@@ -50,6 +51,12 @@ export const users = pgTable('user', {
   role: text('role').notNull().default('user'),
   /** Soft-delete support — Phase 9 cleanup plan. Null = active. */
   deletedAt: timestamp('deletedAt', { withTimezone: true }),
+  /** Incremented on "sign out everywhere" to invalidate existing JWTs. */
+  tokenVersion: integer('tokenVersion').notNull().default(0),
+  /** TOTP secret for 2FA (encrypted at rest). */
+  twoFactorSecret: text('two_factor_secret'),
+  /** Whether 2FA is active. */
+  twoFactorEnabled: boolean('two_factor_enabled').notNull().default(false),
   createdAt: timestamp('createdAt', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updatedAt', { withTimezone: true })
     .defaultNow()
@@ -59,6 +66,26 @@ export const users = pgTable('user', {
 
 export type UserRow = typeof users.$inferSelect;
 export type UserInsert = typeof users.$inferInsert;
+
+// ── User Sessions (login tracking for session management UI) ────────
+
+export const userSessions = pgTable(
+  'user_sessions',
+  {
+    id: text('id').primaryKey(),
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    deviceName: text('device_name'),
+    ip: text('ip'),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    lastActiveAt: timestamp('last_active_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [index('user_sessions_user_id_idx').on(t.userId)],
+);
+
+export type UserSessionRow = typeof userSessions.$inferSelect;
+export type UserSessionInsert = typeof userSessions.$inferInsert;
 
 // ── Accounts (OAuth links) ──────────────────────────────────────────
 
@@ -127,7 +154,7 @@ export const userSettings = pgTable('user_settings', {
   defaultSymbol: text('default_symbol').notNull().default('XAUUSD'),
   /** IANA timezone string. */
   timezone: text('timezone').notNull().default('UTC'),
-  /** Locale string, e.g. 'en', 'zh'. */
+  /** Locale string (BCP 47), e.g. 'en', 'zh-CN', 'ar-AE'. */
   language: text('language').notNull().default('en'),
   /** Accessibility preference. */
   reduceMotion: boolean('reduce_motion').notNull().default(false),
@@ -214,6 +241,16 @@ export const userSettings = pgTable('user_settings', {
   aiApiKeysUpdatedAt: jsonb('ai_api_keys_updated_at').$type<Record<string, string>>(),
   /** Selected market data provider (e.g. 'biquote', 'finnhub', 'live-ticks'). */
   marketDataProvider: text('market_data_provider').notNull().default('biquote'),
+  /** Theme preference: 'light', 'dark', or 'system'. Null means system default. */
+  theme: text('theme'),
+  /** Notification preferences matrix — JSON { eventType: { channel: boolean } }. */
+  notificationPreferences: jsonb('notification_preferences'),
+  /** Free-form custom instructions appended to the AI's system prompt. */
+  customInstructions: text('custom_instructions'),
+  /** Display time format: '12h' or '24h'. Null means 24h (default). */
+  timeFormat: text('time_format'),
+  /** List of tool names the user has disabled. */
+  disabledTools: jsonb('disabled_tools').$type<string[]>(),
   /** Whether onboarding has been completed. */
   onboardingCompleted: boolean('onboarding_completed').notNull().default(false),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),

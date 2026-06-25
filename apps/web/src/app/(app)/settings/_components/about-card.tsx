@@ -31,6 +31,7 @@ async function readBuildId(): Promise<string | null> {
     const trimmed = text.trim();
     return trimmed.length > 0 ? trimmed : null;
   } catch {
+    console.warn('[settings] failed to read .build-id');
     return null;
   }
 }

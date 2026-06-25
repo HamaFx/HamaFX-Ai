@@ -20,14 +20,16 @@
 // bookmarks and prefs in localStorage; this card lets the user clear
 // individual keys or wipe everything stored on this device.
 
-import { Bookmark, MessageSquare, RotateCcw, Trash2 } from 'lucide-react';
+import { Bookmark, Download, MessageSquare, RotateCcw, Trash2, UserX } from 'lucide-react';
 import { useEffect, useState, useTransition } from 'react';
+import { signOut } from 'next-auth/react';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { useConfirm } from '@/components/ui/confirm-drawer';
 
-import { clearChatHistoryAction } from '../actions';
+import { clearChatHistoryAction, deleteAccountAction, exportDataAction } from '../actions';
 import { SettingsRow } from './settings-row';
 
 const KEY_BOOKMARKS = 'hamafx:news:bookmarks';
@@ -49,7 +51,7 @@ function readCounts(): Counts {
       if (Array.isArray(parsed)) bookmarks = parsed.length;
     }
   } catch {
-    /* ignore */
+    console.error('[settings] failed to parse bookmarks from localStorage');
   }
   for (let i = 0; i < window.localStorage.length; i += 1) {
     const k = window.localStorage.key(i);
@@ -62,6 +64,9 @@ export function DataCard() {
   const [counts, setCounts] = useState<Counts>({ bookmarks: 0, storage: 0 });
   const [confirmEl, confirm] = useConfirm();
   const [isPending, startTransition] = useTransition();
+  const [deletePassword, setDeletePassword] = useState('');
+  const [deleteTotpCode, setDeleteTotpCode] = useState('');
+  const [isDeletePending, startDeleteTransition] = useTransition();
 
   useEffect(() => {
     setCounts(readCounts());
@@ -135,7 +140,28 @@ export function DataCard() {
     }
     keys.forEach((k) => window.localStorage.removeItem(k));
     setCounts(readCounts());
+    window.dispatchEvent(new CustomEvent('hamafx:storage-cleared'));
     toast.success('All local data cleared');
+  }
+
+  async function handleDeleteAccount() {
+    const ok = await confirm({
+      title: 'Delete account permanently?',
+      description:
+        'This will immediately delete your account, all conversations, journal entries, alerts, and settings. This action cannot be undone.',
+      confirmLabel: 'Delete my account',
+      tone: 'danger',
+    });
+    if (!ok) return;
+
+    startDeleteTransition(async () => {
+      const result = await deleteAccountAction(deletePassword, deleteTotpCode || undefined);
+      if (result.ok) {
+        await signOut({ callbackUrl: '/' });
+      } else {
+        toast.error(result.error || 'Failed to delete account');
+      }
+    });
   }
 
   return (
@@ -219,10 +245,99 @@ export function DataCard() {
             onClick={() => void clearAll()}
             disabled={counts.storage === 0}
           >
+            <Trash2 className="size-3.5" />
             Clear all
           </Button>
         }
       />
+
+      <RowDivider />
+
+      <SettingsRow
+        icon={<Download className="size-4" />}
+        label="Export my data"
+        description="Download all your data as JSON (GDPR)"
+        action={
+          <Button
+            type="button"
+            size="sm"
+            variant="secondary"
+            onClick={async () => {
+              const result = await exportDataAction();
+              if (result.ok && result.data) {
+                const blob = new Blob([result.data], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `hamafx-export-${Date.now()}.json`;
+                a.click();
+                URL.revokeObjectURL(url);
+                toast.success('Data export ready');
+              } else {
+                toast.error('error' in result ? (result.error ?? 'Export failed') : 'Export failed');
+              }
+            }}
+          >
+            <Download className="size-3.5" />
+            Export
+          </Button>
+        }
+      />
+
+      <hr className="border-divider my-3" />
+
+      {/* Delete account */}
+      <div className="flex flex-col gap-3">
+        <div className="flex items-center gap-2">
+          <UserX className="size-4 text-danger" />
+          <h3 className="text-xs font-bold uppercase tracking-wider text-fg-muted">
+            Delete account
+          </h3>
+        </div>
+        <p className="text-xs text-fg-subtle">
+          Permanently delete your account and all associated data. This action
+          cannot be undone.
+        </p>
+        <div className="flex items-end gap-2 flex-wrap">
+          <div className="flex flex-col gap-1 flex-1 max-w-64">
+            <label htmlFor="delete-pwd" className="text-caption text-fg-muted">
+              Confirm your password
+            </label>
+            <Input
+              id="delete-pwd"
+              type="password"
+              placeholder="Account password"
+              value={deletePassword}
+              onChange={(e) => setDeletePassword(e.target.value)}
+              className="text-xs"
+            />
+          </div>
+          <div className="flex flex-col gap-1 w-28">
+            <label htmlFor="delete-totp" className="text-caption text-fg-muted">
+              2FA code (if enabled)
+            </label>
+            <Input
+              id="delete-totp"
+              type="text"
+              placeholder="000000"
+              maxLength={6}
+              value={deleteTotpCode}
+              onChange={(e) => setDeleteTotpCode(e.target.value.replace(/\D/g, ''))}
+              className="text-xs"
+            />
+          </div>
+          <Button
+            type="button"
+            size="sm"
+            variant="danger"
+            disabled={!deletePassword || isDeletePending}
+            loading={isDeletePending}
+            onClick={() => void handleDeleteAccount()}
+          >
+            Delete account
+          </Button>
+        </div>
+      </div>
 
       {confirmEl}
     </section>

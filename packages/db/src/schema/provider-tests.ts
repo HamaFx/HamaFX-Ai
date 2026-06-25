@@ -16,7 +16,7 @@
 
 import { boolean, index, pgTable, text, timestamp, jsonb } from 'drizzle-orm/pg-core';
 
-import { users } from './auth.js';
+import { users } from './auth';
 
 /**
  * Latest test result per (userId, providerId) — populated by the

@@ -27,6 +27,7 @@ import {
   providerIdFromModel,
   BYOK_PROVIDERS_LIST,
 } from '@hamafx/ai';
+import { redirect } from 'next/navigation';
 import { auth } from '@/auth';
 import type { Metadata } from 'next';
 import { Link } from 'next-view-transitions';
@@ -41,7 +42,7 @@ import { eq, gte, and } from 'drizzle-orm';
 import { UsageLimitsForm } from './_components/usage-limits-form';
 
 export const metadata: Metadata = { title: 'Usage' };
-export const dynamic = 'force-dynamic';
+export const revalidate = 60;
 
 export default async function UsagePage() {
   // Pull env synchronously — if it's missing we still want to render the
@@ -50,11 +51,11 @@ export default async function UsagePage() {
   try {
     maxDailyUsd = getServerEnv().MAX_DAILY_USD;
   } catch {
-    /* ignore — env may not be fully populated in dev */
+    console.warn('[settings] MAX_DAILY_USD not configured, using default 5');
   }
 
   const session = await auth();
-  if (!session?.user?.id) return null;
+  if (!session?.user?.id) redirect('/login');
 
   const db = getDb();
   const startOfMonth = new Date(Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth(), 1));

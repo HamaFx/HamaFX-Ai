@@ -31,7 +31,7 @@ export function ProfileForm({ initialName, email }: ProfileFormProps) {
   const [state, action, pending] = useActionState(async (prevState: { error: string; ok: boolean }, formData: FormData) => {
     const res = await updateProfileAction(formData);
     return {
-      error: res.error || '',
+      error: 'error' in res ? (res.error ?? '') : '',
       ok: res.ok,
     };
   }, { error: '', ok: false });
@@ -47,8 +47,9 @@ export function ProfileForm({ initialName, email }: ProfileFormProps) {
   return (
     <form action={action} className="border border-divider bg-bg-elev-1 rounded-lg p-4 flex flex-col gap-4">
       <div className="flex flex-col gap-2">
-        <label className="text-sm font-medium text-fg">Email</label>
+        <label htmlFor="settings-email" className="text-sm font-medium text-fg">Email</label>
         <Input 
+          id="settings-email"
           value={email} 
           readOnly 
           disabled 
@@ -58,8 +59,9 @@ export function ProfileForm({ initialName, email }: ProfileFormProps) {
       </div>
 
       <div className="flex flex-col gap-2">
-        <label className="text-sm font-medium text-fg">Display Name</label>
+        <label htmlFor="display-name" className="text-sm font-medium text-fg">Display Name</label>
         <Input 
+          id="display-name"
           name="name" 
           defaultValue={initialName} 
           placeholder="Your name"

@@ -20,10 +20,17 @@
 // DB read on render.
 
 import { buildToolCatalogue } from '@hamafx/ai';
+import { getDb, schema } from '@hamafx/db';
+import { eq } from 'drizzle-orm';
 import type { Metadata } from 'next';
+import { redirect } from 'next/navigation';
+import { auth } from '@/auth';
+import { TOOL_NAMES, type ToolName } from '@hamafx/shared';
+import { Settings2 } from 'lucide-react';
 
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
+import { DisabledToolsForm } from './_components/disabled-tools-form';
+
+export const revalidate = 60;
 
 export const metadata: Metadata = {
   title: 'Agent · HamaFX-Ai',
@@ -31,12 +38,22 @@ export const metadata: Metadata = {
 };
 
 export default async function AgentCataloguePage() {
-  const entries = await buildToolCatalogue();
+  const session = await auth();
+  if (!session?.user?.id) redirect('/login');
+
+  const db = getDb();
+  const [settings] = await db
+    .select({ disabledTools: schema.userSettings.disabledTools })
+    .from(schema.userSettings)
+    .where(eq(schema.userSettings.userId, session.user.id));
+
+  const disabledTools = settings?.disabledTools ?? [];
+  const entries = await buildToolCatalogue(disabledTools);
   const totalInvocations = entries.reduce((s, e) => s + e.invocations24h, 0);
   const totalFailures = entries.reduce((s, e) => s + e.failures24h, 0);
 
   return (
-    <main className="mx-auto flex w-full max-w-2xl flex-col gap-4 px-4 py-4">
+    <main className="mx-auto flex w-full max-w-2xl flex-col gap-6 px-4 py-4">
       <header className="flex items-baseline justify-between gap-2">
         <h1 className="text-fg text-xl font-bold">Agent</h1>
         <span className="text-fg-subtle text-body-sm tabular-nums">
@@ -76,6 +93,23 @@ export default async function AgentCataloguePage() {
           </li>
         ))}
       </ul>
+
+      <section aria-labelledby="disabled-tools-heading" className="flex flex-col gap-3">
+        <header className="flex items-center gap-2">
+          <Settings2 className="size-4 text-fg-muted" />
+          <h2 id="disabled-tools-heading" className="text-fg-muted text-sm font-medium">
+            Disabled Tools
+          </h2>
+        </header>
+        <p className="text-fg-muted text-xs">
+          Toggle tools off to prevent the agent from calling them. Disabled tools still appear in the
+          catalogue but are excluded from the agent&apos;s available toolset.
+        </p>
+        <DisabledToolsForm
+          allTools={TOOL_NAMES as unknown as ToolName[]}
+          initialDisabledTools={disabledTools}
+        />
+      </section>
     </main>
   );
 }

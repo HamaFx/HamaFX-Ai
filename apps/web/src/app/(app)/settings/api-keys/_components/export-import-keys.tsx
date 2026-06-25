@@ -41,11 +41,11 @@ export function ExportImportKeys() {
 
     startExportTransition(async () => {
       const res = await exportKeysAction(exportPassword);
-      if (res.ok && res.payload) {
-        setExportedPayload(res.payload);
+      if (res.ok && res.data?.payload) {
+        setExportedPayload(res.data.payload);
         toast.success('Backup payload generated successfully');
       } else {
-        toast.error(res.error || 'Failed to generate backup payload');
+        toast.error('error' in res ? (res.error ?? 'Failed to generate backup payload') : 'Failed to generate backup payload');
       }
     });
   }
@@ -75,7 +75,7 @@ export function ExportImportKeys() {
     startImportTransition(async () => {
       const res = await importKeysAction(importPayload.trim(), importPassword);
       if (res.ok) {
-        toast.success(`Successfully imported ${res.importedCount} keys!`);
+        toast.success(`Successfully imported ${res.data?.importedCount} keys!`);
         setImportPayload('');
         setImportPassword('');
       } else {
@@ -86,7 +86,7 @@ export function ExportImportKeys() {
 
   return (
     <details className="border border-divider bg-bg-elev-1 rounded-lg overflow-hidden mt-2">
-      <summary className="cursor-pointer select-none px-4 py-3 flex items-center justify-between gap-3 hover:bg-bg-elev-2 transition-colors">
+      <summary aria-label="Toggle backup and key migration section" className="cursor-pointer select-none px-4 py-3 flex items-center justify-between gap-3 hover:bg-bg-elev-2 transition-colors">
         <div className="flex flex-col">
           <span className="text-sm font-medium text-fg">Backup & Key Migration</span>
           <span className="text-caption text-fg-subtle">
@@ -106,18 +106,18 @@ export function ExportImportKeys() {
             </h3>
           </div>
           <p className="text-[11px] text-fg-subtle leading-relaxed">
-            Encrypt your configured API keys using a strong password. You will need this password to
-            decrypt and restore your keys later.
+            Encrypt your API keys using your account password. You will need the same
+            password to decrypt and restore your keys later.
           </p>
 
           <div className="flex flex-col gap-1">
             <label htmlFor="export-pwd" className="text-[10px] font-bold text-fg-subtle uppercase">
-              Choose Backup Password
+              Account Password
             </label>
             <Input
               id="export-pwd"
               type="password"
-              placeholder="Min. 8 characters"
+              placeholder="Your account password"
               value={exportPassword}
               onChange={(e) => setExportPassword(e.target.value)}
               className="text-xs"
@@ -138,7 +138,7 @@ export function ExportImportKeys() {
 
           {exportedPayload && (
             <div className="flex flex-col gap-1.5 mt-2">
-              <label className="text-[10px] font-bold text-fg-subtle uppercase flex justify-between items-center">
+              <label htmlFor="export-payload" className="text-[10px] font-bold text-fg-subtle uppercase flex justify-between items-center">
                 <span>Backup Payload</span>
                 <button
                   type="button"
@@ -150,6 +150,7 @@ export function ExportImportKeys() {
                 </button>
               </label>
               <textarea
+                id="export-payload"
                 readOnly
                 value={exportedPayload}
                 rows={4}
@@ -168,7 +169,7 @@ export function ExportImportKeys() {
             </h3>
           </div>
           <p className="text-[11px] text-fg-subtle leading-relaxed">
-            Paste a previously exported backup payload and supply the password you used during export to
+            Paste a previously exported backup payload and enter your account password to
             restore your keys.
           </p>
 

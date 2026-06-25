@@ -20,6 +20,7 @@
 // modest in personal mode (low single digits of turns/day), so a 30-day
 // scan is well under 100 ms even cold.
 
+import { cache } from 'react';
 import { getDb, schema } from '@hamafx/db';
 import { and, desc, eq, gte, lte, sql } from 'drizzle-orm';
 
@@ -154,7 +155,8 @@ function startOfUtcDay(d: Date): Date {
  * Aggregate the last 30 days of telemetry into `UsageStats`. Single SELECT,
  * client-side reduce — keeps the page snappy on cold start.
  */
-export async function computeUsage(userId: string, now = new Date()): Promise<UsageStats> {
+export const computeUsage = cache(
+  async (userId: string, now = new Date()): Promise<UsageStats> => {
   const todayStart = startOfUtcDay(now);
   const sevenStart = new Date(todayStart.getTime() - 6 * DAY_MS);
   const thirtyStart = new Date(todayStart.getTime() - 29 * DAY_MS);
@@ -268,7 +270,7 @@ export async function computeUsage(userId: string, now = new Date()): Promise<Us
     byProvider,
     daily7,
   };
-}
+});
 
 function rowToTelemetry(row: typeof schema.chatTelemetry.$inferSelect): TelemetryRow {
   return {

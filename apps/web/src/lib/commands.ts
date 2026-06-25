@@ -95,6 +95,10 @@ export const COMMANDS: readonly CommandItem[] = [
   { id: 'set-agent',     group: 'settings', label: 'Agent settings',   icon: Cog,      href: '/settings/agent' },
   { id: 'set-usage',     group: 'settings', label: 'Usage & budget',   icon: Cog,      href: '/settings/usage', keywords: ['cost', 'spend'] },
   { id: 'set-profile',   group: 'settings', label: 'Profile',          icon: Cog,      href: '/settings/profile' },
+  { id: 'set-models',    group: 'settings', label: 'Models',           icon: Cog,      href: '/settings/models',   keywords: ['model', 'ai', 'provider'] },
+  { id: 'set-appearance', group: 'settings', label: 'Appearance',      icon: Cog,      href: '/settings',          keywords: ['theme', 'dark', 'light'] },
+  { id: 'set-notifications', group: 'settings', label: 'Notifications', icon: Cog,     href: '/settings/notifications', keywords: ['alert', 'push', 'email'] },
+  { id: 'set-symbols',      group: 'settings', label: 'Symbols',         icon: Cog,     href: '/settings/symbols',      keywords: ['watchlist', 'forex'] },
 ];
 
 /**

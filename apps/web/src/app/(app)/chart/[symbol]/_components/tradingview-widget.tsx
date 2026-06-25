@@ -138,7 +138,7 @@ export function TradingViewWidget({ symbol, tf, theme = 'dark' }: TradingViewWid
         clearTimeout(timerRef.current);
         timerRef.current = null;
       }
-      if (currentContainer) currentContainer.innerHTML = '';
+      if (currentContainer) currentContainer.replaceChildren();
     };
   }, [containerId, symbol, tf, scriptLoaded, loadFailed, theme]);
 

@@ -148,6 +148,13 @@
       "when": 1782259395556,
       "tag": "0020_broken_azazel",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1783000000000,
+      "tag": "0021_user_settings_prefs",
+      "breakpoints": true
     }
   ]
 }

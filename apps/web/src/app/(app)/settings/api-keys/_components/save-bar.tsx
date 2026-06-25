@@ -6,7 +6,7 @@ import { CheckCircle2, Loader2, Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 
-import type { SaveKeysResult } from '../page';
+import type { SaveKeysResult } from '../../actions';
 
 interface SaveBarProps {
   action: (
@@ -37,21 +37,21 @@ export function SaveBar({ action, preservedPrompt, children }: SaveBarProps) {
 
   // Success toast — dedupe so React strict-mode re-renders don't toast twice.
   useEffect(() => {
-    if (state.status !== 'success') return;
-    if (lastSeenAt.current === state.at) return;
-    lastSeenAt.current = state.at;
-    if (state.savedCount === 0 && state.clearedCount === 0) {
+    if (!('ok' in state) || !state.ok) return;
+    if (lastSeenAt.current === state.data.at) return;
+    lastSeenAt.current = state.data.at;
+    if (state.data.savedCount === 0 && state.data.clearedCount === 0) {
       return;
     }
-    if (state.savedCount === 0) {
+    if (state.data.savedCount === 0) {
       toast.success(
-        `Cleared ${state.clearedCount} provider${state.clearedCount === 1 ? '' : 's'}`,
+        `Cleared ${state.data.clearedCount} provider${state.data.clearedCount === 1 ? '' : 's'}`,
       );
     } else {
       const clearedSuffix =
-        state.clearedCount > 0 ? `, cleared ${state.clearedCount}` : '';
+        state.data.clearedCount > 0 ? `, cleared ${state.data.clearedCount}` : '';
       toast.success(
-        `Saved ${state.savedCount} provider${state.savedCount === 1 ? '' : 's'}${clearedSuffix}`,
+        `Saved ${state.data.savedCount} provider${state.data.savedCount === 1 ? '' : 's'}${clearedSuffix}`,
       );
     }
     setIsDirty(false);
@@ -59,10 +59,10 @@ export function SaveBar({ action, preservedPrompt, children }: SaveBarProps) {
 
   // Error toast.
   useEffect(() => {
-    if (state.status !== 'error') return;
-    if (lastErrorSeen.current === state.message) return;
-    lastErrorSeen.current = state.message;
-    toast.error(`Save failed: ${state.message}`);
+    if (!('ok' in state) || state.ok) return;
+    if (lastErrorSeen.current === state.error) return;
+    lastErrorSeen.current = state.error;
+    toast.error(`Save failed: ${state.error}`);
   }, [state]);
 
   // Unsaved changes beforeunload warning
@@ -93,7 +93,7 @@ export function SaveBar({ action, preservedPrompt, children }: SaveBarProps) {
     >
       {children}
       <div className="flex items-center gap-3 justify-end">
-        {state.status === 'success' ? (
+        {('ok' in state && state.ok) ? (
           <span className="flex items-center gap-1.5 text-caption text-bull">
             <CheckCircle2 size={14} aria-hidden="true" />
             Saved

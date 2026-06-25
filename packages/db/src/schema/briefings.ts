@@ -31,8 +31,8 @@
 
 import { pgTable, primaryKey, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 
-import { users } from './auth.js';
-import { chatMessages } from './chat.js';
+import { users } from './auth';
+import { chatMessages } from './chat';
 
 export const briefingsEmitted = pgTable(
   'briefings_emitted',

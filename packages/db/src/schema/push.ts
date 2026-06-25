@@ -15,7 +15,7 @@
  */
 
 import { index, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
-import { users } from './auth.js';
+import { users } from './auth';
 
 /**
  * Browser-issued web-push subscription. Single user, but the user can

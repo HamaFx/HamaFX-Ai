@@ -115,6 +115,10 @@ export function CommandPalette({ onNewChat }: CommandPaletteProps) {
         onNewChat?.();
         return;
       }
+      if (cmd.action) {
+        cmd.action();
+        return;
+      }
       if (cmd.href) {
         router.push(cmd.href);
       }

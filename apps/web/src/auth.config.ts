@@ -56,9 +56,6 @@ export const authConfig: NextAuthConfig = {
       return Response.redirect(redirectUrl);
     },
     jwt({ token, user }) {
-      // On first sign-in, copy the DB user id into the JWT. Subsequent
-      // requests read it from the JWT directly (no DB roundtrip needed
-      // for the middleware auth gate).
       if (user) {
         token.id = user.id;
       }

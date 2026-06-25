@@ -19,14 +19,15 @@
 // Server component.
 
 import { computeUsage } from '@hamafx/ai';
-import { auth } from '@/auth';
 import { ChevronRight } from 'lucide-react';
 import { Link } from 'next-view-transitions';
 
 import { getServerEnv } from '@/lib/env';
 import { cn } from '@/lib/cn';
 
-export async function UsageGlance() {
+export async function UsageGlance({ userId }: { userId?: string }) {
+  if (!userId) return null;
+
   let maxDailyUsd = 5;
   try {
     maxDailyUsd = getServerEnv().MAX_DAILY_USD;
@@ -34,12 +35,9 @@ export async function UsageGlance() {
     /* env not fully populated in dev */
   }
 
-  const session = await auth();
-  if (!session?.user?.id) return null;
-
   let stats: Awaited<ReturnType<typeof computeUsage>> | null = null;
   try {
-    stats = await computeUsage(session.user.id);
+    stats = await computeUsage(userId);
   } catch {
     return null;
   }

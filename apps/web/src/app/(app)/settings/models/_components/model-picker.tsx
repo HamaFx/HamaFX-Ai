@@ -205,6 +205,8 @@ export function ModelPicker({
     label: string;
     providerLabel: string;
     tier: string;
+    inputPrice?: number | null | undefined;
+    outputPrice?: number | null | undefined;
   }> = [];
   for (const provider of providers) {
     for (const model of provider.models) {
@@ -214,6 +216,8 @@ export function ModelPicker({
         label: model.label ?? model.modelId,
         providerLabel: provider.displayName,
         tier: model.tier ?? 'flagship',
+        inputPrice: model.inputPerMTokUsd,
+        outputPrice: model.outputPerMTokUsd,
       });
     }
   }
@@ -283,11 +287,16 @@ export function ModelPicker({
             <option value="" disabled>
               Use fallback ({options[0]?.label ?? '—'})
             </option>
-            {options.map((o) => (
-              <option key={o.value} value={o.value}>
-                {o.providerLabel} · {o.label} ({o.tier})
-              </option>
-            ))}
+            {options.map((o) => {
+              const priceLabel = (o.inputPrice != null && o.outputPrice != null)
+                ? ` · $${o.inputPrice.toFixed(2)}/$${o.outputPrice.toFixed(2)}/1M tok`
+                : '';
+              return (
+                <option key={o.value} value={o.value}>
+                  {o.providerLabel} · {o.label} ({o.tier}{priceLabel})
+                </option>
+              );
+            })}
           </select>
           {pending || save.kind === 'pending' ? (
             <Loader2

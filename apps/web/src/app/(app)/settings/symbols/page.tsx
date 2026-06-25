@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import { redirect } from 'next/navigation';
 import { auth } from '@/auth';
 import { getDb, schema } from '@hamafx/db';
 import { eq, asc } from 'drizzle-orm';
@@ -21,7 +22,7 @@ import { SymbolsForm } from '../_components/symbols-form';
 
 export default async function SymbolsSettingsPage() {
   const session = await auth();
-  if (!session?.user?.id) return null;
+  if (!session?.user?.id) redirect('/login');
 
   const db = getDb();
   

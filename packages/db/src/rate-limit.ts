@@ -30,7 +30,7 @@
 // we reject the request.
 
 import { sql } from 'drizzle-orm';
-import { getDb } from './client.js';
+import { getDb } from './client';
 
 export interface RateLimitResult {
   /** True iff the request is within the limit. */

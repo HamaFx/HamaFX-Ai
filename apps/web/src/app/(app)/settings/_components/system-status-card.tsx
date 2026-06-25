@@ -23,6 +23,7 @@ import { listPushSubscriptions } from '@hamafx/ai';
 import { CheckCircle2, CircleAlert } from 'lucide-react';
 
 import { cn } from '@/lib/cn';
+import { getServerEnv } from '@/lib/env';
 
 interface ChannelStatus {
   label: string;
@@ -30,12 +31,12 @@ interface ChannelStatus {
   detail: string;
 }
 
-async function buildStatuses(): Promise<{
+async function buildStatuses(userId: string): Promise<{
   channels: ChannelStatus[];
   pushCount: number;
   databaseConnected: boolean;
 }> {
-  const env = process.env;
+  const env = getServerEnv();
   const channels: ChannelStatus[] = [
     {
       label: 'Email',
@@ -62,11 +63,11 @@ async function buildStatuses(): Promise<{
   let pushCount = 0;
   let databaseConnected = false;
   try {
-    const subs = await listPushSubscriptions();
+    const subs = await listPushSubscriptions(userId);
     pushCount = subs.length;
     databaseConnected = true;
   } catch {
-    /* ignore — DB might be misconfigured; the channels block still shows */
+    console.error('[settings] failed to list push subscriptions');
   }
 
   // Patch the web push detail with the live count.
@@ -81,8 +82,8 @@ async function buildStatuses(): Promise<{
   return { channels, pushCount, databaseConnected };
 }
 
-export async function SystemStatusCard() {
-  const { channels, databaseConnected } = await buildStatuses();
+export async function SystemStatusCard({ userId }: { userId: string }) {
+  const { channels, databaseConnected } = await buildStatuses(userId);
   const allReady = channels.every((c) => c.ready) && databaseConnected;
 
   return (

@@ -17,146 +17,24 @@
 import { auth } from '@/auth';
 import { buildCatalogForUser } from '@/lib/catalog-server';
 import { getDb, schema } from '@hamafx/db';
-import { eq, and } from 'drizzle-orm';
-import { revalidatePath } from 'next/cache';
+import { eq } from 'drizzle-orm';
+import { formatRelative } from '@/lib/format';
 import {
-  encryptByok,
   decryptByok,
-  PROVIDER_IDS,
   type ProviderId,
-  type ByokPayload,
 } from '@hamafx/shared/encryption';
 import {
   computeUsage,
   BYOK_PROVIDERS_LIST,
-  testProviderKey,
   type ProviderBreakdown,
 } from '@hamafx/ai';
+import { updateApiKeysAction } from '../actions';
 import { ApiKeyCard } from './_components/api-key-card';
 import { ApiKeysLandingBanner } from './_components/api-keys-landing-banner';
 import { BulkTestButton } from './_components/bulk-test-button';
 import { SaveBar } from './_components/save-bar';
 import { MarketDataConfig } from './_components/market-data-config';
 import { ExportImportKeys } from './_components/export-import-keys';
-
-/**
- * Phase D — server action result type. The client reads this via
- * useActionState to show "saving…" → "Saved!" feedback and any
- * error toast on failure.
- */
-export type SaveKeysResult =
-  | { status: 'idle' }
-  | { status: 'success'; savedCount: number; clearedCount: number; at: number }
-  | { status: 'error'; message: string };
-
-async function updateApiKeys(
-  _prevState: SaveKeysResult,
-  formData: FormData,
-): Promise<SaveKeysResult> {
-  'use server';
-  const session = await auth();
-  if (!session?.user?.id) {
-    return { status: 'error', message: 'Not authenticated' };
-  }
-
-  // Build the encrypted payload from the submitted keys. Empty
-  // strings clear a previously stored key (don't keep stale entries).
-  const keys: ByokPayload = {};
-  let clearedCount = 0;
-  for (const id of PROVIDER_IDS) {
-    const raw = formData.get(id);
-    if (typeof raw === 'string' && raw.trim().length > 0) {
-      keys[id] = raw.trim();
-    } else {
-      clearedCount += 1;
-    }
-  }
-
-  try {
-    const db = getDb();
-    
-    // 1. Get old keys to find what changed/new keys to test
-    const [oldSettings] = await db.select({
-      aiApiKeys: schema.userSettings.aiApiKeys,
-      aiApiKeysUpdatedAt: schema.userSettings.aiApiKeysUpdatedAt,
-    })
-      .from(schema.userSettings)
-      .where(eq(schema.userSettings.userId, session.user.id));
-    const oldDecrypted = oldSettings?.aiApiKeys ? decryptByok(oldSettings.aiApiKeys) : null;
-    const oldUpdatedAt = oldSettings?.aiApiKeysUpdatedAt ?? {};
-
-    const newUpdatedAt = { ...oldUpdatedAt };
-    for (const id of PROVIDER_IDS) {
-      const oldKey = oldDecrypted?.[id];
-      const newKey = keys[id];
-      if (newKey && newKey !== oldKey) {
-        newUpdatedAt[id] = new Date().toISOString();
-      } else if (!newKey && oldKey) {
-        delete newUpdatedAt[id];
-      }
-    }
-
-    // 2. Update user settings first
-    await db.update(schema.userSettings)
-      .set({
-        // Always store the payload — even an empty object — so a "clear
-        // all" action works by submitting the form with empty fields.
-        aiApiKeys: Object.keys(keys).length > 0 ? encryptByok(keys) : null,
-        aiApiKeysUpdatedAt: Object.keys(newUpdatedAt).length > 0 ? newUpdatedAt : null,
-      })
-      .where(eq(schema.userSettings.userId, session.user.id));
-
-    // 3. For any changed/new keys, test them. For cleared keys, delete health record.
-    const testedAt = new Date();
-    for (const id of PROVIDER_IDS) {
-      const oldKey = oldDecrypted?.[id];
-      const newKey = keys[id];
-
-      if (newKey && newKey !== oldKey) {
-        // Run test connection
-        const result = await testProviderKey(id, newKey);
-        await db
-          .delete(schema.providerTests)
-          .where(
-            and(
-              eq(schema.providerTests.userId, session.user.id),
-              eq(schema.providerTests.providerId, id),
-            ),
-          );
-        await db.insert(schema.providerTests).values({
-          userId: session.user.id,
-          providerId: id,
-          ok: result.ok,
-          error: result.ok ? null : (result.error ?? 'unknown error'),
-          testedAt: testedAt.toISOString(),
-        });
-      } else if (!newKey && oldKey) {
-        // Key was cleared, remove health record
-        await db
-          .delete(schema.providerTests)
-          .where(
-            and(
-              eq(schema.providerTests.userId, session.user.id),
-              eq(schema.providerTests.providerId, id),
-            ),
-          );
-      }
-    }
-
-    revalidatePath('/settings/api-keys');
-    return {
-      status: 'success',
-      savedCount: Object.keys(keys).length,
-      clearedCount,
-      at: Date.now(),
-    };
-  } catch (err) {
-    return {
-      status: 'error',
-      message: err instanceof Error ? err.message : String(err),
-    };
-  }
-}
 
 /**
  * Default export — the page component. Server-component shell that
@@ -295,7 +173,7 @@ export default async function ApiKeysSettingsPage({
                 {totalConfigured === 0
                   ? 'Please set up at least one provider to start chatting.'
                   : lastTestedStr
-                  ? `Last checked: ${formatAge(lastTestedStr)}`
+                  ? `Last checked: ${formatRelative(lastTestedStr)}`
                   : 'Test connection below to verify setup.'}
               </p>
             </div>
@@ -373,12 +251,12 @@ export default async function ApiKeysSettingsPage({
       ) : null}
 
       <SaveBar
-        action={updateApiKeys}
+        action={updateApiKeysAction}
         {...(fromChat && preservedPrompt ? { preservedPrompt } : {})}
       >
         {configured.length > 0 ? (
-          <section className="flex flex-col gap-3">
-            <h3 className="text-sm font-medium text-fg-subtle uppercase tracking-wide">
+          <section className="flex flex-col gap-3" aria-labelledby="configured-providers-heading">
+            <h3 id="configured-providers-heading" className="text-sm font-medium text-fg-subtle uppercase tracking-wide">
               Configured
             </h3>
             {configured.map((p) => {
@@ -400,8 +278,8 @@ export default async function ApiKeysSettingsPage({
         ) : null}
 
         {available.length > 0 ? (
-          <section className="flex flex-col gap-3">
-            <h3 className="text-sm font-medium text-fg-subtle uppercase tracking-wide">
+          <section className="flex flex-col gap-3" aria-labelledby="add-provider-heading">
+            <h3 id="add-provider-heading" className="text-sm font-medium text-fg-subtle uppercase tracking-wide">
               {configured.length > 0 ? 'Add another' : 'Pick a provider'}
             </h3>
             {available.map((p) => {
@@ -434,7 +312,7 @@ export default async function ApiKeysSettingsPage({
 
       {/* Collapsible Capability Matrix */}
       <details className="border border-divider bg-bg-elev-1 rounded-lg overflow-hidden mt-2">
-        <summary className="cursor-pointer select-none px-4 py-3 flex items-center justify-between gap-3 hover:bg-bg-elev-2 transition-colors">
+        <summary aria-label="Toggle provider capability matrix" className="cursor-pointer select-none px-4 py-3 flex items-center justify-between gap-3 hover:bg-bg-elev-2 transition-colors">
           <div className="flex flex-col">
             <span className="text-sm font-medium text-fg">
               Provider Capability Matrix
@@ -488,15 +366,3 @@ export default async function ApiKeysSettingsPage({
   );
 }
 
-function formatAge(iso: string): string {
-  const t = new Date(iso).getTime();
-  if (!Number.isFinite(t)) return '';
-  const diffMs = Date.now() - t;
-  const m = Math.floor(diffMs / 60_000);
-  if (m < 1) return 'just now';
-  if (m < 60) return `${m}m ago`;
-  const h = Math.floor(m / 60);
-  if (h < 24) return `${h}h ago`;
-  const d = Math.floor(h / 24);
-  return `${d}d ago`;
-}

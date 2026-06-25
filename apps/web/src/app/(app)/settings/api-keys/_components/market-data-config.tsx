@@ -43,7 +43,7 @@ export function MarketDataConfig({ initialProvider, finnhubKeySet }: MarketDataC
     async (prevState: { error: string; ok: boolean }, formData: FormData) => {
       const res = await updateMarketDataProviderAction(formData);
       return {
-        error: res.error || '',
+        error: 'error' in res ? (res.error ?? '') : '',
         ok: res.ok,
       };
     },

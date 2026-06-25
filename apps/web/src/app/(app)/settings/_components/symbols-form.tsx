@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useRef } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -43,6 +43,8 @@ export function SymbolsForm({ initialSymbols, catalog }: SymbolsFormProps) {
   const [activeCategory, setActiveCategory] = useState<string>('all');
   const [bulkInput, setBulkInput] = useState('');
   const [isBulkAdding, setIsBulkAdding] = useState(false);
+  const [catalogPage, setCatalogPage] = useState(0);
+  const CATALOG_PAGE_SIZE = 20;
   
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -92,6 +94,17 @@ export function SymbolsForm({ initialSymbols, catalog }: SymbolsFormProps) {
       );
     });
   }, [availableCatalog, activeCategory, catalogSearch]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredCatalog.length / CATALOG_PAGE_SIZE));
+  const paginatedCatalog = useMemo(() => {
+    const start = catalogPage * CATALOG_PAGE_SIZE;
+    return filteredCatalog.slice(start, start + CATALOG_PAGE_SIZE);
+  }, [filteredCatalog, catalogPage]);
+
+  // Reset to first page when filters change
+  useEffect(() => {
+    setCatalogPage(0);
+  }, [activeCategory, catalogSearch]);
 
   const handleToggleSelect = (symbol: string) => {
     setSelected((prev) => {
@@ -252,7 +265,7 @@ export function SymbolsForm({ initialSymbols, catalog }: SymbolsFormProps) {
             successCount++;
           }
         } catch {
-          // ignore individual add failure
+          console.warn(`[settings] failed to bulk-add symbol ${sym}`);
         }
       }
     }
@@ -318,7 +331,7 @@ export function SymbolsForm({ initialSymbols, catalog }: SymbolsFormProps) {
               successCount++;
             }
           } catch {
-            // ignore
+            console.warn(`[settings] failed to import symbol ${sym}`);
           }
         }
       }
@@ -382,6 +395,7 @@ export function SymbolsForm({ initialSymbols, catalog }: SymbolsFormProps) {
                   type="checkbox"
                   checked={selected.size === filteredWatchlist.length && filteredWatchlist.length > 0}
                   onChange={handleToggleSelectAll}
+                  aria-label="Select all symbols"
                   className="rounded border-divider bg-bg text-brand focus:ring-brand size-3.5 cursor-pointer"
                 />
                 <span>Select All</span>
@@ -418,6 +432,7 @@ export function SymbolsForm({ initialSymbols, catalog }: SymbolsFormProps) {
                       type="checkbox"
                       checked={isSelected}
                       onChange={() => handleToggleSelect(item.symbol)}
+                      aria-label={`Select ${item.symbol}`}
                       className="rounded border-divider bg-bg text-brand focus:ring-brand size-3.5 cursor-pointer"
                     />
                     <div className="flex flex-col">
@@ -541,8 +556,8 @@ export function SymbolsForm({ initialSymbols, catalog }: SymbolsFormProps) {
         </div>
 
         {/* Available Symbols List */}
-        <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-60 overflow-y-auto pr-1">
-          {filteredCatalog.map((item) => (
+        <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2 min-h-[120px] pr-1">
+          {paginatedCatalog.map((item) => (
             <li
               key={item.symbol}
               className="flex items-center justify-between p-3 rounded-lg border border-surface-elevated bg-surface hover:border-fg-subtle/30"
@@ -575,6 +590,35 @@ export function SymbolsForm({ initialSymbols, catalog }: SymbolsFormProps) {
             </div>
           )}
         </ul>
+
+        {filteredCatalog.length > CATALOG_PAGE_SIZE && (
+          <div className="flex items-center justify-between pt-2 border-t border-divider/60">
+            <span className="text-caption text-fg-muted">
+              {filteredCatalog.length} symbols
+            </span>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setCatalogPage((p) => Math.max(0, p - 1))}
+                disabled={catalogPage === 0}
+                className="px-2.5 py-1 text-xs font-medium rounded-md border border-divider bg-bg-elev-1 text-fg-subtle hover:text-fg hover:border-divider disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+              >
+                Previous
+              </button>
+              <span className="text-caption text-fg-muted tabular-nums">
+                Page {catalogPage + 1} of {totalPages}
+              </span>
+              <button
+                type="button"
+                onClick={() => setCatalogPage((p) => Math.min(totalPages - 1, p + 1))}
+                disabled={catalogPage >= totalPages - 1}
+                className="px-2.5 py-1 text-xs font-medium rounded-md border border-divider bg-bg-elev-1 text-fg-subtle hover:text-fg hover:border-divider disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
