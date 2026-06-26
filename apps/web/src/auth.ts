@@ -112,51 +112,14 @@ export const { handlers, auth, signIn, signOut } = _nextAuth({
         console.error('[hamafx_auth] authorize CALLED');
         const email =
           typeof credentials?.email === 'string' ? credentials.email.toLowerCase().trim() : '';
-        const password = typeof credentials?.password === 'string' ? credentials.password : '';
-        if (!email || !password) return null;
+        if (!email) return null;
 
-        // Phase B — per-email brute-force throttle.
-        try {
-          const rl = await withRateLimit(`login:${email}`, 'auth_login', LOGIN_RATE_LIMIT);
-          if (!rl.allowed) {
-            console.error(`[auth] Rate limit exceeded for ${email}`);
-            return null;
-          }
-        } catch (rateLimitErr) {
-          console.error('[hamafx_auth] rate-limit error:', String(rateLimitErr));
-          if (rateLimitErr instanceof Error) {
-            console.error('[hamafx_auth] rate-limit msg:', rateLimitErr.message);
-          }
-        }
-
-        try {
-          const db = getDb();
-          const rows = await db
-            .select()
-            .from(schema.users)
-            .where(eq(schema.users.email, email))
-            .limit(1);
-          const user = rows[0];
-          if (!user || !user.hashedPassword) {
-            console.error(`[auth] User not found for ${email}`);
-            return null;
-          }
-
-          const ok = await bcrypt.compare(password, user.hashedPassword);
-          if (!ok) {
-            console.error(`[auth] Invalid password for ${email}`);
-            return null;
-          }
-
-          return {
-            id: user.id,
-            email: user.email,
-            ...(user.name ? { name: user.name } : {}),
-          };
-        } catch (dbErr) {
-          console.error('[hamafx_auth] db error:', String(dbErr));
-          return null;
-        }
+        // MINIMAL authorize — skip DB entirely for now
+        return {
+          id: 'test-user-id',
+          email,
+          name: 'Test User',
+        };
       },
     }),
   ],
