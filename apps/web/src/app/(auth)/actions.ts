@@ -65,7 +65,6 @@ export async function loginAction(prevState: unknown, formData: FormData) {
     // Otherwise return a diagnostic message
     return { error: `Server error (${errName}): ${errMsg.slice(0, 200)}` };
   }
-  }
 }
 
 const registerSchema = z.object({
