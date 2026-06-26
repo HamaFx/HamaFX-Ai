@@ -25,6 +25,8 @@
 // bare `authConfig` via `NextAuth(authConfig).auth`, while route handlers
 // and server actions use the full config exported here.
 
+console.error('[hamafx_auth] auth.ts module evaluation STARTED');
+
 import NextAuth from 'next-auth';
 import Credentials from 'next-auth/providers/credentials';
 import { DrizzleAdapter } from '@auth/drizzle-adapter';
