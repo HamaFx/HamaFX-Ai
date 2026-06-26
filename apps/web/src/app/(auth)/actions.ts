@@ -55,7 +55,8 @@ export async function loginAction(prevState: unknown, formData: FormData) {
           return { error: 'An error occurred during sign in' };
       }
     }
-    throw error; // Let Next.js handle redirect errors from signIn
+    const msg = error instanceof Error ? `${error.name}: ${error.message}` : String(error);
+    return { error: `DB connection error: ${msg.slice(0, 200)}` };
   }
 }
 
@@ -78,17 +79,14 @@ export async function registerAction(prevState: unknown, formData: FormData) {
   const { name, email, password } = parsed.data;
   const normalizedEmail = email.trim().toLowerCase();
   const db = getDb();
-  
-  // Check if user exists
+
   const existingUser = await db.select().from(schema.users).where(eq(schema.users.email, normalizedEmail)).limit(1);
   if (existingUser.length > 0) {
     return { error: 'An account with this email already exists' };
   }
 
-  // Hash password
   const hashedPassword = await bcrypt.hash(password, 10);
 
-  // Insert user
   const [newUser] = await db.insert(schema.users).values({
     id: crypto.randomUUID(),
     name,
@@ -101,14 +99,12 @@ export async function registerAction(prevState: unknown, formData: FormData) {
     return { error: 'Failed to create user' };
   }
 
-  // Create default user settings (required for onboarding flow)
   await db.insert(schema.userSettings).values({
     userId: newUser.id,
     onboardingCompleted: false,
     defaultSymbol: 'XAUUSD',
   });
 
-  // Login the newly registered user
   try {
     await signIn('credentials', {
       email: normalizedEmail,
@@ -120,6 +116,7 @@ export async function registerAction(prevState: unknown, formData: FormData) {
     if (error instanceof AuthError) {
       return { error: 'Account created, but failed to automatically sign in' };
     }
-    throw error;
+    const msg = error instanceof Error ? `${error.name}: ${error.message}` : String(error);
+    return { error: `DB connection error: ${msg.slice(0, 200)}` };
   }
 }

@@ -45,6 +45,7 @@ function LoginForm() {
       <div className="card-premium p-6">
         <form action={action} className="flex w-full flex-col gap-5">
           <input type="hidden" name="next" value={next} />
+          <input type="hidden" name="build" value={process.env.NEXT_PUBLIC_BUILD_ID ?? ''} />
           
           <div className="flex flex-col gap-2">
             <label htmlFor="email" className="text-fg text-sm font-semibold">
