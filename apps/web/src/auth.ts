@@ -59,9 +59,21 @@ const LOGIN_RATE_LIMIT = Number(process.env.LOGIN_RATE_LIMIT ?? '10');
 // See: https://github.com/nextauthjs/next-auth/discussions/9138
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const _nextAuth = NextAuth as any;
+
+let _adapter: ReturnType<typeof DrizzleAdapter> | undefined;
+try {
+  console.error('[hamafx] auth.ts: creating DrizzleAdapter with getDb()');
+  _adapter = DrizzleAdapter(getDb());
+} catch (e) {
+  console.error('[hamafx] auth.ts: DrizzleAdapter/getDb failed:', e);
+  console.error('[hamafx] auth.ts: DATABASE_URL:', process.env.DATABASE_URL);
+  console.error('[hamafx] auth.ts: POSTGRES_URL:', process.env.POSTGRES_URL ? 'set (' + process.env.POSTGRES_URL.length + ' chars)' : 'not set');
+}
+const adapter = _adapter;
+
 export const { handlers, auth, signIn, signOut } = _nextAuth({
   ...authConfig,
-  adapter: DrizzleAdapter(getDb()),
+  adapter,
   callbacks: {
     async signIn({ user }: { user: User }) {
       if (user?.id) {
