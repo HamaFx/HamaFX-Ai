@@ -20,7 +20,8 @@ const loginSchema = z.object({
 
 export async function loginAction(prevState: unknown, formData: FormData) {
   console.error('[hamafx] loginAction called');
-  const parsed = loginSchema.safeParse(Object.fromEntries(formData));
+  const raw = formData instanceof FormData ? Object.fromEntries(formData) : (formData ?? {});
+  const parsed = loginSchema.safeParse(raw);
   if (!parsed.success) {
     return { error: parsed.error.errors[0]?.message ?? 'Validation failed' };
   }
@@ -57,7 +58,8 @@ const registerSchema = z.object({
 
 export async function registerAction(prevState: unknown, formData: FormData) {
   console.error('[hamafx] registerAction called');
-  const parsed = registerSchema.safeParse(Object.fromEntries(formData));
+  const raw = formData instanceof FormData ? Object.fromEntries(formData) : (formData ?? {});
+  const parsed = registerSchema.safeParse(raw);
   if (!parsed.success) {
     return { error: parsed.error.errors[0]?.message ?? 'Validation failed' };
   }
