@@ -25,8 +25,6 @@
 // bare `authConfig` via `NextAuth(authConfig).auth`, while route handlers
 // and server actions use the full config exported here.
 
-console.error('[hamafx_auth] auth.ts module evaluation STARTED');
-
 import NextAuth from 'next-auth';
 import Credentials from 'next-auth/providers/credentials';
 import { DrizzleAdapter } from '@auth/drizzle-adapter';
@@ -112,46 +110,55 @@ export const { handlers, auth, signIn, signOut } = _nextAuth({
         const password = typeof credentials?.password === 'string' ? credentials.password : '';
         if (!email || !password) return null;
 
-        // Phase B — per-email brute-force throttle. Counts failed
-        // attempts too (because we run this before the bcrypt check).
-        // Returns null on rate-limit hit so NextAuth treats it as a
-        // generic auth failure (no info leak about whether the email
-        // exists or how many tries remain).
-        const rl = await withRateLimit(`login:${email}`, 'auth_login', LOGIN_RATE_LIMIT);
-        if (!rl.allowed) {
-          console.error(`[auth] Rate limit exceeded for ${email}`);
-          return null;
+        // Phase B — per-email brute-force throttle.
+        try {
+          const rl = await withRateLimit(`login:${email}`, 'auth_login', LOGIN_RATE_LIMIT);
+          if (!rl.allowed) {
+            console.error(`[auth] Rate limit exceeded for ${email}`);
+            return null;
+          }
+        } catch (rateLimitErr) {
+          console.error('[hamafx_auth] rate-limit error:', String(rateLimitErr));
+          if (rateLimitErr instanceof Error) {
+            console.error('[hamafx_auth] rate-limit name:', rateLimitErr.name);
+            console.error('[hamafx_auth] rate-limit msg:', rateLimitErr.message);
+            console.error('[hamafx_auth] rate-limit stack:', rateLimitErr.stack?.substring(0, 500));
+          }
         }
 
-        const db = getDb();
-        const rows = await db
-          .select()
-          .from(schema.users)
-          .where(eq(schema.users.email, email))
-          .limit(1);
+        try {
+          const db = getDb();
+          const rows = await db
+            .select()
+            .from(schema.users)
+            .where(eq(schema.users.email, email))
+            .limit(1);
+          const user = rows[0];
+          if (!user || !user.hashedPassword) {
+            console.error(`[auth] User not found or missing password for ${email}`);
+            return null;
+          }
 
-        const user = rows[0];
-        if (!user || !user.hashedPassword) {
-          console.error(`[auth] User not found or missing password for ${email}`);
+          const ok = await bcrypt.compare(password, user.hashedPassword);
+          if (!ok) {
+            console.error(`[auth] Invalid password for ${email}`);
+            return null;
+          }
+
+          return {
+            id: user.id,
+            email: user.email,
+            ...(user.name ? { name: user.name } : {}),
+          };
+        } catch (dbErr) {
+          console.error('[hamafx_auth] db error:', String(dbErr));
+          if (dbErr instanceof Error) {
+            console.error('[hamafx_auth] db error name:', dbErr.name);
+            console.error('[hamafx_auth] db error msg:', dbErr.message);
+            console.error('[hamafx_auth] db error stack:', dbErr.stack?.substring(0, 500));
+          }
           return null;
         }
-
-        const ok = await bcrypt.compare(password, user.hashedPassword);
-        if (!ok) {
-          console.error(`[auth] Invalid password for ${email}`);
-          return null;
-        }
-
-        // The shape NextAuth expects from authorize(): the returned object
-        // gets folded into the JWT by the `jwt` callback in auth.config.ts.
-        // With `exactOptionalPropertyTypes: true`, optional fields must be
-        // either omitted entirely or set to a non-undefined value. We omit
-        // `name` when missing rather than passing `undefined`.
-        return {
-          id: user.id,
-          email: user.email,
-          ...(user.name ? { name: user.name } : {}),
-        };
       },
     }),
   ],
