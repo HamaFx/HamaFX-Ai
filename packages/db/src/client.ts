@@ -88,12 +88,10 @@ export function getDb(): ReturnType<typeof drizzle> {
     max: resolvePoolMax(),
     idle_timeout: 20,
     connect_timeout: 10,
-    // Recycle long-lived connections every 30 minutes so a misconfigured
-    // pool can't slowly burn into Supabase's per-database connection
-    // ceiling on a never-restarted Lambda.
     max_lifetime: 60 * 30,
+    ssl: { rejectUnauthorized: false },
     connection: {
-      statement_timeout: 15000, // 15 seconds to prevent rogue queries
+      statement_timeout: 15000,
     },
   });
 

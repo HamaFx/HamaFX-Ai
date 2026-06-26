@@ -52,12 +52,10 @@ export async function loginAction(prevState: unknown, formData: FormData) {
         case 'CredentialsSignin':
           return { error: 'Invalid email or password' };
         default:
-          return { error: `Auth error: ${error.type}` };
+          return { error: 'An error occurred during sign in' };
       }
     }
-    const msg = error instanceof Error ? `${error.name}: ${error.message}` : String(error);
-    console.error('loginAction error:', msg);
-    return { error: msg };
+    throw error; // Let Next.js handle redirect errors from signIn
   }
 }
 
@@ -80,14 +78,17 @@ export async function registerAction(prevState: unknown, formData: FormData) {
   const { name, email, password } = parsed.data;
   const normalizedEmail = email.trim().toLowerCase();
   const db = getDb();
-
+  
+  // Check if user exists
   const existingUser = await db.select().from(schema.users).where(eq(schema.users.email, normalizedEmail)).limit(1);
   if (existingUser.length > 0) {
     return { error: 'An account with this email already exists' };
   }
 
+  // Hash password
   const hashedPassword = await bcrypt.hash(password, 10);
 
+  // Insert user
   const [newUser] = await db.insert(schema.users).values({
     id: crypto.randomUUID(),
     name,
@@ -100,12 +101,14 @@ export async function registerAction(prevState: unknown, formData: FormData) {
     return { error: 'Failed to create user' };
   }
 
+  // Create default user settings (required for onboarding flow)
   await db.insert(schema.userSettings).values({
     userId: newUser.id,
     onboardingCompleted: false,
     defaultSymbol: 'XAUUSD',
   });
 
+  // Login the newly registered user
   try {
     await signIn('credentials', {
       email: normalizedEmail,
@@ -115,10 +118,8 @@ export async function registerAction(prevState: unknown, formData: FormData) {
     return { success: true };
   } catch (error) {
     if (error instanceof AuthError) {
-      return { error: `Account created, but failed to auto sign in: ${error.type}` };
+      return { error: 'Account created, but failed to automatically sign in' };
     }
-    const msg = error instanceof Error ? `${error.name}: ${error.message}` : String(error);
-    console.error('registerAction error:', msg);
-    return { error: msg };
+    throw error;
   }
 }
