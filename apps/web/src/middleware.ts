@@ -108,6 +108,6 @@ export const config = {
   // /api/cron is cron-secret-protected, /share is public, /auth is the
   // login surface.
   matcher: [
-    '/((?!auth|share|api/auth|api/cron|api/telegram|sw\\.js|sw-precache\\.json|_next/static|_next/image|favicon\\.ico|manifest\\.webmanifest|icons|robots\\.txt|sitemap\\.xml).*)',
+    '/((?!auth|share|api/auth|api/cron|api/telegram|debug|sw\\.js|sw-precache\\.json|_next/static|_next/image|favicon\\.ico|manifest\\.webmanifest|icons|robots\\.txt|sitemap\\.xml).*)',
   ],
 };
