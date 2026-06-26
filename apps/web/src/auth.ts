@@ -46,7 +46,6 @@ const adapter = DrizzleAdapter(getDb());
 export const { handlers, auth, signIn, signOut } = _nextAuth({
   ...authConfig,
   adapter,
-  callbacks: {},
   providers: [
     Credentials({
       name: 'Email + Password',
