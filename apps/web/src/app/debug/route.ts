@@ -40,22 +40,5 @@ export async function GET() {
     }
   }
 
-  // Also test direct postgres connection to see the real error
-  try {
-    const postgres = (await import('postgres')).default;
-    const url = process.env.DATABASE_URL || process.env.POSTGRESS_URL || '';
-    const directSql = postgres(url, { prepare: false, max: 1, connect_timeout: 5 });
-    const directResult = await directSql`SELECT 1 AS ok`;
-    result.direct_query_success = true;
-    result.direct_query_result = String(directResult).substring(0, 500);
-    await directSql.end({ timeout: 3 });
-  } catch (e2) {
-    result.direct_query_error = String(e2).substring(0, 1000);
-    if (e2 instanceof Error) {
-      result.direct_query_error_name = e2.name;
-      result.direct_query_error_message = e2.message.substring(0, 500);
-    }
-  }
-
   return NextResponse.json(result);
 }
