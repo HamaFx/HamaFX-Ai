@@ -25,34 +25,11 @@
 // bare `authConfig` via `NextAuth(authConfig).auth`, while route handlers
 // and server actions use the full config exported here.
 
-// IMPORTANT: In ES modules, import declarations are hoisted.
-// This console.error will execute AFTER all imports are resolved.
-console.error('[hamafx_auth] auth.ts MODULE LOADED');
-
 import NextAuth from 'next-auth';
 import Credentials from 'next-auth/providers/credentials';
 import { DrizzleAdapter } from '@auth/drizzle-adapter';
-import bcrypt from 'bcryptjs';
-import { eq } from 'drizzle-orm';
-
 import { authConfig } from './auth.config';
-import { getDb, schema, withRateLimit } from '@hamafx/db';
-import type { User } from '@auth/core/types';
-
-function parseUserAgent(ua: string): string {
-  if (ua.includes('Mobile') || ua.includes('Android')) return 'Mobile';
-  if (ua.includes('Macintosh') || ua.includes('Windows') || ua.includes('Linux')) {
-    const match = ua.match(/(Chrome|Firefox|Safari|Edge|Opera)\/\S+/);
-    return `Desktop — ${match?.[1] ?? 'Browser'}`;
-  }
-  return ua.slice(0, 60);
-}
-
-// Phase B — brute-force protection on login.
-// 10 attempts per email per minute is the default. Tunable via env.
-// We key on the lowercased email so `Foo@x.com` and `foo@x.com` share
-// the same bucket (the email is also normalised before lookup).
-const LOGIN_RATE_LIMIT = Number(process.env.LOGIN_RATE_LIMIT ?? '10');
+import { getDb } from '@hamafx/db';
 
 // `NextAuth()` returns a value whose inferred type carries deep paths into
 // `@auth/core/providers`. That inferred type isn't portable across pnpm
@@ -64,43 +41,12 @@ const LOGIN_RATE_LIMIT = Number(process.env.LOGIN_RATE_LIMIT ?? '10');
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const _nextAuth = NextAuth as any;
 
-let _adapter: ReturnType<typeof DrizzleAdapter> | undefined;
-try {
-  console.error('[hamafx] auth.ts: creating DrizzleAdapter with getDb()');
-  _adapter = DrizzleAdapter(getDb());
-} catch (e) {
-  console.error('[hamafx] auth.ts: DrizzleAdapter/getDb failed:', e);
-  console.error('[hamafx] auth.ts: DATABASE_URL:', process.env.DATABASE_URL);
-  console.error('[hamafx] auth.ts: POSTGRES_URL:', process.env.POSTGRES_URL ? 'set (' + process.env.POSTGRES_URL.length + ' chars)' : 'not set');
-}
-const adapter = _adapter;
+const adapter = DrizzleAdapter(getDb());
 
 export const { handlers, auth, signIn, signOut } = _nextAuth({
   ...authConfig,
   adapter,
-  callbacks: {
-    async signIn({ user }: { user: User }) {
-      if (user?.id) {
-        const { headers } = await import('next/headers');
-        const h = await headers();
-        const ua = h.get('user-agent') ?? undefined;
-        const ip = h.get('x-forwarded-for') ?? h.get('x-real-ip') ?? undefined;
-
-        try {
-          const db = getDb();
-          await db.insert(schema.userSessions).values({
-            id: crypto.randomUUID(),
-            userId: user.id,
-            deviceName: ua ? parseUserAgent(ua) : null,
-            ip: ip ?? null,
-          });
-        } catch {
-          // Non-critical — session tracking failure shouldn't block login
-        }
-      }
-      return true;
-    },
-  },
+  callbacks: {},
   providers: [
     Credentials({
       name: 'Email + Password',
@@ -123,8 +69,4 @@ export const { handlers, auth, signIn, signOut } = _nextAuth({
       },
     }),
   ],
-  // session.strategy is 'jwt' from authConfig — keeps the Edge-safe
-  // middleware path working without a DB roundtrip. The DrizzleAdapter
-  // is still wired for the OAuth case (user/account/verification tables)
-  // even though we only use Credentials today.
 });
