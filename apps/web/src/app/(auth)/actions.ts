@@ -40,13 +40,18 @@ export async function loginAction(prevState: unknown, formData: FormData) {
   const normalizedEmail = email.trim().toLowerCase();
 
   try {
+    console.error('[diag] loginAction: calling signIn');
     await signIn('credentials', {
       email: normalizedEmail,
       password,
       redirectTo: next && next.startsWith('/') ? next : '/chat',
     });
+    console.error('[diag] loginAction: signIn returned (no redirect)');
     return { success: true };
-  } catch (error) {
+    } catch (error) {
+    const errMsg = String(error);
+    const errName = error?.constructor?.name ?? 'unknown';
+    console.error('[diag] loginAction caught:', errName, errMsg);
     if (error instanceof AuthError) {
       switch (error.type) {
         case 'CredentialsSignin':
@@ -55,7 +60,11 @@ export async function loginAction(prevState: unknown, formData: FormData) {
           return { error: 'An error occurred during sign in' };
       }
     }
-    throw error; // Let Next.js handle redirect errors from signIn
+    // NEXT_REDIRECT is expected — let it propagate
+    if (errName === 'NEXT_REDIRECT') throw error;
+    // Otherwise return a diagnostic message
+    return { error: `Server error (${errName}): ${errMsg.slice(0, 200)}` };
+  }
   }
 }
 
@@ -117,9 +126,13 @@ export async function registerAction(prevState: unknown, formData: FormData) {
     });
     return { success: true };
   } catch (error) {
+    const errMsg = String(error);
+    const errName = error?.constructor?.name ?? 'unknown';
+    console.error('[diag] registerAction caught:', errName, errMsg);
     if (error instanceof AuthError) {
       return { error: 'Account created, but failed to automatically sign in' };
     }
-    throw error;
+    if (errName === 'NEXT_REDIRECT') throw error;
+    return { error: `Server error (${errName}): ${errMsg.slice(0, 200)}` };
   }
 }

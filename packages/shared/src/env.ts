@@ -38,6 +38,7 @@ import { z } from 'zod';
  * ServerEnvSchema refinement below.
  */
 const AuthEnv = z.object({
+  AUTH_SECRET: z.string().min(32, 'AUTH_SECRET must be at least 32 chars').optional(),
   NEXTAUTH_SECRET: z.string().min(32, 'NEXTAUTH_SECRET must be at least 32 chars').optional(),
   AUTH_COOKIE_SECRET: z.string().min(32).optional(),
   CRON_SECRET: z.string().min(16, 'CRON_SECRET must be at least 16 chars').optional(),
@@ -232,13 +233,13 @@ export const ServerEnvSchema = z.intersection(
 ).refine(
   (env) =>
     env.NODE_ENV !== 'production' ||
-    Boolean(env.NEXTAUTH_SECRET && env.CRON_SECRET && env.ENCRYPTION_SECRET),
+    Boolean((env.AUTH_SECRET || env.NEXTAUTH_SECRET) && env.CRON_SECRET && env.ENCRYPTION_SECRET),
   {
     message:
-      'In production, NEXTAUTH_SECRET, CRON_SECRET, and ENCRYPTION_SECRET are all required. ' +
+      'In production, AUTH_SECRET (or NEXTAUTH_SECRET), CRON_SECRET, and ENCRYPTION_SECRET are all required. ' +
       'Set them in your Vercel project (Settings → Environment Variables) for Production ' +
       '+ Preview scopes, or in your local .env.local for `pnpm dev:local`.',
-    path: ['NEXTAUTH_SECRET'],
+    path: ['AUTH_SECRET'],
   },
 );
 

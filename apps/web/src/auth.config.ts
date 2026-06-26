@@ -21,7 +21,7 @@
 import type { NextAuthConfig } from 'next-auth';
 
 const nextAuthSecret =
-  process.env.NEXTAUTH_SECRET ?? process.env.AUTH_SECRET;
+  process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET;
 
 export const authConfig: NextAuthConfig = {
   // NextAuth v5 requires an explicit secret for JWT signing. Without
