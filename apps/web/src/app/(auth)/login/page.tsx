@@ -112,7 +112,9 @@ function LoginForm() {
       <div className="flex flex-col items-center gap-2 border-t border-divider pt-4">
         <button
           type="button"
-          onClick={() => { window.location.href = next || '/chat'; }}
+          onClick={() => {
+            window.location.href = '/api/dev/login';
+          }}
           className="text-fg-muted hover:text-fg cursor-pointer text-xs underline underline-offset-2 transition-colors"
         >
           Skip login (dev only)
