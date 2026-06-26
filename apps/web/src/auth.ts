@@ -55,7 +55,6 @@ export const { handlers, auth, signIn, signOut } = _nextAuth({
         password: { label: 'Password', type: 'password' },
       },
       async authorize(credentials) {
-        console.error('[hamafx_auth] authorize CALLED');
         const email =
           typeof credentials?.email === 'string' ? credentials.email.toLowerCase().trim() : '';
         if (!email) return null;

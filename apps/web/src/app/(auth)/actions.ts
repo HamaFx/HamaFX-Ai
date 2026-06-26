@@ -1,7 +1,5 @@
 'use server';
 
-console.error('[hamafx] actions.ts loaded, PID:', process.pid);
-
 import bcrypt from 'bcryptjs';
 import { eq } from 'drizzle-orm';
 import { AuthError } from 'next-auth';
@@ -10,8 +8,6 @@ import { z } from 'zod';
 import { getDb, schema } from '@hamafx/db';
 import { signIn } from '@/auth';
 
-console.error('[hamafx] actions.ts imports done');
-
 const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
   password: z.string().min(1, 'Password is required'),
@@ -19,7 +15,6 @@ const loginSchema = z.object({
 });
 
 export async function loginAction(prevState: unknown, formData: FormData) {
-  console.error('[hamafx] loginAction called');
   const raw = formData instanceof FormData ? Object.fromEntries(formData) : (formData ?? {});
   const parsed = loginSchema.safeParse(raw);
   if (!parsed.success) {
@@ -30,7 +25,6 @@ export async function loginAction(prevState: unknown, formData: FormData) {
   const normalizedEmail = email.trim().toLowerCase();
 
   try {
-    console.error('[hamafx] loginAction calling signIn');
     await signIn('credentials', {
       email: normalizedEmail,
       password,
@@ -38,7 +32,6 @@ export async function loginAction(prevState: unknown, formData: FormData) {
     });
     return { success: true };
   } catch (error) {
-    console.error('[hamafx] loginAction caught error:', typeof error, error?.constructor?.name);
     if (error instanceof AuthError) {
       return { error: 'Invalid email or password' };
     }
@@ -57,7 +50,6 @@ const registerSchema = z.object({
 });
 
 export async function registerAction(prevState: unknown, formData: FormData) {
-  console.error('[hamafx] registerAction called');
   const raw = formData instanceof FormData ? Object.fromEntries(formData) : (formData ?? {});
   const parsed = registerSchema.safeParse(raw);
   if (!parsed.success) {
@@ -94,7 +86,6 @@ export async function registerAction(prevState: unknown, formData: FormData) {
   });
 
   try {
-    console.error('[hamafx] registerAction calling signIn');
     await signIn('credentials', {
       email: normalizedEmail,
       password,
@@ -102,7 +93,6 @@ export async function registerAction(prevState: unknown, formData: FormData) {
     });
     return { success: true };
   } catch (error) {
-    console.error('[hamafx] registerAction caught error:', typeof error, error?.constructor?.name);
     if (error instanceof AuthError) {
       return { error: 'Account created, but failed to automatically sign in' };
     }
