@@ -3,21 +3,23 @@ import { NextResponse } from 'next/server';
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
-  const result: Record<string, unknown> = {
-    env: {
-      DATABASE_URL: typeof process.env.DATABASE_URL,
-      POSTGRES_URL: typeof process.env.POSTGRES_URL,
-    },
+  const env: Record<string, unknown> = {
+    DATABASE_URL_type: typeof process.env.DATABASE_URL,
+    POSTGRES_URL_type: typeof process.env.POSTGRES_URL,
+    DATABASE_URL_set: !!process.env.DATABASE_URL,
+    POSTGRES_URL_set: !!process.env.POSTGRES_URL,
   };
 
   if (process.env.DATABASE_URL) {
-    result.env.DATABASE_URL_length = process.env.DATABASE_URL.length;
-    result.env.DATABASE_URL_prefix = process.env.DATABASE_URL.substring(0, 20);
+    env.DATABASE_URL_length = process.env.DATABASE_URL.length;
+    env.DATABASE_URL_prefix = process.env.DATABASE_URL.substring(0, 20);
   }
   if (process.env.POSTGRES_URL) {
-    result.env.POSTGRES_URL_length = process.env.POSTGRES_URL.length;
-    result.env.POSTGRES_URL_prefix = process.env.POSTGRES_URL.substring(0, 20);
+    env.POSTGRES_URL_length = process.env.POSTGRES_URL.length;
+    env.POSTGRES_URL_prefix = process.env.POSTGRES_URL.substring(0, 20);
   }
+
+  const result: Record<string, unknown> = { env };
 
   try {
     const { getDb } = await import('@hamafx/db');
