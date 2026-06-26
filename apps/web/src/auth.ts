@@ -120,9 +120,7 @@ export const { handlers, auth, signIn, signOut } = _nextAuth({
         } catch (rateLimitErr) {
           console.error('[hamafx_auth] rate-limit error:', String(rateLimitErr));
           if (rateLimitErr instanceof Error) {
-            console.error('[hamafx_auth] rate-limit name:', rateLimitErr.name);
             console.error('[hamafx_auth] rate-limit msg:', rateLimitErr.message);
-            console.error('[hamafx_auth] rate-limit stack:', rateLimitErr.stack?.substring(0, 500));
           }
         }
 
@@ -135,7 +133,7 @@ export const { handlers, auth, signIn, signOut } = _nextAuth({
             .limit(1);
           const user = rows[0];
           if (!user || !user.hashedPassword) {
-            console.error(`[auth] User not found or missing password for ${email}`);
+            console.error(`[auth] User not found for ${email}`);
             return null;
           }
 
@@ -152,11 +150,6 @@ export const { handlers, auth, signIn, signOut } = _nextAuth({
           };
         } catch (dbErr) {
           console.error('[hamafx_auth] db error:', String(dbErr));
-          if (dbErr instanceof Error) {
-            console.error('[hamafx_auth] db error name:', dbErr.name);
-            console.error('[hamafx_auth] db error msg:', dbErr.message);
-            console.error('[hamafx_auth] db error stack:', dbErr.stack?.substring(0, 500));
-          }
           return null;
         }
       },
