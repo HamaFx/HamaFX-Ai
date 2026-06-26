@@ -1,6 +1,6 @@
 'use server';
 
-console.log('[hamafx] actions.ts loaded, PID:', process.pid);
+console.error('[hamafx] actions.ts loaded, PID:', process.pid);
 
 import bcrypt from 'bcryptjs';
 import { eq } from 'drizzle-orm';
@@ -10,7 +10,7 @@ import { z } from 'zod';
 import { getDb, schema } from '@hamafx/db';
 import { signIn } from '@/auth';
 
-console.log('[hamafx] actions.ts imports done');
+console.error('[hamafx] actions.ts imports done');
 
 const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -19,7 +19,7 @@ const loginSchema = z.object({
 });
 
 export async function loginAction(prevState: unknown, formData: FormData) {
-  console.log('[hamafx] loginAction called');
+  console.error('[hamafx] loginAction called');
   const parsed = loginSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) {
     return { error: parsed.error.errors[0]?.message ?? 'Validation failed' };
@@ -29,7 +29,7 @@ export async function loginAction(prevState: unknown, formData: FormData) {
   const normalizedEmail = email.trim().toLowerCase();
 
   try {
-    console.log('[hamafx] loginAction calling signIn');
+    console.error('[hamafx] loginAction calling signIn');
     await signIn('credentials', {
       email: normalizedEmail,
       password,
@@ -37,7 +37,7 @@ export async function loginAction(prevState: unknown, formData: FormData) {
     });
     return { success: true };
   } catch (error) {
-    console.log('[hamafx] loginAction caught error:', typeof error, error?.constructor?.name);
+    console.error('[hamafx] loginAction caught error:', typeof error, error?.constructor?.name);
     if (error instanceof AuthError) {
       return { error: 'Invalid email or password' };
     }
@@ -56,7 +56,7 @@ const registerSchema = z.object({
 });
 
 export async function registerAction(prevState: unknown, formData: FormData) {
-  console.log('[hamafx] registerAction called');
+  console.error('[hamafx] registerAction called');
   const parsed = registerSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) {
     return { error: parsed.error.errors[0]?.message ?? 'Validation failed' };
@@ -92,7 +92,7 @@ export async function registerAction(prevState: unknown, formData: FormData) {
   });
 
   try {
-    console.log('[hamafx] registerAction calling signIn');
+    console.error('[hamafx] registerAction calling signIn');
     await signIn('credentials', {
       email: normalizedEmail,
       password,
@@ -100,7 +100,7 @@ export async function registerAction(prevState: unknown, formData: FormData) {
     });
     return { success: true };
   } catch (error) {
-    console.log('[hamafx] registerAction caught error:', typeof error, error?.constructor?.name);
+    console.error('[hamafx] registerAction caught error:', typeof error, error?.constructor?.name);
     if (error instanceof AuthError) {
       return { error: 'Account created, but failed to automatically sign in' };
     }
