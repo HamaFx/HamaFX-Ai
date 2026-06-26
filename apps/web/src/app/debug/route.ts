@@ -21,7 +21,7 @@ export async function GET() {
 
   try {
     const { getDb } = await import('@hamafx/db');
-    const db = getDb();
+    const _db = getDb();
     result.getDb_success = true;
   } catch (e) {
     result.getDb_error = String(e).substring(0, 500);
