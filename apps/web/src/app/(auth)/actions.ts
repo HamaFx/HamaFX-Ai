@@ -40,30 +40,24 @@ export async function loginAction(prevState: unknown, formData: FormData) {
   const normalizedEmail = email.trim().toLowerCase();
 
   try {
-    console.error('[diag] loginAction: calling signIn');
     await signIn('credentials', {
       email: normalizedEmail,
       password,
       redirectTo: next && next.startsWith('/') ? next : '/chat',
     });
-    console.error('[diag] loginAction: signIn returned (no redirect)');
     return { success: true };
-    } catch (error) {
-    const errMsg = String(error);
-    const errName = error?.constructor?.name ?? 'unknown';
-    console.error('[diag] loginAction caught:', errName, errMsg);
+  } catch (error) {
     if (error instanceof AuthError) {
       switch (error.type) {
         case 'CredentialsSignin':
           return { error: 'Invalid email or password' };
         default:
-          return { error: 'An error occurred during sign in' };
+          return { error: `Auth error: ${error.type}` };
       }
     }
-    // NEXT_REDIRECT is expected — let it propagate
-    if (errName === 'NEXT_REDIRECT') throw error;
-    // Otherwise return a diagnostic message
-    return { error: `Server error (${errName}): ${errMsg.slice(0, 200)}` };
+    const msg = error instanceof Error ? `${error.name}: ${error.message}` : String(error);
+    console.error('loginAction error:', msg);
+    return { error: msg };
   }
 }
 
@@ -86,17 +80,14 @@ export async function registerAction(prevState: unknown, formData: FormData) {
   const { name, email, password } = parsed.data;
   const normalizedEmail = email.trim().toLowerCase();
   const db = getDb();
-  
-  // Check if user exists
+
   const existingUser = await db.select().from(schema.users).where(eq(schema.users.email, normalizedEmail)).limit(1);
   if (existingUser.length > 0) {
     return { error: 'An account with this email already exists' };
   }
 
-  // Hash password
   const hashedPassword = await bcrypt.hash(password, 10);
 
-  // Insert user
   const [newUser] = await db.insert(schema.users).values({
     id: crypto.randomUUID(),
     name,
@@ -109,14 +100,12 @@ export async function registerAction(prevState: unknown, formData: FormData) {
     return { error: 'Failed to create user' };
   }
 
-  // Create default user settings (required for onboarding flow)
   await db.insert(schema.userSettings).values({
     userId: newUser.id,
     onboardingCompleted: false,
     defaultSymbol: 'XAUUSD',
   });
 
-  // Login the newly registered user
   try {
     await signIn('credentials', {
       email: normalizedEmail,
@@ -125,13 +114,11 @@ export async function registerAction(prevState: unknown, formData: FormData) {
     });
     return { success: true };
   } catch (error) {
-    const errMsg = String(error);
-    const errName = error?.constructor?.name ?? 'unknown';
-    console.error('[diag] registerAction caught:', errName, errMsg);
     if (error instanceof AuthError) {
-      return { error: 'Account created, but failed to automatically sign in' };
+      return { error: `Account created, but failed to auto sign in: ${error.type}` };
     }
-    if (errName === 'NEXT_REDIRECT') throw error;
-    return { error: `Server error (${errName}): ${errMsg.slice(0, 200)}` };
+    const msg = error instanceof Error ? `${error.name}: ${error.message}` : String(error);
+    console.error('registerAction error:', msg);
+    return { error: msg };
   }
 }
