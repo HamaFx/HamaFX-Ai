@@ -25,6 +25,10 @@
 // bare `authConfig` via `NextAuth(authConfig).auth`, while route handlers
 // and server actions use the full config exported here.
 
+// IMPORTANT: In ES modules, import declarations are hoisted.
+// This console.error will execute AFTER all imports are resolved.
+console.error('[hamafx_auth] auth.ts MODULE LOADED');
+
 import NextAuth from 'next-auth';
 import Credentials from 'next-auth/providers/credentials';
 import { DrizzleAdapter } from '@auth/drizzle-adapter';
@@ -105,6 +109,7 @@ export const { handlers, auth, signIn, signOut } = _nextAuth({
         password: { label: 'Password', type: 'password' },
       },
       async authorize(credentials) {
+        console.error('[hamafx_auth] authorize CALLED');
         const email =
           typeof credentials?.email === 'string' ? credentials.email.toLowerCase().trim() : '';
         const password = typeof credentials?.password === 'string' ? credentials.password : '';
