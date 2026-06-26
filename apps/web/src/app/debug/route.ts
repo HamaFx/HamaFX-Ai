@@ -40,5 +40,37 @@ export async function GET() {
     }
   }
 
+  // Test auth module loading
+  try {
+    const { auth } = await import('@/auth');
+    result.auth_loaded = true;
+    result.auth_type = typeof auth;
+  } catch (e) {
+    result.auth_error = String(e).substring(0, 500);
+  }
+
+  // Test DrizzleAdapter
+  try {
+    const { DrizzleAdapter } = await import('@auth/drizzle-adapter');
+    result.adapter_loaded = true;
+  } catch (e) {
+    result.adapter_error = String(e).substring(0, 500);
+  }
+
+  // Test NextAuth full initialization
+  try {
+    const NextAuth = (await import('next-auth')).default;
+    const { authConfig } = await import('@/auth.config');
+    const { getDb } = await import('@hamafx/db');
+    const { DrizzleAdapter } = await import('@auth/drizzle-adapter');
+    const adapter = DrizzleAdapter(getDb());
+    result.adapter_created = true;
+    const test = NextAuth({ ...authConfig, adapter, providers: [] });
+    result.nextauth_created = true;
+    result.nextauth_keys = Object.keys(test).join(', ');
+  } catch (e) {
+    result.nextauth_error = String(e).substring(0, 500);
+  }
+
   return NextResponse.json(result);
 }
