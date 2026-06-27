@@ -1,8 +1,14 @@
+include:
+  - template: Security/SAST.gitlab-ci.yml
+  - template: Security/Secret-Detection.gitlab-ci.yml
+  - template: Security/Container-Scanning.gitlab-ci.yml
+
 image: node:20
 
 stages:
-  - build
   - test
+  - build
+  - publish
   - e2e
   - eval
 
@@ -29,7 +35,7 @@ before_script:
 # LINT & TYPECHECK
 # ==========================================
 lint-and-typecheck:
-  stage: build
+  stage: test
   script:
     - pnpm turbo run lint
     - pnpm turbo run typecheck
@@ -51,6 +57,7 @@ unit-tests-coverage:
   stage: test
   script:
     - pnpm turbo run test -- --coverage
+  coverage: '/All files[^|]*\|[^|]*\s+([\d\.]+)/'
   artifacts:
     paths:
       - coverage/
@@ -59,11 +66,13 @@ unit-tests-coverage:
     - if: $CI_PIPELINE_SOURCE == "schedule"
 
 # ==========================================
-# E2E TESTS (Playwright)
+# E2E TESTS (Playwright) & ENVIRONMENT
 # ==========================================
 e2e-tests:
   stage: e2e
   image: mcr.microsoft.com/playwright:v1.44.0-jammy
+  environment:
+    name: staging
   script:
     - pnpm exec playwright install --with-deps
     - cd apps/web && pnpm exec playwright test
@@ -84,3 +93,22 @@ nightly-eval:
     - pnpm turbo run eval
   rules:
     - if: $CI_PIPELINE_SOURCE == "schedule"
+
+# ==========================================
+# CONTAINER REGISTRY (Docker Publish)
+# ==========================================
+docker-publish:
+  stage: publish
+  image: docker:24.0.5
+  services:
+    - docker:24.0.5-dind
+  before_script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+  script:
+    - docker build -t $CI_REGISTRY_IMAGE/web:$CI_COMMIT_REF_SLUG -f Dockerfile .
+    - docker push $CI_REGISTRY_IMAGE/web:$CI_COMMIT_REF_SLUG
+    - docker build -t $CI_REGISTRY_IMAGE/worker:$CI_COMMIT_REF_SLUG -f Dockerfile.worker .
+    - docker push $CI_REGISTRY_IMAGE/worker:$CI_COMMIT_REF_SLUG
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    - if: $CI_COMMIT_TAG
