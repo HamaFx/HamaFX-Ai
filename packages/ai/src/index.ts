@@ -365,3 +365,20 @@ export {
   saveRouteConfig,
   type NoiseState,
 } from './notifications';
+
+// F7 — Bot Platform with Commands
+export {
+  BotDispatcher,
+  getBotDispatcher,
+  parseCommand,
+  createLinkCode,
+  resolveLinkCode,
+  resolveBotUser,
+  unlinkBot,
+  getBotLink,
+  type BotCommand,
+  type BotContext,
+  type BotResponse,
+  type BotPlatform,
+  type ParsedCommand,
+} from './bot';
