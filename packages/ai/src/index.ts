@@ -289,3 +289,27 @@ export {
   SentimentAgent,
   DecisionAgent,
 } from './multi-agent';
+
+// F1 — Decision Signal Tracking + Outcome Evaluation
+export {
+  extractDecisionSignal,
+  type ExtractionContext,
+  evaluateSignal,
+  candlesToDailyBars,
+  createDecisionSignal,
+  listSignals,
+  getSignal,
+  listSignalsNeedingEvaluation,
+  recordOutcome,
+  recordUnable,
+  maybeCloseSignal,
+  recordFeedback,
+  computeSignalStats,
+  evaluatePendingSignals,
+  type CronEvaluationResult,
+  type DecisionSignalPayload,
+  type DailyBar,
+  type OutcomeResult,
+  type UnableResult,
+  type SignalForEvaluation,
+} from './decision-signals';

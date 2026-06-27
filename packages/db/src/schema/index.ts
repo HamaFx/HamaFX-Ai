@@ -47,3 +47,5 @@ export * from './provider-tests';
 export * from './symbol-catalog';
 // STAB-01 — cron idempotency guard
 export * from './cron-runs';
+// F1 — Decision Signal Tracking + Outcome Evaluation
+export * from './decision-signals';
