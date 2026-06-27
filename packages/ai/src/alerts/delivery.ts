@@ -180,42 +180,25 @@ async function deliverTelegram({ alert, reading, env }: DeliverArgs): Promise<De
   const body = renderTelegramBody(alert, reading);
   const text = `*${escapeMd(subject)}*\n\n${escapeMd(body)}`;
 
-  let res: Response;
   try {
-    res = await fetch(`${TELEGRAM_API}/bot${env.TELEGRAM_BOT_TOKEN}/sendMessage`, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({
-        chat_id: env.TELEGRAM_CHAT_ID,
-        text,
-        parse_mode: 'MarkdownV2',
-        reply_markup: {
-          inline_keyboard: [
-            [
-              { text: '📊 Analyze Setup', callback_data: `/committee ${'symbol' in alert.rule ? alert.rule.symbol : ''}` },
-              { text: '🔕 Snooze 1h', callback_data: `/snooze ${alert.id}` },
-            ],
-            [
-              { text: '📝 Log to Journal', callback_data: `/log ${'symbol' in alert.rule ? alert.rule.symbol : ''} triggered ${'level' in alert.rule ? alert.rule.level : ''}` }
-            ]
-          ]
-        }
-      }),
+    // Use the resilient Telegram client with retry + chunking
+    const { sendTextMessage } = await import('../telegram/client');
+    await sendTextMessage(env.TELEGRAM_BOT_TOKEN, env.TELEGRAM_CHAT_ID, text, {
+      parseMode: 'MarkdownV2',
     });
+    return {
+      alertId: alert.id,
+      channel: 'telegram',
+      ok: true,
+    };
   } catch (err) {
     const msg = err instanceof Error ? err.message : 'fetch failed';
-    console.error(`[alerts] telegram fetch failed for alert ${alert.id}: ${msg}`);
-    return { alertId: alert.id, channel: 'telegram', ok: false, message: msg };
-  }
-
-  if (!res.ok) {
-    const txt = await res.text().catch(() => '');
-    console.error(`[alerts] telegram HTTP ${res.status} for alert ${alert.id}: ${txt.slice(0, 200)}`);
+    console.error(`[alerts] telegram delivery failed for alert ${alert.id}: ${msg}`);
     return {
       alertId: alert.id,
       channel: 'telegram',
       ok: false,
-      message: `telegram HTTP ${res.status}: ${txt.slice(0, 200)}`,
+      message: msg,
     };
   }
 

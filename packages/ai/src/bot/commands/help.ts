@@ -27,18 +27,36 @@ export const helpCommand: BotCommand = {
     const dispatcher = getBotDispatcher();
     const commands = dispatcher.listCommands();
 
-    const lines = commands
-      .filter((c) => c.name !== 'help' && c.name !== 'link')
-      .map((c) => `/${c.name} — ${c.description}`);
+    // Group commands by category for better UX
+    const marketCommands = commands.filter((c) =>
+      ['price', 'chart', 'news', 'calendar'].includes(c.name),
+    );
+    const aiCommands = commands.filter((c) =>
+      ['analyze', 'ask', 'committee'].includes(c.name),
+    );
+    const accountCommands = commands.filter((c) =>
+      ['status', 'positions', 'alert', 'track', 'settings', 'me'].includes(c.name),
+    );
+
+    const formatCmds = (cmds: typeof commands) =>
+      cmds.map((c) => `/${c.name} — ${c.description}`).join('\n');
 
     const text = [
       '🤖 HamaFX Bot Commands',
       '',
-      ...lines,
+      '📈 Market',
+      formatCmds(marketCommands),
+      '',
+      '🧠 AI Analysis',
+      formatCmds(aiCommands),
+      '',
+      '👤 Account',
+      formatCmds(accountCommands),
       '',
       '/link <code> — Link your HamaFX account',
+      '/help — Show this help',
       '',
-      'Send any command to get started.',
+      '💡 You can also send any free-form message to chat with the AI.',
     ].join('\n');
 
     return { text };

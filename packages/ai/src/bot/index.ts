@@ -27,3 +27,21 @@ export {
   unlinkBot,
   getBotLink,
 } from './linking';
+
+// Telegram client (resilient API calls with retry + chunking)
+export {
+  sendTextMessage,
+  sendPhoto,
+  sendChatAction,
+  answerCallbackQuery,
+  sendInlineKeyboard,
+  setBotCommands,
+  telegramApiCall,
+  TelegramApiError,
+} from '../telegram/client';
+
+// Idempotency guard
+export { isDuplicateUpdate, markProcessed } from '../telegram/idempotency';
+
+// Rate limiter
+export { checkRateLimit, getRateLimitStatus } from '../telegram/rate-limiter';

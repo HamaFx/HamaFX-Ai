@@ -382,3 +382,17 @@ export {
   type BotPlatform,
   type ParsedCommand,
 } from './bot';
+
+// F7+ — Telegram client utilities (resilient API, idempotency, rate limiting)
+export {
+  sendTextMessage,
+  sendPhoto,
+  sendChatAction,
+  answerCallbackQuery,
+  sendInlineKeyboard,
+  setBotCommands,
+  telegramApiCall,
+  TelegramApiError,
+} from './telegram/client';
+export { isDuplicateUpdate, markProcessed } from './telegram/idempotency';
+export { checkRateLimit, getRateLimitStatus } from './telegram/rate-limiter';
