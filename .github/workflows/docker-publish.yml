@@ -25,7 +25,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build Web image (for scan)
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v7
         with:
           context: .
           file: ./Dockerfile
@@ -34,7 +34,7 @@ jobs:
           tags: hamafx-web:scan
 
       - name: Build Worker image (for scan)
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v7
         with:
           context: .
           file: ./Dockerfile.worker
@@ -76,7 +76,7 @@ jobs:
           category: trivy-worker
 
       - name: Push Web image
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v7
         with:
           context: .
           file: ./Dockerfile
@@ -84,7 +84,7 @@ jobs:
           tags: ghcr.io/${{ github.repository }}/web:latest,ghcr.io/${{ github.repository }}/web:${{ github.ref_name }}
 
       - name: Push Worker image
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v7
         with:
           context: .
           file: ./Dockerfile.worker
