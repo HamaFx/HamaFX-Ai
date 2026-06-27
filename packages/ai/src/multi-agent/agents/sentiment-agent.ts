@@ -59,7 +59,11 @@ before forming your sentiment assessment.`;
   }
 
   tools(): Record<string, import('ai').Tool> {
-    return { get_news: allTools.get_news, search_knowledge: allTools.search_knowledge };
+    return {
+      get_news: allTools.get_news,
+      search_knowledge: allTools.search_knowledge,
+      get_social_sentiment: allTools.get_social_sentiment,
+    };
   }
 
   protected parseOutput(text: string): { bias: AgentBias; confidence: number; reasoning: string; rawData: Record<string, unknown> } {

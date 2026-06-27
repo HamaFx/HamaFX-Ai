@@ -49,3 +49,7 @@ export * from './symbol-catalog';
 export * from './cron-runs';
 // F1 — Decision Signal Tracking + Outcome Evaluation
 export * from './decision-signals';
+// F2 — Portfolio Management
+export * from './portfolio';
+// F4 — Notification Noise Control
+export * from './noise-control';

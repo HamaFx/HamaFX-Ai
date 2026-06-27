@@ -328,3 +328,40 @@ export {
   type DiagnosticStep,
   type DiagnosticError,
 } from './diagnostics';
+
+// F2 — Portfolio Management
+export {
+  createPosition,
+  listOpenPositions,
+  listAllPositions,
+  getPosition,
+  closePosition,
+  deletePosition,
+  getPortfolioSettings,
+  savePortfolioSettings,
+  computePnL,
+  getOpenPositionsWithPnL,
+  getPortfolioRiskReport,
+} from './portfolio';
+
+// F3 — Social Sentiment Integration
+export {
+  SocialSentimentService,
+  getSentimentService,
+  resetSentimentService,
+  type SentimentEnv,
+} from './sentiment';
+
+// F4 — Notification Noise Control
+export {
+  evaluateNoise,
+  hashContent,
+  isQuietHours,
+  InMemoryNoiseState,
+  DbNoiseState,
+  getNoiseConfig,
+  saveNoiseConfig,
+  getRouteConfig,
+  saveRouteConfig,
+  type NoiseState,
+} from './notifications';
