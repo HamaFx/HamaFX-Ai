@@ -15,6 +15,7 @@
  */
 
 import { boolean, index, jsonb, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+// Note: `real` is not needed here — analysis_mode is text.
 import { users } from './auth';
 
 /**
@@ -39,6 +40,13 @@ export const chatThreads = pgTable(
      * to the top. See packages/ai/src/briefings/persistence.ts.
      */
     isBriefings: boolean('is_briefings').notNull().default(false),
+    /**
+     * Multi-Agent Orchestration — per-thread analysis mode override.
+     * Values: 'single' | 'quick' | 'standard' | 'full' | 'auto'
+     * When 'auto', the orchestrator picks based on the user's message.
+     * Defaults to 'single' for backward compatibility.
+     */
+    analysisMode: text('analysis_mode').default('single'),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp('updated_at', { withTimezone: true })
       .defaultNow()
