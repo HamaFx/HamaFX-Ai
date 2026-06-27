@@ -16,15 +16,6 @@
 
 // NextAuth.js v5 standard tables. Matches the @auth/drizzle-adapter schema
 // so the adapter works drop-in without custom table mapping.
-//
-// Design decisions:
-//   - `users.id` is `text` (not `uuid`) because NextAuth generates
-//     its own IDs via `crypto.randomUUID()` passed through the adapter.
-//   - Passwords are stored hashed (bcrypt) in `hashedPassword` — only
-//     populated for Credentials provider users. OAuth users leave it null.
-//   - `role` defaults to `'user'` per the flat-hierarchy decision.
-//   - `accounts` compound PK on `(provider, providerAccountId)` is the
-//     NextAuth convention — one account per provider per user.
 
 import {
   boolean,
@@ -37,7 +28,7 @@ import {
   timestamp,
 } from 'drizzle-orm/pg-core';
 
-// ── Users ───────────────────────────────────────────────────────────
+// ── Users ──────────────────────────────────────────────────────────────
 
 export const users = pgTable('user', {
   id: text('id').primaryKey(),
@@ -67,7 +58,7 @@ export const users = pgTable('user', {
 export type UserRow = typeof users.$inferSelect;
 export type UserInsert = typeof users.$inferInsert;
 
-// ── User Sessions (login tracking for session management UI) ────────
+// ── User Sessions (login tracking for session management UI) ────────────
 
 export const userSessions = pgTable(
   'user_sessions',
@@ -87,7 +78,7 @@ export const userSessions = pgTable(
 export type UserSessionRow = typeof userSessions.$inferSelect;
 export type UserSessionInsert = typeof userSessions.$inferInsert;
 
-// ── Accounts (OAuth links) ──────────────────────────────────────────
+// ── Accounts (OAuth links) ─────────────────────────────────────────────
 
 export const accounts = pgTable(
   'account',
@@ -114,7 +105,7 @@ export const accounts = pgTable(
 export type AccountRow = typeof accounts.$inferSelect;
 export type AccountInsert = typeof accounts.$inferInsert;
 
-// ── Sessions (DB-backed — only used if strategy='database') ────────
+// ── Sessions (DB-backed — only used if strategy='database') ─────────────
 
 export const sessions = pgTable('session', {
   sessionToken: text('sessionToken').primaryKey(),
@@ -127,7 +118,7 @@ export const sessions = pgTable('session', {
 export type SessionRow = typeof sessions.$inferSelect;
 export type SessionInsert = typeof sessions.$inferInsert;
 
-// ── Verification Tokens (magic-link / email verification) ──────────
+// ── Verification Tokens (magic-link / email verification) ──────────────
 
 export const verificationTokens = pgTable(
   'verificationToken',
@@ -144,7 +135,7 @@ export const verificationTokens = pgTable(
 export type VerificationTokenRow = typeof verificationTokens.$inferSelect;
 export type VerificationTokenInsert = typeof verificationTokens.$inferInsert;
 
-// ── User Settings (application-level preferences) ──────────────────
+// ── User Settings (application-level preferences) ──────────────────────
 
 export const userSettings = pgTable('user_settings', {
   userId: text('user_id')
@@ -175,13 +166,6 @@ export const userSettings = pgTable('user_settings', {
    * Shape (JSONB): { fundamental?: "<provider>:<modelId>",
    *                    technical?: ..., summary?: ...,
    *                    vision?: ..., embedding?: ... }
-   * The resolver checks this before falling back to the provider
-   * spec defaults in BYOK_PROVIDERS.defaultModels.
-   *
-   * Phase F — superseded by `chat_model` (single-string default) for
-   * the main chat surface. Kept for the convene-committee tool which
-   * calls `resolveUserModel` per role. Will be dropped once the
-   * committee path moves to `resolveChatModel` too.
    */
   defaultModels: jsonb('default_models').$type<{
     fundamental?: string;
@@ -193,31 +177,11 @@ export const userSettings = pgTable('user_settings', {
   /**
    * Phase F — the single "default chat model" picker.
    * Shape: "<providerId>:<bareModelId>" (e.g. "google-vertex:gemini-2.5-pro").
-   * Nullable; when null the resolver falls back to the provider's
-   * spec.defaultModels.technical of the highest-priority configured
-   * provider (PROVIDER_PRIORITY in packages/ai/src/model.ts).
-   *
-   * This is the canonical per-user model choice. The pre-F multi-domain
-   * `defaultModels` JSONB column above is retained only because
-   * convene-committee still consumes it for its per-role picks.
    */
   chatModel: text('chat_model'),
-  /**
-   * Phase D2 — user-pickable vision model for the
-   * `analyze_chart_image` tool. Same shape as `chatModel`:
-   * `"<providerId>:<bareModelId>"` (e.g. `"google-vertex:gemini-2.5-pro"`).
-   * Nullable; when null the resolver falls back to the user's chat
-   * provider's `spec.defaultModels.vision`, then to env.AI_VISION_MODEL
-   * (operator-set platform default), then to the hardcoded default.
-   */
+  /** Phase D2 — user-pickable vision model. */
   visionModel: text('vision_model'),
-  /**
-   * Phase D2 — user-pickable embedding model for RAG / memory / news
-   * embeddings. Same shape as `chatModel`. Nullable; when null the
-   * resolver falls back to env.AI_EMBEDDING_MODEL (operator-set; the
-   * platform default is `openai/text-embedding-3-small`), then to
-   * the user's chat provider's `spec.defaultModels.embedding`.
-   */
+  /** Phase D2 — user-pickable embedding model. */
   embeddingModel: text('embedding_model'),
   /** Fallback chain of provider IDs, e.g. ["openai", "google", "groq"] */
   aiFallbackChain: jsonb('ai_fallback_chain').$type<string[]>(),
@@ -225,9 +189,9 @@ export const userSettings = pgTable('user_settings', {
   maxDailyUsd: integer('max_daily_usd'),
   /** Max monthly USD spend for this user. */
   monthlyBudgetLimit: integer('monthly_budget_limit'),
-  /** Per-provider spending thresholds in USD. e.g. { "openai": 10, "google": 5 } */
+  /** Per-provider spending thresholds in USD. */
   providerSpendingThresholds: jsonb('provider_spending_thresholds').$type<Record<string, number>>(),
-  /** Spend alerts channel configuration. e.g. { email: true, telegram: true } */
+  /** Spend alerts channel configuration. */
   spendAlertsConfig: jsonb('spend_alerts_config').$type<{ email?: boolean; telegram?: boolean }>(),
   /** Spend alert state to prevent duplicate alerts within the same month. */
   spendAlertsState: jsonb('spend_alerts_state').$type<{
@@ -237,22 +201,46 @@ export const userSettings = pgTable('user_settings', {
     alerted100?: boolean;
     providerAlerted?: string[];
   }>(),
-  /** Map of providerId to last update ISO timestamp string, for key rotation reminders. */
+  /** Map of providerId to last update ISO timestamp string. */
   aiApiKeysUpdatedAt: jsonb('ai_api_keys_updated_at').$type<Record<string, string>>(),
-  /** Selected market data provider (e.g. 'biquote', 'finnhub', 'live-ticks'). */
+  /** Selected market data provider. */
   marketDataProvider: text('market_data_provider').notNull().default('biquote'),
-  /** Theme preference: 'light', 'dark', or 'system'. Null means system default. */
+  /** Theme preference: 'light', 'dark', or 'system'. */
   theme: text('theme'),
-  /** Notification preferences matrix — JSON { eventType: { channel: boolean } }. */
+  /** Notification preferences matrix. */
   notificationPreferences: jsonb('notification_preferences'),
   /** Free-form custom instructions appended to the AI's system prompt. */
   customInstructions: text('custom_instructions'),
-  /** Display time format: '12h' or '24h'. Null means 24h (default). */
+  /** Display time format: '12h' or '24h'. */
   timeFormat: text('time_format'),
   /** List of tool names the user has disabled. */
   disabledTools: jsonb('disabled_tools').$type<string[]>(),
   /** Whether onboarding has been completed. */
   onboardingCompleted: boolean('onboarding_completed').notNull().default(false),
+  /**
+   * Multi-Agent Orchestration — default analysis mode for new chats.
+   * Values: 'single' | 'quick' | 'standard' | 'full' | 'auto'
+   * 'auto' lets the orchestrator pick based on the user's message.
+   */
+  defaultAnalysisMode: text('default_analysis_mode').default('auto'),
+  /**
+   * Multi-Agent Orchestration — whether to show the expandable
+   * agent opinions panel in the chat UI.
+   */
+  showAgentOpinions: boolean('show_agent_opinions').notNull().default(true),
+  /**
+   * Multi-Agent Orchestration — per-agent model overrides.
+   * Shape: { technical?: string; fundamental?: string; risk?: string;
+   *          sentiment?: string; decision?: string }
+   * Each value is a "<providerId>:<bareModelId>" string.
+   */
+  agentModelOverrides: jsonb('agent_model_overrides').$type<{
+    technical?: string;
+    fundamental?: string;
+    risk?: string;
+    sentiment?: string;
+    decision?: string;
+  }>(),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true })
     .defaultNow()
@@ -263,7 +251,7 @@ export const userSettings = pgTable('user_settings', {
 export type UserSettingsRow = typeof userSettings.$inferSelect;
 export type UserSettingsInsert = typeof userSettings.$inferInsert;
 
-// ── User Symbols (per-user watchlist) ───────────────────────────────
+// ── User Symbols (per-user watchlist) ──────────────────────────────────
 
 export const userSymbols = pgTable(
   'user_symbols',

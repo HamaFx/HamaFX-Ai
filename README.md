@@ -179,6 +179,78 @@ The agent core accesses a suite of 30 specialized tools to analyze and interact 
 
 ---
 
+## 🧠 Multi-Agent Deliberation Mode
+
+HamaFX-Ai supports a **multi-agent deliberation mode** where multiple specialized AI agents analyze the user's question in parallel, then a **Decision Agent** fuses their opinions into a final unified response.
+
+### Modes
+
+| Mode | Agents | LLM Calls | Latency | Cost | Use Case |
+|:---|:---|:---|:---|:---|:---|
+| **Auto** | AI picks | Varies | Varies | Varies | Default — auto-detects based on question |
+| **Single** | Current single agent | 1 | ~2s | 1× | Fast, simple questions |
+| **Quick** | Technical → Decision | 2 | ~3s | 1.5× | "What's the price of gold?" |
+| **Standard** | Technical + Fundamental → Decision | 3 | ~5s | 2.5× | "Analyze XAUUSD" |
+| **Full** | Technical + Fundamental + Risk + Sentiment → Decision | 5 | ~8s | 4× | "Should I buy XAUUSD now?" |
+
+### Specialist Agents
+
+- **Technical Agent** — Price action, indicators, market structure, session levels. Uses fast-tier models (Gemini Flash). Scoped tools: `get_candles`, `get_indicators`, `get_price`, `get_market_structure`, etc.
+- **Fundamental Agent** — Macroeconomic context, central bank policy, COT data, economic calendar. Uses mid-tier models. Scoped tools: `get_calendar`, `get_cot`, `get_news`, etc.
+- **Risk Agent** — Devil's advocate: identifies risks, red flags, worst-case scenarios. Can issue a `hardVeto` to block buy recommendations. Uses mid-tier models.
+- **Sentiment Agent** — News sentiment, social sentiment, fear/greed, contrarian signals. Uses fast-tier models. (Full mode only.)
+- **Decision Agent** — Fuses all specialist opinions into a final response. Surfaces agreement/disagreement, enforces vetoes, produces actionable plan. Uses strong-tier models (Claude/GPT-4o). No tools — only processes opinions.
+
+### Architecture
+
+```
+User Message
+     ↓
+Mode Router (auto / single / quick / standard / full)
+     ↓
+┌─────────────────────────────────────────────────────┐
+│  IF single: existing runChat() flow                 │
+│  IF multi-agent:                                    │
+│                                                      │
+│  ┌─────────┐ ┌────────────┐ ┌──────┐ ┌───────────┐  │
+│  │Technical│ │Fundamental │ │ Risk │ │ Sentiment │  │ (parallel)
+│  │ Agent   │ │  Agent     │ │Agent │ │   Agent   │  │
+│  └────┬────┘ └─────┬──────┘ └──┬───┘ └─────┬─────┘  │
+│       └────────────┼───────────┼────────────┘       │
+│                     ↓                                │
+│            ┌─────────────┐                           │
+│            │  Decision   │                           │
+│            │   Agent     │                           │
+│            └──────┬──────┘                           │
+│                   ↓                                  │
+│         Streamed fused response                      │
+└─────────────────────────────────────────────────────┘
+```
+
+### Key Features
+
+- **Parallel execution**: Specialists run via `Promise.all` for minimum latency
+- **Budget guardrails**: Cost estimated upfront per mode, reserved before pipeline starts, reconciled after
+- **Per-agent model overrides**: Assign different models to each agent via Settings → Agent
+- **Opinion persistence**: All specialist opinions saved to `agent_opinions` table, linked to messages
+- **SSE streaming**: Real-time progress events (agent start/done) + final text streaming
+- **Error fallback**: If a specialist fails, Decision agent proceeds with available opinions. If Decision fails, specialist reasoning is concatenated as raw response
+- **Veto enforcement**: Risk agent's `hardVeto` prevents Decision agent from recommending buys
+- **Timeout handling**: Per-agent timeouts (15s specialists, 30s decision) with AbortController
+
+### Settings
+
+Configure in **Settings → Agent**:
+- Default analysis mode (Auto / Single / Quick / Standard / Full)
+- Show/hide agent opinions panel in chat
+- Per-agent model override (assign specific provider:model to each agent)
+
+### Usage Tracking
+
+Per-agent and per-mode cost breakdowns available via `/api/settings/usage-by-agent`.
+
+---
+
 ## ⚙️ Environmental Configurations
 
 During local development and testing, `NEXTAUTH_SECRET`, `ENCRYPTION_SECRET`, and `CRON_SECRET` are automatically generated if missing and stored in `.hamafx/dev-secrets.json`. In production, all secrets **must** be set explicitly.

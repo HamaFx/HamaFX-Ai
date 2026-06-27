@@ -181,11 +181,6 @@ export {
   findHighImpactEventsInWindow,
 } from './briefings/persistence';
 
-// Auto-Journal — the regex-based shortcut parser was removed in Phase 1
-// hardening (§2). The model handles "Journal: …" and unstructured trade
-// language alike via the `log_journal` tool, which avoids the duplicate
-// double-save the parser caused. See docs/15-hardening-phase-1-correctness.md.
-
 // Phase 3 — Sharable snapshots
 export {
   signShareToken,
@@ -253,3 +248,44 @@ export { extractRateLimits, type RateLimitData } from './rate-limits';
 
 // STAB-06: Exponential-backoff retry helper.
 export { withRetry, type RetryOptions } from './retry';
+
+// Multi-Agent Orchestration
+export {
+  runMultiAgentChat,
+  type RunMultiAgentArgs,
+  selectAgents,
+  autoDetectMode,
+  resolveMode,
+  MODE_OPTIONS,
+  type ModeMeta,
+  type AnalysisMode,
+  type ResolvedMode,
+  type AgentName,
+  type AgentBias,
+  type AgentOpinion,
+  type SharedContext,
+  type MultiAgentResult,
+  type ProgressEvent,
+  type MultiAgentEnv,
+  type ModelTier,
+  AGENT_MODEL_TIER,
+  MODE_COST_ESTIMATE,
+  AGENT_TIMEOUTS,
+  buildSharedContext,
+  buildSharedSystemPrompt,
+  extractUserMessageText,
+  saveAgentOpinions,
+  listAgentOpinions,
+  listMessageOpinions,
+  type SaveOpinionsArgs,
+  ProgressTracker,
+  type AgentProgressPart,
+  progressToSSE,
+  createMultiAgentStreamResponse,
+  BaseAgent,
+  TechnicalAgent,
+  FundamentalAgent,
+  RiskAgent,
+  SentimentAgent,
+  DecisionAgent,
+} from './multi-agent';

@@ -22,6 +22,7 @@
 export * from './auth';
 export * from './_extensions';
 export * from './chat';
+export * from './agent-opinions';
 export * from './alerts';
 export * from './journal';
 export * from './news';
