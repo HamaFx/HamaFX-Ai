@@ -37,6 +37,12 @@ export * from './schemas/chat';
 export * from './schemas/alerts';
 export * from './schemas/journal';
 export * from './schemas/decision-signals';
+// F2 — Portfolio Management
+export * from './schemas/portfolio';
+// F3 — Social Sentiment Integration
+export * from './schemas/sentiment';
+// F4 — Notification Noise Control
+export * from './schemas/noise-control';
 
 // Per-tool output envelope schemas (consumed by chat parts via `safeParse`).
 export * from './schemas/tool-outputs/get-price';
@@ -73,6 +79,10 @@ export * from './schemas/tool-outputs/convene-committee';
 export * from './schemas/tool-outputs/get-intermarket-resonance';
 export * from './schemas/tool-outputs/get-system-diagnostics';
 export * from './schemas/tool-outputs/run-system-action';
+// F2 — Portfolio Management
+export * from './schemas/tool-outputs/get-portfolio-snapshot';
+// F3 — Social Sentiment
+export * from './schemas/tool-outputs/get-social-sentiment';
 // UI-only message parts (planner output, citation + verify warnings)
 export * from './schemas/ui-parts';
 // Briefings (cron-emitted assistant messages in the dedicated thread)

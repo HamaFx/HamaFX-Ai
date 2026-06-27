@@ -63,6 +63,8 @@ import type { ConveneCommitteeOutputSchema } from '../schemas/tool-outputs/conve
 import type { GetIntermarketResonanceOutputSchema } from '../schemas/tool-outputs/get-intermarket-resonance';
 import type { GetSystemDiagnosticsOutputSchema } from '../schemas/tool-outputs/get-system-diagnostics';
 import type { RunSystemActionOutputSchema } from '../schemas/tool-outputs/run-system-action';
+import type { GetPortfolioSnapshotOutputSchema } from '../schemas/tool-outputs/get-portfolio-snapshot';
+import type { GetSocialSentimentOutputSchema } from '../schemas/tool-outputs/get-social-sentiment';
 import type { ToolName } from './tool-names';
 
 /**
@@ -117,6 +119,10 @@ export interface ToolOutputMap {
   get_intermarket_resonance: z.infer<typeof GetIntermarketResonanceOutputSchema>;
   get_system_diagnostics: z.infer<typeof GetSystemDiagnosticsOutputSchema>;
   run_system_action: z.infer<typeof RunSystemActionOutputSchema>;
+  // F2 — Portfolio Management
+  get_portfolio_snapshot: z.infer<typeof GetPortfolioSnapshotOutputSchema>;
+  // F3 — Social Sentiment
+  get_social_sentiment: z.infer<typeof GetSocialSentimentOutputSchema>;
 }
 
 export type ToolInput<T extends ToolName> = T extends keyof ToolIOMap

@@ -55,6 +55,10 @@ export const TOOL_NAMES = [
   'get_intermarket_resonance',
   'get_system_diagnostics',
   'run_system_action',
+  // F2 — Portfolio Management
+  'get_portfolio_snapshot',
+  // F3 — Social Sentiment
+  'get_social_sentiment',
 ] as const;
 
 export type ToolName = (typeof TOOL_NAMES)[number];
