@@ -21,7 +21,7 @@ import { useState, useTransition } from 'react';
 import { toast } from 'sonner';
 
 import { cn } from '@/lib/cn';
-import { fetchCsrf } from '@/lib/csrf';
+import { getCsrfToken } from '@/lib/csrf';
 
 type AgentName = 'technical' | 'fundamental' | 'risk' | 'sentiment' | 'decision';
 
@@ -70,7 +70,7 @@ export function AgentModelOverrideForm({ initialOverrides, providers }: AgentMod
       providerDisplayName: p.displayName,
       modelId: m.modelId,
       modelLabel: m.label ?? m.modelId,
-      tier: m.tier,
+      ...(m.tier !== undefined ? { tier: m.tier } : {}),
     })),
   );
 
@@ -95,12 +95,12 @@ export function AgentModelOverrideForm({ initialOverrides, providers }: AgentMod
   function save() {
     startTransition(async () => {
       try {
-        const csrf = await fetchCsrf();
+        const csrf = getCsrfToken();
         const res = await fetch('/api/settings/analysis-mode', {
           method: 'PATCH',
           headers: {
             'Content-Type': 'application/json',
-            'X-CSRF-Token': csrf ?? '',
+            ...(csrf ? { 'X-CSRF-Token': csrf } : {}),
           },
           body: JSON.stringify({ agentModelOverrides: overrides }),
         });

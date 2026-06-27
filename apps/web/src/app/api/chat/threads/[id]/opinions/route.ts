@@ -20,8 +20,8 @@ import { errorResponse, withAuth } from '@/lib/api';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-export const GET = withAuth<void>(async (req, { user, params }) => {
-  const threadId = (params as { id: string }).id;
+export const GET = withAuth<{ id: string }>(async (req, { user, params }) => {
+  const { id: threadId } = await params;
   if (!threadId || typeof threadId !== 'string') return errorResponse(new Error('Thread ID is required'));
   try {
     const opinions = await listAgentOpinions(user.userId, threadId);

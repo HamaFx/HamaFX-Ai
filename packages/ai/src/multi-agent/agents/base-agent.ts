@@ -24,6 +24,7 @@ import { withToolContext, type ToolContext } from '../../tool-context';
 import type { ProviderId } from '@hamafx/shared';
 import type { SharedContext, AgentOpinion, AgentName, AgentBias, ModelTier } from '../types';
 import { AGENT_TIMEOUTS } from '../types';
+import { extractUserMessageText } from '../context';
 
 export const baseOpinionSchema = z.object({
   bias: z.enum(['bullish', 'bearish', 'neutral']),
@@ -59,7 +60,7 @@ export abstract class BaseAgent {
     const startMs = Date.now();
     const { model, modelId } = this.resolveModel(ctx);
     const sharedPrompt = ctx.snapshot ? `# LIVE MARKET CONTEXT\n${JSON.stringify(ctx.snapshot, null, 2)}\n` : '';
-    const userText = ctx.userMessage.content || '';
+    const userText = extractUserMessageText(ctx.userMessage);
     const fullSystem = `${this.systemPrompt()}\n\n${sharedPrompt}`;
     const toolContext: ToolContext = {
       threadId: '', userId: '', env: ctx.env, signal: ctx.signal,
@@ -85,7 +86,7 @@ export abstract class BaseAgent {
   protected safeParseJson(text: string): Record<string, unknown> | null {
     try { return JSON.parse(text); } catch {
       const m = text.match(/```(?:json)?\s*([\s\S]*?)```/);
-      if (m) { try { return JSON.parse(m[1].trim()); } catch {} }
+      if (m?.[1]) { try { return JSON.parse(m[1].trim()); } catch {} }
       const f = text.indexOf('{'), l = text.lastIndexOf('}');
       if (f >= 0 && l > f) { try { return JSON.parse(text.slice(f, l + 1)); } catch {} }
       return null;

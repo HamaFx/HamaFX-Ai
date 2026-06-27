@@ -21,7 +21,7 @@ import { useState, useTransition } from 'react';
 import { toast } from 'sonner';
 
 import { cn } from '@/lib/cn';
-import { fetchCsrf } from '@/lib/csrf';
+import { getCsrfToken } from '@/lib/csrf';
 
 type AnalysisMode = 'single' | 'quick' | 'standard' | 'full' | 'auto';
 
@@ -49,12 +49,12 @@ export function AnalysisModeForm({ initialMode, showOpinions: initialShowOpinion
   function save() {
     startTransition(async () => {
       try {
-        const csrf = await fetchCsrf();
+        const csrf = getCsrfToken();
         const res = await fetch('/api/settings/analysis-mode', {
           method: 'PATCH',
           headers: {
             'Content-Type': 'application/json',
-            'X-CSRF-Token': csrf ?? '',
+            ...(csrf ? { 'X-CSRF-Token': csrf } : {}),
           },
           body: JSON.stringify({
             defaultAnalysisMode: mode,

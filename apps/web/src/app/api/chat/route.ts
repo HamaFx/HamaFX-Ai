@@ -118,7 +118,7 @@ export const POST = withAuth<void>(async (req, { user }) => {
             try {
               const result = await runMultiAgentChat({
                 threadId: body.threadId, userId: user.userId, userMessage: last as any, history: body.messages as any[],
-                userSettings, displayName, ...(customInstructions ? { customInstructions } : {}),
+                userSettings, displayName: displayName ?? null, ...(customInstructions ? { customInstructions } : {}),
                 env: {
                   AI_GATEWAY_API_KEY: env.AI_GATEWAY_API_KEY, GOOGLE_GENERATIVE_AI_API_KEY: env.GOOGLE_GENERATIVE_AI_API_KEY,
                   GOOGLE_VERTEX_PROJECT: env.GOOGLE_VERTEX_PROJECT, GOOGLE_VERTEX_LOCATION: env.GOOGLE_VERTEX_LOCATION,
@@ -127,7 +127,7 @@ export const POST = withAuth<void>(async (req, { user }) => {
                   AI_DEFAULT_MODEL: env.AI_DEFAULT_MODEL, AI_EMBEDDING_MODEL: env.AI_EMBEDDING_MODEL,
                   MAX_DAILY_USD: env.MAX_DAILY_USD, MAX_TOOL_ITERATIONS: env.MAX_TOOL_ITERATIONS, LOG_PROMPTS: env.LOG_PROMPTS,
                 },
-                ...(req.signal ? { signal: req.signal } : {}), analysisMode,
+                ...(req.signal ? { signal: req.signal } : { signal: null }), analysisMode,
                 messageId: assistantMessageId,
                 onProgress: (event) => {
                   tracker.update(event);

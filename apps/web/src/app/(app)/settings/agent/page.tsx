@@ -63,12 +63,12 @@ export default async function AgentCataloguePage() {
 
   // Build the provider+model list for the override dropdowns.
   const providerModelList = BYOK_PROVIDERS_LIST.map((p) => ({
-    id: p.id,
+    id: p.id as string,
     displayName: p.displayName,
     models: (p.models ?? []).map((m) => ({
       modelId: m.modelId,
-      label: m.label,
-      tier: m.tier,
+      ...(m.label !== undefined ? { label: m.label } : {}),
+      ...(m.tier !== undefined ? { tier: m.tier } : {}),
     })),
   }));
   const entries = await buildToolCatalogue(disabledTools);

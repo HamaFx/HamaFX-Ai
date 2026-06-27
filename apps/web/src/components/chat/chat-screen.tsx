@@ -86,7 +86,7 @@ export function ChatScreen({
   const [title, setTitle] = useState(initialTitle);
   const [analysisMode, setAnalysisMode] = useState<AnalysisMode>('auto');
   const [agentProgress, setAgentProgress] = useState<{
-    agents: Array<{ agentName: string; status: 'pending' | 'running' | 'done' | 'error'; opinion?: { bias: string; confidence: number; reasoning: string }; error?: string }>;
+    agents: Array<{ agentName: string; status: 'pending' | 'running' | 'done' | 'error'; opinion?: { agentName: string; bias: 'bullish' | 'bearish' | 'neutral'; confidence: number; reasoning: string }; error?: string }>;
     mode: string;
   } | null>(null);
 
@@ -144,19 +144,17 @@ export function ChatScreen({
     setAgentProgress(null);
 
     // Add user message to the list immediately
-    const userMsg: UIMessage = {
+    const userMsg = {
       id: crypto.randomUUID(),
-      role: 'user',
-      content: text,
-      parts: [{ type: 'text', text }],
-    };
+      role: 'user' as const,
+      parts: [{ type: 'text' as const, text }],
+    } as unknown as UIMessage;
     const assistantMsgId = crypto.randomUUID();
-    const assistantMsg: UIMessage = {
+    const assistantMsg = {
       id: assistantMsgId,
-      role: 'assistant',
-      content: '',
-      parts: [{ type: 'text', text: '' }],
-    };
+      role: 'assistant' as const,
+      parts: [{ type: 'text' as const, text: '' }],
+    } as unknown as UIMessage;
     setMessages((prev) => [...prev, userMsg, assistantMsg]);
 
     const controller = new AbortController();
@@ -211,7 +209,7 @@ export function ChatScreen({
               // Update the assistant message content progressively
               setMessages((prev) => prev.map((m) =>
                 m.id === assistantMsgId
-                  ? { ...m, content: finalText, parts: [{ type: 'text', text: finalText }] }
+                  ? { ...m, parts: [{ type: 'text' as const, text: finalText }] } as UIMessage
                   : m,
               ));
             } else if (parsed.type === 'metadata') {
@@ -230,7 +228,7 @@ export function ChatScreen({
       const errMsg = err instanceof Error ? err.message : String(err);
       setMessages((prev) => prev.map((m) =>
         m.id === assistantMsgId
-          ? { ...m, content: `⚠️ Error: ${errMsg}`, parts: [{ type: 'text', text: `⚠️ Error: ${errMsg}` }] }
+          ? { ...m, parts: [{ type: 'text' as const, text: `⚠️ Error: ${errMsg}` }] } as UIMessage
           : m,
       ));
       setAgentProgress(null);
@@ -255,7 +253,11 @@ export function ChatScreen({
           const idx = prev.findIndex((m) => m.id === lastUser.id);
           return prev.slice(0, idx + 1);
         });
-        void sendMultiAgentMessage(lastUser.content || '');
+        void sendMultiAgentMessage(
+          (lastUser as unknown as { content?: string }).content
+          || (Array.isArray(lastUser.parts) ? lastUser.parts.filter((p) => (p as { type?: string }).type === 'text').map((p) => (p as { text: string }).text).join('') : '')
+          || ''
+        );
       }
       return;
     }

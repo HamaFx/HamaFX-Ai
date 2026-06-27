@@ -46,7 +46,9 @@ export interface BuildContextArgs {
 export async function buildSharedContext(args: BuildContextArgs): Promise<SharedContext> {
   const { symbol, userId, userMessage, history, userSettings, displayName, customInstructions, env, signal } = args;
   const snapshot = await buildLiveSnapshot({ signal: signal ?? undefined, userId });
-  return { symbol, snapshot, userSettings, customInstructions, userMessage, history, signal, env };
+  const ctx: SharedContext = { symbol, snapshot, userSettings, userMessage, history, signal, env };
+  if (customInstructions !== undefined) ctx.customInstructions = customInstructions;
+  return ctx;
 }
 
 export function buildSharedSystemPrompt(ctx: SharedContext, displayName: string | null): string {
@@ -67,5 +69,7 @@ export function extractUserMessageText(message: UIMessage): string {
       .map((p) => p.text)
       .join('\n');
   }
-  return message.content ?? '';
+  // UIMessage in AI SDK v5 doesn't have a `content` property — use type-safe access.
+  const content = (message as unknown as { content?: string }).content;
+  return content ?? '';
 }

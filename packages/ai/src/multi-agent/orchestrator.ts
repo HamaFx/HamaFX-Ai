@@ -81,7 +81,9 @@ export async function runMultiAgentChat(args: RunMultiAgentArgs): Promise<MultiA
   }
 
   const symbol = userSettings.defaultSymbol ?? 'XAUUSD';
-  const ctx = await buildSharedContext({ symbol, userId, userMessage, history, userSettings, displayName, customInstructions, env, signal });
+  const ctxArgs: Parameters<typeof buildSharedContext>[0] = { symbol, userId, userMessage, history, userSettings, displayName, env, signal };
+  if (customInstructions !== undefined) ctxArgs.customInstructions = customInstructions;
+  const ctx = await buildSharedContext(ctxArgs);
 
   const specialistNames = selectAgents(mode);
   const specialists = specialistNames.map((name) => AGENT_FACTORIES[name]());
