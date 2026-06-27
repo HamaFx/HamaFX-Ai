@@ -14,17 +14,42 @@
  * limitations under the License.
  */
 
-import { handleTelegramWebhook } from '@hamafx/ai';
+// GET /api/telegram/webhook — Returns webhook info and bot status.
+// POST /api/telegram/webhook — Receives Telegram updates.
+
+import { handleTelegramWebhook, setBotCommands, telegramApiCall } from '@hamafx/ai';
 import * as Sentry from '@sentry/nextjs';
 import { getServerEnv } from '@/lib/env';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
+/** GET — webhook status & info (useful for debugging). */
+export async function GET(): Promise<Response> {
+  const env = getServerEnv();
+
+  if (!env.TELEGRAM_BOT_TOKEN) {
+    return Response.json({
+      configured: false,
+      message: 'TELEGRAM_BOT_TOKEN not set. Bot is disabled.',
+    });
+  }
+
+  try {
+    const info = await telegramApiCall(env.TELEGRAM_BOT_TOKEN, 'getWebhookInfo', {});
+    return Response.json({ configured: true, webhookInfo: info });
+  } catch (err) {
+    return Response.json({
+      configured: true,
+      error: err instanceof Error ? err.message : 'Failed to fetch webhook info',
+    }, { status: 500 });
+  }
+}
+
 export async function POST(req: Request): Promise<Response> {
   const env = getServerEnv();
 
-  // Validate Secret Token
+  // Validate Secret Token (Telegram sends this in a header)
   const secretToken = req.headers.get('x-telegram-bot-api-secret-token');
   if (env.TELEGRAM_SECRET_TOKEN && secretToken !== env.TELEGRAM_SECRET_TOKEN) {
     console.warn('[telegram-webhook] Invalid secret token');
