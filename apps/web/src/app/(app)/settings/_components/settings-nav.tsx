@@ -3,7 +3,7 @@
 import { usePathname } from 'next/navigation';
 import { ArrowLeft, ChevronRight } from 'lucide-react';
 import { Link } from 'next-view-transitions';
-import { User, Key, List, Activity, Settings, Brain, Bot, Target } from 'lucide-react';
+import { User, Key, List, Activity, Settings, Brain, Bot, Target, Wallet } from 'lucide-react';
 import { cn } from '@/lib/cn';
 
 const NAV_ITEMS = [
@@ -15,6 +15,7 @@ const NAV_ITEMS = [
   { href: '/settings/symbols', label: 'Symbols', icon: List },
   { href: '/settings/usage', label: 'Usage', icon: Activity },
   { href: '/settings/track-record', label: 'Track Record', icon: Target },
+  { href: '/settings/portfolio', label: 'Portfolio', icon: Wallet },
 ];
 
 export function SettingsNav() {
