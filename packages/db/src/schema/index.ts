@@ -44,3 +44,5 @@ export * from './intermarket-resonance';
 export * from './audit';
 export * from './provider-tests';
 export * from './symbol-catalog';
+// STAB-01 — cron idempotency guard
+export * from './cron-runs';

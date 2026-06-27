@@ -20,7 +20,7 @@
 import { getDb, schema } from '@hamafx/db';
 import type { Symbol } from '@hamafx/shared';
 import type { ModelMessage, UIMessage } from 'ai';
-import { and, asc, desc, eq } from 'drizzle-orm';
+import { and, asc, desc, eq, lt } from 'drizzle-orm';
 
 import { estimateCostUsd } from './cost';
 
@@ -43,14 +43,35 @@ export interface DbThread {
   updatedAt: number;
 }
 
-export async function listThreads(userId: string, limit = 50): Promise<DbThread[]> {
-  const rows = await getDb()
+export async function listThreads(
+  userId: string,
+  limit = 50,
+  // PERF-07: Cursor-based pagination using updatedAt.
+  // Pass the `updatedAt` of the last item from the previous page to get the
+  // next page. Cursor is an ISO string or epoch ms; null = first page.
+  beforeUpdatedAt?: number | null,
+): Promise<{ threads: DbThread[]; nextCursor: number | null }> {
+  const query = getDb()
     .select()
     .from(schema.chatThreads)
-    .where(eq(schema.chatThreads.userId, userId))
+    .where(
+      beforeUpdatedAt
+        ? and(
+            eq(schema.chatThreads.userId, userId),
+            lt(schema.chatThreads.updatedAt, new Date(beforeUpdatedAt)),
+          )
+        : eq(schema.chatThreads.userId, userId),
+    )
     .orderBy(desc(schema.chatThreads.updatedAt))
-    .limit(limit);
-  return rows.map(rowToThread);
+    // Fetch one extra to know if there's a next page.
+    .limit(limit + 1);
+
+  const rows = await query;
+  const hasMore = rows.length > limit;
+  const pageRows = hasMore ? rows.slice(0, limit) : rows;
+  const threads = pageRows.map(rowToThread);
+  const nextCursor = hasMore ? (threads[threads.length - 1]?.updatedAt ?? null) : null;
+  return { threads, nextCursor };
 }
 
 export async function getThread(userId: string, id: string): Promise<DbThread | null> {

@@ -1,0 +1,56 @@
+# INFRA-03: Docker build context exclusions.
+# Keeping the context small speeds up docker build and reduces layer invalidation.
+
+# Version control
+.git
+.gitignore
+.gitattributes
+
+# CI / local tooling
+.github
+.vscode
+.idea
+*.code-workspace
+.editorconfig
+
+# Node modules (Docker installs from scratch)
+**/node_modules
+**/.turbo
+**/.next
+**/.vercel
+
+# Tests, docs, and fixtures (not needed at runtime)
+**/test
+**/tests
+**/__tests__
+**/*.test.ts
+**/*.test.tsx
+**/*.spec.ts
+**/*.spec.tsx
+**/*.test.js
+**/docs
+CHANGELOG.md
+PERFORMANCE_STABILITY_PLAN.md
+DSA_FEATURE_EXPANSION_PLAN.md
+MULTI_AGENT_SYSTEM_PLAN.md
+SETTINGS_ANALYSIS_PLAN.md
+README.md
+
+# Dev DB + local state
+*.db
+*.sqlite
+*.db-shm
+*.db-wal
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Secrets — should NEVER be baked into images
+.env
+.env.local
+.env.*.local
+
+# Playwright E2E artefacts
+playwright-report
+test-results

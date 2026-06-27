@@ -61,7 +61,7 @@ export default async function ChatThreadPage({ params, searchParams }: PageProps
 
   const { threadId } = await params;
 
-  const [thread, dbMessages, allThreads] = await Promise.all([
+  const [thread, dbMessages, { threads: allThreads }] = await Promise.all([
     getThread(userId, threadId),
     listMessages(userId, threadId, 200),
     listThreads(userId, 50),

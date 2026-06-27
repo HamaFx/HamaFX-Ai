@@ -21,6 +21,7 @@ import { AlertChannelSchema, AlertRuleSchema } from '@hamafx/shared';
 import { z } from 'zod';
 
 import { errorResponse, parseJsonBody, withAuth } from '@/lib/api';
+import { withRateLimit } from '@hamafx/db';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -50,6 +51,12 @@ const CreateSchema = z.object({
 
 export const POST = withAuth<void>(async (req, { user }) => {
   try {
+    // STAB-12: Limit alert creation to 60 per user per minute.
+    const rl = await withRateLimit(user.userId, 'alerts_create', 60);
+    if (!rl.allowed) {
+      return Response.json({ error: 'Too many requests' }, { status: 429 });
+    }
+
     const input = await parseJsonBody(req, CreateSchema);
     const alert = await createAlert({ ...input, userId: user.userId });
     return Response.json({ alert }, { status: 201 });

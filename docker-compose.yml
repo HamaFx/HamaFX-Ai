@@ -62,11 +62,32 @@ services:
     environment:
       DATABASE_URL: postgres://hamafx:hamafx@db:5432/hamafx
       NODE_ENV: production
+      # PERF-06: Tune the postgres-js connection pool. 5 connections per web
+      # instance covers concurrent tool calls + budget + telemetry without
+      # exhausting Supabase's transaction pooler ceiling.
+      DB_POOL_MAX: "5"
     env_file:
       - .env
     depends_on:
       db:
         condition: service_healthy
+    # INFRA-01: Health check so Docker/Compose knows when the app is ready.
+    # Polls /api/health which verifies DB connectivity. 3 retries × 10s =
+    # 30s grace period for Next.js cold start.
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3000/api/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    # INFRA-02: Reasonable resource limits. Adjust for your hardware.
+    deploy:
+      resources:
+        limits:
+          memory: 1g
+          cpus: "1.0"
+        reservations:
+          memory: 256m
     restart: unless-stopped
 
   worker:
@@ -77,11 +98,30 @@ services:
       DATABASE_URL: postgres://hamafx:hamafx@db:5432/hamafx
       NODE_ENV: production
       WORKER_MODE: docker
+      # PERF-06: Worker pool — 3 is sufficient for tick-flush + cron inserts.
+      HAMAFX_RUNTIME: worker
+      WORKER_DB_POOL_MAX: "3"
     env_file:
       - .env
     depends_on:
       db:
         condition: service_healthy
+    # INFRA-01: Worker exposes a lightweight HTTP health server on port 8081.
+    # See apps/worker/src/index.ts — it responds { status: 'ok' } at /.
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8081/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    # INFRA-02: Worker is lighter; 512MB cap covers SignalR + candle aggregation.
+    deploy:
+      resources:
+        limits:
+          memory: 512m
+          cpus: "0.5"
+        reservations:
+          memory: 128m
     restart: unless-stopped
 
 volumes:

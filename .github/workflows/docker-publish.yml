@@ -11,6 +11,8 @@ jobs:
     permissions:
       packages: write
       contents: read
+      # INFRA-04: Trivy needs security-events write to upload SARIF.
+      security-events: write
     steps:
       - name: Check out the repo
         uses: actions/checkout@v4
@@ -22,18 +24,69 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push Web
+      - name: Build Web image (for scan)
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: ./apps/web/Dockerfile
+          file: ./Dockerfile
+          push: false
+          load: true
+          tags: hamafx-web:scan
+
+      - name: Build Worker image (for scan)
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile.worker
+          push: false
+          load: true
+          tags: hamafx-worker:scan
+
+      # INFRA-04: Vulnerability scan — fail on CRITICAL severity.
+      - name: Scan Web image with Trivy
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: hamafx-web:scan
+          format: 'sarif'
+          output: 'trivy-web.sarif'
+          severity: 'CRITICAL,HIGH'
+          exit-code: '1'
+
+      - name: Scan Worker image with Trivy
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: hamafx-worker:scan
+          format: 'sarif'
+          output: 'trivy-worker.sarif'
+          severity: 'CRITICAL,HIGH'
+          exit-code: '1'
+
+      - name: Upload Web Trivy SARIF to GitHub Security
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: 'trivy-web.sarif'
+          category: trivy-web
+
+      - name: Upload Worker Trivy SARIF to GitHub Security
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: 'trivy-worker.sarif'
+          category: trivy-worker
+
+      - name: Push Web image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
           push: true
           tags: ghcr.io/${{ github.repository }}/web:latest,ghcr.io/${{ github.repository }}/web:${{ github.ref_name }}
 
-      - name: Build and push Worker
+      - name: Push Worker image
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: ./apps/worker/Dockerfile
+          file: ./Dockerfile.worker
           push: true
           tags: ghcr.io/${{ github.repository }}/worker:latest,ghcr.io/${{ github.repository }}/worker:${{ github.ref_name }}

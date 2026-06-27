@@ -380,46 +380,62 @@ export async function updateApiKeysAction(
       }
     }
 
-    await db.update(schema.userSettings)
-      .set({
-        aiApiKeys: Object.keys(keys).length > 0 ? encryptByok(keys) : null,
-        aiApiKeysUpdatedAt: Object.keys(newUpdatedAt).length > 0 ? newUpdatedAt : null,
-      })
-      .where(eq(schema.userSettings.userId, session.user.id));
-
+    // STAB-10: Run all network calls (testProviderKey) BEFORE opening a
+    // DB transaction so we don't hold a connection open during I/O.
+    // Collect results, then write everything atomically.
     const testedAt = new Date();
+    const testResults: Array<{
+      id: string;
+      action: 'upsert' | 'delete';
+      ok?: boolean;
+      error?: string;
+    }> = [];
+
     for (const id of PROVIDER_IDS) {
       const oldKey = oldDecrypted?.[id];
       const newKey = keys[id];
 
       if (newKey && newKey !== oldKey) {
         const result = await testProviderKey(id, newKey);
-        await db
-          .delete(schema.providerTests)
-          .where(
-            and(
-              eq(schema.providerTests.userId, session.user.id),
-              eq(schema.providerTests.providerId, id),
-            ),
-          );
-        await db.insert(schema.providerTests).values({
-          userId: session.user.id,
-          providerId: id,
-          ok: result.ok,
-          error: result.ok ? null : (result.error ?? 'unknown error'),
-          testedAt: testedAt.toISOString(),
-        });
+        if (result.ok) {
+          testResults.push({ id, action: 'upsert', ok: true });
+        } else {
+          testResults.push({ id, action: 'upsert', ok: false, error: result.error ?? 'unknown error' });
+        }
       } else if (!newKey && oldKey) {
-        await db
-          .delete(schema.providerTests)
-          .where(
-            and(
-              eq(schema.providerTests.userId, session.user.id),
-              eq(schema.providerTests.providerId, id),
-            ),
-          );
+        testResults.push({ id, action: 'delete' });
       }
     }
+
+    // STAB-10: Atomic write — all DB mutations inside one transaction.
+    await db.transaction(async (tx) => {
+      await tx.update(schema.userSettings)
+        .set({
+          aiApiKeys: Object.keys(keys).length > 0 ? encryptByok(keys) : null,
+          aiApiKeysUpdatedAt: Object.keys(newUpdatedAt).length > 0 ? newUpdatedAt : null,
+        })
+        .where(eq(schema.userSettings.userId, session.user.id!));
+
+      for (const tr of testResults) {
+        await tx
+          .delete(schema.providerTests)
+          .where(
+            and(
+              eq(schema.providerTests.userId, session.user.id!),
+              eq(schema.providerTests.providerId, tr.id),
+            ),
+          );
+        if (tr.action === 'upsert') {
+          await tx.insert(schema.providerTests).values({
+            userId: session.user.id!,
+            providerId: tr.id,
+            ok: tr.ok!,
+            error: tr.ok ? null : (tr.error ?? 'unknown error'),
+            testedAt: testedAt.toISOString(),
+          });
+        }
+      }
+    });
 
     revalidatePath('/settings/api-keys');
     return {

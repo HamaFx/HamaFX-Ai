@@ -209,6 +209,11 @@ export async function runChat(args: RunChatArgs) {
   if (modelOverride !== undefined) routingArgs.modelOverride = modelOverride;
   const routing: RoutingDecision = routeTurn(routingArgs);
 
+  // PERF-05: Decrypt BYOK keys once per request, not once per retry attempt.
+  // AES-256-GCM is synchronous CPU work; hoisting it avoids 1-4 redundant
+  // decryptions when the retry loop fires on transient provider errors.
+  const decryptedByokKeys = userSettings.aiApiKeys ? decryptByok(userSettings.aiApiKeys) : null;
+
   let fallbackInfo: FallbackPartPayload | null = null;
   let attempts = 0;
   const maxAttempts = 5;
@@ -286,7 +291,8 @@ export async function runChat(args: RunChatArgs) {
         : 'google'; // default fallback starting point if resolution fails completely
 
       const idx = chain.indexOf(currentProvider);
-      const stored = decryptByok(userSettings.aiApiKeys);
+      // PERF-05: Use the pre-decrypted BYOK keys hoisted above the loop.
+      const stored = decryptedByokKeys;
       for (let i = idx + 1; i < chain.length; i++) {
         const pid = chain[i] as ProviderId;
         const key = stored?.[pid] || (pid === 'google' ? env.GOOGLE_GENERATIVE_AI_API_KEY : undefined);
@@ -643,7 +649,8 @@ export async function runChat(args: RunChatArgs) {
       const chain = userSettings.aiFallbackChain ?? [];
       let nextProviderId: ProviderId | null = null;
       const idx = chain.indexOf(providerId);
-      const stored = decryptByok(userSettings.aiApiKeys);
+      // PERF-05: Use the pre-decrypted BYOK keys hoisted above the loop.
+      const stored = decryptedByokKeys;
       for (let i = idx + 1; i < chain.length; i++) {
         const pid = chain[i] as ProviderId;
         const key = stored?.[pid] || (pid === 'google' ? env.GOOGLE_GENERATIVE_AI_API_KEY : undefined);

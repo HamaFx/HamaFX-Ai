@@ -33,6 +33,7 @@
 
 import { latestArticleTimestampMs, upsertArticles } from '@hamafx/ai';
 import { fetchNews } from '@hamafx/data';
+import * as Sentry from '@sentry/nextjs';
 
 import { withCronAuth } from '@/lib/cron';
 
@@ -95,6 +96,8 @@ export async function GET(req: Request): Promise<Response> {
       };
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
+      // STAB-04 / OBS-01: capture to Sentry.
+      Sentry.captureException(err, { tags: { job: 'cron/news' } });
       console.error('[cron/news] fetch failed:', message);
       throw new Error(`news fetch failed: ${message}`);
     }

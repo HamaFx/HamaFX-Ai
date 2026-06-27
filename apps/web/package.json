@@ -11,6 +11,7 @@
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
     "test": "vitest --passWithNoTests",
+    "analyze": "ANALYZE=true next build",
     "generate:icons": "node scripts/generate-icons.mjs",
     "clean": "rm -rf node_modules .turbo .next"
   },
@@ -54,6 +55,7 @@
   },
   "devDependencies": {
     "@hamafx/config": "workspace:*",
+    "@next/bundle-analyzer": "^16.2.9",
     "@playwright/test": "^1.61.0",
     "@tailwindcss/postcss": "^4.0.0",
     "@types/bcryptjs": "^3.0.0",

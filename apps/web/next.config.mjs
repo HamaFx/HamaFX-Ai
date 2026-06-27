@@ -55,6 +55,12 @@ const nextConfig = {
   },
 };
 
-export default withSentryConfig(nextConfig, {
+import bundleAnalyzer from '@next/bundle-analyzer';
+
+const withBundleAnalyzer = bundleAnalyzer({
+  enabled: process.env.ANALYZE === 'true',
+});
+
+export default withSentryConfig(withBundleAnalyzer(nextConfig), {
   silent: !process.env.CI,
 });

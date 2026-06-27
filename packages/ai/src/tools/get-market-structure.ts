@@ -34,6 +34,7 @@ import {
 import { tool } from 'ai';
 import { z } from 'zod';
 
+
 const InputSchema = z.object({
   symbol: SymbolSchema,
   tf: TimeframeSchema,

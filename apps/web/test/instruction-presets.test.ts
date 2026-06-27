@@ -14,7 +14,11 @@
  * limitations under the License.
  */
 
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
+
+vi.mock('../src/app/(app)/settings/actions', () => ({
+  updateAiPrefsAction: vi.fn(),
+}));
 
 import {
   appendPreset,

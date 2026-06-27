@@ -26,6 +26,7 @@
 //   503 { missing: string[] }        when VAPID keys are not configured
 
 import { savePushSubscription } from '@hamafx/ai';
+import { withRateLimit } from '@hamafx/db';
 import { z } from 'zod';
 
 import { withAuth } from '@/lib/api';
@@ -42,6 +43,12 @@ const BodySchema = z.object({
 });
 
 export const POST = withAuth<void>(async (req, { user }) => {
+  // STAB-12: Rate limit — 10 subscribe attempts per user per minute.
+  const rl = await withRateLimit(user.userId, 'push_subscribe', 10);
+  if (!rl.allowed) {
+    return Response.json({ error: 'Too many requests' }, { status: 429 });
+  }
+
   const missing: string[] = [];
   if (!process.env.VAPID_PUBLIC_KEY) missing.push('VAPID_PUBLIC_KEY');
   if (!process.env.VAPID_PRIVATE_KEY) missing.push('VAPID_PRIVATE_KEY');

@@ -73,7 +73,7 @@ export default async function ChatLanding({ searchParams }: PageProps) {
     redirect(`/chat/${fresh.id}?prompt=${encodeURIComponent(prompt)}`);
   }
 
-  const threads = await listThreads(userId, 1);
+  const { threads } = await listThreads(userId, 1);
   const target = threads[0] ?? (await createThread(userId));
   redirect(`/chat/${target.id}`);
 }

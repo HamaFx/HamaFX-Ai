@@ -32,8 +32,13 @@ export async function GET(req: Request): Promise<Response> {
     return Response.json({ error: { code: 'UNAUTHORIZED', message: 'Authentication required' } }, { status: 401 });
   }
   try {
-    const threads = await listThreads(user.userId);
-    return Response.json({ threads });
+    // PERF-07: Cursor-based pagination. ?before=<epoch ms>&limit=<N>
+    const url = new URL(req.url);
+    const limit = Math.min(Number(url.searchParams.get('limit') ?? '50'), 100);
+    const before = url.searchParams.get('before');
+    const beforeMs = before ? Number(before) : null;
+    const { threads, nextCursor } = await listThreads(user.userId, limit, beforeMs);
+    return Response.json({ threads, nextCursor });
   } catch (err) {
     return errorResponse(err);
   }

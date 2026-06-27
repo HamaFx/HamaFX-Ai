@@ -24,6 +24,7 @@
 // via `briefings_emitted` PK on (`weekly_review:<isoWeek>`, 'weekly_review').
 
 import { emitWeeklyReview } from '@hamafx/ai';
+import * as Sentry from '@sentry/nextjs';
 
 import { withCronAuth } from '@/lib/cron';
 
@@ -43,6 +44,8 @@ export async function GET(req: Request): Promise<Response> {
         if (r.emitted) emittedCount++;
         if (r.reason) reasons.push(`[${userId}]: ${r.reason}`);
       } catch (err) {
+        // STAB-04 / OBS-01: capture to Sentry.
+        Sentry.captureException(err, { tags: { job: 'cron/weekly-review', userId } });
         console.error(`[cron weekly-review] for user ${userId} failed`, err);
         reasons.push(`[${userId}]: error`);
       }

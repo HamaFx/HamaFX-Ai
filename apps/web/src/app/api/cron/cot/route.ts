@@ -26,6 +26,7 @@
 import { upsertCoTReport } from '@hamafx/ai';
 import { fetchLatestRows, parseCftcInt, toCftcName } from '@hamafx/data/providers/cftc';
 import { SYMBOLS, type Symbol } from '@hamafx/shared';
+import * as Sentry from '@sentry/nextjs';
 
 import { withCronAuth } from '@/lib/cron';
 
@@ -69,6 +70,8 @@ export async function GET(req: Request): Promise<Response> {
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
         errors.push({ symbol, message });
+        // STAB-04 / OBS-01: capture to Sentry.
+        Sentry.captureException(err, { tags: { job: 'cron/cot', symbol } });
         console.error(`[cron cot] ${symbol} failed: ${message}`);
       }
     }

@@ -85,9 +85,15 @@ export const chatTelemetry = pgTable(
     kind: text('kind').$type<ChatTelemetryKind | null>(),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   },
-  (t) => [index('chat_telemetry_user_id_idx').on(t.userId), 
+  (t) => [
+    index('chat_telemetry_user_id_idx').on(t.userId),
     index('telemetry_created_idx').on(t.createdAt),
     index('telemetry_thread_idx').on(t.threadId),
+    // PERF-03: Composite index for the 30-day usage range query in computeUsage().
+    // The query filters WHERE userId = ? AND createdAt >= ? AND createdAt <= ?
+    // — leading with userId then createdAt lets Postgres range-scan this index
+    // without a bitmap merge of two single-column indexes.
+    index('telemetry_user_created_idx').on(t.userId, t.createdAt),
   ],
 );
 

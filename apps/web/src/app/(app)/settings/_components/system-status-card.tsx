@@ -20,7 +20,9 @@
 // directly + counts push subscriptions.
 
 import { listPushSubscriptions } from '@hamafx/ai';
+import { getDb } from '@hamafx/db';
 import { CheckCircle2, CircleAlert } from 'lucide-react';
+import { sql } from 'drizzle-orm';
 
 import { cn } from '@/lib/cn';
 import { getServerEnv } from '@/lib/env';
@@ -35,6 +37,8 @@ async function buildStatuses(userId: string): Promise<{
   channels: ChannelStatus[];
   pushCount: number;
   databaseConnected: boolean;
+  stuckJobs: number;
+  recentErrors: number;
 }> {
   const env = getServerEnv();
   const channels: ChannelStatus[] = [
@@ -62,10 +66,31 @@ async function buildStatuses(userId: string): Promise<{
 
   let pushCount = 0;
   let databaseConnected = false;
+  let stuckJobs = 0;
+  let recentErrors = 0;
   try {
     const subs = await listPushSubscriptions(userId);
     pushCount = subs.length;
     databaseConnected = true;
+
+    // OBS-04: Query cron_runs for stuck/errored jobs in last 24h.
+    try {
+      const db = getDb();
+      const since = new Date(Date.now() - 24 * 60 * 60 * 1000);
+      const [row] = await db.execute<{ stuck: string; errors: string }>(sql`
+        SELECT
+          COUNT(*) FILTER (
+            WHERE status = 'started' AND started_at < now() - INTERVAL '5 minutes'
+          )::text AS stuck,
+          COUNT(*) FILTER (WHERE status = 'error')::text AS errors
+        FROM cron_runs
+        WHERE started_at >= ${since}
+      `);
+      stuckJobs = Number((row as { stuck: string; errors: string })?.stuck ?? 0);
+      recentErrors = Number((row as { stuck: string; errors: string })?.errors ?? 0);
+    } catch {
+      // cron_runs not yet migrated — silently skip
+    }
   } catch {
     console.error('[settings] failed to list push subscriptions');
   }
@@ -79,11 +104,12 @@ async function buildStatuses(userId: string): Promise<{
         : 'Configured · 0 devices';
   }
 
-  return { channels, pushCount, databaseConnected };
+  return { channels, pushCount, databaseConnected, stuckJobs, recentErrors };
 }
 
 export async function SystemStatusCard({ userId }: { userId: string }) {
-  const { channels, databaseConnected } = await buildStatuses(userId);
+  const { channels, databaseConnected, stuckJobs, recentErrors } = await buildStatuses(userId);
+  const cronHealthy = stuckJobs === 0 && recentErrors === 0;
   const allReady = channels.every((c) => c.ready) && databaseConnected;
 
   return (
@@ -161,28 +187,28 @@ export async function SystemStatusCard({ userId }: { userId: string }) {
         ))}
       </ul>
 
-      {/* Database connection */}
+      {/* Cron job health — OBS-04 */}
       <div className="border-divider/60 -mx-4 border-t px-4 pt-3">
         <div className="flex items-center gap-3">
           <span
             aria-hidden="true"
             className={cn(
               'inline-flex size-7 shrink-0 items-center justify-center rounded-lg',
-              databaseConnected
-                ? 'bg-bull/15 text-bull'
-                : 'bg-bear/15 text-bear',
+              cronHealthy ? 'bg-bull/15 text-bull' : 'bg-warn/15 text-warn',
             )}
           >
-            {databaseConnected ? (
+            {cronHealthy ? (
               <CheckCircle2 className="size-4" strokeWidth={2.25} />
             ) : (
               <CircleAlert className="size-4" strokeWidth={2.25} />
             )}
           </span>
           <div className="flex min-w-0 flex-1 flex-col">
-            <span className="text-fg text-sm font-semibold">Database</span>
+            <span className="text-fg text-sm font-semibold">Background jobs</span>
             <span className="text-fg-subtle text-body-sm">
-              {databaseConnected ? 'Postgres + pgvector reachable' : 'Connection failed'}
+              {cronHealthy
+                ? 'All jobs healthy (last 24h)'
+                : `${stuckJobs} stuck · ${recentErrors} error${recentErrors === 1 ? '' : 's'} (last 24h)`}
             </span>
           </div>
         </div>

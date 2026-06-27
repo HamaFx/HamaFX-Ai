@@ -3,9 +3,10 @@
 import bcrypt from 'bcryptjs';
 import { eq } from 'drizzle-orm';
 import { AuthError } from 'next-auth';
+import { headers } from 'next/headers';
 import { z } from 'zod';
 
-import { getDb, schema } from '@hamafx/db';
+import { getDb, schema, withRateLimit } from '@hamafx/db';
 import { signIn } from '@/auth';
 
 const loginSchema = z.object({
@@ -58,6 +59,19 @@ export async function registerAction(prevState: unknown, formData: FormData) {
 
   const { name, email, password } = parsed.data;
   const normalizedEmail = email.trim().toLowerCase();
+
+  // INFRA-08: Rate limit registrations per IP — 5 per minute per IP.
+  // This prevents automated account-creation spam.
+  const headersList = await headers();
+  const clientIp =
+    headersList.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+    headersList.get('x-real-ip') ||
+    'unknown';
+  const rl = await withRateLimit(`register:${clientIp}`, 'register', 5);
+  if (!rl.allowed) {
+    return { error: 'Too many registration attempts. Please try again later.' };
+  }
+
   const db = getDb();
 
   const existingUser = await db.select().from(schema.users).where(eq(schema.users.email, normalizedEmail)).limit(1);
@@ -66,23 +80,28 @@ export async function registerAction(prevState: unknown, formData: FormData) {
   }
 
   const hashedPassword = await bcrypt.hash(password, 10);
+  const newUserId = crypto.randomUUID();
 
-  const [newUser] = await db.insert(schema.users).values({
-    id: crypto.randomUUID(),
-    name,
-    email: normalizedEmail,
-    hashedPassword,
-    image: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(name)}`,
-  }).returning();
+  // STAB-10: Wrap the users + userSettings insert in a single transaction
+  // so a partial failure (e.g. userSettings FK violation) rolls back the user row.
+  await db.transaction(async (tx) => {
+    const [u] = await tx.insert(schema.users).values({
+      id: newUserId,
+      name,
+      email: normalizedEmail,
+      hashedPassword,
+      image: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(name)}`,
+    }).returning();
 
-  if (!newUser) {
-    return { error: 'Failed to create user' };
-  }
+    if (!u) throw new Error('Failed to create user');
 
-  await db.insert(schema.userSettings).values({
-    userId: newUser.id,
-    onboardingCompleted: false,
-    defaultSymbol: 'XAUUSD',
+    await tx.insert(schema.userSettings).values({
+      userId: u.id,
+      onboardingCompleted: false,
+      defaultSymbol: 'XAUUSD',
+    });
+
+    return [u];
   });
 
   try {

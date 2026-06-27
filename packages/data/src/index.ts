@@ -66,3 +66,12 @@ export {
   finnhubProvider,
   liveTicksProvider,
 } from './providers/market-data-providers';
+
+// STAB-05: Circuit breaker — per-provider CLOSED/OPEN/HALF_OPEN state machine.
+export {
+  getCircuitBreaker,
+  _resetAllBreakers,
+  type CircuitBreaker,
+  type CircuitBreakerOptions,
+  type CircuitState,
+} from './circuit-breaker';

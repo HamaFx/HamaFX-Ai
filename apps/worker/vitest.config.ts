@@ -28,5 +28,18 @@ export default defineConfig({
     alias: {
       'server-only': new URL('./test/empty.ts', import.meta.url).pathname,
     },
+    // TEST-09: Coverage thresholds. Run with `pnpm test --coverage` to enforce.
+    // We target the src/ directory only; test helpers and empty stubs are excluded.
+    coverage: {
+      provider: 'v8',
+      include: ['src/**/*.ts'],
+      exclude: ['src/**/*.test.ts'],
+      thresholds: {
+        statements: 40,
+        branches: 70,
+        functions: 80,
+        lines: 40,
+      },
+    },
   },
 });

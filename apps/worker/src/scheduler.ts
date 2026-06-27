@@ -14,9 +14,29 @@
  * limitations under the License.
  */
 
+// STAB-01 + STAB-02: Scheduler with idempotency guards and per-job timeouts.
+//
+// Jobs whose cadence is ≥ daily use once-per-day idempotency via
+// acquireCronLock (STAB-01). Minute-level jobs (alerts, briefings) are
+// inherently idempotent and skip the lock.
+//
+// STAB-02: Every job run races against a 60-second AbortController. The
+// signal is threaded into JobContext so individual jobs can short-circuit
+// long loops.
+
 import cron from 'node-cron';
+import { getDb } from '@hamafx/db';
 import type { Logger } from './log.js';
 import { JOBS } from './jobs/index.js';
+import { acquireCronLock } from './cron-lock.js';
+
+// STAB-02: Maximum wall-clock time any scheduled job may run.
+const JOB_TIMEOUT_MS = 60_000;
+
+// Jobs that run more often than once-per-day are inherently idempotent
+// at the application layer (briefings uses (eventId, kind) PK; alerts
+// evaluates current state each minute). Skip the daily lock for them.
+const SKIP_DAILY_LOCK = new Set<keyof typeof JOBS>(['alerts', 'briefings']);
 
 export function startScheduler(log: Logger): void {
   log.info('Starting node-cron scheduler for Docker mode');
@@ -68,21 +88,57 @@ async function runJobSafely(name: keyof typeof JOBS, log: Logger): Promise<void>
     log.error(`Scheduler attempted to run unknown job: ${name}`);
     return;
   }
-  
-  const jobLog = log.with({ job: name });
-  jobLog.info(`Running scheduled job`);
-  
+
+  // OBS-02: Per-run correlation ID so all log lines from one execution can
+  // be filtered together in Loki / CloudWatch / journald.
+  const runId = crypto.randomUUID();
+  const jobLog = log.with({ job: name, runId });
+
+  // STAB-01: Acquire an idempotency lock for daily-cadence jobs.
+  const useLock = !SKIP_DAILY_LOCK.has(name);
+  let lock = null;
+  if (useLock) {
+    try {
+      lock = await acquireCronLock(name, getDb());
+      if (!lock) {
+        jobLog.info('Job skipped — already ran today (idempotency guard)');
+        return;
+      }
+    } catch (lockErr) {
+      // Lock acquisition failed (DB unavailable?). Log and proceed without
+      // idempotency rather than silently skipping — a missed run is worse
+      // than a duplicate for most jobs.
+      jobLog.warn('Failed to acquire cron lock, proceeding without idempotency guard', {
+        err: String(lockErr),
+      });
+    }
+  }
+
+  // STAB-02: Race the job against a hard timeout.
+  const ac = new AbortController();
+  const timeoutHandle = setTimeout(() => {
+    ac.abort(new Error(`Job ${name} timed out after ${JOB_TIMEOUT_MS}ms`));
+  }, JOB_TIMEOUT_MS);
+
+  jobLog.info('Running scheduled job');
+
   try {
     const startMs = Date.now();
-    const result = await job.run({ log: jobLog });
+    const result = await job.run({ log: jobLog, signal: ac.signal });
     const durationMs = Date.now() - startMs;
-    
-    jobLog.info(`Job completed successfully`, {
+
+    jobLog.info('Job completed successfully', {
       durationMs,
       processed: result.processed,
       note: result.note,
     });
+
+    await lock?.done(result.note);
   } catch (err) {
-    jobLog.error(`Job failed`, { err: String(err) });
+    const isTimeout = ac.signal.aborted;
+    jobLog.error(`Job ${isTimeout ? 'timed out' : 'failed'}`, { err: String(err) });
+    await lock?.fail(err);
+  } finally {
+    clearTimeout(timeoutHandle);
   }
 }

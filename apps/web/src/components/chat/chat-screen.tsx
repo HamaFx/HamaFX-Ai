@@ -231,7 +231,7 @@ export function ChatScreen({
     el.addEventListener('scroll', handleScroll, { passive: true });
     handleScroll();
     return () => el.removeEventListener('scroll', handleScroll);
-  }, [messages]);
+  }, []);
 
   // After streaming completes, re-fetch thread to pick up the LLM-
   // generated title.

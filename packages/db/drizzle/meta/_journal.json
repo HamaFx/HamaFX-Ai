@@ -162,6 +162,20 @@
       "when": 1782417403961,
       "tag": "0022_many_proteus",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1782486986251,
+      "tag": "0023_burly_nightcrawler",
+      "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1782487022367,
+      "tag": "0024_living_doorman",
+      "breakpoints": true
     }
   ]
 }

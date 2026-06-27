@@ -15,6 +15,7 @@
  */
 
 import { handleTelegramWebhook } from '@hamafx/ai';
+import * as Sentry from '@sentry/nextjs';
 import { getServerEnv } from '@/lib/env';
 
 export const runtime = 'nodejs';
@@ -38,19 +39,20 @@ export async function POST(req: Request): Promise<Response> {
     return new Response('Bad Request', { status: 400 });
   }
 
-  // We intentionally do NOT await the handleTelegramWebhook here so that
-  // Telegram receives a 200 OK immediately and does not timeout/retry.
-  // Wait, in Serverless Environments like Vercel, if we return early, the
-  // function might be killed before `handleTelegramWebhook` finishes!
-  // To solve this, we can use `waitUntil` from `@vercel/functions`.
-  
-  // Try using `waitUntil` to keep the lambda alive if available, 
-  // or simply await it if we expect fast responses. We will await it.
+  // STAB-03: Return 500 on handler errors so Telegram retries the update.
+  // Previously the handler swallowed errors and always returned 200,
+  // causing updates to be silently dropped on failures.
   try {
     await handleTelegramWebhook(update, env);
+    return new Response('OK', { status: 200 });
   } catch (err) {
+    // OBS-01: Capture to Sentry instead of only logging to console.
+    Sentry.captureException(err, {
+      tags: { component: 'telegram-webhook' },
+      extra: { updateId: (update as Record<string, unknown>)?.update_id },
+    });
     console.error('[telegram-webhook] Handler failed:', err);
+    // Return 500 so Telegram retries delivery (up to its retry limit).
+    return new Response('Internal Server Error', { status: 500 });
   }
-
-  return new Response('OK', { status: 200 });
 }

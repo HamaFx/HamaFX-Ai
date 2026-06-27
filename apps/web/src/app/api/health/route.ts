@@ -14,27 +14,124 @@
  * limitations under the License.
  */
 
+// OBS-03: Enhanced health endpoint.
+//
+// Checks:
+//   db       — SELECT 1 to verify connectivity
+//   env      — ensures critical env vars are present (no values exposed)
+//   version  — deployed commit SHA from DEPLOYED_SHA env var
+//
+// Response schema:
+//   200 — all checks passed; body: { status: 'ok', checks: {...}, ... }
+//   503 — at least one check failed; body: { status: 'error', checks: {...}, ... }
+//
+// The full check response is deliberately kept low-sensitivity (no secrets,
+// no user data). The per-check `ok` field surfaces in the Docker/Compose
+// healthcheck and in uptime-monitoring alerts.
+//
+// OBS-04 addition: includes the count of jobs currently in `cron_runs` for
+// the last 24 hours so the system-status card can detect stuck jobs.
+
 import { NextResponse } from 'next/server';
 import { getDb } from '@hamafx/db';
 import { sql } from 'drizzle-orm';
 
+export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-export async function GET() {
+interface CheckResult {
+  ok: boolean;
+  latencyMs?: number;
+  message?: string;
+}
+
+async function checkDb(): Promise<CheckResult> {
+  const start = Date.now();
   try {
-    // Simple query to verify DB connectivity
     const db = getDb();
     await db.execute(sql`SELECT 1`);
-    
-    return NextResponse.json({
-      status: 'ok',
-      timestamp: new Date().toISOString()
-    }, { status: 200 });
-  } catch {
-    return NextResponse.json({
-      status: 'error',
-      message: 'Database connection failed',
-      timestamp: new Date().toISOString()
-    }, { status: 503 });
+    return { ok: true, latencyMs: Date.now() - start };
+  } catch (err) {
+    return {
+      ok: false,
+      latencyMs: Date.now() - start,
+      message: err instanceof Error ? err.message : 'db check failed',
+    };
   }
+}
+
+// STAB-11: Verify pgvector extension is installed.
+async function checkPgvector(): Promise<CheckResult> {
+  try {
+    const db = getDb();
+    const rows = await db.execute<{ extname: string }>(sql`
+      SELECT extname FROM pg_extension WHERE extname = 'vector'
+    `);
+    if (rows.length === 0) {
+      return { ok: false, message: 'pgvector extension not installed' };
+    }
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, message: err instanceof Error ? err.message : 'pgvector check failed' };
+  }
+}
+
+async function checkCronRuns(): Promise<CheckResult & { recentRuns?: number; stuckRuns?: number }> {
+  try {
+    const db = getDb();
+    const since = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    // Count recent cron runs and detect any that are stuck in 'started' > 5 min ago.
+    const [row] = await db.execute<{ recent: string; stuck: string }>(sql`
+      SELECT
+        COUNT(*)::text AS recent,
+        COUNT(*) FILTER (
+          WHERE status = 'started'
+          AND started_at < now() - INTERVAL '5 minutes'
+        )::text AS stuck
+      FROM cron_runs
+      WHERE started_at >= ${since}
+    `);
+    return {
+      ok: true,
+      recentRuns: Number((row as { recent: string; stuck: string }).recent ?? 0),
+      stuckRuns: Number((row as { recent: string; stuck: string }).stuck ?? 0),
+    };
+  } catch {
+    // cron_runs table may not exist yet (pre-migration). Non-fatal.
+    return { ok: true, message: 'cron_runs unavailable (may need migration)' };
+  }
+}
+
+function checkEnv(): CheckResult {
+  const required = ['DATABASE_URL', 'AUTH_COOKIE_SECRET', 'CRON_SECRET'];
+  const missing = required.filter((k) => !process.env[k]);
+  if (missing.length > 0) {
+    return { ok: false, message: `missing env vars: ${missing.join(', ')}` };
+  }
+  return { ok: true };
+}
+
+export async function GET() {
+  const [dbCheck, cronCheck] = await Promise.all([checkDb(), checkCronRuns()]);
+  const envCheck = checkEnv();
+  const pgvectorCheck = await checkPgvector();
+
+  const allOk = dbCheck.ok && envCheck.ok;
+  const status = allOk ? 'ok' : 'error';
+  const httpStatus = allOk ? 200 : 503;
+
+  return NextResponse.json(
+    {
+      status,
+      ts: new Date().toISOString(),
+      version: process.env.DEPLOYED_SHA ?? 'unknown',
+      checks: {
+        db: dbCheck,
+        env: envCheck,
+        cron: cronCheck,
+        pgvector: pgvectorCheck,
+      },
+    },
+    { status: httpStatus },
+  );
 }

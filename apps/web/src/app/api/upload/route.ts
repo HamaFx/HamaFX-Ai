@@ -32,6 +32,7 @@ import { validationError, providerUnavailable } from '@hamafx/shared';
 
 import { errorResponse, withAuth } from '@/lib/api';
 import { getServerEnv } from '@/lib/env';
+import { withRateLimit } from '@hamafx/db';
 import {
   CHAT_IMAGE_MAX_BYTES,
   uploadChatImage,
@@ -55,6 +56,12 @@ const ALLOWED_MEDIA_TYPES = new Set<string>([
 
 export const POST = withAuth<void>(async (req, { user }) => {
   try {
+    // STAB-12: Rate limit uploads — 20 per user per minute.
+    const rl = await withRateLimit(user.userId, 'upload', 20);
+    if (!rl.allowed) {
+      return Response.json({ error: 'Too many uploads. Please wait a moment.' }, { status: 429 });
+    }
+
     // Pre-check the content-length header so an oversize request is
     // rejected before we read the form. The body-size guard in
     // parseJsonBody (Phase 1 §6) lives on the JSON path; multipart
@@ -93,7 +100,18 @@ export const POST = withAuth<void>(async (req, { user }) => {
       throw validationError(`Unsupported media type: ${mediaType}`);
     }
 
-    const buffer = await file.arrayBuffer();
+    let uploadBody: ArrayBuffer | Uint8Array = await file.arrayBuffer();
+    
+    // PERF-09: Image optimization with sharp
+    if (mediaType.startsWith('image/')) {
+      const sharp = (await import('sharp')).default;
+      const optimized = await sharp(uploadBody)
+        .resize({ width: 2048, height: 2048, fit: 'inside', withoutEnlargement: true })
+        .webp({ quality: 80 })
+        .toBuffer();
+      uploadBody = new Uint8Array(optimized);
+    }
+
     const result = await uploadChatImage(
       {
         SUPABASE_URL: env.SUPABASE_URL,
@@ -101,9 +119,9 @@ export const POST = withAuth<void>(async (req, { user }) => {
       },
       {
         userId: user.userId,
-        body: buffer,
-        mediaType,
-        filename: file.name || 'attachment',
+        body: uploadBody,
+        mediaType: mediaType.startsWith('image/') ? 'image/webp' : mediaType,
+        filename: file.name ? file.name.replace(/\.[^/.]+$/, "") + ".webp" : 'attachment.webp',
       },
     );
 

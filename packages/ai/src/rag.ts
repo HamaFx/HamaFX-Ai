@@ -74,7 +74,11 @@ export interface RunRagQueryArgs {
  */
 export async function runRagQuery(args: RunRagQueryArgs): Promise<RagRow[]> {
   const halflife = args.halflifeDays ?? DEFAULT_HALFLIFE_DAYS_NEWS;
-  const POOL = Math.max(args.limit * 4, 16);
+  // PERF-11: Hard cap the pool to prevent runaway vector scans.
+  // pool = min(limit * 4, MAX_POOL). At limit=50 this gives 200 rows —
+  // enough for quality RRF fusion while keeping Postgres ANN scan O(1).
+  const MAX_POOL = 200;
+  const POOL = Math.min(Math.max(args.limit * 4, 16), MAX_POOL);
 
   const [dense, lexical] = await Promise.all([
     runDenseNewsQuery({ ...args, limit: POOL }),

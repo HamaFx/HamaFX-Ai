@@ -1,0 +1,102 @@
+/**
+ * Copyright 2026 HamaFX
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+// STAB-01: Cron idempotency guard.
+//
+// Usage:
+//   const guard = await acquireCronLock('briefings', db);
+//   if (!guard) return { processed: 0, note: 'skipped: already ran today' };
+//   try {
+//     // ... do work ...
+//     await guard.done(note);
+//   } catch (err) {
+//     await guard.fail(err);
+//     throw err;
+//   }
+//
+// The lock is acquired by attempting to INSERT into `cron_runs`. If a row
+// for (jobName, today UTC) already exists the INSERT conflicts and returns
+// null, signalling the caller to skip.  This ensures at-most-once
+// execution per calendar day even when systemd timers and Vercel cron fire
+// concurrently.
+//
+// STAB-02 note: pass `timeoutMs` to abort long-running jobs. The helper
+// returns an AbortSignal that the job should honour.
+
+import { sql } from 'drizzle-orm';
+import { getDb, schema } from '@hamafx/db';
+
+type DbClient = ReturnType<typeof getDb>;
+
+export interface CronLock {
+  /** Mark the job as successfully completed. */
+  done(note?: string): Promise<void>;
+  /** Mark the job as failed with an error message. */
+  fail(err: unknown): Promise<void>;
+}
+
+/**
+ * Attempt to acquire an idempotency lock for `jobName` for today (UTC).
+ *
+ * @returns A `CronLock` on success, or `null` when the job was already
+ *          recorded for today (caller should skip).
+ */
+export async function acquireCronLock(
+  jobName: string,
+  db: DbClient,
+): Promise<CronLock | null> {
+  const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD UTC
+
+  // Attempt an INSERT. ON CONFLICT on the (job_name, run_date) PK means
+  // the row already exists — another instance is running or already ran.
+  const inserted = await db.execute(sql`
+    INSERT INTO cron_runs (job_name, run_date, status, started_at)
+    VALUES (${jobName}, ${today}::date, 'started', now())
+    ON CONFLICT (job_name, run_date) DO NOTHING
+    RETURNING job_name
+  `);
+
+  // If nothing was inserted, the job already ran today.
+  // Drizzle db.execute() returns a RowList which is directly iterable/array-like.
+  if (inserted.length === 0) {
+    return null;
+  }
+
+  return {
+    async done(note?: string) {
+      await db.execute(sql`
+        UPDATE cron_runs
+        SET status = 'done',
+            finished_at = now(),
+            note = ${note?.slice(0, 500) ?? null}
+        WHERE job_name = ${jobName} AND run_date = ${today}::date
+      `);
+    },
+    async fail(err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      await db.execute(sql`
+        UPDATE cron_runs
+        SET status = 'error',
+            finished_at = now(),
+            note = ${message.slice(0, 500)}
+        WHERE job_name = ${jobName} AND run_date = ${today}::date
+      `);
+    },
+  };
+}
+
+// Expose schema for convenience (re-exported from @hamafx/db).
+export { schema };

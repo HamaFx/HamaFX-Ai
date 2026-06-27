@@ -35,6 +35,7 @@ import {
   emitPreEvent,
   findHighImpactEventsInWindow,
 } from '@hamafx/ai';
+import * as Sentry from '@sentry/nextjs';
 
 import { withCronAuth } from '@/lib/cron';
 
@@ -73,6 +74,10 @@ export async function GET(req: Request): Promise<Response> {
           const r = await emitPreEvent(userId, c.id);
           if (r.emitted) preEmitted += 1;
         } catch (err) {
+          // STAB-04 / OBS-01: capture to Sentry.
+          Sentry.captureException(err, {
+            tags: { job: 'cron/briefings', phase: 'pre', eventId: c.id, userId },
+          });
           console.error(`[cron briefings] pre ${c.id} for user ${userId} failed`, err);
         }
       }
@@ -82,6 +87,10 @@ export async function GET(req: Request): Promise<Response> {
           const r = await emitPostEvent(userId, c.id);
           if (r.emitted) postEmitted += 1;
         } catch (err) {
+          // STAB-04 / OBS-01: capture to Sentry.
+          Sentry.captureException(err, {
+            tags: { job: 'cron/briefings', phase: 'post', eventId: c.id, userId },
+          });
           console.error(`[cron briefings] post ${c.id} for user ${userId} failed`, err);
         }
       }

@@ -68,3 +68,15 @@ export const { handlers, auth, signIn, signOut } = _nextAuth({
     }),
   ],
 });
+
+// PERF-01: React cache() wrapper so multiple server components in the same
+// render tree share a single auth() call. Next.js deduplicates fetch()
+// but NOT arbitrary async functions — wrapping with cache() fills that gap.
+//
+// Import this instead of `auth` in server components that live below a page
+// that already calls auth(). Server Actions must continue using `auth`
+// directly (they run in separate request contexts).
+import { cache } from 'react';
+export const getCachedSession = cache(async () => {
+  return auth();
+});

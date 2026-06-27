@@ -329,13 +329,17 @@ describe('exportKeysAction', () => {
   });
 
   it('returns error when account password is incorrect', async () => {
-    mockDb([[{ hashedPassword: hashedTestPassword }]]);
+    mockDb([
+      [{ twoFactorEnabled: false }],
+      [{ hashedPassword: hashedTestPassword }]
+    ]);
     const result = await exportKeysAction('correct-password-but-not-test-password');
     expect(result).toEqual({ ok: false, error: 'Incorrect account password' });
   });
 
   it('returns error when no keys are configured (null aiApiKeys)', async () => {
     mockDb([
+      [{ twoFactorEnabled: false }],
       [{ hashedPassword: hashedTestPassword }],
       [{ aiApiKeys: null }],
     ]);
@@ -346,6 +350,7 @@ describe('exportKeysAction', () => {
   it('returns error when no keys are configured (empty after decrypt)', async () => {
     const payload = encryptByok({});
     mockDb([
+      [{ twoFactorEnabled: false }],
       [{ hashedPassword: hashedTestPassword }],
       [{ aiApiKeys: payload }],
     ]);
@@ -357,27 +362,30 @@ describe('exportKeysAction', () => {
     const originalKeys = { openai: 'sk-abc', anthropic: 'sk-def' };
     const payload = encryptByok(originalKeys);
     mockDb([
+      [{ twoFactorEnabled: false }],
       [{ hashedPassword: hashedTestPassword }],
       [{ aiApiKeys: payload }],
     ]);
     const result = await exportKeysAction(TEST_PASSWORD);
     expect(result.ok).toBe(true);
     if (result.ok) {
-      const decrypted = decryptWithPassword(result.payload, TEST_PASSWORD);
+      const decrypted = decryptWithPassword(result.data!.payload, TEST_PASSWORD);
       expect(decrypted).toEqual(originalKeys);
     }
   });
 
   it('captures Sentry exception on DB error', async () => {
-    // First getDb call (inside verifyAccountPassword) must succeed
-    const verifyDb = mockQueryChain([[{ hashedPassword: hashedTestPassword }]]);
-    // Second getDb call (inside try block) throws
+    const successDb = mockQueryChain([
+      [{ twoFactorEnabled: false }],
+      [{ hashedPassword: hashedTestPassword }],
+    ]);
     const queryDb = mockQueryChain([]);
     queryDb.select = vi.fn(() => { throw new Error('read failure'); });
 
     (getDb as Mock)
-      .mockReturnValueOnce(verifyDb)
-      .mockReturnValueOnce(queryDb);
+      .mockReturnValueOnce(successDb) // 2fa
+      .mockReturnValueOnce(successDb) // password
+      .mockReturnValueOnce(queryDb);  // settings
 
     const result = await exportKeysAction(TEST_PASSWORD);
     expect(result).toEqual({ ok: false, error: 'read failure' });
@@ -407,20 +415,22 @@ describe('importKeysAction', () => {
   });
 
   it('returns error when account password is incorrect', async () => {
-    mockDb([[{ hashedPassword: hashedTestPassword }]]);
-    const result = await importKeysAction('some-payload', 'wrong-password');
+    mockDb([
+      [{ hashedPassword: hashedTestPassword }]
+    ]);
+    const result = await importKeysAction('backup-string', 'wrong-pass');
     expect(result).toEqual({ ok: false, error: 'Incorrect account password' });
   });
 
   it('imports keys successfully (encryption round-trip)', async () => {
-    const keys = { openai: 'sk-abc', anthropic: 'sk-def' };
-    const backup = encryptWithPassword(keys, TEST_PASSWORD);
-
+    const backup = encryptWithPassword({ anthropic: 'sk-new1', google: 'AIza-new2' }, TEST_PASSWORD);
     mockDb([
       [{ hashedPassword: hashedTestPassword }],
+      [{ aiApiKeys: null }], // existing keys
+      [{}] // update result
     ]);
     const result = await importKeysAction(backup, TEST_PASSWORD);
-    expect(result).toEqual({ ok: true, importedCount: 2 });
+    expect(result).toEqual({ ok: true, data: { importedCount: 2 } });
     expect(revalidatePath).toHaveBeenCalledWith('/settings/api-keys');
   });
 
