@@ -54,6 +54,8 @@ import { conveneCommitteeTool } from './convene-committee';
 import { getIntermarketResonanceTool } from './get-intermarket-resonance';
 import { getSystemDiagnosticsTool } from './get-system-diagnostics';
 import { runSystemActionTool } from './run-system-action';
+import { getPortfolioSnapshotTool } from './get-portfolio-snapshot';
+import { getSocialSentimentTool } from './get-social-sentiment';
 
 export const tools = {
   get_price: withTelemetry('get_price', getPriceTool),
@@ -92,6 +94,10 @@ export const tools = {
   get_intermarket_resonance: withTelemetry('get_intermarket_resonance', getIntermarketResonanceTool),
   get_system_diagnostics: withTelemetry('get_system_diagnostics', getSystemDiagnosticsTool),
   run_system_action: withTelemetry('run_system_action', runSystemActionTool),
+  // F2 — Portfolio Management
+  get_portfolio_snapshot: withTelemetry('get_portfolio_snapshot', getPortfolioSnapshotTool),
+  // F3 — Social Sentiment
+  get_social_sentiment: withTelemetry('get_social_sentiment', getSocialSentimentTool),
 };
 
 export type ToolRegistry = typeof tools;
