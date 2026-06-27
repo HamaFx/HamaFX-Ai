@@ -42,6 +42,7 @@ import type { Tool } from 'ai';
 
 import { recordToolTelemetry } from '../persistence';
 import { maybeGetToolContext } from '../tool-context';
+import { recordStep, completeStep, recordError } from '../diagnostics';
 
 /**
  * Wrap a tool with execute-side telemetry + signal propagation. The
@@ -63,6 +64,8 @@ export function withTelemetry<T extends Tool<any, any>>(name: string, t: T): T {
   const wrappedExecute = async (input: any, opts: any) => {
     const ctx = maybeGetToolContext();
     const startedAt = Date.now();
+    // F5 — Record diagnostic step for this tool call.
+    recordStep(`tool:${name}`, { input });
     // Propagate the per-turn AbortSignal so the tool's `opts.abortSignal`
     // (the AI SDK's own field) is set when the user has closed the tab.
     // Tools may read `opts.abortSignal?.aborted` between phases.
@@ -72,23 +75,30 @@ export function withTelemetry<T extends Tool<any, any>>(name: string, t: T): T {
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const result = await (inner as (i: any, o: any) => Promise<any>)(input, opts2);
+      const ms = Date.now() - startedAt;
       void recordToolTelemetry({
         threadId: ctx?.threadId ?? null,
         messageId: null,
         tool: name,
-        ms: Date.now() - startedAt,
+        ms,
         ok: true,
       });
+      // F5 — Mark the diagnostic step as completed.
+      completeStep(`tool:${name}`, 'completed', ms);
       return result;
     } catch (err) {
+      const ms = Date.now() - startedAt;
       void recordToolTelemetry({
         threadId: ctx?.threadId ?? null,
         messageId: null,
         tool: name,
-        ms: Date.now() - startedAt,
+        ms,
         ok: false,
         errorCode: errorCodeFor(err),
       });
+      // F5 — Record the error and mark the step as failed.
+      recordError(err);
+      completeStep(`tool:${name}`, 'failed', ms);
       throw err;
     }
   };

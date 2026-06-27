@@ -17,6 +17,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { buildSystemPrompt } from '../src/prompt/system';
+import { getMarketPhase, type MarketPhaseContext } from '@hamafx/shared';
 
 describe('buildSystemPrompt', () => {
   it('returns the base prompt when given no snapshot', () => {
@@ -67,5 +68,48 @@ describe('buildSystemPrompt', () => {
     });
     expect(out).toContain('NFP');
     expect(out).toContain('USD');
+  });
+
+  // F6 — Market phase integration in system prompt
+  it('includes market phase context when provided in snapshot', () => {
+    const phase = getMarketPhase(new Date('2026-06-27T14:00:00.000Z')); // Saturday — closed
+    const out = buildSystemPrompt({
+      asOf: '2026-06-27T14:00:00.000Z',
+      session: 'off',
+      prices: {},
+      marketPhase: phase,
+    });
+    expect(out).toContain('MARKET PHASE');
+    expect(out).toContain('CLOSED');
+  });
+
+  it('includes liquidity info for open sessions in market phase', () => {
+    // Monday 14:00 UTC = London/NY Overlap
+    const phase: MarketPhaseContext = {
+      session: 'london_ny_overlap',
+      liquidity: 'high',
+      isOpen: true,
+      nextSessionChange: { session: 'newyork', inMinutes: 180 },
+      goldSpecific: { comexOpen: true },
+    };
+    const out = buildSystemPrompt({
+      asOf: '2026-06-29T14:00:00.000Z',
+      session: 'ny',
+      prices: {},
+      marketPhase: phase,
+    });
+    expect(out).toContain('MARKET PHASE');
+    expect(out).toContain('London/NY Overlap');
+    expect(out).toContain('high liquidity');
+    expect(out).toContain('COMEX');
+  });
+
+  it('does not include market phase section when not provided', () => {
+    const out = buildSystemPrompt({
+      asOf: '2026-05-26T12:00:00.000Z',
+      session: 'london',
+      prices: {},
+    });
+    expect(out).not.toContain('MARKET PHASE');
   });
 });

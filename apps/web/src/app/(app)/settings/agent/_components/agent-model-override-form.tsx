@@ -20,7 +20,6 @@ import { Brain, Check, Loader2, RotateCcw } from 'lucide-react';
 import { useState, useTransition } from 'react';
 import { toast } from 'sonner';
 
-import { cn } from '@/lib/cn';
 import { getCsrfToken } from '@/lib/csrf';
 
 type AgentName = 'technical' | 'fundamental' | 'risk' | 'sentiment' | 'decision';

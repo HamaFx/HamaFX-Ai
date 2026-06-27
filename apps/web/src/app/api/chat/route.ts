@@ -22,6 +22,7 @@ import { BudgetExceededError, runChat } from '@hamafx/ai';
 import { providerUnavailable } from '@hamafx/shared';
 import { withRateLimit } from '@hamafx/db';
 import { z } from 'zod';
+import type { UIMessage } from 'ai';
 
 import { errorResponse, parseJsonBody, withAuth } from '@/lib/api';
 import { getServerEnv } from '@/lib/env';
@@ -96,7 +97,7 @@ export const POST = withAuth<void>(async (req, { user }) => {
       if (!userSettings) return errorResponse(new Error('User settings not found. Please complete onboarding.'));
 
       const displayName = userRow?.name?.trim() || (userRow?.email ? userRow.email.split('@')[0] : null);
-      const userText = extractUserMessageText(last as any);
+      const userText = extractUserMessageText(last as UIMessage);
       const resolvedMode = resolveMode(analysisMode, userText);
 
       if (resolvedMode !== 'single') {
@@ -117,7 +118,7 @@ export const POST = withAuth<void>(async (req, { user }) => {
 
             try {
               const result = await runMultiAgentChat({
-                threadId: body.threadId, userId: user.userId, userMessage: last as any, history: body.messages as any[],
+                threadId: body.threadId, userId: user.userId, userMessage: last as UIMessage, history: body.messages as UIMessage[],
                 userSettings, displayName: displayName ?? null, ...(customInstructions ? { customInstructions } : {}),
                 env: {
                   AI_GATEWAY_API_KEY: env.AI_GATEWAY_API_KEY, GOOGLE_GENERATIVE_AI_API_KEY: env.GOOGLE_GENERATIVE_AI_API_KEY,

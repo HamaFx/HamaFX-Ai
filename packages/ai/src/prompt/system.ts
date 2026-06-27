@@ -21,6 +21,7 @@
 // awareness without burning tokens on tool calls for trivial questions.
 
 import type { Symbol, Tick } from '@hamafx/shared';
+import { getMarketPhase, describeMarketPhase, type MarketPhaseContext } from '@hamafx/shared';
 import type { UserSettingsRow } from '@hamafx/db/schema';
 
 export interface LiveSnapshot {
@@ -41,6 +42,8 @@ export interface LiveSnapshot {
     dbLatencyMs: number;
     lastResonanceSync: string | null;
   };
+  /** F6 — Detailed market phase context (forex session, liquidity, COMEX). */
+  marketPhase?: MarketPhaseContext;
 }
 
 /**
@@ -114,13 +117,21 @@ export function buildSystemPrompt(
     ? `  - Copilot Status: ${snapshot.copilotHealth.status.toUpperCase()} (DB Latency: ${snapshot.copilotHealth.dbLatencyMs}ms)\n  - Last Intermarket Sync: ${snapshot.copilotHealth.lastResonanceSync || 'never'}`
     : '  - Copilot health diagnostics offline.';
 
+  // F6 — Inject market phase context into the system prompt so the AI
+  // is aware of the current forex session, liquidity level, and COMEX
+  // status. This modulates the AI's behavior: during low-liquidity
+  // sessions it should be more cautious about breakout signals.
+  const marketPhaseLine = snapshot.marketPhase
+    ? `\n# MARKET PHASE\n${describeMarketPhase(snapshot.marketPhase)}`
+    : '';
+
   return `${BASE_PROMPT}${userBlock}
 # LIVE_SNAPSHOT (auto-injected, fresh as of ${snapshot.asOf})
 
 - Session: ${snapshot.session}
 ${priceLines || '  - (price feed unavailable)'}
 ${eventLine}
-${healthLines}`;
+${healthLines}${marketPhaseLine}`;
 }
 
 /**

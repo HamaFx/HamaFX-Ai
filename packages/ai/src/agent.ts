@@ -73,6 +73,7 @@ import { extractDecisionSignal, createDecisionSignal } from './decision-signals'
 import type { UserSettingsRow } from '@hamafx/db/schema';
 import { and, eq } from 'drizzle-orm';
 import { extractRateLimits } from './rate-limits';
+import { withDiagnostics, recordStep, completeStep, recordError, exportDiagnosticContext } from './diagnostics';
 
 export interface RunChatArgs {
   threadId: string;
@@ -115,8 +116,34 @@ export interface RunChatArgs {
  * `result.toUIMessageStreamResponse()`.
  */
 export async function runChat(args: RunChatArgs) {
+  const { threadId, userId } = args;
+
+  // F5 — Wrap the entire chat turn in a diagnostic context so that
+  // every tool call, agent run, and persistence step can be traced.
+  // If an error propagates out, we record it in the diagnostic context
+  // and attach the (redacted) trace to the error for Sentry.
+  return withDiagnostics(userId, threadId, () => runChatInner(args)).catch((err) => {
+    recordError(err);
+    // Attach the diagnostic context to the error so upstream Sentry
+    // reporting can include the full (redacted) trace.
+    const diagCtx = exportDiagnosticContext();
+    if (diagCtx && err instanceof Error) {
+      try {
+        (err as Error & { diagnosticContext?: unknown }).diagnosticContext = diagCtx;
+      } catch {
+        // Read-only error object — skip attachment.
+      }
+    }
+    throw err;
+  });
+}
+
+async function runChatInner(args: RunChatArgs) {
   const { threadId, userId, userMessage, env, modelOverride, customInstructions, signal } = args;
   const startedAt = Date.now();
+
+  // F5 — Record the start of the chat turn.
+  recordStep('chat_turn_start', { threadId, model: modelOverride ?? 'default' });
 
   const db = getDb();
   const [userSettings, userRow] = await Promise.all([
@@ -156,13 +183,16 @@ export async function runChat(args: RunChatArgs) {
   // 2) Persist the user message before we start streaming. If the model fails
   //    we still want the prompt in history so retries can resume.
   await appendUserMessage(threadId, userMessage);
+  recordStep('persist_user_message', { threadId });
 
   // 3) Load history + ambient snapshot in parallel; THEN apply rolling-summary
   //    compaction once we know the message count.
+  recordStep('fetch_history_and_snapshot');
   const [history, snapshot] = await Promise.all([
     listMessages(userId, threadId, 60),
     buildLiveSnapshot({ signal, userId }),
   ]);
+  completeStep('fetch_history_and_snapshot', 'completed');
 
 
   // Phase F — compaction uses the same cheap-model derivation as
@@ -210,6 +240,7 @@ export async function runChat(args: RunChatArgs) {
   const routingArgs: Parameters<typeof routeTurn>[0] = { userMessage, env };
   if (modelOverride !== undefined) routingArgs.modelOverride = modelOverride;
   const routing: RoutingDecision = routeTurn(routingArgs);
+  recordStep('routing', { domain: routing.domain, planRequired: routing.planRequired });
 
   // PERF-05: Decrypt BYOK keys once per request, not once per retry attempt.
   // AES-256-GCM is synchronous CPU work; hoisting it avoids 1-4 redundant
@@ -654,7 +685,9 @@ export async function runChat(args: RunChatArgs) {
     if (signal) streamArgs.abortSignal = signal;
 
     try {
+      recordStep('stream_text', { model: resolvedModelId, attempt: attempts });
       const result = await withToolContext(toolContext, () => Promise.resolve(streamText(streamArgs)));
+      completeStep('stream_text', 'completed');
       return result;
     } catch (err) {
       lastError = err;

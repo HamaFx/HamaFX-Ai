@@ -313,3 +313,18 @@ export {
   type UnableResult,
   type SignalForEvaluation,
 } from './decision-signals';
+
+// F5 — Run Diagnostics with Secret Redaction
+export {
+  withDiagnostics,
+  getDiagnosticContext,
+  recordStep,
+  completeStep,
+  recordError,
+  exportDiagnosticContext,
+  redactSecrets,
+  redactString,
+  type RunDiagnosticContext,
+  type DiagnosticStep,
+  type DiagnosticError,
+} from './diagnostics';

@@ -21,6 +21,9 @@
 export * from './symbols';
 export * from './timeframes';
 
+// F6 — Market Phase Detection
+export * from './market-phase';
+
 // Schemas (zod + inferred types)
 export * from './schemas/candle';
 export * from './schemas/tick';

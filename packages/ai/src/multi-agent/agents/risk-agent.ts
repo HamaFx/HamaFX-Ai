@@ -19,6 +19,7 @@
 import { z } from 'zod';
 import { BaseAgent, baseOpinionSchema } from './base-agent';
 import { tools as allTools } from '../../tools';
+import { getMarketPhase } from '@hamafx/shared';
 import type { AgentName, AgentBias, ModelTier } from '../types';
 
 const riskSchema = baseOpinionSchema.extend({
@@ -38,6 +39,23 @@ export class RiskAgent extends BaseAgent {
   readonly modelTier: ModelTier = 'mid';
 
   systemPrompt(): string {
+    // F6 — Inject current market phase context into the risk agent's prompt.
+    // Low-liquidity sessions (Sydney) are flagged as higher risk for
+    // breakout setups, while the London/NY overlap is the most reliable.
+    const phase = getMarketPhase();
+    const liquidityRiskNote =
+      phase.liquidity === 'low'
+        ? '\n\n## CURRENT MARKET PHASE WARNING\nThe market is currently in a LOW LIQUIDITY session (' +
+          phase.session +
+          '). Breakout signals are less reliable during this period. Flag any breakout setup as higher risk due to thin volumes and potential false moves.'
+        : phase.liquidity === 'medium'
+          ? '\n\n## CURRENT MARKET PHASE NOTE\nThe market is currently in a MEDIUM LIQUIDITY session (' +
+            phase.session +
+            '). Exercise caution with breakout setups — moves may be less reliable than during peak hours.'
+          : '\n\n## CURRENT MARKET PHASE NOTE\nThe market is currently in a HIGH LIQUIDITY session (' +
+            phase.session +
+            '). Moves are more reliable during this period.';
+
     return `You are a Risk Screening Agent for HamaFX-Ai.
 
 Your SOLE focus is identifying RISKS and RED FLAGS:
@@ -71,7 +89,7 @@ Set hardVeto to true ONLY if there is a critical, unavoidable risk that makes
 any buy/sell signal dangerous right now. Use sparingly.
 
 Use the available tools to fetch real news, calendar events, and correlation data
-before forming your assessment.`;
+before forming your assessment.${liquidityRiskNote}`;
   }
 
   tools(): Record<string, import('ai').Tool> {

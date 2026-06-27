@@ -21,6 +21,7 @@
 
 import { listPushSubscriptions } from '@hamafx/ai';
 import { getDb } from '@hamafx/db';
+import { getMarketPhase, describeMarketPhase } from '@hamafx/shared';
 import { CheckCircle2, CircleAlert } from 'lucide-react';
 import { sql } from 'drizzle-orm';
 
@@ -111,6 +112,10 @@ export async function SystemStatusCard({ userId }: { userId: string }) {
   const { channels, databaseConnected, stuckJobs, recentErrors } = await buildStatuses(userId);
   const cronHealthy = stuckJobs === 0 && recentErrors === 0;
   const allReady = channels.every((c) => c.ready) && databaseConnected;
+
+  // F6 — Current market phase for the system status card.
+  const marketPhase = getMarketPhase();
+  const marketPhaseDescription = describeMarketPhase(marketPhase);
 
   return (
     <section
@@ -211,6 +216,51 @@ export async function SystemStatusCard({ userId }: { userId: string }) {
                 : `${stuckJobs} stuck · ${recentErrors} error${recentErrors === 1 ? '' : 's'} (last 24h)`}
             </span>
           </div>
+        </div>
+      </div>
+
+      {/* F6 — Market phase detection */}
+      <div className="border-divider/60 -mx-4 border-t px-4 pt-3">
+        <div className="flex items-center gap-3">
+          <span
+            aria-hidden="true"
+            className={cn(
+              'inline-flex size-7 shrink-0 items-center justify-center rounded-lg',
+              marketPhase.isOpen
+                ? marketPhase.liquidity === 'high'
+                  ? 'bg-bull/15 text-bull'
+                  : marketPhase.liquidity === 'medium'
+                    ? 'bg-warn/15 text-warn'
+                    : 'bg-fg-muted/15 text-fg-muted'
+                : 'bg-bg-elev-2 text-fg-subtle',
+            )}
+          >
+            {marketPhase.isOpen ? (
+              <CheckCircle2 className="size-4" strokeWidth={2.25} />
+            ) : (
+              <CircleAlert className="size-4" strokeWidth={2.25} />
+            )}
+          </span>
+          <div className="flex min-w-0 flex-1 flex-col">
+            <span className="text-fg text-sm font-semibold">Market phase</span>
+            <span className="text-fg-subtle text-body-sm">
+              {marketPhaseDescription}
+            </span>
+          </div>
+          <span
+            className={cn(
+              'rounded-full px-2 py-0.5 text-caption font-bold uppercase tabular-nums ring-1',
+              marketPhase.isOpen
+                ? marketPhase.liquidity === 'high'
+                  ? 'bg-bull/10 text-bull ring-bull/30'
+                  : marketPhase.liquidity === 'medium'
+                    ? 'bg-warn/10 text-warn ring-warn/30'
+                    : 'bg-bg-elev-2 text-fg-muted ring-divider'
+                : 'bg-bg-elev-2 text-fg-muted ring-divider',
+            )}
+          >
+            {marketPhase.isOpen ? marketPhase.liquidity : 'Closed'}
+          </span>
         </div>
       </div>
     </section>

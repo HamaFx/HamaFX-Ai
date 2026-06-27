@@ -23,7 +23,7 @@ import type { SignalStats } from '@hamafx/shared';
 import { redirect } from 'next/navigation';
 import { auth } from '@/auth';
 import type { Metadata } from 'next';
-import { Target, TrendingUp, TrendingDown, Minus, ThumbsUp, ThumbsDown } from 'lucide-react';
+import { Target, TrendingUp, TrendingDown } from 'lucide-react';
 
 import { EmptyState } from '@/components/ui/empty-state';
 import { cn } from '@/lib/cn';

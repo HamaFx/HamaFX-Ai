@@ -23,7 +23,7 @@
 
 import { getPrice } from '@hamafx/data';
 import { getDb, schema } from '@hamafx/db';
-import { SYMBOLS, type Symbol, type Tick } from '@hamafx/shared';
+import { SYMBOLS, type Symbol, type Tick, getMarketPhase } from '@hamafx/shared';
 import { desc, eq, asc } from 'drizzle-orm';
 
 import type { LiveSnapshot } from './prompt/system';
@@ -124,6 +124,8 @@ export async function buildLiveSnapshot(
     session: inferSession(now),
     prices,
     ...(copilotHealth ? { copilotHealth } : {}),
+    // F6 — Market phase detection (forex session, liquidity, COMEX).
+    marketPhase: getMarketPhase(now),
   };
 }
 
