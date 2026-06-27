@@ -60,7 +60,7 @@ export function buildSharedSystemPrompt(ctx: SharedContext, displayName: string 
 }
 
 export function extractUserMessageText(message: UIMessage): string {
-  if (Array.isArray(message.parts)) {
+  if (Array.isArray(message.parts) && message.parts.length > 0) {
     return message.parts
       .filter((p): p is { type: 'text'; text: string } =>
         typeof p === 'object' && p !== null && (p as { type?: string }).type === 'text' && typeof (p as { text?: unknown }).text === 'string')

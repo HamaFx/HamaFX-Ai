@@ -15,16 +15,16 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { TechnicalAgent } from '../../src/multi-agent/agents/technical-agent';
-import { FundamentalAgent } from '../../src/multi-agent/agents/fundamental-agent';
-import { RiskAgent } from '../../src/multi-agent/agents/risk-agent';
-import { SentimentAgent } from '../../src/multi-agent/agents/sentiment-agent';
-import { DecisionAgent } from '../../src/multi-agent/agents/decision-agent';
+import { TechnicalAgent } from '../../../src/multi-agent/agents/technical-agent';
+import { FundamentalAgent } from '../../../src/multi-agent/agents/fundamental-agent';
+import { RiskAgent } from '../../../src/multi-agent/agents/risk-agent';
+import { SentimentAgent } from '../../../src/multi-agent/agents/sentiment-agent';
+import { DecisionAgent } from '../../../src/multi-agent/agents/decision-agent';
 
 describe('TechnicalAgent', () => {
   const agent = new TechnicalAgent();
   it('has correct name and tier', () => { expect(agent.name).toBe('technical'); expect(agent.modelTier).toBe('fast'); });
-  it('has a system prompt mentioning technical analysis', () => { const p = agent.systemPrompt(); expect(p).toContain('Technical Analysis Agent'); expect(p).toContain('price action'); });
+  it('has a system prompt mentioning technical analysis', () => { const p = agent.systemPrompt(); expect(p).toContain('Technical Analysis Agent'); expect(p.toLowerCase()).toContain('price action'); });
   it('has scoped tools', () => { const t = agent.tools(); expect(t.get_candles).toBeDefined(); expect(t.get_calendar).toBeUndefined(); });
   it('parses valid JSON output', () => { const r = (agent as any).parseOutput(JSON.stringify({ bias: 'bullish', confidence: 0.85, reasoning: 'Uptrend', keyLevels: { support: [2350], resistance: [2400] } })); expect(r.bias).toBe('bullish'); expect(r.rawData.keyLevels).toBeDefined(); });
   it('parses JSON in code blocks', () => { const r = (agent as any).parseOutput('```json\n{"bias":"bearish","confidence":0.6,"reasoning":"Downtrend"}\n```'); expect(r.bias).toBe('bearish'); });

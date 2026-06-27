@@ -18,10 +18,11 @@
 
 import { generateText, type LanguageModel } from 'ai';
 import { resolveChatModel } from '../model';
-import { estimateCostUsd } from '../cost';
+import { estimateCostUsd, tryReserveBudget, applyBudgetDelta, BudgetExceededError } from '../cost';
 import { withToolContext, type ToolContext } from '../tool-context';
 import { buildSharedContext, buildSharedSystemPrompt, extractUserMessageText } from './context';
 import { selectAgents, resolveMode } from './modes';
+import { saveAgentOpinions } from './persistence';
 import { TechnicalAgent } from './agents/technical-agent';
 import { FundamentalAgent } from './agents/fundamental-agent';
 import { RiskAgent } from './agents/risk-agent';
@@ -55,17 +56,28 @@ export interface RunMultiAgentArgs {
   env: MultiAgentEnv;
   signal: AbortSignal | null;
   analysisMode: AnalysisMode;
+  /** ID of the assistant message that will hold the final response.
+   *  Required for persisting agent opinions alongside the message. */
+  messageId?: string;
   onProgress?: (event: ProgressEvent) => void;
 }
 
 export async function runMultiAgentChat(args: RunMultiAgentArgs): Promise<MultiAgentResult> {
-  const { threadId, userId, userMessage, history, userSettings, displayName, customInstructions, env, signal, analysisMode, onProgress } = args;
+  const { threadId, userId, userMessage, history, userSettings, displayName, customInstructions, env, signal, analysisMode, messageId, onProgress } = args;
   const startMs = Date.now();
   const userText = extractUserMessageText(userMessage);
   const mode = resolveMode(analysisMode, userText);
 
   if (mode === 'single') {
     throw new Error('runMultiAgentChat called with single mode — use runChat() instead');
+  }
+
+  // ── Budget guardrail ── reserve estimated cost upfront ──
+  const estimatedCost = MODE_COST_ESTIMATE[mode] ?? 0.025;
+  const maxDailyUsd = userSettings.maxDailyUsd ?? 100;
+  const reservation = await tryReserveBudget(userId, estimatedCost, maxDailyUsd);
+  if (!reservation.ok) {
+    throw new BudgetExceededError(reservation.spent, reservation.max);
   }
 
   const symbol = userSettings.defaultSymbol ?? 'XAUUSD';
@@ -126,6 +138,26 @@ export async function runMultiAgentChat(args: RunMultiAgentArgs): Promise<MultiA
 
   const totalCostUsd = validOpinions.reduce((sum, o) => sum + o.costUsd, 0) + decisionCostUsd;
   const totalLatencyMs = Date.now() - startMs;
+
+  // ── Budget reconciliation ── adjust reserved estimate to actual cost ──
+  const costDelta = totalCostUsd - estimatedCost;
+  if (Math.abs(costDelta) > 0.0001) {
+    await applyBudgetDelta(userId, costDelta).catch((err) =>
+      console.warn('[multi-agent] applyBudgetDelta failed', err),
+    );
+  }
+
+  // ── Persist agent opinions ── link to the assistant message ──
+  if (messageId && validOpinions.length > 0) {
+    await saveAgentOpinions({
+      userId, threadId, messageId, analysisMode: mode,
+      opinions: validOpinions.map((o) => ({
+        agentName: o.agentName, bias: o.bias, confidence: o.confidence,
+        reasoning: o.reasoning, rawData: o.rawData, model: o.model,
+        costUsd: o.costUsd, latencyMs: o.latencyMs,
+      })),
+    }).catch((err) => console.warn('[multi-agent] saveAgentOpinions failed', err));
+  }
 
   return { finalText, agentOpinions: validOpinions, totalCostUsd, totalLatencyMs, mode };
 }

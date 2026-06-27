@@ -83,7 +83,7 @@ export const POST = withAuth<void>(async (req, { user }) => {
     const analysisMode = body.analysisMode ?? 'single';
 
     if (analysisMode !== 'single') {
-      const { runMultiAgentChat, resolveMode, extractUserMessageText } = await import('@hamafx/ai');
+      const { runMultiAgentChat, resolveMode, extractUserMessageText, ProgressTracker, progressToSSE } = await import('@hamafx/ai');
       const { getDb, schema } = await import('@hamafx/db');
       const { eq } = await import('drizzle-orm');
 
@@ -100,21 +100,70 @@ export const POST = withAuth<void>(async (req, { user }) => {
       const resolvedMode = resolveMode(analysisMode, userText);
 
       if (resolvedMode !== 'single') {
-        const result = await runMultiAgentChat({
-          threadId: body.threadId, userId: user.userId, userMessage: last as any, history: body.messages as any[],
-          userSettings, displayName, ...(customInstructions ? { customInstructions } : {}),
-          env: {
-            AI_GATEWAY_API_KEY: env.AI_GATEWAY_API_KEY, GOOGLE_GENERATIVE_AI_API_KEY: env.GOOGLE_GENERATIVE_AI_API_KEY,
-            GOOGLE_VERTEX_PROJECT: env.GOOGLE_VERTEX_PROJECT, GOOGLE_VERTEX_LOCATION: env.GOOGLE_VERTEX_LOCATION,
-            GOOGLE_APPLICATION_CREDENTIALS_JSON: env.GOOGLE_APPLICATION_CREDENTIALS_JSON,
-            GOOGLE_APPLICATION_CREDENTIALS: env.GOOGLE_APPLICATION_CREDENTIALS,
-            AI_DEFAULT_MODEL: env.AI_DEFAULT_MODEL, AI_EMBEDDING_MODEL: env.AI_EMBEDDING_MODEL,
-            MAX_DAILY_USD: env.MAX_DAILY_USD, MAX_TOOL_ITERATIONS: env.MAX_TOOL_ITERATIONS, LOG_PROMPTS: env.LOG_PROMPTS,
+        // Generate a message ID for the assistant response so opinions
+        // can be persisted and linked to it.
+        const assistantMessageId = crypto.randomUUID();
+
+        // Set up SSE streaming with progress events + final text.
+        const encoder = new TextEncoder();
+        const stream = new ReadableStream({
+          async start(controller) {
+            const tracker = new ProgressTracker(resolvedMode, resolvedMode === 'quick' ? ['technical'] : resolvedMode === 'standard' ? ['technical', 'fundamental'] : ['technical', 'fundamental', 'risk', 'sentiment']);
+
+            const enqueueProgress = () => {
+              const part = tracker.buildPart();
+              controller.enqueue(encoder.encode(`data: ${JSON.stringify(part)}\n\n`));
+            };
+
+            try {
+              const result = await runMultiAgentChat({
+                threadId: body.threadId, userId: user.userId, userMessage: last as any, history: body.messages as any[],
+                userSettings, displayName, ...(customInstructions ? { customInstructions } : {}),
+                env: {
+                  AI_GATEWAY_API_KEY: env.AI_GATEWAY_API_KEY, GOOGLE_GENERATIVE_AI_API_KEY: env.GOOGLE_GENERATIVE_AI_API_KEY,
+                  GOOGLE_VERTEX_PROJECT: env.GOOGLE_VERTEX_PROJECT, GOOGLE_VERTEX_LOCATION: env.GOOGLE_VERTEX_LOCATION,
+                  GOOGLE_APPLICATION_CREDENTIALS_JSON: env.GOOGLE_APPLICATION_CREDENTIALS_JSON,
+                  GOOGLE_APPLICATION_CREDENTIALS: env.GOOGLE_APPLICATION_CREDENTIALS,
+                  AI_DEFAULT_MODEL: env.AI_DEFAULT_MODEL, AI_EMBEDDING_MODEL: env.AI_EMBEDDING_MODEL,
+                  MAX_DAILY_USD: env.MAX_DAILY_USD, MAX_TOOL_ITERATIONS: env.MAX_TOOL_ITERATIONS, LOG_PROMPTS: env.LOG_PROMPTS,
+                },
+                ...(req.signal ? { signal: req.signal } : {}), analysisMode,
+                messageId: assistantMessageId,
+                onProgress: (event) => {
+                  tracker.update(event);
+                  // Also send individual progress events for granular client handling
+                  controller.enqueue(encoder.encode(progressToSSE(event)));
+                  enqueueProgress();
+                },
+              });
+
+              // Stream the final text as text parts
+              const textData = { type: 'text', text: result.finalText };
+              controller.enqueue(encoder.encode(`data: ${JSON.stringify(textData)}\n\n`));
+
+              // Send metadata (cost, latency, opinions, mode)
+              const metaData = { type: 'metadata', data: { agentOpinions: result.agentOpinions, mode: result.mode, totalCostUsd: result.totalCostUsd, totalLatencyMs: result.totalLatencyMs, messageId: assistantMessageId } };
+              controller.enqueue(encoder.encode(`data: ${JSON.stringify(metaData)}\n\n`));
+
+              controller.enqueue(encoder.encode('data: [DONE]\n\n'));
+            } catch (err) {
+              const errMsg = err instanceof Error ? err.message : String(err);
+              const errorData = { type: 'error', error: errMsg };
+              controller.enqueue(encoder.encode(`data: ${JSON.stringify(errorData)}\n\n`));
+              controller.enqueue(encoder.encode('data: [DONE]\n\n'));
+            } finally {
+              controller.close();
+            }
           },
-          ...(req.signal ? { signal: req.signal } : {}), analysisMode,
         });
 
-        return new Response(JSON.stringify({ text: result.finalText, agentOpinions: result.agentOpinions, mode: result.mode, totalCostUsd: result.totalCostUsd, totalLatencyMs: result.totalLatencyMs }), { headers: { 'Content-Type': 'application/json' } });
+        return new Response(stream, {
+          headers: {
+            'Content-Type': 'text/event-stream',
+            'Cache-Control': 'no-cache',
+            'Connection': 'keep-alive',
+          },
+        });
       }
     }
 

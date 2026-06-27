@@ -53,10 +53,11 @@ import { toast } from 'sonner';
 import { cn } from '@/lib/cn';
 import { getCsrfToken } from '@/lib/csrf';
 
-import { ChatTopBar, type ThreadSummary } from './chat-top-bar';
+import { ChatTopBar, type ThreadSummary, type AnalysisMode } from './chat-top-bar';
 import { Composer } from './composer';
 import { MessageList } from './message-list';
 import { QuickPrompts } from './quick-prompts';
+import { AgentDeliberation } from './parts/agent-deliberation';
 
 interface ChatScreenProps {
   threadId: string;
@@ -83,6 +84,11 @@ export function ChatScreen({
   const scrollRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const [title, setTitle] = useState(initialTitle);
+  const [analysisMode, setAnalysisMode] = useState<AnalysisMode>('auto');
+  const [agentProgress, setAgentProgress] = useState<{
+    agents: Array<{ agentName: string; status: 'pending' | 'running' | 'done' | 'error'; opinion?: { bias: string; confidence: number; reasoning: string }; error?: string }>;
+    mode: string;
+  } | null>(null);
 
   // One-shot model override — set right before calling regenerate() so the
   // body builder picks it up. Cleared after the request resolves.
@@ -103,6 +109,7 @@ export function ChatScreen({
           
           const reqBody = {
             modelOverride: override ?? undefined,
+            analysisMode,
             threadId,
             id,
             messages,
@@ -117,7 +124,7 @@ export function ChatScreen({
             : { body: reqBody };
         },
       }),
-    [threadId],
+    [threadId, analysisMode],
   );
 
   const { messages, setMessages, sendMessage, regenerate, stop, status, error } = useChat({
@@ -126,6 +133,112 @@ export function ChatScreen({
     messages: initialMessages,
   });
 
+  // ── Multi-Agent SSE handling ──
+  // When analysisMode is not 'single', the /api/chat endpoint returns a
+  // custom SSE stream with progress events + final text. We intercept the
+  // fetch to parse these events and update the UI accordingly.
+  const multiAgentFetchRef = useRef<AbortController | null>(null);
+
+  const sendMultiAgentMessage = useCallback(async (text: string) => {
+    lastUserTextRef.current = text;
+    setAgentProgress(null);
+
+    // Add user message to the list immediately
+    const userMsg: UIMessage = {
+      id: crypto.randomUUID(),
+      role: 'user',
+      content: text,
+      parts: [{ type: 'text', text }],
+    };
+    const assistantMsgId = crypto.randomUUID();
+    const assistantMsg: UIMessage = {
+      id: assistantMsgId,
+      role: 'assistant',
+      content: '',
+      parts: [{ type: 'text', text: '' }],
+    };
+    setMessages((prev) => [...prev, userMsg, assistantMsg]);
+
+    const controller = new AbortController();
+    multiAgentFetchRef.current = controller;
+
+    try {
+      const csrf = getCsrfToken();
+      const prefsJson = typeof window !== 'undefined' ? window.localStorage.getItem('hamafx:ai-prefs') : null;
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (csrf) headers['X-CSRF-Token'] = csrf;
+      if (prefsJson) headers['X-AI-Prefs'] = prefsJson;
+
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          threadId,
+          analysisMode,
+          messages: [...messages, userMsg],
+        }),
+        signal: controller.signal,
+      });
+
+      if (!res.ok) {
+        const errBody = await res.json().catch(() => null);
+        throw new Error(errBody?.error?.message ?? `HTTP ${res.status}`);
+      }
+
+      const reader = res.body?.getReader();
+      if (!reader) throw new Error('No response body');
+      const decoder = new TextDecoder();
+      let buffer = '';
+      let finalText = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() ?? '';
+
+        for (const line of lines) {
+          if (!line.startsWith('data: ')) continue;
+          const data = line.slice(6).trim();
+          if (data === '[DONE]') continue;
+          try {
+            const parsed = JSON.parse(data);
+            if (parsed.type === 'data-agent-progress') {
+              setAgentProgress(parsed.data);
+            } else if (parsed.type === 'text') {
+              finalText += parsed.text;
+              // Update the assistant message content progressively
+              setMessages((prev) => prev.map((m) =>
+                m.id === assistantMsgId
+                  ? { ...m, content: finalText, parts: [{ type: 'text', text: finalText }] }
+                  : m,
+              ));
+            } else if (parsed.type === 'metadata') {
+              // Metadata received — opinions, cost, etc.
+              // Could store for later display
+            } else if (parsed.type === 'error') {
+              throw new Error(parsed.error);
+            }
+          } catch { /* ignore parse errors for non-JSON lines */ }
+        }
+      }
+
+      setAgentProgress(null);
+    } catch (err) {
+      if (controller.signal.aborted) return;
+      const errMsg = err instanceof Error ? err.message : String(err);
+      setMessages((prev) => prev.map((m) =>
+        m.id === assistantMsgId
+          ? { ...m, content: `⚠️ Error: ${errMsg}`, parts: [{ type: 'text', text: `⚠️ Error: ${errMsg}` }] }
+          : m,
+      ));
+      setAgentProgress(null);
+    } finally {
+      multiAgentFetchRef.current = null;
+    }
+  }, [analysisMode, messages, setMessages, threadId]);
+
   const handleCopy = useCallback((text: string) => {
     void navigator.clipboard.writeText(text);
     toast.success('Copied');
@@ -133,8 +246,21 @@ export function ChatScreen({
 
   const handleRegenerate = useCallback((opts?: { modelOverride?: string }) => {
     if (opts?.modelOverride) modelOverrideRef.current = opts.modelOverride;
+    if (analysisMode !== 'single') {
+      // For multi-agent regenerate, re-send the last user message
+      const lastUser = [...messages].reverse().find((m) => m.role === 'user');
+      if (lastUser) {
+        // Remove the last assistant message
+        setMessages((prev) => {
+          const idx = prev.findIndex((m) => m.id === lastUser.id);
+          return prev.slice(0, idx + 1);
+        });
+        void sendMultiAgentMessage(lastUser.content || '');
+      }
+      return;
+    }
     void regenerate();
-  }, [regenerate]);
+  }, [regenerate, analysisMode, messages, setMessages, sendMultiAgentMessage]);
 
   const handleEdit = useCallback(async (messageId: string, newText: string) => {
     const idx = messages.findIndex((m) => m.id === messageId);
@@ -179,10 +305,14 @@ export function ChatScreen({
     }
     const sliced = messages.slice(0, idx);
     setMessages(sliced);
-    void sendMessage({ text: newText });
-  }, [messages, threadId, router, sendMessage, setMessages]);
+    if (analysisMode !== 'single') {
+      void sendMultiAgentMessage(newText);
+    } else {
+      void sendMessage({ text: newText });
+    }
+  }, [messages, threadId, router, sendMessage, setMessages, analysisMode, sendMultiAgentMessage]);
 
-  const isStreaming = status === 'submitted' || status === 'streaming';
+  const isStreaming = status === 'submitted' || status === 'streaming' || multiAgentFetchRef.current !== null;
   const isEmpty = messages.length === 0;
 
   // Last assistant message id — gets the Regenerate affordance.
@@ -203,8 +333,12 @@ export function ChatScreen({
     if (isStreaming) return;
     autoSubmittedRef.current = threadId;
     lastUserTextRef.current = autoSubmitPrompt;
-    void sendMessage({ text: autoSubmitPrompt });
-  }, [autoSubmitPrompt, threadId, messages.length, isStreaming, sendMessage]);
+    if (analysisMode !== 'single') {
+      void sendMultiAgentMessage(autoSubmitPrompt);
+    } else {
+      void sendMessage({ text: autoSubmitPrompt });
+    }
+  }, [autoSubmitPrompt, threadId, messages.length, isStreaming, sendMessage, analysisMode, sendMultiAgentMessage]);
 
   // Clear model override only after successful stream ready
   useEffect(() => {
@@ -302,17 +436,28 @@ export function ChatScreen({
         pinnedSymbol={pinnedSymbol}
         threads={initialThreads}
         isStreaming={isStreaming}
+        analysisMode={analysisMode}
+        onAnalysisModeChange={setAnalysisMode}
       />
 
       <div ref={scrollRef} className="scrollbar-hide no-overscroll relative flex-1 overflow-y-auto">
         <div className="mx-auto max-w-2xl">
+          {agentProgress && (
+            <div className="px-3 py-2">
+              <AgentDeliberation agents={agentProgress.agents} mode={agentProgress.mode} />
+            </div>
+          )}
           {isEmpty ? (
             <EmptyChatState
               pinnedSymbol={pinnedSymbol}
               {...(isStreaming ? { disabled: true } : {})}
               onSelect={(text) => {
                 lastUserTextRef.current = text;
-                void sendMessage({ text });
+                if (analysisMode !== 'single') {
+                  void sendMultiAgentMessage(text);
+                } else {
+                  void sendMessage({ text });
+                }
               }}
             />
           ) : (
@@ -340,7 +485,11 @@ export function ChatScreen({
                   type="button"
                   onClick={() => {
                     if (lastUserTextRef.current) {
-                      void sendMessage({ text: lastUserTextRef.current });
+                      if (analysisMode !== 'single') {
+                        void sendMultiAgentMessage(lastUserTextRef.current);
+                      } else {
+                        void sendMessage({ text: lastUserTextRef.current });
+                      }
                     }
                   }}
                   aria-label="Retry"
@@ -379,6 +528,10 @@ export function ChatScreen({
         <Composer
           onSubmit={(text, images) => {
             lastUserTextRef.current = text;
+            if (analysisMode !== 'single' && images.length === 0) {
+              void sendMultiAgentMessage(text);
+              return;
+            }
             if (images.length === 0) {
               void sendMessage({ text });
               return;
@@ -393,7 +546,14 @@ export function ChatScreen({
               })),
             });
           }}
-          onStop={() => stop()}
+          onStop={() => {
+            if (multiAgentFetchRef.current) {
+              multiAgentFetchRef.current.abort();
+              multiAgentFetchRef.current = null;
+              setAgentProgress(null);
+            }
+            stop();
+          }}
           isStreaming={isStreaming}
           disabled={isStreaming}
           placeholder={pinnedSymbol ? `Ask about ${pinnedSymbol}…` : 'Ask about XAU, EUR, GBP…'}

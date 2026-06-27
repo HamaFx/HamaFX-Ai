@@ -60,7 +60,7 @@ export default async function UsagePage() {
   const db = getDb();
   const startOfMonth = new Date(Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth(), 1));
 
-  const [stats, recent, settings, mtdRows, monthlySpend] = await Promise.all([
+  const [stats, recent, settings, mtdRows, monthlySpend, agentOpinionRows] = await Promise.all([
     computeUsage(session.user.id),
     listTelemetry(session.user.id, 20),
     db
@@ -85,6 +85,20 @@ export default async function UsagePage() {
         )
       ),
     getMonthlySpend(session.user.id),
+    db
+      .select({
+        agentName: schema.agentOpinions.agentName,
+        analysisMode: schema.agentOpinions.analysisMode,
+        costUsd: schema.agentOpinions.costUsd,
+        latencyMs: schema.agentOpinions.latencyMs,
+      })
+      .from(schema.agentOpinions)
+      .where(
+        and(
+          eq(schema.agentOpinions.userId, session.user.id),
+          gte(schema.agentOpinions.createdAt, startOfMonth)
+        )
+      ),
   ]);
 
   const KNOWN_BYOK_PROVIDERS = new Set([
@@ -160,6 +174,9 @@ export default async function UsagePage() {
         <>
           <DailyChart daily7={stats.daily7} />
           <ModelBreakdownCard stats={stats} />
+          {agentOpinionRows.length > 0 && (
+            <AgentUsageCard rows={agentOpinionRows} />
+          )}
           <RecentTurnsCard rows={recent} />
         </>
       )}
@@ -395,6 +412,108 @@ function RecentTurnsCard({ rows }: { rows: Awaited<ReturnType<typeof listTelemet
           </li>
         ))}
       </ul>
+    </section>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Multi-Agent: per-agent and per-mode cost breakdown
+// ---------------------------------------------------------------------------
+
+function AgentUsageCard({ rows }: {
+  rows: Array<{ agentName: string; analysisMode: string; costUsd: number; latencyMs: number }>;
+}) {
+  // Aggregate by agent
+  const byAgent = new Map<string, { turns: number; cost: number; avgMs: number }>();
+  for (const r of rows) {
+    const existing = byAgent.get(r.agentName) ?? { turns: 0, cost: 0, avgMs: 0 };
+    existing.turns += 1;
+    existing.cost += Number(r.costUsd);
+    existing.avgMs += Number(r.latencyMs);
+    byAgent.set(r.agentName, existing);
+  }
+  const agentRows = [...byAgent.entries()].map(([name, v]) => ({
+    name,
+    turns: v.turns,
+    cost: v.cost,
+    avgMs: Math.round(v.avgMs / v.turns),
+  })).sort((a, b) => b.cost - a.cost);
+
+  // Aggregate by mode
+  const byMode = new Map<string, { turns: number; cost: number }>();
+  for (const r of rows) {
+    const existing = byMode.get(r.analysisMode) ?? { turns: 0, cost: 0 };
+    existing.turns += 1;
+    existing.cost += Number(r.costUsd);
+    byMode.set(r.analysisMode, existing);
+  }
+  const modeRows = [...byMode.entries()].map(([mode, v]) => ({
+    mode,
+    turns: v.turns,
+    cost: v.cost,
+  })).sort((a, b) => b.cost - a.cost);
+
+  const totalCost = agentRows.reduce((s, r) => s + r.cost, 0);
+
+  const AGENT_LABELS: Record<string, string> = {
+    technical: 'Technical',
+    fundamental: 'Fundamental',
+    risk: 'Risk',
+    sentiment: 'Sentiment',
+    decision: 'Decision',
+  };
+
+  return (
+    <section
+      aria-labelledby="agent-usage-heading"
+      className="border border-divider bg-bg-elev-1 rounded-lg flex flex-col gap-3 p-4"
+    >
+      <h2 id="agent-usage-heading" className="text-fg-muted text-sm font-medium">
+        Multi-Agent Breakdown (MTD)
+      </h2>
+
+      <div className="flex flex-col gap-2">
+        <h3 className="text-fg-subtle text-caption font-semibold uppercase tracking-wider">By Agent</h3>
+        <ul className="flex flex-col gap-1.5">
+          {agentRows.map((r) => (
+            <li
+              key={r.name}
+              className="grid grid-cols-[1fr_auto_auto] items-baseline gap-3 text-xs tabular-nums"
+            >
+              <span className="text-fg font-medium">
+                {AGENT_LABELS[r.name] ?? r.name}
+              </span>
+              <span className="text-fg-subtle text-caption">
+                {r.turns} turns · {Math.round(r.avgMs / 100) / 10}s avg
+              </span>
+              <span className="text-fg w-16 text-right">${r.cost.toFixed(4)}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <div className="flex flex-col gap-2">
+        <h3 className="text-fg-subtle text-caption font-semibold uppercase tracking-wider">By Mode</h3>
+        <ul className="flex flex-col gap-1.5">
+          {modeRows.map((r) => (
+            <li
+              key={r.mode}
+              className="grid grid-cols-[1fr_auto_auto] items-baseline gap-3 text-xs tabular-nums"
+            >
+              <span className="text-fg font-medium capitalize">{r.mode}</span>
+              <span className="text-fg-subtle text-caption">{r.turns} turns</span>
+              <span className="text-fg w-16 text-right">${r.cost.toFixed(4)}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <div className="border-t border-divider pt-2">
+        <div className="flex items-baseline justify-between text-xs tabular-nums">
+          <span className="text-fg-muted font-medium">Total Specialist Cost</span>
+          <span className="text-fg">${totalCost.toFixed(4)}</span>
+        </div>
+      </div>
     </section>
   );
 }

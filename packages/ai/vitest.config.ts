@@ -33,5 +33,16 @@ export default defineConfig({
         lines: 20,
       },
     },
+    server: {
+      deps: {
+        // Allow importing modules that use `import 'server-only'` —
+        // the guard is a build-time RSC check, not a runtime one, so
+        // stubbing it out in the test environment is safe.
+        inline: ['server-only'],
+      },
+    },
+    alias: {
+      'server-only': new URL('./test/__mocks__/server-only.ts', import.meta.url).pathname,
+    },
   },
 });

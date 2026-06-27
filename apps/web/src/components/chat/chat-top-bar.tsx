@@ -27,7 +27,7 @@
 // doesn't open" intermittent bug caused by stacked drawer instances.
 
 import type { Symbol } from '@hamafx/shared';
-import { Loader2, MessagesSquare, MoreHorizontal, Plus, Search, Sparkles, Trash2, Check, FileDown } from 'lucide-react';
+import { Loader2, MessagesSquare, MoreHorizontal, Plus, Search, Sparkles, Trash2, Check, FileDown, Brain, ChevronDown } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useRef, useState, useTransition } from 'react';
 import { toast } from 'sonner';
@@ -40,6 +40,25 @@ import { cn } from '@/lib/cn';
 import { fetchCsrf } from '@/lib/csrf';
 import { SymbolChip } from '@/components/ui/symbol-chip';
 import { formatRelative } from '@/lib/format';
+
+export type AnalysisMode = 'single' | 'quick' | 'standard' | 'full' | 'auto';
+
+const MODE_LABELS: Record<AnalysisMode, string> = {
+  auto: 'Auto',
+  single: 'Single',
+  quick: 'Quick',
+  standard: 'Standard',
+  full: 'Full',
+};
+
+const MODE_DESCRIPTIONS: Record<AnalysisMode, string> = {
+  auto: 'AI picks the best mode',
+  single: 'Fast, one agent',
+  quick: 'Technical only (~3s)',
+  standard: 'Technical + Fundamental (~5s)',
+  full: 'All 4 agents + fusion (~8s)',
+};
+
 export interface ThreadSummary {
   id: string;
   title: string | null;
@@ -53,17 +72,21 @@ interface ChatTopBarProps {
   pinnedSymbol: Symbol | null;
   threads: ThreadSummary[];
   isStreaming: boolean;
+  analysisMode?: AnalysisMode;
+  onAnalysisModeChange?: (mode: AnalysisMode) => void;
 }
 
-export function ChatTopBar({ threadId, title, pinnedSymbol, threads, isStreaming }: ChatTopBarProps) {
+export function ChatTopBar({ threadId, title, pinnedSymbol, threads, isStreaming, analysisMode = 'auto', onAnalysisModeChange }: ChatTopBarProps) {
   const router = useRouter();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [modeMenuOpen, setModeMenuOpen] = useState(false);
   const [pending, startTransition] = useTransition();
   const [unpinning, setUnpinning] = useState(false);
   const [confirmEl, confirm] = useConfirm();
   const menuRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
+  const modeMenuRef = useRef<HTMLDivElement>(null);
 
   // Click-out / escape close for the overflow menu.
   useEffect(() => {
@@ -93,6 +116,24 @@ export function ChatTopBar({ threadId, title, pinnedSymbol, threads, isStreaming
       window.removeEventListener('keydown', onKey);
     };
   }, [menuOpen]);
+
+  // Click-out / escape close for the analysis mode menu.
+  useEffect(() => {
+    if (!modeMenuOpen) return;
+    function onPointerDown(e: PointerEvent) {
+      if (!modeMenuRef.current) return;
+      if (!modeMenuRef.current.contains(e.target as Node)) setModeMenuOpen(false);
+    }
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') setModeMenuOpen(false);
+    }
+    window.addEventListener('pointerdown', onPointerDown);
+    window.addEventListener('keydown', onKey);
+    return () => {
+      window.removeEventListener('pointerdown', onPointerDown);
+      window.removeEventListener('keydown', onKey);
+    };
+  }, [modeMenuOpen]);
 
   function newChat() {
     startTransition(async () => {
@@ -231,6 +272,54 @@ export function ChatTopBar({ threadId, title, pinnedSymbol, threads, isStreaming
             </p>
           </div>
         </div>
+
+        {/* Analysis Mode Selector */}
+        {onAnalysisModeChange && (
+          <div className="relative" ref={modeMenuRef}>
+            <button
+              type="button"
+              onClick={() => setModeMenuOpen((v) => !v)}
+              aria-label="Analysis mode"
+              aria-expanded={modeMenuOpen}
+              aria-haspopup="menu"
+              className="text-fg-muted hover:text-fg hover:bg-bg-elev-2 active:bg-bg-elev-3 inline-flex items-center gap-1 rounded-full px-2.5 py-1.5 text-caption font-medium transition-colors shrink-0"
+            >
+              <Brain className="size-3.5" />
+              <span className="hidden sm:inline">{MODE_LABELS[analysisMode]}</span>
+              <ChevronDown className="size-3" />
+            </button>
+            {modeMenuOpen ? (
+              <div
+                role="menu"
+                className="bg-bg-elev-1 ring-divider/60 shadow-xl absolute right-0 top-full z-50 mt-2 w-56 rounded-2xl p-1.5 ring-1"
+              >
+                {(Object.keys(MODE_LABELS) as AnalysisMode[]).map((mode) => (
+                  <button
+                    key={mode}
+                    role="menuitem"
+                    type="button"
+                    onClick={() => {
+                      onAnalysisModeChange(mode);
+                      setModeMenuOpen(false);
+                    }}
+                    className={cn(
+                      'flex w-full items-center justify-between gap-2 rounded-lg px-3 py-2 text-left text-sm transition-colors',
+                      analysisMode === mode
+                        ? 'bg-brand/10 text-fg font-medium'
+                        : 'text-fg-muted hover:bg-bg-elev-2 hover:text-fg',
+                    )}
+                  >
+                    <div className="flex flex-col gap-0.5">
+                      <span>{MODE_LABELS[mode]}</span>
+                      <span className="text-caption text-fg-subtle">{MODE_DESCRIPTIONS[mode]}</span>
+                    </div>
+                    {analysisMode === mode && <Check className="size-4 text-brand shrink-0" />}
+                  </button>
+                ))}
+              </div>
+            ) : null}
+          </div>
+        )}
 
         <Tooltip label="New chat" side="bottom">
           <button

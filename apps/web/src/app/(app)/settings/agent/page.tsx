@@ -19,7 +19,7 @@
 // (count, failure count, p50/p95 latency). Server component — single
 // DB read on render.
 
-import { buildToolCatalogue } from '@hamafx/ai';
+import { buildToolCatalogue, BYOK_PROVIDERS_LIST } from '@hamafx/ai';
 import { getDb, schema } from '@hamafx/db';
 import { eq } from 'drizzle-orm';
 import type { Metadata } from 'next';
@@ -29,6 +29,8 @@ import { TOOL_NAMES, type ToolName } from '@hamafx/shared';
 import { Settings2 } from 'lucide-react';
 
 import { DisabledToolsForm } from './_components/disabled-tools-form';
+import { AnalysisModeForm } from './_components/analysis-mode-form';
+import { AgentModelOverrideForm } from './_components/agent-model-override-form';
 
 export const revalidate = 60;
 
@@ -43,11 +45,32 @@ export default async function AgentCataloguePage() {
 
   const db = getDb();
   const [settings] = await db
-    .select({ disabledTools: schema.userSettings.disabledTools })
+    .select({
+      disabledTools: schema.userSettings.disabledTools,
+      defaultAnalysisMode: schema.userSettings.defaultAnalysisMode,
+      showAgentOpinions: schema.userSettings.showAgentOpinions,
+      agentModelOverrides: schema.userSettings.agentModelOverrides,
+    })
     .from(schema.userSettings)
     .where(eq(schema.userSettings.userId, session.user.id));
 
   const disabledTools = settings?.disabledTools ?? [];
+  const analysisMode = (settings?.defaultAnalysisMode ?? 'auto') as 'single' | 'quick' | 'standard' | 'full' | 'auto';
+  const showOpinions = settings?.showAgentOpinions ?? true;
+  const agentModelOverrides = (settings?.agentModelOverrides as {
+    technical?: string; fundamental?: string; risk?: string; sentiment?: string; decision?: string;
+  } | null) ?? {};
+
+  // Build the provider+model list for the override dropdowns.
+  const providerModelList = BYOK_PROVIDERS_LIST.map((p) => ({
+    id: p.id,
+    displayName: p.displayName,
+    models: (p.models ?? []).map((m) => ({
+      modelId: m.modelId,
+      label: m.label,
+      tier: m.tier,
+    })),
+  }));
   const entries = await buildToolCatalogue(disabledTools);
   const totalInvocations = entries.reduce((s, e) => s + e.invocations24h, 0);
   const totalFailures = entries.reduce((s, e) => s + e.failures24h, 0);
@@ -93,6 +116,10 @@ export default async function AgentCataloguePage() {
           </li>
         ))}
       </ul>
+
+      <AnalysisModeForm initialMode={analysisMode} showOpinions={showOpinions} />
+
+      <AgentModelOverrideForm initialOverrides={agentModelOverrides} providers={providerModelList} />
 
       <section aria-labelledby="disabled-tools-heading" className="flex flex-col gap-3">
         <header className="flex items-center gap-2">
