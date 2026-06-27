@@ -53,3 +53,5 @@ export * from './decision-signals';
 export * from './portfolio';
 // F4 — Notification Noise Control
 export * from './noise-control';
+// F7 — Bot Platform with Commands
+export * from './bot-links';

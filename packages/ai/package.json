@@ -8,7 +8,8 @@
     ".": "./src/index.ts",
     "./tools": "./src/tools/index.ts",
     "./prompt": "./src/prompt/system.ts",
-    "./diagnostics": "./src/diagnostics/index.ts"
+    "./diagnostics": "./src/diagnostics/index.ts",
+    "./bot": "./src/bot/index.ts"
   },
   "scripts": {
     "lint": "eslint .",

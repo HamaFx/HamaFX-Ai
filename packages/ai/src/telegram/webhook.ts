@@ -20,6 +20,7 @@ import { runChat } from '../agent';
 import * as crypto from 'crypto';
 import { getDb, schema } from '@hamafx/db';
 import { eq } from 'drizzle-orm';
+import { getBotDispatcher, resolveBotUser, type BotContext, type BotResponse } from '../bot';
 
 export interface TelegramUpdate {
   update_id: number;
@@ -52,6 +53,61 @@ function stringToUUID(str: string): string {
   ].join('-');
 }
 
+/** Send a text response back to Telegram. */
+async function sendTelegramResponse(
+  chatId: number,
+  response: BotResponse,
+  botToken: string,
+): Promise<void> {
+  // If the response includes an image, send it as a photo
+  if (response.image) {
+    await fetch(`https://api.telegram.org/bot${botToken}/sendPhoto`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        chat_id: chatId,
+        photo: response.image,
+        caption: response.imageCaption,
+        parse_mode: response.parseMode,
+      }),
+    }).catch(console.error);
+    return;
+  }
+
+  await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({
+      chat_id: chatId,
+      text: response.text || 'OK',
+      parse_mode: response.parseMode,
+    }),
+  }).catch(console.error);
+}
+
+/** Send a "link your account" prompt to an unlinked user. */
+async function sendLinkPrompt(chatId: number, botToken: string): Promise<void> {
+  await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({
+      chat_id: chatId,
+      text: [
+        '👋 Welcome to HamaFX Bot!',
+        '',
+        'To use this bot, you need to link your HamaFX account:',
+        '',
+        '1. Go to hamafx.ai/settings',
+        '2. Click "Link Telegram"',
+        '3. Copy the 6-character code',
+        '4. Send: /link <your-code>',
+        '',
+        'Link codes expire after 10 minutes.',
+      ].join('\n'),
+    }),
+  }).catch(console.error);
+}
+
 export async function handleTelegramWebhook(update: TelegramUpdate, env: ServerEnv) {
   const chatId = update.message?.chat.id || update.callback_query?.message?.chat.id;
   const text = update.message?.text || update.callback_query?.data;
@@ -69,7 +125,61 @@ export async function handleTelegramWebhook(update: TelegramUpdate, env: ServerE
     }).catch(console.error);
   }
 
-  // Pre-process slash commands
+  // ── F7: Bot Command Dispatch ──────────────────────────────────
+  // If the message starts with '/', route it through the bot dispatcher.
+  if (text.startsWith('/')) {
+    const botToken = env.TELEGRAM_BOT_TOKEN;
+    if (!botToken) {
+      console.error('[telegram] TELEGRAM_BOT_TOKEN not configured');
+      return;
+    }
+
+    // Special case: /link works without a linked account
+    if (text.toLowerCase().startsWith('/link')) {
+      const linkCtx: BotContext = {
+        userId: '',
+        chatId: String(chatId),
+        platform: 'telegram',
+        botToken,
+      };
+      const dispatcher = getBotDispatcher();
+      const response = await dispatcher.dispatch(text, linkCtx);
+      await sendTelegramResponse(chatId, response, botToken);
+      return;
+    }
+
+    // Resolve the linked user
+    const userId = await resolveBotUser(chatId, 'telegram');
+
+    if (!userId) {
+      // User is not linked — send the link prompt
+      await sendLinkPrompt(chatId, botToken);
+      return;
+    }
+
+    // Send a "Typing..." action to Telegram
+    await fetch(`https://api.telegram.org/bot${botToken}/sendChatAction`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ chat_id: chatId, action: 'typing' }),
+    }).catch(console.error);
+
+    // Dispatch the command
+    const ctx: BotContext = {
+      userId,
+      chatId: String(chatId),
+      platform: 'telegram',
+      botToken,
+    };
+
+    const dispatcher = getBotDispatcher();
+    const response = await dispatcher.dispatch(text, ctx);
+    await sendTelegramResponse(chatId, response, botToken);
+    return;
+  }
+
+  // ── Free-form message: route through the AI agent (existing behavior) ──
+  // Pre-process slash commands (legacy custom instructions)
   let customInstructions = '';
   if (text.startsWith('/status')) {
     customInstructions = 'The user wants a quick status update of their PnL, open trades, and margin.';
@@ -79,9 +189,7 @@ export async function handleTelegramWebhook(update: TelegramUpdate, env: ServerE
     customInstructions = 'The user wants a market snapshot. Run the snapshot tool or summarize the latest macro news quickly.';
   }
 
-  // We map the telegram chat ID to a deterministic thread ID. 
-  // In a real multi-user app we'd look up the user, but this is a single-user app.
-  // We'll use a specific thread ID prefix to keep telegram separate, or just use a daily thread.
+  // Map the telegram chat ID to a deterministic thread ID.
   const threadId = stringToUUID(`tg-${chatId}-default`);
 
   const userMessage: UIMessage = {
