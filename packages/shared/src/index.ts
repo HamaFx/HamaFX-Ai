@@ -33,6 +33,7 @@ export * from './schemas/structure';
 export * from './schemas/chat';
 export * from './schemas/alerts';
 export * from './schemas/journal';
+export * from './schemas/decision-signals';
 
 // Per-tool output envelope schemas (consumed by chat parts via `safeParse`).
 export * from './schemas/tool-outputs/get-price';

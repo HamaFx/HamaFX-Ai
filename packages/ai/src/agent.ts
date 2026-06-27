@@ -30,6 +30,7 @@ import {
 } from 'ai';
 
 import { buildLiveSnapshot } from './context';
+import type { LiveSnapshot } from './prompt/system';
 import {
   applyBudgetDelta,
   BudgetExceededError,
@@ -68,6 +69,7 @@ import { tools } from './tools';
 import { enforceCitations } from './verification';
 import { waitUntil } from './wait-until';
 import { getDb, schema } from '@hamafx/db';
+import { extractDecisionSignal, createDecisionSignal } from './decision-signals';
 import type { UserSettingsRow } from '@hamafx/db/schema';
 import { and, eq } from 'drizzle-orm';
 import { extractRateLimits } from './rate-limits';
@@ -559,6 +561,22 @@ export async function runChat(args: RunChatArgs) {
               parts,
             };
             ({ messageId } = await appendAssistantMessage(threadId, ui));
+
+            // F1 — Decision Signal Tracking. Extract a directional signal
+            // from the assistant's response and persist it. Fire-and-forget:
+            // never blocks the chat response. Only creates a signal when a
+            // clear directional recommendation (buy/sell/reduce/add) is found.
+            if (messageId) {
+              void extractAndPersistSignal(ui, {
+                userId,
+                threadId,
+                messageId,
+                model: resolvedModelId,
+                snapshot,
+              }).catch((err) =>
+                console.warn('[ai] decision signal extraction failed', err),
+              );
+            }
           }
           const rateLimit = extractRateLimits(response.headers);
           if (rateLimit) {
@@ -772,4 +790,48 @@ function countToolCalls(messages: readonly { content: unknown }[]): number {
     }
   }
   return n;
+}
+
+// ---------------------------------------------------------------------------
+// F1 — Decision Signal Tracking helper.
+//
+// Extracts a directional signal from the assistant's response and persists
+// it as a decision_signal row. Fire-and-forget: the caller wraps this in
+// void + .catch() so it never blocks or crashes the chat response.
+//
+// The symbol is resolved from (1) the thread's pinnedSymbol, (2) the user
+// message text, or (3) the first symbol found in the snapshot prices.
+// The current price comes from the live snapshot.
+// ---------------------------------------------------------------------------
+
+async function extractAndPersistSignal(
+  uiMessage: UIMessage,
+  ctx: {
+    userId: string;
+    threadId: string;
+    messageId: string;
+    model: string;
+    snapshot: LiveSnapshot;
+  },
+): Promise<void> {
+  // Resolve the symbol from the snapshot prices (first available).
+  const symbolEntries = Object.entries(ctx.snapshot.prices);
+  if (symbolEntries.length === 0) return; // No price data — can't create a signal.
+
+  // Pick the first symbol that has a price.
+  const [symbol, tick] = symbolEntries[0]!;
+  if (!tick || typeof tick.mid !== 'number') return;
+
+  const payload = extractDecisionSignal(uiMessage, {
+    symbol,
+    currentPrice: tick.mid,
+    userId: ctx.userId,
+    threadId: ctx.threadId,
+    messageId: ctx.messageId,
+    model: ctx.model,
+  });
+
+  if (payload) {
+    await createDecisionSignal(payload);
+  }
 }

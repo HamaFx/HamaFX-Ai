@@ -1,5 +1,11 @@
 {
   "framework": "nextjs",
   "outputDirectory": "apps/web/.next",
-  "buildCommand": "node scripts/predeploy-migrate.mjs && npx turbo run build --filter=@hamafx/web"
+  "buildCommand": "node scripts/predeploy-migrate.mjs && npx turbo run build --filter=@hamafx/web",
+  "crons": [
+    {
+      "path": "/api/cron/evaluate-signals",
+      "schedule": "0 1 * * *"
+    }
+  ]
 }
