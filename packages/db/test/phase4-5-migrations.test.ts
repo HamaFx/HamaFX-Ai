@@ -26,7 +26,7 @@
 //
 // Phase 5 (Migration System):
 //   - sanitizeStatement is exported from pglite-client
-//   - run_drizzle.py has been removed
+//   - run_drizzle.py has been deprecated (MIG-2)
 //   - migration 0007 no longer creates daily_ai_spend
 //   - Test files import sanitizeStatement instead of duplicating it
 //   - Meta snapshot regeneration documentation exists
@@ -179,9 +179,14 @@ describe('Phase 5 — Migration System', () => {
     expect(result).not.toContain('CREATE INDEX');
   });
 
-  it('run_drizzle.py has been removed', () => {
+  it('run_drizzle.py has been deprecated (MIG-2)', () => {
     const runDrizzlePath = join(HERE, '..', 'run_drizzle.py');
-    expect(existsSync(runDrizzlePath)).toBe(false);
+    expect(existsSync(runDrizzlePath)).toBe(true);
+
+    const content = readFileSync(runDrizzlePath, 'utf-8');
+    expect(content).toContain('deprecated');
+    expect(content).not.toContain('pexpect');
+    expect(content).not.toContain('spawn');
   });
 
   it('migration 0007 no longer creates daily_ai_spend', () => {
