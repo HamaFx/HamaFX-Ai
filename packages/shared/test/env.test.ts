@@ -20,7 +20,7 @@ import {
   SECRET_MIN_BYTES,
   generateSecret,
 } from '../src/env-secrets';
-import { parseServerEnv } from '../src/env';
+import { parseServerEnv, resolveDatabaseUrl, ServerEnvSchema } from '../src/env';
 
 const MINIMAL_ENV = {
   // At least one AI transport AND one DB URL must be configured.
@@ -161,5 +161,201 @@ describe('parseServerEnv — secret length validation', () => {
         CRON_SECRET: 'short',
       }),
     ).toThrow(/CRON_SECRET/);
+  });
+});
+
+describe('parseServerEnv — database URL variants', () => {
+  it('accepts POSTGRES_URL as alternative to DATABASE_URL', () => {
+    const env = parseServerEnv({
+      AI_GATEWAY_API_KEY: 'test-key',
+      POSTGRES_URL: 'postgres://user:pass@localhost:5432/db',
+      NODE_ENV: 'test',
+    });
+    expect(env.POSTGRES_URL).toBe('postgres://user:pass@localhost:5432/db');
+  });
+
+  it('rejects when neither DATABASE_URL nor POSTGRES_URL is set', () => {
+    expect(() =>
+      parseServerEnv({
+        AI_GATEWAY_API_KEY: 'test-key',
+        NODE_ENV: 'test',
+      }),
+    ).toThrow(/DATABASE_URL|POSTGRES_URL/);
+  });
+
+  it('prefers DATABASE_URL over POSTGRES_URL', () => {
+    const env = parseServerEnv({
+      AI_GATEWAY_API_KEY: 'test-key',
+      DATABASE_URL: 'postgres://a:pass@localhost:5432/db',
+      POSTGRES_URL: 'postgres://b:pass@localhost:5432/db',
+      NODE_ENV: 'test',
+    });
+    expect(env.DATABASE_URL).toBe('postgres://a:pass@localhost:5432/db');
+  });
+});
+
+describe('parseServerEnv — AI transport variants', () => {
+  it('accepts Google Vertex AI transport', () => {
+    const env = parseServerEnv({
+      DATABASE_URL: 'postgres://user:pass@localhost:5432/db',
+      GOOGLE_VERTEX_PROJECT: 'my-project',
+      GOOGLE_VERTEX_LOCATION: 'us-central1',
+      NODE_ENV: 'test',
+    });
+    expect(env.GOOGLE_VERTEX_PROJECT).toBe('my-project');
+  });
+
+  it('accepts Google Generative AI transport', () => {
+    const env = parseServerEnv({
+      DATABASE_URL: 'postgres://user:pass@localhost:5432/db',
+      GOOGLE_GENERATIVE_AI_API_KEY: 'test-key',
+      NODE_ENV: 'test',
+    });
+    expect(env.GOOGLE_GENERATIVE_AI_API_KEY).toBe('test-key');
+  });
+
+  it('rejects when no AI transport is configured', () => {
+    expect(() =>
+      parseServerEnv({
+        DATABASE_URL: 'postgres://user:pass@localhost:5432/db',
+        NODE_ENV: 'test',
+      }),
+    ).toThrow(/AI_GATEWAY_API_KEY/);
+  });
+
+  it('rejects Vertex AI when location is missing', () => {
+    expect(() =>
+      parseServerEnv({
+        DATABASE_URL: 'postgres://user:pass@localhost:5432/db',
+        GOOGLE_VERTEX_PROJECT: 'my-project',
+        NODE_ENV: 'test',
+      }),
+    ).toThrow(/AI_GATEWAY_API_KEY/);
+  });
+});
+
+describe('parseServerEnv — defaults and transforms', () => {
+  it('defaults NODE_ENV to development', () => {
+    const env = parseServerEnv({
+      AI_GATEWAY_API_KEY: 'test-key',
+      DATABASE_URL: 'postgres://user:pass@localhost:5432/db',
+    });
+    expect(env.NODE_ENV).toBe('development');
+  });
+
+  it('coerces MAX_DAILY_USD from string', () => {
+    const env = parseServerEnv({
+      ...MINIMAL_ENV,
+      NODE_ENV: 'test',
+      MAX_DAILY_USD: '10',
+    });
+    expect(env.MAX_DAILY_USD).toBe(10);
+  });
+
+  it('coerces MAX_TOOL_ITERATIONS from string', () => {
+    const env = parseServerEnv({
+      ...MINIMAL_ENV,
+      NODE_ENV: 'test',
+      MAX_TOOL_ITERATIONS: '12',
+    });
+    expect(env.MAX_TOOL_ITERATIONS).toBe(12);
+  });
+
+  it('transforms LOG_PROMPTS="1" to boolean true', () => {
+    const env = parseServerEnv({ ...MINIMAL_ENV, NODE_ENV: 'test', LOG_PROMPTS: '1' });
+    expect(env.LOG_PROMPTS).toBe(true);
+  });
+
+  it('transforms LOG_PROMPTS="0" to boolean false', () => {
+    const env = parseServerEnv({ ...MINIMAL_ENV, NODE_ENV: 'test', LOG_PROMPTS: '0' });
+    expect(env.LOG_PROMPTS).toBe(false);
+  });
+
+  it('defaults LOG_PROMPTS to false', () => {
+    const env = parseServerEnv({ ...MINIMAL_ENV, NODE_ENV: 'test' });
+    expect(env.LOG_PROMPTS).toBe(false);
+  });
+
+  it('transforms BYOK_ENABLED="true" to boolean true', () => {
+    const env = parseServerEnv({ ...MINIMAL_ENV, NODE_ENV: 'test', BYOK_ENABLED: 'true' });
+    expect(env.BYOK_ENABLED).toBe(true);
+  });
+
+  it('transforms MULTI_USER_ENABLED="1" to boolean true', () => {
+    const env = parseServerEnv({ ...MINIMAL_ENV, NODE_ENV: 'test', MULTI_USER_ENABLED: '1' });
+    expect(env.MULTI_USER_ENABLED).toBe(true);
+  });
+
+  it('transforms UNLIMITED_SYMBOLS="false" to boolean false', () => {
+    const env = parseServerEnv({ ...MINIMAL_ENV, NODE_ENV: 'test', UNLIMITED_SYMBOLS: 'false' });
+    expect(env.UNLIMITED_SYMBOLS).toBe(false);
+  });
+
+  it('defaults AI_DEFAULT_MODEL', () => {
+    const env = parseServerEnv({ ...MINIMAL_ENV, NODE_ENV: 'test' });
+    expect(env.AI_DEFAULT_MODEL).toBe('google-vertex/gemini-2.5-flash');
+  });
+
+  it('defaults AI_TITLE_MODEL', () => {
+    const env = parseServerEnv({ ...MINIMAL_ENV, NODE_ENV: 'test' });
+    expect(env.AI_TITLE_MODEL).toBe('google-vertex/gemini-2.5-flash-lite');
+  });
+
+  it('defaults NEXT_PUBLIC_APP_URL', () => {
+    const env = parseServerEnv({ ...MINIMAL_ENV, NODE_ENV: 'test' });
+    expect(env.NEXT_PUBLIC_APP_URL).toBe('http://localhost:3000');
+  });
+});
+
+describe('ServerEnvSchema — validation via safeParse', () => {
+  it('rejects invalid URL for SUPABASE_URL', () => {
+    const result = ServerEnvSchema.safeParse({
+      ...MINIMAL_ENV,
+      NODE_ENV: 'test',
+      SUPABASE_URL: 'not-a-url',
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects non-positive MAX_DAILY_USD', () => {
+    const result = ServerEnvSchema.safeParse({
+      ...MINIMAL_ENV,
+      NODE_ENV: 'test',
+      MAX_DAILY_USD: -1,
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects non-integer MAX_TOOL_ITERATIONS', () => {
+    const result = ServerEnvSchema.safeParse({
+      ...MINIMAL_ENV,
+      NODE_ENV: 'test',
+      MAX_TOOL_ITERATIONS: 1.5,
+    });
+    expect(result.success).toBe(false);
+  });
+});
+
+describe('resolveDatabaseUrl', () => {
+  it('returns DATABASE_URL when set', () => {
+    const url = resolveDatabaseUrl({ DATABASE_URL: 'postgres://a:pass@localhost:5432/db' });
+    expect(url).toBe('postgres://a:pass@localhost:5432/db');
+  });
+
+  it('falls back to POSTGRES_URL when DATABASE_URL is missing', () => {
+    const url = resolveDatabaseUrl({ POSTGRES_URL: 'postgres://b:pass@localhost:5432/db' });
+    expect(url).toBe('postgres://b:pass@localhost:5432/db');
+  });
+
+  it('throws when neither is set', () => {
+    expect(() => resolveDatabaseUrl({})).toThrow(/DATABASE_URL.*POSTGRES_URL/);
+  });
+
+  it('prefers DATABASE_URL when both are set', () => {
+    const url = resolveDatabaseUrl({
+      DATABASE_URL: 'postgres://a:pass@localhost:5432/db1',
+      POSTGRES_URL: 'postgres://b:pass@localhost:5432/db2',
+    });
+    expect(url).toBe('postgres://a:pass@localhost:5432/db1');
   });
 });

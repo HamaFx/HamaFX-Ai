@@ -14,7 +14,7 @@
 <p align="center">
   <a href="https://github.com/HamaFx/HamaFX-Ai/actions"><img src="https://img.shields.io/badge/status-production%20ready-48d597?style=for-the-badge" alt="Status: Production Ready"></a>
   <a href="https://github.com/HamaFx/HamaFX-Ai/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-Apache%202.0-8a93a3?style=for-the-badge" alt="License"></a>
-  <a href="https://vitest.dev"><img src="https://img.shields.io/badge/tests-590--passed-48d597?style=for-the-badge&logo=vitest&logoColor=white" alt="Tests: 590 Passed"></a>
+  <a href="https://github.com/HamaFx/HamaFX-Ai/actions/workflows/ci-fast.yml"><img src="https://img.shields.io/github/actions/workflow/status/HamaFx/HamaFX-Ai/ci-fast.yml?style=for-the-badge&logo=vitest&logoColor=white&label=tests" alt="Tests"></a>
   <a href="https://nextjs.org"><img src="https://img.shields.io/badge/Next.js-15-black?style=for-the-badge&logo=next.js" alt="Next.js 15"></a>
 </p>
 

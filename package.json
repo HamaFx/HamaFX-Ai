@@ -17,7 +17,14 @@
     "test": "turbo run test -- --run",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md,css}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md,css}\"",
-    "clean": "turbo run clean && rm -rf node_modules"
+    "test:watch": "turbo run test -- --watch",
+    "test:coverage": "turbo run test -- --coverage",
+    "test:e2e": "pnpm --filter @hamafx/web exec playwright test",
+    "test:web": "pnpm --filter @hamafx/web test",
+    "test:ai": "pnpm --filter @hamafx/ai test",
+    "test:shared": "pnpm --filter @hamafx/shared test",
+    "clean": "turbo run clean && rm -rf node_modules",
+    "test:empty-guard": "node scripts/check-test-files.mjs"
   },
   "devDependencies": {
     "@changesets/cli": "^2.31.0",

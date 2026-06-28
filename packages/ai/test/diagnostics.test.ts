@@ -177,6 +177,93 @@ describe('recordError — error recording', () => {
   });
 });
 
+describe('recordStep — additional edge cases', () => {
+  it('records multiple steps in sequence', async () => {
+    await withDiagnostics('user-1', 'thread-1', async () => {
+      recordStep('step_a');
+      recordStep('step_b', { seq: 2 });
+      recordStep('step_c');
+      const ctx = getDiagnosticContext();
+      expect(ctx!.steps).toHaveLength(3);
+      expect(ctx!.steps[0]!.name).toBe('step_a');
+      expect(ctx!.steps[1]!.name).toBe('step_b');
+      expect(ctx!.steps[2]!.name).toBe('step_c');
+    });
+  });
+
+  it('handles undefined metadata gracefully', () => {
+    expect(() => recordStep('no_meta')).not.toThrow();
+  });
+});
+
+describe('completeStep — edge cases', () => {
+  it('matches the last started step when multiple share a name', async () => {
+    await withDiagnostics('user-1', 'thread-1', async () => {
+      recordStep('same_name');
+      recordStep('other');
+      recordStep('same_name');
+      completeStep('same_name', 'completed', 10);
+      const ctx = getDiagnosticContext();
+      // The second 'same_name' (index 2) should be the one marked.
+      expect(ctx!.steps[0]!.status).toBe('started');
+      expect(ctx!.steps[1]!.status).toBe('started');
+      expect(ctx!.steps[2]!.status).toBe('completed');
+      expect(ctx!.steps[2]!.durationMs).toBe(10);
+    });
+  });
+
+  it('merges metadata with existing step metadata', async () => {
+    await withDiagnostics('user-1', 'thread-1', async () => {
+      recordStep('merge_step', { initial: true });
+      completeStep('merge_step', 'completed', 5, { extra: 'data' });
+      const ctx = getDiagnosticContext();
+      expect(ctx!.steps[0]!.metadata).toEqual({
+        initial: true,
+        extra: 'data',
+      });
+    });
+  });
+
+  it('is a no-op when diagnosticStore is empty', () => {
+    expect(() => completeStep('test', 'completed', 1)).not.toThrow();
+  });
+});
+
+describe('recordError — edge cases', () => {
+  it('records an error with a custom name property', async () => {
+    await withDiagnostics('user-1', 'thread-1', async () => {
+      const err = { name: 'CustomError', message: 'custom message' };
+      recordError(err);
+      const ctx = getDiagnosticContext();
+      expect(ctx!.errors[0]!.name).toBe('CustomError');
+      expect(ctx!.errors[0]!.message).toBe('custom message');
+    });
+  });
+
+  it('handles null/undefined error gracefully', async () => {
+    await withDiagnostics('user-1', 'thread-1', async () => {
+      expect(() => {
+        recordError(null);
+        recordError(undefined);
+      }).not.toThrow();
+      const ctx = getDiagnosticContext();
+      // null becomes 'null', undefined becomes 'undefined'
+      expect(ctx!.errors).toHaveLength(2);
+    });
+  });
+
+  it('redacts secrets from the error stack trace', async () => {
+    await withDiagnostics('user-1', 'thread-1', async () => {
+      const err = new Error('generic');
+      (err as { stack?: string }).stack = 'Error: generic\n    at api_key=sk-abc123';
+      recordError(err);
+      const ctx = getDiagnosticContext();
+      expect(ctx!.errors[0]!.stack).toContain('<redacted>');
+      expect(ctx!.errors[0]!.stack).not.toContain('sk-abc123');
+    });
+  });
+});
+
 describe('exportDiagnosticContext — serialization', () => {
   it('exports the full context with redaction', async () => {
     await withDiagnostics('user-1', 'thread-1', async () => {

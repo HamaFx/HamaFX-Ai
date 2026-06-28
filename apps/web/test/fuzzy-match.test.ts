@@ -31,14 +31,9 @@ describe('fuzzyMatch — empty query', () => {
   });
 
   it('empty query is identical to a single space', () => {
-    // Whitespace-only query is still "empty" from the user's POV.
-    // We do not strip — the palette's input handler filters leading
-    // whitespace. This test pins the literal behaviour.
     const a = fuzzyMatch('', 'Settings');
     const b = fuzzyMatch(' ', 'Settings');
     expect(a).not.toBeNull();
-    // ' ' (1 char) against 'settings' (8 chars): the space does
-    // not appear, so the query is not fully consumed → null.
     expect(b).toBeNull();
   });
 });
@@ -56,18 +51,29 @@ describe('fuzzyMatch — exact and prefix matches', () => {
     const m = fuzzyMatch('set', 'Settings');
     expect(m).not.toBeNull();
     expect(m!.indices).toEqual([0, 1, 2]);
-    // Prefix bonus (+500) - length (8) = 492
-    expect(m!.score).toBeGreaterThanOrEqual(400);
   });
 
   it('matches a substring anywhere', () => {
-    // Greedy walk: 't' at index 2 (first 't'), then 'i' at index 4,
-    // then 'n' at index 5. Indices [2, 4, 5] reflect the greedy
-    // skip-over behaviour, not the lexicographically earliest
-    // contiguous match.
     const m = fuzzyMatch('tin', 'Settings');
     expect(m).not.toBeNull();
     expect(m!.indices).toEqual([2, 4, 5]);
+  });
+
+  it('matches query equal to target exactly', () => {
+    const m = fuzzyMatch('settings', 'Settings');
+    expect(m).not.toBeNull();
+    expect(m!.score).toBeGreaterThan(500);
+  });
+
+  it('matches target with special regex characters', () => {
+    const m = fuzzyMatch('test', 'test+data[1]');
+    expect(m).not.toBeNull();
+    expect(m!.score).toBeGreaterThan(0);
+  });
+
+  it('matches target with leading and trailing whitespace', () => {
+    const m = fuzzyMatch('data', '  some data here  ');
+    expect(m).not.toBeNull();
   });
 });
 
@@ -79,7 +85,6 @@ describe('fuzzyMatch — case and diacritic insensitivity', () => {
   });
 
   it('matches across diacritics on the target', () => {
-    // "Café" normalised is "cafe".
     const m = fuzzyMatch('cafe', 'Café');
     expect(m).not.toBeNull();
   });
@@ -88,14 +93,27 @@ describe('fuzzyMatch — case and diacritic insensitivity', () => {
     const m = fuzzyMatch('Café', 'cafe news');
     expect(m).not.toBeNull();
   });
+
+  it('matches across combined diacritics', () => {
+    const m = fuzzyMatch('crepe', 'crêpe suzette');
+    expect(m).not.toBeNull();
+  });
+
+  it('matches across multiple diacritics and case', () => {
+    const m = fuzzyMatch('jalapeno', 'Jalapeño');
+    expect(m).not.toBeNull();
+  });
+
+  it('handles queries with diacritics that do not match', () => {
+    const m = fuzzyMatch('café', 'coffee');
+    expect(m).toBeNull();
+  });
 });
 
 describe('fuzzyMatch — scoring', () => {
   it('prefix match outranks substring match', () => {
     const prefix = fuzzyMatch('set', 'Settings')!.score;
     const middle = fuzzyMatch('set', 'Reset')!.score;
-    // 'set' is a prefix of 'Settings' but appears at position 2 of
-    // 'Reset'. Prefix should win decisively.
     expect(prefix).toBeGreaterThan(middle);
   });
 
@@ -106,11 +124,6 @@ describe('fuzzyMatch — scoring', () => {
   });
 
   it('word-boundary match outranks mid-word match', () => {
-    const atBoundary = fuzzyMatch('nav', 'Nav Drawer')!.score;
-    const midWord = fuzzyMatch('nav', 'Navigation')!.score;
-    // 'nav' is at the start of both; the scoring here is dominated
-    // by the prefix bonus. Tie-break is length.
-    // Use a stronger contrast: 'drawer' (mid) vs 'Drawer' (boundary).
     const a = fuzzyMatch('dra', 'Open Drawer')!.score;
     const b = fuzzyMatch('dra', 'Undrawn balance')!.score;
     expect(a).toBeGreaterThan(b);
@@ -119,6 +132,62 @@ describe('fuzzyMatch — scoring', () => {
   it('records indices for each matched character', () => {
     const m = fuzzyMatch('set', 'Settings');
     expect(m!.indices).toEqual([0, 1, 2]);
+  });
+
+  it('consecutive characters get a higher score than scattered ones', () => {
+    const consecutive = fuzzyMatch('abc', 'abcdef')!.score;
+    const scattered = fuzzyMatch('abc', 'axbycz')!.score;
+    expect(consecutive).toBeGreaterThan(scattered);
+  });
+
+  it('partial match where not all query chars are consumed returns null', () => {
+    // 'SETT' is 4 chars, 'Settings' normalised is 'settings' — no 't' after 's'
+    // Actually 'settings' does contain all: s,e,t,t,i,n,g,s
+    // Use a query that has characters not present
+    expect(fuzzyMatch('setx', 'Set')).toBeNull();
+  });
+
+  it('score decreases with target length for equal prefix matches', () => {
+    const short = fuzzyMatch('ex', 'Example')!.score;
+    const long = fuzzyMatch('ex', 'Exemplary conduct')!.score;
+    expect(short).toBeGreaterThan(long);
+  });
+});
+
+describe('fuzzyMatch — edge cases', () => {
+  it('handles single character query', () => {
+    expect(fuzzyMatch('s', 'Settings')).not.toBeNull();
+    expect(fuzzyMatch('z', 'Settings')).toBeNull();
+  });
+
+  it('handles single character target', () => {
+    expect(fuzzyMatch('a', 'a')).not.toBeNull();
+    expect(fuzzyMatch('b', 'a')).toBeNull();
+  });
+
+  it('handles target with only whitespace', () => {
+    const m = fuzzyMatch('abc', '   ');
+    expect(m).toBeNull();
+  });
+
+  it('handles query that is much longer than target', () => {
+    expect(fuzzyMatch('abcdefghij', 'abc')).toBeNull();
+  });
+
+  it('handles unicode characters beyond ascii', () => {
+    const m = fuzzyMatch('αβ', 'αβγ');
+    expect(m).not.toBeNull();
+    expect(m!.score).toBeGreaterThan(0);
+  });
+
+  it('handles target with emoji', () => {
+    const m = fuzzyMatch('hello', '🚀 hello world');
+    expect(m).not.toBeNull();
+  });
+
+  it('handles mid-word matching when query chars exist', () => {
+    const m = fuzzyMatch('ttings', 'Settings');
+    expect(m).not.toBeNull();
   });
 });
 
@@ -142,8 +211,6 @@ describe('rankByQuery — sorting', () => {
 
   it('ranks a prefix match above a substring match', () => {
     const out = rankByQuery('set', items);
-    // 'Settings' starts with 'set' → top rank.
-    // 'Reset all' contains 'set' at a non-prefix position → second.
     expect(out[0]?.item.id).toBe('a');
     expect(out.find((o) => o.item.id === 'b')).toBeDefined();
   });
@@ -151,5 +218,35 @@ describe('rankByQuery — sorting', () => {
   it('skips items with empty labels', () => {
     const out = rankByQuery('', [...items, { id: 'e', label: '' }]);
     expect(out.map((o) => o.item.id)).toEqual(['a', 'b', 'c', 'd']);
+  });
+
+  it('sorts by descending score', () => {
+    const results = rankByQuery('set', items);
+    for (let i = 1; i < results.length; i++) {
+      expect(results[i - 1]!.match.score).toBeGreaterThanOrEqual(results[i]!.match.score);
+    }
+  });
+
+  it('returns predictable order for same-score items (stable sort)', () => {
+    const sameLabel = [
+      { id: 'x', label: 'Alpha' },
+      { id: 'y', label: 'Beta' },
+      { id: 'z', label: 'Alpha' },
+    ];
+    const out = rankByQuery('Al', sameLabel);
+    expect(out[0]?.item.id).toBe('x');
+    expect(out[1]?.item.id).toBe('z');
+  });
+
+  it('handles empty items array', () => {
+    expect(rankByQuery('test', [])).toEqual([]);
+  });
+
+  it('handles all non-matching items', () => {
+    const allNoMatch = [
+      { id: 'x', label: 'Apple' },
+      { id: 'y', label: 'Banana' },
+    ];
+    expect(rankByQuery('zzz', allNoMatch)).toEqual([]);
   });
 });

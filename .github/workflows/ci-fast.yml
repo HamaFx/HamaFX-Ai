@@ -40,3 +40,10 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm turbo run test
+      - name: Test File Guard
+        run: pnpm test:empty-guard
+      - name: Report Coverage
+        uses: davelosert/vitest-coverage-report-action@v2
+        if: github.event_name == 'pull_request'
+        with:
+          vite-config-path: vitest.workspace.ts

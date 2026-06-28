@@ -13,7 +13,7 @@
   "scripts": {
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "test": "vitest",
+    "test": "vitest --run",
     "clean": "rm -rf node_modules .turbo"
   },
   "dependencies": {
@@ -24,6 +24,7 @@
   },
   "devDependencies": {
     "@hamafx/config": "workspace:*",
+    "@hamafx/test-utils": "workspace:*",
     "@types/node": "^20.14.10",
     "eslint": "^9.17.0",
     "typescript": "^5.7.2",
