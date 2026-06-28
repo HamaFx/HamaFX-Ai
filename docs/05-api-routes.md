@@ -28,16 +28,13 @@
 
 ### 1.1 Overview
 
-### 1.1 Overview
-
-Multi-tenant authentication managed by **NextAuth.js** (Auth.js). Supports multiple providers (Google, GitHub, Credentials). 
-Sessions are stored securely via cookies and backed by the database (`users`, `accounts`, `sessions` tables). Every subsequent request is gated by Edge middleware that checks the NextAuth session.
+Multi-tenant authentication managed by **NextAuth.js v5** (Auth.js). Uses a Credentials provider (email + password with bcrypt). Sessions are JWT-based (stateless) and stored in HttpOnly cookies. Every subsequent request is gated by Edge middleware that validates the NextAuth JWT.
 
 ### 1.2 Middleware (src/middleware.ts)
 
 - **Runtime**: Edge (Web Crypto only — no Node APIs, no `postgres-js`).
-- **Session check**: Reads NextAuth session cookies. If invalid or missing, redirects to `/auth/login` with a
-  `callbackUrl` query param pointing back to the original URL.
+- **Session check**: Reads NextAuth JWT session cookie. If invalid or missing, redirects to `/login` with a
+  `next` query param pointing back to the original URL.
 - **CSRF**: Double-submit cookie pattern. A `hfx_csrf` cookie (random UUID)
   is minted if absent and echoed on every response. State-changing requests
   (`POST`, `PUT`, `DELETE`, `PATCH`) under `/api/*` must carry an
@@ -485,7 +482,7 @@ Persist a browser `PushSubscription`. Idempotent on `endpoint`
 
 **Runtime**: nodejs
 
-**Auth**: Defense-in-depth recheck of `hfx_auth` cookie (middleware already
+**Auth**: Defense-in-depth recheck of NextAuth JWT (middleware already
 gates this, but push endpoints get extra paranoia). Requires `VAPID_PUBLIC_KEY`
 and `VAPID_PRIVATE_KEY` env vars.
 
@@ -719,7 +716,7 @@ but were moved to nodejs for consistency with `@hamafx/data`.
 
 | Method   | Path                                | Group    |
 |----------|-------------------------------------|----------|
-| `POST`   | `/api/auth/login`                   | Auth     |
+| `POST`   | `/api/auth/callback/credentials`    | Auth     |
 | `POST`   | `/api/auth/logout`                  | Auth     |
 | `POST`   | `/api/chat`                         | Chat     |
 | `GET`    | `/api/chat/threads`                 | Chat     |
