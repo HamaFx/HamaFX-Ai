@@ -207,7 +207,7 @@ describe('configuredProviders', () => {
   });
 
   it('returns matching ProviderId entries', () => {
-    const result = configuredProviders({ openai: 'sk-abc', unknown_provider: 'test' } as any);
+    const result = configuredProviders({ openai: 'sk-abc', unknown_provider: 'test' } as Record<string, string>);
     expect(result).toEqual(['openai']);
   });
 
