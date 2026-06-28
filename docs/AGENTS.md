@@ -1,15 +1,18 @@
 # AGENTS.md — HamaFX-Ai Development Guide
 
-> **For AI coding agents (Claude Code, Codex, Cursor, Hermes) working on this repository.**
-> Read this FIRST before making any changes. It replaces the old scattered docs.
+> **For AI coding agents (Claude Code, Codex, Cursor, Gemini CLI, etc.) working on this repository.**
+> Read this FIRST before making any changes. It is the canonical source of truth for the project.
 
 ## Project Identity
 
-**HamaFX-Ai** is a multi-tenant, chat-driven AI trading copilot for three forex instruments: **XAUUSD** (primary), **EURUSD**, **GBPUSD**. It runs as a Next.js 15 PWA with a persistent Node.js worker daemon. The AI agent uses Vercel AI SDK v5 with 30 tools, domain-based model routing, and multi-agent committee deliberation.
+**HamaFX-Ai** is an open-source, multi-tenant, chat-driven AI trading copilot for forex instruments: **XAUUSD** (primary), **EURUSD**, **GBPUSD**. It runs as a Next.js 15 PWA with a persistent Node.js worker daemon. The AI agent uses Vercel AI SDK v5 with 30 tools, domain-based model routing, and multi-agent committee deliberation.
 
-- **Status**: Phases 0-9 shipped (incl. multi-tenant v2.0). Hardening complete. UX Upgrade Plan Phases A/B/C shipped (items 1-19 done). Phase D shipped (Vertex AI BYOK + api-keys page overhaul + bulk test + per-provider usage). Phase E shipped (model picker overhaul — full provider×model catalog with per-domain defaults, /settings/models browser, regenerated chat popover). Items 20-25 parked. In production on Vercel + GCE VM.
-- **Principle**: Multi-tenant via NextAuth.js v5 + Drizzle adapter. BYOK per user (9-provider registry: google, vertex, anthropic, openai, groq, mistral, openrouter, xai, deepseek). Strict userId scoping on all user-data tables.
 - **License**: Apache-2.0
+- **Status**: In production on Vercel + GCE VM. Phases 0–9 shipped (incl. multi-tenant v2.0). UX Upgrade Plan Phases A/B/C/D/E shipped.
+- **Auth**: NextAuth.js v5 (Credentials provider, JWT strategy) + Drizzle adapter. BYOK per user (9-provider registry). Strict `userId` scoping on all user-data tables.
+- **Repo**: [github.com/HamaFx/HamaFX-Ai](https://github.com/HamaFx/HamaFX-Ai)
+
+> **Known issue:** The auth system has critical security bugs. See [`AUTH_FIX_PLAN.md`](../AUTH_FIX_PLAN.md) for the full fix plan before touching auth code.
 
 ## Quick Reference
 
@@ -21,32 +24,34 @@
 | Framework | Next.js 15 App Router + React 19 |
 | Styling | Tailwind CSS v4 + shadcn/ui (Radix) |
 | AI SDK | Vercel AI SDK v5 (`ai` package) |
-| Models | Google Vertex AI (gemini-2.5-pro/flash/flash-lite) + optional AI Gateway |
+| Models | Google Vertex AI + 9-provider BYOK registry |
 | DB | Postgres (Supabase) + pgvector. Drizzle ORM |
 | Local DB | PGlite (embedded Postgres, zero setup) |
 | Charts | TradingView lightweight-charts v5 |
-| Tests | Vitest. 90 test files, 590 cases. `pnpm turbo run test -- --run` |
+| Tests | Vitest (90+ files, 590+ cases). Playwright E2E. |
 | Lint | ESLint flat config in `packages/config/eslint` |
 | TypeScript | Strict mode. `exactOptionalPropertyTypes`, `noUncheckedIndexedAccess` |
 
 ## Commands
 
 ```bash
-# Development (local, zero setup)
-pnpm dev:local              # Next.js + PGlite auto-boot, http://localhost:3000
+# Development (local, zero setup — PGlite auto-boots)
+pnpm dev:local              # http://localhost:3000
 
 # Development (with remote DB)
 pnpm dev                    # starts web only (turbo run dev)
 
 # Docker (full features, pgvector included)
-docker compose up -d
+docker compose -f docker-compose.prod.yml up -d
 
 # Testing
 pnpm turbo run test -- --run    # all packages
 pnpm --filter @hamafx/web test  # single package
+pnpm --filter @hamafx/web exec playwright test  # E2E
 
-# Typecheck
-pnpm typecheck                  # all packages
+# Typecheck & Lint
+pnpm typecheck
+pnpm lint
 
 # Build
 pnpm --filter @hamafx/web build
@@ -54,16 +59,10 @@ pnpm --filter @hamafx/web build
 # Migrations
 pnpm --filter @hamafx/db migrate:gen     # generate from schema changes
 pnpm --filter @hamafx/db migrate:apply   # apply to DATABASE_URL
-# Vercel prod deploys run scripts/predeploy-migrate.mjs before
-# next build, so prod migrations happen automatically. No manual
-# step required.
+# Vercel prod deploys run scripts/predeploy-migrate.mjs automatically.
 
-# AI Evals
-pnpm --filter @hamafx/ai eval -- --base-url http://localhost:3000 --cookie "hfx_auth=..." --cases
-
-# Langfuse (LLM Observability)
-docker compose up -d              # start Postgres + Langfuse
-open http://localhost:3001         # Langfuse dashboard
+# AI Evals (manual, not in CI)
+pnpm --filter @hamafx/ai eval -- --base-url http://localhost:3000 --cookie "authjs.session-token=..." --cases
 ```
 
 ## Monorepo Structure
@@ -78,12 +77,13 @@ HamaFX-Ai/
 │   ├── data/             # Market data adapters — price, candles, news, failover, caching
 │   ├── db/               # Drizzle schema (27 tables) + Postgres/PGlite client
 │   ├── indicators/       # Technical indicators — SMA, EMA, RSI, MACD, SMC structure
-│   ├── shared/           # Zod schemas, domain types, env validation, error codes
-│   └── config/           # Shared ESLint, Prettier, TS configs (not compiled)
-├── docs/                 # Architecture + API + deployment docs
+│   ├── shared/           # Zod schemas, domain types, env validation, error codes, encryption
+│   ├── config/           # Shared ESLint, Prettier, TS configs (not compiled)
+│   └── test-utils/       # Shared test factories, mocks, vitest helpers
+├── docs/                 # Architecture + API + deployment docs (you are here)
 ├── infra/cron-vm/        # GCE VM setup script + systemd units
 ├── tools/                # Lighthouse + MT5 bridge (auxiliary tooling)
-└── scripts/              # dev.ts (local dev entrypoint)
+└── scripts/              # dev.ts (local dev entrypoint), predeploy-migrate.mjs
 ```
 
 **Dependency chain:** `config` → `shared` → `db` + `indicators` → `data` → `ai` → `web` + `worker`
@@ -104,14 +104,14 @@ Browser (PWA)
     │
     ├── /api/market/* ──▶ @hamafx/data ──▶ providers (BiQuote→Finnhub failover)
     │
-    └── Middleware (Edge): hfx_auth cookie check, CSRF, request-id
+    └── Middleware (Edge): NextAuth JWT check, CSRF, request-id
 
 Worker (GCE VM, systemd)
     │
-    ├── SignalR consumer ▶ TickBuffer ▶ live_ticks (1Hz flush)
-    ├── Candle1mAggregator ▶ candles_1m (UPSERT on close)
-    ├── systemd timers ▶ 7 heavy jobs (briefings, snapshots, cot, etc.)
-    └── Light HTTP pokers ▶ Vercel /api/cron/* endpoints
+    ├── SignalR consumer ──▶ TickBuffer ──▶ live_ticks (1Hz flush)
+    ├── Candle1mAggregator ──▶ candles_1m (UPSERT on close)
+    ├── systemd timers ──▶ 7 heavy jobs (briefings, snapshots, cot, etc.)
+    └── Light HTTP pokers ──▶ Vercel /api/cron/* endpoints
 ```
 
 ## Key Patterns
@@ -136,7 +136,7 @@ For fundamental/technical turns: cheap model generates JSON plan, persisted as s
 
 ### 7. Deployment Modes
 - **Local native**: PGlite (embedded Postgres), zero setup, `pnpm dev:local`
-- **Local Docker**: Postgres 16 + pgvector, `docker compose up`
+- **Local Docker**: Postgres 16 + pgvector, `docker compose -f docker-compose.prod.yml up -d`
 - **Production**: Vercel (web) + GCE VM (worker), systemd timers
 
 ## File Naming Conventions
@@ -159,55 +159,44 @@ For fundamental/technical turns: cheap model generates JSON plan, persisted as s
 
 ### PGlite vs Postgres
 - PGlite runs embedded Postgres via WASM, stored in `.hamafx/data/`
-- pgvector NOT available in PGlite — vector tables (`memory_embeddings`, `news_embeddings`) use `real[]` fallback
+- pgvector NOT available in PGlite — vector tables use `real[]` fallback
 - When adding new DB features: ensure they work without pgvector
 
 ### Supabase Pooler
 - Uses transaction mode: `prepare: false` on Postgres client
 - Pool sizes: 5 (web), 3 (worker). Controlled via `DB_POOL_MAX` / `WORKER_DB_POOL_MAX`
 
-### Workspace Dependencies
-- All workspace packages use `workspace:*` in package.json
-- Next.js `transpilePackages` includes all workspace packages
-- Worker uses esbuild for bundling, not Next.js
-
 ### Test Commands
 - Always use `-- --run` flag with vitest to avoid watch mode
 - `pnpm turbo run test -- --run` runs all packages
 - Individual: `pnpm --filter @hamafx/worker test -- --run`
 
-### Langfuse Tracing
-- Self-hosted at http://localhost:3001 (docker compose up)
-- Tracing is OPTIONAL — when LANGFUSE_* env vars are unset, the app
-  boots normally with no tracing overhead.
-- API keys are created in the Langfuse UI after first boot (Settings → API Keys)
-- The AI SDK auto-emits OTel spans — no manual instrumentation needed.
-- Coexists with Sentry: Sentry uses its own SDK, Langfuse uses OTel.
-
 ## What NOT to Change
 
 - **Auth flow**: NextAuth v5 (Credentials provider) with strict per-user
-  `userId` scoping on all user-data tables. Multi-tenant is now load-bearing
-  — do not regress to a single-password gate. New OAuth providers or RLS
-  would require a Phase plan; ask before adding.
+  `userId` scoping. Multi-tenant is load-bearing — do not regress to a
+  single-password gate. See `AUTH_FIX_PLAN.md` for known auth issues.
 - **Middleware**: Edge runtime constraint is intentional. Don't add DB calls there.
 - **Provider failover**: `runWithFailover()` pattern. Don't add direct provider calls.
 - **Tool pattern**: `inputSchema → module augmentation → execute`. Don't break the tool registry.
 - **AsyncLocalStorage**: tools use `getToolContext()`. Don't use global state.
 
-## Further Reading
+## Documentation Index
 
-- `docs/01-architecture.md` — system design, data flow diagrams
-- `docs/02-codebase.md` — package details, conventions, file map
-- `docs/03-ai-agent.md` — agent internals, tools, routing, memory, evals
-- `docs/04-data-layer.md` — DB schema, providers, caching, failover
-- `docs/05-api-routes.md` — all API endpoints, auth, middleware
-- `docs/06-frontend.md` — pages, components, state, charts, PWA
-- `docs/07-worker.md` — worker daemon, SignalR, jobs, scheduler
-- `docs/08-deployment.md` — production cloud deployment (Vercel + GCE)
-- `docs/09-testing.md` — test infrastructure, patterns
-- `docs/10-security.md` — auth, secrets, CSRF, middleware
-- `docs/14-first-run-setup.md` — new user onboarding, dev-secret autogen, BYOK registry
-- `docs/15-motion-conventions.md` — animation conventions (motion-safe: convention for decorative, useReducedMotion for functional)
-- `docs/USER_FLOW.md` — comprehensive user flow reference (sections 1-7)
-- `docs/UX_UPGRADE_PLAN.md` — 25-item UX plan, status table at the top
+| Doc | Description |
+|-----|-------------|
+| [01-architecture.md](./01-architecture.md) | System design, data flow diagrams, deployment topology |
+| [02-codebase.md](./02-codebase.md) | Package details, conventions, file map, extension rules |
+| [03-ai-agent.md](./03-ai-agent.md) | Agent internals, 30 tools, routing, memory, evals |
+| [04-data-layer.md](./04-data-layer.md) | DB schema (27 tables), providers, caching, failover |
+| [05-api-routes.md](./05-api-routes.md) | All 37+ API endpoints, auth, middleware, CSRF |
+| [06-frontend.md](./06-frontend.md) | Pages, components, state, charts, PWA |
+| [07-worker.md](./07-worker.md) | Worker daemon, SignalR, jobs, scheduler |
+| [08-deployment.md](./08-deployment.md) | Production cloud deployment (Vercel + GCE) |
+| [09-testing.md](./09-testing.md) | Test infrastructure, patterns, E2E, eval harness |
+| [10-security.md](./10-security.md) | Auth, secrets, CSRF, BYOK encryption, secrets rotation |
+| [11-self-hosting.md](./11-self-hosting.md) | Docker Compose self-hosting guide |
+| [12-roadmap.md](./12-roadmap.md) | Project roadmap, completed phases, future plans |
+| [13-first-run-setup.md](./13-first-run-setup.md) | New user onboarding, dev-secret autogen, BYOK registry |
+| [14-motion-conventions.md](./14-motion-conventions.md) | Animation conventions (motion-safe, useReducedMotion) |
+| [AUTH_FIX_PLAN.md](../AUTH_FIX_PLAN.md) | Auth system fix plan (critical bugs + improvements) |
