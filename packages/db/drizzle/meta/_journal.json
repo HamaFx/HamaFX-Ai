@@ -232,6 +232,13 @@
       "when": 1782573470002,
       "tag": "0032_phase8_soft_delete_enums_fts",
       "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1782688935778,
+      "tag": "0033_fix_analysis_mode",
+      "breakpoints": true
     }
   ]
 }
