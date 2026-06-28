@@ -1,14 +1,5 @@
-import pexpect
-import sys
-
-child = pexpect.spawn('pnpm run migrate:gen', encoding='utf-8')
-child.logfile = sys.stdout
-
-while True:
-    index = child.expect(['Is .* created or renamed from another table\?', '.*rename.*', pexpect.EOF, pexpect.TIMEOUT], timeout=5)
-    if index == 0 or index == 1:
-        child.send('\r')
-    elif index == 2:
-        break
-    elif index == 3:
-        child.send('\r')
+# This file has been deprecated and is intentionally kept as a placeholder.
+# The original pexpect wrapper was removed in Phase 5 (MIG-2) because it
+# auto-accepted drizzle-kit's interactive prompts, potentially creating
+# incorrect migrations. Use `drizzle-kit generate --custom` instead.
+# See: META_SNAPSHOT_REGENERATION.md
