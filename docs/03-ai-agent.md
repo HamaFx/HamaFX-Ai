@@ -36,7 +36,7 @@ runner.
 Every chat turn flows through a sequence of 6 steps:
 
 ```
-┌───────────────────────────────────────────────────────────┐
+┌──────────────────────────────────────────────────────────┐
 │  runChat({ threadId, userId, userMessage, env })          │
 │                                                           │
 │  1. tryReserveBudget() ── atomic gate, $0.01 reserve      │
@@ -47,7 +47,7 @@ Every chat turn flows through a sequence of 6 steps:
 │  6. streamText() with 30 tools → SSE → client             │
 │     └─ onFinish: persist + telemetry + enforceCitations   │
 │                  + applyBudgetDelta + runAutoTitle         │
-└───────────────────────────────────────────────────────────┘
+└──────────────────────────────────────────────────────────┘
 ```
 
 ### Step-by-step
@@ -436,21 +436,21 @@ parallel**, then a **Moderator** synthesises the final verdict.
 ```
 User setup (symbol, side, entry, stop, target)
     │
-    ├── Pre-fetch context (parallel)
-    │   ├── analyze_fundamental (48h horizon)
-    │   ├── analyze_technical (1D, 4H, 1H, 15M)
-    │   ├── get_journal_stats (per-symbol)
-    │   └── compute_risk (position sizing)
+    ├─ Pre-fetch context (parallel)
+    │   ├─ analyze_fundamental (48h horizon)
+    │   ├─ analyze_technical (1D, 4H, 1H, 15M)
+    │   ├─ get_journal_stats (per-symbol)
+    │   └─ compute_risk (position sizing)
     │
-    ├── 3 Persona LLM calls (parallel)
-    │   ├── Economist — Vertex AI + Google Search Grounding
+    ├─ 3 Persona LLM calls (parallel)
+    │   ├─ Economist — Vertex AI + Google Search Grounding
     │   │    Verdict: bullish/bearish/neutral, confidence 1–10
-    │   ├── Technician — multi-TF analysis
+    │   ├─ Technician — multi-TF analysis
     │   │    Verdict: bullish/bearish/neutral, confidence 1–10
-    │   └── Risk Manager — journal stats + position sizing
+    │   └─ Risk Manager — journal stats + position sizing
     │        Verdict: bullish/bearish/neutral, confidence 1–10
     │
-    └── Moderator synthesis
+    └─ Moderator synthesis
          Grade: A/B/C/D/F
          Signal: go / caution / no-go
          Consensus: 2–3 sentence summary
@@ -802,7 +802,7 @@ token and routes incoming messages through the standard `runChat` pipeline.
 ```bash
 pnpm --filter @hamafx/ai eval -- \
   --base-url http://localhost:3000 \
-  --cookie "hfx_auth=..." \
+  --cookie "authjs.session-token=..." \
   --cases
 ```
 
