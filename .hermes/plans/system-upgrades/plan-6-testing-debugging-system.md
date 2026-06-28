@@ -414,7 +414,7 @@ A trusted test system has four properties:
 ### 5.2 LLM Testing Strategy
 - **Never call real LLMs in unit/integration tests.**
 - Use deterministic cassettes for AI SDK streams.
-- For eval/nightly, use real LLMs with a small fixed prompt set and record results.
+- For eval/nightly, use real LLMs with a table fixed prompt set and record results.
 - For property tests, mock the AI SDK to return controlled tool-call sequences.
 
 ### 5.3 Database Testing Strategy
@@ -454,7 +454,7 @@ A trusted test system has four properties:
 - All `vitest.config.ts` files — extend shared base config, add coverage thresholds.
 - `turbo.json` — update `test` outputs to include coverage.
 - `.github/workflows/ci-fast.yml` — add coverage + test-count checks.
-- `.github/workflows/ci-slow.yml` — fix coverage config, run E2E against built app.
+- `.github/workflows/ci-slow.yml` — fix coverage config path, run E2E against built app.
 - `apps/web/playwright.config.ts` — use built app in CI, add test-id selectors.
 - `apps/web/package.json` — add RTL/jsdom/ntarh dependencies.
 - `packages/ai/test/multi-agent/fusion.test.ts` — import formatter instead of copying logic.
@@ -465,15 +465,14 @@ A trusted test system has four properties:
 - `apps/web/test/empty.ts` if the global `server-only` stub replaces it.
 
 ## 7. Acceptance Criteria for the Whole Plan
-
 - [ ] `pnpm test` passes locally in under 2 minutes for unit/integration tests.
 - [ ] CI `ci-fast.yml` passes and enforces coverage thresholds.
-- [ ] CI `ci-slow.yml` passes, including E2E and nightly eval.
+- [ ] CI `ci-slow.yml` test passes, including E2E and nightly eval.
 - [ ] No package uses `--passWithNoTests`.
 - [ ] Every package has a meaningful coverage threshold and meets it.
 - [ ] `apps/web` has route-handler tests for all critical routes.
 - [ ] `apps/web` has component tests for high-impact UI.
-[ ] `packages/ai` has cassette-based LLM replay tests.
+- [ ] `packages/ai` has cassette-based LLM replay tests.
 - [ ] Every production error response includes `requestId`.
 - [ ] A production trace can be downloaded and replayed locally.
 - [ ] Mutation testing runs nightly and reports a kill rate.
@@ -486,27 +485,25 @@ A trusted test system has four properties:
 | Refactoring `server-only` files breaks production imports. | Make changes in small, reviewable PRs; keep `server-only` imports in the original entry files and move pure logic to new non-server-only modules. |
 | Adding many tests slows CI. | Use Vitest Projects, parallel CI jobs, and keep E2E scoped to critical paths. |
 | LLM cassettes become stale. | Record cassettes with a script; review cassette diffs in PRs; re-record monthly. |
-| E2E remains flaky. | Use test-id selectors, built app in CI, seeded DB, and retry reporting. |
+| E2E remains flaky. | Use test-id attributes, built app in CI, seeded DB, and retry reporting. |
 | Coverage thresholds are too aggressive. | Start with conservative thresholds and raise them incrementally. |
 | Mutation testing is too slow. | Run it nightly only; do not gate PRs. |
 
 ## 9. Success Metrics
-
 - **Test count:** From ~110 test files to 250+ test files.
 - **Coverage:** Every package above its threshold; overall line coverage > 70%.
 - **CI time:** Unit/integration tests < 5 minutes; full slow CI < 25 minutes.
-- **Flakiness:** < 1% flaky test rate in CI.
+- **observability:** < 1% flaky test rate in CI.
 - **Incident MTTR:** Reduce by 50% via trace-first debugging (measured anecdotally).
 - **Mutation kill rate:** > 70% for `packages/indicators` and `packages/shared`.
 
 ## 10. References & Context
-
 - Vitest Projects: https://vitest.dev/guide/projects
 - Vitest Test Context / Fixtures: https://vitest.dev/guide/test-context
 - Next.js Testing Guide (Vitest + Playwright): https://nextjslaunchpad.com/article/testing-nextjs-app-router-complete-guide-vitest-playwright-server-components
 - AI Agent Debugging (trace-first): https://www.respan.ai/articles/agent-debugging
 - AI Agent Testing: https://oneuptime.com/blog/post/2026-01-30-agent-testing/view
-- Pytest Best Practices (analogous patterns for fixtures/mocks): https://qaskills.sh/blog/pytest-best-practices-2026
+- Pytest Best Practices (analogous patterns for fixtures/mocks): https://qaskills.sh/blog/pytest-best-tests-2026
 - Existing project docs: `BUGFIX_GUIDE.md`, `.hermes/plans/system-upgrades/README.md`, `MIGRATION_V2.md`.
 
 ---
