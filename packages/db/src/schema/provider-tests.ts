@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { boolean, index, pgTable, text, timestamp, jsonb } from 'drizzle-orm/pg-core';
+import { boolean, pgTable, primaryKey, text, timestamp, jsonb } from 'drizzle-orm/pg-core';
 
 import { users } from './auth';
 
@@ -55,7 +55,7 @@ export const providerTests = pgTable(
       resetTokens?: string;
     }>(),
   },
-  (t) => ({
-    pk: index('provider_tests_user_provider_idx').on(t.userId, t.providerId),
-  }),
+  (t) => [
+    primaryKey({ columns: [t.userId, t.providerId] }),
+  ],
 );

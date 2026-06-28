@@ -21,8 +21,10 @@ if [ -n "$DATABASE_URL" ]; then
   # Run Drizzle migrations
   echo "Running database migrations..."
   cd /app
-  npx drizzle-kit migrate --config packages/db/drizzle.config.ts 2>/dev/null || \
-    echo "Warning: migration step skipped (drizzle-kit may not be available)"
+  npx drizzle-kit migrate --config packages/db/drizzle.config.ts || {
+    echo "ERROR: database migrations failed — aborting startup." >&2
+    exit 1
+  }
 fi
 
 echo "Starting HamaFX-Ai on port ${PORT:-3000}..."
