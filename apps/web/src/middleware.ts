@@ -44,7 +44,8 @@ export default auth((req) => {
   const requestId = readOrCreateRequestId(req);
 
   // ── Legacy Mode Fallback ─────────────────────────────────────────
-  if (process.env.AUTH_MODE === 'legacy') {
+  // MED-05: Only allow legacy mode in development
+  if (process.env.AUTH_MODE === 'legacy' && process.env.NODE_ENV !== 'production') {
     const headers = new Headers(req.headers);
     headers.set(REQUEST_ID_HEADER, requestId);
     headers.set('x-user-id', '__system__');
@@ -60,13 +61,11 @@ export default auth((req) => {
     csrfToken = crypto.randomUUID();
   }
   const isStateChanging = ['POST', 'PUT', 'DELETE', 'PATCH'].includes(req.method);
-  if (isStateChanging && req.nextUrl.pathname.startsWith('/api/')) {
-    // Only validate if a CSRF cookie was already established on the client
-    if (cookieToken) {
-      const headerToken = req.headers.get('x-csrf-token');
-      if (!headerToken || headerToken !== cookieToken) {
-        return new NextResponse('Forbidden - CSRF token missing or invalid', { status: 403 });
-      }
+  if (isStateChanging && req.nextUrl.pathname.startsWith('/api/') && !req.nextUrl.pathname.startsWith('/api/auth/')) {
+    // MED-02: Always require CSRF token for state-changing API requests
+    const headerToken = req.headers.get('x-csrf-token');
+    if (!cookieToken || !headerToken || headerToken !== cookieToken) {
+      return new NextResponse('Forbidden - CSRF token missing or invalid', { status: 403 });
     }
   }
 

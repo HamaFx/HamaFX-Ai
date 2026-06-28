@@ -29,6 +29,8 @@ import {
   PROVIDER_IDS,
   encryptByok,
   decryptByok,
+  encryptSecret,
+  decryptSecret,
   encryptWithPassword,
   decryptWithPassword,
   type ByokPayload,
@@ -479,7 +481,9 @@ export async function exportKeysAction(password: string, totpCode?: string): Pro
     if (!totpCode) {
       return { ok: false as const, error: '2FA code is required' };
     }
-    if (!user.twoFactorSecret || !verifySync({ secret: user.twoFactorSecret, token: totpCode }).valid) {
+    // HIGH-01: Decrypt the secret before verifying
+    const decryptedSecret = user.twoFactorSecret ? decryptSecret(user.twoFactorSecret) : null;
+    if (!decryptedSecret || !verifySync({ secret: decryptedSecret, token: totpCode }).valid) {
       return { ok: false as const, error: 'Invalid 2FA code' };
     }
   }
@@ -621,7 +625,9 @@ export async function deleteAccountAction(password: string, totpCode?: string): 
     if (!totpCode) {
       return { ok: false as const, error: '2FA code is required' };
     }
-    if (!user.twoFactorSecret || !verifySync({ secret: user.twoFactorSecret, token: totpCode }).valid) {
+    // HIGH-01: Decrypt the secret before verifying
+    const decryptedSecret = user.twoFactorSecret ? decryptSecret(user.twoFactorSecret) : null;
+    if (!decryptedSecret || !verifySync({ secret: decryptedSecret, token: totpCode }).valid) {
       return { ok: false as const, error: 'Invalid 2FA code' };
     }
   }
@@ -888,10 +894,10 @@ export async function setupTwoFactorAction(): Promise<ActionResult<{ secret: str
     const otpauth = generateURI({ secret, issuer: service, label: session.user.email ?? session.user.id });
     const qrDataUrl = await QRCode.toDataURL(otpauth);
 
-    // Store the secret temporarily (not yet verified)
+    // HIGH-01: Encrypt the secret before storing
     const db = getDb();
     await db.update(schema.users)
-      .set({ twoFactorSecret: secret })
+      .set({ twoFactorSecret: encryptSecret(secret) })
       .where(eq(schema.users.id, session.user.id));
 
     return { ok: true, data: { secret, qrDataUrl } };
@@ -925,7 +931,13 @@ export async function verifyTwoFactorAction(token: string): Promise<ActionResult
       return { ok: false, error: 'No 2FA secret found. Start setup first.' };
     }
 
-    const isValid = verifySync({ secret: user.twoFactorSecret, token }).valid;
+    // HIGH-01: Decrypt the secret before verifying
+    const decryptedSecret = decryptSecret(user.twoFactorSecret);
+    if (!decryptedSecret) {
+      return { ok: false, error: '2FA secret is corrupted. Please disable and re-enable 2FA.' };
+    }
+
+    const isValid = verifySync({ secret: decryptedSecret, token }).valid;
 
     if (!isValid) {
       return { ok: false, error: 'Invalid code. Try again.' };
@@ -967,7 +979,13 @@ export async function disableTwoFactorAction(token: string): Promise<ActionResul
       return { ok: false, error: '2FA is not configured' };
     }
 
-    const isValid = verifySync({ secret: user.twoFactorSecret, token }).valid;
+    // HIGH-01: Decrypt the secret before verifying
+    const decryptedSecret = decryptSecret(user.twoFactorSecret);
+    if (!decryptedSecret) {
+      return { ok: false, error: '2FA secret is corrupted. Please disable and re-enable 2FA.' };
+    }
+
+    const isValid = verifySync({ secret: decryptedSecret, token }).valid;
 
     if (!isValid) {
       return { ok: false, error: 'Invalid code. Try again.' };
@@ -976,6 +994,15 @@ export async function disableTwoFactorAction(token: string): Promise<ActionResul
     await db.update(schema.users)
       .set({ twoFactorSecret: null, twoFactorEnabled: false })
       .where(eq(schema.users.id, session.user.id));
+
+    // FEAT-03: Audit log for 2FA disabled
+    try {
+      await db.insert(schema.auditLogs).values({
+        userId: session.user.id,
+        action: '2fa_disabled',
+        metadata: {},
+      });
+    } catch { /* fail open */ }
 
     revalidatePath('/settings');
     return { ok: true };
@@ -1080,5 +1107,55 @@ export async function exportDataAction(): Promise<ActionResult<string>> {
       error: err instanceof Error ? err.message : 'Unknown error',
     };
   }
+}
+
+/**
+ * LOW-04: Change account password.
+ */
+export async function changePasswordAction(
+  currentPassword: string,
+  newPassword: string,
+  totpCode?: string,
+): Promise<ActionResult> {
+  const session = await auth();
+  if (!session?.user?.id) return { ok: false, error: 'Unauthorized' };
+
+  const passwordValid = await verifyAccountPassword(session.user.id, currentPassword);
+  if (!passwordValid) return { ok: false, error: 'Current password is incorrect' };
+
+  const db = getDb();
+  const [user] = await db.select({
+    twoFactorEnabled: schema.users.twoFactorEnabled,
+    twoFactorSecret: schema.users.twoFactorSecret,
+  }).from(schema.users).where(eq(schema.users.id, session.user.id));
+
+  if (user?.twoFactorEnabled) {
+    if (!totpCode) return { ok: false, error: '2FA code is required' };
+    const secret = user.twoFactorSecret ? decryptSecret(user.twoFactorSecret) : null;
+    if (!secret || !verifySync({ secret, token: totpCode }).valid) {
+      return { ok: false, error: 'Invalid 2FA code' };
+    }
+  }
+
+  if (newPassword.length < 8) return { ok: false, error: 'Password must be at least 8 characters' };
+  if (!/[A-Z]/.test(newPassword)) return { ok: false, error: 'Password must contain at least one uppercase letter' };
+  if (!/[a-z]/.test(newPassword)) return { ok: false, error: 'Password must contain at least one lowercase letter' };
+  if (!/[0-9]/.test(newPassword)) return { ok: false, error: 'Password must contain at least one number' };
+
+  const hashedPassword = await bcrypt.hash(newPassword, 12);
+  await db.update(schema.users)
+    .set({ hashedPassword, tokenVersion: sql`${schema.users.tokenVersion} + 1` })
+    .where(eq(schema.users.id, session.user.id));
+
+  // FEAT-03: Audit log for password changed
+  try {
+    await db.insert(schema.auditLogs).values({
+      userId: session.user.id,
+      action: 'password_changed',
+      metadata: {},
+    });
+  } catch { /* fail open */ }
+
+  return { ok: true };
 }
 

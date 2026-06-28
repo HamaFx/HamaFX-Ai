@@ -3,6 +3,10 @@ import { NextResponse } from 'next/server';
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
+  // HIGH-03: Guard debug route — only available in development
+  if (process.env.NODE_ENV === 'production') {
+    return new NextResponse('Not Found', { status: 404 });
+  }
   const env: Record<string, unknown> = {
     DATABASE_URL_type: typeof process.env.DATABASE_URL,
     POSTGRES_URL_type: typeof process.env.POSTGRES_URL,

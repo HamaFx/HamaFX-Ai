@@ -37,8 +37,98 @@
 // back to the async path anyway. One canonical entry point keeps the
 // auth contract obvious.
 
-import { verifyAuthToken, timingSafeEqual, AUTH_COOKIE_NAME } from './auth';
 import { getAuthEnv } from './env';
+
+// Keep-alive for the legacy signed-cookie auth used by the admin-UI
+// cron trigger path. The crypto primitives live here to avoid dragging
+// back the deleted `lib/auth.ts` module.
+
+const AUTH_COOKIE_NAME = 'hfx_auth';
+
+interface AuthPayload {
+  iat: number;
+  exp: number;
+}
+
+type Bytes = Uint8Array<ArrayBuffer>;
+
+function utf8(s: string): Bytes {
+  const enc = new TextEncoder().encode(s);
+  const out = new Uint8Array(new ArrayBuffer(enc.byteLength));
+  out.set(enc);
+  return out;
+}
+
+function base64UrlToBytes(s: string): Bytes {
+  const pad = '='.repeat((4 - (s.length % 4)) % 4);
+  const b64 = (s + pad).replaceAll('-', '+').replaceAll('_', '/');
+  const raw = atob(b64);
+  const out = new Uint8Array(new ArrayBuffer(raw.length));
+  for (let i = 0; i < raw.length; i++) out[i] = raw.charCodeAt(i);
+  return out;
+}
+
+async function getKey(secret: string): Promise<CryptoKey> {
+  return crypto.subtle.importKey('raw', utf8(secret), { name: 'HMAC', hash: 'SHA-256' }, false, [
+    'sign',
+    'verify',
+  ]);
+}
+
+function timingSafeEqual(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let result = 0;
+  for (let i = 0; i < a.length; i++) {
+    result |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  }
+  return result === 0;
+}
+
+async function verifyAuthToken(
+  token: string | undefined,
+  secret: string,
+): Promise<AuthPayload | null> {
+  if (!token) return null;
+
+  const dot = token.indexOf('.');
+  if (dot < 1 || dot >= token.length - 1) return null;
+
+  const payloadB64 = token.slice(0, dot);
+  const sigB64 = token.slice(dot + 1);
+
+  let payloadBytes: Bytes;
+  let sigBytes: Bytes;
+  try {
+    payloadBytes = base64UrlToBytes(payloadB64);
+    sigBytes = base64UrlToBytes(sigB64);
+  } catch {
+    return null;
+  }
+
+  const key = await getKey(secret);
+  const ok = await crypto.subtle.verify('HMAC', key, sigBytes, payloadBytes);
+  if (!ok) return null;
+
+  let payload: unknown;
+  try {
+    payload = JSON.parse(new TextDecoder().decode(payloadBytes));
+  } catch {
+    return null;
+  }
+
+  if (
+    typeof payload !== 'object' ||
+    payload === null ||
+    typeof (payload as AuthPayload).iat !== 'number' ||
+    typeof (payload as AuthPayload).exp !== 'number'
+  ) {
+    return null;
+  }
+
+  const p = payload as AuthPayload;
+  if (p.exp < Date.now()) return null;
+  return p;
+}
 
 /**
  * Tiny wrapper for cron handler bodies — handles auth + JSON response

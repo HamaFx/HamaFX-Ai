@@ -48,6 +48,10 @@ export const users = pgTable('user', {
   twoFactorSecret: text('two_factor_secret'),
   /** Whether 2FA is active. */
   twoFactorEnabled: boolean('two_factor_enabled').notNull().default(false),
+  /** LOW-05: Consecutive failed login attempts for lockout. */
+  failedLoginAttempts: integer('failed_login_attempts').notNull().default(0),
+  /** LOW-05: Timestamp until which the account is locked. */
+  lockedUntil: timestamp('locked_until', { withTimezone: true }),
   createdAt: timestamp('createdAt', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updatedAt', { withTimezone: true })
     .defaultNow()

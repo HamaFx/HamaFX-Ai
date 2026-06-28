@@ -33,12 +33,16 @@ function LoginForm() {
 
   const [state, action, pending] = useActionState(loginAction, { error: '' });
   const [success, setSuccess] = useState(false);
+  const [requires2FA, setRequires2FA] = useState(false);
 
   useEffect(() => {
+    if (state.requires2FA) {
+      setRequires2FA(true);
+    }
     if (state.success) {
       setSuccess(true);
     }
-  }, [state.success]);
+  }, [state.requires2FA, state.success]);
 
   return (
     <div className="flex flex-col gap-6">
@@ -56,7 +60,7 @@ function LoginForm() {
               name="email"
               type="email"
               autoComplete="email"
-              autoFocus
+              autoFocus={!requires2FA}
               required
               disabled={pending || success}
             />
@@ -74,6 +78,40 @@ function LoginForm() {
               required
               disabled={pending || success}
             />
+          </div>
+
+          {requires2FA && (
+            <div className="flex flex-col gap-2">
+              <label htmlFor="totpCode" className="text-fg text-sm font-semibold">
+                2FA Code
+              </label>
+              <Input
+                id="totpCode"
+                name="totpCode"
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                maxLength={6}
+                autoComplete="one-time-code"
+                autoFocus
+                required
+                disabled={pending || success}
+                placeholder="Enter 6-digit code"
+              />
+            </div>
+          )}
+
+          <div className="flex items-center justify-between -mt-3">
+            <label className="flex items-center gap-2 text-fg-muted text-xs cursor-pointer hover:text-fg transition-colors">
+              <input type="checkbox" name="rememberMe" value="true" defaultChecked className="rounded border-divider" />
+              Remember me
+            </label>
+            <Link
+              href="/forgot-password"
+              className="text-fg-muted hover:text-fg text-xs underline underline-offset-2 transition-colors"
+            >
+              Forgot password?
+            </Link>
           </div>
 
           {state?.error ? (
@@ -109,17 +147,19 @@ function LoginForm() {
         </Link>
       </p>
 
-      <div className="flex flex-col items-center gap-2 border-t border-divider pt-4">
-        <button
-          type="button"
-          onClick={() => {
-            window.location.href = '/api/dev/login';
-          }}
-          className="text-fg-muted hover:text-fg cursor-pointer text-xs underline underline-offset-2 transition-colors"
-        >
-          Skip login (dev only)
-        </button>
-      </div>
+      {process.env.NEXT_PUBLIC_ENABLE_DEV_LOGIN === 'true' && (
+        <div className="flex flex-col items-center gap-2 border-t border-divider pt-4">
+          <button
+            type="button"
+            onClick={() => {
+              window.location.href = '/api/dev/login';
+            }}
+            className="text-fg-muted hover:text-fg cursor-pointer text-xs underline underline-offset-2 transition-colors"
+          >
+            Skip login (dev only)
+          </button>
+        </div>
+      )}
     </div>
   );
 }

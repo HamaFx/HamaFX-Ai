@@ -15,6 +15,7 @@
  */
 
 import type { Metadata } from 'next';
+import { redirect } from 'next/navigation';
 
 import { auth } from '@/auth';
 import { getDb, schema } from '@hamafx/db';
@@ -27,6 +28,7 @@ import { DataCard } from './_components/data-card';
 import { NotificationPrefsCard } from './_components/notification-prefs-card';
 import { NotificationsCard } from './_components/notifications-card';
 import { PreferencesCard } from './_components/preferences-card';
+import { ChangePasswordCard } from './_components/change-password-card';
 import { SessionsCard } from './_components/sessions-card';
 import { SystemStatusCard } from './_components/system-status-card';
 import { UsageGlance } from './_components/usage-glance';
@@ -39,6 +41,12 @@ export const revalidate = 60;
 
 export default async function SettingsPage() {
   const session = await auth();
+
+  if (!session?.user?.id) {
+    redirect('/login');
+  }
+
+  const userId = session.user.id;
   const db = getDb();
   let watchlist: string[] = ['XAUUSD', 'EURUSD', 'GBPUSD'];
   let aiPrefs: { customInstructions: string | null } = { customInstructions: null };
@@ -51,50 +59,50 @@ export default async function SettingsPage() {
   let notificationPrefs: Record<string, Record<string, boolean>> | null = null;
   let locale = 'en';
   let twoFactorEnabled = false;
-  if (session?.user?.id) {
-    const [userRow] = await db.select({
-      twoFactorEnabled: schema.users.twoFactorEnabled,
-    }).from(schema.users).where(eq(schema.users.id, session.user.id));
-    twoFactorEnabled = userRow?.twoFactorEnabled ?? false;
 
-    const [settings] = await db.select({
-      customInstructions: schema.userSettings.customInstructions,
-      defaultSymbol: schema.userSettings.defaultSymbol,
-      timeFormat: schema.userSettings.timeFormat,
-      reduceMotion: schema.userSettings.reduceMotion,
-      theme: schema.userSettings.theme,
-      language: schema.userSettings.language,
-      notificationPrefs: schema.userSettings.notificationPreferences,
-    })
-      .from(schema.userSettings)
-      .where(eq(schema.userSettings.userId, session.user.id));
-    if (settings) {
-      aiPrefs = { customInstructions: settings.customInstructions ?? null };
-      uiPrefs = {
-        defaultSymbol: settings.defaultSymbol,
-        timeFormat: settings.timeFormat ?? null,
-        reduceMotion: settings.reduceMotion,
-        theme: settings.theme ?? null,
-      };
-      locale = settings.language ?? 'en';
-      notificationPrefs = settings.notificationPrefs as Record<string, Record<string, boolean>> | null;
-    }
-    const list = await db.select({ symbol: schema.userSymbols.symbol })
-      .from(schema.userSymbols)
-      .where(eq(schema.userSymbols.userId, session.user.id))
-      .orderBy(asc(schema.userSymbols.displayOrder));
-    if (list.length > 0) {
-      watchlist = list.map((item) => item.symbol);
-    }
+  const [userRow] = await db.select({
+    twoFactorEnabled: schema.users.twoFactorEnabled,
+  }).from(schema.users).where(eq(schema.users.id, userId));
+  twoFactorEnabled = userRow?.twoFactorEnabled ?? false;
+
+  const [settings] = await db.select({
+    customInstructions: schema.userSettings.customInstructions,
+    defaultSymbol: schema.userSettings.defaultSymbol,
+    timeFormat: schema.userSettings.timeFormat,
+    reduceMotion: schema.userSettings.reduceMotion,
+    theme: schema.userSettings.theme,
+    language: schema.userSettings.language,
+    notificationPrefs: schema.userSettings.notificationPreferences,
+  })
+    .from(schema.userSettings)
+    .where(eq(schema.userSettings.userId, userId));
+  if (settings) {
+    aiPrefs = { customInstructions: settings.customInstructions ?? null };
+    uiPrefs = {
+      defaultSymbol: settings.defaultSymbol,
+      timeFormat: settings.timeFormat ?? null,
+      reduceMotion: settings.reduceMotion,
+      theme: settings.theme ?? null,
+    };
+    locale = settings.language ?? 'en';
+    notificationPrefs = settings.notificationPrefs as Record<string, Record<string, boolean>> | null;
+  }
+  const list = await db.select({ symbol: schema.userSymbols.symbol })
+    .from(schema.userSymbols)
+    .where(eq(schema.userSymbols.userId, userId))
+    .orderBy(asc(schema.userSymbols.displayOrder));
+  if (list.length > 0) {
+    watchlist = list.map((item) => item.symbol);
   }
 
   return (
     <div className="flex flex-col gap-4">
-      <SystemStatusCard userId={session.user.id} />
-      <UsageGlance userId={session?.user?.id} />
+      <SystemStatusCard userId={userId} />
+      <UsageGlance userId={userId} />
       <AgentCard />
       <AIPrefsCard initialCustomInstructions={aiPrefs.customInstructions} />
-      <NotificationsCard userId={session.user.id} />
+      <NotificationsCard userId={userId} />
+      <ChangePasswordCard />
       <AppearanceCard initialTheme={uiPrefs.theme} initialLocale={locale} />
       <SessionsCard />
       <NotificationPrefsCard initialPrefs={notificationPrefs} />

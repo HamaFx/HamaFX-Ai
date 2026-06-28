@@ -46,15 +46,20 @@ import { parseServerEnv, type ServerEnv } from '@hamafx/shared';
 import { z } from 'zod';
 
 const AuthEnvSchema = z.object({
-  // Phase A: NextAuth required (only enforced in production). Optional
-  // in dev because the autogen path backfills a strong value before
-  // any caller ever sees this.
+  // MED-04: Standardize on AUTH_SECRET (NextAuth v5 convention).
+  // NEXTAUTH_SECRET kept as deprecated fallback for backward compatibility.
+  AUTH_SECRET: z.string().min(32, 'AUTH_SECRET must be at least 32 chars').optional(),
   NEXTAUTH_SECRET: z.string().min(32, 'NEXTAUTH_SECRET must be at least 32 chars').optional(),
   APP_PASSWORD: z.string().min(4).optional(),
   AUTH_COOKIE_SECRET: z.string().min(32).optional(),
   CRON_SECRET: z.string().min(16, 'CRON_SECRET must be at least 16 chars').optional(),
   ENCRYPTION_SECRET: z.string().min(32, 'ENCRYPTION_SECRET must be at least 32 chars').optional(),
   NEXT_PUBLIC_APP_URL: z.string().url().default('http://localhost:3000'),
+  // FEAT-01: Optional OAuth provider credentials
+  AUTH_GOOGLE_ID: z.string().optional(),
+  AUTH_GOOGLE_SECRET: z.string().optional(),
+  AUTH_GITHUB_ID: z.string().optional(),
+  AUTH_GITHUB_SECRET: z.string().optional(),
 });
 
 export type AuthEnv = z.infer<typeof AuthEnvSchema>;
@@ -161,6 +166,16 @@ export function getServerEnv(): ServerEnv {
   loadOrGenerateDevSecrets();
   _serverEnv = parseServerEnv();
   return _serverEnv;
+}
+
+// MED-05: Startup warning if AUTH_MODE=legacy is set in production
+if (process.env.AUTH_MODE === 'legacy' && process.env.NODE_ENV === 'production') {
+  console.error('[SECURITY] AUTH_MODE=legacy is set in production! Authentication is disabled.');
+}
+
+// MED-04: Deprecation warning for NEXTAUTH_SECRET
+if (process.env.NEXTAUTH_SECRET && !process.env.AUTH_SECRET) {
+  console.warn('[env] NEXTAUTH_SECRET is deprecated. Use AUTH_SECRET instead.');
 }
 
 // Trigger validation immediately at startup (skip in test runner and build phase)

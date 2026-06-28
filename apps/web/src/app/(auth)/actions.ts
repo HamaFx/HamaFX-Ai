@@ -1,13 +1,15 @@
 'use server';
 
 import bcrypt from 'bcryptjs';
-import { eq } from 'drizzle-orm';
+import { and, eq, gt, sql } from 'drizzle-orm';
 import { AuthError } from 'next-auth';
 import { headers } from 'next/headers';
 import { z } from 'zod';
 
 import { getDb, schema, withRateLimit } from '@hamafx/db';
 import { signIn } from '@/auth';
+
+const BCRYPT_COST = 12;
 
 const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -25,15 +27,46 @@ export async function loginAction(prevState: unknown, formData: FormData) {
   const { email, password, next } = parsed.data;
   const normalizedEmail = email.trim().toLowerCase();
 
+  // HIGH-02: Rate limit login attempts
+  const headersList = await headers();
+  const clientIp =
+    headersList.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+    headersList.get('x-real-ip') ||
+    'unknown';
+  const rl = await withRateLimit(`login:${clientIp}`, 'login', 10);
+  if (!rl.allowed) {
+    return { error: 'Too many login attempts. Please try again later.' };
+  }
+
+  const rlEmail = await withRateLimit(`login-email:${normalizedEmail}`, 'login_email', 5);
+  if (!rlEmail.allowed) {
+    return { error: 'Too many login attempts for this email. Please try again later.' };
+  }
+
+  // MED-01: Prevent open redirect via protocol-relative URLs
+  const safeNext = next && next.startsWith('/') && !next.startsWith('//') ? next : '/chat';
+
   try {
     await signIn('credentials', {
       email: normalizedEmail,
       password,
-      redirectTo: next && next.startsWith('/') ? next : '/chat',
+      totpCode: formData.get('totpCode') as string || undefined,
+      rememberMe: formData.get('rememberMe') as string || undefined,
+      redirectTo: safeNext,
     });
     return { success: true };
   } catch (error) {
     if (error instanceof AuthError) {
+      const message = error.message;
+      if (message === 'ACCOUNT_LOCKED') {
+        return { error: 'Account temporarily locked due to too many failed attempts. Try again later.' };
+      }
+      if (message === '2FA_REQUIRED') {
+        return { requires2FA: true, email: normalizedEmail };
+      }
+      if (message === 'INVALID_2FA_CODE') {
+        return { error: 'Invalid 2FA code', requires2FA: true };
+      }
       return { error: 'Invalid email or password' };
     }
     return { error: `Error: ${String(error).slice(0, 200)}` };
@@ -79,7 +112,7 @@ export async function registerAction(prevState: unknown, formData: FormData) {
     return { error: 'An account with this email already exists' };
   }
 
-  const hashedPassword = await bcrypt.hash(password, 10);
+  const hashedPassword = await bcrypt.hash(password, BCRYPT_COST);
   const newUserId = crypto.randomUUID();
 
   // STAB-10: Wrap the users + userSettings insert in a single transaction
@@ -104,6 +137,24 @@ export async function registerAction(prevState: unknown, formData: FormData) {
     return [u];
   });
 
+  // HIGH-04: Generate email verification token
+  try {
+    const { randomBytes } = await import('node:crypto');
+    const verifyToken = randomBytes(32).toString('hex');
+    const verifyExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+    await db.insert(schema.verificationTokens).values({
+      identifier: normalizedEmail,
+      token: verifyToken,
+      expires: verifyExpires,
+    });
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+    if (process.env.NODE_ENV !== 'production') {
+      console.info(`[verify] ${baseUrl}/api/auth/verify-email?token=${verifyToken}`);
+    }
+  } catch (err) {
+    console.error('[auth] Failed to create verification token:', err);
+  }
+
   try {
     await signIn('credentials', {
       email: normalizedEmail,
@@ -117,4 +168,99 @@ export async function registerAction(prevState: unknown, formData: FormData) {
     }
     return { error: `Error: ${String(error).slice(0, 200)}` };
   }
+}
+
+// HIGH-05: Password reset flow
+
+export async function forgotPasswordAction(prevState: unknown, formData: FormData) {
+  const raw = formData instanceof FormData ? Object.fromEntries(formData) : (formData ?? {});
+  const email = typeof raw.email === 'string' ? raw.email.trim().toLowerCase() : '';
+  if (!email) return { error: 'Email is required' };
+
+  const rl = await withRateLimit(`forgot:${email}`, 'forgot_password', 3);
+  if (!rl.allowed) return { error: 'Too many requests. Try again later.' };
+
+  const db = getDb();
+  const [user] = await db.select({ id: schema.users.id })
+    .from(schema.users)
+    .where(eq(schema.users.email, email))
+    .limit(1);
+
+  // Don't reveal whether the email exists
+  if (user) {
+    try {
+      const { randomBytes } = await import('node:crypto');
+      const resetToken = randomBytes(32).toString('hex');
+      await db.insert(schema.verificationTokens).values({
+        identifier: email,
+        token: resetToken,
+        expires: new Date(Date.now() + 60 * 60 * 1000), // 1 hour
+      });
+      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+      if (process.env.NODE_ENV !== 'production') {
+        console.info(`[reset] ${baseUrl}/reset-password?token=${resetToken}`);
+      }
+    } catch (err) {
+      console.error('[auth] Failed to create reset token:', err);
+    }
+  }
+
+  return { success: true, message: 'If an account exists, a reset link has been sent.' };
+}
+
+export async function resetPasswordAction(prevState: unknown, formData: FormData) {
+  const raw = formData instanceof FormData ? Object.fromEntries(formData) : (formData ?? {});
+  const token = typeof raw.token === 'string' ? raw.token : '';
+  const password = typeof raw.password === 'string' ? raw.password : '';
+
+  if (!token) return { error: 'Missing reset token' };
+
+  const parsed = z.object({
+    password: z.string()
+      .min(8, 'Password must be at least 8 characters')
+      .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
+      .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
+      .regex(/[0-9]/, 'Password must contain at least one number'),
+  }).safeParse({ password });
+
+  if (!parsed.success) {
+    return { error: parsed.error.errors[0]?.message ?? 'Invalid password' };
+  }
+
+  const db = getDb();
+  const [vt] = await db.select()
+    .from(schema.verificationTokens)
+    .where(and(
+      eq(schema.verificationTokens.token, token),
+      gt(schema.verificationTokens.expires, new Date()),
+    ))
+    .limit(1);
+
+  if (!vt) return { error: 'Invalid or expired reset link' };
+
+  const hashedPassword = await bcrypt.hash(password, BCRYPT_COST);
+
+  let userId: string | null = null;
+  await db.transaction(async (tx) => {
+    const [u] = await tx.update(schema.users)
+      .set({ hashedPassword, tokenVersion: sql`${schema.users.tokenVersion} + 1` })
+      .where(eq(schema.users.email, vt.identifier))
+      .returning({ id: schema.users.id });
+    if (u) userId = u.id;
+    await tx.delete(schema.verificationTokens)
+      .where(eq(schema.verificationTokens.token, token));
+  });
+
+  // FEAT-03: Audit log for password reset
+  if (userId) {
+    try {
+      await db.insert(schema.auditLogs).values({
+        userId,
+        action: 'password_reset',
+        metadata: {},
+      });
+    } catch { /* fail open */ }
+  }
+
+  return { success: true, message: 'Password has been reset. You can now sign in.' };
 }

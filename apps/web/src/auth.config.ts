@@ -30,17 +30,19 @@ export const authConfig: NextAuthConfig = {
   // env var is set, in which case NextAuth falls back to reading
   // AUTH_SECRET itself.
   ...(nextAuthSecret ? { secret: nextAuthSecret } : {}),
-  session: { strategy: 'jwt' },
+  session: { strategy: 'jwt', maxAge: 30 * 24 * 60 * 60 }, // 30 days (FEAT-04: remember me)
   pages: {
     signIn: '/login',
   },
   callbacks: {
     authorized({ auth, request: { nextUrl } }) {
-      if (process.env.AUTH_MODE === 'legacy') return true;
+      // MED-05: Only allow legacy mode in development
+      if (process.env.AUTH_MODE === 'legacy' && process.env.NODE_ENV !== 'production') return true;
 
       const isLoggedIn = !!auth?.user;
       const isOnAuth =
-        nextUrl.pathname === '/login' || nextUrl.pathname === '/register';
+        nextUrl.pathname === '/login' || nextUrl.pathname === '/register' ||
+        nextUrl.pathname === '/forgot-password' || nextUrl.pathname === '/reset-password';
 
       // Auth surface (login + register) is always reachable.
       if (isOnAuth) return true;
@@ -49,10 +51,12 @@ export const authConfig: NextAuthConfig = {
       // also responsible for the redirect when `isLoggedIn` is false.
       if (isLoggedIn) return true;
 
-      // Unauthenticated on a protected route → redirect to /login with
-      // the original URL preserved as `?next=`.
+      // MED-01: Prevent open redirect via protocol-relative URLs
+      const next = nextUrl.pathname + nextUrl.search;
       const redirectUrl = new URL('/login', nextUrl.origin);
-      redirectUrl.searchParams.set('next', nextUrl.pathname + nextUrl.search);
+      if (next.startsWith('/') && !next.startsWith('//')) {
+        redirectUrl.searchParams.set('next', next);
+      }
       return Response.redirect(redirectUrl);
     },
     jwt({ token, user }) {
