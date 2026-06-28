@@ -97,9 +97,9 @@ export const accounts = pgTable(
     id_token: text('id_token'),
     session_state: text('session_state'),
   },
-  (t) => ({
-    compoundKey: primaryKey({ columns: [t.provider, t.providerAccountId] }),
-  }),
+  (t) => [
+    primaryKey({ columns: [t.provider, t.providerAccountId] }),
+  ],
 );
 
 export type AccountRow = typeof accounts.$inferSelect;
@@ -127,9 +127,9 @@ export const verificationTokens = pgTable(
     token: text('token').notNull().unique(),
     expires: timestamp('expires', { withTimezone: true }).notNull(),
   },
-  (t) => ({
-    compoundKey: primaryKey({ columns: [t.identifier, t.token] }),
-  }),
+  (t) => [
+    primaryKey({ columns: [t.identifier, t.token] }),
+  ],
 );
 
 export type VerificationTokenRow = typeof verificationTokens.$inferSelect;
@@ -269,9 +269,9 @@ export const userSymbols = pgTable(
     displayOrder: integer('display_order').notNull().default(0),
     addedAt: timestamp('added_at', { withTimezone: true }).defaultNow().notNull(),
   },
-  (t) => ({
-    pk: primaryKey({ columns: [t.userId, t.symbol] }),
-  }),
+  (t) => [
+    primaryKey({ columns: [t.userId, t.symbol] }),
+  ],
 );
 
 export type UserSymbolRow = typeof userSymbols.$inferSelect;

@@ -26,16 +26,30 @@
 // instead of the noisier:
 //
 //     const thread = await getDb().select().from(chatThreads).where(eq(chatThreads.userId, userId))
+//
+// DESIGN DECISION (Phase 7 §34): The codebase currently uses `eq()`
+// directly in most persistence files. Rather than force a mass
+// refactor that risks breaking working queries, we keep this helper
+// exported and available. New persistence code SHOULD use it; existing
+// code may be migrated incrementally. The helper is tested and correct.
 
 import { eq, type SQL } from 'drizzle-orm';
 
 /**
  * Build a `WHERE` fragment that scopes a query to one user.
  *
- * Works for any Drizzle table that has a `userId` column (the 8
- * user-scoped tables: chatThreads, chatTelemetry, chatToolTelemetry,
- * alerts, journalEntries, memoryEmbeddings, pushSubscriptions,
- * sharedSnapshots, plus userSymbols which is keyed by userId).
+ * Works for any Drizzle table that has a `userId` column. The full list
+ * of user-scoped tables in the schema:
+ *
+ *   chatThreads, chatTelemetry, chatToolTelemetry, alerts,
+ *   journalEntries, memoryEmbeddings, pushSubscriptions,
+ *   sharedSnapshots, userSymbols, agentOpinions, decisionSignals,
+ *   decisionSignalFeedback, portfolioPositions, portfolioSettings,
+ *   notificationNoiseState, botLinks, providerTests, briefingsEmitted,
+ *   dailyAiSpend, userSessions, rateLimits, auditLogs, userSettings.
+ *
+ * If a table has `userId`, this helper works for it — no need to
+ * maintain an exhaustive list. The above is a reference, not a gate.
  *
  * @example
  *   await db.select().from(alerts).where(withUserScope(alerts, userId))

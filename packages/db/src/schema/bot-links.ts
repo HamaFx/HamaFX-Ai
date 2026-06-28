@@ -38,10 +38,10 @@ export const botLinks = pgTable(
     chatId: text('chat_id').notNull(),
     linkedAt: timestamp('linked_at', { withTimezone: true }).defaultNow().notNull(),
   },
-  (t) => ({
-    pk: primaryKey({ columns: [t.platform, t.chatId] }),
-    userIdx: index('bot_links_user_idx').on(t.userId, t.platform),
-  }),
+  (t) => [
+    primaryKey({ columns: [t.platform, t.chatId] }),
+    index('bot_links_user_idx').on(t.userId, t.platform),
+  ],
 );
 
 export type BotLinkRow = typeof botLinks.$inferSelect;

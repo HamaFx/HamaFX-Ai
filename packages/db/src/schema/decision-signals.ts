@@ -70,6 +70,8 @@ export const decisionSignals = pgTable(
     status: text('status').notNull().default('active'),
     /** Reasoning, market phase, etc. */
     metadata: jsonb('metadata').notNull().default('{}'),
+    /** Phase 8 §41 — soft-delete support. Null = active. */
+    deletedAt: timestamp('deleted_at', { withTimezone: true }),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp('updated_at', { withTimezone: true })
       .defaultNow()

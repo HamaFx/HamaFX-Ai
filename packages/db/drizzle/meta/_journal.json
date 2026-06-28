@@ -218,6 +218,20 @@
       "when": 1782573470000,
       "tag": "0030_phase4_security",
       "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1782573470001,
+      "tag": "0031_phase7_comments_and_triggers",
+      "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1782573470002,
+      "tag": "0032_phase8_soft_delete_enums_fts",
+      "breakpoints": true
     }
   ]
 }
