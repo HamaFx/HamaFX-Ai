@@ -16,8 +16,7 @@ Comprehensive reference for the HamaFX-Ai monorepo: structure, every package and
    - [indicators](#packagesindicators)
    - [data](#packagesdata)
    - [ai](#packagesai)
-   - [web3](#packagesweb3)
-   - [worker-core](#packagesworker-core)
+   - [test-utils](#packagestest-utils)
 5. [Apps](#apps)
    - [web](#appsweb)
    - [worker](#appsworker)
@@ -47,7 +46,7 @@ Comprehensive reference for the HamaFX-Ai monorepo: structure, every package and
 | Build orchestrator | Turborepo 2 |
 | Node.js | 20+ |
 | TypeScript | Strict mode throughout |
-| Workspace root | `/home/ubuntu/HamaFX-Ai` |
+| Workspace root | Your local clone path |
 
 ```
 HamaFX-Ai/
@@ -61,8 +60,7 @@ HamaFX-Ai/
 │   ├── indicators/       # Pure TS technical indicators + SMC
 │   ├── data/             # Provider adapters, caching, failover
 │   ├── ai/               # Chat orchestration, tools, RAG, evals
-│   ├── web3/             # (Empty — placeholder)
-│   └── worker-core/      # (Empty — placeholder)
+│   └── test-utils/       # Shared test factories, mocks, vitest helpers
 ├── pnpm-workspace.yaml
 ├── turbo.json
 ├── tsconfig.json
@@ -116,7 +114,7 @@ config
 - `data` depends on `db` (persistence) and `indicators` (computed fields).
 - `ai` depends on `data` (provider access), `db`, and `shared`.
 - `web` and `worker` depend on `ai` for all domain logic.
-- `web3` and `worker-core` are empty placeholders with no dependents.
+- `test-utils` provides shared test factories (users, threads, candles) and mocks (db, fetch, llm, server-only) used across all packages.
 
 **Rule:** No package may import from a package further "upstream" (to the right) in this chain.
 
@@ -559,7 +557,7 @@ For high-stakes decisions:
 
 ---
 
-### packages/web3
+### packages/test-utils
 
 **Status:** Empty placeholder. Reserved for future on-chain analysis, DEX integration, or token sentiment.
 
@@ -567,7 +565,7 @@ No imports, no exports, no dependents. Do not add code here without explicit app
 
 ---
 
-### packages/worker-core
+### packages/config
 
 **Status:** Empty placeholder. Reserved for shared worker utilities extracted from `apps/worker`.
 
@@ -632,7 +630,7 @@ web/
 | `/briefing/[id]` | Specific briefing |
 | `/scan` | Market scanner / screener |
 | `/macro` | Macro data dashboard |
-| `/auth/login` | Login page |
+| `/login` | Login page |
 | `/auth/logout` | Logout handler |
 | `/settings` | User preferences |
 | `/admin` | Admin panel (cost reports, system status) |
