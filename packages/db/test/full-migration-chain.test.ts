@@ -64,11 +64,21 @@ async function applyOne(
 async function applyAll(
   db: Awaited<ReturnType<typeof getPGliteDb>>,
 ): Promise<void> {
+  await db.execute(
+    `CREATE TABLE IF NOT EXISTS "__drizzle_migrations" (
+      id SERIAL PRIMARY KEY,
+      hash text NOT NULL,
+      created_at bigint
+    )`,
+  );
   const journal = JSON.parse(
     readFileSync(join(DRIZZLE_DIR, 'meta', '_journal.json'), 'utf-8'),
   ) as { entries: Array<{ tag: string }> };
   for (const entry of journal.entries) {
     await applyOne(db, entry.tag);
+    await db.execute(
+      `INSERT INTO "__drizzle_migrations" (hash, created_at) VALUES ('${entry.tag}', ${Date.now()})`,
+    );
   }
 }
 
@@ -78,10 +88,10 @@ const EXPECTED_TABLES = [
   'user_settings', 'user_symbols', 'user_sessions',
   'chat_threads', 'chat_messages', 'chat_telemetry', 'chat_tool_telemetry',
   'agent_opinions', 'alerts', 'journal_entries',
-  'news_articles', 'news_embeddings', 'calendar_events', 'snapshots',
+  'news_articles', 'news_embeddings', 'economic_events', 'snapshots',
   'briefings_emitted', 'cot_reports', 'shared_snapshots',
   'push_subscriptions', 'memory_embeddings', 'daily_ai_spend',
-  'rate_limits', 'live_ticks', 'candles_1m', 'throttle',
+  'rate_limits', 'live_ticks', 'candles_1m', 'provider_throttle',
   'intermarket_resonance', 'audit_logs', 'provider_tests',
   'symbol_catalog', 'cron_runs', 'decision_signals',
   'decision_signal_outcomes', 'decision_signal_feedback',

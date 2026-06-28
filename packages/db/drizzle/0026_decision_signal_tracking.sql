@@ -64,3 +64,67 @@ CREATE TABLE IF NOT EXISTS "decision_signal_feedback" (
 );
 --> statement-breakpoint
 CREATE UNIQUE INDEX IF NOT EXISTS "decision_signal_feedback_signal_user_idx" ON "decision_signal_feedback" ("signal_id", "user_id");
+--> statement-breakpoint
+
+-- Create Q2/Q3 feature tables that were missing migration SQL:
+-- portfolio_positions, portfolio_settings, notification_noise_state, bot_links
+
+CREATE TABLE IF NOT EXISTS "portfolio_positions" (
+  "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+  "user_id" text NOT NULL REFERENCES "user"("id") ON DELETE CASCADE,
+  "symbol" text NOT NULL,
+  "direction" text NOT NULL,
+  "lot_size" double precision NOT NULL,
+  "entry_price" double precision NOT NULL,
+  "stop_loss" double precision,
+  "take_profit" double precision,
+  "opened_at" timestamptz NOT NULL,
+  "closed_at" timestamptz,
+  "close_price" double precision,
+  "status" text DEFAULT 'open' NOT NULL,
+  "notes" text,
+  "linked_signal_id" uuid REFERENCES "decision_signals"("id") ON DELETE SET NULL,
+  "deleted_at" timestamptz,
+  "created_at" timestamptz DEFAULT now() NOT NULL,
+  "updated_at" timestamptz DEFAULT now() NOT NULL
+);
+--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "portfolio_positions_user_status_idx" ON "portfolio_positions" ("user_id", "status");
+--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "portfolio_positions_symbol_idx" ON "portfolio_positions" ("symbol", "status");
+--> statement-breakpoint
+
+CREATE TABLE IF NOT EXISTS "portfolio_settings" (
+  "user_id" text NOT NULL REFERENCES "user"("id") ON DELETE CASCADE,
+  "account_balance" double precision,
+  "base_currency" text DEFAULT 'USD' NOT NULL,
+  "max_risk_per_trade_pct" real DEFAULT 2.0 NOT NULL,
+  "max_total_exposure_pct" real DEFAULT 10.0 NOT NULL,
+  "updated_at" timestamptz DEFAULT now() NOT NULL
+);
+--> statement-breakpoint
+CREATE UNIQUE INDEX IF NOT EXISTS "portfolio_settings_user_idx" ON "portfolio_settings" ("user_id");
+--> statement-breakpoint
+
+CREATE TABLE IF NOT EXISTS "notification_noise_state" (
+  "user_id" text NOT NULL REFERENCES "user"("id") ON DELETE CASCADE,
+  "dedup_key" text NOT NULL,
+  "route_type" text NOT NULL,
+  "last_sent_at" timestamptz NOT NULL,
+  "expires_at" timestamptz NOT NULL
+);
+--> statement-breakpoint
+CREATE UNIQUE INDEX IF NOT EXISTS "notification_noise_state_user_dedup_idx" ON "notification_noise_state" ("user_id", "dedup_key");
+--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "notification_noise_state_expires_idx" ON "notification_noise_state" ("expires_at");
+--> statement-breakpoint
+
+CREATE TABLE IF NOT EXISTS "bot_links" (
+  "user_id" text NOT NULL REFERENCES "user"("id") ON DELETE CASCADE,
+  "platform" text NOT NULL,
+  "chat_id" text NOT NULL,
+  "linked_at" timestamptz DEFAULT now() NOT NULL,
+  CONSTRAINT "bot_links_platform_chat_id_pk" PRIMARY KEY ("platform", "chat_id")
+);
+--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "bot_links_user_idx" ON "bot_links" ("user_id", "platform");

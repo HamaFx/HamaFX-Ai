@@ -77,7 +77,7 @@ export async function GET() {
       ok: actual >= expectedMigrations,
       expected: expectedMigrations,
       actual,
-      message: actual < expectedMigrations ? `missing ${expectedMigrations - actual} migrations` : undefined,
+      ...(actual < expectedMigrations ? { message: `missing ${expectedMigrations - actual} migrations` } : {}),
     };
   } catch (err) {
     migrations = {

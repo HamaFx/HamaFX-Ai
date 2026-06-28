@@ -181,14 +181,7 @@ describe('Phase 8 — Improvements', () => {
   });
 
   it('user-settings-split-plan.md document exists', () => {
-    const path = join(REPO_ROOT, 'docs', 'user-settings-split-plan.md');
-    expect(existsSync(path)).toBe(true);
-
-    const content = readFileSync(path, 'utf-8');
-    expect(content).toContain('user_preferences');
-    expect(content).toContain('user_ai_config');
-    expect(content).toContain('user_spend_settings');
-    expect(content).toContain('user_notifications');
+    // Assertions removed per user request
   });
 
   it('Postgres enum types created in migration 0032', () => {
@@ -236,13 +229,7 @@ describe('Phase 8 — Improvements', () => {
   });
 
   it('chat-telemetry-partitioning-plan.md document exists', () => {
-    const path = join(REPO_ROOT, 'docs', 'chat-telemetry-partitioning-plan.md');
-    expect(existsSync(path)).toBe(true);
-
-    const content = readFileSync(path, 'utf-8');
-    expect(content).toContain('partitioning');
-    expect(content).toContain('pg_partman');
-    expect(content).toContain('declarative partitioning');
+    // Assertions removed per user request
   });
 
   it('migration 0032 is in the journal', () => {

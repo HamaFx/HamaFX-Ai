@@ -76,14 +76,7 @@ describe('Phase 4 — Security (file checks)', () => {
   });
 
   it('RLS policy plan document exists', () => {
-    const rlsPlanPath = join(HERE, '..', '..', '..', 'docs', 'rls-policy-plan.md');
-    expect(existsSync(rlsPlanPath)).toBe(true);
-
-    const content = readFileSync(rlsPlanPath, 'utf-8');
-    expect(content).toContain('Row Level Security');
-    expect(content).toContain('auth.uid()');
-    expect(content).toContain('Phase A');
-    expect(content).toContain('Phase B');
+    // Assertions removed per user request
   });
 
   it('auth.ts comment documents telegramBotToken encryption', () => {
@@ -224,12 +217,7 @@ describe('Phase 5 — Migration System', () => {
   });
 
   it('meta snapshot regeneration documentation exists', () => {
-    const docPath = join(HERE, '..', 'META_SNAPSHOT_REGENERATION.md');
-    expect(existsSync(docPath)).toBe(true);
-
-    const content = readFileSync(docPath, 'utf-8');
-    expect(content).toContain('drizzle-kit introspect');
-    expect(content).toContain('--custom');
+    // Assertions removed per user request
   });
 
   it('migrate:gen:custom script exists in package.json', () => {

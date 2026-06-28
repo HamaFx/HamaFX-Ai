@@ -7,67 +7,86 @@
 -- ── Task 41: Soft-delete columns ──────────────────────────────────────
 
 ALTER TABLE "journal_entries" ADD COLUMN IF NOT EXISTS "deleted_at" timestamptz;
+--> statement-breakpoint
 ALTER TABLE "portfolio_positions" ADD COLUMN IF NOT EXISTS "deleted_at" timestamptz;
+--> statement-breakpoint
 ALTER TABLE "decision_signals" ADD COLUMN IF NOT EXISTS "deleted_at" timestamptz;
+--> statement-breakpoint
 
 -- Indexes for soft-delete queries (WHERE deleted_at IS NULL)
 CREATE INDEX IF NOT EXISTS "journal_entries_deleted_at_idx" ON "journal_entries" ("deleted_at");
+--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "portfolio_positions_deleted_at_idx" ON "portfolio_positions" ("deleted_at");
+--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "decision_signals_deleted_at_idx" ON "decision_signals" ("deleted_at");
+--> statement-breakpoint
 
 -- ── Task 43: Postgres enum types ──────────────────────────────────────
 
 DO $$ BEGIN
   CREATE TYPE user_role AS ENUM ('user', 'admin');
 EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+--> statement-breakpoint
 
 DO $$ BEGIN
   CREATE TYPE journal_outcome AS ENUM ('open', 'win', 'loss', 'breakeven');
 EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+--> statement-breakpoint
 
 DO $$ BEGIN
   CREATE TYPE portfolio_status AS ENUM ('open', 'closed');
 EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+--> statement-breakpoint
 
 DO $$ BEGIN
   CREATE TYPE signal_action AS ENUM ('buy', 'sell', 'hold', 'reduce', 'add', 'avoid');
 EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+--> statement-breakpoint
 
 DO $$ BEGIN
   CREATE TYPE signal_bias AS ENUM ('bullish', 'bearish', 'neutral');
 EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+--> statement-breakpoint
 
 DO $$ BEGIN
   CREATE TYPE signal_status AS ENUM ('active', 'expired', 'invalidated', 'closed');
 EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+--> statement-breakpoint
 
 DO $$ BEGIN
   CREATE TYPE signal_source AS ENUM ('chat', 'alert', 'briefing', 'manual');
 EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+--> statement-breakpoint
 
 DO $$ BEGIN
   CREATE TYPE signal_horizon AS ENUM ('intraday', '1d', '3d', '5d', '10d', 'swing');
 EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+--> statement-breakpoint
 
 DO $$ BEGIN
   CREATE TYPE signal_outcome AS ENUM ('hit', 'miss', 'neutral');
 EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+--> statement-breakpoint
 
 DO $$ BEGIN
   CREATE TYPE signal_eval_status AS ENUM ('completed', 'unable');
 EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+--> statement-breakpoint
 
 DO $$ BEGIN
   CREATE TYPE signal_feedback AS ENUM ('useful', 'not_useful');
 EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+--> statement-breakpoint
 
 DO $$ BEGIN
   CREATE TYPE briefing_kind AS ENUM ('pre', 'post', 'weekly_review');
 EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+--> statement-breakpoint
 
 DO $$ BEGIN
   CREATE TYPE bot_platform AS ENUM ('telegram', 'discord', 'slack');
 EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+--> statement-breakpoint
 
 -- Note: Column type conversions from text to enum are intentionally
 -- NOT done in this migration. Postgres can implicitly cast text to enum

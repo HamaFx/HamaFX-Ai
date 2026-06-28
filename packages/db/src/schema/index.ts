@@ -23,7 +23,6 @@ export * from './enums';
 // Phase A (multi-user) — auth tables must come first because other tables
 // reference users.id via foreign keys.
 export * from './auth';
-export * from './_extensions';
 export * from './chat';
 export * from './agent-opinions';
 export * from './alerts';

@@ -175,10 +175,10 @@ describe('Phase 2 — data integrity constraints (migration 0028)', () => {
     const db = await getPGliteDb(dir);
     await applyAllThrough(db, '0028_phase2_data_integrity');
     await db.execute(`INSERT INTO "user" (id, email) VALUES ('u-brief', 'u-brief@localhost')`);
-    await db.execute(`INSERT INTO "chat_threads" (id, user_id, title) VALUES ('t-brief', 'u-brief', 'Test')`);
-    await db.execute(`INSERT INTO "chat_messages" (id, thread_id, role, content) VALUES ('m-brief', 't-brief', 'assistant', '{}'::jsonb)`);
+    await db.execute(`INSERT INTO "chat_threads" (id, user_id, title) VALUES ('00000000-0000-0000-0000-000000000010', 'u-brief', 'Test')`);
+    await db.execute(`INSERT INTO "chat_messages" (id, thread_id, role, content) VALUES ('00000000-0000-0000-0000-000000000100', '00000000-0000-0000-0000-000000000010', 'assistant', '{}'::jsonb)`);
     await expect(
-      db.execute(`INSERT INTO "briefings_emitted" (user_id, event_id, kind, message_id) VALUES ('u-brief', 'evt-1', 'invalid_kind', 'm-brief')`),
+      db.execute(`INSERT INTO "briefings_emitted" (user_id, event_id, kind, message_id) VALUES ('u-brief', 'evt-1', 'invalid_kind', '00000000-0000-0000-0000-000000000100')`),
     ).rejects.toThrow();
   });
 
@@ -186,10 +186,10 @@ describe('Phase 2 — data integrity constraints (migration 0028)', () => {
     const db = await getPGliteDb(dir);
     await applyAllThrough(db, '0028_phase2_data_integrity');
     await db.execute(`INSERT INTO "user" (id, email) VALUES ('u-brief2', 'u-brief2@localhost')`);
-    await db.execute(`INSERT INTO "chat_threads" (id, user_id, title) VALUES ('t-brief2', 'u-brief2', 'Test')`);
-    await db.execute(`INSERT INTO "chat_messages" (id, thread_id, role, content) VALUES ('m-brief2', 't-brief2', 'assistant', '{}'::jsonb)`);
+    await db.execute(`INSERT INTO "chat_threads" (id, user_id, title) VALUES ('00000000-0000-0000-0000-000000000020', 'u-brief2', 'Test')`);
+    await db.execute(`INSERT INTO "chat_messages" (id, thread_id, role, content) VALUES ('00000000-0000-0000-0000-000000000200', '00000000-0000-0000-0000-000000000020', 'assistant', '{}'::jsonb)`);
     for (const kind of ['pre', 'post', 'weekly_review']) {
-      await db.execute(`INSERT INTO "briefings_emitted" (user_id, event_id, kind, message_id) VALUES ('u-brief2', 'evt-${kind}', '${kind}', 'm-brief2')`);
+      await db.execute(`INSERT INTO "briefings_emitted" (user_id, event_id, kind, message_id) VALUES ('u-brief2', 'evt-${kind}', '${kind}', '00000000-0000-0000-0000-000000000200')`);
     }
     const { rows } = await db.execute(`SELECT count(*)::int as cnt FROM "briefings_emitted" WHERE user_id = 'u-brief2'`);
     expect(rows[0]?.cnt).toBe(3);

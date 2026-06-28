@@ -73,10 +73,13 @@ function getSchemaTableColumns(): Map<string, string[]> {
   for (const file of files) {
     try {
       const source = readFileSync(join(schemaDir, file), 'utf-8');
-      const tableMatches = source.matchAll(/pgTable\(\s*['"`]([^'"`]+)['"`]/g);
-      for (const tableMatch of tableMatches) {
-        const tableName = tableMatch[1];
-        const columnMatches = source.matchAll(/\w+:\s*\w+\(\s*['"`]([^'"`]+)['"`]/g);
+      const parts = source.split(/export\s+const\s+\w+\s*=\s*pgTable\(/);
+      const tableNamesMatches = [...source.matchAll(/export\s+const\s+\w+\s*=\s*pgTable\(\s*['"`]([^'"`]+)['"`]/g)];
+      
+      for (let i = 0; i < tableNamesMatches.length; i++) {
+        const tableName = tableNamesMatches[i]![1];
+        const block = parts[i + 1] || '';
+        const columnMatches = block.matchAll(/\w+:\s*\w+\(\s*['"`]([^'"`]+)['"`]/g);
         const columns: string[] = [];
         for (const colMatch of columnMatches) {
           const colName = colMatch[1];
