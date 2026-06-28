@@ -81,13 +81,13 @@ The project uses `pgvector`, not PostGIS. The `extensionsFilters` field tells dr
 
 ---
 
-### CRITICAL-2: `migrate-v2.ts` references non-existent schema exports
+### CRITICAL-2: `migrate-v2.ts` is dead code — references non-existent schema exports
 
-**File:** `packages/db/scripts/migrate-v2.ts` (lines ~60–72)
+**File:** `packages/db/scripts/migrate-v2.ts`
 
-The script references `schema.briefings`, `schema.journal`, `schema.memory`, `schema.shareLinks`, `schema.telemetryTraces`, `schema.toolTelemetry` — none of which exist in the current schema barrel. The actual export names are `briefingsEmitted`, `journalEntries`, `memoryEmbeddings`, `sharedSnapshots`, `chatTelemetry`, `chatToolTelemetry`. Running this script today would throw immediately.
+This was a one-time backfill script from the old single-user → multi-user transition (covered by the now-obsolete `MIGRATION_V2.md` doc). The migration it supported has already been applied to all deployed environments. The script references `schema.briefings`, `schema.journal`, `schema.memory`, `schema.shareLinks`, `schema.telemetryTraces`, `schema.toolTelemetry` — none of which exist in the current schema barrel. Running it today would throw immediately.
 
-**Fix:** Update all table references to match the actual exported names from `schema/index.ts`, or delete the script if the migration has already been completed on all deployments.
+**Fix:** Delete `packages/db/scripts/migrate-v2.ts` and the stale `MIGRATION_V2.md` doc. They are no longer part of the active system.
 
 ---
 
@@ -840,7 +840,7 @@ The schema files use relative imports (`import { users } from './auth'`). Consid
 | 3 | Fix `provider_tests` to use `primaryKey()` instead of `index()` | `packages/db/src/schema/provider-tests.ts` + new migration | CRITICAL |
 | 4 | Re-add FK on `rate_limits.user_id` → `user.id` | `packages/db/src/schema/rate-limits.ts` + new migration | CRITICAL |
 | 5 | Fix `docker-entrypoint.sh` to fail on migration errors | `apps/web/docker-entrypoint.sh` | CRITICAL |
-| 6 | Fix or delete `migrate-v2.ts` (references non-existent exports) | `packages/db/scripts/migrate-v2.ts` | CRITICAL |
+| 6 | Delete dead `migrate-v2.ts` script + stale `MIGRATION_V2.md` doc (one-time backfill already applied) | `packages/db/scripts/migrate-v2.ts`, `MIGRATION_V2.md` | CRITICAL |
 
 ### Phase 2: Data Integrity Constraints
 
@@ -923,7 +923,7 @@ The schema files use relative imports (`import { users } from './auth'`). Consid
 | File | Issues Found |
 |------|-------------|
 | `packages/db/drizzle.config.ts` | CRITICAL-1 |
-| `packages/db/scripts/migrate-v2.ts` | CRITICAL-2 |
+| `packages/db/scripts/migrate-v2.ts` | CRITICAL-2 (dead code — delete) |
 | `packages/db/src/schema/briefings.ts` | CRITICAL-3, DATA-7 |
 | `packages/db/src/schema/daily-ai-spend.ts` | CRITICAL-4 |
 | `packages/db/src/schema/rate-limits.ts` | CRITICAL-5 |
