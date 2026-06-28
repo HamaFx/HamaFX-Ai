@@ -1,7 +1,6 @@
-CREATE TABLE IF NOT EXISTS "daily_ai_spend" (
-	"day" date PRIMARY KEY NOT NULL,
-	"total_usd_cents" bigint DEFAULT 0 NOT NULL
-);
+-- NOTE: daily_ai_spend was previously created here with CREATE TABLE IF NOT EXISTS.
+-- It is already created in migration 0006_dashboard_layout.sql with the same structure.
+-- The duplicate has been removed to avoid confusion (MIG-3).
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "provider_throttle" (
 	"provider" text PRIMARY KEY NOT NULL,

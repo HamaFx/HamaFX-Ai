@@ -65,6 +65,27 @@ function resolvePoolMax(): number {
 }
 
 /**
+ * Default per-runtime statement timeout in milliseconds.
+ *
+ * Web (Vercel): 8 seconds — Vercel Hobby plan has a 10s function timeout
+ * and Pro has 60s. A query that takes 7s+ will already consume most of the
+ * function budget; failing at 8s ensures the function can still return a
+ * structured error to the client instead of being killed mid-query.
+ *
+ * Worker: 30 seconds — the worker is a persistent process with no
+ * function-timeout pressure. Long-running analytics queries (e.g. daily
+ * spend rollups, journal stats) are legitimate here.
+ */
+const DEFAULT_WEB_STATEMENT_TIMEOUT = 8000;
+const DEFAULT_WORKER_STATEMENT_TIMEOUT = 30000;
+
+function resolveStatementTimeout(): number {
+  if (process.env.NODE_ENV === 'test') return 30000;
+  const isWorker = process.env.HAMAFX_RUNTIME === 'worker';
+  return isWorker ? DEFAULT_WORKER_STATEMENT_TIMEOUT : DEFAULT_WEB_STATEMENT_TIMEOUT;
+}
+
+/**
  * Lazy-initialised drizzle client. We use a module-scope singleton so cold
  * Vercel functions reuse the same connection pool across invocations within
  * the same Node process.
@@ -83,6 +104,19 @@ export function getDb(): ReturnType<typeof drizzle> {
 
   // Supabase pooler in transaction mode requires `prepare: false`. The pooler
   // doesn't support prepared statements; postgres-js otherwise tries to use them.
+  //
+  // SSL: `rejectUnauthorized: false` is required because Supabase's
+  // transaction-mode pooler (pgBouncer) presents a self-signed certificate
+  // that Node's default CA store cannot verify. Setting `rejectUnauthorized:
+  // true` would cause every connection to fail with UNABLE_TO_VERIFY_LEAF_SIGNATURE.
+  //
+  // Mitigation: traffic between Vercel and Supabase traverses an encrypted
+  // TLS tunnel regardless — `rejectUnauthorized: false` disables *certificate
+  // verification*, not encryption itself. The risk is a MITM impersonating
+  // the pooler, which is low inside Vercel's network. To fully remediate,
+  // set `SUPABASE_CA_CERT` env var and switch to:
+  //   ssl: { ca: process.env.SUPABASE_CA_CERT, rejectUnauthorized: true }
+  // See: https://supabase.com/docs/guides/database/connecting-to-postgres#ssl
   _sql = postgres(url, {
     prepare: false,
     max: resolvePoolMax(),
@@ -91,7 +125,7 @@ export function getDb(): ReturnType<typeof drizzle> {
     max_lifetime: 60 * 30,
     ssl: { rejectUnauthorized: false },
     connection: {
-      statement_timeout: 15000,
+      statement_timeout: resolveStatementTimeout(),
     },
   });
 
