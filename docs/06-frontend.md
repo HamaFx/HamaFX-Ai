@@ -14,7 +14,7 @@ apps/web/src/
 │   ├── globals.css          # Design tokens, glass utilities, keyframes
 │   ├── manifest.ts          # PWA manifest (standalone, portrait, black theme)
 │   ├── not-found.tsx        # 404 page
-│   ├── (auth)/              # /login, /register, /forgot-password — NextAuth forms
+│   ├── (auth)/              # /login, /register — NextAuth forms
 │   ├── share/[id]/          # /share/[id] — public share w/ HMAC verification
 │   └── (app)/               # Authenticated route group
 │       ├── layout.tsx        # App shell: TopBar, NavDrawer, Toaster, etc.
@@ -512,7 +512,7 @@ Set via `next.config.mjs` `headers()`:
 
 **CSRF Protection**: Double-submit cookie pattern. Edge middleware sets `hfx_csrf` cookie; state-changing requests must include `X-CSRF-Token` header matching the cookie value.
 
-**Auth Gate**: Edge middleware validates the NextAuth session token. Exempt paths: `/login`, `/api/auth/*`, `/api/health`, `/api/cron/*`, `/api/telegram/*`, `/share/*`, static files.
+**Auth Gate**: Edge middleware validates the NextAuth JWT session cookie. Exempt paths: `/login`, `/register`, `/api/auth/*`, `/api/health`, `/api/cron/*`, `/api/telegram/*`, `/share/*`, static files.
 
 ---
 
