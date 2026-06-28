@@ -50,6 +50,10 @@ export const newsArticles = pgTable(
     index('news_published_at_idx').on(t.publishedAt),
     index('news_source_idx').on(t.source),
     index('news_symbols_gin').using('gin', t.symbols),
+    // Phase 8 §44 — Full-text search index on title + summary for
+    // keyword search. Uses a GIN index on a tsvector generated from
+    // title and summary columns.
+    index('news_fts_idx').using('gin', sql`to_tsvector('english', coalesce(title, '') || ' ' || coalesce(summary, ''))`),
   ],
 );
 

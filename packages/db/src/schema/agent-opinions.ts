@@ -37,8 +37,8 @@ export const agentOpinions = pgTable(
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   },
   (t) => [
-    index('idx_agent_opinions_thread').on(t.threadId),
-    index('idx_agent_opinions_user_created').on(t.userId, t.createdAt),
+    index('agent_opinions_thread_idx').on(t.threadId),
+    index('agent_opinions_user_created_idx').on(t.userId, t.createdAt),
   ],
 );
 

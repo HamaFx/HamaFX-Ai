@@ -28,7 +28,7 @@ import {
   timestamp,
 } from 'drizzle-orm/pg-core';
 
-// ── Users ──────────────────────────────────────────────────────────────
+// ── Users ────────────────────────────────────────────────────────────────
 
 export const users = pgTable('user', {
   id: text('id').primaryKey(),
@@ -58,7 +58,7 @@ export const users = pgTable('user', {
 export type UserRow = typeof users.$inferSelect;
 export type UserInsert = typeof users.$inferInsert;
 
-// ── User Sessions (login tracking for session management UI) ────────────
+// ── User Sessions (login tracking for session management UI) ──────────────
 
 export const userSessions = pgTable(
   'user_sessions',
@@ -78,7 +78,7 @@ export const userSessions = pgTable(
 export type UserSessionRow = typeof userSessions.$inferSelect;
 export type UserSessionInsert = typeof userSessions.$inferInsert;
 
-// ── Accounts (OAuth links) ─────────────────────────────────────────────
+// ── Accounts (OAuth links) ────────────────────────────────────────────────
 
 export const accounts = pgTable(
   'account',
@@ -97,15 +97,15 @@ export const accounts = pgTable(
     id_token: text('id_token'),
     session_state: text('session_state'),
   },
-  (t) => ({
-    compoundKey: primaryKey({ columns: [t.provider, t.providerAccountId] }),
-  }),
+  (t) => [
+    primaryKey({ columns: [t.provider, t.providerAccountId] }),
+  ],
 );
 
 export type AccountRow = typeof accounts.$inferSelect;
 export type AccountInsert = typeof accounts.$inferInsert;
 
-// ── Sessions (DB-backed — only used if strategy='database') ─────────────
+// ── Sessions (DB-backed — only used if strategy='database') ───────────────
 
 export const sessions = pgTable('session', {
   sessionToken: text('sessionToken').primaryKey(),
@@ -118,7 +118,7 @@ export const sessions = pgTable('session', {
 export type SessionRow = typeof sessions.$inferSelect;
 export type SessionInsert = typeof sessions.$inferInsert;
 
-// ── Verification Tokens (magic-link / email verification) ──────────────
+// ── Verification Tokens (magic-link / email verification) ─────────────────
 
 export const verificationTokens = pgTable(
   'verificationToken',
@@ -127,15 +127,15 @@ export const verificationTokens = pgTable(
     token: text('token').notNull().unique(),
     expires: timestamp('expires', { withTimezone: true }).notNull(),
   },
-  (t) => ({
-    compoundKey: primaryKey({ columns: [t.identifier, t.token] }),
-  }),
+  (t) => [
+    primaryKey({ columns: [t.identifier, t.token] }),
+  ],
 );
 
 export type VerificationTokenRow = typeof verificationTokens.$inferSelect;
 export type VerificationTokenInsert = typeof verificationTokens.$inferInsert;
 
-// ── User Settings (application-level preferences) ──────────────────────
+// ── User Settings (application-level preferences) ─────────────────────────
 
 export const userSettings = pgTable('user_settings', {
   userId: text('user_id')
@@ -149,7 +149,11 @@ export const userSettings = pgTable('user_settings', {
   language: text('language').notNull().default('en'),
   /** Accessibility preference. */
   reduceMotion: boolean('reduce_motion').notNull().default(false),
-  /** Telegram integration — per-user bot token. */
+  /**
+   * Telegram integration — per-user bot token.
+   * Encrypted at rest with AES-256-GCM using ENCRYPTION_SECRET
+   * (same scheme as aiApiKeys). See @hamafx/shared/encryption.
+   */
   telegramBotToken: text('telegram_bot_token'),
   /** Telegram chat ID for direct messages. */
   telegramChatId: text('telegram_chat_id'),
@@ -251,7 +255,7 @@ export const userSettings = pgTable('user_settings', {
 export type UserSettingsRow = typeof userSettings.$inferSelect;
 export type UserSettingsInsert = typeof userSettings.$inferInsert;
 
-// ── User Symbols (per-user watchlist) ──────────────────────────────────
+// ── User Symbols (per-user watchlist) ──────────────────────────────────────
 
 export const userSymbols = pgTable(
   'user_symbols',
@@ -265,9 +269,9 @@ export const userSymbols = pgTable(
     displayOrder: integer('display_order').notNull().default(0),
     addedAt: timestamp('added_at', { withTimezone: true }).defaultNow().notNull(),
   },
-  (t) => ({
-    pk: primaryKey({ columns: [t.userId, t.symbol] }),
-  }),
+  (t) => [
+    primaryKey({ columns: [t.userId, t.symbol] }),
+  ],
 );
 
 export type UserSymbolRow = typeof userSymbols.$inferSelect;

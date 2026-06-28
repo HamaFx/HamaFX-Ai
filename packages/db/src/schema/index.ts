@@ -17,6 +17,9 @@
 // Barrel for all tables. drizzle.config.ts points its `schema` field here.
 // Order matters only for readability; FKs are resolved by name.
 
+// Phase 8 §43 — Postgres enums for fixed-value fields.
+export * from './enums';
+
 // Phase A (multi-user) — auth tables must come first because other tables
 // reference users.id via foreign keys.
 export * from './auth';

@@ -188,3 +188,58 @@ export function decryptWithPassword(encrypted: string, password: string): unknow
     return null;
   }
 }
+
+// ── Generic secret encryption (Phase 4 — SEC-3) ─────────────────────────
+//
+// Used for encrypting individual sensitive string values (e.g. Telegram bot
+// tokens) that don't need the structured ByokPayload shape. Uses the same
+// AES-256-GCM scheme as BYOK keys: same ENCRYPTION_SECRET, same format
+// ("iv_hex.ciphertext_hex.authTag_hex"), but encrypts a raw string instead
+// of a JSON object.
+
+/**
+ * Encrypt a single secret string for storage.
+ * Returns a string safe for TEXT columns: "<iv_hex>.<ciphertext_hex>.<authTag_hex>"
+ */
+export function encryptSecret(plaintext: string): string {
+  const key = getEncryptionKey();
+  const iv = randomBytes(IV_LENGTH);
+  const cipher = createCipheriv(ALGORITHM, key, iv);
+
+  let encrypted = cipher.update(plaintext, 'utf8', 'hex');
+  encrypted += cipher.final('hex');
+  const authTag = cipher.getAuthTag();
+
+  return `${iv.toString('hex')}.${encrypted}.${authTag.toString('hex')}`;
+}
+
+/**
+ * Decrypt a secret string from storage.
+ * Returns null on any decryption failure (tampered data, wrong key, etc.)
+ * so callers can handle gracefully without crashing.
+ */
+export function decryptSecret(encrypted: string | null | undefined): string | null {
+  if (!encrypted) return null;
+
+  try {
+    const parts = encrypted.split('.');
+    if (parts.length !== 3) return null;
+
+    const iv = Buffer.from(parts[0]!, 'hex');
+    const ciphertext = parts[1]!;
+    const authTag = Buffer.from(parts[2]!, 'hex');
+
+    if (iv.length !== IV_LENGTH || authTag.length !== AUTH_TAG_LENGTH) return null;
+
+    const key = getEncryptionKey();
+    const decipher = createDecipheriv(ALGORITHM, key, iv);
+    decipher.setAuthTag(authTag);
+
+    let decrypted = decipher.update(ciphertext, 'hex', 'utf8');
+    decrypted += decipher.final('utf8');
+
+    return decrypted;
+  } catch {
+    return null;
+  }
+}

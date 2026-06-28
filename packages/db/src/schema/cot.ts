@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { index, integer, jsonb, pgTable, text, timestamp } from 'drizzle-orm/pg-core';
+import { bigint, index, jsonb, pgTable, text, timestamp } from 'drizzle-orm/pg-core';
 
 /**
  * CFTC Commitment-of-Traders weekly snapshots, one row per
@@ -38,14 +38,14 @@ export const cotReports = pgTable(
     /** "XAUUSD" | "EURUSD" | "GBPUSD" — kept as text. */
     symbol: text('symbol').notNull(),
     reportDate: timestamp('report_date', { withTimezone: true }).notNull(),
-    dealerLong: integer('dealer_long'),
-    dealerShort: integer('dealer_short'),
-    assetLong: integer('asset_long'),
-    assetShort: integer('asset_short'),
-    leveragedLong: integer('leveraged_long'),
-    leveragedShort: integer('leveraged_short'),
-    otherLong: integer('other_long'),
-    otherShort: integer('other_short'),
+    dealerLong: bigint('dealer_long', { mode: 'number' }),
+    dealerShort: bigint('dealer_short', { mode: 'number' }),
+    assetLong: bigint('asset_long', { mode: 'number' }),
+    assetShort: bigint('asset_short', { mode: 'number' }),
+    leveragedLong: bigint('leveraged_long', { mode: 'number' }),
+    leveragedShort: bigint('leveraged_short', { mode: 'number' }),
+    otherLong: bigint('other_long', { mode: 'number' }),
+    otherShort: bigint('other_short', { mode: 'number' }),
     /** Provider id, currently always 'cftc'. */
     source: text('source').notNull(),
     /** Full provider row, kept for debugging and future column additions. */

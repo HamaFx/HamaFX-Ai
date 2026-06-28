@@ -39,7 +39,6 @@ export const briefingsEmitted = pgTable(
   {
     /** Phase A — multi-user. Which user this briefing was generated for. */
     userId: text('user_id').notNull()
-      .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),
     eventId: text('event_id').notNull(),
     kind: text('kind').notNull(), // 'pre' | 'post' | 'weekly_review'

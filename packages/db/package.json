@@ -17,7 +17,9 @@
     "test": "vitest --run",
     "clean": "rm -rf node_modules .turbo dist",
     "migrate:gen": "drizzle-kit generate",
+    "migrate:gen:custom": "drizzle-kit generate --custom",
     "migrate:apply": "drizzle-kit migrate",
+    "migrate:status": "node scripts/migrate-status.mjs",
     "migrate:setup-extensions": "node scripts/install-extensions.mjs",
     "studio": "drizzle-kit studio"
   },

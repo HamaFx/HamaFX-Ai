@@ -55,6 +55,8 @@ export const portfolioPositions = pgTable(
     linkedSignalId: uuid('linked_signal_id').references(() => decisionSignals.id, {
       onDelete: 'set null',
     }),
+    /** Phase 8 §41 — soft-delete support. Null = active. */
+    deletedAt: timestamp('deleted_at', { withTimezone: true }),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp('updated_at', { withTimezone: true })
       .defaultNow()

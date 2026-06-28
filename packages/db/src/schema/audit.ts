@@ -32,8 +32,8 @@ export const auditLogs = pgTable(
       .notNull()
       .defaultNow(),
   },
-  (t) => ({
-    userIdIdx: index('audit_logs_user_id_idx').on(t.userId),
-    actionIdx: index('audit_logs_action_idx').on(t.action),
-  })
+  (t) => [
+    index('audit_logs_user_id_idx').on(t.userId),
+    index('audit_logs_action_idx').on(t.action),
+  ],
 );

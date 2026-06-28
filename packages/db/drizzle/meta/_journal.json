@@ -5,190 +5,232 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1779819555971,
+      "when": 1737848370000,
       "tag": "0000_lazy_red_shift",
       "breakpoints": true
     },
     {
       "idx": 1,
       "version": "7",
-      "when": 1779819595007,
+      "when": 1737848370001,
       "tag": "0001_phase_1_completion",
       "breakpoints": true
     },
     {
       "idx": 2,
       "version": "7",
-      "when": 1779820000000,
+      "when": 1737848370002,
       "tag": "0002_phase_2",
       "breakpoints": true
     },
     {
       "idx": 3,
       "version": "7",
-      "when": 1779830000000,
+      "when": 1737848370003,
       "tag": "0003_alert_system",
       "breakpoints": true
     },
     {
       "idx": 4,
       "version": "7",
-      "when": 1779840000000,
+      "when": 1737848370004,
       "tag": "0004_journal_system",
       "breakpoints": true
     },
     {
       "idx": 5,
       "version": "7",
-      "when": 1779850000000,
+      "when": 1737848370005,
       "tag": "0005_market_data",
       "breakpoints": true
     },
     {
       "idx": 6,
       "version": "7",
-      "when": 1779860000000,
+      "when": 1737848370006,
       "tag": "0006_dashboard_layout",
       "breakpoints": true
     },
     {
       "idx": 7,
       "version": "7",
-      "when": 1779870000000,
+      "when": 1737848370007,
       "tag": "0007_idempotency_keys",
       "breakpoints": true
     },
     {
       "idx": 8,
       "version": "7",
-      "when": 1779880000000,
+      "when": 1737848370008,
       "tag": "0008_handoff_tables",
       "breakpoints": true
     },
     {
       "idx": 9,
       "version": "7",
-      "when": 1779890000000,
+      "when": 1737848370009,
       "tag": "0009_news_articles",
       "breakpoints": true
     },
     {
       "idx": 10,
       "version": "7",
-      "when": 1782000000000,
+      "when": 1737848370010,
       "tag": "0010_provider_tests",
       "breakpoints": true
     },
     {
       "idx": 11,
       "version": "7",
-      "when": 1782000000001,
+      "when": 1737848370011,
       "tag": "0011_alert_snooze",
       "breakpoints": true
     },
     {
       "idx": 12,
       "version": "7",
-      "when": 1782000000002,
+      "when": 1737848370012,
       "tag": "0012_default_models",
       "breakpoints": true
     },
     {
       "idx": 13,
       "version": "7",
-      "when": 1782000000003,
+      "when": 1737848370013,
       "tag": "0013_chat_model",
       "breakpoints": true
     },
     {
       "idx": 14,
       "version": "7",
-      "when": 1782200000004,
+      "when": 1737848370014,
       "tag": "0014_vision_embedding_model",
       "breakpoints": true
     },
     {
       "idx": 15,
       "version": "7",
-      "when": 1782239893430,
+      "when": 1737848370015,
       "tag": "0015_open_komodo",
       "breakpoints": true
     },
     {
       "idx": 16,
       "version": "7",
-      "when": 1782242626885,
+      "when": 1737848370016,
       "tag": "0016_windy_cobalt_man",
       "breakpoints": true
     },
     {
       "idx": 17,
       "version": "7",
-      "when": 1782258652829,
+      "when": 1737848370017,
       "tag": "0017_fantastic_mastermind",
       "breakpoints": true
     },
     {
       "idx": 18,
       "version": "7",
-      "when": 1782258694428,
+      "when": 1737848370018,
       "tag": "0018_bizarre_amazoness",
       "breakpoints": true
     },
     {
       "idx": 19,
       "version": "7",
-      "when": 1782259067600,
+      "when": 1737848370019,
       "tag": "0019_funny_silver_centurion",
       "breakpoints": true
     },
     {
       "idx": 20,
       "version": "7",
-      "when": 1782259395556,
+      "when": 1737848370020,
       "tag": "0020_broken_azazel",
       "breakpoints": true
     },
     {
       "idx": 21,
       "version": "7",
-      "when": 1783000000000,
+      "when": 1737848370021,
       "tag": "0021_user_settings_prefs",
       "breakpoints": true
     },
     {
       "idx": 22,
       "version": "7",
-      "when": 1782417403961,
+      "when": 1737848370022,
       "tag": "0022_many_proteus",
       "breakpoints": true
     },
     {
       "idx": 23,
       "version": "7",
-      "when": 1782486986251,
+      "when": 1737848370023,
       "tag": "0023_burly_nightcrawler",
       "breakpoints": true
     },
     {
       "idx": 24,
       "version": "7",
-      "when": 1782487022367,
+      "when": 1737848370024,
       "tag": "0024_living_doorman",
       "breakpoints": true
     },
     {
       "idx": 25,
       "version": "7",
-      "when": 1782487030000,
+      "when": 1737848370025,
       "tag": "0025_multi_agent_orchestration",
       "breakpoints": true
     },
     {
       "idx": 26,
       "version": "7",
-      "when": 1782487040000,
+      "when": 1737848370026,
       "tag": "0026_decision_signal_tracking",
+      "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "7",
+      "when": 1737848370027,
+      "tag": "0027_phase1_critical_fixes",
+      "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "7",
+      "when": 1737848370028,
+      "tag": "0028_phase2_data_integrity",
+      "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1737848370029,
+      "tag": "0029_phase3_schema_fixes",
+      "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1782573470000,
+      "tag": "0030_phase4_security",
+      "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1782573470001,
+      "tag": "0031_phase7_comments_and_triggers",
+      "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1782573470002,
+      "tag": "0032_phase8_soft_delete_enums_fts",
       "breakpoints": true
     }
   ]

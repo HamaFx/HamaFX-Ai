@@ -26,7 +26,7 @@ import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { eq } from 'drizzle-orm';
 
-import { closePGliteDb, getPGliteDb } from '../src/pglite-client';
+import { closePGliteDb, getPGliteDb, sanitizeStatement } from '../src/pglite-client';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const DRIZZLE_DIR = join(HERE, '..', 'drizzle');
@@ -39,19 +39,7 @@ async function applyOne(
   for (const stmt of rawSql.split('--> statement-breakpoint')) {
     const trimmed = stripComments(stmt.trim());
     if (!trimmed) continue;
-    // Strip pgvector-only DDL so PGlite can run the rest of the schema.
-    // (PGlite doesn't ship pgvector; news_embeddings lives behind an
-    // `if (process.env.HAMAFX_VECTOR === 'pgvector')` runtime branch.)
-    const safe = trimmed
-      .replace(
-        /CREATE\s+EXTENSION\s+IF\s+NOT\s+EXISTS\s+"vector".*?;/gi,
-        '-- [pglite] pgvector extension skipped',
-      )
-      .replace(/"embedding"\s+vector\(\d+\)/gi, '"embedding" real[]')
-      .replace(
-        /CREATE\s+INDEX\s+.*?\s+USING\s+hnsw\s*\(.*?vector_cosine_ops.*?\);/gi,
-        '-- [pglite] HNSW index skipped (requires pgvector)',
-      );
+    const safe = sanitizeStatement(trimmed);
     if (!safe.trim() || safe.trim().startsWith('--')) continue;
     await db.execute(safe);
   }

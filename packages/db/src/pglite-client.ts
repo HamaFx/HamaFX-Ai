@@ -37,8 +37,11 @@ let _activeDataDir: string | null = null;
 
 /**
  * Strip pgvector-specific statements from SQL.
+ *
+ * Exported so test files can import the same sanitization logic instead
+ * of duplicating it (MIG-6). This is the single source of truth.
  */
-function sanitizeStatement(sql: string): string {
+export function sanitizeStatement(sql: string): string {
   return sql
     .replace(
       /CREATE\s+EXTENSION\s+IF\s+NOT\s+EXISTS\s+"vector".*?;/gi,

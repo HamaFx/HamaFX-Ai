@@ -32,7 +32,6 @@ export const dailyAiSpend = pgTable(
   {
     /** Phase A — multi-user. References the NextAuth users table. */
     userId: text('user_id').notNull()
-      .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),
     /** UTC calendar day (`YYYY-MM-DD`). */
     day: date('day').notNull(),

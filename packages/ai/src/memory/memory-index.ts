@@ -116,7 +116,7 @@ async function upsertMemory(args: {
   // two statements, and concurrent re-embeddings of the same source
   // could collide on the unique constraint. The single `ON CONFLICT`
   // statement keeps the insert and the body refresh in one transaction
-  // and matches the (kind, source_id) unique key added in 0006.
+  // and matches the (user_id, kind, source_id) unique key (Phase 3 §14).
   await db
     .insert(schema.memoryEmbeddings)
     .values({
@@ -131,7 +131,7 @@ async function upsertMemory(args: {
       occurredAt: args.occurredAt,
     })
     .onConflictDoUpdate({
-      target: [schema.memoryEmbeddings.kind, schema.memoryEmbeddings.sourceId],
+      target: [schema.memoryEmbeddings.userId, schema.memoryEmbeddings.kind, schema.memoryEmbeddings.sourceId],
       set: {
         symbol: args.symbol,
         text,

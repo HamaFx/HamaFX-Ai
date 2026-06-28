@@ -16,7 +16,7 @@ import { fileURLToPath } from 'node:url';
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { closePGliteDb, getPGliteDb } from '../src/pglite-client';
+import { closePGliteDb, getPGliteDb, sanitizeStatement } from '../src/pglite-client';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const DRIZZLE_DIR = join(HERE, '..', 'drizzle');
@@ -24,21 +24,6 @@ const JOURNAL = JSON.parse(
   readFileSync(join(DRIZZLE_DIR, 'meta', '_journal.json'), 'utf-8'),
 ) as { entries: Array<{ tag: string }> };
 
-// Inline copy of the sanitization filter from pglite-client.ts.
-// We can't import the private helper, but the logic is small and
-// must match exactly so tests exercise the same SQL the runner runs.
-function sanitizeStatement(sql: string): string {
-  return sql
-    .replace(
-      /CREATE\s+EXTENSION\s+IF\s+NOT\s+EXISTS\s+"vector".*?;/gi,
-      '-- [pglite] pgvector extension skipped',
-    )
-    .replace(/"embedding"\s+vector\(\d+\)/gi, '"embedding" real[]')
-    .replace(
-      /CREATE\s+INDEX\s+.*?\s+USING\s+hnsw\s*\(.*?vector_cosine_ops.*?\);/gi,
-      '-- [pglite] HNSW index skipped (requires pgvector)',
-    );
-}
 
 function stripComments(sql: string): string {
   const lines = sql.split('\n');

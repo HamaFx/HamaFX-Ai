@@ -20,5 +20,8 @@
 //
 // Required:
 //   - pgvector  (news embeddings)
-//   - uuid-ossp (gen_random_uuid is in pgcrypto on Supabase but uuid-ossp is also handy)
-export const REQUIRED_EXTENSIONS = ['vector', 'pgcrypto'] as const;
+//   - pgcrypto  (gen_random_uuid on Supabase)
+//
+// Phase 7 §35 — The REQUIRED_EXTENSIONS constant was never imported anywhere.
+// Converted to a documentation-only comment. The actual extension installation
+// is handled by scripts/install-extensions.mjs and the 0000 migration.

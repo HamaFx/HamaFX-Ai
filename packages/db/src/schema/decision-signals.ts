@@ -70,6 +70,8 @@ export const decisionSignals = pgTable(
     status: text('status').notNull().default('active'),
     /** Reasoning, market phase, etc. */
     metadata: jsonb('metadata').notNull().default('{}'),
+    /** Phase 8 §41 — soft-delete support. Null = active. */
+    deletedAt: timestamp('deleted_at', { withTimezone: true }),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp('updated_at', { withTimezone: true })
       .defaultNow()
@@ -118,6 +120,8 @@ export const decisionSignalOutcomes = pgTable(
   (t) => [
     uniqueIndex('decision_signal_outcomes_signal_horizon_idx').on(t.signalId, t.horizon),
     index('decision_signal_outcomes_signal_idx').on(t.signalId),
+    // Phase 3 §18 — index for time-range queries (e.g. "outcomes in last 24h")
+    index('decision_signal_outcomes_evaluated_idx').on(t.evaluatedAt),
   ],
 );
 

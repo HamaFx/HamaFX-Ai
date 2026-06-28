@@ -37,5 +37,5 @@ export default defineConfig({
   strict: true,
   verbose: true,
   // pgvector is enabled via a custom migration (see ./drizzle/0000_init_extensions.sql once generated).
-  extensionsFilters: ['postgis'],
+  extensionsFilters: ['vector'],
 });

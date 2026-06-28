@@ -39,6 +39,8 @@ import {
   timestamp,
 } from 'drizzle-orm/pg-core';
 
+import { users } from './auth';
+
 /**
  * Rate-limit counters per (user, endpoint_group, 1-minute window).
  *
@@ -50,7 +52,8 @@ export const rateLimits = pgTable(
   'rate_limits',
   {
     userId: text('user_id')
-      .notNull(),
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
     endpointGroup: text('endpoint_group').notNull(),
     windowStart: timestamp('window_start', { withTimezone: true, mode: 'date' }).notNull(),
     requestCount: integer('request_count').notNull().default(0),

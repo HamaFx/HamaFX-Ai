@@ -25,6 +25,8 @@ import {
   decryptWithPassword,
   describeByok,
   configuredProviders,
+  encryptSecret,
+  decryptSecret,
   PROVIDER_IDS,
 } from '../src/encryption';
 
@@ -205,7 +207,7 @@ describe('configuredProviders', () => {
   });
 
   it('returns matching ProviderId entries', () => {
-    const result = configuredProviders({ openai: 'sk-abc', unknown_provider: 'test' } as any);
+    const result = configuredProviders({ openai: 'sk-abc', unknown_provider: 'test' } as Record<string, string>);
     expect(result).toEqual(['openai']);
   });
 
@@ -223,5 +225,40 @@ describe('configuredProviders', () => {
     for (const id of result) {
       expect(PROVIDER_IDS.includes(id)).toBe(true);
     }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// encryptSecret / decryptSecret (Phase 4 — SEC-3)
+// ---------------------------------------------------------------------------
+describe('encryptSecret / decryptSecret', () => {
+  it('round-trips a secret string', () => {
+    const plaintext = '123456789:ABCdefGHIjklMNOpqrsTUVwxyz';
+    const encrypted = encryptSecret(plaintext);
+    expect(typeof encrypted).toBe('string');
+    expect(encrypted.split('.')).toHaveLength(3);
+    expect(encrypted).not.toContain(plaintext);
+    const decrypted = decryptSecret(encrypted);
+    expect(decrypted).toBe(plaintext);
+  });
+
+  it('produces different ciphertext each call (random IV)', () => {
+    const a = encryptSecret('test-token');
+    const b = encryptSecret('test-token');
+    expect(a).not.toBe(b);
+  });
+
+  it('returns null when decrypting null / undefined / empty', () => {
+    expect(decryptSecret(null)).toBeNull();
+    expect(decryptSecret(undefined)).toBeNull();
+    expect(decryptSecret('')).toBeNull();
+  });
+
+  it('returns null for malformed encrypted strings', () => {
+    expect(decryptSecret('not-encrypted')).toBeNull();
+    expect(decryptSecret('aaaa.bbbb.cccc')).toBeNull();
+    expect(
+      decryptSecret('000000000000000000000000.aaaa.bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb'),
+    ).toBeNull();
   });
 });
