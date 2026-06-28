@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { index, jsonb, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import { index, jsonb, pgTable, text, timestamp, unique, uuid } from 'drizzle-orm/pg-core';
 
 /**
  * Daily / weekly / monthly snapshots: HLOC, pivots, key levels, ATR. Computed
@@ -33,5 +33,9 @@ export const snapshots = pgTable(
     data: jsonb('data').notNull(),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   },
-  (t) => [index('snapshots_symbol_kind_asof_idx').on(t.symbol, t.kind, t.asOf)],
+  (t) => [
+    index('snapshots_symbol_kind_asof_idx').on(t.symbol, t.kind, t.asOf),
+    // Phase 3 §15 — prevents duplicate snapshots from overlapping cron runs.
+    unique('snapshots_symbol_kind_asof_uk').on(t.symbol, t.kind, t.asOf),
+  ],
 );

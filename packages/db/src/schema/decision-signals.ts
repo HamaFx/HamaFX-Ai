@@ -118,6 +118,8 @@ export const decisionSignalOutcomes = pgTable(
   (t) => [
     uniqueIndex('decision_signal_outcomes_signal_horizon_idx').on(t.signalId, t.horizon),
     index('decision_signal_outcomes_signal_idx').on(t.signalId),
+    // Phase 3 §18 — index for time-range queries (e.g. "outcomes in last 24h")
+    index('decision_signal_outcomes_evaluated_idx').on(t.evaluatedAt),
   ],
 );
 

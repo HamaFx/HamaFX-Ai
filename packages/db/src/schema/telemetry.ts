@@ -86,7 +86,9 @@ export const chatTelemetry = pgTable(
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   },
   (t) => [
-    index('chat_telemetry_user_id_idx').on(t.userId),
+    // Phase 3 §17 — chat_telemetry_user_id_idx dropped; the composite
+    // telemetry_user_created_idx (user_id, created_at) covers leftmost-prefix
+    // queries on user_id alone.
     index('telemetry_created_idx').on(t.createdAt),
     index('telemetry_thread_idx').on(t.threadId),
     // PERF-03: Composite index for the 30-day usage range query in computeUsage().
