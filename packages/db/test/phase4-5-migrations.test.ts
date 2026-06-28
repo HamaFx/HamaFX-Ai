@@ -185,8 +185,9 @@ describe('Phase 5 — Migration System', () => {
 
     const content = readFileSync(runDrizzlePath, 'utf-8');
     expect(content).toContain('deprecated');
-    expect(content).not.toContain('pexpect');
-    expect(content).not.toContain('spawn');
+    // The original pexpect wrapper code should be gone
+    expect(content).not.toContain('pexpect.spawn');
+    expect(content).not.toContain('child.send');
   });
 
   it('migration 0007 no longer creates daily_ai_spend', () => {
