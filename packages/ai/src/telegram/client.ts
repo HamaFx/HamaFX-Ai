@@ -74,7 +74,7 @@ export async function telegramApiCall<T = TelegramApiResponse>(
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify(body),
-        signal: options?.signal,
+        signal: options?.signal ?? null,
       });
 
       const data: TelegramApiResponse = await res.json();
@@ -138,7 +138,7 @@ export async function sendTextMessage(
       parse_mode: options?.parseMode,
       reply_to_message_id: i === 0 ? options?.replyToMessageId : undefined,
       disable_web_page_preview: options?.disableWebPagePreview ?? true,
-    }, { signal: options?.signal });
+    }, options?.signal ? { signal: options.signal } : undefined);
     sent++;
   }
 
@@ -163,7 +163,7 @@ export async function sendPhoto(
     photo,
     caption: options?.caption?.slice(0, 1024), // Telegram caption limit
     parse_mode: options?.parseMode,
-  }, { signal: options?.signal });
+  }, options?.signal ? { signal: options.signal } : undefined);
 }
 
 /**
@@ -221,7 +221,7 @@ export async function sendInlineKeyboard(
     text,
     parse_mode: options?.parseMode,
     reply_markup: JSON.stringify({ inline_keyboard: keyboard }),
-  }, { signal: options?.signal });
+  }, options?.signal ? { signal: options.signal } : undefined);
 }
 
 /**
@@ -259,7 +259,7 @@ export async function deleteMessage(
  * Chunk text into pieces that fit within Telegram's message limit.
  * Tries to split on newlines, then on spaces, then hard-cut.
  */
-function chunkText(text: string, maxLen: number): string[] {
+export function chunkText(text: string, maxLen: number): string[] {
   if (text.length <= maxLen) return [text];
 
   const chunks: string[] = [];
@@ -267,6 +267,7 @@ function chunkText(text: string, maxLen: number): string[] {
 
   while (remaining.length > maxLen) {
     let splitIndex = -1;
+    let skipChar = 1;
 
     // Try to split on a newline within the last 500 chars of the chunk
     const newlineIdx = remaining.lastIndexOf('\n', maxLen);
@@ -280,11 +281,12 @@ function chunkText(text: string, maxLen: number): string[] {
       } else {
         // Hard cut
         splitIndex = maxLen;
+        skipChar = 0;
       }
     }
 
     chunks.push(remaining.slice(0, splitIndex).trimEnd());
-    remaining = remaining.slice(splitIndex + 1).trimStart();
+    remaining = remaining.slice(splitIndex + skipChar).trimStart();
   }
 
   if (remaining.length > 0) {

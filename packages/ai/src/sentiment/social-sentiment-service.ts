@@ -39,8 +39,8 @@ import { withRetry } from '../retry';
 // ---------------------------------------------------------------------------
 
 export interface SentimentEnv {
-  SOCIAL_SENTIMENT_API_KEY?: string;
-  SOCIAL_SENTIMENT_API_URL?: string;
+  SOCIAL_SENTIMENT_API_KEY?: string | undefined;
+  SOCIAL_SENTIMENT_API_URL?: string | undefined;
 }
 
 function getEnv(): SentimentEnv {

@@ -22,7 +22,7 @@
 // quiet hours, min severity, cooldown, dedup TTL, and daily digest mode.
 
 import { Bell, Moon, Clock, Filter, Zap } from 'lucide-react';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { Switch } from '@/components/ui/switch';
 import { cn } from '@/lib/cn';
 import type { NoiseConfig, Severity } from '@hamafx/shared';

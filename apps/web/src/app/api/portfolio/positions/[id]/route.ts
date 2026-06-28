@@ -29,7 +29,8 @@ export const dynamic = 'force-dynamic';
 
 export const GET = withAuth<{ id: string }>(async (_req, { user, params }) => {
   try {
-    const position = await getPosition(user.userId, params.id);
+    const { id } = await params;
+    const position = await getPosition(user.userId, id);
     if (!position) {
       return Response.json({ error: 'Position not found' }, { status: 404 });
     }
@@ -41,10 +42,11 @@ export const GET = withAuth<{ id: string }>(async (_req, { user, params }) => {
 
 export const PATCH = withAuth<{ id: string }>(async (req, { user, params }) => {
   try {
+    const { id } = await params;
     const body = await req.json();
     const input = ClosePositionInputSchema.parse(body);
 
-    const position = await closePosition(user.userId, params.id, input);
+    const position = await closePosition(user.userId, id, input);
     if (!position) {
       return Response.json({ error: 'Position not found or already closed' }, { status: 404 });
     }
@@ -56,7 +58,8 @@ export const PATCH = withAuth<{ id: string }>(async (req, { user, params }) => {
 
 export const DELETE = withAuth<{ id: string }>(async (_req, { user, params }) => {
   try {
-    await deletePosition(user.userId, params.id);
+    const { id } = await params;
+    await deletePosition(user.userId, id);
     return new Response(null, { status: 204 });
   } catch (err) {
     return errorResponse(err);

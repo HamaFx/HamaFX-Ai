@@ -31,34 +31,31 @@ export const newsCommand: BotCommand = {
       const db = getDb();
       const limit = 5;
 
-      let query = db
-        .select({
-          headline: schema.newsArticles.title,
-          source: schema.newsArticles.source,
-          url: schema.newsArticles.url,
-          publishedAt: schema.newsArticles.publishedAt,
-          sentiment: schema.newsArticles.sentiment,
-        })
-        .from(schema.newsArticles)
-        .orderBy(desc(schema.newsArticles.publishedAt))
-        .limit(limit);
-
-      // If a symbol is specified, filter by it
-      if (args.length > 0) {
-        const symbol = args[0].toUpperCase();
-        query = db
-          .select({
-            headline: schema.newsArticles.title,
-            source: schema.newsArticles.source,
-            url: schema.newsArticles.url,
-            publishedAt: schema.newsArticles.publishedAt,
-            sentiment: schema.newsArticles.sentiment,
-          })
-          .from(schema.newsArticles)
-          .where(sql`${schema.newsArticles.symbols} @> ARRAY[${symbol}]`)
-          .orderBy(desc(schema.newsArticles.publishedAt))
-          .limit(limit);
-      }
+      const symbolStr = args[0];
+      const query = symbolStr
+        ? db
+            .select({
+              headline: schema.newsArticles.title,
+              source: schema.newsArticles.source,
+              url: schema.newsArticles.url,
+              publishedAt: schema.newsArticles.publishedAt,
+              sentiment: schema.newsArticles.sentiment,
+            })
+            .from(schema.newsArticles)
+            .where(sql`${schema.newsArticles.symbols} @> ARRAY[${symbolStr.toUpperCase()}]`)
+            .orderBy(desc(schema.newsArticles.publishedAt))
+            .limit(limit)
+        : db
+            .select({
+              headline: schema.newsArticles.title,
+              source: schema.newsArticles.source,
+              url: schema.newsArticles.url,
+              publishedAt: schema.newsArticles.publishedAt,
+              sentiment: schema.newsArticles.sentiment,
+            })
+            .from(schema.newsArticles)
+            .orderBy(desc(schema.newsArticles.publishedAt))
+            .limit(limit);
 
       const news = await query;
 

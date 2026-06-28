@@ -79,8 +79,8 @@ describe('evaluateNoise', () => {
     state = new InMemoryNoiseState();
   });
 
-  it('allows the first notification', () => {
-    const decision = evaluateNoise(
+  it('allows the first notification', async () => {
+    const decision = await evaluateNoise(
       'XAUUSD price alert',
       'alert',
       'warning',
@@ -91,9 +91,9 @@ describe('evaluateNoise', () => {
     expect(decision.reasonCode).toBe('allowed');
   });
 
-  it('suppresses duplicate content within dedup TTL', () => {
-    evaluateNoise('XAUUSD price alert', 'alert', 'warning', DEFAULT_NOISE_CONFIG, state);
-    const decision = evaluateNoise(
+  it('suppresses duplicate content within dedup TTL', async () => {
+    await evaluateNoise('XAUUSD price alert', 'alert', 'warning', DEFAULT_NOISE_CONFIG, state);
+    const decision = await evaluateNoise(
       'XAUUSD price alert',
       'alert',
       'warning',
@@ -104,21 +104,22 @@ describe('evaluateNoise', () => {
     expect(decision.reasonCode).toBe('duplicate');
   });
 
-  it('allows different content within dedup TTL', () => {
-    evaluateNoise('XAUUSD price alert', 'alert', 'warning', DEFAULT_NOISE_CONFIG, state);
-    const decision = evaluateNoise(
+  it('allows different content within dedup TTL', async () => {
+    const config = { ...DEFAULT_NOISE_CONFIG, cooldownSeconds: 0 };
+    await evaluateNoise('XAUUSD price alert', 'alert', 'warning', config, state);
+    const decision = await evaluateNoise(
       'EURUSD price alert',
       'alert',
       'warning',
-      DEFAULT_NOISE_CONFIG,
+      config,
       state,
     );
     expect(decision.shouldSend).toBe(true);
   });
 
-  it('suppresses below min severity', () => {
+  it('suppresses below min severity', async () => {
     const config = { ...DEFAULT_NOISE_CONFIG, minSeverity: 'error' as const };
-    const decision = evaluateNoise(
+    const decision = await evaluateNoise(
       'Info message',
       'report',
       'info',
@@ -129,9 +130,9 @@ describe('evaluateNoise', () => {
     expect(decision.reasonCode).toBe('below_min_severity');
   });
 
-  it('allows at or above min severity', () => {
+  it('allows at or above min severity', async () => {
     const config = { ...DEFAULT_NOISE_CONFIG, minSeverity: 'error' as const };
-    const decision = evaluateNoise(
+    const decision = await evaluateNoise(
       'Error message',
       'report',
       'error',
@@ -141,13 +142,13 @@ describe('evaluateNoise', () => {
     expect(decision.shouldSend).toBe(true);
   });
 
-  it('suppresses during quiet hours below quiet-hours min severity', () => {
+  it('suppresses during quiet hours below quiet-hours min severity', async () => {
     const config = {
       ...DEFAULT_NOISE_CONFIG,
       quietHours: { start: '00:00', end: '23:59' }, // All day quiet hours
       minSeverityDuringQuietHours: 'critical' as const,
     };
-    const decision = evaluateNoise(
+    const decision = await evaluateNoise(
       'Warning message',
       'alert',
       'warning',
@@ -158,13 +159,13 @@ describe('evaluateNoise', () => {
     expect(decision.reasonCode).toBe('quiet_hours');
   });
 
-  it('allows critical during quiet hours', () => {
+  it('allows critical during quiet hours', async () => {
     const config = {
       ...DEFAULT_NOISE_CONFIG,
       quietHours: { start: '00:00', end: '23:59' },
       minSeverityDuringQuietHours: 'critical' as const,
     };
-    const decision = evaluateNoise(
+    const decision = await evaluateNoise(
       'Critical message',
       'alert',
       'critical',
@@ -174,11 +175,11 @@ describe('evaluateNoise', () => {
     expect(decision.shouldSend).toBe(true);
   });
 
-  it('suppresses same route type within cooldown', () => {
+  it('suppresses same route type within cooldown', async () => {
     // First notification goes through
-    evaluateNoise('First alert', 'alert', 'warning', DEFAULT_NOISE_CONFIG, state);
+    await evaluateNoise('First alert', 'alert', 'warning', DEFAULT_NOISE_CONFIG, state);
     // Second notification with different content but same route type
-    const decision = evaluateNoise(
+    const decision = await evaluateNoise(
       'Second alert different content',
       'alert',
       'warning',
@@ -189,9 +190,9 @@ describe('evaluateNoise', () => {
     expect(decision.reasonCode).toBe('cooldown');
   });
 
-  it('allows different route types within cooldown', () => {
-    evaluateNoise('First alert', 'alert', 'warning', DEFAULT_NOISE_CONFIG, state);
-    const decision = evaluateNoise(
+  it('allows different route types within cooldown', async () => {
+    await evaluateNoise('First alert', 'alert', 'warning', DEFAULT_NOISE_CONFIG, state);
+    const decision = await evaluateNoise(
       'Report content',
       'report',
       'warning',

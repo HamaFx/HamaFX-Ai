@@ -19,7 +19,7 @@
 // PUT  /api/notifications/noise-config
 
 import { getNoiseConfig, saveNoiseConfig } from '@hamafx/ai';
-import { NoiseConfigSchema } from '@hamafx/shared';
+import { NoiseConfigSchema, type NoiseConfig } from '@hamafx/shared';
 
 import { errorResponse, withAuth } from '@/lib/api';
 
@@ -41,7 +41,12 @@ export const PUT = withAuth<void>(async (req, { user }) => {
     // Validate partial config — allow partial updates
     const partial = NoiseConfigSchema.partial().parse(body);
 
-    const config = await saveNoiseConfig(user.userId, partial);
+    // Clean undefined values to prevent overwriting existing settings with undefined during spread merges
+    const cleaned = Object.fromEntries(
+      Object.entries(partial).filter(([_, v]) => v !== undefined)
+    ) as Partial<NoiseConfig>;
+
+    const config = await saveNoiseConfig(user.userId, cleaned);
     return Response.json({ config });
   } catch (err) {
     return errorResponse(err);

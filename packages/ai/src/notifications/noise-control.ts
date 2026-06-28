@@ -38,9 +38,9 @@ import {
 // ---------------------------------------------------------------------------
 
 export interface NoiseState {
-  hasSeen(dedupKey: string, ttlSeconds: number): boolean;
-  inCooldown(cooldownKey: string, cooldownSeconds: number): boolean;
-  record(dedupKey: string, cooldownKey: string): void;
+  hasSeen(dedupKey: string, ttlSeconds: number): Promise<boolean> | boolean;
+  inCooldown(cooldownKey: string, cooldownSeconds: number): Promise<boolean> | boolean;
+  record(dedupKey: string, cooldownKey: string): Promise<void> | void;
 }
 
 // ---------------------------------------------------------------------------
@@ -94,8 +94,8 @@ export function isQuietHours(
   const minutePart = parts.find((p) => p.type === 'minute')?.value ?? '0';
   const currentMinutes = parseInt(hourPart, 10) * 60 + parseInt(minutePart, 10);
 
-  const [startH, startM] = quietHours.start.split(':').map(Number);
-  const [endH, endM] = quietHours.end.split(':').map(Number);
+  const [startH = 0, startM = 0] = quietHours.start.split(':').map(Number);
+  const [endH = 0, endM = 0] = quietHours.end.split(':').map(Number);
   const startMinutes = startH * 60 + startM;
   const endMinutes = endH * 60 + endM;
 
@@ -122,16 +122,16 @@ export function isQuietHours(
  * If allowed, the state is recorded (dedup key + cooldown key) so
  * subsequent calls within the window are suppressed.
  */
-export function evaluateNoise(
+export async function evaluateNoise(
   content: string,
   routeType: RouteType,
   severity: Severity,
   config: NoiseConfig,
   state: NoiseState,
-): NoiseDecision {
+): Promise<NoiseDecision> {
   // 1. Dedup: hash content, check if seen within dedupTtl
   const dedupKey = hashContent(content, routeType);
-  if (state.hasSeen(dedupKey, config.dedupTtlSeconds)) {
+  if (await state.hasSeen(dedupKey, config.dedupTtlSeconds)) {
     return {
       shouldSend: false,
       reasonCode: 'duplicate',
@@ -167,7 +167,7 @@ export function evaluateNoise(
 
   // 4. Cooldown per route type
   const cooldownKey = routeType;
-  if (state.inCooldown(cooldownKey, config.cooldownSeconds)) {
+  if (config.cooldownSeconds > 0 && await state.inCooldown(cooldownKey, config.cooldownSeconds)) {
     return {
       shouldSend: false,
       reasonCode: 'cooldown',
@@ -178,7 +178,7 @@ export function evaluateNoise(
   }
 
   // All checks passed — record state and allow
-  state.record(dedupKey, cooldownKey);
+  await state.record(dedupKey, cooldownKey);
 
   return {
     shouldSend: true,
@@ -197,7 +197,7 @@ export class InMemoryNoiseState implements NoiseState {
   private seen = new Map<string, number>(); // dedupKey → timestamp
   private cooldowns = new Map<string, number>(); // cooldownKey → timestamp
 
-  hasSeen(dedupKey: string, ttlSeconds: number): boolean {
+  async hasSeen(dedupKey: string, ttlSeconds: number): Promise<boolean> {
     const now = Date.now();
     const last = this.seen.get(dedupKey);
     if (last === undefined) return false;
@@ -208,7 +208,7 @@ export class InMemoryNoiseState implements NoiseState {
     return true;
   }
 
-  inCooldown(cooldownKey: string, cooldownSeconds: number): boolean {
+  async inCooldown(cooldownKey: string, cooldownSeconds: number): Promise<boolean> {
     const now = Date.now();
     const last = this.cooldowns.get(cooldownKey);
     if (last === undefined) return false;
@@ -219,7 +219,7 @@ export class InMemoryNoiseState implements NoiseState {
     return true;
   }
 
-  record(dedupKey: string, cooldownKey: string): void {
+  async record(dedupKey: string, cooldownKey: string): Promise<void> {
     const now = Date.now();
     this.seen.set(dedupKey, now);
     this.cooldowns.set(cooldownKey, now);

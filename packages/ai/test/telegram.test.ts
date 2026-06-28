@@ -18,9 +18,9 @@
 // Run: pnpm --filter @hamafx/ai test -- --run telegram
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { isDuplicateUpdate, markProcessed, _resetForTesting } from '../idempotency';
-import { checkRateLimit, getRateLimitStatus, _resetRateLimitsForTesting } from '../rate-limiter';
-import { chunkText } from '../client';
+import { isDuplicateUpdate, markProcessed, _resetForTesting } from '../src/telegram/idempotency';
+import { checkRateLimit, getRateLimitStatus, _resetRateLimitsForTesting } from '../src/telegram/rate-limiter';
+import { chunkText } from '../src/telegram/client';
 
 // ── Idempotency Guard ──
 

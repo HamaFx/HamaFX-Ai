@@ -109,19 +109,19 @@ async function sendBotResponse(
   botToken: string,
 ): Promise<void> {
   if (response.image) {
-    await sendPhoto(botToken, chatId, response.image, {
-      caption: response.imageCaption,
-      parseMode: response.parseMode,
-    }).catch((err: unknown) => {
+    const options: Parameters<typeof sendPhoto>[3] = {};
+    if (response.imageCaption !== undefined) options.caption = response.imageCaption;
+    if (response.parseMode !== undefined) options.parseMode = response.parseMode;
+    await sendPhoto(botToken, chatId, response.image, options).catch((err: unknown) => {
       console.error('[telegram] sendPhoto failed:', err instanceof Error ? err.message : err);
     });
     return;
   }
 
   if (response.text) {
-    await sendTextMessage(botToken, chatId, response.text, {
-      parseMode: response.parseMode,
-    }).catch((err: unknown) => {
+    const options: Parameters<typeof sendTextMessage>[3] = {};
+    if (response.parseMode !== undefined) options.parseMode = response.parseMode;
+    await sendTextMessage(botToken, chatId, response.text, options).catch((err: unknown) => {
       console.error('[telegram] sendMessage failed:', err instanceof Error ? err.message : err);
     });
   }

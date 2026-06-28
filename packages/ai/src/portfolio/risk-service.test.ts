@@ -88,7 +88,7 @@ describe('computePnL', () => {
 
     // EURUSD: contract size = 100,000, lot = 1.0
     // P&L = (1.1100 - 1.1000) * 100000 * 1.0 = 1000
-    expect(result.unrealizedPnlUsd).toBe(1000);
+    expect(result.unrealizedPnlUsd).toBeCloseTo(1000, 2);
   });
 
   it('computes risk and reward correctly for a long position', () => {

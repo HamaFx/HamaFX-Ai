@@ -49,7 +49,13 @@ function generateLinkCode(): string {
   const bytes = randomBytes(6);
   let code = '';
   for (let i = 0; i < 6; i++) {
-    code += chars[bytes[i] % chars.length];
+    const byte = bytes[i];
+    if (byte !== undefined) {
+      const char = chars[byte % chars.length];
+      if (char !== undefined) {
+        code += char;
+      }
+    }
   }
   return code;
 }

@@ -31,13 +31,13 @@ export const analyzeCommand: BotCommand = {
   aliases: ['a'],
   description: 'Full AI analysis: /analyze <symbol>',
   handler: async (args: string[], ctx: BotContext): Promise<BotResponse> => {
-    if (args.length === 0) {
+    const symbolStr = args[0];
+    if (!symbolStr) {
       return {
         text: 'Usage: /analyze <symbol>\nExample: /analyze EURUSD',
       };
     }
-
-    const symbol = args[0].toUpperCase();
+    const symbol = symbolStr.toUpperCase();
 
     // Rate limit: 10 analyses per minute per user
     const rateLimit = await withRateLimit(ctx.userId, 'bot_analyze', 10);

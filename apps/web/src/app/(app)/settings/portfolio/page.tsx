@@ -26,7 +26,7 @@ import type { PortfolioSettings, PortfolioRiskReport, PositionWithPnL } from '@h
 import { redirect } from 'next/navigation';
 import { auth } from '@/auth';
 import type { Metadata } from 'next';
-import { Wallet, TrendingUp, TrendingDown, AlertTriangle, Shield } from 'lucide-react';
+import { Wallet, TrendingUp, AlertTriangle, Shield } from 'lucide-react';
 
 import { EmptyState } from '@/components/ui/empty-state';
 import { cn } from '@/lib/cn';
@@ -67,7 +67,7 @@ function PortfolioContent({
           </p>
         </div>
         <EmptyState
-          icon={Wallet}
+          icon={<Wallet />}
           title="No positions yet"
           description="Add a position to start tracking your portfolio P&L and risk metrics. The AI can also see your positions when giving trading advice."
         />
@@ -100,7 +100,7 @@ function PortfolioContent({
         <StatCard
           icon={Shield}
           label="Total Risk"
-          value={`$${riskReport.totalRiskUsd.toLocaleString(undefined, { maximumFractionDigits: 0 })`}
+          value={`$${riskReport.totalRiskUsd.toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
           subValue={`${riskReport.totalRiskPct.toFixed(1)}% of account`}
         />
         <StatCard

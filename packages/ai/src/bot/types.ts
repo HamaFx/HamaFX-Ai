@@ -71,7 +71,11 @@ export function parseCommand(text: string): ParsedCommand {
 
   // Remove leading slash, split by whitespace
   const parts = trimmed.slice(1).split(/\s+/);
-  const command = parts[0].toLowerCase().replace(/@\w+$/, ''); // strip @botname suffix
+  const first = parts[0];
+  if (!first) {
+    return { command: '', args: [] };
+  }
+  const command = first.toLowerCase().replace(/@\w+$/, ''); // strip @botname suffix
   const args = parts.slice(1).filter(Boolean);
 
   return { command, args };

@@ -176,6 +176,20 @@
       "when": 1782487022367,
       "tag": "0024_living_doorman",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1782487030000,
+      "tag": "0025_multi_agent_orchestration",
+      "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1782487040000,
+      "tag": "0026_decision_signal_tracking",
+      "breakpoints": true
     }
   ]
 }

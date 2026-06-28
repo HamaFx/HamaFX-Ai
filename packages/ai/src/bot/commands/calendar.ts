@@ -28,7 +28,8 @@ export const calendarCommand: BotCommand = {
   description: 'Economic calendar: /calendar [count]',
   handler: async (args: string[]): Promise<BotResponse> => {
     try {
-      const limit = args.length > 0 ? Math.min(parseInt(args[0], 10) || 5, 15) : 5;
+      const firstArg = args[0];
+      const limit = firstArg ? Math.min(parseInt(firstArg, 10) || 5, 15) : 5;
       const db = getDb();
       const now = new Date();
 

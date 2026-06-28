@@ -20,6 +20,7 @@
 
 import { getPortfolioSettings, savePortfolioSettings } from '@hamafx/ai';
 import { z } from 'zod';
+import type { PortfolioSettings } from '@hamafx/shared';
 
 import { errorResponse, withAuth } from '@/lib/api';
 
@@ -47,7 +48,12 @@ export const PUT = withAuth<void>(async (req, { user }) => {
     const body = await req.json();
     const input = UpdateSettingsSchema.parse(body);
 
-    const settings = await savePortfolioSettings(user.userId, input);
+    // Clean undefined values to prevent overwriting existing settings with undefined during spread merges
+    const cleaned = Object.fromEntries(
+      Object.entries(input).filter(([_, v]) => v !== undefined)
+    ) as Partial<Pick<PortfolioSettings, 'accountBalance' | 'baseCurrency' | 'maxRiskPerTradePct' | 'maxTotalExposurePct'>>;
+
+    const settings = await savePortfolioSettings(user.userId, cleaned);
     return Response.json({ settings });
   } catch (err) {
     return errorResponse(err);

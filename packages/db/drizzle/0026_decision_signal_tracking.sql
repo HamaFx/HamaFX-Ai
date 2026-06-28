@@ -4,7 +4,7 @@
 -- Decision signals: every AI directional recommendation
 CREATE TABLE IF NOT EXISTS "decision_signals" (
   "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
-  "user_id" text NOT NULL REFERENCES "users"("id") ON DELETE CASCADE,
+  "user_id" text NOT NULL REFERENCES "user"("id") ON DELETE CASCADE,
   "thread_id" uuid REFERENCES "chat_threads"("id") ON DELETE SET NULL,
   "message_id" uuid REFERENCES "chat_messages"("id") ON DELETE SET NULL,
   "symbol" text NOT NULL,
@@ -26,12 +26,13 @@ CREATE TABLE IF NOT EXISTS "decision_signals" (
   "created_at" timestamptz DEFAULT now() NOT NULL,
   "updated_at" timestamptz DEFAULT now() NOT NULL
 );
-
+--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "decision_signals_user_idx" ON "decision_signals" ("user_id", "created_at" DESC);
+--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "decision_signals_symbol_idx" ON "decision_signals" ("symbol", "status");
+--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "decision_signals_active_idx" ON "decision_signals" ("status");
-
--- Outcomes: forward evaluation results per horizon
+--> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "decision_signal_outcomes" (
   "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
   "signal_id" uuid NOT NULL REFERENCES "decision_signals"("id") ON DELETE CASCADE,
@@ -49,17 +50,17 @@ CREATE TABLE IF NOT EXISTS "decision_signal_outcomes" (
   "evaluated_at" timestamptz DEFAULT now() NOT NULL,
   "engine_version" text NOT NULL DEFAULT 'v1'
 );
-
+--> statement-breakpoint
 CREATE UNIQUE INDEX IF NOT EXISTS "decision_signal_outcomes_signal_horizon_idx" ON "decision_signal_outcomes" ("signal_id", "horizon");
+--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "decision_signal_outcomes_signal_idx" ON "decision_signal_outcomes" ("signal_id");
-
--- User feedback on signals (thumbs up/down)
+--> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "decision_signal_feedback" (
   "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
   "signal_id" uuid NOT NULL REFERENCES "decision_signals"("id") ON DELETE CASCADE,
-  "user_id" text NOT NULL REFERENCES "users"("id") ON DELETE CASCADE,
+  "user_id" text NOT NULL REFERENCES "user"("id") ON DELETE CASCADE,
   "feedback" text NOT NULL,
   "created_at" timestamptz DEFAULT now() NOT NULL
 );
-
+--> statement-breakpoint
 CREATE UNIQUE INDEX IF NOT EXISTS "decision_signal_feedback_signal_user_idx" ON "decision_signal_feedback" ("signal_id", "user_id");

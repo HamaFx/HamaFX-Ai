@@ -173,7 +173,7 @@ export function TelegramLinkCard(): React.JSX.Element {
           </p>
           <Button
             type="button"
-            variant="destructive"
+            variant="danger"
             onClick={unlink}
             disabled={unlinking}
             className="min-h-[44px]"
@@ -224,7 +224,8 @@ export function TelegramLinkCard(): React.JSX.Element {
                   <Button
                     type="button"
                     variant="secondary"
-                    size="icon"
+                    size="sm"
+                    className="w-10 px-0"
                     onClick={copyCode}
                     aria-label="Copy code"
                   >

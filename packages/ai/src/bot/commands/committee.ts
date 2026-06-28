@@ -31,7 +31,8 @@ export const committeeCommand: BotCommand = {
   aliases: ['comm'],
   description: 'Multi-agent committee: /committee <symbol>',
   handler: async (args: string[], ctx: BotContext): Promise<BotResponse> => {
-    if (args.length === 0) {
+    const symbolStr = args[0];
+    if (!symbolStr) {
       return {
         text: [
           'Usage: /committee <symbol>',
@@ -43,7 +44,7 @@ export const committeeCommand: BotCommand = {
       };
     }
 
-    const symbol = args[0].toUpperCase();
+    const symbol = symbolStr.toUpperCase();
 
     // Aggressive rate limit: 3 per hour per user
     const rateLimit = checkRateLimit(ctx.userId, 'bot_committee', 3);

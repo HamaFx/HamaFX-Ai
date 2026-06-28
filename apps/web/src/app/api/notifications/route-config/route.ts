@@ -19,7 +19,7 @@
 // PUT  /api/notifications/route-config
 
 import { getRouteConfig, saveRouteConfig } from '@hamafx/ai';
-import { RouteConfigSchema } from '@hamafx/shared';
+import { RouteConfigSchema, type RouteConfig } from '@hamafx/shared';
 
 import { errorResponse, withAuth } from '@/lib/api';
 
@@ -40,7 +40,12 @@ export const PUT = withAuth<void>(async (req, { user }) => {
     const body = await req.json();
     const partial = RouteConfigSchema.partial().parse(body);
 
-    const config = await saveRouteConfig(user.userId, partial);
+    // Clean undefined values to prevent overwriting existing settings with undefined during spread merges
+    const cleaned = Object.fromEntries(
+      Object.entries(partial).filter(([_, v]) => v !== undefined)
+    ) as Partial<RouteConfig>;
+
+    const config = await saveRouteConfig(user.userId, cleaned);
     return Response.json({ config });
   } catch (err) {
     return errorResponse(err);

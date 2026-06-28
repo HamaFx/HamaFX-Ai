@@ -17,7 +17,7 @@
 // GET /api/telegram/webhook — Returns webhook info and bot status.
 // POST /api/telegram/webhook — Receives Telegram updates.
 
-import { handleTelegramWebhook, setBotCommands, telegramApiCall } from '@hamafx/ai';
+import { handleTelegramWebhook, telegramApiCall } from '@hamafx/ai';
 import * as Sentry from '@sentry/nextjs';
 import { getServerEnv } from '@/lib/env';
 

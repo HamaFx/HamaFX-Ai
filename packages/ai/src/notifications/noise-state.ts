@@ -99,7 +99,7 @@ export class DbNoiseState implements NoiseState {
     const result = await db
       .delete(schema.notificationNoiseState)
       .where(lt(schema.notificationNoiseState.expiresAt, new Date()));
-    return result.rowCount ?? 0;
+    return (result as any).count ?? (result as any).rowCount ?? 0;
   }
 }
 

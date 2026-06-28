@@ -28,7 +28,8 @@ export const linkCommand: BotCommand = {
   aliases: [],
   description: 'Link your HamaFX account: /link <code>',
   handler: async (args: string[], ctx: BotContext): Promise<BotResponse> => {
-    if (args.length === 0) {
+    const code = args[0];
+    if (!code) {
       return {
         text: [
           '🔗 Link Your HamaFX Account',
@@ -43,8 +44,6 @@ export const linkCommand: BotCommand = {
         ].join('\n'),
       };
     }
-
-    const code = args[0];
 
     // We need the chatId from the context, but since the user isn't linked yet,
     // ctx.userId will be empty. We use a special context for linking.

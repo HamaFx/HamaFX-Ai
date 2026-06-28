@@ -26,13 +26,14 @@ export const priceCommand: BotCommand = {
   aliases: ['p'],
   description: 'Get current price: /price <symbol>',
   handler: async (args: string[]): Promise<BotResponse> => {
-    if (args.length === 0) {
+    const symbolStr = args[0];
+    if (!symbolStr) {
       return {
         text: 'Usage: /price <symbol>\nExample: /price XAUUSD',
       };
     }
 
-    const symbol = args[0].toUpperCase();
+    const symbol = symbolStr.toUpperCase();
 
     try {
       const db = getDb();

@@ -19,7 +19,6 @@
 // POST /api/portfolio/positions
 
 import {
-  closePosition,
   createPosition,
   getOpenPositionsWithPnL,
   listAllPositions,

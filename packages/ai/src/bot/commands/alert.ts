@@ -28,11 +28,10 @@ interface ParsedAlert {
 }
 
 function parseAlertArgs(args: string[]): ParsedAlert | null {
-  if (args.length < 3) return null;
+  const [symbolStr, operator, levelStr] = args;
+  if (!symbolStr || !operator || !levelStr) return null;
 
-  const symbol = args[0].toUpperCase();
-  const operator = args[1];
-  const levelStr = args[2];
+  const symbol = symbolStr.toUpperCase();
 
   let direction: 'above' | 'below';
   if (operator === '>' || operator === '>=') {

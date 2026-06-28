@@ -63,6 +63,8 @@ import {
   SummarizeThreadOutputSchema,
   TOOL_NAMES,
   VerifyCallOutputSchema,
+  GetPortfolioSnapshotOutputSchema,
+  GetSocialSentimentOutputSchema,
   type ToolName,
   type ToolOutput,
 } from '@hamafx/shared';
@@ -100,6 +102,8 @@ import { VerifyCallPart } from './verify-call';
 import { GetIntermarketResonancePart } from './get-intermarket-resonance';
 import { GetSystemDiagnosticsPart } from './get-system-diagnostics';
 import { RunSystemActionPart } from './run-system-action';
+import { GetPortfolioSnapshotPart } from './get-portfolio-snapshot';
+import { GetSocialSentimentPart } from './get-social-sentiment';
 
 /** State a part is in for the duration of a streamed tool call. */
 export type ToolPartState = 'loading' | 'done' | 'error';
@@ -157,6 +161,8 @@ export const partRegistry: { [K in ToolName]: ComponentType<ToolPartProps<K>> } 
   get_intermarket_resonance: GetIntermarketResonancePart,
   get_system_diagnostics: GetSystemDiagnosticsPart,
   run_system_action: RunSystemActionPart,
+  get_portfolio_snapshot: GetPortfolioSnapshotPart,
+  get_social_sentiment: GetSocialSentimentPart,
 };
 
 /**
@@ -202,6 +208,8 @@ const partSchemas: { [K in ToolName]: z.ZodType<ToolOutput<K>> } = {
   get_intermarket_resonance: GetIntermarketResonanceOutputSchema,
   get_system_diagnostics: GetSystemDiagnosticsOutputSchema,
   run_system_action: RunSystemActionOutputSchema,
+  get_portfolio_snapshot: GetPortfolioSnapshotOutputSchema,
+  get_social_sentiment: GetSocialSentimentOutputSchema,
 };
 
 /** Type guard: is `s` a known `ToolName`? */
