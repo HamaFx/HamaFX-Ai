@@ -53,7 +53,7 @@ Perfect for rapid local testing. This mode runs Postgres entirely in-process (`P
 
 ```bash
 # Clone the repository
-git clone https://github.com/HamaFx/HamaFX-Ai
+git clone https://github.com/HamaFx/HamaFX-Ai.git
 cd HamaFX-Ai
 
 # Install workspace dependencies
@@ -69,7 +69,7 @@ pnpm dev:local
 ```
 
 > [!TIP]
-> Sign up at `/auth/register` and connect your API keys on the `/onboarding` screen. Database credentials, session encryption keys, and cron authentication secrets are automatically generated and stored under `.hamafx/dev-secrets.json` on first boot.
+> Sign up at `/register` and connect your API keys on the `/onboarding` screen. Database credentials, session encryption keys, and cron authentication secrets are automatically generated and stored under `.hamafx/dev-secrets.json` on first boot. See [docs/13-first-run-setup.md](docs/13-first-run-setup.md) for details.
 
 ---
 
@@ -322,7 +322,7 @@ pnpm --filter @hamafx/web build
 pnpm format
 
 # Run AI Evaluation cases (Requires running server)
-pnpm --filter @hamafx/ai eval -- --base-url http://localhost:3000 --cookie "hfx_auth=..." --cases
+pnpm --filter @hamafx/ai eval -- --base-url http://localhost:3000 --cookie "authjs.session-token=..." --cases
 ```
 
 ---
