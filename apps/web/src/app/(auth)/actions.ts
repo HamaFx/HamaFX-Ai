@@ -172,6 +172,36 @@ export async function registerAction(prevState: unknown, formData: FormData) {
 
 // HIGH-05: Password reset flow
 
+async function sendPasswordResetEmail(to: string, resetUrl: string) {
+  const apiKey = process.env.RESEND_API_KEY;
+  const fromEmail = process.env.ALERT_FROM_EMAIL;
+  if (!apiKey || !fromEmail) {
+    console.warn('[auth] RESEND_API_KEY or ALERT_FROM_EMAIL not set — skipping reset email');
+    return;
+  }
+  try {
+    const res = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        from: fromEmail,
+        to: [to],
+        subject: '[HamaFX-Ai] Reset your password',
+        html: `<p>Click the link below to reset your password. This link expires in 1 hour.</p><p><a href="${resetUrl}">${resetUrl}</a></p>`,
+      }),
+    });
+    if (!res.ok) {
+      const text = await res.text().catch(() => '');
+      console.error(`[auth] Failed to send reset email: HTTP ${res.status} ${text.slice(0, 200)}`);
+    }
+  } catch (err) {
+    console.error('[auth] Failed to send reset email:', err);
+  }
+}
+
 export async function forgotPasswordAction(prevState: unknown, formData: FormData) {
   const raw = formData instanceof FormData ? Object.fromEntries(formData) : (formData ?? {});
   const email = typeof raw.email === 'string' ? raw.email.trim().toLowerCase() : '';
@@ -196,10 +226,12 @@ export async function forgotPasswordAction(prevState: unknown, formData: FormDat
         token: resetToken,
         expires: new Date(Date.now() + 60 * 60 * 1000), // 1 hour
       });
-      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://hamafx-ai.vercel.app';
+      const resetUrl = `${baseUrl}/reset-password?token=${resetToken}`;
       if (process.env.NODE_ENV !== 'production') {
-        console.info(`[reset] ${baseUrl}/reset-password?token=${resetToken}`);
+        console.info(`[reset] ${resetUrl}`);
       }
+      await sendPasswordResetEmail(email, resetUrl);
     } catch (err) {
       console.error('[auth] Failed to create reset token:', err);
     }
