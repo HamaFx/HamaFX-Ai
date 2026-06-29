@@ -1,6 +1,6 @@
 'use client';
 
-import { useActionState, useState } from 'react';
+import { useActionState, useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
@@ -10,10 +10,16 @@ import { Suspense } from 'react';
 
 function ResetPasswordForm() {
   const searchParams = useSearchParams();
-  const token = searchParams.get('token') || '';
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
+  const token = mounted ? (searchParams.get('token') || '') : '';
 
   const [state, action, pending] = useActionState(resetPasswordAction, { error: '' });
   const [password, setPassword] = useState('');
+
+  if (!mounted) {
+    return <div className="flex justify-center p-8"><span className="text-fg-subtle">Loading...</span></div>;
+  }
 
   if (!token) {
     return (
