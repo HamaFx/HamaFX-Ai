@@ -176,7 +176,7 @@ async function sendPasswordResetEmail(to: string, resetUrl: string) {
   const apiKey = process.env.RESEND_API_KEY;
   const fromEmail = process.env.ALERT_FROM_EMAIL;
   if (!apiKey || !fromEmail) {
-    console.warn('[auth] RESEND_API_KEY or ALERT_FROM_EMAIL not set — skipping reset email');
+    console.warn(`[auth] RESEND_API_KEY or ALERT_FROM_EMAIL not set — logging reset link instead: ${resetUrl}`);
     return;
   }
   try {
