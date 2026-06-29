@@ -43,7 +43,7 @@ export default async function NewsPage() {
       <div className="flex flex-col gap-4">
         <PageHeader
           title="News"
-          description="Headlines tagged for XAU / EUR / GBP / USD — Finnhub primary, Marketaux fallback."
+          description="Headlines tagged for XAU / EUR / GBP / USD from our market data feed."
         />
 
         {articles.length === 0 ? (

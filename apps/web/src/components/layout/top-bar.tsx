@@ -58,7 +58,7 @@ export function TopBar({ title, right }: TopBarProps) {
     >
       <div
         className={cn(
-          'glass-strong pointer-events-auto flex w-full max-w-[400px] items-center gap-2 rounded-full border border-divider/60 px-2 shadow-lg transition-all',
+          'glass-strong pointer-events-auto flex w-full max-w-2xl items-center gap-2 rounded-full border border-divider/60 px-2 shadow-lg transition-all',
         )}
         style={{
           height: 'var(--topbar-h)',

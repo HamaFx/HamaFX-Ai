@@ -36,28 +36,27 @@ export function SettingsSection({
   return (
     <section
       aria-labelledby={`section-${title.toLowerCase().replace(/\s+/g, '-')}`}
-      className="border border-divider bg-bg-elev-1 rounded-lg flex flex-col gap-4 p-4"
+      className="flex flex-col gap-3"
     >
-      <header className="flex items-center gap-3">
+      <header className="flex items-center gap-3 px-0.5">
         {icon ? (
           <span
-            className="text-fg inline-flex h-9 w-9 items-center justify-center rounded-xl"
+            className="text-fg inline-flex h-7 w-7 items-center justify-center rounded-lg"
             style={{
               background: iconColor,
-              boxShadow: 'inset 0 1px 0 0 oklch(100% 0 0 / 0.08)',
             }}
           >
             {icon}
           </span>
         ) : null}
-        <div className="flex flex-col">
+        <div className="flex flex-col gap-0.5">
           <h2
             id={`section-${title.toLowerCase().replace(/\s+/g, '-')}`}
-            className="text-fg text-base font-semibold tracking-tight"
+            className="text-fg text-sm font-semibold tracking-tight"
           >
             {title}
           </h2>
-          {description ? <p className="text-fg-subtle text-xs">{description}</p> : null}
+          {description ? <p className="text-fg-subtle text-caption">{description}</p> : null}
         </div>
       </header>
       <div className="flex flex-col gap-3">{children}</div>

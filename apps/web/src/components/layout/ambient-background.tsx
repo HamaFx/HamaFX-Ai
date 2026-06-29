@@ -26,7 +26,11 @@
 //
 // `intensity="vivid"` brings back the three-orb composition for the
 // login surface, where chromatic interest is a feature.
+//
+// Noise uses CSS repeating-conic-gradient instead of feTurbulence to
+// avoid the known iOS-Safari compositing cost of SVG turbulence filters.
 
+import { useId } from 'react';
 import { cn } from '@/lib/cn';
 
 type Intensity = 'subtle' | 'vivid';
@@ -48,6 +52,7 @@ export function AmbientBackground({
     contained ? 'absolute inset-0' : 'fixed inset-0 -z-10',
     className,
   );
+  const noiseId = `ambient-noise-${useId()}`;
 
   if (intensity === 'subtle') {
     // Default app shell: one tiny warm whisper, top-right only. No noise
@@ -63,7 +68,7 @@ export function AmbientBackground({
     );
   }
 
-  // Vivid (login marquee): three orbs + faint noise.
+  // Vivid (login marquee): three orbs + faint CSS noise overlay.
   return (
     <div aria-hidden="true" className={root}>
       <div
@@ -80,23 +85,15 @@ export function AmbientBackground({
           style={{ background: 'oklch(74% 0.14 230 / 1)', opacity: 0.08 }}
         />
       </div>
-      <svg
-        className="absolute inset-0 h-full w-full mix-blend-overlay"
-        style={{ opacity: 0.04 }}
-        xmlns="http://www.w3.org/2000/svg"
-        aria-hidden="true"
-      >
-        <filter id="hama-noise">
-          <feTurbulence
-            type="fractalNoise"
-            baseFrequency="0.9"
-            numOctaves="2"
-            stitchTiles="stitch"
-          />
-          <feColorMatrix values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.5 0" />
-        </filter>
-        <rect width="100%" height="100%" filter="url(#hama-noise)" />
-      </svg>
+      <div
+        id={noiseId}
+        className="absolute inset-0 h-full w-full"
+        style={{
+          opacity: 0.03,
+          backgroundImage: `repeating-conic-gradient(#fff 0.03%, transparent 0.04%)`,
+          mixBlendMode: 'overlay',
+        }}
+      />
     </div>
   );
 }

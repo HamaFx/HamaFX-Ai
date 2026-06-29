@@ -22,6 +22,24 @@ import type { EventCurrency, Importance } from '@hamafx/shared';
 
 import { cn } from '@/lib/cn';
 
+function handleRadioKeyDown(e: React.KeyboardEvent) {
+  const radios = Array.from(e.currentTarget.querySelectorAll<HTMLButtonElement>('[role="radio"]'));
+  const currentIdx = radios.findIndex(r => r === document.activeElement);
+  if (currentIdx === -1) return;
+  let nextIdx: number;
+  if (e.key === 'ArrowRight') {
+    e.preventDefault();
+    nextIdx = (currentIdx + 1) % radios.length;
+  } else if (e.key === 'ArrowLeft') {
+    e.preventDefault();
+    nextIdx = (currentIdx - 1 + radios.length) % radios.length;
+  } else {
+    return;
+  }
+  radios[nextIdx]?.focus();
+  radios[nextIdx]?.click();
+}
+
 export type ImportanceFilter = Importance | 'all';
 export type CurrencyFilter = EventCurrency | 'all';
 
@@ -71,6 +89,7 @@ export function CalendarToolbar({
       <div
         role="radiogroup"
         aria-label="Filter by importance"
+        onKeyDown={handleRadioKeyDown}
         className="scrollbar-hide -mx-4 flex gap-2 overflow-x-auto px-4"
       >
         {IMPORTANCE.map((opt) => {
@@ -81,6 +100,7 @@ export function CalendarToolbar({
               type="button"
               role="radio"
               aria-checked={active}
+              tabIndex={active ? 0 : -1}
               onClick={() => onImportance(opt.value)}
               className={cn(
                 'inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full border px-3 text-xs font-semibold transition-colors',
@@ -103,6 +123,7 @@ export function CalendarToolbar({
         <div
           role="radiogroup"
           aria-label="Filter by currency"
+          onKeyDown={handleRadioKeyDown}
           className="scrollbar-hide flex flex-1 gap-2 overflow-x-auto"
         >
           {CURRENCIES.map((c) => {
@@ -113,6 +134,7 @@ export function CalendarToolbar({
                 type="button"
                 role="radio"
                 aria-checked={active}
+                tabIndex={active ? 0 : -1}
                 onClick={() => onCurrency(c.value)}
                 className={cn(
                   'inline-flex h-9 shrink-0 items-center rounded-full border px-3 text-body-sm font-semibold uppercase tabular-nums transition-colors',

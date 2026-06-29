@@ -84,6 +84,10 @@ export default async function ModelsSettingsPage() {
   const initialVisionModel = userRow?.visionModel ?? null;
   const initialEmbeddingModel = userRow?.embeddingModel ?? null;
 
+  const allModels = catalog.providers.flatMap((p) =>
+    p.models.map((m) => ({ ...m, providerName: p.displayName })),
+  );
+
   return (
     <div className="flex flex-col gap-6 max-w-2xl">
       <div className="flex items-baseline justify-between gap-4">
@@ -121,6 +125,70 @@ export default async function ModelsSettingsPage() {
         <div className="border-t border-divider p-4 flex flex-col gap-4">
           <VisionModelPicker initialValue={initialVisionModel} providers={configured} />
           <EmbeddingModelPicker initialValue={initialEmbeddingModel} providers={configured} />
+        </div>
+      </details>
+
+      <details className="border border-divider bg-bg-elev-1 rounded-lg overflow-hidden">
+        <summary aria-label="Toggle model comparison table" className="cursor-pointer select-none px-4 py-3 flex items-center justify-between gap-3 hover:bg-bg-elev-2 transition-colors">
+          <div className="flex flex-col">
+            <span className="text-sm font-medium text-fg">
+              Model Comparison
+            </span>
+            <span className="text-caption text-fg-subtle">
+              Compare prices, capabilities, and tiers across all configured providers.
+            </span>
+          </div>
+          <span className="text-caption text-fg-subtle">▾</span>
+        </summary>
+        <div className="border-t border-divider overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-divider">
+                <th className="text-left px-4 py-2.5 text-fg-muted font-medium">Provider</th>
+                <th className="text-left px-4 py-2.5 text-fg-muted font-medium">Model</th>
+                <th className="text-left px-4 py-2.5 text-fg-muted font-medium">Tier</th>
+                <th className="text-right px-4 py-2.5 text-fg-muted font-medium">Input / 1M tok</th>
+                <th className="text-right px-4 py-2.5 text-fg-muted font-medium">Output / 1M tok</th>
+                <th className="text-center px-4 py-2.5 text-fg-muted font-medium">Capabilities</th>
+              </tr>
+            </thead>
+            <tbody>
+              {allModels.map((m) => (
+                <tr key={`${m.providerName}:${m.modelId}`} className="border-b border-divider/50 last:border-0 hover:bg-bg-elev-2/40">
+                  <td className="px-4 py-2.5 text-fg font-medium">{m.providerName}</td>
+                  <td className="px-4 py-2.5 text-fg font-mono text-xs">{m.label ?? m.modelId}</td>
+                  <td className="px-4 py-2.5">
+                    <span className="inline-flex items-center rounded-full bg-bg-elev-2 px-2 py-0.5 text-caption font-medium text-fg-subtle border border-divider">
+                      {m.tier ?? 'flagship'}
+                    </span>
+                  </td>
+                  <td className="px-4 py-2.5 text-right text-fg tabular-nums">
+                    {m.inputPerMTokUsd != null ? `$${m.inputPerMTokUsd.toFixed(2)}` : '—'}
+                  </td>
+                  <td className="px-4 py-2.5 text-right text-fg tabular-nums">
+                    {m.outputPerMTokUsd != null ? `$${m.outputPerMTokUsd.toFixed(2)}` : '—'}
+                  </td>
+                  <td className="px-4 py-2.5 text-center">
+                    <div className="flex items-center justify-center gap-1.5">
+                      {m.tier !== 'embedding' ? (
+                        <span className="inline-flex items-center rounded-full bg-bull/10 text-bull px-1.5 py-0.5 text-caption font-medium">Chat</span>
+                      ) : null}
+                      {m.tier === 'embedding' ? (
+                        <span className="inline-flex items-center rounded-full bg-bg-elev-3 text-fg-muted px-1.5 py-0.5 text-caption font-medium">Embed</span>
+                      ) : null}
+                    </div>
+                  </td>
+                </tr>
+              ))}
+              {allModels.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="px-4 py-6 text-center text-sm text-fg-subtle">
+                    No models available. Configure an API key first.
+                  </td>
+                </tr>
+              ) : null}
+            </tbody>
+          </table>
         </div>
       </details>
 

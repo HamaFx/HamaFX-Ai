@@ -30,6 +30,7 @@ export const authConfig: NextAuthConfig = {
   // env var is set, in which case NextAuth falls back to reading
   // AUTH_SECRET itself.
   ...(nextAuthSecret ? { secret: nextAuthSecret } : {}),
+  trustHost: true,
   session: { strategy: 'jwt', maxAge: 30 * 24 * 60 * 60 }, // 30 days (FEAT-04: remember me)
   pages: {
     signIn: '/login',

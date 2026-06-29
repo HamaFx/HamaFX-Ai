@@ -19,6 +19,8 @@ import Image from 'next/image';
 
 import { AmbientBackground } from '@/components/layout/ambient-background';
 
+export const dynamic = 'force-dynamic';
+
 export const metadata: Metadata = {
   title: {
     template: '%s | HamaFX-Ai',
@@ -37,7 +39,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
     >
       <AmbientBackground intensity="vivid" />
 
-      <div className="relative z-10 mx-auto flex w-full max-w-sm flex-1 flex-col justify-between gap-12 py-8">
+      <div className="relative z-10 mx-auto flex w-full max-w-sm flex-1 flex-col justify-center gap-8 py-8">
         <header className="flex flex-col items-center gap-4 text-center">
           <Image
             src="/icons/icon-192.png"
@@ -56,7 +58,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
           </div>
         </header>
 
-        <div className="flex flex-col gap-6">{children}</div>
+        <div className="card-premium p-6 flex flex-col gap-6">{children}</div>
       </div>
     </main>
   );

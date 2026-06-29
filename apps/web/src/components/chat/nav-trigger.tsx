@@ -33,7 +33,7 @@ export const NavTrigger = forwardRef<HTMLButtonElement, ButtonHTMLAttributes<HTM
           ref={ref}
           type="button"
           aria-label="Open menu"
-          className="text-fg-muted hover:text-fg hover:bg-bg-elev-2 inline-flex size-11 shrink-0 items-center justify-center rounded-xl transition-colors"
+          className="text-fg-muted hover:text-fg hover:bg-bg-elev-2 active:scale-95 inline-flex size-11 shrink-0 items-center justify-center rounded-xl transition-all"
           {...props}
         >
           <Menu className="size-5" />

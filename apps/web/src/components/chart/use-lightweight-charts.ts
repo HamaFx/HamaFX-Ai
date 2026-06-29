@@ -24,7 +24,10 @@ export function useLightweightCharts() {
 
   useEffect(() => {
     if (!lcPromise) {
-      lcPromise = import('lightweight-charts');
+      lcPromise = import('lightweight-charts').catch((err) => {
+        lcPromise = null;
+        throw err;
+      });
     }
     let active = true;
     lcPromise.then((module) => {

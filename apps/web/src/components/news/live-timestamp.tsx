@@ -16,9 +16,8 @@
  * limitations under the License.
  */
 
-import { useEffect, useState } from 'react';
-
 import { formatRelative } from '@/lib/format';
+import { useNow } from '@/components/providers/time-provider';
 
 interface LiveTimestampProps {
   ms: number;
@@ -28,11 +27,7 @@ interface LiveTimestampProps {
 }
 
 export function LiveTimestamp({ ms, prefix, className }: LiveTimestampProps) {
-  const [, force] = useState(0);
-  useEffect(() => {
-    const id = setInterval(() => force((v) => v + 1), 30_000);
-    return () => clearInterval(id);
-  }, []);
+  useNow();
   return (
     <span className={className}>
       {prefix ? `${prefix} ` : null}

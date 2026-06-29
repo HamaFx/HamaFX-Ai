@@ -31,6 +31,8 @@
 import type { SetAlertOutput } from '@hamafx/shared';
 import { Link } from 'next-view-transitions';
 
+import { cn } from '@/lib/cn';
+
 interface SetAlertPartProps {
   /** Tool output, or `null` while streaming / before completion. */
   output: SetAlertOutput | null;
@@ -62,12 +64,12 @@ export function SetAlertPart({ output, state, errorMessage }: SetAlertPartProps)
       <Link
         href={href}
         prefetch
-        className={
-          'focus-visible:ring-brand mt-2 inline-flex min-h-[44px] min-w-[44px] ' +
-          'items-center justify-center rounded-md px-3 text-sm font-medium' +
-          'text-brand underline-offset-2 hover:underline' +
-          'focus-visible:outline-none focus-visible:ring-2'
-        }
+        className={cn(
+          'focus-visible:ring-brand mt-2 inline-flex min-h-[44px] min-w-[44px]',
+          'items-center justify-center rounded-md px-3 text-sm font-medium',
+          'text-brand underline-offset-2 hover:underline',
+          'focus-visible:outline-none focus-visible:ring-2',
+        )}
       >
         View in Alerts →
       </Link>

@@ -30,7 +30,7 @@ export async function AgentCard() {
   return (
     <Link
       href="/settings/agent"
-      className="border-divider/60 bg-bg-elev-1 hover:bg-bg-elev-2 flex items-center gap-3 rounded-full border p-3 transition-colors focus-visible:ring-brand focus:outline-none focus-visible:ring-2"
+      className="border-divider/60 bg-bg-elev-1 hover:bg-bg-elev-2 flex items-center gap-3 rounded-lg border p-3 transition-colors focus-visible:ring-brand focus:outline-none focus-visible:ring-2"
     >
       <span
         aria-hidden="true"

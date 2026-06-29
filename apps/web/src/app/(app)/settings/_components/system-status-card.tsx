@@ -19,6 +19,7 @@
 // without diving into the test buttons. Server component; reads env vars
 // directly + counts push subscriptions.
 
+import { cache } from 'react';
 import { listPushSubscriptions } from '@hamafx/ai';
 import { getDb } from '@hamafx/db';
 import { getMarketPhase, describeMarketPhase } from '@hamafx/shared';
@@ -34,13 +35,15 @@ interface ChannelStatus {
   detail: string;
 }
 
-async function buildStatuses(userId: string): Promise<{
+interface BuildStatusResult {
   channels: ChannelStatus[];
   pushCount: number;
   databaseConnected: boolean;
   stuckJobs: number;
   recentErrors: number;
-}> {
+}
+
+const buildStatuses = cache(async (userId: string): Promise<BuildStatusResult> => {
   const env = getServerEnv();
   const channels: ChannelStatus[] = [
     {
@@ -106,7 +109,7 @@ async function buildStatuses(userId: string): Promise<{
   }
 
   return { channels, pushCount, databaseConnected, stuckJobs, recentErrors };
-}
+});
 
 export async function SystemStatusCard({ userId }: { userId: string }) {
   const { channels, databaseConnected, stuckJobs, recentErrors } = await buildStatuses(userId);

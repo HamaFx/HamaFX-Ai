@@ -267,7 +267,7 @@ export function Composer({
     charCountTone === 'danger'
       ? 'text-bear font-semibold'
       : charCountTone === 'warn'
-        ? 'text-amber-400 font-medium'
+        ? 'text-warn font-medium'
         : 'text-fg-subtle';
 
   return (
@@ -325,7 +325,7 @@ export function Composer({
         ) : null}
 
         {error ? (
-          <p role="alert" className="text-bear px-5 pt-2 text-xs">
+          <p id="composer-error" role="alert" className="text-bear px-5 pt-2 text-xs">
             {error}
           </p>
         ) : null}
@@ -389,6 +389,7 @@ export function Composer({
             <textarea
               ref={ref}
               aria-label="Chat message input"
+              aria-describedby={error ? 'composer-error' : undefined}
               value={value}
               onChange={(e) => setValue(e.target.value)}
               onFocus={() => setFocused(true)}

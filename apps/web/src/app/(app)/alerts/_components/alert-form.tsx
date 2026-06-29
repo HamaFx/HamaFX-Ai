@@ -25,7 +25,7 @@
 // (h-12) primary button so it lives in the thumb zone at the bottom of
 // the drawer.
 import { SYMBOLS, TIMEFRAMES, type Symbol, type Timeframe } from '@hamafx/shared';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { z } from 'zod';
 
@@ -85,12 +85,97 @@ export function AlertForm({ initialSymbol, onCreated }: AlertFormProps) {
   const [note, setNote] = useState<string>('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [testing, setTesting] = useState(false);
+
+  // Inline validation — tracks which fields have been blurred
+  const [touched, setTouched] = useState<Set<string>>(new Set());
+  const touch = (field: string) => setTouched((prev) => new Set(prev).add(field));
 
   const [channels, setChannels] = useState<('email'|'telegram')[]>(['email']);
   // Phase C — UX_UPGRADE_PLAN.md item 17. Snooze window in hours
   // (0 = one-shot). Stored as a string so the input can show an
   // empty placeholder; parsed at submit time.
   const [snoozeHours, setSnoozeHours] = useState<string>('');
+
+  const fieldErrors = useMemo(() => {
+    const errs: Record<string, string | null> = {};
+    const levelNum = Number(level);
+    if (touched.has('level')) {
+      if (!level) errs.level = 'Level is required';
+      else if (!Number.isFinite(levelNum) || levelNum <= 0) errs.level = 'Enter a valid positive number';
+    }
+    if (type === 'indicatorCross' && touched.has('indicator')) {
+      if (!indicator.trim()) errs.indicator = 'Indicator is required';
+    }
+    if (touched.has('channels') && channels.length === 0) {
+      errs.channels = 'Select at least one delivery method';
+    }
+    if (touched.has('note') && note.length > 1000) {
+      errs.note = 'Note must be under 1000 characters';
+    }
+    return errs;
+  }, [level, indicator, channels, note, touched, type]);
+
+  async function testAlert() {
+    setTesting(true);
+    setError(null);
+    setTouched(new Set(['level', 'indicator', 'channels']));
+    const parsedSnooze = snoozeHours ? Number(snoozeHours) : 0;
+    const ruleObj =
+      type === 'priceCross'
+        ? { type: 'priceCross' as const, symbol, level: level ? Number(level) : NaN, direction }
+        : type === 'candleClose'
+          ? { type: 'candleClose' as const, symbol, tf, level: level ? Number(level) : NaN, direction }
+          : {
+              type: 'indicatorCross' as const,
+              symbol,
+              tf,
+              indicator,
+              level: level ? Number(level) : NaN,
+              direction,
+            };
+    const validation = alertSchema.safeParse({
+      rule: ruleObj,
+      channels,
+      note: note.trim() || null,
+      snoozeHours: parsedSnooze,
+    });
+    if (!validation.success) {
+      setTesting(false);
+      setError(validation.error.errors[0]?.message ?? 'Invalid input');
+      return;
+    }
+    try {
+      const res = await fetchCsrf('/api/alerts/preview', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ rule: validation.data.rule, lookbackDays: 90 }),
+      });
+      if (!res.ok) {
+        const body = (await res.json().catch(() => null)) as { error?: { message?: string } } | null;
+        throw new Error(body?.error?.message ?? `HTTP ${res.status}`);
+      }
+      const data = (await res.json()) as { count?: number; unsupported?: boolean };
+      if (data.unsupported) {
+        toast.success('Configuration valid', {
+          description: 'Rule syntax is correct (preview not available for indicator rules)',
+        });
+      } else {
+        const count = data.count ?? 0;
+        toast.success('Configuration valid', {
+          description: count > 0
+            ? `Rule verified — would have triggered ${count} time${count === 1 ? '' : 's'} in 90 days`
+            : 'Rule is valid (no historical triggers in 90-day lookback)',
+        });
+      }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Test failed';
+      toast.error('Test failed', { description: message });
+      setError(message);
+    } finally {
+      setTesting(false);
+    }
+  }
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -218,8 +303,10 @@ export function AlertForm({ initialSymbol, onCreated }: AlertFormProps) {
           <Input
             value={indicator}
             onChange={(e) => setIndicator(e.target.value)}
+            onBlur={() => touch('indicator')}
             placeholder="rsi:14, ema:50, macd:12,26,9"
           />
+          {fieldErrors.indicator ? <p className="text-bear text-xs">{fieldErrors.indicator}</p> : null}
         </div>
       ) : null}
 
@@ -244,9 +331,11 @@ export function AlertForm({ initialSymbol, onCreated }: AlertFormProps) {
           id="alert-level"
           value={level}
           onChange={(e) => setLevel(e.target.value)}
+          onBlur={() => touch('level')}
           inputMode="decimal"
           placeholder={symbol === 'XAUUSD' ? 'e.g. 2400' : 'e.g. 1.0850'}
         />
+        {fieldErrors.level ? <p className="text-bear text-xs">{fieldErrors.level}</p> : null}
       </div>
 
       {/* Phase B — UX_UPGRADE_PLAN.md item 10. Live preview of how
@@ -274,6 +363,7 @@ export function AlertForm({ initialSymbol, onCreated }: AlertFormProps) {
                 const c = 'email';
                 setChannels(e.target.checked ? [...channels, c] : channels.filter((x) => x !== c));
               }}
+              onBlur={() => touch('channels')}
             />
             Email
           </label>
@@ -286,10 +376,12 @@ export function AlertForm({ initialSymbol, onCreated }: AlertFormProps) {
                 const c = 'telegram';
                 setChannels(e.target.checked ? [...channels, c] : channels.filter((x) => x !== c));
               }}
+              onBlur={() => touch('channels')}
             />
             Telegram
           </label>
         </div>
+        {fieldErrors.channels ? <p className="text-bear text-xs">{fieldErrors.channels}</p> : null}
       </div>
 
       <div className="flex flex-col gap-2">
@@ -300,9 +392,11 @@ export function AlertForm({ initialSymbol, onCreated }: AlertFormProps) {
           id="alert-note"
           value={note}
           onChange={(e) => setNote(e.target.value)}
+          onBlur={() => touch('note')}
           placeholder="why am I watching this level?"
           maxLength={280}
         />
+        {fieldErrors.note ? <p className="text-bear text-xs">{fieldErrors.note}</p> : null}
       </div>
 
       {/*
@@ -333,15 +427,28 @@ export function AlertForm({ initialSymbol, onCreated }: AlertFormProps) {
 
       {error ? <p className="text-bear text-sm">{error}</p> : null}
 
-      <Button
-        type="submit"
-        disabled={submitting || !level}
-        size="lg"
-        loading={submitting}
-        className="mt-2"
-      >
-        {submitting ? 'Creating…' : 'Create alert'}
-      </Button>
+      <div className="flex flex-col gap-2 mt-2">
+        <Button
+          type="submit"
+          disabled={submitting || !level}
+          size="lg"
+          loading={submitting}
+          className="w-full"
+        >
+          {submitting ? 'Creating…' : 'Create alert'}
+        </Button>
+        <Button
+          type="button"
+          variant="secondary"
+          size="sm"
+          disabled={testing || !level}
+          loading={testing}
+          onClick={() => void testAlert()}
+          className="w-full"
+        >
+          {testing ? 'Testing…' : 'Test Alert'}
+        </Button>
+      </div>
     </form>
   );
 }

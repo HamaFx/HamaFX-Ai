@@ -25,6 +25,8 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Plus, BookOpen, Activity, RefreshCw } from 'lucide-react';
 import { useState } from 'react';
 
+import { cn } from '@/lib/cn';
+
 import {
   Drawer,
   DrawerContent,
@@ -150,8 +152,5 @@ export function JournalView() {
   );
 }
 
-// Inline class merge helper to prevent typescript lint dependencies
-function cn(...classes: unknown[]) {
-  return classes.filter(Boolean).join(' ');
-}
+
 

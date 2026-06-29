@@ -1,31 +1,19 @@
 'use client';
 
-/**
- * Copyright 2026 HamaFX
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 import React, { createContext, useContext, useCallback, useMemo } from 'react';
 import { useLocalStorage } from '@/hooks/use-local-storage';
 
-interface BookmarksContextValue {
+interface BookmarksState {
   bookmarks: string[];
   isBookmarked: (id: string) => boolean;
+}
+
+interface BookmarksActions {
   toggleBookmark: (id: string) => void;
 }
 
-const BookmarksContext = createContext<BookmarksContextValue | null>(null);
+const StateContext = createContext<BookmarksState | null>(null);
+const ActionsContext = createContext<BookmarksActions | null>(null);
 
 const STORAGE_KEY = 'hamafx:news:bookmarks';
 
@@ -48,22 +36,41 @@ export function BookmarksProvider({ children }: { children: React.ReactNode }) {
     });
   }, [setBookmarkIds]);
 
-  const value = useMemo(
-    () => ({
-      bookmarks: bookmarkIds,
-      isBookmarked,
-      toggleBookmark,
-    }),
-    [bookmarkIds, isBookmarked, toggleBookmark],
+  const state = useMemo(
+    () => ({ bookmarks: bookmarkIds, isBookmarked }),
+    [bookmarkIds, isBookmarked],
   );
 
-  return <BookmarksContext.Provider value={value}>{children}</BookmarksContext.Provider>;
+  const actions = useMemo(
+    () => ({ toggleBookmark }),
+    [toggleBookmark],
+  );
+
+  return (
+    <StateContext.Provider value={state}>
+      <ActionsContext.Provider value={actions}>
+        {children}
+      </ActionsContext.Provider>
+    </StateContext.Provider>
+  );
 }
 
-export function useBookmarksContext() {
-  const context = useContext(BookmarksContext);
+function useBookmarksState(): BookmarksState {
+  const context = useContext(StateContext);
   if (!context) {
-    throw new Error('useBookmarksContext must be used within a BookmarksProvider');
+    throw new Error('useBookmarksState must be used within a BookmarksProvider');
   }
   return context;
+}
+
+function useBookmarksActions(): BookmarksActions {
+  const context = useContext(ActionsContext);
+  if (!context) {
+    throw new Error('useBookmarksActions must be used within a BookmarksProvider');
+  }
+  return context;
+}
+
+export function useBookmarksContext(): BookmarksState & BookmarksActions {
+  return { ...useBookmarksState(), ...useBookmarksActions() };
 }

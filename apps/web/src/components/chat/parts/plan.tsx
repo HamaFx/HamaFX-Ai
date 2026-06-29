@@ -55,6 +55,7 @@ export function PlanPart({ plan }: PlanPartProps) {
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
+        aria-controls="plan-content"
         className="text-fg-muted hover:text-fg focus-visible:ring-2 focus-visible:ring-brand rounded-md flex items-center gap-2 text-left text-body-sm font-medium tabular-nums focus:outline-none"
       >
         {open ? (
@@ -69,7 +70,7 @@ export function PlanPart({ plan }: PlanPartProps) {
       </button>
 
       {open ? (
-        <div className="flex flex-col gap-2 pt-1">
+        <div id="plan-content" className="flex flex-col gap-2 pt-1">
           {plan.steps.length > 0 ? (
             <ol className="text-fg-muted ml-6 flex flex-col gap-1 text-xs">
               {plan.steps.map((s, i) => (

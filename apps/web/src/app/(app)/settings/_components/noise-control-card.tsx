@@ -22,7 +22,7 @@
 // quiet hours, min severity, cooldown, dedup TTL, and daily digest mode.
 
 import { Bell, Moon, Clock, Filter, Zap } from 'lucide-react';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Switch } from '@/components/ui/switch';
 import { cn } from '@/lib/cn';
 import type { NoiseConfig, Severity } from '@hamafx/shared';
@@ -47,21 +47,28 @@ export function NoiseControlCard({ initialConfig }: { initialConfig?: NoiseConfi
     },
   );
   const [saving, setSaving] = useState(false);
+  const savingRef = useRef(false);
+
+  // Debounced save: fires 300ms after config stops changing
+  useEffect(() => {
+    if (savingRef.current) return;
+    const timer = setTimeout(() => {
+      setSaving(true);
+      savingRef.current = true;
+      fetch('/api/notifications/noise-config', {
+        method: 'PUT',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(config),
+      })
+        .then(() => { setSaving(false); savingRef.current = false; })
+        .catch(() => { setSaving(false); savingRef.current = false; });
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [config]);
 
   const update = useCallback(
     (updates: Partial<NoiseConfig>) => {
-      setConfig((prev) => {
-        const next = { ...prev, ...updates };
-        setSaving(true);
-        fetch('/api/notifications/noise-config', {
-          method: 'PUT',
-          headers: { 'content-type': 'application/json' },
-          body: JSON.stringify(updates),
-        })
-          .then(() => setSaving(false))
-          .catch(() => setSaving(false));
-        return next;
-      });
+      setConfig((prev) => ({ ...prev, ...updates }));
     },
     [],
   );
@@ -105,27 +112,29 @@ export function NoiseControlCard({ initialConfig }: { initialConfig?: NoiseConfi
         {config.quietHours && (
           <div className="flex items-center gap-2 pl-6">
             <Clock className="size-3.5 text-fg-muted" />
-            <input
-              type="time"
-              value={config.quietHours.start}
-              onChange={(e) =>
-                update({
-                  quietHours: { ...config.quietHours!, start: e.target.value },
-                })
-              }
-              className="rounded border border-border bg-surface px-2 py-1 text-sm text-fg"
-            />
+        <input
+          type="time"
+          value={config.quietHours.start}
+          onChange={(e) =>
+            update({
+              quietHours: { ...config.quietHours!, start: e.target.value },
+            })
+          }
+          aria-label="Quiet hours start time"
+          className="rounded border border-border bg-surface px-2 py-1 text-sm text-fg"
+        />
             <span className="text-fg-muted text-sm">to</span>
-            <input
-              type="time"
-              value={config.quietHours.end}
-              onChange={(e) =>
-                update({
-                  quietHours: { ...config.quietHours!, end: e.target.value },
-                })
-              }
-              className="rounded border border-border bg-surface px-2 py-1 text-sm text-fg"
-            />
+        <input
+          type="time"
+          value={config.quietHours.end}
+          onChange={(e) =>
+            update({
+              quietHours: { ...config.quietHours!, end: e.target.value },
+            })
+          }
+          aria-label="Quiet hours end time"
+          className="rounded border border-border bg-surface px-2 py-1 text-sm text-fg"
+        />
           </div>
         )}
       </div>
@@ -192,6 +201,7 @@ export function NoiseControlCard({ initialConfig }: { initialConfig?: NoiseConfi
           max={86400}
           value={config.cooldownSeconds}
           onChange={(e) => update({ cooldownSeconds: Number(e.target.value) })}
+          aria-label="Cooldown in seconds"
           className="ml-6 w-32 rounded border border-border bg-surface px-2 py-1 text-sm text-fg"
         />
       </div>
@@ -208,19 +218,21 @@ export function NoiseControlCard({ initialConfig }: { initialConfig?: NoiseConfi
           max={86400}
           value={config.dedupTtlSeconds}
           onChange={(e) => update({ dedupTtlSeconds: Number(e.target.value) })}
+          aria-label="Dedup window in seconds"
           className="ml-6 w-32 rounded border border-border bg-surface px-2 py-1 text-sm text-fg"
         />
       </div>
 
       {/* Daily Digest */}
       <div className="flex items-center gap-2">
-        <span className="text-sm font-medium text-fg">Daily digest mode</span>
+        <span className="text-sm font-medium text-fg" id="daily-digest-label">Daily digest mode</span>
         <Switch
           checked={config.dailyDigestMode}
           onCheckedChange={(v) => update({ dailyDigestMode: v })}
           srLabel="Toggle daily digest mode"
+          aria-describedby="daily-digest-hint"
         />
-        <span className="text-xs text-fg-muted">
+        <span id="daily-digest-hint" className="text-xs text-fg-muted">
           Batch non-critical notifications into a daily summary
         </span>
       </div>

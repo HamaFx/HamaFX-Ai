@@ -21,13 +21,15 @@
 // drawer.
 
 import { SYMBOLS, type Symbol, type TradeSide } from '@hamafx/shared';
-import { useState } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { toast } from 'sonner';
 import { z } from 'zod';
+import { X, Plus } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Segmented } from '@/components/ui/segmented';
+import { cn } from '@/lib/cn';
 import { fetchCsrf } from '@/lib/csrf';
 
 const entrySchema = z.object({
@@ -52,9 +54,49 @@ export function EntryForm({ onCreated }: EntryFormProps) {
   const [target, setTarget] = useState<string>('');
   const [size, setSize] = useState<string>('');
   const [notes, setNotes] = useState<string>('');
-  const [tagsInput, setTagsInput] = useState<string>('');
+  const [tags, setTags] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string | null>>({
+    entry: null,
+    stop: null,
+    target: null,
+  });
+
+  function validateEntry(v: string): string | null {
+    const n = Number(v);
+    if (!v) return 'Entry price is required';
+    if (!Number.isFinite(n) || n <= 0) return 'Entry must be positive';
+    return null;
+  }
+
+  function validateStop(v: string): string | null {
+    if (!v) return null;
+    const n = Number(v);
+    if (!Number.isFinite(n) || n <= 0) return 'Stop must be positive';
+    const entryNum = Number(entry);
+    if (Number.isFinite(entryNum)) {
+      if (side === 'long' && n >= entryNum) return 'Long stop must be below entry';
+      if (side === 'short' && n <= entryNum) return 'Short stop must be above entry';
+    }
+    return null;
+  }
+
+  function validateTarget(v: string): string | null {
+    if (!v) return null;
+    const n = Number(v);
+    if (!Number.isFinite(n) || n <= 0) return 'Target must be positive';
+    const entryNum = Number(entry);
+    if (Number.isFinite(entryNum)) {
+      if (side === 'long' && n <= entryNum) return 'Long target must be above entry';
+      if (side === 'short' && n >= entryNum) return 'Short target must be below entry';
+    }
+    return null;
+  }
+
+  function setFieldError(field: string, err: string | null) {
+    setFieldErrors((prev) => ({ ...prev, [field]: err }));
+  }
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -69,10 +111,7 @@ export function EntryForm({ onCreated }: EntryFormProps) {
       target: target ? Number(target) : null,
       size: size ? Number(size) : null,
       notes: notes.trim() || null,
-      tags: tagsInput
-        .split(',')
-        .map((t) => t.trim())
-        .filter((t) => t.length > 0),
+      tags,
     };
 
     const validation = entrySchema.safeParse(parsed);
@@ -125,7 +164,7 @@ export function EntryForm({ onCreated }: EntryFormProps) {
       setTarget('');
       setSize('');
       setNotes('');
-      setTagsInput('');
+      setTags([]);
       toast.success('Trade logged', { description: `${symbol} ${side} @ ${data.entry}` });
       onCreated?.();
     } catch (err) {
@@ -152,7 +191,11 @@ export function EntryForm({ onCreated }: EntryFormProps) {
       <Segmented<TradeSide>
         label="Side"
         value={side}
-        onChange={setSide}
+        onChange={(v) => {
+          setSide(v);
+          setFieldError('stop', stop ? validateStop(stop) : null);
+          setFieldError('target', target ? validateTarget(target) : null);
+        }}
         role="radiogroup"
         variant="tone"
         size="md"
@@ -163,9 +206,28 @@ export function EntryForm({ onCreated }: EntryFormProps) {
       />
 
       <div className="grid grid-cols-2 gap-3">
-        <Field label="Entry" value={entry} setValue={setEntry} required />
-        <Field label="Stop (optional)" value={stop} setValue={setStop} />
-        <Field label="Target (optional)" value={target} setValue={setTarget} />
+        <Field
+          label="Entry"
+          value={entry}
+          setValue={(v) => { setEntry(v); setFieldError('entry', null); }}
+          required
+          error={fieldErrors.entry ?? null}
+          onBlur={() => setFieldError('entry', validateEntry(entry))}
+        />
+        <Field
+          label="Stop (optional)"
+          value={stop}
+          setValue={(v) => { setStop(v); setFieldError('stop', null); }}
+          error={fieldErrors.stop ?? null}
+          onBlur={() => setFieldError('stop', validateStop(stop))}
+        />
+        <Field
+          label="Target (optional)"
+          value={target}
+          setValue={(v) => { setTarget(v); setFieldError('target', null); }}
+          error={fieldErrors.target ?? null}
+          onBlur={() => setFieldError('target', validateTarget(target))}
+        />
         <Field label="Size in lots (optional)" value={size} setValue={setSize} />
       </div>
 
@@ -182,18 +244,7 @@ export function EntryForm({ onCreated }: EntryFormProps) {
         />
       </div>
 
-      <div className="flex flex-col gap-2">
-        <label className="text-fg-subtle text-body-sm uppercase tracking-wide" htmlFor="tags">
-          Tags (optional, comma-separated)
-        </label>
-        <Input
-          id="tags"
-          value={tagsInput}
-          onChange={(e) => setTagsInput(e.target.value)}
-          placeholder="SMC, FOMC, Breakout..."
-          maxLength={500}
-        />
-      </div>
+      <TagInput value={tags} onChange={setTags} />
 
       {error ? <p className="text-bear text-sm">{error}</p> : null}
 
@@ -215,12 +266,17 @@ function Field({
   value,
   setValue,
   required,
+  error,
+  onBlur,
 }: {
   label: string;
   value: string;
   setValue: (v: string) => void;
   required?: boolean;
+  error?: string | null | undefined;
+  onBlur?: () => void;
 }) {
+  const showError = error !== undefined && error !== null;
   const id = label.toLowerCase().replace(/[^a-z]/g, '-');
   return (
     <div className="flex flex-col gap-2">
@@ -231,9 +287,128 @@ function Field({
         id={id}
         value={value}
         onChange={(e) => setValue(e.target.value)}
+        onBlur={onBlur}
         inputMode="decimal"
         required={required}
+        error={!!error}
       />
+      {showError ? <p className="text-bear text-xs mt-0.5">{error}</p> : null}
+    </div>
+  );
+}
+
+const COMMON_TAGS = [
+  'SMC', 'FOMC', 'Breakout', 'Reversal', 'Continuation',
+  'News', 'Support', 'Resistance', 'Trend', 'Range',
+  'PinBar', 'Engulfing', 'Momentum', 'Scalp', 'Swing',
+  'ICT', 'Supply', 'Demand', 'Fibonacci', 'Divergence',
+];
+
+function TagInput({ value, onChange }: { value: string[]; onChange: (v: string[]) => void }) {
+  const [input, setInput] = useState('');
+  const [focused, setFocused] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const filtered = COMMON_TAGS.filter(
+    (t) => t.toLowerCase().includes(input.toLowerCase()) && !value.includes(t)
+  );
+
+  const add = useCallback((tag: string) => {
+    if (!value.includes(tag)) {
+      onChange([...value, tag]);
+    }
+    setInput('');
+  }, [value, onChange]);
+
+  const remove = useCallback((tag: string) => {
+    onChange(value.filter((t) => t !== tag));
+  }, [value, onChange]);
+
+  const handleKey = useCallback((e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ',') {
+      e.preventDefault();
+      const trimmed = input.trim();
+      if (trimmed && !value.includes(trimmed)) {
+        if (filtered.length > 0 && filtered[0] && filtered[0].toLowerCase() === trimmed.toLowerCase()) {
+          add(filtered[0]);
+        } else {
+          add(trimmed);
+        }
+      }
+    }
+    if (e.key === 'Backspace' && !input && value.length > 0) {
+      const last = value[value.length - 1];
+      if (last) remove(last);
+    }
+  }, [input, value, filtered, add, remove]);
+
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setFocused(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, []);
+
+  return (
+    <div className="flex flex-col gap-2">
+      <label className="text-fg-subtle text-body-sm uppercase tracking-wide">
+        Tags (optional)
+      </label>
+      <div ref={containerRef} className="relative">
+        <div className={cn(
+          'flex flex-wrap gap-1.5 rounded-xl border bg-bg-elev-1/60 px-3 py-2 min-h-12 items-center transition-all duration-200',
+          focused ? 'border-brand/60 shadow-[0_0_0_3px_oklch(78%_0.16_78/0.12)]' : 'border-divider'
+        )}>
+          {value.map((tag) => (
+            <span
+              key={tag}
+              className="inline-flex items-center gap-1 rounded-full bg-brand/15 text-brand px-2.5 py-0.5 text-xs font-bold uppercase ring-1 ring-brand/30"
+            >
+              #{tag}
+              <button
+                type="button"
+                onClick={() => remove(tag)}
+                className="inline-flex size-4 items-center justify-center rounded-full hover:bg-brand/25 transition-colors"
+                aria-label={`Remove tag ${tag}`}
+              >
+                <X className="size-2.5" strokeWidth={3} />
+              </button>
+            </span>
+          ))}
+          <input
+            type="text"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onFocus={() => setFocused(true)}
+            onKeyDown={handleKey}
+            placeholder={value.length === 0 ? 'SMC, FOMC, Breakout...' : ''}
+            className="flex-1 min-w-[100px] bg-transparent text-base text-fg placeholder:text-fg-subtle focus:outline-none h-7"
+            maxLength={50}
+          />
+        </div>
+        {focused && filtered.length > 0 && (
+          <ul className="absolute z-50 mt-1 w-full rounded-xl border border-divider bg-bg-elev-2 shadow-lg overflow-hidden animate-in fade-in slide-in-from-top-1 duration-150">
+            {filtered.slice(0, 8).map((tag) => (
+              <li key={tag}>
+                <button
+                  type="button"
+                  onClick={() => add(tag)}
+                  className="flex w-full items-center gap-2 px-3 py-2.5 text-sm text-fg hover:bg-bg-elev-3 transition-colors text-left cursor-pointer"
+                >
+                  <Plus className="size-3.5 text-fg-muted shrink-0" />
+                  <span className="font-medium">{tag}</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+      {value.length > 0 && (
+        <p className="text-xs text-fg-subtle">{value.length} tag{value.length !== 1 ? 's' : ''} selected</p>
+      )}
     </div>
   );
 }

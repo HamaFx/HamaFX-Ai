@@ -13,6 +13,12 @@ interface UsageAlertResult {
   checkedUsers: number;
 }
 
+const sentAlerts = new Set<string>();
+
+export function resetSentAlerts() {
+  sentAlerts.clear();
+}
+
 export async function checkAllUsageAlerts(): Promise<UsageAlertResult> {
   const db = getDb();
 
@@ -59,6 +65,9 @@ export async function checkAllUsageAlerts(): Promise<UsageAlertResult> {
 
     if (channels.length === 0) continue;
 
+    const dedupPrefix = `monthly:${settings.userId}:`;
+    const provDedupPrefix = `provider:${settings.userId}:`;
+
     const env: Parameters<typeof sendDirectNotification>[2] = {};
     if (process.env.RESEND_API_KEY) env.RESEND_API_KEY = process.env.RESEND_API_KEY;
     if (process.env.ALERT_FROM_EMAIL) env.ALERT_FROM_EMAIL = process.env.ALERT_FROM_EMAIL;
@@ -71,29 +80,41 @@ export async function checkAllUsageAlerts(): Promise<UsageAlertResult> {
       const monthlySpend = await getMonthlySpend(settings.userId);
 
       if (monthlySpend >= limit) {
-        await sendDirectNotification(
-          '[HamaFX-Ai] Monthly Budget Alert: 100% Reached',
-          `Your monthly AI spend has reached 100% of your limit.\n\nSpent: $${monthlySpend.toFixed(2)} / $${limit.toFixed(2)}\n\n— HamaFX-Ai`,
-          env,
-          channels,
-        );
-        alertsSent++;
+        const key = `${dedupPrefix}100`;
+        if (!sentAlerts.has(key)) {
+          sentAlerts.add(key);
+          await sendDirectNotification(
+            '[HamaFX-Ai] Monthly Budget Alert: 100% Reached',
+            `Your monthly AI spend has reached 100% of your limit.\n\nSpent: $${monthlySpend.toFixed(2)} / $${limit.toFixed(2)}\n\n— HamaFX-Ai`,
+            env,
+            channels,
+          );
+          alertsSent++;
+        }
       } else if (monthlySpend >= limit * 0.8) {
-        await sendDirectNotification(
-          '[HamaFX-Ai] Monthly Budget Alert: 80% Reached',
-          `Your monthly AI spend has reached 80% of your limit.\n\nSpent: $${monthlySpend.toFixed(2)} / $${limit.toFixed(2)}\n\n— HamaFX-Ai`,
-          env,
-          channels,
-        );
-        alertsSent++;
+        const key = `${dedupPrefix}80`;
+        if (!sentAlerts.has(key)) {
+          sentAlerts.add(key);
+          await sendDirectNotification(
+            '[HamaFX-Ai] Monthly Budget Alert: 80% Reached',
+            `Your monthly AI spend has reached 80% of your limit.\n\nSpent: $${monthlySpend.toFixed(2)} / $${limit.toFixed(2)}\n\n— HamaFX-Ai`,
+            env,
+            channels,
+          );
+          alertsSent++;
+        }
       } else if (monthlySpend >= limit * 0.5) {
-        await sendDirectNotification(
-          '[HamaFX-Ai] Monthly Budget Alert: 50% Reached',
-          `Your monthly AI spend has reached 50% of your limit.\n\nSpent: $${monthlySpend.toFixed(2)} / $${limit.toFixed(2)}\n\n— HamaFX-Ai`,
-          env,
-          channels,
-        );
-        alertsSent++;
+        const key = `${dedupPrefix}50`;
+        if (!sentAlerts.has(key)) {
+          sentAlerts.add(key);
+          await sendDirectNotification(
+            '[HamaFX-Ai] Monthly Budget Alert: 50% Reached',
+            `Your monthly AI spend has reached 50% of your limit.\n\nSpent: $${monthlySpend.toFixed(2)} / $${limit.toFixed(2)}\n\n— HamaFX-Ai`,
+            env,
+            channels,
+          );
+          alertsSent++;
+        }
       }
     }
 
@@ -103,13 +124,17 @@ export async function checkAllUsageAlerts(): Promise<UsageAlertResult> {
         if (threshold && threshold > 0) {
           const providerSpend = await getProviderMonthlySpend(settings.userId, providerId);
           if (providerSpend >= threshold) {
-            await sendDirectNotification(
-              `[HamaFX-Ai] Provider Threshold Alert: ${providerId}`,
-              `Your monthly spend for provider "${providerId}" has exceeded your configured threshold.\n\nSpent: $${providerSpend.toFixed(2)} / $${threshold.toFixed(2)}\n\n— HamaFX-Ai`,
-              env,
-              channels,
-            );
-            alertsSent++;
+            const key = `${provDedupPrefix}${providerId}:${threshold}`;
+            if (!sentAlerts.has(key)) {
+              sentAlerts.add(key);
+              await sendDirectNotification(
+                `[HamaFX-Ai] Provider Threshold Alert: ${providerId}`,
+                `Your monthly spend for provider "${providerId}" has exceeded your configured threshold.\n\nSpent: $${providerSpend.toFixed(2)} / $${threshold.toFixed(2)}\n\n— HamaFX-Ai`,
+                env,
+                channels,
+              );
+              alertsSent++;
+            }
           }
         }
       }

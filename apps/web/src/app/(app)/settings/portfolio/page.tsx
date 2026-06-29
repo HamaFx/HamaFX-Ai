@@ -107,16 +107,16 @@ function PortfolioContent({
           icon={AlertTriangle}
           label="Alerts"
           value={String(riskReport.alerts.length)}
-          valueClass={riskReport.alerts.length > 0 ? 'text-amber-600 dark:text-amber-400' : ''}
+          valueClass={riskReport.alerts.length > 0 ? 'text-warn' : ''}
         />
       </div>
 
       {/* Alerts */}
       {riskReport.alerts.length > 0 && (
-        <div className="rounded-lg border border-amber-200 dark:border-amber-900/50 bg-amber-50 dark:bg-amber-950/20 p-4">
+        <div className="rounded-lg border border-warn/30 bg-warn/10 p-4">
           <div className="flex items-center gap-2 mb-2">
-            <AlertTriangle className="size-4 text-amber-600 dark:text-amber-400" />
-            <h3 className="text-sm font-semibold text-amber-900 dark:text-amber-200">
+            <AlertTriangle className="size-4 text-warn" />
+            <h3 className="text-sm font-semibold text-warn">
               Risk Alerts
             </h3>
           </div>
@@ -127,8 +127,8 @@ function PortfolioContent({
                 className={cn(
                   'text-sm',
                   alert.level === 'danger'
-                    ? 'text-red-600 dark:text-red-400'
-                    : 'text-amber-700 dark:text-amber-300',
+                    ? 'text-bear'
+                    : 'text-warn',
                 )}
               >
                 • {alert.message}
@@ -167,8 +167,8 @@ function PortfolioContent({
                         className={cn(
                           'text-xs font-medium px-2 py-0.5 rounded',
                           p.direction === 'long'
-                            ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                            : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+                            ? 'bg-bull/10 text-bull'
+                            : 'bg-bear/10 text-bear',
                         )}
                       >
                         {p.direction.toUpperCase()}
@@ -189,8 +189,8 @@ function PortfolioContent({
                         p.unrealizedPnlUsd === null
                           ? 'text-fg-muted'
                           : p.unrealizedPnlUsd >= 0
-                            ? 'text-green-600 dark:text-green-400'
-                            : 'text-red-600 dark:text-red-400',
+                            ? 'text-bull'
+                            : 'text-bear',
                       )}
                     >
                       {p.unrealizedPnlUsd === null
@@ -203,8 +203,8 @@ function PortfolioContent({
                         p.unrealizedPnlPct === null
                           ? 'text-fg-muted'
                           : p.unrealizedPnlPct >= 0
-                            ? 'text-green-600 dark:text-green-400'
-                            : 'text-red-600 dark:text-red-400',
+                            ? 'text-bull'
+                            : 'text-bear',
                       )}
                     >
                       {p.unrealizedPnlPct === null
@@ -234,7 +234,7 @@ function PortfolioContent({
                   <div
                     className={cn(
                       'h-full rounded-full',
-                      c.alert ? 'bg-amber-500' : 'bg-brand',
+                      c.alert ? 'bg-warn' : 'bg-brand',
                     )}
                     style={{ width: `${Math.min(c.pct, 100)}%` }}
                   />
@@ -242,7 +242,7 @@ function PortfolioContent({
                 <span
                   className={cn(
                     'text-sm w-16 text-right',
-                    c.alert ? 'text-amber-600 dark:text-amber-400 font-medium' : 'text-fg-muted',
+                    c.alert ? 'text-warn font-medium' : 'text-fg-muted',
                   )}
                 >
                   {c.pct.toFixed(1)}%

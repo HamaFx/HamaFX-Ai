@@ -244,7 +244,7 @@ function AlertRow({ alert, onToggle, onDelete }: AlertRowProps) {
         const commitThreshold = 0.3;
         if (ratio < commitThreshold && !isTriggered) {
           isTriggered = true;
-          const direction = (entry.boundingClientRect.x - entry.rootBounds!.x) > 0 ? 'left' : 'right';
+          const direction = (entry.boundingClientRect.x - (entry.rootBounds?.x ?? 0)) > 0 ? 'left' : 'right';
 
           if (direction === 'left') {
             onToggle();
@@ -299,6 +299,13 @@ function AlertRow({ alert, onToggle, onDelete }: AlertRowProps) {
           )}
           style={{ scrollSnapAlign: 'center' }}
         >
+          {/* Touch-swipe grabber — visible only on touch devices */}
+          <span
+            aria-hidden
+            className="self-stretch flex items-center touch-swipe-hint text-fg-muted/30"
+          >
+            ≡
+          </span>
           <div className="relative">
             <span
               aria-hidden

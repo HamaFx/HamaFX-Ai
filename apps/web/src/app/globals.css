@@ -105,6 +105,13 @@
   --text-numeric: 0.875rem;
 
   --ease-organic: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-out-organic: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* Firefox scrollbar styling */
+html {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border) transparent;
 }
 
 /* -------------------------------------------------------------------------
@@ -128,10 +135,6 @@
   --space-10: 96px;
 
   --touch-min: 44px;
-}
-
-html {
-  color-scheme: dark;
 }
 
 /* -------------------------------------------------------------------------
@@ -181,9 +184,6 @@ html {
  * ------------------------------------------------------------------------- */
 @layer base {
   html {
-    color-scheme: dark;
-    /* Stop iOS rubber-band reaching the html background colour and
-     * showing a brief stripe of "extra" canvas. */
     overscroll-behavior-y: none;
   }
 
@@ -294,12 +294,20 @@ html {
     oklch(96% 0 0 / 0.04) 100%
   ),
   oklch(12% 0 0 / 0.70);
-  backdrop-filter: blur(40px) saturate(200%);
-  -webkit-backdrop-filter: blur(40px) saturate(200%);
+  backdrop-filter: blur(20px) saturate(150%);
+  -webkit-backdrop-filter: blur(20px) saturate(150%);
   border: 1px solid oklch(96% 0 0 / 0.1);
   box-shadow:
     inset 0 1px 0 0 oklch(100% 0 0 / 0.07),
     var(--shadow-lg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .glass-strong {
+    background: oklch(12% 0 0 / 0.85);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
 }
 
 @utility glass-subtle {
@@ -520,6 +528,10 @@ html[data-reduce-motion='force'] *::after {
   animation-timeline: scroll(nearest block);
 }
 
+@utility transition-organic {
+  transition-timing-function: var(--ease-organic);
+}
+
 @keyframes float-slow {
   0%, 100% {
     transform: translate(0, 0);
@@ -617,15 +629,17 @@ html[data-reduce-motion='force'] *::after {
 }
 
 /* -------------------------------------------------------------------------
- * Visually Stable Font Fallbacks (reduce CLS before custom fonts render)
+ * Touch-Only Swipe Hints (alert rows, etc.)
  * ------------------------------------------------------------------------- */
-@font-face {
-  font-family: 'Inter Fallback';
-  src: local('Arial');
-  size-adjust: 97%;
-  ascent-override: 95%;
-  descent-override: 20%;
-  line-gap-override: 0%;
+@media (hover: none) and (pointer: coarse) {
+  .touch-swipe-hint {
+    display: flex !important;
+  }
+}
+@media not all and (hover: none) and (pointer: coarse) {
+  .touch-swipe-hint {
+    display: none;
+  }
 }
 
 

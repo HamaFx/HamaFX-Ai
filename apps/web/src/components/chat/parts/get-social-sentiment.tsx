@@ -83,7 +83,7 @@ export function GetSocialSentimentPart({ output, state, errorMessage }: GetSocia
       </div>
 
       {output.contrarianSignal && output.contrarianNote && (
-        <div className="bg-amber-500/10 text-amber-500 border border-amber-500/20 p-2.5 rounded-lg text-xs leading-relaxed">
+          <div className="bg-warn/10 text-warn border border-warn/20 p-2.5 rounded-lg text-xs leading-relaxed">
           <div className="font-semibold mb-0.5">Contrarian Warning</div>
           {output.contrarianNote}
         </div>

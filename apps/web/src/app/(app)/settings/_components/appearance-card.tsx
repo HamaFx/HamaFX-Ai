@@ -29,6 +29,7 @@ function applyTheme(theme: Theme) {
 
 export function AppearanceCard({ initialTheme, initialLocale }: { initialTheme?: string | null; initialLocale?: string }) {
   const [theme, setTheme] = useState<Theme>((initialTheme ?? 'system') as Theme);
+  const [locale, setLocale] = useState(initialLocale ?? 'en');
 
   useEffect(() => {
     applyTheme(theme);
@@ -40,6 +41,7 @@ export function AppearanceCard({ initialTheme, initialLocale }: { initialTheme?:
   }, []);
 
   const handleLocaleChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
+    setLocale(e.target.value);
     updateLocaleAction(e.target.value);
   }, []);
 
@@ -72,7 +74,7 @@ export function AppearanceCard({ initialTheme, initialLocale }: { initialTheme?:
         description="Language and date/number formatting"
         action={
           <select
-            value={initialLocale ?? 'en'}
+            value={locale}
             onChange={handleLocaleChange}
             aria-label="Locale"
             className="border border-divider bg-bg-elev-2 text-fg rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand"

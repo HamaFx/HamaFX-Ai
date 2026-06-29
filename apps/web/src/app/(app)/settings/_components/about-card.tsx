@@ -17,27 +17,29 @@
 // About card — sign-out + a small "what's running" footer with build id.
 // Server component.
 
-import { LogOut } from 'lucide-react';
-import { promises as fs } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import path from 'node:path';
+import { LogOut } from 'lucide-react';
 
 import { LogoutButton } from './logout-button';
 import { SettingsRow } from './settings-row';
 
-async function readBuildId(): Promise<string | null> {
-  try {
-    const file = path.join(process.cwd(), '.build-id');
-    const text = await fs.readFile(file, 'utf-8');
-    const trimmed = text.trim();
-    return trimmed.length > 0 ? trimmed : null;
-  } catch {
-    console.warn('[settings] failed to read .build-id');
-    return null;
+let _buildId: string | null | undefined;
+function getBuildId(): string | null {
+  if (_buildId === undefined) {
+    try {
+      const file = path.join(process.cwd(), '.build-id');
+      const text = readFileSync(file, 'utf-8');
+      _buildId = text.trim() || null;
+    } catch {
+      _buildId = null;
+    }
   }
+  return _buildId;
 }
 
 export async function AboutCard() {
-  const buildId = await readBuildId();
+  const buildId = getBuildId();
 
   return (
     <section

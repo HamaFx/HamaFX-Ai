@@ -56,6 +56,8 @@ export async function loginAction(prevState: unknown, formData: FormData) {
     });
     return { success: true };
   } catch (error) {
+    const errStr = String(error);
+    if (errStr.includes('NEXT_REDIRECT')) throw error;
     if (error instanceof AuthError) {
       const message = error.message;
       if (message === 'ACCOUNT_LOCKED') {
@@ -69,7 +71,7 @@ export async function loginAction(prevState: unknown, formData: FormData) {
       }
       return { error: 'Invalid email or password' };
     }
-    return { error: `Error: ${String(error).slice(0, 200)}` };
+    return { error: `Error: ${errStr.slice(0, 200)}` };
   }
 }
 
@@ -163,10 +165,12 @@ export async function registerAction(prevState: unknown, formData: FormData) {
     });
     return { success: true };
   } catch (error) {
+    const errStr = String(error);
+    if (errStr.includes('NEXT_REDIRECT')) throw error;
     if (error instanceof AuthError) {
       return { error: 'Account created, but failed to automatically sign in' };
     }
-    return { error: `Error: ${String(error).slice(0, 200)}` };
+    return { error: `Error: ${errStr.slice(0, 200)}` };
   }
 }
 

@@ -41,7 +41,7 @@ export function Placeholder({ title, description, phase, className, children }: 
       <div className="flex flex-wrap items-center gap-2">
         <h2 className="text-fg text-base font-semibold">{title}</h2>
         {phase ? (
-          <span className="border-border text-fg-muted rounded-full border px-2 py-0.5 text-[11px] font-medium">
+          <span className="border-border text-fg-muted rounded-full border px-2 py-0.5 text-xs font-medium">
             {phase}
           </span>
         ) : null}

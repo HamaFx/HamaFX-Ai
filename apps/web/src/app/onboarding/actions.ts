@@ -18,6 +18,7 @@
 
 import 'server-only';
 
+import { z } from 'zod';
 import { auth } from '@/auth';
 import { getDb, schema } from '@hamafx/db';
 import { eq } from 'drizzle-orm';
@@ -25,6 +26,8 @@ import { revalidatePath } from 'next/cache';
 import type { ByokPayload } from '@hamafx/shared/encryption';
 import { encryptByok, decryptByok } from '@hamafx/shared/encryption';
 import type { PROVIDER_IDS } from '@hamafx/shared/byok';
+
+const symbolSchema = z.string().toUpperCase().regex(/^[A-Z0-9/]{1,10}$/);
 
 export interface OnboardingPayload {
   displayName?: string;
@@ -55,6 +58,16 @@ export async function completeOnboardingAction(formData: FormData) {
   }
 
   try {
+    // Validate symbols
+    if (payload.symbols && Array.isArray(payload.symbols)) {
+      for (const sym of payload.symbols) {
+        const parsed = symbolSchema.safeParse(sym);
+        if (!parsed.success) {
+          return { ok: false as const, error: `Invalid symbol: "${sym}"` };
+        }
+      }
+    }
+
     const db = getDb();
     await db.transaction(async (tx) => {
       // Save displayName to users table if provided

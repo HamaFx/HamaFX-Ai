@@ -112,7 +112,7 @@ export function UsageLimitsForm({
               <Mail className="size-4 text-fg-subtle" />
               <div className="flex flex-col">
                 <span className="text-xs font-semibold text-fg">Email Alerts</span>
-                <span className="text-[10px] text-fg-subtle mt-0.5">Alerts via Resend</span>
+                <span className="text-xs text-fg-subtle mt-0.5">Alerts via Resend</span>
               </div>
             </div>
           </label>
@@ -128,7 +128,7 @@ export function UsageLimitsForm({
               <Send className="size-4 text-fg-subtle" />
               <div className="flex flex-col">
                 <span className="text-xs font-semibold text-fg">Telegram Alerts</span>
-                <span className="text-[10px] text-fg-subtle mt-0.5">Alerts via Telegram Bot</span>
+                <span className="text-xs text-fg-subtle mt-0.5">Alerts via Telegram Bot</span>
               </div>
             </div>
           </label>
@@ -141,7 +141,7 @@ export function UsageLimitsForm({
           Per-Provider Monthly Spending Thresholds
         </span>
         <div className="flex flex-col border border-divider rounded-lg overflow-hidden divide-y divide-divider/60">
-          <div className="grid grid-cols-[1.5fr_1fr_1.2fr] gap-2 items-center bg-bg-elev-2 px-3 py-2 text-[10px] font-bold text-fg-muted uppercase tracking-wider">
+          <div className="grid grid-cols-[1.5fr_1fr_1.2fr] gap-2 items-center bg-bg-elev-2 px-3 py-2 text-xs font-bold text-fg-muted uppercase tracking-wider">
             <span>Provider</span>
             <span className="text-right">Spend (MTD)</span>
             <span className="text-right">Threshold (USD)</span>
@@ -157,7 +157,7 @@ export function UsageLimitsForm({
               >
                 <div className="flex flex-col">
                   <span className="font-semibold text-fg">{p.displayName}</span>
-                  <span className="text-[10px] text-fg-subtle mt-0.5 font-mono">{p.id}</span>
+                  <span className="text-xs text-fg-subtle mt-0.5 font-mono">{p.id}</span>
                 </div>
                 <div className="text-right font-mono text-fg-subtle tabular-nums">
                   <span className={hasExceeded ? 'text-bear font-semibold' : ''}>

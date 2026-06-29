@@ -1,12 +1,30 @@
 'use client';
 
 import { useState, useMemo, useRef, useEffect } from 'react';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+  arrayMove,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
   ArrowDown,
   ArrowUp,
   Download,
+  GripVertical,
   Plus,
   Search,
   Trash,
@@ -30,6 +48,123 @@ interface SymbolCatalogItem {
   sortOrder: number | null;
 }
 
+interface SortableSymbolRowProps {
+  item: SymbolItem;
+  index: number;
+  priceMap: Map<string, number>;
+  isSelected: boolean;
+  onToggleSelect: (symbol: string) => void;
+  onRemove: (symbol: string) => void;
+  onMove: (index: number, direction: 'up' | 'down') => void;
+  totalItems: number;
+}
+
+function SortableSymbolRow({
+  item,
+  index,
+  priceMap,
+  isSelected,
+  onToggleSelect,
+  onRemove,
+  onMove,
+  totalItems,
+}: SortableSymbolRowProps) {
+  const price = priceMap.get(item.symbol);
+  const decimals = item.symbol === 'XAUUSD' ? 2 : 5;
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: item.symbol });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
+  return (
+    <div
+      key={item.symbol}
+      ref={setNodeRef}
+      style={style}
+      className={`flex items-center justify-between p-3 rounded-lg border transition-all ${
+        isDragging
+          ? 'border-brand shadow-lg z-10 opacity-90 bg-bg-elev-2'
+          : isSelected
+            ? 'bg-brand/5 border-brand/40 shadow-glow-brand/5'
+            : 'bg-surface border-surface-elevated hover:border-fg-subtle/30'
+      }`}
+    >
+      <div className="flex items-center gap-3 min-w-0">
+        <button
+          type="button"
+          className="size-6 flex items-center justify-center text-fg-muted hover:text-fg cursor-grab active:cursor-grabbing touch-none shrink-0"
+          aria-label={`Drag to reorder ${item.symbol}`}
+          {...attributes}
+          {...listeners}
+        >
+          <GripVertical className="size-3.5" />
+        </button>
+        <input
+          type="checkbox"
+          checked={isSelected}
+          onChange={() => onToggleSelect(item.symbol)}
+          aria-label={`Select ${item.symbol}`}
+          className="rounded border-divider bg-bg text-brand focus:ring-brand size-3.5 cursor-pointer shrink-0"
+        />
+        <div className="flex flex-col min-w-0">
+          <div className="flex items-baseline gap-2">
+            <span className="font-mono text-sm font-semibold text-fg">{item.symbol}</span>
+            <span className="text-xs uppercase font-mono px-1 rounded bg-bg-elev-2 text-fg-subtle border border-divider shrink-0">
+              {item.category}
+            </span>
+          </div>
+          <span className="text-caption text-fg-subtle truncate">{item.name}</span>
+        </div>
+      </div>
+
+      <div className="flex items-center gap-3 shrink-0">
+        <div className="flex flex-col items-end">
+          <span className="font-mono text-xs font-semibold text-fg">
+            {price !== undefined ? price.toFixed(decimals) : '\u2014'}
+          </span>
+          {price !== undefined && (
+            <span className="text-xs text-fg-muted uppercase tracking-wider">Live</span>
+          )}
+        </div>
+
+        {/* Arrow buttons — keyboard-only fallback, visually hidden on small screens */}
+        <div className="hidden sm:flex items-center border border-divider/60 rounded-md bg-bg">
+          <button
+            type="button"
+            onClick={() => onMove(index, 'up')}
+            disabled={index === 0}
+            aria-label="Move symbol up"
+            className="p-1 text-fg-subtle hover:text-fg disabled:opacity-30 disabled:hover:text-fg-subtle cursor-pointer"
+          >
+            <ArrowUp className="size-3.5" />
+          </button>
+          <div className="w-px h-3.5 bg-divider/60" />
+          <button
+            type="button"
+            onClick={() => onMove(index, 'down')}
+            disabled={index === totalItems - 1}
+            aria-label="Move symbol down"
+            className="p-1 text-fg-subtle hover:text-fg disabled:opacity-30 disabled:hover:text-fg-subtle cursor-pointer"
+          >
+            <ArrowDown className="size-3.5" />
+          </button>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => onRemove(item.symbol)}
+          aria-label={`Remove ${item.symbol} from watchlist`}
+          className="p-1.5 text-fg-subtle hover:text-bear hover:bg-bear/10 rounded-md transition-colors cursor-pointer"
+        >
+          <Trash className="size-3.5" />
+        </button>
+      </div>
+    </div>
+  );
+}
+
 interface SymbolsFormProps {
   initialSymbols: SymbolItem[];
   catalog: SymbolCatalogItem[];
@@ -45,12 +180,18 @@ export function SymbolsForm({ initialSymbols, catalog }: SymbolsFormProps) {
   const [isBulkAdding, setIsBulkAdding] = useState(false);
   const [catalogPage, setCatalogPage] = useState(0);
   const CATALOG_PAGE_SIZE = 20;
+  const [isEditing, setIsEditing] = useState(false);
   
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  // Poll prices for all items in the watchlist
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
+
+  // Poll prices for all items in the watchlist — paused during edits to reduce API calls
   const watchlistSymbols = useMemo(() => watchlist.map((w) => w.symbol), [watchlist]);
-  const { data: ticks } = usePrices(watchlistSymbols);
+  const { data: ticks } = usePrices(watchlistSymbols, { enabled: !isEditing });
 
   const priceMap = useMemo(() => {
     const map = new Map<string, number>();
@@ -137,6 +278,7 @@ export function SymbolsForm({ initialSymbols, catalog }: SymbolsFormProps) {
 
     // Optimistic update
     setWatchlist(newList);
+    setIsEditing(true);
 
     try {
       const res = await fetch('/api/settings/symbols', {
@@ -145,10 +287,12 @@ export function SymbolsForm({ initialSymbols, catalog }: SymbolsFormProps) {
         body: JSON.stringify({ symbols: newList.map((s) => s.symbol) }),
       });
       if (!res.ok) throw new Error();
+      setIsEditing(false);
     } catch {
       toast.error('Failed to update symbol order');
       // Rollback
       setWatchlist(watchlist);
+      setIsEditing(false);
     }
   };
 
@@ -176,6 +320,7 @@ export function SymbolsForm({ initialSymbols, catalog }: SymbolsFormProps) {
 
     const originalList = [...watchlist];
     setWatchlist((prev) => [...prev, newItem]);
+    setIsEditing(true);
 
     try {
       const res = await fetch('/api/settings/symbols', {
@@ -185,9 +330,11 @@ export function SymbolsForm({ initialSymbols, catalog }: SymbolsFormProps) {
       });
       if (!res.ok) throw new Error();
       toast.success(`${normalized} added to watchlist`);
+      setIsEditing(false);
     } catch {
       toast.error(`Failed to add ${normalized}`);
       setWatchlist(originalList);
+      setIsEditing(false);
     }
   };
 
@@ -199,6 +346,7 @@ export function SymbolsForm({ initialSymbols, catalog }: SymbolsFormProps) {
       next.delete(symbol);
       return next;
     });
+    setIsEditing(true);
 
     try {
       const res = await fetch(`/api/settings/symbols/${symbol}`, {
@@ -206,9 +354,11 @@ export function SymbolsForm({ initialSymbols, catalog }: SymbolsFormProps) {
       });
       if (!res.ok) throw new Error();
       toast.success(`${symbol} removed from watchlist`);
+      setIsEditing(false);
     } catch {
       toast.error(`Failed to remove ${symbol}`);
       setWatchlist(originalList);
+      setIsEditing(false);
     }
   };
 
@@ -219,6 +369,7 @@ export function SymbolsForm({ initialSymbols, catalog }: SymbolsFormProps) {
 
     setWatchlist((prev) => prev.filter((s) => !selected.has(s.symbol)));
     setSelected(new Set());
+    setIsEditing(true);
 
     try {
       const promises = toDelete.map((sym) =>
@@ -226,10 +377,38 @@ export function SymbolsForm({ initialSymbols, catalog }: SymbolsFormProps) {
       );
       await Promise.all(promises);
       toast.success(`Successfully removed ${toDelete.length} symbols`);
+      setIsEditing(false);
     } catch {
       toast.error('Failed to complete some symbol removals');
       setWatchlist(originalList);
+      setIsEditing(false);
     }
+  };
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    const oldIndex = watchlist.findIndex((w) => w.symbol === active.id);
+    const newIndex = watchlist.findIndex((w) => w.symbol === over.id);
+    if (oldIndex === -1 || newIndex === -1) return;
+
+    const newList = arrayMove(watchlist, oldIndex, newIndex);
+    setWatchlist(newList);
+    setIsEditing(true);
+
+    fetch('/api/settings/symbols', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ symbols: newList.map((s) => s.symbol) }),
+    }).then((res) => {
+      if (!res.ok) throw new Error();
+      setIsEditing(false);
+    }).catch(() => {
+      toast.error('Failed to update symbol order');
+      setWatchlist(watchlist);
+      setIsEditing(false);
+    });
   };
 
   const handleBulkAdd = async () => {
@@ -412,94 +591,40 @@ export function SymbolsForm({ initialSymbols, catalog }: SymbolsFormProps) {
             </div>
           )}
 
-          <ul className="flex flex-col gap-1.5 max-h-96 overflow-y-auto pr-1">
-            {filteredWatchlist.map((item, index) => {
-              const price = priceMap.get(item.symbol);
-              const decimals = item.symbol === 'XAUUSD' ? 2 : 5;
-              const isSelected = selected.has(item.symbol);
-
-              return (
-                <li
-                  key={item.symbol}
-                  className={`flex items-center justify-between p-3 rounded-lg border transition-all ${
-                    isSelected
-                      ? 'bg-brand/5 border-brand/40 shadow-glow-brand/5'
-                      : 'bg-surface border-surface-elevated hover:border-fg-subtle/30'
-                  }`}
+          <div className="flex flex-col gap-1.5 max-h-96 overflow-y-auto pr-1">
+            {filteredWatchlist.length > 0 ? (
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragEnd={handleDragEnd}
+              >
+                <SortableContext
+                  items={filteredWatchlist.map((w) => w.symbol)}
+                  strategy={verticalListSortingStrategy}
                 >
-                  <div className="flex items-center gap-3">
-                    <input
-                      type="checkbox"
-                      checked={isSelected}
-                      onChange={() => handleToggleSelect(item.symbol)}
-                      aria-label={`Select ${item.symbol}`}
-                      className="rounded border-divider bg-bg text-brand focus:ring-brand size-3.5 cursor-pointer"
+                  {filteredWatchlist.map((item, index) => (
+                    <SortableSymbolRow
+                      key={item.symbol}
+                      item={item}
+                      index={index}
+                      priceMap={priceMap}
+                      isSelected={selected.has(item.symbol)}
+                      onToggleSelect={handleToggleSelect}
+                      onRemove={handleRemove}
+                      onMove={moveItem}
+                      totalItems={watchlist.length}
                     />
-                    <div className="flex flex-col">
-                      <div className="flex items-baseline gap-2">
-                        <span className="font-mono text-sm font-semibold text-fg">{item.symbol}</span>
-                        <span className="text-[10px] uppercase font-mono px-1 rounded bg-bg-elev-2 text-fg-subtle border border-divider">
-                          {item.category}
-                        </span>
-                      </div>
-                      <span className="text-caption text-fg-subtle">{item.name}</span>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-3">
-                    {/* Live price tag */}
-                    <div className="flex flex-col items-end">
-                      <span className="font-mono text-xs font-semibold text-fg">
-                        {price !== undefined ? price.toFixed(decimals) : '—'}
-                      </span>
-                      {price !== undefined && (
-                        <span className="text-[9px] text-fg-muted uppercase tracking-wider">Live</span>
-                      )}
-                    </div>
-
-                    <div className="flex items-center border border-divider/60 rounded-md bg-bg">
-                      <button
-                        type="button"
-                        onClick={() => moveItem(index, 'up')}
-                        disabled={index === 0}
-                        aria-label="Move symbol up"
-                        className="p-1 text-fg-subtle hover:text-fg disabled:opacity-30 disabled:hover:text-fg-subtle cursor-pointer"
-                      >
-                        <ArrowUp className="size-3.5" />
-                      </button>
-                      <div className="w-px h-3.5 bg-divider/60" />
-                      <button
-                        type="button"
-                        onClick={() => moveItem(index, 'down')}
-                        disabled={index === watchlist.length - 1}
-                        aria-label="Move symbol down"
-                        className="p-1 text-fg-subtle hover:text-fg disabled:opacity-30 disabled:hover:text-fg-subtle cursor-pointer"
-                      >
-                        <ArrowDown className="size-3.5" />
-                      </button>
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={() => handleRemove(item.symbol)}
-                      aria-label={`Remove ${item.symbol} from watchlist`}
-                      className="p-1.5 text-fg-subtle hover:text-bear hover:bg-bear/10 rounded-md transition-colors cursor-pointer"
-                    >
-                      <Trash className="size-3.5" />
-                    </button>
-                  </div>
-                </li>
-              );
-            })}
-
-            {filteredWatchlist.length === 0 && (
+                  ))}
+                </SortableContext>
+              </DndContext>
+            ) : (
               <div className="text-center p-8 text-sm text-fg-subtle">
                 {watchlistSearch
                   ? 'No symbols found matching your search.'
                   : 'Your watchlist is empty. Add symbols from the catalog below.'}
               </div>
             )}
-          </ul>
+          </div>
         </div>
       </div>
 
@@ -565,7 +690,7 @@ export function SymbolsForm({ initialSymbols, catalog }: SymbolsFormProps) {
               <div className="flex flex-col">
                 <div className="flex items-baseline gap-2">
                   <span className="font-mono text-sm font-semibold text-fg">{item.symbol}</span>
-                  <span className="text-[9px] uppercase font-mono px-1 rounded bg-bg-elev-2 text-fg-subtle border border-divider">
+                  <span className="text-xs uppercase font-mono px-1 rounded bg-bg-elev-2 text-fg-subtle border border-divider">
                     {item.category}
                   </span>
                 </div>

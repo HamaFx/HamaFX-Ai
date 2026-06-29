@@ -16,28 +16,83 @@
  * limitations under the License.
  */
 
-// Three-segment switch for the supported symbols. Renders as <Link> via the
-// shared <Segmented> primitive so the URL stays in sync (cheap deep links
-// to /chart/XAUUSD?tf=4h etc).
+// Symbol picker with typeahead search. Shows the user's watchlist first,
+// then all available symbols from @hamafx/shared. The search input filters
+// across ALL symbols so users can navigate to a symbol not in their watchlist.
 
-import { type Symbol } from '@hamafx/shared';
+import { Search } from 'lucide-react';
+import { useMemo, useState } from 'react';
 
-import { Segmented } from '@/components/ui/segmented';
+import { SYMBOLS, type Symbol } from '@hamafx/shared';
+
 import { useTimeframe } from '@/hooks/use-tf';
+import { cn } from '@/lib/cn';
+import { Segmented } from '@/components/ui/segmented';
 
 export function SymbolPicker({ active, watchlist }: { active: Symbol; watchlist: string[] }) {
   const [tf] = useTimeframe();
+  const [query, setQuery] = useState('');
+
+  const filteredAll = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return [];
+    return SYMBOLS.filter(
+      (s) => !watchlist.includes(s) && s.toLowerCase().includes(q),
+    );
+  }, [query, watchlist]);
+
+  const showSearch = watchlist.length > 0 || query.length > 0;
+
   return (
-    <Segmented<Symbol>
-      as="link"
-      label="Symbol"
-      srLabel
-      value={active}
-      role="tablist"
-      variant="gradient"
-      groupId="symbol-indicator"
-      hrefFor={(s) => `/chart/${s}?tf=${tf}`}
-      options={watchlist.map((s) => ({ value: s, label: s }))}
-    />
+    <div className="flex flex-col gap-2">
+      {showSearch ? (
+        <div className="relative">
+          <Search
+            aria-hidden="true"
+            className="text-fg-subtle absolute left-3 top-1/2 size-4 -translate-y-1/2"
+          />
+          <input
+            type="search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search symbols…"
+            className="bg-bg-elev-1/60 text-fg placeholder:text-fg-subtle focus:border-brand/60 border-divider h-11 w-full rounded-xl border pl-10 pr-4 text-sm focus:outline-none"
+          />
+        </div>
+      ) : null}
+
+      <Segmented<Symbol>
+        as="link"
+        label="Symbol"
+        srLabel
+        value={active}
+        role="tablist"
+        variant="gradient"
+        groupId="symbol-indicator"
+        hrefFor={(s) => `/chart/${s}?tf=${tf}`}
+        options={watchlist.map((s) => ({ value: s, label: s }))}
+      />
+
+      {query && filteredAll.length > 0 ? (
+        <div className="flex flex-wrap gap-1">
+          {filteredAll.map((s) => (
+            <a
+              key={s}
+              href={`/chart/${s}?tf=${tf}`}
+              className={cn(
+                'inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-semibold tabular-nums transition-colors',
+                'text-fg-muted hover:text-fg hover:bg-bg-elev-2',
+              )}
+            >
+              {s}
+            </a>
+          ))}
+        </div>
+      ) : null}
+
+      {query && filteredAll.length === 0 && watchlist.every((s) => !s.toLowerCase().includes(query.trim().toLowerCase())) ? (
+        <p className="text-fg-subtle px-3 py-2 text-center text-sm">No symbols match.</p>
+      ) : null}
+    </div>
   );
 }

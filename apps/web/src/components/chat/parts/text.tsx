@@ -27,9 +27,10 @@ import { cn } from '@/lib/cn';
 interface TextPartProps {
   text: string;
   role: 'user' | 'assistant';
+  isStreaming?: boolean;
 }
 
-export function TextPart({ text, role }: TextPartProps) {
+export function TextPart({ text, role, isStreaming }: TextPartProps) {
   // User bubbles never need markdown formatting — the user typed it
   // verbatim and we should render it the same way they typed it.
   if (role === 'user') {
@@ -38,8 +39,19 @@ export function TextPart({ text, role }: TextPartProps) {
     );
   }
 
+  // While streaming, skip expensive ReactMarkdown + Shiki parsing.
+  // Upgrade to full markdown rendering once streaming finishes.
+  if (isStreaming) {
+    return (
+      <div aria-live="polite" aria-atomic="true" className="md-prose text-sm leading-relaxed space-y-2">
+        {text}
+        <span className="inline-block w-[2px] h-[1em] bg-text-fg animate-pulse ml-[1px] align-middle" />
+      </div>
+    );
+  }
+
   return (
-    <div className="md-prose text-sm leading-relaxed space-y-2">
+    <div aria-live="polite" aria-atomic="true" className="md-prose text-sm leading-relaxed space-y-2">
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         components={{

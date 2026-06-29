@@ -40,9 +40,9 @@ export function StaleIndicator({ isFetching, label, className }: StaleIndicatorP
   return (
     <span
       role="alert"
-      aria-live="assertive"
+      aria-live="polite"
       className={cn(
-        'text-fg-subtle stale-pulse inline-flex items-center gap-1 text-[10px] font-medium tabular-nums uppercase tracking-wide',
+        'text-fg-subtle stale-pulse inline-flex items-center gap-1 text-xs font-medium tabular-nums uppercase tracking-wide',
         className,
       )}
     >

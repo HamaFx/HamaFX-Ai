@@ -18,7 +18,7 @@
 
 import { type Symbol } from '@hamafx/shared';
 import { Link } from 'next-view-transitions';
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo } from 'react';
 
 import { PriceTag } from '@/components/chart/price-tag';
 import { SymbolPicker } from '@/components/chart/symbol-picker';
@@ -29,14 +29,61 @@ import { useChartData } from '@/hooks/use-chart-data';
 import { useTimeframe } from '@/hooks/use-tf';
 import { useLocalStorage } from '@/hooks/use-local-storage';
 import { type ChartSettings } from '@/components/chart/chart';
+import { type ChartIndicators } from '@/components/chart/chart-settings-drawer';
 import { TradingViewWidget } from './tradingview-widget';
+
+interface ChartConfig {
+  indicators: ChartIndicators;
+  settings: ChartSettings;
+}
+
+const DEFAULT_INDICATORS: ChartIndicators = {
+  ema20: false,
+  ema50: false,
+  ema200: false,
+  sma50: false,
+  sma100: false,
+  bollinger: false,
+  rsi: false,
+  macd: false,
+  atr: false,
+  pivots: false,
+};
+
+const DEFAULT_SETTINGS: ChartSettings = {
+  theme: 'black',
+  gridStyle: 'solid',
+};
+
+const MIGRATED_KEY = 'hfx_chart_config_migrated';
 
 export function ProChartView({ symbol, watchlist }: { symbol: Symbol; watchlist: string[] }) {
   const [tf, setTf] = useTimeframe();
-  const [_settings] = useLocalStorage<ChartSettings>('hamafx-chart-settings', {
-    theme: 'black',
-    gridStyle: 'solid',
+  const [, setConfig] = useLocalStorage<ChartConfig>('hfx_chart_config', {
+    indicators: DEFAULT_INDICATORS,
+    settings: DEFAULT_SETTINGS,
   });
+
+  // Migrate from old storage key 'hamafx-chart-settings' to 'hfx_chart_config'
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (window.localStorage.getItem(MIGRATED_KEY)) return;
+    try {
+      const oldRaw = window.localStorage.getItem('hamafx-chart-settings');
+      if (oldRaw) {
+        const oldSettings = JSON.parse(oldRaw) as Partial<ChartSettings>;
+        setConfig((prev) => ({
+          ...prev,
+          settings: { ...prev.settings, ...oldSettings },
+        }));
+      }
+    } catch {
+      // ignore migration errors
+    } finally {
+      window.localStorage.setItem(MIGRATED_KEY, '1');
+      window.localStorage.removeItem('hamafx-chart-settings');
+    }
+  }, [setConfig]);
 
   const { candles, isLoading, isFetching } = useChartData(symbol, tf, [], 300);
 

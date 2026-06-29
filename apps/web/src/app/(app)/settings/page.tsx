@@ -16,6 +16,7 @@
 
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
+import { KeyRound, Bell, Bot, Database, Info } from 'lucide-react';
 
 import { auth } from '@/auth';
 import { getDb, schema } from '@hamafx/db';
@@ -30,6 +31,7 @@ import { NotificationsCard } from './_components/notifications-card';
 import { PreferencesCard } from './_components/preferences-card';
 import { ChangePasswordCard } from './_components/change-password-card';
 import { SessionsCard } from './_components/sessions-card';
+import { SettingsSection } from './_components/settings-section';
 import { SystemStatusCard } from './_components/system-status-card';
 import { UsageGlance } from './_components/usage-glance';
 import { TwoFactorSetup } from './_components/two-factor-setup';
@@ -60,22 +62,27 @@ export default async function SettingsPage() {
   let locale = 'en';
   let twoFactorEnabled = false;
 
-  const [userRow] = await db.select({
-    twoFactorEnabled: schema.users.twoFactorEnabled,
-  }).from(schema.users).where(eq(schema.users.id, userId));
+  const [[userRow], [settings], list] = await Promise.all([
+    db.select({
+      twoFactorEnabled: schema.users.twoFactorEnabled,
+    }).from(schema.users).where(eq(schema.users.id, userId)),
+    db.select({
+      customInstructions: schema.userSettings.customInstructions,
+      defaultSymbol: schema.userSettings.defaultSymbol,
+      timeFormat: schema.userSettings.timeFormat,
+      reduceMotion: schema.userSettings.reduceMotion,
+      theme: schema.userSettings.theme,
+      language: schema.userSettings.language,
+      notificationPrefs: schema.userSettings.notificationPreferences,
+    })
+      .from(schema.userSettings)
+      .where(eq(schema.userSettings.userId, userId)),
+    db.select({ symbol: schema.userSymbols.symbol })
+      .from(schema.userSymbols)
+      .where(eq(schema.userSymbols.userId, userId))
+      .orderBy(asc(schema.userSymbols.displayOrder)),
+  ]);
   twoFactorEnabled = userRow?.twoFactorEnabled ?? false;
-
-  const [settings] = await db.select({
-    customInstructions: schema.userSettings.customInstructions,
-    defaultSymbol: schema.userSettings.defaultSymbol,
-    timeFormat: schema.userSettings.timeFormat,
-    reduceMotion: schema.userSettings.reduceMotion,
-    theme: schema.userSettings.theme,
-    language: schema.userSettings.language,
-    notificationPrefs: schema.userSettings.notificationPreferences,
-  })
-    .from(schema.userSettings)
-    .where(eq(schema.userSettings.userId, userId));
   if (settings) {
     aiPrefs = { customInstructions: settings.customInstructions ?? null };
     uiPrefs = {
@@ -87,29 +94,41 @@ export default async function SettingsPage() {
     locale = settings.language ?? 'en';
     notificationPrefs = settings.notificationPrefs as Record<string, Record<string, boolean>> | null;
   }
-  const list = await db.select({ symbol: schema.userSymbols.symbol })
-    .from(schema.userSymbols)
-    .where(eq(schema.userSymbols.userId, userId))
-    .orderBy(asc(schema.userSymbols.displayOrder));
   if (list.length > 0) {
     watchlist = list.map((item) => item.symbol);
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-8">
       <SystemStatusCard userId={userId} />
       <UsageGlance userId={userId} />
-      <AgentCard />
-      <AIPrefsCard initialCustomInstructions={aiPrefs.customInstructions} />
-      <NotificationsCard userId={userId} />
-      <ChangePasswordCard />
+
+      <SettingsSection icon={<KeyRound className="size-4" />} title="Security" description="Password, two-factor, and active sessions">
+        <ChangePasswordCard />
+        <TwoFactorSetup enabled={twoFactorEnabled} />
+        <SessionsCard />
+      </SettingsSection>
+
+      <SettingsSection icon={<Bell className="size-4" />} title="Notifications" description="Alert channels, noise control, and test buttons">
+        <NotificationsCard userId={userId} />
+        <NotificationPrefsCard initialPrefs={notificationPrefs} />
+      </SettingsSection>
+
+      <SettingsSection icon={<Bot className="size-4" />} title="AI & Agent" description="Analysis mode, disabled tools, and model configuration">
+        <AgentCard />
+        <AIPrefsCard initialCustomInstructions={aiPrefs.customInstructions} />
+      </SettingsSection>
+
+      <SettingsSection icon={<Database className="size-4" />} title="Data" description="Portfolio, track record, and symbol preferences">
+        <DataCard />
+        <PreferencesCard watchlist={watchlist} initialPrefs={uiPrefs} />
+      </SettingsSection>
+
+      <SettingsSection icon={<Info className="size-4" />} title="About" description="App info and system status">
+        <AboutCard />
+      </SettingsSection>
+
       <AppearanceCard initialTheme={uiPrefs.theme} initialLocale={locale} />
-      <SessionsCard />
-      <NotificationPrefsCard initialPrefs={notificationPrefs} />
-      <TwoFactorSetup enabled={twoFactorEnabled} />
-      <PreferencesCard watchlist={watchlist} initialPrefs={uiPrefs} />
-      <DataCard />
-      <AboutCard />
     </div>
   );
 }

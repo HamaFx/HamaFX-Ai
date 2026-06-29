@@ -42,14 +42,15 @@ export default async function OnboardingPage() {
   // our own host (RSC can't self-fetch without a full URL, and
   // APP_URL isn't always set on Vercel). The wizard accepts the
   // wider ProviderMeta shape so we pass it through as-is.
-  const catalog = await buildCatalogForUser(session.user.id);
+  const [catalog, symbolsCatalog] = await Promise.all([
+    buildCatalogForUser(session.user.id),
+    db
+      .select()
+      .from(schema.symbolCatalog)
+      .where(eq(schema.symbolCatalog.isActive, true))
+      .orderBy(schema.symbolCatalog.sortOrder),
+  ]);
   const providers = catalog.providers;
-
-  const symbolsCatalog = await db
-    .select()
-    .from(schema.symbolCatalog)
-    .where(eq(schema.symbolCatalog.isActive, true))
-    .orderBy(schema.symbolCatalog.sortOrder);
 
   return (
     <div className="flex flex-col gap-8">

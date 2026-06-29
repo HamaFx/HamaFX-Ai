@@ -78,7 +78,7 @@ const ArticleCardInner = memo(
           : null;
 
     const askPrompt = encodeURIComponent(
-      `What does this headline mean for my trading?\n\n${article.title}\n${article.url}`,
+      `What does this headline mean for my trading?\n\nTitle: ${article.title}\n${article.summary ? `Summary: ${article.summary}\n` : ''}${article.url}`,
     );
 
     const totalTags = article.symbols.length + article.topics.length;

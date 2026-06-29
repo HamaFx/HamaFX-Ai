@@ -28,12 +28,18 @@ export default function RegisterPage() {
   const [state, action, pending] = useActionState(registerAction, { error: '' });
   const [success, setSuccess] = useState(false);
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+
+  const passwordsMatch = password === confirmPassword;
+  const confirmTouched = confirmPassword.length > 0;
 
   useEffect(() => {
     if (state.success) {
       setSuccess(true);
     }
   }, [state.success]);
+
+  const submitDisabled = pending || success || (confirmTouched && !passwordsMatch);
 
   return (
     <div className="flex flex-col gap-6">
@@ -113,6 +119,25 @@ export default function RegisterPage() {
             )}
           </div>
 
+          <div className="flex flex-col gap-2">
+            <label htmlFor="confirm-password" className="text-fg text-sm font-semibold">
+              Confirm Password
+            </label>
+            <Input
+              id="confirm-password"
+              name="confirmPassword"
+              type="password"
+              autoComplete="new-password"
+              required
+              disabled={pending || success}
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+            />
+            {confirmTouched && !passwordsMatch ? (
+              <p role="alert" className="text-bear text-xs mt-1">Passwords do not match</p>
+            ) : null}
+          </div>
+
           {state?.error ? (
             <p id="register-error" role="alert" className="text-bear text-sm">
               {state.error}
@@ -123,7 +148,7 @@ export default function RegisterPage() {
             type="submit"
             size="lg"
             loading={pending}
-            disabled={pending || success}
+            disabled={submitDisabled}
             variant={success ? 'success' : 'primary'}
           >
             {success ? (

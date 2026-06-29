@@ -468,8 +468,8 @@ function ThreadSwitcher({ open, onOpenChange, threadId, threads, onPickNew }: Th
     return threads.filter((t) => (t.title ?? '').toLowerCase().includes(q));
   }, [query, threads]);
 
-  const showSearch = threads.length > 5;
-  const showSelectToggle = threads.length > 5;
+  const showSearch = threads.length >= 2;
+  const showSelectToggle = threads.length >= 2;
 
   function toggleSelected(id: string) {
     setSelectedIds((prev) => {

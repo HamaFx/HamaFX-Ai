@@ -223,7 +223,7 @@ export function NavDrawer() {
 function Section({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="flex flex-col gap-1 pt-3 first:pt-0">
-      <p className="text-fg-subtle px-3 pb-1 text-[10px] font-semibold uppercase tracking-wider">
+      <p className="text-fg-subtle px-3 pb-1 text-xs font-semibold uppercase tracking-wider">
         {label}
       </p>
       <ul className="flex flex-col gap-0.5">{children}</ul>
@@ -261,7 +261,7 @@ function NavLink({ item, active }: { item: NavItem; active: boolean }) {
         <div className="flex min-w-0 flex-1 flex-col">
           <span className="text-sm font-semibold leading-tight">{item.label}</span>
           {item.description ? (
-            <span className="text-fg-subtle truncate text-[11px] leading-tight">
+            <span className="text-fg-subtle truncate text-xs leading-tight">
               {item.description}
             </span>
           ) : null}

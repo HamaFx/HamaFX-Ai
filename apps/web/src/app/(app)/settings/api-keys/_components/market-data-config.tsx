@@ -144,9 +144,9 @@ export function MarketDataConfig({ initialProvider, finnhubKeySet }: MarketDataC
             />
             <div className="flex flex-col gap-1 min-w-0">
               <span className="text-xs font-semibold text-fg">{p.name}</span>
-              <span className="text-[11px] text-fg-subtle leading-normal">{p.description}</span>
+              <span className="text-xs text-fg-subtle leading-normal">{p.description}</span>
               {p.warn && (
-                <span className="text-[10px] text-warn font-semibold mt-1">
+                <span className="text-xs text-warn font-semibold mt-1">
                   ⚠️ Note: Finnhub API Key is not set above. Please add it to enable this provider.
                 </span>
               )}
@@ -162,7 +162,7 @@ export function MarketDataConfig({ initialProvider, finnhubKeySet }: MarketDataC
         </div>
       )}
       {test.kind === 'ok' && (
-        <div className="flex items-center gap-2 text-xs text-emerald-400">
+        <div className="flex items-center gap-2 text-xs text-bull">
           <CheckCircle2 className="size-3.5 shrink-0" />
           <span>Connection test successful! Provider is online.</span>
         </div>

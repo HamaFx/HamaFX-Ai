@@ -1,6 +1,6 @@
 'use client';
 
-import { WifiOff, RotateCw } from 'lucide-react';
+import { RotateCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export const dynamic = 'force-static';
@@ -11,17 +11,24 @@ export default function OfflinePage() {
   };
 
   return (
-    <section className="flex min-h-[60svh] flex-col items-center justify-center gap-4 text-center px-4">
-      <div className="bg-muted flex h-12 w-12 items-center justify-center rounded-full">
-        <WifiOff className="text-muted-foreground h-6 w-6" />
-      </div>
-      <div className="space-y-2">
+    <section className="flex min-h-[60svh] flex-col items-center justify-center gap-6 text-center px-4">
+      <span
+        aria-hidden="true"
+        className="inline-flex size-16 items-center justify-center rounded-2xl"
+        style={{
+          background: 'var(--gradient-brand)',
+          boxShadow: '0 0 24px -4px oklch(82% 0.14 85 / 0.3)',
+        }}
+      >
+        <span className="text-bg text-2xl font-bold">H</span>
+      </span>
+      <div className="flex flex-col gap-2">
         <h1 className="text-fg text-xl font-semibold tracking-tight">You&apos;re offline</h1>
         <p className="text-fg-muted text-sm max-w-sm">
-          Please check your network connection. Cached pages and features will continue to work while offline.
+          No connection to the market feed. Cached pages and features will continue to work while offline.
         </p>
       </div>
-      <Button onClick={handleRetry} className="mt-2 gap-2">
+      <Button onClick={handleRetry} className="gap-2">
         <RotateCw className="h-4 w-4" />
         Retry Connection
       </Button>

@@ -26,24 +26,30 @@ import { useQuery } from '@tanstack/react-query';
 
 import { fetchPrices } from '@/lib/market-client';
 
-const POLL_MS = 1_500;
+const POLL_MS = 3_000;
 
-export function usePrices(symbols: readonly Symbol[]) {
+export function usePrices(
+  symbols: readonly Symbol[],
+  options?: { enabled?: boolean },
+) {
   // Stable key: sort so [XAU, EUR] and [EUR, XAU] hit the same cache entry.
   const key = [...symbols].sort();
   return useQuery<Tick[]>({
     queryKey: ['market', 'price', key],
     queryFn: ({ signal }) => fetchPrices(key, { signal }),
-    enabled: symbols.length > 0,
+    enabled: (options?.enabled ?? true) && symbols.length > 0,
     refetchInterval: POLL_MS,
     refetchIntervalInBackground: false,
-    staleTime: 1_000,
+    staleTime: 2_000,
   });
 }
 
 /** Convenience for a single symbol. */
-export function usePrice(symbol: Symbol) {
-  const q = usePrices([symbol]);
+export function usePrice(
+  symbol: Symbol,
+  options?: { enabled?: boolean },
+) {
+  const q = usePrices([symbol], options);
   const tick: Tick | undefined = q.data?.find((t) => t.symbol === symbol);
   return { ...q, tick };
 }
