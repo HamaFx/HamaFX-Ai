@@ -67,6 +67,7 @@ export function CitationWarningPartView({ part }: CitationWarningProps) {
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
+        aria-controls="citation-warning-content"
         className="hover:text-fg flex items-center gap-2 text-left text-body-sm font-medium focus:outline-none"
       >
         {open ? <ChevronDown className="size-3.5" /> : <ChevronRight className="size-3.5" />}
@@ -77,7 +78,7 @@ export function CitationWarningPartView({ part }: CitationWarningProps) {
       </button>
 
       {open ? (
-        <ul className="ml-6 flex flex-col gap-1 text-body-sm">
+        <ul id="citation-warning-content" className="ml-6 flex flex-col gap-1 text-body-sm">
           {rows.map((row, i) => (
             <li key={i} className="text-fg-subtle flex items-start gap-2">
               {row.supported ? (

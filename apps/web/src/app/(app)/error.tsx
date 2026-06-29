@@ -34,14 +34,11 @@ export default function AppError({ error, reset }: AppErrorProps) {
   }, [error]);
 
   return (
-    <div className="border-bear/30 bg-bear/5 flex flex-col gap-3 rounded-lg border p-4">
+    <div className="border-bear/30 bg-bear/5 flex flex-col gap-3 rounded-lg border p-4" role="alert">
       <h1 className="text-bear text-base font-semibold">Couldn&apos;t load this page</h1>
       <p className="text-fg-muted text-sm">
-        {error.message || 'Something went wrong while rendering.'}
+        Something went wrong while rendering. Please try again.
       </p>
-      {error.digest ? (
-        <p className="text-fg-subtle text-caption tabular-nums">digest: {error.digest}</p>
-      ) : null}
       <div>
         <Button type="button" onClick={() => reset()} size="sm" variant="secondary">
           Retry

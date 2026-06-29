@@ -28,7 +28,8 @@ type SkeletonProps = HTMLAttributes<HTMLDivElement>;
 export function Skeleton({ className, ...rest }: SkeletonProps) {
   return (
     <div
-      aria-hidden="true"
+      role="status"
+      aria-label="Loading content"
       className={cn('shimmer rounded-md', className)}
       {...rest}
     />
@@ -44,7 +45,8 @@ interface SkeletonCardProps extends HTMLAttributes<HTMLDivElement> {
 export function SkeletonCard({ className, lines = 2, ...rest }: SkeletonCardProps) {
   return (
     <div
-      aria-hidden="true"
+      role="status"
+      aria-label="Loading content"
       className={cn(
         'border-border bg-bg-elev-1/60 flex flex-col gap-2 overflow-hidden rounded-lg border p-4',
         className,

@@ -81,7 +81,7 @@ export function GetIntermarketResonancePart({
             {output.symbol} Opportunity Cost Divergence
           </h3>
         </div>
-        <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[9px] font-bold ${regimeBg} ${regimeColor}`}>
+        <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-bold ${regimeBg} ${regimeColor}`}>
           <Icon className="size-3" />
           {regimeLabel}
         </span>
@@ -90,15 +90,15 @@ export function GetIntermarketResonancePart({
       {/* Main Stats Block */}
       <div className="grid grid-cols-3 gap-3 text-center">
         <div className="bg-bg-elev-2/50 rounded-lg p-2 border border-divider/25">
-          <span className="text-fg-subtle text-[9px] block uppercase font-medium">10Y Real Yield</span>
+          <span className="text-fg-subtle text-xs block uppercase font-medium">10Y Real Yield</span>
           <span className="text-fg text-base font-extrabold tabular-nums mt-0.5 block">{roundedYield}%</span>
         </div>
         <div className="bg-bg-elev-2/50 rounded-lg p-2 border border-divider/25">
-          <span className="text-fg-subtle text-[9px] block uppercase font-medium">10Y Breakeven</span>
+          <span className="text-fg-subtle text-xs block uppercase font-medium">10Y Breakeven</span>
           <span className="text-fg text-base font-extrabold tabular-nums mt-0.5 block">{roundedInflation}%</span>
         </div>
         <div className="bg-bg-elev-2/50 rounded-lg p-2 border border-divider/25">
-          <span className="text-fg-subtle text-[9px] block uppercase font-medium">z-score divergence</span>
+          <span className="text-fg-subtle text-xs block uppercase font-medium">z-score divergence</span>
           <span className={`text-base font-extrabold tabular-nums mt-0.5 block ${regimeColor}`}>
             {roundedDivergence >= 0 ? `+${roundedDivergence}` : roundedDivergence} SD
           </span>
@@ -107,7 +107,7 @@ export function GetIntermarketResonancePart({
 
       {/* Gauge Needle Visual */}
       <div className="flex flex-col gap-1.5 px-1 mt-1">
-        <div className="flex justify-between text-[9px] text-fg-subtle">
+        <div className="flex justify-between text-xs text-fg-subtle">
           <span>-3.0 SD (Discount)</span>
           <span className="font-bold">0.0 (Fair Value)</span>
           <span>+3.0 SD (Premium)</span>

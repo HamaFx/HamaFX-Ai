@@ -50,7 +50,7 @@ export function SettingsNav() {
       )}
 
       <aside className="md:w-56 shrink-0">
-        <nav role="tablist" aria-label="Settings navigation" className="flex flex-row md:flex-col gap-1 overflow-x-auto snap-x pb-2 md:pb-0">
+        <nav aria-label="Settings" className="flex flex-row md:flex-col gap-1 overflow-x-auto snap-x pb-2 md:pb-0">
           {NAV_ITEMS.map((item) => {
             const active = item.exact
               ? pathname === item.href
@@ -62,7 +62,6 @@ export function SettingsNav() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  role="tab"
                   aria-current={active ? 'page' : undefined}
                   className={cn(
                     'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors whitespace-nowrap snap-start',

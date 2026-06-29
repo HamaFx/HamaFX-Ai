@@ -35,10 +35,8 @@ export function QueryProvider({ children }: { children: React.ReactNode }) {
             // Each hook overrides these (e.g. usePrices polls at 1.5 s).
             staleTime: 30_000,
             gcTime: 5 * 60_000,
-            retry: (failureCount, error) => {
-              if (error instanceof Response && error.status >= 400 && error.status < 500) return false;
-              return failureCount < 3;
-            },
+            retry: 2,
+            retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 10000),
             refetchOnWindowFocus: false,
           },
           mutations: { retry: 0 },

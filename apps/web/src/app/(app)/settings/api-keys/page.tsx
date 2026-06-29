@@ -340,18 +340,18 @@ export default async function ApiKeysSettingsPage({
               {BYOK_PROVIDERS_LIST.map((p) => (
                 <tr key={p.id} className="hover:bg-bg-elev-2/20">
                   <td className="p-3 font-medium text-fg">{p.displayName}</td>
-                  <td className="p-3 text-center text-emerald-400">✓</td>
+                  <td className="p-3 text-center text-bull">✓</td>
                   <td className="p-3 text-center">
-                    {p.supports.vision ? <span className="text-emerald-400">✓</span> : <span className="text-fg-muted">—</span>}
+                    {p.supports.vision ? <span className="text-bull">✓</span> : <span className="text-fg-muted">—</span>}
                   </td>
                   <td className="p-3 text-center">
-                    {p.supports.embedding ? <span className="text-emerald-400">✓</span> : <span className="text-fg-muted">—</span>}
+                    {p.supports.embedding ? <span className="text-bull">✓</span> : <span className="text-fg-muted">—</span>}
                   </td>
-                  <td className="p-3 text-center text-emerald-400">✓</td>
-                  <td className="p-3 text-center text-emerald-400">✓</td>
+                  <td className="p-3 text-center text-bull">✓</td>
+                  <td className="p-3 text-center text-bull">✓</td>
                   <td className="p-3 text-center">
                     {p.pricingTier === 'free' ? (
-                      <span className="rounded-full bg-bull/15 px-2 py-0.5 text-[10px] font-medium text-bull font-semibold">Free</span>
+                      <span className="rounded-full bg-bull/15 px-2 py-0.5 text-xs font-medium text-bull font-semibold">Free</span>
                     ) : (
                       <span className="text-fg-muted">—</span>
                     )}

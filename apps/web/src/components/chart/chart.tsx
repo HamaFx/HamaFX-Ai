@@ -35,6 +35,7 @@
 
 import { Maximize2, ZoomIn, ZoomOut } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
+import { AnimatePresence, m } from 'motion/react';
 
 import { cn } from '@/lib/cn';
 import { priceDecimals } from '@hamafx/shared';
@@ -114,49 +115,76 @@ export function Chart({
       </div>
 
       {/* RSI oscillator sub-pane */}
-      {rsiResult ? (
-        <div className="bg-bg-elev-1 border-border relative h-[120px] overflow-hidden rounded-lg border animate-in fade-in duration-200">
-          <ChartRSI
-            result={rsiResult}
-            candles={candles}
-            mainChart={mainChart}
-            settings={settings ?? null}
-          />
-          <div className="text-fg-subtle pointer-events-none absolute top-2 left-3 z-10 text-caption font-bold uppercase tracking-wider">
-            RSI (14)
-          </div>
-        </div>
-      ) : null}
+      <AnimatePresence>
+        {rsiResult ? (
+          <m.div
+            key="rsi-pane"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2 }}
+            className="bg-bg-elev-1 border-border relative h-[120px] overflow-hidden rounded-lg border"
+          >
+            <ChartRSI
+              result={rsiResult}
+              candles={candles}
+              mainChart={mainChart}
+              settings={settings ?? null}
+            />
+            <div className="text-fg-subtle pointer-events-none absolute top-2 left-3 z-10 text-caption font-bold uppercase tracking-wider">
+              RSI (14)
+            </div>
+          </m.div>
+        ) : null}
+      </AnimatePresence>
 
       {/* MACD oscillator sub-pane */}
-      {macdResult ? (
-        <div className="bg-bg-elev-1 border-border relative h-[140px] overflow-hidden rounded-lg border animate-in fade-in duration-200">
-          <ChartMACD
-            result={macdResult}
-            candles={candles}
-            mainChart={mainChart}
-            settings={settings ?? null}
-          />
-          <div className="text-fg-subtle pointer-events-none absolute top-2 left-3 z-10 text-caption font-bold uppercase tracking-wider">
-            MACD (12, 26, 9)
-          </div>
-        </div>
-      ) : null}
+      <AnimatePresence>
+        {macdResult ? (
+          <m.div
+            key="macd-pane"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2 }}
+            className="bg-bg-elev-1 border-border relative h-[140px] overflow-hidden rounded-lg border"
+          >
+            <ChartMACD
+              result={macdResult}
+              candles={candles}
+              mainChart={mainChart}
+              settings={settings ?? null}
+            />
+            <div className="text-fg-subtle pointer-events-none absolute top-2 left-3 z-10 text-caption font-bold uppercase tracking-wider">
+              MACD (12, 26, 9)
+            </div>
+          </m.div>
+        ) : null}
+      </AnimatePresence>
 
       {/* ATR Volatility sub-pane */}
-      {atrResult ? (
-        <div className="bg-bg-elev-1 border-border relative h-[120px] overflow-hidden rounded-lg border animate-in fade-in duration-200">
-          <ChartATR
-            result={atrResult}
-            candles={candles}
-            mainChart={mainChart}
-            settings={settings ?? null}
-          />
-          <div className="text-fg-subtle pointer-events-none absolute top-2 left-3 z-10 text-caption font-bold uppercase tracking-wider">
-            ATR (14)
-          </div>
-        </div>
-      ) : null}
+      <AnimatePresence>
+        {atrResult ? (
+          <m.div
+            key="atr-pane"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2 }}
+            className="bg-bg-elev-1 border-border relative h-[120px] overflow-hidden rounded-lg border"
+          >
+            <ChartATR
+              result={atrResult}
+              candles={candles}
+              mainChart={mainChart}
+              settings={settings ?? null}
+            />
+            <div className="text-fg-subtle pointer-events-none absolute top-2 left-3 z-10 text-caption font-bold uppercase tracking-wider">
+              ATR (14)
+            </div>
+          </m.div>
+        ) : null}
+      </AnimatePresence>
     </div>
   );
 }

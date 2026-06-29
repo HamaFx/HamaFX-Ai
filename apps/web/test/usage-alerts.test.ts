@@ -34,7 +34,7 @@ vi.mock('drizzle-orm', () => ({
 import { getDb } from '@hamafx/db';
 import { getMonthlySpend, getProviderMonthlySpend, sendDirectNotification } from '@hamafx/ai';
 
-import { checkAllUsageAlerts } from '../src/lib/usage-alerts';
+import { checkAllUsageAlerts, resetSentAlerts } from '../src/lib/usage-alerts';
 
 const mockDb = vi.mocked(getDb);
 const mockGetMonthlySpend = vi.mocked(getMonthlySpend);
@@ -66,6 +66,7 @@ function makeUserRow(overrides: Record<string, unknown> = {}) {
 
 afterEach(() => {
   vi.clearAllMocks();
+  resetSentAlerts();
 });
 
 describe('checkAllUsageAlerts', () => {

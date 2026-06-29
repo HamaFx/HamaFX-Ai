@@ -18,7 +18,7 @@
 
 export function ChartSkeleton() {
   return (
-    <div className="border border-divider bg-bg-elev-1 rounded-lg relative flex aspect-[16/9] w-full items-center justify-center overflow-hidden md:aspect-[21/9]">
+    <div role="status" aria-label="Loading content" className="border border-divider bg-bg-elev-1 rounded-lg relative flex h-[60svh] w-full items-center justify-center overflow-hidden">
       <div className="shimmer absolute inset-0 opacity-50" />
       <span className="text-fg-subtle relative text-xs font-medium tracking-wide">
         Loading chart…

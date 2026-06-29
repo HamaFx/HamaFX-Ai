@@ -81,7 +81,7 @@ function TrackRecordContent({ stats }: { stats: SignalStats }) {
           label="Avg Return"
           value={avgReturnStr}
           icon={stats.avgReturnPct >= 0 ? TrendingUp : TrendingDown}
-          valueClass={stats.avgReturnPct >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}
+          valueClass={stats.avgReturnPct >= 0 ? 'text-bull' : 'text-bear'}
         />
         <StatCard label="Evaluated" value={String(stats.evaluated)} icon={Target} />
       </div>
@@ -174,10 +174,10 @@ function TrackRecordContent({ stats }: { stats: SignalStats }) {
                     className={cn(
                       'text-xs font-medium px-2 py-0.5 rounded uppercase',
                       s.action === 'buy' || s.action === 'add'
-                        ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                        ? 'bg-bull/10 text-bull'
                         : s.action === 'sell' || s.action === 'reduce'
-                          ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
-                          : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400',
+                          ? 'bg-bear/10 text-bear'
+                          : 'bg-bg-elev-2 text-fg-muted',
                     )}
                   >
                     {s.action}
@@ -225,10 +225,10 @@ function StatCard({
 
 function StatusBadge({ status }: { status: string }) {
   const styles: Record<string, string> = {
-    active: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
-    closed: 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400',
-    expired: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
-    invalidated: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+    active: 'bg-info/10 text-info',
+    closed: 'bg-bg-elev-2 text-fg-muted',
+    expired: 'bg-warn/10 text-warn',
+    invalidated: 'bg-bear/10 text-bear',
   };
   return (
     <span className={cn('text-xs font-medium px-2 py-0.5 rounded', styles[status] ?? styles.closed)}>

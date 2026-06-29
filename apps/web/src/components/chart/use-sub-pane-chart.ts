@@ -56,12 +56,27 @@ export function useSubPaneChart<TSeries>({
   const seriesRef = useRef<TSeries | null>(null);
   const onReadyRef = useRef(onReady);
   onReadyRef.current = onReady;
+  const mainChartRef = useRef(mainChart);
 
   const [isReady, setIsReady] = useState(false);
 
   // 1. Chart initialization (mount once, or when container/mainChart changes)
   useEffect(() => {
     if (!lc || !containerEl) return;
+
+    // Avoid rebuilding sub-panes when mainChart reference changes but identity is the same
+    if (mainChart === mainChartRef.current && chartRef.current) {
+      return;
+    }
+
+    // Destroy old sub-pane before rebuilding for a new mainChart identity
+    if (chartRef.current) {
+      chartRef.current.remove();
+      chartRef.current = null;
+      seriesRef.current = null;
+      setIsReady(false);
+    }
+    mainChartRef.current = mainChart;
 
     const createChartFn =
       'createChart' in lc

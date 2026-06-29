@@ -90,7 +90,7 @@ export function GetPortfolioSnapshotPart({ output, state, errorMessage }: GetPor
         <div className="space-y-1">
           {risk.alerts.map((alert, i) => (
             <div
-              key={i}
+              key={`alert-${i}`}
               className={`flex items-start gap-1.5 text-xs p-2 rounded-md ${
                 alert.level === 'danger'
                   ? 'bg-bear/10 text-bear border border-bear/20'
@@ -108,7 +108,7 @@ export function GetPortfolioSnapshotPart({ output, state, errorMessage }: GetPor
         {positions.map((pos, i) => {
           const isBull = pos.unrealizedPnlUsd !== null && pos.unrealizedPnlUsd >= 0;
           return (
-            <li key={i} className="flex items-center justify-between gap-3 p-2 bg-bg rounded-md">
+            <li key={`position-${i}`} className="flex items-center justify-between gap-3 p-2 bg-bg rounded-md">
               <div className="flex flex-col">
                 <div className="flex items-center gap-1.5">
                   <span className="text-fg font-semibold">{pos.symbol}</span>

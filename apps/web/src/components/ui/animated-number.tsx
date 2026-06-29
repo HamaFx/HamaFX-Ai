@@ -26,6 +26,8 @@
 import { useMotionValue, useSpring } from 'motion/react';
 import { useEffect, useState } from 'react';
 
+import { useReducedMotion } from '@/components/providers/time-provider';
+
 interface AnimatedNumberProps {
   value: number;
   decimals?: number;
@@ -39,27 +41,8 @@ export function AnimatedNumber({ value, decimals = 2, className }: AnimatedNumbe
     damping: 30,
     restDelta: 0.5 / 10 ** decimals,
   });
+  const reducedMotion = useReducedMotion();
   const [display, setDisplay] = useState(value.toFixed(decimals));
-  const [reducedMotion, setReducedMotion] = useState(false);
-
-  useEffect(() => {
-    const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
-    const checkMotion = () => {
-      const isForced = document.documentElement.dataset.reduceMotion === 'force';
-      setReducedMotion(mq.matches || isForced);
-    };
-    checkMotion();
-
-    mq.addEventListener('change', checkMotion);
-
-    const obs = new MutationObserver(checkMotion);
-    obs.observe(document.documentElement, { attributes: true, attributeFilter: ['data-reduce-motion'] });
-
-    return () => {
-      mq.removeEventListener('change', checkMotion);
-      obs.disconnect();
-    };
-  }, []);
 
   useEffect(() => {
     motionValue.set(value);

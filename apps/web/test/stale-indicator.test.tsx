@@ -44,7 +44,7 @@ describe('StaleIndicator', () => {
     render(<StaleIndicator isFetching={true} />);
     const el = screen.getByRole('alert');
     expect(el).toBeTruthy();
-    expect(el.getAttribute('aria-live')).toBe('assertive');
+    expect(el.getAttribute('aria-live')).toBe('polite');
   });
 
   it('renders an animated spinner icon', () => {

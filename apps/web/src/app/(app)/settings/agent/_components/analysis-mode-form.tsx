@@ -93,6 +93,7 @@ export function AnalysisModeForm({ initialMode, showOpinions: initialShowOpinion
             key={opt.value}
             type="button"
             onClick={() => setMode(opt.value)}
+            aria-pressed={mode === opt.value}
             className={cn(
               'flex items-center justify-between gap-3 rounded-xl border p-3 text-left transition-colors',
               mode === opt.value

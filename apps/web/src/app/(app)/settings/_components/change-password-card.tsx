@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Lock, Check, Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -15,6 +15,11 @@ export function ChangePasswordCard() {
   const [showNew, setShowNew] = useState(false);
   const [changing, setChanging] = useState(false);
   const [done, setDone] = useState(false);
+
+  // Reset success state when dialog unmounts/remounts
+  useEffect(() => {
+    return () => { setDone(false); };
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,7 +49,7 @@ export function ChangePasswordCard() {
 
   return (
     <div className="card-premium p-4">
-      <div className="mb-3 flex items-center gap-2">
+      <div className="flex items-center gap-2">
         <Lock className="text-fg-muted size-4" />
         <h2 className="text-fg text-sm font-semibold">Change Password</h2>
       </div>
@@ -58,6 +63,7 @@ export function ChangePasswordCard() {
         <form onSubmit={handleSubmit} className="flex flex-col gap-3">
           <Input
             type="password"
+            autoComplete="current-password"
             placeholder="Current password"
             value={currentPassword}
             onChange={(e) => setCurrentPassword(e.target.value)}
@@ -67,6 +73,7 @@ export function ChangePasswordCard() {
           <div className="relative">
             <Input
               type={showNew ? 'text' : 'password'}
+              autoComplete="new-password"
               placeholder="New password"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}

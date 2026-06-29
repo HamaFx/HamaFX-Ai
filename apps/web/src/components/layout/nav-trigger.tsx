@@ -31,13 +31,15 @@ import { Menu } from 'lucide-react';
 import { useNavDrawer } from './nav-drawer-context';
 
 export function NavTrigger() {
-  const { setOpen } = useNavDrawer();
+  const { open, setOpen } = useNavDrawer();
   return (
     <button
       type="button"
-      aria-label="Open menu"
+      aria-label={open ? 'Close navigation' : 'Open navigation'}
+      aria-expanded={open}
+      aria-controls="sidebar-nav"
       onClick={() => setOpen(true)}
-      className="text-fg-muted hover:text-fg hover:bg-bg-elev-2 active:bg-bg-elev-3 inline-flex size-11 shrink-0 items-center justify-center rounded-full transition-colors"
+      className="text-fg-muted hover:text-fg hover:bg-bg-elev-2 active:bg-bg-elev-3 active:scale-95 inline-flex size-11 shrink-0 items-center justify-center rounded-full transition-all"
     >
       <Menu className="size-5" />
     </button>

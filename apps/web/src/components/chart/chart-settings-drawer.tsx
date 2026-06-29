@@ -27,8 +27,10 @@ import {
   DrawerTrigger,
 } from '@/components/ui/drawer';
 import { Switch } from '@/components/ui/switch';
-import { Palette, Activity, Grid3X3, Check } from 'lucide-react';
+import { Palette, Activity, Grid3X3, Check, RotateCcw } from 'lucide-react';
 import { cn } from '@/lib/cn';
+import { Button } from '@/components/ui/button';
+import { useConfirm } from '@/components/ui/confirm-drawer';
 import type { ChartSettings } from './chart';
 
 export interface ChartIndicators {
@@ -52,6 +54,24 @@ interface ChartSettingsDrawerProps {
   trigger: React.ReactNode;
 }
 
+const DEFAULT_INDICATORS: ChartIndicators = {
+  ema20: false,
+  ema50: false,
+  ema200: false,
+  sma50: false,
+  sma100: false,
+  bollinger: false,
+  rsi: false,
+  macd: false,
+  atr: false,
+  pivots: false,
+};
+
+const DEFAULT_SETTINGS: ChartSettings = {
+  theme: 'black',
+  gridStyle: 'solid',
+};
+
 export function ChartSettingsDrawer({
   settings,
   onSettingsChange,
@@ -59,6 +79,8 @@ export function ChartSettingsDrawer({
   onIndicatorsChange,
   trigger,
 }: ChartSettingsDrawerProps) {
+  const [confirmEl, confirm] = useConfirm();
+
   const themes = [
     { id: 'black', label: 'True Black', desc: 'Zero-chroma pure black' },
     { id: 'slate', label: 'Slate Dark', desc: 'Neutral slate canvas' },
@@ -120,7 +142,7 @@ export function ChartSettingsDrawer({
                   )}
                 >
                   <span className="text-sm font-semibold">{t.label}</span>
-                  <span className="text-[10px] text-fg-muted mt-0.5">{t.desc}</span>
+                  <span className="text-xs text-fg-muted mt-0.5">{t.desc}</span>
                   {settings.theme === t.id && (
                     <Check className="size-4 text-brand absolute right-3 top-3.5" />
                   )}
@@ -166,10 +188,10 @@ export function ChartSettingsDrawer({
               {/* EMA 20 */}
               <div className="flex items-center justify-between p-3.5 border-b border-glass-edge/40">
                 <div className="flex items-center gap-3">
-                  <div className="size-2.5 rounded-full bg-blue-500 shadow-md" />
+                  <div className="size-2.5 rounded-full bg-info shadow-md" />
                   <div className="flex flex-col">
                     <span className="text-sm font-semibold">EMA 20</span>
-                    <span className="text-[10px] text-fg-muted mt-0.5">Exponential moving average (20 period)</span>
+                    <span className="text-xs text-fg-muted mt-0.5">Exponential moving average (20 period)</span>
                   </div>
                 </div>
                 <Switch
@@ -182,10 +204,10 @@ export function ChartSettingsDrawer({
               {/* EMA 50 */}
               <div className="flex items-center justify-between p-3.5 border-b border-glass-edge/40">
                 <div className="flex items-center gap-3">
-                  <div className="size-2.5 rounded-full bg-purple-500 shadow-md" />
+                  <div className="size-2.5 rounded-full bg-accent shadow-md" />
                   <div className="flex flex-col">
                     <span className="text-sm font-semibold">EMA 50</span>
-                    <span className="text-[10px] text-fg-muted mt-0.5">Exponential moving average (50 period)</span>
+                    <span className="text-xs text-fg-muted mt-0.5">Exponential moving average (50 period)</span>
                   </div>
                 </div>
                 <Switch
@@ -198,10 +220,10 @@ export function ChartSettingsDrawer({
               {/* EMA 200 */}
               <div className="flex items-center justify-between p-3.5 border-b border-glass-edge/40">
                 <div className="flex items-center gap-3">
-                  <div className="size-2.5 rounded-full bg-yellow-500 shadow-md" />
+                  <div className="size-2.5 rounded-full bg-warn shadow-md" />
                   <div className="flex flex-col">
                     <span className="text-sm font-semibold">EMA 200</span>
-                    <span className="text-[10px] text-fg-muted mt-0.5">Exponential moving average (200 period)</span>
+                    <span className="text-xs text-fg-muted mt-0.5">Exponential moving average (200 period)</span>
                   </div>
                 </div>
                 <Switch
@@ -214,10 +236,10 @@ export function ChartSettingsDrawer({
               {/* SMA 50 */}
               <div className="flex items-center justify-between p-3.5 border-b border-glass-edge/40">
                 <div className="flex items-center gap-3">
-                  <div className="size-2.5 rounded-full bg-emerald-500 shadow-md" />
+                  <div className="size-2.5 rounded-full bg-bull shadow-md" />
                   <div className="flex flex-col">
                     <span className="text-sm font-semibold">SMA 50</span>
-                    <span className="text-[10px] text-fg-muted mt-0.5">Simple moving average (50 period)</span>
+                    <span className="text-xs text-fg-muted mt-0.5">Simple moving average (50 period)</span>
                   </div>
                 </div>
                 <Switch
@@ -230,10 +252,10 @@ export function ChartSettingsDrawer({
               {/* SMA 100 */}
               <div className="flex items-center justify-between p-3.5 border-b border-glass-edge/40">
                 <div className="flex items-center gap-3">
-                  <div className="size-2.5 rounded-full bg-pink-500 shadow-md" />
+                  <div className="size-2.5 rounded-full bg-neutral shadow-md" />
                   <div className="flex flex-col">
                     <span className="text-sm font-semibold">SMA 100</span>
-                    <span className="text-[10px] text-fg-muted mt-0.5">Simple moving average (100 period)</span>
+                    <span className="text-xs text-fg-muted mt-0.5">Simple moving average (100 period)</span>
                   </div>
                 </div>
                 <Switch
@@ -246,10 +268,10 @@ export function ChartSettingsDrawer({
               {/* Bollinger Bands */}
               <div className="flex items-center justify-between p-3.5 border-b border-glass-edge/40">
                 <div className="flex items-center gap-3">
-                  <div className="size-2.5 rounded-full bg-amber-500 shadow-md animate-pulse" />
+                  <div className="size-2.5 rounded-full bg-warn shadow-md animate-pulse" />
                   <div className="flex flex-col">
                     <span className="text-sm font-semibold">Bollinger Bands</span>
-                    <span className="text-[10px] text-fg-muted mt-0.5">Volatility envelopes (20, 2)</span>
+                    <span className="text-xs text-fg-muted mt-0.5">Volatility envelopes (20, 2)</span>
                   </div>
                 </div>
                 <Switch
@@ -262,10 +284,10 @@ export function ChartSettingsDrawer({
               {/* Pivot Points */}
               <div className="flex items-center justify-between p-3.5 border-b border-glass-edge/40">
                 <div className="flex items-center gap-3">
-                  <div className="size-2.5 rounded-full bg-cyan-500 shadow-md animate-pulse" />
+                  <div className="size-2.5 rounded-full bg-info shadow-md animate-pulse" />
                   <div className="flex flex-col">
                     <span className="text-sm font-semibold">Pivot Points</span>
-                    <span className="text-[10px] text-fg-muted mt-0.5">Classic daily floor-trader pivots (PP, S/R levels)</span>
+                    <span className="text-xs text-fg-muted mt-0.5">Classic daily floor-trader pivots (PP, S/R levels)</span>
                   </div>
                 </div>
                 <Switch
@@ -276,12 +298,12 @@ export function ChartSettingsDrawer({
               </div>
 
               {/* RSI Pane */}
-              <div className="flex items-center justify-between p-3.5 border-b border-glass-edge/40 bg-purple-500/5">
+              <div className="flex items-center justify-between p-3.5 border-b border-glass-edge/40 bg-accent/5">
                 <div className="flex items-center gap-3">
-                  <div className="size-2.5 rounded-full bg-purple-400 shadow-md animate-pulse" />
+                  <div className="size-2.5 rounded-full bg-accent shadow-md animate-pulse" />
                   <div className="flex flex-col">
-                    <span className="text-sm font-semibold text-purple-200">RSI Oscillator Pane</span>
-                    <span className="text-[10px] text-purple-400/80 mt-0.5">Synchronized Relative Strength Index (14)</span>
+                    <span className="text-sm font-semibold text-accent">RSI Oscillator Pane</span>
+                    <span className="text-xs text-accent/80 mt-0.5">Synchronized Relative Strength Index (14)</span>
                   </div>
                 </div>
                 <Switch
@@ -292,12 +314,12 @@ export function ChartSettingsDrawer({
               </div>
 
               {/* MACD Pane */}
-              <div className="flex items-center justify-between p-3.5 border-b border-glass-edge/40 bg-blue-500/5">
+              <div className="flex items-center justify-between p-3.5 border-b border-glass-edge/40 bg-info/5">
                 <div className="flex items-center gap-3">
-                  <div className="size-2.5 rounded-full bg-blue-400 shadow-md animate-pulse" />
+                  <div className="size-2.5 rounded-full bg-info shadow-md animate-pulse" />
                   <div className="flex flex-col">
-                    <span className="text-sm font-semibold text-blue-200">MACD Oscillator Pane</span>
-                    <span className="text-[10px] text-blue-400/80 mt-0.5">Moving average convergence divergence (12, 26, 9)</span>
+                    <span className="text-sm font-semibold text-info">MACD Oscillator Pane</span>
+                    <span className="text-xs text-info/80 mt-0.5">Moving average convergence divergence (12, 26, 9)</span>
                   </div>
                 </div>
                 <Switch
@@ -308,12 +330,12 @@ export function ChartSettingsDrawer({
               </div>
 
               {/* ATR Pane */}
-              <div className="flex items-center justify-between p-3.5 bg-yellow-500/5">
+              <div className="flex items-center justify-between p-3.5 bg-warn/5">
                 <div className="flex items-center gap-3">
-                  <div className="size-2.5 rounded-full bg-yellow-400 shadow-md animate-pulse" />
+                  <div className="size-2.5 rounded-full bg-warn shadow-md animate-pulse" />
                   <div className="flex flex-col">
-                    <span className="text-sm font-semibold text-yellow-200">ATR Volatility Pane</span>
-                    <span className="text-[10px] text-yellow-400/80 mt-0.5">Synchronized Average True Range (14)</span>
+                    <span className="text-sm font-semibold text-warn">ATR Volatility Pane</span>
+                    <span className="text-xs text-warn/80 mt-0.5">Synchronized Average True Range (14)</span>
                   </div>
                 </div>
                 <Switch
@@ -326,7 +348,33 @@ export function ChartSettingsDrawer({
             </div>
           </div>
 
+          {/* Reset to defaults */}
+          <div className="flex flex-col gap-2 pt-2">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={async () => {
+                const ok = await confirm({
+                  title: 'Reset chart preferences?',
+                  description: 'All theme, grid, and indicator settings will return to their defaults.',
+                  confirmLabel: 'Reset',
+                });
+                if (ok) {
+                  onIndicatorsChange(DEFAULT_INDICATORS);
+                  onSettingsChange(DEFAULT_SETTINGS);
+                }
+              }}
+              className="self-start"
+            >
+              <RotateCcw className="size-4" />
+              Reset to defaults
+            </Button>
+          </div>
+
         </div>
+
+        {confirmEl}
       </DrawerContent>
     </Drawer>
   );

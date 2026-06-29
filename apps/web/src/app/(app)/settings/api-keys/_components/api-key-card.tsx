@@ -278,7 +278,7 @@ export function ApiKeyCard({ provider, currentValue, health, usage, keyUpdatedAt
               {provider.displayName}
             </label>
             {provider.pricingTier === 'free' && (
-              <span className="rounded-full bg-bull/15 px-2 py-0.5 text-[10px] font-semibold text-bull">
+              <span className="rounded-full bg-bull/15 px-2 py-0.5 text-xs font-semibold text-bull">
                 Free
               </span>
             )}
@@ -296,7 +296,7 @@ export function ApiKeyCard({ provider, currentValue, health, usage, keyUpdatedAt
           <span
             className={
               test.kind === 'ok'
-                ? 'flex items-center gap-1 text-xs text-emerald-400 shrink-0'
+                ? 'flex items-center gap-1 text-xs text-bull shrink-0'
                 : 'flex items-center gap-1 text-xs text-fg-subtle shrink-0'
             }
           >
@@ -311,7 +311,7 @@ export function ApiKeyCard({ provider, currentValue, health, usage, keyUpdatedAt
           <span className="shrink-0 text-sm">⚠️</span>
           <div className="flex flex-col gap-0.5">
             <span className="font-semibold text-fg">Consider rotating your API key</span>
-            <p className="text-fg-subtle text-[11px]">
+            <p className="text-fg-subtle text-xs">
               This key was last updated {keyAgeDays} days ago. Regular key rotation increases security.
             </p>
           </div>
@@ -324,7 +324,7 @@ export function ApiKeyCard({ provider, currentValue, health, usage, keyUpdatedAt
             <span>⏱️</span>
             <span>API Rate Limits</span>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-[11px] mt-0.5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs mt-0.5">
             {health.rateLimit.remainingRequests !== undefined && (
               <div className="flex flex-col gap-0.5">
                 <span className="text-fg-muted font-medium">Requests Remaining</span>
@@ -332,7 +332,7 @@ export function ApiKeyCard({ provider, currentValue, health, usage, keyUpdatedAt
                   {health.rateLimit.remainingRequests}
                 </span>
                 {health.rateLimit.resetRequests && (
-                  <span className="opacity-60 text-[10px]">Resets in {health.rateLimit.resetRequests}</span>
+                  <span className="opacity-60 text-xs">Resets in {health.rateLimit.resetRequests}</span>
                 )}
               </div>
             )}
@@ -343,7 +343,7 @@ export function ApiKeyCard({ provider, currentValue, health, usage, keyUpdatedAt
                   {health.rateLimit.remainingTokens.toLocaleString()}
                 </span>
                 {health.rateLimit.resetTokens && (
-                  <span className="opacity-60 text-[10px]">Resets in {health.rateLimit.resetTokens}</span>
+                  <span className="opacity-60 text-xs">Resets in {health.rateLimit.resetTokens}</span>
                 )}
               </div>
             )}
@@ -449,7 +449,7 @@ export function ApiKeyCard({ provider, currentValue, health, usage, keyUpdatedAt
         </div>
       ) : null}
       {test.kind === 'ok' && dirty ? (
-        <div className="flex items-center gap-2 text-xs text-emerald-400">
+        <div className="flex items-center gap-2 text-xs text-bull">
           <CheckCircle2 className="size-3.5 shrink-0" />
           <span>New value passes validation. Click Save to apply.</span>
         </div>
@@ -460,7 +460,7 @@ export function ApiKeyCard({ provider, currentValue, health, usage, keyUpdatedAt
         <details className="text-xs border border-divider/40 rounded-md overflow-hidden bg-bg-elev-2/30">
           <summary aria-label="Toggle setup instructions and limits" className="cursor-pointer select-none px-3 py-1.5 font-medium text-fg-subtle hover:text-fg transition-colors flex items-center justify-between">
             <span>Setup Instructions & Limits</span>
-            <span className="text-[10px]">▼</span>
+            <span className="text-xs">▼</span>
           </summary>
           <div className="p-3 border-t border-divider/40 flex flex-col gap-2 bg-bg-elev-2/10">
             <div>
@@ -497,7 +497,7 @@ export function ApiKeyCard({ provider, currentValue, health, usage, keyUpdatedAt
           {isVertex ? (
             <>Paste the service-account JSON from the GCP IAM console.</>
           ) : (
-            <>Key is encrypted at rest with AES-256-GCM. Press <kbd className="bg-bg-elev-2 border border-divider px-1.5 py-0.5 rounded text-[10px]">T</kbd> to test.</>
+            <>Key is encrypted at rest with AES-256-GCM. Press <kbd className="bg-bg-elev-2 border border-divider px-1.5 py-0.5 rounded text-xs">T</kbd> to test.</>
           )}
         </span>
         <Button

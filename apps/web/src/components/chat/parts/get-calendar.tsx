@@ -101,7 +101,7 @@ function CalendarRow({ item }: { item: ToolCalendarItem }) {
         {formatHHmmUtc(item.date)}
       </time>
 
-      <span className="border-border text-fg-muted shrink-0 rounded border px-1 py-0.5 text-[9px] uppercase tabular-nums">
+      <span className="border-border text-fg-muted shrink-0 rounded border px-1 py-0.5 text-xs uppercase tabular-nums">
         {tag}
       </span>
 

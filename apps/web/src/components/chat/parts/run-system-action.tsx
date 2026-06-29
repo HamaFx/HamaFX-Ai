@@ -45,7 +45,7 @@ export function RunSystemActionPart({
         <div className="flex items-center gap-2">
           <Terminal className="size-4 text-fg-subtle" />
           <div className="flex flex-col">
-            <span className="text-fg-subtle text-[9px] uppercase font-bold tracking-wider">
+            <span className="text-fg-subtle text-xs uppercase font-bold tracking-wider">
               DevOps Action Console
             </span>
             <h3 className="text-fg text-xs font-bold mt-0.5">
@@ -53,7 +53,7 @@ export function RunSystemActionPart({
             </h3>
           </div>
         </div>
-        <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[9px] font-bold ${
+        <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-bold ${
           isSuccess ? 'bg-bull/10 text-bull' : 'bg-bear/10 text-bear'
         }`}>
           {isSuccess ? <CheckCircle2 className="size-3" /> : <AlertTriangle className="size-3" />}
@@ -63,17 +63,17 @@ export function RunSystemActionPart({
 
       {/* Terminal View */}
       <div className="relative">
-        <div className="absolute top-2 right-2 flex items-center gap-1.5 text-[8px] font-mono text-fg-subtle bg-bg-elev-2/80 px-2 py-0.5 rounded border border-divider/20">
+        <div className="absolute top-2 right-2 flex items-center gap-1.5 text-xs font-mono text-fg-subtle bg-bg-elev-2/80 px-2 py-0.5 rounded border border-divider/20">
           <div className={`size-1.5 rounded-full ${isSuccess ? 'bg-bull animate-pulse' : 'bg-bear'}`} />
           <span>{executionTimeMs}ms</span>
         </div>
-        <pre className="bg-black/90 text-green-400 font-mono text-[9px] p-3 rounded-lg overflow-y-auto max-h-48 border border-divider/25 leading-normal select-all">
+        <pre className="bg-bg-elev-2 text-bull font-mono text-xs p-3 rounded-lg overflow-y-auto max-h-48 border border-divider/25 leading-normal select-all">
           <code>
             {consoleLogs.map((line, idx) => {
-              let textClass = 'text-green-400';
+              let textClass = 'text-bull';
               if (line.startsWith('[error]')) textClass = 'text-bear font-semibold';
-              if (line.startsWith('[resonance-sync]')) textClass = 'text-sky-300';
-              if (line.startsWith('[cot-sync]') || line.startsWith('[cache]')) textClass = 'text-amber-300';
+              if (line.startsWith('[resonance-sync]')) textClass = 'text-info';
+              if (line.startsWith('[cot-sync]') || line.startsWith('[cache]')) textClass = 'text-warn';
               
               return (
                 <div key={idx} className={`${textClass} py-0.5 break-all whitespace-pre-wrap`}>
@@ -109,9 +109,9 @@ function SkeletonCard() {
         <div className="bg-bg-elev-2 h-5 w-24 animate-pulse rounded-full" />
       </div>
       <div className="relative mt-3">
-        <div className="bg-black/90 h-28 w-full rounded-lg border border-divider/25 flex flex-col justify-center items-center gap-2">
-          <Loader2 className="size-5 text-green-400 animate-spin" />
-          <span className="text-[9px] font-mono text-green-400 animate-pulse">
+        <div className="bg-bg-elev-2 h-28 w-full rounded-lg border border-divider/25 flex flex-col justify-center items-center gap-2">
+          <Loader2 className="size-5 text-bull animate-spin" />
+          <span className="text-xs font-mono text-bull animate-pulse">
             [devops] executing target sync scripts...
           </span>
         </div>

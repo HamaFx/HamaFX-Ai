@@ -15,18 +15,27 @@
  */
 
 import { redirect } from 'next/navigation';
+import { cache } from 'react';
 import { eq } from 'drizzle-orm';
 import { auth } from '@/auth';
 import { getDb, schema } from '@hamafx/db';
 
+const getOnboardingStatus = cache(async (userId: string) => {
+  const db = getDb();
+  const [settings] = await db
+    .select({ onboardingCompleted: schema.userSettings.onboardingCompleted })
+    .from(schema.userSettings)
+    .where(eq(schema.userSettings.userId, userId));
+  return settings?.onboardingCompleted ?? false;
+});
+
 import { AmbientBackground } from '@/components/layout/ambient-background';
-import { CommandPalette } from '@/components/layout/command-palette';
-import { InstallNudge } from '@/components/layout/install-nudge';
 import { NavDrawer } from '@/components/layout/nav-drawer';
 import { NavDrawerProvider } from '@/components/layout/nav-drawer-context';
 import { OfflineBanner } from '@/components/layout/offline-banner';
 import { SkipToContent } from '@/components/layout/skip-to-content';
 import { TopBar } from '@/components/layout/top-bar';
+import { CommandPalette, InstallNudge } from '@/components/layout/lazy-chrome';
 import { MotionRoot } from '@/components/ui/motion-config';
 import { Toaster } from '@/components/ui/toaster';
 
@@ -48,12 +57,8 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   if (process.env.AUTH_MODE !== 'legacy') {
     const session = await auth();
     if (session?.user?.id) {
-      const db = getDb();
-      const [settings] = await db
-        .select({ onboardingCompleted: schema.userSettings.onboardingCompleted })
-        .from(schema.userSettings)
-        .where(eq(schema.userSettings.userId, session.user.id));
-      if (!settings?.onboardingCompleted) {
+      const onboardingCompleted = await getOnboardingStatus(session.user.id);
+      if (!onboardingCompleted) {
         redirect('/onboarding');
       }
     }
@@ -70,7 +75,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             id="main-content"
             tabIndex={-1}
             className="mx-auto w-full max-w-2xl px-4 pt-4 focus:outline-none"
-            style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 24px)' }}
+            style={{ viewTransitionName: 'main-content', paddingBottom: 'calc(env(safe-area-inset-bottom) + 24px)' }}
           >
             {/* Phase B — UX_UPGRADE_PLAN.md item 12. PWA install hint.
                 Sticky-positioned below the top bar (drawn here so it

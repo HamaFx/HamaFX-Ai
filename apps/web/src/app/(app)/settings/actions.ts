@@ -722,13 +722,16 @@ export async function updateUIPrefsAction(prefs: {
   }
 }
 
-export async function listSessionsAction(): Promise<ActionResult<Array<{
-  id: string;
-  deviceName: string | null;
-  ip: string | null;
-  createdAt: Date;
-  lastActiveAt: Date;
-}>>> {
+export async function listSessionsAction(): Promise<ActionResult<{
+  sessions: Array<{
+    id: string;
+    deviceName: string | null;
+    ip: string | null;
+    createdAt: Date;
+    lastActiveAt: Date;
+  }>;
+  currentSessionId: string | null;
+}>> {
   const session = await auth();
   if (!session?.user?.id) {
     return { ok: false as const, error: 'Unauthorized' };
@@ -747,7 +750,9 @@ export async function listSessionsAction(): Promise<ActionResult<Array<{
       .where(eq(schema.userSessions.userId, session.user.id))
       .orderBy(schema.userSessions.createdAt);
 
-    return { ok: true as const, data: rows };
+    const currentSessionId = (session as { sessionId?: string }).sessionId ?? null;
+
+    return { ok: true as const, data: { sessions: rows, currentSessionId } };
   } catch (err) {
     Sentry.captureException(err);
     return { ok: false as const, error: 'Failed to load sessions' };

@@ -32,7 +32,7 @@
 
 import type { NewsArticle, SymbolOrCurrencyTag } from '@hamafx/shared';
 import { Bookmark, BookmarkCheck, RotateCw } from 'lucide-react';
-import { useEffect, useMemo, useState, useTransition, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { useInfiniteQuery } from '@tanstack/react-query';
@@ -41,6 +41,7 @@ import { useQueryState } from 'nuqs';
 import { ArticleCard } from '@/components/news/article-card';
 import { useBookmarks } from '@/components/news/use-bookmarks';
 import { EmptyState } from '@/components/ui/empty-state';
+import { SkeletonCard } from '@/components/ui/skeleton';
 import { cn } from '@/lib/cn';
 import { formatRelative } from '@/lib/format';
 
@@ -51,16 +52,28 @@ interface NewsViewProps {
 }
 
 const AUTO_REFRESH_MS = 5 * 60_000;
+const SEARCH_DEBOUNCE_MS = 300;
 
 export function NewsView({ initialArticles }: NewsViewProps) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [query, setQuery] = useQueryState('q', { defaultValue: '' });
+  const [queryInput, setQueryInput] = useState(query);
   const [sentiment, setSentiment] = useQueryState('sentiment', { defaultValue: 'all' }) as [SentimentFilter, (val: SentimentFilter) => void];
   const [symbol, setSymbol] = useQueryState('symbol', { defaultValue: 'all' }) as [SymbolFilter, (val: SymbolFilter) => void];
   const [savedOnly, setSavedOnly] = useState(false);
   const [lastRefreshed, setLastRefreshed] = useState(Date.now());
   const { count: savedCount, list: savedIds } = useBookmarks();
+
+  // Debounce search input before updating query param (avoids refetch on every keystroke)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (queryInput !== query) {
+        setQuery(queryInput || null);
+      }
+    }, SEARCH_DEBOUNCE_MS);
+    return () => clearTimeout(timer);
+  }, [queryInput, query, setQuery]);
 
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage } = useInfiniteQuery({
     queryKey: ['news', { sentiment, symbol, query }] as const,
@@ -161,8 +174,8 @@ export function NewsView({ initialArticles }: NewsViewProps) {
   return (
     <div className="flex flex-col gap-4">
       <NewsToolbar
-        query={query}
-        onQuery={setQuery}
+        query={queryInput}
+        onQuery={setQueryInput}
         sentiment={sentiment}
         onSentiment={setSentiment}
         symbol={symbol}
@@ -235,10 +248,18 @@ export function NewsView({ initialArticles }: NewsViewProps) {
             </section>
           ))}
           {/* Infinite scroll sentinel */}
-          <div ref={sentinelRef} className="h-10 flex items-center justify-center">
-            {isFetchingNextPage && (
-              <span className="text-xs text-fg-muted">Loading more articles...</span>
-            )}
+          <div ref={sentinelRef} className="flex flex-col gap-3">
+            {isFetchingNextPage ? (
+              <>
+                <SkeletonCard className="h-24" lines={3} />
+                <SkeletonCard className="h-24" lines={3} />
+                <SkeletonCard className="h-24" lines={3} />
+              </>
+            ) : allArticles.length > 0 && !hasNextPage ? (
+              <span className="text-xs text-fg-muted text-center py-2">{allArticles.length} articles loaded</span>
+            ) : allArticles.length > 0 ? (
+              <span className="text-xs text-fg-muted text-center py-2">{allArticles.length} articles loaded · scroll for more</span>
+            ) : null}
           </div>
         </div>
       )}

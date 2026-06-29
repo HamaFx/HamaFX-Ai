@@ -51,7 +51,11 @@ export const MessageList = memo(function MessageList({
   const rowVirtualizer = useVirtualizer({
     count,
     getScrollElement: () => scrollContainerRef?.current ?? null,
-    estimateSize: () => 180,
+    estimateSize: (index) => {
+      const msg = messages[index];
+      if (msg?.parts?.some((p) => p.type === 'tool-invocation')) return 500;
+      return 180;
+    },
     overscan: 5,
   });
 
@@ -119,6 +123,7 @@ export const MessageList = memo(function MessageList({
           >
             <Message
               message={m}
+              {...(isStreaming !== undefined ? { isStreaming } : {})}
               {...(onCopy ? { onCopy } : {})}
               {...(onRegenerate && m.id === lastAssistantId && !isStreaming
                 ? { onRegenerate }

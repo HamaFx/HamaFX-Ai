@@ -66,8 +66,8 @@ describe('NextAuth wiring', () => {
       'utf8',
     );
     expect(src).toMatch(/NextAuth\(/);
-    expect(src).toMatch(/DrizzleAdapter\(/);
     expect(src).toMatch(/Credentials\(/);
+    expect(src).toMatch(/getDb\(/);
     expect(src).not.toMatch(/__system__/);
   });
 });

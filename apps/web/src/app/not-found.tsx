@@ -22,18 +22,28 @@ import { Link } from 'next-view-transitions';
 
 export default function NotFound() {
   return (
-    <main className="bg-bg text-fg flex min-h-svh flex-col items-center justify-center gap-4 px-6 text-center">
-      <div className="flex flex-col gap-2">
-        <h1 className="text-lg font-semibold">Page not found.</h1>
-        <p className="text-fg-muted text-sm">
-          The route doesn&apos;t exist. Try one of the tabs in the bottom nav.
+    <main className="bg-bg text-fg flex min-h-svh flex-col items-center justify-center gap-6 px-6 text-center">
+      <span
+        aria-hidden="true"
+        className="inline-flex size-16 items-center justify-center rounded-2xl"
+        style={{
+          background: 'var(--gradient-brand)',
+          boxShadow: '0 0 24px -4px oklch(82% 0.14 85 / 0.3)',
+        }}
+      >
+        <span className="text-bg text-2xl font-bold">H</span>
+      </span>
+      <div className="flex flex-col gap-2" role="alert">
+        <h1 className="text-lg font-semibold">Page not found</h1>
+        <p className="text-fg-muted text-sm max-w-xs">
+          That chart pattern didn&apos;t resolve. The page you&apos;re looking for doesn&apos;t exist or has been moved.
         </p>
       </div>
       <Link
-        href="/dashboard"
-        className="bg-brand text-brand-fg inline-flex h-9 items-center rounded-md px-3 text-sm font-medium hover:opacity-90"
+        href="/chat"
+        className="bg-brand text-brand-fg inline-flex h-9 items-center rounded-md px-4 text-sm font-medium hover:opacity-90 transition-opacity"
       >
-        Go to dashboard
+        Go to chat
       </Link>
     </main>
   );

@@ -67,7 +67,7 @@ export function OverlayToggle({ active, onToggle }: OverlayToggleProps) {
             aria-pressed={on}
             onClick={() => onToggle(k)}
             className={cn(
-              'rounded px-2 py-1 text-[11px] font-medium tabular-nums transition-colors',
+              'rounded px-2 py-1 text-xs font-medium tabular-nums transition-colors',
               on ? 'bg-brand text-brand-fg' : 'text-fg-muted hover:bg-bg-elev-1 hover:text-fg',
             )}
           >

@@ -36,7 +36,7 @@ interface OnboardingWizardProps {
 
 export function OnboardingWizard({ initialName, providers, symbolsCatalog }: OnboardingWizardProps) {
   const [step, setStep] = useState(1);
-  const [loading, setLoading] = useState(false);
+  const [isSubmitting, startSubmit] = useTransition();
   const router = useRouter();
 
   const [name, setName] = useState(initialName);
@@ -54,7 +54,7 @@ export function OnboardingWizard({ initialName, providers, symbolsCatalog }: Onb
   >({ kind: 'idle' });
   const [, startTest] = useTransition();
 
-  // Load saved wizard state on mount
+  // Load saved wizard state on mount (API key intentionally excluded — in-memory only)
   useEffect(() => {
     try {
       const saved = sessionStorage.getItem('hfx_onboarding_wizard');
@@ -67,7 +67,6 @@ export function OnboardingWizard({ initialName, providers, symbolsCatalog }: Onb
         if (typeof parsed.selectedProvider === 'string' || parsed.selectedProvider === null) {
           setSelectedProvider(parsed.selectedProvider);
         }
-        if (typeof parsed.apiKey === 'string') setApiKey(parsed.apiKey);
         if (typeof parsed.tradingStyle === 'string') setTradingStyle(parsed.tradingStyle);
         if (Array.isArray(parsed.selectedSymbols)) setSelectedSymbols(parsed.selectedSymbols);
       }
@@ -76,15 +75,15 @@ export function OnboardingWizard({ initialName, providers, symbolsCatalog }: Onb
     }
   }, []);
 
-  // Save wizard state when any field changes
+  // Save wizard state when any field changes (API key intentionally excluded)
   useEffect(() => {
     try {
-      const state = { step, name, timezone, defaultSymbol, selectedProvider, apiKey, tradingStyle, selectedSymbols };
+      const state = { step, name, timezone, defaultSymbol, selectedProvider, tradingStyle, selectedSymbols };
       sessionStorage.setItem('hfx_onboarding_wizard', JSON.stringify(state));
     } catch {
       // ignore
     }
-  }, [step, name, timezone, defaultSymbol, selectedProvider, apiKey, tradingStyle, selectedSymbols]);
+  }, [step, name, timezone, defaultSymbol, selectedProvider, tradingStyle, selectedSymbols]);
 
   const handleNext = () => setStep((s) => s + 1);
   const handleBack = () => setStep((s) => s - 1);
@@ -116,49 +115,47 @@ export function OnboardingWizard({ initialName, providers, symbolsCatalog }: Onb
     });
   }
 
-  async function handleSubmit() {
-    setLoading(true);
-
-    // Save trading style to localStorage preferences so the client app uses it
-    try {
-      const currentPrefs = JSON.parse(localStorage.getItem('hamafx:prefs') || '{}');
-      localStorage.setItem('hamafx:prefs', JSON.stringify({
-        ...currentPrefs,
-        defaultSymbol: defaultSymbol || selectedSymbols[0] || 'XAUUSD',
-        timeFormat: currentPrefs.timeFormat || '24h',
-        reduceMotion: currentPrefs.reduceMotion || false,
-        tradingStyle: tradingStyle,
-      }));
-    } catch {
-      // ignore
-    }
-
-    const payload = {
-      displayName: name,
-      timezone,
-      defaultSymbol: defaultSymbol || selectedSymbols[0] || 'XAUUSD',
-      symbols: selectedSymbols,
-      apiKeys: selectedProvider && apiKey.trim().length > 0
-        ? { [selectedProvider]: apiKey.trim() }
-        : {},
-    };
-    const fd = new FormData();
-    fd.append('payload', JSON.stringify(payload));
-    try {
-      const res = await completeOnboardingAction(fd);
-      if (res.ok) {
-        sessionStorage.removeItem('hfx_onboarding_wizard');
-        router.push('/chat');
-        router.refresh();
-      } else {
-        toast.error(res.error || 'Failed to complete onboarding');
-        setLoading(false);
+  function handleSubmit() {
+    startSubmit(async () => {
+      // Save trading style to localStorage preferences so the client app uses it
+      try {
+        const currentPrefs = JSON.parse(localStorage.getItem('hamafx:prefs') || '{}');
+        localStorage.setItem('hamafx:prefs', JSON.stringify({
+          ...currentPrefs,
+          defaultSymbol: defaultSymbol || selectedSymbols[0] || 'XAUUSD',
+          timeFormat: currentPrefs.timeFormat || '24h',
+          reduceMotion: currentPrefs.reduceMotion || false,
+          tradingStyle: tradingStyle,
+        }));
+      } catch {
+        // ignore
       }
-    } catch (err) {
-      console.error(err);
-      toast.error('An unexpected error occurred');
-      setLoading(false);
-    }
+
+      const payload = {
+        displayName: name,
+        timezone,
+        defaultSymbol: defaultSymbol || selectedSymbols[0] || 'XAUUSD',
+        symbols: selectedSymbols,
+        apiKeys: selectedProvider && apiKey.trim().length > 0
+          ? { [selectedProvider]: apiKey.trim() }
+          : {},
+      };
+      const fd = new FormData();
+      fd.append('payload', JSON.stringify(payload));
+      try {
+        const res = await completeOnboardingAction(fd);
+        if (res.ok) {
+          sessionStorage.removeItem('hfx_onboarding_wizard');
+          router.push('/chat');
+          router.refresh();
+        } else {
+          toast.error(res.error || 'Failed to complete onboarding');
+        }
+      } catch (err) {
+        console.error(err);
+        toast.error('An unexpected error occurred');
+      }
+    });
   }
 
   const tierLabel = (tier: ProviderPricingTier) => {
@@ -173,10 +170,12 @@ export function OnboardingWizard({ initialName, providers, symbolsCatalog }: Onb
   return (
     <div className="border border-divider bg-bg-elev-1 rounded-lg p-6">
       {/* Stepper */}
-      <div className="mb-8 flex items-center justify-between">
+      <div className="mb-8 flex items-center justify-between" role="list" aria-label="Setup progress">
         {[1, 2, 3, 4, 5].map((i) => (
-          <div key={i} className="flex items-center gap-2">
+          <div key={i} className="flex items-center gap-2" role="listitem">
             <div
+              aria-current={step === i ? 'step' : undefined}
+              aria-label={`Step ${i}: ${['Profile', 'Trading Style', 'Symbols', 'AI Provider', 'Review'][i - 1]}`}
               className={`flex size-8 items-center justify-center rounded-full text-sm font-semibold transition-colors ${
                 step >= i ? 'bg-brand text-black' : 'bg-surface text-fg-subtle'
               }`}
@@ -448,12 +447,12 @@ export function OnboardingWizard({ initialName, providers, symbolsCatalog }: Onb
                   )}
                 </Button>
                 {testState.kind === 'ok' && (
-                  <span className="flex items-center gap-1 text-xs text-emerald-400">
+                  <span className="flex items-center gap-1 text-xs text-bull">
                     <Check className="size-3" /> Key looks valid
                   </span>
                 )}
                 {testState.kind === 'err' && (
-                  <span className="text-xs text-red-400">{testState.message}</span>
+                  <span className="text-xs text-bear">{testState.message}</span>
                 )}
               </div>
             </div>
@@ -522,8 +521,8 @@ export function OnboardingWizard({ initialName, providers, symbolsCatalog }: Onb
             <Button
               className="flex-1"
               onClick={handleSubmit}
-              loading={loading}
-              disabled={loading}
+              loading={isSubmitting}
+              disabled={isSubmitting}
             >
               <Sparkles className="mr-1 size-4" /> Finish Setup
             </Button>

@@ -1,7 +1,8 @@
 'use client';
 
 import { Bell, Mail, Smartphone } from 'lucide-react';
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
+import { toast } from 'sonner';
 import { Switch } from '@/components/ui/switch';
 import { updateNotificationPrefsAction } from '../actions';
 
@@ -50,14 +51,21 @@ export function NotificationPrefsCard({
     return DEFAULT_PREFS;
   });
 
+  const prefsRef = useRef(prefs);
+  prefsRef.current = prefs;
+
   const toggle = useCallback((event: EventType, channel: Channel, value: boolean) => {
-    setPrefs((prev) => {
-      const next = {
-        ...prev,
-        [event]: { ...prev[event], [channel]: value },
-      };
-      updateNotificationPrefsAction(next);
-      return next;
+    const prev = prefsRef.current;
+    const next: PrefsMatrix = {
+      ...prev,
+      [event]: { ...prev[event], [channel]: value },
+    };
+    setPrefs(next);
+    updateNotificationPrefsAction(next).then((result) => {
+      if (!result.ok) {
+        setPrefs(prev);
+        toast.error('Failed to update notification preference');
+      }
     });
   }, []);
 

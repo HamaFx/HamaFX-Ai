@@ -22,6 +22,7 @@
 // touching the message-list code.
 
 import { useState } from 'react';
+import { m } from 'motion/react';
 
 import { cn } from '@/lib/cn';
 
@@ -55,7 +56,9 @@ export function ToolCard({ name, state, input, output, errorText }: ToolCardProp
       : oneLiner(label, output);
 
   return (
-    <div
+    <m.div
+      layout
+      initial={false}
       className={cn(
         'border-border bg-bg-elev-1 rounded-md border px-2.5 py-1.5 text-xs',
         failed && 'border-bear/30',
@@ -66,6 +69,7 @@ export function ToolCard({ name, state, input, output, errorText }: ToolCardProp
         onClick={() => setExpanded((v) => !v)}
         className="flex w-full items-center justify-between gap-2 text-left"
         aria-expanded={expanded}
+        aria-controls="tool-card-content"
       >
         <span className="text-fg-muted flex items-center gap-1.5 font-medium">
           <span aria-hidden>{running ? '◐' : failed ? '✕' : '✓'}</span>
@@ -78,16 +82,24 @@ export function ToolCard({ name, state, input, output, errorText }: ToolCardProp
       </button>
 
       {expanded ? (
-        <div className="border-border mt-2 space-y-2 border-t pt-2 font-mono">
+        <m.div
+          key="tool-card-content"
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ opacity: 1, height: 'auto' }}
+          exit={{ opacity: 0, height: 0 }}
+          transition={{ duration: 0.2 }}
+          id="tool-card-content"
+          className="border-border mt-2 space-y-2 border-t pt-2 font-mono overflow-hidden"
+        >
           <Section label="input" data={input} />
           {failed ? (
             <Section label="error" data={{ message: errorText ?? 'unknown' }} />
           ) : output !== undefined ? (
             <Section label="output" data={output} />
           ) : null}
-        </div>
+        </m.div>
       ) : null}
-    </div>
+    </m.div>
   );
 }
 

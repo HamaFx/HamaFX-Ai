@@ -48,6 +48,25 @@ export function EntryList({ entries, onClosed, onDeleted }: EntryListProps) {
   const [search, setSearch] = useState('');
   const [showFilters, setShowFilters] = useState(false);
 
+  // Derive available symbols from entries for the filter panel
+  const availableSymbols = useMemo(() => {
+    const symbolsSet = new Set<Symbol>();
+    entries.forEach((e) => symbolsSet.add(e.symbol));
+    return Array.from(symbolsSet).sort();
+  }, [entries]);
+
+  // Pre-compute relative time labels in the parent to avoid per-row recomputation
+  const timeLabels = useMemo(() => {
+    const map = new Map<string, { openedAt: string; closedAt: string | null }>();
+    entries.forEach((e) => {
+      map.set(e.id, {
+        openedAt: relative(e.openedAt),
+        closedAt: e.closedAt ? relative(e.closedAt) : null,
+      });
+    });
+    return map;
+  }, [entries]);
+
   // Extract all symbols from open/active trades to subscribe to the price feed
   const activeSymbols = useMemo(() => {
     const symbolsSet = new Set<Symbol>();
@@ -175,8 +194,8 @@ export function EntryList({ entries, onClosed, onDeleted }: EntryListProps) {
         <div className="border border-divider bg-bg-elev-1 rounded-lg p-4 grid grid-cols-2 gap-4 animate-in slide-in-from-top-2 duration-200">
           <div className="flex flex-col gap-1.5">
             <label className="text-caption font-bold uppercase tracking-wider text-fg-subtle">Asset Class</label>
-            <div className="flex flex-wrap gap-1">
-              {(['ALL', 'XAUUSD', 'EURUSD', 'GBPUSD'] as const).map((sym) => (
+              <div className="flex flex-wrap gap-1">
+                {(['ALL', ...availableSymbols] as const).map((sym) => (
                 <button
                   key={sym}
                   onClick={() => setSymbolFilter(sym)}
@@ -240,6 +259,7 @@ export function EntryList({ entries, onClosed, onDeleted }: EntryListProps) {
             {virtualizer.getVirtualItems().map((item) => {
               const e = filteredEntries[item.index];
               if (!e) return null;
+              const labels = timeLabels.get(e.id);
               return (
                 <div
                   key={item.key}
@@ -256,6 +276,8 @@ export function EntryList({ entries, onClosed, onDeleted }: EntryListProps) {
                 >
                   <EntryRow
                     entry={e}
+                    openedAtLabel={labels?.openedAt ?? ''}
+                    closedAtLabel={labels?.closedAt ?? ''}
                     livePrice={priceMap.get(e.symbol)}
                     onClosed={onClosed}
                     onDeleted={onDeleted}
@@ -276,12 +298,16 @@ type ConfirmFn = ReturnType<typeof useConfirm>[1];
 
 function EntryRow({
   entry,
+  openedAtLabel,
+  closedAtLabel,
   livePrice,
   onClosed,
   onDeleted,
   confirm,
 }: {
   entry: JournalEntry;
+  openedAtLabel: string;
+  closedAtLabel?: string;
   livePrice?: number | undefined;
   onClosed: () => void;
   onDeleted: () => void;
@@ -380,8 +406,8 @@ function EntryRow({
       percentage = range > 0 ? ((stopPrice - livePrice) / range) * 100 : 50;
     }
 
-    // Clamp between 1% and 99% for visual boundary protection
-    return Math.min(Math.max(percentage, 2), 98);
+    // Allow beyond-range values for "beyond stop/target" states
+    return Math.min(Math.max(percentage, -20), 120);
   }, [entry, livePrice]);
 
   const sideColor = entry.side === 'long' ? 'text-bull' : 'text-bear';
@@ -419,11 +445,11 @@ function EntryRow({
 
           {/* Opened & Closed Dates */}
           <p className="text-fg-subtle flex flex-wrap items-center gap-x-2 gap-y-1 text-xs font-semibold">
-            <span>Opened {relative(entry.openedAt)}</span>
-            {entry.closedAt && (
+            <span>Opened {openedAtLabel}</span>
+            {entry.closedAt && closedAtLabel && (
               <>
                 <span className="text-fg-muted/50">·</span>
-                <span>Closed {relative(entry.closedAt)}</span>
+                <span>Closed {closedAtLabel}</span>
               </>
             )}
           </p>
@@ -434,7 +460,7 @@ function EntryRow({
               {entry.tags.map((t) => (
                 <span
                   key={t}
-                  className="px-2 py-0.5 text-[9px] font-black uppercase tracking-wider rounded-md bg-brand/5 border border-brand/20 text-brand"
+                  className="px-2 py-0.5 text-xs font-black uppercase tracking-wider rounded-md bg-brand/5 border border-brand/20 text-brand"
                 >
                   #{t}
                 </span>
@@ -522,7 +548,7 @@ function EntryRow({
       {/* Real-time Visual SL-to-TP Slider Bar */}
       {entry.outcome === 'open' && entry.stop !== null && entry.target !== null && livePrice && sliderPosition !== null && (
         <div className="border-t border-glass-edge/30 pt-3 flex flex-col gap-1.5 animate-in fade-in duration-200">
-          <div className="flex items-center justify-between text-[9px] font-bold uppercase tracking-wider text-fg-subtle">
+          <div className="flex items-center justify-between text-xs font-bold uppercase tracking-wider text-fg-subtle">
             <span className="text-bear">SL: {entry.stop}</span>
             <span className="text-fg-muted">Entry: {entry.entry}</span>
             <span className="text-bull">Target: {entry.target}</span>
@@ -536,7 +562,7 @@ function EntryRow({
                   ? `${((entry.entry - entry.stop) / (entry.target - entry.stop)) * 100}%`
                   : `${((entry.stop - entry.entry) / (entry.stop - entry.target)) * 100}%`
               }}
-              className="absolute h-4 w-0.5 bg-yellow-500/80 z-10"
+              className="absolute h-4 w-0.5 bg-warn/80 z-10"
               title="Entry Price Level"
             />
 
@@ -551,22 +577,32 @@ function EntryRow({
             />
 
             {/* Profitable Region Shade */}
-            <div
-              style={{
-                left: entry.side === 'long'
-                  ? `${((entry.entry - entry.stop) / (entry.target - entry.stop)) * 100}%`
-                  : '50%',
-                width: entry.side === 'long'
-                  ? `${(Math.max(sliderPosition - ((entry.entry - entry.stop) / (entry.target - entry.stop)) * 100, 0))}%`
-                  : '0%' // simplistic represent, can detail further
-              }}
-              className="absolute h-full bg-bull/10 rounded-r-full"
-            />
+            {(() => {
+              const entryPct = entry.side === 'long'
+                ? ((entry.entry - entry.stop) / (entry.target - entry.stop)) * 100
+                : ((entry.stop - entry.entry) / (entry.stop - entry.target)) * 100;
+              const width = entry.side === 'long'
+                ? Math.max(sliderPosition - entryPct, 0)
+                : Math.max(sliderPosition - entryPct, 0);
+              return (
+                <div
+                  style={{
+                    left: `${entryPct}%`,
+                    width: `${width}%`,
+                  }}
+                  className="absolute h-full bg-bull/10 rounded-r-full"
+                />
+              );
+            })()}
           </div>
-          <div className="flex justify-between items-center text-[9px] text-fg-muted font-semibold mt-0.5">
-            <span>Stop Loss boundary</span>
+          <div className="flex justify-between items-center text-xs text-fg-muted font-semibold mt-0.5">
+            <span className={sliderPosition < 0 ? 'text-bear font-bold' : ''}>
+              {sliderPosition < 0 ? '✦ Beyond stop' : 'Stop Loss boundary'}
+            </span>
             <span className={cn('font-bold', outcomeColor)}>Live Price: {livePrice}</span>
-            <span>Target boundary</span>
+            <span className={sliderPosition > 100 ? 'text-bull font-bold' : ''}>
+              {sliderPosition > 100 ? '✦ Beyond target' : 'Target boundary'}
+            </span>
           </div>
         </div>
       )}

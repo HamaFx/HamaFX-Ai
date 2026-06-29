@@ -51,10 +51,10 @@ import { ChartSkeleton } from './chart-skeleton';
 import { OverlaySheet } from './overlay-sheet';
 
 class ChartErrorBoundary extends React.Component<
-  { children: React.ReactNode },
+  { children: React.ReactNode; onRetry?: () => void },
   { hasError: boolean; error: Error | null }
 > {
-  constructor(props: { children: React.ReactNode }) {
+  constructor(props: { children: React.ReactNode; onRetry?: () => void }) {
     super(props);
     this.state = { hasError: false, error: null };
   }
@@ -72,7 +72,10 @@ class ChartErrorBoundary extends React.Component<
       return (
         <ChartError
           error={this.state.error ?? new Error('Chart rendering failed')}
-          onRetry={() => this.setState({ hasError: false, error: null })}
+          onRetry={() => {
+            this.setState({ hasError: false, error: null });
+            this.props.onRetry?.();
+          }}
         />
       );
     }
@@ -113,6 +116,7 @@ interface ChartConfig {
 export function ChartView({ symbol, watchlist }: { symbol: Symbol; watchlist: string[] }) {
   const [tf, setTf] = useTimeframe();
   const [activeOverlays, toggleOverlay] = useOverlayToggles();
+  const [chartKey, setChartKey] = useState(0);
 
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [visible, setVisible] = useState(true);
@@ -171,8 +175,10 @@ export function ChartView({ symbol, watchlist }: { symbol: Symbol; watchlist: st
     refetch,
   } = useChartData(symbol, tf, activeIndicatorsRequest, 300, { enabled: visible });
 
-  // Stream live prices tick-by-tick into the current candle
-  const { tick } = usePrice(symbol);
+  // Stream live prices tick-by-tick into the current candle.
+  // Gate on chart visibility (IntersectionObserver) so off-screen
+  // tabs don't waste bandwidth on price polling.
+  const { tick } = usePrice(symbol, { enabled: visible });
 
   const candlesWithLive = useMemo(() => {
     if (!candles || candles.length === 0) return candles;
@@ -226,10 +232,15 @@ export function ChartView({ symbol, watchlist }: { symbol: Symbol; watchlist: st
     ...(overlaysOn ? { kinds: activeOverlays } : {}),
   });
 
-  // Reference price = previous closed bar's close.
+  // Reference price: capture the last candle's close once and pin it
+  // using a ref so new bars don't shift the reference point.
+  const closeRef = useRef<number | null>(null);
   const referenceClose = useMemo(() => {
-    if (!candles || candles.length < 2) return null;
-    return candles.at(-2)?.c ?? null;
+    if (!candles || candles.length === 0) return null;
+    if (closeRef.current === null) {
+      closeRef.current = candles[candles.length - 1]?.c ?? null;
+    }
+    return closeRef.current;
   }, [candles]);
 
   // Convert active list → boolean record for `buildOverlays`.
@@ -244,11 +255,15 @@ export function ChartView({ symbol, watchlist }: { symbol: Symbol; watchlist: st
     [activeOverlays],
   );
 
+  const candlesRef = useRef(candles);
+  candlesRef.current = candles;
+
   const overlaySet = useMemo(() => {
-    if (!structure || !candles) return null;
-    const times = candles.map((c) => c.t);
+    const current = candlesRef.current;
+    if (!structure || !current) return null;
+    const times = current.map((c) => c.t);
     return buildOverlays(structure, times, PALETTE, toggleRecord);
-  }, [structure, candles, toggleRecord]);
+  }, [structure, toggleRecord]);
 
   return (
     <div ref={containerRef} className="-mx-4 flex flex-col animate-in fade-in duration-300">
@@ -320,7 +335,7 @@ export function ChartView({ symbol, watchlist }: { symbol: Symbol; watchlist: st
         ) : !candlesWithLive || candlesWithLive.length === 0 ? (
           <ChartEmpty symbol={symbol} tf={tf} onRetry={() => void refetch()} />
         ) : (
-          <ChartErrorBoundary>
+          <ChartErrorBoundary key={chartKey} onRetry={() => setChartKey(k => k + 1)}>
             <Chart
               symbol={symbol}
               tf={tf}
@@ -337,7 +352,7 @@ export function ChartView({ symbol, watchlist }: { symbol: Symbol; watchlist: st
         ) : null}
 
         <p className="text-fg-subtle text-xs">
-          Polling at 1.5s for price · {tf} candles per server cache TTL · Source: BiQuote
+          Polling at 3s for price · {tf} candles per server cache TTL · Source: BiQuote
         </p>
       </div>
     </div>

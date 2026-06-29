@@ -42,9 +42,10 @@
 import type { EconomicEvent } from '@hamafx/shared';
 import { Bell, Sparkles } from 'lucide-react';
 import { Link } from 'next-view-transitions';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { toast } from 'sonner';
 
+import { useNow } from '@/components/providers/time-provider';
 import { cn } from '@/lib/cn';
 
 interface EventCardProps {
@@ -73,7 +74,7 @@ const IMPORTANCE = {
 >;
 
 export function EventCard({ event }: EventCardProps) {
-  const now = useNowTick();
+  const now = useNow().getTime();
   const date = new Date(event.date);
   const importance = IMPORTANCE[event.importance];
   const isFuture = event.date > now;
@@ -235,6 +236,10 @@ function beatMiss(event: EconomicEvent): 'beat' | 'miss' | null {
   if (event.actual === null || event.forecast === null) return null;
   const delta = event.actual - event.forecast;
   if (delta === 0) return null;
+  const isSignificant = event.forecast !== 0
+    ? Math.abs(delta) / Math.abs(event.forecast) > 0.01
+    : Math.abs(delta) > 0.01;
+  if (!isSignificant) return null;
   return delta > 0 ? 'beat' : 'miss';
 }
 
@@ -261,22 +266,15 @@ function timeLabel(d: Date): string {
   });
 }
 
-function useNowTick(): number {
-  const [now, setNow] = useState(() => Date.now());
-  useEffect(() => {
-    const id = setInterval(() => setNow(Date.now()), 60_000);
-    return () => clearInterval(id);
-  }, []);
-  return now;
-}
-
 // ---------------------------------------------------------------------------
 // Local "Remind me" using the Notifications API. Personal app, no server
 // reminders queue — but a one-shot setTimeout fires a system notification
 // 5 minutes before the event so the user has time to flatten / sit out.
 
+const reminderSet = new Set<string>();
+
 function RemindButton({ event }: { event: EconomicEvent }) {
-  const [armed, setArmed] = useState(false);
+  const [armed, setArmed] = useState(() => reminderSet.has(`cal-${event.id}`));
 
   async function arm() {
     if (typeof window === 'undefined' || !('Notification' in window)) {
@@ -301,6 +299,7 @@ function RemindButton({ event }: { event: EconomicEvent }) {
       return;
     }
     setArmed(true);
+    reminderSet.add(`cal-${event.id}`);
     toast.success('Reminder set', {
       description: `5 minutes before ${event.title}`,
     });

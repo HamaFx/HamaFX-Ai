@@ -24,6 +24,7 @@ import { useTransition } from 'react';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
+import { withCsrf } from '@/lib/csrf';
 
 interface SuccessBody {
   id?: string | null;
@@ -45,8 +46,7 @@ export function TestTelegramButton(): React.JSX.Element {
       try {
         const res = await fetch('/api/admin/test-telegram', {
           method: 'POST',
-          headers: { 'content-type': 'application/json' },
-          body: '{}',
+          ...withCsrf({ headers: { 'content-type': 'application/json' }, body: '{}' }),
         });
 
         if (res.ok) {

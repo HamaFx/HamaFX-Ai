@@ -76,6 +76,8 @@ export function TradingViewWidget({ symbol, tf, theme = 'dark' }: TradingViewWid
   const idSuffix = useId().replace(/:/g, '');
   const containerId = `tv-widget-${symbol}-${tf}-${idSuffix}`;
   const containerRef = useRef<HTMLDivElement | null>(null);
+  type WidgetInstance = { remove: () => void };
+  const widgetRef = useRef<WidgetInstance | null>(null);
   const [loadFailed, setLoadFailed] = useState(false);
   const [scriptLoaded, setScriptLoaded] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -110,7 +112,7 @@ export function TradingViewWidget({ symbol, tf, theme = 'dark' }: TradingViewWid
 
     function initWidget(tv: TradingViewGlobal) {
       try {
-        new tv.widget({
+        const w = new tv.widget({
           container_id: containerId,
           symbol: SYMBOL_TO_TV[symbol] || (symbol.includes(':') ? symbol : `OANDA:${symbol}`),
           interval: TF_TO_TV_INTERVAL[tf] || '60',
@@ -125,20 +127,27 @@ export function TradingViewWidget({ symbol, tf, theme = 'dark' }: TradingViewWid
           allow_symbol_change: false,
           autosize: true,
         });
+        widgetRef.current = w as WidgetInstance;
       } catch (err) {
         console.warn('[pro-chart] TradingView widget construct failed', err);
         setLoadFailed(true);
       }
     }
 
-    const currentContainer = containerRef.current;
+    const container = containerRef.current;
     return () => {
       cancelled = true;
       if (timerRef.current) {
         clearTimeout(timerRef.current);
         timerRef.current = null;
       }
-      if (currentContainer) currentContainer.replaceChildren();
+      if (widgetRef.current) {
+        widgetRef.current.remove();
+        widgetRef.current = null;
+      }
+      if (container) {
+        container.innerHTML = '';
+      }
     };
   }, [containerId, symbol, tf, scriptLoaded, loadFailed, theme]);
 

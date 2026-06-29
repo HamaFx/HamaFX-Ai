@@ -25,10 +25,7 @@
 import type * as LightweightCharts from 'lightweight-charts';
 import { useEffect, useImperativeHandle, useRef, useState, type Ref } from 'react';
 
-import {
-  SERIES_ATR_HEX,
-  SERIES_BULL_HEX,
-} from './chart-colors';
+import { SERIES_ATR_HEX } from './chart-colors';
 import type { Candle, IndicatorResult, Symbol } from '@hamafx/shared';
 import type { ChartSettings, MainChartInstance } from './chart-types';
 import type { OverlaySet } from './overlays';
@@ -99,7 +96,7 @@ export function ChartCanvas({
 
     void import('lightweight-charts').then((lc) => {
       if (cancelled || !containerEl) return;
-      instance = createMainChart(lc, el, settings ?? null);
+      instance = createMainChart(lc, el, settings ?? null, theme);
       instanceRef.current = instance;
       // Force initial resize so canvas isn't 0×0.
       instance.resize(el.clientWidth, el.clientHeight);
@@ -166,13 +163,22 @@ export function ChartCanvas({
     [],
   );
 
+  const lastCandle = candles.length > 0 ? candles[candles.length - 1] : null;
+  const trend = lastCandle ? (lastCandle.c >= lastCandle.o ? 'up' : 'down') : 'neutral';
+
   return (
     <div
       ref={setContainerEl}
       role="img"
-      className={`w-full ${heightClass}`}
+      className={`w-full ${heightClass} relative`}
       aria-label={`${symbol} chart`}
-    />
+    >
+      <div role="status" aria-live="polite" className="sr-only">
+        {lastCandle
+          ? `${symbol} at ${lastCandle.c}, trend ${trend}, high ${lastCandle.h}, low ${lastCandle.l}`
+          : `Loading ${symbol} chart data`}
+      </div>
+    </div>
   );
 }
 
@@ -182,17 +188,9 @@ function createMainChart(
   lc: LcModule,
   container: HTMLElement,
   settings: ChartSettings | null,
+  theme: { colors: { bg: string; grid: string; text: string }; gridColor: string; gridStyle: 0 | 1 },
 ): MainChartInstance {
-  const themeName = settings?.theme ?? 'black';
-  const gridKey = settings?.gridStyle ?? 'solid';
-  const colors = {
-    black: { bg: '#0c0c0c', grid: '#1f1f1f', text: '#a1a8b3' },
-    slate: { bg: '#0f172a', grid: '#1e293b', text: '#94a3b8' },
-    navy:  { bg: '#020617', grid: '#0f172a', text: '#64748b' },
-    classic: { bg: '#0e1118', grid: '#262a35', text: '#a1a8b3' },
-  }[themeName];
-  const gridColor = gridKey === 'none' ? 'transparent' : colors.grid;
-  const gridStyle = gridKey === 'dotted' ? 1 : 0;
+  const gridStyle = theme.gridStyle;
 
   const createChartFn = ('createChart' in lc)
     ? lc.createChart
@@ -205,23 +203,23 @@ function createMainChart(
     'Inter, system-ui, sans-serif';
 
   const chart = createChartFn(container, {
-    layout: { background: { color: colors.bg }, textColor: colors.text, fontFamily },
+    layout: { background: { color: theme.colors.bg }, textColor: theme.colors.text, fontFamily },
     grid: {
-      vertLines: { color: gridColor, style: gridStyle },
-      horzLines: { color: gridColor, style: gridStyle },
+      vertLines: { color: theme.gridColor, style: gridStyle },
+      horzLines: { color: theme.gridColor, style: gridStyle },
     },
-    rightPriceScale: { borderColor: colors.grid },
-    timeScale: { borderColor: colors.grid, timeVisible: true, secondsVisible: false },
+    rightPriceScale: { borderColor: theme.colors.grid },
+    timeScale: { borderColor: theme.colors.grid, timeVisible: true, secondsVisible: false },
     crosshair: { mode: 1 },
     autoSize: true,
     handleScroll: { mouseWheel: true, pressedMouseMove: true, horzTouchDrag: true, vertTouchDrag: true },
     handleScale: { mouseWheel: true, pinch: true, axisPressedMouseMove: { time: true, price: true } },
   });
 
-  // Theme-aware bull/bear.
+  // Theme-aware bull/bear from CSS custom properties (single source of truth)
   const cs = getComputedStyle(container);
-  const bullColor = cs.getPropertyValue('--color-bull').trim() || SERIES_BULL_HEX;
-  const bearColor = cs.getPropertyValue('--color-bear').trim() || '#f0594a';
+  const bullColor = cs.getPropertyValue('--color-bull').trim();
+  const bearColor = cs.getPropertyValue('--color-bear').trim();
 
   const candleSeries = chart.addSeries(lc.CandlestickSeries, {
     upColor: bullColor,

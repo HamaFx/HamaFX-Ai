@@ -49,6 +49,24 @@ const SENTIMENTS: Array<{ value: SentimentFilter; label: string; tone: string }>
   { value: 'neutral', label: 'Neutral', tone: 'text-fg-muted' },
 ];
 
+function handleRadioKeyDown(e: React.KeyboardEvent) {
+  const radios = Array.from(e.currentTarget.querySelectorAll<HTMLButtonElement>('[role="radio"]'));
+  const currentIdx = radios.findIndex(r => r === document.activeElement);
+  if (currentIdx === -1) return;
+  let nextIdx: number;
+  if (e.key === 'ArrowRight') {
+    e.preventDefault();
+    nextIdx = (currentIdx + 1) % radios.length;
+  } else if (e.key === 'ArrowLeft') {
+    e.preventDefault();
+    nextIdx = (currentIdx - 1 + radios.length) % radios.length;
+  } else {
+    return;
+  }
+  radios[nextIdx]?.focus();
+  radios[nextIdx]?.click();
+}
+
 export function NewsToolbar({
   query,
   onQuery,
@@ -92,6 +110,7 @@ export function NewsToolbar({
       <div
         role="radiogroup"
         aria-label="Filter by sentiment"
+        onKeyDown={handleRadioKeyDown}
         className="scrollbar-hide -mx-4 flex gap-2 overflow-x-auto px-4"
       >
         {SENTIMENTS.map((s) => {
@@ -102,6 +121,7 @@ export function NewsToolbar({
               type="button"
               role="radio"
               aria-checked={active}
+              tabIndex={active ? 0 : -1}
               onClick={() => onSentiment(s.value)}
               className={cn(
                 'inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full border px-3 text-xs font-semibold transition-colors',
@@ -124,14 +144,16 @@ export function NewsToolbar({
         <div
           role="radiogroup"
           aria-label="Filter by symbol"
+          onKeyDown={handleRadioKeyDown}
           className="scrollbar-hide -mx-4 flex gap-2 overflow-x-auto px-4"
         >
-          <SymbolChip label="All" active={symbol === 'all'} onClick={() => onSymbol('all')} />
+          <SymbolChip label="All" active={symbol === 'all'} tabIndex={symbol === 'all' ? 0 : -1} onClick={() => onSymbol('all')} />
           {symbolOptions.map((s) => (
             <SymbolChip
               key={s}
               label={s}
               active={symbol === s}
+              tabIndex={symbol === s ? 0 : -1}
               onClick={() => onSymbol(s)}
             />
           ))}
@@ -149,10 +171,12 @@ export function NewsToolbar({
 function SymbolChip({
   label,
   active,
+  tabIndex,
   onClick,
 }: {
   label: string;
   active: boolean;
+  tabIndex?: number;
   onClick: () => void;
 }) {
   return (
@@ -160,6 +184,7 @@ function SymbolChip({
       type="button"
       role="radio"
       aria-checked={active}
+      tabIndex={tabIndex ?? -1}
       onClick={onClick}
       className={cn(
         'inline-flex h-9 shrink-0 items-center rounded-full border px-3 text-body-sm font-semibold uppercase tabular-nums transition-colors',

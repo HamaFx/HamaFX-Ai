@@ -18,6 +18,7 @@
 // list with status indicators. Server component; the action islands are
 // the existing Test*Button / EnableWebPushButton client components.
 
+import Link from 'next/link';
 import { listPushSubscriptions } from '@hamafx/ai';
 import { Bell, Mail, Send } from 'lucide-react';
 
@@ -60,55 +61,61 @@ export async function NotificationsCard({ userId }: { userId: string }) {
         </p>
       </header>
 
-      <SettingsRow
-        icon={<Mail className="size-4" />}
-        iconColor="oklch(78% 0.16 78 / 0.18)"
-        label="Email"
-        description={
-          <span className="flex items-center gap-2">
-            <StatusPill ready={emailReady} />
-            <span>One-off test through Resend</span>
-          </span>
-        }
-        stack
-        action={<TestEmailButton />}
-      />
-
-      <RowDivider />
-
-      <SettingsRow
-        icon={<Send className="size-4" />}
-        iconColor="oklch(74% 0.14 230 / 0.18)"
-        label="Telegram"
-        description={
-          <span className="flex items-center gap-2">
-            <StatusPill ready={telegramReady} />
-            <span>Send a test message to your bot</span>
-          </span>
-        }
-        stack
-        action={<TestTelegramButton />}
-      />
-
-      <RowDivider />
-
-      <SettingsRow
-        icon={<Bell className="size-4" />}
-        iconColor="oklch(70% 0.14 285 / 0.18)"
-        label="Web push"
-        description={
-          <span className="flex items-center gap-2">
-            <StatusPill ready={pushReady} />
-            <span>
-              {pushReady
-                ? `${pushDevices} device${pushDevices === 1 ? '' : 's'} subscribed`
-                : 'VAPID keys not configured'}
+      <Link href="/settings/usage" className="block rounded-lg -mx-1 px-1 py-0.5 transition-colors hover:bg-bg-elev-2/60">
+        <SettingsRow
+          icon={<Mail className="size-4" />}
+          iconColor="oklch(78% 0.16 78 / 0.18)"
+          label="Email"
+          description={
+            <span className="flex items-center gap-2">
+              <StatusPill ready={emailReady} />
+              <span>Configure email alerts and usage notifications</span>
             </span>
-          </span>
-        }
-        stack
-        action={<EnableWebPushButton />}
-      />
+          }
+          stack
+          action={<TestEmailButton />}
+        />
+      </Link>
+
+      <RowDivider />
+
+      <Link href="/settings/telegram" className="block rounded-lg -mx-1 px-1 py-0.5 transition-colors hover:bg-bg-elev-2/60">
+        <SettingsRow
+          icon={<Send className="size-4" />}
+          iconColor="oklch(74% 0.14 230 / 0.18)"
+          label="Telegram"
+          description={
+            <span className="flex items-center gap-2">
+              <StatusPill ready={telegramReady} />
+              <span>Configure Telegram bot and test messages</span>
+            </span>
+          }
+          stack
+          action={<TestTelegramButton />}
+        />
+      </Link>
+
+      <RowDivider />
+
+      <Link href="/settings" className="block rounded-lg -mx-1 px-1 py-0.5 transition-colors hover:bg-bg-elev-2/60">
+        <SettingsRow
+          icon={<Bell className="size-4" />}
+          iconColor="oklch(70% 0.14 285 / 0.18)"
+          label="Web push"
+          description={
+            <span className="flex items-center gap-2">
+              <StatusPill ready={pushReady} />
+              <span>
+                {pushReady
+                  ? `${pushDevices} device${pushDevices === 1 ? '' : 's'} subscribed`
+                  : 'Browser push not configured'}
+              </span>
+            </span>
+          }
+          stack
+          action={<EnableWebPushButton />}
+        />
+      </Link>
     </section>
   );
 }
@@ -121,7 +128,7 @@ function StatusPill({ ready }: { ready: boolean }) {
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[10px] font-bold uppercase tabular-nums ring-1',
+        'inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-xs font-bold uppercase tabular-nums ring-1',
         ready
           ? 'bg-bull/10 text-bull ring-bull/30'
           : 'bg-bg-elev-2 text-fg-subtle ring-divider',

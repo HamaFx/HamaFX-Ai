@@ -18,6 +18,7 @@
 
 import { WifiOff, Loader2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { AnimatePresence, m } from 'motion/react';
 
 /**
  * Sticky pill rendered above the home indicator while the browser reports
@@ -47,31 +48,38 @@ export function OfflineBanner() {
     };
   }, []);
 
-  if (online) return null;
-
   return (
-    <div
-      role="status"
-      aria-live="polite"
-      className="pointer-events-none fixed inset-x-0 z-40 flex justify-center px-4"
-      style={{ bottom: 'var(--toast-bottom)' }}
-    >
-      <div className="glass-strong text-fg pointer-events-auto flex items-center gap-3 rounded-full px-4 py-2.5">
-        <WifiOff className="text-bear size-4" aria-hidden="true" strokeWidth={2.25} />
-        <span className="text-body-sm font-medium">No network</span>
-        <button
-          type="button"
-          disabled={retrying}
-          onClick={() => {
-            setRetrying(true);
-            window.location.reload();
-          }}
-          className="text-fg-muted hover:text-fg focus-visible:ring-brand inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-lg px-3 text-body-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 disabled:opacity-60"
+    <AnimatePresence>
+      {!online && (
+        <m.div
+          key="offline-banner"
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -10 }}
+          transition={{ duration: 0.2 }}
+          role="status"
+          aria-live="polite"
+          className="pointer-events-none fixed inset-x-0 z-40 flex justify-center px-4"
+          style={{ bottom: 'var(--toast-bottom)' }}
         >
-          {retrying && <Loader2 className="size-3 animate-spin" />}
-          Retry
-        </button>
-      </div>
-    </div>
+          <div className="glass-strong text-fg pointer-events-auto flex items-center gap-3 rounded-full px-4 py-2.5">
+            <WifiOff className="text-bear size-4" aria-hidden="true" strokeWidth={2.25} />
+            <span className="text-body-sm font-medium">No network</span>
+            <button
+              type="button"
+              disabled={retrying}
+              onClick={() => {
+                setRetrying(true);
+                window.location.reload();
+              }}
+              className="text-fg-muted hover:text-fg focus-visible:ring-brand inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-lg px-3 text-body-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 disabled:opacity-60"
+            >
+              {retrying && <Loader2 className="size-3 animate-spin" />}
+              Retry
+            </button>
+          </div>
+        </m.div>
+      )}
+    </AnimatePresence>
   );
 }

@@ -82,8 +82,14 @@ export function PerformanceChart({
     const el = containerRef.current;
     if (!el || chartData.length === 0) return;
 
+    // Destroy existing chart instance before creating a new one
+    if (chartRef.current) {
+      chartRef.current.remove();
+      chartRef.current = null;
+      seriesRef.current = null;
+    }
+
     let cancelled = false;
-    let chart: any = null;
 
     void import('lightweight-charts').then((lc) => {
       if (cancelled || !containerRef.current) return;
@@ -94,10 +100,10 @@ export function PerformanceChart({
         ? lc.createChart 
         : ((lc as any).default?.createChart as any);
 
-      chart = createChartFn(containerRef.current, {
+      const chart = createChartFn(containerRef.current, {
         height,
         layout: {
-          background: { color: 'transparent' }, // Glassmorphic clean transparent canvas
+          background: { color: 'transparent' },
           textColor: colors.text,
           fontFamily: getComputedStyle(el).getPropertyValue('--font-sans') || 'Inter, system-ui, sans-serif',
         },
@@ -115,20 +121,19 @@ export function PerformanceChart({
           secondsVisible: false,
         },
         crosshair: {
-          mode: 1, // Magnet
+          mode: 1,
           vertLine: { color: colors.text, style: 3 /* Dashed */ },
           horzLine: { color: colors.text, style: 3 },
         },
         autoSize: true,
-        handleScroll: false, // Static aesthetic tracking curve
+        handleScroll: false,
         handleScale: false,
       });
 
       chartRef.current = chart;
 
-      // Add Area Series with champagne gold tones
       const areaSeries = chart.addSeries(lc.AreaSeries, {
-        lineColor: totalR >= 0 ? '#eab308' : '#f0594a', // Gold if green, Red if negative
+        lineColor: totalR >= 0 ? '#eab308' : '#f0594a',
         topColor: totalR >= 0 ? 'rgba(234, 179, 8, 0.2)' : 'rgba(240, 89, 74, 0.2)',
         bottomColor: 'rgba(0, 0, 0, 0)',
         lineWidth: 2,
@@ -143,9 +148,11 @@ export function PerformanceChart({
 
     return () => {
       cancelled = true;
-      chart?.remove();
-      chartRef.current = null;
-      seriesRef.current = null;
+      if (chartRef.current) {
+        chartRef.current.remove();
+        chartRef.current = null;
+        seriesRef.current = null;
+      }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chartData, theme, height]);
@@ -194,11 +201,11 @@ export function PerformanceChart({
           </div>
           <div>
             <h4 className="text-xs font-bold uppercase tracking-wider text-fg-subtle">Performance Curve</h4>
-            <p className="text-[10px] text-fg-muted mt-0.5">Cumulative R-Multiple Growth</p>
+            <p className="text-xs text-fg-muted mt-0.5">Cumulative R-Multiple Growth</p>
           </div>
         </div>
         <div className="text-right">
-          <span className="text-[10px] text-fg-muted font-medium uppercase tracking-wide">Net R-Score</span>
+          <span className="text-xs text-fg-muted font-medium uppercase tracking-wide">Net R-Score</span>
           <p className={`text-xl font-bold tracking-tight tabular-nums ${totalR >= 0 ? 'text-bull' : 'text-bear'}`}>
             {totalR >= 0 ? '+' : ''}{totalR.toFixed(2)}R
           </p>

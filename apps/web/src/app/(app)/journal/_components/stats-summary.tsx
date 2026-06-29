@@ -289,7 +289,7 @@ export function StatsSummary({ stats, entries = [] }: StatsSummaryProps) {
           )}>
             {profitFactor.toFixed(2)}
           </p>
-          <span className="text-[9px] text-fg-muted font-medium">Gross Wins vs. Gross Losses</span>
+          <span className="text-xs text-fg-muted font-medium">Gross Wins vs. Gross Losses</span>
         </div>
 
         {/* Max Drawdown */}
@@ -301,7 +301,7 @@ export function StatsSummary({ stats, entries = [] }: StatsSummaryProps) {
           <p className="text-lg font-bold tracking-tight mt-1.5 text-bear tabular-nums">
             -{maxDrawdown.toFixed(2)}R
           </p>
-          <span className="text-[9px] text-fg-muted font-medium">Maximum peak-to-trough drop</span>
+          <span className="text-xs text-fg-muted font-medium">Maximum peak-to-trough drop</span>
         </div>
 
         {/* Best Trade Win */}
@@ -313,7 +313,7 @@ export function StatsSummary({ stats, entries = [] }: StatsSummaryProps) {
           <p className="text-lg font-bold tracking-tight mt-1.5 text-bull tabular-nums">
             +{extremes.best.toFixed(2)}R
           </p>
-          <span className="text-[9px] text-fg-muted font-medium">Single maximum R realized</span>
+          <span className="text-xs text-fg-muted font-medium">Single maximum R realized</span>
         </div>
 
         {/* Worst Trade Loss */}
@@ -325,7 +325,7 @@ export function StatsSummary({ stats, entries = [] }: StatsSummaryProps) {
           <p className="text-lg font-bold tracking-tight mt-1.5 text-bear/80 tabular-nums">
             {extremes.worst.toFixed(2)}R
           </p>
-          <span className="text-[9px] text-fg-muted font-medium">Single maximum R loss</span>
+          <span className="text-xs text-fg-muted font-medium">Single maximum R loss</span>
         </div>
       </div>
 
@@ -344,7 +344,7 @@ export function StatsSummary({ stats, entries = [] }: StatsSummaryProps) {
               <p className="text-lg font-bold tracking-tight mt-1.5 text-bull tabular-nums">
                 {stats.longestWinStreak}
               </p>
-              <span className="text-[9px] text-fg-muted font-medium">Longest consecutive wins (across breakevens)</span>
+              <span className="text-xs text-fg-muted font-medium">Longest consecutive wins (across breakevens)</span>
             </div>
 
             <div className="border border-divider bg-bg-elev-1 rounded-lg p-3.5 flex flex-col gap-1">
@@ -355,7 +355,7 @@ export function StatsSummary({ stats, entries = [] }: StatsSummaryProps) {
               <p className="text-lg font-bold tracking-tight mt-1.5 text-bear/80 tabular-nums">
                 {stats.longestLossStreak}
               </p>
-              <span className="text-[9px] text-fg-muted font-medium">Longest consecutive losses</span>
+              <span className="text-xs text-fg-muted font-medium">Longest consecutive losses</span>
             </div>
 
             <div className="border border-divider bg-bg-elev-1 rounded-lg p-3.5 flex flex-col gap-1">
@@ -366,7 +366,7 @@ export function StatsSummary({ stats, entries = [] }: StatsSummaryProps) {
               <p className="text-lg font-bold tracking-tight mt-1.5 text-fg tabular-nums">
                 {(stats.avgHoldMs ?? 0) > 0 ? formatHoldTime(stats.avgHoldMs!) : '—'}
               </p>
-              <span className="text-[9px] text-fg-muted font-medium">Average trade duration (closed)</span>
+              <span className="text-xs text-fg-muted font-medium">Average trade duration (closed)</span>
             </div>
           </div>
 
@@ -441,7 +441,7 @@ function DayOfWeekChart({
         const heightPct = (n / max) * 100;
         return (
           <div key={DOW_KEYS[i]} className="flex flex-1 flex-col items-center gap-1">
-            <span className="text-fg-subtle text-[10px] tabular-nums">{n}</span>
+            <span className="text-fg-subtle text-xs tabular-nums">{n}</span>
             <div className="bg-bg-elev-2 flex h-full w-full items-end overflow-hidden rounded">
               <div
                 className="bg-brand w-full"
@@ -449,7 +449,7 @@ function DayOfWeekChart({
                 aria-label={`${DOW_LABELS[i]}: ${n}`}
               />
             </div>
-            <span className="text-fg-muted text-[10px] uppercase tracking-wider">
+            <span className="text-fg-muted text-xs uppercase tracking-wider">
               {DOW_LABELS[i]}
             </span>
           </div>

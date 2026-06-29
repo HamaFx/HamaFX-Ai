@@ -1,61 +1,54 @@
 'use client';
 
-/**
- * Copyright 2026 HamaFX
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react';
 
-// <NavDrawerProvider> + useNavDrawer() — single source of truth for the
-// nav-drawer open state.
-//
-// Why a context, not per-trigger drawer instances?
-//
-// We render two top bars (TopBar for non-chat routes, ChatTopBar inside
-// the chat surface). When the user navigates between them, vaul's drawer
-// instances would mount/unmount with their own state and focus traps. If
-// any state lingers across remounts the menu button can fire on a stale
-// instance and "appear to do nothing". A single drawer mounted at the
-// layout level, with both buttons calling `setOpen(true)`, eliminates
-// the entire class of bug.
-//
-// The provider also defaults to a noop fallback when accessed outside
-// (e.g. SSR) so trigger components don't have to guard every read.
-
-import { createContext, useCallback, useContext, useState, type ReactNode } from 'react';
-
-interface NavDrawerCtxShape {
+interface NavDrawerState {
   open: boolean;
+}
+
+interface NavDrawerActions {
   setOpen: (v: boolean) => void;
   toggle: () => void;
 }
 
-const FALLBACK: NavDrawerCtxShape = {
+const STATE_FALLBACK: NavDrawerState = {
   open: false,
+};
+
+const ACTIONS_FALLBACK: NavDrawerActions = {
   setOpen: () => undefined,
   toggle: () => undefined,
 };
 
-const Ctx = createContext<NavDrawerCtxShape>(FALLBACK);
+const StateCtx = createContext<NavDrawerState>(STATE_FALLBACK);
+const ActionsCtx = createContext<NavDrawerActions>(ACTIONS_FALLBACK);
 
 export function NavDrawerProvider({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false);
   const toggle = useCallback(() => {
     setOpen((v) => !v);
   }, []);
-  return <Ctx.Provider value={{ open, setOpen, toggle }}>{children}</Ctx.Provider>;
+
+  const state = useMemo(() => ({ open }), [open]);
+  const actions = useMemo(() => ({ setOpen, toggle }), [toggle]);
+
+  return (
+    <StateCtx.Provider value={state}>
+      <ActionsCtx.Provider value={actions}>
+        {children}
+      </ActionsCtx.Provider>
+    </StateCtx.Provider>
+  );
 }
 
-export function useNavDrawer(): NavDrawerCtxShape {
-  return useContext(Ctx);
+export function useNavDrawerState(): NavDrawerState {
+  return useContext(StateCtx);
+}
+
+export function useNavDrawerActions(): NavDrawerActions {
+  return useContext(ActionsCtx);
+}
+
+export function useNavDrawer(): NavDrawerState & NavDrawerActions {
+  return { ...useContext(StateCtx), ...useContext(ActionsCtx) };
 }

@@ -46,8 +46,8 @@ export function GetSystemDiagnosticsPart({
     statusBg = 'bg-bull/10';
     StatusIcon = CheckCircle;
   } else if (status === 'degraded') {
-    statusColor = 'text-amber-500';
-    statusBg = 'bg-amber-500/10';
+    statusColor = 'text-warn';
+    statusBg = 'bg-warn/10';
     StatusIcon = AlertTriangle;
   } else if (status === 'unhealthy') {
     statusColor = 'text-bear';
@@ -67,7 +67,7 @@ export function GetSystemDiagnosticsPart({
             System Telemetry & Health
           </h3>
         </div>
-        <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[9px] font-bold ${statusBg} ${statusColor}`}>
+        <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-bold ${statusBg} ${statusColor}`}>
           <StatusIcon className="size-3" />
           {status.toUpperCase()}
         </span>
@@ -77,21 +77,21 @@ export function GetSystemDiagnosticsPart({
       <div className="grid grid-cols-3 gap-3 text-center">
         <div className="bg-bg-elev-2/50 rounded-lg p-2 border border-divider/25 flex flex-col items-center justify-center">
           <Database className="size-4 text-fg-subtle mb-1" />
-          <span className="text-fg-subtle text-[8px] uppercase font-medium">DB Latency</span>
+          <span className="text-fg-subtle text-xs uppercase font-medium">DB Latency</span>
           <span className="text-fg text-xs font-extrabold mt-0.5 tabular-nums">
             {database.latencyMs >= 0 ? `${database.latencyMs}ms` : 'offline'}
           </span>
         </div>
         <div className="bg-bg-elev-2/50 rounded-lg p-2 border border-divider/25 flex flex-col items-center justify-center">
           <Wallet className="size-4 text-fg-subtle mb-1" />
-          <span className="text-fg-subtle text-[8px] uppercase font-medium">AI Spend Today</span>
+          <span className="text-fg-subtle text-xs uppercase font-medium">AI Spend Today</span>
           <span className="text-fg text-xs font-extrabold mt-0.5 tabular-nums">
             ${budget.spentUsd.toFixed(2)}
           </span>
         </div>
         <div className="bg-bg-elev-2/50 rounded-lg p-2 border border-divider/25 flex flex-col items-center justify-center">
           <Cpu className="size-4 text-fg-subtle mb-1" />
-          <span className="text-fg-subtle text-[8px] uppercase font-medium">Vector Memory</span>
+          <span className="text-fg-subtle text-xs uppercase font-medium">Vector Memory</span>
           <span className="text-fg text-xs font-extrabold mt-0.5 tabular-nums">
             {database.memoryEmbeddingsCount} nodes
           </span>
@@ -100,7 +100,7 @@ export function GetSystemDiagnosticsPart({
 
       {/* Database Record Volumes */}
       <div className="flex flex-col gap-2">
-        <h4 className="text-fg-subtle text-[9px] font-bold uppercase tracking-wider">Database Segment Volumes</h4>
+        <h4 className="text-fg-subtle text-xs font-bold uppercase tracking-wider">Database Segment Volumes</h4>
         <div className="grid grid-cols-2 gap-2 border-t border-divider/20 pt-2 text-caption">
           <div className="flex justify-between py-0.5">
             <span className="text-fg-muted">Journal Entries:</span>
@@ -123,8 +123,8 @@ export function GetSystemDiagnosticsPart({
 
       {/* Environment Config Checks */}
       <div className="flex flex-col gap-2">
-        <h4 className="text-fg-subtle text-[9px] font-bold uppercase tracking-wider">Environment Integrations</h4>
-        <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 border-t border-divider/20 pt-2 text-[9px]">
+        <h4 className="text-fg-subtle text-xs font-bold uppercase tracking-wider">Environment Integrations</h4>
+        <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 border-t border-divider/20 pt-2 text-xs">
           {Object.entries(envCheck).map(([key, configured]) => (
             <div key={key} className="flex items-center justify-between py-0.5">
               <span className="text-fg-muted font-mono">{key}</span>
@@ -138,7 +138,7 @@ export function GetSystemDiagnosticsPart({
 
       {/* Background Jobs Sync Log */}
       <div className="flex flex-col gap-2">
-        <h4 className="text-fg-subtle text-[9px] font-bold uppercase tracking-wider">Background Sync Status</h4>
+        <h4 className="text-fg-subtle text-xs font-bold uppercase tracking-wider">Background Sync Status</h4>
         <div className="flex flex-col gap-1 border-t border-divider/20 pt-2 text-caption">
           <div className="flex justify-between py-0.5">
             <span className="text-fg-muted">FRED Opportunity Cost Sync:</span>
@@ -158,7 +158,7 @@ export function GetSystemDiagnosticsPart({
       <p className="text-fg-muted text-body-sm leading-normal border-t border-divider/20 pt-2.5">
         {narrative}
       </p>
-      <footer className="text-fg-subtle text-[8px] text-right mt-[-4px]">
+      <footer className="text-fg-subtle text-xs text-right mt-[-4px]">
         Diagnostic probe run at: {new Date(asOf).toLocaleTimeString()}
       </footer>
     </div>

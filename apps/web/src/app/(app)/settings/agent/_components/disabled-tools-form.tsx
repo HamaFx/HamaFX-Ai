@@ -26,7 +26,7 @@ export function DisabledToolsForm({
         ? { ok: true }
         : { ok: false, error: res.error || 'Unknown error' };
     },
-    { ok: true },
+    { ok: false },
   );
 
   useEffect(() => {
@@ -58,7 +58,7 @@ export function DisabledToolsForm({
               <div className="flex flex-col min-w-0">
                 <code className="text-fg text-xs font-semibold font-mono">{toolName}</code>
               </div>
-              <span className="ml-auto text-[10px] font-medium uppercase tracking-wider text-fg-subtle">
+              <span className="ml-auto text-xs font-medium uppercase tracking-wider text-fg-subtle">
                 {isDisabled ? 'Disabled' : 'Enabled'}
               </span>
             </label>

@@ -105,13 +105,13 @@ export function ExportImportKeys() {
               Export API Keys
             </h3>
           </div>
-          <p className="text-[11px] text-fg-subtle leading-relaxed">
+          <p className="text-xs text-fg-subtle leading-relaxed">
             Encrypt your API keys using your account password. You will need the same
             password to decrypt and restore your keys later.
           </p>
 
           <div className="flex flex-col gap-1">
-            <label htmlFor="export-pwd" className="text-[10px] font-bold text-fg-subtle uppercase">
+            <label htmlFor="export-pwd" className="text-xs font-bold text-fg-subtle uppercase">
               Account Password
             </label>
             <Input
@@ -138,7 +138,7 @@ export function ExportImportKeys() {
 
           {exportedPayload && (
             <div className="flex flex-col gap-1.5 mt-2">
-              <label htmlFor="export-payload" className="text-[10px] font-bold text-fg-subtle uppercase flex justify-between items-center">
+              <label htmlFor="export-payload" className="text-xs font-bold text-fg-subtle uppercase flex justify-between items-center">
                 <span>Backup Payload</span>
                 <button
                   type="button"
@@ -154,7 +154,7 @@ export function ExportImportKeys() {
                 readOnly
                 value={exportedPayload}
                 rows={4}
-                className="w-full border border-divider bg-bg-elev-2 text-fg font-mono text-[10px] rounded-md p-2.5 resize-none focus:outline-none"
+                className="w-full border border-divider bg-bg-elev-2 text-fg font-mono text-xs rounded-md p-2.5 resize-none focus:outline-none"
               />
             </div>
           )}
@@ -168,14 +168,14 @@ export function ExportImportKeys() {
               Import API Keys
             </h3>
           </div>
-          <p className="text-[11px] text-fg-subtle leading-relaxed">
+          <p className="text-xs text-fg-subtle leading-relaxed">
             Paste a previously exported backup payload and enter your account password to
             restore your keys.
           </p>
 
           <div className="flex flex-col gap-3">
             <div className="flex flex-col gap-1">
-              <label htmlFor="import-payload" className="text-[10px] font-bold text-fg-subtle uppercase">
+              <label htmlFor="import-payload" className="text-xs font-bold text-fg-subtle uppercase">
                 Backup Payload
               </label>
               <textarea
@@ -184,12 +184,12 @@ export function ExportImportKeys() {
                 value={importPayload}
                 onChange={(e) => setImportPayload(e.target.value)}
                 rows={3}
-                className="w-full border border-divider bg-bg-elev-2 text-fg font-mono text-[10px] rounded-md p-2.5 resize-none focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand/40"
+                className="w-full border border-divider bg-bg-elev-2 text-fg font-mono text-xs rounded-md p-2.5 resize-none focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand/40"
               />
             </div>
 
             <div className="flex flex-col gap-1">
-              <label htmlFor="import-pwd" className="text-[10px] font-bold text-fg-subtle uppercase">
+              <label htmlFor="import-pwd" className="text-xs font-bold text-fg-subtle uppercase">
                 Decryption Password
               </label>
               <Input

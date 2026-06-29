@@ -146,12 +146,22 @@ export const QuickPrompts = memo(function QuickPrompts({
   pinnedSymbol,
   now,
 }: QuickPromptsProps) {
-  const session = useMemo(() => getSessionInfo(now ?? new Date()).session, [now]);
+  const sessionInfo = useMemo(() => getSessionInfo(now ?? new Date()), [now]);
+  const session = sessionInfo.session;
+  const sessionPrefix = session === 'london' ? 'London session is live — '
+    : session === 'ny' ? 'NY session is live — '
+    : session === 'asian' ? 'Asian session is live — '
+    : '';
   const prompts = useMemo(() => {
-    return pinnedSymbol
+    const base = pinnedSymbol
       ? generatePinnedPrompts(pinnedSymbol, session)
       : NO_PIN_PROMPTS[session];
-  }, [pinnedSymbol, session]);
+    if (!sessionPrefix) return base;
+    return (base as readonly Prompt[]).map((p, i) => ({
+      ...p,
+      label: i === 0 ? `${sessionPrefix}${p.label}` : p.label,
+    }));
+  }, [pinnedSymbol, session, sessionPrefix]);
 
 
   return (

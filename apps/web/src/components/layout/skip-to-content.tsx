@@ -24,8 +24,15 @@ interface SkipToContentProps {
 }
 
 export function SkipToContent({ targetId = 'main-content' }: SkipToContentProps) {
+  const handleSkip = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    e.preventDefault();
+    const target = document.getElementById(targetId);
+    target?.focus();
+    target?.scrollIntoView();
+  };
+
   return (
-    <a href={`#${targetId}`} className="skip-to-main">
+    <a href={`#${targetId}`} className="skip-to-main" onClick={handleSkip}>
       Skip to main content
     </a>
   );

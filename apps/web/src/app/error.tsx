@@ -34,14 +34,21 @@ export default function ErrorPage({ error, reset }: ErrorPageProps) {
   }, [error]);
 
   return (
-    <main className="bg-bg text-fg flex min-h-svh flex-col items-center justify-center gap-4 px-6 text-center">
-      <div className="flex flex-col gap-2 text-center items-center">
-        <h1 className="text-lg font-semibold">Something broke.</h1>
+    <main className="bg-bg text-fg flex min-h-svh flex-col items-center justify-center gap-6 px-6 text-center">
+      <span
+        aria-hidden="true"
+        className="inline-flex size-16 items-center justify-center rounded-2xl"
+        style={{
+          background: 'var(--gradient-brand)',
+          boxShadow: '0 0 24px -4px oklch(82% 0.14 85 / 0.3)',
+        }}
+      >
+        <span className="text-bg text-2xl font-bold">H</span>
+      </span>
+      <div className="flex flex-col gap-2 text-center items-center" role="alert">
+        <h1 className="text-lg font-semibold">Something went wrong</h1>
         <p className="text-fg-muted text-sm max-w-sm">
-          {error.message || 'An unexpected error occurred while rendering the page.'}
-        </p>
-        <p className="text-fg-subtle text-[11px] tabular-nums">
-          Error ID: {error.digest || 'N/A'}
+          A stop-loss kicked in. Please try again.
         </p>
       </div>
       <div className="flex gap-3">
@@ -49,10 +56,10 @@ export default function ErrorPage({ error, reset }: ErrorPageProps) {
           Try again
         </Button>
         <Link
-          href="/dashboard"
-          className="border border-border bg-transparent text-fg hover:bg-muted/30 inline-flex h-9 items-center justify-center rounded-md px-4 text-sm font-medium transition-colors"
+          href="/chat"
+          className="border border-divider bg-bg-elev-1 text-fg hover:bg-bg-elev-2 inline-flex h-9 items-center justify-center rounded-md px-4 text-sm font-medium transition-colors"
         >
-          Go to dashboard
+          Go to chat
         </Link>
       </div>
     </main>

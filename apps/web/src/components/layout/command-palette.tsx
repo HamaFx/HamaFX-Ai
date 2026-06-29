@@ -232,6 +232,10 @@ export function CommandPalette({ onNewChat }: CommandPaletteProps) {
               <input
                 ref={inputRef}
                 id={inputId}
+                role="combobox"
+                aria-expanded={open}
+                aria-controls="command-listbox"
+                aria-activedescendant={activeIdx >= 0 && flatRows.length > 0 ? `command-option-${activeIdx}` : undefined}
                 type="search"
                 value={query}
                 onChange={(e) => {
@@ -247,7 +251,7 @@ export function CommandPalette({ onNewChat }: CommandPaletteProps) {
             </div>
           </div>
 
-          <div className="scrollbar-hide flex max-h-[50svh] flex-col overflow-y-auto px-2 pb-4">
+          <div id="command-listbox" role="listbox" className="scrollbar-hide flex max-h-[50svh] flex-col overflow-y-auto px-2 pb-4">
             {flatRows.length === 0 ? (
               <p className="text-fg-subtle px-3 py-6 text-center text-sm">
                 No commands match.
@@ -270,7 +274,7 @@ export function CommandPalette({ onNewChat }: CommandPaletteProps) {
                         const isActive = flatIndex === activeIdx;
                         const Icon = command.icon;
                         return (
-                          <li key={command.id}>
+                          <li key={command.id} id={`command-option-${flatIndex}`} role="option" aria-selected={activeIdx === flatIndex}>
                             <button
                               type="button"
                               data-command-idx={flatIndex}

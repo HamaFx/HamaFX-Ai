@@ -89,9 +89,9 @@ export function TwoFactorSetup({ enabled }: TwoFactorSetupProps) {
     return (
       <div className="border border-divider bg-bg-elev-1 rounded-lg p-4 flex flex-col gap-4">
         <div className="flex items-center gap-2">
-          <Shield className="size-4 text-emerald-400" />
+          <Shield className="size-4 text-bull" />
           <span className="text-sm font-medium text-fg">Two-Factor Authentication</span>
-          <span className="rounded-full bg-emerald-400/15 px-2 py-0.5 text-[10px] font-medium text-emerald-400 ml-auto">
+          <span className="rounded-full bg-bull/15 px-2 py-0.5 text-xs font-medium text-bull ml-auto">
             Enabled
           </span>
         </div>
@@ -127,9 +127,9 @@ export function TwoFactorSetup({ enabled }: TwoFactorSetupProps) {
     return (
       <div className="border border-divider bg-bg-elev-1 rounded-lg p-4 flex flex-col gap-3">
         <div className="flex items-center gap-2">
-          <Check className="size-4 text-emerald-400" />
+          <Check className="size-4 text-bull" />
           <span className="text-sm font-medium text-fg">Two-Factor Authentication</span>
-          <span className="rounded-full bg-emerald-400/15 px-2 py-0.5 text-[10px] font-medium text-emerald-400 ml-auto">
+          <span className="rounded-full bg-bull/15 px-2 py-0.5 text-xs font-medium text-bull ml-auto">
             Enabled
           </span>
         </div>
@@ -148,7 +148,7 @@ export function TwoFactorSetup({ enabled }: TwoFactorSetupProps) {
           <span className="text-sm font-medium text-fg">Set Up Two-Factor Authentication</span>
         </div>
         <div className="flex flex-col items-center gap-3">
-          <img src={qrDataUrl} alt="TOTP QR Code" className="size-40 border border-divider rounded-lg" />
+          <img src={qrDataUrl} alt="Scan this QR code with your authenticator app" className="size-40 border border-divider rounded-lg" />
           <p className="text-caption text-fg-subtle text-center max-w-sm">
             Scan this QR code with your authenticator app (e.g., Google Authenticator, Authy).
           </p>
@@ -196,7 +196,7 @@ export function TwoFactorSetup({ enabled }: TwoFactorSetupProps) {
         <Shield className="size-4 text-fg-muted" />
         <span className="text-sm font-medium text-fg">Two-Factor Authentication</span>
         {enabled && (
-          <span className="rounded-full bg-emerald-400/15 px-2 py-0.5 text-[10px] font-medium text-emerald-400 ml-auto">
+          <span className="rounded-full bg-bull/15 px-2 py-0.5 text-xs font-medium text-bull ml-auto">
             Enabled
           </span>
         )}

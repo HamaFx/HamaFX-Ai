@@ -1,14 +1,39 @@
 'use client';
 
-import { useActionState, useState } from 'react';
+import { useActionState, useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { resetPasswordAction } from '../actions';
 
 export function ResetPasswordForm({ token }: { token: string }) {
+  const router = useRouter();
   const [state, action, pending] = useActionState(resetPasswordAction, { error: '' });
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [countdown, setCountdown] = useState<number | null>(null);
+
+  const passwordsMatch = password === confirmPassword;
+  const confirmTouched = confirmPassword.length > 0;
+
+  useEffect(() => {
+    if (state?.success && countdown === null) {
+      setCountdown(3);
+    }
+  }, [state?.success, countdown]);
+
+  useEffect(() => {
+    if (countdown === null || countdown <= 0) return;
+    const id = setTimeout(() => {
+      if (countdown <= 1) {
+        router.push('/login');
+      } else {
+        setCountdown(countdown - 1);
+      }
+    }, 1000);
+    return () => clearTimeout(id);
+  }, [countdown, router]);
 
   if (!token) {
     return (
@@ -24,6 +49,8 @@ export function ResetPasswordForm({ token }: { token: string }) {
       </div>
     );
   }
+
+  const submitDisabled = pending || !!state?.success || (confirmTouched && !passwordsMatch);
 
   return (
     <div className="flex flex-col gap-6">
@@ -76,6 +103,25 @@ export function ResetPasswordForm({ token }: { token: string }) {
             )}
           </div>
 
+          <div className="flex flex-col gap-2">
+            <label htmlFor="confirm-password" className="text-fg text-sm font-semibold">
+              Confirm New Password
+            </label>
+            <Input
+              id="confirm-password"
+              name="confirmPassword"
+              type="password"
+              autoComplete="new-password"
+              required
+              disabled={pending || !!state?.success}
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+            />
+            {confirmTouched && !passwordsMatch ? (
+              <p role="alert" className="text-bear text-xs mt-1">Passwords do not match</p>
+            ) : null}
+          </div>
+
           {state?.error ? (
             <p id="error" role="alert" className="text-bear text-sm">
               {state.error}
@@ -90,7 +136,7 @@ export function ResetPasswordForm({ token }: { token: string }) {
             type="submit"
             size="lg"
             loading={pending}
-            disabled={pending || !!state?.success}
+            disabled={submitDisabled}
             variant={state?.success ? 'success' : 'primary'}
           >
             {state?.success ? 'Password reset' : 'Reset password'}
@@ -101,7 +147,7 @@ export function ResetPasswordForm({ token }: { token: string }) {
       {state?.success ? (
         <p className="text-fg-subtle text-center text-sm">
           <Link href="/login" className="text-brand font-medium hover:underline">
-            Sign in with new password
+            Redirecting to sign in in {countdown}s…
           </Link>
         </p>
       ) : (

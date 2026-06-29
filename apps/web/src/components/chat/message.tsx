@@ -36,6 +36,7 @@
 import type { UIMessage } from 'ai';
 import { Check, ChevronDown, Copy, Pencil, RotateCcw } from 'lucide-react';
 import { memo, useEffect, useMemo, useState } from 'react';
+import { m } from 'motion/react';
 import { useCopied } from '@/hooks/use-copied';
 
 import { Tooltip } from '@/components/ui/tooltip';
@@ -53,6 +54,7 @@ interface MessageProps {
   onCopy?: (text: string) => void;
   onRegenerate?: (opts?: { modelOverride?: string }) => void;
   onEdit?: (messageId: string, newText: string) => void;
+  isStreaming?: boolean;
 }
 
 /**
@@ -65,7 +67,7 @@ interface MessageProps {
  */
 import { RegenModelPicker } from './_components/regen-model-picker';
 
-function MessageImpl({ message, onCopy, onRegenerate, onEdit }: MessageProps) {
+function MessageImpl({ message, onCopy, onRegenerate, onEdit, isStreaming }: MessageProps) {
   const isUser = message.role === 'user';
   const isSystem = message.role === 'system';
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -164,7 +166,12 @@ function MessageImpl({ message, onCopy, onRegenerate, onEdit }: MessageProps) {
   }
 
   return (
-    <div className={cn('group flex w-full flex-col gap-2', isUser ? 'items-end' : 'items-start')}>
+    <m.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+      className={cn('group flex w-full flex-col gap-2', isUser ? 'items-end' : 'items-start')}
+    >
       <div
         className={cn(
           'relative flex max-w-[88%] flex-col gap-2 px-4 py-3',
@@ -182,7 +189,34 @@ function MessageImpl({ message, onCopy, onRegenerate, onEdit }: MessageProps) {
             : undefined
         }
       >
-        {message.parts.map((part, idx) => renderPart(part, idx, message.role))}
+        {message.parts.map((part, idx) => {
+          if (part.type === 'text') {
+            return (
+              <MemoizedTextPart
+                key={idx}
+                text={part.text}
+                role={message.role === 'user' ? 'user' : 'assistant'}
+                isStreaming={!!isStreaming}
+              />
+            );
+          }
+          if (part.type.startsWith('tool-')) {
+            const p = part as StreamToolPart;
+            const name = part.type.slice('tool-'.length);
+            const streamState: StreamToolState = p.state ?? 'output-available';
+            const errorMessage = p.errorText;
+            return (
+              <MemoizedToolPart
+                key={idx}
+                name={name}
+                output={p.output ?? null}
+                state={toPartState(streamState)}
+                {...(errorMessage !== undefined ? { errorMessage } : {})}
+              />
+            );
+          }
+          return renderPart(part, idx, message.role);
+        })}
       </div>
 
       {/* Action row — only assistant messages, only when there's something
@@ -287,7 +321,7 @@ function MessageImpl({ message, onCopy, onRegenerate, onEdit }: MessageProps) {
           ) : null}
         </div>
       ) : null}
-    </div>
+    </m.div>
   );
 }
 
@@ -296,7 +330,8 @@ export const Message = memo(MessageImpl, (prev, next) => {
   if (prev.onRegenerate !== next.onRegenerate) return false;
   if (prev.onEdit !== next.onEdit) return false;
   if (prev.onCopy !== next.onCopy) return false;
-  
+  if (prev.isStreaming !== next.isStreaming) return false;
+
   // Compare parts array
   if (prev.message.parts !== next.message.parts) {
     if (!prev.message.parts || !next.message.parts) return false;
@@ -330,11 +365,8 @@ interface StreamToolPart {
 function renderPart(
   part: UIMessage['parts'][number],
   idx: number,
-  role: UIMessage['role'],
+  _role: UIMessage['role'],
 ): React.ReactNode {
-  if (part.type === 'text') {
-    return <TextPart key={idx} text={part.text} role={role === 'user' ? 'user' : 'assistant'} />;
-  }
   if (part.type === 'reasoning') return null;
   if (part.type.startsWith('source-') || part.type === 'file' || part.type === 'step-start')
     return null;
@@ -397,21 +429,6 @@ function renderPart(
     );
   }
 
-  if (part.type.startsWith('tool-')) {
-    const p = part as StreamToolPart;
-    const name = part.type.slice('tool-'.length);
-    const streamState: StreamToolState = p.state ?? 'output-available';
-    const errorMessage = p.errorText;
-    return (
-      <ChatToolPart
-        key={idx}
-        name={name}
-        output={p.output ?? null}
-        state={toPartState(streamState)}
-        {...(errorMessage !== undefined ? { errorMessage } : {})}
-      />
-    );
-  }
   return null;
 }
 
@@ -422,3 +439,36 @@ function extractText(m: UIMessage): string {
     .join('\n')
     .trim();
 }
+
+const MemoizedTextPart = memo(function MemoizedTextPart({
+  text,
+  role,
+  isStreaming,
+}: {
+  text: string;
+  role: 'user' | 'assistant';
+  isStreaming: boolean;
+}) {
+  return <TextPart text={text} role={role} isStreaming={isStreaming} />;
+});
+
+const MemoizedToolPart = memo(function MemoizedToolPart({
+  name,
+  output,
+  state,
+  errorMessage,
+}: {
+  name: string;
+  output: unknown;
+  state: ToolPartState;
+  errorMessage?: string;
+}) {
+  return (
+    <ChatToolPart
+      name={name}
+      output={output}
+      state={state}
+      {...(errorMessage !== undefined ? { errorMessage } : {})}
+    />
+  );
+});

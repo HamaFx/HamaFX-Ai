@@ -49,9 +49,11 @@ import { ArrowDown, RotateCcw, Sparkles, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
+import { AnimatePresence, m } from 'motion/react';
 
 import { cn } from '@/lib/cn';
 import { getCsrfToken } from '@/lib/csrf';
+import { useConfirm } from '@/components/ui/confirm-drawer';
 
 import { ChatTopBar, type ThreadSummary, type AnalysisMode } from './chat-top-bar';
 import { Composer } from './composer';
@@ -96,6 +98,8 @@ export function ChatScreen({
 
   const [showScrollFab, setShowScrollFab] = useState(false);
   const [dismissedError, setDismissedError] = useState(false);
+  const [isMultiAgentStreaming, setIsMultiAgentStreaming] = useState(false);
+  const [confirmEl, confirm] = useConfirm();
   const titleFetchedRef = useRef<Record<string, boolean>>({});
 
   const transport = useMemo(
@@ -156,6 +160,7 @@ export function ChatScreen({
       parts: [{ type: 'text' as const, text: '' }],
     } as unknown as UIMessage;
     setMessages((prev) => [...prev, userMsg, assistantMsg]);
+    setIsMultiAgentStreaming(true);
 
     const controller = new AbortController();
     multiAgentFetchRef.current = controller;
@@ -234,6 +239,7 @@ export function ChatScreen({
       setAgentProgress(null);
     } finally {
       multiAgentFetchRef.current = null;
+      setIsMultiAgentStreaming(false);
     }
   }, [analysisMode, messages, setMessages, threadId]);
 
@@ -269,6 +275,13 @@ export function ChatScreen({
     if (idx === -1) return;
     const isLastMessage = idx === messages.length - 1;
     if (!isLastMessage) {
+      const ok = await confirm({
+        title: 'Edit earlier message?',
+        description: 'Editing this message will create a new thread branch. The current thread will be preserved.',
+        confirmLabel: 'Create branch',
+        tone: 'default',
+      });
+      if (!ok) return;
       try {
         const csrf = getCsrfToken();
         const res = await fetch('/api/chat/threads/fork', {
@@ -312,9 +325,13 @@ export function ChatScreen({
     } else {
       void sendMessage({ text: newText });
     }
-  }, [messages, threadId, router, sendMessage, setMessages, analysisMode, sendMultiAgentMessage]);
+  }, [messages, threadId, router, sendMessage, setMessages, analysisMode, sendMultiAgentMessage, confirm]);
 
-  const isStreaming = status === 'submitted' || status === 'streaming' || multiAgentFetchRef.current !== null;
+  const isStreaming = useMemo(() => {
+    if (status === 'submitted' || status === 'streaming') return true;
+    if (isMultiAgentStreaming) return true;
+    return false;
+  }, [status, isMultiAgentStreaming]);
   const isEmpty = messages.length === 0;
 
   // Last assistant message id — gets the Regenerate affordance.
@@ -465,7 +482,7 @@ export function ChatScreen({
           ) : (
             <MessageList
               messages={messages}
-              isStreaming={isStreaming}
+              {...(isStreaming ? { isStreaming } : {})}
               showTypingIndicator={status === 'submitted'}
               scrollContainerRef={scrollRef}
               {...(lastAssistantId ? { lastAssistantId } : {})}
@@ -474,80 +491,96 @@ export function ChatScreen({
               onEdit={handleEdit}
             />
           )}
-          {error && !dismissedError ? (
-            <div
-              role="alert"
-              className={cn(
-                'bg-bear/10 text-bear ring-bear/30 mx-3 mb-2 flex items-center justify-between gap-2 rounded-xl p-3 text-xs ring-1 backdrop-blur',
-              )}
-            >
-              <span className="line-clamp-2 flex-1">{error.message}</span>
-              <div className="flex items-center gap-1.5 shrink-0">
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (lastUserTextRef.current) {
-                      if (analysisMode !== 'single') {
-                        void sendMultiAgentMessage(lastUserTextRef.current);
-                      } else {
-                        void sendMessage({ text: lastUserTextRef.current });
+          <AnimatePresence>
+            {error && !dismissedError ? (
+              <m.div
+                key="chat-error"
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.2 }}
+                role="alert"
+                className={cn(
+                  'bg-bear/10 text-bear ring-bear/30 mx-3 mb-2 flex items-center justify-between gap-2 rounded-xl p-3 text-xs ring-1 backdrop-blur',
+                )}
+              >
+                <span className="line-clamp-2 flex-1">{error.message}</span>
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (lastUserTextRef.current) {
+                        if (analysisMode !== 'single') {
+                          void sendMultiAgentMessage(lastUserTextRef.current);
+                        } else {
+                          void sendMessage({ text: lastUserTextRef.current });
+                        }
                       }
-                    }
-                  }}
-                  aria-label="Retry"
-                  className="bg-bear/20 hover:bg-bear/30 ring-bear/30 inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-body-sm font-medium ring-1"
-                >
-                  <RotateCcw className="size-3.5" /> Retry
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setDismissedError(true)}
-                  aria-label="Dismiss error"
-                  className="hover:bg-bear/10 text-bear/80 hover:text-bear inline-flex size-7 items-center justify-center rounded-lg transition-colors"
-                >
-                  <X className="size-4" />
-                </button>
-              </div>
-            </div>
-          ) : null}
+                    }}
+                    aria-label="Retry"
+                    className="bg-bear/20 hover:bg-bear/30 ring-bear/30 inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-body-sm font-medium ring-1"
+                  >
+                    <RotateCcw className="size-3.5" /> Retry
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setDismissedError(true)}
+                    aria-label="Dismiss error"
+                    className="hover:bg-bear/10 text-bear/80 hover:text-bear inline-flex size-7 items-center justify-center rounded-lg transition-colors"
+                  >
+                    <X className="size-4" />
+                  </button>
+                </div>
+              </m.div>
+            ) : null}
+          </AnimatePresence>
         </div>
 
-        {showScrollFab && (
-          <button
-            type="button"
-            onClick={scrollToBottom}
-            aria-label="Scroll to latest"
-            className="scroll-fab glass-strong text-fg fixed left-1/2 z-30 inline-flex h-11 -translate-x-1/2 items-center gap-1.5 rounded-full px-4 text-body-sm font-medium transition-all"
-            style={{ bottom: 'calc(env(safe-area-inset-bottom) + 96px)' }}
-          >
-            <ArrowDown className="size-3.5" />
-            Latest
-          </button>
-        )}
+        <AnimatePresence>
+          {showScrollFab && (
+            <m.button
+              key="scroll-fab"
+              type="button"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 10 }}
+              transition={{ duration: 0.2 }}
+              onClick={scrollToBottom}
+              aria-label="Scroll to latest"
+              className="scroll-fab glass-strong text-fg fixed left-1/2 z-30 inline-flex h-11 -translate-x-1/2 items-center gap-1.5 rounded-full px-4 text-body-sm font-medium transition-all"
+              style={{ bottom: 'calc(env(safe-area-inset-bottom) + 96px)' }}
+            >
+              <ArrowDown className="size-3.5" />
+              Latest
+            </m.button>
+          )}
+        </AnimatePresence>
       </div>
 
       <div className="mx-auto w-full max-w-2xl">
-        <Composer
-          onSubmit={(text, images) => {
-            lastUserTextRef.current = text;
-            if (analysisMode !== 'single' && images.length === 0) {
-              void sendMultiAgentMessage(text);
-              return;
-            }
-            if (images.length === 0) {
-              void sendMessage({ text });
-              return;
-            }
-            void sendMessage({
-              text,
-              files: images.map((img) => ({
-                type: 'file' as const,
-                mediaType: img.mediaType,
-                url: img.url,
-                filename: img.name,
-              })),
-            });
-          }}
+          <Composer
+            onSubmit={(text, images) => {
+              lastUserTextRef.current = text;
+              if (analysisMode !== 'single' && images.length > 0) {
+                toast('Image analysis runs in single-agent mode. Switching to single-agent for this turn.');
+              } else if (analysisMode !== 'single') {
+                void sendMultiAgentMessage(text);
+                return;
+              }
+              if (images.length === 0) {
+                void sendMessage({ text });
+                return;
+              }
+              void sendMessage({
+                text,
+                files: images.map((img) => ({
+                  type: 'file' as const,
+                  mediaType: img.mediaType,
+                  url: img.url,
+                  filename: img.name,
+                })),
+              });
+            }}
           onStop={() => {
             if (multiAgentFetchRef.current) {
               multiAgentFetchRef.current.abort();
@@ -561,6 +594,8 @@ export function ChatScreen({
           placeholder={pinnedSymbol ? `Ask about ${pinnedSymbol}…` : 'Ask about XAU, EUR, GBP…'}
         />
       </div>
+
+      {confirmEl}
     </div>
   );
 }

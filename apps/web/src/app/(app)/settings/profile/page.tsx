@@ -15,10 +15,12 @@
  */
 
 import { auth } from '@/auth';
+import { redirect } from 'next/navigation';
 import { ProfileForm } from '../_components/profile-form';
 
 export default async function ProfileSettingsPage() {
   const session = await auth();
+  if (!session) redirect('/login');
 
   return (
     <div className="flex flex-col gap-6 max-w-xl">

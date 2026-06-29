@@ -63,26 +63,33 @@ export function BulkTestButton({ disabled }: BulkTestButtonProps) {
 
           for (const line of lines) {
             if (!line.trim()) continue;
-            const parsed = JSON.parse(line);
+            let parsed: Record<string, unknown>;
+            try {
+              parsed = JSON.parse(line) as Record<string, unknown>;
+            } catch {
+              console.error('Failed to parse streaming line:', line);
+              continue;
+            }
             if (parsed.type === 'progress') {
-              setProgress({ current: parsed.current, total: parsed.total });
+              setProgress({ current: parsed.current as number, total: parsed.total as number });
             } else if (parsed.type === 'done') {
-              setSummary(parsed.summary);
-              if (parsed.summary.failed === 0) {
+              const summary = parsed.summary as BulkTestSummary;
+              setSummary(summary);
+              if (summary.failed === 0) {
                 toast.success(
-                  `All ${parsed.summary.ok} configured providers are valid.`,
+                  `All ${summary.ok} configured providers are valid.`,
                 );
-              } else if (parsed.summary.ok === 0) {
+              } else if (summary.ok === 0) {
                 toast.error(
-                  `${parsed.summary.failed} providers failed. Check the errors below.`,
+                  `${summary.failed} providers failed. Check the errors below.`,
                 );
               } else {
                 toast.warning(
-                  `${parsed.summary.ok} ok, ${parsed.summary.failed} failed.`,
+                  `${summary.ok} ok, ${summary.failed} failed.`,
                 );
               }
             } else if (parsed.type === 'error') {
-              throw new Error(parsed.message);
+              throw new Error(parsed.message as string);
             }
           }
         }

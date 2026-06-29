@@ -27,8 +27,8 @@
 import type { EconomicEvent } from '@hamafx/shared';
 import { Clock, Sparkles, Zap } from 'lucide-react';
 import { Link } from 'next-view-transitions';
-import { useEffect, useState } from 'react';
 
+import { useNow } from '@/components/providers/time-provider';
 import { cn } from '@/lib/cn';
 
 interface CalendarHeroProps {
@@ -36,7 +36,7 @@ interface CalendarHeroProps {
 }
 
 export function CalendarHero({ events = [] }: CalendarHeroProps) {
-  const now = useNowTick();
+  const now = useNow().getTime();
 
   // Next high-impact event in the future.
   const nextHigh = events
@@ -61,7 +61,7 @@ export function CalendarHero({ events = [] }: CalendarHeroProps) {
   return (
     <section
       aria-label="Calendar overview"
-      className="border border-divider bg-bg-elev-1 rounded-lg relative flex flex-col gap-4 overflow-hidden rounded-[28px] p-4"
+      className="border border-divider bg-bg-elev-1 rounded-lg relative flex flex-col gap-4 overflow-hidden p-4"
     >
       {/* Countdown row */}
       {nextHigh ? (
@@ -184,7 +184,7 @@ function CountryChip({
 }) {
   const label = currency ?? country;
   return (
-    <span className="bg-bg-elev-2 ring-divider rounded px-1.5 py-0.5 text-caption font-bold uppercase tabular-nums ring-1">
+    <span className="bg-bg-elev-2 border border-divider rounded px-1.5 py-0.5 text-caption font-bold uppercase tabular-nums">
       {label}
     </span>
   );
@@ -216,12 +216,4 @@ function startOfDay(ms: number): number {
   return d.getTime();
 }
 
-/** Re-renders once a minute so the countdown stays accurate. */
-function useNowTick(): number {
-  const [now, setNow] = useState(() => Date.now());
-  useEffect(() => {
-    const id = setInterval(() => setNow(Date.now()), 60_000);
-    return () => clearInterval(id);
-  }, []);
-  return now;
-}
+

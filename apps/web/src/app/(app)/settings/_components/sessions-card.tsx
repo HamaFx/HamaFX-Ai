@@ -19,15 +19,18 @@ interface Session {
 
 export function SessionsCard() {
   const [sessions, setSessions] = useState<Session[]>([]);
+  const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [revoking, startRevokeTransition] = useTransition();
+  const [revokingSessions, setRevokingSessions] = useState<Set<string>>(new Set());
+  const [, startRevokeTransition] = useTransition();
   const [signingOut, startSignOutTransition] = useTransition();
   const [confirmEl, confirm] = useConfirm();
 
   useEffect(() => {
     listSessionsAction().then((res) => {
       if (res.ok && res.data) {
-        setSessions(res.data);
+        setSessions(res.data.sessions);
+        setCurrentSessionId(res.data.currentSessionId);
       }
       setLoading(false);
     });
@@ -42,13 +45,22 @@ export function SessionsCard() {
     });
     if (!ok) return;
 
+    setRevokingSessions((prev) => new Set(prev).add(sessionId));
     startRevokeTransition(async () => {
-      const res = await revokeSessionAction(sessionId);
-      if (res.ok) {
-        setSessions((prev) => prev.filter((s) => s.id !== sessionId));
-        toast.success('Session revoked');
-      } else {
-        toast.error(res.error || 'Failed to revoke session');
+      try {
+        const res = await revokeSessionAction(sessionId);
+        if (res.ok) {
+          setSessions((prev) => prev.filter((s) => s.id !== sessionId));
+          toast.success('Session revoked');
+        } else {
+          toast.error(res.error || 'Failed to revoke session');
+        }
+      } finally {
+        setRevokingSessions((prev) => {
+          const next = new Set(prev);
+          next.delete(sessionId);
+          return next;
+        });
       }
     });
   }, [confirm]);
@@ -108,8 +120,13 @@ export function SessionsCard() {
                   <Monitor className="size-4 shrink-0 text-fg-muted" />
                 )}
                 <div className="min-w-0">
-                  <p className="text-sm text-fg truncate">
+                  <p className="text-sm text-fg truncate flex items-center gap-1.5">
                     {s.deviceName ?? 'Unknown device'}
+                    {s.id === currentSessionId && (
+                      <span className="inline-flex items-center rounded-full bg-brand/10 text-brand px-1.5 py-0.5 text-caption font-bold uppercase tracking-wider">
+                        Current session
+                      </span>
+                    )}
                   </p>
                   <p className="text-xs text-fg-subtle">
                     {s.ip ? `${s.ip} · ` : ''}
@@ -121,7 +138,7 @@ export function SessionsCard() {
                 type="button"
                 size="sm"
                 variant="ghost"
-                disabled={revoking}
+                disabled={revokingSessions.has(s.id)}
                 onClick={() => handleRevoke(s.id)}
                 aria-label={`Revoke session ${s.deviceName ?? 'unknown'}`}
               >
