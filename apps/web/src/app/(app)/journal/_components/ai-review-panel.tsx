@@ -132,7 +132,6 @@ export function AiReviewPanel({ entry }: AiReviewPanelProps) {
               '[&_ul]:list-disc [&_ul]:pl-5 [&_li]:mb-1',
               '[&_p]:text-sm [&_p]:leading-relaxed [&_p]:text-fg-subtle'
             )}
-            // eslint-disable-next-line react/no-danger
             dangerouslySetInnerHTML={{ __html: markdownToHtml(review) }}
           />
           {modelId && (
