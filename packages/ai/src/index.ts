@@ -179,6 +179,9 @@ export {
   wasEmitted,
   recordEmitted,
   findHighImpactEventsInWindow,
+  // Phase 1.7 — dashboard surface
+  getLatestBriefing,
+  type LatestBriefing,
 } from './briefings/persistence';
 
 // Phase 3 — Sharable snapshots

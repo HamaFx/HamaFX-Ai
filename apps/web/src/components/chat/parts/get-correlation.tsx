@@ -96,6 +96,9 @@ export function GetCorrelationPart({
         </table>
       </div>
 
+      {/* Phase 1.2d — correlation heat strip */}
+      <HeatStrip matrix={output.matrix} />
+
       <section className="border-border border-t pt-2">
         <header className="flex items-baseline justify-between gap-2">
           <span className="text-fg text-xs font-semibold">DXY proxy</span>
@@ -123,6 +126,35 @@ function Cell({
   if (!cell) return <span className="text-fg-subtle">—</span>;
   const tone = cell.r >= 0.4 ? 'text-bull' : cell.r <= -0.4 ? 'text-bear' : 'text-fg-muted';
   return <span className={`${tone} font-semibold`}>{cell.r.toFixed(2)}</span>;
+}
+
+// Phase 1.2d — a single-row heat strip, one cell per matrix entry, coloured
+// by correlation strength. Pure divs (server-renderable).
+function HeatStrip({ matrix }: { matrix: CorrelationCell[] }) {
+  if (matrix.length === 0) return null;
+
+  const colorFor = (r: number) =>
+    r >= 0.7
+      ? 'bg-bull/80'
+      : r >= 0.4
+        ? 'bg-bull/40'
+        : r <= -0.7
+          ? 'bg-bear/80'
+          : r <= -0.4
+            ? 'bg-bear/40'
+            : 'bg-bg-elev-3';
+
+  // Strongest pair by |r| for the accessible label.
+  const strongest = matrix.reduce((best, c) => (Math.abs(c.r) > Math.abs(best.r) ? c : best), matrix[0]!);
+  const label = `Correlation heat strip: ${strongest.a}/${strongest.b} at ${strongest.r.toFixed(2)}`;
+
+  return (
+    <div className="flex items-center gap-0.5" role="img" aria-label={label}>
+      {matrix.map((c, i) => (
+        <span key={`${c.a}-${c.b}-${i}`} className={`h-2 flex-1 rounded-sm ${colorFor(c.r)}`} />
+      ))}
+    </div>
+  );
 }
 
 function SkeletonCard() {

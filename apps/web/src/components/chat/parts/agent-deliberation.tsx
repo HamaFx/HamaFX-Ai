@@ -16,63 +16,347 @@
 
 'use client';
 
-import { Bot, Shield, TrendingUp, Newspaper, Brain, CheckCircle2, Loader2, AlertCircle } from 'lucide-react';
+// Phase 1.1 — Cinematic Multi-Agent Committee Theater.
+//
+// Replaces the flat status pills with a "war room" deliberation surface:
+//
+//   Zone 1 — Agent ring:     circular avatar nodes that pulse while running,
+//                            check off as they complete.
+//   Zone 2 — Fusion:         converging connector lines feed a central fusion
+//                            node that intensifies as agents finish.
+//   Zone 3 — Verdict reveal: once every agent has settled (done/error), a
+//                            confidence meter + bias distribution + dissent
+//                            indicator is revealed with a spring entrance.
+//
+// The props interface is unchanged from the previous flat version so
+// `chat-screen.tsx` needs no edits.
+
+import {
+  AlertCircle,
+  AlertTriangle,
+  Bot,
+  Brain,
+  CheckCircle2,
+  Newspaper,
+  Shield,
+  TrendingUp,
+} from 'lucide-react';
+import { AnimatePresence, m } from 'motion/react';
 import type { ReactNode } from 'react';
 
-interface AgentOpinion { agentName: string; bias: 'bullish' | 'bearish' | 'neutral'; confidence: number; reasoning: string; }
-interface AgentProgress { agentName: string; status: 'pending' | 'running' | 'done' | 'error'; opinion?: AgentOpinion; error?: string; }
-interface AgentDeliberationProps { agents: AgentProgress[]; mode: string; }
+import { cn } from '@/lib/cn';
 
-const AGENT_META: Record<string, { icon: ReactNode; label: string; color: string }> = {
-  technical:   { icon: <TrendingUp className="size-3.5" />, label: 'Technical',   color: 'text-bull' },
-  fundamental: { icon: <Newspaper className="size-3.5" />,  label: 'Fundamental', color: 'text-info' },
-  risk:        { icon: <Shield className="size-3.5" />,     label: 'Risk',        color: 'text-bear' },
-  sentiment:   { icon: <Bot className="size-3.5" />,        label: 'Sentiment',   color: 'text-warn' },
-  decision:    { icon: <Brain className="size-3.5" />,      label: 'Decision',    color: 'text-info' },
+interface AgentOpinion {
+  agentName: string;
+  bias: 'bullish' | 'bearish' | 'neutral';
+  confidence: number;
+  reasoning: string;
+}
+interface AgentProgress {
+  agentName: string;
+  status: 'pending' | 'running' | 'done' | 'error';
+  opinion?: AgentOpinion;
+  error?: string;
+}
+interface AgentDeliberationProps {
+  agents: AgentProgress[];
+  mode: string;
+}
+
+const AGENT_META: Record<
+  string,
+  { icon: ReactNode; label: string; tokenClass: string; glowClass: string }
+> = {
+  technical: { icon: <TrendingUp className="size-4" />, label: 'Technical', tokenClass: 'text-bull', glowClass: 'shadow-glow-brand' },
+  fundamental: { icon: <Newspaper className="size-4" />, label: 'Fundamental', tokenClass: 'text-info', glowClass: 'shadow-glow-accent' },
+  risk: { icon: <Shield className="size-4" />, label: 'Risk', tokenClass: 'text-bear', glowClass: '' },
+  sentiment: { icon: <Bot className="size-4" />, label: 'Sentiment', tokenClass: 'text-warn', glowClass: '' },
+  decision: { icon: <Brain className="size-4" />, label: 'Decision', tokenClass: 'text-brand', glowClass: 'shadow-glow-brand' },
+};
+
+const FALLBACK_META = {
+  icon: <Bot className="size-4" />,
+  label: 'Agent',
+  tokenClass: 'text-fg-muted',
+  glowClass: '',
+} as const;
+
+const BIAS_TOKEN: Record<AgentOpinion['bias'], string> = {
+  bullish: 'text-bull',
+  bearish: 'text-bear',
+  neutral: 'text-fg-muted',
 };
 
 export function AgentDeliberation({ agents, mode }: AgentDeliberationProps) {
+  const hasDone = agents.some((a) => a.status === 'done');
+  const allDone = agents.length > 0 && agents.every((a) => a.status === 'done' || a.status === 'error');
+  const doneCount = agents.filter((a) => a.status === 'done').length;
+
+  // Verdict math — only opinions that actually arrived count.
+  const opinions = agents.filter((a) => a.opinion);
+  const avgConfidence =
+    opinions.length > 0
+      ? Math.round((opinions.reduce((s, a) => s + (a.opinion?.confidence ?? 0), 0) / opinions.length) * 100)
+      : 0;
+  const biasCounts = {
+    bullish: opinions.filter((a) => a.opinion?.bias === 'bullish').length,
+    bearish: opinions.filter((a) => a.opinion?.bias === 'bearish').length,
+    neutral: opinions.filter((a) => a.opinion?.bias === 'neutral').length,
+  };
+  const dissent = biasCounts.bullish > 0 && biasCounts.bearish > 0;
+  const confidenceTone = avgConfidence > 75 ? 'bg-bull' : avgConfidence >= 50 ? 'bg-warn' : 'bg-bear';
+
   return (
-    <div className="flex flex-col gap-2 p-3 rounded-lg border border-divider bg-bg-elev-1">
-      <div className="flex items-center gap-2 text-xs text-fg-muted">
+    <div
+      role="status"
+      aria-live="polite"
+      className="border border-divider bg-bg-elev-1 rounded-lg p-4 flex flex-col gap-4"
+    >
+      {/* Header */}
+      <div className="flex items-center gap-2 text-caption text-fg-subtle uppercase tracking-wider font-semibold">
         <Brain className="size-3.5" />
-        <span className="uppercase tracking-wider font-semibold">Multi-Agent {mode} mode</span>
+        <span>Multi-Agent {mode} mode</span>
       </div>
-      <div className="flex flex-wrap gap-2">
+
+      {/* Zone 1 — Agent ring */}
+      <div className="flex flex-wrap items-start justify-center gap-3">
         {agents.map((a) => {
-          const meta = AGENT_META[a.agentName] ?? { icon: <Bot className="size-3.5" />, label: a.agentName, color: 'text-fg-muted' };
-          return (
-            <div key={a.agentName} className="flex items-center gap-1.5 text-xs px-2 py-1 rounded-md bg-bg-elev-2 border border-divider">
-              {meta.icon}
-              <span className={meta.color}>{meta.label}</span>
-              {a.status === 'pending' && <span className="text-fg-muted">·</span>}
-              {a.status === 'running' && <Loader2 className="size-3 animate-spin text-fg-muted" />}
-              {a.status === 'done' && <CheckCircle2 className="size-3 text-bull" />}
-              {a.status === 'error' && <AlertCircle className="size-3 text-bear" />}
-            </div>
-          );
+          const meta = AGENT_META[a.agentName] ?? FALLBACK_META;
+          return <AgentNode key={a.agentName} agent={a} meta={meta} />;
         })}
       </div>
-      {agents.some((a) => a.opinion) && (
-        <details className="mt-1">
-          <summary className="cursor-pointer text-xs text-fg-muted hover:text-fg">View agent opinions</summary>
-          <div className="mt-2 flex flex-col gap-2">
-            {agents.filter((a) => a.opinion).map((a) => {
-              const meta = AGENT_META[a.agentName] ?? { label: a.agentName, color: 'text-fg-muted' };
-              return (
-                <div key={a.agentName} className="text-xs border-l-2 border-divider pl-2">
-                  <span className="font-semibold">{meta.label}: </span>
-                  <span className="text-fg-subtle">{a.opinion!.reasoning}</span>
-                  <span className="ml-1 text-fg-muted">({a.opinion!.bias}, {Math.round(a.opinion!.confidence * 100)}%)</span>
+
+      {/* Zone 2 — Connector lines + fusion node */}
+      <AnimatePresence>
+        {hasDone && !allDone ? (
+          <m.div
+            key="fusion"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="flex flex-col items-center"
+          >
+            <ConnectorLines agents={agents} />
+            <m.div
+              animate={{ scale: [1, 1.25, 1] }}
+              transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
+              className={cn('size-2 rounded-full bg-brand shadow-glow-brand', doneCount >= 2 && 'size-2.5')}
+            />
+          </m.div>
+        ) : null}
+      </AnimatePresence>
+
+      {/* "Deliberating…" while nothing is done yet */}
+      {!hasDone ? (
+        <div className="flex items-center justify-center gap-2 text-caption text-fg-subtle uppercase tracking-wider">
+          <span className="motion-safe:animate-pulse">Deliberating…</span>
+        </div>
+      ) : null}
+
+      {/* Zone 3 — Verdict reveal */}
+      <AnimatePresence>
+        {allDone ? (
+          <m.div
+            key="verdict"
+            initial={{ opacity: 0, scale: 0.9, y: 8 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 24 }}
+            aria-label={`Committee verdict: ${dissent ? 'mixed' : opinions[0]?.opinion?.bias ?? 'neutral'}, ${avgConfidence}% confidence`}
+            className="border border-divider bg-bg-elev-2 rounded-lg p-3 flex flex-col gap-3"
+          >
+            {/* Confidence meter */}
+            <div className="flex flex-col gap-1.5">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-semibold text-fg">Committee confidence</span>
+                <span className="text-sm font-bold text-fg tabular-nums">{avgConfidence}%</span>
+              </div>
+              <div className="h-1.5 w-full overflow-hidden rounded-full bg-bg-elev-3">
+                <m.div
+                  className={cn('h-full rounded-full', confidenceTone)}
+                  initial={{ width: 0 }}
+                  animate={{ width: `${avgConfidence}%` }}
+                  transition={{ duration: 0.5, ease: 'easeOut' }}
+                />
+              </div>
+            </div>
+
+            {/* Bias distribution + dissent */}
+            <div className="flex items-center gap-3">
+              <BiasDistribution counts={biasCounts} total={opinions.length} />
+              {dissent ? (
+                <span className="ml-auto inline-flex items-center gap-1 text-caption text-warn font-semibold">
+                  <AlertTriangle className="size-3.5" />
+                  Mixed signals
+                </span>
+              ) : null}
+            </div>
+
+            {/* Expandable opinions */}
+            {opinions.length > 0 ? (
+              <details>
+                <summary className="cursor-pointer list-none text-body-sm text-fg-muted hover:text-fg select-none">
+                  View agent opinions
+                </summary>
+                <div className="mt-2 flex flex-col gap-2">
+                  {opinions.map((a) => {
+                    const meta = AGENT_META[a.agentName] ?? FALLBACK_META;
+                    const op = a.opinion!;
+                    return (
+                      <div key={a.agentName} className="border-l-2 border-divider pl-3 py-1.5">
+                        <span className="text-fg text-body-sm font-semibold">{meta.label}</span>
+                        <span className={cn('ml-2 text-caption font-bold uppercase', BIAS_TOKEN[op.bias])}>{op.bias}</span>
+                        <span className="ml-1 text-fg-subtle text-caption tabular-nums">{Math.round(op.confidence * 100)}%</span>
+                        <p className="text-fg-muted text-xs mt-1 leading-relaxed">{op.reasoning}</p>
+                      </div>
+                    );
+                  })}
                 </div>
-              );
-            })}
-          </div>
-        </details>
-      )}
-      {agents.filter((a) => a.status === 'error' && a.error).map((a) => (
-        <div key={`error-${a.agentName}`} className="text-xs text-bear">{AGENT_META[a.agentName]?.label ?? a.agentName} agent failed: {a.error}</div>
+              </details>
+            ) : null}
+
+            {/* Errors */}
+            {agents
+              .filter((a) => a.status === 'error' && a.error)
+              .map((a) => {
+                const meta = AGENT_META[a.agentName] ?? FALLBACK_META;
+                return (
+                  <div key={`error-${a.agentName}`} className="text-bear text-xs flex items-center gap-1.5">
+                    <AlertCircle className="size-3.5 shrink-0" />
+                    <span>{meta.label} agent failed: {a.error}</span>
+                  </div>
+                );
+              })}
+          </m.div>
+        ) : null}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Agent avatar node
+// ---------------------------------------------------------------------------
+
+function AgentNode({
+  agent,
+  meta,
+}: {
+  agent: AgentProgress;
+  meta: { icon: ReactNode; label: string; tokenClass: string; glowClass: string };
+}) {
+  const status = agent.status;
+
+  return (
+    <div className="flex flex-col items-center gap-1">
+      <div className="relative">
+        {/* Rotating conic ring while running */}
+        {status === 'running' ? (
+          <span aria-hidden className="agent-ring-active absolute inset-0 rounded-full" style={{ padding: 2 }} />
+        ) : null}
+        <m.div
+          aria-label={`${meta.label} agent: ${status}`}
+          animate={status === 'running' ? { scale: [1, 1.05, 1] } : { scale: 1 }}
+          transition={status === 'running' ? { duration: 1.5, repeat: Infinity, ease: 'easeInOut' } : { type: 'spring', stiffness: 400, damping: 25 }}
+          className={cn(
+            'relative flex size-12 items-center justify-center rounded-full',
+            status === 'pending' && 'bg-bg-elev-2 text-fg-subtle',
+            status === 'running' && 'bg-bg-elev-3 text-fg',
+            status === 'done' && 'bg-bg-elev-2',
+            status === 'error' && 'bg-bear/10 text-bear border border-bear/30',
+          )}
+        >
+          <span className={cn(status !== 'error' && status !== 'pending' && meta.tokenClass)}>{meta.icon}</span>
+
+          {/* Status badges */}
+          {status === 'done' ? (
+            <span className={cn('absolute -bottom-0.5 -right-0.5 flex size-4 items-center justify-center rounded-full bg-bg-elev-1', meta.tokenClass)}>
+              <CheckCircle2 className="size-4" />
+            </span>
+          ) : null}
+          {status === 'error' ? (
+            <span className="absolute -bottom-0.5 -right-0.5 flex size-4 items-center justify-center rounded-full bg-bg-elev-1 text-bear">
+              <AlertCircle className="size-4" />
+            </span>
+          ) : null}
+        </m.div>
+      </div>
+      <span className="text-caption text-fg-subtle font-medium">{meta.label}</span>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Connector lines — fan from each `done` agent column down to a central
+// point. Position-independent: x is derived from the agent index, so it
+// scales with however many agents are on screen.
+// ---------------------------------------------------------------------------
+
+function ConnectorLines({ agents }: { agents: AgentProgress[] }) {
+  const n = agents.length;
+  const cx = 50;
+  const cy = 20;
+  const lines = agents
+    .map((a, i) => ({ a, x: n > 0 ? ((i + 0.5) / n) * 100 : 50 }))
+    .filter((d) => d.a.status === 'done');
+
+  return (
+    <svg viewBox="0 0 100 20" preserveAspectRatio="none" className="h-5 w-full" aria-hidden="true">
+      {lines.map((d, i) => (
+        <m.line
+          key={i}
+          x1={d.x}
+          y1={0}
+          x2={cx}
+          y2={cy}
+          stroke="var(--color-divider)"
+          strokeWidth={0.6}
+          initial={{ pathLength: 0, opacity: 0 }}
+          animate={{ pathLength: 1, opacity: 1 }}
+          transition={{ duration: 0.4, delay: i * 0.08 }}
+        />
       ))}
+    </svg>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Bias distribution — three mini bars (bullish / bearish / neutral).
+// ---------------------------------------------------------------------------
+
+function BiasDistribution({
+  counts,
+  total,
+}: {
+  counts: { bullish: number; bearish: number; neutral: number };
+  total: number;
+}) {
+  const rows: Array<{ label: string; count: number; bar: string }> = [
+    { label: 'Bull', count: counts.bullish, bar: 'bg-bull' },
+    { label: 'Bear', count: counts.bearish, bar: 'bg-bear' },
+    { label: 'Neutral', count: counts.neutral, bar: 'bg-fg-muted' },
+  ];
+
+  return (
+    <div className="flex flex-col gap-1">
+      {rows.map((r) => {
+        const pct = total > 0 ? (r.count / total) * 100 : 0;
+        return (
+          <div key={r.label} className="flex items-center gap-2">
+            <span className="w-12 text-caption text-fg-subtle uppercase tracking-wide">{r.label}</span>
+            <div className="h-1.5 w-24 overflow-hidden rounded-full bg-bg-elev-3">
+              <m.div
+                className={cn('h-full rounded-full', r.bar)}
+                initial={{ width: 0 }}
+                animate={{ width: `${pct}%` }}
+                transition={{ duration: 0.4, ease: 'easeOut' }}
+              />
+            </div>
+            <span className="text-caption text-fg-muted tabular-nums">{r.count}</span>
+          </div>
+        );
+      })}
     </div>
   );
 }

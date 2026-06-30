@@ -22,9 +22,15 @@
 // summary row + an expandable list of steps. Default collapsed so the
 // user only sees the rationale at a glance. Expanding reveals the
 // plan's steps and any expected tool calls.
+//
+// Phase 1.4 — adds a `streaming` prop. While streaming, the card auto-
+// expands and shows a pulsing "Thinking…" indicator. When streaming
+// completes, it auto-collapses after a 2s delay and the header fades
+// back to the domain label.
 
-import { Brain, ChevronRight, ChevronDown } from 'lucide-react';
-import { useState } from 'react';
+import { Brain, ChevronRight, ChevronDown, Loader2 } from 'lucide-react';
+import { AnimatePresence, m } from 'motion/react';
+import { useEffect, useRef, useState } from 'react';
 
 import type { UserPlanPart } from '@hamafx/shared';
 
@@ -32,6 +38,7 @@ import { cn } from '@/lib/cn';
 
 interface PlanPartProps {
   plan: UserPlanPart;
+  streaming?: boolean;
 }
 
 const DOMAIN_LABEL: Record<UserPlanPart['domain'], string> = {
@@ -42,8 +49,23 @@ const DOMAIN_LABEL: Record<UserPlanPart['domain'], string> = {
   generic: 'Plan',
 };
 
-export function PlanPart({ plan }: PlanPartProps) {
+export function PlanPart({ plan, streaming = false }: PlanPartProps) {
   const [open, setOpen] = useState(false);
+  const wasStreaming = useRef(false);
+
+  // While streaming → expanded. When streaming completes → collapse after 2s.
+  useEffect(() => {
+    if (streaming) {
+      setOpen(true);
+      wasStreaming.current = true;
+      return;
+    }
+    if (wasStreaming.current) {
+      const t = setTimeout(() => setOpen(false), 2000);
+      wasStreaming.current = false;
+      return () => clearTimeout(t);
+    }
+  }, [streaming]);
 
   return (
     <div
@@ -63,44 +85,66 @@ export function PlanPart({ plan }: PlanPartProps) {
         ) : (
           <ChevronRight className="size-3.5" />
         )}
-        <Brain className="size-3.5" />
-        <span className="text-fg-muted">{DOMAIN_LABEL[plan.domain]}</span>
+        {streaming ? (
+          <Loader2 className="size-3.5 text-brand motion-safe:animate-spin" />
+        ) : (
+          <Brain className="size-3.5" />
+        )}
+        <span className="text-fg-muted">
+          {streaming ? 'Thinking…' : DOMAIN_LABEL[plan.domain]}
+        </span>
         <span className="text-fg-subtle">·</span>
         <span className="text-fg-subtle line-clamp-1 flex-1">{plan.rationale}</span>
       </button>
 
-      {open ? (
-        <div id="plan-content" className="flex flex-col gap-2 pt-1">
-          {plan.steps.length > 0 ? (
-            <ol className="text-fg-muted ml-6 flex flex-col gap-1 text-xs">
-              {plan.steps.map((s, i) => (
-                <li key={i} className="flex items-baseline gap-2">
-                  <span className="text-fg-subtle font-mono text-caption tabular-nums">
-                    {String(i + 1).padStart(2, '0')}
-                  </span>
-                  <span>{s}</span>
-                </li>
-              ))}
-            </ol>
-          ) : (
-            <p className="text-fg-subtle ml-6 text-xs">No steps recorded.</p>
-          )}
-
-          {plan.expectedTools.length > 0 ? (
-            <p className="text-fg-subtle ml-6 text-caption">
-              Expected tools:{' '}
-              {plan.expectedTools.map((t, i) => (
-                <span
-                  key={`${t}-${i}`}
-                  className="bg-bg-elev-2 text-fg-muted ml-1 rounded px-1.5 py-0.5 font-mono text-caption"
-                >
-                  {t}
-                </span>
-              ))}
-            </p>
-          ) : null}
-        </div>
+      {/* Streaming progress bar */}
+      {streaming ? (
+        <div className="bg-brand/30 motion-safe:animate-pulse h-0.5 w-full rounded-full" />
       ) : null}
+
+      <AnimatePresence initial={false}>
+        {open ? (
+          <m.div
+            id="plan-content"
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="overflow-hidden"
+          >
+            <div className="flex flex-col gap-2 pt-1">
+              {plan.steps.length > 0 ? (
+                <ol className="text-fg-muted ml-6 flex flex-col gap-1 text-xs">
+                  {plan.steps.map((s, i) => (
+                    <li key={i} className="flex items-baseline gap-2">
+                      <span className="text-fg-subtle font-mono text-caption tabular-nums">
+                        {String(i + 1).padStart(2, '0')}
+                      </span>
+                      <span>{s}</span>
+                    </li>
+                  ))}
+                </ol>
+              ) : (
+                <p className="text-fg-subtle ml-6 text-xs">No steps recorded.</p>
+              )}
+
+              {plan.expectedTools.length > 0 ? (
+                <p className="text-fg-subtle ml-6 text-caption">
+                  Expected tools:{' '}
+                  {plan.expectedTools.map((t, i) => (
+                    <span
+                      key={`${t}-${i}`}
+                      className="bg-bg-elev-2 text-fg-muted ml-1 rounded px-1.5 py-0.5 font-mono text-caption"
+                    >
+                      {t}
+                    </span>
+                  ))}
+                </p>
+              ) : null}
+            </div>
+          </m.div>
+        ) : null}
+      </AnimatePresence>
     </div>
   );
 }

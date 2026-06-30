@@ -421,6 +421,18 @@ html {
   animation: mic-pulse 1.6s ease-out infinite;
 }
 
+/* Phase 1.1 — Multi-agent committee theater: rotating conic ring that
+ * signals an agent is actively processing. Suppressed by the global
+ * prefers-reduced-motion override below. */
+@keyframes spin-ring {
+  to { transform: rotate(360deg); }
+}
+
+.agent-ring-active {
+  background: conic-gradient(from 0deg, var(--color-brand), transparent, var(--color-brand));
+  animation: spin-ring 2s linear infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

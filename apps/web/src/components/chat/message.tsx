@@ -48,6 +48,7 @@ import { FallbackPartView } from './parts/fallback';
 import { ChatToolPart, type ToolPartState } from './parts/registry';
 import { PlanPart } from './parts/plan';
 import { TextPart } from './parts/text';
+import { MessageFooter } from './_components/message-footer';
 
 interface MessageProps {
   message: UIMessage;
@@ -113,6 +114,7 @@ function MessageImpl({ message, onCopy, onRegenerate, onEdit, isStreaming }: Mes
           <div className="w-full max-w-[88%]">
             <PlanPart
               plan={planPart as unknown as Parameters<typeof PlanPart>[0]['plan']}
+              {...(isStreaming !== undefined ? { streaming: isStreaming } : {})}
             />
           </div>
         </div>
@@ -172,7 +174,7 @@ function MessageImpl({ message, onCopy, onRegenerate, onEdit, isStreaming }: Mes
       transition={{ type: 'spring', stiffness: 300, damping: 30 }}
       className={cn('group flex w-full flex-col gap-2', isUser ? 'items-end' : 'items-start')}
     >
-      <div
+            <div
         className={cn(
           'relative flex max-w-[88%] flex-col gap-2 px-4 py-3',
           isUser
@@ -189,6 +191,9 @@ function MessageImpl({ message, onCopy, onRegenerate, onEdit, isStreaming }: Mes
             : undefined
         }
       >
+        {/* Phase 1.3 — aria-live so screen readers announce the final
+            assistant message when streaming completes. */}
+        <div aria-live={isUser ? undefined : 'polite'}>
         {message.parts.map((part, idx) => {
           if (part.type === 'text') {
             return (
@@ -217,7 +222,16 @@ function MessageImpl({ message, onCopy, onRegenerate, onEdit, isStreaming }: Mes
           }
           return renderPart(part, idx, message.role);
         })}
+        </div>
       </div>
+
+      {/* Phase 1.3 — trust footer on assistant messages (model, time,
+          token usage, cost, citations). Hidden while streaming. */}
+      {!isUser && !isStreaming ? (
+        <div className="max-w-[88%]">
+          <MessageFooter message={message} />
+        </div>
+      ) : null}
 
       {/* Action row — only assistant messages, only when there's something
           to do. Visible on hover/focus, accessible via keyboard. */}

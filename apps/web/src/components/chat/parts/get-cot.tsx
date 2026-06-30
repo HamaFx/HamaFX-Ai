@@ -16,11 +16,17 @@
 
 // Bespoke renderer for the `get_cot` tool part.
 //
-// Server component. Renders a compact strip of net-positioning samples
-// over the last N weeks with .tabular-nums and text-bull / text-bear
-// colouring. Empty pipeline → quiet status line.
+// Phase 1.2c — bars are now center-anchored (positive grows right, negative
+// left) with a center zero-line and an animated width-on-mount entrance.
+//
+// Client component — uses motion for the bar entrance animation.
+
+'use client';
 
 import type { CoTSample } from '@hamafx/shared';
+import { m } from 'motion/react';
+
+import { cn } from '@/lib/cn';
 
 import type { ToolPartProps } from './registry';
 
@@ -83,9 +89,24 @@ export function GetCoTPart({ output, state, errorMessage }: ToolPartProps<'get_c
 
 function Bar({ value, max }: { value: number | null; max: number }) {
   if (value === null) return <span className="text-fg-subtle text-caption">—</span>;
-  const pct = Math.max(2, Math.abs(value) / max * 100);
-  const tone = value >= 0 ? 'bg-bull' : 'bg-bear';
-  return <span className={`block h-1.5 rounded-full ${tone}`} style={{ width: `${pct}%` }} />;
+  // Center-anchored: positive grows right, negative grows left. Half-width
+  // since each side has 50% of the track.
+  const pct = Math.max(2, (Math.abs(value) / max) * 50);
+  const positive = value >= 0;
+  const tone = positive ? 'bg-bull' : 'bg-bear';
+  return (
+    <div className="relative h-[3px] w-full rounded-full bg-bg-elev-2">
+      {/* center zero-line */}
+      <span aria-hidden className="absolute left-1/2 top-0 h-full w-px -translate-x-1/2 bg-divider" />
+      <m.div
+        className={cn('absolute top-0 h-full rounded-full', tone)}
+        style={positive ? { left: '50%' } : { right: '50%' }}
+        initial={{ width: 0 }}
+        animate={{ width: `${pct}%` }}
+        transition={{ duration: 0.4, ease: 'easeOut' }}
+      />
+    </div>
+  );
 }
 
 interface NetRow {

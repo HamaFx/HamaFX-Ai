@@ -19,6 +19,13 @@
 // Position-sizing card. Three rows of dense, copy-friendly numbers — the
 // trader's actual ticket-fill checklist — plus a one-line summary the
 // agent can echo verbatim.
+//
+// Phase 1.2e — adds an R:R gauge next to the RR value. Client component
+// (uses motion for the gauge segment entrance).
+
+'use client';
+
+import { m } from 'motion/react';
 
 import type { ToolPartProps } from './registry';
 
@@ -36,10 +43,13 @@ export function ComputeRiskPart({ output, state, errorMessage }: ToolPartProps<'
           {pretty(output.riskUsd, 2)} USD
         </h3>
         {output.rrRatio !== null ? (
-          <span
-            className={`text-body-sm tabular-nums ${output.rrRatio >= 1 ? 'text-bull' : 'text-bear'}`}
-          >
-            RR {output.rrRatio.toFixed(2)}
+          <span className="flex items-center gap-2">
+            <RrGauge rrRatio={output.rrRatio} />
+            <span
+              className={`text-body-sm tabular-nums ${output.rrRatio >= 1 ? 'text-bull' : 'text-bear'}`}
+            >
+              RR {output.rrRatio.toFixed(2)}
+            </span>
           </span>
         ) : null}
       </header>
@@ -82,6 +92,36 @@ function Row({ k, v }: { k: string; v: string }) {
       <dt className="text-fg-muted">{k}</dt>
       <dd className="text-fg font-medium tabular-nums">{v}</dd>
     </div>
+  );
+}
+
+// Phase 1.2e — R:R gauge. A horizontal bar split into risk (left, bear) and
+// reward (right, bull), proportional to the R:R ratio. Animates on mount.
+function RrGauge({ rrRatio }: { rrRatio: number }) {
+  // risk segment = 1 / (1 + rr), reward = rr / (1 + rr).
+  const safe = Math.max(0, rrRatio);
+  const total = 1 + safe;
+  const riskPct = (1 / total) * 100;
+  const rewardPct = (safe / total) * 100;
+  return (
+    <span
+      className="inline-flex h-1.5 w-20 overflow-hidden rounded-full bg-bg-elev-3"
+      role="img"
+      aria-label={`Risk to reward gauge: 1 to ${rrRatio.toFixed(2)}`}
+    >
+      <m.div
+        className="h-full bg-bear/30"
+        initial={{ width: 0 }}
+        animate={{ width: `${riskPct}%` }}
+        transition={{ duration: 0.4, ease: 'easeOut' }}
+      />
+      <m.div
+        className="h-full bg-bull/30"
+        initial={{ width: 0 }}
+        animate={{ width: `${rewardPct}%` }}
+        transition={{ duration: 0.4, ease: 'easeOut' }}
+      />
+    </span>
   );
 }
 

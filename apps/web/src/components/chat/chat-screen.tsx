@@ -60,6 +60,7 @@ import { Composer } from './composer';
 import { MessageList } from './message-list';
 import { QuickPrompts } from './quick-prompts';
 import { AgentDeliberation } from './parts/agent-deliberation';
+import { ThreadSummaryHeader } from './_components/thread-summary-header';
 
 interface ChatScreenProps {
   threadId: string;
@@ -99,8 +100,11 @@ export function ChatScreen({
   const [showScrollFab, setShowScrollFab] = useState(false);
   const [dismissedError, setDismissedError] = useState(false);
   const [isMultiAgentStreaming, setIsMultiAgentStreaming] = useState(false);
-  const [confirmEl, confirm] = useConfirm();
+    const [confirmEl, confirm] = useConfirm();
   const titleFetchedRef = useRef<Record<string, boolean>>({});
+
+  // Phase 1.5 — thread summary header state (effect wired after useChat).
+  const [summary, setSummary] = useState<{ synopsis: string; insights: Array<{ text: string; symbol?: string | null }> } | null>(null);
 
   const transport = useMemo(
     () =>
@@ -136,6 +140,18 @@ export function ChatScreen({
     transport,
     messages: initialMessages,
   });
+
+  // Phase 1.5 — fetch thread summary once the thread grows past 20 messages.
+  useEffect(() => {
+    if (messages.length > 20 && !summary) {
+      fetch(`/api/chat/threads/${threadId}/summary`)
+        .then((res) => (res.ok ? res.json() : null))
+        .then((data) => {
+          if (data && typeof data.synopsis === 'string') setSummary(data);
+        })
+        .catch(() => {});
+    }
+  }, [messages.length, threadId, summary]);
 
   // ── Multi-Agent SSE handling ──
   // When analysisMode is not 'single', the /api/chat endpoint returns a
@@ -461,6 +477,15 @@ export function ChatScreen({
 
       <div ref={scrollRef} className="scrollbar-hide no-overscroll relative flex-1 overflow-y-auto">
         <div className="mx-auto max-w-2xl">
+          {summary ? (
+            <div className="px-3 pt-2">
+              <ThreadSummaryHeader
+                synopsis={summary.synopsis}
+                insights={summary.insights}
+                onDismiss={() => setSummary(null)}
+              />
+            </div>
+          ) : null}
           {agentProgress && (
             <div className="px-3 py-2">
               <AgentDeliberation agents={agentProgress.agents} mode={agentProgress.mode} />

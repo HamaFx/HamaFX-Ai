@@ -94,8 +94,13 @@ function IndicatorValue({ result, decimals }: { result: IndicatorResult; decimal
       const v = readNumber(last);
       if (v === null) return <Empty />;
       const tone = v > 70 ? 'text-bear' : v < 30 ? 'text-bull' : 'text-fg-muted';
-      // RSI is a 0-100 oscillator; 1 decimal is plenty.
-      return <span className={cn('text-fg text-base', tone)}>{v.toFixed(1)}</span>;
+      // Phase 1.2b — RSI gauge arc next to the numeric value.
+      return (
+        <span className="inline-flex items-center gap-2">
+          <RsiGauge value={v} />
+          <span className={cn('text-fg text-base', tone)}>{v.toFixed(1)}</span>
+        </span>
+      );
     }
     case 'macd': {
       const rec = readRecord(last);
@@ -160,6 +165,50 @@ function IndicatorValue({ result, decimals }: { result: IndicatorResult; decimal
 
 function Empty() {
   return <span className="text-fg-subtle text-sm">—</span>;
+}
+
+// Phase 1.2b — RSI gauge arc. Pure inline SVG semicircle (180°). Background
+// arc uses bg-elev-3; the value arc is coloured by zone (<30 oversold → bull,
+// >70 overbought → bear, else fg-muted). Server-renderable (no motion).
+function RsiGauge({ value }: { value: number }) {
+  const r = 20;
+  const cx = 24;
+  const cy = 28;
+  const circumference = Math.PI * r; // semicircle arc length
+  const frac = Math.max(0, Math.min(1, value / 100));
+  const offset = circumference * (1 - frac);
+  const color =
+    value < 30 ? 'var(--color-bull)' : value > 70 ? 'var(--color-bear)' : 'var(--color-fg-muted)';
+  const d = `M ${cx - r} ${cy} A ${r} ${r} 0 0 1 ${cx + r} ${cy}`;
+  return (
+    <svg
+      width="48"
+      height="32"
+      viewBox="0 0 48 32"
+      role="img"
+      aria-label={`RSI gauge: ${value.toFixed(1)}`}
+    >
+      <path d={d} fill="none" stroke="var(--color-bg-elev-3)" strokeWidth="4" strokeLinecap="round" />
+      <path
+        d={d}
+        fill="none"
+        stroke={color}
+        strokeWidth="4"
+        strokeLinecap="round"
+        strokeDasharray={circumference}
+        strokeDashoffset={offset}
+      />
+      <text
+        x={cx}
+        y={cy - 5}
+        textAnchor="middle"
+        fill="var(--color-fg)"
+                style={{ fontSize: 9, fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}
+      >
+        {value.toFixed(0)}
+      </text>
+    </svg>
+  );
 }
 
 // --- Header / label helpers ---------------------------------------------
