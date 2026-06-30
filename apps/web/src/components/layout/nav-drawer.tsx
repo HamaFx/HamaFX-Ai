@@ -33,6 +33,7 @@ import {
   BookOpen,
   Calendar,
   Cog,
+  LayoutDashboard,
   LineChart,
   LogOut,
   MessageCircle,
@@ -60,6 +61,12 @@ interface NavItem {
 }
 
 const PRIMARY: readonly NavItem[] = [
+  {
+    href: '/dashboard',
+    label: 'Dashboard',
+    icon: LayoutDashboard,
+    description: 'Briefing & performance overview',
+  },
   {
     href: '/chat',
     label: 'Chat',
