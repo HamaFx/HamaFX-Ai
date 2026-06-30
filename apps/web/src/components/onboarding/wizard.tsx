@@ -18,7 +18,7 @@
 
 import { useEffect, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { Check, ChevronRight, Eye, EyeOff, Loader2, Sparkles } from 'lucide-react';
+import { Check, ChevronRight, Eye, EyeOff, Loader2, Sparkles, Bot, User } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -32,11 +32,14 @@ interface OnboardingWizardProps {
   initialName: string;
   providers: ProviderMeta[];
   symbolsCatalog: SymbolCatalogRow[];
+  initialProgress?: Record<string, unknown> | null;
 }
 
-export function OnboardingWizard({ initialName, providers, symbolsCatalog }: OnboardingWizardProps) {
+export function OnboardingWizard({ initialName, providers, symbolsCatalog, initialProgress }: OnboardingWizardProps) {
   const [step, setStep] = useState(1);
   const [isSubmitting, startSubmit] = useTransition();
+  const [nameError, setNameError] = useState<string | null>(null);
+  const [symbolsError, setSymbolsError] = useState<string | null>(null);
   const router = useRouter();
 
   const [name, setName] = useState(initialName);
@@ -54,11 +57,27 @@ export function OnboardingWizard({ initialName, providers, symbolsCatalog }: Onb
   >({ kind: 'idle' });
   const [, startTest] = useTransition();
 
+  // Restore server-side progress on mount
+  useEffect(() => {
+    if (initialProgress) {
+      const p = initialProgress;
+      if (typeof p.step === 'number') setStep(p.step);
+      if (typeof p.name === 'string') setName(p.name);
+      if (typeof p.timezone === 'string') setTimezone(p.timezone);
+      if (typeof p.defaultSymbol === 'string') setDefaultSymbol(p.defaultSymbol);
+      if (typeof p.selectedProvider === 'string' || p.selectedProvider === null) {
+        setSelectedProvider(p.selectedProvider);
+      }
+      if (typeof p.tradingStyle === 'string') setTradingStyle(p.tradingStyle as 'scalper' | 'day_trader' | 'swing' | 'position');
+      if (Array.isArray(p.selectedSymbols)) setSelectedSymbols(p.selectedSymbols as string[]);
+    }
+  }, [initialProgress]);
+
   // Load saved wizard state on mount (API key intentionally excluded — in-memory only)
   useEffect(() => {
     try {
       const saved = sessionStorage.getItem('hfx_onboarding_wizard');
-      if (saved) {
+      if (saved && !initialProgress) {
         const parsed = JSON.parse(saved);
         if (typeof parsed.step === 'number') setStep(parsed.step);
         if (typeof parsed.name === 'string') setName(parsed.name);
@@ -73,7 +92,7 @@ export function OnboardingWizard({ initialName, providers, symbolsCatalog }: Onb
     } catch (e) {
       console.warn('Failed to restore onboarding state', e);
     }
-  }, []);
+  }, [initialProgress]);
 
   // Save wizard state when any field changes (API key intentionally excluded)
   useEffect(() => {
@@ -85,7 +104,48 @@ export function OnboardingWizard({ initialName, providers, symbolsCatalog }: Onb
     }
   }, [step, name, timezone, defaultSymbol, selectedProvider, tradingStyle, selectedSymbols]);
 
-  const handleNext = () => setStep((s) => s + 1);
+  // Server-side progress save (debounced 2s, skip step 1)
+  useEffect(() => {
+    if (step <= 1) return;
+    const timer = setTimeout(() => {
+      fetch('/api/onboarding/save-progress', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ step, name, timezone, defaultSymbol, selectedProvider, tradingStyle, selectedSymbols }),
+      }).catch(() => {});
+    }, 2000);
+    return () => clearTimeout(timer);
+  }, [step, name, timezone, defaultSymbol, selectedProvider, tradingStyle, selectedSymbols]);
+
+  function validateStep(s: number): string | null {
+    switch (s) {
+      case 1:
+        if (name.trim().length < 2) return 'Please enter your name (at least 2 characters)';
+        return null;
+      case 3:
+        if (selectedSymbols.length < 1) return 'Please select at least one symbol';
+        return null;
+      case 4:
+        if (selectedProvider === null) return null;
+        if (apiKey.trim().length < 8) return 'Please enter a valid API key (at least 8 characters)';
+        return null;
+      default:
+        return null;
+    }
+  }
+
+  const handleNext = () => {
+    const error = validateStep(step);
+    if (error) {
+      if (step === 1) setNameError(error);
+      if (step === 3) setSymbolsError(error);
+      toast.error(error);
+      return;
+    }
+    setNameError(null);
+    setSymbolsError(null);
+    setStep((s) => s + 1);
+  };
   const handleBack = () => setStep((s) => s - 1);
 
   function handleTestKey() {
@@ -167,10 +227,36 @@ export function OnboardingWizard({ initialName, providers, symbolsCatalog }: Onb
     }
   };
 
+  function handleSkip() {
+    startSubmit(async () => {
+      const fd = new FormData();
+      fd.append('payload', JSON.stringify({
+        displayName: name,
+        timezone,
+        defaultSymbol: selectedSymbols[0] || 'XAUUSD',
+        symbols: selectedSymbols,
+        apiKeys: {},
+      }));
+      try {
+        const res = await completeOnboardingAction(fd);
+        if (res.ok) {
+          sessionStorage.removeItem('hfx_onboarding_wizard');
+          router.push('/chat');
+          router.refresh();
+        } else {
+          toast.error(res.error || 'Failed to skip');
+        }
+      } catch (err) {
+        console.error(err);
+        toast.error('An unexpected error occurred');
+      }
+    });
+  }
+
   return (
     <div className="border border-divider bg-bg-elev-1 rounded-lg p-6">
       {/* Stepper */}
-      <div className="mb-8 flex items-center justify-between" role="list" aria-label="Setup progress">
+      <div className="mb-4 flex items-center justify-between" role="list" aria-label="Setup progress">
         {[1, 2, 3, 4, 5].map((i) => (
           <div key={i} className="flex items-center gap-2" role="listitem">
             <div
@@ -193,6 +279,17 @@ export function OnboardingWizard({ initialName, providers, symbolsCatalog }: Onb
         ))}
       </div>
 
+      <div className="flex justify-end mb-4">
+        <button
+          type="button"
+          onClick={handleSkip}
+          disabled={isSubmitting}
+          className="text-xs text-fg-subtle hover:text-fg transition-colors"
+        >
+          Skip setup, explore first
+        </button>
+      </div>
+
       {step === 1 && (
         <div className="flex flex-col gap-6 motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-right-4">
           <div>
@@ -203,10 +300,11 @@ export function OnboardingWizard({ initialName, providers, symbolsCatalog }: Onb
             <label className="text-sm font-medium text-fg">Display Name</label>
             <Input
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={(e) => { setName(e.target.value); setNameError(null); }}
               placeholder="Satoshi Nakamoto"
               autoFocus
             />
+            {nameError && <p className="text-xs text-bear">{nameError}</p>}
           </div>
           <div className="flex flex-col gap-2">
             <label className="text-sm font-medium text-fg">Timezone</label>
@@ -287,6 +385,7 @@ export function OnboardingWizard({ initialName, providers, symbolsCatalog }: Onb
           <div>
             <h2 className="text-xl font-semibold text-fg mb-1">Select Preferred Symbols</h2>
             <p className="text-sm text-fg-subtle">Choose the instruments you want in your default watchlist. Select at least one.</p>
+            {symbolsError && <p className="mt-1 text-xs text-bear">{symbolsError}</p>}
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-72 overflow-y-auto pr-1">
             {symbolsCatalog.map((sym) => {
@@ -514,6 +613,49 @@ export function OnboardingWizard({ initialName, providers, symbolsCatalog }: Onb
               </span>
             </li>
           </ul>
+
+          {/* Sample chat preview */}
+          <details className="border border-divider rounded-lg p-3">
+            <summary className="cursor-pointer text-sm text-fg-muted hover:text-fg">
+              Try a sample chat
+            </summary>
+            <div className="mt-3 flex flex-col gap-3">
+              <p className="text-xs text-fg-subtle">
+                A preview of what HamaFX-Ai can do. After setup, you will be able to ask about any symbol.
+              </p>
+              <div className="flex flex-col gap-2 bg-bg-elev-2 rounded-lg p-3">
+                <div className="flex items-start gap-2">
+                  <div className="rounded-full bg-bg-elev-3 p-1.5 mt-0.5">
+                    <User className="size-3 text-fg" />
+                  </div>
+                  <div className="flex-1 text-xs text-fg">
+                    How is XAUUSD looking?
+                  </div>
+                </div>
+                <div className="flex items-start gap-2">
+                  <div className="rounded-full bg-brand/10 p-1.5 mt-0.5">
+                    <Bot className="size-3 text-brand" />
+                  </div>
+                  <div className="flex-1 text-xs text-fg leading-relaxed space-y-1">
+                    <p>
+                      <span className="text-bull font-medium">XAUUSD</span> is showing mixed signals
+                      on the 1H:
+                    </p>
+                    <ul className="list-disc list-inside text-fg-subtle">
+                      <li>Price consolidating above <span className="text-fg tabular-nums">$2,650</span> support</li>
+                      <li>RSI at 54 — neutral</li>
+                      <li>MACD histogram flattening — momentum fading</li>
+                    </ul>
+                    <p>
+                      Bias: <span className="text-bear font-medium">Bearish below $2,640</span> ·
+                      Key resistance at <span className="tablibular-nums">$2,680</span>
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </details>
+
           <div className="flex gap-4">
             <Button variant="secondary" className="flex-1" onClick={handleBack}>
               Back

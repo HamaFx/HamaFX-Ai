@@ -54,9 +54,16 @@ import { Toaster } from '@/components/ui/toaster';
  *   8. <Toaster/>             bottom-center sonner
  */
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
+  let userName: string | undefined;
+  let userEmail: string | undefined;
+  let userId: string | undefined;
+
   if (process.env.AUTH_MODE !== 'legacy') {
     const session = await auth();
     if (session?.user?.id) {
+      userId = session.user.id;
+      userName = session.user.name ?? undefined;
+      userEmail = session.user.email ?? undefined;
       const onboardingCompleted = await getOnboardingStatus(session.user.id);
       if (!onboardingCompleted) {
         redirect('/onboarding');
@@ -84,7 +91,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             <InstallNudge />
             {children}
           </main>
-          <NavDrawer />
+          <NavDrawer {...(userName !== undefined ? { userName } : {})} {...(userEmail !== undefined ? { userEmail } : {})} {...(userId !== undefined ? { userId } : {})} />
           <OfflineBanner />
           {/* Phase B — UX_UPGRADE_PLAN.md item 11. Global ⌘K / Ctrl-K
               launcher. Self-contained: keyboard listener, vaul drawer,

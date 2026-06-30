@@ -55,6 +55,7 @@ export interface CreateJournalInput {
   size?: number | null;
   notes?: string | null;
   tags?: string[];
+  screenshotUrl?: string | null;
   userId: string;
 }
 
@@ -103,6 +104,7 @@ export async function createEntry(input: CreateJournalInput): Promise<JournalEnt
       outcome: 'open',
       notes: input.notes ?? null,
       tags: input.tags ?? [],
+      screenshotUrl: input.screenshotUrl ?? null,
     })
     .returning();
   const entry = rowToEntry(inserted[0]!);
@@ -252,11 +254,93 @@ export function summarize(entries: JournalEntry[]): JournalStats {
   let peakR = 0;
   let maxDrawdown = 0;
 
+  // Phase 2 — rich analytics accumulators.
+  const bySymbolMap = new Map<
+    string,
+    { trades: number; wins: number; totalR: number }
+  >();
+  const byHourMap = new Map<number, { trades: number; wins: number; totalR: number }>();
+  const byDowMap = new Map<string, { trades: number; wins: number; totalR: number }>();
+  const byTagMap = new Map<string, { trades: number; wins: number; totalR: number }>();
+  const rDistributionBuckets = [
+    { bucket: '[-3,-2)', min: -3, max: -2, count: 0 },
+    { bucket: '[-2,-1)', min: -2, max: -1, count: 0 },
+    { bucket: '[-1,0)', min: -1, max: 0, count: 0 },
+    { bucket: '[0,0]', min: 0, max: 0, count: 0 },
+    { bucket: '(0,1]', min: 0, max: 1, count: 0 },
+    { bucket: '(1,2]', min: 1, max: 2, count: 0 },
+    { bucket: '(2,3]', min: 2, max: 3, count: 0 },
+    { bucket: '[3+]', min: 3, max: Infinity, count: 0 },
+  ];
+  const DOW_KEYS = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'] as const;
+
+  function sessionFromHour(hour: number): string {
+    if (hour >= 0 && hour < 8) return 'Asian';
+    if (hour >= 8 && hour < 16) return 'London';
+    if (hour >= 13 && hour < 21) return 'NY';
+    return 'Off';
+  }
+
+  function addToBucket(r: number) {
+    for (const b of rDistributionBuckets) {
+      if (b.bucket === '[0,0]') {
+        if (r === 0) {
+          b.count += 1;
+          return;
+        }
+        continue;
+      }
+      if (b.bucket === '[3+]') {
+        if (r >= b.min) {
+          b.count += 1;
+          return;
+        }
+        continue;
+      }
+      if (r >= b.min && r < b.max) {
+        b.count += 1;
+        return;
+      }
+    }
+  }
+
   for (const e of ordered) {
     if (e.outcome === 'open') {
       open += 1;
       continue;
     }
+
+    // Symbol / hour / day-of-week / tag grouping uses openedAt.
+    const openedHour = new Date(e.openedAt).getUTCHours();
+    const openedDow = new Date(e.openedAt).getUTCDay();
+    const dowKey = DOW_KEYS[openedDow] ?? 'sunday';
+
+    const symbolGroup = bySymbolMap.get(e.symbol) ?? { trades: 0, wins: 0, totalR: 0 };
+    symbolGroup.trades += 1;
+    if (e.outcome === 'win') symbolGroup.wins += 1;
+    if (e.rMultiple !== null) symbolGroup.totalR += e.rMultiple;
+    bySymbolMap.set(e.symbol, symbolGroup);
+
+    const hourGroup = byHourMap.get(openedHour) ?? { trades: 0, wins: 0, totalR: 0 };
+    hourGroup.trades += 1;
+    if (e.outcome === 'win') hourGroup.wins += 1;
+    if (e.rMultiple !== null) hourGroup.totalR += e.rMultiple;
+    byHourMap.set(openedHour, hourGroup);
+
+    const dowGroup = byDowMap.get(dowKey) ?? { trades: 0, wins: 0, totalR: 0 };
+    dowGroup.trades += 1;
+    if (e.outcome === 'win') dowGroup.wins += 1;
+    if (e.rMultiple !== null) dowGroup.totalR += e.rMultiple;
+    byDowMap.set(dowKey, dowGroup);
+
+    for (const tag of e.tags ?? []) {
+      const tagGroup = byTagMap.get(tag) ?? { trades: 0, wins: 0, totalR: 0 };
+      tagGroup.trades += 1;
+      if (e.outcome === 'win') tagGroup.wins += 1;
+      if (e.rMultiple !== null) tagGroup.totalR += e.rMultiple;
+      byTagMap.set(tag, tagGroup);
+    }
+
     if (e.outcome === 'win') {
       wins += 1;
       if (e.rMultiple !== null) sumWinningR += e.rMultiple;
@@ -286,6 +370,7 @@ export function summarize(entries: JournalEntry[]): JournalStats {
     if (e.rMultiple !== null) {
       totalR += e.rMultiple;
       countWithR += 1;
+      addToBucket(e.rMultiple);
 
       cumulativeR += e.rMultiple;
       if (cumulativeR > peakR) peakR = cumulativeR;
@@ -322,6 +407,78 @@ export function summarize(entries: JournalEntry[]): JournalStats {
         : 0
       : sumWinningR / Math.abs(sumLosingR);
 
+  const avgWinR = wins === 0 ? 0 : sumWinningR / wins;
+  const avgLossR = losses === 0 ? 0 : sumLosingR / losses;
+  const recoveryFactor = maxDrawdown === 0 ? 0 : totalR / maxDrawdown;
+
+  // Current streak: if no closed trades, none. Otherwise reflect the
+  // active streak at the end of the ordered walk.
+  const currentStreakOut: JournalStats['currentStreak'] =
+    closed === 0
+      ? { type: 'none', count: 0 }
+      : currentStreak === null
+        ? { type: 'none', count: 0 }
+        : { type: currentStreak, count: currentStreakLen };
+
+  // Build by-session from by-hour.
+  const sessionGroups = new Map<string, { trades: number; wins: number; totalR: number }>();
+  for (const [hour, group] of byHourMap) {
+    const session = sessionFromHour(hour);
+    const existing = sessionGroups.get(session) ?? { trades: 0, wins: 0, totalR: 0 };
+    existing.trades += group.trades;
+    existing.wins += group.wins;
+    existing.totalR += group.totalR;
+    sessionGroups.set(session, existing);
+  }
+
+  const bySymbol = Array.from(bySymbolMap.entries())
+    .map(([symbol, g]) => ({
+      symbol,
+      trades: g.trades,
+      winRate: g.trades === 0 ? 0 : g.wins / g.trades,
+      totalR: g.totalR,
+      expectancy: g.trades === 0 ? 0 : g.totalR / g.trades,
+    }))
+    .sort((a, b) => b.totalR - a.totalR);
+
+  const bySession = Array.from(sessionGroups.entries())
+    .map(([session, g]) => ({
+      session,
+      trades: g.trades,
+      winRate: g.trades === 0 ? 0 : g.wins / g.trades,
+      totalR: g.totalR,
+    }))
+    .sort((a, b) => b.totalR - a.totalR);
+
+  const byHour = Array.from(byHourMap.entries())
+    .map(([hour, g]) => ({
+      hour,
+      trades: g.trades,
+      winRate: g.trades === 0 ? 0 : g.wins / g.trades,
+      totalR: g.totalR,
+    }))
+    .sort((a, b) => a.hour - b.hour);
+
+  const byDayOfWeek = DOW_KEYS.map((day) => {
+    const g = byDowMap.get(day) ?? { trades: 0, wins: 0, totalR: 0 };
+    return {
+      day: day.charAt(0).toUpperCase() + day.slice(1),
+      trades: g.trades,
+      winRate: g.trades === 0 ? 0 : g.wins / g.trades,
+      totalR: g.totalR,
+    };
+  });
+
+  const byTag = Array.from(byTagMap.entries())
+    .map(([tag, g]) => ({
+      tag,
+      trades: g.trades,
+      winRate: g.trades === 0 ? 0 : g.wins / g.trades,
+      totalR: g.totalR,
+      expectancy: g.trades === 0 ? 0 : g.totalR / g.trades,
+    }))
+    .sort((a, b) => b.totalR - a.totalR);
+
   return {
     count: entries.length,
     wins,
@@ -337,6 +494,19 @@ export function summarize(entries: JournalEntry[]): JournalStats {
     profitFactor,
     avgHoldMs,
     perDayOfWeek: perDow,
+    // Phase 2 — rich analytics suite.
+    avgWinR,
+    avgLossR,
+    maxWinStreak: longestWinStreak,
+    maxLossStreak: longestLossStreak,
+    currentStreak: currentStreakOut,
+    recoveryFactor,
+    rDistribution: rDistributionBuckets.map((b) => ({ bucket: b.bucket, count: b.count })),
+    bySymbol,
+    bySession,
+    byHour,
+    byDayOfWeek,
+    byTag,
   };
 }
 
@@ -379,6 +549,7 @@ function rowToEntry(row: typeof schema.journalEntries.$inferSelect): JournalEntr
     notes: row.notes,
     tags: row.tags ?? [],
     attachments: row.attachments ?? [],
+    screenshotUrl: row.screenshotUrl ?? null,
     userId: row.userId,
     createdAt: row.createdAt.getTime(),
     updatedAt: row.updatedAt.getTime(),

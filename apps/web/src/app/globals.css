@@ -1,7 +1,7 @@
 @import 'tailwindcss';
 
 /* -------------------------------------------------------------------------
- * Theme tokens — premium pure-black design system.
+ * Theme tokens — premium pure-black design system (dark).
  *
  * Surfaces: zero-chroma grayscale (oklch hue 0 chroma 0). The previous
  * blue-tinted surfaces (chroma 0.018 hue 265) read as "dark blue" on most
@@ -106,6 +106,77 @@
 
   --ease-organic: cubic-bezier(0.2, 0.8, 0.2, 1);
   --ease-out-organic: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* -------------------------------------------------------------------------
+ * Light theme tokens
+ * ------------------------------------------------------------------------- */
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --color-bg: oklch(98% 0 0);
+    --color-bg-elev-1: oklch(95% 0 0);
+    --color-bg-elev-2: oklch(92% 0 0);
+    --color-bg-elev-3: oklch(88% 0 0);
+    --color-border: oklch(85% 0 0);
+    --color-divider: oklch(80% 0 0 / 0.4);
+    --color-overlay: oklch(0% 0 0 / 0.3);
+    --color-glass: oklch(95% 0 0 / 0.7);
+    --color-glass-strong: oklch(95% 0 0 / 0.85);
+    --color-glass-edge: oklch(0% 0 0 / 0.08);
+    --color-fg: oklch(15% 0 0);
+    --color-fg-muted: oklch(35% 0 0);
+    --color-fg-subtle: oklch(45% 0 0);
+    --color-brand: oklch(65% 0.16 85);
+    --color-brand-fg: oklch(98% 0 0);
+    --shadow-sm: 0 1px 2px 0 oklch(0% 0 0 / 0.06);
+    --shadow-md: 0 4px 12px -2px oklch(0% 0 0 / 0.08), 0 1px 3px 0 oklch(0% 0 0 / 0.04);
+    --shadow-lg: 0 10px 40px -10px oklch(0% 0 0 / 0.1), 0 4px 12px -2px oklch(0% 0 0 / 0.06);
+    --shadow-xl: 0 25px 50px -12px oklch(0% 0 0 / 0.15), 0 10px 20px -8px oklch(0% 0 0 / 0.08);
+    --shadow-glow-brand: 0 0 32px -4px oklch(65% 0.16 85 / 0.25);
+    --shadow-glow-accent: 0 0 32px -4px oklch(62% 0.14 285 / 0.2);
+    --gradient-brand: linear-gradient(135deg, oklch(68% 0.16 85) 0%, oklch(62% 0.17 70) 100%);
+    --gradient-danger: linear-gradient(135deg, oklch(62% 0.22 25) 0%, oklch(55% 0.22 15) 100%);
+    --gradient-brand-soft: linear-gradient(135deg, oklch(65% 0.16 85 / 0.1) 0%, oklch(62% 0.14 285 / 0.08) 100%);
+    --gradient-accent: linear-gradient(135deg, oklch(62% 0.14 285) 0%, oklch(64% 0.14 230) 100%);
+    --shadow-inset-edge: inset 0 1px 0 0 oklch(100% 0 0 / 0.5);
+    --shadow-inset-edge-soft: inset 0 1px 0 0 oklch(100% 0 0 / 0.3);
+    --shadow-brand-press: 0 8px 24px -6px oklch(65% 0.16 85 / 0.3), var(--shadow-inset-edge);
+    --shadow-brand-press-strong: 0 12px 32px -8px oklch(65% 0.16 85 / 0.35), 0 0 0 1px oklch(65% 0.16 85 / 0.2), inset 0 1px 0 0 oklch(100% 0 0 / 0.5);
+    --shadow-danger-press: 0 8px 24px -6px oklch(62% 0.22 25 / 0.3), var(--shadow-inset-edge);
+  }
+}
+
+:root[data-theme="light"] {
+  --color-bg: oklch(98% 0 0);
+  --color-bg-elev-1: oklch(95% 0 0);
+  --color-bg-elev-2: oklch(92% 0 0);
+  --color-bg-elev-3: oklch(88% 0 0);
+  --color-border: oklch(85% 0 0);
+  --color-divider: oklch(80% 0 0 / 0.4);
+  --color-overlay: oklch(0% 0 0 / 0.3);
+  --color-glass: oklch(95% 0 0 / 0.7);
+  --color-glass-strong: oklch(95% 0 0 / 0.85);
+  --color-glass-edge: oklch(0% 0 0 / 0.08);
+  --color-fg: oklch(15% 0 0);
+  --color-fg-muted: oklch(35% 0 0);
+  --color-fg-subtle: oklch(45% 0 0);
+  --color-brand: oklch(65% 0.16 85);
+  --color-brand-fg: oklch(98% 0 0);
+  --shadow-sm: 0 1px 2px 0 oklch(0% 0 0 / 0.06);
+  --shadow-md: 0 4px 12px -2px oklch(0% 0 0 / 0.08), 0 1px 3px 0 oklch(0% 0 0 / 0.04);
+  --shadow-lg: 0 10px 40px -10px oklch(0% 0 0 / 0.1), 0 4px 12px -2px oklch(0% 0 0 / 0.06);
+  --shadow-xl: 0 25px 50px -12px oklch(0% 0 0 / 0.15), 0 10px 20px -8px oklch(0% 0 0 / 0.08);
+  --shadow-glow-brand: 0 0 32px -4px oklch(65% 0.16 85 / 0.25);
+  --shadow-glow-accent: 0 0 32px -4px oklch(62% 0.14 285 / 0.2);
+  --gradient-brand: linear-gradient(135deg, oklch(68% 0.16 85) 0%, oklch(62% 0.17 70) 100%);
+  --gradient-danger: linear-gradient(135deg, oklch(62% 0.22 25) 0%, oklch(55% 0.22 15) 100%);
+  --gradient-brand-soft: linear-gradient(135deg, oklch(65% 0.16 85 / 0.1) 0%, oklch(62% 0.14 285 / 0.08) 100%);
+  --gradient-accent: linear-gradient(135deg, oklch(62% 0.14 285) 0%, oklch(64% 0.14 230) 100%);
+  --shadow-inset-edge: inset 0 1px 0 0 oklch(100% 0 0 / 0.5);
+  --shadow-inset-edge-soft: inset 0 1px 0 0 oklch(100% 0 0 / 0.3);
+  --shadow-brand-press: 0 8px 24px -6px oklch(65% 0.16 85 / 0.3), var(--shadow-inset-edge);
+  --shadow-brand-press-strong: 0 12px 32px -8px oklch(65% 0.16 85 / 0.35), 0 0 0 1px oklch(65% 0.16 85 / 0.2), inset 0 1px 0 0 oklch(100% 0 0 / 0.5);
+  --shadow-danger-press: 0 8px 24px -6px oklch(62% 0.22 25 / 0.3), var(--shadow-inset-edge);
 }
 
 /* Firefox scrollbar styling */

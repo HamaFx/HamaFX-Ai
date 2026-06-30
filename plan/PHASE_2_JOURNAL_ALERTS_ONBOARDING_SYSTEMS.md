@@ -16,18 +16,18 @@
 
 | # | Feature | Size | Surfaces |
 |---|---------|------|----------|
-| 2.1 | Rich journal analytics suite | L | `journal/` |
-| 2.2 | Setup tagging + tag analytics | M | `journal/` |
-| 2.3 | AI trade review | M | `journal/` + `ai/` |
-| 2.4 | Screenshot / import trades | M | `journal/` |
-| 2.5 | Decision-signal feedback loop UI | M | `chat/` + signals |
-| 2.6 | Smart alert digest & noise control UX | S | `settings/` |
-| 2.7 | Interactive, progress-saved onboarding | M | `onboarding/` |
-| 2.8 | Real light theme (or remove affordance) | M | global |
-| 2.9 | Shared TimeProvider + live-data fabric | M | global |
-| 2.10 | PWA depth | S | global |
-| 2.11 | Personalization layer | S/M | `nav/` + global |
-| 2.12 | Shareable, branded snapshots | M | `share/` |
+| 2.1 | Rich journal analytics suite | L | `journal/` | ✅ Done |
+| 2.2 | Setup tagging + tag analytics | M | `journal/` | ✅ Done |
+| 2.3 | AI trade review | M | `journal/` + `ai/` | ✅ Done |
+| 2.4 | Screenshot / import trades | M | `journal/` | ⏳ Not started |
+| 2.5 | Decision-signal feedback loop UI | M | `chat/` + signals | ✅ Done |
+| 2.6 | Smart alert digest & noise control UX | S | `settings/` | ✅ Done |
+| 2.7 | Interactive, progress-saved onboarding | M | `onboarding/` | ⏳ Not started |
+| 2.8 | Real light theme (or remove affordance) | M | global | ⏳ Not started |
+| 2.9 | Shared TimeProvider + live-data fabric | M | global | ✅ Done |
+| 2.10 | PWA depth | S | global | ⏳ Not started |
+| 2.11 | Personalization layer | S/M | `nav/` + global | ⏳ Not started |
+| 2.12 | Shareable, branded snapshots | M | `share/` | ⏳ Not started |
 
 ---
 

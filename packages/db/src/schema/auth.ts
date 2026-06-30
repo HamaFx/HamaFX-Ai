@@ -225,6 +225,8 @@ export const userSettings = pgTable('user_settings', {
   disabledTools: jsonb('disabled_tools').$type<string[]>(),
   /** Whether onboarding has been completed. */
   onboardingCompleted: boolean('onboarding_completed').notNull().default(false),
+  /** Server-side onboarding wizard progress (JSON). Excludes API keys. */
+  onboardingProgress: jsonb('onboarding_progress').$type<Record<string, unknown>>(),
   /**
    * Multi-Agent Orchestration — default analysis mode for new chats.
    * Values: 'single' | 'quick' | 'standard' | 'full' | 'auto'

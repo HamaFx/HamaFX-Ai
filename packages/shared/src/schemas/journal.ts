@@ -42,6 +42,8 @@ export const JournalEntrySchema = z.object({
   rMultiple: z.number().nullable(),
   notes: z.string().nullable(),
   tags: z.array(z.string()).default([]),
+  /** Uploaded chart screenshot URL. */
+  screenshotUrl: z.string().nullable().optional(),
   /** Free-form attachments (Supabase Storage paths). */
   attachments: z.array(z.string()).default([]),
   createdAt: z.number().int(),
@@ -80,6 +82,78 @@ export const JournalStatsSchema = z.object({
       friday: z.number(),
       saturday: z.number(),
     })
+    .optional(),
+  // Phase 2 — rich journal analytics suite.
+  avgWinR: z.number().optional(),
+  avgLossR: z.number().optional(),
+  maxWinStreak: z.number().int().optional(),
+  maxLossStreak: z.number().int().optional(),
+  currentStreak: z
+    .object({
+      type: z.enum(['win', 'loss', 'none']),
+      count: z.number().int(),
+    })
+    .optional(),
+  recoveryFactor: z.number().optional(),
+  rDistribution: z
+    .array(
+      z.object({
+        bucket: z.string(),
+        count: z.number().int(),
+      }),
+    )
+    .optional(),
+  bySymbol: z
+    .array(
+      z.object({
+        symbol: z.string(),
+        trades: z.number().int(),
+        winRate: z.number(),
+        totalR: z.number(),
+        expectancy: z.number(),
+      }),
+    )
+    .optional(),
+  bySession: z
+    .array(
+      z.object({
+        session: z.string(),
+        trades: z.number().int(),
+        winRate: z.number(),
+        totalR: z.number(),
+      }),
+    )
+    .optional(),
+  byHour: z
+    .array(
+      z.object({
+        hour: z.number().int(),
+        trades: z.number().int(),
+        winRate: z.number(),
+        totalR: z.number(),
+      }),
+    )
+    .optional(),
+  byDayOfWeek: z
+    .array(
+      z.object({
+        day: z.string(),
+        trades: z.number().int(),
+        winRate: z.number(),
+        totalR: z.number(),
+      }),
+    )
+    .optional(),
+  byTag: z
+    .array(
+      z.object({
+        tag: z.string(),
+        trades: z.number().int(),
+        winRate: z.number(),
+        totalR: z.number(),
+        expectancy: z.number(),
+      }),
+    )
     .optional(),
 });
 export type JournalStats = z.infer<typeof JournalStatsSchema>;

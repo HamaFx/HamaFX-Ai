@@ -28,7 +28,7 @@ import type { EconomicEvent } from '@hamafx/shared';
 import { Clock, Sparkles, Zap } from 'lucide-react';
 import { Link } from 'next-view-transitions';
 
-import { useNow } from '@/components/providers/time-provider';
+import { useTime } from '@/components/providers/time-provider';
 import { cn } from '@/lib/cn';
 
 interface CalendarHeroProps {
@@ -36,7 +36,7 @@ interface CalendarHeroProps {
 }
 
 export function CalendarHero({ events = [] }: CalendarHeroProps) {
-  const now = useNow().getTime();
+  const { now } = useTime();
 
   // Next high-impact event in the future.
   const nextHigh = events

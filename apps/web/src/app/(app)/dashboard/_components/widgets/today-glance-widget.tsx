@@ -29,7 +29,7 @@ import { Clock, Compass, ShieldAlert, Sparkles } from 'lucide-react';
 import Link from 'next/link';
 import type { JournalEntry, EconomicEvent, Symbol } from '@hamafx/shared';
 
-import { useNow } from '@/components/providers/time-provider';
+import { useTime } from '@/components/providers/time-provider';
 import { cn } from '@/lib/cn';
 
 interface TodayGlanceWidgetProps {
@@ -65,7 +65,7 @@ export function TodayGlanceWidget({
 // -----------------------------------------------------------------------
 
 function CellNextEvent({ events }: { events: EconomicEvent[] }) {
-  const now = useNow().getTime();
+  const { now } = useTime();
   const upcoming = events
     .filter((e) => e.date > now)
     .sort((a, b) => a.date - b.date)[0];

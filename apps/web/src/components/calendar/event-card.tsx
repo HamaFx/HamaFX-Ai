@@ -45,7 +45,7 @@ import { Link } from 'next-view-transitions';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
-import { useNow } from '@/components/providers/time-provider';
+import { useTime } from '@/components/providers/time-provider';
 import { cn } from '@/lib/cn';
 
 interface EventCardProps {
@@ -74,7 +74,7 @@ const IMPORTANCE = {
 >;
 
 export function EventCard({ event }: EventCardProps) {
-  const now = useNow().getTime();
+  const { now } = useTime();
   const date = new Date(event.date);
   const importance = IMPORTANCE[event.importance];
   const isFuture = event.date > now;

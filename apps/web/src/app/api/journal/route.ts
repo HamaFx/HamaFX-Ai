@@ -51,6 +51,7 @@ const CreateSchema = z.object({
   size: z.number().nullable().optional(),
   notes: z.string().max(2000).nullable().optional(),
   tags: z.array(z.string().max(40)).max(10).optional(),
+  screenshotUrl: z.string().nullable().optional(),
 });
 
 export const POST = withAuth<void>(async (req, { user }) => {
@@ -67,6 +68,7 @@ export const POST = withAuth<void>(async (req, { user }) => {
       size: input.size ?? null,
       notes: input.notes ?? null,
       tags: input.tags ?? [],
+      screenshotUrl: input.screenshotUrl ?? null,
     });
     return Response.json({ entry }, { status: 201 });
   } catch (err) {

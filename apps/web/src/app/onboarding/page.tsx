@@ -62,6 +62,7 @@ export default async function OnboardingPage() {
         initialName={session.user.name || ''}
         providers={providers}
         symbolsCatalog={symbolsCatalog}
+        initialProgress={settings?.onboardingProgress ?? null}
       />
     </div>
   );

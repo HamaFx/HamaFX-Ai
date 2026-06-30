@@ -18,7 +18,7 @@
 //
 // Bypassed by the password gate (see middleware.ts) and verified instead
 // by an HMAC-signed token in the `?t=<token>` query param. The route
-// renders title + body + (optional) overlay-on-chart preview.
+// renders markdown body, branded frame, chart annotations, and OG image.
 //
 // Status responses:
 //   - 401 (rendered) → missing/invalid token
@@ -28,6 +28,9 @@
 import { getActiveSnapshot, verifyShareToken } from '@hamafx/ai';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
+import { Sparkles } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -67,51 +70,88 @@ export default async function ShareSnapshotPage({ params, searchParams }: PagePr
     notFound();
   }
 
-  return (
-    <ShareShell title={snap.title}>
-      <article className="prose prose-invert max-w-none text-sm leading-relaxed">
-        <p className="text-fg-muted whitespace-pre-wrap">{snap.body}</p>
-      </article>
-      {snap.overlay && snap.symbol && snap.tf ? (
-        <section
-          aria-label="Chart annotations"
-          className="border-border bg-bg-elev-1 mt-4 rounded-lg border p-3"
-        >
-          <header className="mb-2 flex items-baseline justify-between">
-            <h2 className="text-fg-muted text-sm font-medium">
-              {snap.symbol} · {snap.tf}
-            </h2>
-            <span className="text-fg-subtle text-caption tabular-nums">
-              {snap.overlay.markers.length}m / {snap.overlay.priceLines.length}l
-            </span>
-          </header>
-          <ul className="text-fg-muted flex flex-wrap gap-1.5 text-body-sm">
-            {snap.overlay.priceLines.slice(0, 8).map((line, i) => (
-              <li
-                key={`${line.title}-${i}`}
-                className="border-border bg-bg-elev-2 rounded px-2 py-0.5"
-                style={{ borderColor: line.color }}
-              >
-                {line.title}
-              </li>
-            ))}
-          </ul>
-        </section>
-      ) : null}
-      <footer className="text-fg-subtle mt-4 text-caption">
-        HamaFX-Ai · expires {new Date(snap.expiresAt).toISOString().slice(0, 16).replace('T', ' ')}Z
-      </footer>
-    </ShareShell>
-  );
-}
+  const expiry = new Date(snap.expiresAt).toISOString().slice(0, 16).replace('T', ' ');
 
-function ShareShell({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <main className="bg-bg text-fg mx-auto flex min-h-svh max-w-2xl flex-col gap-3 p-4">
-      <header>
-        <h1 className="text-fg text-base font-semibold">{title}</h1>
+    <div className="min-h-svh bg-bg text-fg flex flex-col">
+      <header className="border-b border-divider px-6 py-4 flex items-center gap-3">
+        <div className="size-8 rounded-lg bg-brand/10 text-brand flex items-center justify-center">
+          <Sparkles className="size-4" />
+        </div>
+        <div>
+          <h1 className="text-fg text-base font-bold">HamaFX·Ai</h1>
+          <p className="text-fg-subtle text-caption">AI Trading Analysis</p>
+        </div>
       </header>
-      {children}
-    </main>
+      <main className="mx-auto max-w-2xl w-full px-4 py-6 flex flex-col gap-4">
+        <h2 className="text-fg text-lg font-semibold">{snap.title}</h2>
+
+        <article className="md-prose max-w-none text-sm leading-relaxed">
+          <ReactMarkdown remarkPlugins={[remarkGfm]}>
+            {snap.body}
+          </ReactMarkdown>
+        </article>
+
+        {snap.overlay && snap.symbol && snap.tf ? (
+          <section
+            aria-label="Chart annotations"
+            className="border border-divider bg-bg-elev-1 rounded-lg p-3"
+          >
+            <header className="mb-2 flex items-baseline justify-between">
+              <h3 className="text-fg-muted text-sm font-medium">
+                {snap.symbol} · {snap.tf}
+              </h3>
+              <span className="text-fg-subtle text-caption tabular-nums">
+                {snap.overlay.markers.length}m / {snap.overlay.priceLines.length}l
+              </span>
+            </header>
+            {snap.overlay.priceLines.length > 0 && (
+              <div className="relative h-12 w-full bg-bg-elev-2 rounded-md border border-divider mb-3 overflow-hidden">
+                {(() => {
+                  const lines = snap.overlay.priceLines;
+                  const prices = lines.map(l => typeof l.price === 'number' ? l.price : parseFloat(l.price as string)).filter(p => !isNaN(p));
+                  if (prices.length === 0) return null;
+                  const min = Math.min(...prices);
+                  const max = Math.max(...prices);
+                  const range = max - min || 1;
+                  return (
+                    <svg className="size-full" viewBox="0 0 100 48" preserveAspectRatio="none" aria-label="Price lines visualization">
+                      {lines.slice(0, 20).map((line, i) => {
+                        const y = ((parseFloat(String(line.price)) - min) / range) * 100;
+                        return (
+                          <line
+                            key={i}
+                            x1="0" y1={`${y}%`} x2="100" y2={`${y}%`}
+                            stroke={line.color || 'var(--color-brand)'}
+                            strokeWidth="1.5"
+                            strokeDasharray={i % 2 === 0 ? 'none' : '4 2'}
+                          />
+                        );
+                      })}
+                    </svg>
+                  );
+                })()}
+              </div>
+            )}
+            <ul className="text-fg-muted flex flex-wrap gap-1.5 text-body-sm">
+              {snap.overlay.priceLines.slice(0, 8).map((line, i) => (
+                <li
+                  key={`${line.title}-${i}`}
+                  className="border border-divider bg-bg-elev-2 rounded px-2 py-0.5"
+                  style={{ borderColor: line.color }}
+                >
+                  {line.title}: {String(line.price)}
+                </li>
+              ))}
+            </ul>
+          </section>
+        ) : null}
+      </main>
+      <footer className="border-t border-divider px-6 py-4 text-center">
+        <p className="text-fg-subtle text-caption">
+          Generated by HamaFX·Ai · expires {expiry}Z
+        </p>
+      </footer>
+    </div>
   );
 }

@@ -21,11 +21,13 @@ import { KeyRound, Bell, Bot, Database, Info } from 'lucide-react';
 import { auth } from '@/auth';
 import { getDb, schema } from '@hamafx/db';
 import { eq, asc } from 'drizzle-orm';
+import type { NoiseConfig } from '@hamafx/shared';
 import { AboutCard } from './_components/about-card';
 import { AgentCard } from './_components/agent-card';
 import { AIPrefsCard } from './_components/ai-prefs-card';
 import { AppearanceCard } from './_components/appearance-card';
 import { DataCard } from './_components/data-card';
+import { NoiseControlCard } from './_components/noise-control-card';
 import { NotificationPrefsCard } from './_components/notification-prefs-card';
 import { NotificationsCard } from './_components/notifications-card';
 import { PreferencesCard } from './_components/preferences-card';
@@ -62,7 +64,7 @@ export default async function SettingsPage() {
   let locale = 'en';
   let twoFactorEnabled = false;
 
-  const [[userRow], [settings], list] = await Promise.all([
+      const [[userRow], [settings], list] = await Promise.all([
     db.select({
       twoFactorEnabled: schema.users.twoFactorEnabled,
     }).from(schema.users).where(eq(schema.users.id, userId)),
@@ -82,6 +84,10 @@ export default async function SettingsPage() {
       .where(eq(schema.userSymbols.userId, userId))
       .orderBy(asc(schema.userSymbols.displayOrder)),
   ]);
+
+  const noiseConfig = settings?.notificationPrefs && typeof settings.notificationPrefs === 'object'
+    ? (settings.notificationPrefs as Record<string, unknown>).noiseConfig as NoiseConfig | undefined
+    : undefined;
   twoFactorEnabled = userRow?.twoFactorEnabled ?? false;
   if (settings) {
     aiPrefs = { customInstructions: settings.customInstructions ?? null };
@@ -111,6 +117,7 @@ export default async function SettingsPage() {
 
       <SettingsSection icon={<Bell className="size-4" />} title="Notifications" description="Alert channels, noise control, and test buttons">
         <NotificationsCard userId={userId} />
+        <NoiseControlCard initialConfig={noiseConfig ?? null} />
         <NotificationPrefsCard initialPrefs={notificationPrefs} />
       </SettingsSection>
 

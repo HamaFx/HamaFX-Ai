@@ -44,6 +44,8 @@ export const journalEntries = pgTable(
       .array()
       .notNull()
       .default(sql`'{}'::text[]`),
+    /** Uploaded chart screenshot URL. */
+    screenshotUrl: text('screenshot_url'),
     /** Storage paths; use Supabase Storage if/when we wire it. */
     attachments: text('attachments')
       .array()

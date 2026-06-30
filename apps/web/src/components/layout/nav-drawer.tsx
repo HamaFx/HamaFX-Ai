@@ -27,6 +27,7 @@
 //   - Reduced-motion friendly transitions (vaul respects the OS pref).
 //   - Sectioned destinations (Markets / Personal) + identity strip and
 //     a footer "Sign out" action.
+//   - User identity display + nav item badges + last-path tracking.
 
 import {
   Bell,
@@ -38,11 +39,11 @@ import {
   LogOut,
   MessageCircle,
   Newspaper,
-  Sparkles,
+  Target,
 } from 'lucide-react';
 import { Link } from 'next-view-transitions';
 import { usePathname, useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { Drawer as DrawerPrimitive } from 'vaul';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
@@ -58,6 +59,7 @@ interface NavItem {
   icon: typeof MessageCircle;
   description?: string;
   match?: readonly string[];
+  badge?: number;
 }
 
 const PRIMARY: readonly NavItem[] = [
@@ -95,15 +97,27 @@ const PRIMARY: readonly NavItem[] = [
 ];
 
 const SECONDARY: readonly NavItem[] = [
+  { href: '/signals', label: 'Signals', icon: Target, description: 'AI track record' },
   { href: '/alerts', label: 'Alerts', icon: Bell, description: 'Price triggers' },
   { href: '/journal', label: 'Journal', icon: BookOpen, description: 'Trades & R-multiples' },
   { href: '/settings', label: 'Settings', icon: Cog, description: 'Notifications, usage' },
 ];
 
-export function NavDrawer() {
+export function NavDrawer({ userName, userEmail, userId: _userId }: { userName?: string; userEmail?: string; userId?: string }) {
   const { open, setOpen } = useNavDrawer();
   const pathname = usePathname();
   const router = useRouter();
+
+  // Track last visited path for "continue where you left off"
+  useEffect(() => {
+    if (pathname && !pathname.startsWith('/share/')) {
+      try {
+        localStorage.setItem('hamafx:last-path', pathname);
+      } catch {
+        // ignore
+      }
+    }
+  }, [pathname]);
 
   // Auto-close on route change.
   useEffect(() => {
@@ -133,6 +147,8 @@ export function NavDrawer() {
     }
   }
 
+  const initial = useMemo(() => (userName?.charAt(0)?.toUpperCase() ?? 'H'), [userName]);
+
   return (
     <DrawerPrimitive.Root open={open} onOpenChange={setOpen} direction="left">
       <DrawerPrimitive.Portal>
@@ -159,22 +175,16 @@ export function NavDrawer() {
           {/* Identity strip */}
           <DrawerPrimitive.Title asChild>
             <div className="flex items-center gap-3 px-5 pt-6 pb-5">
-              <span
-                aria-hidden="true"
-                className="inline-flex size-11 items-center justify-center rounded-full"
-                style={{
-                  backgroundImage: 'var(--gradient-brand)',
-                  boxShadow: 'var(--shadow-brand-press-strong)',
-                }}
-              >
-                <Sparkles className="text-bg size-5" strokeWidth={2.25} />
-              </span>
-              <div className="flex flex-col gap-0.5">
-                <span className="text-fg text-base font-bold tracking-tight">
-                  Hama<span className="text-brand">FX</span>
-                  <span className="text-fg-subtle font-normal">·Ai</span>
+              <div className="size-11 rounded-full bg-brand/10 text-brand flex items-center justify-center text-sm font-bold shadow-glow-brand/15">
+                <span className="text-lg font-bold">{initial}</span>
+              </div>
+              <div className="flex flex-col gap-0.5 min-w-0">
+                <span className="text-fg text-base font-bold tracking-tight truncate">
+                  {userName ?? 'HamaFX User'}
                 </span>
-                <span className="text-fg-muted text-xs">Personal trading copilot</span>
+                <span className="text-fg-subtle text-xs truncate">
+                  {userEmail ?? 'Personal trading copilot'}
+                </span>
               </div>
             </div>
           </DrawerPrimitive.Title>
@@ -273,6 +283,11 @@ function NavLink({ item, active }: { item: NavItem; active: boolean }) {
             </span>
           ) : null}
         </div>
+        {item.badge !== undefined && item.badge > 0 && (
+          <span className="ml-auto bg-brand/15 text-brand text-caption font-bold rounded-full px-1.5 py-0.5 tabular-nums">
+            {item.badge > 99 ? '99+' : item.badge}
+          </span>
+        )}
       </Link>
     </li>
   );

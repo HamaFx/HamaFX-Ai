@@ -45,14 +45,21 @@ export function EntryList({ entries, onClosed, onDeleted }: EntryListProps) {
   const [tab, setTab] = useState<'active' | 'closed' | 'all'>('active');
   const [symbolFilter, setSymbolFilter] = useState<'ALL' | Symbol>('ALL');
   const [sideFilter, setSideFilter] = useState<'ALL' | TradeSide>('ALL');
+  const [tagFilter, setTagFilter] = useState<'ALL' | string>('ALL');
   const [search, setSearch] = useState('');
   const [showFilters, setShowFilters] = useState(false);
 
-  // Derive available symbols from entries for the filter panel
+  // Derive available symbols and tags from entries for the filter panel
   const availableSymbols = useMemo(() => {
     const symbolsSet = new Set<Symbol>();
     entries.forEach((e) => symbolsSet.add(e.symbol));
     return Array.from(symbolsSet).sort();
+  }, [entries]);
+
+  const availableTags = useMemo(() => {
+    const tagsSet = new Set<string>();
+    entries.forEach((e) => e.tags?.forEach((t) => tagsSet.add(t)));
+    return Array.from(tagsSet).sort();
   }, [entries]);
 
   // Pre-compute relative time labels in the parent to avoid per-row recomputation
@@ -96,11 +103,12 @@ export function EntryList({ entries, onClosed, onDeleted }: EntryListProps) {
     });
   }, [entries, tab]);
 
-  // Apply symbol, side and text search filters
+  // Apply symbol, side, tag and text search filters
   const filteredEntries = useMemo(() => {
     return tabEntries.filter((e) => {
       if (symbolFilter !== 'ALL' && e.symbol !== symbolFilter) return false;
       if (sideFilter !== 'ALL' && e.side !== sideFilter) return false;
+      if (tagFilter !== 'ALL' && !e.tags?.includes(tagFilter)) return false;
       if (search.trim()) {
         const query = search.toLowerCase();
         const matchesNote = e.notes?.toLowerCase().includes(query) ?? false;
@@ -110,7 +118,7 @@ export function EntryList({ entries, onClosed, onDeleted }: EntryListProps) {
       }
       return true;
     });
-  }, [tabEntries, symbolFilter, sideFilter, search]);
+  }, [tabEntries, symbolFilter, sideFilter, tagFilter, search]);
 
   const parentRef = useRef<HTMLDivElement>(null);
   const virtualizer = useVirtualizer({
@@ -227,6 +235,24 @@ export function EntryList({ entries, onClosed, onDeleted }: EntryListProps) {
               ))}
             </div>
           </div>
+
+          <div className="flex flex-col gap-1.5 col-span-2">
+            <label className="text-caption font-bold uppercase tracking-wider text-fg-subtle">Tag</label>
+            <div className="flex flex-wrap gap-1">
+              {(['ALL', ...availableTags] as const).map((tag) => (
+                <button
+                  key={tag}
+                  onClick={() => setTagFilter(tag)}
+                  className={cn(
+                    'px-2.5 py-1 text-xs font-semibold rounded-lg border border-glass-edge bg-bg-elev-3/50 hover:bg-bg-elev-3 cursor-pointer',
+                    tagFilter === tag && 'border-brand bg-brand/10 text-brand'
+                  )}
+                >
+                  {tag === 'ALL' ? 'ALL' : `#${tag}`}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
       )}
 
@@ -238,7 +264,7 @@ export function EntryList({ entries, onClosed, onDeleted }: EntryListProps) {
           </div>
           <p className="text-sm font-semibold text-fg">No entries found</p>
           <p className="text-xs text-fg-subtle max-w-[280px]">
-            {search || symbolFilter !== 'ALL' || sideFilter !== 'ALL'
+            {search || symbolFilter !== 'ALL' || sideFilter !== 'ALL' || tagFilter !== 'ALL'
               ? 'Try modifying your search query or filters.'
               : 'Log your first trade to activate your portfolio analytics.'}
           </p>
@@ -466,6 +492,21 @@ function EntryRow({
                 </span>
               ))}
             </div>
+          )}
+
+          {/* Screenshot thumbnail */}
+          {entry.screenshotUrl && (
+            <button
+              type="button"
+              onClick={() => { if (entry.screenshotUrl) window.open(entry.screenshotUrl, '_blank'); }}
+              className="mt-1.5 inline-flex"
+            >
+              <img
+                src={entry.screenshotUrl}
+                alt="Trade chart screenshot"
+                className="size-12 rounded-md object-cover border border-divider hover:opacity-80 transition-opacity"
+              />
+            </button>
           )}
 
           {/* Notes display */}

@@ -16,8 +16,7 @@
  * limitations under the License.
  */
 
-import { formatRelative } from '@/lib/format';
-import { useNow } from '@/components/providers/time-provider';
+import { useTime } from '@/components/providers/time-provider';
 
 interface LiveTimestampProps {
   ms: number;
@@ -27,7 +26,7 @@ interface LiveTimestampProps {
 }
 
 export function LiveTimestamp({ ms, prefix, className }: LiveTimestampProps) {
-  useNow();
+  const { formatRelative } = useTime();
   return (
     <span className={className}>
       {prefix ? `${prefix} ` : null}

@@ -27,7 +27,7 @@ import { Calendar } from 'lucide-react';
 import type { EconomicEvent } from '@hamafx/shared';
 
 import { EmptyState } from '@/components/ui/empty-state';
-import { useNow } from '@/components/providers/time-provider';
+import { useTime } from '@/components/providers/time-provider';
 import { cn } from '@/lib/cn';
 
 interface CalendarWidgetProps {
@@ -36,7 +36,7 @@ interface CalendarWidgetProps {
 }
 
 export function CalendarWidget({ events, limit = 3 }: CalendarWidgetProps) {
-  const now = useNow().getTime();
+  const { now } = useTime();
 
   // Filter to upcoming high/medium importance, sort ascending, cap.
   const upcoming = events

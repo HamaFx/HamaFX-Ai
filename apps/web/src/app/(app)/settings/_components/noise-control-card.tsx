@@ -21,7 +21,7 @@
 // Client component for configuring notification noise control:
 // quiet hours, min severity, cooldown, dedup TTL, and daily digest mode.
 
-import { Bell, Moon, Clock, Filter, Zap } from 'lucide-react';
+import { Bell, Moon, Clock, Filter, Zap, Mail, Smartphone, Info, BarChart3 } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Switch } from '@/components/ui/switch';
 import { cn } from '@/lib/cn';
@@ -33,6 +33,19 @@ const SEVERITY_OPTIONS: { value: Severity; label: string }[] = [
   { value: 'error', label: 'Error' },
   { value: 'critical', label: 'Critical' },
 ];
+
+interface DigestPreview {
+  breakdown: {
+    total: number;
+    allowed: number;
+    blocked: number;
+    bySeverity: { severity: Severity; total: number; allowed: number; blocked: number }[];
+    digestMode: boolean;
+  };
+  allowedPct: number;
+  blockedPct: number;
+  dailyEstimate: number;
+}
 
 export function NoiseControlCard({ initialConfig }: { initialConfig?: NoiseConfig | null }) {
   const [config, setConfig] = useState<NoiseConfig>(
@@ -48,6 +61,8 @@ export function NoiseControlCard({ initialConfig }: { initialConfig?: NoiseConfi
   );
   const [saving, setSaving] = useState(false);
   const savingRef = useRef(false);
+  const [preview, setPreview] = useState<DigestPreview | null>(null);
+  const [previewLoading, setPreviewLoading] = useState(false);
 
   // Debounced save: fires 300ms after config stops changing
   useEffect(() => {
@@ -64,6 +79,16 @@ export function NoiseControlCard({ initialConfig }: { initialConfig?: NoiseConfi
         .catch(() => { setSaving(false); savingRef.current = false; });
     }, 300);
     return () => clearTimeout(timer);
+  }, [config]);
+
+  // Fetch preview when config changes
+  useEffect(() => {
+    setPreviewLoading(true);
+    fetch('/api/alerts/preview-digest')
+      .then((r) => r.ok ? r.json() : null)
+      .then((data) => setPreview(data))
+      .catch(() => setPreview(null))
+      .finally(() => setPreviewLoading(false));
   }, [config]);
 
   const update = useCallback(
@@ -91,6 +116,92 @@ export function NoiseControlCard({ initialConfig }: { initialConfig?: NoiseConfi
       <p className="text-sm text-fg-subtle">
         Reduce notification fatigue with dedup, cooldown, quiet hours, and severity filtering.
       </p>
+
+      {/* Alert Preview */}
+      {preview && (
+        <div className="rounded-lg border border-divider bg-bg-elev-2 p-4 flex flex-col gap-3">
+          <div className="flex items-center gap-2">
+            <BarChart3 className="size-4 text-brand" />
+            <span className="text-sm font-semibold text-fg">Alert preview</span>
+            {previewLoading && <span className="text-xs text-fg-muted">Refreshing…</span>}
+          </div>
+          <div className="grid grid-cols-3 gap-4 text-center">
+            <div>
+              <p className="text-2xl font-bold tabular-nums text-fg">{preview.breakdown.total}</p>
+              <p className="text-xs text-fg-subtle">Total</p>
+            </div>
+            <div>
+              <p className="text-2xl font-bold tabular-nums text-bull">{preview.breakdown.allowed}</p>
+              <p className="text-xs text-fg-subtle">Allowed</p>
+            </div>
+            <div>
+              <p className="text-2xl font-bold tabular-nums text-bear">{preview.breakdown.blocked}</p>
+              <p className="text-xs text-fg-subtle">Blocked</p>
+            </div>
+          </div>
+          <div className="flex h-3 w-full overflow-hidden rounded-full bg-bg-elev-3">
+            <div
+              className="bg-brand transition-all duration-300"
+              style={{ width: `${preview.allowedPct}%` }}
+            />
+            <div
+              className="bg-fg-muted/30 transition-all duration-300"
+              style={{ width: `${preview.blockedPct}%` }}
+            />
+          </div>
+          <div className="grid grid-cols-4 gap-1 text-center text-caption tabular-nums">
+            {SEVERITY_OPTIONS.map((sev) => {
+              const b = preview.breakdown.bySeverity.find((s) => s.severity === sev.value);
+              if (!b) return null;
+              const actPct = b.total > 0 ? Math.round((b.allowed / b.total) * 100) : 0;
+              return (
+                <div key={sev.value} className="flex flex-col">
+                  <span className="text-fg-subtle">{sev.label}</span>
+                  <span className="font-medium text-fg">{actPct}%</span>
+                </div>
+              );
+            })}
+          </div>
+          <p className="text-xs text-fg-subtle">
+            ~{preview.dailyEstimate} alerts/day with current filters.
+          </p>
+        </div>
+      )}
+
+      {/* Smart Alert Digest */}
+      <div className="rounded-lg border border-brand/20 bg-brand/5 p-3 flex flex-col gap-3">
+        <div className="flex items-start gap-3">
+          <div className="rounded-full bg-brand/10 p-2 text-brand">
+            <Mail className="size-4" />
+          </div>
+          <div className="flex-1">
+            <h3 className="text-sm font-semibold text-fg">Smart alert digest</h3>
+            <p className="text-xs text-fg-subtle mt-1">
+              When daily digest is on, non-critical alerts are batched into a single summary
+              instead of interrupting you one-by-one.
+            </p>
+          </div>
+          <Switch
+            checked={config.dailyDigestMode}
+            onCheckedChange={(v) => update({ dailyDigestMode: v })}
+            srLabel="Toggle daily digest mode"
+          />
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs text-fg-subtle">
+          <div className="flex items-center gap-1.5">
+            <Info className="size-3.5" />
+            <span>Info & warning batched</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <Smartphone className="size-3.5" />
+            <span>Critical still instant</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <Bell className="size-3.5" />
+            <span>Sent once per day</span>
+          </div>
+        </div>
+      </div>
 
       {/* Quiet Hours */}
       <div className="flex flex-col gap-2">
@@ -223,19 +334,6 @@ export function NoiseControlCard({ initialConfig }: { initialConfig?: NoiseConfi
         />
       </div>
 
-      {/* Daily Digest */}
-      <div className="flex items-center gap-2">
-        <span className="text-sm font-medium text-fg" id="daily-digest-label">Daily digest mode</span>
-        <Switch
-          checked={config.dailyDigestMode}
-          onCheckedChange={(v) => update({ dailyDigestMode: v })}
-          srLabel="Toggle daily digest mode"
-          aria-describedby="daily-digest-hint"
-        />
-        <span id="daily-digest-hint" className="text-xs text-fg-muted">
-          Batch non-critical notifications into a daily summary
-        </span>
-      </div>
     </section>
   );
 }

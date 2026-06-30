@@ -25,6 +25,7 @@ import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/cn';
+import { fetchCsrf } from '@/lib/csrf';
 
 interface LinkStatus {
   linked: boolean;
@@ -106,7 +107,7 @@ export function TelegramLinkCard(): React.JSX.Element {
     setGenerating(true);
     setCopied(false);
     try {
-      const res = await fetch('/api/bot/link-code', { method: 'POST' });
+      const res = await fetchCsrf('/api/bot/link-code', { method: 'POST' });
       if (res.ok) {
         const data = (await res.json()) as LinkCodeResponse;
         if (data.alreadyLinked) {
@@ -137,7 +138,7 @@ export function TelegramLinkCard(): React.JSX.Element {
   async function unlink(): Promise<void> {
     setUnlinking(true);
     try {
-      const res = await fetch('/api/bot/unlink', { method: 'POST' });
+      const res = await fetchCsrf('/api/bot/unlink', { method: 'POST' });
       if (res.ok) {
         toast.success('Telegram unlinked');
         setStatus({ linked: false });

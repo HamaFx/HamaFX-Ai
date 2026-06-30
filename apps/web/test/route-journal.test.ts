@@ -145,6 +145,7 @@ describe('POST /api/journal', () => {
       size: null,
       notes: null,
       tags: [],
+      screenshotUrl: null,
     });
   });
 

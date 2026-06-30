@@ -34,9 +34,15 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from '@/components/ui/drawer';
+import { Segmented } from '@/components/ui/segmented';
 import { StaleIndicator } from '@/components/ui/stale-indicator';
 import { PerformanceChart } from '@/components/chart/performance-chart';
 
+import { BreakdownTable } from './analytics/breakdown-table';
+import { DrawdownChart } from './analytics/drawdown-chart';
+import { RDistribution } from './analytics/r-distribution';
+import { StreakDisplay } from './analytics/streak-display';
+import { AiReviewPanel } from './ai-review-panel';
 import { EntryForm } from './entry-form';
 import { EntryList } from './entry-list';
 import { StatsSummary } from './stats-summary';
@@ -51,6 +57,7 @@ interface JournalResponse {
 export function JournalView() {
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
+  const [tab, setTab] = useState<'overview' | 'analytics' | 'trades'>('overview');
   const { data, isLoading, isFetching, isError, error } = useQuery<JournalResponse>({
     queryKey: QKEY,
     queryFn: async () => {
@@ -110,24 +117,108 @@ export function JournalView() {
           <p className="text-xs text-fg-subtle">{(error as Error)?.message || 'Unknown network error'}</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-          {/* Left Column: Equity curve and entries list (occupies 2/3 of desktop width) */}
-          <div className="lg:col-span-2 flex flex-col gap-6">
-            {/* Cum R Equity Curve */}
-            <PerformanceChart entries={data?.entries ?? []} />
+        <div className="flex flex-col gap-6">
+          <Segmented
+            value={tab}
+            onChange={(next) => setTab(next as typeof tab)}
+            options={[
+              { value: 'overview', label: 'Overview' },
+              { value: 'analytics', label: 'Analytics' },
+              { value: 'trades', label: 'Trades' },
+            ]}
+            ariaLabel="Journal view"
+            role="tablist"
+            variant="solid"
+            groupId="journal-tabs"
+          />
 
-            {/* Structured Trade logs list */}
-            <EntryList entries={data?.entries ?? []} onClosed={refresh} onDeleted={refresh} />
-          </div>
+          {tab === 'overview' && (
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+              {/* Left Column: Equity curve and entries list (occupies 2/3 of desktop width) */}
+              <div className="lg:col-span-2 flex flex-col gap-6">
+                {/* Cum R Equity Curve */}
+                <PerformanceChart entries={data?.entries ?? []} />
 
-          {/* Right Column: Key performance metrics & analytics (occupies 1/3 of desktop width) */}
-          <div className="lg:col-span-1">
-            {data?.stats ? (
-              <div className="sticky top-[calc(var(--topbar-h)+24px)] flex flex-col gap-6">
-                <StatsSummary stats={data.stats} entries={data.entries} />
+                {/* Structured Trade logs list */}
+                <EntryList entries={data?.entries ?? []} onClosed={refresh} onDeleted={refresh} />
               </div>
-            ) : null}
-          </div>
+
+              {/* Right Column: Key performance metrics & analytics (occupies 1/3 of desktop width) */}
+              <div className="lg:col-span-1">
+                {data?.stats ? (
+                  <div className="sticky top-[calc(var(--topbar-h)+24px)] flex flex-col gap-6">
+                    <StatsSummary stats={data.stats} entries={data.entries} />
+                  </div>
+                ) : null}
+              </div>
+            </div>
+          )}
+
+          {tab === 'analytics' && data?.stats && (
+            <div className="flex flex-col gap-4">
+              {(() => {
+                const latestClosed = data.entries.find((e) => e.outcome !== 'open');
+                return latestClosed ? <AiReviewPanel entry={latestClosed} /> : null;
+              })()}
+              <DrawdownChart entries={data.entries} stats={data.stats} />
+              <RDistribution stats={data.stats} />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <BreakdownTable
+                  title="By Symbol"
+                  data={(data.stats.bySymbol ?? []).map((s) => ({
+                    label: s.symbol,
+                    trades: s.trades,
+                    winRate: s.winRate,
+                    totalR: s.totalR,
+                    expectancy: s.expectancy,
+                  }))}
+                />
+                <BreakdownTable
+                  title="By Session"
+                  data={(data.stats.bySession ?? []).map((s) => ({
+                    label: s.session,
+                    trades: s.trades,
+                    winRate: s.winRate,
+                    totalR: s.totalR,
+                  }))}
+                />
+                <BreakdownTable
+                  title="By Day of Week"
+                  data={(data.stats.byDayOfWeek ?? []).map((s) => ({
+                    label: s.day,
+                    trades: s.trades,
+                    winRate: s.winRate,
+                    totalR: s.totalR,
+                  }))}
+                />
+                <BreakdownTable
+                  title="By Hour (UTC)"
+                  data={(data.stats.byHour ?? []).map((s) => ({
+                    label: `${s.hour.toString().padStart(2, '0')}:00`,
+                    trades: s.trades,
+                    winRate: s.winRate,
+                    totalR: s.totalR,
+                  }))}
+                />
+              </div>
+              <BreakdownTable
+                title="By Tag"
+                data={(data.stats.byTag ?? []).map((s) => ({
+                  label: s.tag,
+                  trades: s.trades,
+                  winRate: s.winRate,
+                  totalR: s.totalR,
+                  expectancy: s.expectancy,
+                }))}
+                sortBy="totalR"
+              />
+              <StreakDisplay stats={data.stats} />
+            </div>
+          )}
+
+          {tab === 'trades' && (
+            <EntryList entries={data?.entries ?? []} onClosed={refresh} onDeleted={refresh} />
+          )}
         </div>
       )}
 

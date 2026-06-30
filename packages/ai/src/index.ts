@@ -140,6 +140,11 @@ export {
   type CreateJournalInput,
   type UpdateJournalInput,
 } from './journal/persistence';
+export {
+  reviewTrade,
+  type ReviewTradeArgs,
+  type TradeReviewResult,
+} from './journal/review';
 
 // Usage
 export {

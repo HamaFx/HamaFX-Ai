@@ -20,17 +20,20 @@
 // CTA is the size-lg primary button so it sits in the thumb zone of the
 // drawer.
 
-import { SYMBOLS, type Symbol, type TradeSide } from '@hamafx/shared';
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { JournalEntrySchema, SYMBOLS, type Symbol, type TradeSide } from '@hamafx/shared';
+import type { JournalEntry } from '@hamafx/shared';
+import { useQuery } from '@tanstack/react-query';
+import { useState, useMemo } from 'react';
 import { toast } from 'sonner';
 import { z } from 'zod';
-import { X, Plus } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Segmented } from '@/components/ui/segmented';
+import { TagInput } from '@/components/ui/tag-input';
 import { cn } from '@/lib/cn';
 import { fetchCsrf } from '@/lib/csrf';
+import { Camera, X } from 'lucide-react';
 
 const entrySchema = z.object({
   symbol: z.string().min(1, 'Symbol is required'),
@@ -55,6 +58,8 @@ export function EntryForm({ onCreated }: EntryFormProps) {
   const [size, setSize] = useState<string>('');
   const [notes, setNotes] = useState<string>('');
   const [tags, setTags] = useState<string[]>([]);
+  const [screenshotUrl, setScreenshotUrl] = useState<string | null>(null);
+  const [uploadingScreenshot, setUploadingScreenshot] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string | null>>({
@@ -98,6 +103,24 @@ export function EntryForm({ onCreated }: EntryFormProps) {
     setFieldErrors((prev) => ({ ...prev, [field]: err }));
   }
 
+  async function handleScreenshotPick(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingScreenshot(true);
+    try {
+      const fd = new FormData();
+      fd.append('file', file);
+      const res = await fetch('/api/upload', { method: 'POST', body: fd });
+      if (!res.ok) throw new Error(`Upload HTTP ${res.status}`);
+      const data = (await res.json()) as { url?: string };
+      if (data.url) setScreenshotUrl(data.url);
+    } catch {
+      toast.error('Screenshot upload failed');
+    } finally {
+      setUploadingScreenshot(false);
+    }
+  }
+
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
@@ -112,6 +135,7 @@ export function EntryForm({ onCreated }: EntryFormProps) {
       size: size ? Number(size) : null,
       notes: notes.trim() || null,
       tags,
+      screenshotUrl,
     };
 
     const validation = entrySchema.safeParse(parsed);
@@ -165,6 +189,7 @@ export function EntryForm({ onCreated }: EntryFormProps) {
       setSize('');
       setNotes('');
       setTags([]);
+      setScreenshotUrl(null);
       toast.success('Trade logged', { description: `${symbol} ${side} @ ${data.entry}` });
       onCreated?.();
     } catch (err) {
@@ -244,7 +269,53 @@ export function EntryForm({ onCreated }: EntryFormProps) {
         />
       </div>
 
-      <TagInput value={tags} onChange={setTags} />
+      {/* Screenshot attachment */}
+      <div className="flex flex-col gap-2">
+        <label className="text-fg-subtle text-body-sm uppercase tracking-wide">
+          Chart Screenshot
+        </label>
+        {screenshotUrl ? (
+          <div className="relative inline-block">
+            <img
+              src={screenshotUrl}
+              alt="Trade chart"
+              className="h-20 rounded-md object-cover border border-divider"
+            />
+            <button
+              type="button"
+              onClick={() => setScreenshotUrl(null)}
+              className="absolute -top-2 -right-2 rounded-full bg-bg-elev-3 border border-divider p-0.5 text-fg-muted hover:text-fg"
+              aria-label="Remove screenshot"
+            >
+              <X className="size-3.5" />
+            </button>
+          </div>
+        ) : (
+          <label
+            className={cn(
+              'flex items-center justify-center gap-2 rounded-lg border border-dashed border-divider p-3 text-xs text-fg-subtle hover:border-brand hover:text-fg transition-colors cursor-pointer',
+              uploadingScreenshot && 'opacity-60 pointer-events-none',
+            )}
+          >
+            <Camera className="size-4" />
+            {uploadingScreenshot ? 'Uploading…' : 'Add screenshot'}
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleScreenshotPick}
+              className="sr-only"
+              disabled={uploadingScreenshot}
+            />
+          </label>
+        )}
+      </div>
+
+      <TagInput
+        value={tags}
+        onChange={setTags}
+        suggestions={useTagSuggestions()}
+        placeholder="Add tags (e.g. London breakout, trend continuation)"
+      />
 
       {error ? <p className="text-bear text-sm">{error}</p> : null}
 
@@ -297,118 +368,26 @@ function Field({
   );
 }
 
-const COMMON_TAGS = [
-  'SMC', 'FOMC', 'Breakout', 'Reversal', 'Continuation',
-  'News', 'Support', 'Resistance', 'Trend', 'Range',
-  'PinBar', 'Engulfing', 'Momentum', 'Scalp', 'Swing',
-  'ICT', 'Supply', 'Demand', 'Fibonacci', 'Divergence',
-];
+function useTagSuggestions() {
+  const { data: allEntries } = useQuery<JournalEntry[]>({
+    queryKey: ['journal', 'all-tags'],
+    queryFn: async () => {
+      const res = await fetch('/api/journal?limit=500');
+      if (!res.ok) return [];
+      const data = (await res.json()) as { entries: unknown[] };
+      return data.entries
+        .map((e) => {
+          const parsed = JournalEntrySchema.safeParse(e);
+          return parsed.success ? parsed.data : null;
+        })
+        .filter((e): e is JournalEntry => e !== null);
+    },
+    staleTime: 60_000,
+  });
 
-function TagInput({ value, onChange }: { value: string[]; onChange: (v: string[]) => void }) {
-  const [input, setInput] = useState('');
-  const [focused, setFocused] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  const filtered = COMMON_TAGS.filter(
-    (t) => t.toLowerCase().includes(input.toLowerCase()) && !value.includes(t)
-  );
-
-  const add = useCallback((tag: string) => {
-    if (!value.includes(tag)) {
-      onChange([...value, tag]);
-    }
-    setInput('');
-  }, [value, onChange]);
-
-  const remove = useCallback((tag: string) => {
-    onChange(value.filter((t) => t !== tag));
-  }, [value, onChange]);
-
-  const handleKey = useCallback((e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' || e.key === ',') {
-      e.preventDefault();
-      const trimmed = input.trim();
-      if (trimmed && !value.includes(trimmed)) {
-        if (filtered.length > 0 && filtered[0] && filtered[0].toLowerCase() === trimmed.toLowerCase()) {
-          add(filtered[0]);
-        } else {
-          add(trimmed);
-        }
-      }
-    }
-    if (e.key === 'Backspace' && !input && value.length > 0) {
-      const last = value[value.length - 1];
-      if (last) remove(last);
-    }
-  }, [input, value, filtered, add, remove]);
-
-  useEffect(() => {
-    function handleClick(e: MouseEvent) {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
-        setFocused(false);
-      }
-    }
-    document.addEventListener('mousedown', handleClick);
-    return () => document.removeEventListener('mousedown', handleClick);
-  }, []);
-
-  return (
-    <div className="flex flex-col gap-2">
-      <label className="text-fg-subtle text-body-sm uppercase tracking-wide">
-        Tags (optional)
-      </label>
-      <div ref={containerRef} className="relative">
-        <div className={cn(
-          'flex flex-wrap gap-1.5 rounded-xl border bg-bg-elev-1/60 px-3 py-2 min-h-12 items-center transition-all duration-200',
-          focused ? 'border-brand/60 shadow-[0_0_0_3px_oklch(78%_0.16_78/0.12)]' : 'border-divider'
-        )}>
-          {value.map((tag) => (
-            <span
-              key={tag}
-              className="inline-flex items-center gap-1 rounded-full bg-brand/15 text-brand px-2.5 py-0.5 text-xs font-bold uppercase ring-1 ring-brand/30"
-            >
-              #{tag}
-              <button
-                type="button"
-                onClick={() => remove(tag)}
-                className="inline-flex size-4 items-center justify-center rounded-full hover:bg-brand/25 transition-colors"
-                aria-label={`Remove tag ${tag}`}
-              >
-                <X className="size-2.5" strokeWidth={3} />
-              </button>
-            </span>
-          ))}
-          <input
-            type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onFocus={() => setFocused(true)}
-            onKeyDown={handleKey}
-            placeholder={value.length === 0 ? 'SMC, FOMC, Breakout...' : ''}
-            className="flex-1 min-w-[100px] bg-transparent text-base text-fg placeholder:text-fg-subtle focus:outline-none h-7"
-            maxLength={50}
-          />
-        </div>
-        {focused && filtered.length > 0 && (
-          <ul className="absolute z-50 mt-1 w-full rounded-xl border border-divider bg-bg-elev-2 shadow-lg overflow-hidden animate-in fade-in slide-in-from-top-1 duration-150">
-            {filtered.slice(0, 8).map((tag) => (
-              <li key={tag}>
-                <button
-                  type="button"
-                  onClick={() => add(tag)}
-                  className="flex w-full items-center gap-2 px-3 py-2.5 text-sm text-fg hover:bg-bg-elev-3 transition-colors text-left cursor-pointer"
-                >
-                  <Plus className="size-3.5 text-fg-muted shrink-0" />
-                  <span className="font-medium">{tag}</span>
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
-      {value.length > 0 && (
-        <p className="text-xs text-fg-subtle">{value.length} tag{value.length !== 1 ? 's' : ''} selected</p>
-      )}
-    </div>
-  );
+  return useMemo(() => {
+    const set = new Set<string>();
+    allEntries?.forEach((e) => e.tags?.forEach((t: string) => set.add(t)));
+    return Array.from(set).sort();
+  }, [allEntries]);
 }

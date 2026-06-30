@@ -19,7 +19,7 @@
 // breakdown, per-horizon breakdown, and recent signals.
 
 import { computeSignalStats } from '@hamafx/ai';
-import type { SignalStats } from '@hamafx/shared';
+import type { DecisionSignal, SignalStats } from '@hamafx/shared';
 import { redirect } from 'next/navigation';
 import { auth } from '@/auth';
 import type { Metadata } from 'next';
@@ -27,6 +27,7 @@ import { Target, TrendingUp, TrendingDown } from 'lucide-react';
 
 import { EmptyState } from '@/components/ui/empty-state';
 import { cn } from '@/lib/cn';
+import { SignalFeedback } from './_components/signal-feedback';
 
 export const metadata: Metadata = { title: 'AI Track Record' };
 export const revalidate = 60;
@@ -163,7 +164,7 @@ function TrackRecordContent({ stats }: { stats: SignalStats }) {
         <div className="rounded-lg border border-border bg-surface p-4">
           <h3 className="text-sm font-semibold text-fg mb-3">Recent Signals</h3>
           <div className="flex flex-col gap-2">
-            {stats.recentSignals.map((s: { id: string; symbol: string; action: string; horizon: string; model: string | null; status: string }) => (
+            {stats.recentSignals.map((s: DecisionSignal) => (
               <div
                 key={s.id}
                 className="flex items-center justify-between gap-2 py-2 border-b border-border last:border-0"
@@ -190,6 +191,7 @@ function TrackRecordContent({ stats }: { stats: SignalStats }) {
                   )}
                 </div>
                 <div className="flex items-center gap-2">
+                  <SignalFeedback signalId={s.id} />
                   <StatusBadge status={s.status} />
                 </div>
               </div>
