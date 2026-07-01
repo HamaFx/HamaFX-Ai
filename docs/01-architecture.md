@@ -103,7 +103,7 @@ The original "single Vercel deploy" rule held until two needs forced our hand:
 | Persistent BiQuote SignalR feed     | A serverless function can't hold a multi-hour WebSocket.                                                |
 | Reliable cron at sub-5-min cadence  | GitHub Actions cron has a 5-minute floor and degrades on shared-runner load.                            |
 
-Phase 8 picked the smallest possible escape hatch: **one `e2-medium` VM in `us-central1-a` running a single Node service plus systemd timers.** Vercel still hosts the chat surface, the read APIs, and the `/api/cron/*` light handlers — the VM just trades persistent connections and longer-running jobs for what Vercel can't do on Hobby. See `docs/superpowers/specs/2026-05-27-phase-8-backend-reliability-design.md` for the full design.
+Phase 8 picked the smallest possible escape hatch: **one `e2-medium` VM in `us-central1-a` running a single Node service plus systemd timers.** Vercel still hosts the chat surface, the read APIs, and the `/api/cron/*` light handlers — the VM just trades persistent connections and longer-running jobs for what Vercel can't do on Hobby.
 
 ## Request flows (summary — full diagrams in `13-data-flow.md`)
 

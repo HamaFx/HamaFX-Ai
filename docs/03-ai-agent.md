@@ -1,6 +1,6 @@
 # 03 — AI Agent System
 
-Deep-dive into the brain of HamaFX-Ai: the `runChat` orchestration flow, 30 tools,
+Deep-dive into the brain of HamaFX-Ai: the `runChat` orchestration flow, 32 tools,
 model routing, planner, memory/RAG, committee deliberation, citation
 verification, budget guardrails, briefings, alert evaluation, and the CLI eval
 runner.
@@ -10,7 +10,7 @@ runner.
 ## Table of Contents
 
 1. [Entry Point: `runChat()`](#entry-point-runchat)
-2. [Tool Catalogue (30 Tools)](#tool-catalogue-30-tools)
+2. [Tool Catalogue (32 Tools)](#tool-catalogue-30-tools)
 3. [Domain-Based Model Routing](#domain-based-model-routing)
 4. [Plan-Then-Act Planner](#plan-then-act-planner)
 5. [System Prompt & Live Snapshot](#system-prompt--live-snapshot)
@@ -44,7 +44,7 @@ Every chat turn flows through a sequence of 6 steps:
 │  3. Load history + buildLiveSnapshot() ── parallel fetch  │
 │  4. compactThread() ── rolling summary if >30 messages    │
 │  5. routeTurn() → resolveModel() → [runPlanner()]         │
-│  6. streamText() with 30 tools → SSE → client             │
+│  6. streamText() with 32 tools → SSE → client             │
 │     └─ onFinish: persist + telemetry + enforceCitations   │
 │                  + applyBudgetDelta + runAutoTitle         │
 └──────────────────────────────────────────────────────────┘
@@ -93,7 +93,7 @@ error never crashes the stream — the user still sees the assistant's answer.
 
 ---
 
-## Tool Catalogue (30 Tools)
+## Tool Catalogue (32 Tools)
 
 **File:** `packages/ai/src/tools/index.ts`
 
@@ -188,10 +188,10 @@ technical > summary.
 
 | Domain        | Score Threshold | Model                      | planRequired | Google Search Grounding |
 |---------------|:---:|----------------------------|:---:|:---:|
-| `fundamental` | ≥ 1 | `AI_FUNDAMENTAL_MODEL` (pro)| yes | yes (Vertex native) |
-| `technical`   | ≥ 1 | `AI_TECHNICAL_MODEL` (flash)| yes | no |
-| `summary`     | ≥ 1 | `AI_SUMMARY_MODEL` (flash-lite) | no | no |
-| `vision`      | —   | `AI_VISION_MODEL` (pro)    | no  | no |
+| `fundamental` | ≥ 1 | Gemini 2.5 Pro (vertex)    | yes | yes (Vertex native) |
+| `technical`   | ≥ 1 | Gemini 2.5 Flash (vertex)  | yes | no |
+| `summary`     | ≥ 1 | Gemini 2.5 Flash-lite      | no  | no |
+| `vision`      | —   | Gemini 2.5 Pro (vertex)    | no  | no |
 | `generic`     | 0 or override | `AI_DEFAULT_MODEL`     | no  | no |
 
 **Vision** triggers automatically when the message contains an image/file part.
@@ -240,7 +240,7 @@ rendered as a collapsible "Thinking" pill in the chat UI.
 
 ### How It Works
 
-1. A cheap model (`AI_SUMMARY_MODEL`, typically flash-lite) receives a prompt:
+1. A cheap model (flash-lite) receives a prompt:
    the routing domain, rationale, and user's message (truncated to 1500 chars).
 2. The model returns JSON: `{ steps: string[], expectedTools: string[], rationale: string }`.
 3. The plan is persisted as a **system-role message** with a `data-plan` part —
@@ -335,8 +335,7 @@ calling `get_price`, unless the snapshot is more than 10 seconds old.
 2. Split: oldest N messages are summarised, newest 12 kept verbatim.
 3. Check for a **cached summary** (persisted as a system message with a digest
    of the summarised prefix). Cache hit → reuse without LLM call.
-4. Cache miss → call `generateText` with the cheapest model (`AI_SUMMARY_MODEL`,
-   typically flash-lite). Max summary length: 1400 characters.
+4. Cache miss → call `generateText` with the cheapest model (flash-lite). Max summary length: 1400 characters.
 5. Persist the summary as a system message for future reuse.
 6. If the LLM call fails: **fall back to truncation** (drop the oldest N
    messages, no summary). The user experience never degrades from a memory

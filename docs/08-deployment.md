@@ -1,4 +1,4 @@
-# 09 — Deployment
+# 08 — Deployment
 
 > **For local development:** see the [Quickstart section in README](../README.md#quickstart)
 > — zero-config native (`pnpm dev:local`) or one-command Docker (`docker compose up`).
@@ -130,12 +130,10 @@ AI_GATEWAY_API_KEY=
 AI_DEFAULT_MODEL=google-vertex/gemini-2.5-flash
 AI_TITLE_MODEL=google-vertex/gemini-2.5-flash-lite
 AI_EMBEDDING_MODEL=openai/text-embedding-3-small
-AI_VISION_MODEL=google-vertex/gemini-2.5-pro
-
-# --- AI domain-routed models (Phase 7a) ---
-AI_FUNDAMENTAL_MODEL=google-vertex/gemini-2.5-pro
-AI_TECHNICAL_MODEL=google-vertex/gemini-2.5-flash
-AI_SUMMARY_MODEL=google-vertex/gemini-2.5-flash
+# Domain-routed models were removed in Phase D2 — model selection is
+# now handled internally by the AI agent's routing logic.
+# AI_VISION_MODEL, AI_FUNDAMENTAL_MODEL, AI_TECHNICAL_MODEL, and
+# AI_SUMMARY_MODEL are no longer read from the environment.
 
 # --- Direct Google Vertex (optional — bypasses the gateway) ---
 GOOGLE_VERTEX_PROJECT=

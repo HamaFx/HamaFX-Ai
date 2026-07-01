@@ -16,7 +16,7 @@ Realistic threats:
 
 Out of scope: DDoS, advanced persistent threats.
 
-> **Known auth issues:** The auth system has critical bugs documented in [`AUTH_FIX_PLAN.md`](../AUTH_FIX_PLAN.md). Read it before working on auth code.
+> **Known auth issues:** The auth system has critical bugs documented in [`AUTH_FIX_PLAN.md`](../AUTH_FIX_PLAN.md) (planned, not yet written). Read the auth section of AGENTS.md before working on auth code.
 
 ## Authentication: NextAuth.js v5
 
@@ -78,7 +78,7 @@ Double-submit cookie pattern:
 - Uses `otplib` for TOTP secret generation and verification.
 - QR code generated via `qrcode` library.
 - Secret stored in `users.twoFactorSecret` column.
-- **Note:** 2FA is not yet enforced during login — see `AUTH_FIX_PLAN.md` BUG-03.
+- **Note:** 2FA is not yet enforced during login — see `AUTH_FIX_PLAN.md` BUG-03 (plan not yet written).
 
 ### Session Management
 

@@ -234,7 +234,7 @@ ClosedCandle {
 
 ### `live_ticks` writer
 
-File: `apps/worker/src/persistence/live-ticks.ts` (82 lines)
+File: `apps/worker/src/persistence/live-ticks.ts` (98 lines)
 
 Writes latest tick per symbol to `live_ticks` table.
 
@@ -254,7 +254,7 @@ Returns `{ written, totalTicks }` summary for logging.
 
 ### `candles_1m` writer
 
-File: `apps/worker/src/persistence/candles-1m.ts` (41 lines)
+File: `apps/worker/src/persistence/candles-1m.ts` (57 lines)
 
 Writes one closed bar per symbol per minute boundary.
 
@@ -335,7 +335,7 @@ The worker runs 7 heavy jobs via systemd one-shot units. Each job has:
 
 ### Job registry
 
-File: `apps/worker/src/jobs/index.ts` (50 lines)
+File: `apps/worker/src/jobs/index.ts` (71 lines)
 
 ```typescript
 export const JOBS: Record<JobName, { run: JobFn; description: string }>
@@ -343,11 +343,12 @@ export const JOBS: Record<JobName, { run: JobFn; description: string }>
 
 Jobs implement `JobFn = (ctx: JobContext) => Promise<JobResult>` where `JobContext` provides a logger and an optional `AbortSignal` (triggered by SIGTERM from systemd).
 
-### The 7 jobs
+### The 8 jobs
 
 | Job | Schedule | Description |
 |---|---|---|
 | **briefings** | Every 5 min | Scans `economic_events` for high-impact releases. Pre-event window: [now+28m, now+32m]. Post-event window: [now-32m, now-28m] (only if `actual` is not null). Emits briefings idempotently via `(eventId, kind)` PK. |
+| **alerts** | Every 1 min | Evaluates user-defined price and indicator alerts via `evaluateAlerts()`. Fires notifications on matched conditions. |
 | **snapshots** | Daily 00:05 UTC | Computes daily HLOC + pivot points (PP/R1/R2/S1/S2) + ATR(14) per symbol from the last 240 1H candles. UPSERTs into `snapshots`. Prunes `candles_1m` to trailing 14 days. |
 | **cot** | Friday 22:00 UTC | Ingests weekly CFTC Commitment of Traders report. Pulls positioning data for futures markets correlated to XAUUSD/EURUSD/GBPUSD. |
 | **fred-actuals** | Daily 01:30 UTC | Backfills `economic_events.actual` where it was null at initial ingestion. Queries FRED API for released values matching previously scheduled events. |
@@ -357,7 +358,7 @@ Jobs implement `JobFn = (ctx: JobContext) => Promise<JobResult>` where `JobConte
 
 ### Job runner CLI
 
-File: `apps/worker/src/runner/cli.ts` (122 lines)
+File: `apps/worker/src/runner/cli.ts` (138 lines)
 
 Entry point for systemd one-shot units:
 

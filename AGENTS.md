@@ -5,14 +5,14 @@
 
 ## Project Identity
 
-**HamaFX-Ai** is an open-source, multi-tenant, chat-driven AI trading copilot for forex instruments: **XAUUSD** (primary), **EURUSD**, **GBPUSD**. It runs as a Next.js 15 PWA with a persistent Node.js worker daemon. The AI agent uses Vercel AI SDK v5 with 30 tools, domain-based model routing, and multi-agent committee deliberation.
+**HamaFX-Ai** is an open-source, multi-tenant, chat-driven AI trading copilot for forex instruments: **XAUUSD** (primary), **EURUSD**, **GBPUSD**. It runs as a Next.js 15 PWA with a persistent Node.js worker daemon. The AI agent uses Vercel AI SDK v5 with 32 tools, domain-based model routing, and multi-agent committee deliberation.
 
 - **License**: Apache-2.0
 - **Status**: In production on Vercel + GCE VM. Phases 0–9 shipped (incl. multi-tenant v2.0). UX Upgrade Plan Phases A/B/C/D/E shipped.
 - **Auth**: NextAuth.js v5 (Credentials provider, JWT strategy) + Drizzle adapter. BYOK per user (9-provider registry). Strict `userId` scoping on all user-data tables.
 - **Repo**: [github.com/HamaFx/HamaFX-Ai](https://github.com/HamaFx/HamaFX-Ai)
 
-> **Known issue:** The auth system has critical security bugs. See [`AUTH_FIX_PLAN.md`](../AUTH_FIX_PLAN.md) for the full fix plan before touching auth code.
+> **Known issue:** The auth system has critical security bugs. See [`AUTH_FIX_PLAN.md`](./AUTH_FIX_PLAN.md) (not yet written — auth guidance in this file is current) for the full fix plan before touching auth code.
 
 ## Quick Reference
 
@@ -73,9 +73,9 @@ HamaFX-Ai/
 │   ├── web/              # Next.js 15 PWA (frontend + API routes)
 │   └── worker/           # Node.js daemon (SignalR consumer, tick processing, job runner)
 ├── packages/
-│   ├── ai/               # AI agent core — chat, 30 tools, routing, memory, persistence
+│   ├── ai/               # AI agent core — chat, 32 tools, routing, memory, persistence
 │   ├── data/             # Market data adapters — price, candles, news, failover, caching
-│   ├── db/               # Drizzle schema (27 tables) + Postgres/PGlite client
+│   ├── db/               # Drizzle schema (40 tables) + Postgres/PGlite client
 │   ├── indicators/       # Technical indicators — SMA, EMA, RSI, MACD, SMC structure
 │   ├── shared/           # Zod schemas, domain types, env validation, error codes, encryption
 │   ├── config/           # Shared ESLint, Prettier, TS configs (not compiled)
@@ -93,7 +93,7 @@ HamaFX-Ai/
 ```
 Browser (PWA)
     │
-    ├── /api/chat ──▶ runChat() ──▶ streamText + 30 tools
+    ├── /api/chat ──▶ runChat() ──▶ streamText + 32 tools
     │                    │
     │                    ├── routeTurn() ──▶ pick model (fundamental/technical/summary/vision)
     │                    ├── runPlanner() ──▶ plan-then-act pre-step
@@ -175,7 +175,7 @@ For fundamental/technical turns: cheap model generates JSON plan, persisted as s
 
 - **Auth flow**: NextAuth v5 (Credentials provider) with strict per-user
   `userId` scoping. Multi-tenant is load-bearing — do not regress to a
-  single-password gate. See `AUTH_FIX_PLAN.md` for known auth issues.
+  single-password gate. See `AUTH_FIX_PLAN.md` (planned, not yet written) for known auth issues.
 - **Middleware**: Edge runtime constraint is intentional. Don't add DB calls there.
 - **Provider failover**: `runWithFailover()` pattern. Don't add direct provider calls.
 - **Tool pattern**: `inputSchema → module augmentation → execute`. Don't break the tool registry.
@@ -185,18 +185,17 @@ For fundamental/technical turns: cheap model generates JSON plan, persisted as s
 
 | Doc | Description |
 |-----|-------------|
-| [01-architecture.md](./01-architecture.md) | System design, data flow diagrams, deployment topology |
-| [02-codebase.md](./02-codebase.md) | Package details, conventions, file map, extension rules |
-| [03-ai-agent.md](./03-ai-agent.md) | Agent internals, 30 tools, routing, memory, evals |
-| [04-data-layer.md](./04-data-layer.md) | DB schema (27 tables), providers, caching, failover |
-| [05-api-routes.md](./05-api-routes.md) | All 37+ API endpoints, auth, middleware, CSRF |
-| [06-frontend.md](./06-frontend.md) | Pages, components, state, charts, PWA |
-| [07-worker.md](./07-worker.md) | Worker daemon, SignalR, jobs, scheduler |
-| [08-deployment.md](./08-deployment.md) | Production cloud deployment (Vercel + GCE) |
-| [09-testing.md](./09-testing.md) | Test infrastructure, patterns, E2E, eval harness |
-| [10-security.md](./10-security.md) | Auth, secrets, CSRF, BYOK encryption, secrets rotation |
-| [11-self-hosting.md](./11-self-hosting.md) | Docker Compose self-hosting guide |
-| [12-roadmap.md](./12-roadmap.md) | Project roadmap, completed phases, future plans |
-| [13-first-run-setup.md](./13-first-run-setup.md) | New user onboarding, dev-secret autogen, BYOK registry |
-| [14-motion-conventions.md](./14-motion-conventions.md) | Animation conventions (motion-safe, useReducedMotion) |
-| [AUTH_FIX_PLAN.md](../AUTH_FIX_PLAN.md) | Auth system fix plan (critical bugs + improvements) |
+| [01-architecture.md](./docs/01-architecture.md) | System design, data flow diagrams, deployment topology |
+| [02-codebase.md](./docs/02-codebase.md) | Package details, conventions, file map, extension rules |
+| [03-ai-agent.md](./docs/03-ai-agent.md) | Agent internals, 32 tools, routing, memory, evals |
+| [04-data-layer.md](./docs/04-data-layer.md) | DB schema (40 tables), providers, caching, failover |
+| [05-api-routes.md](./docs/05-api-routes.md) | All 37+ API endpoints, auth, middleware, CSRF |
+| [06-frontend.md](./docs/06-frontend.md) | Pages, components, state, charts, PWA |
+| [07-worker.md](./docs/07-worker.md) | Worker daemon, SignalR, jobs, scheduler |
+| [08-deployment.md](./docs/08-deployment.md) | Production cloud deployment (Vercel + GCE) |
+| [09-testing.md](./docs/09-testing.md) | Test infrastructure, patterns, E2E, eval harness |
+| [10-security.md](./docs/10-security.md) | Auth, secrets, CSRF, BYOK encryption, secrets rotation |
+| [11-self-hosting.md](./docs/11-self-hosting.md) | Docker Compose self-hosting guide |
+| [13-first-run-setup.md](./docs/13-first-run-setup.md) | New user onboarding, dev-secret autogen, BYOK registry |
+| [15-debugging-and-tracing.md](./docs/15-debugging-and-tracing.md) | Debugging, OpenTelemetry, and request tracing |
+| [AUTH_FIX_PLAN.md](./AUTH_FIX_PLAN.md) | Auth system fix plan (critical bugs + improvements) — not yet written |

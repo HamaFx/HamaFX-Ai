@@ -51,7 +51,7 @@ HamaFX-Ai is structured as a monorepo:
 
 - `apps/web`: Next.js 15 PWA (frontend + API routes + NextAuth)
 - `apps/worker`: Node.js background worker (SignalR consumer, tick processing, scheduled jobs)
-- `packages/ai`: AI agent core — chat orchestration, 30 tools, model routing, memory, persistence
+- `packages/ai`: AI agent core — chat orchestration, 32 tools, model routing, memory, persistence
 - `packages/data`: Market data integrations (BiQuote, Finnhub, Marketaux, FRED) with failover
 - `packages/db`: Drizzle ORM schemas (27 tables) and database clients (Postgres + PGlite)
 - `packages/indicators`: Pure TypeScript trading indicators (RSI, MACD, SMC structure)

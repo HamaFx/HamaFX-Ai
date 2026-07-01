@@ -7,7 +7,7 @@ The data layer is split across two packages:
 
 ---
 
-## 1. Database Schema (20 Tables)
+## 1. Database Schema (40 Tables)
 
 All tables are defined in `packages/db/src/schema/*.ts`. The schema uses Drizzle ORM with pg-core column types and is pulled together by a barrel export in `packages/db/src/schema/index.ts`.
 
@@ -422,7 +422,7 @@ When neither `DATABASE_URL` nor `POSTGRES_URL` is set, the system uses **PGlite*
 
 ### 2.4 Migrations
 
-- 9 migrations (`0000` through `0008`) in `packages/db/drizzle/`.
+- 35 migrations (`0000` through `0034`) in `packages/db/drizzle/`.
 - Production migrations are applied by the deploy/CI pipeline via `drizzle-kit migrate`.
 - Local dev migrations are applied programmatically by PGlite on boot.
 

@@ -57,7 +57,7 @@ Multi-tenant authentication managed by **NextAuth.js v5** (Auth.js). Uses a Cred
 
 ### 1.3 NextAuth Configuration
 
-- Defined in `apps/web/src/lib/auth.ts`.
+- Defined in `apps/web/src/auth.ts`.
 - Uses Drizzle adapter to persist users and sessions.
 - Exposes `session.user.id` to API routes for multi-tenant data isolation.
 - Cookie flags: `Path=/; HttpOnly; SameSite=Lax; Secure` (Secure only in production).

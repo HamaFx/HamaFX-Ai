@@ -153,16 +153,15 @@ config
 ```
 shared/
 ├── src/
-│   ├── schemas/          # 30+ Zod schema files
+│   ├── schemas/          # 18+ Zod schema files (+ tool-outputs/)
 │   │   ├── market.ts     # Symbol, Timeframe, OHLCV, Tick
 │   │   ├── indicator.ts  # Indicator configs, SMC types
 │   │   ├── agent.ts      # Chat messages, tool calls, briefings
 │   │   ├── admin.ts      # User, auth, role schemas
 │   │   └── ...
-│   ├── types/            # Inferred TypeScript types from schemas
+│   ├── ai/               # AI tool names registry + I/O schemas
 │   ├── env.ts            # Environment variable validation (T3 Env)
 │   ├── errors.ts         # Error code enum and taxonomy
-│   ├── registry.ts       # AI tool names registry
 │   └── index.ts          # Barrel re-export
 ```
 
@@ -189,7 +188,7 @@ shared/
 
 **Tool Names Registry:**
 
-A string literal union type `ToolName` enumerating all 30 AI tools registered in `@hamafx/ai`. This is the canonical list — adding a tool in `@hamafx/ai` requires adding its name here.
+A string literal union type `ToolName` enumerating all 32 AI tools registered in `@hamafx/ai`. This is the canonical list — adding a tool in `@hamafx/ai` requires adding its name here.
 
 **Environment (env.ts):**
 
@@ -416,7 +415,7 @@ async function runWithFailover<T>(
 ```
 ai/
 ├── src/
-│   ├── tools/            # 30 AI tool implementations
+│   ├── tools/            # 32 AI tool implementations
 │   │   ├── market/       # getCandles, getQuote, getTick, getSpread, ...
 │   │   ├── indicators/   # getSMA, getRSI, getMACD, getBollinger, getATR, ...
 │   │   ├── smc/          # getSwings, getStructure, getFVG, getOrderBlocks, getLiquidity, ...
@@ -442,7 +441,7 @@ ai/
 │   └── index.ts          # Barrel
 ```
 
-**30 Tools (categorized):**
+**32 Tools (categorized):**
 
 | Category | Count | Tools |
 |---|---|---|
@@ -940,7 +939,7 @@ When adding a new AI tool to `@hamafx/ai`:
    ```
    This instruments latency, error rate, and cost tracking automatically.
 4. **Register in the tool registry** — `packages/ai/src/tools/index.ts`.
-5. **Add the tool name** to the tools registry in `packages/shared/src/registry.ts`.
+5. **Add the tool name** to the tools registry in `packages/shared/src/ai/tool-names.ts`.
 6. **Add tool description** to the system prompt in `packages/ai/src/prompt/system.ts`.
 7. **Update the planner** if the tool requires specific ordering with other tools.
 

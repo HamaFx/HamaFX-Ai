@@ -102,13 +102,13 @@ HamaFX-Ai is structured as a monorepo utilizing Turborepo to coordinate fast bui
 ```text
                             +-----------------------------------+
                             |           CLIENT LAYER            |
-                            |  @hamafx/web (Next.js - 33k LOC)  |
+                            |  @hamafx/web (Next.js - 50k LOC)  |
                             +─────────┬───────────────┬─────────+
                                       │               │
                                       ▼               ▼
                             +──────────────────+ +──────────────────+
                             |    AGENT CORE    | |  MARKET ADAPTERS  |
-                            | @hamafx/ai (20k) | | @hamafx/data (6k) |
+| @hamafx/ai (26k) | |  @hamafx/data (4k) |
                             +─────────┬────────+ +────────┬─────────+
                                       │                   │
                      +────────────────┼───────────────────┤
@@ -116,7 +116,7 @@ HamaFX-Ai is structured as a monorepo utilizing Turborepo to coordinate fast bui
                      ▼                ▼                   ▼
             +──────────────────+ +──────────────────+ +──────────────────+
             |  SHARED SCHEMAS  | |  STORAGE LAYER   | |     SMC MATH     |
-            |@hamafx/shared(4k)| | @hamafx/db (2k)  | |@hamafx/indicators|
+            |@hamafx/shared(5k)| | @hamafx/db (3k)  | |@hamafx/indicators|
             +──────────────────+ +────────▲─────────+ +──────(2k)────────+
                                           │
                                           │
@@ -130,13 +130,13 @@ HamaFX-Ai is structured as a monorepo utilizing Turborepo to coordinate fast bui
 
 | Package / App | Location | Purpose | Lines of Code (LOC) |
 |:---|:---|:---|:---|
-| **`@hamafx/web`** | [`apps/web`](./apps/web) | Next.js 15 App Router client app (Chat, Charts, Journal, Settings, PWA configuration). | ~33,300 |
-| **`@hamafx/worker`**| [`apps/worker`](./apps/worker) | Node daemon consuming ticks at 1Hz, caching candles, checking systemd cron timers. | ~4,900 |
-| **`@hamafx/ai`** | [`packages/ai`](./packages/ai) | Core prompt compilation, classification routing, RAG pipeline, and AI tool bindings. | ~20,200 |
-| **`@hamafx/data`** | [`packages/data`](./packages/data) | Market data integrations with automatic failover (BiQuote primary, Finnhub fallback). | ~5,900 |
-| **`@hamafx/indicators`**| [`packages/indicators`](./packages/indicators) | Pure mathematics for indicators (EMA, SMA, Bollinger Bands) and Smart Money Concepts. | ~2,300 |
-| **`@hamafx/db`** | [`packages/db`](./packages/db) | Multi-tenant schema definition and Drizzle ORM migration harness. | ~2,300 |
-| **`@hamafx/shared`** | [`packages/shared`](./packages/shared) | Shared validation schemas, error definitions, and AES-256-GCM encryption helpers. | ~4,400 |
+| **`@hamafx/web`** | [`apps/web`](./apps/web) | Next.js 15 App Router client app (Chat, Charts, Journal, Settings, PWA configuration). | ~50,300 |
+| **`@hamafx/worker`**| [`apps/worker`](./apps/worker) | Node daemon consuming ticks at 1Hz, caching candles, checking systemd cron timers. | ~3,300 |
+| **`@hamafx/ai`** | [`packages/ai`](./packages/ai) | Core prompt compilation, classification routing, RAG pipeline, and AI tool bindings. | ~25,700 |
+| **`@hamafx/data`** | [`packages/data`](./packages/data) | Market data integrations with automatic failover (BiQuote primary, Finnhub fallback). | ~4,400 |
+| **`@hamafx/indicators`**| [`packages/indicators`](./packages/indicators) | Pure mathematics for indicators (EMA, SMA, Bollinger Bands) and Smart Money Concepts. | ~1,500 |
+| **`@hamafx/db`** | [`packages/db`](./packages/db) | Multi-tenant schema definition and Drizzle ORM migration harness. | ~3,100 |
+| **`@hamafx/shared`** | [`packages/shared`](./packages/shared) | Shared validation schemas, error definitions, and AES-256-GCM encryption helpers. | ~5,400 |
 
 ---
 
@@ -158,12 +158,12 @@ Incoming Turn
            └─► Assemble Context ──► Pull Memory/RAG ──► Run Verification Warnings
 ```
 
-### The 30 AI Tools Registry
+### The 32 AI Tools Registry
 
-The agent core accesses a suite of 30 specialized tools to analyze and interact with market data.
+The agent core accesses a suite of 32 specialized tools to analyze and interact with market data.
 
 <details>
-<summary><b>🔍 Expand to View the Full 30 Tools Matrix</b></summary>
+<summary><b>🔍 Expand to View the Full 32 Tools Matrix</b></summary>
 
 | Domain | Tools | Description |
 |:---|:---|:---|
@@ -272,32 +272,28 @@ During local development and testing, `NEXTAUTH_SECRET`, `ENCRYPTION_SECRET`, an
 
 ## 📚 Product Documentation
 
-See [`AGENTS.md`](./docs/AGENTS.md) first if you are an AI agent writing code on this codebase.
+See [`AGENTS.md`](./AGENTS.md) first if you are an AI agent writing code on this codebase.
 
 ### Core Architecture & System Layout
 *   [**01 - Architecture**](./docs/01-architecture.md): System layout, database topologies, multi-tenant boundaries, and deployment schemes.
 *   [**02 - Codebase**](./docs/02-codebase.md): Coding guidelines, directory conventions, custom TS rules, and scripts configurations.
-*   [**03 - AI Agent**](./docs/03-ai-agent.md): Routing logic, RAG pipelines, verification engines, and detailed descriptions of all 30 tools.
+*   [**03 - AI Agent**](./docs/03-ai-agent.md): Routing logic, RAG pipelines, verification engines, and detailed descriptions of all 32 tools.
 *   [**04 - Data Layer**](./docs/04-data-layer.md): Schemas, cache policies, market provider mappings, and failovers.
 *   [**05 - API Routes**](./docs/05-api-routes.md): Comprehensive routing registry (authentication, charts, cron triggers).
 
 ### Frontend & Daemon Layer
 *   [**06 - Frontend**](./docs/06-frontend.md): Pages layout, Tailwind design variables, component primitives, and client states.
 *   [**07 - Worker**](./docs/07-worker.md): Nodes daemon internals, tick ingestion buffers, and timers scheduler.
-*   [**15 - Motion Conventions**](./docs/15-motion-conventions.md): UI transitions, animations, layouts, and responsive state policies.
-*   [**USER_FLOW.md**](./docs/USER_FLOW.md): UI/UX pathways, navigation maps, Pro chart views, and SMC analysis layout.
-*   [**UX_UPGRADE_PLAN.md**](./docs/UX_UPGRADE_PLAN.md): Progressive upgrades to visual layouts, themes, responsive drawers, and loading states.
 
 ### Deployment & Security Operations
 *   [**08 - Deployment**](./docs/08-deployment.md): Hosting guides for Vercel + GCE (Google Compute Engine) VM instances.
-*   [**10 - Self-Hosting**](./docs/10-self-hosting.md): Steps for deploying your own multi-tenant clone of HamaFX-Ai.
-*   [**12 - Security**](./docs/12-security.md): Client-side BYOK safety boundaries, data storage sanitizations, and access controls.
+*   [**11 - Self-Hosting**](./docs/11-self-hosting.md): Steps for deploying your own multi-tenant clone of HamaFX-Ai.
+*   [**10 - Security**](./docs/10-security.md): Client-side BYOK safety boundaries, data storage sanitizations, and access controls.
 
 ### Maintenance, Setup & Contributions
 *   [**09 - Testing**](./docs/09-testing.md): Automated tests, mock setups, playbooks, and CLI benchmarks.
-*   [**14 - First-Run Setup**](./docs/14-first-run-setup.md): Comprehensive details on what gets auto-generated and how to configure providers.
-*   [**11 - Contributing Guide**](./docs/11-contributing-guide.md): Standard onboarding, issue reporting, and pull request structures.
-*   [**13 - Roadmap**](./docs/13-roadmap.md): Historical progress milestones and future feature directions.
+*   [**13 - First-Run Setup**](./docs/13-first-run-setup.md): Comprehensive details on what gets auto-generated and how to configure providers.
+*   [**15 - Debugging & Tracing**](./docs/15-debugging-and-tracing.md): Internal debugging, OpenTelemetry, and request tracing.
 
 ---
 
