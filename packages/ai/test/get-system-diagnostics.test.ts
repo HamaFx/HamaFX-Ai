@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-/* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any */
-import { describe, expect, it, vi, beforeEach } from 'vitest';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { describe, expect, it, vi } from 'vitest';
 
 process.env['FRED_API_KEY'] = 'test-fred-key';
 process.env['GOOGLE_GENERATIVE_AI_API_KEY'] = 'test-ai-key';
@@ -50,11 +50,6 @@ vi.mock('@hamafx/db', () => ({
         ]),
       }),
     }),
-    insert: () => ({
-      values: () => ({
-        onConflictDoUpdate: vi.fn().mockResolvedValue({}),
-      }),
-    }),
   }),
   schema: {
     journalEntries: { id: 'journal_entries' },
@@ -65,38 +60,17 @@ vi.mock('@hamafx/db', () => ({
   },
 }));
 
-vi.mock('@hamafx/data', () => ({
-  fred: {
-    fetchResonanceInputs: vi.fn().mockResolvedValue({
-      realYields: [
-        { date: '2026-05-28', value: 2.1 },
-        { date: '2026-05-27', value: 2.05 },
-        { date: '2026-05-26', value: 2.0 },
-        { date: '2026-05-25', value: 1.95 },
-        { date: '2026-05-22', value: 1.9 },
-      ],
-      breakevenInflation: [
-        { date: '2026-05-28', value: 2.3 },
-        { date: '2026-05-27', value: 2.28 },
-        { date: '2026-05-26', value: 2.25 },
-        { date: '2026-05-25', value: 2.22 },
-        { date: '2026-05-22', value: 2.2 },
-      ],
-    }),
-  },
-}));
-
 import { getSystemDiagnosticsTool } from '../src/tools/get-system-diagnostics';
-import { runSystemActionTool } from '../src/tools/run-system-action';
 import { withToolContext } from '../src/tool-context';
-import type { GetSystemDiagnosticsOutput, RunSystemActionOutput } from '@hamafx/shared';
+import type { GetSystemDiagnosticsOutput } from '@hamafx/shared';
 
-describe('Diagnostics & DevOps Tools', () => {
+describe('Diagnostics Tools', () => {
   it('correctly reports system diagnostics stats', async () => {
     const result = (await withToolContext(
       {
         threadId: 'test-thread-id',
         userId: 'test-user',
+        latestUserMessageText: 'Show me system diagnostics.',
         env: {} as any,
         signal: null,
         budget: { spent: 0.15, max: 10.0 },
@@ -111,46 +85,5 @@ describe('Diagnostics & DevOps Tools', () => {
     expect(result.budget.remainingUsd).toBe(9.85);
     expect(result.database.status).toBe('connected');
     expect(result.narrative).toContain('HEALTHY');
-  });
-
-  it('correctly triggers and logs resonance sync DevOps actions', async () => {
-    process.env['FRED_API_KEY'] = 'test-fred-key';
-
-    const result = (await withToolContext(
-      {
-        threadId: 'test-thread-id',
-        userId: 'test-user',
-        env: {} as any,
-        signal: null,
-        budget: { spent: 0.15, max: 10.0 },
-        userSettings: {} as any,
-      },
-      () => Promise.resolve(runSystemActionTool.execute!({ action: 'resonance_sync' }, {} as any)),
-    )) as RunSystemActionOutput;
-
-    expect(result.action).toBe('resonance_sync');
-    expect(result.status).toBe('success');
-    expect(result.consoleLogs.length).toBeGreaterThan(0);
-    expect(result.consoleLogs[0]).toContain('Initiating action: RESONANCE_SYNC');
-    expect(result.message).toContain('Intermarket resonance database sync successfully executed');
-  });
-
-  it('correctly executes cache flushes', async () => {
-    const result = (await withToolContext(
-      {
-        threadId: 'test-thread-id',
-        userId: 'test-user',
-        env: {} as any,
-        signal: null,
-        budget: { spent: 0.15, max: 10.0 },
-        userSettings: {} as any,
-      },
-      () => Promise.resolve(runSystemActionTool.execute!({ action: 'flush_cache' }, {} as any)),
-    )) as RunSystemActionOutput;
-
-    expect(result.action).toBe('flush_cache');
-    expect(result.status).toBe('success');
-    expect(result.consoleLogs).toContain('[cache] Flushing Redis/in-memory price feed buffers...');
-    expect(result.message).toContain('pricing caches cleared');
   });
 });

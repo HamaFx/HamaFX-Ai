@@ -63,8 +63,13 @@ export abstract class BaseAgent {
     const userText = extractUserMessageText(ctx.userMessage);
     const fullSystem = `${this.systemPrompt()}\n\n${sharedPrompt}`;
     const toolContext: ToolContext = {
-      threadId: '', userId: '', env: ctx.env, signal: ctx.signal,
-      budget: { spent: 0, max: ctx.userSettings.maxDailyUsd ?? 100 }, userSettings: ctx.userSettings,
+      threadId: '',
+      userId: '',
+      latestUserMessageText: userText,
+      env: ctx.env,
+      signal: ctx.signal,
+      budget: { spent: 0, max: ctx.userSettings.maxDailyUsd ?? 100 },
+      userSettings: ctx.userSettings,
     };
     const timeoutMs = AGENT_TIMEOUTS[this.name] ?? 15_000;
     const controller = new AbortController();

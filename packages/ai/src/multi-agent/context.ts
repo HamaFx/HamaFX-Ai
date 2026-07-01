@@ -17,6 +17,7 @@
 // Multi-Agent Orchestration — shared context builder.
 
 import { buildLiveSnapshot } from '../context';
+export { extractUserMessageText } from '../message-text';
 import { buildSystemPrompt } from '../prompt/system';
 import type { UserSettingsRow } from '@hamafx/db/schema';
 import type { UIMessage } from 'ai';
@@ -61,15 +62,3 @@ export function buildSharedSystemPrompt(ctx: SharedContext, displayName: string 
   return prompt;
 }
 
-export function extractUserMessageText(message: UIMessage): string {
-  if (Array.isArray(message.parts) && message.parts.length > 0) {
-    return message.parts
-      .filter((p): p is { type: 'text'; text: string } =>
-        typeof p === 'object' && p !== null && (p as { type?: string }).type === 'text' && typeof (p as { text?: unknown }).text === 'string')
-      .map((p) => p.text)
-      .join('\n');
-  }
-  // UIMessage in AI SDK v5 doesn't have a `content` property — use type-safe access.
-  const content = (message as unknown as { content?: string }).content;
-  return content ?? '';
-}

@@ -85,7 +85,15 @@ Be concise but thorough. Use markdown formatting for readability.`;
     const sharedPrompt = buildSharedSystemPrompt(ctx, null);
     const system = `${this.systemPrompt()}\n\n${sharedPrompt}`;
     const userMessage = `## User Question\n${userText}\n\n## Specialist Agent Opinions\n${opinionsBlock}\n\n## Your Task\nSynthesize the above opinions into a final response for the user. Follow the response format from your instructions.`;
-    const toolContext: ToolContext = { threadId: execCtx.threadId, userId: execCtx.userId, env: execCtx.env, signal: execCtx.signal, budget: { spent: 0, max: execCtx.userSettings.maxDailyUsd ?? 100 }, userSettings: execCtx.userSettings };
+    const toolContext: ToolContext = {
+      threadId: execCtx.threadId,
+      userId: execCtx.userId,
+      latestUserMessageText: userText,
+      env: execCtx.env,
+      signal: execCtx.signal,
+      budget: { spent: 0, max: execCtx.userSettings.maxDailyUsd ?? 100 },
+      userSettings: execCtx.userSettings,
+    };
     const timeoutMs = AGENT_TIMEOUTS[this.name] ?? 30_000;
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), timeoutMs);

@@ -25,6 +25,7 @@ import { z } from 'zod';
 
 import { createAlert } from '../alerts/persistence';
 import { getToolContext } from '../tool-context';
+import { assertMutationIntent } from './mutation-guard';
 
 const InputSchema = z.object({
   rule: AlertRuleSchema,
@@ -54,6 +55,7 @@ export const setAlertTool = tool({
     'Create a one-shot price / indicator / candle-close alert. Fires when the rule first matches and then deactivates. The user can resend by editing the alert in /alerts.',
   inputSchema: InputSchema,
   execute: async ({ rule, channels, note }): Promise<SetAlertOutput> => {
+    assertMutationIntent('set_alert');
     const alert = await createAlert({ userId: getToolContext().userId, rule, channels, note });
     return { alertId: alert.id, describes: describeRule(rule) };
   },

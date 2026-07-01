@@ -94,7 +94,11 @@ export async function runMultiAgentChat(args: RunMultiAgentArgs): Promise<MultiA
       try {
         const agentCtx: SharedContext = { ...ctx };
         const toolContext: ToolContext = {
-          threadId, userId, env, signal,
+          threadId,
+          userId,
+          latestUserMessageText: userText,
+          env,
+          signal,
           budget: { spent: 0, max: userSettings.maxDailyUsd ?? 100 },
           userSettings,
         };

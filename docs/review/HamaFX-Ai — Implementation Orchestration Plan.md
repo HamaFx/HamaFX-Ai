@@ -507,3 +507,6 @@ regressed.
 | 0.8     | Done | 2026-07-01 | ci-fast.yml runs `pnpm turbo run test -- --coverage` on PR path |
 | 0.9     | Done | 2026-07-01 | Behavioral tests added: `compute-position-health.test.ts` (304 lines), `verify-call.test.ts` (268 lines), `middleware.test.ts` (221 lines) |
 | 0.10    | Done | 2026-07-01 | `billing-contract.test.ts` with `it.todo` placeholders for auth/tenant scoping, idempotency, webhook verification, proration, dunning |
+| 1.1     | Done | 2026-07-01 | `run_system_action` now checks `user.role === 'admin'` before any FRED fetch or `intermarket_resonance` write; focused tests added. `12790bf` |
+| 1.2     | Done | 2026-07-01 | Added server-side mutation-intent screening for `set_alert`, `log_journal`, `share_snapshot`, and `run_system_action`; explicit share/system-action requests required. `12790bf` |
+| 1.3     | Done | 2026-07-01 | Removed theatrical `cot_sync`, `flush_cache`, and `check_migrations`; schema + docs now expose only the real `resonance_sync` action. `12790bf` |

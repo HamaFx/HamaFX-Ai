@@ -164,7 +164,7 @@ never global state.
 | `convene_committee`        | Multi-agent deliberation: 3 persona LLM calls (Economist, Technician, Risk Manager) + Moderator synthesis. Returns a grade (A–F) and go/no-go signal. |
 | `summarize_thread`         | Generate a synopsis of the current thread. Persisted to memory index for future recall. |
 | `get_system_diagnostics`   | Health check: DB row counts, API key validation, sync status, cache freshness. |
-| `run_system_action`        | Trigger system maintenance: historical ingest, cache flush, schema validation. Operator-only. |
+| `run_system_action`        | Trigger the operator-only FRED resonance historical sync. Explicit user request required. |
 
 ### Additional Tools (2 tools)
 

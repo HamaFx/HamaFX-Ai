@@ -27,6 +27,7 @@ import { z } from 'zod';
 
 import { createEntry } from '../journal/persistence';
 import { getToolContext } from '../tool-context';
+import { assertMutationIntent } from './mutation-guard';
 
 const InputSchema = z.object({
   symbol: SymbolSchema,
@@ -52,6 +53,7 @@ export const logJournalTool = tool({
     'Record a trade entry in the journal. Returns the new entry id + a summary line. Status is "open" until the user later marks it closed in /journal or via a follow-up tool call.',
   inputSchema: InputSchema,
   execute: async (input): Promise<LogJournalOutput> => {
+    assertMutationIntent('log_journal');
     const entry = await createEntry({
       symbol: input.symbol,
       side: input.side,

@@ -46,6 +46,8 @@ export interface ToolContext {
   threadId: string;
   /** Phase A — the authenticated user making this request. */
   userId: string;
+  /** Latest end-user text for mutation-intent screening. */
+  latestUserMessageText?: string;
   env: ToolEnv;
   signal: AbortSignal | null;
   budget: { spent: number; max: number };

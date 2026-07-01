@@ -62,6 +62,7 @@ import {
 } from './persistence';
 import { runPlanner } from './planner';
 import { buildSystemPrompt, userContextFromSettings } from './prompt/system';
+import { extractUserMessageText } from './message-text';
 import { routeTurn, type RoutingDecision } from './routing';
 import { generateTitle } from './title';
 import { withToolContext, type ToolContext } from './tool-context';
@@ -463,6 +464,7 @@ async function runChatInner(args: RunChatArgs) {
     const toolContext: ToolContext = {
       threadId,
       userId,
+      latestUserMessageText: extractUserMessageText(userMessage),
       env: {
         AI_GATEWAY_API_KEY: env.AI_GATEWAY_API_KEY,
         GOOGLE_GENERATIVE_AI_API_KEY: env.GOOGLE_GENERATIVE_AI_API_KEY,
