@@ -1,0 +1,503 @@
+# HamaFX-Ai — Implementation Orchestration Plan
+
+**Audience: you are an AI coding agent about to implement fixes across the HamaFX-Ai
+codebase.** This file is your top-level work order. It does **not** contain full
+implementation detail — it tells you which of the 8 review files to open for each task,
+and in what order to work. Never implement from the one-line description below alone.
+
+**Files referenced below, all in this same directory:**
+- `01-authentication-security-review.md`
+- `02-database-rls-scalability-review.md`
+- `03-api-architecture-review.md`
+- `04-ai-agent-safety-cost-review.md`
+- `05-worker-infra-reliability-review.md`
+- `06-frontend-ux-performance-review.md`
+- `07-observability-monitoring-review.md`
+- `08-testing-cicd-code-quality-review.md`
+- `HamaFX-Ai-Production-Readiness-Audit-Prompts.md` (referenced only in Phase 8)
+
+---
+
+## How to work through this file
+
+For every task below:
+1. **Open the cited review file and read the full finding.** The one-liner here is a
+   pointer, not the spec — file paths, exact reasoning, and code sketches live in the
+   source doc.
+2. Implement the fix.
+3. Run `pnpm typecheck` and `pnpm lint` for the affected package(s), plus the relevant
+   test suite.
+4. Update the **Progress Log** at the bottom of this file (task ID, status, date, commit
+   ref) before moving on.
+5. Commit in small, single-concern diffs. Reference the task ID in the commit message,
+   e.g. `fix(1.8): capture unhandled errors to Sentry, stop leaking error.message`.
+
+Work the phases **in order**. Don't start Phase N+1 until Phase N's acceptance criteria
+are met — except where a phase is explicitly marked parallelizable.
+
+## Global constraints (every phase, every task)
+
+- **Preserve self-host / `AUTH_MODE=legacy` compatibility at every step.** A single-
+  `APP_PASSWORD` self-hosted install must keep working, unchanged, all the way through —
+  this is an explicit acceptance criterion in both 01 and 02.
+- **Never weaken existing strictness to make something pass.** No disabling TS `strict`,
+  no relaxing `no-explicit-any`, no blanket `eslint-disable`, no lowering coverage
+  thresholds. Only raise them (08 Part 6).
+- **Never run a destructive or irreversible command without explicit human confirmation.**
+  This especially means: Phase 3.6 (the actual RLS cutover migration), any
+  `pg_restore --clean`, any force-push or history rewrite, any non-sandbox billing API
+  call in Phase 8.3.
+- **Never commit secrets** or real credentials into tracked `.env` files.
+- **If a task requires a product/business decision, stop and add it to "Blocked — needs
+  Hama" at the bottom instead of guessing.** Every review file has its own "Open
+  Questions" section — treat those as stop-and-ask, not stop-and-assume.
+- **Small diffs, one concern each.** Especially for Phase 0/1 — you want Phase 0's CI
+  actually catching regressions in everything that follows it.
+
+---
+
+## Phase 0 — Build the safety net first (Testing & CI)
+
+**Source:** `08-testing-cicd-code-quality-review.md`
+**Depends on:** nothing. **Do this first, full stop** — no fix in any later phase can be
+verified without CI that actually runs and actually gates.
+
+0.1 Fix the CI bootstrap failure (all workflows currently fail in ~3s, before any real
+    work runs). Working hypothesis, unconfirmed since job logs had expired at audit time:
+    pnpm is double-specified — `package.json`'s `"packageManager": "pnpm@9.15.4"` plus
+    `pnpm/action-setup@v4 with: version: 9` in every workflow. Re-run a workflow and read
+    the fresh log before assuming this is the cause. [08 §1c / Part 5 task 1]
+0.2 Enable branch protection on `main` requiring `Lint & Typecheck` and `Unit Tests
+    (Fast)` (and `CodeQL` once green) to pass before merge. [08 §1a / Part 5 task 2]
+0.3 Pick **one** CI system (GitHub Actions or GitLab CI) and delete the other — both
+    currently define lint/typecheck/test/e2e/eval in parallel and will drift. [08 §1f /
+    Part 5 task 3]
+0.4 Move the "Report Coverage" step out of `ci-slow.yml` (it's PR-gated but that workflow
+    only triggers on push/schedule, so it can never run) into `ci-fast.yml`. [08 §1d]
+0.5 Add a real build gate (`turbo run build`) to CI — today a broken `next build` is only
+    caught later by Vercel. [08 §1e / Part 5 task 14]
+0.6 Wire the eval suite to the real 15-case assertion set: either change the `eval`
+    script to pass `--cases`, or make `cases.json` the default instead of the
+    assertion-free `prompts.json`. Add an `eval` task to `turbo.json` (currently absent,
+    which is why the nightly `turbo run eval` fails). [08 §3 / Part 5 task 4]
+0.7 Add a deterministic, offline eval using recorded/mocked model+tool fixtures (MSW is
+    already a dependency) so tool-selection, tool **arguments**, and numeric outputs are
+    asserted without live API keys — not just "was the right tool name called." Keep the
+    live `/api/chat` harness as a separate scheduled scored run. [08 §3 / Part 5 task 5]
+0.8 Enforce coverage on the PR path (`test -- --coverage` in `ci-fast`, not just nightly).
+    [08 §2 / Part 5 task 6]
+0.9 Add behavioral tests for `compute_position_health`, the `verify_call` tool's own
+    `execute()` (not just the `verification.ts` engine it wraps), and `middleware.ts`
+    (CSRF mint/enforce, `x-user-id` injection from JWT, confirm `AUTH_MODE=legacy` bypass
+    is impossible when `NODE_ENV=production`). All three currently have zero behavioral
+    coverage. [08 §2 / Part 5 tasks 7–9]
+0.10 Write the billing test contract (auth/tenant scoping, idempotency, webhook signature
+    verification, proration/dunning edges) **before** any billing code lands — this sets
+    up Phase 8.3 to ship test-first. [08 §2 / Part 5 task 10]
+
+**Acceptance:** [08 Part 7, items 1–4]. Additionally: open a PR that deliberately breaks a
+test and confirm the merge button is actually blocked.
+
+---
+
+## Phase 1 — Fix now, independent of the SaaS timeline
+
+**Sources:** 01, 03, 04, 06, 07 — these are exploitable-today or user-visible-today bugs,
+not just multi-tenant prep.
+**Depends on:** Phase 0.1–0.3 (CI actually running and gating). The rest of Phase 0 can
+continue in parallel with this phase.
+
+1.1 Gate `run_system_action` behind a server-side role check — read the caller's role
+    from context/DB and reject non-operators **before** any FRED call or
+    `intermarket_resonance` write happens. Currently any authenticated user's chat can
+    trigger it despite being documented "Operator-only." [04 §3.2 / Part 5 P0#1]
+1.2 Add a confirmation/guardrail layer for **all** mutation tools (`set_alert`,
+    `log_journal`, `share_snapshot`, `run_system_action`) — at minimum require explicit
+    confirmation for `share_snapshot` (its signed URL bypasses the site password gate)
+    and `run_system_action`. [04 §3.2 / Part 5 P0#2]
+1.3 In the same pass as 1.1/1.2 (same file), remove or clearly label the theatrical
+    `run_system_action` branches (`cot_sync`, `flush_cache`, `check_migrations`) that
+    only emit canned log strings and do no real work. [04 Part 5 P2#10]
+1.4 **Highest user-trust risk in the whole audit.** Anchor `verify_call` to reality:
+    fetch the live price for `symbol` inside the tool, flag when `entry`/`stop`/`target`
+    deviate from market beyond a tolerance, and never let `agree:true` render for a price
+    the tool never checked against the market. Also fix `docs/03-ai-agent.md` L140, which
+    currently describes a different (retrospective) tool than what's implemented — pick
+    one behavior and make the doc match the code. [04 §3.4 / Part 5 P0#3]
+1.5 Harden `/api/dev/login`: require `NODE_ENV === 'development'` explicitly (it
+    currently only excludes `production`, so any non-production, non-development
+    environment — e.g. a misconfigured `staging` — leaves it open). [01 High finding /
+    §4 step 4.2]
+1.6 Telegram webhook: add zod schema validation for the `Update` body, make
+    `TELEGRAM_SECRET_TOKEN` mandatory in production (hard-fail if unset instead of
+    skipping the check), use a constant-time token comparison. **Note:** 01 rates this
+    fail-open behavior High; 03 rates the same file Medium as part of a broader
+    input-validation finding (F1). Implement to 01's stricter bar regardless. [01 High
+    finding / §4 step 4.1; 03 F1 / Part 5 step 2]
+1.7 Add `withAuth` gating to `/api/health` and `/api/health/db` — currently open,
+    usable for DoS or DB-availability enumeration. [01 Medium finding]
+1.8 **Fix the shared error-leak + missing-Sentry-capture problem in one pass** — two
+    different reviews cite nearly the same files for two different reasons, so fix
+    together: `packages/shared/src/errors.ts` (`formatErrorResponse`),
+    `apps/web/src/lib/api.ts` (`errorResponse`/`withAuth`), `apps/web/src/lib/cron.ts`
+    (`withCronAuth`/`runCronJob`), the `/api/chat` multi-agent SSE catch branch, and
+    `(auth)/actions.ts` (`loginAction`/`registerAction`). For each: (a) return a generic
+    client-facing message + `requestId`, never raw `error.message`; (b) add
+    `Sentry.captureException` with route/component tags before returning. [03 F2 / Part 5
+    step 1; 07 OBS-01, OBS-02, OBS-03, OBS-04, OBS-05 / Phase 1 items 1–3]
+1.9 Consolidate the two conflicting `vercel.json` files into the one at the actual
+    Vercel Root Directory; merge the `functions.maxDuration` map and the `crons` block
+    into it; add `export const maxDuration = 60` directly in `/api/chat/route.ts` as a
+    config-path-independent fallback; confirm via a deploy that it actually takes effect.
+    [03 F6 / Part 5 step 5]
+1.10 Make `cron/alerts` atomically claim rows before sending
+    (`UPDATE ... WHERE firedAt IS NULL RETURNING id`, deliver only to returned ids)
+    instead of read-then-send-then-mark; add a per-job run-lock so overlapping
+    invocations no-op. [03 F5 / Part 5 step 4]
+1.11 Route `admin/test-alert-email`, `admin/test-telegram`, and `cron/cleanup-uploads`
+    through the existing `packages/ai`/`packages/data` adapters instead of raw `fetch`
+    (an L1→L4 layering violation). [03 F7 / Part 5 step 7]
+1.12 Fix the PWA offline precache: add a real favicon (or remove `/favicon.ico` from
+    `PRECACHE_URLS`), **and** change `sw.template.js`'s install handler from atomic
+    `cache.addAll()` to per-URL `Promise.allSettled` so one missing asset can't silently
+    wipe the entire offline shell. [06 FE-13 / Sprint 1 task 1]
+1.13 Fix chart tick performance: use `series.update()` for the live tick instead of a
+    full `setData()` over ~300 bars every tick; decouple indicator-series lifecycle from
+    `candles` so indicators aren't torn down and rebuilt on every price update (mirror
+    `use-sub-pane-chart.ts`, which already does this correctly). [06 FE-09, FE-10 /
+    Sprint 1 task 2]
+1.14 Fix the silent news-fetch failure: destructure `isError`/`error` from the
+    `useInfiniteQuery` in `news-view.tsx` and render a distinct error+retry state instead
+    of falling back to the "no results" empty state. [06 FE-01 / Sprint 1 task 3]
+1.15 Fix duplicate non-unique `id`/`aria-controls` on tool-result cards using `useId()`.
+    [06 FE-05 / Sprint 1 task 4]
+
+**Acceptance:** see each cited file's own acceptance-criteria section for the specific
+item (01 §5, 03 Part 6, 04 Part 7, 06 Part 5, 07 §6).
+
+---
+
+## Phase 2 — BLOCKING DECISION: what is a tenant?
+
+**Source:** 02 §7 Q1, cross-referenced against 01 §4.
+**Depends on:** nothing technical — this is a product decision, not an engineering task.
+Do not start Phase 3 until it's answered. Safe to raise with Hama in parallel with
+Phases 0/1.
+
+2.1 This is not a coding task. Present the question directly: is a tenant an individual
+    **user**, or an **organization/team** (shared workspace, org-level billing, multiple
+    seats)?
+2.2 **Flag this specific conflict before implementing either doc literally:** 01's own
+    fix sketch (§4, "Data Access Layer & Isolation") uses a `rls.user_id` session
+    variable and implicitly assumes tenant = user. 02's fix (§4.2) uses
+    `app.current_tenant` and explicitly treats the boundary as unresolved. If you follow
+    both docs as written, half the codebase ends up scoped to one GUC and half to the
+    other. Recommend standardizing on `app.current_tenant` (matches 02's more thorough
+    treatment) regardless of which answer Hama gives — a solo user is just an org of one.
+2.3 Record the decision at the top of the **Progress Log** below before starting Phase 3.
+
+---
+
+## Phase 3 — Multi-tenancy foundation
+
+**Sources:** 02 (primary), 01 (cache/secrets findings), 04 + 07 (the `__system__`
+convergent finding).
+**Depends on:** Phase 2 answered.
+
+3.1 Migration A (additive, nullable): create `organization` + `organization_member`
+    (if tenant = org) or skip and use `user_id` directly (if tenant = user); add
+    nullable `tenant_id` to the ~24 tenant-owned tables plus the 2 FK-only children
+    (`chat_messages`, `decision_signal_outcomes`). Full table inventory in 02 Appendix A.
+    [02 §5 step 2]
+3.2 Backfill: one org per existing user (or skip if tenant=user), populate `tenant_id`
+    from current ownership, run as the future `BYPASSRLS` role. [02 §5 step 3]
+3.3 Migration B: `SET NOT NULL` on `tenant_id`; add the `(tenant_id, opened_at DESC)`
+    composite index on `journal_entries`; drop the redundant `candles_1m_symbol_t_idx`.
+    [02 §5 step 4, F9/F12]
+3.4 Connection layer: add `DIRECT_URL` (session mode, port 5432); point
+    `drizzle.config.ts` migrations and all backup/restore scripts at it instead of the
+    pooled `DATABASE_URL`; add the `SET LOCAL app.current_tenant` wrapper in the Drizzle
+    request path; create a `BYPASSRLS` admin role for worker/cron/migrations. [02 §5
+    step 5, F6/F10]
+3.5 pgvector: add `SET LOCAL hnsw.ef_search` / iterative-scan settings around
+    `searchMemory`; extend its `WHERE` clause with `tenant_id`. [02 §5 step 6, F4/F5]
+3.6 **Migration C (cutover) — get explicit human go-ahead before running this against
+    anything but a local/staging DB.** `ENABLE` + `FORCE ROW LEVEL SECURITY` and create
+    the `tenant_isolation` policy on every tenant table, gated behind an edition/build
+    flag so open-core self-host either skips it or runs `BYPASSRLS`. [02 §5 step 7, F1]
+3.7 Fix backups: switch `verify-restore.sh` to a pgvector-capable Postgres image
+    (`pgvector/pgvector:pg15`), make restore errors fatal instead of logged-and-ignored,
+    assert HNSW indexes exist post-restore; add per-tenant export + delete scripts,
+    rehearse both weekly. [02 §5 step 8, F7/F8]
+3.8 Fix TLS: ship `SUPABASE_CA_CERT` + `rejectUnauthorized: true` for the hosted build.
+    [02 §5 step 9, F11]
+3.9 Centralize secrets delivery for the hosted edition — both Vercel and the GCE worker
+    should fetch secrets from a vault (e.g. Infisical, GCP Secret Manager) at runtime
+    instead of `.env` files. Keep the existing BYOK AES-256-GCM encryption for
+    user-provided API keys as-is; it's correctly implemented. [01 §3 "Secrets
+    Management"]
+3.10 Namespace all in-memory caches by tenant: `cachedVertex`/`cachedVertexKey` in
+    `packages/ai/src/model.ts`, the `agents` Map in `multi-agent/stream.ts`, and
+    `MemoryCache`/`getDefaultCache` in `packages/data/src/cache/index.ts` are all
+    currently global and can leak one tenant's cached client/data into another tenant's
+    request. [01 High finding, "Global State / Module-Level Caching"]
+3.11 **Kill the `__system__` fallback pattern.** This is the single most-corroborated bug
+    across all 8 reviews — caught independently 3 times. Replace every hardcoded
+    `['__system__']` / `?? '__system__'` with real per-user iteration:
+    `apps/web/src/app/api/cron/briefings/route.ts`,
+    `apps/web/src/app/api/cron/weekly-review/route.ts`,
+    `packages/ai/src/briefings/generate.ts`, `packages/ai/src/memory/memory-index.ts`,
+    `packages/ai/src/memory/thread-summary.ts`, `packages/ai/src/persistence.ts`
+    (including `recordTelemetry`), `packages/ai/src/planner.ts`,
+    `packages/ai/src/title.ts`. [01 Critical finding / §4 step 4.2; 04 §3.3 point 4;
+    07 OBS-15]
+3.12 **Do this check before or during 3.11:** run
+    `SELECT * FROM users WHERE id = '__system__'`. If that row doesn't exist,
+    `recordTelemetry` inserts have likely been silently failing (FK violation swallowed
+    by a `.catch()`) — meaning some cost/usage telemetry may already be missing. Report
+    what you find to Hama either way. [04 Open Question 3]
+
+**Acceptance:** [02 §6 — cross-tenant read/write isolation tests, `EXPLAIN ANALYZE`
+index checks, backup-restore verification after the schema changes].
+
+---
+
+## Phase 4 — Rate limiting & AI cost hardening
+
+**Sources:** 03, 04, 07 — three reviews covering the same problem area from different
+angles (infra rate limiting, AI-specific budget logic, monitoring/alerting).
+**Depends on:** Phase 3 substantially done, only if Phase 2 decided tenant = org (task
+4.10 needs `tenant_id`; the rest of this phase doesn't).
+
+4.1 Replace the fixed-window rate limiter (`packages/db/src/rate-limit.ts`) with a
+    sliding-window approach — the current `date_trunc('minute', now())` bucketing allows
+    up to ~2× the intended rate across a window boundary. [03 F4 / Part 5 step 6.1]
+4.2 Add a global (tenant-wide) AI-spend ceiling in addition to the per-user one; convert
+    `MAX_DAILY_USD` from a single shared global counter to per-user/per-tier, so one user
+    burning turns can't return 503 to everyone else. [03 F4 / Part 5 step 6.2; 04
+    Part 5 P1#5]
+4.3 Add per-user (authenticated) / per-IP (anonymous) limits to the provider-quota-facing
+    read routes: `market/*`, `news`, `calendar`, `sentiment`, `decision-signals` —
+    currently unlimited and sitting in front of small provider free-tier quotas. [03 F4 /
+    Part 5 step 6.3]
+4.4 Standardize error envelopes AND 429 responses: convert `push/subscribe`,
+    `push/unsubscribe`, `admin/test-alert-email`, `admin/test-telegram` to the
+    `{error:{code,message,requestId}}` shape; add a shared `rateLimitedResponse()` helper
+    that sets `Retry-After` + `X-RateLimit-*` headers on every `withRateLimit` call site
+    (today only `/api/chat` sets them). [03 F3 / Part 5 step 3]
+4.5 Add `maxOutputTokens` to `streamText` plus a per-turn input-context ceiling; raise
+    `DEFAULT_TURN_ESTIMATE_USD` from the flat $0.01 reservation to a model-aware estimate
+    so one oversized `gemini-2.5-pro` turn can't overshoot `MAX_DAILY_USD` before
+    post-stream reconciliation catches up. [04 §3.3 / Part 5 P1#5]
+4.6 Unify the cost/pricing tables: dedupe `cost.ts`'s `RATES` (8 entries, `{5,15}`
+    fallback for everything else) against `byok-providers.ts`'s `ModelSpec` pricing;
+    cover every supported model explicitly — the current fallback badly mis-prices
+    `deepseek-chat` and others. [04 §3.3 / Part 5 P1#6]
+4.7 Upgrade the citation enforcer from turn-level to value-level: compare numeric claims
+    against actual tool-result values from *this* turn instead of "did any numeric tool
+    run this turn"; broaden the `PRICE_TOKEN` regex to catch comma-formatted, integer,
+    and JPY-style prices. [04 §3.4 / Part 5 P1#7]
+4.8 Add domain/range sanity validation to `set_alert.level` and
+    `log_journal.entry/stop/target/size` — currently bare `z.number()` with no bounds or
+    near-market sanity check. [04 Part 5 P2#9]
+4.9 Build an operator-side spend-anomaly detector: a new worker job (own healthchecks
+    UUID) running a baseline/z-score query against the existing `daily_ai_spend`
+    rollup, capturing to Sentry + paging the operator, independent of any user-set
+    `monthlyBudgetLimit`. 07 §3.4(b) includes ready-to-use SQL for this. [07 OBS-11 /
+    OBS-14b, Phase 3 item 9]
+4.10 **Only if Phase 2 decided tenant = organization:** add `org_id` to `chat_telemetry`,
+    `chat_tool_telemetry`, `daily_ai_spend`; add `computeUsageForOrg()`. If tenant = user,
+    skip this and document that explicitly instead. [04 Part 5 P2#8; 07 §3.4(a)]
+4.11 Decide the fate of vestigial per-domain model routing — `routeTurn`'s domain
+    currently doesn't actually select the chat model, only the planner/title/vision
+    derivations use it. Wire domain→model selection up for real, or delete the dead path
+    and document that a single `chatModel` is used. Configure context caching on the
+    static system-prompt prefix (~90% cached-input discount, currently unused). [04
+    Part 5 P2#11]
+
+**Acceptance:** [04 Part 7 — cost/citation items; 03 Part 6 — rate-limit items]
+
+---
+
+## Phase 5 — Observability & logging unification
+
+**Source:** 07 (primary), plus 04's injection-hardening (same defensive layer).
+**Depends on:** Phase 1.8 (the shared error-capture fix) — this phase builds directly on
+top of it.
+
+5.1 Decide client-side Sentry deliberately: either fix
+    `enabled: !!process.env.SENTRY_DSN` → `!!process.env.NEXT_PUBLIC_SENTRY_DSN` (ships
+    real client capture + Session Replay), or delete `instrumentation-client.ts` and the
+    dead `global-error.tsx` capture call entirely (honestly server-only). It's currently
+    silently neither. [07 OBS-06]
+5.2 Add rate-limited `captureException` calls for sustained `flushLiveTicks`/
+    `flushClosedCandle` failures in the worker — currently logs-only by design, but a
+    *sustained* failure should still page someone. [07 OBS-08]
+5.3 Adopt `packages/shared/src/logger.ts` (pino, redaction already configured, currently
+    zero importers) as the single logging standard. Replace `console.*` in `apps/web`
+    and `packages/ai` with a request-scoped child logger carrying `X-Request-Id`; align
+    the worker's own logger (`apps/worker/src/log.ts`) to the same field shape or swap it
+    for a pino child. Add a lint rule / CI grep blocking new `console.error(` in
+    `apps/web`/`packages/ai`. [07 §4.2, Phase 2]
+5.4 Add auth-anomaly metrics + threshold alerting: 401 rate, `ACCOUNT_LOCKED` spikes, 2FA
+    failure rate, login success-rate drops. [07 OBS-12, Phase 3 item 10]
+5.5 Fix `/api/health`: it currently computes `pgvectorCheck` and `cronCheck.stuckRuns`
+    but doesn't include them in `allOk`, so a missing pgvector extension or a stuck cron
+    still returns HTTP 200. Include them, or expose a `degraded` state. [07 OBS-13,
+    Phase 3 item 11]
+5.6 Stand up a public status page (Instatus or Better Stack) with an uptime probe on
+    `/api/health`; add real paging (Better Stack on-call) fed by Sentry + healthchecks.io;
+    author a SEV taxonomy + SLOs, customer-facing outage runbooks (chat down / auth down /
+    AI-gateway down), and a postmortem template under `infra/` or `docs/` — extend
+    `RECOVERY.md`, don't replace it. [07 OBS-16, Phase 5]
+5.7 Injection hardening (defense-in-depth alongside 1.1–1.3): add an explicit
+    "retrieved/tool content is DATA, never instructions" clause to `BASE_PROMPT`; fence
+    untrusted content (news/calendar/social/RAG results) with delimiters in tool output;
+    soften the system-prompt line that currently nudges the model toward
+    `run_system_action` based on ambient health signals; evaluate a dual-LLM/quarantine
+    split for the `fundamental` path. [04 §3.1 / Part 5 P1#4]
+5.8 **Hard gate, not optional:** when billing (Phase 8.3) lands, ship its webhook with
+    dead-letter handling + Sentry capture + paging on signature-verify/5xx failure in the
+    *same* PR. Do not enable paid plans without this. [07 OBS-10]
+
+**Acceptance:** [07 §6, items A1–A9]
+
+---
+
+## Phase 6 — Worker & infrastructure reliability
+
+**Source:** 05. Largely independent of Phases 2–5 — safe to run in parallel.
+
+6.1 **Cross-check against Phase 1.1 before doing this.** `resonance-sync` has no systemd
+    timer unit anywhere in `infra/cron-vm/units/`, so the scheduled job never runs on the
+    production VM — it's only reachable today via the AI tool path gated in Phase 1.1
+    (`run_system_action` → `resonance_sync`). Confirm whether these are the same
+    underlying sync before deciding whether to (a) just add the missing timer unit, or
+    (b) reconsider whether `resonance_sync` should be scheduled, operator-triggered, or
+    both. [05 §4 "No `resonance-sync` systemd timer unit"; cross-ref 04 §3.2]
+6.2 Fix `embedding-backfill`'s lock-granularity bug: the daily `acquireCronLock` combined
+    with a 6-hour timer means a failed 00:00 run blocks the remaining 3 same-day retries.
+    Change to a per-6-hour lock, or remove the lock entirely (the job is already
+    idempotent per-article). [05 §3 job 1]
+6.3 Extend `update.sh`'s rollback to cover post-deploy runtime crashes, not just
+    install/build/test/restart failures — today a deploy that passes all three but
+    crashes 10 seconds after reaching `active (running)` has no automatic rollback path.
+    [05 §1]
+6.4 Add the two missing entries to `RECOVERY.md`'s UUID table: `HC_CLEANUP_UPLOADS_UUID`
+    and `HC_JOB_RESONANCE_SYNC_UUID`. [05 §4]
+6.5 Verify — don't assume — whether `postgres:15-alpine` in `verify-restore.sh` actually
+    supports the `vector` extension. This overlaps with Phase 3.7's fix; do them
+    together. [05 §5 Open Question 3]
+6.6 Only when justified by real load, not preemptively: upgrade `hamafx-cron` from
+    `e2-medium` to `e2-standard-2`; longer-term, split the always-on SignalR consumer
+    from the heavy-job runners. [05 §6]
+
+**Acceptance:** 05 has no single formal acceptance-criteria section — verify each item
+above against that finding's own "Finding:" text.
+
+---
+
+## Phase 7 — Remaining polish (frontend + housekeeping)
+
+**Sources:** 06 (P2/P3 items not already in Phase 1), 08 (P2 housekeeping), 03 (minor
+doc drift). **Depends on:** nothing — safe to interleave with any other phase, lowest
+priority of the set.
+
+7.1 Enforce `--touch-min` (44px) on primary controls; bump the 20px image-remove button
+    to at least 24px. [06 FE-04]
+7.2 Fix the tool-message virtualizer size estimate — it checks for a `'tool-invocation'`
+    type that no part ever actually has (real types are `'tool-get_price'` etc.). [06
+    FE-12]
+7.3 Wrap streamed assistant text in an `aria-live="polite"` region (mirror
+    `chart-canvas.tsx`'s existing pattern). [06 FE-06]
+7.4 Ensure every `DrawerContent` has a `DrawerTitle`; reconcile the manual focus-trap
+    with vaul's built-in one. [06 FE-07]
+7.5 Whitelist `https://s3.tradingview.com` in CSP `script-src` if the Pro chart is a
+    supported path. [06 FE-15]
+7.6 Add `images.remotePatterns` for the Supabase host; migrate journal remote `<img>`
+    tags to `next/image`. [06 FE-16]
+7.7 Align the 1.5s-vs-3s polling-cadence claim across code and docs; consider wiring the
+    existing (currently unused) SSE hook into the chart. [06 FE-11]
+7.8 Remaining P3 polish: scoped `error.tsx` per view, `role="alert"` on inline failure
+    messages, glass-surface contrast check, manifest screenshots, news-list
+    virtualization, RSC conversion where profiling supports it. [06 FE-02, FE-03, FE-08,
+    FE-14, FE-17, FE-18]
+7.9 Remove dead `@ui/*` config from `tsconfig.base.json` / `.prettierrc.json` / the
+    ESLint message — it points at a `packages/ui` that doesn't exist. Drop the unused
+    `TEST_VAR` from `turbo.json`. [08 Part 5 task 11]
+7.10 Adopt Knip (+ optional dependency-cruiser) as a CI check for unused files/exports/
+    deps. [08 Part 5 task 12]
+7.11 Set `actions/checkout` `fetch-depth: 0` so a future `turbo --affected` gate has real
+    git history to work with. [08 Part 5 task 13]
+7.12 Dependency review: align `tsx` versions across packages, decide on the `next-auth`
+    beta pin, verify `@next/bundle-analyzer`/`lucide-react` major versions are
+    intentional, add a scheduled `pnpm audit --prod`. [08 Part 5 task 15]
+7.13 Strengthen `check-test-files.mjs` to flag files with zero real assertions, not just
+    zero test files. [08 Part 5 task 16]
+7.14 Fix runtime-doc drift: `docs/08-deployment.md` claims an Edge runtime for reads;
+    all 71 declaring route files actually set `nodejs`. [03 F8 / Part 5 step 8]
+7.15 Update the stale `docs/08-backend-and-api.md` comment references in
+    `apps/web/src/lib/api.ts` and `packages/shared/src/errors.ts` to point at the real
+    `docs/05-api-routes.md`. [03 Part 1 correction #1]
+
+---
+
+## Phase 8 — Run the remaining audit prompts
+
+**Source:** `HamaFX-Ai-Production-Readiness-Audit-Prompts.md`. These are meta-tasks, not
+code changes — hand each prompt to a **fresh agent session**, per the pack's own
+instructions ("don't chain them in one conversation").
+
+8.1 Run **Prompt 00** (Documentation & Reality Drift) — fix-directly, same session,
+    scoped to docs/config only. Genuinely overdue: 6 of the 8 completed reviews (02, 03,
+    04, 06, 07, 08) had to correct a stale doc-path or premise before they could start.
+    Running this now also makes any future re-audit cheaper.
+8.2 Run **Prompt 09** (Open-Core Architecture) — its own scope says it reads findings
+    from 01–04, which are now complete, so it's unblocked.
+8.3 Run **Prompt 10** (Billing — 2Checkout/Verifone). **Before running it, resolve this
+    conflict:** 01's own open question #3 assumes Stripe ("Should we integrate Stripe
+    Checkout now…"), while Prompt 10 explicitly states Stripe was ruled out because it
+    doesn't support Iraq-based merchants, and commits to Verifone instead. Confirm which
+    is actually current before running Prompt 10 — its own first research task, verifying
+    Iraq merchant eligibility with Verifone, hasn't been completed either way yet. Also
+    depends on Phase 2's tenant decision, since the billing schema needs to attach to the
+    tenancy model.
+8.4 Run **Prompt 11** (Legal/Compliance) — last, since its own scope explicitly reads 01,
+    04, 09, and 10.
+
+---
+
+## Blocked — needs Hama, don't guess
+
+General rule: every review file has its own numbered "Open Questions" section (01 §6,
+02 §7, 03 Part 7, 04 Part 6, 05's per-section open questions, 07 §7, 08 Appendix B).
+Treat every one of those as stop-and-ask, not stop-and-assume. The items below are true
+phase-blockers, called out explicitly so they don't get missed:
+
+- **Phase 2:** tenant = user or org? (02 §7 Q1)
+- **Phase 2:** should self-host run with RLS disabled, or always-on with an auto-set
+  single tenant? (02 §7 Q2)
+- **Phase 8.3:** Stripe or Verifone — which is actually current? (conflict between 01 §6
+  Q3 and Prompt 10's stated rationale)
+- **Phase 8.3:** is Iraq merchant eligibility with Verifone actually confirmed yet?
+  (Prompt 10's own first research task)
+- **Phase 3.11 / 02 F8:** retention/GDPR policy — is verified per-tenant export+delete a
+  launch requirement or a fast-follow? (02 §7 Q3)
+- **Phase 4:** actual free/paid tier dollar amounts, needed to size the global spend
+  ceiling in 4.2 (03 Part 7 Q3)
+
+---
+
+## Progress Log
+
+If a new agent session picks this file up later, **read this table first.** Don't
+re-verify or redo anything marked Done without a specific reason to suspect it
+regressed.
+
+| Task ID | Status | Date | Notes / commit ref |
+|---------|--------|------|---------------------|
+| 2.x     | Not started | | Tenant decision: _(record answer here once made)_ |
+| 0.1     | Not started | | |
+| 0.2     | Not started | | |
+| 0.3     | Not started | | |
+| ...     | | | _(add rows as you go — one per task ID)_ |
