@@ -39,14 +39,18 @@ const exec = verifyCallTool.execute as unknown as (input: {
     kind: 'swing_high' | 'swing_low';
     barsAgo: number;
   } | null;
+  marketPrice: number | null;
+  marketTolerance: number | null;
   rationale: string;
 }>;
 
 const mockGetCandles = vi.fn();
+const mockGetPrice = vi.fn();
 const mockComputeStructure = vi.fn();
 
 vi.mock('@hamafx/data', () => ({
   getCandles: (...args: unknown[]) => mockGetCandles(...args),
+  getPrice: (...args: unknown[]) => mockGetPrice(...args),
 }));
 
 vi.mock('@hamafx/indicators', () => ({
@@ -71,7 +75,16 @@ function makeCandle(overrides: { time?: number; open?: number; high?: number; lo
 describe('verify_call — Phase 0.9', () => {
   beforeEach(() => {
     mockGetCandles.mockReset();
+    mockGetPrice.mockReset();
     mockComputeStructure.mockReset();
+    mockGetPrice.mockResolvedValue({
+      symbol: 'EURUSD',
+      bid: 1.0799,
+      ask: 1.0801,
+      mid: 1.08,
+      ts: Date.now(),
+      source: 'test',
+    });
   });
 
   it('agrees with a clean long setup and no opposing liquidity', async () => {
@@ -261,5 +274,41 @@ describe('verify_call — Phase 0.9', () => {
       kind: 'swing_low',
       barsAgo: 0,
     });
+  });
+
+  it('fails closed when the live price cannot be fetched', async () => {
+    mockGetPrice.mockRejectedValue(new Error('price provider down'));
+    mockGetCandles.mockResolvedValue([makeCandle({})]);
+    mockComputeStructure.mockReturnValue({
+      symbol: 'EURUSD', tf: '1h', bars: 1, fetchedAt: Date.now(), swings: [{ type: 'high', price: 1.095, index: 0 }],
+    });
+
+    const result = await exec({ symbol: 'EURUSD', side: 'long', entry: 1.08, stop: 1.075, target: 1.09 });
+
+    expect(result.agree).toBe(false);
+    expect(result.marketPrice).toBeNull();
+    expect(result.caveats.some((c) => c.code === 'market_price_unavailable')).toBe(true);
+  });
+
+  it('flags levels that sit too far from the live market', async () => {
+    mockGetPrice.mockResolvedValue({
+      symbol: 'EURUSD',
+      bid: 1.1199,
+      ask: 1.1201,
+      mid: 1.12,
+      ts: Date.now(),
+      source: 'test',
+    });
+    mockGetCandles.mockResolvedValue([makeCandle({})]);
+    mockComputeStructure.mockReturnValue({
+      symbol: 'EURUSD', tf: '1h', bars: 1, fetchedAt: Date.now(), swings: [{ type: 'high', price: 1.13, index: 0 }],
+    });
+
+    const result = await exec({ symbol: 'EURUSD', side: 'long', entry: 1.085, stop: 1.08, target: 1.095 });
+
+    expect(result.agree).toBe(false);
+    expect(result.marketPrice).toBe(1.12);
+    expect(result.marketTolerance).toBeGreaterThan(0);
+    expect(result.caveats.some((c) => c.code === 'level_far_from_market')).toBe(true);
   });
 });

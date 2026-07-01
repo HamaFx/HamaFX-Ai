@@ -88,12 +88,12 @@ export function formatErrorResponse(
     );
   }
   
-  // Fallback for unhandled errors
+  // Fallback for unhandled errors. Never leak raw error messages to clients.
   return new Response(
     JSON.stringify({
       error: {
         code: 'INTERNAL',
-        message: error instanceof Error ? error.message : 'Unknown error occurred',
+        message: 'Internal error',
         ...(options?.requestId ? { requestId: options.requestId } : {}),
       },
     }),

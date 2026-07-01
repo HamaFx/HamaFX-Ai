@@ -19,6 +19,7 @@
 // for the client to consume.
 
 import { BudgetExceededError, runChat } from '@hamafx/ai';
+import * as Sentry from '@sentry/nextjs';
 import { providerUnavailable } from '@hamafx/shared';
 import { withRateLimit } from '@hamafx/db';
 import { z } from 'zod';
@@ -29,6 +30,7 @@ import { getServerEnv } from '@/lib/env';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
+export const maxDuration = 60;
 
 const CHAT_RATE_LIMIT = Number(process.env.AI_CHAT_RATE_LIMIT ?? '30');
 
@@ -148,8 +150,13 @@ export const POST = withAuth<void>(async (req, { user }) => {
 
               controller.enqueue(encoder.encode('data: [DONE]\n\n'));
             } catch (err) {
-              const errMsg = err instanceof Error ? err.message : String(err);
-              const errorData = { type: 'error', error: errMsg };
+              Sentry.captureException(err, {
+                tags: { component: 'chat', mode: 'multi-agent', route: '/api/chat' },
+              });
+              const errorMessage = err instanceof BudgetExceededError
+                ? 'Daily AI budget exceeded. Please try again tomorrow.'
+                : 'Internal error';
+              const errorData = { type: 'error', error: errorMessage };
               controller.enqueue(encoder.encode(`data: ${JSON.stringify(errorData)}\n\n`));
               controller.enqueue(encoder.encode('data: [DONE]\n\n'));
             } finally {
@@ -188,8 +195,14 @@ export const POST = withAuth<void>(async (req, { user }) => {
     return result.toUIMessageStreamResponse();
   } catch (err) {
     if (err instanceof BudgetExceededError) {
-      return errorResponse(providerUnavailable(`Daily AI budget exceeded ($${err.spent.toFixed(2)} / $${err.max.toFixed(2)}). Resets at UTC midnight.`, { code: 'BUDGET_EXCEEDED', spent: err.spent, max: err.max }));
+      return errorResponse(
+        providerUnavailable(
+          `Daily AI budget exceeded ($${err.spent.toFixed(2)} / $${err.max.toFixed(2)}). Resets at UTC midnight.`,
+          { code: 'BUDGET_EXCEEDED', spent: err.spent, max: err.max },
+        ),
+        req,
+      );
     }
-    return errorResponse(err);
+    return errorResponse(err, req);
   }
 });

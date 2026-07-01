@@ -25,6 +25,12 @@ export {
   CURATED_FRED_RELEASE_IDS,
   type FetchCalendarOptions,
 } from './adapters/calendar';
+export {
+  listStorageObjects,
+  deleteStorageObjects,
+  type SupabaseStorageEnv,
+  type StorageObjectInfo,
+} from './adapters/storage';
 
 export {
   getDefaultCache,

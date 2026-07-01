@@ -453,6 +453,7 @@ describe('remaining output schemas', () => {
       schema: VerifyCallOutputSchema,
       sample: {
         symbol: 'EURUSD', asOf: Date.now(), side: 'long', entry: 1.08, stop: 1.075, target: 1.09,
+        marketPrice: 1.0805, marketTolerance: 0.02,
         agree: true, caveats: [], nearestOpposingLiquidity: null,
         rationale: 'Setup looks good.',
       },

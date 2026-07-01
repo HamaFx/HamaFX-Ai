@@ -2,6 +2,18 @@
   "framework": "nextjs",
   "outputDirectory": "apps/web/.next",
   "buildCommand": "node scripts/predeploy-migrate.mjs && npx turbo run build --filter=@hamafx/web",
+  "functions": {
+    "apps/web/src/app/api/chat/route.ts": { "maxDuration": 60 },
+    "apps/web/src/app/api/cron/news/route.ts": { "maxDuration": 60 },
+    "apps/web/src/app/api/cron/calendar/route.ts": { "maxDuration": 30 },
+    "apps/web/src/app/api/cron/alerts/route.ts": { "maxDuration": 15 },
+    "apps/web/src/app/api/cron/snapshots/route.ts": { "maxDuration": 30 },
+    "apps/web/src/app/api/cron/embedding-backfill/route.ts": { "maxDuration": 30 },
+    "apps/web/src/app/api/cron/briefings/route.ts": { "maxDuration": 60 },
+    "apps/web/src/app/api/cron/weekly-review/route.ts": { "maxDuration": 60 },
+    "apps/web/src/app/api/cron/cot/route.ts": { "maxDuration": 30 },
+    "apps/web/src/app/api/cron/fred-actuals/route.ts": { "maxDuration": 30 }
+  },
   "crons": [
     {
       "path": "/api/cron/evaluate-signals",

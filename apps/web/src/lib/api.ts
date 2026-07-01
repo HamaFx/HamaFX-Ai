@@ -22,6 +22,7 @@
 //   - X-Request-Id propagation (Phase 7a)
 //   - Phase A: getUserFromRequest() + withAuth() for multi-user scoping
 
+import * as Sentry from '@sentry/nextjs';
 import { ProviderError, toAppError } from '@hamafx/data';
 import { AppError, type ErrorCode, validationError, formatErrorResponse } from '@hamafx/shared';
 import { ZodError, type z } from 'zod';
@@ -125,6 +126,15 @@ function readRequestId(req?: Request): string | undefined {
   return req?.headers.get(REQUEST_ID_HEADER) ?? undefined;
 }
 
+function routeTag(req?: Request): string {
+  if (!req) return 'unknown';
+  try {
+    return new URL(req.url).pathname;
+  } catch {
+    return 'unknown';
+  }
+}
+
 /**
  * Standardised error response. Pass `req` to echo the X-Request-Id header
  * (and embed it in the error body so the UI can show it in a bug report).
@@ -134,17 +144,33 @@ export function errorResponse(err: unknown, req?: Request): Response {
   const headers: Record<string, string> = {};
   if (requestId) headers[REQUEST_ID_HEADER] = requestId;
   const options = { ...(requestId ? { requestId } : {}), headers };
+  const route = routeTag(req);
 
   if (err instanceof AppError) {
+    if (err.status >= 500) {
+      Sentry.captureException(err, {
+        tags: { component: 'api', route, kind: 'app-error' },
+        extra: { requestId, code: err.code },
+      });
+    }
     return formatErrorResponse(err, options);
   }
   if (err instanceof ProviderError) {
+    Sentry.captureException(err, {
+      tags: { component: 'api', route, kind: 'provider-error' },
+      extra: { requestId, provider: err.provider },
+    });
     return formatErrorResponse(toAppError(err), options);
   }
   if (err instanceof ZodError) {
     return formatErrorResponse(validationError('Invalid request', err.flatten()), options);
   }
-  console.error('[api] unhandled error', { err, requestId });
+
+  Sentry.captureException(err, {
+    tags: { component: 'api', route, kind: 'unhandled-error' },
+    extra: { requestId },
+  });
+  console.error('[api] unhandled error', { err, requestId, route });
   return formatErrorResponse(err, options);
 }
 

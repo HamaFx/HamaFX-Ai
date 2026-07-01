@@ -36,6 +36,8 @@ import { NextResponse } from 'next/server';
 import { getDb } from '@hamafx/db';
 import { sql } from 'drizzle-orm';
 
+import { withAuth } from '@/lib/api';
+
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
@@ -111,7 +113,7 @@ function checkEnv(): CheckResult {
   return { ok: true };
 }
 
-export async function GET() {
+export const GET = withAuth<void>(async () => {
   const [dbCheck, cronCheck] = await Promise.all([checkDb(), checkCronRuns()]);
   const envCheck = checkEnv();
   const pgvectorCheck = await checkPgvector();
@@ -134,4 +136,4 @@ export async function GET() {
     },
     { status: httpStatus },
   );
-}
+});

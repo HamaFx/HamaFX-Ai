@@ -32,6 +32,8 @@ const CAVEAT_GLYPH: Record<string, string> = {
   no_invalidation: '∅',
   opposing_liquidity_in_path: '∿',
   thin_structure: '≈',
+  market_price_unavailable: '¤',
+  level_far_from_market: 'Δ',
 };
 
 export function VerifyCallPart({ output, state, errorMessage }: ToolPartProps<'verify_call'>) {

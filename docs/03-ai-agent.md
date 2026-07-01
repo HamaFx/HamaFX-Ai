@@ -137,7 +137,7 @@ never global state.
 | `compute_risk`             | Position sizing from account size, risk %, entry, stop, and target. Returns units, notional, R:R ratio, and max loss. |
 | `compute_position_health`  | Real-time health check of open journal entries: current P&L, distance to stop/target, time-in-trade. |
 | `forecast_volatility`      | Expected range forecast using ATR, implied vol proxies, and upcoming event impact. Returns upper/lower bands for a time horizon. |
-| `verify_call`              | Retrospective trade review: given an entry/stop/target, checks what actually happened (did it hit TP first? SL first? Neither?). |
+| `verify_call`              | Deterministic setup verification: checks the live market price, validates entry/stop/target geometry, and flags opposing liquidity between entry and target. |
 | `replay_setup`             | Historical backtest of a rule-based setup (e.g. "EMA50/EMA200 cross with ATR stop"). Returns win rate, avg R, max drawdown, equity curve. |
 
 ### News & Calendar (3 tools)

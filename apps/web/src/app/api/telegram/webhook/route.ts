@@ -17,12 +17,73 @@
 // GET /api/telegram/webhook — Returns webhook info and bot status.
 // POST /api/telegram/webhook — Receives Telegram updates.
 
+import { timingSafeEqual } from 'node:crypto';
+
 import { handleTelegramWebhook, telegramApiCall } from '@hamafx/ai';
 import * as Sentry from '@sentry/nextjs';
+import { z } from 'zod';
+
 import { getServerEnv } from '@/lib/env';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
+
+const TelegramUpdateSchema = z.object({
+  update_id: z.number().int(),
+  message: z
+    .object({
+      message_id: z.number().int(),
+      chat: z.object({
+        id: z.number(),
+        first_name: z.string().optional(),
+        last_name: z.string().optional(),
+        username: z.string().optional(),
+      }),
+      text: z.string().optional(),
+      from: z
+        .object({
+          id: z.number(),
+          first_name: z.string().optional(),
+          username: z.string().optional(),
+          is_bot: z.boolean(),
+        })
+        .optional(),
+    })
+    .optional(),
+  callback_query: z
+    .object({
+      id: z.string(),
+      data: z.string(),
+      from: z
+        .object({
+          id: z.number(),
+          is_bot: z.boolean(),
+        })
+        .optional(),
+      message: z
+        .object({
+          message_id: z.number().int(),
+          chat: z.object({ id: z.number() }),
+        })
+        .optional(),
+    })
+    .optional(),
+  edited_message: z
+    .object({
+      message_id: z.number().int(),
+      chat: z.object({ id: z.number() }),
+      text: z.string().optional(),
+    })
+    .optional(),
+});
+
+function safeSecretEquals(actual: string | null, expected: string): boolean {
+  if (actual === null) return false;
+  const actualBuf = Buffer.from(actual);
+  const expectedBuf = Buffer.from(expected);
+  if (actualBuf.length !== expectedBuf.length) return false;
+  return timingSafeEqual(actualBuf, expectedBuf);
+}
 
 /** GET — webhook status & info (useful for debugging). */
 export async function GET(): Promise<Response> {
@@ -39,45 +100,48 @@ export async function GET(): Promise<Response> {
     const info = await telegramApiCall(env.TELEGRAM_BOT_TOKEN, 'getWebhookInfo', {});
     return Response.json({ configured: true, webhookInfo: info });
   } catch (err) {
-    return Response.json({
-      configured: true,
-      error: err instanceof Error ? err.message : 'Failed to fetch webhook info',
-    }, { status: 500 });
+    return Response.json(
+      {
+        configured: true,
+        error: err instanceof Error ? err.message : 'Failed to fetch webhook info',
+      },
+      { status: 500 },
+    );
   }
 }
 
 export async function POST(req: Request): Promise<Response> {
   const env = getServerEnv();
 
-  // Validate Secret Token (Telegram sends this in a header)
+  if (process.env.NODE_ENV === 'production' && !env.TELEGRAM_SECRET_TOKEN) {
+    console.error('[telegram-webhook] TELEGRAM_SECRET_TOKEN is required in production');
+    return new Response('Server misconfigured', { status: 500 });
+  }
+
   const secretToken = req.headers.get('x-telegram-bot-api-secret-token');
-  if (env.TELEGRAM_SECRET_TOKEN && secretToken !== env.TELEGRAM_SECRET_TOKEN) {
+  if (env.TELEGRAM_SECRET_TOKEN && !safeSecretEquals(secretToken, env.TELEGRAM_SECRET_TOKEN)) {
     console.warn('[telegram-webhook] Invalid secret token');
     return new Response('Unauthorized', { status: 401 });
   }
 
   let update;
   try {
-    update = await req.json();
+    update = TelegramUpdateSchema.parse(await req.json());
   } catch (err) {
-    console.error('[telegram-webhook] Failed to parse JSON body', err);
+    console.error('[telegram-webhook] Invalid webhook payload', err);
     return new Response('Bad Request', { status: 400 });
   }
 
-  // STAB-03: Return 500 on handler errors so Telegram retries the update.
-  // Previously the handler swallowed errors and always returned 200,
-  // causing updates to be silently dropped on failures.
+  // Return 500 on handler errors so Telegram retries the update.
   try {
     await handleTelegramWebhook(update, env);
     return new Response('OK', { status: 200 });
   } catch (err) {
-    // OBS-01: Capture to Sentry instead of only logging to console.
     Sentry.captureException(err, {
       tags: { component: 'telegram-webhook' },
-      extra: { updateId: (update as Record<string, unknown>)?.update_id },
+      extra: { updateId: update.update_id },
     });
     console.error('[telegram-webhook] Handler failed:', err);
-    // Return 500 so Telegram retries delivery (up to its retry limit).
     return new Response('Internal Server Error', { status: 500 });
   }
 }

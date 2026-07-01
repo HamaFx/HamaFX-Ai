@@ -37,6 +37,8 @@
 // back to the async path anyway. One canonical entry point keeps the
 // auth contract obvious.
 
+import * as Sentry from '@sentry/nextjs';
+
 import { getAuthEnv } from './env';
 
 // Keep-alive for the legacy signed-cookie auth used by the admin-UI
@@ -169,10 +171,12 @@ export async function withCronAuth(
     const result = await fn();
     return Response.json({ ok: true, ...result });
   } catch (err) {
-    const message = err instanceof Error ? err.message : 'Cron handler failed';
+    Sentry.captureException(err, {
+      tags: { component: 'cron', route: routeTag(req), kind: 'handler-error' },
+    });
     console.error('[cron] handler error', err);
     return Response.json(
-      { error: { code: 'INTERNAL', message } },
+      { error: { code: 'INTERNAL', message: 'Internal error' } },
       { status: 500 },
     );
   }
@@ -188,6 +192,14 @@ function readCookie(header: string, name: string): string | undefined {
   return undefined;
 }
 
+function routeTag(req: Request): string {
+  try {
+    return new URL(req.url).pathname;
+  } catch {
+    return 'unknown';
+  }
+}
+
 export async function runCronJob(name: string, fn: () => Promise<void>, options: { timeout?: number } = {}): Promise<Response> {
   const startTime = Date.now();
   try {
@@ -198,7 +210,10 @@ export async function runCronJob(name: string, fn: () => Promise<void>, options:
     ]);
     return Response.json({ ok: true, duration: Date.now() - startTime });
   } catch (error) {
+    Sentry.captureException(error, {
+      tags: { component: 'cron', job: name, kind: 'job-error' },
+    });
     console.error(`[cron] ${name} failed:`, error);
-    return Response.json({ ok: false, error: error instanceof Error ? error.message : 'Unknown error' }, { status: 500 });
+    return Response.json({ error: { code: 'INTERNAL', message: 'Internal error' } }, { status: 500 });
   }
 }

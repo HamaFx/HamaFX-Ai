@@ -1,5 +1,6 @@
 'use server';
 
+import * as Sentry from '@sentry/nextjs';
 import bcrypt from 'bcryptjs';
 import { and, eq, gt, sql } from 'drizzle-orm';
 import { AuthError } from 'next-auth';
@@ -71,7 +72,11 @@ export async function loginAction(prevState: unknown, formData: FormData) {
       }
       return { error: 'Invalid email or password' };
     }
-    return { error: `Error: ${errStr.slice(0, 200)}` };
+    Sentry.captureException(error, {
+      tags: { component: 'auth-actions', action: 'login' },
+      extra: { email: normalizedEmail },
+    });
+    return { error: 'Unable to sign in right now. Please try again.' };
   }
 }
 
@@ -154,6 +159,10 @@ export async function registerAction(prevState: unknown, formData: FormData) {
       console.info(`[verify] ${baseUrl}/api/auth/verify-email?token=${verifyToken}`);
     }
   } catch (err) {
+    Sentry.captureException(err, {
+      tags: { component: 'auth-actions', action: 'register-verification-token' },
+      extra: { email: normalizedEmail },
+    });
     console.error('[auth] Failed to create verification token:', err);
   }
 
@@ -170,7 +179,11 @@ export async function registerAction(prevState: unknown, formData: FormData) {
     if (error instanceof AuthError) {
       return { error: 'Account created, but failed to automatically sign in' };
     }
-    return { error: `Error: ${errStr.slice(0, 200)}` };
+    Sentry.captureException(error, {
+      tags: { component: 'auth-actions', action: 'register' },
+      extra: { email: normalizedEmail },
+    });
+    return { error: 'Unable to finish registration right now. Please try again.' };
   }
 }
 

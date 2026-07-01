@@ -6,7 +6,7 @@ import { eq } from 'drizzle-orm';
 
 export async function GET() {
   // Hard guard — only allow in development
-  if (process.env.NODE_ENV === 'production') {
+  if (process.env.NODE_ENV !== 'development') {
     return new NextResponse('Not Found', { status: 404 });
   }
 

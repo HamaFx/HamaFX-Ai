@@ -17,17 +17,18 @@
 // Tool: verify_call.
 //
 // Verifies a directional setup by:
-//   1. Sanity-checking entry / stop / target geometry.
-//   2. Scanning recent structure for the nearest opposing liquidity
+//   1. Grounding the proposed levels against the live market price.
+//   2. Sanity-checking entry / stop / target geometry.
+//   3. Scanning recent structure for the nearest opposing liquidity
 //      (swing high above entry for a long, swing low below entry for a
 //      short).
-//   3. Flagging when that opposing level sits inside entry→target.
+//   4. Flagging when that opposing level sits inside entry→target.
 //
 // Pure deterministic logic — no LLM call. The output is consumed by the
-// `verify-warning` chat part which renders the caveats next to the
-// agent's directional call rather than silencing it.
+// `verify-warning` chat part which renders caveats next to the agent's
+// directional call rather than silencing it.
 
-import { getCandles } from '@hamafx/data';
+import { getCandles, getPrice } from '@hamafx/data';
 import { computeStructure } from '@hamafx/indicators';
 import {
   VerifyCallInputSchema,
@@ -48,7 +49,7 @@ declare module '@hamafx/shared' {
 
 export const verifyCallTool = tool({
   description:
-    "Verify a directional setup. Re-checks (entry, stop, target) geometry and scans recent structure for the nearest opposing liquidity (swing high above for longs, swing low below for shorts) — flags when that level sits inside entry→target. Use after naming a setup (BEFORE the user asks 'is this safe'). Never blocks; emits caveats with `agree: false` so the user sees the call AND the warnings together.",
+    "Verify a directional setup. Re-checks the proposed levels against the live market, validates entry/stop/target geometry, and scans recent structure for the nearest opposing liquidity (swing high above for longs, swing low below for shorts). Use after naming a setup and before presenting it as verified.",
   inputSchema: InputSchema,
   execute: async ({
     symbol,
@@ -60,8 +61,42 @@ export const verifyCallTool = tool({
     lookbackBars,
   }): Promise<VerifyCallOutput> => {
     const caveats: VerifyCallCaveat[] = [];
+    const nullableTarget = target ?? null;
 
-    // Geometry checks first — cheap and deterministic.
+    let marketPrice: number | null = null;
+    let marketTolerance: number | null = null;
+
+    try {
+      const tick = await getPrice(symbol);
+      marketPrice = tick.mid;
+      marketTolerance = marketDistanceTolerance(symbol, tick.mid);
+
+      const levels = [
+        { name: 'entry', value: entry },
+        { name: 'stop', value: stop },
+        ...(nullableTarget !== null ? [{ name: 'target', value: nullableTarget }] : []),
+      ];
+
+      for (const level of levels) {
+        const distance = Math.abs(level.value - tick.mid);
+        if (distance > marketTolerance) {
+          caveats.push({
+            code: 'level_far_from_market',
+            message:
+              `${capitalize(level.name)} ${level.value.toFixed(decimals(symbol))} sits ` +
+              `${distance.toFixed(decimals(symbol))} away from live ${symbol} price ` +
+              `${tick.mid.toFixed(decimals(symbol))} (tolerance ${marketTolerance.toFixed(decimals(symbol))}).`,
+          });
+        }
+      }
+    } catch {
+      caveats.push({
+        code: 'market_price_unavailable',
+        message: 'Could not fetch the live market price, so this setup was not grounded against the current market.',
+      });
+    }
+
+    // Geometry checks next — cheap and deterministic.
     if (side === 'long' && stop >= entry) {
       caveats.push({
         code: 'invalid_stop_side',
@@ -74,7 +109,6 @@ export const verifyCallTool = tool({
         message: `Short with stop ${stop} ≤ entry ${entry} — stop must sit above entry.`,
       });
     }
-    const nullableTarget = target ?? null;
     if (nullableTarget !== null) {
       if (side === 'long' && nullableTarget <= entry) {
         caveats.push({
@@ -159,6 +193,8 @@ export const verifyCallTool = tool({
       entry,
       stop,
       target: nullableTarget,
+      marketPrice,
+      marketTolerance,
       nearestOpposingLiquidity,
       agree,
       caveats,
@@ -171,6 +207,8 @@ export const verifyCallTool = tool({
       entry,
       stop,
       target: nullableTarget,
+      marketPrice,
+      marketTolerance,
       agree,
       caveats,
       nearestOpposingLiquidity,
@@ -187,23 +225,40 @@ function decimals(symbol: Symbol): number {
   return symbol === 'XAUUSD' ? 2 : 5;
 }
 
+function marketDistanceTolerance(symbol: Symbol, livePrice: number): number {
+  if (symbol === 'XAUUSD') {
+    return Math.max(25, livePrice * 0.02);
+  }
+  return Math.max(0.005, livePrice * 0.02);
+}
+
+function capitalize(value: string): string {
+  return value.charAt(0).toUpperCase() + value.slice(1);
+}
+
 function buildRationale(args: {
   symbol: Symbol;
   side: 'long' | 'short';
   entry: number;
   stop: number;
   target: number | null;
+  marketPrice: number | null;
+  marketTolerance: number | null;
   nearestOpposingLiquidity: VerifyCallOutput['nearestOpposingLiquidity'];
   agree: boolean;
   caveats: VerifyCallCaveat[];
 }): string {
   const d = decimals(args.symbol);
   const head = `${args.side === 'long' ? 'Long' : 'Short'} ${args.symbol}: entry ${args.entry.toFixed(d)} · stop ${args.stop.toFixed(d)}${args.target !== null ? ` · target ${args.target.toFixed(d)}` : ''}.`;
+  const marketLine =
+    args.marketPrice !== null && args.marketTolerance !== null
+      ? ` Checked against live price ${args.marketPrice.toFixed(d)} (tolerance ${args.marketTolerance.toFixed(d)}).`
+      : ' Live price check unavailable.';
   if (args.agree) {
     const liquidityLine = args.nearestOpposingLiquidity
       ? ` Nearest opposing ${args.nearestOpposingLiquidity.kind === 'swing_high' ? 'swing high' : 'swing low'} at ${args.nearestOpposingLiquidity.price.toFixed(d)} (${args.nearestOpposingLiquidity.barsAgo} bars back).`
       : '';
-    return `${head} Geometry checks out.${liquidityLine}`;
+    return `${head}${marketLine} Geometry checks out.${liquidityLine}`;
   }
-  return `${head} ${args.caveats.length} caveat${args.caveats.length === 1 ? '' : 's'}: ${args.caveats.map((c) => c.message).join(' · ')}`;
+  return `${head}${marketLine} ${args.caveats.length} caveat${args.caveats.length === 1 ? '' : 's'}: ${args.caveats.map((c) => c.message).join(' · ')}`;
 }

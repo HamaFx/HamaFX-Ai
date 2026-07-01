@@ -63,6 +63,8 @@ export const VerifyCallCaveatSchema = z.object({
     'no_invalidation',
     'opposing_liquidity_in_path',
     'thin_structure',
+    'market_price_unavailable',
+    'level_far_from_market',
   ]),
   message: z.string(),
 });
@@ -75,6 +77,10 @@ export const VerifyCallOutputSchema = z.object({
   entry: z.number(),
   stop: z.number(),
   target: z.number().nullable(),
+  /** Live market price used to ground the setup, or null when unavailable. */
+  marketPrice: z.number().nullable(),
+  /** Max allowed absolute distance from live price before the setup is caveated. */
+  marketTolerance: z.number().nullable(),
   /**
    * True when the verifier sees no problems. False means at least one
    * caveat fired — see `caveats[]` for details. The verifier never

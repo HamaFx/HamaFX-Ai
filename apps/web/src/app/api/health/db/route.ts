@@ -26,6 +26,8 @@ import { NextResponse } from 'next/server';
 import { getDb } from '@hamafx/db';
 import { sql } from 'drizzle-orm';
 import { readFileSync } from 'node:fs';
+
+import { withAuth } from '@/lib/api';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -49,7 +51,7 @@ interface DbHealthResult {
   migrations: { ok: boolean; expected: number; actual?: number; message?: string };
 }
 
-export async function GET() {
+export const GET = withAuth<void>(async () => {
   const expectedMigrations = getExpectedMigrationCount();
 
   let connectivity: DbHealthResult['connectivity'] = { ok: false };
@@ -97,4 +99,4 @@ export async function GET() {
     { status, ts: new Date().toISOString(), ...result },
     { status: httpStatus },
   );
-}
+});
