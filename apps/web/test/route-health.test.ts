@@ -8,6 +8,10 @@ vi.mock('@hamafx/db', () => ({
 
 import { GET } from '@/app/api/health/route';
 
+const MOCK_REQ = new Request('http://localhost/api/health', {
+  headers: { 'x-user-id': 'test-user' },
+});
+
 const ENV = {
   DATABASE_URL: 'test-db-url',
   AUTH_COOKIE_SECRET: 'test-auth-secret',
@@ -34,7 +38,7 @@ describe('GET /api/health', () => {
       { extname: 'vector', recent: '42', stuck: '0' },
     ]);
 
-    const response = await GET();
+    const response = await GET(MOCK_REQ, { params: Promise.resolve(undefined as never) });
     expect(response.status).toBe(200);
 
     const body = await response.json();
@@ -54,7 +58,7 @@ describe('GET /api/health', () => {
     ]);
     delete process.env.DATABASE_URL;
 
-    const response = await GET();
+    const response = await GET(MOCK_REQ, { params: Promise.resolve(undefined as never) });
     expect(response.status).toBe(503);
 
     const body = await response.json();
@@ -66,7 +70,7 @@ describe('GET /api/health', () => {
   it('returns 503 when db check fails', async () => {
     mockDbExecute.mockRejectedValue(new Error('connection refused'));
 
-    const response = await GET();
+    const response = await GET(MOCK_REQ, { params: Promise.resolve(undefined as never) });
     expect(response.status).toBe(503);
 
     const body = await response.json();
@@ -78,7 +82,7 @@ describe('GET /api/health', () => {
   it('reports pgvector not installed when extension is missing', async () => {
     mockDbExecute.mockResolvedValue([]);
 
-    const response = await GET();
+    const response = await GET(MOCK_REQ, { params: Promise.resolve(undefined as never) });
     expect(response.status).toBe(200);
 
     const body = await response.json();
@@ -89,7 +93,7 @@ describe('GET /api/health', () => {
   it('gracefully handles missing cron_runs table', async () => {
     mockDbExecute.mockResolvedValue([]);
 
-    const response = await GET();
+    const response = await GET(MOCK_REQ, { params: Promise.resolve(undefined as never) });
     expect(response.status).toBe(200);
 
     const body = await response.json();

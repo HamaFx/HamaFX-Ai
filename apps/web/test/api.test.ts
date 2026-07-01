@@ -101,7 +101,7 @@ describe('errorResponse', () => {
     const res = errorResponse('string error');
     expect(res.status).toBe(500);
     const body = await res.json();
-    expect(body.error.message).toBe('Unknown error occurred');
+    expect(body.error.message).toBe('Internal error');
   });
 
   it('returns 503 for provider errors', async () => {

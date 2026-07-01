@@ -28,7 +28,7 @@
 //                                 (variable NAMES only, never values)
 //   502 { error: string }        on Resend non-2xx (response text truncated)
 
-import { sendDirectNotification } from '@hamafx/ai';
+
 import { z } from 'zod';
 
 import { withAuth } from '@/lib/api';
@@ -38,8 +38,13 @@ export const dynamic = 'force-dynamic';
 
 const BodySchema = z.object({ to: z.string().email().optional() });
 
+const RESEND_ENDPOINT = 'https://api.resend.com/emails';
 const SUBJECT = '[HamaFX-Ai] Test alert email';
 const TEXT_BODY = 'If you received this, the alerts pipeline is wired up correctly.\n\n— HamaFX-Ai';
+
+interface ResendCreateResponse {
+  id?: string;
+}
 
 export const POST = withAuth<void>(async (req) => {
   // 2. Parse body — accept empty body as `{}` so a no-arg POST works.

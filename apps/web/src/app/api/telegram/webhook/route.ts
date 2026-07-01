@@ -19,7 +19,7 @@
 
 import { timingSafeEqual } from 'node:crypto';
 
-import { handleTelegramWebhook, telegramApiCall } from '@hamafx/ai';
+import { handleTelegramWebhook, telegramApiCall, type TelegramUpdate } from '@hamafx/ai';
 import * as Sentry from '@sentry/nextjs';
 import { z } from 'zod';
 
@@ -134,7 +134,7 @@ export async function POST(req: Request): Promise<Response> {
 
   // Return 500 on handler errors so Telegram retries the update.
   try {
-    await handleTelegramWebhook(update, env);
+    await handleTelegramWebhook(update as TelegramUpdate, env);
     return new Response('OK', { status: 200 });
   } catch (err) {
     Sentry.captureException(err, {

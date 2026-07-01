@@ -196,14 +196,14 @@ describe('formatErrorResponse', () => {
     const res = formatErrorResponse(new Error('Something broke'));
     expect(res.status).toBe(500);
     const body = await res.json();
-    expect(body).toEqual({ error: { code: 'INTERNAL', message: 'Something broke' } });
+    expect(body).toEqual({ error: { code: 'INTERNAL', message: 'Internal error' } });
   });
 
   it('formats unknown (non-Error) as generic 500', async () => {
     const res = formatErrorResponse('string error');
     expect(res.status).toBe(500);
     const body = await res.json();
-    expect(body).toEqual({ error: { code: 'INTERNAL', message: 'Unknown error occurred' } });
+    expect(body).toEqual({ error: { code: 'INTERNAL', message: 'Internal error' } });
   });
 
   it('formats AppError without details correctly', async () => {
