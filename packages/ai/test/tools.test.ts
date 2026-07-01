@@ -110,7 +110,7 @@ describe('tools registry', () => {
   });
 
   it('get_price tool has correct input schema', () => {
-    const schema = tools.get_price.inputSchema as { describe: () => string };
+    const schema = tools.get_price.inputSchema as unknown as { describe: () => string };
     expect(schema.describe()).toBeTruthy();
   });
 

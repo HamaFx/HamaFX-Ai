@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import type { AgentOpinion, AgentName } from '../../src/multi-agent/types';
 
 // Test the fusion logic without importing the full DecisionAgent (which

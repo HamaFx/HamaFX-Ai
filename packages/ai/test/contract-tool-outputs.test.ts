@@ -143,7 +143,7 @@ describe('AnalyzeTechnicalOutputSchema', () => {
   });
 
   it('rejects missing summary', () => {
-    const { summary, ...rest } = valid;
+    const { summary: _, ...rest } = valid;
     expect(AnalyzeTechnicalOutputSchema.safeParse(rest).success).toBe(false);
   });
 
@@ -519,8 +519,7 @@ describe('remaining output schemas', () => {
     it(`${name} validates its sample data`, () => {
       const result = schema.safeParse(sample);
       if (!result.success) {
-        // eslint-disable-next-line no-console
-        console.error(`${name} error:`, JSON.stringify((result as { error: unknown }).error, null, 2));
+        console.error(`${name} error:`, JSON.stringify((result as unknown as { error: unknown }).error, null, 2));
       }
       expect(result.success).toBe(true);
     });

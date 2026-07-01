@@ -17,6 +17,7 @@
 // Risk Screening Agent — identifies risks, red flags, worst-case scenarios.
 
 import { z } from 'zod';
+import type { Tool } from 'ai';
 import { BaseAgent, baseOpinionSchema } from './base-agent';
 import { tools as allTools } from '../../tools';
 import { getMarketPhase } from '@hamafx/shared';
@@ -92,7 +93,7 @@ Use the available tools to fetch real news, calendar events, and correlation dat
 before forming your assessment.${liquidityRiskNote}`;
   }
 
-  tools(): Record<string, import('ai').Tool> {
+  tools(): Record<string, Tool> {
     return {
       get_news: allTools.get_news,
       get_calendar: allTools.get_calendar,

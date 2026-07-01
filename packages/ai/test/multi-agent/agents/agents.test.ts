@@ -15,20 +15,21 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { TechnicalAgent } from '../../../src/multi-agent/agents/technical-agent';
-import { FundamentalAgent } from '../../../src/multi-agent/agents/fundamental-agent';
-import { RiskAgent } from '../../../src/multi-agent/agents/risk-agent';
-import { SentimentAgent } from '../../../src/multi-agent/agents/sentiment-agent';
-import { DecisionAgent } from '../../../src/multi-agent/agents/decision-agent';
+import type { AgentBias } from '@ai/multi-agent/types';
+import { TechnicalAgent } from '@ai/multi-agent/agents/technical-agent';
+import { FundamentalAgent } from '@ai/multi-agent/agents/fundamental-agent';
+import { RiskAgent } from '@ai/multi-agent/agents/risk-agent';
+import { SentimentAgent } from '@ai/multi-agent/agents/sentiment-agent';
+import { DecisionAgent } from '@ai/multi-agent/agents/decision-agent';
 
 describe('TechnicalAgent', () => {
   const agent = new TechnicalAgent();
   it('has correct name and tier', () => { expect(agent.name).toBe('technical'); expect(agent.modelTier).toBe('fast'); });
   it('has a system prompt mentioning technical analysis', () => { const p = agent.systemPrompt(); expect(p).toContain('Technical Analysis Agent'); expect(p.toLowerCase()).toContain('price action'); });
   it('has scoped tools', () => { const t = agent.tools(); expect(t.get_candles).toBeDefined(); expect(t.get_calendar).toBeUndefined(); });
-  it('parses valid JSON output', () => { const r = (agent as any).parseOutput(JSON.stringify({ bias: 'bullish', confidence: 0.85, reasoning: 'Uptrend', keyLevels: { support: [2350], resistance: [2400] } })); expect(r.bias).toBe('bullish'); expect(r.rawData.keyLevels).toBeDefined(); });
-  it('parses JSON in code blocks', () => { const r = (agent as any).parseOutput('```json\n{"bias":"bearish","confidence":0.6,"reasoning":"Downtrend"}\n```'); expect(r.bias).toBe('bearish'); });
-  it('falls back on parse failure', () => { const r = (agent as any).parseOutput('The market looks bullish.'); expect(r.bias).toBe('bullish'); expect(r.rawData.parseFailed).toBe(true); });
+  it('parses valid JSON output', () => { const r = (agent as unknown as { parseOutput(text: string): { bias: AgentBias; confidence: number; reasoning: string; rawData: Record<string, unknown> } }).parseOutput(JSON.stringify({ bias: 'bullish', confidence: 0.85, reasoning: 'Uptrend', keyLevels: { support: [2350], resistance: [2400] } })); expect(r.bias).toBe('bullish'); expect(r.rawData.keyLevels).toBeDefined(); });
+  it('parses JSON in code blocks', () => { const r = (agent as unknown as { parseOutput(text: string): { bias: AgentBias; confidence: number; reasoning: string; rawData: Record<string, unknown> } }).parseOutput('```json\n{"bias":"bearish","confidence":0.6,"reasoning":"Downtrend"}\n```'); expect(r.bias).toBe('bearish'); });
+  it('falls back on parse failure', () => { const r = (agent as unknown as { parseOutput(text: string): { bias: AgentBias; confidence: number; reasoning: string; rawData: Record<string, unknown> } }).parseOutput('The market looks bullish.'); expect(r.bias).toBe('bullish'); expect(r.rawData.parseFailed).toBe(true); });
 });
 
 describe('FundamentalAgent', () => {
@@ -55,6 +56,6 @@ describe('DecisionAgent', () => {
   it('has correct name and tier', () => { expect(agent.name).toBe('decision'); expect(agent.modelTier).toBe('strong'); });
   it('has NO tools', () => { expect(Object.keys(agent.tools())).toHaveLength(0); });
   it('mentions fusion and veto', () => { const p = agent.systemPrompt(); expect(p).toContain('hardVeto'); expect(p).toContain('AGREEMENT'); });
-  it('extracts bullish bias', () => { expect((agent as any).parseOutput('XAUUSD is bullish. Buy at 2360.').bias).toBe('bullish'); });
-  it('extracts bearish bias', () => { expect((agent as any).parseOutput('Bearish outlook. Sell on rallies.').bias).toBe('bearish'); });
+  it('extracts bullish bias', () => { expect((agent as unknown as { parseOutput(text: string): { bias: AgentBias } }).parseOutput('XAUUSD is bullish. Buy at 2360.').bias).toBe('bullish'); });
+  it('extracts bearish bias', () => { expect((agent as unknown as { parseOutput(text: string): { bias: AgentBias } }).parseOutput('Bearish outlook. Sell on rallies.').bias).toBe('bearish'); });
 });

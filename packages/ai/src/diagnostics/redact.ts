@@ -24,8 +24,6 @@
 // objects/arrays (key-based). Together these two layers ensure that
 // secrets never leak into structured diagnostic traces.
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 /**
  * Regex patterns for redacting secrets in string values.
  * Each entry is [pattern, replacement] where replacement is either a

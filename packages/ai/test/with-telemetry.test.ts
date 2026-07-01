@@ -15,6 +15,7 @@
  */
 
 import { describe, expect, it, vi, beforeEach } from 'vitest';
+import { z } from 'zod';
 
 import { withTelemetry } from '../src/tools/with-telemetry';
 import {
@@ -38,7 +39,7 @@ vi.mock('../src/tool-context', () => ({
 function makeTool(execute: (input: unknown, opts?: unknown) => unknown) {
   return {
     description: 'test tool',
-    parameters: { type: 'object', properties: {}, required: [] } as const,
+    inputSchema: z.object({}),
     execute,
   };
 }
@@ -52,7 +53,7 @@ describe('withTelemetry — diagnostics integration', () => {
   it('records a diagnostic step on execute', async () => {
     const tool = withTelemetry('test_tool', makeTool(async () => 'ok'));
     await withDiagnostics('user-1', 'thread-1', async () => {
-      await tool.execute!({ foo: 'bar' }, {});
+      await tool.execute!({ foo: 'bar' }, { toolCallId: 'test', messages: [] });
 
       const ctx = getDiagnosticContext()!;
       // completeStep mutates the step in-place (status → 'completed'),
@@ -74,7 +75,7 @@ describe('withTelemetry — diagnostics integration', () => {
     );
 
     await withDiagnostics('user-1', 'thread-1', async () => {
-      await expect(tool.execute!({}, {})).rejects.toThrow('boom');
+      await expect(tool.execute!({}, { toolCallId: 'test', messages: [] })).rejects.toThrow('boom');
 
       const ctx = getDiagnosticContext()!;
       const step = ctx.steps.find((s) => s.name === 'tool:failing_tool');
@@ -100,7 +101,7 @@ describe('withTelemetry — diagnostics integration', () => {
       userSettings: {} as never,
     });
 
-    await tool.execute!({}, {});
+    await tool.execute!({}, { toolCallId: 'test', messages: [] });
     expect(mockRecordToolTelemetry).toHaveBeenCalledTimes(1);
     expect(mockRecordToolTelemetry).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -128,7 +129,7 @@ describe('withTelemetry — diagnostics integration', () => {
       userSettings: {} as never,
     });
 
-    await expect(tool.execute!({}, {})).rejects.toThrow();
+    await expect(tool.execute!({}, { toolCallId: 'test', messages: [] })).rejects.toThrow();
     expect(mockRecordToolTelemetry).toHaveBeenCalledTimes(1);
     expect(mockRecordToolTelemetry).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -148,7 +149,7 @@ describe('withTelemetry — diagnostics integration', () => {
       }),
     );
 
-    await expect(tool.execute!({}, {})).rejects.toThrow();
+    await expect(tool.execute!({}, { toolCallId: 'test', messages: [] })).rejects.toThrow();
     expect(mockRecordToolTelemetry).toHaveBeenCalledWith(
       expect.objectContaining({ errorCode: 'RangeError', ok: false }),
     );
@@ -158,11 +159,11 @@ describe('withTelemetry — diagnostics integration', () => {
     const tool = withTelemetry(
       'str_err_tool',
       makeTool(async () => {
-        throw 'just a string'; // eslint-disable-line no-throw-literal
+        throw 'just a string';
       }),
     );
 
-    await expect(tool.execute!({}, {})).rejects.toBe('just a string');
+    await expect(tool.execute!({}, { toolCallId: 'test', messages: [] })).rejects.toBe('just a string');
     expect(mockRecordToolTelemetry).toHaveBeenCalledWith(
       expect.objectContaining({ errorCode: 'unknown', ok: false }),
     );
@@ -170,7 +171,7 @@ describe('withTelemetry — diagnostics integration', () => {
 
   it('passes through the tool result unchanged', async () => {
     const tool = withTelemetry('passthrough', makeTool(async () => ({ data: [1, 2, 3] })));
-    const result = await tool.execute!({}, {});
+    const result = await tool.execute!({}, { toolCallId: 'test', messages: [] });
     expect(result).toEqual({ data: [1, 2, 3] });
   });
 
@@ -195,12 +196,12 @@ describe('withTelemetry — diagnostics integration', () => {
       userSettings: {} as never,
     });
 
-    await tool.execute!({}, {});
+    await tool.execute!({}, { toolCallId: 'test', messages: [] });
     expect(capturedOpts.abortSignal).toBe(ac.signal);
   });
 
   it('returns tool as-is when execute is missing', () => {
-    const toolDef = { description: 'schema only', parameters: { type: 'object' as const, properties: {}, required: [] as string[] } };
+    const toolDef = { description: 'schema only', inputSchema: z.object({}) };
     const wrapped = withTelemetry('schema_only', toolDef);
     expect(wrapped).toBe(toolDef);
   });

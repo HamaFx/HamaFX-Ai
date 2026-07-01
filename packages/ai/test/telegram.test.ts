@@ -17,7 +17,7 @@
 // Tests for the upgraded Telegram bot system.
 // Run: pnpm --filter @hamafx/ai test -- --run telegram
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { isDuplicateUpdate, markProcessed, _resetForTesting } from '../src/telegram/idempotency';
 import { checkRateLimit, getRateLimitStatus, _resetRateLimitsForTesting } from '../src/telegram/rate-limiter';
 import { chunkText } from '../src/telegram/client';
@@ -129,8 +129,8 @@ describe('Text Chunking', () => {
     const text = 'X'.repeat(5000); // no spaces or newlines
     const chunks = chunkText(text, 4000);
     expect(chunks.length).toBe(2);
-    expect(chunks[0].length).toBe(4000);
-    expect(chunks[1].length).toBe(1000);
+    expect(chunks[0]!.length).toBe(4000);
+    expect(chunks[1]!.length).toBe(1000);
   });
 
   it('handles empty text', () => {

@@ -33,7 +33,7 @@ const InputSchema = z.object({
   symbol: SymbolSchema.describe('The forex or gold symbol to get sentiment for'),
 });
 
-const OutputSchema = z.object({
+const _OutputSchema = z.object({
   symbol: z.string(),
   overall: z.enum(['very_bullish', 'bullish', 'neutral', 'bearish', 'very_bearish']),
   overallScore: z.number(),
@@ -53,7 +53,7 @@ const OutputSchema = z.object({
   available: z.boolean(),
 });
 
-export type GetSocialSentimentOutput = z.infer<typeof OutputSchema>;
+export type GetSocialSentimentOutput = z.infer<typeof _OutputSchema>;
 
 declare module '@hamafx/shared' {
   interface ToolIOMap {

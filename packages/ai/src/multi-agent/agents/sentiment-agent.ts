@@ -17,6 +17,7 @@
 // Sentiment Analysis Agent — social sentiment, news sentiment, market fear/greed.
 
 import { z } from 'zod';
+import type { Tool } from 'ai';
 import { BaseAgent, baseOpinionSchema } from './base-agent';
 import { tools as allTools } from '../../tools';
 import type { AgentName, AgentBias, ModelTier } from '../types';
@@ -58,7 +59,7 @@ Use the available tools to fetch real news and search for relevant information
 before forming your sentiment assessment.`;
   }
 
-  tools(): Record<string, import('ai').Tool> {
+  tools(): Record<string, Tool> {
     return {
       get_news: allTools.get_news,
       search_knowledge: allTools.search_knowledge,

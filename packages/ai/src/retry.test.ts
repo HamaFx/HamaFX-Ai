@@ -16,12 +16,13 @@
 
 // Tests for STAB-06: withRetry exponential backoff helper.
 
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { withRetry } from './retry';
+import type * as RetryModule from './retry';
 
 // Speed up: make the retry helper skip real timer delays.
 vi.mock('./retry', async (importOriginal) => {
-  const original = await importOriginal<typeof import('./retry')>();
+  const original = await importOriginal<typeof RetryModule>();
 
   // Patch jitteredDelay to return 0 in tests so they don't actually sleep.
   return {

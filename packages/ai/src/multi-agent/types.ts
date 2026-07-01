@@ -22,7 +22,7 @@
 
 import type { LiveSnapshot } from '../prompt/system';
 import type { UserSettingsRow } from '@hamafx/db/schema';
-import type { UIMessage, LanguageModel } from 'ai';
+import type { UIMessage } from 'ai';
 
 // ── Analysis Modes ──────────────────────────────────────────────────────
 
@@ -85,8 +85,10 @@ export interface SharedContext {
  * Env slice needed by the multi-agent pipeline.
  * Mirrors the RunChatArgs env but typed separately for clarity.
  */
+import type { ServerEnv } from '@hamafx/shared';
+
 export type MultiAgentEnv = Pick<
-  import('@hamafx/shared').ServerEnv,
+  ServerEnv,
   | 'AI_GATEWAY_API_KEY'
   | 'GOOGLE_GENERATIVE_AI_API_KEY'
   | 'GOOGLE_VERTEX_PROJECT'

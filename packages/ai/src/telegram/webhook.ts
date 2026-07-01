@@ -159,7 +159,7 @@ export async function handleTelegramWebhook(update: TelegramUpdate, env: ServerE
 
   // ── Idempotency: skip duplicate updates from Telegram retries ──
   if (isDuplicateUpdate(updateId)) {
-    console.log(`[telegram] Skipping duplicate update_id=${updateId}`);
+    console.info(`[telegram] Skipping duplicate update_id=${updateId}`);
     return;
   }
 
@@ -210,8 +210,8 @@ async function handleCommand(
   text: string,
   chatId: number,
   botToken: string,
-  env: ServerEnv,
-  update: TelegramUpdate,
+  _env: ServerEnv,
+  _update: TelegramUpdate,
 ): Promise<void> {
   // /link works without a linked account
   if (text.toLowerCase().startsWith('/link')) {

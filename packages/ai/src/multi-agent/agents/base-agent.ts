@@ -86,9 +86,9 @@ export abstract class BaseAgent {
   protected safeParseJson(text: string): Record<string, unknown> | null {
     try { return JSON.parse(text); } catch {
       const m = text.match(/```(?:json)?\s*([\s\S]*?)```/);
-      if (m?.[1]) { try { return JSON.parse(m[1].trim()); } catch {} }
+      if (m?.[1]) { try { return JSON.parse(m[1].trim()); } catch { /* continue */ } }
       const f = text.indexOf('{'), l = text.lastIndexOf('}');
-      if (f >= 0 && l > f) { try { return JSON.parse(text.slice(f, l + 1)); } catch {} }
+      if (f >= 0 && l > f) { try { return JSON.parse(text.slice(f, l + 1)); } catch { /* continue */ } }
       return null;
     }
   }

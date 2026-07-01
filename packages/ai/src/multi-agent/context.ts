@@ -44,7 +44,7 @@ export interface BuildContextArgs {
 }
 
 export async function buildSharedContext(args: BuildContextArgs): Promise<SharedContext> {
-  const { symbol, userId, userMessage, history, userSettings, displayName, customInstructions, env, signal } = args;
+  const { symbol, userId, userMessage, history, userSettings, customInstructions, env, signal } = args;
   const snapshot = await buildLiveSnapshot({ signal: signal ?? undefined, userId });
   const ctx: SharedContext = { symbol, snapshot, userSettings, userMessage, history, signal, env };
   if (customInstructions !== undefined) ctx.customInstructions = customInstructions;

@@ -26,7 +26,6 @@ import type {
   PortfolioPosition,
   PortfolioRiskReport,
   PositionWithPnL,
-  PortfolioSettings,
   ConcentrationItem,
   CorrelationRiskItem,
   PositionNearStop,

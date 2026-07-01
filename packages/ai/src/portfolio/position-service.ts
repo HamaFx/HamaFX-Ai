@@ -30,10 +30,6 @@ import type {
   CreatePositionInput,
   ClosePositionInput,
 } from '@hamafx/shared';
-import {
-  getContractSize,
-  getPipValue,
-} from '@hamafx/shared';
 
 // ---------------------------------------------------------------------------
 // Position CRUD

@@ -31,7 +31,7 @@ const mockLog = {
   info: vi.fn(),
   warn: vi.fn(),
   error: vi.fn(),
-  with: vi.fn(() => mockLog),
+  with: vi.fn((..._args: unknown[]) => mockLog),
 };
 
 const mockLock = {

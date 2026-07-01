@@ -16,8 +16,7 @@
 
 // Decision Agent — fuses all specialist opinions into a final unified response.
 
-import { generateText, type LanguageModel } from 'ai';
-import { resolveChatModel } from '../../model';
+import { generateText, type Tool } from 'ai';
 import { estimateCostUsd } from '../../cost';
 import { withToolContext, type ToolContext } from '../../tool-context';
 import { BaseAgent } from './base-agent';
@@ -64,7 +63,7 @@ If a specialist agent is missing (unavailable), note it explicitly:
 Be concise but thorough. Use markdown formatting for readability.`;
   }
 
-  tools(): Record<string, import('ai').Tool> { return {}; }
+  tools(): Record<string, Tool> { return {}; }
 
   protected parseOutput(text: string): { bias: AgentBias; confidence: number; reasoning: string; rawData: Record<string, unknown> } {
     const lower = text.toLowerCase();
