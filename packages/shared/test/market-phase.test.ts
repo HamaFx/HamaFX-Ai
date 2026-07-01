@@ -22,7 +22,6 @@ import {
   isComexOpen,
   describeMarketPhase,
   getSignalTtlMinutes,
-  type ForexSession,
 } from '../src/market-phase';
 
 // Helper: create a Date at a specific UTC day/hour/minute.

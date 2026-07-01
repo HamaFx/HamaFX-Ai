@@ -15,7 +15,7 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "vitest --run",
-    "eval": "tsx src/eval/runner.ts",
+    "eval": "tsx src/eval/runner.ts --cases",
     "clean": "rm -rf node_modules .turbo"
   },
   "dependencies": {
@@ -46,6 +46,7 @@
     "tsx": "^4.22.3",
     "typescript": "^5.7.2",
     "fast-check": "^4.1.0",
+    "msw": "^2.14.6",
     "vitest": "^2.1.8"
   },
   "license": "Apache-2.0"

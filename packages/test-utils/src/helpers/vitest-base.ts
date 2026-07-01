@@ -35,7 +35,7 @@ export function createProjectConfig(opts: ProjectOptions): UserWorkspaceConfig {
           new URL('../mocks/server-only.ts', import.meta.url),
         ),
       },
-    } as UserWorkspaceConfig['test'],
+    },
     ...(coverage
       ? {
           coverage: {
@@ -51,5 +51,5 @@ export function createProjectConfig(opts: ProjectOptions): UserWorkspaceConfig {
           },
         }
       : {}),
-  });
+  } as UserWorkspaceConfig);
 }

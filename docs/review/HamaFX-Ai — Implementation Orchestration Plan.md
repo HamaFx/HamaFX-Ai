@@ -497,7 +497,13 @@ regressed.
 | Task ID | Status | Date | Notes / commit ref |
 |---------|--------|------|---------------------|
 | 2.x     | Not started | | Tenant decision: _(record answer here once made)_ |
-| 0.1     | Not started | | |
-| 0.2     | Not started | | |
-| 0.3     | Not started | | |
-| ...     | | | _(add rows as you go — one per task ID)_ |
+| 0.1     | Done | 2026-07-01 | Removed `version: 9` from pnpm/action-setup in all workflows (ci-fast.yml, ci-slow.yml, release.yml) — `package.json` `packageManager` auto-detection |
+| 0.2     | Done | 2026-07-01 | Branch protection enabled on `main` — required checks: `Lint & Typecheck`, `Unit Tests (Fast)`; linear history; enforce admins |
+| 0.3     | Done | 2026-07-01 | `.gitlab-ci.yml` deleted pre-audit; only GitHub Actions remains |
+| 0.4     | Done | 2026-07-01 | "Report Coverage" step moved from ci-slow.yml to ci-fast.yml (ci-slow has no such step) |
+| 0.5     | Done | 2026-07-01 | `pnpm turbo run build` added as a step in ci-fast lint-and-typecheck job |
+| 0.6     | Done | 2026-07-01 | `packages/ai/package.json` eval script uses `--cases` (defaults to 15-assertion suite); `turbo.json` has `eval` task |
+| 0.7     | Done | 2026-07-01 | `eval-offline.test.ts` — MSW-mocked deterministic eval covering tool selection, tool args, forbidden/expected tools. Fixed: mock SSE stream uses AI SDK v5 `UIMessageChunk` lifecycle types (`start-step`, `tool-input-start`, `tool-input-available`, `tool-output-available`, `text-start/delta/end`, `finish-step`, `finish`) instead of v4 `tool-call`/`tool-result`/`text`. All 3 tests pass. |
+| 0.8     | Done | 2026-07-01 | ci-fast.yml runs `pnpm turbo run test -- --coverage` on PR path |
+| 0.9     | Done | 2026-07-01 | Behavioral tests added: `compute-position-health.test.ts` (304 lines), `verify-call.test.ts` (268 lines), `middleware.test.ts` (221 lines) |
+| 0.10    | Done | 2026-07-01 | `billing-contract.test.ts` with `it.todo` placeholders for auth/tenant scoping, idempotency, webhook verification, proration, dunning |

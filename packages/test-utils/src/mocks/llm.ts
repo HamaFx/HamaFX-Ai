@@ -1,5 +1,3 @@
-import type { JSONValue } from 'ai';
-
 export interface MockLlmResponse {
   content: string;
   toolCalls?: Array<{
@@ -40,12 +38,13 @@ export function createMockLlm() {
         content: 'Mock response',
       };
       _callCount++;
+      const toolCalls = resp.toolCalls?.map((tc) => ({
+        toolName: tc.name,
+        args: tc.args,
+      }));
       return {
         text: resp.content,
-        toolCalls: resp.toolCalls?.map((tc) => ({
-          toolName: tc.name,
-          args: tc.args as Record<string, JSONValue>,
-        })),
+        ...(toolCalls ? { toolCalls } : {}),
         finishReason: resp.finishReason ?? 'stop',
       };
     },
