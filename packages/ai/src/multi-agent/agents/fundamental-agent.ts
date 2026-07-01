@@ -15,6 +15,7 @@
  */
 
 import { z } from 'zod';
+import type { Tool } from 'ai';
 import { BaseAgent, baseOpinionSchema } from './base-agent';
 import { tools as allTools } from '../../tools';
 import type { AgentName, AgentBias, ModelTier } from '../types';
@@ -50,7 +51,7 @@ DO NOT give a final buy/sell recommendation. Output your fundamental read only.
 Use the available tools to fetch real calendar events, COT data, and news before forming your opinion.`;
   }
 
-  tools(): Record<string, import('ai').Tool> {
+  tools(): Record<string, Tool> {
     return { get_calendar: allTools.get_calendar, get_cot: allTools.get_cot, get_news: allTools.get_news, get_intermarket_resonance: allTools.get_intermarket_resonance, search_knowledge: allTools.search_knowledge };
   }
 

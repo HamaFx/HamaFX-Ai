@@ -21,7 +21,7 @@
 // awareness without burning tokens on tool calls for trivial questions.
 
 import type { Symbol, Tick } from '@hamafx/shared';
-import { getMarketPhase, describeMarketPhase, type MarketPhaseContext } from '@hamafx/shared';
+import { describeMarketPhase, type MarketPhaseContext } from '@hamafx/shared';
 import type { UserSettingsRow } from '@hamafx/db/schema';
 
 export interface LiveSnapshot {

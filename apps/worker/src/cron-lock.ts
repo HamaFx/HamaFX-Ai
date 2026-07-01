@@ -37,7 +37,7 @@
 // returns an AbortSignal that the job should honour.
 
 import { sql } from 'drizzle-orm';
-import { getDb, schema } from '@hamafx/db';
+import { type getDb, schema } from '@hamafx/db';
 
 type DbClient = ReturnType<typeof getDb>;
 

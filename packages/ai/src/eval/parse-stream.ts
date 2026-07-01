@@ -152,13 +152,14 @@ function extractToolCalls(message: UIMessage): ParsedToolCall[] {
       continue;
     }
 
-    const name = part.type.slice('tool-'.length);
     const p = part as {
       input?: unknown;
       output?: unknown;
       state?: string;
+      toolName?: string;
     };
 
+    const name = p.toolName ?? part.type.slice('tool-'.length);
     const resultSummary =
       p.state === 'output-available' ? JSON.stringify(p.output ?? null).slice(0, 200) : null;
 

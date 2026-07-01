@@ -104,7 +104,7 @@ export const verifyCallTool = tool({
         tf,
         candles,
         kinds: ['swings'],
-        swings: { lookback: 3 },
+        swings: { lookback: 1 },
       });
       const swings = structure.swings ?? [];
       const lastIndex = candles.length - 1;

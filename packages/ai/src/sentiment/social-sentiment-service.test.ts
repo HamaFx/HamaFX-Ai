@@ -95,9 +95,9 @@ describe('SocialSentimentService', () => {
     expect(service.isAvailable).toBe(false);
 
     const result = await service.getSentiment('XAUUSD');
-    expect(result.available).toBe(false);
-    expect(result.sentiment).toBe('neutral');
-    expect(result.score).toBe(0);
+    expect(result?.available).toBe(false);
+    expect(result?.sentiment).toBe('neutral');
+    expect(result?.score).toBe(0);
   });
 
   it('returns unavailable aggregated sentiment when no API key', async () => {

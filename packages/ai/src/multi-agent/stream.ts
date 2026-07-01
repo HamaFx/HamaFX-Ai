@@ -86,7 +86,7 @@ export function progressToSSE(event: ProgressEvent): string {
   return `data: ${JSON.stringify(event)}\n\n`;
 }
 
-export function createMultiAgentStreamResponse(progressEvents: ProgressEvent[], finalText: string, mode: ResolvedMode): Response {
+export function createMultiAgentStreamResponse(progressEvents: ProgressEvent[], finalText: string, _mode: ResolvedMode): Response {
   const encoder = new TextEncoder();
   const stream = new ReadableStream({
     start(controller) {

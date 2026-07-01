@@ -96,7 +96,7 @@ export function extractDecisionSignal(
   let entryHigh: number | null = null;
   let stopLoss: number | null = null;
   let takeProfit: number | null = null;
-  let confidence: number | null = null;
+  const confidence: number | null = null;
 
   if (riskOutput) {
     const entry = riskOutput.entry as number | undefined;

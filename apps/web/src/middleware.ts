@@ -51,6 +51,7 @@ export default auth((req) => {
     headers.set('x-user-id', '__system__');
     const next = NextResponse.next({ request: { headers } });
     next.headers.set(REQUEST_ID_HEADER, requestId);
+    next.headers.set('x-user-id', '__system__');
     return next;
   }
 
@@ -91,8 +92,19 @@ export default auth((req) => {
 
   const next = NextResponse.next({ request: { headers } });
   next.headers.set(REQUEST_ID_HEADER, requestId);
+  if (userId) {
+    next.headers.set('x-user-id', userId);
+  }
 
-  if (!req.cookies.has('hfx_csrf')) {
+  // Preserve the incoming CSRF cookie on the response so the client keeps
+  // the same double-submit token across requests.
+  if (cookieToken) {
+    next.cookies.set('hfx_csrf', cookieToken, {
+      path: '/',
+      sameSite: 'lax',
+      secure: process.env.NODE_ENV === 'production',
+    });
+  } else {
     next.cookies.set('hfx_csrf', csrfToken, {
       path: '/',
       sameSite: 'lax',

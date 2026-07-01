@@ -15,6 +15,7 @@
  */
 
 import { z } from 'zod';
+import type { Tool } from 'ai';
 import { BaseAgent, baseOpinionSchema } from './base-agent';
 import { tools as allTools } from '../../tools';
 import type { AgentName, AgentBias, ModelTier } from '../types';
@@ -51,7 +52,7 @@ Return a structured JSON object:
 Use the available tools to fetch real candle data, indicators, and market structure before forming your opinion.`;
   }
 
-  tools(): Record<string, import('ai').Tool> {
+  tools(): Record<string, Tool> {
     return { get_candles: allTools.get_candles, get_indicators: allTools.get_indicators, get_price: allTools.get_price, get_market_structure: allTools.get_market_structure, get_session_levels: allTools.get_session_levels, get_intermarket: allTools.get_intermarket, get_intermarket_resonance: allTools.get_intermarket_resonance, get_correlation: allTools.get_correlation, get_seasonality: allTools.get_seasonality };
   }
 

@@ -110,12 +110,12 @@ function buildRow(args: BuildRowArgs): PositionHealthRow {
   if (e.stop !== null) {
     const risk = Math.abs(e.entry - e.stop);
     if (risk > 0) pnlR = pnlPriceUnits / risk;
-    distanceToStopPips = Math.abs(mid - e.stop) / pip;
+    distanceToStopPips = (mid - e.stop) * sign / pip;
   }
 
   let distanceToTargetPips: number | null = null;
   if (e.target !== null) {
-    distanceToTargetPips = Math.abs(mid - e.target) / pip;
+    distanceToTargetPips = (e.target - mid) * sign / pip;
   }
 
   const aboutToHit =

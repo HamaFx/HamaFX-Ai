@@ -33,7 +33,7 @@ const InputSchema = z.object({
   includeRisk: z.boolean().optional().default(true).describe('Whether to include the risk report'),
 });
 
-const OutputSchema = z.object({
+const _OutputSchema = z.object({
   asOf: z.number(),
   positions: z.array(
     z.object({
@@ -67,7 +67,7 @@ const OutputSchema = z.object({
   empty: z.boolean(),
 });
 
-export type GetPortfolioSnapshotOutput = z.infer<typeof OutputSchema>;
+export type GetPortfolioSnapshotOutput = z.infer<typeof _OutputSchema>;
 
 declare module '@hamafx/shared' {
   interface ToolIOMap {

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { createLinkCode, resolveLinkCode } from './linking';
 
 // These tests only cover the in-memory link code logic.
@@ -55,7 +55,7 @@ describe('Link Code Resolution', () => {
   });
 
   it('returns null for an expired code', async () => {
-    const { code } = createLinkCode('user-expired');
+    createLinkCode('user-expired');
     // We can't easily mock time in this test, but we can test
     // that a non-existent code returns null
     const result = await resolveLinkCode('ZZZZZZ', '123', 'telegram');

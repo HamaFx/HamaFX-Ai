@@ -25,9 +25,10 @@
 // until Phase D implements per-user briefings.
 
 import { getDb, schema } from '@hamafx/db';
-import { and, desc, eq } from 'drizzle-orm';
+import { and, desc, eq, gte as dgte, lte as dlte, isNotNull as disNotNull } from 'drizzle-orm';
 
-import { type DbThread } from '../persistence';
+import type { DbThread } from '../persistence';
+import type { Symbol } from '@hamafx/shared';
 
 
 
@@ -151,11 +152,10 @@ export async function findHighImpactEventsInWindow(args: {
   toMs: number;
   requireActual?: boolean;
 }): Promise<{ id: string }[]> {
-  const { eq: deq, and: dand, gte: dgte, lte: dlte, isNotNull: disNotNull } = await import('drizzle-orm');
   const filters = [
     dgte(schema.economicEvents.date, new Date(args.fromMs)),
     dlte(schema.economicEvents.date, new Date(args.toMs)),
-    deq(schema.economicEvents.importance, 'high'),
+    eq(schema.economicEvents.importance, 'high'),
   ];
   if (args.requireActual) {
     filters.push(disNotNull(schema.economicEvents.actual));
@@ -163,7 +163,7 @@ export async function findHighImpactEventsInWindow(args: {
   const rows = await getDb()
     .select({ id: schema.economicEvents.id })
     .from(schema.economicEvents)
-    .where(dand(...filters));
+    .where(and(...filters));
   return rows;
 }
 
@@ -206,7 +206,7 @@ export interface LatestBriefing {
    * related event's currency (EUR→EURUSD, GBP→GBPUSD, else XAUUSD).
    * Always populated for `pre`/`post`; null for `weekly_review`.
    */
-  symbol: import('@hamafx/shared').Symbol | null;
+  symbol: Symbol | null;
   /** Related event title (resolved lazily from `economic_events`). */
   eventTitle: string | null;
   /** Related event date (ms epoch UTC), if any. */
@@ -271,7 +271,7 @@ export async function getLatestBriefing(userId: string): Promise<LatestBriefing 
     // Resolve related event for pre/post briefings.
     let eventTitle: string | null = null;
     let eventDate: number | null = null;
-    let symbol: import('@hamafx/shared').Symbol | null = null;
+    let symbol: Symbol | null = null;
     if (bp.eventId) {
       try {
         const evRows = await getDb()

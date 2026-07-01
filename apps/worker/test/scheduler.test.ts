@@ -31,7 +31,7 @@ const mockLog = {
   info: vi.fn(),
   warn: vi.fn(),
   error: vi.fn(),
-  with: vi.fn(() => mockLog),
+  with: vi.fn((..._args: unknown[]) => mockLog),
 };
 
 const mockLock = {
@@ -56,7 +56,7 @@ async function runJobSafely(name: JobName, log: typeof mockLog): Promise<void> {
   let lock: typeof mockLock | null = null;
   if (useLock) {
     try {
-      lock = await mockAcquireCronLock(name, {} as any);
+      lock = await mockAcquireCronLock(name, {} as never);
       if (!lock) {
         jobLog.info('Job skipped — already ran today (idempotency guard)');
         return;
@@ -175,7 +175,7 @@ describe('runJobSafely', () => {
       signal.addEventListener('abort', () => reject(new Error('Job timed out')));
     }));
 
-    const promise = runJobSafely('snapshots', mockLog);
+    const _promise = runJobSafely('snapshots', mockLog);
 
     await vi.advanceTimersByTimeAsync(60_000);
 
@@ -186,7 +186,7 @@ describe('runJobSafely', () => {
   });
 
   it('handles unknown job gracefully', async () => {
-    await runJobSafely('nonexistent' as any, mockLog);
+    await runJobSafely('nonexistent' as never, mockLog);
 
     expect(mockLog.error).toHaveBeenCalledWith('Scheduler attempted to run unknown job: nonexistent');
     expect(mockJobRun).not.toHaveBeenCalled();

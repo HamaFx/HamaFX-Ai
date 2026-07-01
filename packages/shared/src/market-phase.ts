@@ -175,13 +175,12 @@ function getNextSessionChangeOnWeekend(now: Date): { session: ForexSession; inMi
  * Tokyo = medium.
  * Sydney = low.
  */
-const SESSION_LIQUIDITY: Record<ForexSession, LiquidityLevel> = {
+const _SESSION_LIQUIDITY: Partial<Record<ForexSession, LiquidityLevel>> = {
   london_ny_overlap: 'high',
   london: 'high',
   newyork: 'high',
   tokyo: 'medium',
   sydney: 'low',
-  closed: 'low',
 };
 
 /**

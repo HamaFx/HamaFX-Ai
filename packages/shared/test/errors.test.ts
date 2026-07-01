@@ -28,7 +28,6 @@ import {
   internalError,
   formatErrorResponse,
   ERROR_CODES,
-  type ErrorCode,
 } from '../src';
 
 describe('ERROR_CODES', () => {

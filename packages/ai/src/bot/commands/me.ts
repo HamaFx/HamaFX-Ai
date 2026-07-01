@@ -19,7 +19,7 @@
 
 import type { BotCommand, BotResponse, BotContext } from '../types';
 import { getDb, schema } from '@hamafx/db';
-import { eq, and, gte, sql } from 'drizzle-orm';
+import { eq, and, sql } from 'drizzle-orm';
 import { getBotLink } from '../linking';
 
 export const meCommand: BotCommand = {

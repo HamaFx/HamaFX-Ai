@@ -16,7 +16,7 @@
 
 import { describe, it, expect } from 'vitest';
 import { ProgressTracker } from '../../src/multi-agent/stream';
-import type { ProgressEvent, AgentOpinion, ResolvedMode } from '../../src/multi-agent/types';
+import type { AgentOpinion, ResolvedMode } from '../../src/multi-agent/types';
 
 describe('fallback — ProgressTracker error handling', () => {
   it('tracks agent errors in progress', () => {

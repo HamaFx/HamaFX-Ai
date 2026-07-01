@@ -4,7 +4,6 @@
     "NODE_ENV",
     "VERCEL",
     "VERCEL_ENV",
-    "TEST_VAR",
     "AI_DEFAULT_MODEL",
     "AI_TITLE_MODEL",
     "CRON_SECRET",
@@ -49,6 +48,10 @@
     "test": {
       "dependsOn": ["^build"],
       "outputs": ["coverage/**"]
+    },
+    "eval": {
+      "dependsOn": ["^build"],
+      "cache": false
     },
     "clean": {
       "cache": false

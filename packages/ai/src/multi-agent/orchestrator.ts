@@ -16,11 +16,9 @@
 
 // Multi-Agent Orchestration — pipeline coordinator.
 
-import { generateText, type LanguageModel } from 'ai';
-import { resolveChatModel } from '../model';
-import { estimateCostUsd, tryReserveBudget, applyBudgetDelta, BudgetExceededError } from '../cost';
+import { tryReserveBudget, applyBudgetDelta, BudgetExceededError } from '../cost';
 import { withToolContext, type ToolContext } from '../tool-context';
-import { buildSharedContext, buildSharedSystemPrompt, extractUserMessageText } from './context';
+import { buildSharedContext, extractUserMessageText } from './context';
 import { selectAgents, resolveMode } from './modes';
 import { saveAgentOpinions } from './persistence';
 import { TechnicalAgent } from './agents/technical-agent';
@@ -30,10 +28,10 @@ import { SentimentAgent } from './agents/sentiment-agent';
 import { DecisionAgent } from './agents/decision-agent';
 import type { BaseAgent } from './agents/base-agent';
 import type {
-  AnalysisMode, ResolvedMode, AgentOpinion, AgentName,
+  AnalysisMode, AgentOpinion, AgentName,
   SharedContext, MultiAgentResult, ProgressEvent, MultiAgentEnv,
 } from './types';
-import { AGENT_TIMEOUTS, MODE_COST_ESTIMATE } from './types';
+import { MODE_COST_ESTIMATE } from './types';
 import type { UserSettingsRow } from '@hamafx/db/schema';
 import type { UIMessage } from 'ai';
 

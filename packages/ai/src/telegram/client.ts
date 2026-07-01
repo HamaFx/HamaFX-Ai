@@ -25,7 +25,6 @@
 import { withRetry } from '../retry';
 
 const TELEGRAM_API_BASE = 'https://api.telegram.org';
-const MAX_MESSAGE_LENGTH = 4096;
 const SAFE_CHUNK_LENGTH = 4000; // Leave headroom for formatting
 
 interface TelegramApiResponse {

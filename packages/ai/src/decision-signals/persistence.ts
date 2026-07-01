@@ -22,12 +22,11 @@
 import { getDb, schema } from '@hamafx/db';
 import type {
   DecisionSignal,
-  DecisionSignalOutcome,
   Outcome,
   FirstHit,
   EvalHorizon,
 } from '@hamafx/shared';
-import { and, desc, eq, isNull, not, sql, inArray } from 'drizzle-orm';
+import { and, desc, eq, sql } from 'drizzle-orm';
 
 import type { DecisionSignalPayload, OutcomeResult } from './types';
 

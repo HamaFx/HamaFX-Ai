@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 const mockExecute = vi.fn();
 
 vi.mock('../src/client', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('../src/client')>();
+  const actual = await importOriginal();
   return {
     ...actual,
     getDb: vi.fn(() => ({ execute: mockExecute })),

@@ -1,5 +1,3 @@
-import type { RequestHandler } from 'msw';
-
 export type MockFetchHandler = (url: string, options?: RequestInit) => Promise<Response>;
 
 export function createMockFetch(): {
