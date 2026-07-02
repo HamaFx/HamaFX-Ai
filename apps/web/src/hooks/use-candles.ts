@@ -32,7 +32,7 @@ import { fetchCandles } from '@/lib/market-client';
 
 /**
  * Refresh interval per timeframe. Mirrors the cache TTL on the server side
- * (docs/06-data-sources.md) — anything tighter just wastes calls.
+ * (docs/04-data-layer.md) — anything tighter just wastes calls.
  */
 function refetchIntervalFor(tf: Timeframe): number {
   switch (tf) {
