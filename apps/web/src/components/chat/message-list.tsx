@@ -24,6 +24,16 @@ import { memo } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { Message } from './message';
 
+// Phase 7 task 7.3 — sr-only polite live region so screen readers announce
+// streamed assistant text. Mirrors the pattern in chart-canvas.tsx.
+function StreamingLiveRegion({ text }: { text: string }) {
+  return (
+    <div role="status" aria-live="polite" className="sr-only">
+      {text}
+    </div>
+  );
+}
+
 interface MessageListProps {
   messages: UIMessage[];
   isStreaming?: boolean;
@@ -53,7 +63,7 @@ export const MessageList = memo(function MessageList({
     getScrollElement: () => scrollContainerRef?.current ?? null,
     estimateSize: (index) => {
       const msg = messages[index];
-      if (msg?.parts?.some((p) => p.type === 'tool-invocation')) return 500;
+      if (msg?.parts?.some((p) => p.type.startsWith('tool-'))) return 500;
       return 180;
     },
     overscan: 5,
@@ -130,6 +140,14 @@ export const MessageList = memo(function MessageList({
                 : {})}
               {...(onEdit ? { onEdit } : {})}
             />
+            {isStreaming && m.role === 'assistant' && (
+              <StreamingLiveRegion
+                text={m.parts
+                  ?.filter((p) => p.type === 'text')
+                  .map((p) => ('text' in p ? p.text : ''))
+                  .join('') ?? ''}
+              />
+            )}
           </div>
         );
       })}

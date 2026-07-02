@@ -315,7 +315,7 @@ export function Composer({
                   type="button"
                   aria-label={`Remove ${img.name}`}
                   onClick={() => removeImage(img.id)}
-                  className="bg-bg-elev-3 text-fg border-border focus-visible:ring-brand absolute -right-2 -top-2 inline-flex size-5 items-center justify-center rounded-full border text-caption leading-none focus:outline-none focus-visible:ring-2"
+                  className="bg-bg-elev-3 text-fg border-border focus-visible:ring-brand absolute -right-2 -top-2 inline-flex size-6 items-center justify-center rounded-full border text-caption leading-none focus:outline-none focus-visible:ring-2"
                 >
                   ×
                 </button>
@@ -340,7 +340,7 @@ export function Composer({
               onClick={() => fileInputRef.current?.click()}
               disabled={disabled || images.length >= MAX_IMAGES}
               className={cn(
-                'inline-flex size-[36px] shrink-0 items-center justify-center rounded-full transition-colors',
+                'inline-flex size-[44px] shrink-0 items-center justify-center rounded-full transition-colors',
                 'focus-visible:ring-brand/60 focus:outline-none focus-visible:ring-2',
                 disabled || images.length >= MAX_IMAGES
                   ? 'text-fg-subtle cursor-not-allowed opacity-60'
@@ -371,7 +371,7 @@ export function Composer({
                 onClick={() => (voice.active ? voice.stop() : voice.start())}
                 disabled={disabled}
                 className={cn(
-                  'inline-flex size-[36px] shrink-0 items-center justify-center rounded-full transition-colors',
+                  'inline-flex size-[44px] shrink-0 items-center justify-center rounded-full transition-colors',
                   'focus-visible:ring-brand/60 focus:outline-none focus-visible:ring-2',
                   voice.active
                     ? 'text-bear mic-pulse bg-bear/10'
@@ -450,7 +450,7 @@ export function Composer({
                   type="button"
                   onClick={onStop}
                   aria-label="Stop generating"
-                  className="text-bear ring-bear/40 inline-flex size-[36px] shrink-0 items-center justify-center rounded-full bg-bear/15 focus:outline-none focus-visible:ring-2 ring-1"
+                  className="text-bear ring-bear/40 inline-flex size-[44px] shrink-0 items-center justify-center rounded-full bg-bear/15 focus:outline-none focus-visible:ring-2 ring-1"
                 >
                   <Square className="size-[14px] fill-current" strokeWidth={0} />
                 </m.button>
@@ -466,7 +466,7 @@ export function Composer({
                   disabled={!canSend}
                   aria-label="Send message"
                   className={cn(
-                    'text-brand-fg bg-brand hover:brightness-110 inline-flex size-[36px] shrink-0 items-center justify-center rounded-full font-semibold',
+                    'text-brand-fg bg-brand hover:brightness-110 inline-flex size-[44px] shrink-0 items-center justify-center rounded-full font-semibold',
                     'disabled:cursor-not-allowed disabled:opacity-40 disabled:grayscale',
                     'focus-visible:ring-brand focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-bg',
                   )}

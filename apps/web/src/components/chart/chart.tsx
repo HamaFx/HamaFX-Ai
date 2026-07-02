@@ -89,7 +89,7 @@ export function Chart({
         <div className="border-glass-edge bg-glass absolute right-4 bottom-4 z-10 flex items-center gap-1 rounded-full border p-1 shadow-lg backdrop-blur-md">
           <button
             onClick={() => mainChart?.zoomIn()}
-            className="text-fg-muted hover:bg-bg-elev-3 hover:text-fg flex size-8 cursor-pointer items-center justify-center rounded-full transition-all"
+            className="text-fg-muted hover:bg-bg-elev-3 hover:text-fg flex size-11 cursor-pointer items-center justify-center rounded-full transition-all"
             title="Zoom In"
             type="button"
           >
@@ -97,7 +97,7 @@ export function Chart({
           </button>
           <button
             onClick={() => mainChart?.zoomOut()}
-            className="text-fg-muted hover:bg-bg-elev-3 hover:text-fg flex size-8 cursor-pointer items-center justify-center rounded-full transition-all"
+            className="text-fg-muted hover:bg-bg-elev-3 hover:text-fg flex size-11 cursor-pointer items-center justify-center rounded-full transition-all"
             title="Zoom Out"
             type="button"
           >
@@ -105,7 +105,7 @@ export function Chart({
           </button>
           <button
             onClick={() => mainChart?.resetView()}
-            className="text-fg-muted hover:bg-bg-elev-3 hover:text-fg flex size-8 cursor-pointer items-center justify-center rounded-full transition-all"
+            className="text-fg-muted hover:bg-bg-elev-3 hover:text-fg flex size-11 cursor-pointer items-center justify-center rounded-full transition-all"
             title="Reset View"
             type="button"
           >
