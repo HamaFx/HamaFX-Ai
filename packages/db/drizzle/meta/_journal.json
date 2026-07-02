@@ -260,6 +260,34 @@
       "when": 1782800000001,
       "tag": "0036_phase3_tenant_constraints",
       "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "7",
+      "when": 1782800000002,
+      "tag": "0037_phase3_bypassrls_admin_role",
+      "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "7",
+      "when": 1782800000003,
+      "tag": "0038_phase3_rls_cutover",
+      "breakpoints": true
+    },
+    {
+      "idx": 39,
+      "version": "7",
+      "when": 1782800000004,
+      "tag": "0039_phase3_runtime_fixes",
+      "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "7",
+      "when": 1782800000005,
+      "tag": "0040_phase8_billing_nowpayments",
+      "breakpoints": true
     }
   ]
 }
