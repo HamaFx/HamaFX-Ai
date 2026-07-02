@@ -414,7 +414,7 @@ SyslogIdentifier=hamafx-job-<name>
 
 File: `apps/worker/src/scheduler/embedded.ts` (115 lines)
 
-For local development, the worker can run cron jobs in-process via `node-cron`. Registers all 7 jobs with their production cron expressions. Each is wrapped in try/catch so one failure doesn't affect others. Light crons (news/alerts/warm-cache) that require Vercel endpoints and API keys are skipped in embedded mode.
+For local development, the worker can run cron jobs in-process via `node-cron`. Registers all 8 jobs with their production cron expressions. Each is wrapped in try/catch so one failure doesn't affect others. Light crons (news/alerts/warm-cache) that require Vercel endpoints and API keys are skipped in embedded mode.
 
 ## Light HTTP Pokers
 

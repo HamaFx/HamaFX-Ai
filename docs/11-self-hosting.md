@@ -126,6 +126,6 @@ See [13-first-run-setup.md](./13-first-run-setup.md) for detailed first-run info
 |---------|-------------|-----|
 | `Invalid environment configuration: AUTH_SECRET must be at least 32 chars` | Secret not set or too short | Generate with `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"` |
 | `relation does not exist` on first boot | Migrations didn't run | `docker compose -f docker-compose.prod.yml restart app` |
-| Worker can't connect to SignalR | BiQuote credentials missing | Set `BIQUOTE_API_KEY` in `.env` |
+| Worker can't connect to SignalR | BiQuote endpoint unreachable | Set `BIQUOTE_BASE_URL` in `.env` (BiQuote is keyless) |
 | `Daily AI budget exceeded` | Hit the spending cap | Wait until UTC midnight or raise `MAX_DAILY_USD` |
 | Encrypted BYOK keys unreadable after restart | `ENCRYPTION_SECRET` changed | Restore the original secret or re-enter API keys in Settings |
