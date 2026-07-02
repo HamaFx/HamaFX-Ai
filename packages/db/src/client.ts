@@ -151,12 +151,34 @@ export async function closeDb(): Promise<void> {
  * Run work inside a transaction that sets the current tenant GUC for future
  * RLS-aware query paths.
  */
+/**
+ * Whether RLS is enabled for this deployment. When true, `withTenantDb`
+ * sets the `app.current_tenant` GUC so RLS policies enforce isolation.
+ * When false (self-host / legacy mode), the GUC is not set and policies
+ * (if they exist) are bypassed by the connection role.
+ *
+ * Phase 3 §3.6 — gated behind HAMAFX_ENABLE_RLS env var so self-host
+ * editions can skip RLS enforcement without code changes.
+ */
+const rlsEnabled = process.env.HAMAFX_ENABLE_RLS === 'true' || process.env.HAMAFX_ENABLE_RLS === '1';
+
+/**
+ * Run work inside a transaction that sets the current tenant GUC for
+ * RLS-aware query paths.
+ *
+ * When RLS is disabled (self-host / legacy mode), this still runs the
+ * work in a transaction but does NOT set the GUC — RLS policies either
+ * don't exist (migration not applied) or are bypassed by the connection
+ * role (BYPASSRLS).
+ */
 export async function withTenantDb<T>(
   tenantId: string,
   work: (db: DbClient) => Promise<T>,
 ): Promise<T> {
   return getDb().transaction(async (tx) => {
-    await tx.execute(sql`SELECT set_config('app.current_tenant', ${tenantId}, true)`);
+    if (rlsEnabled) {
+      await tx.execute(sql`SELECT set_config('app.current_tenant', ${tenantId}, true)`);
+    }
     return work(tx as unknown as DbClient);
   });
 }
