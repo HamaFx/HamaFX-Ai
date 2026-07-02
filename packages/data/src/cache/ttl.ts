@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-// Per-resource TTL policy. Mirrors the table in docs/06-data-sources.md.
+// Per-resource TTL policy. Mirrors the table in docs/04-data-layer.md.
 // Tweak here, not at call sites.
 
 import type { Timeframe } from '@hamafx/shared';

@@ -123,7 +123,7 @@ const AiEnv = z
 // across invocations on Vercel, and covers our entire TTL policy. Setting these
 // vars is supported as a future swap-in but no code path requires them today.
 //
-// See docs/06-data-sources.md § "Cache layer" and packages/data/src/cache/.
+// See docs/04-data-layer.md § "Cache layer" and packages/data/src/cache/.
 const CacheEnv = z.object({
   UPSTASH_REDIS_REST_URL: z.string().url().optional(),
   UPSTASH_REDIS_REST_TOKEN: z.string().min(1).optional(),
