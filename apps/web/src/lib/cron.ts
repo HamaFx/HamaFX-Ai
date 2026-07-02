@@ -40,6 +40,7 @@
 import * as Sentry from '@sentry/nextjs';
 
 import { getAuthEnv } from './env';
+import { createScopedLoggerWithContext } from './logger';
 
 // Keep-alive for the legacy signed-cookie auth used by the admin-UI
 // cron trigger path. The crypto primitives live here to avoid dragging
@@ -174,7 +175,11 @@ export async function withCronAuth(
     Sentry.captureException(err, {
       tags: { component: 'cron', route: routeTag(req), kind: 'handler-error' },
     });
-    console.error('[cron] handler error', err);
+    // OBS-09 (Phase 5.3): Use pino logger instead of console.error
+    createScopedLoggerWithContext({ component: 'cron', route: routeTag(req) }).error(
+      'cron handler error',
+      { err: String(err) },
+    );
     return Response.json(
       { error: { code: 'INTERNAL', message: 'Internal error' } },
       { status: 500 },
@@ -213,7 +218,11 @@ export async function runCronJob(name: string, fn: () => Promise<void>, options:
     Sentry.captureException(error, {
       tags: { component: 'cron', job: name, kind: 'job-error' },
     });
-    console.error(`[cron] ${name} failed:`, error);
+    // OBS-09 (Phase 5.3): Use pino logger instead of console.error
+    createScopedLoggerWithContext({ component: 'cron', job: name }).error(
+      `cron job ${name} failed`,
+      { err: String(error) },
+    );
     return Response.json({ error: { code: 'INTERNAL', message: 'Internal error' } }, { status: 500 });
   }
 }

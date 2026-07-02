@@ -21,6 +21,39 @@
 // We deliberately avoid pulling in pino / winston — the worker stays free
 // of large deps. Three log levels (info / warn / error) cover the entire
 // surface; journald handles rotation.
+//
+// OBS-09 (Phase 5.3): Aligned field shape with the shared pino logger.
+// The shared logger emits `{level, time, msg, ...meta}` (pino default).
+// We now emit `{ts, level, msg, service, ...meta}` — `ts` is kept for
+// backward compatibility with existing journald parsers, and redaction
+// paths have been added to match the pino logger's redact config.
+
+const REDACT_KEYS = new Set([
+  'authorization',
+  'cookie',
+  'password',
+  'hashedPassword',
+  'email',
+  'token',
+  'keys',
+  'aiApiKeys',
+  'apiKey',
+  'secret',
+  'accessToken',
+  'refreshToken',
+]);
+
+function redactMeta(meta: Record<string, unknown>): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(meta)) {
+    if (REDACT_KEYS.has(k) || REDACT_KEYS.has(k.toLowerCase())) {
+      out[k] = '[REDACTED]';
+    } else {
+      out[k] = v;
+    }
+  }
+  return out;
+}
 
 type Level = 'info' | 'warn' | 'error';
 
@@ -46,19 +79,21 @@ function nowIso(): string {
 }
 
 function emit(level: Level, msg: string, meta: Record<string, unknown>, pretty: boolean): void {
+  // OBS-09 (Phase 5.3): Redact sensitive keys before emitting
+  const safeMeta = redactMeta(meta);
   if (pretty) {
-    const tags = Object.entries(meta)
+    const tags = Object.entries(safeMeta)
       .filter(([k]) => k !== 'service')
       .map(([k, v]) => `${k}=${JSON.stringify(v)}`)
       .join(' ');
-    const service = String(meta['service'] ?? '');
+    const service = String(safeMeta['service'] ?? '');
     const prefix = `[${level}]${service ? ` ${service}` : ''}`;
     const line = `${nowIso()} ${prefix} ${msg}${tags ? ` ${tags}` : ''}`;
     // eslint-disable-next-line no-console
     console[level === 'error' ? 'error' : level === 'warn' ? 'warn' : 'info'](line);
     return;
   }
-  const line = { ts: nowIso(), level, msg, ...meta };
+  const line = { ts: nowIso(), level, msg, ...safeMeta };
   // eslint-disable-next-line no-console
   console[level === 'error' ? 'error' : level === 'warn' ? 'warn' : 'info'](
     JSON.stringify(line),
