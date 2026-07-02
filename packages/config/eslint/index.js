@@ -57,7 +57,7 @@ export default [
             {
               group: ['../../../*', '../../../../*'],
               message:
-                'Use path aliases (@/, @shared/, @ai/, @data/, @indicators/, @db/, @ui/) instead of deep relative imports.',
+                'Use path aliases (@/, @shared/, @ai/, @data/, @indicators/, @db/) instead of deep relative imports.',
             },
           ],
         },

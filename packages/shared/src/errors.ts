@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-// Stable error codes used in the API error envelope (see docs/08-backend-and-api.md).
+// Stable error codes used in the API error envelope (see docs/05-api-routes.md).
 // Add new codes here, not inline.
 
 export const ERROR_CODES = [

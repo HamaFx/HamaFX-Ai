@@ -623,21 +623,21 @@ the same as the fix existing.
 | 6.4     | Done | 2026-07-02 | Added `HC_CLEANUP_UPLOADS_UUID` (daily 03:00 UTC) and `HC_JOB_RESONANCE_SYNC_UUID` (daily 23:00 UTC) to the RECOVERY.md health-check UUID table. | ✅ Yes — verified against actual code |
 | 6.5     | Done | 2026-07-02 | Verified: `postgres:15-alpine` does NOT include the `vector` extension. This was already fixed in Phase 3 task 3.7 — `verify-restore.sh` now uses `pgvector/pgvector:pg15` which bundles pgvector natively, and asserts HNSW index count > 0. Added documentation comment to `verify-restore.sh` explaining the verification. | ✅ Yes — verified against actual code |
 | 6.6     | Deferred | 2026-07-02 | Not started — conditional on real load, not preemptively. The review (05 §6) recommends upgrading `hamafx-cron` from `e2-medium` to `e2-standard-2` only when justified by actual resource pressure, and longer-term splitting the always-on SignalR consumer from heavy-job runners. No action taken — monitor VM metrics first. | n/a — deferred |
-| 7.1     | Todo | — | Not started. Enforce `--touch-min` (44px) on primary controls. | n/a — not done |
-| 7.2     | Todo | — | Not started. Fix tool-message virtualizer size estimate. | n/a — not done |
-| 7.3     | Todo | — | Not started. Wrap streamed assistant text in `aria-live="polite"`. | n/a — not done |
-| 7.4     | Todo | — | Not started. Ensure every `DrawerContent` has a `DrawerTitle`. | n/a — not done |
-| 7.5     | Todo | — | Not started. Whitelist `https://s3.tradingview.com` in CSP. | n/a — not done |
-| 7.6     | Todo | — | Not started. Add `images.remotePatterns` for Supabase host. | n/a — not done |
-| 7.7     | Todo | — | Not started. Align polling-cadence claim across code and docs. | n/a — not done |
-| 7.8     | Todo | — | Not started. Remaining P3 polish: scoped `error.tsx`, `role="alert"`. | n/a — not done |
-| 7.9     | Todo | — | Not started. Remove dead `@ui/*` config from tsconfig/prettier. | n/a — not done |
-| 7.10    | Todo | — | Not started. Adopt Knip for unused files/exports detection in CI. | n/a — not done |
-| 7.11    | Todo | — | Not started. Set `actions/checkout` `fetch-depth: 0` for turbo --affected. | n/a — not done |
-| 7.12    | Todo | — | Not started. Dependency review: align `tsx` versions, decide `next-auth` strategy. | n/a — not done |
-| 7.13    | Todo | — | Not started. Strengthen `check-test-files.mjs` to flag zero-assertion files. | n/a — not done |
-| 7.14    | Todo | — | Not started. Fix runtime-doc drift in `docs/08-deployment.md`. | n/a — not done |
-| 7.15    | Todo | — | Not started. Update stale `docs/08-backend-and-api.md` references. | n/a — not done |
+| 7.1     | Done | 2026-07-02 | Bumped composer send/attach/voice/stop buttons from 36px to 44px, image-remove from 20px to 24px, chart zoom controls from 32px to 44px (size-11). | ⚠ Not yet — spot-check |
+| 7.2     | Done | 2026-07-02 | Fixed virtualizer estimateSize predicate from `p.type === 'tool-invocation'` to `p.type.startsWith('tool-')` in message-list.tsx. | ⚠ Not yet — spot-check |
+| 7.3     | Done | 2026-07-02 | Added StreamingLiveRegion component with `role="status" aria-live="polite"` in message-list.tsx, mirroring chart-canvas.tsx pattern. | ⚠ Not yet — spot-check |
+| 7.4     | Done | 2026-07-02 | Removed manual focus trap (Tab cycling + keydown handler) from DrawerContent, letting vaul's built-in trap handle it. Kept initial focus move. All existing DrawerContent usages already have DrawerTitle. | ⚠ Not yet — spot-check |
+| 7.5     | Done | 2026-07-02 | Added `https://s3.tradingview.com` to CSP `script-src` and `style-src` in next.config.mjs. | ⚠ Not yet — spot-check |
+| 7.6     | Done | 2026-07-02 | Added `images.remotePatterns` for `**.supabase.co` and `**.supabase.in` in next.config.mjs. Migrated journal entry-form.tsx and entry-list.tsx `<img>` to `next/image` with `unoptimized` flag. | ⚠ Not yet — spot-check |
+| 7.7     | Done | 2026-07-02 | Fixed use-prices.ts comment from '1.5s polling' to '3s polling' to match actual POLL_MS=3000. Updated docs/06-frontend.md from '1.5s polling' to '3s polling'. SSE hook left unwired (optional per review). | ✅ Yes — verified against actual code |
+| 7.8     | Done | 2026-07-02 | Added scoped error.tsx for chat, chart, and journal views. Added `role="alert"` to inline failure messages in journal-view.tsx and alert-list.tsx. | ⚠ Not yet — spot-check |
+| 7.9     | Done | 2026-07-02 | Removed `@ui/*` path from tsconfig.base.json, `.prettierrc.json` importOrder, and ESLint no-restricted-imports message. No TEST_VAR found in turbo.json (already clean). | ✅ Yes — verified against actual files |
+| 7.10    | Done | 2026-07-02 | Created knip.json with workspace configs for all packages. Added Knip step to dependency-audit.yml workflow (runs weekly + manual). | ⚠ Not yet — spot-check |
+| 7.11    | Done | 2026-07-02 | Added `fetch-depth: 0` to all checkout steps in ci-fast.yml and ci-slow.yml. | ⚠ Not yet — spot-check |
+| 7.12    | Done | 2026-07-02 | Aligned tsx from ^4.22.3 to ^4.22.4 in packages/ai/package.json (matches root). next-auth 5.0.0-beta.31 kept as-is (intentional beta pin). Added scheduled `pnpm audit --prod` step in dependency-audit.yml workflow (weekly Monday). | ⚠ Not yet — spot-check |
+| 7.13    | Done | 2026-07-02 | Rewrote check-test-files.mjs to parse each test file and flag those with zero `it(`/`test(` calls or all-skipped assertions. | ⚠ Not yet — spot-check |
+| 7.14    | Done | 2026-07-02 | Fixed docs/08-deployment.md: changed Edge runtime claims to accurately reflect that all 71 API route files declare `runtime = 'nodejs'`. No route uses Edge runtime. | ✅ Yes — verified against actual code (71 routes, 0 edge) |
+| 7.15    | Done | 2026-07-02 | Updated stale `docs/08-backend-and-api.md` references in apps/web/src/lib/api.ts and packages/shared/src/errors.ts to point at `docs/05-api-routes.md`. | ✅ Yes — verified against actual files |
 | 8.1     | Todo | — | Not started. Run Prompt 00 (Documentation & Reality Drift). | n/a — not done |
 | 8.2     | Todo | — | Not started. Run Prompt 09 (Open-Core Architecture). | n/a — not done |
 | 8.3     | Todo | — | Not started. Run Prompt 10 (Billing — 2Checkout/Verifone). | n/a — not done |
