@@ -28,9 +28,11 @@ import { AppError, type ErrorCode, validationError, formatErrorResponse } from '
 import { ZodError, type z } from 'zod';
 
 import { auth } from '@/auth';
+import { createScopedLoggerWithContext } from './logger';
+import { recordAuthEvent } from './auth-anomaly';
 import { REQUEST_ID_HEADER } from './request-id';
 
-// ── Auth helpers (Phase A) ──────────────────────────────────────
+// ── Auth helpers (Phase A) ─────────────────────────────────────────────────
 
 export interface RequestUser {
   userId: string;
@@ -90,6 +92,8 @@ export function withAuth<T>(
   return async (req: Request, ctx: { params: Promise<T> }) => {
     const user = await getUserFromRequest(req);
     if (!user) {
+      // OBS-12 (Phase 5.4): Track 401s for auth anomaly detection
+      recordAuthEvent('unauthorized_401');
       const requestId = readRequestId(req);
       const headers: Record<string, string> = {};
       if (requestId) headers[REQUEST_ID_HEADER] = requestId;
@@ -170,7 +174,11 @@ export function errorResponse(err: unknown, req?: Request): Response {
     tags: { component: 'api', route, kind: 'unhandled-error' },
     extra: { requestId },
   });
-  console.error('[api] unhandled error', { err, requestId, route });
+  // OBS-09 (Phase 5.3): Use pino logger instead of console.error
+  createScopedLoggerWithContext({ component: 'api', route, requestId }).error(
+    'unhandled error',
+    { err: String(err) },
+  );
   return formatErrorResponse(err, options);
 }
 
