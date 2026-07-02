@@ -14,19 +14,4 @@
  * limitations under the License.
  */
 
-// Public barrel for @hamafx/db.
-
-export * from './schema/index';
-export { getDb, getAdminDb, closeAdminDb, closeDb, withTenantDb, schema } from './client';
-export { withUserScope } from './with-user-scope';
-export { withRateLimit, type RateLimitResult } from './rate-limit';
-export { getActiveUserIds } from './active-users';
-export {
-  getSubscription,
-  isSubscriptionActive,
-  getEffectiveFeatures,
-  getEffectiveTokenCap,
-  countActiveAlerts,
-  countJournalEntriesThisMonth,
-  type SubscriptionWithPlan,
-} from './queries/billing';
+export * from './features';

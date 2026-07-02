@@ -57,3 +57,5 @@ export * from './portfolio';
 export * from './noise-control';
 // F7 — Bot Platform with Commands
 export * from './bot-links';
+// Phase B — Billing (NOWPayments / crypto)
+export * from './billing';

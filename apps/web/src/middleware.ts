@@ -43,7 +43,7 @@ const { auth } = NextAuth(authConfig);
 export default auth((req) => {
   const requestId = readOrCreateRequestId(req);
 
-  // ── Legacy Mode Fallback ─────────────────────────────────────────
+  // ── Legacy Mode Fallback ──────────────────────────────────────────────
   // MED-05: Only allow legacy mode in development
   if (process.env.AUTH_MODE === 'legacy' && process.env.NODE_ENV !== 'production') {
     const headers = new Headers(req.headers);
@@ -55,7 +55,7 @@ export default auth((req) => {
     return next;
   }
 
-  // ── CSRF double-submit cookie (state-changing /api/*) ───────────
+  // ── CSRF double-submit cookie (state-changing /api/*) ──────────────────
   const cookieToken = req.cookies.get('hfx_csrf')?.value;
   let csrfToken = cookieToken;
   if (!csrfToken) {
@@ -70,7 +70,7 @@ export default auth((req) => {
     }
   }
 
-  // ── Auth gate (handled by `authorized` callback in auth.config) ──
+  // ── Auth gate (handled by `authorized` callback in auth.config) ──────
   // `req.auth` is the JWT session (set by NextAuth's `auth()` wrapper).
   // The `authorized` callback has already redirected unauthed users on
   // protected routes, so by here `req.auth?.user` is either valid or
@@ -117,8 +117,8 @@ export default auth((req) => {
 export const config = {
   // Same exclusions as before — /api/auth is NextAuth's catch-all,
   // /api/cron is cron-secret-protected, /share is public, /auth is the
-  // login surface.
+  // login surface. /api/billing/webhook is HMAC-signed (not session-auth).
   matcher: [
-    '/((?!auth|share|api/auth|api/dev|api/cron|api/telegram|debug|sw\\.js|sw-precache\\.json|_next/static|_next/image|favicon\\.ico|manifest\\.webmanifest|icons|robots\\.txt|sitemap\\.xml).*)',
+    '/((?!auth|share|api/auth|api/dev|api/cron|api/telegram|api/billing/webhook|debug|sw\\.js|sw-precache\\.json|_next/static|_next/image|favicon\\.ico|manifest\\.webmanifest|icons|robots\\.txt|sitemap\\.xml).*)',
   ],
 };

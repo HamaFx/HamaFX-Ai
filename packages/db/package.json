@@ -21,6 +21,7 @@
     "migrate:apply": "drizzle-kit migrate",
     "migrate:status": "node scripts/migrate-status.mjs",
     "migrate:setup-extensions": "node scripts/install-extensions.mjs",
+    "seed:plans": "tsx scripts/seed-plans.ts",
     "studio": "drizzle-kit studio"
   },
   "dependencies": {

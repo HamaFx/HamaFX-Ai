@@ -177,6 +177,25 @@ const NotifyEnv = z.object({
   VAPID_SUBJECT: z.string().optional(),
 });
 
+/**
+ * NOWPayments (crypto billing) — Phase A/B of the billing integration plan.
+ *
+ * All optional: billing routes are feature-flagged and no-op when unset.
+ * In production with billing enabled, set all three.
+ *
+ *   NOWPAYMENTS_API_KEY     — x-api-key header for REST API calls
+ *   NOWPAYMENTS_IPN_SECRET  — HMAC-SHA512 shared secret for webhook verification
+ *   NOWPAYMENTS_API_BASE    — sandbox (api-sandbox.nowpayments.io) or live (api.nowpayments.io)
+ */
+const BillingEnv = z.object({
+  NOWPAYMENTS_API_KEY: z.string().min(1).optional(),
+  NOWPAYMENTS_IPN_SECRET: z.string().min(1).optional(),
+  NOWPAYMENTS_API_BASE: z
+    .string()
+    .url()
+    .default('https://api-sandbox.nowpayments.io'),
+});
+
 const PublicEnv = z.object({
   NEXT_PUBLIC_APP_URL: z.string().url().default('http://localhost:3000'),
   /** Browser-readable VAPID public key. MUST equal `VAPID_PUBLIC_KEY`. */
@@ -233,7 +252,12 @@ const RuntimeEnv = z.object({
 export const ServerEnvSchema = z
   .intersection(
     z.intersection(DbEnv, AiEnv),
-    AuthEnv.merge(CacheEnv).merge(ProvidersEnv).merge(NotifyEnv).merge(PublicEnv).merge(RuntimeEnv),
+    AuthEnv.merge(CacheEnv)
+      .merge(ProvidersEnv)
+      .merge(NotifyEnv)
+      .merge(BillingEnv)
+      .merge(PublicEnv)
+      .merge(RuntimeEnv),
   )
   .refine(
     (env) =>
