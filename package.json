@@ -24,7 +24,8 @@
     "test:ai": "pnpm --filter @hamafx/ai test",
     "test:shared": "pnpm --filter @hamafx/shared test",
     "clean": "turbo run clean && rm -rf node_modules",
-    "test:empty-guard": "node scripts/check-test-files.mjs"
+    "test:empty-guard": "node scripts/check-test-files.mjs",
+    "check-console-errors": "node scripts/check-console-errors.mjs"
   },
   "devDependencies": {
     "@changesets/cli": "^2.31.0",
