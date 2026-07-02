@@ -19,8 +19,9 @@
 // Polls /api/market/price for one or more symbols. The route handler caches
 // at 3 s so two pollers per 3 s window collapse into a single upstream call.
 //
-// We use 1.5 s polling (same as docs/06-data-sources.md) when the tab is
-// visible; TanStack Query auto-pauses when offline / hidden.
+// We use 3 s polling when the tab is visible; TanStack Query auto-pauses
+// when offline / hidden. (Phase 7 task 7.7 — aligned comment with actual
+// POLL_MS value; docs/06-frontend.md updated to match.)
 import type { Symbol, Tick } from '@hamafx/shared';
 import { useQuery } from '@tanstack/react-query';
 

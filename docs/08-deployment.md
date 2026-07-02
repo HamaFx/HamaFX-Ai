@@ -50,7 +50,7 @@ The web app is one Vercel deploy and the worker is one VM. Both pull from the sa
 - **Install command**: `pnpm install --frozen-lockfile`.
 - **Output**: standard Next.js.
 - **Node**: 20.x.
-- **Regions**: primary `iad1`; `/api/chat` runs Node, light reads run Edge.
+- **Regions**: primary `iad1`; all API routes run Node.js runtime.
 - **Deployment Protection**: not used (NextAuth protects the routes).
 - **Environments**: `Production` (`main`), `Preview` (PRs), `Development` (local).
 
@@ -76,8 +76,14 @@ We do **not** ship a `crons` block in `vercel.json` — Vercel Hobby caps cron a
 
 ### Edge vs Node runtime
 
-- Default runtime: **Edge** for the cheap reads (`/api/market/*`, `/api/news`, `/api/calendar`, `/api/alerts`, `/api/journal`).
-- **Node** runtime for `/api/chat` (longer streaming, heavier deps), `/api/cron/*`, and any route that touches `getDb()` (postgres-js doesn't run on Edge).
+- All API routes use **Node** runtime. Every `route.ts` under `apps/web/src/app/api/`
+  declares `export const runtime = 'nodejs'` (71 route files verified). No route uses
+  the Edge runtime. This is because all routes that touch the database use `getDb()`
+  (postgres-js), which doesn't run on Edge. Even lightweight read routes
+  (`/api/market/*`, `/api/news`, `/api/calendar`, `/api/alerts`, `/api/journal`)
+  declare `nodejs` because they share the same DB client and auth middleware.
+- If Edge runtime is desired for specific read-only routes in the future, they would
+  need a separate Edge-compatible data layer (e.g. Supabase's Edge-compatible client).
 
 ## VM project
 

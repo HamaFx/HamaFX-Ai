@@ -19,6 +19,11 @@
 // Bottom-sheet drawer built on vaul. Mirrors the shadcn/ui Drawer API so
 // patterns from the docs translate directly. iOS-feel swipe-to-dismiss,
 // focus trapping, and Escape-to-close come from vaul out of the box.
+//
+// Phase 7 task 7.4 — the manual focus trap + Tab cycling was removed to
+// avoid double-handling with vaul's built-in trap. vaul/Radix already
+// manages focus restore, Tab cycling, and Escape-to-close. We keep only
+// the initial focus move to the first focusable element for ergonomics.
 
 import * as React from 'react';
 import { Drawer as DrawerPrimitive } from 'vaul';
@@ -73,66 +78,22 @@ const DrawerContent = React.forwardRef<
     const el = contentRef.current;
     if (!el) return;
 
-    // 1. Store previously focused element
-    const previousFocus = document.activeElement as HTMLElement | null;
+    // Focus the first focusable element on open for ergonomics.
+    // vaul handles Tab cycling, Escape-to-close, and focus restore.
+    const focusableSelector =
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
+    const focusables = Array.from(
+      el.querySelectorAll<HTMLElement>(focusableSelector),
+    ).filter(
+      (node) => !node.hasAttribute('disabled') && node.getAttribute('aria-hidden') !== 'true',
+    );
 
-    // 2. Focus drawer/content or first focusable child on open
-    const focusableSelector = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
-    const getFocusableElements = () => {
-      if (!el) return [];
-      return Array.from(el.querySelectorAll<HTMLElement>(focusableSelector)).filter(
-        (node) => !node.hasAttribute('disabled') && node.getAttribute('aria-hidden') !== 'true',
-      );
-    };
-
-    const focusables = getFocusableElements();
     const firstFocusable = focusables[0];
     if (firstFocusable) {
       firstFocusable.focus();
     } else {
       el.focus();
     }
-
-    // 3. Tab cycling within drawer
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key !== 'Tab') return;
-
-      const currentFocusables = getFocusableElements();
-      if (currentFocusables.length === 0) {
-        e.preventDefault();
-        return;
-      }
-
-      const first = currentFocusables[0];
-      const last = currentFocusables[currentFocusables.length - 1];
-      if (!first || !last) return;
-
-      if (e.shiftKey) {
-        // Shift + Tab: cycle backwards
-        if (document.activeElement === first || document.activeElement === el) {
-          last.focus();
-          e.preventDefault();
-        }
-      } else {
-        // Tab: cycle forwards
-        if (document.activeElement === last) {
-          first.focus();
-          e.preventDefault();
-        }
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-
-    // 4. Restore focus on close
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-      if (previousFocus && typeof previousFocus.focus === 'function') {
-        requestAnimationFrame(() => {
-          previousFocus.focus();
-        });
-      }
-    };
   }, []);
 
   return (

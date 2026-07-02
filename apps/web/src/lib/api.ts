@@ -16,7 +16,7 @@
 
 // Tiny helpers shared by all `/api/*` route handlers.
 // Centralises:
-//   - the public error envelope shape (matches docs/08-backend-and-api.md)
+//   - the public error envelope shape (matches docs/05-api-routes.md)
 //   - zod input parsing with a friendly 400 on failure
 //   - normalised provider/AppError → HTTP mapping
 //   - X-Request-Id propagation (Phase 7a)

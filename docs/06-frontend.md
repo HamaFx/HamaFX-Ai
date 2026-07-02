@@ -232,7 +232,7 @@ ChartView
 │       Per-TF polling intervals:
 │         1m: 5s    5m-4h: 30s    1d-1w: 5min
 │       Prefetches adjacent timeframes for instant switching
-├─ usePrice(symbol)           → 1.5s polling → live tick merged into last candle
+├─ usePrice(symbol)           → 3s polling → live tick merged into last candle
 ├─ useStructure(symbol, tf)   → conditionally fetches SMC overlays
 └─ buildOverlays(structure, candles, palette, toggles)
 ```
