@@ -51,14 +51,14 @@ async function runJobSafely(name: JobName, log: typeof mockLog): Promise<void> {
   const runId = 'test-uuid';
   const jobLog = log.with({ job: name, runId });
 
-  const SKIP_DAILY_LOCK = new Set<JobName>(['alerts', 'briefings']);
+  const SKIP_DAILY_LOCK = new Set<JobName>(['alerts', 'briefings', 'embedding-backfill']);
   const useLock = !SKIP_DAILY_LOCK.has(name);
   let lock: typeof mockLock | null = null;
   if (useLock) {
     try {
       lock = await mockAcquireCronLock(name, {} as never);
       if (!lock) {
-        jobLog.info('Job skipped — already ran today (idempotency guard)');
+        jobLog.info('Job skipped - already ran today (idempotency guard)');
         return;
       }
     } catch (lockErr) {
@@ -130,6 +130,15 @@ describe('runJobSafely', () => {
     }
   });
 
+  it('skips daily lock for embedding-backfill (6-hour cadence, per-article idempotent)', async () => {
+    // Phase 6 task 6.2: embedding-backfill must not use the daily lock
+    // because a failed 00:00 run would block all 3 same-day retries.
+    mockJobRun.mockResolvedValue({ processed: 10, note: 'embedded 10' });
+    await runJobSafely('embedding-backfill', mockLog);
+    expect(mockAcquireCronLock).not.toHaveBeenCalled();
+    expect(mockJobRun).toHaveBeenCalledOnce();
+  });
+
   it('skips job when lock returns null (already ran today)', async () => {
     mockAcquireCronLock.mockResolvedValue(null);
 
@@ -137,7 +146,7 @@ describe('runJobSafely', () => {
 
     expect(mockJobRun).not.toHaveBeenCalled();
     expect(mockLock.done).not.toHaveBeenCalled();
-    expect(mockLog.info).toHaveBeenCalledWith('Job skipped — already ran today (idempotency guard)');
+    expect(mockLog.info).toHaveBeenCalledWith('Job skipped - already ran today (idempotency guard)');
   });
 
   it('proceeds without idempotency when lock acquisition throws', async () => {
