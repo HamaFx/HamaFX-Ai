@@ -3,7 +3,7 @@
 import { usePathname } from 'next/navigation';
 import { ArrowLeft, ChevronRight } from 'lucide-react';
 import { Link } from 'next-view-transitions';
-import { User, Key, List, Activity, Settings, Brain, Bot, Target, Wallet, MessageCircle } from 'lucide-react';
+import { User, Key, List, Activity, Settings, Brain, Bot, Target, Wallet, MessageCircle, CreditCard } from 'lucide-react';
 import { cn } from '@/lib/cn';
 
 const NAV_ITEMS = [
@@ -17,6 +17,7 @@ const NAV_ITEMS = [
   { href: '/settings/track-record', label: 'Track Record', icon: Target },
   { href: '/settings/portfolio', label: 'Portfolio', icon: Wallet },
   { href: '/settings/telegram', label: 'Telegram', icon: MessageCircle },
+  { href: '/settings/billing', label: 'Billing', icon: CreditCard },
 ];
 
 export function SettingsNav() {
