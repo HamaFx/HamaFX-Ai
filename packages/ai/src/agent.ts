@@ -34,8 +34,11 @@ import type { LiveSnapshot } from './prompt/system';
 import {
   applyBudgetDelta,
   BudgetExceededError,
+  checkGlobalDailyBudget,
   DEFAULT_TURN_ESTIMATE_USD,
   estimateCostUsd,
+  estimateTurnCostUsd,
+  MAX_OUTPUT_TOKENS,
   tryReserveBudget,
   checkBudgetAlertsAndThresholds,
 } from './cost';
@@ -175,11 +178,37 @@ async function runChatInner(args: RunChatArgs) {
   //    Postgres serialises the row-level UPDATE so exactly one wins. A
   //    `recordTelemetry` call at the end reconciles the reservation with
   //    the actual cost (delta between estimated and observed).
-  const reservation = await tryReserveBudget(userId, DEFAULT_TURN_ESTIMATE_USD, maxDailyUsd);
+  //
+  //    Phase 4: the reservation is now model-aware. We resolve the model
+  //    first to get a conservative per-turn estimate, so a single oversized
+  //    gemini-2.5-pro turn can't overshoot MAX_DAILY_USD before the
+  //    post-stream reconciliation catches up. Falls back to the flat
+  //    DEFAULT_TURN_ESTIMATE_USD if model resolution fails.
+  let preResolvedModelId: string | null = null;
+  try {
+    const preRes = resolveChatModel(userSettings, env);
+    preResolvedModelId = preRes.modelId;
+  } catch {
+    // Model resolution may fail if no provider is configured; the flat
+    // fallback is still a valid reservation.
+  }
+  const turnEstimateUsd = preResolvedModelId
+    ? Math.max(DEFAULT_TURN_ESTIMATE_USD, estimateTurnCostUsd(preResolvedModelId))
+    : DEFAULT_TURN_ESTIMATE_USD;
+
+  // Phase 4: check the global (tenant-wide) AI-spend ceiling before
+  // reserving per-user budget. This prevents one user burning turns
+  // from causing 503s for everyone else.
+  const globalBudget = await checkGlobalDailyBudget(maxDailyUsd);
+  if (!globalBudget.ok) {
+    throw new BudgetExceededError(globalBudget.globalSpent, globalBudget.globalMax);
+  }
+
+  const reservation = await tryReserveBudget(userId, turnEstimateUsd, maxDailyUsd);
   if (!reservation.ok) {
     throw new BudgetExceededError(reservation.spent, reservation.max);
   }
-  const reservedUsd = DEFAULT_TURN_ESTIMATE_USD;
+  const reservedUsd = turnEstimateUsd;
 
   // 2) Persist the user message before we start streaming. If the model fails
   //    we still want the prompt in history so retries can resume.
@@ -539,6 +568,9 @@ async function runChatInner(args: RunChatArgs) {
         ? { ...activeTools, googleSearch: getVertexGoogleSearchTool(env, userId) } 
         : activeTools,
       stopWhen: stepCountIs(env.MAX_TOOL_ITERATIONS),
+      // Phase 4: cap output tokens so a single turn can't generate an
+      // unbounded response that overshoots the daily budget.
+      maxOutputTokens: MAX_OUTPUT_TOKENS,
 
       onFinish: async ({ usage, finishReason, response }) => {
         try {
@@ -643,6 +675,10 @@ async function runChatInner(args: RunChatArgs) {
             outputTokens: usage?.outputTokens ?? 0,
             toolCalls: countToolCalls(response.messages),
             ms: Date.now() - startedAt,
+            // Phase 4: BYOK flag — true when the user's own API key was used.
+            byokKey: decryptedByokKeys !== null && !!providerId &&
+              PROVIDER_IDS.includes(providerId) &&
+              decryptedByokKeys[providerId as ProviderId] !== undefined,
           });
           // Reconcile the budget reservation with the actual post-call cost.
           // Positive delta = we underestimated; negative = release. Keeps

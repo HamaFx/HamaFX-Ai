@@ -30,7 +30,7 @@
 
 import { z } from 'zod';
 
-import { withAuth } from '@/lib/api';
+import { errorResponse, parseJsonBody, withAuth } from '@/lib/api';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -51,15 +51,9 @@ interface TelegramResponse {
 }
 
 export const POST = withAuth<void>(async (req) => {
-  // 2. Parse body — accept empty body as `{}`.
-  const raw = await safeReadJson(req);
-  const parsed = BodySchema.safeParse(raw);
-  if (!parsed.success) {
-    return Response.json({ error: 'invalid_body', issues: parsed.error.issues }, { status: 400 });
-  }
-  const body = parsed.data;
+  let body: z.infer<typeof BodySchema>;
+  try { body = await parseJsonBody(req, BodySchema); } catch (err) { return errorResponse(err); }
 
-  // 3. Env contract.
   const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN ?? '';
   const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID ?? '';
 
@@ -67,10 +61,12 @@ export const POST = withAuth<void>(async (req) => {
   if (!TELEGRAM_BOT_TOKEN) missing.push('TELEGRAM_BOT_TOKEN');
   if (!TELEGRAM_CHAT_ID && !body.chatId) missing.push('TELEGRAM_CHAT_ID');
   if (missing.length > 0) {
-    return Response.json({ missing }, { status: 503 });
+    return Response.json(
+      { error: { code: 'SERVICE_UNAVAILABLE', message: `Missing env vars: ${missing.join(', ')}` } },
+      { status: 503 },
+    );
   }
 
-  // 4. Send.
   const chatId = body.chatId ?? TELEGRAM_CHAT_ID;
   const tgResponse = await fetch(`${TELEGRAM_API}/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
     method: 'POST',
@@ -83,9 +79,8 @@ export const POST = withAuth<void>(async (req) => {
   });
 
   if (!tgResponse.ok) {
-    const text = await tgResponse.text().catch(() => '');
     return Response.json(
-      { error: `telegram HTTP ${tgResponse.status}: ${text.slice(0, 200)}` },
+      { error: { code: 'PROVIDER_ERROR', message: `Telegram returned HTTP ${tgResponse.status}` } },
       { status: 502 },
     );
   }
@@ -94,13 +89,3 @@ export const POST = withAuth<void>(async (req) => {
   const messageId = json.result?.message_id ?? null;
   return Response.json({ id: messageId === null ? null : String(messageId) }, { status: 200 });
 });
-
-async function safeReadJson(req: Request): Promise<unknown> {
-  try {
-    const text = await req.text();
-    if (!text) return {};
-    return JSON.parse(text) as unknown;
-  } catch {
-    return {};
-  }
-}

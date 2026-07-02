@@ -25,6 +25,7 @@
 import * as Sentry from '@sentry/nextjs';
 import { ProviderError, toAppError } from '@hamafx/data';
 import { AppError, type ErrorCode, validationError, formatErrorResponse } from '@hamafx/shared';
+import type { RateLimitResult } from '@hamafx/db';
 import { ZodError, type z } from 'zod';
 
 import { auth } from '@/auth';
@@ -263,4 +264,39 @@ export async function parseJsonBody<S extends z.ZodTypeAny>(
     throw validationError('Invalid JSON body', err instanceof Error ? err.message : undefined);
   }
   return schema.parse(raw) as z.infer<S>;
+}
+
+// ── Rate-limit response helper (Phase 4) ──────────────────────────────
+
+/**
+ * Build a standard 429 response with `Retry-After` and `X-RateLimit-*`
+ * headers from a `RateLimitResult`. Every `withRateLimit` call site
+ * should use this instead of constructing an ad-hoc 429.
+ *
+ * The body uses the standard error envelope:
+ *   { error: { code: 'RATE_LIMITED', message, requestId? } }
+ */
+export function rateLimitedResponse(rl: RateLimitResult, req?: Request): Response {
+  const requestId = req ? readRequestId(req) : undefined;
+  const remaining = Math.max(0, rl.limit - rl.count);
+  const retryAfter = Math.max(1, rl.resetAt - Math.floor(Date.now() / 1000));
+
+  const headers: Record<string, string> = {
+    'Retry-After': String(retryAfter),
+    'X-RateLimit-Limit': String(rl.limit),
+    'X-RateLimit-Remaining': String(remaining),
+    'X-RateLimit-Reset': String(rl.resetAt),
+  };
+  if (requestId) headers[REQUEST_ID_HEADER] = requestId;
+
+  return Response.json(
+    {
+      error: {
+        code: 'RATE_LIMITED',
+        message: 'Too many requests. Please retry after the cooldown.',
+        ...(requestId ? { requestId } : {}),
+      },
+    },
+    { status: 429, headers },
+  );
 }

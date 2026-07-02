@@ -29,7 +29,7 @@ import { savePushSubscription } from '@hamafx/ai';
 import { withRateLimit } from '@hamafx/db';
 import { z } from 'zod';
 
-import { withAuth } from '@/lib/api';
+import { errorResponse, parseJsonBody, rateLimitedResponse, withAuth } from '@/lib/api';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -46,33 +46,28 @@ export const POST = withAuth<void>(async (req, { user }) => {
   // STAB-12: Rate limit — 10 subscribe attempts per user per minute.
   const rl = await withRateLimit(user.userId, 'push_subscribe', 10);
   if (!rl.allowed) {
-    return Response.json({ error: 'Too many requests' }, { status: 429 });
+    return rateLimitedResponse(rl, req);
   }
 
   const missing: string[] = [];
   if (!process.env.VAPID_PUBLIC_KEY) missing.push('VAPID_PUBLIC_KEY');
   if (!process.env.VAPID_PRIVATE_KEY) missing.push('VAPID_PRIVATE_KEY');
   if (missing.length > 0) {
-    return Response.json({ missing }, { status: 503 });
+    return Response.json(
+      { error: { code: 'SERVICE_UNAVAILABLE', message: `Missing env vars: ${missing.join(', ')}` } },
+      { status: 503 },
+    );
   }
 
-  let raw: unknown;
-  try {
-    raw = await req.json();
-  } catch {
-    raw = null;
-  }
-  const parsed = BodySchema.safeParse(raw);
-  if (!parsed.success) {
-    return Response.json({ error: 'invalid_body', issues: parsed.error.issues }, { status: 400 });
-  }
+  let body: z.infer<typeof BodySchema>;
+  try { body = await parseJsonBody(req, BodySchema); } catch (err) { return errorResponse(err); }
 
   const userAgent = req.headers.get('user-agent') ?? null;
   const row = await savePushSubscription({
     userId: user.userId,
-    endpoint: parsed.data.endpoint,
-    p256dh: parsed.data.keys.p256dh,
-    auth: parsed.data.keys.auth,
+    endpoint: body.endpoint,
+    p256dh: body.keys.p256dh,
+    auth: body.keys.auth,
     userAgent,
   });
 

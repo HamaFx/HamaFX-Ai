@@ -18,13 +18,17 @@
 // GET /api/decision-signals?limit=50&status=active
 
 import { listSignals } from '@hamafx/ai';
+import { withRateLimit } from '@hamafx/db';
 
-import { errorResponse, withAuth } from '@/lib/api';
+import { errorResponse, rateLimitedResponse, withAuth } from '@/lib/api';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 export const GET = withAuth<void>(async (req, { user }) => {
+  // Phase 4: rate-limit provider-quota-facing route (30 req/min/user).
+  const rl = await withRateLimit(user.userId, 'decision_signals', 30);
+  if (!rl.allowed) return rateLimitedResponse(rl, req);
   try {
     const url = new URL(req.url);
     const limit = Math.min(Number(url.searchParams.get('limit') ?? '50'), 100);

@@ -25,7 +25,7 @@
 import { deletePushSubscriptionByEndpoint } from '@hamafx/ai';
 import { z } from 'zod';
 
-import { withAuth } from '@/lib/api';
+import { errorResponse, parseJsonBody, withAuth } from '@/lib/api';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -35,17 +35,9 @@ const BodySchema = z.object({
 });
 
 export const POST = withAuth<void>(async (req, { user }) => {
-  let raw: unknown;
-  try {
-    raw = await req.json();
-  } catch {
-    raw = null;
-  }
-  const parsed = BodySchema.safeParse(raw);
-  if (!parsed.success) {
-    return Response.json({ error: 'invalid_body', issues: parsed.error.issues }, { status: 400 });
-  }
+  let body: z.infer<typeof BodySchema>;
+  try { body = await parseJsonBody(req, BodySchema); } catch (err) { return errorResponse(err); }
 
-  await deletePushSubscriptionByEndpoint(user.userId, parsed.data.endpoint);
+  await deletePushSubscriptionByEndpoint(user.userId, body.endpoint);
   return Response.json({ ok: true }, { status: 200 });
 });

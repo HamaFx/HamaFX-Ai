@@ -14,14 +14,28 @@
  * limitations under the License.
  */
 
-// Domain-based model routing.
+// Domain-based routing.
 //
-// Each chat turn picks a model from one of:
-//   - fundamental — macro / news / events / "why" reasoning → top-tier model
-//   - technical   — chart structure / indicators / levels    → fast model
-//   - summary     — news/calendar/journal recap, "list X"     → cheapest fast
-//   - vision      — image attached this turn                  → vision model
-//   - generic     — everything else                           → default
+// Phase 4 task 4.11 — the per-domain model selection path has been
+// removed. `routeTurn` now only classifies the turn into a domain for:
+//   - deciding whether to run the planner (planRequired)
+//   - adding the Vertex googleSearch tool for fundamental turns
+//   - recording the domain in telemetry for /settings/usage breakdown
+//
+// The chat model itself is always resolved via `resolveChatModel()`
+// regardless of domain. A single `chatModel` (from user_settings or
+// the default provider) is used for all domains. Per-domain model
+// selection can be re-enabled in the future by wiring domain→model
+// mapping back into `resolveChatModel`, but the current dead path
+// (which derived a model but never used it) has been deleted.
+//
+// Context caching for the static system-prompt prefix (~90% cached-input
+// discount) is configured at the provider/model level, not here. For
+// Google Gemini models, the AI SDK's `@ai-sdk/google` automatically
+// uses context caching when the system prompt exceeds a threshold.
+// For Anthropic models, the `@ai-sdk/anthropic` provider supports
+// prompt caching via the `cacheControl` parameter. No additional
+// configuration is needed in the routing layer.
 //
 // Classification is rule-based — fast, deterministic, easy to test, and
 // auditable in telemetry. It runs on the LATEST user message only; prior

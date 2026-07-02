@@ -31,7 +31,7 @@
 
 import { z } from 'zod';
 
-import { withAuth } from '@/lib/api';
+import { errorResponse, parseJsonBody, withAuth } from '@/lib/api';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -47,17 +47,9 @@ interface ResendCreateResponse {
 }
 
 export const POST = withAuth<void>(async (req) => {
-  // 2. Parse body — accept empty body as `{}` so a no-arg POST works.
-  const raw = await safeReadJson(req);
-  const parsed = BodySchema.safeParse(raw);
-  if (!parsed.success) {
-    return Response.json({ error: 'invalid_body', issues: parsed.error.issues }, { status: 400 });
-  }
-  const body = parsed.data;
+  let body: z.infer<typeof BodySchema>;
+  try { body = await parseJsonBody(req, BodySchema); } catch (err) { return errorResponse(err); }
 
-  // 3. Env contract. Read directly from process.env so a missing var produces
-  //    a 503 with the variable NAME (never the value), even when other
-  //    unrelated server envs may not be set.
   const RESEND_API_KEY = process.env.RESEND_API_KEY ?? '';
   const ALERT_FROM_EMAIL = process.env.ALERT_FROM_EMAIL ?? '';
   const ALERT_TO_EMAIL = process.env.ALERT_TO_EMAIL ?? '';
@@ -67,10 +59,12 @@ export const POST = withAuth<void>(async (req) => {
   if (!ALERT_FROM_EMAIL) missing.push('ALERT_FROM_EMAIL');
   if (!ALERT_TO_EMAIL && !body.to) missing.push('ALERT_TO_EMAIL');
   if (missing.length > 0) {
-    return Response.json({ missing }, { status: 503 });
+    return Response.json(
+      { error: { code: 'SERVICE_UNAVAILABLE', message: `Missing env vars: ${missing.join(', ')}` } },
+      { status: 503 },
+    );
   }
 
-  // 4. Send via Resend.
   const recipient = body.to ?? ALERT_TO_EMAIL;
   const resendResponse = await fetch(RESEND_ENDPOINT, {
     method: 'POST',
@@ -89,7 +83,7 @@ export const POST = withAuth<void>(async (req) => {
   if (!resendResponse.ok) {
     const text = await resendResponse.text().catch(() => '');
     return Response.json(
-      { error: `resend HTTP ${resendResponse.status}: ${text.slice(0, 200)}` },
+      { error: { code: 'PROVIDER_ERROR', message: `Resend returned HTTP ${resendResponse.status}` } },
       { status: 502 },
     );
   }
@@ -97,14 +91,3 @@ export const POST = withAuth<void>(async (req) => {
   const json = (await resendResponse.json().catch(() => ({}))) as ResendCreateResponse;
   return Response.json({ id: json.id ?? null }, { status: 200 });
 });
-
-/** `req.json()` that tolerates empty bodies and invalid JSON by returning `{}`. */
-async function safeReadJson(req: Request): Promise<unknown> {
-  try {
-    const text = await req.text();
-    if (!text) return {};
-    return JSON.parse(text) as unknown;
-  } catch {
-    return {};
-  }
-}

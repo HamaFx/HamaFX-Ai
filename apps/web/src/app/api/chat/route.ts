@@ -25,7 +25,7 @@ import { withRateLimit } from '@hamafx/db';
 import { z } from 'zod';
 import type { UIMessage } from 'ai';
 
-import { errorResponse, parseJsonBody, withAuth } from '@/lib/api';
+import { errorResponse, parseJsonBody, rateLimitedResponse, withAuth } from '@/lib/api';
 import { getServerEnv } from '@/lib/env';
 
 export const runtime = 'nodejs';
@@ -53,10 +53,7 @@ const BodySchema = z.object({
 export const POST = withAuth<void>(async (req, { user }) => {
   const rl = await withRateLimit(user.userId, 'ai_chat', CHAT_RATE_LIMIT);
   if (!rl.allowed) {
-    return Response.json(
-      { error: { code: 'RATE_LIMITED', message: `Too many chat turns (${rl.count}/${rl.limit} per minute). Slow down.` } },
-      { status: 429, headers: { 'Retry-After': '60', 'X-RateLimit-Limit': String(rl.limit), 'X-RateLimit-Remaining': '0' } },
-    );
+    return rateLimitedResponse(rl, req);
   }
 
   let body: z.infer<typeof BodySchema>;

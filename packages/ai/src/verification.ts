@@ -109,18 +109,40 @@ export function collectFindings(args: EnforceArgs): CitationFindingReport | null
   const toolsInvoked = readToolCallNames(args.responseMessages);
   const findings: CitationFinding[] = [];
 
-  if (!hasAny(toolsInvoked, NUMERIC_TOOLS)) {
-    const priceMatches = uniqueMatches(text, PRICE_TOKEN);
-    for (const m of priceMatches) {
-      const sentence = containingSentence(text, m);
-      if (ATTRIBUTION_TOKEN.test(sentence)) continue;
-      findings.push({
-        text: surroundingPhrase(text, m, 80),
-        supported: false,
-        supportingTool: null,
-      });
-      if (findings.length >= 8) break;
+  // Phase 4: value-level citation enforcement.
+  // Instead of skipping all price claims when any numeric tool ran
+  // (turn-level), we extract actual numeric values from tool results
+  // this turn and compare claimed prices against them. A claim is
+  // "supported" only if a numeric tool ran AND the claimed value is
+  // close to a value found in the tool results.
+  const toolResultNumbers = extractToolResultNumbers(args.responseMessages);
+  const hasNumericTool = hasAny(toolsInvoked, NUMERIC_TOOLS);
+
+  const priceMatches = uniqueMatches(text, PRICE_TOKEN);
+  for (const m of priceMatches) {
+    const sentence = containingSentence(text, m);
+    if (ATTRIBUTION_TOKEN.test(sentence)) continue;
+
+    // Parse the matched price token to a number for value comparison.
+    const claimedNum = parsePriceToken(m);
+
+    if (hasNumericTool && claimedNum !== null) {
+      // Value-level check: is the claimed price close to any tool result?
+      const matched = toolResultNumbers.some(
+        (toolNum) => Math.abs(toolNum - claimedNum) / Math.max(Math.abs(claimedNum), 1) < 0.001, // 0.1% tolerance
+      );
+      if (matched) continue; // Claim is backed by a tool result value.
+      // Claim is NOT backed even though a numeric tool ran — flag it.
     }
+
+    // If no numeric tool ran at all, all price claims are unsupported.
+    // If a numeric tool ran but the value doesn't match, also unsupported.
+    findings.push({
+      text: surroundingPhrase(text, m, 80),
+      supported: false,
+      supportingTool: null,
+    });
+    if (findings.length >= 8) break;
   }
 
   if (!hasAny(toolsInvoked, NEWS_OR_EVENT_TOOLS)) {
@@ -190,6 +212,86 @@ function readToolCallNames(messages: ReadonlyArray<{ content: unknown }>): Set<s
 function hasAny(set: Set<string>, candidates: ReadonlySet<string>): boolean {
   for (const c of candidates) if (set.has(c)) return true;
   return false;
+}
+
+/**
+ * Phase 4 — extract numeric values from tool-result parts in the
+ * response messages. These are the actual values returned by tools
+ * this turn (e.g. price = 2350.50). We scan tool-result content for
+ * any number that looks like a price (matching PRICE_TOKEN) and also
+ * any bare number in JSON output fields like "price", "close", "level".
+ *
+ * Returns a Set of parsed floats for value-level comparison.
+ */
+function extractToolResultNumbers(messages: ReadonlyArray<{ content: unknown }>): number[] {
+  const numbers: number[] = [];
+  for (const m of messages) {
+    if (!Array.isArray(m.content)) continue;
+    for (const part of m.content) {
+      if (
+        part &&
+        typeof part === 'object' &&
+        'type' in part &&
+        (part as { type: string }).type === 'tool-result'
+      ) {
+        const result = (part as { result?: unknown }).result;
+        if (result !== null && typeof result === 'object') {
+          // Scan common price-bearing fields in tool JSON output.
+          const obj = result as Record<string, unknown>;
+          for (const key of ['price', 'close', 'open', 'high', 'low', 'level', 'entry', 'stop', 'target', 'bid', 'ask', 'mid']) {
+            const val = obj[key];
+            if (typeof val === 'number' && Number.isFinite(val) && val > 0) {
+              numbers.push(val);
+            }
+          }
+          // Also check nested "tick" or "candles" arrays.
+          if (Array.isArray(obj.candles)) {
+            for (const candle of obj.candles) {
+              if (typeof candle === 'object' && candle !== null) {
+                const c = candle as Record<string, unknown>;
+                for (const key of ['close', 'open', 'high', 'low']) {
+                  const val = c[key];
+                  if (typeof val === 'number' && Number.isFinite(val) && val > 0) {
+                    numbers.push(val);
+                  }
+                }
+              }
+            }
+          }
+          if (typeof obj.tick === 'object' && obj.tick !== null) {
+            const tick = obj.tick as Record<string, unknown>;
+            for (const key of ['price', 'bid', 'ask', 'mid']) {
+              const val = tick[key];
+              if (typeof val === 'number' && Number.isFinite(val) && val > 0) {
+                numbers.push(val);
+              }
+            }
+          }
+        }
+        // Also scan stringified result for price tokens.
+        if (typeof result === 'string') {
+          const matches = uniqueMatches(result, PRICE_TOKEN);
+          for (const m2 of matches) {
+            const parsed = parsePriceToken(m2);
+            if (parsed !== null) numbers.push(parsed);
+          }
+        }
+      }
+    }
+  }
+  return numbers;
+}
+
+/**
+ * Parse a price-token string (e.g. "3,050.50", "1.0850", "2350") to a float.
+ * Returns null if the string can't be parsed as a positive number.
+ */
+function parsePriceToken(token: string): number | null {
+  // Remove commas (comma-formatted prices).
+  const cleaned = token.replace(/,/g, '');
+  const num = parseFloat(cleaned);
+  if (Number.isFinite(num) && num > 0) return num;
+  return null;
 }
 
 function surroundingPhrase(haystack: string, needle: string, span: number): string {

@@ -22,10 +22,25 @@ import { TimeframeSchema } from '../timeframes';
 export const AlertChannelSchema = z.enum(['email', 'telegram', 'web-push']);
 export type AlertChannel = z.infer<typeof AlertChannelSchema>;
 
+/**
+ * Phase 4 — domain/range sanity bounds for alert levels.
+ *
+ * Prices for our supported instruments fall in these bands:
+ *   - XAUUSD: 100–50,000 (covers historical + black-swan spike)
+ *   - EURUSD / GBPUSD: 0.50–2.00
+ *   - JPY pairs: 50–500
+ *
+ * We use a generous global range (0.0001–100,000) to avoid rejecting
+ * valid values for any instrument we might add, while still catching
+ * obviously wrong values (negative, zero, or absurdly large).
+ */
+const ALERT_LEVEL_MIN = 0.0001;
+const ALERT_LEVEL_MAX = 100_000;
+
 const PriceCrossRule = z.object({
   type: z.literal('priceCross'),
   symbol: SymbolSchema,
-  level: z.number(),
+  level: z.number().min(ALERT_LEVEL_MIN).max(ALERT_LEVEL_MAX, 'alert level is outside the plausible price range'),
   direction: z.enum(['above', 'below']),
 });
 
@@ -33,7 +48,7 @@ const CandleCloseRule = z.object({
   type: z.literal('candleClose'),
   symbol: SymbolSchema,
   tf: TimeframeSchema,
-  level: z.number(),
+  level: z.number().min(ALERT_LEVEL_MIN).max(ALERT_LEVEL_MAX, 'alert level is outside the plausible price range'),
   direction: z.enum(['above', 'below']),
 });
 
@@ -54,7 +69,7 @@ const IndicatorCrossRule = z.object({
       /^(?:sma|ema|rsi|atr|macd|bollinger|pivots)(?::[0-9]+(?:,[0-9]+){0,2})?$/i,
       'indicator must match `<kind>` or `<kind>:n[,n[,n]]`',
     ),
-  level: z.number(),
+  level: z.number().min(ALERT_LEVEL_MIN).max(ALERT_LEVEL_MAX, 'indicator level is outside the plausible range'),
   direction: z.enum(['above', 'below']),
   /**
    * Latest observed indicator value from the previous evaluation tick.

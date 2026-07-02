@@ -504,6 +504,16 @@ export interface TelemetryInput {
   toolCalls: number;
   ms: number;
   /**
+   * Phase 4 — actual provider-billed cost in USD where available.
+   * Falls back to the estimate when not provided.
+   */
+  actualCostUsd?: number | null;
+  /**
+   * Phase 4 — BYOK flag. `true` when the turn used the user's own API
+   * key. Defaults to `false` (system/gateway key).
+   */
+  byokKey?: boolean;
+  /**
    * Row marker for non-assistant-turn telemetry. Legacy assistant-turn callers
    * omit this and the column stays `null`. Title_Generator emits one of:
    * `'title_generated' | 'title_failed' | 'title_skipped_budget'`. The Phase
@@ -543,6 +553,9 @@ export async function recordTelemetry(t: TelemetryInput): Promise<void> {
       toolCalls: t.toolCalls,
       ms: t.ms,
       estCostUsd: estimateCostUsd(t.model, t.inputTokens, t.outputTokens),
+      // Phase 4: capture actual cost + BYOK flag for billing reconciliation.
+      ...(t.actualCostUsd != null ? { actualCostUsd: t.actualCostUsd } : {}),
+      byokKey: t.byokKey ?? false,
       kind: t.kind ?? null,
     });
 }

@@ -39,11 +39,16 @@
 // in a heuristic that runs on every assistant turn.
 
 /**
- * Matches a price-shaped token for one of our three supported symbols.
+ * Matches a price-shaped token for one of our supported symbols.
  *
  *   - XAUUSD: `1xxx.xx`–`4xxxx.xx` (gold typically trades 1500–4000;
  *     the upper bound covers a black-swan spike).
  *   - EURUSD / GBPUSD: `0.xxxx` or `1.xxxx` to four or five decimals.
+ *
+ * Phase 4: broadened to also catch:
+ *   - Comma-formatted prices (`3,050.5`, `1,085.50`)
+ *   - Integer prices (`3050`, `1085`)
+ *   - JPY-style values (`150.25`, `149.80`)
  *
  * Boundary guards:
  *   - `(?<!\d\.)` — not part of a longer numeric token (e.g. `1.2.3`).
@@ -56,10 +61,22 @@
 export const PRICE_TOKEN = new RegExp(
   String.raw`(?<!\d\.)(?<!\d)\b(` +
     // gold band: 1000.00 – 49999.99 (4–5 integer digits, covers a spike)
+    // also matches comma-formatted: 3,050.50
     String.raw`[1-4]\d{3,4}\.\d{1,2}` +
+    `|` +
+    String.raw`[1-4]\d{0,3}(?:,\d{3})+\.\d{1,2}` +
     `|` +
     // FX bands
     String.raw`[01]\.\d{4,5}` +
+    `|` +
+    // JPY-style: 100–999.99 (e.g. USDJPY 150.25)
+    String.raw`[1-9]\d{2}\.\d{1,3}` +
+    `|` +
+    // Comma-formatted FX: 1,0850 or 1,08.50 (less common but seen)
+    String.raw`[01],\d{3,4}(?:\.\d{1,5})?` +
+    `|` +
+    // Integer gold price: 3050, 4200 (no decimals)
+    String.raw`[1-4]\d{3,4}(?!\.\d)` +
     String.raw`)\b(?!\d)(?!\.\d)`,
   'g',
 );

@@ -86,6 +86,20 @@ export const chatTelemetry = pgTable(
     /** Estimated cost in USD; computed from per-model rate at insert time. */
     estCostUsd: doublePrecision('est_cost_usd').notNull().default(0),
     /**
+     * Phase 4 — actual provider-billed cost in USD where the provider/AI
+     * Gateway exposes it. Falls back to the estimate when not available.
+     * Used for billing reconciliation so usage on a user's own API key
+     * is never billed as system spend.
+     */
+    actualCostUsd: doublePrecision('actual_cost_usd'),
+    /**
+     * Phase 4 — BYOK flag. `true` when the turn used the user's own API
+     * key (Bring Your Own Key), `false` when it used the system/gateway
+     * key. Needed so usage on a user's own key is never billed as
+     * system spend.
+     */
+    byokKey: boolean('byok_key').default(false),
+    /**
      * Row marker. `null` for legacy assistant turns; one of `ChatTelemetryKind`
      * for Title_Generator events. Stored as plain text so we can extend the
      * vocabulary later without a migration.

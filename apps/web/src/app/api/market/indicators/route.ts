@@ -32,7 +32,8 @@ import {
 } from '@hamafx/shared';
 import { z } from 'zod';
 
-import { errorResponse, parseJsonBody, withAuth } from '@/lib/api';
+import { errorResponse, parseJsonBody, rateLimitedResponse, withAuth } from '@/lib/api';
+import { withRateLimit } from '@hamafx/db';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -50,7 +51,10 @@ const BodySchema = z.object({
 // Phase B: auth-gate. The authenticated `user` is not used inside the
 // handler — indicators are computed on shared market data — but the
 // gate prevents anonymous scraping.
-export const POST = withAuth<void>(async (req) => {
+export const POST = withAuth<void>(async (req, { user }) => {
+  // Phase 4: rate-limit provider-quota-facing route (30 req/min/user).
+  const rl = await withRateLimit(user.userId, 'market_indicators', 30);
+  if (!rl.allowed) return rateLimitedResponse(rl, req);
   try {
     const { symbol, tf, count, indicators } = await parseJsonBody(req, BodySchema);
     const candles = await getCandles(symbol, tf, { count });

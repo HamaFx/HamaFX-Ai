@@ -18,14 +18,18 @@
 // GET /api/sentiment?symbol=XAUUSD
 
 import { getSentimentService } from '@hamafx/ai';
+import { withRateLimit } from '@hamafx/db';
 import { SymbolSchema } from '@hamafx/shared';
 
-import { errorResponse, withAuth } from '@/lib/api';
+import { errorResponse, rateLimitedResponse, withAuth } from '@/lib/api';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-export const GET = withAuth<void>(async (req, { user: _user }) => {
+export const GET = withAuth<void>(async (req, { user }) => {
+  // Phase 4: rate-limit provider-quota-facing route (20 req/min/user).
+  const rl = await withRateLimit(user.userId, 'sentiment', 20);
+  if (!rl.allowed) return rateLimitedResponse(rl, req);
   try {
     const url = new URL(req.url);
     const symbol = url.searchParams.get('symbol');

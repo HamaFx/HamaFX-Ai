@@ -27,6 +27,7 @@ import { runSnapshots } from './snapshots.js';
 import { runWeeklyReview } from './weekly-review.js';
 import { runResonanceSync } from './resonance-sync.js';
 import { runAlerts } from './alerts.js';
+import { runSpendAnomaly } from './spend-anomaly.js';
 import type { JobFn, JobName } from './types.js';
 
 export const JOBS: Record<JobName, { run: JobFn; description: string }> = {
@@ -65,6 +66,10 @@ export const JOBS: Record<JobName, { run: JobFn; description: string }> = {
   'resonance-sync': {
     run: runResonanceSync,
     description: 'Daily intermarket resonance sync — computes and stores real yield and DXY gold divergences.',
+  },
+  'spend-anomaly': {
+    run: runSpendAnomaly,
+    description: 'Phase 4 — operator-side spend-anomaly detector. Z-score query against daily_ai_spend; captures to Sentry + pages operator.',
   },
 };
 

@@ -29,15 +29,26 @@ import { createEntry } from '../journal/persistence';
 import { getToolContext } from '../tool-context';
 import { assertMutationIntent } from './mutation-guard';
 
+/**
+ * Phase 4 — domain/range sanity bounds for journal entry fields.
+ *
+ * Entry/stop/target prices use the same generous range as alert levels.
+ * Position size is bounded to 0–10,000,000 units to catch absurd values
+ * while not rejecting any realistic retail or institutional size.
+ */
+const JOURNAL_PRICE_MIN = 0.0001;
+const JOURNAL_PRICE_MAX = 100_000;
+const JOURNAL_SIZE_MAX = 10_000_000;
+
 const InputSchema = z.object({
   symbol: SymbolSchema,
   side: TradeSideSchema,
   /** ms epoch UTC; defaults to "now" so the agent can omit it. */
   openedAtMs: z.number().int().optional(),
-  entry: z.number(),
-  stop: z.number().nullable().optional(),
-  target: z.number().nullable().optional(),
-  size: z.number().nullable().optional(),
+  entry: z.number().min(JOURNAL_PRICE_MIN).max(JOURNAL_PRICE_MAX, 'entry price is outside the plausible range'),
+  stop: z.number().min(JOURNAL_PRICE_MIN).max(JOURNAL_PRICE_MAX, 'stop price is outside the plausible range').nullable().optional(),
+  target: z.number().min(JOURNAL_PRICE_MIN).max(JOURNAL_PRICE_MAX, 'target price is outside the plausible range').nullable().optional(),
+  size: z.number().min(0).max(JOURNAL_SIZE_MAX, 'position size is outside the plausible range').nullable().optional(),
   notes: z.string().max(2000).nullable().optional(),
   tags: z.array(z.string().max(40)).max(10).optional(),
 });

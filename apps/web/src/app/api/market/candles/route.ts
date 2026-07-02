@@ -24,11 +24,11 @@
 import { getCandlesWithMeta } from '@hamafx/data';
 import { DEFAULT_TIMEFRAME, SymbolSchema, TimeframeSchema } from '@hamafx/shared';
 import { decryptByok } from '@hamafx/shared/encryption';
-import { getDb, schema } from '@hamafx/db';
+import { getDb, schema, withRateLimit } from '@hamafx/db';
 import { eq } from 'drizzle-orm';
 import { z } from 'zod';
 
-import { errorResponse, parseSearchParams, withAuth } from '@/lib/api';
+import { errorResponse, parseSearchParams, rateLimitedResponse, withAuth } from '@/lib/api';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -42,6 +42,9 @@ const QuerySchema = z.object({
 // Phase B: auth-gate. Market data is shared, but the gate prevents
 // anonymous scraping. The authenticated `user` is used to load provider preferences.
 export const GET = withAuth<void>(async (req, { user }) => {
+  // Phase 4: rate-limit provider-quota-facing route (60 req/min/user).
+  const rl = await withRateLimit(user.userId, 'market_candles', 60);
+  if (!rl.allowed) return rateLimitedResponse(rl, req);
   try {
     const { symbol, tf, count } = parseSearchParams(req, QuerySchema);
 

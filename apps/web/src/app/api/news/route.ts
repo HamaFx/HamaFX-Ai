@@ -15,12 +15,16 @@
  */
 
 import { listRecentArticles } from '@hamafx/ai';
-import { errorResponse, withAuth } from '@/lib/api';
+import { withRateLimit } from '@hamafx/db';
+import { errorResponse, rateLimitedResponse, withAuth } from '@/lib/api';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-export const GET = withAuth<void>(async (req) => {
+export const GET = withAuth<void>(async (req, { user }) => {
+  // Phase 4: rate-limit provider-quota-facing route (30 req/min/user).
+  const rl = await withRateLimit(user.userId, 'news', 30);
+  if (!rl.allowed) return rateLimitedResponse(rl, req);
   try {
         const url = new URL(req.url);
     const offset = parseInt(url.searchParams.get('offset') ?? '0', 10);
