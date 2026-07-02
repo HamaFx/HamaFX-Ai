@@ -14,8 +14,10 @@
  * limitations under the License.
  */
 
+import { sql } from 'drizzle-orm';
 import { index, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
-import { users } from './auth';
+
+import { organization, users } from './auth';
 
 /**
  * Browser-issued web-push subscription. Single user, but the user can
@@ -25,14 +27,24 @@ import { users } from './auth';
  * `p256dh` and `auth` are the keys returned by `pushManager.subscribe`,
  * needed to encrypt the push payload per RFC 8030.
  */
-export const pushSubscriptions = pgTable('push_subscriptions', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  /** Phase A — multi-user. References the NextAuth users table. */
-  userId: text('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
-  endpoint: text('endpoint').notNull().unique(),
-  p256dh: text('p256dh').notNull(),
-  auth: text('auth').notNull(),
-  /** Captured at subscribe time so we know which device sent it. */
-  userAgent: text('user_agent'),
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-}, (t) => [index('push_subscriptions_user_id_idx').on(t.userId)]);
+export const pushSubscriptions = pgTable(
+  'push_subscriptions',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    /** Phase A — multi-user. References the NextAuth users table. */
+    userId: text('user_id')
+      .references(() => users.id, { onDelete: 'cascade' })
+      .notNull(),
+    endpoint: text('endpoint').notNull().unique(),
+    tenantId: text('tenant_id')
+      .notNull()
+      .default(sql`current_setting('app.current_tenant', true)`)
+      .references(() => organization.id, { onDelete: 'cascade' }),
+    p256dh: text('p256dh').notNull(),
+    auth: text('auth').notNull(),
+    /** Captured at subscribe time so we know which device sent it. */
+    userAgent: text('user_agent'),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [index('push_subscriptions_user_id_idx').on(t.userId)],
+);

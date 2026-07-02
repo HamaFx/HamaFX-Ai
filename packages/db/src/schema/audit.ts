@@ -14,8 +14,10 @@
  * limitations under the License.
  */
 
-import { text, timestamp, jsonb, index, pgTable } from 'drizzle-orm/pg-core';
-import { users } from './auth';
+import { sql } from 'drizzle-orm';
+import { index, jsonb, pgTable, text, timestamp } from 'drizzle-orm/pg-core';
+
+import { organization, users } from './auth';
 
 export const auditLogs = pgTable(
   'audit_logs',
@@ -26,6 +28,10 @@ export const auditLogs = pgTable(
     userId: text('user_id')
       .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),
+    tenantId: text('tenant_id')
+      .notNull()
+      .default(sql`current_setting('app.current_tenant', true)`)
+      .references(() => organization.id, { onDelete: 'cascade' }),
     action: text('action').notNull(),
     metadata: jsonb('metadata'),
     createdAt: timestamp('created_at', { withTimezone: true, mode: 'string' })

@@ -22,16 +22,24 @@
 //
 // See DSA_FEATURE_EXPANSION_PLAN.md §F4 for the full design.
 
+import { sql } from 'drizzle-orm';
 import { index, pgTable, text, timestamp, uniqueIndex } from 'drizzle-orm/pg-core';
-import { users } from './auth';
+
+import { organization, users } from './auth';
 
 export const notificationNoiseState = pgTable(
   'notification_noise_state',
   {
     /** Phase A — multi-user. References the NextAuth users table. */
-    userId: text('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
+    userId: text('user_id')
+      .references(() => users.id, { onDelete: 'cascade' })
+      .notNull(),
     /** Hashed content + route type for dedup. */
     dedupKey: text('dedup_key').notNull(),
+    tenantId: text('tenant_id')
+      .notNull()
+      .default(sql`current_setting('app.current_tenant', true)`)
+      .references(() => organization.id, { onDelete: 'cascade' }),
     /** "report" | "alert" | "system_error" | "signal_outcome" | "briefing" | "usage_warning". */
     routeType: text('route_type').notNull(),
     lastSentAt: timestamp('last_sent_at', { withTimezone: true }).notNull(),

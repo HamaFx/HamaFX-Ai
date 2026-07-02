@@ -22,8 +22,19 @@
 //
 // See DSA_FEATURE_EXPANSION_PLAN.md §F2 for the full design.
 
-import { doublePrecision, index, pgTable, real, text, timestamp, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
-import { users } from './auth';
+import { sql } from 'drizzle-orm';
+import {
+  doublePrecision,
+  index,
+  pgTable,
+  real,
+  text,
+  timestamp,
+  uniqueIndex,
+  uuid,
+} from 'drizzle-orm/pg-core';
+
+import { organization, users } from './auth';
 import { decisionSignals } from './decision-signals';
 
 // ---------------------------------------------------------------------------
@@ -35,9 +46,15 @@ export const portfolioPositions = pgTable(
   {
     id: uuid('id').primaryKey().defaultRandom(),
     /** Phase A — multi-user. References the NextAuth users table. */
-    userId: text('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
+    userId: text('user_id')
+      .references(() => users.id, { onDelete: 'cascade' })
+      .notNull(),
     /** "XAUUSD" | "EURUSD" | "GBPUSD" — kept as text. */
     symbol: text('symbol').notNull(),
+    tenantId: text('tenant_id')
+      .notNull()
+      .default(sql`current_setting('app.current_tenant', true)`)
+      .references(() => organization.id, { onDelete: 'cascade' }),
     /** "long" | "short". */
     direction: text('direction').notNull(),
     /** In standard lots (1.0 = 100k units for FX, 100 oz for gold). */
@@ -80,6 +97,10 @@ export const portfolioSettings = pgTable(
     userId: text('user_id')
       .references(() => users.id, { onDelete: 'cascade' })
       .notNull(),
+    tenantId: text('tenant_id')
+      .notNull()
+      .default(sql`current_setting('app.current_tenant', true)`)
+      .references(() => organization.id, { onDelete: 'cascade' }),
     /** For risk % calculations. */
     accountBalance: doublePrecision('account_balance'),
     /** Default "USD". */

@@ -23,10 +23,23 @@
 //
 // See DSA_FEATURE_EXPANSION_PLAN.md §F1 for the full design.
 
-import { boolean, doublePrecision, index, integer, jsonb, pgTable, real, text, timestamp, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
-import { users } from './auth';
-import { chatThreads } from './chat';
-import { chatMessages } from './chat';
+import { sql } from 'drizzle-orm';
+import {
+  boolean,
+  doublePrecision,
+  index,
+  integer,
+  jsonb,
+  pgTable,
+  real,
+  text,
+  timestamp,
+  uniqueIndex,
+  uuid,
+} from 'drizzle-orm/pg-core';
+
+import { organization, users } from './auth';
+import { chatMessages, chatThreads } from './chat';
 
 // ---------------------------------------------------------------------------
 // decision_signals
@@ -37,8 +50,14 @@ export const decisionSignals = pgTable(
   {
     id: uuid('id').primaryKey().defaultRandom(),
     /** Phase A — multi-user. References the NextAuth users table. */
-    userId: text('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
+    userId: text('user_id')
+      .references(() => users.id, { onDelete: 'cascade' })
+      .notNull(),
     threadId: uuid('thread_id').references(() => chatThreads.id, { onDelete: 'set null' }),
+    tenantId: text('tenant_id')
+      .notNull()
+      .default(sql`current_setting('app.current_tenant', true)`)
+      .references(() => organization.id, { onDelete: 'cascade' }),
     messageId: uuid('message_id').references(() => chatMessages.id, { onDelete: 'set null' }),
     /** "XAUUSD" | "EURUSD" | "GBPUSD" — kept as text. */
     symbol: text('symbol').notNull(),
@@ -80,6 +99,7 @@ export const decisionSignals = pgTable(
   },
   (t) => [
     index('decision_signals_user_idx').on(t.userId, t.createdAt),
+    index('decision_signals_tenant_idx').on(t.tenantId, t.createdAt),
     index('decision_signals_symbol_idx').on(t.symbol, t.status),
     index('decision_signals_active_idx').on(t.status),
   ],
@@ -96,6 +116,10 @@ export const decisionSignalOutcomes = pgTable(
     signalId: uuid('signal_id')
       .references(() => decisionSignals.id, { onDelete: 'cascade' })
       .notNull(),
+    tenantId: text('tenant_id')
+      .notNull()
+      .default(sql`current_setting('app.current_tenant', true)`)
+      .references(() => organization.id, { onDelete: 'cascade' }),
     /** "1d" | "3d" | "5d" | "10d". */
     horizon: text('horizon').notNull(),
     /** "completed" | "unable". */
@@ -120,6 +144,7 @@ export const decisionSignalOutcomes = pgTable(
   (t) => [
     uniqueIndex('decision_signal_outcomes_signal_horizon_idx').on(t.signalId, t.horizon),
     index('decision_signal_outcomes_signal_idx').on(t.signalId),
+    index('decision_signal_outcomes_tenant_idx').on(t.tenantId, t.evaluatedAt),
     // Phase 3 §18 — index for time-range queries (e.g. "outcomes in last 24h")
     index('decision_signal_outcomes_evaluated_idx').on(t.evaluatedAt),
   ],
@@ -137,10 +162,19 @@ export const decisionSignalFeedback = pgTable(
       .references(() => decisionSignals.id, { onDelete: 'cascade' })
       .notNull(),
     /** Phase A — multi-user. */
-    userId: text('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
+    userId: text('user_id')
+      .references(() => users.id, { onDelete: 'cascade' })
+      .notNull(),
     /** "useful" | "not_useful". */
     feedback: text('feedback').notNull(),
+    tenantId: text('tenant_id')
+      .notNull()
+      .default(sql`current_setting('app.current_tenant', true)`)
+      .references(() => organization.id, { onDelete: 'cascade' }),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   },
-  (t) => [uniqueIndex('decision_signal_feedback_signal_user_idx').on(t.signalId, t.userId)],
+  (t) => [
+    uniqueIndex('decision_signal_feedback_signal_user_idx').on(t.signalId, t.userId),
+    index('decision_signal_feedback_tenant_idx').on(t.tenantId, t.createdAt),
+  ],
 );

@@ -14,8 +14,10 @@
  * limitations under the License.
  */
 
+import { sql } from 'drizzle-orm';
 import { boolean, index, integer, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
-import { users } from './auth';
+
+import { organization, users } from './auth';
 
 /**
  * Per-tool execution telemetry — Phase 7b.
@@ -30,9 +32,15 @@ export const chatToolTelemetry = pgTable(
   {
     id: uuid('id').primaryKey().defaultRandom(),
     /** Phase A — multi-user. References the NextAuth users table. */
-    userId: text('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
+    userId: text('user_id')
+      .references(() => users.id, { onDelete: 'cascade' })
+      .notNull(),
     /** May be null for orphan tool calls (none today, kept for resilience). */
     threadId: uuid('thread_id'),
+    tenantId: text('tenant_id')
+      .notNull()
+      .default(sql`current_setting('app.current_tenant', true)`)
+      .references(() => organization.id, { onDelete: 'cascade' }),
     /** May be null for tool calls that finished after the message saved. */
     messageId: uuid('message_id'),
     /** Tool name from `TOOL_NAMES`. */
@@ -45,7 +53,9 @@ export const chatToolTelemetry = pgTable(
     errorCode: text('error_code'),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   },
-  (t) => [index('chat_tool_telemetry_user_id_idx').on(t.userId), 
+  (t) => [
+    index('chat_tool_telemetry_tenant_id_idx').on(t.tenantId),
+    index('chat_tool_telemetry_user_id_idx').on(t.userId),
     index('tool_telemetry_created_idx').on(t.createdAt),
     index('tool_telemetry_thread_idx').on(t.threadId, t.createdAt),
     index('tool_telemetry_tool_idx').on(t.tool),

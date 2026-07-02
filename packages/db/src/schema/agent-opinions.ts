@@ -14,17 +14,29 @@
  * limitations under the License.
  */
 
+import { sql } from 'drizzle-orm';
 import { index, integer, jsonb, pgTable, real, text, timestamp, uuid } from 'drizzle-orm/pg-core';
-import { users } from './auth';
-import { chatThreads, chatMessages } from './chat';
+
+import { organization, users } from './auth';
+import { chatMessages, chatThreads } from './chat';
 
 export const agentOpinions = pgTable(
   'agent_opinions',
   {
     id: uuid('id').primaryKey().defaultRandom(),
-    userId: text('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
-    threadId: uuid('thread_id').references(() => chatThreads.id, { onDelete: 'cascade' }).notNull(),
-    messageId: uuid('message_id').references(() => chatMessages.id, { onDelete: 'cascade' }).notNull(),
+    userId: text('user_id')
+      .references(() => users.id, { onDelete: 'cascade' })
+      .notNull(),
+    threadId: uuid('thread_id')
+      .references(() => chatThreads.id, { onDelete: 'cascade' })
+      .notNull(),
+    tenantId: text('tenant_id')
+      .notNull()
+      .default(sql`current_setting('app.current_tenant', true)`)
+      .references(() => organization.id, { onDelete: 'cascade' }),
+    messageId: uuid('message_id')
+      .references(() => chatMessages.id, { onDelete: 'cascade' })
+      .notNull(),
     agentName: text('agent_name').notNull(),
     bias: text('bias').notNull(),
     confidence: real('confidence').notNull(),

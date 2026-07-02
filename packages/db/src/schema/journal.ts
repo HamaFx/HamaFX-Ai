@@ -16,16 +16,23 @@
 
 import { sql } from 'drizzle-orm';
 import { doublePrecision, index, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
-import { users } from './auth';
+
+import { organization, users } from './auth';
 
 export const journalEntries = pgTable(
   'journal_entries',
   {
     id: uuid('id').primaryKey().defaultRandom(),
     /** Phase A — multi-user. References the NextAuth users table. */
-    userId: text('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
+    userId: text('user_id')
+      .references(() => users.id, { onDelete: 'cascade' })
+      .notNull(),
     /** "XAUUSD" | "EURUSD" | "GBPUSD". */
     symbol: text('symbol').notNull(),
+    tenantId: text('tenant_id')
+      .notNull()
+      .default(sql`current_setting('app.current_tenant', true)`)
+      .references(() => organization.id, { onDelete: 'cascade' }),
     /** "long" | "short". */
     side: text('side').notNull(),
     openedAt: timestamp('opened_at', { withTimezone: true }).notNull(),
@@ -59,5 +66,10 @@ export const journalEntries = pgTable(
       .notNull()
       .$onUpdate(() => new Date()),
   },
-  (t) => [index('journal_entries_user_id_idx').on(t.userId), index('journal_symbol_idx').on(t.symbol), index('journal_opened_idx').on(t.openedAt)],
+  (t) => [
+    index('journal_entries_user_id_idx').on(t.userId),
+    index('journal_entries_tenant_opened_idx').on(t.tenantId, t.openedAt),
+    index('journal_symbol_idx').on(t.symbol),
+    index('journal_opened_idx').on(t.openedAt),
+  ],
 );

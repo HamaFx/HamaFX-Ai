@@ -29,17 +29,23 @@
 // briefing body, with ON DELETE CASCADE so a wiped chat history can't leave
 // dangling pointers.
 
+import { sql } from 'drizzle-orm';
 import { pgTable, primaryKey, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 
-import { users } from './auth';
+import { organization, users } from './auth';
 import { chatMessages } from './chat';
 
 export const briefingsEmitted = pgTable(
   'briefings_emitted',
   {
     /** Phase A — multi-user. Which user this briefing was generated for. */
-    userId: text('user_id').notNull()
+    userId: text('user_id')
+      .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),
+    tenantId: text('tenant_id')
+      .notNull()
+      .default(sql`current_setting('app.current_tenant', true)`)
+      .references(() => organization.id, { onDelete: 'cascade' }),
     eventId: text('event_id').notNull(),
     kind: text('kind').notNull(), // 'pre' | 'post' | 'weekly_review'
     messageId: uuid('message_id')

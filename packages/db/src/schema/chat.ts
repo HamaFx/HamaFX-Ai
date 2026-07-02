@@ -14,9 +14,11 @@
  * limitations under the License.
  */
 
+import { sql } from 'drizzle-orm';
 import { boolean, index, jsonb, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+
 // Note: `real` is not needed here — analysis_mode is text.
-import { users } from './auth';
+import { organization, users } from './auth';
 
 /**
  * Chat threads. One row per conversation. Personal-mode: no `user_id`.
@@ -26,8 +28,14 @@ export const chatThreads = pgTable(
   {
     id: uuid('id').primaryKey().defaultRandom(),
     /** Phase A — multi-user. References the NextAuth users table. */
-    userId: text('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
+    userId: text('user_id')
+      .references(() => users.id, { onDelete: 'cascade' })
+      .notNull(),
     title: text('title'),
+    tenantId: text('tenant_id')
+      .notNull()
+      .default(sql`current_setting('app.current_tenant', true)`)
+      .references(() => organization.id, { onDelete: 'cascade' }),
     /** "XAUUSD" | "EURUSD" | "GBPUSD" — kept as text to avoid a coupling enum. */
     pinnedSymbol: text('pinned_symbol'),
     /** Provider/model id override, e.g. "anthropic/claude-3.7-sonnet". */
@@ -56,6 +64,7 @@ export const chatThreads = pgTable(
   (t) => [
     index('chat_threads_updated_at_idx').on(t.updatedAt),
     index('chat_threads_user_id_idx').on(t.userId),
+    index('chat_threads_tenant_id_idx').on(t.tenantId),
   ],
 );
 
@@ -70,11 +79,18 @@ export const chatMessages = pgTable(
     threadId: uuid('thread_id')
       .references(() => chatThreads.id, { onDelete: 'cascade' })
       .notNull(),
+    tenantId: text('tenant_id')
+      .notNull()
+      .default(sql`current_setting('app.current_tenant', true)`)
+      .references(() => organization.id, { onDelete: 'cascade' }),
     /** "user" | "assistant" | "system" | "tool" — kept as text. */
     role: text('role').notNull(),
     content: text('content').notNull().default(''),
     parts: jsonb('parts'),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   },
-  (t) => [index('chat_messages_thread_idx').on(t.threadId, t.createdAt)],
+  (t) => [
+    index('chat_messages_thread_idx').on(t.threadId, t.createdAt),
+    index('chat_messages_tenant_id_idx').on(t.tenantId),
+  ],
 );

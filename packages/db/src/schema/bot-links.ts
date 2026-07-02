@@ -22,8 +22,10 @@
 //
 // See DSA_FEATURE_EXPANSION_PLAN.md §F7 for the full design.
 
+import { sql } from 'drizzle-orm';
 import { index, pgTable, primaryKey, text, timestamp } from 'drizzle-orm/pg-core';
-import { users } from './auth';
+
+import { organization, users } from './auth';
 
 export const botLinks = pgTable(
   'bot_links',
@@ -32,6 +34,10 @@ export const botLinks = pgTable(
     userId: text('user_id')
       .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),
+    tenantId: text('tenant_id')
+      .notNull()
+      .default(sql`current_setting('app.current_tenant', true)`)
+      .references(() => organization.id, { onDelete: 'cascade' }),
     /** 'telegram' | 'discord' | 'slack' — extensible. */
     platform: text('platform').notNull(),
     /** The chat ID from the bot platform (Telegram chat ID, etc.). */

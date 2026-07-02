@@ -14,8 +14,19 @@
  * limitations under the License.
  */
 
-import { boolean, index, integer, jsonb, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
-import { users } from './auth';
+import { sql } from 'drizzle-orm';
+import {
+  boolean,
+  index,
+  integer,
+  jsonb,
+  pgTable,
+  text,
+  timestamp,
+  uuid,
+} from 'drizzle-orm/pg-core';
+
+import { organization, users } from './auth';
 
 /**
  * Alerts. The `rule` column holds the discriminated-union AlertRule schema
@@ -33,9 +44,15 @@ export const alerts = pgTable(
   {
     id: uuid('id').primaryKey().defaultRandom(),
     /** Phase A — multi-user. References the NextAuth users table. */
-    userId: text('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
+    userId: text('user_id')
+      .references(() => users.id, { onDelete: 'cascade' })
+      .notNull(),
     /** zod-validated AlertRule JSON — see packages/shared/src/schemas/alerts.ts */
     rule: jsonb('rule').notNull(),
+    tenantId: text('tenant_id')
+      .notNull()
+      .default(sql`current_setting('app.current_tenant', true)`)
+      .references(() => organization.id, { onDelete: 'cascade' }),
     /** AlertChannel[] persisted as text[]. */
     channels: text('channels').array().notNull().default(['email']),
     note: text('note'),
@@ -60,6 +77,7 @@ export const alerts = pgTable(
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   },
   (t) => [
+    index('alerts_tenant_id_idx').on(t.tenantId),
     index('alerts_user_id_idx').on(t.userId),
     index('alerts_active_idx').on(t.active),
     index('alerts_fired_at_idx').on(t.firedAt),

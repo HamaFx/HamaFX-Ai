@@ -246,6 +246,20 @@
       "when": 1782792163139,
       "tag": "0034_breezy_absorbing_man",
       "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "7",
+      "when": 1782800000000,
+      "tag": "0035_phase3_multitenancy_foundation",
+      "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1782800000001,
+      "tag": "0036_phase3_tenant_constraints",
+      "breakpoints": true
     }
   ]
 }

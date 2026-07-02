@@ -17,6 +17,7 @@
 // NextAuth.js v5 standard tables. Matches the @auth/drizzle-adapter schema
 // so the adapter works drop-in without custom table mapping.
 
+import { sql } from 'drizzle-orm';
 import {
   boolean,
   index,
@@ -62,6 +63,32 @@ export const users = pgTable('user', {
 export type UserRow = typeof users.$inferSelect;
 export type UserInsert = typeof users.$inferInsert;
 
+export const organization = pgTable('organization', {
+  id: text('id').primaryKey(),
+  name: text('name').notNull(),
+  plan: text('plan').notNull().default('free'),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  deletedAt: timestamp('deleted_at', { withTimezone: true }),
+});
+
+export const organizationMember = pgTable(
+  'organization_member',
+  {
+    orgId: text('org_id')
+      .notNull()
+      .references(() => organization.id, { onDelete: 'cascade' }),
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    role: text('role').notNull().default('member'),
+    addedAt: timestamp('added_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.orgId, t.userId] }),
+    index('organization_member_user_idx').on(t.userId),
+  ],
+);
+
 // ── User Sessions (login tracking for session management UI) ──────────────
 
 export const userSessions = pgTable(
@@ -71,6 +98,10 @@ export const userSessions = pgTable(
     userId: text('user_id')
       .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),
+    tenantId: text('tenant_id')
+      .notNull()
+      .default(sql`current_setting('app.current_tenant', true)`)
+      .references(() => organization.id, { onDelete: 'cascade' }),
     deviceName: text('device_name'),
     ip: text('ip'),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
@@ -101,9 +132,7 @@ export const accounts = pgTable(
     id_token: text('id_token'),
     session_state: text('session_state'),
   },
-  (t) => [
-    primaryKey({ columns: [t.provider, t.providerAccountId] }),
-  ],
+  (t) => [primaryKey({ columns: [t.provider, t.providerAccountId] })],
 );
 
 export type AccountRow = typeof accounts.$inferSelect;
@@ -131,9 +160,7 @@ export const verificationTokens = pgTable(
     token: text('token').notNull().unique(),
     expires: timestamp('expires', { withTimezone: true }).notNull(),
   },
-  (t) => [
-    primaryKey({ columns: [t.identifier, t.token] }),
-  ],
+  (t) => [primaryKey({ columns: [t.identifier, t.token] })],
 );
 
 export type VerificationTokenRow = typeof verificationTokens.$inferSelect;
@@ -145,6 +172,10 @@ export const userSettings = pgTable('user_settings', {
   userId: text('user_id')
     .primaryKey()
     .references(() => users.id, { onDelete: 'cascade' }),
+  tenantId: text('tenant_id')
+    .notNull()
+    .default(sql`current_setting('app.current_tenant', true)`)
+    .references(() => organization.id, { onDelete: 'cascade' }),
   /** Default trading symbol (e.g. 'XAUUSD'). */
   defaultSymbol: text('default_symbol').notNull().default('XAUUSD'),
   /** IANA timezone string. */
@@ -269,15 +300,17 @@ export const userSymbols = pgTable(
     userId: text('user_id')
       .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),
+    tenantId: text('tenant_id')
+      .notNull()
+      .default(sql`current_setting('app.current_tenant', true)`)
+      .references(() => organization.id, { onDelete: 'cascade' }),
     /** Trading symbol, e.g. 'XAUUSD', 'BTCUSD'. */
     symbol: text('symbol').notNull(),
     /** Display ordering — lower numbers first. */
     displayOrder: integer('display_order').notNull().default(0),
     addedAt: timestamp('added_at', { withTimezone: true }).defaultNow().notNull(),
   },
-  (t) => [
-    primaryKey({ columns: [t.userId, t.symbol] }),
-  ],
+  (t) => [primaryKey({ columns: [t.userId, t.symbol] })],
 );
 
 export type UserSymbolRow = typeof userSymbols.$inferSelect;

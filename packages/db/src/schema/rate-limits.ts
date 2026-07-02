@@ -30,16 +30,10 @@
 //     SET request_count = rate_limits.request_count + 1
 //   RETURNING request_count;
 
-import {
-  index,
-  integer,
-  pgTable,
-  primaryKey,
-  text,
-  timestamp,
-} from 'drizzle-orm/pg-core';
+import { sql } from 'drizzle-orm';
+import { index, integer, pgTable, primaryKey, text, timestamp } from 'drizzle-orm/pg-core';
 
-import { users } from './auth';
+import { organization, users } from './auth';
 
 /**
  * Rate-limit counters per (user, endpoint_group, 1-minute window).
@@ -54,6 +48,10 @@ export const rateLimits = pgTable(
     userId: text('user_id')
       .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),
+    tenantId: text('tenant_id')
+      .notNull()
+      .default(sql`current_setting('app.current_tenant', true)`)
+      .references(() => organization.id, { onDelete: 'cascade' }),
     endpointGroup: text('endpoint_group').notNull(),
     windowStart: timestamp('window_start', { withTimezone: true, mode: 'date' }).notNull(),
     requestCount: integer('request_count').notNull().default(0),

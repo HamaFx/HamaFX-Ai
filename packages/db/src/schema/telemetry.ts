@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import { sql } from 'drizzle-orm';
 import {
   doublePrecision,
   index,
@@ -23,7 +24,8 @@ import {
   timestamp,
   uuid,
 } from 'drizzle-orm/pg-core';
-import { users } from './auth';
+
+import { organization, users } from './auth';
 
 /**
  * Discriminator for non-assistant-turn telemetry rows.
@@ -66,8 +68,14 @@ export const chatTelemetry = pgTable(
   {
     id: uuid('id').primaryKey().defaultRandom(),
     /** Phase A — multi-user. References the NextAuth users table. */
-    userId: text('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
+    userId: text('user_id')
+      .references(() => users.id, { onDelete: 'cascade' })
+      .notNull(),
     threadId: uuid('thread_id'),
+    tenantId: text('tenant_id')
+      .notNull()
+      .default(sql`current_setting('app.current_tenant', true)`)
+      .references(() => organization.id, { onDelete: 'cascade' }),
     messageId: uuid('message_id'),
     model: text('model').notNull(),
     inputTokens: integer('input_tokens').notNull().default(0),
@@ -86,6 +94,7 @@ export const chatTelemetry = pgTable(
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   },
   (t) => [
+    index('chat_telemetry_tenant_id_idx').on(t.tenantId),
     // Phase 3 §17 — chat_telemetry_user_id_idx dropped; the composite
     // telemetry_user_created_idx (user_id, created_at) covers leftmost-prefix
     // queries on user_id alone.

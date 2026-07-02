@@ -14,8 +14,10 @@
  * limitations under the License.
  */
 
+import { sql } from 'drizzle-orm';
 import { index, jsonb, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
-import { users } from './auth';
+
+import { organization, users } from './auth';
 
 /**
  * One-off shareable analysis snapshots. Reachable via `/share/<id>?t=<token>`
@@ -29,8 +31,14 @@ export const sharedSnapshots = pgTable(
   {
     id: uuid('id').primaryKey().defaultRandom(),
     /** Phase A — multi-user. References the NextAuth users table. */
-    userId: text('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
+    userId: text('user_id')
+      .references(() => users.id, { onDelete: 'cascade' })
+      .notNull(),
     title: text('title').notNull(),
+    tenantId: text('tenant_id')
+      .notNull()
+      .default(sql`current_setting('app.current_tenant', true)`)
+      .references(() => organization.id, { onDelete: 'cascade' }),
     /** Plain-text body, rendered as Markdown in the share UI. */
     body: text('body').notNull(),
     /** Optional `AnnotateChartOutput` shape — overlay re-rendered on the
@@ -42,5 +50,8 @@ export const sharedSnapshots = pgTable(
     expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   },
-  (t) => [index('shared_snapshots_user_id_idx').on(t.userId), index('shared_snapshots_expires_at_idx').on(t.expiresAt)],
+  (t) => [
+    index('shared_snapshots_user_id_idx').on(t.userId),
+    index('shared_snapshots_expires_at_idx').on(t.expiresAt),
+  ],
 );

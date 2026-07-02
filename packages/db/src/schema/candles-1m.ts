@@ -26,7 +26,6 @@
 
 import {
   doublePrecision,
-  index,
   integer,
   pgTable,
   primaryKey,
@@ -57,10 +56,7 @@ export const candles1m = pgTable(
     source: text('source').notNull().default('biquote-signalr'),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   },
-  (t) => [
-    primaryKey({ columns: [t.symbol, t.t] }),
-    index('candles_1m_symbol_t_idx').on(t.symbol, t.t),
-  ],
+  (t) => [primaryKey({ columns: [t.symbol, t.t] })],
 );
 
 export type Candle1mRow = typeof candles1m.$inferSelect;

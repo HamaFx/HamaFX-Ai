@@ -14,8 +14,10 @@
  * limitations under the License.
  */
 
+import { sql } from 'drizzle-orm';
 import { index, jsonb, pgTable, text, timestamp, unique, uuid, vector } from 'drizzle-orm/pg-core';
-import { users } from './auth';
+
+import { organization, users } from './auth';
 
 /**
  * Unified memory index. Phase 7b additions:
@@ -49,9 +51,15 @@ export const memoryEmbeddings = pgTable(
   {
     id: uuid('id').primaryKey().defaultRandom(),
     /** Phase A — multi-user. References the NextAuth users table. */
-    userId: text('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
+    userId: text('user_id')
+      .references(() => users.id, { onDelete: 'cascade' })
+      .notNull(),
     /** "journal" | "briefing" | "thread_synopsis" — discriminator. */
     kind: text('kind').notNull(),
+    tenantId: text('tenant_id')
+      .notNull()
+      .default(sql`current_setting('app.current_tenant', true)`)
+      .references(() => organization.id, { onDelete: 'cascade' }),
     /** Originating row id (journal_entries.id, chat_messages.id, ...). */
     sourceId: text('source_id').notNull(),
     /** Symbol context, when the memory is symbol-scoped. */
@@ -67,7 +75,9 @@ export const memoryEmbeddings = pgTable(
     occurredAt: timestamp('occurred_at', { withTimezone: true }).notNull(),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   },
-  (t) => [index('memory_embeddings_user_id_idx').on(t.userId), 
+  (t) => [
+    index('memory_embeddings_tenant_id_idx').on(t.tenantId),
+    index('memory_embeddings_user_id_idx').on(t.userId),
     index('memory_kind_idx').on(t.kind),
     index('memory_source_idx').on(t.kind, t.sourceId),
     index('memory_symbol_idx').on(t.symbol),

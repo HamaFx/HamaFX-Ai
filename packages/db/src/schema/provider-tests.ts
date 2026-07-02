@@ -14,9 +14,10 @@
  * limitations under the License.
  */
 
-import { boolean, pgTable, primaryKey, text, timestamp, jsonb } from 'drizzle-orm/pg-core';
+import { sql } from 'drizzle-orm';
+import { boolean, jsonb, pgTable, primaryKey, text, timestamp } from 'drizzle-orm/pg-core';
 
-import { users } from './auth';
+import { organization, users } from './auth';
 
 /**
  * Latest test result per (userId, providerId) — populated by the
@@ -40,13 +41,15 @@ export const providerTests = pgTable(
     userId: text('user_id')
       .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),
+    tenantId: text('tenant_id')
+      .notNull()
+      .default(sql`current_setting('app.current_tenant', true)`)
+      .references(() => organization.id, { onDelete: 'cascade' }),
     providerId: text('provider_id').notNull(),
     ok: boolean('ok').notNull(),
     /** Human-readable error message — null when ok. Never logged. */
     error: text('error'),
-    testedAt: timestamp('tested_at', { withTimezone: true, mode: 'string' })
-      .notNull()
-      .defaultNow(),
+    testedAt: timestamp('tested_at', { withTimezone: true, mode: 'string' }).notNull().defaultNow(),
     /** Rate limit information extracted from response headers. */
     rateLimit: jsonb('rate_limit').$type<{
       remainingRequests?: number;
@@ -55,7 +58,5 @@ export const providerTests = pgTable(
       resetTokens?: string;
     }>(),
   },
-  (t) => [
-    primaryKey({ columns: [t.userId, t.providerId] }),
-  ],
+  (t) => [primaryKey({ columns: [t.userId, t.providerId] })],
 );

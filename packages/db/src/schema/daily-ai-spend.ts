@@ -14,8 +14,10 @@
  * limitations under the License.
  */
 
+import { sql } from 'drizzle-orm';
 import { bigint, date, pgTable, primaryKey, text } from 'drizzle-orm/pg-core';
-import { users } from './auth';
+
+import { organization, users } from './auth';
 
 /**
  * Atomic daily AI-spend counter (Phase 1 hardening §7).
@@ -31,8 +33,13 @@ export const dailyAiSpend = pgTable(
   'daily_ai_spend',
   {
     /** Phase A — multi-user. References the NextAuth users table. */
-    userId: text('user_id').notNull()
+    userId: text('user_id')
+      .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),
+    tenantId: text('tenant_id')
+      .notNull()
+      .default(sql`current_setting('app.current_tenant', true)`)
+      .references(() => organization.id, { onDelete: 'cascade' }),
     /** UTC calendar day (`YYYY-MM-DD`). */
     day: date('day').notNull(),
     /** Running estimated spend in USD cents — see helper docs. */
