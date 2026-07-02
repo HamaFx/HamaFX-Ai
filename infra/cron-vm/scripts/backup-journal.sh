@@ -12,7 +12,8 @@ set -euo pipefail
 # shellcheck source=./_load-env.sh
 source "$(dirname "${BASH_SOURCE[0]}")/_load-env.sh" /opt/hamafx/.env
 
-: "${DATABASE_URL:?DATABASE_URL must be set}"
+JOURNAL_DB_URL="${DIRECT_URL:-${POSTGRES_URL_NON_POOLING:-${DATABASE_URL:-${POSTGRES_URL:-}}}}"
+: "${JOURNAL_DB_URL:?Set DIRECT_URL (preferred) or POSTGRES_URL_NON_POOLING / DATABASE_URL / POSTGRES_URL}"
 : "${GCS_BACKUP_BUCKET:?GCS_BACKUP_BUCKET must be set}"
 
 HC_UUID="${HC_BACKUP_JOURNAL_UUID:-}"
@@ -41,7 +42,7 @@ log "exporting journal_entries → $TARGET"
 # streaming `json_agg` straight into gsutil. Empty table case yields
 # the literal string `null` which we coerce to `[]`.
 set -o pipefail
-if ! psql "$DATABASE_URL" -A -t \
+if ! psql "$JOURNAL_DB_URL" -A -t \
   -c "SELECT COALESCE(json_agg(j), '[]'::json) FROM journal_entries j;" \
   | gsutil -q cp - "$TARGET"; then
   log 'psql | gsutil failed'
@@ -50,6 +51,6 @@ if ! psql "$DATABASE_URL" -A -t \
 fi
 
 # Quick row count for the ping body.
-ROW_COUNT="$(psql "$DATABASE_URL" -A -t -c 'SELECT COUNT(*) FROM journal_entries;' || echo '?')"
+ROW_COUNT="$(psql "$JOURNAL_DB_URL" -A -t -c 'SELECT COUNT(*) FROM journal_entries;' || echo '?')"
 log "exported $ROW_COUNT rows"
 ping_hc success "rows=$ROW_COUNT target=$TARGET"

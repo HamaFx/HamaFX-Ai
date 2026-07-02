@@ -11,7 +11,8 @@
 #   5. Tears the container down, deletes the temp file.
 #   6. Pings HC_VERIFY_RESTORE_UUID success/fail with row counts.
 #
-# Tested with PostgreSQL 15 in a docker container. The VM needs Docker
+# Tested with pgvector/pgvector:pg15 in a docker container so the restore
+# rehearsal validates vector columns and HNSW indexes too. The VM needs Docker
 # installed (setup.sh grew an apt-get docker.io step in PR-17).
 
 set -euo pipefail
@@ -74,7 +75,7 @@ docker run --rm -d \
   -e POSTGRES_USER=verify \
   -e POSTGRES_DB="$TARGET_DB" \
   -p "${LOCAL_PG_PORT}:5432" \
-  postgres:15-alpine >/dev/null
+  pgvector/pgvector:pg15 >/dev/null
 
 # Wait for the container's Postgres to accept connections.
 for _ in $(seq 1 30); do
@@ -88,27 +89,33 @@ done
 # expects them).
 docker exec "$CONTAINER" psql -U verify -d "$TARGET_DB" -c \
   'CREATE EXTENSION IF NOT EXISTS vector; CREATE EXTENSION IF NOT EXISTS pgcrypto;' \
-  >/dev/null 2>&1 || log 'extension create failed (vector may not be available in postgres:15-alpine — non-fatal for the smoke check)'
+  >/dev/null
 
 # ------------------------------------------------------------------ Restore + assert
 log 'running pg_restore'
-PGPASSWORD=verify pg_restore \
+if ! PGPASSWORD=verify pg_restore \
   --no-owner --no-privileges \
   -h 127.0.0.1 -p "$LOCAL_PG_PORT" -U verify -d "$TARGET_DB" \
-  "$DUMP" || log 'pg_restore reported errors (often expected for vector-extension edges; we still assert row counts)'
+  "$DUMP"; then
+  log 'pg_restore failed'
+  ping_hc fail "pg_restore failed for $LATEST"
+  exit 1
+fi
 
 JOURNAL_ROWS="$(PGPASSWORD=verify psql -h 127.0.0.1 -p "$LOCAL_PG_PORT" -U verify -d "$TARGET_DB" \
   -A -t -c 'SELECT COUNT(*) FROM journal_entries;' 2>/dev/null || echo 0)"
 THREADS_ROWS="$(PGPASSWORD=verify psql -h 127.0.0.1 -p "$LOCAL_PG_PORT" -U verify -d "$TARGET_DB" \
   -A -t -c 'SELECT COUNT(*) FROM chat_threads;' 2>/dev/null || echo 0)"
+HNSW_INDEX_COUNT="$(PGPASSWORD=verify psql -h 127.0.0.1 -p "$LOCAL_PG_PORT" -U verify -d "$TARGET_DB" \
+  -A -t -c "SELECT COUNT(*) FROM pg_indexes WHERE schemaname = 'public' AND indexdef ILIKE '%USING hnsw%';" 2>/dev/null || echo 0)"
 
-log "journal_entries=$JOURNAL_ROWS chat_threads=$THREADS_ROWS"
+log "journal_entries=$JOURNAL_ROWS chat_threads=$THREADS_ROWS hnsw_indexes=$HNSW_INDEX_COUNT"
 
-if [[ "$JOURNAL_ROWS" =~ ^[0-9]+$ ]] && [[ "$THREADS_ROWS" =~ ^[0-9]+$ ]]; then
-  ping_hc success "journal=$JOURNAL_ROWS threads=$THREADS_ROWS dump=$LATEST"
-  echo "$(date -u +%FT%TZ) journal=$JOURNAL_ROWS threads=$THREADS_ROWS dump=$LATEST" \
+if [[ "$JOURNAL_ROWS" =~ ^[0-9]+$ ]] && [[ "$THREADS_ROWS" =~ ^[0-9]+$ ]] && [[ "$HNSW_INDEX_COUNT" =~ ^[0-9]+$ ]] && (( HNSW_INDEX_COUNT > 0 )); then
+  ping_hc success "journal=$JOURNAL_ROWS threads=$THREADS_ROWS hnsw=$HNSW_INDEX_COUNT dump=$LATEST"
+  echo "$(date -u +%FT%TZ) journal=$JOURNAL_ROWS threads=$THREADS_ROWS hnsw=$HNSW_INDEX_COUNT dump=$LATEST" \
     | gsutil -q cp - "gs://${GCS_BACKUP_BUCKET}/verify/last-success.txt"
 else
-  ping_hc fail "could not query restored DB"
+  ping_hc fail "restore verification failed (rows or hnsw indexes missing)"
   exit 1
 fi

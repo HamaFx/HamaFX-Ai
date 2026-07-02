@@ -31,9 +31,9 @@
 // All paths are guarded by the daily AI budget so a runaway agent loop
 // can't burn embedding spend in a side-effect.
 
-import { getDb, schema } from '@hamafx/db';
-import type { ServerEnv, Symbol, ThreadInsight } from '@hamafx/shared';
+import { getDb, schema, withTenantDb } from '@hamafx/db';
 import type { UserSettingsRow } from '@hamafx/db/schema';
+import type { ServerEnv, Symbol, ThreadInsight } from '@hamafx/shared';
 import { desc, eq, gte, sql } from 'drizzle-orm';
 
 import { dailySpendUsd } from '../cost';
@@ -131,7 +131,11 @@ async function upsertMemory(args: {
       occurredAt: args.occurredAt,
     })
     .onConflictDoUpdate({
-      target: [schema.memoryEmbeddings.userId, schema.memoryEmbeddings.kind, schema.memoryEmbeddings.sourceId],
+      target: [
+        schema.memoryEmbeddings.userId,
+        schema.memoryEmbeddings.kind,
+        schema.memoryEmbeddings.sourceId,
+      ],
       set: {
         symbol: args.symbol,
         text,
@@ -245,9 +249,7 @@ export interface RememberThreadSynopsisArgs {
 export async function rememberThreadSynopsis(
   args: RememberThreadSynopsisArgs,
 ): Promise<{ stored: boolean; reason?: string }> {
-  const insightLines = args.insights.map(
-    (i) => `→ ${i.text}${i.symbol ? ` (${i.symbol})` : ''}`,
-  );
+  const insightLines = args.insights.map((i) => `→ ${i.text}${i.symbol ? ` (${i.symbol})` : ''}`);
   const text = [args.synopsis, ...insightLines].join('\n').trim();
   return upsertMemory({
     kind: 'thread_synopsis',
@@ -274,6 +276,8 @@ export interface SearchMemoryArgs {
   since?: number;
   /** Phase A — multi-tenant scope. Required unless explicitly skipping. */
   userId: string;
+  /** Phase 3 — future org/workspace tenant boundary. Defaults to userId today. */
+  tenantId?: string;
 }
 
 /**
@@ -283,6 +287,7 @@ export interface SearchMemoryArgs {
  */
 export async function searchMemory(args: SearchMemoryArgs): Promise<MemoryRow[]> {
   const { embedding, limit, kinds, symbol, since } = args;
+  const tenantId = args.tenantId ?? args.userId;
   const vec = vectorLiteral(embedding);
 
   // Build dynamic WHERE clauses while keeping drizzle's parametrisation.
@@ -294,30 +299,37 @@ export async function searchMemory(args: SearchMemoryArgs): Promise<MemoryRow[]>
         )})`
       : sql``;
   const symbolClause = symbol ? sql`AND symbol = ${symbol}` : sql``;
-  const sinceClause =
-    since !== undefined ? sql`AND occurred_at >= ${new Date(since)}` : sql``;
+  const sinceClause = since !== undefined ? sql`AND occurred_at >= ${new Date(since)}` : sql``;
+  const tenantClause = sql`AND tenant_id = ${tenantId}`;
   const userClause = sql`AND user_id = ${args.userId}`;
 
-  const result = await getDb().execute(sql`
-    SELECT
-      id,
-      kind,
-      source_id AS "sourceId",
-      symbol,
-      text,
-      model,
-      meta,
-      occurred_at AS "occurredAt",
-      1 - (embedding <=> ${vec}::vector) AS similarity
-    FROM memory_embeddings
-    WHERE 1 = 1
-      ${kindClause}
-      ${symbolClause}
-      ${sinceClause}
-      ${userClause}
-    ORDER BY embedding <=> ${vec}::vector
-    LIMIT ${limit}
-  `);
+  const result = await withTenantDb(tenantId, async (db) => {
+    await db.execute(sql`SET LOCAL hnsw.ef_search = 100`);
+    await db.execute(sql`SET LOCAL hnsw.iterative_scan = 'relaxed_order'`);
+    await db.execute(sql`SET LOCAL hnsw.max_scan_tuples = 20000`);
+
+    return db.execute(sql`
+      SELECT
+        id,
+        kind,
+        source_id AS "sourceId",
+        symbol,
+        text,
+        model,
+        meta,
+        occurred_at AS "occurredAt",
+        1 - (embedding <=> ${vec}::vector) AS similarity
+      FROM memory_embeddings
+      WHERE 1 = 1
+        ${kindClause}
+        ${symbolClause}
+        ${sinceClause}
+        ${tenantClause}
+        ${userClause}
+      ORDER BY embedding <=> ${vec}::vector
+      LIMIT ${limit}
+    `);
+  });
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const rows = (result as any).rows ?? (result as unknown as MemoryRow[]);

@@ -17,6 +17,7 @@
 // Drizzle client. Node runtime only — postgres-js does not work on Edge.
 // Routes that touch this module must export `runtime = 'nodejs'`.
 
+import { sql } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 
@@ -54,9 +55,7 @@ function resolvePoolMax(): number {
   // environment file so we can pick the right default without
   // pulling Vercel-specific env vars into @hamafx/db.
   const isWorker = process.env.HAMAFX_RUNTIME === 'worker';
-  const envOverride = isWorker
-    ? process.env.WORKER_DB_POOL_MAX
-    : process.env.DB_POOL_MAX;
+  const envOverride = isWorker ? process.env.WORKER_DB_POOL_MAX : process.env.DB_POOL_MAX;
   if (envOverride) {
     const n = Number(envOverride);
     if (Number.isFinite(n) && n > 0) return Math.floor(n);
@@ -79,6 +78,8 @@ function resolvePoolMax(): number {
 const DEFAULT_WEB_STATEMENT_TIMEOUT = 8000;
 const DEFAULT_WORKER_STATEMENT_TIMEOUT = 30000;
 
+type DbClient = ReturnType<typeof drizzle>;
+
 function resolveStatementTimeout(): number {
   if (process.env.NODE_ENV === 'test') return 30000;
   const isWorker = process.env.HAMAFX_RUNTIME === 'worker';
@@ -90,7 +91,19 @@ function resolveStatementTimeout(): number {
  * Vercel functions reuse the same connection pool across invocations within
  * the same Node process.
  */
-export function getDb(): ReturnType<typeof drizzle> {
+function resolveSslOptions(): false | { rejectUnauthorized: boolean; ca?: string } {
+  const ca = process.env.SUPABASE_CA_CERT?.replace(/\\n/g, '\n').trim();
+  if (ca) {
+    return {
+      ca,
+      rejectUnauthorized: true,
+    };
+  }
+
+  return { rejectUnauthorized: false };
+}
+
+export function getDb(): DbClient {
   if (_client) return _client;
 
   // Accept DATABASE_URL or POSTGRES_URL (the Supabase Vercel integration
@@ -105,25 +118,17 @@ export function getDb(): ReturnType<typeof drizzle> {
   // Supabase pooler in transaction mode requires `prepare: false`. The pooler
   // doesn't support prepared statements; postgres-js otherwise tries to use them.
   //
-  // SSL: `rejectUnauthorized: false` is required because Supabase's
-  // transaction-mode pooler (pgBouncer) presents a self-signed certificate
-  // that Node's default CA store cannot verify. Setting `rejectUnauthorized:
-  // true` would cause every connection to fail with UNABLE_TO_VERIFY_LEAF_SIGNATURE.
-  //
-  // Mitigation: traffic between Vercel and Supabase traverses an encrypted
-  // TLS tunnel regardless — `rejectUnauthorized: false` disables *certificate
-  // verification*, not encryption itself. The risk is a MITM impersonating
-  // the pooler, which is low inside Vercel's network. To fully remediate,
-  // set `SUPABASE_CA_CERT` env var and switch to:
-  //   ssl: { ca: process.env.SUPABASE_CA_CERT, rejectUnauthorized: true }
-  // See: https://supabase.com/docs/guides/database/connecting-to-postgres#ssl
+  // TLS hardening (Phase 3 Session B): when SUPABASE_CA_CERT is present we verify
+  // the server certificate with rejectUnauthorized=true. Until that cert is wired in,
+  // we keep the legacy rejectUnauthorized=false fallback so existing deployments do
+  // not break mid-rollout.
   _sql = postgres(url, {
     prepare: false,
     max: resolvePoolMax(),
     idle_timeout: 20,
     connect_timeout: 10,
     max_lifetime: 60 * 30,
-    ssl: { rejectUnauthorized: false },
+    ssl: resolveSslOptions(),
     connection: {
       statement_timeout: resolveStatementTimeout(),
     },
@@ -140,6 +145,20 @@ export async function closeDb(): Promise<void> {
     _sql = null;
     _client = null;
   }
+}
+
+/**
+ * Run work inside a transaction that sets the current tenant GUC for future
+ * RLS-aware query paths.
+ */
+export async function withTenantDb<T>(
+  tenantId: string,
+  work: (db: DbClient) => Promise<T>,
+): Promise<T> {
+  return getDb().transaction(async (tx) => {
+    await tx.execute(sql`SELECT set_config('app.current_tenant', ${tenantId}, true)`);
+    return work(tx as unknown as DbClient);
+  });
 }
 
 export { schema };

@@ -14,7 +14,8 @@ set -euo pipefail
 # shellcheck source=./_load-env.sh
 source "$(dirname "${BASH_SOURCE[0]}")/_load-env.sh" /opt/hamafx/.env
 
-: "${DATABASE_URL:?DATABASE_URL must be set in /opt/hamafx/.env}"
+DB_DUMP_URL="${DIRECT_URL:-${POSTGRES_URL_NON_POOLING:-${DATABASE_URL:-${POSTGRES_URL:-}}}}"
+: "${DB_DUMP_URL:?Set DIRECT_URL (preferred) or POSTGRES_URL_NON_POOLING / DATABASE_URL / POSTGRES_URL in /opt/hamafx/.env}"
 : "${GCS_BACKUP_BUCKET:?GCS_BACKUP_BUCKET must be set (e.g. hamafx-backups-hamafx-78845)}"
 
 HC_UUID="${HC_BACKUP_DB_UUID:-}"
@@ -43,7 +44,7 @@ START=$(date +%s)
 log "dumping → $TARGET"
 
 set -o pipefail
-if ! pg_dump --format=custom --no-owner --no-privileges --dbname="$DATABASE_URL" \
+if ! pg_dump --format=custom --no-owner --no-privileges --dbname="$DB_DUMP_URL" \
   | gzip --rsyncable \
   | gsutil -q cp - "$TARGET"; then
   log 'pg_dump | gzip | gsutil failed'

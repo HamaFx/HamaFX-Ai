@@ -11,10 +11,11 @@ vi.mock('../src/client', async (importOriginal) => {
 });
 
 describe('public API exports', () => {
-  it('exports getDb, closeDb, and schema from client', async () => {
+  it('exports getDb, closeDb, withTenantDb, and schema from client', async () => {
     const mod = await import('../src/index');
     expect(mod.getDb).toBeTypeOf('function');
     expect(mod.closeDb).toBeTypeOf('function');
+    expect(mod.withTenantDb).toBeTypeOf('function');
     expect(mod.schema).toBeTypeOf('object');
   });
 
@@ -82,7 +83,9 @@ describe('withRateLimit with mocked client', () => {
 describe('extractCount regression guard', () => {
   function extractCount(rows: unknown): number {
     const list = (
-      Array.isArray(rows) ? rows : ((rows as { rows?: Array<{ request_count: number }> }).rows ?? [])
+      Array.isArray(rows)
+        ? rows
+        : ((rows as { rows?: Array<{ request_count: number }> }).rows ?? [])
     ) as Array<{ request_count: number }>;
     return Number(list[0]?.request_count ?? 0);
   }

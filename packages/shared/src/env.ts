@@ -45,14 +45,17 @@ const AuthEnv = z.object({
   ENCRYPTION_SECRET: z.string().min(32, 'ENCRYPTION_SECRET must be at least 32 chars').optional(),
 });
 
-// We accept either DATABASE_URL or POSTGRES_URL — the Supabase Vercel
-// integration writes POSTGRES_URL (transaction pooler, prepare-statement-safe
-// when the client is configured with `prepare: false`). At consume time the
-// adapter resolves whichever is set; both being unset fails validation.
+// We accept either DATABASE_URL or POSTGRES_URL for app traffic — the Supabase
+// Vercel integration writes POSTGRES_URL (transaction pooler, prepare-statement-safe
+// when the client is configured with `prepare: false`). Phase 3 adds DIRECT_URL /
+// POSTGRES_URL_NON_POOLING for migrations, backups, and other session-bound tasks.
 const DbEnv = z
   .object({
     DATABASE_URL: z.string().url().optional(),
     POSTGRES_URL: z.string().url().optional(),
+    DIRECT_URL: z.string().url().optional(),
+    POSTGRES_URL_NON_POOLING: z.string().url().optional(),
+    SUPABASE_CA_CERT: z.string().optional(),
     SUPABASE_URL: z.string().url().optional(),
     SUPABASE_SERVICE_ROLE_KEY: z.string().optional(),
     SUPABASE_SECRET_KEY: z.string().optional(),
@@ -105,8 +108,8 @@ const AiEnv = z
     (v) =>
       Boolean(
         v.AI_GATEWAY_API_KEY ||
-          v.GOOGLE_GENERATIVE_AI_API_KEY ||
-          (v.GOOGLE_VERTEX_PROJECT && v.GOOGLE_VERTEX_LOCATION),
+        v.GOOGLE_GENERATIVE_AI_API_KEY ||
+        (v.GOOGLE_VERTEX_PROJECT && v.GOOGLE_VERTEX_LOCATION),
       ),
     {
       message:
@@ -202,16 +205,20 @@ const RuntimeEnv = z.object({
   LANGFUSE_BASE_URL: z.string().url().optional(),
 
   // Feature Flags
-  MULTI_USER_ENABLED: z.union([z.literal('0'), z.literal('1'), z.literal('true'), z.literal('false')])
+  MULTI_USER_ENABLED: z
+    .union([z.literal('0'), z.literal('1'), z.literal('true'), z.literal('false')])
     .default('0')
     .transform((v) => v === '1' || v === 'true'),
-  BYOK_ENABLED: z.union([z.literal('0'), z.literal('1'), z.literal('true'), z.literal('false')])
+  BYOK_ENABLED: z
+    .union([z.literal('0'), z.literal('1'), z.literal('true'), z.literal('false')])
     .default('0')
     .transform((v) => v === '1' || v === 'true'),
-  UNLIMITED_SYMBOLS: z.union([z.literal('0'), z.literal('1'), z.literal('true'), z.literal('false')])
+  UNLIMITED_SYMBOLS: z
+    .union([z.literal('0'), z.literal('1'), z.literal('true'), z.literal('false')])
     .default('0')
     .transform((v) => v === '1' || v === 'true'),
-  PER_USER_BRIEFINGS: z.union([z.literal('0'), z.literal('1'), z.literal('true'), z.literal('false')])
+  PER_USER_BRIEFINGS: z
+    .union([z.literal('0'), z.literal('1'), z.literal('true'), z.literal('false')])
     .default('0')
     .transform((v) => v === '1' || v === 'true'),
 });
@@ -223,32 +230,48 @@ const RuntimeEnv = z.object({
 // Production-only refinement: secrets become REQUIRED when NODE_ENV is
 // 'production'. We can't refine AuthEnv in isolation because NODE_ENV lives
 // in RuntimeEnv — by checking after the intersection we see the combined shape.
-export const ServerEnvSchema = z.intersection(
-  z.intersection(DbEnv, AiEnv),
-  AuthEnv.merge(CacheEnv)
-    .merge(ProvidersEnv)
-    .merge(NotifyEnv)
-    .merge(PublicEnv)
-    .merge(RuntimeEnv),
-).refine(
-  (env) =>
-    env.NODE_ENV !== 'production' ||
-    Boolean((env.AUTH_SECRET || env.NEXTAUTH_SECRET) && env.CRON_SECRET && env.ENCRYPTION_SECRET),
-  {
-    message:
-      'In production, AUTH_SECRET (or NEXTAUTH_SECRET), CRON_SECRET, and ENCRYPTION_SECRET are all required. ' +
-      'Set them in your Vercel project (Settings → Environment Variables) for Production ' +
-      '+ Preview scopes, or in your local .env.local for `pnpm dev:local`.',
-    path: ['AUTH_SECRET'],
-  },
-);
+export const ServerEnvSchema = z
+  .intersection(
+    z.intersection(DbEnv, AiEnv),
+    AuthEnv.merge(CacheEnv).merge(ProvidersEnv).merge(NotifyEnv).merge(PublicEnv).merge(RuntimeEnv),
+  )
+  .refine(
+    (env) =>
+      env.NODE_ENV !== 'production' ||
+      Boolean((env.AUTH_SECRET || env.NEXTAUTH_SECRET) && env.CRON_SECRET && env.ENCRYPTION_SECRET),
+    {
+      message:
+        'In production, AUTH_SECRET (or NEXTAUTH_SECRET), CRON_SECRET, and ENCRYPTION_SECRET are all required. ' +
+        'Set them in your Vercel project (Settings → Environment Variables) for Production ' +
+        '+ Preview scopes, or in your local .env.local for `pnpm dev:local`.',
+      path: ['AUTH_SECRET'],
+    },
+  );
 
 export type ServerEnv = z.infer<typeof ServerEnvSchema>;
 /**
- * Resolve the active Postgres connection string, preferring DATABASE_URL. */
+ * Resolve the active Postgres connection string for app traffic, preferring DATABASE_URL.
+ */
 export function resolveDatabaseUrl(env: Pick<ServerEnv, 'DATABASE_URL' | 'POSTGRES_URL'>): string {
   const url = env.DATABASE_URL || env.POSTGRES_URL;
   if (!url) throw new Error('Neither DATABASE_URL nor POSTGRES_URL is set');
+  return url;
+}
+
+/**
+ * Resolve the direct/session-mode Postgres connection string for migrations,
+ * backups, and other session-bound operations.
+ */
+export function resolveDirectDatabaseUrl(
+  env: Pick<ServerEnv, 'DIRECT_URL' | 'POSTGRES_URL_NON_POOLING' | 'DATABASE_URL' | 'POSTGRES_URL'>,
+): string {
+  const url =
+    env.DIRECT_URL || env.POSTGRES_URL_NON_POOLING || env.DATABASE_URL || env.POSTGRES_URL;
+  if (!url) {
+    throw new Error(
+      'Neither DIRECT_URL, POSTGRES_URL_NON_POOLING, DATABASE_URL, nor POSTGRES_URL is set',
+    );
+  }
   return url;
 }
 

@@ -52,14 +52,13 @@
  *   a friendlier wrapper.
  *
  * Env vars
- *   POSTGRES_URL_NON_POOLING    preferred — direct connection,
- *                                safe for DDL
- *   DATABASE_URL               fallback — same purpose
+ *   DIRECT_URL                 preferred — explicit direct/session connection
+ *   POSTGRES_URL_NON_POOLING   compatibility fallback — direct connection
+ *   DATABASE_URL               legacy fallback
  *
  * Wired into vercel.json buildCommand:
  *   "buildCommand": "node scripts/predeploy-migrate.mjs && npx turbo run build --filter=@hamafx/web"
  */
-
 import { execFileSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
@@ -76,13 +75,15 @@ if (vercelEnv && vercelEnv !== 'production') {
 }
 
 const url =
+  process.env.DIRECT_URL ||
   process.env.POSTGRES_URL_NON_POOLING ||
-  process.env.DATABASE_URL;
+  process.env.DATABASE_URL ||
+  process.env.POSTGRES_URL;
 
 if (!url) {
   console.error(
-    '[predeploy-migrate] Missing POSTGRES_URL_NON_POOLING (or DATABASE_URL). ' +
-      'Set one of them in the Vercel project env or local shell before deploying.',
+    '[predeploy-migrate] Missing DIRECT_URL, POSTGRES_URL_NON_POOLING, DATABASE_URL, and POSTGRES_URL. ' +
+      'Set a direct/session-mode connection string before deploying.',
   );
   process.exit(1);
 }

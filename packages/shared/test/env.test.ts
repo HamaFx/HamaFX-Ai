@@ -15,12 +15,14 @@
  */
 
 import { afterEach, describe, expect, it } from 'vitest';
+
 import {
-  AUTO_GENERATED_SECRETS,
-  SECRET_MIN_BYTES,
-  generateSecret,
-} from '../src/env-secrets';
-import { parseServerEnv, resolveDatabaseUrl, ServerEnvSchema } from '../src/env';
+  parseServerEnv,
+  resolveDatabaseUrl,
+  resolveDirectDatabaseUrl,
+  ServerEnvSchema,
+} from '../src/env';
+import { AUTO_GENERATED_SECRETS, generateSecret, SECRET_MIN_BYTES } from '../src/env-secrets';
 
 const MINIMAL_ENV = {
   // At least one AI transport AND one DB URL must be configured.
@@ -56,11 +58,7 @@ describe('generateSecret', () => {
 
 describe('AUTO_GENERATED_SECRETS', () => {
   it('contains the three auto-generatable secrets', () => {
-    expect(AUTO_GENERATED_SECRETS).toEqual([
-      'NEXTAUTH_SECRET',
-      'ENCRYPTION_SECRET',
-      'CRON_SECRET',
-    ]);
+    expect(AUTO_GENERATED_SECRETS).toEqual(['NEXTAUTH_SECRET', 'ENCRYPTION_SECRET', 'CRON_SECRET']);
   });
 
   it('SECRET_MIN_BYTES covers each secret with sufficient length', () => {
@@ -104,9 +102,9 @@ describe('parseServerEnv — dev mode secret ergonomics', () => {
 
 describe('parseServerEnv — production requires secrets', () => {
   it('throws when NODE_ENV=production and secrets missing', () => {
-    expect(() =>
-      parseServerEnv({ ...MINIMAL_ENV, NODE_ENV: 'production' }),
-    ).toThrow(/NEXTAUTH_SECRET|ENCRYPTION_SECRET|CRON_SECRET/);
+    expect(() => parseServerEnv({ ...MINIMAL_ENV, NODE_ENV: 'production' })).toThrow(
+      /NEXTAUTH_SECRET|ENCRYPTION_SECRET|CRON_SECRET/,
+    );
   });
 
   it('throws when only NEXTAUTH_SECRET is present in production', () => {
@@ -357,5 +355,46 @@ describe('resolveDatabaseUrl', () => {
       POSTGRES_URL: 'postgres://b:pass@localhost:5432/db2',
     });
     expect(url).toBe('postgres://a:pass@localhost:5432/db1');
+  });
+});
+
+describe('resolveDirectDatabaseUrl', () => {
+  it('prefers DIRECT_URL when set', () => {
+    const url = resolveDirectDatabaseUrl({
+      DIRECT_URL: 'postgres://direct:pass@localhost:5432/db',
+      POSTGRES_URL_NON_POOLING: 'postgres://np:pass@localhost:5432/db',
+      DATABASE_URL: 'postgres://pooled:pass@localhost:5432/db',
+      POSTGRES_URL: 'postgres://fallback:pass@localhost:5432/db',
+    });
+    expect(url).toBe('postgres://direct:pass@localhost:5432/db');
+  });
+
+  it('falls back through the non-pooled and legacy URL variants', () => {
+    expect(
+      resolveDirectDatabaseUrl({
+        POSTGRES_URL_NON_POOLING: 'postgres://np:pass@localhost:5432/db',
+        DATABASE_URL: 'postgres://pooled:pass@localhost:5432/db',
+        POSTGRES_URL: 'postgres://fallback:pass@localhost:5432/db',
+      }),
+    ).toBe('postgres://np:pass@localhost:5432/db');
+
+    expect(
+      resolveDirectDatabaseUrl({
+        DATABASE_URL: 'postgres://pooled:pass@localhost:5432/db',
+        POSTGRES_URL: 'postgres://fallback:pass@localhost:5432/db',
+      }),
+    ).toBe('postgres://pooled:pass@localhost:5432/db');
+
+    expect(
+      resolveDirectDatabaseUrl({
+        POSTGRES_URL: 'postgres://fallback:pass@localhost:5432/db',
+      }),
+    ).toBe('postgres://fallback:pass@localhost:5432/db');
+  });
+
+  it('throws when no direct-capable URL is available', () => {
+    expect(() => resolveDirectDatabaseUrl({})).toThrow(
+      /DIRECT_URL.*POSTGRES_URL_NON_POOLING.*DATABASE_URL.*POSTGRES_URL/,
+    );
   });
 });

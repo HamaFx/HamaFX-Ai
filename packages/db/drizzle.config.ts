@@ -19,11 +19,15 @@
 
 import { defineConfig } from 'drizzle-kit';
 
-const databaseUrl = process.env.DATABASE_URL || process.env.POSTGRES_URL;
+const databaseUrl =
+  process.env.DIRECT_URL ||
+  process.env.POSTGRES_URL_NON_POOLING ||
+  process.env.DATABASE_URL ||
+  process.env.POSTGRES_URL;
 if (!databaseUrl) {
   // eslint-disable-next-line no-console
   console.warn(
-    '[drizzle-kit] Neither DATABASE_URL nor POSTGRES_URL is set — generate-only commands will work, but migrate/studio will fail.',
+    '[drizzle-kit] None of DIRECT_URL, POSTGRES_URL_NON_POOLING, DATABASE_URL, or POSTGRES_URL is set — generate-only commands will work, but migrate/studio will fail.',
   );
 }
 
