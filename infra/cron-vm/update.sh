@@ -124,5 +124,33 @@ sudo /bin/systemctl restart hamafx-worker.service || {
   rollback "systemctl restart hamafx-worker failed"
 }
 
+# ── Phase 6 task 6.3 — post-deploy runtime crash guard ──────────────
+# The restart above may report `active (running)` even though the worker
+# crashes seconds later (e.g. a runtime TypeError that only surfaces on
+# the first SignalR tick).  systemd's Restart=always will loop the crash
+# indefinitely on the bad code.  To catch this, we wait a short health
+# window and verify the unit is still `active (running)` AND has not
+# exceeded its restart burst.  If it has, we roll back to PREV_SHA.
+#
+# The window (30 s) is long enough for the worker's WatchdogSec=120
+# readiness gate to fire notifyReady() on a healthy boot, but short
+# enough to avoid blocking the 5-minute update timer for too long.
+HEALTH_WAIT_SEC=30
+log "post-deploy health check — waiting ${HEALTH_WAIT_SEC}s for runtime stability"
+sleep "$HEALTH_WAIT_SEC"
+
+# Check that the unit is still active (not failed, not restarting).
+WORKER_STATUS="$(systemctl is-active hamafx-worker.service 2>/dev/null || true)"
+if [[ "$WORKER_STATUS" != "active" ]]; then
+  rollback "post-deploy health check failed — worker status: $WORKER_STATUS after ${HEALTH_WAIT_SEC}s"
+fi
+
+# Check systemd's restart count — if the unit has restarted more than
+# once in the health window, it's crash-looping on the new code.
+RESTART_COUNT="$(systemctl show -p NRestarts --value hamafx-worker.service 2>/dev/null || echo 0)"
+if [[ "$RESTART_COUNT" =~ ^[0-9]+$ ]] && (( RESTART_COUNT > 1 )); then
+  rollback "post-deploy crash loop detected — $RESTART_COUNT restarts within ${HEALTH_WAIT_SEC}s"
+fi
+
 log "applied $NEW_SHA"
 ping_hc success "applied $NEW_SHA"
