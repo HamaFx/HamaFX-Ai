@@ -14,6 +14,12 @@
 # Tested with pgvector/pgvector:pg15 in a docker container so the restore
 # rehearsal validates vector columns and HNSW indexes too. The VM needs Docker
 # installed (setup.sh grew an apt-get docker.io step in PR-17).
+#
+# Phase 6 task 6.5 — verified: the original `postgres:15-alpine` image does
+# NOT include the `vector` extension.  It was replaced with
+# `pgvector/pgvector:pg15` in Phase 3 task 3.7, which bundles pgvector
+# natively.  The script also asserts HNSW index count > 0 to confirm
+# vector columns and indexes survive the restore.
 
 set -euo pipefail
 
