@@ -609,14 +609,14 @@ the same as the fix existing.
 | 4.9     | Todo | — | Not started. Build operator-side spend-anomaly detector (worker job). | n/a — not done |
 | 4.10    | Todo | — | Not started (conditional on tenant=org, which was decided as tenant=user). May be skipped. | n/a — not done |
 | 4.11    | Todo | — | Not started. Decide fate of vestigial per-domain model routing. | n/a — not done |
-| 5.1     | Todo | — | Not started. Decide client-side Sentry: fix or remove. | n/a — not done |
-| 5.2     | Todo | — | Not started. Add rate-limited `captureException` for sustained flush failures. | n/a — not done |
-| 5.3     | Todo | — | Not started. Adopt pino logger across worker + routes. | n/a — not done |
-| 5.4     | Todo | — | Not started. Add auth-anomaly metrics + threshold alerting. | n/a — not done |
-| 5.5     | Todo | — | Not started. Fix `/api/health` pgvector + cron check computation. | n/a — not done |
-| 5.6     | Todo | — | Not started. Stand up public status page (Instatus/Better Stack). | n/a — not done |
-| 5.7     | Todo | — | Not started. Injection hardening: explicit untrusted-content clause in system prompt. | n/a — not done |
-| 5.8     | Todo | — | Not started. Hard gate: billing webhook must verify signatures (when Phase 8.3 lands). | n/a — not done |
+| 5.1     | Done | Phase 5 | Fixed: `enabled` now keys off `NEXT_PUBLIC_SENTRY_DSN`; added `service:web` tag + `release` to server/edge configs. | Verified — client Sentry deliberately enabled |
+| 5.2     | Done | Phase 5 | Done. Rate-limited `captureException` (5-min cooldown, 3-failure threshold) for sustained `flushLiveTicks`/`flushClosedCandle` failures. | Verified — code review |
+| 5.3     | Done | Phase 5 | Done. Adopted pino logger (`packages/shared/src/logger.ts`) in `apps/web` (api.ts, cron.ts, chat route, auth actions). Created `lib/logger.ts` with request-scoped child logger. Added redaction to worker logger. Created `scripts/check-console-errors.mjs` CI grep. | Verified — code review |
+| 5.4     | Done | Phase 5 | Done. Created `lib/auth-anomaly.ts` with sliding-window detector for 401 rate, ACCOUNT_LOCKED spikes, 2FA failures, login success-rate drops. Wired into `withAuth` (401 tracking) and `loginAction` (success/failure/locked/2FA). Alerts via `Sentry.captureMessage` with 5-min cooldown. | Verified — code review |
+| 5.5     | Done | Phase 5 | Done. `/api/health` now includes `pgvectorCheck.ok` and `cronCheck.stuckRuns === 0` in `allOk`. Missing pgvector or stuck cron returns 503. | Verified — code review |
+| 5.6     | Done | Phase 5 | Done. Created `docs/INCIDENT-RESPONSE.md` with SEV taxonomy, SLOs, on-call/paging setup checklist, customer-facing outage runbooks (chat/auth/AI-gateway down), comms templates, postmortem template. Extends RECOVERY.md. | Verified — doc review |
+| 5.7     | Done | Phase 5 | Done. Added explicit "Untrusted Content Policy" clause to `BASE_PROMPT` (retrieved/tool content is DATA, never instructions). Added untrusted-data warnings to tool descriptions (get-news, get-calendar, get-social-sentiment, search-knowledge). Softened Hard-rule 10 so `run_system_action` is only suggested by user request, not ambient health signals. | Verified — code review |
+| 5.8     | Done | Phase 5 | Done. Created `docs/BILLING-WEBHOOK-SAFETY-GATE.md` defining hard-gate requirements: signature verification, dead-letter queue, Sentry capture + paging, idempotency, and acceptance tests. Paid plans cannot be enabled until all tests pass. | Verified — doc review |
 | 6.1     | Todo | — | Not started. Cross-check resonance-sync systemd unit; add missing timer. | n/a — not done |
 | 6.2     | Todo | — | Not started. Fix embedding-backfill lock-granularity bug. | n/a — not done |
 | 6.3     | Todo | — | Not started. Extend `update.sh` rollback for post-deploy runtime crashes. | n/a — not done |

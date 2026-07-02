@@ -9,6 +9,8 @@ import { z } from 'zod';
 
 import { getDb, schema, withRateLimit } from '@hamafx/db';
 import { signIn } from '@/auth';
+import { createScopedLoggerWithContext } from '@/lib/logger';
+import { recordAuthEvent } from '@/lib/auth-anomaly';
 
 const BCRYPT_COST = 12;
 
@@ -19,6 +21,7 @@ const loginSchema = z.object({
 });
 
 export async function loginAction(prevState: unknown, formData: FormData) {
+  return Sentry.withServerActionInstrumentation('loginAction', { formData }, async () => {
   const raw = formData instanceof FormData ? Object.fromEntries(formData) : (formData ?? {});
   const parsed = loginSchema.safeParse(raw);
   if (!parsed.success) {
@@ -55,6 +58,7 @@ export async function loginAction(prevState: unknown, formData: FormData) {
       rememberMe: formData.get('rememberMe') as string || undefined,
       redirectTo: safeNext,
     });
+    recordAuthEvent('login_success');
     return { success: true };
   } catch (error) {
     const errStr = String(error);
@@ -62,14 +66,17 @@ export async function loginAction(prevState: unknown, formData: FormData) {
     if (error instanceof AuthError) {
       const message = error.message;
       if (message === 'ACCOUNT_LOCKED') {
+        recordAuthEvent('account_locked');
         return { error: 'Account temporarily locked due to too many failed attempts. Try again later.' };
       }
       if (message === '2FA_REQUIRED') {
         return { requires2FA: true, email: normalizedEmail };
       }
       if (message === 'INVALID_2FA_CODE') {
+        recordAuthEvent('2fa_failure');
         return { error: 'Invalid 2FA code', requires2FA: true };
       }
+      recordAuthEvent('login_failure');
       return { error: 'Invalid email or password' };
     }
     Sentry.captureException(error, {
@@ -78,6 +85,7 @@ export async function loginAction(prevState: unknown, formData: FormData) {
     });
     return { error: 'Unable to sign in right now. Please try again.' };
   }
+  });
 }
 
 const registerSchema = z.object({
@@ -91,6 +99,7 @@ const registerSchema = z.object({
 });
 
 export async function registerAction(prevState: unknown, formData: FormData) {
+  return Sentry.withServerActionInstrumentation('registerAction', { formData }, async () => {
   const raw = formData instanceof FormData ? Object.fromEntries(formData) : (formData ?? {});
   const parsed = registerSchema.safeParse(raw);
   if (!parsed.success) {
@@ -156,7 +165,9 @@ export async function registerAction(prevState: unknown, formData: FormData) {
     });
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
     if (process.env.NODE_ENV !== 'production') {
-      console.info(`[verify] ${baseUrl}/api/auth/verify-email?token=${verifyToken}`);
+      createScopedLoggerWithContext({ component: 'auth-actions', action: 'register-verification-token' }).info(
+        `verify link: ${baseUrl}/api/auth/verify-email?token=${verifyToken}`,
+      );
     }
   } catch (err) {
     Sentry.captureException(err, {
@@ -185,6 +196,7 @@ export async function registerAction(prevState: unknown, formData: FormData) {
     });
     return { error: 'Unable to finish registration right now. Please try again.' };
   }
+  });
 }
 
 // HIGH-05: Password reset flow
@@ -193,7 +205,9 @@ async function sendPasswordResetEmail(to: string, resetUrl: string) {
   const apiKey = process.env.RESEND_API_KEY;
   const fromEmail = process.env.ALERT_FROM_EMAIL;
   if (!apiKey || !fromEmail) {
-    console.warn(`[auth] RESEND_API_KEY or ALERT_FROM_EMAIL not set — logging reset link instead: ${resetUrl}`);
+    createScopedLoggerWithContext({ component: 'auth-actions', action: 'send-reset-email' }).warn(
+      `RESEND_API_KEY or ALERT_FROM_EMAIL not set — logging reset link instead: ${resetUrl}`,
+    );
     return;
   }
   try {
@@ -212,10 +226,15 @@ async function sendPasswordResetEmail(to: string, resetUrl: string) {
     });
     if (!res.ok) {
       const text = await res.text().catch(() => '');
-      console.error(`[auth] Failed to send reset email: HTTP ${res.status} ${text.slice(0, 200)}`);
+      createScopedLoggerWithContext({ component: 'auth-actions', action: 'send-reset-email' }).error(
+        `Failed to send reset email: HTTP ${res.status} ${text.slice(0, 200)}`,
+      );
     }
   } catch (err) {
-    console.error('[auth] Failed to send reset email:', err);
+    createScopedLoggerWithContext({ component: 'auth-actions', action: 'send-reset-email' }).error(
+      'Failed to send reset email',
+      { err: String(err) },
+    );
   }
 }
 
@@ -246,11 +265,16 @@ export async function forgotPasswordAction(prevState: unknown, formData: FormDat
       const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://hamafx-ai.vercel.app';
       const resetUrl = `${baseUrl}/reset-password?token=${resetToken}`;
       if (process.env.NODE_ENV !== 'production') {
-        console.info(`[reset] ${resetUrl}`);
+        createScopedLoggerWithContext({ component: 'auth-actions', action: 'forgot-password' }).info(
+          `reset link: ${resetUrl}`,
+        );
       }
       await sendPasswordResetEmail(email, resetUrl);
     } catch (err) {
-      console.error('[auth] Failed to create reset token:', err);
+      createScopedLoggerWithContext({ component: 'auth-actions', action: 'forgot-password' }).error(
+        'Failed to create reset token',
+        { err: String(err) },
+      );
     }
   }
 

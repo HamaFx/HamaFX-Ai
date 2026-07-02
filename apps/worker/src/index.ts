@@ -158,6 +158,15 @@ export async function runWorker(args: RunWorkerArgs): Promise<RunningWorker> {
   // We write each closed bar to `candles_1m` synchronously; failures are
   // logged but do NOT throw, because a single failed insert shouldn't
   // take down the consumer.
+  //
+  // OBS-08 (Phase 5.2): A *sustained* write failure should still page
+  // someone. We rate-limit Sentry capture to at most 1 event per 5
+  // minutes per failure source so a transient blip doesn't cause alert
+  // fatigue.
+  let lastCandleCaptureAt = 0;
+  const CANDLE_CAPTURE_COOLDOWN_MS = 5 * 60 * 1000; // 5 minutes
+  let candleFailureCount = 0;
+
   const aggregator = new Candle1mAggregator((bar: ClosedCandle) => {
     void (async () => {
       try {
@@ -171,8 +180,22 @@ export async function runWorker(args: RunWorkerArgs): Promise<RunningWorker> {
           c: bar.c,
           ticks: bar.tickVolume,
         });
+        // Reset failure counter on success
+        candleFailureCount = 0;
       } catch (err) {
-        log.error('flushClosedCandle failed', { err: String(err), symbol: bar.symbol });
+        candleFailureCount += 1;
+        log.error('flushClosedCandle failed', { err: String(err), symbol: bar.symbol, consecutiveFailures: candleFailureCount });
+
+        // Rate-limited Sentry capture: only page after sustained failures
+        const now = Date.now();
+        if (candleFailureCount >= 3 && now - lastCandleCaptureAt > CANDLE_CAPTURE_COOLDOWN_MS) {
+          lastCandleCaptureAt = now;
+          captureException(err, {
+            kind: 'flushClosedCandle-sustained',
+            symbol: bar.symbol,
+            consecutiveFailures: String(candleFailureCount),
+          });
+        }
       }
     })();
   });
@@ -208,6 +231,13 @@ export async function runWorker(args: RunWorkerArgs): Promise<RunningWorker> {
   notifyReady();
   notifyStatus('signalr connected; tick stream active');
 
+  // OBS-08 (Phase 5.2): Rate-limited Sentry capture for sustained
+  // flushLiveTicks failures. Same cooldown pattern as candle flush:
+  // at most 1 Sentry event per 5 minutes after 3 consecutive failures.
+  let lastTickFlushCaptureAt = 0;
+  let tickFlushFailureCount = 0;
+  const TICK_FLUSH_CAPTURE_COOLDOWN_MS = 5 * 60 * 1000; // 5 minutes
+
   const flushIntervalMs = args.flushIntervalMs ?? 1_000;
   const flushTimer = setInterval(() => {
     void (async () => {
@@ -216,8 +246,21 @@ export async function runWorker(args: RunWorkerArgs): Promise<RunningWorker> {
         if (r.written > 0) {
           log.info('flushed live_ticks', { written: r.written, ticks: r.totalTicks });
         }
+        // Reset failure counter on success
+        tickFlushFailureCount = 0;
       } catch (err) {
-        log.error('flushLiveTicks failed', { err: String(err) });
+        tickFlushFailureCount += 1;
+        log.error('flushLiveTicks failed', { err: String(err), consecutiveFailures: tickFlushFailureCount });
+
+        // Rate-limited Sentry capture for sustained failures
+        const now = Date.now();
+        if (tickFlushFailureCount >= 3 && now - lastTickFlushCaptureAt > TICK_FLUSH_CAPTURE_COOLDOWN_MS) {
+          lastTickFlushCaptureAt = now;
+          captureException(err, {
+            kind: 'flushLiveTicks-sustained',
+            consecutiveFailures: String(tickFlushFailureCount),
+          });
+        }
       }
     })();
   }, flushIntervalMs);
@@ -277,7 +320,7 @@ export async function main(): Promise<void> {
 
   await initSentry(env, 'worker');
 
-  // ── Langfuse LLM Observability ──────────────────────────────
+  // ── Langfuse LLM Observability ──────────────────────────────────────
   // Silently skipped when LANGFUSE_* env vars are not set.
   initLangfuse();
 

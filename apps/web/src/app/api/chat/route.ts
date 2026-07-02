@@ -27,6 +27,7 @@ import type { UIMessage } from 'ai';
 
 import { errorResponse, parseJsonBody, withAuth } from '@/lib/api';
 import { getServerEnv } from '@/lib/env';
+import { createRequestLogger } from '@/lib/logger';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -51,6 +52,7 @@ const BodySchema = z.object({
 });
 
 export const POST = withAuth<void>(async (req, { user }) => {
+  const log = createRequestLogger(req, user);
   const rl = await withRateLimit(user.userId, 'ai_chat', CHAT_RATE_LIMIT);
   if (!rl.allowed) {
     return Response.json(
@@ -152,7 +154,9 @@ export const POST = withAuth<void>(async (req, { user }) => {
             } catch (err) {
               Sentry.captureException(err, {
                 tags: { component: 'chat', mode: 'multi-agent', route: '/api/chat' },
+                extra: { threadId: body.threadId, userId: user.userId },
               });
+              log.error('multi-agent chat failed', { err: String(err), threadId: body.threadId, mode: resolvedMode });
               const errorMessage = err instanceof BudgetExceededError
                 ? 'Daily AI budget exceeded. Please try again tomorrow.'
                 : 'Internal error';
@@ -203,6 +207,15 @@ export const POST = withAuth<void>(async (req, { user }) => {
         req,
       );
     }
+    // OBS-01 (Phase 5.3): Log the error via pino before delegating to errorResponse
+    log.error('chat agent failed', { err: String(err), threadId: body.threadId });
+    // OBS-01 (Phase 5): Explicitly capture chat errors with chat-specific tags.
+    // errorResponse() captures with generic 'api' tags; this ensures the chat
+    // hot path is always visible in Sentry with the right component tag.
+    Sentry.captureException(err, {
+      tags: { component: 'chat', mode: 'single', route: '/api/chat' },
+      extra: { threadId: body.threadId, userId: user.userId },
+    });
     return errorResponse(err, req);
   }
 });
