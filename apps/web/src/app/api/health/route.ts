@@ -118,7 +118,13 @@ export const GET = withAuth<void>(async () => {
   const envCheck = checkEnv();
   const pgvectorCheck = await checkPgvector();
 
-  const allOk = dbCheck.ok && envCheck.ok;
+  // OBS-13 (Phase 5.5): Include pgvector + stuck-cron in allOk.
+  // Previously `allOk = dbCheck.ok && envCheck.ok` which meant a missing
+  // pgvector extension or a stuck cron job still returned HTTP 200.
+  // Now: a missing pgvector extension or stuck cron runs cause a 503
+  // (degraded state), so uptime monitors correctly detect the issue.
+  const cronOk = cronCheck.ok && (cronCheck.stuckRuns ?? 0) === 0;
+  const allOk = dbCheck.ok && envCheck.ok && pgvectorCheck.ok && cronOk;
   const status = allOk ? 'ok' : 'error';
   const httpStatus = allOk ? 200 : 503;
 
