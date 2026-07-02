@@ -1,0 +1,23 @@
+[Unit]
+Description=HamaFX-Ai weekly per-tenant export rehearsal
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=hamafx
+Group=hamafx
+WorkingDirectory=/opt/hamafx
+EnvironmentFile=/opt/hamafx/.env
+
+# Rehearsal: export the __system__ tenant (always exists, small dataset).
+# In production with real tenants, a separate cron or manual trigger should
+# iterate over all active users. This unit proves the pipeline works weekly.
+ExecStart=/opt/hamafx/app/infra/cron-vm/scripts/export-tenant.sh __system__
+
+MemoryMax=512M
+TimeoutStartSec=300
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=hamafx-tenant-export

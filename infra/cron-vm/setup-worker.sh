@@ -94,6 +94,17 @@ install_unit() {
   fi
   log "installing systemd unit -> ${TARGET_UNIT}"
   install -m 644 "$UNIT_FILE" "$TARGET_UNIT"
+  # Phase 3 §3.7 — per-tenant export + delete rehearsal units.
+  for unit in hamafx-tenant-export hamafx-tenant-delete; do
+    local unit_file="${APP_DIR}/infra/cron-vm/units/${unit}.service"
+    local timer_file="${APP_DIR}/infra/cron-vm/units/${unit}.timer"
+    if [[ -f "$unit_file" ]]; then
+      install -m 644 -o root -g root "$unit_file" /etc/systemd/system/
+      install -m 644 -o root -g root "$timer_file" /etc/systemd/system/
+      systemctl enable "${unit}.timer" 2>/dev/null || true
+    fi
+  done
+
   systemctl daemon-reload
   systemctl enable hamafx-worker.service
   log "starting hamafx-worker.service"

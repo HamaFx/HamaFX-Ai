@@ -161,4 +161,53 @@ export async function withTenantDb<T>(
   });
 }
 
+// ── Phase 3 §3.4 — BYPASSRLS admin client ──────────────────────────────
+
+let _adminClient: DbClient | null = null;
+let _adminSql: ReturnType<typeof postgres> | null = null;
+
+/**
+ * Admin DB client that connects as the `hamafx_admin` role (BYPASSRLS).
+ *
+ * Used by the worker, cron jobs, and migrations for cross-tenant operations
+ * that must bypass Row-Level Security. Falls back to the regular `getDb()`
+ * when `ADMIN_DATABASE_URL` is not set (self-host / legacy mode).
+ *
+ * @throws if neither ADMIN_DATABASE_URL nor DATABASE_URL/POSTGRES_URL is set.
+ */
+export function getAdminDb(): DbClient {
+  if (_adminClient) return _adminClient;
+
+  const adminUrl = process.env.ADMIN_DATABASE_URL;
+  if (!adminUrl) {
+    // Fallback: no admin role configured — use the regular connection.
+    // In self-host / legacy mode (no RLS), this is correct.
+    return getDb();
+  }
+
+  _adminSql = postgres(adminUrl, {
+    prepare: false,
+    max: resolvePoolMax(),
+    idle_timeout: 20,
+    connect_timeout: 10,
+    max_lifetime: 60 * 30,
+    ssl: resolveSslOptions(),
+    connection: {
+      statement_timeout: resolveStatementTimeout(),
+    },
+  });
+
+  _adminClient = drizzle(_adminSql, { schema });
+  return _adminClient;
+}
+
+/** For tests / scripts only — closes the admin pool. */
+export async function closeAdminDb(): Promise<void> {
+  if (_adminSql) {
+    await _adminSql.end({ timeout: 5 });
+    _adminSql = null;
+    _adminClient = null;
+  }
+}
+
 export { schema };

@@ -1,0 +1,11 @@
+[Unit]
+Description=Weekly per-tenant delete rehearsal (dry-run) — Sunday 05:30 UTC
+
+[Timer]
+OnCalendar=Sun *-*-* 05:30:00 UTC
+RandomizedDelaySec=120
+Persistent=true
+Unit=hamafx-tenant-delete.service
+
+[Install]
+WantedBy=timers.target

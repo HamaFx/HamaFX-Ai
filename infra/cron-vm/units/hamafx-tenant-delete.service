@@ -1,0 +1,23 @@
+[Unit]
+Description=HamaFX-Ai weekly per-tenant delete rehearsal (dry-run)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=hamafx
+Group=hamafx
+WorkingDirectory=/opt/hamafx
+EnvironmentFile=/opt/hamafx/.env
+
+# Rehearsal: dry-run only (no --confirm flag). Proves the script runs,
+# connects, and counts rows correctly without deleting anything.
+# Real deletions are triggered manually with --confirm for GDPR requests.
+ExecStart=/opt/hamafx/app/infra/cron-vm/scripts/delete-tenant.sh __system__
+
+MemoryMax=512M
+TimeoutStartSec=300
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=hamafx-tenant-delete
