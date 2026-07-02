@@ -193,12 +193,14 @@ firing means everything is fine:
 | Light calendar poll | every 15 min | `HC_LIGHT_CALENDAR_UUID` |
 | Light alerts poll | every 5 min | `HC_LIGHT_ALERTS_UUID` |
 | Light warm-cache poll | every 2 min | `HC_LIGHT_WARM_CACHE_UUID` |
+| Light cleanup-uploads | daily 03:00 UTC | `HC_CLEANUP_UPLOADS_UUID` |
 | embedding-backfill | every 6 h | `HC_JOB_EMBEDDING_BACKFILL_UUID` |
 | briefings | every 5 min | `HC_JOB_BRIEFINGS_UUID` |
 | snapshots | daily 00:05 UTC | `HC_JOB_SNAPSHOTS_UUID` |
 | cot | weekly Fri 22:00 UTC | `HC_JOB_COT_UUID` |
 | fred-actuals | daily 01:30 UTC | `HC_JOB_FRED_ACTUALS_UUID` |
 | weekly-review | weekly Sun 18:00 UTC | `HC_JOB_WEEKLY_REVIEW_UUID` |
+| resonance-sync | daily 23:00 UTC | `HC_JOB_RESONANCE_SYNC_UUID` |
 | db backup | daily 03:00 UTC | `HC_BACKUP_DB_UUID` |
 | journal backup | daily 03:05 UTC | `HC_BACKUP_JOURNAL_UUID` |
 | verify-restore | weekly Sun 04:00 UTC | `HC_VERIFY_RESTORE_UUID` |

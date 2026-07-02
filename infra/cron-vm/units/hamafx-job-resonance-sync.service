@@ -1,0 +1,32 @@
+[Unit]
+Description=HamaFX-Ai job — intermarket resonance sync (FRED yields + gold regression)
+Documentation=https://github.com/HamaFx/HamaFX-Ai/blob/main/docs/review/05-worker-infra-reliability-review.md
+# We don't depend on the always-on worker — the job runs in its own
+# Node process and connects to Postgres / FRED directly.
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=hamafx
+Group=hamafx
+WorkingDirectory=/opt/hamafx/app/apps/worker
+EnvironmentFile=/opt/hamafx/.env
+# Phase 2 hardening §4 — pick worker-flavoured pool defaults in @hamafx/db.
+Environment="HAMAFX_RUNTIME=worker"
+# Phase 3 hardening §12 — force JSON logger output under journald.
+Environment="NODE_ENV=production"
+ExecStart=/usr/bin/node /opt/hamafx/app/apps/worker/dist/runner/cli.js resonance-sync
+
+MemoryMax=512M
+TimeoutStartSec=300
+
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/hamafx
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=hamafx-job-resonance-sync

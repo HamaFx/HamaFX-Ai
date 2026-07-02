@@ -1,0 +1,13 @@
+[Unit]
+Description=Daily intermarket resonance sync at 23:00 UTC
+# Persistent=true — if the VM is down at 23:00, catch up on next boot.
+# The job is idempotent per-date (UPSERT on intermarket_resonance.date PK).
+
+[Timer]
+OnCalendar=*-*-* 23:00:00 UTC
+RandomizedDelaySec=60
+Persistent=true
+Unit=hamafx-job-resonance-sync.service
+
+[Install]
+WantedBy=timers.target
