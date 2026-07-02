@@ -36,7 +36,6 @@ import { getDb, schema } from '@hamafx/db';
 import type { ServerEnv, UserPlanPart } from '@hamafx/shared';
 import { generateText, type UIMessage } from 'ai';
 
-import { dailySpendUsd } from './cost';
 import { resolveModel } from './model';
 import { maybeGetToolContext } from './tool-context';
 import type { RoutingDecision } from './routing';
@@ -141,12 +140,21 @@ export async function runPlanner(args: RunPlannerArgs): Promise<PlanResult> {
   // Phase 3 hardening §4 — read the cached snapshot from the per-turn
   // tool context when available so the planner doesn't double-up on
   // the title generator's `dailySpendUsd()` query.
+  //
+  // Phase 3 §3.11 — use real userId from tool context; no __system__ fallback.
+  // If no userId is available, skip the budget check rather than attributing
+  // spend to a phantom user.
   let llmAllowed = true;
+  let ctx: ReturnType<typeof maybeGetToolContext> = null;
   try {
-    const ctx = maybeGetToolContext();
-    const userId = ctx?.userId ?? '__system__';
-    const spent = ctx ? ctx.budget.spent : await dailySpendUsd(userId);
-    if (spent >= args.env.MAX_DAILY_USD) llmAllowed = false;
+    ctx = maybeGetToolContext();
+    if (ctx?.userId) {
+      const spent = ctx.budget.spent;
+      if (spent >= args.env.MAX_DAILY_USD) llmAllowed = false;
+    } else {
+      // No tool context — can't check budget, allow LLM (the chat-level
+      // guardrail still applies).
+    }
   } catch {
     llmAllowed = false;
   }
@@ -175,7 +183,7 @@ export async function runPlanner(args: RunPlannerArgs): Promise<PlanResult> {
   try {
     const modelId = args.plannerModelId;
     const callArgs: Parameters<typeof generateText>[0] = {
-      model: resolveModel(modelId, args.env),
+      model: resolveModel(modelId, args.env, ctx?.userId),
       system: SYSTEM_PROMPT,
       prompt,
     };

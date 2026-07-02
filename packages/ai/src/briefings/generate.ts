@@ -104,7 +104,7 @@ async function emitEventBriefing(
 
   const env = envFromProcess();
 
-  const summary = await composeEventSummary(event, kind, env);
+  const summary = await composeEventSummary(event, kind, env, userId);
 
   // Phase 1 hardening §10 — refuse to burn the (eventId, kind) idempotency
   // slot on a stub. If the LLM and the deterministic fallback both
@@ -143,6 +143,7 @@ async function emitEventBriefing(
     body: summary,
     briefingKind: kind,
     occurredAtMs: event.date,
+    userId,
     ...(event.currency
       ? { symbol: symbolFromCurrency(event.currency) }
       : {}),
@@ -155,11 +156,12 @@ async function composeEventSummary(
   event: EconomicEvent,
   kind: 'pre' | 'post',
   env: BriefingsEnv,
+  userId: string,
 ): Promise<string> {
   // Hard budget guard before any model call.
   let llmAllowed = true;
   try {
-    const spent = await dailySpendUsd('__system__');
+    const spent = await dailySpendUsd(userId);
     if (spent >= env.MAX_DAILY_USD) llmAllowed = false;
   } catch {
     // If we can't compute spend, fall back to deterministic copy — never block.
@@ -171,7 +173,7 @@ async function composeEventSummary(
   const prompt = buildEventPrompt(event, kind);
   try {
     const { text } = await generateText({
-      model: resolveModel(env.AI_DEFAULT_MODEL, env),
+      model: resolveModel(env.AI_DEFAULT_MODEL, env, userId),
       system:
         'You are HamaFX-Ai writing a briefing for the single user. Be concise (max 6 short bullets). No greetings, no signoffs. Plain text, no markdown headings, no emoji.',
       prompt,
@@ -287,7 +289,7 @@ export async function emitWeeklyReview(userId: string): Promise<{ emitted: boole
     .limit(50);
   void entries;
 
-  const summary = await composeWeeklyReviewSummary(stats, env);
+  const summary = await composeWeeklyReviewSummary(stats, env, userId);
   // Phase 1 hardening §10 — same idempotency-protection as event briefings.
   if (summary.trim().length < 50) {
     return { emitted: false, reason: 'summary_too_short' };
@@ -315,6 +317,7 @@ export async function emitWeeklyReview(userId: string): Promise<{ emitted: boole
     body: summary,
     briefingKind: 'weekly_review',
     occurredAtMs: Date.now(),
+    userId,
   }).catch((err) => console.warn('[briefings] memory write failed', err));
 
   return { emitted: true };
@@ -323,12 +326,13 @@ export async function emitWeeklyReview(userId: string): Promise<{ emitted: boole
 async function composeWeeklyReviewSummary(
   stats: Awaited<ReturnType<typeof computeStats>>,
   env: BriefingsEnv,
+  userId: string,
 ): Promise<string> {
   const det = deterministicWeeklyReview(stats);
 
   let llmAllowed = true;
   try {
-    const spent = await dailySpendUsd('__system__');
+    const spent = await dailySpendUsd(userId);
     if (spent >= env.MAX_DAILY_USD) llmAllowed = false;
   } catch {
     llmAllowed = false;
@@ -337,7 +341,7 @@ async function composeWeeklyReviewSummary(
 
   try {
     const { text } = await generateText({
-      model: resolveModel(env.AI_DEFAULT_MODEL, env),
+      model: resolveModel(env.AI_DEFAULT_MODEL, env, userId),
       system:
         'You are HamaFX-Ai writing the user\'s weekly trading review. Be concise (max 5 short bullets). No greetings or signoffs. Plain text.',
       prompt: `Stats:\n${det}\n\nWrite the review.`,

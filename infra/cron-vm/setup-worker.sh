@@ -71,6 +71,10 @@ ensure_env_file() {
     warn "  BIQUOTE_BASE_URL=https://biquote.io        (optional override)"
     warn "  HC_SIGNALR_UUID=<...>                      (optional, for healthchecks.io)"
     warn "  SENTRY_DSN=<...>                           (optional, for Sentry)"
+    warn ""
+    warn "  Phase 3 §3.9 — Secrets vault (optional, alternative to .env):"
+    warn "  SECRETS_VAULT_PROVIDER=gcp-secret-manager   (fetch from GCP Secret Manager)"
+    warn "  GCP_PROJECT_ID=<your-gcp-project>           (required when vault provider is gcp-secret-manager)"
     install -m 600 -o "$USER_NAME" -g "$USER_NAME" /dev/null "$env_file"
   fi
   chmod 600 "$env_file"

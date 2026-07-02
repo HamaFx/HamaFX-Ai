@@ -34,7 +34,9 @@ export {
 
 export {
   getDefaultCache,
+  getDefaultCacheSync,
   setDefaultCache,
+  clearAllTenantCaches,
   MemoryCache,
   cacheKey,
   cacheTag,

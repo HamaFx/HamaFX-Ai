@@ -119,3 +119,7 @@ export {
 // barrel — importing them pulls node:crypto + `server-only` into the
 // client bundle. Consumers must import directly:
 //   import { generateSecret } from '@hamafx/shared/env-secrets';
+//
+// Phase 3 §3.9 — vault secrets loader also NOT re-exported from the barrel
+// (it pulls google-auth-library dynamically). Consumers must import directly:
+//   import { loadSecretsFromVault } from '@hamafx/shared/vault';

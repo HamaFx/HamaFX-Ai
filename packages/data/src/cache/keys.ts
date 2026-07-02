@@ -18,6 +18,10 @@
 //
 // We keep keys short, lowercase, and stable. Add new resources here so we
 // can rg(1) for "hfx:price" and find every consumer.
+//
+// Phase 3 §3.10 — an optional `tenantId` prefix is supported for
+// tenant-scoped cache entries. When omitted the key is global (preserving
+// backward compatibility for market data that is inherently shared).
 
 import type { Symbol, Timeframe } from '@hamafx/shared';
 
@@ -37,12 +41,19 @@ export interface KeyParts {
   tf?: Timeframe | null;
   /** Per-resource discriminator (e.g. `"ema:14"`, `"page:2"`). */
   extra?: string | null;
+  /**
+   * Phase 3 §3.10 — tenant namespace. When set, the key is prefixed with
+   * `t:<tenantId>:` so one tenant's cached value can't collide with
+   * another's. Omit for globally-shared market data.
+   */
+  tenantId?: string | null;
 }
 
 const NULL = '_';
 
-export function cacheKey({ resource, symbol, tf, extra }: KeyParts): string {
-  return ['hfx', resource, symbol ?? NULL, tf ?? NULL, extra ?? NULL].join(':');
+export function cacheKey({ resource, symbol, tf, extra, tenantId }: KeyParts): string {
+  const base = ['hfx', resource, symbol ?? NULL, tf ?? NULL, extra ?? NULL].join(':');
+  return tenantId ? `t:${tenantId}:${base}` : base;
 }
 
 /** Cache tag for group invalidation, e.g. `tag('price', 'XAUUSD')`. */

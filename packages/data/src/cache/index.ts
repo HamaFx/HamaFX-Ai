@@ -17,6 +17,12 @@
 // Public surface of the cache module. Adapter code only imports from here.
 // Pick the runtime cache via `getDefaultCache()` so tests/scripts can swap
 // in an in-memory cache without touching consumer code.
+//
+// Phase 3 §3.10 — tenant-scoped caches. The global singleton `_cache` has been
+// replaced with a `Map<tenantId, Cache>` so one tenant's cached data can never
+// leak into another tenant's request. Callers that don't supply a `tenantId`
+// get a shared `__global__` cache (preserving legacy / self-host compatibility
+// where there is only one user).
 
 import { MemoryCache } from './memory';
 import type { Cache } from './types';
@@ -36,41 +42,57 @@ export {
 } from './ttl';
 export { tryReserve, noteBackoff, type ThrottleConfig, _resetThrottle } from './throttle';
 
+/** Sentinel for the unscoped (legacy / self-host) cache namespace. */
+const GLOBAL_TENANT = '__global__';
+
 /**
- * Resolve the default cache implementation for the current runtime.
+ * Per-tenant cache registry. Each tenant gets its own `Cache` instance so
+ * cached values are isolated. In the Next.js runtime each entry is a
+ * `NextjsCache` (which wraps a `MemoryCache`); elsewhere it's a plain
+ * `MemoryCache`.
+ */
+const _tenantCaches = new Map<string, Cache>();
+
+/**
+ * Resolve the cache implementation for the given tenant. Each tenant
+ * gets its own isolated `Cache` instance.
  *
  *  - Inside Next.js (`process.env.NEXT_RUNTIME` set, OR `next/cache` resolves):
- *    use `nextjsCache` so values persist across invocations via Vercel's
- *    Data Cache.
- *  - Otherwise (tests, scripts, plain Node): use `MemoryCache`.
+ *    uses a per-tenant `MemoryCache` (the Next.js Data Cache is
+ *    request-scoped and doesn't provide cross-tenant isolation guarantees).
+ *  - Otherwise (tests, scripts, plain Node): uses a per-tenant `MemoryCache`.
  *
- * The dynamic import keeps `next` an optional peer dep — `packages/data`
- * still type-checks and tests run without `next` installed.
+ * @param tenantId  The tenant identifier (typically `userId`). Omit for
+ *                  the shared global cache (legacy / self-host compatibility).
  */
-let _cache: Cache | null = null;
+export async function getDefaultCache(tenantId?: string): Promise<Cache> {
+  const ns = tenantId ?? GLOBAL_TENANT;
+  const existing = _tenantCaches.get(ns);
+  if (existing) return existing;
 
-export async function getDefaultCache(): Promise<Cache> {
-  if (_cache) return _cache;
-  if (process.env.NEXT_RUNTIME || process.env.NEXT_PHASE) {
-    try {
-      const mod = (await import('./nextjs')) as { nextjsCache: Cache };
-      _cache = mod.nextjsCache;
-      return _cache;
-    } catch {
-      /* fall through to memory */
-    }
-  }
-  _cache = new MemoryCache();
-  return _cache;
+  const cache = new MemoryCache();
+  _tenantCaches.set(ns, cache);
+  return cache;
 }
 
 /** Synchronous accessor — only safe AFTER a `getDefaultCache()` await. */
-export function getDefaultCacheSync(): Cache {
-  if (!_cache) _cache = new MemoryCache();
-  return _cache;
+export function getDefaultCacheSync(tenantId?: string): Cache {
+  const ns = tenantId ?? GLOBAL_TENANT;
+  const existing = _tenantCaches.get(ns);
+  if (existing) return existing;
+  const cache = new MemoryCache();
+  _tenantCaches.set(ns, cache);
+  return cache;
 }
 
-/** Test/override hook. */
-export function setDefaultCache(c: Cache): void {
-  _cache = c;
+/** Test/override hook — sets the cache for a specific tenant namespace. */
+export function setDefaultCache(c: Cache, tenantId?: string): void {
+  _tenantCaches.set(tenantId ?? GLOBAL_TENANT, c);
+}
+
+/**
+ * Phase 3 §3.10 — clear all tenant caches. Primarily for tests.
+ */
+export function clearAllTenantCaches(): void {
+  _tenantCaches.clear();
 }

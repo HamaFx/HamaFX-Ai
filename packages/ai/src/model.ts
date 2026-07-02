@@ -80,10 +80,13 @@ function parseVertexCredentials(json: string): VertexCredentials {
   return creds;
 }
 
-let cachedVertex: ReturnType<typeof createVertex> | null = null;
-let cachedVertexKey: string | null = null;
+// Phase 3 §3.10 — per-tenant Vertex client cache. The previous global
+// singleton (`cachedVertex` / `cachedVertexKey`) could share a Vertex AI
+// client instance across tenants. Now each tenant gets its own cached
+// client, keyed by a composite of tenantId + credentials.
+const _vertexCache = new Map<string, ReturnType<typeof createVertex>>();
 
-function getVertex(env: ResolveModelEnv): ReturnType<typeof createVertex> {
+function getVertex(env: ResolveModelEnv, tenantId?: string): ReturnType<typeof createVertex> {
   if (!env.GOOGLE_VERTEX_PROJECT || !env.GOOGLE_VERTEX_LOCATION) {
     throw new Error(
       'GOOGLE_VERTEX_PROJECT and GOOGLE_VERTEX_LOCATION are required for `google-vertex/...` models',
@@ -91,8 +94,10 @@ function getVertex(env: ResolveModelEnv): ReturnType<typeof createVertex> {
   }
 
   // Cache key includes everything that affects auth so dev hot-reloads pick up changes.
-  const cacheKey = `${env.GOOGLE_VERTEX_PROJECT}|${env.GOOGLE_VERTEX_LOCATION}|${env.GOOGLE_APPLICATION_CREDENTIALS_JSON ?? ''}|${env.GOOGLE_APPLICATION_CREDENTIALS ?? ''}`;
-  if (cachedVertex && cachedVertexKey === cacheKey) return cachedVertex;
+  // Phase 3 §3.10 — include tenantId in the cache key so tenants are isolated.
+  const cacheKey = `${tenantId ?? '__global__'}|${env.GOOGLE_VERTEX_PROJECT}|${env.GOOGLE_VERTEX_LOCATION}|${env.GOOGLE_APPLICATION_CREDENTIALS_JSON ?? ''}|${env.GOOGLE_APPLICATION_CREDENTIALS ?? ''}`;
+  const cached = _vertexCache.get(cacheKey);
+  if (cached) return cached;
 
   const config: Parameters<typeof createVertex>[0] = {
     project: env.GOOGLE_VERTEX_PROJECT,
@@ -106,9 +111,9 @@ function getVertex(env: ResolveModelEnv): ReturnType<typeof createVertex> {
   // If only GOOGLE_APPLICATION_CREDENTIALS (a path) is set, google-auth-library
   // reads it automatically from process.env — no extra wiring needed.
 
-  cachedVertex = createVertex(config);
-  cachedVertexKey = cacheKey;
-  return cachedVertex;
+  const vertex = createVertex(config);
+  _vertexCache.set(cacheKey, vertex);
+  return vertex;
 }
 
 /**
@@ -118,10 +123,10 @@ function getVertex(env: ResolveModelEnv): ReturnType<typeof createVertex> {
  *
  * Throws if no transport is configured for the requested id.
  */
-export function resolveModel(modelId: string, env: ResolveModelEnv): LanguageModel | string {
+export function resolveModel(modelId: string, env: ResolveModelEnv, tenantId?: string): LanguageModel | string {
   if (modelId.startsWith('google-vertex/')) {
     const bareId = modelId.slice('google-vertex/'.length);
-    return getVertex(env)(bareId);
+    return getVertex(env, tenantId)(bareId);
   }
 
   if (env.AI_GATEWAY_API_KEY) {
@@ -147,8 +152,8 @@ export function resolveModel(modelId: string, env: ResolveModelEnv): LanguageMod
  * Returns the Google Search grounding tool via the Vertex AI provider.
  * This tool must be used with a `google-vertex/` model.
  */
-export function getVertexGoogleSearchTool(env: ResolveModelEnv) {
-  return getVertex(env).tools.googleSearch({});
+export function getVertexGoogleSearchTool(env: ResolveModelEnv, tenantId?: string) {
+  return getVertex(env, tenantId).tools.googleSearch({});
 }
 
 import {

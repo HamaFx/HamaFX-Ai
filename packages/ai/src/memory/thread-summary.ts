@@ -192,10 +192,16 @@ async function generateSummary(
 ): Promise<string | null> {
   // Hard budget guard — never spend on a memory side-effect we can do without.
   let allowed = true;
+  let ctx: ReturnType<typeof maybeGetToolContext> = null;
   try {
-    const ctx = maybeGetToolContext();
-    const spent = await dailySpendUsd(ctx?.userId ?? '__system__');
-    if (spent >= env.MAX_DAILY_USD) allowed = false;
+    ctx = maybeGetToolContext();
+    // Phase 3 §3.11 — use real userId from tool context; no __system__ fallback.
+    // If no userId is available, skip the budget check rather than attributing
+    // spend to a phantom user.
+    if (ctx?.userId) {
+      const spent = await dailySpendUsd(ctx.userId);
+      if (spent >= env.MAX_DAILY_USD) allowed = false;
+    }
   } catch {
     allowed = false;
   }
@@ -208,7 +214,7 @@ async function generateSummary(
 
   try {
     const callArgs: Parameters<typeof generateText>[0] = {
-      model: resolveModel(compactionModelId, env),
+      model: resolveModel(compactionModelId, env, ctx?.userId),
       system:
         "You compress chat history into a 4-bullet system note for a trading copilot. Capture: (1) the symbol(s) under discussion, (2) the user's active question/setup, (3) any prior facts or numbers cited, (4) any open follow-up. No greetings, no filler.",
       prompt: transcript,

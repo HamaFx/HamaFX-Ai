@@ -24,6 +24,7 @@
 // via `briefings_emitted` PK on (`weekly_review:<isoWeek>`, 'weekly_review').
 
 import { emitWeeklyReview } from '@hamafx/ai';
+import { getActiveUserIds } from '@hamafx/db';
 import * as Sentry from '@sentry/nextjs';
 
 import { withCronAuth } from '@/lib/cron';
@@ -33,8 +34,10 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(req: Request): Promise<Response> {
   return withCronAuth(req, async () => {
-    // Temporary: Iterate over system user until NextAuth is implemented
-    const activeUsers = ['__system__'];
+    // Phase 3 §3.11 — iterate over real active users instead of the
+    // hardcoded '__system__' fallback. In self-host / legacy mode this
+    // returns ['__system__'] (the only user).
+    const activeUsers = await getActiveUserIds();
     let emittedCount = 0;
     const reasons: string[] = [];
 

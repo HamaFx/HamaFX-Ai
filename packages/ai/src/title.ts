@@ -25,7 +25,6 @@
 import type { ServerEnv } from '@hamafx/shared';
 import { generateText } from 'ai';
 
-import { dailySpendUsd } from './cost';
 import { resolveModel } from './model';
 import { maybeGetToolContext } from './tool-context';
 
@@ -133,15 +132,20 @@ export async function generateTitle(args: GenerateTitleArgs): Promise<GenerateTi
   // generator does at most one `dailySpendUsd` query. When the title
   // generator is invoked outside `withToolContext` (e.g. a future
   // ad-hoc backfill script) we fall back to the live query.
+  //
+  // Phase 3 §3.11 — use real userId from tool context; no __system__ fallback.
+  // If no userId is available, skip the budget check (the chat-level
+  // guardrail still applies).
   const ctx = maybeGetToolContext();
-  const userId = ctx?.userId ?? '__system__';
-  const spent = ctx ? ctx.budget.spent : await dailySpendUsd(userId);
-  if (spent >= env.MAX_DAILY_USD) {
-    return {
-      title: deterministicFallbackTitle(firstUser),
-      source: 'fallback',
-      reason: 'budget',
-    };
+  if (ctx?.userId) {
+    const spent = ctx.budget.spent;
+    if (spent >= env.MAX_DAILY_USD) {
+      return {
+        title: deterministicFallbackTitle(firstUser),
+        source: 'fallback',
+        reason: 'budget',
+      };
+    }
   }
 
   const userPrompt = `${firstUser.slice(0, PROMPT_INPUT_BUDGET)}\n\n---\n\n${firstAssistant.slice(
@@ -154,7 +158,7 @@ export async function generateTitle(args: GenerateTitleArgs): Promise<GenerateTi
     const generateArgs: Parameters<typeof generateText>[0] = {
       // Resolve the id either to a gateway-routed string or a direct provider
       // model instance, depending on which transport is configured.
-      model: resolveModel(args.titleModelId, env),
+      model: resolveModel(args.titleModelId, env, ctx?.userId),
       system: SYSTEM_PROMPT,
       prompt: userPrompt,
     };

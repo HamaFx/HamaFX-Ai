@@ -11,6 +11,7 @@
     "./byok": "./src/byok.ts",
     "./env": "./src/env.ts",
     "./env-secrets": "./src/env-secrets.ts",
+    "./vault": "./src/vault.ts",
     "./errors": "./src/errors.ts",
     "./encryption": "./src/encryption.ts",
     "./logger": "./src/logger.ts"

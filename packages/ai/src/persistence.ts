@@ -525,10 +525,16 @@ export interface TelemetryInput {
 }
 
 export async function recordTelemetry(t: TelemetryInput): Promise<void> {
+  // Phase 3 §3.11 — the __system__ fallback is retained ONLY because the
+  // userId column is NOT NULL with a FK to users.id, and __system__ exists
+  // as a seeded row (migration 0009). Callers should always pass t.userId.
+  // The fallback ensures we don't lose telemetry for paths that haven't
+  // been updated yet, but it should be removed once all callers pass userId.
+  const userId = t.userId ?? '__system__';
   await getDb()
     .insert(schema.chatTelemetry)
     .values({
-      userId: t.userId ?? '__system__',
+      userId,
       threadId: t.threadId,
       messageId: t.messageId,
       model: t.model,
@@ -562,10 +568,13 @@ export interface ToolTelemetryInput {
 
 export async function recordToolTelemetry(t: ToolTelemetryInput): Promise<void> {
   try {
+    // Phase 3 §3.11 — same pattern as recordTelemetry: __system__ fallback
+    // retained for the NOT NULL FK column, but callers should pass userId.
+    const userId = t.userId ?? '__system__';
     await getDb()
       .insert(schema.chatToolTelemetry)
       .values({
-        userId: t.userId ?? '__system__',
+        userId,
         threadId: t.threadId,
         messageId: t.messageId,
         tool: t.tool,

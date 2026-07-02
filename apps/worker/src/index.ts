@@ -267,6 +267,11 @@ export async function runWorker(args: RunWorkerArgs): Promise<RunningWorker> {
 import { startScheduler } from './scheduler.js';
 
 export async function main(): Promise<void> {
+  // Phase 3 §3.9 — load secrets from vault (GCP Secret Manager) before
+  // loadEnv() runs. No-op when SECRETS_VAULT_PROVIDER is unset or 'none'.
+  const { loadSecretsFromVault } = await import('@hamafx/shared/vault');
+  await loadSecretsFromVault();
+
   const env = loadEnv();
   const log = createLogger({ service: 'worker', commit: env.DEPLOYED_SHA });
 

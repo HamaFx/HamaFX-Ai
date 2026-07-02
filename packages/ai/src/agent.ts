@@ -536,7 +536,7 @@ async function runChatInner(args: RunChatArgs) {
       system: systemPrompt,
       messages: modelMessages,
       tools: routing.domain === 'fundamental' && env.GOOGLE_VERTEX_PROJECT
-        ? { ...activeTools, googleSearch: getVertexGoogleSearchTool(env) } 
+        ? { ...activeTools, googleSearch: getVertexGoogleSearchTool(env, userId) } 
         : activeTools,
       stopWhen: stepCountIs(env.MAX_TOOL_ITERATIONS),
 

@@ -35,6 +35,7 @@ import {
   emitPreEvent,
   findHighImpactEventsInWindow,
 } from '@hamafx/ai';
+import { getActiveUserIds } from '@hamafx/db';
 import * as Sentry from '@sentry/nextjs';
 
 import { withCronAuth } from '@/lib/cron';
@@ -65,8 +66,10 @@ export async function GET(req: Request): Promise<Response> {
 
     let postEmitted = 0;
 
-    // Temporary: Iterate over system user until NextAuth is implemented
-    const activeUsers = ['__system__'];
+    // Phase 3 §3.11 — iterate over real active users instead of the
+    // hardcoded '__system__' fallback. In self-host / legacy mode this
+    // returns ['__system__'] (the only user).
+    const activeUsers = await getActiveUserIds();
 
     for (const userId of activeUsers) {
       for (const c of preCandidates) {

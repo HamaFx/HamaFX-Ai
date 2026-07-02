@@ -87,8 +87,13 @@ async function upsertMemory(args: {
   const env = args.env ?? {};
   if (env.MAX_DAILY_USD !== undefined) {
     try {
-      const spent = await dailySpendUsd(args.userId ?? '__system__');
-      if (spent >= env.MAX_DAILY_USD) return { stored: false, reason: 'budget' };
+      // Phase 3 §3.11 — require a real userId; no __system__ fallback.
+      // If userId is missing, skip the budget check rather than attributing
+      // spend to a phantom user.
+      if (args.userId) {
+        const spent = await dailySpendUsd(args.userId);
+        if (spent >= env.MAX_DAILY_USD) return { stored: false, reason: 'budget' };
+      }
     } catch {
       // proceed — budget probe failed; the chat-level guardrail still applies.
     }
@@ -117,10 +122,17 @@ async function upsertMemory(args: {
   // could collide on the unique constraint. The single `ON CONFLICT`
   // statement keeps the insert and the body refresh in one transaction
   // and matches the (user_id, kind, source_id) unique key (Phase 3 §14).
+  // Phase 3 §3.11 — prefer the real userId. The __system__ fallback is
+  // retained ONLY for the DB insert (the column is NOT NULL with a FK to
+  // users.id, and __system__ exists as a seeded row). Callers should always
+  // pass userId; this fallback ensures we don't break existing paths that
+  // haven't been updated yet.
+  const effectiveUserId = args.userId ?? '__system__';
+
   await db
     .insert(schema.memoryEmbeddings)
     .values({
-      userId: args.userId ?? '__system__',
+      userId: effectiveUserId,
       kind: args.kind,
       sourceId: args.sourceId,
       symbol: args.symbol,
@@ -143,7 +155,7 @@ async function upsertMemory(args: {
         embedding,
         meta: args.meta as never,
         occurredAt: args.occurredAt,
-        userId: args.userId ?? '__system__',
+        userId: effectiveUserId,
         // createdAt stays at the original insert time — pgvector cosine
         // results don't depend on it, and consumers prefer the original
         // ingestion timestamp for audit trails.
@@ -221,6 +233,8 @@ export interface RememberBriefingArgs {
   briefingKind: string;
   occurredAtMs?: number;
   env?: Partial<EmbedEnv>;
+  /** Phase 3 §3.11 — the owning user. Required for proper tenant isolation. */
+  userId?: string;
 }
 
 export async function rememberBriefing(
@@ -234,6 +248,7 @@ export async function rememberBriefing(
     meta: { briefingKind: args.briefingKind },
     occurredAt: new Date(args.occurredAtMs ?? Date.now()),
     ...(args.env ? { env: args.env } : {}),
+    ...(args.userId ? { userId: args.userId } : {}),
   });
 }
 
