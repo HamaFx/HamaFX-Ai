@@ -558,7 +558,9 @@ the same as the fix existing.
 
 | Task ID | Status | Date | Notes / commit ref | Verified independently? |
 |---------|--------|------|---------------------|--------------------------|
-| 2.x     | Done | 2026-07-02 | Tenant = individual user; self-host RLS = disabled (BYPASSRLS). Phase 3 ready to start. | ✅ Yes |
+| 2.1     | Done | 2026-07-02 | Tenant = individual user (not org). Decision presented and resolved. `7dbd713` | ✅ Yes |
+| 2.2     | Done | 2026-07-02 | Flagged 01 vs 02 conflict on RLS enforcement; resolved: self-host uses BYPASSRLS, hosted enables RLS. `7dbd713` | ✅ Yes |
+| 2.3     | Done | 2026-07-02 | Decision recorded at top of Progress Log before Phase 3 started. `7dbd713` | ✅ Yes |
 | 0.1     | Done | 2026-07-01 | Removed `version: 9` from pnpm/action-setup in all workflows (ci-fast.yml, ci-slow.yml, release.yml) — `package.json` `packageManager` auto-detection | ⚠ Not yet — predates this requirement, spot-check |
 | 0.2     | Done | 2026-07-01 | Branch protection enabled on `main` — required checks: `Lint & Typecheck`, `Unit Tests (Fast)`; linear history; enforce admins | ⚠ Not yet — confirm on GitHub's actual settings page, not just this row |
 | 0.3     | Done | 2026-07-01 | `.gitlab-ci.yml` deleted pre-audit; only GitHub Actions remains | ⚠ Not yet — spot-check |
@@ -572,7 +574,18 @@ the same as the fix existing.
 | 1.1     | Done | 2026-07-01 | `run_system_action` now checks `user.role === 'admin'` before any FRED fetch or `intermarket_resonance` write; focused tests added. `4abc4d6` | 🔴 **Not yet — verify this one first.** Confirm commit `4abc4d6` exists and open `run-system-action.ts` directly; this is the privilege-escalation fix |
 | 1.2     | Done | 2026-07-01 | Added server-side mutation-intent screening for `set_alert`, `log_journal`, `share_snapshot`, and `run_system_action`; explicit share/system-action requests required. `4abc4d6` | ⚠ Not yet — spot-check alongside 1.1 |
 | 1.3     | Done | 2026-07-01 | Removed theatrical `cot_sync`, `flush_cache`, and `check_migrations`; schema + docs now expose only the real `resonance_sync` action. `4abc4d6` | ⚠ Not yet — spot-check alongside 1.1 |
-
+| 1.4     | Done | 2026-07-01 | Anchored `verify_call` to reality: cross-checks entry/stop/target against live market price; regression test with bad entry added. `f2faf77` | ⚠ Not yet — spot-check; this is the highest user-trust risk |
+| 1.5     | Done | 2026-07-01 | Hardened `/api/dev/login`: requires `NODE_ENV === 'development'` explicitly (rejects 'test' and 'production'). `f2faf77` | ⚠ Not yet — spot-check |
+| 1.6     | Done | 2026-07-01 | Telegram webhook: added zod schema validation for `Update` body; `TELEGRAM_SECRET_TOKEN` now required (returns 401 if missing). `f2faf77` | ⚠ Not yet — spot-check |
+| 1.7     | Done | 2026-07-01 | Added `withAuth` gating to `/api/health` and `/api/health/db`; test mocks updated. `f2faf77` `a8a1b78` | ⚠ Not yet — spot-check |
+| 1.8     | Done | 2026-07-01 | Fixed shared error-leak: error responses no longer leak `error.message`; added `captureException` calls in caught branches. `f2faf77` | ⚠ Not yet — spot-check |
+| 1.9     | Done | 2026-07-01 | Consolidated two conflicting `vercel.json` files into one at `apps/web/vercel.json`; root `vercel.json` deleted. `f2faf77` `8d7444c` | ⚠ Not yet — spot-check |
+| 1.10    | Done | 2026-07-01 | `cron/alerts` now atomically claims rows before sending (SELECT FOR UPDATE SKIP LOCKED pattern). `f2faf77` | ⚠ Not yet — spot-check |
+| 1.11    | Done | 2026-07-01 | Routed `admin/test-alert-email`, `admin/test-telegram`, and `cron/cleanup-uploads` through `withAuth` / `withCronAuth`. `f2faf77` | ⚠ Not yet — spot-check |
+| 1.12    | Done | 2026-07-01 | Fixed PWA offline precache: added real favicon; removed `/favicon.ico` from precache if not served. `f2faf77` | ⚠ Not yet — spot-check |
+| 1.13    | Done | 2026-07-01 | Fixed chart tick performance: uses `series.update()` for live tick instead of full `setData()`. `f2faf77` | ⚠ Not yet — spot-check |
+| 1.14    | Done | 2026-07-01 | Fixed silent news-fetch failure: destructured `isError`/`error` from the tool result; errors now surface. `f2faf77` | ⚠ Not yet — spot-check |
+| 1.15    | Done | 2026-07-01 | Fixed duplicate non-unique `id`/`aria-controls` on tool-result cards using `useId()`. `f2faf77` | ⚠ Not yet — spot-check |
 | 3.1     | Done | 2026-07-02 | Added `organization` / `organization_member` plus nullable `tenant_id` across the Phase 3 Session A user-scoped tables and the two child tables (`chat_messages`, `decision_signal_outcomes`). `7a6c589` | ⚠ Not yet — Phase 3 requires independent verification by another session |
 | 3.2     | Done | 2026-07-02 | Added personal-tenant backfill + compatibility triggers so existing and new rows inherit `tenant_id` during rollout. `7a6c589` | ⚠ Not yet — Phase 3 requires independent verification by another session |
 | 3.3     | Done | 2026-07-02 | Added `tenant_id` NOT NULL migration, `journal_entries_tenant_opened_idx`, and dropped redundant `candles_1m_symbol_t_idx`. `7a6c589` | ⚠ Not yet — Phase 3 requires independent verification by another session |
@@ -581,7 +594,51 @@ the same as the fix existing.
 | 3.6     | Blocked | 2026-07-02 | Not started here. RLS cutover migration intentionally held back pending explicit human go-ahead before any non-local execution. | n/a — not done |
 | 3.7     | Partial | 2026-07-02 | Restore rehearsal now uses `pgvector/pgvector:pg15`, fails hard on restore errors, and asserts HNSW indexes; per-tenant export/delete scripts still remain. `1728241` | ⚠ Not yet — partial only; independent verification still needed |
 | 3.8     | Done | 2026-07-02 | Added `SUPABASE_CA_CERT` support and CA-verified TLS path in the DB client, with legacy fallback retained until cert rollout. `1728241` | ⚠ Not yet — Phase 3 requires independent verification by another session |
-| 3.9     | Done | 2026-07-02 | Added `packages/shared/src/vault.ts` with GCP Secret Manager support; wired into `apps/web/src/instrumentation.ts` (Vercel) and `apps/worker/src/index.ts` (GCE worker). No-op when `SECRETS_VAULT_PROVIDER` is unset — preserves self-host `.env` compatibility. BYOK AES-256-GCM encryption left untouched as specified. | ⚠ Not yet — Phase 3 requires independent verification by another session |
-| 3.10    | Done | 2026-07-02 | Replaced global `_cache` singleton in `packages/data/src/cache/index.ts` with per-tenant `Map<string, Cache>`; added optional `tenantId` to `cacheKey()`; replaced global `cachedVertex`/`cachedVertexKey` in `packages/ai/src/model.ts` with per-tenant `Map` keyed by tenantId + credentials; added optional `tenantId` param to `resolveModel()` and `getVertexGoogleSearchTool()`; verified `ProgressTracker.agents` Map is already instance-scoped (not module-level). | ⚠ Not yet — Phase 3 requires independent verification by another session |
-| 3.11    | Done | 2026-07-02 | Replaced hardcoded `['__system__']` in both cron routes with `getActiveUserIds()` from `@hamafx/db`; updated `composeEventSummary()`, `composeWeeklyReviewSummary()`, `rememberBriefing()`, `upsertMemory()`, `generateSummary()`, `recordTelemetry()`, `recordToolTelemetry()`, planner, and title generator to use real `userId` from tool context / function params. `__system__` retained ONLY as last-resort DB insert fallback for NOT NULL FK columns (documented inline). Budget checks now skip when no userId instead of attributing spend to `__system__`. | ⚠ Not yet — Phase 3 requires independent verification by another session |
-| 3.12    | Done | 2026-07-02 | Verified `__system__` user row exists: migration `0009_news_articles.sql` seeds `INSERT INTO "user" (...) VALUES ('__system__', 'system@localhost', 'System', 'user')`. Telemetry FK inserts have NOT been silently failing — the row exists. No missing cost/usage telemetry from this cause. | ⚠ Not yet — Phase 3 requires independent verification by another session |
+| 3.9     | Done | 2026-07-02 | Added `packages/shared/src/vault.ts` with GCP Secret Manager support; wired into `apps/web/src/instrumentation.ts` (Vercel) and `apps/worker/src/index.ts` (GCE worker). No-op when `SECRETS_VAULT_PROVIDER` is unset — preserves self-host `.env` compatibility. BYOK AES-256-GCM encryption left untouched as specified. `95eba85` | ⚠ Not yet — Phase 3 requires independent verification by another session |
+| 3.10    | Done | 2026-07-02 | Replaced global `_cache` singleton in `packages/data/src/cache/index.ts` with per-tenant `Map<string, Cache>`; added optional `tenantId` to `cacheKey()`; replaced global `cachedVertex`/`cachedVertexKey` in `packages/ai/src/model.ts` with per-tenant `Map` keyed by tenantId + credentials; added optional `tenantId` param to `resolveModel()` and `getVertexGoogleSearchTool()`; verified `ProgressTracker.agents` Map is already instance-scoped (not module-level). `95eba85` | ⚠ Not yet — Phase 3 requires independent verification by another session |
+| 3.11    | Done | 2026-07-02 | Replaced hardcoded `['__system__']` in both cron routes with `getActiveUserIds()` from `@hamafx/db`; updated `composeEventSummary()`, `composeWeeklyReviewSummary()`, `rememberBriefing()`, `upsertMemory()`, `generateSummary()`, `recordTelemetry()`, `recordToolTelemetry()`, planner, and title generator to use real `userId` from tool context / function params. `__system__` retained ONLY as last-resort DB insert fallback for NOT NULL FK columns (documented inline). Budget checks now skip when no userId instead of attributing spend to `__system__`. `95eba85` | ⚠ Not yet — Phase 3 requires independent verification by another session |
+| 3.12    | Done | 2026-07-02 | Verified `__system__` user row exists: migration `0009_news_articles.sql` seeds `INSERT INTO "user" (...) VALUES ('__system__', 'system@localhost', 'System', 'user')`. Telemetry FK inserts have NOT been silently failing — the row exists. No missing cost/usage telemetry from this cause. `95eba85` | ⚠ Not yet — Phase 3 requires independent verification by another session |
+| 4.1     | Todo | — | Not started. Replace fixed-window rate limiter with sliding-window. | n/a — not done |
+| 4.2     | Todo | — | Not started. Add global tenant-wide AI-spend ceiling. | n/a — not done |
+| 4.3     | Todo | — | Not started. Add per-user/per-IP limits on provider-quota-facing endpoints. | n/a — not done |
+| 4.4     | Todo | — | Not started. Standardize error envelopes and 429 responses. | n/a — not done |
+| 4.5     | Todo | — | Not started. Add `maxOutputTokens` to `streamText` + per-turn input-context ceiling. | n/a — not done |
+| 4.6     | Todo | — | Not started. Unify cost/pricing tables; dedupe `cost.ts` RATES vs BYOK ModelSpec. | n/a — not done |
+| 4.7     | Todo | — | Not started. Upgrade citation enforcer from turn-level to value-level. | n/a — not done |
+| 4.8     | Todo | — | Not started. Add domain/range sanity validation to `set_alert.level` and journal fields. | n/a — not done |
+| 4.9     | Todo | — | Not started. Build operator-side spend-anomaly detector (worker job). | n/a — not done |
+| 4.10    | Todo | — | Not started (conditional on tenant=org, which was decided as tenant=user). May be skipped. | n/a — not done |
+| 4.11    | Todo | — | Not started. Decide fate of vestigial per-domain model routing. | n/a — not done |
+| 5.1     | Todo | — | Not started. Decide client-side Sentry: fix or remove. | n/a — not done |
+| 5.2     | Todo | — | Not started. Add rate-limited `captureException` for sustained flush failures. | n/a — not done |
+| 5.3     | Todo | — | Not started. Adopt pino logger across worker + routes. | n/a — not done |
+| 5.4     | Todo | — | Not started. Add auth-anomaly metrics + threshold alerting. | n/a — not done |
+| 5.5     | Todo | — | Not started. Fix `/api/health` pgvector + cron check computation. | n/a — not done |
+| 5.6     | Todo | — | Not started. Stand up public status page (Instatus/Better Stack). | n/a — not done |
+| 5.7     | Todo | — | Not started. Injection hardening: explicit untrusted-content clause in system prompt. | n/a — not done |
+| 5.8     | Todo | — | Not started. Hard gate: billing webhook must verify signatures (when Phase 8.3 lands). | n/a — not done |
+| 6.1     | Todo | — | Not started. Cross-check resonance-sync systemd unit; add missing timer. | n/a — not done |
+| 6.2     | Todo | — | Not started. Fix embedding-backfill lock-granularity bug. | n/a — not done |
+| 6.3     | Todo | — | Not started. Extend `update.sh` rollback for post-deploy runtime crashes. | n/a — not done |
+| 6.4     | Todo | — | Not started. Add missing entries to `RECOVERY.md` UUID table. | n/a — not done |
+| 6.5     | Todo | — | Not started. Verify `postgres:15-alpine` pgvector support in `verify-restore.sh`. | n/a — not done |
+| 6.6     | Todo | — | Not started (conditional on load). Upgrade `hamafx-cron` VM if justified. | n/a — not done |
+| 7.1     | Todo | — | Not started. Enforce `--touch-min` (44px) on primary controls. | n/a — not done |
+| 7.2     | Todo | — | Not started. Fix tool-message virtualizer size estimate. | n/a — not done |
+| 7.3     | Todo | — | Not started. Wrap streamed assistant text in `aria-live="polite"`. | n/a — not done |
+| 7.4     | Todo | — | Not started. Ensure every `DrawerContent` has a `DrawerTitle`. | n/a — not done |
+| 7.5     | Todo | — | Not started. Whitelist `https://s3.tradingview.com` in CSP. | n/a — not done |
+| 7.6     | Todo | — | Not started. Add `images.remotePatterns` for Supabase host. | n/a — not done |
+| 7.7     | Todo | — | Not started. Align polling-cadence claim across code and docs. | n/a — not done |
+| 7.8     | Todo | — | Not started. Remaining P3 polish: scoped `error.tsx`, `role="alert"`. | n/a — not done |
+| 7.9     | Todo | — | Not started. Remove dead `@ui/*` config from tsconfig/prettier. | n/a — not done |
+| 7.10    | Todo | — | Not started. Adopt Knip for unused files/exports detection in CI. | n/a — not done |
+| 7.11    | Todo | — | Not started. Set `actions/checkout` `fetch-depth: 0` for turbo --affected. | n/a — not done |
+| 7.12    | Todo | — | Not started. Dependency review: align `tsx` versions, decide `next-auth` strategy. | n/a — not done |
+| 7.13    | Todo | — | Not started. Strengthen `check-test-files.mjs` to flag zero-assertion files. | n/a — not done |
+| 7.14    | Todo | — | Not started. Fix runtime-doc drift in `docs/08-deployment.md`. | n/a — not done |
+| 7.15    | Todo | — | Not started. Update stale `docs/08-backend-and-api.md` references. | n/a — not done |
+| 8.1     | Todo | — | Not started. Run Prompt 00 (Documentation & Reality Drift). | n/a — not done |
+| 8.2     | Todo | — | Not started. Run Prompt 09 (Open-Core Architecture). | n/a — not done |
+| 8.3     | Todo | — | Not started. Run Prompt 10 (Billing — 2Checkout/Verifone). | n/a — not done |
+| 8.4     | Todo | — | Not started. Run Prompt 11 (Legal/Compliance). | n/a — not done |
