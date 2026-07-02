@@ -17,7 +17,7 @@
 // Next.js Data Cache adapter. Wraps `unstable_cache` so adapter code stays
 // framework-agnostic (it talks to the `Cache` interface, not Next directly).
 //
-// Why this instead of Upstash Redis? See docs/06-data-sources.md § Cache.
+// Why this instead of Upstash Redis? See docs/04-data-layer.md § Cache.
 // TL;DR: free, persists across invocations on Vercel, single dependency.
 //
 // Why dynamic-import `next/cache` instead of a static dep? `@hamafx/data`
