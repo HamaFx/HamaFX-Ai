@@ -231,7 +231,7 @@ The same schemas validate inputs at:
 
 ## Failure & resilience
 
-- **Provider failover**: each data type has primary + fallback adapter; on error or stale cache, we transparently fall back. See `06-data-sources.md`.
+- **Provider failover**: each data type has primary + fallback adapter; on error or stale cache, we transparently fall back. See `docs/04-data-layer.md`.
 - **Stale-while-error**: if everything fails, we serve the last cached value and flag the freshness in the UI.
 - **Graceful degradation**: if charts API is down, chat still works with last cached snapshot and a warning banner.
 - **No silent staleness**: every tool result includes `fetchedAt` and `source`; the UI surfaces "data is N seconds old".

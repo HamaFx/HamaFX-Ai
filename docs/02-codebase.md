@@ -195,7 +195,7 @@ A string literal union type `ToolName` enumerating all 32 AI tools registered in
 Uses `@t3-oss/env-core` + Zod. Validates at startup. Covers:
 
 - `DATABASE_URL` (Postgres connection string)
-- `BIQUOTE_API_KEY`, `FINNHUB_API_KEY`, `MARKETAUX_API_KEY`, `FRED_API_KEY`
+- `BIQUOTE_BASE_URL` (keyless), `FINNHUB_API_KEY`, `MARKETAUX_API_KEY`, `FRED_API_KEY`
 - `CFTC_API_KEY`
 - `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`
 - `SENTRY_DSN`

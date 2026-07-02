@@ -166,12 +166,14 @@ never global state.
 | `get_system_diagnostics`   | Health check: DB row counts, API key validation, sync status, cache freshness. |
 | `run_system_action`        | Trigger the operator-only FRED resonance historical sync. Explicit user request required. |
 
-### Additional Tools (2 tools)
+### Additional Tools (4 tools)
 
 | Tool              | Description |
 |-------------------|-------------|
 | `get_cot`         | CFTC Commitment of Traders report data for futures positions (commercial, non-commercial, non-reportable). |
 | `get_seasonality` | Historical seasonality patterns: average monthly returns, win rate by month/day-of-week for the selected symbol. |
+| `get_portfolio_snapshot` | Retrieves the user's current portfolio snapshot (open positions, balances, exposure). |
+| `get_social_sentiment` | Fetches social sentiment signals (social media buzz, fear/greed, contrarian indicators). |
 
 ---
 
