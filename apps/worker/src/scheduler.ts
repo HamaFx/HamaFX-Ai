@@ -16,7 +16,7 @@
 
 // STAB-01 + STAB-02: Scheduler with idempotency guards and per-job timeouts.
 //
-// Jobs whose cadence is ≥ daily use once-per-day idempotency via
+// Jobs whose cadence is >= daily use once-per-day idempotency via
 // acquireCronLock (STAB-01). Minute-level jobs (alerts, briefings) are
 // inherently idempotent and skip the lock.
 //
@@ -36,7 +36,18 @@ const JOB_TIMEOUT_MS = 60_000;
 // Jobs that run more often than once-per-day are inherently idempotent
 // at the application layer (briefings uses (eventId, kind) PK; alerts
 // evaluates current state each minute). Skip the daily lock for them.
-const SKIP_DAILY_LOCK = new Set<keyof typeof JOBS>(['alerts', 'briefings']);
+//
+// embedding-backfill is also excluded: it fires every 6 hours but the
+// daily acquireCronLock meant a failed 00:00 run blocked all 3 same-day
+// retries. The job is already idempotent per-article (query filters for
+// `embedding IS NULL`), so removing the daily lock lets each 6-hour
+// timer firing run independently and self-heal within the same day.
+// (Phase 6 task 6.2 - 05 section 3 job 1)
+const SKIP_DAILY_LOCK = new Set<keyof typeof JOBS>([
+  'alerts',
+  'briefings',
+  'embedding-backfill',
+]);
 
 export function startScheduler(log: Logger): void {
   log.info('Starting node-cron scheduler for Docker mode');
@@ -101,12 +112,12 @@ async function runJobSafely(name: keyof typeof JOBS, log: Logger): Promise<void>
     try {
       lock = await acquireCronLock(name, getDb());
       if (!lock) {
-        jobLog.info('Job skipped — already ran today (idempotency guard)');
+        jobLog.info('Job skipped - already ran today (idempotency guard)');
         return;
       }
     } catch (lockErr) {
       // Lock acquisition failed (DB unavailable?). Log and proceed without
-      // idempotency rather than silently skipping — a missed run is worse
+      // idempotency rather than silently skipping - a missed run is worse
       // than a duplicate for most jobs.
       jobLog.warn('Failed to acquire cron lock, proceeding without idempotency guard', {
         err: String(lockErr),
