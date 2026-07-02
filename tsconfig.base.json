@@ -27,7 +27,6 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["apps/web/src/*"],
-      "@ui/*": ["packages/ui/src/*"],
       "@shared/*": ["packages/shared/src/*"],
       "@ai/*": ["packages/ai/src/*"],
       "@data/*": ["packages/data/src/*"],

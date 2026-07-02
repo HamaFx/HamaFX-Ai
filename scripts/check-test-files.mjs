@@ -18,6 +18,33 @@ const packages = [
 
 let failed = false;
 
+// Phase 7 task 7.13 — also flag files with zero real assertions.
+// We read each test file and check for at least one `it(`, `test(`, or
+// `it.todo(` call that isn't commented out. Files with only `.skip` are
+// also flagged.
+const ASSERTION_RE = /^\s*(?:it|test)\.(?:todo|skip|only|concurrent)\s*\(|^\s*(?:it|test)\s*\(/;
+
+function countAssertions(filePath) {
+  const content = readFileSync(filePath, 'utf-8');
+  const lines = content.split('\n');
+  let count = 0;
+  let allSkip = true;
+  let hasAny = false;
+  for (const line of lines) {
+    const trimmed = line.trim();
+    // Skip comments
+    if (trimmed.startsWith('//') || trimmed.startsWith('*') || trimmed.startsWith('/*')) continue;
+    if (ASSERTION_RE.test(line)) {
+      count++;
+      hasAny = true;
+      if (!line.includes('.skip')) {
+        allSkip = false;
+      }
+    }
+  }
+  return { count, hasAny, allSkip };
+}
+
 for (const pkg of packages) {
   const pkgJsonPath = join(pkg.path, 'package.json');
   if (!existsSync(pkgJsonPath)) {
@@ -36,20 +63,51 @@ for (const pkg of packages) {
   const testDir = join(pkg.path, 'test');
   const srcTestFiles = findTestFiles(join(pkg.path, 'src'));
   const testTestFiles = findTestFiles(testDir);
+  const allTestFiles = [...srcTestFiles, ...testTestFiles];
 
-  if (srcTestFiles.length === 0 && testTestFiles.length === 0) {
+  if (allTestFiles.length === 0) {
     console.error(`❌ ${pkg.name} has ZERO test files but test script is "${testScript}".`);
     failed = true;
-  } else {
-    console.log(`✓ ${pkg.name}: ${srcTestFiles.length + testTestFiles.length} test file(s)`);
+    continue;
+  }
+
+  // Phase 7 task 7.13 — check each file for real assertions
+  const zeroAssertionFiles = [];
+  const allSkipFiles = [];
+  for (const file of allTestFiles) {
+    const { count, hasAny, allSkip } = countAssertions(file);
+    if (!hasAny) {
+      zeroAssertionFiles.push(file);
+    } else if (allSkip) {
+      allSkipFiles.push(file);
+    }
+  }
+
+  if (zeroAssertionFiles.length > 0) {
+    console.error(`❌ ${pkg.name} has ${zeroAssertionFiles.length} test file(s) with ZERO assertions:`);
+    for (const f of zeroAssertionFiles) {
+      console.error(`   ${f.replace(root + '/', '')}`);
+    }
+    failed = true;
+  }
+
+  if (allSkipFiles.length > 0) {
+    console.warn(`⚠  ${pkg.name} has ${allSkipFiles.length} test file(s) with all-skipped assertions:`);
+    for (const f of allSkipFiles) {
+      console.warn(`   ${f.replace(root + '/', '')}`);
+    }
+  }
+
+  if (zeroAssertionFiles.length === 0) {
+    console.log(`✓ ${pkg.name}: ${allTestFiles.length} test file(s), all have assertions`);
   }
 }
 
 if (failed) {
-  console.error('\n❌ Some packages are missing tests. Add test files or update the test script.');
+  console.error('\n❌ Some packages have missing or empty test files. Add tests or update the test script.');
   process.exit(1);
 } else {
-  console.log('\n✓ All packages with test scripts have at least one test file.');
+  console.log('\n✓ All packages with test scripts have test files with real assertions.');
 }
 
 function findTestFiles(dir) {
