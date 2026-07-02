@@ -92,6 +92,9 @@ export * from './schemas/briefings';
 export * from './ai/tool-names';
 export * from './ai/tool-io';
 
+// Phase E — Billing feature gating
+export * from './billing';
+
 // Errors & Logging
 export * from './errors';
 export * from './logger';
