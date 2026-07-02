@@ -474,9 +474,8 @@ General rule: every review file has its own numbered "Open Questions" section (0
 Treat every one of those as stop-and-ask, not stop-and-assume. The items below are true
 phase-blockers, called out explicitly so they don't get missed:
 
-- **Phase 2:** tenant = user or org? (02 §7 Q1)
-- **Phase 2:** should self-host run with RLS disabled, or always-on with an auto-set
-  single tenant? (02 §7 Q2)
+- **Phase 2 (answered):** tenant = user (not org). Tenant = individual user; no organization/team abstraction. (02 §7 Q1)
+- **Phase 2 (answered):** self-host RLS disabled (BYPASSRLS). Self-host runs with `BYPASSRLS` role; always-on RLS is for hosted only. (02 §7 Q2)
 - **Phase 8.3:** Stripe or Verifone — which is actually current? (conflict between 01 §6
   Q3 and Prompt 10's stated rationale)
 - **Phase 8.3:** is Iraq merchant eligibility with Verifone actually confirmed yet?
@@ -496,7 +495,7 @@ regressed.
 
 | Task ID | Status | Date | Notes / commit ref |
 |---------|--------|------|---------------------|
-| 2.x     | Not started | | Tenant decision: _(record answer here once made)_ |
+| 2.x     | Done | 2026-07-02 | Tenant = individual user; self-host RLS = disabled (BYPASSRLS). Phase 3 ready to start. |
 | 0.1     | Done | 2026-07-01 | Removed `version: 9` from pnpm/action-setup in all workflows (ci-fast.yml, ci-slow.yml, release.yml) — `package.json` `packageManager` auto-detection |
 | 0.2     | Done | 2026-07-01 | Branch protection enabled on `main` — required checks: `Lint & Typecheck`, `Unit Tests (Fast)`; linear history; enforce admins |
 | 0.3     | Done | 2026-07-01 | `.gitlab-ci.yml` deleted pre-audit; only GitHub Actions remains |
