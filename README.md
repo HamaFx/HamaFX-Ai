@@ -37,7 +37,7 @@ HamaFX-Ai is an **autonomous AI trading companion that lives in your pocket**. C
 *   📊 **Hybrid Charting Engine:** Toggles on the fly between a high-performance **TradingView Pro** widget and **Lightweight-charts SMC** (Smart Money Concepts) indicator overlay charts.
 *   🧠 **Plan-Then-Act Reasoning:** Analytical instructions generate clear, chronological execution stages displayed as an interactive "Thinking" workflow pill before calling model tools.
 *   🏛️ **Multi-Agent Committee:** Convenes a panel of virtual experts (**Economist**, **Technician**, and **Risk Manager**) to parallel-evaluate market patterns and return a consolidated grade consensus (A/B/C/D/F).
-*   🔒 **Bring Your Own Key (BYOK):** Zero platform vendor lock-in. Connect Gemini, Claude, OpenAI, Groq, DeepSeek, or Mistral keys securely stored and encrypted client-side using **AES-256-GCM**.
+*   🔒 **Bring Your Own Key (BYOK):** Zero platform vendor lock-in. Connect Gemini, Claude, OpenAI, Groq, DeepSeek, Mistral, OpenRouter, or xAI keys securely stored and encrypted client-side using **AES-256-GCM**.
 *   📱 **Progressive Web App (PWA):** Mobile-first design that installs natively on iOS and Android. Sub-second page loads, virtualized feeds via TanStack Virtual, and optimized SWR local query caching.
 *   🟢 **Zero-Database Dev Hook:** Uses native PGlite (in-process Postgres) to boot the entire stack in under 5 seconds with zero local database instances to install or configure.
 
@@ -174,6 +174,7 @@ The agent core accesses a suite of 32 specialized tools to analyze and interact 
 | **🧠 Memory & RAG** | `search_knowledge` <br> `summarize_thread` | Searches PGVector embeddings for historical context, and compacts long conversation histories. |
 | **✍️ Write Actions** | `set_alert` <br> `log_journal` <br> `get_journal_stats` <br> `share_snapshot` | Creates price/macro alerts, records journals, retrieves performance stats, and exports chart snaps. |
 | **🏛️ Deliberation** | `convene_committee` <br> `get_system_diagnostics` <br> `run_system_action` | Triggers parallel expert agents, evaluates diagnostics, and executes verified actions. |
+| **📊 Portfolio & Sentiment** | `get_portfolio_snapshot` <br> `get_social_sentiment` | Retrieves current portfolio snapshot and fetches social sentiment signals. |
 
 </details>
 
@@ -265,7 +266,7 @@ During local development and testing, `NEXTAUTH_SECRET`, `ENCRYPTION_SECRET`, an
 | `ENCRYPTION_SECRET` | Hex String (32 bytes) | Production | Key used to encrypt client-side BYOK credentials via AES-256-GCM. |
 | `CRON_SECRET` | String (>=16 chars) | Production | Bearer token required to invoke cron trigger routes at `/api/cron/*`. |
 | `GOOGLE_GENERATIVE_AI_API_KEY` | Gemini Key | Option | API Key for Google generative models (default routing option). |
-| `BIQUOTE_API_KEY` | BiQuote Forex Key | Option | Live tick feed primary provider credentials. |
+| `BIQUOTE_BASE_URL` | URL | Option | BiQuote market-data endpoint override (BiQuote is keyless — no API key needed). Default: `https://biquote.io`. |
 | `FINNHUB_API_KEY` | Finnhub Stock Key | Option | Macroeconomic calendar and news feed credentials. |
 
 ---
