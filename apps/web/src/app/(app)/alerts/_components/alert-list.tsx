@@ -137,7 +137,7 @@ export function AlertList() {
       {isLoading ? (
         <p className="text-fg-muted text-sm px-1">Loading…</p>
       ) : isError ? (
-        <p className="text-bear text-sm px-1">Failed to load: {(error as Error)?.message}</p>
+        <p className="text-bear text-sm px-1" role="alert">Failed to load: {(error as Error)?.message}</p>
       ) : data?.alerts.length === 0 ? (
         <EmptyState
           tone="muted"

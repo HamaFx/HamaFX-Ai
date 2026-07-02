@@ -21,6 +21,7 @@
 
 import type { JournalEntry, Symbol, TradeSide } from '@hamafx/shared';
 import { Trash2, Search, SlidersHorizontal, ArrowUpRight, ArrowDownRight, Compass, Play } from 'lucide-react';
+import Image from 'next/image';
 import { useState, useMemo, useRef } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 
@@ -501,10 +502,13 @@ function EntryRow({
               onClick={() => { if (entry.screenshotUrl) window.open(entry.screenshotUrl, '_blank'); }}
               className="mt-1.5 inline-flex"
             >
-              <img
+              <Image
                 src={entry.screenshotUrl}
                 alt="Trade chart screenshot"
+                width={48}
+                height={48}
                 className="size-12 rounded-md object-cover border border-divider hover:opacity-80 transition-opacity"
+                unoptimized
               />
             </button>
           )}

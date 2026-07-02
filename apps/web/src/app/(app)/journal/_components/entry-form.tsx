@@ -23,6 +23,7 @@
 import { JournalEntrySchema, SYMBOLS, type Symbol, type TradeSide } from '@hamafx/shared';
 import type { JournalEntry } from '@hamafx/shared';
 import { useQuery } from '@tanstack/react-query';
+import Image from 'next/image';
 import { useState, useMemo } from 'react';
 import { toast } from 'sonner';
 import { z } from 'zod';
@@ -276,10 +277,13 @@ export function EntryForm({ onCreated }: EntryFormProps) {
         </label>
         {screenshotUrl ? (
           <div className="relative inline-block">
-            <img
+            <Image
               src={screenshotUrl}
               alt="Trade chart"
+              width={80}
+              height={80}
               className="h-20 rounded-md object-cover border border-divider"
+              unoptimized
             />
             <button
               type="button"
