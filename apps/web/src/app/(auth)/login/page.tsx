@@ -103,7 +103,7 @@ function LoginForm() {
 
           <div className="flex items-center justify-between -mt-3">
             <label className="flex items-center gap-2 text-fg-muted text-xs cursor-pointer hover:text-fg transition-colors">
-              <input type="checkbox" name="rememberMe" value="true" defaultChecked className="rounded border-divider" />
+              <input type="checkbox" name="rememberMe" value="true" defaultChecked className="rounded border-zinc-800" />
               Remember me
             </label>
             <Link
@@ -115,7 +115,7 @@ function LoginForm() {
           </div>
 
           {state?.error ? (
-            <p id="login-error" role="alert" className="text-bear text-sm">
+            <p id="login-error" role="alert" className="text-red-500 text-sm">
               {state.error}
             </p>
           ) : null}
@@ -142,13 +142,13 @@ function LoginForm() {
 
       <p className="text-fg-subtle text-center text-sm">
         Don't have an account?{' '}
-        <Link href="/register" className="text-brand font-medium hover:underline">
+        <Link href="/register" className="text-fg font-medium hover:underline">
           Create an account
         </Link>
       </p>
 
       {process.env.NEXT_PUBLIC_ENABLE_DEV_LOGIN === 'true' && (
-        <div className="flex flex-col items-center gap-2 border-t border-divider pt-4">
+        <div className="flex flex-col items-center gap-2 border-t border-zinc-800 pt-4">
           <button
             type="button"
             onClick={() => {

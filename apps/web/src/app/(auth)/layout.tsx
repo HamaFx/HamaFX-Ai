@@ -46,19 +46,19 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
             alt=""
             width={80}
             height={80}
-            className="rounded-2xl shadow-xl shadow-black/60"
+            className="rounded-sm shadow-xl shadow-black/60"
             priority
           />
           <div className="flex flex-col gap-2">
             <h1 className="text-fg text-2xl font-bold tracking-tight sm:text-3xl">
-              Hama<span className="text-brand">FX</span>
+              Hama<span className="text-fg">FX</span>
               <span className="text-fg-subtle font-normal">·Ai</span>
             </h1>
             <p className="text-fg-muted text-base">Enterprise trading copilot</p>
           </div>
         </header>
 
-        <div className="card-premium p-6 flex flex-col gap-6">{children}</div>
+        <div className="surface-panel p-6 flex flex-col gap-6">{children}</div>
       </div>
     </main>
   );
