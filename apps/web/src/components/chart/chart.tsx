@@ -74,7 +74,7 @@ export function Chart({
   return (
     <div className={cn('flex flex-col gap-2', className)}>
       {/* Primary Candlestick Pane */}
-      <div className="bg-bg-elev-1 border border-border relative overflow-hidden rounded-lg">
+      <div className="bg-zinc-950 border border-border relative overflow-hidden rounded-sm">
         <ChartCanvas
           symbol={symbol}
           candles={candles}
@@ -86,10 +86,10 @@ export function Chart({
         />
 
         {/* Floating zoom and pan controls overlay */}
-        <div className="border-glass-edge bg-glass absolute right-4 bottom-4 z-10 flex items-center gap-1 rounded-full border p-1 shadow-lg backdrop-blur-md">
+        <div className="border-glass-edge bg-glass absolute right-4 bottom-4 z-10 flex items-center gap-1 rounded-sm border p-1 shadow-lg ">
           <button
             onClick={() => mainChart?.zoomIn()}
-            className="text-fg-muted hover:bg-bg-elev-3 hover:text-fg flex size-11 cursor-pointer items-center justify-center rounded-full transition-all"
+            className="text-fg-muted hover:bg-zinc-800 hover:text-fg flex size-11 cursor-pointer items-center justify-center rounded-sm transition-all"
             title="Zoom In"
             type="button"
           >
@@ -97,7 +97,7 @@ export function Chart({
           </button>
           <button
             onClick={() => mainChart?.zoomOut()}
-            className="text-fg-muted hover:bg-bg-elev-3 hover:text-fg flex size-11 cursor-pointer items-center justify-center rounded-full transition-all"
+            className="text-fg-muted hover:bg-zinc-800 hover:text-fg flex size-11 cursor-pointer items-center justify-center rounded-sm transition-all"
             title="Zoom Out"
             type="button"
           >
@@ -105,7 +105,7 @@ export function Chart({
           </button>
           <button
             onClick={() => mainChart?.resetView()}
-            className="text-fg-muted hover:bg-bg-elev-3 hover:text-fg flex size-11 cursor-pointer items-center justify-center rounded-full transition-all"
+            className="text-fg-muted hover:bg-zinc-800 hover:text-fg flex size-11 cursor-pointer items-center justify-center rounded-sm transition-all"
             title="Reset View"
             type="button"
           >
@@ -123,7 +123,7 @@ export function Chart({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.2 }}
-            className="bg-bg-elev-1 border-border relative h-[120px] overflow-hidden rounded-lg border"
+            className="bg-zinc-950 border-border relative h-[120px] overflow-hidden rounded-sm border"
           >
             <ChartRSI
               result={rsiResult}
@@ -147,7 +147,7 @@ export function Chart({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.2 }}
-            className="bg-bg-elev-1 border-border relative h-[140px] overflow-hidden rounded-lg border"
+            className="bg-zinc-950 border-border relative h-[140px] overflow-hidden rounded-sm border"
           >
             <ChartMACD
               result={macdResult}
@@ -171,7 +171,7 @@ export function Chart({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.2 }}
-            className="bg-bg-elev-1 border-border relative h-[120px] overflow-hidden rounded-lg border"
+            className="bg-zinc-950 border-border relative h-[120px] overflow-hidden rounded-sm border"
           >
             <ChartATR
               result={atrResult}
