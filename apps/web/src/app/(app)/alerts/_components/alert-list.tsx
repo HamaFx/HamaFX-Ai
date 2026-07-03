@@ -137,7 +137,7 @@ export function AlertList() {
       {isLoading ? (
         <p className="text-fg-muted text-sm px-1">Loading…</p>
       ) : isError ? (
-        <p className="text-bear text-sm px-1" role="alert">Failed to load: {(error as Error)?.message}</p>
+        <p className="text-red-500 text-sm px-1" role="alert">Failed to load: {(error as Error)?.message}</p>
       ) : data?.alerts.length === 0 ? (
         <EmptyState
           tone="muted"
@@ -206,7 +206,7 @@ interface AlertRowProps {
 function AlertRow({ alert, onToggle, onDelete }: AlertRowProps) {
   const RuleIcon = ruleIcon(alert);
   const StatusIcon = alert.active ? Bell : alert.firedAt ? BellRing : BellOff;
-  const statusTone = alert.active ? 'text-brand' : alert.firedAt ? 'text-warn' : 'text-fg-subtle';
+  const statusTone = alert.active ? 'text-fg' : alert.firedAt ? 'text-warn' : 'text-fg-subtle';
 
   const trackRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -273,7 +273,7 @@ function AlertRow({ alert, onToggle, onDelete }: AlertRowProps) {
   }, [onToggle, onDelete]);
 
   return (
-    <li className="relative overflow-hidden rounded-lg border border-divider bg-bg-elev-1 transition-all duration-200 hover:shadow-lg">
+    <li className="relative overflow-hidden rounded-sm border border-zinc-800 bg-zinc-950 transition-all duration-200 hover:shadow-lg">
       <div
         ref={trackRef}
         className="grid overflow-x-auto scrollbar-none overscroll-behavior-x-none select-none"
@@ -284,7 +284,7 @@ function AlertRow({ alert, onToggle, onDelete }: AlertRowProps) {
       >
         {/* Left Option (Re-arm / Pause) */}
         <div 
-          className="flex w-full items-center justify-start pl-6 bg-brand/10 text-brand"
+          className="flex w-full items-center justify-start pl-6 bg-zinc-900 text-fg"
           style={{ scrollSnapAlign: 'start' }}
         >
           <StatusIcon className="size-5 animate-pulse" />
@@ -294,7 +294,7 @@ function AlertRow({ alert, onToggle, onDelete }: AlertRowProps) {
         <div
           ref={contentRef}
           className={cn(
-            'flex w-full items-start gap-3 p-4 bg-bg-elev-1 transition-opacity duration-200',
+            'flex w-full items-start gap-3 p-4 bg-zinc-950 transition-opacity duration-200',
             !alert.active && 'opacity-60 saturate-50',
           )}
           style={{ scrollSnapAlign: 'center' }}
@@ -310,24 +310,24 @@ function AlertRow({ alert, onToggle, onDelete }: AlertRowProps) {
             <span
               aria-hidden
               className={cn(
-                'inline-flex size-12 shrink-0 items-center justify-center rounded-2xl',
+                'inline-flex size-12 shrink-0 items-center justify-center rounded-sm',
                 statusTone,
               )}
               style={{
                 background: alert.active
-                  ? 'var(--gradient-brand-soft)'
+                  ? 'none'
                   : alert.firedAt
-                    ? 'oklch(82% 0.16 80 / 0.15)'
-                    : 'oklch(70% 0.02 265 / 0.1)',
-                boxShadow: 'var(--shadow-inset-edge-soft)',
+                    ? 'rgba(245, 158, 11, 0.12)'
+                    : 'rgba(59, 130, 246, 0.08)',
+                boxShadow: 'none',
               }}
             >
               <StatusIcon className="size-5" strokeWidth={1.75} />
             </span>
             {alert.active && !alert.firedAt && (
               <span className="absolute -top-1 -right-1 flex h-3 w-3">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-3 w-3 bg-brand border-2 border-bg"></span>
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-sm bg-fg opacity-75"></span>
+                <span className="relative inline-flex rounded-sm h-3 w-3 bg-fg border-2 border-bg"></span>
               </span>
             )}
           </div>
@@ -343,7 +343,7 @@ function AlertRow({ alert, onToggle, onDelete }: AlertRowProps) {
                   <Mail className="text-fg-muted size-3.5" strokeWidth={2} />
                 )}
                 {alert.channels.includes('telegram') && (
-                  <Send className="text-brand size-3.5" strokeWidth={2} />
+                  <Send className="text-fg size-3.5" strokeWidth={2} />
                 )}
               </div>
             </div>
@@ -363,7 +363,7 @@ function AlertRow({ alert, onToggle, onDelete }: AlertRowProps) {
                 type="button"
                 onClick={onToggle}
                 aria-label={alert.active ? 'Pause alert' : 'Re-arm alert'}
-                className="text-fg-muted hover:text-fg hover:bg-bg-elev-2 inline-flex size-10 items-center justify-center rounded-full transition-colors"
+                className="text-fg-muted hover:text-fg hover:bg-zinc-900 inline-flex size-10 items-center justify-center rounded-sm transition-colors"
               >
                 {alert.active ? <BellOff className="size-4" /> : <RotateCw className="size-4" />}
               </button>
@@ -373,7 +373,7 @@ function AlertRow({ alert, onToggle, onDelete }: AlertRowProps) {
                 type="button"
                 onClick={onDelete}
                 aria-label="Delete alert"
-                className="text-bear/70 hover:text-bear hover:bg-bear/10 inline-flex size-10 items-center justify-center rounded-full transition-colors"
+                className="text-bear/70 hover:text-red-500 hover:bg-red-500/10 inline-flex size-10 items-center justify-center rounded-sm transition-colors"
               >
                 <Trash2 className="size-4" />
               </button>
@@ -383,7 +383,7 @@ function AlertRow({ alert, onToggle, onDelete }: AlertRowProps) {
 
         {/* Right Option (Delete) */}
         <div 
-          className="flex w-full items-center justify-end pr-6 bg-bear/10 text-bear"
+          className="flex w-full items-center justify-end pr-6 bg-red-500/10 text-red-500"
           style={{ scrollSnapAlign: 'end' }}
         >
           <Trash2 className="size-5 animate-pulse" />

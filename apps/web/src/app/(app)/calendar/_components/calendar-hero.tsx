@@ -61,17 +61,17 @@ export function CalendarHero({ events = [] }: CalendarHeroProps) {
   return (
     <section
       aria-label="Calendar overview"
-      className="border border-divider bg-bg-elev-1 rounded-lg relative flex flex-col gap-4 overflow-hidden p-4"
+      className="border border-zinc-800 bg-zinc-950 rounded-sm relative flex flex-col gap-4 overflow-hidden p-4"
     >
       {/* Countdown row */}
       {nextHigh ? (
         <div className="flex items-start gap-3">
           <span
             aria-hidden="true"
-            className="text-bear inline-flex size-12 shrink-0 items-center justify-center rounded-full"
+            className="text-red-500 inline-flex size-12 shrink-0 items-center justify-center rounded-sm"
             style={{
-              background: 'oklch(70% 0.22 25 / 0.15)',
-              boxShadow: 'var(--shadow-inset-edge-soft)',
+              background: 'rgba(239, 68, 68, 0.12)',
+              boxShadow: 'none',
             }}
           >
             <Zap className="size-5" strokeWidth={2} />
@@ -92,7 +92,7 @@ export function CalendarHero({ events = [] }: CalendarHeroProps) {
             href={`/chat?prompt=${encodeURIComponent(
               `What does ${nextHigh.title} mean for ${nextHigh.currency ?? 'the dollar'} and gold?`,
             )}`}
-            className="text-fg-muted hover:text-brand active:bg-bg-elev-3 inline-flex size-9 shrink-0 items-center justify-center rounded-full transition-colors"
+            className="text-fg-muted hover:text-fg active:bg-zinc-800 inline-flex size-9 shrink-0 items-center justify-center rounded-sm transition-colors"
             aria-label="Ask AI about this event"
           >
             <Sparkles className="size-4" />
@@ -114,11 +114,11 @@ export function CalendarHero({ events = [] }: CalendarHeroProps) {
             {upcoming.length} upcoming
           </span>
         </div>
-        <div className="bg-bg-elev-2 flex h-1.5 w-full overflow-hidden rounded-full">
+        <div className="bg-zinc-900 flex h-1.5 w-full overflow-hidden rounded-sm">
           {counts.high > 0 ? (
             <span
               aria-hidden
-              className="bg-bear h-full"
+              className="bg-red-500 h-full"
               style={{ width: `${pct(counts.high)}%` }}
             />
           ) : null}
@@ -138,8 +138,8 @@ export function CalendarHero({ events = [] }: CalendarHeroProps) {
           ) : null}
         </div>
         <ul className="flex flex-wrap items-center gap-x-3 gap-y-1 text-body-sm tabular-nums">
-          <Tag dot="bg-bear" tone="text-bear" label="High" count={counts.high} />
-          <Tag dot="bg-warn" tone="text-warn" label="Medium" count={counts.medium} />
+          <Tag dot="bg-bear" tone="text-red-500" label="High" count={counts.high} />
+          <Tag dot="bg-warn" tone="text-amber-500" label="Medium" count={counts.medium} />
           <Tag dot="bg-fg-subtle" tone="text-fg-muted" label="Low" count={counts.low} />
         </ul>
       </div>
@@ -150,7 +150,7 @@ export function CalendarHero({ events = [] }: CalendarHeroProps) {
 // ---------------------------------------------------------------------------
 
 function Countdown({ ms }: { ms: number }) {
-  if (ms <= 0) return <span className="text-bear font-semibold">Live now</span>;
+  if (ms <= 0) return <span className="text-red-500 font-semibold">Live now</span>;
   const d = Math.floor(ms / (24 * 60 * 60_000));
   const h = Math.floor((ms % (24 * 60 * 60_000)) / (60 * 60_000));
   const m = Math.floor((ms % (60 * 60_000)) / 60_000);
@@ -169,7 +169,7 @@ function Countdown({ ms }: { ms: number }) {
     );
   }
   return (
-    <span className="text-warn font-semibold">
+    <span className="text-amber-500 font-semibold">
       in {m}m
     </span>
   );
@@ -184,7 +184,7 @@ function CountryChip({
 }) {
   const label = currency ?? country;
   return (
-    <span className="bg-bg-elev-2 border border-divider rounded px-1.5 py-0.5 text-caption font-bold uppercase tabular-nums">
+    <span className="bg-zinc-900 border border-zinc-800 rounded px-1.5 py-0.5 text-caption font-bold uppercase tabular-nums">
       {label}
     </span>
   );
@@ -203,7 +203,7 @@ function Tag({
 }) {
   return (
     <li className="inline-flex items-center gap-1.5">
-      <span aria-hidden className={cn('size-2 rounded-full', dot)} />
+      <span aria-hidden className={cn('size-2 rounded-sm', dot)} />
       <span className={cn('font-semibold', tone)}>{label}</span>
       <span className="text-fg">{count}</span>
     </li>
