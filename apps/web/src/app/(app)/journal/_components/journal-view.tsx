@@ -73,9 +73,9 @@ export function JournalView() {
   return (
     <div className="flex flex-col gap-6 animate-in fade-in duration-300">
       {/* Sticky header controls */}
-      <header className="border border-divider bg-bg-elev-1 rounded-lg flex flex-wrap items-center justify-between gap-4 p-4">
+      <header className="border border-zinc-800 bg-zinc-950 rounded-sm flex flex-wrap items-center justify-between gap-4 p-4">
         <div className="flex items-center gap-3">
-          <div className="rounded-full bg-brand/10 p-3 text-brand">
+          <div className="rounded-sm bg-zinc-900 p-3 text-fg">
             <BookOpen className="size-5" />
           </div>
           <div>
@@ -89,7 +89,7 @@ export function JournalView() {
           
           <button
             onClick={refresh}
-            className="bg-bg-elev-1 border border-divider size-10 flex items-center justify-center rounded-full text-fg-muted hover:text-fg transition-all cursor-pointer"
+            className="bg-zinc-950 border border-zinc-800 size-10 flex items-center justify-center rounded-sm text-fg-muted hover:text-fg transition-all cursor-pointer"
             title="Refresh logs"
           >
             <RefreshCw className={cn("size-4", isFetching && "animate-spin")} />
@@ -97,7 +97,7 @@ export function JournalView() {
 
           <button
             onClick={() => setOpen(true)}
-            className="inline-flex h-10 items-center justify-center gap-2 rounded-full bg-brand px-4 text-xs font-bold text-brand-fg shadow-glow-brand/15 hover:opacity-90 transition-all cursor-pointer"
+            className="inline-flex h-10 items-center justify-center gap-2 rounded-sm bg-fg px-4 text-xs font-bold text-black shadow-none/15 hover:opacity-90 transition-all cursor-pointer"
           >
             <Plus className="size-4" />
             <span>Log Trade</span>
@@ -108,12 +108,12 @@ export function JournalView() {
       {/* Main Responsive Grid Layout */}
       {isLoading ? (
         <div className="flex flex-col items-center justify-center h-[350px] gap-2.5">
-          <Activity className="size-6 text-brand animate-pulse" />
+          <Activity className="size-6 text-fg animate-pulse" />
           <p className="text-xs font-bold uppercase tracking-wider text-fg-muted">Loading your metrics...</p>
         </div>
       ) : isError ? (
-        <div className="border border-divider bg-bg-elev-1 rounded-lg p-6 border-bear/20 bg-bear/5 text-center flex flex-col items-center justify-center gap-2">
-          <p className="text-sm font-semibold text-bear" role="alert">Failed to load journal portfolio</p>
+        <div className="border border-zinc-800 bg-zinc-950 rounded-sm p-6 border-bear/20 bg-bear/5 text-center flex flex-col items-center justify-center gap-2">
+          <p className="text-sm font-semibold text-red-500" role="alert">Failed to load journal portfolio</p>
           <p className="text-xs text-fg-subtle">{(error as Error)?.message || 'Unknown network error'}</p>
         </div>
       ) : (

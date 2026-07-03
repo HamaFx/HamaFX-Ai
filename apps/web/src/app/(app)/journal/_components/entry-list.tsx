@@ -136,27 +136,27 @@ export function EntryList({ entries, onClosed, onDeleted }: EntryListProps) {
     <div className="flex flex-col gap-4">
       {/* Visual Tab Switcher */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-glass-edge/40 pb-2">
-        <div className="flex p-0.5 rounded-xl bg-bg-elev-2/60 border border-glass-edge/40 self-start">
+        <div className="flex p-0.5 rounded-sm bg-zinc-900 border border-glass-edge/40 self-start">
           <button
             onClick={() => setTab('active')}
             className={cn(
-              'px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all relative flex items-center gap-1.5 cursor-pointer',
-              tab === 'active' ? 'bg-brand text-brand-fg shadow-glow-brand/10' : 'text-fg-muted hover:text-fg'
+              'px-3.5 py-1.5 text-xs font-semibold rounded-sm transition-all relative flex items-center gap-1.5 cursor-pointer',
+              tab === 'active' ? 'bg-fg text-black shadow-none/10' : 'text-fg-muted hover:text-fg'
             )}
           >
             Active Positions
             {activeCount > 0 && (
               <span className={cn(
-                'size-2 rounded-full',
-                tab === 'active' ? 'bg-brand-fg animate-ping' : 'bg-brand animate-pulse'
+                'size-2 rounded-sm',
+                tab === 'active' ? 'bg-brand-fg animate-ping' : 'bg-fg animate-pulse'
               )} />
             )}
           </button>
           <button
             onClick={() => setTab('closed')}
             className={cn(
-              'px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer',
-              tab === 'closed' ? 'bg-brand text-brand-fg shadow-glow-brand/10' : 'text-fg-muted hover:text-fg'
+              'px-3.5 py-1.5 text-xs font-semibold rounded-sm transition-all cursor-pointer',
+              tab === 'closed' ? 'bg-fg text-black shadow-none/10' : 'text-fg-muted hover:text-fg'
             )}
           >
             Closed History
@@ -165,8 +165,8 @@ export function EntryList({ entries, onClosed, onDeleted }: EntryListProps) {
           <button
             onClick={() => setTab('all')}
             className={cn(
-              'px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer',
-              tab === 'all' ? 'bg-brand text-brand-fg shadow-glow-brand/10' : 'text-fg-muted hover:text-fg'
+              'px-3.5 py-1.5 text-xs font-semibold rounded-sm transition-all cursor-pointer',
+              tab === 'all' ? 'bg-fg text-black shadow-none/10' : 'text-fg-muted hover:text-fg'
             )}
           >
             All Logs
@@ -182,14 +182,14 @@ export function EntryList({ entries, onClosed, onDeleted }: EntryListProps) {
               placeholder="Search notes, tags, symbol..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 text-xs rounded-xl bg-bg-elev-2/45 border border-glass-edge/40 focus:outline-none focus:border-brand/70 transition-all text-fg"
+              className="w-full pl-9 pr-4 py-2 text-xs rounded-sm bg-bg-elev-2/45 border border-glass-edge/40 focus:outline-none focus:border-brand/70 transition-all text-fg"
             />
           </div>
           <button
             onClick={() => setShowFilters(!showFilters)}
             className={cn(
-              'p-2.5 rounded-xl border border-glass-edge/40 bg-bg-elev-2/45 text-fg-muted hover:text-fg transition-all cursor-pointer',
-              showFilters && 'border-brand text-brand bg-brand/5'
+              'p-2.5 rounded-sm border border-glass-edge/40 bg-bg-elev-2/45 text-fg-muted hover:text-fg transition-all cursor-pointer',
+              showFilters && 'border-zinc-700 text-fg bg-zinc-950'
             )}
             title="Toggle advanced filters"
           >
@@ -200,7 +200,7 @@ export function EntryList({ entries, onClosed, onDeleted }: EntryListProps) {
 
       {/* Advanced Filter Panel */}
       {showFilters && (
-        <div className="border border-divider bg-bg-elev-1 rounded-lg p-4 grid grid-cols-2 gap-4 animate-in slide-in-from-top-2 duration-200">
+        <div className="border border-zinc-800 bg-zinc-950 rounded-sm p-4 grid grid-cols-2 gap-4 animate-in slide-in-from-top-2 duration-200">
           <div className="flex flex-col gap-1.5">
             <label className="text-caption font-bold uppercase tracking-wider text-fg-subtle">Asset Class</label>
               <div className="flex flex-wrap gap-1">
@@ -209,8 +209,8 @@ export function EntryList({ entries, onClosed, onDeleted }: EntryListProps) {
                   key={sym}
                   onClick={() => setSymbolFilter(sym)}
                   className={cn(
-                    'px-2.5 py-1 text-xs font-semibold rounded-lg border border-glass-edge bg-bg-elev-3/50 hover:bg-bg-elev-3 cursor-pointer',
-                    symbolFilter === sym && 'border-brand bg-brand/10 text-brand'
+                    'px-2.5 py-1 text-xs font-semibold rounded-sm border border-glass-edge bg-zinc-800/50 hover:bg-zinc-800 cursor-pointer',
+                    symbolFilter === sym && 'border-zinc-700 bg-zinc-900 text-fg'
                   )}
                 >
                   {sym}
@@ -227,8 +227,8 @@ export function EntryList({ entries, onClosed, onDeleted }: EntryListProps) {
                   key={side}
                   onClick={() => setSideFilter(side)}
                   className={cn(
-                    'px-2.5 py-1 text-xs font-semibold rounded-lg border border-glass-edge bg-bg-elev-3/50 hover:bg-bg-elev-3 cursor-pointer',
-                    sideFilter === side && 'border-brand bg-brand/10 text-brand'
+                    'px-2.5 py-1 text-xs font-semibold rounded-sm border border-glass-edge bg-zinc-800/50 hover:bg-zinc-800 cursor-pointer',
+                    sideFilter === side && 'border-zinc-700 bg-zinc-900 text-fg'
                   )}
                 >
                   {side === 'ALL' ? 'ALL' : side === 'long' ? 'Buy ↑' : 'Sell ↓'}
@@ -245,8 +245,8 @@ export function EntryList({ entries, onClosed, onDeleted }: EntryListProps) {
                   key={tag}
                   onClick={() => setTagFilter(tag)}
                   className={cn(
-                    'px-2.5 py-1 text-xs font-semibold rounded-lg border border-glass-edge bg-bg-elev-3/50 hover:bg-bg-elev-3 cursor-pointer',
-                    tagFilter === tag && 'border-brand bg-brand/10 text-brand'
+                    'px-2.5 py-1 text-xs font-semibold rounded-sm border border-glass-edge bg-zinc-800/50 hover:bg-zinc-800 cursor-pointer',
+                    tagFilter === tag && 'border-zinc-700 bg-zinc-900 text-fg'
                   )}
                 >
                   {tag === 'ALL' ? 'ALL' : `#${tag}`}
@@ -259,8 +259,8 @@ export function EntryList({ entries, onClosed, onDeleted }: EntryListProps) {
 
       {/* Entries List */}
       {filteredEntries.length === 0 ? (
-        <div className="border border-divider bg-bg-elev-1 rounded-lg p-8 text-center flex flex-col items-center justify-center gap-2">
-          <div className="size-10 rounded-full bg-glass border border-glass-edge flex items-center justify-center text-fg-muted">
+        <div className="border border-zinc-800 bg-zinc-950 rounded-sm p-8 text-center flex flex-col items-center justify-center gap-2">
+          <div className="size-10 rounded-sm bg-glass border border-glass-edge flex items-center justify-center text-fg-muted">
             <Compass className="size-5" />
           </div>
           <p className="text-sm font-semibold text-fg">No entries found</p>
@@ -438,7 +438,7 @@ function EntryRow({
   }, [entry, livePrice]);
 
   const sideColor = entry.side === 'long' ? 'text-bull' : 'text-bear';
-  const sideBg = entry.side === 'long' ? 'bg-bull/10 border-bull/20' : 'bg-bear/10 border-bear/20';
+  const sideBg = entry.side === 'long' ? 'bg-emerald-500/10 border-bull/20' : 'bg-red-500/10 border-bear/20';
   
   const isWin = entry.outcome === 'win' || (liveStats && liveStats.rMultiple > 0);
   const isLoss = entry.outcome === 'loss' || (liveStats && liveStats.rMultiple < 0);
@@ -446,7 +446,7 @@ function EntryRow({
   const outcomeColor = isWin ? 'text-bull' : isLoss ? 'text-bear' : 'text-fg-muted';
 
   return (
-    <li className="border border-divider bg-bg-elev-1 rounded-lg flex flex-col gap-3.5 p-4 hover:border-glass-edge-hover hover:shadow-glow-brand/5 transition-all duration-200">
+    <li className="border border-zinc-800 bg-zinc-950 rounded-sm flex flex-col gap-3.5 p-4 hover:border-glass-edge-hover hover:shadow-none/5 transition-all duration-200">
       <div className="flex items-start gap-4">
         <div className="min-w-0 flex-1 flex flex-col gap-1.5">
           {/* Header Row */}
@@ -464,7 +464,7 @@ function EntryRow({
 
             {/* Sizing lot indicator */}
             {entry.size !== null && (
-              <span className="text-caption font-medium text-fg-subtle px-1.5 py-0.5 rounded-full bg-bg-elev-3 border border-glass-edge/40">
+              <span className="text-caption font-medium text-fg-subtle px-1.5 py-0.5 rounded-sm bg-zinc-800 border border-glass-edge/40">
                 {entry.size} Lots
               </span>
             )}
@@ -487,7 +487,7 @@ function EntryRow({
               {entry.tags.map((t) => (
                 <span
                   key={t}
-                  className="px-2 py-0.5 text-xs font-black uppercase tracking-wider rounded-md bg-brand/5 border border-brand/20 text-brand"
+                  className="px-2 py-0.5 text-xs font-black uppercase tracking-wider rounded-sm bg-zinc-950 border border-brand/20 text-fg"
                 >
                   #{t}
                 </span>
@@ -507,7 +507,7 @@ function EntryRow({
                 alt="Trade chart screenshot"
                 width={48}
                 height={48}
-                className="size-12 rounded-md object-cover border border-divider hover:opacity-80 transition-opacity"
+                className="size-12 rounded-sm object-cover border border-zinc-800 hover:opacity-80 transition-opacity"
                 unoptimized
               />
             </button>
@@ -515,7 +515,7 @@ function EntryRow({
 
           {/* Notes display */}
           {entry.notes && (
-            <p className="text-fg-muted text-xs leading-relaxed mt-1.5 border-l-2 border-glass-edge/70 pl-2.5 py-0.5">
+            <p className="text-fg-muted text-xs leading-[1.4] mt-1.5 border-l-2 border-glass-edge/70 pl-2.5 py-0.5">
               {entry.notes}
             </p>
           )}
@@ -543,14 +543,14 @@ function EntryRow({
                 </span>
               </div>
             ) : (
-              <div className="flex items-center gap-1.5 text-brand font-bold text-xs animate-pulse">
+              <div className="flex items-center gap-1.5 text-fg font-bold text-xs animate-pulse">
                 <Play className="size-3 fill-brand" />
                 <span>Live polling...</span>
               </div>
             )
           ) : (
             <div className="flex flex-col items-end">
-              <span className={cn('text-xs font-black uppercase tracking-wider px-2 py-0.5 rounded bg-bg-elev-3 border border-glass-edge/40', outcomeColor)}>
+              <span className={cn('text-xs font-black uppercase tracking-wider px-2 py-0.5 rounded bg-zinc-800 border border-glass-edge/40', outcomeColor)}>
                 {entry.outcome}
               </span>
               {entry.rMultiple !== null && (
@@ -581,7 +581,7 @@ function EntryRow({
                 aria-label="Delete entry"
                 onClick={() => void remove()}
                 disabled={busy}
-                className="text-bear/75 hover:text-bear hover:bg-bear/10 inline-flex size-9 items-center justify-center rounded-full transition-colors disabled:opacity-50 cursor-pointer"
+                className="text-bear/75 hover:text-red-500 hover:bg-red-500/10 inline-flex size-9 items-center justify-center rounded-sm transition-colors disabled:opacity-50 cursor-pointer"
               >
                 <Trash2 className="size-4" />
               </button>
@@ -594,12 +594,12 @@ function EntryRow({
       {entry.outcome === 'open' && entry.stop !== null && entry.target !== null && livePrice && sliderPosition !== null && (
         <div className="border-t border-glass-edge/30 pt-3 flex flex-col gap-1.5 animate-in fade-in duration-200">
           <div className="flex items-center justify-between text-xs font-bold uppercase tracking-wider text-fg-subtle">
-            <span className="text-bear">SL: {entry.stop}</span>
+            <span className="text-red-500">SL: {entry.stop}</span>
             <span className="text-fg-muted">Entry: {entry.entry}</span>
-            <span className="text-bull">Target: {entry.target}</span>
+            <span className="text-emerald-500">Target: {entry.target}</span>
           </div>
 
-          <div className="relative h-2 w-full rounded-full bg-bg-elev-3 border border-glass-edge/20 overflow-visible mt-1 flex items-center">
+          <div className="relative h-2 w-full rounded-sm bg-zinc-800 border border-glass-edge/20 overflow-visible mt-1 flex items-center">
             {/* Entry Line Indicator */}
             <div
               style={{
@@ -615,8 +615,8 @@ function EntryRow({
             <div
               style={{ left: `${sliderPosition}%` }}
               className={cn(
-                'absolute size-3 rounded-full -translate-x-1/2 z-20 shadow-md border border-fg transition-all duration-300',
-                isWin ? 'bg-bull shadow-glow-bull/30 animate-pulse' : isLoss ? 'bg-bear shadow-glow-bear/30' : 'bg-fg-muted'
+                'absolute size-3 rounded-sm -translate-x-1/2 z-20 shadow-md border border-fg transition-all duration-300',
+                isWin ? 'bg-emerald-500 shadow-glow-bull/30 animate-pulse' : isLoss ? 'bg-red-500 shadow-glow-bear/30' : 'bg-fg-muted'
               )}
               title={`Live Price: ${livePrice}`}
             />
@@ -635,17 +635,17 @@ function EntryRow({
                     left: `${entryPct}%`,
                     width: `${width}%`,
                   }}
-                  className="absolute h-full bg-bull/10 rounded-r-full"
+                  className="absolute h-full bg-emerald-500/10 rounded-r-full"
                 />
               );
             })()}
           </div>
           <div className="flex justify-between items-center text-xs text-fg-muted font-semibold mt-0.5">
-            <span className={sliderPosition < 0 ? 'text-bear font-bold' : ''}>
+            <span className={sliderPosition < 0 ? 'text-red-500 font-bold' : ''}>
               {sliderPosition < 0 ? '✦ Beyond stop' : 'Stop Loss boundary'}
             </span>
             <span className={cn('font-bold', outcomeColor)}>Live Price: {livePrice}</span>
-            <span className={sliderPosition > 100 ? 'text-bull font-bold' : ''}>
+            <span className={sliderPosition > 100 ? 'text-emerald-500 font-bold' : ''}>
               {sliderPosition > 100 ? '✦ Beyond target' : 'Target boundary'}
             </span>
           </div>
@@ -654,7 +654,7 @@ function EntryRow({
 
       {/* Manual close input stack */}
       {closing && (
-        <div className="border-divider flex flex-col gap-3 border-t pt-3">
+        <div className="border-zinc-800 flex flex-col gap-3 border-t pt-3">
           <div>
             <label
               className="text-fg-subtle text-caption font-bold uppercase tracking-wider"
@@ -670,7 +670,7 @@ function EntryRow({
               autoFocus
               className="mt-1.5 focus:border-brand/70"
             />
-            {error ? <p className="text-bear mt-2 text-xs font-semibold">{error}</p> : null}
+            {error ? <p className="text-red-500 mt-2 text-xs font-semibold">{error}</p> : null}
           </div>
           <div className="flex gap-2">
             <Button
