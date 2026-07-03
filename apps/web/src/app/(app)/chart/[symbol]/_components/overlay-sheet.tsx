@@ -49,8 +49,8 @@ export function OverlaySheet({ active, onToggle }: OverlaySheetProps) {
           type="button"
           aria-label={`Chart overlays${enabledCount > 0 ? ` (${enabledCount} active)` : ''}`}
           className={cn(
-            'border-divider bg-bg-elev-2 inline-flex h-11 min-w-[44px] items-center justify-center gap-1.5 rounded-full border px-3 text-body-sm font-medium transition-colors shadow-sm',
-            'focus-visible:ring-brand focus:outline-none focus-visible:ring-2',
+            'border-zinc-800 bg-zinc-900 inline-flex h-11 min-w-[44px] items-center justify-center gap-1.5 rounded-sm border px-3 text-body-sm font-medium transition-colors shadow-sm',
+            'focus-visible:ring-fg focus:outline-none focus-visible:ring-2',
             enabledCount > 0 ? 'text-fg' : 'text-fg-muted hover:text-fg',
           )}
         >
@@ -66,7 +66,7 @@ export function OverlaySheet({ active, onToggle }: OverlaySheetProps) {
           </div>
           <Tooltip label="Close">
             <DrawerClose
-              className="text-fg-muted hover:text-fg hover:bg-bg-elev-1 inline-flex h-11 w-11 items-center justify-center rounded-full transition-colors"
+              className="text-fg-muted hover:text-fg hover:bg-zinc-950 inline-flex h-11 w-11 items-center justify-center rounded-sm transition-colors"
               aria-label="Close overlays sheet"
             >
               <X className="size-4" />
@@ -83,8 +83,8 @@ export function OverlaySheet({ active, onToggle }: OverlaySheetProps) {
                   onClick={() => onToggle(k)}
                   aria-pressed={on}
                   className={cn(
-                    'flex min-h-[56px] w-full items-center justify-between gap-3 rounded-lg px-3 py-3 text-left transition-colors',
-                    on ? 'bg-bg-elev-3' : 'hover:bg-bg-elev-1',
+                    'flex min-h-[56px] w-full items-center justify-between gap-3 rounded-sm px-3 py-3 text-left transition-colors',
+                    on ? 'bg-zinc-800' : 'hover:bg-bg-elev-1',
                   )}
                 >
                   <div className="flex flex-col">
@@ -94,13 +94,13 @@ export function OverlaySheet({ active, onToggle }: OverlaySheetProps) {
                   <span
                     aria-hidden="true"
                     className={cn(
-                      'relative inline-flex h-6 w-10 shrink-0 items-center rounded-full transition-colors',
-                      on ? 'bg-brand' : 'bg-bg-elev-3',
+                      'relative inline-flex h-6 w-10 shrink-0 items-center rounded-sm transition-colors',
+                      on ? 'bg-fg' : 'bg-zinc-800',
                     )}
                   >
                     <span
                       className={cn(
-                        'bg-fg absolute h-5 w-5 rounded-full shadow-sm transition-all',
+                        'bg-fg absolute h-5 w-5 rounded-sm shadow-sm transition-all',
                         on ? 'left-[18px]' : 'left-[2px]',
                       )}
                     />

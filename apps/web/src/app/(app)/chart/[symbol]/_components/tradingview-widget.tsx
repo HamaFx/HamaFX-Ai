@@ -178,7 +178,7 @@ export function TradingViewWidget({ symbol, tf, theme = 'dark' }: TradingViewWid
         <div
           id={containerId}
           ref={containerRef}
-          className="border-border bg-bg-elev-1 rounded-lg border"
+          className="border-border bg-zinc-950 rounded-sm border"
           style={{ height: '70svh' }}
           aria-label={`${symbol} ${tf} chart (TradingView)`}
         />
@@ -192,14 +192,14 @@ function FallbackMessage({ symbol }: { symbol: Symbol }) {
   return (
     <div
       role="alert"
-      className="border-bear/30 bg-bg-elev-1 text-fg-muted flex flex-col gap-2 rounded-lg border p-4 text-sm"
+      className="border-red-500/30 bg-zinc-950 text-fg-muted flex flex-col gap-2 rounded-sm border p-4 text-sm"
     >
-      <p className="text-bear font-semibold">TradingView did not load.</p>
+      <p className="text-red-500 font-semibold">TradingView did not load.</p>
       <p>
         The Advanced Charting Widget could not reach <code>s3.tradingview.com</code>.
         Some networks block third-party scripts; the bundled chart still works.
       </p>
-      <Link href={`/chart/${symbol}/structure`} className="text-brand text-sm underline-offset-2 hover:underline">
+      <Link href={`/chart/${symbol}/structure`} className="text-fg text-sm underline-offset-2 hover:underline">
         ← back to structure chart
       </Link>
     </div>

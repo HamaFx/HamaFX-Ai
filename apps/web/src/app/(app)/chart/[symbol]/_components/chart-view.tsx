@@ -272,7 +272,7 @@ export function ChartView({ symbol, watchlist }: { symbol: Symbol; watchlist: st
         className="sticky z-20 px-4 pt-3 pb-2 transition-all"
         style={{ top: 'calc(var(--topbar-h) + env(safe-area-inset-top))' }}
       >
-        <header className="border border-divider bg-bg-elev-1 rounded-lg flex flex-col gap-3 p-3">
+        <header className="border border-zinc-800 bg-zinc-950 rounded-sm flex flex-col gap-3 p-3">
           <div className="flex flex-wrap items-center justify-between gap-3 px-1">
             <SymbolPicker active={symbol} watchlist={watchlist} />
             <PriceTag symbol={symbol} referencePrice={referenceClose} />
@@ -301,7 +301,7 @@ export function ChartView({ symbol, watchlist }: { symbol: Symbol; watchlist: st
                   <Tooltip label="Preferences">
                     <button
                       aria-label="Preferences"
-                      className="bg-bg-elev-1 border border-divider text-fg-muted hover:text-fg focus-visible:ring-brand inline-flex size-11 items-center justify-center rounded-full focus:outline-none focus-visible:ring-2 cursor-pointer"
+                      className="bg-zinc-950 border border-zinc-800 text-fg-muted hover:text-fg focus-visible:ring-fg inline-flex size-11 items-center justify-center rounded-sm focus:outline-none focus-visible:ring-2 cursor-pointer"
                     >
                       <SlidersHorizontal className="size-4" />
                     </button>
@@ -310,14 +310,14 @@ export function ChartView({ symbol, watchlist }: { symbol: Symbol; watchlist: st
               />
 
               {process.env.NEXT_PUBLIC_TRADINGVIEW_ENABLED === '1' ? (
-                <div className="flex bg-bg-elev-2 p-0.5 rounded-lg border border-divider">
+                <div className="flex bg-zinc-900 p-0.5 rounded-sm border border-zinc-800">
                   <Link
                     href={`/chart/${symbol}?tf=${tf}`}
-                    className="px-3 py-1.5 text-xs font-medium rounded-md text-fg-muted hover:text-fg transition-colors"
+                    className="px-3 py-1.5 text-xs font-medium rounded-sm text-fg-muted hover:text-fg transition-colors"
                   >
                     TradingView
                   </Link>
-                  <span className="px-3 py-1.5 text-xs font-semibold rounded-md bg-bg-elev-1 text-fg shadow-sm">
+                  <span className="px-3 py-1.5 text-xs font-semibold rounded-sm bg-zinc-950 text-fg shadow-sm">
                     Structure
                   </span>
                 </div>

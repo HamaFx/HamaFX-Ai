@@ -101,7 +101,7 @@ export function ProChartView({ symbol, watchlist }: { symbol: Symbol; watchlist:
         className="sticky z-20 px-4 pt-3 pb-2 transition-all"
         style={{ top: 'calc(var(--topbar-h) + env(safe-area-inset-top))' }}
       >
-        <header className="border border-divider bg-bg-elev-1 rounded-lg flex flex-col gap-3 p-3">
+        <header className="border border-zinc-800 bg-zinc-950 rounded-sm flex flex-col gap-3 p-3">
           <div className="flex flex-wrap items-center justify-between gap-3 px-1">
             <SymbolPicker active={symbol} watchlist={watchlist} />
             <PriceTag symbol={symbol} referencePrice={referenceClose} />
@@ -116,13 +116,13 @@ export function ProChartView({ symbol, watchlist }: { symbol: Symbol; watchlist:
               <PinToChat symbol={symbol} />
 
               {/* Toggle Tab */}
-              <div className="flex bg-bg-elev-2 p-0.5 rounded-lg border border-divider">
-                <span className="px-3 py-1.5 text-xs font-semibold rounded-md bg-bg-elev-1 text-fg shadow-sm">
+              <div className="flex bg-zinc-900 p-0.5 rounded-sm border border-zinc-800">
+                <span className="px-3 py-1.5 text-xs font-semibold rounded-sm bg-zinc-950 text-fg shadow-sm">
                   TradingView
                 </span>
                 <Link
                   href={`/chart/${symbol}/structure?tf=${tf}`}
-                  className="px-3 py-1.5 text-xs font-medium rounded-md text-fg-muted hover:text-fg transition-colors"
+                  className="px-3 py-1.5 text-xs font-medium rounded-sm text-fg-muted hover:text-fg transition-colors"
                 >
                   Structure
                 </Link>
