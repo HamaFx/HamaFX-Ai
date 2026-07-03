@@ -173,7 +173,7 @@ export function EnableWebPushButton(): React.JSX.Element {
         onClick={isSubscribed ? disable : enable}
         loading={pending}
         aria-busy={pending}
-        className="focus-visible:ring-brand focus-visible:ring-offset-bg min-h-[44px] min-w-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
+        className="focus-visible:ring-fg focus-visible:ring-offset-bg min-h-[44px] min-w-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
       >
         {pending
           ? isSubscribed
@@ -190,7 +190,7 @@ export function EnableWebPushButton(): React.JSX.Element {
         ) : status.kind === 'unsubscribed' ? (
           <span className="text-fg-subtle">Not subscribed on this device.</span>
         ) : status.kind === 'error' ? (
-          <span className="text-bear">Error: {status.message}</span>
+          <span className="text-red-500">Error: {status.message}</span>
         ) : null}
       </p>
     </div>

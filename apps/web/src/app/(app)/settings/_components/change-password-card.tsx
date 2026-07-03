@@ -48,14 +48,14 @@ export function ChangePasswordCard() {
   };
 
   return (
-    <div className="card-premium p-4">
+    <div className="surface-panel p-4">
       <div className="flex items-center gap-2">
         <Lock className="text-fg-muted size-4" />
         <h2 className="text-fg text-sm font-semibold">Change Password</h2>
       </div>
 
       {done ? (
-        <div className="flex items-center gap-2 text-sm text-bull">
+        <div className="flex items-center gap-2 text-sm text-emerald-500">
           <Check className="size-4" />
           Password changed successfully
         </div>

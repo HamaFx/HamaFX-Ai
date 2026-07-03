@@ -167,7 +167,7 @@ export function DataCard() {
   return (
     <section
       aria-labelledby="data-heading"
-      className="border border-divider bg-bg-elev-1 rounded-lg flex flex-col gap-1 p-4"
+      className="border border-zinc-800 bg-zinc-950 rounded-sm flex flex-col gap-1 p-4"
     >
       <header className="flex items-center gap-3 pb-2">
         <h2 id="data-heading" className="text-fg text-base font-semibold tracking-tight">
@@ -284,7 +284,7 @@ export function DataCard() {
         }
       />
 
-      <hr className="border-divider my-3" />
+      <hr className="border-zinc-800 my-3" />
 
       {/* Delete account */}
       <div className="flex flex-col gap-3">
@@ -345,5 +345,5 @@ export function DataCard() {
 }
 
 function RowDivider() {
-  return <div className="border-divider/60 -mx-4 my-1 border-t" />;
+  return <div className="border-zinc-800 -mx-4 my-1 border-t" />;
 }

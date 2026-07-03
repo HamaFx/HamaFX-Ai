@@ -46,7 +46,7 @@ export function AppearanceCard({ initialTheme, initialLocale }: { initialTheme?:
   }, []);
 
   return (
-    <section className="border border-divider bg-bg-elev-1 rounded-lg flex flex-col gap-1 p-4" aria-labelledby="appearance-heading">
+    <section className="border border-zinc-800 bg-zinc-950 rounded-sm flex flex-col gap-1 p-4" aria-labelledby="appearance-heading">
       <div className="flex items-center justify-between">
         <h2 id="appearance-heading" className="text-fg text-base font-semibold tracking-tight">Appearance</h2>
         <p className="text-fg-subtle text-caption uppercase tracking-wider">Theme</p>
@@ -77,7 +77,7 @@ export function AppearanceCard({ initialTheme, initialLocale }: { initialTheme?:
             value={locale}
             onChange={handleLocaleChange}
             aria-label="Locale"
-            className="border border-divider bg-bg-elev-2 text-fg rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand"
+            className="border border-zinc-800 bg-zinc-900 text-fg rounded-sm px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-fg"
           >
             {LOCALES.map((l) => (
               <option key={l.value} value={l.value}>{l.label}</option>

@@ -100,7 +100,7 @@ export function NoiseControlCard({ initialConfig }: { initialConfig?: NoiseConfi
 
   return (
     <section
-      className="border border-divider bg-bg-elev-1 rounded-lg flex flex-col gap-4 p-4"
+      className="border border-zinc-800 bg-zinc-950 rounded-sm flex flex-col gap-4 p-4"
       aria-labelledby="noise-control-heading"
     >
       <div className="flex items-center gap-3 pb-2">
@@ -119,9 +119,9 @@ export function NoiseControlCard({ initialConfig }: { initialConfig?: NoiseConfi
 
       {/* Alert Preview */}
       {preview && (
-        <div className="rounded-lg border border-divider bg-bg-elev-2 p-4 flex flex-col gap-3">
+        <div className="rounded-sm border border-zinc-800 bg-zinc-900 p-4 flex flex-col gap-3">
           <div className="flex items-center gap-2">
-            <BarChart3 className="size-4 text-brand" />
+            <BarChart3 className="size-4 text-fg" />
             <span className="text-sm font-semibold text-fg">Alert preview</span>
             {previewLoading && <span className="text-xs text-fg-muted">Refreshing…</span>}
           </div>
@@ -131,17 +131,17 @@ export function NoiseControlCard({ initialConfig }: { initialConfig?: NoiseConfi
               <p className="text-xs text-fg-subtle">Total</p>
             </div>
             <div>
-              <p className="text-2xl font-bold tabular-nums text-bull">{preview.breakdown.allowed}</p>
+              <p className="text-2xl font-bold tabular-nums text-emerald-500">{preview.breakdown.allowed}</p>
               <p className="text-xs text-fg-subtle">Allowed</p>
             </div>
             <div>
-              <p className="text-2xl font-bold tabular-nums text-bear">{preview.breakdown.blocked}</p>
+              <p className="text-2xl font-bold tabular-nums text-red-500">{preview.breakdown.blocked}</p>
               <p className="text-xs text-fg-subtle">Blocked</p>
             </div>
           </div>
-          <div className="flex h-3 w-full overflow-hidden rounded-full bg-bg-elev-3">
+          <div className="flex h-3 w-full overflow-hidden rounded-sm bg-zinc-800">
             <div
-              className="bg-brand transition-all duration-300"
+              className="bg-fg transition-all duration-300"
               style={{ width: `${preview.allowedPct}%` }}
             />
             <div
@@ -169,9 +169,9 @@ export function NoiseControlCard({ initialConfig }: { initialConfig?: NoiseConfi
       )}
 
       {/* Smart Alert Digest */}
-      <div className="rounded-lg border border-brand/20 bg-brand/5 p-3 flex flex-col gap-3">
+      <div className="rounded-sm border border-brand/20 bg-zinc-950 p-3 flex flex-col gap-3">
         <div className="flex items-start gap-3">
-          <div className="rounded-full bg-brand/10 p-2 text-brand">
+          <div className="rounded-sm bg-zinc-900 p-2 text-fg">
             <Mail className="size-4" />
           </div>
           <div className="flex-1">
@@ -264,7 +264,7 @@ export function NoiseControlCard({ initialConfig }: { initialConfig?: NoiseConfi
               className={cn(
                 'rounded px-3 py-1 text-xs font-medium transition-colors',
                 config.minSeverity === opt.value
-                  ? 'bg-brand text-white'
+                  ? 'bg-fg text-white'
                   : 'bg-surface-elevated text-fg-muted hover:text-fg',
               )}
             >
@@ -289,7 +289,7 @@ export function NoiseControlCard({ initialConfig }: { initialConfig?: NoiseConfi
                 className={cn(
                   'rounded px-3 py-1 text-xs font-medium transition-colors',
                   config.minSeverityDuringQuietHours === opt.value
-                    ? 'bg-brand text-white'
+                    ? 'bg-fg text-white'
                     : 'bg-surface-elevated text-fg-muted hover:text-fg',
                 )}
               >
