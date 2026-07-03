@@ -180,8 +180,8 @@ export function PerformanceChart({
 
   if (chartData.length < 2) {
     return (
-      <div className="card-premium flex h-[220px] flex-col items-center justify-center gap-2 p-6 text-center">
-        <div className="rounded-full bg-brand/10 p-3 text-brand">
+      <div className="surface-panel flex h-[220px] flex-col items-center justify-center gap-2 p-6 text-center">
+        <div className="rounded-sm bg-zinc-900 p-3 text-fg">
           <TrendingUp className="size-6 animate-pulse" />
         </div>
         <p className="text-sm font-semibold text-fg">Performance Curve Loading</p>
@@ -193,10 +193,10 @@ export function PerformanceChart({
   }
 
   return (
-    <div className="card-premium relative overflow-hidden p-4 flex flex-col gap-3">
+    <div className="surface-panel relative overflow-hidden p-4 flex flex-col gap-3">
       <div className="flex items-center justify-between px-1">
         <div className="flex items-center gap-2">
-          <div className="rounded-lg bg-brand/10 p-2 text-brand">
+          <div className="rounded-sm bg-zinc-900 p-2 text-fg">
             <Award className="size-4" />
           </div>
           <div>
@@ -212,7 +212,7 @@ export function PerformanceChart({
         </div>
       </div>
 
-      <div className="relative w-full overflow-hidden rounded-lg mt-1 bg-black/10">
+      <div className="relative w-full overflow-hidden rounded-sm mt-1 bg-black/10">
         <div ref={containerRef} className="w-full" />
       </div>
     </div>

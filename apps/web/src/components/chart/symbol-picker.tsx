@@ -60,7 +60,7 @@ export function SymbolPicker({ active, watchlist }: { active: Symbol; watchlist:
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search symbols…"
-            className="bg-bg-elev-1/60 text-fg placeholder:text-fg-subtle focus:border-brand/60 border-divider h-11 w-full rounded-xl border pl-10 pr-4 text-sm focus:outline-none"
+            className="bg-zinc-950/60 text-fg placeholder:text-fg-subtle focus:border-zinc-700 border-zinc-800 h-11 w-full rounded-sm border pl-10 pr-4 text-sm focus:outline-none"
           />
         </div>
       ) : null}
@@ -84,7 +84,7 @@ export function SymbolPicker({ active, watchlist }: { active: Symbol; watchlist:
               key={s}
               href={`/chart/${s}?tf=${tf}`}
               className={cn(
-                'inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-semibold tabular-nums transition-colors',
+                'inline-flex items-center gap-1.5 rounded-sm px-3 py-1.5 text-sm font-semibold tabular-nums transition-colors',
                 'text-fg-muted hover:text-fg hover:bg-bg-elev-2',
               )}
             >

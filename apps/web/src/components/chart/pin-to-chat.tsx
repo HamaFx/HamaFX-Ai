@@ -80,7 +80,7 @@ export function PinToChat({ symbol, prompt }: PinToChatProps) {
         onClick={() => void onPin()}
         disabled={pending}
         aria-label={`Pin ${symbol} to a new chat`}
-        className="bg-bg-elev-1 border border-divider text-fg-muted hover:text-brand hover:border-brand/40 focus-visible:ring-brand inline-flex size-11 items-center justify-center rounded-full focus:outline-none focus-visible:ring-2 disabled:cursor-not-allowed disabled:opacity-60"
+        className="bg-zinc-950 border border-zinc-800 text-fg-muted hover:text-fg hover:border-zinc-700 focus-visible:ring-fg inline-flex size-11 items-center justify-center rounded-sm focus:outline-none focus-visible:ring-2 disabled:cursor-not-allowed disabled:opacity-60"
       >
         <MessageCircle className="size-4" strokeWidth={1.75} />
       </button>
