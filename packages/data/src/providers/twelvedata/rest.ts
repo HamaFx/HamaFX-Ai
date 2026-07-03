@@ -3,7 +3,7 @@ import { z } from 'zod';
 
 import { noteBackoff, tryReserve, type ThrottleConfig } from '../../cache/throttle';
 import { ProviderError } from '../../errors';
-import { toTwelveDataInterval } from './map';
+import { toTwelveDataInterval, toTwelveDataSymbol } from './map';
 import type { NormalizedTwelveDataCandle } from './types';
 import { TwelveDataBarSchema, TwelveDataTimeSeriesMetaSchema } from './types';
 
@@ -112,7 +112,11 @@ export async function fetchCandles(
   const interval = toTwelveDataInterval(tf);
   const outputsize = Math.min(count, 5000);
 
-  const json = await rawFetch('/time_series', { symbol, interval, outputsize: String(outputsize) }, opts);
+  const json = await rawFetch(
+    '/time_series',
+    { symbol: toTwelveDataSymbol(symbol), interval, outputsize: String(outputsize) },
+    opts,
+  );
   const parsed = TwelveDataTimeSeriesResponseSchema.safeParse(json);
   if (!parsed.success) {
     throw new ProviderError('PROVIDER_PARSE_ERROR', PROVIDER, 'unexpected time_series response shape', {
@@ -152,7 +156,7 @@ export async function fetchQuote(
   symbol: Symbol,
   opts: CallOptions,
 ): Promise<{ price: number }> {
-  const json = await rawFetch('/quote', { symbol }, opts);
+  const json = await rawFetch('/quote', { symbol: toTwelveDataSymbol(symbol) }, opts);
   const parsed = TwelveDataQuoteResponseSchema.safeParse(json);
   if (!parsed.success) {
     throw new ProviderError('PROVIDER_PARSE_ERROR', PROVIDER, 'unexpected quote response shape', {

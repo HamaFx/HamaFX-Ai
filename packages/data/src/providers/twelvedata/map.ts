@@ -14,3 +14,12 @@ const TO_TWELVEDATA_INTERVAL: Record<Timeframe, string> = {
 export function toTwelveDataInterval(tf: Timeframe): string {
   return TO_TWELVEDATA_INTERVAL[tf];
 }
+
+const FOREX_SYMBOL_RE = /^[A-Z]{6}$/;
+
+export function toTwelveDataSymbol(symbol: string): string {
+  if (FOREX_SYMBOL_RE.test(symbol)) {
+    return `${symbol.slice(0, 3)}/${symbol.slice(3)}`;
+  }
+  return symbol;
+}
