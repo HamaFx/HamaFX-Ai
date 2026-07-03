@@ -42,14 +42,14 @@ export function GetJournalStatsPart({
 
   if (stats.count === 0) {
     return (
-      <div className="border-border bg-bg-elev-1 rounded-lg border p-3">
+      <div className="border-border bg-zinc-950 rounded-sm border p-3">
         <p className="text-fg-muted text-sm">No journal entries match the filter.</p>
       </div>
     );
   }
 
   return (
-    <div className="border-border bg-bg-elev-1 flex flex-col gap-3 rounded-lg border p-3">
+    <div className="border-border bg-zinc-950 flex flex-col gap-3 rounded-sm border p-3">
       <header className="text-fg text-sm font-semibold">Journal stats</header>
 
       <dl className="grid grid-cols-3 gap-x-3 gap-y-1 text-body-sm tabular-nums">
@@ -58,10 +58,10 @@ export function GetJournalStatsPart({
         <dt className="text-fg-subtle">avg R</dt>
 
         <dd className="text-fg font-semibold">{stats.count}</dd>
-        <dd className={stats.winRate >= 0.5 ? 'text-bull font-semibold' : 'text-bear font-semibold'}>
+        <dd className={stats.winRate >= 0.5 ? 'text-emerald-500 font-semibold' : 'text-red-500 font-semibold'}>
           {Math.round(stats.winRate * 100)}%
         </dd>
-        <dd className={stats.avgR >= 0 ? 'text-bull font-semibold' : 'text-bear font-semibold'}>
+        <dd className={stats.avgR >= 0 ? 'text-emerald-500 font-semibold' : 'text-red-500 font-semibold'}>
           {stats.avgR.toFixed(2)}R
         </dd>
 
@@ -69,8 +69,8 @@ export function GetJournalStatsPart({
         <dt className="text-fg-subtle">losses</dt>
         <dt className="text-fg-subtle">total R</dt>
 
-        <dd className="text-bull">{stats.wins}</dd>
-        <dd className="text-bear">{stats.losses}</dd>
+        <dd className="text-emerald-500">{stats.wins}</dd>
+        <dd className="text-red-500">{stats.losses}</dd>
         <dd className={stats.totalR >= 0 ? 'text-bull' : 'text-bear'}>
           {stats.totalR.toFixed(2)}R
         </dd>
@@ -121,12 +121,12 @@ function BreakdownList({
 function SkeletonCard() {
   return (
     <div
-      className="border-border bg-bg-elev-1 rounded-lg border p-3"
+      className="border-border bg-zinc-950 rounded-sm border p-3"
       aria-busy="true"
       aria-label="Computing journal stats"
     >
-      <div className="bg-bg-elev-2 h-4 w-1/3 animate-pulse rounded" />
-      <div className="bg-bg-elev-2 mt-3 h-16 animate-pulse rounded" />
+      <div className="bg-zinc-900 h-4 w-1/3 animate-pulse rounded" />
+      <div className="bg-zinc-900 mt-3 h-16 animate-pulse rounded" />
     </div>
   );
 }
@@ -135,7 +135,7 @@ function ErrorCard({ message }: { message?: string }) {
   return (
     <div
       role="alert"
-      className="border-bear/30 bg-bg-elev-1 text-bear rounded-lg border p-3 text-sm"
+      className="border-red-500/30 bg-zinc-950 text-red-500 rounded-sm border p-3 text-sm"
     >
       Journal stats failed{message ? ` · ${message}` : ''}
     </div>

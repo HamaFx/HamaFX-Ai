@@ -38,7 +38,7 @@ export function GetIntermarketResonancePart({
 
   if (output.observations.length === 0) {
     return (
-      <div className="border-border bg-bg-elev-1 rounded-lg border p-3">
+      <div className="border-border bg-zinc-950 rounded-sm border p-3">
         <p className="text-fg-muted text-sm">{output.narrative}</p>
       </div>
     );
@@ -50,18 +50,18 @@ export function GetIntermarketResonancePart({
 
   // Determine styling based on the active regime
   let regimeColor = 'text-fg';
-  let regimeBg = 'bg-bg-elev-3';
+  let regimeBg = 'bg-zinc-800';
   let regimeLabel = 'CONVERGENT';
   let Icon = HelpCircle;
 
   if (output.regime === 'divergent_hedging') {
     regimeColor = 'text-bull';
-    regimeBg = 'bg-bull/10';
+    regimeBg = 'bg-emerald-500/10';
     regimeLabel = 'HEDGING PREMIUM (BULLISH OVERRIDE)';
     Icon = TrendingUp;
   } else if (output.regime === 'divergent_discount') {
     regimeColor = 'text-bear';
-    regimeBg = 'bg-bear/10';
+    regimeBg = 'bg-red-500/10';
     regimeLabel = 'YIELD DISCOUNT (OVERSOLD OVERRIDE)';
     Icon = TrendingDown;
   }
@@ -71,8 +71,8 @@ export function GetIntermarketResonancePart({
   const needlePercent = ((clampedDiv + 3) / 6) * 100;
 
   return (
-    <div className="border-border bg-bg-elev-1 flex flex-col gap-4 rounded-xl border p-4 shadow-md backdrop-blur">
-      <header className="flex items-center justify-between border-b border-divider/40 pb-2">
+    <div className="border-border bg-zinc-950 flex flex-col gap-4 rounded-sm border p-4 shadow-md ">
+      <header className="flex items-center justify-between border-b border-zinc-900 pb-2">
         <div className="flex flex-col">
           <span className="text-fg-subtle text-caption uppercase font-bold tracking-wider">
             Intermarket resonance radar
@@ -81,7 +81,7 @@ export function GetIntermarketResonancePart({
             {output.symbol} Opportunity Cost Divergence
           </h3>
         </div>
-        <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-bold ${regimeBg} ${regimeColor}`}>
+        <span className={`inline-flex items-center gap-1 rounded-sm px-2.5 py-0.5 text-xs font-bold ${regimeBg} ${regimeColor}`}>
           <Icon className="size-3" />
           {regimeLabel}
         </span>
@@ -89,15 +89,15 @@ export function GetIntermarketResonancePart({
 
       {/* Main Stats Block */}
       <div className="grid grid-cols-3 gap-3 text-center">
-        <div className="bg-bg-elev-2/50 rounded-lg p-2 border border-divider/25">
+        <div className="bg-bg-elev-2/50 rounded-sm p-2 border border-divider/25">
           <span className="text-fg-subtle text-xs block uppercase font-medium">10Y Real Yield</span>
           <span className="text-fg text-base font-extrabold tabular-nums mt-0.5 block">{roundedYield}%</span>
         </div>
-        <div className="bg-bg-elev-2/50 rounded-lg p-2 border border-divider/25">
+        <div className="bg-bg-elev-2/50 rounded-sm p-2 border border-divider/25">
           <span className="text-fg-subtle text-xs block uppercase font-medium">10Y Breakeven</span>
           <span className="text-fg text-base font-extrabold tabular-nums mt-0.5 block">{roundedInflation}%</span>
         </div>
-        <div className="bg-bg-elev-2/50 rounded-lg p-2 border border-divider/25">
+        <div className="bg-bg-elev-2/50 rounded-sm p-2 border border-divider/25">
           <span className="text-fg-subtle text-xs block uppercase font-medium">z-score divergence</span>
           <span className={`text-base font-extrabold tabular-nums mt-0.5 block ${regimeColor}`}>
             {roundedDivergence >= 0 ? `+${roundedDivergence}` : roundedDivergence} SD
@@ -112,12 +112,12 @@ export function GetIntermarketResonancePart({
           <span className="font-bold">0.0 (Fair Value)</span>
           <span>+3.0 SD (Premium)</span>
         </div>
-        <div className="relative w-full h-2.5 bg-bg-elev-3 rounded-full overflow-hidden border border-divider/30">
+        <div className="relative w-full h-2.5 bg-zinc-800 rounded-sm overflow-hidden border border-zinc-900">
           {/* Neutral range center bar */}
           <div className="absolute left-[25%] right-[25%] top-0 bottom-0 bg-fg-subtle/10" />
           {/* Needle indicator */}
           <div 
-            className={`absolute top-0 bottom-0 w-1.5 rounded-full shadow-lg transition-all duration-500 ${
+            className={`absolute top-0 bottom-0 w-1.5 rounded-sm shadow-lg transition-all duration-500 ${
               output.regime === 'divergent_hedging' ? 'bg-bull' : output.regime === 'divergent_discount' ? 'bg-bear' : 'bg-fg'
             }`}
             style={{ left: `calc(${needlePercent}% - 3px)` }}
@@ -125,14 +125,14 @@ export function GetIntermarketResonancePart({
         </div>
       </div>
 
-      <p className="text-fg-muted text-xs leading-relaxed leading-normal mt-0.5">
+      <p className="text-fg-muted text-xs leading-[1.4] leading-normal mt-0.5">
         {output.narrative}
       </p>
 
       {/* Historical observations list */}
       <div className="flex flex-col gap-2 mt-1">
         <h4 className="text-fg text-body-sm font-bold uppercase tracking-wider">Historical Resonance Log</h4>
-        <ul className="flex flex-col gap-1 border-t border-divider/20 pt-2">
+        <ul className="flex flex-col gap-1 border-t border-zinc-900/50 pt-2">
           {output.observations.slice(-5).reverse().map((obs) => (
             <li key={obs.date} className="flex items-center justify-between text-body-sm py-0.5">
               <span className="text-fg-subtle tabular-nums">{obs.date}</span>
@@ -154,27 +154,27 @@ export function GetIntermarketResonancePart({
 
 function SkeletonCard() {
   return (
-    <div className="border-border bg-bg-elev-1 rounded-xl border p-4" aria-busy="true" aria-label="Loading Intermarket Resonance">
+    <div className="border-border bg-zinc-950 rounded-sm border p-4" aria-busy="true" aria-label="Loading Intermarket Resonance">
       <div className="flex items-center justify-between">
         <div className="flex flex-col gap-1 w-2/3">
-          <div className="bg-bg-elev-2 h-3 w-1/3 animate-pulse rounded" />
-          <div className="bg-bg-elev-2 h-4 w-2/3 animate-pulse rounded mt-1" />
+          <div className="bg-zinc-900 h-3 w-1/3 animate-pulse rounded" />
+          <div className="bg-zinc-900 h-4 w-2/3 animate-pulse rounded mt-1" />
         </div>
-        <div className="bg-bg-elev-2 h-5 w-24 animate-pulse rounded-full" />
+        <div className="bg-zinc-900 h-5 w-24 animate-pulse rounded-sm" />
       </div>
       <div className="grid grid-cols-3 gap-3 mt-4">
         {[0, 1, 2].map((i) => (
-          <div key={i} className="bg-bg-elev-2 h-12 animate-pulse rounded-lg" />
+          <div key={i} className="bg-zinc-900 h-12 animate-pulse rounded-sm" />
         ))}
       </div>
-      <div className="bg-bg-elev-2 h-8 w-full animate-pulse rounded-lg mt-4" />
+      <div className="bg-zinc-900 h-8 w-full animate-pulse rounded-sm mt-4" />
     </div>
   );
 }
 
 function ErrorCard({ message }: { message?: string }) {
   return (
-    <div role="alert" className="border-bear/30 bg-bg-elev-1 text-bear rounded-xl border p-4 text-sm font-semibold">
+    <div role="alert" className="border-red-500/30 bg-zinc-950 text-red-500 rounded-sm border p-4 text-sm font-semibold">
       Intermarket resonance radar failed {message ? ` · ${message}` : ''}
     </div>
   );

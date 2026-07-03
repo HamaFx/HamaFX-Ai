@@ -62,7 +62,7 @@ export function GetIndicatorsPart({ output, state, errorMessage }: GetIndicators
   const decimals = priceDecimalsForSymbol(output.symbol);
 
   return (
-    <div className="border-border bg-bg-elev-1 rounded-lg border p-3">
+    <div className="border-border bg-zinc-950 rounded-sm border p-3">
       <div className="text-fg-muted mb-2 text-xs">
         {output.symbol} · {output.tf} · {output.results.length}{' '}
         {output.results.length === 1 ? 'indicator' : 'indicators'}
@@ -289,16 +289,16 @@ function priceDecimalsForSymbol(s: string): number {
 function IndicatorsCardSkeleton() {
   return (
     <div
-      className="border-border bg-bg-elev-1 rounded-lg border p-3"
+      className="border-border bg-zinc-950 rounded-sm border p-3"
       aria-busy="true"
       aria-label="Loading indicators"
     >
-      <div className="bg-bg-elev-2 mb-2 h-3 w-40 animate-pulse rounded" />
+      <div className="bg-zinc-900 mb-2 h-3 w-40 animate-pulse rounded" />
       <ul className="space-y-1.5">
         {[0, 1, 2].map((i) => (
           <li key={i} className="flex min-h-[44px] items-center justify-between gap-3">
-            <span className="bg-bg-elev-2 h-4 w-20 animate-pulse rounded" />
-            <span className="bg-bg-elev-2 h-4 w-28 animate-pulse rounded" />
+            <span className="bg-zinc-900 h-4 w-20 animate-pulse rounded" />
+            <span className="bg-zinc-900 h-4 w-28 animate-pulse rounded" />
           </li>
         ))}
       </ul>
@@ -310,7 +310,7 @@ function IndicatorsCardError({ message }: { message?: string }) {
   return (
     <div
       role="alert"
-      className="border-bear/30 bg-bg-elev-1 text-bear rounded-lg border p-3 text-sm"
+      className="border-red-500/30 bg-zinc-950 text-red-500 rounded-sm border p-3 text-sm"
     >
       Indicators unavailable{message ? ` · ${message}` : ''}
     </div>
