@@ -164,7 +164,7 @@ export default async function UsagePage() {
           action={
             <Link
               href="/chat"
-              className="bg-brand text-brand-fg inline-flex h-9 items-center rounded-md px-3 text-sm font-medium hover:opacity-90"
+              className="bg-fg text-black inline-flex h-9 items-center rounded-sm px-3 text-sm font-medium hover:opacity-90"
             >
               Start chatting
             </Link>
@@ -209,7 +209,7 @@ function BudgetCard({
   return (
     <section
       aria-labelledby="usage-budget-heading"
-      className="border border-divider bg-bg-elev-1 rounded-lg flex flex-col gap-3 p-4"
+      className="border border-zinc-800 bg-zinc-950 rounded-sm flex flex-col gap-3 p-4"
     >
       <header className="flex items-baseline justify-between gap-3">
         <h2 id="usage-budget-heading" className="text-fg-muted text-sm font-medium">
@@ -225,11 +225,11 @@ function BudgetCard({
         aria-valuemin={0}
         aria-valuemax={100}
         aria-label="Daily budget consumed"
-        className="bg-bg-elev-2 h-2 w-full overflow-hidden rounded-full"
+        className="bg-zinc-900 h-2 w-full overflow-hidden rounded-sm"
       >
         <div className={cn('h-full transition-all', toneClass)} style={{ width: `${pct}%` }} />
       </div>
-      <dl className="grid grid-cols-3 gap-3 pt-1 text-xs tabular-nums border-b border-divider/40 pb-3">
+      <dl className="grid grid-cols-3 gap-3 pt-1 text-xs tabular-nums border-b border-zinc-900 pb-3">
         <Stat label="last 7d" value={`$${stats.sevenDayUsd.toFixed(4)}`} />
         <Stat label="last 30d" value={`$${stats.thirtyDayUsd.toFixed(4)}`} />
         <Stat label="turns" value={stats.thirtyDayTurns} />
@@ -244,12 +244,12 @@ function BudgetCard({
         </div>
         <div className="flex justify-between items-baseline text-xs">
           <span className="text-fg-muted">Estimated Month Projection (based on 7d)</span>
-          <span className={cn("font-semibold font-mono tabular-nums", isProjectedExceeded ? "text-warn" : "text-fg")}>
+          <span className={cn("font-semibold font-mono tabular-nums", isProjectedExceeded ? "text-amber-500" : "text-fg")}>
             ${projection.toFixed(2)}
           </span>
         </div>
         {isProjectedExceeded && (
-          <div className="bg-warn/5 border border-warn/25 rounded-md p-2.5 text-caption text-warn mt-1">
+          <div className="bg-warn/5 border border-warn/25 rounded-sm p-2.5 text-caption text-amber-500 mt-1">
             ⚠️ Based on the last 7 days of usage, you are projected to exceed your monthly budget limit of ${monthlyLimit?.toFixed(2)}. Consider reviewing your active tools or adjusting your budget.
           </div>
         )}
@@ -282,7 +282,7 @@ function DailyChart({ daily7 }: { daily7: DayBucket[] }) {
   return (
     <section
       aria-labelledby="usage-daily-heading"
-      className="border border-divider bg-bg-elev-1 rounded-lg flex flex-col gap-3 p-4"
+      className="border border-zinc-800 bg-zinc-950 rounded-sm flex flex-col gap-3 p-4"
     >
       <h2 id="usage-daily-heading" className="text-fg-muted text-sm font-medium">
         Last 7 days
@@ -302,7 +302,7 @@ function DailyChart({ daily7 }: { daily7: DayBucket[] }) {
                 aria-valuemin={0}
                 aria-valuemax={100}
                 aria-label={`${d.turns} turns, $${d.costUsd.toFixed(4)} spent`}
-                className="bg-brand block h-1.5 rounded-full"
+                className="bg-fg block h-1.5 rounded-sm"
                 style={{ width: `${pct}%` }}
               />
               <span className="text-fg-muted w-20 text-right tabular-nums">
@@ -330,7 +330,7 @@ function ModelBreakdownCard({ stats }: { stats: UsageStats }) {
     return (
       <section
         aria-labelledby="usage-models-heading"
-        className="border border-divider bg-bg-elev-1 rounded-lg flex flex-col gap-2 p-4"
+        className="border border-zinc-800 bg-zinc-950 rounded-sm flex flex-col gap-2 p-4"
       >
         <h2 id="usage-models-heading" className="text-fg-muted text-sm font-medium">
           By model (30d)
@@ -342,7 +342,7 @@ function ModelBreakdownCard({ stats }: { stats: UsageStats }) {
   return (
     <section
       aria-labelledby="usage-models-heading"
-      className="border border-divider bg-bg-elev-1 rounded-lg flex flex-col gap-3 p-4"
+      className="border border-zinc-800 bg-zinc-950 rounded-sm flex flex-col gap-3 p-4"
     >
       <h2 id="usage-models-heading" className="text-fg-muted text-sm font-medium">
         By model (30d)
@@ -375,7 +375,7 @@ function RecentTurnsCard({ rows }: { rows: Awaited<ReturnType<typeof listTelemet
     return (
       <section
         aria-labelledby="usage-recent-heading"
-        className="border border-divider bg-bg-elev-1 rounded-lg flex flex-col gap-2 p-4"
+        className="border border-zinc-800 bg-zinc-950 rounded-sm flex flex-col gap-2 p-4"
       >
         <h2 id="usage-recent-heading" className="text-fg-muted text-sm font-medium">
           Recent turns
@@ -390,7 +390,7 @@ function RecentTurnsCard({ rows }: { rows: Awaited<ReturnType<typeof listTelemet
   return (
     <section
       aria-labelledby="usage-recent-heading"
-      className="border border-divider bg-bg-elev-1 rounded-lg flex flex-col gap-3 p-4"
+      className="border border-zinc-800 bg-zinc-950 rounded-sm flex flex-col gap-3 p-4"
     >
       <h2 id="usage-recent-heading" className="text-fg-muted text-sm font-medium">
         Recent turns
@@ -466,7 +466,7 @@ function AgentUsageCard({ rows }: {
   return (
     <section
       aria-labelledby="agent-usage-heading"
-      className="border border-divider bg-bg-elev-1 rounded-lg flex flex-col gap-3 p-4"
+      className="border border-zinc-800 bg-zinc-950 rounded-sm flex flex-col gap-3 p-4"
     >
       <h2 id="agent-usage-heading" className="text-fg-muted text-sm font-medium">
         Multi-Agent Breakdown (MTD)
@@ -508,7 +508,7 @@ function AgentUsageCard({ rows }: {
         </ul>
       </div>
 
-      <div className="border-t border-divider pt-2">
+      <div className="border-t border-zinc-800 pt-2">
         <div className="flex items-baseline justify-between text-xs tabular-nums">
           <span className="text-fg-muted font-medium">Total Specialist Cost</span>
           <span className="text-fg">${totalCost.toFixed(4)}</span>

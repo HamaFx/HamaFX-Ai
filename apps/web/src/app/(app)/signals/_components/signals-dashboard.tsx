@@ -60,12 +60,12 @@ function SignalCard({ signal }: { signal: DecisionSignal }) {
   const biasToken = signal.bias === 'bullish' ? 'text-bull' : signal.bias === 'bearish' ? 'text-bear' : 'text-fg-muted';
 
   const statusStyles: Record<string, string> = {
-    active: 'bg-info/10 text-info',
-    pending: 'bg-warn/10 text-warn',
-    hit: 'bg-bull/10 text-bull',
-    miss: 'bg-bear/10 text-bear',
-    expired: 'bg-bg-elev-2 text-fg-muted',
-    invalidated: 'bg-bear/10 text-bear',
+    active: 'bg-blue-500/10 text-info',
+    pending: 'bg-amber-500/10 text-warn',
+    hit: 'bg-emerald-500/10 text-bull',
+    miss: 'bg-red-500/10 text-bear',
+    expired: 'bg-zinc-900 text-fg-muted',
+    invalidated: 'bg-red-500/10 text-bear',
   };
 
   const statusLabel = signal.status.charAt(0).toUpperCase() + signal.status.slice(1);
@@ -85,7 +85,7 @@ function SignalCard({ signal }: { signal: DecisionSignal }) {
   const reasoning = metadata?.reasoning as string | undefined;
 
   return (
-    <div className="border border-divider bg-bg-elev-1 rounded-lg p-3 flex flex-col gap-2">
+    <div className="border border-zinc-800 bg-zinc-950 rounded-sm p-3 flex flex-col gap-2">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <span className="text-fg font-semibold text-sm">{signal.symbol}</span>
@@ -140,7 +140,7 @@ function SignalCard({ signal }: { signal: DecisionSignal }) {
       </div>
 
       {expanded && reasoning && (
-        <div className="border-t border-divider pt-2 text-xs text-fg-muted leading-relaxed">
+        <div className="border-t border-zinc-800 pt-2 text-xs text-fg-muted leading-[1.4]">
           {reasoning}
         </div>
       )}
@@ -160,7 +160,7 @@ function StatCard({
   valueClass?: string;
 }) {
   return (
-    <div className="rounded-lg border border-divider bg-bg-elev-1 p-4">
+    <div className="rounded-sm border border-zinc-800 bg-zinc-950 p-4">
       <div className="flex items-center gap-2 text-fg-subtle">
         <Icon className="size-4" />
         <span className="text-xs font-medium">{label}</span>

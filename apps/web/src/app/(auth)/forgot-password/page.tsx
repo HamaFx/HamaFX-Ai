@@ -11,7 +11,7 @@ export default function ForgotPasswordPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="card-premium p-6">
+      <div className="surface-panel p-6">
         <form action={action} className="flex w-full flex-col gap-5">
           <p className="text-fg-muted text-sm">
             Enter your email address and we'll send you a link to reset your password.
@@ -33,13 +33,13 @@ export default function ForgotPasswordPage() {
           </div>
 
           {state?.error ? (
-            <p id="error" role="alert" className="text-bear text-sm">
+            <p id="error" role="alert" className="text-red-500 text-sm">
               {state.error}
             </p>
           ) : null}
 
           {state?.success ? (
-            <p className="text-bull text-sm">
+            <p className="text-emerald-500 text-sm">
               {state.message}
             </p>
           ) : null}
@@ -58,7 +58,7 @@ export default function ForgotPasswordPage() {
 
       <p className="text-fg-subtle text-center text-sm">
         Remember your password?{' '}
-        <Link href="/login" className="text-brand font-medium hover:underline">
+        <Link href="/login" className="text-fg font-medium hover:underline">
           Sign in
         </Link>
       </p>
