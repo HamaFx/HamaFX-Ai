@@ -64,7 +64,7 @@ export async function getSubscription(tenantId: string): Promise<SubscriptionWit
 
   if (subs.length === 0) return null;
 
-  const sub = subs[0];
+  const sub = subs[0]!;
 
   // Fetch the associated plan.
   const plans = await db
@@ -73,10 +73,24 @@ export async function getSubscription(tenantId: string): Promise<SubscriptionWit
     .where(eq(schema.plans.id, sub.planId))
     .limit(1);
 
-  return {
-    ...sub,
-    plan: plans[0] ?? null,
+  const plan = plans[0] ?? null;
+
+  const result: SubscriptionWithPlan = {
+    id: sub.id,
+    tenantId: sub.tenantId,
+    planId: sub.planId,
+    status: sub.status,
+    nowpaymentsRecurringId: sub.nowpaymentsRecurringId,
+    nowpaymentsInvoiceId: sub.nowpaymentsInvoiceId,
+    currentPeriodEnd: sub.currentPeriodEnd,
+    trialEnd: sub.trialEnd,
+    canceledAt: sub.canceledAt,
+    createdAt: sub.createdAt,
+    updatedAt: sub.updatedAt,
+    plan,
   };
+
+  return result;
 }
 
 /**
@@ -96,7 +110,7 @@ export function isSubscriptionActive(sub: SubscriptionWithPlan | null): boolean 
  * Otherwise, returns the free tier features.
  */
 export function getEffectiveFeatures(sub: SubscriptionWithPlan | null): string[] {
-  if (isSubscriptionActive(sub) && sub.plan?.features) {
+  if (sub && isSubscriptionActive(sub) && sub.plan?.features) {
     return sub.plan.features;
   }
   // Free tier default
@@ -111,7 +125,7 @@ export function getEffectiveFeatures(sub: SubscriptionWithPlan | null): string[]
  * Returns a default free-tier cap (100,000) if no active subscription.
  */
 export function getEffectiveTokenCap(sub: SubscriptionWithPlan | null): number | null {
-  if (isSubscriptionActive(sub) && sub.plan) {
+  if (sub && isSubscriptionActive(sub) && sub.plan) {
     return sub.plan.monthlyTokenCap ?? null;
   }
   // Free tier default: 100K tokens/month

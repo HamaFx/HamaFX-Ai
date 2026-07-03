@@ -59,7 +59,7 @@ export async function POST(req: Request): Promise<Response> {
 
   const isValid = await verifyIpnSignature(rawBody, signature, ipnSecret);
   if (!isValid) {
-    logger.warn('Invalid IPN signature', { signaturePresent: !!signature });
+    logger.warn({ signaturePresent: !!signature }, 'Invalid IPN signature');
     return new Response('Unauthorized', { status: 401 });
   }
 
@@ -78,7 +78,7 @@ export async function POST(req: Request): Promise<Response> {
     return new Response('Bad Request', { status: 400 });
   }
 
-  logger.info('IPN received', { payment_id, payment_status, invoice_id });
+  logger.info({ payment_id, payment_status, invoice_id }, 'IPN received');
 
   const db = getDb();
   const bodyHash = createHash('sha256').update(rawBody).digest('hex');
@@ -95,8 +95,8 @@ export async function POST(req: Request): Promise<Response> {
     )
     .limit(1);
 
-  if (existing.length > 0 && existing[0].processed) {
-    logger.info('IPN already processed, skipping', { payment_id, payment_status });
+  if (existing.length > 0 && existing[0]!.processed) {
+    logger.info({ payment_id, payment_status }, 'IPN already processed, skipping');
     return new Response('OK', { status: 200 });
   }
 
@@ -125,12 +125,12 @@ export async function POST(req: Request): Promise<Response> {
       .limit(1);
 
     if (paymentRows.length === 0) {
-      logger.warn('Payment row not found for IPN', { payment_id });
+      logger.warn({ payment_id }, 'Payment row not found for IPN');
       await markIpnProcessed(db, payment_id, payment_status, 'Payment row not found');
       return new Response('OK', { status: 200 });
     }
 
-    const payment = paymentRows[0];
+    const payment = paymentRows[0]!;
 
     await db
       .update(schema.payments)
@@ -149,14 +149,14 @@ export async function POST(req: Request): Promise<Response> {
     }
 
     await markIpnProcessed(db, payment_id, payment_status, null);
-    logger.info('IPN processed successfully', { payment_id, payment_status });
+    logger.info({ payment_id, payment_status }, 'IPN processed successfully');
 
     return new Response('OK', { status: 200 });
   } catch (err) {
     Sentry.captureException(err, {
       tags: { component: 'billing-webhook', payment_id, payment_status },
     });
-    logger.error('IPN processing failed', { err: String(err), payment_id, payment_status });
+    logger.error({ err: String(err), payment_id, payment_status }, 'IPN processing failed');
     await markIpnProcessed(db, payment_id, payment_status, String(err));
     return new Response('Internal Server Error', { status: 500 });
   }

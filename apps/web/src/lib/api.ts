@@ -176,8 +176,8 @@ export function errorResponse(err: unknown, req?: Request): Response {
   });
   // OBS-09 (Phase 5.3): Use pino logger instead of console.error
   createScopedLoggerWithContext({ component: 'api', route, requestId }).error(
-    'unhandled error',
     { err: String(err) },
+    'unhandled error',
   );
   return formatErrorResponse(err, options);
 }

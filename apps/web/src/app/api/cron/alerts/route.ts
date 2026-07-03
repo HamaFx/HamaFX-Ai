@@ -40,7 +40,7 @@ export async function GET(req: Request): Promise<Response> {
     if (result.errors.length > 0) {
       const log = createScopedLoggerWithContext({ component: 'cron', job: 'alerts' });
       for (const alertErr of result.errors) {
-        log.error('alert evaluation error', { err: String(alertErr) });
+        log.error({ err: String(alertErr) }, 'alert evaluation error');
       }
     }
 

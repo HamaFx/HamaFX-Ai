@@ -232,8 +232,7 @@ async function sendPasswordResetEmail(to: string, resetUrl: string) {
     }
   } catch (err) {
     createScopedLoggerWithContext({ component: 'auth-actions', action: 'send-reset-email' }).error(
-      'Failed to send reset email',
-      { err: String(err) },
+      'Failed to send reset email: ' + String(err),
     );
   }
 }
@@ -272,8 +271,7 @@ export async function forgotPasswordAction(prevState: unknown, formData: FormDat
       await sendPasswordResetEmail(email, resetUrl);
     } catch (err) {
       createScopedLoggerWithContext({ component: 'auth-actions', action: 'forgot-password' }).error(
-        'Failed to create reset token',
-        { err: String(err) },
+        'Failed to create reset token: ' + String(err),
       );
     }
   }

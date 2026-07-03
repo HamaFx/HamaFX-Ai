@@ -28,7 +28,6 @@
 
 import {
   getSubscription,
-  isSubscriptionActive,
   getEffectiveFeatures,
   getEffectiveTokenCap,
   countActiveAlerts,

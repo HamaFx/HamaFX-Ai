@@ -28,6 +28,8 @@
 
 import { logger as rootLogger, createScopedLogger } from '@hamafx/shared';
 
+type PinoLogger = ReturnType<typeof createScopedLogger>;
+
 import { REQUEST_ID_HEADER } from './request-id';
 import type { RequestUser } from './api';
 
@@ -36,7 +38,7 @@ import type { RequestUser } from './api';
  * and `service` on every log line. The requestId is read from the
  * `X-Request-Id` header stamped by middleware.
  */
-export function createRequestLogger(req?: Request, user?: RequestUser | null) {
+export function createRequestLogger(req?: Request, user?: RequestUser | null): PinoLogger {
   const context: Record<string, unknown> = { service: 'web' };
 
   if (req) {
@@ -62,7 +64,7 @@ export function createRequestLogger(req?: Request, user?: RequestUser | null) {
  * Create a scoped logger for non-request contexts (cron jobs, background
  * tasks, server actions without a Request object).
  */
-export function createScopedLoggerWithContext(context: Record<string, unknown>) {
+export function createScopedLoggerWithContext(context: Record<string, unknown>): PinoLogger {
   return createScopedLogger({ service: 'web', ...context });
 }
 

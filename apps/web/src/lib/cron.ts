@@ -177,8 +177,8 @@ export async function withCronAuth(
     });
     // OBS-09 (Phase 5.3): Use pino logger instead of console.error
     createScopedLoggerWithContext({ component: 'cron', route: routeTag(req) }).error(
-      'cron handler error',
       { err: String(err) },
+      'cron handler error',
     );
     return Response.json(
       { error: { code: 'INTERNAL', message: 'Internal error' } },
@@ -220,8 +220,8 @@ export async function runCronJob(name: string, fn: () => Promise<void>, options:
     });
     // OBS-09 (Phase 5.3): Use pino logger instead of console.error
     createScopedLoggerWithContext({ component: 'cron', job: name }).error(
-      `cron job ${name} failed`,
       { err: String(error) },
+      `cron job ${name} failed`,
     );
     return Response.json({ error: { code: 'INTERNAL', message: 'Internal error' } }, { status: 500 });
   }

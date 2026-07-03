@@ -156,7 +156,7 @@ export const POST = withAuth<void>(async (req, { user }) => {
                 tags: { component: 'chat', mode: 'multi-agent', route: '/api/chat' },
                 extra: { threadId: body.threadId, userId: user.userId },
               });
-              log.error('multi-agent chat failed', { err: String(err), threadId: body.threadId, mode: resolvedMode });
+              log.error({ err: String(err), threadId: body.threadId, mode: resolvedMode }, 'multi-agent chat failed');
               const errorMessage = err instanceof BudgetExceededError
                 ? 'Daily AI budget exceeded. Please try again tomorrow.'
                 : 'Internal error';
@@ -208,7 +208,7 @@ export const POST = withAuth<void>(async (req, { user }) => {
       );
     }
     // OBS-01 (Phase 5.3): Log the error via pino before delegating to errorResponse
-    log.error('chat agent failed', { err: String(err), threadId: body.threadId });
+    log.error({ err: String(err), threadId: body.threadId }, 'chat agent failed');
     // OBS-01 (Phase 5): Explicitly capture chat errors with chat-specific tags.
     // errorResponse() captures with generic 'api' tags; this ensures the chat
     // hot path is always visible in Sentry with the right component tag.

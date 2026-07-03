@@ -59,12 +59,12 @@ const THRESHOLDS = {
 };
 
 // Rate-limit Sentry captures to avoid duplicate alerts
-let lastAlertAt: Partial<Record<AuthEventType, number>> = {};
+const lastAlertAt: Partial<Record<AuthEventType, number>> = {};
 const ALERT_COOLDOWN_MS = 5 * 60 * 1000; // 5 minutes
 
 function pruneOldEvents(): void {
   const cutoff = Date.now() - WINDOW_MS;
-  while (events.length > 0 && events[0].ts < cutoff) {
+  while (events.length > 0 && events[0]!.ts < cutoff) {
     events.shift();
   }
 }
@@ -77,7 +77,7 @@ function maybeAlert(type: AuthEventType, message: string, extra?: Record<string,
   Sentry.captureMessage(message, {
     level: 'warning',
     tags: { component: 'auth-anomaly', anomaly: type },
-    extra,
+    ...(extra ? { extra } : {}),
   });
 }
 
