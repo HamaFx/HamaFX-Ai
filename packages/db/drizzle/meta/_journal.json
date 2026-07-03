@@ -288,6 +288,13 @@
       "when": 1782800000005,
       "tag": "0040_phase8_billing_nowpayments",
       "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "7",
+      "when": 1783097280000,
+      "tag": "0041_fix_missing_tenant_columns",
+      "breakpoints": true
     }
   ]
 }
