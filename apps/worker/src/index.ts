@@ -21,11 +21,13 @@
 // second and UPSERTed into `live_ticks`. The 1m candle aggregator (PR-7)
 // will plug into the same tick stream alongside the buffer.
 //
+// Phase 9a: Binance WebSocket consumer for live crypto klines.
+//
 // Lifecycle:
 //   1. loadEnv — fail fast if required env is missing.
 //   2. createLogger — JSON in prod, pretty in dev.
 //   3. installSignalHandlers — graceful shutdown on SIGTERM / SIGINT.
-//   4. start SignalR consumer + the 1Hz flush loop.
+//   4. start SignalR consumer + Binance WS consumer + the 1Hz flush loop.
 //   5. heartbeat to healthchecks.io every 30s while the consumer is alive.
 
 import { getDb } from '@hamafx/db';
@@ -45,6 +47,7 @@ import {
   notifyWatchdog,
 } from './sd-notify.js';
 import { captureException, flushSentry, initSentry } from './sentry.js';
+import { BinanceStreamConsumer } from './binance/index.js';
 import {
   createDefaultBuildConnection,
   SignalRConsumer,
@@ -117,6 +120,7 @@ export interface RunWorkerArgs {
 
 export interface RunningWorker {
   consumer: SignalRConsumer;
+  binanceConsumer: BinanceStreamConsumer;
   buffer: TickBuffer;
   aggregator: Candle1mAggregator;
   /** Idempotent. Cleanly tears down timers + the hub. */
@@ -216,6 +220,19 @@ export async function runWorker(args: RunWorkerArgs): Promise<RunningWorker> {
     }
   });
 
+  // Binance WebSocket consumer for live crypto klines.
+  const cryptoSymbols = (env.BINANCE_CRYPTO_SYMBOLS ?? 'BTCUSDT,ETHUSDT')
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
+
+  const binanceConsumer = new BinanceStreamConsumer({
+    symbols: cryptoSymbols,
+    onTick: handleIncomingTick,
+    onActivity: () => notifyWatchdog(),
+    log: log.with({ module: 'binance-ws' }),
+  });
+
   // Start the Headless MT5 TCP bridge server on the whitelisted local loopback port
   const mt5Server = startMT5Server({
     port: env.MT5_BRIDGE_PORT,
@@ -224,12 +241,13 @@ export async function runWorker(args: RunWorkerArgs): Promise<RunningWorker> {
   });
 
   await consumer.start();
+  await binanceConsumer.start();
   symbolManager.start();
   // The consumer is connected and subscribed — tell systemd we're done
   // bootstrapping. Pair with `Type=notify` in hamafx-worker.service so
   // the unit only enters `active (running)` once we're ready.
   notifyReady();
-  notifyStatus('signalr connected; tick stream active');
+  notifyStatus('signalr + binance ws connected; tick stream active');
 
   // OBS-08 (Phase 5.2): Rate-limited Sentry capture for sustained
   // flushLiveTicks failures. Same cooldown pattern as candle flush:
@@ -291,6 +309,7 @@ export async function runWorker(args: RunWorkerArgs): Promise<RunningWorker> {
     await Promise.all([
       mt5Server.stop(),
       consumer.stop(),
+      binanceConsumer.stop(),
     ]);
 
     // Drain anything buffered after the last interval tick — best-effort.
@@ -304,7 +323,7 @@ export async function runWorker(args: RunWorkerArgs): Promise<RunningWorker> {
     aggregator.closeAll();
   };
 
-  return { consumer, buffer, aggregator, stop };
+  return { consumer, binanceConsumer, buffer, aggregator, stop };
 }
 
 import { startScheduler } from './scheduler.js';
@@ -351,8 +370,33 @@ export async function main(): Promise<void> {
 
   const worker = await runWorker({ env, log });
   
-  // Start HTTP Health Server for Docker orchestration
-  const healthServer = http.createServer((req, res) => {
+  // Start HTTP server: health checks + BiQuote REST proxy for Vercel
+  // The proxy lets Vercel serverless functions reach BiQuote through this
+  // worker VM when BiQuote is unreachable from the Vercel network.
+  const BIQUOTE_BASE = 'https://biquote.io';
+  const healthServer = http.createServer(async (req, res) => {
+    // BiQuote proxy: /biquote/api/XAUUSD/ohlc?interval=60&limit=100
+    if (req.url?.startsWith('/biquote')) {
+      const rest = req.url.slice('/biquote'.length) || '/';
+      const target = `${BIQUOTE_BASE}${rest}`;
+      try {
+        const targetRes = await fetch(target, {
+          signal: AbortSignal.timeout(10_000),
+          headers: { accept: 'application/json' },
+        });
+        const body = await targetRes.text();
+        res.writeHead(targetRes.status, {
+          'Content-Type': targetRes.headers.get('content-type') || 'application/json',
+          'Cache-Control': 'no-store',
+        });
+        res.end(body);
+      } catch (err) {
+        log.error('biquote-proxy error', { target, err: String(err) });
+        res.writeHead(502, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ status: 'error', message: String(err) }));
+      }
+      return;
+    }
     if (req.url === '/health' || req.url === '/api/health' || req.url === '/') {
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ status: 'ok' }));

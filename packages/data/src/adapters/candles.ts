@@ -24,12 +24,11 @@
 // Phase 7a: opt-in SWR via TTL policy + `getCandlesWithMeta` for callers
 // that want to surface staleness.
 //
-// Phase 8 PR-8 final order:
-//   1m:    candles-1m  (worker-maintained)  →  biquote  →  finnhub
-//   ≥5m:                                       biquote  →  finnhub
-//   1w:                                                    finnhub  (biquote unsupported)
-//
-// PR-19 removed Twelve Data entirely.
+// Symbol routing:
+//   Crypto (BTCUSDT, ETHUSDT, etc.) → binance → biquote → finnhub
+//   Forex/Gold (EURUSD, XAUUSD)     → twelvedata → biquote → finnhub
+//   1m:                              candles-1m (pinned) → above
+//   1w:                              finnhub (biquote unsupported)
 
 import {
   CandleSchema,
@@ -40,6 +39,9 @@ import {
 } from '@hamafx/shared';
 
 import * as biquote from '../providers/biquote';
+import * as twelvedata from '../providers/twelvedata';
+import * as binance from '../providers/binance';
+import { isCryptoSymbol } from '../providers/binance/map';
 import { fetchCandles1m } from '../providers/candles-1m';
 import { cacheKey, cacheTag, candleTtl, getDefaultCache } from '../cache';
 import { ProviderError } from '../errors';
@@ -50,7 +52,7 @@ export interface GetCandlesOptions {
   signal?: AbortSignal;
   /** Number of bars to request (capped at 5000 by upstream). Default 300. */
   count?: number;
-  apiKeys?: Partial<{ finnhub: string; biquoteBaseUrl: string }>;
+  apiKeys?: Partial<{ finnhub: string; biquoteBaseUrl: string; twelvedata: string }>;
   marketDataProvider?: string;
 }
 
@@ -66,6 +68,7 @@ const MAX_COUNT = 5000;
 function resolveKeys(opts: GetCandlesOptions) {
   return {
     finnhub: opts.apiKeys?.finnhub ?? process.env.FINNHUB_API_KEY ?? '',
+    twelvedata: opts.apiKeys?.twelvedata ?? process.env.TWELVEDATA_API_KEY ?? '',
     biquoteBaseUrl:
       opts.apiKeys?.biquoteBaseUrl ?? process.env.BIQUOTE_BASE_URL ?? 'https://biquote.io',
   };
@@ -107,6 +110,8 @@ export async function getCandlesWithMeta(
   const key = cacheKey({ resource: 'candles', symbol, tf, extra: `n${count}` });
   const tags = [cacheTag('candles'), cacheTag('candles', symbol)];
 
+  const isCrypto = isCryptoSymbol(symbol);
+
   const r = await cache.fetchWithMeta<Candle[]>(
     key,
     async () => {
@@ -144,7 +149,59 @@ export async function getCandlesWithMeta(
         });
       }
 
-      // Phase 8 — BiQuote first (except 1w which it doesn't support).
+      // Crypto → Binance, Forex/Gold → Twelve Data (primary providers).
+      if (isCrypto) {
+        attempts.push({
+          name: 'binance',
+          run: async () => {
+            const raw = await binance.fetchCandles(symbol, tf, count, {
+              ...(opts.signal ? { signal: opts.signal } : {}),
+            });
+            const fetchedAt = Date.now();
+            return raw.map((bar) =>
+              CandleSchema.parse({
+                symbol,
+                tf,
+                t: bar.t,
+                o: bar.o,
+                h: bar.h,
+                l: bar.l,
+                c: bar.c,
+                v: bar.v,
+                source: 'binance',
+                fetchedAt,
+              }),
+            );
+          },
+        });
+      } else if (keys.twelvedata) {
+        attempts.push({
+          name: 'twelvedata',
+          run: async () => {
+            const raw = await twelvedata.fetchCandles(symbol, tf, count, {
+              apiKey: keys.twelvedata,
+              ...(opts.signal ? { signal: opts.signal } : {}),
+            });
+            const fetchedAt = Date.now();
+            return raw.map((bar) =>
+              CandleSchema.parse({
+                symbol,
+                tf,
+                t: bar.t,
+                o: bar.o,
+                h: bar.h,
+                l: bar.l,
+                c: bar.c,
+                v: bar.v,
+                source: 'twelvedata',
+                fetchedAt,
+              }),
+            );
+          },
+        });
+      }
+
+      // BiQuote fallback (except 1w which it doesn't support).
       if (tf !== '1w') {
         attempts.push({
           name: 'biquote',
@@ -207,10 +264,11 @@ export async function getCandlesWithMeta(
       }
 
       if (attempts.length === 0) {
+        const missing = isCrypto ? 'use Binance' : 'set TWELVEDATA_API_KEY or FINNHUB_API_KEY or use BiQuote';
         throw new ProviderError(
           'NO_PROVIDER_AVAILABLE',
           'none',
-          'no candle provider configured (set FINNHUB_API_KEY or use BiQuote)',
+          `no candle provider configured (${missing})`,
         );
       }
 

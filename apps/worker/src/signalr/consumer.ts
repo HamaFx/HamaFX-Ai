@@ -51,8 +51,8 @@ export interface NormalizedTick {
   mid: number;
   /** ms epoch UTC. */
   ts: number;
-  /** Stable string. 'biquote-signalr' or 'mt5-local' from the bridge. */
-  source: 'biquote-signalr' | 'mt5-local';
+  /** Stable string. 'biquote-signalr', 'mt5-local', or 'binance-ws'. */
+  source: 'biquote-signalr' | 'mt5-local' | 'binance-ws';
 }
 
 export interface MinimalHubConnection {

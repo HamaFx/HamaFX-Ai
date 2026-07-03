@@ -97,6 +97,18 @@ const WorkerEnvSchema = z.object({
    * 'docker' starts an internal node-cron scheduler.
    */
   WORKER_MODE: z.enum(['systemd', 'docker']).default('systemd'),
+
+  /**
+   * Comma-separated list of crypto symbols for the Binance WebSocket
+   * consumer. Defaults to BTCUSDT,ETHUSDT.
+   */
+  BINANCE_CRYPTO_SYMBOLS: optionalNonEmpty,
+
+  /**
+   * Binance WebSocket base URL. Override to stream.binance.us for US-hosted
+   * VMs since stream.binance.com blocks US IPs (HTTP 451).
+   */
+  BINANCE_WS_URL: optionalUrl,
 });
 
 export type WorkerEnv = z.infer<typeof WorkerEnvSchema>;
