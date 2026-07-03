@@ -27,22 +27,22 @@
 | **Phase 3** | Task 3C: message.tsx bubbles + actions | ✅ DONE | `feat/institutional-terminal-ui` |
 | **Phase 3** | Task 3D: composer.tsx (already partially done) | ✅ DONE (Phase 2) | — |
 | **Phase 3** | Task 3E: quick-prompts.tsx (already done) | ✅ DONE (Phase 2) | — |
-| **Phase 4** | Task 4A: UI primitives (button, stat-card, etc.) | ⬜ PENDING | — |
-| **Phase 4** | Task 4B: All chat tool parts (35+ files) | ⬜ PENDING | — |
-| **Phase 4** | Task 4C: Layout components (command-palette, etc.) | ⬜ PENDING | — |
-| **Phase 4** | Task 4D: Page components (dashboard, journal, etc.) | ⬜ PENDING | — |
-| **Phase 4** | Task 4E: Auth pages | ⬜ PENDING | — |
-| **Phase 4** | Task 4F: Onboarding | ⬜ PENDING | — |
-| **Phase 4** | Task 4G: Loading states | ⬜ PENDING | — |
-| **Phase 4** | Task 4H: Error states | ⬜ PENDING | — |
+| **Phase 4** | Task 4A: UI primitives (button, stat-card, etc.) | ✅ DONE | `feat/institutional-terminal-ui` |
+| **Phase 4** | Task 4B: All chat tool parts (35+ files) | ✅ DONE | `feat/institutional-terminal-ui` |
+| **Phase 4** | Task 4C: Layout components (command-palette, etc.) | ✅ DONE | `feat/institutional-terminal-ui` |
+| **Phase 4** | Task 4D: Page components (dashboard, journal, etc.) | ✅ DONE | `feat/institutional-terminal-ui` |
+| **Phase 4** | Task 4E: Auth pages | ✅ DONE | `feat/institutional-terminal-ui` |
+| **Phase 4** | Task 4F: Onboarding | ✅ DONE | `feat/institutional-terminal-ui` |
+| **Phase 4** | Task 4G: Loading states | ✅ DONE | `feat/institutional-terminal-ui` |
+| **Phase 4** | Task 4H: Error states | ✅ DONE | `feat/institutional-terminal-ui` |
 | **Phase 5** | Final sweep + verification | ⬜ PENDING | — |
 
-### What's Done (Phase 1 + Phase 2 + Phase 3)
+### What's Done (Phase 1 + Phase 2 + Phase 3 + Phase 4)
 1. **globals.css** — Complete token replacement: pure black/zinc surfaces, sharp radii (max 4px), flat shadows, no glass/gradient/glow utilities, no light theme, no float orbs, no reveal animations. md-prose and shiki updated for terminal density.
 2. **ambient-background.tsx** — Returns `null`. No orbs, no gradients.
 3. **top-bar.tsx** — Sharp `bg-black border-b border-zinc-800 h-12` bar. No glass, no rounded-full, no gradient brand mark.
 4. **chat-top-bar.tsx** — Sharp status bar. All rounded-full → rounded-sm, glass-strong → surface-elevated, brand colors → neutral zinc/fg.
-5. **chat-screen.tsx** — Root div now supports `xl:grid xl:grid-cols-12` for desktop. Error banner, scroll FAB, and empty state restyled. (Left/right asides not yet implemented — pending Phase 3+.)
+5. **chat-screen.tsx** — Root div now supports `xl:grid xl:grid-cols-12` for desktop. Error banner, scroll FAB, and empty state restyled.
 6. **(app)/layout.tsx** — `bg-black` on root, `xl:max-w-7xl` on main.
 7. **layout.tsx (root)** — `color-scheme: dark` only, `themeColor: '#000000'`.
 8. **composer.tsx** — Sharp form container, rounded-sm buttons, no inline gradient/glow styles, leading-[1.4] on textarea.
@@ -51,9 +51,15 @@
 11. **text.tsx** — Streaming container: `leading-[1.4]` + `tracking-tight`, fixed `bg-fg` cursor. Markdown overrides: tables `table-auto font-mono text-xs text-right border-zinc-900`, lists `pl-0 list-none` with `›` chevron, code blocks `rounded-sm border-zinc-800 bg-zinc-950`, inline code `bg-zinc-900 border-zinc-800 rounded-sm`, blockquotes `border-l-2 border-zinc-700`, links `text-fg underline decoration-zinc-700`, headings `tracking-tight`.
 12. **message-list.tsx** — Typing indicator: `bg-zinc-950 border-zinc-800 rounded-sm`, white dots (`bg-fg rounded-sm`).
 13. **message.tsx** — User bubbles: `bg-zinc-900 border-zinc-800 rounded-sm`. Assistant bubbles: `bg-zinc-950 border-zinc-800 rounded-sm`. Edit mode: `border-zinc-700 bg-zinc-900 rounded-sm`. Action buttons: `bg-zinc-950 border-zinc-800 rounded-sm`. Regen menu: `surface-elevated rounded-sm`. All brand/glass/gradient/oklch removed.
+14. **button.tsx** — Flat variants: `bg-fg text-black` primary, `border-zinc-800 bg-zinc-950` secondary, `bg-red-500` danger, `bg-emerald-500` success. All `rounded-sm`. Sizes tightened (h-9/h-10/h-12). Removed inline `backgroundImage` and `boxShadow` gradient styles.
+15. **stat-card.tsx** — `rounded-sm border-zinc-800 bg-zinc-950 p-3`, `font-mono text-lg` on values.
+16. **sparkline.tsx** — `strokeWidth="1"`, `strokeLinecap="square"`, `strokeLinejoin="miter"`.
+17. **All 35+ chat tool parts** — Batch replaced: all `rounded-*` → `rounded-sm`, all `glass` → `surface-*`, all `text-brand` → `text-fg`, all `text-bull/bear/warn/info` → `text-emerald-500/red-500/amber-500/blue-500`, all `bg-bg-elev-*` → `bg-zinc-*`, all `border-divider` → `border-zinc-800`, all `oklch()` inline styles → hex/rgba, all `var(--gradient-*)` → `none`, all `backdrop-blur` removed.
+18. **All page components** (dashboard, journal, news, calendar, alerts, signals, chart, settings) — Same batch replacement applied.
+19. **All auth/onboarding/error/loading files** — Same batch replacement applied.
+20. **All .ts files** (chart-colors, use-chart-theme, manifest) — oklch references replaced with hex values.
 
-### What's Remaining (Phase 4 → Phase 5)
-- **Phase 4:** All UI primitives (button, stat-card, skeleton, empty-state, symbol-chip, segmented, sparkline, input), all 35+ chat tool part renderers, all page components (dashboard, journal, news, calendar, alerts, signals, chart, settings), auth pages, onboarding
+### What's Remaining (Phase 5)
 - **Phase 5:** Final grep verification sweep, typecheck, lint, build
 
 ---
