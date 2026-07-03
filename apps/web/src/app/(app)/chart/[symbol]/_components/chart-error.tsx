@@ -33,7 +33,7 @@ export function ChartError({ error, onRetry }: ChartErrorProps) {
     <div className="aspect-[16/9] w-full md:aspect-[21/9]">
       <EmptyState
         tone="muted"
-        icon={<AlertCircle className="text-bear size-7" strokeWidth={2} />}
+        icon={<AlertCircle className="text-red-500 size-7" strokeWidth={2} />}
         title={isQuota ? 'Rate limited' : 'Failed to load chart'}
         description={error.message.slice(0, 140)}
         action={

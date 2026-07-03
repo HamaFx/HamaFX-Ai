@@ -142,7 +142,7 @@ export function CalendarView({ initialEvents }: CalendarViewProps) {
           onClick={manualRefresh}
           disabled={pending}
           aria-label="Refresh now"
-          className="text-fg-muted hover:text-fg hover:bg-bg-elev-2 inline-flex h-9 items-center gap-1.5 rounded-full px-3 text-xs font-medium transition-colors disabled:opacity-50"
+          className="text-fg-muted hover:text-fg hover:bg-zinc-900 inline-flex h-9 items-center gap-1.5 rounded-sm px-3 text-xs font-medium transition-colors disabled:opacity-50"
         >
           <RotateCw className={cn('size-3.5', pending && 'animate-spin')} />
           {pending ? 'Refreshing…' : `Updated ${formatRelative(lastRefreshed)}`}
@@ -161,7 +161,7 @@ export function CalendarView({ initialEvents }: CalendarViewProps) {
           {sections.map(([label, items]) => (
             <section key={label} className="flex flex-col gap-3">
               <h2
-                className="bg-bg/95 supports-[backdrop-filter]:bg-bg/70 text-fg-subtle sticky z-10 -mx-4 flex items-baseline gap-2 px-5 py-2 text-caption font-semibold uppercase tracking-wider backdrop-blur-md"
+                className="bg-bg/95 supports-[backdrop-filter]:bg-bg/70 text-fg-subtle sticky z-10 -mx-4 flex items-baseline gap-2 px-5 py-2 text-caption font-semibold uppercase tracking-wider "
                 style={{ top: 'calc(var(--topbar-h) + env(safe-area-inset-top))' }}
               >
                 {label}
