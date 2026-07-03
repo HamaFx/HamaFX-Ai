@@ -1,182 +1,87 @@
 @import 'tailwindcss';
 
 /* -------------------------------------------------------------------------
- * Theme tokens — premium pure-black design system (dark).
+ * Theme tokens — institutional terminal design system (dark-only).
  *
- * Surfaces: zero-chroma grayscale (oklch hue 0 chroma 0). The previous
- * blue-tinted surfaces (chroma 0.018 hue 265) read as "dark blue" on most
- * displays. Neutral surfaces read as "true dark" — closer to Linear, Vercel,
- * Apple's deep dark mode.
+ * Ultra-dense, high-contrast, data-first utility. Pure black canvas,
+ * zinc grayscale surfaces, sharp geometry (max rounded-md / 4px).
+ * No glassmorphism, no gradients, no glow shadows, no ambient orbs.
  *
- * Brand: warm champagne gold. Kept gold for personality but slightly higher
- * luminance + lower chroma than the previous amber so it sits cleanly
- * against pure black instead of competing.
- *
- * Contrast: --color-fg-subtle bumped from 60% to 68% L in R1 of the frontend
- * redesign (PLAN.md §2.1) — the previous value cleared AA on bg-elev-1 by a
- * hair and failed AA on bg-elev-2. 68% L clears both with margin.
+ * Brand: neutral white-on-black. Market signals: emerald/red/amber.
  * ------------------------------------------------------------------------- */
 
 @theme {
-  /* Surfaces — pure neutral grayscale */
-  --color-bg: oklch(8% 0 0);
-  --color-bg-elev-1: oklch(12% 0 0);
-  --color-bg-elev-2: oklch(16% 0 0);
-  --color-bg-elev-3: oklch(20% 0 0);
-  --color-border: oklch(22% 0 0);
-  --color-divider: oklch(28% 0 0 / 0.4);
-  --color-overlay: oklch(0% 0 0 / 0.75);
+  /* ── Surfaces — pure black / zinc grayscale. Zero chroma, zero hue. ── */
+  --color-bg: #000000;
+  --color-bg-elev-1: #09090B;
+  --color-bg-elev-2: #18181B;
+  --color-bg-elev-3: #27272A;
+  --color-border: #27272A;
+  --color-divider: #111113;
+  --color-overlay: rgba(0, 0, 0, 0.85);
 
-  /* Glass surfaces — black-tinted base for proper "dark glass" feel */
-  --color-glass: oklch(12% 0 0 / 0.6);
-  --color-glass-strong: oklch(12% 0 0 / 0.78);
-  --color-glass-edge: oklch(96% 0 0 / 0.06);
+  /* ── Text ── */
+  --color-fg: #FAFAFA;
+  --color-fg-muted: #A1A1AA;
+  --color-fg-subtle: #71717A;
 
-  /* Text */
-  --color-fg: oklch(96% 0 0);
-  --color-fg-muted: oklch(76% 0 0);
-  --color-fg-subtle: oklch(68% 0 0);
+  /* ── Brand — neutral white accent (institutional) ── */
+  --color-brand: #FAFAFA;
+  --color-brand-fg: #000000;
+  --color-brand-glow: rgba(250, 250, 250, 0.15);
 
-  /* Brand — refined champagne gold */
-  --color-brand: oklch(82% 0.14 85);
-  --color-brand-fg: oklch(8% 0 0);
-  --color-brand-glow: oklch(82% 0.14 85 / 0.3);
+  /* ── Accent — kept for backward compat but unused in terminal theme ── */
+  --color-accent: #3B82F6;
+  --color-accent-glow: rgba(59, 130, 246, 0.15);
 
-  /* Accent — desaturated indigo, used very sparingly */
-  --color-accent: oklch(70% 0.14 285);
-  --color-accent-glow: oklch(70% 0.14 285 / 0.25);
+  /* ── Market Signal States ── */
+  --color-bull: #10B981;
+  --color-bear: #EF4444;
+  --color-neutral: #71717A;
+  --color-warn: #F59E0B;
+  --color-info: #3B82F6;
 
-  /* Market states — semantic, kept far apart in luminance */
-  --color-bull: oklch(72% 0.18 152);
-  --color-bear: oklch(70% 0.22 25);
-  --color-neutral: oklch(70% 0 0);
-  --color-warn: oklch(82% 0.14 80);
-  --color-info: oklch(74% 0.14 230);
+  /* ── Radii — SHARP GEOMETRY. Max rounded-md (4px). ── */
+  --radius-sm: 2px;
+  --radius-md: 4px;
+  --radius-lg: 4px;
+  --radius-xl: 4px;
+  --radius-2xl: 4px;
+  --radius-pill: 4px;
 
-  /* Radii - Refined for terminal aesthetic */
-  --radius-sm: 4px;
-  --radius-md: 8px;
-  --radius-lg: 12px;
-  --radius-xl: 16px;
-  --radius-2xl: 20px;
-  --radius-pill: 999px;
+  /* ── Shadows — minimal, flat. No glow. ── */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.6);
+  --shadow-md: 0 2px 8px -2px rgba(0, 0, 0, 0.7);
+  --shadow-lg: 0 4px 16px -4px rgba(0, 0, 0, 0.8);
+  --shadow-xl: 0 8px 32px -8px rgba(0, 0, 0, 0.9);
+  --shadow-glow-brand: none;
+  --shadow-glow-accent: none;
 
-  /* Shadows — deeper to read against true black */
-  --shadow-sm: 0 1px 2px 0 oklch(0% 0 0 / 0.4);
-  --shadow-md: 0 4px 12px -2px oklch(0% 0 0 / 0.5), 0 1px 3px 0 oklch(0% 0 0 / 0.3);
-  --shadow-lg:
-    0 10px 40px -10px oklch(0% 0 0 / 0.6), 0 4px 12px -2px oklch(0% 0 0 / 0.4);
-  --shadow-xl:
-    0 25px 50px -12px oklch(0% 0 0 / 0.7), 0 10px 20px -8px oklch(0% 0 0 / 0.5);
-  --shadow-glow-brand: 0 0 32px -4px oklch(82% 0.14 85 / 0.35);
-  --shadow-glow-accent: 0 0 32px -4px oklch(70% 0.14 285 / 0.3);
-
-  /* Fonts */
+  /* ── Fonts ── */
   --font-sans: var(--font-sans), system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   --font-mono: var(--font-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
 
-  /* Fluid Typography */
+  /* ── Fluid Typography ── */
   --text-sm: clamp(0.8rem, 0.7rem + 0.5vw, 0.875rem);
   --text-base: clamp(0.95rem, 0.85rem + 0.5vw, 1rem);
   --text-lg: clamp(1rem, 0.9rem + 0.6vw, 1.125rem);
 
-  /* Display scale — page titles, hero numbers, section heads.
-   * Tighter tracking at larger sizes for a deliberate, crafted feel.
-   * Apply via `text-display-{size}` utility (declared below). */
   --text-display-2xl: clamp(2.25rem, 1.5rem + 3.5vw, 3.5rem);
   --text-display-xl: clamp(1.75rem, 1.2rem + 2.5vw, 2.5rem);
   --text-display-lg: clamp(1.25rem, 1rem + 1vw, 1.5rem);
   --text-display-md: clamp(1.125rem, 1rem + 0.5vw, 1.25rem);
 
-  /* Body scale — replaces ad-hoc `text-[11px]`, `text-[10px]`, `text-xs`
-   * across the codebase. `text-body-sm` is the workhorse for meta, helper,
-   * and dense lists. */
   --text-body-lg: 1.0625rem;
   --text-body: 0.9375rem;
   --text-body-sm: 0.8125rem;
-
-  /* Caption — uppercase eyebrow labels, section dividers. */
   --text-caption: 0.6875rem;
 
-  /* Numeric scale — separate from the prose scale so prices and headings
-   * can both feel intentional. Always pair with `tabular-nums`. */
   --text-numeric-xl: 1.5rem;
   --text-numeric-lg: 1.125rem;
   --text-numeric: 0.875rem;
 
   --ease-organic: cubic-bezier(0.2, 0.8, 0.2, 1);
   --ease-out-organic: cubic-bezier(0.2, 0.8, 0.2, 1);
-}
-
-/* -------------------------------------------------------------------------
- * Light theme tokens
- * ------------------------------------------------------------------------- */
-@media (prefers-color-scheme: light) {
-  :root:not([data-theme="dark"]) {
-    --color-bg: oklch(98% 0 0);
-    --color-bg-elev-1: oklch(95% 0 0);
-    --color-bg-elev-2: oklch(92% 0 0);
-    --color-bg-elev-3: oklch(88% 0 0);
-    --color-border: oklch(85% 0 0);
-    --color-divider: oklch(80% 0 0 / 0.4);
-    --color-overlay: oklch(0% 0 0 / 0.3);
-    --color-glass: oklch(95% 0 0 / 0.7);
-    --color-glass-strong: oklch(95% 0 0 / 0.85);
-    --color-glass-edge: oklch(0% 0 0 / 0.08);
-    --color-fg: oklch(15% 0 0);
-    --color-fg-muted: oklch(35% 0 0);
-    --color-fg-subtle: oklch(45% 0 0);
-    --color-brand: oklch(65% 0.16 85);
-    --color-brand-fg: oklch(98% 0 0);
-    --shadow-sm: 0 1px 2px 0 oklch(0% 0 0 / 0.06);
-    --shadow-md: 0 4px 12px -2px oklch(0% 0 0 / 0.08), 0 1px 3px 0 oklch(0% 0 0 / 0.04);
-    --shadow-lg: 0 10px 40px -10px oklch(0% 0 0 / 0.1), 0 4px 12px -2px oklch(0% 0 0 / 0.06);
-    --shadow-xl: 0 25px 50px -12px oklch(0% 0 0 / 0.15), 0 10px 20px -8px oklch(0% 0 0 / 0.08);
-    --shadow-glow-brand: 0 0 32px -4px oklch(65% 0.16 85 / 0.25);
-    --shadow-glow-accent: 0 0 32px -4px oklch(62% 0.14 285 / 0.2);
-    --gradient-brand: linear-gradient(135deg, oklch(68% 0.16 85) 0%, oklch(62% 0.17 70) 100%);
-    --gradient-danger: linear-gradient(135deg, oklch(62% 0.22 25) 0%, oklch(55% 0.22 15) 100%);
-    --gradient-brand-soft: linear-gradient(135deg, oklch(65% 0.16 85 / 0.1) 0%, oklch(62% 0.14 285 / 0.08) 100%);
-    --gradient-accent: linear-gradient(135deg, oklch(62% 0.14 285) 0%, oklch(64% 0.14 230) 100%);
-    --shadow-inset-edge: inset 0 1px 0 0 oklch(100% 0 0 / 0.5);
-    --shadow-inset-edge-soft: inset 0 1px 0 0 oklch(100% 0 0 / 0.3);
-    --shadow-brand-press: 0 8px 24px -6px oklch(65% 0.16 85 / 0.3), var(--shadow-inset-edge);
-    --shadow-brand-press-strong: 0 12px 32px -8px oklch(65% 0.16 85 / 0.35), 0 0 0 1px oklch(65% 0.16 85 / 0.2), inset 0 1px 0 0 oklch(100% 0 0 / 0.5);
-    --shadow-danger-press: 0 8px 24px -6px oklch(62% 0.22 25 / 0.3), var(--shadow-inset-edge);
-  }
-}
-
-:root[data-theme="light"] {
-  --color-bg: oklch(98% 0 0);
-  --color-bg-elev-1: oklch(95% 0 0);
-  --color-bg-elev-2: oklch(92% 0 0);
-  --color-bg-elev-3: oklch(88% 0 0);
-  --color-border: oklch(85% 0 0);
-  --color-divider: oklch(80% 0 0 / 0.4);
-  --color-overlay: oklch(0% 0 0 / 0.3);
-  --color-glass: oklch(95% 0 0 / 0.7);
-  --color-glass-strong: oklch(95% 0 0 / 0.85);
-  --color-glass-edge: oklch(0% 0 0 / 0.08);
-  --color-fg: oklch(15% 0 0);
-  --color-fg-muted: oklch(35% 0 0);
-  --color-fg-subtle: oklch(45% 0 0);
-  --color-brand: oklch(65% 0.16 85);
-  --color-brand-fg: oklch(98% 0 0);
-  --shadow-sm: 0 1px 2px 0 oklch(0% 0 0 / 0.06);
-  --shadow-md: 0 4px 12px -2px oklch(0% 0 0 / 0.08), 0 1px 3px 0 oklch(0% 0 0 / 0.04);
-  --shadow-lg: 0 10px 40px -10px oklch(0% 0 0 / 0.1), 0 4px 12px -2px oklch(0% 0 0 / 0.06);
-  --shadow-xl: 0 25px 50px -12px oklch(0% 0 0 / 0.15), 0 10px 20px -8px oklch(0% 0 0 / 0.08);
-  --shadow-glow-brand: 0 0 32px -4px oklch(65% 0.16 85 / 0.25);
-  --shadow-glow-accent: 0 0 32px -4px oklch(62% 0.14 285 / 0.2);
-  --gradient-brand: linear-gradient(135deg, oklch(68% 0.16 85) 0%, oklch(62% 0.17 70) 100%);
-  --gradient-danger: linear-gradient(135deg, oklch(62% 0.22 25) 0%, oklch(55% 0.22 15) 100%);
-  --gradient-brand-soft: linear-gradient(135deg, oklch(65% 0.16 85 / 0.1) 0%, oklch(62% 0.14 285 / 0.08) 100%);
-  --gradient-accent: linear-gradient(135deg, oklch(62% 0.14 285) 0%, oklch(64% 0.14 230) 100%);
-  --shadow-inset-edge: inset 0 1px 0 0 oklch(100% 0 0 / 0.5);
-  --shadow-inset-edge-soft: inset 0 1px 0 0 oklch(100% 0 0 / 0.3);
-  --shadow-brand-press: 0 8px 24px -6px oklch(65% 0.16 85 / 0.3), var(--shadow-inset-edge);
-  --shadow-brand-press-strong: 0 12px 32px -8px oklch(65% 0.16 85 / 0.35), 0 0 0 1px oklch(65% 0.16 85 / 0.2), inset 0 1px 0 0 oklch(100% 0 0 / 0.5);
-  --shadow-danger-press: 0 8px 24px -6px oklch(62% 0.22 25 / 0.3), var(--shadow-inset-edge);
 }
 
 /* Firefox scrollbar styling */
@@ -190,7 +95,7 @@ html {
  * ------------------------------------------------------------------------- */
 :root {
   color-scheme: dark;
-  --topbar-h: 56px;
+  --topbar-h: 48px;
   --fab-bottom: calc(env(safe-area-inset-bottom) + 16px);
   --toast-bottom: calc(env(safe-area-inset-bottom) + 16px);
 
@@ -209,45 +114,14 @@ html {
 }
 
 /* -------------------------------------------------------------------------
- * Themeable gradients & shadows. Use via
- *   style={{ backgroundImage: 'var(--gradient-brand)' }}
- * or the inline `@utility` definitions below.
+ * Flat shadow tokens (replacing gradient-based press shadows)
  * ------------------------------------------------------------------------- */
 :root {
-  --gradient-brand: linear-gradient(
-    135deg,
-    oklch(85% 0.14 85) 0%,
-    oklch(78% 0.15 70) 100%
-  );
-  --gradient-danger: linear-gradient(
-    135deg,
-    oklch(72% 0.22 25) 0%,
-    oklch(64% 0.22 15) 100%
-  );
-  --gradient-brand-soft: linear-gradient(
-    135deg,
-    oklch(82% 0.14 85 / 0.16) 0%,
-    oklch(70% 0.14 285 / 0.12) 100%
-  );
-  --gradient-accent: linear-gradient(
-    135deg,
-    oklch(70% 0.14 285) 0%,
-    oklch(74% 0.14 230) 100%
-  );
-
-  --shadow-inset-edge: inset 0 1px 0 0 oklch(100% 0 0 / 0.12);
-  --shadow-inset-edge-soft: inset 0 1px 0 0 oklch(100% 0 0 / 0.06);
-
-  --shadow-brand-press:
-    0 8px 24px -6px oklch(82% 0.14 85 / 0.45),
-    var(--shadow-inset-edge);
-  --shadow-brand-press-strong:
-    0 12px 32px -8px oklch(82% 0.14 85 / 0.5),
-    0 0 0 1px oklch(82% 0.14 85 / 0.25),
-    inset 0 1px 0 0 oklch(100% 0 0 / 0.18);
-  --shadow-danger-press:
-    0 8px 24px -6px oklch(70% 0.22 25 / 0.45),
-    var(--shadow-inset-edge);
+  --shadow-inset-edge: inset 0 1px 0 0 rgba(250, 250, 250, 0.08);
+  --shadow-inset-edge-soft: inset 0 1px 0 0 rgba(250, 250, 250, 0.04);
+  --shadow-brand-press: 0 2px 8px -2px rgba(0, 0, 0, 0.7);
+  --shadow-brand-press-strong: 0 4px 16px -4px rgba(0, 0, 0, 0.8);
+  --shadow-danger-press: 0 2px 8px -2px rgba(0, 0, 0, 0.7);
 }
 
 /* -------------------------------------------------------------------------
@@ -265,9 +139,6 @@ html {
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
-    /* Deliberately no background-image vignette — pure black canvas reads
-     * as truly premium. Ambient warmth is layered on top by
-     * <AmbientBackground/> at very low opacity. */
   }
 
   .tabular-nums {
@@ -276,13 +147,13 @@ html {
   }
 
   :focus-visible {
-    outline: 2px solid var(--color-brand);
-    outline-offset: 2px;
+    outline: 2px solid var(--color-fg);
+    outline-offset: 1px;
     border-radius: var(--radius-sm);
   }
 
   ::selection {
-    background-color: oklch(82% 0.14 85 / 0.35);
+    background-color: rgba(250, 250, 250, 0.2);
     color: var(--color-fg);
   }
 
@@ -305,7 +176,7 @@ html {
     }
     ::-webkit-scrollbar-thumb {
       background: var(--color-border);
-      border-radius: 999px;
+      border-radius: 2px;
       border: 2px solid transparent;
       background-clip: padding-box;
     }
@@ -323,7 +194,7 @@ html {
     padding: 10px 16px;
     background: var(--color-bg-elev-2);
     color: var(--color-fg);
-    border-radius: var(--radius-md);
+    border-radius: var(--radius-sm);
     font-size: 14px;
     font-weight: 600;
     box-shadow: var(--shadow-md);
@@ -332,84 +203,28 @@ html {
   .skip-to-main:focus,
   .skip-to-main:focus-visible {
     top: calc(env(safe-area-inset-top, 0px) + 12px);
-    outline: 2px solid var(--color-brand);
-    outline-offset: 2px;
+    outline: 2px solid var(--color-fg);
+    outline-offset: 1px;
   }
 }
 
 /* -------------------------------------------------------------------------
- * Glass surface utilities — true-black-tinted glass for premium feel
+ * Flat surface utilities (replacing glass/blur utilities)
  * ------------------------------------------------------------------------- */
 
-@utility glass {
-  background: linear-gradient(
-    135deg,
-    oklch(96% 0 0 / 0.03) 0%,
-    oklch(96% 0 0 / 0.00) 50%,
-    oklch(96% 0 0 / 0.02) 100%
-  ),
-  oklch(12% 0 0 / 0.45);
-  backdrop-filter: blur(24px) saturate(160%);
-  -webkit-backdrop-filter: blur(24px) saturate(160%);
-  border: 1px solid oklch(96% 0 0 / 0.08);
-  box-shadow:
-    inset 0 1px 0 0 oklch(100% 0 0 / 0.05),
-    var(--shadow-md);
+@utility surface-panel {
+  background: var(--color-bg-elev-1);
+  border: 1px solid var(--color-border);
 }
 
-@utility glass-strong {
-  background: linear-gradient(
-    135deg,
-    oklch(96% 0 0 / 0.05) 0%,
-    oklch(96% 0 0 / 0.01) 50%,
-    oklch(96% 0 0 / 0.04) 100%
-  ),
-  oklch(12% 0 0 / 0.70);
-  backdrop-filter: blur(20px) saturate(150%);
-  -webkit-backdrop-filter: blur(20px) saturate(150%);
-  border: 1px solid oklch(96% 0 0 / 0.1);
-  box-shadow:
-    inset 0 1px 0 0 oklch(100% 0 0 / 0.07),
-    var(--shadow-lg);
+@utility surface-elevated {
+  background: var(--color-bg-elev-2);
+  border: 1px solid var(--color-border);
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .glass-strong {
-    background: oklch(12% 0 0 / 0.85);
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
-  }
-}
-
-@utility glass-subtle {
-  background: oklch(14% 0 0 / 0.45);
-  backdrop-filter: blur(12px) saturate(140%);
-  -webkit-backdrop-filter: blur(12px) saturate(140%);
-  border: 1px solid oklch(96% 0 0 / 0.06);
-}
-
-@utility card-premium {
-  position: relative;
-  background: linear-gradient(
-    180deg,
-    oklch(14% 0 0 / 0.7) 0%,
-    oklch(11% 0 0 / 0.85) 100%
-  );
-  backdrop-filter: blur(16px) saturate(140%);
-  -webkit-backdrop-filter: blur(16px) saturate(140%);
-  border: 1px solid oklch(96% 0 0 / 0.07);
-  border-radius: var(--radius-2xl);
-  box-shadow:
-    inset 0 1px 0 0 oklch(100% 0 0 / 0.04),
-    var(--shadow-md);
-}
-
-@utility glow-brand {
-  box-shadow: var(--shadow-glow-brand);
-}
-
-@utility glow-accent {
-  box-shadow: var(--shadow-glow-accent);
+@utility surface-flat {
+  background: var(--color-bg);
+  border: 1px solid var(--color-divider);
 }
 
 @utility pt-safe {
@@ -436,15 +251,11 @@ html {
  * to prevent rubber-band leak, layout shift, and double-paint flicker.
  * ------------------------------------------------------------------------- */
 
-/* Contain overscroll inside a scroller so iOS doesn't bounce the body. */
 .no-overscroll {
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
 }
 
-/* Paint isolation for full-bleed surfaces (chat, drawers). Tells the
- * browser this subtree paints independently — prevents flicker when a
- * sibling repaints. */
 .paint-isolated {
   contain: layout paint;
 }
@@ -479,28 +290,25 @@ html {
 
 @keyframes mic-pulse {
   0% {
-    box-shadow: 0 0 0 0 oklch(70% 0.22 25 / 0.45);
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.45);
   }
   70% {
-    box-shadow: 0 0 0 12px oklch(70% 0.22 25 / 0);
+    box-shadow: 0 0 0 12px rgba(239, 68, 68, 0);
   }
   100% {
-    box-shadow: 0 0 0 0 oklch(70% 0.22 25 / 0);
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
   }
 }
 .mic-pulse {
   animation: mic-pulse 1.6s ease-out infinite;
 }
 
-/* Phase 1.1 — Multi-agent committee theater: rotating conic ring that
- * signals an agent is actively processing. Suppressed by the global
- * prefers-reduced-motion override below. */
 @keyframes spin-ring {
   to { transform: rotate(360deg); }
 }
 
 .agent-ring-active {
-  background: conic-gradient(from 0deg, var(--color-brand), transparent, var(--color-brand));
+  background: conic-gradient(from 0deg, #FAFAFA, transparent, #FAFAFA);
   animation: spin-ring 2s linear infinite;
 }
 
@@ -515,9 +323,6 @@ html {
   }
 }
 
-/* User-forced reduced motion (settings preference). Mirrors the OS-level
- * media query above so the rest of the codebase doesn't need to know
- * about this toggle. Set on <html> by the preferences card. */
 html[data-reduce-motion='force'] *,
 html[data-reduce-motion='force'] *::before,
 html[data-reduce-motion='force'] *::after {
@@ -528,10 +333,10 @@ html[data-reduce-motion='force'] *::after {
 }
 
 /* -------------------------------------------------------------------------
- * Markdown-light: applies to chat/parts/text.tsx output.
+ * Markdown prose — applies to chat/parts/text.tsx output.
  * ------------------------------------------------------------------------- */
 .md-prose {
-  line-height: 1.6;
+  line-height: 1.4;
 }
 .md-prose strong {
   color: var(--color-fg);
@@ -544,20 +349,21 @@ html[data-reduce-motion='force'] *::after {
 .md-prose code {
   font-family: var(--font-mono);
   font-size: 0.875em;
-  background: oklch(16% 0 0 / 0.7);
-  border: 1px solid var(--color-divider);
-  border-radius: 6px;
+  background: var(--color-bg-elev-2);
+  border: 1px solid var(--color-border);
+  border-radius: 2px;
   padding: 1px 5px;
 }
 .md-prose ul {
   margin: 8px 0;
-  padding-left: 18px;
-  list-style: disc;
+  padding-left: 0;
+  list-style: none;
 }
 .md-prose ul li {
   margin-top: 4px;
 }
 .md-prose ul li::marker {
+  content: '';
   color: var(--color-fg-subtle);
 }
 
@@ -572,23 +378,6 @@ html[data-reduce-motion='force'] *::after {
 .md-prose h5,
 .md-prose h6 {
   text-wrap: balance;
-}
-
-@keyframes reveal {
-  from {
-    opacity: 0;
-    transform: scale(0.95) translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1) translateY(0);
-  }
-}
-
-@utility animate-reveal {
-  animation: reveal linear both;
-  animation-timeline: view();
-  animation-range: entry 5% cover 25%;
 }
 
 @keyframes scroll-fab {
@@ -615,60 +404,16 @@ html[data-reduce-motion='force'] *::after {
   transition-timing-function: var(--ease-organic);
 }
 
-@keyframes float-slow {
-  0%, 100% {
-    transform: translate(0, 0);
-  }
-  50% {
-    transform: translate(12px, -8px);
-  }
-}
-@keyframes float-medium {
-  0%, 100% {
-    transform: translate(0, 0);
-  }
-  50% {
-    transform: translate(-16px, 12px);
-  }
-}
-@keyframes float-fast {
-  0%, 100% {
-    transform: translate(0, 0);
-  }
-  50% {
-    transform: translate(8px, 16px);
-  }
-}
-
-.float-orb-1 {
-  will-change: transform;
-  animation: float-slow 15s ease-in-out infinite;
-}
-.float-orb-2 {
-  will-change: transform;
-  animation: float-medium 20s ease-in-out infinite;
-}
-.float-orb-3 {
-  will-change: transform;
-  animation: float-fast 18s ease-in-out infinite;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .float-orb-1, .float-orb-2, .float-orb-3 {
-    animation: none !important;
-    will-change: auto !important;
-  }
-}
-
 /* Shiki overrides to match design system code blocks */
 .shiki {
   margin: 0 !important;
   background-color: transparent !important;
   padding: 0.75rem !important;
-  font-family: inherit !important;
-  font-size: inherit !important;
-  line-height: inherit !important;
+  font-family: var(--font-mono) !important;
+  font-size: 0.8125rem !important;
+  line-height: 1.4 !important;
   overflow-x: auto;
+  border-radius: 0 !important;
 }
 .shiki code {
   background-color: transparent !important;
@@ -681,8 +426,8 @@ html[data-reduce-motion='force'] *::after {
  * ------------------------------------------------------------------------- */
 .scroll-shadows-x {
   background:
-    linear-gradient(to right, var(--color-bg-elev-1) 30%, rgba(12, 12, 12, 0)),
-    linear-gradient(to right, rgba(12, 12, 12, 0), var(--color-bg-elev-1) 70%) 100% 0,
+    linear-gradient(to right, var(--color-bg-elev-1) 30%, rgba(0, 0, 0, 0)),
+    linear-gradient(to right, rgba(0, 0, 0, 0), var(--color-bg-elev-1) 70%) 100% 0,
     radial-gradient(farthest-side at 0 50%, rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0)),
     radial-gradient(farthest-side at 100% 50%, rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0)) 100% 0;
   background-repeat: no-repeat;
@@ -724,5 +469,3 @@ html[data-reduce-motion='force'] *::after {
     display: none;
   }
 }
-
-
