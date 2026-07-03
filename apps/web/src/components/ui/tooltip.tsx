@@ -62,8 +62,8 @@ export function Tooltip({ label, side = 'top', children, className }: TooltipPro
         aria-hidden="true"
         className={cn(
           'pointer-events-none absolute left-1/2 -translate-x-1/2 z-50',
-          'whitespace-nowrap rounded-md px-2 py-1 text-body-sm font-medium',
-          'glass-strong text-fg shadow-lg',
+          'whitespace-nowrap rounded-sm px-2 py-1 text-body-sm font-medium',
+          'surface-elevated text-fg shadow-lg',
           'opacity-0 transition-opacity duration-150',
           'group-hover/tooltip:opacity-100 group-hover/tooltip:delay-300',
           'group-focus-within/tooltip:opacity-100 group-focus-within/tooltip:delay-0',

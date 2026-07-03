@@ -46,10 +46,10 @@ export const Switch = forwardRef<HTMLButtonElement, SwitchProps>(function Switch
       disabled={disabled}
       onClick={() => onCheckedChange(!checked)}
       className={cn(
-        'relative inline-flex h-7 w-12 shrink-0 items-center rounded-full transition-colors',
-        'focus:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-bg',
+        'relative inline-flex h-7 w-12 shrink-0 items-center rounded-sm transition-colors',
+        'focus:outline-none focus-visible:ring-2 focus-visible:ring-fg focus-visible:ring-offset-2 focus-visible:ring-offset-bg',
         'disabled:cursor-not-allowed disabled:opacity-50',
-        checked ? 'bg-brand' : 'bg-bg-elev-3',
+        checked ? 'bg-fg' : 'bg-zinc-800',
         className,
       )}
       {...rest}
@@ -57,7 +57,7 @@ export const Switch = forwardRef<HTMLButtonElement, SwitchProps>(function Switch
       <span
         aria-hidden="true"
         className={cn(
-          'inline-block size-5 rounded-full bg-fg shadow-sm transition-transform duration-150',
+          'inline-block size-5 rounded-sm bg-fg shadow-sm transition-transform duration-150',
           checked ? 'translate-x-[22px]' : 'translate-x-0.5',
         )}
       />
