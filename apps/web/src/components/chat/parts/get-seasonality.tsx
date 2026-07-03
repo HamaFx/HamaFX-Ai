@@ -30,7 +30,7 @@ export function GetSeasonalityPart({
   if (state === 'loading' || !output) return <SkeletonCard />;
 
   return (
-    <div className="border-border bg-bg-elev-1 flex flex-col gap-3 rounded-lg border p-3">
+    <div className="border-border bg-zinc-950 flex flex-col gap-3 rounded-sm border p-3">
       <header className="flex flex-wrap items-baseline justify-between gap-2">
         <h3 className="text-fg text-sm font-semibold">
           {output.symbol} · seasonality · {output.granularity}
@@ -41,7 +41,7 @@ export function GetSeasonalityPart({
       {output.thin ? (
         <p
           role="note"
-          className="text-warn border-warn/30 bg-warn/5 rounded-md border px-2 py-1 text-body-sm"
+          className="text-amber-500 border-warn/30 bg-warn/5 rounded-sm border px-2 py-1 text-body-sm"
         >
           Thin sample — interpret as directional, not statistically significant.
         </p>
@@ -53,7 +53,7 @@ export function GetSeasonalityPart({
           return (
             <li
               key={b.key}
-              className="border-divider/40 flex items-baseline justify-between gap-2 rounded-md border px-2 py-1"
+              className="border-zinc-900 flex items-baseline justify-between gap-2 rounded-sm border px-2 py-1"
             >
               <span className="text-fg-muted w-12 font-medium">{b.label}</span>
               <span className={`${tone} font-semibold`}>
@@ -74,12 +74,12 @@ export function GetSeasonalityPart({
 function SkeletonCard() {
   return (
     <div
-      className="border-border bg-bg-elev-1 rounded-lg border p-3"
+      className="border-border bg-zinc-950 rounded-sm border p-3"
       aria-busy="true"
       aria-label="Computing seasonality"
     >
-      <div className="bg-bg-elev-2 h-4 w-1/2 animate-pulse rounded" />
-      <div className="bg-bg-elev-2 mt-3 h-24 animate-pulse rounded" />
+      <div className="bg-zinc-900 h-4 w-1/2 animate-pulse rounded" />
+      <div className="bg-zinc-900 mt-3 h-24 animate-pulse rounded" />
     </div>
   );
 }
@@ -88,7 +88,7 @@ function ErrorCard({ message }: { message?: string }) {
   return (
     <div
       role="alert"
-      className="border-bear/30 bg-bg-elev-1 text-bear rounded-lg border p-3 text-sm"
+      className="border-red-500/30 bg-zinc-950 text-red-500 rounded-sm border p-3 text-sm"
     >
       Seasonality failed{message ? ` · ${message}` : ''}
     </div>

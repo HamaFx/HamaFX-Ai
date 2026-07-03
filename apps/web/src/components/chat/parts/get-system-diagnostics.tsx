@@ -38,27 +38,27 @@ export function GetSystemDiagnosticsPart({
 
   // Status mapping
   let statusColor = 'text-fg';
-  let statusBg = 'bg-bg-elev-3';
+  let statusBg = 'bg-zinc-800';
   let StatusIcon = Activity;
 
   if (status === 'healthy') {
     statusColor = 'text-bull';
-    statusBg = 'bg-bull/10';
+    statusBg = 'bg-emerald-500/10';
     StatusIcon = CheckCircle;
   } else if (status === 'degraded') {
     statusColor = 'text-warn';
-    statusBg = 'bg-warn/10';
+    statusBg = 'bg-amber-500/10';
     StatusIcon = AlertTriangle;
   } else if (status === 'unhealthy') {
     statusColor = 'text-bear';
-    statusBg = 'bg-bear/10';
+    statusBg = 'bg-red-500/10';
     StatusIcon = AlertTriangle;
   }
 
   return (
-    <div className="border-border bg-bg-elev-1 flex flex-col gap-4 rounded-xl border p-4 shadow-md backdrop-blur">
+    <div className="border-border bg-zinc-950 flex flex-col gap-4 rounded-sm border p-4 shadow-md ">
       {/* Header */}
-      <header className="flex items-center justify-between border-b border-divider/40 pb-2">
+      <header className="flex items-center justify-between border-b border-zinc-900 pb-2">
         <div className="flex flex-col">
           <span className="text-fg-subtle text-caption uppercase font-bold tracking-wider">
             Copilot Diagnostic Node
@@ -67,7 +67,7 @@ export function GetSystemDiagnosticsPart({
             System Telemetry & Health
           </h3>
         </div>
-        <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-bold ${statusBg} ${statusColor}`}>
+        <span className={`inline-flex items-center gap-1 rounded-sm px-2.5 py-0.5 text-xs font-bold ${statusBg} ${statusColor}`}>
           <StatusIcon className="size-3" />
           {status.toUpperCase()}
         </span>
@@ -75,21 +75,21 @@ export function GetSystemDiagnosticsPart({
 
       {/* Latency & Spend Highlights */}
       <div className="grid grid-cols-3 gap-3 text-center">
-        <div className="bg-bg-elev-2/50 rounded-lg p-2 border border-divider/25 flex flex-col items-center justify-center">
+        <div className="bg-bg-elev-2/50 rounded-sm p-2 border border-divider/25 flex flex-col items-center justify-center">
           <Database className="size-4 text-fg-subtle mb-1" />
           <span className="text-fg-subtle text-xs uppercase font-medium">DB Latency</span>
           <span className="text-fg text-xs font-extrabold mt-0.5 tabular-nums">
             {database.latencyMs >= 0 ? `${database.latencyMs}ms` : 'offline'}
           </span>
         </div>
-        <div className="bg-bg-elev-2/50 rounded-lg p-2 border border-divider/25 flex flex-col items-center justify-center">
+        <div className="bg-bg-elev-2/50 rounded-sm p-2 border border-divider/25 flex flex-col items-center justify-center">
           <Wallet className="size-4 text-fg-subtle mb-1" />
           <span className="text-fg-subtle text-xs uppercase font-medium">AI Spend Today</span>
           <span className="text-fg text-xs font-extrabold mt-0.5 tabular-nums">
             ${budget.spentUsd.toFixed(2)}
           </span>
         </div>
-        <div className="bg-bg-elev-2/50 rounded-lg p-2 border border-divider/25 flex flex-col items-center justify-center">
+        <div className="bg-bg-elev-2/50 rounded-sm p-2 border border-divider/25 flex flex-col items-center justify-center">
           <Cpu className="size-4 text-fg-subtle mb-1" />
           <span className="text-fg-subtle text-xs uppercase font-medium">Vector Memory</span>
           <span className="text-fg text-xs font-extrabold mt-0.5 tabular-nums">
@@ -101,7 +101,7 @@ export function GetSystemDiagnosticsPart({
       {/* Database Record Volumes */}
       <div className="flex flex-col gap-2">
         <h4 className="text-fg-subtle text-xs font-bold uppercase tracking-wider">Database Segment Volumes</h4>
-        <div className="grid grid-cols-2 gap-2 border-t border-divider/20 pt-2 text-caption">
+        <div className="grid grid-cols-2 gap-2 border-t border-zinc-900/50 pt-2 text-caption">
           <div className="flex justify-between py-0.5">
             <span className="text-fg-muted">Journal Entries:</span>
             <span className="text-fg font-medium tabular-nums">{database.journalEntriesCount}</span>
@@ -124,11 +124,11 @@ export function GetSystemDiagnosticsPart({
       {/* Environment Config Checks */}
       <div className="flex flex-col gap-2">
         <h4 className="text-fg-subtle text-xs font-bold uppercase tracking-wider">Environment Integrations</h4>
-        <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 border-t border-divider/20 pt-2 text-xs">
+        <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 border-t border-zinc-900/50 pt-2 text-xs">
           {Object.entries(envCheck).map(([key, configured]) => (
             <div key={key} className="flex items-center justify-between py-0.5">
               <span className="text-fg-muted font-mono">{key}</span>
-              <span className={`px-1.5 py-0.5 rounded font-bold ${configured ? 'bg-bull/10 text-bull' : 'bg-bear/10 text-bear'}`}>
+              <span className={`px-1.5 py-0.5 rounded font-bold ${configured ? 'bg-emerald-500/10 text-bull' : 'bg-red-500/10 text-bear'}`}>
                 {configured ? 'OK' : 'MISSING'}
               </span>
             </div>
@@ -139,7 +139,7 @@ export function GetSystemDiagnosticsPart({
       {/* Background Jobs Sync Log */}
       <div className="flex flex-col gap-2">
         <h4 className="text-fg-subtle text-xs font-bold uppercase tracking-wider">Background Sync Status</h4>
-        <div className="flex flex-col gap-1 border-t border-divider/20 pt-2 text-caption">
+        <div className="flex flex-col gap-1 border-t border-zinc-900/50 pt-2 text-caption">
           <div className="flex justify-between py-0.5">
             <span className="text-fg-muted">FRED Opportunity Cost Sync:</span>
             <span className="text-fg font-semibold tabular-nums">
@@ -155,7 +155,7 @@ export function GetSystemDiagnosticsPart({
         </div>
       </div>
 
-      <p className="text-fg-muted text-body-sm leading-normal border-t border-divider/20 pt-2.5">
+      <p className="text-fg-muted text-body-sm leading-normal border-t border-zinc-900/50 pt-2.5">
         {narrative}
       </p>
       <footer className="text-fg-subtle text-xs text-right mt-[-4px]">
@@ -167,27 +167,27 @@ export function GetSystemDiagnosticsPart({
 
 function SkeletonCard() {
   return (
-    <div className="border-border bg-bg-elev-1 rounded-xl border p-4 shadow-md" aria-busy="true" aria-label="Querying Diagnostics">
+    <div className="border-border bg-zinc-950 rounded-sm border p-4 shadow-md" aria-busy="true" aria-label="Querying Diagnostics">
       <div className="flex items-center justify-between">
         <div className="flex flex-col gap-1 w-2/3">
-          <div className="bg-bg-elev-2 h-3 w-1/3 animate-pulse rounded" />
-          <div className="bg-bg-elev-2 h-4 w-2/3 animate-pulse rounded mt-1" />
+          <div className="bg-zinc-900 h-3 w-1/3 animate-pulse rounded" />
+          <div className="bg-zinc-900 h-4 w-2/3 animate-pulse rounded mt-1" />
         </div>
-        <div className="bg-bg-elev-2 h-5 w-20 animate-pulse rounded-full" />
+        <div className="bg-zinc-900 h-5 w-20 animate-pulse rounded-sm" />
       </div>
       <div className="grid grid-cols-3 gap-3 mt-4">
         {[0, 1, 2].map((i) => (
-          <div key={i} className="bg-bg-elev-2 h-12 animate-pulse rounded-lg" />
+          <div key={i} className="bg-zinc-900 h-12 animate-pulse rounded-sm" />
         ))}
       </div>
-      <div className="bg-bg-elev-2 h-16 w-full animate-pulse rounded-lg mt-4" />
+      <div className="bg-zinc-900 h-16 w-full animate-pulse rounded-sm mt-4" />
     </div>
   );
 }
 
 function ErrorCard({ message }: { message?: string }) {
   return (
-    <div role="alert" className="border-bear/30 bg-bg-elev-1 text-bear rounded-xl border p-4 text-sm font-semibold">
+    <div role="alert" className="border-red-500/30 bg-zinc-950 text-red-500 rounded-sm border p-4 text-sm font-semibold">
       Operational diagnostics probe failed {message ? ` · ${message}` : ''}
     </div>
   );

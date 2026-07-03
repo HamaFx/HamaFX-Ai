@@ -25,11 +25,11 @@ interface GetSocialSentimentPartProps {
 }
 
 const SENTIMENT_COLORS: Record<string, string> = {
-  very_bullish: 'bg-bull/15 text-bull border border-bull/20',
-  bullish: 'bg-bull/10 text-bull/90 border border-bull/10',
-  neutral: 'bg-bg-elev-2 text-fg-muted border border-divider',
-  bearish: 'bg-bear/10 text-bear/90 border border-bear/10',
-  very_bearish: 'bg-bear/15 text-bear border border-bear/20',
+  very_bullish: 'bg-bull/15 text-emerald-500 border border-bull/20',
+  bullish: 'bg-emerald-500/10 text-bull/90 border border-bull/10',
+  neutral: 'bg-zinc-900 text-fg-muted border border-divider',
+  bearish: 'bg-red-500/10 text-bear/90 border border-bear/10',
+  very_bearish: 'bg-bear/15 text-red-500 border border-bear/20',
 };
 
 const SOURCE_ICONS: Record<string, LucideIcon> = {
@@ -43,30 +43,30 @@ const SOURCE_ICONS: Record<string, LucideIcon> = {
 export function GetSocialSentimentPart({ output, state, errorMessage }: GetSocialSentimentPartProps) {
   if (state === 'error') {
     return (
-      <div role="alert" className="border-bear/30 bg-bg-elev-1 text-bear rounded-lg border p-3 text-sm">
+      <div role="alert" className="border-red-500/30 bg-zinc-950 text-red-500 rounded-sm border p-3 text-sm">
         Sentiment unavailable{errorMessage ? ` · ${errorMessage}` : ''}
       </div>
     );
   }
   if (state === 'loading' || !output) {
     return (
-      <div className="border-border bg-bg-elev-1 rounded-lg border p-3" aria-busy="true">
-        <div className="bg-bg-elev-2 mb-2 h-3 w-32 animate-pulse rounded" />
-        <div className="bg-bg-elev-2 h-16 w-full animate-pulse rounded" />
+      <div className="border-border bg-zinc-950 rounded-sm border p-3" aria-busy="true">
+        <div className="bg-zinc-900 mb-2 h-3 w-32 animate-pulse rounded" />
+        <div className="bg-zinc-900 h-16 w-full animate-pulse rounded" />
       </div>
     );
   }
 
   if (!output.available) {
     return (
-      <div className="border-border bg-bg-elev-1 rounded-lg border p-3 text-fg-muted text-sm text-center">
+      <div className="border-border bg-zinc-950 rounded-sm border p-3 text-fg-muted text-sm text-center">
         No sentiment data available for {output.symbol}.
       </div>
     );
   }
 
   return (
-    <div className="border-border bg-bg-elev-1 rounded-lg border p-3 space-y-4">
+    <div className="border-border bg-zinc-950 rounded-sm border p-3 space-y-4">
       <div className="text-fg-muted text-xs">
         Social Sentiment · {new Date(output.fetchedAt).toLocaleTimeString()}
       </div>
@@ -74,7 +74,7 @@ export function GetSocialSentimentPart({ output, state, errorMessage }: GetSocia
       <div className="flex items-center justify-between gap-3">
         <span className="text-lg font-bold text-fg">{output.symbol}</span>
         <span
-          className={`text-sm px-2.5 py-1 rounded-md font-semibold ${
+          className={`text-sm px-2.5 py-1 rounded-sm font-semibold ${
             SENTIMENT_COLORS[output.overall] || SENTIMENT_COLORS.neutral
           }`}
         >
@@ -83,7 +83,7 @@ export function GetSocialSentimentPart({ output, state, errorMessage }: GetSocia
       </div>
 
       {output.contrarianSignal && output.contrarianNote && (
-          <div className="bg-warn/10 text-warn border border-warn/20 p-2.5 rounded-lg text-xs leading-relaxed">
+          <div className="bg-amber-500/10 text-amber-500 border border-warn/20 p-2.5 rounded-sm text-xs leading-[1.4]">
           <div className="font-semibold mb-0.5">Contrarian Warning</div>
           {output.contrarianNote}
         </div>
@@ -95,7 +95,7 @@ export function GetSocialSentimentPart({ output, state, errorMessage }: GetSocia
           .map((src, i) => {
             const Icon = SOURCE_ICONS[src.source] || AlertCircle;
             return (
-              <div key={i} className="flex items-center justify-between gap-3 p-2 bg-bg rounded-md text-xs">
+              <div key={i} className="flex items-center justify-between gap-3 p-2 bg-bg rounded-sm text-xs">
                 <div className="flex items-center gap-2">
                   <Icon className="size-4 text-fg-muted shrink-0" />
                   <span className="text-fg font-medium capitalize flex-1">
