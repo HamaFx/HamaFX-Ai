@@ -40,11 +40,11 @@ export function ThreadSummaryHeader({ synopsis, insights, onDismiss }: ThreadSum
     <div
       role="status"
       aria-label="Thread summary"
-      className="border border-divider bg-bg-elev-1 rounded-lg p-3 mb-3"
+      className="border border-zinc-800 bg-zinc-950 rounded-sm p-3 mb-3"
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Sparkles className="size-3.5 text-brand" />
+          <Sparkles className="size-3.5 text-fg" />
           <span className="text-body-sm font-semibold text-fg">Thread summary</span>
         </div>
         <div className="flex items-center gap-1">
@@ -53,7 +53,7 @@ export function ThreadSummaryHeader({ synopsis, insights, onDismiss }: ThreadSum
             onClick={() => setOpen((v) => !v)}
             aria-expanded={open}
             aria-label={open ? 'Collapse summary' : 'Expand summary'}
-            className="text-fg-subtle hover:text-fg inline-flex size-7 items-center justify-center rounded-md transition-colors"
+            className="text-fg-subtle hover:text-fg inline-flex size-7 items-center justify-center rounded-sm transition-colors"
           >
             {open ? <ChevronUp className="size-3.5" /> : <ChevronDown className="size-3.5" />}
           </button>
@@ -62,7 +62,7 @@ export function ThreadSummaryHeader({ synopsis, insights, onDismiss }: ThreadSum
               type="button"
               onClick={onDismiss}
               aria-label="Dismiss summary"
-              className="text-fg-subtle hover:text-bear inline-flex size-7 items-center justify-center rounded-md transition-colors"
+              className="text-fg-subtle hover:text-red-500 inline-flex size-7 items-center justify-center rounded-sm transition-colors"
             >
               <X className="size-3.5" />
             </button>
@@ -85,19 +85,19 @@ export function ThreadSummaryHeader({ synopsis, insights, onDismiss }: ThreadSum
             className="overflow-hidden"
           >
             <div className="flex flex-col gap-2 pt-2">
-              <p className="text-fg text-sm leading-relaxed">{synopsis}</p>
+              <p className="text-fg text-sm leading-[1.4]">{synopsis}</p>
 
               {insights.length > 0 ? (
                 <ul className="flex flex-col gap-1">
                   {insights.map((ins, i) => (
                     <li
                       key={i}
-                      className="border-divider/40 flex items-baseline gap-2 rounded-md border p-2 text-xs"
+                      className="border-zinc-900 flex items-baseline gap-2 rounded-sm border p-2 text-xs"
                     >
                       <span className="text-fg-muted">→</span>
                       <span className="text-fg flex-1">{ins.text}</span>
                       {ins.symbol ? (
-                        <span className="bg-bg-elev-2 text-fg-muted rounded px-1.5 py-0.5 text-caption font-medium">
+                        <span className="bg-zinc-900 text-fg-muted rounded px-1.5 py-0.5 text-caption font-medium">
                           {ins.symbol}
                         </span>
                       ) : null}

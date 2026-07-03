@@ -41,14 +41,14 @@ export function AnalyzeFundamentalPart({
 
   if (output.pipelinePending) {
     return (
-      <div className="border-border bg-bg-elev-1 rounded-lg border p-3">
+      <div className="border-border bg-zinc-950 rounded-sm border p-3">
         <p className="text-fg-muted text-sm">{output.summary}</p>
       </div>
     );
   }
 
   return (
-    <div className="border-border bg-bg-elev-1 rounded-lg border p-3">
+    <div className="border-border bg-zinc-950 rounded-sm border p-3">
       <header className="mb-2 flex items-baseline justify-between gap-2">
         <h3 className="text-fg text-sm font-semibold">
           {output.symbol} · fundamental
@@ -81,7 +81,7 @@ export function AnalyzeFundamentalPart({
                   </span>
                 </div>
                 <span
-                  className={`shrink-0 rounded-full px-2 py-0.5 text-caption font-medium uppercase tracking-wide ${impactClass(e.importance)}`}
+                  className={`shrink-0 rounded-sm px-2 py-0.5 text-caption font-medium uppercase tracking-wide ${impactClass(e.importance)}`}
                 >
                   {e.importance}
                 </span>
@@ -93,7 +93,7 @@ export function AnalyzeFundamentalPart({
 
       <Link
         href={`/calendar?symbol=${output.symbol}`}
-        className="text-brand focus-visible:ring-brand mt-3 block min-h-[24px] text-right text-body-sm font-medium underline-offset-2 outline-none hover:underline focus-visible:ring-2"
+        className="text-fg focus-visible:ring-fg mt-3 block min-h-[24px] text-right text-body-sm font-medium underline-offset-2 outline-none hover:underline focus-visible:ring-2"
       >
         open calendar →
       </Link>
@@ -111,13 +111,13 @@ function SentimentStrip({
   const pct = (n: number) => Math.round((n / total) * 100);
   return (
     <div className="flex items-center gap-2 text-caption tabular-nums">
-      <span className="text-bull bg-bull/10 rounded-full px-2 py-0.5 font-medium">
+      <span className="text-emerald-500 bg-emerald-500/10 rounded-sm px-2 py-0.5 font-medium">
         ↑ {sentiment.positive} ({pct(sentiment.positive)}%)
       </span>
-      <span className="text-bear bg-bear/10 rounded-full px-2 py-0.5 font-medium">
+      <span className="text-red-500 bg-red-500/10 rounded-sm px-2 py-0.5 font-medium">
         ↓ {sentiment.negative} ({pct(sentiment.negative)}%)
       </span>
-      <span className="text-fg-muted bg-bg-elev-2 rounded-full px-2 py-0.5 font-medium">
+      <span className="text-fg-muted bg-zinc-900 rounded-sm px-2 py-0.5 font-medium">
         · {sentiment.neutral} ({pct(sentiment.neutral)}%)
       </span>
     </div>
@@ -125,9 +125,9 @@ function SentimentStrip({
 }
 
 function impactClass(importance: 'low' | 'medium' | 'high'): string {
-  if (importance === 'high') return 'bg-bear/10 text-bear';
-  if (importance === 'medium') return 'bg-warn/10 text-warn';
-  return 'bg-bg-elev-2 text-fg-muted';
+  if (importance === 'high') return 'bg-red-500/10 text-bear';
+  if (importance === 'medium') return 'bg-amber-500/10 text-warn';
+  return 'bg-zinc-900 text-fg-muted';
 }
 
 function formatStamp(iso: string): string {
@@ -143,15 +143,15 @@ function formatStamp(iso: string): string {
 function SkeletonCard() {
   return (
     <div
-      className="border-border bg-bg-elev-1 rounded-lg border p-3"
+      className="border-border bg-zinc-950 rounded-sm border p-3"
       aria-busy="true"
       aria-label="Analyzing fundamental backdrop"
     >
-      <div className="bg-bg-elev-2 h-4 w-1/2 animate-pulse rounded" />
-      <div className="bg-bg-elev-2 mt-3 h-3 w-3/4 animate-pulse rounded" />
+      <div className="bg-zinc-900 h-4 w-1/2 animate-pulse rounded" />
+      <div className="bg-zinc-900 mt-3 h-3 w-3/4 animate-pulse rounded" />
       <ul className="mt-3 flex flex-col gap-2">
         {[0, 1, 2].map((i) => (
-          <li key={i} className="bg-bg-elev-2 h-8 animate-pulse rounded" />
+          <li key={i} className="bg-zinc-900 h-8 animate-pulse rounded" />
         ))}
       </ul>
     </div>
@@ -162,7 +162,7 @@ function ErrorCard({ message }: { message?: string }) {
   return (
     <div
       role="alert"
-      className="border-bear/30 bg-bg-elev-1 text-bear rounded-lg border p-3 text-sm"
+      className="border-red-500/30 bg-zinc-950 text-red-500 rounded-sm border p-3 text-sm"
     >
       Fundamental analysis failed{message ? ` · ${message}` : ''}
     </div>

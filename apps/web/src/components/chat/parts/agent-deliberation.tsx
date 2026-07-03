@@ -67,11 +67,11 @@ const AGENT_META: Record<
   string,
   { icon: ReactNode; label: string; tokenClass: string; glowClass: string }
 > = {
-  technical: { icon: <TrendingUp className="size-4" />, label: 'Technical', tokenClass: 'text-bull', glowClass: 'shadow-glow-brand' },
-  fundamental: { icon: <Newspaper className="size-4" />, label: 'Fundamental', tokenClass: 'text-info', glowClass: 'shadow-glow-accent' },
+  technical: { icon: <TrendingUp className="size-4" />, label: 'Technical', tokenClass: 'text-bull', glowClass: 'shadow-none' },
+  fundamental: { icon: <Newspaper className="size-4" />, label: 'Fundamental', tokenClass: 'text-info', glowClass: 'shadow-none' },
   risk: { icon: <Shield className="size-4" />, label: 'Risk', tokenClass: 'text-bear', glowClass: '' },
   sentiment: { icon: <Bot className="size-4" />, label: 'Sentiment', tokenClass: 'text-warn', glowClass: '' },
-  decision: { icon: <Brain className="size-4" />, label: 'Decision', tokenClass: 'text-brand', glowClass: 'shadow-glow-brand' },
+  decision: { icon: <Brain className="size-4" />, label: 'Decision', tokenClass: 'text-fg', glowClass: 'shadow-none' },
 };
 
 const FALLBACK_META = {
@@ -110,7 +110,7 @@ export function AgentDeliberation({ agents, mode }: AgentDeliberationProps) {
     <div
       role="status"
       aria-live="polite"
-      className="border border-divider bg-bg-elev-1 rounded-lg p-4 flex flex-col gap-4"
+      className="border border-zinc-800 bg-zinc-950 rounded-sm p-4 flex flex-col gap-4"
     >
       {/* Header */}
       <div className="flex items-center gap-2 text-caption text-fg-subtle uppercase tracking-wider font-semibold">
@@ -141,7 +141,7 @@ export function AgentDeliberation({ agents, mode }: AgentDeliberationProps) {
             <m.div
               animate={{ scale: [1, 1.25, 1] }}
               transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
-              className={cn('size-2 rounded-full bg-brand shadow-glow-brand', doneCount >= 2 && 'size-2.5')}
+              className={cn('size-2 rounded-sm bg-fg shadow-none', doneCount >= 2 && 'size-2.5')}
             />
           </m.div>
         ) : null}
@@ -164,7 +164,7 @@ export function AgentDeliberation({ agents, mode }: AgentDeliberationProps) {
             exit={{ opacity: 0, scale: 0.9 }}
             transition={{ type: 'spring', stiffness: 300, damping: 24 }}
             aria-label={`Committee verdict: ${dissent ? 'mixed' : opinions[0]?.opinion?.bias ?? 'neutral'}, ${avgConfidence}% confidence`}
-            className="border border-divider bg-bg-elev-2 rounded-lg p-3 flex flex-col gap-3"
+            className="border border-zinc-800 bg-zinc-900 rounded-sm p-3 flex flex-col gap-3"
           >
             {/* Confidence meter */}
             <div className="flex flex-col gap-1.5">
@@ -172,9 +172,9 @@ export function AgentDeliberation({ agents, mode }: AgentDeliberationProps) {
                 <span className="text-sm font-semibold text-fg">Committee confidence</span>
                 <span className="text-sm font-bold text-fg tabular-nums">{avgConfidence}%</span>
               </div>
-              <div className="h-1.5 w-full overflow-hidden rounded-full bg-bg-elev-3">
+              <div className="h-1.5 w-full overflow-hidden rounded-sm bg-zinc-800">
                 <m.div
-                  className={cn('h-full rounded-full', confidenceTone)}
+                  className={cn('h-full rounded-sm', confidenceTone)}
                   initial={{ width: 0 }}
                   animate={{ width: `${avgConfidence}%` }}
                   transition={{ duration: 0.5, ease: 'easeOut' }}
@@ -186,7 +186,7 @@ export function AgentDeliberation({ agents, mode }: AgentDeliberationProps) {
             <div className="flex items-center gap-3">
               <BiasDistribution counts={biasCounts} total={opinions.length} />
               {dissent ? (
-                <span className="ml-auto inline-flex items-center gap-1 text-caption text-warn font-semibold">
+                <span className="ml-auto inline-flex items-center gap-1 text-caption text-amber-500 font-semibold">
                   <AlertTriangle className="size-3.5" />
                   Mixed signals
                 </span>
@@ -204,11 +204,11 @@ export function AgentDeliberation({ agents, mode }: AgentDeliberationProps) {
                     const meta = AGENT_META[a.agentName] ?? FALLBACK_META;
                     const op = a.opinion!;
                     return (
-                      <div key={a.agentName} className="border-l-2 border-divider pl-3 py-1.5">
+                      <div key={a.agentName} className="border-l-2 border-zinc-800 pl-3 py-1.5">
                         <span className="text-fg text-body-sm font-semibold">{meta.label}</span>
                         <span className={cn('ml-2 text-caption font-bold uppercase', BIAS_TOKEN[op.bias])}>{op.bias}</span>
                         <span className="ml-1 text-fg-subtle text-caption tabular-nums">{Math.round(op.confidence * 100)}%</span>
-                        <p className="text-fg-muted text-xs mt-1 leading-relaxed">{op.reasoning}</p>
+                        <p className="text-fg-muted text-xs mt-1 leading-[1.4]">{op.reasoning}</p>
                       </div>
                     );
                   })}
@@ -222,7 +222,7 @@ export function AgentDeliberation({ agents, mode }: AgentDeliberationProps) {
               .map((a) => {
                 const meta = AGENT_META[a.agentName] ?? FALLBACK_META;
                 return (
-                  <div key={`error-${a.agentName}`} className="text-bear text-xs flex items-center gap-1.5">
+                  <div key={`error-${a.agentName}`} className="text-red-500 text-xs flex items-center gap-1.5">
                     <AlertCircle className="size-3.5 shrink-0" />
                     <span>{meta.label} agent failed: {a.error}</span>
                   </div>
@@ -253,30 +253,30 @@ function AgentNode({
       <div className="relative">
         {/* Rotating conic ring while running */}
         {status === 'running' ? (
-          <span aria-hidden className="agent-ring-active absolute inset-0 rounded-full" style={{ padding: 2 }} />
+          <span aria-hidden className="agent-ring-active absolute inset-0 rounded-sm" style={{ padding: 2 }} />
         ) : null}
         <m.div
           aria-label={`${meta.label} agent: ${status}`}
           animate={status === 'running' ? { scale: [1, 1.05, 1] } : { scale: 1 }}
           transition={status === 'running' ? { duration: 1.5, repeat: Infinity, ease: 'easeInOut' } : { type: 'spring', stiffness: 400, damping: 25 }}
           className={cn(
-            'relative flex size-12 items-center justify-center rounded-full',
-            status === 'pending' && 'bg-bg-elev-2 text-fg-subtle',
-            status === 'running' && 'bg-bg-elev-3 text-fg',
+            'relative flex size-12 items-center justify-center rounded-sm',
+            status === 'pending' && 'bg-zinc-900 text-fg-subtle',
+            status === 'running' && 'bg-zinc-800 text-fg',
             status === 'done' && 'bg-bg-elev-2',
-            status === 'error' && 'bg-bear/10 text-bear border border-bear/30',
+            status === 'error' && 'bg-red-500/10 text-red-500 border border-red-500/30',
           )}
         >
           <span className={cn(status !== 'error' && status !== 'pending' && meta.tokenClass)}>{meta.icon}</span>
 
           {/* Status badges */}
           {status === 'done' ? (
-            <span className={cn('absolute -bottom-0.5 -right-0.5 flex size-4 items-center justify-center rounded-full bg-bg-elev-1', meta.tokenClass)}>
+            <span className={cn('absolute -bottom-0.5 -right-0.5 flex size-4 items-center justify-center rounded-sm bg-bg-elev-1', meta.tokenClass)}>
               <CheckCircle2 className="size-4" />
             </span>
           ) : null}
           {status === 'error' ? (
-            <span className="absolute -bottom-0.5 -right-0.5 flex size-4 items-center justify-center rounded-full bg-bg-elev-1 text-bear">
+            <span className="absolute -bottom-0.5 -right-0.5 flex size-4 items-center justify-center rounded-sm bg-zinc-950 text-red-500">
               <AlertCircle className="size-4" />
             </span>
           ) : null}
@@ -345,9 +345,9 @@ function BiasDistribution({
         return (
           <div key={r.label} className="flex items-center gap-2">
             <span className="w-12 text-caption text-fg-subtle uppercase tracking-wide">{r.label}</span>
-            <div className="h-1.5 w-24 overflow-hidden rounded-full bg-bg-elev-3">
+            <div className="h-1.5 w-24 overflow-hidden rounded-sm bg-zinc-800">
               <m.div
-                className={cn('h-full rounded-full', r.bar)}
+                className={cn('h-full rounded-sm', r.bar)}
                 initial={{ width: 0 }}
                 animate={{ width: `${pct}%` }}
                 transition={{ duration: 0.4, ease: 'easeOut' }}
