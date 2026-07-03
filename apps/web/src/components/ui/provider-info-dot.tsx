@@ -87,7 +87,7 @@ export function ProviderInfoDot({
         role="img"
         aria-label={ariaLabel}
         className={
-          'text-fg-muted hover:text-fg inline-flex size-4 items-center justify-center rounded-full transition-colors' +
+          'text-fg-muted hover:text-fg inline-flex size-4 items-center justify-center rounded-sm transition-colors' +
           (className ? ` ${className}` : '')
         }
         onClick={(e) => e.stopPropagation()}

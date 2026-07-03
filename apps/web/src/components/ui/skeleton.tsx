@@ -30,7 +30,7 @@ export function Skeleton({ className, ...rest }: SkeletonProps) {
     <div
       role="status"
       aria-label="Loading content"
-      className={cn('shimmer rounded-md', className)}
+      className={cn('shimmer rounded-sm', className)}
       {...rest}
     />
   );
@@ -41,14 +41,14 @@ interface SkeletonCardProps extends HTMLAttributes<HTMLDivElement> {
   lines?: number;
 }
 
-/** Shimmering card placeholder matching the codebase's `card-premium`. */
+/** Shimmering card placeholder matching the codebase's `surface-panel`. */
 export function SkeletonCard({ className, lines = 2, ...rest }: SkeletonCardProps) {
   return (
     <div
       role="status"
       aria-label="Loading content"
       className={cn(
-        'border-border bg-bg-elev-1/60 flex flex-col gap-2 overflow-hidden rounded-lg border p-4',
+        'border-border bg-zinc-950/60 flex flex-col gap-2 overflow-hidden rounded-sm border p-4',
         className,
       )}
       {...rest}

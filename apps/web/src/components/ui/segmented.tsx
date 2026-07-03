@@ -187,21 +187,21 @@ export function Segmented<T extends string>(props: SegmentedProps<T>) {
         onKeyDown={handleKeyDown}
         className={cn(
           variant === 'gradient'
-            ? 'border-border bg-bg-elev-2 inline-flex items-center gap-0.5 rounded-full border p-0.5'
-            : 'border-border bg-bg-elev-2 inline-flex flex-wrap items-center gap-0.5 rounded-full border p-0.5',
+            ? 'border-border bg-zinc-900 inline-flex items-center gap-0.5 rounded-sm border p-0.5'
+            : 'border-border bg-zinc-900 inline-flex flex-wrap items-center gap-0.5 rounded-sm border p-0.5',
           className,
         )}
       >
         {options.map((opt, optIndex) => {
           const active = opt.value === value;
           const baseItem = cn(
-            'relative inline-flex min-w-[44px] items-center justify-center rounded-full font-semibold tabular-nums transition-colors',
-            'focus-visible:ring-brand focus:outline-none focus-visible:ring-2',
+            'relative inline-flex min-w-[44px] items-center justify-center rounded-sm font-semibold tabular-nums transition-colors',
+            'focus-visible:ring-fg focus:outline-none focus-visible:ring-2',
             ITEM_PAD[size],
             SIZE[size],
             !active && 'text-fg-muted hover:text-fg',
-            active && variant === 'gradient' && 'text-brand-fg',
-            active && variant === 'solid' && 'bg-brand text-brand-fg',
+            active && variant === 'gradient' && 'text-black',
+            active && variant === 'solid' && 'bg-fg text-black',
             active && variant === 'tone' && toneClass(opt.tone),
           );
 
@@ -209,11 +209,11 @@ export function Segmented<T extends string>(props: SegmentedProps<T>) {
             active && variant === 'gradient' ? (
               <m.span
                 layoutId={layoutId}
-                className="absolute inset-0 -z-0 rounded-full"
+                className="absolute inset-0 -z-0 rounded-sm"
                 style={{
-                  backgroundImage: 'var(--gradient-brand)',
+                  backgroundImage: 'none',
                   boxShadow:
-                    'inset 0 1px 0 0 oklch(100% 0 0 / 0.15), 0 4px 12px -2px oklch(78% 0.16 78 / 0.4)',
+                    'inset 0 1px 0 0 rgba(250, 250, 250, 0.15), 0 4px 12px -2px rgba(250, 250, 250, 0.2)',
                 }}
                 transition={{ type: 'spring', stiffness: 380, damping: 30 }}
               />
@@ -264,7 +264,7 @@ export function Segmented<T extends string>(props: SegmentedProps<T>) {
 }
 
 function toneClass(tone: SegmentedTone | undefined): string {
-  if (tone === 'bull') return 'bg-bull text-bg';
-  if (tone === 'bear') return 'bg-bear text-bg';
-  return 'bg-brand text-brand-fg';
+  if (tone === 'bull') return 'bg-emerald-500 text-bg';
+  if (tone === 'bear') return 'bg-red-500 text-bg';
+  return 'bg-fg text-black';
 }

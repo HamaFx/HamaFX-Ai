@@ -69,9 +69,9 @@ export function Sparkline({ values, className, stroke, label }: SparklineProps) 
         d={path}
         fill="none"
         stroke={stroke ?? 'currentColor'}
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
+        strokeWidth="1"
+        strokeLinecap="square"
+        strokeLinejoin="miter"
         vectorEffect="non-scaling-stroke"
       />
     </svg>
