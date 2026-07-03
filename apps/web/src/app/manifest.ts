@@ -16,7 +16,7 @@
 
 import type { MetadataRoute } from 'next';
 
-// Pure black canvas — matches --color-bg = oklch(8% 0 0).
+// Pure black canvas — matches --color-bg = #000000.
 // `#0a0a0a` is the closest sRGB approximation.
 export default function manifest(): MetadataRoute.Manifest {
   return {

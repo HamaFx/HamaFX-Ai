@@ -25,10 +25,10 @@ export default function NotFound() {
     <main className="bg-bg text-fg flex min-h-svh flex-col items-center justify-center gap-6 px-6 text-center">
       <span
         aria-hidden="true"
-        className="inline-flex size-16 items-center justify-center rounded-2xl"
+        className="inline-flex size-16 items-center justify-center rounded-sm"
         style={{
-          background: 'var(--gradient-brand)',
-          boxShadow: '0 0 24px -4px oklch(82% 0.14 85 / 0.3)',
+          background: 'none',
+          boxShadow: '0 0 24px -4px rgba(250, 250, 250, 0.15)',
         }}
       >
         <span className="text-bg text-2xl font-bold">H</span>
@@ -41,7 +41,7 @@ export default function NotFound() {
       </div>
       <Link
         href="/chat"
-        className="bg-brand text-brand-fg inline-flex h-9 items-center rounded-md px-4 text-sm font-medium hover:opacity-90 transition-opacity"
+        className="bg-fg text-black inline-flex h-9 items-center rounded-sm px-4 text-sm font-medium hover:opacity-90 transition-opacity"
       >
         Go to chat
       </Link>

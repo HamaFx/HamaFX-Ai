@@ -37,10 +37,10 @@ export default function ErrorPage({ error, reset }: ErrorPageProps) {
     <main className="bg-bg text-fg flex min-h-svh flex-col items-center justify-center gap-6 px-6 text-center">
       <span
         aria-hidden="true"
-        className="inline-flex size-16 items-center justify-center rounded-2xl"
+        className="inline-flex size-16 items-center justify-center rounded-sm"
         style={{
-          background: 'var(--gradient-brand)',
-          boxShadow: '0 0 24px -4px oklch(82% 0.14 85 / 0.3)',
+          background: 'none',
+          boxShadow: '0 0 24px -4px rgba(250, 250, 250, 0.15)',
         }}
       >
         <span className="text-bg text-2xl font-bold">H</span>
@@ -57,7 +57,7 @@ export default function ErrorPage({ error, reset }: ErrorPageProps) {
         </Button>
         <Link
           href="/chat"
-          className="border border-divider bg-bg-elev-1 text-fg hover:bg-bg-elev-2 inline-flex h-9 items-center justify-center rounded-md px-4 text-sm font-medium transition-colors"
+          className="border border-zinc-800 bg-zinc-950 text-fg hover:bg-zinc-900 inline-flex h-9 items-center justify-center rounded-sm px-4 text-sm font-medium transition-colors"
         >
           Go to chat
         </Link>
