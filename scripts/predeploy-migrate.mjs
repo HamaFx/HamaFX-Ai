@@ -64,6 +64,10 @@ import { existsSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+function redactUrl(url) {
+  return url.replace(/:[^/@]+@/, ':***@');
+}
+
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(__dirname, '..');
 
@@ -74,19 +78,34 @@ if (vercelEnv && vercelEnv !== 'production') {
   process.exit(0);
 }
 
-const url =
-  process.env.DIRECT_URL ||
-  process.env.POSTGRES_URL_NON_POOLING ||
-  process.env.DATABASE_URL ||
-  process.env.POSTGRES_URL;
+const envVars = [
+  { name: 'DIRECT_URL', val: process.env.DIRECT_URL },
+  { name: 'POSTGRES_URL_NON_POOLING', val: process.env.POSTGRES_URL_NON_POOLING },
+  { name: 'DATABASE_URL', val: process.env.DATABASE_URL },
+  { name: 'POSTGRES_URL', val: process.env.POSTGRES_URL },
+];
+
+let url = null;
+let urlName = null;
+for (const { name, val } of envVars) {
+  if (val && val.length > 0) {
+    url = val;
+    urlName = name;
+    break;
+  }
+}
 
 if (!url) {
+  const found = envVars.filter((e) => e.val && e.val.length > 0).map((e) => e.name);
   console.error(
-    '[predeploy-migrate] Missing DIRECT_URL, POSTGRES_URL_NON_POOLING, DATABASE_URL, and POSTGRES_URL. ' +
-      'Set a direct/session-mode connection string before deploying.',
+    '[predeploy-migrate] No DB connection string found. Available env vars: ' +
+      (found.length > 0 ? found.join(', ') : 'none') +
+      '. Set DIRECT_URL or POSTGRES_URL_NON_POOLING before deploying to ensure DDL works.',
   );
   process.exit(1);
 }
+
+console.log('[predeploy-migrate] Using %s — %s', urlName, redactUrl(url));
 
 // Sanity-check the migrations directory actually exists. If we
 // ever move it, this fails loud rather than silently doing
@@ -99,9 +118,6 @@ if (!existsSync(migrationsDir)) {
   );
   process.exit(1);
 }
-
-const redacted = url.replace(/:[^/@]+@/, ':***@');
-console.log(`[predeploy-migrate] Applying pending migrations against ${redacted}`);
 
 try {
   // Pass the connection string via DATABASE_URL — drizzle-kit reads
