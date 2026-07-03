@@ -71,9 +71,9 @@ function CellNextEvent({ events }: { events: EconomicEvent[] }) {
     .sort((a, b) => a.date - b.date)[0];
 
   return (
-    <div className="border-divider bg-bg-elev-1 flex flex-col gap-1.5 rounded-lg border p-3">
+    <div className="border-zinc-800 bg-zinc-950 flex flex-col gap-1.5 rounded-sm border p-3">
       <div className="text-fg-subtle flex items-center gap-1.5 text-caption font-semibold uppercase tracking-wider">
-        <Clock className="text-warn size-3.5" />
+        <Clock className="text-amber-500 size-3.5" />
         Next event
       </div>
       {upcoming ? (
@@ -112,16 +112,16 @@ function CellSession() {
   const session = getSession(new Date());
   const active = session !== 'Closed' && session !== 'Weekend';
   return (
-    <div className="border-divider bg-bg-elev-1 flex flex-col gap-1.5 rounded-lg border p-3">
+    <div className="border-zinc-800 bg-zinc-950 flex flex-col gap-1.5 rounded-sm border p-3">
       <div className="text-fg-subtle flex items-center gap-1.5 text-caption font-semibold uppercase tracking-wider">
-        <Compass className="text-brand size-3.5" />
+        <Compass className="text-fg size-3.5" />
         Session
       </div>
       <span className="text-fg text-body-sm font-semibold">{session}</span>
       <span
         className={cn(
-          'inline-flex w-fit items-center rounded-full px-1.5 py-0.5 text-caption font-medium',
-          active ? 'bg-bull/10 text-bull' : 'bg-fg-muted/10 text-fg-muted',
+          'inline-flex w-fit items-center rounded-sm px-1.5 py-0.5 text-caption font-medium',
+          active ? 'bg-emerald-500/10 text-bull' : 'bg-fg-muted/10 text-fg-muted',
         )}
       >
         {active ? 'Active' : 'Closed'}
@@ -169,9 +169,9 @@ function CellOpenRisk({ entries }: { entries: JournalEntry[] }) {
   const totalRRounded = Math.round(totalR * 10) / 10;
 
   return (
-    <div className="border-divider bg-bg-elev-1 flex flex-col gap-1.5 rounded-lg border p-3">
+    <div className="border-zinc-800 bg-zinc-950 flex flex-col gap-1.5 rounded-sm border p-3">
       <div className="text-fg-subtle flex items-center gap-1.5 text-caption font-semibold uppercase tracking-wider">
-        <ShieldAlert className="text-bear size-3.5" />
+        <ShieldAlert className="text-red-500 size-3.5" />
         Open risk
       </div>
       {open.length === 0 ? (
@@ -199,15 +199,15 @@ function CellAiNudge({
 }) {
   const nudge = briefingNudge ?? `Ask AI about today's bias for ${defaultSymbol}`;
   return (
-    <div className="border-divider bg-bg-elev-1 flex flex-col gap-1.5 rounded-lg border p-3">
+    <div className="border-zinc-800 bg-zinc-950 flex flex-col gap-1.5 rounded-sm border p-3">
       <div className="text-fg-subtle flex items-center gap-1.5 text-caption font-semibold uppercase tracking-wider">
-        <Sparkles className="text-brand size-3.5" />
+        <Sparkles className="text-fg size-3.5" />
         AI nudge
       </div>
       <p className="text-fg line-clamp-2 text-body-sm">{nudge}</p>
       <Link
         href="/chat"
-        className="text-brand text-caption mt-auto inline-flex items-center gap-1 hover:underline"
+        className="text-fg text-caption mt-auto inline-flex items-center gap-1 hover:underline"
       >
         Open chat <span aria-hidden>→</span>
       </Link>

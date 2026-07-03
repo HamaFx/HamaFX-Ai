@@ -65,7 +65,7 @@ function heatCellStyle(totalR: number): React.CSSProperties {
   if (totalR === 0) return { backgroundColor: 'var(--color-bg-elev-2)' };
   const alpha = Math.max(0.15, Math.min(0.85, Math.abs(totalR) / 5));
   const base = totalR > 0 ? 'var(--color-bull)' : 'var(--color-bear)';
-  return { backgroundColor: `oklch(from ${base} l c h / ${alpha})` };
+  return { backgroundColor: `rgba(250, 250, 250, ${alpha})` };
 }
 
 /** YYYY-MM-DD in local time. Avoids UTC drift confusing the user. */
@@ -182,7 +182,7 @@ export function PnLHeatmapWidget({ entries }: PnLHeatmapWidgetProps) {
     <section
       role="img"
       aria-label={`P&L heatmap. ${totals.count} trades, total ${totals.r >= 0 ? '+' : ''}${totals.r.toFixed(1)}R`}
-      className="border-divider bg-bg-elev-1 flex flex-col gap-3 rounded-lg border p-4"
+      className="border-zinc-800 bg-zinc-950 flex flex-col gap-3 rounded-sm border p-4"
     >
       <header className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
@@ -197,7 +197,7 @@ export function PnLHeatmapWidget({ entries }: PnLHeatmapWidgetProps) {
             type="button"
             onClick={() => shiftMonth(-1)}
             aria-label="Previous month"
-            className="text-fg-subtle hover:text-fg inline-flex size-7 items-center justify-center rounded-md"
+            className="text-fg-subtle hover:text-fg inline-flex size-7 items-center justify-center rounded-sm"
           >
             <ChevronLeft className="size-4" />
           </button>
@@ -205,7 +205,7 @@ export function PnLHeatmapWidget({ entries }: PnLHeatmapWidgetProps) {
             type="button"
             onClick={() => shiftMonth(1)}
             aria-label="Next month"
-            className="text-fg-subtle hover:text-fg inline-flex size-7 items-center justify-center rounded-md"
+            className="text-fg-subtle hover:text-fg inline-flex size-7 items-center justify-center rounded-sm"
           >
             <ChevronRight className="size-4" />
           </button>
@@ -297,7 +297,7 @@ export function PnLHeatmapWidget({ entries }: PnLHeatmapWidgetProps) {
                   onDeleted={() => setSelectedDay(null)}
                 />
               </div>
-              <div className="border-divider border-t p-3">
+              <div className="border-zinc-800 border-t p-3">
                 <DrawerClose className="text-fg-muted hover:text-fg text-body-sm w-full text-center">
                   Close
                 </DrawerClose>
@@ -320,7 +320,7 @@ function Legend() {
             key={a}
             className="size-3 rounded-sm"
             style={{
-              backgroundColor: `oklch(from var(--color-bull) l c h / ${a})`,
+              backgroundColor: `rgba(16, 185, 129, ${a})`,
             }}
             aria-hidden="true"
           />
@@ -330,7 +330,7 @@ function Legend() {
             key={a}
             className="size-3 rounded-sm"
             style={{
-              backgroundColor: `oklch(from var(--color-bear) l c h / ${a})`,
+              backgroundColor: `rgba(239, 68, 68, ${a})`,
             }}
             aria-hidden="true"
           />

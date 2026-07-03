@@ -80,7 +80,7 @@ export function WatchlistWidget({
   return (
     <section
       aria-label="Watchlist"
-      className="border-divider bg-bg-elev-1 flex flex-col gap-3 rounded-lg border p-4"
+      className="border-zinc-800 bg-zinc-950 flex flex-col gap-3 rounded-sm border p-4"
     >
       <header className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
@@ -101,10 +101,10 @@ export function WatchlistWidget({
             return Array.from({ length: list.length }).map((_, i) => (
               <li
                 key={i}
-                className="border-divider/40 flex items-center justify-between border-b py-2 last:border-0"
+                className="border-zinc-900 flex items-center justify-between border-b py-2 last:border-0"
               >
-                <div className="bg-bg-elev-2 h-3 w-16 animate-pulse rounded" />
-                <div className="bg-bg-elev-2 h-3 w-12 animate-pulse rounded" />
+                <div className="bg-zinc-900 h-3 w-16 animate-pulse rounded" />
+                <div className="bg-zinc-900 h-3 w-12 animate-pulse rounded" />
               </li>
             ));
           }
@@ -139,7 +139,7 @@ function WatchRow({
   const last = tick.mid;
   const isBull = last >= first;
   return (
-    <li className="border-divider/40 flex items-center justify-between gap-3 border-b py-2 last:border-0">
+    <li className="border-zinc-900 flex items-center justify-between gap-3 border-b py-2 last:border-0">
       <div className="flex min-w-0 flex-col">
         <span className="text-fg text-body-sm font-semibold">{tick.symbol}</span>
         <span className="text-fg-subtle text-caption tabular-nums">
