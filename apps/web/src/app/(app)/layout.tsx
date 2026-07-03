@@ -74,14 +74,14 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   return (
     <MotionRoot>
       <NavDrawerProvider>
-        <div className="text-fg relative min-h-svh">
+        <div className="bg-black text-fg relative min-h-svh">
           <SkipToContent />
           <AmbientBackground />
           <TopBar />
           <main
             id="main-content"
             tabIndex={-1}
-            className="mx-auto w-full max-w-2xl px-4 pt-4 focus:outline-none"
+            className="mx-auto w-full max-w-2xl px-4 pt-4 xl:max-w-7xl xl:px-6 focus:outline-none"
             style={{ viewTransitionName: 'main-content', paddingBottom: 'calc(env(safe-area-inset-bottom) + 24px)' }}
           >
             {/* Phase B — UX_UPGRADE_PLAN.md item 12. PWA install hint.
