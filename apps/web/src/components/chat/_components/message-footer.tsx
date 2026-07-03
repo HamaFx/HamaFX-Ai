@@ -104,7 +104,7 @@ export function MessageFooter({ message }: MessageFooterProps) {
       </div>
 
       {open ? (
-        <div className="border-t border-divider mt-2 pt-2 flex flex-col gap-1.5 text-caption">
+        <div className="border-t border-zinc-800 mt-2 pt-2 flex flex-col gap-1.5 text-caption">
           {usage ? (
             <div className="flex justify-between">
               <span className="text-fg-subtle">Tokens</span>
@@ -128,7 +128,7 @@ export function MessageFooter({ message }: MessageFooterProps) {
                   href={c.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-brand hover:underline flex items-center gap-1"
+                  className="text-fg hover:underline flex items-center gap-1"
                 >
                   <LinkIcon className="size-3 shrink-0" />
                   <span className="truncate">{c.title || c.url}</span>

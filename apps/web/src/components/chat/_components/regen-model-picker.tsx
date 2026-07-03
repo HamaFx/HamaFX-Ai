@@ -256,7 +256,7 @@ export function RegenModelPicker({ popoverId, activeModelId, onPick }: RegenMode
             No default set.{' '}
             <a
               href="/settings/models"
-              className="text-brand hover:underline not-italic"
+              className="text-fg hover:underline not-italic"
             >
               Pick one in Settings → Models
             </a>
@@ -315,13 +315,13 @@ function RegenRow({
       role="menuitem"
       data-model-id={fullyQualified}
       onClick={onClick}
-      className="text-fg hover:bg-bg-elev-2 focus:bg-bg-elev-2 flex w-full items-center justify-between gap-2 rounded-lg px-3 py-1.5 text-left text-xs transition-colors focus:outline-none"
+      className="text-fg hover:bg-zinc-900 focus:bg-zinc-900 flex w-full items-center justify-between gap-2 rounded-sm px-3 py-1.5 text-left text-xs transition-colors focus:outline-none"
     >
       <span className="truncate">{label}</span>
       {isActive ? (
         <CheckCircle2
           size={14}
-          className="text-bull shrink-0"
+          className="text-emerald-500 shrink-0"
           aria-hidden="true"
         />
       ) : null}
