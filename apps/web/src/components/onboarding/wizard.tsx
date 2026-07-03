@@ -254,7 +254,7 @@ export function OnboardingWizard({ initialName, providers, symbolsCatalog, initi
   }
 
   return (
-    <div className="border border-divider bg-bg-elev-1 rounded-lg p-6">
+    <div className="border border-zinc-800 bg-zinc-950 rounded-sm p-6">
       {/* Stepper */}
       <div className="mb-4 flex items-center justify-between" role="list" aria-label="Setup progress">
         {[1, 2, 3, 4, 5].map((i) => (
@@ -262,8 +262,8 @@ export function OnboardingWizard({ initialName, providers, symbolsCatalog, initi
             <div
               aria-current={step === i ? 'step' : undefined}
               aria-label={`Step ${i}: ${['Profile', 'Trading Style', 'Symbols', 'AI Provider', 'Review'][i - 1]}`}
-              className={`flex size-8 items-center justify-center rounded-full text-sm font-semibold transition-colors ${
-                step >= i ? 'bg-brand text-black' : 'bg-surface text-fg-subtle'
+              className={`flex size-8 items-center justify-center rounded-sm text-sm font-semibold transition-colors ${
+                step >= i ? 'bg-fg text-black' : 'bg-surface text-fg-subtle'
               }`}
             >
               {step > i ? <Check className="size-4" /> : i}
@@ -271,7 +271,7 @@ export function OnboardingWizard({ initialName, providers, symbolsCatalog, initi
             {i < 5 && (
               <div
                 className={`h-px w-8 sm:w-16 transition-colors ${
-                  step > i ? 'bg-brand' : 'bg-surface-elevated'
+                  step > i ? 'bg-fg' : 'bg-surface-elevated'
                 }`}
               />
             )}
@@ -304,12 +304,12 @@ export function OnboardingWizard({ initialName, providers, symbolsCatalog, initi
               placeholder="Satoshi Nakamoto"
               autoFocus
             />
-            {nameError && <p className="text-xs text-bear">{nameError}</p>}
+            {nameError && <p className="text-xs text-red-500">{nameError}</p>}
           </div>
           <div className="flex flex-col gap-2">
             <label className="text-sm font-medium text-fg">Timezone</label>
             <select
-              className="h-10 w-full rounded-md border border-surface-elevated bg-bg px-3 py-2 text-sm text-fg focus:outline-none focus:ring-1 focus:ring-brand cursor-pointer"
+              className="h-10 w-full rounded-sm border border-surface-elevated bg-bg px-3 py-2 text-sm text-fg focus:outline-none focus:ring-1 focus:ring-fg cursor-pointer"
               value={timezone}
               onChange={(e) => setTimezone(e.target.value)}
             >
@@ -345,23 +345,23 @@ export function OnboardingWizard({ initialName, providers, symbolsCatalog, initi
                   key={style.id}
                   type="button"
                   onClick={() => setTradingStyle(style.id as 'scalper' | 'day_trader' | 'swing' | 'position')}
-                  className={`text-left rounded-xl border p-4 transition-all hover:bg-bg-elev-2 flex flex-col gap-1.5 cursor-pointer relative ${
+                  className={`text-left rounded-sm border p-4 transition-all hover:bg-zinc-900 flex flex-col gap-1.5 cursor-pointer relative ${
                     active
-                      ? 'border-brand bg-brand/5 ring-1 ring-brand shadow-glow-brand/5'
+                      ? 'border-zinc-700 bg-zinc-950 ring-1 ring-fg shadow-none/5'
                       : 'border-surface-elevated bg-surface hover:border-fg-muted'
                   }`}
                 >
                   <div className="flex items-center justify-between">
                     <span className="font-semibold text-fg text-sm sm:text-base">{style.title}</span>
-                    <span className="text-xs font-mono font-medium px-2 py-0.5 rounded bg-bg-elev-2 text-fg-subtle border border-divider">
+                    <span className="text-xs font-mono font-medium px-2 py-0.5 rounded bg-zinc-900 text-fg-subtle border border-zinc-800">
                       {style.timeframe}
                     </span>
                   </div>
-                  <p className="text-xs sm:text-sm text-fg-subtle leading-relaxed">
+                  <p className="text-xs sm:text-sm text-fg-subtle leading-[1.4]">
                     {style.desc}
                   </p>
                   {active && (
-                    <span className="absolute bottom-3 right-3 text-brand">
+                    <span className="absolute bottom-3 right-3 text-fg">
                       <Check className="size-4" />
                     </span>
                   )}
@@ -385,7 +385,7 @@ export function OnboardingWizard({ initialName, providers, symbolsCatalog, initi
           <div>
             <h2 className="text-xl font-semibold text-fg mb-1">Select Preferred Symbols</h2>
             <p className="text-sm text-fg-subtle">Choose the instruments you want in your default watchlist. Select at least one.</p>
-            {symbolsError && <p className="mt-1 text-xs text-bear">{symbolsError}</p>}
+            {symbolsError && <p className="mt-1 text-xs text-red-500">{symbolsError}</p>}
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-72 overflow-y-auto pr-1">
             {symbolsCatalog.map((sym) => {
@@ -409,9 +409,9 @@ export function OnboardingWizard({ initialName, providers, symbolsCatalog, initi
                       setSelectedSymbols([...selectedSymbols, sym.symbol]);
                     }
                   }}
-                  className={`text-left rounded-xl border p-4 transition-all hover:bg-bg-elev-2 flex items-center justify-between cursor-pointer relative ${
+                  className={`text-left rounded-sm border p-4 transition-all hover:bg-zinc-900 flex items-center justify-between cursor-pointer relative ${
                     active
-                      ? 'border-brand bg-brand/5 ring-1 ring-brand'
+                      ? 'border-zinc-700 bg-zinc-950 ring-1 ring-fg'
                       : 'border-surface-elevated bg-surface hover:border-fg-muted'
                   }`}
                 >
@@ -420,7 +420,7 @@ export function OnboardingWizard({ initialName, providers, symbolsCatalog, initi
                     <span className="text-xs text-fg-subtle">{sym.name} ({sym.category})</span>
                   </div>
                   <div className={`size-5 rounded border flex items-center justify-center transition-colors ${
-                    active ? 'bg-brand border-brand text-black' : 'border-divider bg-bg'
+                    active ? 'bg-fg border-zinc-700 text-black' : 'border-zinc-800 bg-bg'
                   }`}>
                     {active && <Check className="size-3.5 stroke-[3]" />}
                   </div>
@@ -433,7 +433,7 @@ export function OnboardingWizard({ initialName, providers, symbolsCatalog, initi
             <div className="flex flex-col gap-2">
               <label className="text-sm font-medium text-fg">Default Chart Symbol</label>
               <select
-                className="h-10 w-full rounded-md border border-surface-elevated bg-bg px-3 py-2 text-sm text-fg focus:outline-none focus:ring-1 focus:ring-brand cursor-pointer"
+                className="h-10 w-full rounded-sm border border-surface-elevated bg-bg px-3 py-2 text-sm text-fg focus:outline-none focus:ring-1 focus:ring-fg cursor-pointer"
                 value={defaultSymbol}
                 onChange={(e) => setDefaultSymbol(e.target.value)}
               >
@@ -478,9 +478,9 @@ export function OnboardingWizard({ initialName, providers, symbolsCatalog, initi
                     setSelectedProvider(p.id);
                     setTestState({ kind: 'idle' });
                   }}
-                  className={`text-left rounded-lg border p-3 transition-colors ${
+                  className={`text-left rounded-sm border p-3 transition-colors ${
                     selected
-                      ? 'border-brand bg-brand/10 ring-1 ring-brand'
+                      ? 'border-zinc-700 bg-zinc-900 ring-1 ring-fg'
                       : 'border-surface-elevated bg-surface hover:border-fg-subtle'
                   }`}
                 >
@@ -546,12 +546,12 @@ export function OnboardingWizard({ initialName, providers, symbolsCatalog, initi
                   )}
                 </Button>
                 {testState.kind === 'ok' && (
-                  <span className="flex items-center gap-1 text-xs text-bull">
+                  <span className="flex items-center gap-1 text-xs text-emerald-500">
                     <Check className="size-3" /> Key looks valid
                   </span>
                 )}
                 {testState.kind === 'err' && (
-                  <span className="text-xs text-bear">{testState.message}</span>
+                  <span className="text-xs text-red-500">{testState.message}</span>
                 )}
               </div>
             </div>
@@ -598,7 +598,7 @@ export function OnboardingWizard({ initialName, providers, symbolsCatalog, initi
               Here is what we will configure for you:
             </p>
           </div>
-          <ul className="list-disc list-inside text-sm text-fg space-y-1.5 border border-divider bg-bg-elev-2 rounded-lg p-4">
+          <ul className="list-disc list-inside text-sm text-fg space-y-1.5 border border-zinc-800 bg-zinc-900 rounded-sm p-4">
             <li>Display name: <span className="text-fg-subtle">{name || '—'}</span></li>
             <li>Timezone: <span className="text-fg-subtle">{timezone}</span></li>
             <li>Trading style: <span className="text-fg-subtle capitalize">{tradingStyle.replace('_', ' ')}</span></li>
@@ -615,7 +615,7 @@ export function OnboardingWizard({ initialName, providers, symbolsCatalog, initi
           </ul>
 
           {/* Sample chat preview */}
-          <details className="border border-divider rounded-lg p-3">
+          <details className="border border-zinc-800 rounded-sm p-3">
             <summary className="cursor-pointer text-sm text-fg-muted hover:text-fg">
               Try a sample chat
             </summary>
@@ -623,9 +623,9 @@ export function OnboardingWizard({ initialName, providers, symbolsCatalog, initi
               <p className="text-xs text-fg-subtle">
                 A preview of what HamaFX-Ai can do. After setup, you will be able to ask about any symbol.
               </p>
-              <div className="flex flex-col gap-2 bg-bg-elev-2 rounded-lg p-3">
+              <div className="flex flex-col gap-2 bg-zinc-900 rounded-sm p-3">
                 <div className="flex items-start gap-2">
-                  <div className="rounded-full bg-bg-elev-3 p-1.5 mt-0.5">
+                  <div className="rounded-sm bg-zinc-800 p-1.5 mt-0.5">
                     <User className="size-3 text-fg" />
                   </div>
                   <div className="flex-1 text-xs text-fg">
@@ -633,12 +633,12 @@ export function OnboardingWizard({ initialName, providers, symbolsCatalog, initi
                   </div>
                 </div>
                 <div className="flex items-start gap-2">
-                  <div className="rounded-full bg-brand/10 p-1.5 mt-0.5">
-                    <Bot className="size-3 text-brand" />
+                  <div className="rounded-sm bg-zinc-900 p-1.5 mt-0.5">
+                    <Bot className="size-3 text-fg" />
                   </div>
-                  <div className="flex-1 text-xs text-fg leading-relaxed space-y-1">
+                  <div className="flex-1 text-xs text-fg leading-[1.4] space-y-1">
                     <p>
-                      <span className="text-bull font-medium">XAUUSD</span> is showing mixed signals
+                      <span className="text-emerald-500 font-medium">XAUUSD</span> is showing mixed signals
                       on the 1H:
                     </p>
                     <ul className="list-disc list-inside text-fg-subtle">
@@ -647,7 +647,7 @@ export function OnboardingWizard({ initialName, providers, symbolsCatalog, initi
                       <li>MACD histogram flattening — momentum fading</li>
                     </ul>
                     <p>
-                      Bias: <span className="text-bear font-medium">Bearish below $2,640</span> ·
+                      Bias: <span className="text-red-500 font-medium">Bearish below $2,640</span> ·
                       Key resistance at <span className="tablibular-nums">$2,680</span>
                     </p>
                   </div>
