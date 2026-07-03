@@ -52,7 +52,7 @@ export function AlertsWidget({ alerts, limit = 5 }: AlertsWidgetProps) {
   return (
     <section
       aria-label="Active alerts"
-      className="border-divider bg-bg-elev-1 flex flex-col gap-3 rounded-lg border p-4"
+      className="border-zinc-800 bg-zinc-950 flex flex-col gap-3 rounded-sm border p-4"
     >
       <header className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
@@ -83,7 +83,7 @@ export function AlertsWidget({ alerts, limit = 5 }: AlertsWidgetProps) {
           {rows.map((a) => (
             <li
               key={a.id}
-              className="border-divider/40 flex items-center justify-between gap-3 border-b py-2 last:border-0"
+              className="border-zinc-900 flex items-center justify-between gap-3 border-b py-2 last:border-0"
             >
               <div className="flex min-w-0 flex-col">
                 <span className="text-fg text-body-sm font-semibold">
@@ -96,7 +96,7 @@ export function AlertsWidget({ alerts, limit = 5 }: AlertsWidgetProps) {
               <span
                 className={cn(
                   'text-caption font-bold px-1.5 py-0.5 rounded shrink-0',
-                  a.active ? 'bg-bull/10 text-bull' : 'bg-fg-muted/10 text-fg-muted',
+                  a.active ? 'bg-emerald-500/10 text-bull' : 'bg-fg-muted/10 text-fg-muted',
                 )}
               >
                 {a.active ? 'Armed' : 'Paused'}

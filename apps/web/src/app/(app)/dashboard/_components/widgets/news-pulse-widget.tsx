@@ -60,7 +60,7 @@ export function NewsPulseWidget({ articles }: NewsPulseWidgetProps) {
   return (
     <section
       aria-labelledby="news-pulse-heading"
-      className="border-divider bg-bg-elev-1 flex flex-col gap-3 rounded-lg border p-4"
+      className="border-zinc-800 bg-zinc-950 flex flex-col gap-3 rounded-sm border p-4"
     >
       <header className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
@@ -84,7 +84,7 @@ export function NewsPulseWidget({ articles }: NewsPulseWidgetProps) {
       <div
         role="img"
         aria-label={`${total} articles: ${counts.positive} positive, ${counts.negative} negative, ${counts.neutral} neutral`}
-        className="flex h-1.5 w-full overflow-hidden rounded-full bg-bg-elev-2"
+        className="flex h-1.5 w-full overflow-hidden rounded-sm bg-zinc-900"
       >
         <div
           className="h-full bg-bull"
@@ -109,7 +109,7 @@ export function NewsPulseWidget({ articles }: NewsPulseWidgetProps) {
       {top || bottom ? (
         <ul className="flex flex-col gap-2">
           {top ? (
-            <li className="border-divider/40 border-l-2 border-l-bull/50 pl-2">
+            <li className="border-zinc-900 border-l-2 border-l-bull/50 pl-2">
               <span className="text-fg-subtle text-caption uppercase tracking-wider">
                 Most positive
               </span>
@@ -117,14 +117,14 @@ export function NewsPulseWidget({ articles }: NewsPulseWidgetProps) {
                 href={top.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-fg hover:text-brand line-clamp-2 text-body-sm"
+                className="text-fg hover:text-fg line-clamp-2 text-body-sm"
               >
                 {top.title}
               </a>
             </li>
           ) : null}
           {bottom && bottom.id !== top?.id ? (
-            <li className="border-divider/40 border-l-2 border-l-bear/50 pl-2">
+            <li className="border-zinc-900 border-l-2 border-l-bear/50 pl-2">
               <span className="text-fg-subtle text-caption uppercase tracking-wider">
                 Most negative
               </span>
@@ -132,7 +132,7 @@ export function NewsPulseWidget({ articles }: NewsPulseWidgetProps) {
                 href={bottom.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-fg hover:text-brand line-clamp-2 text-body-sm"
+                className="text-fg hover:text-fg line-clamp-2 text-body-sm"
               >
                 {bottom.title}
               </a>

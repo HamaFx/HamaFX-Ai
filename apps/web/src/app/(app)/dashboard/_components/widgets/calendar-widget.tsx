@@ -47,7 +47,7 @@ export function CalendarWidget({ events, limit = 3 }: CalendarWidgetProps) {
   return (
     <section
       aria-label="Upcoming events"
-      className="border-divider bg-bg-elev-1 flex flex-col gap-3 rounded-lg border p-4"
+      className="border-zinc-800 bg-zinc-950 flex flex-col gap-3 rounded-sm border p-4"
     >
       <header className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
@@ -81,7 +81,7 @@ export function CalendarWidget({ events, limit = 3 }: CalendarWidgetProps) {
             return (
               <li
                 key={e.id}
-                className="border-divider/40 flex items-center justify-between gap-3 border-b py-2 last:border-0"
+                className="border-zinc-900 flex items-center justify-between gap-3 border-b py-2 last:border-0"
               >
                 <div className="flex min-w-0 flex-col">
                   <span className="text-fg text-body-sm font-semibold truncate">

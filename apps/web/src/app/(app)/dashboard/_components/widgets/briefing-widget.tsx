@@ -63,7 +63,7 @@ const KIND_META: Record<'pre' | 'post' | 'weekly_review', KindMeta> = {
 export function BriefingWidget({ briefing }: BriefingWidgetProps) {
   if (!briefing) {
     return (
-      <div className="border-divider bg-bg-elev-1 rounded-lg border p-2">
+      <div className="border-zinc-800 bg-zinc-950 rounded-sm border p-2">
         <EmptyState
           icon={<Sparkles className="size-6" />}
           title="No briefing yet"
@@ -83,20 +83,20 @@ export function BriefingWidget({ briefing }: BriefingWidgetProps) {
     <article
       role="status"
       aria-label={meta.label}
-      className="border-divider bg-bg-elev-1 flex flex-col gap-3 rounded-lg border p-4"
+      className="border-zinc-800 bg-zinc-950 flex flex-col gap-3 rounded-sm border p-4"
     >
       <header className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
-          <Icon className="text-brand size-4" />
+          <Icon className="text-fg size-4" />
           <span className="text-fg text-body-sm font-semibold">AI Briefing</span>
           <span
             className={cn(
-              'rounded-full px-1.5 py-0.5 text-caption font-medium',
+              'rounded-sm px-1.5 py-0.5 text-caption font-medium',
               briefing.kind === 'pre'
-                ? 'bg-warn/10 text-warn'
+                ? 'bg-amber-500/10 text-warn'
                 : briefing.kind === 'post'
-                  ? 'bg-info/10 text-info'
-                  : 'bg-brand/10 text-brand',
+                  ? 'bg-blue-500/10 text-info'
+                  : 'bg-zinc-900 text-fg',
             )}
           >
             {meta.label}
@@ -122,14 +122,14 @@ export function BriefingWidget({ briefing }: BriefingWidgetProps) {
         </p>
       ) : null}
 
-      <div className="md-prose text-fg-muted text-body-sm flex flex-col gap-2 leading-relaxed">
+      <div className="md-prose text-fg-muted text-body-sm flex flex-col gap-2 leading-[1.4]">
         <ReactMarkdown remarkPlugins={[remarkGfm]}>{briefing.body}</ReactMarkdown>
       </div>
 
       <footer className="mt-auto flex items-center justify-end">
         <Link
           href="/chat"
-          className="text-brand text-body-sm hover:underline inline-flex items-center gap-1"
+          className="text-fg text-body-sm hover:underline inline-flex items-center gap-1"
         >
           Dig deeper in chat <ArrowRight className="size-3.5" />
         </Link>
