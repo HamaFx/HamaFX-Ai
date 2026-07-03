@@ -35,14 +35,14 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
       ref={ref}
       aria-invalid={error ? 'true' : undefined}
       className={cn(
-        'bg-bg-elev-1/60 text-fg placeholder:text-fg-subtle',
-        'h-12 w-full rounded-xl border px-4 text-base',
+        'bg-zinc-950/60 text-fg placeholder:text-fg-subtle',
+        'h-12 w-full rounded-sm border px-4 text-base',
         error
           ? 'border-bear/60 focus:border-bear/80 focus:shadow-[0_0_0_3px_oklch(70%_0.22_25/0.12)]'
-          : 'border-divider focus:border-brand/60 focus:shadow-[0_0_0_3px_oklch(78%_0.16_78/0.12)]',
-        'backdrop-blur-sm',
+          : 'border-zinc-800 focus:border-zinc-700 focus:shadow-[0_0_0_3px_oklch(78%_0.16_78/0.12)]',
+        '',
         'transition-all duration-200',
-        'focus:bg-bg-elev-1/80',
+        'focus:bg-zinc-950/80',
         'focus-visible:outline-none',
         'disabled:cursor-not-allowed disabled:opacity-60',
         className,

@@ -41,17 +41,17 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 // Primary/danger get their fills via inlineStyle below (theme tokens).
 const variants: Record<Variant, string> = {
-  primary: 'text-brand-fg font-semibold hover:opacity-90',
-  secondary: 'border border-divider bg-bg-elev-2 text-fg hover:bg-bg-elev-3',
-  ghost: 'text-fg hover:bg-bg-elev-1',
-  danger: 'text-bg font-semibold hover:opacity-90',
-  success: 'bg-bull text-bg font-semibold hover:opacity-90',
+  primary: 'bg-fg text-black font-semibold hover:bg-fg-muted',
+  secondary: 'border border-zinc-800 bg-zinc-950 text-fg hover:bg-zinc-900',
+  ghost: 'text-fg-muted hover:text-fg hover:bg-zinc-950',
+  danger: 'bg-red-500 text-white font-semibold hover:bg-red-600',
+  success: 'bg-emerald-500 text-black font-semibold hover:bg-emerald-600',
 };
 
 const sizes: Record<Size, string> = {
-  sm: 'h-10 px-4 text-sm',
-  md: 'h-12 px-5 text-sm',
-  lg: 'h-14 px-6 text-base',
+  sm: 'h-9 px-3 text-sm rounded-sm',
+  md: 'h-10 px-4 text-sm rounded-sm',
+  lg: 'h-12 px-5 text-base rounded-sm',
 };
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(
@@ -70,26 +70,8 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
 ) {
   const isDisabled = disabled || loading || false;
 
-  // Variant-driven inline styles — use theme tokens (gradients/shadows
-  // defined in globals.css :root) so a future theme change touches one
-  // file, not every Button instance.
-  const inlineStyle: React.CSSProperties = (() => {
-    if (variant === 'primary') {
-      return {
-        backgroundImage: 'var(--gradient-brand)',
-        boxShadow: 'var(--shadow-brand-press)',
-        ...style,
-      };
-    }
-    if (variant === 'danger') {
-      return {
-        backgroundImage: 'var(--gradient-danger)',
-        boxShadow: 'var(--shadow-danger-press)',
-        ...style,
-      };
-    }
-    return style ?? {};
-  })();
+  // Variant-driven inline styles removed — flat surfaces only.
+  const inlineStyle: React.CSSProperties = style ?? {};
 
   return (
     <button
@@ -98,7 +80,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
       disabled={isDisabled}
       style={inlineStyle}
       className={cn(
-        'inline-flex items-center justify-center gap-2 rounded-xl font-medium',
+        'inline-flex items-center justify-center gap-2 rounded-sm font-medium',
         'transition-colors duration-150',
         'disabled:cursor-not-allowed disabled:opacity-60 disabled:shadow-none',
         variants[variant],

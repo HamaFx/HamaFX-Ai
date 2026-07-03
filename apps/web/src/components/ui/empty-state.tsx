@@ -28,8 +28,8 @@
 //   muted → neutral elev surface, used for "no data yet" states where the
 //           absence is informational, not a call-to-action
 //
-// Per PLAN.md §2.4 + §2.5 — solid surface (no card-premium), sharper radii
-// (rounded-3xl → rounded-lg), no glow shadow on the icon container.
+// Per PLAN.md §2.4 + §2.5 — solid surface (no surface-panel), sharper radii
+// (rounded-sm → rounded-sm), no glow shadow on the icon container.
 
 import type { ReactNode } from 'react';
 
@@ -61,15 +61,15 @@ export function EmptyState({
       aria-label={title}
       className={cn(
         'flex flex-col items-center gap-5 px-6 py-10 text-center',
-        !bare && 'border border-divider bg-bg-elev-1 rounded-lg',
+        !bare && 'border border-zinc-800 bg-zinc-950 rounded-sm',
         className,
       )}
     >
       <span
         aria-hidden="true"
         className={cn(
-          'inline-flex items-center justify-center rounded-lg',
-          tone === 'brand' ? 'text-brand bg-brand/10 h-20 w-20' : 'text-fg-muted bg-bg-elev-2 h-16 w-16',
+          'inline-flex items-center justify-center rounded-sm',
+          tone === 'brand' ? 'text-fg bg-zinc-900 h-20 w-20' : 'text-fg-muted bg-zinc-900 h-16 w-16',
         )}
       >
         {icon}
@@ -77,7 +77,7 @@ export function EmptyState({
       <div className="flex max-w-xs flex-col gap-2">
         <p className="text-fg text-body font-semibold tracking-tight">{title}</p>
         {description ? (
-          <p className="text-fg-muted text-body-sm leading-relaxed">{description}</p>
+          <p className="text-fg-muted text-body-sm leading-[1.4]">{description}</p>
         ) : null}
       </div>
       {action ? <div className="flex items-center justify-center gap-2">{action}</div> : null}

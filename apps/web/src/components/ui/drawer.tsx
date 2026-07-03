@@ -48,7 +48,7 @@ const DrawerOverlay = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <DrawerPrimitive.Overlay
     ref={ref}
-    className={cn('fixed inset-0 z-50 bg-overlay backdrop-blur-sm', className)}
+    className={cn('fixed inset-0 z-50 bg-overlay ', className)}
     {...props}
   />
 )) as React.ForwardRefExoticComponent<
@@ -103,14 +103,14 @@ const DrawerContent = React.forwardRef<
         ref={setRefs}
         tabIndex={-1}
         className={cn(
-          'glass-strong fixed inset-x-0 bottom-0 z-50 mt-24 flex h-auto max-h-[92svh] flex-col rounded-t-xl border-b-0',
+          'surface-elevated fixed inset-x-0 bottom-0 z-50 mt-24 flex h-auto max-h-[92svh] flex-col rounded-t-xl border-b-0',
           'pb-[max(env(safe-area-inset-bottom),16px)]',
           'focus-visible:outline-none',
           className,
         )}
         {...props}
       >
-        <div className="mx-auto mt-3 mb-2 h-1.5 w-12 rounded-full bg-fg-subtle/40" aria-hidden="true" />
+        <div className="mx-auto mt-3 mb-2 h-1.5 w-12 rounded-sm bg-fg-subtle/40" aria-hidden="true" />
         {children}
       </DrawerPrimitive.Content>
     </DrawerPortal>
