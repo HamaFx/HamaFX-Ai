@@ -51,7 +51,7 @@ export function SetAlertPart({ output, state, errorMessage }: SetAlertPartProps)
   const href = `/alerts?id=${encodeURIComponent(output.alertId)}`;
 
   return (
-    <div className="border-border bg-bg-elev-1 rounded-lg border p-3">
+    <div className="border-border bg-zinc-950 rounded-sm border p-3">
       <div className="flex items-start gap-2">
         <span aria-hidden className="text-base leading-6">
           🔔
@@ -65,9 +65,9 @@ export function SetAlertPart({ output, state, errorMessage }: SetAlertPartProps)
         href={href}
         prefetch
         className={cn(
-          'focus-visible:ring-brand mt-2 inline-flex min-h-[44px] min-w-[44px]',
-          'items-center justify-center rounded-md px-3 text-sm font-medium',
-          'text-brand underline-offset-2 hover:underline',
+          'focus-visible:ring-fg mt-2 inline-flex min-h-[44px] min-w-[44px]',
+          'items-center justify-center rounded-sm px-3 text-sm font-medium',
+          'text-fg underline-offset-2 hover:underline',
           'focus-visible:outline-none focus-visible:ring-2',
         )}
       >
@@ -80,18 +80,18 @@ export function SetAlertPart({ output, state, errorMessage }: SetAlertPartProps)
 function SetAlertSkeleton() {
   return (
     <div
-      className="border-border bg-bg-elev-1 rounded-lg border p-3"
+      className="border-border bg-zinc-950 rounded-sm border p-3"
       aria-busy="true"
       aria-label="Creating alert"
     >
       <div className="flex items-start gap-2">
-        <div className="bg-bg-elev-2 h-5 w-5 animate-pulse rounded-full" />
+        <div className="bg-zinc-900 h-5 w-5 animate-pulse rounded-sm" />
         <div className="min-w-0 flex-1 space-y-1.5">
-          <div className="bg-bg-elev-2 h-3 w-24 animate-pulse rounded" />
-          <div className="bg-bg-elev-2 h-4 w-48 animate-pulse rounded" />
+          <div className="bg-zinc-900 h-3 w-24 animate-pulse rounded" />
+          <div className="bg-zinc-900 h-4 w-48 animate-pulse rounded" />
         </div>
       </div>
-      <div className="bg-bg-elev-2 mt-2 h-11 w-32 animate-pulse rounded-md" />
+      <div className="bg-zinc-900 mt-2 h-11 w-32 animate-pulse rounded-sm" />
     </div>
   );
 }
@@ -100,7 +100,7 @@ function SetAlertError({ message }: { message?: string }) {
   return (
     <div
       role="alert"
-      className="border-bear/30 bg-bg-elev-1 text-bear rounded-lg border p-3 text-sm"
+      className="border-red-500/30 bg-zinc-950 text-red-500 rounded-sm border p-3 text-sm"
     >
       Could not create alert{message ? ` · ${message}` : ''}
     </div>

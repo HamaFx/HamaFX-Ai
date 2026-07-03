@@ -60,8 +60,8 @@ export function ToolCard({ name, state, input, output, errorText }: ToolCardProp
       layout
       initial={false}
       className={cn(
-        'border-border bg-bg-elev-1 rounded-md border px-2.5 py-1.5 text-xs',
-        failed && 'border-bear/30',
+        'border-border bg-zinc-950 rounded-sm border px-2.5 py-1.5 text-xs',
+        failed && 'border-red-500/30',
       )}
     >
       <button
