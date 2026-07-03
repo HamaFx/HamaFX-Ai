@@ -27,7 +27,13 @@ const root = resolve(__dirname, '..');
 // installed via pnpm at runtime).
 const pkg = JSON.parse(readFileSync(resolve(root, 'package.json'), 'utf8'));
 const deps = Object.keys(pkg.dependencies ?? {});
-const external = deps.filter((d) => !d.startsWith('@hamafx/'));
+// Don't auto-externalize OpenTelemetry packages — they'd need to resolve
+// from node_modules at runtime, but pnpm's strict layout won't hoist
+// transitive @opentelemetry/* deps into the worker's node_modules.
+// Bundling them is simpler and avoids a long chain of manual deps.
+const external = deps.filter(
+  (d) => !d.startsWith('@hamafx/') && !d.startsWith('@opentelemetry/'),
+);
 
 // Plus Node built-ins that shouldn't be inlined.
 external.push(
@@ -36,7 +42,6 @@ external.push(
   // dynamic-resolve based on the environment; let Node load them as
   // installed packages rather than bundling them.
   '@sentry/node',
-  '@opentelemetry/*',
 );
 
 /** @type {import('esbuild').BuildOptions} */
