@@ -135,7 +135,7 @@ function MessageImpl({ message, onCopy, onRegenerate, onEdit, isStreaming }: Mes
   if (isUser && isEditing) {
     return (
       <div className="mb-2 mt-1 flex w-full justify-end">
-        <div className="flex w-full max-w-[88%] flex-col gap-2 rounded-3xl rounded-br-md border border-brand/50 bg-bg-elev-1/80 p-3 shadow-md focus-within:ring-2 focus-within:ring-brand">
+        <div className="flex w-full max-w-[88%] flex-col gap-2 rounded-sm border border-zinc-700 bg-zinc-900 p-3 focus-within:ring-2 focus-within:ring-fg">
           <textarea
             className="w-full resize-none bg-transparent text-sm text-fg outline-none [field-sizing:content]"
             value={editValue}
@@ -147,7 +147,7 @@ function MessageImpl({ message, onCopy, onRegenerate, onEdit, isStreaming }: Mes
             <button
               type="button"
               onClick={() => setIsEditing(false)}
-              className="rounded-full bg-bg-elev-2 px-3 py-1 text-xs text-fg-muted transition-colors hover:text-fg"
+              className="rounded-sm bg-zinc-900 px-3 py-1 text-xs text-fg-muted transition-colors hover:text-fg"
             >
               Cancel
             </button>
@@ -157,7 +157,7 @@ function MessageImpl({ message, onCopy, onRegenerate, onEdit, isStreaming }: Mes
                 setIsEditing(false);
                 onEdit?.(message.id, editValue);
               }}
-              className="rounded-full bg-brand px-3 py-1 text-xs text-brand-fg transition-colors hover:brightness-110"
+              className="rounded-sm bg-fg px-3 py-1 text-xs text-black transition-colors hover:bg-fg-muted"
             >
               Send
             </button>
@@ -178,18 +178,9 @@ function MessageImpl({ message, onCopy, onRegenerate, onEdit, isStreaming }: Mes
         className={cn(
           'relative flex max-w-[88%] flex-col gap-2 px-4 py-3',
           isUser
-            ? 'text-brand-fg rounded-3xl rounded-br-md font-medium shadow-sm'
-            : 'glass-subtle text-fg rounded-3xl rounded-bl-md',
+            ? 'bg-zinc-900 border border-zinc-800 text-fg rounded-sm font-medium'
+            : 'bg-zinc-950 border border-zinc-800 text-fg rounded-sm',
         )}
-        style={
-          isUser
-            ? {
-                backgroundImage: 'var(--gradient-brand)',
-                boxShadow:
-                  'inset 0 1px 0 0 oklch(100% 0 0 / 0.15), 0 4px 12px -4px oklch(78% 0.16 78 / 0.4)',
-              }
-            : undefined
-        }
       >
         {/* Phase 1.3 — aria-live so screen readers announce the final
             assistant message when streaming completes. */}
@@ -248,10 +239,10 @@ function MessageImpl({ message, onCopy, onRegenerate, onEdit, isStreaming }: Mes
                 type="button"
                 onClick={copy}
                 aria-label={copied ? 'Copied' : 'Copy message'}
-                className="bg-bg-elev-1 border border-divider text-fg-muted hover:text-fg focus-visible:ring-brand inline-flex size-8 items-center justify-center rounded-lg transition-colors focus:outline-none focus-visible:ring-2"
+                className="bg-zinc-950 border border-zinc-800 text-fg-muted hover:text-fg focus-visible:ring-fg inline-flex size-8 items-center justify-center rounded-sm transition-colors focus:outline-none focus-visible:ring-2"
               >
                 {copied ? (
-                  <Check className="text-bull size-3.5" />
+                  <Check className="text-emerald-500 size-3.5" />
                 ) : (
                   <Copy className="size-3.5" />
                 )}
@@ -267,7 +258,7 @@ function MessageImpl({ message, onCopy, onRegenerate, onEdit, isStreaming }: Mes
                   setIsEditing(true);
                 }}
                 aria-label="Edit prompt"
-                className="bg-bg-elev-1 border border-divider text-fg-muted hover:text-fg focus-visible:ring-brand inline-flex size-8 items-center justify-center rounded-lg transition-colors focus:outline-none focus-visible:ring-2"
+                className="bg-zinc-950 border border-zinc-800 text-fg-muted hover:text-fg focus-visible:ring-fg inline-flex size-8 items-center justify-center rounded-sm transition-colors focus:outline-none focus-visible:ring-2"
               >
                 <Pencil className="size-3.5" />
               </button>
@@ -280,7 +271,7 @@ function MessageImpl({ message, onCopy, onRegenerate, onEdit, isStreaming }: Mes
                   type="button"
                   onClick={() => onRegenerate()}
                   aria-label="Regenerate response"
-                  className="bg-bg-elev-1 border border-divider text-fg-muted hover:text-fg focus-visible:ring-brand inline-flex size-8 items-center justify-center rounded-l-lg transition-colors focus:outline-none focus-visible:ring-2"
+                  className="bg-zinc-950 border border-zinc-800 text-fg-muted hover:text-fg focus-visible:ring-fg inline-flex size-8 items-center justify-center rounded-l-lg transition-colors focus:outline-none focus-visible:ring-2"
                 >
                   <RotateCcw className="size-3.5" />
                 </button>
@@ -291,7 +282,7 @@ function MessageImpl({ message, onCopy, onRegenerate, onEdit, isStreaming }: Mes
                   popoverTarget={hasPopoverSupport ? `regen-menu-${message.id}` : undefined}
                   onClick={hasPopoverSupport ? undefined : () => setIsOpenFallback(!isOpenFallback)}
                   aria-label="Regenerate with a different model"
-                  className="bg-bg-elev-1 border border-divider text-fg-muted hover:text-fg focus-visible:ring-brand inline-flex size-8 items-center justify-center rounded-r-lg border-l border-divider/40 transition-colors focus:outline-none focus-visible:ring-2"
+                  className="bg-zinc-950 border border-zinc-800 text-fg-muted hover:text-fg focus-visible:ring-fg inline-flex size-8 items-center justify-center rounded-r-lg border-l border-zinc-900 transition-colors focus:outline-none focus-visible:ring-2"
                   style={
                     hasPopoverSupport
                       ? ({ anchorName: `--regen-btn-${message.id}` } as React.CSSProperties)
@@ -306,7 +297,7 @@ function MessageImpl({ message, onCopy, onRegenerate, onEdit, isStreaming }: Mes
                 popover={hasPopoverSupport ? "auto" : undefined}
                 role="menu"
                 className={cn(
-                  "bg-bg-elev-1 border border-divider border-divider/60 m-0 rounded-xl border p-1 shadow-xl",
+                  "bg-zinc-950 border border-zinc-800 border-zinc-800 m-0 rounded-sm border p-1 shadow-xl",
                   !hasPopoverSupport && "absolute bottom-full right-0 mb-2 z-50",
                   !hasPopoverSupport && !isOpenFallback && "hidden"
                 )}

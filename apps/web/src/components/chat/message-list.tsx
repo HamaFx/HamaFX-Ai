@@ -96,17 +96,17 @@ export const MessageList = memo(function MessageList({
             >
               <div className="flex justify-start">
                 <div
-                  className="bg-bg-elev-1 border border-divider text-fg flex items-center gap-1 rounded-3xl rounded-bl-md px-4 py-3"
+                  className="bg-zinc-950 border border-zinc-800 text-fg flex items-center gap-1 rounded-sm px-4 py-3"
                   role="status"
                   aria-label="Assistant is responding"
                 >
-                  <span className="bg-brand motion-safe:animate-bounce size-1.5 rounded-full" />
+                  <span className="bg-fg motion-safe:animate-bounce size-1.5 rounded-sm" />
                   <span
-                    className="bg-brand motion-safe:animate-bounce size-1.5 rounded-full"
+                    className="bg-fg motion-safe:animate-bounce size-1.5 rounded-sm"
                     style={{ animationDelay: '150ms' }}
                   />
                   <span
-                    className="bg-brand motion-safe:animate-bounce size-1.5 rounded-full"
+                    className="bg-fg motion-safe:animate-bounce size-1.5 rounded-sm"
                     style={{ animationDelay: '300ms' }}
                   />
                 </div>

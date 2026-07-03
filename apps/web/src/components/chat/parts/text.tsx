@@ -35,7 +35,7 @@ export function TextPart({ text, role, isStreaming }: TextPartProps) {
   // verbatim and we should render it the same way they typed it.
   if (role === 'user') {
     return (
-      <p className="whitespace-pre-line text-sm leading-relaxed">{text}</p>
+      <p className="whitespace-pre-line text-sm leading-[1.4]">{text}</p>
     );
   }
 
@@ -43,59 +43,64 @@ export function TextPart({ text, role, isStreaming }: TextPartProps) {
   // Upgrade to full markdown rendering once streaming finishes.
   if (isStreaming) {
     return (
-      <div aria-live="polite" aria-atomic="true" className="md-prose text-sm leading-relaxed space-y-2">
+      <div aria-live="polite" aria-atomic="true" className="md-prose text-sm leading-[1.4] tracking-tight space-y-2 text-fg">
         {text}
-        <span className="inline-block w-[2px] h-[1em] bg-text-fg animate-pulse ml-[1px] align-middle" />
+        <span className="inline-block w-[2px] h-[1em] bg-fg animate-pulse ml-[1px] align-middle" />
       </div>
     );
   }
 
   return (
-    <div aria-live="polite" aria-atomic="true" className="md-prose text-sm leading-relaxed space-y-2">
+    <div aria-live="polite" aria-atomic="true" className="md-prose text-sm leading-[1.4] tracking-tight space-y-2 text-fg">
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         components={{
-          h1: ({ children }) => <h1 className="text-lg font-bold mt-4 mb-2">{children}</h1>,
-          h2: ({ children }) => <h2 className="text-base font-semibold mt-3 mb-1.5">{children}</h2>,
-          h3: ({ children }) => <h3 className="text-sm font-medium mt-2 mb-1">{children}</h3>,
+          h1: ({ children }) => <h1 className="text-base font-bold mt-4 mb-2 text-fg tracking-tight">{children}</h1>,
+          h2: ({ children }) => <h2 className="text-sm font-semibold mt-3 mb-1.5 text-fg tracking-tight">{children}</h2>,
+          h3: ({ children }) => <h3 className="text-sm font-medium mt-2 mb-1 text-fg">{children}</h3>,
           blockquote: ({ children }) => (
-            <blockquote className="border-brand/40 text-fg-muted my-2 border-l-3 pl-3 italic">
+            <blockquote className="border-l-2 border-zinc-700 text-fg-muted my-2 pl-3 italic text-sm leading-[1.4]">
               {children}
             </blockquote>
           ),
-          hr: () => <hr className="border-divider my-4" />,
-          p: ({ children }) => <p className="leading-relaxed whitespace-pre-line my-1.5">{children}</p>,
-          ul: ({ children }) => <ul className="list-disc pl-5 my-2 space-y-1">{children}</ul>,
-          ol: ({ children }) => <ol className="list-decimal pl-5 my-2 space-y-1">{children}</ol>,
-          li: ({ children }) => <li className="my-0.5">{children}</li>,
+          hr: () => <hr className="border-zinc-900 my-4" />,
+          p: ({ children }) => <p className="leading-[1.4] whitespace-pre-line my-1.5 text-fg text-sm">{children}</p>,
+          ul: ({ children }) => <ul className="pl-0 list-none my-2 space-y-1">{children}</ul>,
+          ol: ({ children }) => <ol className="pl-0 list-none my-2 space-y-1">{children}</ol>,
+          li: ({ children }) => (
+            <li className="text-fg text-sm leading-[1.4] flex gap-2">
+              <span className="text-fg-subtle select-none">›</span>
+              <span className="flex-1">{children}</span>
+            </li>
+          ),
           a: ({ href, children }) => (
             <a
               href={href}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-brand underline-offset-2 hover:underline"
+              className="text-fg underline underline-offset-2 decoration-zinc-700 hover:decoration-zinc-500"
             >
               {children}
             </a>
           ),
           table: ({ children }) => (
-            <div className="my-3 overflow-x-auto rounded-lg border border-divider">
-              <table className="min-w-full divide-y divide-divider/40 text-caption font-mono text-left">
+            <div className="my-3 overflow-x-auto border border-zinc-900 rounded-sm">
+              <table className="table-auto font-mono text-xs text-right border-zinc-900 w-full">
                 {children}
               </table>
             </div>
           ),
-          thead: ({ children }) => <thead className="bg-bg-elev-2/60">{children}</thead>,
-          tbody: ({ children }) => <tbody className="divide-y divide-divider/20">{children}</tbody>,
-          tr: ({ children }) => <tr className="hover:bg-bg-elev-1/30 transition-colors">{children}</tr>,
-          th: ({ children }) => <th className="px-4 py-2 font-semibold text-fg-subtle">{children}</th>,
-          td: ({ children }) => <td className="px-4 py-2 text-fg">{children}</td>,
+          thead: ({ children }) => <thead className="bg-zinc-900 border-b border-zinc-800">{children}</thead>,
+          tbody: ({ children }) => <tbody className="divide-y divide-zinc-900">{children}</tbody>,
+          tr: ({ children }) => <tr className="border-zinc-900 hover:bg-zinc-950 transition-colors">{children}</tr>,
+          th: ({ children }) => <th className="px-3 py-1.5 text-left font-semibold text-fg-subtle uppercase tracking-wider border-r border-zinc-900 last:border-r-0">{children}</th>,
+          td: ({ children }) => <td className="px-3 py-1.5 text-fg tabular-nums border-r border-zinc-900 last:border-r-0">{children}</td>,
           code({ className, children, ...props }) {
             const match = /language-(\w+)/.exec(className || '');
             const codeStr = String(children).replace(/\n$/, '');
             if (!match) {
               return (
-                <code className="bg-bg-elev-2 text-fg-subtle font-mono text-xs px-1.5 py-0.5 rounded" {...props}>
+                <code className="bg-zinc-900 text-fg-muted font-mono text-xs border border-zinc-800 rounded-sm px-1.5 py-0.5" {...props}>
                   {children}
                 </code>
               );
@@ -145,7 +150,7 @@ function ShikiCode({ code, lang }: { code: string; lang: string }) {
   }
 
   return (
-    <pre className="scrollbar-hide overflow-x-auto p-3 font-mono text-body-sm leading-relaxed">
+    <pre className="scrollbar-hide overflow-x-auto p-3 font-mono text-body-sm leading-[1.4]">
       <code>{code}</code>
     </pre>
   );
@@ -171,10 +176,10 @@ function CodeBlock({ code, lang }: { code: string; lang: string }) {
   return (
     <div
       className={cn(
-        'border-divider bg-bg-elev-1/60 relative my-2 overflow-hidden rounded-xl border',
+        'border-zinc-800 bg-zinc-950 relative my-2 overflow-hidden rounded-sm border',
       )}
     >
-      <div className="border-divider/60 bg-bg-elev-2/60 flex items-center justify-between border-b px-3 py-2">
+      <div className="border-zinc-800 bg-zinc-900 flex items-center justify-between border-b px-3 py-2">
         <span className="text-fg-subtle font-mono text-caption uppercase tracking-wider">
           {lang || 'code'}
         </span>
@@ -182,11 +187,11 @@ function CodeBlock({ code, lang }: { code: string; lang: string }) {
           type="button"
           onClick={copy}
           aria-label={copied ? 'Copied' : 'Copy code'}
-          className="text-fg-muted hover:text-fg inline-flex items-center gap-1 rounded-md px-2 py-1 text-caption font-medium transition-colors cursor-pointer"
+          className="text-fg-muted hover:text-fg inline-flex items-center gap-1 rounded-sm px-2 py-1 text-caption font-medium transition-colors cursor-pointer"
         >
           {copied ? (
             <>
-              <Check className="text-bull size-3" /> copied
+              <Check className="text-emerald-500 size-3" /> copied
             </>
           ) : (
             <>
@@ -199,11 +204,11 @@ function CodeBlock({ code, lang }: { code: string; lang: string }) {
       <ShikiCode code={displayCode} lang={lang} />
 
       {shouldTruncate && (
-        <div className="border-divider/40 bg-bg-elev-2/30 flex justify-center border-t py-1.5">
+        <div className="border-zinc-800 bg-zinc-900/50 flex justify-center border-t py-1.5">
           <button
             type="button"
             onClick={() => setExpanded(!expanded)}
-            className="text-brand hover:text-brand-hover text-caption font-semibold transition-colors cursor-pointer"
+            className="text-fg hover:text-fg-muted text-caption font-semibold transition-colors cursor-pointer"
           >
             {expanded ? 'Collapse code' : `Show all ${lines.length} lines`}
           </button>
