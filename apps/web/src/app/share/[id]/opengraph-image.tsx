@@ -34,12 +34,12 @@ export default async function OGImage({ params }: { params: Promise<{ id: string
               width: 64,
               height: 64,
               borderRadius: 16,
-              background: 'oklch(82% 0.14 85 / 0.15)',
+              background: 'rgba(250, 250, 250, 0.12)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               fontSize: 32,
-              color: 'oklch(82% 0.14 85)',
+              color: '#FAFAFA',
             }}
           >
             ✦
