@@ -113,10 +113,10 @@ function PortfolioContent({
 
       {/* Alerts */}
       {riskReport.alerts.length > 0 && (
-        <div className="rounded-lg border border-warn/30 bg-warn/10 p-4">
+        <div className="rounded-sm border border-warn/30 bg-amber-500/10 p-4">
           <div className="flex items-center gap-2 mb-2">
-            <AlertTriangle className="size-4 text-warn" />
-            <h3 className="text-sm font-semibold text-warn">
+            <AlertTriangle className="size-4 text-amber-500" />
+            <h3 className="text-sm font-semibold text-amber-500">
               Risk Alerts
             </h3>
           </div>
@@ -140,7 +140,7 @@ function PortfolioContent({
 
       {/* Positions Table */}
       {positions.length > 0 && (
-        <div className="rounded-lg border border-border bg-surface overflow-hidden">
+        <div className="rounded-sm border border-border bg-surface overflow-hidden">
           <div className="px-4 py-3 border-b border-border">
             <h3 className="text-sm font-semibold text-fg">Open Positions</h3>
           </div>
@@ -167,8 +167,8 @@ function PortfolioContent({
                         className={cn(
                           'text-xs font-medium px-2 py-0.5 rounded',
                           p.direction === 'long'
-                            ? 'bg-bull/10 text-bull'
-                            : 'bg-bear/10 text-bear',
+                            ? 'bg-emerald-500/10 text-bull'
+                            : 'bg-red-500/10 text-bear',
                         )}
                       >
                         {p.direction.toUpperCase()}
@@ -224,17 +224,17 @@ function PortfolioContent({
 
       {/* Concentration */}
       {riskReport.concentration.length > 0 && (
-        <div className="rounded-lg border border-border bg-surface p-4">
+        <div className="rounded-sm border border-border bg-surface p-4">
           <h3 className="text-sm font-semibold text-fg mb-3">Concentration</h3>
           <div className="space-y-2">
             {riskReport.concentration.map((c) => (
               <div key={c.symbol} className="flex items-center gap-3">
                 <span className="text-sm text-fg w-20">{c.symbol}</span>
-                <div className="flex-1 h-2 bg-surface-elevated rounded-full overflow-hidden">
+                <div className="flex-1 h-2 bg-surface-elevated rounded-sm overflow-hidden">
                   <div
                     className={cn(
-                      'h-full rounded-full',
-                      c.alert ? 'bg-warn' : 'bg-brand',
+                      'h-full rounded-sm',
+                      c.alert ? 'bg-warn' : 'bg-fg',
                     )}
                     style={{ width: `${Math.min(c.pct, 100)}%` }}
                   />
@@ -242,7 +242,7 @@ function PortfolioContent({
                 <span
                   className={cn(
                     'text-sm w-16 text-right',
-                    c.alert ? 'text-warn font-medium' : 'text-fg-muted',
+                    c.alert ? 'text-amber-500 font-medium' : 'text-fg-muted',
                   )}
                 >
                   {c.pct.toFixed(1)}%
@@ -254,7 +254,7 @@ function PortfolioContent({
       )}
 
       {/* Account Settings */}
-      <div className="rounded-lg border border-border bg-surface p-4">
+      <div className="rounded-sm border border-border bg-surface p-4">
         <h3 className="text-sm font-semibold text-fg mb-3">Account Settings</h3>
         <dl className="grid grid-cols-2 gap-4 text-sm">
           <div>
@@ -297,7 +297,7 @@ function StatCard({
   valueClass?: string;
 }) {
   return (
-    <div className="rounded-lg border border-border bg-surface p-4">
+    <div className="rounded-sm border border-border bg-surface p-4">
       <div className="flex items-center gap-2 text-fg-subtle">
         <Icon className="size-4" />
         <span className="text-xs font-medium">{label}</span>
