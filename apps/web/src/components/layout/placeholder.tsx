@@ -34,19 +34,19 @@ export function Placeholder({ title, description, phase, className, children }: 
   return (
     <div
       className={cn(
-        'border-border bg-bg-elev-1 flex flex-col items-start gap-3 rounded-lg border p-5',
+        'border-border bg-zinc-950 flex flex-col items-start gap-3 rounded-sm border p-5',
         className,
       )}
     >
       <div className="flex flex-wrap items-center gap-2">
         <h2 className="text-fg text-base font-semibold">{title}</h2>
         {phase ? (
-          <span className="border-border text-fg-muted rounded-full border px-2 py-0.5 text-xs font-medium">
+          <span className="border-border text-fg-muted rounded-sm border px-2 py-0.5 text-xs font-medium">
             {phase}
           </span>
         ) : null}
       </div>
-      <p className="text-fg-muted text-sm leading-relaxed">{description}</p>
+      <p className="text-fg-muted text-sm leading-[1.4]">{description}</p>
       {children}
     </div>
   );

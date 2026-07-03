@@ -72,9 +72,9 @@ const ArticleCardInner = memo(
   }) {
     const sentimentColor =
       article.sentiment === 'positive'
-        ? 'oklch(72% 0.18 152)'
+        ? '#10B981'
         : article.sentiment === 'negative'
-          ? 'oklch(70% 0.22 25)'
+          ? '#EF4444'
           : null;
 
     const askPrompt = encodeURIComponent(
@@ -93,9 +93,9 @@ const ArticleCardInner = memo(
     return (
       <article
         className={cn(
-          'group relative overflow-hidden rounded-lg',
-          'border border-divider bg-bg-elev-1',
-          'transition-colors duration-200 md:hover:bg-bg-elev-2/60',
+          'group relative overflow-hidden rounded-sm',
+          'border border-zinc-800 bg-bg-elev-1',
+          'transition-colors duration-200 md:hover:bg-zinc-900',
         )}
       >
         {sentimentColor ? (
@@ -147,7 +147,7 @@ const ArticleCardInner = memo(
           </div>
 
           {article.summary ? (
-            <p className="text-fg-muted mt-2 line-clamp-2 text-body-sm leading-relaxed">
+            <p className="text-fg-muted mt-2 line-clamp-2 text-body-sm leading-[1.4]">
               {article.summary}
             </p>
           ) : null}
@@ -163,7 +163,7 @@ const ArticleCardInner = memo(
           <a
             href={`/chat?prompt=${askPrompt}`}
             onClick={(e) => e.stopPropagation()}
-            className="bg-bg-elev-2 text-fg-muted hover:text-brand pointer-events-auto inline-flex items-center gap-1 rounded-pill px-3 py-1.5 text-body-sm font-medium transition-colors"
+            className="bg-zinc-900 text-fg-muted hover:text-fg pointer-events-auto inline-flex items-center gap-1 rounded-pill px-3 py-1.5 text-body-sm font-medium transition-colors"
           >
             <Sparkles className="size-3.5" />
             Ask AI
@@ -180,9 +180,9 @@ const ArticleCardInner = memo(
               aria-label={saved ? 'Remove bookmark' : 'Bookmark article'}
               aria-pressed={saved}
               className={cn(
-                'inline-flex size-8 items-center justify-center rounded-full transition-colors',
+                'inline-flex size-8 items-center justify-center rounded-sm transition-colors',
                 saved
-                  ? 'text-brand bg-brand/10'
+                  ? 'text-fg bg-zinc-900'
                   : 'text-fg-muted hover:text-fg hover:bg-bg-elev-2',
               )}
             >
@@ -194,7 +194,7 @@ const ArticleCardInner = memo(
               rel="noopener noreferrer"
               aria-label="Open article in new tab"
               onClick={(e) => e.stopPropagation()}
-              className="text-fg-muted hover:text-fg hover:bg-bg-elev-2 inline-flex size-8 items-center justify-center rounded-full transition-colors"
+              className="text-fg-muted hover:text-fg hover:bg-zinc-900 inline-flex size-8 items-center justify-center rounded-sm transition-colors"
             >
               <ExternalLink className="size-4" />
             </a>
