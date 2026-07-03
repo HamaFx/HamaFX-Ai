@@ -31,16 +31,16 @@ export default function TelegramSettingsPage() {
         description="Link your Telegram to control HamaFX with bot commands."
       />
 
-      <section className="rounded-xl border border-border bg-surface p-6 space-y-4">
+      <section className="rounded-sm border border-border bg-surface p-6 space-y-4">
         <div className="flex items-center gap-2">
-          <MessageCircle className="size-5 text-brand" />
+          <MessageCircle className="size-5 text-fg" />
           <h2 className="text-lg font-semibold">Bot Linking</h2>
         </div>
 
         <TelegramLinkCard />
       </section>
 
-      <section className="rounded-xl border border-border bg-surface p-6 space-y-4">
+      <section className="rounded-sm border border-border bg-surface p-6 space-y-4">
         <h2 className="text-sm font-semibold text-fg-subtle">Test Notification</h2>
         <p className="text-sm text-fg-subtle">
           Send a test message to verify your Telegram bot is configured correctly.
@@ -48,7 +48,7 @@ export default function TelegramSettingsPage() {
         <TestTelegramButton />
       </section>
 
-      <section className="rounded-xl border border-border bg-surface p-6 space-y-3">
+      <section className="rounded-sm border border-border bg-surface p-6 space-y-3">
         <h2 className="text-sm font-semibold text-fg-subtle">Available Commands</h2>
         <div className="grid gap-2 text-sm">
           {[

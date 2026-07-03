@@ -61,9 +61,9 @@ export function SignalFeedback({ signalId, initialFeedback = null }: SignalFeedb
         aria-label="This signal was useful"
         aria-pressed={feedback === 'useful'}
         className={cn(
-          'inline-flex size-8 items-center justify-center rounded-md transition-colors',
+          'inline-flex size-8 items-center justify-center rounded-sm transition-colors',
           feedback === 'useful'
-            ? 'bg-bull/10 text-bull'
+            ? 'bg-emerald-500/10 text-bull'
             : 'text-fg-muted hover:text-fg hover:bg-bg-elev-2',
           saving && 'opacity-60',
         )}
@@ -77,9 +77,9 @@ export function SignalFeedback({ signalId, initialFeedback = null }: SignalFeedb
         aria-label="This signal was not useful"
         aria-pressed={feedback === 'not_useful'}
         className={cn(
-          'inline-flex size-8 items-center justify-center rounded-md transition-colors',
+          'inline-flex size-8 items-center justify-center rounded-sm transition-colors',
           feedback === 'not_useful'
-            ? 'bg-bear/10 text-bear'
+            ? 'bg-red-500/10 text-bear'
             : 'text-fg-muted hover:text-fg hover:bg-bg-elev-2',
           saving && 'opacity-60',
         )}

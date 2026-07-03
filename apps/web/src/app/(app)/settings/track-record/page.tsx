@@ -89,7 +89,7 @@ function TrackRecordContent({ stats }: { stats: SignalStats }) {
 
       {/* Accuracy by Model */}
       {stats.byModel.length > 0 && (
-        <div className="rounded-lg border border-border bg-surface p-4">
+        <div className="rounded-sm border border-border bg-surface p-4">
           <h3 className="text-sm font-semibold text-fg mb-3">Accuracy by Model</h3>
           <div className="flex flex-col gap-2">
             {stats.byModel.map((m: { model: string; hitRate: number; count: number }) => (
@@ -97,7 +97,7 @@ function TrackRecordContent({ stats }: { stats: SignalStats }) {
                 <span className="text-sm text-fg-subtle w-32 truncate">{m.model}</span>
                 <div className="flex-1 h-6 bg-surface-elevated rounded overflow-hidden">
                   <div
-                    className="h-full bg-brand rounded transition-all"
+                    className="h-full bg-fg rounded transition-all"
                     style={{ width: `${m.hitRate * 100}%` }}
                   />
                 </div>
@@ -113,7 +113,7 @@ function TrackRecordContent({ stats }: { stats: SignalStats }) {
 
       {/* Accuracy by Horizon */}
       {stats.byHorizon.length > 0 && (
-        <div className="rounded-lg border border-border bg-surface p-4">
+        <div className="rounded-sm border border-border bg-surface p-4">
           <h3 className="text-sm font-semibold text-fg mb-3">Accuracy by Horizon</h3>
           <div className="flex flex-col gap-2">
             {stats.byHorizon.map((h: { horizon: string; hitRate: number; count: number }) => (
@@ -121,7 +121,7 @@ function TrackRecordContent({ stats }: { stats: SignalStats }) {
                 <span className="text-sm text-fg-subtle w-20">{h.horizon}</span>
                 <div className="flex-1 h-6 bg-surface-elevated rounded overflow-hidden">
                   <div
-                    className="h-full bg-brand rounded transition-all"
+                    className="h-full bg-fg rounded transition-all"
                     style={{ width: `${h.hitRate * 100}%` }}
                   />
                 </div>
@@ -137,7 +137,7 @@ function TrackRecordContent({ stats }: { stats: SignalStats }) {
 
       {/* Accuracy by Action */}
       {stats.byAction.length > 0 && (
-        <div className="rounded-lg border border-border bg-surface p-4">
+        <div className="rounded-sm border border-border bg-surface p-4">
           <h3 className="text-sm font-semibold text-fg mb-3">Accuracy by Action</h3>
           <div className="flex flex-col gap-2">
             {stats.byAction.map((a: { action: string; hitRate: number; count: number }) => (
@@ -145,7 +145,7 @@ function TrackRecordContent({ stats }: { stats: SignalStats }) {
                 <span className="text-sm text-fg-subtle w-20 uppercase">{a.action}</span>
                 <div className="flex-1 h-6 bg-surface-elevated rounded overflow-hidden">
                   <div
-                    className="h-full bg-brand rounded transition-all"
+                    className="h-full bg-fg rounded transition-all"
                     style={{ width: `${a.hitRate * 100}%` }}
                   />
                 </div>
@@ -161,7 +161,7 @@ function TrackRecordContent({ stats }: { stats: SignalStats }) {
 
       {/* Recent Signals */}
       {stats.recentSignals.length > 0 && (
-        <div className="rounded-lg border border-border bg-surface p-4">
+        <div className="rounded-sm border border-border bg-surface p-4">
           <h3 className="text-sm font-semibold text-fg mb-3">Recent Signals</h3>
           <div className="flex flex-col gap-2">
             {stats.recentSignals.map((s: DecisionSignal) => (
@@ -175,10 +175,10 @@ function TrackRecordContent({ stats }: { stats: SignalStats }) {
                     className={cn(
                       'text-xs font-medium px-2 py-0.5 rounded uppercase',
                       s.action === 'buy' || s.action === 'add'
-                        ? 'bg-bull/10 text-bull'
+                        ? 'bg-emerald-500/10 text-bull'
                         : s.action === 'sell' || s.action === 'reduce'
-                          ? 'bg-bear/10 text-bear'
-                          : 'bg-bg-elev-2 text-fg-muted',
+                          ? 'bg-red-500/10 text-bear'
+                          : 'bg-zinc-900 text-fg-muted',
                     )}
                   >
                     {s.action}
@@ -215,7 +215,7 @@ function StatCard({
   valueClass?: string;
 }) {
   return (
-    <div className="rounded-lg border border-border bg-surface p-4">
+    <div className="rounded-sm border border-border bg-surface p-4">
       <div className="flex items-center gap-2 text-fg-subtle">
         <Icon className="size-4" />
         <span className="text-xs font-medium">{label}</span>
@@ -227,10 +227,10 @@ function StatCard({
 
 function StatusBadge({ status }: { status: string }) {
   const styles: Record<string, string> = {
-    active: 'bg-info/10 text-info',
-    closed: 'bg-bg-elev-2 text-fg-muted',
-    expired: 'bg-warn/10 text-warn',
-    invalidated: 'bg-bear/10 text-bear',
+    active: 'bg-blue-500/10 text-info',
+    closed: 'bg-zinc-900 text-fg-muted',
+    expired: 'bg-amber-500/10 text-warn',
+    invalidated: 'bg-red-500/10 text-bear',
   };
   return (
     <span className={cn('text-xs font-medium px-2 py-0.5 rounded', styles[status] ?? styles.closed)}>
