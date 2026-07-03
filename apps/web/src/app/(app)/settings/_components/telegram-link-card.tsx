@@ -179,9 +179,9 @@ export function TelegramLinkCard(): React.JSX.Element {
       <div className="flex items-center gap-2">
         <span
           className={cn(
-            'inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium',
+            'inline-flex items-center gap-1.5 rounded-sm px-2.5 py-0.5 text-xs font-medium',
             status?.linked
-              ? 'bg-bull/10 text-bull'
+              ? 'bg-emerald-500/10 text-bull'
               : 'bg-bg-elev-2/10 text-fg-muted',
           )}
         >
@@ -215,7 +215,7 @@ export function TelegramLinkCard(): React.JSX.Element {
             href={`https://t.me/HamaFXBot`}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 text-xs text-brand hover:text-brand/80 font-semibold transition-colors"
+            className="inline-flex items-center gap-1.5 text-xs text-fg hover:text-fg/80 font-semibold transition-colors"
           >
             <ExternalLink className="size-3" />
             Open HamaFX Bot on Telegram
@@ -246,7 +246,7 @@ export function TelegramLinkCard(): React.JSX.Element {
             href={`https://t.me/HamaFXBot`}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 text-xs text-brand hover:text-brand/80 font-semibold transition-colors"
+            className="inline-flex items-center gap-1.5 text-xs text-fg hover:text-fg/80 font-semibold transition-colors"
           >
             <ExternalLink className="size-3" />
             Open HamaFX Bot on Telegram
@@ -269,7 +269,7 @@ export function TelegramLinkCard(): React.JSX.Element {
           ) : (
               <div className="space-y-3">
                 {/* Link code display */}
-                <div className="rounded-lg border border-border bg-surface-elevated p-4 space-y-2">
+                <div className="rounded-sm border border-border bg-surface-elevated p-4 space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="text-xs text-fg-subtle">Your link code</span>
                     <span className="text-xs text-fg-subtle">
@@ -300,7 +300,7 @@ export function TelegramLinkCard(): React.JSX.Element {
                     href={`https://t.me/HamaFXBot`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 text-xs text-brand hover:text-brand/80 font-semibold transition-colors"
+                    className="inline-flex items-center gap-1.5 text-xs text-fg hover:text-fg/80 font-semibold transition-colors"
                   >
                     <ExternalLink className="size-3" />
                     Open HamaFX Bot on Telegram

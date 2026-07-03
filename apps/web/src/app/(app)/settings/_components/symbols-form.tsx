@@ -83,11 +83,11 @@ function SortableSymbolRow({
       key={item.symbol}
       ref={setNodeRef}
       style={style}
-      className={`flex items-center justify-between p-3 rounded-lg border transition-all ${
+      className={`flex items-center justify-between p-3 rounded-sm border transition-all ${
         isDragging
-          ? 'border-brand shadow-lg z-10 opacity-90 bg-bg-elev-2'
+          ? 'border-zinc-700 shadow-lg z-10 opacity-90 bg-bg-elev-2'
           : isSelected
-            ? 'bg-brand/5 border-brand/40 shadow-glow-brand/5'
+            ? 'bg-zinc-950 border-zinc-700 shadow-none/5'
             : 'bg-surface border-surface-elevated hover:border-fg-subtle/30'
       }`}
     >
@@ -106,12 +106,12 @@ function SortableSymbolRow({
           checked={isSelected}
           onChange={() => onToggleSelect(item.symbol)}
           aria-label={`Select ${item.symbol}`}
-          className="rounded border-divider bg-bg text-brand focus:ring-brand size-3.5 cursor-pointer shrink-0"
+          className="rounded border-zinc-800 bg-bg text-fg focus:ring-fg size-3.5 cursor-pointer shrink-0"
         />
         <div className="flex flex-col min-w-0">
           <div className="flex items-baseline gap-2">
             <span className="font-mono text-sm font-semibold text-fg">{item.symbol}</span>
-            <span className="text-xs uppercase font-mono px-1 rounded bg-bg-elev-2 text-fg-subtle border border-divider shrink-0">
+            <span className="text-xs uppercase font-mono px-1 rounded bg-zinc-900 text-fg-subtle border border-zinc-800 shrink-0">
               {item.category}
             </span>
           </div>
@@ -130,7 +130,7 @@ function SortableSymbolRow({
         </div>
 
         {/* Arrow buttons — keyboard-only fallback, visually hidden on small screens */}
-        <div className="hidden sm:flex items-center border border-divider/60 rounded-md bg-bg">
+        <div className="hidden sm:flex items-center border border-zinc-800 rounded-sm bg-bg">
           <button
             type="button"
             onClick={() => onMove(index, 'up')}
@@ -156,7 +156,7 @@ function SortableSymbolRow({
           type="button"
           onClick={() => onRemove(item.symbol)}
           aria-label={`Remove ${item.symbol} from watchlist`}
-          className="p-1.5 text-fg-subtle hover:text-bear hover:bg-bear/10 rounded-md transition-colors cursor-pointer"
+          className="p-1.5 text-fg-subtle hover:text-red-500 hover:bg-red-500/10 rounded-sm transition-colors cursor-pointer"
         >
           <Trash className="size-3.5" />
         </button>
@@ -523,7 +523,7 @@ export function SymbolsForm({ initialSymbols, catalog }: SymbolsFormProps) {
   return (
     <div className="flex flex-col gap-6 font-sans">
       {/* Watchlist Section */}
-      <div className="border border-divider bg-bg-elev-1 rounded-xl p-4 flex flex-col gap-4">
+      <div className="border border-zinc-800 bg-zinc-950 rounded-sm p-4 flex flex-col gap-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <h3 className="font-semibold text-fg text-sm uppercase tracking-wider">Your Watchlist</h3>
           
@@ -568,14 +568,14 @@ export function SymbolsForm({ initialSymbols, catalog }: SymbolsFormProps) {
         {/* Watchlist Table/List */}
         <div className="flex flex-col gap-2">
           {filteredWatchlist.length > 0 && (
-            <div className="flex items-center justify-between px-3 py-1.5 text-caption text-fg-subtle border-b border-divider/60">
+            <div className="flex items-center justify-between px-3 py-1.5 text-caption text-fg-subtle border-b border-zinc-800">
               <div className="flex items-center gap-2">
                 <input
                   type="checkbox"
                   checked={selected.size === filteredWatchlist.length && filteredWatchlist.length > 0}
                   onChange={handleToggleSelectAll}
                   aria-label="Select all symbols"
-                  className="rounded border-divider bg-bg text-brand focus:ring-brand size-3.5 cursor-pointer"
+                  className="rounded border-zinc-800 bg-bg text-fg focus:ring-fg size-3.5 cursor-pointer"
                 />
                 <span>Select All</span>
               </div>
@@ -583,7 +583,7 @@ export function SymbolsForm({ initialSymbols, catalog }: SymbolsFormProps) {
                 <button
                   type="button"
                   onClick={handleBulkDelete}
-                  className="text-bear font-semibold hover:underline flex items-center gap-1 cursor-pointer"
+                  className="text-red-500 font-semibold hover:underline flex items-center gap-1 cursor-pointer"
                 >
                   <Trash className="size-3" /> Remove Selected ({selected.size})
                 </button>
@@ -629,19 +629,19 @@ export function SymbolsForm({ initialSymbols, catalog }: SymbolsFormProps) {
       </div>
 
       {/* Catalog / Suggestions Section */}
-      <div className="border border-divider bg-bg-elev-1 rounded-xl p-4 flex flex-col gap-4">
+      <div className="border border-zinc-800 bg-zinc-950 rounded-sm p-4 flex flex-col gap-4">
         <h3 className="font-semibold text-fg text-sm uppercase tracking-wider">Available Symbol Catalog</h3>
 
         {/* Category Tabs */}
-        <div className="flex bg-bg-elev-2 p-0.5 rounded-lg border border-divider overflow-x-auto scrollbar-none">
+        <div className="flex bg-zinc-900 p-0.5 rounded-sm border border-zinc-800 overflow-x-auto scrollbar-none">
           {['all', 'forex', 'metals', 'crypto', 'indices'].map((cat) => (
             <button
               key={cat}
               type="button"
               onClick={() => setActiveCategory(cat)}
-              className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-all cursor-pointer shrink-0 uppercase tracking-wide ${
+              className={`px-3 py-1.5 text-xs font-semibold rounded-sm transition-all cursor-pointer shrink-0 uppercase tracking-wide ${
                 activeCategory === cat
-                  ? 'bg-bg-elev-1 text-fg shadow-sm'
+                  ? 'bg-zinc-950 text-fg shadow-sm'
                   : 'text-fg-muted hover:text-fg'
               }`}
             >
@@ -685,12 +685,12 @@ export function SymbolsForm({ initialSymbols, catalog }: SymbolsFormProps) {
           {paginatedCatalog.map((item) => (
             <li
               key={item.symbol}
-              className="flex items-center justify-between p-3 rounded-lg border border-surface-elevated bg-surface hover:border-fg-subtle/30"
+              className="flex items-center justify-between p-3 rounded-sm border border-surface-elevated bg-surface hover:border-fg-subtle/30"
             >
               <div className="flex flex-col">
                 <div className="flex items-baseline gap-2">
                   <span className="font-mono text-sm font-semibold text-fg">{item.symbol}</span>
-                  <span className="text-xs uppercase font-mono px-1 rounded bg-bg-elev-2 text-fg-subtle border border-divider">
+                  <span className="text-xs uppercase font-mono px-1 rounded bg-zinc-900 text-fg-subtle border border-zinc-800">
                     {item.category}
                   </span>
                 </div>
@@ -701,7 +701,7 @@ export function SymbolsForm({ initialSymbols, catalog }: SymbolsFormProps) {
                 variant="secondary"
                 size="sm"
                 onClick={() => handleAdd(item.symbol)}
-                className="h-8 w-8 p-0 cursor-pointer text-fg-subtle hover:text-brand"
+                className="h-8 w-8 p-0 cursor-pointer text-fg-subtle hover:text-fg"
                 aria-label={`Add ${item.symbol} to watchlist`}
               >
                 <Plus className="size-4" />
@@ -717,7 +717,7 @@ export function SymbolsForm({ initialSymbols, catalog }: SymbolsFormProps) {
         </ul>
 
         {filteredCatalog.length > CATALOG_PAGE_SIZE && (
-          <div className="flex items-center justify-between pt-2 border-t border-divider/60">
+          <div className="flex items-center justify-between pt-2 border-t border-zinc-800">
             <span className="text-caption text-fg-muted">
               {filteredCatalog.length} symbols
             </span>
@@ -726,7 +726,7 @@ export function SymbolsForm({ initialSymbols, catalog }: SymbolsFormProps) {
                 type="button"
                 onClick={() => setCatalogPage((p) => Math.max(0, p - 1))}
                 disabled={catalogPage === 0}
-                className="px-2.5 py-1 text-xs font-medium rounded-md border border-divider bg-bg-elev-1 text-fg-subtle hover:text-fg hover:border-divider disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+                className="px-2.5 py-1 text-xs font-medium rounded-sm border border-zinc-800 bg-zinc-950 text-fg-subtle hover:text-fg hover:border-zinc-800 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
               >
                 Previous
               </button>
@@ -737,7 +737,7 @@ export function SymbolsForm({ initialSymbols, catalog }: SymbolsFormProps) {
                 type="button"
                 onClick={() => setCatalogPage((p) => Math.min(totalPages - 1, p + 1))}
                 disabled={catalogPage >= totalPages - 1}
-                className="px-2.5 py-1 text-xs font-medium rounded-md border border-divider bg-bg-elev-1 text-fg-subtle hover:text-fg hover:border-divider disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+                className="px-2.5 py-1 text-xs font-medium rounded-sm border border-zinc-800 bg-zinc-950 text-fg-subtle hover:text-fg hover:border-zinc-800 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
               >
                 Next
               </button>

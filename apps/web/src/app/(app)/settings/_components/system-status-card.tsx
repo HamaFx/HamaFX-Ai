@@ -123,7 +123,7 @@ export async function SystemStatusCard({ userId }: { userId: string }) {
   return (
     <section
       aria-labelledby="system-status-heading"
-      className="border border-divider bg-bg-elev-1 rounded-lg relative flex flex-col gap-4 overflow-hidden p-4"
+      className="border border-zinc-800 bg-zinc-950 rounded-sm relative flex flex-col gap-4 overflow-hidden p-4"
     >
       <header className="flex items-center justify-between gap-3">
         <h2
@@ -134,15 +134,15 @@ export async function SystemStatusCard({ userId }: { userId: string }) {
         </h2>
         <span
           className={cn(
-            'inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-caption font-bold uppercase tracking-wide ring-1',
+            'inline-flex items-center gap-1.5 rounded-sm px-2 py-0.5 text-caption font-bold uppercase tracking-wide ring-1',
             allReady
-              ? 'bg-bull/10 text-bull ring-bull/30'
-              : 'bg-warn/10 text-warn ring-warn/30',
+              ? 'bg-emerald-500/10 text-emerald-500 ring-bull/30'
+              : 'bg-amber-500/10 text-amber-500 ring-warn/30',
           )}
         >
           {allReady ? (
             <>
-              <span aria-hidden className="bg-bull size-1.5 rounded-full" />
+              <span aria-hidden className="bg-emerald-500 size-1.5 rounded-sm" />
               All systems
             </>
           ) : (
@@ -163,10 +163,10 @@ export async function SystemStatusCard({ userId }: { userId: string }) {
             <span
               aria-hidden="true"
               className={cn(
-                'inline-flex size-7 shrink-0 items-center justify-center rounded-full',
+                'inline-flex size-7 shrink-0 items-center justify-center rounded-sm',
                 c.ready
                   ? 'bg-bull/15 text-bull'
-                  : 'bg-bg-elev-2 text-fg-subtle',
+                  : 'bg-zinc-900 text-fg-subtle',
               )}
             >
               {c.ready ? (
@@ -183,10 +183,10 @@ export async function SystemStatusCard({ userId }: { userId: string }) {
             </div>
             <span
               className={cn(
-                'rounded-full px-2 py-0.5 text-caption font-bold uppercase tabular-nums ring-1',
+                'rounded-sm px-2 py-0.5 text-caption font-bold uppercase tabular-nums ring-1',
                 c.ready
-                  ? 'bg-bull/10 text-bull ring-bull/30'
-                  : 'bg-bg-elev-2 text-fg-muted ring-divider',
+                  ? 'bg-emerald-500/10 text-emerald-500 ring-bull/30'
+                  : 'bg-zinc-900 text-fg-muted ring-divider',
               )}
             >
               {c.ready ? 'Ready' : 'Off'}
@@ -196,12 +196,12 @@ export async function SystemStatusCard({ userId }: { userId: string }) {
       </ul>
 
       {/* Cron job health — OBS-04 */}
-      <div className="border-divider/60 -mx-4 border-t px-4 pt-3">
+      <div className="border-zinc-800 -mx-4 border-t px-4 pt-3">
         <div className="flex items-center gap-3">
           <span
             aria-hidden="true"
             className={cn(
-              'inline-flex size-7 shrink-0 items-center justify-center rounded-lg',
+              'inline-flex size-7 shrink-0 items-center justify-center rounded-sm',
               cronHealthy ? 'bg-bull/15 text-bull' : 'bg-warn/15 text-warn',
             )}
           >
@@ -223,19 +223,19 @@ export async function SystemStatusCard({ userId }: { userId: string }) {
       </div>
 
       {/* F6 — Market phase detection */}
-      <div className="border-divider/60 -mx-4 border-t px-4 pt-3">
+      <div className="border-zinc-800 -mx-4 border-t px-4 pt-3">
         <div className="flex items-center gap-3">
           <span
             aria-hidden="true"
             className={cn(
-              'inline-flex size-7 shrink-0 items-center justify-center rounded-lg',
+              'inline-flex size-7 shrink-0 items-center justify-center rounded-sm',
               marketPhase.isOpen
                 ? marketPhase.liquidity === 'high'
                   ? 'bg-bull/15 text-bull'
                   : marketPhase.liquidity === 'medium'
                     ? 'bg-warn/15 text-warn'
                     : 'bg-fg-muted/15 text-fg-muted'
-                : 'bg-bg-elev-2 text-fg-subtle',
+                : 'bg-zinc-900 text-fg-subtle',
             )}
           >
             {marketPhase.isOpen ? (
@@ -252,14 +252,14 @@ export async function SystemStatusCard({ userId }: { userId: string }) {
           </div>
           <span
             className={cn(
-              'rounded-full px-2 py-0.5 text-caption font-bold uppercase tabular-nums ring-1',
+              'rounded-sm px-2 py-0.5 text-caption font-bold uppercase tabular-nums ring-1',
               marketPhase.isOpen
                 ? marketPhase.liquidity === 'high'
-                  ? 'bg-bull/10 text-bull ring-bull/30'
+                  ? 'bg-emerald-500/10 text-emerald-500 ring-bull/30'
                   : marketPhase.liquidity === 'medium'
-                    ? 'bg-warn/10 text-warn ring-warn/30'
-                    : 'bg-bg-elev-2 text-fg-muted ring-divider'
-                : 'bg-bg-elev-2 text-fg-muted ring-divider',
+                    ? 'bg-amber-500/10 text-amber-500 ring-warn/30'
+                    : 'bg-zinc-900 text-fg-muted ring-divider'
+                : 'bg-zinc-900 text-fg-muted ring-divider',
             )}
           >
             {marketPhase.isOpen ? marketPhase.liquidity : 'Closed'}

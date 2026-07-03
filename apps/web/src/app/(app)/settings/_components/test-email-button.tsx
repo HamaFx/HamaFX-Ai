@@ -96,7 +96,7 @@ export function TestEmailButton(): React.JSX.Element {
       onClick={send}
       loading={pending}
       aria-busy={pending}
-      className="focus-visible:ring-brand min-h-[44px] focus-visible:ring-2"
+      className="focus-visible:ring-fg min-h-[44px] focus-visible:ring-2"
     >
       <Mail className="size-4" />
       {pending ? 'Sending…' : 'Send test email'}

@@ -28,7 +28,7 @@ interface SettingsSectionProps {
 
 export function SettingsSection({
   icon,
-  iconColor = 'oklch(78% 0.16 78 / 0.18)',
+  iconColor = 'rgba(250, 250, 250, 0.15)',
   title,
   description,
   children,
@@ -41,7 +41,7 @@ export function SettingsSection({
       <header className="flex items-center gap-3 px-0.5">
         {icon ? (
           <span
-            className="text-fg inline-flex h-7 w-7 items-center justify-center rounded-lg"
+            className="text-fg inline-flex h-7 w-7 items-center justify-center rounded-sm"
             style={{
               background: iconColor,
             }}
