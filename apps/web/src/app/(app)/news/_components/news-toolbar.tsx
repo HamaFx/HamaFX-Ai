@@ -92,14 +92,14 @@ export function NewsToolbar({
           onChange={(e) => onQuery(e.target.value)}
           placeholder="Search headlines…"
           aria-label="Search headlines"
-          className="bg-bg-elev-1/60 text-fg placeholder:text-fg-subtle focus:border-brand/60 border-divider h-11 w-full rounded-full border pl-10 pr-10 text-sm focus:outline-none"
+          className="bg-zinc-950/60 text-fg placeholder:text-fg-subtle focus:border-zinc-700 border-zinc-800 h-11 w-full rounded-sm border pl-10 pr-10 text-sm focus:outline-none"
         />
         {query ? (
           <button
             type="button"
             aria-label="Clear search"
             onClick={() => onQuery('')}
-            className="text-fg-subtle hover:text-fg absolute right-2 top-1/2 inline-flex size-7 -translate-y-1/2 items-center justify-center rounded-full transition-colors"
+            className="text-fg-subtle hover:text-fg absolute right-2 top-1/2 inline-flex size-7 -translate-y-1/2 items-center justify-center rounded-sm transition-colors"
           >
             <X className="size-4" />
           </button>
@@ -124,10 +124,10 @@ export function NewsToolbar({
               tabIndex={active ? 0 : -1}
               onClick={() => onSentiment(s.value)}
               className={cn(
-                'inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full border px-3 text-xs font-semibold transition-colors',
+                'inline-flex h-9 shrink-0 items-center gap-1.5 rounded-sm border px-3 text-xs font-semibold transition-colors',
                 active
-                  ? 'bg-brand text-brand-fg border-brand'
-                  : 'border-divider bg-bg-elev-1/60 text-fg-muted hover:text-fg',
+                  ? 'bg-fg text-black border-zinc-700'
+                  : 'border-zinc-800 bg-zinc-950/60 text-fg-muted hover:text-fg',
               )}
             >
               <span aria-hidden="true" className={cn(active ? '' : s.tone)}>
@@ -187,10 +187,10 @@ function SymbolChip({
       tabIndex={tabIndex ?? -1}
       onClick={onClick}
       className={cn(
-        'inline-flex h-9 shrink-0 items-center rounded-full border px-3 text-body-sm font-semibold uppercase tabular-nums transition-colors',
+        'inline-flex h-9 shrink-0 items-center rounded-sm border px-3 text-body-sm font-semibold uppercase tabular-nums transition-colors',
         active
-          ? 'bg-bg-elev-3 text-fg border-brand/50'
-          : 'border-divider bg-bg-elev-1/60 text-fg-muted hover:text-fg',
+          ? 'bg-zinc-800 text-fg border-zinc-700'
+          : 'border-zinc-800 bg-zinc-950/60 text-fg-muted hover:text-fg',
       )}
     >
       {label}

@@ -193,10 +193,10 @@ export function NewsView({ initialArticles }: NewsViewProps) {
           aria-pressed={savedOnly}
           disabled={savedCount === 0}
           className={cn(
-            'inline-flex h-9 items-center gap-1.5 rounded-full border px-3 text-xs font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-40',
+            'inline-flex h-9 items-center gap-1.5 rounded-sm border px-3 text-xs font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-40',
             savedOnly
-              ? 'bg-brand text-brand-fg border-brand'
-              : 'border-divider bg-bg-elev-1/60 text-fg-muted hover:text-fg',
+              ? 'bg-fg text-black border-zinc-700'
+              : 'border-zinc-800 bg-zinc-950/60 text-fg-muted hover:text-fg',
           )}
         >
           {savedOnly ? <BookmarkCheck className="size-3.5" /> : <Bookmark className="size-3.5" />}
@@ -208,7 +208,7 @@ export function NewsView({ initialArticles }: NewsViewProps) {
           onClick={manualRefresh}
           disabled={pending}
           aria-label="Refresh now"
-          className="text-fg-muted hover:text-fg hover:bg-bg-elev-2 inline-flex h-9 items-center gap-1.5 rounded-lg px-3 text-xs font-medium transition-colors disabled:opacity-50"
+          className="text-fg-muted hover:text-fg hover:bg-zinc-900 inline-flex h-9 items-center gap-1.5 rounded-sm px-3 text-xs font-medium transition-colors disabled:opacity-50"
         >
           <RotateCw className={cn('size-3.5', pending && 'animate-spin')} />
           {pending ? 'Refreshing…' : `Updated ${formatRelative(lastRefreshed)}`}
@@ -232,7 +232,7 @@ export function NewsView({ initialArticles }: NewsViewProps) {
           {buckets.map(([label, items]) => (
             <section key={label} className="flex flex-col gap-3">
               <h2
-                className="bg-bg/95 supports-[backdrop-filter]:bg-bg/70 text-fg-subtle sticky z-10 -mx-4 flex items-baseline gap-2 px-5 py-2 text-caption font-semibold uppercase tracking-wider backdrop-blur-md"
+                className="bg-bg/95 supports-[backdrop-filter]:bg-bg/70 text-fg-subtle sticky z-10 -mx-4 flex items-baseline gap-2 px-5 py-2 text-caption font-semibold uppercase tracking-wider "
                 style={{ top: 'calc(var(--topbar-h) + env(safe-area-inset-top))' }}
               >
                 {label}

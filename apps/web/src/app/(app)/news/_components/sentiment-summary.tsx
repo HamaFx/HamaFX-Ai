@@ -57,7 +57,7 @@ export function SentimentSummary({ articles }: SentimentSummaryProps) {
   return (
     <section
       aria-labelledby="news-pulse-heading"
-      className="border border-divider bg-bg-elev-1 rounded-lg relative flex flex-col gap-3 p-4"
+      className="border border-zinc-800 bg-zinc-950 rounded-sm relative flex flex-col gap-3 p-4"
     >
       <header className="flex items-baseline justify-between gap-3">
         <div className="flex flex-col gap-0.5">
@@ -79,10 +79,10 @@ export function SentimentSummary({ articles }: SentimentSummaryProps) {
       </header>
 
       {/* Stacked sentiment bar */}
-      <div className="bg-bg-elev-2 flex h-2 w-full overflow-hidden rounded-full">
+      <div className="bg-zinc-900 flex h-2 w-full overflow-hidden rounded-sm">
         {counts.positive > 0 ? (
           <span
-            className="bg-bull h-full"
+            className="bg-emerald-500 h-full"
             style={{ width: `${pct(counts.positive)}%` }}
             aria-hidden="true"
           />
@@ -96,14 +96,14 @@ export function SentimentSummary({ articles }: SentimentSummaryProps) {
         ) : null}
         {counts.none > 0 ? (
           <span
-            className="bg-bg-elev-3 h-full"
+            className="bg-zinc-800 h-full"
             style={{ width: `${pct(counts.none)}%` }}
             aria-hidden="true"
           />
         ) : null}
         {counts.negative > 0 ? (
           <span
-            className="bg-bear h-full"
+            className="bg-red-500 h-full"
             style={{ width: `${pct(counts.negative)}%` }}
             aria-hidden="true"
           />
@@ -144,7 +144,7 @@ function Count({
         ? 'bg-bear'
         : tone === 'muted'
           ? 'bg-fg-subtle'
-          : 'bg-bg-elev-3';
+          : 'bg-zinc-800';
   const labelClass =
     tone === 'bull'
       ? 'text-bull'
@@ -153,7 +153,7 @@ function Count({
         : 'text-fg-muted';
   return (
     <li className="inline-flex items-center gap-1.5">
-      <span aria-hidden className={cn('size-2 rounded-full', dotClass)} />
+      <span aria-hidden className={cn('size-2 rounded-sm', dotClass)} />
       <span className={cn('font-semibold', labelClass)}>{label}</span>
       <span className="text-fg">{count}</span>
       <span className="text-fg-subtle">({pct.toFixed(0)}%)</span>

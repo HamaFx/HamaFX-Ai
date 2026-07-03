@@ -73,7 +73,7 @@ export function RefreshButton({ endpoint, label = 'Refresh now' }: RefreshButton
       size="sm"
       onClick={refresh}
       loading={isLoading}
-      className="focus-visible:ring-brand min-h-[44px] focus-visible:ring-2"
+      className="focus-visible:ring-fg min-h-[44px] focus-visible:ring-2"
     >
       <RefreshCw className={`size-3.5 ${isLoading ? 'animate-spin' : ''}`} />
       {isLoading ? 'Loading…' : label}
