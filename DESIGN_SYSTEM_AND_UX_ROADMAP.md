@@ -22,11 +22,11 @@
 | **Phase 2** | Composer restyle | ✅ DONE | `feat/institutional-terminal-ui` |
 | **Phase 2** | QuickPrompts restyle | ✅ DONE | `feat/institutional-terminal-ui` |
 | **Phase 2** | NavDrawer restyle | ✅ DONE | `feat/institutional-terminal-ui` |
-| **Phase 3** | Task 3A: text.tsx streaming CLS + markdown | ⬜ PENDING | — |
-| **Phase 3** | Task 3B: message-list.tsx typing indicator | ⬜ PENDING | — |
-| **Phase 3** | Task 3C: message.tsx bubbles + actions | ⬜ PENDING | — |
-| **Phase 3** | Task 3D: composer.tsx (already partially done) | ⬜ PENDING (verify) | — |
-| **Phase 3** | Task 3E: quick-prompts.tsx (already done) | ✅ DONE | — |
+| **Phase 3** | Task 3A: text.tsx streaming CLS + markdown | ✅ DONE | `feat/institutional-terminal-ui` |
+| **Phase 3** | Task 3B: message-list.tsx typing indicator | ✅ DONE | `feat/institutional-terminal-ui` |
+| **Phase 3** | Task 3C: message.tsx bubbles + actions | ✅ DONE | `feat/institutional-terminal-ui` |
+| **Phase 3** | Task 3D: composer.tsx (already partially done) | ✅ DONE (Phase 2) | — |
+| **Phase 3** | Task 3E: quick-prompts.tsx (already done) | ✅ DONE (Phase 2) | — |
 | **Phase 4** | Task 4A: UI primitives (button, stat-card, etc.) | ⬜ PENDING | — |
 | **Phase 4** | Task 4B: All chat tool parts (35+ files) | ⬜ PENDING | — |
 | **Phase 4** | Task 4C: Layout components (command-palette, etc.) | ⬜ PENDING | — |
@@ -37,7 +37,7 @@
 | **Phase 4** | Task 4H: Error states | ⬜ PENDING | — |
 | **Phase 5** | Final sweep + verification | ⬜ PENDING | — |
 
-### What's Done (Phase 1 + Phase 2)
+### What's Done (Phase 1 + Phase 2 + Phase 3)
 1. **globals.css** — Complete token replacement: pure black/zinc surfaces, sharp radii (max 4px), flat shadows, no glass/gradient/glow utilities, no light theme, no float orbs, no reveal animations. md-prose and shiki updated for terminal density.
 2. **ambient-background.tsx** — Returns `null`. No orbs, no gradients.
 3. **top-bar.tsx** — Sharp `bg-black border-b border-zinc-800 h-12` bar. No glass, no rounded-full, no gradient brand mark.
@@ -48,9 +48,11 @@
 8. **composer.tsx** — Sharp form container, rounded-sm buttons, no inline gradient/glow styles, leading-[1.4] on textarea.
 9. **quick-prompts.tsx** — Sharp cards, neutral icon containers, no per-prompt color customization.
 10. **nav-drawer.tsx** — surface-elevated, rounded-sm, no oklch inline styles, no glow shadows.
+11. **text.tsx** — Streaming container: `leading-[1.4]` + `tracking-tight`, fixed `bg-fg` cursor. Markdown overrides: tables `table-auto font-mono text-xs text-right border-zinc-900`, lists `pl-0 list-none` with `›` chevron, code blocks `rounded-sm border-zinc-800 bg-zinc-950`, inline code `bg-zinc-900 border-zinc-800 rounded-sm`, blockquotes `border-l-2 border-zinc-700`, links `text-fg underline decoration-zinc-700`, headings `tracking-tight`.
+12. **message-list.tsx** — Typing indicator: `bg-zinc-950 border-zinc-800 rounded-sm`, white dots (`bg-fg rounded-sm`).
+13. **message.tsx** — User bubbles: `bg-zinc-900 border-zinc-800 rounded-sm`. Assistant bubbles: `bg-zinc-950 border-zinc-800 rounded-sm`. Edit mode: `border-zinc-700 bg-zinc-900 rounded-sm`. Action buttons: `bg-zinc-950 border-zinc-800 rounded-sm`. Regen menu: `surface-elevated rounded-sm`. All brand/glass/gradient/oklch removed.
 
-### What's Remaining (Phase 3 → Phase 5)
-- **Phase 3:** text.tsx markdown overrides (tables, lists, code blocks), message-list.tsx typing indicator, message.tsx bubble styling
+### What's Remaining (Phase 4 → Phase 5)
 - **Phase 4:** All UI primitives (button, stat-card, skeleton, empty-state, symbol-chip, segmented, sparkline, input), all 35+ chat tool part renderers, all page components (dashboard, journal, news, calendar, alerts, signals, chart, settings), auth pages, onboarding
 - **Phase 5:** Final grep verification sweep, typecheck, lint, build
 
