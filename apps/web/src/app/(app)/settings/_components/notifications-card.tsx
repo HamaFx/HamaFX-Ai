@@ -47,7 +47,7 @@ export async function NotificationsCard({ userId }: { userId: string }) {
   return (
     <section
       aria-labelledby="notifications-heading"
-      className="border border-divider bg-bg-elev-1 rounded-lg flex flex-col gap-1 p-4"
+      className="border border-zinc-800 bg-zinc-950 rounded-sm flex flex-col gap-1 p-4"
     >
       <header className="flex items-center gap-3 pb-2">
         <h2
@@ -61,10 +61,10 @@ export async function NotificationsCard({ userId }: { userId: string }) {
         </p>
       </header>
 
-      <Link href="/settings/usage" className="block rounded-lg -mx-1 px-1 py-0.5 transition-colors hover:bg-bg-elev-2/60">
+      <Link href="/settings/usage" className="block rounded-sm -mx-1 px-1 py-0.5 transition-colors hover:bg-zinc-900">
         <SettingsRow
           icon={<Mail className="size-4" />}
-          iconColor="oklch(78% 0.16 78 / 0.18)"
+          iconColor="rgba(250, 250, 250, 0.15)"
           label="Email"
           description={
             <span className="flex items-center gap-2">
@@ -79,10 +79,10 @@ export async function NotificationsCard({ userId }: { userId: string }) {
 
       <RowDivider />
 
-      <Link href="/settings/telegram" className="block rounded-lg -mx-1 px-1 py-0.5 transition-colors hover:bg-bg-elev-2/60">
+      <Link href="/settings/telegram" className="block rounded-sm -mx-1 px-1 py-0.5 transition-colors hover:bg-zinc-900">
         <SettingsRow
           icon={<Send className="size-4" />}
-          iconColor="oklch(74% 0.14 230 / 0.18)"
+          iconColor="rgba(59, 130, 246, 0.15)"
           label="Telegram"
           description={
             <span className="flex items-center gap-2">
@@ -97,10 +97,10 @@ export async function NotificationsCard({ userId }: { userId: string }) {
 
       <RowDivider />
 
-      <Link href="/settings" className="block rounded-lg -mx-1 px-1 py-0.5 transition-colors hover:bg-bg-elev-2/60">
+      <Link href="/settings" className="block rounded-sm -mx-1 px-1 py-0.5 transition-colors hover:bg-zinc-900">
         <SettingsRow
           icon={<Bell className="size-4" />}
-          iconColor="oklch(70% 0.14 285 / 0.18)"
+          iconColor="rgba(59, 130, 246, 0.15)"
           label="Web push"
           description={
             <span className="flex items-center gap-2">
@@ -121,20 +121,20 @@ export async function NotificationsCard({ userId }: { userId: string }) {
 }
 
 function RowDivider() {
-  return <div className="border-divider/60 -mx-4 my-1 border-t" />;
+  return <div className="border-zinc-800 -mx-4 my-1 border-t" />;
 }
 
 function StatusPill({ ready }: { ready: boolean }) {
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-xs font-bold uppercase tabular-nums ring-1',
+        'inline-flex items-center gap-1 rounded-sm px-1.5 py-0.5 text-xs font-bold uppercase tabular-nums ring-1',
         ready
-          ? 'bg-bull/10 text-bull ring-bull/30'
-          : 'bg-bg-elev-2 text-fg-subtle ring-divider',
+          ? 'bg-emerald-500/10 text-emerald-500 ring-bull/30'
+          : 'bg-zinc-900 text-fg-subtle ring-divider',
       )}
     >
-      <span aria-hidden className={ready ? 'bg-bull size-1 rounded-full' : 'bg-fg-subtle size-1 rounded-full'} />
+      <span aria-hidden className={ready ? 'bg-emerald-500 size-1 rounded-sm' : 'bg-fg-subtle size-1 rounded-sm'} />
       {ready ? 'Ready' : 'Off'}
     </span>
   );

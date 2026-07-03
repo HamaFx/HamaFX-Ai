@@ -70,7 +70,7 @@ export function NotificationPrefsCard({
   }, []);
 
   return (
-    <section className="border border-divider bg-bg-elev-1 rounded-lg flex flex-col gap-1 p-4" aria-labelledby="notification-prefs-heading">
+    <section className="border border-zinc-800 bg-zinc-950 rounded-sm flex flex-col gap-1 p-4" aria-labelledby="notification-prefs-heading">
       <div className="flex items-center gap-3 pb-2">
         <h2 id="notification-prefs-heading" className="text-fg text-base font-semibold tracking-tight">
           Notification preferences
@@ -80,7 +80,7 @@ export function NotificationPrefsCard({
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-divider">
+            <tr className="border-b border-zinc-800">
               <th className="text-left py-2 pr-4 text-fg-muted font-medium">Event type</th>
               {CHANNELS.map((ch) => (
                 <th key={ch.key} className="text-center py-2 px-3 text-fg-muted font-medium">

@@ -65,9 +65,9 @@ export function SettingsNav() {
                   href={item.href}
                   aria-current={active ? 'page' : undefined}
                   className={cn(
-                    'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors whitespace-nowrap snap-start',
+                    'flex items-center gap-3 rounded-sm px-3 py-2 text-sm font-medium transition-colors whitespace-nowrap snap-start',
                     active
-                      ? 'bg-brand/10 text-brand'
+                      ? 'bg-zinc-900 text-fg'
                       : 'text-fg-subtle hover:bg-surface-elevated hover:text-fg'
                   )}
                 >

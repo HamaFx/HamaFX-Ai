@@ -95,7 +95,7 @@ export function SessionsCard() {
   };
 
   return (
-    <section className="border border-divider bg-bg-elev-1 rounded-lg flex flex-col gap-1 p-4" aria-labelledby="active-sessions-heading">
+    <section className="border border-zinc-800 bg-zinc-950 rounded-sm flex flex-col gap-1 p-4" aria-labelledby="active-sessions-heading">
       <div className="flex items-center gap-3 pb-2">
         <h2 id="active-sessions-heading" className="text-fg text-base font-semibold tracking-tight">
           Active sessions
@@ -123,7 +123,7 @@ export function SessionsCard() {
                   <p className="text-sm text-fg truncate flex items-center gap-1.5">
                     {s.deviceName ?? 'Unknown device'}
                     {s.id === currentSessionId && (
-                      <span className="inline-flex items-center rounded-full bg-brand/10 text-brand px-1.5 py-0.5 text-caption font-bold uppercase tracking-wider">
+                      <span className="inline-flex items-center rounded-sm bg-zinc-900 text-fg px-1.5 py-0.5 text-caption font-bold uppercase tracking-wider">
                         Current session
                       </span>
                     )}
@@ -151,7 +151,7 @@ export function SessionsCard() {
 
       {sessions.length > 0 && (
         <>
-          <hr className="border-divider my-2" />
+          <hr className="border-zinc-800 my-2" />
           <SettingsRow
             icon={<LogOut className="size-4" />}
             label="Sign out everywhere"
