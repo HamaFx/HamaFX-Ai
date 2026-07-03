@@ -135,7 +135,7 @@ export function AgentModelOverrideForm({ initialOverrides, providers }: AgentMod
           return (
             <div
               key={agent.name}
-              className="flex flex-col gap-1.5 rounded-xl border border-divider/60 bg-bg-elev-1 p-3"
+              className="flex flex-col gap-1.5 rounded-sm border border-zinc-800 bg-zinc-950 p-3"
             >
               <div className="flex items-baseline justify-between gap-2">
                 <div className="flex flex-col">
@@ -149,7 +149,7 @@ export function AgentModelOverrideForm({ initialOverrides, providers }: AgentMod
               <select
                 value={currentValue}
                 onChange={(e) => setAgentModel(agent.name, e.target.value)}
-                className="bg-bg-elev-2 text-fg border-divider rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-brand"
+                className="bg-zinc-900 text-fg border-zinc-800 rounded-sm border px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-fg"
               >
                 <option value="">Default ({agent.defaultTier} tier)</option>
                 {modelOptions.map((opt) => (
@@ -173,7 +173,7 @@ export function AgentModelOverrideForm({ initialOverrides, providers }: AgentMod
             type="button"
             onClick={save}
             disabled={pending}
-            className="bg-brand text-white hover:bg-brand/90 inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors disabled:opacity-50"
+            className="bg-fg text-white hover:bg-fg/90 inline-flex items-center gap-2 rounded-sm px-4 py-2 text-sm font-medium transition-colors disabled:opacity-50"
           >
             {pending ? <Loader2 className="size-4 animate-spin" /> : saved ? <Check className="size-4" /> : null}
             {saved ? 'Saved' : 'Save overrides'}
@@ -182,7 +182,7 @@ export function AgentModelOverrideForm({ initialOverrides, providers }: AgentMod
             type="button"
             onClick={reset}
             disabled={pending}
-            className="text-fg-muted hover:text-fg inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm transition-colors"
+            className="text-fg-muted hover:text-fg inline-flex items-center gap-1.5 rounded-sm px-3 py-2 text-sm transition-colors"
           >
             <RotateCcw className="size-3.5" />
             Reset

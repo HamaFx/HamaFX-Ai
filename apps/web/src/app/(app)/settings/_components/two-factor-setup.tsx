@@ -87,11 +87,11 @@ export function TwoFactorSetup({ enabled }: TwoFactorSetupProps) {
 
   if (enabled && step !== 'done') {
     return (
-      <div className="border border-divider bg-bg-elev-1 rounded-lg p-4 flex flex-col gap-4">
+      <div className="border border-zinc-800 bg-zinc-950 rounded-sm p-4 flex flex-col gap-4">
         <div className="flex items-center gap-2">
-          <Shield className="size-4 text-bull" />
+          <Shield className="size-4 text-emerald-500" />
           <span className="text-sm font-medium text-fg">Two-Factor Authentication</span>
-          <span className="rounded-full bg-bull/15 px-2 py-0.5 text-xs font-medium text-bull ml-auto">
+          <span className="rounded-sm bg-bull/15 px-2 py-0.5 text-xs font-medium text-emerald-500 ml-auto">
             Enabled
           </span>
         </div>
@@ -125,11 +125,11 @@ export function TwoFactorSetup({ enabled }: TwoFactorSetupProps) {
 
   if (step === 'done') {
     return (
-      <div className="border border-divider bg-bg-elev-1 rounded-lg p-4 flex flex-col gap-3">
+      <div className="border border-zinc-800 bg-zinc-950 rounded-sm p-4 flex flex-col gap-3">
         <div className="flex items-center gap-2">
-          <Check className="size-4 text-bull" />
+          <Check className="size-4 text-emerald-500" />
           <span className="text-sm font-medium text-fg">Two-Factor Authentication</span>
-          <span className="rounded-full bg-bull/15 px-2 py-0.5 text-xs font-medium text-bull ml-auto">
+          <span className="rounded-sm bg-bull/15 px-2 py-0.5 text-xs font-medium text-emerald-500 ml-auto">
             Enabled
           </span>
         </div>
@@ -142,18 +142,18 @@ export function TwoFactorSetup({ enabled }: TwoFactorSetupProps) {
 
   if (step === 'show_qr' && qrDataUrl) {
     return (
-      <div className="border border-divider bg-bg-elev-1 rounded-lg p-4 flex flex-col gap-4">
+      <div className="border border-zinc-800 bg-zinc-950 rounded-sm p-4 flex flex-col gap-4">
         <div className="flex items-center gap-2">
-          <Shield className="size-4 text-brand" />
+          <Shield className="size-4 text-fg" />
           <span className="text-sm font-medium text-fg">Set Up Two-Factor Authentication</span>
         </div>
         <div className="flex flex-col items-center gap-3">
-          <img src={qrDataUrl} alt="Scan this QR code with your authenticator app" className="size-40 border border-divider rounded-lg" />
+          <img src={qrDataUrl} alt="Scan this QR code with your authenticator app" className="size-40 border border-zinc-800 rounded-sm" />
           <p className="text-caption text-fg-subtle text-center max-w-sm">
             Scan this QR code with your authenticator app (e.g., Google Authenticator, Authy).
           </p>
           <div className="flex items-center gap-2">
-            <code className="text-xs bg-bg-elev-2 px-2 py-1 rounded border border-divider font-mono select-all">
+            <code className="text-xs bg-zinc-900 px-2 py-1 rounded border border-zinc-800 font-mono select-all">
               {secret}
             </code>
             <button
@@ -191,12 +191,12 @@ export function TwoFactorSetup({ enabled }: TwoFactorSetupProps) {
   }
 
   return (
-    <div className="border border-divider bg-bg-elev-1 rounded-lg p-4 flex flex-col gap-3">
+    <div className="border border-zinc-800 bg-zinc-950 rounded-sm p-4 flex flex-col gap-3">
       <div className="flex items-center gap-2">
         <Shield className="size-4 text-fg-muted" />
         <span className="text-sm font-medium text-fg">Two-Factor Authentication</span>
         {enabled && (
-          <span className="rounded-full bg-bull/15 px-2 py-0.5 text-xs font-medium text-bull ml-auto">
+          <span className="rounded-sm bg-bull/15 px-2 py-0.5 text-xs font-medium text-emerald-500 ml-auto">
             Enabled
           </span>
         )}

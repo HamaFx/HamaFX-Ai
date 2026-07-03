@@ -95,10 +95,10 @@ export function AnalysisModeForm({ initialMode, showOpinions: initialShowOpinion
             onClick={() => setMode(opt.value)}
             aria-pressed={mode === opt.value}
             className={cn(
-              'flex items-center justify-between gap-3 rounded-xl border p-3 text-left transition-colors',
+              'flex items-center justify-between gap-3 rounded-sm border p-3 text-left transition-colors',
               mode === opt.value
-                ? 'border-brand/40 bg-brand/5'
-                : 'border-divider/60 bg-bg-elev-1 hover:border-divider',
+                ? 'border-zinc-700 bg-zinc-950'
+                : 'border-zinc-800 bg-zinc-950 hover:border-divider',
             )}
           >
             <div className="flex flex-col gap-0.5">
@@ -111,7 +111,7 @@ export function AnalysisModeForm({ initialMode, showOpinions: initialShowOpinion
               )}
             </div>
             {mode === opt.value && (
-              <Check className="size-4 text-brand shrink-0" />
+              <Check className="size-4 text-fg shrink-0" />
             )}
           </button>
         ))}
@@ -122,7 +122,7 @@ export function AnalysisModeForm({ initialMode, showOpinions: initialShowOpinion
           type="checkbox"
           checked={showOpinions}
           onChange={(e) => setShowOpinions(e.target.checked)}
-          className="size-4 rounded border-divider"
+          className="size-4 rounded border-zinc-800"
         />
         <span className="text-fg-muted text-sm">Show agent opinions in chat</span>
       </label>
@@ -132,7 +132,7 @@ export function AnalysisModeForm({ initialMode, showOpinions: initialShowOpinion
           type="button"
           onClick={save}
           disabled={pending}
-          className="bg-brand text-white hover:bg-brand/90 inline-flex items-center gap-2 self-start rounded-lg px-4 py-2 text-sm font-medium transition-colors disabled:opacity-50"
+          className="bg-fg text-white hover:bg-fg/90 inline-flex items-center gap-2 self-start rounded-sm px-4 py-2 text-sm font-medium transition-colors disabled:opacity-50"
         >
           {pending ? <Loader2 className="size-4 animate-spin" /> : saved ? <Check className="size-4" /> : null}
           {saved ? 'Saved' : 'Save changes'}
