@@ -40,13 +40,13 @@ export function SubscriptionStatus({
 }) {
   if (!subscription || !currentPlan) {
     return (
-      <div className="rounded-lg border border-border bg-surface p-4">
+      <div className="rounded-sm border border-border bg-surface p-4">
         <div className="flex items-center justify-between">
           <div>
             <p className="text-fg font-medium">No active subscription</p>
             <p className="text-fg-subtle text-sm">You are on the Free tier.</p>
           </div>
-          <span className="rounded-full bg-gray-500/10 px-3 py-1 text-xs font-medium text-gray-600 dark:text-gray-400">
+          <span className="rounded-sm bg-gray-500/10 px-3 py-1 text-xs font-medium text-gray-600 dark:text-gray-400">
             Free
           </span>
         </div>
@@ -58,12 +58,12 @@ export function SubscriptionStatus({
   const periodEnd = subscription.currentPeriodEnd ? new Date(subscription.currentPeriodEnd) : null;
 
   return (
-    <div className="rounded-lg border border-border bg-surface p-4">
+    <div className="rounded-sm border border-border bg-surface p-4">
       <div className="flex items-center justify-between">
         <div className="flex flex-col gap-1">
           <div className="flex items-center gap-2">
             <p className="text-fg font-medium">{currentPlan.name} Plan</p>
-            <span className={cn('rounded-full px-2.5 py-0.5 text-xs font-medium capitalize', statusColor)}>
+            <span className={cn('rounded-sm px-2.5 py-0.5 text-xs font-medium capitalize', statusColor)}>
               {subscription.status.replace('_', ' ')}
             </span>
           </div>
