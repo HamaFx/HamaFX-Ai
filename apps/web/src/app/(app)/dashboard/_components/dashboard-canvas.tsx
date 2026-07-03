@@ -290,11 +290,11 @@ function SortableWidget({
       style={style}
       className={cn(
         widget.span === 2 && 'md:col-span-2',
-        editMode && 'rounded-lg ring-1 ring-brand/40',
+        editMode && 'rounded-sm ring-1 ring-zinc-700',
       )}
     >
       {editMode ? (
-        <div className="border-divider bg-bg-elev-1 mb-1 flex items-center justify-between gap-2 rounded-lg border px-3 py-1.5">
+        <div className="border-zinc-800 bg-zinc-950 mb-1 flex items-center justify-between gap-2 rounded-sm border px-3 py-1.5">
           <button
             type="button"
             aria-label={`Drag ${WIDGET_LABELS[widget.type]} widget`}
@@ -320,7 +320,7 @@ function SortableWidget({
               type="button"
               aria-label={`Remove ${WIDGET_LABELS[widget.type]}`}
               onClick={onRemove}
-              className="text-fg-subtle hover:text-bear"
+              className="text-fg-subtle hover:text-red-500"
             >
               <X className="size-3.5" />
             </button>
@@ -400,19 +400,19 @@ function AddWidgetMenu({
   return (
     <details className="relative">
       <summary
-        className="border-divider bg-bg-elev-1 hover:bg-bg-elev-2 text-fg inline-flex cursor-pointer list-none items-center gap-1 rounded-md border px-2 py-1 text-caption"
+        className="border-zinc-800 bg-zinc-950 hover:bg-zinc-900 text-fg inline-flex cursor-pointer list-none items-center gap-1 rounded-sm border px-2 py-1 text-caption"
         aria-label="Add widget"
       >
         <Plus className="size-3.5" />
         Add widget
       </summary>
-      <div className="border-divider bg-bg-elev-1 absolute right-0 z-10 mt-1 flex min-w-[180px] flex-col rounded-md border p-1 shadow-lg">
+      <div className="border-zinc-800 bg-zinc-950 absolute right-0 z-10 mt-1 flex min-w-[180px] flex-col rounded-sm border p-1 shadow-lg">
         {hidden.map((t) => (
           <button
             key={t}
             type="button"
             onClick={() => onAdd(t)}
-            className="text-fg hover:bg-bg-elev-2 rounded-sm px-2 py-1 text-left text-caption"
+            className="text-fg hover:bg-zinc-900 rounded-sm px-2 py-1 text-left text-caption"
           >
             {WIDGET_LABELS[t]}
           </button>

@@ -22,7 +22,7 @@
 // page can map `WidgetConfig[]` → props without drift.
 //
 // Design tokens (`bg-bg-elev-1`, `text-fg`, `border-divider`, etc.) and
-// the rounded-lg convention from PLAN.md §2.4 are applied uniformly by
+// the rounded-sm convention from PLAN.md §2.4 are applied uniformly by
 // the widget wrapper inside `DashboardCanvas` — widget implementations
 // only need to render their own body.
 
