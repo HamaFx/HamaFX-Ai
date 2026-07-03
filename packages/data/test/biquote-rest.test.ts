@@ -269,15 +269,15 @@ describe('biquote throttle', () => {
     vi.restoreAllMocks();
   });
 
-  it('throws PROVIDER_QUOTA_EXCEEDED after the 11th call within the window', async () => {
+  it('throws PROVIDER_QUOTA_EXCEEDED after the 51st call within the window', async () => {
     // A `Response` body can only be consumed once, so each fetch call must
     // get a fresh Response. Use mockImplementation, not mockResolvedValue.
     globalThis.fetch = vi
       .fn()
       .mockImplementation(() => Promise.resolve(jsonResponse(VALID_TICK))) as unknown as typeof fetch;
 
-    // 10 calls succeed; the 11th must throw without hitting fetch.
-    for (let i = 0; i < 10; i += 1) {
+    // 50 calls succeed; the 51st must throw without hitting fetch.
+    for (let i = 0; i < 50; i += 1) {
       await fetchTick('XAUUSD');
     }
     await expect(fetchTick('XAUUSD')).rejects.toBeInstanceOf(ProviderError);

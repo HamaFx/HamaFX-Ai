@@ -56,7 +56,7 @@ const DEFAULT_TIMEOUT_MS = 8_000;
  * On 429, the adaptive throttle drops the cap to 80% of `limit` for
  * `cooloffMs` (90 s default), then auto-recovers.
  */
-const THROTTLE: ThrottleConfig = { limit: 10, windowMs: 60_000 };
+const THROTTLE: ThrottleConfig = { limit: 50, windowMs: 60_000 };
 
 const ErrorEnvelopeSchema = z.object({
   message: z.string(),

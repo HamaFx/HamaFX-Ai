@@ -26,7 +26,7 @@
 //
 // Symbol routing:
 //   Crypto (BTCUSDT, ETHUSDT, etc.) → binance → biquote → finnhub
-//   Forex/Gold (EURUSD, XAUUSD)     → twelvedata → biquote → finnhub
+//   Forex/Gold (EURUSD, XAUUSD)     → biquote → twelvedata → finnhub
 //   1m:                              candles-1m (pinned) → above
 //   1w:                              finnhub (biquote unsupported)
 
@@ -149,7 +149,8 @@ export async function getCandlesWithMeta(
         });
       }
 
-      // Crypto → Binance, Forex/Gold → Twelve Data (primary providers).
+      // Crypto → Binance (primary).
+      // Forex/Gold → BiQuote first (free, unlimited), then Twelve Data (800/day).
       if (isCrypto) {
         attempts.push({
           name: 'binance',
@@ -174,34 +175,9 @@ export async function getCandlesWithMeta(
             );
           },
         });
-      } else if (keys.twelvedata) {
-        attempts.push({
-          name: 'twelvedata',
-          run: async () => {
-            const raw = await twelvedata.fetchCandles(symbol, tf, count, {
-              apiKey: keys.twelvedata,
-              ...(opts.signal ? { signal: opts.signal } : {}),
-            });
-            const fetchedAt = Date.now();
-            return raw.map((bar) =>
-              CandleSchema.parse({
-                symbol,
-                tf,
-                t: bar.t,
-                o: bar.o,
-                h: bar.h,
-                l: bar.l,
-                c: bar.c,
-                v: bar.v,
-                source: 'twelvedata',
-                fetchedAt,
-              }),
-            );
-          },
-        });
       }
 
-      // BiQuote fallback (except 1w which it doesn't support).
+      // BiQuote first for forex/gold (free, no rate limits).
       if (tf !== '1w') {
         attempts.push({
           name: 'biquote',
@@ -226,6 +202,34 @@ export async function getCandlesWithMeta(
                 // Forex volume is 0 from BiQuote; keep null in our DTO.
                 v: bar.volume > 0 ? bar.volume : null,
                 source: 'biquote',
+                fetchedAt,
+              }),
+            );
+          },
+        });
+      }
+
+      // Twelve Data backup for forex/gold (800 req/day — preserve for real failures).
+      if (!isCrypto && keys.twelvedata) {
+        attempts.push({
+          name: 'twelvedata',
+          run: async () => {
+            const raw = await twelvedata.fetchCandles(symbol, tf, count, {
+              apiKey: keys.twelvedata,
+              ...(opts.signal ? { signal: opts.signal } : {}),
+            });
+            const fetchedAt = Date.now();
+            return raw.map((bar) =>
+              CandleSchema.parse({
+                symbol,
+                tf,
+                t: bar.t,
+                o: bar.o,
+                h: bar.h,
+                l: bar.l,
+                c: bar.c,
+                v: bar.v,
+                source: 'twelvedata',
                 fetchedAt,
               }),
             );
