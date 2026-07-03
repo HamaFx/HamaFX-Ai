@@ -1,4 +1,5 @@
 import type { Symbol, Timeframe } from '@hamafx/shared';
+import { getSymbolDefinition, isKnownSymbol } from '@hamafx/shared';
 import { z } from 'zod';
 
 import { noteBackoff, tryReserve, type ThrottleConfig } from '../../cache/throttle';
@@ -11,13 +12,35 @@ const PROVIDER = 'twelvedata';
 const BASE_URL = 'https://api.twelvedata.com';
 const DEFAULT_TIMEOUT_MS = 10_000;
 
+// Free tier: 8 req/min, 800/day. Self-throttle at 7 req/min to leave headroom.
 const THROTTLE: ThrottleConfig = { limit: 7, windowMs: 60_000 };
+
+// Daily quota tracking — free tier caps at 800 req/day, warn at 780.
+let dailyCount = 0;
+let dailyResetAt = Date.now() + 24 * 60 * 60 * 1000;
+
+function checkDailyQuota(): boolean {
+  if (Date.now() > dailyResetAt) {
+    dailyCount = 0;
+    dailyResetAt = Date.now() + 24 * 60 * 60 * 1000;
+  }
+  if (dailyCount >= 780) {
+    return false; // exhausted — leave 20 as buffer
+  }
+  return true;
+}
 
 interface CallOptions {
   signal?: AbortSignal;
   apiKey: string;
   skipThrottle?: boolean;
 }
+
+const TwelveDataPriceResponseSchema = z.object({
+  status: z.literal('ok').optional(),
+  symbol: z.string().optional(),
+  price: z.string(),
+});
 
 const TwelveDataQuoteResponseSchema = z.object({
   status: z.literal('ok'),
@@ -38,7 +61,9 @@ const TwelveDataTimeSeriesResponseSchema = z.object({
   values: z.array(TwelveDataBarSchema).optional(),
 });
 
+// BUG-5 fix: add status: z.literal('error') to error schema
 const TwelveDataErrorResponseSchema = z.object({
+  status: z.literal('error').optional(),
   code: z.number(),
   message: z.string(),
 });
@@ -53,6 +78,15 @@ async function rawFetch(
       'PROVIDER_QUOTA_EXCEEDED',
       PROVIDER,
       `Self-throttle: capped at ${THROTTLE.limit} req / ${THROTTLE.windowMs}ms`,
+    );
+  }
+
+  // Daily quota check
+  if (!opts.skipThrottle && !checkDailyQuota()) {
+    throw new ProviderError(
+      'PROVIDER_QUOTA_EXCEEDED',
+      PROVIDER,
+      'Daily API quota exhausted (800/day limit, 780 buffer reached)',
     );
   }
 
@@ -100,6 +134,20 @@ async function rawFetch(
     });
   }
 
+  // OPT-5: Track api-credits-left header
+  const creditsLeft = res.headers.get('api-credits-left');
+  if (creditsLeft) {
+    const remaining = Number(creditsLeft);
+    if (!Number.isNaN(remaining) && remaining < 50) {
+      console.warn(`[twelvedata] Low API credits: ${remaining} remaining`);
+    }
+  }
+
+  // Track daily quota
+  if (!opts.skipThrottle) {
+    dailyCount += 1;
+  }
+
   return json;
 }
 
@@ -114,7 +162,15 @@ export async function fetchCandles(
 
   const json = await rawFetch(
     '/time_series',
-    { symbol: toTwelveDataSymbol(symbol), interval, outputsize: String(outputsize) },
+    {
+      symbol: toTwelveDataSymbol(symbol),
+      interval,
+      outputsize: String(outputsize),
+      // OPT-4: explicitly request ascending order
+      order: 'asc',
+      // OPT-6: force UTC timezone for consistent datetime parsing
+      timezone: 'UTC',
+    },
     opts,
   );
   const parsed = TwelveDataTimeSeriesResponseSchema.safeParse(json);
@@ -130,7 +186,10 @@ export async function fetchCandles(
 
   const out: NormalizedTwelveDataCandle[] = [];
   for (const bar of parsed.data.values) {
-    const t = Date.parse(bar.datetime);
+    // ARCH-4 fix: Twelve Data returns "2026-07-03 15:30:00" (space-separated).
+    // Replace space with 'T' to make it ISO-8601 parseable.
+    const dtStr = bar.datetime.includes(' ') ? bar.datetime.replace(' ', 'T') : bar.datetime;
+    const t = Date.parse(dtStr);
     if (Number.isNaN(t)) {
       throw new ProviderError('PROVIDER_PARSE_ERROR', PROVIDER, `invalid datetime "${bar.datetime}"`);
     }
@@ -150,6 +209,29 @@ export async function fetchCandles(
 
   out.sort((a, b) => a.t - b.t);
   return out;
+}
+
+/**
+ * ARCH-6: Lightweight price fetch using the /price endpoint.
+ * Returns just the current price — cheaper than /quote (less data).
+ */
+export async function fetchPrice(
+  tdSymbol: string,
+  opts: CallOptions,
+): Promise<{ price: number }> {
+  const json = await rawFetch('/price', { symbol: tdSymbol }, opts);
+  const parsed = TwelveDataPriceResponseSchema.safeParse(json);
+  if (!parsed.success) {
+    throw new ProviderError('PROVIDER_PARSE_ERROR', PROVIDER, 'unexpected price response shape', {
+      cause: parsed.error,
+    });
+  }
+
+  const price = Number.parseFloat(parsed.data.price);
+  if (Number.isNaN(price)) {
+    throw new ProviderError('PROVIDER_PARSE_ERROR', PROVIDER, 'invalid price');
+  }
+  return { price };
 }
 
 export async function fetchQuote(

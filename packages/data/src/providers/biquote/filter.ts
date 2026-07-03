@@ -16,14 +16,11 @@
 
 // Symbol whitelist for the BiQuote provider. BiQuote covers thousands of
 // instruments (BIST stocks, crypto, indices, commodities, FX); we
-// deliberately constrain ourselves to the three internal symbols and
-// refuse to issue requests for anything else.
+// constrain ourselves to known symbols from the catalog.
 //
-// This protects us from accidental subscription drift if a future PR
-// reaches into the BiQuote adapter from a code path that hasn't been
-// reviewed against the SUPPORTED_SYMBOLS contract.
+// The UNLIMITED_SYMBOLS env flag bypasses the check for testing.
 
-import { isSymbol, SYMBOLS, type Symbol } from '@hamafx/shared';
+import { isKnownSymbol, type Symbol } from '@hamafx/shared';
 
 import { ProviderError } from '../../errors';
 
@@ -31,11 +28,11 @@ const PROVIDER = 'biquote';
 
 export function assertSupportedSymbol(symbol: string): Symbol {
   const isUnlimited = process.env.UNLIMITED_SYMBOLS === 'true' || process.env.UNLIMITED_SYMBOLS === '1';
-  if (!isSymbol(symbol) || (!isUnlimited && !SYMBOLS.includes(symbol as typeof SYMBOLS[number]))) {
+  if (!isUnlimited && !isKnownSymbol(symbol)) {
     throw new ProviderError(
       'PROVIDER_HTTP_ERROR',
       PROVIDER,
-      `unsupported symbol "${symbol}" — biquote adapter is restricted to ${SYMBOLS.join(', ')}`,
+      `unsupported symbol "${symbol}" — biquote adapter is restricted to known symbols`,
     );
   }
   return symbol;

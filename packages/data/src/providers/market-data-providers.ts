@@ -15,14 +15,15 @@
  */
 
 import type { Symbol, Timeframe, Tick, Candle } from '@hamafx/shared';
+import { CandleSchema } from '@hamafx/shared';
 import type { MarketDataProvider } from './market-data-provider';
 import * as biquote from './biquote';
 import * as finnhub from './finnhub';
 import * as twelvedata from './twelvedata';
+import { toTwelveDataSymbol } from './twelvedata/map';
 import * as binance from './binance';
 import { fetchLiveTick } from './live-ticks';
 import { fetchCandles1m } from './candles-1m';
-import { CandleSchema } from '@hamafx/shared';
 
 export const biquoteProvider: MarketDataProvider = {
   id: 'biquote',
@@ -189,7 +190,7 @@ export const twelvedataProvider: MarketDataProvider = {
       if (!apiKey) {
         return { ok: false, error: 'Twelve Data API Key is required' };
       }
-      await twelvedata.fetchQuote('EURUSD', { apiKey });
+      await twelvedata.fetchPrice('EUR/USD', { apiKey });
       return { ok: true };
     } catch (err) {
       return { ok: false, error: err instanceof Error ? err.message : String(err) };
@@ -197,7 +198,8 @@ export const twelvedataProvider: MarketDataProvider = {
   },
   async fetchTick(symbol: Symbol, options?: { signal?: AbortSignal; apiKeys?: Record<string, string> }): Promise<Tick> {
     const apiKey = options?.apiKeys?.twelvedata ?? process.env.TWELVEDATA_API_KEY ?? '';
-    const res = await twelvedata.fetchQuote(symbol, {
+    // ARCH-6: use /price endpoint (lighter than /quote)
+    const res = await twelvedata.fetchPrice(toTwelveDataSymbol(symbol), {
       apiKey,
       ...(options?.signal ? { signal: options.signal } : {}),
     });
@@ -246,15 +248,15 @@ export const binanceProvider: MarketDataProvider = {
     }
   },
   async fetchTick(symbol: Symbol, options?: { signal?: AbortSignal; apiKeys?: Record<string, string> }): Promise<Tick> {
-    const raw = await binance.fetchCandles(symbol, '1m', 1, {
+    // Use lightweight ticker price endpoint instead of fetching a full candle
+    const price = await binance.fetchTickerPrice(symbol, {
       ...(options?.signal ? { signal: options.signal } : {}),
     });
-    const last = raw[raw.length - 1]!;
     return {
       symbol,
-      bid: last.c,
-      ask: last.c,
-      mid: last.c,
+      bid: price,
+      ask: price,
+      mid: price,
       ts: Date.now(),
       source: 'binance',
     };

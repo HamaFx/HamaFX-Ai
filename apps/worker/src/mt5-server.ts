@@ -15,7 +15,7 @@
  */
 
 import * as net from 'net';
-import { isSymbol, type Symbol } from '@hamafx/shared';
+import { isKnownSymbol, type Symbol } from '@hamafx/shared';
 import type { Logger } from './log.js';
 import type { NormalizedTick } from './signalr/consumer.js';
 
@@ -50,7 +50,7 @@ export function startMT5Server(opts: MT5ServerOptions): MT5ServerHandle {
             const raw = JSON.parse(frame);
             const symbol = String(raw.symbol).toUpperCase();
             
-            if (!isSymbol(symbol)) {
+            if (!isKnownSymbol(symbol)) {
               log.warn('MT5 Bridge received unsupported symbol', { symbol });
               boundary = buffer.indexOf('\n');
               continue;

@@ -56,11 +56,12 @@ export const GET = withAuth<void>(async (req, { user }) => {
 
     const decrypted = settings?.aiApiKeys ? decryptByok(settings.aiApiKeys) : null;
     const finnhubKey = decrypted?.finnhub ?? '';
+    const twelvedataKey = decrypted?.twelvedata ?? process.env.TWELVEDATA_API_KEY ?? '';
     const marketDataProvider = settings?.marketDataProvider ?? 'biquote';
 
     const r = await getCandlesWithMeta(symbol, tf, {
       count,
-      apiKeys: { finnhub: finnhubKey },
+      apiKeys: { finnhub: finnhubKey, twelvedata: twelvedataKey },
       marketDataProvider,
     });
     return Response.json(

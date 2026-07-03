@@ -16,8 +16,33 @@
 
 import { EventEmitter } from 'node:events';
 import { getDb, schema } from '@hamafx/db';
-import { isSymbol } from '@hamafx/shared';
+import {
+  getSymbolDefinition,
+  isKnownSymbol,
+  symbolCategory,
+  type SymbolCategory,
+} from '@hamafx/shared';
 import type { Logger } from './log.js';
+
+interface ActiveSymbol {
+  symbol: string;
+  category: SymbolCategory;
+  watchlistCount: number;
+}
+
+export interface SymbolChangeEvent {
+  current: string[];
+  added: string[];
+  removed: string[];
+}
+
+export interface PerConsumerChangeEvent {
+  symbols: string[];
+  added: string[];
+  removed: string[];
+}
+
+const MAX_TD_WS_SLOTS = 8; // Free tier limit
 
 export class SymbolManager extends EventEmitter {
   private symbols: Set<string> = new Set();
@@ -33,7 +58,11 @@ export class SymbolManager extends EventEmitter {
 
   /**
    * Start polling the database for active symbols.
-   * Emits 'symbolsChanged' when the aggregate list changes.
+   * Emits per-consumer events when symbol sets change:
+   *   - 'twelvedataChanged' → TD consumer updates (8-slot budget)
+   *   - 'biquoteChanged' → BiQuote consumer updates (all forex)
+   *   - 'binanceChanged' → Binance consumer updates (all crypto)
+   *   - 'symbolsChanged' → aggregate event (backward compat)
    */
   public start(): void {
     if (this.pollTimer) return;
@@ -65,14 +94,16 @@ export class SymbolManager extends EventEmitter {
 
     try {
       const db = getDb();
-      // Fetch distinct symbols from user watchlists
+      // Fetch distinct symbols from user watchlists with count for popularity
       const rows = await db
         .selectDistinct({ symbol: schema.userSymbols.symbol })
         .from(schema.userSymbols);
 
-      const newSymbols = new Set(rows.map((r) => r.symbol).filter(isSymbol));
+      const newSymbols = new Set(
+        rows.map((r) => r.symbol).filter((s) => isKnownSymbol(s)),
+      );
       
-      // If the database has no symbols, fallback to defaults just to keep the connection alive
+      // If the database has no symbols, fallback to defaults
       if (newSymbols.size === 0) {
         newSymbols.add('XAUUSD');
         newSymbols.add('EURUSD');
@@ -81,23 +112,63 @@ export class SymbolManager extends EventEmitter {
 
       if (this.hasSetChanged(this.symbols, newSymbols)) {
         const added = Array.from(newSymbols).filter((s) => !this.symbols.has(s));
-        // Type-guard: this.symbols is `Set<string>` but newSymbols is the
-        // narrowed union, so `.has(s)` rejects plain strings without a guard.
-        const removed = Array.from(this.symbols).filter(
-          (s): s is 'XAUUSD' | 'EURUSD' | 'GBPUSD' => isSymbol(s) && !newSymbols.has(s),
-        );
+        const removed = Array.from(this.symbols).filter((s) => !newSymbols.has(s));
         
         this.symbols = newSymbols;
+
+        // Build active symbol list with categories
+        const activeSymbols: ActiveSymbol[] = Array.from(this.symbols).map((s) => ({
+          symbol: s,
+          category: symbolCategory(s) ?? 'forex',
+          watchlistCount: 1, // TODO: aggregate from DB for real popularity
+        }));
+
+        // Emit aggregate event (backward compat)
         this.emit('symbolsChanged', { 
           current: Array.from(this.symbols),
           added,
-          removed 
+          removed,
+        });
+
+        // Emit per-consumer events
+        const tdSlots = this.assignTwelveDataSlots(activeSymbols);
+        this.emit('twelvedataChanged', { 
+          symbols: tdSlots,
+          added: tdSlots,
+          removed: [],
+        });
+
+        const biquoteSymbols = activeSymbols
+          .filter((s) => s.category === 'forex' || s.category === 'gold')
+          .map((s) => s.symbol);
+        const prevBiquote = Array.from(this.symbols).filter(
+          (s) => symbolCategory(s) === 'forex' || symbolCategory(s) === 'gold',
+        );
+        this.emit('biquoteChanged', {
+          symbols: biquoteSymbols,
+          added: biquoteSymbols.filter((s) => !prevBiquote.includes(s)),
+          removed: prevBiquote.filter((s) => !biquoteSymbols.includes(s)),
+        });
+
+        const binanceSymbols = activeSymbols
+          .filter((s) => s.category === 'crypto')
+          .map((s) => getSymbolDefinition(s.symbol).binance ?? s.symbol);
+        const prevBinance = Array.from(this.symbols)
+          .filter((s) => symbolCategory(s) === 'crypto')
+          .map((s) => getSymbolDefinition(s).binance ?? s);
+        this.emit('binanceChanged', {
+          symbols: binanceSymbols,
+          added: binanceSymbols.filter((s) => !prevBinance.includes(s)),
+          removed: prevBinance.filter((s) => !binanceSymbols.includes(s)),
         });
         
         this.log.info('Active symbols changed', { 
           total: this.symbols.size, 
+          tdSlots: tdSlots.length,
+          biquote: biquoteSymbols.length,
+          binance: binanceSymbols.length,
           added, 
-          removed 
+          removed,
         });
       }
     } catch (err) {
@@ -105,6 +176,37 @@ export class SymbolManager extends EventEmitter {
     } finally {
       this.isPolling = false;
     }
+  }
+
+  /**
+   * Assign up to 8 Twelve Data WS slots.
+   * Priority: gold first (always), then most-watched forex pairs.
+   */
+  private assignTwelveDataSlots(activeSymbols: ActiveSymbol[]): string[] {
+    const gold = activeSymbols.filter((s) => s.category === 'gold');
+    const forex = activeSymbols
+      .filter((s) => s.category === 'forex')
+      .sort((a, b) => b.watchlistCount - a.watchlistCount);
+
+    const slots: string[] = [];
+    
+    // Gold always gets slot 1
+    for (const g of gold) {
+      const def = getSymbolDefinition(g.symbol);
+      slots.push(def.twelveData);
+      if (slots.length >= MAX_TD_WS_SLOTS) break;
+    }
+    
+    // Fill remaining with top forex
+    for (const f of forex) {
+      if (slots.length >= MAX_TD_WS_SLOTS) break;
+      const def = getSymbolDefinition(f.symbol);
+      if (!slots.includes(def.twelveData)) {
+        slots.push(def.twelveData);
+      }
+    }
+    
+    return slots;
   }
 
   private hasSetChanged(a: Set<string>, b: Set<string>): boolean {

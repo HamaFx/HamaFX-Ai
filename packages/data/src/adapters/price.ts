@@ -36,9 +36,11 @@
 // BiQuote as primary, the chat-telemetry showed Twelve Data was not
 // being selected, so the dependency + key + adapter were retired.
 
-import { SymbolSchema, type Symbol, type Tick } from '@hamafx/shared';
+import { SymbolSchema, getSymbolDefinition, symbolCategory, type Symbol, type Tick } from '@hamafx/shared';
 
 import * as biquote from '../providers/biquote';
+import * as twelvedata from '../providers/twelvedata';
+import * as binance from '../providers/binance';
 import { fetchLiveTick } from '../providers/live-ticks';
 import { cacheKey, cacheTag, getDefaultCache, PRICE_TTL } from '../cache';
 import { runWithFailover, type ProviderAttempt } from '../failover';
@@ -58,6 +60,7 @@ export interface GetPriceOptions {
   apiKeys?: Partial<{
     finnhub: string;
     biquoteBaseUrl: string;
+    twelvedata: string;
   }>;
   marketDataProvider?: string;
 }
@@ -83,6 +86,7 @@ function resolveKeys(opts: GetPriceOptions) {
     finnhub: opts.apiKeys?.finnhub ?? process.env.FINNHUB_API_KEY ?? '',
     biquoteBaseUrl:
       opts.apiKeys?.biquoteBaseUrl ?? process.env.BIQUOTE_BASE_URL ?? 'https://biquote.io',
+    twelvedata: opts.apiKeys?.twelvedata ?? process.env.TWELVEDATA_API_KEY ?? '',
   };
 }
 
@@ -105,6 +109,7 @@ export async function getPriceWithMeta(
   opts: GetPriceOptions = {},
 ): Promise<PriceResult> {
   const symbol = SymbolSchema.parse(symbolInput);
+  const def = getSymbolDefinition(symbol); // NEW: get symbol definition for category routing
   const keys = resolveKeys(opts);
   const ttl = opts.ttlSeconds ?? PRICE_TTL.ttlSeconds;
   const swr = opts.maxStaleSeconds ?? PRICE_TTL.maxStaleSeconds;
@@ -118,15 +123,7 @@ export async function getPriceWithMeta(
     async () => {
       const attempts: ProviderAttempt<{ price: number; provider: string; ageMs: number | null }>[] = [];
 
-      // Phase 8 PR-8 — `live_ticks` is the freshest source we have when
-      // the worker is healthy. If the row is stale or missing, this
-      // attempt throws `ProviderEmptyError` and `runWithFailover` moves
-      // on without recording a health failure.
-      //
-      // Phase 2 hardening §2 — pinned: true keeps live-ticks first
-      // regardless of recent score so a transient empty result during a
-      // worker restart doesn't permanently demote the SignalR pipeline
-      // below the BiQuote REST fallback.
+      // 1. live-ticks (always pinned first — Postgres snapshot from worker)
       attempts.push({
         name: 'live-ticks',
         pinned: true,
@@ -136,21 +133,49 @@ export async function getPriceWithMeta(
         },
       });
 
-      // Phase 8 PR-4 — BiQuote REST. Always present, no key required.
-      attempts.push({
-        name: 'biquote',
-        run: async () => {
-          const tick = await biquote.fetchTick(symbol, {
-            baseUrl: keys.biquoteBaseUrl,
-            ...(opts.signal ? { signal: opts.signal } : {}),
-          });
-          // BiQuote suppresses `last` for FX (always 0). Use the
-          // server-computed `mid` instead — that's what we want
-          // downstream anyway.
-          return { price: tick.mid, provider: 'biquote', ageMs: null };
-        },
-      });
+      // 2. Source-specific REST fallback based on category
+      if (def.category === 'crypto' && def.binance) {
+        // Crypto → Binance REST (free, unlimited)
+        attempts.push({
+          name: 'binance',
+          run: async () => {
+            const price = await binance.fetchTickerPrice(def.binance!, {
+              ...(opts.signal ? { signal: opts.signal } : {}),
+            });
+            return { price, provider: 'binance', ageMs: null };
+          },
+        });
+      } else {
+        // Gold/Forex → BiQuote REST (free, unlimited)
+        attempts.push({
+          name: 'biquote',
+          run: async () => {
+            const tick = await biquote.fetchTick(symbol, {
+              baseUrl: keys.biquoteBaseUrl,
+              ...(opts.signal ? { signal: opts.signal } : {}),
+            });
+            // BUG-3 fix: mid is now optional, compute fallback
+            const mid = tick.mid ?? ((tick.bid + tick.ask) / 2);
+            return { price: mid, provider: 'biquote', ageMs: null };
+          },
+        });
+      }
 
+      // 3. Twelve Data as final fallback (if API key configured)
+      if (keys.twelvedata) {
+        attempts.push({
+          name: 'twelvedata',
+          run: async () => {
+            const res = await twelvedata.fetchPrice(def.twelveData, {
+              apiKey: keys.twelvedata,
+              ...(opts.signal ? { signal: opts.signal } : {}),
+            });
+            return { price: res.price, provider: 'twelvedata', ageMs: null };
+          },
+        });
+      }
+
+      // 4. Finnhub as last resort (if key configured)
       if (keys.finnhub) {
         attempts.push({
           name: 'finnhub',

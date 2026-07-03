@@ -26,7 +26,7 @@
 // Server component on purpose — no state, no events, no browser-only APIs.
 
 import {
-  isSymbol,
+  isKnownSymbol,
   priceDecimals,
   type GetMarketStructureOutput,
   type StructureEvent,
@@ -52,7 +52,7 @@ export function GetMarketStructurePart({
     return <StructureSkeleton />;
   }
 
-  const decimals = isSymbol(output.symbol) ? priceDecimals(output.symbol) : 5;
+  const decimals = isKnownSymbol(output.symbol) ? priceDecimals(output.symbol) : 5;
 
   const swings: readonly SwingPoint[] = output.swings ?? [];
   const events: readonly StructureEvent[] = output.events ?? [];

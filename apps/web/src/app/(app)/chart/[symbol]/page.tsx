@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { isSymbol } from '@hamafx/shared';
+import { isKnownSymbol } from '@hamafx/shared';
 import type { Metadata } from 'next';
 import { notFound, redirect } from 'next/navigation';
 
@@ -30,12 +30,12 @@ interface PageProps {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { symbol } = await params;
-  return { title: isSymbol(symbol) ? `${symbol} · Chart` : 'Chart' };
+  return { title: isKnownSymbol(symbol) ? `${symbol} · Chart` : 'Chart' };
 }
 
 export default async function ChartPage({ params, searchParams }: PageProps) {
   const { symbol } = await params;
-  if (!isSymbol(symbol)) notFound();
+  if (!isKnownSymbol(symbol)) notFound();
 
   const sp = await searchParams;
   const tf = sp.tf;

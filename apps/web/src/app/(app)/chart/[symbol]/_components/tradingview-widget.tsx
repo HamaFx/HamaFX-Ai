@@ -17,6 +17,7 @@
  */
 
 import type { Symbol, Timeframe } from '@hamafx/shared';
+import { getSymbolDefinition, isKnownSymbol } from '@hamafx/shared';
 import { Link } from 'next-view-transitions';
 import Script from 'next/script';
 import { useEffect, useRef, useState, useId } from 'react';
@@ -47,11 +48,23 @@ declare global {
   }
 }
 
-const SYMBOL_TO_TV: Record<Symbol, string> = {
+const SYMBOL_TO_TV: Record<string, string> = {
   XAUUSD: 'OANDA:XAUUSD',
   EURUSD: 'OANDA:EURUSD',
   GBPUSD: 'OANDA:GBPUSD',
 };
+
+/**
+ * Resolve a symbol to its TradingView ticker.
+ * Uses SymbolDefinition.tradingView from the catalog for known symbols,
+ * falls back to the hardcoded map, then to OANDA:{symbol}.
+ */
+function resolveTvSymbol(symbol: string): string {
+  if (isKnownSymbol(symbol)) {
+    return getSymbolDefinition(symbol).tradingView;
+  }
+  return SYMBOL_TO_TV[symbol] || (symbol.includes(':') ? symbol : `OANDA:${symbol}`);
+}
 
 const TF_TO_TV_INTERVAL: Record<Timeframe, string> = {
   '1m': '1',
@@ -114,7 +127,7 @@ export function TradingViewWidget({ symbol, tf, theme = 'dark' }: TradingViewWid
       try {
         const w = new tv.widget({
           container_id: containerId,
-          symbol: SYMBOL_TO_TV[symbol] || (symbol.includes(':') ? symbol : `OANDA:${symbol}`),
+          symbol: resolveTvSymbol(symbol),
           interval: TF_TO_TV_INTERVAL[tf] || '60',
           theme: theme,
           timezone: 'Etc/UTC',

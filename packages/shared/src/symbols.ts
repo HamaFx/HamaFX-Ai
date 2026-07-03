@@ -14,40 +14,80 @@
  * limitations under the License.
  */
 
-// The three supported instruments. This list is INTENTIONALLY tiny — see
-// docs/00-overview.md and docs/14-ai-agent-handoff.md. Adding a symbol here
-// is a project-wide change that touches data adapters, agent prompts, and UI.
+// Symbol system — now powered by the symbol catalog (symbol-catalog.ts).
+// The old 3-symbol hardcoded list has been replaced with a dynamic,
+// category-based system supporting 50+ symbols across gold, forex, and crypto.
+//
+// Backward compatibility: SYMBOLS, isSymbol, pipSize, priceDecimals, and
+// formatPips are preserved but now delegate to the catalog where possible.
 
 import { z } from 'zod';
 
+import {
+  BUILTIN_SYMBOLS,
+  SYMBOL_MAP,
+  isKnownSymbol,
+  getSymbolDefinition,
+  symbolCategory,
+  type SymbolCategory,
+} from './symbol-catalog';
+
+export type { SymbolCategory, SymbolDefinition } from './symbol-catalog';
+export {
+  BUILTIN_SYMBOLS,
+  SYMBOL_MAP,
+  isKnownSymbol,
+  getSymbolDefinition,
+  tryGetSymbolDefinition,
+  ALL_SYMBOLS,
+  symbolsByCategory,
+  symbolCategory,
+} from './symbol-catalog';
+
+/** Legacy export — the original 3 symbols, still supported. */
 export const SYMBOLS = ['XAUUSD', 'EURUSD', 'GBPUSD'] as const;
 export type Symbol = string;
 
-export const SymbolSchema = z.string().min(2).max(20);
+/**
+ * Strict symbol schema — validates against the known symbol catalog.
+ * Use this for routes that should only accept supported symbols.
+ */
+export const SymbolSchema = z
+  .string()
+  .min(2)
+  .max(20)
+  .refine((s) => isKnownSymbol(s), (s) => ({ message: `Unknown symbol: ${s}` }));
 
+/**
+ * Loose symbol schema — accepts any reasonable string.
+ * Use for routes that need to accept any symbol (e.g. search).
+ */
+export const LooseSymbolSchema = z.string().min(2).max(20);
+
+/**
+ * Type guard — checks if a value is a known symbol.
+ * Replaces the old permissive length-only check.
+ */
 export function isSymbol(value: unknown): value is string {
-  return typeof value === 'string' && value.length >= 2 && value.length <= 20;
+  return typeof value === 'string' && isKnownSymbol(value);
 }
 
-/** Standard pip size per symbol (5-decimal FX, 1-decimal gold). */
+/** Standard pip size per symbol — delegates to SymbolDefinition. */
 export function pipSize(symbol: string): number {
+  const def = SYMBOL_MAP.get(symbol.toUpperCase());
+  if (def) return def.pipSize;
+  // Fallback for unknown symbols
   const s = symbol.toUpperCase();
-  switch (s) {
-    case 'XAUUSD':
-      return 0.1;
-    case 'EURUSD':
-    case 'GBPUSD':
-      return 0.0001;
-    default:
-      if (s.endsWith('JPY')) return 0.01;
-      return 0.0001;
-  }
+  if (s.endsWith('JPY')) return 0.01;
+  return 0.0001;
 }
 
-/** Number of price decimals to show by default. */
+/** Number of price decimals to show — delegates to SymbolDefinition. */
 export function priceDecimals(symbol: string): number {
+  const def = SYMBOL_MAP.get(symbol.toUpperCase());
+  if (def) return def.decimals;
+  // Fallback for unknown symbols
   const s = symbol.toUpperCase();
-  if (s === 'XAUUSD') return 2;
   if (s.endsWith('JPY')) return 3;
   return 5;
 }
@@ -59,7 +99,10 @@ export function formatPips(symbol: string, delta: number): string {
   return `${sign}${pips.toFixed(1)} pips`;
 }
 
-/** Currency tags used for news/calendar filtering. */
-export const CURRENCY_TAGS = ['USD', 'EUR', 'GBP', 'XAU'] as const;
+/** Currency tags used for news/calendar filtering — expanded from catalog. */
+export const CURRENCY_TAGS = [
+  'USD', 'EUR', 'GBP', 'XAU', 'JPY', 'AUD', 'CAD', 'NZD', 'CHF',
+  'BTC', 'ETH', 'SOL', 'BNB', 'XRP', 'ADA',
+] as const;
 export type CurrencyTag = (typeof CURRENCY_TAGS)[number];
 export const CurrencyTagSchema = z.enum(CURRENCY_TAGS);

@@ -38,6 +38,23 @@ export class BinanceStreamConsumer {
     this.connect();
   }
 
+  /**
+   * Update subscriptions dynamically. Reconnects with the new symbol set.
+   */
+  async updateSubscriptions(added: string[], removed: string[]): Promise<void> {
+    const newSet = new Set(this.symbols);
+    for (const s of added) newSet.add(s);
+    for (const s of removed) newSet.delete(s);
+    
+    this.symbols.length = 0;
+    this.symbols.push(...newSet);
+    
+    // Reconnect with updated streams
+    if (this.ws && !this.destroyed) {
+      this.ws.close(4000, 'subscription update');
+    }
+  }
+
   async stop(): Promise<void> {
     this.destroyed = true;
     if (this.reconnectTimer) clearTimeout(this.reconnectTimer);

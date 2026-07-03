@@ -1,5 +1,5 @@
 import { getPriceWithMeta } from '@hamafx/data';
-import { SymbolSchema, type Tick } from '@hamafx/shared';
+import { SymbolSchema } from '@hamafx/shared';
 import { eq } from 'drizzle-orm';
 import { z } from 'zod';
 
@@ -27,11 +27,11 @@ const QuerySchema = z.object({
 async function* generatePrices(keys: Record<string, string>, symbols: string[]): AsyncGenerator<string> {
   while (true) {
     try {
-      const ticks: Tick[] = [];
-      for (const symbol of symbols) {
-        const result = await getPriceWithMeta(symbol, { apiKeys: keys });
-        ticks.push(result.tick);
-      }
+      // ARCH-1 fix: parallel fetch instead of sequential loop
+      const results = await Promise.all(
+        symbols.map((s) => getPriceWithMeta(s, { apiKeys: keys })),
+      );
+      const ticks = results.map((r) => r.tick);
       yield `data: ${JSON.stringify({ ticks, ts: Date.now() })}\n\n`;
     } catch (err) {
       yield `data: ${JSON.stringify({ error: String(err), ts: Date.now() })}\n\n`;

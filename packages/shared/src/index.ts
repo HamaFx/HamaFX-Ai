@@ -19,6 +19,7 @@
 
 // Domain primitives
 export * from './symbols';
+export * from './symbol-catalog';
 export * from './timeframes';
 
 // F6 — Market Phase Detection

@@ -114,3 +114,57 @@ export async function fetchCandles(
     opts,
   );
 }
+
+/**
+ * GET /api/v3/ticker/price?symbol=BTCUSDT — 1 weight.
+ * Lightweight price fetch returning just the current price.
+ */
+export async function fetchTickerPrice(
+  symbol: string,
+  opts?: { signal?: AbortSignal },
+): Promise<number> {
+  const url = new URL(`${BASE_URL}/api/v3/ticker/price`);
+  url.searchParams.set('symbol', symbol.toUpperCase());
+
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(new Error('timeout')), DEFAULT_TIMEOUT_MS);
+  if (opts?.signal) {
+    if (opts.signal.aborted) ctrl.abort(opts.signal.reason);
+    else opts.signal.addEventListener('abort', () => ctrl.abort(opts.signal!.reason));
+  }
+
+  let res: Response;
+  try {
+    res = await fetch(url, { signal: ctrl.signal, cache: 'no-store' });
+  } catch (cause) {
+    clearTimeout(timer);
+    const isAbort = (cause as Error)?.name === 'AbortError';
+    throw new ProviderError(
+      isAbort ? 'PROVIDER_TIMEOUT' : 'PROVIDER_HTTP_ERROR',
+      PROVIDER,
+      isAbort ? 'request timed out' : 'fetch failed',
+      { cause },
+    );
+  }
+  clearTimeout(timer);
+
+  if (!res.ok) {
+    throw new ProviderError(
+      'PROVIDER_HTTP_ERROR',
+      PROVIDER,
+      `HTTP ${res.status} ${res.statusText}`,
+      { status: res.status },
+    );
+  }
+
+  const json: unknown = await res.json().catch(() => null);
+  if (!json || typeof json !== 'object' || !('price' in json)) {
+    throw new ProviderError('PROVIDER_PARSE_ERROR', PROVIDER, 'expected { price: string } response');
+  }
+
+  const price = Number.parseFloat((json as { price: string }).price);
+  if (Number.isNaN(price)) {
+    throw new ProviderError('PROVIDER_PARSE_ERROR', PROVIDER, 'invalid ticker price');
+  }
+  return price;
+}

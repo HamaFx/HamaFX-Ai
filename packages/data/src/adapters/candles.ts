@@ -33,6 +33,8 @@
 import {
   CandleSchema,
   SymbolSchema,
+  getSymbolDefinition,
+  symbolCategory,
   type Candle,
   type Symbol,
   type Timeframe,
@@ -99,18 +101,18 @@ export async function getCandlesWithMeta(
   opts: GetCandlesOptions = {},
 ): Promise<CandlesResult> {
   const symbol = SymbolSchema.parse(symbolInput);
+  const def = getSymbolDefinition(symbol); // NEW: get symbol definition for category routing
   const count = Math.max(1, Math.min(opts.count ?? DEFAULT_COUNT, MAX_COUNT));
   const keys = resolveKeys(opts);
   const policy = candleTtl(tf, true);
-  // BiQuote tops out at 2000 bars per series; cap our request to it but let
-  // larger requests still flow through to Finnhub.
-  const biquoteCount = Math.min(count, 2000);
+  // BUG-1 fix: BiQuote tops out at 1000 bars per series (was 2000)
+  const biquoteCount = Math.min(count, 1000);
 
   const cache = await getDefaultCache();
   const key = cacheKey({ resource: 'candles', symbol, tf, extra: `n${count}` });
   const tags = [cacheTag('candles'), cacheTag('candles', symbol)];
 
-  const isCrypto = isCryptoSymbol(symbol);
+  const isCrypto = def.category === 'crypto' && !!def.binance;
 
   const r = await cache.fetchWithMeta<Candle[]>(
     key,
@@ -155,7 +157,7 @@ export async function getCandlesWithMeta(
         attempts.push({
           name: 'binance',
           run: async () => {
-            const raw = await binance.fetchCandles(symbol, tf, count, {
+            const raw = await binance.fetchCandles(def.binance!, tf, count, {
               ...(opts.signal ? { signal: opts.signal } : {}),
             });
             const fetchedAt = Date.now();
@@ -178,12 +180,12 @@ export async function getCandlesWithMeta(
       }
 
       // BiQuote first for forex/gold (free, no rate limits).
-      if (tf !== '1w') {
+      if (def.category !== 'crypto' && tf !== '1w') {
         attempts.push({
           name: 'biquote',
           run: async () => {
             const raw = await biquote.fetchOhlc({
-              symbol,
+              symbol: def.biquote as Symbol,
               tf,
               count: biquoteCount,
               baseUrl: keys.biquoteBaseUrl,

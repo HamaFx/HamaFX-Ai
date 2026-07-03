@@ -15,9 +15,14 @@ export function toBinanceInterval(tf: Timeframe): string {
   return TO_BINANCE_INTERVAL[tf];
 }
 
-const CRYPTO_SUFFIXES = ['USDT', 'BTC', 'ETH', 'BNB', 'SOL', 'XRP', 'ADA', 'DOGE', 'DOT', 'MATIC'];
+// Expanded crypto symbol set — covers all BUILTIN_SYMBOLS crypto entries
+// plus common additional pairs.
+const CRYPTO_SYMBOLS = new Set([
+  'BTCUSDT', 'ETHUSDT', 'SOLUSDT', 'BNBUSDT', 'XRPUSDT', 'ADAUSDT',
+  'DOGEUSDT', 'AVAXUSDT', 'DOTUSDT', 'LINKUSDT', 'MATICUSDT',
+]);
 
 export function isCryptoSymbol(symbol: string): boolean {
   const s = symbol.toUpperCase();
-  return CRYPTO_SUFFIXES.some((suffix) => s.endsWith(suffix));
+  return CRYPTO_SYMBOLS.has(s) || s.endsWith('USDT') || s.endsWith('BTC');
 }

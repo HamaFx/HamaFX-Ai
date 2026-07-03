@@ -1,3 +1,3 @@
-export { fetchCandles, fetchQuote } from './rest';
-export { toTwelveDataInterval } from './map';
+export { fetchCandles, fetchQuote, fetchPrice } from './rest';
+export { toTwelveDataInterval, toTwelveDataSymbol, fromTwelveDataSymbol } from './map';
 export type { NormalizedTwelveDataCandle } from './types';

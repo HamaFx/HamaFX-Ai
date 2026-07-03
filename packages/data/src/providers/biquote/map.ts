@@ -26,13 +26,19 @@
 // Reference: https://biquote.io/docs
 
 import type { BiquoteTimeframe } from '@hamafx/shared';
-import type { Symbol, Timeframe } from '@hamafx/shared';
+import { getSymbolDefinition, isKnownSymbol, type Symbol, type Timeframe } from '@hamafx/shared';
 
-const TO_BIQUOTE_SYMBOL: Record<Symbol, string> = {
-  XAUUSD: 'XAUUSD',
-  EURUSD: 'EURUSD',
-  GBPUSD: 'GBPUSD',
-};
+/**
+ * BiQuote uses our concatenated symbol codes verbatim (`XAUUSD`,
+ * `EURUSD`, `GBPUSD`, etc.). For known catalog symbols we use the
+ * `biquote` field from SymbolDefinition; for unknown symbols we pass
+ * through as-is (the filter layer rejects unknowns unless
+ * UNLIMITED_SYMBOLS is set).
+ */
+export function toBiquoteSymbol(symbol: Symbol): string {
+  const def = isKnownSymbol(symbol) ? getSymbolDefinition(symbol) : null;
+  return def?.biquote ?? symbol;
+}
 
 /**
  * BiQuote's `/api/{symbol}/ohlc` endpoint accepts M1..D1. There is no W1.
@@ -49,9 +55,7 @@ const TO_BIQUOTE_TIMEFRAME: Record<Exclude<Timeframe, '1w'>, BiquoteTimeframe> =
   '1d': '1d',
 };
 
-export function toBiquoteSymbol(symbol: Symbol): string {
-  return TO_BIQUOTE_SYMBOL[symbol] || symbol;
-}
+// (toBiquoteSymbol is defined above)
 
 /**
  * Map an internal timeframe to BiQuote's notation. Returns `null` for

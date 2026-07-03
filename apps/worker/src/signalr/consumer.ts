@@ -35,7 +35,7 @@
 
 import {
   BiquoteSignalRTickSchema,
-  isSymbol,
+  isKnownSymbol,
   SYMBOLS,
   type Symbol,
 } from '@hamafx/shared';
@@ -51,8 +51,8 @@ export interface NormalizedTick {
   mid: number;
   /** ms epoch UTC. */
   ts: number;
-  /** Stable string. 'biquote-signalr', 'mt5-local', or 'binance-ws'. */
-  source: 'biquote-signalr' | 'mt5-local' | 'binance-ws';
+  /** Stable string. 'biquote-signalr', 'mt5-local', 'binance-ws', or 'twelvedata-ws'. */
+  source: 'biquote-signalr' | 'mt5-local' | 'binance-ws' | 'twelvedata-ws';
 }
 
 export interface MinimalHubConnection {
@@ -254,7 +254,7 @@ export class SignalRConsumer {
     }
 
     const tick = parsed.data;
-    if (!isSymbol(tick.symbol)) {
+    if (!isKnownSymbol(tick.symbol)) {
       // BiQuote pushes ticks for all subscribed symbols; in theory we never
       // see ticks for symbols we didn't subscribe to, but skip silently
       // if a stray tick arrives (e.g. mid-resubscribe race).

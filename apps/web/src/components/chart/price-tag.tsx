@@ -23,7 +23,7 @@
 // updates feel alive instead of snapping. Delta gets a TrendingUp/Down
 // icon for at-a-glance direction.
 
-import { priceDecimals, type Symbol } from '@hamafx/shared';
+import { getSymbolDefinition, isKnownSymbol, priceDecimals, type Symbol } from '@hamafx/shared';
 import { Minus, TrendingDown, TrendingUp } from 'lucide-react';
 
 import { AnimatedNumber } from '@/components/ui/animated-number';
@@ -42,7 +42,7 @@ interface PriceTagProps {
 
 export function PriceTag({ symbol, referencePrice, className }: PriceTagProps) {
   const { tick, isLoading, isError } = usePrice(symbol);
-  const decimals = priceDecimals(symbol);
+  const decimals = isKnownSymbol(symbol) ? getSymbolDefinition(symbol).decimals : priceDecimals(symbol);
 
   if (isLoading) {
     return (

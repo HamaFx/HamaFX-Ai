@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-import { isSymbol, type Symbol } from '@hamafx/shared';
+import { isKnownSymbol, type Symbol } from '@hamafx/shared';
 import { Clock, Sparkles, TrendingUp } from 'lucide-react';
 import { useCallback, useEffect } from 'react';
 import { toast } from 'sonner';
@@ -75,7 +75,7 @@ export function PreferencesCard({
       document.documentElement.dataset.reduceMotion = prefs.reduceMotion ? 'force' : 'auto';
       
       // Sanitize defaultSymbol from localStorage using isSymbol and ensuring it is present in the watchlist
-      if (!isSymbol(prefs.defaultSymbol) || !watchlist.includes(prefs.defaultSymbol)) {
+      if (!isKnownSymbol(prefs.defaultSymbol) || !watchlist.includes(prefs.defaultSymbol)) {
         const defaultSym = watchlist.includes('XAUUSD') ? 'XAUUSD' : (watchlist[0] || DEFAULTS.defaultSymbol);
         // Avoid infinite updates if it is already matching
         if (prefs.defaultSymbol !== defaultSym) {

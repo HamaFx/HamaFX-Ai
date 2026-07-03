@@ -67,12 +67,17 @@ export {
 // adapter-style flat re-exports above.
 export * as cftc from './providers/cftc';
 export * as fred from './providers/fred';
+export * as twelvedata from './providers/twelvedata';
+export * as binance from './providers/binance';
+export * as biquote from './providers/biquote';
 export { type MarketDataProvider } from './providers/market-data-provider';
 export {
   MARKET_DATA_PROVIDERS,
   biquoteProvider,
   finnhubProvider,
   liveTicksProvider,
+  twelvedataProvider,
+  binanceProvider,
 } from './providers/market-data-providers';
 
 // STAB-05: Circuit breaker — per-provider CLOSED/OPEN/HALF_OPEN state machine.

@@ -49,9 +49,10 @@ const DEFAULT_TIMEOUT_MS = 8_000;
 
 /**
  * Self-throttle config. BiQuote is unauthenticated and doesn't publish a
- * fair-use cap; we cap REST traffic at 10/min total across all three
- * symbols. The persistent SignalR connection (Phase 8 PR-6) is a single
- * long-lived TCP socket and is NOT counted here.
+ * fair-use cap; we cap REST traffic at 50/min total across all symbols.
+ * The persistent SignalR connection (Phase 8 PR-6) is a single
+ * long-lived TCP socket and is NOT counted here. (BUG-4 fix: comment
+ * now matches the actual throttle limit of 50/min.)
  *
  * On 429, the adaptive throttle drops the cap to 80% of `limit` for
  * `cooloffMs` (90 s default), then auto-recovers.
@@ -201,7 +202,7 @@ export async function fetchLatest(
 export interface FetchOhlcArgs extends CallOptions {
   symbol: Symbol;
   tf: Timeframe;
-  /** Bar count, capped at BiQuote's documented 2000-per-series limit. */
+  /** Bar count, capped at BiQuote's documented 1000-per-series limit. (BUG-1 fix: was 2000) */
   count: number;
   /**
    * If false (default), drop the live unfinished bar (`isOpen=true`). The
@@ -233,7 +234,7 @@ export async function fetchOhlc(args: FetchOhlcArgs): Promise<BiquoteOhlcBar[]> 
     );
   }
 
-  const limit = Math.max(1, Math.min(args.count, 2000));
+  const limit = Math.max(1, Math.min(args.count, 1000)); // BUG-1 fix: was 2000, BiQuote max is 1000
   const path = `/api/${toBiquoteSymbol(validated)}/ohlc`;
   const env = await call(path, { interval: tf, limit: String(limit) }, OhlcEnvelopeSchema, args);
   const raw = env.bars;

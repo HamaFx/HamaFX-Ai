@@ -58,8 +58,10 @@ export const BiquoteTickSchema = z.object({
   /**
    * Mid price. BiQuote computes this server-side, so callers should
    * prefer `mid` over `last` (which is 0 for FX) or the bid/ask average.
+   * Optional — not in BiQuote's official documented tick schema, so we
+   * compute a fallback (bid+ask)/2 when missing. (BUG-3 fix)
    */
-  mid: z.number().finite(),
+  mid: z.number().finite().optional(),
   /** Last traded price. 0 for FX (suppressed by BiQuote). */
   last: z.number().finite(),
   volume: z.number().finite(),

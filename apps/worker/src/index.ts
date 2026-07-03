@@ -48,6 +48,7 @@ import {
 } from './sd-notify.js';
 import { captureException, flushSentry, initSentry } from './sentry.js';
 import { BinanceStreamConsumer } from './binance/index.js';
+import { TwelveDataWsConsumer } from './twelvedata/index.js';
 import {
   createDefaultBuildConnection,
   SignalRConsumer,
@@ -121,6 +122,7 @@ export interface RunWorkerArgs {
 export interface RunningWorker {
   consumer: SignalRConsumer;
   binanceConsumer: BinanceStreamConsumer;
+  tdConsumer: TwelveDataWsConsumer;
   buffer: TickBuffer;
   aggregator: Candle1mAggregator;
   /** Idempotent. Cleanly tears down timers + the hub. */
@@ -136,19 +138,22 @@ export async function runWorker(args: RunWorkerArgs): Promise<RunningWorker> {
 
   let lastTickAt = 0;
   let lastMt5TickAt = 0;
+  let lastTwelveDataTickAt = 0;
 
   // Shared tick handler to push ticks to database buffer, trigger 1m candle aggregations, and notify watchdog
+  // Priority: MT5 > TwelveData > BiQuote > Binance
   const handleIncomingTick = (tick: NormalizedTick) => {
     const now = Date.now();
     
-    // MT5 as primary, BiQuote as fallback
     if (tick.source === 'mt5-local') {
       lastMt5TickAt = now;
+    } else if (tick.source === 'twelvedata-ws') {
+      lastTwelveDataTickAt = now;
     } else if (tick.source === 'biquote-signalr') {
-      // Drop BiQuote ticks if MT5 is actively sending data (within the last 15 seconds)
-      if (now - lastMt5TickAt < 15_000) {
-        return;
-      }
+      // Drop BiQuote ticks if Twelve Data is actively sending for this symbol
+      if (now - lastTwelveDataTickAt < 15_000) return;
+      // Also drop if MT5 is active
+      if (now - lastMt5TickAt < 15_000) return;
     }
 
     buffer.push(tick);
@@ -214,9 +219,27 @@ export async function runWorker(args: RunWorkerArgs): Promise<RunningWorker> {
   });
 
   const symbolManager = new SymbolManager(log.with({ module: 'symbol-manager' }));
+  
+  // Wire per-consumer subscription updates
   symbolManager.on('symbolsChanged', ({ added, removed }) => {
+    // Backward compat: still update BiQuote consumer via aggregate event
     if (consumer.isStarted()) {
       void consumer.updateSubscriptions(added, removed);
+    }
+  });
+  symbolManager.on('twelvedataChanged', ({ symbols }) => {
+    if (tdConsumer) {
+      void tdConsumer.updateSubscriptions(symbols);
+    }
+  });
+  symbolManager.on('biquoteChanged', ({ added, removed }) => {
+    if (consumer.isStarted()) {
+      void consumer.updateSubscriptions(added, removed);
+    }
+  });
+  symbolManager.on('binanceChanged', ({ added, removed }) => {
+    if (binanceConsumer) {
+      void binanceConsumer.updateSubscriptions(added, removed);
     }
   });
 
@@ -233,6 +256,16 @@ export async function runWorker(args: RunWorkerArgs): Promise<RunningWorker> {
     log: log.with({ module: 'binance-ws' }),
   });
 
+  // Twelve Data WebSocket consumer for gold + forex live ticks.
+  // Free tier: 8 concurrent symbol streams. SymbolManager assigns slots.
+  const tdConsumer = new TwelveDataWsConsumer({
+    apiKey: env.TWELVEDATA_API_KEY ?? '',
+    symbols: [],  // SymbolManager will populate via 'twelvedataChanged' event
+    onTick: handleIncomingTick,
+    onActivity: () => notifyWatchdog(),
+    log: log.with({ module: 'twelvedata-ws' }),
+  });
+
   // Start the Headless MT5 TCP bridge server on the whitelisted local loopback port
   const mt5Server = startMT5Server({
     port: env.MT5_BRIDGE_PORT,
@@ -240,14 +273,15 @@ export async function runWorker(args: RunWorkerArgs): Promise<RunningWorker> {
     onTick: handleIncomingTick,
   });
 
-  await consumer.start();
-  await binanceConsumer.start();
+  await consumer.start();        // BiQuote SignalR
+  await binanceConsumer.start(); // Binance WS
+  await tdConsumer.start();      // Twelve Data WS
   symbolManager.start();
   // The consumer is connected and subscribed — tell systemd we're done
   // bootstrapping. Pair with `Type=notify` in hamafx-worker.service so
   // the unit only enters `active (running)` once we're ready.
   notifyReady();
-  notifyStatus('signalr + binance ws connected; tick stream active');
+  notifyStatus('signalr + binance ws + twelvedata ws connected; tick stream active');
 
   // OBS-08 (Phase 5.2): Rate-limited Sentry capture for sustained
   // flushLiveTicks failures. Same cooldown pattern as candle flush:
@@ -305,11 +339,12 @@ export async function runWorker(args: RunWorkerArgs): Promise<RunningWorker> {
     if (heartbeatTimer) clearInterval(heartbeatTimer);
     symbolManager.stop();
     
-    // Gracefully shut down both services in parallel
+    // Gracefully shut down all services in parallel
     await Promise.all([
       mt5Server.stop(),
       consumer.stop(),
       binanceConsumer.stop(),
+      tdConsumer.stop(),
     ]);
 
     // Drain anything buffered after the last interval tick — best-effort.
@@ -323,7 +358,7 @@ export async function runWorker(args: RunWorkerArgs): Promise<RunningWorker> {
     aggregator.closeAll();
   };
 
-  return { consumer, binanceConsumer, buffer, aggregator, stop };
+  return { consumer, binanceConsumer, tdConsumer, buffer, aggregator, stop };
 }
 
 import { startScheduler } from './scheduler.js';

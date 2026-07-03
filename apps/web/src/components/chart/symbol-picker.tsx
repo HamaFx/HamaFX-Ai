@@ -23,7 +23,7 @@
 import { Search } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
-import { SYMBOLS, type Symbol } from '@hamafx/shared';
+import { BUILTIN_SYMBOLS, SYMBOLS, type Symbol } from '@hamafx/shared';
 
 import { useTimeframe } from '@/hooks/use-tf';
 import { cn } from '@/lib/cn';
@@ -36,9 +36,13 @@ export function SymbolPicker({ active, watchlist }: { active: Symbol; watchlist:
   const filteredAll = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return [];
-    return SYMBOLS.filter(
-      (s) => !watchlist.includes(s) && s.toLowerCase().includes(q),
-    );
+    // Search all BUILTIN_SYMBOLS (not just the old 3) by internal symbol or display name
+    return BUILTIN_SYMBOLS
+      .filter((s) =>
+        !watchlist.includes(s.internal) &&
+        (s.internal.toLowerCase().includes(q) || s.display.toLowerCase().includes(q)),
+      )
+      .map((s) => s.internal);
   }, [query, watchlist]);
 
   const showSearch = watchlist.length > 0 || query.length > 0;
