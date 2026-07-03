@@ -43,7 +43,7 @@ export function CitationWarningPartView({ part }: CitationWarningProps) {
   const tone =
     part.stance === 'strict'
       ? 'border-warn/40 bg-warn/5 text-warn'
-      : 'border-divider/60 bg-bg-elev-1/60 text-fg-muted';
+      : 'border-zinc-800 bg-zinc-950/60 text-fg-muted';
 
   const hasFindings = (part.findings?.length ?? 0) > 0;
   // Backward compat: parts without `findings` get one synthetic
@@ -62,7 +62,7 @@ export function CitationWarningPartView({ part }: CitationWarningProps) {
       }));
 
   return (
-    <div className={`flex flex-col gap-1 rounded-2xl border px-3 py-2 ${tone}`}>
+    <div className={`flex flex-col gap-1 rounded-sm border px-3 py-2 ${tone}`}>
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
@@ -83,12 +83,12 @@ export function CitationWarningPartView({ part }: CitationWarningProps) {
             <li key={i} className="text-fg-subtle flex items-start gap-2">
               {row.supported ? (
                 <Check
-                  className="text-bull mt-0.5 size-3.5 shrink-0"
+                  className="text-emerald-500 mt-0.5 size-3.5 shrink-0"
                   aria-label="supported"
                 />
               ) : (
                 <X
-                  className="text-warn mt-0.5 size-3.5 shrink-0"
+                  className="text-amber-500 mt-0.5 size-3.5 shrink-0"
                   aria-label="no tool source"
                 />
               )}

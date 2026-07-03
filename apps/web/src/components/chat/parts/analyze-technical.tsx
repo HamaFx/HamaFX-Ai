@@ -17,7 +17,7 @@
 // Bespoke renderer for the `analyze_technical` tool part.
 //
 // Server component. Renders one compact card per timeframe with .tabular-nums
-// on every numeric field and text-bull/text-bear on the directional ones.
+// on every numeric field and text-bull/text-red-500 on the directional ones.
 // `partial: true` surfaces a single line at the top so the user knows a tf
 // was dropped due to a fetch failure.
 
@@ -39,7 +39,7 @@ export function AnalyzeTechnicalPart({
   }
 
   return (
-    <div className="border-border bg-bg-elev-1 rounded-lg border p-3">
+    <div className="border-border bg-zinc-950 rounded-sm border p-3">
       <header className="mb-2 flex items-baseline justify-between gap-2">
         <h3 className="text-fg text-sm font-semibold">
           {output.symbol} · technical
@@ -50,7 +50,7 @@ export function AnalyzeTechnicalPart({
       </header>
 
       {output.partial ? (
-        <p className="text-warn mb-2 text-body-sm">⚠ Some timeframes unavailable.</p>
+        <p className="text-amber-500 mb-2 text-body-sm">⚠ Some timeframes unavailable.</p>
       ) : null}
 
       <p className="text-fg-muted mb-3 text-xs leading-snug">{output.summary}</p>
@@ -85,7 +85,7 @@ function TfCard({
         : 'text-fg-muted';
 
   return (
-    <li className="border-border bg-bg-elev-2 flex flex-col gap-1.5 rounded-md border p-2.5">
+    <li className="border-border bg-zinc-900 flex flex-col gap-1.5 rounded-sm border p-2.5">
       <div className="flex items-baseline justify-between gap-2">
         <span className="text-fg text-xs font-semibold uppercase tracking-wide">
           {reading.tf}
@@ -132,7 +132,7 @@ function TfCard({
 
       <Link
         href={`/chart/${symbol}/structure?tf=${reading.tf}`}
-        className="text-brand focus-visible:ring-brand mt-1 block min-h-[24px] text-right text-body-sm font-medium underline-offset-2 outline-none hover:underline focus-visible:ring-2"
+        className="text-fg focus-visible:ring-fg mt-1 block min-h-[24px] text-right text-body-sm font-medium underline-offset-2 outline-none hover:underline focus-visible:ring-2"
       >
         view chart →
       </Link>
@@ -143,15 +143,15 @@ function TfCard({
 function SkeletonCard() {
   return (
     <div
-      className="border-border bg-bg-elev-1 rounded-lg border p-3"
+      className="border-border bg-zinc-950 rounded-sm border p-3"
       aria-busy="true"
       aria-label="Analyzing technical posture"
     >
-      <div className="bg-bg-elev-2 h-4 w-1/2 animate-pulse rounded" />
-      <div className="bg-bg-elev-2 mt-3 h-3 w-3/4 animate-pulse rounded" />
+      <div className="bg-zinc-900 h-4 w-1/2 animate-pulse rounded" />
+      <div className="bg-zinc-900 mt-3 h-3 w-3/4 animate-pulse rounded" />
       <ul className="mt-3 grid grid-cols-3 gap-2">
         {[0, 1, 2].map((i) => (
-          <li key={i} className="bg-bg-elev-2 h-24 animate-pulse rounded-md" />
+          <li key={i} className="bg-zinc-900 h-24 animate-pulse rounded-sm" />
         ))}
       </ul>
     </div>
@@ -162,7 +162,7 @@ function ErrorCard({ message }: { message?: string }) {
   return (
     <div
       role="alert"
-      className="border-bear/30 bg-bg-elev-1 text-bear rounded-lg border p-3 text-sm"
+      className="border-red-500/30 bg-zinc-950 text-red-500 rounded-sm border p-3 text-sm"
     >
       Technical analysis failed{message ? ` · ${message}` : ''}
     </div>
