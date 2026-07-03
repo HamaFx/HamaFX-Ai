@@ -14,13 +14,6 @@
  * limitations under the License.
  */
 
-// Mobile-first page header. Hierarchy: page title is the loudest thing on
-// the screen (display scale, weight 700), description is one line of helper
-// text in muted color. Optional icon tile is 48×48 (size-12), solid brand
-// tint, no gradient — keeps the page quiet until the user reads the title.
-//
-// Per PLAN.md §2.4 + §3 — R1 display type tokens, sharper radii.
-
 import type { ReactNode } from 'react';
 
 interface PageHeaderProps {
@@ -38,7 +31,7 @@ export function PageHeader({ title, description, icon, children }: PageHeaderPro
           {icon ? (
             <span
               aria-hidden="true"
-              className="text-brand bg-brand/10 inline-flex size-12 items-center justify-center rounded-lg"
+              className="text-fg bg-zinc-900 inline-flex size-12 items-center justify-center rounded-sm"
             >
               {icon}
             </span>
@@ -50,7 +43,7 @@ export function PageHeader({ title, description, icon, children }: PageHeaderPro
         {children ? <div className="flex items-center gap-2">{children}</div> : null}
       </div>
       {description ? (
-        <p className="text-fg-muted text-body-sm leading-relaxed">{description}</p>
+        <p className="text-fg-muted text-body-sm leading-[1.4]">{description}</p>
       ) : null}
     </header>
   );

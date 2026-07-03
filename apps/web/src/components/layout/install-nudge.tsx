@@ -138,7 +138,7 @@ export function InstallNudge() {
       <div
         role="status"
         aria-live="polite"
-        className="border-divider bg-bg-elev-2 text-fg-muted mx-3 mt-2 flex items-start gap-3 rounded-lg border p-3 text-caption"
+        className="border-zinc-800 bg-zinc-900 text-fg-muted mx-3 mt-2 flex items-start gap-3 rounded-sm border p-3 text-caption"
       >
         <Share className="text-fg-muted mt-0.5 size-4 shrink-0" aria-hidden="true" />
         <p className="flex-1 leading-snug">
@@ -149,7 +149,7 @@ export function InstallNudge() {
           type="button"
           onClick={onDismiss}
           aria-label="Dismiss install hint"
-          className="text-fg-subtle hover:text-fg -mr-1 inline-flex size-6 shrink-0 items-center justify-center rounded-full transition-colors hover:bg-bg-elev-3"
+          className="text-fg-subtle hover:text-fg -mr-1 inline-flex size-6 shrink-0 items-center justify-center rounded-sm transition-colors hover:bg-zinc-800"
         >
           <X className="size-3.5" />
         </button>
@@ -163,7 +163,7 @@ export function InstallNudge() {
       <div
         role="status"
         aria-live="polite"
-        className="border-divider bg-bg-elev-2 mx-3 mt-2 flex items-center gap-3 rounded-lg border p-3"
+        className="border-zinc-800 bg-zinc-900 mx-3 mt-2 flex items-center gap-3 rounded-sm border p-3"
       >
         <Download className="text-fg-muted size-4 shrink-0" aria-hidden="true" />
         <p className="text-fg-muted flex-1 text-caption leading-snug">
@@ -172,7 +172,7 @@ export function InstallNudge() {
         <button
           type="button"
           onClick={() => void onInstall()}
-          className="text-brand border-brand/40 hover:bg-brand/15 inline-flex h-8 items-center rounded-full border px-3 text-caption font-semibold"
+          className="text-fg border-zinc-700 hover:bg-zinc-800 inline-flex h-8 items-center rounded-sm border px-3 text-caption font-semibold"
         >
           Install
         </button>
@@ -180,7 +180,7 @@ export function InstallNudge() {
           type="button"
           onClick={onDismiss}
           aria-label="Dismiss install hint"
-          className="text-fg-subtle hover:text-fg inline-flex size-7 shrink-0 items-center justify-center rounded-full transition-colors hover:bg-bg-elev-3"
+          className="text-fg-subtle hover:text-fg inline-flex size-7 shrink-0 items-center justify-center rounded-sm transition-colors hover:bg-zinc-800"
         >
           <X className="size-3.5" />
         </button>

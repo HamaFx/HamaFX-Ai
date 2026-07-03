@@ -20,14 +20,7 @@ import { WifiOff, Loader2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { AnimatePresence, m } from 'motion/react';
 
-/**
- * Sticky pill rendered above the home indicator while the browser reports
- * it is offline. Renders nothing while online. Listens to `online`/`offline`
- * events to flip state. The Retry button calls `location.reload()`.
- */
 export function OfflineBanner() {
-  // Default to `true` so the banner does not flash during SSR/first paint;
-  // the effect below reconciles with `navigator.onLine` on mount.
   const [online, setOnline] = useState(true);
   const [retrying, setRetrying] = useState(false);
 
@@ -62,8 +55,8 @@ export function OfflineBanner() {
           className="pointer-events-none fixed inset-x-0 z-40 flex justify-center px-4"
           style={{ bottom: 'var(--toast-bottom)' }}
         >
-          <div className="glass-strong text-fg pointer-events-auto flex items-center gap-3 rounded-full px-4 py-2.5">
-            <WifiOff className="text-bear size-4" aria-hidden="true" strokeWidth={2.25} />
+          <div className="surface-elevated text-fg pointer-events-auto flex items-center gap-3 rounded-sm px-4 py-2.5">
+            <WifiOff className="text-red-500 size-4" aria-hidden="true" strokeWidth={2.25} />
             <span className="text-body-sm font-medium">No network</span>
             <button
               type="button"
@@ -72,7 +65,7 @@ export function OfflineBanner() {
                 setRetrying(true);
                 window.location.reload();
               }}
-              className="text-fg-muted hover:text-fg focus-visible:ring-brand inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-lg px-3 text-body-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 disabled:opacity-60"
+              className="text-fg-muted hover:text-fg focus-visible:ring-fg inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-sm px-3 text-body-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 disabled:opacity-60"
             >
               {retrying && <Loader2 className="size-3 animate-spin" />}
               Retry

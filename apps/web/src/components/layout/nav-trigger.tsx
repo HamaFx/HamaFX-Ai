@@ -20,11 +20,6 @@
 // Both <TopBar> and <ChatTopBar> render this component. Clicks call into
 // the drawer's context state, so it doesn't matter which trigger fires —
 // only one drawer instance lives in the DOM.
-//
-// No tooltip on the trigger. The hamburger glyph is universally
-// understood and any tooltip wrapper would interpose a span between the
-// click target and the visible icon, occasionally swallowing taps that
-// land near the icon's edge on touch devices.
 
 import { Menu } from 'lucide-react';
 
@@ -39,7 +34,7 @@ export function NavTrigger() {
       aria-expanded={open}
       aria-controls="sidebar-nav"
       onClick={() => setOpen(true)}
-      className="text-fg-muted hover:text-fg hover:bg-bg-elev-2 active:bg-bg-elev-3 active:scale-95 inline-flex size-11 shrink-0 items-center justify-center rounded-full transition-all"
+      className="text-fg-muted hover:text-fg hover:bg-zinc-900 active:bg-zinc-800 active:scale-95 inline-flex size-11 shrink-0 items-center justify-center rounded-sm transition-all"
     >
       <Menu className="size-5" />
     </button>
