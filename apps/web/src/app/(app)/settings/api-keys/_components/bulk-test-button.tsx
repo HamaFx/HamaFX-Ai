@@ -133,9 +133,9 @@ export function BulkTestButton({ disabled }: BulkTestButtonProps) {
       {summary ? (
         <span className="flex items-center gap-1 text-caption tabular-nums">
           {summary.failed === 0 ? (
-            <CheckCircle2 className="size-3 text-bull" />
+            <CheckCircle2 className="size-3 text-emerald-500" />
           ) : (
-            <XCircle className="size-3 text-bear" />
+            <XCircle className="size-3 text-red-500" />
           )}
           <span className="text-fg-muted">
             {summary.ok}/{summary.total - summary.missing} ok

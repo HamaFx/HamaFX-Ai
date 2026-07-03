@@ -71,10 +71,10 @@ export function ApiKeysLandingBanner({ prompt }: ApiKeysLandingBannerProps) {
     <div
       role="status"
       aria-live="polite"
-      className="border-info/30 bg-info/10 text-fg flex items-start gap-3 rounded-lg border p-4"
+      className="border-info/30 bg-blue-500/10 text-fg flex items-start gap-3 rounded-sm border p-4"
     >
-      <Info className="text-info mt-0.5 size-5 shrink-0" aria-hidden="true" />
-      <div className="flex-1 leading-relaxed">
+      <Info className="text-blue-500 mt-0.5 size-5 shrink-0" aria-hidden="true" />
+      <div className="flex-1 leading-[1.4]">
         <p className="text-sm font-medium">No AI provider is configured</p>
         <p className="text-fg-muted mt-1 text-xs">
           Add a key below to start chatting. Free-tier providers (Google,
@@ -93,7 +93,7 @@ export function ApiKeysLandingBanner({ prompt }: ApiKeysLandingBannerProps) {
         type="button"
         onClick={dismiss}
         aria-label="Dismiss banner"
-        className="text-fg-subtle hover:text-fg -mr-1 inline-flex size-7 shrink-0 items-center justify-center rounded-full transition-colors hover:bg-info/15"
+        className="text-fg-subtle hover:text-fg -mr-1 inline-flex size-7 shrink-0 items-center justify-center rounded-sm transition-colors hover:bg-info/15"
       >
         <X className="size-4" />
       </button>

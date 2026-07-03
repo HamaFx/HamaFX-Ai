@@ -87,7 +87,7 @@ export default async function AgentCataloguePage() {
 
       <p className="text-fg-muted text-sm">
         Every tool the agent can call. Counts and latencies come from{' '}
-        <code className="bg-bg-elev-2 text-fg rounded px-1.5 py-0.5 font-mono text-xs">
+        <code className="bg-zinc-900 text-fg rounded px-1.5 py-0.5 font-mono text-xs">
           chat_tool_telemetry
         </code>{' '}
         over the last 24 hours.
@@ -97,7 +97,7 @@ export default async function AgentCataloguePage() {
         {entries.map((e) => (
           <li
             key={e.name}
-            className="border-divider/60 bg-bg-elev-1 flex flex-col gap-1.5 rounded-2xl border p-3"
+            className="border-zinc-800 bg-zinc-950 flex flex-col gap-1.5 rounded-sm border p-3"
           >
             <div className="flex flex-wrap items-baseline justify-between gap-2">
               <code className="text-fg font-mono text-sm font-semibold">{e.name}</code>
@@ -112,7 +112,7 @@ export default async function AgentCataloguePage() {
                 {e.invocations24h > 0 ? <Pill label={`p95 ${e.p95Ms}ms`} tone="muted" /> : null}
               </div>
             </div>
-            <p className="text-fg-muted text-xs leading-relaxed">{e.description}</p>
+            <p className="text-fg-muted text-xs leading-[1.4]">{e.description}</p>
           </li>
         ))}
       </ul>
@@ -147,8 +147,8 @@ function Pill({ label, tone }: { label: string; tone: 'muted' | 'bear' | 'bull' 
       ? 'bg-bear/15 text-bear'
       : tone === 'bull'
         ? 'bg-bull/15 text-bull'
-        : 'bg-bg-elev-2 text-fg-muted';
+        : 'bg-zinc-900 text-fg-muted';
   return (
-    <span className={`rounded-full px-1.5 py-0.5 text-caption font-medium ${cls}`}>{label}</span>
+    <span className={`rounded-sm px-1.5 py-0.5 text-caption font-medium ${cls}`}>{label}</span>
   );
 }

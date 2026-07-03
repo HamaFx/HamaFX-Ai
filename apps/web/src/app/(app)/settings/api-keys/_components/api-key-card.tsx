@@ -124,7 +124,7 @@ const SETUP_INSTRUCTIONS: Record<string, {
 };
 
 function ProviderLogo({ id }: { id: string }) {
-  const baseClass = "size-5 text-brand shrink-0";
+  const baseClass = "size-5 text-fg shrink-0";
   switch (id) {
     case 'google':
     case 'vertex':
@@ -264,7 +264,7 @@ export function ApiKeyCard({ provider, currentValue, health, usage, keyUpdatedAt
           handleTest();
         }
       }}
-      className="border border-divider bg-bg-elev-1 rounded-lg p-4 flex flex-col gap-3 focus:outline-none focus:ring-2 focus:ring-brand/40"
+      className="border border-zinc-800 bg-zinc-950 rounded-sm p-4 flex flex-col gap-3 focus:outline-none focus:ring-2 focus:ring-zinc-700"
     >
       {/* Header */}
       <div className="flex items-baseline justify-between gap-4">
@@ -278,7 +278,7 @@ export function ApiKeyCard({ provider, currentValue, health, usage, keyUpdatedAt
               {provider.displayName}
             </label>
             {provider.pricingTier === 'free' && (
-              <span className="rounded-full bg-bull/15 px-2 py-0.5 text-xs font-semibold text-bull">
+              <span className="rounded-sm bg-bull/15 px-2 py-0.5 text-xs font-semibold text-emerald-500">
                 Free
               </span>
             )}
@@ -296,7 +296,7 @@ export function ApiKeyCard({ provider, currentValue, health, usage, keyUpdatedAt
           <span
             className={
               test.kind === 'ok'
-                ? 'flex items-center gap-1 text-xs text-bull shrink-0'
+                ? 'flex items-center gap-1 text-xs text-emerald-500 shrink-0'
                 : 'flex items-center gap-1 text-xs text-fg-subtle shrink-0'
             }
           >
@@ -307,7 +307,7 @@ export function ApiKeyCard({ provider, currentValue, health, usage, keyUpdatedAt
       </div>
 
       {keyAgeDays !== null && keyAgeDays >= 90 && (
-        <div className="border border-warn/20 bg-warn/5 rounded-lg p-3 text-caption text-warn flex items-start gap-2.5">
+        <div className="border border-warn/20 bg-warn/5 rounded-sm p-3 text-caption text-amber-500 flex items-start gap-2.5">
           <span className="shrink-0 text-sm">⚠️</span>
           <div className="flex flex-col gap-0.5">
             <span className="font-semibold text-fg">Consider rotating your API key</span>
@@ -319,7 +319,7 @@ export function ApiKeyCard({ provider, currentValue, health, usage, keyUpdatedAt
       )}
 
       {health?.rateLimit && (
-        <div className="border border-divider/60 bg-bg-elev-2/40 rounded-lg p-3 text-caption text-fg-subtle flex flex-col gap-1.5 shadow-sm">
+        <div className="border border-zinc-800 bg-bg-elev-2/40 rounded-sm p-3 text-caption text-fg-subtle flex flex-col gap-1.5 shadow-sm">
           <div className="font-semibold text-fg flex items-center gap-1.5">
             <span>⏱️</span>
             <span>API Rate Limits</span>
@@ -353,7 +353,7 @@ export function ApiKeyCard({ provider, currentValue, health, usage, keyUpdatedAt
 
       {/* Vertex-specific JSON preview (when a value is entered). */}
       {isVertex && vertexPreview ? (
-        <div className="text-caption text-fg-subtle border border-divider/60 bg-bg-elev-2 rounded px-3 py-2 flex flex-col gap-1">
+        <div className="text-caption text-fg-subtle border border-zinc-800 bg-zinc-900 rounded px-3 py-2 flex flex-col gap-1">
           {vertexPreview.clientEmail ? (
             <span>
               <span className="text-fg-muted">client_email:</span>{' '}
@@ -367,7 +367,7 @@ export function ApiKeyCard({ provider, currentValue, health, usage, keyUpdatedAt
             </span>
           ) : null}
           {vertexPreview.error ? (
-            <span className="text-bear">{vertexPreview.error}</span>
+            <span className="text-red-500">{vertexPreview.error}</span>
           ) : null}
         </div>
       ) : null}
@@ -389,13 +389,13 @@ export function ApiKeyCard({ provider, currentValue, health, usage, keyUpdatedAt
             spellCheck={false}
             autoComplete="off"
             rows={6}
-            className="border border-divider bg-bg-elev-2 placeholder:text-fg-muted text-fg font-mono text-caption w-full rounded-md px-3 py-2 focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand/40 resize-y"
+            className="border border-zinc-800 bg-zinc-900 placeholder:text-fg-muted text-fg font-mono text-caption w-full rounded-sm px-3 py-2 focus:border-zinc-700 focus:outline-none focus:ring-1 focus:ring-zinc-700 resize-y"
           />
           {isSet && (
             <button
               type="button"
               onClick={handleCopy}
-              className="text-fg-muted hover:text-fg absolute right-3 bottom-3 inline-flex h-7 w-7 items-center justify-center rounded transition-colors hover:bg-bg-elev-3 border border-divider"
+              className="text-fg-muted hover:text-fg absolute right-3 bottom-3 inline-flex h-7 w-7 items-center justify-center rounded transition-colors hover:bg-zinc-800 border border-zinc-800"
               aria-label="Copy key to clipboard"
             >
               <Copy className="size-3.5" />
@@ -443,13 +443,13 @@ export function ApiKeyCard({ provider, currentValue, health, usage, keyUpdatedAt
 
       {/* Validation / test feedback. */}
       {test.kind === 'err' ? (
-        <div className="flex items-start gap-2 text-xs text-bear">
+        <div className="flex items-start gap-2 text-xs text-red-500">
           <XCircle className="size-3.5 mt-0.5 shrink-0" />
           <span className="break-words">{test.message}</span>
         </div>
       ) : null}
       {test.kind === 'ok' && dirty ? (
-        <div className="flex items-center gap-2 text-xs text-bull">
+        <div className="flex items-center gap-2 text-xs text-emerald-500">
           <CheckCircle2 className="size-3.5 shrink-0" />
           <span>New value passes validation. Click Save to apply.</span>
         </div>
@@ -457,12 +457,12 @@ export function ApiKeyCard({ provider, currentValue, health, usage, keyUpdatedAt
 
       {/* Expandable setup instructions details. */}
       {instructions && (
-        <details className="text-xs border border-divider/40 rounded-md overflow-hidden bg-bg-elev-2/30">
+        <details className="text-xs border border-zinc-900 rounded-sm overflow-hidden bg-zinc-900/50">
           <summary aria-label="Toggle setup instructions and limits" className="cursor-pointer select-none px-3 py-1.5 font-medium text-fg-subtle hover:text-fg transition-colors flex items-center justify-between">
             <span>Setup Instructions & Limits</span>
             <span className="text-xs">▼</span>
           </summary>
-          <div className="p-3 border-t border-divider/40 flex flex-col gap-2 bg-bg-elev-2/10">
+          <div className="p-3 border-t border-zinc-900 flex flex-col gap-2 bg-bg-elev-2/10">
             <div>
               <span className="font-semibold text-fg-muted">How to get:</span>{' '}
               <span className="text-fg-subtle">{instructions.howToGet}</span>
@@ -482,7 +482,7 @@ export function ApiKeyCard({ provider, currentValue, health, usage, keyUpdatedAt
                 href={instructions.dashboardUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center text-brand hover:underline font-semibold"
+                className="inline-flex items-center text-fg hover:underline font-semibold"
               >
                 Go to {provider.displayName} Dashboard →
               </a>
@@ -497,7 +497,7 @@ export function ApiKeyCard({ provider, currentValue, health, usage, keyUpdatedAt
           {isVertex ? (
             <>Paste the service-account JSON from the GCP IAM console.</>
           ) : (
-            <>Key is encrypted at rest with AES-256-GCM. Press <kbd className="bg-bg-elev-2 border border-divider px-1.5 py-0.5 rounded text-xs">T</kbd> to test.</>
+            <>Key is encrypted at rest with AES-256-GCM. Press <kbd className="bg-zinc-900 border border-zinc-800 px-1.5 py-0.5 rounded text-xs">T</kbd> to test.</>
           )}
         </span>
         <Button
@@ -539,7 +539,7 @@ function StatusPill({
 }) {
   if (!isSet) {
     return (
-      <span className="rounded-full bg-bg-elev-2 px-2 py-0.5 text-caption font-medium text-fg-subtle">
+      <span className="rounded-sm bg-zinc-900 px-2 py-0.5 text-caption font-medium text-fg-subtle">
         Not set
       </span>
     );
@@ -547,34 +547,34 @@ function StatusPill({
   // Live test result takes precedence over the cached health snapshot.
   if (testState.kind === 'err') {
     return (
-      <span className="rounded-full bg-bear/15 px-2 py-0.5 text-caption font-medium text-bear">
+      <span className="rounded-sm bg-bear/15 px-2 py-0.5 text-caption font-medium text-red-500">
         Failed
       </span>
     );
   }
   if (testState.kind === 'ok') {
     return (
-      <span className="rounded-full bg-bull/15 px-2 py-0.5 text-caption font-medium text-bull">
+      <span className="rounded-sm bg-bull/15 px-2 py-0.5 text-caption font-medium text-emerald-500">
         OK
       </span>
     );
   }
   if (!health) {
     return (
-      <span className="rounded-full bg-bg-elev-2 px-2 py-0.5 text-caption font-medium text-fg-subtle">
+      <span className="rounded-sm bg-zinc-900 px-2 py-0.5 text-caption font-medium text-fg-subtle">
         Saved (untested)
       </span>
     );
   }
   if (!health.ok) {
     return (
-      <span className="rounded-full bg-bear/15 px-2 py-0.5 text-caption font-medium text-bear">
+      <span className="rounded-sm bg-bear/15 px-2 py-0.5 text-caption font-medium text-red-500">
         Failed <span className="opacity-60">·</span> {formatRelative(health.testedAt)}
       </span>
     );
   }
   return (
-    <span className="rounded-full bg-bull/15 px-2 py-0.5 text-caption font-medium text-bull">
+    <span className="rounded-sm bg-bull/15 px-2 py-0.5 text-caption font-medium text-emerald-500">
       OK <span className="opacity-60">·</span> {formatRelative(health.testedAt)}
     </span>
   );
@@ -592,7 +592,7 @@ function UsageBadge({
 }) {
   if (!usage || usage.turns === 0) return null;
   return (
-    <span className="rounded-full bg-brand/10 px-2 py-0.5 text-caption font-medium text-brand tabular-nums">
+    <span className="rounded-sm bg-zinc-900 px-2 py-0.5 text-caption font-medium text-fg tabular-nums">
       {usage.turns} {usage.turns === 1 ? 'turn' : 'turns'} · $
       {usage.costUsd.toFixed(2)}
     </span>
