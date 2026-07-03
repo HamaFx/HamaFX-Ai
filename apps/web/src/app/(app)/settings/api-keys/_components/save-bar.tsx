@@ -94,7 +94,7 @@ export function SaveBar({ action, preservedPrompt, children }: SaveBarProps) {
       {children}
       <div className="flex items-center gap-3 justify-end">
         {('ok' in state && state.ok) ? (
-          <span className="flex items-center gap-1.5 text-caption text-bull">
+          <span className="flex items-center gap-1.5 text-caption text-emerald-500">
             <CheckCircle2 size={14} aria-hidden="true" />
             Saved
           </span>
@@ -113,7 +113,7 @@ export function SaveBar({ action, preservedPrompt, children }: SaveBarProps) {
         {preservedPrompt ? (
           <Link
             href={`/chat?prompt=${encodeURIComponent(preservedPrompt)}`}
-            className="border border-divider bg-bg-elev-2 text-fg hover:bg-bg-elev-3 inline-flex h-12 items-center justify-center rounded-lg px-4 text-sm font-medium"
+            className="border border-zinc-800 bg-zinc-900 text-fg hover:bg-zinc-800 inline-flex h-12 items-center justify-center rounded-sm px-4 text-sm font-medium"
           >
             Skip and continue to chat
           </Link>

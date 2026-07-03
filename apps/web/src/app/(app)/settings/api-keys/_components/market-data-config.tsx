@@ -109,10 +109,10 @@ export function MarketDataConfig({ initialProvider, finnhubKeySet }: MarketDataC
   return (
     <form
       action={action}
-      className="border border-divider bg-bg-elev-1 rounded-xl p-5 flex flex-col gap-5 shadow-sm"
+      className="border border-zinc-800 bg-zinc-950 rounded-sm p-5 flex flex-col gap-5 shadow-sm"
     >
-      <header className="flex items-center gap-3 border-b border-divider/60 pb-3">
-        <Database className="size-5 text-brand shrink-0" />
+      <header className="flex items-center gap-3 border-b border-zinc-800 pb-3">
+        <Database className="size-5 text-fg shrink-0" />
         <div>
           <h2 className="text-sm font-semibold text-fg">Market Data Provider</h2>
           <p className="text-caption text-fg-subtle mt-0.5">
@@ -125,10 +125,10 @@ export function MarketDataConfig({ initialProvider, finnhubKeySet }: MarketDataC
         {providersList.map((p) => (
           <label
             key={p.id}
-            className={`flex items-start gap-3 border rounded-lg p-3 cursor-pointer select-none transition-all ${
+            className={`flex items-start gap-3 border rounded-sm p-3 cursor-pointer select-none transition-all ${
               selected === p.id
-                ? 'border-brand bg-brand/5'
-                : 'border-divider bg-bg-elev-2/40 hover:bg-bg-elev-2'
+                ? 'border-zinc-700 bg-zinc-950'
+                : 'border-zinc-800 bg-bg-elev-2/40 hover:bg-bg-elev-2'
             }`}
           >
             <input
@@ -146,7 +146,7 @@ export function MarketDataConfig({ initialProvider, finnhubKeySet }: MarketDataC
               <span className="text-xs font-semibold text-fg">{p.name}</span>
               <span className="text-xs text-fg-subtle leading-normal">{p.description}</span>
               {p.warn && (
-                <span className="text-xs text-warn font-semibold mt-1">
+                <span className="text-xs text-amber-500 font-semibold mt-1">
                   ⚠️ Note: Finnhub API Key is not set above. Please add it to enable this provider.
                 </span>
               )}
@@ -156,19 +156,19 @@ export function MarketDataConfig({ initialProvider, finnhubKeySet }: MarketDataC
       </div>
 
       {test.kind === 'err' && (
-        <div className="flex items-start gap-2 text-xs text-bear">
+        <div className="flex items-start gap-2 text-xs text-red-500">
           <XCircle className="size-3.5 mt-0.5 shrink-0" />
           <span className="break-words">{test.message}</span>
         </div>
       )}
       {test.kind === 'ok' && (
-        <div className="flex items-center gap-2 text-xs text-bull">
+        <div className="flex items-center gap-2 text-xs text-emerald-500">
           <CheckCircle2 className="size-3.5 shrink-0" />
           <span>Connection test successful! Provider is online.</span>
         </div>
       )}
 
-      <div className="flex items-center justify-between border-t border-divider/60 pt-4 gap-3">
+      <div className="flex items-center justify-between border-t border-zinc-800 pt-4 gap-3">
         <Button
           type="button"
           variant="secondary"

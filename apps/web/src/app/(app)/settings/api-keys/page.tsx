@@ -151,15 +151,15 @@ export default async function ApiKeysSettingsPage({
       </div>
 
       {/* Premium Provider Health Dashboard */}
-      <div className="border border-divider bg-bg-elev-1 rounded-xl p-5 flex flex-col gap-4 shadow-sm">
+      <div className="border border-zinc-800 bg-zinc-950 rounded-sm p-5 flex flex-col gap-4 shadow-sm">
         <div className="flex items-center justify-between gap-4 flex-wrap">
           <div className="flex items-center gap-3">
             {totalConfigured === 0 ? (
-              <span className="size-3 rounded-full bg-fg-muted/40 animate-pulse" />
+              <span className="size-3 rounded-sm bg-fg-muted/40 animate-pulse" />
             ) : totalFailed > 0 ? (
-              <span className="size-3 rounded-full bg-bear animate-pulse" />
+              <span className="size-3 rounded-sm bg-red-500 animate-pulse" />
             ) : (
-              <span className="size-3 rounded-full bg-bull" />
+              <span className="size-3 rounded-sm bg-bull" />
             )}
             <div>
               <h3 className="text-sm font-semibold text-fg">
@@ -182,7 +182,7 @@ export default async function ApiKeysSettingsPage({
         </div>
 
         {totalFailed > 0 && (
-          <div className="border border-bear/20 bg-bear/5 rounded-lg p-3 text-caption text-bear flex flex-col gap-1.5">
+          <div className="border border-bear/20 bg-bear/5 rounded-sm p-3 text-caption text-red-500 flex flex-col gap-1.5">
             <span className="font-semibold">Failing Connections:</span>
             <ul className="list-disc pl-4 space-y-1">
               {configured
@@ -202,7 +202,7 @@ export default async function ApiKeysSettingsPage({
           </div>
         )}
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 border-t border-divider/60 pt-4 text-caption">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 border-t border-zinc-800 pt-4 text-caption">
           <div className="flex flex-col">
             <span className="text-fg-muted">Configured</span>
             <span className="text-base font-semibold text-fg tabular-nums mt-0.5">
@@ -226,7 +226,7 @@ export default async function ApiKeysSettingsPage({
 
       {/* Empty state when no providers are configured. */}
       {totalConfigured === 0 ? (
-        <div className="border border-divider bg-bg-elev-1 rounded-lg p-6 flex flex-col items-center text-center gap-3">
+        <div className="border border-zinc-800 bg-zinc-950 rounded-sm p-6 flex flex-col items-center text-center gap-3">
           <div className="text-3xl">🔑</div>
           <div>
             <h3 className="text-sm font-semibold text-fg">No API keys configured yet</h3>
@@ -237,13 +237,13 @@ export default async function ApiKeysSettingsPage({
             </p>
           </div>
           <div className="flex flex-wrap gap-2 justify-center">
-            <span className="rounded-full bg-bull/15 px-2.5 py-1 text-caption font-medium text-bull">
+            <span className="rounded-sm bg-bull/15 px-2.5 py-1 text-caption font-medium text-emerald-500">
               Google Gemini · free
             </span>
-            <span className="rounded-full bg-bull/15 px-2.5 py-1 text-caption font-medium text-bull">
+            <span className="rounded-sm bg-bull/15 px-2.5 py-1 text-caption font-medium text-emerald-500">
               Groq · free
             </span>
-            <span className="rounded-full bg-bg-elev-2 px-2.5 py-1 text-caption font-medium text-fg-subtle">
+            <span className="rounded-sm bg-zinc-900 px-2.5 py-1 text-caption font-medium text-fg-subtle">
               + 7 paid options
             </span>
           </div>
@@ -311,8 +311,8 @@ export default async function ApiKeysSettingsPage({
       <ExportImportKeys />
 
       {/* Collapsible Capability Matrix */}
-      <details className="border border-divider bg-bg-elev-1 rounded-lg overflow-hidden mt-2">
-        <summary aria-label="Toggle provider capability matrix" className="cursor-pointer select-none px-4 py-3 flex items-center justify-between gap-3 hover:bg-bg-elev-2 transition-colors">
+      <details className="border border-zinc-800 bg-zinc-950 rounded-sm overflow-hidden mt-2">
+        <summary aria-label="Toggle provider capability matrix" className="cursor-pointer select-none px-4 py-3 flex items-center justify-between gap-3 hover:bg-zinc-900 transition-colors">
           <div className="flex flex-col">
             <span className="text-sm font-medium text-fg">
               Provider Capability Matrix
@@ -323,10 +323,10 @@ export default async function ApiKeysSettingsPage({
           </div>
           <span className="text-caption text-fg-subtle">▾</span>
         </summary>
-        <div className="border-t border-divider p-0 overflow-x-auto">
+        <div className="border-t border-zinc-800 p-0 overflow-x-auto">
           <table className="w-full text-left border-collapse min-w-[500px]">
             <thead>
-              <tr className="border-b border-divider text-caption font-semibold text-fg-muted bg-bg-elev-2/50">
+              <tr className="border-b border-zinc-800 text-caption font-semibold text-fg-muted bg-bg-elev-2/50">
                 <th className="p-3">Provider</th>
                 <th className="p-3 text-center">Chat</th>
                 <th className="p-3 text-center">Vision</th>
@@ -336,22 +336,22 @@ export default async function ApiKeysSettingsPage({
                 <th className="p-3 text-center">Free Tier</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-divider/50 text-caption">
+            <tbody className="divide-y divide-zinc-800/50 text-caption">
               {BYOK_PROVIDERS_LIST.map((p) => (
                 <tr key={p.id} className="hover:bg-bg-elev-2/20">
                   <td className="p-3 font-medium text-fg">{p.displayName}</td>
-                  <td className="p-3 text-center text-bull">✓</td>
+                  <td className="p-3 text-center text-emerald-500">✓</td>
                   <td className="p-3 text-center">
-                    {p.supports.vision ? <span className="text-bull">✓</span> : <span className="text-fg-muted">—</span>}
+                    {p.supports.vision ? <span className="text-emerald-500">✓</span> : <span className="text-fg-muted">—</span>}
                   </td>
                   <td className="p-3 text-center">
-                    {p.supports.embedding ? <span className="text-bull">✓</span> : <span className="text-fg-muted">—</span>}
+                    {p.supports.embedding ? <span className="text-emerald-500">✓</span> : <span className="text-fg-muted">—</span>}
                   </td>
-                  <td className="p-3 text-center text-bull">✓</td>
-                  <td className="p-3 text-center text-bull">✓</td>
+                  <td className="p-3 text-center text-emerald-500">✓</td>
+                  <td className="p-3 text-center text-emerald-500">✓</td>
                   <td className="p-3 text-center">
                     {p.pricingTier === 'free' ? (
-                      <span className="rounded-full bg-bull/15 px-2 py-0.5 text-xs font-medium text-bull font-semibold">Free</span>
+                      <span className="rounded-sm bg-bull/15 px-2 py-0.5 text-xs font-medium text-emerald-500 font-semibold">Free</span>
                     ) : (
                       <span className="text-fg-muted">—</span>
                     )}

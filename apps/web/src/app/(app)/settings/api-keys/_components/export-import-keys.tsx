@@ -85,8 +85,8 @@ export function ExportImportKeys() {
   }
 
   return (
-    <details className="border border-divider bg-bg-elev-1 rounded-lg overflow-hidden mt-2">
-      <summary aria-label="Toggle backup and key migration section" className="cursor-pointer select-none px-4 py-3 flex items-center justify-between gap-3 hover:bg-bg-elev-2 transition-colors">
+    <details className="border border-zinc-800 bg-zinc-950 rounded-sm overflow-hidden mt-2">
+      <summary aria-label="Toggle backup and key migration section" className="cursor-pointer select-none px-4 py-3 flex items-center justify-between gap-3 hover:bg-zinc-900 transition-colors">
         <div className="flex flex-col">
           <span className="text-sm font-medium text-fg">Backup & Key Migration</span>
           <span className="text-caption text-fg-subtle">
@@ -96,16 +96,16 @@ export function ExportImportKeys() {
         <span className="text-caption text-fg-subtle">▾</span>
       </summary>
 
-      <div className="border-t border-divider p-4 grid grid-cols-1 md:grid-cols-2 gap-6 bg-bg-elev-2/10">
+      <div className="border-t border-zinc-800 p-4 grid grid-cols-1 md:grid-cols-2 gap-6 bg-bg-elev-2/10">
         {/* Export Column */}
         <div className="flex flex-col gap-4">
           <div className="flex items-center gap-2">
-            <Download className="size-4 text-brand shrink-0" />
+            <Download className="size-4 text-fg shrink-0" />
             <h3 className="text-xs font-bold uppercase tracking-wider text-fg-muted">
               Export API Keys
             </h3>
           </div>
-          <p className="text-xs text-fg-subtle leading-relaxed">
+          <p className="text-xs text-fg-subtle leading-[1.4]">
             Encrypt your API keys using your account password. You will need the same
             password to decrypt and restore your keys later.
           </p>
@@ -143,7 +143,7 @@ export function ExportImportKeys() {
                 <button
                   type="button"
                   onClick={handleCopy}
-                  className="text-brand hover:underline font-semibold flex items-center gap-1 normal-case"
+                  className="text-fg hover:underline font-semibold flex items-center gap-1 normal-case"
                 >
                   {copied ? <Check className="size-3" /> : <Copy className="size-3" />}
                   {copied ? 'Copied' : 'Copy'}
@@ -154,21 +154,21 @@ export function ExportImportKeys() {
                 readOnly
                 value={exportedPayload}
                 rows={4}
-                className="w-full border border-divider bg-bg-elev-2 text-fg font-mono text-xs rounded-md p-2.5 resize-none focus:outline-none"
+                className="w-full border border-zinc-800 bg-zinc-900 text-fg font-mono text-xs rounded-sm p-2.5 resize-none focus:outline-none"
               />
             </div>
           )}
         </div>
 
         {/* Import Column */}
-        <div className="flex flex-col gap-4 border-t md:border-t-0 md:border-l border-divider/60 pt-6 md:pt-0 md:pl-6">
+        <div className="flex flex-col gap-4 border-t md:border-t-0 md:border-l border-zinc-800 pt-6 md:pt-0 md:pl-6">
           <div className="flex items-center gap-2">
-            <Upload className="size-4 text-brand shrink-0" />
+            <Upload className="size-4 text-fg shrink-0" />
             <h3 className="text-xs font-bold uppercase tracking-wider text-fg-muted">
               Import API Keys
             </h3>
           </div>
-          <p className="text-xs text-fg-subtle leading-relaxed">
+          <p className="text-xs text-fg-subtle leading-[1.4]">
             Paste a previously exported backup payload and enter your account password to
             restore your keys.
           </p>
@@ -184,7 +184,7 @@ export function ExportImportKeys() {
                 value={importPayload}
                 onChange={(e) => setImportPayload(e.target.value)}
                 rows={3}
-                className="w-full border border-divider bg-bg-elev-2 text-fg font-mono text-xs rounded-md p-2.5 resize-none focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand/40"
+                className="w-full border border-zinc-800 bg-zinc-900 text-fg font-mono text-xs rounded-sm p-2.5 resize-none focus:border-zinc-700 focus:outline-none focus:ring-1 focus:ring-zinc-700"
               />
             </div>
 
