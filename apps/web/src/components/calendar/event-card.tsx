@@ -54,7 +54,7 @@ interface EventCardProps {
 
 const IMPORTANCE = {
   high: {
-    ribbon: 'oklch(70% 0.22 25)',
+    ribbon: '#EF4444',
     label: 'High impact',
     glyph: '▲',
   },
@@ -64,7 +64,7 @@ const IMPORTANCE = {
     glyph: '■',
   },
   low: {
-    ribbon: 'oklch(28% 0 0 / 0)',
+    ribbon: 'transparent',
     label: 'Low impact',
     glyph: '•',
   },
@@ -94,9 +94,9 @@ export function EventCard({ event }: EventCardProps) {
   return (
     <article
       className={cn(
-        'group relative overflow-hidden rounded-lg',
-        'border border-divider bg-bg-elev-1',
-        'transition-colors duration-200 md:hover:bg-bg-elev-2/60',
+        'group relative overflow-hidden rounded-sm',
+        'border border-zinc-800 bg-bg-elev-1',
+        'transition-colors duration-200 md:hover:bg-zinc-900',
         isImminent && 'border-warn/40',
       )}
     >
@@ -114,7 +114,7 @@ export function EventCard({ event }: EventCardProps) {
         {/* Meta strip — currency glyph + country + time + countdown */}
         <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-body-sm tabular-nums">
           <span
-            className="text-brand font-bold uppercase tabular-nums"
+            className="text-fg font-bold uppercase tabular-nums"
             title={importance.label}
             aria-label={importance.label}
           >
@@ -165,7 +165,7 @@ export function EventCard({ event }: EventCardProps) {
         >
           <Link
             href={`/chat?prompt=${askPrompt}`}
-            className="bg-bg-elev-2 text-fg-muted hover:text-brand pointer-events-auto inline-flex items-center gap-1 rounded-pill px-3 py-1.5 text-body-sm font-medium transition-colors"
+            className="bg-zinc-900 text-fg-muted hover:text-fg pointer-events-auto inline-flex items-center gap-1 rounded-pill px-3 py-1.5 text-body-sm font-medium transition-colors"
           >
             <Sparkles className="size-3.5" />
             Ask AI
@@ -244,7 +244,7 @@ function beatMiss(event: EconomicEvent): 'beat' | 'miss' | null {
 }
 
 function Countdown({ ms, imminent }: { ms: number; imminent: boolean }) {
-  if (ms <= 0) return <span className="text-bear font-semibold">Live now</span>;
+  if (ms <= 0) return <span className="text-red-500 font-semibold">Live now</span>;
   const d = Math.floor(ms / (24 * 60 * 60_000));
   const h = Math.floor((ms % (24 * 60 * 60_000)) / (60 * 60_000));
   const m = Math.floor((ms % (60 * 60_000)) / 60_000);
@@ -325,7 +325,7 @@ function RemindButton({ event }: { event: EconomicEvent }) {
       className={cn(
         'pointer-events-auto inline-flex items-center gap-1 rounded-pill px-3 py-1.5 text-body-sm font-medium transition-colors',
         armed
-          ? 'text-brand bg-brand/10'
+          ? 'text-fg bg-zinc-900'
           : 'text-fg-muted hover:text-fg bg-bg-elev-2',
       )}
     >
