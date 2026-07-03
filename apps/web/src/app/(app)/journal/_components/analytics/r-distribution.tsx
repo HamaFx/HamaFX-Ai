@@ -35,7 +35,7 @@ export function RDistribution({ stats, className }: RDistributionProps) {
   return (
     <div
       className={cn(
-        'border border-divider bg-bg-elev-1 rounded-lg p-4 flex flex-col gap-3',
+        'border border-zinc-800 bg-zinc-950 rounded-sm p-4 flex flex-col gap-3',
         className,
       )}
       role="img"

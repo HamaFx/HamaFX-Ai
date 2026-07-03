@@ -97,15 +97,15 @@ export function BreakdownTable({ title, data, sortBy = 'totalR' }: BreakdownTabl
 
   return (
     <div
-      className="border border-divider bg-bg-elev-1 rounded-lg overflow-hidden"
+      className="border border-zinc-800 bg-zinc-950 rounded-sm overflow-hidden"
       role="table"
       aria-label={title}
     >
-      <div className="px-3 py-2 border-b border-divider">
+      <div className="px-3 py-2 border-b border-zinc-800">
         <span className="text-body-sm font-semibold text-fg">{title}</span>
       </div>
       <table className="w-full text-sm">
-        <thead className="bg-bg-elev-2">
+        <thead className="bg-zinc-900">
           <tr>
             {header('label', 'Label', false)}
             {header('trades', 'Trades')}
@@ -116,7 +116,7 @@ export function BreakdownTable({ title, data, sortBy = 'totalR' }: BreakdownTabl
         </thead>
         <tbody>
           {rows.map((row) => (
-            <tr key={row.label} className="border-b border-divider/30 last:border-b-0">
+            <tr key={row.label} className="border-b border-zinc-900 last:border-b-0">
               <td className="py-2 px-3 text-fg font-medium">{row.label}</td>
               <td className="py-2 px-3 text-right text-fg-muted tabular-nums">{row.trades}</td>
               <td

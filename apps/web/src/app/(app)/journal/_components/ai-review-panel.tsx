@@ -78,7 +78,7 @@ export function AiReviewPanel({ entry }: AiReviewPanelProps) {
 
   if (entry.outcome === 'open') {
     return (
-      <div className="rounded-lg border border-divider bg-bg-elev-1 p-4 flex items-start gap-3 text-fg-subtle">
+      <div className="rounded-sm border border-zinc-800 bg-zinc-950 p-4 flex items-start gap-3 text-fg-subtle">
         <AlertCircle className="size-5 shrink-0 mt-0.5" />
         <p className="text-sm">
           Close this trade to unlock an AI-powered post-trade review.
@@ -88,10 +88,10 @@ export function AiReviewPanel({ entry }: AiReviewPanelProps) {
   }
 
   return (
-    <div className="rounded-lg border border-divider bg-bg-elev-1 p-4 flex flex-col gap-4">
+    <div className="rounded-sm border border-zinc-800 bg-zinc-950 p-4 flex flex-col gap-4">
       <div className="flex items-center justify-between gap-4">
         <div className="flex items-center gap-2">
-          <Sparkles className="size-4 text-brand" />
+          <Sparkles className="size-4 text-fg" />
           <h3 className="text-sm font-semibold text-fg">AI Trade Review</h3>
         </div>
         <Button
@@ -117,7 +117,7 @@ export function AiReviewPanel({ entry }: AiReviewPanelProps) {
       </div>
 
       {error && (
-        <div className="rounded-md bg-bear/5 border border-bear/20 p-3 text-sm text-bear flex items-start gap-2">
+        <div className="rounded-sm bg-bear/5 border border-bear/20 p-3 text-sm text-red-500 flex items-start gap-2">
           <AlertCircle className="size-4 shrink-0 mt-0.5" />
           {error}
         </div>
@@ -130,7 +130,7 @@ export function AiReviewPanel({ entry }: AiReviewPanelProps) {
               'prose prose-sm max-w-none dark:prose-invert',
               'text-fg [&_h2]:text-base [&_h2]:font-semibold [&_h2]:mt-4 [&_h2]:mb-2',
               '[&_ul]:list-disc [&_ul]:pl-5 [&_li]:mb-1',
-              '[&_p]:text-sm [&_p]:leading-relaxed [&_p]:text-fg-subtle'
+              '[&_p]:text-sm [&_p]:leading-[1.4] [&_p]:text-fg-subtle'
             )}
             dangerouslySetInnerHTML={{ __html: markdownToHtml(review) }}
           />
