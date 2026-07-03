@@ -30,13 +30,13 @@ export function ForecastVolatilityPart({
   if (state === 'loading' || !output) return <SkeletonCard />;
 
   return (
-    <div className="border-border bg-bg-elev-1 flex flex-col gap-3 rounded-lg border p-3">
+    <div className="border-border bg-zinc-950 flex flex-col gap-3 rounded-sm border p-3">
       <header className="flex flex-wrap items-baseline justify-between gap-2">
         <h3 className="text-fg text-sm font-semibold">
           {output.symbol} · {output.horizonHours}h forward vol
         </h3>
         {output.eventAdjusted ? (
-          <span className="bg-warn/15 text-warn rounded-full px-2 py-0.5 text-caption font-semibold">
+          <span className="bg-warn/15 text-amber-500 rounded-sm px-2 py-0.5 text-caption font-semibold">
             Event-adjusted ×{output.eventMultiplier.toFixed(1)}
           </span>
         ) : null}
@@ -80,7 +80,7 @@ export function ForecastVolatilityPart({
 
 function Stat({ k, v }: { k: string; v: string }) {
   return (
-    <div className="border-divider/40 flex flex-col rounded-md border p-2">
+    <div className="border-zinc-900 flex flex-col rounded-sm border p-2">
       <span className="text-fg-subtle text-caption uppercase tracking-wide">{k}</span>
       <span className="text-fg font-semibold">{v}</span>
     </div>
@@ -90,12 +90,12 @@ function Stat({ k, v }: { k: string; v: string }) {
 function SkeletonCard() {
   return (
     <div
-      className="border-border bg-bg-elev-1 rounded-lg border p-3"
+      className="border-border bg-zinc-950 rounded-sm border p-3"
       aria-busy="true"
       aria-label="Forecasting volatility"
     >
-      <div className="bg-bg-elev-2 h-4 w-1/2 animate-pulse rounded" />
-      <div className="bg-bg-elev-2 mt-3 h-16 animate-pulse rounded" />
+      <div className="bg-zinc-900 h-4 w-1/2 animate-pulse rounded" />
+      <div className="bg-zinc-900 mt-3 h-16 animate-pulse rounded" />
     </div>
   );
 }
@@ -104,7 +104,7 @@ function ErrorCard({ message }: { message?: string }) {
   return (
     <div
       role="alert"
-      className="border-bear/30 bg-bg-elev-1 text-bear rounded-lg border p-3 text-sm"
+      className="border-red-500/30 bg-zinc-950 text-red-500 rounded-sm border p-3 text-sm"
     >
       Vol forecast failed{message ? ` · ${message}` : ''}
     </div>

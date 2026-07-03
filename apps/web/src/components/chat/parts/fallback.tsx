@@ -59,14 +59,14 @@ export function FallbackPartView({ part }: FallbackPartViewProps) {
     <div
       role="status"
       aria-live="polite"
-      className="border-warn/30 bg-warn/10 text-fg mt-2 flex items-start gap-2 rounded-lg border p-3 text-body-sm"
+      className="border-warn/30 bg-amber-500/10 text-fg mt-2 flex items-start gap-2 rounded-sm border p-3 text-body-sm"
     >
       <AlertTriangle
-        className="text-warn mt-0.5 size-4 shrink-0"
+        className="text-amber-500 mt-0.5 size-4 shrink-0"
         aria-hidden="true"
       />
       <div className="min-w-0 flex-1 leading-snug">
-        <p className="text-warn font-semibold">Override unavailable</p>
+        <p className="text-amber-500 font-semibold">Override unavailable</p>
         <p className="text-fg-muted mt-0.5">
           {message}. Used the default domain model instead.
         </p>

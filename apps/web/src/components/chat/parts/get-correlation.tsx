@@ -15,8 +15,8 @@
  */
 
 // Bespoke renderer for the `get_correlation` tool part.
-// Renders the correlation matrix dynamically with text-bull /
-// text-bear cells and a small DXY proxy strip with the value and 24h
+// Renders the correlation matrix dynamically with text-emerald-500 /
+// text-red-500 cells and a small DXY proxy strip with the value and 24h
 // change.
 
 import {
@@ -55,7 +55,7 @@ export function GetCorrelationPart({
   const dxy = output.dxyProxy;
 
   return (
-    <div className="border-border bg-bg-elev-1 flex flex-col gap-3 rounded-lg border p-3">
+    <div className="border-border bg-zinc-950 flex flex-col gap-3 rounded-sm border p-3">
       <header className="flex items-baseline justify-between gap-2">
         <h3 className="text-fg text-sm font-semibold">
           Correlation · {output.tf} · {output.windowBars} bars
@@ -142,7 +142,7 @@ function HeatStrip({ matrix }: { matrix: CorrelationCell[] }) {
           ? 'bg-bear/80'
           : r <= -0.4
             ? 'bg-bear/40'
-            : 'bg-bg-elev-3';
+            : 'bg-zinc-800';
 
   // Strongest pair by |r| for the accessible label.
   const strongest = matrix.reduce((best, c) => (Math.abs(c.r) > Math.abs(best.r) ? c : best), matrix[0]!);
@@ -160,12 +160,12 @@ function HeatStrip({ matrix }: { matrix: CorrelationCell[] }) {
 function SkeletonCard() {
   return (
     <div
-      className="border-border bg-bg-elev-1 rounded-lg border p-3"
+      className="border-border bg-zinc-950 rounded-sm border p-3"
       aria-busy="true"
       aria-label="Computing correlation"
     >
-      <div className="bg-bg-elev-2 h-4 w-1/2 animate-pulse rounded" />
-      <div className="bg-bg-elev-2 mt-3 h-20 animate-pulse rounded" />
+      <div className="bg-zinc-900 h-4 w-1/2 animate-pulse rounded" />
+      <div className="bg-zinc-900 mt-3 h-20 animate-pulse rounded" />
     </div>
   );
 }
@@ -174,7 +174,7 @@ function ErrorCard({ message }: { message?: string }) {
   return (
     <div
       role="alert"
-      className="border-bear/30 bg-bg-elev-1 text-bear rounded-lg border p-3 text-sm"
+      className="border-red-500/30 bg-zinc-950 text-red-500 rounded-sm border p-3 text-sm"
     >
       Correlation failed{message ? ` · ${message}` : ''}
     </div>

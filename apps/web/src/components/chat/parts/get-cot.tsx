@@ -40,7 +40,7 @@ export function GetCoTPart({ output, state, errorMessage }: ToolPartProps<'get_c
 
   if (output.pipelinePending) {
     return (
-      <div className="border-border bg-bg-elev-1 rounded-lg border p-3">
+      <div className="border-border bg-zinc-950 rounded-sm border p-3">
         <p className="text-fg-muted text-sm">{output.summary}</p>
       </div>
     );
@@ -48,7 +48,7 @@ export function GetCoTPart({ output, state, errorMessage }: ToolPartProps<'get_c
 
   if (output.samples.length === 0) {
     return (
-      <div className="border-border bg-bg-elev-1 rounded-lg border p-3">
+      <div className="border-border bg-zinc-950 rounded-sm border p-3">
         <p className="text-fg-muted text-sm">No CoT data for {output.symbol} in window.</p>
       </div>
     );
@@ -58,7 +58,7 @@ export function GetCoTPart({ output, state, errorMessage }: ToolPartProps<'get_c
   const max = Math.max(0.0001, ...nets.map((n) => Math.abs(n.leveraged ?? 0)));
 
   return (
-    <div className="border-border bg-bg-elev-1 flex flex-col gap-3 rounded-lg border p-3">
+    <div className="border-border bg-zinc-950 flex flex-col gap-3 rounded-sm border p-3">
       <header className="flex items-baseline justify-between gap-2">
         <h3 className="text-fg text-sm font-semibold">
           {output.symbol} · CoT · {output.samples.length} weeks
@@ -95,11 +95,11 @@ function Bar({ value, max }: { value: number | null; max: number }) {
   const positive = value >= 0;
   const tone = positive ? 'bg-bull' : 'bg-bear';
   return (
-    <div className="relative h-[3px] w-full rounded-full bg-bg-elev-2">
+    <div className="relative h-[3px] w-full rounded-sm bg-zinc-900">
       {/* center zero-line */}
       <span aria-hidden className="absolute left-1/2 top-0 h-full w-px -translate-x-1/2 bg-divider" />
       <m.div
-        className={cn('absolute top-0 h-full rounded-full', tone)}
+        className={cn('absolute top-0 h-full rounded-sm', tone)}
         style={positive ? { left: '50%' } : { right: '50%' }}
         initial={{ width: 0 }}
         animate={{ width: `${pct}%` }}
@@ -129,14 +129,14 @@ function formatSigned(n: number): string {
 function SkeletonCard() {
   return (
     <div
-      className="border-border bg-bg-elev-1 rounded-lg border p-3"
+      className="border-border bg-zinc-950 rounded-sm border p-3"
       aria-busy="true"
       aria-label="Loading CoT"
     >
-      <div className="bg-bg-elev-2 h-4 w-1/2 animate-pulse rounded" />
+      <div className="bg-zinc-900 h-4 w-1/2 animate-pulse rounded" />
       <ul className="mt-3 flex flex-col gap-1.5">
         {[0, 1, 2, 3].map((i) => (
-          <li key={i} className="bg-bg-elev-2 h-4 animate-pulse rounded" />
+          <li key={i} className="bg-zinc-900 h-4 animate-pulse rounded" />
         ))}
       </ul>
     </div>
@@ -147,7 +147,7 @@ function ErrorCard({ message }: { message?: string }) {
   return (
     <div
       role="alert"
-      className="border-bear/30 bg-bg-elev-1 text-bear rounded-lg border p-3 text-sm"
+      className="border-red-500/30 bg-zinc-950 text-red-500 rounded-sm border p-3 text-sm"
     >
       CoT load failed{message ? ` · ${message}` : ''}
     </div>

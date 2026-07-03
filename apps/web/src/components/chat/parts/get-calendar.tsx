@@ -57,9 +57,9 @@ export function GetCalendarPart({ output, state, errorMessage }: GetCalendarPart
 
   if (output.pipelinePending) {
     return (
-      <div className="border-border bg-bg-elev-1 text-fg-muted rounded-lg border p-3 text-sm">
+      <div className="border-border bg-zinc-950 text-fg-muted rounded-sm border p-3 text-sm">
         Calendar pipeline hasn&apos;t populated the DB yet. Trigger the{' '}
-        <code className="bg-bg-elev-2 rounded px-1 py-0.5 text-caption">/api/cron/calendar</code>{' '}
+        <code className="bg-zinc-900 rounded px-1 py-0.5 text-caption">/api/cron/calendar</code>{' '}
         cron once and try again.
       </div>
     );
@@ -69,14 +69,14 @@ export function GetCalendarPart({ output, state, errorMessage }: GetCalendarPart
 
   if (items.length === 0) {
     return (
-      <div className="border-border bg-bg-elev-1 text-fg-muted rounded-lg border p-3 text-sm">
+      <div className="border-border bg-zinc-950 text-fg-muted rounded-sm border p-3 text-sm">
         No calendar events in the requested window.
       </div>
     );
   }
 
   return (
-    <div className="border-border bg-bg-elev-1 rounded-lg border">
+    <div className="border-border bg-zinc-950 rounded-sm border">
       <ul className="divide-border divide-y">
         {items.map((item) => (
           <li key={item.id}>
@@ -95,7 +95,7 @@ function CalendarRow({ item }: { item: ToolCalendarItem }) {
   return (
     <a
       href={`/calendar?id=${encodeURIComponent(item.id)}`}
-      className="focus-visible:ring-fg-muted hover:bg-bg-elev-2 flex min-h-[44px] items-center gap-2.5 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2"
+      className="focus-visible:ring-fg-muted hover:bg-zinc-900 flex min-h-[44px] items-center gap-2.5 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2"
     >
       <time dateTime={iso} className="text-fg-muted w-12 shrink-0 text-xs tabular-nums">
         {formatHHmmUtc(item.date)}
@@ -137,16 +137,16 @@ function CalendarRow({ item }: { item: ToolCalendarItem }) {
 function CalendarSkeleton() {
   return (
     <div
-      className="border-border bg-bg-elev-1 rounded-lg border"
+      className="border-border bg-zinc-950 rounded-sm border"
       aria-busy="true"
       aria-label="Loading calendar"
     >
       <ul className="divide-border divide-y">
         {[0, 1, 2].map((i) => (
           <li key={i} className="flex min-h-[44px] items-center gap-2.5 px-3 py-2">
-            <span className="bg-bg-elev-2 h-3 w-12 animate-pulse rounded" />
-            <span className="bg-bg-elev-2 h-3 w-10 animate-pulse rounded" />
-            <span className="bg-bg-elev-2 h-3 flex-1 animate-pulse rounded" />
+            <span className="bg-zinc-900 h-3 w-12 animate-pulse rounded" />
+            <span className="bg-zinc-900 h-3 w-10 animate-pulse rounded" />
+            <span className="bg-zinc-900 h-3 flex-1 animate-pulse rounded" />
           </li>
         ))}
       </ul>
@@ -158,7 +158,7 @@ function CalendarError({ message }: { message?: string }) {
   return (
     <div
       role="alert"
-      className="border-bear/30 bg-bg-elev-1 text-bear rounded-lg border p-3 text-sm"
+      className="border-red-500/30 bg-zinc-950 text-red-500 rounded-sm border p-3 text-sm"
     >
       Calendar unavailable{message ? ` · ${message}` : ''}
     </div>

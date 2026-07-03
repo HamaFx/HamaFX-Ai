@@ -54,7 +54,7 @@ export function GetCandlesPart({ output, state, errorMessage }: GetCandlesPartPr
   }
   if (output.candles.length === 0) {
     return (
-      <div className="border-border bg-bg-elev-1 text-fg-muted rounded-lg border p-3 text-xs">
+      <div className="border-border bg-zinc-950 text-fg-muted rounded-sm border p-3 text-xs">
         {output.symbol} · {output.tf} · no bars returned
       </div>
     );
@@ -75,7 +75,7 @@ export function GetCandlesPart({ output, state, errorMessage }: GetCandlesPartPr
   const tail = output.candles.slice(-5);
 
   return (
-    <div className="border-border bg-bg-elev-1 rounded-lg border p-3">
+    <div className="border-border bg-zinc-950 rounded-sm border p-3">
       <div className="text-fg-muted mb-2 flex items-baseline justify-between text-xs">
         <span>
           <span className="text-fg font-medium">{output.symbol}</span> · {output.tf} · last{' '}
@@ -202,16 +202,16 @@ function CandleSparkline({
 function CandlesCardSkeleton() {
   return (
     <div
-      className="border-border bg-bg-elev-1 rounded-lg border p-3"
+      className="border-border bg-zinc-950 rounded-sm border p-3"
       aria-busy="true"
       aria-label="Loading candles"
     >
-      <div className="bg-bg-elev-2 mb-2 h-3 w-40 animate-pulse rounded" />
+      <div className="bg-zinc-900 mb-2 h-3 w-40 animate-pulse rounded" />
       <div className="grid grid-cols-4 gap-2">
         {[0, 1, 2, 3].map((i) => (
           <div key={i} className="flex flex-col gap-1">
-            <span className="bg-bg-elev-2 h-2 w-4 animate-pulse rounded" />
-            <span className="bg-bg-elev-2 h-4 w-12 animate-pulse rounded" />
+            <span className="bg-zinc-900 h-2 w-4 animate-pulse rounded" />
+            <span className="bg-zinc-900 h-4 w-12 animate-pulse rounded" />
           </div>
         ))}
       </div>
@@ -223,7 +223,7 @@ function CandlesCardError({ message }: { message?: string }) {
   return (
     <div
       role="alert"
-      className="border-bear/30 bg-bg-elev-1 text-bear rounded-lg border p-3 text-sm"
+      className="border-red-500/30 bg-zinc-950 text-red-500 rounded-sm border p-3 text-sm"
     >
       Candles unavailable{message ? ` · ${message}` : ''}
     </div>
