@@ -14,10 +14,10 @@ export default function OfflinePage() {
     <section className="flex min-h-[60svh] flex-col items-center justify-center gap-6 text-center px-4">
       <span
         aria-hidden="true"
-        className="inline-flex size-16 items-center justify-center rounded-2xl"
+        className="inline-flex size-16 items-center justify-center rounded-sm"
         style={{
-          background: 'var(--gradient-brand)',
-          boxShadow: '0 0 24px -4px oklch(82% 0.14 85 / 0.3)',
+          background: 'none',
+          boxShadow: '0 0 24px -4px rgba(250, 250, 250, 0.15)',
         }}
       >
         <span className="text-bg text-2xl font-bold">H</span>

@@ -30,14 +30,14 @@ export async function AgentCard() {
   return (
     <Link
       href="/settings/agent"
-      className="border-divider/60 bg-bg-elev-1 hover:bg-bg-elev-2 flex items-center gap-3 rounded-lg border p-3 transition-colors focus-visible:ring-brand focus:outline-none focus-visible:ring-2"
+      className="border-zinc-800 bg-zinc-950 hover:bg-zinc-900 flex items-center gap-3 rounded-sm border p-3 transition-colors focus-visible:ring-fg focus:outline-none focus-visible:ring-2"
     >
       <span
         aria-hidden="true"
-        className="text-fg-muted inline-flex size-9 shrink-0 items-center justify-center rounded-full"
+        className="text-fg-muted inline-flex size-9 shrink-0 items-center justify-center rounded-sm"
         style={{
-          background: 'oklch(20% 0 0 / 0.6)',
-          boxShadow: 'var(--shadow-inset-edge-soft)',
+          background: '#27272A',
+          boxShadow: 'none',
         }}
       >
         <Bot className="size-4" />
@@ -50,7 +50,7 @@ export async function AgentCard() {
           {totalFailures > 0 ? (
             <>
               {' '}
-              · <span className="text-bear">{totalFailures} failure{totalFailures === 1 ? '' : 's'}</span>
+              · <span className="text-red-500">{totalFailures} failure{totalFailures === 1 ? '' : 's'}</span>
             </>
           ) : null}
         </span>

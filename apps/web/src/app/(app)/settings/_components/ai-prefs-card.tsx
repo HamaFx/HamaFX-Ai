@@ -141,7 +141,7 @@ export function AIPrefsCard({ initialCustomInstructions }: { initialCustomInstru
   return (
     <section
       aria-labelledby="ai-prefs-heading"
-      className="border border-divider bg-bg-elev-1 rounded-lg flex flex-col gap-3 p-4"
+      className="border border-zinc-800 bg-zinc-950 rounded-sm flex flex-col gap-3 p-4"
     >
       <header className="flex items-center gap-3 pb-1">
         <h2
@@ -161,7 +161,7 @@ export function AIPrefsCard({ initialCustomInstructions }: { initialCustomInstru
 
       <p className="text-fg-muted text-xs">
         To pick which AI model handles each kind of turn, use{' '}
-        <Link href="/settings/models" className="text-brand hover:underline">
+        <Link href="/settings/models" className="text-fg hover:underline">
           Settings → Models
         </Link>
         . The choices there are server-side and apply to every chat turn.
@@ -187,13 +187,13 @@ export function AIPrefsCard({ initialCustomInstructions }: { initialCustomInstru
           {INSTRUCTION_PRESETS.map((preset) => (
             <div
               key={preset.id}
-              className="border-divider bg-bg-elev-2 inline-flex items-center overflow-hidden rounded-full border text-caption"
+              className="border-zinc-800 bg-zinc-900 inline-flex items-center overflow-hidden rounded-sm border text-caption"
             >
               <button
                 type="button"
                 onClick={() => applyPreset(preset.id, 'replace')}
                 aria-label={`Apply preset "${preset.label}" (replace existing instructions)`}
-                className="hover:bg-bg-elev-3 text-fg-muted hover:text-fg px-3 py-1 transition-colors"
+                className="hover:bg-zinc-800 text-fg-muted hover:text-fg px-3 py-1 transition-colors"
               >
                 <Sparkles className="mr-1 inline size-3 align-text-bottom" aria-hidden="true" />
                 {preset.label}
@@ -203,7 +203,7 @@ export function AIPrefsCard({ initialCustomInstructions }: { initialCustomInstru
                 onClick={() => applyPreset(preset.id, 'append')}
                 aria-label={`Append preset "${preset.label}" to existing instructions`}
                 title="Append to existing"
-                className="border-divider/60 text-fg-subtle hover:text-fg hover:bg-bg-elev-3 -ml-px border-l px-2 py-1 transition-colors"
+                className="border-zinc-800 text-fg-subtle hover:text-fg hover:bg-zinc-800 -ml-px border-l px-2 py-1 transition-colors"
               >
                 +
               </button>
@@ -228,7 +228,7 @@ export function AIPrefsCard({ initialCustomInstructions }: { initialCustomInstru
           onChange={(e) => handleInstructionsChange(e.target.value)}
           placeholder="e.g. Always respond in bullet points. Do not use emojis."
           rows={3}
-          className="border-divider/60 bg-bg-elev-2 text-fg placeholder:text-fg-muted rounded-lg border p-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand resize-none"
+          className="border-zinc-800 bg-zinc-900 text-fg placeholder:text-fg-muted rounded-sm border p-3 text-sm focus:outline-none focus:ring-2 focus:ring-fg resize-none"
         />
       </div>
 
