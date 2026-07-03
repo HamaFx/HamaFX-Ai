@@ -152,11 +152,11 @@ export function NavDrawer({ userName, userEmail, userId: _userId }: { userName?:
   return (
     <DrawerPrimitive.Root open={open} onOpenChange={setOpen} direction="left">
       <DrawerPrimitive.Portal>
-        <DrawerPrimitive.Overlay className="bg-overlay fixed inset-0 z-[60] backdrop-blur-sm" />
+        <DrawerPrimitive.Overlay className="bg-overlay fixed inset-0 z-[60] " />
         <DrawerPrimitive.Content
           aria-label="Primary navigation"
           className={cn(
-            'glass-strong fixed inset-y-0 left-0 z-[60] flex w-[88vw] max-w-[340px] flex-col',
+            'surface-elevated fixed inset-y-0 left-0 z-[60] flex w-[88vw] max-w-[340px] flex-col',
             'border-r border-divider rounded-r-3xl',
             'paint-isolated',
             'focus-visible:outline-none',
@@ -169,13 +169,13 @@ export function NavDrawer({ userName, userEmail, userId: _userId }: { userName?:
           {/* Vaul drag handle (vertical edge). */}
           <div
             aria-hidden="true"
-            className="absolute right-2 top-1/2 h-12 w-1 -translate-y-1/2 rounded-full bg-fg-subtle/30"
+            className="absolute right-2 top-1/2 h-12 w-1 -translate-y-1/2 rounded-sm bg-fg-subtle/30"
           />
 
           {/* Identity strip */}
           <DrawerPrimitive.Title asChild>
             <div className="flex items-center gap-3 px-5 pt-6 pb-5">
-              <div className="size-11 rounded-full bg-brand/10 text-brand flex items-center justify-center text-sm font-bold shadow-glow-brand/15">
+              <div className="size-11 rounded-sm bg-zinc-900 text-fg flex items-center justify-center text-sm font-bold ">
                 <span className="text-lg font-bold">{initial}</span>
               </div>
               <div className="flex flex-col gap-0.5 min-w-0">
@@ -215,12 +215,12 @@ export function NavDrawer({ userName, userEmail, userId: _userId }: { userName?:
             <button
               type="button"
               onClick={() => void logout()}
-              className="text-fg-muted hover:text-fg hover:bg-bg-elev-2 flex min-h-[48px] w-full items-center gap-3 rounded-full px-3 text-left text-sm font-medium transition-colors"
+              className="text-fg-muted hover:text-fg hover:bg-bg-elev-2 flex min-h-[48px] w-full items-center gap-3 rounded-sm px-3 text-left text-sm font-medium transition-colors"
             >
               <span
                 aria-hidden="true"
-                className="text-fg-muted inline-flex size-9 items-center justify-center rounded-full"
-                style={{ background: 'oklch(20% 0 0 / 0.6)' }}
+                className="text-fg-muted inline-flex size-9 items-center justify-center rounded-sm"
+                style={{ background: '#27272A' }}
               >
                 <LogOut className="size-4" strokeWidth={2} />
               </span>
@@ -256,21 +256,21 @@ function NavLink({ item, active }: { item: NavItem; active: boolean }) {
         href={item.href}
         aria-current={active ? 'page' : undefined}
         className={cn(
-          'group/nav relative flex min-h-[56px] items-center gap-3 rounded-full px-3 transition-all',
-          active ? 'bg-brand/10 ring-1 ring-brand/30 text-fg shadow-[0_4px_24px_-4px_oklch(78%_0.16_78/0.2)]' : 'text-fg-muted hover:bg-bg-elev-2 hover:text-fg',
+          'group/nav relative flex min-h-[56px] items-center gap-3 rounded-sm px-3 transition-all',
+          active ? 'bg-zinc-900 ring-1 ring-zinc-700 text-fg' : 'text-fg-muted hover:bg-bg-elev-2 hover:text-fg',
         )}
       >
         <span
           aria-hidden="true"
           className={cn(
-            'inline-flex size-9 items-center justify-center rounded-full transition-colors',
+            'inline-flex size-9 items-center justify-center rounded-sm transition-colors',
             active ? 'text-brand' : 'text-fg-muted group-hover/nav:text-fg',
           )}
           style={{
             background: active
-              ? 'oklch(82% 0.14 85 / 0.18)'
-              : 'oklch(20% 0 0 / 0.6)',
-            boxShadow: 'var(--shadow-inset-edge-soft)',
+              ? '#27272A'
+              : '#18181B',
+            boxShadow: 'none',
           }}
         >
           <Icon className="size-5" strokeWidth={active ? 2 : 1.75} />
@@ -284,7 +284,7 @@ function NavLink({ item, active }: { item: NavItem; active: boolean }) {
           ) : null}
         </div>
         {item.badge !== undefined && item.badge > 0 && (
-          <span className="ml-auto bg-brand/15 text-brand text-caption font-bold rounded-full px-1.5 py-0.5 tabular-nums">
+          <span className="ml-auto bg-zinc-800 text-fg text-caption font-bold rounded-sm px-1.5 py-0.5 tabular-nums">
             {item.badge > 99 ? '99+' : item.badge}
           </span>
         )}
