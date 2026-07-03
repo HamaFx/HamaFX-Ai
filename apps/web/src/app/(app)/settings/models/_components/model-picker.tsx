@@ -228,7 +228,7 @@ export function ModelPicker({
 
   if (providers.length === 0 || options.length === 0) {
     return (
-      <div className="border border-divider bg-bg-elev-1 rounded-lg p-6 flex flex-col items-center text-center gap-3">
+      <div className="border border-zinc-800 bg-zinc-950 rounded-sm p-6 flex flex-col items-center text-center gap-3">
         <div className="text-3xl">{NO_PROVIDERS_EMOJI[kind]}</div>
         <div>
           <h3 className="text-sm font-semibold text-fg">No providers available</h3>
@@ -236,7 +236,7 @@ export function ModelPicker({
             Add an API key in{' '}
             <a
               href="/settings/api-keys"
-              className="text-brand hover:underline"
+              className="text-fg hover:underline"
             >
               Settings → API Keys
             </a>{' '}
@@ -253,7 +253,7 @@ export function ModelPicker({
     : 'Use fallback (operator env / spec default)';
 
   return (
-    <div className="border border-divider bg-bg-elev-1 rounded-lg p-4 flex flex-col gap-3">
+    <div className="border border-zinc-800 bg-zinc-950 rounded-sm p-4 flex flex-col gap-3">
       <div className="flex items-baseline justify-between gap-3">
         <div className="flex flex-col">
           <span className="text-sm font-medium text-fg">
@@ -264,7 +264,7 @@ export function ModelPicker({
           </span>
         </div>
         {value ? (
-          <span className="inline-flex items-center gap-1 text-caption text-bull">
+          <span className="inline-flex items-center gap-1 text-caption text-emerald-500">
             <Check size={12} aria-hidden="true" />
             Saved
           </span>
@@ -282,7 +282,7 @@ export function ModelPicker({
             value={value ?? ''}
             onChange={(e) => pick(e.target.value)}
             disabled={pending || save.kind === 'pending'}
-            className="w-full appearance-none border border-divider bg-bg-elev-2 text-fg rounded-lg pl-3 pr-9 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand disabled:opacity-60"
+            className="w-full appearance-none border border-zinc-800 bg-zinc-900 text-fg rounded-sm pl-3 pr-9 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-fg disabled:opacity-60"
           >
             <option value="" disabled>
               Use fallback ({options[0]?.label ?? '—'})
@@ -315,7 +315,7 @@ export function ModelPicker({
       </label>
 
       {save.kind === 'error' ? (
-        <div className="text-caption text-bear">{save.message}</div>
+        <div className="text-caption text-red-500">{save.message}</div>
       ) : null}
 
       <p className="text-caption text-fg-subtle">{helper ?? HELPERS[kind]}</p>
