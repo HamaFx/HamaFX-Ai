@@ -274,9 +274,9 @@ export function Composer({
     <div className="sticky bottom-0 px-3 pb-[max(env(safe-area-inset-bottom),12px)] transition-all duration-300 w-full max-w-4xl mx-auto z-20">
       <form
         className={cn(
-          'bg-bg-elev-1 border border-divider relative flex w-full flex-col overflow-hidden rounded-xl shadow-md transition-all duration-300',
-          focused && 'border-brand/40 shadow-[0_8px_32px_-8px_oklch(78%_0.16_78/0.2)] ring-1 ring-brand/30',
-          dragOver && 'bg-brand/5 ring-2 ring-inset ring-brand/50',
+          'bg-zinc-950 border border-zinc-800 relative flex w-full flex-col overflow-hidden rounded-sm shadow-md transition-all duration-300',
+          focused && 'border-zinc-700',
+          dragOver && 'ring-2 ring-inset ring-zinc-600',
         )}
         onSubmit={(e) => {
           e.preventDefault();
@@ -294,9 +294,9 @@ export function Composer({
           <div
             role="status"
             aria-live="polite"
-            className="text-bear ring-bear/30 mx-auto mt-3 inline-flex items-center gap-2 self-center rounded-full bg-bear/10 px-3 py-1 text-body-sm font-medium ring-1"
+            className="text-red-500 border border-red-500/30 mx-auto mt-3 inline-flex items-center gap-2 self-center rounded-sm bg-red-500/10 px-3 py-1 text-body-sm font-medium"
           >
-            <span className="bg-bear motion-safe:animate-pulse size-1.5 rounded-full" />
+            <span className="bg-red-500 motion-safe:animate-pulse size-1.5 rounded-sm" />
             Listening…
           </div>
         ) : null}
@@ -309,13 +309,13 @@ export function Composer({
                 <img
                   src={img.url}
                   alt={`Attached image ${idx + 1} of ${images.length}`}
-                  className="border-divider size-14 rounded-xl border object-cover"
+                  className="border-zinc-800 size-14 rounded-sm border object-cover"
                 />
                 <button
                   type="button"
                   aria-label={`Remove ${img.name}`}
                   onClick={() => removeImage(img.id)}
-                  className="bg-bg-elev-3 text-fg border-border focus-visible:ring-brand absolute -right-2 -top-2 inline-flex size-6 items-center justify-center rounded-full border text-caption leading-none focus:outline-none focus-visible:ring-2"
+                  className="bg-bg-elev-3 text-fg border-border focus-visible:ring-fg absolute -right-2 -top-2 inline-flex size-6 items-center justify-center rounded-sm border text-caption leading-none focus:outline-none focus-visible:ring-2"
                 >
                   ×
                 </button>
@@ -340,8 +340,8 @@ export function Composer({
               onClick={() => fileInputRef.current?.click()}
               disabled={disabled || images.length >= MAX_IMAGES}
               className={cn(
-                'inline-flex size-[44px] shrink-0 items-center justify-center rounded-full transition-colors',
-                'focus-visible:ring-brand/60 focus:outline-none focus-visible:ring-2',
+                'inline-flex size-[44px] shrink-0 items-center justify-center rounded-sm transition-colors',
+                'focus-visible:ring-fg/60 focus:outline-none focus-visible:ring-2',
                 disabled || images.length >= MAX_IMAGES
                   ? 'text-fg-subtle cursor-not-allowed opacity-60'
                   : 'text-fg-muted hover:bg-bg-elev-2/50 hover:text-fg',
@@ -371,10 +371,10 @@ export function Composer({
                 onClick={() => (voice.active ? voice.stop() : voice.start())}
                 disabled={disabled}
                 className={cn(
-                  'inline-flex size-[44px] shrink-0 items-center justify-center rounded-full transition-colors',
-                  'focus-visible:ring-brand/60 focus:outline-none focus-visible:ring-2',
+                  'inline-flex size-[44px] shrink-0 items-center justify-center rounded-sm transition-colors',
+                  'focus-visible:ring-fg/60 focus:outline-none focus-visible:ring-2',
                   voice.active
-                    ? 'text-bear mic-pulse bg-bear/10'
+                    ? 'text-red-500 mic-pulse bg-red-500/10'
                     : 'text-fg-muted hover:bg-bg-elev-2/50 hover:text-fg',
                   disabled ? 'cursor-not-allowed opacity-60' : '',
                 )}
@@ -400,7 +400,7 @@ export function Composer({
               disabled={disabled}
               maxLength={MAX_TEXT_CHARS}
               className={cn(
-                'text-fg placeholder:text-fg-subtle w-full resize-none bg-transparent px-2 py-2.5 text-body leading-relaxed focus:outline-none',
+                'text-fg placeholder:text-fg-subtle w-full resize-none bg-transparent px-2 py-2.5 text-body leading-[1.4] focus:outline-none',
                 'max-h-[40dvh] min-h-[44px] transition-colors duration-150',
                 '[field-sizing:content]',
               )}
@@ -432,7 +432,7 @@ export function Composer({
 
             {focused && !isTouch && !isStreaming ? (
               <p className="text-fg-subtle hidden pr-1 text-caption tabular-nums sm:block">
-                <kbd className="bg-bg-elev-2 ring-divider rounded border px-1.5 font-mono ring-1">
+                <kbd className="bg-bg-elev-2 border border-zinc-800 rounded-sm px-1.5 font-mono">
                   Enter
                 </kbd>{' '}
                 to send
@@ -450,7 +450,7 @@ export function Composer({
                   type="button"
                   onClick={onStop}
                   aria-label="Stop generating"
-                  className="text-bear ring-bear/40 inline-flex size-[44px] shrink-0 items-center justify-center rounded-full bg-bear/15 focus:outline-none focus-visible:ring-2 ring-1"
+                  className="text-red-500 border border-red-500/40 inline-flex size-[44px] shrink-0 items-center justify-center rounded-sm bg-red-500/15 focus:outline-none focus-visible:ring-2"
                 >
                   <Square className="size-[14px] fill-current" strokeWidth={0} />
                 </m.button>
@@ -466,15 +466,10 @@ export function Composer({
                   disabled={!canSend}
                   aria-label="Send message"
                   className={cn(
-                    'text-brand-fg bg-brand hover:brightness-110 inline-flex size-[44px] shrink-0 items-center justify-center rounded-full font-semibold',
+                    'text-black bg-fg hover:bg-fg-muted inline-flex size-[44px] shrink-0 items-center justify-center rounded-sm font-semibold',
                     'disabled:cursor-not-allowed disabled:opacity-40 disabled:grayscale',
-                    'focus-visible:ring-brand focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-bg',
+                    'focus-visible:ring-fg focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-bg',
                   )}
-                  style={{
-                    boxShadow: canSend
-                      ? 'inset 0 1px 0 0 oklch(100% 0 0 / 0.18), 0 4px 12px -4px oklch(78% 0.16 78 / 0.4)'
-                      : 'none',
-                  }}
                 >
                   <ArrowUp className="size-[18px]" strokeWidth={2.5} />
                 </m.button>

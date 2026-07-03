@@ -464,7 +464,7 @@ export function ChatScreen({
   }
 
   return (
-    <div className="bg-bg paint-isolated fixed inset-0 z-50 flex flex-col">
+    <div className="bg-black paint-isolated fixed inset-0 z-50 flex flex-col xl:grid xl:grid-cols-12 xl:h-screen xl:w-full xl:overflow-hidden">
       <ChatTopBar
         threadId={threadId}
         title={title}
@@ -475,8 +475,8 @@ export function ChatScreen({
         onAnalysisModeChange={setAnalysisMode}
       />
 
-      <div ref={scrollRef} className="scrollbar-hide no-overscroll relative flex-1 overflow-y-auto">
-        <div className="mx-auto max-w-2xl">
+      <div ref={scrollRef} className="scrollbar-hide no-overscroll relative flex-1 overflow-y-auto xl:col-span-6 xl:h-full xl:overflow-y-auto">
+        <div className="mx-auto max-w-2xl px-4 py-4">
           {summary ? (
             <div className="px-3 pt-2">
               <ThreadSummaryHeader
@@ -526,7 +526,7 @@ export function ChatScreen({
                 transition={{ duration: 0.2 }}
                 role="alert"
                 className={cn(
-                  'bg-bear/10 text-bear ring-bear/30 mx-3 mb-2 flex items-center justify-between gap-2 rounded-xl p-3 text-xs ring-1 backdrop-blur',
+                  'bg-red-500/10 text-red-500 border border-red-500/30 mx-3 mb-2 flex items-center justify-between gap-2 rounded-sm p-3 text-xs',
                 )}
               >
                 <span className="line-clamp-2 flex-1">{error.message}</span>
@@ -543,7 +543,7 @@ export function ChatScreen({
                       }
                     }}
                     aria-label="Retry"
-                    className="bg-bear/20 hover:bg-bear/30 ring-bear/30 inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-body-sm font-medium ring-1"
+                    className="bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 inline-flex items-center gap-1 rounded-sm px-3 py-1.5 text-body-sm font-medium"
                   >
                     <RotateCcw className="size-3.5" /> Retry
                   </button>
@@ -551,7 +551,7 @@ export function ChatScreen({
                     type="button"
                     onClick={() => setDismissedError(true)}
                     aria-label="Dismiss error"
-                    className="hover:bg-bear/10 text-bear/80 hover:text-bear inline-flex size-7 items-center justify-center rounded-lg transition-colors"
+                    className="hover:bg-red-500/10 text-red-500/80 hover:text-red-500 inline-flex size-7 items-center justify-center rounded-sm transition-colors"
                   >
                     <X className="size-4" />
                   </button>
@@ -572,7 +572,7 @@ export function ChatScreen({
               transition={{ duration: 0.2 }}
               onClick={scrollToBottom}
               aria-label="Scroll to latest"
-              className="scroll-fab glass-strong text-fg fixed left-1/2 z-30 inline-flex h-11 -translate-x-1/2 items-center gap-1.5 rounded-full px-4 text-body-sm font-medium transition-all"
+              className="scroll-fab surface-elevated text-fg fixed left-1/2 z-30 inline-flex h-11 -translate-x-1/2 items-center gap-1.5 rounded-sm px-4 text-body-sm font-medium transition-all"
               style={{ bottom: 'calc(env(safe-area-inset-bottom) + 96px)' }}
             >
               <ArrowDown className="size-3.5" />
@@ -638,18 +638,13 @@ function EmptyChatState({ pinnedSymbol, disabled, onSelect }: EmptyChatStateProp
     <div className="flex min-h-[60svh] flex-col items-center justify-center gap-6 px-4 py-10 text-center">
       <span
         aria-hidden="true"
-        className="text-brand inline-flex size-20 items-center justify-center rounded-3xl"
-        style={{
-          backgroundImage: 'var(--gradient-brand-soft)',
-          boxShadow:
-            'inset 0 1px 0 0 oklch(100% 0 0 / 0.08), 0 0 40px -8px oklch(82% 0.14 85 / 0.35)',
-        }}
+        className="text-fg-muted inline-flex size-16 items-center justify-center rounded-sm border border-zinc-800 bg-zinc-900"
       >
-        <Sparkles className="size-9" strokeWidth={1.75} />
+        <Sparkles className="size-8" strokeWidth={1.75} />
       </span>
       <div className="flex max-w-md flex-col gap-2">
         <h2 className="text-fg text-xl font-bold tracking-tight">How can I help?</h2>
-        <p className="text-fg-muted text-sm leading-relaxed">
+        <p className="text-fg-muted text-sm leading-[1.4]">
           {pinnedSymbol
             ? `Ask about ${pinnedSymbol} bias, structure, news, or set an alert.`
             : 'Ask about gold, EUR, GBP — bias, structure, news, or set an alert.'}
@@ -664,7 +659,7 @@ function EmptyChatState({ pinnedSymbol, disabled, onSelect }: EmptyChatStateProp
         />
       </div>
 
-      <p className="text-fg-subtle max-w-md text-body-sm leading-relaxed">
+      <p className="text-fg-subtle max-w-md text-body-sm leading-[1.4]">
         Numbers come from live tools — prices, candles, news, and the calendar are
         fetched on demand. The copilot will say so when something can&apos;t be checked.
       </p>
