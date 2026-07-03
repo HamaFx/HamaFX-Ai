@@ -52,44 +52,30 @@ export function TopBar({ title, right }: TopBarProps) {
   return (
     <header
       className={cn(
-        'sticky top-0 z-30 flex justify-center pointer-events-none',
-        'pt-[calc(env(safe-area-inset-top)+12px)] px-3 pb-2',
+        'sticky top-0 z-30 flex h-12 w-full items-center justify-between',
+        'border-b border-zinc-800 bg-black px-3 pt-safe',
       )}
     >
-      <div
-        className={cn(
-          'glass-strong pointer-events-auto flex w-full max-w-2xl items-center gap-2 rounded-full border border-divider/60 px-2 shadow-lg transition-all',
-        )}
-        style={{
-          height: 'var(--topbar-h)',
-          boxShadow: 'var(--shadow-inset-edge-soft), 0 8px 32px -8px oklch(78% 0.16 85 / 0.15)',
-        }}
+      <NavTrigger />
+
+      <Link
+        href="/chat"
+        aria-label="HamaFX-Ai home"
+        className="group flex flex-1 items-center gap-2 px-1 text-sm font-semibold tracking-tight text-fg transition-opacity hover:opacity-80"
       >
-        <NavTrigger />
-
-        <Link
-          href="/chat"
-          aria-label="HamaFX-Ai home"
-          className="group flex flex-1 items-center justify-center gap-2 px-1 text-sm font-semibold tracking-tight transition-opacity hover:opacity-80"
+        <span
+          aria-hidden="true"
+          className="relative inline-flex size-6 items-center justify-center rounded-sm bg-fg text-black"
         >
-          <span
-            aria-hidden="true"
-            className="relative inline-flex size-7 items-center justify-center rounded-md"
-            style={{
-              backgroundImage: 'var(--gradient-brand)',
-              boxShadow: '0 0 12px -2px oklch(82% 0.14 85 / 0.4)',
-            }}
-          >
-            <span className="text-bg text-xs font-bold">H</span>
-          </span>
-          <span className="text-fg">
-            {title ?? 'HamaFX'}
-            <span className="text-fg-subtle font-normal">·Ai</span>
-          </span>
-        </Link>
+          <span className="text-xs font-bold">H</span>
+        </span>
+        <span className="text-fg">
+          {title ?? 'HamaFX'}
+          <span className="text-fg-subtle font-normal">·Ai</span>
+        </span>
+      </Link>
 
-        <div className="flex min-w-[44px] items-center justify-end gap-2">{right}</div>
-      </div>
+      <div className="flex min-w-[44px] items-center justify-end gap-2">{right}</div>
     </header>
   );
 }

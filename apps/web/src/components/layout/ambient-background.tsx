@@ -30,70 +30,10 @@
 // Noise uses CSS repeating-conic-gradient instead of feTurbulence to
 // avoid the known iOS-Safari compositing cost of SVG turbulence filters.
 
-import { useId } from 'react';
-import { cn } from '@/lib/cn';
+// AmbientBackground is now a no-op — the institutional terminal theme
+// uses a pure black canvas with no ambient orbs or gradients.
+// The component is kept for backward import compatibility.
 
-type Intensity = 'subtle' | 'vivid';
-
-interface AmbientBackgroundProps {
-  intensity?: Intensity;
-  /** Render absolutely (inside a self-contained surface) instead of fixed. */
-  contained?: boolean;
-  className?: string;
-}
-
-export function AmbientBackground({
-  intensity = 'subtle',
-  contained = false,
-  className,
-}: AmbientBackgroundProps) {
-  const root = cn(
-    'pointer-events-none overflow-hidden',
-    contained ? 'absolute inset-0' : 'fixed inset-0 -z-10',
-    className,
-  );
-  const noiseId = `ambient-noise-${useId()}`;
-
-  if (intensity === 'subtle') {
-    // Default app shell: one tiny warm whisper, top-right only. No noise
-    // filter — pure canvas reads cleaner and avoids feTurbulence's known
-    // iOS-Safari compositing cost.
-    return (
-      <div aria-hidden="true" className={root}>
-        <div
-          className="absolute -top-40 -right-40 h-[28rem] w-[28rem] rounded-full blur-[100px] float-orb-1"
-          style={{ background: 'oklch(82% 0.14 85 / 1)', opacity: 0.04 }}
-        />
-      </div>
-    );
-  }
-
-  // Vivid (login marquee): three orbs + faint CSS noise overlay.
-  return (
-    <div aria-hidden="true" className={root}>
-      <div
-        className="absolute -top-32 -right-32 h-[28rem] w-[28rem] rounded-full blur-[100px] float-orb-1"
-        style={{ background: 'oklch(82% 0.14 85 / 1)', opacity: 0.18 }}
-      />
-      <div
-        className="absolute -bottom-32 -left-32 h-[32rem] w-[32rem] rounded-full blur-[120px] float-orb-2"
-        style={{ background: 'oklch(70% 0.14 285 / 1)', opacity: 0.14 }}
-      />
-      <div className="absolute left-1/2 top-1/3 -translate-x-1/2 float-orb-3">
-        <div
-          className="h-[24rem] w-[24rem] rounded-full blur-[110px]"
-          style={{ background: 'oklch(74% 0.14 230 / 1)', opacity: 0.08 }}
-        />
-      </div>
-      <div
-        id={noiseId}
-        className="absolute inset-0 h-full w-full"
-        style={{
-          opacity: 0.03,
-          backgroundImage: `repeating-conic-gradient(#fff 0.03%, transparent 0.04%)`,
-          mixBlendMode: 'overlay',
-        }}
-      />
-    </div>
-  );
+export function AmbientBackground() {
+  return null;
 }
