@@ -70,7 +70,7 @@ export function PlanPart({ plan, streaming = false }: PlanPartProps) {
   return (
     <div
       className={cn(
-        'border-divider/60 bg-bg-elev-1 flex flex-col gap-1 rounded-2xl border px-3 py-2',
+        'border-zinc-800 bg-zinc-950 flex flex-col gap-1 rounded-sm border px-3 py-2',
       )}
     >
       <button
@@ -78,7 +78,7 @@ export function PlanPart({ plan, streaming = false }: PlanPartProps) {
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
         aria-controls="plan-content"
-        className="text-fg-muted hover:text-fg focus-visible:ring-2 focus-visible:ring-brand rounded-md flex items-center gap-2 text-left text-body-sm font-medium tabular-nums focus:outline-none"
+        className="text-fg-muted hover:text-fg focus-visible:ring-2 focus-visible:ring-fg rounded-sm flex items-center gap-2 text-left text-body-sm font-medium tabular-nums focus:outline-none"
       >
         {open ? (
           <ChevronDown className="size-3.5" />
@@ -86,7 +86,7 @@ export function PlanPart({ plan, streaming = false }: PlanPartProps) {
           <ChevronRight className="size-3.5" />
         )}
         {streaming ? (
-          <Loader2 className="size-3.5 text-brand motion-safe:animate-spin" />
+          <Loader2 className="size-3.5 text-fg motion-safe:animate-spin" />
         ) : (
           <Brain className="size-3.5" />
         )}
@@ -99,7 +99,7 @@ export function PlanPart({ plan, streaming = false }: PlanPartProps) {
 
       {/* Streaming progress bar */}
       {streaming ? (
-        <div className="bg-brand/30 motion-safe:animate-pulse h-0.5 w-full rounded-full" />
+        <div className="bg-zinc-700 motion-safe:animate-pulse h-0.5 w-full rounded-sm" />
       ) : null}
 
       <AnimatePresence initial={false}>
@@ -134,7 +134,7 @@ export function PlanPart({ plan, streaming = false }: PlanPartProps) {
                   {plan.expectedTools.map((t, i) => (
                     <span
                       key={`${t}-${i}`}
-                      className="bg-bg-elev-2 text-fg-muted ml-1 rounded px-1.5 py-0.5 font-mono text-caption"
+                      className="bg-zinc-900 text-fg-muted ml-1 rounded px-1.5 py-0.5 font-mono text-caption"
                     >
                       {t}
                     </span>

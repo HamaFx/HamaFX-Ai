@@ -50,12 +50,12 @@ export function LogJournalPart({ output, state, errorMessage }: LogJournalPartPr
   }
 
   return (
-    <div className="border-border bg-bg-elev-1 rounded-lg border p-3">
+    <div className="border-border bg-zinc-950 rounded-sm border p-3">
       <div className="text-fg-muted mb-1 text-xs">Journal entry saved</div>
       <p className="text-fg mb-2 text-sm font-medium">{output.summary}</p>
       <Link
         href={`/journal?id=${encodeURIComponent(output.entryId)}`}
-        className="text-brand focus-visible:ring-brand inline-flex min-h-[44px] min-w-[44px] items-center text-sm underline-offset-2 hover:underline focus:outline-none focus-visible:ring-2"
+        className="text-fg focus-visible:ring-fg inline-flex min-h-[44px] min-w-[44px] items-center text-sm underline-offset-2 hover:underline focus:outline-none focus-visible:ring-2"
       >
         View in journal →
       </Link>
@@ -66,13 +66,13 @@ export function LogJournalPart({ output, state, errorMessage }: LogJournalPartPr
 function LogJournalSkeleton() {
   return (
     <div
-      className="border-border bg-bg-elev-1 rounded-lg border p-3"
+      className="border-border bg-zinc-950 rounded-sm border p-3"
       aria-busy="true"
       aria-label="Saving journal entry"
     >
-      <div className="bg-bg-elev-2 mb-2 h-3 w-32 animate-pulse rounded" />
-      <div className="bg-bg-elev-2 mb-2 h-4 w-3/4 animate-pulse rounded" />
-      <div className="bg-bg-elev-2 h-4 w-24 animate-pulse rounded" />
+      <div className="bg-zinc-900 mb-2 h-3 w-32 animate-pulse rounded" />
+      <div className="bg-zinc-900 mb-2 h-4 w-3/4 animate-pulse rounded" />
+      <div className="bg-zinc-900 h-4 w-24 animate-pulse rounded" />
     </div>
   );
 }
@@ -81,7 +81,7 @@ function LogJournalError({ message }: { message?: string }) {
   return (
     <div
       role="alert"
-      className="border-bear/30 bg-bg-elev-1 text-bear rounded-lg border p-3 text-sm"
+      className="border-red-500/30 bg-zinc-950 text-red-500 rounded-sm border p-3 text-sm"
     >
       Could not save journal entry{message ? ` · ${message}` : ''}
     </div>

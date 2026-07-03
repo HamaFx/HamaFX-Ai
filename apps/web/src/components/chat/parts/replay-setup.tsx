@@ -30,7 +30,7 @@ export function ReplaySetupPart({
   if (state === 'loading' || !output) return <SkeletonCard />;
 
   return (
-    <div className="border-border bg-bg-elev-1 flex flex-col gap-3 rounded-lg border p-3">
+    <div className="border-border bg-zinc-950 flex flex-col gap-3 rounded-sm border p-3">
       <header className="flex flex-wrap items-baseline justify-between gap-2">
         <h3 className="text-fg text-sm font-semibold">
           Replay · {output.symbol} {output.tf}
@@ -60,7 +60,7 @@ export function ReplaySetupPart({
       {output.thin ? (
         <p
           role="note"
-          className="text-warn border-warn/30 bg-warn/5 rounded-md border px-2 py-1 text-body-sm"
+          className="text-amber-500 border-warn/30 bg-warn/5 rounded-sm border px-2 py-1 text-body-sm"
         >
           Thin sample — fewer than 5 trades. Treat as illustrative.
         </p>
@@ -77,7 +77,7 @@ export function ReplaySetupPart({
           </div>
           <ul className="flex flex-col gap-0.5 max-h-40 overflow-y-auto">
             {output.trades.slice(0, 25).map((t, i) => (
-              <li key={i} className="border-divider/40 grid grid-cols-5 rounded-md border px-2 py-1">
+              <li key={i} className="border-zinc-900 grid grid-cols-5 rounded-sm border px-2 py-1">
                 <span className={t.side === 'long' ? 'text-bull' : 'text-bear'}>
                   {t.side === 'long' ? '▲' : '▼'}
                 </span>
@@ -101,7 +101,7 @@ export function ReplaySetupPart({
 
 function Stat({ k, v, tone }: { k: string; v: string; tone?: string }) {
   return (
-    <div className="border-divider/40 flex flex-col rounded-md border p-2">
+    <div className="border-zinc-900 flex flex-col rounded-sm border p-2">
       <span className="text-fg-subtle text-caption uppercase tracking-wide">{k}</span>
       <span className={`text-fg font-semibold ${tone ?? ''}`}>{v}</span>
     </div>
@@ -111,12 +111,12 @@ function Stat({ k, v, tone }: { k: string; v: string; tone?: string }) {
 function SkeletonCard() {
   return (
     <div
-      className="border-border bg-bg-elev-1 rounded-lg border p-3"
+      className="border-border bg-zinc-950 rounded-sm border p-3"
       aria-busy="true"
       aria-label="Replaying rule"
     >
-      <div className="bg-bg-elev-2 h-4 w-1/2 animate-pulse rounded" />
-      <div className="bg-bg-elev-2 mt-3 h-32 animate-pulse rounded" />
+      <div className="bg-zinc-900 h-4 w-1/2 animate-pulse rounded" />
+      <div className="bg-zinc-900 mt-3 h-32 animate-pulse rounded" />
     </div>
   );
 }
@@ -125,7 +125,7 @@ function ErrorCard({ message }: { message?: string }) {
   return (
     <div
       role="alert"
-      className="border-bear/30 bg-bg-elev-1 text-bear rounded-lg border p-3 text-sm"
+      className="border-red-500/30 bg-zinc-950 text-red-500 rounded-sm border p-3 text-sm"
     >
       Rule replay failed{message ? ` · ${message}` : ''}
     </div>
