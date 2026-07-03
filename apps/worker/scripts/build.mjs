@@ -44,6 +44,25 @@ external.push(
   '@sentry/node',
 );
 
+// Stub out `server-only` — it's a build-time guard that throws at module
+// load time, which breaks the worker (Node.js backend with no bundler
+// stripping). The modules that import it (@hamafx/shared/src/encryption)
+// are never called by the worker, but the import side-effect is evaluated
+// eagerly during ESM module graph loading.
+const serverOnlyPlugin = {
+  name: 'server-only',
+  setup(build) {
+    build.onResolve({ filter: /^server-only$/ }, () => ({
+      path: 'server-only-stub',
+      namespace: 'server-only-stub',
+    }));
+    build.onLoad({ filter: /^server-only-stub$/, namespace: 'server-only-stub' }, () => ({
+      contents: '',
+      loader: 'js',
+    }));
+  },
+};
+
 /** @type {import('esbuild').BuildOptions} */
 const common = {
   bundle: true,
@@ -52,6 +71,7 @@ const common = {
   target: 'node20',
   sourcemap: true,
   external,
+  plugins: [serverOnlyPlugin],
   // Workspace packages are pure ESM; force the bundler to emit ESM and
   // not wrap dynamic-import shims that confuse Node.
   banner: {
