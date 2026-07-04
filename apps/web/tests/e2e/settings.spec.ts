@@ -14,97 +14,131 @@
  * limitations under the License.
  */
 
-import { test, expect } from '@playwright/test';
-import { ensureTestUser } from './test-utils';
+// ---------------------------------------------------------------------------
+// E2E: Settings flows
+//
+// Covers: profile update, API key save/test, symbol watchlist add/remove/
+// reorder, model picker selection, usage budget setting.
+// Uses the composable fixtures (authedPage).
+// ---------------------------------------------------------------------------
+
+import { test, expect } from './fixtures';
 
 test.describe('Settings', () => {
-  test.beforeAll(async () => {
-    await ensureTestUser('test@example.com', 'password123');
-  });
+  test('1. Profile update flow — update display name and save', async ({ authedPage }) => {
+    const page = authedPage;
 
-  test.beforeEach(async ({ page }) => {
-    await page.goto('/login');
-    await page.fill('input[name="email"]', 'test@example.com');
-    await page.fill('input[name="password"]', 'password123');
-    await page.click('button[type="submit"]');
-    await expect(page).toHaveURL(/.*\/chat.*/, { timeout: 30000 });
-  });
-
-  test('1. Profile update flow — update display name and save', async ({ page }) => {
     await page.goto('/settings/profile');
-    await expect(page.locator('h2')).toContainText('Profile');
+    await expect(page.getByRole('heading', { name: /profile/i })).toBeVisible();
 
-    const nameInput = page.locator('input[name="name"]');
+    const nameInput = page.getByLabel(/name/i);
     await nameInput.fill('Updated Test User');
-    await page.click('button[type="submit"]');
+    await page.getByRole('button', { name: /save|submit/i }).click();
 
-    await expect(page.getByText('Profile updated successfully')).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText(/profile updated successfully/i)).toBeVisible({ timeout: 10_000 });
   });
 
-  test('2. API key save + test flow — enter key, test, save', async ({ page }) => {
+  test('2. API key save + test flow — enter key, test, save', async ({ authedPage }) => {
+    const page = authedPage;
+
     await page.goto('/settings/api-keys');
-    await expect(page.locator('h2')).toContainText('API Keys');
+    await expect(page.getByRole('heading', { name: /api keys/i })).toBeVisible();
 
     const googleInput = page.locator('input#key-google');
     await googleInput.fill('test-google-key-12345');
 
-    await page.locator('button:has-text("Test connection")').first().click();
-    await expect(page.getByText('Testing…')).toBeVisible({ timeout: 5000 });
+    await page.getByRole('button', { name: /test connection/i }).first().click();
+    await expect(page.getByText(/testing/i)).toBeVisible({ timeout: 5_000 });
 
-    const saveButton = page.locator('button:has-text("Save Keys")');
+    const saveButton = page.getByRole('button', { name: /save keys/i });
     await saveButton.click();
-    await expect(page.getByText('Saved')).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText(/saved/i)).toBeVisible({ timeout: 10_000 });
   });
 
-  test('3. Symbol add/remove/reorder flow', async ({ page }) => {
+  test('3. Symbol add/remove/reorder flow', async ({ authedPage }) => {
+    const page = authedPage;
+
     await page.goto('/settings/symbols');
-    await expect(page.locator('h2')).toContainText('Symbols Watchlist');
+    await expect(page.getByRole('heading', { name: /symbols watchlist/i })).toBeVisible();
 
-    await page.locator('input[placeholder="Search catalog by symbol or name..."]').fill('EURUSD');
-    await page.locator('button[aria-label="Add EURUSD to watchlist"]').click();
-    await expect(page.getByText('EURUSD added to watchlist')).toBeVisible({ timeout: 10000 });
+    // Add EURUSD
+    await page.getByPlaceholder(/search catalog by symbol or name/i).fill('EURUSD');
+    await page.getByRole('button', { name: /add EURUSD to watchlist/i }).click();
+    await expect(page.getByText(/EURUSD added to watchlist/i)).toBeVisible({ timeout: 10_000 });
 
-    await page.locator('input[aria-label="Move symbol up"]').first().click();
+    // Reorder — move up
+    await page.getByRole('button', { name: /move symbol up/i }).first().click();
 
-    await page.locator('button[aria-label="Remove EURUSD from watchlist"]').click();
-    await expect(page.getByText('EURUSD removed from watchlist')).toBeVisible({ timeout: 10000 });
+    // Remove
+    await page.getByRole('button', { name: /remove EURUSD from watchlist/i }).click();
+    await expect(page.getByText(/EURUSD removed from watchlist/i)).toBeVisible({ timeout: 10_000 });
   });
 
-  test('4. Model picker selection flow — select a chat model', async ({ page }) => {
+  test('4. Model picker selection flow — select a chat model', async ({ authedPage }) => {
+    const page = authedPage;
+
+    // Mock the chat model API
     await page.route('**/api/settings/chat-model', (route) => {
       if (route.request().method() === 'GET') {
-        route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ chatModel: null }) });
+        route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({ chatModel: null }),
+        });
       } else if (route.request().method() === 'PUT') {
-        route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ chatModel: 'google:gemini-2.0-flash' }) });
+        route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({ chatModel: 'google:gemini-2.0-flash' }),
+        });
       } else {
         route.continue();
       }
     });
 
     await page.goto('/settings/models');
-    await expect(page.locator('h2')).toContainText('Models');
+    await expect(page.getByRole('heading', { name: /models/i })).toBeVisible();
 
     const select = page.locator('select').first();
-    await expect(select).toBeEnabled({ timeout: 15000 });
+    await expect(select).toBeEnabled({ timeout: 15_000 });
 
     const options = await select.locator('option').all();
     if (options.length > 1) {
       const firstOptionValue = await options[1]!.getAttribute('value');
       if (firstOptionValue) {
         await select.selectOption(firstOptionValue);
-        await expect(page.getByText('Current chat model updated')).toBeVisible({ timeout: 10000 });
+        await expect(page.getByText(/current chat model updated/i)).toBeVisible({ timeout: 10_000 });
       }
     }
   });
 
-  test('5. Usage budget setting flow — set monthly budget limit', async ({ page }) => {
+  test('5. Usage budget setting flow — set monthly budget limit', async ({ authedPage }) => {
+    const page = authedPage;
+
     await page.goto('/settings/usage');
-    await expect(page.locator('h2')).toContainText('Limits & Alerts');
+    await expect(page.getByRole('heading', { name: /limits & alerts/i })).toBeVisible();
 
     const budgetInput = page.locator('input#monthlyBudgetLimit');
     await budgetInput.fill('50');
 
-    await page.locator('button:has-text("Save Changes")').click();
-    await expect(page.getByText('Usage limits and alerts updated successfully')).toBeVisible({ timeout: 10000 });
+    await page.getByRole('button', { name: /save changes/i }).click();
+    await expect(page.getByText(/usage limits and alerts updated successfully/i)).toBeVisible({ timeout: 10_000 });
+  });
+
+  test('6. Settings navigation — all settings pages load', async ({ authedPage }) => {
+    const page = authedPage;
+
+    const settingsPages = [
+      { path: '/settings/profile', heading: /profile/i },
+      { path: '/settings/api-keys', heading: /api keys/i },
+      { path: '/settings/symbols', heading: /symbols watchlist/i },
+      { path: '/settings/models', heading: /models/i },
+      { path: '/settings/usage', heading: /limits & alerts/i },
+    ];
+
+    for (const { path, heading } of settingsPages) {
+      await page.goto(path);
+      await expect(page.getByRole('heading', { name: heading })).toBeVisible({ timeout: 15_000 });
+    }
   });
 });
