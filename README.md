@@ -88,9 +88,19 @@ HamaFX-Ai is an **autonomous AI trading companion that lives in your pocket**. C
 
 ## 🚀 Quick Start
 
-> **Prerequisites:** [Node.js v20+](https://nodejs.org/), [pnpm v9+](https://pnpm.io/). That's it — no database required for local dev.
+### What You'll Need
 
-### One-Command Setup (Interactive)
+| Requirement | Version | Get it |
+|-------------|---------|--------|
+| **Node.js** | v20 or higher | [Download →](https://nodejs.org/) |
+| **pnpm** | v9 or higher | `npm install -g pnpm` |
+| **An AI API key** | Any provider | See [BYOK](#-what-is-byok-bring-your-own-key) below |
+
+That's it. No database to install. No Docker required (unless you want it).
+
+---
+
+### Option 1: One-Command Setup (Recommended)
 
 ```bash
 git clone https://github.com/HamaFx/HamaFX-Ai.git
@@ -98,24 +108,31 @@ cd HamaFX-Ai
 pnpm setup
 ```
 
-The setup wizard will:
-1. ✅ Check prerequisites (Node, pnpm, Git, Docker)
-2. 🤔 Ask: **Local Dev** (fast, no Docker) or **Docker** (full features)?
-3. 🔑 Explain BYOK (Bring Your Own Key) — no server-level AI keys needed
-4. 📊 Optionally collect market data provider keys (Finnhub, Marketaux, FRED, etc.)
-5. 🔐 Generate all required secrets automatically + enable BYOK mode
-6. 📦 Install dependencies and offer to start the app
+The interactive wizard handles everything for you:
 
-> [!IMPORTANT]
-> HamaFX-Ai uses **BYOK** (Bring Your Own Key). After registering, add your AI provider key (Google Gemini, OpenAI, Anthropic, Groq, etc.) via the **onboarding wizard** or **Settings → API Keys**. Your key is encrypted at rest and never leaves your device. Free tier providers like Google Gemini and Groq are great for trying it out.
+```
+  ┌─────────────────────────────────────────────────────┐
+  │         HamaFX-Ai  —  Setup Wizard                  │
+  └─────────────────────────────────────────────────────┘
 
-> [!TIP]
-> Open `http://localhost:3000`, register at `/register`, and the onboarding wizard will guide you through adding your first AI provider key.
+  [1/6] ✅ Checking prerequisites      → Node, pnpm, Git, Docker
+  [2/6] 🤔 Choose setup mode           → Local Dev or Docker?
+  [3/6] 🔑 BYOK explanation            → Lists all 9 AI providers
+  [4/6] 📊 Market data keys (optional) → Finnhub, Marketaux, FRED, etc.
+  [5/6] 🔐 Generating secrets          → Auto-generates all required keys
+  [6/6] 📦 Installing dependencies     → Then offers to start the app
+```
 
-### Manual Setup
+When the wizard finishes, it offers to start the app immediately. Say yes, and you're running.
+
+---
+
+### Option 2: Manual Setup
 
 <details>
-<summary><b>Option 1: Native PGlite (Zero-Setup)</b></summary>
+<summary><b>🖥️ Local Dev — Fastest, no Docker needed</b></summary>
+
+Best for: **trying the app, developing, contributing**
 
 ```bash
 git clone https://github.com/HamaFx/HamaFX-Ai.git
@@ -125,33 +142,119 @@ echo 'BYOK_ENABLED=1' >> .env.local
 pnpm dev:local
 ```
 
-No AI provider keys are needed to start the app. After registering at `/register`, the onboarding wizard will guide you through adding your first AI provider key (Google Gemini, OpenAI, Anthropic, Groq, etc.). Auth and encryption secrets are **auto-generated** to `.hamafx/dev-secrets.json` on first boot.
+Then open **http://localhost:3000**
+
+What works:
+- ✅ Full web app, AI chat, charts, journal, alerts
+- ✅ All 32 AI tools, multi-agent deliberation
+- ✅ Hot reload — changes appear instantly
+
+What doesn't work (needs Docker):
+- ❌ Vector search / RAG memory (pgvector not in PGlite)
+- ❌ Live market data stream (no worker process)
+- ❌ Langfuse observability UI
+
+All auth and encryption secrets are **auto-generated** on first boot — you don't need to create any.
 
 </details>
 
 <details>
-<summary><b>Option 2: Docker Compose (Full Features)</b></summary>
+<summary><b>🐳 Docker — All features enabled</b></summary>
+
+Best for: **self-hosting, full features, production-like setup**
 
 ```bash
 git clone https://github.com/HamaFx/HamaFX-Ai.git
 cd HamaFX-Ai
-./docker/init-secrets.sh
-echo 'BYOK_ENABLED=1' >> .env
-# (Optional) Add market data keys to .env (Finnhub, Marketaux, FRED, etc.)
-docker compose up -d
+./docker/init-secrets.sh          # generates random passwords & secrets
+echo 'BYOK_ENABLED=1' >> .env     # enable Bring Your Own Key
+docker compose up -d              # starts everything
 ```
 
-| Service | Port | Purpose |
-|---------|------|---------|
-| `db` | 5432 | Postgres 16 + pgvector |
-| `langfuse` | 3001 | LLM observability UI |
-| `app` | 3000 | Next.js web app |
-| `worker` | 8081 | Worker daemon (SignalR + jobs) |
+Then open **http://localhost:3000**
+
+| Service | Port | What it does |
+|---------|------|-------------|
+| **Web app** | 3000 | The main HamaFX-Ai application |
+| **Langfuse** | 3001 | AI observability dashboard (optional) |
+| **Postgres** | 5432 | Database with pgvector for vector search |
+| **Worker** | 8081 | Background jobs, live market data, crons |
+
+First build takes 3-5 minutes. Subsequent starts are much faster.
 
 </details>
 
-> [!NOTE]
-> Docker Compose includes PostgreSQL 16 with `pgvector` for full RAG/memory support. Vector features are disabled under PGlite local dev.
+---
+
+### Which Mode Should I Choose?
+
+| | Local Dev | Docker |
+|---|---|---|
+| **Best for** | Trying it out, developing | Self-hosting, full features |
+| **Needs Docker** | No | Yes |
+| **Startup time** | ~10 seconds | ~3-5 minutes (first build) |
+| **RAM usage** | ~500MB | ~2GB |
+| **Vector search (RAG)** | ❌ | ✅ |
+| **Live market data** | ❌ | ✅ |
+| **Langfuse observability** | ❌ | ✅ |
+| **Hot reload** | ✅ | ❌ |
+
+**New here?** Start with **Local Dev** (`pnpm setup` → choose option 1). You can always switch to Docker later.
+
+---
+
+### 🔑 What is BYOK? (Bring Your Own Key)
+
+HamaFX-Ai doesn't include AI keys. You bring your own — it's your key, your bill, your data.
+
+**How it works:**
+1. Get an API key from any provider below (some are free)
+2. Start the app and register an account
+3. The **onboarding wizard** walks you through adding your key
+4. Your key is **encrypted at rest** (AES-256-GCM) and never leaves your device
+
+**Supported AI providers:**
+
+| Provider | Cost | Key format | Get a key |
+|----------|------|------------|-----------|
+| **Google Gemini** | Free tier | `AIza…` | [Get key →](https://aistudio.google.com/apikey) |
+| **Groq** | Free tier | `gsk_…` | [Get key →](https://console.groq.com/keys) |
+| **DeepSeek** | Low cost | `sk-…` | [Get key →](https://platform.deepseek.com/api_keys) |
+| **Mistral** | Low cost | `…` | [Get key →](https://console.mistral.ai/api-keys) |
+| **OpenAI** | Medium cost | `sk-…` | [Get key →](https://platform.openai.com/api-keys) |
+| **Anthropic** | Medium cost | `sk-ant-…` | [Get key →](https://console.anthropic.com/settings/keys) |
+| **OpenRouter** | Medium cost | `sk-or-…` | [Get key →](https://openrouter.ai/keys) |
+| **xAI (Grok)** | Medium cost | `xai-…` | [Get key →](https://console.x.ai) |
+| **Google Vertex AI** | Medium cost | Service account | [Get key →](https://console.cloud.google.com/vertex-ai) |
+
+> [!TIP]
+> **Just want to try it?** Get a free Google Gemini key — it takes 30 seconds and costs nothing.
+
+You can add multiple providers and switch between them in **Settings → API Keys**.
+
+---
+
+### After Starting the App
+
+① **Register** — Open http://localhost:3000/register and create an account
+
+② **Onboarding wizard** — Add your AI provider key (the wizard guides you through it)
+
+③ **Start chatting** — Ask about markets, analyze charts, set alerts, log trades
+
+That's it. You're running HamaFX-Ai.
+
+---
+
+### Troubleshooting
+
+| Problem | Solution |
+|---------|----------|
+| `pnpm: command not found` | Install it: `npm install -g pnpm` |
+| `Node.js version too old` | Install v20+ from [nodejs.org](https://nodejs.org/) |
+| `No AI API keys configured` | Add a key via Settings → API Keys (or the onboarding wizard) |
+| `Port 3000 already in use` | Another app is using it. Stop it or change the port: `PORT=3001 pnpm dev:local` |
+| `Docker compose failed` | Make sure Docker is running: `docker info` |
 
 ---
 
@@ -352,39 +455,55 @@ The full documentation set lives in [`docs/`](docs/). Every claim is verified ag
 
 ## 🐳 Self-Hosting
 
-HamaFX-Ai is designed to ship from **one codebase** serving both a hosted SaaS and self-hosted deployments. The split is controlled by environment variables — no code branches.
+HamaFX-Ai runs from **one codebase** — no forks or branches needed. You just set environment variables to control the mode.
 
-| Mode | Database | Scheduler | Setup |
-|------|----------|-----------|-------|
-| **Local native** | PGlite (embedded) | node-cron (embedded) | `pnpm dev:local` |
-| **Docker** | Postgres 16 + pgvector | node-cron (embedded) | `docker compose up -d` |
-| **Production** | Supabase Postgres | systemd timers (GCE VM) | Vercel + GCE VM |
+### Deployment Modes
 
-See [docs/06-deployment-self-hosting.md](docs/06-deployment-self-hosting.md) for the complete self-hosting guide and [docs/08-agent-setup-run.md](docs/08-agent-setup-run.md) for the full environment variable reference (78 vars documented).
+| Mode | Database | Best for | How to start |
+|------|----------|----------|-------------|
+| **Local Dev** | PGlite (embedded) | Trying it out, developing | `pnpm dev:local` |
+| **Docker** | Postgres 16 + pgvector | Self-hosting with all features | `docker compose up -d` |
+| **Production** | Supabase Postgres | Large-scale hosting | Vercel + GCE VM |
+
+### Minimum Setup for Self-Hosting
+
+If you're using the **interactive setup wizard** (`pnpm setup`), you don't need to worry about these — the wizard handles them automatically.
+
+If you're setting up manually, here's what you need:
 
 <details>
 <summary><b>📋 Minimum env vars for self-hosting</b></summary>
 
 ```bash
-# Required
+# ── Required (auto-generated by pnpm setup or docker/init-secrets.sh) ──
 AUTH_SECRET=<32-byte hex>          # node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 ENCRYPTION_SECRET=<32-byte hex>    # node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 CRON_SECRET=<16+ chars>            # node -e "console.log(require('crypto').randomBytes(16).toString('hex'))"
-GOOGLE_GENERATIVE_AI_API_KEY=AIza...  # Or AI_GATEWAY_API_KEY
 
-# Recommended
+# ── Required for BYOK mode ──
+BYOK_ENABLED=1                     # Enable Bring Your Own Key (users add their own AI keys)
+
+# ── Recommended ──
 MULTI_USER_ENABLED=1               # Enable multi-user registration
-BYOK_ENABLED=1                     # Enable Bring Your Own Key
 NEXTAUTH_URL=http://localhost:3000 # Your deployment URL
 
-# Data providers (optional but recommended)
+# ── AI keys are NOT required ──
+# Users add their own AI provider keys via Settings → API Keys after registration.
+# See the BYOK section above for supported providers.
+
+# ── Market data (optional, unlocks live news & economic data) ──
 FINNHUB_API_KEY=...
 MARKETAUX_API_KEY=...
 FRED_API_KEY=...
-TWELVEDATA_API_KEY=...
 ```
 
 </details>
+
+> [!NOTE]
+> **Server operators** who want to provide a server-wide AI fallback (so users don't need their own keys) can set `AI_GATEWAY_API_KEY`, `GOOGLE_GENERATIVE_AI_API_KEY`, or `GOOGLE_VERTEX_*` in the server environment. These act as fallbacks when a user hasn't added their own key. Most self-hosters should use BYOK mode instead.
+
+📖 **Full self-hosting guide:** [docs/06-deployment-self-hosting.md](docs/06-deployment-self-hosting.md)
+📖 **Full env var reference:** [docs/08-agent-setup-run.md](docs/08-agent-setup-run.md) (78 vars documented)
 
 ---
 
