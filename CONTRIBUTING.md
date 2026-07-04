@@ -21,11 +21,22 @@ No database installation required for local dev — PGlite (embedded Postgres) b
 
 ## 2. Quick Start
 
+### Interactive Setup (Recommended)
+
 ```bash
 # Fork and clone
 git clone https://github.com/<your-username>/HamaFX-Ai.git
 cd HamaFX-Ai
 
+# Run the setup wizard — checks prerequisites, asks for AI key, generates secrets
+pnpm setup
+```
+
+The wizard handles everything: prerequisite checks, mode selection (Local Dev vs Docker), AI provider key collection, secret generation, dependency installation, and startup.
+
+### Manual Setup
+
+```bash
 # Install dependencies
 pnpm install
 

@@ -90,7 +90,29 @@ HamaFX-Ai is an **autonomous AI trading companion that lives in your pocket**. C
 
 > **Prerequisites:** [Node.js v20+](https://nodejs.org/), [pnpm v9+](https://pnpm.io/). That's it — no database required for local dev.
 
-### Option 1: Native PGlite (Zero-Setup)
+### One-Command Setup (Interactive)
+
+```bash
+git clone https://github.com/HamaFx/HamaFX-Ai.git
+cd HamaFX-Ai
+pnpm setup
+```
+
+The setup wizard will:
+1. ✅ Check prerequisites (Node, pnpm, Git, Docker)
+2. 🤔 Ask: **Local Dev** (fast, no Docker) or **Docker** (full features)?
+3. 🔑 Ask which AI provider you want and collect your API key
+4. 🔐 Generate all required secrets automatically
+5. 📦 Install dependencies
+6. 🚀 Offer to start the app immediately
+
+> [!TIP]
+> Open `http://localhost:3000`, register at `/register`, and connect your API keys on the `/onboarding` screen.
+
+### Manual Setup
+
+<details>
+<summary><b>Option 1: Native PGlite (Zero-Setup)</b></summary>
 
 ```bash
 git clone https://github.com/HamaFx/HamaFX-Ai.git
@@ -100,24 +122,18 @@ echo 'GOOGLE_GENERATIVE_AI_API_KEY=AIza...' >> .env.local
 pnpm dev:local
 ```
 
-> [!TIP]
-> Open `http://localhost:3000`, register at `/register`, and connect your API keys on the `/onboarding` screen. Auth secrets, encryption keys, and cron tokens are **auto-generated** to `.hamafx/dev-secrets.json` on first boot.
+Auth secrets, encryption keys, and cron tokens are **auto-generated** to `.hamafx/dev-secrets.json` on first boot.
 
-### Option 2: Docker Compose (Full Features)
+</details>
 
 <details>
-<summary><b>🐳 Click to expand Docker setup</b></summary>
+<summary><b>Option 2: Docker Compose (Full Features)</b></summary>
 
 ```bash
 git clone https://github.com/HamaFx/HamaFX-Ai.git
 cd HamaFX-Ai
-# Generate random secrets (creates .env with cryptographically secure values)
 ./docker/init-secrets.sh
-
-# Add your AI provider keys to .env (at least one is required)
-nano .env
-
-# Start all services (Postgres 16 + pgvector, Langfuse, web app, worker)
+nano .env  # add your AI provider key
 docker compose up -d
 ```
 
