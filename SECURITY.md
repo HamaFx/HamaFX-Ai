@@ -2,26 +2,131 @@
 
 ## Supported Versions
 
-We provide security updates for the `main` branch and the latest stable release. Please ensure you are running the latest version of HamaFX-Ai to remain secure.
+We provide security updates for the `main` branch and the latest stable release.
 
-| Version | Supported          |
-| ------- | ------------------ |
-| Latest  | :white_check_mark: |
-| < Latest| :x:                |
+| Version | Supported |
+| ------- | ---------- |
+| Latest `main` | ✅ |
+| Latest release tag | ✅ |
+| Older releases | ❌ |
 
 ## Reporting a Vulnerability
 
-If you discover a security vulnerability within HamaFX-Ai, please **do not** open a public issue. We ask that you practice responsible disclosure to protect the community.
+If you discover a security vulnerability in HamaFX-Ai, **do not open a public issue**.
 
-Instead, please send an email to **security@hamafx.com**. We will strive to acknowledge your report within 48 hours and work with you to understand and mitigate the issue.
+Instead, email **security@hamafx.com** with:
 
-Please include the following information in your report:
-* A description of the vulnerability.
-* Steps to reproduce the issue.
-* The impact of the vulnerability.
-* Any potential mitigations you may suggest.
+1. A description of the vulnerability
+2. Steps to reproduce the issue
+3. The potential impact (data exposure, privilege escalation, financial impact, etc.)
+4. Any suggested mitigations
+
+**Response timeline:**
+
+| Step | Target |
+|------|--------|
+| Acknowledgment | 48 hours |
+| Initial assessment | 5 business days |
+| Fix or mitigation | 30 days (severity-dependent) |
+| Public disclosure | After fix is released, coordinated with reporter |
+
+Please practice responsible disclosure. We commit to not taking legal action against reporters who act in good faith.
 
 ## Known Security Considerations
 
-* **BYOK API Keys**: The Bring Your Own Key (BYOK) architecture encrypts API keys at rest in the database using the `ENCRYPTION_SECRET`. However, when interacting with the AI agent, these keys are decrypted in memory. Please ensure that `ENCRYPTION_SECRET` is strong, kept secret, and never committed to source control.
-* **Self-Hosted Deployments**: As a self-hosted platform, the security of the underlying infrastructure, operating system, and network access is the responsibility of the deployment operator. We recommend using reverse proxies (like Nginx, Traefik, or Caddy) with TLS/SSL enabled to secure data in transit.
+### Authentication
+
+HamaFX-Ai uses NextAuth.js v5 with a Credentials provider (email + password, bcrypt). Sessions are JWT-based with a 30-day expiry. Account lockout activates after 5 failed login attempts (15-minute lockout).
+
+**Known issues** (documented in [docs/05-security-auth-compliance.md](docs/05-security-auth-compliance.md) §4):
+
+| Issue | Severity | Status |
+|-------|----------|--------|
+| Token version not checked in JWT callback — sessions not invalidated after password change | Critical | Unfixed |
+| `__system__` user assumption in cron jobs can bypass tenant scoping | Critical | Unfixed |
+| Deleted users retain valid JWTs until expiry | High | Unfixed |
+
+If you are working on auth code, read [docs/05-security-auth-compliance.md](docs/05-security-auth-compliance.md) before making changes.
+
+### BYOK API Key Encryption
+
+User-provided AI provider keys (BYOK) are encrypted at rest using AES-256-GCM with the `ENCRYPTION_SECRET` environment variable (32-byte hex key). Keys are decrypted in memory only during tool execution.
+
+**Responsibilities:**
+- `ENCRYPTION_SECRET` must be a strong, randomly generated 32-byte hex value
+- Never commit `ENCRYPTION_SECRET` to version control
+- Never log decrypted API key values
+- The `redactSecrets()` utility (`packages/ai/src/diagnostics/redact.ts`) automatically redacts keys from diagnostic traces — ensure any new logging flows through it
+
+### Row-Level Security (RLS)
+
+RLS policies exist (migrations 0035–0039) but enforcement is **off by default**. Set `HAMAFX_ENABLE_RLS=true` to enable. Self-hosted deployments using PGlite have no RLS (PGlite does not support it).
+
+If you are self-hosting with multiple users, you must:
+1. Use Postgres (not PGlite)
+2. Set `HAMAFX_ENABLE_RLS=true`
+3. Set `ADMIN_DATABASE_URL` to the `hamafx_admin` BYPASSRLS role connection string
+4. Apply all migrations through 0041
+
+### Billing Webhook
+
+The NOWPayments billing webhook (`/api/billing/webhook`) verifies HMAC-SHA512 signatures on every request before any business logic runs. The `NOWPAYMENTS_IPN_SECRET` must be kept secret and set in the NOWPayments dashboard.
+
+**Safety gate requirements** (must be met before enabling paid plans):
+1. Webhook signature verification on every request ✅
+2. Dead-letter queue for failed processing (`ipn_events` table) ✅
+3. Sentry capture of webhook errors ⚠️ verify implementation
+4. Paging on signature failure threshold ⚠️ verify implementation
+
+### CSRF Protection
+
+All state-changing API requests (POST, PUT, DELETE, PATCH) require a CSRF double-submit cookie. The `hfx_csrf` cookie must match the `x-csrf-token` header. This is enforced in Edge middleware (`apps/web/src/middleware.ts`).
+
+### Content Security Policy
+
+The CSP header is set in `next.config.mjs`:
+
+```
+default-src 'self';
+script-src 'self' 'unsafe-eval' 'unsafe-inline' https://s3.tradingview.com;
+style-src 'self' 'unsafe-inline' https://s3.tradingview.com;
+img-src 'self' data: blob: https:;
+font-src 'self' data:;
+connect-src 'self' wss: https:;
+```
+
+> **Note:** `'unsafe-eval'` and `'unsafe-inline'` are present for Next.js and TradingView compatibility. Tightening to nonce-based CSP is a future improvement.
+
+### Self-Hosted Deployment Security
+
+Self-hosters are responsible for:
+- Securing the underlying infrastructure (OS, network, firewall)
+- Using a reverse proxy (Nginx, Traefik, Caddy) with TLS/SSL
+- Generating strong secrets (`AUTH_SECRET`, `ENCRYPTION_SECRET`, `CRON_SECRET`)
+- Keeping `ENCRYPTION_SECRET` backed up — losing it makes all stored BYOK keys unrecoverable
+- Restricting access to the database
+- Regularly updating dependencies (`pnpm update` + Dependabot PRs)
+
+### Data Provider Licensing
+
+HamaFX-Ai integrates with multiple market data providers (BiQuote, Finnhub, Marketaux, FRED, TwelveData, Binance, CFTC). **No provider terms of service are included in this repository.** If you redistribute market data to paying subscribers, you are responsible for verifying each provider's redistribution terms and obtaining appropriate licenses. See [docs/02-data-flows.md](docs/02-data-flows.md) §6 for the licensing status table.
+
+## Security Measures in CI/CD
+
+| Measure | Workflow | What it catches |
+|---------|----------|----------------|
+| CodeQL analysis | `codeql.yml` (weekly + PRs) | Code injection, path traversal, XSS patterns |
+| Trivy container scan | `docker-publish.yml` (on release) | CRITICAL + HIGH vulnerabilities in Docker images |
+| Dependabot | Weekly | Outdated dependencies with known CVEs |
+| ESLint security rules | `ci-fast.yml` (every PR) | Common security anti-patterns |
+
+## Secret Management
+
+| Environment | Method |
+|-------------|--------|
+| Local dev | Auto-generated to `.hamafx/dev-secrets.json` (gitignored) |
+| Docker | `.env` file (gitignored, from `.env.example` template) |
+| Production (hosted) | GCP Secret Manager (`SECRETS_VAULT_PROVIDER=gcp-secret-manager`) |
+| Self-hosted | `.env` file or your preferred secrets manager |
+
+**Never commit secrets.** The `.gitignore` excludes `.env`, `.env.local`, `.hamafx/`, and `docker-compose.override.yml`.
