@@ -21,52 +21,30 @@
 // vars available to the Playwright test runner process.
 // ---------------------------------------------------------------------------
 
-import { readFileSync } from 'fs';
 import { defineConfig, devices } from '@playwright/test';
 import { fileURLToPath } from 'url';
-import { dirname, resolve } from 'path';
+import { dirname } from 'path';
+import { loadE2eEnv } from './tests/e2e/env-loader';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-function loadEnvFiles() {
-  const files = [
-    resolve(__dirname, '.env.local'),
-    resolve(__dirname, '../../.env.local'),
-  ];
-  for (const envPath of files) {
-    try {
-      const content = readFileSync(envPath, 'utf-8');
-      for (const line of content.split('\n')) {
-        const trimmed = line.trim();
-        if (!trimmed || trimmed.startsWith('#') || trimmed.startsWith('//')) continue;
-        const eqIdx = trimmed.indexOf('=');
-        if (eqIdx === -1) continue;
-        const key = trimmed.slice(0, eqIdx).trim();
-        if (trimmed.slice(eqIdx + 1).trim() === '"') continue; // skip multi-line JSON start
-        let value = trimmed.slice(eqIdx + 1).trim();
-        if ((value.startsWith('"') && value.endsWith('"')) ||
-            (value.startsWith("'") && value.endsWith("'"))) {
-          value = value.slice(1, -1);
-        }
-        if (key && value && !process.env[key]) {
-          process.env[key] = value;
-        }
-      }
-    } catch {}
-  }
-  if (!process.env.AUTH_SECRET) {
-    process.env.AUTH_SECRET = process.env.AUTH_COOKIE_SECRET || 'e2e-test-fallback-secret-key-32-chars!!';
-  }
-  if (!process.env.NEXTAUTH_URL) {
-    process.env.NEXTAUTH_URL = 'http://localhost:3000';
-  }
-  if (!process.env.DATABASE_URL && process.env.POSTGRES_URL) {
-    process.env.DATABASE_URL = process.env.POSTGRES_URL;
-  }
-}
+loadE2eEnv(__dirname);
 
-loadEnvFiles();
+// Build the webServer command with the correct ENCRYPTION_SECRET from
+// .env.production.local (since .env.local has an empty override).
+function buildWebServerCommand(): string {
+  const encKey = process.env.ENCRYPTION_SECRET;
+  const baseCmd = process.env.CI ? 'pnpm build && pnpm start' : 'pnpm dev';
+  // Force webpack mode because Turbopack does not respect
+  // serverExternalPackages, causing thread-stream's worker file resolution
+  // to fail ("vendor-chunks/lib/worker.js").
+  const webpackFlag = process.env.CI ? '' : ' --webpack';
+  if (encKey) {
+    return `ENCRYPTION_SECRET=${encKey} ${baseCmd}${webpackFlag}`;
+  }
+  return `${baseCmd}${webpackFlag}`;
+}
 
 export default defineConfig({
   testDir: './tests/e2e',
@@ -86,7 +64,7 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: process.env.CI ? 'pnpm build && pnpm start' : 'pnpm dev',
+    command: buildWebServerCommand(),
     url: 'http://localhost:3000',
     reuseExistingServer: !process.env.CI,
     timeout: process.env.CI ? 120_000 : 30_000,

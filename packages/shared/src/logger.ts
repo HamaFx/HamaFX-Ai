@@ -19,19 +19,13 @@ import pino from 'pino';
 // Define a default base config for our structured logger
 const isDevelopment = process.env.NODE_ENV === 'development';
 
+// NOTE: We intentionally avoid pino-pretty / transport here because
+// Next.js webpack/Turbopack cannot safely bundle thread-stream's worker
+// file ("vendor-chunks/lib/worker.js"). For pretty-printed dev logs,
+// pipe the output: pnpm dev | npx pino-pretty
+
 export const logger = pino({
   level: process.env.LOG_LEVEL || (isDevelopment ? 'debug' : 'info'),
-  // Use pino-pretty for human-readable logs in development, raw JSON in production
-  ...(isDevelopment && {
-    transport: {
-      target: 'pino-pretty',
-      options: {
-        colorize: true,
-        translateTime: 'SYS:standard',
-        ignore: 'pid,hostname',
-      },
-    },
-  }),
   // Automatically inject default context bindings, but omit pid/hostname to save bytes in JSON
   ...(isDevelopment ? { base: null } : {}),
   redact: {
