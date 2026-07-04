@@ -93,8 +93,8 @@ export function GetPortfolioSnapshotPart({ output, state, errorMessage }: GetPor
               key={`alert-${i}`}
               className={`flex items-start gap-1.5 text-xs p-2 rounded-sm ${
                 alert.level === 'danger'
-                  ? 'bg-red-500/10 text-red-500 border border-bear/20'
-                  : 'bg-amber-500/10 text-amber-500 border border-warn/20'
+                  ? 'bg-red-500/10 text-red-500 border border-red-500/20'
+                  : 'bg-amber-500/10 text-amber-500 border border-amber-500/20'
               }`}
             >
               <AlertTriangle className="size-3.5 shrink-0 mt-0.5" />
@@ -108,15 +108,15 @@ export function GetPortfolioSnapshotPart({ output, state, errorMessage }: GetPor
         {positions.map((pos, i) => {
           const isBull = pos.unrealizedPnlUsd !== null && pos.unrealizedPnlUsd >= 0;
           return (
-            <li key={`position-${i}`} className="flex items-center justify-between gap-3 p-2 bg-bg rounded-sm">
+            <li key={`position-${i}`} className="flex items-center justify-between gap-3 p-2 bg-zinc-950 rounded-sm">
               <div className="flex flex-col">
                 <div className="flex items-center gap-1.5">
                   <span className="text-fg font-semibold">{pos.symbol}</span>
                   <span
                     className={`text-caption px-1.5 py-0.5 rounded font-medium ${
                       pos.direction === 'long'
-                        ? 'bg-bull/15 text-bull'
-                        : 'bg-bear/15 text-bear'
+                        ? 'bg-emerald-500/15 text-emerald-500'
+                        : 'bg-red-500/15 text-red-500'
                     }`}
                   >
                     {pos.direction.toUpperCase()}
@@ -128,7 +128,7 @@ export function GetPortfolioSnapshotPart({ output, state, errorMessage }: GetPor
               </div>
               <div className="text-right">
                 {pos.unrealizedPnlUsd !== null && pos.unrealizedPnlPct !== null ? (
-                  <div className={`font-semibold tabular-nums ${isBull ? 'text-bull' : 'text-bear'}`}>
+                  <div className={`font-semibold tabular-nums ${isBull ? 'text-emerald-500' : 'text-red-500'}`}>
                     {isBull ? '+' : ''}${pos.unrealizedPnlUsd.toLocaleString(undefined, { maximumFractionDigits: 2 })}
                     <div className="text-caption font-normal">
                       {isBull ? '+' : ''}{pos.unrealizedPnlPct.toFixed(2)}%

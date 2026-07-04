@@ -44,8 +44,8 @@ interface NewsToolbarProps {
 
 const SENTIMENTS: Array<{ value: SentimentFilter; label: string; tone: string }> = [
   { value: 'all', label: 'All', tone: 'text-fg' },
-  { value: 'positive', label: 'Bullish', tone: 'text-bull' },
-  { value: 'negative', label: 'Bearish', tone: 'text-bear' },
+  { value: 'positive', label: 'Bullish', tone: 'text-emerald-500' },
+  { value: 'negative', label: 'Bearish', tone: 'text-red-500' },
   { value: 'neutral', label: 'Neutral', tone: 'text-fg-muted' },
 ];
 

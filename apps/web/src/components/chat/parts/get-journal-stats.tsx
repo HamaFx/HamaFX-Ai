@@ -71,7 +71,7 @@ export function GetJournalStatsPart({
 
         <dd className="text-emerald-500">{stats.wins}</dd>
         <dd className="text-red-500">{stats.losses}</dd>
-        <dd className={stats.totalR >= 0 ? 'text-bull' : 'text-bear'}>
+        <dd className={stats.totalR >= 0 ? 'text-emerald-500' : 'text-red-500'}>
           {stats.totalR.toFixed(2)}R
         </dd>
       </dl>
@@ -104,10 +104,10 @@ function BreakdownList({
             >
               <span className="text-fg truncate font-medium">{r.key}</span>
               <span className="text-fg-muted">{r.count}</span>
-              <span className={r.winRate >= 0.5 ? 'text-bull' : 'text-bear'}>
+              <span className={r.winRate >= 0.5 ? 'text-emerald-500' : 'text-red-500'}>
                 {Math.round(r.winRate * 100)}%
               </span>
-              <span className={r.avgR >= 0 ? 'text-bull' : 'text-bear'}>
+              <span className={r.avgR >= 0 ? 'text-emerald-500' : 'text-red-500'}>
                 {r.avgR.toFixed(2)}R
               </span>
             </Link>

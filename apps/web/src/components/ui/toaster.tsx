@@ -66,16 +66,15 @@ export function Toaster() {
         toastOptions={{
           classNames: {
             toast:
-              'group !rounded-sm ! !backdrop-saturate-150 !shadow-2xl ' +
-              '![background:linear-gradient(135deg,oklch(20%_0.022_265/0.85),oklch(17%_0.018_265/0.95))] ' +
-              '!border !border-zinc-800 !text-fg ' +
-              '![box-shadow:inset_0_1px_0_0_oklch(100%_0_0_/_0.06),0_25px_50px_-12px_oklch(0%_0_0_/_0.5)]',
+              'group !rounded-sm !border !border-zinc-800 !text-fg !shadow-2xl ' +
+              '![background:rgba(24,24,27,0.9)] ' +
+              '![box-shadow:0_4px_16px_-4px_rgba(0,0,0,0.8)]',
             title: '!text-sm !font-semibold',
             description: '!text-xs !text-fg-muted',
             success: '!border-emerald-500/40',
             error: '!border-red-500/40',
-            info: '!border-info/40',
-            warning: '!border-warn/40',
+            info: '!border-blue-500/40',
+            warning: '!border-amber-500/40',
           },
         }}
       />

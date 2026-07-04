@@ -93,9 +93,9 @@ export function BriefingWidget({ briefing }: BriefingWidgetProps) {
             className={cn(
               'rounded-sm px-1.5 py-0.5 text-caption font-medium',
               briefing.kind === 'pre'
-                ? 'bg-amber-500/10 text-warn'
+                ? 'bg-amber-500/10 text-amber-500'
                 : briefing.kind === 'post'
-                  ? 'bg-blue-500/10 text-info'
+                  ? 'bg-blue-500/10 text-blue-500'
                   : 'bg-zinc-900 text-fg',
             )}
           >

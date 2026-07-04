@@ -36,7 +36,7 @@ export function ForecastVolatilityPart({
           {output.symbol} · {output.horizonHours}h forward vol
         </h3>
         {output.eventAdjusted ? (
-          <span className="bg-warn/15 text-amber-500 rounded-sm px-2 py-0.5 text-caption font-semibold">
+          <span className="bg-amber-500/15 text-amber-500 rounded-sm px-2 py-0.5 text-caption font-semibold">
             Event-adjusted ×{output.eventMultiplier.toFixed(1)}
           </span>
         ) : null}

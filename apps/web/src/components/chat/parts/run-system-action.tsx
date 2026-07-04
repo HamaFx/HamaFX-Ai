@@ -54,7 +54,7 @@ export function RunSystemActionPart({
           </div>
         </div>
         <span className={`inline-flex items-center gap-1 rounded-sm px-2.5 py-0.5 text-xs font-bold ${
-          isSuccess ? 'bg-emerald-500/10 text-bull' : 'bg-red-500/10 text-bear'
+          isSuccess ? 'bg-emerald-500/10 text-emerald-500' : 'bg-red-500/10 text-red-500'
         }`}>
           {isSuccess ? <CheckCircle2 className="size-3" /> : <AlertTriangle className="size-3" />}
           {isSuccess ? 'COMPLETED' : 'FAILED'}
@@ -63,17 +63,17 @@ export function RunSystemActionPart({
 
       {/* Terminal View */}
       <div className="relative">
-        <div className="absolute top-2 right-2 flex items-center gap-1.5 text-xs font-mono text-fg-subtle bg-bg-elev-2/80 px-2 py-0.5 rounded border border-zinc-900/50">
-          <div className={`size-1.5 rounded-sm ${isSuccess ? 'bg-emerald-500 animate-pulse' : 'bg-bear'}`} />
+        <div className="absolute top-2 right-2 flex items-center gap-1.5 text-xs font-mono text-fg-subtle bg-zinc-900/80 px-2 py-0.5 rounded border border-zinc-900/50">
+          <div className={`size-1.5 rounded-sm ${isSuccess ? 'bg-emerald-500 animate-pulse' : 'bg-red-500'}`} />
           <span>{executionTimeMs}ms</span>
         </div>
-        <pre className="bg-zinc-900 text-emerald-500 font-mono text-xs p-3 rounded-sm overflow-y-auto max-h-48 border border-divider/25 leading-normal select-all">
+        <pre className="bg-zinc-900 text-emerald-500 font-mono text-xs p-3 rounded-sm overflow-y-auto max-h-48 border border-zinc-800/25 leading-normal select-all">
           <code>
             {consoleLogs.map((line, idx) => {
-              let textClass = 'text-bull';
+              let textClass = 'text-emerald-500';
               if (line.startsWith('[error]')) textClass = 'text-red-500 font-semibold';
-              if (line.startsWith('[resonance-sync]')) textClass = 'text-info';
-              if (line.startsWith('[cot-sync]') || line.startsWith('[cache]')) textClass = 'text-warn';
+              if (line.startsWith('[resonance-sync]')) textClass = 'text-blue-500';
+              if (line.startsWith('[cot-sync]') || line.startsWith('[cache]')) textClass = 'text-amber-500';
               
               return (
                 <div key={idx} className={`${textClass} py-0.5 break-all whitespace-pre-wrap`}>
@@ -87,7 +87,7 @@ export function RunSystemActionPart({
 
       {/* Action Summary Message */}
       <div className={`rounded-sm p-2.5 text-body-sm leading-[1.4] border ${
-        isSuccess ? 'bg-bull/5 border-bull/20 text-fg' : 'bg-bear/5 border-bear/20 text-bear'
+        isSuccess ? 'bg-emerald-500/5 border-emerald-500/20 text-fg' : 'bg-red-500/5 border-red-500/20 text-red-500'
       }`}>
         {message}
       </div>
@@ -109,7 +109,7 @@ function SkeletonCard() {
         <div className="bg-zinc-900 h-5 w-24 animate-pulse rounded-sm" />
       </div>
       <div className="relative mt-3">
-        <div className="bg-zinc-900 h-28 w-full rounded-sm border border-divider/25 flex flex-col justify-center items-center gap-2">
+        <div className="bg-zinc-900 h-28 w-full rounded-sm border border-zinc-800/25 flex flex-col justify-center items-center gap-2">
           <Loader2 className="size-5 text-emerald-500 animate-spin" />
           <span className="text-xs font-mono text-emerald-500 animate-pulse">
             [devops] executing target sync scripts...

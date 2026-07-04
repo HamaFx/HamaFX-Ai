@@ -165,7 +165,7 @@ export async function SystemStatusCard({ userId }: { userId: string }) {
               className={cn(
                 'inline-flex size-7 shrink-0 items-center justify-center rounded-sm',
                 c.ready
-                  ? 'bg-bull/15 text-bull'
+                  ? 'bg-emerald-500/15 text-emerald-500'
                   : 'bg-zinc-900 text-fg-subtle',
               )}
             >
@@ -202,7 +202,7 @@ export async function SystemStatusCard({ userId }: { userId: string }) {
             aria-hidden="true"
             className={cn(
               'inline-flex size-7 shrink-0 items-center justify-center rounded-sm',
-              cronHealthy ? 'bg-bull/15 text-bull' : 'bg-warn/15 text-warn',
+              cronHealthy ? 'bg-emerald-500/15 text-emerald-500' : 'bg-amber-500/15 text-amber-500',
             )}
           >
             {cronHealthy ? (
@@ -231,9 +231,9 @@ export async function SystemStatusCard({ userId }: { userId: string }) {
               'inline-flex size-7 shrink-0 items-center justify-center rounded-sm',
               marketPhase.isOpen
                 ? marketPhase.liquidity === 'high'
-                  ? 'bg-bull/15 text-bull'
+                  ? 'bg-emerald-500/15 text-emerald-500'
                   : marketPhase.liquidity === 'medium'
-                    ? 'bg-warn/15 text-warn'
+                    ? 'bg-amber-500/15 text-amber-500'
                     : 'bg-fg-muted/15 text-fg-muted'
                 : 'bg-zinc-900 text-fg-subtle',
             )}

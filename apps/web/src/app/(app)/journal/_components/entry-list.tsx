@@ -135,8 +135,8 @@ export function EntryList({ entries, onClosed, onDeleted }: EntryListProps) {
   return (
     <div className="flex flex-col gap-4">
       {/* Visual Tab Switcher */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-glass-edge/40 pb-2">
-        <div className="flex p-0.5 rounded-sm bg-zinc-900 border border-glass-edge/40 self-start">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-800/40 pb-2">
+        <div className="flex p-0.5 rounded-sm bg-zinc-900 border border-zinc-800/40 self-start">
           <button
             onClick={() => setTab('active')}
             className={cn(
@@ -148,7 +148,7 @@ export function EntryList({ entries, onClosed, onDeleted }: EntryListProps) {
             {activeCount > 0 && (
               <span className={cn(
                 'size-2 rounded-sm',
-                tab === 'active' ? 'bg-brand-fg animate-ping' : 'bg-fg animate-pulse'
+                tab === 'active' ? 'bg-fg-fg animate-ping' : 'bg-fg animate-pulse'
               )} />
             )}
           </button>
@@ -182,13 +182,13 @@ export function EntryList({ entries, onClosed, onDeleted }: EntryListProps) {
               placeholder="Search notes, tags, symbol..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 text-xs rounded-sm bg-bg-elev-2/45 border border-glass-edge/40 focus:outline-none focus:border-brand/70 transition-all text-fg"
+              className="w-full pl-9 pr-4 py-2 text-xs rounded-sm bg-zinc-900/45 border border-zinc-800/40 focus:outline-none focus:border-zinc-700/70 transition-all text-fg"
             />
           </div>
           <button
             onClick={() => setShowFilters(!showFilters)}
             className={cn(
-              'p-2.5 rounded-sm border border-glass-edge/40 bg-bg-elev-2/45 text-fg-muted hover:text-fg transition-all cursor-pointer',
+              'p-2.5 rounded-sm border border-zinc-800/40 bg-zinc-900/45 text-fg-muted hover:text-fg transition-all cursor-pointer',
               showFilters && 'border-zinc-700 text-fg bg-zinc-950'
             )}
             title="Toggle advanced filters"
@@ -209,7 +209,7 @@ export function EntryList({ entries, onClosed, onDeleted }: EntryListProps) {
                   key={sym}
                   onClick={() => setSymbolFilter(sym)}
                   className={cn(
-                    'px-2.5 py-1 text-xs font-semibold rounded-sm border border-glass-edge bg-zinc-800/50 hover:bg-zinc-800 cursor-pointer',
+                    'px-2.5 py-1 text-xs font-semibold rounded-sm border border-zinc-800 bg-zinc-800/50 hover:bg-zinc-800 cursor-pointer',
                     symbolFilter === sym && 'border-zinc-700 bg-zinc-900 text-fg'
                   )}
                 >
@@ -227,7 +227,7 @@ export function EntryList({ entries, onClosed, onDeleted }: EntryListProps) {
                   key={side}
                   onClick={() => setSideFilter(side)}
                   className={cn(
-                    'px-2.5 py-1 text-xs font-semibold rounded-sm border border-glass-edge bg-zinc-800/50 hover:bg-zinc-800 cursor-pointer',
+                    'px-2.5 py-1 text-xs font-semibold rounded-sm border border-zinc-800 bg-zinc-800/50 hover:bg-zinc-800 cursor-pointer',
                     sideFilter === side && 'border-zinc-700 bg-zinc-900 text-fg'
                   )}
                 >
@@ -245,7 +245,7 @@ export function EntryList({ entries, onClosed, onDeleted }: EntryListProps) {
                   key={tag}
                   onClick={() => setTagFilter(tag)}
                   className={cn(
-                    'px-2.5 py-1 text-xs font-semibold rounded-sm border border-glass-edge bg-zinc-800/50 hover:bg-zinc-800 cursor-pointer',
+                    'px-2.5 py-1 text-xs font-semibold rounded-sm border border-zinc-800 bg-zinc-800/50 hover:bg-zinc-800 cursor-pointer',
                     tagFilter === tag && 'border-zinc-700 bg-zinc-900 text-fg'
                   )}
                 >
@@ -260,7 +260,7 @@ export function EntryList({ entries, onClosed, onDeleted }: EntryListProps) {
       {/* Entries List */}
       {filteredEntries.length === 0 ? (
         <div className="border border-zinc-800 bg-zinc-950 rounded-sm p-8 text-center flex flex-col items-center justify-center gap-2">
-          <div className="size-10 rounded-sm bg-glass border border-glass-edge flex items-center justify-center text-fg-muted">
+          <div className="size-10 rounded-sm bg-zinc-900 border border-zinc-800 flex items-center justify-center text-fg-muted">
             <Compass className="size-5" />
           </div>
           <p className="text-sm font-semibold text-fg">No entries found</p>
@@ -437,16 +437,16 @@ function EntryRow({
     return Math.min(Math.max(percentage, -20), 120);
   }, [entry, livePrice]);
 
-  const sideColor = entry.side === 'long' ? 'text-bull' : 'text-bear';
-  const sideBg = entry.side === 'long' ? 'bg-emerald-500/10 border-bull/20' : 'bg-red-500/10 border-bear/20';
+  const sideColor = entry.side === 'long' ? 'text-emerald-500' : 'text-red-500';
+  const sideBg = entry.side === 'long' ? 'bg-emerald-500/10 border-emerald-500/20' : 'bg-red-500/10 border-red-500/20';
   
   const isWin = entry.outcome === 'win' || (liveStats && liveStats.rMultiple > 0);
   const isLoss = entry.outcome === 'loss' || (liveStats && liveStats.rMultiple < 0);
 
-  const outcomeColor = isWin ? 'text-bull' : isLoss ? 'text-bear' : 'text-fg-muted';
+  const outcomeColor = isWin ? 'text-emerald-500' : isLoss ? 'text-red-500' : 'text-fg-muted';
 
   return (
-    <li className="border border-zinc-800 bg-zinc-950 rounded-sm flex flex-col gap-3.5 p-4 hover:border-glass-edge-hover hover:shadow-none/5 transition-all duration-200">
+    <li className="border border-zinc-800 bg-zinc-950 rounded-sm flex flex-col gap-3.5 p-4 hover:border-zinc-800-hover hover:shadow-none/5 transition-all duration-200">
       <div className="flex items-start gap-4">
         <div className="min-w-0 flex-1 flex flex-col gap-1.5">
           {/* Header Row */}
@@ -464,7 +464,7 @@ function EntryRow({
 
             {/* Sizing lot indicator */}
             {entry.size !== null && (
-              <span className="text-caption font-medium text-fg-subtle px-1.5 py-0.5 rounded-sm bg-zinc-800 border border-glass-edge/40">
+              <span className="text-caption font-medium text-fg-subtle px-1.5 py-0.5 rounded-sm bg-zinc-800 border border-zinc-800/40">
                 {entry.size} Lots
               </span>
             )}
@@ -487,7 +487,7 @@ function EntryRow({
               {entry.tags.map((t) => (
                 <span
                   key={t}
-                  className="px-2 py-0.5 text-xs font-black uppercase tracking-wider rounded-sm bg-zinc-950 border border-brand/20 text-fg"
+                  className="px-2 py-0.5 text-xs font-black uppercase tracking-wider rounded-sm bg-zinc-950 border border-zinc-700/20 text-fg"
                 >
                   #{t}
                 </span>
@@ -515,7 +515,7 @@ function EntryRow({
 
           {/* Notes display */}
           {entry.notes && (
-            <p className="text-fg-muted text-xs leading-[1.4] mt-1.5 border-l-2 border-glass-edge/70 pl-2.5 py-0.5">
+            <p className="text-fg-muted text-xs leading-[1.4] mt-1.5 border-l-2 border-zinc-800/70 pl-2.5 py-0.5">
               {entry.notes}
             </p>
           )}
@@ -550,7 +550,7 @@ function EntryRow({
             )
           ) : (
             <div className="flex flex-col items-end">
-              <span className={cn('text-xs font-black uppercase tracking-wider px-2 py-0.5 rounded bg-zinc-800 border border-glass-edge/40', outcomeColor)}>
+              <span className={cn('text-xs font-black uppercase tracking-wider px-2 py-0.5 rounded bg-zinc-800 border border-zinc-800/40', outcomeColor)}>
                 {entry.outcome}
               </span>
               {entry.rMultiple !== null && (
@@ -581,7 +581,7 @@ function EntryRow({
                 aria-label="Delete entry"
                 onClick={() => void remove()}
                 disabled={busy}
-                className="text-bear/75 hover:text-red-500 hover:bg-red-500/10 inline-flex size-9 items-center justify-center rounded-sm transition-colors disabled:opacity-50 cursor-pointer"
+                className="text-red-500/75 hover:text-red-500 hover:bg-red-500/10 inline-flex size-9 items-center justify-center rounded-sm transition-colors disabled:opacity-50 cursor-pointer"
               >
                 <Trash2 className="size-4" />
               </button>
@@ -592,14 +592,14 @@ function EntryRow({
 
       {/* Real-time Visual SL-to-TP Slider Bar */}
       {entry.outcome === 'open' && entry.stop !== null && entry.target !== null && livePrice && sliderPosition !== null && (
-        <div className="border-t border-glass-edge/30 pt-3 flex flex-col gap-1.5 animate-in fade-in duration-200">
+        <div className="border-t border-zinc-800/30 pt-3 flex flex-col gap-1.5 animate-in fade-in duration-200">
           <div className="flex items-center justify-between text-xs font-bold uppercase tracking-wider text-fg-subtle">
             <span className="text-red-500">SL: {entry.stop}</span>
             <span className="text-fg-muted">Entry: {entry.entry}</span>
             <span className="text-emerald-500">Target: {entry.target}</span>
           </div>
 
-          <div className="relative h-2 w-full rounded-sm bg-zinc-800 border border-glass-edge/20 overflow-visible mt-1 flex items-center">
+          <div className="relative h-2 w-full rounded-sm bg-zinc-800 border border-zinc-800/20 overflow-visible mt-1 flex items-center">
             {/* Entry Line Indicator */}
             <div
               style={{
@@ -607,7 +607,7 @@ function EntryRow({
                   ? `${((entry.entry - entry.stop) / (entry.target - entry.stop)) * 100}%`
                   : `${((entry.stop - entry.entry) / (entry.stop - entry.target)) * 100}%`
               }}
-              className="absolute h-4 w-0.5 bg-warn/80 z-10"
+              className="absolute h-4 w-0.5 bg-amber-500/80 z-10"
               title="Entry Price Level"
             />
 
@@ -616,7 +616,7 @@ function EntryRow({
               style={{ left: `${sliderPosition}%` }}
               className={cn(
                 'absolute size-3 rounded-sm -translate-x-1/2 z-20 shadow-md border border-fg transition-all duration-300',
-                isWin ? 'bg-emerald-500 shadow-glow-bull/30 animate-pulse' : isLoss ? 'bg-red-500 shadow-glow-bear/30' : 'bg-fg-muted'
+                isWin ? 'bg-emerald-500 shadow-none/30 animate-pulse' : isLoss ? 'bg-red-500 shadow-none/30' : 'bg-fg-muted'
               )}
               title={`Live Price: ${livePrice}`}
             />
@@ -668,7 +668,7 @@ function EntryRow({
               onChange={(ev) => setExit(ev.target.value)}
               inputMode="decimal"
               autoFocus
-              className="mt-1.5 focus:border-brand/70"
+              className="mt-1.5 focus:border-zinc-700/70"
             />
             {error ? <p className="text-red-500 mt-2 text-xs font-semibold">{error}</p> : null}
           </div>

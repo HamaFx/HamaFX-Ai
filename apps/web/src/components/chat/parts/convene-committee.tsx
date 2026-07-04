@@ -50,13 +50,13 @@ function GradeBadge({
   let icon = null;
 
   if (goNoGo === 'go') {
-    bgTone = 'bg-emerald-500/10 text-bull';
+    bgTone = 'bg-emerald-500/10 text-emerald-500';
     icon = <CheckCircle2 className="mr-1 size-3" />;
   } else if (goNoGo === 'caution') {
-    bgTone = 'bg-amber-500/10 text-warn';
+    bgTone = 'bg-amber-500/10 text-amber-500';
     icon = <AlertTriangle className="mr-1 size-3" />;
   } else {
-    bgTone = 'bg-red-500/10 text-bear';
+    bgTone = 'bg-red-500/10 text-red-500';
     icon = <XCircle className="mr-1 size-3" />;
   }
 
@@ -133,9 +133,9 @@ function VerdictCard({ verdict }: { verdict: CommitteeVerdict }) {
 
   const tone =
     verdict.verdict === 'bullish'
-      ? 'text-bull'
+      ? 'text-emerald-500'
       : verdict.verdict === 'bearish'
-        ? 'text-bear'
+        ? 'text-red-500'
         : 'text-fg-muted';
 
   return (

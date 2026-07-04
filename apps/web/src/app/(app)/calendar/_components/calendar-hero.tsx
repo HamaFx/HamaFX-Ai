@@ -125,7 +125,7 @@ export function CalendarHero({ events = [] }: CalendarHeroProps) {
           {counts.medium > 0 ? (
             <span
               aria-hidden
-              className="bg-warn h-full"
+              className="bg-amber-500 h-full"
               style={{ width: `${pct(counts.medium)}%` }}
             />
           ) : null}
@@ -138,8 +138,8 @@ export function CalendarHero({ events = [] }: CalendarHeroProps) {
           ) : null}
         </div>
         <ul className="flex flex-wrap items-center gap-x-3 gap-y-1 text-body-sm tabular-nums">
-          <Tag dot="bg-bear" tone="text-red-500" label="High" count={counts.high} />
-          <Tag dot="bg-warn" tone="text-amber-500" label="Medium" count={counts.medium} />
+          <Tag dot="bg-red-500" tone="text-red-500" label="High" count={counts.high} />
+          <Tag dot="bg-amber-500" tone="text-amber-500" label="Medium" count={counts.medium} />
           <Tag dot="bg-fg-subtle" tone="text-fg-muted" label="Low" count={counts.low} />
         </ul>
       </div>

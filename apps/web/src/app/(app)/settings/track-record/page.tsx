@@ -82,7 +82,7 @@ function TrackRecordContent({ stats }: { stats: SignalStats }) {
           label="Avg Return"
           value={avgReturnStr}
           icon={stats.avgReturnPct >= 0 ? TrendingUp : TrendingDown}
-          valueClass={stats.avgReturnPct >= 0 ? 'text-bull' : 'text-bear'}
+          valueClass={stats.avgReturnPct >= 0 ? 'text-emerald-500' : 'text-red-500'}
         />
         <StatCard label="Evaluated" value={String(stats.evaluated)} icon={Target} />
       </div>
@@ -175,9 +175,9 @@ function TrackRecordContent({ stats }: { stats: SignalStats }) {
                     className={cn(
                       'text-xs font-medium px-2 py-0.5 rounded uppercase',
                       s.action === 'buy' || s.action === 'add'
-                        ? 'bg-emerald-500/10 text-bull'
+                        ? 'bg-emerald-500/10 text-emerald-500'
                         : s.action === 'sell' || s.action === 'reduce'
-                          ? 'bg-red-500/10 text-bear'
+                          ? 'bg-red-500/10 text-red-500'
                           : 'bg-zinc-900 text-fg-muted',
                     )}
                   >
@@ -227,10 +227,10 @@ function StatCard({
 
 function StatusBadge({ status }: { status: string }) {
   const styles: Record<string, string> = {
-    active: 'bg-blue-500/10 text-info',
+    active: 'bg-blue-500/10 text-blue-500',
     closed: 'bg-zinc-900 text-fg-muted',
-    expired: 'bg-amber-500/10 text-warn',
-    invalidated: 'bg-red-500/10 text-bear',
+    expired: 'bg-amber-500/10 text-amber-500',
+    invalidated: 'bg-red-500/10 text-red-500',
   };
   return (
     <span className={cn('text-xs font-medium px-2 py-0.5 rounded', styles[status] ?? styles.closed)}>

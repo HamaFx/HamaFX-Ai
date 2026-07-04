@@ -264,7 +264,7 @@ export function Segmented<T extends string>(props: SegmentedProps<T>) {
 }
 
 function toneClass(tone: SegmentedTone | undefined): string {
-  if (tone === 'bull') return 'bg-emerald-500 text-bg';
-  if (tone === 'bear') return 'bg-red-500 text-bg';
+  if (tone === 'bull') return 'bg-emerald-500 text-black';
+  if (tone === 'bear') return 'bg-red-500 text-black';
   return 'bg-fg text-black';
 }

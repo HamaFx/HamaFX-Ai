@@ -42,15 +42,15 @@ export function GetSystemDiagnosticsPart({
   let StatusIcon = Activity;
 
   if (status === 'healthy') {
-    statusColor = 'text-bull';
+    statusColor = 'text-emerald-500';
     statusBg = 'bg-emerald-500/10';
     StatusIcon = CheckCircle;
   } else if (status === 'degraded') {
-    statusColor = 'text-warn';
+    statusColor = 'text-amber-500';
     statusBg = 'bg-amber-500/10';
     StatusIcon = AlertTriangle;
   } else if (status === 'unhealthy') {
-    statusColor = 'text-bear';
+    statusColor = 'text-red-500';
     statusBg = 'bg-red-500/10';
     StatusIcon = AlertTriangle;
   }
@@ -75,21 +75,21 @@ export function GetSystemDiagnosticsPart({
 
       {/* Latency & Spend Highlights */}
       <div className="grid grid-cols-3 gap-3 text-center">
-        <div className="bg-bg-elev-2/50 rounded-sm p-2 border border-divider/25 flex flex-col items-center justify-center">
+        <div className="bg-zinc-900/50 rounded-sm p-2 border border-zinc-800/25 flex flex-col items-center justify-center">
           <Database className="size-4 text-fg-subtle mb-1" />
           <span className="text-fg-subtle text-xs uppercase font-medium">DB Latency</span>
           <span className="text-fg text-xs font-extrabold mt-0.5 tabular-nums">
             {database.latencyMs >= 0 ? `${database.latencyMs}ms` : 'offline'}
           </span>
         </div>
-        <div className="bg-bg-elev-2/50 rounded-sm p-2 border border-divider/25 flex flex-col items-center justify-center">
+        <div className="bg-zinc-900/50 rounded-sm p-2 border border-zinc-800/25 flex flex-col items-center justify-center">
           <Wallet className="size-4 text-fg-subtle mb-1" />
           <span className="text-fg-subtle text-xs uppercase font-medium">AI Spend Today</span>
           <span className="text-fg text-xs font-extrabold mt-0.5 tabular-nums">
             ${budget.spentUsd.toFixed(2)}
           </span>
         </div>
-        <div className="bg-bg-elev-2/50 rounded-sm p-2 border border-divider/25 flex flex-col items-center justify-center">
+        <div className="bg-zinc-900/50 rounded-sm p-2 border border-zinc-800/25 flex flex-col items-center justify-center">
           <Cpu className="size-4 text-fg-subtle mb-1" />
           <span className="text-fg-subtle text-xs uppercase font-medium">Vector Memory</span>
           <span className="text-fg text-xs font-extrabold mt-0.5 tabular-nums">
@@ -128,7 +128,7 @@ export function GetSystemDiagnosticsPart({
           {Object.entries(envCheck).map(([key, configured]) => (
             <div key={key} className="flex items-center justify-between py-0.5">
               <span className="text-fg-muted font-mono">{key}</span>
-              <span className={`px-1.5 py-0.5 rounded font-bold ${configured ? 'bg-emerald-500/10 text-bull' : 'bg-red-500/10 text-bear'}`}>
+              <span className={`px-1.5 py-0.5 rounded font-bold ${configured ? 'bg-emerald-500/10 text-emerald-500' : 'bg-red-500/10 text-red-500'}`}>
                 {configured ? 'OK' : 'MISSING'}
               </span>
             </div>

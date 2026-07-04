@@ -41,7 +41,7 @@ export function GetSeasonalityPart({
       {output.thin ? (
         <p
           role="note"
-          className="text-amber-500 border-warn/30 bg-warn/5 rounded-sm border px-2 py-1 text-body-sm"
+          className="text-amber-500 border-amber-500/30 bg-amber-500/5 rounded-sm border px-2 py-1 text-body-sm"
         >
           Thin sample — interpret as directional, not statistically significant.
         </p>
@@ -49,7 +49,7 @@ export function GetSeasonalityPart({
 
       <ul className="grid grid-cols-2 gap-1 text-body-sm tabular-nums sm:grid-cols-3">
         {output.buckets.map((b) => {
-          const tone = b.medianReturnPct >= 0 ? 'text-bull' : 'text-bear';
+          const tone = b.medianReturnPct >= 0 ? 'text-emerald-500' : 'text-red-500';
           return (
             <li
               key={b.key}

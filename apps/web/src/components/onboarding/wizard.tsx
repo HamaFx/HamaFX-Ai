@@ -309,7 +309,7 @@ export function OnboardingWizard({ initialName, providers, symbolsCatalog, initi
           <div className="flex flex-col gap-2">
             <label className="text-sm font-medium text-fg">Timezone</label>
             <select
-              className="h-10 w-full rounded-sm border border-surface-elevated bg-bg px-3 py-2 text-sm text-fg focus:outline-none focus:ring-1 focus:ring-fg cursor-pointer"
+              className="h-10 w-full rounded-sm border border-surface-elevated bg-zinc-950 px-3 py-2 text-sm text-fg focus:outline-none focus:ring-1 focus:ring-fg cursor-pointer"
               value={timezone}
               onChange={(e) => setTimezone(e.target.value)}
             >
@@ -420,7 +420,7 @@ export function OnboardingWizard({ initialName, providers, symbolsCatalog, initi
                     <span className="text-xs text-fg-subtle">{sym.name} ({sym.category})</span>
                   </div>
                   <div className={`size-5 rounded border flex items-center justify-center transition-colors ${
-                    active ? 'bg-fg border-zinc-700 text-black' : 'border-zinc-800 bg-bg'
+                    active ? 'bg-fg border-zinc-700 text-black' : 'border-zinc-800 bg-zinc-950'
                   }`}>
                     {active && <Check className="size-3.5 stroke-[3]" />}
                   </div>
@@ -433,7 +433,7 @@ export function OnboardingWizard({ initialName, providers, symbolsCatalog, initi
             <div className="flex flex-col gap-2">
               <label className="text-sm font-medium text-fg">Default Chart Symbol</label>
               <select
-                className="h-10 w-full rounded-sm border border-surface-elevated bg-bg px-3 py-2 text-sm text-fg focus:outline-none focus:ring-1 focus:ring-fg cursor-pointer"
+                className="h-10 w-full rounded-sm border border-surface-elevated bg-zinc-950 px-3 py-2 text-sm text-fg focus:outline-none focus:ring-1 focus:ring-fg cursor-pointer"
                 value={defaultSymbol}
                 onChange={(e) => setDefaultSymbol(e.target.value)}
               >

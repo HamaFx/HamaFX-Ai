@@ -130,7 +130,7 @@ export function TagInput({
         <div
           className={cn(
             'flex flex-wrap items-center gap-1.5 rounded-sm border bg-zinc-950 px-3 py-2 min-h-[44px] transition-all',
-            focused ? 'border-zinc-700 ring-2 ring-brand/10' : 'border-divider',
+            focused ? 'border-zinc-700 ring-2 ring-fg/10' : 'border-zinc-800',
           )}
           onClick={() => inputRef.current?.focus()}
         >
@@ -172,7 +172,7 @@ export function TagInput({
                   onClick={() => add(s)}
                   className={cn(
                     'w-full text-left px-3 py-2 text-body-sm hover:bg-zinc-900 transition-colors',
-                    i === highlighted && 'bg-bg-elev-2',
+                    i === highlighted && 'bg-zinc-900',
                   )}
                 >
                   {s}

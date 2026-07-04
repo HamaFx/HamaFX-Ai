@@ -150,7 +150,7 @@ function WatchRow({
         {buf.length >= 2 ? (
           <Sparkline
             values={buf}
-            className={cn('h-4 w-16', isBull ? 'text-bull' : 'text-bear')}
+            className={cn('h-4 w-16', isBull ? 'text-emerald-500' : 'text-red-500')}
             label={`${tick.symbol} trend`}
           />
         ) : (
@@ -159,7 +159,7 @@ function WatchRow({
         <span
           className={cn(
             'text-caption tabular-nums',
-            isBull ? 'text-bull' : 'text-bear',
+            isBull ? 'text-emerald-500' : 'text-red-500',
           )}
         >
           {isBull ? '▲' : '▼'}

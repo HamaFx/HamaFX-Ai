@@ -73,7 +73,7 @@ export default async function ShareSnapshotPage({ params, searchParams }: PagePr
   const expiry = new Date(snap.expiresAt).toISOString().slice(0, 16).replace('T', ' ');
 
   return (
-    <div className="min-h-svh bg-bg text-fg flex flex-col">
+    <div className="min-h-svh bg-zinc-950 text-fg flex flex-col">
       <header className="border-b border-zinc-800 px-6 py-4 flex items-center gap-3">
         <div className="size-8 rounded-sm bg-zinc-900 text-fg flex items-center justify-center">
           <Sparkles className="size-4" />

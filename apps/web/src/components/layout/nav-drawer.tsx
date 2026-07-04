@@ -157,7 +157,7 @@ export function NavDrawer({ userName, userEmail, userId: _userId }: { userName?:
           aria-label="Primary navigation"
           className={cn(
             'surface-elevated fixed inset-y-0 left-0 z-[60] flex w-[88vw] max-w-[340px] flex-col',
-            'border-r border-divider rounded-r-3xl',
+            'border-r border-zinc-800 rounded-r-3xl',
             'paint-isolated',
             'focus-visible:outline-none',
           )}
@@ -211,11 +211,11 @@ export function NavDrawer({ userName, userEmail, userId: _userId }: { userName?:
           </nav>
 
           {/* Footer */}
-          <div className="border-divider mt-auto border-t px-3 py-3">
+          <div className="border-zinc-800 mt-auto border-t px-3 py-3">
             <button
               type="button"
               onClick={() => void logout()}
-              className="text-fg-muted hover:text-fg hover:bg-bg-elev-2 flex min-h-[48px] w-full items-center gap-3 rounded-sm px-3 text-left text-sm font-medium transition-colors"
+              className="text-fg-muted hover:text-fg hover:bg-zinc-900 flex min-h-[48px] w-full items-center gap-3 rounded-sm px-3 text-left text-sm font-medium transition-colors"
             >
               <span
                 aria-hidden="true"
@@ -257,14 +257,14 @@ function NavLink({ item, active }: { item: NavItem; active: boolean }) {
         aria-current={active ? 'page' : undefined}
         className={cn(
           'group/nav relative flex min-h-[56px] items-center gap-3 rounded-sm px-3 transition-all',
-          active ? 'bg-zinc-900 ring-1 ring-zinc-700 text-fg' : 'text-fg-muted hover:bg-bg-elev-2 hover:text-fg',
+          active ? 'bg-zinc-900 ring-1 ring-zinc-700 text-fg' : 'text-fg-muted hover:bg-zinc-900 hover:text-fg',
         )}
       >
         <span
           aria-hidden="true"
           className={cn(
             'inline-flex size-9 items-center justify-center rounded-sm transition-colors',
-            active ? 'text-brand' : 'text-fg-muted group-hover/nav:text-fg',
+            active ? 'text-fg' : 'text-fg-muted group-hover/nav:text-fg',
           )}
           style={{
             background: active

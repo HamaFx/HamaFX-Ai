@@ -43,10 +43,10 @@ export interface StatCardProps {
 
 const TONE_CLASS: Record<StatTone, string> = {
   fg: 'text-fg',
-  bull: 'text-bull',
-  bear: 'text-bear',
+  bull: 'text-emerald-500',
+  bear: 'text-red-500',
   muted: 'text-fg-muted',
-  warn: 'text-warn',
+  warn: 'text-amber-500',
 };
 
 const TONE_TINT: Record<StatTone, string> = {

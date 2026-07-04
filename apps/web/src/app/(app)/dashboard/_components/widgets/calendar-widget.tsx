@@ -74,9 +74,9 @@ export function CalendarWidget({ events, limit = 3 }: CalendarWidgetProps) {
             const date = new Date(e.date);
             const importanceTone =
               e.importance === 'high'
-                ? 'bg-bear/15 text-bear'
+                ? 'bg-red-500/15 text-red-500'
                 : e.importance === 'medium'
-                  ? 'bg-warn/15 text-warn'
+                  ? 'bg-amber-500/15 text-amber-500'
                   : 'bg-fg-muted/15 text-fg-muted';
             return (
               <li

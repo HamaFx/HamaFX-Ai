@@ -92,16 +92,16 @@ export function ChangePasswordCard() {
           </div>
           {newPassword.length > 0 && (
             <div className="text-xs text-fg-subtle grid grid-cols-2 gap-1">
-              <span className={newPassword.length >= 8 ? 'text-bull' : 'text-bear'}>
+              <span className={newPassword.length >= 8 ? 'text-emerald-500' : 'text-red-500'}>
                 {newPassword.length >= 8 ? '✓' : '✗'} Min 8 characters
               </span>
-              <span className={/[A-Z]/.test(newPassword) ? 'text-bull' : 'text-bear'}>
+              <span className={/[A-Z]/.test(newPassword) ? 'text-emerald-500' : 'text-red-500'}>
                 {/[A-Z]/.test(newPassword) ? '✓' : '✗'} Uppercase
               </span>
-              <span className={/[a-z]/.test(newPassword) ? 'text-bull' : 'text-bear'}>
+              <span className={/[a-z]/.test(newPassword) ? 'text-emerald-500' : 'text-red-500'}>
                 {/[a-z]/.test(newPassword) ? '✓' : '✗'} Lowercase
               </span>
-              <span className={/[0-9]/.test(newPassword) ? 'text-bull' : 'text-bear'}>
+              <span className={/[0-9]/.test(newPassword) ? 'text-emerald-500' : 'text-red-500'}>
                 {/[0-9]/.test(newPassword) ? '✓' : '✗'} Number
               </span>
             </div>

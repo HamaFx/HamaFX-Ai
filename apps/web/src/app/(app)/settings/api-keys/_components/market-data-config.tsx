@@ -128,7 +128,7 @@ export function MarketDataConfig({ initialProvider, finnhubKeySet }: MarketDataC
             className={`flex items-start gap-3 border rounded-sm p-3 cursor-pointer select-none transition-all ${
               selected === p.id
                 ? 'border-zinc-700 bg-zinc-950'
-                : 'border-zinc-800 bg-bg-elev-2/40 hover:bg-bg-elev-2'
+                : 'border-zinc-800 bg-zinc-900/40 hover:bg-zinc-900'
             }`}
           >
             <input

@@ -109,7 +109,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           href="/icons/apple-splash-1179x2556.png"
         />
       </head>
-      <body className="bg-bg text-fg min-h-svh antialiased">
+      <body className="bg-zinc-950 text-fg min-h-svh antialiased">
         <ViewTransitions>
           <Providers>{children}</Providers>
         </ViewTransitions>

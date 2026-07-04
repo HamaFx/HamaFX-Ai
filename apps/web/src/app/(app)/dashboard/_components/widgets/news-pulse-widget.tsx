@@ -48,7 +48,7 @@ export function NewsPulseWidget({ articles }: NewsPulseWidgetProps) {
   const leanLabel =
     score > 0.15 ? 'Bullish' : score < -0.15 ? 'Bearish' : 'Neutral';
   const leanTone =
-    score > 0.15 ? 'text-bull' : score < -0.15 ? 'text-bear' : 'text-fg-muted';
+    score > 0.15 ? 'text-emerald-500' : score < -0.15 ? 'text-red-500' : 'text-fg-muted';
 
   // Headlines at the extremes.
   const ranked = [...articles]
@@ -87,7 +87,7 @@ export function NewsPulseWidget({ articles }: NewsPulseWidgetProps) {
         className="flex h-1.5 w-full overflow-hidden rounded-sm bg-zinc-900"
       >
         <div
-          className="h-full bg-bull"
+          className="h-full bg-emerald-500"
           style={{ width: `${pct(counts.positive)}%` }}
         />
         <div
@@ -95,7 +95,7 @@ export function NewsPulseWidget({ articles }: NewsPulseWidgetProps) {
           style={{ width: `${pct(counts.neutral)}%` }}
         />
         <div
-          className="h-full bg-bear"
+          className="h-full bg-red-500"
           style={{ width: `${pct(counts.negative)}%` }}
         />
       </div>

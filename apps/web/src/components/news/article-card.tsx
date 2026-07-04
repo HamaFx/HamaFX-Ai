@@ -94,7 +94,7 @@ const ArticleCardInner = memo(
       <article
         className={cn(
           'group relative overflow-hidden rounded-sm',
-          'border border-zinc-800 bg-bg-elev-1',
+          'border border-zinc-800 bg-zinc-950',
           'transition-colors duration-200 md:hover:bg-zinc-900',
         )}
       >
@@ -130,7 +130,7 @@ const ArticleCardInner = memo(
                 <span
                   className={cn(
                     'inline-flex items-center gap-1 font-semibold',
-                    article.sentiment === 'positive' ? 'text-bull' : 'text-bear',
+                    article.sentiment === 'positive' ? 'text-emerald-500' : 'text-red-500',
                   )}
                 >
                   <span aria-hidden>
@@ -163,7 +163,7 @@ const ArticleCardInner = memo(
           <a
             href={`/chat?prompt=${askPrompt}`}
             onClick={(e) => e.stopPropagation()}
-            className="bg-zinc-900 text-fg-muted hover:text-fg pointer-events-auto inline-flex items-center gap-1 rounded-pill px-3 py-1.5 text-body-sm font-medium transition-colors"
+            className="bg-zinc-900 text-fg-muted hover:text-fg pointer-events-auto inline-flex items-center gap-1 rounded-sm px-3 py-1.5 text-body-sm font-medium transition-colors"
           >
             <Sparkles className="size-3.5" />
             Ask AI
@@ -183,7 +183,7 @@ const ArticleCardInner = memo(
                 'inline-flex size-8 items-center justify-center rounded-sm transition-colors',
                 saved
                   ? 'text-fg bg-zinc-900'
-                  : 'text-fg-muted hover:text-fg hover:bg-bg-elev-2',
+                  : 'text-fg-muted hover:text-fg hover:bg-zinc-900',
               )}
             >
               <Bookmark className={cn('size-4', saved && 'fill-current')} />

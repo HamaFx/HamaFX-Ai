@@ -55,12 +55,12 @@ export function GetIntermarketResonancePart({
   let Icon = HelpCircle;
 
   if (output.regime === 'divergent_hedging') {
-    regimeColor = 'text-bull';
+    regimeColor = 'text-emerald-500';
     regimeBg = 'bg-emerald-500/10';
     regimeLabel = 'HEDGING PREMIUM (BULLISH OVERRIDE)';
     Icon = TrendingUp;
   } else if (output.regime === 'divergent_discount') {
-    regimeColor = 'text-bear';
+    regimeColor = 'text-red-500';
     regimeBg = 'bg-red-500/10';
     regimeLabel = 'YIELD DISCOUNT (OVERSOLD OVERRIDE)';
     Icon = TrendingDown;
@@ -89,15 +89,15 @@ export function GetIntermarketResonancePart({
 
       {/* Main Stats Block */}
       <div className="grid grid-cols-3 gap-3 text-center">
-        <div className="bg-bg-elev-2/50 rounded-sm p-2 border border-divider/25">
+        <div className="bg-zinc-900/50 rounded-sm p-2 border border-zinc-800/25">
           <span className="text-fg-subtle text-xs block uppercase font-medium">10Y Real Yield</span>
           <span className="text-fg text-base font-extrabold tabular-nums mt-0.5 block">{roundedYield}%</span>
         </div>
-        <div className="bg-bg-elev-2/50 rounded-sm p-2 border border-divider/25">
+        <div className="bg-zinc-900/50 rounded-sm p-2 border border-zinc-800/25">
           <span className="text-fg-subtle text-xs block uppercase font-medium">10Y Breakeven</span>
           <span className="text-fg text-base font-extrabold tabular-nums mt-0.5 block">{roundedInflation}%</span>
         </div>
-        <div className="bg-bg-elev-2/50 rounded-sm p-2 border border-divider/25">
+        <div className="bg-zinc-900/50 rounded-sm p-2 border border-zinc-800/25">
           <span className="text-fg-subtle text-xs block uppercase font-medium">z-score divergence</span>
           <span className={`text-base font-extrabold tabular-nums mt-0.5 block ${regimeColor}`}>
             {roundedDivergence >= 0 ? `+${roundedDivergence}` : roundedDivergence} SD
@@ -118,7 +118,7 @@ export function GetIntermarketResonancePart({
           {/* Needle indicator */}
           <div 
             className={`absolute top-0 bottom-0 w-1.5 rounded-sm shadow-lg transition-all duration-500 ${
-              output.regime === 'divergent_hedging' ? 'bg-bull' : output.regime === 'divergent_discount' ? 'bg-bear' : 'bg-fg'
+              output.regime === 'divergent_hedging' ? 'bg-emerald-500' : output.regime === 'divergent_discount' ? 'bg-red-500' : 'bg-fg'
             }`}
             style={{ left: `calc(${needlePercent}% - 3px)` }}
           />
@@ -139,7 +139,7 @@ export function GetIntermarketResonancePart({
               <div className="flex items-center gap-4">
                 <span className="text-fg-muted tabular-nums">Yield: {obs.realYieldPct?.toFixed(2)}%</span>
                 <span className={`tabular-nums font-medium min-w-[50px] text-right ${
-                  obs.divergenceScore === null ? 'text-fg-subtle' : obs.divergenceScore >= 1.5 ? 'text-bull' : obs.divergenceScore <= -1.5 ? 'text-bear' : 'text-fg'
+                  obs.divergenceScore === null ? 'text-fg-subtle' : obs.divergenceScore >= 1.5 ? 'text-emerald-500' : obs.divergenceScore <= -1.5 ? 'text-red-500' : 'text-fg'
                 }`}>
                   {obs.divergenceScore === null ? '—' : obs.divergenceScore >= 0 ? `+${obs.divergenceScore.toFixed(2)} SD` : `${obs.divergenceScore.toFixed(2)} SD`}
                 </span>

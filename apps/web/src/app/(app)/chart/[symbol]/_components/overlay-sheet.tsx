@@ -84,7 +84,7 @@ export function OverlaySheet({ active, onToggle }: OverlaySheetProps) {
                   aria-pressed={on}
                   className={cn(
                     'flex min-h-[56px] w-full items-center justify-between gap-3 rounded-sm px-3 py-3 text-left transition-colors',
-                    on ? 'bg-zinc-800' : 'hover:bg-bg-elev-1',
+                    on ? 'bg-zinc-800' : 'hover:bg-zinc-950',
                   )}
                 >
                   <div className="flex flex-col">

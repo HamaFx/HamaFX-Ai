@@ -52,7 +52,7 @@ export function SentimentSummary({ articles }: SentimentSummaryProps) {
       : score < -0.15
         ? 'Bearish'
         : 'Neutral';
-  const leanTone = score > 0.15 ? 'text-bull' : score < -0.15 ? 'text-bear' : 'text-fg-muted';
+  const leanTone = score > 0.15 ? 'text-emerald-500' : score < -0.15 ? 'text-red-500' : 'text-fg-muted';
 
   return (
     <section
@@ -139,17 +139,17 @@ function Count({
 }) {
   const dotClass =
     tone === 'bull'
-      ? 'bg-bull'
+      ? 'bg-emerald-500'
       : tone === 'bear'
-        ? 'bg-bear'
+        ? 'bg-red-500'
         : tone === 'muted'
           ? 'bg-fg-subtle'
           : 'bg-zinc-800';
   const labelClass =
     tone === 'bull'
-      ? 'text-bull'
+      ? 'text-emerald-500'
       : tone === 'bear'
-        ? 'text-bear'
+        ? 'text-red-500'
         : 'text-fg-muted';
   return (
     <li className="inline-flex items-center gap-1.5">

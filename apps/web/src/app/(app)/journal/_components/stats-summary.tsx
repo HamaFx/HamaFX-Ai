@@ -225,7 +225,7 @@ export function StatsSummary({ stats, entries = [] }: StatsSummaryProps) {
 
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 mt-0.5 text-caption font-semibold text-fg-subtle">
             <div className="flex items-center gap-1.5">
-              <span className="size-2 rounded-sm bg-bull" />
+              <span className="size-2 rounded-sm bg-emerald-500" />
               <span>Wins ({distribution.raw.win})</span>
             </div>
             <div className="flex items-center gap-1.5">
@@ -237,7 +237,7 @@ export function StatsSummary({ stats, entries = [] }: StatsSummaryProps) {
               <span>Breakeven ({distribution.raw.be})</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <span className="size-2 rounded-sm bg-bear" />
+              <span className="size-2 rounded-sm bg-red-500" />
               <span>Losses ({distribution.raw.loss})</span>
             </div>
           </div>
@@ -281,11 +281,11 @@ export function StatsSummary({ stats, entries = [] }: StatsSummaryProps) {
         <div className="border border-zinc-800 bg-zinc-950 rounded-sm p-3.5 flex flex-col gap-1 relative overflow-hidden group hover:border-zinc-700 transition-all">
           <div className="flex items-center justify-between">
             <span className="text-caption font-bold uppercase tracking-wider text-fg-subtle">Profit Factor</span>
-            <Percent className="size-3.5 text-brand/70" />
+            <Percent className="size-3.5 text-fg/70" />
           </div>
           <p className={cn(
             'text-lg font-bold tracking-tight mt-1.5 tabular-nums',
-            profitFactor >= 1.5 ? 'text-bull' : profitFactor >= 1.0 ? 'text-fg' : 'text-bear'
+            profitFactor >= 1.5 ? 'text-emerald-500' : profitFactor >= 1.0 ? 'text-fg' : 'text-red-500'
           )}>
             {profitFactor.toFixed(2)}
           </p>
@@ -296,7 +296,7 @@ export function StatsSummary({ stats, entries = [] }: StatsSummaryProps) {
         <div className="border border-zinc-800 bg-zinc-950 rounded-sm p-3.5 flex flex-col gap-1 relative overflow-hidden group hover:border-red-500/40 transition-all">
           <div className="flex items-center justify-between">
             <span className="text-caption font-bold uppercase tracking-wider text-fg-subtle">Max R DD</span>
-            <ShieldAlert className="size-3.5 text-bear/70" />
+            <ShieldAlert className="size-3.5 text-red-500/70" />
           </div>
           <p className="text-lg font-bold tracking-tight mt-1.5 text-red-500 tabular-nums">
             -{maxDrawdown.toFixed(2)}R
@@ -308,7 +308,7 @@ export function StatsSummary({ stats, entries = [] }: StatsSummaryProps) {
         <div className="border border-zinc-800 bg-zinc-950 rounded-sm p-3.5 flex flex-col gap-1 relative overflow-hidden group hover:border-emerald-500/40 transition-all">
           <div className="flex items-center justify-between">
             <span className="text-caption font-bold uppercase tracking-wider text-fg-subtle">Best Trade</span>
-            <Award className="size-3.5 text-bull/70" />
+            <Award className="size-3.5 text-emerald-500/70" />
           </div>
           <p className="text-lg font-bold tracking-tight mt-1.5 text-emerald-500 tabular-nums">
             +{extremes.best.toFixed(2)}R
@@ -320,9 +320,9 @@ export function StatsSummary({ stats, entries = [] }: StatsSummaryProps) {
         <div className="border border-zinc-800 bg-zinc-950 rounded-sm p-3.5 flex flex-col gap-1 relative overflow-hidden group hover:border-red-500/30 transition-all">
           <div className="flex items-center justify-between">
             <span className="text-caption font-bold uppercase tracking-wider text-fg-subtle">Worst Trade</span>
-            <TrendingDown className="size-3.5 text-bear/70" />
+            <TrendingDown className="size-3.5 text-red-500/70" />
           </div>
-          <p className="text-lg font-bold tracking-tight mt-1.5 text-bear/80 tabular-nums">
+          <p className="text-lg font-bold tracking-tight mt-1.5 text-red-500/80 tabular-nums">
             {extremes.worst.toFixed(2)}R
           </p>
           <span className="text-xs text-fg-muted font-medium">Single maximum R loss</span>
@@ -339,7 +339,7 @@ export function StatsSummary({ stats, entries = [] }: StatsSummaryProps) {
             <div className="border border-zinc-800 bg-zinc-950 rounded-sm p-3.5 flex flex-col gap-1">
               <div className="flex items-center justify-between">
                 <span className="text-caption font-bold uppercase tracking-wider text-fg-subtle">Win Streak</span>
-                <Flame className="size-3.5 text-bull/70" />
+                <Flame className="size-3.5 text-emerald-500/70" />
               </div>
               <p className="text-lg font-bold tracking-tight mt-1.5 text-emerald-500 tabular-nums">
                 {stats.longestWinStreak}
@@ -350,9 +350,9 @@ export function StatsSummary({ stats, entries = [] }: StatsSummaryProps) {
             <div className="border border-zinc-800 bg-zinc-950 rounded-sm p-3.5 flex flex-col gap-1">
               <div className="flex items-center justify-between">
                 <span className="text-caption font-bold uppercase tracking-wider text-fg-subtle">Loss Streak</span>
-                <Flame className="size-3.5 text-bear/70" />
+                <Flame className="size-3.5 text-red-500/70" />
               </div>
-              <p className="text-lg font-bold tracking-tight mt-1.5 text-bear/80 tabular-nums">
+              <p className="text-lg font-bold tracking-tight mt-1.5 text-red-500/80 tabular-nums">
                 {stats.longestLossStreak}
               </p>
               <span className="text-xs text-fg-muted font-medium">Longest consecutive losses</span>
@@ -361,7 +361,7 @@ export function StatsSummary({ stats, entries = [] }: StatsSummaryProps) {
             <div className="border border-zinc-800 bg-zinc-950 rounded-sm p-3.5 flex flex-col gap-1">
               <div className="flex items-center justify-between">
                 <span className="text-caption font-bold uppercase tracking-wider text-fg-subtle">Avg Hold</span>
-                <Clock className="size-3.5 text-info/70" />
+                <Clock className="size-3.5 text-blue-500/70" />
               </div>
               <p className="text-lg font-bold tracking-tight mt-1.5 text-fg tabular-nums">
                 {(stats.avgHoldMs ?? 0) > 0 ? formatHoldTime(stats.avgHoldMs!) : '—'}

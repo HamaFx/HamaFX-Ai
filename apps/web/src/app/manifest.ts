@@ -26,8 +26,8 @@ export default function manifest(): MetadataRoute.Manifest {
     start_url: '/chat',
     display: 'standalone',
     orientation: 'portrait',
-    background_color: '#0a0a0a',
-    theme_color: '#0a0a0a',
+    background_color: '#000000',
+    theme_color: '#000000',
     categories: ['finance', 'productivity'],
     shortcuts: [
       { name: 'New Chat', url: '/chat', icons: [{ src: '/icons/icon-192.png', sizes: '192x192' }] },

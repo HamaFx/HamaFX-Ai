@@ -44,13 +44,13 @@ export async function UsageGlance({ userId }: { userId?: string }) {
 
   const pct = maxDailyUsd > 0 ? Math.min(100, (stats.todayUsd / maxDailyUsd) * 100) : 0;
   const tone = pct >= 90 ? 'bear' : pct >= 60 ? 'warn' : 'bull';
-  const toneClass = tone === 'bear' ? 'bg-bear' : tone === 'warn' ? 'bg-warn' : 'bg-bull';
+  const toneClass = tone === 'bear' ? 'bg-red-500' : tone === 'warn' ? 'bg-amber-500' : 'bg-emerald-500';
 
   return (
     <Link
       href="/settings/usage"
       aria-label="Open detailed usage"
-      className="border border-zinc-800 bg-zinc-950 rounded-sm group flex flex-col gap-3 p-4 transition-colors md:hover:bg-bg-elev-2/40"
+      className="border border-zinc-800 bg-zinc-950 rounded-sm group flex flex-col gap-3 p-4 transition-colors md:hover:bg-zinc-900/40"
     >
       <header className="flex items-baseline justify-between gap-3">
         <h2 className="text-fg-subtle text-caption font-semibold uppercase tracking-wider">

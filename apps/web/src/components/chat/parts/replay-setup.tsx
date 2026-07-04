@@ -43,24 +43,24 @@ export function ReplaySetupPart({
         <Stat
           k="Win rate"
           v={`${(output.hitRate * 100).toFixed(0)}%`}
-          tone={output.hitRate >= 0.5 ? 'text-bull' : 'text-bear'}
+          tone={output.hitRate >= 0.5 ? 'text-emerald-500' : 'text-red-500'}
         />
         <Stat
           k="Avg R"
           v={output.avgR.toFixed(2)}
-          tone={output.avgR > 0 ? 'text-bull' : 'text-bear'}
+          tone={output.avgR > 0 ? 'text-emerald-500' : 'text-red-500'}
         />
         <Stat
           k="Total R"
           v={output.totalR.toFixed(2)}
-          tone={output.totalR > 0 ? 'text-bull' : 'text-bear'}
+          tone={output.totalR > 0 ? 'text-emerald-500' : 'text-red-500'}
         />
       </dl>
 
       {output.thin ? (
         <p
           role="note"
-          className="text-amber-500 border-warn/30 bg-warn/5 rounded-sm border px-2 py-1 text-body-sm"
+          className="text-amber-500 border-amber-500/30 bg-amber-500/5 rounded-sm border px-2 py-1 text-body-sm"
         >
           Thin sample — fewer than 5 trades. Treat as illustrative.
         </p>
@@ -78,12 +78,12 @@ export function ReplaySetupPart({
           <ul className="flex flex-col gap-0.5 max-h-40 overflow-y-auto">
             {output.trades.slice(0, 25).map((t, i) => (
               <li key={i} className="border-zinc-900 grid grid-cols-5 rounded-sm border px-2 py-1">
-                <span className={t.side === 'long' ? 'text-bull' : 'text-bear'}>
+                <span className={t.side === 'long' ? 'text-emerald-500' : 'text-red-500'}>
                   {t.side === 'long' ? '▲' : '▼'}
                 </span>
                 <span>{t.entry.toFixed(5)}</span>
                 <span>{t.exit.toFixed(5)}</span>
-                <span className={t.rMultiple >= 0 ? 'text-bull' : 'text-bear'}>
+                <span className={t.rMultiple >= 0 ? 'text-emerald-500' : 'text-red-500'}>
                   {t.rMultiple >= 0 ? '+' : ''}
                   {t.rMultiple.toFixed(2)}
                 </span>

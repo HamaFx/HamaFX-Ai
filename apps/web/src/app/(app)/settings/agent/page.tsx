@@ -144,9 +144,9 @@ export default async function AgentCataloguePage() {
 function Pill({ label, tone }: { label: string; tone: 'muted' | 'bear' | 'bull' }) {
   const cls =
     tone === 'bear'
-      ? 'bg-bear/15 text-bear'
+      ? 'bg-red-500/15 text-red-500'
       : tone === 'bull'
-        ? 'bg-bull/15 text-bull'
+        ? 'bg-emerald-500/15 text-emerald-500'
         : 'bg-zinc-900 text-fg-muted';
   return (
     <span className={`rounded-sm px-1.5 py-0.5 text-caption font-medium ${cls}`}>{label}</span>

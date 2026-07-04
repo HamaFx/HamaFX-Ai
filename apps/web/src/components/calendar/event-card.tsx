@@ -59,7 +59,7 @@ const IMPORTANCE = {
     glyph: '▲',
   },
   medium: {
-    ribbon: 'oklch(82% 0.14 80)',
+    ribbon: '#F59E0B',
     label: 'Medium impact',
     glyph: '■',
   },
@@ -95,9 +95,9 @@ export function EventCard({ event }: EventCardProps) {
     <article
       className={cn(
         'group relative overflow-hidden rounded-sm',
-        'border border-zinc-800 bg-bg-elev-1',
+        'border border-zinc-800 bg-zinc-950',
         'transition-colors duration-200 md:hover:bg-zinc-900',
-        isImminent && 'border-warn/40',
+        isImminent && 'border-amber-500/40',
       )}
     >
       {/* Importance ribbon — suppressed for low-importance events; the
@@ -165,7 +165,7 @@ export function EventCard({ event }: EventCardProps) {
         >
           <Link
             href={`/chat?prompt=${askPrompt}`}
-            className="bg-zinc-900 text-fg-muted hover:text-fg pointer-events-auto inline-flex items-center gap-1 rounded-pill px-3 py-1.5 text-body-sm font-medium transition-colors"
+            className="bg-zinc-900 text-fg-muted hover:text-fg pointer-events-auto inline-flex items-center gap-1 rounded-sm px-3 py-1.5 text-body-sm font-medium transition-colors"
           >
             <Sparkles className="size-3.5" />
             Ask AI
@@ -196,7 +196,7 @@ function DataRow({ event }: { event: EconomicEvent }) {
         <span
           className={cn(
             'ml-auto inline-flex items-center gap-1 px-1.5 text-caption font-bold uppercase tabular-nums',
-            beat === 'beat' ? 'text-bull' : 'text-bear',
+            beat === 'beat' ? 'text-emerald-500' : 'text-red-500',
           )}
         >
           {beat === 'beat' ? '▲ beat' : '▼ miss'}
@@ -251,7 +251,7 @@ function Countdown({ ms, imminent }: { ms: number; imminent: boolean }) {
   const text =
     d > 0 ? `in ${d}d ${h}h` : h > 0 ? `in ${h}h ${m}m` : `in ${m}m`;
   return (
-    <span className={cn('font-semibold', imminent ? 'text-warn' : 'text-fg')}>
+    <span className={cn('font-semibold', imminent ? 'text-amber-500' : 'text-fg')}>
       {text}
     </span>
   );
@@ -323,10 +323,10 @@ function RemindButton({ event }: { event: EconomicEvent }) {
       disabled={armed}
       aria-pressed={armed}
       className={cn(
-        'pointer-events-auto inline-flex items-center gap-1 rounded-pill px-3 py-1.5 text-body-sm font-medium transition-colors',
+        'pointer-events-auto inline-flex items-center gap-1 rounded-sm px-3 py-1.5 text-body-sm font-medium transition-colors',
         armed
           ? 'text-fg bg-zinc-900'
-          : 'text-fg-muted hover:text-fg bg-bg-elev-2',
+          : 'text-fg-muted hover:text-fg bg-zinc-900',
       )}
     >
       <Bell className={cn('size-3.5', armed && 'fill-current')} />

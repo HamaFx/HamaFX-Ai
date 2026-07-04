@@ -102,7 +102,7 @@ export function GetCorrelationPart({
       <section className="border-border border-t pt-2">
         <header className="flex items-baseline justify-between gap-2">
           <span className="text-fg text-xs font-semibold">DXY proxy</span>
-          <span className={`text-body-sm tabular-nums ${dxy.change24h >= 0 ? 'text-bull' : 'text-bear'}`}>
+          <span className={`text-body-sm tabular-nums ${dxy.change24h >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
             {dxy.value.toFixed(4)} ({dxy.change24h >= 0 ? '+' : ''}
             {dxy.change24h.toFixed(2)}% 24h)
           </span>
@@ -124,7 +124,7 @@ function Cell({
 }) {
   const cell = lookup.get(`${row}|${col}`);
   if (!cell) return <span className="text-fg-subtle">—</span>;
-  const tone = cell.r >= 0.4 ? 'text-bull' : cell.r <= -0.4 ? 'text-bear' : 'text-fg-muted';
+  const tone = cell.r >= 0.4 ? 'text-emerald-500' : cell.r <= -0.4 ? 'text-red-500' : 'text-fg-muted';
   return <span className={`${tone} font-semibold`}>{cell.r.toFixed(2)}</span>;
 }
 
@@ -135,13 +135,13 @@ function HeatStrip({ matrix }: { matrix: CorrelationCell[] }) {
 
   const colorFor = (r: number) =>
     r >= 0.7
-      ? 'bg-bull/80'
+      ? 'bg-emerald-500/80'
       : r >= 0.4
-        ? 'bg-bull/40'
+        ? 'bg-emerald-500/40'
         : r <= -0.7
-          ? 'bg-bear/80'
+          ? 'bg-red-500/80'
           : r <= -0.4
-            ? 'bg-bear/40'
+            ? 'bg-red-500/40'
             : 'bg-zinc-800';
 
   // Strongest pair by |r| for the accessible label.

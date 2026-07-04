@@ -344,7 +344,7 @@ function HighlightedLabel({ label, indices }: { label: string; indices: number[]
     const ch = label[i];
     if (idxSet.has(i)) {
       out.push(
-        <mark key={i} className="bg-brand/20 text-fg rounded-sm px-0.5">
+        <mark key={i} className="bg-fg/20 text-fg rounded-sm px-0.5">
           {ch}
         </mark>,
       );

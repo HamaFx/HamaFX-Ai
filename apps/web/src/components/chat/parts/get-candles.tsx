@@ -21,7 +21,7 @@
 //
 //   1. A header row that names the symbol, the timeframe, and the bar
 //      count — so the user knows exactly what data the agent looked at.
-//   2. The most recent bar's OHLC summary, with `text-bull` / `text-bear`
+//   2. The most recent bar's OHLC summary, with `text-emerald-500` / `text-red-500`
 //      colouring on the close vs. open delta and a per-symbol pip count.
 //   3. An optional 5-row tail of the closed bars (timestamp + close) for
 //      quick eyeball context.
@@ -67,7 +67,7 @@ export function GetCandlesPart({ output, state, errorMessage }: GetCandlesPartPr
   const decimals = priceDecimals(symbol);
   const change = last.c - last.o;
   const isBull = last.c >= last.o;
-  const tone = isBull ? 'text-bull' : 'text-bear';
+  const tone = isBull ? 'text-emerald-500' : 'text-red-500';
   const pips = change / pipSize(symbol);
   const sign = change > 0 ? '+' : change < 0 ? '−' : '';
 
@@ -116,7 +116,7 @@ export function GetCandlesPart({ output, state, errorMessage }: GetCandlesPartPr
                 <time dateTime={new Date(c.t).toISOString()} className="text-fg-subtle">
                   {formatBarTime(c.t)}
                 </time>
-                <span className={barBull ? 'text-bull' : 'text-bear'}>{c.c.toFixed(decimals)}</span>
+                <span className={barBull ? 'text-emerald-500' : 'text-red-500'}>{c.c.toFixed(decimals)}</span>
               </li>
             );
           })}

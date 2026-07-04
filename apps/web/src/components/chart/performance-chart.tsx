@@ -206,7 +206,7 @@ export function PerformanceChart({
         </div>
         <div className="text-right">
           <span className="text-xs text-fg-muted font-medium uppercase tracking-wide">Net R-Score</span>
-          <p className={`text-xl font-bold tracking-tight tabular-nums ${totalR >= 0 ? 'text-bull' : 'text-bear'}`}>
+          <p className={`text-xl font-bold tracking-tight tabular-nums ${totalR >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
             {totalR >= 0 ? '+' : ''}{totalR.toFixed(2)}R
           </p>
         </div>

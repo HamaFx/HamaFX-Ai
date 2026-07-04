@@ -31,7 +31,7 @@
 //   pivots      →  kind                : P / R1 / S1
 //
 // All numerics use `.tabular-nums`. Sign colouring uses semantic tokens
-// `text-bull` / `text-bear` and the neutral tone uses `text-fg-muted`.
+// `text-emerald-500` / `text-red-500` and the neutral tone uses `text-fg-muted`.
 //
 // Server component on purpose — no state, no events, no browser-only APIs.
 
@@ -93,7 +93,7 @@ function IndicatorValue({ result, decimals }: { result: IndicatorResult; decimal
     case 'rsi': {
       const v = readNumber(last);
       if (v === null) return <Empty />;
-      const tone = v > 70 ? 'text-bear' : v < 30 ? 'text-bull' : 'text-fg-muted';
+      const tone = v > 70 ? 'text-red-500' : v < 30 ? 'text-emerald-500' : 'text-fg-muted';
       // Phase 1.2b — RSI gauge arc next to the numeric value.
       return (
         <span className="inline-flex items-center gap-2">
@@ -106,7 +106,7 @@ function IndicatorValue({ result, decimals }: { result: IndicatorResult; decimal
       const rec = readRecord(last);
       const hist = rec ? readNullableNumber(rec.hist) : null;
       if (hist === null) return <Empty />;
-      const tone = hist > 0 ? 'text-bull' : hist < 0 ? 'text-bear' : 'text-fg-muted';
+      const tone = hist > 0 ? 'text-emerald-500' : hist < 0 ? 'text-red-500' : 'text-fg-muted';
       const sign = hist > 0 ? '+' : '';
       return (
         <>

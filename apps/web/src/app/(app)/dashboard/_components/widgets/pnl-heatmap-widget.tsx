@@ -21,7 +21,7 @@
 // TradeZella-style grid of daily realized R. Each closed day is coloured
 // green/red by the sum of `rMultiple` for trades that closed on that local
 // day; opacity scales with magnitude. Days with no closed trades are
-// `bg-bg-elev-2`. Clicking a day opens a Drawer listing the trades that
+// `bg-zinc-900`. Clicking a day opens a Drawer listing the trades that
 // closed that day (reuse the journal EntryList pattern, but filtered).
 //
 // Pure client component — receives entries as props (the dashboard page
@@ -64,8 +64,10 @@ interface DayBucket {
 function heatCellStyle(totalR: number): React.CSSProperties {
   if (totalR === 0) return { backgroundColor: 'var(--color-bg-elev-2)' };
   const alpha = Math.max(0.15, Math.min(0.85, Math.abs(totalR) / 5));
-  const base = totalR > 0 ? 'var(--color-bull)' : 'var(--color-bear)';
-  return { backgroundColor: `rgba(250, 250, 250, ${alpha})` };
+  return {
+    backgroundColor:
+      totalR > 0 ? `rgba(16, 185, 129, ${alpha})` : `rgba(239, 68, 68, ${alpha})`,
+  };
 }
 
 /** YYYY-MM-DD in local time. Avoids UTC drift confusing the user. */
@@ -245,8 +247,8 @@ export function PnLHeatmapWidget({ entries }: PnLHeatmapWidgetProps) {
                   className={cn(
                     'flex size-8 items-center justify-center rounded-sm tabular-nums',
                     'text-caption',
-                    cell.totalR > 0 && 'text-bull',
-                    cell.totalR < 0 && 'text-bear',
+                    cell.totalR > 0 && 'text-emerald-500',
+                    cell.totalR < 0 && 'text-red-500',
                     cell.totalR === 0 && 'text-fg-muted',
                     'transition-transform active:scale-95',
                   )}

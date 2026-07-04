@@ -20,7 +20,7 @@ export default function OfflinePage() {
           boxShadow: '0 0 24px -4px rgba(250, 250, 250, 0.15)',
         }}
       >
-        <span className="text-bg text-2xl font-bold">H</span>
+        <span className="text-black text-2xl font-bold">H</span>
       </span>
       <div className="flex flex-col gap-2">
         <h1 className="text-fg text-xl font-semibold tracking-tight">You&apos;re offline</h1>

@@ -59,7 +59,7 @@ export function FallbackPartView({ part }: FallbackPartViewProps) {
     <div
       role="status"
       aria-live="polite"
-      className="border-warn/30 bg-amber-500/10 text-fg mt-2 flex items-start gap-2 rounded-sm border p-3 text-body-sm"
+      className="border-amber-500/30 bg-amber-500/10 text-fg mt-2 flex items-start gap-2 rounded-sm border p-3 text-body-sm"
     >
       <AlertTriangle
         className="text-amber-500 mt-0.5 size-4 shrink-0"

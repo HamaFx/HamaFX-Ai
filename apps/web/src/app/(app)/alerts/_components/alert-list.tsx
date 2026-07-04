@@ -206,7 +206,7 @@ interface AlertRowProps {
 function AlertRow({ alert, onToggle, onDelete }: AlertRowProps) {
   const RuleIcon = ruleIcon(alert);
   const StatusIcon = alert.active ? Bell : alert.firedAt ? BellRing : BellOff;
-  const statusTone = alert.active ? 'text-fg' : alert.firedAt ? 'text-warn' : 'text-fg-subtle';
+  const statusTone = alert.active ? 'text-fg' : alert.firedAt ? 'text-amber-500' : 'text-fg-subtle';
 
   const trackRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -373,7 +373,7 @@ function AlertRow({ alert, onToggle, onDelete }: AlertRowProps) {
                 type="button"
                 onClick={onDelete}
                 aria-label="Delete alert"
-                className="text-bear/70 hover:text-red-500 hover:bg-red-500/10 inline-flex size-10 items-center justify-center rounded-sm transition-colors"
+                className="text-red-500/70 hover:text-red-500 hover:bg-red-500/10 inline-flex size-10 items-center justify-center rounded-sm transition-colors"
               >
                 <Trash2 className="size-4" />
               </button>

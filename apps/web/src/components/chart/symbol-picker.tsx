@@ -23,7 +23,7 @@
 import { Search } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
-import { BUILTIN_SYMBOLS, SYMBOLS, type Symbol } from '@hamafx/shared';
+import { BUILTIN_SYMBOLS, type Symbol } from '@hamafx/shared';
 
 import { useTimeframe } from '@/hooks/use-tf';
 import { cn } from '@/lib/cn';
@@ -85,7 +85,7 @@ export function SymbolPicker({ active, watchlist }: { active: Symbol; watchlist:
               href={`/chart/${s}?tf=${tf}`}
               className={cn(
                 'inline-flex items-center gap-1.5 rounded-sm px-3 py-1.5 text-sm font-semibold tabular-nums transition-colors',
-                'text-fg-muted hover:text-fg hover:bg-bg-elev-2',
+                'text-fg-muted hover:text-fg hover:bg-zinc-900',
               )}
             >
               {s}

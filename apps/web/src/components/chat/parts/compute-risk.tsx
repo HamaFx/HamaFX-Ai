@@ -33,7 +33,7 @@ export function ComputeRiskPart({ output, state, errorMessage }: ToolPartProps<'
   if (state === 'error') return <ErrorCard {...(errorMessage ? { message: errorMessage } : {})} />;
   if (state === 'loading' || !output) return <SkeletonCard />;
 
-  const tone = output.invalidDirection ? 'border-warn/40' : 'border-border';
+  const tone = output.invalidDirection ? 'border-amber-500/40' : 'border-border';
 
   return (
     <div className={`bg-zinc-950 flex flex-col gap-3 rounded-sm border p-3 ${tone}`}>
@@ -46,7 +46,7 @@ export function ComputeRiskPart({ output, state, errorMessage }: ToolPartProps<'
           <span className="flex items-center gap-2">
             <RrGauge rrRatio={output.rrRatio} />
             <span
-              className={`text-body-sm tabular-nums ${output.rrRatio >= 1 ? 'text-bull' : 'text-bear'}`}
+              className={`text-body-sm tabular-nums ${output.rrRatio >= 1 ? 'text-emerald-500' : 'text-red-500'}`}
             >
               RR {output.rrRatio.toFixed(2)}
             </span>
@@ -76,7 +76,7 @@ export function ComputeRiskPart({ output, state, errorMessage }: ToolPartProps<'
       {output.invalidDirection ? (
         <p
           role="alert"
-          className="text-amber-500 border-warn/30 bg-warn/5 rounded-sm border px-2 py-1 text-body-sm"
+          className="text-amber-500 border-amber-500/30 bg-amber-500/5 rounded-sm border px-2 py-1 text-body-sm"
         >
           Stop is on the wrong side of entry for this direction — the agent suggested an inverted
           setup.
@@ -88,7 +88,7 @@ export function ComputeRiskPart({ output, state, errorMessage }: ToolPartProps<'
 
 function Row({ k, v }: { k: string; v: string }) {
   return (
-    <div className="flex items-baseline justify-between gap-2 border-b border-dashed border-divider/50 pb-1">
+    <div className="flex items-baseline justify-between gap-2 border-b border-dashed border-zinc-800/50 pb-1">
       <dt className="text-fg-muted">{k}</dt>
       <dd className="text-fg font-medium tabular-nums">{v}</dd>
     </div>
@@ -110,13 +110,13 @@ function RrGauge({ rrRatio }: { rrRatio: number }) {
       aria-label={`Risk to reward gauge: 1 to ${rrRatio.toFixed(2)}`}
     >
       <m.div
-        className="h-full bg-bear/30"
+        className="h-full bg-red-500/30"
         initial={{ width: 0 }}
         animate={{ width: `${riskPct}%` }}
         transition={{ duration: 0.4, ease: 'easeOut' }}
       />
       <m.div
-        className="h-full bg-bull/30"
+        className="h-full bg-emerald-500/30"
         initial={{ width: 0 }}
         animate={{ width: `${rewardPct}%` }}
         transition={{ duration: 0.4, ease: 'easeOut' }}

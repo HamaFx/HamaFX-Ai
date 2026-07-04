@@ -91,7 +91,7 @@ export function TwoFactorSetup({ enabled }: TwoFactorSetupProps) {
         <div className="flex items-center gap-2">
           <Shield className="size-4 text-emerald-500" />
           <span className="text-sm font-medium text-fg">Two-Factor Authentication</span>
-          <span className="rounded-sm bg-bull/15 px-2 py-0.5 text-xs font-medium text-emerald-500 ml-auto">
+          <span className="rounded-sm bg-emerald-500/15 px-2 py-0.5 text-xs font-medium text-emerald-500 ml-auto">
             Enabled
           </span>
         </div>
@@ -105,7 +105,7 @@ export function TwoFactorSetup({ enabled }: TwoFactorSetupProps) {
             placeholder="Enter 6-digit code to disable"
             maxLength={6}
             aria-label="Enter 6-digit code to disable two-factor authentication"
-            className="bg-bg h-9 text-sm w-40"
+            className="bg-zinc-950 h-9 text-sm w-40"
           />
           <Button
             type="button"
@@ -129,7 +129,7 @@ export function TwoFactorSetup({ enabled }: TwoFactorSetupProps) {
         <div className="flex items-center gap-2">
           <Check className="size-4 text-emerald-500" />
           <span className="text-sm font-medium text-fg">Two-Factor Authentication</span>
-          <span className="rounded-sm bg-bull/15 px-2 py-0.5 text-xs font-medium text-emerald-500 ml-auto">
+          <span className="rounded-sm bg-emerald-500/15 px-2 py-0.5 text-xs font-medium text-emerald-500 ml-auto">
             Enabled
           </span>
         </div>
@@ -173,7 +173,7 @@ export function TwoFactorSetup({ enabled }: TwoFactorSetupProps) {
             placeholder="Enter 6-digit code"
             maxLength={6}
             aria-label="Enter verification code"
-            className="bg-bg h-9 text-sm w-32"
+            className="bg-zinc-950 h-9 text-sm w-32"
           />
           <Button
             type="button"
@@ -196,7 +196,7 @@ export function TwoFactorSetup({ enabled }: TwoFactorSetupProps) {
         <Shield className="size-4 text-fg-muted" />
         <span className="text-sm font-medium text-fg">Two-Factor Authentication</span>
         {enabled && (
-          <span className="rounded-sm bg-bull/15 px-2 py-0.5 text-xs font-medium text-emerald-500 ml-auto">
+          <span className="rounded-sm bg-emerald-500/15 px-2 py-0.5 text-xs font-medium text-emerald-500 ml-auto">
             Enabled
           </span>
         )}

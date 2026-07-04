@@ -25,11 +25,11 @@ interface GetSocialSentimentPartProps {
 }
 
 const SENTIMENT_COLORS: Record<string, string> = {
-  very_bullish: 'bg-bull/15 text-emerald-500 border border-bull/20',
-  bullish: 'bg-emerald-500/10 text-bull/90 border border-bull/10',
-  neutral: 'bg-zinc-900 text-fg-muted border border-divider',
-  bearish: 'bg-red-500/10 text-bear/90 border border-bear/10',
-  very_bearish: 'bg-bear/15 text-red-500 border border-bear/20',
+  very_bullish: 'bg-emerald-500/15 text-emerald-500 border border-emerald-500/20',
+  bullish: 'bg-emerald-500/10 text-emerald-500/90 border border-emerald-500/10',
+  neutral: 'bg-zinc-900 text-fg-muted border border-zinc-800',
+  bearish: 'bg-red-500/10 text-red-500/90 border border-red-500/10',
+  very_bearish: 'bg-red-500/15 text-red-500 border border-red-500/20',
 };
 
 const SOURCE_ICONS: Record<string, LucideIcon> = {
@@ -83,7 +83,7 @@ export function GetSocialSentimentPart({ output, state, errorMessage }: GetSocia
       </div>
 
       {output.contrarianSignal && output.contrarianNote && (
-          <div className="bg-amber-500/10 text-amber-500 border border-warn/20 p-2.5 rounded-sm text-xs leading-[1.4]">
+          <div className="bg-amber-500/10 text-amber-500 border border-amber-500/20 p-2.5 rounded-sm text-xs leading-[1.4]">
           <div className="font-semibold mb-0.5">Contrarian Warning</div>
           {output.contrarianNote}
         </div>
@@ -95,7 +95,7 @@ export function GetSocialSentimentPart({ output, state, errorMessage }: GetSocia
           .map((src, i) => {
             const Icon = SOURCE_ICONS[src.source] || AlertCircle;
             return (
-              <div key={i} className="flex items-center justify-between gap-3 p-2 bg-bg rounded-sm text-xs">
+              <div key={i} className="flex items-center justify-between gap-3 p-2 bg-zinc-950 rounded-sm text-xs">
                 <div className="flex items-center gap-2">
                   <Icon className="size-4 text-fg-muted shrink-0" />
                   <span className="text-fg font-medium capitalize flex-1">

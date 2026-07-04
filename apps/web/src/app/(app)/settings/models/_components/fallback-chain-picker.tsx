@@ -65,7 +65,7 @@ function SortableItem({
       className={`flex items-center justify-between gap-3 border bg-zinc-900 rounded-sm p-2.5 transition-all ${
         isDragging
           ? 'border-zinc-700 shadow-lg z-10 opacity-90'
-          : 'border-zinc-800 hover:border-divider'
+          : 'border-zinc-800 hover:border-zinc-800'
       }`}
     >
       <div className="flex items-center gap-2 min-w-0">
@@ -202,7 +202,7 @@ export function FallbackChainPicker({
           </SortableContext>
         </DndContext>
       ) : (
-        <div className="text-center py-6 border border-dashed border-zinc-800 bg-bg-elev-2/40 rounded-sm text-caption text-fg-subtle">
+        <div className="text-center py-6 border border-dashed border-zinc-800 bg-zinc-900/40 rounded-sm text-caption text-fg-subtle">
           No fallback chain configured. If a model call fails, the request will immediately fail.
         </div>
       )}

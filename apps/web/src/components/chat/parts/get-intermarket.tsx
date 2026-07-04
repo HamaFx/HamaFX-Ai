@@ -25,9 +25,9 @@ import type { RiskRegime } from '@hamafx/shared';
 import type { ToolPartProps } from './registry';
 
 const REGIME_TONE: Record<RiskRegime, { bg: string; fg: string; label: string }> = {
-  'risk-on': { bg: 'bg-bull/15', fg: 'text-bull', label: 'Risk-on' },
-  'risk-off': { bg: 'bg-bear/15', fg: 'text-bear', label: 'Risk-off' },
-  neutral: { bg: 'bg-bg-elev-2', fg: 'text-fg-muted', label: 'Neutral' },
+  'risk-on': { bg: 'bg-emerald-500/15', fg: 'text-emerald-500', label: 'Risk-on' },
+  'risk-off': { bg: 'bg-red-500/15', fg: 'text-red-500', label: 'Risk-off' },
+  neutral: { bg: 'bg-zinc-900', fg: 'text-fg-muted', label: 'Neutral' },
 };
 
 export function GetIntermarketPart({
@@ -39,13 +39,13 @@ export function GetIntermarketPart({
   if (state === 'loading' || !output) return <SkeletonCard />;
 
   const tone = REGIME_TONE[output.regime];
-  const dxyTone = output.dxyProxy.change24h >= 0 ? 'text-bull' : 'text-bear';
+  const dxyTone = output.dxyProxy.change24h >= 0 ? 'text-emerald-500' : 'text-red-500';
   const goldTone =
     output.goldChange24h === null
       ? 'text-fg-muted'
       : output.goldChange24h >= 0
-        ? 'text-bull'
-        : 'text-bear';
+        ? 'text-emerald-500'
+        : 'text-red-500';
 
   return (
     <div className="border-border bg-zinc-950 flex flex-col gap-3 rounded-sm border p-3">
@@ -80,9 +80,9 @@ export function GetIntermarketPart({
           v={output.xauDxyCorrelation.toFixed(2)}
           tone={
             output.xauDxyCorrelation <= -0.4
-              ? 'text-bull'
+              ? 'text-emerald-500'
               : output.xauDxyCorrelation >= 0.4
-                ? 'text-bear'
+                ? 'text-red-500'
                 : 'text-fg-muted'
           }
         />

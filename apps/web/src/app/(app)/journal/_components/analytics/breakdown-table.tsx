@@ -122,7 +122,7 @@ export function BreakdownTable({ title, data, sortBy = 'totalR' }: BreakdownTabl
               <td
                 className={cn(
                   'py-2 px-3 text-right tabular-nums font-medium',
-                  row.winRate > 0.55 ? 'text-bull' : row.winRate < 0.4 ? 'text-bear' : 'text-fg-muted',
+                  row.winRate > 0.55 ? 'text-emerald-500' : row.winRate < 0.4 ? 'text-red-500' : 'text-fg-muted',
                 )}
               >
                 {(row.winRate * 100).toFixed(0)}%
@@ -130,7 +130,7 @@ export function BreakdownTable({ title, data, sortBy = 'totalR' }: BreakdownTabl
               <td
                 className={cn(
                   'py-2 px-3 text-right tabular-nums font-medium',
-                  row.totalR > 0 ? 'text-bull' : row.totalR < 0 ? 'text-bear' : 'text-fg-muted',
+                  row.totalR > 0 ? 'text-emerald-500' : row.totalR < 0 ? 'text-red-500' : 'text-fg-muted',
                 )}
               >
                 {row.totalR > 0 ? '+' : ''}

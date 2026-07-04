@@ -20,7 +20,7 @@
 // row deep-links to `/calendar?id=<item.id>` so the user can jump from chat
 // straight to the dedicated calendar surface for that event. Numeric columns
 // use `.tabular-nums` so digits align across rows; impact is colour-coded via
-// semantic tokens (`text-bear` / `text-warn` / `text-fg-muted`).
+// semantic tokens (`text-red-500` / `text-amber-500` / `text-fg-muted`).
 //
 // Server component on purpose — purely presentational, no state or events.
 
@@ -36,8 +36,8 @@ interface GetCalendarPartProps {
 const MAX_ROWS = 10;
 
 const IMPACT_TEXT: Record<ToolCalendarItem['importance'], string> = {
-  high: 'text-bear',
-  medium: 'text-warn',
+  high: 'text-red-500',
+  medium: 'text-amber-500',
   low: 'text-fg-muted',
 };
 

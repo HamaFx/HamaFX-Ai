@@ -67,10 +67,10 @@ const AGENT_META: Record<
   string,
   { icon: ReactNode; label: string; tokenClass: string; glowClass: string }
 > = {
-  technical: { icon: <TrendingUp className="size-4" />, label: 'Technical', tokenClass: 'text-bull', glowClass: 'shadow-none' },
-  fundamental: { icon: <Newspaper className="size-4" />, label: 'Fundamental', tokenClass: 'text-info', glowClass: 'shadow-none' },
-  risk: { icon: <Shield className="size-4" />, label: 'Risk', tokenClass: 'text-bear', glowClass: '' },
-  sentiment: { icon: <Bot className="size-4" />, label: 'Sentiment', tokenClass: 'text-warn', glowClass: '' },
+  technical: { icon: <TrendingUp className="size-4" />, label: 'Technical', tokenClass: 'text-emerald-500', glowClass: 'shadow-none' },
+  fundamental: { icon: <Newspaper className="size-4" />, label: 'Fundamental', tokenClass: 'text-blue-500', glowClass: 'shadow-none' },
+  risk: { icon: <Shield className="size-4" />, label: 'Risk', tokenClass: 'text-red-500', glowClass: '' },
+  sentiment: { icon: <Bot className="size-4" />, label: 'Sentiment', tokenClass: 'text-amber-500', glowClass: '' },
   decision: { icon: <Brain className="size-4" />, label: 'Decision', tokenClass: 'text-fg', glowClass: 'shadow-none' },
 };
 
@@ -82,8 +82,8 @@ const FALLBACK_META = {
 } as const;
 
 const BIAS_TOKEN: Record<AgentOpinion['bias'], string> = {
-  bullish: 'text-bull',
-  bearish: 'text-bear',
+  bullish: 'text-emerald-500',
+  bearish: 'text-red-500',
   neutral: 'text-fg-muted',
 };
 
@@ -104,7 +104,7 @@ export function AgentDeliberation({ agents, mode }: AgentDeliberationProps) {
     neutral: opinions.filter((a) => a.opinion?.bias === 'neutral').length,
   };
   const dissent = biasCounts.bullish > 0 && biasCounts.bearish > 0;
-  const confidenceTone = avgConfidence > 75 ? 'bg-bull' : avgConfidence >= 50 ? 'bg-warn' : 'bg-bear';
+  const confidenceTone = avgConfidence > 75 ? 'bg-emerald-500' : avgConfidence >= 50 ? 'bg-amber-500' : 'bg-red-500';
 
   return (
     <div
@@ -263,7 +263,7 @@ function AgentNode({
             'relative flex size-12 items-center justify-center rounded-sm',
             status === 'pending' && 'bg-zinc-900 text-fg-subtle',
             status === 'running' && 'bg-zinc-800 text-fg',
-            status === 'done' && 'bg-bg-elev-2',
+            status === 'done' && 'bg-zinc-900',
             status === 'error' && 'bg-red-500/10 text-red-500 border border-red-500/30',
           )}
         >
@@ -271,7 +271,7 @@ function AgentNode({
 
           {/* Status badges */}
           {status === 'done' ? (
-            <span className={cn('absolute -bottom-0.5 -right-0.5 flex size-4 items-center justify-center rounded-sm bg-bg-elev-1', meta.tokenClass)}>
+            <span className={cn('absolute -bottom-0.5 -right-0.5 flex size-4 items-center justify-center rounded-sm bg-zinc-950', meta.tokenClass)}>
               <CheckCircle2 className="size-4" />
             </span>
           ) : null}
@@ -333,8 +333,8 @@ function BiasDistribution({
   total: number;
 }) {
   const rows: Array<{ label: string; count: number; bar: string }> = [
-    { label: 'Bull', count: counts.bullish, bar: 'bg-bull' },
-    { label: 'Bear', count: counts.bearish, bar: 'bg-bear' },
+    { label: 'Bull', count: counts.bullish, bar: 'bg-emerald-500' },
+    { label: 'Bear', count: counts.bearish, bar: 'bg-red-500' },
     { label: 'Neutral', count: counts.neutral, bar: 'bg-fg-muted' },
   ];
 

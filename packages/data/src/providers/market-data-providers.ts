@@ -45,9 +45,9 @@ export const biquoteProvider: MarketDataProvider = {
     });
     return {
       symbol,
-      bid: tick.mid,
-      ask: tick.mid,
-      mid: tick.mid,
+      bid: tick.mid ?? 0,
+      ask: tick.mid ?? 0,
+      mid: tick.mid ?? 0,
       ts: Date.now(),
       source: 'biquote',
     };

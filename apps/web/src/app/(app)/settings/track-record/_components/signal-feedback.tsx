@@ -63,8 +63,8 @@ export function SignalFeedback({ signalId, initialFeedback = null }: SignalFeedb
         className={cn(
           'inline-flex size-8 items-center justify-center rounded-sm transition-colors',
           feedback === 'useful'
-            ? 'bg-emerald-500/10 text-bull'
-            : 'text-fg-muted hover:text-fg hover:bg-bg-elev-2',
+            ? 'bg-emerald-500/10 text-emerald-500'
+            : 'text-fg-muted hover:text-fg hover:bg-zinc-900',
           saving && 'opacity-60',
         )}
       >
@@ -79,8 +79,8 @@ export function SignalFeedback({ signalId, initialFeedback = null }: SignalFeedb
         className={cn(
           'inline-flex size-8 items-center justify-center rounded-sm transition-colors',
           feedback === 'not_useful'
-            ? 'bg-red-500/10 text-bear'
-            : 'text-fg-muted hover:text-fg hover:bg-bg-elev-2',
+            ? 'bg-red-500/10 text-red-500'
+            : 'text-fg-muted hover:text-fg hover:bg-zinc-900',
           saving && 'opacity-60',
         )}
       >

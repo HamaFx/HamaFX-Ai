@@ -68,16 +68,16 @@ export function PriceTag({ symbol, referencePrice, className }: PriceTagProps) {
         decimals={decimals}
         className={cn(
           'text-base font-semibold tabular-nums',
-          bull && 'text-bull',
-          bear && 'text-bear',
+          bull && 'text-emerald-500',
+          bear && 'text-red-500',
         )}
       />
       {delta !== null ? (
         <span
           className={cn(
             'inline-flex items-center gap-0.5 text-xs tabular-nums',
-            bull && 'text-bull',
-            bear && 'text-bear',
+            bull && 'text-emerald-500',
+            bear && 'text-red-500',
             !bull && !bear && 'text-fg-muted',
           )}
         >

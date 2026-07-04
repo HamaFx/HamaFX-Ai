@@ -101,7 +101,7 @@ export function GetNewsPart({ output, state, errorMessage }: GetNewsPartProps) {
 function SentimentDot({ sentiment }: { sentiment: NewsSentiment | null }) {
   if (sentiment === null) return null;
   const color =
-    sentiment === 'positive' ? 'bg-bull' : sentiment === 'negative' ? 'bg-bear' : 'bg-fg-muted';
+    sentiment === 'positive' ? 'bg-emerald-500' : sentiment === 'negative' ? 'bg-red-500' : 'bg-fg-muted';
   return (
     <span
       role="img"

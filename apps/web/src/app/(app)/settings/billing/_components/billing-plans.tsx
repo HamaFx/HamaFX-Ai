@@ -82,7 +82,7 @@ export function BillingPlans({ plans, currentPlanId }: { plans: Plan[]; currentP
                 'flex flex-col gap-3 rounded-sm border p-4 transition-colors',
                 isCurrent
                   ? 'border-zinc-700 bg-zinc-950'
-                  : 'border-border bg-surface hover:border-brand/20',
+                  : 'border-border bg-surface hover:border-zinc-700/20',
               )}
             >
               <div className="flex items-center justify-between">

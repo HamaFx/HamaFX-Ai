@@ -71,7 +71,7 @@ export function ApiKeysLandingBanner({ prompt }: ApiKeysLandingBannerProps) {
     <div
       role="status"
       aria-live="polite"
-      className="border-info/30 bg-blue-500/10 text-fg flex items-start gap-3 rounded-sm border p-4"
+      className="border-blue-500/30 bg-blue-500/10 text-fg flex items-start gap-3 rounded-sm border p-4"
     >
       <Info className="text-blue-500 mt-0.5 size-5 shrink-0" aria-hidden="true" />
       <div className="flex-1 leading-[1.4]">
@@ -93,7 +93,7 @@ export function ApiKeysLandingBanner({ prompt }: ApiKeysLandingBannerProps) {
         type="button"
         onClick={dismiss}
         aria-label="Dismiss banner"
-        className="text-fg-subtle hover:text-fg -mr-1 inline-flex size-7 shrink-0 items-center justify-center rounded-sm transition-colors hover:bg-info/15"
+        className="text-fg-subtle hover:text-fg -mr-1 inline-flex size-7 shrink-0 items-center justify-center rounded-sm transition-colors hover:bg-blue-500/15"
       >
         <X className="size-4" />
       </button>

@@ -18,7 +18,7 @@
 //
 // `get_price` returns a snapshot of bid/ask/mid for one or more symbols at a
 // single moment in time — there's no prior tick context here, so we don't
-// render a signed delta or `text-bull` / `text-bear` colouring. The schema
+// render a signed delta or `text-emerald-500` / `text-red-500` colouring. The schema
 // only carries `mid`, `bid`, `ask`, so this surface is deliberately simple:
 // symbol on the left, mid + spread on the right, with `.tabular-nums` on
 // every numeric column.

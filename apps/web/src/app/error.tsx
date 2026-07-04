@@ -34,7 +34,7 @@ export default function ErrorPage({ error, reset }: ErrorPageProps) {
   }, [error]);
 
   return (
-    <main className="bg-bg text-fg flex min-h-svh flex-col items-center justify-center gap-6 px-6 text-center">
+    <main className="bg-zinc-950 text-fg flex min-h-svh flex-col items-center justify-center gap-6 px-6 text-center">
       <span
         aria-hidden="true"
         className="inline-flex size-16 items-center justify-center rounded-sm"
@@ -43,7 +43,7 @@ export default function ErrorPage({ error, reset }: ErrorPageProps) {
           boxShadow: '0 0 24px -4px rgba(250, 250, 250, 0.15)',
         }}
       >
-        <span className="text-bg text-2xl font-bold">H</span>
+        <span className="text-black text-2xl font-bold">H</span>
       </span>
       <div className="flex flex-col gap-2 text-center items-center" role="alert">
         <h1 className="text-lg font-semibold">Something went wrong</h1>

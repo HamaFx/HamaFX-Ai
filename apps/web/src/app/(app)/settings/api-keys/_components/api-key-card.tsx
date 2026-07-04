@@ -278,7 +278,7 @@ export function ApiKeyCard({ provider, currentValue, health, usage, keyUpdatedAt
               {provider.displayName}
             </label>
             {provider.pricingTier === 'free' && (
-              <span className="rounded-sm bg-bull/15 px-2 py-0.5 text-xs font-semibold text-emerald-500">
+              <span className="rounded-sm bg-emerald-500/15 px-2 py-0.5 text-xs font-semibold text-emerald-500">
                 Free
               </span>
             )}
@@ -307,7 +307,7 @@ export function ApiKeyCard({ provider, currentValue, health, usage, keyUpdatedAt
       </div>
 
       {keyAgeDays !== null && keyAgeDays >= 90 && (
-        <div className="border border-warn/20 bg-warn/5 rounded-sm p-3 text-caption text-amber-500 flex items-start gap-2.5">
+        <div className="border border-amber-500/20 bg-amber-500/5 rounded-sm p-3 text-caption text-amber-500 flex items-start gap-2.5">
           <span className="shrink-0 text-sm">⚠️</span>
           <div className="flex flex-col gap-0.5">
             <span className="font-semibold text-fg">Consider rotating your API key</span>
@@ -319,7 +319,7 @@ export function ApiKeyCard({ provider, currentValue, health, usage, keyUpdatedAt
       )}
 
       {health?.rateLimit && (
-        <div className="border border-zinc-800 bg-bg-elev-2/40 rounded-sm p-3 text-caption text-fg-subtle flex flex-col gap-1.5 shadow-sm">
+        <div className="border border-zinc-800 bg-zinc-900/40 rounded-sm p-3 text-caption text-fg-subtle flex flex-col gap-1.5 shadow-sm">
           <div className="font-semibold text-fg flex items-center gap-1.5">
             <span>⏱️</span>
             <span>API Rate Limits</span>
@@ -462,7 +462,7 @@ export function ApiKeyCard({ provider, currentValue, health, usage, keyUpdatedAt
             <span>Setup Instructions & Limits</span>
             <span className="text-xs">▼</span>
           </summary>
-          <div className="p-3 border-t border-zinc-900 flex flex-col gap-2 bg-bg-elev-2/10">
+          <div className="p-3 border-t border-zinc-900 flex flex-col gap-2 bg-zinc-900/10">
             <div>
               <span className="font-semibold text-fg-muted">How to get:</span>{' '}
               <span className="text-fg-subtle">{instructions.howToGet}</span>
@@ -547,14 +547,14 @@ function StatusPill({
   // Live test result takes precedence over the cached health snapshot.
   if (testState.kind === 'err') {
     return (
-      <span className="rounded-sm bg-bear/15 px-2 py-0.5 text-caption font-medium text-red-500">
+      <span className="rounded-sm bg-red-500/15 px-2 py-0.5 text-caption font-medium text-red-500">
         Failed
       </span>
     );
   }
   if (testState.kind === 'ok') {
     return (
-      <span className="rounded-sm bg-bull/15 px-2 py-0.5 text-caption font-medium text-emerald-500">
+      <span className="rounded-sm bg-emerald-500/15 px-2 py-0.5 text-caption font-medium text-emerald-500">
         OK
       </span>
     );
@@ -568,13 +568,13 @@ function StatusPill({
   }
   if (!health.ok) {
     return (
-      <span className="rounded-sm bg-bear/15 px-2 py-0.5 text-caption font-medium text-red-500">
+      <span className="rounded-sm bg-red-500/15 px-2 py-0.5 text-caption font-medium text-red-500">
         Failed <span className="opacity-60">·</span> {formatRelative(health.testedAt)}
       </span>
     );
   }
   return (
-    <span className="rounded-sm bg-bull/15 px-2 py-0.5 text-caption font-medium text-emerald-500">
+    <span className="rounded-sm bg-emerald-500/15 px-2 py-0.5 text-caption font-medium text-emerald-500">
       OK <span className="opacity-60">·</span> {formatRelative(health.testedAt)}
     </span>
   );

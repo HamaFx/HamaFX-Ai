@@ -62,7 +62,7 @@ export function RDistribution({ stats, className }: RDistributionProps) {
                   <div
                     className={cn(
                       'w-full rounded-t',
-                      isPositive ? 'bg-bull/60' : 'bg-bear/60',
+                      isPositive ? 'bg-emerald-500/60' : 'bg-red-500/60',
                     )}
                     style={{ height: `${Math.max(heightPct, 0)}%` }}
                     aria-label={`${d.bucket}: ${d.count}`}

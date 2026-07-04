@@ -265,7 +265,7 @@ export function ChatTopBar({ threadId, title, pinnedSymbol, threads, isStreaming
               aria-label="Analysis mode"
               aria-expanded={modeMenuOpen}
               aria-haspopup="menu"
-              className="text-fg-muted hover:text-fg hover:bg-bg-elev-2 active:bg-bg-elev-3 inline-flex items-center gap-1 rounded-sm px-2.5 py-1.5 text-caption font-medium transition-colors shrink-0"
+              className="text-fg-muted hover:text-fg hover:bg-zinc-900 active:bg-zinc-800 inline-flex items-center gap-1 rounded-sm px-2.5 py-1.5 text-caption font-medium transition-colors shrink-0"
             >
               <Brain className="size-3.5" />
               <span className="hidden sm:inline">{MODE_LABELS[analysisMode]}</span>
@@ -274,7 +274,7 @@ export function ChatTopBar({ threadId, title, pinnedSymbol, threads, isStreaming
             {modeMenuOpen ? (
               <div
                 role="menu"
-                className="bg-bg-elev-1 border border-zinc-800 shadow-xl absolute right-0 top-full z-50 mt-2 w-56 rounded-sm p-1.5"
+                className="bg-zinc-950 border border-zinc-800 shadow-xl absolute right-0 top-full z-50 mt-2 w-56 rounded-sm p-1.5"
               >
                 {(Object.keys(MODE_LABELS) as AnalysisMode[]).map((mode) => (
                   <button
@@ -289,7 +289,7 @@ export function ChatTopBar({ threadId, title, pinnedSymbol, threads, isStreaming
                       'flex w-full items-center justify-between gap-2 rounded-sm px-3 py-2 text-left text-sm transition-colors',
                       analysisMode === mode
                         ? 'bg-zinc-900 text-fg font-medium'
-                        : 'text-fg-muted hover:bg-bg-elev-2 hover:text-fg',
+                        : 'text-fg-muted hover:bg-zinc-900 hover:text-fg',
                     )}
                   >
                     <div className="flex flex-col gap-0.5">
@@ -310,7 +310,7 @@ export function ChatTopBar({ threadId, title, pinnedSymbol, threads, isStreaming
             onClick={newChat}
             disabled={pending}
             aria-label="New chat"
-            className="text-fg-muted hover:text-fg hover:bg-bg-elev-2 active:bg-bg-elev-3 inline-flex size-11 shrink-0 items-center justify-center rounded-sm transition-colors disabled:opacity-50"
+            className="text-fg-muted hover:text-fg hover:bg-zinc-900 active:bg-zinc-800 inline-flex size-11 shrink-0 items-center justify-center rounded-sm transition-colors disabled:opacity-50"
           >
             {pending ? <Loader2 className="size-5 animate-spin" /> : <Plus className="size-5" />}
           </button>
@@ -324,7 +324,7 @@ export function ChatTopBar({ threadId, title, pinnedSymbol, threads, isStreaming
             aria-label="Conversation menu"
             aria-expanded={menuOpen}
             aria-haspopup="menu"
-            className="text-fg-muted hover:text-fg hover:bg-bg-elev-2 active:bg-bg-elev-3 inline-flex size-11 shrink-0 items-center justify-center rounded-sm transition-colors"
+            className="text-fg-muted hover:text-fg hover:bg-zinc-900 active:bg-zinc-800 inline-flex size-11 shrink-0 items-center justify-center rounded-sm transition-colors"
           >
             <MoreHorizontal className="size-5" />
           </button>
@@ -368,27 +368,27 @@ export function ChatTopBar({ threadId, title, pinnedSymbol, threads, isStreaming
                   setMenuOpen(false);
                   setDrawerOpen(true);
                 }}
-                className="text-fg hover:bg-bg-elev-2 flex min-h-[48px] w-full items-center gap-2 px-4 py-3 text-left"
+                className="text-fg hover:bg-zinc-900 flex min-h-[48px] w-full items-center gap-2 px-4 py-3 text-left"
               >
                 <MessagesSquare className="size-4" />
                 Switch conversation
               </button>
-              <div className="border-divider/60 border-t" />
+              <div className="border-zinc-800/60 border-t" />
               <button
                 role="menuitem"
                 type="button"
                 onClick={exportThread}
-                className="text-fg hover:bg-bg-elev-2 flex min-h-[48px] w-full items-center gap-2 px-4 py-3 text-left"
+                className="text-fg hover:bg-zinc-900 flex min-h-[48px] w-full items-center gap-2 px-4 py-3 text-left"
               >
                 <FileDown className="size-4" />
                 Export as Markdown
               </button>
-              <div className="border-divider/60 border-t" />
+              <div className="border-zinc-800/60 border-t" />
               <button
                 role="menuitem"
                 type="button"
                 onClick={() => void deleteCurrent()}
-                className="text-bear hover:bg-bear/10 flex min-h-[48px] w-full items-center gap-2 px-4 py-3 text-left"
+                className="text-red-500 hover:bg-red-500/10 flex min-h-[48px] w-full items-center gap-2 px-4 py-3 text-left"
               >
                 <Trash2 className="size-4" />
                 Delete conversation
@@ -396,7 +396,6 @@ export function ChatTopBar({ threadId, title, pinnedSymbol, threads, isStreaming
             </div>
           ) : null}
         </div>
-      </div>
 
       <ThreadSwitcher
         open={drawerOpen}
@@ -525,7 +524,7 @@ function ThreadSwitcher({ open, onOpenChange, threadId, threads, onPickNew }: Th
                 type="button"
                 onClick={() => (selectMode ? exitSelectMode() : setSelectMode(true))}
                 aria-pressed={selectMode}
-                className="text-fg-muted hover:text-fg border-divider/60 hover:bg-bg-elev-2 inline-flex h-9 items-center gap-1.5 rounded-sm border px-3 text-caption font-medium"
+                className="text-fg-muted hover:text-fg border-zinc-800/60 hover:bg-zinc-900 inline-flex h-9 items-center gap-1.5 rounded-sm border px-3 text-caption font-medium"
               >
                 {selectMode ? 'Cancel' : 'Select'}
               </button>
@@ -549,7 +548,7 @@ function ThreadSwitcher({ open, onOpenChange, threadId, threads, onPickNew }: Th
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Search…"
-                className="bg-bg-elev-1/60 text-fg placeholder:text-fg-subtle focus:border-zinc-700 border-divider h-11 w-full rounded-sm border pl-10 pr-4 text-sm focus:outline-none"
+                className="bg-zinc-950/60 text-fg placeholder:text-fg-subtle focus:border-zinc-700 border-zinc-800 h-11 w-full rounded-sm border pl-10 pr-4 text-sm focus:outline-none"
               />
             </div>
           </div>
@@ -559,19 +558,19 @@ function ThreadSwitcher({ open, onOpenChange, threadId, threads, onPickNew }: Th
           <button
             type="button"
             onClick={onPickNew}
-            className="text-fg hover:bg-bg-elev-2 flex min-h-[56px] items-center gap-3 rounded-sm px-3 py-3 text-left text-sm font-semibold transition-colors"
+            className="text-fg hover:bg-zinc-900 flex min-h-[56px] items-center gap-3 rounded-sm px-3 py-3 text-left text-sm font-semibold transition-colors"
           >
             <span
               aria-hidden="true"
               className="text-fg inline-flex size-10 items-center justify-center rounded-sm"
-              style={{ background: 'oklch(82% 0.14 85 / 0.18)' }}
+              style={{ background: 'rgba(250, 250, 250, 0.15)' }}
             >
               <Plus className="size-5" />
             </span>
             New conversation
           </button>
         </div>
-        <div className="border-divider border-t" />
+        <div className="border-zinc-800 border-t" />
         <ul className="scrollbar-hide flex max-h-[60svh] flex-col gap-1 overflow-y-auto px-2 pb-4 pt-2">
           {filtered.length === 0 ? (
             <p className="text-fg-subtle px-3 py-4 text-center text-sm">
@@ -597,8 +596,8 @@ function ThreadSwitcher({ open, onOpenChange, threadId, threads, onPickNew }: Th
                     className={cn(
                       'flex min-h-[56px] w-full items-center gap-3 rounded-sm px-3 py-3 text-left text-sm transition-colors',
                       isActive && !selectMode
-                        ? 'bg-bg-elev-3 text-fg'
-                        : 'text-fg-muted hover:bg-bg-elev-2 hover:text-fg',
+                        ? 'bg-zinc-800 text-fg'
+                        : 'text-fg-muted hover:bg-zinc-900 hover:text-fg',
                       isSelected && 'ring-1 ring-zinc-700 bg-zinc-900 text-fg',
                     )}
                   >
@@ -607,7 +606,7 @@ function ThreadSwitcher({ open, onOpenChange, threadId, threads, onPickNew }: Th
                         aria-hidden="true"
                         className={cn(
                           'inline-flex size-5 shrink-0 items-center justify-center rounded-md border',
-                          isSelected ? 'bg-fg border-brand text-bg' : 'border-divider/80 bg-bg-elev-1',
+                          isSelected ? 'bg-fg border-zinc-700 text-black' : 'border-zinc-800/80 bg-zinc-950',
                         )}
                       >
                         {isSelected ? (
@@ -639,7 +638,7 @@ function ThreadSwitcher({ open, onOpenChange, threadId, threads, onPickNew }: Th
           <div
             role="toolbar"
             aria-label="Bulk actions"
-            className="border-divider bg-bg-elev-1 sticky bottom-0 flex items-center justify-between gap-2 border-t p-3"
+            className="border-zinc-800 bg-zinc-950 sticky bottom-0 flex items-center justify-between gap-2 border-t p-3"
           >
             <span className="text-fg-muted text-caption">
               {selectedIds.size} selected
@@ -648,7 +647,7 @@ function ThreadSwitcher({ open, onOpenChange, threadId, threads, onPickNew }: Th
               <button
                 type="button"
                 onClick={exitSelectMode}
-                className="text-fg-muted hover:text-fg border-divider/60 hover:bg-bg-elev-2 inline-flex h-9 items-center rounded-sm border px-3 text-caption font-medium"
+                className="text-fg-muted hover:text-fg border-zinc-800/60 hover:bg-zinc-900 inline-flex h-9 items-center rounded-sm border px-3 text-caption font-medium"
               >
                 Cancel
               </button>
@@ -657,7 +656,7 @@ function ThreadSwitcher({ open, onOpenChange, threadId, threads, onPickNew }: Th
                 onClick={() => void bulkDelete()}
                 disabled={selectedIds.size === 0 || deleting}
                 aria-label={`Delete ${selectedIds.size} selected conversation${selectedIds.size === 1 ? '' : 's'}`}
-                className="text-bear border-bear/40 hover:bg-bear/15 inline-flex h-9 items-center gap-1.5 rounded-sm border px-3 text-caption font-semibold disabled:cursor-not-allowed disabled:opacity-50"
+                className="text-red-500 border-red-500/40 hover:bg-red-500/15 inline-flex h-9 items-center gap-1.5 rounded-sm border px-3 text-caption font-semibold disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {deleting ? (
                   <Loader2 className="size-3 animate-spin" aria-hidden="true" />

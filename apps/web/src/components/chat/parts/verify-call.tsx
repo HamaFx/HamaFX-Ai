@@ -40,8 +40,8 @@ export function VerifyCallPart({ output, state, errorMessage }: ToolPartProps<'v
   if (state === 'error') return <ErrorCard {...(errorMessage ? { message: errorMessage } : {})} />;
   if (state === 'loading' || !output) return <SkeletonCard />;
 
-  const tone = output.agree ? 'border-emerald-500/40' : 'border-warn/40';
-  const headerTone = output.agree ? 'text-bull' : 'text-warn';
+  const tone = output.agree ? 'border-emerald-500/40' : 'border-amber-500/40';
+  const headerTone = output.agree ? 'text-emerald-500' : 'text-amber-500';
   const Icon = output.agree ? CheckCircle2 : AlertTriangle;
 
   return (
@@ -58,7 +58,7 @@ export function VerifyCallPart({ output, state, errorMessage }: ToolPartProps<'v
           {output.caveats.map((c, i) => (
             <li
               key={i}
-              className="border-warn/30 bg-warn/5 flex items-baseline gap-2 rounded-sm border px-2 py-1.5 text-body-sm"
+              className="border-amber-500/30 bg-amber-500/5 flex items-baseline gap-2 rounded-sm border px-2 py-1.5 text-body-sm"
             >
               <span className="text-amber-500 font-semibold">{CAVEAT_GLYPH[c.code] ?? '!'}</span>
               <span className="text-fg flex-1">{c.message}</span>

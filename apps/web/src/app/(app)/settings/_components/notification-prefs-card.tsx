@@ -92,7 +92,7 @@ export function NotificationPrefsCard({
           </thead>
           <tbody>
             {(Object.keys(DEFAULT_PREFS) as EventType[]).map((event) => (
-              <tr key={event} className="border-b border-divider/50 last:border-0">
+              <tr key={event} className="border-b border-zinc-800/50 last:border-0">
                 <td className="py-3 pr-4 text-fg">{EVENT_LABELS[event]}</td>
                 {CHANNELS.map((ch) => (
                   <td key={ch.key} className="text-center py-3 px-3">

@@ -34,7 +34,7 @@ export function SummarizeThreadPart({
       <header className="flex items-baseline justify-between gap-2">
         <h3 className="text-fg text-sm font-semibold">Thread synopsis</h3>
         {output.remembered ? (
-          <span className="bg-bull/15 text-emerald-500 rounded-sm px-2 py-0.5 text-caption font-semibold">
+          <span className="bg-emerald-500/15 text-emerald-500 rounded-sm px-2 py-0.5 text-caption font-semibold">
             Saved to memory
           </span>
         ) : (

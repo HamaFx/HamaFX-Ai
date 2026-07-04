@@ -61,8 +61,8 @@ const IMPORTANCE: Array<{
   tone: string;
 }> = [
   { value: 'all', label: 'All', glyph: '·', tone: 'text-fg' },
-  { value: 'high', label: 'High', glyph: '▲', tone: 'text-bear' },
-  { value: 'medium', label: 'Medium', glyph: '■', tone: 'text-warn' },
+  { value: 'high', label: 'High', glyph: '▲', tone: 'text-red-500' },
+  { value: 'medium', label: 'Medium', glyph: '■', tone: 'text-amber-500' },
   { value: 'low', label: 'Low', glyph: '•', tone: 'text-fg-subtle' },
 ];
 

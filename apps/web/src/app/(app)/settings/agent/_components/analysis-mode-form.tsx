@@ -98,7 +98,7 @@ export function AnalysisModeForm({ initialMode, showOpinions: initialShowOpinion
               'flex items-center justify-between gap-3 rounded-sm border p-3 text-left transition-colors',
               mode === opt.value
                 ? 'border-zinc-700 bg-zinc-950'
-                : 'border-zinc-800 bg-zinc-950 hover:border-divider',
+                : 'border-zinc-800 bg-zinc-950 hover:border-zinc-800',
             )}
           >
             <div className="flex flex-col gap-0.5">

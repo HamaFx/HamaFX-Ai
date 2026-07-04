@@ -154,7 +154,7 @@ export default async function ModelsSettingsPage() {
             </thead>
             <tbody>
               {allModels.map((m) => (
-                <tr key={`${m.providerName}:${m.modelId}`} className="border-b border-divider/50 last:border-0 hover:bg-bg-elev-2/40">
+                <tr key={`${m.providerName}:${m.modelId}`} className="border-b border-zinc-800/50 last:border-0 hover:bg-zinc-900/40">
                   <td className="px-4 py-2.5 text-fg font-medium">{m.providerName}</td>
                   <td className="px-4 py-2.5 text-fg font-mono text-xs">{m.label ?? m.modelId}</td>
                   <td className="px-4 py-2.5">

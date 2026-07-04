@@ -570,7 +570,7 @@ function PreviewCallout(props: PreviewCalloutProps) {
       className={cn(
         'rounded-sm border p-3 text-body-sm',
         state.kind === 'ok'
-          ? 'border-info/30 bg-blue-500/10 text-fg-muted'
+          ? 'border-blue-500/30 bg-blue-500/10 text-fg-muted'
           : 'border-zinc-800 bg-zinc-950/40 text-fg-subtle',
       )}
     >

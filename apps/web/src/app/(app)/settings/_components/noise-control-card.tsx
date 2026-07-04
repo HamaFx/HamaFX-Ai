@@ -169,7 +169,7 @@ export function NoiseControlCard({ initialConfig }: { initialConfig?: NoiseConfi
       )}
 
       {/* Smart Alert Digest */}
-      <div className="rounded-sm border border-brand/20 bg-zinc-950 p-3 flex flex-col gap-3">
+      <div className="rounded-sm border border-zinc-700/20 bg-zinc-950 p-3 flex flex-col gap-3">
         <div className="flex items-start gap-3">
           <div className="rounded-sm bg-zinc-900 p-2 text-fg">
             <Mail className="size-4" />

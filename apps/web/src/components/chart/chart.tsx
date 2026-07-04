@@ -86,7 +86,7 @@ export function Chart({
         />
 
         {/* Floating zoom and pan controls overlay */}
-        <div className="border-glass-edge bg-glass absolute right-4 bottom-4 z-10 flex items-center gap-1 rounded-sm border p-1 shadow-lg ">
+        <div className="border-zinc-800 bg-zinc-900 absolute right-4 bottom-4 z-10 flex items-center gap-1 rounded-sm border p-1 shadow-lg ">
           <button
             onClick={() => mainChart?.zoomIn()}
             className="text-fg-muted hover:bg-zinc-800 hover:text-fg flex size-11 cursor-pointer items-center justify-center rounded-sm transition-all"

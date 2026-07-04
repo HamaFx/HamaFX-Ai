@@ -125,8 +125,8 @@ function SentimentStrip({
 }
 
 function impactClass(importance: 'low' | 'medium' | 'high'): string {
-  if (importance === 'high') return 'bg-red-500/10 text-bear';
-  if (importance === 'medium') return 'bg-amber-500/10 text-warn';
+  if (importance === 'high') return 'bg-red-500/10 text-red-500';
+  if (importance === 'medium') return 'bg-amber-500/10 text-amber-500';
   return 'bg-zinc-900 text-fg-muted';
 }
 

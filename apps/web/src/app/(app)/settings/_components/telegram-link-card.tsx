@@ -181,8 +181,8 @@ export function TelegramLinkCard(): React.JSX.Element {
           className={cn(
             'inline-flex items-center gap-1.5 rounded-sm px-2.5 py-0.5 text-xs font-medium',
             status?.linked
-              ? 'bg-emerald-500/10 text-bull'
-              : 'bg-bg-elev-2/10 text-fg-muted',
+              ? 'bg-emerald-500/10 text-emerald-500'
+              : 'bg-zinc-900/10 text-fg-muted',
           )}
         >
           {status?.linked ? (

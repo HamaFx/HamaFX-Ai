@@ -121,7 +121,7 @@ function CellSession() {
       <span
         className={cn(
           'inline-flex w-fit items-center rounded-sm px-1.5 py-0.5 text-caption font-medium',
-          active ? 'bg-emerald-500/10 text-bull' : 'bg-fg-muted/10 text-fg-muted',
+          active ? 'bg-emerald-500/10 text-emerald-500' : 'bg-fg-muted/10 text-fg-muted',
         )}
       >
         {active ? 'Active' : 'Closed'}

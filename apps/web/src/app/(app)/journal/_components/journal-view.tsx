@@ -112,7 +112,7 @@ export function JournalView() {
           <p className="text-xs font-bold uppercase tracking-wider text-fg-muted">Loading your metrics...</p>
         </div>
       ) : isError ? (
-        <div className="border border-zinc-800 bg-zinc-950 rounded-sm p-6 border-bear/20 bg-bear/5 text-center flex flex-col items-center justify-center gap-2">
+        <div className="border border-zinc-800 bg-zinc-950 rounded-sm p-6 border-red-500/20 bg-red-500/5 text-center flex flex-col items-center justify-center gap-2">
           <p className="text-sm font-semibold text-red-500" role="alert">Failed to load journal portfolio</p>
           <p className="text-xs text-fg-subtle">{(error as Error)?.message || 'Unknown network error'}</p>
         </div>

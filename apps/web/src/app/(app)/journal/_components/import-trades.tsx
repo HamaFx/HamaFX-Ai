@@ -165,7 +165,7 @@ export function ImportTrades({ onImported }: { onImported?: () => void }) {
                       {parsed.slice(0, 20).map((t, i) => (
                         <tr key={i} className="border-t border-zinc-800">
                           <td className="p-2 text-fg">{t.symbol}</td>
-                          <td className={cn('p-2', t.side === 'long' ? 'text-bull' : 'text-bear')}>{t.side}</td>
+                          <td className={cn('p-2', t.side === 'long' ? 'text-emerald-500' : 'text-red-500')}>{t.side}</td>
                           <td className="p-2 text-right text-fg">{t.entry}</td>
                           <td className="p-2 text-right text-fg">{t.exit ?? '—'}</td>
                         </tr>

@@ -52,7 +52,7 @@ export function ComputePositionHealthPart({
       <ul className="flex flex-col gap-1">
         {output.rows.map((r) => {
           const pnlTone =
-            r.pnlPips > 0 ? 'text-bull' : r.pnlPips < 0 ? 'text-bear' : 'text-fg-muted';
+            r.pnlPips > 0 ? 'text-emerald-500' : r.pnlPips < 0 ? 'text-red-500' : 'text-fg-muted';
           return (
             <li
               key={r.entryId}
@@ -80,7 +80,7 @@ export function ComputePositionHealthPart({
                   <span>target {r.distanceToTargetPips.toFixed(1)}p away</span>
                 ) : null}
                 {r.aboutToHit ? (
-                  <span className="bg-warn/15 text-amber-500 rounded-sm px-2 py-0.5 font-semibold">
+                  <span className="bg-amber-500/15 text-amber-500 rounded-sm px-2 py-0.5 font-semibold">
                     About to hit
                   </span>
                 ) : null}
@@ -99,7 +99,7 @@ export function ComputePositionHealthPart({
       {output.partial ? (
         <p
           role="note"
-          className="text-amber-500 border-warn/30 bg-warn/5 rounded-sm border px-2 py-1 text-body-sm"
+          className="text-amber-500 border-amber-500/30 bg-amber-500/5 rounded-sm border px-2 py-1 text-body-sm"
         >
           One or more positions skipped due to a price-fetch failure.
         </p>

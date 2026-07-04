@@ -20,7 +20,7 @@
 // liquidity sweeps) rather than per-bar series. The mobile card surfaces
 // the model's prose `summary` verbatim, then a compact "what we found"
 // counts row, plus the latest 3 directional events (BOS / CHoCH) coloured
-// with `text-bull` / `text-bear` and the latest 2 swing pivots with prices
+// with `text-emerald-500` / `text-red-500` and the latest 2 swing pivots with prices
 // in `.tabular-nums`.
 //
 // Server component on purpose — no state, no events, no browser-only APIs.
@@ -94,8 +94,8 @@ export function GetMarketStructurePart({
                 <span
                   className={
                     e.direction === 'bullish'
-                      ? 'bg-bull/15 text-emerald-500 rounded px-1.5 py-0.5 text-xs font-medium'
-                      : 'bg-bear/15 text-red-500 rounded px-1.5 py-0.5 text-xs font-medium'
+                      ? 'bg-emerald-500/15 text-emerald-500 rounded px-1.5 py-0.5 text-xs font-medium'
+                      : 'bg-red-500/15 text-red-500 rounded px-1.5 py-0.5 text-xs font-medium'
                   }
                 >
                   {e.direction}

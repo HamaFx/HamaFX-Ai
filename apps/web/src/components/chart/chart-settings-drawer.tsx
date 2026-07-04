@@ -137,8 +137,8 @@ export function ChartSettingsDrawer({
                   key={t.id}
                   onClick={() => updateTheme(t.id)}
                   className={cn(
-                    'flex flex-col text-left p-3 rounded-sm border border-glass-edge bg-bg-elev-2/50 transition-all hover:bg-zinc-800 cursor-pointer relative',
-                    settings.theme === t.id && 'border-brand/70 bg-zinc-950 shadow-none/10'
+                    'flex flex-col text-left p-3 rounded-sm border border-zinc-800 bg-zinc-900/50 transition-all hover:bg-zinc-800 cursor-pointer relative',
+                    settings.theme === t.id && 'border-zinc-700/70 bg-zinc-950 shadow-none/10'
                   )}
                 >
                   <span className="text-sm font-semibold">{t.label}</span>
@@ -163,8 +163,8 @@ export function ChartSettingsDrawer({
                   key={g.id}
                   onClick={() => updateGrid(g.id)}
                   className={cn(
-                    'text-center py-2.5 text-xs font-semibold rounded-sm border border-glass-edge bg-bg-elev-2/50 transition-all hover:bg-zinc-800 cursor-pointer relative',
-                    settings.gridStyle === g.id && 'border-brand/70 bg-zinc-950'
+                    'text-center py-2.5 text-xs font-semibold rounded-sm border border-zinc-800 bg-zinc-900/50 transition-all hover:bg-zinc-800 cursor-pointer relative',
+                    settings.gridStyle === g.id && 'border-zinc-700/70 bg-zinc-950'
                   )}
                 >
                   {g.label}
@@ -183,12 +183,12 @@ export function ChartSettingsDrawer({
               Indicator Layers
             </h3>
             
-            <div className="flex flex-col gap-1 rounded-sm border border-glass-edge bg-bg-elev-2/40 overflow-hidden">
+            <div className="flex flex-col gap-1 rounded-sm border border-zinc-800 bg-zinc-900/40 overflow-hidden">
               
               {/* EMA 20 */}
-              <div className="flex items-center justify-between p-3.5 border-b border-glass-edge/40">
+              <div className="flex items-center justify-between p-3.5 border-b border-zinc-800/40">
                 <div className="flex items-center gap-3">
-                  <div className="size-2.5 rounded-sm bg-info shadow-md" />
+                  <div className="size-2.5 rounded-sm bg-blue-500 shadow-md" />
                   <div className="flex flex-col">
                     <span className="text-sm font-semibold">EMA 20</span>
                     <span className="text-xs text-fg-muted mt-0.5">Exponential moving average (20 period)</span>
@@ -202,7 +202,7 @@ export function ChartSettingsDrawer({
               </div>
 
               {/* EMA 50 */}
-              <div className="flex items-center justify-between p-3.5 border-b border-glass-edge/40">
+              <div className="flex items-center justify-between p-3.5 border-b border-zinc-800/40">
                 <div className="flex items-center gap-3">
                   <div className="size-2.5 rounded-sm bg-accent shadow-md" />
                   <div className="flex flex-col">
@@ -218,9 +218,9 @@ export function ChartSettingsDrawer({
               </div>
 
               {/* EMA 200 */}
-              <div className="flex items-center justify-between p-3.5 border-b border-glass-edge/40">
+              <div className="flex items-center justify-between p-3.5 border-b border-zinc-800/40">
                 <div className="flex items-center gap-3">
-                  <div className="size-2.5 rounded-sm bg-warn shadow-md" />
+                  <div className="size-2.5 rounded-sm bg-amber-500 shadow-md" />
                   <div className="flex flex-col">
                     <span className="text-sm font-semibold">EMA 200</span>
                     <span className="text-xs text-fg-muted mt-0.5">Exponential moving average (200 period)</span>
@@ -234,7 +234,7 @@ export function ChartSettingsDrawer({
               </div>
 
               {/* SMA 50 */}
-              <div className="flex items-center justify-between p-3.5 border-b border-glass-edge/40">
+              <div className="flex items-center justify-between p-3.5 border-b border-zinc-800/40">
                 <div className="flex items-center gap-3">
                   <div className="size-2.5 rounded-sm bg-emerald-500 shadow-md" />
                   <div className="flex flex-col">
@@ -250,7 +250,7 @@ export function ChartSettingsDrawer({
               </div>
 
               {/* SMA 100 */}
-              <div className="flex items-center justify-between p-3.5 border-b border-glass-edge/40">
+              <div className="flex items-center justify-between p-3.5 border-b border-zinc-800/40">
                 <div className="flex items-center gap-3">
                   <div className="size-2.5 rounded-sm bg-neutral shadow-md" />
                   <div className="flex flex-col">
@@ -266,9 +266,9 @@ export function ChartSettingsDrawer({
               </div>
 
               {/* Bollinger Bands */}
-              <div className="flex items-center justify-between p-3.5 border-b border-glass-edge/40">
+              <div className="flex items-center justify-between p-3.5 border-b border-zinc-800/40">
                 <div className="flex items-center gap-3">
-                  <div className="size-2.5 rounded-sm bg-warn shadow-md animate-pulse" />
+                  <div className="size-2.5 rounded-sm bg-amber-500 shadow-md animate-pulse" />
                   <div className="flex flex-col">
                     <span className="text-sm font-semibold">Bollinger Bands</span>
                     <span className="text-xs text-fg-muted mt-0.5">Volatility envelopes (20, 2)</span>
@@ -282,9 +282,9 @@ export function ChartSettingsDrawer({
               </div>
 
               {/* Pivot Points */}
-              <div className="flex items-center justify-between p-3.5 border-b border-glass-edge/40">
+              <div className="flex items-center justify-between p-3.5 border-b border-zinc-800/40">
                 <div className="flex items-center gap-3">
-                  <div className="size-2.5 rounded-sm bg-info shadow-md animate-pulse" />
+                  <div className="size-2.5 rounded-sm bg-blue-500 shadow-md animate-pulse" />
                   <div className="flex flex-col">
                     <span className="text-sm font-semibold">Pivot Points</span>
                     <span className="text-xs text-fg-muted mt-0.5">Classic daily floor-trader pivots (PP, S/R levels)</span>
@@ -298,7 +298,7 @@ export function ChartSettingsDrawer({
               </div>
 
               {/* RSI Pane */}
-              <div className="flex items-center justify-between p-3.5 border-b border-glass-edge/40 bg-accent/5">
+              <div className="flex items-center justify-between p-3.5 border-b border-zinc-800/40 bg-accent/5">
                 <div className="flex items-center gap-3">
                   <div className="size-2.5 rounded-sm bg-accent shadow-md animate-pulse" />
                   <div className="flex flex-col">
@@ -314,12 +314,12 @@ export function ChartSettingsDrawer({
               </div>
 
               {/* MACD Pane */}
-              <div className="flex items-center justify-between p-3.5 border-b border-glass-edge/40 bg-info/5">
+              <div className="flex items-center justify-between p-3.5 border-b border-zinc-800/40 bg-blue-500/5">
                 <div className="flex items-center gap-3">
-                  <div className="size-2.5 rounded-sm bg-info shadow-md animate-pulse" />
+                  <div className="size-2.5 rounded-sm bg-blue-500 shadow-md animate-pulse" />
                   <div className="flex flex-col">
                     <span className="text-sm font-semibold text-blue-500">MACD Oscillator Pane</span>
-                    <span className="text-xs text-info/80 mt-0.5">Moving average convergence divergence (12, 26, 9)</span>
+                    <span className="text-xs text-blue-500/80 mt-0.5">Moving average convergence divergence (12, 26, 9)</span>
                   </div>
                 </div>
                 <Switch
@@ -330,12 +330,12 @@ export function ChartSettingsDrawer({
               </div>
 
               {/* ATR Pane */}
-              <div className="flex items-center justify-between p-3.5 bg-warn/5">
+              <div className="flex items-center justify-between p-3.5 bg-amber-500/5">
                 <div className="flex items-center gap-3">
-                  <div className="size-2.5 rounded-sm bg-warn shadow-md animate-pulse" />
+                  <div className="size-2.5 rounded-sm bg-amber-500 shadow-md animate-pulse" />
                   <div className="flex flex-col">
                     <span className="text-sm font-semibold text-amber-500">ATR Volatility Pane</span>
-                    <span className="text-xs text-warn/80 mt-0.5">Synchronized Average True Range (14)</span>
+                    <span className="text-xs text-amber-500/80 mt-0.5">Synchronized Average True Range (14)</span>
                   </div>
                 </div>
                 <Switch

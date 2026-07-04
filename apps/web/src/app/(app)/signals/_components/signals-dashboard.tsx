@@ -37,7 +37,7 @@ export function SignalsDashboard({ signals, stats }: SignalsDashboardProps) {
           label="Avg return"
           value={avgReturnStr}
           icon={stats.avgReturnPct >= 0 ? TrendingUp : TrendingDown}
-          valueClass={stats.avgReturnPct >= 0 ? 'text-bull' : 'text-bear'}
+          valueClass={stats.avgReturnPct >= 0 ? 'text-emerald-500' : 'text-red-500'}
         />
         <StatCard label="Evaluated" value={String(stats.evaluated)} icon={Target} />
       </div>
@@ -57,15 +57,15 @@ export function SignalsDashboard({ signals, stats }: SignalsDashboardProps) {
 function SignalCard({ signal }: { signal: DecisionSignal }) {
   const [expanded, setExpanded] = useState(false);
 
-  const biasToken = signal.bias === 'bullish' ? 'text-bull' : signal.bias === 'bearish' ? 'text-bear' : 'text-fg-muted';
+  const biasToken = signal.bias === 'bullish' ? 'text-emerald-500' : signal.bias === 'bearish' ? 'text-red-500' : 'text-fg-muted';
 
   const statusStyles: Record<string, string> = {
-    active: 'bg-blue-500/10 text-info',
-    pending: 'bg-amber-500/10 text-warn',
-    hit: 'bg-emerald-500/10 text-bull',
-    miss: 'bg-red-500/10 text-bear',
+    active: 'bg-blue-500/10 text-blue-500',
+    pending: 'bg-amber-500/10 text-amber-500',
+    hit: 'bg-emerald-500/10 text-emerald-500',
+    miss: 'bg-red-500/10 text-red-500',
     expired: 'bg-zinc-900 text-fg-muted',
-    invalidated: 'bg-red-500/10 text-bear',
+    invalidated: 'bg-red-500/10 text-red-500',
   };
 
   const statusLabel = signal.status.charAt(0).toUpperCase() + signal.status.slice(1);

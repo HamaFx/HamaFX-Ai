@@ -107,13 +107,13 @@ function PortfolioContent({
           icon={AlertTriangle}
           label="Alerts"
           value={String(riskReport.alerts.length)}
-          valueClass={riskReport.alerts.length > 0 ? 'text-warn' : ''}
+          valueClass={riskReport.alerts.length > 0 ? 'text-amber-500' : ''}
         />
       </div>
 
       {/* Alerts */}
       {riskReport.alerts.length > 0 && (
-        <div className="rounded-sm border border-warn/30 bg-amber-500/10 p-4">
+        <div className="rounded-sm border border-amber-500/30 bg-amber-500/10 p-4">
           <div className="flex items-center gap-2 mb-2">
             <AlertTriangle className="size-4 text-amber-500" />
             <h3 className="text-sm font-semibold text-amber-500">
@@ -127,8 +127,8 @@ function PortfolioContent({
                 className={cn(
                   'text-sm',
                   alert.level === 'danger'
-                    ? 'text-bear'
-                    : 'text-warn',
+                    ? 'text-red-500'
+                    : 'text-amber-500',
                 )}
               >
                 • {alert.message}
@@ -167,8 +167,8 @@ function PortfolioContent({
                         className={cn(
                           'text-xs font-medium px-2 py-0.5 rounded',
                           p.direction === 'long'
-                            ? 'bg-emerald-500/10 text-bull'
-                            : 'bg-red-500/10 text-bear',
+                            ? 'bg-emerald-500/10 text-emerald-500'
+                            : 'bg-red-500/10 text-red-500',
                         )}
                       >
                         {p.direction.toUpperCase()}
@@ -189,8 +189,8 @@ function PortfolioContent({
                         p.unrealizedPnlUsd === null
                           ? 'text-fg-muted'
                           : p.unrealizedPnlUsd >= 0
-                            ? 'text-bull'
-                            : 'text-bear',
+                            ? 'text-emerald-500'
+                            : 'text-red-500',
                       )}
                     >
                       {p.unrealizedPnlUsd === null
@@ -203,8 +203,8 @@ function PortfolioContent({
                         p.unrealizedPnlPct === null
                           ? 'text-fg-muted'
                           : p.unrealizedPnlPct >= 0
-                            ? 'text-bull'
-                            : 'text-bear',
+                            ? 'text-emerald-500'
+                            : 'text-red-500',
                       )}
                     >
                       {p.unrealizedPnlPct === null
@@ -234,7 +234,7 @@ function PortfolioContent({
                   <div
                     className={cn(
                       'h-full rounded-sm',
-                      c.alert ? 'bg-warn' : 'bg-fg',
+                      c.alert ? 'bg-amber-500' : 'bg-fg',
                     )}
                     style={{ width: `${Math.min(c.pct, 100)}%` }}
                   />

@@ -85,7 +85,7 @@ function SortableSymbolRow({
       style={style}
       className={`flex items-center justify-between p-3 rounded-sm border transition-all ${
         isDragging
-          ? 'border-zinc-700 shadow-lg z-10 opacity-90 bg-bg-elev-2'
+          ? 'border-zinc-700 shadow-lg z-10 opacity-90 bg-zinc-900'
           : isSelected
             ? 'bg-zinc-950 border-zinc-700 shadow-none/5'
             : 'bg-surface border-surface-elevated hover:border-fg-subtle/30'
@@ -106,7 +106,7 @@ function SortableSymbolRow({
           checked={isSelected}
           onChange={() => onToggleSelect(item.symbol)}
           aria-label={`Select ${item.symbol}`}
-          className="rounded border-zinc-800 bg-bg text-fg focus:ring-fg size-3.5 cursor-pointer shrink-0"
+          className="rounded border-zinc-800 bg-zinc-950 text-fg focus:ring-fg size-3.5 cursor-pointer shrink-0"
         />
         <div className="flex flex-col min-w-0">
           <div className="flex items-baseline gap-2">
@@ -130,7 +130,7 @@ function SortableSymbolRow({
         </div>
 
         {/* Arrow buttons — keyboard-only fallback, visually hidden on small screens */}
-        <div className="hidden sm:flex items-center border border-zinc-800 rounded-sm bg-bg">
+        <div className="hidden sm:flex items-center border border-zinc-800 rounded-sm bg-zinc-950">
           <button
             type="button"
             onClick={() => onMove(index, 'up')}
@@ -561,7 +561,7 @@ export function SymbolsForm({ initialSymbols, catalog }: SymbolsFormProps) {
             value={watchlistSearch}
             onChange={(e) => setWatchlistSearch(e.target.value)}
             placeholder="Search watchlist symbols..."
-            className="pl-9 bg-bg h-9 text-sm"
+            className="pl-9 bg-zinc-950 h-9 text-sm"
           />
         </div>
 
@@ -575,7 +575,7 @@ export function SymbolsForm({ initialSymbols, catalog }: SymbolsFormProps) {
                   checked={selected.size === filteredWatchlist.length && filteredWatchlist.length > 0}
                   onChange={handleToggleSelectAll}
                   aria-label="Select all symbols"
-                  className="rounded border-zinc-800 bg-bg text-fg focus:ring-fg size-3.5 cursor-pointer"
+                  className="rounded border-zinc-800 bg-zinc-950 text-fg focus:ring-fg size-3.5 cursor-pointer"
                 />
                 <span>Select All</span>
               </div>
@@ -658,7 +658,7 @@ export function SymbolsForm({ initialSymbols, catalog }: SymbolsFormProps) {
               value={catalogSearch}
               onChange={(e) => setCatalogSearch(e.target.value)}
               placeholder="Search catalog by symbol or name..."
-              className="pl-9 bg-bg h-9 text-sm"
+              className="pl-9 bg-zinc-950 h-9 text-sm"
             />
           </div>
           
@@ -667,7 +667,7 @@ export function SymbolsForm({ initialSymbols, catalog }: SymbolsFormProps) {
               value={bulkInput}
               onChange={(e) => setBulkInput(e.target.value)}
               placeholder="Bulk symbols (comma separated)"
-              className="bg-bg h-9 text-sm w-44"
+              className="bg-zinc-950 h-9 text-sm w-44"
             />
             <Button
               type="button"

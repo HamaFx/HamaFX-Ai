@@ -17,7 +17,7 @@
 // Bespoke renderer for the `analyze_technical` tool part.
 //
 // Server component. Renders one compact card per timeframe with .tabular-nums
-// on every numeric field and text-bull/text-red-500 on the directional ones.
+// on every numeric field and text-emerald-500/text-red-500 on the directional ones.
 // `partial: true` surfaces a single line at the top so the user knows a tf
 // was dropped due to a fetch failure.
 
@@ -73,15 +73,15 @@ function TfCard({
 }) {
   const trendTone =
     reading.trend === 'up'
-      ? 'text-bull'
+      ? 'text-emerald-500'
       : reading.trend === 'down'
-        ? 'text-bear'
+        ? 'text-red-500'
         : 'text-fg-muted';
   const biasTone =
     reading.bias === 'bullish'
-      ? 'text-bull'
+      ? 'text-emerald-500'
       : reading.bias === 'bearish'
-        ? 'text-bear'
+        ? 'text-red-500'
         : 'text-fg-muted';
 
   return (
@@ -102,7 +102,7 @@ function TfCard({
 
         <dt className="text-fg-subtle">MACD h</dt>
         <dd
-          className={`text-right ${reading.momentum.macdHist >= 0 ? 'text-bull' : 'text-bear'}`}
+          className={`text-right ${reading.momentum.macdHist >= 0 ? 'text-emerald-500' : 'text-red-500'}`}
         >
           {reading.momentum.macdHist.toFixed(4)}
         </dd>

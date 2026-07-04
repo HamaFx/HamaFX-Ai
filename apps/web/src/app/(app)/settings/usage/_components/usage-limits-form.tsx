@@ -101,7 +101,7 @@ export function UsageLimitsForm({
           Alert Channels (50%, 80%, 100% thresholds)
         </span>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <label className="flex items-center gap-3 border border-zinc-800 bg-bg-elev-2/40 hover:bg-zinc-900 rounded-sm p-3 cursor-pointer select-none transition-colors">
+          <label className="flex items-center gap-3 border border-zinc-800 bg-zinc-900/40 hover:bg-zinc-900 rounded-sm p-3 cursor-pointer select-none transition-colors">
             <input
               type="checkbox"
               name="emailAlert"
@@ -117,7 +117,7 @@ export function UsageLimitsForm({
             </div>
           </label>
 
-          <label className="flex items-center gap-3 border border-zinc-800 bg-bg-elev-2/40 hover:bg-zinc-900 rounded-sm p-3 cursor-pointer select-none transition-colors">
+          <label className="flex items-center gap-3 border border-zinc-800 bg-zinc-900/40 hover:bg-zinc-900 rounded-sm p-3 cursor-pointer select-none transition-colors">
             <input
               type="checkbox"
               name="telegramAlert"
@@ -153,7 +153,7 @@ export function UsageLimitsForm({
             return (
               <div
                 key={p.id}
-                className="grid grid-cols-[1.5fr_1fr_1.2fr] gap-2 items-center px-3 py-2.5 text-xs transition-colors hover:bg-bg-elev-2/20"
+                className="grid grid-cols-[1.5fr_1fr_1.2fr] gap-2 items-center px-3 py-2.5 text-xs transition-colors hover:bg-zinc-900/20"
               >
                 <div className="flex flex-col">
                   <span className="font-semibold text-fg">{p.displayName}</span>

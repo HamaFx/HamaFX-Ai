@@ -282,13 +282,13 @@ export function EntryForm({ onCreated }: EntryFormProps) {
               alt="Trade chart"
               width={80}
               height={80}
-              className="h-20 rounded-md object-cover border border-divider"
+              className="h-20 rounded-md object-cover border border-zinc-800"
               unoptimized
             />
             <button
               type="button"
               onClick={() => setScreenshotUrl(null)}
-              className="absolute -top-2 -right-2 rounded-full bg-bg-elev-3 border border-divider p-0.5 text-fg-muted hover:text-fg"
+              className="absolute -top-2 -right-2 rounded-sm bg-zinc-800 border border-zinc-800 p-0.5 text-fg-muted hover:text-fg"
               aria-label="Remove screenshot"
             >
               <X className="size-3.5" />
@@ -297,7 +297,7 @@ export function EntryForm({ onCreated }: EntryFormProps) {
         ) : (
           <label
             className={cn(
-              'flex items-center justify-center gap-2 rounded-lg border border-dashed border-divider p-3 text-xs text-fg-subtle hover:border-brand hover:text-fg transition-colors cursor-pointer',
+              'flex items-center justify-center gap-2 rounded-sm border border-dashed border-zinc-800 p-3 text-xs text-fg-subtle hover:border-zinc-700 hover:text-fg transition-colors cursor-pointer',
               uploadingScreenshot && 'opacity-60 pointer-events-none',
             )}
           >
@@ -321,7 +321,7 @@ export function EntryForm({ onCreated }: EntryFormProps) {
         placeholder="Add tags (e.g. London breakout, trend continuation)"
       />
 
-      {error ? <p className="text-bear text-sm">{error}</p> : null}
+      {error ? <p className="text-red-500 text-sm">{error}</p> : null}
 
       <Button
         type="submit"
@@ -367,7 +367,7 @@ function Field({
         required={required}
         error={!!error}
       />
-      {showError ? <p className="text-bear text-xs mt-0.5">{error}</p> : null}
+      {showError ? <p className="text-red-500 text-xs mt-0.5">{error}</p> : null}
     </div>
   );
 }

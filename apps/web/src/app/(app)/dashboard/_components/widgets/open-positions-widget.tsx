@@ -86,8 +86,8 @@ export function OpenPositionsWidget({
                   className={cn(
                     'inline-flex size-5 shrink-0 items-center justify-center rounded',
                     e.side === 'long'
-                      ? 'bg-bull/15 text-bull'
-                      : 'bg-bear/15 text-bear',
+                      ? 'bg-emerald-500/15 text-emerald-500'
+                      : 'bg-red-500/15 text-red-500',
                   )}
                 >
                   {e.side === 'long' ? (

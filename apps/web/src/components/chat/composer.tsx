@@ -265,9 +265,9 @@ export function Composer({
   const charCountTone = getCharCountTone(charCount);
   const charCountClass =
     charCountTone === 'danger'
-      ? 'text-bear font-semibold'
+      ? 'text-red-500 font-semibold'
       : charCountTone === 'warn'
-        ? 'text-warn font-medium'
+        ? 'text-amber-500 font-medium'
         : 'text-fg-subtle';
 
   return (
@@ -315,7 +315,7 @@ export function Composer({
                   type="button"
                   aria-label={`Remove ${img.name}`}
                   onClick={() => removeImage(img.id)}
-                  className="bg-bg-elev-3 text-fg border-border focus-visible:ring-fg absolute -right-2 -top-2 inline-flex size-6 items-center justify-center rounded-sm border text-caption leading-none focus:outline-none focus-visible:ring-2"
+                  className="bg-zinc-800 text-fg border-border focus-visible:ring-fg absolute -right-2 -top-2 inline-flex size-6 items-center justify-center rounded-sm border text-caption leading-none focus:outline-none focus-visible:ring-2"
                 >
                   ×
                 </button>
@@ -325,7 +325,7 @@ export function Composer({
         ) : null}
 
         {error ? (
-          <p id="composer-error" role="alert" className="text-bear px-5 pt-2 text-xs">
+          <p id="composer-error" role="alert" className="text-red-500 px-5 pt-2 text-xs">
             {error}
           </p>
         ) : null}
@@ -344,7 +344,7 @@ export function Composer({
                 'focus-visible:ring-fg/60 focus:outline-none focus-visible:ring-2',
                 disabled || images.length >= MAX_IMAGES
                   ? 'text-fg-subtle cursor-not-allowed opacity-60'
-                  : 'text-fg-muted hover:bg-bg-elev-2/50 hover:text-fg',
+                  : 'text-fg-muted hover:bg-zinc-900/50 hover:text-fg',
               )}
             >
               <ImagePlus className="size-[20px]" strokeWidth={1.5} />
@@ -375,7 +375,7 @@ export function Composer({
                   'focus-visible:ring-fg/60 focus:outline-none focus-visible:ring-2',
                   voice.active
                     ? 'text-red-500 mic-pulse bg-red-500/10'
-                    : 'text-fg-muted hover:bg-bg-elev-2/50 hover:text-fg',
+                    : 'text-fg-muted hover:bg-zinc-900/50 hover:text-fg',
                   disabled ? 'cursor-not-allowed opacity-60' : '',
                 )}
               >
@@ -432,7 +432,7 @@ export function Composer({
 
             {focused && !isTouch && !isStreaming ? (
               <p className="text-fg-subtle hidden pr-1 text-caption tabular-nums sm:block">
-                <kbd className="bg-bg-elev-2 border border-zinc-800 rounded-sm px-1.5 font-mono">
+                <kbd className="bg-zinc-900 border border-zinc-800 rounded-sm px-1.5 font-mono">
                   Enter
                 </kbd>{' '}
                 to send

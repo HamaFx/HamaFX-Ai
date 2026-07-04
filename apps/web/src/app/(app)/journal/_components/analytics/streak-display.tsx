@@ -35,9 +35,9 @@ export function StreakDisplay({ stats, className }: StreakDisplayProps) {
   const currentLabel = current.type === 'win' ? 'W' : current.type === 'loss' ? 'L' : '—';
   const currentClass =
     current.type === 'win'
-      ? 'bg-emerald-500/10 text-bull'
+      ? 'bg-emerald-500/10 text-emerald-500'
       : current.type === 'loss'
-        ? 'bg-red-500/10 text-bear'
+        ? 'bg-red-500/10 text-red-500'
         : 'bg-zinc-900 text-fg-muted';
 
   return (

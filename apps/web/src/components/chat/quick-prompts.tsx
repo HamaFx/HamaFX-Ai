@@ -58,39 +58,39 @@ interface Prompt {
 
 const NO_PIN_PROMPTS: Record<TradingSession, readonly Prompt[]> = {
   asian: [
-    { icon: TrendingUp, label: "What's moving in Asia today?", bg: 'oklch(78% 0.16 78 / 0.18)', fg: 'text-brand' },
-    { icon: CalendarDays, label: "Today's calendar", bg: 'oklch(72% 0.18 295 / 0.18)', fg: 'text-accent' },
-    { icon: LineChart, label: 'Top-down gold 4H→15M', bg: 'oklch(74% 0.16 230 / 0.15)', fg: 'text-info' },
-    { icon: BarChart3, label: 'Show me the structure', bg: 'oklch(74% 0.16 230 / 0.15)', fg: 'text-info' },
-    { icon: Bell, label: 'Alert gold above 2400', bg: 'oklch(82% 0.16 80 / 0.15)', fg: 'text-warn' },
+    { icon: TrendingUp, label: "What's moving in Asia today?", bg: '', fg: 'text-fg' },
+    { icon: CalendarDays, label: "Today's calendar", bg: '', fg: 'text-accent' },
+    { icon: LineChart, label: 'Top-down gold 4H→15M', bg: '', fg: 'text-blue-500' },
+    { icon: BarChart3, label: 'Show me the structure', bg: '', fg: 'text-blue-500' },
+    { icon: Bell, label: 'Alert gold above 2400', bg: '', fg: 'text-amber-500' },
   ],
   london: [
-    { icon: TrendingUp, label: 'London open — bias on majors?', bg: 'oklch(78% 0.16 78 / 0.18)', fg: 'text-brand' },
-    { icon: LineChart, label: 'Top-down EURUSD 4H→15M', bg: 'oklch(74% 0.16 230 / 0.15)', fg: 'text-info' },
-    { icon: BarChart3, label: 'Show me the structure', bg: 'oklch(74% 0.16 230 / 0.15)', fg: 'text-info' },
-    { icon: CalendarDays, label: "London session calendar", bg: 'oklch(72% 0.18 295 / 0.18)', fg: 'text-accent' },
-    { icon: Bell, label: 'Alert EURUSD above 1.0900', bg: 'oklch(82% 0.16 80 / 0.15)', fg: 'text-warn' },
+    { icon: TrendingUp, label: 'London open — bias on majors?', bg: '', fg: 'text-fg' },
+    { icon: LineChart, label: 'Top-down EURUSD 4H→15M', bg: '', fg: 'text-blue-500' },
+    { icon: BarChart3, label: 'Show me the structure', bg: '', fg: 'text-blue-500' },
+    { icon: CalendarDays, label: "London session calendar", bg: '', fg: 'text-accent' },
+    { icon: Bell, label: 'Alert EURUSD above 1.0900', bg: '', fg: 'text-amber-500' },
   ],
   ny: [
-    { icon: TrendingUp, label: 'NY session plan for XAUUSD', bg: 'oklch(78% 0.16 78 / 0.18)', fg: 'text-brand' },
-    { icon: LineChart, label: 'Top-down XAUUSD 4H→15M', bg: 'oklch(74% 0.16 230 / 0.15)', fg: 'text-info' },
-    { icon: BarChart3, label: 'Show me the structure', bg: 'oklch(74% 0.16 230 / 0.15)', fg: 'text-info' },
-    { icon: CalendarDays, label: "NY session calendar", bg: 'oklch(72% 0.18 295 / 0.18)', fg: 'text-accent' },
-    { icon: Bell, label: 'Alert gold above 2400', bg: 'oklch(82% 0.16 80 / 0.15)', fg: 'text-warn' },
+    { icon: TrendingUp, label: 'NY session plan for XAUUSD', bg: '', fg: 'text-fg' },
+    { icon: LineChart, label: 'Top-down XAUUSD 4H→15M', bg: '', fg: 'text-blue-500' },
+    { icon: BarChart3, label: 'Show me the structure', bg: '', fg: 'text-blue-500' },
+    { icon: CalendarDays, label: "NY session calendar", bg: '', fg: 'text-accent' },
+    { icon: Bell, label: 'Alert gold above 2400', bg: '', fg: 'text-amber-500' },
   ],
   closed: [
-    { icon: BarChart3, label: 'How did today close?', bg: 'oklch(74% 0.16 230 / 0.15)', fg: 'text-info' },
-    { icon: TrendingUp, label: 'Daily bias recap', bg: 'oklch(78% 0.16 78 / 0.18)', fg: 'text-brand' },
-    { icon: LineChart, label: 'Top-down gold 4H→15M', bg: 'oklch(74% 0.16 230 / 0.15)', fg: 'text-info' },
-    { icon: CalendarDays, label: "Tomorrow's calendar", bg: 'oklch(72% 0.18 295 / 0.18)', fg: 'text-accent' },
-    { icon: Bell, label: 'Set an alert for tomorrow', bg: 'oklch(82% 0.16 80 / 0.15)', fg: 'text-warn' },
+    { icon: BarChart3, label: 'How did today close?', bg: '', fg: 'text-blue-500' },
+    { icon: TrendingUp, label: 'Daily bias recap', bg: '', fg: 'text-fg' },
+    { icon: LineChart, label: 'Top-down gold 4H→15M', bg: '', fg: 'text-blue-500' },
+    { icon: CalendarDays, label: "Tomorrow's calendar", bg: '', fg: 'text-accent' },
+    { icon: Bell, label: 'Set an alert for tomorrow', bg: '', fg: 'text-amber-500' },
   ],
   weekend: [
-    { icon: TrendingUp, label: 'Weekly bias — what is your read?', bg: 'oklch(78% 0.16 78 / 0.18)', fg: 'text-brand' },
-    { icon: BarChart3, label: 'Weekly structure recap', bg: 'oklch(74% 0.16 230 / 0.15)', fg: 'text-info' },
-    { icon: CalendarDays, label: 'Next week calendar', bg: 'oklch(72% 0.18 295 / 0.18)', fg: 'text-accent' },
-    { icon: LineChart, label: 'Key levels to watch', bg: 'oklch(74% 0.16 230 / 0.15)', fg: 'text-info' },
-    { icon: Bell, label: 'Set alert for Sunday open', bg: 'oklch(82% 0.16 80 / 0.15)', fg: 'text-warn' },
+    { icon: TrendingUp, label: 'Weekly bias — what is your read?', bg: '', fg: 'text-fg' },
+    { icon: BarChart3, label: 'Weekly structure recap', bg: '', fg: 'text-blue-500' },
+    { icon: CalendarDays, label: 'Next week calendar', bg: '', fg: 'text-accent' },
+    { icon: LineChart, label: 'Key levels to watch', bg: '', fg: 'text-blue-500' },
+    { icon: Bell, label: 'Set alert for Sunday open', bg: '', fg: 'text-amber-500' },
   ],
 };
 
@@ -99,43 +99,43 @@ function generatePinnedPrompts(symbol: string, session: TradingSession): readonl
   switch (session) {
     case 'asian':
       return [
-        { icon: TrendingUp, label: `${s} Asian range and key levels`, bg: 'oklch(78% 0.16 78 / 0.18)', fg: 'text-brand' },
-        { icon: CalendarDays, label: `${s} news impact today`, bg: 'oklch(72% 0.18 295 / 0.18)', fg: 'text-accent' },
-        { icon: LineChart, label: `Top-down ${s} 4H→15M`, bg: 'oklch(74% 0.16 230 / 0.15)', fg: 'text-info' },
-        { icon: BarChart3, label: `${s} Asian session structure`, bg: 'oklch(74% 0.16 230 / 0.15)', fg: 'text-info' },
-        { icon: Bell, label: `Alert ${s} break of recent high`, bg: 'oklch(82% 0.16 80 / 0.15)', fg: 'text-warn' },
+        { icon: TrendingUp, label: `${s} Asian range and key levels`, bg: '', fg: 'text-fg' },
+        { icon: CalendarDays, label: `${s} news impact today`, bg: '', fg: 'text-accent' },
+        { icon: LineChart, label: `Top-down ${s} 4H→15M`, bg: '', fg: 'text-blue-500' },
+        { icon: BarChart3, label: `${s} Asian session structure`, bg: '', fg: 'text-blue-500' },
+        { icon: Bell, label: `Alert ${s} break of recent high`, bg: '', fg: 'text-amber-500' },
       ];
     case 'london':
       return [
-        { icon: TrendingUp, label: `London open bias for ${s}`, bg: 'oklch(78% 0.16 78 / 0.18)', fg: 'text-brand' },
-        { icon: LineChart, label: `Top-down ${s} 4H→15M`, bg: 'oklch(74% 0.16 230 / 0.15)', fg: 'text-info' },
-        { icon: BarChart3, label: `London session ${s} key levels`, bg: 'oklch(74% 0.16 230 / 0.15)', fg: 'text-info' },
-        { icon: CalendarDays, label: `European news affecting ${s}`, bg: 'oklch(72% 0.18 295 / 0.18)', fg: 'text-accent' },
-        { icon: Bell, label: `Alert ${s} below London low`, bg: 'oklch(82% 0.16 80 / 0.15)', fg: 'text-warn' },
+        { icon: TrendingUp, label: `London open bias for ${s}`, bg: '', fg: 'text-fg' },
+        { icon: LineChart, label: `Top-down ${s} 4H→15M`, bg: '', fg: 'text-blue-500' },
+        { icon: BarChart3, label: `London session ${s} key levels`, bg: '', fg: 'text-blue-500' },
+        { icon: CalendarDays, label: `European news affecting ${s}`, bg: '', fg: 'text-accent' },
+        { icon: Bell, label: `Alert ${s} below London low`, bg: '', fg: 'text-amber-500' },
       ];
     case 'ny':
       return [
-        { icon: TrendingUp, label: `NY session plan for ${s}`, bg: 'oklch(78% 0.16 78 / 0.18)', fg: 'text-brand' },
-        { icon: LineChart, label: `Top-down ${s} 4H→15M`, bg: 'oklch(74% 0.16 230 / 0.15)', fg: 'text-info' },
-        { icon: BarChart3, label: `${s} news & market correlation`, bg: 'oklch(74% 0.16 230 / 0.15)', fg: 'text-info' },
-        { icon: CalendarDays, label: `NY session calendar for USD`, bg: 'oklch(72% 0.18 295 / 0.18)', fg: 'text-accent' },
-        { icon: Bell, label: `Alert ${s} break of high`, bg: 'oklch(82% 0.16 80 / 0.15)', fg: 'text-warn' },
+        { icon: TrendingUp, label: `NY session plan for ${s}`, bg: '', fg: 'text-fg' },
+        { icon: LineChart, label: `Top-down ${s} 4H→15M`, bg: '', fg: 'text-blue-500' },
+        { icon: BarChart3, label: `${s} news & market correlation`, bg: '', fg: 'text-blue-500' },
+        { icon: CalendarDays, label: `NY session calendar for USD`, bg: '', fg: 'text-accent' },
+        { icon: Bell, label: `Alert ${s} break of high`, bg: '', fg: 'text-amber-500' },
       ];
     case 'closed':
       return [
-        { icon: BarChart3, label: `How did ${s} close today?`, bg: 'oklch(74% 0.16 230 / 0.15)', fg: 'text-info' },
-        { icon: TrendingUp, label: `${s} daily bias recap`, bg: 'oklch(78% 0.16 78 / 0.18)', fg: 'text-brand' },
-        { icon: LineChart, label: `Top-down ${s} 4H→15M`, bg: 'oklch(74% 0.16 230 / 0.15)', fg: 'text-info' },
-        { icon: CalendarDays, label: `Tomorrow's ${s} news outlook`, bg: 'oklch(72% 0.18 295 / 0.18)', fg: 'text-accent' },
-        { icon: Bell, label: `Set an alert for ${s} tomorrow`, bg: 'oklch(82% 0.16 80 / 0.15)', fg: 'text-warn' },
+        { icon: BarChart3, label: `How did ${s} close today?`, bg: '', fg: 'text-blue-500' },
+        { icon: TrendingUp, label: `${s} daily bias recap`, bg: '', fg: 'text-fg' },
+        { icon: LineChart, label: `Top-down ${s} 4H→15M`, bg: '', fg: 'text-blue-500' },
+        { icon: CalendarDays, label: `Tomorrow's ${s} news outlook`, bg: '', fg: 'text-accent' },
+        { icon: Bell, label: `Set an alert for ${s} tomorrow`, bg: '', fg: 'text-amber-500' },
       ];
     case 'weekend':
       return [
-        { icon: TrendingUp, label: `${s} weekly bias & structure`, bg: 'oklch(78% 0.16 78 / 0.18)', fg: 'text-brand' },
-        { icon: BarChart3, label: `Weekly ${s} sentiment & COT check`, bg: 'oklch(74% 0.16 230 / 0.15)', fg: 'text-info' },
-        { icon: CalendarDays, label: `Next week ${s} news calendar`, bg: 'oklch(72% 0.18 295 / 0.18)', fg: 'text-accent' },
-        { icon: LineChart, label: `${s} key levels to watch next week`, bg: 'oklch(74% 0.16 230 / 0.15)', fg: 'text-info' },
-        { icon: Bell, label: `Set ${s} alert for Sunday open`, bg: 'oklch(82% 0.16 80 / 0.15)', fg: 'text-warn' },
+        { icon: TrendingUp, label: `${s} weekly bias & structure`, bg: '', fg: 'text-fg' },
+        { icon: BarChart3, label: `Weekly ${s} sentiment & COT check`, bg: '', fg: 'text-blue-500' },
+        { icon: CalendarDays, label: `Next week ${s} news calendar`, bg: '', fg: 'text-accent' },
+        { icon: LineChart, label: `${s} key levels to watch next week`, bg: '', fg: 'text-blue-500' },
+        { icon: Bell, label: `Set ${s} alert for Sunday open`, bg: '', fg: 'text-amber-500' },
       ];
   }
 }

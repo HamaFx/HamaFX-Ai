@@ -96,7 +96,7 @@ export function ExportImportKeys() {
         <span className="text-caption text-fg-subtle">▾</span>
       </summary>
 
-      <div className="border-t border-zinc-800 p-4 grid grid-cols-1 md:grid-cols-2 gap-6 bg-bg-elev-2/10">
+      <div className="border-t border-zinc-800 p-4 grid grid-cols-1 md:grid-cols-2 gap-6 bg-zinc-900/10">
         {/* Export Column */}
         <div className="flex flex-col gap-4">
           <div className="flex items-center gap-2">

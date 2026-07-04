@@ -73,7 +73,7 @@ export function GetCoTPart({ output, state, errorMessage }: ToolPartProps<'get_c
             <span className="text-fg-subtle w-16 tabular-nums">{row.dateIso.slice(5)}</span>
             <Bar value={row.leveraged} max={max} />
             <span
-              className={`w-20 text-right tabular-nums ${row.leveraged === null ? 'text-fg-subtle' : row.leveraged >= 0 ? 'text-bull' : 'text-bear'}`}
+              className={`w-20 text-right tabular-nums ${row.leveraged === null ? 'text-fg-subtle' : row.leveraged >= 0 ? 'text-emerald-500' : 'text-red-500'}`}
             >
               {row.leveraged === null ? '—' : formatSigned(row.leveraged)}
             </span>
@@ -93,7 +93,7 @@ function Bar({ value, max }: { value: number | null; max: number }) {
   // since each side has 50% of the track.
   const pct = Math.max(2, (Math.abs(value) / max) * 50);
   const positive = value >= 0;
-  const tone = positive ? 'bg-bull' : 'bg-bear';
+  const tone = positive ? 'bg-emerald-500' : 'bg-red-500';
   return (
     <div className="relative h-[3px] w-full rounded-sm bg-zinc-900">
       {/* center zero-line */}

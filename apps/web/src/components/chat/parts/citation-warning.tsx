@@ -42,7 +42,7 @@ export function CitationWarningPartView({ part }: CitationWarningProps) {
   const [open, setOpen] = useState(false);
   const tone =
     part.stance === 'strict'
-      ? 'border-warn/40 bg-warn/5 text-warn'
+      ? 'border-amber-500/40 bg-amber-500/5 text-amber-500'
       : 'border-zinc-800 bg-zinc-950/60 text-fg-muted';
 
   const hasFindings = (part.findings?.length ?? 0) > 0;

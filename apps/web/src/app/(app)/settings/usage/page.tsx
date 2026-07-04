@@ -201,7 +201,7 @@ function BudgetCard({
 }) {
   const pct = Math.min(100, (stats.todayUsd / maxDailyUsd) * 100);
   const tone = pct >= 90 ? 'bear' : pct >= 60 ? 'warn' : 'bull';
-  const toneClass = tone === 'bear' ? 'bg-bear' : tone === 'warn' ? 'bg-warn' : 'bg-bull';
+  const toneClass = tone === 'bear' ? 'bg-red-500' : tone === 'warn' ? 'bg-amber-500' : 'bg-emerald-500';
 
   const projection = (stats.sevenDayUsd / 7) * 30;
   const isProjectedExceeded = monthlyLimit ? projection > monthlyLimit : false;
@@ -249,7 +249,7 @@ function BudgetCard({
           </span>
         </div>
         {isProjectedExceeded && (
-          <div className="bg-warn/5 border border-warn/25 rounded-sm p-2.5 text-caption text-amber-500 mt-1">
+          <div className="bg-amber-500/5 border border-amber-500/25 rounded-sm p-2.5 text-caption text-amber-500 mt-1">
             ⚠️ Based on the last 7 days of usage, you are projected to exceed your monthly budget limit of ${monthlyLimit?.toFixed(2)}. Consider reviewing your active tools or adjusting your budget.
           </div>
         )}

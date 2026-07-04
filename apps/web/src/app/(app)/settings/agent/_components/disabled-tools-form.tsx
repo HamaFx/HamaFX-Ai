@@ -45,7 +45,7 @@ export function DisabledToolsForm({
           return (
             <label
               key={toolName}
-              className="flex items-center gap-3 px-3 py-2.5 border-b border-zinc-800 last:border-b-0 hover:bg-bg-elev-2/20 cursor-pointer select-none transition-colors"
+              className="flex items-center gap-3 px-3 py-2.5 border-b border-zinc-800 last:border-b-0 hover:bg-zinc-900/20 cursor-pointer select-none transition-colors"
             >
               <input
                 type="checkbox"
@@ -54,7 +54,7 @@ export function DisabledToolsForm({
                 defaultChecked={isDisabled}
                 className="size-4 accent-brand rounded border-zinc-800 cursor-pointer"
               />
-              <Power className={`size-3.5 shrink-0 ${isDisabled ? 'text-bear' : 'text-bull'}`} />
+              <Power className={`size-3.5 shrink-0 ${isDisabled ? 'text-red-500' : 'text-emerald-500'}`} />
               <div className="flex flex-col min-w-0">
                 <code className="text-fg text-xs font-semibold font-mono">{toolName}</code>
               </div>
