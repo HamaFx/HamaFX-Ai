@@ -507,24 +507,6 @@ FRED_API_KEY=...
 
 ---
 
-## 🗺️ Roadmap & Known Gaps
-
-We document gaps honestly — not as aspirations, but as current-state facts.
-
-| Gap | Severity | Status |
-|-----|----------|--------|
-| Token version not checked in JWT callback | 🔴 Critical | Unfixed — sessions not invalidated after password change |
-| `__system__` user assumption in cron jobs | 🔴 Critical | Unfixed — can bypass tenant scoping in multi-tenant mode |
-| Deleted users retain valid JWTs until expiry | 🟠 High | Unfixed |
-| RLS enforcement off by default | 🟡 Medium | By design — set `HAMAFX_ENABLE_RLS=true` to enable |
-| Billing in sandbox mode | 🟡 Medium | NOWPayments wired but production cutover prerequisites unchecked |
-| Data provider licensing unresolved | 🟠 High | No terms files in repo — legal review needed before redistributing data |
-| AlphaVantage / Trading Economics env vars without implementations | 🔵 Low | Stale references in `.env.example` |
-
-See [docs/05-security-auth-compliance.md](docs/05-security-auth-compliance.md) §4 for full details on auth bugs and [CHANGELOG.md](CHANGELOG.md) for the complete known gaps table.
-
----
-
 ## 🔧 CLI Commands
 
 <details>
