@@ -14,67 +14,38 @@
  * limitations under the License.
  */
 
-import { test, expect } from '@playwright/test';
-import { ensureTestUser } from './test-utils';
+// ---------------------------------------------------------------------------
+// E2E: Multi-Agent Chat modes
+//
+// Covers: full mode (4 agents), quick mode (technical only), single mode
+// (standard chat), SSE mock streaming, analysis mode selector, and
+// verification that the correct mode is sent in the request body.
+// ---------------------------------------------------------------------------
+
+import { test, expect, FULL_MODE_SSE, QUICK_MODE_SSE } from './fixtures';
 
 test.describe('Multi-Agent Chat', () => {
-  test.beforeAll(async () => {
-    await ensureTestUser('test@example.com', 'password123');
-  });
+  test('full mode shows 4 agent progress indicators', async ({ authedPage, mockChatApi }) => {
+    const page = authedPage;
 
-  test('full mode shows 4 agent progress indicators', async ({ page }) => {
-    // 1. Authenticate
-    await page.goto('/login');
-    await page.fill('input[name="email"]', 'test@example.com');
-    await page.fill('input[name="password"]', 'password123');
-    await page.click('button[type="submit"]');
-    await expect(page).toHaveURL(/.*\/chat.*/, { timeout: 30000 });
-
-    // 2. Mock the multi-agent SSE endpoint
     let requestSeen = false;
+    await mockChatApi(page, {
+      multiAgentBody: FULL_MODE_SSE,
+    });
+
+    // Override route to also capture request body
+    await page.unroute('**/api/chat');
     await page.route('**/api/chat', (route) => {
       const body = route.request().postDataJSON();
       if (body?.analysisMode && body.analysisMode !== 'single') {
         requestSeen = true;
-        // Return a mock SSE stream with progress events + final text
-        const sseBody = [
-          'data: {"type":"specialists_start","agents":["technical","fundamental","risk","sentiment"]}',
-          '',
-          'data: {"type":"agent_start","agent":"technical"}',
-          '',
-          'data: {"type":"agent_done","agent":"technical","opinion":{"agentName":"technical","bias":"bullish","confidence":0.8,"reasoning":"Uptrend","rawData":{},"costUsd":0.01,"latencyMs":1200,"model":"test"}}',
-          '',
-          'data: {"type":"agent_start","agent":"fundamental"}',
-          '',
-          'data: {"type":"agent_done","agent":"fundamental","opinion":{"agentName":"fundamental","bias":"bullish","confidence":0.7,"reasoning":"Dovish Fed","rawData":{},"costUsd":0.01,"latencyMs":1500,"model":"test"}}',
-          '',
-          'data: {"type":"agent_start","agent":"risk"}',
-          '',
-          'data: {"type":"agent_done","agent":"risk","opinion":{"agentName":"risk","bias":"neutral","confidence":0.5,"reasoning":"Moderate risk","rawData":{"hardVeto":false},"costUsd":0.01,"latencyMs":1000,"model":"test"}}',
-          '',
-          'data: {"type":"agent_start","agent":"sentiment"}',
-          '',
-          'data: {"type":"agent_done","agent":"sentiment","opinion":{"agentName":"sentiment","bias":"bullish","confidence":0.6,"reasoning":"Positive news","rawData":{},"costUsd":0.01,"latencyMs":800,"model":"test"}}',
-          '',
-          'data: {"type":"fusion_start"}',
-          '',
-          'data: {"type":"fusion_done"}',
-          '',
-          'data: {"type":"text","text":"**Bottom Line:** XAUUSD is bullish with moderate confidence."}',
-          '',
-          'data: {"type":"metadata","data":{"mode":"full","totalCostUsd":0.05,"totalLatencyMs":5000}}',
-          '',
-          'data: [DONE]',
-          '',
-        ].join('\n');
         route.fulfill({
           status: 200,
           contentType: 'text/event-stream',
           headers: { 'Cache-Control': 'no-cache', Connection: 'keep-alive' },
-          body: sseBody,
+          body: FULL_MODE_SSE,
         });
       } else {
-        // Single-agent fallback mock
         route.fulfill({
           status: 200,
           contentType: 'text/plain; charset=utf-8',
@@ -84,90 +55,65 @@ test.describe('Multi-Agent Chat', () => {
       }
     });
 
-    // 3. Select "Full" mode from the toolbar
-    // Click the analysis mode button (has Brain icon + aria-label)
-    await page.click('button[aria-label="Analysis mode"]');
-    // Click "Full" option in the dropdown
-    await page.click('button[role="menuitem"]:has-text("Full")');
+    // Select "Full" mode from the toolbar
+    await page.getByRole('button', { name: /analysis mode/i }).click();
+    await page.getByRole('menuitem', { name: /full/i }).click();
 
-    // 4. Send a message
-    await page.fill('textarea', 'Should I buy XAUUSD now?');
-    await page.press('textarea', 'Enter');
+    // Send a message
+    const textarea = page.getByRole('textbox');
+    await textarea.fill('Should I buy XAUUSD now?');
+    await textarea.press('Enter');
 
-    // 5. Verify the request was sent with analysisMode=full
+    // Verify the request was sent with analysisMode=full
     expect(requestSeen).toBe(true);
 
-    // 6. Verify the agent deliberation UI appears (progress chips)
-    await expect(page.locator('text=Multi-Agent')).toBeVisible({ timeout: 15000 });
+    // Verify the agent deliberation UI appears
+    await expect(page.getByText('Multi-Agent')).toBeVisible({ timeout: 15_000 });
 
-    // 7. Verify the final response text appears
-    await expect(page.locator('text=Bottom Line')).toBeVisible({ timeout: 15000 });
+    // Verify the final response text appears
+    await expect(page.getByText('Bottom Line')).toBeVisible({ timeout: 15_000 });
   });
 
-  test('quick mode only shows Technical agent', async ({ page }) => {
-    await page.goto('/login');
-    await page.fill('input[name="email"]', 'test@example.com');
-    await page.fill('input[name="password"]', 'password123');
-    await page.click('button[type="submit"]');
-    await expect(page).toHaveURL(/.*\/chat.*/, { timeout: 30000 });
+  test('quick mode only shows Technical agent', async ({ authedPage }) => {
+    const page = authedPage;
 
     let modeSeen = '';
     await page.route('**/api/chat', (route) => {
       const body = route.request().postDataJSON();
       if (body?.analysisMode) modeSeen = body.analysisMode;
 
-      const sseBody = [
-        'data: {"type":"specialists_start","agents":["technical"]}',
-        '',
-        'data: {"type":"agent_start","agent":"technical"}',
-        '',
-        'data: {"type":"agent_done","agent":"technical","opinion":{"agentName":"technical","bias":"bullish","confidence":0.85,"reasoning":"Strong uptrend","rawData":{},"costUsd":0.01,"latencyMs":900,"model":"test"}}',
-        '',
-        'data: {"type":"fusion_start"}',
-        '',
-        'data: {"type":"fusion_done"}',
-        '',
-        'data: {"type":"text","text":"**Bottom Line:** Quick technical read — bullish."}',
-        '',
-        'data: [DONE]',
-        '',
-      ].join('\n');
-
       route.fulfill({
         status: 200,
         contentType: 'text/event-stream',
         headers: { 'Cache-Control': 'no-cache', Connection: 'keep-alive' },
-        body: sseBody,
+        body: QUICK_MODE_SSE,
       });
     });
 
     // Select "Quick" mode
-    await page.click('button[aria-label="Analysis mode"]');
-    await page.click('button[role="menuitem"]:has-text("Quick")');
+    await page.getByRole('button', { name: /analysis mode/i }).click();
+    await page.getByRole('menuitem', { name: /quick/i }).click();
 
     // Send a message
-    await page.fill('textarea', "What's the price of gold?");
-    await page.press('textarea', 'Enter');
+    const textarea = page.getByRole('textbox');
+    await textarea.fill("What's the price of gold?");
+    await textarea.press('Enter');
 
     // Verify the mode was sent
     expect(modeSeen).toBe('quick');
 
     // Verify response appears
-    await expect(page.locator('text=Quick technical read')).toBeVisible({ timeout: 15000 });
+    await expect(page.getByText('Quick technical read')).toBeVisible({ timeout: 15_000 });
   });
 
-  test('single mode uses standard chat (no multi-agent)', async ({ page }) => {
-    await page.goto('/login');
-    await page.fill('input[name="email"]', 'test@example.com');
-    await page.fill('input[name="password"]', 'password123');
-    await page.click('button[type="submit"]');
-    await expect(page).toHaveURL(/.*\/chat.*/, { timeout: 30000 });
+  test('single mode uses standard chat (no multi-agent)', async ({ authedPage }) => {
+    const page = authedPage;
 
     let analysisModeSeen: string | undefined = undefined;
     await page.route('**/api/chat', (route) => {
       const body = route.request().postDataJSON();
       analysisModeSeen = body?.analysisMode;
-      // Standard AI SDK stream format
+
       route.fulfill({
         status: 200,
         contentType: 'text/plain; charset=utf-8',
@@ -177,19 +123,21 @@ test.describe('Multi-Agent Chat', () => {
     });
 
     // Select "Single" mode
-    await page.click('button[aria-label="Analysis mode"]');
-    await page.click('button[role="menuitem"]:has-text("Single")');
+    await page.getByRole('button', { name: /analysis mode/i }).click();
+    await page.getByRole('menuitem', { name: /single/i }).click();
 
     // Send a message
-    await page.fill('textarea', 'Hello');
-    await page.press('textarea', 'Enter');
+    const textarea = page.getByRole('textbox');
+    await textarea.fill('Hello');
+    await textarea.press('Enter');
 
     // Verify single mode was sent
     expect(analysisModeSeen).toBe('single');
 
     // Verify standard response appears (no multi-agent UI)
-    await expect(page.locator('text=Single agent response')).toBeVisible({ timeout: 15000 });
+    await expect(page.getByText('Single agent response')).toBeVisible({ timeout: 15_000 });
+
     // Multi-Agent deliberation panel should NOT appear
-    await expect(page.locator('text=Multi-Agent')).not.toBeVisible();
+    await expect(page.getByText('Multi-Agent')).not.toBeVisible();
   });
 });
