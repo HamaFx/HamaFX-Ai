@@ -16,21 +16,27 @@
  */
 
 /**
- * scripts/setup.mjs — Interactive first-run setup for HamaFX-Ai.
+ * scripts/setup.mjs — Interactive first-run setup wizard for HamaFX-Ai.
  *
- * Guides the user through:
- *   1. Prerequisite checks (Node, pnpm, Docker)
- *   2. Mode selection (Local dev vs Docker)
- *   3. AI provider key collection
- *   4. Secret generation
- *   5. Dependency installation
- *   6. Startup
+ * Features:
+ *   - Animated ASCII art banner with gradient colors
+ *   - Prerequisite checks with version validation
+ *   - Mode selection (Local Dev vs Docker) with feature comparison
+ *   - Multi-provider AI key collection (Google Gemini, Vercel AI Gateway,
+ *     Google Vertex AI, OpenAI, Anthropic, Groq, OpenRouter)
+ *   - Optional market data provider keys
+ *   - Key validation (length, format hints)
+ *   - Automatic secret generation
+ *   - Dependency installation with spinner
+ *   - Pre-start summary review
+ *   - Graceful Ctrl+C handling
+ *   - Colored, box-drawing UI throughout
  *
  * Usage:  pnpm setup   (or: node scripts/setup.mjs)
  */
 
 import { execSync, spawn } from 'node:child_process';
-import { existsSync, mkdirSync, writeFileSync, readFileSync, appendFileSync } from 'node:fs';
+import { existsSync, writeFileSync, readFileSync, appendFileSync, statSync } from 'node:fs';
 import { createInterface } from 'node:readline/promises';
 import { stdin, stdout } from 'node:process';
 import { resolve, dirname } from 'node:path';
@@ -40,81 +46,311 @@ import { randomBytes } from 'node:crypto';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(__dirname, '..');
 
-// ── Helpers ────────────────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════
+//  Terminal Helpers
+// ═══════════════════════════════════════════════════════════════════════════
 
-const COLORS = {
+const C = {
   reset: '\x1b[0m',
   bold: '\x1b[1m',
   dim: '\x1b[2m',
+  italic: '\x1b[3m',
+  underline: '\x1b[4m',
+  blink: '\x1b[5m',
   red: '\x1b[31m',
   green: '\x1b[32m',
   yellow: '\x1b[33m',
   blue: '\x1b[34m',
-  cyan: '\x1b[36m',
   magenta: '\x1b[35m',
-  bg: '\x1b[48;5;236m',
+  cyan: '\x1b[36m',
+  white: '\x1b[37m',
+  bgRed: '\x1b[41m',
+  bgGreen: '\x1b[42m',
+  bgBlue: '\x1b[44m',
+  bgCyan: '\x1b[46m',
+  bgBlack: '\x1b[40m',
+  // 256-color palette
+  sky: '\x1b[38;5;75m',
+  teal: '\x1b[38;5;80m',
+  lime: '\x1b[38;5;113m',
+  gold: '\x1b[38;5;220m',
+  coral: '\x1b[38;5;209m',
+  lavender: '\x1b[38;5;183m',
+  gray: '\x1b[38;5;245m',
+  darkGray: '\x1b[38;5;238m',
 };
 
-function c(color, text) {
-  return `${COLORS[color] ?? ''}${text}${COLORS.reset}`;
+function paint(text, ...colors) {
+  return colors.map(co => C[co] ?? '').join('') + text + C.reset;
 }
 
-function log(msg) {
-  console.log(msg);
+function line(text = '') { console.log(text); }
+function p(text) { console.log(text); }
+function ok(msg) { console.log(`  ${paint('✓', 'green')} ${msg}`); }
+function warn(msg) { console.log(`  ${paint('⚠', 'yellow')} ${msg}`); }
+function fail(msg) { console.log(`  ${paint('✗', 'red')} ${msg}`); }
+function info(msg) { console.log(`  ${paint('ℹ', 'sky')} ${msg}`); }
+
+// ── Spinner ─────────────────────────────────────────────────────────────────
+
+const SPINNER_FRAMES = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
+let spinnerInterval = null;
+let spinnerActive = false;
+
+function startSpinner(msg) {
+  if (spinnerActive) stopSpinner();
+  spinnerActive = true;
+  let i = 0;
+  process.stdout.write(`  ${paint(SPINNER_FRAMES[0], 'cyan')} ${msg}...`);
+  spinnerInterval = setInterval(() => {
+    process.stdout.write(`\r  ${paint(SPINNER_FRAMES[i % SPINNER_FRAMES.length], 'cyan')} ${msg}...`);
+    i++;
+  }, 80);
 }
 
-function ok(msg) {
-  console.log(`${c('green', '✓')} ${msg}`);
+function stopSpinner(successMsg = null) {
+  if (!spinnerActive) return;
+  spinnerActive = false;
+  clearInterval(spinnerInterval);
+  spinnerInterval = null;
+  process.stdout.write('\r' + ' '.repeat(60) + '\r');
+  if (successMsg) ok(successMsg);
 }
 
-function warn(msg) {
-  console.log(`${c('yellow', '⚠')}  ${msg}`);
+// ── Box drawing ─────────────────────────────────────────────────────────────
+
+function box(title, lines, opts = {}) {
+  const color = opts.color ?? 'cyan';
+  const minWidth = opts.minWidth ?? 50;
+  const titleLen = title ? title.length + 4 : 0;
+  const maxContent = Math.max(...lines.map(l => stripAnsi(l).length), titleLen, minWidth);
+  const width = maxContent + 4;
+
+  const tl = '╔', tr = '╗', bl = '╚', br = '╝', h = '═', v = '║';
+
+  let out = '';
+  if (title) {
+    const titlePad = Math.max(0, width - title.length - 2);
+    out += `  ${paint(tl + h + ' ', color)}${paint(title, 'bold')}${' '.repeat(titlePad)}${paint(' ' + h + tr, color)}\n`;
+  } else {
+    out += `  ${paint(tl + h.repeat(width), color)}${paint(tr, color)}\n`;
+  }
+
+  for (const l of lines) {
+    const stripped = stripAnsi(l);
+    const pad = Math.max(0, width - stripped.length - 2);
+    out += `  ${paint(v, color)} ${l}${' '.repeat(pad)} ${paint(v, color)}\n`;
+  }
+
+  out += `  ${paint(bl + h.repeat(width), color)}${paint(br, color)}`;
+  console.log(out);
 }
 
-function fail(msg) {
-  console.log(`${c('red', '✗')} ${msg}`);
+function stripAnsi(str) {
+  return str.replace(/\x1b\[[0-9;]*m/g, '');
 }
 
-function banner() {
-  console.log();
-  console.log(c('bold', c('cyan', '  ╔══════════════════════════════════════════╗')));
-  console.log(c('bold', c('cyan', '  ║         HamaFX-Ai  —  Setup Wizard       ║')));
-  console.log(c('bold', c('cyan', '  ╚══════════════════════════════════════════╝')));
-  console.log(c('dim', '  The open-source, multi-user AI trading platform'));
-  console.log();
+// ── Progress ─────────────────────────────────────────────────────────────────
+
+let totalSteps = 6;
+let currentStep = 0;
+
+function stepHeader(title) {
+  currentStep++;
+  line();
+  console.log(`  ${paint(`[${currentStep}/${totalSteps}]`, 'dim')} ${paint(title, 'bold', 'cyan')}`);
+  console.log(`  ${paint('─'.repeat(52), 'darkGray')}`);
 }
+
+// ── Utility ──────────────────────────────────────────────────────────────────
 
 function hasBin(cmd) {
-  try {
-    execSync(`command -v ${cmd}`, { stdio: 'ignore' });
-    return true;
-  } catch {
-    return false;
-  }
+  try { execSync(`command -v ${cmd}`, { stdio: 'ignore' }); return true; }
+  catch { return false; }
 }
 
 function getVersion(cmd, flag = '--version') {
-  try {
-    return execSync(`${cmd} ${flag}`, { encoding: 'utf-8' }).trim();
-  } catch {
-    return null;
-  }
+  try { return execSync(`${cmd} ${flag}`, { encoding: 'utf-8' }).trim(); }
+  catch { return null; }
 }
 
 function randHex(bytes = 32) {
   return randomBytes(bytes).toString('hex');
 }
 
-// ── Main ───────────────────────────────────────────────────────────────────
+function maskKey(key) {
+  if (!key || key.length < 8) return key;
+  return key.slice(0, 4) + '•'.repeat(Math.min(20, key.length - 8)) + key.slice(-4);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  Banner
+// ═══════════════════════════════════════════════════════════════════════════
+
+function printBanner() {
+  const logo = [
+    '  _   _  _   _  ___  ___  ___  ___  ___ ',
+    ' | | | || \\ | || __|| _ \\/ __|| __|| _ \\',
+    ' | |_| ||  \\| || _| |   /\\__ \\| _| |   /',
+    '  \\___/ |_|\\_||___||_|_\\|___/|___||_|_\\',
+    '                                         ',
+    '         A I  ·  T R A D I N G  ·  P L A T F O R M',
+  ];
+
+  const gradientColors = ['cyan', 'sky', 'teal', 'lime', 'gold', 'coral'];
+
+  line();
+  for (let i = 0; i < logo.length; i++) {
+    const color = gradientColors[i % gradientColors.length];
+    console.log(paint(logo[i], color));
+  }
+  line();
+  console.log(paint('  The open-source, multi-user AI trading platform', 'dim'));
+  console.log(paint('  Apache 2.0 Licensed · Built with Next.js, Drizzle, pgvector', 'dim'));
+  line();
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  Provider Definitions
+// ═══════════════════════════════════════════════════════════════════════════
+
+const AI_PROVIDERS = [
+  {
+    id: 'google-gemini',
+    label: 'Google Gemini (Direct API)',
+    envKey: 'GOOGLE_GENERATIVE_AI_API_KEY',
+    hint: 'Free tier available',
+    url: 'https://aistudio.google.com/apikey',
+    keyPrefix: 'AIza',
+    minLen: 30,
+    color: 'lime',
+  },
+  {
+    id: 'vercel-gateway',
+    label: 'Vercel AI Gateway',
+    envKey: 'AI_GATEWAY_API_KEY',
+    hint: 'Multi-provider routing',
+    url: 'https://vercel.com/ai',
+    keyPrefix: null,
+    minLen: 20,
+    color: 'white',
+  },
+  {
+    id: 'google-vertex',
+    label: 'Google Vertex AI',
+    envKey: null, // multi-var
+    hint: 'GCP service account required',
+    url: 'https://console.cloud.google.com/vertex-ai',
+    keyPrefix: null,
+    minLen: 0,
+    color: 'sky',
+    isVertex: true,
+  },
+  {
+    id: 'openai',
+    label: 'OpenAI',
+    envKey: 'OPENAI_API_KEY',
+    hint: 'GPT-4o, o3, etc.',
+    url: 'https://platform.openai.com/api-keys',
+    keyPrefix: 'sk-',
+    minLen: 40,
+    color: 'teal',
+  },
+  {
+    id: 'anthropic',
+    label: 'Anthropic',
+    envKey: 'ANTHROPIC_API_KEY',
+    hint: 'Claude 3.5/4 Sonnet, Opus',
+    url: 'https://console.anthropic.com/settings/keys',
+    keyPrefix: 'sk-ant-',
+    minLen: 40,
+    color: 'coral',
+  },
+  {
+    id: 'groq',
+    label: 'Groq',
+    envKey: 'GROQ_API_KEY',
+    hint: 'Ultra-fast inference',
+    url: 'https://console.groq.com/keys',
+    keyPrefix: 'gsk_',
+    minLen: 30,
+    color: 'gold',
+  },
+  {
+    id: 'openrouter',
+    label: 'OpenRouter',
+    envKey: 'OPENROUTER_API_KEY',
+    hint: '300+ models, one API',
+    url: 'https://openrouter.ai/keys',
+    keyPrefix: 'sk-or-',
+    minLen: 30,
+    color: 'lavender',
+  },
+];
+
+const MARKET_DATA_PROVIDERS = [
+  {
+    id: 'finnhub',
+    label: 'Finnhub',
+    envKey: 'FINNHUB_API_KEY',
+    hint: 'Stocks, forex, crypto news',
+    url: 'https://finnhub.io/dashboard',
+    minLen: 15,
+    color: 'teal',
+  },
+  {
+    id: 'marketaux',
+    label: 'Marketaux',
+    envKey: 'MARKETAUX_API_KEY',
+    hint: 'Financial news feed',
+    url: 'https://marketaux.com/dashboard',
+    minLen: 15,
+    color: 'sky',
+  },
+  {
+    id: 'fred',
+    label: 'FRED (Federal Reserve)',
+    envKey: 'FRED_API_KEY',
+    hint: 'Economic data & calendar',
+    url: 'https://fredaccount.stlouisfed.org/apikeys',
+    minLen: 20,
+    color: 'gold',
+  },
+  {
+    id: 'alphavantage',
+    label: 'Alpha Vantage',
+    envKey: 'ALPHAVANTAGE_API_KEY',
+    hint: 'Stocks, forex, indicators',
+    url: 'https://www.alphavantage/support/#api-key',
+    minLen: 10,
+    color: 'lime',
+  },
+];
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  Main
+// ═══════════════════════════════════════════════════════════════════════════
+
+let rl;
+const collectedKeys = {}; // envKey -> value
+const collectedExtra = {}; // extra env vars (Vertex, etc.)
+let selectedMode = 'local';
 
 async function main() {
-  banner();
+  printBanner();
 
-  const rl = createInterface({ input: stdin, output: stdout });
+  // Graceful Ctrl+C
+  process.on('SIGINT', () => {
+    if (spinnerActive) stopSpinner();
+    line();
+    warn('Setup interrupted. Re-run anytime: pnpm setup');
+    process.exit(130);
+  });
+
+  rl = createInterface({ input: stdin, output: stdout });
 
   // ── Step 1: Prerequisites ──────────────────────────────────────────────
-  console.log(c('bold', 'Step 1: Checking prerequisites'));
-  console.log(c('dim', '─'.repeat(50)));
+  stepHeader('Checking prerequisites');
 
   const checks = [
     { name: 'Node.js', bin: 'node', minVersion: '20', installHint: 'https://nodejs.org/ (install v20+)' },
@@ -130,306 +366,407 @@ async function main() {
       if (minVersion && ver) {
         const major = ver.match(/v?(\d+)/)?.[1];
         if (major && Number(major) >= Number(minVersion)) {
-          ok(`${name} ${c('dim', ver)}`);
+          ok(`${name} ${paint(ver, 'dim')}`);
         } else {
           warn(`${name} ${ver} — needs v${minVersion}+`);
-          console.log(c('dim', `    Upgrade: ${installHint}`));
+          console.log(`    ${paint('Upgrade:', 'dim')} ${installHint}`);
           allOk = false;
         }
       } else {
-        ok(`${name} ${c('dim', ver ?? '')}`);
+        ok(`${name} ${paint(ver ?? '', 'dim')}`);
       }
     } else {
       fail(`${name} not found`);
-      console.log(c('dim', `    Install: ${installHint}`));
+      console.log(`    ${paint('Install:', 'dim')} ${installHint}`);
       allOk = false;
     }
   }
 
   const hasDocker = hasBin('docker');
   if (hasDocker) {
-    ok(`Docker ${c('dim', getVersion('docker') ?? '')}`);
+    ok(`Docker ${paint(getVersion('docker') ?? '', 'dim')}`);
   } else {
-    console.log(c('dim', `   Docker not found (optional — needed for Docker mode only)`));
+    console.log(`  ${paint('○', 'gray')} Docker ${paint('not found (optional — needed for Docker mode)', 'dim')}`);
   }
 
-  console.log();
+  const hasCurl = hasBin('curl');
+  if (hasCurl) {
+    const curlVer = getVersion('curl')?.split('\n')[0] ?? '';
+    ok(`curl ${paint(curlVer, 'dim')}`);
+  }
 
   if (!allOk) {
+    line();
     fail('Some prerequisites are missing. Install them and re-run: pnpm setup');
     rl.close();
     process.exit(1);
   }
 
-  // ── Step 2: Mode selection ─────────────────────────────────────────────
-  console.log(c('bold', 'Step 2: Choose your setup mode'));
-  console.log(c('dim', '─'.repeat(50)));
-  console.log();
-  console.log(`  ${c('cyan', '1.')} ${c('bold', 'Local Dev')} ${c('dim', '(recommended for trying & contributing)')}`);
-  console.log(`     ${c('dim', 'Embedded Postgres (PGlite), no Docker needed')}`);
-  console.log(`     ${c('dim', 'Fast startup, hot reload, most features work')}`);
-  console.log(`     ${c('dim', 'No vector search (RAG) or live market data')}`);
-  console.log();
-  console.log(`  ${c('cyan', '2.')} ${c('bold', 'Docker Compose')} ${c('dim', '(full features)')}`);
-  console.log(`     ${c('dim', 'Postgres 16 + pgvector, worker, Langfuse')}`);
-  console.log(`     ${c('dim', 'All features including vector search & crons')}`);
-  console.log(`     ${c('dim', 'Requires Docker')}`);
-  console.log();
+  // ── Step 2: Mode Selection ─────────────────────────────────────────────
+  stepHeader('Choose your setup mode');
+
+  const localFeatures = [
+    ['✓', 'Embedded Postgres (PGlite)', 'No Docker needed'],
+    ['✓', 'Fast startup & hot reload', 'Best for development'],
+    ['✓', 'Full web app + AI chat', '78 API routes'],
+    ['✓', 'Auth, journal, alerts', 'Settings, onboarding'],
+    ['✗', 'Vector search (RAG)', 'pgvector not in PGlite'],
+    ['✗', 'Live market data', 'No worker process'],
+    ['✗', 'Langfuse observability', 'Needs Docker'],
+  ];
+
+  const dockerFeatures = [
+    ['✓', 'Postgres 16 + pgvector', 'Full RAG & memory'],
+    ['✓', 'Worker daemon', 'Live SignalR + crons'],
+    ['✓', 'Langfuse UI', 'LLM observability'],
+    ['✓', 'All features enabled', 'Production-ready'],
+    ['!', 'Slower first start', 'Docker build ~3-5 min'],
+    ['!', 'More resource usage', '~2GB RAM recommended'],
+  ];
+
+  box('Local Dev (PGlite)', [
+    `${paint('Recommended for:', 'bold')} trying the app & contributing`,
+    '',
+    ...localFeatures.map(([icon, feat, desc]) =>
+      `${icon === '✓' ? paint('✓', 'green') : paint('✗', 'red')}  ${feat.padEnd(28)} ${paint(desc, 'dim')}`
+    ),
+    '',
+    `${paint('Command:', 'bold')} pnpm dev:local`,
+  ], { color: 'cyan', minWidth: 54 });
+
+  line();
+
+  box('Docker Compose (Full Features)', [
+    `${paint('Recommended for:', 'bold')} self-hosting & full features`,
+    '',
+    ...dockerFeatures.map(([icon, feat, desc]) =>
+      `${icon === '✓' ? paint('✓', 'green') : icon === '!' ? paint('!', 'yellow') : paint('✗', 'red')}  ${feat.padEnd(28)} ${paint(desc, 'dim')}`
+    ),
+    '',
+    `${paint('Command:', 'bold')} docker compose up -d`,
+  ], { color: 'teal', minWidth: 54 });
+
+  line();
 
   if (!hasDocker) {
-    console.log(c('yellow', '  Docker not detected — Local Dev mode is your only option.'));
-    console.log();
-  }
-
-  let modeChoice;
-  if (hasDocker) {
-    modeChoice = await rl.question(`  Choose [1/2] (default: 1): `);
+    info('Docker not detected — Local Dev mode is your only option.');
+    selectedMode = 'local';
   } else {
-    modeChoice = '1';
+    const choice = await rl.question(`  Choose mode ${paint('[1=Local / 2=Docker]', 'dim')} (default: 1): `);
+    selectedMode = choice.trim() === '2' ? 'docker' : 'local';
   }
-  const mode = modeChoice.trim() === '2' && hasDocker ? 'docker' : 'local';
 
-  console.log();
-  console.log(c('green', `  → Selected: ${mode === 'docker' ? 'Docker Compose' : 'Local Dev'}`));
-  console.log();
+  line();
+  console.log(`  ${paint('→', 'green')} Selected: ${paint(selectedMode === 'docker' ? 'Docker Compose' : 'Local Dev', 'bold', selectedMode === 'docker' ? 'teal' : 'cyan')}`);
 
-  // ── Step 3: AI provider key ────────────────────────────────────────────
-  console.log(c('bold', 'Step 3: AI Provider Key'));
-  console.log(c('dim', '─'.repeat(50)));
-  console.log();
-  console.log('  HamaFX-Ai needs at least one AI provider to function.');
-  console.log('  You can add more later in Settings → API Keys.');
-  console.log();
-  console.log(`  ${c('cyan', '1.')} Google Gemini (direct API)   ${c('dim', '— free tier available')}`);
-  console.log(`     ${c('dim', 'Get a key: https://aistudio.google.com/apikey')}`);
-  console.log();
-  console.log(`  ${c('cyan', '2.')} Vercel AI Gateway              ${c('dim', '— multi-provider')}`);
-  console.log(`     ${c('dim', 'Get a key: https://vercel.com/ai')}`);
-  console.log();
-  console.log(`  ${c('cyan', '3.')} Google Vertex AI              ${c('dim', '— GCP service account')}`);
-  console.log(`     ${c('dim', 'Requires project + location + credentials JSON')}`);
-  console.log();
-  console.log(`  ${c('dim', '4. Skip for now')}  ${c('dim', '(you can add a key later)')}`);
-  console.log();
+  // ── Step 3: AI Provider Keys ───────────────────────────────────────────
+  stepHeader('Configure AI providers');
 
-  const providerChoice = await rl.question(`  Choose provider [1/2/3/4] (default: 1): `);
+  console.log(`  HamaFX-Ai needs at least one AI provider to function.`);
+  console.log(`  You can add more later in ${paint('Settings → API Keys', 'dim')}.`);
+  console.log(`  ${paint('Pick multiple by comma-separating numbers (e.g. 1,3,5)', 'dim')}`);
+  line();
 
-  let envKey = null;
-  let envValue = null;
-  let extraEnv = {};
+  for (let i = 0; i < AI_PROVIDERS.length; i++) {
+    const p = AI_PROVIDERS[i];
+    const num = paint(`${i + 1}.`, 'cyan');
+    const label = paint(p.label, 'bold', p.color);
+    const hint = paint(`(${p.hint})`, 'dim');
+    console.log(`  ${num} ${label} ${hint}`);
+    if (p.url) console.log(`     ${paint('Get key:', 'dim')} ${p.url}`);
+  }
 
-  const choice = providerChoice.trim() || '1';
+  line();
+  console.log(`  ${paint('0.', 'dim')} Skip for now ${paint('(add keys later)', 'dim')}`);
+  line();
 
-  if (choice === '4') {
-    console.log(c('yellow', '  → Skipped. Add a key later in .env.local or Settings → API Keys.'));
-  } else if (choice === '1') {
-    envKey = 'GOOGLE_GENERATIVE_AI_API_KEY';
-    console.log();
-    envValue = await rl.question(`  Paste your Google Gemini API key: `);
-    if (!envValue.trim()) {
-      warn('No key entered — you can add it later in .env.local');
-    }
-  } else if (choice === '2') {
-    envKey = 'AI_GATEWAY_API_KEY';
-    console.log();
-    envValue = await rl.question(`  Paste your Vercel AI Gateway key: `);
-    if (!envValue.trim()) {
-      warn('No key entered — you can add it later in .env.local');
-    }
-  } else if (choice === '3') {
-    console.log();
-    const project = (await rl.question(`  Google Cloud Project ID: `)).trim();
-    const location = (await rl.question(`  Vertex AI location (default: us-central1): `)).trim() || 'us-central1';
-    const creds = (await rl.question(`  Path to service account JSON file: `)).trim();
+  const providerInput = await rl.question(`  Select provider(s) (default: 1): `);
+  const trimmed = providerInput.trim() || '1';
 
-    if (project) extraEnv.GOOGLE_VERTEX_PROJECT = project;
-    if (location) extraEnv.GOOGLE_VERTEX_LOCATION = location;
+  if (trimmed === '0') {
+    warn('Skipped AI provider setup. Add a key later in .env.local or Settings → API Keys.');
+  } else {
+    const indices = trimmed.split(',').map(s => parseInt(s.trim(), 10)).filter(n => n >= 1 && n <= AI_PROVIDERS.length);
 
-    if (creds && existsSync(creds)) {
-      try {
-        const json = readFileSync(creds, 'utf-8').replace(/\n/g, '\\n');
-        extraEnv.GOOGLE_APPLICATION_CREDENTIALS_JSON = json;
-        ok('Service account credentials loaded');
-      } catch {
-        fail(`Could not read file: ${creds}`);
-        warn('You can set GOOGLE_APPLICATION_CREDENTIALS_JSON manually later');
+    if (indices.length === 0) {
+      warn('No valid selection — skipping for now');
+    } else {
+      for (const idx of indices) {
+        const provider = AI_PROVIDERS[idx - 1];
+        line();
+        console.log(`  ${paint('●', provider.color)} ${paint(provider.label, 'bold', provider.color)}`);
+
+        if (provider.isVertex) {
+          // Vertex AI: collect project, location, credentials
+          const project = (await rl.question(`    Google Cloud Project ID: `)).trim();
+          const location = (await rl.question(`    Vertex AI location ${paint('(default: us-central1)', 'dim')}: `)).trim() || 'us-central1';
+          const credsPath = (await rl.question(`    Path to service account JSON: `)).trim();
+
+          if (project) collectedExtra.GOOGLE_VERTEX_PROJECT = project;
+          if (location) collectedExtra.GOOGLE_VERTEX_LOCATION = location;
+
+          if (credsPath && existsSync(credsPath)) {
+            try {
+              const json = readFileSync(credsPath, 'utf-8').replace(/\n/g, '\\n');
+              collectedExtra.GOOGLE_APPLICATION_CREDENTIALS_JSON = json;
+              ok(`Credentials loaded from ${credsPath}`);
+            } catch {
+              fail(`Could not read: ${credsPath}`);
+              warn('Set GOOGLE_APPLICATION_CREDENTIALS_JSON manually later');
+            }
+          } else if (credsPath) {
+            fail(`File not found: ${credsPath}`);
+            warn('Set GOOGLE_APPLICATION_CREDENTIALS_JSON manually later');
+          }
+        } else {
+          // Standard API key
+          const key = (await rl.question(`    Paste your API key: `)).trim();
+
+          if (!key) {
+            warn(`No key entered for ${provider.label} — skipping`);
+          } else if (provider.minLen && key.length < provider.minLen) {
+            warn(`Key looks short (${key.length} chars, expected ~${provider.minLen}+) — saving anyway`);
+            collectedKeys[provider.envKey] = key;
+          } else if (provider.keyPrefix && !key.startsWith(provider.keyPrefix)) {
+            warn(`Key doesn't start with "${provider.keyPrefix}" — saving anyway`);
+            collectedKeys[provider.envKey] = key;
+          } else {
+            ok(`Key saved ${paint(maskKey(key), 'dim')}`);
+            collectedKeys[provider.envKey] = key;
+          }
+        }
       }
-    } else if (creds) {
-      fail(`File not found: ${creds}`);
-      warn('Set GOOGLE_APPLICATION_CREDENTIALS_JSON manually later');
     }
-  } else {
-    warn(`Unknown choice "${choice}" — skipping for now`);
   }
 
-  console.log();
+  // ── Step 4: Market Data Keys (Optional) ────────────────────────────────
+  stepHeader('Market data providers (optional)');
 
-  // ── Step 4: Generate secrets & write env ───────────────────────────────
-  console.log(c('bold', 'Step 4: Generating secrets'));
-  console.log(c('dim', '─'.repeat(50)));
+  console.log(`  Market data keys are ${paint('optional', 'bold')} — the app works without them.`);
+  console.log(`  They unlock live news, economic calendars, and enriched data.`);
+  console.log(`  ${paint('Pick multiple by comma-separating numbers', 'dim')}`);
+  line();
 
-  if (mode === 'local') {
-    // Local dev: secrets auto-generate to .hamafx/dev-secrets.json on boot.
-    // We only need to write the AI key (if provided) to .env.local
+  for (let i = 0; i < MARKET_DATA_PROVIDERS.length; i++) {
+    const p = MARKET_DATA_PROVIDERS[i];
+    console.log(`  ${paint(`${i + 1}.`, 'cyan')} ${paint(p.label, 'bold', p.color)} ${paint(`(${p.hint})`, 'dim')}`);
+    console.log(`     ${paint('Get key:', 'dim')} ${p.url}`);
+  }
+
+  line();
+  console.log(`  ${paint('0.', 'dim')} Skip all`);
+  line();
+
+  const marketInput = await rl.question(`  Select provider(s) (default: 0 — skip): `);
+  const marketTrimmed = marketInput.trim() || '0';
+
+  if (marketTrimmed !== '0') {
+    const indices = marketTrimmed.split(',').map(s => parseInt(s.trim(), 10)).filter(n => n >= 1 && n <= MARKET_DATA_PROVIDERS.length);
+
+    for (const idx of indices) {
+      const provider = MARKET_DATA_PROVIDERS[idx - 1];
+      const key = (await rl.question(`    ${provider.label} API key: `)).trim();
+
+      if (key) {
+        collectedKeys[provider.envKey] = key;
+        ok(`${provider.label} key saved ${paint(maskKey(key), 'dim')}`);
+      } else {
+        warn(`No key for ${provider.label} — skipping`);
+      }
+    }
+  } else {
+    info('Skipped market data providers — add them later in .env.local');
+  }
+
+  // ── Step 5: Generate Secrets & Write Config ────────────────────────────
+  stepHeader('Generating secrets & writing config');
+
+  if (selectedMode === 'local') {
     const envLocalPath = resolve(repoRoot, '.env.local');
-
-    // Read existing .env.local if present (don't overwrite)
     let existing = '';
     if (existsSync(envLocalPath)) {
       existing = readFileSync(envLocalPath, 'utf-8');
+      info(`Existing .env.local found — merging new keys`);
     }
 
     const lines = [];
 
-    if (envKey && envValue && envValue.trim()) {
-      // Don't duplicate if already present
-      if (!existing.includes(`${envKey}=`)) {
-        lines.push(`${envKey}=${envValue.trim()}`);
+    for (const [key, val] of Object.entries(collectedKeys)) {
+      if (!existing.includes(`${key}=`)) {
+        lines.push(`${key}=${val}`);
       } else {
-        // Update existing line
-        existing = existing.replace(
-          new RegExp(`^${envKey}=.*$`, 'm'),
-          `${envKey}=${envValue.trim()}`,
-        );
+        existing = existing.replace(new RegExp(`^${key}=.*$`, 'm'), `${key}=${val}`);
       }
     }
 
-    // Add extra Vertex env vars
-    for (const [key, val] of Object.entries(extraEnv)) {
+    for (const [key, val] of Object.entries(collectedExtra)) {
       if (!existing.includes(`${key}=`)) {
         lines.push(`${key}=${val}`);
+      } else {
+        existing = existing.replace(new RegExp(`^${key}=.*$`, 'm'), `${key}=${val}`);
       }
     }
 
     if (lines.length > 0) {
-      if (existing && !existing.endsWith('\n')) {
-        appendFileSync(envLocalPath, '\n');
-      }
+      if (existing && !existing.endsWith('\n')) appendFileSync(envLocalPath, '\n');
       appendFileSync(envLocalPath, lines.join('\n') + '\n');
-      ok(`Wrote ${lines.length} env var(s) to ${c('dim', '.env.local')}`);
+      ok(`Wrote ${lines.length} env var(s) to ${paint('.env.local', 'dim')}`);
     } else if (existing) {
-      ok(`.env.local already configured ${c('dim', '(no changes needed)')}`);
-    } else {
-      ok('No env vars to write — secrets will auto-generate on first boot');
+      ok(`.env.local already configured ${paint('(no changes needed)', 'dim')}`);
     }
 
-    ok(`Auth/encryption secrets auto-generate to ${c('dim', '.hamafx/dev-secrets.json')} on first boot`);
+    ok(`Auth & encryption secrets auto-generate to ${paint('.hamafx/dev-secrets.json', 'dim')} on first boot`);
   } else {
-    // Docker mode: use init-secrets.sh for Docker secrets + write AI key to .env
+    // Docker mode
     const initScript = resolve(repoRoot, 'docker/init-secrets.sh');
     if (existsSync(initScript)) {
       try {
-        execSync(`bash "${initScript}"`, { stdio: 'inherit', cwd: repoRoot });
-        ok('Docker secrets generated');
+        execSync(`bash "${initScript}"`, { stdio: 'pipe', cwd: repoRoot });
+        ok('Docker secrets generated via init-secrets.sh');
       } catch {
-        warn('init-secrets.sh reported .env already exists — leaving it');
+        info('init-secrets.sh: .env already exists — keeping it');
       }
     }
 
-    // Append AI key to .env
     const envPath = resolve(repoRoot, '.env');
-    if (envKey && envValue && envValue.trim()) {
-      let envExisting = '';
-      if (existsSync(envPath)) {
-        envExisting = readFileSync(envPath, 'utf-8');
-      }
+    let envExisting = '';
+    if (existsSync(envPath)) {
+      envExisting = readFileSync(envPath, 'utf-8');
+    }
 
-      if (!envExisting.includes(`${envKey}=`)) {
-        appendFileSync(envPath, `${envKey}=${envValue.trim()}\n`);
-        ok(`Added ${envKey} to ${c('dim', '.env')}`);
+    const lines = [];
+    for (const [key, val] of Object.entries(collectedKeys)) {
+      if (!envExisting.includes(`${key}=`)) {
+        lines.push(`${key}=${val}`);
       } else {
-        envExisting = envExisting.replace(
-          new RegExp(`^${envKey}=.*$`, 'm'),
-          `${envKey}=${envValue.trim()}`,
-        );
-        writeFileSync(envPath, envExisting);
-        ok(`Updated ${envKey} in ${c('dim', '.env')}`);
+        envExisting = envExisting.replace(new RegExp(`^${key}=.*$`, 'm'), `${key}=${val}`);
       }
     }
 
-    // Add extra Vertex env vars to .env
-    for (const [key, val] of Object.entries(extraEnv)) {
-      appendFileSync(envPath, `${key}=${val}\n`);
+    for (const [key, val] of Object.entries(collectedExtra)) {
+      if (!envExisting.includes(`${key}=`)) {
+        lines.push(`${key}=${val}`);
+      } else {
+        envExisting = envExisting.replace(new RegExp(`^${key}=.*$`, 'm'), `${key}=${val}`);
+      }
+    }
+
+    if (lines.length > 0) {
+      if (envExisting && !envExisting.endsWith('\n')) appendFileSync(envPath, '\n');
+      appendFileSync(envPath, lines.join('\n') + '\n');
+      ok(`Wrote ${lines.length} env var(s) to ${paint('.env', 'dim')}`);
     }
   }
 
-  console.log();
+  // ── Step 6: Install Dependencies ───────────────────────────────────────
+  stepHeader('Installing dependencies');
 
-  // ── Step 5: Install dependencies ───────────────────────────────────────
-  console.log(c('bold', 'Step 5: Installing dependencies'));
-  console.log(c('dim', '─'.repeat(50)));
-
-  if (mode === 'local') {
+  if (selectedMode === 'local') {
+    startSpinner('Running pnpm install');
     try {
-      execSync('pnpm install --frozen-lockfile', { stdio: 'inherit', cwd: repoRoot });
-      ok('Dependencies installed');
+      execSync('pnpm install --frozen-lockfile', { stdio: 'pipe', cwd: repoRoot });
+      stopSpinner('Dependencies installed (frozen lockfile)');
     } catch {
-      warn('Frozen lockfile failed — trying without lockfile');
-      execSync('pnpm install', { stdio: 'inherit', cwd: repoRoot });
-      ok('Dependencies installed');
+      stopSpinner();
+      startSpinner('Retrying without lockfile');
+      try {
+        execSync('pnpm install', { stdio: 'pipe', cwd: repoRoot });
+        stopSpinner('Dependencies installed');
+      } catch {
+        stopSpinner();
+        fail('pnpm install failed — try running it manually');
+        rl.close();
+        process.exit(1);
+      }
     }
   } else {
-    // Docker will handle the build — no need to install locally
-    console.log(c('dim', '  Docker mode — dependencies are installed during docker compose build'));
-    ok('Skipping local install (Docker handles it)');
+    info('Docker mode — dependencies install during docker compose build');
+    ok('Skipping local install');
   }
 
-  console.log();
+  // ── Summary ────────────────────────────────────────────────────────────
+  line();
+  console.log(`  ${paint('─'.repeat(52), 'darkGray')}`);
+  line();
 
-  // ── Step 6: Start ──────────────────────────────────────────────────────
-  console.log(c('bold', 'Step 6: Ready to start!'));
-  console.log(c('dim', '─'.repeat(50)));
-  console.log();
+  const summaryLines = [
+    `${paint('Mode:', 'bold')}         ${selectedMode === 'docker' ? 'Docker Compose' : 'Local Dev (PGlite)'}`,
+    `${paint('AI providers:', 'bold')}   ${Object.keys(collectedKeys).filter(k => AI_PROVIDERS.some(p => p.envKey === k)).length || paint('none (add later)', 'dim')}`,
+  ];
 
-  if (mode === 'local') {
-    console.log(`  ${c('green', 'pnpm dev:local')}`);
-    console.log();
-    console.log(c('dim', '  Then open: http://localhost:3000'));
-    console.log(c('dim', '  Register at: http://localhost:3000/register'));
-    console.log();
+  const aiKeys = Object.keys(collectedKeys).filter(k => AI_PROVIDERS.some(p => p.envKey === k));
+  if (aiKeys.length > 0) {
+    const names = aiKeys.map(k => {
+      const provider = AI_PROVIDERS.find(p => p.envKey === k);
+      return provider ? provider.label : k;
+    });
+    summaryLines.push(`               ${paint(names.join(', '), 'dim')}`);
+  }
 
-    const startNow = await rl.question(`  Start dev server now? [Y/n]: `);
+  const marketKeys = Object.keys(collectedKeys).filter(k => MARKET_DATA_PROVIDERS.some(p => p.envKey === k));
+  summaryLines.push(`${paint('Market data:', 'bold')}    ${marketKeys.length || paint('none (optional)', 'dim')}`);
+  if (marketKeys.length > 0) {
+    const names = marketKeys.map(k => {
+      const provider = MARKET_DATA_PROVIDERS.find(p => p.envKey === k);
+      return provider ? provider.label : k;
+    });
+    summaryLines.push(`               ${paint(names.join(', '), 'dim')}`);
+  }
+
+  summaryLines.push(`${paint('Secrets:', 'bold')}       ${selectedMode === 'docker' ? 'Generated in .env' : 'Auto-gen on first boot'}`);
+  summaryLines.push(`${paint('Config file:', 'bold')}   ${selectedMode === 'docker' ? '.env' : '.env.local'}`);
+
+  box('Setup Summary', summaryLines, { color: 'green', minWidth: 52 });
+
+  // ── Start ──────────────────────────────────────────────────────────────
+  line();
+  console.log(`  ${paint('Ready to launch! 🚀', 'bold', 'green')}`);
+  line();
+
+  if (selectedMode === 'local') {
+    console.log(`  ${paint('Start command:', 'bold')} ${paint('pnpm dev:local', 'green')}`);
+    console.log(`  ${paint('App URL:', 'bold')}       http://localhost:3000`);
+    console.log(`  ${paint('Register:', 'bold')}      http://localhost:3000/register`);
+    line();
+
+    const startNow = await rl.question(`  Start dev server now? ${paint('[Y/n]', 'dim')} `);
 
     if (startNow.trim().toLowerCase() !== 'n') {
-      console.log();
-      console.log(c('cyan', '  Starting HamaFX-Ai...'));
-      console.log(c('dim', '  Press Ctrl+C to stop'));
-      console.log();
+      line();
+      console.log(`  ${paint('Starting HamaFX-Ai...', 'cyan')}`);
+      console.log(`  ${paint('Press Ctrl+C to stop', 'dim')}`);
+      line();
 
       rl.close();
 
-      // Spawn dev server — inherit stdio so user sees output
       const child = spawn('pnpm', ['dev:local'], {
         cwd: repoRoot,
         stdio: 'inherit',
         env: { ...process.env, HAMAFX_LOCAL_DEV: '1' },
       });
 
-      child.on('exit', (code) => {
-        process.exit(code ?? 0);
-      });
+      child.on('exit', (code) => process.exit(code ?? 0));
     } else {
-      console.log();
-      console.log(c('dim', '  Run this whenever you\'re ready:'));
-      console.log(`  ${c('green', 'pnpm dev:local')}`);
-      console.log();
+      line();
+      console.log(`  ${paint('Run when ready:', 'dim')}`);
+      console.log(`  ${paint('pnpm dev:local', 'green')}`);
+      line();
       rl.close();
     }
   } else {
-    console.log(`  ${c('green', 'docker compose up -d')}`);
-    console.log();
-    console.log(c('dim', '  Then open: http://localhost:3000'));
-    console.log(c('dim', '  Register at: http://localhost:3000/register'));
-    console.log(c('dim', '  Langfuse UI: http://localhost:3001'));
-    console.log();
+    console.log(`  ${paint('Start command:', 'bold')} ${paint('docker compose up -d --build', 'green')}`);
+    console.log(`  ${paint('App URL:', 'bold')}       http://localhost:3000`);
+    console.log(`  ${paint('Langfuse:', 'bold')}      http://localhost:3001`);
+    console.log(`  ${paint('Register:', 'bold')}      http://localhost:3000/register`);
+    line();
 
-    const startNow = await rl.question(`  Start Docker stack now? [Y/n]: `);
+    const startNow = await rl.question(`  Start Docker stack now? ${paint('[Y/n]', 'dim')} `);
 
     if (startNow.trim().toLowerCase() !== 'n') {
-      console.log();
-      console.log(c('cyan', '  Building and starting Docker stack...'));
-      console.log(c('dim', '  First build takes a few minutes. Subsequent starts are faster.'));
-      console.log();
+      line();
+      console.log(`  ${paint('Building & starting Docker stack...', 'cyan')}`);
+      console.log(`  ${paint('First build takes a few minutes...', 'dim')}`);
+      line();
 
       rl.close();
 
@@ -440,31 +777,33 @@ async function main() {
 
       child.on('exit', (code) => {
         if (code === 0) {
-          console.log();
+          line();
           ok('Docker stack is running!');
-          console.log();
-          console.log(`  ${c('bold', 'Web app:')}    http://localhost:3000`);
-          console.log(`  ${c('bold', 'Langfuse:')}   http://localhost:3001`);
-          console.log();
-          console.log(c('dim', '  Logs: docker compose logs -f app'));
-          console.log(c('dim', '  Stop: docker compose down'));
-          console.log();
+          line();
+          console.log(`  ${paint('Web app:', 'bold')}    http://localhost:3000`);
+          console.log(`  ${paint('Langfuse:', 'bold')}   http://localhost:3001`);
+          line();
+          console.log(`  ${paint('Logs:', 'dim')}  docker compose logs -f app`);
+          console.log(`  ${paint('Stop:', 'dim')}  docker compose down`);
+          line();
         } else {
           fail('Docker compose failed. Check the output above.');
         }
         process.exit(code ?? 1);
       });
     } else {
-      console.log();
-      console.log(c('dim', '  Run this whenever you\'re ready:'));
-      console.log(`  ${c('green', 'docker compose up -d --build')}`);
-      console.log();
+      line();
+      console.log(`  ${paint('Run when ready:', 'dim')}`);
+      console.log(`  ${paint('docker compose up -d --build', 'green')}`);
+      line();
       rl.close();
     }
   }
 }
 
 main().catch((err) => {
-  console.error('\n' + c('red', 'Setup failed:'), err.message);
+  if (spinnerActive) stopSpinner();
+  line();
+  fail(`Setup failed: ${err.message}`);
   process.exit(1);
 });
