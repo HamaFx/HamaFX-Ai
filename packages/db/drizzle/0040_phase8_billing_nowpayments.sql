@@ -14,14 +14,17 @@
 DO $$ BEGIN
   CREATE TYPE plan_interval AS ENUM ('monthly', 'quarterly', 'yearly');
 EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+--> statement-breakpoint
 
 DO $$ BEGIN
   CREATE TYPE subscription_status AS ENUM ('trialing', 'active', 'past_due', 'canceled', 'expired');
 EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+--> statement-breakpoint
 
 DO $$ BEGIN
   CREATE TYPE payment_status AS ENUM ('waiting', 'confirming', 'confirmed', 'sending', 'finished', 'failed', 'expired', 'refunded');
 EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+--> statement-breakpoint
 
 -- ── Plans ─────────────────────────────────────────────────────────────────
 
@@ -38,8 +41,10 @@ CREATE TABLE IF NOT EXISTS "plans" (
   "created_at" timestamptz NOT NULL DEFAULT now(),
   "updated_at" timestamptz NOT NULL DEFAULT now()
 );
+--> statement-breakpoint
 
 CREATE INDEX IF NOT EXISTS "plans_name_idx" ON "plans" ("name");
+--> statement-breakpoint
 
 -- ── Subscriptions ─────────────────────────────────────────────────────────
 
@@ -58,9 +63,12 @@ CREATE TABLE IF NOT EXISTS "subscriptions" (
   "created_at" timestamptz NOT NULL DEFAULT now(),
   "updated_at" timestamptz NOT NULL DEFAULT now()
 );
+--> statement-breakpoint
 
 CREATE INDEX IF NOT EXISTS "subscriptions_tenant_idx" ON "subscriptions" ("tenant_id");
+--> statement-breakpoint
 CREATE UNIQUE INDEX IF NOT EXISTS "subscriptions_tenant_active_idx" ON "subscriptions" ("tenant_id", "status");
+--> statement-breakpoint
 
 -- ── Payments ──────────────────────────────────────────────────────────────
 
@@ -80,10 +88,14 @@ CREATE TABLE IF NOT EXISTS "payments" (
   "created_at" timestamptz NOT NULL DEFAULT now(),
   "updated_at" timestamptz NOT NULL DEFAULT now()
 );
+--> statement-breakpoint
 
 CREATE INDEX IF NOT EXISTS "payments_subscription_idx" ON "payments" ("subscription_id");
+--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "payments_tenant_idx" ON "payments" ("tenant_id");
+--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "payments_status_idx" ON "payments" ("status");
+--> statement-breakpoint
 
 -- ── IPN Events (idempotency + audit) ──────────────────────────────────────
 
@@ -98,9 +110,12 @@ CREATE TABLE IF NOT EXISTS "ipn_events" (
   "received_at" timestamptz NOT NULL DEFAULT now(),
   "processed_at" timestamptz
 );
+--> statement-breakpoint
 
 CREATE UNIQUE INDEX IF NOT EXISTS "ipn_events_idempotency_idx" ON "ipn_events" ("nowpayments_payment_id", "payment_status");
+--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "ipn_events_processed_idx" ON "ipn_events" ("processed");
+--> statement-breakpoint
 
 -- ── Updated-at triggers ───────────────────────────────────────────────────
 
@@ -113,18 +128,27 @@ BEGIN
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
+--> statement-breakpoint
 
 DROP TRIGGER IF EXISTS trg_updated_at_plans ON "plans";
+--> statement-breakpoint
 CREATE TRIGGER trg_updated_at_plans
   BEFORE UPDATE ON "plans"
   FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+--> statement-breakpoint
 
 DROP TRIGGER IF EXISTS trg_updated_at_subscriptions ON "subscriptions";
+--> statement-breakpoint
 CREATE TRIGGER trg_updated_at_subscriptions
   BEFORE UPDATE ON "subscriptions"
   FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+--> statement-breakpoint
 
 DROP TRIGGER IF EXISTS trg_updated_at_payments ON "payments";
+--> statement-breakpoint
 CREATE TRIGGER trg_updated_at_payments
   BEFORE UPDATE ON "payments"
   FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+--> statement-breakpoint
+
+

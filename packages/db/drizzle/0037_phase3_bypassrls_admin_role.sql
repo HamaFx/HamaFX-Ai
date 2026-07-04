@@ -26,18 +26,24 @@ BEGIN
   END IF;
 END
 $$;
+--> statement-breakpoint
 
 -- Grant schema + table permissions. The role needs full access to all
 -- tables and sequences in the public schema.
 GRANT USAGE ON SCHEMA public TO hamafx_admin;
+--> statement-breakpoint
 GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO hamafx_admin;
+--> statement-breakpoint
 GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO hamafx_admin;
+--> statement-breakpoint
 
 -- Ensure future tables (created by later migrations) are also accessible.
 ALTER DEFAULT PRIVILEGES IN SCHEMA public
   GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO hamafx_admin;
+--> statement-breakpoint
 ALTER DEFAULT PRIVILEGES IN SCHEMA public
   GRANT USAGE, SELECT ON SEQUENCES TO hamafx_admin;
+--> statement-breakpoint
 
 -- Note: the password for this role must be set out-of-band by the operator:
 --   ALTER ROLE hamafx_admin WITH PASSWORD '<strong-password>';
@@ -45,3 +51,5 @@ ALTER DEFAULT PRIVILEGES IN SCHEMA public
 -- The operator sets it once, then configures ADMIN_DATABASE_URL in the
 -- worker's .env file:
 --   ADMIN_DATABASE_URL=postgresql://hamafx_admin:<password>@<host>:5432/postgres
+
+

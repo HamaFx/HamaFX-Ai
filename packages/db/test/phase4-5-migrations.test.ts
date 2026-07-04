@@ -208,9 +208,11 @@ describe('Phase 5 — Migration System', () => {
 
     for (const file of testFiles) {
       const content = readFileSync(join(HERE, file), 'utf-8');
-      expect(content).toContain(
-        "import { closePGliteDb, getPGliteDb, sanitizeStatement } from '../src/pglite-client'",
-      );
+      // Files should import sanitizeStatement (and optionally executeWithFallback)
+      // from pglite-client rather than duplicating the logic locally.
+      const hasImport = content.includes("from '../src/pglite-client'");
+      const hasSanitizeImport = content.includes('sanitizeStatement');
+      expect(hasImport && hasSanitizeImport).toBe(true);
       // Should NOT contain an inline function definition
       expect(content).not.toMatch(/function\s+sanitize(Statement)?\s*\(/);
     }

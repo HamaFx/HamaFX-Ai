@@ -17,6 +17,7 @@ CREATE TABLE IF NOT EXISTS "organization" (
   "created_at" timestamptz NOT NULL DEFAULT now(),
   "deleted_at" timestamptz
 );
+--> statement-breakpoint
 
 CREATE TABLE IF NOT EXISTS "organization_member" (
   "org_id" text NOT NULL REFERENCES "organization"("id") ON DELETE CASCADE,
@@ -25,8 +26,10 @@ CREATE TABLE IF NOT EXISTS "organization_member" (
   "added_at" timestamptz NOT NULL DEFAULT now(),
   PRIMARY KEY ("org_id", "user_id")
 );
+--> statement-breakpoint
 
 CREATE INDEX IF NOT EXISTS "organization_member_user_idx" ON "organization_member" ("user_id");
+--> statement-breakpoint
 
 -- ── 2. Helper functions ────────────────────────────────────────────────────
 
@@ -39,6 +42,7 @@ BEGIN
   RETURN COALESCE(current_setting('app.current_tenant', true), p_user_id);
 END;
 $$;
+--> statement-breakpoint
 
 CREATE OR REPLACE FUNCTION hamafx_provision_personal_organization()
 RETURNS trigger
@@ -65,12 +69,15 @@ BEGIN
   RETURN NEW;
 END;
 $$;
+--> statement-breakpoint
 
 DROP TRIGGER IF EXISTS hamafx_user_personal_organization_after_insert ON "user";
+--> statement-breakpoint
 CREATE TRIGGER hamafx_user_personal_organization_after_insert
 AFTER INSERT ON "user"
 FOR EACH ROW
 EXECUTE FUNCTION hamafx_provision_personal_organization();
+--> statement-breakpoint
 
 -- ── 3. Backfill personal organizations for existing users ─────────────────
 
@@ -86,11 +93,13 @@ SELECT
   u."deletedAt"
 FROM "user" u
 ON CONFLICT ("id") DO NOTHING;
+--> statement-breakpoint
 
 INSERT INTO "organization_member" ("org_id", "user_id", "role")
 SELECT u."id", u."id", 'owner'
 FROM "user" u
 ON CONFLICT ("org_id", "user_id") DO NOTHING;
+--> statement-breakpoint
 
 -- ── 4. Add tenant_id columns (only where missing) ──────────────────────────
 
@@ -99,27 +108,33 @@ DO $$ BEGIN
     ALTER TABLE "user_settings" ADD COLUMN "tenant_id" text REFERENCES "organization"("id") ON DELETE CASCADE;
   END IF;
 END $$;
+--> statement-breakpoint
 
 DO $$ BEGIN
   IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='chat_threads' AND column_name='tenant_id') THEN
     ALTER TABLE "chat_threads" ADD COLUMN "tenant_id" text REFERENCES "organization"("id") ON DELETE CASCADE;
   END IF;
 END $$;
+--> statement-breakpoint
 
 DO $$ BEGIN
   IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='chat_messages' AND column_name='tenant_id') THEN
     ALTER TABLE "chat_messages" ADD COLUMN "tenant_id" text REFERENCES "organization"("id") ON DELETE CASCADE;
   END IF;
 END $$;
+--> statement-breakpoint
 
 -- ── 5. Backfill tenant_id (set to user_id for personal org) ───────────────-
 
 UPDATE "user_settings" SET "tenant_id" = "user_id" WHERE "tenant_id" IS NULL;
+--> statement-breakpoint
 UPDATE "chat_threads" SET "tenant_id" = "user_id" WHERE "tenant_id" IS NULL;
+--> statement-breakpoint
 UPDATE "chat_messages" cm
 SET "tenant_id" = ct."tenant_id"
 FROM "chat_threads" ct
 WHERE cm."tenant_id" IS NULL AND cm."thread_id" = ct."id";
+--> statement-breakpoint
 
 -- ── 6. Add NOT NULL constraint after backfill (only if column exists) ──────
 
@@ -128,18 +143,21 @@ DO $$ BEGIN
     ALTER TABLE "user_settings" ALTER COLUMN "tenant_id" SET NOT NULL;
   END IF;
 END $$;
+--> statement-breakpoint
 
 DO $$ BEGIN
   IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='chat_threads' AND column_name='tenant_id') THEN
     ALTER TABLE "chat_threads" ALTER COLUMN "tenant_id" SET NOT NULL;
   END IF;
 END $$;
+--> statement-breakpoint
 
 DO $$ BEGIN
   IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='chat_messages' AND column_name='tenant_id') THEN
     ALTER TABLE "chat_messages" ALTER COLUMN "tenant_id" SET NOT NULL;
   END IF;
 END $$;
+--> statement-breakpoint
 
 -- ── 7. Tenant ID auto-set function + triggers ──────────────────────────────
 
@@ -154,6 +172,7 @@ BEGIN
   RETURN NEW;
 END;
 $$;
+--> statement-breakpoint
 
 CREATE OR REPLACE FUNCTION hamafx_set_chat_message_tenant_id()
 RETURNS trigger
@@ -169,6 +188,7 @@ BEGIN
   RETURN NEW;
 END;
 $$;
+--> statement-breakpoint
 
 -- ── 8. Tenant ID auto-set trigger (only if column exists and trigger doesn't) ─
 
@@ -181,6 +201,7 @@ DO $$ BEGIN
     END IF;
   END IF;
 END $$;
+--> statement-breakpoint
 
 DO $$ BEGIN
   IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='chat_threads' AND column_name='tenant_id') THEN
@@ -191,6 +212,7 @@ DO $$ BEGIN
     END IF;
   END IF;
 END $$;
+--> statement-breakpoint
 
 DO $$ BEGIN
   IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='chat_messages' AND column_name='tenant_id') THEN
@@ -201,6 +223,7 @@ DO $$ BEGIN
     END IF;
   END IF;
 END $$;
+--> statement-breakpoint
 
 -- ── 9. Re-create the update_updated_at() function (0039) ────────────────────
 
@@ -225,3 +248,6 @@ BEGIN
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
+--> statement-breakpoint
+
+

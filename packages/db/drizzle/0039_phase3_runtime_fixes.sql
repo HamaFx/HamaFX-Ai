@@ -16,23 +16,36 @@
 -- ── Bug 1: Remove RLS from account and session ──────────────────────────
 
 DROP POLICY IF EXISTS tenant_isolation ON account;
+--> statement-breakpoint
 ALTER TABLE account NO FORCE ROW LEVEL SECURITY;
+--> statement-breakpoint
 ALTER TABLE account DISABLE ROW LEVEL SECURITY;
+--> statement-breakpoint
 
 DROP POLICY IF EXISTS tenant_isolation ON session;
+--> statement-breakpoint
 ALTER TABLE session NO FORCE ROW LEVEL SECURITY;
+--> statement-breakpoint
 ALTER TABLE session DISABLE ROW LEVEL SECURITY;
+--> statement-breakpoint
 
 -- ── Bug 2: Fix update_updated_at() for camelCase columns ───────────────
 
 -- Drop the existing trigger function and all triggers that use it
 DROP TRIGGER IF EXISTS trg_updated_at_user ON "user";
+--> statement-breakpoint
 DROP TRIGGER IF EXISTS trg_updated_at_user_settings ON "user_settings";
+--> statement-breakpoint
 DROP TRIGGER IF EXISTS trg_updated_at_chat_threads ON "chat_threads";
+--> statement-breakpoint
 DROP TRIGGER IF EXISTS trg_updated_at_journal_entries ON "journal_entries";
+--> statement-breakpoint
 DROP TRIGGER IF EXISTS trg_updated_at_portfolio_positions ON "portfolio_positions";
+--> statement-breakpoint
 DROP TRIGGER IF EXISTS trg_updated_at_portfolio_settings ON "portfolio_settings";
+--> statement-breakpoint
 DROP TRIGGER IF EXISTS trg_updated_at_decision_signals ON "decision_signals";
+--> statement-breakpoint
 
 -- Replace with a column-name-agnostic version that works for both
 -- snake_case (updated_at) and camelCase (updatedAt) columns.
@@ -45,12 +58,14 @@ BEGIN
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
+--> statement-breakpoint
 
 -- Actually, use a simpler approach: check TG_TABLE_NAME and set the right column.
 -- PostgreSQL doesn't allow dynamic column access in plpgsql easily, so we use
 -- a per-table trigger function approach instead.
 
 DROP FUNCTION update_updated_at();
+--> statement-breakpoint
 
 -- Generic function that tries updated_at first, falls back to updatedAt
 CREATE OR REPLACE FUNCTION update_updated_at()
@@ -74,32 +89,42 @@ BEGIN
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
+--> statement-breakpoint
 
 -- Recreate all triggers
 CREATE TRIGGER trg_updated_at_user
   BEFORE UPDATE ON "user"
   FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+--> statement-breakpoint
 
 CREATE TRIGGER trg_updated_at_user_settings
   BEFORE UPDATE ON "user_settings"
   FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+--> statement-breakpoint
 
 CREATE TRIGGER trg_updated_at_chat_threads
   BEFORE UPDATE ON "chat_threads"
   FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+--> statement-breakpoint
 
 CREATE TRIGGER trg_updated_at_journal_entries
   BEFORE UPDATE ON "journal_entries"
   FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+--> statement-breakpoint
 
 CREATE TRIGGER trg_updated_at_portfolio_positions
   BEFORE UPDATE ON "portfolio_positions"
   FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+--> statement-breakpoint
 
 CREATE TRIGGER trg_updated_at_portfolio_settings
   BEFORE UPDATE ON "portfolio_settings"
   FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+--> statement-breakpoint
 
 CREATE TRIGGER trg_updated_at_decision_signals
   BEFORE UPDATE ON "decision_signals"
   FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+--> statement-breakpoint
+
+

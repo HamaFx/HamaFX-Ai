@@ -36,181 +36,256 @@
 -- ── Direct tenant tables (have both user_id and tenant_id) ──────────────
 
 ALTER TABLE agent_opinions ENABLE ROW LEVEL SECURITY;
+--> statement-breakpoint
 ALTER TABLE agent_opinions FORCE ROW LEVEL SECURITY;
+--> statement-breakpoint
 CREATE POLICY tenant_isolation ON agent_opinions
   FOR ALL
   USING (tenant_id = current_setting('app.current_tenant', true))
   WITH CHECK (tenant_id = current_setting('app.current_tenant', true));
+--> statement-breakpoint
 
 ALTER TABLE alerts ENABLE ROW LEVEL SECURITY;
+--> statement-breakpoint
 ALTER TABLE alerts FORCE ROW LEVEL SECURITY;
+--> statement-breakpoint
 CREATE POLICY tenant_isolation ON alerts
   FOR ALL
   USING (tenant_id = current_setting('app.current_tenant', true))
   WITH CHECK (tenant_id = current_setting('app.current_tenant', true));
+--> statement-breakpoint
 
 ALTER TABLE audit_logs ENABLE ROW LEVEL SECURITY;
+--> statement-breakpoint
 ALTER TABLE audit_logs FORCE ROW LEVEL SECURITY;
+--> statement-breakpoint
 CREATE POLICY tenant_isolation ON audit_logs
   FOR ALL
   USING (tenant_id = current_setting('app.current_tenant', true))
   WITH CHECK (tenant_id = current_setting('app.current_tenant', true));
+--> statement-breakpoint
 
 ALTER TABLE bot_links ENABLE ROW LEVEL SECURITY;
+--> statement-breakpoint
 ALTER TABLE bot_links FORCE ROW LEVEL SECURITY;
+--> statement-breakpoint
 CREATE POLICY tenant_isolation ON bot_links
   FOR ALL
   USING (tenant_id = current_setting('app.current_tenant', true))
   WITH CHECK (tenant_id = current_setting('app.current_tenant', true));
+--> statement-breakpoint
 
 ALTER TABLE briefings_emitted ENABLE ROW LEVEL SECURITY;
+--> statement-breakpoint
 ALTER TABLE briefings_emitted FORCE ROW LEVEL SECURITY;
+--> statement-breakpoint
 CREATE POLICY tenant_isolation ON briefings_emitted
   FOR ALL
   USING (tenant_id = current_setting('app.current_tenant', true))
   WITH CHECK (tenant_id = current_setting('app.current_tenant', true));
+--> statement-breakpoint
 
 ALTER TABLE chat_telemetry ENABLE ROW LEVEL SECURITY;
+--> statement-breakpoint
 ALTER TABLE chat_telemetry FORCE ROW LEVEL SECURITY;
+--> statement-breakpoint
 CREATE POLICY tenant_isolation ON chat_telemetry
   FOR ALL
   USING (tenant_id = current_setting('app.current_tenant', true))
   WITH CHECK (tenant_id = current_setting('app.current_tenant', true));
+--> statement-breakpoint
 
 ALTER TABLE chat_threads ENABLE ROW LEVEL SECURITY;
+--> statement-breakpoint
 ALTER TABLE chat_threads FORCE ROW LEVEL SECURITY;
+--> statement-breakpoint
 CREATE POLICY tenant_isolation ON chat_threads
   FOR ALL
   USING (tenant_id = current_setting('app.current_tenant', true))
   WITH CHECK (tenant_id = current_setting('app.current_tenant', true));
+--> statement-breakpoint
 
 ALTER TABLE chat_tool_telemetry ENABLE ROW LEVEL SECURITY;
+--> statement-breakpoint
 ALTER TABLE chat_tool_telemetry FORCE ROW LEVEL SECURITY;
+--> statement-breakpoint
 CREATE POLICY tenant_isolation ON chat_tool_telemetry
   FOR ALL
   USING (tenant_id = current_setting('app.current_tenant', true))
   WITH CHECK (tenant_id = current_setting('app.current_tenant', true));
+--> statement-breakpoint
 
 ALTER TABLE daily_ai_spend ENABLE ROW LEVEL SECURITY;
+--> statement-breakpoint
 ALTER TABLE daily_ai_spend FORCE ROW LEVEL SECURITY;
+--> statement-breakpoint
 CREATE POLICY tenant_isolation ON daily_ai_spend
   FOR ALL
   USING (tenant_id = current_setting('app.current_tenant', true))
   WITH CHECK (tenant_id = current_setting('app.current_tenant', true));
+--> statement-breakpoint
 
 ALTER TABLE decision_signal_feedback ENABLE ROW LEVEL SECURITY;
+--> statement-breakpoint
 ALTER TABLE decision_signal_feedback FORCE ROW LEVEL SECURITY;
+--> statement-breakpoint
 CREATE POLICY tenant_isolation ON decision_signal_feedback
   FOR ALL
   USING (tenant_id = current_setting('app.current_tenant', true))
   WITH CHECK (tenant_id = current_setting('app.current_tenant', true));
+--> statement-breakpoint
 
 ALTER TABLE decision_signals ENABLE ROW LEVEL SECURITY;
+--> statement-breakpoint
 ALTER TABLE decision_signals FORCE ROW LEVEL SECURITY;
+--> statement-breakpoint
 CREATE POLICY tenant_isolation ON decision_signals
   FOR ALL
   USING (tenant_id = current_setting('app.current_tenant', true))
   WITH CHECK (tenant_id = current_setting('app.current_tenant', true));
+--> statement-breakpoint
 
 ALTER TABLE journal_entries ENABLE ROW LEVEL SECURITY;
+--> statement-breakpoint
 ALTER TABLE journal_entries FORCE ROW LEVEL SECURITY;
+--> statement-breakpoint
 CREATE POLICY tenant_isolation ON journal_entries
   FOR ALL
   USING (tenant_id = current_setting('app.current_tenant', true))
   WITH CHECK (tenant_id = current_setting('app.current_tenant', true));
+--> statement-breakpoint
 
 ALTER TABLE memory_embeddings ENABLE ROW LEVEL SECURITY;
+--> statement-breakpoint
 ALTER TABLE memory_embeddings FORCE ROW LEVEL SECURITY;
+--> statement-breakpoint
 CREATE POLICY tenant_isolation ON memory_embeddings
   FOR ALL
   USING (tenant_id = current_setting('app.current_tenant', true))
   WITH CHECK (tenant_id = current_setting('app.current_tenant', true));
+--> statement-breakpoint
 
 ALTER TABLE notification_noise_state ENABLE ROW LEVEL SECURITY;
+--> statement-breakpoint
 ALTER TABLE notification_noise_state FORCE ROW LEVEL SECURITY;
+--> statement-breakpoint
 CREATE POLICY tenant_isolation ON notification_noise_state
   FOR ALL
   USING (tenant_id = current_setting('app.current_tenant', true))
   WITH CHECK (tenant_id = current_setting('app.current_tenant', true));
+--> statement-breakpoint
 
 ALTER TABLE portfolio_positions ENABLE ROW LEVEL SECURITY;
+--> statement-breakpoint
 ALTER TABLE portfolio_positions FORCE ROW LEVEL SECURITY;
+--> statement-breakpoint
 CREATE POLICY tenant_isolation ON portfolio_positions
   FOR ALL
   USING (tenant_id = current_setting('app.current_tenant', true))
   WITH CHECK (tenant_id = current_setting('app.current_tenant', true));
+--> statement-breakpoint
 
 ALTER TABLE portfolio_settings ENABLE ROW LEVEL SECURITY;
+--> statement-breakpoint
 ALTER TABLE portfolio_settings FORCE ROW LEVEL SECURITY;
+--> statement-breakpoint
 CREATE POLICY tenant_isolation ON portfolio_settings
   FOR ALL
   USING (tenant_id = current_setting('app.current_tenant', true))
   WITH CHECK (tenant_id = current_setting('app.current_tenant', true));
+--> statement-breakpoint
 
 ALTER TABLE provider_tests ENABLE ROW LEVEL SECURITY;
+--> statement-breakpoint
 ALTER TABLE provider_tests FORCE ROW LEVEL SECURITY;
+--> statement-breakpoint
 CREATE POLICY tenant_isolation ON provider_tests
   FOR ALL
   USING (tenant_id = current_setting('app.current_tenant', true))
   WITH CHECK (tenant_id = current_setting('app.current_tenant', true));
+--> statement-breakpoint
 
 ALTER TABLE push_subscriptions ENABLE ROW LEVEL SECURITY;
+--> statement-breakpoint
 ALTER TABLE push_subscriptions FORCE ROW LEVEL SECURITY;
+--> statement-breakpoint
 CREATE POLICY tenant_isolation ON push_subscriptions
   FOR ALL
   USING (tenant_id = current_setting('app.current_tenant', true))
   WITH CHECK (tenant_id = current_setting('app.current_tenant', true));
+--> statement-breakpoint
 
 ALTER TABLE rate_limits ENABLE ROW LEVEL SECURITY;
+--> statement-breakpoint
 ALTER TABLE rate_limits FORCE ROW LEVEL SECURITY;
+--> statement-breakpoint
 CREATE POLICY tenant_isolation ON rate_limits
   FOR ALL
   USING (tenant_id = current_setting('app.current_tenant', true))
   WITH CHECK (tenant_id = current_setting('app.current_tenant', true));
+--> statement-breakpoint
 
 ALTER TABLE shared_snapshots ENABLE ROW LEVEL SECURITY;
+--> statement-breakpoint
 ALTER TABLE shared_snapshots FORCE ROW LEVEL SECURITY;
+--> statement-breakpoint
 CREATE POLICY tenant_isolation ON shared_snapshots
   FOR ALL
   USING (tenant_id = current_setting('app.current_tenant', true))
   WITH CHECK (tenant_id = current_setting('app.current_tenant', true));
+--> statement-breakpoint
 
 ALTER TABLE user_sessions ENABLE ROW LEVEL SECURITY;
+--> statement-breakpoint
 ALTER TABLE user_sessions FORCE ROW LEVEL SECURITY;
+--> statement-breakpoint
 CREATE POLICY tenant_isolation ON user_sessions
   FOR ALL
   USING (tenant_id = current_setting('app.current_tenant', true))
   WITH CHECK (tenant_id = current_setting('app.current_tenant', true));
+--> statement-breakpoint
 
 ALTER TABLE user_settings ENABLE ROW LEVEL SECURITY;
+--> statement-breakpoint
 ALTER TABLE user_settings FORCE ROW LEVEL SECURITY;
+--> statement-breakpoint
 CREATE POLICY tenant_isolation ON user_settings
   FOR ALL
   USING (tenant_id = current_setting('app.current_tenant', true))
   WITH CHECK (tenant_id = current_setting('app.current_tenant', true));
+--> statement-breakpoint
 
 ALTER TABLE user_symbols ENABLE ROW LEVEL SECURITY;
+--> statement-breakpoint
 ALTER TABLE user_symbols FORCE ROW LEVEL SECURITY;
+--> statement-breakpoint
 CREATE POLICY tenant_isolation ON user_symbols
   FOR ALL
   USING (tenant_id = current_setting('app.current_tenant', true))
   WITH CHECK (tenant_id = current_setting('app.current_tenant', true));
+--> statement-breakpoint
 
 -- ── F3 child tables (have tenant_id via denormalization, no direct user_id) ──
 
 ALTER TABLE chat_messages ENABLE ROW LEVEL SECURITY;
+--> statement-breakpoint
 ALTER TABLE chat_messages FORCE ROW LEVEL SECURITY;
+--> statement-breakpoint
 CREATE POLICY tenant_isolation ON chat_messages
   FOR ALL
   USING (tenant_id = current_setting('app.current_tenant', true))
   WITH CHECK (tenant_id = current_setting('app.current_tenant', true));
+--> statement-breakpoint
 
 ALTER TABLE decision_signal_outcomes ENABLE ROW LEVEL SECURITY;
+--> statement-breakpoint
 ALTER TABLE decision_signal_outcomes FORCE ROW LEVEL SECURITY;
+--> statement-breakpoint
 CREATE POLICY tenant_isolation ON decision_signal_outcomes
   FOR ALL
   USING (tenant_id = current_setting('app.current_tenant', true))
   WITH CHECK (tenant_id = current_setting('app.current_tenant', true));
+--> statement-breakpoint
 
 -- ── NextAuth tables (have user_id + tenant_id) ──────────────────────────
 -- account and session are NextAuth adapter tables. They have tenant_id
@@ -218,18 +293,24 @@ CREATE POLICY tenant_isolation ON decision_signal_outcomes
 -- tenant-scoped too.
 
 ALTER TABLE account ENABLE ROW LEVEL SECURITY;
+--> statement-breakpoint
 ALTER TABLE account FORCE ROW LEVEL SECURITY;
+--> statement-breakpoint
 CREATE POLICY tenant_isolation ON account
   FOR ALL
   USING (tenant_id = current_setting('app.current_tenant', true))
   WITH CHECK (tenant_id = current_setting('app.current_tenant', true));
+--> statement-breakpoint
 
 ALTER TABLE session ENABLE ROW LEVEL SECURITY;
+--> statement-breakpoint
 ALTER TABLE session FORCE ROW LEVEL SECURITY;
+--> statement-breakpoint
 CREATE POLICY tenant_isolation ON session
   FOR ALL
   USING (tenant_id = current_setting('app.current_tenant', true))
   WITH CHECK (tenant_id = current_setting('app.current_tenant', true));
+--> statement-breakpoint
 
 -- ── Tables NOT getting RLS (global/shared) ──────────────────────────────
 -- These tables are intentionally NOT RLS-protected because they contain
@@ -239,3 +320,5 @@ CREATE POLICY tenant_isolation ON session
 --   provider_throttle, cron_runs, verificationToken, organization,
 --   organization_member, user (the users table itself — RLS would be
 --   circular since the tenant_id on user is the user's own org membership)
+
+

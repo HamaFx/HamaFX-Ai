@@ -29,7 +29,7 @@ import { fileURLToPath } from 'node:url';
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { closePGliteDb, getPGliteDb, sanitizeStatement } from '../src/pglite-client';
+import { closePGliteDb, getPGliteDb, executeWithFallback, sanitizeStatement } from '../src/pglite-client';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const DRIZZLE_DIR = join(HERE, '..', 'drizzle');
@@ -58,7 +58,7 @@ async function applyOne(
     if (!trimmed) continue;
     const safe = sanitizeStatement(trimmed);
     if (!safe.trim() || safe.trim().startsWith('--')) continue;
-    await db.execute(safe);
+    await executeWithFallback(db, safe);
   }
 }
 

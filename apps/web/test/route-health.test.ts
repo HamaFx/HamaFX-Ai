@@ -83,21 +83,28 @@ describe('GET /api/health', () => {
     mockDbExecute.mockResolvedValue([]);
 
     const response = await GET(MOCK_REQ, { params: Promise.resolve(undefined as never) });
-    expect(response.status).toBe(200);
+    expect(response.status).toBe(503);
 
     const body = await response.json();
+    expect(body.status).toBe('error');
     expect(body.checks.pgvector.ok).toBe(false);
     expect(body.checks.pgvector.message).toContain('pgvector extension not installed');
+    expect(body.checks.db.ok).toBe(true);
+    expect(body.checks.env.ok).toBe(true);
   });
 
   it('gracefully handles missing cron_runs table', async () => {
     mockDbExecute.mockResolvedValue([]);
 
     const response = await GET(MOCK_REQ, { params: Promise.resolve(undefined as never) });
-    expect(response.status).toBe(200);
+    expect(response.status).toBe(503);
 
     const body = await response.json();
+    expect(body.status).toBe('error');
     expect(body.checks.cron.ok).toBe(true);
     expect(body.checks.cron.message).toContain('cron_runs unavailable');
+    expect(body.checks.db.ok).toBe(true);
+    expect(body.checks.env.ok).toBe(true);
+    expect(body.checks.pgvector.ok).toBe(false);
   });
 });

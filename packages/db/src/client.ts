@@ -120,8 +120,9 @@ export function getDb(): DbClient {
   //
   // TLS hardening (Phase 3 Session B): when SUPABASE_CA_CERT is present we verify
   // the server certificate with rejectUnauthorized=true. Until that cert is wired in,
-  // we keep the legacy rejectUnauthorized=false fallback so existing deployments do
-  // not break mid-rollout.
+  // we keep the legacy rejectUnauthorized=false fallback (accepting self-signed certs
+  // and connections without a CA bundle) so existing deployments do not break
+  // mid-rollout.
   _sql = postgres(url, {
     prepare: false,
     max: resolvePoolMax(),

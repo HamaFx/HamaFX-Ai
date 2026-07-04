@@ -67,18 +67,18 @@ describe('assertSupportedSymbol', () => {
   });
 
   it('throws ProviderError for any unsupported instrument', () => {
-    expect(() => assertSupportedSymbol('USDJPY')).toThrow(ProviderError);
     expect(() => assertSupportedSymbol('BTCUSD')).toThrow(ProviderError);
     expect(() => assertSupportedSymbol('GARAN')).toThrow(ProviderError);
+    expect(() => assertSupportedSymbol('ZZZZZZ')).toThrow(ProviderError);
   });
 
   it('error message names the offender so debugging is fast', () => {
     try {
-      assertSupportedSymbol('USDJPY');
+      assertSupportedSymbol('ZZZZZZ');
     } catch (err) {
       const e = err as ProviderError;
       expect(e.provider).toBe('biquote');
-      expect(e.message).toContain('USDJPY');
+      expect(e.message).toContain('ZZZZZZ');
     }
   });
 });

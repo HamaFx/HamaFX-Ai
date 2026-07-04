@@ -106,7 +106,7 @@ describe('biquote fetchTick', () => {
     const fetchSpy = vi.fn();
     globalThis.fetch = fetchSpy as unknown as typeof fetch;
 
-    await expect(fetchTick('USDJPY' as unknown as 'XAUUSD')).rejects.toThrow(/unsupported symbol/);
+    await expect(fetchTick('GARAN' as unknown as 'XAUUSD')).rejects.toThrow(/unsupported symbol/);
     expect(fetchSpy).not.toHaveBeenCalled();
   });
 
@@ -250,7 +250,7 @@ describe('biquote fetchOhlc', () => {
     ).rejects.toMatchObject({ code: 'PROVIDER_HTTP_ERROR' });
   });
 
-  it('caps `count` at 2000 to match the documented BiQuote limit', async () => {
+  it('caps `count` at 1000 to match the documented BiQuote limit', async () => {
     const fetchSpy = vi
       .fn()
       .mockResolvedValue(jsonResponse(ohlcEnvelope([bar('2026-05-27T18:00:00Z')])));
@@ -258,7 +258,7 @@ describe('biquote fetchOhlc', () => {
 
     await fetchOhlc({ symbol: 'XAUUSD', tf: '1m', count: 99999 });
     const url = String(fetchSpy.mock.calls[0]?.[0]);
-    expect(url).toContain('limit=2000');
+    expect(url).toContain('limit=1000');
   });
 });
 
