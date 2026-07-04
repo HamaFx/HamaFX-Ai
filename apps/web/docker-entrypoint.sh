@@ -12,7 +12,7 @@ if [ -n "$DATABASE_URL" ]; then
   PG_PORT=$(echo "$DATABASE_URL" | sed -n 's|.*:\([0-9]*\)/.*|\1|p')
   PG_PORT=${PG_PORT:-5432}
 
-  until curl -s "http://${PG_HOST}:${PG_PORT}" >/dev/null 2>&1 || nc -z "$PG_HOST" "$PG_PORT" 2>/dev/null; do
+  until pg_isready -h "$PG_HOST" -p "$PG_PORT" >/dev/null 2>&1; do
     echo "  still waiting..."
     sleep 2
   done

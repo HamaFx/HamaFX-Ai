@@ -12,7 +12,7 @@ A lightweight GCE `e2-small` instance that fires all cron endpoints on schedule 
 | Machine type | `e2-medium` (2 vCPU, 4 GB RAM) |
 | OS | Ubuntu 24.04 LTS Minimal |
 | Disk | 10 GB pd-standard |
-| External IP | Ephemeral (check `gcloud compute instances describe hamafx-cron --zone=us-central1-a --format='get(networkInterfaces[0].accessConfigs[0].natIP)'`) |
+| External IP | Static (reserved via `gcloud compute addresses`) — see [Static IP](#static-ip) below |
 | Monthly cost | ~$15-17 (e2-medium in us-central1, sustained use discount) |
 
 ## Schedule
@@ -133,6 +133,64 @@ into `/opt/hamafx/.env`. The nightly `hamafx-backup-db.timer` and
 ## Disaster recovery
 
 Concrete restore commands live in `infra/cron-vm/RECOVERY.md`.
+
+## Static IP
+
+The VM should use a **static external IP** so that:
+
+- Outbound API calls (Vercel cron endpoints, healthchecks.io) come from a
+  stable address — useful for allowlisting on upstream firewalls.
+- If you ever need inbound access (SSH from a restricted IP range, a
+  webhook receiver), the address doesn't change on reboot.
+
+```bash
+# Reserve a static IP (one-time)
+gcloud compute addresses create hamafx-cron-ip \
+  --region=us-central1 --project=hamafx-78845
+
+# Attach it to the VM (requires the VM to be stopped briefly)
+gcloud compute instances stop hamafx-cron --zone=us-central1-a --project=hamafx-78845
+gcloud compute instances describe hamafx-cron \
+  --zone=us-central1-a --project=hamafx-78845 \
+  --format='get(networkInterfaces[0].accessConfigs[0].natIP)'
+gcloud compute instances add-access-config hamafx-cron \
+  --zone=us-central1-a --project=hamafx-78845 \
+  --address=<RESERVED_IP> --network-tier=PREMIUM
+gcloud compute instances start hamafx-cron --zone=us-central1-a --project=hamafx-78845
+```
+
+Cost: ~$3-4/month for a static IP attached to a running instance (free
+while the instance is running, charged only when the IP is reserved but
+unattached).
+
+## Backup security
+
+The nightly `pg_dump` and journal JSON exports land in a single GCS
+bucket (`gs://hamafx-backups-*`). To protect against accidental or
+malicious deletion if the VM is compromised:
+
+1. **Enable GCS bucket versioning** so deleted objects can be restored:
+   ```bash
+   gcloud storage buckets update gs://hamafx-backups-hamafx-78845 \
+     --versioning
+   ```
+
+2. **Add a retention lock** on the `db/` prefix so backups can't be
+   deleted before the 30-day retention window expires:
+   ```bash
+   # Requires the bucket to have retention policy enabled
+   gcloud storage buckets update gs://hamafx-backups-hamafx-78845 \
+     --retention-period=30d
+   ```
+
+3. **Back up `/opt/hamafx/.env`** off the VM. If the VM is lost, all
+   secrets (DATABASE_URL, CRON_SECRET, HC_* UUIDs, GCS bucket name)
+   must be manually restored. Store a copy in GCP Secret Manager or a
+   separate secure location:
+   ```bash
+   gcloud secrets create hamafx-vm-env --replication-policy=automatic
+   gcloud secrets versions add hamafx-vm-env --data-file=/opt/hamafx/.env
+   ```
 
 ## Teardown
 

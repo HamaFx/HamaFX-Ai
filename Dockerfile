@@ -36,7 +36,7 @@ RUN pnpm turbo run build --filter=@hamafx/web...
 # ── Runner ────────────────────────────────────────────────
 FROM base AS runner
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    curl ca-certificates \
+    curl ca-certificates postgresql-client \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy Next.js standalone output

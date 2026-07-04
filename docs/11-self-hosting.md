@@ -43,7 +43,8 @@ GOOGLE_GENERATIVE_AI_API_KEY="your_gemini_key"
 ## 2. Start the Stack
 
 ```bash
-docker compose -f docker-compose.prod.yml up -d
+./docker/init-secrets.sh
+docker compose up -d
 ```
 
 Docker will build the Next.js `app` and the `worker` containers. Once running, access the application at **http://localhost:3000**.
@@ -69,14 +70,14 @@ Docker will build the Next.js `app` and the `worker` containers. Once running, a
 ```bash
 cd HamaFX-Ai
 git pull origin main
-docker compose -f docker-compose.prod.yml up -d --build
+docker compose up -d --build
 ```
 
 Drizzle schema migrations are applied automatically when the `app` container starts.
 
 ## 4. Security & Reverse Proxy
 
-The `docker-compose.prod.yml` binds ports 3000 (web) and 3001 (Langfuse) to `localhost` by default. For internet-facing deployments, put the stack behind a reverse proxy with SSL termination:
+The `docker-compose.yml` binds ports 3000 (web) and 3001 (Langfuse) to `localhost` by default. For internet-facing deployments, put the stack behind a reverse proxy with SSL termination:
 
 ### Caddy Example
 
@@ -125,7 +126,7 @@ See [13-first-run-setup.md](./13-first-run-setup.md) for detailed first-run info
 | Symptom | Likely cause | Fix |
 |---------|-------------|-----|
 | `Invalid environment configuration: AUTH_SECRET must be at least 32 chars` | Secret not set or too short | Generate with `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"` |
-| `relation does not exist` on first boot | Migrations didn't run | `docker compose -f docker-compose.prod.yml restart app` |
+| `relation does not exist` on first boot | Migrations didn't run | `docker compose restart app` |
 | Worker can't connect to SignalR | BiQuote endpoint unreachable | Set `BIQUOTE_BASE_URL` in `.env` (BiQuote is keyless) |
 | `Daily AI budget exceeded` | Hit the spending cap | Wait until UTC midnight or raise `MAX_DAILY_USD` |
 | Encrypted BYOK keys unreadable after restart | `ENCRYPTION_SECRET` changed | Restore the original secret or re-enter API keys in Settings |

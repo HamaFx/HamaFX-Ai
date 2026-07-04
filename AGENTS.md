@@ -42,7 +42,8 @@ pnpm dev:local              # http://localhost:3000
 pnpm dev                    # starts web only (turbo run dev)
 
 # Docker (full features, pgvector included)
-docker compose -f docker-compose.prod.yml up -d
+./docker/init-secrets.sh
+docker compose up -d
 
 # Testing
 pnpm turbo run test -- --run    # all packages
@@ -136,7 +137,7 @@ For fundamental/technical turns: cheap model generates JSON plan, persisted as s
 
 ### 7. Deployment Modes
 - **Local native**: PGlite (embedded Postgres), zero setup, `pnpm dev:local`
-- **Local Docker**: Postgres 16 + pgvector, `docker compose -f docker-compose.prod.yml up -d`
+- **Local Docker**: Postgres 16 + pgvector, `./docker/init-secrets.sh && docker compose up -d`
 - **Production**: Vercel (web) + GCE VM (worker), systemd timers
 
 ## File Naming Conventions

@@ -111,14 +111,10 @@ pnpm dev:local
 ```bash
 git clone https://github.com/HamaFx/HamaFX-Ai.git
 cd HamaFX-Ai
-cp .env.example .env
+# Generate random secrets (creates .env with cryptographically secure values)
+./docker/init-secrets.sh
 
-# Generate required secrets
-node -e "console.log('AUTH_SECRET=' + require('crypto').randomBytes(32).toString('hex'))"
-node -e "console.log('ENCRYPTION_SECRET=' + require('crypto').randomBytes(32).toString('hex'))"
-node -e "console.log('CRON_SECRET=' + require('crypto').randomBytes(16).toString('hex'))"
-
-# Fill in .env with the generated secrets + at least one AI provider key
+# Add your AI provider keys to .env (at least one is required)
 nano .env
 
 # Start all services (Postgres 16 + pgvector, Langfuse, web app, worker)

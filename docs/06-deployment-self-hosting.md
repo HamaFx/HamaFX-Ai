@@ -237,12 +237,13 @@ From `docker-compose.yml`:
 | `app` | 1GB | 1.0 |
 | `worker` | 512MB | 0.5 |
 
-### 3.4 Docker Compose Prod
+### 3.4 Docker Compose
 
-`docker-compose.prod.yml` — alternative compose file for production-like Docker deployment (web + worker only, expects external DB):
+`docker-compose.yml` — single compose file for both development and production Docker deployment (web + worker + Postgres + Langfuse):
 
 ```bash
-docker compose -f docker-compose.prod.yml up -d
+./docker/init-secrets.sh    # generates .env with random secrets
+docker compose up -d
 ```
 
 ### 3.5 Langfuse (Optional)

@@ -68,7 +68,7 @@ You can return to any step via Settings. The wizard never blocks — the chat wo
 
 ## Docker / Production Paths
 
-- **Docker compose** (`docker compose -f docker-compose.prod.yml up -d`):
+- **Docker compose** (`./docker/init-secrets.sh && docker compose up -d`):
   Postgres 16 + pgvector + the app. Follow the env file instructions in the compose file. pgvector requires this mode — PGlite doesn't ship the vector extension. See [11-self-hosting.md](./11-self-hosting.md).
 
 - **Cloud** (Vercel + GCE VM): see [08-deployment.md](./08-deployment.md). All three secrets must be set in Vercel's dashboard; the VM reads from `/opt/hamafx/.env` on disk.

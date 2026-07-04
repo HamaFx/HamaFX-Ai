@@ -107,6 +107,12 @@ if (!url) {
 
 console.log('[predeploy-migrate] Using %s — %s', urlName, redactUrl(url));
 
+if (urlName === 'DATABASE_URL' || urlName === 'POSTGRES_URL') {
+  console.warn('[predeploy-migrate] WARNING: %s may be a pooled connection (e.g. PgBouncer).', urlName);
+  console.warn('[predeploy-migrate] DDL through a pooler can fail or hang. Set DIRECT_URL or');
+  console.warn('[predeploy-migrate] POSTGRES_URL_NON_POOLING for reliable migrations.');
+}
+
 // Sanity-check the migrations directory actually exists. If we
 // ever move it, this fails loud rather than silently doing
 // nothing useful.

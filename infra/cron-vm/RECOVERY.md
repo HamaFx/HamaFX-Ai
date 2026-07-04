@@ -153,7 +153,11 @@ gcloud compute ssh hamafx-cron --zone=us-central1-a --project=$PROJECT_ID \
   --command="sudo bash /tmp/hamafx-cron/setup.sh"
 
 # 4. Restore /opt/hamafx/.env with all secrets (CRON_SECRET, DATABASE_URL,
-#    GCS_BACKUP_BUCKET, every HC_* UUID). Re-deploy worker code:
+#    GCS_BACKUP_BUCKET, every HC_* UUID). If you stored it in GCP Secret
+#    Manager (see README.md → Backup security), retrieve it:
+#      gcloud secrets versions access latest --secret=hamafx-vm-env > /opt/hamafx/.env
+#      chmod 600 /opt/hamafx/.env
+#    Re-deploy worker code:
 gcloud compute ssh hamafx-cron --zone=us-central1-a --project=$PROJECT_ID \
   --command="sudo -u hamafx git clone https://github.com/HamaFx/HamaFX-Ai.git /opt/hamafx/app \
     && sudo -u hamafx pnpm -C /opt/hamafx/app install --frozen-lockfile \
