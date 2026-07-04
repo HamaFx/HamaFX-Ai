@@ -18,25 +18,23 @@
 /**
  * scripts/setup.mjs — Interactive first-run setup wizard for HamaFX-Ai.
  *
- * Features:
- *   - Animated ASCII art banner with gradient colors
- *   - Prerequisite checks with version validation
- *   - Mode selection (Local Dev vs Docker) with feature comparison
- *   - Multi-provider AI key collection (Google Gemini, Vercel AI Gateway,
- *     Google Vertex AI, OpenAI, Anthropic, Groq, OpenRouter)
- *   - Optional market data provider keys
- *   - Key validation (length, format hints)
- *   - Automatic secret generation
- *   - Dependency installation with spinner
- *   - Pre-start summary review
- *   - Graceful Ctrl+C handling
- *   - Colored, box-drawing UI throughout
+ * HamaFX-Ai uses BYOK (Bring Your Own Key): each user adds their own AI
+ * provider API key via the in-app Settings → API Keys page after
+ * registration. No server-level AI keys are required to boot the app.
+ *
+ * This wizard:
+ *   1. Checks prerequisites (Node, pnpm, Git, Docker)
+ *   2. Helps choose a setup mode (Local Dev vs Docker)
+ *   3. Explains the BYOK model and lists supported providers
+ *   4. Collects optional market data provider keys (env-level)
+ *   5. Generates secrets & writes config (BYOK_ENABLED=1)
+ *   6. Installs dependencies and offers to start the app
  *
  * Usage:  pnpm setup   (or: node scripts/setup.mjs)
  */
 
 import { execSync, spawn } from 'node:child_process';
-import { existsSync, writeFileSync, readFileSync, appendFileSync, statSync } from 'node:fs';
+import { existsSync, writeFileSync, readFileSync, appendFileSync } from 'node:fs';
 import { createInterface } from 'node:readline/promises';
 import { stdin, stdout } from 'node:process';
 import { resolve, dirname } from 'node:path';
@@ -56,7 +54,6 @@ const C = {
   dim: '\x1b[2m',
   italic: '\x1b[3m',
   underline: '\x1b[4m',
-  blink: '\x1b[5m',
   red: '\x1b[31m',
   green: '\x1b[32m',
   yellow: '\x1b[33m',
@@ -85,7 +82,6 @@ function paint(text, ...colors) {
 }
 
 function line(text = '') { console.log(text); }
-function p(text) { console.log(text); }
 function ok(msg) { console.log(`  ${paint('✓', 'green')} ${msg}`); }
 function warn(msg) { console.log(`  ${paint('⚠', 'yellow')} ${msg}`); }
 function fail(msg) { console.log(`  ${paint('✗', 'red')} ${msg}`); }
@@ -119,6 +115,10 @@ function stopSpinner(successMsg = null) {
 
 // ── Box drawing ─────────────────────────────────────────────────────────────
 
+function stripAnsi(str) {
+  return str.replace(/\x1b\[[0-9;]*m/g, '');
+}
+
 function box(title, lines, opts = {}) {
   const color = opts.color ?? 'cyan';
   const minWidth = opts.minWidth ?? 50;
@@ -146,10 +146,6 @@ function box(title, lines, opts = {}) {
   console.log(out);
 }
 
-function stripAnsi(str) {
-  return str.replace(/\x1b\[[0-9;]*m/g, '');
-}
-
 // ── Progress ─────────────────────────────────────────────────────────────────
 
 let totalSteps = 6;
@@ -172,10 +168,6 @@ function hasBin(cmd) {
 function getVersion(cmd, flag = '--version') {
   try { return execSync(`${cmd} ${flag}`, { encoding: 'utf-8' }).trim(); }
   catch { return null; }
-}
-
-function randHex(bytes = 32) {
-  return randomBytes(bytes).toString('hex');
 }
 
 function maskKey(key) {
@@ -211,120 +203,26 @@ function printBanner() {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-//  Provider Definitions
+//  BYOK Provider Info (for display only — keys are collected in-app)
 // ═══════════════════════════════════════════════════════════════════════════
 
-const AI_PROVIDERS = [
-  {
-    id: 'google-gemini',
-    label: 'Google Gemini (Direct API)',
-    envKey: 'GOOGLE_GENERATIVE_AI_API_KEY',
-    hint: 'Free tier available',
-    url: 'https://aistudio.google.com/apikey',
-    keyPrefix: 'AIza',
-    minLen: 30,
-    color: 'lime',
-  },
-  {
-    id: 'vercel-gateway',
-    label: 'Vercel AI Gateway',
-    envKey: 'AI_GATEWAY_API_KEY',
-    hint: 'Multi-provider routing',
-    url: 'https://vercel.com/ai',
-    keyPrefix: null,
-    minLen: 20,
-    color: 'white',
-  },
-  {
-    id: 'google-vertex',
-    label: 'Google Vertex AI',
-    envKey: null, // multi-var
-    hint: 'GCP service account required',
-    url: 'https://console.cloud.google.com/vertex-ai',
-    keyPrefix: null,
-    minLen: 0,
-    color: 'sky',
-    isVertex: true,
-  },
-  {
-    id: 'openai',
-    label: 'OpenAI',
-    envKey: 'OPENAI_API_KEY',
-    hint: 'GPT-4o, o3, etc.',
-    url: 'https://platform.openai.com/api-keys',
-    keyPrefix: 'sk-',
-    minLen: 40,
-    color: 'teal',
-  },
-  {
-    id: 'anthropic',
-    label: 'Anthropic',
-    envKey: 'ANTHROPIC_API_KEY',
-    hint: 'Claude 3.5/4 Sonnet, Opus',
-    url: 'https://console.anthropic.com/settings/keys',
-    keyPrefix: 'sk-ant-',
-    minLen: 40,
-    color: 'coral',
-  },
-  {
-    id: 'groq',
-    label: 'Groq',
-    envKey: 'GROQ_API_KEY',
-    hint: 'Ultra-fast inference',
-    url: 'https://console.groq.com/keys',
-    keyPrefix: 'gsk_',
-    minLen: 30,
-    color: 'gold',
-  },
-  {
-    id: 'openrouter',
-    label: 'OpenRouter',
-    envKey: 'OPENROUTER_API_KEY',
-    hint: '300+ models, one API',
-    url: 'https://openrouter.ai/keys',
-    keyPrefix: 'sk-or-',
-    minLen: 30,
-    color: 'lavender',
-  },
+const BYOK_PROVIDERS_INFO = [
+  { name: 'Google Gemini',    tier: 'Free',    hint: 'AIza…',           url: 'https://aistudio.google.com/apikey',                  color: 'lime' },
+  { name: 'Anthropic',        tier: 'Medium',  hint: 'sk-ant-…',        url: 'https://console.anthropic.com/settings/keys',         color: 'coral' },
+  { name: 'OpenAI',           tier: 'Medium',  hint: 'sk-…',            url: 'https://platform.openai.com/api-keys',                color: 'teal' },
+  { name: 'Groq',             tier: 'Free',    hint: 'gsk_…',           url: 'https://console.groq.com/keys',                       color: 'gold' },
+  { name: 'Mistral',          tier: 'Low',     hint: '…',               url: 'https://console.mistral.ai/api-keys',                 color: 'sky' },
+  { name: 'OpenRouter',       tier: 'Medium',  hint: 'sk-or-…',         url: 'https://openrouter.ai/keys',                          color: 'lavender' },
+  { name: 'xAI (Grok)',       tier: 'Medium',  hint: 'xai-…',           url: 'https://console.x.ai',                                color: 'white' },
+  { name: 'DeepSeek',         tier: 'Low',     hint: 'sk-…',            url: 'https://platform.deepseek.com/api_keys',              color: 'cyan' },
+  { name: 'Google Vertex AI', tier: 'Medium',  hint: 'Service account',  url: 'https://console.cloud.google.com/vertex-ai',          color: 'sky' },
 ];
 
 const MARKET_DATA_PROVIDERS = [
-  {
-    id: 'finnhub',
-    label: 'Finnhub',
-    envKey: 'FINNHUB_API_KEY',
-    hint: 'Stocks, forex, crypto news',
-    url: 'https://finnhub.io/dashboard',
-    minLen: 15,
-    color: 'teal',
-  },
-  {
-    id: 'marketaux',
-    label: 'Marketaux',
-    envKey: 'MARKETAUX_API_KEY',
-    hint: 'Financial news feed',
-    url: 'https://marketaux.com/dashboard',
-    minLen: 15,
-    color: 'sky',
-  },
-  {
-    id: 'fred',
-    label: 'FRED (Federal Reserve)',
-    envKey: 'FRED_API_KEY',
-    hint: 'Economic data & calendar',
-    url: 'https://fredaccount.stlouisfed.org/apikeys',
-    minLen: 20,
-    color: 'gold',
-  },
-  {
-    id: 'alphavantage',
-    label: 'Alpha Vantage',
-    envKey: 'ALPHAVANTAGE_API_KEY',
-    hint: 'Stocks, forex, indicators',
-    url: 'https://www.alphavantage/support/#api-key',
-    minLen: 10,
-    color: 'lime',
-  },
+  { id: 'finnhub',     label: 'Finnhub',                 envKey: 'FINNHUB_API_KEY',      hint: 'Stocks, forex, crypto news',  url: 'https://finnhub.io/dashboard',                  minLen: 15, color: 'teal' },
+  { id: 'marketaux',   label: 'Marketaux',               envKey: 'MARKETAUX_API_KEY',    hint: 'Financial news feed',         url: 'https://marketaux.com/dashboard',               minLen: 15, color: 'sky' },
+  { id: 'fred',        label: 'FRED (Federal Reserve)',  envKey: 'FRED_API_KEY',         hint: 'Economic data & calendar',    url: 'https://fredaccount.stlouisfed.org/apikeys',    minLen: 20, color: 'gold' },
+  { id: 'alphavantage',label: 'Alpha Vantage',           envKey: 'ALPHAVANTAGE_API_KEY', hint: 'Stocks, forex, indicators',   url: 'https://www.alphavantage/support/#api-key',     minLen: 10, color: 'lime' },
 ];
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -332,8 +230,7 @@ const MARKET_DATA_PROVIDERS = [
 // ═══════════════════════════════════════════════════════════════════════════
 
 let rl;
-const collectedKeys = {}; // envKey -> value
-const collectedExtra = {}; // extra env vars (Vertex, etc.)
+const collectedMarketKeys = {}; // envKey -> value
 let selectedMode = 'local';
 
 async function main() {
@@ -387,12 +284,6 @@ async function main() {
     ok(`Docker ${paint(getVersion('docker') ?? '', 'dim')}`);
   } else {
     console.log(`  ${paint('○', 'gray')} Docker ${paint('not found (optional — needed for Docker mode)', 'dim')}`);
-  }
-
-  const hasCurl = hasBin('curl');
-  if (hasCurl) {
-    const curlVer = getVersion('curl')?.split('\n')[0] ?? '';
-    ok(`curl ${paint(curlVer, 'dim')}`);
   }
 
   if (!allOk) {
@@ -459,85 +350,28 @@ async function main() {
   line();
   console.log(`  ${paint('→', 'green')} Selected: ${paint(selectedMode === 'docker' ? 'Docker Compose' : 'Local Dev', 'bold', selectedMode === 'docker' ? 'teal' : 'cyan')}`);
 
-  // ── Step 3: AI Provider Keys ───────────────────────────────────────────
-  stepHeader('Configure AI providers');
+  // ── Step 3: BYOK Explanation ───────────────────────────────────────────
+  stepHeader('AI Providers — Bring Your Own Key (BYOK)');
 
-  console.log(`  HamaFX-Ai needs at least one AI provider to function.`);
-  console.log(`  You can add more later in ${paint('Settings → API Keys', 'dim')}.`);
-  console.log(`  ${paint('Pick multiple by comma-separating numbers (e.g. 1,3,5)', 'dim')}`);
+  console.log(`  HamaFX-Ai uses ${paint('BYOK', 'bold', 'cyan')} (Bring Your Own Key).`);
+  console.log(`  ${paint('No server-level AI keys are needed to start the app.', 'dim')}`);
+  line();
+  console.log(`  After registering, you'll add your AI provider key via the`);
+  console.log(`  ${paint('onboarding wizard', 'bold')} or ${paint('Settings → API Keys', 'bold')}.`);
+  console.log(`  Your key is encrypted at rest (AES-256-GCM) and never leaves your device.`);
+  line();
+  console.log(`  ${paint('Supported providers:', 'bold')}`);
   line();
 
-  for (let i = 0; i < AI_PROVIDERS.length; i++) {
-    const p = AI_PROVIDERS[i];
-    const num = paint(`${i + 1}.`, 'cyan');
-    const label = paint(p.label, 'bold', p.color);
-    const hint = paint(`(${p.hint})`, 'dim');
-    console.log(`  ${num} ${label} ${hint}`);
-    if (p.url) console.log(`     ${paint('Get key:', 'dim')} ${p.url}`);
+  for (const p of BYOK_PROVIDERS_INFO) {
+    const tierColor = p.tier === 'Free' ? 'green' : p.tier === 'Low' ? 'lime' : 'gold';
+    console.log(`  ${paint('●', p.color)} ${paint(p.name.padEnd(22), 'bold', p.color)} ${paint(p.tier, tierColor)} ${paint(`(${p.hint})`, 'dim')}`);
+    console.log(`     ${paint('Get key:', 'dim')} ${p.url}`);
   }
 
   line();
-  console.log(`  ${paint('0.', 'dim')} Skip for now ${paint('(add keys later)', 'dim')}`);
-  line();
-
-  const providerInput = await rl.question(`  Select provider(s) (default: 1): `);
-  const trimmed = providerInput.trim() || '1';
-
-  if (trimmed === '0') {
-    warn('Skipped AI provider setup. Add a key later in .env.local or Settings → API Keys.');
-  } else {
-    const indices = trimmed.split(',').map(s => parseInt(s.trim(), 10)).filter(n => n >= 1 && n <= AI_PROVIDERS.length);
-
-    if (indices.length === 0) {
-      warn('No valid selection — skipping for now');
-    } else {
-      for (const idx of indices) {
-        const provider = AI_PROVIDERS[idx - 1];
-        line();
-        console.log(`  ${paint('●', provider.color)} ${paint(provider.label, 'bold', provider.color)}`);
-
-        if (provider.isVertex) {
-          // Vertex AI: collect project, location, credentials
-          const project = (await rl.question(`    Google Cloud Project ID: `)).trim();
-          const location = (await rl.question(`    Vertex AI location ${paint('(default: us-central1)', 'dim')}: `)).trim() || 'us-central1';
-          const credsPath = (await rl.question(`    Path to service account JSON: `)).trim();
-
-          if (project) collectedExtra.GOOGLE_VERTEX_PROJECT = project;
-          if (location) collectedExtra.GOOGLE_VERTEX_LOCATION = location;
-
-          if (credsPath && existsSync(credsPath)) {
-            try {
-              const json = readFileSync(credsPath, 'utf-8').replace(/\n/g, '\\n');
-              collectedExtra.GOOGLE_APPLICATION_CREDENTIALS_JSON = json;
-              ok(`Credentials loaded from ${credsPath}`);
-            } catch {
-              fail(`Could not read: ${credsPath}`);
-              warn('Set GOOGLE_APPLICATION_CREDENTIALS_JSON manually later');
-            }
-          } else if (credsPath) {
-            fail(`File not found: ${credsPath}`);
-            warn('Set GOOGLE_APPLICATION_CREDENTIALS_JSON manually later');
-          }
-        } else {
-          // Standard API key
-          const key = (await rl.question(`    Paste your API key: `)).trim();
-
-          if (!key) {
-            warn(`No key entered for ${provider.label} — skipping`);
-          } else if (provider.minLen && key.length < provider.minLen) {
-            warn(`Key looks short (${key.length} chars, expected ~${provider.minLen}+) — saving anyway`);
-            collectedKeys[provider.envKey] = key;
-          } else if (provider.keyPrefix && !key.startsWith(provider.keyPrefix)) {
-            warn(`Key doesn't start with "${provider.keyPrefix}" — saving anyway`);
-            collectedKeys[provider.envKey] = key;
-          } else {
-            ok(`Key saved ${paint(maskKey(key), 'dim')}`);
-            collectedKeys[provider.envKey] = key;
-          }
-        }
-      }
-    }
-  }
+  info('You can add multiple providers and switch between them in the app.');
+  info('Free tier providers (Google Gemini, Groq) are great for trying it out.');
 
   // ── Step 4: Market Data Keys (Optional) ────────────────────────────────
   stepHeader('Market data providers (optional)');
@@ -568,7 +402,7 @@ async function main() {
       const key = (await rl.question(`    ${provider.label} API key: `)).trim();
 
       if (key) {
-        collectedKeys[provider.envKey] = key;
+        collectedMarketKeys[provider.envKey] = key;
         ok(`${provider.label} key saved ${paint(maskKey(key), 'dim')}`);
       } else {
         warn(`No key for ${provider.label} — skipping`);
@@ -591,15 +425,15 @@ async function main() {
 
     const lines = [];
 
-    for (const [key, val] of Object.entries(collectedKeys)) {
-      if (!existing.includes(`${key}=`)) {
-        lines.push(`${key}=${val}`);
-      } else {
-        existing = existing.replace(new RegExp(`^${key}=.*$`, 'm'), `${key}=${val}`);
-      }
+    // Enable BYOK mode
+    if (!existing.includes('BYOK_ENABLED=')) {
+      lines.push('BYOK_ENABLED=1');
+    } else {
+      existing = existing.replace(/^BYOK_ENABLED=.*/m, 'BYOK_ENABLED=1');
     }
 
-    for (const [key, val] of Object.entries(collectedExtra)) {
+    // Write market data keys
+    for (const [key, val] of Object.entries(collectedMarketKeys)) {
       if (!existing.includes(`${key}=`)) {
         lines.push(`${key}=${val}`);
       } else {
@@ -615,6 +449,7 @@ async function main() {
       ok(`.env.local already configured ${paint('(no changes needed)', 'dim')}`);
     }
 
+    ok(`BYOK mode enabled ${paint('(BYOK_ENABLED=1)', 'dim')}`);
     ok(`Auth & encryption secrets auto-generate to ${paint('.hamafx/dev-secrets.json', 'dim')} on first boot`);
   } else {
     // Docker mode
@@ -635,15 +470,16 @@ async function main() {
     }
 
     const lines = [];
-    for (const [key, val] of Object.entries(collectedKeys)) {
-      if (!envExisting.includes(`${key}=`)) {
-        lines.push(`${key}=${val}`);
-      } else {
-        envExisting = envExisting.replace(new RegExp(`^${key}=.*$`, 'm'), `${key}=${val}`);
-      }
+
+    // Enable BYOK mode
+    if (!envExisting.includes('BYOK_ENABLED=')) {
+      lines.push('BYOK_ENABLED=1');
+    } else {
+      envExisting = envExisting.replace(/^BYOK_ENABLED=.*/m, 'BYOK_ENABLED=1');
     }
 
-    for (const [key, val] of Object.entries(collectedExtra)) {
+    // Write market data keys
+    for (const [key, val] of Object.entries(collectedMarketKeys)) {
       if (!envExisting.includes(`${key}=`)) {
         lines.push(`${key}=${val}`);
       } else {
@@ -656,6 +492,8 @@ async function main() {
       appendFileSync(envPath, lines.join('\n') + '\n');
       ok(`Wrote ${lines.length} env var(s) to ${paint('.env', 'dim')}`);
     }
+
+    ok(`BYOK mode enabled ${paint('(BYOK_ENABLED=1)', 'dim')}`);
   }
 
   // ── Step 6: Install Dependencies ───────────────────────────────────────
@@ -690,31 +528,25 @@ async function main() {
   line();
 
   const summaryLines = [
-    `${paint('Mode:', 'bold')}         ${selectedMode === 'docker' ? 'Docker Compose' : 'Local Dev (PGlite)'}`,
-    `${paint('AI providers:', 'bold')}   ${Object.keys(collectedKeys).filter(k => AI_PROVIDERS.some(p => p.envKey === k)).length || paint('none (add later)', 'dim')}`,
+    `${paint('Mode:', 'bold')}           ${selectedMode === 'docker' ? 'Docker Compose' : 'Local Dev (PGlite)'}`,
+    `${paint('AI providers:', 'bold')}     ${paint('BYOK — add keys after registration', 'cyan')}`,
+    `${paint('Market data:', 'bold')}      ${Object.keys(collectedMarketKeys).length || paint('none (optional)', 'dim')}`,
   ];
 
-  const aiKeys = Object.keys(collectedKeys).filter(k => AI_PROVIDERS.some(p => p.envKey === k));
-  if (aiKeys.length > 0) {
-    const names = aiKeys.map(k => {
-      const provider = AI_PROVIDERS.find(p => p.envKey === k);
-      return provider ? provider.label : k;
-    });
-    summaryLines.push(`               ${paint(names.join(', '), 'dim')}`);
-  }
-
-  const marketKeys = Object.keys(collectedKeys).filter(k => MARKET_DATA_PROVIDERS.some(p => p.envKey === k));
-  summaryLines.push(`${paint('Market data:', 'bold')}    ${marketKeys.length || paint('none (optional)', 'dim')}`);
-  if (marketKeys.length > 0) {
-    const names = marketKeys.map(k => {
+  if (Object.keys(collectedMarketKeys).length > 0) {
+    const names = Object.keys(collectedMarketKeys).map(k => {
       const provider = MARKET_DATA_PROVIDERS.find(p => p.envKey === k);
       return provider ? provider.label : k;
     });
-    summaryLines.push(`               ${paint(names.join(', '), 'dim')}`);
+    summaryLines.push(`                 ${paint(names.join(', '), 'dim')}`);
   }
 
-  summaryLines.push(`${paint('Secrets:', 'bold')}       ${selectedMode === 'docker' ? 'Generated in .env' : 'Auto-gen on first boot'}`);
-  summaryLines.push(`${paint('Config file:', 'bold')}   ${selectedMode === 'docker' ? '.env' : '.env.local'}`);
+  summaryLines.push(`${paint('BYOK:', 'bold')}           ${paint('Enabled', 'green')} ${paint('(BYOK_ENABLED=1)', 'dim')}`);
+  summaryLines.push(`${paint('Config file:', 'bold')}     ${selectedMode === 'docker' ? '.env' : '.env.local'}`);
+  summaryLines.push(`${paint('Next steps:', 'bold')}`);
+  summaryLines.push(`  1. Start the app`);
+  summaryLines.push(`  2. Register at /register`);
+  summaryLines.push(`  3. Add your AI key in the onboarding wizard`);
 
   box('Setup Summary', summaryLines, { color: 'green', minWidth: 52 });
 

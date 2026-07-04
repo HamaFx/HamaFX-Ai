@@ -103,20 +103,20 @@ const AiEnv = z
      */
     AI_TITLE_MODEL: z.string().default('google-vertex/gemini-2.5-flash-lite'),
     AI_EMBEDDING_MODEL: z.string().default('openai/text-embedding-3-small'),
-  })
-  .refine(
-    (v) =>
-      Boolean(
-        v.AI_GATEWAY_API_KEY ||
-        v.GOOGLE_GENERATIVE_AI_API_KEY ||
-        (v.GOOGLE_VERTEX_PROJECT && v.GOOGLE_VERTEX_LOCATION),
-      ),
-    {
-      message:
-        'Configure one AI transport: GOOGLE_VERTEX_PROJECT+GOOGLE_VERTEX_LOCATION, AI_GATEWAY_API_KEY, or GOOGLE_GENERATIVE_AI_API_KEY',
-      path: ['AI_GATEWAY_API_KEY'],
-    },
-  );
+  });
+
+// NOTE: The AI transport refinement (requiring at least one of
+// AI_GATEWAY_API_KEY / GOOGLE_GENERATIVE_AI_API_KEY / Vertex) was removed.
+// Open-source self-hosters use BYOK (Bring Your Own Key) — users add their
+// own AI provider keys via the in-app Settings → API Keys page after
+// registration. The app boots without any server-level AI keys. When a user
+// tries to chat without any keys configured, resolveChatModel() throws a
+// clear error pointing them to Settings → API Keys.
+//
+// Server operators who want to provide a server-wide AI fallback (e.g. for
+// a hosted SaaS) can still set AI_GATEWAY_API_KEY / GOOGLE_GENERATIVE_AI_API_KEY
+// / GOOGLE_VERTEX_* — envFallbackKeys() in model.ts will surface them as
+// BYOK fallbacks.
 
 // Upstash Redis is intentionally OPTIONAL. Personal-mode caching uses Next.js's
 // built-in Data Cache (`fetch`-cache + `unstable_cache`) which is free, persists

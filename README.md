@@ -101,13 +101,16 @@ pnpm setup
 The setup wizard will:
 1. ✅ Check prerequisites (Node, pnpm, Git, Docker)
 2. 🤔 Ask: **Local Dev** (fast, no Docker) or **Docker** (full features)?
-3. 🔑 Ask which AI provider you want and collect your API key
-4. 🔐 Generate all required secrets automatically
-5. 📦 Install dependencies
-6. 🚀 Offer to start the app immediately
+3. 🔑 Explain BYOK (Bring Your Own Key) — no server-level AI keys needed
+4. 📊 Optionally collect market data provider keys (Finnhub, Marketaux, FRED, etc.)
+5. 🔐 Generate all required secrets automatically + enable BYOK mode
+6. 📦 Install dependencies and offer to start the app
+
+> [!IMPORTANT]
+> HamaFX-Ai uses **BYOK** (Bring Your Own Key). After registering, add your AI provider key (Google Gemini, OpenAI, Anthropic, Groq, etc.) via the **onboarding wizard** or **Settings → API Keys**. Your key is encrypted at rest and never leaves your device. Free tier providers like Google Gemini and Groq are great for trying it out.
 
 > [!TIP]
-> Open `http://localhost:3000`, register at `/register`, and connect your API keys on the `/onboarding` screen.
+> Open `http://localhost:3000`, register at `/register`, and the onboarding wizard will guide you through adding your first AI provider key.
 
 ### Manual Setup
 
@@ -118,11 +121,11 @@ The setup wizard will:
 git clone https://github.com/HamaFx/HamaFX-Ai.git
 cd HamaFX-Ai
 pnpm install
-echo 'GOOGLE_GENERATIVE_AI_API_KEY=AIza...' >> .env.local
+echo 'BYOK_ENABLED=1' >> .env.local
 pnpm dev:local
 ```
 
-Auth secrets, encryption keys, and cron tokens are **auto-generated** to `.hamafx/dev-secrets.json` on first boot.
+No AI provider keys are needed to start the app. After registering at `/register`, the onboarding wizard will guide you through adding your first AI provider key (Google Gemini, OpenAI, Anthropic, Groq, etc.). Auth and encryption secrets are **auto-generated** to `.hamafx/dev-secrets.json` on first boot.
 
 </details>
 
@@ -133,7 +136,8 @@ Auth secrets, encryption keys, and cron tokens are **auto-generated** to `.hamaf
 git clone https://github.com/HamaFx/HamaFX-Ai.git
 cd HamaFX-Ai
 ./docker/init-secrets.sh
-nano .env  # add your AI provider key
+echo 'BYOK_ENABLED=1' >> .env
+# (Optional) Add market data keys to .env (Finnhub, Marketaux, FRED, etc.)
 docker compose up -d
 ```
 

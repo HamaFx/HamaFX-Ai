@@ -28,11 +28,13 @@ No database installation required for local dev — PGlite (embedded Postgres) b
 git clone https://github.com/<your-username>/HamaFX-Ai.git
 cd HamaFX-Ai
 
-# Run the setup wizard — checks prerequisites, asks for AI key, generates secrets
+# Run the setup wizard — checks prerequisites, explains BYOK, generates secrets
 pnpm setup
 ```
 
-The wizard handles everything: prerequisite checks, mode selection (Local Dev vs Docker), AI provider key collection, secret generation, dependency installation, and startup.
+The wizard handles everything: prerequisite checks, mode selection (Local Dev vs Docker), BYOK explanation, optional market data key collection, secret generation, and startup.
+
+> **BYOK:** HamaFX-Ai uses Bring Your Own Key — no server-level AI keys are needed. After registering, add your AI provider key (Google Gemini, OpenAI, Anthropic, Groq, etc.) via the onboarding wizard or Settings → API Keys.
 
 ### Manual Setup
 
@@ -40,13 +42,14 @@ The wizard handles everything: prerequisite checks, mode selection (Local Dev vs
 # Install dependencies
 pnpm install
 
-# Set up at least one AI provider key
-echo 'GOOGLE_GENERATIVE_AI_API_KEY=AIza...' >> .env.local
+# Enable BYOK mode
+echo 'BYOK_ENABLED=1' >> .env.local
 
 # Start dev server (PGlite auto-boots, secrets auto-generate)
 pnpm dev:local
 
-# Open http://localhost:3000
+# Open http://localhost:3000 and register
+# → The onboarding wizard will guide you through adding your first AI provider key
 ```
 
 Auth secrets (`AUTH_SECRET`, `ENCRYPTION_SECRET`, `CRON_SECRET`) auto-generate to `.hamafx/dev-secrets.json` on first boot. See [docs/08-agent-setup-run.md](docs/08-agent-setup-run.md) for full setup details.
