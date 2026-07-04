@@ -18,7 +18,7 @@
 
 import { useEffect, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { Check, ChevronRight, Eye, EyeOff, Loader2, Sparkles, Bot, User } from 'lucide-react';
+import {IconCheck, IconChevronRight, IconEye, IconEyeOff, IconLoader2, IconBolt, IconRobot, IconUser} from '@tabler/icons-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -94,7 +94,7 @@ export function OnboardingWizard({ initialName, providers, symbolsCatalog, initi
     }
   }, [initialProgress]);
 
-  // Save wizard state when any field changes (API key intentionally excluded)
+  // IconDeviceFloppy wizard state when any field changes (API key intentionally excluded)
   useEffect(() => {
     try {
       const state = { step, name, timezone, defaultSymbol, selectedProvider, tradingStyle, selectedSymbols };
@@ -177,7 +177,7 @@ export function OnboardingWizard({ initialName, providers, symbolsCatalog, initi
 
   function handleSubmit() {
     startSubmit(async () => {
-      // Save trading style to localStorage preferences so the client app uses it
+      // IconDeviceFloppy trading style to localStorage preferences so the client app uses it
       try {
         const currentPrefs = JSON.parse(localStorage.getItem('hamafx:prefs') || '{}');
         localStorage.setItem('hamafx:prefs', JSON.stringify({
@@ -254,7 +254,7 @@ export function OnboardingWizard({ initialName, providers, symbolsCatalog, initi
   }
 
   return (
-    <div className="border border-zinc-800 bg-zinc-950 rounded-sm p-6">
+    <div className="border border-border bg-bg-elev-1 rounded-sm p-6">
       {/* Stepper */}
       <div className="mb-4 flex items-center justify-between" role="list" aria-label="Setup progress">
         {[1, 2, 3, 4, 5].map((i) => (
@@ -263,15 +263,15 @@ export function OnboardingWizard({ initialName, providers, symbolsCatalog, initi
               aria-current={step === i ? 'step' : undefined}
               aria-label={`Step ${i}: ${['Profile', 'Trading Style', 'Symbols', 'AI Provider', 'Review'][i - 1]}`}
               className={`flex size-8 items-center justify-center rounded-sm text-sm font-semibold transition-colors ${
-                step >= i ? 'bg-fg text-black' : 'bg-surface text-fg-subtle'
+                step >= i ? 'bg-fg text-black' : 'bg-bg-elev-1 text-fg-subtle'
               }`}
             >
-              {step > i ? <Check className="size-4" /> : i}
+              {step > i ? <IconCheck className="size-4" /> : i}
             </div>
             {i < 5 && (
               <div
                 className={`h-px w-8 sm:w-16 transition-colors ${
-                  step > i ? 'bg-fg' : 'bg-surface-elevated'
+                  step > i ? 'bg-fg' : 'bg-bg-elev-1-elevated'
                 }`}
               />
             )}
@@ -304,12 +304,12 @@ export function OnboardingWizard({ initialName, providers, symbolsCatalog, initi
               placeholder="Satoshi Nakamoto"
               autoFocus
             />
-            {nameError && <p className="text-xs text-red-500">{nameError}</p>}
+            {nameError && <p className="text-xs text-bear">{nameError}</p>}
           </div>
           <div className="flex flex-col gap-2">
             <label className="text-sm font-medium text-fg">Timezone</label>
             <select
-              className="h-10 w-full rounded-sm border border-surface-elevated bg-zinc-950 px-3 py-2 text-sm text-fg focus:outline-none focus:ring-1 focus:ring-fg cursor-pointer"
+              className="h-10 w-full rounded-sm border border-surface-elevated bg-bg-elev-1 px-3 py-2 text-sm text-fg focus:outline-none focus:ring-1 focus:ring-fg cursor-pointer"
               value={timezone}
               onChange={(e) => setTimezone(e.target.value)}
             >
@@ -321,7 +321,7 @@ export function OnboardingWizard({ initialName, providers, symbolsCatalog, initi
             </select>
           </div>
           <Button className="w-full" onClick={handleNext} disabled={!name.trim()}>
-            Continue <ChevronRight className="ml-2 size-4" />
+            Continue <IconChevronRight className="ml-2 size-4" />
           </Button>
         </div>
       )}
@@ -345,15 +345,15 @@ export function OnboardingWizard({ initialName, providers, symbolsCatalog, initi
                   key={style.id}
                   type="button"
                   onClick={() => setTradingStyle(style.id as 'scalper' | 'day_trader' | 'swing' | 'position')}
-                  className={`text-left rounded-sm border p-4 transition-all hover:bg-zinc-900 flex flex-col gap-1.5 cursor-pointer relative ${
+                  className={`text-left rounded-sm border p-4 transition-all hover:bg-bg-elev-2 flex flex-col gap-1.5 cursor-pointer relative ${
                     active
-                      ? 'border-zinc-700 bg-zinc-950 ring-1 ring-fg shadow-none/5'
-                      : 'border-surface-elevated bg-surface hover:border-fg-muted'
+                      ? 'border-border bg-bg-elev-1 ring-1 ring-fg shadow-none/5'
+                      : 'border-surface-elevated bg-bg-elev-1 hover:border-fg-muted'
                   }`}
                 >
                   <div className="flex items-center justify-between">
                     <span className="font-semibold text-fg text-sm sm:text-base">{style.title}</span>
-                    <span className="text-xs font-mono font-medium px-2 py-0.5 rounded bg-zinc-900 text-fg-subtle border border-zinc-800">
+                    <span className="text-xs font-mono font-medium px-2 py-0.5 rounded-sm bg-bg-elev-2 text-fg-subtle border border-border">
                       {style.timeframe}
                     </span>
                   </div>
@@ -362,7 +362,7 @@ export function OnboardingWizard({ initialName, providers, symbolsCatalog, initi
                   </p>
                   {active && (
                     <span className="absolute bottom-3 right-3 text-fg">
-                      <Check className="size-4" />
+                      <IconCheck className="size-4" />
                     </span>
                   )}
                 </button>
@@ -374,7 +374,7 @@ export function OnboardingWizard({ initialName, providers, symbolsCatalog, initi
               Back
             </Button>
             <Button className="flex-1" onClick={handleNext}>
-              Continue <ChevronRight className="ml-2 size-4" />
+              Continue <IconChevronRight className="ml-2 size-4" />
             </Button>
           </div>
         </div>
@@ -385,7 +385,7 @@ export function OnboardingWizard({ initialName, providers, symbolsCatalog, initi
           <div>
             <h2 className="text-xl font-semibold text-fg mb-1">Select Preferred Symbols</h2>
             <p className="text-sm text-fg-subtle">Choose the instruments you want in your default watchlist. Select at least one.</p>
-            {symbolsError && <p className="mt-1 text-xs text-red-500">{symbolsError}</p>}
+            {symbolsError && <p className="mt-1 text-xs text-bear">{symbolsError}</p>}
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-72 overflow-y-auto pr-1">
             {symbolsCatalog.map((sym) => {
@@ -409,20 +409,20 @@ export function OnboardingWizard({ initialName, providers, symbolsCatalog, initi
                       setSelectedSymbols([...selectedSymbols, sym.symbol]);
                     }
                   }}
-                  className={`text-left rounded-sm border p-4 transition-all hover:bg-zinc-900 flex items-center justify-between cursor-pointer relative ${
+                  className={`text-left rounded-sm border p-4 transition-all hover:bg-bg-elev-2 flex items-center justify-between cursor-pointer relative ${
                     active
-                      ? 'border-zinc-700 bg-zinc-950 ring-1 ring-fg'
-                      : 'border-surface-elevated bg-surface hover:border-fg-muted'
+                      ? 'border-border bg-bg-elev-1 ring-1 ring-fg'
+                      : 'border-surface-elevated bg-bg-elev-1 hover:border-fg-muted'
                   }`}
                 >
                   <div className="flex flex-col gap-0.5">
                     <span className="font-mono font-semibold text-fg text-sm sm:text-base">{sym.symbol}</span>
                     <span className="text-xs text-fg-subtle">{sym.name} ({sym.category})</span>
                   </div>
-                  <div className={`size-5 rounded border flex items-center justify-center transition-colors ${
-                    active ? 'bg-fg border-zinc-700 text-black' : 'border-zinc-800 bg-zinc-950'
+                  <div className={`size-5 rounded-sm border flex items-center justify-center transition-colors ${
+                    active ? 'bg-fg border-border text-black' : 'border-border bg-bg-elev-1'
                   }`}>
-                    {active && <Check className="size-3.5 stroke-[3]" />}
+                    {active && <IconCheck className="size-3.5 stroke-[3]" />}
                   </div>
                 </button>
               );
@@ -433,7 +433,7 @@ export function OnboardingWizard({ initialName, providers, symbolsCatalog, initi
             <div className="flex flex-col gap-2">
               <label className="text-sm font-medium text-fg">Default Chart Symbol</label>
               <select
-                className="h-10 w-full rounded-sm border border-surface-elevated bg-zinc-950 px-3 py-2 text-sm text-fg focus:outline-none focus:ring-1 focus:ring-fg cursor-pointer"
+                className="h-10 w-full rounded-sm border border-surface-elevated bg-bg-elev-1 px-3 py-2 text-sm text-fg focus:outline-none focus:ring-1 focus:ring-fg cursor-pointer"
                 value={defaultSymbol}
                 onChange={(e) => setDefaultSymbol(e.target.value)}
               >
@@ -451,7 +451,7 @@ export function OnboardingWizard({ initialName, providers, symbolsCatalog, initi
               Back
             </Button>
             <Button className="flex-1" onClick={handleNext} disabled={selectedSymbols.length === 0}>
-              Continue <ChevronRight className="ml-2 size-4" />
+              Continue <IconChevronRight className="ml-2 size-4" />
             </Button>
           </div>
         </div>
@@ -462,8 +462,8 @@ export function OnboardingWizard({ initialName, providers, symbolsCatalog, initi
           <div>
             <h2 className="text-xl font-semibold text-fg mb-1">Connect an AI Provider</h2>
             <p className="text-sm text-fg-subtle">
-              HamaFX-Ai is BYOK (Bring Your Own Key). Pick a provider below and paste
-              your API key. You can add more or change providers later in Settings.
+              HamaFX-Ai is BYOK (Bring Your Own IconKey). Pick a provider below and paste
+              your API key. You can add more or change providers later in IconSettings.
             </p>
           </div>
 
@@ -480,8 +480,8 @@ export function OnboardingWizard({ initialName, providers, symbolsCatalog, initi
                   }}
                   className={`text-left rounded-sm border p-3 transition-colors ${
                     selected
-                      ? 'border-zinc-700 bg-zinc-900 ring-1 ring-fg'
-                      : 'border-surface-elevated bg-surface hover:border-fg-subtle'
+                      ? 'border-border bg-bg-elev-2 ring-1 ring-fg'
+                      : 'border-surface-elevated bg-bg-elev-1 hover:border-fg-subtle'
                   }`}
                 >
                   <div className="flex items-baseline justify-between gap-2">
@@ -502,7 +502,7 @@ export function OnboardingWizard({ initialName, providers, symbolsCatalog, initi
           {selectedProvider && (
             <div className="flex flex-col gap-3 motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-top-2">
               <label className="text-sm font-medium text-fg">
-                API Key for {providers.find((p) => p.id === selectedProvider)?.displayName}
+                API IconKey for {providers.find((p) => p.id === selectedProvider)?.displayName}
               </label>
               <div className="relative">
                 <Input
@@ -524,7 +524,7 @@ export function OnboardingWizard({ initialName, providers, symbolsCatalog, initi
                      className="p-1 text-fg-subtle hover:text-fg transition-colors"
                      aria-label={revealed ? 'Hide key' : 'Show key'}
                   >
-                    {revealed ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                    {revealed ? <IconEyeOff className="size-4" /> : <IconEye className="size-4" />}
                   </button>
                 </div>
               </div>
@@ -538,7 +538,7 @@ export function OnboardingWizard({ initialName, providers, symbolsCatalog, initi
                 >
                   {testState.kind === 'pending' ? (
                     <>
-                      <Loader2 className="mr-1 size-3 animate-spin" />
+                      <IconLoader2 className="mr-1 size-3 animate-spin" />
                       Testing
                     </>
                   ) : (
@@ -546,12 +546,12 @@ export function OnboardingWizard({ initialName, providers, symbolsCatalog, initi
                   )}
                 </Button>
                 {testState.kind === 'ok' && (
-                  <span className="flex items-center gap-1 text-xs text-emerald-500">
-                    <Check className="size-3" /> Key looks valid
+                  <span className="flex items-center gap-1 text-xs text-bull">
+                    <IconCheck className="size-3" /> IconKey looks valid
                   </span>
                 )}
                 {testState.kind === 'err' && (
-                  <span className="text-xs text-red-500">{testState.message}</span>
+                  <span className="text-xs text-bear">{testState.message}</span>
                 )}
               </div>
             </div>
@@ -572,7 +572,7 @@ export function OnboardingWizard({ initialName, providers, symbolsCatalog, initi
               onClick={handleNext}
               disabled={!selectedProvider || apiKey.trim().length < 8}
             >
-              Continue <ChevronRight className="ml-2 size-4" />
+              Continue <IconChevronRight className="ml-2 size-4" />
             </Button>
           </div>
           <button
@@ -585,7 +585,7 @@ export function OnboardingWizard({ initialName, providers, symbolsCatalog, initi
             }}
             className="text-xs text-fg-subtle hover:text-fg transition-colors text-center w-full mt-2"
           >
-            Skip for now (configure later in Settings)
+            Skip for now (configure later in IconSettings)
           </button>
         </div>
       )}
@@ -598,7 +598,7 @@ export function OnboardingWizard({ initialName, providers, symbolsCatalog, initi
               Here is what we will configure for you:
             </p>
           </div>
-          <ul className="list-disc list-inside text-sm text-fg space-y-1.5 border border-zinc-800 bg-zinc-900 rounded-sm p-4">
+          <ul className="list-disc list-inside text-sm text-fg space-y-1.5 border border-border bg-bg-elev-2 rounded-sm p-4">
             <li>Display name: <span className="text-fg-subtle">{name || '—'}</span></li>
             <li>Timezone: <span className="text-fg-subtle">{timezone}</span></li>
             <li>Trading style: <span className="text-fg-subtle capitalize">{tradingStyle.replace('_', ' ')}</span></li>
@@ -615,7 +615,7 @@ export function OnboardingWizard({ initialName, providers, symbolsCatalog, initi
           </ul>
 
           {/* Sample chat preview */}
-          <details className="border border-zinc-800 rounded-sm p-3">
+          <details className="border border-border rounded-sm p-3">
             <summary className="cursor-pointer text-sm text-fg-muted hover:text-fg">
               Try a sample chat
             </summary>
@@ -623,22 +623,22 @@ export function OnboardingWizard({ initialName, providers, symbolsCatalog, initi
               <p className="text-xs text-fg-subtle">
                 A preview of what HamaFX-Ai can do. After setup, you will be able to ask about any symbol.
               </p>
-              <div className="flex flex-col gap-2 bg-zinc-900 rounded-sm p-3">
+              <div className="flex flex-col gap-2 bg-bg-elev-2 rounded-sm p-3">
                 <div className="flex items-start gap-2">
-                  <div className="rounded-sm bg-zinc-800 p-1.5 mt-0.5">
-                    <User className="size-3 text-fg" />
+                  <div className="rounded-sm bg-bg-elev-3 p-1.5 mt-0.5">
+                    <IconUser className="size-3 text-fg" />
                   </div>
                   <div className="flex-1 text-xs text-fg">
                     How is XAUUSD looking?
                   </div>
                 </div>
                 <div className="flex items-start gap-2">
-                  <div className="rounded-sm bg-zinc-900 p-1.5 mt-0.5">
-                    <Bot className="size-3 text-fg" />
+                  <div className="rounded-sm bg-bg-elev-2 p-1.5 mt-0.5">
+                    <IconRobot className="size-3 text-fg" />
                   </div>
                   <div className="flex-1 text-xs text-fg leading-[1.4] space-y-1">
                     <p>
-                      <span className="text-emerald-500 font-medium">XAUUSD</span> is showing mixed signals
+                      <span className="text-bull font-medium">XAUUSD</span> is showing mixed signals
                       on the 1H:
                     </p>
                     <ul className="list-disc list-inside text-fg-subtle">
@@ -647,8 +647,8 @@ export function OnboardingWizard({ initialName, providers, symbolsCatalog, initi
                       <li>MACD histogram flattening — momentum fading</li>
                     </ul>
                     <p>
-                      Bias: <span className="text-red-500 font-medium">Bearish below $2,640</span> ·
-                      Key resistance at <span className="tablibular-nums">$2,680</span>
+                      Bias: <span className="text-bear font-medium">Bearish below $2,640</span> ·
+                      IconKey resistance at <span className="tablibular-nums">$2,680</span>
                     </p>
                   </div>
                 </div>
@@ -666,7 +666,7 @@ export function OnboardingWizard({ initialName, providers, symbolsCatalog, initi
               loading={isSubmitting}
               disabled={isSubmitting}
             >
-              <Sparkles className="mr-1 size-4" /> Finish Setup
+              <IconBolt className="mr-1 size-4" /> Finish Setup
             </Button>
           </div>
         </div>

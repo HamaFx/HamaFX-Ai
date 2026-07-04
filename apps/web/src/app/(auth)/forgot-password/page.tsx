@@ -33,13 +33,13 @@ export default function ForgotPasswordPage() {
           </div>
 
           {state?.error ? (
-            <p id="error" role="alert" className="text-red-500 text-sm">
+            <p id="error" role="alert" className="text-bear text-sm">
               {state.error}
             </p>
           ) : null}
 
           {state?.success ? (
-            <p className="text-emerald-500 text-sm">
+            <p className="text-bull text-sm">
               {state.message}
             </p>
           ) : null}

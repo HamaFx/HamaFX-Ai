@@ -25,9 +25,9 @@ import type { RiskRegime } from '@hamafx/shared';
 import type { ToolPartProps } from './registry';
 
 const REGIME_TONE: Record<RiskRegime, { bg: string; fg: string; label: string }> = {
-  'risk-on': { bg: 'bg-emerald-500/15', fg: 'text-emerald-500', label: 'Risk-on' },
-  'risk-off': { bg: 'bg-red-500/15', fg: 'text-red-500', label: 'Risk-off' },
-  neutral: { bg: 'bg-zinc-900', fg: 'text-fg-muted', label: 'Neutral' },
+  'risk-on': { bg: 'bg-bull/15', fg: 'text-bull', label: 'Risk-on' },
+  'risk-off': { bg: 'bg-bear/15', fg: 'text-bear', label: 'Risk-off' },
+  neutral: { bg: 'bg-bg-elev-2', fg: 'text-fg-muted', label: 'Neutral' },
 };
 
 export function GetIntermarketPart({
@@ -39,16 +39,16 @@ export function GetIntermarketPart({
   if (state === 'loading' || !output) return <SkeletonCard />;
 
   const tone = REGIME_TONE[output.regime];
-  const dxyTone = output.dxyProxy.change24h >= 0 ? 'text-emerald-500' : 'text-red-500';
+  const dxyTone = output.dxyProxy.change24h >= 0 ? 'text-bull' : 'text-bear';
   const goldTone =
     output.goldChange24h === null
       ? 'text-fg-muted'
       : output.goldChange24h >= 0
-        ? 'text-emerald-500'
-        : 'text-red-500';
+        ? 'text-bull'
+        : 'text-bear';
 
   return (
-    <div className="border-border bg-zinc-950 flex flex-col gap-3 rounded-sm border p-3">
+    <div className="border-border bg-bg-elev-1 flex flex-col gap-3 rounded-sm border p-3">
       <header className="flex flex-wrap items-baseline justify-between gap-2">
         <h3 className="text-fg text-sm font-semibold">Intermarket · {output.tf}</h3>
         <span
@@ -80,9 +80,9 @@ export function GetIntermarketPart({
           v={output.xauDxyCorrelation.toFixed(2)}
           tone={
             output.xauDxyCorrelation <= -0.4
-              ? 'text-emerald-500'
+              ? 'text-bull'
               : output.xauDxyCorrelation >= 0.4
-                ? 'text-red-500'
+                ? 'text-bear'
                 : 'text-fg-muted'
           }
         />
@@ -96,7 +96,7 @@ export function GetIntermarketPart({
 
 function Stat({ k, v, sub, tone }: { k: string; v: string; sub?: string; tone?: string }) {
   return (
-    <div className="border-zinc-900 flex flex-col rounded-sm border p-2">
+    <div className="border-divider flex flex-col rounded-sm border p-2">
       <span className="text-fg-subtle text-caption uppercase tracking-wide">{k}</span>
       <span className={`text-fg font-semibold ${tone ?? ''}`}>{v}</span>
       {sub ? <span className="text-fg-subtle text-caption">{sub}</span> : null}
@@ -107,12 +107,12 @@ function Stat({ k, v, sub, tone }: { k: string; v: string; sub?: string; tone?: 
 function SkeletonCard() {
   return (
     <div
-      className="border-border bg-zinc-950 rounded-sm border p-3"
+      className="border-border bg-bg-elev-1 rounded-sm border p-3"
       aria-busy="true"
       aria-label="Computing intermarket pulse"
     >
-      <div className="bg-zinc-900 h-4 w-1/2 animate-pulse rounded" />
-      <div className="bg-zinc-900 mt-3 h-16 animate-pulse rounded" />
+      <div className="bg-bg-elev-2 h-4 w-1/2 animate-pulse rounded-sm" />
+      <div className="bg-bg-elev-2 mt-3 h-16 animate-pulse rounded-sm" />
     </div>
   );
 }
@@ -121,7 +121,7 @@ function ErrorCard({ message }: { message?: string }) {
   return (
     <div
       role="alert"
-      className="border-red-500/30 bg-zinc-950 text-red-500 rounded-sm border p-3 text-sm"
+      className="border-bear/30 bg-bg-elev-1 text-bear rounded-sm border p-3 text-sm"
     >
       Intermarket failed{message ? ` · ${message}` : ''}
     </div>

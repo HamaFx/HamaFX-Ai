@@ -32,7 +32,7 @@
 // green = bullish, red = bearish, no ribbon = neutral. Kept as the
 // "scannable at a glance" signal even before the user reads the title.
 //
-// Action row (Ask AI, Bookmark, Open) lives in a hover overlay on desktop
+// Action row (Ask AI, IconBookmark, Open) lives in a hover overlay on desktop
 // (revealed on card hover or keyboard focus). On touch devices, the row
 // is permanently visible — touch affordances don't have hover. This keeps
 // the resting card body to three clean zones without losing the three
@@ -41,7 +41,7 @@
 // Action overlay is memoized to avoid re-rendering untouched cards when bookmark updates.
 
 import type { NewsArticle } from '@hamafx/shared';
-import { Bookmark, ExternalLink, Sparkles } from 'lucide-react';
+import {IconBookmark, IconExternalLink, IconBolt} from '@tabler/icons-react';
 import { m } from 'motion/react';
 import { memo } from 'react';
 
@@ -94,8 +94,8 @@ const ArticleCardInner = memo(
       <article
         className={cn(
           'group relative overflow-hidden rounded-sm',
-          'border border-zinc-800 bg-zinc-950',
-          'transition-colors duration-200 md:hover:bg-zinc-900',
+          'border border-border bg-bg-elev-1',
+          'transition-colors duration-200 md:hover:bg-bg-elev-2',
         )}
       >
         {sentimentColor ? (
@@ -130,7 +130,7 @@ const ArticleCardInner = memo(
                 <span
                   className={cn(
                     'inline-flex items-center gap-1 font-semibold',
-                    article.sentiment === 'positive' ? 'text-emerald-500' : 'text-red-500',
+                    article.sentiment === 'positive' ? 'text-bull' : 'text-bear',
                   )}
                 >
                   <span aria-hidden>
@@ -163,9 +163,9 @@ const ArticleCardInner = memo(
           <a
             href={`/chat?prompt=${askPrompt}`}
             onClick={(e) => e.stopPropagation()}
-            className="bg-zinc-900 text-fg-muted hover:text-fg pointer-events-auto inline-flex items-center gap-1 rounded-sm px-3 py-1.5 text-body-sm font-medium transition-colors"
+            className="bg-bg-elev-2 text-fg-muted hover:text-fg pointer-events-auto inline-flex items-center gap-1 rounded-sm px-3 py-1.5 text-body-sm font-medium transition-colors"
           >
-            <Sparkles className="size-3.5" />
+            <IconBolt className="size-3.5" />
             Ask AI
           </a>
           <div className="pointer-events-auto flex items-center gap-0.5">
@@ -177,16 +177,16 @@ const ArticleCardInner = memo(
                 if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate(50);
                 onToggle(article.id);
               }}
-              aria-label={saved ? 'Remove bookmark' : 'Bookmark article'}
+              aria-label={saved ? 'Remove bookmark' : 'IconBookmark article'}
               aria-pressed={saved}
               className={cn(
                 'inline-flex size-8 items-center justify-center rounded-sm transition-colors',
                 saved
-                  ? 'text-fg bg-zinc-900'
-                  : 'text-fg-muted hover:text-fg hover:bg-zinc-900',
+                  ? 'text-fg bg-bg-elev-2'
+                  : 'text-fg-muted hover:text-fg hover:bg-bg-elev-2',
               )}
             >
-              <Bookmark className={cn('size-4', saved && 'fill-current')} />
+              <IconBookmark className={cn('size-4', saved && 'fill-current')} />
             </m.button>
             <a
               href={article.url}
@@ -194,9 +194,9 @@ const ArticleCardInner = memo(
               rel="noopener noreferrer"
               aria-label="Open article in new tab"
               onClick={(e) => e.stopPropagation()}
-              className="text-fg-muted hover:text-fg hover:bg-zinc-900 inline-flex size-8 items-center justify-center rounded-sm transition-colors"
+              className="text-fg-muted hover:text-fg hover:bg-bg-elev-2 inline-flex size-8 items-center justify-center rounded-sm transition-colors"
             >
-              <ExternalLink className="size-4" />
+              <IconExternalLink className="size-4" />
             </a>
           </div>
         </div>

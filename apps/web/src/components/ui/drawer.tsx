@@ -103,7 +103,7 @@ const DrawerContent = React.forwardRef<
         ref={setRefs}
         tabIndex={-1}
         className={cn(
-          'surface-elevated fixed inset-x-0 bottom-0 z-50 mt-24 flex h-auto max-h-[92svh] flex-col rounded-t-xl border-b-0',
+          'surface-elevated fixed inset-x-0 bottom-0 z-50 mt-24 flex h-auto max-h-[92svh] flex-col rounded-sm border-b-0',
           'pb-[max(env(safe-area-inset-bottom),16px)]',
           'focus-visible:outline-none',
           className,

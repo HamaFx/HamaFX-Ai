@@ -19,7 +19,7 @@
 // Bespoke renderer for the `run_system_action` tool part.
 // Renders an interactive terminal-style DevOps console showing live stdout logs.
 
-import { Terminal, CheckCircle2, AlertTriangle, Loader2 } from 'lucide-react';
+import {IconTerminal, IconCircleCheck, IconAlertTriangle, IconLoader2} from '@tabler/icons-react';
 import type { ToolPartProps } from './registry';
 
 export function RunSystemActionPart({
@@ -39,11 +39,11 @@ export function RunSystemActionPart({
   const isSuccess = status === 'success';
 
   return (
-    <div className="border-border bg-zinc-950 flex flex-col gap-3 rounded-sm border p-4 shadow-lg ">
+    <div className="border-border bg-bg-elev-1 flex flex-col gap-3 rounded-sm border p-4 shadow-lg ">
       {/* Header */}
-      <header className="flex items-center justify-between border-b border-zinc-900 pb-2">
+      <header className="flex items-center justify-between border-b border-divider pb-2">
         <div className="flex items-center gap-2">
-          <Terminal className="size-4 text-fg-subtle" />
+          <IconTerminal className="size-4 text-fg-subtle" />
           <div className="flex flex-col">
             <span className="text-fg-subtle text-xs uppercase font-bold tracking-wider">
               DevOps Action Console
@@ -54,26 +54,26 @@ export function RunSystemActionPart({
           </div>
         </div>
         <span className={`inline-flex items-center gap-1 rounded-sm px-2.5 py-0.5 text-xs font-bold ${
-          isSuccess ? 'bg-emerald-500/10 text-emerald-500' : 'bg-red-500/10 text-red-500'
+          isSuccess ? 'bg-bull/10 text-bull' : 'bg-bear/10 text-bear'
         }`}>
-          {isSuccess ? <CheckCircle2 className="size-3" /> : <AlertTriangle className="size-3" />}
+          {isSuccess ? <IconCircleCheck className="size-3" /> : <IconAlertTriangle className="size-3" />}
           {isSuccess ? 'COMPLETED' : 'FAILED'}
         </span>
       </header>
 
-      {/* Terminal View */}
+      {/* IconTerminal View */}
       <div className="relative">
-        <div className="absolute top-2 right-2 flex items-center gap-1.5 text-xs font-mono text-fg-subtle bg-zinc-900/80 px-2 py-0.5 rounded border border-zinc-900/50">
-          <div className={`size-1.5 rounded-sm ${isSuccess ? 'bg-emerald-500 animate-pulse' : 'bg-red-500'}`} />
+        <div className="absolute top-2 right-2 flex items-center gap-1.5 text-xs font-mono text-fg-subtle bg-bg-elev-2/80 px-2 py-0.5 rounded-sm border border-divider/50">
+          <div className={`size-1.5 rounded-sm ${isSuccess ? 'bg-bull animate-pulse' : 'bg-bear'}`} />
           <span>{executionTimeMs}ms</span>
         </div>
-        <pre className="bg-zinc-900 text-emerald-500 font-mono text-xs p-3 rounded-sm overflow-y-auto max-h-48 border border-zinc-800/25 leading-normal select-all">
+        <pre className="bg-bg-elev-2 text-bull font-mono text-xs p-3 rounded-sm overflow-y-auto max-h-48 border border-border/25 leading-normal select-all">
           <code>
             {consoleLogs.map((line, idx) => {
-              let textClass = 'text-emerald-500';
-              if (line.startsWith('[error]')) textClass = 'text-red-500 font-semibold';
-              if (line.startsWith('[resonance-sync]')) textClass = 'text-blue-500';
-              if (line.startsWith('[cot-sync]') || line.startsWith('[cache]')) textClass = 'text-amber-500';
+              let textClass = 'text-bull';
+              if (line.startsWith('[error]')) textClass = 'text-bear font-semibold';
+              if (line.startsWith('[resonance-sync]')) textClass = 'text-info';
+              if (line.startsWith('[cot-sync]') || line.startsWith('[cache]')) textClass = 'text-warn';
               
               return (
                 <div key={idx} className={`${textClass} py-0.5 break-all whitespace-pre-wrap`}>
@@ -87,7 +87,7 @@ export function RunSystemActionPart({
 
       {/* Action Summary Message */}
       <div className={`rounded-sm p-2.5 text-body-sm leading-[1.4] border ${
-        isSuccess ? 'bg-emerald-500/5 border-emerald-500/20 text-fg' : 'bg-red-500/5 border-red-500/20 text-red-500'
+        isSuccess ? 'bg-bull/5 border-bull/20 text-fg' : 'bg-bear/5 border-bear/20 text-bear'
       }`}>
         {message}
       </div>
@@ -97,21 +97,21 @@ export function RunSystemActionPart({
 
 function SkeletonCard() {
   return (
-    <div className="border-border bg-zinc-950 rounded-sm border p-4 shadow-md" aria-busy="true" aria-label="Executing Task">
-      <div className="flex items-center justify-between border-b border-zinc-900 pb-2">
+    <div className="border-border bg-bg-elev-1 rounded-sm border p-4 shadow-md" aria-busy="true" aria-label="Executing Task">
+      <div className="flex items-center justify-between border-b border-divider pb-2">
         <div className="flex items-center gap-2 w-2/3">
-          <Terminal className="size-4 text-fg-subtle animate-pulse" />
+          <IconTerminal className="size-4 text-fg-subtle animate-pulse" />
           <div className="flex flex-col gap-1 w-full">
-            <div className="bg-zinc-900 h-2 w-1/4 animate-pulse rounded" />
-            <div className="bg-zinc-900 h-3.5 w-1/2 animate-pulse rounded mt-0.5" />
+            <div className="bg-bg-elev-2 h-2 w-1/4 animate-pulse rounded-sm" />
+            <div className="bg-bg-elev-2 h-3.5 w-1/2 animate-pulse rounded-sm mt-0.5" />
           </div>
         </div>
-        <div className="bg-zinc-900 h-5 w-24 animate-pulse rounded-sm" />
+        <div className="bg-bg-elev-2 h-5 w-24 animate-pulse rounded-sm" />
       </div>
       <div className="relative mt-3">
-        <div className="bg-zinc-900 h-28 w-full rounded-sm border border-zinc-800/25 flex flex-col justify-center items-center gap-2">
-          <Loader2 className="size-5 text-emerald-500 animate-spin" />
-          <span className="text-xs font-mono text-emerald-500 animate-pulse">
+        <div className="bg-bg-elev-2 h-28 w-full rounded-sm border border-border/25 flex flex-col justify-center items-center gap-2">
+          <IconLoader2 className="size-5 text-bull animate-spin" />
+          <span className="text-xs font-mono text-bull animate-pulse">
             [devops] executing target sync scripts...
           </span>
         </div>
@@ -122,7 +122,7 @@ function SkeletonCard() {
 
 function ErrorCard({ message }: { message?: string }) {
   return (
-    <div role="alert" className="border-red-500/30 bg-zinc-950 text-red-500 rounded-sm border p-4 text-sm font-semibold">
+    <div role="alert" className="border-bear/30 bg-bg-elev-1 text-bear rounded-sm border p-4 text-sm font-semibold">
       DevOps execution pipeline failed {message ? ` · ${message}` : ''}
     </div>
   );

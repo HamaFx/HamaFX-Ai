@@ -2,7 +2,7 @@
 
 import { useActionState, useEffect } from 'react';
 import { toast } from 'sonner';
-import { Power } from 'lucide-react';
+import { IconPower } from '@tabler/icons-react';
 
 import { Button } from '@/components/ui/button';
 import { updateDisabledToolsAction } from '../../actions';
@@ -39,22 +39,22 @@ export function DisabledToolsForm({
 
   return (
     <form action={formAction} className="flex flex-col gap-3">
-      <div className="border border-zinc-800 bg-zinc-950 rounded-sm overflow-hidden">
+      <div className="border border-border bg-bg-elev-1 rounded-sm overflow-hidden">
         {allTools.map((toolName) => {
           const isDisabled = initialDisabledTools.includes(toolName);
           return (
             <label
               key={toolName}
-              className="flex items-center gap-3 px-3 py-2.5 border-b border-zinc-800 last:border-b-0 hover:bg-zinc-900/20 cursor-pointer select-none transition-colors"
+              className="flex items-center gap-3 px-3 py-2.5 border-b border-border last:border-b-0 hover:bg-bg-elev-2/20 cursor-pointer select-none transition-colors"
             >
               <input
                 type="checkbox"
                 name="disabledTool"
                 value={toolName}
                 defaultChecked={isDisabled}
-                className="size-4 accent-brand rounded border-zinc-800 cursor-pointer"
+                className="size-4 accent-brand rounded-sm border-border cursor-pointer"
               />
-              <Power className={`size-3.5 shrink-0 ${isDisabled ? 'text-red-500' : 'text-emerald-500'}`} />
+              <IconPower className={`size-3.5 shrink-0 ${isDisabled ? 'text-bear' : 'text-bull'}`} />
               <div className="flex flex-col min-w-0">
                 <code className="text-fg text-xs font-semibold font-mono">{toolName}</code>
               </div>
@@ -67,7 +67,7 @@ export function DisabledToolsForm({
       </div>
       <div className="flex justify-end">
         <Button type="submit" loading={pending} className="min-w-[120px]">
-          Save Changes
+          IconDeviceFloppy Changes
         </Button>
       </div>
     </form>

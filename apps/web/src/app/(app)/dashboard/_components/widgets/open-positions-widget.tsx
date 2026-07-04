@@ -23,7 +23,7 @@
 // computable). Links out to /journal for the full table.
 
 import Link from 'next/link';
-import { Activity, ArrowUpRight, ArrowDownRight } from 'lucide-react';
+import {IconActivity, IconArrowUpRight, IconArrowDownRight} from '@tabler/icons-react';
 import type { JournalEntry } from '@hamafx/shared';
 import { priceDecimals } from '@hamafx/shared';
 
@@ -46,11 +46,11 @@ export function OpenPositionsWidget({
   return (
     <section
       aria-label="Open positions"
-      className="border-zinc-800 bg-zinc-950 flex flex-col gap-3 rounded-sm border p-4"
+      className="border-border bg-bg-elev-1 flex flex-col gap-3 rounded-sm border p-4"
     >
       <header className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
-          <Activity className="text-fg-subtle size-4" />
+          <IconActivity className="text-fg-subtle size-4" />
           <span className="text-fg text-body-sm font-semibold">
             Open positions
           </span>
@@ -67,7 +67,7 @@ export function OpenPositionsWidget({
 
       {open.length === 0 ? (
         <EmptyState
-          icon={<Activity className="size-5" />}
+          icon={<IconActivity className="size-5" />}
           title="No open positions"
           description="Active trades will appear here when you log them."
           tone="muted"
@@ -79,21 +79,21 @@ export function OpenPositionsWidget({
           {open.map((e) => (
             <li
               key={e.id}
-              className="border-zinc-900 flex items-center justify-between gap-3 border-b py-2 last:border-0"
+              className="border-divider flex items-center justify-between gap-3 border-b py-2 last:border-0"
             >
               <div className="flex min-w-0 items-center gap-2">
                 <span
                   className={cn(
-                    'inline-flex size-5 shrink-0 items-center justify-center rounded',
+                    'inline-flex size-5 shrink-0 items-center justify-center rounded-sm',
                     e.side === 'long'
-                      ? 'bg-emerald-500/15 text-emerald-500'
-                      : 'bg-red-500/15 text-red-500',
+                      ? 'bg-bull/15 text-bull'
+                      : 'bg-bear/15 text-bear',
                   )}
                 >
                   {e.side === 'long' ? (
-                    <ArrowUpRight className="size-3.5" />
+                    <IconArrowUpRight className="size-3.5" />
                   ) : (
-                    <ArrowDownRight className="size-3.5" />
+                    <IconArrowDownRight className="size-3.5" />
                   )}
                 </span>
                 <div className="flex min-w-0 flex-col">

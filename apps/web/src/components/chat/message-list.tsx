@@ -63,7 +63,15 @@ export const MessageList = memo(function MessageList({
     getScrollElement: () => scrollContainerRef?.current ?? null,
     estimateSize: (index) => {
       const msg = messages[index];
-      if (msg?.parts?.some((p) => p.type.startsWith('tool-'))) return 500;
+      if (!msg) return 180;
+      // More granular estimate based on content type
+      const hasToolCall = msg.parts?.some((p) => p.type.startsWith('tool-'));
+      const hasMarkdown = msg.parts?.some((p) => p.type === 'text' && p.text.length > 500);
+      const hasTables = msg.parts?.some((p) => p.type === 'text' && /\|.*\|/.test(p.text));
+      if (hasToolCall) return 500;
+      if (hasTables) return 400;
+      if (hasMarkdown) return 300;
+      if (msg.role === 'user') return 80;
       return 180;
     },
     overscan: 5,
@@ -96,19 +104,12 @@ export const MessageList = memo(function MessageList({
             >
               <div className="flex justify-start">
                 <div
-                  className="bg-zinc-950 border border-zinc-800 text-fg flex items-center gap-1 rounded-sm px-4 py-3"
+                  className="flex items-center gap-2 py-3"
                   role="status"
                   aria-label="Assistant is responding"
                 >
-                  <span className="bg-fg motion-safe:animate-bounce size-1.5 rounded-sm" />
-                  <span
-                    className="bg-fg motion-safe:animate-bounce size-1.5 rounded-sm"
-                    style={{ animationDelay: '150ms' }}
-                  />
-                  <span
-                    className="bg-fg motion-safe:animate-bounce size-1.5 rounded-sm"
-                    style={{ animationDelay: '300ms' }}
-                  />
+                  <span className="inline-block h-4 w-0.5 bg-fg motion-safe:animate-pulse" />
+                  <span className="text-sm text-fg-muted">Thinking…</span>
                 </div>
               </div>
             </div>

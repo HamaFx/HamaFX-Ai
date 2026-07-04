@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { CheckCircle2, Loader2, Play, XCircle } from 'lucide-react';
+import {IconCircleCheck, IconLoader2, IconPlayerPlay, IconCircleX} from '@tabler/icons-react';
 
 import { Button } from '@/components/ui/button';
 import { withCsrf } from '@/lib/csrf';
@@ -81,7 +81,7 @@ export function BulkTestButton({ disabled }: BulkTestButtonProps) {
                 );
               } else if (summary.ok === 0) {
                 toast.error(
-                  `${summary.failed} providers failed. Check the errors below.`,
+                  `${summary.failed} providers failed. IconCheck the errors below.`,
                 );
               } else {
                 toast.warning(
@@ -120,12 +120,12 @@ export function BulkTestButton({ disabled }: BulkTestButtonProps) {
       >
         {isLoading ? (
           <>
-            <Loader2 className="size-3 animate-spin" />
+            <IconLoader2 className="size-3 animate-spin" />
             {progress ? `Testing (${progress.current}/${progress.total})…` : 'Testing all…'}
           </>
         ) : (
           <>
-            <Play className="size-3" />
+            <IconPlayerPlay className="size-3" />
             Test all
           </>
         )}
@@ -133,9 +133,9 @@ export function BulkTestButton({ disabled }: BulkTestButtonProps) {
       {summary ? (
         <span className="flex items-center gap-1 text-caption tabular-nums">
           {summary.failed === 0 ? (
-            <CheckCircle2 className="size-3 text-emerald-500" />
+            <IconCircleCheck className="size-3 text-bull" />
           ) : (
-            <XCircle className="size-3 text-red-500" />
+            <IconCircleX className="size-3 text-bear" />
           )}
           <span className="text-fg-muted">
             {summary.ok}/{summary.total - summary.missing} ok

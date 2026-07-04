@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Shield, ShieldOff, Loader2, Check, Copy } from 'lucide-react';
+import {IconShield, IconShieldOff, IconLoader2, IconCheck, IconCopy} from '@tabler/icons-react';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
@@ -87,11 +87,11 @@ export function TwoFactorSetup({ enabled }: TwoFactorSetupProps) {
 
   if (enabled && step !== 'done') {
     return (
-      <div className="border border-zinc-800 bg-zinc-950 rounded-sm p-4 flex flex-col gap-4">
+      <div className="border border-border bg-bg-elev-1 rounded-sm p-4 flex flex-col gap-4">
         <div className="flex items-center gap-2">
-          <Shield className="size-4 text-emerald-500" />
+          <IconShield className="size-4 text-bull" />
           <span className="text-sm font-medium text-fg">Two-Factor Authentication</span>
-          <span className="rounded-sm bg-emerald-500/15 px-2 py-0.5 text-xs font-medium text-emerald-500 ml-auto">
+          <span className="rounded-sm bg-bull/15 px-2 py-0.5 text-xs font-medium text-bull ml-auto">
             Enabled
           </span>
         </div>
@@ -105,7 +105,7 @@ export function TwoFactorSetup({ enabled }: TwoFactorSetupProps) {
             placeholder="Enter 6-digit code to disable"
             maxLength={6}
             aria-label="Enter 6-digit code to disable two-factor authentication"
-            className="bg-zinc-950 h-9 text-sm w-40"
+            className="bg-bg-elev-1 h-9 text-sm w-40"
           />
           <Button
             type="button"
@@ -115,7 +115,7 @@ export function TwoFactorSetup({ enabled }: TwoFactorSetupProps) {
             disabled={disabling || token.length !== 6}
             className="w-fit"
           >
-            {disabling ? <Loader2 className="size-3.5 animate-spin mr-1" /> : <ShieldOff className="size-3.5 mr-1" />}
+            {disabling ? <IconLoader2 className="size-3.5 animate-spin mr-1" /> : <IconShieldOff className="size-3.5 mr-1" />}
             Disable 2FA
           </Button>
         </div>
@@ -125,11 +125,11 @@ export function TwoFactorSetup({ enabled }: TwoFactorSetupProps) {
 
   if (step === 'done') {
     return (
-      <div className="border border-zinc-800 bg-zinc-950 rounded-sm p-4 flex flex-col gap-3">
+      <div className="border border-border bg-bg-elev-1 rounded-sm p-4 flex flex-col gap-3">
         <div className="flex items-center gap-2">
-          <Check className="size-4 text-emerald-500" />
+          <IconCheck className="size-4 text-bull" />
           <span className="text-sm font-medium text-fg">Two-Factor Authentication</span>
-          <span className="rounded-sm bg-emerald-500/15 px-2 py-0.5 text-xs font-medium text-emerald-500 ml-auto">
+          <span className="rounded-sm bg-bull/15 px-2 py-0.5 text-xs font-medium text-bull ml-auto">
             Enabled
           </span>
         </div>
@@ -142,18 +142,18 @@ export function TwoFactorSetup({ enabled }: TwoFactorSetupProps) {
 
   if (step === 'show_qr' && qrDataUrl) {
     return (
-      <div className="border border-zinc-800 bg-zinc-950 rounded-sm p-4 flex flex-col gap-4">
+      <div className="border border-border bg-bg-elev-1 rounded-sm p-4 flex flex-col gap-4">
         <div className="flex items-center gap-2">
-          <Shield className="size-4 text-fg" />
+          <IconShield className="size-4 text-fg" />
           <span className="text-sm font-medium text-fg">Set Up Two-Factor Authentication</span>
         </div>
         <div className="flex flex-col items-center gap-3">
-          <img src={qrDataUrl} alt="Scan this QR code with your authenticator app" className="size-40 border border-zinc-800 rounded-sm" />
+          <img src={qrDataUrl} alt="Scan this QR code with your authenticator app" className="size-40 border border-border rounded-sm" />
           <p className="text-caption text-fg-subtle text-center max-w-sm">
             Scan this QR code with your authenticator app (e.g., Google Authenticator, Authy).
           </p>
           <div className="flex items-center gap-2">
-            <code className="text-xs bg-zinc-900 px-2 py-1 rounded border border-zinc-800 font-mono select-all">
+            <code className="text-xs bg-bg-elev-2 px-2 py-1 rounded-sm border border-border font-mono select-all">
               {secret}
             </code>
             <button
@@ -162,7 +162,7 @@ export function TwoFactorSetup({ enabled }: TwoFactorSetupProps) {
               className="p-1 text-fg-subtle hover:text-fg cursor-pointer"
               aria-label="Copy secret"
             >
-              <Copy className="size-3.5" />
+              <IconCopy className="size-3.5" />
             </button>
           </div>
         </div>
@@ -173,7 +173,7 @@ export function TwoFactorSetup({ enabled }: TwoFactorSetupProps) {
             placeholder="Enter 6-digit code"
             maxLength={6}
             aria-label="Enter verification code"
-            className="bg-zinc-950 h-9 text-sm w-32"
+            className="bg-bg-elev-1 h-9 text-sm w-32"
           />
           <Button
             type="button"
@@ -182,7 +182,7 @@ export function TwoFactorSetup({ enabled }: TwoFactorSetupProps) {
             onClick={handleVerify}
             disabled={verifying || token.length !== 6}
           >
-            {verifying ? <Loader2 className="size-3.5 animate-spin mr-1" /> : null}
+            {verifying ? <IconLoader2 className="size-3.5 animate-spin mr-1" /> : null}
             Verify & Enable
           </Button>
         </div>
@@ -191,12 +191,12 @@ export function TwoFactorSetup({ enabled }: TwoFactorSetupProps) {
   }
 
   return (
-    <div className="border border-zinc-800 bg-zinc-950 rounded-sm p-4 flex flex-col gap-3">
+    <div className="border border-border bg-bg-elev-1 rounded-sm p-4 flex flex-col gap-3">
       <div className="flex items-center gap-2">
-        <Shield className="size-4 text-fg-muted" />
+        <IconShield className="size-4 text-fg-muted" />
         <span className="text-sm font-medium text-fg">Two-Factor Authentication</span>
         {enabled && (
-          <span className="rounded-sm bg-emerald-500/15 px-2 py-0.5 text-xs font-medium text-emerald-500 ml-auto">
+          <span className="rounded-sm bg-bull/15 px-2 py-0.5 text-xs font-medium text-bull ml-auto">
             Enabled
           </span>
         )}
@@ -212,7 +212,7 @@ export function TwoFactorSetup({ enabled }: TwoFactorSetupProps) {
         disabled={isSettingUp}
         className="w-fit"
       >
-        {isSettingUp ? <Loader2 className="size-3.5 animate-spin mr-1" /> : <Shield className="size-3.5 mr-1" />}
+        {isSettingUp ? <IconLoader2 className="size-3.5 animate-spin mr-1" /> : <IconShield className="size-3.5 mr-1" />}
         Set up 2FA
       </Button>
     </div>

@@ -16,14 +16,14 @@
 
 'use client';
 
-// Phase 1.6 — Calendar widget.
+// Phase 1.6 — IconCalendar widget.
 //
 // Next 3 high-impact economic events with live countdowns. Uses the
 // shared `useNow` provider so all tickers stay in sync without each
 // widget spawning its own interval.
 
 import Link from 'next/link';
-import { Calendar } from 'lucide-react';
+import { IconCalendar } from '@tabler/icons-react';
 import type { EconomicEvent } from '@hamafx/shared';
 
 import { EmptyState } from '@/components/ui/empty-state';
@@ -38,7 +38,7 @@ interface CalendarWidgetProps {
 export function CalendarWidget({ events, limit = 3 }: CalendarWidgetProps) {
   const { now } = useTime();
 
-  // Filter to upcoming high/medium importance, sort ascending, cap.
+  // IconFilter to upcoming high/medium importance, sort ascending, cap.
   const upcoming = events
     .filter((e) => e.date > now)
     .sort((a, b) => a.date - b.date)
@@ -47,11 +47,11 @@ export function CalendarWidget({ events, limit = 3 }: CalendarWidgetProps) {
   return (
     <section
       aria-label="Upcoming events"
-      className="border-zinc-800 bg-zinc-950 flex flex-col gap-3 rounded-sm border p-4"
+      className="border-border bg-bg-elev-1 flex flex-col gap-3 rounded-sm border p-4"
     >
       <header className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
-          <Calendar className="text-fg-subtle size-4" />
+          <IconCalendar className="text-fg-subtle size-4" />
           <span className="text-fg text-body-sm font-semibold">Calendar</span>
         </div>
         <Link href="/calendar" className="text-fg-subtle hover:text-fg text-caption">
@@ -61,7 +61,7 @@ export function CalendarWidget({ events, limit = 3 }: CalendarWidgetProps) {
 
       {upcoming.length === 0 ? (
         <EmptyState
-          icon={<Calendar className="size-5" />}
+          icon={<IconCalendar className="size-5" />}
           title="No upcoming events"
           description="High-impact events will appear here as they're scheduled."
           tone="muted"
@@ -74,14 +74,14 @@ export function CalendarWidget({ events, limit = 3 }: CalendarWidgetProps) {
             const date = new Date(e.date);
             const importanceTone =
               e.importance === 'high'
-                ? 'bg-red-500/15 text-red-500'
+                ? 'bg-bear/15 text-bear'
                 : e.importance === 'medium'
-                  ? 'bg-amber-500/15 text-amber-500'
+                  ? 'bg-warn/15 text-warn'
                   : 'bg-fg-muted/15 text-fg-muted';
             return (
               <li
                 key={e.id}
-                className="border-zinc-900 flex items-center justify-between gap-3 border-b py-2 last:border-0"
+                className="border-divider flex items-center justify-between gap-3 border-b py-2 last:border-0"
               >
                 <div className="flex min-w-0 flex-col">
                   <span className="text-fg text-body-sm font-semibold truncate">
@@ -102,7 +102,7 @@ export function CalendarWidget({ events, limit = 3 }: CalendarWidgetProps) {
                 </div>
                 <span
                   className={cn(
-                    'text-caption font-bold px-1.5 py-0.5 rounded shrink-0',
+                    'text-caption font-bold px-1.5 py-0.5 rounded-sm shrink-0',
                     importanceTone,
                   )}
                 >

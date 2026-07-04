@@ -34,7 +34,7 @@
 
 import { useMemo, memo } from 'react';
 import type { Symbol } from '@hamafx/shared';
-import { BarChart3, Bell, CalendarDays, LineChart, TrendingUp } from 'lucide-react';
+import {IconChartBar, IconBell, IconCalendarEvent, IconChartLine, IconTrendingUp} from '@tabler/icons-react';
 
 import { getSessionInfo, type TradingSession } from '@/lib/session';
 
@@ -48,49 +48,47 @@ interface QuickPromptsProps {
 }
 
 interface Prompt {
-  icon: typeof BarChart3;
+  icon: typeof IconChartBar;
   label: string;
-  /** Background tint behind the icon. */
-  bg: string;
   /** Icon foreground color class. */
   fg: string;
 }
 
 const NO_PIN_PROMPTS: Record<TradingSession, readonly Prompt[]> = {
   asian: [
-    { icon: TrendingUp, label: "What's moving in Asia today?", bg: '', fg: 'text-fg' },
-    { icon: CalendarDays, label: "Today's calendar", bg: '', fg: 'text-accent' },
-    { icon: LineChart, label: 'Top-down gold 4H→15M', bg: '', fg: 'text-blue-500' },
-    { icon: BarChart3, label: 'Show me the structure', bg: '', fg: 'text-blue-500' },
-    { icon: Bell, label: 'Alert gold above 2400', bg: '', fg: 'text-amber-500' },
+    { icon: IconTrendingUp, label: "What's moving in Asia today?", fg: 'text-fg' },
+    { icon: IconCalendarEvent, label: "Today's calendar", fg: 'text-accent' },
+    { icon: IconChartLine, label: 'Top-down gold 4H→15M', fg: 'text-info' },
+    { icon: IconChartBar, label: 'Show me the structure', fg: 'text-info' },
+    { icon: IconBell, label: 'Alert gold above 2400', fg: 'text-warn' },
   ],
   london: [
-    { icon: TrendingUp, label: 'London open — bias on majors?', bg: '', fg: 'text-fg' },
-    { icon: LineChart, label: 'Top-down EURUSD 4H→15M', bg: '', fg: 'text-blue-500' },
-    { icon: BarChart3, label: 'Show me the structure', bg: '', fg: 'text-blue-500' },
-    { icon: CalendarDays, label: "London session calendar", bg: '', fg: 'text-accent' },
-    { icon: Bell, label: 'Alert EURUSD above 1.0900', bg: '', fg: 'text-amber-500' },
+    { icon: IconTrendingUp, label: 'London open — bias on majors?', fg: 'text-fg' },
+    { icon: IconChartLine, label: 'Top-down EURUSD 4H→15M', fg: 'text-info' },
+    { icon: IconChartBar, label: 'Show me the structure', fg: 'text-info' },
+    { icon: IconCalendarEvent, label: "London session calendar", fg: 'text-accent' },
+    { icon: IconBell, label: 'Alert EURUSD above 1.0900', fg: 'text-warn' },
   ],
   ny: [
-    { icon: TrendingUp, label: 'NY session plan for XAUUSD', bg: '', fg: 'text-fg' },
-    { icon: LineChart, label: 'Top-down XAUUSD 4H→15M', bg: '', fg: 'text-blue-500' },
-    { icon: BarChart3, label: 'Show me the structure', bg: '', fg: 'text-blue-500' },
-    { icon: CalendarDays, label: "NY session calendar", bg: '', fg: 'text-accent' },
-    { icon: Bell, label: 'Alert gold above 2400', bg: '', fg: 'text-amber-500' },
+    { icon: IconTrendingUp, label: 'NY session plan for XAUUSD', fg: 'text-fg' },
+    { icon: IconChartLine, label: 'Top-down XAUUSD 4H→15M', fg: 'text-info' },
+    { icon: IconChartBar, label: 'Show me the structure', fg: 'text-info' },
+    { icon: IconCalendarEvent, label: "NY session calendar", fg: 'text-accent' },
+    { icon: IconBell, label: 'Alert gold above 2400', fg: 'text-warn' },
   ],
   closed: [
-    { icon: BarChart3, label: 'How did today close?', bg: '', fg: 'text-blue-500' },
-    { icon: TrendingUp, label: 'Daily bias recap', bg: '', fg: 'text-fg' },
-    { icon: LineChart, label: 'Top-down gold 4H→15M', bg: '', fg: 'text-blue-500' },
-    { icon: CalendarDays, label: "Tomorrow's calendar", bg: '', fg: 'text-accent' },
-    { icon: Bell, label: 'Set an alert for tomorrow', bg: '', fg: 'text-amber-500' },
+    { icon: IconChartBar, label: 'How did today close?', fg: 'text-info' },
+    { icon: IconTrendingUp, label: 'Daily bias recap', fg: 'text-fg' },
+    { icon: IconChartLine, label: 'Top-down gold 4H→15M', fg: 'text-info' },
+    { icon: IconCalendarEvent, label: "Tomorrow's calendar", fg: 'text-accent' },
+    { icon: IconBell, label: 'Set an alert for tomorrow', fg: 'text-warn' },
   ],
   weekend: [
-    { icon: TrendingUp, label: 'Weekly bias — what is your read?', bg: '', fg: 'text-fg' },
-    { icon: BarChart3, label: 'Weekly structure recap', bg: '', fg: 'text-blue-500' },
-    { icon: CalendarDays, label: 'Next week calendar', bg: '', fg: 'text-accent' },
-    { icon: LineChart, label: 'Key levels to watch', bg: '', fg: 'text-blue-500' },
-    { icon: Bell, label: 'Set alert for Sunday open', bg: '', fg: 'text-amber-500' },
+    { icon: IconTrendingUp, label: 'Weekly bias — what is your read?', fg: 'text-fg' },
+    { icon: IconChartBar, label: 'Weekly structure recap', fg: 'text-info' },
+    { icon: IconCalendarEvent, label: 'Next week calendar', fg: 'text-accent' },
+    { icon: IconChartLine, label: 'IconKey levels to watch', fg: 'text-info' },
+    { icon: IconBell, label: 'Set alert for Sunday open', fg: 'text-warn' },
   ],
 };
 
@@ -99,43 +97,43 @@ function generatePinnedPrompts(symbol: string, session: TradingSession): readonl
   switch (session) {
     case 'asian':
       return [
-        { icon: TrendingUp, label: `${s} Asian range and key levels`, bg: '', fg: 'text-fg' },
-        { icon: CalendarDays, label: `${s} news impact today`, bg: '', fg: 'text-accent' },
-        { icon: LineChart, label: `Top-down ${s} 4H→15M`, bg: '', fg: 'text-blue-500' },
-        { icon: BarChart3, label: `${s} Asian session structure`, bg: '', fg: 'text-blue-500' },
-        { icon: Bell, label: `Alert ${s} break of recent high`, bg: '', fg: 'text-amber-500' },
+        { icon: IconTrendingUp, label: `${s} Asian range and key levels`, fg: 'text-fg' },
+        { icon: IconCalendarEvent, label: `${s} news impact today`, fg: 'text-accent' },
+        { icon: IconChartLine, label: `Top-down ${s} 4H→15M`, fg: 'text-info' },
+        { icon: IconChartBar, label: `${s} Asian session structure`, fg: 'text-info' },
+        { icon: IconBell, label: `Alert ${s} break of recent high`, fg: 'text-warn' },
       ];
     case 'london':
       return [
-        { icon: TrendingUp, label: `London open bias for ${s}`, bg: '', fg: 'text-fg' },
-        { icon: LineChart, label: `Top-down ${s} 4H→15M`, bg: '', fg: 'text-blue-500' },
-        { icon: BarChart3, label: `London session ${s} key levels`, bg: '', fg: 'text-blue-500' },
-        { icon: CalendarDays, label: `European news affecting ${s}`, bg: '', fg: 'text-accent' },
-        { icon: Bell, label: `Alert ${s} below London low`, bg: '', fg: 'text-amber-500' },
+        { icon: IconTrendingUp, label: `London open bias for ${s}`, fg: 'text-fg' },
+        { icon: IconChartLine, label: `Top-down ${s} 4H→15M`, fg: 'text-info' },
+        { icon: IconChartBar, label: `London session ${s} key levels`, fg: 'text-info' },
+        { icon: IconCalendarEvent, label: `European news affecting ${s}`, fg: 'text-accent' },
+        { icon: IconBell, label: `Alert ${s} below London low`, fg: 'text-warn' },
       ];
     case 'ny':
       return [
-        { icon: TrendingUp, label: `NY session plan for ${s}`, bg: '', fg: 'text-fg' },
-        { icon: LineChart, label: `Top-down ${s} 4H→15M`, bg: '', fg: 'text-blue-500' },
-        { icon: BarChart3, label: `${s} news & market correlation`, bg: '', fg: 'text-blue-500' },
-        { icon: CalendarDays, label: `NY session calendar for USD`, bg: '', fg: 'text-accent' },
-        { icon: Bell, label: `Alert ${s} break of high`, bg: '', fg: 'text-amber-500' },
+        { icon: IconTrendingUp, label: `NY session plan for ${s}`, fg: 'text-fg' },
+        { icon: IconChartLine, label: `Top-down ${s} 4H→15M`, fg: 'text-info' },
+        { icon: IconChartBar, label: `${s} news & market correlation`, fg: 'text-info' },
+        { icon: IconCalendarEvent, label: `NY session calendar for USD`, fg: 'text-accent' },
+        { icon: IconBell, label: `Alert ${s} break of high`, fg: 'text-warn' },
       ];
     case 'closed':
       return [
-        { icon: BarChart3, label: `How did ${s} close today?`, bg: '', fg: 'text-blue-500' },
-        { icon: TrendingUp, label: `${s} daily bias recap`, bg: '', fg: 'text-fg' },
-        { icon: LineChart, label: `Top-down ${s} 4H→15M`, bg: '', fg: 'text-blue-500' },
-        { icon: CalendarDays, label: `Tomorrow's ${s} news outlook`, bg: '', fg: 'text-accent' },
-        { icon: Bell, label: `Set an alert for ${s} tomorrow`, bg: '', fg: 'text-amber-500' },
+        { icon: IconChartBar, label: `How did ${s} close today?`, fg: 'text-info' },
+        { icon: IconTrendingUp, label: `${s} daily bias recap`, fg: 'text-fg' },
+        { icon: IconChartLine, label: `Top-down ${s} 4H→15M`, fg: 'text-info' },
+        { icon: IconCalendarEvent, label: `Tomorrow's ${s} news outlook`, fg: 'text-accent' },
+        { icon: IconBell, label: `Set an alert for ${s} tomorrow`, fg: 'text-warn' },
       ];
     case 'weekend':
       return [
-        { icon: TrendingUp, label: `${s} weekly bias & structure`, bg: '', fg: 'text-fg' },
-        { icon: BarChart3, label: `Weekly ${s} sentiment & COT check`, bg: '', fg: 'text-blue-500' },
-        { icon: CalendarDays, label: `Next week ${s} news calendar`, bg: '', fg: 'text-accent' },
-        { icon: LineChart, label: `${s} key levels to watch next week`, bg: '', fg: 'text-blue-500' },
-        { icon: Bell, label: `Set ${s} alert for Sunday open`, bg: '', fg: 'text-amber-500' },
+        { icon: IconTrendingUp, label: `${s} weekly bias & structure`, fg: 'text-fg' },
+        { icon: IconChartBar, label: `Weekly ${s} sentiment & COT check`, fg: 'text-info' },
+        { icon: IconCalendarEvent, label: `Next week ${s} news calendar`, fg: 'text-accent' },
+        { icon: IconChartLine, label: `${s} key levels to watch next week`, fg: 'text-info' },
+        { icon: IconBell, label: `Set ${s} alert for Sunday open`, fg: 'text-warn' },
       ];
   }
 }
@@ -174,10 +172,10 @@ export const QuickPrompts = memo(function QuickPrompts({
             type="button"
             disabled={disabled}
             onClick={() => onSelect(p.label)}
-            className="border border-zinc-800 bg-zinc-950 text-fg hover:bg-zinc-900 hover:border-zinc-700 focus-visible:ring-fg flex h-14 items-center gap-3 rounded-sm px-3 text-left text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 disabled:opacity-50"
+            className="border border-border bg-bg-elev-1 text-fg hover:bg-bg-elev-3 focus-visible:ring-fg flex h-14 items-center gap-3 rounded-sm px-4 py-3 text-left text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 disabled:opacity-50"
           >
             <span
-              className={`shrink-0 inline-flex size-8 items-center justify-center rounded-sm border border-zinc-800 bg-zinc-900 text-fg-muted`}
+              className={`shrink-0 inline-flex size-8 items-center justify-center rounded-sm border border-border bg-bg-elev-2 text-fg-muted`}
             >
               <Icon className="size-4" strokeWidth={2} aria-hidden="true" />
             </span>

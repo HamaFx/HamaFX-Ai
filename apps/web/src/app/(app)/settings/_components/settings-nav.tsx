@@ -1,23 +1,23 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
-import { ArrowLeft, ChevronRight } from 'lucide-react';
+import {IconArrowLeft, IconChevronRight} from '@tabler/icons-react';
 import { Link } from 'next-view-transitions';
-import { User, Key, List, Activity, Settings, Brain, Bot, Target, Wallet, MessageCircle, CreditCard } from 'lucide-react';
+import {IconUser, IconKey, IconList, IconActivity, IconSettings, IconCpu, IconRobot, IconTarget, IconWallet, IconMessageCircle, IconCreditCard} from '@tabler/icons-react';
 import { cn } from '@/lib/cn';
 
 const NAV_ITEMS = [
-  { href: '/settings', label: 'General', icon: Settings, exact: true },
-  { href: '/settings/profile', label: 'Profile', icon: User },
-  { href: '/settings/api-keys', label: 'API Keys', icon: Key },
-  { href: '/settings/models', label: 'Models', icon: Brain },
-  { href: '/settings/agent', label: 'Agent', icon: Bot },
-  { href: '/settings/symbols', label: 'Symbols', icon: List },
-  { href: '/settings/usage', label: 'Usage', icon: Activity },
-  { href: '/settings/track-record', label: 'Track Record', icon: Target },
-  { href: '/settings/portfolio', label: 'Portfolio', icon: Wallet },
-  { href: '/settings/telegram', label: 'Telegram', icon: MessageCircle },
-  { href: '/settings/billing', label: 'Billing', icon: CreditCard },
+  { href: '/settings', label: 'General', icon: IconSettings, exact: true },
+  { href: '/settings/profile', label: 'Profile', icon: IconUser },
+  { href: '/settings/api-keys', label: 'API Keys', icon: IconKey },
+  { href: '/settings/models', label: 'Models', icon: IconCpu },
+  { href: '/settings/agent', label: 'Agent', icon: IconRobot },
+  { href: '/settings/symbols', label: 'Symbols', icon: IconList },
+  { href: '/settings/usage', label: 'Usage', icon: IconActivity },
+  { href: '/settings/track-record', label: 'Track Record', icon: IconTarget },
+  { href: '/settings/portfolio', label: 'Portfolio', icon: IconWallet },
+  { href: '/settings/telegram', label: 'Telegram', icon: IconMessageCircle },
+  { href: '/settings/billing', label: 'Billing', icon: IconCreditCard },
 ];
 
 export function SettingsNav() {
@@ -36,12 +36,10 @@ export function SettingsNav() {
             href="/settings"
             className="inline-flex items-center gap-1.5 hover:text-fg transition-colors shrink-0"
           >
-            <ArrowLeft className="size-3.5" />
-            Settings
-          </Link>
+            <IconArrowLeft className="size-3.5" />Settings</Link>
           {currentItem && (
             <>
-              <ChevronRight className="size-3.5 shrink-0" aria-hidden />
+              <IconChevronRight className="size-3.5 shrink-0" aria-hidden />
               <span className="text-fg font-medium truncate" aria-current="page">
                 {currentItem.label}
               </span>
@@ -67,8 +65,8 @@ export function SettingsNav() {
                   className={cn(
                     'flex items-center gap-3 rounded-sm px-3 py-2 text-sm font-medium transition-colors whitespace-nowrap snap-start',
                     active
-                      ? 'bg-zinc-900 text-fg'
-                      : 'text-fg-subtle hover:bg-surface-elevated hover:text-fg'
+                      ? 'bg-bg-elev-2 text-fg'
+                      : 'text-fg-subtle hover:bg-bg-elev-1-elevated hover:text-fg'
                   )}
                 >
                 <Icon className="size-4" />

@@ -32,7 +32,7 @@
  */
 
 import type { Symbol } from '@hamafx/shared';
-import { MessageCircle } from 'lucide-react';
+import { IconMessageCircle } from '@tabler/icons-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { toast } from 'sonner';
@@ -80,9 +80,9 @@ export function PinToChat({ symbol, prompt }: PinToChatProps) {
         onClick={() => void onPin()}
         disabled={pending}
         aria-label={`Pin ${symbol} to a new chat`}
-        className="bg-zinc-950 border border-zinc-800 text-fg-muted hover:text-fg hover:border-zinc-700 focus-visible:ring-fg inline-flex size-11 items-center justify-center rounded-sm focus:outline-none focus-visible:ring-2 disabled:cursor-not-allowed disabled:opacity-60"
+        className="bg-bg-elev-1 border border-border text-fg-muted hover:text-fg hover:border-border focus-visible:ring-fg inline-flex size-11 items-center justify-center rounded-sm focus:outline-none focus-visible:ring-2 disabled:cursor-not-allowed disabled:opacity-60"
       >
-        <MessageCircle className="size-4" strokeWidth={1.75} />
+        <IconMessageCircle className="size-4" strokeWidth={1.75} />
       </button>
     </Tooltip>
   );

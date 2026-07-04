@@ -17,7 +17,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Check, Loader2 } from 'lucide-react';
+import {IconCheck, IconLoader2} from '@tabler/icons-react';
 import { cn } from '@/lib/cn';
 
 interface Plan {
@@ -67,7 +67,7 @@ export function BillingPlans({ plans, currentPlanId }: { plans: Plan[]; currentP
     <div className="flex flex-col gap-3">
       <h3 className="text-fg text-sm font-semibold">Available Plans</h3>
       {error && (
-        <div className="rounded-sm border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-600 dark:text-red-400">
+        <div className="rounded-sm border border-bear/30 bg-bear/10 px-3 py-2 text-sm text-red-600 dark:text-bear">
           {error}
         </div>
       )}
@@ -81,14 +81,14 @@ export function BillingPlans({ plans, currentPlanId }: { plans: Plan[]; currentP
               className={cn(
                 'flex flex-col gap-3 rounded-sm border p-4 transition-colors',
                 isCurrent
-                  ? 'border-zinc-700 bg-zinc-950'
-                  : 'border-border bg-surface hover:border-zinc-700/20',
+                  ? 'border-border bg-bg-elev-1'
+                  : 'border-border bg-bg-elev-1 hover:border-border/20',
               )}
             >
               <div className="flex items-center justify-between">
                 <h4 className="text-fg font-semibold">{plan.name}</h4>
                 {isCurrent && (
-                  <span className="rounded-sm bg-zinc-900 px-2 py-0.5 text-xs font-medium text-fg">
+                  <span className="rounded-sm bg-bg-elev-2 px-2 py-0.5 text-xs font-medium text-fg">
                     Current
                   </span>
                 )}
@@ -97,7 +97,7 @@ export function BillingPlans({ plans, currentPlanId }: { plans: Plan[]; currentP
               <ul className="flex flex-col gap-1.5 text-sm text-fg-subtle">
                 {(plan.features ?? []).map((feat) => (
                   <li key={feat} className="flex items-center gap-2">
-                    <Check className="size-3.5 text-fg" />
+                    <IconCheck className="size-3.5 text-fg" />
                     {feat.replace(/_/g, ' ')}
                   </li>
                 ))}
@@ -109,7 +109,7 @@ export function BillingPlans({ plans, currentPlanId }: { plans: Plan[]; currentP
                   className="mt-auto inline-flex items-center justify-center gap-2 rounded-sm bg-fg px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-fg/90 disabled:opacity-50"
                 >
                   {loading === plan.id ? (
-                    <Loader2 className="size-4 animate-spin" />
+                    <IconLoader2 className="size-4 animate-spin" />
                   ) : (
                     `Upgrade to ${plan.name}`
                   )}

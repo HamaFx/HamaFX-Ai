@@ -17,7 +17,7 @@
 // Bespoke renderer for the `analyze_technical` tool part.
 //
 // Server component. Renders one compact card per timeframe with .tabular-nums
-// on every numeric field and text-emerald-500/text-red-500 on the directional ones.
+// on every numeric field and text-bull/text-bear on the directional ones.
 // `partial: true` surfaces a single line at the top so the user knows a tf
 // was dropped due to a fetch failure.
 
@@ -39,7 +39,7 @@ export function AnalyzeTechnicalPart({
   }
 
   return (
-    <div className="border-border bg-zinc-950 rounded-sm border p-3">
+    <div className="border-border bg-bg-elev-1 rounded-sm border p-3">
       <header className="mb-2 flex items-baseline justify-between gap-2">
         <h3 className="text-fg text-sm font-semibold">
           {output.symbol} · technical
@@ -50,7 +50,7 @@ export function AnalyzeTechnicalPart({
       </header>
 
       {output.partial ? (
-        <p className="text-amber-500 mb-2 text-body-sm">⚠ Some timeframes unavailable.</p>
+        <p className="text-warn mb-2 text-body-sm">⚠ Some timeframes unavailable.</p>
       ) : null}
 
       <p className="text-fg-muted mb-3 text-xs leading-snug">{output.summary}</p>
@@ -73,19 +73,19 @@ function TfCard({
 }) {
   const trendTone =
     reading.trend === 'up'
-      ? 'text-emerald-500'
+      ? 'text-bull'
       : reading.trend === 'down'
-        ? 'text-red-500'
+        ? 'text-bear'
         : 'text-fg-muted';
   const biasTone =
     reading.bias === 'bullish'
-      ? 'text-emerald-500'
+      ? 'text-bull'
       : reading.bias === 'bearish'
-        ? 'text-red-500'
+        ? 'text-bear'
         : 'text-fg-muted';
 
   return (
-    <li className="border-border bg-zinc-900 flex flex-col gap-1.5 rounded-sm border p-2.5">
+    <li className="border-border bg-bg-elev-2 flex flex-col gap-1.5 rounded-sm border p-2.5">
       <div className="flex items-baseline justify-between gap-2">
         <span className="text-fg text-xs font-semibold uppercase tracking-wide">
           {reading.tf}
@@ -102,7 +102,7 @@ function TfCard({
 
         <dt className="text-fg-subtle">MACD h</dt>
         <dd
-          className={`text-right ${reading.momentum.macdHist >= 0 ? 'text-emerald-500' : 'text-red-500'}`}
+          className={`text-right ${reading.momentum.macdHist >= 0 ? 'text-bull' : 'text-bear'}`}
         >
           {reading.momentum.macdHist.toFixed(4)}
         </dd>
@@ -143,15 +143,15 @@ function TfCard({
 function SkeletonCard() {
   return (
     <div
-      className="border-border bg-zinc-950 rounded-sm border p-3"
+      className="border-border bg-bg-elev-1 rounded-sm border p-3"
       aria-busy="true"
       aria-label="Analyzing technical posture"
     >
-      <div className="bg-zinc-900 h-4 w-1/2 animate-pulse rounded" />
-      <div className="bg-zinc-900 mt-3 h-3 w-3/4 animate-pulse rounded" />
+      <div className="bg-bg-elev-2 h-4 w-1/2 animate-pulse rounded-sm" />
+      <div className="bg-bg-elev-2 mt-3 h-3 w-3/4 animate-pulse rounded-sm" />
       <ul className="mt-3 grid grid-cols-3 gap-2">
         {[0, 1, 2].map((i) => (
-          <li key={i} className="bg-zinc-900 h-24 animate-pulse rounded-sm" />
+          <li key={i} className="bg-bg-elev-2 h-24 animate-pulse rounded-sm" />
         ))}
       </ul>
     </div>
@@ -162,7 +162,7 @@ function ErrorCard({ message }: { message?: string }) {
   return (
     <div
       role="alert"
-      className="border-red-500/30 bg-zinc-950 text-red-500 rounded-sm border p-3 text-sm"
+      className="border-bear/30 bg-bg-elev-1 text-bear rounded-sm border p-3 text-sm"
     >
       Technical analysis failed{message ? ` · ${message}` : ''}
     </div>

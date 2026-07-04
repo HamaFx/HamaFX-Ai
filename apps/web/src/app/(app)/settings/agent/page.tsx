@@ -26,7 +26,7 @@ import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { auth } from '@/auth';
 import { TOOL_NAMES, type ToolName } from '@hamafx/shared';
-import { Settings2 } from 'lucide-react';
+import { IconSettings } from '@tabler/icons-react';
 
 import { DisabledToolsForm } from './_components/disabled-tools-form';
 import { AnalysisModeForm } from './_components/analysis-mode-form';
@@ -87,7 +87,7 @@ export default async function AgentCataloguePage() {
 
       <p className="text-fg-muted text-sm">
         Every tool the agent can call. Counts and latencies come from{' '}
-        <code className="bg-zinc-900 text-fg rounded px-1.5 py-0.5 font-mono text-xs">
+        <code className="bg-bg-elev-2 text-fg rounded-sm px-1.5 py-0.5 font-mono text-xs">
           chat_tool_telemetry
         </code>{' '}
         over the last 24 hours.
@@ -97,7 +97,7 @@ export default async function AgentCataloguePage() {
         {entries.map((e) => (
           <li
             key={e.name}
-            className="border-zinc-800 bg-zinc-950 flex flex-col gap-1.5 rounded-sm border p-3"
+            className="border-border bg-bg-elev-1 flex flex-col gap-1.5 rounded-sm border p-3"
           >
             <div className="flex flex-wrap items-baseline justify-between gap-2">
               <code className="text-fg font-mono text-sm font-semibold">{e.name}</code>
@@ -123,7 +123,7 @@ export default async function AgentCataloguePage() {
 
       <section aria-labelledby="disabled-tools-heading" className="flex flex-col gap-3">
         <header className="flex items-center gap-2">
-          <Settings2 className="size-4 text-fg-muted" />
+          <IconSettings className="size-4 text-fg-muted" />
           <h2 id="disabled-tools-heading" className="text-fg-muted text-sm font-medium">
             Disabled Tools
           </h2>
@@ -144,10 +144,10 @@ export default async function AgentCataloguePage() {
 function Pill({ label, tone }: { label: string; tone: 'muted' | 'bear' | 'bull' }) {
   const cls =
     tone === 'bear'
-      ? 'bg-red-500/15 text-red-500'
+      ? 'bg-bear/15 text-bear'
       : tone === 'bull'
-        ? 'bg-emerald-500/15 text-emerald-500'
-        : 'bg-zinc-900 text-fg-muted';
+        ? 'bg-bull/15 text-bull'
+        : 'bg-bg-elev-2 text-fg-muted';
   return (
     <span className={`rounded-sm px-1.5 py-0.5 text-caption font-medium ${cls}`}>{label}</span>
   );

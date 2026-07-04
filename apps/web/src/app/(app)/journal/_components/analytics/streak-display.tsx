@@ -35,16 +35,16 @@ export function StreakDisplay({ stats, className }: StreakDisplayProps) {
   const currentLabel = current.type === 'win' ? 'W' : current.type === 'loss' ? 'L' : '—';
   const currentClass =
     current.type === 'win'
-      ? 'bg-emerald-500/10 text-emerald-500'
+      ? 'bg-bull/10 text-bull'
       : current.type === 'loss'
-        ? 'bg-red-500/10 text-red-500'
-        : 'bg-zinc-900 text-fg-muted';
+        ? 'bg-bear/10 text-bear'
+        : 'bg-bg-elev-2 text-fg-muted';
 
   return (
     <div className={cn('grid grid-cols-3 gap-3', className)}>
       <div
         className={cn(
-          'border border-zinc-800 rounded-sm p-3 flex flex-col gap-1',
+          'border border-border rounded-sm p-3 flex flex-col gap-1',
           currentClass,
         )}
       >
@@ -55,12 +55,12 @@ export function StreakDisplay({ stats, className }: StreakDisplayProps) {
         </span>
       </div>
 
-      <div className="border border-zinc-800 bg-zinc-950 rounded-sm p-3 flex flex-col gap-1 text-emerald-500">
+      <div className="border border-border bg-bg-elev-1 rounded-sm p-3 flex flex-col gap-1 text-bull">
         <span className="text-caption font-bold uppercase tracking-wider text-fg-subtle">Best Win</span>
         <span className="text-lg font-bold tabular-nums">{maxWin}</span>
       </div>
 
-      <div className="border border-zinc-800 bg-zinc-950 rounded-sm p-3 flex flex-col gap-1 text-red-500">
+      <div className="border border-border bg-bg-elev-1 rounded-sm p-3 flex flex-col gap-1 text-bear">
         <span className="text-caption font-bold uppercase tracking-wider text-fg-subtle">Worst Loss</span>
         <span className="text-lg font-bold tabular-nums">{maxLoss}</span>
       </div>

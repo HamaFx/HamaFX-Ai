@@ -41,7 +41,7 @@ export function SearchKnowledgePart({
 
   if (output.pipelinePending) {
     return (
-      <div className="border-border bg-zinc-950 rounded-sm border p-3">
+      <div className="border-border bg-bg-elev-1 rounded-sm border p-3">
         <p className="text-fg-muted text-sm">News embeddings pipeline hasn&apos;t ingested yet.</p>
       </div>
     );
@@ -49,7 +49,7 @@ export function SearchKnowledgePart({
 
   if (output.items.length === 0) {
     return (
-      <div className="border-border bg-zinc-950 rounded-sm border p-3">
+      <div className="border-border bg-bg-elev-1 rounded-sm border p-3">
         <p className="text-fg-muted text-sm">No matching articles.</p>
       </div>
     );
@@ -58,7 +58,7 @@ export function SearchKnowledgePart({
   const items = output.items.slice(0, MAX_ROWS);
 
   return (
-    <div className="border-border bg-zinc-950 rounded-sm border p-3">
+    <div className="border-border bg-bg-elev-1 rounded-sm border p-3">
       <header className="text-fg-muted mb-2 flex items-baseline justify-between text-body-sm">
         <span>Top {items.length} matches</span>
         <span className="font-mono">{output.model}</span>
@@ -86,7 +86,7 @@ export function SearchKnowledgePart({
                   </div>
                 </div>
                 <span
-                  className="bg-zinc-900 text-fg-muted shrink-0 rounded-sm px-2 py-1 text-caption font-semibold tabular-nums"
+                  className="bg-bg-elev-2 text-fg-muted shrink-0 rounded-sm px-2 py-1 text-caption font-semibold tabular-nums"
                   aria-label={`similarity ${sim} percent`}
                 >
                   {sim}%
@@ -103,15 +103,15 @@ export function SearchKnowledgePart({
 function RagCardSkeleton() {
   return (
     <div
-      className="border-border bg-zinc-950 rounded-sm border p-3"
+      className="border-border bg-bg-elev-1 rounded-sm border p-3"
       aria-busy="true"
       aria-label="Searching knowledge base"
     >
       <ul className="divide-border divide-y">
         {[0, 1, 2].map((i) => (
           <li key={i} className="flex min-h-[44px] items-center justify-between gap-3 py-2">
-            <span className="bg-zinc-900 h-4 w-3/4 animate-pulse rounded" />
-            <span className="bg-zinc-900 h-5 w-10 animate-pulse rounded-sm" />
+            <span className="bg-bg-elev-2 h-4 w-3/4 animate-pulse rounded-sm" />
+            <span className="bg-bg-elev-2 h-5 w-10 animate-pulse rounded-sm" />
           </li>
         ))}
       </ul>
@@ -123,7 +123,7 @@ function RagCardError({ message }: { message?: string }) {
   return (
     <div
       role="alert"
-      className="border-red-500/30 bg-zinc-950 text-red-500 rounded-sm border p-3 text-sm"
+      className="border-bear/30 bg-bg-elev-1 text-bear rounded-sm border p-3 text-sm"
     >
       Knowledge search failed{message ? ` · ${message}` : ''}
     </div>

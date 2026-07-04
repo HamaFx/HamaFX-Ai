@@ -20,7 +20,7 @@
 // header's gear icon — frees vertical space below the chart.
 
 import type { StructureKind } from '@hamafx/shared';
-import { Settings2, X } from 'lucide-react';
+import {IconSettings, IconX} from '@tabler/icons-react';
 
 import {
   Drawer,
@@ -49,12 +49,12 @@ export function OverlaySheet({ active, onToggle }: OverlaySheetProps) {
           type="button"
           aria-label={`Chart overlays${enabledCount > 0 ? ` (${enabledCount} active)` : ''}`}
           className={cn(
-            'border-zinc-800 bg-zinc-900 inline-flex h-11 min-w-[44px] items-center justify-center gap-1.5 rounded-sm border px-3 text-body-sm font-medium transition-colors shadow-sm',
+            'border-border bg-bg-elev-2 inline-flex h-11 min-w-[44px] items-center justify-center gap-1.5 rounded-sm border px-3 text-body-sm font-medium transition-colors shadow-sm',
             'focus-visible:ring-fg focus:outline-none focus-visible:ring-2',
             enabledCount > 0 ? 'text-fg' : 'text-fg-muted hover:text-fg',
           )}
         >
-          <Settings2 className="size-4" />
+          <IconSettings className="size-4" />
           {enabledCount > 0 ? <span className="tabular-nums">{enabledCount}</span> : null}
         </button>
       </DrawerTrigger>
@@ -66,10 +66,10 @@ export function OverlaySheet({ active, onToggle }: OverlaySheetProps) {
           </div>
           <Tooltip label="Close">
             <DrawerClose
-              className="text-fg-muted hover:text-fg hover:bg-zinc-950 inline-flex h-11 w-11 items-center justify-center rounded-sm transition-colors"
+              className="text-fg-muted hover:text-fg hover:bg-bg-elev-1 inline-flex h-11 w-11 items-center justify-center rounded-sm transition-colors"
               aria-label="Close overlays sheet"
             >
-              <X className="size-4" />
+              <IconX className="size-4" />
             </DrawerClose>
           </Tooltip>
         </DrawerHeader>
@@ -84,7 +84,7 @@ export function OverlaySheet({ active, onToggle }: OverlaySheetProps) {
                   aria-pressed={on}
                   className={cn(
                     'flex min-h-[56px] w-full items-center justify-between gap-3 rounded-sm px-3 py-3 text-left transition-colors',
-                    on ? 'bg-zinc-800' : 'hover:bg-zinc-950',
+                    on ? 'bg-bg-elev-3' : 'hover:bg-bg-elev-1',
                   )}
                 >
                   <div className="flex flex-col">
@@ -95,7 +95,7 @@ export function OverlaySheet({ active, onToggle }: OverlaySheetProps) {
                     aria-hidden="true"
                     className={cn(
                       'relative inline-flex h-6 w-10 shrink-0 items-center rounded-sm transition-colors',
-                      on ? 'bg-fg' : 'bg-zinc-800',
+                      on ? 'bg-fg' : 'bg-bg-elev-3',
                     )}
                   >
                     <span

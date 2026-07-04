@@ -1,6 +1,6 @@
 'use client';
 
-import { Bell, Mail, Smartphone } from 'lucide-react';
+import {IconBell, IconMail, IconDeviceMobile} from '@tabler/icons-react';
 import { useCallback, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { Switch } from '@/components/ui/switch';
@@ -18,10 +18,10 @@ const EVENT_LABELS: Record<EventType, string> = {
   usage_warnings: 'Usage warnings',
 };
 
-const CHANNELS: { key: Channel; icon: typeof Bell; label: string }[] = [
-  { key: 'email', icon: Mail, label: 'Email' },
-  { key: 'push', icon: Bell, label: 'Push' },
-  { key: 'telegram', icon: Smartphone, label: 'Telegram' },
+const CHANNELS: { key: Channel; icon: typeof IconBell; label: string }[] = [
+  { key: 'email', icon: IconMail, label: 'Email' },
+  { key: 'push', icon: IconBell, label: 'Push' },
+  { key: 'telegram', icon: IconDeviceMobile, label: 'Telegram' },
 ];
 
 const DEFAULT_PREFS: PrefsMatrix = {
@@ -70,7 +70,7 @@ export function NotificationPrefsCard({
   }, []);
 
   return (
-    <section className="border border-zinc-800 bg-zinc-950 rounded-sm flex flex-col gap-1 p-4" aria-labelledby="notification-prefs-heading">
+    <section className="border border-border bg-bg-elev-1 rounded-sm flex flex-col gap-1 p-4" aria-labelledby="notification-prefs-heading">
       <div className="flex items-center gap-3 pb-2">
         <h2 id="notification-prefs-heading" className="text-fg text-base font-semibold tracking-tight">
           Notification preferences
@@ -80,7 +80,7 @@ export function NotificationPrefsCard({
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-zinc-800">
+            <tr className="border-b border-border">
               <th className="text-left py-2 pr-4 text-fg-muted font-medium">Event type</th>
               {CHANNELS.map((ch) => (
                 <th key={ch.key} className="text-center py-2 px-3 text-fg-muted font-medium">
@@ -92,7 +92,7 @@ export function NotificationPrefsCard({
           </thead>
           <tbody>
             {(Object.keys(DEFAULT_PREFS) as EventType[]).map((event) => (
-              <tr key={event} className="border-b border-zinc-800/50 last:border-0">
+              <tr key={event} className="border-b border-border/50 last:border-0">
                 <td className="py-3 pr-4 text-fg">{EVENT_LABELS[event]}</td>
                 {CHANNELS.map((ch) => (
                   <td key={ch.key} className="text-center py-3 px-3">

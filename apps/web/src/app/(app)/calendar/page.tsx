@@ -19,7 +19,7 @@
 // <CalendarHero/> at the top and the interactive <CalendarView/> below.
 
 import { listUpcomingEvents } from '@hamafx/ai';
-import { CalendarDays } from 'lucide-react';
+import { IconCalendarEvent } from '@tabler/icons-react';
 import type { Metadata } from 'next';
 
 import { PageHeader } from '@/components/layout/page-header';
@@ -29,7 +29,7 @@ import { CalendarHero } from './_components/calendar-hero';
 import { CalendarView } from './_components/calendar-view';
 import { RefreshButton } from '../news/_components/refresh-button';
 
-export const metadata: Metadata = { title: 'Calendar' };
+export const metadata: Metadata = { title: 'IconCalendar' };
 export const dynamic = 'force-dynamic';
 
 export default async function CalendarPage() {
@@ -45,7 +45,7 @@ export default async function CalendarPage() {
       {events.length === 0 ? (
         <EmptyState
           tone="muted"
-          icon={<CalendarDays className="size-7" strokeWidth={1.75} />}
+          icon={<IconCalendarEvent className="size-7" strokeWidth={1.75} />}
           title="No events scheduled"
           description="Events refresh automatically every 15 minutes. Tap below to refresh now."
           action={<RefreshButton endpoint="/api/cron/calendar" />}

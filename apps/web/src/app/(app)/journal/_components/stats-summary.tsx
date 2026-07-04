@@ -21,20 +21,7 @@
 // and institutional stats (Profit Factor, Max Drawdown, Expectancy, and Extreme trade boundaries).
 
 import type { JournalEntry, JournalStats } from '@hamafx/shared';
-import {
-  Activity,
-  Calculator,
-  Target,
-  TrendingUp,
-  ShieldAlert,
-  Percent,
-  Award,
-  TrendingDown,
-  Flame,
-  Clock,
-  CalendarDays,
-  BookOpen,
-} from 'lucide-react';
+import { IconActivity,  IconCalculator,  IconTarget,  IconTrendingUp,  IconShieldAlert,  IconPercentage,  IconAward,  IconTrendingDown,  IconFlame,  IconClock,  IconCalendarEvent,  IconBook } from '@tabler/icons-react';
 import { useMemo } from 'react';
 
 import { StatCard, type StatTone } from '@/components/ui/stat-card';
@@ -171,10 +158,10 @@ export function StatsSummary({ stats, entries = [] }: StatsSummaryProps) {
   const totalTone: StatTone = stats.totalR > 0 ? 'bull' : stats.totalR < 0 ? 'bear' : 'muted';
   if (entries.length === 0) {
     return (
-      <div className="border border-zinc-800 bg-zinc-950 rounded-sm p-6">
+      <div className="border border-border bg-bg-elev-1 rounded-sm p-6">
         <EmptyState
           tone="muted"
-          icon={<BookOpen className="size-7" strokeWidth={1.75} />}
+          icon={<IconBook className="size-7" strokeWidth={1.75} />}
           title="No journal entries yet"
           description="Start logging your trades to see statistics here."
         />
@@ -186,17 +173,17 @@ export function StatsSummary({ stats, entries = [] }: StatsSummaryProps) {
     <div className="flex flex-col gap-4">
       {/* Visual Outcome Distribution Bar */}
       {entries.length > 0 && (
-        <div className="border border-zinc-800 bg-zinc-950 rounded-sm p-4 flex flex-col gap-2.5">
+        <div className="border border-border bg-bg-elev-1 rounded-sm p-4 flex flex-col gap-2.5">
           <div className="flex items-center justify-between text-xs font-semibold text-fg-subtle">
             <span className="uppercase tracking-wider">Outcome Distribution</span>
             <span className="tabular-nums text-fg-muted">{entries.length} Total Trades logged</span>
           </div>
 
-          <div className="h-3 w-full rounded-sm bg-zinc-800 overflow-hidden flex">
+          <div className="h-3 w-full rounded-sm bg-bg-elev-3 overflow-hidden flex">
             {distribution.win > 0 && (
               <div
                 style={{ width: `${distribution.win}%` }}
-                className="h-full bg-emerald-500 transition-all duration-300"
+                className="h-full bg-bull transition-all duration-300"
                 title={`Wins: ${distribution.raw.win}`}
               />
             )}
@@ -217,7 +204,7 @@ export function StatsSummary({ stats, entries = [] }: StatsSummaryProps) {
             {distribution.loss > 0 && (
               <div
                 style={{ width: `${distribution.loss}%` }}
-                className="h-full bg-red-500 transition-all duration-300"
+                className="h-full bg-bear transition-all duration-300"
                 title={`Losses: ${distribution.raw.loss}`}
               />
             )}
@@ -225,7 +212,7 @@ export function StatsSummary({ stats, entries = [] }: StatsSummaryProps) {
 
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 mt-0.5 text-caption font-semibold text-fg-subtle">
             <div className="flex items-center gap-1.5">
-              <span className="size-2 rounded-sm bg-emerald-500" />
+              <span className="size-2 rounded-sm bg-bull" />
               <span>Wins ({distribution.raw.win})</span>
             </div>
             <div className="flex items-center gap-1.5">
@@ -237,7 +224,7 @@ export function StatsSummary({ stats, entries = [] }: StatsSummaryProps) {
               <span>Breakeven ({distribution.raw.be})</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <span className="size-2 rounded-sm bg-red-500" />
+              <span className="size-2 rounded-sm bg-bear" />
               <span>Losses ({distribution.raw.loss})</span>
             </div>
           </div>
@@ -247,27 +234,27 @@ export function StatsSummary({ stats, entries = [] }: StatsSummaryProps) {
       {/* Grid of Stat Cards */}
       <dl className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-2">
         <StatCard
-          icon={<Activity className="size-3.5" strokeWidth={2} />}
+          icon={<IconActivity className="size-3.5" strokeWidth={2} />}
           label="trades"
           value={stats.count}
           sparkline={tradesSpark}
         />
         <StatCard
-          icon={<Target className="size-3.5" strokeWidth={2} />}
+          icon={<IconTarget className="size-3.5" strokeWidth={2} />}
           label="win-rate"
           value={`${winRatePct}%`}
           tone={winTone}
           sparkline={winRateSpark}
         />
         <StatCard
-          icon={<TrendingUp className="size-3.5" strokeWidth={2} />}
+          icon={<IconTrendingUp className="size-3.5" strokeWidth={2} />}
           label="avg R"
           value={stats.avgR.toFixed(2)}
           tone={avgRTone}
           sparkline={avgRSpark}
         />
         <StatCard
-          icon={<Calculator className="size-3.5" strokeWidth={2} />}
+          icon={<IconCalculator className="size-3.5" strokeWidth={2} />}
           label="total R"
           value={stats.totalR.toFixed(2)}
           tone={totalTone}
@@ -278,14 +265,14 @@ export function StatsSummary({ stats, entries = [] }: StatsSummaryProps) {
       {/* Advanced Institutional Metrics Grid */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-2">
         {/* Profit Factor */}
-        <div className="border border-zinc-800 bg-zinc-950 rounded-sm p-3.5 flex flex-col gap-1 relative overflow-hidden group hover:border-zinc-700 transition-all">
+        <div className="border border-border bg-bg-elev-1 rounded-sm p-3.5 flex flex-col gap-1 relative overflow-hidden group hover:border-border transition-all">
           <div className="flex items-center justify-between">
             <span className="text-caption font-bold uppercase tracking-wider text-fg-subtle">Profit Factor</span>
-            <Percent className="size-3.5 text-fg/70" />
+            <IconPercentage className="size-3.5 text-fg/70" />
           </div>
           <p className={cn(
             'text-lg font-bold tracking-tight mt-1.5 tabular-nums',
-            profitFactor >= 1.5 ? 'text-emerald-500' : profitFactor >= 1.0 ? 'text-fg' : 'text-red-500'
+            profitFactor >= 1.5 ? 'text-bull' : profitFactor >= 1.0 ? 'text-fg' : 'text-bear'
           )}>
             {profitFactor.toFixed(2)}
           </p>
@@ -293,36 +280,36 @@ export function StatsSummary({ stats, entries = [] }: StatsSummaryProps) {
         </div>
 
         {/* Max Drawdown */}
-        <div className="border border-zinc-800 bg-zinc-950 rounded-sm p-3.5 flex flex-col gap-1 relative overflow-hidden group hover:border-red-500/40 transition-all">
+        <div className="border border-border bg-bg-elev-1 rounded-sm p-3.5 flex flex-col gap-1 relative overflow-hidden group hover:border-bear/40 transition-all">
           <div className="flex items-center justify-between">
             <span className="text-caption font-bold uppercase tracking-wider text-fg-subtle">Max R DD</span>
-            <ShieldAlert className="size-3.5 text-red-500/70" />
+            <IconShieldAlert className="size-3.5 text-bear/70" />
           </div>
-          <p className="text-lg font-bold tracking-tight mt-1.5 text-red-500 tabular-nums">
+          <p className="text-lg font-bold tracking-tight mt-1.5 text-bear tabular-nums">
             -{maxDrawdown.toFixed(2)}R
           </p>
           <span className="text-xs text-fg-muted font-medium">Maximum peak-to-trough drop</span>
         </div>
 
         {/* Best Trade Win */}
-        <div className="border border-zinc-800 bg-zinc-950 rounded-sm p-3.5 flex flex-col gap-1 relative overflow-hidden group hover:border-emerald-500/40 transition-all">
+        <div className="border border-border bg-bg-elev-1 rounded-sm p-3.5 flex flex-col gap-1 relative overflow-hidden group hover:border-bull/40 transition-all">
           <div className="flex items-center justify-between">
             <span className="text-caption font-bold uppercase tracking-wider text-fg-subtle">Best Trade</span>
-            <Award className="size-3.5 text-emerald-500/70" />
+            <IconAward className="size-3.5 text-bull/70" />
           </div>
-          <p className="text-lg font-bold tracking-tight mt-1.5 text-emerald-500 tabular-nums">
+          <p className="text-lg font-bold tracking-tight mt-1.5 text-bull tabular-nums">
             +{extremes.best.toFixed(2)}R
           </p>
           <span className="text-xs text-fg-muted font-medium">Single maximum R realized</span>
         </div>
 
         {/* Worst Trade Loss */}
-        <div className="border border-zinc-800 bg-zinc-950 rounded-sm p-3.5 flex flex-col gap-1 relative overflow-hidden group hover:border-red-500/30 transition-all">
+        <div className="border border-border bg-bg-elev-1 rounded-sm p-3.5 flex flex-col gap-1 relative overflow-hidden group hover:border-bear/30 transition-all">
           <div className="flex items-center justify-between">
             <span className="text-caption font-bold uppercase tracking-wider text-fg-subtle">Worst Trade</span>
-            <TrendingDown className="size-3.5 text-red-500/70" />
+            <IconTrendingDown className="size-3.5 text-bear/70" />
           </div>
-          <p className="text-lg font-bold tracking-tight mt-1.5 text-red-500/80 tabular-nums">
+          <p className="text-lg font-bold tracking-tight mt-1.5 text-bear/80 tabular-nums">
             {extremes.worst.toFixed(2)}R
           </p>
           <span className="text-xs text-fg-muted font-medium">Single maximum R loss</span>
@@ -336,32 +323,32 @@ export function StatsSummary({ stats, entries = [] }: StatsSummaryProps) {
       {hasExtendedStats(stats) ? (
         <>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-            <div className="border border-zinc-800 bg-zinc-950 rounded-sm p-3.5 flex flex-col gap-1">
+            <div className="border border-border bg-bg-elev-1 rounded-sm p-3.5 flex flex-col gap-1">
               <div className="flex items-center justify-between">
                 <span className="text-caption font-bold uppercase tracking-wider text-fg-subtle">Win Streak</span>
-                <Flame className="size-3.5 text-emerald-500/70" />
+                <IconFlame className="size-3.5 text-bull/70" />
               </div>
-              <p className="text-lg font-bold tracking-tight mt-1.5 text-emerald-500 tabular-nums">
+              <p className="text-lg font-bold tracking-tight mt-1.5 text-bull tabular-nums">
                 {stats.longestWinStreak}
               </p>
               <span className="text-xs text-fg-muted font-medium">Longest consecutive wins (across breakevens)</span>
             </div>
 
-            <div className="border border-zinc-800 bg-zinc-950 rounded-sm p-3.5 flex flex-col gap-1">
+            <div className="border border-border bg-bg-elev-1 rounded-sm p-3.5 flex flex-col gap-1">
               <div className="flex items-center justify-between">
                 <span className="text-caption font-bold uppercase tracking-wider text-fg-subtle">Loss Streak</span>
-                <Flame className="size-3.5 text-red-500/70" />
+                <IconFlame className="size-3.5 text-bear/70" />
               </div>
-              <p className="text-lg font-bold tracking-tight mt-1.5 text-red-500/80 tabular-nums">
+              <p className="text-lg font-bold tracking-tight mt-1.5 text-bear/80 tabular-nums">
                 {stats.longestLossStreak}
               </p>
               <span className="text-xs text-fg-muted font-medium">Longest consecutive losses</span>
             </div>
 
-            <div className="border border-zinc-800 bg-zinc-950 rounded-sm p-3.5 flex flex-col gap-1">
+            <div className="border border-border bg-bg-elev-1 rounded-sm p-3.5 flex flex-col gap-1">
               <div className="flex items-center justify-between">
                 <span className="text-caption font-bold uppercase tracking-wider text-fg-subtle">Avg Hold</span>
-                <Clock className="size-3.5 text-blue-500/70" />
+                <IconClock className="size-3.5 text-info/70" />
               </div>
               <p className="text-lg font-bold tracking-tight mt-1.5 text-fg tabular-nums">
                 {(stats.avgHoldMs ?? 0) > 0 ? formatHoldTime(stats.avgHoldMs!) : '—'}
@@ -371,10 +358,10 @@ export function StatsSummary({ stats, entries = [] }: StatsSummaryProps) {
           </div>
 
           {stats.perDayOfWeek ? (
-            <div className="border border-zinc-800 bg-zinc-950 rounded-sm p-3.5 flex flex-col gap-3">
+            <div className="border border-border bg-bg-elev-1 rounded-sm p-3.5 flex flex-col gap-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <CalendarDays className="size-3.5 text-fg-muted" />
+                  <IconCalendarEvent className="size-3.5 text-fg-muted" />
                   <span className="text-caption font-bold uppercase tracking-wider text-fg-subtle">
                     Closed by day of week
                   </span>
@@ -442,7 +429,7 @@ function DayOfWeekChart({
         return (
           <div key={DOW_KEYS[i]} className="flex flex-1 flex-col items-center gap-1">
             <span className="text-fg-subtle text-xs tabular-nums">{n}</span>
-            <div className="bg-zinc-900 flex h-full w-full items-end overflow-hidden rounded">
+            <div className="bg-bg-elev-2 flex h-full w-full items-end overflow-hidden rounded-sm">
               <div
                 className="bg-fg w-full"
                 style={{ height: `${heightPct}%`, minHeight: n > 0 ? '4px' : '0' }}

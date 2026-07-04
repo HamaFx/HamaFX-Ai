@@ -19,7 +19,7 @@
 // Server component.
 
 import { computeUsage } from '@hamafx/ai';
-import { ChevronRight } from 'lucide-react';
+import { IconChevronRight } from '@tabler/icons-react';
 import { Link } from 'next-view-transitions';
 
 import { getServerEnv } from '@/lib/env';
@@ -44,13 +44,13 @@ export async function UsageGlance({ userId }: { userId?: string }) {
 
   const pct = maxDailyUsd > 0 ? Math.min(100, (stats.todayUsd / maxDailyUsd) * 100) : 0;
   const tone = pct >= 90 ? 'bear' : pct >= 60 ? 'warn' : 'bull';
-  const toneClass = tone === 'bear' ? 'bg-red-500' : tone === 'warn' ? 'bg-amber-500' : 'bg-emerald-500';
+  const toneClass = tone === 'bear' ? 'bg-bear' : tone === 'warn' ? 'bg-warn' : 'bg-bull';
 
   return (
     <Link
       href="/settings/usage"
       aria-label="Open detailed usage"
-      className="border border-zinc-800 bg-zinc-950 rounded-sm group flex flex-col gap-3 p-4 transition-colors md:hover:bg-zinc-900/40"
+      className="border border-border bg-bg-elev-1 rounded-sm group flex flex-col gap-3 p-4 transition-colors md:hover:bg-bg-elev-2/40"
     >
       <header className="flex items-baseline justify-between gap-3">
         <h2 className="text-fg-subtle text-caption font-semibold uppercase tracking-wider">
@@ -67,7 +67,7 @@ export async function UsageGlance({ userId }: { userId?: string }) {
         aria-valuemin={0}
         aria-valuemax={100}
         aria-label="Daily budget consumed"
-        className="bg-zinc-900 h-2 w-full overflow-hidden rounded-sm"
+        className="bg-bg-elev-2 h-2 w-full overflow-hidden rounded-sm"
       >
         <div className={cn('h-full transition-all', toneClass)} style={{ width: `${pct}%` }} />
       </div>
@@ -80,7 +80,7 @@ export async function UsageGlance({ userId }: { userId?: string }) {
 
       <div className="text-fg-muted flex items-center justify-between gap-2 text-xs font-medium">
         <span>View detailed breakdown</span>
-        <ChevronRight className="text-fg-subtle size-4 transition-transform group-hover:translate-x-0.5" />
+        <IconChevronRight className="text-fg-subtle size-4 transition-transform group-hover:translate-x-0.5" />
       </div>
     </Link>
   );

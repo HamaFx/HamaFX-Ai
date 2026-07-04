@@ -22,7 +22,7 @@
 
 import type { JournalEntry, JournalStats } from '@hamafx/shared';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Plus, BookOpen, Activity, RefreshCw } from 'lucide-react';
+import {IconPlus, IconBook, IconActivity, IconRefresh} from '@tabler/icons-react';
 import { useState } from 'react';
 
 import { cn } from '@/lib/cn';
@@ -73,10 +73,10 @@ export function JournalView() {
   return (
     <div className="flex flex-col gap-6 animate-in fade-in duration-300">
       {/* Sticky header controls */}
-      <header className="border border-zinc-800 bg-zinc-950 rounded-sm flex flex-wrap items-center justify-between gap-4 p-4">
+      <header className="border border-border bg-bg-elev-1 rounded-sm flex flex-wrap items-center justify-between gap-4 p-4">
         <div className="flex items-center gap-3">
-          <div className="rounded-sm bg-zinc-900 p-3 text-fg">
-            <BookOpen className="size-5" />
+          <div className="rounded-sm bg-bg-elev-2 p-3 text-fg">
+            <IconBook className="size-5" />
           </div>
           <div>
             <h1 className="text-lg font-black tracking-tight text-fg">Trading Journal</h1>
@@ -89,17 +89,17 @@ export function JournalView() {
           
           <button
             onClick={refresh}
-            className="bg-zinc-950 border border-zinc-800 size-10 flex items-center justify-center rounded-sm text-fg-muted hover:text-fg transition-all cursor-pointer"
+            className="bg-bg-elev-1 border border-border size-10 flex items-center justify-center rounded-sm text-fg-muted hover:text-fg transition-all cursor-pointer"
             title="Refresh logs"
           >
-            <RefreshCw className={cn("size-4", isFetching && "animate-spin")} />
+            <IconRefresh className={cn("size-4", isFetching && "animate-spin")} />
           </button>
 
           <button
             onClick={() => setOpen(true)}
             className="inline-flex h-10 items-center justify-center gap-2 rounded-sm bg-fg px-4 text-xs font-bold text-black shadow-none/15 hover:opacity-90 transition-all cursor-pointer"
           >
-            <Plus className="size-4" />
+            <IconPlus className="size-4" />
             <span>Log Trade</span>
           </button>
         </div>
@@ -108,12 +108,12 @@ export function JournalView() {
       {/* Main Responsive Grid Layout */}
       {isLoading ? (
         <div className="flex flex-col items-center justify-center h-[350px] gap-2.5">
-          <Activity className="size-6 text-fg animate-pulse" />
+          <IconActivity className="size-6 text-fg animate-pulse" />
           <p className="text-xs font-bold uppercase tracking-wider text-fg-muted">Loading your metrics...</p>
         </div>
       ) : isError ? (
-        <div className="border border-zinc-800 bg-zinc-950 rounded-sm p-6 border-red-500/20 bg-red-500/5 text-center flex flex-col items-center justify-center gap-2">
-          <p className="text-sm font-semibold text-red-500" role="alert">Failed to load journal portfolio</p>
+        <div className="border border-border bg-bg-elev-1 rounded-sm p-6 border-bear/20 bg-bear/5 text-center flex flex-col items-center justify-center gap-2">
+          <p className="text-sm font-semibold text-bear" role="alert">Failed to load journal portfolio</p>
           <p className="text-xs text-fg-subtle">{(error as Error)?.message || 'Unknown network error'}</p>
         </div>
       ) : (
@@ -143,7 +143,7 @@ export function JournalView() {
                 <EntryList entries={data?.entries ?? []} onClosed={refresh} onDeleted={refresh} />
               </div>
 
-              {/* Right Column: Key performance metrics & analytics (occupies 1/3 of desktop width) */}
+              {/* Right Column: IconKey performance metrics & analytics (occupies 1/3 of desktop width) */}
               <div className="lg:col-span-1">
                 {data?.stats ? (
                   <div className="sticky top-[calc(var(--topbar-h)+24px)] flex flex-col gap-6">

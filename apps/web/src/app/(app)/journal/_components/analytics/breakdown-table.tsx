@@ -97,15 +97,15 @@ export function BreakdownTable({ title, data, sortBy = 'totalR' }: BreakdownTabl
 
   return (
     <div
-      className="border border-zinc-800 bg-zinc-950 rounded-sm overflow-hidden"
+      className="border border-border bg-bg-elev-1 rounded-sm overflow-hidden"
       role="table"
       aria-label={title}
     >
-      <div className="px-3 py-2 border-b border-zinc-800">
+      <div className="px-3 py-2 border-b border-border">
         <span className="text-body-sm font-semibold text-fg">{title}</span>
       </div>
       <table className="w-full text-sm">
-        <thead className="bg-zinc-900">
+        <thead className="bg-bg-elev-2">
           <tr>
             {header('label', 'Label', false)}
             {header('trades', 'Trades')}
@@ -116,13 +116,13 @@ export function BreakdownTable({ title, data, sortBy = 'totalR' }: BreakdownTabl
         </thead>
         <tbody>
           {rows.map((row) => (
-            <tr key={row.label} className="border-b border-zinc-900 last:border-b-0">
+            <tr key={row.label} className="border-b border-divider last:border-b-0">
               <td className="py-2 px-3 text-fg font-medium">{row.label}</td>
               <td className="py-2 px-3 text-right text-fg-muted tabular-nums">{row.trades}</td>
               <td
                 className={cn(
                   'py-2 px-3 text-right tabular-nums font-medium',
-                  row.winRate > 0.55 ? 'text-emerald-500' : row.winRate < 0.4 ? 'text-red-500' : 'text-fg-muted',
+                  row.winRate > 0.55 ? 'text-bull' : row.winRate < 0.4 ? 'text-bear' : 'text-fg-muted',
                 )}
               >
                 {(row.winRate * 100).toFixed(0)}%
@@ -130,7 +130,7 @@ export function BreakdownTable({ title, data, sortBy = 'totalR' }: BreakdownTabl
               <td
                 className={cn(
                   'py-2 px-3 text-right tabular-nums font-medium',
-                  row.totalR > 0 ? 'text-emerald-500' : row.totalR < 0 ? 'text-red-500' : 'text-fg-muted',
+                  row.totalR > 0 ? 'text-bull' : row.totalR < 0 ? 'text-bear' : 'text-fg-muted',
                 )}
               >
                 {row.totalR > 0 ? '+' : ''}

@@ -22,7 +22,7 @@
 //   - agree=false — amber ring (warning, not error), one row per caveat
 //                   with a glyph keyed off `caveat.code`.
 
-import { AlertTriangle, CheckCircle2 } from 'lucide-react';
+import {IconAlertTriangle, IconCircleCheck} from '@tabler/icons-react';
 
 import type { ToolPartProps } from './registry';
 
@@ -40,12 +40,12 @@ export function VerifyCallPart({ output, state, errorMessage }: ToolPartProps<'v
   if (state === 'error') return <ErrorCard {...(errorMessage ? { message: errorMessage } : {})} />;
   if (state === 'loading' || !output) return <SkeletonCard />;
 
-  const tone = output.agree ? 'border-emerald-500/40' : 'border-amber-500/40';
-  const headerTone = output.agree ? 'text-emerald-500' : 'text-amber-500';
-  const Icon = output.agree ? CheckCircle2 : AlertTriangle;
+  const tone = output.agree ? 'border-bull/40' : 'border-warn/40';
+  const headerTone = output.agree ? 'text-bull' : 'text-warn';
+  const Icon = output.agree ? IconCircleCheck : IconAlertTriangle;
 
   return (
-    <div className={`bg-zinc-950 flex flex-col gap-3 rounded-sm border p-3 ${tone}`}>
+    <div className={`bg-bg-elev-1 flex flex-col gap-3 rounded-sm border p-3 ${tone}`}>
       <header className={`flex items-center gap-2 text-sm font-semibold ${headerTone}`}>
         <Icon className="size-4" />
         {output.agree ? 'Setup verified' : `${output.caveats.length} caveat${output.caveats.length === 1 ? '' : 's'}`}
@@ -58,9 +58,9 @@ export function VerifyCallPart({ output, state, errorMessage }: ToolPartProps<'v
           {output.caveats.map((c, i) => (
             <li
               key={i}
-              className="border-amber-500/30 bg-amber-500/5 flex items-baseline gap-2 rounded-sm border px-2 py-1.5 text-body-sm"
+              className="border-warn/30 bg-warn/5 flex items-baseline gap-2 rounded-sm border px-2 py-1.5 text-body-sm"
             >
-              <span className="text-amber-500 font-semibold">{CAVEAT_GLYPH[c.code] ?? '!'}</span>
+              <span className="text-warn font-semibold">{CAVEAT_GLYPH[c.code] ?? '!'}</span>
               <span className="text-fg flex-1">{c.message}</span>
             </li>
           ))}
@@ -84,12 +84,12 @@ export function VerifyCallPart({ output, state, errorMessage }: ToolPartProps<'v
 function SkeletonCard() {
   return (
     <div
-      className="border-border bg-zinc-950 rounded-sm border p-3"
+      className="border-border bg-bg-elev-1 rounded-sm border p-3"
       aria-busy="true"
       aria-label="Verifying setup"
     >
-      <div className="bg-zinc-900 h-4 w-1/2 animate-pulse rounded" />
-      <div className="bg-zinc-900 mt-3 h-16 animate-pulse rounded" />
+      <div className="bg-bg-elev-2 h-4 w-1/2 animate-pulse rounded-sm" />
+      <div className="bg-bg-elev-2 mt-3 h-16 animate-pulse rounded-sm" />
     </div>
   );
 }
@@ -98,7 +98,7 @@ function ErrorCard({ message }: { message?: string }) {
   return (
     <div
       role="alert"
-      className="border-red-500/30 bg-zinc-950 text-red-500 rounded-sm border p-3 text-sm"
+      className="border-bear/30 bg-bg-elev-1 text-bear rounded-sm border p-3 text-sm"
     >
       Setup verification failed{message ? ` · ${message}` : ''}
     </div>

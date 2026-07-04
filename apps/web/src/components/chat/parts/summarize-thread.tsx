@@ -30,11 +30,11 @@ export function SummarizeThreadPart({
   if (state === 'loading' || !output) return <SkeletonCard />;
 
   return (
-    <div className="border-border bg-zinc-950 flex flex-col gap-3 rounded-sm border p-3">
+    <div className="border-border bg-bg-elev-1 flex flex-col gap-3 rounded-sm border p-3">
       <header className="flex items-baseline justify-between gap-2">
         <h3 className="text-fg text-sm font-semibold">Thread synopsis</h3>
         {output.remembered ? (
-          <span className="bg-emerald-500/15 text-emerald-500 rounded-sm px-2 py-0.5 text-caption font-semibold">
+          <span className="bg-bull/15 text-bull rounded-sm px-2 py-0.5 text-caption font-semibold">
             Saved to memory
           </span>
         ) : (
@@ -51,12 +51,12 @@ export function SummarizeThreadPart({
             {output.insights.map((ins, i) => (
               <li
                 key={i}
-                className="border-zinc-900 flex items-baseline gap-2 rounded-sm border p-2 text-xs"
+                className="border-divider flex items-baseline gap-2 rounded-sm border p-2 text-xs"
               >
                 <span className="text-fg-muted">→</span>
                 <span className="text-fg flex-1">{ins.text}</span>
                 {ins.symbol ? (
-                  <span className="bg-zinc-900 text-fg-muted rounded px-1.5 py-0.5 text-caption font-medium">
+                  <span className="bg-bg-elev-2 text-fg-muted rounded-sm px-1.5 py-0.5 text-caption font-medium">
                     {ins.symbol}
                   </span>
                 ) : null}
@@ -72,12 +72,12 @@ export function SummarizeThreadPart({
 function SkeletonCard() {
   return (
     <div
-      className="border-border bg-zinc-950 rounded-sm border p-3"
+      className="border-border bg-bg-elev-1 rounded-sm border p-3"
       aria-busy="true"
       aria-label="Summarising thread"
     >
-      <div className="bg-zinc-900 h-4 w-1/2 animate-pulse rounded" />
-      <div className="bg-zinc-900 mt-3 h-16 animate-pulse rounded" />
+      <div className="bg-bg-elev-2 h-4 w-1/2 animate-pulse rounded-sm" />
+      <div className="bg-bg-elev-2 mt-3 h-16 animate-pulse rounded-sm" />
     </div>
   );
 }
@@ -86,7 +86,7 @@ function ErrorCard({ message }: { message?: string }) {
   return (
     <div
       role="alert"
-      className="border-red-500/30 bg-zinc-950 text-red-500 rounded-sm border p-3 text-sm"
+      className="border-bear/30 bg-bg-elev-1 text-bear rounded-sm border p-3 text-sm"
     >
       Thread summarisation failed{message ? ` · ${message}` : ''}
     </div>

@@ -25,19 +25,7 @@
  */
 
 import type { ComponentType } from 'react';
-import {
-  Bell,
-  BookOpen,
-  Calendar,
-  Cog,
-  KeyRound,
-  LineChart,
-  type LucideIcon,
-  MessageCirclePlus,
-  Newspaper,
-  Plus,
-  Settings as SettingsIcon,
-} from 'lucide-react';
+import { IconBell,  IconBook,  IconCalendar,  IconCog,  IconKey,  IconChartLine,  type Icon,  IconMessagePlus,  IconNewspaper,  IconPlus,  IconSettings as SettingsIcon } from '@tabler/icons-react';
 
 export type CommandGroup = 'navigation' | 'create' | 'settings';
 
@@ -45,9 +33,9 @@ export interface CommandItem {
   id: string;
   group: CommandGroup;
   label: string;
-  /** Search aliases — extra terms the user can type to surface this command. */
+  /** IconSearch aliases — extra terms the user can type to surface this command. */
   keywords?: string[];
-  icon: LucideIcon;
+  icon: Icon;
   /**
    * Where to navigate. When `kind === 'navigate'`, the palette
    * pushes the path with router.push(). The component handles this.
@@ -74,31 +62,31 @@ export interface CommandItem {
  */
 export const COMMANDS: readonly CommandItem[] = [
   // ── Navigation ───────────────────────────────────────────
-  { id: 'nav-chat',  group: 'navigation', label: 'Chat',         icon: MessageCirclePlus, href: '/chat' },
-  { id: 'nav-chart-xau', group: 'navigation', label: 'Chart — Gold',   icon: LineChart, href: '/chart/XAUUSD', keywords: ['xau', 'gold', 'xauusd'] },
-  { id: 'nav-chart-eur', group: 'navigation', label: 'Chart — Euro',   icon: LineChart, href: '/chart/EURUSD', keywords: ['eur', 'euro', 'eurusd'] },
-  { id: 'nav-chart-gbp', group: 'navigation', label: 'Chart — Pound',  icon: LineChart, href: '/chart/GBPUSD', keywords: ['gbp', 'pound', 'cable'] },
-  { id: 'nav-news',     group: 'navigation', label: 'News',         icon: Newspaper, href: '/news' },
-  { id: 'nav-calendar', group: 'navigation', label: 'Calendar',     icon: Calendar,  href: '/calendar' },
-  { id: 'nav-alerts',   group: 'navigation', label: 'Alerts',       icon: Bell,      href: '/alerts' },
-  { id: 'nav-journal',  group: 'navigation', label: 'Journal',      icon: BookOpen,  href: '/journal' },
-  { id: 'nav-settings', group: 'navigation', label: 'Settings',     icon: SettingsIcon, href: '/settings' },
+  { id: 'nav-chat',  group: 'navigation', label: 'Chat',         icon: IconMessagePlus, href: '/chat' },
+  { id: 'nav-chart-xau', group: 'navigation', label: 'Chart — Gold',   icon: IconChartLine, href: '/chart/XAUUSD', keywords: ['xau', 'gold', 'xauusd'] },
+  { id: 'nav-chart-eur', group: 'navigation', label: 'Chart — Euro',   icon: IconChartLine, href: '/chart/EURUSD', keywords: ['eur', 'euro', 'eurusd'] },
+  { id: 'nav-chart-gbp', group: 'navigation', label: 'Chart — Pound',  icon: IconChartLine, href: '/chart/GBPUSD', keywords: ['gbp', 'pound', 'cable'] },
+  { id: 'nav-news',     group: 'navigation', label: 'News',         icon: IconNewspaper, href: '/news' },
+  { id: 'nav-calendar', group: 'navigation', label: 'IconCalendar',     icon: IconCalendar,  href: '/calendar' },
+  { id: 'nav-alerts',   group: 'navigation', label: 'Alerts',       icon: IconBell,      href: '/alerts' },
+  { id: 'nav-journal',  group: 'navigation', label: 'Journal',      icon: IconBook,  href: '/journal' },
+  { id: 'nav-settings', group: 'navigation', label: 'SettingsIcon',     icon: SettingsIcon, href: '/settings' },
 
   // ── Create ────────────────────────────────────────────────
   // The "new chat" command is imperative; we wire it to a callback
   // when the palette mounts. We can't statically describe that here,
   // so we expose an id and let the component provide the handler.
-  { id: 'create-chat',   group: 'create', label: 'New chat',     icon: Plus,  shortcut: 'C' },
+  { id: 'create-chat',   group: 'create', label: 'New chat',     icon: IconPlus,  shortcut: 'C' },
 
-  // ── Settings deep links ───────────────────────────────────
-  { id: 'set-api-keys',  group: 'settings', label: 'API Keys',         icon: KeyRound, href: '/settings/api-keys', keywords: ['byok', 'provider'] },
-  { id: 'set-agent',     group: 'settings', label: 'Agent settings',   icon: Cog,      href: '/settings/agent' },
-  { id: 'set-usage',     group: 'settings', label: 'Usage & budget',   icon: Cog,      href: '/settings/usage', keywords: ['cost', 'spend'] },
-  { id: 'set-profile',   group: 'settings', label: 'Profile',          icon: Cog,      href: '/settings/profile' },
-  { id: 'set-models',    group: 'settings', label: 'Models',           icon: Cog,      href: '/settings/models',   keywords: ['model', 'ai', 'provider'] },
-  { id: 'set-appearance', group: 'settings', label: 'Appearance',      icon: Cog,      href: '/settings',          keywords: ['theme', 'dark', 'light'] },
-  { id: 'set-notifications', group: 'settings', label: 'Notifications', icon: Cog,     href: '/settings/notifications', keywords: ['alert', 'push', 'email'] },
-  { id: 'set-symbols',      group: 'settings', label: 'Symbols',         icon: Cog,     href: '/settings/symbols',      keywords: ['watchlist', 'forex'] },
+  // ── SettingsIcon deep links ───────────────────────────────────
+  { id: 'set-api-keys',  group: 'settings', label: 'API Keys',         icon: IconKey, href: '/settings/api-keys', keywords: ['byok', 'provider'] },
+  { id: 'set-agent',     group: 'settings', label: 'Agent settings',   icon: IconCog,      href: '/settings/agent' },
+  { id: 'set-usage',     group: 'settings', label: 'Usage & budget',   icon: IconCog,      href: '/settings/usage', keywords: ['cost', 'spend'] },
+  { id: 'set-profile',   group: 'settings', label: 'Profile',          icon: IconCog,      href: '/settings/profile' },
+  { id: 'set-models',    group: 'settings', label: 'Models',           icon: IconCog,      href: '/settings/models',   keywords: ['model', 'ai', 'provider'] },
+  { id: 'set-appearance', group: 'settings', label: 'Appearance',      icon: IconCog,      href: '/settings',          keywords: ['theme', 'dark', 'light'] },
+  { id: 'set-notifications', group: 'settings', label: 'Notifications', icon: IconCog,     href: '/settings/notifications', keywords: ['alert', 'push', 'email'] },
+  { id: 'set-symbols',      group: 'settings', label: 'Symbols',         icon: IconCog,     href: '/settings/symbols',      keywords: ['watchlist', 'forex'] },
 ];
 
 /**
@@ -111,7 +99,7 @@ export function findCommand(id: string): CommandItem | null {
 import { z } from 'zod';
 
 export const commandSchema = z.object({
-  id: z.string().min(1, 'Command ID is required'),
+  id: z.string().min(1, 'IconCommand ID is required'),
   group: z.enum(['navigation', 'create', 'settings']),
   label: z.string().min(1, 'Label is required'),
   keywords: z.array(z.string()).optional(),
@@ -121,10 +109,10 @@ export const commandSchema = z.object({
   shortcut: z.string().optional(),
 });
 
-export type Command = CommandItem;
+export type IconCommand = CommandItem;
 
-export function validateCommand(command: unknown): Command {
-  return commandSchema.parse(command) as Command;
+export function validateCommand(command: unknown): IconCommand {
+  return commandSchema.parse(command) as IconCommand;
 }
 
 export type { ComponentType };

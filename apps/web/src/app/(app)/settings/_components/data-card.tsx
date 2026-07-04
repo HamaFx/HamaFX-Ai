@@ -20,7 +20,7 @@
 // bookmarks and prefs in localStorage; this card lets the user clear
 // individual keys or wipe everything stored on this device.
 
-import { Bookmark, Download, MessageSquare, RotateCcw, Trash2, UserX } from 'lucide-react';
+import {IconBookmark, IconDownload, IconMessage, IconArrowBackUp, IconTrash, IconUserX} from '@tabler/icons-react';
 import { useEffect, useState, useTransition } from 'react';
 import { signOut } from 'next-auth/react';
 import { toast } from 'sonner';
@@ -167,7 +167,7 @@ export function DataCard() {
   return (
     <section
       aria-labelledby="data-heading"
-      className="border border-zinc-800 bg-zinc-950 rounded-sm flex flex-col gap-1 p-4"
+      className="border border-border bg-bg-elev-1 rounded-sm flex flex-col gap-1 p-4"
     >
       <header className="flex items-center gap-3 pb-2">
         <h2 id="data-heading" className="text-fg text-base font-semibold tracking-tight">
@@ -176,7 +176,7 @@ export function DataCard() {
       </header>
 
       <SettingsRow
-        icon={<MessageSquare className="size-4" />}
+        icon={<IconMessage className="size-4" />}
         label="Chat history"
         description="Permanently delete all server-side conversations"
         action={
@@ -187,7 +187,7 @@ export function DataCard() {
             onClick={() => void clearChatHistory()}
             disabled={isPending}
           >
-            <Trash2 className="size-3.5" />
+            <IconTrash className="size-3.5" />
             Delete all
           </Button>
         }
@@ -196,7 +196,7 @@ export function DataCard() {
       <RowDivider />
 
       <SettingsRow
-        icon={<Bookmark className="size-4" />}
+        icon={<IconBookmark className="size-4" />}
         label="Saved articles"
         description={`${counts.bookmarks} bookmark${counts.bookmarks === 1 ? '' : 's'} stored`}
         action={
@@ -207,7 +207,7 @@ export function DataCard() {
             onClick={() => void clearBookmarks()}
             disabled={counts.bookmarks === 0}
           >
-            <Trash2 className="size-3.5" />
+            <IconTrash className="size-3.5" />
             Clear
           </Button>
         }
@@ -216,7 +216,7 @@ export function DataCard() {
       <RowDivider />
 
       <SettingsRow
-        icon={<RotateCcw className="size-4" />}
+        icon={<IconArrowBackUp className="size-4" />}
         label="Reset preferences"
         description="Clear local theme + default symbol overrides"
         action={
@@ -234,7 +234,7 @@ export function DataCard() {
       <RowDivider />
 
       <SettingsRow
-        icon={<Trash2 className="size-4" />}
+        icon={<IconTrash className="size-4" />}
         label="Clear all local data"
         description={`${counts.storage} key${counts.storage === 1 ? '' : 's'} on this device`}
         action={
@@ -245,7 +245,7 @@ export function DataCard() {
             onClick={() => void clearAll()}
             disabled={counts.storage === 0}
           >
-            <Trash2 className="size-3.5" />
+            <IconTrash className="size-3.5" />
             Clear all
           </Button>
         }
@@ -254,9 +254,9 @@ export function DataCard() {
       <RowDivider />
 
       <SettingsRow
-        icon={<Download className="size-4" />}
+        icon={<IconDownload className="size-4" />}
         label="Export my data"
-        description="Download all your data as JSON (GDPR)"
+        description="IconDownload all your data as JSON (GDPR)"
         action={
           <Button
             type="button"
@@ -278,18 +278,18 @@ export function DataCard() {
               }
             }}
           >
-            <Download className="size-3.5" />
+            <IconDownload className="size-3.5" />
             Export
           </Button>
         }
       />
 
-      <hr className="border-zinc-800 my-3" />
+      <hr className="border-border my-3" />
 
       {/* Delete account */}
       <div className="flex flex-col gap-3">
         <div className="flex items-center gap-2">
-          <UserX className="size-4 text-danger" />
+          <IconUserX className="size-4 text-danger" />
           <h3 className="text-xs font-bold uppercase tracking-wider text-fg-muted">
             Delete account
           </h3>
@@ -345,5 +345,5 @@ export function DataCard() {
 }
 
 function RowDivider() {
-  return <div className="border-zinc-800 -mx-4 my-1 border-t" />;
+  return <div className="border-border -mx-4 my-1 border-t" />;
 }

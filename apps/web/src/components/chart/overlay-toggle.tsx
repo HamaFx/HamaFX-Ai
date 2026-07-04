@@ -56,7 +56,7 @@ export function OverlayToggle({ active, onToggle }: OverlayToggleProps) {
     <div
       role="group"
       aria-label="Chart overlays"
-      className="border-border bg-zinc-900 inline-flex flex-wrap items-center gap-0.5 rounded-sm border p-0.5"
+      className="border-border bg-bg-elev-2 inline-flex flex-wrap items-center gap-0.5 rounded-sm border p-0.5"
     >
       {ALL_KINDS.map((k) => {
         const on = active.includes(k);
@@ -67,8 +67,8 @@ export function OverlayToggle({ active, onToggle }: OverlayToggleProps) {
             aria-pressed={on}
             onClick={() => onToggle(k)}
             className={cn(
-              'rounded px-2 py-1 text-xs font-medium tabular-nums transition-colors',
-              on ? 'bg-fg text-black' : 'text-fg-muted hover:bg-zinc-950 hover:text-fg',
+              'rounded-sm px-2 py-1 text-xs font-medium tabular-nums transition-colors',
+              on ? 'bg-fg text-black' : 'text-fg-muted hover:bg-bg-elev-1 hover:text-fg',
             )}
           >
             {SHORT_LABEL[k]}

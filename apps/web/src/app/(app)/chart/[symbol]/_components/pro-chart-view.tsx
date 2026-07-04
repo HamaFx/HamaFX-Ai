@@ -101,7 +101,7 @@ export function ProChartView({ symbol, watchlist }: { symbol: Symbol; watchlist:
         className="sticky z-20 px-4 pt-3 pb-2 transition-all"
         style={{ top: 'calc(var(--topbar-h) + env(safe-area-inset-top))' }}
       >
-        <header className="border border-zinc-800 bg-zinc-950 rounded-sm flex flex-col gap-3 p-3">
+        <header className="border border-border bg-bg-elev-1 rounded-sm flex flex-col gap-3 p-3">
           <div className="flex flex-wrap items-center justify-between gap-3 px-1">
             <SymbolPicker active={symbol} watchlist={watchlist} />
             <PriceTag symbol={symbol} referencePrice={referenceClose} />
@@ -116,8 +116,8 @@ export function ProChartView({ symbol, watchlist }: { symbol: Symbol; watchlist:
               <PinToChat symbol={symbol} />
 
               {/* Toggle Tab */}
-              <div className="flex bg-zinc-900 p-0.5 rounded-sm border border-zinc-800">
-                <span className="px-3 py-1.5 text-xs font-semibold rounded-sm bg-zinc-950 text-fg shadow-sm">
+              <div className="flex bg-bg-elev-2 p-0.5 rounded-sm border border-border">
+                <span className="px-3 py-1.5 text-xs font-semibold rounded-sm bg-bg-elev-1 text-fg shadow-sm">
                   TradingView
                 </span>
                 <Link

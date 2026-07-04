@@ -23,7 +23,7 @@
 // appears once the thread has grown long enough (~20 messages) AND a summary
 // has been generated.
 
-import { ChevronDown, ChevronUp, Sparkles, X } from 'lucide-react';
+import {IconChevronDown, IconChevronUp, IconBolt, IconX} from '@tabler/icons-react';
 import { AnimatePresence, m } from 'motion/react';
 import { useState } from 'react';
 
@@ -40,11 +40,11 @@ export function ThreadSummaryHeader({ synopsis, insights, onDismiss }: ThreadSum
     <div
       role="status"
       aria-label="Thread summary"
-      className="border border-zinc-800 bg-zinc-950 rounded-sm p-3 mb-3"
+      className="border border-border bg-bg-elev-1 rounded-sm p-3 mb-3"
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Sparkles className="size-3.5 text-fg" />
+          <IconBolt className="size-3.5 text-fg" />
           <span className="text-body-sm font-semibold text-fg">Thread summary</span>
         </div>
         <div className="flex items-center gap-1">
@@ -55,16 +55,16 @@ export function ThreadSummaryHeader({ synopsis, insights, onDismiss }: ThreadSum
             aria-label={open ? 'Collapse summary' : 'Expand summary'}
             className="text-fg-subtle hover:text-fg inline-flex size-7 items-center justify-center rounded-sm transition-colors"
           >
-            {open ? <ChevronUp className="size-3.5" /> : <ChevronDown className="size-3.5" />}
+            {open ? <IconChevronUp className="size-3.5" /> : <IconChevronDown className="size-3.5" />}
           </button>
           {onDismiss ? (
             <button
               type="button"
               onClick={onDismiss}
               aria-label="Dismiss summary"
-              className="text-fg-subtle hover:text-red-500 inline-flex size-7 items-center justify-center rounded-sm transition-colors"
+              className="text-fg-subtle hover:text-bear inline-flex size-7 items-center justify-center rounded-sm transition-colors"
             >
-              <X className="size-3.5" />
+              <IconX className="size-3.5" />
             </button>
           ) : null}
         </div>
@@ -92,12 +92,12 @@ export function ThreadSummaryHeader({ synopsis, insights, onDismiss }: ThreadSum
                   {insights.map((ins, i) => (
                     <li
                       key={i}
-                      className="border-zinc-900 flex items-baseline gap-2 rounded-sm border p-2 text-xs"
+                      className="border-divider flex items-baseline gap-2 rounded-sm border p-2 text-xs"
                     >
                       <span className="text-fg-muted">→</span>
                       <span className="text-fg flex-1">{ins.text}</span>
                       {ins.symbol ? (
-                        <span className="bg-zinc-900 text-fg-muted rounded px-1.5 py-0.5 text-caption font-medium">
+                        <span className="bg-bg-elev-2 text-fg-muted rounded-sm px-1.5 py-0.5 text-caption font-medium">
                           {ins.symbol}
                         </span>
                       ) : null}

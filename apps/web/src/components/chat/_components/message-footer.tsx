@@ -24,7 +24,7 @@
 // chaining — metadata is only present on finished assistant turns.
 
 import type { UIMessage } from 'ai';
-import { Bot, ChevronDown, ChevronRight, Link as LinkIcon } from 'lucide-react';
+import {IconRobot, IconChevronDown, IconChevronRight, IconLink as LinkIcon} from '@tabler/icons-react';
 import { useState } from 'react';
 
 interface MessageFooterProps {
@@ -85,7 +85,7 @@ export function MessageFooter({ message }: MessageFooterProps) {
       <div className="flex items-center gap-2 text-caption text-fg-subtle mt-1.5">
         {model ? (
           <span className="inline-flex items-center gap-1">
-            <Bot className="size-3" />
+            <IconRobot className="size-3" />
             {formatModelLabel(model)}
           </span>
         ) : null}
@@ -97,14 +97,14 @@ export function MessageFooter({ message }: MessageFooterProps) {
             aria-expanded={open}
             className="ml-auto inline-flex items-center gap-0.5 text-fg-subtle hover:text-fg transition-colors"
           >
-            {open ? <ChevronDown className="size-3" /> : <ChevronRight className="size-3" />}
+            {open ? <IconChevronDown className="size-3" /> : <IconChevronRight className="size-3" />}
             details
           </button>
         ) : null}
       </div>
 
       {open ? (
-        <div className="border-t border-zinc-800 mt-2 pt-2 flex flex-col gap-1.5 text-caption">
+        <div className="border-t border-border mt-2 pt-2 flex flex-col gap-1.5 text-caption">
           {usage ? (
             <div className="flex justify-between">
               <span className="text-fg-subtle">Tokens</span>

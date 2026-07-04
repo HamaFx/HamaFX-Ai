@@ -19,7 +19,7 @@
 // Premium chat composer.
 //
 // New in this iteration:
-//   - When `isStreaming` is true the Send button morphs into a Stop button
+//   - When `isStreaming` is true the IconArrowRight button morphs into a Stop button
 //     (square indicator + amber ring) wired to the AI SDK's `stop()`.
 //   - When voice input is active the mic gets a soft "mic-pulse" ring
 //     and a "Listening…" caption appears above the row so the user gets
@@ -28,7 +28,7 @@
 //     on focus (desktop only — hidden on touch).
 //   - Image thumbnail rail is keyboard-focusable for delete.
 
-import { ArrowUp, ImagePlus, Mic, Square } from 'lucide-react';
+import {IconArrowUp, IconPhotoPlus, IconMicrophone, IconSquare} from '@tabler/icons-react';
 import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, m } from 'motion/react';
 import { toast } from 'sonner';
@@ -162,12 +162,12 @@ export function Composer({
       const res = await fetchCsrf('/api/upload', { method: 'POST', body: fd });
       if (!res.ok) {
         const text = await res.text().catch(() => '');
-        throw new Error(`Upload failed for "${file.name}": ${res.status} ${text.slice(0, 80)}`);
+        throw new Error(`IconUpload failed for "${file.name}": ${res.status} ${text.slice(0, 80)}`);
       }
       const json = (await res.json()) as { url?: string; mediaType?: string };
       const url = typeof json.url === 'string' ? json.url : null;
       if (!url) {
-        throw new Error(`Upload returned no URL for "${file.name}"`);
+        throw new Error(`IconUpload returned no URL for "${file.name}"`);
       }
       
       return {
@@ -265,17 +265,17 @@ export function Composer({
   const charCountTone = getCharCountTone(charCount);
   const charCountClass =
     charCountTone === 'danger'
-      ? 'text-red-500 font-semibold'
+      ? 'text-bear font-semibold'
       : charCountTone === 'warn'
-        ? 'text-amber-500 font-medium'
+        ? 'text-warn font-medium'
         : 'text-fg-subtle';
 
   return (
     <div className="sticky bottom-0 px-3 pb-[max(env(safe-area-inset-bottom),12px)] transition-all duration-300 w-full max-w-4xl mx-auto z-20">
       <form
         className={cn(
-          'bg-zinc-950 border border-zinc-800 relative flex w-full flex-col overflow-hidden rounded-sm shadow-md transition-all duration-300',
-          focused && 'border-zinc-700',
+          'bg-bg-elev-1 border border-border relative flex w-full flex-col overflow-hidden rounded-sm shadow-md transition-all duration-300',
+          focused && 'border-border',
           dragOver && 'ring-2 ring-inset ring-zinc-600',
         )}
         onSubmit={(e) => {
@@ -294,9 +294,9 @@ export function Composer({
           <div
             role="status"
             aria-live="polite"
-            className="text-red-500 border border-red-500/30 mx-auto mt-3 inline-flex items-center gap-2 self-center rounded-sm bg-red-500/10 px-3 py-1 text-body-sm font-medium"
+            className="text-bear border border-bear/30 mx-auto mt-3 inline-flex items-center gap-2 self-center rounded-sm bg-bear/10 px-3 py-1 text-body-sm font-medium"
           >
-            <span className="bg-red-500 motion-safe:animate-pulse size-1.5 rounded-sm" />
+            <span className="bg-bear motion-safe:animate-pulse size-1.5 rounded-sm" />
             Listening…
           </div>
         ) : null}
@@ -309,13 +309,13 @@ export function Composer({
                 <img
                   src={img.url}
                   alt={`Attached image ${idx + 1} of ${images.length}`}
-                  className="border-zinc-800 size-14 rounded-sm border object-cover"
+                  className="border-border size-14 rounded-sm border object-cover"
                 />
                 <button
                   type="button"
                   aria-label={`Remove ${img.name}`}
                   onClick={() => removeImage(img.id)}
-                  className="bg-zinc-800 text-fg border-border focus-visible:ring-fg absolute -right-2 -top-2 inline-flex size-6 items-center justify-center rounded-sm border text-caption leading-none focus:outline-none focus-visible:ring-2"
+                  className="bg-bg-elev-3 text-fg border-border focus-visible:ring-fg absolute -right-2 -top-2 inline-flex size-6 items-center justify-center rounded-sm border text-caption leading-none focus:outline-none focus-visible:ring-2"
                 >
                   ×
                 </button>
@@ -325,7 +325,7 @@ export function Composer({
         ) : null}
 
         {error ? (
-          <p id="composer-error" role="alert" className="text-red-500 px-5 pt-2 text-xs">
+          <p id="composer-error" role="alert" className="text-bear px-5 pt-2 text-xs">
             {error}
           </p>
         ) : null}
@@ -344,10 +344,10 @@ export function Composer({
                 'focus-visible:ring-fg/60 focus:outline-none focus-visible:ring-2',
                 disabled || images.length >= MAX_IMAGES
                   ? 'text-fg-subtle cursor-not-allowed opacity-60'
-                  : 'text-fg-muted hover:bg-zinc-900/50 hover:text-fg',
+                  : 'text-fg-muted hover:bg-bg-elev-2/50 hover:text-fg',
               )}
             >
-              <ImagePlus className="size-[20px]" strokeWidth={1.5} />
+              <IconPhotoPlus className="size-[20px]" strokeWidth={1.5} />
             </button>
 
             <input
@@ -367,19 +367,18 @@ export function Composer({
                 type="button"
                 aria-label={voice.active ? 'Stop voice input' : 'Start voice input'}
                 aria-pressed={voice.active}
-                aria-busy={voice.active}
                 onClick={() => (voice.active ? voice.stop() : voice.start())}
                 disabled={disabled}
                 className={cn(
                   'inline-flex size-[44px] shrink-0 items-center justify-center rounded-sm transition-colors',
                   'focus-visible:ring-fg/60 focus:outline-none focus-visible:ring-2',
                   voice.active
-                    ? 'text-red-500 mic-pulse bg-red-500/10'
-                    : 'text-fg-muted hover:bg-zinc-900/50 hover:text-fg',
+                    ? 'text-bear mic-pulse bg-bear/10'
+                    : 'text-fg-muted hover:bg-bg-elev-2/50 hover:text-fg',
                   disabled ? 'cursor-not-allowed opacity-60' : '',
                 )}
               >
-                <Mic className="size-[20px]" strokeWidth={1.5} />
+                <IconMicrophone className="size-[20px]" strokeWidth={1.5} />
               </button>
             ) : null}
           </div>
@@ -432,7 +431,7 @@ export function Composer({
 
             {focused && !isTouch && !isStreaming ? (
               <p className="text-fg-subtle hidden pr-1 text-caption tabular-nums sm:block">
-                <kbd className="bg-zinc-900 border border-zinc-800 rounded-sm px-1.5 font-mono">
+                <kbd className="bg-bg-elev-2 border border-border rounded-sm px-1.5 font-mono">
                   Enter
                 </kbd>{' '}
                 to send
@@ -450,9 +449,9 @@ export function Composer({
                   type="button"
                   onClick={onStop}
                   aria-label="Stop generating"
-                  className="text-red-500 border border-red-500/40 inline-flex size-[44px] shrink-0 items-center justify-center rounded-sm bg-red-500/15 focus:outline-none focus-visible:ring-2"
+                  className="text-bear border border-bear/40 inline-flex size-[44px] shrink-0 items-center justify-center rounded-sm bg-bear/15 focus:outline-none focus-visible:ring-2"
                 >
-                  <Square className="size-[14px] fill-current" strokeWidth={0} />
+                  <IconSquare className="size-[14px] fill-current" strokeWidth={0} />
                 </m.button>
               ) : (
                 <m.button
@@ -464,14 +463,14 @@ export function Composer({
                   transition={{ type: 'spring', stiffness: 400, damping: 25 }}
                   type="submit"
                   disabled={!canSend}
-                  aria-label="Send message"
+                  aria-label="ArrowRight message"
                   className={cn(
                     'text-black bg-fg hover:bg-fg-muted inline-flex size-[44px] shrink-0 items-center justify-center rounded-sm font-semibold',
                     'disabled:cursor-not-allowed disabled:opacity-40 disabled:grayscale',
                     'focus-visible:ring-fg focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-bg',
                   )}
                 >
-                  <ArrowUp className="size-[18px]" strokeWidth={2.5} />
+                  <IconArrowUp className="size-[18px]" strokeWidth={2.5} />
                 </m.button>
               )}
             </AnimatePresence>

@@ -49,7 +49,7 @@ export function GetNewsPart({ output, state, errorMessage }: GetNewsPartProps) {
 
   if (output.pipelinePending) {
     return (
-      <div className="border-border bg-zinc-950 rounded-sm border p-3">
+      <div className="border-border bg-bg-elev-1 rounded-sm border p-3">
         <p className="text-fg-muted text-sm">News pipeline hasn&apos;t ingested yet.</p>
       </div>
     );
@@ -57,7 +57,7 @@ export function GetNewsPart({ output, state, errorMessage }: GetNewsPartProps) {
 
   if (output.items.length === 0) {
     return (
-      <div className="border-border bg-zinc-950 rounded-sm border p-3">
+      <div className="border-border bg-bg-elev-1 rounded-sm border p-3">
         <p className="text-fg-muted text-sm">No matching news.</p>
       </div>
     );
@@ -66,7 +66,7 @@ export function GetNewsPart({ output, state, errorMessage }: GetNewsPartProps) {
   const items = output.items.slice(0, MAX_ROWS);
 
   return (
-    <div className="border-border bg-zinc-950 rounded-sm border p-3">
+    <div className="border-border bg-bg-elev-1 rounded-sm border p-3">
       <ul className="divide-border divide-y">
         {items.map((item) => {
           const iso = new Date(item.publishedAt).toISOString();
@@ -101,7 +101,7 @@ export function GetNewsPart({ output, state, errorMessage }: GetNewsPartProps) {
 function SentimentDot({ sentiment }: { sentiment: NewsSentiment | null }) {
   if (sentiment === null) return null;
   const color =
-    sentiment === 'positive' ? 'bg-emerald-500' : sentiment === 'negative' ? 'bg-red-500' : 'bg-fg-muted';
+    sentiment === 'positive' ? 'bg-bull' : sentiment === 'negative' ? 'bg-bear' : 'bg-fg-muted';
   return (
     <span
       role="img"
@@ -114,15 +114,15 @@ function SentimentDot({ sentiment }: { sentiment: NewsSentiment | null }) {
 function NewsCardSkeleton() {
   return (
     <div
-      className="border-border bg-zinc-950 rounded-sm border p-3"
+      className="border-border bg-bg-elev-1 rounded-sm border p-3"
       aria-busy="true"
       aria-label="Loading news"
     >
       <ul className="divide-border divide-y">
         {[0, 1, 2].map((i) => (
           <li key={i} className="flex min-h-[44px] flex-col justify-center gap-1 py-2">
-            <span className="bg-zinc-900 h-4 w-3/4 animate-pulse rounded" />
-            <span className="bg-zinc-900 h-3 w-1/3 animate-pulse rounded" />
+            <span className="bg-bg-elev-2 h-4 w-3/4 animate-pulse rounded-sm" />
+            <span className="bg-bg-elev-2 h-3 w-1/3 animate-pulse rounded-sm" />
           </li>
         ))}
       </ul>
@@ -134,7 +134,7 @@ function NewsCardError({ message }: { message?: string }) {
   return (
     <div
       role="alert"
-      className="border-red-500/30 bg-zinc-950 text-red-500 rounded-sm border p-3 text-sm"
+      className="border-bear/30 bg-bg-elev-1 text-bear rounded-sm border p-3 text-sm"
     >
       News unavailable{message ? ` · ${message}` : ''}
     </div>

@@ -34,7 +34,7 @@ export function EquityCurveWidget({ entries }: EquityCurveWidgetProps) {
   return (
     <section
       aria-label="Equity curve"
-      className="border-zinc-800 bg-zinc-950 flex flex-col gap-3 rounded-sm border p-4"
+      className="border-border bg-bg-elev-1 flex flex-col gap-3 rounded-sm border p-4"
     >
       <header className="flex items-center justify-between gap-2">
         <span className="text-fg text-body-sm font-semibold">Equity curve</span>

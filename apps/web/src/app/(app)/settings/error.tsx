@@ -1,6 +1,6 @@
 'use client';
 
-import { RotateCw } from 'lucide-react';
+import { IconRefresh } from '@tabler/icons-react';
 import { Button } from '@/components/ui/button';
 
 export default function SettingsError({
@@ -17,7 +17,7 @@ export default function SettingsError({
         {error.message || 'An unexpected error occurred. Please try again.'}
       </p>
       <Button type="button" size="sm" variant="secondary" onClick={() => reset()}>
-        <RotateCw className="size-3.5" />
+        <IconRefresh className="size-3.5" />
         Try again
       </Button>
     </div>

@@ -16,10 +16,10 @@
  * limitations under the License.
  */
 
-// Settings island for Resend email test. Uses sonner toasts for
+// IconSettings island for Resend email test. Uses sonner toasts for
 // confirmation/error rather than inline status text.
 
-import { Mail } from 'lucide-react';
+import { IconMail } from '@tabler/icons-react';
 import { useTransition } from 'react';
 import { toast } from 'sonner';
 
@@ -98,8 +98,8 @@ export function TestEmailButton(): React.JSX.Element {
       aria-busy={pending}
       className="focus-visible:ring-fg min-h-[44px] focus-visible:ring-2"
     >
-      <Mail className="size-4" />
-      {pending ? 'Sending…' : 'Send test email'}
+      <IconMail className="size-4" />
+      {pending ? 'Sending…' : 'IconArrowRight test email'}
     </Button>
   );
 }

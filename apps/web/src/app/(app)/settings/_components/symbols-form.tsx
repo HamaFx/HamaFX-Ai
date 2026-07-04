@@ -20,16 +20,7 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import {
-  ArrowDown,
-  ArrowUp,
-  Download,
-  GripVertical,
-  Plus,
-  Search,
-  Trash,
-  Upload,
-} from 'lucide-react';
+import { IconArrowDown,  IconArrowUp,  IconDownload,  IconGripVertical,  IconPlus,  IconSearch,  IconTrash,  IconUpload } from '@tabler/icons-react';
 import { toast } from 'sonner';
 import { usePrices } from '@/hooks/use-prices';
 
@@ -85,10 +76,10 @@ function SortableSymbolRow({
       style={style}
       className={`flex items-center justify-between p-3 rounded-sm border transition-all ${
         isDragging
-          ? 'border-zinc-700 shadow-lg z-10 opacity-90 bg-zinc-900'
+          ? 'border-border shadow-lg z-10 opacity-90 bg-bg-elev-2'
           : isSelected
-            ? 'bg-zinc-950 border-zinc-700 shadow-none/5'
-            : 'bg-surface border-surface-elevated hover:border-fg-subtle/30'
+            ? 'bg-bg-elev-1 border-border shadow-none/5'
+            : 'bg-bg-elev-1 border-surface-elevated hover:border-fg-subtle/30'
       }`}
     >
       <div className="flex items-center gap-3 min-w-0">
@@ -99,19 +90,19 @@ function SortableSymbolRow({
           {...attributes}
           {...listeners}
         >
-          <GripVertical className="size-3.5" />
+          <IconGripVertical className="size-3.5" />
         </button>
         <input
           type="checkbox"
           checked={isSelected}
           onChange={() => onToggleSelect(item.symbol)}
           aria-label={`Select ${item.symbol}`}
-          className="rounded border-zinc-800 bg-zinc-950 text-fg focus:ring-fg size-3.5 cursor-pointer shrink-0"
+          className="rounded-sm border-border bg-bg-elev-1 text-fg focus:ring-fg size-3.5 cursor-pointer shrink-0"
         />
         <div className="flex flex-col min-w-0">
           <div className="flex items-baseline gap-2">
             <span className="font-mono text-sm font-semibold text-fg">{item.symbol}</span>
-            <span className="text-xs uppercase font-mono px-1 rounded bg-zinc-900 text-fg-subtle border border-zinc-800 shrink-0">
+            <span className="text-xs uppercase font-mono px-1 rounded-sm bg-bg-elev-2 text-fg-subtle border border-border shrink-0">
               {item.category}
             </span>
           </div>
@@ -130,7 +121,7 @@ function SortableSymbolRow({
         </div>
 
         {/* Arrow buttons — keyboard-only fallback, visually hidden on small screens */}
-        <div className="hidden sm:flex items-center border border-zinc-800 rounded-sm bg-zinc-950">
+        <div className="hidden sm:flex items-center border border-border rounded-sm bg-bg-elev-1">
           <button
             type="button"
             onClick={() => onMove(index, 'up')}
@@ -138,7 +129,7 @@ function SortableSymbolRow({
             aria-label="Move symbol up"
             className="p-1 text-fg-subtle hover:text-fg disabled:opacity-30 disabled:hover:text-fg-subtle cursor-pointer"
           >
-            <ArrowUp className="size-3.5" />
+            <IconArrowUp className="size-3.5" />
           </button>
           <div className="w-px h-3.5 bg-divider/60" />
           <button
@@ -148,7 +139,7 @@ function SortableSymbolRow({
             aria-label="Move symbol down"
             className="p-1 text-fg-subtle hover:text-fg disabled:opacity-30 disabled:hover:text-fg-subtle cursor-pointer"
           >
-            <ArrowDown className="size-3.5" />
+            <IconArrowDown className="size-3.5" />
           </button>
         </div>
 
@@ -156,9 +147,9 @@ function SortableSymbolRow({
           type="button"
           onClick={() => onRemove(item.symbol)}
           aria-label={`Remove ${item.symbol} from watchlist`}
-          className="p-1.5 text-fg-subtle hover:text-red-500 hover:bg-red-500/10 rounded-sm transition-colors cursor-pointer"
+          className="p-1.5 text-fg-subtle hover:text-bear hover:bg-bear/10 rounded-sm transition-colors cursor-pointer"
         >
-          <Trash className="size-3.5" />
+          <IconTrash className="size-3.5" />
         </button>
       </div>
     </div>
@@ -521,9 +512,9 @@ export function SymbolsForm({ initialSymbols, catalog }: SymbolsFormProps) {
   };
 
   return (
-    <div className="flex flex-col gap-6 font-sans">
+    <div className="flex flex-col gap-6">
       {/* Watchlist Section */}
-      <div className="border border-zinc-800 bg-zinc-950 rounded-sm p-4 flex flex-col gap-4">
+      <div className="border border-border bg-bg-elev-1 rounded-sm p-4 flex flex-col gap-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <h3 className="font-semibold text-fg text-sm uppercase tracking-wider">Your Watchlist</h3>
           
@@ -534,7 +525,7 @@ export function SymbolsForm({ initialSymbols, catalog }: SymbolsFormProps) {
               onClick={handleExport}
               className="text-fg-subtle hover:text-fg h-8 text-xs gap-1.5 cursor-pointer"
             >
-              <Download className="size-3.5" /> Export
+              <IconDownload className="size-3.5" /> Export
             </Button>
             <Button
               variant="ghost"
@@ -542,7 +533,7 @@ export function SymbolsForm({ initialSymbols, catalog }: SymbolsFormProps) {
               onClick={() => fileInputRef.current?.click()}
               className="text-fg-subtle hover:text-fg h-8 text-xs gap-1.5 cursor-pointer"
             >
-              <Upload className="size-3.5" /> Import
+              <IconUpload className="size-3.5" /> Import
             </Button>
             <input
               type="file"
@@ -554,28 +545,28 @@ export function SymbolsForm({ initialSymbols, catalog }: SymbolsFormProps) {
           </div>
         </div>
 
-        {/* Watchlist Search */}
+        {/* Watchlist IconSearch */}
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-fg-muted" />
+          <IconSearch className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-fg-muted" />
           <Input
             value={watchlistSearch}
             onChange={(e) => setWatchlistSearch(e.target.value)}
-            placeholder="Search watchlist symbols..."
-            className="pl-9 bg-zinc-950 h-9 text-sm"
+            placeholder="IconSearch watchlist symbols..."
+            className="pl-9 bg-bg-elev-1 h-9 text-sm"
           />
         </div>
 
-        {/* Watchlist Table/List */}
+        {/* Watchlist Table/IconList */}
         <div className="flex flex-col gap-2">
           {filteredWatchlist.length > 0 && (
-            <div className="flex items-center justify-between px-3 py-1.5 text-caption text-fg-subtle border-b border-zinc-800">
+            <div className="flex items-center justify-between px-3 py-1.5 text-caption text-fg-subtle border-b border-border">
               <div className="flex items-center gap-2">
                 <input
                   type="checkbox"
                   checked={selected.size === filteredWatchlist.length && filteredWatchlist.length > 0}
                   onChange={handleToggleSelectAll}
                   aria-label="Select all symbols"
-                  className="rounded border-zinc-800 bg-zinc-950 text-fg focus:ring-fg size-3.5 cursor-pointer"
+                  className="rounded-sm border-border bg-bg-elev-1 text-fg focus:ring-fg size-3.5 cursor-pointer"
                 />
                 <span>Select All</span>
               </div>
@@ -583,9 +574,9 @@ export function SymbolsForm({ initialSymbols, catalog }: SymbolsFormProps) {
                 <button
                   type="button"
                   onClick={handleBulkDelete}
-                  className="text-red-500 font-semibold hover:underline flex items-center gap-1 cursor-pointer"
+                  className="text-bear font-semibold hover:underline flex items-center gap-1 cursor-pointer"
                 >
-                  <Trash className="size-3" /> Remove Selected ({selected.size})
+                  <IconTrash className="size-3" /> Remove Selected ({selected.size})
                 </button>
               )}
             </div>
@@ -629,11 +620,11 @@ export function SymbolsForm({ initialSymbols, catalog }: SymbolsFormProps) {
       </div>
 
       {/* Catalog / Suggestions Section */}
-      <div className="border border-zinc-800 bg-zinc-950 rounded-sm p-4 flex flex-col gap-4">
+      <div className="border border-border bg-bg-elev-1 rounded-sm p-4 flex flex-col gap-4">
         <h3 className="font-semibold text-fg text-sm uppercase tracking-wider">Available Symbol Catalog</h3>
 
         {/* Category Tabs */}
-        <div className="flex bg-zinc-900 p-0.5 rounded-sm border border-zinc-800 overflow-x-auto scrollbar-none">
+        <div className="flex bg-bg-elev-2 p-0.5 rounded-sm border border-border overflow-x-auto scrollbar-none">
           {['all', 'forex', 'metals', 'crypto', 'indices'].map((cat) => (
             <button
               key={cat}
@@ -641,7 +632,7 @@ export function SymbolsForm({ initialSymbols, catalog }: SymbolsFormProps) {
               onClick={() => setActiveCategory(cat)}
               className={`px-3 py-1.5 text-xs font-semibold rounded-sm transition-all cursor-pointer shrink-0 uppercase tracking-wide ${
                 activeCategory === cat
-                  ? 'bg-zinc-950 text-fg shadow-sm'
+                  ? 'bg-bg-elev-1 text-fg shadow-sm'
                   : 'text-fg-muted hover:text-fg'
               }`}
             >
@@ -650,15 +641,15 @@ export function SymbolsForm({ initialSymbols, catalog }: SymbolsFormProps) {
           ))}
         </div>
 
-        {/* Catalog Search & Bulk Add */}
+        {/* Catalog IconSearch & Bulk Add */}
         <div className="flex flex-col sm:flex-row gap-2">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-fg-muted" />
+            <IconSearch className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-fg-muted" />
             <Input
               value={catalogSearch}
               onChange={(e) => setCatalogSearch(e.target.value)}
-              placeholder="Search catalog by symbol or name..."
-              className="pl-9 bg-zinc-950 h-9 text-sm"
+              placeholder="IconSearch catalog by symbol or name..."
+              className="pl-9 bg-bg-elev-1 h-9 text-sm"
             />
           </div>
           
@@ -667,7 +658,7 @@ export function SymbolsForm({ initialSymbols, catalog }: SymbolsFormProps) {
               value={bulkInput}
               onChange={(e) => setBulkInput(e.target.value)}
               placeholder="Bulk symbols (comma separated)"
-              className="bg-zinc-950 h-9 text-sm w-44"
+              className="bg-bg-elev-1 h-9 text-sm w-44"
             />
             <Button
               type="button"
@@ -675,22 +666,22 @@ export function SymbolsForm({ initialSymbols, catalog }: SymbolsFormProps) {
               disabled={isBulkAdding || !bulkInput.trim()}
               className="h-9 px-3 text-xs gap-1 cursor-pointer"
             >
-              <Plus className="size-3.5" /> Bulk Add
+              <IconPlus className="size-3.5" /> Bulk Add
             </Button>
           </div>
         </div>
 
-        {/* Available Symbols List */}
+        {/* Available Symbols IconList */}
         <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2 min-h-[120px] pr-1">
           {paginatedCatalog.map((item) => (
             <li
               key={item.symbol}
-              className="flex items-center justify-between p-3 rounded-sm border border-surface-elevated bg-surface hover:border-fg-subtle/30"
+              className="flex items-center justify-between p-3 rounded-sm border border-surface-elevated bg-bg-elev-1 hover:border-fg-subtle/30"
             >
               <div className="flex flex-col">
                 <div className="flex items-baseline gap-2">
                   <span className="font-mono text-sm font-semibold text-fg">{item.symbol}</span>
-                  <span className="text-xs uppercase font-mono px-1 rounded bg-zinc-900 text-fg-subtle border border-zinc-800">
+                  <span className="text-xs uppercase font-mono px-1 rounded-sm bg-bg-elev-2 text-fg-subtle border border-border">
                     {item.category}
                   </span>
                 </div>
@@ -704,7 +695,7 @@ export function SymbolsForm({ initialSymbols, catalog }: SymbolsFormProps) {
                 className="h-8 w-8 p-0 cursor-pointer text-fg-subtle hover:text-fg"
                 aria-label={`Add ${item.symbol} to watchlist`}
               >
-                <Plus className="size-4" />
+                <IconPlus className="size-4" />
               </Button>
             </li>
           ))}
@@ -717,7 +708,7 @@ export function SymbolsForm({ initialSymbols, catalog }: SymbolsFormProps) {
         </ul>
 
         {filteredCatalog.length > CATALOG_PAGE_SIZE && (
-          <div className="flex items-center justify-between pt-2 border-t border-zinc-800">
+          <div className="flex items-center justify-between pt-2 border-t border-border">
             <span className="text-caption text-fg-muted">
               {filteredCatalog.length} symbols
             </span>
@@ -726,7 +717,7 @@ export function SymbolsForm({ initialSymbols, catalog }: SymbolsFormProps) {
                 type="button"
                 onClick={() => setCatalogPage((p) => Math.max(0, p - 1))}
                 disabled={catalogPage === 0}
-                className="px-2.5 py-1 text-xs font-medium rounded-sm border border-zinc-800 bg-zinc-950 text-fg-subtle hover:text-fg hover:border-zinc-800 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+                className="px-2.5 py-1 text-xs font-medium rounded-sm border border-border bg-bg-elev-1 text-fg-subtle hover:text-fg hover:border-border disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
               >
                 Previous
               </button>
@@ -737,7 +728,7 @@ export function SymbolsForm({ initialSymbols, catalog }: SymbolsFormProps) {
                 type="button"
                 onClick={() => setCatalogPage((p) => Math.min(totalPages - 1, p + 1))}
                 disabled={catalogPage >= totalPages - 1}
-                className="px-2.5 py-1 text-xs font-medium rounded-sm border border-zinc-800 bg-zinc-950 text-fg-subtle hover:text-fg hover:border-zinc-800 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+                className="px-2.5 py-1 text-xs font-medium rounded-sm border border-border bg-bg-elev-1 text-fg-subtle hover:text-fg hover:border-border disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
               >
                 Next
               </button>

@@ -25,7 +25,7 @@
 // Uses the shared `TimeProvider` so the countdown ticks without each
 // cell starting its own interval. All numerals are `tabular-nums`.
 
-import { Clock, Compass, ShieldAlert, Sparkles } from 'lucide-react';
+import {IconClock, IconCompass, IconShieldAlert, IconBolt} from '@tabler/icons-react';
 import Link from 'next/link';
 import type { JournalEntry, EconomicEvent, Symbol } from '@hamafx/shared';
 
@@ -71,9 +71,9 @@ function CellNextEvent({ events }: { events: EconomicEvent[] }) {
     .sort((a, b) => a.date - b.date)[0];
 
   return (
-    <div className="border-zinc-800 bg-zinc-950 flex flex-col gap-1.5 rounded-sm border p-3">
+    <div className="border-border bg-bg-elev-1 flex flex-col gap-1.5 rounded-sm border p-3">
       <div className="text-fg-subtle flex items-center gap-1.5 text-caption font-semibold uppercase tracking-wider">
-        <Clock className="text-amber-500 size-3.5" />
+        <IconClock className="text-warn size-3.5" />
         Next event
       </div>
       {upcoming ? (
@@ -112,16 +112,16 @@ function CellSession() {
   const session = getSession(new Date());
   const active = session !== 'Closed' && session !== 'Weekend';
   return (
-    <div className="border-zinc-800 bg-zinc-950 flex flex-col gap-1.5 rounded-sm border p-3">
+    <div className="border-border bg-bg-elev-1 flex flex-col gap-1.5 rounded-sm border p-3">
       <div className="text-fg-subtle flex items-center gap-1.5 text-caption font-semibold uppercase tracking-wider">
-        <Compass className="text-fg size-3.5" />
+        <IconCompass className="text-fg size-3.5" />
         Session
       </div>
       <span className="text-fg text-body-sm font-semibold">{session}</span>
       <span
         className={cn(
           'inline-flex w-fit items-center rounded-sm px-1.5 py-0.5 text-caption font-medium',
-          active ? 'bg-emerald-500/10 text-emerald-500' : 'bg-fg-muted/10 text-fg-muted',
+          active ? 'bg-bull/10 text-bull' : 'bg-fg-muted/10 text-fg-muted',
         )}
       >
         {active ? 'Active' : 'Closed'}
@@ -169,9 +169,9 @@ function CellOpenRisk({ entries }: { entries: JournalEntry[] }) {
   const totalRRounded = Math.round(totalR * 10) / 10;
 
   return (
-    <div className="border-zinc-800 bg-zinc-950 flex flex-col gap-1.5 rounded-sm border p-3">
+    <div className="border-border bg-bg-elev-1 flex flex-col gap-1.5 rounded-sm border p-3">
       <div className="text-fg-subtle flex items-center gap-1.5 text-caption font-semibold uppercase tracking-wider">
-        <ShieldAlert className="text-red-500 size-3.5" />
+        <IconShieldAlert className="text-bear size-3.5" />
         Open risk
       </div>
       {open.length === 0 ? (
@@ -199,9 +199,9 @@ function CellAiNudge({
 }) {
   const nudge = briefingNudge ?? `Ask AI about today's bias for ${defaultSymbol}`;
   return (
-    <div className="border-zinc-800 bg-zinc-950 flex flex-col gap-1.5 rounded-sm border p-3">
+    <div className="border-border bg-bg-elev-1 flex flex-col gap-1.5 rounded-sm border p-3">
       <div className="text-fg-subtle flex items-center gap-1.5 text-caption font-semibold uppercase tracking-wider">
-        <Sparkles className="text-fg size-3.5" />
+        <IconBolt className="text-fg size-3.5" />
         AI nudge
       </div>
       <p className="text-fg line-clamp-2 text-body-sm">{nudge}</p>

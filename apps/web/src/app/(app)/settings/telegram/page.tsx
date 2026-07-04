@@ -15,40 +15,40 @@
  */
 
 import type { Metadata } from 'next';
-import { MessageCircle } from 'lucide-react';
+import { IconMessageCircle } from '@tabler/icons-react';
 
 import { PageHeader } from '@/components/layout/page-header';
 import { TelegramLinkCard } from '../_components/telegram-link-card';
 import { TestTelegramButton } from '../_components/test-telegram-button';
 
-export const metadata: Metadata = { title: 'Telegram Bot — Settings' };
+export const metadata: Metadata = { title: 'Telegram IconRobot — IconSettings' };
 
 export default function TelegramSettingsPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Telegram Bot"
-        description="Link your Telegram to control HamaFX with bot commands."
+        title="Telegram IconRobot"
+        description="IconLink your Telegram to control HamaFX with bot commands."
       />
 
-      <section className="rounded-sm border border-border bg-surface p-6 space-y-4">
+      <section className="rounded-sm border border-border bg-bg-elev-1 p-6 space-y-4">
         <div className="flex items-center gap-2">
-          <MessageCircle className="size-5 text-fg" />
+          <IconMessageCircle className="size-5 text-fg" />
           <h2 className="text-lg font-semibold">Bot Linking</h2>
         </div>
 
         <TelegramLinkCard />
       </section>
 
-      <section className="rounded-sm border border-border bg-surface p-6 space-y-4">
+      <section className="rounded-sm border border-border bg-bg-elev-1 p-6 space-y-4">
         <h2 className="text-sm font-semibold text-fg-subtle">Test Notification</h2>
         <p className="text-sm text-fg-subtle">
-          Send a test message to verify your Telegram bot is configured correctly.
+          IconArrowRight a test message to verify your Telegram bot is configured correctly.
         </p>
         <TestTelegramButton />
       </section>
 
-      <section className="rounded-sm border border-border bg-surface p-6 space-y-3">
+      <section className="rounded-sm border border-border bg-bg-elev-1 p-6 space-y-3">
         <h2 className="text-sm font-semibold text-fg-subtle">Available Commands</h2>
         <div className="grid gap-2 text-sm">
           {[
@@ -60,10 +60,10 @@ export default function TelegramSettingsPage() {
             { cmd: '/positions', desc: 'Show your open positions' },
             { cmd: '/track', desc: 'AI track record stats' },
             { cmd: '/status', desc: 'System status and overview' },
-            { cmd: '/help', desc: 'List all commands' },
+            { cmd: '/help', desc: 'IconList all commands' },
           ].map((item) => (
             <div key={item.cmd} className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3">
-              <code className="rounded bg-surface-elevated px-2 py-0.5 font-mono text-xs whitespace-nowrap sm:w-64">
+              <code className="rounded-sm bg-bg-elev-1-elevated px-2 py-0.5 font-mono text-xs whitespace-nowrap sm:w-64">
                 {item.cmd}
               </code>
               <span className="text-fg-subtle">{item.desc}</span>

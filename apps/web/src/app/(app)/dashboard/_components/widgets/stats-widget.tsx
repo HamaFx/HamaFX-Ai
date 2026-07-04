@@ -23,7 +23,7 @@
 // styling stays consistent across the app.
 
 import { useMemo } from 'react';
-import { Activity, DollarSign, Percent, TrendingUp } from 'lucide-react';
+import {IconActivity, IconCurrencyDollar, IconPercentage, IconTrendingUp} from '@tabler/icons-react';
 import type { JournalEntry } from '@hamafx/shared';
 
 import { StatCard, type StatCardProps } from '@/components/ui/stat-card';
@@ -57,26 +57,26 @@ export function StatsWidget({ entries }: StatsWidgetProps) {
         label: 'Cumulative R',
         value: `${totalR >= 0 ? '+' : ''}${totalR.toFixed(2)}R`,
         tone: totalR > 0 ? 'bull' : totalR < 0 ? 'bear' : 'fg',
-        icon: <DollarSign />,
+        icon: <IconCurrencyDollar />,
         ...(sparkline.length >= 2 ? { sparkline } : {}),
       },
       {
         label: 'Win rate',
         value: closed.length > 0 ? `${winRate.toFixed(0)}%` : '—',
         tone: winRate >= 50 ? 'bull' : winRate > 0 ? 'muted' : 'bear',
-        icon: <Percent />,
+        icon: <IconPercentage />,
       },
       {
         label: 'Avg R',
         value: closed.length > 0 ? `${avgR >= 0 ? '+' : ''}${avgR.toFixed(2)}R` : '—',
         tone: avgR > 0 ? 'bull' : avgR < 0 ? 'bear' : 'muted',
-        icon: <TrendingUp />,
+        icon: <IconTrendingUp />,
       },
       {
         label: 'Active',
         value: String(open.length),
         tone: 'fg',
-        icon: <Activity />,
+        icon: <IconActivity />,
       },
     ];
 

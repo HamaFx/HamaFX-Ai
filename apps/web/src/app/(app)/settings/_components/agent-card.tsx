@@ -19,7 +19,7 @@
 // Right-arrow link so the settings list reads consistently.
 
 import { buildToolCatalogue } from '@hamafx/ai';
-import { Bot, ChevronRight } from 'lucide-react';
+import {IconRobot, IconChevronRight} from '@tabler/icons-react';
 import { Link } from 'next-view-transitions';
 
 export async function AgentCard() {
@@ -30,17 +30,17 @@ export async function AgentCard() {
   return (
     <Link
       href="/settings/agent"
-      className="border-zinc-800 bg-zinc-950 hover:bg-zinc-900 flex items-center gap-3 rounded-sm border p-3 transition-colors focus-visible:ring-fg focus:outline-none focus-visible:ring-2"
+      className="border-border bg-bg-elev-1 hover:bg-bg-elev-2 flex items-center gap-3 rounded-sm border p-3 transition-colors focus-visible:ring-fg focus:outline-none focus-visible:ring-2"
     >
       <span
         aria-hidden="true"
         className="text-fg-muted inline-flex size-9 shrink-0 items-center justify-center rounded-sm"
         style={{
-          background: '#27272A',
+          background: 'var(--color-bg-elev-3)',
           boxShadow: 'none',
         }}
       >
-        <Bot className="size-4" />
+        <IconRobot className="size-4" />
       </span>
       <div className="flex min-w-0 flex-1 flex-col gap-0.5">
         <span className="text-fg text-sm font-semibold leading-tight">Agent</span>
@@ -50,12 +50,12 @@ export async function AgentCard() {
           {totalFailures > 0 ? (
             <>
               {' '}
-              · <span className="text-red-500">{totalFailures} failure{totalFailures === 1 ? '' : 's'}</span>
+              · <span className="text-bear">{totalFailures} failure{totalFailures === 1 ? '' : 's'}</span>
             </>
           ) : null}
         </span>
       </div>
-      <ChevronRight className="text-fg-subtle size-4" />
+      <IconChevronRight className="text-fg-subtle size-4" />
     </Link>
   );
 }

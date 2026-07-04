@@ -19,7 +19,7 @@
 
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
-import { CreditCard } from 'lucide-react';
+import { IconCreditCard } from '@tabler/icons-react';
 
 import { auth } from '@/auth';
 import { getDb, schema } from '@hamafx/db';
@@ -29,7 +29,7 @@ import { BillingPlans } from './_components/billing-plans';
 import { PaymentHistory } from './_components/payment-history';
 import { SubscriptionStatus } from './_components/subscription-status';
 
-export const metadata: Metadata = { title: 'Billing — Settings' };
+export const metadata: Metadata = { title: 'Billing — IconSettings' };
 export const revalidate = 0;
 
 export default async function BillingPage() {
@@ -52,7 +52,7 @@ export default async function BillingPage() {
   return (
     <div className="flex flex-col gap-8">
       <SettingsSection
-        icon={<CreditCard className="size-4" />}
+        icon={<IconCreditCard className="size-4" />}
         title="Billing"
         description="Manage your subscription and payment method."
       >

@@ -34,14 +34,14 @@ import { Segmented } from '@/components/ui/segmented';
 import { TagInput } from '@/components/ui/tag-input';
 import { cn } from '@/lib/cn';
 import { fetchCsrf } from '@/lib/csrf';
-import { Camera, X } from 'lucide-react';
+import {IconCamera, IconX} from '@tabler/icons-react';
 
 const entrySchema = z.object({
   symbol: z.string().min(1, 'Symbol is required'),
   side: z.enum(['long', 'short']),
   entry: z.number({ invalid_type_error: 'Entry price must be a number' }).positive('Entry price must be positive'),
   stop: z.number().positive('Stop loss must be positive').nullable().optional(),
-  target: z.number().positive('Target must be positive').nullable().optional(),
+  target: z.number().positive('IconTarget must be positive').nullable().optional(),
   size: z.number().positive('Size must be positive').nullable().optional(),
   notes: z.string().max(5000, 'Notes must be under 5000 characters').nullable().optional(),
   tags: z.array(z.string()).optional(),
@@ -91,7 +91,7 @@ export function EntryForm({ onCreated }: EntryFormProps) {
   function validateTarget(v: string): string | null {
     if (!v) return null;
     const n = Number(v);
-    if (!Number.isFinite(n) || n <= 0) return 'Target must be positive';
+    if (!Number.isFinite(n) || n <= 0) return 'IconTarget must be positive';
     const entryNum = Number(entry);
     if (Number.isFinite(entryNum)) {
       if (side === 'long' && n <= entryNum) return 'Long target must be above entry';
@@ -112,7 +112,7 @@ export function EntryForm({ onCreated }: EntryFormProps) {
       const fd = new FormData();
       fd.append('file', file);
       const res = await fetch('/api/upload', { method: 'POST', body: fd });
-      if (!res.ok) throw new Error(`Upload HTTP ${res.status}`);
+      if (!res.ok) throw new Error(`IconUpload HTTP ${res.status}`);
       const data = (await res.json()) as { url?: string };
       if (data.url) setScreenshotUrl(data.url);
     } catch {
@@ -195,7 +195,7 @@ export function EntryForm({ onCreated }: EntryFormProps) {
       onCreated?.();
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Create failed';
-      toast.error('Save failed', { description: message });
+      toast.error('IconDeviceFloppy failed', { description: message });
       setError(message);
     } finally {
       setBusy(false);
@@ -282,26 +282,26 @@ export function EntryForm({ onCreated }: EntryFormProps) {
               alt="Trade chart"
               width={80}
               height={80}
-              className="h-20 rounded-md object-cover border border-zinc-800"
+              className="h-20 rounded-md object-cover border border-border"
               unoptimized
             />
             <button
               type="button"
               onClick={() => setScreenshotUrl(null)}
-              className="absolute -top-2 -right-2 rounded-sm bg-zinc-800 border border-zinc-800 p-0.5 text-fg-muted hover:text-fg"
+              className="absolute -top-2 -right-2 rounded-sm bg-bg-elev-3 border border-border p-0.5 text-fg-muted hover:text-fg"
               aria-label="Remove screenshot"
             >
-              <X className="size-3.5" />
+              <IconX className="size-3.5" />
             </button>
           </div>
         ) : (
           <label
             className={cn(
-              'flex items-center justify-center gap-2 rounded-sm border border-dashed border-zinc-800 p-3 text-xs text-fg-subtle hover:border-zinc-700 hover:text-fg transition-colors cursor-pointer',
+              'flex items-center justify-center gap-2 rounded-sm border border-dashed border-border p-3 text-xs text-fg-subtle hover:border-border hover:text-fg transition-colors cursor-pointer',
               uploadingScreenshot && 'opacity-60 pointer-events-none',
             )}
           >
-            <Camera className="size-4" />
+            <IconCamera className="size-4" />
             {uploadingScreenshot ? 'Uploading…' : 'Add screenshot'}
             <input
               type="file"
@@ -321,7 +321,7 @@ export function EntryForm({ onCreated }: EntryFormProps) {
         placeholder="Add tags (e.g. London breakout, trend continuation)"
       />
 
-      {error ? <p className="text-red-500 text-sm">{error}</p> : null}
+      {error ? <p className="text-bear text-sm">{error}</p> : null}
 
       <Button
         type="submit"
@@ -330,7 +330,7 @@ export function EntryForm({ onCreated }: EntryFormProps) {
         loading={busy}
         className="mt-2"
       >
-        {busy ? 'Saving…' : 'Save entry'}
+        {busy ? 'Saving…' : 'IconDeviceFloppy entry'}
       </Button>
     </form>
   );
@@ -367,7 +367,7 @@ function Field({
         required={required}
         error={!!error}
       />
-      {showError ? <p className="text-red-500 text-xs mt-0.5">{error}</p> : null}
+      {showError ? <p className="text-bear text-xs mt-0.5">{error}</p> : null}
     </div>
   );
 }

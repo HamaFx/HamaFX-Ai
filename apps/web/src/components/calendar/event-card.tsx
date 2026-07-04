@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-// Calendar event card — data-first, scannable at a glance.
+// IconCalendar event card — data-first, scannable at a glance.
 //
 // Layout:
 //
@@ -40,7 +40,7 @@
 // (commit 1992755) so news and calendar read as one design system.
 
 import type { EconomicEvent } from '@hamafx/shared';
-import { Bell, Sparkles } from 'lucide-react';
+import {IconBell, IconBolt} from '@tabler/icons-react';
 import { Link } from 'next-view-transitions';
 import { useState } from 'react';
 import { toast } from 'sonner';
@@ -54,12 +54,12 @@ interface EventCardProps {
 
 const IMPORTANCE = {
   high: {
-    ribbon: '#EF4444',
+    ribbon: 'var(--color-bear)',
     label: 'High impact',
     glyph: '▲',
   },
   medium: {
-    ribbon: '#F59E0B',
+    ribbon: 'var(--color-warn)',
     label: 'Medium impact',
     glyph: '■',
   },
@@ -95,9 +95,9 @@ export function EventCard({ event }: EventCardProps) {
     <article
       className={cn(
         'group relative overflow-hidden rounded-sm',
-        'border border-zinc-800 bg-zinc-950',
-        'transition-colors duration-200 md:hover:bg-zinc-900',
-        isImminent && 'border-amber-500/40',
+        'border border-border bg-bg-elev-1',
+        'transition-colors duration-200 md:hover:bg-bg-elev-2',
+        isImminent && 'border-warn/40',
       )}
     >
       {/* Importance ribbon — suppressed for low-importance events; the
@@ -165,9 +165,9 @@ export function EventCard({ event }: EventCardProps) {
         >
           <Link
             href={`/chat?prompt=${askPrompt}`}
-            className="bg-zinc-900 text-fg-muted hover:text-fg pointer-events-auto inline-flex items-center gap-1 rounded-sm px-3 py-1.5 text-body-sm font-medium transition-colors"
+            className="bg-bg-elev-2 text-fg-muted hover:text-fg pointer-events-auto inline-flex items-center gap-1 rounded-sm px-3 py-1.5 text-body-sm font-medium transition-colors"
           >
-            <Sparkles className="size-3.5" />
+            <IconBolt className="size-3.5" />
             Ask AI
           </Link>
           <RemindButton event={event} />
@@ -196,7 +196,7 @@ function DataRow({ event }: { event: EconomicEvent }) {
         <span
           className={cn(
             'ml-auto inline-flex items-center gap-1 px-1.5 text-caption font-bold uppercase tabular-nums',
-            beat === 'beat' ? 'text-emerald-500' : 'text-red-500',
+            beat === 'beat' ? 'text-bull' : 'text-bear',
           )}
         >
           {beat === 'beat' ? '▲ beat' : '▼ miss'}
@@ -244,14 +244,14 @@ function beatMiss(event: EconomicEvent): 'beat' | 'miss' | null {
 }
 
 function Countdown({ ms, imminent }: { ms: number; imminent: boolean }) {
-  if (ms <= 0) return <span className="text-red-500 font-semibold">Live now</span>;
+  if (ms <= 0) return <span className="text-bear font-semibold">Live now</span>;
   const d = Math.floor(ms / (24 * 60 * 60_000));
   const h = Math.floor((ms % (24 * 60 * 60_000)) / (60 * 60_000));
   const m = Math.floor((ms % (60 * 60_000)) / 60_000);
   const text =
     d > 0 ? `in ${d}d ${h}h` : h > 0 ? `in ${h}h ${m}m` : `in ${m}m`;
   return (
-    <span className={cn('font-semibold', imminent ? 'text-amber-500' : 'text-fg')}>
+    <span className={cn('font-semibold', imminent ? 'text-warn' : 'text-fg')}>
       {text}
     </span>
   );
@@ -325,11 +325,11 @@ function RemindButton({ event }: { event: EconomicEvent }) {
       className={cn(
         'pointer-events-auto inline-flex items-center gap-1 rounded-sm px-3 py-1.5 text-body-sm font-medium transition-colors',
         armed
-          ? 'text-fg bg-zinc-900'
-          : 'text-fg-muted hover:text-fg bg-zinc-900',
+          ? 'text-fg bg-bg-elev-2'
+          : 'text-fg-muted hover:text-fg bg-bg-elev-2',
       )}
     >
-      <Bell className={cn('size-3.5', armed && 'fill-current')} />
+      <IconBell className={cn('size-3.5', armed && 'fill-current')} />
       {armed ? 'Reminded' : 'Remind me'}
     </button>
   );

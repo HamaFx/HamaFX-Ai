@@ -18,7 +18,7 @@
 //
 // `get_price` returns a snapshot of bid/ask/mid for one or more symbols at a
 // single moment in time — there's no prior tick context here, so we don't
-// render a signed delta or `text-emerald-500` / `text-red-500` colouring. The schema
+// render a signed delta or `text-bull` / `text-bear` colouring. The schema
 // only carries `mid`, `bid`, `ask`, so this surface is deliberately simple:
 // symbol on the left, mid + spread on the right, with `.tabular-nums` on
 // every numeric column.
@@ -43,7 +43,7 @@ export function GetPricePart({ output, state, errorMessage }: GetPricePartProps)
   }
 
   return (
-    <div className="border-border bg-zinc-950 rounded-sm border p-3">
+    <div className="border-border bg-bg-elev-1 rounded-sm border p-3">
       <div className="text-fg-muted mb-2 text-xs">Live prices · {formatTime(output.asOf)}</div>
       <ul className="space-y-1.5">
         {output.ticks.map((t) => {
@@ -67,16 +67,16 @@ export function GetPricePart({ output, state, errorMessage }: GetPricePartProps)
 function PriceCardSkeleton() {
   return (
     <div
-      className="border-border bg-zinc-950 rounded-sm border p-3"
+      className="border-border bg-bg-elev-1 rounded-sm border p-3"
       aria-busy="true"
       aria-label="Loading prices"
     >
-      <div className="bg-zinc-900 mb-2 h-3 w-32 animate-pulse rounded" />
+      <div className="bg-bg-elev-2 mb-2 h-3 w-32 animate-pulse rounded-sm" />
       <ul className="space-y-1.5">
         {[0, 1, 2].map((i) => (
           <li key={i} className="flex min-h-[44px] items-center justify-between gap-3">
-            <span className="bg-zinc-900 h-4 w-16 animate-pulse rounded" />
-            <span className="bg-zinc-900 h-4 w-24 animate-pulse rounded" />
+            <span className="bg-bg-elev-2 h-4 w-16 animate-pulse rounded-sm" />
+            <span className="bg-bg-elev-2 h-4 w-24 animate-pulse rounded-sm" />
           </li>
         ))}
       </ul>
@@ -88,7 +88,7 @@ function PriceCardError({ message }: { message?: string }) {
   return (
     <div
       role="alert"
-      className="border-red-500/30 bg-zinc-950 text-red-500 rounded-sm border p-3 text-sm"
+      className="border-bear/30 bg-bg-elev-1 text-bear rounded-sm border p-3 text-sm"
     >
       Price unavailable{message ? ` · ${message}` : ''}
     </div>

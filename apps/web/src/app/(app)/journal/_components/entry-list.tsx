@@ -20,7 +20,7 @@
 // and powerful tabs/filters (Active, Closed, All, symbols, sides, text searches).
 
 import type { JournalEntry, Symbol, TradeSide } from '@hamafx/shared';
-import { Trash2, Search, SlidersHorizontal, ArrowUpRight, ArrowDownRight, Compass, Play } from 'lucide-react';
+import {IconTrash, IconSearch, IconAdjustmentsHorizontal, IconArrowUpRight, IconArrowDownRight, IconCompass, IconPlayerPlay} from '@tabler/icons-react';
 import Image from 'next/image';
 import { useState, useMemo, useRef } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
@@ -95,7 +95,7 @@ export function EntryList({ entries, onClosed, onDeleted }: EntryListProps) {
     return map;
   }, [ticks]);
 
-  // Filter entries based on active tab
+  // IconFilter entries based on active tab
   const tabEntries = useMemo(() => {
     return entries.filter((e) => {
       if (tab === 'active') return e.outcome === 'open';
@@ -135,8 +135,8 @@ export function EntryList({ entries, onClosed, onDeleted }: EntryListProps) {
   return (
     <div className="flex flex-col gap-4">
       {/* Visual Tab Switcher */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-800/40 pb-2">
-        <div className="flex p-0.5 rounded-sm bg-zinc-900 border border-zinc-800/40 self-start">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border/40 pb-2">
+        <div className="flex p-0.5 rounded-sm bg-bg-elev-2 border border-border/40 self-start">
           <button
             onClick={() => setTab('active')}
             className={cn(
@@ -148,7 +148,7 @@ export function EntryList({ entries, onClosed, onDeleted }: EntryListProps) {
             {activeCount > 0 && (
               <span className={cn(
                 'size-2 rounded-sm',
-                tab === 'active' ? 'bg-fg-fg animate-ping' : 'bg-fg animate-pulse'
+                tab === 'active' ? 'bg-fg animate-ping' : 'bg-fg animate-pulse'
               )} />
             )}
           </button>
@@ -173,34 +173,34 @@ export function EntryList({ entries, onClosed, onDeleted }: EntryListProps) {
           </button>
         </div>
 
-        {/* Filter Trigger & Search Bar */}
+        {/* IconFilter Trigger & IconSearch Bar */}
         <div className="flex items-center gap-2">
           <div className="relative flex-1 sm:w-64">
-            <Search className="absolute left-3.5 top-3 size-3.5 text-fg-muted" />
+            <IconSearch className="absolute left-3.5 top-3 size-3.5 text-fg-muted" />
             <input
               type="text"
-              placeholder="Search notes, tags, symbol..."
+              placeholder="IconSearch notes, tags, symbol..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 text-xs rounded-sm bg-zinc-900/45 border border-zinc-800/40 focus:outline-none focus:border-zinc-700/70 transition-all text-fg"
+              className="w-full pl-9 pr-4 py-2 text-xs rounded-sm bg-bg-elev-2/45 border border-border/40 focus:outline-none focus:border-border/70 transition-all text-fg"
             />
           </div>
           <button
             onClick={() => setShowFilters(!showFilters)}
             className={cn(
-              'p-2.5 rounded-sm border border-zinc-800/40 bg-zinc-900/45 text-fg-muted hover:text-fg transition-all cursor-pointer',
-              showFilters && 'border-zinc-700 text-fg bg-zinc-950'
+              'p-2.5 rounded-sm border border-border/40 bg-bg-elev-2/45 text-fg-muted hover:text-fg transition-all cursor-pointer',
+              showFilters && 'border-border text-fg bg-bg-elev-1'
             )}
             title="Toggle advanced filters"
           >
-            <SlidersHorizontal className="size-4" />
+            <IconAdjustmentsHorizontal className="size-4" />
           </button>
         </div>
       </div>
 
-      {/* Advanced Filter Panel */}
+      {/* Advanced IconFilter Panel */}
       {showFilters && (
-        <div className="border border-zinc-800 bg-zinc-950 rounded-sm p-4 grid grid-cols-2 gap-4 animate-in slide-in-from-top-2 duration-200">
+        <div className="border border-border bg-bg-elev-1 rounded-sm p-4 grid grid-cols-2 gap-4 animate-in slide-in-from-top-2 duration-200">
           <div className="flex flex-col gap-1.5">
             <label className="text-caption font-bold uppercase tracking-wider text-fg-subtle">Asset Class</label>
               <div className="flex flex-wrap gap-1">
@@ -209,8 +209,8 @@ export function EntryList({ entries, onClosed, onDeleted }: EntryListProps) {
                   key={sym}
                   onClick={() => setSymbolFilter(sym)}
                   className={cn(
-                    'px-2.5 py-1 text-xs font-semibold rounded-sm border border-zinc-800 bg-zinc-800/50 hover:bg-zinc-800 cursor-pointer',
-                    symbolFilter === sym && 'border-zinc-700 bg-zinc-900 text-fg'
+                    'px-2.5 py-1 text-xs font-semibold rounded-sm border border-border bg-bg-elev-3/50 hover:bg-bg-elev-3 cursor-pointer',
+                    symbolFilter === sym && 'border-border bg-bg-elev-2 text-fg'
                   )}
                 >
                   {sym}
@@ -227,8 +227,8 @@ export function EntryList({ entries, onClosed, onDeleted }: EntryListProps) {
                   key={side}
                   onClick={() => setSideFilter(side)}
                   className={cn(
-                    'px-2.5 py-1 text-xs font-semibold rounded-sm border border-zinc-800 bg-zinc-800/50 hover:bg-zinc-800 cursor-pointer',
-                    sideFilter === side && 'border-zinc-700 bg-zinc-900 text-fg'
+                    'px-2.5 py-1 text-xs font-semibold rounded-sm border border-border bg-bg-elev-3/50 hover:bg-bg-elev-3 cursor-pointer',
+                    sideFilter === side && 'border-border bg-bg-elev-2 text-fg'
                   )}
                 >
                   {side === 'ALL' ? 'ALL' : side === 'long' ? 'Buy ↑' : 'Sell ↓'}
@@ -245,8 +245,8 @@ export function EntryList({ entries, onClosed, onDeleted }: EntryListProps) {
                   key={tag}
                   onClick={() => setTagFilter(tag)}
                   className={cn(
-                    'px-2.5 py-1 text-xs font-semibold rounded-sm border border-zinc-800 bg-zinc-800/50 hover:bg-zinc-800 cursor-pointer',
-                    tagFilter === tag && 'border-zinc-700 bg-zinc-900 text-fg'
+                    'px-2.5 py-1 text-xs font-semibold rounded-sm border border-border bg-bg-elev-3/50 hover:bg-bg-elev-3 cursor-pointer',
+                    tagFilter === tag && 'border-border bg-bg-elev-2 text-fg'
                   )}
                 >
                   {tag === 'ALL' ? 'ALL' : `#${tag}`}
@@ -257,11 +257,11 @@ export function EntryList({ entries, onClosed, onDeleted }: EntryListProps) {
         </div>
       )}
 
-      {/* Entries List */}
+      {/* Entries IconList */}
       {filteredEntries.length === 0 ? (
-        <div className="border border-zinc-800 bg-zinc-950 rounded-sm p-8 text-center flex flex-col items-center justify-center gap-2">
-          <div className="size-10 rounded-sm bg-zinc-900 border border-zinc-800 flex items-center justify-center text-fg-muted">
-            <Compass className="size-5" />
+        <div className="border border-border bg-bg-elev-1 rounded-sm p-8 text-center flex flex-col items-center justify-center gap-2">
+          <div className="size-10 rounded-sm bg-bg-elev-2 border border-border flex items-center justify-center text-fg-muted">
+            <IconCompass className="size-5" />
           </div>
           <p className="text-sm font-semibold text-fg">No entries found</p>
           <p className="text-xs text-fg-subtle max-w-[280px]">
@@ -415,7 +415,7 @@ function EntryRow({
     return { pips, cashPnl, rMultiple };
   }, [entry, livePrice]);
 
-  // Compute horizontal slider positioning for Stop Loss and Target
+  // Compute horizontal slider positioning for Stop Loss and IconTarget
   const sliderPosition = useMemo(() => {
     if (!livePrice || entry.stop === null || entry.target === null) return null;
 
@@ -437,22 +437,22 @@ function EntryRow({
     return Math.min(Math.max(percentage, -20), 120);
   }, [entry, livePrice]);
 
-  const sideColor = entry.side === 'long' ? 'text-emerald-500' : 'text-red-500';
-  const sideBg = entry.side === 'long' ? 'bg-emerald-500/10 border-emerald-500/20' : 'bg-red-500/10 border-red-500/20';
+  const sideColor = entry.side === 'long' ? 'text-bull' : 'text-bear';
+  const sideBg = entry.side === 'long' ? 'bg-bull/10 border-bull/20' : 'bg-bear/10 border-bear/20';
   
   const isWin = entry.outcome === 'win' || (liveStats && liveStats.rMultiple > 0);
   const isLoss = entry.outcome === 'loss' || (liveStats && liveStats.rMultiple < 0);
 
-  const outcomeColor = isWin ? 'text-emerald-500' : isLoss ? 'text-red-500' : 'text-fg-muted';
+  const outcomeColor = isWin ? 'text-bull' : isLoss ? 'text-bear' : 'text-fg-muted';
 
   return (
-    <li className="border border-zinc-800 bg-zinc-950 rounded-sm flex flex-col gap-3.5 p-4 hover:border-zinc-800-hover hover:shadow-none/5 transition-all duration-200">
+    <li className="border border-border bg-bg-elev-1 rounded-sm flex flex-col gap-3.5 p-4 hover:border-border-hover hover:shadow-none/5 transition-all duration-200">
       <div className="flex items-start gap-4">
         <div className="min-w-0 flex-1 flex flex-col gap-1.5">
           {/* Header Row */}
           <div className="flex flex-wrap items-center gap-2 text-sm font-bold tabular-nums">
             <span className={cn(
-              'px-2 py-0.5 text-caption font-black uppercase tracking-wider rounded border',
+              'px-2 py-0.5 text-caption font-black uppercase tracking-wider rounded-sm border',
               sideBg,
               sideColor
             )}>
@@ -464,7 +464,7 @@ function EntryRow({
 
             {/* Sizing lot indicator */}
             {entry.size !== null && (
-              <span className="text-caption font-medium text-fg-subtle px-1.5 py-0.5 rounded-sm bg-zinc-800 border border-zinc-800/40">
+              <span className="text-caption font-medium text-fg-subtle px-1.5 py-0.5 rounded-sm bg-bg-elev-3 border border-border/40">
                 {entry.size} Lots
               </span>
             )}
@@ -487,7 +487,7 @@ function EntryRow({
               {entry.tags.map((t) => (
                 <span
                   key={t}
-                  className="px-2 py-0.5 text-xs font-black uppercase tracking-wider rounded-sm bg-zinc-950 border border-zinc-700/20 text-fg"
+                  className="px-2 py-0.5 text-xs font-black uppercase tracking-wider rounded-sm bg-bg-elev-1 border border-border/20 text-fg"
                 >
                   #{t}
                 </span>
@@ -507,7 +507,7 @@ function EntryRow({
                 alt="Trade chart screenshot"
                 width={48}
                 height={48}
-                className="size-12 rounded-sm object-cover border border-zinc-800 hover:opacity-80 transition-opacity"
+                className="size-12 rounded-sm object-cover border border-border hover:opacity-80 transition-opacity"
                 unoptimized
               />
             </button>
@@ -515,7 +515,7 @@ function EntryRow({
 
           {/* Notes display */}
           {entry.notes && (
-            <p className="text-fg-muted text-xs leading-[1.4] mt-1.5 border-l-2 border-zinc-800/70 pl-2.5 py-0.5">
+            <p className="text-fg-muted text-xs leading-[1.4] mt-1.5 border-l-2 border-border/70 pl-2.5 py-0.5">
               {entry.notes}
             </p>
           )}
@@ -530,7 +530,7 @@ function EntryRow({
                 {/* Live R Multiple */}
                 {entry.stop !== null && (
                   <span className={cn('text-sm font-extrabold tabular-nums flex items-center gap-0.5', outcomeColor)}>
-                    {liveStats.rMultiple >= 0 ? <ArrowUpRight className="size-4" /> : <ArrowDownRight className="size-4" />}
+                    {liveStats.rMultiple >= 0 ? <IconArrowUpRight className="size-4" /> : <IconArrowDownRight className="size-4" />}
                     {liveStats.rMultiple >= 0 ? '+' : ''}{liveStats.rMultiple.toFixed(2)}R
                   </span>
                 )}
@@ -544,13 +544,13 @@ function EntryRow({
               </div>
             ) : (
               <div className="flex items-center gap-1.5 text-fg font-bold text-xs animate-pulse">
-                <Play className="size-3 fill-brand" />
+                <IconPlayerPlay className="size-3 fill-brand" />
                 <span>Live polling...</span>
               </div>
             )
           ) : (
             <div className="flex flex-col items-end">
-              <span className={cn('text-xs font-black uppercase tracking-wider px-2 py-0.5 rounded bg-zinc-800 border border-zinc-800/40', outcomeColor)}>
+              <span className={cn('text-xs font-black uppercase tracking-wider px-2 py-0.5 rounded-sm bg-bg-elev-3 border border-border/40', outcomeColor)}>
                 {entry.outcome}
               </span>
               {entry.rMultiple !== null && (
@@ -581,9 +581,9 @@ function EntryRow({
                 aria-label="Delete entry"
                 onClick={() => void remove()}
                 disabled={busy}
-                className="text-red-500/75 hover:text-red-500 hover:bg-red-500/10 inline-flex size-9 items-center justify-center rounded-sm transition-colors disabled:opacity-50 cursor-pointer"
+                className="text-bear/75 hover:text-bear hover:bg-bear/10 inline-flex size-9 items-center justify-center rounded-sm transition-colors disabled:opacity-50 cursor-pointer"
               >
-                <Trash2 className="size-4" />
+                <IconTrash className="size-4" />
               </button>
             </Tooltip>
           </div>
@@ -592,14 +592,14 @@ function EntryRow({
 
       {/* Real-time Visual SL-to-TP Slider Bar */}
       {entry.outcome === 'open' && entry.stop !== null && entry.target !== null && livePrice && sliderPosition !== null && (
-        <div className="border-t border-zinc-800/30 pt-3 flex flex-col gap-1.5 animate-in fade-in duration-200">
+        <div className="border-t border-border/30 pt-3 flex flex-col gap-1.5 animate-in fade-in duration-200">
           <div className="flex items-center justify-between text-xs font-bold uppercase tracking-wider text-fg-subtle">
-            <span className="text-red-500">SL: {entry.stop}</span>
+            <span className="text-bear">SL: {entry.stop}</span>
             <span className="text-fg-muted">Entry: {entry.entry}</span>
-            <span className="text-emerald-500">Target: {entry.target}</span>
+            <span className="text-bull">Target: {entry.target}</span>
           </div>
 
-          <div className="relative h-2 w-full rounded-sm bg-zinc-800 border border-zinc-800/20 overflow-visible mt-1 flex items-center">
+          <div className="relative h-2 w-full rounded-sm bg-bg-elev-3 border border-border/20 overflow-visible mt-1 flex items-center">
             {/* Entry Line Indicator */}
             <div
               style={{
@@ -607,7 +607,7 @@ function EntryRow({
                   ? `${((entry.entry - entry.stop) / (entry.target - entry.stop)) * 100}%`
                   : `${((entry.stop - entry.entry) / (entry.stop - entry.target)) * 100}%`
               }}
-              className="absolute h-4 w-0.5 bg-amber-500/80 z-10"
+              className="absolute h-4 w-0.5 bg-warn/80 z-10"
               title="Entry Price Level"
             />
 
@@ -616,7 +616,7 @@ function EntryRow({
               style={{ left: `${sliderPosition}%` }}
               className={cn(
                 'absolute size-3 rounded-sm -translate-x-1/2 z-20 shadow-md border border-fg transition-all duration-300',
-                isWin ? 'bg-emerald-500 shadow-none/30 animate-pulse' : isLoss ? 'bg-red-500 shadow-none/30' : 'bg-fg-muted'
+                isWin ? 'bg-bull shadow-none/30 animate-pulse' : isLoss ? 'bg-bear shadow-none/30' : 'bg-fg-muted'
               )}
               title={`Live Price: ${livePrice}`}
             />
@@ -635,18 +635,18 @@ function EntryRow({
                     left: `${entryPct}%`,
                     width: `${width}%`,
                   }}
-                  className="absolute h-full bg-emerald-500/10 rounded-r-full"
+                  className="absolute h-full bg-bull/10 rounded-r-full"
                 />
               );
             })()}
           </div>
           <div className="flex justify-between items-center text-xs text-fg-muted font-semibold mt-0.5">
-            <span className={sliderPosition < 0 ? 'text-red-500 font-bold' : ''}>
+            <span className={sliderPosition < 0 ? 'text-bear font-bold' : ''}>
               {sliderPosition < 0 ? '✦ Beyond stop' : 'Stop Loss boundary'}
             </span>
             <span className={cn('font-bold', outcomeColor)}>Live Price: {livePrice}</span>
-            <span className={sliderPosition > 100 ? 'text-emerald-500 font-bold' : ''}>
-              {sliderPosition > 100 ? '✦ Beyond target' : 'Target boundary'}
+            <span className={sliderPosition > 100 ? 'text-bull font-bold' : ''}>
+              {sliderPosition > 100 ? '✦ Beyond target' : 'IconTarget boundary'}
             </span>
           </div>
         </div>
@@ -654,7 +654,7 @@ function EntryRow({
 
       {/* Manual close input stack */}
       {closing && (
-        <div className="border-zinc-800 flex flex-col gap-3 border-t pt-3">
+        <div className="border-border flex flex-col gap-3 border-t pt-3">
           <div>
             <label
               className="text-fg-subtle text-caption font-bold uppercase tracking-wider"
@@ -668,9 +668,9 @@ function EntryRow({
               onChange={(ev) => setExit(ev.target.value)}
               inputMode="decimal"
               autoFocus
-              className="mt-1.5 focus:border-zinc-700/70"
+              className="mt-1.5 focus:border-border/70"
             />
-            {error ? <p className="text-red-500 mt-2 text-xs font-semibold">{error}</p> : null}
+            {error ? <p className="text-bear mt-2 text-xs font-semibold">{error}</p> : null}
           </div>
           <div className="flex gap-2">
             <Button
@@ -679,9 +679,7 @@ function EntryRow({
               onClick={close}
               disabled={busy || !exit}
               className="flex-1"
-            >
-              Save
-            </Button>
+            >DeviceFloppy</Button>
             <Button
               type="button"
               size="md"

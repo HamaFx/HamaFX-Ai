@@ -18,11 +18,11 @@
  */
 
 // Premium Cumulative R-Multiple Performance Chart using lightweight-charts.
-// Visualizes equity growth over time with clean canvas styling and champagne gold gradient fills.
+// Visualizes equity growth over time with clean canvas styling.
 
 import type { JournalEntry } from '@hamafx/shared';
 import type * as LightweightCharts from 'lightweight-charts';
-import { TrendingUp, Award } from 'lucide-react';
+import {IconTrendingUp, IconAward} from '@tabler/icons-react';
 import { useEffect, useMemo, useRef } from 'react';
 
 import { getThemeColors } from './chart';
@@ -44,7 +44,7 @@ export function PerformanceChart({
   const chartRef = useRef<any>(null);
   const seriesRef = useRef<any>(null);
 
-  // Filter closed trades and calculate cumulative R-multiple series chronologically
+  // IconFilter closed trades and calculate cumulative R-multiple series chronologically
   const chartData = useMemo(() => {
     const closed = entries
       .filter(
@@ -105,7 +105,7 @@ export function PerformanceChart({
         layout: {
           background: { color: 'transparent' },
           textColor: colors.text,
-          fontFamily: getComputedStyle(el).getPropertyValue('--font-sans') || 'Inter, system-ui, sans-serif',
+          fontFamily: getComputedStyle(el).getPropertyValue('--font-sans') || 'Geist Sans, system-ui, sans-serif',
         },
         grid: {
           vertLines: { color: 'transparent' },
@@ -181,8 +181,8 @@ export function PerformanceChart({
   if (chartData.length < 2) {
     return (
       <div className="surface-panel flex h-[220px] flex-col items-center justify-center gap-2 p-6 text-center">
-        <div className="rounded-sm bg-zinc-900 p-3 text-fg">
-          <TrendingUp className="size-6 animate-pulse" />
+        <div className="rounded-sm bg-bg-elev-2 p-3 text-fg">
+          <IconTrendingUp className="size-6 animate-pulse" />
         </div>
         <p className="text-sm font-semibold text-fg">Performance Curve Loading</p>
         <p className="max-w-[280px] text-xs text-fg-subtle">
@@ -196,8 +196,8 @@ export function PerformanceChart({
     <div className="surface-panel relative overflow-hidden p-4 flex flex-col gap-3">
       <div className="flex items-center justify-between px-1">
         <div className="flex items-center gap-2">
-          <div className="rounded-sm bg-zinc-900 p-2 text-fg">
-            <Award className="size-4" />
+          <div className="rounded-sm bg-bg-elev-2 p-2 text-fg">
+            <IconAward className="size-4" />
           </div>
           <div>
             <h4 className="text-xs font-bold uppercase tracking-wider text-fg-subtle">Performance Curve</h4>
@@ -206,7 +206,7 @@ export function PerformanceChart({
         </div>
         <div className="text-right">
           <span className="text-xs text-fg-muted font-medium uppercase tracking-wide">Net R-Score</span>
-          <p className={`text-xl font-bold tracking-tight tabular-nums ${totalR >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
+          <p className={`text-xl font-bold tracking-tight tabular-nums ${totalR >= 0 ? 'text-bull' : 'text-bear'}`}>
             {totalR >= 0 ? '+' : ''}{totalR.toFixed(2)}R
           </p>
         </div>

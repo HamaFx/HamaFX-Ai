@@ -61,8 +61,8 @@ const IMPORTANCE: Array<{
   tone: string;
 }> = [
   { value: 'all', label: 'All', glyph: '·', tone: 'text-fg' },
-  { value: 'high', label: 'High', glyph: '▲', tone: 'text-red-500' },
-  { value: 'medium', label: 'Medium', glyph: '■', tone: 'text-amber-500' },
+  { value: 'high', label: 'High', glyph: '▲', tone: 'text-bear' },
+  { value: 'medium', label: 'Medium', glyph: '■', tone: 'text-warn' },
   { value: 'low', label: 'Low', glyph: '•', tone: 'text-fg-subtle' },
 ];
 
@@ -105,8 +105,8 @@ export function CalendarToolbar({
               className={cn(
                 'inline-flex h-9 shrink-0 items-center gap-1.5 rounded-sm border px-3 text-xs font-semibold transition-colors',
                 active
-                  ? 'bg-fg text-black border-zinc-700'
-                  : 'border-zinc-800 bg-zinc-950/60 text-fg-muted hover:text-fg',
+                  ? 'bg-fg text-black border-border'
+                  : 'border-border bg-bg-elev-1/60 text-fg-muted hover:text-fg',
               )}
             >
               <span aria-hidden className={active ? '' : opt.tone}>
@@ -139,8 +139,8 @@ export function CalendarToolbar({
                 className={cn(
                   'inline-flex h-9 shrink-0 items-center rounded-sm border px-3 text-body-sm font-semibold uppercase tabular-nums transition-colors',
                   active
-                    ? 'bg-zinc-800 text-fg border-zinc-700'
-                    : 'border-zinc-800 bg-zinc-950/60 text-fg-muted hover:text-fg',
+                    ? 'bg-bg-elev-3 text-fg border-border'
+                    : 'border-border bg-bg-elev-1/60 text-fg-muted hover:text-fg',
                 )}
               >
                 {c.label}
@@ -156,8 +156,8 @@ export function CalendarToolbar({
           className={cn(
             'inline-flex h-9 shrink-0 items-center gap-1.5 rounded-sm border px-3 text-body-sm font-semibold transition-colors',
             showPast
-              ? 'bg-zinc-800 text-fg border-zinc-700'
-              : 'border-zinc-800 bg-zinc-950/60 text-fg-muted hover:text-fg',
+              ? 'bg-bg-elev-3 text-fg border-border'
+              : 'border-border bg-bg-elev-1/60 text-fg-muted hover:text-fg',
           )}
         >
           {showPast ? 'Hide past' : 'Show past'}

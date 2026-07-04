@@ -2,7 +2,7 @@
 
 import { useActionState, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { CheckCircle2, Loader2, Save } from 'lucide-react';
+import {IconCircleCheck, IconLoader2, IconDeviceFloppy} from '@tabler/icons-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 
@@ -15,7 +15,7 @@ interface SaveBarProps {
   ) => Promise<SaveKeysResult>;
   /**
    * When the user landed here from /chat with `?prompt=…`, show a
-   * "Skip and continue" link alongside the Save button.
+   * "Skip and continue" link alongside the IconDeviceFloppy button.
    */
   preservedPrompt?: string;
   /**
@@ -62,7 +62,7 @@ export function SaveBar({ action, preservedPrompt, children }: SaveBarProps) {
     if (!('ok' in state) || state.ok) return;
     if (lastErrorSeen.current === state.error) return;
     lastErrorSeen.current = state.error;
-    toast.error(`Save failed: ${state.error}`);
+    toast.error(`IconDeviceFloppy failed: ${state.error}`);
   }, [state]);
 
   // Unsaved changes beforeunload warning
@@ -94,8 +94,8 @@ export function SaveBar({ action, preservedPrompt, children }: SaveBarProps) {
       {children}
       <div className="flex items-center gap-3 justify-end">
         {('ok' in state && state.ok) ? (
-          <span className="flex items-center gap-1.5 text-caption text-emerald-500">
-            <CheckCircle2 size={14} aria-hidden="true" />
+          <span className="flex items-center gap-1.5 text-caption text-bull">
+            <IconCircleCheck size={14} aria-hidden="true" />
             Saved
           </span>
         ) : null}
@@ -113,7 +113,7 @@ export function SaveBar({ action, preservedPrompt, children }: SaveBarProps) {
         {preservedPrompt ? (
           <Link
             href={`/chat?prompt=${encodeURIComponent(preservedPrompt)}`}
-            className="border border-zinc-800 bg-zinc-900 text-fg hover:bg-zinc-800 inline-flex h-12 items-center justify-center rounded-sm px-4 text-sm font-medium"
+            className="border border-border bg-bg-elev-2 text-fg hover:bg-bg-elev-3 inline-flex h-12 items-center justify-center rounded-sm px-4 text-sm font-medium"
           >
             Skip and continue to chat
           </Link>
@@ -121,13 +121,13 @@ export function SaveBar({ action, preservedPrompt, children }: SaveBarProps) {
         <Button type="submit" disabled={isPending}>
           {isPending ? (
             <>
-              <Loader2 size={16} className="animate-spin" aria-hidden="true" />
+              <IconLoader2 size={16} className="animate-spin" aria-hidden="true" />
               Saving…
             </>
           ) : (
             <>
-              <Save size={16} aria-hidden="true" />
-              Save Keys
+              <IconDeviceFloppy size={16} aria-hidden="true" />
+              IconDeviceFloppy Keys
             </>
           )}
         </Button>

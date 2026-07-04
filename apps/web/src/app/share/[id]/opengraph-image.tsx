@@ -17,7 +17,7 @@ export default async function OGImage({ params }: { params: Promise<{ id: string
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          background: 'linear-gradient(135deg, #0c0c0c 0%, #1a1a1a 100%)',
+          background: 'linear-gradient(135deg, #0A0A0A 0%, #141414 100%)',
           fontFamily: 'system-ui, sans-serif',
         }}
       >
@@ -39,7 +39,7 @@ export default async function OGImage({ params }: { params: Promise<{ id: string
               alignItems: 'center',
               justifyContent: 'center',
               fontSize: 32,
-              color: '#FAFAFA',
+              color: '#F0F0F0',
             }}
           >
             ✦
@@ -50,10 +50,10 @@ export default async function OGImage({ params }: { params: Promise<{ id: string
               flexDirection: 'column',
             }}
           >
-            <span style={{ fontSize: 36, fontWeight: 700, color: '#fafafa', letterSpacing: '-0.02em' }}>
+            <span style={{ fontSize: 36, fontWeight: 700, color: '#F0F0F0', letterSpacing: '-0.02em' }}>
               HamaFX·Ai
             </span>
-            <span style={{ fontSize: 20, color: '#a1a8b3', marginTop: 4 }}>
+            <span style={{ fontSize: 20, color: '#808080', marginTop: 4 }}>
               AI Trading Analysis
             </span>
           </div>

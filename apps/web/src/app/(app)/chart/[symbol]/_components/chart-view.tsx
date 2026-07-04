@@ -21,7 +21,7 @@
 // Combines dynamic price feeds, structure events, active indicators, and customized styling.
 
 import { type Symbol, type Candle, msPerTimeframe } from '@hamafx/shared';
-import { SlidersHorizontal } from 'lucide-react';
+import { IconAdjustmentsHorizontal } from '@tabler/icons-react';
 import { Link } from 'next-view-transitions';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 
@@ -84,10 +84,10 @@ class ChartErrorBoundary extends React.Component<
 }
 
 const PALETTE: OverlayPalette = {
-  bull: '#48d597',
-  bear: '#f0594a',
-  warn: '#f5b041',
-  muted: '#7d8693',
+  bull: '#22C55E',
+  bear: '#EF4444',
+  warn: '#F59E0B',
+  muted: '#808080',
 };
 
 const DEFAULT_INDICATORS: ChartIndicators = {
@@ -272,7 +272,7 @@ export function ChartView({ symbol, watchlist }: { symbol: Symbol; watchlist: st
         className="sticky z-20 px-4 pt-3 pb-2 transition-all"
         style={{ top: 'calc(var(--topbar-h) + env(safe-area-inset-top))' }}
       >
-        <header className="border border-zinc-800 bg-zinc-950 rounded-sm flex flex-col gap-3 p-3">
+        <header className="border border-border bg-bg-elev-1 rounded-sm flex flex-col gap-3 p-3">
           <div className="flex flex-wrap items-center justify-between gap-3 px-1">
             <SymbolPicker active={symbol} watchlist={watchlist} />
             <PriceTag symbol={symbol} referencePrice={referenceClose} />
@@ -301,23 +301,23 @@ export function ChartView({ symbol, watchlist }: { symbol: Symbol; watchlist: st
                   <Tooltip label="Preferences">
                     <button
                       aria-label="Preferences"
-                      className="bg-zinc-950 border border-zinc-800 text-fg-muted hover:text-fg focus-visible:ring-fg inline-flex size-11 items-center justify-center rounded-sm focus:outline-none focus-visible:ring-2 cursor-pointer"
+                      className="bg-bg-elev-1 border border-border text-fg-muted hover:text-fg focus-visible:ring-fg inline-flex size-11 items-center justify-center rounded-sm focus:outline-none focus-visible:ring-2 cursor-pointer"
                     >
-                      <SlidersHorizontal className="size-4" />
+                      <IconAdjustmentsHorizontal className="size-4" />
                     </button>
                   </Tooltip>
                 }
               />
 
               {process.env.NEXT_PUBLIC_TRADINGVIEW_ENABLED === '1' ? (
-                <div className="flex bg-zinc-900 p-0.5 rounded-sm border border-zinc-800">
+                <div className="flex bg-bg-elev-2 p-0.5 rounded-sm border border-border">
                   <Link
                     href={`/chart/${symbol}?tf=${tf}`}
                     className="px-3 py-1.5 text-xs font-medium rounded-sm text-fg-muted hover:text-fg transition-colors"
                   >
                     TradingView
                   </Link>
-                  <span className="px-3 py-1.5 text-xs font-semibold rounded-sm bg-zinc-950 text-fg shadow-sm">
+                  <span className="px-3 py-1.5 text-xs font-semibold rounded-sm bg-bg-elev-1 text-fg shadow-sm">
                     Structure
                   </span>
                 </div>

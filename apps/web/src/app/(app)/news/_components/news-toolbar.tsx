@@ -21,7 +21,7 @@
 // horizontally so we never wrap onto two rows on narrow screens.
 
 import type { NewsSentiment, SymbolOrCurrencyTag } from '@hamafx/shared';
-import { Search, X } from 'lucide-react';
+import {IconSearch, IconX} from '@tabler/icons-react';
 
 import { cn } from '@/lib/cn';
 
@@ -44,8 +44,8 @@ interface NewsToolbarProps {
 
 const SENTIMENTS: Array<{ value: SentimentFilter; label: string; tone: string }> = [
   { value: 'all', label: 'All', tone: 'text-fg' },
-  { value: 'positive', label: 'Bullish', tone: 'text-emerald-500' },
-  { value: 'negative', label: 'Bearish', tone: 'text-red-500' },
+  { value: 'positive', label: 'Bullish', tone: 'text-bull' },
+  { value: 'negative', label: 'Bearish', tone: 'text-bear' },
   { value: 'neutral', label: 'Neutral', tone: 'text-fg-muted' },
 ];
 
@@ -80,9 +80,9 @@ export function NewsToolbar({
 }: NewsToolbarProps) {
   return (
     <div className="flex flex-col gap-3">
-      {/* Search */}
+      {/* IconSearch */}
       <div className="relative">
-        <Search
+        <IconSearch
           aria-hidden="true"
           className="text-fg-subtle absolute left-3 top-1/2 size-4 -translate-y-1/2"
         />
@@ -90,9 +90,9 @@ export function NewsToolbar({
           type="search"
           value={query}
           onChange={(e) => onQuery(e.target.value)}
-          placeholder="Search headlines…"
+          placeholder="IconSearch headlines…"
           aria-label="Search headlines"
-          className="bg-zinc-950/60 text-fg placeholder:text-fg-subtle focus:border-zinc-700 border-zinc-800 h-11 w-full rounded-sm border pl-10 pr-10 text-sm focus:outline-none"
+          className="bg-bg-elev-1/60 text-fg placeholder:text-fg-subtle focus:border-border border-border h-11 w-full rounded-sm border pl-10 pr-10 text-sm focus:outline-none"
         />
         {query ? (
           <button
@@ -101,7 +101,7 @@ export function NewsToolbar({
             onClick={() => onQuery('')}
             className="text-fg-subtle hover:text-fg absolute right-2 top-1/2 inline-flex size-7 -translate-y-1/2 items-center justify-center rounded-sm transition-colors"
           >
-            <X className="size-4" />
+            <IconX className="size-4" />
           </button>
         ) : null}
       </div>
@@ -126,8 +126,8 @@ export function NewsToolbar({
               className={cn(
                 'inline-flex h-9 shrink-0 items-center gap-1.5 rounded-sm border px-3 text-xs font-semibold transition-colors',
                 active
-                  ? 'bg-fg text-black border-zinc-700'
-                  : 'border-zinc-800 bg-zinc-950/60 text-fg-muted hover:text-fg',
+                  ? 'bg-fg text-black border-border'
+                  : 'border-border bg-bg-elev-1/60 text-fg-muted hover:text-fg',
               )}
             >
               <span aria-hidden="true" className={cn(active ? '' : s.tone)}>
@@ -189,8 +189,8 @@ function SymbolChip({
       className={cn(
         'inline-flex h-9 shrink-0 items-center rounded-sm border px-3 text-body-sm font-semibold uppercase tabular-nums transition-colors',
         active
-          ? 'bg-zinc-800 text-fg border-zinc-700'
-          : 'border-zinc-800 bg-zinc-950/60 text-fg-muted hover:text-fg',
+          ? 'bg-bg-elev-3 text-fg border-border'
+          : 'border-border bg-bg-elev-1/60 text-fg-muted hover:text-fg',
       )}
     >
       {label}

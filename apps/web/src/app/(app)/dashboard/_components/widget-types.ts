@@ -21,7 +21,7 @@
 // `DashboardCanvas` client component stays presentational and the server
 // page can map `WidgetConfig[]` → props without drift.
 //
-// Design tokens (`bg-zinc-950`, `text-fg`, `border-zinc-800`, etc.) and
+// Design tokens (`bg-bg-elev-1`, `text-fg`, `border-border`, etc.) and
 // the rounded-sm convention from PLAN.md §2.4 are applied uniformly by
 // the widget wrapper inside `DashboardCanvas` — widget implementations
 // only need to render their own body.

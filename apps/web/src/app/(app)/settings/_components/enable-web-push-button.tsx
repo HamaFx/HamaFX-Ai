@@ -190,7 +190,7 @@ export function EnableWebPushButton(): React.JSX.Element {
         ) : status.kind === 'unsubscribed' ? (
           <span className="text-fg-subtle">Not subscribed on this device.</span>
         ) : status.kind === 'error' ? (
-          <span className="text-red-500">Error: {status.message}</span>
+          <span className="text-bear">Error: {status.message}</span>
         ) : null}
       </p>
     </div>

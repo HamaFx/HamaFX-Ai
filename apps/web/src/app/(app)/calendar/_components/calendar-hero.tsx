@@ -25,7 +25,7 @@
 // gauge how event-heavy the week is.
 
 import type { EconomicEvent } from '@hamafx/shared';
-import { Clock, Sparkles, Zap } from 'lucide-react';
+import {IconClock, IconBolt, IconBolt} from '@tabler/icons-react';
 import { Link } from 'next-view-transitions';
 
 import { useTime } from '@/components/providers/time-provider';
@@ -61,20 +61,20 @@ export function CalendarHero({ events = [] }: CalendarHeroProps) {
   return (
     <section
       aria-label="Calendar overview"
-      className="border border-zinc-800 bg-zinc-950 rounded-sm relative flex flex-col gap-4 overflow-hidden p-4"
+      className="border border-border bg-bg-elev-1 rounded-sm relative flex flex-col gap-4 overflow-hidden p-4"
     >
       {/* Countdown row */}
       {nextHigh ? (
         <div className="flex items-start gap-3">
           <span
             aria-hidden="true"
-            className="text-red-500 inline-flex size-12 shrink-0 items-center justify-center rounded-sm"
+            className="text-bear inline-flex size-12 shrink-0 items-center justify-center rounded-sm"
             style={{
               background: 'rgba(239, 68, 68, 0.12)',
               boxShadow: 'none',
             }}
           >
-            <Zap className="size-5" strokeWidth={2} />
+            <IconBolt className="size-5" strokeWidth={2} />
           </span>
           <div className="flex min-w-0 flex-1 flex-col gap-0.5">
             <p className="text-fg-subtle text-caption font-semibold uppercase tracking-wider">
@@ -82,7 +82,7 @@ export function CalendarHero({ events = [] }: CalendarHeroProps) {
             </p>
             <p className="text-fg truncate text-base font-bold">{nextHigh.title}</p>
             <p className="text-fg-muted flex items-center gap-1.5 text-xs tabular-nums">
-              <Clock className="size-3" />
+              <IconClock className="size-3" />
               <Countdown ms={nextHigh.date - now} />
               <span aria-hidden className="opacity-50">·</span>
               <CountryChip country={nextHigh.country} currency={nextHigh.currency} />
@@ -92,15 +92,15 @@ export function CalendarHero({ events = [] }: CalendarHeroProps) {
             href={`/chat?prompt=${encodeURIComponent(
               `What does ${nextHigh.title} mean for ${nextHigh.currency ?? 'the dollar'} and gold?`,
             )}`}
-            className="text-fg-muted hover:text-fg active:bg-zinc-800 inline-flex size-9 shrink-0 items-center justify-center rounded-sm transition-colors"
+            className="text-fg-muted hover:text-fg active:bg-bg-elev-3 inline-flex size-9 shrink-0 items-center justify-center rounded-sm transition-colors"
             aria-label="Ask AI about this event"
           >
-            <Sparkles className="size-4" />
+            <IconBolt className="size-4" />
           </Link>
         </div>
       ) : (
         <div className="text-fg-muted flex items-center gap-3 text-sm">
-          <Sparkles className="text-fg-subtle size-5" />
+          <IconBolt className="text-fg-subtle size-5" />
           No high-impact events in the next 14 days.
         </div>
       )}
@@ -114,18 +114,18 @@ export function CalendarHero({ events = [] }: CalendarHeroProps) {
             {upcoming.length} upcoming
           </span>
         </div>
-        <div className="bg-zinc-900 flex h-1.5 w-full overflow-hidden rounded-sm">
+        <div className="bg-bg-elev-2 flex h-1.5 w-full overflow-hidden rounded-sm">
           {counts.high > 0 ? (
             <span
               aria-hidden
-              className="bg-red-500 h-full"
+              className="bg-bear h-full"
               style={{ width: `${pct(counts.high)}%` }}
             />
           ) : null}
           {counts.medium > 0 ? (
             <span
               aria-hidden
-              className="bg-amber-500 h-full"
+              className="bg-warn h-full"
               style={{ width: `${pct(counts.medium)}%` }}
             />
           ) : null}
@@ -138,8 +138,8 @@ export function CalendarHero({ events = [] }: CalendarHeroProps) {
           ) : null}
         </div>
         <ul className="flex flex-wrap items-center gap-x-3 gap-y-1 text-body-sm tabular-nums">
-          <Tag dot="bg-red-500" tone="text-red-500" label="High" count={counts.high} />
-          <Tag dot="bg-amber-500" tone="text-amber-500" label="Medium" count={counts.medium} />
+          <Tag dot="bg-bear" tone="text-bear" label="High" count={counts.high} />
+          <Tag dot="bg-warn" tone="text-warn" label="Medium" count={counts.medium} />
           <Tag dot="bg-fg-subtle" tone="text-fg-muted" label="Low" count={counts.low} />
         </ul>
       </div>
@@ -150,7 +150,7 @@ export function CalendarHero({ events = [] }: CalendarHeroProps) {
 // ---------------------------------------------------------------------------
 
 function Countdown({ ms }: { ms: number }) {
-  if (ms <= 0) return <span className="text-red-500 font-semibold">Live now</span>;
+  if (ms <= 0) return <span className="text-bear font-semibold">Live now</span>;
   const d = Math.floor(ms / (24 * 60 * 60_000));
   const h = Math.floor((ms % (24 * 60 * 60_000)) / (60 * 60_000));
   const m = Math.floor((ms % (60 * 60_000)) / 60_000);
@@ -169,7 +169,7 @@ function Countdown({ ms }: { ms: number }) {
     );
   }
   return (
-    <span className="text-amber-500 font-semibold">
+    <span className="text-warn font-semibold">
       in {m}m
     </span>
   );
@@ -184,7 +184,7 @@ function CountryChip({
 }) {
   const label = currency ?? country;
   return (
-    <span className="bg-zinc-900 border border-zinc-800 rounded px-1.5 py-0.5 text-caption font-bold uppercase tabular-nums">
+    <span className="bg-bg-elev-2 border border-border rounded-sm px-1.5 py-0.5 text-caption font-bold uppercase tabular-nums">
       {label}
     </span>
   );

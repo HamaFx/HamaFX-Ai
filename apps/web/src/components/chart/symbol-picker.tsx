@@ -20,7 +20,7 @@
 // then all available symbols from @hamafx/shared. The search input filters
 // across ALL symbols so users can navigate to a symbol not in their watchlist.
 
-import { Search } from 'lucide-react';
+import { IconSearch } from '@tabler/icons-react';
 import { useMemo, useState } from 'react';
 
 import { BUILTIN_SYMBOLS, type Symbol } from '@hamafx/shared';
@@ -36,7 +36,7 @@ export function SymbolPicker({ active, watchlist }: { active: Symbol; watchlist:
   const filteredAll = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return [];
-    // Search all BUILTIN_SYMBOLS (not just the old 3) by internal symbol or display name
+    // IconSearch all BUILTIN_SYMBOLS (not just the old 3) by internal symbol or display name
     return BUILTIN_SYMBOLS
       .filter((s) =>
         !watchlist.includes(s.internal) &&
@@ -51,7 +51,7 @@ export function SymbolPicker({ active, watchlist }: { active: Symbol; watchlist:
     <div className="flex flex-col gap-2">
       {showSearch ? (
         <div className="relative">
-          <Search
+          <IconSearch
             aria-hidden="true"
             className="text-fg-subtle absolute left-3 top-1/2 size-4 -translate-y-1/2"
           />
@@ -59,8 +59,8 @@ export function SymbolPicker({ active, watchlist }: { active: Symbol; watchlist:
             type="search"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search symbols…"
-            className="bg-zinc-950/60 text-fg placeholder:text-fg-subtle focus:border-zinc-700 border-zinc-800 h-11 w-full rounded-sm border pl-10 pr-4 text-sm focus:outline-none"
+            placeholder="IconSearch symbols…"
+            className="bg-bg-elev-1/60 text-fg placeholder:text-fg-subtle focus:border-border border-border h-11 w-full rounded-sm border pl-10 pr-4 text-sm focus:outline-none"
           />
         </div>
       ) : null}
@@ -71,7 +71,7 @@ export function SymbolPicker({ active, watchlist }: { active: Symbol; watchlist:
         srLabel
         value={active}
         role="tablist"
-        variant="gradient"
+        variant="accent"
         groupId="symbol-indicator"
         hrefFor={(s) => `/chart/${s}?tf=${tf}`}
         options={watchlist.map((s) => ({ value: s, label: s }))}
@@ -85,7 +85,7 @@ export function SymbolPicker({ active, watchlist }: { active: Symbol; watchlist:
               href={`/chart/${s}?tf=${tf}`}
               className={cn(
                 'inline-flex items-center gap-1.5 rounded-sm px-3 py-1.5 text-sm font-semibold tabular-nums transition-colors',
-                'text-fg-muted hover:text-fg hover:bg-zinc-900',
+                'text-fg-muted hover:text-fg hover:bg-bg-elev-2',
               )}
             >
               {s}

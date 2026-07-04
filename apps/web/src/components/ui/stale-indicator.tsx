@@ -23,7 +23,7 @@
 // Use as a pill next to a timestamp or a header. Renders nothing when
 // neither `isStale` nor `isFetching` are true.
 
-import { RefreshCw } from 'lucide-react';
+import { IconRefresh } from '@tabler/icons-react';
 
 import { cn } from '@/lib/cn';
 
@@ -39,14 +39,14 @@ export function StaleIndicator({ isFetching, label, className }: StaleIndicatorP
   if (!isFetching) return null;
   return (
     <span
-      role="alert"
+      role="status"
       aria-live="polite"
       className={cn(
         'text-fg-subtle stale-pulse inline-flex items-center gap-1 text-xs font-medium tabular-nums uppercase tracking-wide',
         className,
       )}
     >
-      <RefreshCw className="size-3 animate-spin" aria-hidden="true" />
+      <IconRefresh className="size-3 animate-spin" aria-hidden="true" />
       {label ?? 'updating'}
     </span>
   );

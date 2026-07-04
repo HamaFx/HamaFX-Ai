@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-// Premium glass settings section.
+// Premium settings section.
 
 import type { ReactNode } from 'react';
 

@@ -15,18 +15,13 @@
  */
 
 import type { Metadata, Viewport } from 'next';
-import { Inter, JetBrains_Mono } from 'next/font/google';
+import { JetBrains_Mono } from 'next/font/google';
+import { GeistSans } from 'geist/font/sans';
 import { ViewTransitions } from 'next-view-transitions';
 
 import { Providers } from '@/components/providers';
 
 import './globals.css';
-
-const inter = Inter({
-  subsets: ['latin'],
-  variable: '--font-sans',
-  display: 'swap',
-});
 
 const jetbrainsMono = JetBrains_Mono({
   subsets: ['latin'],
@@ -60,14 +55,14 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 5,
   viewportFit: 'cover',
-  themeColor: '#000000',
+  themeColor: '#0A0A0A',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html
       lang="en"
-      className={`${inter.variable} ${jetbrainsMono.variable}`}
+      className={`${GeistSans.variable} ${jetbrainsMono.variable}`}
       suppressHydrationWarning
     >
       <head>
@@ -109,7 +104,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           href="/icons/apple-splash-1179x2556.png"
         />
       </head>
-      <body className="bg-zinc-950 text-fg min-h-svh antialiased">
+      <body className="bg-bg text-fg min-h-svh antialiased">
         <ViewTransitions>
           <Providers>{children}</Providers>
         </ViewTransitions>

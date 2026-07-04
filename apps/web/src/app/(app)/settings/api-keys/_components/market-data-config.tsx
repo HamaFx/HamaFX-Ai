@@ -18,7 +18,7 @@
 
 import { useActionState, useEffect, useState, useTransition } from 'react';
 import { toast } from 'sonner';
-import { Database, Loader2, CheckCircle2, XCircle } from 'lucide-react';
+import {IconDatabase, IconLoader2, IconCircleCheck, IconCircleX} from '@tabler/icons-react';
 import { Button } from '@/components/ui/button';
 import { updateMarketDataProviderAction } from '../../actions';
 import { withCsrf } from '@/lib/csrf';
@@ -94,7 +94,7 @@ export function MarketDataConfig({ initialProvider, finnhubKeySet }: MarketDataC
     {
       id: 'finnhub',
       name: 'Finnhub REST',
-      description: 'Supports weekly candles and robust historical feeds. Requires Finnhub API Key.',
+      description: 'Supports weekly candles and robust historical feeds. Requires Finnhub API IconKey.',
       requiresKey: true,
       warn: !finnhubKeySet && selected === 'finnhub',
     },
@@ -109,10 +109,10 @@ export function MarketDataConfig({ initialProvider, finnhubKeySet }: MarketDataC
   return (
     <form
       action={action}
-      className="border border-zinc-800 bg-zinc-950 rounded-sm p-5 flex flex-col gap-5 shadow-sm"
+      className="border border-border bg-bg-elev-1 rounded-sm p-5 flex flex-col gap-5 shadow-sm"
     >
-      <header className="flex items-center gap-3 border-b border-zinc-800 pb-3">
-        <Database className="size-5 text-fg shrink-0" />
+      <header className="flex items-center gap-3 border-b border-border pb-3">
+        <IconDatabase className="size-5 text-fg shrink-0" />
         <div>
           <h2 className="text-sm font-semibold text-fg">Market Data Provider</h2>
           <p className="text-caption text-fg-subtle mt-0.5">
@@ -127,8 +127,8 @@ export function MarketDataConfig({ initialProvider, finnhubKeySet }: MarketDataC
             key={p.id}
             className={`flex items-start gap-3 border rounded-sm p-3 cursor-pointer select-none transition-all ${
               selected === p.id
-                ? 'border-zinc-700 bg-zinc-950'
-                : 'border-zinc-800 bg-zinc-900/40 hover:bg-zinc-900'
+                ? 'border-border bg-bg-elev-1'
+                : 'border-border bg-bg-elev-2/40 hover:bg-bg-elev-2'
             }`}
           >
             <input
@@ -146,8 +146,8 @@ export function MarketDataConfig({ initialProvider, finnhubKeySet }: MarketDataC
               <span className="text-xs font-semibold text-fg">{p.name}</span>
               <span className="text-xs text-fg-subtle leading-normal">{p.description}</span>
               {p.warn && (
-                <span className="text-xs text-amber-500 font-semibold mt-1">
-                  ⚠️ Note: Finnhub API Key is not set above. Please add it to enable this provider.
+                <span className="text-xs text-warn font-semibold mt-1">
+                  ⚠️ Note: Finnhub API IconKey is not set above. Please add it to enable this provider.
                 </span>
               )}
             </div>
@@ -156,19 +156,19 @@ export function MarketDataConfig({ initialProvider, finnhubKeySet }: MarketDataC
       </div>
 
       {test.kind === 'err' && (
-        <div className="flex items-start gap-2 text-xs text-red-500">
-          <XCircle className="size-3.5 mt-0.5 shrink-0" />
+        <div className="flex items-start gap-2 text-xs text-bear">
+          <IconCircleX className="size-3.5 mt-0.5 shrink-0" />
           <span className="break-words">{test.message}</span>
         </div>
       )}
       {test.kind === 'ok' && (
-        <div className="flex items-center gap-2 text-xs text-emerald-500">
-          <CheckCircle2 className="size-3.5 shrink-0" />
+        <div className="flex items-center gap-2 text-xs text-bull">
+          <IconCircleCheck className="size-3.5 shrink-0" />
           <span>Connection test successful! Provider is online.</span>
         </div>
       )}
 
-      <div className="flex items-center justify-between border-t border-zinc-800 pt-4 gap-3">
+      <div className="flex items-center justify-between border-t border-border pt-4 gap-3">
         <Button
           type="button"
           variant="secondary"
@@ -179,7 +179,7 @@ export function MarketDataConfig({ initialProvider, finnhubKeySet }: MarketDataC
         >
           {isTesting ? (
             <>
-              <Loader2 className="size-3 animate-spin" />
+              <IconLoader2 className="size-3 animate-spin" />
               Testing…
             </>
           ) : (
@@ -188,7 +188,7 @@ export function MarketDataConfig({ initialProvider, finnhubKeySet }: MarketDataC
         </Button>
 
         <Button type="submit" loading={pending} className="min-w-[120px]" size="sm">
-          Save Provider
+          IconDeviceFloppy Provider
         </Button>
       </div>
     </form>

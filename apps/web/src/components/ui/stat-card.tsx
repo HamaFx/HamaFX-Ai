@@ -43,18 +43,18 @@ export interface StatCardProps {
 
 const TONE_CLASS: Record<StatTone, string> = {
   fg: 'text-fg',
-  bull: 'text-emerald-500',
-  bear: 'text-red-500',
+  bull: 'text-bull',
+  bear: 'text-bear',
   muted: 'text-fg-muted',
-  warn: 'text-amber-500',
+  warn: 'text-warn',
 };
 
 const TONE_TINT: Record<StatTone, string> = {
   fg: '',
-  bull: 'border-l-emerald-500/40',
-  bear: 'border-l-red-500/40',
+  bull: 'border-l-bull/40',
+  bear: 'border-l-bear/40',
   muted: '',
-  warn: 'border-l-amber-500/40',
+  warn: 'border-l-warn/40',
 };
 
 export function StatCard({ icon, label, value, tone = 'fg', sparkline }: StatCardProps) {
@@ -63,7 +63,7 @@ export function StatCard({ icon, label, value, tone = 'fg', sparkline }: StatCar
       aria-label={`${label}: ${value}`}
       className={cn(
         'relative flex flex-col gap-2 overflow-hidden rounded-sm',
-        'border border-zinc-800 border-l-2 bg-zinc-950 p-4',
+        'border border-border border-l-2 bg-bg-elev-1 p-4',
         TONE_TINT[tone],
       )}
     >

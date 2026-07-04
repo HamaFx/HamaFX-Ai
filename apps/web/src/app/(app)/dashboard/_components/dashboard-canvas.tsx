@@ -48,7 +48,7 @@ import {
   useSortable,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { GripVertical, Plus, SlidersHorizontal, X } from 'lucide-react';
+import {IconGripVertical, IconPlus, IconAdjustmentsHorizontal, IconX} from '@tabler/icons-react';
 import type {
   Alert,
   EconomicEvent,
@@ -216,7 +216,7 @@ export function DashboardCanvas(props: DashboardCanvasProps) {
             onClick={() => setEditMode((v) => !v)}
             aria-pressed={editMode}
           >
-            <SlidersHorizontal className="size-4" />
+            <IconAdjustmentsHorizontal className="size-4" />
             {editMode ? 'Done' : 'Customize'}
           </Button>
         </div>
@@ -294,7 +294,7 @@ function SortableWidget({
       )}
     >
       {editMode ? (
-        <div className="border-zinc-800 bg-zinc-950 mb-1 flex items-center justify-between gap-2 rounded-sm border px-3 py-1.5">
+        <div className="border-border bg-bg-elev-1 mb-1 flex items-center justify-between gap-2 rounded-sm border px-3 py-1.5">
           <button
             type="button"
             aria-label={`Drag ${WIDGET_LABELS[widget.type]} widget`}
@@ -302,7 +302,7 @@ function SortableWidget({
             {...attributes}
             {...listeners}
           >
-            <GripVertical className="size-4" />
+            <IconGripVertical className="size-4" />
           </button>
           <span className="text-fg-subtle text-caption uppercase tracking-wider">
             {WIDGET_LABELS[widget.type]}
@@ -320,9 +320,9 @@ function SortableWidget({
               type="button"
               aria-label={`Remove ${WIDGET_LABELS[widget.type]}`}
               onClick={onRemove}
-              className="text-fg-subtle hover:text-red-500"
+              className="text-fg-subtle hover:text-bear"
             >
-              <X className="size-3.5" />
+              <IconX className="size-3.5" />
             </button>
           </div>
         </div>
@@ -400,19 +400,19 @@ function AddWidgetMenu({
   return (
     <details className="relative">
       <summary
-        className="border-zinc-800 bg-zinc-950 hover:bg-zinc-900 text-fg inline-flex cursor-pointer list-none items-center gap-1 rounded-sm border px-2 py-1 text-caption"
+        className="border-border bg-bg-elev-1 hover:bg-bg-elev-2 text-fg inline-flex cursor-pointer list-none items-center gap-1 rounded-sm border px-2 py-1 text-caption"
         aria-label="Add widget"
       >
-        <Plus className="size-3.5" />
+        <IconPlus className="size-3.5" />
         Add widget
       </summary>
-      <div className="border-zinc-800 bg-zinc-950 absolute right-0 z-10 mt-1 flex min-w-[180px] flex-col rounded-sm border p-1 shadow-lg">
+      <div className="border-border bg-bg-elev-1 absolute right-0 z-10 mt-1 flex min-w-[180px] flex-col rounded-sm border p-1 shadow-lg">
         {hidden.map((t) => (
           <button
             key={t}
             type="button"
             onClick={() => onAdd(t)}
-            className="text-fg hover:bg-zinc-900 rounded-sm px-2 py-1 text-left text-caption"
+            className="text-fg hover:bg-bg-elev-2 rounded-sm px-2 py-1 text-left text-caption"
           >
             {WIDGET_LABELS[t]}
           </button>

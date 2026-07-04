@@ -29,7 +29,6 @@ const getOnboardingStatus = cache(async (userId: string) => {
   return settings?.onboardingCompleted ?? false;
 });
 
-import { AmbientBackground } from '@/components/layout/ambient-background';
 import { NavDrawer } from '@/components/layout/nav-drawer';
 import { NavDrawerProvider } from '@/components/layout/nav-drawer-context';
 import { OfflineBanner } from '@/components/layout/offline-banner';
@@ -44,8 +43,7 @@ import { Toaster } from '@/components/ui/toaster';
  *
  *   1. <NavDrawerProvider/>   single source of truth for the menu state
  *   2. <SkipToContent/>       a11y skip link, visible on focus only
- *   3. <AmbientBackground/>   fixed -z-10, very subtle warm orb
- *   4. <TopBar/>              sticky top, glass — hidden on /chat where
+ *   3. <TopBar/>              sticky top — hidden on /chat where
  *                              <ChatTopBar/> takes over
  *   5. main content           page body (id="main-content")
  *   6. <NavDrawer/>           single global drawer instance, opened from
@@ -76,7 +74,6 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       <NavDrawerProvider>
         <div className="bg-black text-fg relative min-h-svh">
           <SkipToContent />
-          <AmbientBackground />
           <TopBar />
           <main
             id="main-content"

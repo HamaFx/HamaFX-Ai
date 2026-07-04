@@ -17,14 +17,7 @@
  */
 
 import { useState, useTransition } from 'react';
-import {
-  CheckCircle2,
-  Eye,
-  EyeOff,
-  Loader2,
-  XCircle,
-  Copy,
-} from 'lucide-react';
+import { IconCircleCheck,  IconEye,  IconEyeOff,  IconLoader2,  IconCircleX,  IconCopy } from '@tabler/icons-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ProviderInfoDot } from '@/components/ui/provider-info-dot';
@@ -77,7 +70,7 @@ const SETUP_INSTRUCTIONS: Record<string, {
     dashboardUrl: 'https://console.cloud.google.com/vertex-ai',
     freeTier: 'No free tier. Billed directly to your Google Cloud Project Project.',
     rateLimits: 'Determined by your GCP project quota limits.',
-    howToGet: 'Create a Service Account in your GCP console, grant it the "Vertex AI User" role, create a JSON private key, and paste the entire JSON file content here.',
+    howToGet: 'Create a Service Account in your GCP console, grant it the "Vertex AI IconUser" role, create a JSON private key, and paste the entire JSON file content here.',
   },
   anthropic: {
     dashboardUrl: 'https://console.anthropic.com/',
@@ -107,7 +100,7 @@ const SETUP_INSTRUCTIONS: Record<string, {
     dashboardUrl: 'https://openrouter.ai/keys',
     freeTier: 'Provides access to both free open-source models and premium models.',
     rateLimits: 'Varies depending on model and account credits.',
-    howToGet: 'Go to OpenRouter, sign in, go to API keys under Settings, and create a key.',
+    howToGet: 'Go to OpenRouter, sign in, go to API keys under IconSettings, and create a key.',
   },
   xai: {
     dashboardUrl: 'https://console.x.ai/',
@@ -232,16 +225,16 @@ export function ApiKeyCard({ provider, currentValue, health, usage, keyUpdatedAt
   async function handleCopy() {
     if (!isSet) return;
     const ok = await confirm({
-      title: 'Copy API Key to Clipboard?',
+      title: 'IconCopy API IconKey to Clipboard?',
       description: 'API keys are highly sensitive. Storing them in the system clipboard makes them accessible to other applications running on your device. Proceed with caution.',
-      confirmLabel: 'Copy Key',
+      confirmLabel: 'IconCopy IconKey',
       cancelLabel: 'Cancel',
       tone: 'default',
     });
     if (ok) {
       try {
         await navigator.clipboard.writeText(value.trim());
-        toast.success('API Key copied to clipboard');
+        toast.success('API IconKey copied to clipboard');
       } catch {
         toast.error('Failed to copy to clipboard');
       }
@@ -264,7 +257,7 @@ export function ApiKeyCard({ provider, currentValue, health, usage, keyUpdatedAt
           handleTest();
         }
       }}
-      className="border border-zinc-800 bg-zinc-950 rounded-sm p-4 flex flex-col gap-3 focus:outline-none focus:ring-2 focus:ring-zinc-700"
+      className="border border-border bg-bg-elev-1 rounded-sm p-4 flex flex-col gap-3 focus:outline-none focus:ring-2 focus:ring-zinc-700"
     >
       {/* Header */}
       <div className="flex items-baseline justify-between gap-4">
@@ -278,7 +271,7 @@ export function ApiKeyCard({ provider, currentValue, health, usage, keyUpdatedAt
               {provider.displayName}
             </label>
             {provider.pricingTier === 'free' && (
-              <span className="rounded-sm bg-emerald-500/15 px-2 py-0.5 text-xs font-semibold text-emerald-500">
+              <span className="rounded-sm bg-bull/15 px-2 py-0.5 text-xs font-semibold text-bull">
                 Free
               </span>
             )}
@@ -296,18 +289,18 @@ export function ApiKeyCard({ provider, currentValue, health, usage, keyUpdatedAt
           <span
             className={
               test.kind === 'ok'
-                ? 'flex items-center gap-1 text-xs text-emerald-500 shrink-0'
+                ? 'flex items-center gap-1 text-xs text-bull shrink-0'
                 : 'flex items-center gap-1 text-xs text-fg-subtle shrink-0'
             }
           >
-            {test.kind === 'ok' && <CheckCircle2 className="size-3" />}
+            {test.kind === 'ok' && <IconCircleCheck className="size-3" />}
             {test.kind === 'ok' ? 'Looks valid' : test.kind === 'err' ? 'Last test failed' : 'Saved'}
           </span>
         ) : null}
       </div>
 
       {keyAgeDays !== null && keyAgeDays >= 90 && (
-        <div className="border border-amber-500/20 bg-amber-500/5 rounded-sm p-3 text-caption text-amber-500 flex items-start gap-2.5">
+        <div className="border border-warn/20 bg-warn/5 rounded-sm p-3 text-caption text-warn flex items-start gap-2.5">
           <span className="shrink-0 text-sm">⚠️</span>
           <div className="flex flex-col gap-0.5">
             <span className="font-semibold text-fg">Consider rotating your API key</span>
@@ -319,7 +312,7 @@ export function ApiKeyCard({ provider, currentValue, health, usage, keyUpdatedAt
       )}
 
       {health?.rateLimit && (
-        <div className="border border-zinc-800 bg-zinc-900/40 rounded-sm p-3 text-caption text-fg-subtle flex flex-col gap-1.5 shadow-sm">
+        <div className="border border-border bg-bg-elev-2/40 rounded-sm p-3 text-caption text-fg-subtle flex flex-col gap-1.5 shadow-sm">
           <div className="font-semibold text-fg flex items-center gap-1.5">
             <span>⏱️</span>
             <span>API Rate Limits</span>
@@ -353,7 +346,7 @@ export function ApiKeyCard({ provider, currentValue, health, usage, keyUpdatedAt
 
       {/* Vertex-specific JSON preview (when a value is entered). */}
       {isVertex && vertexPreview ? (
-        <div className="text-caption text-fg-subtle border border-zinc-800 bg-zinc-900 rounded px-3 py-2 flex flex-col gap-1">
+        <div className="text-caption text-fg-subtle border border-border bg-bg-elev-2 rounded-sm px-3 py-2 flex flex-col gap-1">
           {vertexPreview.clientEmail ? (
             <span>
               <span className="text-fg-muted">client_email:</span>{' '}
@@ -367,7 +360,7 @@ export function ApiKeyCard({ provider, currentValue, health, usage, keyUpdatedAt
             </span>
           ) : null}
           {vertexPreview.error ? (
-            <span className="text-red-500">{vertexPreview.error}</span>
+            <span className="text-bear">{vertexPreview.error}</span>
           ) : null}
         </div>
       ) : null}
@@ -389,16 +382,16 @@ export function ApiKeyCard({ provider, currentValue, health, usage, keyUpdatedAt
             spellCheck={false}
             autoComplete="off"
             rows={6}
-            className="border border-zinc-800 bg-zinc-900 placeholder:text-fg-muted text-fg font-mono text-caption w-full rounded-sm px-3 py-2 focus:border-zinc-700 focus:outline-none focus:ring-1 focus:ring-zinc-700 resize-y"
+            className="border border-border bg-bg-elev-2 placeholder:text-fg-muted text-fg font-mono text-caption w-full rounded-sm px-3 py-2 focus:border-border focus:outline-none focus:ring-1 focus:ring-zinc-700 resize-y"
           />
           {isSet && (
             <button
               type="button"
               onClick={handleCopy}
-              className="text-fg-muted hover:text-fg absolute right-3 bottom-3 inline-flex h-7 w-7 items-center justify-center rounded transition-colors hover:bg-zinc-800 border border-zinc-800"
+              className="text-fg-muted hover:text-fg absolute right-3 bottom-3 inline-flex h-7 w-7 items-center justify-center rounded-sm transition-colors hover:bg-bg-elev-3 border border-border"
               aria-label="Copy key to clipboard"
             >
-              <Copy className="size-3.5" />
+              <IconCopy className="size-3.5" />
             </button>
           )}
         </div>
@@ -423,19 +416,19 @@ export function ApiKeyCard({ provider, currentValue, health, usage, keyUpdatedAt
               <button
                 type="button"
                 onClick={handleCopy}
-                className="text-fg-muted hover:text-fg inline-flex h-7 w-7 items-center justify-center rounded transition-colors"
+                className="text-fg-muted hover:text-fg inline-flex h-7 w-7 items-center justify-center rounded-sm transition-colors"
                 aria-label="Copy key to clipboard"
               >
-                <Copy className="size-3.5" />
+                <IconCopy className="size-3.5" />
               </button>
             )}
             <button
               type="button"
               onClick={() => setRevealed((r) => !r)}
-              className="text-fg-muted hover:text-fg inline-flex h-7 w-7 items-center justify-center rounded transition-colors"
+              className="text-fg-muted hover:text-fg inline-flex h-7 w-7 items-center justify-center rounded-sm transition-colors"
               aria-label={revealed ? 'Hide key' : 'Show key'}
             >
-              {revealed ? <EyeOff className="size-3.5" /> : <Eye className="size-3.5" />}
+              {revealed ? <IconEyeOff className="size-3.5" /> : <IconEye className="size-3.5" />}
             </button>
           </div>
         </div>
@@ -443,26 +436,26 @@ export function ApiKeyCard({ provider, currentValue, health, usage, keyUpdatedAt
 
       {/* Validation / test feedback. */}
       {test.kind === 'err' ? (
-        <div className="flex items-start gap-2 text-xs text-red-500">
-          <XCircle className="size-3.5 mt-0.5 shrink-0" />
+        <div className="flex items-start gap-2 text-xs text-bear">
+          <IconCircleX className="size-3.5 mt-0.5 shrink-0" />
           <span className="break-words">{test.message}</span>
         </div>
       ) : null}
       {test.kind === 'ok' && dirty ? (
-        <div className="flex items-center gap-2 text-xs text-emerald-500">
-          <CheckCircle2 className="size-3.5 shrink-0" />
-          <span>New value passes validation. Click Save to apply.</span>
+        <div className="flex items-center gap-2 text-xs text-bull">
+          <IconCircleCheck className="size-3.5 shrink-0" />
+          <span>New value passes validation. Click IconDeviceFloppy to apply.</span>
         </div>
       ) : null}
 
       {/* Expandable setup instructions details. */}
       {instructions && (
-        <details className="text-xs border border-zinc-900 rounded-sm overflow-hidden bg-zinc-900/50">
+        <details className="text-xs border border-divider rounded-sm overflow-hidden bg-bg-elev-2/50">
           <summary aria-label="Toggle setup instructions and limits" className="cursor-pointer select-none px-3 py-1.5 font-medium text-fg-subtle hover:text-fg transition-colors flex items-center justify-between">
             <span>Setup Instructions & Limits</span>
             <span className="text-xs">▼</span>
           </summary>
-          <div className="p-3 border-t border-zinc-900 flex flex-col gap-2 bg-zinc-900/10">
+          <div className="p-3 border-t border-divider flex flex-col gap-2 bg-bg-elev-2/10">
             <div>
               <span className="font-semibold text-fg-muted">How to get:</span>{' '}
               <span className="text-fg-subtle">{instructions.howToGet}</span>
@@ -497,7 +490,7 @@ export function ApiKeyCard({ provider, currentValue, health, usage, keyUpdatedAt
           {isVertex ? (
             <>Paste the service-account JSON from the GCP IAM console.</>
           ) : (
-            <>Key is encrypted at rest with AES-256-GCM. Press <kbd className="bg-zinc-900 border border-zinc-800 px-1.5 py-0.5 rounded text-xs">T</kbd> to test.</>
+            <>Key is encrypted at rest with AES-256-GCM. Press <kbd className="bg-bg-elev-2 border border-border px-1.5 py-0.5 rounded-sm text-xs">T</kbd> to test.</>
           )}
         </span>
         <Button
@@ -510,7 +503,7 @@ export function ApiKeyCard({ provider, currentValue, health, usage, keyUpdatedAt
         >
           {test.kind === 'pending' ? (
             <>
-              <Loader2 className="size-3 animate-spin" />
+              <IconLoader2 className="size-3 animate-spin" />
               Testing…
             </>
           ) : (
@@ -539,7 +532,7 @@ function StatusPill({
 }) {
   if (!isSet) {
     return (
-      <span className="rounded-sm bg-zinc-900 px-2 py-0.5 text-caption font-medium text-fg-subtle">
+      <span className="rounded-sm bg-bg-elev-2 px-2 py-0.5 text-caption font-medium text-fg-subtle">
         Not set
       </span>
     );
@@ -547,34 +540,34 @@ function StatusPill({
   // Live test result takes precedence over the cached health snapshot.
   if (testState.kind === 'err') {
     return (
-      <span className="rounded-sm bg-red-500/15 px-2 py-0.5 text-caption font-medium text-red-500">
+      <span className="rounded-sm bg-bear/15 px-2 py-0.5 text-caption font-medium text-bear">
         Failed
       </span>
     );
   }
   if (testState.kind === 'ok') {
     return (
-      <span className="rounded-sm bg-emerald-500/15 px-2 py-0.5 text-caption font-medium text-emerald-500">
+      <span className="rounded-sm bg-bull/15 px-2 py-0.5 text-caption font-medium text-bull">
         OK
       </span>
     );
   }
   if (!health) {
     return (
-      <span className="rounded-sm bg-zinc-900 px-2 py-0.5 text-caption font-medium text-fg-subtle">
+      <span className="rounded-sm bg-bg-elev-2 px-2 py-0.5 text-caption font-medium text-fg-subtle">
         Saved (untested)
       </span>
     );
   }
   if (!health.ok) {
     return (
-      <span className="rounded-sm bg-red-500/15 px-2 py-0.5 text-caption font-medium text-red-500">
+      <span className="rounded-sm bg-bear/15 px-2 py-0.5 text-caption font-medium text-bear">
         Failed <span className="opacity-60">·</span> {formatRelative(health.testedAt)}
       </span>
     );
   }
   return (
-    <span className="rounded-sm bg-emerald-500/15 px-2 py-0.5 text-caption font-medium text-emerald-500">
+    <span className="rounded-sm bg-bull/15 px-2 py-0.5 text-caption font-medium text-bull">
       OK <span className="opacity-60">·</span> {formatRelative(health.testedAt)}
     </span>
   );
@@ -592,7 +585,7 @@ function UsageBadge({
 }) {
   if (!usage || usage.turns === 0) return null;
   return (
-    <span className="rounded-sm bg-zinc-900 px-2 py-0.5 text-caption font-medium text-fg tabular-nums">
+    <span className="rounded-sm bg-bg-elev-2 px-2 py-0.5 text-caption font-medium text-fg tabular-nums">
       {usage.turns} {usage.turns === 1 ? 'turn' : 'turns'} · $
       {usage.costUsd.toFixed(2)}
     </span>

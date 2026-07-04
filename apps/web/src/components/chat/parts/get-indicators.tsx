@@ -31,7 +31,7 @@
 //   pivots      →  kind                : P / R1 / S1
 //
 // All numerics use `.tabular-nums`. Sign colouring uses semantic tokens
-// `text-emerald-500` / `text-red-500` and the neutral tone uses `text-fg-muted`.
+// `text-bull` / `text-bear` and the neutral tone uses `text-fg-muted`.
 //
 // Server component on purpose — no state, no events, no browser-only APIs.
 
@@ -62,7 +62,7 @@ export function GetIndicatorsPart({ output, state, errorMessage }: GetIndicators
   const decimals = priceDecimalsForSymbol(output.symbol);
 
   return (
-    <div className="border-border bg-zinc-950 rounded-sm border p-3">
+    <div className="border-border bg-bg-elev-1 rounded-sm border p-3">
       <div className="text-fg-muted mb-2 text-xs">
         {output.symbol} · {output.tf} · {output.results.length}{' '}
         {output.results.length === 1 ? 'indicator' : 'indicators'}
@@ -93,7 +93,7 @@ function IndicatorValue({ result, decimals }: { result: IndicatorResult; decimal
     case 'rsi': {
       const v = readNumber(last);
       if (v === null) return <Empty />;
-      const tone = v > 70 ? 'text-red-500' : v < 30 ? 'text-emerald-500' : 'text-fg-muted';
+      const tone = v > 70 ? 'text-bear' : v < 30 ? 'text-bull' : 'text-fg-muted';
       // Phase 1.2b — RSI gauge arc next to the numeric value.
       return (
         <span className="inline-flex items-center gap-2">
@@ -106,7 +106,7 @@ function IndicatorValue({ result, decimals }: { result: IndicatorResult; decimal
       const rec = readRecord(last);
       const hist = rec ? readNullableNumber(rec.hist) : null;
       if (hist === null) return <Empty />;
-      const tone = hist > 0 ? 'text-emerald-500' : hist < 0 ? 'text-red-500' : 'text-fg-muted';
+      const tone = hist > 0 ? 'text-bull' : hist < 0 ? 'text-bear' : 'text-fg-muted';
       const sign = hist > 0 ? '+' : '';
       return (
         <>
@@ -289,16 +289,16 @@ function priceDecimalsForSymbol(s: string): number {
 function IndicatorsCardSkeleton() {
   return (
     <div
-      className="border-border bg-zinc-950 rounded-sm border p-3"
+      className="border-border bg-bg-elev-1 rounded-sm border p-3"
       aria-busy="true"
       aria-label="Loading indicators"
     >
-      <div className="bg-zinc-900 mb-2 h-3 w-40 animate-pulse rounded" />
+      <div className="bg-bg-elev-2 mb-2 h-3 w-40 animate-pulse rounded-sm" />
       <ul className="space-y-1.5">
         {[0, 1, 2].map((i) => (
           <li key={i} className="flex min-h-[44px] items-center justify-between gap-3">
-            <span className="bg-zinc-900 h-4 w-20 animate-pulse rounded" />
-            <span className="bg-zinc-900 h-4 w-28 animate-pulse rounded" />
+            <span className="bg-bg-elev-2 h-4 w-20 animate-pulse rounded-sm" />
+            <span className="bg-bg-elev-2 h-4 w-28 animate-pulse rounded-sm" />
           </li>
         ))}
       </ul>
@@ -310,7 +310,7 @@ function IndicatorsCardError({ message }: { message?: string }) {
   return (
     <div
       role="alert"
-      className="border-red-500/30 bg-zinc-950 text-red-500 rounded-sm border p-3 text-sm"
+      className="border-bear/30 bg-bg-elev-1 text-bear rounded-sm border p-3 text-sm"
     >
       Indicators unavailable{message ? ` · ${message}` : ''}
     </div>

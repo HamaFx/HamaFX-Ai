@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-import { Check, Copy } from 'lucide-react';
+import {IconCheck, IconCopy} from '@tabler/icons-react';
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -59,11 +59,11 @@ export function TextPart({ text, role, isStreaming }: TextPartProps) {
           h2: ({ children }) => <h2 className="text-sm font-semibold mt-3 mb-1.5 text-fg tracking-tight">{children}</h2>,
           h3: ({ children }) => <h3 className="text-sm font-medium mt-2 mb-1 text-fg">{children}</h3>,
           blockquote: ({ children }) => (
-            <blockquote className="border-l-2 border-zinc-700 text-fg-muted my-2 pl-3 italic text-sm leading-[1.4]">
+            <blockquote className="border-l-2 border-border text-fg-muted my-2 pl-3 italic text-sm leading-[1.4]">
               {children}
             </blockquote>
           ),
-          hr: () => <hr className="border-zinc-900 my-4" />,
+          hr: () => <hr className="border-divider my-4" />,
           p: ({ children }) => <p className="leading-[1.4] whitespace-pre-line my-1.5 text-fg text-sm">{children}</p>,
           ul: ({ children }) => <ul className="pl-0 list-none my-2 space-y-1">{children}</ul>,
           ol: ({ children }) => <ol className="pl-0 list-none my-2 space-y-1">{children}</ol>,
@@ -84,23 +84,23 @@ export function TextPart({ text, role, isStreaming }: TextPartProps) {
             </a>
           ),
           table: ({ children }) => (
-            <div className="my-3 overflow-x-auto border border-zinc-900 rounded-sm">
-              <table className="table-auto font-mono text-xs text-right border-zinc-900 w-full">
+            <div className="my-3 overflow-x-auto border border-divider rounded-sm">
+              <table className="table-auto font-mono text-xs text-right border-divider w-full">
                 {children}
               </table>
             </div>
           ),
-          thead: ({ children }) => <thead className="bg-zinc-900 border-b border-zinc-800">{children}</thead>,
+          thead: ({ children }) => <thead className="bg-bg-elev-2 border-b border-border">{children}</thead>,
           tbody: ({ children }) => <tbody className="divide-y divide-zinc-900">{children}</tbody>,
-          tr: ({ children }) => <tr className="border-zinc-900 hover:bg-zinc-950 transition-colors">{children}</tr>,
-          th: ({ children }) => <th className="px-3 py-1.5 text-left font-semibold text-fg-subtle uppercase tracking-wider border-r border-zinc-900 last:border-r-0">{children}</th>,
-          td: ({ children }) => <td className="px-3 py-1.5 text-fg tabular-nums border-r border-zinc-900 last:border-r-0">{children}</td>,
+          tr: ({ children }) => <tr className="border-divider hover:bg-bg-elev-1 transition-colors">{children}</tr>,
+          th: ({ children }) => <th className="px-3 py-1.5 text-left font-semibold text-fg-subtle uppercase tracking-wider border-r border-divider last:border-r-0">{children}</th>,
+          td: ({ children }) => <td className="px-3 py-1.5 text-fg tabular-nums border-r border-divider last:border-r-0">{children}</td>,
           code({ className, children, ...props }) {
             const match = /language-(\w+)/.exec(className || '');
             const codeStr = String(children).replace(/\n$/, '');
             if (!match) {
               return (
-                <code className="bg-zinc-900 text-fg-muted font-mono text-xs border border-zinc-800 rounded-sm px-1.5 py-0.5" {...props}>
+                <code className="bg-bg-elev-2 text-fg-muted font-mono text-xs border border-border rounded-sm px-1.5 py-0.5" {...props}>
                   {children}
                 </code>
               );
@@ -176,26 +176,26 @@ function CodeBlock({ code, lang }: { code: string; lang: string }) {
   return (
     <div
       className={cn(
-        'border-zinc-800 bg-zinc-950 relative my-2 overflow-hidden rounded-sm border',
+        'border-border bg-bg-elev-1 relative my-2 overflow-hidden rounded-sm border',
       )}
     >
-      <div className="border-zinc-800 bg-zinc-900 flex items-center justify-between border-b px-3 py-2">
+      <div className="border-border bg-bg-elev-2 flex items-center justify-between border-b px-3 py-2">
         <span className="text-fg-subtle font-mono text-caption uppercase tracking-wider">
           {lang || 'code'}
         </span>
         <button
           type="button"
           onClick={copy}
-          aria-label={copied ? 'Copied' : 'Copy code'}
+          aria-label={copied ? 'Copied' : 'IconCopy code'}
           className="text-fg-muted hover:text-fg inline-flex items-center gap-1 rounded-sm px-2 py-1 text-caption font-medium transition-colors cursor-pointer"
         >
           {copied ? (
             <>
-              <Check className="text-emerald-500 size-3" /> copied
+              <IconCheck className="text-bull size-3" /> copied
             </>
           ) : (
             <>
-              <Copy className="size-3" /> copy
+              <IconCopy className="size-3" /> copy
             </>
           )}
         </button>
@@ -204,7 +204,7 @@ function CodeBlock({ code, lang }: { code: string; lang: string }) {
       <ShikiCode code={displayCode} lang={lang} />
 
       {shouldTruncate && (
-        <div className="border-zinc-800 bg-zinc-900/50 flex justify-center border-t py-1.5">
+        <div className="border-border bg-bg-elev-2/50 flex justify-center border-t py-1.5">
           <button
             type="button"
             onClick={() => setExpanded(!expanded)}

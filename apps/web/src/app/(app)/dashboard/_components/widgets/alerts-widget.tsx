@@ -23,7 +23,7 @@
 // alerts page for management.
 
 import Link from 'next/link';
-import { Bell } from 'lucide-react';
+import { IconBell } from '@tabler/icons-react';
 import type { Alert } from '@hamafx/shared';
 
 import { EmptyState } from '@/components/ui/empty-state';
@@ -52,11 +52,11 @@ export function AlertsWidget({ alerts, limit = 5 }: AlertsWidgetProps) {
   return (
     <section
       aria-label="Active alerts"
-      className="border-zinc-800 bg-zinc-950 flex flex-col gap-3 rounded-sm border p-4"
+      className="border-border bg-bg-elev-1 flex flex-col gap-3 rounded-sm border p-4"
     >
       <header className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
-          <Bell className="text-fg-subtle size-4" />
+          <IconBell className="text-fg-subtle size-4" />
           <span className="text-fg text-body-sm font-semibold">Alerts</span>
           {rows.length > 0 ? (
             <span className="text-fg-subtle text-caption tabular-nums">
@@ -71,7 +71,7 @@ export function AlertsWidget({ alerts, limit = 5 }: AlertsWidgetProps) {
 
       {rows.length === 0 ? (
         <EmptyState
-          icon={<Bell className="size-5" />}
+          icon={<IconBell className="size-5" />}
           title="No alerts set"
           description="Create price or indicator alerts to get notified on your phone or email."
           tone="muted"
@@ -83,7 +83,7 @@ export function AlertsWidget({ alerts, limit = 5 }: AlertsWidgetProps) {
           {rows.map((a) => (
             <li
               key={a.id}
-              className="border-zinc-900 flex items-center justify-between gap-3 border-b py-2 last:border-0"
+              className="border-divider flex items-center justify-between gap-3 border-b py-2 last:border-0"
             >
               <div className="flex min-w-0 flex-col">
                 <span className="text-fg text-body-sm font-semibold">
@@ -95,8 +95,8 @@ export function AlertsWidget({ alerts, limit = 5 }: AlertsWidgetProps) {
               </div>
               <span
                 className={cn(
-                  'text-caption font-bold px-1.5 py-0.5 rounded shrink-0',
-                  a.active ? 'bg-emerald-500/10 text-emerald-500' : 'bg-fg-muted/10 text-fg-muted',
+                  'text-caption font-bold px-1.5 py-0.5 rounded-sm shrink-0',
+                  a.active ? 'bg-bull/10 text-bull' : 'bg-fg-muted/10 text-fg-muted',
                 )}
               >
                 {a.active ? 'Armed' : 'Paused'}

@@ -19,7 +19,7 @@
 import { useActionState, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { Check } from 'lucide-react';
+import { IconCheck } from '@tabler/icons-react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -103,7 +103,7 @@ function LoginForm() {
 
           <div className="flex items-center justify-between -mt-3">
             <label className="flex items-center gap-2 text-fg-muted text-xs cursor-pointer hover:text-fg transition-colors">
-              <input type="checkbox" name="rememberMe" value="true" defaultChecked className="rounded border-zinc-800" />
+              <input type="checkbox" name="rememberMe" value="true" defaultChecked className="rounded-sm border-border" />
               Remember me
             </label>
             <Link
@@ -115,7 +115,7 @@ function LoginForm() {
           </div>
 
           {state?.error ? (
-            <p id="login-error" role="alert" className="text-red-500 text-sm">
+            <p id="login-error" role="alert" className="text-bear text-sm">
               {state.error}
             </p>
           ) : null}
@@ -129,7 +129,7 @@ function LoginForm() {
           >
             {success ? (
               <>
-                <Check className="size-5" /> Welcome back
+                <IconCheck className="size-5" /> Welcome back
               </>
             ) : pending ? (
               'Signing in…'
@@ -148,7 +148,7 @@ function LoginForm() {
       </p>
 
       {process.env.NEXT_PUBLIC_ENABLE_DEV_LOGIN === 'true' && (
-        <div className="flex flex-col items-center gap-2 border-t border-zinc-800 pt-4">
+        <div className="flex flex-col items-center gap-2 border-t border-border pt-4">
           <button
             type="button"
             onClick={() => {

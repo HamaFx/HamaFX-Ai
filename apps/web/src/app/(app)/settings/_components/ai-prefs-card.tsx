@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-import { Sparkles, X } from 'lucide-react';
+import {IconBolt, IconX} from '@tabler/icons-react';
 import Link from 'next/link';
 
 import { useLocalStorage } from '@/hooks/use-local-storage';
@@ -141,7 +141,7 @@ export function AIPrefsCard({ initialCustomInstructions }: { initialCustomInstru
   return (
     <section
       aria-labelledby="ai-prefs-heading"
-      className="border border-zinc-800 bg-zinc-950 rounded-sm flex flex-col gap-3 p-4"
+      className="border border-border bg-bg-elev-1 rounded-sm flex flex-col gap-3 p-4"
     >
       <header className="flex items-center gap-3 pb-1">
         <h2
@@ -162,7 +162,7 @@ export function AIPrefsCard({ initialCustomInstructions }: { initialCustomInstru
       <p className="text-fg-muted text-xs">
         To pick which AI model handles each kind of turn, use{' '}
         <Link href="/settings/models" className="text-fg hover:underline">
-          Settings → Models
+          IconSettings → Models
         </Link>
         . The choices there are server-side and apply to every chat turn.
       </p>
@@ -187,15 +187,15 @@ export function AIPrefsCard({ initialCustomInstructions }: { initialCustomInstru
           {INSTRUCTION_PRESETS.map((preset) => (
             <div
               key={preset.id}
-              className="border-zinc-800 bg-zinc-900 inline-flex items-center overflow-hidden rounded-sm border text-caption"
+              className="border-border bg-bg-elev-2 inline-flex items-center overflow-hidden rounded-sm border text-caption"
             >
               <button
                 type="button"
                 onClick={() => applyPreset(preset.id, 'replace')}
                 aria-label={`Apply preset "${preset.label}" (replace existing instructions)`}
-                className="hover:bg-zinc-800 text-fg-muted hover:text-fg px-3 py-1 transition-colors"
+                className="hover:bg-bg-elev-3 text-fg-muted hover:text-fg px-3 py-1 transition-colors"
               >
-                <Sparkles className="mr-1 inline size-3 align-text-bottom" aria-hidden="true" />
+                <IconBolt className="mr-1 inline size-3 align-text-bottom" aria-hidden="true" />
                 {preset.label}
               </button>
               <button
@@ -203,7 +203,7 @@ export function AIPrefsCard({ initialCustomInstructions }: { initialCustomInstru
                 onClick={() => applyPreset(preset.id, 'append')}
                 aria-label={`Append preset "${preset.label}" to existing instructions`}
                 title="Append to existing"
-                className="border-zinc-800 text-fg-subtle hover:text-fg hover:bg-zinc-800 -ml-px border-l px-2 py-1 transition-colors"
+                className="border-border text-fg-subtle hover:text-fg hover:bg-bg-elev-3 -ml-px border-l px-2 py-1 transition-colors"
               >
                 +
               </button>
@@ -216,7 +216,7 @@ export function AIPrefsCard({ initialCustomInstructions }: { initialCustomInstru
               className="text-fg-subtle hover:text-fg ml-1 inline-flex items-center gap-1 px-2 py-1 text-caption transition-colors"
               aria-label="Clear custom instructions"
             >
-              <X className="size-3" aria-hidden="true" />
+              <IconX className="size-3" aria-hidden="true" />
               Clear
             </button>
           ) : null}
@@ -228,7 +228,7 @@ export function AIPrefsCard({ initialCustomInstructions }: { initialCustomInstru
           onChange={(e) => handleInstructionsChange(e.target.value)}
           placeholder="e.g. Always respond in bullet points. Do not use emojis."
           rows={3}
-          className="border-zinc-800 bg-zinc-900 text-fg placeholder:text-fg-muted rounded-sm border p-3 text-sm focus:outline-none focus:ring-2 focus:ring-fg resize-none"
+          className="border-border bg-bg-elev-2 text-fg placeholder:text-fg-muted rounded-sm border p-3 text-sm focus:outline-none focus:ring-2 focus:ring-fg resize-none"
         />
       </div>
 

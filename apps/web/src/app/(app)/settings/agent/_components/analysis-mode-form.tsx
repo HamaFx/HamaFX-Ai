@@ -16,7 +16,7 @@
 
 'use client';
 
-import { Brain, Check, Loader2 } from 'lucide-react';
+import {IconCpu, IconCheck, IconLoader2} from '@tabler/icons-react';
 import { useState, useTransition } from 'react';
 import { toast } from 'sonner';
 
@@ -77,7 +77,7 @@ export function AnalysisModeForm({ initialMode, showOpinions: initialShowOpinion
   return (
     <section aria-labelledby="analysis-mode-heading" className="flex flex-col gap-3">
       <header className="flex items-center gap-2">
-        <Brain className="size-4 text-fg-muted" />
+        <IconCpu className="size-4 text-fg-muted" />
         <h2 id="analysis-mode-heading" className="text-fg-muted text-sm font-medium">
           Analysis Mode
         </h2>
@@ -97,8 +97,8 @@ export function AnalysisModeForm({ initialMode, showOpinions: initialShowOpinion
             className={cn(
               'flex items-center justify-between gap-3 rounded-sm border p-3 text-left transition-colors',
               mode === opt.value
-                ? 'border-zinc-700 bg-zinc-950'
-                : 'border-zinc-800 bg-zinc-950 hover:border-zinc-800',
+                ? 'border-border bg-bg-elev-1'
+                : 'border-border bg-bg-elev-1 hover:border-border',
             )}
           >
             <div className="flex flex-col gap-0.5">
@@ -111,7 +111,7 @@ export function AnalysisModeForm({ initialMode, showOpinions: initialShowOpinion
               )}
             </div>
             {mode === opt.value && (
-              <Check className="size-4 text-fg shrink-0" />
+              <IconCheck className="size-4 text-fg shrink-0" />
             )}
           </button>
         ))}
@@ -122,7 +122,7 @@ export function AnalysisModeForm({ initialMode, showOpinions: initialShowOpinion
           type="checkbox"
           checked={showOpinions}
           onChange={(e) => setShowOpinions(e.target.checked)}
-          className="size-4 rounded border-zinc-800"
+          className="size-4 rounded-sm border-border"
         />
         <span className="text-fg-muted text-sm">Show agent opinions in chat</span>
       </label>
@@ -134,8 +134,8 @@ export function AnalysisModeForm({ initialMode, showOpinions: initialShowOpinion
           disabled={pending}
           className="bg-fg text-white hover:bg-fg/90 inline-flex items-center gap-2 self-start rounded-sm px-4 py-2 text-sm font-medium transition-colors disabled:opacity-50"
         >
-          {pending ? <Loader2 className="size-4 animate-spin" /> : saved ? <Check className="size-4" /> : null}
-          {saved ? 'Saved' : 'Save changes'}
+          {pending ? <IconLoader2 className="size-4 animate-spin" /> : saved ? <IconCheck className="size-4" /> : null}
+          {saved ? 'Saved' : 'IconDeviceFloppy changes'}
         </button>
       )}
     </section>

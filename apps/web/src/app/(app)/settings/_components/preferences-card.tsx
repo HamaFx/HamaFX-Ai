@@ -17,7 +17,7 @@
  */
 
 import { isKnownSymbol, type Symbol } from '@hamafx/shared';
-import { Clock, Sparkles, TrendingUp } from 'lucide-react';
+import {IconClock, IconBolt, IconTrendingUp} from '@tabler/icons-react';
 import { useCallback, useEffect } from 'react';
 import { toast } from 'sonner';
 import { useLocalStorage } from '@/hooks/use-local-storage';
@@ -95,7 +95,7 @@ export function PreferencesCard({
   return (
     <section
       aria-labelledby="prefs-heading"
-      className="border border-zinc-800 bg-zinc-950 rounded-sm flex flex-col gap-1 p-4"
+      className="border border-border bg-bg-elev-1 rounded-sm flex flex-col gap-1 p-4"
     >
       <header className="flex items-center gap-3 pb-2">
         <h2
@@ -110,7 +110,7 @@ export function PreferencesCard({
       </header>
 
       <SettingsRow
-        icon={<TrendingUp className="size-4" />}
+        icon={<IconTrendingUp className="size-4" />}
         label="Default symbol"
         description="Used when /chart loads without a symbol query"
         stack
@@ -129,7 +129,7 @@ export function PreferencesCard({
       <RowDivider />
 
       <SettingsRow
-        icon={<Clock className="size-4" />}
+        icon={<IconClock className="size-4" />}
         label="Time format"
         description="Affects timestamps in news and the calendar"
         stack
@@ -151,7 +151,7 @@ export function PreferencesCard({
       <RowDivider />
 
       <SettingsRow
-        icon={<Sparkles className="size-4" />}
+        icon={<IconBolt className="size-4" />}
         label="Reduced motion"
         description="Force-disable animations regardless of system preference"
         action={
@@ -172,5 +172,5 @@ export function PreferencesCard({
 }
 
 function RowDivider() {
-  return <div className="border-zinc-800 -mx-4 my-1 border-t" />;
+  return <div className="border-border -mx-4 my-1 border-t" />;
 }

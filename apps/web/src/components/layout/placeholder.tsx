@@ -34,7 +34,7 @@ export function Placeholder({ title, description, phase, className, children }: 
   return (
     <div
       className={cn(
-        'border-border bg-zinc-950 flex flex-col items-start gap-3 rounded-sm border p-5',
+        'border-border bg-bg-elev-1 flex flex-col items-start gap-3 rounded-sm border p-5',
         className,
       )}
     >

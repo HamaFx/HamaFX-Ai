@@ -45,7 +45,7 @@ export function ProfileForm({ initialName, email }: ProfileFormProps) {
   }, [state.ok, state.error]);
 
   return (
-    <form action={action} className="border border-zinc-800 bg-zinc-950 rounded-sm p-4 flex flex-col gap-4">
+    <form action={action} className="border border-border bg-bg-elev-1 rounded-sm p-4 flex flex-col gap-4">
       <div className="flex flex-col gap-2">
         <label htmlFor="settings-email" className="text-sm font-medium text-fg">Email</label>
         <Input 

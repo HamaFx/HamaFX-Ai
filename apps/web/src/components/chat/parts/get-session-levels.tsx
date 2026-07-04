@@ -40,14 +40,14 @@ export function GetSessionLevelsPart({
 
   if (output.pipelinePending) {
     return (
-      <div className="border-border bg-zinc-950 text-fg-muted rounded-sm border p-3 text-sm">
+      <div className="border-border bg-bg-elev-1 text-fg-muted rounded-sm border p-3 text-sm">
         No candles available yet for {output.symbol} — try again in a minute.
       </div>
     );
   }
 
   return (
-    <div className="border-border bg-zinc-950 flex flex-col gap-3 rounded-sm border p-3">
+    <div className="border-border bg-bg-elev-1 flex flex-col gap-3 rounded-sm border p-3">
       <header className="flex items-baseline justify-between gap-2">
         <h3 className="text-fg text-sm font-semibold">{output.symbol} · session levels</h3>
         <span className="text-fg-subtle font-mono text-caption">
@@ -74,7 +74,7 @@ function SessionList({ rows, title }: { rows: SessionRange[]; title: string }) {
             <span className="text-fg w-14 font-semibold">{SESSION_LABEL[r.session]}</span>
             <span className="text-fg-muted flex-1">
               O {fmt(r.open)} · H {fmt(r.high)} · L {fmt(r.low)} ·{' '}
-              {r.forming ? <em className="text-amber-500 not-italic">forming…</em> : `C ${fmt(r.close)}`}
+              {r.forming ? <em className="text-warn not-italic">forming…</em> : `C ${fmt(r.close)}`}
             </span>
           </li>
         ))}
@@ -91,12 +91,12 @@ function fmt(n: number | null): string {
 function SkeletonCard() {
   return (
     <div
-      className="border-border bg-zinc-950 rounded-sm border p-3"
+      className="border-border bg-bg-elev-1 rounded-sm border p-3"
       aria-busy="true"
       aria-label="Computing session levels"
     >
-      <div className="bg-zinc-900 h-4 w-1/2 animate-pulse rounded" />
-      <div className="bg-zinc-900 mt-3 h-20 animate-pulse rounded" />
+      <div className="bg-bg-elev-2 h-4 w-1/2 animate-pulse rounded-sm" />
+      <div className="bg-bg-elev-2 mt-3 h-20 animate-pulse rounded-sm" />
     </div>
   );
 }
@@ -105,7 +105,7 @@ function ErrorCard({ message }: { message?: string }) {
   return (
     <div
       role="alert"
-      className="border-red-500/30 bg-zinc-950 text-red-500 rounded-sm border p-3 text-sm"
+      className="border-bear/30 bg-bg-elev-1 text-bear rounded-sm border p-3 text-sm"
     >
       Session levels failed{message ? ` · ${message}` : ''}
     </div>

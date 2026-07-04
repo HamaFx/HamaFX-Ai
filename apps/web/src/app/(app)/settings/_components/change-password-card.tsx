@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Lock, Check, Eye, EyeOff } from 'lucide-react';
+import {IconLock, IconCheck, IconEye, IconEyeOff} from '@tabler/icons-react';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
@@ -50,13 +50,13 @@ export function ChangePasswordCard() {
   return (
     <div className="surface-panel p-4">
       <div className="flex items-center gap-2">
-        <Lock className="text-fg-muted size-4" />
+        <IconLock className="text-fg-muted size-4" />
         <h2 className="text-fg text-sm font-semibold">Change Password</h2>
       </div>
 
       {done ? (
-        <div className="flex items-center gap-2 text-sm text-emerald-500">
-          <Check className="size-4" />
+        <div className="flex items-center gap-2 text-sm text-bull">
+          <IconCheck className="size-4" />
           Password changed successfully
         </div>
       ) : (
@@ -87,21 +87,21 @@ export function ChangePasswordCard() {
               className="text-fg-muted hover:text-fg absolute right-2 top-1/2 -translate-y-1/2"
               tabIndex={-1}
             >
-              {showNew ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+              {showNew ? <IconEyeOff className="size-4" /> : <IconEye className="size-4" />}
             </button>
           </div>
           {newPassword.length > 0 && (
             <div className="text-xs text-fg-subtle grid grid-cols-2 gap-1">
-              <span className={newPassword.length >= 8 ? 'text-emerald-500' : 'text-red-500'}>
+              <span className={newPassword.length >= 8 ? 'text-bull' : 'text-bear'}>
                 {newPassword.length >= 8 ? '✓' : '✗'} Min 8 characters
               </span>
-              <span className={/[A-Z]/.test(newPassword) ? 'text-emerald-500' : 'text-red-500'}>
+              <span className={/[A-Z]/.test(newPassword) ? 'text-bull' : 'text-bear'}>
                 {/[A-Z]/.test(newPassword) ? '✓' : '✗'} Uppercase
               </span>
-              <span className={/[a-z]/.test(newPassword) ? 'text-emerald-500' : 'text-red-500'}>
+              <span className={/[a-z]/.test(newPassword) ? 'text-bull' : 'text-bear'}>
                 {/[a-z]/.test(newPassword) ? '✓' : '✗'} Lowercase
               </span>
-              <span className={/[0-9]/.test(newPassword) ? 'text-emerald-500' : 'text-red-500'}>
+              <span className={/[0-9]/.test(newPassword) ? 'text-bull' : 'text-bear'}>
                 {/[0-9]/.test(newPassword) ? '✓' : '✗'} Number
               </span>
             </div>

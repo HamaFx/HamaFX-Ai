@@ -29,7 +29,7 @@
 
 import Link from 'next/link';
 import { useEffect, useReducer, useRef, type MutableRefObject } from 'react';
-import { Eye } from 'lucide-react';
+import { IconEye } from '@tabler/icons-react';
 import type { Symbol, Tick } from '@hamafx/shared';
 import { priceDecimals } from '@hamafx/shared';
 
@@ -80,11 +80,11 @@ export function WatchlistWidget({
   return (
     <section
       aria-label="Watchlist"
-      className="border-zinc-800 bg-zinc-950 flex flex-col gap-3 rounded-sm border p-4"
+      className="border-border bg-bg-elev-1 flex flex-col gap-3 rounded-sm border p-4"
     >
       <header className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
-          <Eye className="text-fg-subtle size-4" />
+          <IconEye className="text-fg-subtle size-4" />
           <span className="text-fg text-body-sm font-semibold">Watchlist</span>
         </div>
         <Link
@@ -101,10 +101,10 @@ export function WatchlistWidget({
             return Array.from({ length: list.length }).map((_, i) => (
               <li
                 key={i}
-                className="border-zinc-900 flex items-center justify-between border-b py-2 last:border-0"
+                className="border-divider flex items-center justify-between border-b py-2 last:border-0"
               >
-                <div className="bg-zinc-900 h-3 w-16 animate-pulse rounded" />
-                <div className="bg-zinc-900 h-3 w-12 animate-pulse rounded" />
+                <div className="bg-bg-elev-2 h-3 w-16 animate-pulse rounded-sm" />
+                <div className="bg-bg-elev-2 h-3 w-12 animate-pulse rounded-sm" />
               </li>
             ));
           }
@@ -139,7 +139,7 @@ function WatchRow({
   const last = tick.mid;
   const isBull = last >= first;
   return (
-    <li className="border-zinc-900 flex items-center justify-between gap-3 border-b py-2 last:border-0">
+    <li className="border-divider flex items-center justify-between gap-3 border-b py-2 last:border-0">
       <div className="flex min-w-0 flex-col">
         <span className="text-fg text-body-sm font-semibold">{tick.symbol}</span>
         <span className="text-fg-subtle text-caption tabular-nums">
@@ -150,7 +150,7 @@ function WatchRow({
         {buf.length >= 2 ? (
           <Sparkline
             values={buf}
-            className={cn('h-4 w-16', isBull ? 'text-emerald-500' : 'text-red-500')}
+            className={cn('h-4 w-16', isBull ? 'text-bull' : 'text-bear')}
             label={`${tick.symbol} trend`}
           />
         ) : (
@@ -159,7 +159,7 @@ function WatchRow({
         <span
           className={cn(
             'text-caption tabular-nums',
-            isBull ? 'text-emerald-500' : 'text-red-500',
+            isBull ? 'text-bull' : 'text-bear',
           )}
         >
           {isBull ? '▲' : '▼'}

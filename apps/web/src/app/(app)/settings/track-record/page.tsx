@@ -23,7 +23,7 @@ import type { DecisionSignal, SignalStats } from '@hamafx/shared';
 import { redirect } from 'next/navigation';
 import { auth } from '@/auth';
 import type { Metadata } from 'next';
-import { Target, TrendingUp, TrendingDown } from 'lucide-react';
+import {IconTarget, IconTrendingUp, IconTrendingDown} from '@tabler/icons-react';
 
 import { EmptyState } from '@/components/ui/empty-state';
 import { cn } from '@/lib/cn';
@@ -53,7 +53,7 @@ function TrackRecordContent({ stats }: { stats: SignalStats }) {
           </p>
         </div>
         <EmptyState
-          icon={<Target className="size-8" />}
+          icon={<IconTarget className="size-8" />}
           title="No signals yet"
           description="Ask the AI for a trade recommendation (buy/sell with entry, stop, and target) to start building a track record."
         />
@@ -76,28 +76,28 @@ function TrackRecordContent({ stats }: { stats: SignalStats }) {
 
       {/* Summary cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <StatCard label="Hit Rate" value={`${hitRatePct}%`} icon={Target} />
-        <StatCard label="Total Signals" value={String(stats.total)} icon={Target} />
+        <StatCard label="Hit Rate" value={`${hitRatePct}%`} icon={IconTarget} />
+        <StatCard label="Total Signals" value={String(stats.total)} icon={IconTarget} />
         <StatCard
           label="Avg Return"
           value={avgReturnStr}
-          icon={stats.avgReturnPct >= 0 ? TrendingUp : TrendingDown}
-          valueClass={stats.avgReturnPct >= 0 ? 'text-emerald-500' : 'text-red-500'}
+          icon={stats.avgReturnPct >= 0 ? IconTrendingUp : IconTrendingDown}
+          valueClass={stats.avgReturnPct >= 0 ? 'text-bull' : 'text-bear'}
         />
-        <StatCard label="Evaluated" value={String(stats.evaluated)} icon={Target} />
+        <StatCard label="Evaluated" value={String(stats.evaluated)} icon={IconTarget} />
       </div>
 
       {/* Accuracy by Model */}
       {stats.byModel.length > 0 && (
-        <div className="rounded-sm border border-border bg-surface p-4">
+        <div className="rounded-sm border border-border bg-bg-elev-1 p-4">
           <h3 className="text-sm font-semibold text-fg mb-3">Accuracy by Model</h3>
           <div className="flex flex-col gap-2">
             {stats.byModel.map((m: { model: string; hitRate: number; count: number }) => (
               <div key={m.model} className="flex items-center gap-3">
                 <span className="text-sm text-fg-subtle w-32 truncate">{m.model}</span>
-                <div className="flex-1 h-6 bg-surface-elevated rounded overflow-hidden">
+                <div className="flex-1 h-6 bg-bg-elev-1-elevated rounded-sm overflow-hidden">
                   <div
-                    className="h-full bg-fg rounded transition-all"
+                    className="h-full bg-fg rounded-sm transition-all"
                     style={{ width: `${m.hitRate * 100}%` }}
                   />
                 </div>
@@ -113,15 +113,15 @@ function TrackRecordContent({ stats }: { stats: SignalStats }) {
 
       {/* Accuracy by Horizon */}
       {stats.byHorizon.length > 0 && (
-        <div className="rounded-sm border border-border bg-surface p-4">
+        <div className="rounded-sm border border-border bg-bg-elev-1 p-4">
           <h3 className="text-sm font-semibold text-fg mb-3">Accuracy by Horizon</h3>
           <div className="flex flex-col gap-2">
             {stats.byHorizon.map((h: { horizon: string; hitRate: number; count: number }) => (
               <div key={h.horizon} className="flex items-center gap-3">
                 <span className="text-sm text-fg-subtle w-20">{h.horizon}</span>
-                <div className="flex-1 h-6 bg-surface-elevated rounded overflow-hidden">
+                <div className="flex-1 h-6 bg-bg-elev-1-elevated rounded-sm overflow-hidden">
                   <div
-                    className="h-full bg-fg rounded transition-all"
+                    className="h-full bg-fg rounded-sm transition-all"
                     style={{ width: `${h.hitRate * 100}%` }}
                   />
                 </div>
@@ -137,15 +137,15 @@ function TrackRecordContent({ stats }: { stats: SignalStats }) {
 
       {/* Accuracy by Action */}
       {stats.byAction.length > 0 && (
-        <div className="rounded-sm border border-border bg-surface p-4">
+        <div className="rounded-sm border border-border bg-bg-elev-1 p-4">
           <h3 className="text-sm font-semibold text-fg mb-3">Accuracy by Action</h3>
           <div className="flex flex-col gap-2">
             {stats.byAction.map((a: { action: string; hitRate: number; count: number }) => (
               <div key={a.action} className="flex items-center gap-3">
                 <span className="text-sm text-fg-subtle w-20 uppercase">{a.action}</span>
-                <div className="flex-1 h-6 bg-surface-elevated rounded overflow-hidden">
+                <div className="flex-1 h-6 bg-bg-elev-1-elevated rounded-sm overflow-hidden">
                   <div
-                    className="h-full bg-fg rounded transition-all"
+                    className="h-full bg-fg rounded-sm transition-all"
                     style={{ width: `${a.hitRate * 100}%` }}
                   />
                 </div>
@@ -161,7 +161,7 @@ function TrackRecordContent({ stats }: { stats: SignalStats }) {
 
       {/* Recent Signals */}
       {stats.recentSignals.length > 0 && (
-        <div className="rounded-sm border border-border bg-surface p-4">
+        <div className="rounded-sm border border-border bg-bg-elev-1 p-4">
           <h3 className="text-sm font-semibold text-fg mb-3">Recent Signals</h3>
           <div className="flex flex-col gap-2">
             {stats.recentSignals.map((s: DecisionSignal) => (
@@ -173,12 +173,12 @@ function TrackRecordContent({ stats }: { stats: SignalStats }) {
                   <span className="text-sm font-medium text-fg">{s.symbol}</span>
                   <span
                     className={cn(
-                      'text-xs font-medium px-2 py-0.5 rounded uppercase',
+                      'text-xs font-medium px-2 py-0.5 rounded-sm uppercase',
                       s.action === 'buy' || s.action === 'add'
-                        ? 'bg-emerald-500/10 text-emerald-500'
+                        ? 'bg-bull/10 text-bull'
                         : s.action === 'sell' || s.action === 'reduce'
-                          ? 'bg-red-500/10 text-red-500'
-                          : 'bg-zinc-900 text-fg-muted',
+                          ? 'bg-bear/10 text-bear'
+                          : 'bg-bg-elev-2 text-fg-muted',
                     )}
                   >
                     {s.action}
@@ -215,7 +215,7 @@ function StatCard({
   valueClass?: string;
 }) {
   return (
-    <div className="rounded-sm border border-border bg-surface p-4">
+    <div className="rounded-sm border border-border bg-bg-elev-1 p-4">
       <div className="flex items-center gap-2 text-fg-subtle">
         <Icon className="size-4" />
         <span className="text-xs font-medium">{label}</span>
@@ -227,13 +227,13 @@ function StatCard({
 
 function StatusBadge({ status }: { status: string }) {
   const styles: Record<string, string> = {
-    active: 'bg-blue-500/10 text-blue-500',
-    closed: 'bg-zinc-900 text-fg-muted',
-    expired: 'bg-amber-500/10 text-amber-500',
-    invalidated: 'bg-red-500/10 text-red-500',
+    active: 'bg-info/10 text-info',
+    closed: 'bg-bg-elev-2 text-fg-muted',
+    expired: 'bg-warn/10 text-warn',
+    invalidated: 'bg-bear/10 text-bear',
   };
   return (
-    <span className={cn('text-xs font-medium px-2 py-0.5 rounded', styles[status] ?? styles.closed)}>
+    <span className={cn('text-xs font-medium px-2 py-0.5 rounded-sm', styles[status] ?? styles.closed)}>
       {status}
     </span>
   );

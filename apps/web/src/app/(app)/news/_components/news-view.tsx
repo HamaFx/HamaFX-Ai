@@ -31,7 +31,7 @@
 // the "where am I in the timeline" cue.
 
 import type { NewsArticle, SymbolOrCurrencyTag } from '@hamafx/shared';
-import { Bookmark, BookmarkCheck, RotateCw } from 'lucide-react';
+import {IconBookmark, IconBookmarkCheck, IconRefresh} from '@tabler/icons-react';
 import { useEffect, useMemo, useRef, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
@@ -195,11 +195,11 @@ export function NewsView({ initialArticles }: NewsViewProps) {
           className={cn(
             'inline-flex h-9 items-center gap-1.5 rounded-sm border px-3 text-xs font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-40',
             savedOnly
-              ? 'bg-fg text-black border-zinc-700'
-              : 'border-zinc-800 bg-zinc-950/60 text-fg-muted hover:text-fg',
+              ? 'bg-fg text-black border-border'
+              : 'border-border bg-bg-elev-1/60 text-fg-muted hover:text-fg',
           )}
         >
-          {savedOnly ? <BookmarkCheck className="size-3.5" /> : <Bookmark className="size-3.5" />}
+          {savedOnly ? <IconBookmarkCheck className="size-3.5" /> : <IconBookmark className="size-3.5" />}
           Saved {savedCount > 0 ? `· ${savedCount}` : ''}
         </button>
 
@@ -208,9 +208,9 @@ export function NewsView({ initialArticles }: NewsViewProps) {
           onClick={manualRefresh}
           disabled={pending}
           aria-label="Refresh now"
-          className="text-fg-muted hover:text-fg hover:bg-zinc-900 inline-flex h-9 items-center gap-1.5 rounded-sm px-3 text-xs font-medium transition-colors disabled:opacity-50"
+          className="text-fg-muted hover:text-fg hover:bg-bg-elev-2 inline-flex h-9 items-center gap-1.5 rounded-sm px-3 text-xs font-medium transition-colors disabled:opacity-50"
         >
-          <RotateCw className={cn('size-3.5', pending && 'animate-spin')} />
+          <IconRefresh className={cn('size-3.5', pending && 'animate-spin')} />
           {pending ? 'Refreshing…' : `Updated ${formatRelative(lastRefreshed)}`}
         </button>
       </div>
@@ -219,11 +219,11 @@ export function NewsView({ initialArticles }: NewsViewProps) {
       {filtered.length === 0 ? (
         <EmptyState
           tone="muted"
-          icon={<Bookmark className="size-7" strokeWidth={1.75} />}
+          icon={<IconBookmark className="size-7" strokeWidth={1.75} />}
           title={savedOnly ? 'No saved articles' : 'Nothing matches'}
           description={
             savedOnly
-              ? 'Save articles by tapping the bookmark icon on any card.'
+              ? 'IconDeviceFloppy articles by tapping the bookmark icon on any card.'
               : 'Try clearing the search or pick a different sentiment / symbol filter.'
           }
         />
@@ -232,7 +232,7 @@ export function NewsView({ initialArticles }: NewsViewProps) {
           {buckets.map(([label, items]) => (
             <section key={label} className="flex flex-col gap-3">
               <h2
-                className="bg-zinc-950/95 text-fg-subtle sticky z-10 -mx-4 flex items-baseline gap-2 px-5 py-2 text-caption font-semibold uppercase tracking-wider"
+                className="bg-bg-elev-1/95 text-fg-subtle sticky z-10 -mx-4 flex items-baseline gap-2 px-5 py-2 text-caption font-semibold uppercase tracking-wider"
                 style={{ top: 'calc(var(--topbar-h) + env(safe-area-inset-top))' }}
               >
                 {label}

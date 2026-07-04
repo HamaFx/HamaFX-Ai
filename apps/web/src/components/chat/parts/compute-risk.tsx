@@ -33,10 +33,10 @@ export function ComputeRiskPart({ output, state, errorMessage }: ToolPartProps<'
   if (state === 'error') return <ErrorCard {...(errorMessage ? { message: errorMessage } : {})} />;
   if (state === 'loading' || !output) return <SkeletonCard />;
 
-  const tone = output.invalidDirection ? 'border-amber-500/40' : 'border-border';
+  const tone = output.invalidDirection ? 'border-warn/40' : 'border-border';
 
   return (
-    <div className={`bg-zinc-950 flex flex-col gap-3 rounded-sm border p-3 ${tone}`}>
+    <div className={`bg-bg-elev-1 flex flex-col gap-3 rounded-sm border p-3 ${tone}`}>
       <header className="flex items-baseline justify-between gap-2">
         <h3 className="text-fg text-sm font-semibold">
           {output.side === 'long' ? 'Long' : 'Short'} {output.symbol} · risk{' '}
@@ -46,7 +46,7 @@ export function ComputeRiskPart({ output, state, errorMessage }: ToolPartProps<'
           <span className="flex items-center gap-2">
             <RrGauge rrRatio={output.rrRatio} />
             <span
-              className={`text-body-sm tabular-nums ${output.rrRatio >= 1 ? 'text-emerald-500' : 'text-red-500'}`}
+              className={`text-body-sm tabular-nums ${output.rrRatio >= 1 ? 'text-bull' : 'text-bear'}`}
             >
               RR {output.rrRatio.toFixed(2)}
             </span>
@@ -76,7 +76,7 @@ export function ComputeRiskPart({ output, state, errorMessage }: ToolPartProps<'
       {output.invalidDirection ? (
         <p
           role="alert"
-          className="text-amber-500 border-amber-500/30 bg-amber-500/5 rounded-sm border px-2 py-1 text-body-sm"
+          className="text-warn border-warn/30 bg-warn/5 rounded-sm border px-2 py-1 text-body-sm"
         >
           Stop is on the wrong side of entry for this direction — the agent suggested an inverted
           setup.
@@ -88,7 +88,7 @@ export function ComputeRiskPart({ output, state, errorMessage }: ToolPartProps<'
 
 function Row({ k, v }: { k: string; v: string }) {
   return (
-    <div className="flex items-baseline justify-between gap-2 border-b border-dashed border-zinc-800/50 pb-1">
+    <div className="flex items-baseline justify-between gap-2 border-b border-dashed border-border/50 pb-1">
       <dt className="text-fg-muted">{k}</dt>
       <dd className="text-fg font-medium tabular-nums">{v}</dd>
     </div>
@@ -105,18 +105,18 @@ function RrGauge({ rrRatio }: { rrRatio: number }) {
   const rewardPct = (safe / total) * 100;
   return (
     <span
-      className="inline-flex h-1.5 w-20 overflow-hidden rounded-sm bg-zinc-800"
+      className="inline-flex h-1.5 w-20 overflow-hidden rounded-sm bg-bg-elev-3"
       role="img"
       aria-label={`Risk to reward gauge: 1 to ${rrRatio.toFixed(2)}`}
     >
       <m.div
-        className="h-full bg-red-500/30"
+        className="h-full bg-bear/30"
         initial={{ width: 0 }}
         animate={{ width: `${riskPct}%` }}
         transition={{ duration: 0.4, ease: 'easeOut' }}
       />
       <m.div
-        className="h-full bg-emerald-500/30"
+        className="h-full bg-bull/30"
         initial={{ width: 0 }}
         animate={{ width: `${rewardPct}%` }}
         transition={{ duration: 0.4, ease: 'easeOut' }}
@@ -136,12 +136,12 @@ function pretty(n: number, decimals: number): string {
 function SkeletonCard() {
   return (
     <div
-      className="border-border bg-zinc-950 rounded-sm border p-3"
+      className="border-border bg-bg-elev-1 rounded-sm border p-3"
       aria-busy="true"
       aria-label="Computing position size"
     >
-      <div className="bg-zinc-900 h-4 w-1/2 animate-pulse rounded" />
-      <div className="bg-zinc-900 mt-3 h-24 animate-pulse rounded" />
+      <div className="bg-bg-elev-2 h-4 w-1/2 animate-pulse rounded-sm" />
+      <div className="bg-bg-elev-2 mt-3 h-24 animate-pulse rounded-sm" />
     </div>
   );
 }
@@ -150,7 +150,7 @@ function ErrorCard({ message }: { message?: string }) {
   return (
     <div
       role="alert"
-      className="border-red-500/30 bg-zinc-950 text-red-500 rounded-sm border p-3 text-sm"
+      className="border-bear/30 bg-bg-elev-1 text-bear rounded-sm border p-3 text-sm"
     >
       Risk calc failed{message ? ` · ${message}` : ''}
     </div>

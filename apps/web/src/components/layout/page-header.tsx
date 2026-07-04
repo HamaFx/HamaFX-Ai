@@ -31,7 +31,7 @@ export function PageHeader({ title, description, icon, children }: PageHeaderPro
           {icon ? (
             <span
               aria-hidden="true"
-              className="text-fg bg-zinc-900 inline-flex size-12 items-center justify-center rounded-sm"
+              className="text-fg bg-bg-elev-2 inline-flex size-12 items-center justify-center rounded-sm"
             >
               {icon}
             </span>

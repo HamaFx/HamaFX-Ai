@@ -18,7 +18,7 @@
 
 // <ConfirmDrawer> — drawer-based confirmation dialog. Replaces native
 // `window.confirm()` calls so destructive actions stay within the app's
-// glass aesthetic.
+// clean aesthetic.
 //
 // Two ways to use it:
 //
@@ -37,7 +37,7 @@
 //    promise that resolves `true` on confirm, `false` otherwise. Renders
 //    its own portal-mounted drawer.
 
-import { AlertTriangle } from 'lucide-react';
+import { IconAlertTriangle } from '@tabler/icons-react';
 import { useCallback, useRef, useState } from 'react';
 
 import {
@@ -85,10 +85,10 @@ export function ConfirmDrawer({
             {tone === 'danger' ? (
               <span
                 aria-hidden
-                className="text-red-500 inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-sm"
+                className="text-bear inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-sm"
                 style={{ background: 'rgba(239, 68, 68, 0.1)' }}
               >
-                <AlertTriangle className="size-5" strokeWidth={2} />
+                <IconAlertTriangle className="size-5" strokeWidth={2} />
               </span>
             ) : null}
             <div className="min-w-0 flex-1">

@@ -20,7 +20,7 @@
 // today / tomorrow / this-week / later-this-month / past sections.
 
 import type { EconomicEvent } from '@hamafx/shared';
-import { Filter, RotateCw, CalendarX } from 'lucide-react';
+import {IconFilter, IconRefresh, IconCalendarX} from '@tabler/icons-react';
 import { useEffect, useMemo, useState, useTransition } from 'react';
 import { toast } from 'sonner';
 import { useQuery } from '@tanstack/react-query';
@@ -76,7 +76,7 @@ export function CalendarView({ initialEvents }: CalendarViewProps) {
       try {
         const res = await fetch('/api/cron/calendar');
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        toast.success('Calendar refreshed');
+        toast.success('IconCalendar refreshed');
         refetch();
         setLastRefreshed(Date.now());
       } catch (err) {
@@ -114,7 +114,7 @@ export function CalendarView({ initialEvents }: CalendarViewProps) {
       <div className="mt-4">
         <EmptyState
           tone="muted"
-          icon={<CalendarX className="size-7" />}
+          icon={<IconCalendarX className="size-7" />}
           title="Failed to load calendar"
           description={error instanceof Error ? error.message : 'Unknown error'}
           action={<Button onClick={() => refetch()}>Retry</Button>}
@@ -142,9 +142,9 @@ export function CalendarView({ initialEvents }: CalendarViewProps) {
           onClick={manualRefresh}
           disabled={pending}
           aria-label="Refresh now"
-          className="text-fg-muted hover:text-fg hover:bg-zinc-900 inline-flex h-9 items-center gap-1.5 rounded-sm px-3 text-xs font-medium transition-colors disabled:opacity-50"
+          className="text-fg-muted hover:text-fg hover:bg-bg-elev-2 inline-flex h-9 items-center gap-1.5 rounded-sm px-3 text-xs font-medium transition-colors disabled:opacity-50"
         >
-          <RotateCw className={cn('size-3.5', pending && 'animate-spin')} />
+          <IconRefresh className={cn('size-3.5', pending && 'animate-spin')} />
           {pending ? 'Refreshing…' : `Updated ${formatRelative(lastRefreshed)}`}
         </button>
       </div>
@@ -152,7 +152,7 @@ export function CalendarView({ initialEvents }: CalendarViewProps) {
       {filtered.length === 0 ? (
         <EmptyState
           tone="muted"
-          icon={<Filter className="size-7" strokeWidth={1.75} />}
+          icon={<IconFilter className="size-7" strokeWidth={1.75} />}
           title="No events match"
           description="Try a different importance or currency filter, or toggle 'Show past'."
         />
@@ -161,7 +161,7 @@ export function CalendarView({ initialEvents }: CalendarViewProps) {
           {sections.map(([label, items]) => (
             <section key={label} className="flex flex-col gap-3">
               <h2
-                className="bg-zinc-950/95 text-fg-subtle sticky z-10 -mx-4 flex items-baseline gap-2 px-5 py-2 text-caption font-semibold uppercase tracking-wider"
+                className="bg-bg-elev-1/95 text-fg-subtle sticky z-10 -mx-4 flex items-baseline gap-2 px-5 py-2 text-caption font-semibold uppercase tracking-wider"
                 style={{ top: 'calc(var(--topbar-h) + env(safe-area-inset-top))' }}
               >
                 {label}

@@ -39,7 +39,7 @@
  *     every selection would inflate telemetry without insight.
  */
 
-import { Command, Search } from 'lucide-react';
+import {IconCommand, IconSearch} from '@tabler/icons-react';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 
@@ -55,7 +55,7 @@ import {
 const GROUP_LABELS: Record<CommandGroup, string> = {
   navigation: 'Navigate',
   create: 'Create',
-  settings: 'Settings',
+  settings: 'IconSettings',
 };
 const GROUP_ORDER: CommandGroup[] = ['navigation', 'create', 'settings'];
 
@@ -214,7 +214,7 @@ export function CommandPalette({ onNewChat }: CommandPaletteProps) {
           <DrawerHeader>
             <DrawerTitle>
               <span className="flex items-center gap-2">
-                <Command className="size-4" aria-hidden="true" />
+                <IconCommand className="size-4" aria-hidden="true" />
                 Quick switch
               </span>
             </DrawerTitle>
@@ -222,10 +222,10 @@ export function CommandPalette({ onNewChat }: CommandPaletteProps) {
 
           <div className="px-4 pb-3">
             <label htmlFor={inputId} className="sr-only">
-              Search commands
+              IconSearch commands
             </label>
             <div className="relative">
-              <Search
+              <IconSearch
                 aria-hidden="true"
                 className="text-fg-subtle absolute left-3 top-1/2 size-4 -translate-y-1/2"
               />
@@ -243,10 +243,10 @@ export function CommandPalette({ onNewChat }: CommandPaletteProps) {
                   setActiveIdx(0);
                 }}
                 onKeyDown={onInputKeyDown}
-                placeholder="Search…"
+                placeholder="IconSearch…"
                 autoComplete="off"
                 spellCheck={false}
-                className="bg-zinc-950/60 text-fg placeholder:text-fg-subtle focus:border-zinc-700 border-zinc-800 h-11 w-full rounded-sm border pl-10 pr-4 text-sm focus:outline-none"
+                className="bg-bg-elev-1/60 text-fg placeholder:text-fg-subtle focus:border-border border-border h-11 w-full rounded-sm border pl-10 pr-4 text-sm focus:outline-none"
               />
             </div>
           </div>
@@ -283,13 +283,13 @@ export function CommandPalette({ onNewChat }: CommandPaletteProps) {
                               className={cn(
                                 'flex min-h-[44px] w-full items-center gap-3 rounded-sm px-3 py-2 text-left text-sm transition-colors',
                                 isActive
-                                  ? 'bg-zinc-800 text-fg'
-                                  : 'text-fg-muted hover:bg-zinc-900 hover:text-fg',
+                                  ? 'bg-bg-elev-3 text-fg'
+                                  : 'text-fg-muted hover:bg-bg-elev-2 hover:text-fg',
                               )}
                             >
                               <span
                                 aria-hidden="true"
-                                className="text-fg-muted inline-flex size-8 shrink-0 items-center justify-center rounded-sm bg-zinc-900"
+                                className="text-fg-muted inline-flex size-8 shrink-0 items-center justify-center rounded-sm bg-bg-elev-2"
                               >
                                 <Icon className="size-4" strokeWidth={1.75} />
                               </span>
@@ -297,7 +297,7 @@ export function CommandPalette({ onNewChat }: CommandPaletteProps) {
                                 <HighlightedLabel label={command.label} indices={labelIndices} />
                               </span>
                               {command.shortcut ? (
-                                <kbd className="bg-zinc-900 ring-divider rounded border px-1.5 font-mono text-caption ring-1">
+                                <kbd className="bg-bg-elev-2 ring-divider rounded-sm border px-1.5 font-mono text-caption ring-1">
                                   {command.shortcut}
                                 </kbd>
                               ) : null}
@@ -321,10 +321,10 @@ export function CommandPalette({ onNewChat }: CommandPaletteProps) {
           type="button"
           onClick={() => setOpen(true)}
           aria-label="Open command palette"
-          className="bg-zinc-900 text-fg-muted border-zinc-800 hover:bg-zinc-800 hover:text-fg fixed right-4 bottom-24 z-30 inline-flex size-12 items-center justify-center rounded-sm border shadow-md"
+          className="bg-bg-elev-2 text-fg-muted border-border hover:bg-bg-elev-3 hover:text-fg fixed right-4 bottom-24 z-30 inline-flex size-12 items-center justify-center rounded-sm border shadow-md"
           style={{ bottom: 'calc(env(safe-area-inset-bottom) + 96px)' }}
         >
-          <Command className="size-5" aria-hidden="true" />
+          <IconCommand className="size-5" aria-hidden="true" />
         </button>
       ) : null}
     </>

@@ -21,14 +21,14 @@
 // TradeZella-style grid of daily realized R. Each closed day is coloured
 // green/red by the sum of `rMultiple` for trades that closed on that local
 // day; opacity scales with magnitude. Days with no closed trades are
-// `bg-zinc-900`. Clicking a day opens a Drawer listing the trades that
+// `bg-bg-elev-2`. Clicking a day opens a Drawer listing the trades that
 // closed that day (reuse the journal EntryList pattern, but filtered).
 //
 // Pure client component — receives entries as props (the dashboard page
 // already does the `Promise.all` fetch).
 
 import { useMemo, useState } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import {IconChevronLeft, IconChevronRight} from '@tabler/icons-react';
 import type { JournalEntry } from '@hamafx/shared';
 
 import {
@@ -184,7 +184,7 @@ export function PnLHeatmapWidget({ entries }: PnLHeatmapWidgetProps) {
     <section
       role="img"
       aria-label={`P&L heatmap. ${totals.count} trades, total ${totals.r >= 0 ? '+' : ''}${totals.r.toFixed(1)}R`}
-      className="border-zinc-800 bg-zinc-950 flex flex-col gap-3 rounded-sm border p-4"
+      className="border-border bg-bg-elev-1 flex flex-col gap-3 rounded-sm border p-4"
     >
       <header className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
@@ -201,7 +201,7 @@ export function PnLHeatmapWidget({ entries }: PnLHeatmapWidgetProps) {
             aria-label="Previous month"
             className="text-fg-subtle hover:text-fg inline-flex size-7 items-center justify-center rounded-sm"
           >
-            <ChevronLeft className="size-4" />
+            <IconChevronLeft className="size-4" />
           </button>
           <button
             type="button"
@@ -209,7 +209,7 @@ export function PnLHeatmapWidget({ entries }: PnLHeatmapWidgetProps) {
             aria-label="Next month"
             className="text-fg-subtle hover:text-fg inline-flex size-7 items-center justify-center rounded-sm"
           >
-            <ChevronRight className="size-4" />
+            <IconChevronRight className="size-4" />
           </button>
         </div>
       </header>
@@ -230,7 +230,7 @@ export function PnLHeatmapWidget({ entries }: PnLHeatmapWidgetProps) {
             ))}
           </div>
 
-          {/* Calendar grid */}
+          {/* IconCalendar grid */}
           <div className="grid grid-cols-7 gap-1.5">
             {m.weeks.flat().map((cell, idx) => {
               if (!cell) {
@@ -247,8 +247,8 @@ export function PnLHeatmapWidget({ entries }: PnLHeatmapWidgetProps) {
                   className={cn(
                     'flex size-8 items-center justify-center rounded-sm tabular-nums',
                     'text-caption',
-                    cell.totalR > 0 && 'text-emerald-500',
-                    cell.totalR < 0 && 'text-red-500',
+                    cell.totalR > 0 && 'text-bull',
+                    cell.totalR < 0 && 'text-bear',
                     cell.totalR === 0 && 'text-fg-muted',
                     'transition-transform active:scale-95',
                   )}
@@ -299,7 +299,7 @@ export function PnLHeatmapWidget({ entries }: PnLHeatmapWidgetProps) {
                   onDeleted={() => setSelectedDay(null)}
                 />
               </div>
-              <div className="border-zinc-800 border-t p-3">
+              <div className="border-border border-t p-3">
                 <DrawerClose className="text-fg-muted hover:text-fg text-body-sm w-full text-center">
                   Close
                 </DrawerClose>

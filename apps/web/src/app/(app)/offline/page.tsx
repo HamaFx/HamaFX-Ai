@@ -1,6 +1,6 @@
 'use client';
 
-import { RotateCw } from 'lucide-react';
+import { IconRefresh } from '@tabler/icons-react';
 import { Button } from '@/components/ui/button';
 
 export const dynamic = 'force-static';
@@ -17,8 +17,7 @@ export default function OfflinePage() {
         className="inline-flex size-16 items-center justify-center rounded-sm"
         style={{
           background: 'none',
-          boxShadow: '0 0 24px -4px rgba(250, 250, 250, 0.15)',
-        }}
+                  }}
       >
         <span className="text-black text-2xl font-bold">H</span>
       </span>
@@ -29,7 +28,7 @@ export default function OfflinePage() {
         </p>
       </div>
       <Button onClick={handleRetry} className="gap-2">
-        <RotateCw className="h-4 w-4" />
+        <IconRefresh className="h-4 w-4" />
         Retry Connection
       </Button>
     </section>

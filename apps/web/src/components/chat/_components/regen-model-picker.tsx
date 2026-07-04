@@ -17,7 +17,7 @@
  */
 
 import { useEffect, useRef, useState } from 'react';
-import { CheckCircle2, Loader2 } from 'lucide-react';
+import {IconCircleCheck, IconLoader2} from '@tabler/icons-react';
 
 import { withCsrf } from '@/lib/csrf';
 import type { CatalogResponse } from '@hamafx/shared';
@@ -190,7 +190,7 @@ export function RegenModelPicker({ popoverId, activeModelId, onPick }: RegenMode
   if (loading) {
     return (
       <div className="flex items-center gap-2 px-3 py-2 text-xs text-fg-subtle">
-        <Loader2 size={12} className="animate-spin" aria-hidden="true" />
+        <IconLoader2 size={12} className="animate-spin" aria-hidden="true" />
         Loading models…
       </div>
     );
@@ -199,7 +199,7 @@ export function RegenModelPicker({ popoverId, activeModelId, onPick }: RegenMode
   if (!catalog || catalog.providers.length === 0) {
     return (
       <div className="px-3 py-2 text-xs text-fg-subtle">
-        Add a key in Settings → API Keys to see model options.
+        Add a key in IconSettings → API Keys to see model options.
       </div>
     );
   }
@@ -208,7 +208,7 @@ export function RegenModelPicker({ popoverId, activeModelId, onPick }: RegenMode
   if (configured.length === 0) {
     return (
       <div className="px-3 py-2 text-xs text-fg-subtle">
-        Add a key in Settings → API Keys to see model options.
+        Add a key in IconSettings → API Keys to see model options.
       </div>
     );
   }
@@ -258,7 +258,7 @@ export function RegenModelPicker({ popoverId, activeModelId, onPick }: RegenMode
               href="/settings/models"
               className="text-fg hover:underline not-italic"
             >
-              Pick one in Settings → Models
+              Pick one in IconSettings → Models
             </a>
             .
           </div>
@@ -315,13 +315,13 @@ function RegenRow({
       role="menuitem"
       data-model-id={fullyQualified}
       onClick={onClick}
-      className="text-fg hover:bg-zinc-900 focus:bg-zinc-900 flex w-full items-center justify-between gap-2 rounded-sm px-3 py-1.5 text-left text-xs transition-colors focus:outline-none"
+      className="text-fg hover:bg-bg-elev-2 focus:bg-bg-elev-2 flex w-full items-center justify-between gap-2 rounded-sm px-3 py-1.5 text-left text-xs transition-colors focus:outline-none"
     >
       <span className="truncate">{label}</span>
       {isActive ? (
-        <CheckCircle2
+        <IconCircleCheck
           size={14}
-          className="text-emerald-500 shrink-0"
+          className="text-bull shrink-0"
           aria-hidden="true"
         />
       ) : null}

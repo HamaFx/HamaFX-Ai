@@ -20,7 +20,7 @@
 // Calls /api/decision-signals/[id]/feedback with { feedback: 'useful' | 'not_useful' }.
 
 import { useState } from 'react';
-import { ThumbsUp, ThumbsDown } from 'lucide-react';
+import {IconThumbUp, IconThumbDown} from '@tabler/icons-react';
 
 import { fetchCsrf } from '@/lib/csrf';
 import { cn } from '@/lib/cn';
@@ -63,12 +63,12 @@ export function SignalFeedback({ signalId, initialFeedback = null }: SignalFeedb
         className={cn(
           'inline-flex size-8 items-center justify-center rounded-sm transition-colors',
           feedback === 'useful'
-            ? 'bg-emerald-500/10 text-emerald-500'
-            : 'text-fg-muted hover:text-fg hover:bg-zinc-900',
+            ? 'bg-bull/10 text-bull'
+            : 'text-fg-muted hover:text-fg hover:bg-bg-elev-2',
           saving && 'opacity-60',
         )}
       >
-        <ThumbsUp className="size-4" />
+        <IconThumbUp className="size-4" />
       </button>
       <button
         type="button"
@@ -79,12 +79,12 @@ export function SignalFeedback({ signalId, initialFeedback = null }: SignalFeedb
         className={cn(
           'inline-flex size-8 items-center justify-center rounded-sm transition-colors',
           feedback === 'not_useful'
-            ? 'bg-red-500/10 text-red-500'
-            : 'text-fg-muted hover:text-fg hover:bg-zinc-900',
+            ? 'bg-bear/10 text-bear'
+            : 'text-fg-muted hover:text-fg hover:bg-bg-elev-2',
           saving && 'opacity-60',
         )}
       >
-        <ThumbsDown className="size-4" />
+        <IconThumbDown className="size-4" />
       </button>
     </div>
   );

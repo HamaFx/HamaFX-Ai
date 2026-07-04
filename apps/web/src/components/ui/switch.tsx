@@ -49,7 +49,7 @@ export const Switch = forwardRef<HTMLButtonElement, SwitchProps>(function Switch
         'relative inline-flex h-7 w-12 shrink-0 items-center rounded-sm transition-colors',
         'focus:outline-none focus-visible:ring-2 focus-visible:ring-fg focus-visible:ring-offset-2 focus-visible:ring-offset-bg',
         'disabled:cursor-not-allowed disabled:opacity-50',
-        checked ? 'bg-fg' : 'bg-zinc-800',
+        checked ? 'bg-fg' : 'bg-bg-elev-3',
         className,
       )}
       {...rest}

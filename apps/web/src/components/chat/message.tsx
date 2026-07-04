@@ -21,7 +21,7 @@
 //
 // Action row appears on hover (desktop) / focus (keyboard) at the bottom-
 // right of the bubble:
-//   - Copy (always, when the message has plain text)
+//   - IconCopy (always, when the message has plain text)
 //   - Regenerate (only for the last assistant message, drives `regenerate()`)
 //
 // Both controls are 32×32 pills that stack horizontally so they don't
@@ -34,7 +34,8 @@
 // internal context.
 
 import type { UIMessage } from 'ai';
-import { Check, ChevronDown, Copy, Pencil, RotateCcw } from 'lucide-react';
+import {IconCheck, IconChevronDown, IconCopy, IconEdit, IconArrowBackUp} from '@tabler/icons-react';
+import { useReducedMotion } from 'motion/react';
 import { memo, useEffect, useMemo, useState } from 'react';
 import { m } from 'motion/react';
 import { useCopied } from '@/hooks/use-copied';
@@ -71,6 +72,7 @@ import { RegenModelPicker } from './_components/regen-model-picker';
 function MessageImpl({ message, onCopy, onRegenerate, onEdit, isStreaming }: MessageProps) {
   const isUser = message.role === 'user';
   const isSystem = message.role === 'system';
+  const prefersReducedMotion = useReducedMotion();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const plainText = useMemo(() => extractText(message), [message.parts]);
   const [copied, triggerCopy] = useCopied(1200);
@@ -135,7 +137,7 @@ function MessageImpl({ message, onCopy, onRegenerate, onEdit, isStreaming }: Mes
   if (isUser && isEditing) {
     return (
       <div className="mb-2 mt-1 flex w-full justify-end">
-        <div className="flex w-full max-w-[88%] flex-col gap-2 rounded-sm border border-zinc-700 bg-zinc-900 p-3 focus-within:ring-2 focus-within:ring-fg">
+        <div className="flex w-full max-w-[88%] flex-col gap-2 rounded-sm border border-border bg-bg-elev-2 p-3 focus-within:ring-2 focus-within:ring-fg">
           <textarea
             className="w-full resize-none bg-transparent text-sm text-fg outline-none [field-sizing:content]"
             value={editValue}
@@ -147,7 +149,7 @@ function MessageImpl({ message, onCopy, onRegenerate, onEdit, isStreaming }: Mes
             <button
               type="button"
               onClick={() => setIsEditing(false)}
-              className="rounded-sm bg-zinc-900 px-3 py-1 text-xs text-fg-muted transition-colors hover:text-fg"
+              className="rounded-sm bg-bg-elev-2 px-3 py-1 text-xs text-fg-muted transition-colors hover:text-fg"
             >
               Cancel
             </button>
@@ -158,9 +160,7 @@ function MessageImpl({ message, onCopy, onRegenerate, onEdit, isStreaming }: Mes
                 onEdit?.(message.id, editValue);
               }}
               className="rounded-sm bg-fg px-3 py-1 text-xs text-black transition-colors hover:bg-fg-muted"
-            >
-              Send
-            </button>
+            >ArrowRight</button>
           </div>
         </div>
       </div>
@@ -169,17 +169,17 @@ function MessageImpl({ message, onCopy, onRegenerate, onEdit, isStreaming }: Mes
 
   return (
     <m.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={prefersReducedMotion ? false : { opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+      transition={prefersReducedMotion ? { duration: 0 } : { type: 'spring', stiffness: 300, damping: 30 }}
       className={cn('group flex w-full flex-col gap-2', isUser ? 'items-end' : 'items-start')}
     >
-            <div
+      <div
         className={cn(
-          'relative flex max-w-[88%] flex-col gap-2 px-4 py-3',
+          'relative flex flex-col gap-2',
           isUser
-            ? 'bg-zinc-900 border border-zinc-800 text-fg rounded-sm font-medium'
-            : 'bg-zinc-950 border border-zinc-800 text-fg rounded-sm',
+            ? 'max-w-[85%] ml-auto bg-bg-elev-2 text-fg rounded-sm px-4 py-2 font-medium'
+            : 'w-full py-3',
         )}
       >
         {/* Phase 1.3 — aria-live so screen readers announce the final
@@ -219,7 +219,7 @@ function MessageImpl({ message, onCopy, onRegenerate, onEdit, isStreaming }: Mes
       {/* Phase 1.3 — trust footer on assistant messages (model, time,
           token usage, cost, citations). Hidden while streaming. */}
       {!isUser && !isStreaming ? (
-        <div className="max-w-[88%]">
+        <div className="w-full">
           <MessageFooter message={message} />
         </div>
       ) : null}
@@ -239,12 +239,12 @@ function MessageImpl({ message, onCopy, onRegenerate, onEdit, isStreaming }: Mes
                 type="button"
                 onClick={copy}
                 aria-label={copied ? 'Copied' : 'Copy message'}
-                className="bg-zinc-950 border border-zinc-800 text-fg-muted hover:text-fg focus-visible:ring-fg inline-flex size-8 items-center justify-center rounded-sm transition-colors focus:outline-none focus-visible:ring-2"
+                className="bg-bg-elev-1 border border-border text-fg-muted hover:text-fg focus-visible:ring-fg inline-flex size-8 items-center justify-center rounded-sm transition-colors focus:outline-none focus-visible:ring-2"
               >
                 {copied ? (
-                  <Check className="text-emerald-500 size-3.5" />
+                  <IconCheck className="text-bull size-3.5" />
                 ) : (
-                  <Copy className="size-3.5" />
+                  <IconCopy className="size-3.5" />
                 )}
               </button>
             </Tooltip>
@@ -258,9 +258,9 @@ function MessageImpl({ message, onCopy, onRegenerate, onEdit, isStreaming }: Mes
                   setIsEditing(true);
                 }}
                 aria-label="Edit prompt"
-                className="bg-zinc-950 border border-zinc-800 text-fg-muted hover:text-fg focus-visible:ring-fg inline-flex size-8 items-center justify-center rounded-sm transition-colors focus:outline-none focus-visible:ring-2"
+                className="bg-bg-elev-1 border border-border text-fg-muted hover:text-fg focus-visible:ring-fg inline-flex size-8 items-center justify-center rounded-sm transition-colors focus:outline-none focus-visible:ring-2"
               >
-                <Pencil className="size-3.5" />
+                <IconEdit className="size-3.5" />
               </button>
             </Tooltip>
           ) : null}
@@ -271,9 +271,9 @@ function MessageImpl({ message, onCopy, onRegenerate, onEdit, isStreaming }: Mes
                   type="button"
                   onClick={() => onRegenerate()}
                   aria-label="Regenerate response"
-                  className="bg-zinc-950 border border-zinc-800 text-fg-muted hover:text-fg focus-visible:ring-fg inline-flex size-8 items-center justify-center rounded-l-lg transition-colors focus:outline-none focus-visible:ring-2"
+                  className="bg-bg-elev-1 border border-border text-fg-muted hover:text-fg focus-visible:ring-fg inline-flex size-8 items-center justify-center rounded-sm transition-colors focus:outline-none focus-visible:ring-2"
                 >
-                  <RotateCcw className="size-3.5" />
+                  <IconArrowBackUp className="size-3.5" />
                 </button>
               </Tooltip>
               <Tooltip label="Regenerate with…">
@@ -282,14 +282,14 @@ function MessageImpl({ message, onCopy, onRegenerate, onEdit, isStreaming }: Mes
                   popoverTarget={hasPopoverSupport ? `regen-menu-${message.id}` : undefined}
                   onClick={hasPopoverSupport ? undefined : () => setIsOpenFallback(!isOpenFallback)}
                   aria-label="Regenerate with a different model"
-                  className="bg-zinc-950 border border-zinc-800 text-fg-muted hover:text-fg focus-visible:ring-fg inline-flex size-8 items-center justify-center rounded-r-lg border-l border-zinc-900 transition-colors focus:outline-none focus-visible:ring-2"
+                  className="bg-bg-elev-1 border border-border text-fg-muted hover:text-fg focus-visible:ring-fg inline-flex size-8 items-center justify-center rounded-sm border-l border-divider transition-colors focus:outline-none focus-visible:ring-2"
                   style={
                     hasPopoverSupport
                       ? ({ anchorName: `--regen-btn-${message.id}` } as React.CSSProperties)
                       : undefined
                   }
                 >
-                  <ChevronDown className="size-3.5" />
+                  <IconChevronDown className="size-3.5" />
                 </button>
               </Tooltip>
               <div
@@ -297,7 +297,7 @@ function MessageImpl({ message, onCopy, onRegenerate, onEdit, isStreaming }: Mes
                 popover={hasPopoverSupport ? "auto" : undefined}
                 role="menu"
                 className={cn(
-                  "bg-zinc-950 border border-zinc-800 border-zinc-800 m-0 rounded-sm border p-1 shadow-xl",
+                  "bg-bg-elev-1 border border-border m-0 rounded-sm p-1 shadow-xl",
                   !hasPopoverSupport && "absolute bottom-full right-0 mb-2 z-50",
                   !hasPopoverSupport && !isOpenFallback && "hidden"
                 )}

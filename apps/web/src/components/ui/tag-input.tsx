@@ -18,7 +18,7 @@
 
 // Chip-based tag input with autocomplete, keyboard navigation, and validation.
 
-import { X } from 'lucide-react';
+import { IconX } from '@tabler/icons-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { Input } from '@/components/ui/input';
@@ -129,24 +129,24 @@ export function TagInput({
       <div ref={containerRef} className="relative">
         <div
           className={cn(
-            'flex flex-wrap items-center gap-1.5 rounded-sm border bg-zinc-950 px-3 py-2 min-h-[44px] transition-all',
-            focused ? 'border-zinc-700 ring-2 ring-fg/10' : 'border-zinc-800',
+            'flex flex-wrap items-center gap-1.5 rounded-sm border bg-bg-elev-1 px-3 py-2 min-h-[44px] transition-all',
+            focused ? 'border-border ring-2 ring-fg/10' : 'border-border',
           )}
           onClick={() => inputRef.current?.focus()}
         >
           {value.map((tag) => (
             <span
               key={tag}
-              className="inline-flex items-center gap-1 bg-zinc-900 text-fg-muted rounded-sm px-2 py-0.5 text-body-sm"
+              className="inline-flex items-center gap-1 bg-bg-elev-2 text-fg-muted rounded-sm px-2 py-0.5 text-body-sm"
             >
               {tag}
               <button
                 type="button"
                 onClick={() => remove(tag)}
                 aria-label={`Remove tag ${tag}`}
-                className="text-fg-subtle hover:text-red-500 transition-colors"
+                className="text-fg-subtle hover:text-bear transition-colors"
               >
-                <X className="size-3" />
+                <IconX className="size-3" />
               </button>
             </span>
           ))}
@@ -164,15 +164,15 @@ export function TagInput({
         </div>
 
         {focused && filtered.length > 0 && (
-          <ul className="absolute z-10 mt-1 w-full bg-zinc-950 border border-zinc-800 rounded-sm shadow-md overflow-hidden">
+          <ul className="absolute z-10 mt-1 w-full bg-bg-elev-1 border border-border rounded-sm shadow-md overflow-hidden">
             {filtered.map((s, i) => (
               <li key={s}>
                 <button
                   type="button"
                   onClick={() => add(s)}
                   className={cn(
-                    'w-full text-left px-3 py-2 text-body-sm hover:bg-zinc-900 transition-colors',
-                    i === highlighted && 'bg-zinc-900',
+                    'w-full text-left px-3 py-2 text-body-sm hover:bg-bg-elev-2 transition-colors',
+                    i === highlighted && 'bg-bg-elev-2',
                   )}
                 >
                   {s}

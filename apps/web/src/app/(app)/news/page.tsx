@@ -19,7 +19,7 @@
 // SentimentSummary above the interactive <NewsView/> client component.
 
 import { listRecentArticles } from '@hamafx/ai';
-import { Newspaper } from 'lucide-react';
+import { IconNewspaper } from '@tabler/icons-react';
 import type { Metadata } from 'next';
 
 import { PageHeader } from '@/components/layout/page-header';
@@ -49,7 +49,7 @@ export default async function NewsPage() {
         {articles.length === 0 ? (
           <EmptyState
             tone="muted"
-            icon={<Newspaper className="size-7" strokeWidth={1.75} />}
+            icon={<IconNewspaper className="size-7" strokeWidth={1.75} />}
             title="No news yet"
             description="Headlines populate automatically every few minutes. Tap below to refresh now."
             action={<RefreshButton endpoint="/api/cron/news" />}

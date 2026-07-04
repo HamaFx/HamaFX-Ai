@@ -24,7 +24,7 @@
 // suitable for the dashboard grid.
 
 import Link from 'next/link';
-import { Newspaper } from 'lucide-react';
+import { IconNewspaper } from '@tabler/icons-react';
 import type { NewsArticle } from '@hamafx/shared';
 
 import { cn } from '@/lib/cn';
@@ -48,7 +48,7 @@ export function NewsPulseWidget({ articles }: NewsPulseWidgetProps) {
   const leanLabel =
     score > 0.15 ? 'Bullish' : score < -0.15 ? 'Bearish' : 'Neutral';
   const leanTone =
-    score > 0.15 ? 'text-emerald-500' : score < -0.15 ? 'text-red-500' : 'text-fg-muted';
+    score > 0.15 ? 'text-bull' : score < -0.15 ? 'text-bear' : 'text-fg-muted';
 
   // Headlines at the extremes.
   const ranked = [...articles]
@@ -60,11 +60,11 @@ export function NewsPulseWidget({ articles }: NewsPulseWidgetProps) {
   return (
     <section
       aria-labelledby="news-pulse-heading"
-      className="border-zinc-800 bg-zinc-950 flex flex-col gap-3 rounded-sm border p-4"
+      className="border-border bg-bg-elev-1 flex flex-col gap-3 rounded-sm border p-4"
     >
       <header className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
-          <Newspaper className="text-fg-subtle size-4" />
+          <IconNewspaper className="text-fg-subtle size-4" />
           <span
             id="news-pulse-heading"
             className="text-fg text-body-sm font-semibold"
@@ -84,10 +84,10 @@ export function NewsPulseWidget({ articles }: NewsPulseWidgetProps) {
       <div
         role="img"
         aria-label={`${total} articles: ${counts.positive} positive, ${counts.negative} negative, ${counts.neutral} neutral`}
-        className="flex h-1.5 w-full overflow-hidden rounded-sm bg-zinc-900"
+        className="flex h-1.5 w-full overflow-hidden rounded-sm bg-bg-elev-2"
       >
         <div
-          className="h-full bg-emerald-500"
+          className="h-full bg-bull"
           style={{ width: `${pct(counts.positive)}%` }}
         />
         <div
@@ -95,7 +95,7 @@ export function NewsPulseWidget({ articles }: NewsPulseWidgetProps) {
           style={{ width: `${pct(counts.neutral)}%` }}
         />
         <div
-          className="h-full bg-red-500"
+          className="h-full bg-bear"
           style={{ width: `${pct(counts.negative)}%` }}
         />
       </div>
@@ -109,7 +109,7 @@ export function NewsPulseWidget({ articles }: NewsPulseWidgetProps) {
       {top || bottom ? (
         <ul className="flex flex-col gap-2">
           {top ? (
-            <li className="border-zinc-900 border-l-2 border-l-bull/50 pl-2">
+            <li className="border-divider border-l-2 border-l-bull/50 pl-2">
               <span className="text-fg-subtle text-caption uppercase tracking-wider">
                 Most positive
               </span>
@@ -124,7 +124,7 @@ export function NewsPulseWidget({ articles }: NewsPulseWidgetProps) {
             </li>
           ) : null}
           {bottom && bottom.id !== top?.id ? (
-            <li className="border-zinc-900 border-l-2 border-l-bear/50 pl-2">
+            <li className="border-divider border-l-2 border-l-bear/50 pl-2">
               <span className="text-fg-subtle text-caption uppercase tracking-wider">
                 Most negative
               </span>

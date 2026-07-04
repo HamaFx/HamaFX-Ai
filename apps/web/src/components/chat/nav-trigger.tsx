@@ -20,7 +20,7 @@
 // chat top bar can pass it as `<NavDrawer trigger={...}>` without the
 // drawer having to be aware of chat-specific styling.
 
-import { Menu } from 'lucide-react';
+import { IconMenu2 } from '@tabler/icons-react';
 import { forwardRef, type ButtonHTMLAttributes } from 'react';
 
 import { Tooltip } from '@/components/ui/tooltip';
@@ -33,10 +33,10 @@ export const NavTrigger = forwardRef<HTMLButtonElement, ButtonHTMLAttributes<HTM
           ref={ref}
           type="button"
           aria-label="Open menu"
-          className="text-fg-muted hover:text-fg hover:bg-zinc-900 active:scale-95 inline-flex size-11 shrink-0 items-center justify-center rounded-sm transition-all"
+          className="text-fg-muted hover:text-fg hover:bg-bg-elev-2 active:scale-95 inline-flex size-11 shrink-0 items-center justify-center rounded-sm transition-all"
           {...props}
         >
-          <Menu className="size-5" />
+          <IconMenu2 className="size-5" />
         </button>
       </Tooltip>
     );

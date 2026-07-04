@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-// Top app bar — sticky glass surface with three slots:
+// Top app bar — sticky surface with three slots:
 //   [☰ menu] [brand mark + title] [right slot]
 //
 // The chat route renders its own <ChatTopBar>; we hide the global TopBar
@@ -53,7 +53,7 @@ export function TopBar({ title, right }: TopBarProps) {
     <header
       className={cn(
         'sticky top-0 z-30 flex h-12 w-full items-center justify-between',
-        'border-b border-zinc-800 bg-black px-3 pt-safe',
+        'border-b border-border bg-black px-3 pt-safe',
       )}
     >
       <NavTrigger />
@@ -71,7 +71,7 @@ export function TopBar({ title, right }: TopBarProps) {
         </span>
         <span className="text-fg">
           {title ?? 'HamaFX'}
-          <span className="text-fg-subtle font-normal">·Ai</span>
+          <span className="text-fg-subtle font-normal" aria-hidden>·Ai</span>
         </span>
       </Link>
 

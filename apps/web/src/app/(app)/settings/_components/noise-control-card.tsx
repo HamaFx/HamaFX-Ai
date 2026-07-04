@@ -16,19 +16,19 @@
  * limitations under the License.
  */
 
-// F4 — Noise Control Settings Card
+// F4 — Noise Control IconSettings Card
 //
 // Client component for configuring notification noise control:
 // quiet hours, min severity, cooldown, dedup TTL, and daily digest mode.
 
-import { Bell, Moon, Clock, Filter, Zap, Mail, Smartphone, Info, BarChart3 } from 'lucide-react';
+import {IconBell, IconMoon, IconClock, IconFilter, IconBolt, IconMail, IconDeviceMobile, IconInfo, IconChartBar} from '@tabler/icons-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Switch } from '@/components/ui/switch';
 import { cn } from '@/lib/cn';
 import type { NoiseConfig, Severity } from '@hamafx/shared';
 
 const SEVERITY_OPTIONS: { value: Severity; label: string }[] = [
-  { value: 'info', label: 'Info' },
+  { value: 'info', label: 'IconInfo' },
   { value: 'warning', label: 'Warning' },
   { value: 'error', label: 'Error' },
   { value: 'critical', label: 'Critical' },
@@ -100,7 +100,7 @@ export function NoiseControlCard({ initialConfig }: { initialConfig?: NoiseConfi
 
   return (
     <section
-      className="border border-zinc-800 bg-zinc-950 rounded-sm flex flex-col gap-4 p-4"
+      className="border border-border bg-bg-elev-1 rounded-sm flex flex-col gap-4 p-4"
       aria-labelledby="noise-control-heading"
     >
       <div className="flex items-center gap-3 pb-2">
@@ -119,9 +119,9 @@ export function NoiseControlCard({ initialConfig }: { initialConfig?: NoiseConfi
 
       {/* Alert Preview */}
       {preview && (
-        <div className="rounded-sm border border-zinc-800 bg-zinc-900 p-4 flex flex-col gap-3">
+        <div className="rounded-sm border border-border bg-bg-elev-2 p-4 flex flex-col gap-3">
           <div className="flex items-center gap-2">
-            <BarChart3 className="size-4 text-fg" />
+            <IconChartBar className="size-4 text-fg" />
             <span className="text-sm font-semibold text-fg">Alert preview</span>
             {previewLoading && <span className="text-xs text-fg-muted">Refreshing…</span>}
           </div>
@@ -131,15 +131,15 @@ export function NoiseControlCard({ initialConfig }: { initialConfig?: NoiseConfi
               <p className="text-xs text-fg-subtle">Total</p>
             </div>
             <div>
-              <p className="text-2xl font-bold tabular-nums text-emerald-500">{preview.breakdown.allowed}</p>
+              <p className="text-2xl font-bold tabular-nums text-bull">{preview.breakdown.allowed}</p>
               <p className="text-xs text-fg-subtle">Allowed</p>
             </div>
             <div>
-              <p className="text-2xl font-bold tabular-nums text-red-500">{preview.breakdown.blocked}</p>
+              <p className="text-2xl font-bold tabular-nums text-bear">{preview.breakdown.blocked}</p>
               <p className="text-xs text-fg-subtle">Blocked</p>
             </div>
           </div>
-          <div className="flex h-3 w-full overflow-hidden rounded-sm bg-zinc-800">
+          <div className="flex h-3 w-full overflow-hidden rounded-sm bg-bg-elev-3">
             <div
               className="bg-fg transition-all duration-300"
               style={{ width: `${preview.allowedPct}%` }}
@@ -169,10 +169,10 @@ export function NoiseControlCard({ initialConfig }: { initialConfig?: NoiseConfi
       )}
 
       {/* Smart Alert Digest */}
-      <div className="rounded-sm border border-zinc-700/20 bg-zinc-950 p-3 flex flex-col gap-3">
+      <div className="rounded-sm border border-border/20 bg-bg-elev-1 p-3 flex flex-col gap-3">
         <div className="flex items-start gap-3">
-          <div className="rounded-sm bg-zinc-900 p-2 text-fg">
-            <Mail className="size-4" />
+          <div className="rounded-sm bg-bg-elev-2 p-2 text-fg">
+            <IconMail className="size-4" />
           </div>
           <div className="flex-1">
             <h3 className="text-sm font-semibold text-fg">Smart alert digest</h3>
@@ -189,15 +189,15 @@ export function NoiseControlCard({ initialConfig }: { initialConfig?: NoiseConfi
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs text-fg-subtle">
           <div className="flex items-center gap-1.5">
-            <Info className="size-3.5" />
+            <IconInfo className="size-3.5" />
             <span>Info & warning batched</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <Smartphone className="size-3.5" />
+            <IconDeviceMobile className="size-3.5" />
             <span>Critical still instant</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <Bell className="size-3.5" />
+            <IconBell className="size-3.5" />
             <span>Sent once per day</span>
           </div>
         </div>
@@ -206,7 +206,7 @@ export function NoiseControlCard({ initialConfig }: { initialConfig?: NoiseConfi
       {/* Quiet Hours */}
       <div className="flex flex-col gap-2">
         <div className="flex items-center gap-2">
-          <Moon className="size-4 text-fg-muted" />
+          <IconMoon className="size-4 text-fg-muted" />
           <span className="text-sm font-medium text-fg">Quiet hours</span>
           <Switch
             checked={config.quietHours !== null}
@@ -222,7 +222,7 @@ export function NoiseControlCard({ initialConfig }: { initialConfig?: NoiseConfi
         </div>
         {config.quietHours && (
           <div className="flex items-center gap-2 pl-6">
-            <Clock className="size-3.5 text-fg-muted" />
+            <IconClock className="size-3.5 text-fg-muted" />
         <input
           type="time"
           value={config.quietHours.start}
@@ -232,7 +232,7 @@ export function NoiseControlCard({ initialConfig }: { initialConfig?: NoiseConfi
             })
           }
           aria-label="Quiet hours start time"
-          className="rounded border border-border bg-surface px-2 py-1 text-sm text-fg"
+          className="rounded-sm border border-border bg-bg-elev-1 px-2 py-1 text-sm text-fg"
         />
             <span className="text-fg-muted text-sm">to</span>
         <input
@@ -244,7 +244,7 @@ export function NoiseControlCard({ initialConfig }: { initialConfig?: NoiseConfi
             })
           }
           aria-label="Quiet hours end time"
-          className="rounded border border-border bg-surface px-2 py-1 text-sm text-fg"
+          className="rounded-sm border border-border bg-bg-elev-1 px-2 py-1 text-sm text-fg"
         />
           </div>
         )}
@@ -253,7 +253,7 @@ export function NoiseControlCard({ initialConfig }: { initialConfig?: NoiseConfi
       {/* Min Severity */}
       <div className="flex flex-col gap-2">
         <div className="flex items-center gap-2">
-          <Filter className="size-4 text-fg-muted" />
+          <IconFilter className="size-4 text-fg-muted" />
           <span className="text-sm font-medium text-fg">Minimum severity</span>
         </div>
         <div className="flex gap-2 pl-6">
@@ -262,10 +262,10 @@ export function NoiseControlCard({ initialConfig }: { initialConfig?: NoiseConfi
               key={opt.value}
               onClick={() => update({ minSeverity: opt.value })}
               className={cn(
-                'rounded px-3 py-1 text-xs font-medium transition-colors',
+                'rounded-sm px-3 py-1 text-xs font-medium transition-colors',
                 config.minSeverity === opt.value
                   ? 'bg-fg text-white'
-                  : 'bg-surface-elevated text-fg-muted hover:text-fg',
+                  : 'bg-bg-elev-1-elevated text-fg-muted hover:text-fg',
               )}
             >
               {opt.label}
@@ -278,7 +278,7 @@ export function NoiseControlCard({ initialConfig }: { initialConfig?: NoiseConfi
       {config.quietHours && (
         <div className="flex flex-col gap-2">
           <div className="flex items-center gap-2">
-            <Moon className="size-4 text-fg-muted" />
+            <IconMoon className="size-4 text-fg-muted" />
             <span className="text-sm font-medium text-fg">Min severity during quiet hours</span>
           </div>
           <div className="flex gap-2 pl-6">
@@ -287,10 +287,10 @@ export function NoiseControlCard({ initialConfig }: { initialConfig?: NoiseConfi
                 key={opt.value}
                 onClick={() => update({ minSeverityDuringQuietHours: opt.value })}
                 className={cn(
-                  'rounded px-3 py-1 text-xs font-medium transition-colors',
+                  'rounded-sm px-3 py-1 text-xs font-medium transition-colors',
                   config.minSeverityDuringQuietHours === opt.value
                     ? 'bg-fg text-white'
-                    : 'bg-surface-elevated text-fg-muted hover:text-fg',
+                    : 'bg-bg-elev-1-elevated text-fg-muted hover:text-fg',
                 )}
               >
                 {opt.label}
@@ -303,7 +303,7 @@ export function NoiseControlCard({ initialConfig }: { initialConfig?: NoiseConfi
       {/* Cooldown */}
       <div className="flex flex-col gap-2">
         <div className="flex items-center gap-2">
-          <Zap className="size-4 text-fg-muted" />
+          <IconBolt className="size-4 text-fg-muted" />
           <span className="text-sm font-medium text-fg">Cooldown (seconds)</span>
         </div>
         <input
@@ -313,14 +313,14 @@ export function NoiseControlCard({ initialConfig }: { initialConfig?: NoiseConfi
           value={config.cooldownSeconds}
           onChange={(e) => update({ cooldownSeconds: Number(e.target.value) })}
           aria-label="Cooldown in seconds"
-          className="ml-6 w-32 rounded border border-border bg-surface px-2 py-1 text-sm text-fg"
+          className="ml-6 w-32 rounded-sm border border-border bg-bg-elev-1 px-2 py-1 text-sm text-fg"
         />
       </div>
 
       {/* Dedup TTL */}
       <div className="flex flex-col gap-2">
         <div className="flex items-center gap-2">
-          <Bell className="size-4 text-fg-muted" />
+          <IconBell className="size-4 text-fg-muted" />
           <span className="text-sm font-medium text-fg">Dedup window (seconds)</span>
         </div>
         <input
@@ -330,7 +330,7 @@ export function NoiseControlCard({ initialConfig }: { initialConfig?: NoiseConfi
           value={config.dedupTtlSeconds}
           onChange={(e) => update({ dedupTtlSeconds: Number(e.target.value) })}
           aria-label="Dedup window in seconds"
-          className="ml-6 w-32 rounded border border-border bg-surface px-2 py-1 text-sm text-fg"
+          className="ml-6 w-32 rounded-sm border border-border bg-bg-elev-1 px-2 py-1 text-sm text-fg"
         />
       </div>
 

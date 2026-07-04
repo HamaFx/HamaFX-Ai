@@ -60,7 +60,7 @@ export function AnnotateChartPart({
   const overlayParam = TOGGLEABLE.filter((k) => (output.countsByKind[k] ?? 0) > 0).join(',');
 
   return (
-    <div className="border-border bg-zinc-950 rounded-sm border p-3">
+    <div className="border-border bg-bg-elev-1 rounded-sm border p-3">
       <header className="mb-2 flex items-baseline justify-between gap-2">
         <h3 className="text-fg text-sm font-semibold">
           {output.symbol} · {output.tf} · annotated
@@ -77,7 +77,7 @@ export function AnnotateChartPart({
           return (
             <li
               key={k}
-              className="bg-zinc-900 text-fg-muted rounded-sm px-2 py-0.5 text-body-sm font-medium tabular-nums"
+              className="bg-bg-elev-2 text-fg-muted rounded-sm px-2 py-0.5 text-body-sm font-medium tabular-nums"
             >
               {KIND_LABELS[k]} · {c}
             </li>
@@ -98,14 +98,14 @@ export function AnnotateChartPart({
 function SkeletonCard() {
   return (
     <div
-      className="border-border bg-zinc-950 rounded-sm border p-3"
+      className="border-border bg-bg-elev-1 rounded-sm border p-3"
       aria-busy="true"
       aria-label="Computing chart annotations"
     >
-      <div className="bg-zinc-900 h-4 w-1/2 animate-pulse rounded" />
+      <div className="bg-bg-elev-2 h-4 w-1/2 animate-pulse rounded-sm" />
       <ul className="mt-2 flex gap-2">
         {[0, 1, 2].map((i) => (
-          <li key={i} className="bg-zinc-900 h-5 w-14 animate-pulse rounded-sm" />
+          <li key={i} className="bg-bg-elev-2 h-5 w-14 animate-pulse rounded-sm" />
         ))}
       </ul>
     </div>
@@ -116,7 +116,7 @@ function ErrorCard({ message }: { message?: string }) {
   return (
     <div
       role="alert"
-      className="border-red-500/30 bg-zinc-950 text-red-500 rounded-sm border p-3 text-sm"
+      className="border-bear/30 bg-bg-elev-1 text-bear rounded-sm border p-3 text-sm"
     >
       Annotation failed{message ? ` · ${message}` : ''}
     </div>

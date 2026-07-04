@@ -21,12 +21,12 @@
 // Layout: fixed inset-0 with three rows:
 //
 //   ┌──────────────────────────────────┐
-//   │ ChatTopBar    ☰ · title · + · ⋯ │  sticky, glass
+//   │ ChatTopBar    ☰ · title · + · ⋯ │  sticky
 //   ├──────────────────────────────────┤
 //   │  message scroll area             │  flex-1, no-overscroll
 //   │  (or empty state w/ prompts)     │
 //   ├──────────────────────────────────┤
-//   │ Composer                         │  sticky, glass
+//   │ Composer                         │  sticky
 //   └──────────────────────────────────┘
 //
 // Stability tweaks vs. previous iteration:
@@ -45,7 +45,7 @@
 import { useChat } from '@ai-sdk/react';
 import type { Symbol } from '@hamafx/shared';
 import { DefaultChatTransport, type UIMessage } from 'ai';
-import { ArrowDown, RotateCcw, Sparkles, X } from 'lucide-react';
+import {IconArrowDown, IconArrowBackUp, IconBolt, IconX} from '@tabler/icons-react';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
@@ -141,6 +141,13 @@ export function ChatScreen({
     messages: initialMessages,
   });
 
+  // Ref to hold the latest messages array — avoids stale closure in
+  // multi-agent SSE handler where the captured `messages` may be outdated.
+  const messagesRef = useRef(messages);
+  useEffect(() => {
+    messagesRef.current = messages;
+  }, [messages]);
+
   // Phase 1.5 — fetch thread summary once the thread grows past 20 messages.
   useEffect(() => {
     if (messages.length > 20 && !summary) {
@@ -194,7 +201,7 @@ export function ChatScreen({
         body: JSON.stringify({
           threadId,
           analysisMode,
-          messages: [...messages, userMsg],
+          messages: [...messagesRef.current, userMsg],
         }),
         signal: controller.signal,
       });
@@ -257,7 +264,7 @@ export function ChatScreen({
       multiAgentFetchRef.current = null;
       setIsMultiAgentStreaming(false);
     }
-  }, [analysisMode, messages, setMessages, threadId]);
+  }, [analysisMode, setMessages, threadId]);
 
   const handleCopy = useCallback((text: string) => {
     void navigator.clipboard.writeText(text);
@@ -292,7 +299,7 @@ export function ChatScreen({
     const isLastMessage = idx === messages.length - 1;
     if (!isLastMessage) {
       const ok = await confirm({
-        title: 'Edit earlier message?',
+        title: 'IconEdit earlier message?',
         description: 'Editing this message will create a new thread branch. The current thread will be preserved.',
         confirmLabel: 'Create branch',
         tone: 'default',
@@ -526,7 +533,7 @@ export function ChatScreen({
                 transition={{ duration: 0.2 }}
                 role="alert"
                 className={cn(
-                  'bg-red-500/10 text-red-500 border border-red-500/30 mx-3 mb-2 flex items-center justify-between gap-2 rounded-sm p-3 text-xs',
+                  'bg-bear/10 text-bear border border-bear/30 mx-3 mb-2 flex items-center justify-between gap-2 rounded-sm p-3 text-xs',
                 )}
               >
                 <span className="line-clamp-2 flex-1">{error.message}</span>
@@ -543,17 +550,17 @@ export function ChatScreen({
                       }
                     }}
                     aria-label="Retry"
-                    className="bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 inline-flex items-center gap-1 rounded-sm px-3 py-1.5 text-body-sm font-medium"
+                    className="bg-bear/20 hover:bg-bear/30 border border-bear/30 inline-flex items-center gap-1 rounded-sm px-3 py-1.5 text-body-sm font-medium"
                   >
-                    <RotateCcw className="size-3.5" /> Retry
+                    <IconArrowBackUp className="size-3.5" /> Retry
                   </button>
                   <button
                     type="button"
                     onClick={() => setDismissedError(true)}
                     aria-label="Dismiss error"
-                    className="hover:bg-red-500/10 text-red-500/80 hover:text-red-500 inline-flex size-7 items-center justify-center rounded-sm transition-colors"
+                    className="hover:bg-bear/10 text-bear/80 hover:text-bear inline-flex size-7 items-center justify-center rounded-sm transition-colors"
                   >
-                    <X className="size-4" />
+                    <IconX className="size-4" />
                   </button>
                 </div>
               </m.div>
@@ -572,10 +579,10 @@ export function ChatScreen({
               transition={{ duration: 0.2 }}
               onClick={scrollToBottom}
               aria-label="Scroll to latest"
-              className="scroll-fab surface-elevated text-fg fixed left-1/2 z-30 inline-flex h-11 -translate-x-1/2 items-center gap-1.5 rounded-sm px-4 text-body-sm font-medium transition-all"
+              className="scroll-fab surface-elevated text-fg absolute left-1/2 z-30 inline-flex h-11 -translate-x-1/2 items-center gap-1.5 rounded-sm px-4 text-body-sm font-medium transition-all"
               style={{ bottom: 'calc(env(safe-area-inset-bottom) + 96px)' }}
             >
-              <ArrowDown className="size-3.5" />
+              <IconArrowDown className="size-3.5" />
               Latest
             </m.button>
           )}
@@ -636,19 +643,18 @@ interface EmptyChatStateProps {
 function EmptyChatState({ pinnedSymbol, disabled, onSelect }: EmptyChatStateProps) {
   return (
     <div className="flex min-h-[60svh] flex-col items-center justify-center gap-6 px-4 py-10 text-center">
-      <span
-        aria-hidden="true"
-        className="text-fg-muted inline-flex size-16 items-center justify-center rounded-sm border border-zinc-800 bg-zinc-900"
-      >
-        <Sparkles className="size-8" strokeWidth={1.75} />
-      </span>
-      <div className="flex max-w-md flex-col gap-2">
-        <h2 className="text-fg text-xl font-bold tracking-tight">How can I help?</h2>
-        <p className="text-fg-muted text-sm leading-[1.4]">
-          {pinnedSymbol
-            ? `Ask about ${pinnedSymbol} bias, structure, news, or set an alert.`
-            : 'Ask about gold, EUR, GBP — bias, structure, news, or set an alert.'}
-        </p>
+      {/* Brand logo mark — 48px, accent color */}
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" className="text-brand" aria-hidden="true">
+        <rect x="4" y="6" width="3" height="12" rx="1" fill="currentColor" />
+        <rect x="10" y="3" width="3" height="18" rx="1" fill="currentColor" opacity="0.6" />
+        <rect x="17" y="8" width="3" height="10" rx="1" fill="currentColor" />
+        <line x1="5.5" y1="2" x2="5.5" y2="22" stroke="currentColor" strokeWidth="0.5" />
+        <line x1="18.5" y1="4" x2="18.5" y2="20" stroke="currentColor" strokeWidth="0.5" />
+      </svg>
+
+      <div className="flex flex-col gap-1">
+        <h2 className="text-fg text-lg font-semibold tracking-tight">HamaFX·Ai</h2>
+        <p className="text-fg-muted text-sm">Start a conversation</p>
       </div>
 
       <div className="w-full max-w-md">
@@ -658,11 +664,6 @@ function EmptyChatState({ pinnedSymbol, disabled, onSelect }: EmptyChatStateProp
           {...(disabled ? { disabled: true } : {})}
         />
       </div>
-
-      <p className="text-fg-subtle max-w-md text-body-sm leading-[1.4]">
-        Numbers come from live tools — prices, candles, news, and the calendar are
-        fetched on demand. The copilot will say so when something can&apos;t be checked.
-      </p>
     </div>
   );
 }

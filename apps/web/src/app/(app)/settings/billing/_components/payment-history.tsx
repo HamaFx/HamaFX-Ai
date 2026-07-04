@@ -26,12 +26,12 @@ interface Payment {
 }
 
 const STATUS_COLORS: Record<string, string> = {
-  waiting: 'text-amber-600 dark:text-amber-400',
-  confirming: 'text-blue-600 dark:text-blue-400',
-  confirmed: 'text-blue-600 dark:text-blue-400',
-  sending: 'text-blue-600 dark:text-blue-400',
+  waiting: 'text-amber-600 dark:text-warn',
+  confirming: 'text-blue-600 dark:text-info',
+  confirmed: 'text-blue-600 dark:text-info',
+  sending: 'text-blue-600 dark:text-info',
   finished: 'text-green-600 dark:text-green-400',
-  failed: 'text-red-600 dark:text-red-400',
+  failed: 'text-red-600 dark:text-bear',
   expired: 'text-gray-600 dark:text-gray-400',
   refunded: 'text-purple-600 dark:text-purple-400',
 };

@@ -61,7 +61,7 @@ export function EmptyState({
       aria-label={title}
       className={cn(
         'flex flex-col items-center gap-5 px-6 py-10 text-center',
-        !bare && 'border border-zinc-800 bg-zinc-950 rounded-sm',
+        !bare && 'border border-border bg-bg-elev-1 rounded-sm',
         className,
       )}
     >
@@ -69,7 +69,7 @@ export function EmptyState({
         aria-hidden="true"
         className={cn(
           'inline-flex items-center justify-center rounded-sm',
-          tone === 'brand' ? 'text-fg bg-zinc-900 h-20 w-20' : 'text-fg-muted bg-zinc-900 h-16 w-16',
+          tone === 'brand' ? 'text-fg bg-bg-elev-2 h-20 w-20' : 'text-fg-muted bg-bg-elev-2 h-16 w-16',
         )}
       >
         {icon}

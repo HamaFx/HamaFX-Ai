@@ -23,7 +23,7 @@ import { cache } from 'react';
 import { listPushSubscriptions } from '@hamafx/ai';
 import { getDb } from '@hamafx/db';
 import { getMarketPhase, describeMarketPhase } from '@hamafx/shared';
-import { CheckCircle2, CircleAlert } from 'lucide-react';
+import {IconCircleCheck, IconAlertCircle} from '@tabler/icons-react';
 import { sql } from 'drizzle-orm';
 
 import { cn } from '@/lib/cn';
@@ -123,7 +123,7 @@ export async function SystemStatusCard({ userId }: { userId: string }) {
   return (
     <section
       aria-labelledby="system-status-heading"
-      className="border border-zinc-800 bg-zinc-950 rounded-sm relative flex flex-col gap-4 overflow-hidden p-4"
+      className="border border-border bg-bg-elev-1 rounded-sm relative flex flex-col gap-4 overflow-hidden p-4"
     >
       <header className="flex items-center justify-between gap-3">
         <h2
@@ -136,18 +136,18 @@ export async function SystemStatusCard({ userId }: { userId: string }) {
           className={cn(
             'inline-flex items-center gap-1.5 rounded-sm px-2 py-0.5 text-caption font-bold uppercase tracking-wide ring-1',
             allReady
-              ? 'bg-emerald-500/10 text-emerald-500 ring-bull/30'
-              : 'bg-amber-500/10 text-amber-500 ring-warn/30',
+              ? 'bg-bull/10 text-bull ring-bull/30'
+              : 'bg-warn/10 text-warn ring-warn/30',
           )}
         >
           {allReady ? (
             <>
-              <span aria-hidden className="bg-emerald-500 size-1.5 rounded-sm" />
+              <span aria-hidden className="bg-bull size-1.5 rounded-sm" />
               All systems
             </>
           ) : (
             <>
-              <CircleAlert className="size-3" />
+              <IconAlertCircle className="size-3" />
               Some channels off
             </>
           )}
@@ -165,14 +165,14 @@ export async function SystemStatusCard({ userId }: { userId: string }) {
               className={cn(
                 'inline-flex size-7 shrink-0 items-center justify-center rounded-sm',
                 c.ready
-                  ? 'bg-emerald-500/15 text-emerald-500'
-                  : 'bg-zinc-900 text-fg-subtle',
+                  ? 'bg-bull/15 text-bull'
+                  : 'bg-bg-elev-2 text-fg-subtle',
               )}
             >
               {c.ready ? (
-                <CheckCircle2 className="size-4" strokeWidth={2.25} />
+                <IconCircleCheck className="size-4" strokeWidth={2.25} />
               ) : (
-                <CircleAlert className="size-4" strokeWidth={2.25} />
+                <IconAlertCircle className="size-4" strokeWidth={2.25} />
               )}
             </span>
             <div className="flex min-w-0 flex-1 flex-col">
@@ -185,8 +185,8 @@ export async function SystemStatusCard({ userId }: { userId: string }) {
               className={cn(
                 'rounded-sm px-2 py-0.5 text-caption font-bold uppercase tabular-nums ring-1',
                 c.ready
-                  ? 'bg-emerald-500/10 text-emerald-500 ring-bull/30'
-                  : 'bg-zinc-900 text-fg-muted ring-divider',
+                  ? 'bg-bull/10 text-bull ring-bull/30'
+                  : 'bg-bg-elev-2 text-fg-muted ring-divider',
               )}
             >
               {c.ready ? 'Ready' : 'Off'}
@@ -196,19 +196,19 @@ export async function SystemStatusCard({ userId }: { userId: string }) {
       </ul>
 
       {/* Cron job health — OBS-04 */}
-      <div className="border-zinc-800 -mx-4 border-t px-4 pt-3">
+      <div className="border-border -mx-4 border-t px-4 pt-3">
         <div className="flex items-center gap-3">
           <span
             aria-hidden="true"
             className={cn(
               'inline-flex size-7 shrink-0 items-center justify-center rounded-sm',
-              cronHealthy ? 'bg-emerald-500/15 text-emerald-500' : 'bg-amber-500/15 text-amber-500',
+              cronHealthy ? 'bg-bull/15 text-bull' : 'bg-warn/15 text-warn',
             )}
           >
             {cronHealthy ? (
-              <CheckCircle2 className="size-4" strokeWidth={2.25} />
+              <IconCircleCheck className="size-4" strokeWidth={2.25} />
             ) : (
-              <CircleAlert className="size-4" strokeWidth={2.25} />
+              <IconAlertCircle className="size-4" strokeWidth={2.25} />
             )}
           </span>
           <div className="flex min-w-0 flex-1 flex-col">
@@ -223,7 +223,7 @@ export async function SystemStatusCard({ userId }: { userId: string }) {
       </div>
 
       {/* F6 — Market phase detection */}
-      <div className="border-zinc-800 -mx-4 border-t px-4 pt-3">
+      <div className="border-border -mx-4 border-t px-4 pt-3">
         <div className="flex items-center gap-3">
           <span
             aria-hidden="true"
@@ -231,17 +231,17 @@ export async function SystemStatusCard({ userId }: { userId: string }) {
               'inline-flex size-7 shrink-0 items-center justify-center rounded-sm',
               marketPhase.isOpen
                 ? marketPhase.liquidity === 'high'
-                  ? 'bg-emerald-500/15 text-emerald-500'
+                  ? 'bg-bull/15 text-bull'
                   : marketPhase.liquidity === 'medium'
-                    ? 'bg-amber-500/15 text-amber-500'
+                    ? 'bg-warn/15 text-warn'
                     : 'bg-fg-muted/15 text-fg-muted'
-                : 'bg-zinc-900 text-fg-subtle',
+                : 'bg-bg-elev-2 text-fg-subtle',
             )}
           >
             {marketPhase.isOpen ? (
-              <CheckCircle2 className="size-4" strokeWidth={2.25} />
+              <IconCircleCheck className="size-4" strokeWidth={2.25} />
             ) : (
-              <CircleAlert className="size-4" strokeWidth={2.25} />
+              <IconAlertCircle className="size-4" strokeWidth={2.25} />
             )}
           </span>
           <div className="flex min-w-0 flex-1 flex-col">
@@ -255,11 +255,11 @@ export async function SystemStatusCard({ userId }: { userId: string }) {
               'rounded-sm px-2 py-0.5 text-caption font-bold uppercase tabular-nums ring-1',
               marketPhase.isOpen
                 ? marketPhase.liquidity === 'high'
-                  ? 'bg-emerald-500/10 text-emerald-500 ring-bull/30'
+                  ? 'bg-bull/10 text-bull ring-bull/30'
                   : marketPhase.liquidity === 'medium'
-                    ? 'bg-amber-500/10 text-amber-500 ring-warn/30'
-                    : 'bg-zinc-900 text-fg-muted ring-divider'
-                : 'bg-zinc-900 text-fg-muted ring-divider',
+                    ? 'bg-warn/10 text-warn ring-warn/30'
+                    : 'bg-bg-elev-2 text-fg-muted ring-divider'
+                : 'bg-bg-elev-2 text-fg-muted ring-divider',
             )}
           >
             {marketPhase.isOpen ? marketPhase.liquidity : 'Closed'}

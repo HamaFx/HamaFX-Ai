@@ -27,8 +27,8 @@ export default function GlobalError({
             justifyContent: 'center',
             padding: '2rem',
             fontFamily: 'system-ui, sans-serif',
-            color: '#1a1a2e',
-            background: '#f8f9fa',
+            color: 'var(--color-fg)',
+            background: 'var(--color-bg)',
           }}
         >
           <h1 style={{ fontSize: '1.5rem', fontWeight: 700, margin: '0 0 0.5rem' }}>
@@ -38,7 +38,7 @@ export default function GlobalError({
             style={{
               maxWidth: '36rem',
               fontSize: '0.875rem',
-              color: '#6b7280',
+              color: 'var(--color-fg-muted)',
               margin: '0 0 1.5rem',
             }}
           >
@@ -51,7 +51,7 @@ export default function GlobalError({
               fontSize: '0.875rem',
               fontWeight: 600,
               color: '#fff',
-              background: '#2563eb',
+              background: 'var(--color-brand)',
               border: 'none',
               borderRadius: '0.5rem',
               cursor: 'pointer',

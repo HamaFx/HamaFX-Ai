@@ -1,6 +1,6 @@
 'use client';
 
-import { Download, Upload, X, FileSpreadsheet } from 'lucide-react';
+import {IconDownload, IconUpload, IconX, IconFileSpreadsheet} from '@tabler/icons-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
@@ -110,13 +110,13 @@ export function ImportTrades({ onImported }: { onImported?: () => void }) {
         onClick={() => setOpen(true)}
         className="self-start"
       >
-        <Download className="mr-1 size-4" />
+        <IconDownload className="mr-1 size-4" />
         Import trades
       </Button>
 
       {open && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60">
-          <div className="w-full sm:max-w-lg rounded-t-2xl sm:rounded-sm bg-zinc-950 border border-zinc-800 p-6 flex flex-col gap-4 max-h-[80vh] overflow-y-auto">
+          <div className="w-full sm:max-w-lg rounded-sm bg-bg-elev-1 border border-border p-6 flex flex-col gap-4 max-h-[80vh] overflow-y-auto">
             <div className="flex items-center justify-between">
               <h3 className="text-base font-semibold text-fg">Import trades</h3>
               <button
@@ -124,18 +124,18 @@ export function ImportTrades({ onImported }: { onImported?: () => void }) {
                 onClick={() => { setOpen(false); setParsed(null); }}
                 className="text-fg-muted hover:text-fg"
               >
-                <X className="size-5" />
+                <IconX className="size-5" />
               </button>
             </div>
 
             {!parsed ? (
               <div className="flex flex-col gap-3">
                 <p className="text-sm text-fg-subtle">
-                  Upload a CSV file with columns:{' '}
+                  IconUpload a CSV file with columns:{' '}
                   <code className="text-xs text-fg">symbol, side, entry, date, exit, stop, target, size</code>
                 </p>
-                <label className="flex items-center justify-center gap-2 rounded-sm border border-dashed border-zinc-800 p-6 text-sm text-fg-subtle hover:border-zinc-700 hover:text-fg transition-colors cursor-pointer">
-                  <Upload className="size-5" />
+                <label className="flex items-center justify-center gap-2 rounded-sm border border-dashed border-border p-6 text-sm text-fg-subtle hover:border-border hover:text-fg transition-colors cursor-pointer">
+                  <IconUpload className="size-5" />
                   Choose CSV file
                   <input
                     type="file"
@@ -148,13 +148,13 @@ export function ImportTrades({ onImported }: { onImported?: () => void }) {
             ) : (
               <div className="flex flex-col gap-3">
                 <div className="flex items-center gap-2 text-sm text-fg">
-                  <FileSpreadsheet className="size-4 text-fg" />
+                  <IconFileSpreadsheet className="size-4 text-fg" />
                   <span className="font-medium">{parsed.length} trades parsed</span>
                 </div>
-                <div className="max-h-48 overflow-y-auto border border-zinc-800 rounded-sm">
+                <div className="max-h-48 overflow-y-auto border border-border rounded-sm">
                   <table className="w-full text-xs tabular-nums">
                     <thead>
-                      <tr className="bg-zinc-900 text-fg-subtle">
+                      <tr className="bg-bg-elev-2 text-fg-subtle">
                         <th className="text-left p-2">Symbol</th>
                         <th className="text-left p-2">Side</th>
                         <th className="text-right p-2">Entry</th>
@@ -163,9 +163,9 @@ export function ImportTrades({ onImported }: { onImported?: () => void }) {
                     </thead>
                     <tbody>
                       {parsed.slice(0, 20).map((t, i) => (
-                        <tr key={i} className="border-t border-zinc-800">
+                        <tr key={i} className="border-t border-border">
                           <td className="p-2 text-fg">{t.symbol}</td>
-                          <td className={cn('p-2', t.side === 'long' ? 'text-emerald-500' : 'text-red-500')}>{t.side}</td>
+                          <td className={cn('p-2', t.side === 'long' ? 'text-bull' : 'text-bear')}>{t.side}</td>
                           <td className="p-2 text-right text-fg">{t.entry}</td>
                           <td className="p-2 text-right text-fg">{t.exit ?? '—'}</td>
                         </tr>

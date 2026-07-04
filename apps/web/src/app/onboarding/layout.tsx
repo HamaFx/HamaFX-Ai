@@ -15,7 +15,6 @@
  */
 
 import type { ReactNode } from 'react';
-import { AmbientBackground } from '@/components/layout/ambient-background';
 import { Toaster } from '@/components/ui/toaster';
 
 export const metadata = {
@@ -25,7 +24,6 @@ export const metadata = {
 export default function OnboardingLayout({ children }: { children: ReactNode }) {
   return (
     <div className="text-fg relative min-h-svh">
-      <AmbientBackground />
       <main className="mx-auto w-full max-w-2xl px-4 py-8">
         {children}
       </main>

@@ -19,7 +19,7 @@
 // Sign-out trigger. Drawer-confirm because losing the session on a personal
 // app is annoying if it happens by accident.
 
-import { LogOut } from 'lucide-react';
+import { IconLogout } from '@tabler/icons-react';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useQueryClient } from '@tanstack/react-query';
@@ -69,7 +69,7 @@ export function LogoutButton() {
         onClick={() => void logout()}
         loading={pending}
       >
-        <LogOut className="size-3.5" />
+        <IconLogout className="size-3.5" />
         {pending ? 'Signing out…' : 'Sign out'}
       </Button>
       {confirmEl}

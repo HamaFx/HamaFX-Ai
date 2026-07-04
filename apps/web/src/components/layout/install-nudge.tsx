@@ -27,14 +27,14 @@
  *     button. Tapping the button calls `event.prompt()` and waits
  *     for the user's choice.
  *   - iOS Safari: no native install prompt. We detect iOS without
- *     standalone mode and show a text instruction: "Tap Share →
+ *     standalone mode and show a text instruction: "Tap IconShare →
  *     Add to Home Screen".
  *   - Already installed (standalone mode): nothing rendered.
  *   - User dismisses three times: stop showing (cap in localStorage).
  *   - SSR-safe: all checks live in useEffect.
  */
 
-import { Download, Share, X } from 'lucide-react';
+import {IconDownload, IconShare, IconX} from '@tabler/icons-react';
 import { useEffect, useState } from 'react';
 
 const STORAGE_KEY = 'hfx_install_dismissed';
@@ -138,9 +138,9 @@ export function InstallNudge() {
       <div
         role="status"
         aria-live="polite"
-        className="border-zinc-800 bg-zinc-900 text-fg-muted mx-3 mt-2 flex items-start gap-3 rounded-sm border p-3 text-caption"
+        className="border-border bg-bg-elev-2 text-fg-muted mx-3 mt-2 flex items-start gap-3 rounded-sm border p-3 text-caption"
       >
-        <Share className="text-fg-muted mt-0.5 size-4 shrink-0" aria-hidden="true" />
+        <IconShare className="text-fg-muted mt-0.5 size-4 shrink-0" aria-hidden="true" />
         <p className="flex-1 leading-snug">
           Install HamaFX-Ai: tap <span className="text-fg font-medium">Share</span>{' '}
           then <span className="text-fg font-medium">Add to Home Screen</span>.
@@ -149,9 +149,9 @@ export function InstallNudge() {
           type="button"
           onClick={onDismiss}
           aria-label="Dismiss install hint"
-          className="text-fg-subtle hover:text-fg -mr-1 inline-flex size-6 shrink-0 items-center justify-center rounded-sm transition-colors hover:bg-zinc-800"
+          className="text-fg-subtle hover:text-fg -mr-1 inline-flex size-6 shrink-0 items-center justify-center rounded-sm transition-colors hover:bg-bg-elev-3"
         >
-          <X className="size-3.5" />
+          <IconX className="size-3.5" />
         </button>
       </div>
     );
@@ -163,16 +163,16 @@ export function InstallNudge() {
       <div
         role="status"
         aria-live="polite"
-        className="border-zinc-800 bg-zinc-900 mx-3 mt-2 flex items-center gap-3 rounded-sm border p-3"
+        className="border-border bg-bg-elev-2 mx-3 mt-2 flex items-center gap-3 rounded-sm border p-3"
       >
-        <Download className="text-fg-muted size-4 shrink-0" aria-hidden="true" />
+        <IconDownload className="text-fg-muted size-4 shrink-0" aria-hidden="true" />
         <p className="text-fg-muted flex-1 text-caption leading-snug">
           Install HamaFX-Ai for one-tap access on your device.
         </p>
         <button
           type="button"
           onClick={() => void onInstall()}
-          className="text-fg border-zinc-700 hover:bg-zinc-800 inline-flex h-8 items-center rounded-sm border px-3 text-caption font-semibold"
+          className="text-fg border-border hover:bg-bg-elev-3 inline-flex h-8 items-center rounded-sm border px-3 text-caption font-semibold"
         >
           Install
         </button>
@@ -180,9 +180,9 @@ export function InstallNudge() {
           type="button"
           onClick={onDismiss}
           aria-label="Dismiss install hint"
-          className="text-fg-subtle hover:text-fg inline-flex size-7 shrink-0 items-center justify-center rounded-sm transition-colors hover:bg-zinc-800"
+          className="text-fg-subtle hover:text-fg inline-flex size-7 shrink-0 items-center justify-center rounded-sm transition-colors hover:bg-bg-elev-3"
         >
-          <X className="size-3.5" />
+          <IconX className="size-3.5" />
         </button>
       </div>
     );

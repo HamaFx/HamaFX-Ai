@@ -21,7 +21,7 @@
 //
 //   1. A header row that names the symbol, the timeframe, and the bar
 //      count — so the user knows exactly what data the agent looked at.
-//   2. The most recent bar's OHLC summary, with `text-emerald-500` / `text-red-500`
+//   2. The most recent bar's OHLC summary, with `text-bull` / `text-bear`
 //      colouring on the close vs. open delta and a per-symbol pip count.
 //   3. An optional 5-row tail of the closed bars (timestamp + close) for
 //      quick eyeball context.
@@ -54,7 +54,7 @@ export function GetCandlesPart({ output, state, errorMessage }: GetCandlesPartPr
   }
   if (output.candles.length === 0) {
     return (
-      <div className="border-border bg-zinc-950 text-fg-muted rounded-sm border p-3 text-xs">
+      <div className="border-border bg-bg-elev-1 text-fg-muted rounded-sm border p-3 text-xs">
         {output.symbol} · {output.tf} · no bars returned
       </div>
     );
@@ -67,7 +67,7 @@ export function GetCandlesPart({ output, state, errorMessage }: GetCandlesPartPr
   const decimals = priceDecimals(symbol);
   const change = last.c - last.o;
   const isBull = last.c >= last.o;
-  const tone = isBull ? 'text-emerald-500' : 'text-red-500';
+  const tone = isBull ? 'text-bull' : 'text-bear';
   const pips = change / pipSize(symbol);
   const sign = change > 0 ? '+' : change < 0 ? '−' : '';
 
@@ -75,7 +75,7 @@ export function GetCandlesPart({ output, state, errorMessage }: GetCandlesPartPr
   const tail = output.candles.slice(-5);
 
   return (
-    <div className="border-border bg-zinc-950 rounded-sm border p-3">
+    <div className="border-border bg-bg-elev-1 rounded-sm border p-3">
       <div className="text-fg-muted mb-2 flex items-baseline justify-between text-xs">
         <span>
           <span className="text-fg font-medium">{output.symbol}</span> · {output.tf} · last{' '}
@@ -116,7 +116,7 @@ export function GetCandlesPart({ output, state, errorMessage }: GetCandlesPartPr
                 <time dateTime={new Date(c.t).toISOString()} className="text-fg-subtle">
                   {formatBarTime(c.t)}
                 </time>
-                <span className={barBull ? 'text-emerald-500' : 'text-red-500'}>{c.c.toFixed(decimals)}</span>
+                <span className={barBull ? 'text-bull' : 'text-bear'}>{c.c.toFixed(decimals)}</span>
               </li>
             );
           })}
@@ -202,16 +202,16 @@ function CandleSparkline({
 function CandlesCardSkeleton() {
   return (
     <div
-      className="border-border bg-zinc-950 rounded-sm border p-3"
+      className="border-border bg-bg-elev-1 rounded-sm border p-3"
       aria-busy="true"
       aria-label="Loading candles"
     >
-      <div className="bg-zinc-900 mb-2 h-3 w-40 animate-pulse rounded" />
+      <div className="bg-bg-elev-2 mb-2 h-3 w-40 animate-pulse rounded-sm" />
       <div className="grid grid-cols-4 gap-2">
         {[0, 1, 2, 3].map((i) => (
           <div key={i} className="flex flex-col gap-1">
-            <span className="bg-zinc-900 h-2 w-4 animate-pulse rounded" />
-            <span className="bg-zinc-900 h-4 w-12 animate-pulse rounded" />
+            <span className="bg-bg-elev-2 h-2 w-4 animate-pulse rounded-sm" />
+            <span className="bg-bg-elev-2 h-4 w-12 animate-pulse rounded-sm" />
           </div>
         ))}
       </div>
@@ -223,7 +223,7 @@ function CandlesCardError({ message }: { message?: string }) {
   return (
     <div
       role="alert"
-      className="border-red-500/30 bg-zinc-950 text-red-500 rounded-sm border p-3 text-sm"
+      className="border-bear/30 bg-bg-elev-1 text-bear rounded-sm border p-3 text-sm"
     >
       Candles unavailable{message ? ` · ${message}` : ''}
     </div>

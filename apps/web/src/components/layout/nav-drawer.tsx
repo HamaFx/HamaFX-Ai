@@ -29,18 +29,7 @@
 //     a footer "Sign out" action.
 //   - User identity display + nav item badges + last-path tracking.
 
-import {
-  Bell,
-  BookOpen,
-  Calendar,
-  Cog,
-  LayoutDashboard,
-  LineChart,
-  LogOut,
-  MessageCircle,
-  Newspaper,
-  Target,
-} from 'lucide-react';
+import { IconBell,  IconBook,  IconCalendar,  IconCog,  IconLayoutDashboard,  IconChartLine,  IconLogout,  IconMessageCircle,  IconNewspaper,  IconTarget } from '@tabler/icons-react';
 import { Link } from 'next-view-transitions';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useMemo } from 'react';
@@ -56,7 +45,7 @@ import { useNavDrawer } from './nav-drawer-context';
 interface NavItem {
   href: string;
   label: string;
-  icon: typeof MessageCircle;
+  icon: typeof IconMessageCircle;
   description?: string;
   match?: readonly string[];
   badge?: number;
@@ -66,41 +55,41 @@ const PRIMARY: readonly NavItem[] = [
   {
     href: '/dashboard',
     label: 'Dashboard',
-    icon: LayoutDashboard,
+    icon: IconLayoutDashboard,
     description: 'Briefing & performance overview',
   },
   {
     href: '/chat',
     label: 'Chat',
-    icon: MessageCircle,
+    icon: IconMessageCircle,
     description: 'Ask anything about your symbols',
   },
   {
     href: '/chart/XAUUSD',
     label: 'Chart',
-    icon: LineChart,
+    icon: IconChartLine,
     match: ['/chart'],
     description: 'Live candles + structure',
   },
   {
     href: '/news',
     label: 'News',
-    icon: Newspaper,
+    icon: IconNewspaper,
     description: 'Tagged headlines',
   },
   {
     href: '/calendar',
-    label: 'Calendar',
-    icon: Calendar,
+    label: 'IconCalendar',
+    icon: IconCalendar,
     description: 'Macro events',
   },
 ];
 
 const SECONDARY: readonly NavItem[] = [
-  { href: '/signals', label: 'Signals', icon: Target, description: 'AI track record' },
-  { href: '/alerts', label: 'Alerts', icon: Bell, description: 'Price triggers' },
-  { href: '/journal', label: 'Journal', icon: BookOpen, description: 'Trades & R-multiples' },
-  { href: '/settings', label: 'Settings', icon: Cog, description: 'Notifications, usage' },
+  { href: '/signals', label: 'Signals', icon: IconTarget, description: 'AI track record' },
+  { href: '/alerts', label: 'Alerts', icon: IconBell, description: 'Price triggers' },
+  { href: '/journal', label: 'Journal', icon: IconBook, description: 'Trades & R-multiples' },
+  { href: '/settings', label: 'IconSettings', icon: IconCog, description: 'Notifications, usage' },
 ];
 
 export function NavDrawer({ userName, userEmail, userId: _userId }: { userName?: string; userEmail?: string; userId?: string }) {
@@ -108,16 +97,7 @@ export function NavDrawer({ userName, userEmail, userId: _userId }: { userName?:
   const pathname = usePathname();
   const router = useRouter();
 
-  // Track last visited path for "continue where you left off"
-  useEffect(() => {
-    if (pathname && !pathname.startsWith('/share/')) {
-      try {
-        localStorage.setItem('hamafx:last-path', pathname);
-      } catch {
-        // ignore
-      }
-    }
-  }, [pathname]);
+  // D3 — Removed dead localStorage last-path tracking (never read back).
 
   // Auto-close on route change.
   useEffect(() => {
@@ -157,7 +137,7 @@ export function NavDrawer({ userName, userEmail, userId: _userId }: { userName?:
           aria-label="Primary navigation"
           className={cn(
             'surface-elevated fixed inset-y-0 left-0 z-[60] flex w-[88vw] max-w-[340px] flex-col',
-            'border-r border-zinc-800 rounded-r-3xl',
+            'border-r border-border rounded-sm',
             'paint-isolated',
             'focus-visible:outline-none',
           )}
@@ -175,12 +155,12 @@ export function NavDrawer({ userName, userEmail, userId: _userId }: { userName?:
           {/* Identity strip */}
           <DrawerPrimitive.Title asChild>
             <div className="flex items-center gap-3 px-5 pt-6 pb-5">
-              <div className="size-11 rounded-sm bg-zinc-900 text-fg flex items-center justify-center text-sm font-bold ">
+              <div className="size-11 rounded-sm bg-bg-elev-2 text-fg flex items-center justify-center text-sm font-bold ">
                 <span className="text-lg font-bold">{initial}</span>
               </div>
               <div className="flex flex-col gap-0.5 min-w-0">
                 <span className="text-fg text-base font-bold tracking-tight truncate">
-                  {userName ?? 'HamaFX User'}
+                  {userName ?? 'HamaFX IconUser'}
                 </span>
                 <span className="text-fg-subtle text-xs truncate">
                   {userEmail ?? 'Personal trading copilot'}
@@ -211,18 +191,18 @@ export function NavDrawer({ userName, userEmail, userId: _userId }: { userName?:
           </nav>
 
           {/* Footer */}
-          <div className="border-zinc-800 mt-auto border-t px-3 py-3">
+          <div className="border-border mt-auto border-t px-3 py-3">
             <button
               type="button"
               onClick={() => void logout()}
-              className="text-fg-muted hover:text-fg hover:bg-zinc-900 flex min-h-[48px] w-full items-center gap-3 rounded-sm px-3 text-left text-sm font-medium transition-colors"
+              className="text-fg-muted hover:text-fg hover:bg-bg-elev-2 flex min-h-[48px] w-full items-center gap-3 rounded-sm px-3 text-left text-sm font-medium transition-colors"
             >
               <span
                 aria-hidden="true"
                 className="text-fg-muted inline-flex size-9 items-center justify-center rounded-sm"
                 style={{ background: '#27272A' }}
               >
-                <LogOut className="size-4" strokeWidth={2} />
+                <IconLogout className="size-4" strokeWidth={2} />
               </span>
               Sign out
             </button>
@@ -257,7 +237,7 @@ function NavLink({ item, active }: { item: NavItem; active: boolean }) {
         aria-current={active ? 'page' : undefined}
         className={cn(
           'group/nav relative flex min-h-[56px] items-center gap-3 rounded-sm px-3 transition-all',
-          active ? 'bg-zinc-900 ring-1 ring-zinc-700 text-fg' : 'text-fg-muted hover:bg-zinc-900 hover:text-fg',
+          active ? 'bg-bg-elev-2 ring-1 ring-zinc-700 text-fg' : 'text-fg-muted hover:bg-bg-elev-2 hover:text-fg',
         )}
       >
         <span
@@ -284,7 +264,7 @@ function NavLink({ item, active }: { item: NavItem; active: boolean }) {
           ) : null}
         </div>
         {item.badge !== undefined && item.badge > 0 && (
-          <span className="ml-auto bg-zinc-800 text-fg text-caption font-bold rounded-sm px-1.5 py-0.5 tabular-nums">
+          <span className="ml-auto bg-bg-elev-3 text-fg text-caption font-bold rounded-sm px-1.5 py-0.5 tabular-nums">
             {item.badge > 99 ? '99+' : item.badge}
           </span>
         )}

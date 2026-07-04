@@ -1,53 +1,55 @@
 @import 'tailwindcss';
 
 /* -------------------------------------------------------------------------
- * Theme tokens — institutional terminal design system (dark-only).
+ * Theme tokens — HamaFX-Ai premium trading terminal design system (dark-only).
  *
- * Ultra-dense, high-contrast, data-first utility. Pure black canvas,
- * zinc grayscale surfaces, sharp geometry (max rounded-md / 4px).
- * No glassmorphism, no gradients, no glow shadows, no ambient orbs.
+ * Sharp, data-first, with a distinctive brand identity. Near-black canvas,
+ * refined grayscale surfaces, orange brand accent (#F07010), sharp geometry
+ * (max rounded-sm / 2px). No glassmorphism, no gradients, no glow shadows,
+ * no ambient orbs.
  *
- * Brand: neutral white-on-black. Market signals: emerald/red/amber.
+ * Brand: orange accent (#F07010) used with extreme restraint. Market signals:
+ * refined green/red/amber reserved for price/P&L data only.
  * ------------------------------------------------------------------------- */
 
 @theme {
-  /* ── Surfaces — pure black / zinc grayscale. Zero chroma, zero hue. ── */
-  --color-bg: #000000;
-  --color-bg-elev-1: #09090B;
-  --color-bg-elev-2: #18181B;
-  --color-bg-elev-3: #27272A;
-  --color-border: #27272A;
-  --color-divider: #111113;
-  --color-overlay: rgba(0, 0, 0, 0.85);
+  /* ── Surfaces — near-black canvas / refined grayscale. ── */
+  --color-bg: #0A0A0A;
+  --color-bg-elev-1: #141414;
+  --color-bg-elev-2: #1E1E1E;
+  --color-bg-elev-3: #2A2A2A;
+  --color-border: #1E1E1E;
+  --color-divider: #141414;
+  --color-overlay: rgba(0, 0, 0, 0.80);
 
-  /* ── Text ── */
-  --color-fg: #FAFAFA;
-  --color-fg-muted: #A1A1AA;
-  --color-fg-subtle: #71717A;
+  /* ── Text — from owner's palette photo ── */
+  --color-fg: #F0F0F0;
+  --color-fg-muted: #808080;
+  --color-fg-subtle: #555555;
 
-  /* ── Brand — neutral white accent (institutional) ── */
-  --color-brand: #FAFAFA;
-  --color-brand-fg: #000000;
-  --color-brand-glow: rgba(250, 250, 250, 0.15);
+  /* ── Brand — orange accent (#F07010). Used with EXTREME RESTRAINT. ── */
+  --color-brand: #F07010;
+  --color-brand-fg: #FFFFFF;
+  --color-brand-glow: rgba(240, 112, 16, 0.15);
 
   /* ── Accent — kept for backward compat but unused in terminal theme ── */
-  --color-accent: #3B82F6;
-  --color-accent-glow: rgba(59, 130, 246, 0.15);
+  --color-accent: #F07010;
+  --color-accent-glow: rgba(240, 112, 16, 0.15);
 
-  /* ── Market Signal States ── */
-  --color-bull: #10B981;
+  /* ── Market Signal States — reserved ONLY for price/P&L data ── */
+  --color-bull: #22C55E;
   --color-bear: #EF4444;
   --color-neutral: #71717A;
   --color-warn: #F59E0B;
   --color-info: #3B82F6;
 
-  /* ── Radii — SHARP GEOMETRY. Max rounded-md (4px). ── */
+  /* ── Radii — SHARP GEOMETRY. Uniform 2px everywhere. ── */
   --radius-sm: 2px;
-  --radius-md: 4px;
-  --radius-lg: 4px;
-  --radius-xl: 4px;
-  --radius-2xl: 4px;
-  --radius-pill: 4px;
+  --radius-md: 2px;
+  --radius-lg: 2px;
+  --radius-xl: 2px;
+  --radius-2xl: 2px;
+  --radius-pill: 2px;
 
   /* ── Shadows — minimal, flat. No glow. ── */
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.6);

@@ -16,10 +16,10 @@
  * limitations under the License.
  */
 
-// Settings island for Telegram test message. Uses sonner toasts for
+// IconSettings island for Telegram test message. Uses sonner toasts for
 // confirmation/error rather than inline status text.
 
-import { Send } from 'lucide-react';
+import { IconArrowRight } from '@tabler/icons-react';
 import { useTransition } from 'react';
 import { toast } from 'sonner';
 
@@ -100,8 +100,8 @@ export function TestTelegramButton(): React.JSX.Element {
       aria-busy={pending}
       className="focus-visible:ring-fg min-h-[44px] focus-visible:ring-2"
     >
-      <Send className="size-4" />
-      {pending ? 'Sending…' : 'Send test Telegram'}
+      <IconArrowRight className="size-4" />
+      {pending ? 'Sending…' : 'IconArrowRight test Telegram'}
     </Button>
   );
 }

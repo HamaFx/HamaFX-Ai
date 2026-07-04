@@ -15,28 +15,18 @@
  */
 
 import type { ConveneCommitteeOutput, CommitteeVerdict } from '@hamafx/shared';
-import {
-  AlertTriangle,
-  Briefcase,
-  CheckCircle2,
-  ChevronDown,
-  Link as LinkIcon,
-  ShieldAlert,
-  TrendingUp,
-  Users,
-  XCircle,
-} from 'lucide-react';
-import type { LucideIcon } from 'lucide-react';
+import { IconAlertTriangle,  IconBriefcase,  IconCircleCheck,  IconChevronDown,  IconLink as LinkIcon,  IconShieldAlert,  IconTrendingUp,  IconUsers,  IconCircleX } from '@tabler/icons-react';
+import type { Icon } from '@tabler/icons-react';
 
 import type { ToolPartProps } from './registry';
 
 const PERSONA_LABELS: Record<
   CommitteeVerdict['persona'],
-  { label: string; Icon: LucideIcon }
+  { label: string; Icon: Icon }
 > = {
-  economist: { label: 'Economist', Icon: Briefcase },
-  technician: { label: 'Technician', Icon: TrendingUp },
-  risk_manager: { label: 'Risk Manager', Icon: ShieldAlert },
+  economist: { label: 'Economist', Icon: IconBriefcase },
+  technician: { label: 'Technician', Icon: IconTrendingUp },
+  risk_manager: { label: 'Risk Manager', Icon: IconShieldAlert },
 };
 
 function GradeBadge({
@@ -46,23 +36,23 @@ function GradeBadge({
   grade: ConveneCommitteeOutput['grade'];
   goNoGo: ConveneCommitteeOutput['goNoGo'];
 }) {
-  let bgTone = 'bg-zinc-900 text-fg-muted';
+  let bgTone = 'bg-bg-elev-2 text-fg-muted';
   let icon = null;
 
   if (goNoGo === 'go') {
-    bgTone = 'bg-emerald-500/10 text-emerald-500';
-    icon = <CheckCircle2 className="mr-1 size-3" />;
+    bgTone = 'bg-bull/10 text-bull';
+    icon = <IconCircleCheck className="mr-1 size-3" />;
   } else if (goNoGo === 'caution') {
-    bgTone = 'bg-amber-500/10 text-amber-500';
-    icon = <AlertTriangle className="mr-1 size-3" />;
+    bgTone = 'bg-warn/10 text-warn';
+    icon = <IconAlertTriangle className="mr-1 size-3" />;
   } else {
-    bgTone = 'bg-red-500/10 text-red-500';
-    icon = <XCircle className="mr-1 size-3" />;
+    bgTone = 'bg-bear/10 text-bear';
+    icon = <IconCircleX className="mr-1 size-3" />;
   }
 
   return (
     <div
-      className={`flex items-center rounded px-2 py-0.5 text-xs font-bold uppercase tracking-wide ${bgTone}`}
+      className={`flex items-center rounded-sm px-2 py-0.5 text-xs font-bold uppercase tracking-wide ${bgTone}`}
     >
       {icon}
       Grade {grade}
@@ -83,11 +73,11 @@ export function ConveneCommitteePart({
   }
 
   return (
-    <div className="border-border bg-zinc-950 flex flex-col gap-3 rounded-sm border p-3">
+    <div className="border-border bg-bg-elev-1 flex flex-col gap-3 rounded-sm border p-3">
       <header className="flex flex-col gap-2">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Users className="text-fg size-4" />
+            <IconUsers className="text-fg size-4" />
             <h3 className="text-fg text-sm font-semibold">
               Committee Review · {output.symbol} {output.side.toUpperCase()}
             </h3>
@@ -117,7 +107,7 @@ export function ConveneCommitteePart({
         ))}
       </div>
 
-      <div className="border-border bg-zinc-900 rounded-sm border p-3 text-sm">
+      <div className="border-border bg-bg-elev-2 rounded-sm border p-3 text-sm">
         <div className="text-fg-muted mb-1 text-xs font-semibold uppercase tracking-wider">
           Consensus
         </div>
@@ -133,13 +123,13 @@ function VerdictCard({ verdict }: { verdict: CommitteeVerdict }) {
 
   const tone =
     verdict.verdict === 'bullish'
-      ? 'text-emerald-500'
+      ? 'text-bull'
       : verdict.verdict === 'bearish'
-        ? 'text-red-500'
+        ? 'text-bear'
         : 'text-fg-muted';
 
   return (
-    <details className="border-border bg-zinc-900 group rounded-sm border [&_summary::-webkit-details-marker]:hidden">
+    <details className="border-border bg-bg-elev-2 group rounded-sm border [&_summary::-webkit-details-marker]:hidden">
       <summary className="focus-visible:ring-fg flex cursor-pointer items-center justify-between rounded-sm p-2.5 outline-none focus-visible:ring-2 focus-visible:ring-inset">
         <div className="flex items-center gap-2">
           <Icon className="text-fg-subtle size-4" />
@@ -149,10 +139,10 @@ function VerdictCard({ verdict }: { verdict: CommitteeVerdict }) {
           <span className={`text-body-sm font-medium uppercase ${tone}`}>
             {verdict.verdict}
           </span>
-          <span className="bg-zinc-950 border-border text-fg-subtle rounded border px-1.5 py-0.5 text-caption tabular-nums">
+          <span className="bg-bg-elev-1 border-border text-fg-subtle rounded-sm border px-1.5 py-0.5 text-caption tabular-nums">
             Conf: {verdict.confidence}/10
           </span>
-          <ChevronDown className="text-fg-subtle size-3.5 transition-transform group-open:rotate-180" />
+          <IconChevronDown className="text-fg-subtle size-3.5 transition-transform group-open:rotate-180" />
         </div>
       </summary>
 
@@ -232,24 +222,24 @@ function VerdictCard({ verdict }: { verdict: CommitteeVerdict }) {
 function SkeletonCard() {
   return (
     <div
-      className="border-border bg-zinc-950 flex flex-col gap-3 rounded-sm border p-3"
+      className="border-border bg-bg-elev-1 flex flex-col gap-3 rounded-sm border p-3"
       aria-busy="true"
       aria-label="Convening committee"
     >
       <div className="flex items-center justify-between">
-        <div className="bg-zinc-900 h-5 w-1/3 animate-pulse rounded" />
-        <div className="bg-zinc-900 h-5 w-16 animate-pulse rounded" />
+        <div className="bg-bg-elev-2 h-5 w-1/3 animate-pulse rounded-sm" />
+        <div className="bg-bg-elev-2 h-5 w-16 animate-pulse rounded-sm" />
       </div>
       <div className="flex gap-2">
-        <div className="bg-zinc-900 h-4 w-20 animate-pulse rounded" />
-        <div className="bg-zinc-900 h-4 w-20 animate-pulse rounded" />
+        <div className="bg-bg-elev-2 h-4 w-20 animate-pulse rounded-sm" />
+        <div className="bg-bg-elev-2 h-4 w-20 animate-pulse rounded-sm" />
       </div>
       <div className="flex flex-col gap-2">
-        <div className="bg-zinc-900 h-10 animate-pulse rounded-sm" />
-        <div className="bg-zinc-900 h-10 animate-pulse rounded-sm" />
-        <div className="bg-zinc-900 h-10 animate-pulse rounded-sm" />
+        <div className="bg-bg-elev-2 h-10 animate-pulse rounded-sm" />
+        <div className="bg-bg-elev-2 h-10 animate-pulse rounded-sm" />
+        <div className="bg-bg-elev-2 h-10 animate-pulse rounded-sm" />
       </div>
-      <div className="bg-zinc-900 h-16 animate-pulse rounded-sm" />
+      <div className="bg-bg-elev-2 h-16 animate-pulse rounded-sm" />
     </div>
   );
 }
@@ -258,7 +248,7 @@ function ErrorCard({ message }: { message?: string }) {
   return (
     <div
       role="alert"
-      className="border-red-500/30 bg-zinc-950 text-red-500 rounded-sm border p-3 text-sm"
+      className="border-bear/30 bg-bg-elev-1 text-bear rounded-sm border p-3 text-sm"
     >
       Committee convening failed{message ? ` · ${message}` : ''}
     </div>

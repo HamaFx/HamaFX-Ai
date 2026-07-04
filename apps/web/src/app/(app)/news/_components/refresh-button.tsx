@@ -20,7 +20,7 @@
 // asks Next to revalidate the server component. Confirmation/error
 // surface through sonner toasts (no inline status string).
 
-import { RefreshCw } from 'lucide-react';
+import { IconRefresh } from '@tabler/icons-react';
 import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
 import { toast } from 'sonner';
@@ -75,7 +75,7 @@ export function RefreshButton({ endpoint, label = 'Refresh now' }: RefreshButton
       loading={isLoading}
       className="focus-visible:ring-fg min-h-[44px] focus-visible:ring-2"
     >
-      <RefreshCw className={`size-3.5 ${isLoading ? 'animate-spin' : ''}`} />
+      <IconRefresh className={`size-3.5 ${isLoading ? 'animate-spin' : ''}`} />
       {isLoading ? 'Loading…' : label}
     </Button>
   );

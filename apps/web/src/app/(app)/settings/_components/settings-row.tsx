@@ -39,7 +39,7 @@ interface SettingsRowProps {
 
 export function SettingsRow({
   icon,
-  iconColor = '#27272A',
+  iconColor = 'var(--color-bg-elev-3)',
   label,
   description,
   action,

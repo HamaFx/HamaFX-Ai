@@ -27,7 +27,7 @@
 // the chat surface, not an error: many users simply haven't received a
 // briefing yet (fresh account, low event volume, etc.).
 
-import { ArrowRight, Calendar, Newspaper, Sparkles } from 'lucide-react';
+import {IconArrowRight, IconCalendar, IconNewspaper, IconBolt} from '@tabler/icons-react';
 import Link from 'next/link';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -51,21 +51,21 @@ interface BriefingWidgetProps {
 
 interface KindMeta {
   label: string;
-  icon: typeof Sparkles;
+  icon: typeof IconBolt;
 }
 
 const KIND_META: Record<'pre' | 'post' | 'weekly_review', KindMeta> = {
-  pre: { label: 'Pre-event briefing', icon: Calendar },
-  post: { label: 'Post-event recap', icon: Newspaper },
-  weekly_review: { label: 'Weekly review', icon: Sparkles },
+  pre: { label: 'Pre-event briefing', icon: IconCalendar },
+  post: { label: 'Post-event recap', icon: IconNewspaper },
+  weekly_review: { label: 'Weekly review', icon: IconBolt },
 };
 
 export function BriefingWidget({ briefing }: BriefingWidgetProps) {
   if (!briefing) {
     return (
-      <div className="border-zinc-800 bg-zinc-950 rounded-sm border p-2">
+      <div className="border-border bg-bg-elev-1 rounded-sm border p-2">
         <EmptyState
-          icon={<Sparkles className="size-6" />}
+          icon={<IconBolt className="size-6" />}
           title="No briefing yet"
           description="We'll surface an AI briefing here around the next high-impact event."
           tone="muted"
@@ -76,14 +76,14 @@ export function BriefingWidget({ briefing }: BriefingWidgetProps) {
     );
   }
 
-  const meta = KIND_META[briefing.kind] ?? { label: 'Briefing', icon: Sparkles };
+  const meta = KIND_META[briefing.kind] ?? { label: 'Briefing', icon: IconBolt };
   const Icon = meta.icon;
 
   return (
     <article
       role="status"
       aria-label={meta.label}
-      className="border-zinc-800 bg-zinc-950 flex flex-col gap-3 rounded-sm border p-4"
+      className="border-border bg-bg-elev-1 flex flex-col gap-3 rounded-sm border p-4"
     >
       <header className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
@@ -93,10 +93,10 @@ export function BriefingWidget({ briefing }: BriefingWidgetProps) {
             className={cn(
               'rounded-sm px-1.5 py-0.5 text-caption font-medium',
               briefing.kind === 'pre'
-                ? 'bg-amber-500/10 text-amber-500'
+                ? 'bg-warn/10 text-warn'
                 : briefing.kind === 'post'
-                  ? 'bg-blue-500/10 text-blue-500'
-                  : 'bg-zinc-900 text-fg',
+                  ? 'bg-info/10 text-info'
+                  : 'bg-bg-elev-2 text-fg',
             )}
           >
             {meta.label}
@@ -131,7 +131,7 @@ export function BriefingWidget({ briefing }: BriefingWidgetProps) {
           href="/chat"
           className="text-fg text-body-sm hover:underline inline-flex items-center gap-1"
         >
-          Dig deeper in chat <ArrowRight className="size-3.5" />
+          Dig deeper in chat <IconArrowRight className="size-3.5" />
         </Link>
       </footer>
     </article>

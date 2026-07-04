@@ -20,7 +20,7 @@
 // the codebase had grown (TimeframePicker, SymbolPicker, alert-form's
 // Segmented, journal entry-form's Pills). One shape, three rendering modes:
 //
-//   variant="gradient" → brand-gradient slide-in indicator (chart pickers)
+//   variant="accent"  → brand accent slide-in indicator (chart pickers)
 //   variant="solid"    → flat brand bg on the active segment (forms)
 //   variant="tone"     → bull/bear/brand tone per option (long/short, ↑/↓)
 //
@@ -37,7 +37,7 @@ import { useEffect, useId, useRef, useState } from 'react';
 
 import { cn } from '@/lib/cn';
 
-export type SegmentedVariant = 'gradient' | 'solid' | 'tone';
+export type SegmentedVariant = 'accent' | 'solid' | 'tone';
 export type SegmentedTone = 'brand' | 'bull' | 'bear';
 
 export interface SegmentedOption<T extends string> {
@@ -186,9 +186,9 @@ export function Segmented<T extends string>(props: SegmentedProps<T>) {
         aria-label={computedAriaLabel}
         onKeyDown={handleKeyDown}
         className={cn(
-          variant === 'gradient'
-            ? 'border-border bg-zinc-900 inline-flex items-center gap-0.5 rounded-sm border p-0.5'
-            : 'border-border bg-zinc-900 inline-flex flex-wrap items-center gap-0.5 rounded-sm border p-0.5',
+          variant === 'accent'
+            ? 'border-border bg-bg-elev-2 inline-flex items-center gap-0.5 rounded-sm border p-0.5'
+            : 'border-border bg-bg-elev-2 inline-flex flex-wrap items-center gap-0.5 rounded-sm border p-0.5',
           className,
         )}
       >
@@ -200,13 +200,13 @@ export function Segmented<T extends string>(props: SegmentedProps<T>) {
             ITEM_PAD[size],
             SIZE[size],
             !active && 'text-fg-muted hover:text-fg',
-            active && variant === 'gradient' && 'text-black',
+            active && variant === 'accent' && 'text-black',
             active && variant === 'solid' && 'bg-fg text-black',
             active && variant === 'tone' && toneClass(opt.tone),
           );
 
           const indicator =
-            active && variant === 'gradient' ? (
+            active && variant === 'accent' ? (
               <m.span
                 layoutId={layoutId}
                 className="absolute inset-0 -z-0 rounded-sm"
@@ -264,7 +264,7 @@ export function Segmented<T extends string>(props: SegmentedProps<T>) {
 }
 
 function toneClass(tone: SegmentedTone | undefined): string {
-  if (tone === 'bull') return 'bg-emerald-500 text-black';
-  if (tone === 'bear') return 'bg-red-500 text-black';
+  if (tone === 'bull') return 'bg-bull text-black';
+  if (tone === 'bear') return 'bg-bear text-black';
   return 'bg-fg text-black';
 }

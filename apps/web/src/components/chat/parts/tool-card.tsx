@@ -21,8 +21,9 @@
 // crisp on mobile. Bespoke renderers can land per-tool later without
 // touching the message-list code.
 
-import { useState } from 'react';
+import { useState, useId } from 'react';
 import { m } from 'motion/react';
+import { IconChevronDown, IconChevronRight } from '@tabler/icons-react';
 
 import { cn } from '@/lib/cn';
 
@@ -44,6 +45,7 @@ const PRETTY_NAME: Record<string, string> = {
 
 export function ToolCard({ name, state, input, output, errorText }: ToolCardProps) {
   const [expanded, setExpanded] = useState(false);
+  const contentId = useId();
   const label = PRETTY_NAME[name] ?? name.replace(/^tool-/, '').replace(/_/g, ' ');
   const running = state === 'input-streaming' || state === 'input-available';
   const failed = state === 'output-error';
@@ -60,25 +62,26 @@ export function ToolCard({ name, state, input, output, errorText }: ToolCardProp
       layout
       initial={false}
       className={cn(
-        'border-border bg-zinc-950 rounded-sm border px-2.5 py-1.5 text-xs',
-        failed && 'border-red-500/30',
+        'border-border bg-bg-elev-1 rounded-sm border',
+        failed && 'border-bear/30',
       )}
     >
       <button
         type="button"
         onClick={() => setExpanded((v) => !v)}
-        className="flex w-full items-center justify-between gap-2 text-left"
+        className="flex w-full items-center justify-between gap-2 border-b border-divider px-3 py-2 text-left text-xs"
         aria-expanded={expanded}
-        aria-controls="tool-card-content"
+        aria-controls={contentId}
       >
         <span className="text-fg-muted flex items-center gap-1.5 font-medium">
-          <span aria-hidden>{running ? '◐' : failed ? '✕' : '✓'}</span>
           <span>{label}</span>
-          <span className={cn('text-fg-subtle truncate', running && 'animate-pulse')}>
+          <span className={cn('text-fg-subtle truncate font-mono tabular-nums', running && 'animate-pulse')}>
             · {summary}
           </span>
         </span>
-        <span className="text-fg-subtle">{expanded ? '−' : '+'}</span>
+        <span className="text-fg-subtle">
+          {expanded ? <IconChevronDown className="size-4" /> : <IconChevronRight className="size-4" />}
+        </span>
       </button>
 
       {expanded ? (
@@ -88,8 +91,8 @@ export function ToolCard({ name, state, input, output, errorText }: ToolCardProp
           animate={{ opacity: 1, height: 'auto' }}
           exit={{ opacity: 0, height: 0 }}
           transition={{ duration: 0.2 }}
-          id="tool-card-content"
-          className="border-border mt-2 space-y-2 border-t pt-2 font-mono overflow-hidden"
+          id={contentId}
+          className="border-divider mt-0 space-y-2 px-3 py-3 font-mono tabular-nums text-sm overflow-hidden"
         >
           <Section label="input" data={input} />
           {failed ? (
@@ -106,8 +109,8 @@ export function ToolCard({ name, state, input, output, errorText }: ToolCardProp
 function Section({ label, data }: { label: string; data: unknown }) {
   return (
     <div>
-      <div className="text-fg-subtle mb-0.5 uppercase tracking-wide">{label}</div>
-      <pre className="bg-zinc-950 max-h-40 overflow-auto rounded p-2 text-caption leading-tight">
+      <div className="text-fg-subtle mb-0.5 text-xs uppercase tracking-wide">{label}</div>
+      <pre className="bg-bg-elev-2 max-h-40 overflow-auto rounded-sm p-2 text-caption leading-tight">
         {safeStringify(data)}
       </pre>
     </div>

@@ -31,16 +31,7 @@
 // The props interface is unchanged from the previous flat version so
 // `chat-screen.tsx` needs no edits.
 
-import {
-  AlertCircle,
-  AlertTriangle,
-  Bot,
-  Brain,
-  CheckCircle2,
-  Newspaper,
-  Shield,
-  TrendingUp,
-} from 'lucide-react';
+import { IconAlertCircle,  IconAlertTriangle,  IconRobot,  IconCpu,  IconCircleCheck,  IconNewspaper,  IconShield,  IconTrendingUp } from '@tabler/icons-react';
 import { AnimatePresence, m } from 'motion/react';
 import type { ReactNode } from 'react';
 
@@ -67,23 +58,23 @@ const AGENT_META: Record<
   string,
   { icon: ReactNode; label: string; tokenClass: string; glowClass: string }
 > = {
-  technical: { icon: <TrendingUp className="size-4" />, label: 'Technical', tokenClass: 'text-emerald-500', glowClass: 'shadow-none' },
-  fundamental: { icon: <Newspaper className="size-4" />, label: 'Fundamental', tokenClass: 'text-blue-500', glowClass: 'shadow-none' },
-  risk: { icon: <Shield className="size-4" />, label: 'Risk', tokenClass: 'text-red-500', glowClass: '' },
-  sentiment: { icon: <Bot className="size-4" />, label: 'Sentiment', tokenClass: 'text-amber-500', glowClass: '' },
-  decision: { icon: <Brain className="size-4" />, label: 'Decision', tokenClass: 'text-fg', glowClass: 'shadow-none' },
+  technical: { icon: <IconTrendingUp className="size-4" />, label: 'Technical', tokenClass: 'text-bull', glowClass: 'shadow-none' },
+  fundamental: { icon: <IconNewspaper className="size-4" />, label: 'Fundamental', tokenClass: 'text-info', glowClass: 'shadow-none' },
+  risk: { icon: <IconShield className="size-4" />, label: 'Risk', tokenClass: 'text-bear', glowClass: '' },
+  sentiment: { icon: <IconRobot className="size-4" />, label: 'Sentiment', tokenClass: 'text-warn', glowClass: '' },
+  decision: { icon: <IconCpu className="size-4" />, label: 'Decision', tokenClass: 'text-fg', glowClass: 'shadow-none' },
 };
 
 const FALLBACK_META = {
-  icon: <Bot className="size-4" />,
+  icon: <IconRobot className="size-4" />,
   label: 'Agent',
   tokenClass: 'text-fg-muted',
   glowClass: '',
 } as const;
 
 const BIAS_TOKEN: Record<AgentOpinion['bias'], string> = {
-  bullish: 'text-emerald-500',
-  bearish: 'text-red-500',
+  bullish: 'text-bull',
+  bearish: 'text-bear',
   neutral: 'text-fg-muted',
 };
 
@@ -104,17 +95,17 @@ export function AgentDeliberation({ agents, mode }: AgentDeliberationProps) {
     neutral: opinions.filter((a) => a.opinion?.bias === 'neutral').length,
   };
   const dissent = biasCounts.bullish > 0 && biasCounts.bearish > 0;
-  const confidenceTone = avgConfidence > 75 ? 'bg-emerald-500' : avgConfidence >= 50 ? 'bg-amber-500' : 'bg-red-500';
+  const confidenceTone = avgConfidence > 75 ? 'bg-bull' : avgConfidence >= 50 ? 'bg-warn' : 'bg-bear';
 
   return (
     <div
       role="status"
       aria-live="polite"
-      className="border border-zinc-800 bg-zinc-950 rounded-sm p-4 flex flex-col gap-4"
+      className="border border-border bg-bg-elev-1 rounded-sm p-4 flex flex-col gap-4"
     >
       {/* Header */}
       <div className="flex items-center gap-2 text-caption text-fg-subtle uppercase tracking-wider font-semibold">
-        <Brain className="size-3.5" />
+        <IconCpu className="size-3.5" />
         <span>Multi-Agent {mode} mode</span>
       </div>
 
@@ -164,7 +155,7 @@ export function AgentDeliberation({ agents, mode }: AgentDeliberationProps) {
             exit={{ opacity: 0, scale: 0.9 }}
             transition={{ type: 'spring', stiffness: 300, damping: 24 }}
             aria-label={`Committee verdict: ${dissent ? 'mixed' : opinions[0]?.opinion?.bias ?? 'neutral'}, ${avgConfidence}% confidence`}
-            className="border border-zinc-800 bg-zinc-900 rounded-sm p-3 flex flex-col gap-3"
+            className="border border-border bg-bg-elev-2 rounded-sm p-3 flex flex-col gap-3"
           >
             {/* Confidence meter */}
             <div className="flex flex-col gap-1.5">
@@ -172,7 +163,7 @@ export function AgentDeliberation({ agents, mode }: AgentDeliberationProps) {
                 <span className="text-sm font-semibold text-fg">Committee confidence</span>
                 <span className="text-sm font-bold text-fg tabular-nums">{avgConfidence}%</span>
               </div>
-              <div className="h-1.5 w-full overflow-hidden rounded-sm bg-zinc-800">
+              <div className="h-1.5 w-full overflow-hidden rounded-sm bg-bg-elev-3">
                 <m.div
                   className={cn('h-full rounded-sm', confidenceTone)}
                   initial={{ width: 0 }}
@@ -186,8 +177,8 @@ export function AgentDeliberation({ agents, mode }: AgentDeliberationProps) {
             <div className="flex items-center gap-3">
               <BiasDistribution counts={biasCounts} total={opinions.length} />
               {dissent ? (
-                <span className="ml-auto inline-flex items-center gap-1 text-caption text-amber-500 font-semibold">
-                  <AlertTriangle className="size-3.5" />
+                <span className="ml-auto inline-flex items-center gap-1 text-caption text-warn font-semibold">
+                  <IconAlertTriangle className="size-3.5" />
                   Mixed signals
                 </span>
               ) : null}
@@ -204,7 +195,7 @@ export function AgentDeliberation({ agents, mode }: AgentDeliberationProps) {
                     const meta = AGENT_META[a.agentName] ?? FALLBACK_META;
                     const op = a.opinion!;
                     return (
-                      <div key={a.agentName} className="border-l-2 border-zinc-800 pl-3 py-1.5">
+                      <div key={a.agentName} className="border-l-2 border-border pl-3 py-1.5">
                         <span className="text-fg text-body-sm font-semibold">{meta.label}</span>
                         <span className={cn('ml-2 text-caption font-bold uppercase', BIAS_TOKEN[op.bias])}>{op.bias}</span>
                         <span className="ml-1 text-fg-subtle text-caption tabular-nums">{Math.round(op.confidence * 100)}%</span>
@@ -222,8 +213,8 @@ export function AgentDeliberation({ agents, mode }: AgentDeliberationProps) {
               .map((a) => {
                 const meta = AGENT_META[a.agentName] ?? FALLBACK_META;
                 return (
-                  <div key={`error-${a.agentName}`} className="text-red-500 text-xs flex items-center gap-1.5">
-                    <AlertCircle className="size-3.5 shrink-0" />
+                  <div key={`error-${a.agentName}`} className="text-bear text-xs flex items-center gap-1.5">
+                    <IconAlertCircle className="size-3.5 shrink-0" />
                     <span>{meta.label} agent failed: {a.error}</span>
                   </div>
                 );
@@ -261,23 +252,23 @@ function AgentNode({
           transition={status === 'running' ? { duration: 1.5, repeat: Infinity, ease: 'easeInOut' } : { type: 'spring', stiffness: 400, damping: 25 }}
           className={cn(
             'relative flex size-12 items-center justify-center rounded-sm',
-            status === 'pending' && 'bg-zinc-900 text-fg-subtle',
-            status === 'running' && 'bg-zinc-800 text-fg',
-            status === 'done' && 'bg-zinc-900',
-            status === 'error' && 'bg-red-500/10 text-red-500 border border-red-500/30',
+            status === 'pending' && 'bg-bg-elev-2 text-fg-subtle',
+            status === 'running' && 'bg-bg-elev-3 text-fg',
+            status === 'done' && 'bg-bg-elev-2',
+            status === 'error' && 'bg-bear/10 text-bear border border-bear/30',
           )}
         >
           <span className={cn(status !== 'error' && status !== 'pending' && meta.tokenClass)}>{meta.icon}</span>
 
           {/* Status badges */}
           {status === 'done' ? (
-            <span className={cn('absolute -bottom-0.5 -right-0.5 flex size-4 items-center justify-center rounded-sm bg-zinc-950', meta.tokenClass)}>
-              <CheckCircle2 className="size-4" />
+            <span className={cn('absolute -bottom-0.5 -right-0.5 flex size-4 items-center justify-center rounded-sm bg-bg-elev-1', meta.tokenClass)}>
+              <IconCircleCheck className="size-4" />
             </span>
           ) : null}
           {status === 'error' ? (
-            <span className="absolute -bottom-0.5 -right-0.5 flex size-4 items-center justify-center rounded-sm bg-zinc-950 text-red-500">
-              <AlertCircle className="size-4" />
+            <span className="absolute -bottom-0.5 -right-0.5 flex size-4 items-center justify-center rounded-sm bg-bg-elev-1 text-bear">
+              <IconAlertCircle className="size-4" />
             </span>
           ) : null}
         </m.div>
@@ -333,8 +324,8 @@ function BiasDistribution({
   total: number;
 }) {
   const rows: Array<{ label: string; count: number; bar: string }> = [
-    { label: 'Bull', count: counts.bullish, bar: 'bg-emerald-500' },
-    { label: 'Bear', count: counts.bearish, bar: 'bg-red-500' },
+    { label: 'Bull', count: counts.bullish, bar: 'bg-bull' },
+    { label: 'Bear', count: counts.bearish, bar: 'bg-bear' },
     { label: 'Neutral', count: counts.neutral, bar: 'bg-fg-muted' },
   ];
 
@@ -345,7 +336,7 @@ function BiasDistribution({
         return (
           <div key={r.label} className="flex items-center gap-2">
             <span className="w-12 text-caption text-fg-subtle uppercase tracking-wide">{r.label}</span>
-            <div className="h-1.5 w-24 overflow-hidden rounded-sm bg-zinc-800">
+            <div className="h-1.5 w-24 overflow-hidden rounded-sm bg-bg-elev-3">
               <m.div
                 className={cn('h-full rounded-sm', r.bar)}
                 initial={{ width: 0 }}

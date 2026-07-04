@@ -20,11 +20,11 @@
 // poller so multiple tags on the same page share one upstream call.
 //
 // The price digits animate via `<AnimatedNumber>` (motion spring) so live
-// updates feel alive instead of snapping. Delta gets a TrendingUp/Down
+// updates feel alive instead of snapping. Delta gets a IconTrendingUp/Down
 // icon for at-a-glance direction.
 
 import { getSymbolDefinition, isKnownSymbol, priceDecimals, type Symbol } from '@hamafx/shared';
-import { Minus, TrendingDown, TrendingUp } from 'lucide-react';
+import {IconMinus, IconTrendingDown, IconTrendingUp} from '@tabler/icons-react';
 
 import { AnimatedNumber } from '@/components/ui/animated-number';
 import { usePrice } from '@/hooks/use-prices';
@@ -53,7 +53,7 @@ export function PriceTag({ symbol, referencePrice, className }: PriceTagProps) {
   }
   if (isError || !tick) {
     return (
-      <span className={cn('text-red-500 text-xs tabular-nums', className)}>price unavailable</span>
+      <span className={cn('text-bear text-xs tabular-nums', className)}>price unavailable</span>
     );
   }
 
@@ -68,20 +68,20 @@ export function PriceTag({ symbol, referencePrice, className }: PriceTagProps) {
         decimals={decimals}
         className={cn(
           'text-base font-semibold tabular-nums',
-          bull && 'text-emerald-500',
-          bear && 'text-red-500',
+          bull && 'text-bull',
+          bear && 'text-bear',
         )}
       />
       {delta !== null ? (
         <span
           className={cn(
             'inline-flex items-center gap-0.5 text-xs tabular-nums',
-            bull && 'text-emerald-500',
-            bear && 'text-red-500',
+            bull && 'text-bull',
+            bear && 'text-bear',
             !bull && !bear && 'text-fg-muted',
           )}
         >
-          {bull ? <TrendingUp className="size-3" /> : bear ? <TrendingDown className="size-3" /> : <Minus className="size-3" />}
+          {bull ? <IconTrendingUp className="size-3" /> : bear ? <IconTrendingDown className="size-3" /> : <IconMinus className="size-3" />}
           {delta >= 0 ? '+' : ''}
           {delta.toFixed(decimals)}
         </span>

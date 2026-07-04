@@ -18,19 +18,7 @@
 
 import type { Alert } from '@hamafx/shared';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import {
-  Activity,
-  BarChart3,
-  Bell,
-  BellOff,
-  BellRing,
-  Mail,
-  Plus,
-  RotateCw,
-  Send,
-  Trash2,
-  TrendingUp,
-} from 'lucide-react';
+import { IconActivity,  IconChartBar,  IconBell,  IconBellOff,  IconBellRinging,  IconMail,  IconPlus,  IconRefresh,  IconArrowRight,  IconTrash,  IconTrendingUp } from '@tabler/icons-react';
 import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -137,16 +125,16 @@ export function AlertList() {
       {isLoading ? (
         <p className="text-fg-muted text-sm px-1">Loading…</p>
       ) : isError ? (
-        <p className="text-red-500 text-sm px-1" role="alert">Failed to load: {(error as Error)?.message}</p>
+        <p className="text-bear text-sm px-1" role="alert">Failed to load: {(error as Error)?.message}</p>
       ) : data?.alerts.length === 0 ? (
         <EmptyState
           tone="muted"
-          icon={<Bell className="size-7" strokeWidth={1.75} />}
+          icon={<IconBell className="size-7" strokeWidth={1.75} />}
           title="No alerts configured"
           description="Create price alerts to get notified when the market hits your targets."
           action={
             <Button type="button" onClick={() => setOpen(true)}>
-              <Plus className="size-4" />
+              <IconPlus className="size-4" />
               Create alert
             </Button>
           }
@@ -186,7 +174,7 @@ export function AlertList() {
       {data && data.alerts.length > 0 ? (
         <div className="flex justify-end">
           <Button type="button" onClick={() => setOpen(true)}>
-            <Plus className="size-4" />
+            <IconPlus className="size-4" />
             New alert
           </Button>
         </div>
@@ -205,8 +193,8 @@ interface AlertRowProps {
 
 function AlertRow({ alert, onToggle, onDelete }: AlertRowProps) {
   const RuleIcon = ruleIcon(alert);
-  const StatusIcon = alert.active ? Bell : alert.firedAt ? BellRing : BellOff;
-  const statusTone = alert.active ? 'text-fg' : alert.firedAt ? 'text-amber-500' : 'text-fg-subtle';
+  const StatusIcon = alert.active ? IconBell : alert.firedAt ? IconBellRinging : IconBellOff;
+  const statusTone = alert.active ? 'text-fg' : alert.firedAt ? 'text-warn' : 'text-fg-subtle';
 
   const trackRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -273,7 +261,7 @@ function AlertRow({ alert, onToggle, onDelete }: AlertRowProps) {
   }, [onToggle, onDelete]);
 
   return (
-    <li className="relative overflow-hidden rounded-sm border border-zinc-800 bg-zinc-950 transition-all duration-200 hover:shadow-lg">
+    <li className="relative overflow-hidden rounded-sm border border-border bg-bg-elev-1 transition-all duration-200 hover:shadow-lg">
       <div
         ref={trackRef}
         className="grid overflow-x-auto scrollbar-none overscroll-behavior-x-none select-none"
@@ -284,7 +272,7 @@ function AlertRow({ alert, onToggle, onDelete }: AlertRowProps) {
       >
         {/* Left Option (Re-arm / Pause) */}
         <div 
-          className="flex w-full items-center justify-start pl-6 bg-zinc-900 text-fg"
+          className="flex w-full items-center justify-start pl-6 bg-bg-elev-2 text-fg"
           style={{ scrollSnapAlign: 'start' }}
         >
           <StatusIcon className="size-5 animate-pulse" />
@@ -294,7 +282,7 @@ function AlertRow({ alert, onToggle, onDelete }: AlertRowProps) {
         <div
           ref={contentRef}
           className={cn(
-            'flex w-full items-start gap-3 p-4 bg-zinc-950 transition-opacity duration-200',
+            'flex w-full items-start gap-3 p-4 bg-bg-elev-1 transition-opacity duration-200',
             !alert.active && 'opacity-60 saturate-50',
           )}
           style={{ scrollSnapAlign: 'center' }}
@@ -340,10 +328,10 @@ function AlertRow({ alert, onToggle, onDelete }: AlertRowProps) {
               </div>
               <div className="flex items-center gap-1 ml-1.5">
                 {alert.channels.includes('email') && (
-                  <Mail className="text-fg-muted size-3.5" strokeWidth={2} />
+                  <IconMail className="text-fg-muted size-3.5" strokeWidth={2} />
                 )}
                 {alert.channels.includes('telegram') && (
-                  <Send className="text-fg size-3.5" strokeWidth={2} />
+                  <IconArrowRight className="text-fg size-3.5" strokeWidth={2} />
                 )}
               </div>
             </div>
@@ -363,9 +351,9 @@ function AlertRow({ alert, onToggle, onDelete }: AlertRowProps) {
                 type="button"
                 onClick={onToggle}
                 aria-label={alert.active ? 'Pause alert' : 'Re-arm alert'}
-                className="text-fg-muted hover:text-fg hover:bg-zinc-900 inline-flex size-10 items-center justify-center rounded-sm transition-colors"
+                className="text-fg-muted hover:text-fg hover:bg-bg-elev-2 inline-flex size-10 items-center justify-center rounded-sm transition-colors"
               >
-                {alert.active ? <BellOff className="size-4" /> : <RotateCw className="size-4" />}
+                {alert.active ? <IconBellOff className="size-4" /> : <IconRefresh className="size-4" />}
               </button>
             </Tooltip>
             <Tooltip label="Delete">
@@ -373,9 +361,9 @@ function AlertRow({ alert, onToggle, onDelete }: AlertRowProps) {
                 type="button"
                 onClick={onDelete}
                 aria-label="Delete alert"
-                className="text-red-500/70 hover:text-red-500 hover:bg-red-500/10 inline-flex size-10 items-center justify-center rounded-sm transition-colors"
+                className="text-bear/70 hover:text-bear hover:bg-bear/10 inline-flex size-10 items-center justify-center rounded-sm transition-colors"
               >
-                <Trash2 className="size-4" />
+                <IconTrash className="size-4" />
               </button>
             </Tooltip>
           </div>
@@ -383,10 +371,10 @@ function AlertRow({ alert, onToggle, onDelete }: AlertRowProps) {
 
         {/* Right Option (Delete) */}
         <div 
-          className="flex w-full items-center justify-end pr-6 bg-red-500/10 text-red-500"
+          className="flex w-full items-center justify-end pr-6 bg-bear/10 text-bear"
           style={{ scrollSnapAlign: 'end' }}
         >
-          <Trash2 className="size-5 animate-pulse" />
+          <IconTrash className="size-5 animate-pulse" />
         </div>
       </div>
     </li>
@@ -396,11 +384,11 @@ function AlertRow({ alert, onToggle, onDelete }: AlertRowProps) {
 function ruleIcon(a: Alert) {
   switch (a.rule.type) {
     case 'priceCross':
-      return TrendingUp;
+      return IconTrendingUp;
     case 'indicatorCross':
-      return Activity;
+      return IconActivity;
     case 'candleClose':
-      return BarChart3;
+      return IconChartBar;
   }
 }
 

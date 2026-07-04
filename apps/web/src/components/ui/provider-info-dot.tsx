@@ -33,7 +33,7 @@
  * handler.
  */
 
-import { Info } from 'lucide-react';
+import { IconInfo } from '@tabler/icons-react';
 import type { ReactElement } from 'react';
 
 import { Tooltip } from '@/components/ui/tooltip';
@@ -84,7 +84,7 @@ export function ProviderInfoDot({
   return (
     <Tooltip label={label} side={side}>
       <span
-        role="img"
+        role="button"
         aria-label={ariaLabel}
         className={
           'text-fg-muted hover:text-fg inline-flex size-4 items-center justify-center rounded-sm transition-colors' +
@@ -92,7 +92,7 @@ export function ProviderInfoDot({
         }
         onClick={(e) => e.stopPropagation()}
       >
-        <Info className="size-3" aria-hidden="true" />
+        <IconInfo className="size-3" aria-hidden="true" />
         <span className="sr-only">{provider.displayName} info</span>
       </span>
     </Tooltip>

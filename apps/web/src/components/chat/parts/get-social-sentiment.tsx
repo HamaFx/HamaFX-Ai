@@ -15,7 +15,7 @@
  */
 
 import { type GetSocialSentimentOutput } from '@hamafx/shared';
-import { MessageSquare, MessageCircle, BarChart3, Newspaper, AlertCircle, type LucideIcon } from 'lucide-react';
+import {IconMessage, IconMessageCircle, IconChartBar, IconNewspaper, IconAlertCircle, type Icon} from '@tabler/icons-react';
 
 interface GetSocialSentimentPartProps {
   /** Tool output, or `null` while streaming / before completion. */
@@ -25,48 +25,48 @@ interface GetSocialSentimentPartProps {
 }
 
 const SENTIMENT_COLORS: Record<string, string> = {
-  very_bullish: 'bg-emerald-500/15 text-emerald-500 border border-emerald-500/20',
-  bullish: 'bg-emerald-500/10 text-emerald-500/90 border border-emerald-500/10',
-  neutral: 'bg-zinc-900 text-fg-muted border border-zinc-800',
-  bearish: 'bg-red-500/10 text-red-500/90 border border-red-500/10',
-  very_bearish: 'bg-red-500/15 text-red-500 border border-red-500/20',
+  very_bullish: 'bg-bull/15 text-bull border border-bull/20',
+  bullish: 'bg-bull/10 text-bull/90 border border-bull/10',
+  neutral: 'bg-bg-elev-2 text-fg-muted border border-border',
+  bearish: 'bg-bear/10 text-bear/90 border border-bear/10',
+  very_bearish: 'bg-bear/15 text-bear border border-bear/20',
 };
 
-const SOURCE_ICONS: Record<string, LucideIcon> = {
-  reddit: MessageSquare,
-  twitter: MessageCircle,
-  retail_positioning: BarChart3,
-  news: Newspaper,
-  aggregated: AlertCircle,
+const SOURCE_ICONS: Record<string, Icon> = {
+  reddit: IconMessage,
+  twitter: IconMessageCircle,
+  retail_positioning: IconChartBar,
+  news: IconNewspaper,
+  aggregated: IconAlertCircle,
 };
 
 export function GetSocialSentimentPart({ output, state, errorMessage }: GetSocialSentimentPartProps) {
   if (state === 'error') {
     return (
-      <div role="alert" className="border-red-500/30 bg-zinc-950 text-red-500 rounded-sm border p-3 text-sm">
+      <div role="alert" className="border-bear/30 bg-bg-elev-1 text-bear rounded-sm border p-3 text-sm">
         Sentiment unavailable{errorMessage ? ` · ${errorMessage}` : ''}
       </div>
     );
   }
   if (state === 'loading' || !output) {
     return (
-      <div className="border-border bg-zinc-950 rounded-sm border p-3" aria-busy="true">
-        <div className="bg-zinc-900 mb-2 h-3 w-32 animate-pulse rounded" />
-        <div className="bg-zinc-900 h-16 w-full animate-pulse rounded" />
+      <div className="border-border bg-bg-elev-1 rounded-sm border p-3" aria-busy="true">
+        <div className="bg-bg-elev-2 mb-2 h-3 w-32 animate-pulse rounded-sm" />
+        <div className="bg-bg-elev-2 h-16 w-full animate-pulse rounded-sm" />
       </div>
     );
   }
 
   if (!output.available) {
     return (
-      <div className="border-border bg-zinc-950 rounded-sm border p-3 text-fg-muted text-sm text-center">
+      <div className="border-border bg-bg-elev-1 rounded-sm border p-3 text-fg-muted text-sm text-center">
         No sentiment data available for {output.symbol}.
       </div>
     );
   }
 
   return (
-    <div className="border-border bg-zinc-950 rounded-sm border p-3 space-y-4">
+    <div className="border-border bg-bg-elev-1 rounded-sm border p-3 space-y-4">
       <div className="text-fg-muted text-xs">
         Social Sentiment · {new Date(output.fetchedAt).toLocaleTimeString()}
       </div>
@@ -83,7 +83,7 @@ export function GetSocialSentimentPart({ output, state, errorMessage }: GetSocia
       </div>
 
       {output.contrarianSignal && output.contrarianNote && (
-          <div className="bg-amber-500/10 text-amber-500 border border-amber-500/20 p-2.5 rounded-sm text-xs leading-[1.4]">
+          <div className="bg-warn/10 text-warn border border-warn/20 p-2.5 rounded-sm text-xs leading-[1.4]">
           <div className="font-semibold mb-0.5">Contrarian Warning</div>
           {output.contrarianNote}
         </div>
@@ -93,9 +93,9 @@ export function GetSocialSentimentPart({ output, state, errorMessage }: GetSocia
         {output.sources
           .filter((s) => s.available)
           .map((src, i) => {
-            const Icon = SOURCE_ICONS[src.source] || AlertCircle;
+            const Icon = SOURCE_ICONS[src.source] || IconAlertCircle;
             return (
-              <div key={i} className="flex items-center justify-between gap-3 p-2 bg-zinc-950 rounded-sm text-xs">
+              <div key={i} className="flex items-center justify-between gap-3 p-2 bg-bg-elev-1 rounded-sm text-xs">
                 <div className="flex items-center gap-2">
                   <Icon className="size-4 text-fg-muted shrink-0" />
                   <span className="text-fg font-medium capitalize flex-1">
@@ -109,7 +109,7 @@ export function GetSocialSentimentPart({ output, state, errorMessage }: GetSocia
                     </span>
                   )}
                   <span
-                    className={`px-2 py-0.5 rounded font-medium ${
+                    className={`px-2 py-0.5 rounded-sm font-medium ${
                       SENTIMENT_COLORS[src.sentiment] || SENTIMENT_COLORS.neutral
                     }`}
                   >

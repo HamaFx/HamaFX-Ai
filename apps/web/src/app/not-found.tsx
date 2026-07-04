@@ -22,14 +22,13 @@ import { Link } from 'next-view-transitions';
 
 export default function NotFound() {
   return (
-    <main className="bg-zinc-950 text-fg flex min-h-svh flex-col items-center justify-center gap-6 px-6 text-center">
+    <main className="bg-bg-elev-1 text-fg flex min-h-svh flex-col items-center justify-center gap-6 px-6 text-center">
       <span
         aria-hidden="true"
         className="inline-flex size-16 items-center justify-center rounded-sm"
         style={{
           background: 'none',
-          boxShadow: '0 0 24px -4px rgba(250, 250, 250, 0.15)',
-        }}
+                  }}
       >
         <span className="text-black text-2xl font-bold">H</span>
       </span>

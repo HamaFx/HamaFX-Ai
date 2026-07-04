@@ -110,8 +110,8 @@ export default async function ModelsSettingsPage() {
 
       <FallbackChainPicker initialChain={initialChain} configuredProviders={configured} />
 
-      <details className="border border-zinc-800 bg-zinc-950 rounded-sm overflow-hidden">
-        <summary aria-label="Toggle advanced model settings" className="cursor-pointer select-none px-4 py-3 flex items-center justify-between gap-3 hover:bg-zinc-900 transition-colors">
+      <details className="border border-border bg-bg-elev-1 rounded-sm overflow-hidden">
+        <summary aria-label="Toggle advanced model settings" className="cursor-pointer select-none px-4 py-3 flex items-center justify-between gap-3 hover:bg-bg-elev-2 transition-colors">
           <div className="flex flex-col">
             <span className="text-sm font-medium text-fg">
               Advanced
@@ -122,14 +122,14 @@ export default async function ModelsSettingsPage() {
           </div>
           <span className="text-caption text-fg-subtle">▾</span>
         </summary>
-        <div className="border-t border-zinc-800 p-4 flex flex-col gap-4">
+        <div className="border-t border-border p-4 flex flex-col gap-4">
           <VisionModelPicker initialValue={initialVisionModel} providers={configured} />
           <EmbeddingModelPicker initialValue={initialEmbeddingModel} providers={configured} />
         </div>
       </details>
 
-      <details className="border border-zinc-800 bg-zinc-950 rounded-sm overflow-hidden">
-        <summary aria-label="Toggle model comparison table" className="cursor-pointer select-none px-4 py-3 flex items-center justify-between gap-3 hover:bg-zinc-900 transition-colors">
+      <details className="border border-border bg-bg-elev-1 rounded-sm overflow-hidden">
+        <summary aria-label="Toggle model comparison table" className="cursor-pointer select-none px-4 py-3 flex items-center justify-between gap-3 hover:bg-bg-elev-2 transition-colors">
           <div className="flex flex-col">
             <span className="text-sm font-medium text-fg">
               Model Comparison
@@ -140,10 +140,10 @@ export default async function ModelsSettingsPage() {
           </div>
           <span className="text-caption text-fg-subtle">▾</span>
         </summary>
-        <div className="border-t border-zinc-800 overflow-x-auto">
+        <div className="border-t border-border overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-zinc-800">
+              <tr className="border-b border-border">
                 <th className="text-left px-4 py-2.5 text-fg-muted font-medium">Provider</th>
                 <th className="text-left px-4 py-2.5 text-fg-muted font-medium">Model</th>
                 <th className="text-left px-4 py-2.5 text-fg-muted font-medium">Tier</th>
@@ -154,11 +154,11 @@ export default async function ModelsSettingsPage() {
             </thead>
             <tbody>
               {allModels.map((m) => (
-                <tr key={`${m.providerName}:${m.modelId}`} className="border-b border-zinc-800/50 last:border-0 hover:bg-zinc-900/40">
+                <tr key={`${m.providerName}:${m.modelId}`} className="border-b border-border/50 last:border-0 hover:bg-bg-elev-2/40">
                   <td className="px-4 py-2.5 text-fg font-medium">{m.providerName}</td>
                   <td className="px-4 py-2.5 text-fg font-mono text-xs">{m.label ?? m.modelId}</td>
                   <td className="px-4 py-2.5">
-                    <span className="inline-flex items-center rounded-sm bg-zinc-900 px-2 py-0.5 text-caption font-medium text-fg-subtle border border-zinc-800">
+                    <span className="inline-flex items-center rounded-sm bg-bg-elev-2 px-2 py-0.5 text-caption font-medium text-fg-subtle border border-border">
                       {m.tier ?? 'flagship'}
                     </span>
                   </td>
@@ -171,10 +171,10 @@ export default async function ModelsSettingsPage() {
                   <td className="px-4 py-2.5 text-center">
                     <div className="flex items-center justify-center gap-1.5">
                       {m.tier !== 'embedding' ? (
-                        <span className="inline-flex items-center rounded-sm bg-emerald-500/10 text-emerald-500 px-1.5 py-0.5 text-caption font-medium">Chat</span>
+                        <span className="inline-flex items-center rounded-sm bg-bull/10 text-bull px-1.5 py-0.5 text-caption font-medium">Chat</span>
                       ) : null}
                       {m.tier === 'embedding' ? (
-                        <span className="inline-flex items-center rounded-sm bg-zinc-800 text-fg-muted px-1.5 py-0.5 text-caption font-medium">Embed</span>
+                        <span className="inline-flex items-center rounded-sm bg-bg-elev-3 text-fg-muted px-1.5 py-0.5 text-caption font-medium">Embed</span>
                       ) : null}
                     </div>
                   </td>

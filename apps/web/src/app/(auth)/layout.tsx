@@ -17,8 +17,6 @@
 import type { Metadata } from 'next';
 import Image from 'next/image';
 
-import { AmbientBackground } from '@/components/layout/ambient-background';
-
 export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
@@ -31,14 +29,12 @@ export const metadata: Metadata = {
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
     <main
-      className="bg-zinc-950 relative flex min-h-svh flex-col overflow-hidden px-6"
+      className="bg-bg-elev-1 relative flex min-h-svh flex-col overflow-hidden px-6"
       style={{
         paddingTop: 'max(env(safe-area-inset-top), 24px)',
         paddingBottom: 'max(env(safe-area-inset-bottom), 24px)',
       }}
     >
-      <AmbientBackground />
-
       <div className="relative z-10 mx-auto flex w-full max-w-sm flex-1 flex-col justify-center gap-8 py-8">
         <header className="flex flex-col items-center gap-4 text-center">
           <Image

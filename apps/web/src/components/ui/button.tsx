@@ -15,8 +15,8 @@
  */
 
 // Static button — no scale/whileTap that can cause layout shift.
-// Opacity + color transitions only. Spinner uses lucide's Loader2 to
-// satisfy steering rule §10 ("lucide-react exclusively, no inline SVGs").
+// Opacity + color transitions only. Spinner uses lucide's IconLoader2 to
+// satisfy steering rule §10 ("@tabler/icons-react exclusively, no inline SVGs").
 //
 // Mobile-first sizes:
 //   sm = 40px (h-10) — fits in dense action rows; 4px below 44pt min so
@@ -25,7 +25,7 @@
 //   md = 48px (h-12) — default. Comfortable thumb-zone target.
 //   lg = 56px (h-14) — primary CTA on landing/empty states.
 
-import { Loader2 } from 'lucide-react';
+import { IconLoader2 } from '@tabler/icons-react';
 import { forwardRef, type ButtonHTMLAttributes } from 'react';
 
 import { cn } from '@/lib/cn';
@@ -42,14 +42,14 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 // Primary/danger get their fills via inlineStyle below (theme tokens).
 const variants: Record<Variant, string> = {
   primary: 'bg-fg text-black font-semibold hover:bg-fg-muted',
-  secondary: 'border border-zinc-800 bg-zinc-950 text-fg hover:bg-zinc-900',
-  ghost: 'text-fg-muted hover:text-fg hover:bg-zinc-950',
-  danger: 'bg-red-500 text-white font-semibold hover:bg-red-600',
-  success: 'bg-emerald-500 text-black font-semibold hover:bg-emerald-600',
+  secondary: 'border border-border bg-bg-elev-1 text-fg hover:bg-bg-elev-2',
+  ghost: 'text-fg-muted hover:text-fg hover:bg-bg-elev-1',
+  danger: 'bg-bear text-white font-semibold hover:bg-red-600',
+  success: 'bg-bull text-black font-semibold hover:bg-emerald-600',
 };
 
 const sizes: Record<Size, string> = {
-  sm: 'h-9 px-3 text-sm rounded-sm',
+  sm: 'h-10 px-3 text-sm rounded-sm',
   md: 'h-10 px-4 text-sm rounded-sm',
   lg: 'h-12 px-5 text-base rounded-sm',
 };
@@ -78,6 +78,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
       ref={ref}
       type={type}
       disabled={isDisabled}
+      aria-busy={loading || false}
       style={inlineStyle}
       className={cn(
         'inline-flex items-center justify-center gap-2 rounded-sm font-medium',
@@ -89,7 +90,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
       )}
       {...rest}
     >
-      {loading ? <Loader2 className="size-4 animate-spin" aria-hidden="true" /> : null}
+      {loading ? <IconLoader2 className="size-4 animate-spin" aria-hidden="true" /> : null}
       {children}
     </button>
   );

@@ -26,7 +26,7 @@ import type { PortfolioSettings, PortfolioRiskReport, PositionWithPnL } from '@h
 import { redirect } from 'next/navigation';
 import { auth } from '@/auth';
 import type { Metadata } from 'next';
-import { Wallet, TrendingUp, AlertTriangle, Shield } from 'lucide-react';
+import {IconWallet, IconTrendingUp, IconAlertTriangle, IconShield} from '@tabler/icons-react';
 
 import { EmptyState } from '@/components/ui/empty-state';
 import { cn } from '@/lib/cn';
@@ -67,7 +67,7 @@ function PortfolioContent({
           </p>
         </div>
         <EmptyState
-          icon={<Wallet />}
+          icon={<IconWallet />}
           title="No positions yet"
           description="Add a position to start tracking your portfolio P&L and risk metrics. The AI can also see your positions when giving trading advice."
         />
@@ -87,36 +87,36 @@ function PortfolioContent({
       {/* Risk Summary Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <StatCard
-          icon={Wallet}
+          icon={IconWallet}
           label="Open Positions"
           value={String(riskReport.openPositionCount)}
         />
         <StatCard
-          icon={TrendingUp}
+          icon={IconTrendingUp}
           label="Total Exposure"
           value={`$${riskReport.totalExposureUsd.toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
           subValue={`${riskReport.totalExposurePct.toFixed(1)}% of account`}
         />
         <StatCard
-          icon={Shield}
+          icon={IconShield}
           label="Total Risk"
           value={`$${riskReport.totalRiskUsd.toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
           subValue={`${riskReport.totalRiskPct.toFixed(1)}% of account`}
         />
         <StatCard
-          icon={AlertTriangle}
+          icon={IconAlertTriangle}
           label="Alerts"
           value={String(riskReport.alerts.length)}
-          valueClass={riskReport.alerts.length > 0 ? 'text-amber-500' : ''}
+          valueClass={riskReport.alerts.length > 0 ? 'text-warn' : ''}
         />
       </div>
 
       {/* Alerts */}
       {riskReport.alerts.length > 0 && (
-        <div className="rounded-sm border border-amber-500/30 bg-amber-500/10 p-4">
+        <div className="rounded-sm border border-warn/30 bg-warn/10 p-4">
           <div className="flex items-center gap-2 mb-2">
-            <AlertTriangle className="size-4 text-amber-500" />
-            <h3 className="text-sm font-semibold text-amber-500">
+            <IconAlertTriangle className="size-4 text-warn" />
+            <h3 className="text-sm font-semibold text-warn">
               Risk Alerts
             </h3>
           </div>
@@ -127,8 +127,8 @@ function PortfolioContent({
                 className={cn(
                   'text-sm',
                   alert.level === 'danger'
-                    ? 'text-red-500'
-                    : 'text-amber-500',
+                    ? 'text-bear'
+                    : 'text-warn',
                 )}
               >
                 • {alert.message}
@@ -140,14 +140,14 @@ function PortfolioContent({
 
       {/* Positions Table */}
       {positions.length > 0 && (
-        <div className="rounded-sm border border-border bg-surface overflow-hidden">
+        <div className="rounded-sm border border-border bg-bg-elev-1 overflow-hidden">
           <div className="px-4 py-3 border-b border-border">
             <h3 className="text-sm font-semibold text-fg">Open Positions</h3>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-border bg-surface-elevated">
+                <tr className="border-b border-border bg-bg-elev-1-elevated">
                   <th className="text-left py-2 px-4 text-fg-muted font-medium">Symbol</th>
                   <th className="text-left py-2 px-4 text-fg-muted font-medium">Direction</th>
                   <th className="text-right py-2 px-4 text-fg-muted font-medium">Lots</th>
@@ -165,10 +165,10 @@ function PortfolioContent({
                     <td className="py-3 px-4">
                       <span
                         className={cn(
-                          'text-xs font-medium px-2 py-0.5 rounded',
+                          'text-xs font-medium px-2 py-0.5 rounded-sm',
                           p.direction === 'long'
-                            ? 'bg-emerald-500/10 text-emerald-500'
-                            : 'bg-red-500/10 text-red-500',
+                            ? 'bg-bull/10 text-bull'
+                            : 'bg-bear/10 text-bear',
                         )}
                       >
                         {p.direction.toUpperCase()}
@@ -189,8 +189,8 @@ function PortfolioContent({
                         p.unrealizedPnlUsd === null
                           ? 'text-fg-muted'
                           : p.unrealizedPnlUsd >= 0
-                            ? 'text-emerald-500'
-                            : 'text-red-500',
+                            ? 'text-bull'
+                            : 'text-bear',
                       )}
                     >
                       {p.unrealizedPnlUsd === null
@@ -203,8 +203,8 @@ function PortfolioContent({
                         p.unrealizedPnlPct === null
                           ? 'text-fg-muted'
                           : p.unrealizedPnlPct >= 0
-                            ? 'text-emerald-500'
-                            : 'text-red-500',
+                            ? 'text-bull'
+                            : 'text-bear',
                       )}
                     >
                       {p.unrealizedPnlPct === null
@@ -224,17 +224,17 @@ function PortfolioContent({
 
       {/* Concentration */}
       {riskReport.concentration.length > 0 && (
-        <div className="rounded-sm border border-border bg-surface p-4">
+        <div className="rounded-sm border border-border bg-bg-elev-1 p-4">
           <h3 className="text-sm font-semibold text-fg mb-3">Concentration</h3>
           <div className="space-y-2">
             {riskReport.concentration.map((c) => (
               <div key={c.symbol} className="flex items-center gap-3">
                 <span className="text-sm text-fg w-20">{c.symbol}</span>
-                <div className="flex-1 h-2 bg-surface-elevated rounded-sm overflow-hidden">
+                <div className="flex-1 h-2 bg-bg-elev-1-elevated rounded-sm overflow-hidden">
                   <div
                     className={cn(
                       'h-full rounded-sm',
-                      c.alert ? 'bg-amber-500' : 'bg-fg',
+                      c.alert ? 'bg-warn' : 'bg-fg',
                     )}
                     style={{ width: `${Math.min(c.pct, 100)}%` }}
                   />
@@ -242,7 +242,7 @@ function PortfolioContent({
                 <span
                   className={cn(
                     'text-sm w-16 text-right',
-                    c.alert ? 'text-amber-500 font-medium' : 'text-fg-muted',
+                    c.alert ? 'text-warn font-medium' : 'text-fg-muted',
                   )}
                 >
                   {c.pct.toFixed(1)}%
@@ -253,9 +253,9 @@ function PortfolioContent({
         </div>
       )}
 
-      {/* Account Settings */}
-      <div className="rounded-sm border border-border bg-surface p-4">
-        <h3 className="text-sm font-semibold text-fg mb-3">Account Settings</h3>
+      {/* Account IconSettings */}
+      <div className="rounded-sm border border-border bg-bg-elev-1 p-4">
+        <h3 className="text-sm font-semibold text-fg mb-3">Account IconSettings</h3>
         <dl className="grid grid-cols-2 gap-4 text-sm">
           <div>
             <dt className="text-fg-muted">Account Balance</dt>
@@ -290,14 +290,14 @@ function StatCard({
   subValue,
   valueClass,
 }: {
-  icon: typeof Wallet;
+  icon: typeof IconWallet;
   label: string;
   value: string;
   subValue?: string;
   valueClass?: string;
 }) {
   return (
-    <div className="rounded-sm border border-border bg-surface p-4">
+    <div className="rounded-sm border border-border bg-bg-elev-1 p-4">
       <div className="flex items-center gap-2 text-fg-subtle">
         <Icon className="size-4" />
         <span className="text-xs font-medium">{label}</span>

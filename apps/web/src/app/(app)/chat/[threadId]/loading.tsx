@@ -35,7 +35,7 @@ export default function ThreadLoading() {
           </div>
         ))}
       </div>
-      <div className="fixed bottom-0 left-0 right-0 border-t border-zinc-800 bg-zinc-950 p-4">
+      <div className="fixed bottom-0 left-0 right-0 border-t border-border bg-bg-elev-1 p-4">
         <Skeleton className="h-10 w-full rounded-sm" />
       </div>
     </div>

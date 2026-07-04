@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-import { AlertCircle, RotateCcw } from 'lucide-react';
+import {IconAlertCircle, IconArrowBackUp} from '@tabler/icons-react';
 
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
@@ -33,12 +33,12 @@ export function ChartError({ error, onRetry }: ChartErrorProps) {
     <div className="aspect-[16/9] w-full md:aspect-[21/9]">
       <EmptyState
         tone="muted"
-        icon={<AlertCircle className="text-red-500 size-7" strokeWidth={2} />}
+        icon={<IconAlertCircle className="text-bear size-7" strokeWidth={2} />}
         title={isQuota ? 'Rate limited' : 'Failed to load chart'}
         description={error.message.slice(0, 140)}
         action={
           <Button type="button" variant="secondary" size="sm" onClick={onRetry}>
-            <RotateCcw className="size-4" /> Retry
+            <IconArrowBackUp className="size-4" /> Retry
           </Button>
         }
         className="h-full justify-center"

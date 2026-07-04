@@ -29,7 +29,7 @@
 // source" pill. The legacy flat `unsupportedClaims` list is still
 // rendered for parts persisted before the findings field landed.
 
-import { Quote, ChevronDown, ChevronRight, Check, X } from 'lucide-react';
+import {IconQuote, IconChevronDown, IconChevronRight, IconCheck, IconX} from '@tabler/icons-react';
 import { useState } from 'react';
 
 import type { CitationWarningPart } from '@hamafx/shared';
@@ -42,8 +42,8 @@ export function CitationWarningPartView({ part }: CitationWarningProps) {
   const [open, setOpen] = useState(false);
   const tone =
     part.stance === 'strict'
-      ? 'border-amber-500/40 bg-amber-500/5 text-amber-500'
-      : 'border-zinc-800 bg-zinc-950/60 text-fg-muted';
+      ? 'border-warn/40 bg-warn/5 text-warn'
+      : 'border-border bg-bg-elev-1/60 text-fg-muted';
 
   const hasFindings = (part.findings?.length ?? 0) > 0;
   // Backward compat: parts without `findings` get one synthetic
@@ -70,8 +70,8 @@ export function CitationWarningPartView({ part }: CitationWarningProps) {
         aria-controls="citation-warning-content"
         className="hover:text-fg flex items-center gap-2 text-left text-body-sm font-medium focus:outline-none"
       >
-        {open ? <ChevronDown className="size-3.5" /> : <ChevronRight className="size-3.5" />}
-        <Quote className="size-3.5" />
+        {open ? <IconChevronDown className="size-3.5" /> : <IconChevronRight className="size-3.5" />}
+        <IconQuote className="size-3.5" />
         <span>
           {rows.length} statement{rows.length === 1 ? '' : 's'} without a tool source
         </span>
@@ -82,13 +82,13 @@ export function CitationWarningPartView({ part }: CitationWarningProps) {
           {rows.map((row, i) => (
             <li key={i} className="text-fg-subtle flex items-start gap-2">
               {row.supported ? (
-                <Check
-                  className="text-emerald-500 mt-0.5 size-3.5 shrink-0"
+                <IconCheck
+                  className="text-bull mt-0.5 size-3.5 shrink-0"
                   aria-label="supported"
                 />
               ) : (
-                <X
-                  className="text-amber-500 mt-0.5 size-3.5 shrink-0"
+                <IconX
+                  className="text-warn mt-0.5 size-3.5 shrink-0"
                   aria-label="no tool source"
                 />
               )}

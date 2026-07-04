@@ -17,7 +17,7 @@
  */
 
 import { useEffect, useState, useTransition } from 'react';
-import { Check, ChevronDown, Loader2 } from 'lucide-react';
+import {IconCheck, IconChevronDown, IconLoader2} from '@tabler/icons-react';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
@@ -172,7 +172,7 @@ export function ModelPicker({
           kind: 'error',
           message: err instanceof Error ? err.message : String(err),
         });
-        toast.error(err instanceof Error ? err.message : 'Save failed');
+        toast.error(err instanceof Error ? err.message : 'IconDeviceFloppy failed');
       }
     });
   }
@@ -197,7 +197,7 @@ export function ModelPicker({
     }
   }
 
-  // Filter options by domain. Same shape as the ChatModelPicker of
+  // IconFilter options by domain. Same shape as the ChatModelPicker of
   // Phase F but tier- + capability-aware so embedding-only models
   // never surface in the chat picker, etc.
   const options: Array<{
@@ -228,7 +228,7 @@ export function ModelPicker({
 
   if (providers.length === 0 || options.length === 0) {
     return (
-      <div className="border border-zinc-800 bg-zinc-950 rounded-sm p-6 flex flex-col items-center text-center gap-3">
+      <div className="border border-border bg-bg-elev-1 rounded-sm p-6 flex flex-col items-center text-center gap-3">
         <div className="text-3xl">{NO_PROVIDERS_EMOJI[kind]}</div>
         <div>
           <h3 className="text-sm font-semibold text-fg">No providers available</h3>
@@ -238,7 +238,7 @@ export function ModelPicker({
               href="/settings/api-keys"
               className="text-fg hover:underline"
             >
-              Settings → API Keys
+              IconSettings → API Keys
             </a>{' '}
             {NO_PROVIDERS_COPY[kind]}.
           </p>
@@ -253,7 +253,7 @@ export function ModelPicker({
     : 'Use fallback (operator env / spec default)';
 
   return (
-    <div className="border border-zinc-800 bg-zinc-950 rounded-sm p-4 flex flex-col gap-3">
+    <div className="border border-border bg-bg-elev-1 rounded-sm p-4 flex flex-col gap-3">
       <div className="flex items-baseline justify-between gap-3">
         <div className="flex flex-col">
           <span className="text-sm font-medium text-fg">
@@ -264,8 +264,8 @@ export function ModelPicker({
           </span>
         </div>
         {value ? (
-          <span className="inline-flex items-center gap-1 text-caption text-emerald-500">
-            <Check size={12} aria-hidden="true" />
+          <span className="inline-flex items-center gap-1 text-caption text-bull">
+            <IconCheck size={12} aria-hidden="true" />
             Saved
           </span>
         ) : (
@@ -282,7 +282,7 @@ export function ModelPicker({
             value={value ?? ''}
             onChange={(e) => pick(e.target.value)}
             disabled={pending || save.kind === 'pending'}
-            className="w-full appearance-none border border-zinc-800 bg-zinc-900 text-fg rounded-sm pl-3 pr-9 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-fg disabled:opacity-60"
+            className="w-full appearance-none border border-border bg-bg-elev-2 text-fg rounded-sm pl-3 pr-9 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-fg disabled:opacity-60"
           >
             <option value="" disabled>
               Use fallback ({options[0]?.label ?? '—'})
@@ -299,13 +299,13 @@ export function ModelPicker({
             })}
           </select>
           {pending || save.kind === 'pending' ? (
-            <Loader2
+            <IconLoader2
               size={14}
               className="absolute right-3 top-1/2 -translate-y-1/2 animate-spin text-fg-subtle"
               aria-hidden="true"
             />
           ) : (
-            <ChevronDown
+            <IconChevronDown
               size={14}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-fg-subtle pointer-events-none"
               aria-hidden="true"
@@ -315,7 +315,7 @@ export function ModelPicker({
       </label>
 
       {save.kind === 'error' ? (
-        <div className="text-caption text-red-500">{save.message}</div>
+        <div className="text-caption text-bear">{save.message}</div>
       ) : null}
 
       <p className="text-caption text-fg-subtle">{helper ?? HELPERS[kind]}</p>
@@ -335,7 +335,7 @@ export function ModelPicker({
 }
 
 /**
- * Filter that decides whether a model in the catalog should appear
+ * IconFilter that decides whether a model in the catalog should appear
  * in the picker for a given kind. Three checks:
  *   - tier: chat/vision forbid 'embedding'; embedding only allows 'embedding'
  *   - provider.supports: vision requires supports.vision; embedding

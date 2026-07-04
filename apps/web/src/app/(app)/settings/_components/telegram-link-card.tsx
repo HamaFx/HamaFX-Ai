@@ -16,10 +16,10 @@
  * limitations under the License.
  */
 
-// Settings island for linking/unlinking Telegram bot.
-// Phase 7D — Settings & Polish.
+// IconSettings island for linking/unlinking Telegram bot.
+// Phase 7D — IconSettings & Polish.
 
-import { Check, Link2, Loader2, Unlink, Copy, RefreshCw, ExternalLink } from 'lucide-react';
+import {IconCheck, IconLink, IconLoader2, IconUnlink, IconCopy, IconRefresh, IconExternalLink} from '@tabler/icons-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -112,14 +112,14 @@ export function TelegramLinkCard(): React.JSX.Element {
         const data = (await res.json()) as LinkCodeResponse;
         if (data.alreadyLinked) {
           toast.info('Already linked', {
-            description: 'Your Telegram is already connected. Unlink first to re-link.',
+            description: 'Your Telegram is already connected. IconUnlink first to re-link.',
           });
           await fetchStatus();
           return;
         }
         setLinkCode(data);
-        toast.success('Link code generated', {
-          description: 'Send the code to the HamaFX bot on Telegram',
+        toast.success('IconLink code generated', {
+          description: 'IconArrowRight the code to the HamaFX bot on Telegram',
         });
         startPolling();
       } else {
@@ -167,7 +167,7 @@ export function TelegramLinkCard(): React.JSX.Element {
   if (loading) {
     return (
       <div className="flex items-center gap-2 text-fg-subtle">
-        <Loader2 className="size-4 animate-spin" />
+        <IconLoader2 className="size-4 animate-spin" />
         Checking Telegram link status…
       </div>
     );
@@ -181,17 +181,17 @@ export function TelegramLinkCard(): React.JSX.Element {
           className={cn(
             'inline-flex items-center gap-1.5 rounded-sm px-2.5 py-0.5 text-xs font-medium',
             status?.linked
-              ? 'bg-emerald-500/10 text-emerald-500'
-              : 'bg-zinc-900/10 text-fg-muted',
+              ? 'bg-bull/10 text-bull'
+              : 'bg-bg-elev-2/10 text-fg-muted',
           )}
         >
           {status?.linked ? (
             <>
-              <Check className="size-3" /> Linked
+              <IconCheck className="size-3" /> Linked
             </>
           ) : (
             <>
-              <Link2 className="size-3" /> Not linked
+              <IconLink className="size-3" /> Not linked
             </>
           )}
         </span>
@@ -207,9 +207,9 @@ export function TelegramLinkCard(): React.JSX.Element {
         <div className="space-y-3">
           <p className="text-sm text-fg-subtle">
             Your Telegram account is connected. You can use bot commands like{' '}
-            <code className="rounded bg-surface-elevated px-1 py-0.5 text-xs">/price</code>,{' '}
-            <code className="rounded bg-surface-elevated px-1 py-0.5 text-xs">/analyze</code>,{' '}
-            <code className="rounded bg-surface-elevated px-1 py-0.5 text-xs">/ask</code>, and more.
+            <code className="rounded-sm bg-bg-elev-1-elevated px-1 py-0.5 text-xs">/price</code>,{' '}
+            <code className="rounded-sm bg-bg-elev-1-elevated px-1 py-0.5 text-xs">/analyze</code>,{' '}
+            <code className="rounded-sm bg-bg-elev-1-elevated px-1 py-0.5 text-xs">/ask</code>, and more.
           </p>
           <a
             href={`https://t.me/HamaFXBot`}
@@ -217,8 +217,8 @@ export function TelegramLinkCard(): React.JSX.Element {
             rel="noopener noreferrer"
             className="inline-flex items-center gap-1.5 text-xs text-fg hover:text-fg/80 font-semibold transition-colors"
           >
-            <ExternalLink className="size-3" />
-            Open HamaFX Bot on Telegram
+            <IconExternalLink className="size-3" />
+            Open HamaFX IconRobot on Telegram
           </a>
           <Button
             type="button"
@@ -228,18 +228,18 @@ export function TelegramLinkCard(): React.JSX.Element {
             className="min-h-[44px]"
           >
             {unlinking ? (
-              <Loader2 className="size-4 animate-spin" />
+              <IconLoader2 className="size-4 animate-spin" />
             ) : (
-              <Unlink className="size-4" />
+              <IconUnlink className="size-4" />
             )}
-            {unlinking ? 'Unlinking…' : 'Unlink Telegram'}
+            {unlinking ? 'Unlinking…' : 'IconUnlink Telegram'}
           </Button>
         </div>
       ) : (
         /* Not linked state */
         <div className="space-y-3">
           <p className="text-sm text-fg-subtle">
-            Link your Telegram to control HamaFX from your phone with bot commands.
+            IconLink your Telegram to control HamaFX from your phone with bot commands.
           </p>
 
           <a
@@ -248,8 +248,8 @@ export function TelegramLinkCard(): React.JSX.Element {
             rel="noopener noreferrer"
             className="inline-flex items-center gap-1.5 text-xs text-fg hover:text-fg/80 font-semibold transition-colors"
           >
-            <ExternalLink className="size-3" />
-            Open HamaFX Bot on Telegram
+            <IconExternalLink className="size-3" />
+            Open HamaFX IconRobot on Telegram
           </a>
 
           {!linkCode ? (
@@ -260,16 +260,16 @@ export function TelegramLinkCard(): React.JSX.Element {
               className="min-h-[44px]"
             >
               {generating ? (
-                <Loader2 className="size-4 animate-spin" />
+                <IconLoader2 className="size-4 animate-spin" />
               ) : (
-                <Link2 className="size-4" />
+                <IconLink className="size-4" />
               )}
-              {generating ? 'Generating…' : 'Link Telegram'}
+              {generating ? 'Generating…' : 'IconLink Telegram'}
             </Button>
           ) : (
               <div className="space-y-3">
-                {/* Link code display */}
-                <div className="rounded-sm border border-border bg-surface-elevated p-4 space-y-2">
+                {/* IconLink code display */}
+                <div className="rounded-sm border border-border bg-bg-elev-1-elevated p-4 space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="text-xs text-fg-subtle">Your link code</span>
                     <span className="text-xs text-fg-subtle">
@@ -277,7 +277,7 @@ export function TelegramLinkCard(): React.JSX.Element {
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <code className="flex-1 rounded bg-background px-3 py-2 text-lg font-mono font-bold tracking-widest">
+                    <code className="flex-1 rounded-sm bg-bg px-3 py-2 text-lg font-mono font-bold tracking-widest">
                       {linkCode.code}
                     </code>
                     <Button
@@ -288,11 +288,11 @@ export function TelegramLinkCard(): React.JSX.Element {
                       onClick={copyCode}
                       aria-label="Copy code"
                     >
-                      {copied ? <Check className="size-4" /> : <Copy className="size-4" />}
+                      {copied ? <IconCheck className="size-4" /> : <IconCopy className="size-4" />}
                     </Button>
                   </div>
                   <p className="text-xs text-fg-subtle">
-                    Send{' '}
+                    IconArrowRight{' '}
                     <code className="font-mono">/link {linkCode.code}</code>{' '}
                     to the HamaFX bot on Telegram.
                   </p>
@@ -302,14 +302,14 @@ export function TelegramLinkCard(): React.JSX.Element {
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-1.5 text-xs text-fg hover:text-fg/80 font-semibold transition-colors"
                   >
-                    <ExternalLink className="size-3" />
-                    Open HamaFX Bot on Telegram
+                    <IconExternalLink className="size-3" />
+                    Open HamaFX IconRobot on Telegram
                   </a>
                 </div>
 
                 {polling && (
                   <div className="flex items-center gap-2 text-xs text-fg-subtle animate-pulse">
-                    <Loader2 className="size-3 animate-spin" />
+                    <IconLoader2 className="size-3 animate-spin" />
                     Waiting for Telegram confirmation...
                   </div>
                 )}
@@ -321,7 +321,7 @@ export function TelegramLinkCard(): React.JSX.Element {
                   disabled={generating}
                   className="min-h-[44px]"
                 >
-                  <RefreshCw className="size-4" />
+                  <IconRefresh className="size-4" />
                   Regenerate code
                 </Button>
               </div>

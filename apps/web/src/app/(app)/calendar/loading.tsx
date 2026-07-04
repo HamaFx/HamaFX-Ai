@@ -20,7 +20,7 @@ export default function CalendarLoading() {
   return (
     <div className="flex flex-col gap-4">
       {/* CalendarHero placeholder */}
-      <div className="border border-zinc-800 bg-zinc-950 rounded-sm flex flex-col gap-4 p-4">
+      <div className="border border-border bg-bg-elev-1 rounded-sm flex flex-col gap-4 p-4">
         <div className="flex items-start gap-3">
           <Skeleton className="size-12 shrink-0 rounded-sm" />
           <div className="flex min-w-0 flex-1 flex-col gap-1.5">

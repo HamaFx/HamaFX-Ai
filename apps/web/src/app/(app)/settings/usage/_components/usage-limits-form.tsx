@@ -18,7 +18,7 @@
 
 import { useActionState, useEffect } from 'react';
 import { toast } from 'sonner';
-import { ShieldAlert, Mail, Send } from 'lucide-react';
+import {IconShieldAlert, IconMail, IconArrowRight} from '@tabler/icons-react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -64,10 +64,10 @@ export function UsageLimitsForm({
   return (
     <form
       action={action}
-      className="border border-zinc-800 bg-zinc-950 rounded-sm p-5 flex flex-col gap-6"
+      className="border border-border bg-bg-elev-1 rounded-sm p-5 flex flex-col gap-6"
     >
-      <header className="flex items-center gap-3 border-b border-zinc-800 pb-3">
-        <ShieldAlert className="size-5 text-fg shrink-0" />
+      <header className="flex items-center gap-3 border-b border-border pb-3">
+        <IconShieldAlert className="size-5 text-fg shrink-0" />
         <div>
           <h2 className="text-sm font-semibold text-fg">Limits & Alerts</h2>
           <p className="text-caption text-fg-subtle mt-0.5">
@@ -101,15 +101,15 @@ export function UsageLimitsForm({
           Alert Channels (50%, 80%, 100% thresholds)
         </span>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <label className="flex items-center gap-3 border border-zinc-800 bg-zinc-900/40 hover:bg-zinc-900 rounded-sm p-3 cursor-pointer select-none transition-colors">
+          <label className="flex items-center gap-3 border border-border bg-bg-elev-2/40 hover:bg-bg-elev-2 rounded-sm p-3 cursor-pointer select-none transition-colors">
             <input
               type="checkbox"
               name="emailAlert"
               defaultChecked={!!initialAlertConfig.email}
-              className="size-4 accent-brand rounded border-zinc-800 cursor-pointer"
+              className="size-4 accent-brand rounded-sm border-border cursor-pointer"
             />
             <div className="flex items-center gap-2">
-              <Mail className="size-4 text-fg-subtle" />
+              <IconMail className="size-4 text-fg-subtle" />
               <div className="flex flex-col">
                 <span className="text-xs font-semibold text-fg">Email Alerts</span>
                 <span className="text-xs text-fg-subtle mt-0.5">Alerts via Resend</span>
@@ -117,18 +117,18 @@ export function UsageLimitsForm({
             </div>
           </label>
 
-          <label className="flex items-center gap-3 border border-zinc-800 bg-zinc-900/40 hover:bg-zinc-900 rounded-sm p-3 cursor-pointer select-none transition-colors">
+          <label className="flex items-center gap-3 border border-border bg-bg-elev-2/40 hover:bg-bg-elev-2 rounded-sm p-3 cursor-pointer select-none transition-colors">
             <input
               type="checkbox"
               name="telegramAlert"
               defaultChecked={!!initialAlertConfig.telegram}
-              className="size-4 accent-brand rounded border-zinc-800 cursor-pointer"
+              className="size-4 accent-brand rounded-sm border-border cursor-pointer"
             />
             <div className="flex items-center gap-2">
-              <Send className="size-4 text-fg-subtle" />
+              <IconArrowRight className="size-4 text-fg-subtle" />
               <div className="flex flex-col">
                 <span className="text-xs font-semibold text-fg">Telegram Alerts</span>
-                <span className="text-xs text-fg-subtle mt-0.5">Alerts via Telegram Bot</span>
+                <span className="text-xs text-fg-subtle mt-0.5">Alerts via Telegram IconRobot</span>
               </div>
             </div>
           </label>
@@ -140,8 +140,8 @@ export function UsageLimitsForm({
         <span className="text-xs font-semibold text-fg-muted uppercase tracking-wider">
           Per-Provider Monthly Spending Thresholds
         </span>
-        <div className="flex flex-col border border-zinc-800 rounded-sm overflow-hidden divide-y divide-zinc-800/60">
-          <div className="grid grid-cols-[1.5fr_1fr_1.2fr] gap-2 items-center bg-zinc-900 px-3 py-2 text-xs font-bold text-fg-muted uppercase tracking-wider">
+        <div className="flex flex-col border border-border rounded-sm overflow-hidden divide-y divide-zinc-800/60">
+          <div className="grid grid-cols-[1.5fr_1fr_1.2fr] gap-2 items-center bg-bg-elev-2 px-3 py-2 text-xs font-bold text-fg-muted uppercase tracking-wider">
             <span>Provider</span>
             <span className="text-right">Spend (MTD)</span>
             <span className="text-right">Threshold (USD)</span>
@@ -153,14 +153,14 @@ export function UsageLimitsForm({
             return (
               <div
                 key={p.id}
-                className="grid grid-cols-[1.5fr_1fr_1.2fr] gap-2 items-center px-3 py-2.5 text-xs transition-colors hover:bg-zinc-900/20"
+                className="grid grid-cols-[1.5fr_1fr_1.2fr] gap-2 items-center px-3 py-2.5 text-xs transition-colors hover:bg-bg-elev-2/20"
               >
                 <div className="flex flex-col">
                   <span className="font-semibold text-fg">{p.displayName}</span>
                   <span className="text-xs text-fg-subtle mt-0.5 font-mono">{p.id}</span>
                 </div>
                 <div className="text-right font-mono text-fg-subtle tabular-nums">
-                  <span className={hasExceeded ? 'text-red-500 font-semibold' : ''}>
+                  <span className={hasExceeded ? 'text-bear font-semibold' : ''}>
                     ${p.currentSpend.toFixed(2)}
                   </span>
                 </div>
@@ -185,9 +185,9 @@ export function UsageLimitsForm({
         </div>
       </div>
 
-      <div className="flex justify-end border-t border-zinc-800 pt-4">
+      <div className="flex justify-end border-t border-border pt-4">
         <Button type="submit" loading={pending} className="min-w-[120px]">
-          Save Changes
+          IconDeviceFloppy Changes
         </Button>
       </div>
     </form>

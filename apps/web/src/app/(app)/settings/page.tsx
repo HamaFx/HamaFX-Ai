@@ -16,7 +16,7 @@
 
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
-import { KeyRound, Bell, Bot, Database, Info } from 'lucide-react';
+import {IconKey, IconBell, IconRobot, IconDatabase, IconInfo} from '@tabler/icons-react';
 
 import { auth } from '@/auth';
 import { getDb, schema } from '@hamafx/db';
@@ -38,7 +38,7 @@ import { SystemStatusCard } from './_components/system-status-card';
 import { UsageGlance } from './_components/usage-glance';
 import { TwoFactorSetup } from './_components/two-factor-setup';
 
-export const metadata: Metadata = { title: 'Settings' };
+export const metadata: Metadata = { title: 'IconSettings' };
 // We render server components that hit the DB (push subscription count,
 // usage stats), so we need a fresh render on every visit.
 export const revalidate = 60;
@@ -109,29 +109,29 @@ export default async function SettingsPage() {
       <SystemStatusCard userId={userId} />
       <UsageGlance userId={userId} />
 
-      <SettingsSection icon={<KeyRound className="size-4" />} title="Security" description="Password, two-factor, and active sessions">
+      <SettingsSection icon={<IconKey className="size-4" />} title="Security" description="Password, two-factor, and active sessions">
         <ChangePasswordCard />
         <TwoFactorSetup enabled={twoFactorEnabled} />
         <SessionsCard />
       </SettingsSection>
 
-      <SettingsSection icon={<Bell className="size-4" />} title="Notifications" description="Alert channels, noise control, and test buttons">
+      <SettingsSection icon={<IconBell className="size-4" />} title="Notifications" description="Alert channels, noise control, and test buttons">
         <NotificationsCard userId={userId} />
         <NoiseControlCard initialConfig={noiseConfig ?? null} />
         <NotificationPrefsCard initialPrefs={notificationPrefs} />
       </SettingsSection>
 
-      <SettingsSection icon={<Bot className="size-4" />} title="AI & Agent" description="Analysis mode, disabled tools, and model configuration">
+      <SettingsSection icon={<IconRobot className="size-4" />} title="AI & Agent" description="Analysis mode, disabled tools, and model configuration">
         <AgentCard />
         <AIPrefsCard initialCustomInstructions={aiPrefs.customInstructions} />
       </SettingsSection>
 
-      <SettingsSection icon={<Database className="size-4" />} title="Data" description="Portfolio, track record, and symbol preferences">
+      <SettingsSection icon={<IconDatabase className="size-4" />} title="Data" description="Portfolio, track record, and symbol preferences">
         <DataCard />
         <PreferencesCard watchlist={watchlist} initialPrefs={uiPrefs} />
       </SettingsSection>
 
-      <SettingsSection icon={<Info className="size-4" />} title="About" description="App info and system status">
+      <SettingsSection icon={<IconInfo className="size-4" />} title="About" description="App info and system status">
         <AboutCard />
       </SettingsSection>
 

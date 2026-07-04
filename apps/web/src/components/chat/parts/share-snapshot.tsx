@@ -50,21 +50,21 @@ export function ShareSnapshotPart({
   }
 
   return (
-    <div className="border-border bg-zinc-950 flex flex-col gap-2 rounded-sm border p-3">
+    <div className="border-border bg-bg-elev-1 flex flex-col gap-2 rounded-sm border p-3">
       <header className="flex items-baseline justify-between gap-2">
         <h3 className="text-fg text-sm font-semibold">Snapshot ready</h3>
         <span className="text-fg-subtle text-caption tabular-nums">{formatExpiry(output.expiresAt)}</span>
       </header>
 
       <div className="flex items-stretch gap-2">
-        <code className="border-border bg-zinc-900 text-fg-muted flex-1 truncate rounded border px-2 py-2 text-body-sm">
+        <code className="border-border bg-bg-elev-2 text-fg-muted flex-1 truncate rounded-sm border px-2 py-2 text-body-sm">
           {output.url}
         </code>
         <button
           type="button"
           onClick={() => copy(output.url)}
           aria-label="Copy share link"
-          className="border-border bg-zinc-900 text-fg-muted hover:text-fg focus-visible:ring-fg inline-flex h-11 min-w-[44px] items-center justify-center rounded-sm border px-3 text-body-sm font-medium focus:outline-none focus-visible:ring-2"
+          className="border-border bg-bg-elev-2 text-fg-muted hover:text-fg focus-visible:ring-fg inline-flex h-11 min-w-[44px] items-center justify-center rounded-sm border px-3 text-body-sm font-medium focus:outline-none focus-visible:ring-2"
         >
           {copied ? 'copied' : 'copy'}
         </button>
@@ -96,12 +96,12 @@ function formatExpiry(ms: number): string {
 function SkeletonCard() {
   return (
     <div
-      className="border-border bg-zinc-950 rounded-sm border p-3"
+      className="border-border bg-bg-elev-1 rounded-sm border p-3"
       aria-busy="true"
       aria-label="Creating share link"
     >
-      <div className="bg-zinc-900 h-4 w-1/3 animate-pulse rounded" />
-      <div className="bg-zinc-900 mt-3 h-9 w-full animate-pulse rounded" />
+      <div className="bg-bg-elev-2 h-4 w-1/3 animate-pulse rounded-sm" />
+      <div className="bg-bg-elev-2 mt-3 h-9 w-full animate-pulse rounded-sm" />
     </div>
   );
 }
@@ -110,7 +110,7 @@ function ErrorCard({ message }: { message?: string }) {
   return (
     <div
       role="alert"
-      className="border-red-500/30 bg-zinc-950 text-red-500 rounded-sm border p-3 text-sm"
+      className="border-bear/30 bg-bg-elev-1 text-bear rounded-sm border p-3 text-sm"
     >
       Share failed{message ? ` · ${message}` : ''}
     </div>

@@ -21,7 +21,7 @@ export default function NewsLoading() {
     <div className="flex flex-col gap-4">
       <Skeleton className="h-8 w-48" />
       {/* SentimentSummary placeholder */}
-      <div className="border border-zinc-800 bg-zinc-950 rounded-sm flex flex-col gap-3 p-4">
+      <div className="border border-border bg-bg-elev-1 rounded-sm flex flex-col gap-3 p-4">
         <div className="flex items-baseline justify-between gap-3">
           <Skeleton className="h-4 w-24" />
           <Skeleton className="h-4 w-16" />

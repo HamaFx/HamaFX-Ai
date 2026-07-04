@@ -18,7 +18,7 @@
 
 import { useActionState, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Check } from 'lucide-react';
+import { IconCheck } from '@tabler/icons-react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -43,7 +43,6 @@ export default function RegisterPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="surface-panel p-6">
         <form action={action} className="flex w-full flex-col gap-5">
           <div className="flex flex-col gap-2">
             <label htmlFor="name" className="text-fg text-sm font-semibold">
@@ -92,25 +91,25 @@ export default function RegisterPage() {
             {password.length > 0 && (
               <div className="text-xs text-fg-subtle grid grid-cols-2 gap-1 mt-1">
                 <div className="flex items-center gap-1">
-                  <span className={password.length >= 8 ? "text-emerald-500" : "text-red-500"}>
+                  <span className={password.length >= 8 ? "text-bull" : "text-bear"}>
                     {password.length >= 8 ? "✓" : "✗"}
                   </span>
                   <span>Min 8 characters</span>
                 </div>
                 <div className="flex items-center gap-1">
-                  <span className={/[A-Z]/.test(password) ? "text-emerald-500" : "text-red-500"}>
+                  <span className={/[A-Z]/.test(password) ? "text-bull" : "text-bear"}>
                     {/[A-Z]/.test(password) ? "✓" : "✗"}
                   </span>
                   <span>One uppercase letter</span>
                 </div>
                 <div className="flex items-center gap-1">
-                  <span className={/[a-z]/.test(password) ? "text-emerald-500" : "text-red-500"}>
+                  <span className={/[a-z]/.test(password) ? "text-bull" : "text-bear"}>
                     {/[a-z]/.test(password) ? "✓" : "✗"}
                   </span>
                   <span>One lowercase letter</span>
                 </div>
                 <div className="flex items-center gap-1">
-                  <span className={/[0-9]/.test(password) ? "text-emerald-500" : "text-red-500"}>
+                  <span className={/[0-9]/.test(password) ? "text-bull" : "text-bear"}>
                     {/[0-9]/.test(password) ? "✓" : "✗"}
                   </span>
                   <span>One number</span>
@@ -134,12 +133,12 @@ export default function RegisterPage() {
               onChange={(e) => setConfirmPassword(e.target.value)}
             />
             {confirmTouched && !passwordsMatch ? (
-              <p role="alert" className="text-red-500 text-xs mt-1">Passwords do not match</p>
+              <p role="alert" className="text-bear text-xs mt-1">Passwords do not match</p>
             ) : null}
           </div>
 
           {state?.error ? (
-            <p id="register-error" role="alert" className="text-red-500 text-sm">
+            <p id="register-error" role="alert" className="text-bear text-sm">
               {state.error}
             </p>
           ) : null}
@@ -153,7 +152,7 @@ export default function RegisterPage() {
           >
             {success ? (
               <>
-                <Check className="size-5" /> Account created
+                <IconCheck className="size-5" /> Account created
               </>
             ) : pending ? (
               'Creating account…'
@@ -162,7 +161,6 @@ export default function RegisterPage() {
             )}
           </Button>
         </form>
-      </div>
 
       <p className="text-fg-subtle text-center text-sm">
         Already have an account?{' '}

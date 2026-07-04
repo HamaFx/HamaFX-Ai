@@ -47,7 +47,7 @@ export function AnalyzeChartImagePart({
   }
 
   return (
-    <div className="border-border bg-zinc-950 flex flex-col gap-3 rounded-sm border p-3">
+    <div className="border-border bg-bg-elev-1 flex flex-col gap-3 rounded-sm border p-3">
       <header className="flex items-baseline justify-between gap-2">
         <h3 className="text-fg text-sm font-semibold">
           {output.symbol ?? 'Chart'} {output.tf ? `· ${output.tf}` : ''} · vision
@@ -110,13 +110,13 @@ function shortRef(s: string): string {
 function SkeletonCard() {
   return (
     <div
-      className="border-border bg-zinc-950 rounded-sm border p-3"
+      className="border-border bg-bg-elev-1 rounded-sm border p-3"
       aria-busy="true"
       aria-label="Analysing chart screenshot"
     >
-      <div className="bg-zinc-900 h-4 w-1/2 animate-pulse rounded" />
-      <div className="bg-zinc-900 mt-3 h-3 w-3/4 animate-pulse rounded" />
-      <div className="bg-zinc-900 mt-2 h-3 w-2/3 animate-pulse rounded" />
+      <div className="bg-bg-elev-2 h-4 w-1/2 animate-pulse rounded-sm" />
+      <div className="bg-bg-elev-2 mt-3 h-3 w-3/4 animate-pulse rounded-sm" />
+      <div className="bg-bg-elev-2 mt-2 h-3 w-2/3 animate-pulse rounded-sm" />
     </div>
   );
 }
@@ -125,7 +125,7 @@ function ErrorCard({ message }: { message?: string }) {
   return (
     <div
       role="alert"
-      className="border-red-500/30 bg-zinc-950 text-red-500 rounded-sm border p-3 text-sm"
+      className="border-bear/30 bg-bg-elev-1 text-bear rounded-sm border p-3 text-sm"
     >
       Vision analysis failed{message ? ` · ${message}` : ''}
     </div>

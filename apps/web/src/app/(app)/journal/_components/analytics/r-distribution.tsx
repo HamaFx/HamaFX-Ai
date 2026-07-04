@@ -35,7 +35,7 @@ export function RDistribution({ stats, className }: RDistributionProps) {
   return (
     <div
       className={cn(
-        'border border-zinc-800 bg-zinc-950 rounded-sm p-4 flex flex-col gap-3',
+        'border border-border bg-bg-elev-1 rounded-sm p-4 flex flex-col gap-3',
         className,
       )}
       role="img"
@@ -62,7 +62,7 @@ export function RDistribution({ stats, className }: RDistributionProps) {
                   <div
                     className={cn(
                       'w-full rounded-t',
-                      isPositive ? 'bg-emerald-500/60' : 'bg-red-500/60',
+                      isPositive ? 'bg-bull/60' : 'bg-bear/60',
                     )}
                     style={{ height: `${Math.max(heightPct, 0)}%` }}
                     aria-label={`${d.bucket}: ${d.count}`}

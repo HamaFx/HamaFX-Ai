@@ -25,9 +25,9 @@ interface Subscription {
 
 const STATUS_COLORS: Record<string, string> = {
   active: 'bg-green-500/10 text-green-600 dark:text-green-400',
-  trialing: 'bg-blue-500/10 text-blue-600 dark:text-blue-400',
-  past_due: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
-  canceled: 'bg-red-500/10 text-red-600 dark:text-red-400',
+  trialing: 'bg-info/10 text-blue-600 dark:text-info',
+  past_due: 'bg-warn/10 text-amber-600 dark:text-warn',
+  canceled: 'bg-bear/10 text-red-600 dark:text-bear',
   expired: 'bg-gray-500/10 text-gray-600 dark:text-gray-400',
 };
 
@@ -40,7 +40,7 @@ export function SubscriptionStatus({
 }) {
   if (!subscription || !currentPlan) {
     return (
-      <div className="rounded-sm border border-border bg-surface p-4">
+      <div className="rounded-sm border border-border bg-bg-elev-1 p-4">
         <div className="flex items-center justify-between">
           <div>
             <p className="text-fg font-medium">No active subscription</p>
@@ -58,7 +58,7 @@ export function SubscriptionStatus({
   const periodEnd = subscription.currentPeriodEnd ? new Date(subscription.currentPeriodEnd) : null;
 
   return (
-    <div className="rounded-sm border border-border bg-surface p-4">
+    <div className="rounded-sm border border-border bg-bg-elev-1 p-4">
       <div className="flex items-center justify-between">
         <div className="flex flex-col gap-1">
           <div className="flex items-center gap-2">

@@ -52,12 +52,12 @@ export function SentimentSummary({ articles }: SentimentSummaryProps) {
       : score < -0.15
         ? 'Bearish'
         : 'Neutral';
-  const leanTone = score > 0.15 ? 'text-emerald-500' : score < -0.15 ? 'text-red-500' : 'text-fg-muted';
+  const leanTone = score > 0.15 ? 'text-bull' : score < -0.15 ? 'text-bear' : 'text-fg-muted';
 
   return (
     <section
       aria-labelledby="news-pulse-heading"
-      className="border border-zinc-800 bg-zinc-950 rounded-sm relative flex flex-col gap-3 p-4"
+      className="border border-border bg-bg-elev-1 rounded-sm relative flex flex-col gap-3 p-4"
     >
       <header className="flex items-baseline justify-between gap-3">
         <div className="flex flex-col gap-0.5">
@@ -79,10 +79,10 @@ export function SentimentSummary({ articles }: SentimentSummaryProps) {
       </header>
 
       {/* Stacked sentiment bar */}
-      <div className="bg-zinc-900 flex h-2 w-full overflow-hidden rounded-sm">
+      <div className="bg-bg-elev-2 flex h-2 w-full overflow-hidden rounded-sm">
         {counts.positive > 0 ? (
           <span
-            className="bg-emerald-500 h-full"
+            className="bg-bull h-full"
             style={{ width: `${pct(counts.positive)}%` }}
             aria-hidden="true"
           />
@@ -96,14 +96,14 @@ export function SentimentSummary({ articles }: SentimentSummaryProps) {
         ) : null}
         {counts.none > 0 ? (
           <span
-            className="bg-zinc-800 h-full"
+            className="bg-bg-elev-3 h-full"
             style={{ width: `${pct(counts.none)}%` }}
             aria-hidden="true"
           />
         ) : null}
         {counts.negative > 0 ? (
           <span
-            className="bg-red-500 h-full"
+            className="bg-bear h-full"
             style={{ width: `${pct(counts.negative)}%` }}
             aria-hidden="true"
           />
@@ -139,17 +139,17 @@ function Count({
 }) {
   const dotClass =
     tone === 'bull'
-      ? 'bg-emerald-500'
+      ? 'bg-bull'
       : tone === 'bear'
-        ? 'bg-red-500'
+        ? 'bg-bear'
         : tone === 'muted'
           ? 'bg-fg-subtle'
-          : 'bg-zinc-800';
+          : 'bg-bg-elev-3';
   const labelClass =
     tone === 'bull'
-      ? 'text-emerald-500'
+      ? 'text-bull'
       : tone === 'bear'
-        ? 'text-red-500'
+        ? 'text-bear'
         : 'text-fg-muted';
   return (
     <li className="inline-flex items-center gap-1.5">

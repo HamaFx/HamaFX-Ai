@@ -15,8 +15,8 @@
  */
 
 // Bespoke renderer for the `get_correlation` tool part.
-// Renders the correlation matrix dynamically with text-emerald-500 /
-// text-red-500 cells and a small DXY proxy strip with the value and 24h
+// Renders the correlation matrix dynamically with text-bull /
+// text-bear cells and a small DXY proxy strip with the value and 24h
 // change.
 
 import {
@@ -55,7 +55,7 @@ export function GetCorrelationPart({
   const dxy = output.dxyProxy;
 
   return (
-    <div className="border-border bg-zinc-950 flex flex-col gap-3 rounded-sm border p-3">
+    <div className="border-border bg-bg-elev-1 flex flex-col gap-3 rounded-sm border p-3">
       <header className="flex items-baseline justify-between gap-2">
         <h3 className="text-fg text-sm font-semibold">
           Correlation · {output.tf} · {output.windowBars} bars
@@ -102,7 +102,7 @@ export function GetCorrelationPart({
       <section className="border-border border-t pt-2">
         <header className="flex items-baseline justify-between gap-2">
           <span className="text-fg text-xs font-semibold">DXY proxy</span>
-          <span className={`text-body-sm tabular-nums ${dxy.change24h >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
+          <span className={`text-body-sm tabular-nums ${dxy.change24h >= 0 ? 'text-bull' : 'text-bear'}`}>
             {dxy.value.toFixed(4)} ({dxy.change24h >= 0 ? '+' : ''}
             {dxy.change24h.toFixed(2)}% 24h)
           </span>
@@ -124,7 +124,7 @@ function Cell({
 }) {
   const cell = lookup.get(`${row}|${col}`);
   if (!cell) return <span className="text-fg-subtle">—</span>;
-  const tone = cell.r >= 0.4 ? 'text-emerald-500' : cell.r <= -0.4 ? 'text-red-500' : 'text-fg-muted';
+  const tone = cell.r >= 0.4 ? 'text-bull' : cell.r <= -0.4 ? 'text-bear' : 'text-fg-muted';
   return <span className={`${tone} font-semibold`}>{cell.r.toFixed(2)}</span>;
 }
 
@@ -135,14 +135,14 @@ function HeatStrip({ matrix }: { matrix: CorrelationCell[] }) {
 
   const colorFor = (r: number) =>
     r >= 0.7
-      ? 'bg-emerald-500/80'
+      ? 'bg-bull/80'
       : r >= 0.4
-        ? 'bg-emerald-500/40'
+        ? 'bg-bull/40'
         : r <= -0.7
-          ? 'bg-red-500/80'
+          ? 'bg-bear/80'
           : r <= -0.4
-            ? 'bg-red-500/40'
-            : 'bg-zinc-800';
+            ? 'bg-bear/40'
+            : 'bg-bg-elev-3';
 
   // Strongest pair by |r| for the accessible label.
   const strongest = matrix.reduce((best, c) => (Math.abs(c.r) > Math.abs(best.r) ? c : best), matrix[0]!);
@@ -160,12 +160,12 @@ function HeatStrip({ matrix }: { matrix: CorrelationCell[] }) {
 function SkeletonCard() {
   return (
     <div
-      className="border-border bg-zinc-950 rounded-sm border p-3"
+      className="border-border bg-bg-elev-1 rounded-sm border p-3"
       aria-busy="true"
       aria-label="Computing correlation"
     >
-      <div className="bg-zinc-900 h-4 w-1/2 animate-pulse rounded" />
-      <div className="bg-zinc-900 mt-3 h-20 animate-pulse rounded" />
+      <div className="bg-bg-elev-2 h-4 w-1/2 animate-pulse rounded-sm" />
+      <div className="bg-bg-elev-2 mt-3 h-20 animate-pulse rounded-sm" />
     </div>
   );
 }
@@ -174,7 +174,7 @@ function ErrorCard({ message }: { message?: string }) {
   return (
     <div
       role="alert"
-      className="border-red-500/30 bg-zinc-950 text-red-500 rounded-sm border p-3 text-sm"
+      className="border-bear/30 bg-bg-elev-1 text-bear rounded-sm border p-3 text-sm"
     >
       Correlation failed{message ? ` · ${message}` : ''}
     </div>
