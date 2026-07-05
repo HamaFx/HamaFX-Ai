@@ -24,11 +24,11 @@ interface Subscription {
 }
 
 const STATUS_COLORS: Record<string, string> = {
-  active: 'bg-green-500/10 text-green-600 dark:text-green-400',
-  trialing: 'bg-info/10 text-blue-600 dark:text-info',
-  past_due: 'bg-warn/10 text-amber-600 dark:text-warn',
-  canceled: 'bg-bear/10 text-red-600 dark:text-bear',
-  expired: 'bg-gray-500/10 text-gray-600 dark:text-gray-400',
+  active: 'bg-bull/10 text-bull',
+  trialing: 'bg-info/10 text-info',
+  past_due: 'bg-warn/10 text-warn',
+  canceled: 'bg-bear/10 text-bear',
+  expired: 'bg-fg-muted/10 text-fg-subtle',
 };
 
 export function SubscriptionStatus({

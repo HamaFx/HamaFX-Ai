@@ -18,7 +18,7 @@
 
 import { useActionState, useEffect } from 'react';
 import { toast } from 'sonner';
-import {IconShieldAlert, IconMail, IconArrowRight} from '@tabler/icons-react';
+import {IconAlertTriangle, IconMail, IconArrowRight} from '@tabler/icons-react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -67,7 +67,7 @@ export function UsageLimitsForm({
       className="border border-border bg-bg-elev-1 rounded-sm p-5 flex flex-col gap-6"
     >
       <header className="flex items-center gap-3 border-b border-border pb-3">
-        <IconShieldAlert className="size-5 text-fg shrink-0" />
+        <IconAlertTriangle className="size-5 text-fg shrink-0" />
         <div>
           <h2 className="text-sm font-semibold text-fg">Limits & Alerts</h2>
           <p className="text-caption text-fg-subtle mt-0.5">

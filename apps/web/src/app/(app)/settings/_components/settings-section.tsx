@@ -28,7 +28,7 @@ interface SettingsSectionProps {
 
 export function SettingsSection({
   icon,
-  iconColor = 'rgba(250, 250, 250, 0.15)',
+  iconColor = 'var(--color-bg-elev-3)',
   title,
   description,
   children,

@@ -31,7 +31,7 @@
 // The props interface is unchanged from the previous flat version so
 // `chat-screen.tsx` needs no edits.
 
-import { IconAlertCircle,  IconAlertTriangle,  IconRobot,  IconCpu,  IconCircleCheck,  IconNewspaper,  IconShield,  IconTrendingUp } from '@tabler/icons-react';
+import { IconAlertCircle,  IconAlertTriangle,  IconRobot,  IconCpu,  IconCircleCheck,  IconNews,  IconShield,  IconTrendingUp } from '@tabler/icons-react';
 import { AnimatePresence, m } from 'motion/react';
 import type { ReactNode } from 'react';
 
@@ -59,7 +59,7 @@ const AGENT_META: Record<
   { icon: ReactNode; label: string; tokenClass: string; glowClass: string }
 > = {
   technical: { icon: <IconTrendingUp className="size-4" />, label: 'Technical', tokenClass: 'text-bull', glowClass: 'shadow-none' },
-  fundamental: { icon: <IconNewspaper className="size-4" />, label: 'Fundamental', tokenClass: 'text-info', glowClass: 'shadow-none' },
+  fundamental: { icon: <IconNews className="size-4" />, label: 'Fundamental', tokenClass: 'text-info', glowClass: 'shadow-none' },
   risk: { icon: <IconShield className="size-4" />, label: 'Risk', tokenClass: 'text-bear', glowClass: '' },
   sentiment: { icon: <IconRobot className="size-4" />, label: 'Sentiment', tokenClass: 'text-warn', glowClass: '' },
   decision: { icon: <IconCpu className="size-4" />, label: 'Decision', tokenClass: 'text-fg', glowClass: 'shadow-none' },

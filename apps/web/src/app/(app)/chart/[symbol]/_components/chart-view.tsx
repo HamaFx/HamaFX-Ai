@@ -22,11 +22,18 @@
 
 import { type Symbol, type Candle, msPerTimeframe } from '@hamafx/shared';
 import { IconAdjustmentsHorizontal } from '@tabler/icons-react';
+import dynamic from 'next/dynamic';
 import { Link } from 'next-view-transitions';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 
-import { Chart, type ChartSettings } from '@/components/chart/chart';
-import { ChartSettingsDrawer, type ChartIndicators } from '@/components/chart/chart-settings-drawer';
+import type { ChartSettings } from '@/components/chart/chart';
+import type { ChartIndicators } from '@/components/chart/chart-settings-drawer';
+
+const Chart = dynamic(() => import('@/components/chart/chart').then((m) => m.Chart), { ssr: false });
+const ChartSettingsDrawer = dynamic(
+  () => import('@/components/chart/chart-settings-drawer').then((m) => m.ChartSettingsDrawer),
+  { ssr: false },
+);
 import { useOverlayToggles } from '@/components/chart/overlay-toggle';
 import {
   buildOverlays,

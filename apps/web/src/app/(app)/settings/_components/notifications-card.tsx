@@ -64,7 +64,7 @@ export async function NotificationsCard({ userId }: { userId: string }) {
       <Link href="/settings/usage" className="block rounded-sm -mx-1 px-1 py-0.5 transition-colors hover:bg-bg-elev-2">
         <SettingsRow
           icon={<IconMail className="size-4" />}
-          iconColor="rgba(250, 250, 250, 0.15)"
+          iconColor="var(--color-bg-elev-3)"
           label="Email"
           description={
             <span className="flex items-center gap-2">
@@ -82,7 +82,7 @@ export async function NotificationsCard({ userId }: { userId: string }) {
       <Link href="/settings/telegram" className="block rounded-sm -mx-1 px-1 py-0.5 transition-colors hover:bg-bg-elev-2">
         <SettingsRow
           icon={<IconArrowRight className="size-4" />}
-          iconColor="rgba(59, 130, 246, 0.15)"
+          iconColor="var(--color-info)"
           label="Telegram"
           description={
             <span className="flex items-center gap-2">
@@ -100,7 +100,7 @@ export async function NotificationsCard({ userId }: { userId: string }) {
       <Link href="/settings" className="block rounded-sm -mx-1 px-1 py-0.5 transition-colors hover:bg-bg-elev-2">
         <SettingsRow
           icon={<IconBell className="size-4" />}
-          iconColor="rgba(59, 130, 246, 0.15)"
+          iconColor="var(--color-info)"
           label="Web push"
           description={
             <span className="flex items-center gap-2">

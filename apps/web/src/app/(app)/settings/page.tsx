@@ -16,7 +16,7 @@
 
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
-import {IconKey, IconBell, IconRobot, IconDatabase, IconInfo} from '@tabler/icons-react';
+import {IconKey, IconBell, IconRobot, IconDatabase, IconInfoCircle} from '@tabler/icons-react';
 
 import { auth } from '@/auth';
 import { getDb, schema } from '@hamafx/db';
@@ -131,7 +131,7 @@ export default async function SettingsPage() {
         <PreferencesCard watchlist={watchlist} initialPrefs={uiPrefs} />
       </SettingsSection>
 
-      <SettingsSection icon={<IconInfo className="size-4" />} title="About" description="App info and system status">
+      <SettingsSection icon={<IconInfoCircle className="size-4" />} title="About" description="App info and system status">
         <AboutCard />
       </SettingsSection>
 

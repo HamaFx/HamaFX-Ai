@@ -25,7 +25,7 @@
  */
 
 import type { ComponentType } from 'react';
-import { IconBell,  IconBook,  IconCalendar,  IconCog,  IconKey,  IconChartLine,  type Icon,  IconMessagePlus,  IconNewspaper,  IconPlus,  IconSettings as SettingsIcon } from '@tabler/icons-react';
+import { IconBell,  IconBook,  IconCalendar,  IconSettings,  IconKey,  IconChartLine,  type Icon,  IconMessagePlus,  IconNews,  IconPlus } from '@tabler/icons-react';
 
 export type CommandGroup = 'navigation' | 'create' | 'settings';
 
@@ -66,11 +66,11 @@ export const COMMANDS: readonly CommandItem[] = [
   { id: 'nav-chart-xau', group: 'navigation', label: 'Chart — Gold',   icon: IconChartLine, href: '/chart/XAUUSD', keywords: ['xau', 'gold', 'xauusd'] },
   { id: 'nav-chart-eur', group: 'navigation', label: 'Chart — Euro',   icon: IconChartLine, href: '/chart/EURUSD', keywords: ['eur', 'euro', 'eurusd'] },
   { id: 'nav-chart-gbp', group: 'navigation', label: 'Chart — Pound',  icon: IconChartLine, href: '/chart/GBPUSD', keywords: ['gbp', 'pound', 'cable'] },
-  { id: 'nav-news',     group: 'navigation', label: 'News',         icon: IconNewspaper, href: '/news' },
-  { id: 'nav-calendar', group: 'navigation', label: 'IconCalendar',     icon: IconCalendar,  href: '/calendar' },
+  { id: 'nav-news',     group: 'navigation', label: 'News',         icon: IconNews, href: '/news' },
+  { id: 'nav-calendar', group: 'navigation', label: 'Calendar',     icon: IconCalendar,  href: '/calendar' },
   { id: 'nav-alerts',   group: 'navigation', label: 'Alerts',       icon: IconBell,      href: '/alerts' },
   { id: 'nav-journal',  group: 'navigation', label: 'Journal',      icon: IconBook,  href: '/journal' },
-  { id: 'nav-settings', group: 'navigation', label: 'SettingsIcon',     icon: SettingsIcon, href: '/settings' },
+  { id: 'nav-settings', group: 'navigation', label: 'Settings',     icon: IconSettings, href: '/settings' },
 
   // ── Create ────────────────────────────────────────────────
   // The "new chat" command is imperative; we wire it to a callback
@@ -78,15 +78,15 @@ export const COMMANDS: readonly CommandItem[] = [
   // so we expose an id and let the component provide the handler.
   { id: 'create-chat',   group: 'create', label: 'New chat',     icon: IconPlus,  shortcut: 'C' },
 
-  // ── SettingsIcon deep links ───────────────────────────────────
+  // ── Settings deep links ───────────────────────────────────
   { id: 'set-api-keys',  group: 'settings', label: 'API Keys',         icon: IconKey, href: '/settings/api-keys', keywords: ['byok', 'provider'] },
-  { id: 'set-agent',     group: 'settings', label: 'Agent settings',   icon: IconCog,      href: '/settings/agent' },
-  { id: 'set-usage',     group: 'settings', label: 'Usage & budget',   icon: IconCog,      href: '/settings/usage', keywords: ['cost', 'spend'] },
-  { id: 'set-profile',   group: 'settings', label: 'Profile',          icon: IconCog,      href: '/settings/profile' },
-  { id: 'set-models',    group: 'settings', label: 'Models',           icon: IconCog,      href: '/settings/models',   keywords: ['model', 'ai', 'provider'] },
-  { id: 'set-appearance', group: 'settings', label: 'Appearance',      icon: IconCog,      href: '/settings',          keywords: ['theme', 'dark', 'light'] },
-  { id: 'set-notifications', group: 'settings', label: 'Notifications', icon: IconCog,     href: '/settings/notifications', keywords: ['alert', 'push', 'email'] },
-  { id: 'set-symbols',      group: 'settings', label: 'Symbols',         icon: IconCog,     href: '/settings/symbols',      keywords: ['watchlist', 'forex'] },
+  { id: 'set-agent',     group: 'settings', label: 'Agent settings',   icon: IconSettings, href: '/settings/agent' },
+  { id: 'set-usage',     group: 'settings', label: 'Usage & budget',   icon: IconSettings, href: '/settings/usage', keywords: ['cost', 'spend'] },
+  { id: 'set-profile',   group: 'settings', label: 'Profile',          icon: IconSettings, href: '/settings/profile' },
+  { id: 'set-models',    group: 'settings', label: 'Models',           icon: IconSettings, href: '/settings/models',   keywords: ['model', 'ai', 'provider'] },
+  { id: 'set-appearance', group: 'settings', label: 'Appearance',      icon: IconSettings, href: '/settings',          keywords: ['theme', 'dark', 'light'] },
+  { id: 'set-notifications', group: 'settings', label: 'Notifications', icon: IconSettings, href: '/settings/notifications', keywords: ['alert', 'push', 'email'] },
+  { id: 'set-symbols',      group: 'settings', label: 'Symbols',         icon: IconSettings, href: '/settings/symbols',      keywords: ['watchlist', 'forex'] },
 ];
 
 /**
@@ -99,7 +99,7 @@ export function findCommand(id: string): CommandItem | null {
 import { z } from 'zod';
 
 export const commandSchema = z.object({
-  id: z.string().min(1, 'IconCommand ID is required'),
+  id: z.string().min(1, 'Command ID is required'),
   group: z.enum(['navigation', 'create', 'settings']),
   label: z.string().min(1, 'Label is required'),
   keywords: z.array(z.string()).optional(),

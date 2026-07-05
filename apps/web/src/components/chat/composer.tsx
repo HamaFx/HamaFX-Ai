@@ -276,7 +276,7 @@ export function Composer({
         className={cn(
           'bg-bg-elev-1 border border-border relative flex w-full flex-col overflow-hidden rounded-sm shadow-md transition-all duration-300',
           focused && 'border-border',
-          dragOver && 'ring-2 ring-inset ring-zinc-600',
+          dragOver && 'ring-2 ring-inset ring-border',
         )}
         onSubmit={(e) => {
           e.preventDefault();
@@ -463,7 +463,7 @@ export function Composer({
                   transition={{ type: 'spring', stiffness: 400, damping: 25 }}
                   type="submit"
                   disabled={!canSend}
-                  aria-label="ArrowRight message"
+                  aria-label="Send message"
                   className={cn(
                     'text-black bg-fg hover:bg-fg-muted inline-flex size-[44px] shrink-0 items-center justify-center rounded-sm font-semibold',
                     'disabled:cursor-not-allowed disabled:opacity-40 disabled:grayscale',

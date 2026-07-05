@@ -160,7 +160,7 @@ function MessageImpl({ message, onCopy, onRegenerate, onEdit, isStreaming }: Mes
                 onEdit?.(message.id, editValue);
               }}
               className="rounded-sm bg-fg px-3 py-1 text-xs text-black transition-colors hover:bg-fg-muted"
-            >ArrowRight</button>
+            >Save</button>
           </div>
         </div>
       </div>
@@ -174,158 +174,177 @@ function MessageImpl({ message, onCopy, onRegenerate, onEdit, isStreaming }: Mes
       transition={prefersReducedMotion ? { duration: 0 } : { type: 'spring', stiffness: 300, damping: 30 }}
       className={cn('group flex w-full flex-col gap-2', isUser ? 'items-end' : 'items-start')}
     >
-      <div
-        className={cn(
-          'relative flex flex-col gap-2',
-          isUser
-            ? 'max-w-[85%] ml-auto bg-bg-elev-2 text-fg rounded-sm px-4 py-2 font-medium'
-            : 'w-full py-3',
-        )}
-      >
-        {/* Phase 1.3 — aria-live so screen readers announce the final
-            assistant message when streaming completes. */}
-        <div aria-live={isUser ? undefined : 'polite'}>
-        {message.parts.map((part, idx) => {
-          if (part.type === 'text') {
-            return (
-              <MemoizedTextPart
-                key={idx}
-                text={part.text}
-                role={message.role === 'user' ? 'user' : 'assistant'}
-                isStreaming={!!isStreaming}
-              />
-            );
-          }
-          if (part.type.startsWith('tool-')) {
-            const p = part as StreamToolPart;
-            const name = part.type.slice('tool-'.length);
-            const streamState: StreamToolState = p.state ?? 'output-available';
-            const errorMessage = p.errorText;
-            return (
-              <MemoizedToolPart
-                key={idx}
-                name={name}
-                output={p.output ?? null}
-                state={toPartState(streamState)}
-                {...(errorMessage !== undefined ? { errorMessage } : {})}
-              />
-            );
-          }
-          return renderPart(part, idx, message.role);
-        })}
-        </div>
-      </div>
+      {/* Outer wrapper: brand accent icon for assistant, plain for user */}
+      <div className={cn('flex w-full', !isUser && !isSystem ? 'items-start gap-3' : '')}>
+        {/* Assistant brand accent icon on the left */}
+        {!isUser && !isSystem ? (
+          <span
+            aria-hidden="true"
+            className="mt-1 shrink-0 inline-flex size-4 items-center justify-center"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="text-brand" aria-hidden="true">
+              <rect x="4" y="6" width="3" height="12" rx="1" fill="currentColor" />
+              <rect x="10" y="3" width="3" height="18" rx="1" fill="currentColor" opacity="0.6" />
+              <rect x="17" y="8" width="3" height="10" rx="1" fill="currentColor" />
+            </svg>
+          </span>
+        ) : null}
+        <div className={cn('flex flex-col gap-2', !isUser && !isSystem ? 'min-w-0 flex-1' : 'w-full')}>
+          <div
+            className={cn(
+              'relative flex flex-col gap-2',
+              isUser
+                ? 'max-w-[85%] ml-auto bg-bg-elev-2 text-fg rounded-sm px-4 py-2 font-medium'
+                : 'w-full',
+              !isUser && !isSystem ? 'py-1' : 'py-3',
+            )}
+          >
+            {/* Phase 1.3 — aria-live so screen readers announce the final
+                assistant message when streaming completes. */}
+            <div aria-live={isUser ? undefined : 'polite'}>
+            {message.parts.map((part, idx) => {
+              if (part.type === 'text') {
+                return (
+                  <MemoizedTextPart
+                    key={idx}
+                    text={part.text}
+                    role={message.role === 'user' ? 'user' : 'assistant'}
+                    isStreaming={!!isStreaming}
+                  />
+                );
+              }
+              if (part.type.startsWith('tool-')) {
+                const p = part as StreamToolPart;
+                const name = part.type.slice('tool-'.length);
+                const streamState: StreamToolState = p.state ?? 'output-available';
+                const errorMessage = p.errorText;
+                return (
+                  <MemoizedToolPart
+                    key={idx}
+                    name={name}
+                    output={p.output ?? null}
+                    state={toPartState(streamState)}
+                    {...(errorMessage !== undefined ? { errorMessage } : {})}
+                  />
+                );
+              }
+              return renderPart(part, idx, message.role);
+            })}
+            </div>
+          </div>
 
-      {/* Phase 1.3 — trust footer on assistant messages (model, time,
-          token usage, cost, citations). Hidden while streaming. */}
-      {!isUser && !isStreaming ? (
-        <div className="w-full">
-          <MessageFooter message={message} />
-        </div>
-      ) : null}
+          {/* Phase 1.3 — trust footer on assistant messages (model, time,
+              token usage, cost, citations). Hidden while streaming. */}
+          {!isUser && !isStreaming ? (
+            <div className="w-full">
+              <MessageFooter message={message} />
+            </div>
+          ) : null}
 
-      {/* Action row — only assistant messages, only when there's something
-          to do. Visible on hover/focus, accessible via keyboard. */}
-      {hasActions ? (
-        <div
-          className={cn(
-            'mr-2 flex items-center gap-1 transition-opacity duration-150',
-            'opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:focus-within:opacity-100',
-          )}
-        >
-          {plainText.length > 0 ? (
-            <Tooltip label={copied ? 'Copied' : 'Copy'}>
-              <button
-                type="button"
-                onClick={copy}
-                aria-label={copied ? 'Copied' : 'Copy message'}
-                className="bg-bg-elev-1 border border-border text-fg-muted hover:text-fg focus-visible:ring-fg inline-flex size-8 items-center justify-center rounded-sm transition-colors focus:outline-none focus-visible:ring-2"
-              >
-                {copied ? (
-                  <IconCheck className="text-bull size-3.5" />
-                ) : (
-                  <IconCopy className="size-3.5" />
-                )}
-              </button>
-            </Tooltip>
-          ) : null}
-          {isUser && onEdit ? (
-            <Tooltip label="Edit prompt">
-              <button
-                type="button"
-                onClick={() => {
-                  setEditValue(plainText);
-                  setIsEditing(true);
-                }}
-                aria-label="Edit prompt"
-                className="bg-bg-elev-1 border border-border text-fg-muted hover:text-fg focus-visible:ring-fg inline-flex size-8 items-center justify-center rounded-sm transition-colors focus:outline-none focus-visible:ring-2"
-              >
-                <IconEdit className="size-3.5" />
-              </button>
-            </Tooltip>
-          ) : null}
-          {onRegenerate ? (
-            <div className="relative inline-flex">
-              <Tooltip label="Regenerate">
-                <button
-                  type="button"
-                  onClick={() => onRegenerate()}
-                  aria-label="Regenerate response"
-                  className="bg-bg-elev-1 border border-border text-fg-muted hover:text-fg focus-visible:ring-fg inline-flex size-8 items-center justify-center rounded-sm transition-colors focus:outline-none focus-visible:ring-2"
-                >
-                  <IconArrowBackUp className="size-3.5" />
-                </button>
-              </Tooltip>
-              <Tooltip label="Regenerate with…">
-                <button
-                  type="button"
-                  popoverTarget={hasPopoverSupport ? `regen-menu-${message.id}` : undefined}
-                  onClick={hasPopoverSupport ? undefined : () => setIsOpenFallback(!isOpenFallback)}
-                  aria-label="Regenerate with a different model"
-                  className="bg-bg-elev-1 border border-border text-fg-muted hover:text-fg focus-visible:ring-fg inline-flex size-8 items-center justify-center rounded-sm border-l border-divider transition-colors focus:outline-none focus-visible:ring-2"
-                  style={
-                    hasPopoverSupport
-                      ? ({ anchorName: `--regen-btn-${message.id}` } as React.CSSProperties)
-                      : undefined
-                  }
-                >
-                  <IconChevronDown className="size-3.5" />
-                </button>
-              </Tooltip>
-              <div
-                id={`regen-menu-${message.id}`}
-                popover={hasPopoverSupport ? "auto" : undefined}
-                role="menu"
-                className={cn(
-                  "bg-bg-elev-1 border border-border m-0 rounded-sm p-1 shadow-xl",
-                  !hasPopoverSupport && "absolute bottom-full right-0 mb-2 z-50",
-                  !hasPopoverSupport && !isOpenFallback && "hidden"
-                )}
-                style={
-                  hasPopoverSupport
-                    ? ({ 
-                        minWidth: '12rem',
-                        positionAnchor: `--regen-btn-${message.id}`,
-                        bottom: 'calc(anchor(top) + 8px)',
-                        right: 'anchor(right)',
-                        position: 'fixed'
-                      } as React.CSSProperties)
-                    : { minWidth: '12rem' }
-                }
-              >
-                <RegenModelPicker
-                  popoverId={`regen-menu-${message.id}`}
-                  activeModelId={(message as unknown as { metadata?: { model?: string } }).metadata?.model ?? null}
-                  onPick={(modelId) => {
-                    onRegenerate({ modelOverride: modelId });
-                    setIsOpenFallback(false);
-                  }}
-                />
-              </div>
+          {/* Action row — only assistant messages, only when there's something
+              to do. Visible on hover/focus, accessible via keyboard. */}
+          {hasActions ? (
+            <div
+              className={cn(
+                'flex items-center gap-1 transition-opacity duration-150',
+                'opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:focus-within:opacity-100',
+              )}
+            >
+              {plainText.length > 0 ? (
+                <Tooltip label={copied ? 'Copied' : 'Copy'}>
+                  <button
+                    type="button"
+                    onClick={copy}
+                    aria-label={copied ? 'Copied' : 'Copy message'}
+                    className="bg-bg-elev-1 border border-border text-fg-muted hover:text-fg focus-visible:ring-fg inline-flex size-8 items-center justify-center rounded-sm transition-colors focus:outline-none focus-visible:ring-2"
+                  >
+                    {copied ? (
+                      <IconCheck className="text-bull size-3.5" />
+                    ) : (
+                      <IconCopy className="size-3.5" />
+                    )}
+                  </button>
+                </Tooltip>
+              ) : null}
+              {isUser && onEdit ? (
+                <Tooltip label="Edit prompt">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditValue(plainText);
+                      setIsEditing(true);
+                    }}
+                    aria-label="Edit prompt"
+                    className="bg-bg-elev-1 border border-border text-fg-muted hover:text-fg focus-visible:ring-fg inline-flex size-8 items-center justify-center rounded-sm transition-colors focus:outline-none focus-visible:ring-2"
+                  >
+                    <IconEdit className="size-3.5" />
+                  </button>
+                </Tooltip>
+              ) : null}
+              {onRegenerate ? (
+                <div className="relative inline-flex">
+                  <Tooltip label="Regenerate">
+                    <button
+                      type="button"
+                      onClick={() => onRegenerate()}
+                      aria-label="Regenerate response"
+                      className="bg-bg-elev-1 border border-border text-fg-muted hover:text-fg focus-visible:ring-fg inline-flex size-8 items-center justify-center rounded-sm transition-colors focus:outline-none focus-visible:ring-2"
+                    >
+                      <IconArrowBackUp className="size-3.5" />
+                    </button>
+                  </Tooltip>
+                  <Tooltip label="Regenerate with…">
+                    <button
+                      type="button"
+                      popoverTarget={hasPopoverSupport ? `regen-menu-${message.id}` : undefined}
+                      onClick={hasPopoverSupport ? undefined : () => setIsOpenFallback(!isOpenFallback)}
+                      aria-label="Regenerate with a different model"
+                      className="bg-bg-elev-1 border border-border text-fg-muted hover:text-fg focus-visible:ring-fg inline-flex size-8 items-center justify-center rounded-sm border-l border-divider transition-colors focus:outline-none focus-visible:ring-2"
+                      style={
+                        hasPopoverSupport
+                          ? ({ anchorName: `--regen-btn-${message.id}` } as React.CSSProperties)
+                          : undefined
+                      }
+                    >
+                      <IconChevronDown className="size-3.5" />
+                    </button>
+                  </Tooltip>
+                  <div
+                    id={`regen-menu-${message.id}`}
+                    popover={hasPopoverSupport ? "auto" : undefined}
+                    role="menu"
+                    className={cn(
+                      "bg-bg-elev-1 border border-border m-0 rounded-sm p-1 shadow-xl",
+                      !hasPopoverSupport && "absolute bottom-full right-0 mb-2 z-50",
+                      !hasPopoverSupport && !isOpenFallback && "hidden"
+                    )}
+                    style={
+                      hasPopoverSupport
+                        ? ({ 
+                            minWidth: '12rem',
+                            positionAnchor: `--regen-btn-${message.id}`,
+                            bottom: 'calc(anchor(top) + 8px)',
+                            right: 'anchor(right)',
+                            position: 'fixed'
+                          } as React.CSSProperties)
+                        : { minWidth: '12rem' }
+                    }
+                  >
+                    <RegenModelPicker
+                      popoverId={`regen-menu-${message.id}`}
+                      activeModelId={(message as unknown as { metadata?: { model?: string } }).metadata?.model ?? null}
+                      onPick={(modelId) => {
+                        onRegenerate({ modelOverride: modelId });
+                        setIsOpenFallback(false);
+                      }}
+                    />
+                  </div>
+                </div>
+              ) : null}
             </div>
           ) : null}
         </div>
-      ) : null}
+      </div>
     </m.div>
   );
 }

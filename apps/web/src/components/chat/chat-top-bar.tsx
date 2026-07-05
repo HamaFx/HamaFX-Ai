@@ -27,7 +27,7 @@
 // doesn't open" intermittent bug caused by stacked drawer instances.
 
 import type { Symbol } from '@hamafx/shared';
-import {IconLoader2, IconMessages, IconDotsHorizontal, IconPlus, IconSearch, IconBolt, IconTrash, IconCheck, IconFileDownload, IconCpu, IconChevronDown} from '@tabler/icons-react';
+import {IconLoader2, IconMessages, IconDotsCircleHorizontal, IconPlus, IconSearch, IconBolt, IconTrash, IconCheck, IconFileDownload, IconCpu, IconChevronDown} from '@tabler/icons-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useRef, useState, useTransition } from 'react';
 import { toast } from 'sonner';
@@ -194,7 +194,7 @@ export function ChatTopBar({ threadId, title, pinnedSymbol, threads, isStreaming
       toast.error('Pop-up blocked. Click here to download', {
         duration: 8000,
         action: {
-          label: 'IconDownload',
+          label: 'Download',
           onClick: () => {
             window.location.href = exportUrl;
           },
@@ -326,7 +326,7 @@ export function ChatTopBar({ threadId, title, pinnedSymbol, threads, isStreaming
             aria-haspopup="menu"
             className="text-fg-muted hover:text-fg hover:bg-bg-elev-2 active:bg-bg-elev-3 inline-flex size-11 shrink-0 items-center justify-center rounded-sm transition-colors"
           >
-            <IconDotsHorizontal className="size-5" />
+            <IconDotsCircleHorizontal className="size-5" />
           </button>
           {menuOpen ? (
             <div
@@ -535,7 +535,7 @@ function ThreadSwitcher({ open, onOpenChange, threadId, threads, onPickNew }: Th
         {showSearch ? (
           <div className="px-4 pb-3">
             <label htmlFor="thread-search" className="sr-only">
-              IconSearch conversations
+              Search conversations
             </label>
             <div className="relative">
               <IconSearch
@@ -547,7 +547,7 @@ function ThreadSwitcher({ open, onOpenChange, threadId, threads, onPickNew }: Th
                 type="search"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="IconSearch…"
+                placeholder="Search…"
                 className="bg-bg-elev-1/60 text-fg placeholder:text-fg-subtle focus:border-border border-border h-11 w-full rounded-sm border pl-10 pr-4 text-sm focus:outline-none"
               />
             </div>
@@ -562,8 +562,7 @@ function ThreadSwitcher({ open, onOpenChange, threadId, threads, onPickNew }: Th
           >
             <span
               aria-hidden="true"
-              className="text-fg inline-flex size-10 items-center justify-center rounded-sm"
-              style={{ background: 'rgba(250, 250, 250, 0.15)' }}
+              className="text-fg bg-bg-elev-3 inline-flex size-10 items-center justify-center rounded-sm"
             >
               <IconPlus className="size-5" />
             </span>
@@ -598,7 +597,7 @@ function ThreadSwitcher({ open, onOpenChange, threadId, threads, onPickNew }: Th
                       isActive && !selectMode
                         ? 'bg-bg-elev-3 text-fg'
                         : 'text-fg-muted hover:bg-bg-elev-2 hover:text-fg',
-                      isSelected && 'ring-1 ring-zinc-700 bg-bg-elev-2 text-fg',
+                      isSelected && 'ring-1 ring-border bg-bg-elev-2 text-fg',
                     )}
                   >
                     {selectMode ? (
@@ -623,7 +622,7 @@ function ThreadSwitcher({ open, onOpenChange, threadId, threads, onPickNew }: Th
                       </span>
                     </div>
                     {t.pinnedSymbol ? (
-                      <span className="bg-bg-elev-3 text-fg ring-zinc-700 shrink-0 rounded-sm px-2 py-0.5 text-caption font-bold tabular-nums ring-1">
+                      <span className="bg-bg-elev-3 text-fg ring-border shrink-0 rounded-sm px-2 py-0.5 text-caption font-bold tabular-nums ring-1">
                         {t.pinnedSymbol}
                       </span>
                     ) : null}

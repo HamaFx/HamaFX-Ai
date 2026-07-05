@@ -25,7 +25,7 @@
 // gauge how event-heavy the week is.
 
 import type { EconomicEvent } from '@hamafx/shared';
-import {IconClock, IconBolt, IconBolt} from '@tabler/icons-react';
+import {IconClock, IconBolt} from '@tabler/icons-react';
 import { Link } from 'next-view-transitions';
 
 import { useTime } from '@/components/providers/time-provider';
@@ -68,11 +68,7 @@ export function CalendarHero({ events = [] }: CalendarHeroProps) {
         <div className="flex items-start gap-3">
           <span
             aria-hidden="true"
-            className="text-bear inline-flex size-12 shrink-0 items-center justify-center rounded-sm"
-            style={{
-              background: 'rgba(239, 68, 68, 0.12)',
-              boxShadow: 'none',
-            }}
+            className="text-bear bg-bear/10 inline-flex size-12 shrink-0 items-center justify-center rounded-sm"
           >
             <IconBolt className="size-5" strokeWidth={2} />
           </span>

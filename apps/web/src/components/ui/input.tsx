@@ -38,8 +38,8 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
         'bg-bg-elev-1/60 text-fg placeholder:text-fg-subtle',
         'h-12 w-full rounded-sm border px-4 text-base',
         error
-          ? 'border-bear/60 focus:border-bear/80 focus:shadow-[0_0_0_3px_rgba(239,68,68,0.12)]'
-          : 'border-border focus:border-border focus:shadow-[0_0_0_3px_rgba(250,250,250,0.12)]',
+          ? 'border-bear/60 focus:border-bear/80 focus:ring-2 focus:ring-bear/30'
+          : 'border-border focus:border-border focus:ring-2 focus:ring-fg/30',
         '',
         'transition-all duration-200',
         'focus:bg-bg-elev-1/80',

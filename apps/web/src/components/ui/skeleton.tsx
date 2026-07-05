@@ -48,7 +48,7 @@ export function SkeletonCard({ className, lines = 2, ...rest }: SkeletonCardProp
       role="status"
       aria-label="Loading content"
       className={cn(
-        'border-border bg-bg-elev-1/60 flex flex-col gap-2 overflow-hidden rounded-sm border p-4',
+        'border-border bg-bg-elev-1/60 flex flex-col gap-2 overflow-hidden rounded-sm border p-4 fade-in',
         className,
       )}
       {...rest}

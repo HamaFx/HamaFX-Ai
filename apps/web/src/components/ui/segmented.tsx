@@ -212,8 +212,6 @@ export function Segmented<T extends string>(props: SegmentedProps<T>) {
                 className="absolute inset-0 -z-0 rounded-sm"
                 style={{
                   backgroundImage: 'none',
-                  boxShadow:
-                    'inset 0 1px 0 0 rgba(250, 250, 250, 0.15), 0 4px 12px -2px rgba(250, 250, 250, 0.2)',
                 }}
                 transition={{ type: 'spring', stiffness: 380, damping: 30 }}
               />

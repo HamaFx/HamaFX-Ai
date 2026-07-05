@@ -27,9 +27,9 @@
 //   - Reduced-motion friendly transitions (vaul respects the OS pref).
 //   - Sectioned destinations (Markets / Personal) + identity strip and
 //     a footer "Sign out" action.
-//   - User identity display + nav item badges + last-path tracking.
+//   - User identity display + nav item badges.
 
-import { IconBell,  IconBook,  IconCalendar,  IconCog,  IconLayoutDashboard,  IconChartLine,  IconLogout,  IconMessageCircle,  IconNewspaper,  IconTarget } from '@tabler/icons-react';
+import { IconBell,  IconBook,  IconCalendar,  IconSettings,  IconLayoutDashboard,  IconChartLine,  IconLogout,  IconMessageCircle,  IconNews,  IconTarget } from '@tabler/icons-react';
 import { Link } from 'next-view-transitions';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useMemo } from 'react';
@@ -48,7 +48,6 @@ interface NavItem {
   icon: typeof IconMessageCircle;
   description?: string;
   match?: readonly string[];
-  badge?: number;
 }
 
 const PRIMARY: readonly NavItem[] = [
@@ -74,12 +73,12 @@ const PRIMARY: readonly NavItem[] = [
   {
     href: '/news',
     label: 'News',
-    icon: IconNewspaper,
+    icon: IconNews,
     description: 'Tagged headlines',
   },
   {
     href: '/calendar',
-    label: 'IconCalendar',
+    label: 'Calendar',
     icon: IconCalendar,
     description: 'Macro events',
   },
@@ -89,7 +88,7 @@ const SECONDARY: readonly NavItem[] = [
   { href: '/signals', label: 'Signals', icon: IconTarget, description: 'AI track record' },
   { href: '/alerts', label: 'Alerts', icon: IconBell, description: 'Price triggers' },
   { href: '/journal', label: 'Journal', icon: IconBook, description: 'Trades & R-multiples' },
-  { href: '/settings', label: 'IconSettings', icon: IconCog, description: 'Notifications, usage' },
+  { href: '/settings', label: 'Settings',    icon: IconSettings, description: 'Notifications, usage' },
 ];
 
 export function NavDrawer({ userName, userEmail, userId: _userId }: { userName?: string; userEmail?: string; userId?: string }) {
@@ -160,7 +159,7 @@ export function NavDrawer({ userName, userEmail, userId: _userId }: { userName?:
               </div>
               <div className="flex flex-col gap-0.5 min-w-0">
                 <span className="text-fg text-base font-bold tracking-tight truncate">
-                  {userName ?? 'HamaFX IconUser'}
+                  {userName ?? 'HamaFX User'}
                 </span>
                 <span className="text-fg-subtle text-xs truncate">
                   {userEmail ?? 'Personal trading copilot'}
@@ -197,14 +196,13 @@ export function NavDrawer({ userName, userEmail, userId: _userId }: { userName?:
               onClick={() => void logout()}
               className="text-fg-muted hover:text-fg hover:bg-bg-elev-2 flex min-h-[48px] w-full items-center gap-3 rounded-sm px-3 text-left text-sm font-medium transition-colors"
             >
-              <span
-                aria-hidden="true"
-                className="text-fg-muted inline-flex size-9 items-center justify-center rounded-sm"
-                style={{ background: '#27272A' }}
-              >
-                <IconLogout className="size-4" strokeWidth={2} />
-              </span>
-              Sign out
+            <span
+              aria-hidden="true"
+              className="text-fg-muted bg-bg-elev-3 inline-flex size-9 items-center justify-center rounded-sm"
+            >
+              <IconLogout className="size-4" strokeWidth={2} />
+            </span>
+            Sign out
             </button>
           </div>
         </DrawerPrimitive.Content>
@@ -237,21 +235,15 @@ function NavLink({ item, active }: { item: NavItem; active: boolean }) {
         aria-current={active ? 'page' : undefined}
         className={cn(
           'group/nav relative flex min-h-[56px] items-center gap-3 rounded-sm px-3 transition-all',
-          active ? 'bg-bg-elev-2 ring-1 ring-zinc-700 text-fg' : 'text-fg-muted hover:bg-bg-elev-2 hover:text-fg',
+          active ? 'bg-bg-elev-2 ring-1 ring-border text-fg' : 'text-fg-muted hover:bg-bg-elev-2 hover:text-fg',
         )}
       >
         <span
           aria-hidden="true"
           className={cn(
             'inline-flex size-9 items-center justify-center rounded-sm transition-colors',
-            active ? 'text-fg' : 'text-fg-muted group-hover/nav:text-fg',
+            active ? 'bg-bg-elev-3 text-fg' : 'bg-bg-elev-2 text-fg-muted group-hover/nav:text-fg',
           )}
-          style={{
-            background: active
-              ? '#27272A'
-              : '#18181B',
-            boxShadow: 'none',
-          }}
         >
           <Icon className="size-5" strokeWidth={active ? 2 : 1.75} />
         </span>
@@ -263,11 +255,7 @@ function NavLink({ item, active }: { item: NavItem; active: boolean }) {
             </span>
           ) : null}
         </div>
-        {item.badge !== undefined && item.badge > 0 && (
-          <span className="ml-auto bg-bg-elev-3 text-fg text-caption font-bold rounded-sm px-1.5 py-0.5 tabular-nums">
-            {item.badge > 99 ? '99+' : item.badge}
-          </span>
-        )}
+
       </Link>
     </li>
   );

@@ -21,14 +21,14 @@
 // Client component for configuring notification noise control:
 // quiet hours, min severity, cooldown, dedup TTL, and daily digest mode.
 
-import {IconBell, IconMoon, IconClock, IconFilter, IconBolt, IconMail, IconDeviceMobile, IconInfo, IconChartBar} from '@tabler/icons-react';
+import {IconBell, IconMoon, IconClock, IconFilter, IconBolt, IconMail, IconDeviceMobile, IconInfoCircle, IconChartBar} from '@tabler/icons-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Switch } from '@/components/ui/switch';
 import { cn } from '@/lib/cn';
 import type { NoiseConfig, Severity } from '@hamafx/shared';
 
 const SEVERITY_OPTIONS: { value: Severity; label: string }[] = [
-  { value: 'info', label: 'IconInfo' },
+  { value: 'info', label: 'Info' },
   { value: 'warning', label: 'Warning' },
   { value: 'error', label: 'Error' },
   { value: 'critical', label: 'Critical' },
@@ -189,7 +189,7 @@ export function NoiseControlCard({ initialConfig }: { initialConfig?: NoiseConfi
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs text-fg-subtle">
           <div className="flex items-center gap-1.5">
-            <IconInfo className="size-3.5" />
+            <IconInfoCircle className="size-3.5" />
             <span>Info & warning batched</span>
           </div>
           <div className="flex items-center gap-1.5">

@@ -45,7 +45,7 @@
 import { useChat } from '@ai-sdk/react';
 import type { Symbol } from '@hamafx/shared';
 import { DefaultChatTransport, type UIMessage } from 'ai';
-import {IconArrowDown, IconArrowBackUp, IconBolt, IconX} from '@tabler/icons-react';
+import {IconArrowDown, IconArrowBackUp, IconX} from '@tabler/icons-react';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';

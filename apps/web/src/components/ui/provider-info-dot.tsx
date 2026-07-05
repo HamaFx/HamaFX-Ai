@@ -33,7 +33,7 @@
  * handler.
  */
 
-import { IconInfo } from '@tabler/icons-react';
+import { IconInfoCircle } from '@tabler/icons-react';
 import type { ReactElement } from 'react';
 
 import { Tooltip } from '@/components/ui/tooltip';
@@ -92,7 +92,7 @@ export function ProviderInfoDot({
         }
         onClick={(e) => e.stopPropagation()}
       >
-        <IconInfo className="size-3" aria-hidden="true" />
+        <IconInfoCircle className="size-3" aria-hidden="true" />
         <span className="sr-only">{provider.displayName} info</span>
       </span>
     </Tooltip>

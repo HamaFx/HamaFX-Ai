@@ -266,6 +266,15 @@ html {
  * Keyframes
  * ------------------------------------------------------------------------- */
 
+@keyframes fadeIn {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+.fade-in {
+  animation: fadeIn 0.25s ease-out both;
+}
+
 @keyframes shimmer {
   0% { background-position: -200% 0; }
   100% { background-position: 200% 0; }

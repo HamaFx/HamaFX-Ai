@@ -67,7 +67,7 @@ export function BillingPlans({ plans, currentPlanId }: { plans: Plan[]; currentP
     <div className="flex flex-col gap-3">
       <h3 className="text-fg text-sm font-semibold">Available Plans</h3>
       {error && (
-        <div className="rounded-sm border border-bear/30 bg-bear/10 px-3 py-2 text-sm text-red-600 dark:text-bear">
+        <div className="rounded-sm border border-bear/30 bg-bear/10 px-3 py-2 text-sm text-bear">
           {error}
         </div>
       )}

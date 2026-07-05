@@ -15,7 +15,7 @@
  */
 
 import type { ConveneCommitteeOutput, CommitteeVerdict } from '@hamafx/shared';
-import { IconAlertTriangle,  IconBriefcase,  IconCircleCheck,  IconChevronDown,  IconLink as LinkIcon,  IconShieldAlert,  IconTrendingUp,  IconUsers,  IconCircleX } from '@tabler/icons-react';
+import { IconAlertTriangle,  IconBriefcase,  IconCircleCheck,  IconChevronDown,  IconLink as LinkIcon,  IconTrendingUp,  IconUsers,  IconCircleX } from '@tabler/icons-react';
 import type { Icon } from '@tabler/icons-react';
 
 import type { ToolPartProps } from './registry';
@@ -26,7 +26,7 @@ const PERSONA_LABELS: Record<
 > = {
   economist: { label: 'Economist', Icon: IconBriefcase },
   technician: { label: 'Technician', Icon: IconTrendingUp },
-  risk_manager: { label: 'Risk Manager', Icon: IconShieldAlert },
+  risk_manager: { label: 'Risk Manager', Icon: IconAlertTriangle },
 };
 
 function GradeBadge({

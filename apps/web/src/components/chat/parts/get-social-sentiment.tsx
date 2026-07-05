@@ -15,7 +15,7 @@
  */
 
 import { type GetSocialSentimentOutput } from '@hamafx/shared';
-import {IconMessage, IconMessageCircle, IconChartBar, IconNewspaper, IconAlertCircle, type Icon} from '@tabler/icons-react';
+import {IconMessage, IconMessageCircle, IconChartBar, IconNews, IconAlertCircle, type Icon} from '@tabler/icons-react';
 
 interface GetSocialSentimentPartProps {
   /** Tool output, or `null` while streaming / before completion. */
@@ -36,7 +36,7 @@ const SOURCE_ICONS: Record<string, Icon> = {
   reddit: IconMessage,
   twitter: IconMessageCircle,
   retail_positioning: IconChartBar,
-  news: IconNewspaper,
+  news: IconNews,
   aggregated: IconAlertCircle,
 };
 

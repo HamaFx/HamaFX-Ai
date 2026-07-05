@@ -27,7 +27,7 @@
 // the chat surface, not an error: many users simply haven't received a
 // briefing yet (fresh account, low event volume, etc.).
 
-import {IconArrowRight, IconCalendar, IconNewspaper, IconBolt} from '@tabler/icons-react';
+import {IconArrowRight, IconCalendar, IconNews, IconBolt} from '@tabler/icons-react';
 import Link from 'next/link';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -56,7 +56,7 @@ interface KindMeta {
 
 const KIND_META: Record<'pre' | 'post' | 'weekly_review', KindMeta> = {
   pre: { label: 'Pre-event briefing', icon: IconCalendar },
-  post: { label: 'Post-event recap', icon: IconNewspaper },
+  post: { label: 'Post-event recap', icon: IconNews },
   weekly_review: { label: 'Weekly review', icon: IconBolt },
 };
 

@@ -31,7 +31,7 @@
  *     /settings/api-keys (regardless of `from=chat`).
  */
 
-import {IconInfo, IconX} from '@tabler/icons-react';
+import {IconInfoCircle, IconX} from '@tabler/icons-react';
 import { useEffect, useState } from 'react';
 
 const STORAGE_KEY = 'hfx_banner_dismissed:api-keys-from-chat';
@@ -73,7 +73,7 @@ export function ApiKeysLandingBanner({ prompt }: ApiKeysLandingBannerProps) {
       aria-live="polite"
       className="border-info/30 bg-info/10 text-fg flex items-start gap-3 rounded-sm border p-4"
     >
-      <IconInfo className="text-info mt-0.5 size-5 shrink-0" aria-hidden="true" />
+      <IconInfoCircle className="text-info mt-0.5 size-5 shrink-0" aria-hidden="true" />
       <div className="flex-1 leading-[1.4]">
         <p className="text-sm font-medium">No AI provider is configured</p>
         <p className="text-fg-muted mt-1 text-xs">

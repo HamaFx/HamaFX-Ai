@@ -24,7 +24,7 @@
 // suitable for the dashboard grid.
 
 import Link from 'next/link';
-import { IconNewspaper } from '@tabler/icons-react';
+import { IconNews } from '@tabler/icons-react';
 import type { NewsArticle } from '@hamafx/shared';
 
 import { cn } from '@/lib/cn';
@@ -64,7 +64,7 @@ export function NewsPulseWidget({ articles }: NewsPulseWidgetProps) {
     >
       <header className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
-          <IconNewspaper className="text-fg-subtle size-4" />
+          <IconNews className="text-fg-subtle size-4" />
           <span
             id="news-pulse-heading"
             className="text-fg text-body-sm font-semibold"

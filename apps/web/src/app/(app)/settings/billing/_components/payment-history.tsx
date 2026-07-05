@@ -26,14 +26,14 @@ interface Payment {
 }
 
 const STATUS_COLORS: Record<string, string> = {
-  waiting: 'text-amber-600 dark:text-warn',
-  confirming: 'text-blue-600 dark:text-info',
-  confirmed: 'text-blue-600 dark:text-info',
-  sending: 'text-blue-600 dark:text-info',
-  finished: 'text-green-600 dark:text-green-400',
-  failed: 'text-red-600 dark:text-bear',
-  expired: 'text-gray-600 dark:text-gray-400',
-  refunded: 'text-purple-600 dark:text-purple-400',
+  waiting: 'text-warn',
+  confirming: 'text-info',
+  confirmed: 'text-info',
+  sending: 'text-info',
+  finished: 'text-bull',
+  failed: 'text-bear',
+  expired: 'text-fg-subtle',
+  refunded: 'text-info',
 };
 
 export function PaymentHistory({ payments }: { payments: Payment[] }) {

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import {IconPlus, IconTrash, IconGripVertical, IconShieldAlert, IconLoader2} from '@tabler/icons-react';
+import {IconPlus, IconTrash, IconGripVertical, IconAlertTriangle, IconLoader2} from '@tabler/icons-react';
 import { toast } from 'sonner';
 import {
   DndContext,
@@ -165,7 +165,7 @@ export function FallbackChainPicker({
     <div className="border border-border bg-bg-elev-1 rounded-sm p-4 flex flex-col gap-4">
       <div className="flex flex-col gap-1">
         <span className="text-sm font-medium text-fg flex items-center gap-1.5">
-          <IconShieldAlert className="size-4 text-fg" />
+          <IconAlertTriangle className="size-4 text-fg" />
           Provider Fallback Chain
         </span>
         <span className="text-caption text-fg-subtle">

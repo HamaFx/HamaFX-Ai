@@ -21,7 +21,7 @@
 // and institutional stats (Profit Factor, Max Drawdown, Expectancy, and Extreme trade boundaries).
 
 import type { JournalEntry, JournalStats } from '@hamafx/shared';
-import { IconActivity,  IconCalculator,  IconTarget,  IconTrendingUp,  IconShieldAlert,  IconPercentage,  IconAward,  IconTrendingDown,  IconFlame,  IconClock,  IconCalendarEvent,  IconBook } from '@tabler/icons-react';
+import { IconActivity,  IconCalculator,  IconTarget,  IconTrendingUp,  IconAlertTriangle,  IconPercentage,  IconAward,  IconTrendingDown,  IconFlame,  IconClock,  IconCalendarEvent,  IconBook } from '@tabler/icons-react';
 import { useMemo } from 'react';
 
 import { StatCard, type StatTone } from '@/components/ui/stat-card';
@@ -283,7 +283,7 @@ export function StatsSummary({ stats, entries = [] }: StatsSummaryProps) {
         <div className="border border-border bg-bg-elev-1 rounded-sm p-3.5 flex flex-col gap-1 relative overflow-hidden group hover:border-bear/40 transition-all">
           <div className="flex items-center justify-between">
             <span className="text-caption font-bold uppercase tracking-wider text-fg-subtle">Max R DD</span>
-            <IconShieldAlert className="size-3.5 text-bear/70" />
+            <IconAlertTriangle className="size-3.5 text-bear/70" />
           </div>
           <p className="text-lg font-bold tracking-tight mt-1.5 text-bear tabular-nums">
             -{maxDrawdown.toFixed(2)}R

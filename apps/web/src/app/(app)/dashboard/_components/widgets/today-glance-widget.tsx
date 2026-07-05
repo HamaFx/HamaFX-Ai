@@ -25,7 +25,7 @@
 // Uses the shared `TimeProvider` so the countdown ticks without each
 // cell starting its own interval. All numerals are `tabular-nums`.
 
-import {IconClock, IconCompass, IconShieldAlert, IconBolt} from '@tabler/icons-react';
+import {IconClock, IconCompass, IconAlertTriangle, IconBolt} from '@tabler/icons-react';
 import Link from 'next/link';
 import type { JournalEntry, EconomicEvent, Symbol } from '@hamafx/shared';
 
@@ -171,7 +171,7 @@ function CellOpenRisk({ entries }: { entries: JournalEntry[] }) {
   return (
     <div className="border-border bg-bg-elev-1 flex flex-col gap-1.5 rounded-sm border p-3">
       <div className="text-fg-subtle flex items-center gap-1.5 text-caption font-semibold uppercase tracking-wider">
-        <IconShieldAlert className="text-bear size-3.5" />
+        <IconAlertTriangle className="text-bear size-3.5" />
         Open risk
       </div>
       {open.length === 0 ? (

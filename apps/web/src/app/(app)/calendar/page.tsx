@@ -25,7 +25,9 @@ import type { Metadata } from 'next';
 import { PageHeader } from '@/components/layout/page-header';
 import { EmptyState } from '@/components/ui/empty-state';
 
-import { CalendarHero } from './_components/calendar-hero';
+import nextDynamic from 'next/dynamic';
+
+const CalendarHero = nextDynamic(() => import('./_components/calendar-hero').then((m) => m.CalendarHero));
 import { CalendarView } from './_components/calendar-view';
 import { RefreshButton } from '../news/_components/refresh-button';
 

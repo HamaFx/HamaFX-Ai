@@ -31,7 +31,7 @@
 // the "where am I in the timeline" cue.
 
 import type { NewsArticle, SymbolOrCurrencyTag } from '@hamafx/shared';
-import {IconBookmark, IconBookmarkCheck, IconRefresh} from '@tabler/icons-react';
+import {IconBookmark, IconRefresh} from '@tabler/icons-react';
 import { useEffect, useMemo, useRef, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
@@ -199,7 +199,7 @@ export function NewsView({ initialArticles }: NewsViewProps) {
               : 'border-border bg-bg-elev-1/60 text-fg-muted hover:text-fg',
           )}
         >
-          {savedOnly ? <IconBookmarkCheck className="size-3.5" /> : <IconBookmark className="size-3.5" />}
+          {savedOnly ? <IconBookmark className="size-3.5" /> : <IconBookmark className="size-3.5" />}
           Saved {savedCount > 0 ? `· ${savedCount}` : ''}
         </button>
 
