@@ -44,14 +44,11 @@ const isCI = !!process.env.CI;
 function buildWebServerCommand(): string {
   const encKey = process.env.ENCRYPTION_SECRET;
   const baseCmd = isCI ? 'pnpm build && pnpm start' : 'pnpm dev';
-  // Force webpack mode because Turbopack does not respect
-  // serverExternalPackages, causing thread-stream's worker file resolution
-  // to fail ("vendor-chunks/lib/worker.js").
-  const webpackFlag = isCI ? '' : ' --webpack';
+  // Webpack is the default in Next.js 15. Avoid --turbo flag.
   if (encKey) {
-    return `ENCRYPTION_SECRET=${encKey} ${baseCmd}${webpackFlag}`;
+    return `ENCRYPTION_SECRET=${encKey} ${baseCmd}`;
   }
-  return `${baseCmd}${webpackFlag}`;
+  return baseCmd;
 }
 
 export default defineConfig({
