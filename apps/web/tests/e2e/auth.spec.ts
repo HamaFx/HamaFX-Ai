@@ -37,7 +37,11 @@ test.describe('Authentication', () => {
     await page.goto('/');
 
     await expect(page).toHaveURL(/.*\/login/);
-    await expect(page.getByRole('heading', { name: /sign in|welcome/i })).toBeVisible();
+    // The auth layout renders an <h1> with the product name ("HamaFX·Ai")
+    // and the login form has a "Sign in" button. Assert both so the test
+    // confirms we landed on the login page.
+    await expect(page.getByRole('heading', { name: /hamafx/i })).toBeVisible();
+    await expect(page.getByRole('button', { name: /sign in/i })).toBeVisible();
 
     await context.close();
   });

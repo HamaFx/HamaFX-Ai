@@ -97,6 +97,10 @@ const EXPECTED_TABLES = [
   'decision_signal_outcomes', 'decision_signal_feedback',
   'portfolio_positions', 'portfolio_settings',
   'notification_noise_state', 'bot_links',
+  // Phase B — Billing (NOWPayments / crypto), migration 0040
+  'plans', 'subscriptions', 'payments', 'ipn_events',
+  // Phase 3 — Multi-tenancy, migrations 0035–0041
+  'organization', 'organization_member',
 ];
 
 describe('Phase 6 — Task 27: Full migration chain (all migrations on fresh PGlite)', () => {
