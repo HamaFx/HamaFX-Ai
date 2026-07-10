@@ -257,7 +257,7 @@ export function ApiKeyCard({ provider, currentValue, health, usage, keyUpdatedAt
           handleTest();
         }
       }}
-      className="border border-border bg-bg-elev-1 rounded-sm p-4 flex flex-col gap-3 focus:outline-none focus:ring-2 focus:ring-zinc-700"
+      className="border border-border bg-bg-elev-1 rounded-sm p-4 flex flex-col gap-3 focus:outline-none focus:ring-2 focus:ring-border"
     >
       {/* Header */}
       <div className="flex items-baseline justify-between gap-4">
@@ -271,7 +271,7 @@ export function ApiKeyCard({ provider, currentValue, health, usage, keyUpdatedAt
               {provider.displayName}
             </label>
             {provider.pricingTier === 'free' && (
-              <span className="rounded-sm bg-bull/15 px-2 py-0.5 text-xs font-semibold text-bull">
+              <span className="rounded-sm bg-success/15 px-2 py-0.5 text-xs font-semibold text-success">
                 Free
               </span>
             )}
@@ -289,7 +289,7 @@ export function ApiKeyCard({ provider, currentValue, health, usage, keyUpdatedAt
           <span
             className={
               test.kind === 'ok'
-                ? 'flex items-center gap-1 text-xs text-bull shrink-0'
+                ? 'flex items-center gap-1 text-xs text-success shrink-0'
                 : 'flex items-center gap-1 text-xs text-fg-subtle shrink-0'
             }
           >
@@ -360,7 +360,7 @@ export function ApiKeyCard({ provider, currentValue, health, usage, keyUpdatedAt
             </span>
           ) : null}
           {vertexPreview.error ? (
-            <span className="text-bear">{vertexPreview.error}</span>
+            <span className="text-danger">{vertexPreview.error}</span>
           ) : null}
         </div>
       ) : null}
@@ -382,7 +382,7 @@ export function ApiKeyCard({ provider, currentValue, health, usage, keyUpdatedAt
             spellCheck={false}
             autoComplete="off"
             rows={6}
-            className="border border-border bg-bg-elev-2 placeholder:text-fg-muted text-fg font-mono text-caption w-full rounded-sm px-3 py-2 focus:border-border focus:outline-none focus:ring-1 focus:ring-zinc-700 resize-y"
+            className="border border-border bg-bg-elev-2 placeholder:text-fg-muted text-fg font-mono text-caption w-full rounded-sm px-3 py-2 focus:border-border focus:outline-none focus:ring-1 focus:ring-border resize-y"
           />
           {isSet && (
             <button
@@ -436,13 +436,13 @@ export function ApiKeyCard({ provider, currentValue, health, usage, keyUpdatedAt
 
       {/* Validation / test feedback. */}
       {test.kind === 'err' ? (
-        <div className="flex items-start gap-2 text-xs text-bear">
+        <div className="flex items-start gap-2 text-xs text-danger">
           <IconCircleX className="size-3.5 mt-0.5 shrink-0" />
           <span className="break-words">{test.message}</span>
         </div>
       ) : null}
       {test.kind === 'ok' && dirty ? (
-        <div className="flex items-center gap-2 text-xs text-bull">
+        <div className="flex items-center gap-2 text-xs text-success">
           <IconCircleCheck className="size-3.5 shrink-0" />
           <span>New value passes validation. Click IconDeviceFloppy to apply.</span>
         </div>
@@ -540,14 +540,14 @@ function StatusPill({
   // Live test result takes precedence over the cached health snapshot.
   if (testState.kind === 'err') {
     return (
-      <span className="rounded-sm bg-bear/15 px-2 py-0.5 text-caption font-medium text-bear">
+      <span className="rounded-sm bg-danger/15 px-2 py-0.5 text-caption font-medium text-danger">
         Failed
       </span>
     );
   }
   if (testState.kind === 'ok') {
     return (
-      <span className="rounded-sm bg-bull/15 px-2 py-0.5 text-caption font-medium text-bull">
+      <span className="rounded-sm bg-success/15 px-2 py-0.5 text-caption font-medium text-success">
         OK
       </span>
     );
@@ -561,13 +561,13 @@ function StatusPill({
   }
   if (!health.ok) {
     return (
-      <span className="rounded-sm bg-bear/15 px-2 py-0.5 text-caption font-medium text-bear">
+      <span className="rounded-sm bg-danger/15 px-2 py-0.5 text-caption font-medium text-danger">
         Failed <span className="opacity-60">·</span> {formatRelative(health.testedAt)}
       </span>
     );
   }
   return (
-    <span className="rounded-sm bg-bull/15 px-2 py-0.5 text-caption font-medium text-bull">
+    <span className="rounded-sm bg-success/15 px-2 py-0.5 text-caption font-medium text-success">
       OK <span className="opacity-60">·</span> {formatRelative(health.testedAt)}
     </span>
   );

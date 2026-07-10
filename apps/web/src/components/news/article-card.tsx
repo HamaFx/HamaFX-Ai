@@ -72,9 +72,9 @@ const ArticleCardInner = memo(
   }) {
     const sentimentColor =
       article.sentiment === 'positive'
-        ? '#10B981'
+        ? 'var(--color-bull)'
         : article.sentiment === 'negative'
-          ? '#EF4444'
+          ? 'var(--color-bear)'
           : null;
 
     const askPrompt = encodeURIComponent(

@@ -125,7 +125,7 @@ function SentimentStrip({
 }
 
 function impactClass(importance: 'low' | 'medium' | 'high'): string {
-  if (importance === 'high') return 'bg-bear/10 text-bear';
+  if (importance === 'high') return 'bg-danger/10 text-danger';
   if (importance === 'medium') return 'bg-warn/10 text-warn';
   return 'bg-bg-elev-2 text-fg-muted';
 }
@@ -162,7 +162,7 @@ function ErrorCard({ message }: { message?: string }) {
   return (
     <div
       role="alert"
-      className="border-bear/30 bg-bg-elev-1 text-bear rounded-sm border p-3 text-sm"
+      className="border-danger/30 bg-bg-elev-1 text-danger rounded-sm border p-3 text-sm"
     >
       Fundamental analysis failed{message ? ` · ${message}` : ''}
     </div>

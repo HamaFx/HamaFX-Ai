@@ -38,7 +38,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
         'bg-bg-elev-1/60 text-fg placeholder:text-fg-subtle',
         'h-12 w-full rounded-sm border px-4 text-base',
         error
-          ? 'border-bear/60 focus:border-bear/80 focus:ring-2 focus:ring-bear/30'
+          ? 'border-danger/60 focus:border-danger/80 focus:ring-2 focus:ring-danger/30'
           : 'border-border focus:border-border focus:ring-2 focus:ring-fg/30',
         '',
         'transition-all duration-200',

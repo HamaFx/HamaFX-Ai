@@ -134,7 +134,7 @@ function NewsCardError({ message }: { message?: string }) {
   return (
     <div
       role="alert"
-      className="border-bear/30 bg-bg-elev-1 text-bear rounded-sm border p-3 text-sm"
+      className="border-danger/30 bg-bg-elev-1 text-danger rounded-sm border p-3 text-sm"
     >
       News unavailable{message ? ` · ${message}` : ''}
     </div>

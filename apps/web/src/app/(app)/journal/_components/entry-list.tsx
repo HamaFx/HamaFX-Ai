@@ -670,7 +670,7 @@ function EntryRow({
               autoFocus
               className="mt-1.5 focus:border-border/70"
             />
-            {error ? <p className="text-bear mt-2 text-xs font-semibold">{error}</p> : null}
+            {error ? <p className="text-danger mt-2 text-xs font-semibold">{error}</p> : null}
           </div>
           <div className="flex gap-2">
             <Button

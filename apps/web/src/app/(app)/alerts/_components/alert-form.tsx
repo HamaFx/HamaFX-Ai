@@ -306,7 +306,7 @@ export function AlertForm({ initialSymbol, onCreated }: AlertFormProps) {
             onBlur={() => touch('indicator')}
             placeholder="rsi:14, ema:50, macd:12,26,9"
           />
-          {fieldErrors.indicator ? <p className="text-bear text-xs">{fieldErrors.indicator}</p> : null}
+          {fieldErrors.indicator ? <p className="text-danger text-xs">{fieldErrors.indicator}</p> : null}
         </div>
       ) : null}
 
@@ -335,7 +335,7 @@ export function AlertForm({ initialSymbol, onCreated }: AlertFormProps) {
           inputMode="decimal"
           placeholder={symbol === 'XAUUSD' ? 'e.g. 2400' : 'e.g. 1.0850'}
         />
-        {fieldErrors.level ? <p className="text-bear text-xs">{fieldErrors.level}</p> : null}
+        {fieldErrors.level ? <p className="text-danger text-xs">{fieldErrors.level}</p> : null}
       </div>
 
       {/* Phase B — UX_UPGRADE_PLAN.md item 10. Live preview of how
@@ -381,7 +381,7 @@ export function AlertForm({ initialSymbol, onCreated }: AlertFormProps) {
             Telegram
           </label>
         </div>
-        {fieldErrors.channels ? <p className="text-bear text-xs">{fieldErrors.channels}</p> : null}
+        {fieldErrors.channels ? <p className="text-danger text-xs">{fieldErrors.channels}</p> : null}
       </div>
 
       <div className="flex flex-col gap-2">
@@ -396,7 +396,7 @@ export function AlertForm({ initialSymbol, onCreated }: AlertFormProps) {
           placeholder="why am I watching this level?"
           maxLength={280}
         />
-        {fieldErrors.note ? <p className="text-bear text-xs">{fieldErrors.note}</p> : null}
+        {fieldErrors.note ? <p className="text-danger text-xs">{fieldErrors.note}</p> : null}
       </div>
 
       {/*
@@ -425,7 +425,7 @@ export function AlertForm({ initialSymbol, onCreated }: AlertFormProps) {
         />
       </div>
 
-      {error ? <p className="text-bear text-sm">{error}</p> : null}
+      {error ? <p className="text-danger text-sm">{error}</p> : null}
 
       <div className="flex flex-col gap-2 mt-2">
         <Button

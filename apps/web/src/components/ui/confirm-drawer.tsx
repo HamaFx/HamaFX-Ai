@@ -85,7 +85,7 @@ export function ConfirmDrawer({
             {tone === 'danger' ? (
               <span
                 aria-hidden
-                className="text-bear bg-bear/10 inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-sm"
+                className="text-danger bg-danger/10 inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-sm"
               >
                 <IconAlertTriangle className="size-5" strokeWidth={2} />
               </span>

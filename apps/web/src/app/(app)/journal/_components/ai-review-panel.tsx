@@ -119,7 +119,7 @@ export function AiReviewPanel({ entry }: AiReviewPanelProps) {
       </div>
 
       {error && (
-        <div className="rounded-sm bg-bear/5 border border-bear/20 p-3 text-sm text-bear flex items-start gap-2">
+        <div className="rounded-sm bg-danger/5 border border-danger/20 p-3 text-sm text-danger flex items-start gap-2">
           <IconAlertCircle className="size-4 shrink-0 mt-0.5" />
           {error}
         </div>

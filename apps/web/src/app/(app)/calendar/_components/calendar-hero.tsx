@@ -68,7 +68,7 @@ export function CalendarHero({ events = [] }: CalendarHeroProps) {
         <div className="flex items-start gap-3">
           <span
             aria-hidden="true"
-            className="text-bear bg-bear/10 inline-flex size-12 shrink-0 items-center justify-center rounded-sm"
+            className="text-danger bg-danger/10 inline-flex size-12 shrink-0 items-center justify-center rounded-sm"
           >
             <IconBolt className="size-5" strokeWidth={2} />
           </span>
@@ -114,7 +114,7 @@ export function CalendarHero({ events = [] }: CalendarHeroProps) {
           {counts.high > 0 ? (
             <span
               aria-hidden
-              className="bg-bear h-full"
+              className="bg-danger h-full"
               style={{ width: `${pct(counts.high)}%` }}
             />
           ) : null}
@@ -134,7 +134,7 @@ export function CalendarHero({ events = [] }: CalendarHeroProps) {
           ) : null}
         </div>
         <ul className="flex flex-wrap items-center gap-x-3 gap-y-1 text-body-sm tabular-nums">
-          <Tag dot="bg-bear" tone="text-bear" label="High" count={counts.high} />
+          <Tag dot="bg-danger" tone="text-danger" label="High" count={counts.high} />
           <Tag dot="bg-warn" tone="text-warn" label="Medium" count={counts.medium} />
           <Tag dot="bg-fg-subtle" tone="text-fg-muted" label="Low" count={counts.low} />
         </ul>
@@ -146,7 +146,7 @@ export function CalendarHero({ events = [] }: CalendarHeroProps) {
 // ---------------------------------------------------------------------------
 
 function Countdown({ ms }: { ms: number }) {
-  if (ms <= 0) return <span className="text-bear font-semibold">Live now</span>;
+  if (ms <= 0) return <span className="text-danger font-semibold">Live now</span>;
   const d = Math.floor(ms / (24 * 60 * 60_000));
   const h = Math.floor((ms % (24 * 60 * 60_000)) / (60 * 60_000));
   const m = Math.floor((ms % (60 * 60_000)) / 60_000);

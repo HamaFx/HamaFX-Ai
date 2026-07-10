@@ -38,7 +38,7 @@ export function ResetPasswordForm({ token }: { token: string }) {
   if (!token) {
     return (
       <div className="flex flex-col gap-6">
-        <p className="text-bear text-sm">Invalid or missing reset link. Please request a new one.</p>
+        <p className="text-danger text-sm">Invalid or missing reset link. Please request a new one.</p>
         <div className="mt-4">
             <Link href="/forgot-password" className="text-fg font-medium hover:underline text-sm">
               Request new reset link
@@ -73,25 +73,25 @@ export function ResetPasswordForm({ token }: { token: string }) {
             {password.length > 0 && (
               <div className="text-xs text-fg-subtle grid grid-cols-2 gap-1 mt-1">
                 <div className="flex items-center gap-1">
-                  <span className={password.length >= 8 ? "text-bull" : "text-bear"}>
+                  <span className={password.length >= 8 ? "text-success" : "text-danger"}>
                     {password.length >= 8 ? "✓" : "✗"}
                   </span>
                   <span>Min 8 characters</span>
                 </div>
                 <div className="flex items-center gap-1">
-                  <span className={/[A-Z]/.test(password) ? "text-bull" : "text-bear"}>
+                  <span className={/[A-Z]/.test(password) ? "text-success" : "text-danger"}>
                     {/[A-Z]/.test(password) ? "✓" : "✗"}
                   </span>
                   <span>One uppercase letter</span>
                 </div>
                 <div className="flex items-center gap-1">
-                  <span className={/[a-z]/.test(password) ? "text-bull" : "text-bear"}>
+                  <span className={/[a-z]/.test(password) ? "text-success" : "text-danger"}>
                     {/[a-z]/.test(password) ? "✓" : "✗"}
                   </span>
                   <span>One lowercase letter</span>
                 </div>
                 <div className="flex items-center gap-1">
-                  <span className={/[0-9]/.test(password) ? "text-bull" : "text-bear"}>
+                  <span className={/[0-9]/.test(password) ? "text-success" : "text-danger"}>
                     {/[0-9]/.test(password) ? "✓" : "✗"}
                   </span>
                   <span>One number</span>
@@ -115,18 +115,18 @@ export function ResetPasswordForm({ token }: { token: string }) {
               onChange={(e) => setConfirmPassword(e.target.value)}
             />
             {confirmTouched && !passwordsMatch ? (
-              <p role="alert" className="text-bear text-xs mt-1">Passwords do not match</p>
+              <p role="alert" className="text-danger text-xs mt-1">Passwords do not match</p>
             ) : null}
           </div>
 
           {state?.error ? (
-            <p id="error" role="alert" className="text-bear text-sm">
+            <p id="error" role="alert" className="text-danger text-sm">
               {state.error}
             </p>
           ) : null}
 
           {state?.success ? (
-            <p className="text-bull text-sm">{state.message}</p>
+            <p className="text-success text-sm">{state.message}</p>
           ) : null}
 
           <Button

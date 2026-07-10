@@ -157,9 +157,9 @@ export default async function ApiKeysSettingsPage({
             {totalConfigured === 0 ? (
               <span className="size-3 rounded-sm bg-fg-muted/40 animate-pulse" />
             ) : totalFailed > 0 ? (
-              <span className="size-3 rounded-sm bg-bear animate-pulse" />
+              <span className="size-3 rounded-sm bg-danger animate-pulse" />
             ) : (
-              <span className="size-3 rounded-sm bg-bull" />
+              <span className="size-3 rounded-sm bg-success" />
             )}
             <div>
               <h3 className="text-sm font-semibold text-fg">
@@ -182,7 +182,7 @@ export default async function ApiKeysSettingsPage({
         </div>
 
         {totalFailed > 0 && (
-          <div className="border border-bear/20 bg-bear/5 rounded-sm p-3 text-caption text-bear flex flex-col gap-1.5">
+          <div className="border border-danger/20 bg-danger/5 rounded-sm p-3 text-caption text-danger flex flex-col gap-1.5">
             <span className="font-semibold">Failing Connections:</span>
             <ul className="list-disc pl-4 space-y-1">
               {configured
@@ -237,10 +237,10 @@ export default async function ApiKeysSettingsPage({
             </p>
           </div>
           <div className="flex flex-wrap gap-2 justify-center">
-            <span className="rounded-sm bg-bull/15 px-2.5 py-1 text-caption font-medium text-bull">
+            <span className="rounded-sm bg-success/15 px-2.5 py-1 text-caption font-medium text-success">
               Google Gemini · free
             </span>
-            <span className="rounded-sm bg-bull/15 px-2.5 py-1 text-caption font-medium text-bull">
+            <span className="rounded-sm bg-success/15 px-2.5 py-1 text-caption font-medium text-success">
               Groq · free
             </span>
             <span className="rounded-sm bg-bg-elev-2 px-2.5 py-1 text-caption font-medium text-fg-subtle">
@@ -336,22 +336,22 @@ export default async function ApiKeysSettingsPage({
                 <th className="p-3 text-center">Free Tier</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-zinc-800/50 text-caption">
+            <tbody className="divide-y divide-border/50 text-caption">
               {BYOK_PROVIDERS_LIST.map((p) => (
                 <tr key={p.id} className="hover:bg-bg-elev-2/20">
                   <td className="p-3 font-medium text-fg">{p.displayName}</td>
-                  <td className="p-3 text-center text-bull">✓</td>
+                  <td className="p-3 text-center text-success">✓</td>
                   <td className="p-3 text-center">
-                    {p.supports.vision ? <span className="text-bull">✓</span> : <span className="text-fg-muted">—</span>}
+                    {p.supports.vision ? <span className="text-success">✓</span> : <span className="text-fg-muted">—</span>}
                   </td>
                   <td className="p-3 text-center">
-                    {p.supports.embedding ? <span className="text-bull">✓</span> : <span className="text-fg-muted">—</span>}
+                    {p.supports.embedding ? <span className="text-success">✓</span> : <span className="text-fg-muted">—</span>}
                   </td>
-                  <td className="p-3 text-center text-bull">✓</td>
-                  <td className="p-3 text-center text-bull">✓</td>
+                  <td className="p-3 text-center text-success">✓</td>
+                  <td className="p-3 text-center text-success">✓</td>
                   <td className="p-3 text-center">
                     {p.pricingTier === 'free' ? (
-                      <span className="rounded-sm bg-bull/15 px-2 py-0.5 text-xs font-medium text-bull font-semibold">Free</span>
+                      <span className="rounded-sm bg-success/15 px-2 py-0.5 text-xs font-medium text-success font-semibold">Free</span>
                     ) : (
                       <span className="text-fg-muted">—</span>
                     )}

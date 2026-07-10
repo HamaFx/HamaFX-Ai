@@ -130,11 +130,11 @@ function StatusPill({ ready }: { ready: boolean }) {
       className={cn(
         'inline-flex items-center gap-1 rounded-sm px-1.5 py-0.5 text-xs font-bold uppercase tabular-nums ring-1',
         ready
-          ? 'bg-bull/10 text-bull ring-bull/30'
+          ? 'bg-success/10 text-success ring-success/30'
           : 'bg-bg-elev-2 text-fg-subtle ring-divider',
       )}
     >
-      <span aria-hidden className={ready ? 'bg-bull size-1 rounded-sm' : 'bg-fg-subtle size-1 rounded-sm'} />
+      <span aria-hidden className={ready ? 'bg-success size-1 rounded-sm' : 'bg-fg-subtle size-1 rounded-sm'} />
       {ready ? 'Ready' : 'Off'}
     </span>
   );

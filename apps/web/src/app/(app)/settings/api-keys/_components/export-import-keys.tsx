@@ -184,7 +184,7 @@ export function ExportImportKeys() {
                 value={importPayload}
                 onChange={(e) => setImportPayload(e.target.value)}
                 rows={3}
-                className="w-full border border-border bg-bg-elev-2 text-fg font-mono text-xs rounded-sm p-2.5 resize-none focus:border-border focus:outline-none focus:ring-1 focus:ring-zinc-700"
+                className="w-full border border-border bg-bg-elev-2 text-fg font-mono text-xs rounded-sm p-2.5 resize-none focus:border-border focus:outline-none focus:ring-1 focus:ring-border"
               />
             </div>
 

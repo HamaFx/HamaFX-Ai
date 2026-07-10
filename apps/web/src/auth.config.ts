@@ -20,8 +20,15 @@
 
 import type { NextAuthConfig } from 'next-auth';
 
+// Dev fallback: ensures the Edge middleware never runs without a
+// signing secret (which would cause MissingSecret errors and break
+// the auth gate). In production AUTH_SECRET must be set explicitly.
 const nextAuthSecret =
-  process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET;
+  process.env.AUTH_SECRET ??
+  process.env.NEXTAUTH_SECRET ??
+  (process.env.NODE_ENV !== 'production'
+    ? 'dev-fallback-secret-must-be-at-least-32-chars-long!!'
+    : undefined);
 
 export const authConfig: NextAuthConfig = {
   // NextAuth v5 requires an explicit secret for JWT signing. Without
@@ -29,7 +36,7 @@ export const authConfig: NextAuthConfig = {
   // unconditionally here — the value may be `undefined` if neither
   // env var is set, in which case NextAuth falls back to reading
   // AUTH_SECRET itself.
-  ...(nextAuthSecret ? { secret: nextAuthSecret } : {}),
+  secret: nextAuthSecret,
   trustHost: true,
   session: { strategy: 'jwt', maxAge: 30 * 24 * 60 * 60 }, // 30 days (FEAT-04: remember me)
   pages: {

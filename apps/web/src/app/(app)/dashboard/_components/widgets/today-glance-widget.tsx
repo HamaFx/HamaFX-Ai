@@ -121,7 +121,7 @@ function CellSession() {
       <span
         className={cn(
           'inline-flex w-fit items-center rounded-sm px-1.5 py-0.5 text-caption font-medium',
-          active ? 'bg-bull/10 text-bull' : 'bg-fg-muted/10 text-fg-muted',
+          active ? 'bg-success/10 text-success' : 'bg-fg-muted/10 text-fg-muted',
         )}
       >
         {active ? 'Active' : 'Closed'}
@@ -171,7 +171,7 @@ function CellOpenRisk({ entries }: { entries: JournalEntry[] }) {
   return (
     <div className="border-border bg-bg-elev-1 flex flex-col gap-1.5 rounded-sm border p-3">
       <div className="text-fg-subtle flex items-center gap-1.5 text-caption font-semibold uppercase tracking-wider">
-        <IconAlertTriangle className="text-bear size-3.5" />
+        <IconAlertTriangle className="text-danger size-3.5" />
         Open risk
       </div>
       {open.length === 0 ? (

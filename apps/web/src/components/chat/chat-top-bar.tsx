@@ -388,7 +388,7 @@ export function ChatTopBar({ threadId, title, pinnedSymbol, threads, isStreaming
                 role="menuitem"
                 type="button"
                 onClick={() => void deleteCurrent()}
-                className="text-bear hover:bg-bear/10 flex min-h-[48px] w-full items-center gap-2 px-4 py-3 text-left"
+                className="text-danger hover:bg-danger/10 flex min-h-[48px] w-full items-center gap-2 px-4 py-3 text-left"
               >
                 <IconTrash className="size-4" />
                 Delete conversation
@@ -655,7 +655,7 @@ function ThreadSwitcher({ open, onOpenChange, threadId, threads, onPickNew }: Th
                 onClick={() => void bulkDelete()}
                 disabled={selectedIds.size === 0 || deleting}
                 aria-label={`Delete ${selectedIds.size} selected conversation${selectedIds.size === 1 ? '' : 's'}`}
-                className="text-bear border-bear/40 hover:bg-bear/15 inline-flex h-9 items-center gap-1.5 rounded-sm border px-3 text-caption font-semibold disabled:cursor-not-allowed disabled:opacity-50"
+                className="text-danger border-danger/40 hover:bg-danger/15 inline-flex h-9 items-center gap-1.5 rounded-sm border px-3 text-caption font-semibold disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {deleting ? (
                   <IconLoader2 className="size-3 animate-spin" aria-hidden="true" />

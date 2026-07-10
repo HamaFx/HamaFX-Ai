@@ -50,7 +50,7 @@ export async function AgentCard() {
           {totalFailures > 0 ? (
             <>
               {' '}
-              · <span className="text-bear">{totalFailures} failure{totalFailures === 1 ? '' : 's'}</span>
+              · <span className="text-danger">{totalFailures} failure{totalFailures === 1 ? '' : 's'}</span>
             </>
           ) : null}
         </span>

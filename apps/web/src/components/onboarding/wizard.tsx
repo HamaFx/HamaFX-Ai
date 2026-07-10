@@ -304,7 +304,7 @@ export function OnboardingWizard({ initialName, providers, symbolsCatalog, initi
               placeholder="Satoshi Nakamoto"
               autoFocus
             />
-            {nameError && <p className="text-xs text-bear">{nameError}</p>}
+            {nameError && <p className="text-xs text-danger">{nameError}</p>}
           </div>
           <div className="flex flex-col gap-2">
             <label className="text-sm font-medium text-fg">Timezone</label>
@@ -385,7 +385,7 @@ export function OnboardingWizard({ initialName, providers, symbolsCatalog, initi
           <div>
             <h2 className="text-xl font-semibold text-fg mb-1">Select Preferred Symbols</h2>
             <p className="text-sm text-fg-subtle">Choose the instruments you want in your default watchlist. Select at least one.</p>
-            {symbolsError && <p className="mt-1 text-xs text-bear">{symbolsError}</p>}
+            {symbolsError && <p className="mt-1 text-xs text-danger">{symbolsError}</p>}
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-72 overflow-y-auto pr-1">
             {symbolsCatalog.map((sym) => {
@@ -546,12 +546,12 @@ export function OnboardingWizard({ initialName, providers, symbolsCatalog, initi
                   )}
                 </Button>
                 {testState.kind === 'ok' && (
-                  <span className="flex items-center gap-1 text-xs text-bull">
+                  <span className="flex items-center gap-1 text-xs text-success">
                     <IconCheck className="size-3" /> IconKey looks valid
                   </span>
                 )}
                 {testState.kind === 'err' && (
-                  <span className="text-xs text-bear">{testState.message}</span>
+                  <span className="text-xs text-danger">{testState.message}</span>
                 )}
               </div>
             </div>

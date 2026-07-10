@@ -321,7 +321,7 @@ export function EntryForm({ onCreated }: EntryFormProps) {
         placeholder="Add tags (e.g. London breakout, trend continuation)"
       />
 
-      {error ? <p className="text-bear text-sm">{error}</p> : null}
+      {error ? <p className="text-danger text-sm">{error}</p> : null}
 
       <Button
         type="submit"
@@ -367,7 +367,7 @@ function Field({
         required={required}
         error={!!error}
       />
-      {showError ? <p className="text-bear text-xs mt-0.5">{error}</p> : null}
+      {showError ? <p className="text-danger text-xs mt-0.5">{error}</p> : null}
     </div>
   );
 }

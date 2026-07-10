@@ -33,10 +33,10 @@ export default function ChartError({ error, reset }: ChartErrorProps) {
 
   return (
     <div
-      className="border-bear/30 bg-bear/5 flex flex-col gap-3 rounded-sm border p-4"
+      className="border-danger/30 bg-danger/5 flex flex-col gap-3 rounded-sm border p-4"
       role="alert"
     >
-      <h1 className="text-bear text-base font-semibold">Chart unavailable</h1>
+      <h1 className="text-danger text-base font-semibold">Chart unavailable</h1>
       <p className="text-fg-muted text-sm">
         Something went wrong while loading the chart. Please try again.
       </p>

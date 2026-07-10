@@ -55,7 +55,7 @@ export function ChangePasswordCard() {
       </div>
 
       {done ? (
-        <div className="flex items-center gap-2 text-sm text-bull">
+        <div className="flex items-center gap-2 text-sm text-success">
           <IconCheck className="size-4" />
           Password changed successfully
         </div>
@@ -92,16 +92,16 @@ export function ChangePasswordCard() {
           </div>
           {newPassword.length > 0 && (
             <div className="text-xs text-fg-subtle grid grid-cols-2 gap-1">
-              <span className={newPassword.length >= 8 ? 'text-bull' : 'text-bear'}>
+              <span className={newPassword.length >= 8 ? 'text-success' : 'text-danger'}>
                 {newPassword.length >= 8 ? '✓' : '✗'} Min 8 characters
               </span>
-              <span className={/[A-Z]/.test(newPassword) ? 'text-bull' : 'text-bear'}>
+              <span className={/[A-Z]/.test(newPassword) ? 'text-success' : 'text-danger'}>
                 {/[A-Z]/.test(newPassword) ? '✓' : '✗'} Uppercase
               </span>
-              <span className={/[a-z]/.test(newPassword) ? 'text-bull' : 'text-bear'}>
+              <span className={/[a-z]/.test(newPassword) ? 'text-success' : 'text-danger'}>
                 {/[a-z]/.test(newPassword) ? '✓' : '✗'} Lowercase
               </span>
-              <span className={/[0-9]/.test(newPassword) ? 'text-bull' : 'text-bear'}>
+              <span className={/[0-9]/.test(newPassword) ? 'text-success' : 'text-danger'}>
                 {/[0-9]/.test(newPassword) ? '✓' : '✗'} Number
               </span>
             </div>

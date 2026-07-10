@@ -54,7 +54,7 @@ export function DisabledToolsForm({
                 defaultChecked={isDisabled}
                 className="size-4 accent-brand rounded-sm border-border cursor-pointer"
               />
-              <IconPower className={`size-3.5 shrink-0 ${isDisabled ? 'text-bear' : 'text-bull'}`} />
+              <IconPower className={`size-3.5 shrink-0 ${isDisabled ? 'text-danger' : 'text-success'}`} />
               <div className="flex flex-col min-w-0">
                 <code className="text-fg text-xs font-semibold font-mono">{toolName}</code>
               </div>

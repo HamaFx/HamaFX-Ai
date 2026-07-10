@@ -321,7 +321,7 @@ function RegenRow({
       {isActive ? (
         <IconCircleCheck
           size={14}
-          className="text-bull shrink-0"
+          className="text-success shrink-0"
           aria-hidden="true"
         />
       ) : null}

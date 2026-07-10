@@ -54,7 +54,7 @@ export function RunSystemActionPart({
           </div>
         </div>
         <span className={`inline-flex items-center gap-1 rounded-sm px-2.5 py-0.5 text-xs font-bold ${
-          isSuccess ? 'bg-bull/10 text-bull' : 'bg-bear/10 text-bear'
+          isSuccess ? 'bg-success/10 text-success' : 'bg-danger/10 text-danger'
         }`}>
           {isSuccess ? <IconCircleCheck className="size-3" /> : <IconAlertTriangle className="size-3" />}
           {isSuccess ? 'COMPLETED' : 'FAILED'}
@@ -64,14 +64,14 @@ export function RunSystemActionPart({
       {/* IconTerminal View */}
       <div className="relative">
         <div className="absolute top-2 right-2 flex items-center gap-1.5 text-xs font-mono text-fg-subtle bg-bg-elev-2/80 px-2 py-0.5 rounded-sm border border-divider/50">
-          <div className={`size-1.5 rounded-sm ${isSuccess ? 'bg-bull animate-pulse' : 'bg-bear'}`} />
+          <div className={`size-1.5 rounded-sm ${isSuccess ? 'bg-success animate-pulse' : 'bg-danger'}`} />
           <span>{executionTimeMs}ms</span>
         </div>
-        <pre className="bg-bg-elev-2 text-bull font-mono text-xs p-3 rounded-sm overflow-y-auto max-h-48 border border-border/25 leading-normal select-all">
+        <pre className="bg-bg-elev-2 text-success font-mono text-xs p-3 rounded-sm overflow-y-auto max-h-48 border border-border/25 leading-normal select-all">
           <code>
             {consoleLogs.map((line, idx) => {
-              let textClass = 'text-bull';
-              if (line.startsWith('[error]')) textClass = 'text-bear font-semibold';
+              let textClass = 'text-success';
+              if (line.startsWith('[error]')) textClass = 'text-danger font-semibold';
               if (line.startsWith('[resonance-sync]')) textClass = 'text-info';
               if (line.startsWith('[cot-sync]') || line.startsWith('[cache]')) textClass = 'text-warn';
               
@@ -87,7 +87,7 @@ export function RunSystemActionPart({
 
       {/* Action Summary Message */}
       <div className={`rounded-sm p-2.5 text-body-sm leading-[1.4] border ${
-        isSuccess ? 'bg-bull/5 border-bull/20 text-fg' : 'bg-bear/5 border-bear/20 text-bear'
+        isSuccess ? 'bg-success/5 border-success/20 text-fg' : 'bg-danger/5 border-danger/20 text-danger'
       }`}>
         {message}
       </div>
@@ -110,8 +110,8 @@ function SkeletonCard() {
       </div>
       <div className="relative mt-3">
         <div className="bg-bg-elev-2 h-28 w-full rounded-sm border border-border/25 flex flex-col justify-center items-center gap-2">
-          <IconLoader2 className="size-5 text-bull animate-spin" />
-          <span className="text-xs font-mono text-bull animate-pulse">
+          <IconLoader2 className="size-5 text-success animate-spin" />
+          <span className="text-xs font-mono text-success animate-pulse">
             [devops] executing target sync scripts...
           </span>
         </div>
@@ -122,7 +122,7 @@ function SkeletonCard() {
 
 function ErrorCard({ message }: { message?: string }) {
   return (
-    <div role="alert" className="border-bear/30 bg-bg-elev-1 text-bear rounded-sm border p-4 text-sm font-semibold">
+    <div role="alert" className="border-danger/30 bg-bg-elev-1 text-danger rounded-sm border p-4 text-sm font-semibold">
       DevOps execution pipeline failed {message ? ` · ${message}` : ''}
     </div>
   );

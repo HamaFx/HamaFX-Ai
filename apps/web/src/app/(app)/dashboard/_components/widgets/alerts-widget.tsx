@@ -96,7 +96,7 @@ export function AlertsWidget({ alerts, limit = 5 }: AlertsWidgetProps) {
               <span
                 className={cn(
                   'text-caption font-bold px-1.5 py-0.5 rounded-sm shrink-0',
-                  a.active ? 'bg-bull/10 text-bull' : 'bg-fg-muted/10 text-fg-muted',
+                  a.active ? 'bg-success/10 text-success' : 'bg-fg-muted/10 text-fg-muted',
                 )}
               >
                 {a.active ? 'Armed' : 'Paused'}

@@ -136,13 +136,13 @@ export async function SystemStatusCard({ userId }: { userId: string }) {
           className={cn(
             'inline-flex items-center gap-1.5 rounded-sm px-2 py-0.5 text-caption font-bold uppercase tracking-wide ring-1',
             allReady
-              ? 'bg-bull/10 text-bull ring-bull/30'
+              ? 'bg-success/10 text-success ring-success/30'
               : 'bg-warn/10 text-warn ring-warn/30',
           )}
         >
           {allReady ? (
             <>
-              <span aria-hidden className="bg-bull size-1.5 rounded-sm" />
+              <span aria-hidden className="bg-success size-1.5 rounded-sm" />
               All systems
             </>
           ) : (
@@ -165,7 +165,7 @@ export async function SystemStatusCard({ userId }: { userId: string }) {
               className={cn(
                 'inline-flex size-7 shrink-0 items-center justify-center rounded-sm',
                 c.ready
-                  ? 'bg-bull/15 text-bull'
+                  ? 'bg-success/15 text-success'
                   : 'bg-bg-elev-2 text-fg-subtle',
               )}
             >
@@ -185,7 +185,7 @@ export async function SystemStatusCard({ userId }: { userId: string }) {
               className={cn(
                 'rounded-sm px-2 py-0.5 text-caption font-bold uppercase tabular-nums ring-1',
                 c.ready
-                  ? 'bg-bull/10 text-bull ring-bull/30'
+                  ? 'bg-success/10 text-success ring-success/30'
                   : 'bg-bg-elev-2 text-fg-muted ring-divider',
               )}
             >
@@ -202,7 +202,7 @@ export async function SystemStatusCard({ userId }: { userId: string }) {
             aria-hidden="true"
             className={cn(
               'inline-flex size-7 shrink-0 items-center justify-center rounded-sm',
-              cronHealthy ? 'bg-bull/15 text-bull' : 'bg-warn/15 text-warn',
+              cronHealthy ? 'bg-success/15 text-success' : 'bg-warn/15 text-warn',
             )}
           >
             {cronHealthy ? (
@@ -231,7 +231,7 @@ export async function SystemStatusCard({ userId }: { userId: string }) {
               'inline-flex size-7 shrink-0 items-center justify-center rounded-sm',
               marketPhase.isOpen
                 ? marketPhase.liquidity === 'high'
-                  ? 'bg-bull/15 text-bull'
+                  ? 'bg-success/15 text-success'
                   : marketPhase.liquidity === 'medium'
                     ? 'bg-warn/15 text-warn'
                     : 'bg-fg-muted/15 text-fg-muted'
@@ -255,7 +255,7 @@ export async function SystemStatusCard({ userId }: { userId: string }) {
               'rounded-sm px-2 py-0.5 text-caption font-bold uppercase tabular-nums ring-1',
               marketPhase.isOpen
                 ? marketPhase.liquidity === 'high'
-                  ? 'bg-bull/10 text-bull ring-bull/30'
+                  ? 'bg-success/10 text-success ring-success/30'
                   : marketPhase.liquidity === 'medium'
                     ? 'bg-warn/10 text-warn ring-warn/30'
                     : 'bg-bg-elev-2 text-fg-muted ring-divider'

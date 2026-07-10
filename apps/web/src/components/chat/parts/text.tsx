@@ -78,7 +78,7 @@ export function TextPart({ text, role, isStreaming }: TextPartProps) {
               href={href}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-fg underline underline-offset-2 decoration-zinc-700 hover:decoration-zinc-500"
+              className="text-fg underline underline-offset-2 decoration-border hover:decoration-fg-subtle"
             >
               {children}
             </a>
@@ -91,7 +91,7 @@ export function TextPart({ text, role, isStreaming }: TextPartProps) {
             </div>
           ),
           thead: ({ children }) => <thead className="bg-bg-elev-2 border-b border-border">{children}</thead>,
-          tbody: ({ children }) => <tbody className="divide-y divide-zinc-900">{children}</tbody>,
+          tbody: ({ children }) => <tbody className="divide-y divide-divider">{children}</tbody>,
           tr: ({ children }) => <tr className="border-divider hover:bg-bg-elev-1 transition-colors">{children}</tr>,
           th: ({ children }) => <th className="px-3 py-1.5 text-left font-semibold text-fg-subtle uppercase tracking-wider border-r border-divider last:border-r-0">{children}</th>,
           td: ({ children }) => <td className="px-3 py-1.5 text-fg tabular-nums border-r border-divider last:border-r-0">{children}</td>,
@@ -191,7 +191,7 @@ function CodeBlock({ code, lang }: { code: string; lang: string }) {
         >
           {copied ? (
             <>
-              <IconCheck className="text-bull size-3" /> copied
+              <IconCheck className="text-success size-3" /> copied
             </>
           ) : (
             <>

@@ -62,7 +62,7 @@ export function ThreadSummaryHeader({ synopsis, insights, onDismiss }: ThreadSum
               type="button"
               onClick={onDismiss}
               aria-label="Dismiss summary"
-              className="text-fg-subtle hover:text-bear inline-flex size-7 items-center justify-center rounded-sm transition-colors"
+              className="text-fg-subtle hover:text-danger inline-flex size-7 items-center justify-center rounded-sm transition-colors"
             >
               <IconX className="size-3.5" />
             </button>

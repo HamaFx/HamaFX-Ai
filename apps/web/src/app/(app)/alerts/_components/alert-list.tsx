@@ -125,7 +125,7 @@ export function AlertList() {
       {isLoading ? (
         <p className="text-fg-muted text-sm px-1">Loading…</p>
       ) : isError ? (
-        <p className="text-bear text-sm px-1" role="alert">Failed to load: {(error as Error)?.message}</p>
+        <p className="text-danger text-sm px-1" role="alert">Failed to load: {(error as Error)?.message}</p>
       ) : data?.alerts.length === 0 ? (
         <EmptyState
           tone="muted"
@@ -361,7 +361,7 @@ function AlertRow({ alert, onToggle, onDelete }: AlertRowProps) {
                 type="button"
                 onClick={onDelete}
                 aria-label="Delete alert"
-                className="text-bear/70 hover:text-bear hover:bg-bear/10 inline-flex size-10 items-center justify-center rounded-sm transition-colors"
+                className="text-danger/70 hover:text-danger hover:bg-danger/10 inline-flex size-10 items-center justify-center rounded-sm transition-colors"
               >
                 <IconTrash className="size-4" />
               </button>
@@ -371,7 +371,7 @@ function AlertRow({ alert, onToggle, onDelete }: AlertRowProps) {
 
         {/* Right Option (Delete) */}
         <div 
-          className="flex w-full items-center justify-end pr-6 bg-bear/10 text-bear"
+          className="flex w-full items-center justify-end pr-6 bg-danger/10 text-danger"
           style={{ scrollSnapAlign: 'end' }}
         >
           <IconTrash className="size-5 animate-pulse" />

@@ -26,7 +26,7 @@ export default function GlobalError({
             alignItems: 'center',
             justifyContent: 'center',
             padding: '2rem',
-            fontFamily: 'system-ui, sans-serif',
+            fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
             color: 'var(--color-fg)',
             background: 'var(--color-bg)',
           }}

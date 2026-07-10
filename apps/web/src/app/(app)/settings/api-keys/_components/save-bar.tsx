@@ -94,7 +94,7 @@ export function SaveBar({ action, preservedPrompt, children }: SaveBarProps) {
       {children}
       <div className="flex items-center gap-3 justify-end">
         {('ok' in state && state.ok) ? (
-          <span className="flex items-center gap-1.5 text-caption text-bull">
+          <span className="flex items-center gap-1.5 text-caption text-success">
             <IconCircleCheck size={14} aria-hidden="true" />
             Saved
           </span>

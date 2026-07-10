@@ -43,8 +43,8 @@ export async function UsageGlance({ userId }: { userId?: string }) {
   }
 
   const pct = maxDailyUsd > 0 ? Math.min(100, (stats.todayUsd / maxDailyUsd) * 100) : 0;
-  const tone = pct >= 90 ? 'bear' : pct >= 60 ? 'warn' : 'bull';
-  const toneClass = tone === 'bear' ? 'bg-bear' : tone === 'warn' ? 'bg-warn' : 'bg-bull';
+  const tone = pct >= 90 ? 'danger' : pct >= 60 ? 'warn' : 'success';
+  const toneClass = tone === 'danger' ? 'bg-danger' : tone === 'warn' ? 'bg-warn' : 'bg-success';
 
   return (
     <Link

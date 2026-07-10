@@ -34,7 +34,7 @@ export default function SignalsError({
     <div className="flex flex-col items-center justify-center gap-5 px-6 py-16 text-center">
       <span
         aria-hidden="true"
-        className="text-bear bg-bear/10 inline-flex h-16 w-16 items-center justify-center rounded-sm"
+        className="text-danger bg-danger/10 inline-flex h-16 w-16 items-center justify-center rounded-sm"
       >
         <IconAlertTriangle className="size-8" />
       </span>

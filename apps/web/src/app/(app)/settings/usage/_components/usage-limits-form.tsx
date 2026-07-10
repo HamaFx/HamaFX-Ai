@@ -140,7 +140,7 @@ export function UsageLimitsForm({
         <span className="text-xs font-semibold text-fg-muted uppercase tracking-wider">
           Per-Provider Monthly Spending Thresholds
         </span>
-        <div className="flex flex-col border border-border rounded-sm overflow-hidden divide-y divide-zinc-800/60">
+        <div className="flex flex-col border border-border rounded-sm overflow-hidden divide-y divide-border/60">
           <div className="grid grid-cols-[1.5fr_1fr_1.2fr] gap-2 items-center bg-bg-elev-2 px-3 py-2 text-xs font-bold text-fg-muted uppercase tracking-wider">
             <span>Provider</span>
             <span className="text-right">Spend (MTD)</span>
@@ -160,7 +160,7 @@ export function UsageLimitsForm({
                   <span className="text-xs text-fg-subtle mt-0.5 font-mono">{p.id}</span>
                 </div>
                 <div className="text-right font-mono text-fg-subtle tabular-nums">
-                  <span className={hasExceeded ? 'text-bear font-semibold' : ''}>
+                  <span className={hasExceeded ? 'text-danger font-semibold' : ''}>
                     ${p.currentSpend.toFixed(2)}
                   </span>
                 </div>

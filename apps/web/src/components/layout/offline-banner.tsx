@@ -56,7 +56,7 @@ export function OfflineBanner() {
           style={{ bottom: 'var(--toast-bottom)' }}
         >
           <div className="surface-elevated text-fg pointer-events-auto flex items-center gap-3 rounded-sm px-4 py-2.5">
-            <IconWifiOff className="text-bear size-4" aria-hidden="true" strokeWidth={2.25} />
+            <IconWifiOff className="text-danger size-4" aria-hidden="true" strokeWidth={2.25} />
             <span className="text-body-sm font-medium">No network</span>
             <button
               type="button"

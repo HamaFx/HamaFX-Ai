@@ -115,7 +115,7 @@ function LoginForm() {
           </div>
 
           {state?.error ? (
-            <p id="login-error" role="alert" className="text-bear text-sm">
+            <p id="login-error" role="alert" className="text-danger text-sm">
               {state.error}
             </p>
           ) : null}

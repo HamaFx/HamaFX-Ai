@@ -54,7 +54,7 @@ interface EventCardProps {
 
 const IMPORTANCE = {
   high: {
-    ribbon: 'var(--color-bear)',
+    ribbon: 'var(--color-danger)',
     label: 'High impact',
     glyph: '▲',
   },
@@ -244,7 +244,7 @@ function beatMiss(event: EconomicEvent): 'beat' | 'miss' | null {
 }
 
 function Countdown({ ms, imminent }: { ms: number; imminent: boolean }) {
-  if (ms <= 0) return <span className="text-bear font-semibold">Live now</span>;
+  if (ms <= 0) return <span className="text-danger font-semibold">Live now</span>;
   const d = Math.floor(ms / (24 * 60 * 60_000));
   const h = Math.floor((ms % (24 * 60 * 60_000)) / (60 * 60_000));
   const m = Math.floor((ms % (60 * 60_000)) / 60_000);

@@ -83,7 +83,7 @@ export function CitationWarningPartView({ part }: CitationWarningProps) {
             <li key={i} className="text-fg-subtle flex items-start gap-2">
               {row.supported ? (
                 <IconCheck
-                  className="text-bull mt-0.5 size-3.5 shrink-0"
+                  className="text-success mt-0.5 size-3.5 shrink-0"
                   aria-label="supported"
                 />
               ) : (

@@ -213,7 +213,7 @@ export function AgentDeliberation({ agents, mode }: AgentDeliberationProps) {
               .map((a) => {
                 const meta = AGENT_META[a.agentName] ?? FALLBACK_META;
                 return (
-                  <div key={`error-${a.agentName}`} className="text-bear text-xs flex items-center gap-1.5">
+                  <div key={`error-${a.agentName}`} className="text-danger text-xs flex items-center gap-1.5">
                     <IconAlertCircle className="size-3.5 shrink-0" />
                     <span>{meta.label} agent failed: {a.error}</span>
                   </div>
@@ -255,7 +255,7 @@ function AgentNode({
             status === 'pending' && 'bg-bg-elev-2 text-fg-subtle',
             status === 'running' && 'bg-bg-elev-3 text-fg',
             status === 'done' && 'bg-bg-elev-2',
-            status === 'error' && 'bg-bear/10 text-bear border border-bear/30',
+            status === 'error' && 'bg-danger/10 text-danger border border-danger/30',
           )}
         >
           <span className={cn(status !== 'error' && status !== 'pending' && meta.tokenClass)}>{meta.icon}</span>
@@ -267,7 +267,7 @@ function AgentNode({
             </span>
           ) : null}
           {status === 'error' ? (
-            <span className="absolute -bottom-0.5 -right-0.5 flex size-4 items-center justify-center rounded-sm bg-bg-elev-1 text-bear">
+            <span className="absolute -bottom-0.5 -right-0.5 flex size-4 items-center justify-center rounded-sm bg-bg-elev-1 text-danger">
               <IconAlertCircle className="size-4" />
             </span>
           ) : null}

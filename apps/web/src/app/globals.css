@@ -10,6 +10,8 @@
  *
  * Brand: orange accent (#F07010) used with extreme restraint. Market signals:
  * refined green/red/amber reserved for price/P&L data only.
+ * System status: dedicated success/danger tokens (distinct from market
+ * bull/bear) for form validation, toasts, and destructive actions.
  * ------------------------------------------------------------------------- */
 
 @theme {
@@ -18,8 +20,8 @@
   --color-bg-elev-1: #141414;
   --color-bg-elev-2: #1E1E1E;
   --color-bg-elev-3: #2A2A2A;
-  --color-border: #1E1E1E;
-  --color-divider: #141414;
+  --color-border: #262626;
+  --color-divider: #1E1E1E;
   --color-overlay: rgba(0, 0, 0, 0.80);
 
   /* ── Text — from owner's palette photo ── */
@@ -43,6 +45,14 @@
   --color-warn: #F59E0B;
   --color-info: #3B82F6;
 
+  /* ── System Status — DISTINCT from market data. Used for success/error/
+   *    status UI (form validation, toasts, destructive actions, "active"
+   *    badges) so bull/bear stay reserved for price/P&L data only. ── */
+  --color-success: #16A34A;
+  --color-success-fg: #0A0A0A;
+  --color-danger: #DC2626;
+  --color-danger-fg: #FFFFFF;
+
   /* ── Radii — SHARP GEOMETRY. Uniform 2px everywhere. ── */
   --radius-sm: 2px;
   --radius-md: 2px;
@@ -60,7 +70,7 @@
   --shadow-glow-accent: none;
 
   /* ── Fonts ── */
-  --font-sans: var(--font-sans), system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-sans: var(--font-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
   --font-mono: var(--font-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
 
   /* ── Fluid Typography ── */

@@ -24,10 +24,10 @@ interface Subscription {
 }
 
 const STATUS_COLORS: Record<string, string> = {
-  active: 'bg-bull/10 text-bull',
+  active: 'bg-success/10 text-success',
   trialing: 'bg-info/10 text-info',
   past_due: 'bg-warn/10 text-warn',
-  canceled: 'bg-bear/10 text-bear',
+  canceled: 'bg-danger/10 text-danger',
   expired: 'bg-fg-muted/10 text-fg-subtle',
 };
 
@@ -46,7 +46,7 @@ export function SubscriptionStatus({
             <p className="text-fg font-medium">No active subscription</p>
             <p className="text-fg-subtle text-sm">You are on the Free tier.</p>
           </div>
-          <span className="rounded-sm bg-gray-500/10 px-3 py-1 text-xs font-medium text-gray-600 dark:text-gray-400">
+          <span className="rounded-sm bg-fg-muted/10 px-3 py-1 text-xs font-medium text-fg-subtle">
             Free
           </span>
         </div>

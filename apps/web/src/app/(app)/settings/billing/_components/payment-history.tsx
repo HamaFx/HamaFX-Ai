@@ -30,8 +30,8 @@ const STATUS_COLORS: Record<string, string> = {
   confirming: 'text-info',
   confirmed: 'text-info',
   sending: 'text-info',
-  finished: 'text-bull',
-  failed: 'text-bear',
+  finished: 'text-success',
+  failed: 'text-danger',
   expired: 'text-fg-subtle',
   refunded: 'text-info',
 };

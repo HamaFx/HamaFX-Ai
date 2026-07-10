@@ -104,7 +104,7 @@ export default async function AgentCataloguePage() {
               <div className="flex items-center gap-1.5 text-caption tabular-nums">
                 <Pill label={`${e.invocations24h}×`} tone="muted" />
                 {e.failures24h > 0 ? (
-                  <Pill label={`${e.failures24h} fail`} tone="bear" />
+                  <Pill label={`${e.failures24h} fail`} tone="danger" />
                 ) : null}
                 {e.invocations24h > 0 ? (
                   <Pill label={`p50 ${e.medianMs}ms`} tone="muted" />
@@ -141,12 +141,12 @@ export default async function AgentCataloguePage() {
   );
 }
 
-function Pill({ label, tone }: { label: string; tone: 'muted' | 'bear' | 'bull' }) {
+function Pill({ label, tone }: { label: string; tone: 'muted' | 'danger' | 'success' }) {
   const cls =
-    tone === 'bear'
-      ? 'bg-bear/15 text-bear'
-      : tone === 'bull'
-        ? 'bg-bull/15 text-bull'
+    tone === 'danger'
+      ? 'bg-danger/15 text-danger'
+      : tone === 'success'
+        ? 'bg-success/15 text-success'
         : 'bg-bg-elev-2 text-fg-muted';
   return (
     <span className={`rounded-sm px-1.5 py-0.5 text-caption font-medium ${cls}`}>{label}</span>

@@ -171,7 +171,7 @@ export default async function ModelsSettingsPage() {
                   <td className="px-4 py-2.5 text-center">
                     <div className="flex items-center justify-center gap-1.5">
                       {m.tier !== 'embedding' ? (
-                        <span className="inline-flex items-center rounded-sm bg-bull/10 text-bull px-1.5 py-0.5 text-caption font-medium">Chat</span>
+                        <span className="inline-flex items-center rounded-sm bg-success/10 text-success px-1.5 py-0.5 text-caption font-medium">Chat</span>
                       ) : null}
                       {m.tier === 'embedding' ? (
                         <span className="inline-flex items-center rounded-sm bg-bg-elev-3 text-fg-muted px-1.5 py-0.5 text-caption font-medium">Embed</span>

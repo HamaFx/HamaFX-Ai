@@ -290,7 +290,7 @@ function SortableWidget({
       style={style}
       className={cn(
         widget.span === 2 && 'md:col-span-2',
-        editMode && 'rounded-sm ring-1 ring-zinc-700',
+        editMode && 'rounded-sm ring-1 ring-border',
       )}
     >
       {editMode ? (
@@ -320,7 +320,7 @@ function SortableWidget({
               type="button"
               aria-label={`Remove ${WIDGET_LABELS[widget.type]}`}
               onClick={onRemove}
-              className="text-fg-subtle hover:text-bear"
+              className="text-fg-subtle hover:text-danger"
             >
               <IconX className="size-3.5" />
             </button>

@@ -156,13 +156,13 @@ export function MarketDataConfig({ initialProvider, finnhubKeySet }: MarketDataC
       </div>
 
       {test.kind === 'err' && (
-        <div className="flex items-start gap-2 text-xs text-bear">
+        <div className="flex items-start gap-2 text-xs text-danger">
           <IconCircleX className="size-3.5 mt-0.5 shrink-0" />
           <span className="break-words">{test.message}</span>
         </div>
       )}
       {test.kind === 'ok' && (
-        <div className="flex items-center gap-2 text-xs text-bull">
+        <div className="flex items-center gap-2 text-xs text-success">
           <IconCircleCheck className="size-3.5 shrink-0" />
           <span>Connection test successful! Provider is online.</span>
         </div>

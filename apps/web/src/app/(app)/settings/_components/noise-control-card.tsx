@@ -131,11 +131,11 @@ export function NoiseControlCard({ initialConfig }: { initialConfig?: NoiseConfi
               <p className="text-xs text-fg-subtle">Total</p>
             </div>
             <div>
-              <p className="text-2xl font-bold tabular-nums text-bull">{preview.breakdown.allowed}</p>
+              <p className="text-2xl font-bold tabular-nums text-success">{preview.breakdown.allowed}</p>
               <p className="text-xs text-fg-subtle">Allowed</p>
             </div>
             <div>
-              <p className="text-2xl font-bold tabular-nums text-bear">{preview.breakdown.blocked}</p>
+              <p className="text-2xl font-bold tabular-nums text-danger">{preview.breakdown.blocked}</p>
               <p className="text-xs text-fg-subtle">Blocked</p>
             </div>
           </div>

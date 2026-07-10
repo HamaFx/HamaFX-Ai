@@ -43,7 +43,7 @@ const SOURCE_ICONS: Record<string, Icon> = {
 export function GetSocialSentimentPart({ output, state, errorMessage }: GetSocialSentimentPartProps) {
   if (state === 'error') {
     return (
-      <div role="alert" className="border-bear/30 bg-bg-elev-1 text-bear rounded-sm border p-3 text-sm">
+      <div role="alert" className="border-danger/30 bg-bg-elev-1 text-danger rounded-sm border p-3 text-sm">
         Sentiment unavailable{errorMessage ? ` · ${errorMessage}` : ''}
       </div>
     );

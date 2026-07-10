@@ -27,7 +27,7 @@ interface GetPortfolioSnapshotPartProps {
 export function GetPortfolioSnapshotPart({ output, state, errorMessage }: GetPortfolioSnapshotPartProps) {
   if (state === 'error') {
     return (
-      <div role="alert" className="border-bear/30 bg-bg-elev-1 text-bear rounded-sm border p-3 text-sm">
+      <div role="alert" className="border-danger/30 bg-bg-elev-1 text-danger rounded-sm border p-3 text-sm">
         Portfolio snapshot unavailable{errorMessage ? ` · ${errorMessage}` : ''}
       </div>
     );

@@ -200,8 +200,8 @@ function BudgetCard({
   monthlyLimit: number | null;
 }) {
   const pct = Math.min(100, (stats.todayUsd / maxDailyUsd) * 100);
-  const tone = pct >= 90 ? 'bear' : pct >= 60 ? 'warn' : 'bull';
-  const toneClass = tone === 'bear' ? 'bg-bear' : tone === 'warn' ? 'bg-warn' : 'bg-bull';
+  const tone = pct >= 90 ? 'danger' : pct >= 60 ? 'warn' : 'success';
+  const toneClass = tone === 'danger' ? 'bg-danger' : tone === 'warn' ? 'bg-warn' : 'bg-success';
 
   const projection = (stats.sevenDayUsd / 7) * 30;
   const isProjectedExceeded = monthlyLimit ? projection > monthlyLimit : false;

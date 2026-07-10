@@ -89,7 +89,7 @@ function SortableItem({
         size="sm"
         onClick={onRemove}
         disabled={disabled}
-        className="size-7 p-0 flex items-center justify-center text-bear hover:bg-bear/10 hover:text-bear shrink-0"
+        className="size-7 p-0 flex items-center justify-center text-danger hover:bg-danger/10 hover:text-danger shrink-0"
         aria-label={`Remove ${displayName} from chain`}
       >
         <IconTrash className="size-3.5" />

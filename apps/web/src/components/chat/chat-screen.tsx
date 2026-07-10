@@ -533,7 +533,7 @@ export function ChatScreen({
                 transition={{ duration: 0.2 }}
                 role="alert"
                 className={cn(
-                  'bg-bear/10 text-bear border border-bear/30 mx-3 mb-2 flex items-center justify-between gap-2 rounded-sm p-3 text-xs',
+                  'bg-danger/10 text-danger border border-danger/30 mx-3 mb-2 flex items-center justify-between gap-2 rounded-sm p-3 text-xs',
                 )}
               >
                 <span className="line-clamp-2 flex-1">{error.message}</span>
@@ -550,7 +550,7 @@ export function ChatScreen({
                       }
                     }}
                     aria-label="Retry"
-                    className="bg-bear/20 hover:bg-bear/30 border border-bear/30 inline-flex items-center gap-1 rounded-sm px-3 py-1.5 text-body-sm font-medium"
+                    className="bg-danger/20 hover:bg-danger/30 border border-danger/30 inline-flex items-center gap-1 rounded-sm px-3 py-1.5 text-body-sm font-medium"
                   >
                     <IconArrowBackUp className="size-3.5" /> Retry
                   </button>
@@ -558,7 +558,7 @@ export function ChatScreen({
                     type="button"
                     onClick={() => setDismissedError(true)}
                     aria-label="Dismiss error"
-                    className="hover:bg-bear/10 text-bear/80 hover:text-bear inline-flex size-7 items-center justify-center rounded-sm transition-colors"
+                    className="hover:bg-danger/10 text-danger/80 hover:text-danger inline-flex size-7 items-center justify-center rounded-sm transition-colors"
                   >
                     <IconX className="size-4" />
                   </button>

@@ -259,7 +259,7 @@ function MessageImpl({ message, onCopy, onRegenerate, onEdit, isStreaming }: Mes
                     className="bg-bg-elev-1 border border-border text-fg-muted hover:text-fg focus-visible:ring-fg inline-flex size-8 items-center justify-center rounded-sm transition-colors focus:outline-none focus-visible:ring-2"
                   >
                     {copied ? (
-                      <IconCheck className="text-bull size-3.5" />
+                      <IconCheck className="text-success size-3.5" />
                     ) : (
                       <IconCopy className="size-3.5" />
                     )}

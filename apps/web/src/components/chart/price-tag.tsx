@@ -53,7 +53,7 @@ export function PriceTag({ symbol, referencePrice, className }: PriceTagProps) {
   }
   if (isError || !tick) {
     return (
-      <span className={cn('text-bear text-xs tabular-nums', className)}>price unavailable</span>
+      <span className={cn('text-danger text-xs tabular-nums', className)}>price unavailable</span>
     );
   }
 

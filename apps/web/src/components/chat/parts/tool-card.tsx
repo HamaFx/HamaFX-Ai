@@ -63,7 +63,7 @@ export function ToolCard({ name, state, input, output, errorText }: ToolCardProp
       initial={false}
       className={cn(
         'border-border bg-bg-elev-1 rounded-sm border',
-        failed && 'border-bear/30',
+        failed && 'border-danger/30',
       )}
     >
       <button

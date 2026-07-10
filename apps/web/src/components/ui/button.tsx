@@ -44,8 +44,8 @@ const variants: Record<Variant, string> = {
   primary: 'bg-fg text-black font-semibold hover:bg-fg-muted',
   secondary: 'border border-border bg-bg-elev-1 text-fg hover:bg-bg-elev-2',
   ghost: 'text-fg-muted hover:text-fg hover:bg-bg-elev-1',
-  danger: 'bg-bear text-white font-semibold hover:bg-bear/90',
-  success: 'bg-bull text-black font-semibold hover:bg-bull/90',
+  danger: 'bg-danger text-white font-semibold hover:bg-danger/90',
+  success: 'bg-success text-black font-semibold hover:bg-success/90',
 };
 
 const sizes: Record<Size, string> = {

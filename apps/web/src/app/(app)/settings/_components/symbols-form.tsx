@@ -147,7 +147,7 @@ function SortableSymbolRow({
           type="button"
           onClick={() => onRemove(item.symbol)}
           aria-label={`Remove ${item.symbol} from watchlist`}
-          className="p-1.5 text-fg-subtle hover:text-bear hover:bg-bear/10 rounded-sm transition-colors cursor-pointer"
+          className="p-1.5 text-fg-subtle hover:text-danger hover:bg-danger/10 rounded-sm transition-colors cursor-pointer"
         >
           <IconTrash className="size-3.5" />
         </button>
@@ -574,7 +574,7 @@ export function SymbolsForm({ initialSymbols, catalog }: SymbolsFormProps) {
                 <button
                   type="button"
                   onClick={handleBulkDelete}
-                  className="text-bear font-semibold hover:underline flex items-center gap-1 cursor-pointer"
+                  className="text-danger font-semibold hover:underline flex items-center gap-1 cursor-pointer"
                 >
                   <IconTrash className="size-3" /> Remove Selected ({selected.size})
                 </button>

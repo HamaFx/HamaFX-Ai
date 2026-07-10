@@ -42,16 +42,16 @@ export function GetSystemDiagnosticsPart({
   let StatusIcon = IconActivity;
 
   if (status === 'healthy') {
-    statusColor = 'text-bull';
-    statusBg = 'bg-bull/10';
+    statusColor = 'text-success';
+    statusBg = 'bg-success/10';
     StatusIcon = IconCircleCheck;
   } else if (status === 'degraded') {
     statusColor = 'text-warn';
     statusBg = 'bg-warn/10';
     StatusIcon = IconAlertTriangle;
   } else if (status === 'unhealthy') {
-    statusColor = 'text-bear';
-    statusBg = 'bg-bear/10';
+    statusColor = 'text-danger';
+    statusBg = 'bg-danger/10';
     StatusIcon = IconAlertTriangle;
   }
 
@@ -128,7 +128,7 @@ export function GetSystemDiagnosticsPart({
           {Object.entries(envCheck).map(([key, configured]) => (
             <div key={key} className="flex items-center justify-between py-0.5">
               <span className="text-fg-muted font-mono">{key}</span>
-              <span className={`px-1.5 py-0.5 rounded-sm font-bold ${configured ? 'bg-bull/10 text-bull' : 'bg-bear/10 text-bear'}`}>
+              <span className={`px-1.5 py-0.5 rounded-sm font-bold ${configured ? 'bg-success/10 text-success' : 'bg-danger/10 text-danger'}`}>
                 {configured ? 'OK' : 'MISSING'}
               </span>
             </div>
@@ -187,7 +187,7 @@ function SkeletonCard() {
 
 function ErrorCard({ message }: { message?: string }) {
   return (
-    <div role="alert" className="border-bear/30 bg-bg-elev-1 text-bear rounded-sm border p-4 text-sm font-semibold">
+    <div role="alert" className="border-danger/30 bg-bg-elev-1 text-danger rounded-sm border p-4 text-sm font-semibold">
       Operational diagnostics probe failed {message ? ` · ${message}` : ''}
     </div>
   );

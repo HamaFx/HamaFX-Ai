@@ -265,7 +265,7 @@ export function Composer({
   const charCountTone = getCharCountTone(charCount);
   const charCountClass =
     charCountTone === 'danger'
-      ? 'text-bear font-semibold'
+      ? 'text-danger font-semibold'
       : charCountTone === 'warn'
         ? 'text-warn font-medium'
         : 'text-fg-subtle';
@@ -294,9 +294,9 @@ export function Composer({
           <div
             role="status"
             aria-live="polite"
-            className="text-bear border border-bear/30 mx-auto mt-3 inline-flex items-center gap-2 self-center rounded-sm bg-bear/10 px-3 py-1 text-body-sm font-medium"
+            className="text-danger border border-danger/30 mx-auto mt-3 inline-flex items-center gap-2 self-center rounded-sm bg-danger/10 px-3 py-1 text-body-sm font-medium"
           >
-            <span className="bg-bear motion-safe:animate-pulse size-1.5 rounded-sm" />
+            <span className="bg-danger motion-safe:animate-pulse size-1.5 rounded-sm" />
             Listening…
           </div>
         ) : null}
@@ -325,7 +325,7 @@ export function Composer({
         ) : null}
 
         {error ? (
-          <p id="composer-error" role="alert" className="text-bear px-5 pt-2 text-xs">
+          <p id="composer-error" role="alert" className="text-danger px-5 pt-2 text-xs">
             {error}
           </p>
         ) : null}
@@ -373,7 +373,7 @@ export function Composer({
                   'inline-flex size-[44px] shrink-0 items-center justify-center rounded-sm transition-colors',
                   'focus-visible:ring-fg/60 focus:outline-none focus-visible:ring-2',
                   voice.active
-                    ? 'text-bear mic-pulse bg-bear/10'
+                    ? 'text-danger mic-pulse bg-danger/10'
                     : 'text-fg-muted hover:bg-bg-elev-2/50 hover:text-fg',
                   disabled ? 'cursor-not-allowed opacity-60' : '',
                 )}
@@ -449,7 +449,7 @@ export function Composer({
                   type="button"
                   onClick={onStop}
                   aria-label="Stop generating"
-                  className="text-bear border border-bear/40 inline-flex size-[44px] shrink-0 items-center justify-center rounded-sm bg-bear/15 focus:outline-none focus-visible:ring-2"
+                  className="text-danger border border-danger/40 inline-flex size-[44px] shrink-0 items-center justify-center rounded-sm bg-danger/15 focus:outline-none focus-visible:ring-2"
                 >
                   <IconSquare className="size-[14px] fill-current" strokeWidth={0} />
                 </m.button>

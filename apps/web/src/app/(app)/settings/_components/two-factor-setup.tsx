@@ -89,9 +89,9 @@ export function TwoFactorSetup({ enabled }: TwoFactorSetupProps) {
     return (
       <div className="border border-border bg-bg-elev-1 rounded-sm p-4 flex flex-col gap-4">
         <div className="flex items-center gap-2">
-          <IconShield className="size-4 text-bull" />
+          <IconShield className="size-4 text-success" />
           <span className="text-sm font-medium text-fg">Two-Factor Authentication</span>
-          <span className="rounded-sm bg-bull/15 px-2 py-0.5 text-xs font-medium text-bull ml-auto">
+          <span className="rounded-sm bg-success/15 px-2 py-0.5 text-xs font-medium text-success ml-auto">
             Enabled
           </span>
         </div>
@@ -127,9 +127,9 @@ export function TwoFactorSetup({ enabled }: TwoFactorSetupProps) {
     return (
       <div className="border border-border bg-bg-elev-1 rounded-sm p-4 flex flex-col gap-3">
         <div className="flex items-center gap-2">
-          <IconCheck className="size-4 text-bull" />
+          <IconCheck className="size-4 text-success" />
           <span className="text-sm font-medium text-fg">Two-Factor Authentication</span>
-          <span className="rounded-sm bg-bull/15 px-2 py-0.5 text-xs font-medium text-bull ml-auto">
+          <span className="rounded-sm bg-success/15 px-2 py-0.5 text-xs font-medium text-success ml-auto">
             Enabled
           </span>
         </div>
@@ -196,7 +196,7 @@ export function TwoFactorSetup({ enabled }: TwoFactorSetupProps) {
         <IconShield className="size-4 text-fg-muted" />
         <span className="text-sm font-medium text-fg">Two-Factor Authentication</span>
         {enabled && (
-          <span className="rounded-sm bg-bull/15 px-2 py-0.5 text-xs font-medium text-bull ml-auto">
+          <span className="rounded-sm bg-success/15 px-2 py-0.5 text-xs font-medium text-success ml-auto">
             Enabled
           </span>
         )}

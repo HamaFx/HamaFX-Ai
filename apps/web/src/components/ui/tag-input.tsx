@@ -144,7 +144,7 @@ export function TagInput({
                 type="button"
                 onClick={() => remove(tag)}
                 aria-label={`Remove tag ${tag}`}
-                className="text-fg-subtle hover:text-bear transition-colors"
+                className="text-fg-subtle hover:text-danger transition-colors"
               >
                 <IconX className="size-3" />
               </button>

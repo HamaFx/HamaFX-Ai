@@ -264,7 +264,7 @@ export function ModelPicker({
           </span>
         </div>
         {value ? (
-          <span className="inline-flex items-center gap-1 text-caption text-bull">
+          <span className="inline-flex items-center gap-1 text-caption text-success">
             <IconCheck size={12} aria-hidden="true" />
             Saved
           </span>
@@ -315,7 +315,7 @@ export function ModelPicker({
       </label>
 
       {save.kind === 'error' ? (
-        <div className="text-caption text-bear">{save.message}</div>
+        <div className="text-caption text-danger">{save.message}</div>
       ) : null}
 
       <p className="text-caption text-fg-subtle">{helper ?? HELPERS[kind]}</p>
