@@ -309,7 +309,7 @@ export function OnboardingWizard({ initialName, providers, symbolsCatalog, initi
           <div className="flex flex-col gap-2">
             <label className="text-sm font-medium text-fg">Timezone</label>
             <select
-              className="h-10 w-full rounded-sm border border-surface-elevated bg-bg-elev-1 px-3 py-2 text-sm text-fg focus:outline-none focus:ring-1 focus:ring-fg cursor-pointer"
+              className="h-10 w-full rounded-sm border border-border bg-bg-elev-1 px-3 py-2 text-sm text-fg focus:outline-none focus:ring-1 focus:ring-fg cursor-pointer"
               value={timezone}
               onChange={(e) => setTimezone(e.target.value)}
             >
@@ -347,8 +347,8 @@ export function OnboardingWizard({ initialName, providers, symbolsCatalog, initi
                   onClick={() => setTradingStyle(style.id as 'scalper' | 'day_trader' | 'swing' | 'position')}
                   className={`text-left rounded-sm border p-4 transition-all hover:bg-bg-elev-2 flex flex-col gap-1.5 cursor-pointer relative ${
                     active
-                      ? 'border-border bg-bg-elev-1 ring-1 ring-fg shadow-none/5'
-                      : 'border-surface-elevated bg-bg-elev-1 hover:border-fg-muted'
+                      ? 'border-border bg-bg-elev-1 ring-1 ring-fg'
+                      : 'border-border bg-bg-elev-1 hover:border-fg-muted'
                   }`}
                 >
                   <div className="flex items-center justify-between">
@@ -412,7 +412,7 @@ export function OnboardingWizard({ initialName, providers, symbolsCatalog, initi
                   className={`text-left rounded-sm border p-4 transition-all hover:bg-bg-elev-2 flex items-center justify-between cursor-pointer relative ${
                     active
                       ? 'border-border bg-bg-elev-1 ring-1 ring-fg'
-                      : 'border-surface-elevated bg-bg-elev-1 hover:border-fg-muted'
+                      : 'border-border bg-bg-elev-1 hover:border-fg-muted'
                   }`}
                 >
                   <div className="flex flex-col gap-0.5">
@@ -433,7 +433,7 @@ export function OnboardingWizard({ initialName, providers, symbolsCatalog, initi
             <div className="flex flex-col gap-2">
               <label className="text-sm font-medium text-fg">Default Chart Symbol</label>
               <select
-                className="h-10 w-full rounded-sm border border-surface-elevated bg-bg-elev-1 px-3 py-2 text-sm text-fg focus:outline-none focus:ring-1 focus:ring-fg cursor-pointer"
+                className="h-10 w-full rounded-sm border border-border bg-bg-elev-1 px-3 py-2 text-sm text-fg focus:outline-none focus:ring-1 focus:ring-fg cursor-pointer"
                 value={defaultSymbol}
                 onChange={(e) => setDefaultSymbol(e.target.value)}
               >
@@ -481,7 +481,7 @@ export function OnboardingWizard({ initialName, providers, symbolsCatalog, initi
                   className={`text-left rounded-sm border p-3 transition-colors ${
                     selected
                       ? 'border-border bg-bg-elev-2 ring-1 ring-fg'
-                      : 'border-surface-elevated bg-bg-elev-1 hover:border-fg-subtle'
+                      : 'border-border bg-bg-elev-1 hover:border-fg-subtle'
                   }`}
                 >
                   <div className="flex items-baseline justify-between gap-2">

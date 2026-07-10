@@ -97,7 +97,7 @@ export function JournalView() {
 
           <button
             onClick={() => setOpen(true)}
-            className="inline-flex h-10 items-center justify-center gap-2 rounded-sm bg-fg px-4 text-xs font-bold text-black shadow-none/15 hover:opacity-90 transition-all cursor-pointer"
+            className="inline-flex h-10 items-center justify-center gap-2 rounded-sm bg-fg px-4 text-xs font-bold text-black shadow-sm hover:opacity-90 transition-all cursor-pointer"
           >
             <IconPlus className="size-4" />
             <span>Log Trade</span>

@@ -78,8 +78,8 @@ function SortableSymbolRow({
         isDragging
           ? 'border-border shadow-lg z-10 opacity-90 bg-bg-elev-2'
           : isSelected
-            ? 'bg-bg-elev-1 border-border shadow-none/5'
-            : 'bg-bg-elev-1 border-surface-elevated hover:border-fg-subtle/30'
+            ? 'bg-bg-elev-1 border-border shadow-sm'
+            : 'bg-bg-elev-1 border-border hover:border-fg-subtle/30'
       }`}
     >
       <div className="flex items-center gap-3 min-w-0">
@@ -676,7 +676,7 @@ export function SymbolsForm({ initialSymbols, catalog }: SymbolsFormProps) {
           {paginatedCatalog.map((item) => (
             <li
               key={item.symbol}
-              className="flex items-center justify-between p-3 rounded-sm border border-surface-elevated bg-bg-elev-1 hover:border-fg-subtle/30"
+              className="flex items-center justify-between p-3 rounded-sm border border-border bg-bg-elev-1 hover:border-fg-subtle/30"
             >
               <div className="flex flex-col">
                 <div className="flex items-baseline gap-2">

@@ -199,8 +199,8 @@ function createMainChart(
   if (!createChartFn) throw new Error('Could not find createChart function in imported module');
 
   const fontFamily =
-    getComputedStyle(container).getPropertyValue('--font-sans') ||
-    'Inter, system-ui, sans-serif';
+    getComputedStyle(container).getPropertyValue('--font-sans').trim() ||
+    'system-ui, sans-serif';
 
   const chart = createChartFn(container, {
     layout: { background: { color: theme.colors.bg }, textColor: theme.colors.text, fontFamily },

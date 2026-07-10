@@ -38,9 +38,10 @@
      a warm rim without recolouring the entire surface. */
   --color-brand-border: #2D2218;
 
-  /* ── Accent — kept for backward compat but unused in terminal theme ── */
-  --color-accent: #F07010;
-  --color-accent-glow: rgba(240, 112, 16, 0.15);
+  /* ── Accent — aliased to brand for backward compat. Do not use; prefer
+   *    --color-brand everywhere. ── */
+  --color-accent: #F56E0F;
+  --color-accent-glow: rgba(245, 110, 15, 0.15);
 
   /* ── Market Signal States — reserved ONLY for price/P&L data ── */
   --color-bull: #22C55E;
@@ -73,28 +74,45 @@
   --shadow-glow-brand: none;
   --shadow-glow-accent: none;
 
-  /* ── Fonts ── */
-  --font-sans: var(--font-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
-  --font-mono: var(--font-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+  /* ── Fonts — JetBrains Mono as primary. Sans stack is also JetBrains
+   *    Mono since the terminal aesthetic is monospace-first. Mono override
+   *    is used for numeric data, code, and data-dense grids. ── */
+  --font-sans: var(--font-mono), ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --font-mono: var(--font-mono), ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 
-  /* ── Fluid Typography ── */
-  --text-sm: clamp(0.8rem, 0.7rem + 0.5vw, 0.875rem);
-  --text-base: clamp(0.95rem, 0.85rem + 0.5vw, 1rem);
-  --text-lg: clamp(1rem, 0.9rem + 0.6vw, 1.125rem);
+  /* ── Type scale — refined hierarchy with tighter leading for data density ── */
+  --leading-prose: 1.5;
+  --leading-compact: 1.35;
+  --leading-tight: 1.2;
 
+  /* ── Core fluid sizes (viewport-responsive) ── */
+  --text-xs: clamp(0.6875rem, 0.65rem + 0.2vw, 0.75rem);
+  --text-sm: clamp(0.8125rem, 0.72rem + 0.5vw, 0.875rem);
+  --text-base: clamp(0.9375rem, 0.85rem + 0.5vw, 1rem);
+  --text-lg: clamp(1.0625rem, 0.95rem + 0.6vw, 1.125rem);
+
+  /* ── Display / heading — used for page headers, auth titles, hero ── */
   --text-display-2xl: clamp(2.25rem, 1.5rem + 3.5vw, 3.5rem);
   --text-display-xl: clamp(1.75rem, 1.2rem + 2.5vw, 2.5rem);
   --text-display-lg: clamp(1.25rem, 1rem + 1vw, 1.5rem);
-  --text-display-md: clamp(1.125rem, 1rem + 0.5vw, 1.25rem);
 
+  /* ── Body — fixed sizes for consistent reading rhythm ── */
   --text-body-lg: 1.0625rem;
   --text-body: 0.9375rem;
   --text-body-sm: 0.8125rem;
   --text-caption: 0.6875rem;
 
+  /* ── Numeric — dedicated scale for price tables, P&L, stats ── */
   --text-numeric-xl: 1.5rem;
   --text-numeric-lg: 1.125rem;
   --text-numeric: 0.875rem;
+  --text-numeric-sm: 0.75rem;
+
+  /* ── Tracking — four step scale ── */
+  --tracking-tight: -0.02em;
+  --tracking-normal: 0;
+  --tracking-wide: 0.02em;
+  --tracking-wider: 0.05em;
 
   --ease-organic: cubic-bezier(0.2, 0.8, 0.2, 1);
   --ease-out-organic: cubic-bezier(0.2, 0.8, 0.2, 1);
@@ -159,7 +177,7 @@ html {
     color: var(--color-fg);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
-    text-rendering: optimizeLegibility;
+    text-rendering: geometricPrecision;
   }
 
   .tabular-nums {
@@ -366,7 +384,7 @@ html[data-reduce-motion='force'] *::after {
  * Markdown prose — applies to chat/parts/text.tsx output.
  * ------------------------------------------------------------------------- */
 .md-prose {
-  line-height: 1.4;
+  line-height: var(--leading-prose);
 }
 .md-prose strong {
   color: var(--color-fg);

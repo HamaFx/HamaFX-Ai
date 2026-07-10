@@ -25,7 +25,9 @@ import './globals.css';
 const jetbrainsMono = JetBrains_Mono({
   subsets: ['latin'],
   variable: '--font-mono',
+  weight: ['400', '500', '600', '700', '800'],
   display: 'swap',
+  adjustFontFallback: false,
 });
 
 export const metadata: Metadata = {

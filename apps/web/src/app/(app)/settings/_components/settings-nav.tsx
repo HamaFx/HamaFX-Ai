@@ -66,7 +66,7 @@ export function SettingsNav() {
                     'flex items-center gap-3 rounded-sm px-3 py-2 text-sm font-medium transition-colors whitespace-nowrap snap-start',
                     active
                       ? 'bg-brand/8 ring-1 ring-brand/22 text-brand'
-                      : 'text-fg-subtle hover:bg-bg-elev-1-elevated hover:text-fg'
+                      : 'text-fg-subtle hover:bg-bg-elev-2 hover:text-fg'
                   )}
                 >
                 <Icon className="size-4" />

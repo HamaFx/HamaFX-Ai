@@ -35,7 +35,6 @@
     "bcryptjs": "^3.0.3",
     "clsx": "^2.1.1",
     "drizzle-orm": "^0.38.3",
-    "geist": "^1.7.2",
     "lightweight-charts": "^5.0.4",
     "motion": "^12.40.0",
     "next": "^15.1.4",

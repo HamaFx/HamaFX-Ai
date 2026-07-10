@@ -138,7 +138,7 @@ export function ChartSettingsDrawer({
                   onClick={() => updateTheme(t.id)}
                   className={cn(
                     'flex flex-col text-left p-3 rounded-sm border border-border bg-bg-elev-2/50 transition-all hover:bg-bg-elev-3 cursor-pointer relative',
-                    settings.theme === t.id && 'border-border/70 bg-bg-elev-1 shadow-none/10'
+                    settings.theme === t.id && 'border-border/70 bg-bg-elev-1 shadow-sm'
                   )}
                 >
                   <span className="text-sm font-semibold">{t.label}</span>

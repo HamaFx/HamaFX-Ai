@@ -141,7 +141,7 @@ export function EntryList({ entries, onClosed, onDeleted }: EntryListProps) {
             onClick={() => setTab('active')}
             className={cn(
               'px-3.5 py-1.5 text-xs font-semibold rounded-sm transition-all relative flex items-center gap-1.5 cursor-pointer',
-              tab === 'active' ? 'bg-fg text-black shadow-none/10' : 'text-fg-muted hover:text-fg'
+              tab === 'active' ? 'bg-fg text-black shadow-sm' : 'text-fg-muted hover:text-fg'
             )}
           >
             Active Positions
@@ -156,7 +156,7 @@ export function EntryList({ entries, onClosed, onDeleted }: EntryListProps) {
             onClick={() => setTab('closed')}
             className={cn(
               'px-3.5 py-1.5 text-xs font-semibold rounded-sm transition-all cursor-pointer',
-              tab === 'closed' ? 'bg-fg text-black shadow-none/10' : 'text-fg-muted hover:text-fg'
+              tab === 'closed' ? 'bg-fg text-black shadow-sm' : 'text-fg-muted hover:text-fg'
             )}
           >
             Closed History
@@ -166,7 +166,7 @@ export function EntryList({ entries, onClosed, onDeleted }: EntryListProps) {
             onClick={() => setTab('all')}
             className={cn(
               'px-3.5 py-1.5 text-xs font-semibold rounded-sm transition-all cursor-pointer',
-              tab === 'all' ? 'bg-fg text-black shadow-none/10' : 'text-fg-muted hover:text-fg'
+              tab === 'all' ? 'bg-fg text-black shadow-sm' : 'text-fg-muted hover:text-fg'
             )}
           >
             All Logs
@@ -446,7 +446,7 @@ function EntryRow({
   const outcomeColor = isWin ? 'text-bull' : isLoss ? 'text-bear' : 'text-fg-muted';
 
   return (
-    <li className="border border-border bg-bg-elev-1 rounded-sm flex flex-col gap-3.5 p-4 hover:border-border-hover hover:shadow-none/5 transition-all duration-200">
+    <li className="border border-border bg-bg-elev-1 rounded-sm flex flex-col gap-3.5 p-4 hover:border-fg-muted/30 hover:shadow-sm transition-all duration-200">
       <div className="flex items-start gap-4">
         <div className="min-w-0 flex-1 flex flex-col gap-1.5">
           {/* Header Row */}
@@ -616,7 +616,7 @@ function EntryRow({
               style={{ left: `${sliderPosition}%` }}
               className={cn(
                 'absolute size-3 rounded-sm -translate-x-1/2 z-20 shadow-md border border-fg transition-all duration-300',
-                isWin ? 'bg-bull shadow-none/30 animate-pulse' : isLoss ? 'bg-bear shadow-none/30' : 'bg-fg-muted'
+                isWin ? 'bg-bull shadow-md animate-pulse' : isLoss ? 'bg-bear shadow-md' : 'bg-fg-muted'
               )}
               title={`Live Price: ${livePrice}`}
             />
