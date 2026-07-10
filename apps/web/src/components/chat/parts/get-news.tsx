@@ -39,6 +39,20 @@ interface GetNewsPartProps {
 /** Maximum rows rendered per card. The model can re-query for more. */
 const MAX_ROWS = 8;
 
+function cleanNewsText(raw: string): string {
+  return raw
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&apos;/g, "'")
+    .replace(/&#x27;/g, "'")
+    .replace(/&nbsp;/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 export function GetNewsPart({ output, state, errorMessage }: GetNewsPartProps) {
   if (state === 'error') {
     return <NewsCardError {...(errorMessage ? { message: errorMessage } : {})} />;
@@ -78,11 +92,11 @@ export function GetNewsPart({ output, state, errorMessage }: GetNewsPartProps) {
               >
                 <div className="flex items-start gap-2">
                   <SentimentDot sentiment={item.sentiment} />
-                  <span className="text-fg line-clamp-2 font-medium">{item.title}</span>
+                  <span className="text-fg line-clamp-2 font-medium">{cleanNewsText(item.title)}</span>
                 </div>
                 <div className="text-fg-muted flex items-center gap-1.5 text-xs">
                   <span className="truncate">
-                    {item.publisher ? `${item.source} · ${item.publisher}` : item.source}
+                    {item.publisher ? `${item.source} · ${cleanNewsText(item.publisher)}` : item.source}
                   </span>
                   <span aria-hidden>·</span>
                   <time dateTime={iso} className="tabular-nums">

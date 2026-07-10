@@ -50,6 +50,20 @@ import { formatRelative } from '@/lib/format';
 
 import { useBookmarks } from './use-bookmarks';
 
+function cleanNewsText(raw: string): string {
+  return raw
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&apos;/g, "'")
+    .replace(/&#x27;/g, "'")
+    .replace(/&nbsp;/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 interface ArticleCardProps {
   article: NewsArticle;
 }
@@ -113,7 +127,7 @@ const ArticleCardInner = memo(
           className="block px-4 py-4 pl-5"
         >
           <h3 className="text-fg line-clamp-3 text-body font-semibold leading-snug">
-            {article.title}
+            {cleanNewsText(article.title)}
           </h3>
 
           <div className="text-fg-subtle mt-2 flex flex-wrap items-center gap-x-2 text-body-sm tabular-nums">
@@ -148,7 +162,7 @@ const ArticleCardInner = memo(
 
           {article.summary ? (
             <p className="text-fg-muted mt-2 line-clamp-2 text-body-sm leading-[1.4]">
-              {article.summary}
+              {cleanNewsText(article.summary)}
             </p>
           ) : null}
         </a>
@@ -156,7 +170,9 @@ const ArticleCardInner = memo(
         <div
           className={cn(
             'pointer-events-none absolute inset-x-0 bottom-0',
-            'flex items-center justify-between gap-1 px-3 pb-2',
+            'flex items-center justify-between gap-1 px-3 pb-2 pt-3',
+            'bg-gradient-to-t from-bg-elev-1 via-bg-elev-1/90 to-transparent',
+            'md:group-hover:from-bg-elev-2 md:group-hover:via-bg-elev-2/90',
             overlayVisibility,
           )}
         >
