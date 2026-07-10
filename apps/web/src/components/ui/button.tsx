@@ -41,7 +41,7 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 // Primary/danger get their fills via inlineStyle below (theme tokens).
 const variants: Record<Variant, string> = {
-  primary: 'bg-fg text-black font-semibold hover:bg-fg-muted',
+  primary: 'bg-brand text-brand-fg font-semibold hover:bg-brand/90 border border-brand-border',
   secondary: 'border border-border bg-bg-elev-1 text-fg hover:bg-bg-elev-2',
   ghost: 'text-fg-muted hover:text-fg hover:bg-bg-elev-1',
   danger: 'bg-danger text-white font-semibold hover:bg-danger/90',
@@ -79,7 +79,6 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
       type={type}
       disabled={isDisabled}
       aria-busy={loading || false}
-      data-variant={variant}
       style={inlineStyle}
       className={cn(
         'inline-flex items-center justify-center gap-2 rounded-sm font-medium',

@@ -100,60 +100,9 @@
   --ease-out-organic: cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-/* =========================================================================
- * Accent Preview — scoped orange highlights on the pure black/grey base.
- *
- * TEMPORARY. The base palette (black/grey surfaces + market data colours)
- * is NEVER changed here. These rules add orange (#F56E0F) as a deliberate
- * hero accent ONLY on elements explicitly marked with data-accent="...".
- * No broad selectors (no [aria-current], no :focus-visible, no > span) —
- * every rule targets a specific data attribute so nothing bleeds.
- *
- * Intensity levels (applied via data-theme attribute on <html>):
- *   signal — orange in hero spots only (active nav, logo badge)
- *   pulse  — signal + selected tab borders
- *
- * Orange primary CTA is toggled separately via [data-cta="orange"].
- *
- * Removal: delete this section + theme-preview.tsx + layout script +
- * the data-accent / data-variant / data-segmented attrs when done.
- * ========================================================================= */
-
-/* ── Shared accent variables — only defined when a theme is active. ── */
-:root[data-theme="signal"],
-:root[data-theme="pulse"] {
-  --accent-border: rgba(245, 110, 15, 0.22);
-  --accent-surface: rgba(245, 110, 15, 0.08);
-}
-
-/* ── Active nav items — only [data-accent="nav-active"] elements. ── */
-:root[data-theme="signal"] [data-accent="nav-active"],
-:root[data-theme="pulse"] [data-accent="nav-active"] {
-  background-color: var(--accent-surface) !important;
-  border: 1px solid var(--accent-border) !important;
-  color: var(--color-brand) !important;
-}
-
-/* ── Logo badge — only [data-accent="logo"] element. ── */
-:root[data-theme="signal"] [data-accent="logo"],
-:root[data-theme="pulse"] [data-accent="logo"] {
-  background-color: var(--color-brand) !important;
-  color: var(--color-brand-fg) !important;
-}
-
-/* ── PULSE only: selected tabs in segmented controls (solid variant). ── */
-:root[data-theme="pulse"] [data-segmented="solid"] [aria-pressed="true"] {
-  border-color: var(--accent-border) !important;
-}
-
-/* ── Orange primary CTA toggle (independent of intensity). ── */
-:root[data-cta="orange"] [data-variant="primary"] {
-  background-color: var(--color-brand) !important;
-  color: var(--color-brand-fg) !important;
-  border: 1px solid var(--color-brand-border);
-}
-:root[data-cta="orange"] [data-variant="primary"]:hover {
-  background-color: rgba(245, 110, 15, 0.85) !important;
+/* ── Selected tabs in solid segmented controls get a subtle brand border. ── */
+[data-segmented="solid"] [aria-pressed="true"] {
+  border-color: rgba(245, 110, 15, 0.22);
 }
 
 /* Firefox scrollbar styling */

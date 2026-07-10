@@ -233,10 +233,11 @@ function NavLink({ item, active }: { item: NavItem; active: boolean }) {
       <Link
         href={item.href}
         aria-current={active ? 'page' : undefined}
-        data-accent={active ? 'nav-active' : undefined}
         className={cn(
           'group/nav relative flex min-h-[56px] items-center gap-3 rounded-sm px-3 transition-all',
-          active ? 'bg-bg-elev-2 ring-1 ring-border text-fg' : 'text-fg-muted hover:bg-bg-elev-2 hover:text-fg',
+          active
+            ? 'bg-brand/8 ring-1 ring-brand/22 text-brand'
+            : 'text-fg-muted hover:bg-bg-elev-2 hover:text-fg',
         )}
       >
         <span

@@ -19,7 +19,6 @@ import { JetBrains_Mono } from 'next/font/google';
 import { ViewTransitions } from 'next-view-transitions';
 
 import { Providers } from '@/components/providers';
-import { ThemePreview } from '@/components/theme-preview';
 
 import './globals.css';
 
@@ -67,14 +66,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     >
       <head>
         <meta name="color-scheme" content="dark" />
-        {/* Accent preview — applies saved settings before paint to avoid FOUC.
-            Remove this script when the preview period ends. */}
-        <script
-          dangerouslySetInnerHTML={{
-            __html:
-              "(function(){try{var t=localStorage.getItem('theme-preview');if(t&&['signal','pulse'].includes(t)){document.documentElement.setAttribute('data-theme',t)}var c=localStorage.getItem('theme-cta');if(c==='orange'){document.documentElement.setAttribute('data-cta','orange')}}catch(e){}})();",
-          }}
-        />
         {/* iPhone 14 & 15 Pro */}
         <link
           rel="apple-touch-startup-image"
@@ -116,8 +107,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <ViewTransitions>
           <Providers>{children}</Providers>
         </ViewTransitions>
-        {/* TEMPORARY — theme palette preview switcher. Remove when decided. */}
-        <ThemePreview />
       </body>
     </html>
   );

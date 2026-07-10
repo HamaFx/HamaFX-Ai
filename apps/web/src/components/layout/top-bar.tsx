@@ -65,8 +65,7 @@ export function TopBar({ title, right }: TopBarProps) {
       >
         <span
           aria-hidden="true"
-          data-accent="logo"
-          className="relative inline-flex size-6 items-center justify-center rounded-sm bg-fg text-black"
+          className="relative inline-flex size-6 items-center justify-center rounded-sm bg-brand text-brand-fg"
         >
           <span className="text-xs font-bold">H</span>
         </span>
