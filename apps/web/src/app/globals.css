@@ -96,6 +96,72 @@
   --ease-out-organic: cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
+/* =========================================================================
+ * Theme Preview — runtime palette overrides (TEMPORARY).
+ *
+ * These override the @theme token values when [data-theme] is set on <html>.
+ * The inline script in layout.tsx reads localStorage('theme-preview') and
+ * applies the attribute before paint to prevent a flash of the wrong theme.
+ *
+ * Only surface / border / text / brand tokens are overridden. Market colours
+ * (bull/bear/success/danger/warn/info) are intentionally NOT overridden —
+ * they are data semantics that must stay consistent across all palettes.
+ *
+ * When you've chosen a winner, bake its values into the @theme block above
+ * and delete this section, the ThemePreview component, and the layout script.
+ * ========================================================================= */
+
+/* ── A: Amber Obsidian — warm-tinted surfaces, amber accent. ── */
+:root[data-theme="amber"] {
+  --color-bg: #0C0908;
+  --color-bg-elev-1: #161210;
+  --color-bg-elev-2: #201913;
+  --color-bg-elev-3: #2C2218;
+  --color-border: #2A2018;
+  --color-divider: #1C1612;
+  --color-fg: #F5EFE8;
+  --color-fg-muted: #8A7E72;
+  --color-fg-subtle: #5A4F45;
+  --color-brand: #F56E0F;
+  --color-brand-glow: rgba(245, 110, 15, 0.15);
+  --color-accent: #F56E0F;
+  --color-accent-glow: rgba(245, 110, 15, 0.15);
+}
+
+/* ── B: Cold Obsidian — cool blue-black surfaces, amber as sole warm accent. ── */
+:root[data-theme="cold"] {
+  --color-bg: #08090B;
+  --color-bg-elev-1: #0E1014;
+  --color-bg-elev-2: #161920;
+  --color-bg-elev-3: #1E222B;
+  --color-border: #22262F;
+  --color-divider: #141719;
+  --color-fg: #EDF0F5;
+  --color-fg-muted: #7A8290;
+  --color-fg-subtle: #4A5260;
+  --color-brand: #F56E0F;
+  --color-brand-glow: rgba(245, 110, 15, 0.15);
+  --color-accent: #F56E0F;
+  --color-accent-glow: rgba(245, 110, 15, 0.15);
+}
+
+/* ── C: Bronze & Amber — warm bronze-tinted borders/dividers, amber hero. ── */
+:root[data-theme="bronze"] {
+  --color-bg: #0A0807;
+  --color-bg-elev-1: #12100E;
+  --color-bg-elev-2: #1A1714;
+  --color-bg-elev-3: #241F1A;
+  --color-border: #3A2E22;
+  --color-divider: #1A1714;
+  --color-fg: #F2EBE3;
+  --color-fg-muted: #8C7D6E;
+  --color-fg-subtle: #5A4D40;
+  --color-brand: #F56E0F;
+  --color-brand-glow: rgba(245, 110, 15, 0.15);
+  --color-accent: #F56E0F;
+  --color-accent-glow: rgba(245, 110, 15, 0.15);
+}
+
 /* Firefox scrollbar styling */
 html {
   scrollbar-width: thin;
