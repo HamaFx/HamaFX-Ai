@@ -184,6 +184,7 @@ export function Segmented<T extends string>(props: SegmentedProps<T>) {
         ref={containerRef}
         role={role}
         aria-label={computedAriaLabel}
+        data-segmented={variant}
         onKeyDown={handleKeyDown}
         className={cn(
           variant === 'accent'
@@ -264,5 +265,5 @@ export function Segmented<T extends string>(props: SegmentedProps<T>) {
 function toneClass(tone: SegmentedTone | undefined): string {
   if (tone === 'bull') return 'bg-bull text-black';
   if (tone === 'bear') return 'bg-bear text-black';
-  return 'bg-fg text-black';
+  return 'bg-brand text-brand-fg';
 }

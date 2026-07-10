@@ -30,9 +30,13 @@
   --color-fg-subtle: #555555;
 
   /* ── Brand — orange accent (#F07010). Used with EXTREME RESTRAINT. ── */
-  --color-brand: #F07010;
+  --color-brand: #F56E0F;
   --color-brand-fg: #FFFFFF;
-  --color-brand-glow: rgba(240, 112, 16, 0.15);
+  --color-brand-glow: rgba(245, 110, 15, 0.15);
+  /* Subtle orange-tinted border — low light mixed with the brand colour.
+     Used on "cool places" (active nav, hero panels, focus edges) to give
+     a warm rim without recolouring the entire surface. */
+  --color-brand-border: #2D2218;
 
   /* ── Accent — kept for backward compat but unused in terminal theme ── */
   --color-accent: #F07010;
@@ -97,69 +101,76 @@
 }
 
 /* =========================================================================
- * Theme Preview — runtime palette overrides (TEMPORARY).
+ * Accent Preview — scoped orange highlights on the pure black/grey base.
  *
- * These override the @theme token values when [data-theme] is set on <html>.
- * The inline script in layout.tsx reads localStorage('theme-preview') and
- * applies the attribute before paint to prevent a flash of the wrong theme.
+ * TEMPORARY. The base palette (black/grey surfaces + market data colours)
+ * is NEVER changed here. These rules add orange (#F56E0F) as a deliberate
+ * hero accent in specific "cool places" when [data-theme] is set on <html>.
  *
- * Only surface / border / text / brand tokens are overridden. Market colours
- * (bull/bear/success/danger/warn/info) are intentionally NOT overridden —
- * they are data semantics that must stay consistent across all palettes.
+ * Intensity levels (applied via data-theme attribute):
+ *   signal — orange in hero spots only (active nav, logo, brand tabs)
+ *   pulse  — signal + interactive highlights (focus rings, selected, live)
  *
- * When you've chosen a winner, bake its values into the @theme block above
- * and delete this section, the ThemePreview component, and the layout script.
+ * Orange primary CTA is toggled separately via [data-cta="orange"].
+ *
+ * Removal: delete this section + theme-preview.tsx + layout script when done.
  * ========================================================================= */
 
-/* ── A: Amber Obsidian — warm-tinted surfaces, amber accent. ── */
-:root[data-theme="amber"] {
-  --color-bg: #0C0908;
-  --color-bg-elev-1: #161210;
-  --color-bg-elev-2: #201913;
-  --color-bg-elev-3: #2C2218;
-  --color-border: #2A2018;
-  --color-divider: #1C1612;
-  --color-fg: #F5EFE8;
-  --color-fg-muted: #8A7E72;
-  --color-fg-subtle: #5A4F45;
-  --color-brand: #F56E0F;
-  --color-brand-glow: rgba(245, 110, 15, 0.15);
-  --color-accent: #F56E0F;
-  --color-accent-glow: rgba(245, 110, 15, 0.15);
+/* ── Brand-border helper: a low-light orange edge. ── */
+:root[data-theme="signal"],
+:root[data-theme="pulse"] {
+  --accent-border: rgba(245, 110, 15, 0.2);
+  --accent-surface: rgba(245, 110, 15, 0.08);
 }
 
-/* ── B: Cold Obsidian — cool blue-black surfaces, amber as sole warm accent. ── */
-:root[data-theme="cold"] {
-  --color-bg: #08090B;
-  --color-bg-elev-1: #0E1014;
-  --color-bg-elev-2: #161920;
-  --color-bg-elev-3: #1E222B;
-  --color-border: #22262F;
-  --color-divider: #141719;
-  --color-fg: #EDF0F5;
-  --color-fg-muted: #7A8290;
-  --color-fg-subtle: #4A5260;
-  --color-brand: #F56E0F;
-  --color-brand-glow: rgba(245, 110, 15, 0.15);
-  --color-accent: #F56E0F;
-  --color-accent-glow: rgba(245, 110, 15, 0.15);
+/* ── Active nav items — the "you are here" hero. ── */
+:root[data-theme="signal"] [aria-current="page"],
+:root[data-theme="pulse"] [aria-current="page"] {
+  background-color: var(--accent-surface) !important;
+  border: 1px solid var(--accent-border);
+  color: var(--color-brand) !important;
 }
 
-/* ── C: Bronze & Amber — warm bronze-tinted borders/dividers, amber hero. ── */
-:root[data-theme="bronze"] {
-  --color-bg: #0A0807;
-  --color-bg-elev-1: #12100E;
-  --color-bg-elev-2: #1A1714;
-  --color-bg-elev-3: #241F1A;
-  --color-border: #3A2E22;
-  --color-divider: #1A1714;
-  --color-fg: #F2EBE3;
-  --color-fg-muted: #8C7D6E;
-  --color-fg-subtle: #5A4D40;
-  --color-brand: #F56E0F;
-  --color-brand-glow: rgba(245, 110, 15, 0.15);
-  --color-accent: #F56E0F;
-  --color-accent-glow: rgba(245, 110, 15, 0.15);
+/* Active nav icon chip gets a warmer fill */
+:root[data-theme="signal"] [aria-current="page"] .bg-bg-elev-3,
+:root[data-theme="pulse"] [aria-current="page"] .bg-bg-elev-3 {
+  background-color: rgba(245, 110, 15, 0.15) !important;
+  color: var(--color-brand) !important;
+}
+
+/* ── Logo / brand wordmark badge — the identity hero. ── */
+:root[data-theme="signal"] [aria-label="HamaFX-Ai home"] > span,
+:root[data-theme="pulse"] [aria-label="HamaFX-Ai home"] > span {
+  background-color: var(--color-brand) !important;
+  color: var(--color-brand-fg) !important;
+}
+
+/* ── PULSE only: interactive highlights ── */
+
+/* Focus rings — keyboard accent */
+:root[data-theme="pulse"] :focus-visible {
+  outline: 2px solid var(--color-brand) !important;
+  outline-offset: 2px;
+}
+
+/* Selected/active tabs in segmented controls (solid variant) */
+:root[data-theme="pulse"] [data-segmented="solid"] [aria-pressed="true"] {
+  border-color: var(--accent-border) !important;
+}
+
+/* Live/active indicator dots get a warm ring */
+:root[data-theme="pulse"] .animate-pulse.bg-success {
+  box-shadow: 0 0 0 2px var(--accent-border);
+}
+
+/* ── Orange primary CTA toggle (independent of intensity) ── */
+:root[data-cta="orange"] [data-variant="primary"] {
+  background-color: var(--color-brand) !important;
+  color: var(--color-brand-fg) !important;
+  border: 1px solid var(--color-brand-border);
+}
+:root[data-cta="orange"] [data-variant="primary"]:hover {
+  background-color: rgba(245, 110, 15, 0.85) !important;
 }
 
 /* Firefox scrollbar styling */

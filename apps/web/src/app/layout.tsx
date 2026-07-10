@@ -67,12 +67,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     >
       <head>
         <meta name="color-scheme" content="dark" />
-        {/* Theme preview — applies saved palette before paint to avoid FOUC.
+        {/* Accent preview — applies saved settings before paint to avoid FOUC.
             Remove this script when the preview period ends. */}
         <script
           dangerouslySetInnerHTML={{
             __html:
-              "(function(){try{var t=localStorage.getItem('theme-preview');if(t&&t!=='default'&&['amber','cold','bronze'].includes(t)){document.documentElement.setAttribute('data-theme',t)}}catch(e){}})();",
+              "(function(){try{var t=localStorage.getItem('theme-preview');if(t&&['signal','pulse'].includes(t)){document.documentElement.setAttribute('data-theme',t)}var c=localStorage.getItem('theme-cta');if(c==='orange'){document.documentElement.setAttribute('data-cta','orange')}}catch(e){}})();",
           }}
         />
         {/* iPhone 14 & 15 Pro */}
