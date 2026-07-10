@@ -33,10 +33,11 @@ const nextAuthSecret =
 export const authConfig: NextAuthConfig = {
   // NextAuth v5 requires an explicit secret for JWT signing. Without
   // this, every /api/auth/* call throws MissingSecret. We set it
-  // unconditionally here — the value may be `undefined` if neither
-  // env var is set, in which case NextAuth falls back to reading
-  // AUTH_SECRET itself.
-  secret: nextAuthSecret,
+  // here when available — if neither env var is set, the property is
+  // omitted entirely and NextAuth falls back to reading AUTH_SECRET
+  // itself. (Conditionally spread because `exactOptionalPropertyTypes`
+  // forbids assigning `undefined` to `secret: string | string[]`.)
+  ...(nextAuthSecret ? { secret: nextAuthSecret } : {}),
   trustHost: true,
   session: { strategy: 'jwt', maxAge: 30 * 24 * 60 * 60 }, // 30 days (FEAT-04: remember me)
   pages: {
