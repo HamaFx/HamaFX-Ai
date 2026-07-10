@@ -62,6 +62,7 @@ export function SettingsNav() {
                   key={item.href}
                   href={item.href}
                   aria-current={active ? 'page' : undefined}
+                  data-accent={active ? 'nav-active' : undefined}
                   className={cn(
                     'flex items-center gap-3 rounded-sm px-3 py-2 text-sm font-medium transition-colors whitespace-nowrap snap-start',
                     active

@@ -105,65 +105,48 @@
  *
  * TEMPORARY. The base palette (black/grey surfaces + market data colours)
  * is NEVER changed here. These rules add orange (#F56E0F) as a deliberate
- * hero accent in specific "cool places" when [data-theme] is set on <html>.
+ * hero accent ONLY on elements explicitly marked with data-accent="...".
+ * No broad selectors (no [aria-current], no :focus-visible, no > span) —
+ * every rule targets a specific data attribute so nothing bleeds.
  *
- * Intensity levels (applied via data-theme attribute):
- *   signal — orange in hero spots only (active nav, logo, brand tabs)
- *   pulse  — signal + interactive highlights (focus rings, selected, live)
+ * Intensity levels (applied via data-theme attribute on <html>):
+ *   signal — orange in hero spots only (active nav, logo badge)
+ *   pulse  — signal + selected tab borders
  *
  * Orange primary CTA is toggled separately via [data-cta="orange"].
  *
- * Removal: delete this section + theme-preview.tsx + layout script when done.
+ * Removal: delete this section + theme-preview.tsx + layout script +
+ * the data-accent / data-variant / data-segmented attrs when done.
  * ========================================================================= */
 
-/* ── Brand-border helper: a low-light orange edge. ── */
+/* ── Shared accent variables — only defined when a theme is active. ── */
 :root[data-theme="signal"],
 :root[data-theme="pulse"] {
-  --accent-border: rgba(245, 110, 15, 0.2);
+  --accent-border: rgba(245, 110, 15, 0.22);
   --accent-surface: rgba(245, 110, 15, 0.08);
 }
 
-/* ── Active nav items — the "you are here" hero. ── */
-:root[data-theme="signal"] [aria-current="page"],
-:root[data-theme="pulse"] [aria-current="page"] {
+/* ── Active nav items — only [data-accent="nav-active"] elements. ── */
+:root[data-theme="signal"] [data-accent="nav-active"],
+:root[data-theme="pulse"] [data-accent="nav-active"] {
   background-color: var(--accent-surface) !important;
-  border: 1px solid var(--accent-border);
+  border: 1px solid var(--accent-border) !important;
   color: var(--color-brand) !important;
 }
 
-/* Active nav icon chip gets a warmer fill */
-:root[data-theme="signal"] [aria-current="page"] .bg-bg-elev-3,
-:root[data-theme="pulse"] [aria-current="page"] .bg-bg-elev-3 {
-  background-color: rgba(245, 110, 15, 0.15) !important;
-  color: var(--color-brand) !important;
-}
-
-/* ── Logo / brand wordmark badge — the identity hero. ── */
-:root[data-theme="signal"] [aria-label="HamaFX-Ai home"] > span,
-:root[data-theme="pulse"] [aria-label="HamaFX-Ai home"] > span {
+/* ── Logo badge — only [data-accent="logo"] element. ── */
+:root[data-theme="signal"] [data-accent="logo"],
+:root[data-theme="pulse"] [data-accent="logo"] {
   background-color: var(--color-brand) !important;
   color: var(--color-brand-fg) !important;
 }
 
-/* ── PULSE only: interactive highlights ── */
-
-/* Focus rings — keyboard accent */
-:root[data-theme="pulse"] :focus-visible {
-  outline: 2px solid var(--color-brand) !important;
-  outline-offset: 2px;
-}
-
-/* Selected/active tabs in segmented controls (solid variant) */
+/* ── PULSE only: selected tabs in segmented controls (solid variant). ── */
 :root[data-theme="pulse"] [data-segmented="solid"] [aria-pressed="true"] {
   border-color: var(--accent-border) !important;
 }
 
-/* Live/active indicator dots get a warm ring */
-:root[data-theme="pulse"] .animate-pulse.bg-success {
-  box-shadow: 0 0 0 2px var(--accent-border);
-}
-
-/* ── Orange primary CTA toggle (independent of intensity) ── */
+/* ── Orange primary CTA toggle (independent of intensity). ── */
 :root[data-cta="orange"] [data-variant="primary"] {
   background-color: var(--color-brand) !important;
   color: var(--color-brand-fg) !important;
