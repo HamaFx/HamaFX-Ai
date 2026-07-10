@@ -20,7 +20,7 @@
 
 import Link from 'next/link';
 import { listPushSubscriptions } from '@hamafx/ai';
-import {IconBell, IconMail, IconArrowRight} from '@tabler/icons-react';
+import {IconBell, IconBrandTelegram, IconMail} from '@tabler/icons-react';
 
 import { cn } from '@/lib/cn';
 import { getServerEnv } from '@/lib/env';
@@ -81,8 +81,8 @@ export async function NotificationsCard({ userId }: { userId: string }) {
 
       <Link href="/settings/telegram" className="block rounded-sm -mx-1 px-1 py-0.5 transition-colors hover:bg-bg-elev-2">
         <SettingsRow
-          icon={<IconArrowRight className="size-4" />}
-          iconColor="var(--color-brand)"
+          icon={<IconBrandTelegram className="size-4 text-brand" />}
+          iconColor="var(--color-bg-elev-3)"
           label="Telegram"
           description={
             <span className="flex items-center gap-2">
@@ -99,8 +99,8 @@ export async function NotificationsCard({ userId }: { userId: string }) {
 
       <Link href="/settings" className="block rounded-sm -mx-1 px-1 py-0.5 transition-colors hover:bg-bg-elev-2">
         <SettingsRow
-          icon={<IconBell className="size-4" />}
-          iconColor="var(--color-brand)"
+          icon={<IconBell className="size-4 text-brand" />}
+          iconColor="var(--color-bg-elev-3)"
           label="Web push"
           description={
             <span className="flex items-center gap-2">
