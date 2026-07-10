@@ -49,7 +49,7 @@ export const Switch = forwardRef<HTMLButtonElement, SwitchProps>(function Switch
         'relative inline-flex h-7 w-12 shrink-0 items-center rounded-sm transition-colors',
         'focus:outline-none focus-visible:ring-2 focus-visible:ring-fg focus-visible:ring-offset-2 focus-visible:ring-offset-bg',
         'disabled:cursor-not-allowed disabled:opacity-50',
-        checked ? 'bg-fg' : 'bg-bg-elev-3',
+        checked ? 'bg-brand' : 'bg-bg-elev-3',
         className,
       )}
       {...rest}
@@ -57,7 +57,7 @@ export const Switch = forwardRef<HTMLButtonElement, SwitchProps>(function Switch
       <span
         aria-hidden="true"
         className={cn(
-          'inline-block size-5 rounded-sm bg-fg shadow-sm transition-transform duration-150',
+          'inline-block size-5 rounded-sm bg-brand-fg shadow-sm transition-transform duration-150',
           checked ? 'translate-x-[22px]' : 'translate-x-0.5',
         )}
       />
