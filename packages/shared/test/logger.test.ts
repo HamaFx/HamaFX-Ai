@@ -23,7 +23,7 @@ import {
   logErrorContext,
   logForAgent,
   traceIdStorage,
-} from '../src';
+} from '../src/logger';
 
 describe('logger', () => {
   it('exports a pino logger instance', () => {

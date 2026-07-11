@@ -98,7 +98,9 @@ export * from './billing';
 
 // Errors & Logging
 export * from './errors';
-export * from './logger';
+// Logger is server-only (uses node:async_hooks / node:stream). Import from
+// '@hamafx/shared/logger' directly in server/worker code; do NOT re-export
+// here to keep the client bundle free of Node built-ins.
 export { logStreamHub } from './log-stream';
 export * from './error-patterns';
 export * from './bug-report';
