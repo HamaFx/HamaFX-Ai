@@ -234,7 +234,7 @@ export function ChatTopBar({ threadId, title, pinnedSymbol, threads, isStreaming
     <header
       className={cn(
         'sticky top-0 z-30 flex h-12 w-full shrink-0 items-center justify-between',
-        'border-b border-border bg-black px-3 pt-safe',
+        'border-b border-border bg-bg-base px-3 pt-safe',
       )}
     >
       <NavTrigger />

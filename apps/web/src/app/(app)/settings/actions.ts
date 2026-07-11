@@ -23,6 +23,7 @@ import { getDb, schema, withRateLimit } from '@hamafx/db';
 import { eq, and, inArray, sql } from 'drizzle-orm';
 import * as Sentry from '@sentry/nextjs';
 import { revalidatePath } from 'next/cache';
+import { signOut } from '@/auth';
 import { generateSecret, generateURI, verifySync } from 'otplib';
 import QRCode from 'qrcode';
 import {
@@ -645,6 +646,7 @@ export async function deleteAccountAction(password: string, totpCode?: string): 
   try {
     await db.delete(schema.users)
       .where(eq(schema.users.id, session.user.id));
+    await signOut({ redirectTo: '/' });
     return { ok: true as const };
   } catch (err) {
     Sentry.captureException(err);
@@ -862,8 +864,14 @@ export async function updateNotificationPrefsAction(prefs: Record<string, Record
 
   try {
     const db = getDb();
+    // Merge with existing notification preferences to preserve nested
+    // fields like noiseConfig that aren't managed through this action.
+    const [existing] = await db.select({ notificationPreferences: schema.userSettings.notificationPreferences })
+      .from(schema.userSettings)
+      .where(eq(schema.userSettings.userId, session.user.id));
+    const merged = { ...(existing?.notificationPreferences as Record<string, unknown> || {}), ...prefs };
     await db.update(schema.userSettings)
-      .set({ notificationPreferences: prefs })
+      .set({ notificationPreferences: merged as Record<string, Record<string, boolean>> })
       .where(eq(schema.userSettings.userId, session.user.id));
 
     revalidatePath('/settings');
@@ -892,14 +900,16 @@ export async function setupTwoFactorAction(): Promise<ActionResult<{ secret: str
   }
 
   try {
-    
-
     const secret = generateSecret();
     const service = 'HamaFX-Ai';
     const otpauth = generateURI({ secret, issuer: service, label: session.user.email ?? session.user.id });
     const qrDataUrl = await QRCode.toDataURL(otpauth);
 
-    // HIGH-01: Encrypt the secret before storing
+    // Store the encrypted secret in the DB so verifyTwoFactorAction can
+    // read it. The secret is encrypted at rest and only enabled after
+    // successful token verification. If the user abandons setup, the
+    // orphaned encrypted secret is harmless and will be overwritten on
+    // the next setup attempt.
     const db = getDb();
     await db.update(schema.users)
       .set({ twoFactorSecret: encryptSecret(secret) })
@@ -1161,6 +1171,7 @@ export async function changePasswordAction(
     });
   } catch { /* fail open */ }
 
+  revalidatePath('/settings');
   return { ok: true };
 }
 

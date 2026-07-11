@@ -242,6 +242,15 @@ export function ChartView({ symbol, watchlist }: { symbol: Symbol; watchlist: st
   // Reference price: capture the last candle's close once and pin it
   // using a ref so new bars don't shift the reference point.
   const closeRef = useRef<number | null>(null);
+  // Reset the reference close during render when the symbol changes,
+  // so switching from XAUUSD (~2370) to EURUSD (~1.08) doesn't show
+  // an absurd delta. Using a render-phase guard avoids the one-frame
+  // gap that useEffect-based resets would introduce.
+  const prevSymbolRef = useRef(symbol);
+  if (prevSymbolRef.current !== symbol) {
+    closeRef.current = null;
+    prevSymbolRef.current = symbol;
+  }
   const referenceClose = useMemo(() => {
     if (!candles || candles.length === 0) return null;
     if (closeRef.current === null) {
@@ -342,7 +351,7 @@ export function ChartView({ symbol, watchlist }: { symbol: Symbol; watchlist: st
         ) : !candlesWithLive || candlesWithLive.length === 0 ? (
           <ChartEmpty symbol={symbol} tf={tf} onRetry={() => void refetch()} />
         ) : (
-          <ChartErrorBoundary key={chartKey} onRetry={() => setChartKey(k => k + 1)}>
+          <ChartErrorBoundary key={`${symbol}-${tf}-${chartKey}`} onRetry={() => setChartKey(k => k + 1)}>
             <Chart
               symbol={symbol}
               tf={tf}

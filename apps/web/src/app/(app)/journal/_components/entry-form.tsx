@@ -41,7 +41,7 @@ const entrySchema = z.object({
   side: z.enum(['long', 'short']),
   entry: z.number({ invalid_type_error: 'Entry price must be a number' }).positive('Entry price must be positive'),
   stop: z.number().positive('Stop loss must be positive').nullable().optional(),
-  target: z.number().positive('IconTarget must be positive').nullable().optional(),
+  target: z.number().positive('Target must be positive').nullable().optional(),
   size: z.number().positive('Size must be positive').nullable().optional(),
   notes: z.string().max(5000, 'Notes must be under 5000 characters').nullable().optional(),
   tags: z.array(z.string()).optional(),
@@ -63,6 +63,7 @@ export function EntryForm({ onCreated }: EntryFormProps) {
   const [uploadingScreenshot, setUploadingScreenshot] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const tagSuggestions = useTagSuggestions();
   const [fieldErrors, setFieldErrors] = useState<Record<string, string | null>>({
     entry: null,
     stop: null,
@@ -112,7 +113,7 @@ export function EntryForm({ onCreated }: EntryFormProps) {
       const fd = new FormData();
       fd.append('file', file);
       const res = await fetch('/api/upload', { method: 'POST', body: fd });
-      if (!res.ok) throw new Error(`IconUpload HTTP ${res.status}`);
+      if (!res.ok) throw new Error(`Upload HTTP ${res.status}`);
       const data = (await res.json()) as { url?: string };
       if (data.url) setScreenshotUrl(data.url);
     } catch {
@@ -176,6 +177,7 @@ export function EntryForm({ onCreated }: EntryFormProps) {
           size: data.size,
           notes: data.notes,
           tags: data.tags,
+          screenshotUrl: screenshotUrl,
         }),
       });
       if (!res.ok) {
@@ -195,7 +197,7 @@ export function EntryForm({ onCreated }: EntryFormProps) {
       onCreated?.();
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Create failed';
-      toast.error('IconDeviceFloppy failed', { description: message });
+      toast.error('Save failed', { description: message });
       setError(message);
     } finally {
       setBusy(false);
@@ -317,7 +319,7 @@ export function EntryForm({ onCreated }: EntryFormProps) {
       <TagInput
         value={tags}
         onChange={setTags}
-        suggestions={useTagSuggestions()}
+        suggestions={tagSuggestions}
         placeholder="Add tags (e.g. London breakout, trend continuation)"
       />
 
@@ -330,7 +332,7 @@ export function EntryForm({ onCreated }: EntryFormProps) {
         loading={busy}
         className="mt-2"
       >
-        {busy ? 'Saving…' : 'IconDeviceFloppy entry'}
+        {busy ? 'Saving…' : 'Save entry'}
       </Button>
     </form>
   );

@@ -159,7 +159,10 @@ export async function withCronAuth(
     const cookieHeader = req.headers.get('cookie') ?? '';
     const token = readCookie(cookieHeader, AUTH_COOKIE_NAME);
     if (token) {
-      const payload = await verifyAuthToken(token, env.AUTH_COOKIE_SECRET ?? '');
+      if (!env.AUTH_COOKIE_SECRET) {
+        throw new Error('AUTH_COOKIE_SECRET must be set to verify cron auth cookies');
+      }
+      const payload = await verifyAuthToken(token, env.AUTH_COOKIE_SECRET);
       hasSessionAuth = payload !== null;
     }
   }

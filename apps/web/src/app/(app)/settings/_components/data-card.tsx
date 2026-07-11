@@ -20,7 +20,7 @@
 // bookmarks and prefs in localStorage; this card lets the user clear
 // individual keys or wipe everything stored on this device.
 
-import {IconBookmark, IconDownload, IconMessage, IconArrowBackUp, IconTrash, IconUserX} from '@tabler/icons-react';
+import {IconBookmark, IconDownload, IconMessage, IconArrowBackUp, IconTrash, IconUserX, IconEye, IconEyeOff} from '@tabler/icons-react';
 import { useEffect, useState, useTransition } from 'react';
 import { signOut } from 'next-auth/react';
 import { toast } from 'sonner';
@@ -65,6 +65,7 @@ export function DataCard() {
   const [confirmEl, confirm] = useConfirm();
   const [isPending, startTransition] = useTransition();
   const [deletePassword, setDeletePassword] = useState('');
+  const [showDeletePassword, setShowDeletePassword] = useState(false);
   const [deleteTotpCode, setDeleteTotpCode] = useState('');
   const [isDeletePending, startDeleteTransition] = useTransition();
 
@@ -303,14 +304,25 @@ export function DataCard() {
             <label htmlFor="delete-pwd" className="text-caption text-fg-muted">
               Confirm your password
             </label>
-            <Input
-              id="delete-pwd"
-              type="password"
-              placeholder="Account password"
-              value={deletePassword}
-              onChange={(e) => setDeletePassword(e.target.value)}
-              className="text-xs"
-            />
+            <div className="relative">
+              <Input
+                id="delete-pwd"
+                type={showDeletePassword ? 'text' : 'password'}
+                placeholder="Account password"
+                value={deletePassword}
+                onChange={(e) => setDeletePassword(e.target.value)}
+                className="text-xs"
+              />
+              <button
+                type="button"
+                onClick={() => setShowDeletePassword(!showDeletePassword)}
+                className="text-fg-muted hover:text-fg absolute right-2 top-1/2 -translate-y-1/2"
+                tabIndex={-1}
+                aria-label={showDeletePassword ? 'Hide password' : 'Show password'}
+              >
+                {showDeletePassword ? <IconEyeOff className="size-3.5" /> : <IconEye className="size-3.5" />}
+              </button>
+            </div>
           </div>
           <div className="flex flex-col gap-1 w-28">
             <label htmlFor="delete-totp" className="text-caption text-fg-muted">

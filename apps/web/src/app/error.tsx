@@ -20,6 +20,7 @@
 // surfaces during rendering. We log + show a recover button so the user
 // isn't stuck on a blank screen.
 import { useEffect } from 'react';
+import * as Sentry from '@sentry/nextjs';
 import { Button } from '@/components/ui/button';
 import { Link } from 'next-view-transitions';
 
@@ -30,7 +31,7 @@ interface ErrorPageProps {
 
 export default function ErrorPage({ error, reset }: ErrorPageProps) {
   useEffect(() => {
-    console.error('[app] uncaught render error', error);
+    Sentry.captureException(error);
   }, [error]);
 
   return (
@@ -42,7 +43,7 @@ export default function ErrorPage({ error, reset }: ErrorPageProps) {
           background: 'none',
                   }}
       >
-        <span className="text-black text-2xl font-bold">H</span>
+        <span className="text-fg text-2xl font-bold">H</span>
       </span>
       <div className="flex flex-col gap-2 text-center items-center" role="alert">
         <h1 className="text-lg font-semibold">Something went wrong</h1>

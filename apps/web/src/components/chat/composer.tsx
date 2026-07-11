@@ -162,12 +162,12 @@ export function Composer({
       const res = await fetchCsrf('/api/upload', { method: 'POST', body: fd });
       if (!res.ok) {
         const text = await res.text().catch(() => '');
-        throw new Error(`IconUpload failed for "${file.name}": ${res.status} ${text.slice(0, 80)}`);
+        throw new Error(`Upload failed for "${file.name}": ${res.status} ${text.slice(0, 80)}`);
       }
       const json = (await res.json()) as { url?: string; mediaType?: string };
       const url = typeof json.url === 'string' ? json.url : null;
       if (!url) {
-        throw new Error(`IconUpload returned no URL for "${file.name}"`);
+        throw new Error(`Upload returned no URL for "${file.name}"`);
       }
       
       return {

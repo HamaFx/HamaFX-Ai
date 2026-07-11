@@ -43,7 +43,7 @@ export default async function DashboardPage() {
   const settled = await Promise.allSettled([
     listAlerts(userId, { limit: 20 }),
     listUpcomingEvents({ limit: 12 }),
-    listEntries(userId, { limit: 200 }),
+    listEntries(userId, { limit: 50 }),
     listRecentArticles(30),
     getLatestBriefing(userId),
   ]);

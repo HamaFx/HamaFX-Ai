@@ -51,6 +51,7 @@ export async function loginAction(prevState: unknown, formData: FormData) {
   const safeNext = next && next.startsWith('/') && !next.startsWith('//') ? next : '/chat';
 
   try {
+    recordAuthEvent('login_success');
     await signIn('credentials', {
       email: normalizedEmail,
       password,
@@ -58,7 +59,6 @@ export async function loginAction(prevState: unknown, formData: FormData) {
       rememberMe: formData.get('rememberMe') as string || undefined,
       redirectTo: safeNext,
     });
-    recordAuthEvent('login_success');
     return { success: true };
   } catch (error) {
     const errStr = String(error);

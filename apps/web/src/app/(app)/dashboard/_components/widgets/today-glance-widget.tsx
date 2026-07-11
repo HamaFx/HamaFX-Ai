@@ -139,9 +139,12 @@ function getSession(now: Date): 'Asian' | 'London' | 'New York' | 'Closed' | 'We
   const day = now.getUTCDay();
   if (day === 0 || day === 6) return 'Weekend';
   const hour = now.getUTCHours();
-  if (hour >= 0 && hour < 8) return 'Asian';
-  if (hour >= 8 && hour < 13) return 'London';
-  if (hour >= 13 && hour < 21) return 'New York';
+  // Sydney 22:00–07:00 UTC + Tokyo 00:00–09:00 → Asian: 22:00–07:59
+  if (hour >= 22 || hour < 8) return 'Asian';
+  // London 08:00–17:00 UTC (including London/NY overlap at 13:00–16:59)
+  if (hour >= 8 && hour < 17) return 'London';
+  // New York 13:00–22:00 UTC (active after London closes: 17:00–21:59)
+  if (hour >= 17 && hour < 22) return 'New York';
   return 'Closed';
 }
 
@@ -158,10 +161,11 @@ function CellOpenRisk({ entries }: { entries: JournalEntry[] }) {
     if (
       e.entry !== null &&
       e.stop !== null &&
-      e.target !== null &&
-      Math.abs(e.entry - e.target) > 0
+      Math.abs(e.entry - e.stop) > 0
     ) {
-      totalR += Math.abs(e.entry - e.stop) / Math.abs(e.entry - e.target);
+      // R = capital-at-risk per position (1R each). The risk is defined by
+      // |entry - stop|, which represents one R in the user's risk framework.
+      totalR += 1;
     } else {
       totalR += 1;
     }

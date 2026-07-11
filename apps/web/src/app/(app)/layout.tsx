@@ -75,7 +75,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   return (
     <MotionRoot>
       <NavDrawerProvider>
-        <div className="bg-black text-fg relative min-h-svh">
+        <div className="bg-bg-base text-fg relative min-h-svh">
           <SkipToContent />
           <TopBar />
           <main

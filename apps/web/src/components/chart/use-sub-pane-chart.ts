@@ -110,6 +110,7 @@ export function useSubPaneChart<TSeries>({
       applyOptions: (opts) => chart.applyOptions(opts as never),
       applyDecimals: () => {},
       setCandles: () => {},
+      updateLastCandle: () => {},
       setOverlays: () => {},
       setIndicators: () => {},
       resize: (w, h) => chart.resize(w, h, true),

@@ -19,7 +19,7 @@
 import { useActionState, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { IconCheck } from '@tabler/icons-react';
+import { IconCheck, IconEye, IconEyeOff } from '@tabler/icons-react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -34,6 +34,7 @@ function LoginForm() {
   const [state, action, pending] = useActionState(loginAction, { error: '' });
   const [success, setSuccess] = useState(false);
   const [requires2FA, setRequires2FA] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
     if (state.requires2FA) {
@@ -62,7 +63,8 @@ function LoginForm() {
               autoComplete="email"
               autoFocus={!requires2FA}
               required
-              disabled={pending || success}
+              disabled={success}
+              readOnly={pending || requires2FA}
             />
           </div>
 
@@ -70,14 +72,26 @@ function LoginForm() {
             <label htmlFor="password" className="text-fg text-sm font-semibold">
               Password
             </label>
-            <Input
-              id="password"
-              name="password"
-              type="password"
-              autoComplete="current-password"
-              required
-              disabled={pending || success}
-            />
+            <div className="relative">
+              <Input
+                id="password"
+                name="password"
+                type={showPassword ? 'text' : 'password'}
+                autoComplete="current-password"
+                required
+                disabled={success}
+                readOnly={pending || requires2FA}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="text-fg-muted hover:text-fg absolute right-2 top-1/2 -translate-y-1/2"
+                tabIndex={-1}
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+              >
+                {showPassword ? <IconEyeOff className="size-4" /> : <IconEye className="size-4" />}
+              </button>
+            </div>
           </div>
 
           {requires2FA && (
@@ -95,7 +109,8 @@ function LoginForm() {
                 autoComplete="one-time-code"
                 autoFocus
                 required
-                disabled={pending || success}
+                disabled={success}
+                readOnly={pending}
                 placeholder="Enter 6-digit code"
               />
             </div>

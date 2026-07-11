@@ -50,9 +50,9 @@ export function DrawdownChart({ entries, stats, className }: DrawdownChartProps)
       peaks.push(peak);
     }
 
-    const recovery = maxDD === 0 ? 0 : stats.totalR / maxDD;
+    const recovery = maxDD === 0 ? 0 : cumulative / maxDD;
     return { curve, peaks, maxDrawdown: maxDD, recoveryFactor: recovery };
-  }, [entries, stats.totalR]);
+  }, [entries]);
 
   if (curve.length < 2) {
     return (

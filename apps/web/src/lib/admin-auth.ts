@@ -64,15 +64,26 @@ export async function getAdminUser(): Promise<AdminAuthResult> {
     return { admin: { userId: user.id, email: user.email, name: user.name }, reason: 'authenticated' };
   }
 
-  // Check if any admin exists
-  const adminCount = await db
+  // Check if any admin exists.
+  // Security: single-user mode only grants admin to the *earliest* user
+  // (by creation date), not ALL authenticated users. This prevents privilege
+  // escalation when a second user registers before the first admin is promoted.
+  const [adminCount] = await db
     .select({ count: sql<number>`count(*)` })
     .from(schema.users)
     .where(eq(schema.users.role, 'admin'));
 
-  if (Number(adminCount[0]?.count ?? 0) === 0) {
-    // No admins exist — single-user mode, treat as admin
-    return { admin: { userId: user.id, email: user.email, name: user.name }, reason: 'authenticated' };
+  if (Number(adminCount?.count ?? 0) === 0) {
+    // No admins exist — single-user mode.
+    // Only promote the earliest-created user.
+    const [firstUser] = await db
+      .select({ id: schema.users.id })
+      .from(schema.users)
+      .orderBy(schema.users.createdAt)
+      .limit(1);
+    if (firstUser && firstUser.id === user.id) {
+      return { admin: { userId: user.id, email: user.email, name: user.name }, reason: 'authenticated' };
+    }
   }
 
   return { admin: null, reason: 'forbidden' };

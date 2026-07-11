@@ -21,14 +21,14 @@ import { PageHeader } from '@/components/layout/page-header';
 import { TelegramLinkCard } from '../_components/telegram-link-card';
 import { TestTelegramButton } from '../_components/test-telegram-button';
 
-export const metadata: Metadata = { title: 'Telegram IconRobot — IconSettings' };
+export const metadata: Metadata = { title: 'Telegram Bot — Settings' };
 
 export default function TelegramSettingsPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Telegram IconRobot"
-        description="IconLink your Telegram to control HamaFX with bot commands."
+        title="Telegram Bot"
+        description="Link your Telegram to control HamaFX with bot commands."
       />
 
       <section className="rounded-sm border border-border bg-bg-elev-1 p-6 space-y-4">
@@ -43,7 +43,7 @@ export default function TelegramSettingsPage() {
       <section className="rounded-sm border border-border bg-bg-elev-1 p-6 space-y-4">
         <h2 className="text-sm font-semibold text-fg-subtle">Test Notification</h2>
         <p className="text-sm text-fg-subtle">
-          IconArrowRight a test message to verify your Telegram bot is configured correctly.
+          Send a test message to verify your Telegram bot is configured correctly.
         </p>
         <TestTelegramButton />
       </section>
@@ -60,7 +60,7 @@ export default function TelegramSettingsPage() {
             { cmd: '/positions', desc: 'Show your open positions' },
             { cmd: '/track', desc: 'AI track record stats' },
             { cmd: '/status', desc: 'System status and overview' },
-            { cmd: '/help', desc: 'IconList all commands' },
+            { cmd: '/help', desc: 'List all commands' },
           ].map((item) => (
             <div key={item.cmd} className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3">
               <code className="rounded-sm bg-bg-elev-1-elevated px-2 py-0.5 font-mono text-xs whitespace-nowrap sm:w-64">

@@ -186,7 +186,7 @@ function CodeBlock({ code, lang }: { code: string; lang: string }) {
         <button
           type="button"
           onClick={copy}
-          aria-label={copied ? 'Copied' : 'IconCopy code'}
+          aria-label={copied ? 'Copied' : 'Copy code'}
           className="text-fg-muted hover:text-fg inline-flex items-center gap-1 rounded-sm px-2 py-1 text-caption font-medium transition-colors cursor-pointer"
         >
           {copied ? (

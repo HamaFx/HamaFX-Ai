@@ -17,7 +17,7 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import {IconDownload, IconUpload, IconCopy, IconCheck} from '@tabler/icons-react';
+import {IconDownload, IconUpload, IconCopy, IconCheck, IconEye, IconEyeOff} from '@tabler/icons-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -25,12 +25,14 @@ import { exportKeysAction, importKeysAction } from '../../actions';
 
 export function ExportImportKeys() {
   const [exportPassword, setExportPassword] = useState('');
+  const [showExportPassword, setShowExportPassword] = useState(false);
   const [exportedPayload, setExportedPayload] = useState('');
   const [copied, setCopied] = useState(false);
   const [isExportPending, startExportTransition] = useTransition();
 
   const [importPayload, setImportPayload] = useState('');
   const [importPassword, setImportPassword] = useState('');
+  const [showImportPassword, setShowImportPassword] = useState(false);
   const [isImportPending, startImportTransition] = useTransition();
 
   async function handleExport() {
@@ -114,14 +116,25 @@ export function ExportImportKeys() {
             <label htmlFor="export-pwd" className="text-xs font-bold text-fg-subtle uppercase">
               Account Password
             </label>
-            <Input
-              id="export-pwd"
-              type="password"
-              placeholder="Your account password"
-              value={exportPassword}
-              onChange={(e) => setExportPassword(e.target.value)}
-              className="text-xs"
-            />
+            <div className="relative">
+              <Input
+                id="export-pwd"
+                type={showExportPassword ? 'text' : 'password'}
+                placeholder="Your account password"
+                value={exportPassword}
+                onChange={(e) => setExportPassword(e.target.value)}
+                className="text-xs"
+              />
+              <button
+                type="button"
+                onClick={() => setShowExportPassword(!showExportPassword)}
+                className="text-fg-muted hover:text-fg absolute right-2 top-1/2 -translate-y-1/2"
+                tabIndex={-1}
+                aria-label={showExportPassword ? 'Hide password' : 'Show password'}
+              >
+                {showExportPassword ? <IconEyeOff className="size-4" /> : <IconEye className="size-4" />}
+              </button>
+            </div>
           </div>
 
           <Button
@@ -192,14 +205,25 @@ export function ExportImportKeys() {
               <label htmlFor="import-pwd" className="text-xs font-bold text-fg-subtle uppercase">
                 Decryption Password
               </label>
+              <div className="relative">
               <Input
                 id="import-pwd"
-                type="password"
+                type={showImportPassword ? 'text' : 'password'}
                 placeholder="Enter backup password"
                 value={importPassword}
                 onChange={(e) => setImportPassword(e.target.value)}
                 className="text-xs"
               />
+              <button
+                type="button"
+                onClick={() => setShowImportPassword(!showImportPassword)}
+                className="text-fg-muted hover:text-fg absolute right-2 top-1/2 -translate-y-1/2"
+                tabIndex={-1}
+                aria-label={showImportPassword ? 'Hide password' : 'Show password'}
+              >
+                {showImportPassword ? <IconEyeOff className="size-4" /> : <IconEye className="size-4" />}
+              </button>
+            </div>
             </div>
 
             <Button

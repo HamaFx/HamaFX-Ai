@@ -54,7 +54,7 @@ export function RDistribution({ stats, className }: RDistributionProps) {
         <div className="flex flex-col gap-2">
           <div className="flex items-end gap-1 h-32">
             {data.map((d) => {
-              const isPositive = d.bucket.startsWith('(') || d.bucket.startsWith('[') && d.bucket !== '[0,0]' && d.bucket !== '[-3,-2)' && d.bucket !== '[-2,-1)' && d.bucket !== '[-1,0)';
+              const isPositive = d.bucket.startsWith('(') || (d.bucket.startsWith('[') && d.bucket !== '[0,0]' && d.bucket !== '[-3,-2)' && d.bucket !== '[-2,-1)' && d.bucket !== '[-1,0)');
               const heightPct = (d.count / maxCount) * 100;
               return (
                 <div key={d.bucket} className="flex flex-1 flex-col items-center gap-1.5">

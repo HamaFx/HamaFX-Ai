@@ -19,7 +19,7 @@ export default function OfflinePage() {
           background: 'none',
                   }}
       >
-        <span className="text-black text-2xl font-bold">H</span>
+        <span className="text-fg text-2xl font-bold">H</span>
       </span>
       <div className="flex flex-col gap-2">
         <h1 className="text-fg text-xl font-semibold tracking-tight">You&apos;re offline</h1>

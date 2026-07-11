@@ -87,7 +87,7 @@ const NO_PIN_PROMPTS: Record<TradingSession, readonly Prompt[]> = {
     { icon: IconTrendingUp, label: 'Weekly bias — what is your read?', fg: 'text-fg' },
     { icon: IconChartBar, label: 'Weekly structure recap', fg: 'text-info' },
     { icon: IconCalendarEvent, label: 'Next week calendar', fg: 'text-accent' },
-    { icon: IconChartLine, label: 'IconKey levels to watch', fg: 'text-info' },
+    { icon: IconChartLine, label: 'Key levels to watch', fg: 'text-info' },
     { icon: IconBell, label: 'Set alert for Sunday open', fg: 'text-warn' },
   ],
 };

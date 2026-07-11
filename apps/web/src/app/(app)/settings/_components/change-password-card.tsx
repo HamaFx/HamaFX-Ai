@@ -12,6 +12,7 @@ export function ChangePasswordCard() {
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [totpCode, setTotpCode] = useState('');
+  const [showCurrent, setShowCurrent] = useState(false);
   const [showNew, setShowNew] = useState(false);
   const [changing, setChanging] = useState(false);
   const [done, setDone] = useState(false);
@@ -61,15 +62,26 @@ export function ChangePasswordCard() {
         </div>
       ) : (
         <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-          <Input
-            type="password"
-            autoComplete="current-password"
-            placeholder="Current password"
-            value={currentPassword}
-            onChange={(e) => setCurrentPassword(e.target.value)}
-            required
-            disabled={changing}
-          />
+          <div className="relative">
+            <Input
+              type={showCurrent ? 'text' : 'password'}
+              autoComplete="current-password"
+              placeholder="Current password"
+              value={currentPassword}
+              onChange={(e) => setCurrentPassword(e.target.value)}
+              required
+              disabled={changing}
+            />
+            <button
+              type="button"
+              onClick={() => setShowCurrent(!showCurrent)}
+              className="text-fg-muted hover:text-fg absolute right-2 top-1/2 -translate-y-1/2"
+              tabIndex={-1}
+              aria-label={showCurrent ? 'Hide password' : 'Show password'}
+            >
+              {showCurrent ? <IconEyeOff className="size-4" /> : <IconEye className="size-4" />}
+            </button>
+          </div>
           <div className="relative">
             <Input
               type={showNew ? 'text' : 'password'}

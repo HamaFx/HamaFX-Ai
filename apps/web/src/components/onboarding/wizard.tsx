@@ -648,7 +648,7 @@ export function OnboardingWizard({ initialName, providers, symbolsCatalog, initi
                     </ul>
                     <p>
                       Bias: <span className="text-bear font-medium">Bearish below $2,640</span> ·
-                      IconKey resistance at <span className="tablibular-nums">$2,680</span>
+                      IconKey resistance at              <span className="tabular-nums">$2,680</span>
                     </p>
                   </div>
                 </div>

@@ -24,7 +24,7 @@ export function useLocalStorage<T>(key: string, initialValue: T) {
   const initialValueRef = useRef(initialValue);
   initialValueRef.current = initialValue;
 
-  // Load from localStorage on mount
+  // Load from localStorage on mount and when key changes.
   useEffect(() => {
     try {
       const item = window.localStorage.getItem(key);

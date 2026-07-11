@@ -42,6 +42,7 @@ export interface MainChartInstance {
   applyOptions(opts: unknown): void;
   applyDecimals(d: number): void;
   setCandles(candles: Candle[]): void;
+  updateLastCandle(candle: { time: number; open: number; high: number; low: number; close: number }): void;
   setOverlays(overlays: OverlaySet | null): void;
   setIndicators(results: IndicatorResult[] | null): void;
   resize(w: number, h: number): void;

@@ -210,10 +210,7 @@ export function Segmented<T extends string>(props: SegmentedProps<T>) {
             active && variant === 'accent' ? (
               <m.span
                 layoutId={layoutId}
-                className="absolute inset-0 -z-0 rounded-sm"
-                style={{
-                  backgroundImage: 'none',
-                }}
+                className="absolute inset-0 -z-0 rounded-sm bg-brand"
                 transition={{ type: 'spring', stiffness: 380, damping: 30 }}
               />
             ) : null;

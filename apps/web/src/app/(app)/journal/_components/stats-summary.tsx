@@ -93,7 +93,7 @@ export function StatsSummary({ stats, entries = [] }: StatsSummaryProps) {
   }, [closedTrades]);
 
   const profitFactor = useMemo(() => {
-    if (grossLoss === 0) return grossProfit > 0 ? 99.9 : 1.0;
+    if (grossLoss === 0) return grossProfit > 0 ? Number.POSITIVE_INFINITY : 1.0;
     return grossProfit / grossLoss;
   }, [grossProfit, grossLoss]);
 
@@ -274,7 +274,7 @@ export function StatsSummary({ stats, entries = [] }: StatsSummaryProps) {
             'text-lg font-bold tracking-tight mt-1.5 tabular-nums',
             profitFactor >= 1.5 ? 'text-bull' : profitFactor >= 1.0 ? 'text-fg' : 'text-bear'
           )}>
-            {profitFactor.toFixed(2)}
+            {Number.isFinite(profitFactor) ? profitFactor.toFixed(2) : '∞'}
           </p>
           <span className="text-xs text-fg-muted font-medium">Gross Wins vs. Gross Losses</span>
         </div>

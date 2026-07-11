@@ -161,16 +161,21 @@ export function PnLHeatmapWidget({ entries }: PnLHeatmapWidgetProps) {
     return result;
   }, [anchor, bucketsByKey]);
 
-  // Summary stats for the visible window.
+  // Summary stats for the visible window only — matches what the user sees.
   const totals = useMemo(() => {
     let r = 0;
     let count = 0;
     for (const [, b] of bucketsByKey) {
+      // Only include buckets within the two visible months.
+      const visible = months.some((m) =>
+        m.weeks.flat().some((cell) => cell?.key === b.key),
+      );
+      if (!visible) continue;
       r += b.totalR;
       count += b.count;
     }
     return { r, count };
-  }, [bucketsByKey]);
+  }, [bucketsByKey, months]);
 
   function shiftMonth(delta: number) {
     setAnchor((prev) => {

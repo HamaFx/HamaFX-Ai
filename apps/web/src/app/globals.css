@@ -78,7 +78,7 @@
    *    Mono since the terminal aesthetic is monospace-first. Mono override
    *    is used for numeric data, code, and data-dense grids. ── */
   --font-sans: var(--font-mono), ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  --font-mono: var(--font-mono), ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 
   /* ── Type scale — refined hierarchy with tighter leading for data density ── */
   --leading-prose: 1.5;

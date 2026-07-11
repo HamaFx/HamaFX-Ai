@@ -78,7 +78,7 @@ const DrawerContent = React.forwardRef<
     const el = contentRef.current;
     if (!el) return;
 
-    // Focus the first focusable element on open for ergonomics.
+    // Focus the first focusable element each time the drawer opens.
     // vaul handles Tab cycling, Escape-to-close, and focus restore.
     const focusableSelector =
       'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
@@ -94,7 +94,7 @@ const DrawerContent = React.forwardRef<
     } else {
       el.focus();
     }
-  }, []);
+  });
 
   return (
     <DrawerPortal>

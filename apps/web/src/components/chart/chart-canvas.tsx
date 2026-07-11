@@ -27,6 +27,7 @@ import { useEffect, useImperativeHandle, useRef, useState, type Ref } from 'reac
 
 import { SERIES_ATR_HEX } from './chart-colors';
 import type { Candle, IndicatorResult, Symbol } from '@hamafx/shared';
+import { priceDecimals } from '@hamafx/shared';
 import type { ChartSettings, MainChartInstance } from './chart-types';
 import type { OverlaySet } from './overlays';
 import { useChartTheme } from './use-chart-theme';
@@ -81,6 +82,7 @@ export function ChartCanvas({
 
   const candlesRef = useRef(candles);
   candlesRef.current = candles;
+  const prevCandleCountRef = useRef(candles.length);
   const overlaysRef = useRef(overlays);
   overlaysRef.current = overlays;
   const indicatorResultsRef = useRef(indicatorResults);
@@ -100,6 +102,9 @@ export function ChartCanvas({
       instanceRef.current = instance;
       // Force initial resize so canvas isn't 0×0.
       instance.resize(el.clientWidth, el.clientHeight);
+      // Apply correct decimal precision for the symbol immediately
+      // (fixes race condition where applyDecimals was a no-op on first load).
+      instance.applyDecimals(priceDecimals(symbol));
       if (candlesRef.current.length > 0) instance.setCandles(candlesRef.current);
       if (overlaysRef.current) instance.setOverlays(overlaysRef.current);
       if (indicatorResultsRef.current) instance.setIndicators(indicatorResultsRef.current);
@@ -114,8 +119,29 @@ export function ChartCanvas({
   }, [containerEl]);
 
   // Push fresh candle data whenever the query refetches.
+  // On tick updates (same candle count), update only the last candle
+  // to avoid a full setData() repaint and flickering.
   useEffect(() => {
-    instanceRef.current?.setCandles(candles || []);
+    const instance = instanceRef.current;
+    if (!instance) return;
+    const arr = candles || [];
+    if (arr.length === 0) return;
+    const prevCount = prevCandleCountRef.current;
+    prevCandleCountRef.current = arr.length;
+    // Set full data on initial load or when count changes (new candle).
+    if (prevCount !== arr.length || prevCount === 0) {
+      instance.setCandles(arr);
+    } else if (arr.length > 0) {
+      // Tick update — only update the last candle in-place.
+      const last = arr[arr.length - 1]!;
+      instance.updateLastCandle({
+        time: Math.floor(last.t / 1000),
+        open: last.o,
+        high: last.h,
+        low: last.l,
+        close: last.c,
+      });
+    }
   }, [candles]);
 
   // Push overlays whenever they change.
@@ -123,10 +149,12 @@ export function ChartCanvas({
     instanceRef.current?.setOverlays(overlays ?? null);
   }, [overlays]);
 
-  // Push dynamic on-chart indicators whenever they update.
+  // Push dynamic on-chart indicators only when indicator results change.
+  // Previously also depended on [candles], which caused up to 12 indicator
+  // series to be rebuilt on every 3-second price tick.
   useEffect(() => {
     instanceRef.current?.setIndicators(indicatorResults ?? null);
-  }, [indicatorResults, candles]);
+  }, [indicatorResults]);
 
   // Apply theme changes to the live chart.
   useEffect(() => {
@@ -151,6 +179,7 @@ export function ChartCanvas({
       applyOptions: (opts) => instanceRef.current?.applyOptions(opts as never),
       applyDecimals: (d) => instanceRef.current?.applyDecimals(d),
       setCandles: (c) => instanceRef.current?.setCandles(c),
+      updateLastCandle: (c) => instanceRef.current?.updateLastCandle(c),
       setOverlays: (o) => instanceRef.current?.setOverlays(o),
       setIndicators: (r) => instanceRef.current?.setIndicators(r),
       resize: (w, h) => instanceRef.current?.resize(w, h),
@@ -250,6 +279,23 @@ function createMainChart(
           open: c.o, high: c.h, low: c.l, close: c.c,
         })),
       );
+    },
+    updateLastCandle(candle: { time: number; open: number; high: number; low: number; close: number }) {
+      // Keep currentCandles in sync so indicator timestamp lookups use fresh data.
+      if (currentCandles.length > 0) {
+        const last = currentCandles[currentCandles.length - 1]!;
+        last.o = candle.open;
+        last.h = candle.high;
+        last.l = candle.low;
+        last.c = candle.close;
+      }
+      candleSeries.update({
+        time: candle.time as unknown as UTCTimestamp,
+        open: candle.open,
+        high: candle.high,
+        low: candle.low,
+        close: candle.close,
+      });
     },
     setOverlays(overlays: OverlaySet | null) {
       const chartAny = chart as unknown as {

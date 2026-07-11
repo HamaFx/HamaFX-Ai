@@ -30,7 +30,7 @@ export default function NotFound() {
           background: 'none',
                   }}
       >
-        <span className="text-black text-2xl font-bold">H</span>
+        <span className="text-fg text-2xl font-bold">H</span>
       </span>
       <div className="flex flex-col gap-2" role="alert">
         <h1 className="text-lg font-semibold">Page not found</h1>

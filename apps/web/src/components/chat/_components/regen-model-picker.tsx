@@ -199,7 +199,7 @@ export function RegenModelPicker({ popoverId, activeModelId, onPick }: RegenMode
   if (!catalog || catalog.providers.length === 0) {
     return (
       <div className="px-3 py-2 text-xs text-fg-subtle">
-        Add a key in IconSettings → API Keys to see model options.
+        Add a key in Settings → API Keys to see model options.
       </div>
     );
   }
@@ -208,7 +208,7 @@ export function RegenModelPicker({ popoverId, activeModelId, onPick }: RegenMode
   if (configured.length === 0) {
     return (
       <div className="px-3 py-2 text-xs text-fg-subtle">
-        Add a key in IconSettings → API Keys to see model options.
+        Add a key in Settings → API Keys to see model options.
       </div>
     );
   }
@@ -258,7 +258,7 @@ export function RegenModelPicker({ popoverId, activeModelId, onPick }: RegenMode
               href="/settings/models"
               className="text-fg hover:underline not-italic"
             >
-              Pick one in IconSettings → Models
+              Pick one in Settings → Models
             </a>
             .
           </div>

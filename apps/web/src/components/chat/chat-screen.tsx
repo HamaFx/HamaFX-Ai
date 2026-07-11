@@ -228,25 +228,28 @@ export function ChatScreen({
           if (!line.startsWith('data: ')) continue;
           const data = line.slice(6).trim();
           if (data === '[DONE]') continue;
+          let parsed;
           try {
-            const parsed = JSON.parse(data);
-            if (parsed.type === 'data-agent-progress') {
-              setAgentProgress(parsed.data);
-            } else if (parsed.type === 'text') {
-              finalText += parsed.text;
-              // Update the assistant message content progressively
-              setMessages((prev) => prev.map((m) =>
-                m.id === assistantMsgId
-                  ? { ...m, parts: [{ type: 'text' as const, text: finalText }] } as UIMessage
-                  : m,
-              ));
-            } else if (parsed.type === 'metadata') {
-              // Metadata received — opinions, cost, etc.
-              // Could store for later display
-            } else if (parsed.type === 'error') {
-              throw new Error(parsed.error);
-            }
-          } catch { /* ignore parse errors for non-JSON lines */ }
+            parsed = JSON.parse(data);
+          } catch {
+            continue; // skip non-JSON lines
+          }
+          if (parsed.type === 'data-agent-progress') {
+            setAgentProgress(parsed.data);
+          } else if (parsed.type === 'text') {
+            finalText += parsed.text;
+            // Update the assistant message content progressively
+            setMessages((prev) => prev.map((m) =>
+              m.id === assistantMsgId
+                ? { ...m, parts: [{ type: 'text' as const, text: finalText }] } as UIMessage
+                : m,
+            ));
+          } else if (parsed.type === 'metadata') {
+            // Metadata received — opinions, cost, etc.
+            // Could store for later display
+          } else if (parsed.type === 'error') {
+            throw new Error(parsed.error as string);
+          }
         }
       }
 
@@ -299,7 +302,7 @@ export function ChatScreen({
     const isLastMessage = idx === messages.length - 1;
     if (!isLastMessage) {
       const ok = await confirm({
-        title: 'IconEdit earlier message?',
+        title: 'Edit earlier message?',
         description: 'Editing this message will create a new thread branch. The current thread will be preserved.',
         confirmLabel: 'Create branch',
         tone: 'default',
@@ -471,7 +474,7 @@ export function ChatScreen({
   }
 
   return (
-    <div className="bg-black paint-isolated fixed inset-0 z-50 flex flex-col xl:grid xl:grid-cols-12 xl:h-screen xl:w-full xl:overflow-hidden">
+    <div className="bg-bg-base paint-isolated fixed inset-0 z-50 flex flex-col xl:grid xl:grid-cols-12 xl:h-screen xl:w-full xl:overflow-hidden">
       <ChatTopBar
         threadId={threadId}
         title={title}

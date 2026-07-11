@@ -44,8 +44,8 @@ export function StatsWidget({ entries }: StatsWidgetProps) {
     const winRate = closed.length > 0 ? (winCount / closed.length) * 100 : 0;
     const avgR = closed.length > 0 ? totalR / closed.length : 0;
 
-    // Last 10 closed trades (oldest → newest) for the cumulative sparkline.
-    const sparkSource = closed.slice(0, 10).reverse();
+    // Last 10 closed trades (newest → oldest) for the cumulative sparkline.
+    const sparkSource = closed.slice(-10).reverse();
     let cumulative = 0;
     const sparkline = sparkSource.map((e) => {
       cumulative += e.rMultiple ?? 0;

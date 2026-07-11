@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/cn';
+import { getCsrfToken } from '@/lib/csrf';
 
 interface ParsedTrade {
   symbol: string;
@@ -81,9 +82,12 @@ export function ImportTrades({ onImported }: { onImported?: () => void }) {
     if (!parsed || parsed.length === 0) return;
     setImporting(true);
     try {
+      const csrf = getCsrfToken();
+      const headers: Record<string, string> = { 'content-type': 'application/json' };
+      if (csrf) headers['X-CSRF-Token'] = csrf;
       const res = await fetch('/api/journal/import', {
         method: 'POST',
-        headers: { 'content-type': 'application/json' },
+        headers,
         body: JSON.stringify({ trades: parsed }),
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -131,7 +135,7 @@ export function ImportTrades({ onImported }: { onImported?: () => void }) {
             {!parsed ? (
               <div className="flex flex-col gap-3">
                 <p className="text-sm text-fg-subtle">
-                  IconUpload a CSV file with columns:{' '}
+                  Upload a CSV file with columns:{' '}
                   <code className="text-xs text-fg">symbol, side, entry, date, exit, stop, target, size</code>
                 </p>
                 <label className="flex items-center justify-center gap-2 rounded-sm border border-dashed border-border p-6 text-sm text-fg-subtle hover:border-border hover:text-fg transition-colors cursor-pointer">

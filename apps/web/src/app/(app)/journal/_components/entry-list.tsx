@@ -179,7 +179,7 @@ export function EntryList({ entries, onClosed, onDeleted }: EntryListProps) {
             <IconSearch className="absolute left-3.5 top-3 size-3.5 text-fg-muted" />
             <input
               type="text"
-              placeholder="IconSearch notes, tags, symbol..."
+              placeholder="Search notes, tags, symbol..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="w-full pl-9 pr-4 py-2 text-xs rounded-sm bg-bg-elev-2/45 border border-border/40 focus:outline-none focus:border-border/70 transition-all text-fg"
@@ -627,13 +627,16 @@ function EntryRow({
                 ? ((entry.entry - entry.stop) / (entry.target - entry.stop)) * 100
                 : ((entry.stop - entry.entry) / (entry.stop - entry.target)) * 100;
               const width = entry.side === 'long'
-                ? Math.max(sliderPosition - entryPct, 0)
-                : Math.max(sliderPosition - entryPct, 0);
+                ? sliderPosition - entryPct
+                : entryPct - sliderPosition;
+              const shadeLeft = entry.side === 'long'
+                ? entryPct
+                : sliderPosition;
               return (
                 <div
                   style={{
-                    left: `${entryPct}%`,
-                    width: `${width}%`,
+                    left: `${Math.max(shadeLeft, 0)}%`,
+                    width: `${Math.abs(Math.max(width, 0))}%`,
                   }}
                   className="absolute h-full bg-bull/10 rounded-r-full"
                 />
@@ -646,7 +649,7 @@ function EntryRow({
             </span>
             <span className={cn('font-bold', outcomeColor)}>Live Price: {livePrice}</span>
             <span className={sliderPosition > 100 ? 'text-bull font-bold' : ''}>
-              {sliderPosition > 100 ? '✦ Beyond target' : 'IconTarget boundary'}
+              {sliderPosition > 100 ? '✦ Beyond target' : 'Target boundary'}
             </span>
           </div>
         </div>
@@ -679,7 +682,7 @@ function EntryRow({
               onClick={close}
               disabled={busy || !exit}
               className="flex-1"
-            >DeviceFloppy</Button>
+            >Save</Button>
             <Button
               type="button"
               size="md"
