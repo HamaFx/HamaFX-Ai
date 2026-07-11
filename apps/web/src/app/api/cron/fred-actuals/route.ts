@@ -32,6 +32,7 @@ import * as Sentry from '@sentry/nextjs';
 
 import { withCronAuth } from '@/lib/cron';
 import { getServerEnv } from '@/lib/env';
+import { createScopedLoggerWithContext } from '@/lib/logger';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -44,6 +45,7 @@ export const dynamic = 'force-dynamic';
 const LOOKBACK_DAYS = 7;
 
 export async function GET(req: Request): Promise<Response> {
+  const log = createScopedLoggerWithContext({ component: 'cron', job: 'fred-actuals' });
   return withCronAuth(req, async () => {
     const env = getServerEnv();
     if (!env.FRED_API_KEY) {
@@ -89,7 +91,7 @@ export async function GET(req: Request): Promise<Response> {
         errors.push({ id: ev.id, message });
         // STAB-04 / OBS-01: capture to Sentry.
         Sentry.captureException(err, { tags: { job: 'cron/fred-actuals', eventId: ev.id } });
-        console.error(`[cron fred-actuals] ${ev.id} failed: ${message}`);
+        log.errorContext(err, 'patchEventActual', { eventId: ev.id, message });
       }
     }
 

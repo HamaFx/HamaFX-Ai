@@ -26,12 +26,14 @@ import { upsertEvents } from '@hamafx/ai';
 import { fetchUpcomingEvents, ProviderError } from '@hamafx/data';
 
 import { withCronAuth } from '@/lib/cron';
+import { createScopedLoggerWithContext } from '@/lib/logger';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
 
 export async function GET(req: Request): Promise<Response> {
+  const log = createScopedLoggerWithContext({ component: 'cron', job: 'calendar' });
   return withCronAuth(req, async () => {
     try {
       const events = await fetchUpcomingEvents();
@@ -43,9 +45,11 @@ export async function GET(req: Request): Promise<Response> {
     } catch (err) {
       if (err instanceof ProviderError) {
         // Upstream blip — log once, skip this tick, return 200 with note.
-        console.warn(
-          `[cron/calendar] provider ${err.provider} skipped: ${err.code} ${err.message}`,
-        );
+        log.warn('provider skipped', {
+          provider: err.provider,
+          code: err.code,
+          message: err.message,
+        });
         return {
           processed: 0,
           note: `provider ${err.provider} unavailable (${err.code})`,

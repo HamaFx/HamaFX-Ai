@@ -174,7 +174,11 @@ export async function registerAction(prevState: unknown, formData: FormData) {
       tags: { component: 'auth-actions', action: 'register-verification-token' },
       extra: { email: normalizedEmail },
     });
-    console.error('[auth] Failed to create verification token:', err);
+    createScopedLoggerWithContext({ component: 'auth-actions', action: 'register-verification-token' }).errorContext(
+      err,
+      'createVerificationToken',
+      { email: normalizedEmail },
+    );
   }
 
   try {

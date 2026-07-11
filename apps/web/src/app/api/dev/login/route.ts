@@ -3,8 +3,10 @@ import { NextResponse } from 'next/server';
 import { signIn } from '@/auth';
 import { getDb, schema } from '@hamafx/db';
 import { eq } from 'drizzle-orm';
+import { createScopedLoggerWithContext } from '@/lib/logger';
 
 export async function GET() {
+  const log = createScopedLoggerWithContext({ component: 'dev', route: '/api/dev/login' });
   // Hard guard — only allow in development
   if (process.env.NODE_ENV !== 'development') {
     return new NextResponse('Not Found', { status: 404 });
@@ -34,13 +36,13 @@ export async function GET() {
         name: 'Dev User',
         hashedPassword,
       });
-      console.error('[dev-login] Created dev user in DB');
+      log.info('created dev user in DB');
     }
 
     await signIn('credentials', { email, password: devPassword, redirect: false });
-    console.error('[dev-login] signIn OK');
+    log.info('dev signIn OK');
   } catch (e: unknown) {
-    console.error('[dev-login] error:', e instanceof Error ? `${e.name}: ${e.message}` : String(e));
+    log.errorContext(e, 'devLogin', {});
   }
 
   return NextResponse.redirect(new URL('/chat', process.env.NEXTAUTH_URL || 'https://hamafx-ai.vercel.app'));

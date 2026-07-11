@@ -26,6 +26,7 @@ import { revalidatePath } from 'next/cache';
 import type { ByokPayload } from '@hamafx/shared/encryption';
 import { encryptByok, decryptByok } from '@hamafx/shared/encryption';
 import type { PROVIDER_IDS } from '@hamafx/shared/byok';
+import { createScopedLoggerWithContext } from '@/lib/logger';
 
 const symbolSchema = z.string().toUpperCase().regex(/^[A-Z0-9/]{1,10}$/);
 
@@ -142,14 +143,22 @@ export async function completeOnboardingAction(formData: FormData) {
           )
           .onConflictDoNothing();
       } catch (err) {
-        console.error('[onboarding] failed to seed watchlist', err);
+        createScopedLoggerWithContext({ component: 'onboarding', action: 'seed-watchlist' }).errorContext(
+          err,
+          'seedWatchlist',
+          { userId },
+        );
       }
     });
 
     revalidatePath('/');
     return { ok: true as const, success: true as const };
   } catch (err) {
-    console.error('[onboarding] completeOnboardingAction failed', err);
+    createScopedLoggerWithContext({ component: 'onboarding', action: 'complete-onboarding' }).errorContext(
+      err,
+      'completeOnboarding',
+      { userId },
+    );
     return {
       ok: false as const,
       error: err instanceof Error ? err.message : 'Unknown error',

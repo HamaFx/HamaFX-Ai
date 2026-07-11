@@ -36,6 +36,7 @@ import { fetchNews } from '@hamafx/data';
 import * as Sentry from '@sentry/nextjs';
 
 import { withCronAuth } from '@/lib/cron';
+import { createScopedLoggerWithContext, type CategorizedLogger } from '@/lib/logger';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -62,8 +63,9 @@ const PAGE_LIMIT = 50;
 const MAX_PAGES = 4;
 
 export async function GET(req: Request): Promise<Response> {
+  const log = createScopedLoggerWithContext({ component: 'cron', job: 'news' });
   return withCronAuth(req, async () => {
-    let publishedAfter = await highWaterMarkIso();
+    let publishedAfter = await highWaterMarkIso(log);
     let totalProcessed = 0;
     let totalInserted = 0;
     let totalSkipped = 0;
@@ -98,7 +100,7 @@ export async function GET(req: Request): Promise<Response> {
       const message = err instanceof Error ? err.message : String(err);
       // STAB-04 / OBS-01: capture to Sentry.
       Sentry.captureException(err, { tags: { job: 'cron/news' } });
-      console.error('[cron/news] fetch failed:', message);
+      log.errorContext(err, 'fetchNews', { message });
       throw new Error(`news fetch failed: ${message}`);
     }
   });
@@ -109,7 +111,7 @@ export async function GET(req: Request): Promise<Response> {
  * to a 6-hour lookback when the table is empty (fresh DB / first run
  * after a wipe). Clamped at 7 days in case of a stray future-dated row.
  */
-async function highWaterMarkIso(): Promise<string> {
+async function highWaterMarkIso(log: CategorizedLogger): Promise<string> {
   try {
     const ms = await latestArticleTimestampMs();
     if (ms !== null) {
@@ -117,7 +119,7 @@ async function highWaterMarkIso(): Promise<string> {
       return new Date(clamped).toISOString();
     }
   } catch (err) {
-    console.warn('[cron/news] high-water-mark probe failed; falling back to 6h', err);
+    log.warn('high-water-mark probe failed; falling back to 6h', { err: String(err) });
   }
   return new Date(Date.now() - FALLBACK_LOOKBACK_MS).toISOString();
 }

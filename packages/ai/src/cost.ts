@@ -246,6 +246,7 @@ export async function getProviderMonthlySpend(userId: string, providerId: string
     'openrouter',
     'xai',
     'deepseek',
+    'iamhc',
   ]);
   const providerIdFromModel = (modelId: string) => {
     const slash = modelId.indexOf('/');

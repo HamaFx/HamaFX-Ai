@@ -30,17 +30,48 @@ export const ERROR_CODES = [
 
 export type ErrorCode = (typeof ERROR_CODES)[number];
 
+export interface ErrorContext {
+  /** The operation that failed, e.g. 'fetch_candles', 'login', 'onboarding_complete' */
+  operation: string;
+  /** The module/feature where the error occurred */
+  module: string;
+  /** The user ID involved (if any) */
+  userId?: string;
+  /** The thread ID involved (if any) */
+  threadId?: string;
+  /** The tool that failed (if any) */
+  tool?: string;
+  /** The input that caused the error (redacted) */
+  input?: Record<string, unknown>;
+  /** Whether this error is retryable */
+  retryable?: boolean;
+  /** Suggested fix for AI agents */
+  suggestedFix?: string;
+  /** Related file path */
+  file?: string;
+  /** Related documentation link */
+  docs?: string;
+}
+
 export class AppError extends Error {
   readonly code: ErrorCode;
   readonly status: number;
   readonly details: unknown;
+  readonly context: ErrorContext | undefined;
 
-  constructor(code: ErrorCode, message: string, status: number, details?: unknown) {
+  constructor(
+    code: ErrorCode,
+    message: string,
+    status: number,
+    details?: unknown,
+    context?: ErrorContext,
+  ) {
     super(message);
     this.name = 'AppError';
     this.code = code;
     this.status = status;
     this.details = details;
+    this.context = context;
   }
 }
 

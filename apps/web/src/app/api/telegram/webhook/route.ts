@@ -24,6 +24,7 @@ import * as Sentry from '@sentry/nextjs';
 import { z } from 'zod';
 
 import { getServerEnv } from '@/lib/env';
+import { createScopedLoggerWithContext } from '@/lib/logger';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -111,10 +112,11 @@ export async function GET(): Promise<Response> {
 }
 
 export async function POST(req: Request): Promise<Response> {
+  const log = createScopedLoggerWithContext({ component: 'telegram', route: '/api/telegram/webhook' });
   const env = getServerEnv();
 
   if (process.env.NODE_ENV === 'production' && !env.TELEGRAM_SECRET_TOKEN) {
-    console.error('[telegram-webhook] TELEGRAM_SECRET_TOKEN is required in production');
+    log.error('TELEGRAM_SECRET_TOKEN is required in production');
     return new Response('Server misconfigured', { status: 500 });
   }
 
@@ -128,7 +130,7 @@ export async function POST(req: Request): Promise<Response> {
   try {
     update = TelegramUpdateSchema.parse(await req.json());
   } catch (err) {
-    console.error('[telegram-webhook] Invalid webhook payload', err);
+    log.errorContext(err, 'parseWebhookPayload', {});
     return new Response('Bad Request', { status: 400 });
   }
 
@@ -141,7 +143,7 @@ export async function POST(req: Request): Promise<Response> {
       tags: { component: 'telegram-webhook' },
       extra: { updateId: update.update_id },
     });
-    console.error('[telegram-webhook] Handler failed:', err);
+    log.errorContext(err, 'handleTelegramWebhook', { updateId: update.update_id });
     return new Response('Internal Server Error', { status: 500 });
   }
 }

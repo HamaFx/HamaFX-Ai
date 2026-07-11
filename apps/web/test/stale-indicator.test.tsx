@@ -40,9 +40,9 @@ describe('StaleIndicator', () => {
     expect(screen.getByText('refreshing')).toBeTruthy();
   });
 
-  it('renders with role="alert" and aria-live="assertive"', () => {
+  it('renders with role="status" and aria-live="polite"', () => {
     render(<StaleIndicator isFetching={true} />);
-    const el = screen.getByRole('alert');
+    const el = screen.getByRole('status');
     expect(el).toBeTruthy();
     expect(el.getAttribute('aria-live')).toBe('polite');
   });
@@ -56,7 +56,7 @@ describe('StaleIndicator', () => {
 
   it('applies additional className', () => {
     render(<StaleIndicator isFetching={true} className="extra-class" />);
-    const el = screen.getByRole('alert');
+    const el = screen.getByRole('status');
     expect(el.classList.contains('extra-class')).toBe(true);
   });
 });

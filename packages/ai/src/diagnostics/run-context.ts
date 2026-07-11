@@ -31,7 +31,10 @@
 import { AsyncLocalStorage } from 'node:async_hooks';
 import { randomUUID } from 'node:crypto';
 
+import { traceIdStorage } from '@hamafx/shared/logger';
+
 import { redactSecrets } from './redact';
+import { persistTrace, type PersistedTrace } from './trace-persistence';
 
 export interface DiagnosticStep {
   /** Step name, e.g. 'fetch_candles', 'run_technical_agent'. */
@@ -96,7 +99,45 @@ export function withDiagnostics<T>(
     steps: [],
     errors: [],
   };
-  return diagnosticStore.run(ctx, fn);
+
+  // Set traceId in AsyncLocalStorage so the logger auto-injects it into
+  // every log line inside this diagnostic scope.
+  return traceIdStorage.run(ctx.traceId, () =>
+    diagnosticStore.run(ctx, async () => {
+      try {
+        const result = await fn();
+        await maybePersistTrace(ctx);
+        return result;
+      } catch (err) {
+        recordError(err);
+        await maybePersistTrace(ctx, 'failed');
+        throw err;
+      }
+    }),
+  );
+}
+
+async function maybePersistTrace(
+  ctx: RunDiagnosticContext,
+  status: 'completed' | 'failed' = 'completed',
+): Promise<void> {
+  try {
+    const trace = exportDiagnosticContextInternal(ctx, status);
+    const persisted: PersistedTrace = {
+      traceId: String(trace.traceId ?? ctx.traceId),
+      userId: String(trace.userId ?? ctx.userId),
+      threadId: String(trace.threadId ?? ctx.threadId),
+      startedAt: Number(trace.startedAt ?? ctx.startedAt),
+      durationMs: Number(trace.durationMs ?? Date.now() - ctx.startedAt),
+      stepCount: Number(trace.stepCount ?? ctx.steps.length),
+      errorCount: Number(trace.errorCount ?? ctx.errors.length),
+      status,
+      trace,
+    };
+    await persistTrace(persisted);
+  } catch {
+    // Persistence failures must never block the chat turn.
+  }
 }
 
 /**
@@ -222,13 +263,22 @@ export function recordError(err: unknown): void {
 export function exportDiagnosticContext(): Record<string, unknown> | null {
   const ctx = diagnosticStore.getStore();
   if (!ctx) return null;
+  return exportDiagnosticContextInternal(ctx, 'completed');
+}
 
+function exportDiagnosticContextInternal(
+  ctx: RunDiagnosticContext,
+  status: 'completed' | 'failed' = 'completed',
+): Record<string, unknown> {
   return redactSecrets({
     traceId: ctx.traceId,
     userId: ctx.userId,
     threadId: ctx.threadId,
     startedAt: ctx.startedAt,
     durationMs: Date.now() - ctx.startedAt,
+    stepCount: ctx.steps.length,
+    errorCount: ctx.errors.length,
+    status,
     steps: ctx.steps,
     errors: ctx.errors,
   }) as Record<string, unknown>;

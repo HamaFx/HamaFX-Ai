@@ -69,8 +69,12 @@ describe('encryptByok / decryptByok', () => {
   it('returns null for tampered ciphertext', () => {
     const encrypted = encryptByok(payload);
     const parts = encrypted.split('.');
-    // Flip a bit in the ciphertext
-    const tampered = [parts[0], parts[1]!.slice(0, -1) + '0', parts[2]!].join('.');
+    // Flip the last hex digit of the ciphertext so it is always different
+    // from the original (avoids the 1/16 chance that replacing with '0'
+    // leaves the ciphertext unchanged).
+    const last = parts[1]!.slice(-1);
+    const flipped = last === '0' ? '1' : '0';
+    const tampered = [parts[0], parts[1]!.slice(0, -1) + flipped, parts[2]!].join('.');
     expect(decryptByok(tampered)).toBeNull();
   });
 

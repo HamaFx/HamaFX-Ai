@@ -111,6 +111,7 @@ export default async function UsagePage() {
     'openrouter',
     'xai',
     'deepseek',
+    'iamhc',
   ]);
 
   const canonicalizeProviderId = (prefix: string) => {

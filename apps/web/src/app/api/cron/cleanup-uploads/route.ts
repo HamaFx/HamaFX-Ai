@@ -27,6 +27,7 @@
 
 import { withCronAuth } from '@/lib/cron';
 import { getServerEnv } from '@/lib/env';
+import { createScopedLoggerWithContext } from '@/lib/logger';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -36,6 +37,7 @@ const BUCKET = 'chat-images';
 const RETENTION_DAYS = 7;
 
 export async function GET(req: Request): Promise<Response> {
+  const log = createScopedLoggerWithContext({ component: 'cron', job: 'cleanup-uploads' });
   return withCronAuth(req, async () => {
     const env = getServerEnv();
     if (!env.SUPABASE_URL || !env.SUPABASE_SERVICE_ROLE_KEY) {
@@ -66,7 +68,7 @@ export async function GET(req: Request): Promise<Response> {
         },
       );
       if (!listRes.ok) {
-        console.warn(`[cleanup-uploads] list ${prefix} failed: ${listRes.status}`);
+        log.warn('list failed', { prefix, status: listRes.status });
         errors += 1;
         continue;
       }
@@ -83,7 +85,7 @@ export async function GET(req: Request): Promise<Response> {
         },
       );
       if (!delRes.ok) {
-        console.warn(`[cleanup-uploads] delete ${prefix} failed: ${delRes.status}`);
+        log.warn('delete failed', { prefix, status: delRes.status });
         errors += 1;
         continue;
       }

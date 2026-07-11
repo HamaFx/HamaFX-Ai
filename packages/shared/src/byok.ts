@@ -32,6 +32,7 @@ export const PROVIDER_IDS = [
   'openrouter',
   'xai',
   'deepseek',
+  'iamhc',
 ] as const;
 export type ProviderId = (typeof PROVIDER_IDS)[number];
 
@@ -57,6 +58,7 @@ export interface ByokPayload {
   deepseek?: string;
   finnhub?: string;
   twelvedata?: string;
+  iamhc?: string;
 }
 
 /**

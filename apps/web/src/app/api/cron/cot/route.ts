@@ -29,6 +29,7 @@ import { SYMBOLS, type Symbol } from '@hamafx/shared';
 import * as Sentry from '@sentry/nextjs';
 
 import { withCronAuth } from '@/lib/cron';
+import { createScopedLoggerWithContext } from '@/lib/logger';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -37,6 +38,7 @@ export const dynamic = 'force-dynamic';
 const WEEKS = 4;
 
 export async function GET(req: Request): Promise<Response> {
+  const log = createScopedLoggerWithContext({ component: 'cron', job: 'cot' });
   return withCronAuth(req, async () => {
     let processed = 0;
     let upserted = 0;
@@ -72,7 +74,7 @@ export async function GET(req: Request): Promise<Response> {
         errors.push({ symbol, message });
         // STAB-04 / OBS-01: capture to Sentry.
         Sentry.captureException(err, { tags: { job: 'cron/cot', symbol } });
-        console.error(`[cron cot] ${symbol} failed: ${message}`);
+        log.errorContext(err, 'fetchCot', { symbol, message });
       }
     }
 

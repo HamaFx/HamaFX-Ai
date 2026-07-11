@@ -39,6 +39,7 @@ import { getActiveUserIds } from '@hamafx/db';
 import * as Sentry from '@sentry/nextjs';
 
 import { withCronAuth } from '@/lib/cron';
+import { createScopedLoggerWithContext } from '@/lib/logger';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -47,6 +48,7 @@ const PRE_OFFSET_MS = 30 * 60 * 1000;
 const WINDOW_MS = 4 * 60 * 1000;
 
 export async function GET(req: Request): Promise<Response> {
+  const log = createScopedLoggerWithContext({ component: 'cron', job: 'briefings' });
   return withCronAuth(req, async () => {
     const now = Date.now();
 
@@ -81,7 +83,7 @@ export async function GET(req: Request): Promise<Response> {
           Sentry.captureException(err, {
             tags: { job: 'cron/briefings', phase: 'pre', eventId: c.id, userId },
           });
-          console.error(`[cron briefings] pre ${c.id} for user ${userId} failed`, err);
+          log.errorContext(err, 'emitPreEvent', { eventId: c.id, userId });
         }
       }
 
@@ -94,7 +96,7 @@ export async function GET(req: Request): Promise<Response> {
           Sentry.captureException(err, {
             tags: { job: 'cron/briefings', phase: 'post', eventId: c.id, userId },
           });
-          console.error(`[cron briefings] post ${c.id} for user ${userId} failed`, err);
+          log.errorContext(err, 'emitPostEvent', { eventId: c.id, userId });
         }
       }
     }

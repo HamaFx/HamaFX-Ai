@@ -36,6 +36,7 @@ import { SYMBOLS } from '@hamafx/shared';
 import * as Sentry from '@sentry/nextjs';
 
 import { withCronAuth } from '@/lib/cron';
+import { createScopedLoggerWithContext } from '@/lib/logger';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -44,6 +45,7 @@ const SOURCE_TF = '1h' as const;
 const SOURCE_COUNT = 240; // ~10 days of 1H bars; plenty for ATR14 + PDH/PDL.
 
 export async function GET(req: Request): Promise<Response> {
+  const log = createScopedLoggerWithContext({ component: 'cron', job: 'snapshots' });
   return withCronAuth(req, async () => {
     const asOf = previousUtcMidnight();
     let processed = 0;
@@ -62,7 +64,7 @@ export async function GET(req: Request): Promise<Response> {
         Sentry.captureException(err, {
           tags: { job: 'cron/snapshots', symbol },
         });
-        console.error(`[cron snapshots] ${symbol} failed: ${message}`);
+        log.errorContext(err, 'computeDailySnapshot', { symbol, message });
       }
     }
 

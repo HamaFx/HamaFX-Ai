@@ -29,7 +29,7 @@
 //     a footer "Sign out" action.
 //   - User identity display + nav item badges.
 
-import { IconBell,  IconBook,  IconCalendar,  IconSettings,  IconLayoutDashboard,  IconChartLine,  IconLogout,  IconMessageCircle,  IconNews,  IconTarget } from '@tabler/icons-react';
+import { IconBell,  IconBook,  IconCalendar,  IconSettings,  IconLayoutDashboard,  IconChartLine,  IconLogout,  IconMessageCircle,  IconNews,  IconTarget,  IconShield } from '@tabler/icons-react';
 import { Link } from 'next-view-transitions';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useMemo } from 'react';
@@ -91,7 +91,11 @@ const SECONDARY: readonly NavItem[] = [
   { href: '/settings', label: 'Settings',    icon: IconSettings, description: 'Notifications, usage' },
 ];
 
-export function NavDrawer({ userName, userEmail, userId: _userId }: { userName?: string; userEmail?: string; userId?: string }) {
+const ADMIN: readonly NavItem[] = [
+  { href: '/admin', label: 'Admin', icon: IconShield, description: 'Debug & system' },
+];
+
+export function NavDrawer({ userName, userEmail, userId: _userId, isAdmin }: { userName?: string; userEmail?: string; userId?: string; isAdmin?: boolean }) {
   const { open, setOpen } = useNavDrawer();
   const pathname = usePathname();
   const router = useRouter();
@@ -187,6 +191,14 @@ export function NavDrawer({ userName, userEmail, userId: _userId }: { userName?:
                 <NavLink key={item.href} item={item} active={isActive(item)} />
               ))}
             </Section>
+
+            {isAdmin ? (
+              <Section label="Administration">
+                {ADMIN.map((item) => (
+                  <NavLink key={item.href} item={item} active={isActive(item)} />
+                ))}
+              </Section>
+            ) : null}
           </nav>
 
           {/* Footer */}

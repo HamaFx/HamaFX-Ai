@@ -133,6 +133,7 @@ const KNOWN_BYOK_PROVIDERS = new Set([
   'openrouter',
   'xai',
   'deepseek',
+  'iamhc',
 ]);
 
 /**

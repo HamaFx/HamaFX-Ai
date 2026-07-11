@@ -232,6 +232,113 @@ Playwright config: `apps/web/playwright.config.ts`. Traces saved on first retry.
 3. **New provider**: Test map/transform functions. Test empty response handling. Test error handling.
 4. **New DB schema**: Test that migrations apply cleanly. Test CRUD operations using `withIsolatedTx`.
 5. **New worker job**: Test the run function. Test idempotency. Test abort signal handling.
+6. **New admin route**: Mock `getAdminUser()` and test 200/401/403 responses. Use `fetchCsrf` for POSTs.
+7. **New logging/diagnostics feature**: Test that log lines include `category`, structured errors include `error.name/code/stack`, and diagnostic traces are persisted.
+
+## Admin API Testing
+
+Admin routes live under `/api/admin/*` and are gated by `withAdminAuth()`. When testing them:
+
+1. Mock `getAdminUser()` so it returns a valid admin.
+2. Test both the happy path and the 403/401 rejection paths.
+3. Use `fetchCsrf` for POST requests — admin routes require CSRF tokens.
+
+Example:
+
+```typescript
+import { describe, it, expect, vi } from 'vitest';
+import { GET } from '../app/api/admin/users/route';
+import { fetchCsrf } from '@/lib/csrf';
+import * as adminAuth from '@/lib/admin-auth';
+
+vi.mock('@/lib/admin-auth', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/admin-auth')>();
+  return {
+    ...actual,
+    getAdminUser: vi.fn(() => Promise.resolve({
+      admin: { userId: 'admin-123', email: 'admin@example.com', name: 'Admin' },
+      reason: 'authenticated',
+    })),
+  };
+});
+
+beforeEach(() => {
+  vi.clearAllMocks();
+});
+
+describe('GET /api/admin/users', () => {
+  it('returns a paginated user list for admins', async () => {
+    const res = await GET(new Request('http://localhost/api/admin/users'));
+    expect(res.status).toBe(200);
+    const json = await res.json();
+    expect(json).toHaveProperty('users');
+    expect(json).toHaveProperty('total');
+  });
+
+  it('returns 401 when unauthenticated', async () => {
+    vi.mocked(adminAuth.getAdminUser).mockResolvedValueOnce({
+      admin: null,
+      reason: 'unauthenticated',
+    });
+    const res = await GET(new Request('http://localhost/api/admin/users'));
+    expect(res.status).toBe(401);
+  });
+
+  it('returns 403 for non-admin users', async () => {
+    vi.mocked(adminAuth.getAdminUser).mockResolvedValueOnce({
+      admin: null,
+      reason: 'forbidden',
+    });
+    const res = await GET(new Request('http://localhost/api/admin/users'));
+    expect(res.status).toBe(403);
+  });
+});
+
+describe('POST /api/admin/onboarding/reset', () => {
+  it('resets onboarding for admins', async () => {
+    const res = await fetchCsrf('/api/admin/onboarding/reset', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ mode: 'soft' }),
+    });
+    expect(res.status).toBe(200);
+    const json = await res.json();
+    expect(json.ok).toBe(true);
+    expect(json.reset).toBe(true);
+  });
+});
+```
+
+## Logging & Diagnostics Testing
+
+The shared logger in `packages/shared/src/logger.ts` and diagnostic trace persistence in `packages/ai/src/diagnostics/trace-persistence.ts` should be tested for:
+
+- `createCategorizedLogger()` adds `category` to every log line.
+- `logErrorContext()` enriches errors with `error.name`, `error.message`, `error.code`, `error.stack`, `file`, `line`, and `traceId`.
+- `logForAgent()` emits `agentLog: true`.
+- Diagnostic traces are persisted to `diagnostic_traces` after `withDiagnostics()` completes.
+- `DEBUG_TRACE_PATH` writes trace JSON files when set.
+- Trace persistence failures do not block the chat turn.
+
+Example:
+
+```typescript
+import { createCategorizedLogger, logErrorContext } from '@hamafx/shared';
+
+describe('createCategorizedLogger', () => {
+  it('adds category to log lines', () => {
+    const log = createCategorizedLogger('ai');
+    // Use a spy or pino destination to assert the emitted object has category: 'ai'
+  });
+});
+
+describe('logErrorContext', () => {
+  it('includes structured error info', () => {
+    const err = new Error('boom');
+    // Assert log output contains error.name, error.message, etc.
+  });
+});
+```
 
 ## Best Practices
 

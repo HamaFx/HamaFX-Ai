@@ -18,6 +18,7 @@ import { createCipheriv, randomBytes } from 'node:crypto';
 import { getDb, schema } from '@hamafx/db';
 import { eq } from 'drizzle-orm';
 import bcrypt from 'bcryptjs';
+import type { Page } from '@playwright/test';
 
 /**
  * Encrypt a dummy BYOK payload for the test user so the chat page
@@ -46,7 +47,7 @@ function encryptDummyByokKey(): string | null {
   }
 }
 
-export async function ensureTestUser(email = 'test@example.com', password = 'password123') {
+export async function ensureTestUser(email = 'test@example.com', password = 'password123', role: 'user' | 'admin' = 'user') {
   const db = getDb();
   
   const hashedPassword = await bcrypt.hash(password, 10);
@@ -57,7 +58,7 @@ export async function ensureTestUser(email = 'test@example.com', password = 'pas
     email,
     name: 'Test User',
     hashedPassword,
-    role: 'user',
+    role,
   }).onConflictDoUpdate({
     target: schema.users.email,
     set: { hashedPassword }
@@ -85,4 +86,16 @@ export async function ensureTestUser(email = 'test@example.com', password = 'pas
   });
 
   return user;
+}
+
+/**
+ * Log in through the UI as the given user.
+ * Callers should ensure the user exists first with ensureTestUser.
+ */
+export async function loginAs(page: Page, email: string, password: string) {
+  await page.goto('/login');
+  await page.getByLabel('Email').fill(email);
+  await page.getByLabel('Password').fill(password);
+  await page.getByRole('button', { name: /sign in/i }).click();
+  await page.waitForURL(/.*\/chat.*/, { timeout: 30_000 });
 }

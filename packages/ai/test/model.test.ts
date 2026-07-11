@@ -14,6 +14,7 @@ vi.mock('@hamafx/shared/encryption', () => ({
     'openrouter',
     'xai',
     'deepseek',
+    'iamhc',
   ],
   decryptByok: () => byokPayload,
   encryptByok: () => '',

@@ -30,6 +30,7 @@ import { getCandlesWithMeta, getPriceWithMeta } from '@hamafx/data';
 import { SYMBOLS } from '@hamafx/shared';
 
 import { withCronAuth } from '@/lib/cron';
+import { createScopedLoggerWithContext } from '@/lib/logger';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -49,6 +50,7 @@ const SLOW_TIMEFRAMES_EVERY_10_MIN: Array<'4h'> = ['4h'];
 const STAGGER_MS = 1500;
 
 export async function GET(req: Request): Promise<Response> {
+  const log = createScopedLoggerWithContext({ component: 'cron', job: 'warm-cache' });
   return withCronAuth(req, async () => {
     const errors: Array<{ key: string; message: string }> = [];
     let processed = 0;
@@ -62,7 +64,7 @@ export async function GET(req: Request): Promise<Response> {
         } catch (err) {
           const message = err instanceof Error ? err.message : String(err);
           errors.push({ key: `price:${s}`, message });
-          console.warn(`[warm-cache] price:${s} failed: ${message}`);
+          log.warn('price warm failed', { symbol: s, message });
         }
       }),
     );
@@ -86,7 +88,7 @@ export async function GET(req: Request): Promise<Response> {
         } catch (err) {
           const message = err instanceof Error ? err.message : String(err);
           errors.push({ key: `candles:${symbol}:${tf}`, message });
-          console.warn(`[warm-cache] candles:${symbol}:${tf} failed: ${message}`);
+          log.warn('candles warm failed', { symbol, tf, message });
         }
         await new Promise((r) => setTimeout(r, STAGGER_MS));
       }

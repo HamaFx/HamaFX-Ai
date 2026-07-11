@@ -931,6 +931,90 @@ const DEEPSEEK: ByokProviderSpec = {
   },
 };
 
+const IAMHC: ByokProviderSpec = {
+  id: 'iamhc',
+  displayName: 'IAMHC API',
+  familyName: 'Aggregate',
+  keyHint: 'sk-…',
+  description: 'IAMHC — aggregated API proxy with 25+ models across OpenAI, Anthropic, Gemini, and more.',
+  pricingTier: 'low',
+  defaultModels: {
+    fundamental: 'DeepSeek-V4-Pro',
+    technical: 'DeepSeek-V4-Flash',
+    summary: 'Qwen3.6-35B-A3B',
+    vision: 'Qwen3.5-397B-A17B',
+    embedding: null,
+  },
+  bestFor: 'Multi-model proxy',
+  supports: { vision: true, embedding: false },
+  models: [
+    {
+      modelId: 'auto',
+      label: 'Auto (routed)',
+      description: 'Smart routing across all models.',
+      tier: 'flagship',
+      capabilities: { tools: true, jsonMode: true, streaming: true },
+    },
+    {
+      modelId: 'DeepSeek-V4-Pro',
+      label: 'DeepSeek V4 Pro',
+      description: 'Best reasoning model via proxy.',
+      tier: 'flagship',
+      capabilities: { tools: true, jsonMode: true, streaming: true },
+    },
+    {
+      modelId: 'DeepSeek-V4-Flash',
+      label: 'DeepSeek V4 Flash',
+      description: 'Fast balanced model.',
+      tier: 'pro',
+      capabilities: { tools: true, jsonMode: true, streaming: true },
+    },
+    {
+      modelId: 'Qwen3.5-397B-A17B',
+      label: 'Qwen 3.5 397B (MoE)',
+      description: 'Strong reasoning, vision-capable.',
+      tier: 'flagship',
+      capabilities: { vision: true, tools: true, jsonMode: true, streaming: true },
+    },
+    {
+      modelId: 'Qwen3.6-35B-A3B',
+      label: 'Qwen 3.6 35B (MoE)',
+      description: 'Fast light reasoning.',
+      tier: 'lite',
+      capabilities: { tools: true, jsonMode: true, streaming: true },
+    },
+    {
+      modelId: 'Kimi-K2.6',
+      label: 'Kimi K2.6',
+      description: 'Long context reasoning.',
+      tier: 'pro',
+      capabilities: { tools: true, jsonMode: true, streaming: true },
+    },
+    {
+      modelId: 'MiniMax-M3',
+      label: 'MiniMax M3',
+      description: 'General purpose model.',
+      tier: 'pro',
+      capabilities: { tools: true, jsonMode: true, streaming: true },
+    },
+    {
+      modelId: 'glm-4.7',
+      label: 'GLM 4.7',
+      description: 'ChatGLM series, Anthropic-compatible.',
+      tier: 'pro',
+      capabilities: { tools: true, jsonMode: true, streaming: true },
+    },
+  ],
+  factory: (apiKey) => {
+    const provider = createOpenAICompatible({
+      name: 'iamhc',
+      apiKey,
+      baseURL: 'https://api.iamhc.cn/v1',
+    });
+    return (modelId) => provider(modelId);
+  },
+};
+
 export const BYOK_PROVIDERS: Record<ProviderId, ByokProviderSpec> = {
   google: GOOGLE,
   vertex: VERTEX,
@@ -941,6 +1025,7 @@ export const BYOK_PROVIDERS: Record<ProviderId, ByokProviderSpec> = {
   openrouter: OPENROUTER,
   xai: XAI,
   deepseek: DEEPSEEK,
+  iamhc: IAMHC,
 };
 
 /** Ordered list of all providers — handy for iterating in UI. */

@@ -188,6 +188,7 @@ const PROVIDER_PRIORITY: ProviderId[] = [
   'mistral',
   'groq',
   'deepseek',
+  'iamhc',
 ];
 
 /**

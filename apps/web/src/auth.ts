@@ -42,6 +42,9 @@ import { getDb, schema } from '@hamafx/db';
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const _nextAuth = NextAuth as any;
 
+const IMPERSONATION_ENABLED =
+  process.env.NODE_ENV !== 'production' && process.env.ENABLE_IMPERSONATION === 'true';
+
 export const { handlers, auth, signIn, signOut } = _nextAuth({
   ...authConfig,
   providers: [
@@ -111,6 +114,43 @@ export const { handlers, auth, signIn, signOut } = _nextAuth({
         }
       },
     }),
+    // Dev-only impersonation provider. Only registered when ENABLE_IMPERSONATION
+    // is set and not in production. This provider bypasses password checks
+    // so an admin can sign in as another user for debugging.
+    ...(IMPERSONATION_ENABLED
+      ? [
+          Credentials({
+            id: 'impersonate',
+            name: 'Impersonation',
+            credentials: {
+              userId: { label: 'User ID', type: 'text' },
+            },
+            async authorize(credentials) {
+              const userId = typeof credentials?.userId === 'string' ? credentials.userId : '';
+              if (!userId) return null;
+
+              const db = getDb();
+              const [user] = await db
+                .select()
+                .from(schema.users)
+                .where(eq(schema.users.id, userId))
+                .limit(1);
+
+              if (!user) return null;
+
+              return {
+                id: user.id,
+                email: user.email,
+                name: user.name,
+                image: user.image,
+                tokenVersion: user.tokenVersion,
+                sessionId: '',
+                rememberMe: false,
+              };
+            },
+          }),
+        ]
+      : []),
   ],
   callbacks: {
     ...authConfig.callbacks,

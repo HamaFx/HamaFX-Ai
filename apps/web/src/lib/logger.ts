@@ -24,11 +24,9 @@
 //   import { createRequestLogger } from '@/lib/logger';
 //   const log = createRequestLogger(req, user);
 //   log.info('chat started', { threadId });
-//   log.error('agent failed', { err: String(err) });
+//   log.errorContext(err, 'agent failed', { threadId });
 
-import { logger as rootLogger, createScopedLogger } from '@hamafx/shared';
-
-type PinoLogger = ReturnType<typeof createScopedLogger>;
+import { createCategorizedLogger, type CategorizedLogger } from '@hamafx/shared/logger';
 
 import { REQUEST_ID_HEADER } from './request-id';
 import type { RequestUser } from './api';
@@ -38,7 +36,7 @@ import type { RequestUser } from './api';
  * and `service` on every log line. The requestId is read from the
  * `X-Request-Id` header stamped by middleware.
  */
-export function createRequestLogger(req?: Request, user?: RequestUser | null): PinoLogger {
+export function createRequestLogger(req?: Request, user?: RequestUser | null): CategorizedLogger {
   const context: Record<string, unknown> = { service: 'web' };
 
   if (req) {
@@ -57,16 +55,16 @@ export function createRequestLogger(req?: Request, user?: RequestUser | null): P
     context['userId'] = user.userId;
   }
 
-  return createScopedLogger(context);
+  return createCategorizedLogger('api', context);
 }
 
 /**
  * Create a scoped logger for non-request contexts (cron jobs, background
  * tasks, server actions without a Request object).
  */
-export function createScopedLoggerWithContext(context: Record<string, unknown>): PinoLogger {
-  return createScopedLogger({ service: 'web', ...context });
+export function createScopedLoggerWithContext(context: Record<string, unknown>): CategorizedLogger {
+  return createCategorizedLogger('api', { service: 'web', ...context });
 }
 
 // Re-export the root logger for cases where a scoped child is not needed
-export { rootLogger };
+export { createCategorizedLogger, type CategorizedLogger };

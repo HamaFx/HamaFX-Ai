@@ -212,23 +212,24 @@ describe('parseServerEnv — AI transport variants', () => {
     expect(env.GOOGLE_GENERATIVE_AI_API_KEY).toBe('test-key');
   });
 
-  it('rejects when no AI transport is configured', () => {
-    expect(() =>
-      parseServerEnv({
-        DATABASE_URL: 'postgres://user:pass@localhost:5432/db',
-        NODE_ENV: 'test',
-      }),
-    ).toThrow(/AI_GATEWAY_API_KEY/);
+  it('accepts when no AI transport is configured (BYOK mode)', () => {
+    const env = parseServerEnv({
+      DATABASE_URL: 'postgres://user:pass@localhost:5432/db',
+      NODE_ENV: 'test',
+    });
+    expect(env.AI_GATEWAY_API_KEY).toBeUndefined();
+    expect(env.GOOGLE_GENERATIVE_AI_API_KEY).toBeUndefined();
+    expect(env.GOOGLE_VERTEX_PROJECT).toBeUndefined();
   });
 
-  it('rejects Vertex AI when location is missing', () => {
-    expect(() =>
-      parseServerEnv({
-        DATABASE_URL: 'postgres://user:pass@localhost:5432/db',
-        GOOGLE_VERTEX_PROJECT: 'my-project',
-        NODE_ENV: 'test',
-      }),
-    ).toThrow(/AI_GATEWAY_API_KEY/);
+  it('accepts Vertex AI when location is missing', () => {
+    const env = parseServerEnv({
+      DATABASE_URL: 'postgres://user:pass@localhost:5432/db',
+      GOOGLE_VERTEX_PROJECT: 'my-project',
+      NODE_ENV: 'test',
+    });
+    expect(env.GOOGLE_VERTEX_PROJECT).toBe('my-project');
+    expect(env.GOOGLE_VERTEX_LOCATION).toBeUndefined();
   });
 });
 

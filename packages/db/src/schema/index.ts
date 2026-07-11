@@ -49,6 +49,10 @@ export * from './provider-tests';
 export * from './symbol-catalog';
 // STAB-01 — cron idempotency guard
 export * from './cron-runs';
+// DEBUG — diagnostic trace persistence
+export * from './diagnostic-traces';
+// Admin — runtime feature flags
+export * from './feature-flags';
 // F1 — Decision Signal Tracking + Outcome Evaluation
 export * from './decision-signals';
 // F2 — Portfolio Management

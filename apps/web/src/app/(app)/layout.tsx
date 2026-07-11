@@ -19,6 +19,7 @@ import { cache } from 'react';
 import { eq } from 'drizzle-orm';
 import { auth } from '@/auth';
 import { getDb, schema } from '@hamafx/db';
+import { checkIsAdmin } from '@/lib/admin-check';
 
 const getOnboardingStatus = cache(async (userId: string) => {
   const db = getDb();
@@ -55,6 +56,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   let userName: string | undefined;
   let userEmail: string | undefined;
   let userId: string | undefined;
+  let isAdmin = false;
 
   if (process.env.AUTH_MODE !== 'legacy') {
     const session = await auth();
@@ -66,6 +68,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       if (!onboardingCompleted) {
         redirect('/onboarding');
       }
+      isAdmin = await checkIsAdmin();
     }
   }
 
@@ -88,7 +91,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             <InstallNudge />
             {children}
           </main>
-          <NavDrawer {...(userName !== undefined ? { userName } : {})} {...(userEmail !== undefined ? { userEmail } : {})} {...(userId !== undefined ? { userId } : {})} />
+          <NavDrawer {...(userName !== undefined ? { userName } : {})} {...(userEmail !== undefined ? { userEmail } : {})} {...(userId !== undefined ? { userId } : {})} isAdmin={isAdmin} />
           <OfflineBanner />
           {/* Phase B — UX_UPGRADE_PLAN.md item 11. Global ⌘K / Ctrl-K
               launcher. Self-contained: keyboard listener, vaul drawer,

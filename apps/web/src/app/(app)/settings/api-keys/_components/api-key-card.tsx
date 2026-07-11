@@ -114,6 +114,12 @@ const SETUP_INSTRUCTIONS: Record<string, {
     rateLimits: 'Standard limits are very generous.',
     howToGet: 'Create a DeepSeek account, go to API Keys in the developer dashboard, and create a key.',
   },
+  iamhc: {
+    dashboardUrl: 'https://api.iamhc.cn/',
+    freeTier: 'Paid proxy service — aggregated pricing across 25+ models.',
+    rateLimits: 'Varies by plan. Contact provider for details.',
+    howToGet: 'Visit api.iamhc.cn, register an account, and generate an API key from your dashboard.',
+  },
 };
 
 function ProviderLogo({ id }: { id: string }) {
@@ -150,6 +156,13 @@ function ProviderLogo({ id }: { id: string }) {
       return (
         <svg viewBox="0 0 24 24" className={baseClass} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <path d="M9.5 20H4V4h5.5l2.5 4 2.5-4H20v16h-5.5L12 16l-2.5 4z" />
+        </svg>
+      );
+    case 'iamhc':
+      return (
+        <svg viewBox="0 0 24 24" className={baseClass} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="12" cy="12" r="10" />
+          <path d="M12 6v12M6 12h12" />
         </svg>
       );
     default:

@@ -16,13 +16,15 @@
 
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
-import {IconKey, IconBell, IconRobot, IconDatabase, IconInfoCircle} from '@tabler/icons-react';
+import {IconKey, IconBell, IconRobot, IconDatabase, IconInfoCircle, IconShield} from '@tabler/icons-react';
 
 import { auth } from '@/auth';
 import { getDb, schema } from '@hamafx/db';
 import { eq, asc } from 'drizzle-orm';
 import type { NoiseConfig } from '@hamafx/shared';
+import { checkIsAdmin } from '@/lib/admin-check';
 import { AboutCard } from './_components/about-card';
+import { OnboardingResetCard } from './_components/onboarding-reset-card';
 import { AgentCard } from './_components/agent-card';
 import { AIPrefsCard } from './_components/ai-prefs-card';
 import { AppearanceCard } from './_components/appearance-card';
@@ -88,6 +90,8 @@ export default async function SettingsPage() {
   const noiseConfig = settings?.notificationPrefs && typeof settings.notificationPrefs === 'object'
     ? (settings.notificationPrefs as Record<string, unknown>).noiseConfig as NoiseConfig | undefined
     : undefined;
+
+  const isAdmin = await checkIsAdmin();
   twoFactorEnabled = userRow?.twoFactorEnabled ?? false;
   if (settings) {
     aiPrefs = { customInstructions: settings.customInstructions ?? null };
@@ -134,6 +138,12 @@ export default async function SettingsPage() {
       <SettingsSection icon={<IconInfoCircle className="size-4" />} title="About" description="App info and system status">
         <AboutCard />
       </SettingsSection>
+
+      {isAdmin ? (
+        <SettingsSection icon={<IconShield className="size-4" />} title="Admin" description="Debug and testing tools">
+          <OnboardingResetCard />
+        </SettingsSection>
+      ) : null}
 
       <AppearanceCard initialTheme={uiPrefs.theme} initialLocale={locale} />
     </div>

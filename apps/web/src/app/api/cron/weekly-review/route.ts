@@ -28,11 +28,13 @@ import { getActiveUserIds } from '@hamafx/db';
 import * as Sentry from '@sentry/nextjs';
 
 import { withCronAuth } from '@/lib/cron';
+import { createScopedLoggerWithContext } from '@/lib/logger';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 export async function GET(req: Request): Promise<Response> {
+  const log = createScopedLoggerWithContext({ component: 'cron', job: 'weekly-review' });
   return withCronAuth(req, async () => {
     // Phase 3 §3.11 — iterate over real active users instead of the
     // hardcoded '__system__' fallback. In self-host / legacy mode this
@@ -49,7 +51,7 @@ export async function GET(req: Request): Promise<Response> {
       } catch (err) {
         // STAB-04 / OBS-01: capture to Sentry.
         Sentry.captureException(err, { tags: { job: 'cron/weekly-review', userId } });
-        console.error(`[cron weekly-review] for user ${userId} failed`, err);
+        log.errorContext(err, 'emitWeeklyReview', { userId });
         reasons.push(`[${userId}]: error`);
       }
     }

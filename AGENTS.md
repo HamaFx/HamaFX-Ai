@@ -182,6 +182,48 @@ For fundamental/technical turns: cheap model generates JSON plan, persisted as s
 - **Tool pattern**: `inputSchema → module augmentation → execute`. Don't break the tool registry.
 - **AsyncLocalStorage**: tools use `getToolContext()`. Don't use global state.
 
+## Admin Debugging & Logging
+
+### Admin Dashboard
+
+A dedicated `/admin` page is available for admin users. It provides a centralized debugging interface for:
+
+- **Onboarding Control** — reset and replay the onboarding wizard (soft or full reset)
+- **Cron History** — view recent cron job runs
+- **Tool Telemetry** — inspect recent AI tool calls
+- **Diagnostic Traces** — browse persisted chat diagnostic traces
+- **User Management** — list users and their onboarding status
+- **Feature Flags** — toggle runtime feature flags
+- **Log Stream** — stream logs in real-time (dev only)
+
+An **Onboarding Reset** card is also available in `/settings` for quick access.
+
+Admin access is determined by `apps/web/src/lib/admin-auth.ts`:
+- A user with `role = 'admin'` is always an admin.
+- In single-user deployments (no users with `role = 'admin'`), the sole authenticated user is treated as admin for self-hosting convenience.
+
+### Logging Upgrade
+
+The project uses a single pino logger from `packages/shared/src/logger.ts` across both web and worker:
+
+- **Categories** — every log line carries a `category` field (e.g., `auth`, `db`, `ai`, `cron`, `admin`)
+- **Trace correlation** — `traceIdStorage` injects `traceId` automatically inside diagnostic scopes
+- **Structured errors** — `logErrorContext()` enriches error logs with code, stack, file, line, cause, and error-pattern metadata
+- **AI-agent-friendly logs** — `logForAgent()` produces logs with `agentLog: true` for easy filtering
+- **Error patterns** — `packages/shared/src/error-patterns.ts` catalogs known failure modes with suggested fixes
+- **Bug reports** — `packages/shared/src/bug-report.ts` generates redacted, AI-agent-friendly bug reports
+- **Diagnostic trace persistence** — traces are saved to `diagnostic_traces` and optionally to `DEBUG_TRACE_PATH`
+- **Worker migration** — `apps/worker/src/log.ts` now delegates to the shared pino logger
+
+### Useful Admin/Debug Env Vars
+
+| Variable | Purpose |
+|----------|---------|
+| `LOG_LEVEL` | `trace`, `debug`, `info`, `warn`, `error` |
+| `DEBUG_TRACE_PATH` | Optional directory to write diagnostic trace JSON files |
+| `ENABLE_LOG_STREAM` | Set to `true` in dev to enable `/api/admin/logs/stream` |
+| `ENABLE_IMPERSONATION` | Set to `true` in dev to enable user impersonation |
+
 ## Documentation Index
 
 | Doc | Description |

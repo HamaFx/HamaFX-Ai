@@ -99,6 +99,9 @@ export * from './billing';
 // Errors & Logging
 export * from './errors';
 export * from './logger';
+export { logStreamHub } from './log-stream';
+export * from './error-patterns';
+export * from './bug-report';
 // BYOK encryption is server-only (uses node:crypto) — import directly
 // from '@hamafx/shared/encryption' instead. Re-exporting it here would
 // pull node:crypto into any client component that imports the barrel.
