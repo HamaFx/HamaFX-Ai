@@ -12,15 +12,15 @@
 
 ### Phase 1 (P0 Critical): ✅ COMPLETE — 24/24 fixes
 ### Phase 2 (P1 High): 🟡 ~84 of 99 items complete
-### Phase 3 (P2): 🟡 ~48 of 66 items complete (~73%)
+### Phase 3 (P2): 🟡 ~51 of 66 items complete (~77%)
 
-**Completed this session (batches 1-4):** CC-7 shared datetime.ts, CC-10 _shared.tsx, 3.1.7 hardcoded RGB fix, 3.1.10 refetchIntervalFor dedup, 3.2.2-3.2.5 loading states, 3.3.2 price-tag IntersectionObserver, 3.3.4 chart autoSize, 3.4.1 BookmarksProvider, 3.4.10 heatmap today, 3.4.12 notes max length, 3.6.1-3.6.5 export/security.
+**Completed this session (batches 1-5):** CC-7 shared datetime.ts, CC-10 _shared.tsx, 3.1.7 hardcoded RGB fix, 3.1.10 refetchIntervalFor dedup, 3.2.2-3.2.5 loading states, 3.3.2 price-tag IntersectionObserver, 3.3.4 chart autoSize, 3.4.1 BookmarksProvider, 3.4.3 alert button position, 3.4.10 heatmap today, 3.4.12 notes max length, 3.4.14 signal feedback (verified), 3.4.15-3.4.16 dual persistence fix, 3.6.1-3.6.5 export/security.
 
-**Remaining (~18 items):** 3.1 design drift (~10), 3.3 performance (~3 — news virtual, admin RQ, time-provider), 3.4 UX (~4), 3.5 a11y (~1).
+**Remaining (~15 items):** 3.1 design drift (~10), 3.3 performance (~3 — news virtual, admin RQ, time-provider), 3.4 UX (~1), 3.5 a11y (~1).
 ### Phase 4 (P3): 🟡 ~15 of 40 items complete
 ### Phase 5 (Features): ✅ COMPLETE — 8/8 fixes
 
-**Overall: ~189 of 237 items complete (~80%)**
+**Overall: ~192 of 237 items complete (~81%)**
 
 ### Phase 1 (P0 Critical): ✅ COMPLETE — 24/24 fixes
 
@@ -146,11 +146,11 @@
 | CC-9 | Index-as-Key in Lists | ⏳ Remaining (deferred) |
 | CC-10 | Duplicated SkeletonCard/ErrorCard → _shared.tsx created | ✅ Done |
 
-### Phase 3 (P2): 🟡 ~48 of 66 items complete (~73%)
+### Phase 3 (P2): 🟡 ~51 of 66 items complete (~77%)
 
-**Completed this session (batches 1-4):** CC-7 shared datetime.ts, CC-10 _shared.tsx, 3.1.7 hardcoded RGB fix, 3.1.10 refetchIntervalFor dedup, 3.2.2-3.2.5 loading states, 3.3.2 price-tag IntersectionObserver, 3.3.4 chart autoSize, 3.4.1 BookmarksProvider, 3.4.10 heatmap today, 3.4.12 notes max length, 3.6.1-3.6.5 export/security.
+**Completed this session (batches 1-5):** CC-7 shared datetime.ts, CC-10 _shared.tsx, 3.1.7 hardcoded RGB fix, 3.1.10 refetchIntervalFor dedup, 3.2.2-3.2.5 loading states, 3.3.2 price-tag IntersectionObserver, 3.3.4 chart autoSize, 3.4.1 BookmarksProvider, 3.4.3 alert button position, 3.4.10 heatmap today, 3.4.12 notes max length, 3.4.14 signal feedback (verified), 3.4.15-3.4.16 dual persistence fix, 3.6.1-3.6.5 export/security.
 
-**Remaining (~18 items):** 3.1 design drift (~10), 3.3 performance (~3 — news virtual, admin RQ, time-provider), 3.4 UX (~4), 3.5 a11y (~1).
+**Remaining (~15 items):** 3.1 design drift (~10), 3.3 performance (~3 — news virtual, admin RQ, time-provider), 3.4 UX (~1), 3.5 a11y (~1).
 
 | # | Item | Status |
 |---|------|--------|
@@ -821,7 +821,7 @@ const merged = { ...existing, ...newPrefs, noiseConfig: existing.noiseConfig };
 |---|------|-------|-----|
 | 3.4.1 | `news/page.tsx` | `BookmarksProvider` wraps server components unnecessarily | Move to wrap only `<NewsView />` |
 | 3.4.2 | `calendar-view.tsx` | `showPast` not synced to URL | Use `nuqs` for URL state |
-| 3.4.3 | `alert-list.tsx` | "New alert" button at bottom | Move to top or add FAB |
+| 3.4.3 | `alert-list.tsx` | "New alert" button at bottom | ✅ Done — moved to top bar next to filter |
 | 3.4.4 | `signals-dashboard.tsx` | `SignalCard` not memoized | `React.memo` |
 | 3.4.5 | `alert-list.tsx` | `filteredAlerts` not memoized | `useMemo` |
 | 3.4.6 | `calendar-view.tsx` | `showPast` toggle not in URL | Sync to URL with `nuqs` |
@@ -832,9 +832,9 @@ const merged = { ...existing, ...newPrefs, noiseConfig: existing.noiseConfig };
 | 3.4.11 | Dashboard | Only 2-column max on wide screens | Add `lg:grid-cols-3` or more |
 | 3.4.12 | `entry-form.tsx` | Notes max length mismatch | Align client/server validation |
 | 3.4.13 | `ai-review-panel.tsx` | AI review stale on entry change | Refetch on entry change |
-| 3.4.14 | `signal-feedback.tsx` | No error feedback | Add error toast |
-| 3.4.15 | `preferences-card.tsx` | Dual persistence drift | Single-source (DB) |
-| 3.4.16 | `ai-prefs-card.tsx` | Dual persistence drift | Single-source (DB) |
+| 3.4.14 | `signal-feedback.tsx` | No error feedback | ✅ Done — toast.error on catch (Phase 2.7.13) |
+| 3.4.15 | `preferences-card.tsx` | Dual persistence drift | ✅ Done — always sync server→localStorage on mount |
+| 3.4.16 | `ai-prefs-card.tsx` | Dual persistence drift | ✅ Done — always sync server→localStorage on mount |
 | 3.4.17 | `use-voice-input.ts` | `supported` flash on hydration | Add hydration check |
 | 3.4.18 | `use-local-storage.ts` | Stale state when key changes | Add key to deps |
 | 3.4.19 | `sw-register.tsx` | Update toast never auto-dismisses | Set reasonable duration |

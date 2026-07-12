@@ -107,7 +107,7 @@ export function AlertList() {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
-        <div className="w-[200px]">
+        <div className="flex items-center gap-3">
           <Segmented<'all' | 'active' | 'past'>
             value={filter}
             onChange={setFilter}
@@ -119,6 +119,12 @@ export function AlertList() {
             variant="solid"
             size="sm"
           />
+          {data && data.alerts.length > 0 ? (
+            <Button type="button" size="sm" onClick={() => setOpen(true)}>
+              <IconPlus className="size-4" />
+              New alert
+            </Button>
+          ) : null}
         </div>
         <StaleIndicator isFetching={isFetching && !isLoading} />
       </div>
@@ -172,14 +178,6 @@ export function AlertList() {
         </DrawerContent>
       </Drawer>
 
-      {data && data.alerts.length > 0 ? (
-        <div className="flex justify-end">
-          <Button type="button" onClick={() => setOpen(true)}>
-            <IconPlus className="size-4" />
-            New alert
-          </Button>
-        </div>
-      ) : null}
 
       {confirmEl}
     </div>

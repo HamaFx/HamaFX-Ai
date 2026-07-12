@@ -50,20 +50,25 @@ export function PreferencesCard({
 }) {
   const [prefs, setPrefs, hydrated] = useLocalStorage<Prefs>(STORAGE_KEY, DEFAULTS);
 
-  // Seed localStorage from server value on first hydration if no local data
+  // Always sync server value to localStorage (DB is source of truth).
+  // This resolves drift from cross-device DB changes or cleared localStorage.
   useEffect(() => {
     if (hydrated && initialPrefs) {
-      const stored = window.localStorage.getItem(STORAGE_KEY);
-      if (!stored) {
-        const merged: Prefs = {
-          defaultSymbol: (initialPrefs.defaultSymbol ?? DEFAULTS.defaultSymbol) as Symbol,
-          timeFormat: (initialPrefs.timeFormat ?? DEFAULTS.timeFormat) as '12h' | '24h',
-          reduceMotion: initialPrefs.reduceMotion ?? DEFAULTS.reduceMotion,
-        };
+      const merged: Prefs = {
+        defaultSymbol: (initialPrefs.defaultSymbol ?? DEFAULTS.defaultSymbol) as Symbol,
+        timeFormat: (initialPrefs.timeFormat ?? DEFAULTS.timeFormat) as '12h' | '24h',
+        reduceMotion: initialPrefs.reduceMotion ?? DEFAULTS.reduceMotion,
+      };
+      // Only write if different to avoid unnecessary localStorage sets
+      if (
+        prefs.defaultSymbol !== merged.defaultSymbol ||
+        prefs.timeFormat !== merged.timeFormat ||
+        prefs.reduceMotion !== merged.reduceMotion
+      ) {
         setPrefs(merged);
       }
     }
-  }, [hydrated, initialPrefs, setPrefs]);
+  }, [hydrated, initialPrefs, prefs, setPrefs]);
 
   const update = useCallback(<K extends keyof Prefs>(key: K, value: Prefs[K]) => {
     setPrefs((prev) => ({ ...prev, [key]: value }));

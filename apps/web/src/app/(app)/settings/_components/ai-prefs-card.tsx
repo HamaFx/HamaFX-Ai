@@ -18,6 +18,7 @@
 
 import {IconBolt, IconX} from '@tabler/icons-react';
 import Link from 'next/link';
+import { useEffect } from 'react';
 
 import { useLocalStorage } from '@/hooks/use-local-storage';
 import { useConfirm } from '@/components/ui/confirm-drawer';
@@ -119,6 +120,15 @@ let _aiSyncTimer: ReturnType<typeof setTimeout> | undefined;
 export function AIPrefsCard({ initialCustomInstructions }: { initialCustomInstructions?: string | null }) {
   const [prefs, setPrefs, hydrated] = useLocalStorage<AIPrefs>(AI_PREFS_STORAGE_KEY, DEFAULTS);
   const [confirmEl, confirm] = useConfirm();
+
+  // Always sync server value to localStorage (DB is source of truth).
+  // Resolves drift from cross-device DB changes or cleared localStorage.
+  const serverInstructions = initialCustomInstructions ?? '';
+  useEffect(() => {
+    if (hydrated && serverInstructions !== (prefs?.customInstructions ?? '')) {
+      setPrefs((prev) => ({ ...prev, customInstructions: serverInstructions }));
+    }
+  }, [hydrated, serverInstructions]); // deliberately exclude prefs/setPrefs to avoid loops
 
   const customInstructions = hydrated
     ? (prefs?.customInstructions ?? '')
