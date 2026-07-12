@@ -20,6 +20,7 @@
 // and powerful tabs/filters (Active, Closed, All, symbols, sides, text searches).
 
 import type { JournalEntry, Symbol, TradeSide } from '@hamafx/shared';
+import { pipSize, getSymbolDefinition } from '@hamafx/shared';
 import {IconTrash, IconSearch, IconAdjustmentsHorizontal, IconArrowUpRight, IconArrowDownRight, IconCompass, IconPlayerPlay} from '@tabler/icons-react';
 import Image from 'next/image';
 import { useState, useMemo, useRef } from 'react';
@@ -394,14 +395,17 @@ function EntryRow({
 
     const diff = entry.side === 'long' ? livePrice - entry.entry : entry.entry - livePrice;
     
-    // Pip calculations: Gold uses *10, Forex uses *10000
-    const pipMultiplier = entry.symbol === 'XAUUSD' ? 10 : 10000;
+    // Pip calculations: use symbol definition pipSize for correct multiplier
+    const pipMultiplier = 1 / pipSize(entry.symbol);
     const pips = diff * pipMultiplier;
 
     // USD Cash calculations (size = lots)
+    // Contract sizes: Gold = 100, Forex = 100000
     let cashPnl = 0;
     if (entry.size !== null) {
-      const contractSize = entry.symbol === 'XAUUSD' ? 100 : 100000;
+      const def = getSymbolDefinition(entry.symbol);
+      const isCommodity = def?.currencies?.includes('XAU') ?? false;
+      const contractSize = isCommodity ? 100 : 100000;
       cashPnl = entry.size * contractSize * diff;
     }
 

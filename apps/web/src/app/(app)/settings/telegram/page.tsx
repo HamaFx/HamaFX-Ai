@@ -15,15 +15,19 @@
  */
 
 import type { Metadata } from 'next';
+import { redirect } from 'next/navigation';
 import { IconMessageCircle } from '@tabler/icons-react';
 
+import { auth } from '@/auth';
 import { PageHeader } from '@/components/layout/page-header';
 import { TelegramLinkCard } from '../_components/telegram-link-card';
 import { TestTelegramButton } from '../_components/test-telegram-button';
 
 export const metadata: Metadata = { title: 'Telegram | Settings | HamaFX' };
 
-export default function TelegramSettingsPage() {
+export default async function TelegramSettingsPage() {
+  const session = await auth();
+  if (!session?.user?.id) redirect('/login');
   return (
     <div className="space-y-6">
       <PageHeader
