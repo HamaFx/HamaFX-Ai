@@ -94,7 +94,7 @@ export function MarketDataConfig({ initialProvider, finnhubKeySet }: MarketDataC
     {
       id: 'finnhub',
       name: 'Finnhub REST',
-      description: 'Supports weekly candles and robust historical feeds. Requires Finnhub API IconKey.',
+      description: 'Supports weekly candles and robust historical feeds. Requires Finnhub API key.',
       requiresKey: true,
       warn: !finnhubKeySet && selected === 'finnhub',
     },

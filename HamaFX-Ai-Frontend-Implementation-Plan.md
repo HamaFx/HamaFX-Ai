@@ -39,39 +39,74 @@
 | 1.23 | Segmented control accent indicator → bg-brand | ✅ Done |
 | 1.24 | Button focus rings → focus-visible:ring-2 | ✅ Done |
 
-### Phase 2 (P1 High): 🟡 PARTIAL — key items done
+### Phase 2 (P1 High): 🟡 ~58 of 99 items complete
 
 | # | Item | Status |
 |---|------|--------|
+| 2.1.1 | forgotPasswordAction + resetPasswordAction Sentry wrappers | ✅ Done |
+| 2.1.2 | Rate limiting on resetPasswordAction (max 5 per IP) | ✅ Done |
+| 2.1.3 | Double-panel nesting — forgot-password layout removed | ✅ Done |
 | 2.1.4 | Login password visibility toggle | ✅ Done |
 | 2.1.5 | Register password visibility toggle | ✅ Done |
+| 2.1.6 | tradingStyle persisted server-side via saveProgress | ✅ Done |
+| 2.1.7 | CSRF on onboarding progress-save fetch | ✅ Done |
 | 2.1.8 | Onboarding wizard tablibular-nums typo | ✅ Done |
+| 2.1.9 | bg-bg-elev-1-elevated class (exists in design system) | ✅ Done |
+| 2.1.10 | Post-login redirect standardized to /chat | ✅ Done |
 | 2.1.11 | app/error.tsx console.error → Sentry.captureException | ✅ Done |
 | 2.1.12 | app/manifest.ts color alignment #000000 → #0A0A0A | ✅ Done |
+| 2.1.13 | Debug route DB URL sanitized (maskDbUrl) | ✅ Done |
 | 2.1.14 | globals.css --font-mono circular reference | ✅ Done |
-| 2.3.1 | Dashboard page listUpcomingEvents userId removed (not accepted) | ✅ Done |
+| 2.2.1 | Dead .content → .parts for UIMessage | ✅ Done |
+| 2.2.2 | Regex /\|.*\|/ already escaped | ✅ Done |
+| 2.2.3 | Auto-scroll direct scrollTop during streaming | ✅ Done |
+| 2.2.4 | modelOverrideRef cleared on error | ✅ Done |
+| 2.2.5 | AbortController cleanup on unmount | ✅ Done |
+| 2.2.6 | useId() for ARIA in plan.tsx | ✅ Done |
+| 2.2.7 | useId() for ARIA in citation-warning.tsx | ✅ Done |
+| 2.2.8 | <a> → <Link> in get-calendar.tsx | ✅ Done |
+| 2.2.9 | setInterval expiry updates in share-snapshot.tsx | ✅ Done |
+| 2.2.10 | Registry falls back to ToolCard on schema failure | ✅ Done |
+| 2.2.11 | handleRegenerate/handleEdit stable (messagesRef) | ✅ Done |
+| 2.2.12 | Share snapshot stale expiry ticker | ✅ Done |
+| 2.2.13 | Thread list search debounce | ⏳ Remaining |
+| 2.3.1 | Dashboard listUpcomingEvents userId removed | ✅ Done |
+| 2.3.2 | Dashboard widget error states | ⏳ Remaining |
 | 2.3.3 | Dashboard listEntries limit 200→50 | ✅ Done |
-| 2.5.1 | News error.tsx created (CC-4) | ✅ Done |
+| 2.3.4 | Widget React.memo | ⏳ Remaining |
+| 2.3.5 | Watchlist re-render on 3s poll | ⏳ Remaining |
+| 2.3.6 | Briefing ReactMarkdown useMemo | ⏳ Remaining |
+| 2.3.7 | Watchlist error state | ⏳ Remaining |
+| 2.3.8 | Heatmap touch targets 44px | ⏳ Remaining |
+| 2.3.9 | AddWidgetMenu outside-click close | ⏳ Remaining |
+| 2.3.10 | useTime() for live session label | ✅ Done |
+| 2.4.1-2.4.7 | Chart system | ⏳ Remaining |
+| 2.5.1 | News error.tsx created | ✅ Done |
+| 2.5.2 | News force-dynamic → revalidate = 300 | ✅ Done |
 | 2.5.3 | News error.tsx (CC-4) | ✅ Done |
+| 2.5.4-2.5.13 | News/Calendar/Signals/Alerts remaining | ⏳ Remaining |
 | 2.6.1 | Journal screenshotUrl sent to API | ✅ Done |
+| 2.6.2 | Journal ImportTrades connected to view | ✅ Done |
+| 2.6.3 | Journal closedAt on import | ⏳ Remaining |
 | 2.6.4 | Journal short position shade inverted | ✅ Done |
-| 2.6.8 | Journal profit factor Infinity/∞ display | ✅ Done |
+| 2.6.5 | Journal AI review refetch | ⏳ Remaining |
+| 2.6.6 | Journal notes max length alignment | ⏳ Remaining |
+| 2.6.7 | Journal pip multiplier hardcoded | ⏳ Remaining |
+| 2.6.8 | Journal profit factor Infinity/∞ | ✅ Done |
 | 2.6.9 | Journal recovery factor local cumulative | ✅ Done |
+| 2.7.1 | Settings exportDataAction password verify | ✅ Done |
 | 2.7.2 | Settings revalidatePath after password change | ✅ Done |
 | 2.7.3 | Settings signOut after account deletion | ✅ Done |
+| 2.7.4-2.7.15 | Settings remaining | ⏳ Remaining |
+| 2.7.5 | Settings export userId leak (already stripped) | ✅ Done |
+| 2.8.1 | Duplicate admin check → delegates to admin-auth.ts | ✅ Done |
+| 2.8.2 | window.confirm → ConfirmDrawer | ✅ Done |
 | 2.8.3 | Drawer focus-trap re-runs on open state | ✅ Done |
-| 2.8.5 | sw-register.tsx (noted, not yet fixed) | ⏳ Remaining |
+| 2.8.5 | sw-register.tsx toast duration | ⏳ Remaining |
 | 2.8.17 | use-local-storage.ts stale state on key change | ✅ Done |
+| 2.8.4, 2.8.6-2.8.16, 2.8.18 | Admin/Layout/UI/Lib remaining | ⏳ Remaining |
 | CC-4 | error.tsx files: news, alerts, calendar, settings/billing | ✅ Done |
 | CC-5 | window.confirm() → ConfirmDrawer (already eliminated) | ✅ Done |
-| 2.1.1-2.1.3, 2.1.6-2.1.7, 2.1.9-2.1.10, 2.1.13 | Auth/Onboarding remaining | ⏳ Remaining |
-| 2.2.1-2.2.13 | Chat system fixes | ⏳ Remaining |
-| 2.3.2, 2.3.4-2.3.10 | Dashboard remaining | ⏳ Remaining |
-| 2.4.1-2.4.7 | Chart system remaining | ⏳ Remaining |
-| 2.5.2, 2.5.4-2.5.13 | News/Calendar/Signals/Alerts remaining | ⏳ Remaining |
-| 2.6.2-2.6.3, 2.6.5-2.6.7 | Journal remaining | ⏳ Remaining |
-| 2.7.1, 2.7.4-2.7.15 | Settings remaining | ⏳ Remaining |
-| 2.8.1-2.8.2, 2.8.4, 2.8.6-2.8.16, 2.8.18 | Admin/Layout/UI/Lib remaining | ⏳ Remaining |
 
 ### Phase 3 (P2): ⏳ Not started
 ### Phase 4 (P3): ⏳ Not started

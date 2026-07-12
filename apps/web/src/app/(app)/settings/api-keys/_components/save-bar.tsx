@@ -62,7 +62,7 @@ export function SaveBar({ action, preservedPrompt, children }: SaveBarProps) {
     if (!('ok' in state) || state.ok) return;
     if (lastErrorSeen.current === state.error) return;
     lastErrorSeen.current = state.error;
-    toast.error(`IconDeviceFloppy failed: ${state.error}`);
+    toast.error(`Save failed: ${state.error}`);
   }, [state]);
 
   // Unsaved changes beforeunload warning

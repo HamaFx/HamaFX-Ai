@@ -92,7 +92,7 @@ export function EntryForm({ onCreated }: EntryFormProps) {
   function validateTarget(v: string): string | null {
     if (!v) return null;
     const n = Number(v);
-    if (!Number.isFinite(n) || n <= 0) return 'IconTarget must be positive';
+    if (!Number.isFinite(n) || n <= 0) return 'Target must be positive';
     const entryNum = Number(entry);
     if (Number.isFinite(entryNum)) {
       if (side === 'long' && n <= entryNum) return 'Long target must be above entry';

@@ -81,7 +81,7 @@ export function BulkTestButton({ disabled }: BulkTestButtonProps) {
                 );
               } else if (summary.ok === 0) {
                 toast.error(
-                  `${summary.failed} providers failed. IconCheck the errors below.`,
+                  `${summary.failed} providers failed. Check the errors below.`,
                 );
               } else {
                 toast.warning(

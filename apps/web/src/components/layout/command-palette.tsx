@@ -55,7 +55,7 @@ import {
 const GROUP_LABELS: Record<CommandGroup, string> = {
   navigation: 'Navigate',
   create: 'Create',
-  settings: 'IconSettings',
+  settings: 'Settings',
 };
 const GROUP_ORDER: CommandGroup[] = ['navigation', 'create', 'settings'];
 
@@ -243,7 +243,7 @@ export function CommandPalette({ onNewChat }: CommandPaletteProps) {
                   setActiveIdx(0);
                 }}
                 onKeyDown={onInputKeyDown}
-                placeholder="IconSearch…"
+                placeholder="Search…"
                 autoComplete="off"
                 spellCheck={false}
                 className="bg-bg-elev-1/60 text-fg placeholder:text-fg-subtle focus:border-border border-border h-11 w-full rounded-sm border pl-10 pr-4 text-sm focus:outline-none"

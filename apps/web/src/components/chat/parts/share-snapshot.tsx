@@ -21,7 +21,7 @@
 // Client component because we need a copy-to-clipboard action. Layout
 // stays minimal — a one-line title + the copyable URL + an expiry hint.
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import type { ToolPartProps } from './registry';
 
@@ -31,6 +31,13 @@ export function ShareSnapshotPart({
   errorMessage,
 }: ToolPartProps<'share_snapshot'>) {
   const [copied, setCopied] = useState(false);
+  // Ticking clock so the expiry hint updates in real time.
+  const [now, setNow] = useState(() => Date.now());
+
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), 30_000);
+    return () => clearInterval(id);
+  }, []);
 
   if (state === 'error') {
     return <ErrorCard {...(errorMessage ? { message: errorMessage } : {})} />;
@@ -53,7 +60,7 @@ export function ShareSnapshotPart({
     <div className="border-border bg-bg-elev-1 flex flex-col gap-2 rounded-sm border p-3">
       <header className="flex items-baseline justify-between gap-2">
         <h3 className="text-fg text-sm font-semibold">Snapshot ready</h3>
-        <span className="text-fg-subtle text-caption tabular-nums">{formatExpiry(output.expiresAt)}</span>
+        <span className="text-fg-subtle text-caption tabular-nums">{formatExpiry(output.expiresAt, now)}</span>
       </header>
 
       <div className="flex items-stretch gap-2">
@@ -82,8 +89,8 @@ export function ShareSnapshotPart({
   );
 }
 
-function formatExpiry(ms: number): string {
-  const diff = ms - Date.now();
+function formatExpiry(ms: number, nowMs: number): string {
+  const diff = ms - nowMs;
   if (diff <= 0) return 'expired';
   const mins = Math.floor(diff / 60_000);
   if (mins < 60) return `expires in ${mins}m`;

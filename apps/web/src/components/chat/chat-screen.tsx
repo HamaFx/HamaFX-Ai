@@ -277,29 +277,37 @@ export function ChatScreen({
   const handleRegenerate = useCallback((opts?: { modelOverride?: string }) => {
     if (opts?.modelOverride) modelOverrideRef.current = opts.modelOverride;
     if (analysisMode !== 'single') {
-      // For multi-agent regenerate, re-send the last user message
-      const lastUser = [...messages].reverse().find((m) => m.role === 'user');
+      // For multi-agent regenerate, re-send the last user message.
+      // Read messages from the ref so this callback doesn't need `messages`
+      // in its dependency array (keeps the handler stable across stream tokens).
+      const lastUser = [...messagesRef.current].reverse().find((m) => m.role === 'user');
       if (lastUser) {
         // Remove the last assistant message
         setMessages((prev) => {
           const idx = prev.findIndex((m) => m.id === lastUser.id);
           return prev.slice(0, idx + 1);
         });
-        void sendMultiAgentMessage(
-          (lastUser as unknown as { content?: string }).content
-          || (Array.isArray(lastUser.parts) ? lastUser.parts.filter((p) => (p as { type?: string }).type === 'text').map((p) => (p as { text: string }).text).join('') : '')
-          || ''
-        );
+        // AI SDK v5: UIMessage has `parts`, not `content`. Build the text from parts.
+        const text = Array.isArray(lastUser.parts)
+          ? lastUser.parts
+              .filter((p) => (p as { type?: string }).type === 'text')
+              .map((p) => (p as { text: string }).text)
+              .join('')
+          : '';
+        void sendMultiAgentMessage(text);
       }
       return;
     }
     void regenerate();
-  }, [regenerate, analysisMode, messages, setMessages, sendMultiAgentMessage]);
+  }, [regenerate, analysisMode, setMessages, sendMultiAgentMessage]);
 
   const handleEdit = useCallback(async (messageId: string, newText: string) => {
-    const idx = messages.findIndex((m) => m.id === messageId);
+    // Read messages from the ref so this callback is stable across stream tokens
+    // (avoids recreating it on every token, which would defeat MessageList's memo).
+    const cur = messagesRef.current;
+    const idx = cur.findIndex((m) => m.id === messageId);
     if (idx === -1) return;
-    const isLastMessage = idx === messages.length - 1;
+    const isLastMessage = idx === cur.length - 1;
     if (!isLastMessage) {
       const ok = await confirm({
         title: 'Edit earlier message?',
@@ -344,14 +352,14 @@ export function ChatScreen({
       }
       return;
     }
-    const sliced = messages.slice(0, idx);
+    const sliced = cur.slice(0, idx);
     setMessages(sliced);
     if (analysisMode !== 'single') {
       void sendMultiAgentMessage(newText);
     } else {
       void sendMessage({ text: newText });
     }
-  }, [messages, threadId, router, sendMessage, setMessages, analysisMode, sendMultiAgentMessage, confirm]);
+  }, [threadId, router, sendMessage, setMessages, analysisMode, sendMultiAgentMessage, confirm]);
 
   const isStreaming = useMemo(() => {
     if (status === 'submitted' || status === 'streaming') return true;
@@ -385,9 +393,10 @@ export function ChatScreen({
     }
   }, [autoSubmitPrompt, threadId, messages.length, isStreaming, sendMessage, analysisMode, sendMultiAgentMessage]);
 
-  // Clear model override only after successful stream ready
+  // Clear model override after the stream settles (ready or error),
+  // so a failed regenerate doesn't leak its override into the next send.
   useEffect(() => {
-    if (status === 'ready' && !error) {
+    if (status === 'ready' || (error && status === 'error')) {
       modelOverrideRef.current = null;
     }
   }, [status, error]);
@@ -442,6 +451,17 @@ export function ChatScreen({
     };
   }, [status, messages.length, threadId]);
 
+  // Abort any in-flight multi-agent fetch when the component unmounts,
+  // preventing background SSE streams from updating unmounted state.
+  useEffect(() => {
+    return () => {
+      if (multiAgentFetchRef.current) {
+        multiAgentFetchRef.current.abort();
+        multiAgentFetchRef.current = null;
+      }
+    };
+  }, []);
+
   // Initial scroll-to-bottom. Instant, not smooth — smooth on mount is
   // what produced the "drift" effect on slow devices.
   useEffect(() => {
@@ -454,15 +474,21 @@ export function ChatScreen({
 
   // Auto-scroll on new content, but only if the user is close to the
   // bottom. Distance < 240 means "user is following the conversation" —
-  // we keep them at the bottom. Otherwise stay put so they can read
-  // older messages without the page yanking them back.
+  // we keep them at the bottom. During streaming use instant scroll
+  // (invoke `scrollTop` directly) to avoid queuing a smooth animation per
+  // every stream token, which causes visible jank and wastes CPU.
+  // After streaming stops, fall back to smooth for the final position.
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
     const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
     if (distanceFromBottom < 240) {
       requestAnimationFrame(() => {
-        el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
+        if (isStreaming) {
+          el.scrollTop = el.scrollHeight;
+        } else {
+          el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
+        }
       });
     }
   }, [messages, isStreaming]);

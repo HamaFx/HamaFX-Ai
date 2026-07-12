@@ -223,7 +223,7 @@ export function NewsView({ initialArticles }: NewsViewProps) {
           title={savedOnly ? 'No saved articles' : 'Nothing matches'}
           description={
             savedOnly
-              ? 'IconDeviceFloppy articles by tapping the bookmark icon on any card.'
+              ? 'Save articles by tapping the bookmark icon on any card.'
               : 'Try clearing the search or pick a different sentiment / symbol filter.'
           }
         />

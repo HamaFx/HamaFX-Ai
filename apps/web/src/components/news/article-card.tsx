@@ -193,7 +193,7 @@ const ArticleCardInner = memo(
                 if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate(50);
                 onToggle(article.id);
               }}
-              aria-label={saved ? 'Remove bookmark' : 'IconBookmark article'}
+              aria-label={saved ? 'Remove bookmark' : 'Bookmark article'}
               aria-pressed={saved}
               className={cn(
                 'inline-flex size-8 items-center justify-center rounded-sm transition-colors',

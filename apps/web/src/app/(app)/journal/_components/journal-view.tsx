@@ -22,7 +22,7 @@
 
 import type { JournalEntry, JournalStats } from '@hamafx/shared';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import {IconPlus, IconBook, IconActivity, IconRefresh} from '@tabler/icons-react';
+import {IconPlus, IconBook, IconActivity, IconRefresh, IconUpload} from '@tabler/icons-react';
 import { useState } from 'react';
 
 import { cn } from '@/lib/cn';
@@ -45,6 +45,7 @@ import { StreakDisplay } from './analytics/streak-display';
 import { AiReviewPanel } from './ai-review-panel';
 import { EntryForm } from './entry-form';
 import { EntryList } from './entry-list';
+import { ImportTrades } from './import-trades';
 import { StatsSummary } from './stats-summary';
 
 const QKEY = ['journal'] as const;
@@ -58,6 +59,8 @@ export function JournalView() {
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [tab, setTab] = useState<'overview' | 'analytics' | 'trades'>('overview');
+  const [importOpen, setImportOpen] = useState(false);
+
   const { data, isLoading, isFetching, isError, error } = useQuery<JournalResponse>({
     queryKey: QKEY,
     queryFn: async () => {
@@ -87,6 +90,14 @@ export function JournalView() {
         <div className="flex items-center gap-2">
           <StaleIndicator isFetching={isFetching && !isLoading} />
           
+          <button
+            onClick={() => setImportOpen(true)}
+            className="bg-bg-elev-1 border border-border size-10 flex items-center justify-center rounded-sm text-fg-muted hover:text-fg transition-all cursor-pointer"
+            title="Import trades"
+          >
+            <IconUpload className="size-4" />
+          </button>
+
           <button
             onClick={refresh}
             className="bg-bg-elev-1 border border-border size-10 flex items-center justify-center rounded-sm text-fg-muted hover:text-fg transition-all cursor-pointer"
@@ -237,6 +248,19 @@ export function JournalView() {
               setOpen(false);
             }}
           />
+        </DrawerContent>
+      </Drawer>
+
+      {/* Import Trades Drawer */}
+      <Drawer open={importOpen} onOpenChange={setImportOpen}>
+        <DrawerContent className="max-h-[85svh]">
+          <DrawerHeader className="pb-2">
+            <DrawerTitle className="text-lg font-black tracking-tight text-fg">Import Trades</DrawerTitle>
+            <DrawerDescription className="text-xs text-fg-subtle">
+              Upload a CSV file to bulk-import your trading history.
+            </DrawerDescription>
+          </DrawerHeader>
+          <ImportTrades onImported={() => { refresh(); setImportOpen(false); }} />
         </DrawerContent>
       </Drawer>
     </div>

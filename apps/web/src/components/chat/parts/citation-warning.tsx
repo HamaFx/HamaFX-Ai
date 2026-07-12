@@ -30,7 +30,7 @@
 // rendered for parts persisted before the findings field landed.
 
 import {IconQuote, IconChevronDown, IconChevronRight, IconCheck, IconX} from '@tabler/icons-react';
-import { useState } from 'react';
+import { useId, useState } from 'react';
 
 import type { CitationWarningPart } from '@hamafx/shared';
 
@@ -39,6 +39,8 @@ interface CitationWarningProps {
 }
 
 export function CitationWarningPartView({ part }: CitationWarningProps) {
+  const id = useId();
+  const contentId = `citation-warning-content-${id}`;
   const [open, setOpen] = useState(false);
   const tone =
     part.stance === 'strict'
@@ -67,7 +69,7 @@ export function CitationWarningPartView({ part }: CitationWarningProps) {
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
-        aria-controls="citation-warning-content"
+        aria-controls={contentId}
         className="hover:text-fg flex items-center gap-2 text-left text-body-sm font-medium focus:outline-none"
       >
         {open ? <IconChevronDown className="size-3.5" /> : <IconChevronRight className="size-3.5" />}
@@ -78,7 +80,7 @@ export function CitationWarningPartView({ part }: CitationWarningProps) {
       </button>
 
       {open ? (
-        <ul id="citation-warning-content" className="ml-6 flex flex-col gap-1 text-body-sm">
+        <ul id={contentId} className="ml-6 flex flex-col gap-1 text-body-sm">
           {rows.map((row, i) => (
             <li key={i} className="text-fg-subtle flex items-start gap-2">
               {row.supported ? (

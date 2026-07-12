@@ -31,7 +31,8 @@ import { SentimentSummary } from './_components/sentiment-summary';
 import { BookmarksProvider } from '@/components/news/bookmarks-context';
 
 export const metadata: Metadata = { title: 'News' };
-export const dynamic = 'force-dynamic';
+// ISR: revalidate every 5 minutes instead of forcing dynamic on every request.
+export const revalidate = 300;
 
 export default async function NewsPage() {
   // Larger window now that the page can filter — gives the user real

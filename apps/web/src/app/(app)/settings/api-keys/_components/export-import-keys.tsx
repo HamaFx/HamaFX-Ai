@@ -159,7 +159,7 @@ export function ExportImportKeys() {
                   className="text-fg hover:underline font-semibold flex items-center gap-1 normal-case"
                 >
                   {copied ? <IconCheck className="size-3" /> : <IconCopy className="size-3" />}
-                  {copied ? 'Copied' : 'IconCopy'}
+                  {copied ? 'Copied' : 'Copy'}
                 </button>
               </label>
               <textarea

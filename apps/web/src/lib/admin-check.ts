@@ -15,28 +15,13 @@
  */
 
 import { cache } from 'react';
-import { eq, sql } from 'drizzle-orm';
+import { getAdminUser } from './admin-auth';
 
-import { auth } from '@/auth';
-import { getDb, schema } from '@hamafx/db';
-
+/**
+ * Lightweight admin check for server components.
+ * Delegates to the canonical `getAdminUser` in admin-auth.ts.
+ */
 export const checkIsAdmin = cache(async (): Promise<boolean> => {
-  const session = await auth();
-  if (!session?.user?.id) return false;
-
-  const db = getDb();
-  const [user] = await db
-    .select({ role: schema.users.role })
-    .from(schema.users)
-    .where(eq(schema.users.id, session.user.id));
-
-  if (user?.role === 'admin') return true;
-
-  // Single-user mode: no admins exist
-  const [adminCount] = await db
-    .select({ count: sql<number>`count(*)` })
-    .from(schema.users)
-    .where(eq(schema.users.role, 'admin'));
-
-  return Number(adminCount?.count ?? 0) === 0;
+  const { admin } = await getAdminUser();
+  return admin !== null;
 });

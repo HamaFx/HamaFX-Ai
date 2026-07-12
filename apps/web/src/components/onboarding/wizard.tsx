@@ -94,7 +94,7 @@ export function OnboardingWizard({ initialName, providers, symbolsCatalog, initi
     }
   }, [initialProgress]);
 
-  // IconDeviceFloppy wizard state when any field changes (API key intentionally excluded)
+  // Save wizard state when any field changes (API key intentionally excluded)
   useEffect(() => {
     try {
       const state = { step, name, timezone, defaultSymbol, selectedProvider, tradingStyle, selectedSymbols };
@@ -108,11 +108,15 @@ export function OnboardingWizard({ initialName, providers, symbolsCatalog, initi
   useEffect(() => {
     if (step <= 1) return;
     const timer = setTimeout(() => {
-      fetch('/api/onboarding/save-progress', {
+      fetch('/api/onboarding/save-progress', withCsrf({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ step, name, timezone, defaultSymbol, selectedProvider, tradingStyle, selectedSymbols }),
-      }).catch(() => {});
+      })).catch((err) => {
+        // Log instead of silently swallowing — defensive: a failed progress save
+        // is non-fatal but worth surfacing for debugging.
+        console.warn('onboarding save-progress failed', err);
+      });
     }, 2000);
     return () => clearTimeout(timer);
   }, [step, name, timezone, defaultSymbol, selectedProvider, tradingStyle, selectedSymbols]);
@@ -177,7 +181,7 @@ export function OnboardingWizard({ initialName, providers, symbolsCatalog, initi
 
   function handleSubmit() {
     startSubmit(async () => {
-      // IconDeviceFloppy trading style to localStorage preferences so the client app uses it
+      // Save trading style to localStorage preferences so the client app uses it
       try {
         const currentPrefs = JSON.parse(localStorage.getItem('hamafx:prefs') || '{}');
         localStorage.setItem('hamafx:prefs', JSON.stringify({
@@ -196,6 +200,7 @@ export function OnboardingWizard({ initialName, providers, symbolsCatalog, initi
         timezone,
         defaultSymbol: defaultSymbol || selectedSymbols[0] || 'XAUUSD',
         symbols: selectedSymbols,
+        tradingStyle,
         apiKeys: selectedProvider && apiKey.trim().length > 0
           ? { [selectedProvider]: apiKey.trim() }
           : {},
@@ -235,6 +240,7 @@ export function OnboardingWizard({ initialName, providers, symbolsCatalog, initi
         timezone,
         defaultSymbol: selectedSymbols[0] || 'XAUUSD',
         symbols: selectedSymbols,
+        tradingStyle,
         apiKeys: {},
       }));
       try {
@@ -271,7 +277,7 @@ export function OnboardingWizard({ initialName, providers, symbolsCatalog, initi
             {i < 5 && (
               <div
                 className={`h-px w-8 sm:w-16 transition-colors ${
-                  step > i ? 'bg-fg' : 'bg-bg-elev-1-elevated'
+                  step > i ? 'bg-fg' : 'bg-bg-elev-2'
                 }`}
               />
             )}
@@ -462,8 +468,8 @@ export function OnboardingWizard({ initialName, providers, symbolsCatalog, initi
           <div>
             <h2 className="text-xl font-semibold text-fg mb-1">Connect an AI Provider</h2>
             <p className="text-sm text-fg-subtle">
-              HamaFX-Ai is BYOK (Bring Your Own IconKey). Pick a provider below and paste
-              your API key. You can add more or change providers later in IconSettings.
+              HamaFX-Ai is BYOK (Bring Your Own Key). Pick a provider below and paste
+              your API key. You can add more or change providers later in Settings.
             </p>
           </div>
 
@@ -502,7 +508,7 @@ export function OnboardingWizard({ initialName, providers, symbolsCatalog, initi
           {selectedProvider && (
             <div className="flex flex-col gap-3 motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-top-2">
               <label className="text-sm font-medium text-fg">
-                API IconKey for {providers.find((p) => p.id === selectedProvider)?.displayName}
+                API Key for {providers.find((p) => p.id === selectedProvider)?.displayName}
               </label>
               <div className="relative">
                 <Input
@@ -547,7 +553,7 @@ export function OnboardingWizard({ initialName, providers, symbolsCatalog, initi
                 </Button>
                 {testState.kind === 'ok' && (
                   <span className="flex items-center gap-1 text-xs text-success">
-                    <IconCheck className="size-3" /> IconKey looks valid
+                    <IconCheck className="size-3" /> Key looks valid
                   </span>
                 )}
                 {testState.kind === 'err' && (
@@ -585,7 +591,7 @@ export function OnboardingWizard({ initialName, providers, symbolsCatalog, initi
             }}
             className="text-xs text-fg-subtle hover:text-fg transition-colors text-center w-full mt-2"
           >
-            Skip for now (configure later in IconSettings)
+            Skip for now (configure later in Settings)
           </button>
         </div>
       )}
@@ -648,7 +654,7 @@ export function OnboardingWizard({ initialName, providers, symbolsCatalog, initi
                     </ul>
                     <p>
                       Bias: <span className="text-bear font-medium">Bearish below $2,640</span> ·
-                      IconKey resistance at              <span className="tabular-nums">$2,680</span>
+                      Key resistance at              <span className="tabular-nums">$2,680</span>
                     </p>
                   </div>
                 </div>

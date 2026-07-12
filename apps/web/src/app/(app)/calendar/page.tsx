@@ -31,7 +31,7 @@ const CalendarHero = nextDynamic(() => import('./_components/calendar-hero').the
 import { CalendarView } from './_components/calendar-view';
 import { RefreshButton } from '../news/_components/refresh-button';
 
-export const metadata: Metadata = { title: 'IconCalendar' };
+export const metadata: Metadata = { title: 'Calendar' };
 export const dynamic = 'force-dynamic';
 
 export default async function CalendarPage() {

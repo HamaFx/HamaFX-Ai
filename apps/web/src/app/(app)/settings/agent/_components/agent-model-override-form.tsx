@@ -176,7 +176,7 @@ export function AgentModelOverrideForm({ initialOverrides, providers }: AgentMod
             className="bg-fg text-white hover:bg-fg/90 inline-flex items-center gap-2 rounded-sm px-4 py-2 text-sm font-medium transition-colors disabled:opacity-50"
           >
             {pending ? <IconLoader2 className="size-4 animate-spin" /> : saved ? <IconCheck className="size-4" /> : null}
-            {saved ? 'Saved' : 'IconDeviceFloppy overrides'}
+            {saved ? 'Saved' : 'Save overrides'}
           </button>
           <button
             type="button"

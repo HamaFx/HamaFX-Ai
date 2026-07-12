@@ -30,14 +30,20 @@ import { createScopedLoggerWithContext } from '@/lib/logger';
 
 const symbolSchema = z.string().toUpperCase().regex(/^[A-Z0-9/]{1,10}$/);
 
+export type TradingStyle = 'scalper' | 'day_trader' | 'swing' | 'position';
+
 export interface OnboardingPayload {
   displayName?: string;
   timezone?: string;
   defaultSymbol?: string;
   symbols?: string[];
+  /** User's self-selected trading style — persisted to onboardingProgress so the AI can adapt suggestions. */
+  tradingStyle?: TradingStyle;
   /** Map of provider id → plaintext API key. Empty string = don't change. */
   apiKeys?: Partial<Record<(typeof PROVIDER_IDS)[number], string>>;
 }
+
+const tradingStyleSchema = z.enum(['scalper', 'day_trader', 'swing', 'position']);
 
 /**
  * Complete onboarding for the current user. Accepts an arbitrary payload
@@ -69,6 +75,16 @@ export async function completeOnboardingAction(formData: FormData) {
       }
     }
 
+    // Validate tradingStyle if provided (BUG-1: tradingStyle now persisted server-side)
+    let validatedTradingStyle: TradingStyle | undefined;
+    if (payload.tradingStyle !== undefined) {
+      const ts = tradingStyleSchema.safeParse(payload.tradingStyle);
+      if (!ts.success) {
+        return { ok: false as const, error: 'Invalid trading style' };
+      }
+      validatedTradingStyle = ts.data;
+    }
+
     const db = getDb();
     await db.transaction(async (tx) => {
       // Save displayName to users table if provided
@@ -80,8 +96,13 @@ export async function completeOnboardingAction(formData: FormData) {
       }
 
       // 1. Merge API keys — keep existing ones for providers not in the payload.
+      // Also fetch onboardingProgress so we can merge tradingStyle into it without
+      // clobbering other progress keys (BUG-1: tradingStyle now persisted server-side).
       const [existing] = await tx
-        .select({ aiApiKeys: schema.userSettings.aiApiKeys })
+        .select({
+          aiApiKeys: schema.userSettings.aiApiKeys,
+          onboardingProgress: schema.userSettings.onboardingProgress,
+        })
         .from(schema.userSettings)
         .where(eq(schema.userSettings.userId, userId));
       const currentKeys = decryptByok(existing?.aiApiKeys) ?? {};
@@ -95,6 +116,10 @@ export async function completeOnboardingAction(formData: FormData) {
           // Empty string = leave existing key in place (no-op). Use a
           // dedicated "clear" flow if the user wants to remove a key.
         }
+      }
+      const mergedProgress: Record<string, unknown> = { ...(existing?.onboardingProgress ?? {}) };
+      if (validatedTradingStyle) {
+        mergedProgress.tradingStyle = validatedTradingStyle;
       }
 
       // 2. Upsert user settings.
@@ -111,6 +136,7 @@ export async function completeOnboardingAction(formData: FormData) {
           timezone: payload.timezone || 'UTC',
           aiApiKeys: encryptedKeys,
           onboardingCompleted: true,
+          ...(Object.keys(mergedProgress).length > 0 ? { onboardingProgress: mergedProgress } : {}),
         });
       } else {
         await tx
@@ -120,6 +146,7 @@ export async function completeOnboardingAction(formData: FormData) {
             timezone: payload.timezone || 'UTC',
             aiApiKeys: encryptedKeys,
             onboardingCompleted: true,
+            ...(Object.keys(mergedProgress).length > 0 ? { onboardingProgress: mergedProgress } : {}),
           })
           .where(eq(schema.userSettings.userId, userId));
       }

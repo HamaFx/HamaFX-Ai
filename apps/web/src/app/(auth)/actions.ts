@@ -242,100 +242,116 @@ async function sendPasswordResetEmail(to: string, resetUrl: string) {
 }
 
 export async function forgotPasswordAction(prevState: unknown, formData: FormData) {
-  const raw = formData instanceof FormData ? Object.fromEntries(formData) : (formData ?? {});
-  const email = typeof raw.email === 'string' ? raw.email.trim().toLowerCase() : '';
-  if (!email) return { error: 'Email is required' };
+  return Sentry.withServerActionInstrumentation('forgotPasswordAction', { formData }, async () => {
+    const raw = formData instanceof FormData ? Object.fromEntries(formData) : (formData ?? {});
+    const email = typeof raw.email === 'string' ? raw.email.trim().toLowerCase() : '';
+    if (!email) return { error: 'Email is required' };
 
-  const rl = await withRateLimit(`forgot:${email}`, 'forgot_password', 3);
-  if (!rl.allowed) return { error: 'Too many requests. Try again later.' };
+    const rl = await withRateLimit(`forgot:${email}`, 'forgot_password', 3);
+    if (!rl.allowed) return { error: 'Too many requests. Try again later.' };
 
-  const db = getDb();
-  const [user] = await db.select({ id: schema.users.id })
-    .from(schema.users)
-    .where(eq(schema.users.email, email))
-    .limit(1);
+    const db = getDb();
+    const [user] = await db.select({ id: schema.users.id })
+      .from(schema.users)
+      .where(eq(schema.users.email, email))
+      .limit(1);
 
-  // Don't reveal whether the email exists
-  if (user) {
-    try {
-      const { randomBytes } = await import('node:crypto');
-      const resetToken = randomBytes(32).toString('hex');
-      await db.insert(schema.verificationTokens).values({
-        identifier: email,
-        token: resetToken,
-        expires: new Date(Date.now() + 60 * 60 * 1000), // 1 hour
-      });
-      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://hamafx-ai.vercel.app';
-      const resetUrl = `${baseUrl}/reset-password?token=${resetToken}`;
-      if (process.env.NODE_ENV !== 'production') {
-        createScopedLoggerWithContext({ component: 'auth-actions', action: 'forgot-password' }).info(
-          `reset link: ${resetUrl}`,
+    // Don't reveal whether the email exists
+    if (user) {
+      try {
+        const { randomBytes } = await import('node:crypto');
+        const resetToken = randomBytes(32).toString('hex');
+        await db.insert(schema.verificationTokens).values({
+          identifier: email,
+          token: resetToken,
+          expires: new Date(Date.now() + 60 * 60 * 1000), // 1 hour
+        });
+        // BUG-10: use a consistent localhost fallback to avoid sending prod URLs in non-prod envs
+        const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+        const resetUrl = `${baseUrl}/reset-password?token=${resetToken}`;
+        if (process.env.NODE_ENV !== 'production') {
+          createScopedLoggerWithContext({ component: 'auth-actions', action: 'forgot-password' }).info(
+            `reset link: ${resetUrl}`,
+          );
+        }
+        await sendPasswordResetEmail(email, resetUrl);
+      } catch (err) {
+        createScopedLoggerWithContext({ component: 'auth-actions', action: 'forgot-password' }).error(
+          'Failed to create reset token: ' + String(err),
         );
       }
-      await sendPasswordResetEmail(email, resetUrl);
-    } catch (err) {
-      createScopedLoggerWithContext({ component: 'auth-actions', action: 'forgot-password' }).error(
-        'Failed to create reset token: ' + String(err),
-      );
     }
-  }
 
-  return { success: true, message: 'If an account exists, a reset link has been sent.' };
+    return { success: true, message: 'If an account exists, a reset link has been sent.' };
+  });
 }
 
 export async function resetPasswordAction(prevState: unknown, formData: FormData) {
-  const raw = formData instanceof FormData ? Object.fromEntries(formData) : (formData ?? {});
-  const token = typeof raw.token === 'string' ? raw.token : '';
-  const password = typeof raw.password === 'string' ? raw.password : '';
+  return Sentry.withServerActionInstrumentation('resetPasswordAction', { formData }, async () => {
+    const raw = formData instanceof FormData ? Object.fromEntries(formData) : (formData ?? {});
+    const token = typeof raw.token === 'string' ? raw.token : '';
+    const password = typeof raw.password === 'string' ? raw.password : '';
 
-  if (!token) return { error: 'Missing reset token' };
+    if (!token) return { error: 'Missing reset token' };
 
-  const parsed = z.object({
-    password: z.string()
-      .min(8, 'Password must be at least 8 characters')
-      .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
-      .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
-      .regex(/[0-9]/, 'Password must contain at least one number'),
-  }).safeParse({ password });
+    // BUG-4: Rate limit reset attempts per client IP to prevent token enumeration / brute force.
+    const headersList = await headers();
+    const clientIp =
+      headersList.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+      headersList.get('x-real-ip') ||
+      'unknown';
+    const rl = await withRateLimit(`reset:${clientIp}`, 'reset_password', 5);
+    if (!rl.allowed) {
+      return { error: 'Too many reset attempts. Please try again later.' };
+    }
 
-  if (!parsed.success) {
-    return { error: parsed.error.errors[0]?.message ?? 'Invalid password' };
-  }
+    const parsed = z.object({
+      password: z.string()
+        .min(8, 'Password must be at least 8 characters')
+        .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
+        .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
+        .regex(/[0-9]/, 'Password must contain at least one number'),
+    }).safeParse({ password });
 
-  const db = getDb();
-  const [vt] = await db.select()
-    .from(schema.verificationTokens)
-    .where(and(
-      eq(schema.verificationTokens.token, token),
-      gt(schema.verificationTokens.expires, new Date()),
-    ))
-    .limit(1);
+    if (!parsed.success) {
+      return { error: parsed.error.errors[0]?.message ?? 'Invalid password' };
+    }
 
-  if (!vt) return { error: 'Invalid or expired reset link' };
+    const db = getDb();
+    const [vt] = await db.select()
+      .from(schema.verificationTokens)
+      .where(and(
+        eq(schema.verificationTokens.token, token),
+        gt(schema.verificationTokens.expires, new Date()),
+      ))
+      .limit(1);
 
-  const hashedPassword = await bcrypt.hash(password, BCRYPT_COST);
+    if (!vt) return { error: 'Invalid or expired reset link' };
 
-  let userId: string | null = null;
-  await db.transaction(async (tx) => {
-    const [u] = await tx.update(schema.users)
-      .set({ hashedPassword, tokenVersion: sql`${schema.users.tokenVersion} + 1` })
-      .where(eq(schema.users.email, vt.identifier))
-      .returning({ id: schema.users.id });
-    if (u) userId = u.id;
-    await tx.delete(schema.verificationTokens)
-      .where(eq(schema.verificationTokens.token, token));
+    const hashedPassword = await bcrypt.hash(password, BCRYPT_COST);
+
+    let userId: string | null = null;
+    await db.transaction(async (tx) => {
+      const [u] = await tx.update(schema.users)
+        .set({ hashedPassword, tokenVersion: sql`${schema.users.tokenVersion} + 1` })
+        .where(eq(schema.users.email, vt.identifier))
+        .returning({ id: schema.users.id });
+      if (u) userId = u.id;
+      await tx.delete(schema.verificationTokens)
+        .where(eq(schema.verificationTokens.token, token));
+    });
+
+    // FEAT-03: Audit log for password reset
+    if (userId) {
+      try {
+        await db.insert(schema.auditLogs).values({
+          userId,
+          action: 'password_reset',
+          metadata: {},
+        });
+      } catch { /* fail open */ }
+    }
+
+    return { success: true, message: 'Password has been reset. You can now sign in.' };
   });
-
-  // FEAT-03: Audit log for password reset
-  if (userId) {
-    try {
-      await db.insert(schema.auditLogs).values({
-        userId,
-        action: 'password_reset',
-        metadata: {},
-      });
-    } catch { /* fail open */ }
-  }
-
-  return { success: true, message: 'Password has been reset. You can now sign in.' };
 }

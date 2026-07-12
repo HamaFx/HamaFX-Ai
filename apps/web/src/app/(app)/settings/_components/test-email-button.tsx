@@ -99,7 +99,7 @@ export function TestEmailButton(): React.JSX.Element {
       className="focus-visible:ring-fg min-h-[44px] focus-visible:ring-2"
     >
       <IconMail className="size-4" />
-      {pending ? 'Sending…' : 'IconArrowRight test email'}
+      {pending ? 'Sending…' : 'Send test email'}
     </Button>
   );
 }

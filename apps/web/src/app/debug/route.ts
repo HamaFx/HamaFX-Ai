@@ -2,6 +2,26 @@ import { NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
 
+/**
+ * Mask a DB connection URL so we can see the host/scheme but never the
+ * credentials. e.g. `postgresql://user:pass@host:5432/db` →
+ * `postgresql://***@host:5432/db`.
+ */
+function maskDbUrl(raw: string): string {
+  try {
+    const u = new URL(raw);
+    if (u.username || u.password) {
+      u.username = '***';
+      u.password = '';
+    }
+    return u.toString();
+  } catch {
+    // Not a parseable URL — return only the scheme if present, else '(invalid)'
+    const schemeMatch = /^([a-z][a-z0-9+\-.]*):\/\//i.exec(raw);
+    return schemeMatch ? `${schemeMatch[1]}://(non-parseable)` : '(invalid)';
+  }
+}
+
 export async function GET() {
   // HIGH-03: Guard debug route — only available in development
   if (process.env.NODE_ENV === 'production') {
@@ -16,11 +36,11 @@ export async function GET() {
 
   if (process.env.DATABASE_URL) {
     env.DATABASE_URL_length = process.env.DATABASE_URL.length;
-    env.DATABASE_URL_prefix = process.env.DATABASE_URL.substring(0, 20);
+    env.DATABASE_URL_masked = maskDbUrl(process.env.DATABASE_URL);
   }
   if (process.env.POSTGRES_URL) {
     env.POSTGRES_URL_length = process.env.POSTGRES_URL.length;
-    env.POSTGRES_URL_prefix = process.env.POSTGRES_URL.substring(0, 20);
+    env.POSTGRES_URL_masked = maskDbUrl(process.env.POSTGRES_URL);
   }
 
   const result: Record<string, unknown> = { env };

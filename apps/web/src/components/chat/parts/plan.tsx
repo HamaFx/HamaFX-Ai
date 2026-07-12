@@ -30,7 +30,7 @@
 
 import {IconCpu, IconChevronRight, IconChevronDown, IconLoader2} from '@tabler/icons-react';
 import { AnimatePresence, m } from 'motion/react';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 
 import type { UserPlanPart } from '@hamafx/shared';
 
@@ -50,6 +50,8 @@ const DOMAIN_LABEL: Record<UserPlanPart['domain'], string> = {
 };
 
 export function PlanPart({ plan, streaming = false }: PlanPartProps) {
+  const id = useId();
+  const contentId = `plan-content-${id}`;
   const [open, setOpen] = useState(false);
   const wasStreaming = useRef(false);
 
@@ -77,7 +79,7 @@ export function PlanPart({ plan, streaming = false }: PlanPartProps) {
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
-        aria-controls="plan-content"
+        aria-controls={contentId}
         className="text-fg-muted hover:text-fg focus-visible:ring-2 focus-visible:ring-fg rounded-sm flex items-center gap-2 text-left text-body-sm font-medium tabular-nums focus:outline-none"
       >
         {open ? (
@@ -105,7 +107,7 @@ export function PlanPart({ plan, streaming = false }: PlanPartProps) {
       <AnimatePresence initial={false}>
         {open ? (
           <m.div
-            id="plan-content"
+            id={contentId}
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}

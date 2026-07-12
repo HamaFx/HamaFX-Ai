@@ -112,14 +112,14 @@ export function TelegramLinkCard(): React.JSX.Element {
         const data = (await res.json()) as LinkCodeResponse;
         if (data.alreadyLinked) {
           toast.info('Already linked', {
-            description: 'Your Telegram is already connected. IconUnlink first to re-link.',
+            description: 'Your Telegram is already connected. Unlink first to re-link.',
           });
           await fetchStatus();
           return;
         }
         setLinkCode(data);
-        toast.success('IconLink code generated', {
-          description: 'IconArrowRight the code to the HamaFX bot on Telegram',
+        toast.success('Link code generated', {
+          description: 'Send the code to the HamaFX bot on Telegram',
         });
         startPolling();
       } else {
@@ -232,7 +232,7 @@ export function TelegramLinkCard(): React.JSX.Element {
             ) : (
               <IconUnlink className="size-4" />
             )}
-            {unlinking ? 'Unlinking…' : 'IconUnlink Telegram'}
+            {unlinking ? 'Unlinking…' : 'Unlink Telegram'}
           </Button>
         </div>
       ) : (
@@ -264,11 +264,11 @@ export function TelegramLinkCard(): React.JSX.Element {
               ) : (
                 <IconLink className="size-4" />
               )}
-              {generating ? 'Generating…' : 'IconLink Telegram'}
+              {generating ? 'Generating…' : 'Link Telegram'}
             </Button>
           ) : (
               <div className="space-y-3">
-                {/* IconLink code display */}
+                {/* Link code display */}
                 <div className="rounded-sm border border-border bg-bg-elev-1-elevated p-4 space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="text-xs text-fg-subtle">Your link code</span>

@@ -24,6 +24,7 @@
 //
 // Server component on purpose — purely presentational, no state or events.
 
+import Link from 'next/link';
 import type { GetCalendarOutput, ToolCalendarItem } from '@hamafx/shared';
 
 interface GetCalendarPartProps {
@@ -93,7 +94,7 @@ function CalendarRow({ item }: { item: ToolCalendarItem }) {
   const tag = item.currency ?? item.country;
 
   return (
-    <a
+    <Link
       href={`/calendar?id=${encodeURIComponent(item.id)}`}
       className="focus-visible:ring-fg-muted hover:bg-bg-elev-2 flex min-h-[44px] items-center gap-2.5 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2"
     >
@@ -130,7 +131,7 @@ function CalendarRow({ item }: { item: ToolCalendarItem }) {
           )}
         </span>
       )}
-    </a>
+    </Link>
   );
 }
 

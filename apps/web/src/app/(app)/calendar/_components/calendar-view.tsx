@@ -76,7 +76,7 @@ export function CalendarView({ initialEvents }: CalendarViewProps) {
       try {
         const res = await fetch('/api/cron/calendar');
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        toast.success('IconCalendar refreshed');
+        toast.success('Calendar refreshed');
         refetch();
         setLastRefreshed(Date.now());
       } catch (err) {

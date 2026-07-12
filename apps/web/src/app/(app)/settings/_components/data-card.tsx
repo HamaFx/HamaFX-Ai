@@ -257,7 +257,7 @@ export function DataCard() {
       <SettingsRow
         icon={<IconDownload className="size-4" />}
         label="Export my data"
-        description="IconDownload all your data as JSON (GDPR)"
+        description="Download all your data as JSON (GDPR)"
         action={
           <Button
             type="button"

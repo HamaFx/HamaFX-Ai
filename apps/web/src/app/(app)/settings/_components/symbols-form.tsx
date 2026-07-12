@@ -551,7 +551,7 @@ export function SymbolsForm({ initialSymbols, catalog }: SymbolsFormProps) {
           <Input
             value={watchlistSearch}
             onChange={(e) => setWatchlistSearch(e.target.value)}
-            placeholder="IconSearch watchlist symbols..."
+            placeholder="Search watchlist symbols..."
             className="pl-9 bg-bg-elev-1 h-9 text-sm"
           />
         </div>
@@ -648,7 +648,7 @@ export function SymbolsForm({ initialSymbols, catalog }: SymbolsFormProps) {
             <Input
               value={catalogSearch}
               onChange={(e) => setCatalogSearch(e.target.value)}
-              placeholder="IconSearch catalog by symbol or name..."
+              placeholder="Search catalog by symbol or name..."
               className="pl-9 bg-bg-elev-1 h-9 text-sm"
             />
           </div>

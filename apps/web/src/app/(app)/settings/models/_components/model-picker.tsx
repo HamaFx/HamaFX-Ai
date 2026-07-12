@@ -172,7 +172,7 @@ export function ModelPicker({
           kind: 'error',
           message: err instanceof Error ? err.message : String(err),
         });
-        toast.error(err instanceof Error ? err.message : 'IconDeviceFloppy failed');
+        toast.error(err instanceof Error ? err.message : 'Save failed');
       }
     });
   }

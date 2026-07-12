@@ -109,7 +109,8 @@ function formatCountdown(ms: number): string {
 // -----------------------------------------------------------------------
 
 function CellSession() {
-  const session = getSession(new Date());
+  const { now } = useTime();
+  const session = getSession(new Date(now));
   const active = session !== 'Closed' && session !== 'Weekend';
   return (
     <div className="border-border bg-bg-elev-1 flex flex-col gap-1.5 rounded-sm border p-3">

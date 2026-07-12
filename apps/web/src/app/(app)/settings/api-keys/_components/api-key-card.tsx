@@ -70,7 +70,7 @@ const SETUP_INSTRUCTIONS: Record<string, {
     dashboardUrl: 'https://console.cloud.google.com/vertex-ai',
     freeTier: 'No free tier. Billed directly to your Google Cloud Project Project.',
     rateLimits: 'Determined by your GCP project quota limits.',
-    howToGet: 'Create a Service Account in your GCP console, grant it the "Vertex AI IconUser" role, create a JSON private key, and paste the entire JSON file content here.',
+    howToGet: 'Create a Service Account in your GCP console, grant it the "Vertex AI User" role, create a JSON private key, and paste the entire JSON file content here.',
   },
   anthropic: {
     dashboardUrl: 'https://console.anthropic.com/',
@@ -100,7 +100,7 @@ const SETUP_INSTRUCTIONS: Record<string, {
     dashboardUrl: 'https://openrouter.ai/keys',
     freeTier: 'Provides access to both free open-source models and premium models.',
     rateLimits: 'Varies depending on model and account credits.',
-    howToGet: 'Go to OpenRouter, sign in, go to API keys under IconSettings, and create a key.',
+    howToGet: 'Go to OpenRouter, sign in, go to API keys under Settings, and create a key.',
   },
   xai: {
     dashboardUrl: 'https://console.x.ai/',
@@ -238,16 +238,16 @@ export function ApiKeyCard({ provider, currentValue, health, usage, keyUpdatedAt
   async function handleCopy() {
     if (!isSet) return;
     const ok = await confirm({
-      title: 'IconCopy API IconKey to Clipboard?',
+      title: 'Copy API Key to Clipboard?',
       description: 'API keys are highly sensitive. Storing them in the system clipboard makes them accessible to other applications running on your device. Proceed with caution.',
-      confirmLabel: 'IconCopy IconKey',
+      confirmLabel: 'Copy Key',
       cancelLabel: 'Cancel',
       tone: 'default',
     });
     if (ok) {
       try {
         await navigator.clipboard.writeText(value.trim());
-        toast.success('API IconKey copied to clipboard');
+        toast.success('API Key copied to clipboard');
       } catch {
         toast.error('Failed to copy to clipboard');
       }

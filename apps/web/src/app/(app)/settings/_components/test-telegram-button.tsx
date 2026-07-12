@@ -101,7 +101,7 @@ export function TestTelegramButton(): React.JSX.Element {
       className="focus-visible:ring-fg min-h-[44px] focus-visible:ring-2"
     >
       <IconArrowRight className="size-4" />
-      {pending ? 'Sending…' : 'IconArrowRight test Telegram'}
+      {pending ? 'Sending…' : 'Send test Telegram'}
     </Button>
   );
 }

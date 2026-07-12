@@ -33,7 +33,7 @@ export interface CommandItem {
   id: string;
   group: CommandGroup;
   label: string;
-  /** IconSearch aliases — extra terms the user can type to surface this command. */
+  /** Search aliases — extra terms the user can type to surface this command. */
   keywords?: string[];
   icon: Icon;
   /**
