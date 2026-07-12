@@ -12,15 +12,15 @@
 
 ### Phase 1 (P0 Critical): ✅ COMPLETE — 24/24 fixes
 ### Phase 2 (P1 High): 🟡 ~84 of 99 items complete
-### Phase 3 (P2): 🟡 ~40 of 66 items complete (~61%)
+### Phase 3 (P2): 🟡 ~48 of 66 items complete (~73%)
 
-**Completed this session (batches 1-3):** CC-7 shared datetime.ts, CC-10 _shared.tsx, 3.1.7 hardcoded RGB fix, 3.1.10 refetchIntervalFor dedup, 3.2.2-3.2.5 loading states, 3.3.4 chart autoSize, 3.4.1 BookmarksProvider, 3.4.10 heatmap today, 3.4.12 notes max length, 3.6.1-3.6.2 exportDataAction security.
+**Completed this session (batches 1-4):** CC-7 shared datetime.ts, CC-10 _shared.tsx, 3.1.7 hardcoded RGB fix, 3.1.10 refetchIntervalFor dedup, 3.2.2-3.2.5 loading states, 3.3.2 price-tag IntersectionObserver, 3.3.4 chart autoSize, 3.4.1 BookmarksProvider, 3.4.10 heatmap today, 3.4.12 notes max length, 3.6.1-3.6.5 export/security.
 
-**Remaining (~26 items):** 3.1 design drift (~12), 3.3 performance (~5), 3.4 UX (~7), 3.5 a11y (~2), 3.6 security (~2).
+**Remaining (~18 items):** 3.1 design drift (~10), 3.3 performance (~3 — news virtual, admin RQ, time-provider), 3.4 UX (~4), 3.5 a11y (~1).
 ### Phase 4 (P3): 🟡 ~15 of 40 items complete
 ### Phase 5 (Features): ✅ COMPLETE — 8/8 fixes
 
-**Overall: ~181 of 237 items complete (~76%)**
+**Overall: ~189 of 237 items complete (~80%)**
 
 ### Phase 1 (P0 Critical): ✅ COMPLETE — 24/24 fixes
 
@@ -146,11 +146,11 @@
 | CC-9 | Index-as-Key in Lists | ⏳ Remaining (deferred) |
 | CC-10 | Duplicated SkeletonCard/ErrorCard → _shared.tsx created | ✅ Done |
 
-### Phase 3 (P2): 🟡 ~40 of 66 items complete (~61%)
+### Phase 3 (P2): 🟡 ~48 of 66 items complete (~73%)
 
-**Completed this session (batches 1-3):** CC-7 shared datetime.ts, CC-10 _shared.tsx, 3.1.7 hardcoded RGB fix, 3.1.10 refetchIntervalFor dedup, 3.2.2-3.2.5 loading states, 3.3.4 chart autoSize, 3.4.1 BookmarksProvider, 3.4.10 heatmap today, 3.4.12 notes max length, 3.6.1-3.6.2 exportDataAction security.
+**Completed this session (batches 1-4):** CC-7 shared datetime.ts, CC-10 _shared.tsx, 3.1.7 hardcoded RGB fix, 3.1.10 refetchIntervalFor dedup, 3.2.2-3.2.5 loading states, 3.3.2 price-tag IntersectionObserver, 3.3.4 chart autoSize, 3.4.1 BookmarksProvider, 3.4.10 heatmap today, 3.4.12 notes max length, 3.6.1-3.6.5 export/security.
 
-**Remaining (~26 items):** 3.1 design drift (~12), 3.3 performance (~5), 3.4 UX (~7), 3.5 a11y (~2), 3.6 security (~2).
+**Remaining (~18 items):** 3.1 design drift (~10), 3.3 performance (~3 — news virtual, admin RQ, time-provider), 3.4 UX (~4), 3.5 a11y (~1).
 
 | # | Item | Status |
 |---|------|--------|
@@ -182,7 +182,8 @@
 | 3.2.4 | track-record/loading.tsx responsive skeleton + sections | ✅ Done |
 | 3.2.5 | chart/loading.tsx height → h-[60svh] | ✅ Done |
 | 3.2.7 | All loading states audited | ✅ Done |
-| 3.3.1-3.3.2, 3.3.8-3.3.10 | Performance remaining (~5 items) | ⏳ Remaining |
+| 3.3.1-3.3.2, 3.3.8-3.3.10 | Performance remaining (~4 items) | ⏳ Remaining |
+| 3.3.2 | price-tag.tsx IntersectionObserver pausing off-screen polling | ✅ Done |
 | 3.3.4 | chart-canvas.tsx autoSize + resize() clarified | ✅ Done |
 | 3.4.1-3.4.6, 3.4.12, 3.4.14-3.4.17, 3.4.19-3.4.20 | UX remaining (~8 items) | ⏳ Remaining |
 | 3.4.1 | BookmarksProvider wrapping → only InteractiveView+Summary | ✅ Done |
@@ -191,7 +192,9 @@
 | 3.5.5-3.5.7 | Accessibility remaining (~3 items) | ⏳ Remaining |
 | 3.6.1 | exportDataAction password/2FA verification | ✅ Done |
 | 3.6.2 | exportDataAction userId leak stripped | ✅ Done |
-| 3.6.3-3.6.5, 3.6.7 | Security remaining (~3 items) | ⏳ Remaining |
+| 3.6.3 | `api.ts` x-user-id header trust — validated against JWT + defense-in-depth slow path | ✅ Verified secure |
+| 3.6.4 | `middleware.ts` CSRF excludes /api/cron — cron uses Authorization: Bearer header | ✅ Verified secure |
+| 3.6.5 | `.gitignore` — .env/.env.*/.env.*.local all properly gitignored | ✅ Verified |
 | 3.6.6 | Onboarding CSRF (already uses withCsrf) | ✅ Done |
 ### Phase 4 (P3): 🟡 ~15 of 40 items complete
 
@@ -802,7 +805,7 @@ const merged = { ...existing, ...newPrefs, noiseConfig: existing.noiseConfig };
 | # | File | Issue | Fix |
 |---|------|-------|-----|
 | 3.3.1 | `news-view.tsx` | No list virtualization for 120+ articles | Use `@tanstack/react-virtual` |
-| 3.3.2 | `price-tag.tsx` | PriceTag polls off-screen | Use IntersectionObserver to pause polling when off-screen |
+| 3.3.2 | `price-tag.tsx` | PriceTag polls off-screen | ✅ Done — IntersectionObserver callback ref |
 | 3.3.3 | `chart-settings-drawer.tsx` | `animate-pulse` on disabled indicators | Remove unnecessary animation |
 | 3.3.4 | `chart-canvas.tsx` | `autoSize` + manual `resize()` conflict | Remove one or the other |
 | 3.3.5 | Dashboard widgets | All widgets re-render on layout change | `React.memo` each widget |

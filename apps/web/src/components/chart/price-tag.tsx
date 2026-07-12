@@ -25,6 +25,7 @@
 
 import { getSymbolDefinition, isKnownSymbol, priceDecimals, type Symbol } from '@hamafx/shared';
 import {IconMinus, IconTrendingDown, IconTrendingUp} from '@tabler/icons-react';
+import { useCallback, useRef, useState } from 'react';
 
 import { AnimatedNumber } from '@/components/ui/animated-number';
 import { usePrice } from '@/hooks/use-prices';
@@ -40,20 +41,43 @@ interface PriceTagProps {
   className?: string;
 }
 
+/**
+ * Live price readout for the chart header. Uses IntersectionObserver to
+ * pause polling when the tag is scrolled off-screen, saving bandwidth
+ * and CPU for price tags that aren't visible (e.g. in a scrolled chart
+ * or off-screen dashboard widget).
+ */
 export function PriceTag({ symbol, referencePrice, className }: PriceTagProps) {
-  const { tick, isLoading, isError } = usePrice(symbol);
+  const observerRef = useRef<IntersectionObserver | null>(null);
+  const [inView, setInView] = useState(true); // start visible to avoid flash
+
+  // Callback ref: re-connects IntersectionObserver whenever the DOM node
+  // changes (handles render-branch transitions without orphaning the observer).
+  const elRef = useCallback((node: HTMLSpanElement | null) => {
+    observerRef.current?.disconnect();
+    observerRef.current = null;
+    if (!node) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => setInView(entry?.isIntersecting ?? true),
+      { threshold: 0 },
+    );
+    observer.observe(node);
+    observerRef.current = observer;
+  }, []);
+
+  const { tick, isLoading, isError } = usePrice(symbol, { enabled: inView });
   const decimals = isKnownSymbol(symbol) ? getSymbolDefinition(symbol).decimals : priceDecimals(symbol);
 
   if (isLoading) {
     return (
-      <span className={cn('text-fg-subtle text-base tabular-nums animate-pulse', className)}>
+      <span ref={elRef} className={cn('text-fg-subtle text-base tabular-nums animate-pulse', className)}>
         —
       </span>
     );
   }
   if (isError || !tick) {
     return (
-      <span className={cn('text-danger text-xs tabular-nums', className)}>price unavailable</span>
+      <span ref={elRef} className={cn('text-danger text-xs tabular-nums', className)}>price unavailable</span>
     );
   }
 
@@ -62,7 +86,7 @@ export function PriceTag({ symbol, referencePrice, className }: PriceTagProps) {
   const bear = delta !== null && delta < 0;
 
   return (
-    <span className={cn('flex items-baseline gap-2', className)}>
+    <span ref={elRef} className={cn('flex items-baseline gap-2', className)}>
       <AnimatedNumber
         value={tick.mid}
         decimals={decimals}
