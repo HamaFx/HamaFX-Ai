@@ -23,6 +23,7 @@
 
 import { Link } from 'next-view-transitions';
 
+import { formatStamp } from '@/lib/datetime';
 import type { ToolPartProps } from './registry';
 
 const MAX_ROWS = 8;
@@ -128,15 +129,4 @@ function RagCardError({ message }: { message?: string }) {
       Knowledge search failed{message ? ` · ${message}` : ''}
     </div>
   );
-}
-
-function formatStamp(iso: string): string {
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return iso;
-  const yyyy = d.getUTCFullYear().toString().padStart(4, '0');
-  const mm = (d.getUTCMonth() + 1).toString().padStart(2, '0');
-  const dd = d.getUTCDate().toString().padStart(2, '0');
-  const hh = d.getUTCHours().toString().padStart(2, '0');
-  const mi = d.getUTCMinutes().toString().padStart(2, '0');
-  return `${yyyy}-${mm}-${dd} ${hh}:${mi}Z`;
 }

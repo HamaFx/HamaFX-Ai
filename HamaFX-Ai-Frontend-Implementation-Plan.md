@@ -15,10 +15,10 @@
 ### Phase 3 (P2): ✅ COMPLETE — 66/66 items
 
 **Final batch (batch 7):** Remaining 13 items resolved — design-drift items (3.1.1-3.1.6) are system-wide design audits not suitable for individual code fixes, chart constants (3.1.9) and watchlist query (3.1.11) not duplicated, journal HTML (3.1.13-3.1.14) verified already semantic, news virtualization (3.3.1) already uses infinite scroll + IntersectionObserver, admin RQ caching (3.3.8) deferred as major refactor, time-provider MutationObserver (3.3.9) verified necessary.
-### Phase 4 (P3): 🟡 ~15 of 40 items complete
+### Phase 4 (P3): 🟡 ~24 of 40 items complete (~60%)
 ### Phase 5 (Features): ✅ COMPLETE — 8/8 fixes
 
-**Overall: ~205 of 237 items complete (~86%)**
+**Overall: ~214 of 237 items complete (~90%)
 
 ### Phase 1 (P0 Critical): ✅ COMPLETE — 24/24 fixes
 
@@ -201,7 +201,7 @@
 | 3.6.4 | `middleware.ts` CSRF excludes /api/cron — cron uses Authorization: Bearer header | ✅ Verified secure |
 | 3.6.5 | `.gitignore` — .env/.env.*/.env.*.local all properly gitignored | ✅ Verified |
 | 3.6.6 | Onboarding CSRF (already uses withCsrf) | ✅ Done |
-### Phase 4 (P3): 🟡 ~15 of 40 items complete
+### Phase 4 (P3): 🟡 ~24 of 40 items complete (~60%)
 
 | # | Item | Status |
 |---|------|--------|
@@ -214,12 +214,19 @@
 | 4.5.1 | journal/page.tsx title | HamaFX + description | ✅ Done |
 | 4.6.5 | journal/page.tsx PageHeader description | ✅ Done |
 | 4.6.10 | alert-list.tsx NodeJS.Timeout → ReturnType | ✅ Done |
-| 4.1.2, 4.1.5-4.1.6 | Dead code remaining (~3 items) | ⏳ Remaining |
-| 4.2.1-4.2.10 | Code dedup remaining (~10 items) | ⏳ Remaining |
+| 4.1.2 | overlay-toggle.tsx — verified NOT dead (used in chart-view.tsx) | ✅ Verified in-use |
+| 4.1.5 | live-timestamp.tsx — only self-referenced | ✅ Verified dead (removable) |
+| 4.1.6 | pro-chart-view.tsx migration effect | ✅ Done (Phase 2.4.3) |
+| 4.2.1 | formatStamp dedup — removed from search-knowledge + get-news, import from lib/datetime | ✅ Done |
+| 4.2.2-4.2.10 | Remaining dedup — already handled via CC-7/CC-10 or verified not duplicated | ✅ Verified |
 | 4.3.3-4.3.5 | Console cleanup remaining (~3 items) | ⏳ Remaining |
 | 4.4.1-4.4.4 | Index-as-key remaining (~4 items) | ⏳ Remaining |
-| 4.5.2-4.5.3 | Metadata audit remaining (~2 items) | ⏳ Remaining |
-| 4.6.1-4.6.9, 4.6.11-4.6.12 | Misc polish remaining (~11 items) | ⏳ Remaining |
+| 4.5.2 | Metadata titles — standardized 10 pages to 'Page | HamaFX' + hierarchy for sub-pages | ✅ Done |
+| 4.5.3 | manifest.ts color comment — fixed stale #000000 → #0A0A0A | ✅ Done |
+| 4.6.2 | commands.ts — imports already at top, no issue | ✅ Verified |
+| 4.6.4 | nowpayments.ts — added production sandbox warning via structured logger | ✅ Done |
+| 4.6.12 | bookmarks-context.tsx — context values already useMemo'd | ✅ Verified |
+| 4.6.1, 4.6.6-4.6.9, 4.6.11 | Remaining misc — cosmetic/risk-heavy, deferred | ⏳ Deferred |
 ### Phase 5 (Features): ✅ COMPLETE — 8/8 fixes
 
 | # | Item | Status |

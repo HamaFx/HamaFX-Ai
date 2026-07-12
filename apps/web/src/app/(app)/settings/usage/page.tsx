@@ -41,7 +41,7 @@ import { getDb, schema } from '@hamafx/db';
 import { eq, gte, and } from 'drizzle-orm';
 import { UsageLimitsForm } from './_components/usage-limits-form';
 
-export const metadata: Metadata = { title: 'Usage' };
+export const metadata: Metadata = { title: 'Usage | HamaFX' };
 export const revalidate = 60;
 
 export default async function UsagePage() {

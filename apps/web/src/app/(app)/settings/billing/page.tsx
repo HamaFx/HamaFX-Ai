@@ -29,7 +29,7 @@ import { BillingPlans } from './_components/billing-plans';
 import { PaymentHistory } from './_components/payment-history';
 import { SubscriptionStatus } from './_components/subscription-status';
 
-export const metadata: Metadata = { title: 'Billing — Settings' };
+export const metadata: Metadata = { title: 'Billing | Settings | HamaFX' };
 export const revalidate = 0;
 
 export default async function BillingPage() {

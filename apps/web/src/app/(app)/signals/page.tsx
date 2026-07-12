@@ -4,7 +4,7 @@ import { auth } from '@/auth';
 import type { Metadata } from 'next';
 import { SignalsDashboard } from './_components/signals-dashboard';
 
-export const metadata: Metadata = { title: 'AI Signals' };
+export const metadata: Metadata = { title: 'AI Signals | HamaFX' };
 export const revalidate = 60;
 
 export default async function SignalsPage() {

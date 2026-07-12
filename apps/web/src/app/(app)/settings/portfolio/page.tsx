@@ -31,7 +31,7 @@ import {IconWallet, IconTrendingUp, IconAlertTriangle, IconShield} from '@tabler
 import { EmptyState } from '@/components/ui/empty-state';
 import { cn } from '@/lib/cn';
 
-export const metadata: Metadata = { title: 'Portfolio' };
+export const metadata: Metadata = { title: 'Portfolio | HamaFX' };
 export const revalidate = 30;
 
 export default async function PortfolioPage() {

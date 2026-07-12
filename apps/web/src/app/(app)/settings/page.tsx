@@ -40,7 +40,7 @@ import { SystemStatusCard } from './_components/system-status-card';
 import { UsageGlance } from './_components/usage-glance';
 import { TwoFactorSetup } from './_components/two-factor-setup';
 
-export const metadata: Metadata = { title: 'Settings' };
+export const metadata: Metadata = { title: 'Settings | HamaFX' };
 // We render server components that hit the DB (push subscription count,
 // usage stats), so we need a fresh render on every visit.
 export const revalidate = 60;

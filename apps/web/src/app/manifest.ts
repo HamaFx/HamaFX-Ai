@@ -16,8 +16,7 @@
 
 import type { MetadataRoute } from 'next';
 
-// Pure black canvas — matches --color-bg = #000000.
-// `#0a0a0a` is the closest sRGB approximation.
+// Matches --color-bg = #0A0A0A from globals.css.
 export default function manifest(): MetadataRoute.Manifest {
   return {
     name: 'HamaFX-Ai',

@@ -19,6 +19,7 @@
 // API docs: https://api-docs.nowpayments.io/
 
 import { getServerEnv } from '@/lib/env';
+import { createScopedLoggerWithContext } from '@/lib/logger';
 
 export interface NowPaymentsInvoice {
   id: string;
@@ -62,6 +63,13 @@ export async function createInvoice(params: CreateInvoiceParams): Promise<NowPay
   const apiKey = env.NOWPAYMENTS_API_KEY;
   const baseUrl = env.NOWPAYMENTS_API_BASE ?? 'https://api-sandbox.nowpayments.io';
 
+  if (baseUrl.includes('sandbox') && process.env.NODE_ENV === 'production') {
+    createScopedLoggerWithContext({ component: 'nowpayments', operation: 'createInvoice' }).error(
+      { nowpaymentsBaseUrl: baseUrl },
+      'Using sandbox API in production — set NOWPAYMENTS_API_BASE',
+    );
+  }
+
   if (!apiKey) {
     throw new Error('NOWPAYMENTS_API_KEY is not configured');
   }
@@ -98,6 +106,13 @@ export async function getPaymentStatus(paymentId: string): Promise<NowPaymentRes
   const env = getServerEnv();
   const apiKey = env.NOWPAYMENTS_API_KEY;
   const baseUrl = env.NOWPAYMENTS_API_BASE ?? 'https://api-sandbox.nowpayments.io';
+
+  if (baseUrl.includes('sandbox') && process.env.NODE_ENV === 'production') {
+    createScopedLoggerWithContext({ component: 'nowpayments', operation: 'createInvoice' }).error(
+      { nowpaymentsBaseUrl: baseUrl },
+      'Using sandbox API in production — set NOWPAYMENTS_API_BASE',
+    );
+  }
 
   if (!apiKey) {
     throw new Error('NOWPAYMENTS_API_KEY is not configured');

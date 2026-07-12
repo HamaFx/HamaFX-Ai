@@ -29,7 +29,7 @@ import { EmptyState } from '@/components/ui/empty-state';
 import { cn } from '@/lib/cn';
 import { SignalFeedback } from './_components/signal-feedback';
 
-export const metadata: Metadata = { title: 'AI Track Record' };
+export const metadata: Metadata = { title: 'AI Track Record | HamaFX' };
 export const revalidate = 60;
 
 export default async function TrackRecordPage() {

@@ -21,7 +21,7 @@ import { PageHeader } from '@/components/layout/page-header';
 import { TelegramLinkCard } from '../_components/telegram-link-card';
 import { TestTelegramButton } from '../_components/test-telegram-button';
 
-export const metadata: Metadata = { title: 'Telegram Bot — Settings' };
+export const metadata: Metadata = { title: 'Telegram | Settings | HamaFX' };
 
 export default function TelegramSettingsPage() {
   return (

@@ -20,7 +20,7 @@ import { PageHeader } from '@/components/layout/page-header';
 
 import { AlertList } from './_components/alert-list';
 
-export const metadata: Metadata = { title: 'Alerts' };
+export const metadata: Metadata = { title: 'Alerts | HamaFX' };
 
 export default function AlertsPage() {
   return (

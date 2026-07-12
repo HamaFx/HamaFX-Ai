@@ -30,7 +30,7 @@ import { NewsView } from './_components/news-view';
 import { SentimentSummary } from './_components/sentiment-summary';
 import { BookmarksProvider } from '@/components/news/bookmarks-context';
 
-export const metadata: Metadata = { title: 'News' };
+export const metadata: Metadata = { title: 'News | HamaFX' };
 // ISR: revalidate every 5 minutes instead of forcing dynamic on every request.
 export const revalidate = 300;
 

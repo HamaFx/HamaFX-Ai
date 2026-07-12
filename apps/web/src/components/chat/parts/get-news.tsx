@@ -29,6 +29,8 @@
 import type { GetNewsOutput, NewsSentiment } from '@hamafx/shared';
 import { Link } from 'next-view-transitions';
 
+import { formatStamp } from '@/lib/datetime';
+
 interface GetNewsPartProps {
   /** Tool output, or `null` while streaming / before completion. */
   output: GetNewsOutput | null;
@@ -155,18 +157,3 @@ function NewsCardError({ message }: { message?: string }) {
   );
 }
 
-/**
- * Deterministic UTC `YYYY-MM-DD HH:mm` stamp. We avoid client-side
- * relative-time libraries here so the server-rendered output is stable
- * across hydration boundaries.
- */
-function formatStamp(iso: string): string {
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return iso;
-  const yyyy = d.getUTCFullYear().toString().padStart(4, '0');
-  const mm = (d.getUTCMonth() + 1).toString().padStart(2, '0');
-  const dd = d.getUTCDate().toString().padStart(2, '0');
-  const hh = d.getUTCHours().toString().padStart(2, '0');
-  const mi = d.getUTCMinutes().toString().padStart(2, '0');
-  return `${yyyy}-${mm}-${dd} ${hh}:${mi}Z`;
-}
