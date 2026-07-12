@@ -22,6 +22,8 @@ ExecStart=/usr/bin/node /opt/hamafx/app/apps/worker/dist/runner/cli.js embedding
 # each and is the heaviest job; 1 GB is plenty.
 MemoryMax=1G
 TimeoutStartSec=600
+StartLimitIntervalSec=3600
+StartLimitBurst=5
 
 # Hardening
 NoNewPrivileges=true

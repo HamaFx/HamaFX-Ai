@@ -90,10 +90,24 @@ git reset --hard "$NEW_SHA" >/dev/null
 rollback() {
   local reason="$1"
   log "rolling back to $PREV_SHA: $reason"
-  git reset --hard "$PREV_SHA" >/dev/null || true
-  pnpm install --frozen-lockfile --silent || true
-  pnpm --filter @hamafx/worker build --silent || true
-  ping_hc fail "$reason at $NEW_SHA"
+  if ! git reset --hard "$PREV_SHA" >/dev/null; then
+    log "CRITICAL: git reset failed during rollback — manual intervention required"
+    ping_hc fail "ROLLBACK FAILED: git reset failed. reason=$reason"
+    exit 1
+  fi
+  if ! pnpm install --frozen-lockfile; then
+    log "CRITICAL: pnpm install failed during rollback"
+    ping_hc fail "ROLLBACK FAILED: install failed. reason=$reason"
+    exit 1
+  fi
+  if ! pnpm --filter @hamafx/worker build; then
+    log "CRITICAL: build failed during rollback"
+    ping_hc fail "ROLLBACK FAILED: build failed. reason=$reason"
+    exit 1
+  fi
+  # Restart worker on the rolled-back code
+  sudo /bin/systemctl restart hamafx-worker.service || true
+  ping_hc fail "rolled back from $NEW_SHA to $PREV_SHA: $reason"
   exit 1
 }
 
@@ -105,9 +119,9 @@ if ! pnpm --filter @hamafx/worker build; then
   rollback "build failed"
 fi
 
-if ! pnpm --filter @hamafx/worker test -- --run; then
-  rollback "tests failed"
-fi
+# NOTE: Worker tests are skipped on the VM — CI runs them on every PR and
+# push to main. Running tests with DATABASE_URL pointing to production
+# could accidentally read/write production data.
 
 # Success path — record SHA, restart the worker, ping HC.
 echo "$NEW_SHA" > "$SHA_FILE"
@@ -153,4 +167,6 @@ if [[ "$RESTART_COUNT" =~ ^[0-9]+$ ]] && (( RESTART_COUNT > 1 )); then
 fi
 
 log "applied $NEW_SHA"
+# Prune the pnpm store to reclaim disk space from old packages
+pnpm store prune 2>/dev/null || true
 ping_hc success "applied $NEW_SHA"

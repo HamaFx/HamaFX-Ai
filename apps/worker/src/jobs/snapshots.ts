@@ -63,16 +63,19 @@ export async function runSnapshots(ctx: JobContext): Promise<JobResult> {
     }
   }
 
-  // Tail step — prune candles_1m beyond the retention window. Cheap
-  // enough to run synchronously after the snapshot loop.
+  // Tail step — prune candles_1m beyond the retention window.
+  // Uses a count-before-delete pattern to avoid .returning() which
+  // forces Postgres to ship all deleted rows back to Node.js.
   let pruned = 0;
   try {
     const cutoff = new Date(Date.now() - CANDLES_RETENTION_DAYS * 24 * 60 * 60 * 1000);
-    const result = await getDb()
-      .delete(candles1m)
-      .where(lt(candles1m.t, cutoff))
-      .returning({ symbol: candles1m.symbol });
-    pruned = result.length;
+    // Count first, then delete without .returning()
+    const [row] = await getDb()
+      .select({ count: sql<number>`count(*)::int` })
+      .from(candles1m)
+      .where(lt(candles1m.t, cutoff));
+    pruned = row?.count ?? 0;
+    await getDb().delete(candles1m).where(lt(candles1m.t, cutoff));
     log.info('candles_1m prune complete', { cutoff: cutoff.toISOString(), pruned });
   } catch (err) {
     log.error('candles_1m prune failed', { err: String(err) });

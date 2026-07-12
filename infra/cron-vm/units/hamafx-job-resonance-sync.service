@@ -20,6 +20,8 @@ ExecStart=/usr/bin/node /opt/hamafx/app/apps/worker/dist/runner/cli.js resonance
 
 MemoryMax=512M
 TimeoutStartSec=300
+StartLimitIntervalSec=3600
+StartLimitBurst=5
 
 NoNewPrivileges=true
 PrivateTmp=true

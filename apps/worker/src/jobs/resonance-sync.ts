@@ -170,29 +170,23 @@ export async function runResonanceSync(ctx: JobContext): Promise<JobResult> {
       date: pt.date,
       realYieldPct: pt.realYield,
       breakevenInflationPct: pt.inflation,
-      // Synthesize DXY proxy geometrically if we want, or default to 100 for base.
-      // DXY is handled primarily on the AI tool / live route, so we persist null
-      // or standard baseline here.
-      dxyIndex: 100.0,
+      // DXY is handled primarily on the AI tool / live route, so we persist
+      // a placeholder. Set to null to indicate the column is unused for now.
+      dxyIndex: null,
       goldClose: pt.gold,
       divergenceScore,
       createdAt: new Date(),
     };
   });
 
-  // 7. Write to database
+  // 7. Write to database — batch insert for better performance.
   log.info('persisting resonance rows', { rows: dbRows.length });
   let processed = 0;
 
-  for (const row of dbRows) {
-    if (ctx.signal?.aborted) {
-      log.warn('resonance-sync aborted during persistence');
-      break;
-    }
-
+  if (dbRows.length > 0) {
     await db
       .insert(schema.intermarketResonance)
-      .values(row)
+      .values(dbRows)
       .onConflictDoUpdate({
         target: schema.intermarketResonance.date,
         set: {
@@ -204,8 +198,7 @@ export async function runResonanceSync(ctx: JobContext): Promise<JobResult> {
           createdAt: sql`now()`,
         },
       });
-
-    processed += 1;
+    processed = dbRows.length;
   }
 
   log.info('resonance-sync complete', { processed });

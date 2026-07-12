@@ -62,23 +62,23 @@ export function startScheduler(log: Logger): void {
     void runJobSafely('briefings', log);
   });
 
-  // Embedding backfill: Every hour at minute 0
-  cron.schedule('0 * * * *', () => {
+  // Embedding backfill: Every 6 hours (aligned with systemd timer)
+  cron.schedule('0 */6 * * *', () => {
     void runJobSafely('embedding-backfill', log);
   });
 
-  // Snapshots: Daily at 00:00 UTC
-  cron.schedule('0 0 * * *', () => {
+  // Snapshots: Daily at 00:05 UTC (aligned with systemd timer)
+  cron.schedule('5 0 * * *', () => {
     void runJobSafely('snapshots', log);
   });
 
-  // CoT: Weekly on Saturday at 00:00 UTC
-  cron.schedule('0 0 * * 6', () => {
+  // CoT: Weekly on Friday at 22:00 UTC (aligned with systemd timer)
+  cron.schedule('0 22 * * 5', () => {
     void runJobSafely('cot', log);
   });
 
-  // FRED Actuals: Daily at 01:00 UTC
-  cron.schedule('0 1 * * *', () => {
+  // FRED Actuals: Daily at 01:30 UTC (aligned with systemd timer)
+  cron.schedule('30 1 * * *', () => {
     void runJobSafely('fred-actuals', log);
   });
 

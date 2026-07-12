@@ -40,8 +40,10 @@ WatchdogSec=120
 # tick buffer before being forcibly killed. The default is SIGABRT,
 # which would skip the graceful-shutdown path entirely.
 WatchdogSignal=SIGTERM
-TimeoutStartSec=30
-TimeoutStopSec=15
+TimeoutStartSec=60
+TimeoutStopSec=30
+StartLimitIntervalSec=300
+StartLimitBurst=10
 
 # Hardening (non-exhaustive — keep simple for personal-mode)
 NoNewPrivileges=true

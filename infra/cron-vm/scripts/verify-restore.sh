@@ -15,11 +15,9 @@
 # rehearsal validates vector columns and HNSW indexes too. The VM needs Docker
 # installed (setup.sh grew an apt-get docker.io step in PR-17).
 #
-# Phase 6 task 6.5 — verified: the original `postgres:15-alpine` image does
-# NOT include the `vector` extension.  It was replaced with
-# `pgvector/pgvector:pg15` in Phase 3 task 3.7, which bundles pgvector
-# natively.  The script also asserts HNSW index count > 0 to confirm
-# vector columns and indexes survive the restore.
+# Uses pgvector/pgvector:pg16 which bundles pgvector natively, matching the
+# production docker-compose.yml version. The script also asserts HNSW index
+# count > 0 to confirm vector columns and indexes survive the restore.
 
 set -euo pipefail
 
@@ -38,6 +36,7 @@ TARGET_DB='hamafx_verify'
 
 cleanup() {
   docker rm -f "$CONTAINER" >/dev/null 2>&1 || true
+  docker image prune -f >/dev/null 2>&1 || true
   rm -rf "$TMP_DIR"
 }
 trap cleanup EXIT
@@ -81,7 +80,7 @@ docker run --rm -d \
   -e POSTGRES_USER=verify \
   -e POSTGRES_DB="$TARGET_DB" \
   -p "${LOCAL_PG_PORT}:5432" \
-  pgvector/pgvector:pg15 >/dev/null
+  pgvector/pgvector:pg16 >/dev/null
 
 # Wait for the container's Postgres to accept connections.
 for _ in $(seq 1 30); do
@@ -90,6 +89,13 @@ for _ in $(seq 1 30); do
   fi
   sleep 1
 done
+
+# Verify the container actually became ready before proceeding.
+if ! docker exec "$CONTAINER" pg_isready -U verify >/dev/null 2>&1; then
+  log 'postgres container did not become ready in 30 seconds'
+  ping_hc fail "postgres container not ready"
+  exit 1
+fi
 
 # Ensure pgvector + pgcrypto extensions exist before restore (the dump
 # expects them).

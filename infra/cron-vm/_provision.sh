@@ -40,6 +40,15 @@ log 'enabling docker so the verify-restore timer can boot a throwaway pg'
 systemctl enable --now docker
 usermod -aG docker hamafx
 
+log 'ensuring GCP firewall rules (SSH only from anywhere, everything else blocked)'
+if ! gcloud compute firewall-rules describe hamafx-allow-ssh --project=hamafx-78845 2>/dev/null; then
+  gcloud compute firewall-rules create hamafx-allow-ssh \
+    --network default --allow tcp:22 --source-ranges 0.0.0.0/0 \
+    --project hamafx-78845 --quiet
+fi
+# Ensure port 8081 (health server) is NOT exposed externally — it binds to
+# 127.0.0.1 only. No firewall rule is created for it.
+
 log 'installing Node.js 20.x (skipped if already present at v20+)'
 if ! command -v node >/dev/null 2>&1 || ! node --version | grep -qE '^v(20|21|22)\.'; then
   curl -fsSL https://deb.nodesource.com/setup_20.x | bash -

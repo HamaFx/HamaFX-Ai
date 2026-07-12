@@ -48,6 +48,7 @@ export class SymbolManager extends EventEmitter {
   private symbols: Set<string> = new Set();
   private pollTimer: NodeJS.Timeout | null = null;
   private isPolling = false;
+  private consecutiveFailures = 0;
 
   constructor(
     private readonly log: Logger,
@@ -114,6 +115,9 @@ export class SymbolManager extends EventEmitter {
         const added = Array.from(newSymbols).filter((s) => !this.symbols.has(s));
         const removed = Array.from(this.symbols).filter((s) => !newSymbols.has(s));
         
+        // Capture old symbols BEFORE updating this.symbols — needed for correct
+        // diff computation in per-consumer events (biquoteChanged, binanceChanged).
+        const oldSymbols = new Set(this.symbols);
         this.symbols = newSymbols;
 
         // Build active symbol list with categories
@@ -141,7 +145,7 @@ export class SymbolManager extends EventEmitter {
         const biquoteSymbols = activeSymbols
           .filter((s) => s.category === 'forex' || s.category === 'gold')
           .map((s) => s.symbol);
-        const prevBiquote = Array.from(this.symbols).filter(
+        const prevBiquote = Array.from(oldSymbols).filter(
           (s) => symbolCategory(s) === 'forex' || symbolCategory(s) === 'gold',
         );
         this.emit('biquoteChanged', {
@@ -153,7 +157,7 @@ export class SymbolManager extends EventEmitter {
         const binanceSymbols = activeSymbols
           .filter((s) => s.category === 'crypto')
           .map((s) => getSymbolDefinition(s.symbol).binance ?? s.symbol);
-        const prevBinance = Array.from(this.symbols)
+        const prevBinance = Array.from(oldSymbols)
           .filter((s) => symbolCategory(s) === 'crypto')
           .map((s) => getSymbolDefinition(s).binance ?? s);
         this.emit('binanceChanged', {
@@ -162,6 +166,9 @@ export class SymbolManager extends EventEmitter {
           removed: prevBinance.filter((s) => !binanceSymbols.includes(s)),
         });
         
+        // Reset failure counter on successful poll
+        this.consecutiveFailures = 0;
+
         this.log.info('Active symbols changed', { 
           total: this.symbols.size, 
           tdSlots: tdSlots.length,
@@ -172,7 +179,11 @@ export class SymbolManager extends EventEmitter {
         });
       }
     } catch (err) {
+      this.consecutiveFailures += 1;
       this.log.error('Failed to poll user symbols', { err: String(err) });
+      if (this.consecutiveFailures >= 5) {
+        this.log.warn('SymbolManager: 5+ consecutive poll failures — symbols may be stale');
+      }
     } finally {
       this.isPolling = false;
     }

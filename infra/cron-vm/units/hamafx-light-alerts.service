@@ -5,7 +5,14 @@ Wants=network-online.target
 
 [Service]
 Type=oneshot
+User=hamafx
+Group=hamafx
 EnvironmentFile=/opt/hamafx/.env
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/hamafx
 ExecStart=/usr/bin/curl -fsS -m 30 \
   -H "Authorization: Bearer ${CRON_SECRET}" \
   ${PRODUCTION_URL}/api/cron/alerts

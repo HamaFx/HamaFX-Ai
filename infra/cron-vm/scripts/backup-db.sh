@@ -41,6 +41,12 @@ log() { printf '%s [backup-db] %s\n' "$(date -u +%FT%TZ)" "$*"; }
 ping_hc start
 
 START=$(date +%s)
+# Warn if using a pooled connection — pg_dump through PgBouncer can produce
+# inconsistent dumps or fail. Set DIRECT_URL for reliable backups.
+if [[ "$DB_DUMP_URL" == *"pooler"* ]] || [[ "$DB_DUMP_URL" == *"pgbouncer"* ]]; then
+  log "WARNING: Using pooled connection for pg_dump — set DIRECT_URL for reliable backups"
+fi
+
 log "dumping → $TARGET"
 
 set -o pipefail

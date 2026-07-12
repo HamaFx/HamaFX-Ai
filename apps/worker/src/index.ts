@@ -125,6 +125,8 @@ export interface RunningWorker {
   tdConsumer: TwelveDataWsConsumer;
   buffer: TickBuffer;
   aggregator: Candle1mAggregator;
+  /** Returns the epoch ms of the last tick (0 if none received yet). */
+  getLastTickAt(): number;
   /** Idempotent. Cleanly tears down timers + the hub. */
   stop(): Promise<void>;
 }
@@ -142,6 +144,11 @@ export async function runWorker(args: RunWorkerArgs): Promise<RunningWorker> {
 
   // Shared tick handler to push ticks to database buffer, trigger 1m candle aggregations, and notify watchdog
   // Priority: MT5 > TwelveData > BiQuote > Binance
+  // The FALLBACK_TIMEOUT_MS defines how long after the last TwelveData tick
+  // we continue to suppress BiQuote ticks (to avoid duplicate processing).
+  // Defaults to 5s — reduced from 15s to minimize data gaps during
+  // TwelveData disconnects. Override with TICK_FALLBACK_TIMEOUT_MS env.
+  const FALLBACK_TIMEOUT_MS = Number(process.env.TICK_FALLBACK_TIMEOUT_MS ?? 5_000);
   const handleIncomingTick = (tick: NormalizedTick) => {
     const now = Date.now();
     
@@ -151,9 +158,9 @@ export async function runWorker(args: RunWorkerArgs): Promise<RunningWorker> {
       lastTwelveDataTickAt = now;
     } else if (tick.source === 'biquote-signalr') {
       // Drop BiQuote ticks if Twelve Data is actively sending for this symbol
-      if (now - lastTwelveDataTickAt < 15_000) return;
+      if (now - lastTwelveDataTickAt < FALLBACK_TIMEOUT_MS) return;
       // Also drop if MT5 is active
-      if (now - lastMt5TickAt < 15_000) return;
+      if (now - lastMt5TickAt < FALLBACK_TIMEOUT_MS) return;
     }
 
     buffer.push(tick);
@@ -358,7 +365,9 @@ export async function runWorker(args: RunWorkerArgs): Promise<RunningWorker> {
     aggregator.closeAll();
   };
 
-  return { consumer, binanceConsumer, tdConsumer, buffer, aggregator, stop };
+  const getLastTickAt = (): number => lastTickAt;
+
+  return { consumer, binanceConsumer, tdConsumer, buffer, aggregator, getLastTickAt, stop };
 }
 
 import { startScheduler } from './scheduler.js';
@@ -396,9 +405,13 @@ export async function main(): Promise<void> {
     log.error('unhandledRejection', { reason: String(reason) });
     captureException(reason, { kind: 'unhandledRejection' });
   });
+  // Node.js documentation warns: attempting to resume after an uncaught
+  // exception can lead to undefined behavior. We flush Sentry then exit —
+  // systemd will restart the worker automatically.
   process.on('uncaughtException', (err) => {
     log.error('uncaughtException', { err: String(err) });
     captureException(err, { kind: 'uncaughtException' });
+    flushSentry(2_000).finally(() => process.exit(1));
   });
 
   installSignalHandlers(log);
@@ -408,10 +421,23 @@ export async function main(): Promise<void> {
   // Start HTTP server: health checks + BiQuote REST proxy for Vercel
   // The proxy lets Vercel serverless functions reach BiQuote through this
   // worker VM when BiQuote is unreachable from the Vercel network.
-  const BIQUOTE_BASE = 'https://biquote.io';
+  //
+  // SECURITY: binds to 127.0.0.1 only — NOT exposed to the public internet.
+  // The BiQuote proxy requires bearer-token auth when BIQUOTE_PROXY_TOKEN is set.
+  const BIQUOTE_BASE = process.env.BIQUOTE_BASE_URL ?? 'https://biquote.io';
+  const PROXY_TOKEN = process.env.BIQUOTE_PROXY_TOKEN;
   const healthServer = http.createServer(async (req, res) => {
     // BiQuote proxy: /biquote/api/XAUUSD/ohlc?interval=60&limit=100
     if (req.url?.startsWith('/biquote')) {
+      // Require bearer-token auth when BIQUOTE_PROXY_TOKEN is configured
+      if (PROXY_TOKEN) {
+        const auth = req.headers.authorization;
+        if (auth !== `Bearer ${PROXY_TOKEN}`) {
+          res.writeHead(403, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ status: 'error', message: 'forbidden' }));
+          return;
+        }
+      }
       const rest = req.url.slice('/biquote'.length) || '/';
       const target = `${BIQUOTE_BASE}${rest}`;
       try {
@@ -432,17 +458,26 @@ export async function main(): Promise<void> {
       }
       return;
     }
+    // Health endpoint — returns real worker state (tick age, SignalR status, uptime)
     if (req.url === '/health' || req.url === '/api/health' || req.url === '/') {
-      res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ status: 'ok' }));
+      const lastTickAt = worker.getLastTickAt();
+      const ageMs = Date.now() - lastTickAt;
+      const healthy = lastTickAt > 0 && ageMs < 120_000;
+      res.writeHead(healthy ? 200 : 503, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({
+        status: healthy ? 'ok' : 'degraded',
+        lastTickAgeMs: ageMs,
+        signalrConnected: worker.consumer.isStarted(),
+        uptimeMs: process.uptime() * 1000,
+      }));
     } else {
       res.writeHead(404);
       res.end();
     }
   });
 
-  healthServer.listen(8081, '0.0.0.0', () => {
-    log.info('Health server listening on port 8081');
+  healthServer.listen(8081, '127.0.0.1', () => {
+    log.info('Health server listening on 127.0.0.1:8081');
   });
 
   onShutdown(() => {

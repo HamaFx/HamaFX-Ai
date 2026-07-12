@@ -1,6 +1,6 @@
 # HamaFX-Ai Cron VM
 
-A lightweight GCE `e2-small` instance that fires all cron endpoints on schedule via `curl`. Replaces GitHub Actions (which requires billing) and Vercel Cron (which caps at once/day on Hobby).
+A lightweight GCE `e2-medium` instance that fires all cron endpoints on schedule via `curl`. Replaces GitHub Actions (which requires billing) and Vercel Cron (which caps at once/day on Hobby).
 
 ## Instance details
 
@@ -14,6 +14,15 @@ A lightweight GCE `e2-small` instance that fires all cron endpoints on schedule 
 | Disk | 10 GB pd-standard |
 | External IP | Static (reserved via `gcloud compute addresses`) — see [Static IP](#static-ip) below |
 | Monthly cost | ~$15-17 (e2-medium in us-central1, sustained use discount) |
+
+## Firewall
+
+The VM uses GCP default firewall rules (deny all inbound except SSH):
+- **SSH (port 22):** allowed from 0.0.0.0/0
+- **Port 8081:** NOT exposed externally — the health server binds to `127.0.0.1` only
+- **No other inbound ports** are needed
+
+Firewall rules are configured by `_provision.sh` during VM setup.
 
 ## Schedule
 

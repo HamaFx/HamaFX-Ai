@@ -32,6 +32,12 @@ if [[ -z "$USER_ID" ]]; then
   exit 1
 fi
 
+# Validate user_id format — alphanumeric, hyphens, underscores only
+if [[ ! "$USER_ID" =~ ^[a-zA-Z0-9_-]+$ ]]; then
+  echo "Invalid user_id format — must be alphanumeric with hyphens/underscores only" >&2
+  exit 1
+fi
+
 DB_URL="${ADMIN_DATABASE_URL:-${DIRECT_URL:-${POSTGRES_URL_NON_POOLING:-${DATABASE_URL:-${POSTGRES_URL:-}}}}}"
 : "${DB_URL:?Set ADMIN_DATABASE_URL (preferred) or DIRECT_URL / POSTGRES_URL_NON_POOLING / DATABASE_URL / POSTGRES_URL in /opt/hamafx/.env}"
 
@@ -97,24 +103,24 @@ log "processing tenant deletion for user_id=${USER_ID} (${CONFIRM:-dry-run})"
 
 TOTAL_ROWS=0
 for TABLE in "${TENANT_TABLES[@]}"; do
-  # Count rows for this tenant.
-  COUNT=$(psql --dbname="$DB_URL" -A -t -c \
-    "SELECT COUNT(*) FROM ${TABLE} WHERE user_id = '${USER_ID}';" 2>/dev/null || echo 0)
+  # Count rows for this tenant using psql variables (parameterized to prevent SQL injection).
+  COUNT=$(psql --dbname="$DB_URL" -A -t -v user_id="$USER_ID" -c \
+    "SELECT COUNT(*) FROM ${TABLE} WHERE user_id = :'user_id';" 2>/dev/null || echo 0)
   COUNT="${COUNT// /}"
   if [[ "$COUNT" =~ ^[0-9]+$ ]] && (( COUNT > 0 )); then
     log "  ${TABLE}: ${COUNT} rows"
     TOTAL_ROWS=$((TOTAL_ROWS + COUNT))
     if [[ -n "$CONFIRM" ]]; then
-      psql --dbname="$DB_URL" -c \
-        "DELETE FROM ${TABLE} WHERE user_id = '${USER_ID}';" >/dev/null 2>&1 || true
+      psql --dbname="$DB_URL" -v user_id="$USER_ID" -c \
+        "DELETE FROM ${TABLE} WHERE user_id = :'user_id';" >/dev/null 2>&1 || true
     fi
   fi
 done
 
 # Finally, soft-delete the user record itself (set deleted_at).
 if [[ -n "$CONFIRM" ]]; then
-  psql --dbname="$DB_URL" -c \
-    "UPDATE \"user\" SET \"deletedAt\" = now() WHERE id = '${USER_ID}';" >/dev/null 2>&1 || true
+  psql --dbname="$DB_URL" -v user_id="$USER_ID" -c \
+    "UPDATE \"user\" SET \"deletedAt\" = now() WHERE id = :'user_id';" >/dev/null 2>&1 || true
   log "user ${USER_ID} soft-deleted (deletedAt = now())"
 fi
 

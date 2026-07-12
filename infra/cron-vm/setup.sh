@@ -32,9 +32,14 @@ if [[ "$EUID" -ne 0 ]]; then
   exit 1
 fi
 
-log 'installing dependencies'
-apt-get update -qq
-apt-get install -y -qq curl logrotate sudo postgresql-client docker.io
+log 'configuring journald storage limits'
+cat > /etc/systemd/journald.conf.d/hamafx.conf <<'JOURNALD'
+[Journal]
+SystemMaxUse=500M
+SystemKeepFree=2G
+MaxFileSec=7day
+JOURNALD
+systemctl restart systemd-journald
 
 log 'adding hamafx user to docker group (PR-17: verify-restore needs it)'
 if id hamafx >/dev/null 2>&1; then

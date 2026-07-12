@@ -17,6 +17,8 @@ ExecStart=/usr/bin/node /opt/hamafx/app/apps/worker/dist/runner/cli.js fred-actu
 
 MemoryMax=512M
 TimeoutStartSec=120
+StartLimitIntervalSec=3600
+StartLimitBurst=5
 
 NoNewPrivileges=true
 PrivateTmp=true

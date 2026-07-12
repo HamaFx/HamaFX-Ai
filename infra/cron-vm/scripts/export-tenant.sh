@@ -26,6 +26,12 @@ if [[ -z "$USER_ID" ]]; then
   exit 1
 fi
 
+# Validate user_id format — alphanumeric, hyphens, underscores only
+if [[ ! "$USER_ID" =~ ^[a-zA-Z0-9_-]+$ ]]; then
+  echo "Invalid user_id format — must be alphanumeric with hyphens/underscores only" >&2
+  exit 1
+fi
+
 DB_URL="${ADMIN_DATABASE_URL:-${DIRECT_URL:-${POSTGRES_URL_NON_POOLING:-${DATABASE_URL:-${POSTGRES_URL:-}}}}}"
 : "${DB_URL:?Set ADMIN_DATABASE_URL (preferred) or DIRECT_URL / POSTGRES_URL_NON_POOLING / DATABASE_URL / POSTGRES_URL in /opt/hamafx/.env}"
 : "${GCS_BACKUP_BUCKET:?GCS_BACKUP_BUCKET must be set}"
@@ -84,20 +90,20 @@ TENANT_TABLES=(
 
 # Build a JSON export using psql's JSON capabilities.
 # Each table is exported as a JSON array keyed by table name.
-SQL_HEADER="SELECT json_build_object('userId', '${USER_ID}', 'exportedAt', now()::text, 'tables', jsonb_object_agg(table_name, rows)) FROM ("
+SQL_HEADER="SELECT json_build_object('userId', :'user_id', 'exportedAt', now()::text, 'tables', jsonb_object_agg(table_name, rows)) FROM ("
 SQL_BODY=""
 for i in "${!TENANT_TABLES[@]}"; do
   TABLE="${TENANT_TABLES[$i]}"
   if [[ $i -gt 0 ]]; then
     SQL_BODY+=" UNION ALL "
   fi
-  SQL_BODY+="SELECT '${TABLE}' AS table_name, COALESCE((SELECT jsonb_agg(to_jsonb(t)) FROM ${TABLE} t WHERE t.user_id = '${USER_ID}'), '[]'::jsonb) AS rows"
+  SQL_BODY+="SELECT '${TABLE}' AS table_name, COALESCE((SELECT jsonb_agg(to_jsonb(t)) FROM ${TABLE} t WHERE t.user_id = :'user_id'), '[]'::jsonb) AS rows"
 done
 SQL_FOOTER=") sub;"
 
 FULL_SQL="${SQL_HEADER}${SQL_BODY}${SQL_FOOTER}"
 
-if ! psql --dbname="$DB_URL" -A -t -c "$FULL_SQL" | gsutil -q cp - "$TARGET"; then
+if ! psql --dbname="$DB_URL" -A -t -v user_id="$USER_ID" -c "$FULL_SQL" | gsutil -q cp - "$TARGET"; then
   log "export failed for user_id=${USER_ID}"
   ping_hc fail "export failed for ${USER_ID}"
   exit 1

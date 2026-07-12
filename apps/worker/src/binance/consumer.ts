@@ -72,12 +72,18 @@ export class BinanceStreamConsumer {
   private connect(): void {
     if (this.destroyed) return;
 
+    // Don't connect when there are no symbols — subscribing to the
+    // all-market !miniTicker@arr stream would flood the worker with
+    // hundreds of tickers per second.
+    if (this.symbols.length === 0) {
+      this.log.info('binance ws skipping — no symbols configured');
+      return;
+    }
+
     const streams = this.symbols
       .map((s) => `${s.toLowerCase()}@kline_1m`)
       .join('/');
-    const url = streams
-      ? `${BINANCE_WS_BASE}/stream?streams=${streams}`
-      : `${BINANCE_WS_BASE}/ws/!miniTicker@arr`;
+    const url = `${BINANCE_WS_BASE}/stream?streams=${streams}`;
 
     this.log.info('binance ws connecting', { url: url.slice(0, 80) });
 

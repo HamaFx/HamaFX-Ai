@@ -1,0 +1,11 @@
+[Unit]
+Description=HamaFX-Ai weekly Docker image prune
+Documentation=https://github.com/HamaFx/HamaFX-Ai
+
+[Timer]
+OnCalendar=Sun *-*-* 05:00:00
+RandomizedDelaySec=600
+Persistent=true
+
+[Install]
+WantedBy=timers.target

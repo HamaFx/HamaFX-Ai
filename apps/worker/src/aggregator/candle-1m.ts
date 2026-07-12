@@ -42,7 +42,8 @@ export interface ClosedCandle {
   v: number | null;
   /** Number of ticks observed inside the bar. */
   tickVolume: number;
-  source: 'biquote-signalr';
+  /** Source of the tick data — matches the last tick that updated the bar. */
+  source: NormalizedTick['source'];
 }
 
 interface OpenBar {
@@ -52,6 +53,7 @@ interface OpenBar {
   l: number;
   c: number;
   ticks: number;
+  source: NormalizedTick['source'];
 }
 
 const MINUTE_MS = 60_000;
@@ -79,7 +81,7 @@ export class Candle1mAggregator {
     const existing = this.bars.get(tick.symbol);
 
     if (!existing) {
-      this.bars.set(tick.symbol, this.openBar(bucket, tick.mid));
+      this.bars.set(tick.symbol, this.openBar(bucket, tick.mid, tick.source));
       return;
     }
 
@@ -93,6 +95,7 @@ export class Candle1mAggregator {
       if (tick.mid < existing.l) existing.l = tick.mid;
       existing.c = tick.mid;
       existing.ticks += 1;
+      existing.source = tick.source;
       return;
     }
 
@@ -101,7 +104,7 @@ export class Candle1mAggregator {
     // jumped multiple minutes (gap during BiQuote outage / weekend) —
     // creating empty bars for missing minutes is undesirable.
     this.emitClosed(tick.symbol, existing);
-    this.bars.set(tick.symbol, this.openBar(bucket, tick.mid));
+    this.bars.set(tick.symbol, this.openBar(bucket, tick.mid, tick.source));
   }
 
   /**
@@ -121,8 +124,8 @@ export class Candle1mAggregator {
     return this.bars.get(symbol);
   }
 
-  private openBar(bucket: number, mid: number): OpenBar {
-    return { bucket, o: mid, h: mid, l: mid, c: mid, ticks: 1 };
+  private openBar(bucket: number, mid: number, source: NormalizedTick['source']): OpenBar {
+    return { bucket, o: mid, h: mid, l: mid, c: mid, ticks: 1, source };
   }
 
   private emitClosed(symbol: Symbol, bar: OpenBar): void {
@@ -135,7 +138,7 @@ export class Candle1mAggregator {
       c: bar.c,
       v: null,
       tickVolume: bar.ticks,
-      source: 'biquote-signalr',
+      source: bar.source,
     });
   }
 }

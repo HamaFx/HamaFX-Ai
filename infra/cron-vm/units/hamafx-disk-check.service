@@ -1,0 +1,24 @@
+[Unit]
+Description=HamaFX-Ai disk space check (alert if >85% used)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=hamafx
+Group=hamafx
+EnvironmentFile=/opt/hamafx/.env
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/hamafx
+ExecStart=/bin/sh -c 'USED=$$(df / | awk "NR==2 {print $$5+0}"); test "$$USED" -le 85'
+ExecStartPost=/bin/sh -c 'test -z "$$HC_DISK_CHECK_UUID" || STATUS=$$(df / | awk "NR==2 {if($$5+0>85) print \"/fail\"; else print \"\"}"); /usr/bin/curl -fsS -m 5 "https://hc-ping.com/$$HC_DISK_CHECK_UUID$$STATUS" || true'
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=hamafx-disk-check
+
+StartLimitIntervalSec=3600
+StartLimitBurst=12
