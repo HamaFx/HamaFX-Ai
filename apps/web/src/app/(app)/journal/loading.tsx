@@ -20,7 +20,7 @@ export default function JournalLoading() {
   return (
     <div className="flex flex-col gap-4">
       <Skeleton className="h-8 w-28" />
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
         {Array.from({ length: 3 }).map((_, i) => (
           <div key={i} className="border border-border bg-bg-elev-1 rounded-sm flex flex-col gap-2 p-4">
             <Skeleton className="h-3 w-16" />

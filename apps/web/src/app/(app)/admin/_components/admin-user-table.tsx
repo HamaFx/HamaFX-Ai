@@ -36,26 +36,46 @@ export function AdminUserTable() {
   const [users, setUsers] = useState<UserSummary[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
+
+  const fetchUsers = async () => {
+    setLoading(true);
+    setFetchError(null);
+    try {
+      const res = await fetch('/api/admin/users?limit=50&offset=0');
+      if (!res.ok) throw new Error(await res.text());
+      const data = (await res.json()) as { users: UserSummary[]; total: number };
+      setUsers(data.users);
+      setTotal(data.total);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Failed to load users';
+      setFetchError(msg);
+      toast.error(msg);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    async function fetchUsers() {
-      try {
-        const res = await fetch('/api/admin/users?limit=50&offset=0');
-        if (!res.ok) throw new Error(await res.text());
-        const data = (await res.json()) as { users: UserSummary[]; total: number };
-        setUsers(data.users);
-        setTotal(data.total);
-      } catch {
-        toast.error('Failed to load users');
-      } finally {
-        setLoading(false);
-      }
-    }
     void fetchUsers();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   if (loading) {
     return <SkeletonCard lines={4} />;
+  }
+
+  if (fetchError) {
+    return (
+      <SettingsSection title="Users" description="Registered users.">
+        <div className="flex flex-col items-center gap-3 py-8 text-center">
+          <p className="text-sm text-danger">{fetchError}</p>
+          <button type="button" onClick={fetchUsers} className="text-sm text-fg underline hover:no-underline">
+            Retry
+          </button>
+        </div>
+      </SettingsSection>
+    );
   }
 
   return (

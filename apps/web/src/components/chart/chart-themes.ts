@@ -22,7 +22,6 @@ export const THEME_PRESETS = {
   slate: { bg: '#0f172a', grid: '#1e293b', text: '#94a3b8', bull: SERIES_BULL_HEX, bear: SERIES_BEAR_HEX },
   navy:  { bg: '#020617', grid: '#0f172a', text: '#64748b', bull: SERIES_BULL_HEX, bear: SERIES_BEAR_HEX },
   classic: { bg: '#0e1118', grid: '#262a35', text: '#a1a8b3', bull: SERIES_BULL_HEX, bear: SERIES_BEAR_HEX },
-  light: { bg: '#fafafa', grid: '#e5e5e5', text: '#666666', bull: SERIES_BULL_HEX, bear: SERIES_BEAR_HEX },
 } as const;
 
 export function getThemeColors(theme: NonNullable<ChartSettings['theme']>) {

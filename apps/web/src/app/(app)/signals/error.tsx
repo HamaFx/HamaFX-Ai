@@ -18,6 +18,7 @@
 
 import { IconAlertTriangle, IconRefresh } from '@tabler/icons-react';
 import { useEffect } from 'react';
+import * as Sentry from '@sentry/nextjs';
 
 export default function SignalsError({
   error,
@@ -27,7 +28,7 @@ export default function SignalsError({
   reset: () => void;
 }) {
   useEffect(() => {
-    console.error('Signals page error:', error);
+    Sentry.captureException(error);
   }, [error]);
 
   return (

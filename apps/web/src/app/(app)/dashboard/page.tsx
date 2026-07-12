@@ -40,6 +40,7 @@ export default async function DashboardPage() {
   // All widget bodies are pure presentational components; the canvas
   // wires them to these props. Failures on a single source shouldn't
   // break the whole dashboard — each Promise settles independently.
+  // Phase 5.6 — track per-source errors so widgets can surface them.
   const settled = await Promise.allSettled([
     listAlerts(userId, { limit: 20 }),
     listUpcomingEvents({ limit: 12 }),
@@ -60,6 +61,21 @@ export default async function DashboardPage() {
   const news = unwrap(newsR, []);
   const briefing = unwrap(briefingR, null);
 
+  // Phase 5.6 — per-source error flags for widget error states.
+  // Extract a useful error message from rejected promises (reason
+  // may be an Error instance, a string, or an arbitrary value).
+  const reasonMsg = (reason: unknown): string =>
+    reason instanceof Error ? reason.message : String(reason);
+
+  const fetchErrors = {
+    alerts: alertsR.status === 'rejected' ? reasonMsg(alertsR.reason) : null,
+    events: eventsR.status === 'rejected' ? reasonMsg(eventsR.reason) : null,
+    entries: entriesR.status === 'rejected' ? reasonMsg(entriesR.reason) : null,
+    news: newsR.status === 'rejected' ? reasonMsg(newsR.reason) : null,
+    briefing: briefingR.status === 'rejected' ? reasonMsg(briefingR.reason) : null,
+  };
+  const hasAnyError = Object.values(fetchErrors).some(Boolean);
+
   return (
     <DashboardCanvas
       alerts={alerts}
@@ -67,6 +83,8 @@ export default async function DashboardPage() {
       entries={entries}
       news={news}
       briefing={briefing}
+      fetchErrors={fetchErrors}
+      hasAnyError={hasAnyError}
     />
   );
 }

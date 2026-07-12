@@ -216,7 +216,7 @@ function AlertRow({ alert, onToggle, onDelete }: AlertRowProps) {
     resizeOb.observe(track);
 
     let isTriggered = false;
-    let timer: NodeJS.Timeout;
+    let timer: ReturnType<typeof setTimeout>;
 
     const observer = new IntersectionObserver(
       (entries) => {

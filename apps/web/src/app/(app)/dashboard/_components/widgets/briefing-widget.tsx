@@ -62,6 +62,14 @@ const KIND_META: Record<'pre' | 'post' | 'weekly_review', KindMeta> = {
 };
 
 export function BriefingWidget({ briefing }: BriefingWidgetProps) {
+  // useMemo must be called before any early return (rules of hooks).
+  const markdownContent = useMemo(() => {
+    if (!briefing?.body) return null;
+    return (
+      <ReactMarkdown remarkPlugins={[remarkGfm]}>{briefing.body}</ReactMarkdown>
+    );
+  }, [briefing?.body]);
+
   if (!briefing) {
     return (
       <div className="border-border bg-bg-elev-1 rounded-sm border p-2">
@@ -79,12 +87,6 @@ export function BriefingWidget({ briefing }: BriefingWidgetProps) {
 
   const meta = KIND_META[briefing.kind] ?? { label: 'Briefing', icon: IconBolt };
   const Icon = meta.icon;
-
-  const markdownContent = useMemo(() => {
-    return (
-      <ReactMarkdown remarkPlugins={[remarkGfm]}>{briefing.body}</ReactMarkdown>
-    );
-  }, [briefing.body]);
 
   return (
     <article

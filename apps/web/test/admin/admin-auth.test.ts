@@ -16,22 +16,60 @@
 
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 
-const mockSelect = vi.hoisted(() => vi.fn());
-const mockFrom = vi.hoisted(() => vi.fn());
-const mockWhere = vi.hoisted(() => vi.fn());
+// ── Mock db ────────────────────────────────────────────────────────
+// drizzle query builder pattern: select → from → where → orderBy → limit
+// Each step returns a thenable (Promise-like) that also exposes chain
+// methods so the caller can either `await` the result immediately or
+// continue building the query.
+//
+// admin-auth.ts uses three query patterns:
+//   1. select → from → where                        (user lookup)
+//   2. select → from → where                        (admin count)
+//   3. select → from → orderBy → limit               (first user)
 
-vi.mock('@hamafx/db', () => ({
-  getDb: () => ({
-    select: mockSelect.mockReturnValue({
-      from: mockFrom.mockReturnValue({
-        where: mockWhere,
-      }),
+const whereResults: unknown[] = [];
+let whereCallIndex = 0;
+let orderByLimitResult: unknown = [];
+
+/**
+ * Build a chainable drizzle mock — returned by from().
+ * Has `.where()`, `.orderBy()`, `.limit()`, and `.then()` for await.
+ */
+function makeFromResult(): Record<string, unknown> {
+  return {
+    then: (resolve: (v: unknown) => void) => resolve([]),
+
+    where: vi.fn(() => {
+      const idx = whereCallIndex++;
+      const value = whereResults[idx];
+      return makeThenable(value ?? []);
     }),
-  }),
-  schema: {
-    users: {} as Record<string, unknown>,
-  },
-}));
+
+    orderBy: vi.fn(() => ({
+      limit: vi.fn(() => makeThenable(orderByLimitResult)),
+    })),
+
+    limit: vi.fn(() => makeFromResult()),
+  };
+}
+
+function makeThenable(value: unknown): Record<string, unknown> {
+  return {
+    then: (resolve: (v: unknown) => void) => resolve(value),
+  };
+}
+
+vi.mock('@hamafx/db', () => {
+  const fromResult = makeFromResult();
+  return {
+    getDb: () => ({
+      select: vi.fn(() => ({ from: vi.fn(() => fromResult) })),
+    }),
+    schema: {
+      users: {} as Record<string, unknown>,
+    },
+  };
+});
 
 const mockAuth = vi.hoisted(() => vi.fn());
 vi.mock('@/auth', () => ({
@@ -40,9 +78,24 @@ vi.mock('@/auth', () => ({
 
 import { getAdminUser, withAdminAuth } from '@/lib/admin-auth';
 
+function pushWhereResult(value: unknown) {
+  whereResults.push(value);
+}
+
+function pushOrderByLimitResult(value: unknown) {
+  orderByLimitResult = value;
+}
+
+function resetMockState() {
+  whereResults.length = 0;
+  whereCallIndex = 0;
+  orderByLimitResult = [];
+}
+
 describe('getAdminUser', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    resetMockState();
   });
 
   it('returns unauthenticated when no session exists', async () => {
@@ -56,7 +109,7 @@ describe('getAdminUser', () => {
 
   it('returns admin when user has admin role', async () => {
     mockAuth.mockResolvedValue({ user: { id: 'u-123' } });
-    mockWhere.mockResolvedValue([{ id: 'u-123', email: 'admin@example.com', name: 'Admin', role: 'admin' }]);
+    pushWhereResult([{ id: 'u-123', email: 'admin@example.com', name: 'Admin', role: 'admin' }]);
 
     const result = await getAdminUser();
 
@@ -66,9 +119,8 @@ describe('getAdminUser', () => {
 
   it('returns forbidden when user is not admin and other admins exist', async () => {
     mockAuth.mockResolvedValue({ user: { id: 'u-456' } });
-    mockWhere
-      .mockResolvedValueOnce([{ id: 'u-456', email: 'user@example.com', name: 'User', role: 'user' }])
-      .mockResolvedValueOnce([{ count: 1 }]);
+    pushWhereResult([{ id: 'u-456', email: 'user@example.com', name: 'User', role: 'user' }]);
+    pushWhereResult([{ count: 1 }]);
 
     const result = await getAdminUser();
 
@@ -78,9 +130,12 @@ describe('getAdminUser', () => {
 
   it('treats single user as admin in single-user deployment', async () => {
     mockAuth.mockResolvedValue({ user: { id: 'u-789' } });
-    mockWhere
-      .mockResolvedValueOnce([{ id: 'u-789', email: 'solo@example.com', name: 'Solo', role: 'user' }])
-      .mockResolvedValueOnce([{ count: 0 }]);
+    // Call 1: select → from → where (user lookup)
+    pushWhereResult([{ id: 'u-789', email: 'solo@example.com', name: 'Solo', role: 'user' }]);
+    // Call 2: select → from → where (admin count → 0)
+    pushWhereResult([{ count: 0 }]);
+    // Call 3: select → from → orderBy → limit (first user)
+    pushOrderByLimitResult([{ id: 'u-789' }]);
 
     const result = await getAdminUser();
 
@@ -90,7 +145,7 @@ describe('getAdminUser', () => {
 
   it('returns forbidden when user record is missing', async () => {
     mockAuth.mockResolvedValue({ user: { id: 'u-missing' } });
-    mockWhere.mockResolvedValue([]);
+    pushWhereResult([]);
 
     const result = await getAdminUser();
 
@@ -102,6 +157,7 @@ describe('getAdminUser', () => {
 describe('withAdminAuth', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    resetMockState();
   });
 
   it('returns 401 when unauthenticated', async () => {
@@ -117,9 +173,8 @@ describe('withAdminAuth', () => {
 
   it('returns 403 when forbidden', async () => {
     mockAuth.mockResolvedValue({ user: { id: 'u-456' } });
-    mockWhere
-      .mockResolvedValueOnce([{ id: 'u-456', email: 'user@example.com', name: 'User', role: 'user' }])
-      .mockResolvedValueOnce([{ count: 1 }]);
+    pushWhereResult([{ id: 'u-456', email: 'user@example.com', name: 'User', role: 'user' }]);
+    pushWhereResult([{ count: 1 }]);
 
     const handler = withAdminAuth(async () => Response.json({ ok: true }));
     const res = await handler(new Request('http://localhost/api/admin/test'));
@@ -131,7 +186,7 @@ describe('withAdminAuth', () => {
 
   it('calls the handler when admin is authenticated', async () => {
     mockAuth.mockResolvedValue({ user: { id: 'u-123' } });
-    mockWhere.mockResolvedValue([{ id: 'u-123', email: 'admin@example.com', name: 'Admin', role: 'admin' }]);
+    pushWhereResult([{ id: 'u-123', email: 'admin@example.com', name: 'Admin', role: 'admin' }]);
 
     const handler = withAdminAuth(async (_req, { user }) => Response.json({ admin: user.userId }));
     const res = await handler(new Request('http://localhost/api/admin/test'));

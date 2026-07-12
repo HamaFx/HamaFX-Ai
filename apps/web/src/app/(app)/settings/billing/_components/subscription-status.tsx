@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+import { cn } from '@/lib/cn';
+
 interface Subscription {
   id: string;
   status: string;
@@ -82,6 +84,4 @@ export function SubscriptionStatus({
   );
 }
 
-function cn(...classes: (string | undefined | false)[]): string {
-  return classes.filter(Boolean).join(' ');
-}
+

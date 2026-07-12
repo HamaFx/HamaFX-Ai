@@ -36,25 +36,45 @@ interface ToolTelemetryRow {
 export function AdminToolTelemetryTable() {
   const [rows, setRows] = useState<ToolTelemetryRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
+
+  const fetchRows = async () => {
+    setLoading(true);
+    setFetchError(null);
+    try {
+      const res = await fetch('/api/admin/diagnostics/tool-telemetry?limit=50');
+      if (!res.ok) throw new Error(await res.text());
+      const data = (await res.json()) as { entries: ToolTelemetryRow[] };
+      setRows(data.entries);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Failed to load tool telemetry';
+      setFetchError(msg);
+      toast.error(msg);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    async function fetchRows() {
-      try {
-        const res = await fetch('/api/admin/diagnostics/tool-telemetry?limit=50');
-        if (!res.ok) throw new Error(await res.text());
-        const data = (await res.json()) as { entries: ToolTelemetryRow[] };
-        setRows(data.entries);
-      } catch {
-        toast.error('Failed to load tool telemetry');
-      } finally {
-        setLoading(false);
-      }
-    }
     void fetchRows();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   if (loading) {
     return <SkeletonCard lines={4} />;
+  }
+
+  if (fetchError) {
+    return (
+      <SettingsSection title="Tool Telemetry" description="Recent AI tool calls.">
+        <div className="flex flex-col items-center gap-3 py-8 text-center">
+          <p className="text-sm text-danger">{fetchError}</p>
+          <button type="button" onClick={fetchRows} className="text-sm text-fg underline hover:no-underline">
+            Retry
+          </button>
+        </div>
+      </SettingsSection>
+    );
   }
 
   return (

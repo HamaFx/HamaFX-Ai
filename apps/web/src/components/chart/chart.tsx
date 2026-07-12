@@ -91,6 +91,7 @@ export function Chart({
             onClick={() => mainChart?.zoomIn()}
             className="text-fg-muted hover:bg-bg-elev-3 hover:text-fg flex size-11 cursor-pointer items-center justify-center rounded-sm transition-all"
             title="Zoom In"
+            aria-label="Zoom in"
             type="button"
           >
             <IconZoomIn className="size-4" />
@@ -99,6 +100,7 @@ export function Chart({
             onClick={() => mainChart?.zoomOut()}
             className="text-fg-muted hover:bg-bg-elev-3 hover:text-fg flex size-11 cursor-pointer items-center justify-center rounded-sm transition-all"
             title="Zoom Out"
+            aria-label="Zoom out"
             type="button"
           >
             <IconZoomOut className="size-4" />
@@ -107,6 +109,7 @@ export function Chart({
             onClick={() => mainChart?.resetView()}
             className="text-fg-muted hover:bg-bg-elev-3 hover:text-fg flex size-11 cursor-pointer items-center justify-center rounded-sm transition-all"
             title="Reset View"
+            aria-label="Reset view"
             type="button"
           >
             <IconMaximize className="size-4" />

@@ -34,7 +34,6 @@ import {
   CandleSchema,
   SymbolSchema,
   getSymbolDefinition,
-  symbolCategory,
   type Candle,
   type Symbol,
   type Timeframe,
@@ -43,7 +42,6 @@ import {
 import * as biquote from '../providers/biquote';
 import * as twelvedata from '../providers/twelvedata';
 import * as binance from '../providers/binance';
-import { isCryptoSymbol } from '../providers/binance/map';
 import { fetchCandles1m } from '../providers/candles-1m';
 import { cacheKey, cacheTag, candleTtl, getDefaultCache } from '../cache';
 import { ProviderError } from '../errors';

@@ -20,6 +20,7 @@
 // + bottom nav) intact while showing an inline failure card — better than
 // the root error.tsx which hides everything.
 import { useEffect } from 'react';
+import * as Sentry from '@sentry/nextjs';
 
 import { Button } from '@/components/ui/button';
 
@@ -30,7 +31,7 @@ interface AppErrorProps {
 
 export default function AppError({ error, reset }: AppErrorProps) {
   useEffect(() => {
-    console.error('[app] segment error', error);
+    Sentry.captureException(error);
   }, [error]);
 
   return (

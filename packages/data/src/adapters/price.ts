@@ -36,7 +36,7 @@
 // BiQuote as primary, the chat-telemetry showed Twelve Data was not
 // being selected, so the dependency + key + adapter were retired.
 
-import { SymbolSchema, getSymbolDefinition, symbolCategory, type Symbol, type Tick } from '@hamafx/shared';
+import { SymbolSchema, getSymbolDefinition, type Symbol, type Tick } from '@hamafx/shared';
 
 import * as biquote from '../providers/biquote';
 import * as twelvedata from '../providers/twelvedata';

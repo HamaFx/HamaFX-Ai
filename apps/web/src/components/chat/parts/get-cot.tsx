@@ -68,7 +68,7 @@ export function GetCoTPart({ output, state, errorMessage }: ToolPartProps<'get_c
       <p className="text-fg-muted text-xs leading-snug">{output.summary}</p>
 
       <ul className="flex flex-col gap-1.5">
-        {nets.map((row, i) => (
+        {nets.map((row) => (
           <li key={row.dateIso} className="grid grid-cols-[auto_1fr_auto] items-center gap-2 text-body-sm">
             <span className="text-fg-subtle w-16 tabular-nums">{row.dateIso.slice(5)}</span>
             <Bar value={row.leveraged} max={max} />
@@ -77,7 +77,6 @@ export function GetCoTPart({ output, state, errorMessage }: ToolPartProps<'get_c
             >
               {row.leveraged === null ? '—' : formatSigned(row.leveraged)}
             </span>
-            {i === 0 ? null : null}
           </li>
         ))}
       </ul>

@@ -170,8 +170,8 @@ export function safeSetItem<T>(key: string, value: T): boolean {
     if (typeof window === 'undefined') return false;
     localStorage.setItem(key, JSON.stringify(value));
     return true;
-  } catch (e) {
-    console.error(`[storage] Failed to set ${key}:`, e);
+  } catch {
+    // Silently fail - localStorage may be unavailable or quota exceeded
     return false;
   }
 }

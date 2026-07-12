@@ -2,6 +2,7 @@
 
 import { IconAlertTriangle, IconRefresh } from '@tabler/icons-react';
 import { useEffect } from 'react';
+import * as Sentry from '@sentry/nextjs';
 
 export default function BillingError({
   error,
@@ -11,7 +12,7 @@ export default function BillingError({
   reset: () => void;
 }) {
   useEffect(() => {
-    console.error('Billing page error:', error);
+    Sentry.captureException(error);
   }, [error]);
 
   return (

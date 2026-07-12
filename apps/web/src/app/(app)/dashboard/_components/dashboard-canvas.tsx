@@ -48,7 +48,7 @@ import {
   useSortable,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import {IconGripVertical, IconPlus, IconAdjustmentsHorizontal, IconX} from '@tabler/icons-react';
+import {IconGripVertical, IconPlus, IconAdjustmentsHorizontal, IconX, IconRotate, IconAlertTriangle} from '@tabler/icons-react';
 import type {
   Alert,
   EconomicEvent,
@@ -58,6 +58,7 @@ import type {
 } from '@hamafx/shared';
 
 import { Button } from '@/components/ui/button';
+import { useConfirm } from '@/components/ui/confirm-drawer';
 import {
   DEFAULT_LAYOUT,
   LAYOUT_STORAGE_KEY,
@@ -106,6 +107,15 @@ interface DashboardCanvasProps {
   entries: readonly JournalEntry[];
   news: readonly NewsArticle[];
   briefing: BriefingData;
+  /** Phase 5.6 — per-source error messages; null means fetch succeeded. */
+  fetchErrors?: {
+    alerts: string | null;
+    events: string | null;
+    entries: string | null;
+    news: string | null;
+    briefing: string | null;
+  };
+  hasAnyError?: boolean;
 }
 
 const ALL_WIDGETS: WidgetType[] = [
@@ -127,6 +137,7 @@ export function DashboardCanvas(props: DashboardCanvasProps) {
     DEFAULT_LAYOUT,
   );
   const [editMode, setEditMode] = useState(false);
+  const [confirmEl, confirm] = useConfirm();
 
   // After hydration, prune any widget types that no longer exist in the
   // catalogue (forward-compat) and fill missing ones from ALL_WIDGETS.
@@ -190,6 +201,16 @@ export function DashboardCanvas(props: DashboardCanvasProps) {
     persistLayout(DEFAULT_LAYOUT);
   }
 
+  async function handleReset() {
+    const ok = await confirm({
+      title: 'Reset dashboard layout?',
+      description: 'All widgets will return to their default positions and sizes.',
+      confirmLabel: 'Reset',
+      tone: 'danger',
+    });
+    if (ok) resetLayout();
+  }
+
   const hidden = ALL_WIDGETS.filter(
     (t) => !safeLayout.some((w) => w.type === t),
   );
@@ -217,7 +238,8 @@ export function DashboardCanvas(props: DashboardCanvasProps) {
             />
           ) : null}
           {editMode ? (
-            <Button variant="ghost" size="sm" onClick={resetLayout}>
+            <Button variant="ghost" size="sm" onClick={handleReset}>
+              <IconRotate className="size-4" />
               Reset
             </Button>
           ) : null}
@@ -233,6 +255,24 @@ export function DashboardCanvas(props: DashboardCanvasProps) {
         </div>
       </div>
 
+      {/* Phase 5.6 — Error banner for failed data fetches */}
+      {props.hasAnyError ? (
+        <div className="border-warn/30 bg-warn/5 flex items-center gap-3 rounded-sm border px-4 py-2.5 text-sm" role="alert">
+          <IconAlertTriangle className="size-4 shrink-0 text-warn" />
+          <span className="text-fg-subtle">
+            Some dashboard data failed to load. Try{' '}
+            <button
+              type="button"
+              onClick={() => window.location.reload()}
+              className="text-fg underline hover:no-underline"
+            >
+              refreshing
+            </button>
+            .
+          </span>
+        </div>
+      ) : null}
+
       <DndContext
         sensors={sensors}
         collisionDetection={closestCenter}
@@ -242,7 +282,7 @@ export function DashboardCanvas(props: DashboardCanvasProps) {
           items={safeLayout.map((w) => w.id)}
           strategy={rectSortingStrategy}
         >
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
             {safeLayout.map((w) => (
               <SortableWidget
                 key={w.id}
@@ -256,6 +296,7 @@ export function DashboardCanvas(props: DashboardCanvasProps) {
           </div>
         </SortableContext>
       </DndContext>
+      {confirmEl}
     </div>
   );
 }
@@ -325,7 +366,7 @@ function SortableWidget({
               onClick={onToggleSpan}
               className="text-fg-subtle hover:text-fg text-caption"
             >
-              {widget.span === 1 ? '⤢' : '⤡'}
+              {widget.span === 1 ? '⊞' : '⊟'}
             </button>
             <button
               type="button"

@@ -24,7 +24,6 @@
  * entry here; no UI changes required.
  */
 
-import type { ComponentType } from 'react';
 import { IconBell,  IconBook,  IconCalendar,  IconSettings,  IconKey,  IconChartLine,  type Icon,  IconMessagePlus,  IconNews,  IconPlus } from '@tabler/icons-react';
 
 export type CommandGroup = 'navigation' | 'create' | 'settings';

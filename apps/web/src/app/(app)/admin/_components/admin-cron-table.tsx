@@ -35,25 +35,45 @@ interface CronRun {
 export function AdminCronTable() {
   const [runs, setRuns] = useState<CronRun[]>([]);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
+
+  const fetchRuns = async () => {
+    setLoading(true);
+    setFetchError(null);
+    try {
+      const res = await fetch('/api/admin/cron-history?days=7');
+      if (!res.ok) throw new Error(await res.text());
+      const data = (await res.json()) as { runs: CronRun[] };
+      setRuns(data.runs);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Failed to load cron history';
+      setFetchError(msg);
+      toast.error(msg);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    async function fetchRuns() {
-      try {
-        const res = await fetch('/api/admin/cron-history?days=7');
-        if (!res.ok) throw new Error(await res.text());
-        const data = (await res.json()) as { runs: CronRun[] };
-        setRuns(data.runs);
-      } catch {
-        toast.error('Failed to load cron history');
-      } finally {
-        setLoading(false);
-      }
-    }
     void fetchRuns();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   if (loading) {
     return <SkeletonCard lines={4} />;
+  }
+
+  if (fetchError) {
+    return (
+      <SettingsSection title="Cron History" description="Recent cron job runs.">
+        <div className="flex flex-col items-center gap-3 py-8 text-center">
+          <p className="text-sm text-danger">{fetchError}</p>
+          <button type="button" onClick={fetchRuns} className="text-sm text-fg underline hover:no-underline">
+            Retry
+          </button>
+        </div>
+      </SettingsSection>
+    );
   }
 
   return (

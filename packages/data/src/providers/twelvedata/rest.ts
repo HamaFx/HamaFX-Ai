@@ -1,5 +1,4 @@
 import type { Symbol, Timeframe } from '@hamafx/shared';
-import { getSymbolDefinition, isKnownSymbol } from '@hamafx/shared';
 import { z } from 'zod';
 
 import { noteBackoff, tryReserve, type ThrottleConfig } from '../../cache/throttle';

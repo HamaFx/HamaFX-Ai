@@ -268,7 +268,7 @@ export function ChartSettingsDrawer({
               {/* Bollinger Bands */}
               <div className="flex items-center justify-between p-3.5 border-b border-border/40">
                 <div className="flex items-center gap-3">
-                  <div className="size-2.5 rounded-sm bg-warn shadow-md animate-pulse" />
+                  <div className="size-2.5 rounded-sm bg-warn shadow-md" />
                   <div className="flex flex-col">
                     <span className="text-sm font-semibold">Bollinger Bands</span>
                     <span className="text-xs text-fg-muted mt-0.5">Volatility envelopes (20, 2)</span>
@@ -284,7 +284,7 @@ export function ChartSettingsDrawer({
               {/* Pivot Points */}
               <div className="flex items-center justify-between p-3.5 border-b border-border/40">
                 <div className="flex items-center gap-3">
-                  <div className="size-2.5 rounded-sm bg-info shadow-md animate-pulse" />
+                  <div className="size-2.5 rounded-sm bg-info shadow-md" />
                   <div className="flex flex-col">
                     <span className="text-sm font-semibold">Pivot Points</span>
                     <span className="text-xs text-fg-muted mt-0.5">Classic daily floor-trader pivots (PP, S/R levels)</span>
@@ -300,7 +300,7 @@ export function ChartSettingsDrawer({
               {/* RSI Pane */}
               <div className="flex items-center justify-between p-3.5 border-b border-border/40 bg-accent/5">
                 <div className="flex items-center gap-3">
-                  <div className="size-2.5 rounded-sm bg-accent shadow-md animate-pulse" />
+                  <div className="size-2.5 rounded-sm bg-accent shadow-md" />
                   <div className="flex flex-col">
                     <span className="text-sm font-semibold text-accent">RSI Oscillator Pane</span>
                     <span className="text-xs text-accent/80 mt-0.5">Synchronized Relative Strength Index (14)</span>
@@ -316,7 +316,7 @@ export function ChartSettingsDrawer({
               {/* MACD Pane */}
               <div className="flex items-center justify-between p-3.5 border-b border-border/40 bg-info/5">
                 <div className="flex items-center gap-3">
-                  <div className="size-2.5 rounded-sm bg-info shadow-md animate-pulse" />
+                  <div className="size-2.5 rounded-sm bg-info shadow-md" />
                   <div className="flex flex-col">
                     <span className="text-sm font-semibold text-info">MACD Oscillator Pane</span>
                     <span className="text-xs text-info/80 mt-0.5">Moving average convergence divergence (12, 26, 9)</span>
@@ -332,7 +332,7 @@ export function ChartSettingsDrawer({
               {/* ATR Pane */}
               <div className="flex items-center justify-between p-3.5 bg-warn/5">
                 <div className="flex items-center gap-3">
-                  <div className="size-2.5 rounded-sm bg-warn shadow-md animate-pulse" />
+                  <div className="size-2.5 rounded-sm bg-warn shadow-md" />
                   <div className="flex flex-col">
                     <span className="text-sm font-semibold text-warn">ATR Volatility Pane</span>
                     <span className="text-xs text-warn/80 mt-0.5">Synchronized Average True Range (14)</span>

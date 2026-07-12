@@ -18,6 +18,7 @@
 
 // Phase 7 task 7.8 — scoped error boundary for the journal view.
 import { useEffect } from 'react';
+import * as Sentry from '@sentry/nextjs';
 
 import { Button } from '@/components/ui/button';
 
@@ -28,7 +29,7 @@ interface JournalErrorProps {
 
 export default function JournalError({ error, reset }: JournalErrorProps) {
   useEffect(() => {
-    console.error('[journal] segment error', error);
+    Sentry.captureException(error);
   }, [error]);
 
   return (

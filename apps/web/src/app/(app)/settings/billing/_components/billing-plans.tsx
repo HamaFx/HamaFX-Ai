@@ -19,6 +19,7 @@
 import { useState } from 'react';
 import {IconCheck, IconLoader2} from '@tabler/icons-react';
 import { cn } from '@/lib/cn';
+import { fetchCsrf } from '@/lib/csrf';
 
 interface Plan {
   id: string;
@@ -38,9 +39,9 @@ export function BillingPlans({ plans, currentPlanId }: { plans: Plan[]; currentP
     setError(null);
     setLoading(planId);
     try {
-      const res = await fetch('/api/billing/checkout', {
+      const res = await fetchCsrf('/api/billing/checkout', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-csrf-token': getCsrfToken() },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ planId }),
       });
       const data = await res.json();
@@ -56,11 +57,6 @@ export function BillingPlans({ plans, currentPlanId }: { plans: Plan[]; currentP
     } finally {
       setLoading(null);
     }
-  }
-
-  function getCsrfToken(): string {
-    const match = document.cookie.match(/hfx_csrf=([^;]+)/);
-    return match?.[1] ?? '';
   }
 
   return (
