@@ -242,11 +242,6 @@ export function createCategorizedLogger(
   const base = destination ? createPinoLogger(destination) : logger;
   const child = base.child({ category, ...additionalContext });
 
-  function injectTraceId(meta?: Record<string, unknown>): Record<string, unknown> {
-    const traceId = getCurrentTraceId();
-    return { ...(traceId ? { traceId } : {}), ...(meta ?? {}) };
-  }
-
   function log(
     level: 'trace' | 'debug' | 'info' | 'warn' | 'error',
     msgOrObj: string | Record<string, unknown>,

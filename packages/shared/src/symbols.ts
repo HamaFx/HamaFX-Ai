@@ -24,12 +24,8 @@
 import { z } from 'zod';
 
 import {
-  BUILTIN_SYMBOLS,
   SYMBOL_MAP,
   isKnownSymbol,
-  getSymbolDefinition,
-  symbolCategory,
-  type SymbolCategory,
 } from './symbol-catalog';
 
 export type { SymbolCategory, SymbolDefinition } from './symbol-catalog';
