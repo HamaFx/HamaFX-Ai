@@ -15,9 +15,9 @@
 // Run from the package root: `pnpm --filter @hamafx/worker build`.
 
 import { build } from 'esbuild';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { dirname, resolve } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = resolve(__dirname, '..');
@@ -32,8 +32,9 @@ const deps = Object.keys(pkg.dependencies ?? {});
 // transitive @opentelemetry/* deps into the worker's node_modules.
 // Bundling them is simpler and avoids a long chain of manual deps.
 // With shamefully-hoist=true, external deps are available from the monorepo
-// root node_modules. No packages need forced bundling.
-const alwaysBundle = new Set();
+// root node_modules. ws is bundled via the pnpm-resolver plugin below
+// to avoid runtime resolution issues with pnpm's strict layout.
+const alwaysBundle = new Set(['ws']);
 const external = deps.filter(
   (d) => !d.startsWith('@hamafx/') && !d.startsWith('@opentelemetry/') && !alwaysBundle.has(d),
 );
@@ -66,10 +67,48 @@ const serverOnlyPlugin = {
   },
 };
 
-/** @type {import('esbuild').BuildOptions} */
 // Resolve packages from the monorepo root's node_modules so esbuild can
 // find packages in pnpm's .pnpm store when alwaysBundle includes them.
 const monorepoRoot = resolve(root, '..', '..');
+
+// Plugin: resolve specific packages from pnpm's .pnpm store when
+// esbuild's default resolution fails (pnpm strict layout).
+// Only activates for packages listed in pnpmBundlePackages.
+const pnpmBundlePackages = new Set(['ws']);
+const pnpmResolver = {
+  name: 'pnpm-resolver',
+  setup(build) {
+    build.onResolve({ filter: /.*/ }, (args) => {
+      // Only handle specific packages that need bundling from pnpm store
+      if (!pnpmBundlePackages.has(args.path)) return undefined;
+      if (args.path.startsWith('.') || args.path.startsWith('/') || args.path.startsWith('node:')) {
+        return undefined;
+      }
+      // Search .pnpm store for matching package directories
+      const pnpmStore = join(monorepoRoot, 'node_modules', '.pnpm');
+      if (!existsSync(pnpmStore)) return undefined;
+      const entries = readdirSync(pnpmStore);
+      const match = entries.find((e) => e.startsWith(`${args.path}@`));
+      if (match) {
+        const pkgDir = join(pnpmStore, match, 'node_modules', args.path);
+        // Read the package.json main field to get the entry point
+        const pkgJsonPath = join(pkgDir, 'package.json');
+        if (existsSync(pkgJsonPath)) {
+          const pkgJson = JSON.parse(readFileSync(pkgJsonPath, 'utf8'));
+          const mainFile = pkgJson.main || 'index.js';
+          const entryPath = join(pkgDir, mainFile);
+          if (existsSync(entryPath)) {
+            return { path: entryPath };
+          }
+        }
+        // Fallback: try index.js
+        const fallback = join(pkgDir, 'index.js');
+        if (existsSync(fallback)) return { path: fallback };
+      }
+      return undefined;
+    });
+  },
+};
 
 const common = {
   bundle: true,
@@ -79,7 +118,7 @@ const common = {
   sourcemap: true,
   external,
   nodePaths: [resolve(monorepoRoot, 'node_modules')],
-  plugins: [serverOnlyPlugin],
+  plugins: [pnpmResolver, serverOnlyPlugin],
   // Workspace packages are pure ESM; force the bundler to emit ESM and
   // not wrap dynamic-import shims that confuse Node.
   banner: {
