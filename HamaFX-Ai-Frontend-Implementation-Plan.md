@@ -12,15 +12,15 @@
 
 ### Phase 1 (P0 Critical): ✅ COMPLETE — 24/24 fixes
 ### Phase 2 (P1 High): 🟡 ~84 of 99 items complete
-### Phase 3 (P2): 🟡 ~51 of 66 items complete (~77%)
+### Phase 3 (P2): 🟡 ~53 of 66 items complete (~80%)
 
-**Completed this session (batches 1-5):** CC-7 shared datetime.ts, CC-10 _shared.tsx, 3.1.7 hardcoded RGB fix, 3.1.10 refetchIntervalFor dedup, 3.2.2-3.2.5 loading states, 3.3.2 price-tag IntersectionObserver, 3.3.4 chart autoSize, 3.4.1 BookmarksProvider, 3.4.3 alert button position, 3.4.10 heatmap today, 3.4.12 notes max length, 3.4.14 signal feedback (verified), 3.4.15-3.4.16 dual persistence fix, 3.6.1-3.6.5 export/security.
+**Completed this session (batches 1-6):** CC-7 shared datetime.ts, CC-10 _shared.tsx, 3.1.7 hardcoded RGB fix, 3.1.10 refetchIntervalFor dedup, 3.2.2-3.2.5 loading states, 3.3.2 price-tag IntersectionObserver, 3.3.4 chart autoSize, 3.4.1 BookmarksProvider, 3.4.3 alert button position, 3.4.10 heatmap today, 3.4.12 notes max length, 3.4.14-3.4.16 signal feedback + dual persistence, 3.5.6 skip-to-content (verified), 3.5.7 keyboard nav (verified), 3.6.1-3.6.5 export/security.
 
-**Remaining (~15 items):** 3.1 design drift (~10), 3.3 performance (~3 — news virtual, admin RQ, time-provider), 3.4 UX (~1), 3.5 a11y (~1).
+**Remaining (~13 items):** 3.1 design drift (~10), 3.3 performance (~3 — news virtual, admin RQ, time-provider).
 ### Phase 4 (P3): 🟡 ~15 of 40 items complete
 ### Phase 5 (Features): ✅ COMPLETE — 8/8 fixes
 
-**Overall: ~192 of 237 items complete (~81%)**
+**Overall: ~194 of 237 items complete (~82%)**
 
 ### Phase 1 (P0 Critical): ✅ COMPLETE — 24/24 fixes
 
@@ -146,11 +146,11 @@
 | CC-9 | Index-as-Key in Lists | ⏳ Remaining (deferred) |
 | CC-10 | Duplicated SkeletonCard/ErrorCard → _shared.tsx created | ✅ Done |
 
-### Phase 3 (P2): 🟡 ~51 of 66 items complete (~77%)
+### Phase 3 (P2): 🟡 ~53 of 66 items complete (~80%)
 
-**Completed this session (batches 1-5):** CC-7 shared datetime.ts, CC-10 _shared.tsx, 3.1.7 hardcoded RGB fix, 3.1.10 refetchIntervalFor dedup, 3.2.2-3.2.5 loading states, 3.3.2 price-tag IntersectionObserver, 3.3.4 chart autoSize, 3.4.1 BookmarksProvider, 3.4.3 alert button position, 3.4.10 heatmap today, 3.4.12 notes max length, 3.4.14 signal feedback (verified), 3.4.15-3.4.16 dual persistence fix, 3.6.1-3.6.5 export/security.
+**Completed this session (batches 1-6):** CC-7 shared datetime.ts, CC-10 _shared.tsx, 3.1.7 hardcoded RGB fix, 3.1.10 refetchIntervalFor dedup, 3.2.2-3.2.5 loading states, 3.3.2 price-tag IntersectionObserver, 3.3.4 chart autoSize, 3.4.1 BookmarksProvider, 3.4.3 alert button position, 3.4.10 heatmap today, 3.4.12 notes max length, 3.4.14-3.4.16 signal feedback + dual persistence, 3.5.6 skip-to-content (verified), 3.5.7 keyboard nav (verified), 3.6.1-3.6.5 export/security.
 
-**Remaining (~15 items):** 3.1 design drift (~10), 3.3 performance (~3 — news virtual, admin RQ, time-provider), 3.4 UX (~1), 3.5 a11y (~1).
+**Remaining (~13 items):** 3.1 design drift (~10), 3.3 performance (~3 — news virtual, admin RQ, time-provider).
 
 | # | Item | Status |
 |---|------|--------|
@@ -189,7 +189,7 @@
 | 3.4.1 | BookmarksProvider wrapping → only InteractiveView+Summary | ✅ Done |
 | 3.4.10 | Heatmap today indicator (ring-2 + aria/title) | ✅ Done |
 | 3.4.12 | Notes max length server 2000→5000 (align with client) | ✅ Done |
-| 3.5.5-3.5.7 | Accessibility remaining (~3 items) | ⏳ Remaining |
+| 3.5.5-3.5.7 | Accessibility remaining (~3 items) | ✅ All verified — 3.5.5 (Phase 2.3.8), 3.5.6-3.5.7 (verified) |
 | 3.6.1 | exportDataAction password/2FA verification | ✅ Done |
 | 3.6.2 | exportDataAction userId leak stripped | ✅ Done |
 | 3.6.3 | `api.ts` x-user-id header trust — validated against JWT + defense-in-depth slow path | ✅ Verified secure |
@@ -848,9 +848,9 @@ const merged = { ...existing, ...newPrefs, noiseConfig: existing.noiseConfig };
 | 3.5.2 | `button.tsx` | No focus ring on any variant | Add `focus-visible:ring-2` |
 | 3.5.3 | `parts/plan.tsx` | Hardcoded ARIA IDs | Use `useId()` |
 | 3.5.4 | `parts/citation-warning.tsx` | Hardcoded ARIA IDs | Use `useId()` |
-| 3.5.5 | `pnl-heatmap-widget.tsx` | Touch targets 32px < 44px | Increase to 44px minimum |
-| 3.5.6 | `skip-to-content.tsx` | Verify skip link works correctly | Test and fix if needed |
-| 3.5.7 | All pages | Audit keyboard navigation | Ensure all interactive elements are keyboard accessible |
+| 3.5.5 | `pnl-heatmap-widget.tsx` | Touch targets 32px < 44px | ✅ Done — 44px min (Phase 2.3.8) |
+| 3.5.6 | `skip-to-content.tsx` | Verify skip link works correctly | ✅ Verified — CSS off-screen→focus slide-in, targets main#main-content |
+| 3.5.7 | All pages | Audit keyboard navigation | ✅ Verified — zero anti-patterns, all buttons/links semantic |
 
 ### 3.6 Security Improvements
 
