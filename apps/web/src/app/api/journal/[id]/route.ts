@@ -48,7 +48,7 @@ const PatchSchema = z.object({
   target: z.number().nullable().optional(),
   size: z.number().nullable().optional(),
   outcome: TradeOutcomeSchema.optional(),
-  notes: z.string().max(2000).nullable().optional(),
+  notes: z.string().max(5000).nullable().optional(),
   tags: z.array(z.string().max(40)).max(10).optional(),
 });
 

@@ -12,7 +12,7 @@
 
 ### Phase 1 (P0 Critical): ✅ COMPLETE — 24/24 fixes
 ### Phase 2 (P1 High): 🟡 ~84 of 99 items complete
-### Phase 3 (P2): 🟡 ~36 of 66 items complete
+### Phase 3 (P2): 🟡 ~40 of 66 items complete
 ### Phase 4 (P3): 🟡 ~15 of 40 items complete
 ### Phase 5 (Features): ✅ COMPLETE — 8/8 fixes
 
@@ -142,7 +142,7 @@
 | CC-9 | Index-as-Key in Lists | ⏳ Remaining |
 | CC-10 | Duplicated SkeletonCard/ErrorCard → _shared.tsx created | ✅ Done |
 
-### Phase 3 (P2): 🟡 ~36 of 66 items complete
+### Phase 3 (P2): 🟡 ~40 of 66 items complete
 
 | # | Item | Status |
 |---|------|--------|
@@ -176,11 +176,15 @@
 | 3.2.7 | All loading states audited | ✅ Done |
 | 3.3.1-3.3.2, 3.3.8-3.3.10 | Performance remaining (~5 items) | ⏳ Remaining |
 | 3.3.4 | chart-canvas.tsx autoSize + resize() clarified | ✅ Done |
-| 3.4.1-3.4.6, 3.4.10, 3.4.12, 3.4.14-3.4.17, 3.4.19-3.4.20 | UX remaining (~14 items) | ⏳ Remaining |
+| 3.4.1-3.4.6, 3.4.12, 3.4.14-3.4.17, 3.4.19-3.4.20 | UX remaining (~8 items) | ⏳ Remaining |
+| 3.4.1 | BookmarksProvider wrapping → only InteractiveView+Summary | ✅ Done |
+| 3.4.10 | Heatmap today indicator (ring-2 + aria/title) | ✅ Done |
+| 3.4.12 | Notes max length server 2000→5000 (align with client) | ✅ Done |
 | 3.5.5-3.5.7 | Accessibility remaining (~3 items) | ⏳ Remaining |
 | 3.6.1 | exportDataAction password/2FA verification | ✅ Done |
 | 3.6.2 | exportDataAction userId leak stripped | ✅ Done |
-| 3.6.3-3.6.7 | Security remaining (~5 items) | ⏳ Remaining |
+| 3.6.3-3.6.5, 3.6.7 | Security remaining (~3 items) | ⏳ Remaining |
+| 3.6.6 | Onboarding CSRF (already uses withCsrf) | ✅ Done |
 ### Phase 4 (P3): 🟡 ~15 of 40 items complete
 
 | # | Item | Status |

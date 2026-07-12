@@ -40,28 +40,26 @@ export default async function NewsPage() {
   const articles = await listRecentArticles(120);
 
   return (
-    <BookmarksProvider>
-      <div className="flex flex-col gap-4">
-        <PageHeader
-          title="News"
-          description="Headlines tagged for XAU / EUR / GBP / USD from our market data feed."
-        />
+    <div className="flex flex-col gap-4">
+      <PageHeader
+        title="News"
+        description="Headlines tagged for XAU / EUR / GBP / USD from our market data feed."
+      />
 
-        {articles.length === 0 ? (
-          <EmptyState
-            tone="muted"
-            icon={<IconNews className="size-7" strokeWidth={1.75} />}
-            title="No news yet"
-            description="Headlines populate automatically every few minutes. Tap below to refresh now."
-            action={<RefreshButton endpoint="/api/cron/news" />}
-          />
-        ) : (
-          <>
-            <SentimentSummary articles={articles} />
-            <NewsView initialArticles={articles} />
-          </>
-        )}
-      </div>
-    </BookmarksProvider>
+      {articles.length === 0 ? (
+        <EmptyState
+          tone="muted"
+          icon={<IconNews className="size-7" strokeWidth={1.75} />}
+          title="No news yet"
+          description="Headlines populate automatically every few minutes. Tap below to refresh now."
+          action={<RefreshButton endpoint="/api/cron/news" />}
+        />
+      ) : (
+        <BookmarksProvider>
+          <SentimentSummary articles={articles} />
+          <NewsView initialArticles={articles} />
+        </BookmarksProvider>
+      )}
+    </div>
   );
 }

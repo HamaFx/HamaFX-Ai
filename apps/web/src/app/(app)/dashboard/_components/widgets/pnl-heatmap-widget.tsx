@@ -241,13 +241,14 @@ export function PnLHeatmapWidget({ entries }: PnLHeatmapWidgetProps) {
                 return <div key={idx} aria-hidden="true" />;
               }
               const sign = cell.totalR > 0 ? '+' : '';
+              const isToday = cell.key === localDayKey(Date.now());
               return (
                 <button
                   key={cell.key}
                   type="button"
                   onClick={() => setSelectedDay(cell)}
-                  title={`${cell.key}: ${sign}${cell.totalR.toFixed(1)}R (${cell.count} trades)`}
-                  aria-label={`${cell.key}: ${sign}${cell.totalR.toFixed(1)}R, ${cell.count} trades`}
+                  title={`${cell.key}: ${sign}${cell.totalR.toFixed(1)}R (${cell.count} trades)${isToday ? ' · today' : ''}`}
+                  aria-label={`${cell.key}: ${sign}${cell.totalR.toFixed(1)}R, ${cell.count} trades${isToday ? ', today' : ''}`}
                   className={cn(
                     'flex size-11 items-center justify-center rounded-sm tabular-nums',
                     'text-caption',
@@ -255,6 +256,7 @@ export function PnLHeatmapWidget({ entries }: PnLHeatmapWidgetProps) {
                     cell.totalR < 0 && 'text-bear',
                     cell.totalR === 0 && 'text-fg-muted',
                     'transition-transform active:scale-95',
+                    isToday && 'ring-2 ring-fg ring-offset-1 ring-offset-bg-elev-1',
                   )}
                   style={heatCellStyle(cell.totalR)}
                 >
