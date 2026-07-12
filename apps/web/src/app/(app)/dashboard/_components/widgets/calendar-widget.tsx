@@ -28,6 +28,7 @@ import type { EconomicEvent } from '@hamafx/shared';
 
 import { EmptyState } from '@/components/ui/empty-state';
 import { useTime } from '@/components/providers/time-provider';
+import { formatCountdown } from '@/lib/datetime';
 import { cn } from '@/lib/cn';
 
 interface CalendarWidgetProps {
@@ -117,15 +118,3 @@ export function CalendarWidget({ events, limit = 3 }: CalendarWidgetProps) {
   );
 }
 
-function formatCountdown(ms: number): string {
-  if (ms <= 0) return 'Live now';
-  const min = Math.floor(ms / 60_000);
-  if (min < 60) return `in ${min}m`;
-  const hr = Math.floor(min / 60);
-  if (hr < 24) {
-    const remMin = min % 60;
-    return remMin > 0 ? `in ${hr}h ${remMin}m` : `in ${hr}h`;
-  }
-  const d = Math.floor(hr / 24);
-  return `in ${d}d`;
-}

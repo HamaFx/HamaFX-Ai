@@ -23,7 +23,7 @@
 //   - .with(tags) returns a child logger
 //   - forceJson option forces JSON output in tests
 
-import { Writable } from 'node:stream';
+import type { Writable } from 'node:stream';
 
 import {
   createCategorizedLogger,

@@ -1059,10 +1059,37 @@ export async function updateLocaleAction(locale: string): Promise<ActionResult> 
   }
 }
 
-export async function exportDataAction(): Promise<ActionResult<string>> {
+export async function exportDataAction(password?: string, totpCode?: string): Promise<ActionResult<string>> {
   const session = await auth();
   if (!session?.user?.id) {
     return { ok: false as const, error: 'Unauthorized' };
+  }
+
+  // Require password verification for data export (3.6.1)
+  if (!password || password.length < 8) {
+    return { ok: false as const, error: 'Password is required to export your data' };
+  }
+
+  // Check 2FA if enabled
+  const db = getDb();
+  const [user] = await db.select({
+    twoFactorEnabled: schema.users.twoFactorEnabled,
+    twoFactorSecret: schema.users.twoFactorSecret,
+  }).from(schema.users).where(eq(schema.users.id, session.user.id));
+
+  if (user?.twoFactorEnabled) {
+    if (!totpCode) {
+      return { ok: false as const, error: '2FA code is required to export your data' };
+    }
+    const decryptedSecret = user.twoFactorSecret ? decryptSecret(user.twoFactorSecret) : null;
+    if (!decryptedSecret || !verifySync({ secret: decryptedSecret, token: totpCode }).valid) {
+      return { ok: false as const, error: 'Invalid 2FA code' };
+    }
+  }
+
+  const passwordValid = await verifyAccountPassword(session.user.id, password);
+  if (!passwordValid) {
+    return { ok: false as const, error: 'Incorrect account password' };
   }
 
   const rl = await withRateLimit(session.user.id, 'settings_export', 3);
@@ -1093,22 +1120,23 @@ export async function exportDataAction(): Promise<ActionResult<string>> {
     const briefings = await db.select().from(schema.briefingsEmitted).where(eq(schema.briefingsEmitted.userId, userId));
     const auditLogs = await db.select().from(schema.auditLogs).where(eq(schema.auditLogs.userId, userId));
 
+    // Strip userId from all exported records for security (3.6.2)
     const data = {
       exportedAt: new Date().toISOString(),
-      profile: profile ?? null,
-      settings,
+      profile: profile ? { ...profile, hashedPassword: undefined, twoFactorSecret: undefined } : null,
+      settings: settings.map((s) => ({ ...s, userId: undefined, aiApiKeys: undefined })),
       threads: threads.map((t) => ({ ...t, userId: undefined })),
       messages: messages.map((m) => ({ ...m, userId: undefined })),
-      journalEntries,
-      alerts,
-      symbols,
-      pushSubscriptions,
-      memories,
-      sharedSnapshots,
-      telemetry,
-      spend,
-      briefings,
-      auditLogs,
+      journalEntries: journalEntries.map((e) => ({ ...e, userId: undefined })),
+      alerts: alerts.map((a) => ({ ...a, userId: undefined })),
+      symbols: symbols.map((s) => ({ ...s, userId: undefined })),
+      pushSubscriptions: pushSubscriptions.map((s) => ({ ...s, userId: undefined })),
+      memories: memories.map((m) => ({ ...m, userId: undefined })),
+      sharedSnapshots: sharedSnapshots.map((s) => ({ ...s, userId: undefined })),
+      telemetry: telemetry.map((t) => ({ ...t, userId: undefined })),
+      spend: spend.map((s) => ({ ...s, userId: undefined })),
+      briefings: briefings.map((b) => ({ ...b, userId: undefined })),
+      auditLogs: auditLogs.map((a) => ({ ...a, userId: undefined })),
     };
 
     return {

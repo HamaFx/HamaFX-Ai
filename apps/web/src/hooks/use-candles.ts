@@ -29,26 +29,7 @@ import type { Candle, Symbol, Timeframe } from '@hamafx/shared';
 import { useQuery } from '@tanstack/react-query';
 
 import { fetchCandles } from '@/lib/market-client';
-
-/**
- * Refresh interval per timeframe. Mirrors the cache TTL on the server side
- * (docs/04-data-layer.md) — anything tighter just wastes calls.
- */
-function refetchIntervalFor(tf: Timeframe): number {
-  switch (tf) {
-    case '1m':
-      return 5_000;
-    case '5m':
-    case '15m':
-    case '30m':
-    case '1h':
-    case '4h':
-      return 30_000;
-    case '1d':
-    case '1w':
-      return 5 * 60_000;
-  }
-}
+import { refetchIntervalFor } from '@/lib/datetime';
 
 export interface UseCandlesOptions {
   /**

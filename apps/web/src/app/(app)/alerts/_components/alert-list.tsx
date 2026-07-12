@@ -49,7 +49,6 @@ export function AlertList() {
   const [open, setOpen] = useState(false);
   const [filter, setFilter] = useState<'all' | 'active' | 'past'>('all');
   const [confirmEl, confirm] = useConfirm();
-  const [showFormInline, setShowFormInline] = useState(false);
 
   const { data, isLoading, isFetching, isError, error } = useQuery<{ alerts: Alert[] }>({
     queryKey: ALERTS_QUERY_KEY,

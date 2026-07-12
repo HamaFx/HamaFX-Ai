@@ -32,6 +32,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/cn';
 import { formatRelative } from '@/lib/format';
+import { startOfDay } from '@/lib/datetime';
 
 import {
   CalendarToolbar,
@@ -227,8 +228,3 @@ function bucket(events: readonly EconomicEvent[]): Section[] {
   return sections;
 }
 
-function startOfDay(ms: number): number {
-  const d = new Date(ms);
-  d.setHours(0, 0, 0, 0);
-  return d.getTime();
-}

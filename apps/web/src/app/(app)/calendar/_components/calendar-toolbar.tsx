@@ -21,24 +21,7 @@
 import type { EventCurrency, Importance } from '@hamafx/shared';
 
 import { cn } from '@/lib/cn';
-
-function handleRadioKeyDown(e: React.KeyboardEvent) {
-  const radios = Array.from(e.currentTarget.querySelectorAll<HTMLButtonElement>('[role="radio"]'));
-  const currentIdx = radios.findIndex(r => r === document.activeElement);
-  if (currentIdx === -1) return;
-  let nextIdx: number;
-  if (e.key === 'ArrowRight') {
-    e.preventDefault();
-    nextIdx = (currentIdx + 1) % radios.length;
-  } else if (e.key === 'ArrowLeft') {
-    e.preventDefault();
-    nextIdx = (currentIdx - 1 + radios.length) % radios.length;
-  } else {
-    return;
-  }
-  radios[nextIdx]?.focus();
-  radios[nextIdx]?.click();
-}
+import { handleRadioKeyDown } from '@/lib/datetime';
 
 export type ImportanceFilter = Importance | 'all';
 export type CurrencyFilter = EventCurrency | 'all';

@@ -25,22 +25,7 @@ import { useEffect, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import type { Candle, IndicatorResult, Symbol, Timeframe } from '@hamafx/shared';
 import { fetchCandles, fetchChartData, type IndicatorRequest } from '@/lib/market-client';
-
-function refetchIntervalFor(tf: Timeframe): number {
-  switch (tf) {
-    case '1m':
-      return 5_000;
-    case '5m':
-    case '15m':
-    case '30m':
-    case '1h':
-    case '4h':
-      return 30_000;
-    case '1d':
-    case '1w':
-      return 5 * 60_000;
-  }
-}
+import { refetchIntervalFor } from '@/lib/datetime';
 
 function getAdjacentTimeframes(tf: Timeframe): Timeframe[] {
   switch (tf) {

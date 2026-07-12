@@ -29,6 +29,7 @@ import {IconClock, IconBolt} from '@tabler/icons-react';
 import { Link } from 'next-view-transitions';
 
 import { useTime } from '@/components/providers/time-provider';
+import { startOfDay } from '@/lib/datetime';
 import { cn } from '@/lib/cn';
 
 interface CalendarHeroProps {
@@ -205,11 +206,4 @@ function Tag({
     </li>
   );
 }
-
-function startOfDay(ms: number): number {
-  const d = new Date(ms);
-  d.setHours(0, 0, 0, 0);
-  return d.getTime();
-}
-
 

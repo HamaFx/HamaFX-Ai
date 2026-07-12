@@ -44,6 +44,7 @@ import { EmptyState } from '@/components/ui/empty-state';
 import { SkeletonCard } from '@/components/ui/skeleton';
 import { cn } from '@/lib/cn';
 import { formatRelative } from '@/lib/format';
+import { startOfDay } from '@/lib/datetime';
 
 import { NewsToolbar, type SentimentFilter, type SymbolFilter } from './news-toolbar';
 
@@ -304,8 +305,3 @@ function bucketByTime(articles: readonly NewsArticle[]): Bucket[] {
   return buckets;
 }
 
-function startOfDay(ms: number): number {
-  const d = new Date(ms);
-  d.setHours(0, 0, 0, 0);
-  return d.getTime();
-}

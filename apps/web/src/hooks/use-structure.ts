@@ -28,6 +28,10 @@ import { useQuery } from '@tanstack/react-query';
 
 import { fetchStructure } from '@/lib/market-client';
 
+/**
+ * Structure data refreshes less frequently than candles — it only changes
+ * when bars close, so 15-60 s for intraday and 5 min for higher TFs.
+ */
 function refetchIntervalFor(tf: Timeframe): number {
   switch (tf) {
     case '1m':

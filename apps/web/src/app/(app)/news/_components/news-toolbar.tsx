@@ -24,6 +24,7 @@ import type { NewsSentiment, SymbolOrCurrencyTag } from '@hamafx/shared';
 import {IconSearch, IconX} from '@tabler/icons-react';
 
 import { cn } from '@/lib/cn';
+import { handleRadioKeyDown } from '@/lib/datetime';
 
 export type SentimentFilter = NewsSentiment | 'all';
 export type SymbolFilter = SymbolOrCurrencyTag | 'all';
@@ -48,24 +49,6 @@ const SENTIMENTS: Array<{ value: SentimentFilter; label: string; tone: string }>
   { value: 'negative', label: 'Bearish', tone: 'text-bear' },
   { value: 'neutral', label: 'Neutral', tone: 'text-fg-muted' },
 ];
-
-function handleRadioKeyDown(e: React.KeyboardEvent) {
-  const radios = Array.from(e.currentTarget.querySelectorAll<HTMLButtonElement>('[role="radio"]'));
-  const currentIdx = radios.findIndex(r => r === document.activeElement);
-  if (currentIdx === -1) return;
-  let nextIdx: number;
-  if (e.key === 'ArrowRight') {
-    e.preventDefault();
-    nextIdx = (currentIdx + 1) % radios.length;
-  } else if (e.key === 'ArrowLeft') {
-    e.preventDefault();
-    nextIdx = (currentIdx - 1 + radios.length) % radios.length;
-  } else {
-    return;
-  }
-  radios[nextIdx]?.focus();
-  radios[nextIdx]?.click();
-}
 
 export function NewsToolbar({
   query,

@@ -12,11 +12,11 @@
 
 ### Phase 1 (P0 Critical): ✅ COMPLETE — 24/24 fixes
 ### Phase 2 (P1 High): 🟡 ~84 of 99 items complete
-### Phase 3 (P2): 🟡 ~25 of 66 items complete
+### Phase 3 (P2): 🟡 ~30 of 66 items complete
 ### Phase 4 (P3): 🟡 ~15 of 40 items complete
 ### Phase 5 (Features): ✅ COMPLETE — 8/8 fixes
 
-**Overall: ~176 of 237 items complete (~74%)**
+**Overall: ~181 of 237 items complete (~76%)**
 
 ### Phase 1 (P0 Critical): ✅ COMPLETE — 24/24 fixes
 
@@ -92,6 +92,9 @@
 | 2.4.3 | pro-chart-view dead migration effect removed | ✅ Done |
 | 2.4.4 | tradingview-widget double-init guard | ✅ Done |
 | 2.4.1-2.4.2, 2.4.5-2.4.6 | Chart system remaining | ⏳ Remaining |
+| 2.6.6-2.6.7 | Journal notes/pip remaining | ⏳ Remaining |
+| 2.7.4, 2.7.6-2.7.7, 2.7.12, 2.7.14-2.7.15 | Settings remaining | ⏳ Remaining |
+| 2.8.4, 2.8.6, 2.8.11, 2.8.13, 2.8.15-2.8.16, 2.8.18 | Admin/Layout/UI/Lib remaining | ⏳ Remaining |
 | 2.5.1 | News error.tsx created | ✅ Done |
 | 2.5.2 | News force-dynamic → revalidate = 300 | ✅ Done |
 | 2.5.3 | News error.tsx (CC-4) | ✅ Done |
@@ -133,8 +136,13 @@
 | 2.8.4, 2.8.6, 2.8.11, 2.8.13, 2.8.15-2.8.16, 2.8.18 | Admin/Layout/UI/Lib remaining | ⏳ Remaining |
 | CC-4 | error.tsx files: news, alerts, calendar, settings/billing | ✅ Done |
 | CC-5 | window.confirm() → ConfirmDrawer (already eliminated) | ✅ Done |
+| CC-6 | Inconsistent Skeleton/Loading States | ⏳ Remaining |
+| CC-7 | Duplicated Utility Functions → lib/datetime.ts + hook refactors | ✅ Done |
+| CC-8 | console.error/warn/log in Production Code | ⏳ Remaining |
+| CC-9 | Index-as-Key in Lists | ⏳ Remaining |
+| CC-10 | Duplicated SkeletonCard/ErrorCard → _shared.tsx created | ✅ Done |
 
-### Phase 3 (P2): 🟡 ~25 of 66 items complete
+### Phase 3 (P2): 🟡 ~30 of 66 items complete
 
 | # | Item | Status |
 |---|------|--------|
@@ -157,12 +165,15 @@
 | 3.5.3 | plan.tsx useId() for ARIA | ✅ Done |
 | 3.5.4 | citation-warning.tsx useId() for ARIA | ✅ Done |
 | 3.6.8 | billing-plans.tsx fetchCsrf | ✅ Done |
-| 3.1.1-3.1.11, 3.1.13-3.1.14 | Design drift remaining (~12 items) | ⏳ Remaining |
+| 3.1.1-3.1.9, 3.1.11, 3.1.13-3.1.14 | Design drift remaining (~13 items) | ⏳ Remaining |
+| 3.1.10 | Duplicated refetchIntervalFor → lib/datetime.ts | ✅ Done |
 | 3.2.2-3.2.5, 3.2.7 | Loading state remaining (~6 items) | ⏳ Remaining |
 | 3.3.1-3.3.2, 3.3.4, 3.3.8-3.3.10 | Performance remaining (~7 items) | ⏳ Remaining |
 | 3.4.1-3.4.6, 3.4.10, 3.4.12, 3.4.14-3.4.17, 3.4.19-3.4.20 | UX remaining (~14 items) | ⏳ Remaining |
 | 3.5.5-3.5.7 | Accessibility remaining (~3 items) | ⏳ Remaining |
-| 3.6.1-3.6.7 | Security remaining (~7 items) | ⏳ Remaining |
+| 3.6.1 | exportDataAction password/2FA verification | ✅ Done |
+| 3.6.2 | exportDataAction userId leak stripped | ✅ Done |
+| 3.6.3-3.6.7 | Security remaining (~5 items) | ⏳ Remaining |
 ### Phase 4 (P3): 🟡 ~15 of 40 items complete
 
 | # | Item | Status |

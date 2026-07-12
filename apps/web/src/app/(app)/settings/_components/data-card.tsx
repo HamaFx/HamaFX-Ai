@@ -264,7 +264,9 @@ export function DataCard() {
             size="sm"
             variant="secondary"
             onClick={async () => {
-              const result = await exportDataAction();
+              const pwd = window.prompt('Enter your account password to export data:');
+              if (!pwd) { toast.error('Password is required to export your data'); return; }
+              const result = await exportDataAction(pwd);
               if (result.ok && result.data) {
                 const blob = new Blob([result.data], { type: 'application/json' });
                 const url = URL.createObjectURL(blob);
