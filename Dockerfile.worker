@@ -28,6 +28,9 @@ RUN pnpm turbo run build --filter=@hamafx/worker...
 # Prune development dependencies
 RUN pnpm --filter=@hamafx/worker deploy --prod /prod/worker
 
+# Copy built dist/ files into the deployed package
+RUN cp -r apps/worker/dist /prod/worker/dist
+
 FROM node:20-slim AS runner
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl ca-certificates \
