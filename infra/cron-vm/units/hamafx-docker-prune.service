@@ -9,7 +9,6 @@ User=root
 NoNewPrivileges=true
 PrivateTmp=true
 ExecStart=/usr/bin/docker image prune -f
-ExecStartPost=/bin/sh -c 'test -z "$$HC_DISK_CHECK_UUID" || /usr/bin/curl -fsS -m 5 "https://hc-ping.com/$$HC_DISK_CHECK_UUID" || true'
 
 StandardOutput=journal
 StandardError=journal

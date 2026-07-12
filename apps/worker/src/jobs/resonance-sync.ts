@@ -183,6 +183,11 @@ export async function runResonanceSync(ctx: JobContext): Promise<JobResult> {
   log.info('persisting resonance rows', { rows: dbRows.length });
   let processed = 0;
 
+  if (ctx.signal?.aborted) {
+    log.warn('resonance-sync aborted before persistence');
+    return { processed: 0, note: 'aborted before persistence' };
+  }
+
   if (dbRows.length > 0) {
     await db
       .insert(schema.intermarketResonance)

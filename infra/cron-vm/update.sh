@@ -7,7 +7,7 @@
 #   1. Hard-reset to origin/main.
 #   2. pnpm install --frozen-lockfile.
 #   3. pnpm --filter @hamafx/worker build.
-#   4. pnpm --filter @hamafx/worker test --run.
+#   4. (tests skipped on VM — CI runs them on every PR/push)
 #
 # Any of those four failing rolls back to the previous SHA, restores
 # the previous install, and pings HC_UPDATE_UUID with `fail`. Only on a

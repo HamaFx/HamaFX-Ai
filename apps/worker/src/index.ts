@@ -30,7 +30,7 @@
 //   4. start SignalR consumer + Binance WS consumer + the 1Hz flush loop.
 //   5. heartbeat to healthchecks.io every 30s while the consumer is alive.
 
-import { getDb } from '@hamafx/db';
+import { closeDb, getDb } from '@hamafx/db';
 import { initLangfuse, shutdownLangfuse } from '@hamafx/ai';
 import * as http from 'http';
 
@@ -480,6 +480,7 @@ export async function main(): Promise<void> {
     log.info('Health server listening on 127.0.0.1:8081');
   });
 
+  onShutdown(() => closeDb());
   onShutdown(() => {
     healthServer.close();
     return worker.stop();

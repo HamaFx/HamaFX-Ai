@@ -41,7 +41,10 @@ MaxFileSec=7day
 JOURNALD
 systemctl restart systemd-journald
 
-log 'adding hamafx user to docker group (PR-17: verify-restore needs it)'
+# Install system packages. Idempotent — won't re-install if present.
+log 'ensuring system packages'
+apt-get update -qq
+apt-get install -y -qq curl logrotate sudo postgresql-client docker.io 2>/dev/null || true
 if id hamafx >/dev/null 2>&1; then
   usermod -aG docker hamafx || true
 fi

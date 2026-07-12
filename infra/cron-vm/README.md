@@ -24,6 +24,12 @@ The VM uses GCP default firewall rules (deny all inbound except SSH):
 
 Firewall rules are configured by `_provision.sh` during VM setup.
 
+> **BiQuote Proxy:** The worker's health server includes a BiQuote REST proxy
+> at `/biquote/*`, but it is bound to `127.0.0.1` and only accessible from the
+> VM itself. Vercel should go directly to `https://biquote.io` (the default
+> `BIQUOTE_BASE_URL`). If you previously configured `BIQUOTE_BASE_URL` on Vercel
+> to point to the VM, remove that override.
+
 ## Schedule
 
 | Endpoint | Cadence | Purpose |

@@ -77,6 +77,7 @@ const WorkerEnvSchema = z.object({
   HC_TENANT_DELETE_UUID: optionalNonEmpty,
   HC_TENANT_EXPORT_UUID: optionalNonEmpty,
   HC_CLEANUP_UPLOADS_UUID: optionalNonEmpty,
+  HC_DOCKER_PRUNE_UUID: optionalNonEmpty,
 
   /**
    * Optional Sentry DSN — server-only. When unset, the worker logs to

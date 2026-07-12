@@ -30,6 +30,7 @@ import { ping, withHeartbeat } from '../healthchecks.js';
 import { JOBS, type JobName } from '../jobs/index.js';
 import { createLogger } from '../log.js';
 import { captureException, flushSentry, initSentry } from '../sentry.js';
+import { closeDb } from '@hamafx/db';
 
 function isKnownJob(name: string): name is JobName {
   return name in JOBS;
@@ -117,6 +118,7 @@ async function main(): Promise<number> {
     return 2;
   } finally {
     await flushSentry(2_000);
+    await closeDb();
     process.removeListener('SIGTERM', sigtermHandler);
     process.removeListener('SIGINT', sigtermHandler);
   }
