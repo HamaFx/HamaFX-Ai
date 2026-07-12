@@ -31,7 +31,7 @@ const deps = Object.keys(pkg.dependencies ?? {});
 // from node_modules at runtime, but pnpm's strict layout won't hoist
 // transitive @opentelemetry/* deps into the worker's node_modules.
 // Bundling them is simpler and avoids a long chain of manual deps.
-const alwaysBundle = new Set(['ws']);
+const alwaysBundle = new Set();
 const external = deps.filter(
   (d) => !d.startsWith('@hamafx/') && !d.startsWith('@opentelemetry/') && !alwaysBundle.has(d),
 );
