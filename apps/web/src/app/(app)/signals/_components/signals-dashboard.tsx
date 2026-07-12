@@ -1,7 +1,7 @@
 'use client';
 
 import type { DecisionSignal, SignalStats } from '@hamafx/shared';
-import { useState } from 'react';
+import { memo, useState } from 'react';
 import {IconTarget, IconTrendingUp, IconTrendingDown, IconChevronDown, IconChevronRight, IconBolt} from '@tabler/icons-react';
 
 import { cn } from '@/lib/cn';
@@ -55,7 +55,7 @@ export function SignalsDashboard({ signals, stats }: SignalsDashboardProps) {
   );
 }
 
-function SignalCard({ signal }: { signal: DecisionSignal }) {
+const SignalCard = memo(function SignalCard({ signal }: { signal: DecisionSignal }) {
   const [expanded, setExpanded] = useState(false);
 
   const biasToken = signal.bias === 'bullish' ? 'text-bull' : signal.bias === 'bearish' ? 'text-bear' : 'text-fg-muted';
@@ -136,7 +136,7 @@ function SignalCard({ signal }: { signal: DecisionSignal }) {
       )}
     </div>
   );
-}
+});
 
 function StatCard({
   label,

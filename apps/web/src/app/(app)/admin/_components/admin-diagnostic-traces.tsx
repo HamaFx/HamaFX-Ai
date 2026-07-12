@@ -16,9 +16,10 @@
 
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
+import { Button } from '@/components/ui/button';
 import { SkeletonCard } from '@/components/ui/skeleton';
 import { SettingsSection } from '@/app/(app)/settings/_components/settings-section';
 import { cn } from '@/lib/cn';
@@ -36,25 +37,44 @@ interface DiagnosticTraceSummary {
 export function AdminDiagnosticTraces() {
   const [traces, setTraces] = useState<DiagnosticTraceSummary[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchTraces = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch('/api/admin/diagnostics/traces?limit=20');
+      if (!res.ok) throw new Error(await res.text());
+      const data = (await res.json()) as { traces: DiagnosticTraceSummary[] };
+      setTraces(data.traces);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Unknown error';
+      setError(msg);
+      toast.error('Failed to load diagnostic traces');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    async function fetchTraces() {
-      try {
-        const res = await fetch('/api/admin/diagnostics/traces?limit=20');
-        if (!res.ok) throw new Error(await res.text());
-        const data = (await res.json()) as { traces: DiagnosticTraceSummary[] };
-        setTraces(data.traces);
-      } catch {
-        toast.error('Failed to load diagnostic traces');
-      } finally {
-        setLoading(false);
-      }
-    }
     void fetchTraces();
-  }, []);
+  }, [fetchTraces]);
 
   if (loading) {
     return <SkeletonCard lines={4} />;
+  }
+
+  if (error) {
+    return (
+      <SettingsSection title="Diagnostic Traces" description="Recent chat diagnostic traces.">
+        <div className="border-border bg-bg-elev-1 flex flex-col items-center gap-3 rounded-sm border p-6">
+          <p className="text-danger text-sm">{error}</p>
+          <Button variant="secondary" size="sm" onClick={() => void fetchTraces()}>
+            Retry
+          </Button>
+        </div>
+      </SettingsSection>
+    );
   }
 
   return (

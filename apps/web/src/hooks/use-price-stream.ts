@@ -17,6 +17,8 @@ export function usePriceStream(symbols: readonly Symbol[]) {
   });
   const esRef = useRef<EventSource | null>(null);
   const reconnectRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const attemptRef = useRef(0);
+  const MAX_RECONNECT = 8;
 
   useEffect(() => {
     if (symbols.length === 0) return;
@@ -30,7 +32,10 @@ export function usePriceStream(symbols: readonly Symbol[]) {
       esRef.current = es;
 
       es.onopen = () => {
-        if (!closed) setState((prev) => ({ ...prev, connected: true, error: null }));
+        if (!closed) {
+          attemptRef.current = 0; // Reset reconnect counter on success
+          setState((prev) => ({ ...prev, connected: true, error: null }));
+        }
       };
 
       es.onmessage = (event) => {
@@ -55,8 +60,15 @@ export function usePriceStream(symbols: readonly Symbol[]) {
       es.onerror = () => {
         es.close();
         if (!closed) {
+          attemptRef.current += 1;
+          if (attemptRef.current > MAX_RECONNECT) {
+            setState((prev) => ({ ...prev, connected: false, error: 'Connection lost after max retries' }));
+            return;
+          }
           setState((prev) => ({ ...prev, connected: false, error: 'Connection lost' }));
-          reconnectRef.current = setTimeout(connect, 3_000);
+          // Exponential backoff: 3s, 6s, 12s, 24s... capped at 30s
+          const delay = Math.min(3_000 * Math.pow(2, attemptRef.current - 1), 30_000);
+          reconnectRef.current = setTimeout(connect, delay);
         }
       };
     }

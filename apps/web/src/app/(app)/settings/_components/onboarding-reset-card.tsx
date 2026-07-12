@@ -21,6 +21,7 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
+import { useConfirm } from '@/components/ui/confirm-drawer';
 import { Switch } from '@/components/ui/switch';
 import { fetchCsrf } from '@/lib/csrf';
 
@@ -28,9 +29,16 @@ export function OnboardingResetCard() {
   const router = useRouter();
   const [resetting, setResetting] = useState(false);
   const [fullReset, setFullReset] = useState(false);
+  const [confirmEl, confirm] = useConfirm();
 
   async function handleReset() {
-    if (!confirm('Reset onboarding? You will need to go through the wizard again.')) return;
+    const ok = await confirm({
+      title: 'Reset onboarding?',
+      description: 'You will need to go through the wizard again.',
+      confirmLabel: 'Reset',
+      tone: 'danger',
+    });
+    if (!ok) return;
     setResetting(true);
     try {
       const res = await fetchCsrf('/api/admin/onboarding/reset', {
@@ -63,6 +71,7 @@ export function OnboardingResetCard() {
       <Button variant="danger" loading={resetting} onClick={handleReset}>
         Reset Onboarding
       </Button>
+      {confirmEl}
     </div>
   );
 }

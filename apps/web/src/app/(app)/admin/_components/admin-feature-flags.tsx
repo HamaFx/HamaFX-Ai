@@ -16,9 +16,10 @@
 
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
+import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { SkeletonCard } from '@/components/ui/skeleton';
 import { SettingsSection } from '@/app/(app)/settings/_components/settings-section';
@@ -27,22 +28,27 @@ import { fetchCsrf } from '@/lib/csrf';
 export function AdminFeatureFlags() {
   const [features, setFeatures] = useState<Record<string, boolean>>({});
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchFeatures = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch('/api/admin/features');
+      if (!res.ok) throw new Error(await res.text());
+      const data = (await res.json()) as { features: Record<string, boolean> };
+      setFeatures(data.features);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unknown error');
+      toast.error('Failed to load feature flags');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    async function fetchFeatures() {
-      try {
-        const res = await fetch('/api/admin/features');
-        if (!res.ok) throw new Error(await res.text());
-        const data = (await res.json()) as { features: Record<string, boolean> };
-        setFeatures(data.features);
-      } catch {
-        toast.error('Failed to load feature flags');
-      } finally {
-        setLoading(false);
-      }
-    }
     void fetchFeatures();
-  }, []);
+  }, [fetchFeatures]);
 
   async function toggle(key: string, next: boolean) {
     try {
@@ -61,6 +67,19 @@ export function AdminFeatureFlags() {
 
   if (loading) {
     return <SkeletonCard lines={4} />;
+  }
+
+  if (error) {
+    return (
+      <SettingsSection title="Feature Flags" description="Toggle runtime feature flags.">
+        <div className="border-border bg-bg-elev-1 flex flex-col items-center gap-3 rounded-sm border p-6">
+          <p className="text-danger text-sm">{error}</p>
+          <Button variant="secondary" size="sm" onClick={() => void fetchFeatures()}>
+            Retry
+          </Button>
+        </div>
+      </SettingsSection>
+    );
   }
 
   const entries = Object.entries(features);

@@ -46,7 +46,7 @@ export function SwRegister(): null {
                       window.location.reload();
                     },
                   },
-                  duration: Infinity,
+                  duration: 10000,
                 });
               }
             });

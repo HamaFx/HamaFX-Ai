@@ -38,6 +38,7 @@ import { Tooltip } from '@/components/ui/tooltip';
 import { cn } from '@/lib/cn';
 import { fetchCsrf } from '@/lib/csrf';
 import { formatRelative } from '@/lib/format';
+import { useMemo } from 'react';
 
 import { AlertForm } from './alert-form';
 
@@ -48,6 +49,7 @@ export function AlertList() {
   const [open, setOpen] = useState(false);
   const [filter, setFilter] = useState<'all' | 'active' | 'past'>('all');
   const [confirmEl, confirm] = useConfirm();
+  const [showFormInline, setShowFormInline] = useState(false);
 
   const { data, isLoading, isFetching, isError, error } = useQuery<{ alerts: Alert[] }>({
     queryKey: ALERTS_QUERY_KEY,
@@ -97,11 +99,11 @@ export function AlertList() {
     if (ok) remove.mutate(alert.id);
   }
 
-  const filteredAlerts = data?.alerts.filter((a) => {
+  const filteredAlerts = useMemo(() => data?.alerts.filter((a) => {
     if (filter === 'active') return a.active && !a.firedAt;
     if (filter === 'past') return !!a.firedAt || !a.active;
     return true;
-  });
+  }), [data?.alerts, filter]);
 
   return (
     <div className="flex flex-col gap-4">

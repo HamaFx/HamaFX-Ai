@@ -435,6 +435,8 @@ function ThreadSwitcher({ open, onOpenChange, threadId, threads, onPickNew }: Th
   const [confirmEl, confirm] = useConfirm();
 
   const [now, setNow] = useState(Date.now());
+  // Debounced search term — prevents re-filter on every keystroke.
+  const [debouncedQuery, setDebouncedQuery] = useState('');
 
   useEffect(() => {
     if (!open) return;
@@ -444,11 +446,17 @@ function ThreadSwitcher({ open, onOpenChange, threadId, threads, onPickNew }: Th
     return () => clearInterval(interval);
   }, [open]);
 
+  // Debounce search input (300ms)
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedQuery(query), 300);
+    return () => clearTimeout(timer);
+  }, [query]);
+
   const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
+    const q = debouncedQuery.trim().toLowerCase();
     if (!q) return threads;
     return threads.filter((t) => (t.title ?? '').toLowerCase().includes(q));
-  }, [query, threads]);
+  }, [debouncedQuery, threads]);
 
   const showSearch = threads.length >= 2;
   const showSelectToggle = threads.length >= 2;

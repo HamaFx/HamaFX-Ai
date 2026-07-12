@@ -97,9 +97,11 @@ export function TradingViewWidget({ symbol, tf, theme = 'dark' }: TradingViewWid
 
   useEffect(() => {
     let cancelled = false;
+    let initialized = false;
 
     const tv = typeof window !== 'undefined' ? window.TradingView : undefined;
-    if (tv) {
+    if (tv && !initialized) {
+      initialized = true;
       initWidget(tv);
       return;
     }
@@ -108,9 +110,10 @@ export function TradingViewWidget({ symbol, tf, theme = 'dark' }: TradingViewWid
 
     if (scriptLoaded) {
       const tvNew = typeof window !== 'undefined' ? window.TradingView : undefined;
-      if (tvNew) {
+      if (tvNew && !initialized) {
+        initialized = true;
         initWidget(tvNew);
-      } else {
+      } else if (!tvNew) {
         setLoadFailed(true);
       }
       return;

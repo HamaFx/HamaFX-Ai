@@ -21,7 +21,7 @@
 
 import type { EconomicEvent } from '@hamafx/shared';
 import {IconFilter, IconRefresh, IconCalendarX} from '@tabler/icons-react';
-import { useEffect, useMemo, useState, useTransition } from 'react';
+import { useCallback, useEffect, useMemo, useState, useTransition } from 'react';
 import { toast } from 'sonner';
 import { useQuery } from '@tanstack/react-query';
 import { useQueryState } from 'nuqs';
@@ -49,8 +49,15 @@ export function CalendarView({ initialEvents }: CalendarViewProps) {
   const [pending, startTransition] = useTransition();
   const [importance, setImportance] = useQueryState('importance', { defaultValue: 'all' }) as [ImportanceFilter, (val: ImportanceFilter) => void];
   const [currency, setCurrency] = useQueryState('currency', { defaultValue: 'all' }) as [CurrencyFilter, (val: CurrencyFilter) => void];
-  const [showPast, setShowPast] = useState(false);
+  // Phase 2.5.5 — sync showPast to URL via nuqs so filtered state survives navigation.
+  const [showPastParam, setShowPastParam] = useQueryState('showPast', { defaultValue: 'false' });
+  const showPast = showPastParam === 'true';
   const [lastRefreshed, setLastRefreshed] = useState(Date.now());
+
+  // Stable setter for the toolbar — maps boolean back to URL string.
+  const setShowPast = useCallback((v: boolean) => {
+    setShowPastParam(v ? 'true' : null);
+  }, [setShowPastParam]);
 
   const { data: events = initialEvents, isLoading, isError, error, refetch } = useQuery<EconomicEvent[]>({
     queryKey: ['calendar'],
@@ -212,7 +219,6 @@ function bucket(events: readonly EconomicEvent[]): Section[] {
   }
 
   const sections: Section[] = [];
-  // Today first so the user lands on what's actionable.
   if (today.length) sections.push(['Today', today]);
   if (tomorrow.length) sections.push(['Tomorrow', tomorrow]);
   if (week.length) sections.push(['Later this week', week]);

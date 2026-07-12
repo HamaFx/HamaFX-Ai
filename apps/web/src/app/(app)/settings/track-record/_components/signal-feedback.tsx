@@ -21,6 +21,7 @@
 
 import { useState } from 'react';
 import {IconThumbUp, IconThumbDown} from '@tabler/icons-react';
+import { toast } from 'sonner';
 
 import { fetchCsrf } from '@/lib/csrf';
 import { cn } from '@/lib/cn';
@@ -46,7 +47,9 @@ export function SignalFeedback({ signalId, initialFeedback = null }: SignalFeedb
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       setFeedback(value);
     } catch (err) {
-      console.warn('[signal-feedback] failed', err);
+      toast.error('Feedback failed', {
+        description: err instanceof Error ? err.message : 'Unknown error',
+      });
     } finally {
       setSaving(false);
     }

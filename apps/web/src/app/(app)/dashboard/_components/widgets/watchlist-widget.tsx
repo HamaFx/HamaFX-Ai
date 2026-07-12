@@ -29,7 +29,7 @@
 
 import Link from 'next/link';
 import { useEffect, useReducer, useRef, type MutableRefObject } from 'react';
-import { IconEye } from '@tabler/icons-react';
+import { IconEye, IconRefresh, IconAlertTriangle } from '@tabler/icons-react';
 import type { Symbol, Tick } from '@hamafx/shared';
 import { priceDecimals } from '@hamafx/shared';
 
@@ -59,6 +59,9 @@ export function WatchlistWidget({
   const tickQuery = usePrices(list);
   const data = tickQuery.data;
   const isLoading = tickQuery.isLoading;
+  const isError = tickQuery.isError;
+  const error = tickQuery.error;
+  const refetch = tickQuery.refetch;
   const buffersRef = useRef<Map<Symbol, number[]>>(new Map());
 
   // Bump a counter each time new ticks arrive so the sparkline picks up
@@ -97,6 +100,24 @@ export function WatchlistWidget({
 
       <ul className="flex flex-col">
         {(() => {
+          if (isError) {
+            return (
+              <li className="flex flex-col items-center gap-2 py-4 text-center">
+                <IconAlertTriangle className="size-5 text-danger" />
+                <p className="text-danger text-xs">
+                  {error instanceof Error ? error.message : 'Failed to load prices'}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => refetch()}
+                  className="inline-flex items-center gap-1 text-fg-subtle hover:text-fg text-caption"
+                >
+                  <IconRefresh className="size-3" />
+                  Retry
+                </button>
+              </li>
+            );
+          }
           if (isLoading && (!data || data.length === 0)) {
             return Array.from({ length: list.length }).map((_, i) => (
               <li
