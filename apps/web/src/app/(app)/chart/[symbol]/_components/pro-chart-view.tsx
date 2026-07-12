@@ -85,7 +85,9 @@ export function ProChartView({ symbol, watchlist }: { symbol: Symbol; watchlist:
     }
   }, [setConfig]);
 
-  const { candles, isLoading, isFetching } = useChartData(symbol, tf, [], 300);
+  // Pro chart uses TradingView widget which loads its own data.
+  // Only need a minimal candle count for PriceTag reference close + StaleIndicator.
+  const { candles, isLoading, isFetching } = useChartData(symbol, tf, [], 2);
 
   const referenceClose = useMemo(() => {
     return candles && candles.length > 0 ? (candles[candles.length - 1]?.c ?? null) : null;

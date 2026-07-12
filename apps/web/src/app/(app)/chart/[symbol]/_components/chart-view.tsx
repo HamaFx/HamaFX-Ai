@@ -271,15 +271,11 @@ export function ChartView({ symbol, watchlist }: { symbol: Symbol; watchlist: st
     [activeOverlays],
   );
 
-  const candlesRef = useRef(candles);
-  candlesRef.current = candles;
-
   const overlaySet = useMemo(() => {
-    const current = candlesRef.current;
-    if (!structure || !current) return null;
-    const times = current.map((c) => c.t);
+    if (!structure || !candles) return null;
+    const times = candles.map((c) => c.t);
     return buildOverlays(structure, times, PALETTE, toggleRecord);
-  }, [structure, toggleRecord]);
+  }, [structure, candles, toggleRecord]);
 
   return (
     <div ref={containerRef} className="-mx-4 flex flex-col animate-in fade-in duration-300">

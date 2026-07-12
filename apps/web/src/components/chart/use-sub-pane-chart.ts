@@ -75,6 +75,7 @@ export function useSubPaneChart<TSeries>({
       chartRef.current = null;
       seriesRef.current = null;
       setIsReady(false);
+      prevCandleCount.current = 0; // reset so symbol-switch always triggers initial data load
     }
     mainChartRef.current = mainChart;
 
@@ -133,9 +134,15 @@ export function useSubPaneChart<TSeries>({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lc, containerEl, mainChart]);
 
-  // 2. Data Updates
+  const prevCandleCount = useRef(candles.length);
+
+  // 2. Data Updates — only fire when candle count changes (new candle formed),
+  // not on every price tick which merely updates the latest candle's o/h/l/c.
   useEffect(() => {
     if (!isReady || !lc || !chartRef.current || !seriesRef.current || !result) return;
+    // Skip update on price-only ticks — indicators are analyzed on closed candles.
+    if (candles.length === prevCandleCount.current && prevCandleCount.current > 0) return;
+    prevCandleCount.current = candles.length;
     updateData(seriesRef.current, result, candles, lc);
   }, [isReady, lc, result, candles, updateData]);
 
