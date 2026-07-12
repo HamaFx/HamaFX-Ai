@@ -18,14 +18,27 @@ import { Skeleton, SkeletonCard } from '@/components/ui/skeleton';
 
 export default function TrackRecordLoading() {
   return (
-    <div className="flex flex-col gap-4">
-      <Skeleton className="h-8 w-48" />
-      <Skeleton className="h-4 w-72" />
-      <div className="grid grid-cols-2 gap-3">
-        <SkeletonCard className="h-28" lines={3} />
-        <SkeletonCard className="h-28" lines={3} />
+    <div className="flex flex-col gap-6">
+      {/* Header matching actual page layout */}
+      <div>
+        <Skeleton className="h-8 w-48" />
+        <Skeleton className="mt-1 h-4 w-80" />
       </div>
-      <SkeletonCard className="h-64" lines={8} />
+      {/* Summary cards — matches grid-cols-2 md:grid-cols-4 on actual page */}
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div key={i} className="border border-border bg-bg-elev-1 rounded-sm flex flex-col gap-2 p-4">
+            <Skeleton className="h-4 w-12" />
+            <Skeleton className="h-8 w-16" />
+          </div>
+        ))}
+      </div>
+      {/* Accuracy by Model section */}
+      <SkeletonCard className="h-40" lines={3} />
+      {/* Accuracy by Horizon section */}
+      <SkeletonCard className="h-40" lines={3} />
+      {/* Recent Signals section */}
+      <SkeletonCard className="h-48" lines={5} />
     </div>
   );
 }

@@ -100,7 +100,8 @@ export function ChartCanvas({
       if (cancelled || !containerEl) return;
       instance = createMainChart(lc, el, settings ?? null, theme);
       instanceRef.current = instance;
-      // Force initial resize so canvas isn't 0×0.
+      // Force initial resize so canvas isn't 0×0 on first paint.
+      // autoSize (ResizeObserver) handles subsequent resizes.
       instance.resize(el.clientWidth, el.clientHeight);
       // Apply correct decimal precision for the symbol immediately
       // (fixes race condition where applyDecimals was a no-op on first load).

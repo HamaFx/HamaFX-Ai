@@ -60,14 +60,13 @@ interface DayBucket {
   entries: JournalEntry[];
 }
 
-/** Map totalR → a semantic background style (bull/bear + alpha). */
+/** Map totalR to a semantic background style (bull/bear + alpha).
+ * Uses CSS custom properties with opacity for wide browser support. */
 function heatCellStyle(totalR: number): React.CSSProperties {
   if (totalR === 0) return { backgroundColor: 'var(--color-bg-elev-2)' };
   const alpha = Math.max(0.15, Math.min(0.85, Math.abs(totalR) / 5));
-  return {
-    backgroundColor:
-      totalR > 0 ? `rgba(16, 185, 129, ${alpha})` : `rgba(239, 68, 68, ${alpha})`,
-  };
+  const colorVar = totalR > 0 ? 'var(--color-bull)' : 'var(--color-bear)';
+  return { backgroundColor: colorVar, opacity: alpha };
 }
 
 /** YYYY-MM-DD in local time. Avoids UTC drift confusing the user. */
@@ -325,20 +324,20 @@ function Legend() {
         {[0.2, 0.4, 0.6, 0.85].map((a) => (
           <span
             key={a}
-            className="size-3 rounded-sm"
-            style={{
-              backgroundColor: `rgba(16, 185, 129, ${a})`,
-            }}
+            className="size-3 rounded-sm"              style={{
+                backgroundColor: 'var(--color-bull)',
+                opacity: a,
+              }}
             aria-hidden="true"
           />
         ))}
         {[0.85, 0.6, 0.4, 0.2].map((a) => (
           <span
             key={a}
-            className="size-3 rounded-sm"
-            style={{
-              backgroundColor: `rgba(239, 68, 68, ${a})`,
-            }}
+            className="size-3 rounded-sm"              style={{
+                backgroundColor: 'var(--color-bear)',
+                opacity: a,
+              }}
             aria-hidden="true"
           />
         ))}

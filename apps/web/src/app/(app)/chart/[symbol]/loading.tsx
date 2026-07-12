@@ -26,7 +26,7 @@ export default function ChartLoading() {
         <Skeleton className="h-9 w-44" />
         <Skeleton className="h-9 w-32" />
       </header>
-      <Skeleton className="aspect-[16/9] w-full md:aspect-[21/9]" />
+      <Skeleton className="h-[60svh] w-full" />
     </div>
   );
 }
