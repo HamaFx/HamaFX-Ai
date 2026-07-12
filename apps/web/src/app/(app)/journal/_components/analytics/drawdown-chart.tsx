@@ -29,7 +29,7 @@ interface DrawdownChartProps {
   className?: string;
 }
 
-export function DrawdownChart({ entries, stats, className }: DrawdownChartProps) {
+export function DrawdownChart({ entries, stats: _stats, className }: DrawdownChartProps) {
   const { curve, peaks, maxDrawdown, recoveryFactor } = useMemo(() => {
     const closed = [...entries]
       .filter((e) => e.outcome !== 'open' && e.rMultiple !== null)
