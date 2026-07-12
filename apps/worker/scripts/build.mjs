@@ -31,7 +31,10 @@ const deps = Object.keys(pkg.dependencies ?? {});
 // from node_modules at runtime, but pnpm's strict layout won't hoist
 // transitive @opentelemetry/* deps into the worker's node_modules.
 // Bundling them is simpler and avoids a long chain of manual deps.
-const alwaysBundle = new Set();
+// ws must be bundled — pnpm's strict layout (shamefully-hoist=false) puts
+// it in the root .pnpm store, not in the worker's node_modules, so Node
+// can't resolve it at runtime from the worker's WorkingDirectory.
+const alwaysBundle = new Set(['ws']);
 const external = deps.filter(
   (d) => !d.startsWith('@hamafx/') && !d.startsWith('@opentelemetry/') && !alwaysBundle.has(d),
 );
@@ -65,6 +68,10 @@ const serverOnlyPlugin = {
 };
 
 /** @type {import('esbuild').BuildOptions} */
+// Resolve packages from the monorepo root's node_modules so esbuild can
+// find packages in pnpm's .pnpm store when alwaysBundle includes them.
+const monorepoRoot = resolve(root, '..', '..');
+
 const common = {
   bundle: true,
   format: 'esm',
@@ -72,6 +79,7 @@ const common = {
   target: 'node20',
   sourcemap: true,
   external,
+  nodePaths: [resolve(monorepoRoot, 'node_modules')],
   plugins: [serverOnlyPlugin],
   // Workspace packages are pure ESM; force the bundler to emit ESM and
   // not wrap dynamic-import shims that confuse Node.

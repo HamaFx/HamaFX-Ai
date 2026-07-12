@@ -9,7 +9,7 @@ Type=notify
 NotifyAccess=main
 User=hamafx
 Group=hamafx
-WorkingDirectory=/opt/hamafx/app/apps/worker
+WorkingDirectory=/opt/hamafx/app
 EnvironmentFile=/opt/hamafx/.env
 # Phase 2 hardening §4 — tells `@hamafx/db.getDb()` to pick the
 # worker-flavoured pool defaults (max=3) instead of the web defaults
