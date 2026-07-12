@@ -95,24 +95,3 @@ export const COMMANDS: readonly CommandItem[] = [
 export function findCommand(id: string): CommandItem | null {
   return COMMANDS.find((c) => c.id === id) ?? null;
 }
-
-import { z } from 'zod';
-
-export const commandSchema = z.object({
-  id: z.string().min(1, 'Command ID is required'),
-  group: z.enum(['navigation', 'create', 'settings']),
-  label: z.string().min(1, 'Label is required'),
-  keywords: z.array(z.string()).optional(),
-  icon: z.any(),
-  href: z.string().optional(),
-  action: z.function().optional(),
-  shortcut: z.string().optional(),
-});
-
-export type IconCommand = CommandItem;
-
-export function validateCommand(command: unknown): IconCommand {
-  return commandSchema.parse(command) as IconCommand;
-}
-
-export type { ComponentType };

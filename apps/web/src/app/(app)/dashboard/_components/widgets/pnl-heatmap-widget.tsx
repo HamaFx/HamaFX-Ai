@@ -250,7 +250,7 @@ export function PnLHeatmapWidget({ entries }: PnLHeatmapWidgetProps) {
                   title={`${cell.key}: ${sign}${cell.totalR.toFixed(1)}R (${cell.count} trades)`}
                   aria-label={`${cell.key}: ${sign}${cell.totalR.toFixed(1)}R, ${cell.count} trades`}
                   className={cn(
-                    'flex size-8 items-center justify-center rounded-sm tabular-nums',
+                    'flex size-11 items-center justify-center rounded-sm tabular-nums',
                     'text-caption',
                     cell.totalR > 0 && 'text-bull',
                     cell.totalR < 0 && 'text-bear',

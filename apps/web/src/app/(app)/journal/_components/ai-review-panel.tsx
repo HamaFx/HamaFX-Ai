@@ -24,7 +24,7 @@ import type { JournalEntry } from '@hamafx/shared';
 import {IconBolt, IconAlertCircle, IconRefresh} from '@tabler/icons-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { fetchCsrf } from '@/lib/csrf';
@@ -50,6 +50,14 @@ export function AiReviewPanel({ entry }: AiReviewPanelProps) {
   const [modelId, setModelId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Reset review state when the entry changes so stale reviews aren't
+  // shown for a different trade.
+  useEffect(() => {
+    setReview(null);
+    setModelId(null);
+    setError(null);
+  }, [entry.id]);
 
   async function generateReview() {
     setLoading(true);

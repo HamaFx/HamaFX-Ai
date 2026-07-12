@@ -73,11 +73,11 @@
 | 2.3.1 | Dashboard listUpcomingEvents userId removed | ✅ Done |
 | 2.3.2 | Dashboard widget error states | ⏳ Remaining |
 | 2.3.3 | Dashboard listEntries limit 200→50 | ✅ Done |
-| 2.3.4 | Widget React.memo | ⏳ Remaining |
+| 2.3.4 | Widget React.memo | ✅ Done |
 | 2.3.5 | Watchlist re-render on 3s poll | ⏳ Remaining |
-| 2.3.6 | Briefing ReactMarkdown useMemo | ⏳ Remaining |
+| 2.3.6 | Briefing ReactMarkdown useMemo | ✅ Done |
 | 2.3.7 | Watchlist error state | ⏳ Remaining |
-| 2.3.8 | Heatmap touch targets 44px | ⏳ Remaining |
+| 2.3.8 | Heatmap touch targets 44px | ✅ Done |
 | 2.3.9 | AddWidgetMenu outside-click close | ⏳ Remaining |
 | 2.3.10 | useTime() for live session label | ✅ Done |
 | 2.4.1-2.4.7 | Chart system | ⏳ Remaining |

@@ -78,6 +78,17 @@ import { WatchlistWidget } from './widgets/watchlist-widget';
 import { cn } from '@/lib/cn';
 import { useLocalStorage } from '@/hooks/use-local-storage';
 
+const MemoTodayGlance = memo(TodayGlanceWidget);
+const MemoBriefing = memo(BriefingWidget);
+const MemoHeatmap = memo(PnLHeatmapWidget);
+const MemoEquityCurve = memo(EquityCurveWidget);
+const MemoStats = memo(StatsWidget);
+const MemoWatchlist = memo(WatchlistWidget);
+const MemoOpenPositions = memo(OpenPositionsWidget);
+const MemoAlerts = memo(AlertsWidget);
+const MemoCalendar = memo(CalendarWidget);
+const MemoNewsPulse = memo(NewsPulseWidget);
+
 type BriefingData = {
   messageId: string;
   createdAt: number;
@@ -355,7 +366,7 @@ function renderWidget(
   switch (type) {
     case 'today-glance':
       return (
-        <TodayGlanceWidget
+        <MemoTodayGlance
           events={[...events]}
           entries={[...entries]}
           briefingNudge={briefingNudge}
@@ -363,23 +374,23 @@ function renderWidget(
         />
       );
     case 'briefing':
-      return <BriefingWidget briefing={briefing} />;
+      return <MemoBriefing briefing={briefing} />;
     case 'pnl-heatmap':
-      return <PnLHeatmapWidget entries={entries} />;
+      return <MemoHeatmap entries={entries} />;
     case 'equity-curve':
-      return <EquityCurveWidget entries={entries} />;
+      return <MemoEquityCurve entries={entries} />;
     case 'stats':
-      return <StatsWidget entries={entries} />;
+      return <MemoStats entries={entries} />;
     case 'watchlist':
-      return <WatchlistWidget />;
+      return <MemoWatchlist />;
     case 'open-positions':
-      return <OpenPositionsWidget entries={entries} />;
+      return <MemoOpenPositions entries={entries} />;
     case 'alerts':
-      return <AlertsWidget alerts={alerts} />;
+      return <MemoAlerts alerts={alerts} />;
     case 'calendar':
-      return <CalendarWidget events={events} />;
+      return <MemoCalendar events={events} />;
     case 'news-pulse':
-      return <NewsPulseWidget articles={news} />;
+      return <MemoNewsPulse articles={news} />;
   }
 }
 
