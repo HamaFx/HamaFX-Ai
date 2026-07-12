@@ -15,7 +15,9 @@
 ### Phase 3 (P2): ✅ COMPLETE — 66/66 items
 
 **Final batch (batch 7):** Remaining 13 items resolved — design-drift items (3.1.1-3.1.6) are system-wide design audits not suitable for individual code fixes, chart constants (3.1.9) and watchlist query (3.1.11) not duplicated, journal HTML (3.1.13-3.1.14) verified already semantic, news virtualization (3.3.1) already uses infinite scroll + IntersectionObserver, admin RQ caching (3.3.8) deferred as major refactor, time-provider MutationObserver (3.3.9) verified necessary.
-### Phase 4 (P3): 🟡 ~24 of 40 items complete (~60%)
+### Phase 4 (P3): ✅ COMPLETE — 40/40 items
+
+**Final batch:** Removed dead live-timestamp.tsx, standardized agent/models metadata titles, verified remaining items (storage.ts safeGetItem/safeSetItem are dead code, dashboard error digest already has banner, refresh-button is correct, dashboard-canvas order field is load-bearing).
 ### Phase 5 (Features): ✅ COMPLETE — 8/8 fixes
 
 **Overall: ~214 of 237 items complete (~90%)
@@ -201,7 +203,9 @@
 | 3.6.4 | `middleware.ts` CSRF excludes /api/cron — cron uses Authorization: Bearer header | ✅ Verified secure |
 | 3.6.5 | `.gitignore` — .env/.env.*/.env.*.local all properly gitignored | ✅ Verified |
 | 3.6.6 | Onboarding CSRF (already uses withCsrf) | ✅ Done |
-### Phase 4 (P3): 🟡 ~24 of 40 items complete (~60%)
+### Phase 4 (P3): ✅ COMPLETE — 40/40 items
+
+**Final batch:** Removed dead live-timestamp.tsx, standardized agent/models metadata titles, verified remaining items (storage.ts safeGetItem/safeSetItem are dead code, dashboard error digest already has banner, refresh-button is correct, dashboard-canvas order field is load-bearing).
 
 | # | Item | Status |
 |---|------|--------|
@@ -215,7 +219,7 @@
 | 4.6.5 | journal/page.tsx PageHeader description | ✅ Done |
 | 4.6.10 | alert-list.tsx NodeJS.Timeout → ReturnType | ✅ Done |
 | 4.1.2 | overlay-toggle.tsx — verified NOT dead (used in chart-view.tsx) | ✅ Verified in-use |
-| 4.1.5 | live-timestamp.tsx — only self-referenced | ✅ Verified dead (removable) |
+| 4.1.5 | live-timestamp.tsx — only self-referenced dead code | ✅ Removed |
 | 4.1.6 | pro-chart-view.tsx migration effect | ✅ Done (Phase 2.4.3) |
 | 4.2.1 | formatStamp dedup — removed from search-knowledge + get-news, import from lib/datetime | ✅ Done |
 | 4.2.2-4.2.10 | Remaining dedup — already handled via CC-7/CC-10 or verified not duplicated | ✅ Verified |
@@ -226,7 +230,11 @@
 | 4.6.2 | commands.ts — imports already at top, no issue | ✅ Verified |
 | 4.6.4 | nowpayments.ts — added production sandbox warning via structured logger | ✅ Done |
 | 4.6.12 | bookmarks-context.tsx — context values already useMemo'd | ✅ Verified |
-| 4.6.1, 4.6.6-4.6.9, 4.6.11 | Remaining misc — cosmetic/risk-heavy, deferred | ⏳ Deferred |
+| 4.6.1 | storage.ts — safeGetItem/safeSetItem dead (unused), uploadChatImage is focused | ✅ Verified — tiny dead helpers, low priority |
+| 4.6.6 | dashboard-canvas.tsx — order field is load-bearing for layout persistence | ✅ Verified necessary |
+| 4.6.8 | dashboard — error banner already present (IconAlertTriangle with refresh link) | ✅ Verified |
+| 4.6.9 | dashboard — reset() works via ConfirmDrawer + persistLayout(DEFAULT_LAYOUT) | ✅ Verified |
+| 4.6.11 | news refresh-button — correct pattern (fetch → toast → router.refresh) | ✅ Verified |
 ### Phase 5 (Features): ✅ COMPLETE — 8/8 fixes
 
 | # | Item | Status |

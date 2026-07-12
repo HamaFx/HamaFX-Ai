@@ -32,7 +32,7 @@ import { FallbackChainPicker } from './_components/fallback-chain-picker';
 export const revalidate = 60;
 
 export const metadata = {
-  title: 'Models · HamaFX-Ai',
+  title: 'Models | HamaFX',
   description: 'Pick the default chat, vision, and embedding models.',
 };
 

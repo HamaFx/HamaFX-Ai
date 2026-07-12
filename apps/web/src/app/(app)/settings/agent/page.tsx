@@ -35,7 +35,7 @@ import { AgentModelOverrideForm } from './_components/agent-model-override-form'
 export const revalidate = 60;
 
 export const metadata: Metadata = {
-  title: 'Agent · HamaFX-Ai',
+  title: 'Agent | HamaFX',
   description: 'Tool catalogue and recent invocation stats.',
 };
 
