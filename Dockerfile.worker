@@ -36,7 +36,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 WORKDIR /app
 COPY --from=builder /prod/worker ./
 
+ARG DEPLOYED_SHA=unknown
+ENV DEPLOYED_SHA=${DEPLOYED_SHA}
+
 ENV NODE_ENV=production
 ENV WORKER_MODE=docker
+
+EXPOSE 8081
+EXPOSE 8080
 
 CMD ["node", "dist/index.js"]

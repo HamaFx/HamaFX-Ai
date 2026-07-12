@@ -1,18 +1,19 @@
 [Unit]
-Description=HamaFX-Ai self-update (git pull + build + worker restart)
-After=network-online.target
+Description=HamaFX-Ai self-update (git pull + Docker build + container restart)
+After=network-online.target docker.service
 Wants=network-online.target
+Requires=docker.service
 
 [Service]
 Type=oneshot
 User=hamafx
 Group=hamafx
-WorkingDirectory=/opt/hamafx/app
-ExecStart=/opt/hamafx/app/infra/cron-vm/update.sh
+WorkingDirectory=/opt/hamafx
+EnvironmentFile=/opt/hamafx/.env
+ExecStart=/opt/hamafx/scripts/docker-update.sh
 TimeoutStartSec=600
 
-# Allow `sudo systemctl restart hamafx-worker` from this script — the
-# corresponding sudoers rule lives in `infra/cron-vm/sudoers.d/hamafx`.
+# Docker needs NoNewPrivileges=false (hamafx is in docker group)
 NoNewPrivileges=false
 
 StandardOutput=journal

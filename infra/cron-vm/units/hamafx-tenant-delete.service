@@ -13,7 +13,7 @@ EnvironmentFile=/opt/hamafx/.env
 # Rehearsal: dry-run only (no --confirm flag). Proves the script runs,
 # connects, and counts rows correctly without deleting anything.
 # Real deletions are triggered manually with --confirm for GDPR requests.
-ExecStart=/opt/hamafx/app/infra/cron-vm/scripts/delete-tenant.sh __system__
+ExecStart=/opt/hamafx/scripts/delete-tenant.sh __system__
 
 MemoryMax=512M
 TimeoutStartSec=300

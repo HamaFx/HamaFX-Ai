@@ -1,0 +1,11 @@
+[Unit]
+Description=Check worker container health every minute
+
+[Timer]
+OnBootSec=3min
+OnUnitActiveSec=1min
+RandomizedDelaySec=15
+Unit=hamafx-docker-autoheal.service
+
+[Install]
+WantedBy=timers.target

@@ -1,0 +1,18 @@
+[Unit]
+Description=HamaFX-Ai Docker container health monitor + auto-restart
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+User=hamafx
+Group=hamafx
+ExecStart=/opt/hamafx/scripts/docker-autoheal.sh
+TimeoutStartSec=30
+
+NoNewPrivileges=true
+PrivateTmp=true
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=hamafx-docker-autoheal

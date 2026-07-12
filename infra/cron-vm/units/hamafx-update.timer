@@ -1,6 +1,5 @@
 [Unit]
-Description=Self-update every 5 minutes
-# Run a few minutes after boot so a fresh VM picks up changes promptly.
+Description=Self-update every 5 minutes (git pull + Docker build)
 
 [Timer]
 OnBootSec=2min

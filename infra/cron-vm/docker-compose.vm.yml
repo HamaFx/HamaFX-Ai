@@ -1,0 +1,62 @@
+# HamaFX-Ai VM Worker Docker Compose
+# Deployed to /opt/hamafx/docker-compose.yml on the GCE VM.
+# Builds the worker image from the repo's Dockerfile.worker — no external registry needed.
+#
+# The frontend (apps/web) runs on Vercel. Supabase is external.
+# This container ONLY runs the worker + internal job scheduler.
+
+services:
+  worker:
+    build:
+      context: /opt/hamafx/app
+      dockerfile: Dockerfile.worker
+    image: hamafx-worker:local
+    container_name: hamafx-worker
+    restart: unless-stopped
+
+    # All secrets from /opt/hamafx/.env
+    env_file:
+      - /opt/hamafx/.env
+
+    # Hardcoded env vars (override any .env values)
+    environment:
+      NODE_ENV: production
+      WORKER_MODE: docker
+      HAMAFX_RUNTIME: worker
+
+    # Ports bound to localhost ONLY — not accessible from the internet
+    ports:
+      - "127.0.0.1:8081:8081"   # Health server + BiQuote proxy
+      - "127.0.0.1:8080:8080"   # MT5 bridge
+
+    # No persistent volumes — all state lives in Supabase Postgres.
+    # The worker is stateless: in-memory tick buffer + candle aggregator
+    # are rebuilt from provider connections on restart.
+
+    # Health check — replaces systemd WatchdogSec
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8081/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+    # Graceful shutdown — give the worker 30s to drain buffers + close WS
+    stop_grace_period: 30s
+    stop_signal: SIGTERM
+
+    # Resource limits — matches current systemd MemoryMax=1.5G
+    deploy:
+      resources:
+        limits:
+          memory: 1.5g
+          cpus: "1.5"
+        reservations:
+          memory: 256m
+
+    # Log rotation — 50MB × 3 files = 150MB max
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "3"

@@ -1,10 +1,10 @@
-# Allow the `hamafx` user to restart the worker service without a
-# password. Required by infra/cron-vm/update.sh — the self-update timer
-# runs as `hamafx` but needs to bounce the long-running
-# `hamafx-worker.service`.
+# Allow the `hamafx` user to restart the worker service and Docker without a
+# password. Required by infra/cron-vm/scripts/docker-update.sh — the self-update
+# timer runs as `hamafx` but needs to restart the worker container.
 #
 # Install path: /etc/sudoers.d/hamafx (mode 0440).
 # Validate before installing: `visudo -c -f infra/cron-vm/sudoers.d/hamafx`.
 
+hamafx ALL=(root) NOPASSWD: /bin/systemctl restart docker
 hamafx ALL=(root) NOPASSWD: /bin/systemctl restart hamafx-worker.service
 hamafx ALL=(root) NOPASSWD: /bin/systemctl restart hamafx-worker

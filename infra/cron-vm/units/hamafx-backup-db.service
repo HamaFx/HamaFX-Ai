@@ -9,7 +9,7 @@ User=hamafx
 Group=hamafx
 WorkingDirectory=/opt/hamafx
 EnvironmentFile=/opt/hamafx/.env
-ExecStart=/opt/hamafx/app/infra/cron-vm/scripts/backup-db.sh
+ExecStart=/opt/hamafx/scripts/backup-db.sh
 
 # A full dump of the existing schema is well under 1G; this leaves
 # headroom for embeddings growth.

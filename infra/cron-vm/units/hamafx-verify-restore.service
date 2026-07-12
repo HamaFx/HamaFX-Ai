@@ -10,7 +10,7 @@ User=hamafx
 Group=hamafx
 WorkingDirectory=/opt/hamafx
 EnvironmentFile=/opt/hamafx/.env
-ExecStart=/opt/hamafx/app/infra/cron-vm/scripts/verify-restore.sh
+ExecStart=/opt/hamafx/scripts/verify-restore.sh
 
 MemoryMax=2G
 TimeoutStartSec=2400
