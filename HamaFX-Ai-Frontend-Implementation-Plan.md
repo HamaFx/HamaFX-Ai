@@ -12,7 +12,11 @@
 
 ### Phase 1 (P0 Critical): ✅ COMPLETE — 24/24 fixes
 ### Phase 2 (P1 High): 🟡 ~84 of 99 items complete
-### Phase 3 (P2): 🟡 ~40 of 66 items complete
+### Phase 3 (P2): 🟡 ~40 of 66 items complete (~61%)
+
+**Completed this session (batches 1-3):** CC-7 shared datetime.ts, CC-10 _shared.tsx, 3.1.7 hardcoded RGB fix, 3.1.10 refetchIntervalFor dedup, 3.2.2-3.2.5 loading states, 3.3.4 chart autoSize, 3.4.1 BookmarksProvider, 3.4.10 heatmap today, 3.4.12 notes max length, 3.6.1-3.6.2 exportDataAction security.
+
+**Remaining (~26 items):** 3.1 design drift (~12), 3.3 performance (~5), 3.4 UX (~7), 3.5 a11y (~2), 3.6 security (~2).
 ### Phase 4 (P3): 🟡 ~15 of 40 items complete
 ### Phase 5 (Features): ✅ COMPLETE — 8/8 fixes
 
@@ -138,11 +142,15 @@
 | CC-5 | window.confirm() → ConfirmDrawer (already eliminated) | ✅ Done |
 | CC-6 | Inconsistent Skeleton/Loading States | ✅ Done |
 | CC-7 | Duplicated Utility Functions → lib/datetime.ts + hook refactors | ✅ Done |
-| CC-8 | console.error/warn/log in Production Code | ⏳ Remaining |
-| CC-9 | Index-as-Key in Lists | ⏳ Remaining |
+| CC-8 | console.error/warn/log in Production Code | ⏳ Partially done |
+| CC-9 | Index-as-Key in Lists | ⏳ Remaining (deferred) |
 | CC-10 | Duplicated SkeletonCard/ErrorCard → _shared.tsx created | ✅ Done |
 
-### Phase 3 (P2): 🟡 ~40 of 66 items complete
+### Phase 3 (P2): 🟡 ~40 of 66 items complete (~61%)
+
+**Completed this session (batches 1-3):** CC-7 shared datetime.ts, CC-10 _shared.tsx, 3.1.7 hardcoded RGB fix, 3.1.10 refetchIntervalFor dedup, 3.2.2-3.2.5 loading states, 3.3.4 chart autoSize, 3.4.1 BookmarksProvider, 3.4.10 heatmap today, 3.4.12 notes max length, 3.6.1-3.6.2 exportDataAction security.
+
+**Remaining (~26 items):** 3.1 design drift (~12), 3.3 performance (~5), 3.4 UX (~7), 3.5 a11y (~2), 3.6 security (~2).
 
 | # | Item | Status |
 |---|------|--------|
