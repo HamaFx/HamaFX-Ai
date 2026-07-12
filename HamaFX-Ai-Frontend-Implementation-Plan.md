@@ -87,7 +87,7 @@
 | 2.5.4-2.5.13 | News/Calendar/Signals/Alerts remaining | ⏳ Remaining |
 | 2.6.1 | Journal screenshotUrl sent to API | ✅ Done |
 | 2.6.2 | Journal ImportTrades connected to view | ✅ Done |
-| 2.6.3 | Journal closedAt on import | ⏳ Remaining |
+| 2.6.3 | Journal closedAt + notes now parsed from CSV | ✅ Done |
 | 2.6.4 | Journal short position shade inverted | ✅ Done |
 | 2.6.5 | Journal AI review refetch | ⏳ Remaining |
 | 2.6.6 | Journal notes max length alignment | ⏳ Remaining |

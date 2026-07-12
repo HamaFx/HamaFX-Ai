@@ -15,6 +15,7 @@
  */
 
 import { auth } from '@/auth';
+import { redirect } from 'next/navigation';
 import { buildCatalogForUser } from '@/lib/catalog-server';
 import { getDb, schema } from '@hamafx/db';
 import { eq } from 'drizzle-orm';
@@ -46,7 +47,7 @@ export default async function ApiKeysSettingsPage({
   searchParams?: Promise<{ from?: string; prompt?: string }>;
 }) {
   const session = await auth();
-  if (!session?.user?.id) return null;
+  if (!session?.user?.id) redirect('/login');
 
   // Phase A — UX_UPGRADE_PLAN.md item 4. When the user lands here
   // from /chat with no AI provider configured, surface a dismissible

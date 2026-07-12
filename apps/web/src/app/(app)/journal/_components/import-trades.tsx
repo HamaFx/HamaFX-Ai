@@ -44,6 +44,10 @@ export function ImportTrades({ onImported }: { onImported?: () => void }) {
       const stop = cols[5] ? Number(cols[5]) : null;
       const target = cols[6] ? Number(cols[6]) : null;
       const size = cols[7] ? Number(cols[7]) : null;
+      // Parse closedAt if present (column 8: closed date)
+      const closedAtRaw = cols[8] ? new Date(cols[8]).getTime() : NaN;
+      const closedAt = Number.isFinite(closedAtRaw) ? closedAtRaw : null;
+      const notesRaw = cols[9]?.trim() || null;
 
       results.push({
         symbol,
@@ -54,8 +58,8 @@ export function ImportTrades({ onImported }: { onImported?: () => void }) {
         exit: exit && Number.isFinite(exit) ? exit : null,
         size: size && Number.isFinite(size) ? size : null,
         openedAt: Number.isFinite(openedAt) ? openedAt : Date.now(),
-        closedAt: null,
-        notes: null,
+        closedAt,
+        notes: notesRaw,
       });
     }
 
@@ -136,7 +140,7 @@ export function ImportTrades({ onImported }: { onImported?: () => void }) {
               <div className="flex flex-col gap-3">
                 <p className="text-sm text-fg-subtle">
                   Upload a CSV file with columns:{' '}
-                  <code className="text-xs text-fg">symbol, side, entry, date, exit, stop, target, size</code>
+                  <code className="text-xs text-fg">symbol, side, entry, date, exit, stop, target, size, closedDate?, notes?</code>
                 </p>
                 <label className="flex items-center justify-center gap-2 rounded-sm border border-dashed border-border p-6 text-sm text-fg-subtle hover:border-border hover:text-fg transition-colors cursor-pointer">
                   <IconUpload className="size-5" />

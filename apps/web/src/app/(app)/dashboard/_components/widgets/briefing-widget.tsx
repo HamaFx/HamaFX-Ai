@@ -29,6 +29,7 @@
 
 import {IconArrowRight, IconCalendar, IconNews, IconBolt} from '@tabler/icons-react';
 import Link from 'next/link';
+import { useMemo } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
@@ -79,6 +80,12 @@ export function BriefingWidget({ briefing }: BriefingWidgetProps) {
   const meta = KIND_META[briefing.kind] ?? { label: 'Briefing', icon: IconBolt };
   const Icon = meta.icon;
 
+  const markdownContent = useMemo(() => {
+    return (
+      <ReactMarkdown remarkPlugins={[remarkGfm]}>{briefing.body}</ReactMarkdown>
+    );
+  }, [briefing.body]);
+
   return (
     <article
       role="status"
@@ -123,7 +130,7 @@ export function BriefingWidget({ briefing }: BriefingWidgetProps) {
       ) : null}
 
       <div className="md-prose text-fg-muted text-body-sm flex flex-col gap-2 leading-[1.4]">
-        <ReactMarkdown remarkPlugins={[remarkGfm]}>{briefing.body}</ReactMarkdown>
+        {markdownContent}
       </div>
 
       <footer className="mt-auto flex items-center justify-end">

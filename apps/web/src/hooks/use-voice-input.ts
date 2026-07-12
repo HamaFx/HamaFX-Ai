@@ -69,7 +69,8 @@ export interface UseVoiceInputArgs {
 }
 
 export interface UseVoiceInputResult {
-  supported: boolean;
+  /** `undefined` during SSR hydration; settles to boolean on client. */
+  supported: boolean | undefined;
   active: boolean;
   start: () => void;
   stop: () => void;
@@ -78,7 +79,9 @@ export interface UseVoiceInputResult {
 export function useVoiceInput({ lang, onText, onError }: UseVoiceInputArgs): UseVoiceInputResult {
   const [active, setActive] = useState(false);
   const ref = useRef<SpeechRecognitionLike | null>(null);
-  const [supported, setSupported] = useState(false);
+  // Hydration-safe: start as undefined so the UI can render a neutral
+  // state until the client-side check completes.
+  const [supported, setSupported] = useState<boolean | undefined>(undefined);
 
   const onTextRef = useRef(onText);
   onTextRef.current = onText;

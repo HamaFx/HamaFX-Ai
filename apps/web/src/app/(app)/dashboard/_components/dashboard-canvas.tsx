@@ -30,7 +30,7 @@
 //   - Persist on every change.
 //   - "Customize" toggle exposes the chrome; default = clean view.
 
-import { useCallback, useMemo, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   DndContext,
   KeyboardSensor,
@@ -396,9 +396,22 @@ function AddWidgetMenu({
   hidden: WidgetType[];
   onAdd: (type: WidgetType) => void;
 }) {
+  const ref = useRef<HTMLDetailsElement>(null);
+
+  // Close on outside click
+  useEffect(() => {
+    function handler(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        ref.current.open = false;
+      }
+    }
+    document.addEventListener('click', handler);
+    return () => document.removeEventListener('click', handler);
+  }, []);
+
   if (hidden.length === 0) return null;
   return (
-    <details className="relative">
+    <details ref={ref} className="relative">
       <summary
         className="border-border bg-bg-elev-1 hover:bg-bg-elev-2 text-fg inline-flex cursor-pointer list-none items-center gap-1 rounded-sm border px-2 py-1 text-caption"
         aria-label="Add widget"
