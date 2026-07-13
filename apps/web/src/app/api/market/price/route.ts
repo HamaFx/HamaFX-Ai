@@ -26,7 +26,7 @@
 import { getPriceWithMeta } from '@hamafx/data';
 import { SYMBOLS, SymbolSchema, type Tick } from '@hamafx/shared';
 import { decryptByok } from '@hamafx/shared/encryption';
-import { getDb, schema } from '@hamafx/db';
+import { schema, withTenantDb } from '@hamafx/db';
 import { eq } from 'drizzle-orm';
 import { z } from 'zod';
 
@@ -79,14 +79,16 @@ export const GET = withAuth<void>(async (req, { user }) => {
       symbol: repeated.length > 1 ? repeated : (url.searchParams.get('symbol') ?? undefined),
     });
 
-    const db = getDb();
-    const [settings] = await db
-      .select({
-        aiApiKeys: schema.userSettings.aiApiKeys,
-        marketDataProvider: schema.userSettings.marketDataProvider,
-      })
-      .from(schema.userSettings)
-      .where(eq(schema.userSettings.userId, user.userId));
+    const [settings] = await withTenantDb(user.userId, async (db) => {
+      const rows = await db
+        .select({
+          aiApiKeys: schema.userSettings.aiApiKeys,
+          marketDataProvider: schema.userSettings.marketDataProvider,
+        })
+        .from(schema.userSettings)
+        .where(eq(schema.userSettings.userId, user.userId));
+      return rows;
+    });
 
     const decrypted = settings?.aiApiKeys ? decryptByok(settings.aiApiKeys) : null;
     const finnhubKey = decrypted?.finnhub ?? '';

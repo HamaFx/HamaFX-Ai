@@ -24,7 +24,7 @@
 import { getCandlesWithMeta } from '@hamafx/data';
 import { DEFAULT_TIMEFRAME, SymbolSchema, TimeframeSchema } from '@hamafx/shared';
 import { decryptByok } from '@hamafx/shared/encryption';
-import { getDb, schema } from '@hamafx/db';
+import { schema, withTenantDb } from '@hamafx/db';
 import { eq } from 'drizzle-orm';
 import { z } from 'zod';
 
@@ -45,14 +45,16 @@ export const GET = withAuth<void>(async (req, { user }) => {
   try {
     const { symbol, tf, count } = parseSearchParams(req, QuerySchema);
 
-    const db = getDb();
-    const [settings] = await db
-      .select({
-        aiApiKeys: schema.userSettings.aiApiKeys,
-        marketDataProvider: schema.userSettings.marketDataProvider,
-      })
-      .from(schema.userSettings)
-      .where(eq(schema.userSettings.userId, user.userId));
+    const [settings] = await withTenantDb(user.userId, async (db) => {
+      const rows = await db
+        .select({
+          aiApiKeys: schema.userSettings.aiApiKeys,
+          marketDataProvider: schema.userSettings.marketDataProvider,
+        })
+        .from(schema.userSettings)
+        .where(eq(schema.userSettings.userId, user.userId));
+      return rows;
+    });
 
     const decrypted = settings?.aiApiKeys ? decryptByok(settings.aiApiKeys) : null;
     const finnhubKey = decrypted?.finnhub ?? '';

@@ -76,6 +76,13 @@ export default async function DashboardPage() {
   };
   const hasAnyError = Object.values(fetchErrors).some(Boolean);
 
+  // Log failed sources for debugging (visible in Vercel logs)
+  if (hasAnyError) {
+    for (const [source, error] of Object.entries(fetchErrors)) {
+      if (error) console.error('[dashboard] %s failed: %s', source, error);
+    }
+  }
+
   return (
     <DashboardCanvas
       alerts={alerts}

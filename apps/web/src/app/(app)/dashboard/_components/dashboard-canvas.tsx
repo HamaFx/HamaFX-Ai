@@ -269,6 +269,11 @@ export function DashboardCanvas(props: DashboardCanvasProps) {
               refreshing
             </button>
             .
+            {props.fetchErrors && (
+              <span className="ml-2 text-fg-muted text-xs">
+                ({Object.entries(props.fetchErrors).filter(([, v]) => v).map(([k]) => k).join(', ')})
+              </span>
+            )}
           </span>
         </div>
       ) : null}
