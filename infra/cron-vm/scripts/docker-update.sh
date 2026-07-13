@@ -73,10 +73,55 @@ fi
 
 log "upgrading $PREV_SHA -> $NEW_SHA"
 
+# Check which files changed to decide if we need a Docker rebuild.
+# Only worker code + its dependencies (packages/*, config files) need a rebuild.
+# Frontend-only changes (apps/web/) skip the expensive docker compose build.
+CHANGED_FILES=$(git diff --name-only "$PREV_SHA" "$NEW_SHA" 2>/dev/null || true)
+
+# Paths that require a full Docker rebuild (worker + its monorepo deps).
+# Everything else just needs a git pull (e.g., frontend, docs, infra scripts).
+NEEDS_REBUILD=0
+for pattern in \
+  '^apps/worker/' \
+  '^packages/ai/' \
+  '^packages/db/' \
+  '^packages/data/' \
+  '^packages/indicators/' \
+  '^packages/shared/' \
+  '^packages/config/' \
+  '^pnpm-lock.yaml$' \
+  '^Dockerfile.worker$' \
+  '^turbo.json$' \
+  '^tsconfig.base.json$' \
+  '^\.npmrc$' \
+  '^package.json$'; do
+  if echo "$CHANGED_FILES" | grep -qE "$pattern"; then
+    NEEDS_REBUILD=1
+    log "worker-relevant change detected: $(echo "$CHANGED_FILES" | grep -E "$pattern" | head -3 | tr '\n' ' ')"
+    break
+  fi
+done
+
+# Always git pull regardless.
+git reset --hard "$NEW_SHA" >/dev/null
+
+# Copy any updated infra scripts to /opt/hamafx/scripts (no rebuild needed).
+if echo "$CHANGED_FILES" | grep -qE '^infra/cron-vm/scripts/'; then
+  log 'copying updated infra scripts'
+  cp "$APP_DIR"/infra/cron-vm/scripts/*.sh /opt/hamafx/scripts/ 2>/dev/null || true
+  cp "$APP_DIR"/infra/cron-vm/scripts/*.py /opt/hamafx/scripts/ 2>/dev/null || true
+  chmod +x /opt/hamafx/scripts/*.sh /opt/hamafx/scripts/*.py 2>/dev/null || true
+fi
+
+if [[ "$NEEDS_REBUILD" -eq 0 ]]; then
+  log "no worker-relevant changes — skipping Docker rebuild"
+  echo "$NEW_SHA" > "$SHA_FILE"
+  ping_hc success "applied $NEW_SHA (no rebuild)"
+  exit 0
+fi
+
 # Tag the current image for instant rollback before building
 docker tag hamafx-worker:local hamafx-worker:rollback 2>/dev/null || true
-
-git reset --hard "$NEW_SHA" >/dev/null
 
 # Build the new image (Docker layer cache makes this fast)
 log "building Docker image"
