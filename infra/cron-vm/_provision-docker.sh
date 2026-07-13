@@ -106,7 +106,7 @@ install -m 644 -o hamafx -g hamafx \
 
 log 'copying scripts to /opt/hamafx/scripts/'
 install -d -m 755 -o hamafx -g hamafx "${INSTALL_DIR}/scripts"
-for script in docker-update.sh docker-autoheal.sh \
+for script in docker-update.sh docker-autoheal.sh webhook-listener.py \
   backup-db.sh backup-journal.sh verify-restore.sh \
   delete-tenant.sh export-tenant.sh _load-env.sh; do
   if [[ -f "${STAGE}/scripts/${script}" ]]; then
@@ -139,7 +139,7 @@ for unit in \
   hamafx-backup-db hamafx-backup-journal hamafx-verify-restore \
   hamafx-tenant-export hamafx-tenant-delete \
   hamafx-disk-check hamafx-docker-prune \
-  hamafx-update hamafx-docker-autoheal; do
+  hamafx-update hamafx-docker-autoheal hamafx-webhook; do
   for ext in service timer; do
     [[ -f "${STAGE}/units/${unit}.${ext}" ]] && \
       install -m 644 "${STAGE}/units/${unit}.${ext}" "/etc/systemd/system/"
@@ -159,6 +159,28 @@ for timer in \
   hamafx-update.timer hamafx-docker-autoheal.timer; do
   systemctl enable --now "$timer" 2>/dev/null || true
 done
+
+log 'generating webhook secret if not present'
+if ! grep -q '^WEBHOOK_SECRET=' "${INSTALL_DIR}/.env" 2>/dev/null; then
+  SECRET=$(openssl rand -hex 32)
+  echo "WEBHOOK_SECRET=$SECRET" >> "${INSTALL_DIR}/.env"
+  chmod 600 "${INSTALL_DIR}/.env"
+  log "webhook secret generated and added to .env"
+fi
+
+log 'opening firewall port 9000 for GitHub webhooks'
+if ! gcloud compute firewall-rules describe hamafx-webhook --project="$(gcloud config get-value project)" 2>/dev/null; then
+  gcloud compute firewall-rules create hamafx-webhook \
+    --network default --allow tcp:9000 \
+    --source-ranges 140.82.112.0/20 \
+    --target-tags hamafx-cron \
+    --description 'GitHub webhook listener' \
+    --quiet
+  log 'firewall rule hamafx-webhook created'
+fi
+
+log 'enabling + starting webhook service'
+systemctl enable --now hamafx-webhook.service 2>/dev/null || true
 
 log 'building and starting the worker container (first build takes ~2-3 min)'
 cd "$INSTALL_DIR"

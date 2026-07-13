@@ -1,0 +1,9 @@
+[Unit]
+Description=HamaFX-Ai webhook socket (port 9000)
+
+[Socket]
+ListenStream=9000
+Accept=no
+
+[Install]
+WantedBy=sockets.target

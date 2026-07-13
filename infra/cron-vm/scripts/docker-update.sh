@@ -24,7 +24,7 @@ readonly CONTAINER="hamafx-worker"
 # Load HC_UPDATE_UUID safely
 HC_UUID=''
 if [[ -f /opt/hamafx/.env ]]; then
-  HC_UUID=$(grep -E '^HC_UPDATE_UUID=' /opt/hamafx/.env | cut -d= -f2- | tr -d '"' | tr -d "'")
+  HC_UUID=$(grep -E '^HC_UPDATE_UUID=' /opt/hamafx/.env | cut -d= -f2- | tr -d '"' | tr -d "'" || true)
 fi
 
 ping_hc() {

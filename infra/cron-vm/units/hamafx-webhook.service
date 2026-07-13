@@ -1,0 +1,27 @@
+[Unit]
+Description=HamaFX-Ai GitHub webhook listener
+After=network-online.target docker.service
+Wants=network-online.target
+Requires=docker.service
+
+[Service]
+Type=simple
+User=hamafx
+Group=hamafx
+WorkingDirectory=/opt/hamafx
+EnvironmentFile=/opt/hamafx/.env
+Environment=WEBHOOK_PORT=9000
+ExecStart=/usr/bin/python3 /opt/hamafx/scripts/webhook-listener.py
+Restart=always
+RestartSec=10
+TimeoutStopSec=10
+
+NoNewPrivileges=true
+PrivateTmp=true
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=hamafx-webhook
+
+[Install]
+WantedBy=multi-user.target
