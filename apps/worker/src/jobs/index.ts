@@ -27,6 +27,7 @@ import { runSnapshots } from './snapshots.js';
 import { runWeeklyReview } from './weekly-review.js';
 import { runResonanceSync } from './resonance-sync.js';
 import { runAlerts } from './alerts.js';
+import { runMultiAgentAnalysis } from './multi-agent-analysis.js';
 import type { JobFn, JobName } from './types.js';
 
 export const JOBS: Record<JobName, { run: JobFn; description: string }> = {
@@ -65,6 +66,10 @@ export const JOBS: Record<JobName, { run: JobFn; description: string }> = {
   'resonance-sync': {
     run: runResonanceSync,
     description: 'Daily intermarket resonance sync — computes and stores real yield and DXY gold divergences.',
+  },
+  'multi-agent-analysis': {
+    run: runMultiAgentAnalysis,
+    description: 'U2 — Polls analysis_jobs table every 3s, runs multi-agent full-mode analysis for queued jobs.',
   },
 };
 

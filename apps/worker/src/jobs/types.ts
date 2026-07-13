@@ -47,4 +47,5 @@ export type JobName =
   | 'fred-actuals'
   | 'weekly-review'
   | 'resonance-sync'
-  | 'alerts';
+  | 'alerts'
+  | 'multi-agent-analysis';

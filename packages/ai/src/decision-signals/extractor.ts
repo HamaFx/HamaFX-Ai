@@ -122,12 +122,15 @@ export function extractDecisionSignal(
   const bias = actionToBias(action);
   const sourceType: SignalSourceType = 'chat';
 
-  // 7. Build metadata — keep reasoning snippet for context.
+  // 7. Build metadata + provenance — track which tools informed this signal.
   const metadata: Record<string, unknown> = {
     reasoning: text.slice(0, 500),
   };
 
-  return {
+  // U5 — provenance: collect tool names found in the response parts.
+  const invokedTools = extractToolNames(parts);
+
+  const payload: DecisionSignalPayload = {
     symbol: context.symbol,
     action,
     bias,
@@ -146,6 +149,11 @@ export function extractDecisionSignal(
     threadId: context.threadId,
     messageId: context.messageId,
   };
+  // U5 — provenance: only include when tools were found (exactOptionalPropertyTypes).
+  if (invokedTools.length > 0) {
+    payload.provenance = { tools: invokedTools };
+  }
+  return payload;
 }
 
 // ---------------------------------------------------------------------------
@@ -228,4 +236,18 @@ function extractTextFromParts(parts: UIMessage['parts']): string {
     }
   }
   return text;
+}
+
+/** U5 — Extract tool names from tool-call parts in the response. */
+function extractToolNames(parts: UIMessage['parts']): string[] {
+  const names = new Set<string>();
+  for (const part of parts) {
+    if (typeof part === 'object' && part !== null && 'type' in part) {
+      const p = part as { type: string; toolName?: string };
+      if (p.type === 'tool-call' && typeof p.toolName === 'string') {
+        names.add(p.toolName);
+      }
+    }
+  }
+  return [...names].sort();
 }

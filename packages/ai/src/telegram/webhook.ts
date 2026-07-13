@@ -24,7 +24,7 @@
 //   - Timeouts: AI agent calls have a 30s timeout to prevent webhook hangs.
 //   - Error safety: user-facing errors are sanitized (no internal details leaked).
 
-import { type ServerEnv } from '@hamafx/shared';
+import { pickAiEnv, type ServerEnv } from '@hamafx/shared';
 import type { UIMessage } from 'ai';
 import { runChat } from '../agent';
 import * as crypto from 'crypto';
@@ -344,19 +344,7 @@ async function handleFreeFormMessage(
         threadId,
         userId, // SECURITY FIX: use the real user ID, not __system__
         userMessage,
-        env: {
-          AI_GATEWAY_API_KEY: env.AI_GATEWAY_API_KEY,
-          GOOGLE_GENERATIVE_AI_API_KEY: env.GOOGLE_GENERATIVE_AI_API_KEY,
-          GOOGLE_VERTEX_PROJECT: env.GOOGLE_VERTEX_PROJECT,
-          GOOGLE_VERTEX_LOCATION: env.GOOGLE_VERTEX_LOCATION,
-          GOOGLE_APPLICATION_CREDENTIALS_JSON: env.GOOGLE_APPLICATION_CREDENTIALS_JSON,
-          GOOGLE_APPLICATION_CREDENTIALS: env.GOOGLE_APPLICATION_CREDENTIALS,
-          AI_DEFAULT_MODEL: env.AI_DEFAULT_MODEL,
-          AI_EMBEDDING_MODEL: env.AI_EMBEDDING_MODEL,
-          MAX_DAILY_USD: env.MAX_DAILY_USD,
-          MAX_TOOL_ITERATIONS: env.MAX_TOOL_ITERATIONS,
-          LOG_PROMPTS: env.LOG_PROMPTS,
-        },
+        env: pickAiEnv(env),
       }),
       new Promise<never>((_, reject) =>
         setTimeout(() => reject(new Error('AI agent timeout')), 30_000),

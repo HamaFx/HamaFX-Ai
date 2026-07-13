@@ -211,6 +211,64 @@ export function ChatScreen({
         throw new Error(errBody?.error?.message ?? `HTTP ${res.status}`);
       }
 
+      // U2 — Full mode: detect queued job response (JSON, not SSE).
+      const contentType = res.headers.get('content-type') ?? '';
+      if (contentType.includes('application/json')) {
+        const json = await res.json() as { type?: string; jobId?: string };
+        if (json.type === 'analysis-queued' && json.jobId) {
+          // Start polling for the background job result.
+          const POLL_INTERVAL_MS = 2_000;
+          const MAX_POLL_TIME_MS = 5 * 60_000;
+          const startPoll = Date.now();
+
+          while (Date.now() - startPoll < MAX_POLL_TIME_MS) {
+            if (controller.signal.aborted) return;
+            await new Promise((r) => setTimeout(r, POLL_INTERVAL_MS));
+            if (controller.signal.aborted) return;
+
+            try {
+              const pollRes = await fetch(`/api/chat/analysis-jobs/${json.jobId}`, {
+                headers: { 'X-CSRF-Token': getCsrfToken() ?? '' },
+                signal: controller.signal,
+              });
+              if (!pollRes.ok) continue;
+              const pollJson = await pollRes.json() as {
+                status?: string; progress?: Array<Record<string, unknown>>;
+                result?: { finalText?: string; agentOpinions?: unknown };
+                error?: string;
+              };
+
+              // Render progress from the job's progress events.
+              if (Array.isArray(pollJson.progress) && pollJson.progress.length > 0) {
+                const lastProgress = pollJson.progress[pollJson.progress.length - 1] as Record<string, unknown> | undefined;
+                if (lastProgress && lastProgress.type === 'data-agent-progress') {
+                  setAgentProgress((lastProgress as { data: typeof agentProgress }).data);
+                }
+              }
+
+              if (pollJson.status === 'complete' && pollJson.result?.finalText) {
+                setMessages((prev) => prev.map((m) =>
+                  m.id === assistantMsgId
+                    ? { ...m, parts: [{ type: 'text' as const, text: pollJson.result!.finalText! }] } as UIMessage
+                    : m,
+                ));
+                setAgentProgress(null);
+                return;
+              }
+
+              if (pollJson.status === 'failed') {
+                throw new Error(pollJson.error ?? 'Background analysis failed.');
+              }
+            } catch (err) {
+              if (controller.signal.aborted) return;
+              throw err;
+            }
+          }
+          throw new Error('Background analysis timed out after 5 minutes.');
+        }
+        throw new Error(`Unexpected JSON response: ${JSON.stringify(json)}`);
+      }
+
       const reader = res.body?.getReader();
       if (!reader) throw new Error('No response body');
       const decoder = new TextDecoder();

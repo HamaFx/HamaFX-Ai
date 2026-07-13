@@ -14,26 +14,30 @@
  * limitations under the License.
  */
 
-// Domain-based model routing.
+// Domain-based turn classification.
 //
-// Each chat turn picks a model from one of:
-//   - fundamental — macro / news / events / "why" reasoning → top-tier model
-//   - technical   — chart structure / indicators / levels    → fast model
-//   - summary     — news/calendar/journal recap, "list X"     → cheapest fast
-//   - vision      — image attached this turn                  → vision model
-//   - generic     — everything else                           → default
+// Each chat turn is classified into one of:
+//   - fundamental — macro / news / events / "why" reasoning
+//   - technical   — chart structure / indicators / levels
+//   - summary     — news/calendar/journal recap, "list X"
+//   - vision      — image attached this turn
+//   - generic     — everything else
+//
+// The domain drives TWO downstream decisions:
+//   1. Whether a plan-then-act pre-step runs (fundamental + technical only).
+//   2. Which model tier to use (resolved in resolveChatModel via the
+//      domain param — fundamental→pro, technical→fast, summary→cheapest).
 //
 // Classification is rule-based — fast, deterministic, easy to test, and
 // auditable in telemetry. It runs on the LATEST user message only; prior
-// turns are not re-classified. Per-thread `pinnedSymbol` is honoured but
-// does not change domain selection on its own.
+// turns are not re-classified.
 //
 // Routing decisions live in chat_telemetry via the `kind` discriminator
-// (extended below) so /settings/usage can break down spend per domain.
+// so /settings/usage can break down spend per domain.
 
 import type { UIMessage } from 'ai';
-
-import type { ServerEnv } from '@hamafx/shared';
+import type { ResolveModelEnv } from './model';
+import { classifyTurnLLM } from './semantic-routing';
 
 export type RoutingDomain =
   | 'fundamental'
@@ -53,26 +57,31 @@ export interface RoutingDecision {
   rationale: string;
 }
 
-type RouterEnv = Pick<
-  ServerEnv,
-  | 'AI_DEFAULT_MODEL'
->;
-
 /**
- * Pick the best model for this turn. `userMessage` is the message just
+ * Classify this turn by domain. `userMessage` is the message just
  * appended; we only inspect its text + image parts.
  *
- * Caller-provided `modelOverride` always wins — used by the explicit
- * "regenerate with model X" UX. When no override is set, the classifier
- * picks; on a tie or empty signal we fall back to `AI_DEFAULT_MODEL`.
+ * Model tier selection is handled downstream by `resolveChatModel`
+ * (in model.ts) which maps the domain to the provider's defaultModels
+ * tier. This function only decides the domain + planRequired flag.
  */
-export function routeTurn(args: {
+export interface RouteTurnOptions {
   userMessage: UIMessage;
-  env: RouterEnv;
   modelOverride?: string | null;
-}): RoutingDecision {
+  /** U3 — semantic routing config. Omit to skip AI classification. */
+  semanticRouting?: {
+    /** The summary-tier model id to use for classification. */
+    modelId: string;
+    /** AI env subset for model resolution. */
+    env: ResolveModelEnv;
+    signal?: AbortSignal | null;
+  };
+}
+
+export async function routeTurn(args: { userMessage: UIMessage; modelOverride?: string | null }): Promise<RoutingDecision>;
+export async function routeTurn(args: RouteTurnOptions): Promise<RoutingDecision>;
+export async function routeTurn(args: RouteTurnOptions): Promise<RoutingDecision> {
   const { userMessage, modelOverride } = args;
-  void args.env; // kept for future use; not currently consumed.
 
   if (modelOverride && modelOverride.length > 0) {
     return {
@@ -82,8 +91,34 @@ export function routeTurn(args: {
     };
   }
 
-  const text = extractText(userMessage).toLowerCase();
+  const rawText = extractText(userMessage);
+  const text = rawText.toLowerCase();
   const hasImage = hasImagePart(userMessage);
+
+  // U3 — Semantic routing: try AI classification before keyword scoring.
+  // Feature-gated: only runs when semanticRouting config is provided.
+  if (args.semanticRouting && rawText.length >= 10) {
+    const startMs = Date.now();
+    try {
+      const result = await classifyTurnLLM(
+        rawText,
+        args.semanticRouting.modelId,
+        args.semanticRouting.env,
+        args.semanticRouting.signal,
+      );
+      if (result) {
+        const domain = result.domain === 'vision' ? 'generic' as const : result.domain;
+        return {
+          domain,
+          planRequired: domain === 'fundamental' || domain === 'technical',
+          rationale: `semantic: ${result.rationale} (confidence=${result.confidence.toFixed(2)}, ${Date.now() - startMs}ms)`,
+        };
+      }
+      // Fall through to keyword scoring on low confidence or failure.
+    } catch {
+      // Fall through to keyword scoring.
+    }
+  }
 
   if (hasImage) {
     return {

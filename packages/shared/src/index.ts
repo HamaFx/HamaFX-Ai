@@ -91,7 +91,9 @@ export * from './schemas/briefings';
 
 // AI tool plumbing
 export * from './ai/tool-names';
-export * from './ai/tool-io';
+export { isTextPart, getTextFromParts, getMessageText } from './ai/tool-io';
+export type { UiTextPart } from './ai/tool-io';
+export type { ToolOutputMap, ToolIOMap, ToolOutput, ToolInput } from './ai/tool-io';
 
 // Phase E — Billing feature gating
 export * from './billing';
@@ -110,8 +112,8 @@ export * from './bug-report';
 export {} from './encryption';
 
 // Env (server-only — do NOT import from client code)
-export { ServerEnvSchema, parseServerEnv, resolveDatabaseUrl } from './env';
-export type { ServerEnv } from './env';
+export { ServerEnvSchema, parseServerEnv, resolveDatabaseUrl, pickAiEnv } from './env';
+export type { ServerEnv, AiEnvKeys } from './env';
 // BYOK type re-exports (intentionally NOT pulling node:crypto into
 // the client bundle).
 export {

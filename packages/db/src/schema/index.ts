@@ -63,3 +63,5 @@ export * from './noise-control';
 export * from './bot-links';
 // Phase B — Billing (NOWPayments / crypto)
 export * from './billing';
+// U2 — Background multi-agent analysis jobs
+export * from './analysis-jobs';

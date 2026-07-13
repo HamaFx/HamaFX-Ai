@@ -378,6 +378,11 @@ export interface ChatModelResolution {
 export function resolveChatModel(
   userSettings: Pick<UserSettingsRow, 'aiApiKeys' | 'chatModel'>,
   env: ResolveModelEnv,
+  /** Optional routing domain — picks the matching tier from defaultModels
+   *  (fundamental→pro, technical→fast, summary→cheapest, etc.). Defaults to
+   *  'technical' when omitted (backward-compatible). Ignored when the user
+   *  has an explicit chatModel override set. */
+  domain?: ModelDomain,
 ): ChatModelResolution {
   const stored = decryptByok(userSettings.aiApiKeys);
   const keys: ByokPayload = {
@@ -428,8 +433,9 @@ export function resolveChatModel(
   }
 
   // No explicit pick: use the priority-ordered first configured
-  // provider's `technical` model. This is the path single-tenant
-  // installs and brand-new users hit.
+  // provider's model for the requested domain. Defaults to 'technical'
+  // when no domain is specified (backward-compatible).
+  const tier: ModelDomain = domain ?? 'technical';
   const priority = configured.slice().sort(
     (a, b) => PROVIDER_PRIORITY.indexOf(a) - PROVIDER_PRIORITY.indexOf(b),
   );
@@ -439,10 +445,10 @@ export function resolveChatModel(
   }
   const spec = BYOK_PROVIDERS[providerId];
   const apiKey = keys[providerId]!;
-  const bareModelId = spec.defaultModels.technical;
+  const bareModelId = spec.defaultModels[tier];
   if (!bareModelId) {
     throw new Error(
-      `Provider ${providerId} has no default technical model configured.`,
+      `Provider ${providerId} has no default ${tier} model configured.`,
     );
   }
   return {

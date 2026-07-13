@@ -63,8 +63,8 @@ export abstract class BaseAgent {
     const userText = extractUserMessageText(ctx.userMessage);
     const fullSystem = `${this.systemPrompt()}\n\n${sharedPrompt}`;
     const toolContext: ToolContext = {
-      threadId: '',
-      userId: '',
+      threadId: ctx.threadId,
+      userId: ctx.userId,
       latestUserMessageText: userText,
       env: ctx.env,
       signal: ctx.signal,

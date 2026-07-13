@@ -17,10 +17,10 @@
 // Multi-Agent Orchestration — pipeline coordinator.
 
 import { tryReserveBudget, applyBudgetDelta, BudgetExceededError } from '../cost';
-import { withToolContext, type ToolContext } from '../tool-context';
 import { buildSharedContext, extractUserMessageText } from './context';
 import { selectAgents, resolveMode } from './modes';
 import { saveAgentOpinions } from './persistence';
+import { appendUserMessage, appendAssistantMessage, recordTelemetry } from '../persistence';
 import { TechnicalAgent } from './agents/technical-agent';
 import { FundamentalAgent } from './agents/fundamental-agent';
 import { RiskAgent } from './agents/risk-agent';
@@ -54,14 +54,13 @@ export interface RunMultiAgentArgs {
   env: MultiAgentEnv;
   signal: AbortSignal | null;
   analysisMode: AnalysisMode;
-  /** ID of the assistant message that will hold the final response.
-   *  Required for persisting agent opinions alongside the message. */
-  messageId?: string;
   onProgress?: (event: ProgressEvent) => void;
+  /** P1-4/U1 — token-by-token fusion streaming callback. */
+  onTextChunk?: (chunk: string) => void;
 }
 
 export async function runMultiAgentChat(args: RunMultiAgentArgs): Promise<MultiAgentResult> {
-  const { threadId, userId, userMessage, history, userSettings, displayName, customInstructions, env, signal, analysisMode, messageId, onProgress } = args;
+  const { threadId, userId, userMessage, history, userSettings, displayName, customInstructions, env, signal, analysisMode, onProgress, onTextChunk } = args;
   const startMs = Date.now();
   const userText = extractUserMessageText(userMessage);
   const mode = resolveMode(analysisMode, userText);
@@ -78,90 +77,129 @@ export async function runMultiAgentChat(args: RunMultiAgentArgs): Promise<MultiA
     throw new BudgetExceededError(reservation.spent, reservation.max);
   }
 
-  const symbol = userSettings.defaultSymbol ?? 'XAUUSD';
-  const ctxArgs: Parameters<typeof buildSharedContext>[0] = { symbol, userId, userMessage, history, userSettings, displayName, env, signal };
-  if (customInstructions !== undefined) ctxArgs.customInstructions = customInstructions;
-  const ctx = await buildSharedContext(ctxArgs);
+  // ── Persist the user message first ──
+  // This ensures the conversation survives even if all agents fail.
+  // Do this AFTER budget reservation succeeds but BEFORE any agent work.
+  await appendUserMessage(threadId, userMessage);
 
-  const specialistNames = selectAgents(mode);
-  const specialists = specialistNames.map((name) => AGENT_FACTORIES[name]());
-
-  onProgress?.({ type: 'specialists_start', agents: specialistNames });
-
-  const opinions = await Promise.all(
-    specialists.map(async (agent) => {
-      onProgress?.({ type: 'agent_start', agent: agent.name });
-      try {
-        const agentCtx: SharedContext = { ...ctx };
-        const toolContext: ToolContext = {
-          threadId,
-          userId,
-          latestUserMessageText: userText,
-          env,
-          signal,
-          budget: { spent: 0, max: userSettings.maxDailyUsd ?? 100 },
-          userSettings,
-        };
-        const opinion = await withToolContext(toolContext, () => agent.run(agentCtx));
-        onProgress?.({ type: 'agent_done', agent: agent.name, opinion });
-        return opinion;
-      } catch (err) {
-        const msg = err instanceof Error ? err.message : String(err);
-        console.error(`[multi-agent] ${agent.name} failed`, err);
-        onProgress?.({ type: 'agent_error', agent: agent.name, error: msg });
-        return null;
-      }
-    }),
-  );
-
-  const validOpinions = opinions.filter((o): o is AgentOpinion => o !== null);
-
-  onProgress?.({ type: 'fusion_start' });
-
-  const decisionAgent = new DecisionAgent();
-  let finalText: string;
+  // ── Run specialists + fusion with budget-leak guard ──
+  // Wrap the entire execution from shared-context build through
+  // reconciliation in try/finally so that any throw (buildSharedContext,
+  // Promise.all, fuse, etc.) before reconciliation releases the budget
+  // reservation. Without this guard repeated failures inflate
+  // daily_ai_spend and prematurely trip the BudgetExceededError guardrail.
+  let reconciled = false;
+  let validOpinions: AgentOpinion[] = [];
+  let finalText = '';
   let decisionCostUsd = 0;
+  let totalCostUsd = 0;
+  let totalLatencyMs = 0;
 
   try {
-    const decisionResult = await decisionAgent.fuse(validOpinions, ctx, { threadId, userId, env, signal, userSettings });
-    finalText = decisionResult.text;
-    decisionCostUsd = decisionResult.costUsd;
-    onProgress?.({ type: 'fusion_done' });
-  } catch (err) {
-    console.error('[multi-agent] Decision agent failed', err);
-    onProgress?.({ type: 'fusion_done' });
-    if (validOpinions.length > 0) {
-      finalText = validOpinions
-        .map((o) => `**${o.agentName.charAt(0).toUpperCase() + o.agentName.slice(1)} Agent** (${o.bias}, ${Math.round(o.confidence * 100)}% confidence)\n${o.reasoning}`)
-        .join('\n\n---\n\n');
-      finalText = `⚠️ The Decision agent encountered an error. Here are the individual specialist opinions:\n\n${finalText}`;
-    } else {
-      finalText = 'I apologize, but all analysis agents encountered errors. Please try again or switch to single-agent mode.';
+    const symbol = userSettings.defaultSymbol ?? 'XAUUSD';
+    const ctxArgs: Parameters<typeof buildSharedContext>[0] = { symbol, userId, threadId, userMessage, history, userSettings, displayName, env, signal };
+    if (customInstructions !== undefined) ctxArgs.customInstructions = customInstructions;
+    const ctx = await buildSharedContext(ctxArgs);
+
+    const specialistNames = selectAgents(mode);
+    const specialists = specialistNames.map((name) => AGENT_FACTORIES[name]());
+
+    onProgress?.({ type: 'specialists_start', agents: specialistNames });
+
+    const opinions = await Promise.all(
+      specialists.map(async (agent) => {
+        onProgress?.({ type: 'agent_start', agent: agent.name });
+        try {
+          const agentCtx: SharedContext = { ...ctx };
+          const opinion = await agent.run(agentCtx);
+          onProgress?.({ type: 'agent_done', agent: agent.name, opinion });
+          return opinion;
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : String(err);
+          console.error(`[multi-agent] ${agent.name} failed`, err);
+          onProgress?.({ type: 'agent_error', agent: agent.name, error: msg });
+          return null;
+        }
+      }),
+    );
+
+    validOpinions = opinions.filter((o): o is AgentOpinion => o !== null);
+
+    onProgress?.({ type: 'fusion_start' });
+
+    const decisionAgent = new DecisionAgent();
+
+    try {
+      const decisionResult = await decisionAgent.fuse(validOpinions, ctx, { threadId, userId, env, signal, userSettings }, onTextChunk);
+      finalText = decisionResult.text;
+      decisionCostUsd = decisionResult.costUsd;
+      onProgress?.({ type: 'fusion_done' });
+    } catch (err) {
+      console.error('[multi-agent] Decision agent failed', err);
+      onProgress?.({ type: 'fusion_done' });
+      if (validOpinions.length > 0) {
+        finalText = validOpinions
+          .map((o) => `**${o.agentName.charAt(0).toUpperCase() + o.agentName.slice(1)} Agent** (${o.bias}, ${Math.round(o.confidence * 100)}% confidence)\n${o.reasoning}`)
+          .join('\n\n---\n\n');
+        finalText = `⚠️ The Decision agent encountered an error. Here are the individual specialist opinions:\n\n${finalText}`;
+      } else {
+        finalText = 'I apologize, but all analysis agents encountered errors. Please try again or switch to single-agent mode.';
+      }
     }
-  }
 
-  const totalCostUsd = validOpinions.reduce((sum, o) => sum + o.costUsd, 0) + decisionCostUsd;
-  const totalLatencyMs = Date.now() - startMs;
+    totalCostUsd = validOpinions.reduce((sum, o) => sum + o.costUsd, 0) + decisionCostUsd;
+    totalLatencyMs = Date.now() - startMs;
 
-  // ── Budget reconciliation ── adjust reserved estimate to actual cost ──
-  const costDelta = totalCostUsd - estimatedCost;
-  if (Math.abs(costDelta) > 0.0001) {
+    // ── Budget reconciliation ── adjust reserved estimate to actual cost ──
+    // Always reconcile, even when totalCostUsd is 0 (all specialists failed).
+    const costDelta = totalCostUsd - estimatedCost;
     await applyBudgetDelta(userId, costDelta).catch((err) =>
       console.warn('[multi-agent] applyBudgetDelta failed', err),
     );
+    reconciled = true;
+  } finally {
+    if (!reconciled) {
+      // Release the full reservation — any path that throws before
+      // reconciliation must not leave the reservation stuck.
+      await applyBudgetDelta(userId, -estimatedCost).catch((err) =>
+        console.warn('[multi-agent] failed to release budget reservation after error', err),
+      );
+    }
   }
 
-  // ── Persist agent opinions ── link to the assistant message ──
-  if (messageId && validOpinions.length > 0) {
+  // ── Persist the assistant message ──
+  // Build a UIMessage from the final text and persist it, getting a real
+  // DB-generated messageId that satisfies the agent_opinions FK constraint.
+  const assistantUi: UIMessage = {
+    id: crypto.randomUUID(),
+    role: 'assistant',
+    parts: [{ type: 'text', text: finalText }],
+  };
+  const { messageId: persistedMessageId } = await appendAssistantMessage(threadId, assistantUi);
+
+  // ── Persist agent opinions ── link to the real assistant message ──
+  if (validOpinions.length > 0) {
     await saveAgentOpinions({
-      userId, threadId, messageId, analysisMode: mode,
+      userId, threadId, messageId: persistedMessageId, analysisMode: mode,
       opinions: validOpinions.map((o) => ({
         agentName: o.agentName, bias: o.bias, confidence: o.confidence,
         reasoning: o.reasoning, rawData: o.rawData, model: o.model,
         costUsd: o.costUsd, latencyMs: o.latencyMs,
       })),
-    }).catch((err) => console.warn('[multi-agent] saveAgentOpinions failed', err));
+    }).catch((err) => console.error('[multi-agent] saveAgentOpinions failed', err));
   }
 
-  return { finalText, agentOpinions: validOpinions, totalCostUsd, totalLatencyMs, mode };
+  // ── Record telemetry for the multi-agent turn ──
+  void recordTelemetry({
+    userId,
+    threadId,
+    messageId: persistedMessageId,
+    model: `multi-agent/${mode}`,
+    inputTokens: 0,
+    outputTokens: 0,
+    toolCalls: 0,
+    ms: totalLatencyMs,
+  }).catch((err) => console.warn('[multi-agent] recordTelemetry failed', err));
+
+  return { finalText, agentOpinions: validOpinions, totalCostUsd, totalLatencyMs, mode, messageId: persistedMessageId };
 }

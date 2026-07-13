@@ -300,6 +300,48 @@ export function resolveDirectDatabaseUrl(
 }
 
 /**
+ * P3-11 — Canonical AI env subset for agent / planner / title / tool-context.
+ *
+ * Extracted from the 5+ places where the same `{ AI_GATEWAY_API_KEY,
+ * GOOGLE_*, AI_DEFAULT_MODEL, AI_EMBEDDING_MODEL, ... }` object was
+ * hand-built. Returns the full canonical set.
+ *
+ * The parameter type is a mapped type over AiEnvKeys so callers can
+ * pass `Pick<ServerEnv, AiEnvKeys>` (agent.ts) or the full `ServerEnv`
+ * (route.ts, telegram/webhook.ts) — both are assignable.
+ */
+export type AiEnvKeys =
+  | 'AI_GATEWAY_API_KEY'
+  | 'GOOGLE_GENERATIVE_AI_API_KEY'
+  | 'GOOGLE_VERTEX_PROJECT'
+  | 'GOOGLE_VERTEX_LOCATION'
+  | 'GOOGLE_APPLICATION_CREDENTIALS_JSON'
+  | 'GOOGLE_APPLICATION_CREDENTIALS'
+  | 'AI_DEFAULT_MODEL'
+  | 'AI_TITLE_MODEL'
+  | 'AI_EMBEDDING_MODEL'
+  | 'MAX_DAILY_USD'
+  | 'MAX_TOOL_ITERATIONS'
+  | 'LOG_PROMPTS';
+
+export function pickAiEnv(env: Pick<ServerEnv, AiEnvKeys>) {
+  return {
+    AI_GATEWAY_API_KEY: env.AI_GATEWAY_API_KEY,
+    GOOGLE_GENERATIVE_AI_API_KEY: env.GOOGLE_GENERATIVE_AI_API_KEY,
+    GOOGLE_VERTEX_PROJECT: env.GOOGLE_VERTEX_PROJECT,
+    GOOGLE_VERTEX_LOCATION: env.GOOGLE_VERTEX_LOCATION,
+    GOOGLE_APPLICATION_CREDENTIALS_JSON: env.GOOGLE_APPLICATION_CREDENTIALS_JSON,
+    GOOGLE_APPLICATION_CREDENTIALS: env.GOOGLE_APPLICATION_CREDENTIALS,
+    AI_DEFAULT_MODEL: env.AI_DEFAULT_MODEL,
+    AI_TITLE_MODEL: env.AI_TITLE_MODEL,
+    AI_EMBEDDING_MODEL: env.AI_EMBEDDING_MODEL,
+    MAX_DAILY_USD: env.MAX_DAILY_USD,
+    MAX_TOOL_ITERATIONS: env.MAX_TOOL_ITERATIONS,
+    LOG_PROMPTS: env.LOG_PROMPTS,
+  };
+}
+
+/**
  * Parse process.env into a typed env object. Throws a readable error listing
  * every missing/invalid variable. Cache the result at module-scope in callers.
  */

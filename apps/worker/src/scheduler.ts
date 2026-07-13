@@ -47,6 +47,7 @@ const SKIP_DAILY_LOCK = new Set<keyof typeof JOBS>([
   'alerts',
   'briefings',
   'embedding-backfill',
+  'multi-agent-analysis',
 ]);
 
 export function startScheduler(log: Logger): void {
@@ -91,6 +92,14 @@ export function startScheduler(log: Logger): void {
   cron.schedule('0 18 * * 0', () => {
     void runJobSafely('weekly-review', log);
   });
+
+  // U2 — Multi-agent analysis: poll every 3 seconds for pending jobs.
+  // Uses setInterval instead of cron because 3s is below cron's 1-minute
+  // minimum resolution. The job is idempotent (claims via FOR UPDATE SKIP
+  // LOCKED) and self-limiting (stops when no pending work found).
+  setInterval(() => {
+    void runJobSafely('multi-agent-analysis', log);
+  }, 3_000);
 }
 
 async function runJobSafely(name: keyof typeof JOBS, log: Logger): Promise<void> {

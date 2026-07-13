@@ -16,7 +16,7 @@
 
 // Decision Agent — fuses all specialist opinions into a final unified response.
 
-import { generateText, type Tool } from 'ai';
+import { generateText, streamText, type Tool } from 'ai';
 import { estimateCostUsd } from '../../cost';
 import { withToolContext, type ToolContext } from '../../tool-context';
 import { BaseAgent } from './base-agent';
@@ -77,6 +77,7 @@ Be concise but thorough. Use markdown formatting for readability.`;
     opinions: AgentOpinion[],
     ctx: SharedContext,
     execCtx: { threadId: string; userId: string; env: MultiAgentEnv; signal: AbortSignal | null; userSettings: UserSettingsRow },
+    onTextChunk?: (chunk: string) => void,
   ): Promise<{ text: string; costUsd: number; latencyMs: number; modelId: string }> {
     const startMs = Date.now();
     const { model, modelId } = this.resolveModel(ctx);
@@ -99,6 +100,27 @@ Be concise but thorough. Use markdown formatting for readability.`;
     const timeout = setTimeout(() => controller.abort(), timeoutMs);
     if (execCtx.signal) execCtx.signal.addEventListener('abort', () => controller.abort(), { once: true });
     try {
+      // P1-4/U1 — Use streamText for token-by-token fusion streaming.
+      // On text deltas, invoke the callback so the route can emit SSE frames.
+      // Falls back to generateText when no callback is provided (e.g. tests).
+      if (onTextChunk) {
+        const sResult = await withToolContext(toolContext, async () =>
+          streamText({ model, system, messages: [{ role: 'user' as const, content: userMessage }], abortSignal: controller.signal, maxOutputTokens: 4000 }),
+        );
+        const latencyMs = Date.now() - startMs;
+        let fullText = '';
+        for await (const part of sResult.fullStream) {
+          if (part.type === 'text-delta') {
+            fullText += part.text;
+            onTextChunk(part.text);
+          }
+        }
+        // Wait for usage before returning
+        const usage = await sResult.usage;
+        const costUsd = estimateCostUsd(modelId, usage?.inputTokens ?? 0, usage?.outputTokens ?? 0);
+        return { text: fullText, costUsd, latencyMs, modelId };
+      }
+      // Legacy: generateText for callers without streaming callback
       const result = await withToolContext(toolContext, async () => generateText({ model, system, messages: [{ role: 'user' as const, content: userMessage }], abortSignal: controller.signal, maxOutputTokens: 4000 }));
       const latencyMs = Date.now() - startMs;
       const costUsd = estimateCostUsd(modelId, result.usage?.inputTokens ?? 0, result.usage?.outputTokens ?? 0);

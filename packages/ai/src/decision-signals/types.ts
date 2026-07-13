@@ -81,6 +81,17 @@ export interface DecisionSignalPayload {
   userId: string;
   threadId: string;
   messageId: string;
+  /**
+   * U5 — Structured provenance: which tools and agent opinions contributed
+   * to this signal. Populated by the extractor from tool-call parts present
+   * in the assistant's response. Enables auditability in backtests.
+   */
+  provenance?: {
+    /** Tool names invoked this turn that informed the signal. */
+    tools: string[];
+    /** Multi-agent opinions that contributed (only in multi-agent mode). */
+    agents?: Array<{ name: string; bias: string; confidence: number }>;
+  };
 }
 
 // ---------------------------------------------------------------------------

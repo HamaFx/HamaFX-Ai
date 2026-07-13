@@ -33,6 +33,46 @@
 
 import type { z } from 'zod';
 
+// P3-14 — Typed UIMessage part guards. These replace the scattered `as any`
+// casts around UIMessage.parts access across agent.ts and persistence.ts.
+
+/** AI SDK v5 UIMessage text part. */
+export interface UiTextPart {
+  type: 'text';
+  text: string;
+}
+
+/** Check whether a UIMessage part is a text part. */
+export function isTextPart(part: unknown): part is UiTextPart {
+  return (
+    typeof part === 'object' &&
+    part !== null &&
+    'type' in part &&
+    (part as { type: unknown }).type === 'text'
+  );
+}
+
+/** Extract the concatenated text from a UIMessage's parts array. */
+export function getTextFromParts(parts: unknown): string {
+  if (!Array.isArray(parts)) return '';
+  return parts
+    .filter(isTextPart)
+    .map((p) => p.text)
+    .join('\n')
+    .trim();
+}
+
+/** Best-effort text extraction from a UIMessage — uses parts first, falls
+ *  back to legacy content/text properties for backward compatibility. */
+export function getMessageText(m: { parts?: unknown; content?: unknown; text?: unknown }): string {
+  const fromParts = getTextFromParts(m.parts ?? []);
+  if (fromParts) return fromParts;
+  // Legacy fallback — some older message shapes carry content/text directly.
+  if (typeof m.content === 'string') return m.content.trim();
+  if (typeof m.text === 'string') return m.text.trim();
+  return '';
+}
+
 import type { AnalyzeChartImageOutputSchema } from '../schemas/tool-outputs/analyze-chart-image';
 import type { AnalyzeFundamentalOutputSchema } from '../schemas/tool-outputs/analyze-fundamental';
 import type { AnalyzeTechnicalOutputSchema } from '../schemas/tool-outputs/analyze-technical';

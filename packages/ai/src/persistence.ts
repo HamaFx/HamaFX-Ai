@@ -18,7 +18,7 @@
 // Anything that touches Postgres lives here so route handlers stay thin.
 
 import { getDb, schema } from '@hamafx/db';
-import type { Symbol } from '@hamafx/shared';
+import { getMessageText, type Symbol } from '@hamafx/shared';
 import type { ModelMessage, UIMessage } from 'ai';
 import { and, asc, desc, eq, lt } from 'drizzle-orm';
 
@@ -468,25 +468,10 @@ function stripPartsForStorage(parts: unknown): unknown {
   });
 }
 
-/** Best-effort plain-text extraction from a UIMessage — used for search/title. */
+/** Best-effort plain-text extraction from a UIMessage — uses the shared
+ *  typed guard for parts-first extraction with legacy fallback. */
 function extractText(m: UIMessage): string {
-  const parts = m.parts ?? [];
-  const fromParts = parts
-    .map((p) => {
-      if (typeof p === 'object' && p !== null && 'type' in p) {
-        if ((p as { type: string }).type === 'text') {
-          return ((p as { text?: string }).text ?? '').trim();
-        }
-      }
-      return '';
-    })
-    .filter(Boolean)
-    .join('\n')
-    .trim();
-  
-  if (fromParts) return fromParts;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return ((m as any).content || (m as any).text || '').trim();
+  return getMessageText(m);
 }
 
 // ---------------------------------------------------------------------------

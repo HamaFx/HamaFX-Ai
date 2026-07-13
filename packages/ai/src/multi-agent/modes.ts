@@ -32,14 +32,28 @@ export function selectAgents(mode: ResolvedMode): AgentName[] {
 }
 
 export function autoDetectMode(message: string): ResolvedMode {
-  const lower = message.toLowerCase();
+  const lower = message.toLowerCase().trim();
+
+  // Trivial messages — greetings, thanks, single-word acknowledgements.
+  // No need to spin up multiple agents for these.
+  if (/^(hi|hello|hey|thanks|thank you|ok|okay|yes|no|bye|good morning|good night)\b/.test(lower)) return 'single';
+
+  // Simple price checks already covered by the LIVE_SNAPSHOT.
+  if (/(what'?s the price|current price|quote|how much is)/.test(lower)) return 'single';
+  if (/^(price|quote|rate)\s+(for|of)?\s*\w{3,6}\??$/i.test(lower)) return 'single';
+
+  // Trading decision questions — full committee.
   if (/should i (buy|sell|enter|go long|go short|trade)/.test(lower)) return 'full';
   if (/(is it (a )?good time (to|for)|is now (a )?good time)/.test(lower)) return 'full';
   if (/(buy or sell|long or short|bullish or bearish)/.test(lower)) return 'full';
-  if (/(what'?s the price|current price|quote|how much is)/.test(lower)) return 'quick';
-  if (/^(price|quote|rate)\s+(for|of)?\s*\w{3,6}\??$/i.test(lower.trim())) return 'quick';
+
+  // Analysis / opinion questions — standard.
   if (/(analyze|analysis|outlook|view on|what do you think|forecast|predict)/.test(lower)) return 'standard';
   if (/(technical (and|&) fundamental|full analysis|deep dive)/.test(lower)) return 'standard';
+
+  // Ambiguous short prompts — default to single for efficiency.
+  if (lower.length < 10) return 'single';
+
   return 'standard';
 }
 

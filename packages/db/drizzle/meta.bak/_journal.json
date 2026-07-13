@@ -330,20 +330,6 @@
       "when": 1783964700000,
       "tag": "0046_tenant_id_defaults",
       "breakpoints": true
-    },
-    {
-      "idx": 47,
-      "version": "7",
-      "when": 1783965047186,
-      "tag": "0047_sturdy_longshot",
-      "breakpoints": true
-    },
-    {
-      "idx": 48,
-      "version": "7",
-      "when": 1783979000248,
-      "tag": "0048_sturdy_james_howlett",
-      "breakpoints": true
     }
   ]
 }

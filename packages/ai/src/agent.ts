@@ -19,7 +19,7 @@
 // and the daily-budget guardrail in one place so route code stays a thin
 // HTTP shell.
 
-import { type ServerEnv } from '@hamafx/shared';
+import { getMessageText, pickAiEnv, type AiEnvKeys, type ServerEnv } from '@hamafx/shared';
 import {
   convertToModelMessages,
   stepCountIs,
@@ -48,6 +48,7 @@ import {
   resolveOverrideModel,
   resolveModelForProvider,
   getVertexGoogleSearchTool,
+  type ModelDomain,
 } from './model';
 import { decryptByok, type ProviderId } from '@hamafx/shared/encryption';
 import { PROVIDER_IDS } from '@hamafx/shared/byok';
@@ -63,7 +64,7 @@ import {
 import { runPlanner } from './planner';
 import { buildSystemPrompt, userContextFromSettings } from './prompt/system';
 import { extractUserMessageText } from './message-text';
-import { routeTurn, type RoutingDecision } from './routing';
+import { routeTurn, type RoutingDecision, type RoutingDomain } from './routing';
 import { generateTitle } from './title';
 import { withToolContext, type ToolContext } from './tool-context';
 import { tools } from './tools';
@@ -82,21 +83,8 @@ export interface RunChatArgs {
   userId: string;
   /** Most recent user UIMessage to append + answer. */
   userMessage: UIMessage;
-  /** Whole env — caller passes the already-validated ServerEnv. */
-  env: Pick<
-    ServerEnv,
-    | 'AI_GATEWAY_API_KEY'
-    | 'GOOGLE_GENERATIVE_AI_API_KEY'
-    | 'GOOGLE_VERTEX_PROJECT'
-    | 'GOOGLE_VERTEX_LOCATION'
-    | 'GOOGLE_APPLICATION_CREDENTIALS_JSON'
-    | 'GOOGLE_APPLICATION_CREDENTIALS'
-    | 'AI_DEFAULT_MODEL'
-    | 'AI_EMBEDDING_MODEL'
-    | 'MAX_DAILY_USD'
-    | 'MAX_TOOL_ITERATIONS'
-    | 'LOG_PROMPTS'
-  >;
+  /** Whole env — caller passes the already-validated ServerEnv env subset. */
+  env: Pick<ServerEnv, AiEnvKeys>;
   /** Optional model override (e.g. coming from thread.modelOverride). */
   modelOverride?: string | null;
   /** Custom instructions to append to the system prompt. */
@@ -213,34 +201,46 @@ async function runChatInner(args: RunChatArgs) {
   // except the very first position. We carry two flavours of system rows
   // in the thread: the rolling-summary note (already folded into the
   // system prompt as `compaction.extraSystem`) and the planner's
-  // `data-plan` parts (Phase 7c). Both are UI / context-only — feeding
+  // `data-plan` parts (Phase 7c — persisted as role='system' by
+  // planner.persistPlan). Both are UI / context-only — feeding
   // them inline would crash the next turn with
   // "system messages are only supported at the beginning of the conversation".
   // Drop them here and rely on `streamText`'s `system` parameter instead.
-  const conversational = compaction.kept.filter((m) => m.role !== 'system');
+  //
+  // P2-10: Also defensively filter any non-system message that contains
+  // a `data-plan` part — this guards against a future role change in
+  // persistPlan that would bypass the role-based filter.
+  const conversational = compaction.kept.filter((m) => {
+    if (m.role === 'system') return false;
+    // Defensive: drop any message whose sole purpose is a data-plan part.
+    if (Array.isArray(m.parts) && m.parts.length === 1) {
+      const first = m.parts[0];
+      if (first && typeof first === 'object' && (first as { type?: string }).type === 'data-plan') {
+        return false;
+      }
+    }
+    return true;
+  });
 
   const modelMessages: ModelMessage[] = convertToModelMessages(
     conversational.map(
-      (m) =>
-        ({
-          id: m.id,
-          role: m.role,
-          parts: (Array.isArray(m.parts) && m.parts.length > 0
-            ? m.parts
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            : [{ type: 'text', text: (m as any).content || (m as any).text || '' }]) as UIMessage['parts'],
-        }) as UIMessage,
+      (m): UIMessage => ({
+        id: m.id,
+        role: m.role as UIMessage['role'],
+        parts: (Array.isArray(m.parts) && m.parts.length > 0
+          ? m.parts            : [{ type: 'text' as const, text: getMessageText(m) }]) as UIMessage['parts'],
+      }),
     ),
   );
 
-  // 4) Model resolution — Phase F collapses the per-domain picker into
-  // a single chat_model. The override path stays the same (per-thread
-  // pick from the regen-model-picker); the default path is now just
-  // resolveChatModel which honours user_settings.chatModel (or the
-  // highest-priority configured provider's spec defaults).
-  const routingArgs: Parameters<typeof routeTurn>[0] = { userMessage, env };
+  // 4) Model resolution — routeTurn picks a domain; we map that to the
+  // provider's tier-appropriate model (fundamental→pro, technical→fast,
+  // summary→cheapest, etc.). The override path stays the same (per-thread
+  // pick from the regen-model-picker). When no override is set, the
+  // domain parameter tells resolveChatModel which defaultModels tier to use.
+  const routingArgs: Parameters<typeof routeTurn>[0] = { userMessage };
   if (modelOverride !== undefined) routingArgs.modelOverride = modelOverride;
-  const routing: RoutingDecision = routeTurn(routingArgs);
+  const routing: RoutingDecision = await routeTurn(routingArgs);
   recordStep('routing', { domain: routing.domain, planRequired: routing.planRequired });
 
   // PERF-05: Decrypt BYOK keys once per request, not once per retry attempt.
@@ -259,9 +259,11 @@ async function runChatInner(args: RunChatArgs) {
     attempts++;
     let resolvedModel: LanguageModel;
     let resolvedModelId: string;
-    let providerId: ProviderId;
+    let providerId: ProviderId | undefined;
 
     try {
+      const domainParam = toModelDomain(routing.domain);
+
       if (typeof currentModelOverride === 'string' && currentModelOverride.length > 0) {
         const resolved = resolveOverrideModel({
           override: currentModelOverride,
@@ -282,14 +284,14 @@ async function runChatInner(args: RunChatArgs) {
             resolvedModelId = res.modelId;
             providerId = res.providerId;
           } else {
-            const res = resolveChatModel(userSettings, env);
+            const res = resolveChatModel(userSettings, env, domainParam);
             resolvedModel = res.model;
             resolvedModelId = res.modelId;
             providerId = res.providerId;
           }
         }
       } else {
-        const res = resolveChatModel(userSettings, env);
+        const res = resolveChatModel(userSettings, env, domainParam);
         resolvedModel = res.model;
         resolvedModelId = res.modelId;
         providerId = res.providerId;
@@ -316,45 +318,34 @@ async function runChatInner(args: RunChatArgs) {
 
 
       // Fallback! Get next provider from chain
-      const chain = userSettings.aiFallbackChain ?? [];
-      let nextProviderId: ProviderId | null = null;
-      
-      // If we don't have a provider ID yet because resolution failed, default to the first in the chain
-      const currentProvider: ProviderId = (typeof currentModelOverride === 'string' && currentModelOverride.length > 0)
-        ? (currentModelOverride.includes(':') ? currentModelOverride.split(':')[0] : currentModelOverride) as ProviderId
-        : 'google'; // default fallback starting point if resolution fails completely
+      const currentProvider = providerId ?? ((typeof currentModelOverride === 'string' && currentModelOverride.length > 0)
+        ? (currentModelOverride.includes(':') ? currentModelOverride.split(':')[0] : currentModelOverride)
+        : 'google') as ProviderId;
 
-      const idx = chain.indexOf(currentProvider);
-      // PERF-05: Use the pre-decrypted BYOK keys hoisted above the loop.
-      const stored = decryptedByokKeys;
-      for (let i = idx + 1; i < chain.length; i++) {
-        const pid = chain[i] as ProviderId;
-        const key = stored?.[pid] || (pid === 'google' ? env.GOOGLE_GENERATIVE_AI_API_KEY : undefined);
-        if (typeof key === 'string' && key.trim().length > 0) {
-          nextProviderId = pid;
-          break;
-        }
-      }
+      const nextFallback = pickNextFallbackProvider(
+        userSettings.aiFallbackChain ?? [],
+        currentProvider,
+        decryptedByokKeys,
+        env.GOOGLE_GENERATIVE_AI_API_KEY,
+        routing.domain,
+      );
 
-      if (!nextProviderId) {
+      if (!nextFallback) {
         throw err;
       }
 
       console.warn(
-        `[ai] Fallback triggered! Model resolution failed. Trying next fallback provider: "${nextProviderId}"`,
+        `[ai] Fallback triggered! Model resolution failed. Trying next fallback provider: "${nextFallback.providerId}"`,
       );
 
       fallbackInfo = makeFallbackPart(
         currentModelOverride ?? 'default',
-        decision
+        decision,
       );
 
-      const nextSpec = BYOK_PROVIDERS[nextProviderId];
-      if (nextSpec && nextSpec.defaultModels.technical) {
-        currentModelOverride = `${nextProviderId}:${nextSpec.defaultModels.technical}`;
-      } else {
-        currentModelOverride = nextProviderId;
-      }
+      currentModelOverride = nextFallback.modelId
+        ? `${nextFallback.providerId}:${nextFallback.modelId}`
+        : nextFallback.providerId;
       continue;
     }
 
@@ -389,18 +380,7 @@ async function runChatInner(args: RunChatArgs) {
           userMessage,
           routing,
           plannerModelId,
-          env: {
-            AI_GATEWAY_API_KEY: env.AI_GATEWAY_API_KEY,
-            GOOGLE_GENERATIVE_AI_API_KEY: env.GOOGLE_GENERATIVE_AI_API_KEY,
-            GOOGLE_VERTEX_PROJECT: env.GOOGLE_VERTEX_PROJECT,
-            GOOGLE_VERTEX_LOCATION: env.GOOGLE_VERTEX_LOCATION,
-            GOOGLE_APPLICATION_CREDENTIALS_JSON:
-              env.GOOGLE_APPLICATION_CREDENTIALS_JSON,
-            GOOGLE_APPLICATION_CREDENTIALS: env.GOOGLE_APPLICATION_CREDENTIALS,
-            AI_DEFAULT_MODEL: env.AI_DEFAULT_MODEL,
-            MAX_DAILY_USD: env.MAX_DAILY_USD,
-            LOG_PROMPTS: env.LOG_PROMPTS,
-          },
+          env: pickAiEnv(env),
           ...(signal ? { signal } : {}),
         });
         if (plannerResult.source === 'llm' && env.LOG_PROMPTS) {
@@ -465,18 +445,7 @@ async function runChatInner(args: RunChatArgs) {
       threadId,
       userId,
       latestUserMessageText: extractUserMessageText(userMessage),
-      env: {
-        AI_GATEWAY_API_KEY: env.AI_GATEWAY_API_KEY,
-        GOOGLE_GENERATIVE_AI_API_KEY: env.GOOGLE_GENERATIVE_AI_API_KEY,
-        GOOGLE_VERTEX_PROJECT: env.GOOGLE_VERTEX_PROJECT,
-        GOOGLE_VERTEX_LOCATION: env.GOOGLE_VERTEX_LOCATION,
-        GOOGLE_APPLICATION_CREDENTIALS_JSON: env.GOOGLE_APPLICATION_CREDENTIALS_JSON,
-        GOOGLE_APPLICATION_CREDENTIALS: env.GOOGLE_APPLICATION_CREDENTIALS,
-        AI_DEFAULT_MODEL: env.AI_DEFAULT_MODEL,
-        AI_EMBEDDING_MODEL: env.AI_EMBEDDING_MODEL,
-        MAX_DAILY_USD: env.MAX_DAILY_USD,
-        LOG_PROMPTS: env.LOG_PROMPTS,
-      },
+      env: pickAiEnv(env),
       signal: signal ?? null,
       // The reservation we just took is the freshest budget snapshot we
       // can offer. Helpers that need a stricter "have we crossed the
@@ -699,42 +668,39 @@ async function runChatInner(args: RunChatArgs) {
       }
 
       // Fallback! Get next provider from chain
-      const chain = userSettings.aiFallbackChain ?? [];
-      let nextProviderId: ProviderId | null = null;
-      const idx = chain.indexOf(providerId);
-      // PERF-05: Use the pre-decrypted BYOK keys hoisted above the loop.
-      const stored = decryptedByokKeys;
-      for (let i = idx + 1; i < chain.length; i++) {
-        const pid = chain[i] as ProviderId;
-        const key = stored?.[pid] || (pid === 'google' ? env.GOOGLE_GENERATIVE_AI_API_KEY : undefined);
-        if (typeof key === 'string' && key.trim().length > 0) {
-          nextProviderId = pid;
-          break;
-        }
-      }
+      const nextFallback = pickNextFallbackProvider(
+        userSettings.aiFallbackChain ?? [],
+        providerId,
+        decryptedByokKeys,
+        env.GOOGLE_GENERATIVE_AI_API_KEY,
+        routing.domain,
+      );
 
-      if (!nextProviderId) {
+      if (!nextFallback) {
         throw err;
       }
 
       console.warn(
-        `[ai] Fallback triggered! Provider "${providerId}" failed (${decision.reason}: ${decision.message}). Trying next fallback provider: "${nextProviderId}"`,
+        `[ai] Fallback triggered! Provider "${providerId}" failed (${decision.reason}: ${decision.message}). Trying next fallback provider: "${nextFallback.providerId}"`,
       );
 
       fallbackInfo = makeFallbackPart(
         currentModelOverride ?? `${providerId}:${bareModelId}`,
-        decision
+        decision,
       );
 
-      const nextSpec = BYOK_PROVIDERS[nextProviderId];
-      if (nextSpec && nextSpec.defaultModels.technical) {
-        currentModelOverride = `${nextProviderId}:${nextSpec.defaultModels.technical}`;
-      } else {
-        currentModelOverride = nextProviderId;
-      }
+      currentModelOverride = nextFallback.modelId
+        ? `${nextFallback.providerId}:${nextFallback.modelId}`
+        : nextFallback.providerId;
     }
   }
 
+  // All retry attempts exhausted without a successful stream — release the
+  // budget reservation we took at the top of the turn. Without this, repeated
+  // failures inflate daily_ai_spend and prematurely trip BudgetExceededError.
+  await applyBudgetDelta(userId, -reservedUsd).catch((err) =>
+    console.warn('[ai] failed to release budget reservation after exhausted retries', err),
+  );
   throw lastError ?? new Error('All fallback attempts failed');
 }
 
@@ -772,17 +738,7 @@ async function runAutoTitleBackground(args: {
       firstUser,
       firstAssistant,
       titleModelId,
-      env: {
-        AI_GATEWAY_API_KEY: env.AI_GATEWAY_API_KEY,
-        GOOGLE_GENERATIVE_AI_API_KEY: env.GOOGLE_GENERATIVE_AI_API_KEY,
-        GOOGLE_VERTEX_PROJECT: env.GOOGLE_VERTEX_PROJECT,
-        GOOGLE_VERTEX_LOCATION: env.GOOGLE_VERTEX_LOCATION,
-        GOOGLE_APPLICATION_CREDENTIALS_JSON: env.GOOGLE_APPLICATION_CREDENTIALS_JSON,
-        GOOGLE_APPLICATION_CREDENTIALS: env.GOOGLE_APPLICATION_CREDENTIALS,
-        AI_DEFAULT_MODEL: env.AI_DEFAULT_MODEL,
-        MAX_DAILY_USD: env.MAX_DAILY_USD,
-        LOG_PROMPTS: env.LOG_PROMPTS,
-      },
+      env: pickAiEnv(env),
     };
     if (signal) titleArgs.signal = signal;
     const titleResult = await generateTitle(titleArgs);
@@ -828,6 +784,53 @@ function countToolCalls(messages: readonly { content: unknown }[]): number {
 }
 
 // ---------------------------------------------------------------------------
+// P2-6 — Domain-to-model-tier mapping.
+//
+// Maps a routing domain to the corresponding ModelDomain tier.
+// 'generic' has no specific tier → falls back to 'technical'.
+// ---------------------------------------------------------------------------
+
+function toModelDomain(domain: RoutingDomain): ModelDomain {
+  return domain === 'generic' ? 'technical' : domain;
+}
+
+// ---------------------------------------------------------------------------
+// P2-8 — Shared fallback provider walker.
+//
+// Extracted from the two near-identical fallback blocks (resolution catch
+// and stream catch). Walks the user's aiFallbackChain past the current
+// provider, returns the first subsequent provider with a usable key.
+// Picks the domain-appropriate model tier (fundamental→pro, summary→cheap,
+// etc.) instead of always defaulting to 'technical'.
+// ---------------------------------------------------------------------------
+
+function pickNextFallbackProvider(
+  chain: string[],
+  currentProviderId: ProviderId | string | undefined,
+  decryptedByokKeys: ReturnType<typeof decryptByok> | null,
+  envGoogleKey: string | undefined,
+  routingDomain: RoutingDomain,
+): { providerId: ProviderId; modelId: string | null } | null {
+  const currentProvider: ProviderId | string = currentProviderId || 'google';
+  const idx = chain.indexOf(currentProvider);
+  const startIdx = idx === -1 ? -1 : idx;
+
+  for (let i = startIdx + 1; i < chain.length; i++) {
+    const pid = chain[i] as ProviderId;
+    const key = decryptedByokKeys?.[pid] || (pid === 'google' ? envGoogleKey : undefined);
+
+    if (typeof key === 'string' && key.trim().length > 0) {
+      const spec = BYOK_PROVIDERS[pid];
+      // Pick the domain-appropriate tier — not always 'technical'.
+      const tier = toModelDomain(routingDomain);
+      const modelId = spec?.defaultModels[tier] ?? spec?.defaultModels.technical ?? null;
+      return { providerId: pid, modelId };
+    }
+  }
+  return null;
+}
+
+// ---------------------------------------------------------------------------
 // F1 — Decision Signal Tracking helper.
 //
 // Extracts a directional signal from the assistant's response and persists
@@ -849,12 +852,34 @@ async function extractAndPersistSignal(
     snapshot: LiveSnapshot;
   },
 ): Promise<void> {
-  // Resolve the symbol from the snapshot prices (first available).
-  const symbolEntries = Object.entries(ctx.snapshot.prices);
-  if (symbolEntries.length === 0) return; // No price data — can't create a signal.
+  // Resolve the symbol using documented precedence:
+  //   (1) Symbol mentioned in the assistant's response text.
+  //   (2) First symbol found in the live snapshot prices.
+  const text = Array.isArray(uiMessage.parts)
+    ? uiMessage.parts
+        .filter((p) => (p as { type?: string }).type === 'text')
+        .map((p) => (p as { text: string }).text)
+        .join(' ')
+    : '';
+  const SUPPORTED = ['XAUUSD', 'EURUSD', 'GBPUSD'] as const;
+  let symbol: string | undefined;
+  for (const s of SUPPORTED) {
+    if (text.toUpperCase().includes(s)) {
+      symbol = s;
+      break;
+    }
+  }
 
-  // Pick the first symbol that has a price.
-  const [symbol, tick] = symbolEntries[0]!;
+  // Fall back to the first available symbol from the snapshot.
+  if (!symbol) {
+    const symbolEntries = Object.entries(ctx.snapshot.prices);
+    if (symbolEntries.length === 0) return;
+    const [firstSym, tick] = symbolEntries[0]!;
+    if (!tick || typeof tick.mid !== 'number') return;
+    symbol = firstSym;
+  }
+
+  const tick = ctx.snapshot.prices[symbol as keyof typeof ctx.snapshot.prices];
   if (!tick || typeof tick.mid !== 'number') return;
 
   const payload = extractDecisionSignal(uiMessage, {

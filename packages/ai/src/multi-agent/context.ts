@@ -35,6 +35,7 @@ function userContextFromSettings(displayName: string | null, settings: UserSetti
 export interface BuildContextArgs {
   symbol: string;
   userId: string;
+  threadId: string;
   userMessage: UIMessage;
   history: UIMessage[];
   userSettings: UserSettingsRow;
@@ -45,9 +46,9 @@ export interface BuildContextArgs {
 }
 
 export async function buildSharedContext(args: BuildContextArgs): Promise<SharedContext> {
-  const { symbol, userId, userMessage, history, userSettings, customInstructions, env, signal } = args;
+  const { symbol, userId, threadId, userMessage, history, userSettings, customInstructions, env, signal } = args;
   const snapshot = await buildLiveSnapshot({ signal: signal ?? undefined, userId });
-  const ctx: SharedContext = { symbol, snapshot, userSettings, userMessage, history, signal, env };
+  const ctx: SharedContext = { symbol, threadId, userId, snapshot, userSettings, userMessage, history, signal, env };
   if (customInstructions !== undefined) ctx.customInstructions = customInstructions;
   return ctx;
 }

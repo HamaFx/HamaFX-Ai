@@ -65,6 +65,10 @@ export interface AgentOpinion {
 export interface SharedContext {
   /** Trading symbol, e.g. 'XAUUSD'. */
   symbol: string;
+  /** Thread ID for tool context scoping. */
+  threadId: string;
+  /** User ID for tool context scoping. */
+  userId: string;
   /** Live snapshot from buildLiveSnapshot — prices, session, health. */
   snapshot: LiveSnapshot;
   /** User's settings row (for model overrides, custom instructions, etc.). */
@@ -125,6 +129,8 @@ export interface MultiAgentResult {
   totalLatencyMs: number;
   /** Resolved mode (never 'auto'). */
   mode: ResolvedMode;
+  /** ID of the persisted assistant message (for opinion linking + telemetry). */
+  messageId: string;
 }
 
 // ── Model Tier ──────────────────────────────────────────────────────────

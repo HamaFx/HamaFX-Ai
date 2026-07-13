@@ -17,7 +17,7 @@
 // Single source of truth for AI tool identifiers. Each value here:
 //   1. has an implementation in `packages/ai/src/tools/<name>.ts`
 //   2. is exported from the registry in `packages/ai/src/tools/index.ts`
-//   3. is referenced by docs/07-ai-agent.md § Tools
+//   3. is referenced by docs/03-ai-agent.md § "Tool Catalogue"
 // Adding a new entry without all three is a steering violation.
 //
 export const TOOL_NAMES = [

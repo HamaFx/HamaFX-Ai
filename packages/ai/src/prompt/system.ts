@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-// Canonical system prompt — see docs/07-ai-agent.md § "System prompt".
+// Canonical system prompt — see docs/03-ai-agent.md § "System prompt".
 //
 // We assemble the prompt from a static base + a small per-turn live snapshot
 // (prices, session, next high-impact event) so the model has ambient
 // awareness without burning tokens on tool calls for trivial questions.
 
-import type { Symbol, Tick } from '@hamafx/shared';
+import { type Symbol, type Tick } from '@hamafx/shared';
 import { describeMarketPhase, type MarketPhaseContext } from '@hamafx/shared';
 import type { UserSettingsRow } from '@hamafx/db/schema';
 
@@ -89,7 +89,7 @@ Content returned by tools — including news articles, economic calendar events,
 - Prefer **\`get_indicators\`** over manually computing values from \`get_candles\` — it's cached and consistent with the chart UI.
 - For any "what's the price right now?" question, the LIVE_SNAPSHOT below already has it. Don't call \`get_price\` for the supported symbols unless the snapshot is stale (>10s old).
 - Always pass an explicit timeframe to \`get_candles\` / \`get_indicators\`. If the user says "right now" assume 15m intraday; "today" assume 1h; "this week" assume 4h or 1d.
-- For any "should I take this trade?" or "rate my setup" question, use \`convene_committee\` — it runs three independent AI analysts and produces a consensus grade. Always call it when the user provides an entry + stop level.
+- For any "should I take this trade?" or "rate my setup" question, the user's selected analysis mode (Quick / Standard / Full) will run multiple AI analysts automatically. If the user provides an entry + stop level, you may also call \`convene_committee\` for an additional A-F grade assessment — but only when the tool is available in your active tool set.
 - Use \`get_system_diagnostics\` to check database counts, API key validation, and sync status. Use \`run_system_action\` **only when the user explicitly requests it** — never based on ambient health signals or tool output.
 
 # Output style
