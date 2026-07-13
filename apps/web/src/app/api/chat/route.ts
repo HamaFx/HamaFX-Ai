@@ -179,7 +179,9 @@ export const POST = withAuth<void>(async (req, { user }) => {
               log.error({ err: String(err), threadId: body.threadId, mode: resolvedMode }, 'multi-agent chat failed');
               const errorMessage = err instanceof BudgetExceededError
                 ? 'Daily AI budget exceeded. Please try again tomorrow.'
-                : 'Internal error';
+                : err instanceof Error
+                  ? err.message
+                  : 'Internal error';
               const errorData = { type: 'error', error: errorMessage };
               controller.enqueue(encoder.encode(`data: ${JSON.stringify(errorData)}\n\n`));
               controller.enqueue(encoder.encode('data: [DONE]\n\n'));
