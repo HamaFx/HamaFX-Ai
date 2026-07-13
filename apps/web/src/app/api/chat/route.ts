@@ -220,15 +220,22 @@ export const POST = withAuth<void>(async (req, { user }) => {
         req,
       );
     }
-    // OBS-01 (Phase 5.3): Log the error via pino before delegating to errorResponse
+    // OBS-01 (Phase 5.3): Log the error via pino.
     log.error({ err: String(err), threadId: body.threadId }, 'chat agent failed');
     // OBS-01 (Phase 5): Explicitly capture chat errors with chat-specific tags.
-    // errorResponse() captures with generic 'api' tags; this ensures the chat
-    // hot path is always visible in Sentry with the right component tag.
     Sentry.captureException(err, {
       tags: { component: 'chat', mode: 'single', route: '/api/chat' },
       extra: { threadId: body.threadId, userId: user.userId },
     });
-    return errorResponse(err, req);
+    // Surface the actual error message to the client instead of a generic
+    // "Internal error". The client's useChat/error handler shows err.message.
+    const message = err instanceof Error ? err.message : 'Internal error';
+    const requestId = req.headers.get('x-request-id');
+    const errorHeaders: Record<string, string> = {};
+    if (requestId) errorHeaders['x-request-id'] = requestId;
+    return Response.json(
+      { error: { code: 'CHAT_FAILED', message, ...(requestId ? { requestId } : {}) } },
+      { status: 500, headers: errorHeaders },
+    );
   }
 });
