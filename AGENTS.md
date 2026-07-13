@@ -62,6 +62,15 @@ pnpm --filter @hamafx/db migrate:gen     # generate from schema changes
 pnpm --filter @hamafx/db migrate:apply   # apply to DATABASE_URL
 # Vercel prod deploys run scripts/predeploy-migrate.mjs automatically.
 
+### Migration Rules (load-bearing — do NOT violate)
+
+- **Never run `drizzle-kit push` against production.** It drops columns/tables not in the schema (e.g., `tenant_id` on 10 global tables, `symbol_catalog.n_data_symbol`). Always use `migrate:gen` + `migrate:apply`.
+- **Never edit applied migration files.** Editing changes the SHA-256 hash, causing drizzle-kit to re-apply on the next deploy — typically failing on non-idempotent DDL. Create a NEW migration to fix issues.
+- **Always use a direct connection for migrations.** Use `DIRECT_URL` or `POSTGRES_URL_NON_POOLING` (port 5432), never the Supabase pooler (port 6543 / `DATABASE_URL`). PgBouncer in transaction mode silently drops DDL.
+- **All new migrations must be idempotent.** Use `IF NOT EXISTS` / `IF EXISTS` / `DO $$ ... IF NOT EXISTS ... $$` guards. A CI test verifies every migration can be applied twice against PGlite.
+- **Run `pnpm --filter @hamafx/db migrate:status` before deploying** to check for pending migrations.
+- **The tracking table is `drizzle.__drizzle_migrations`** (not `public`). The config pins `migrationsSchema: 'drizzle'`.
+
 # AI Evals (manual, not in CI)
 pnpm --filter @hamafx/ai eval -- --base-url http://localhost:3000 --cookie "authjs.session-token=..." --cases
 ```

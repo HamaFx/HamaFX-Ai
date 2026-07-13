@@ -25,6 +25,7 @@
 
 import { readFileSync, readdirSync, existsSync } from 'node:fs';
 import { join, dirname } from 'node:path';
+import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -75,18 +76,27 @@ async function checkDatabase() {
 
     try {
       const rows = await sql`
-        SELECT hash, created_at FROM "__drizzle_migrations" ORDER BY id
+        SELECT hash, created_at FROM drizzle."__drizzle_migrations" ORDER BY id
       `;
 
-      const appliedTags = new Set(rows.map((r) => r.hash));
-      const pending = journalEntries.filter((e) => !appliedTags.has(e.tag));
+      const appliedHashes = new Set(rows.map((r) => r.hash));
 
-      console.log(`\n   Database has ${appliedTags.size} applied migrations.\n`);
+      const pending = [];
+      for (const entry of journalEntries) {
+        const sqlPath = join(DRIZZLE_DIR, `${entry.tag}.sql`);
+        const fileContent = readFileSync(sqlPath);
+        const fileHash = createHash('sha256').update(fileContent).digest('hex');
+        if (!appliedHashes.has(fileHash)) {
+          pending.push({ tag: entry.tag, hash: fileHash });
+        }
+      }
+
+      console.log(`\n   Database has ${appliedHashes.size} applied migrations.\n`);
 
       if (pending.length > 0) {
         console.log('   Pending migrations:\n');
-        for (const entry of pending) {
-          console.log(`      -> ${entry.tag}`);
+        for (const { tag, hash } of pending) {
+          console.log(`      -> ${tag}  (hash: ${hash.substring(0, 12)}...)`);
         }
         console.log('\n   Run `pnpm migrate:apply` to apply pending migrations.\n');
       } else {

@@ -25,6 +25,7 @@
 // budget for marginal value — we already store 1m candles in
 // `candles_1m`, which covers the replay use cases.
 
+import { sql } from 'drizzle-orm';
 import { doublePrecision, pgTable, text, timestamp } from 'drizzle-orm/pg-core';
 
 export const liveTicks = pgTable('live_ticks', {
@@ -49,6 +50,7 @@ export const liveTicks = pgTable('live_ticks', {
    *   - 'alpha-vantage'    — last-resort
    */
   source: text('source').notNull(),
+  tenantId: text('tenant_id').default(sql`'__system__'`),
   /** Drizzle-managed; updated automatically on every UPSERT (see SQL migration). */
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 });

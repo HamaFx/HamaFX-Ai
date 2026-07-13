@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import { sql } from 'drizzle-orm';
 import { bigint, index, jsonb, pgTable, text, timestamp } from 'drizzle-orm/pg-core';
 
 /**
@@ -50,6 +51,7 @@ export const cotReports = pgTable(
     source: text('source').notNull(),
     /** Full provider row, kept for debugging and future column additions. */
     raw: jsonb('raw'),
+    tenantId: text('tenant_id').default(sql`'__system__'`),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   },
   (t) => [index('cot_reports_symbol_date_idx').on(t.symbol, t.reportDate)],

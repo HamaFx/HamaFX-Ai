@@ -44,6 +44,7 @@ export const newsArticles = pgTable(
       .array()
       .notNull()
       .default(sql`'{}'::text[]`),
+    tenantId: text('tenant_id').default(sql`'__system__'`),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   },
   (t) => [
@@ -70,6 +71,7 @@ export const newsEmbeddings = pgTable(
     /** Provider/model id, e.g. "openai/text-embedding-3-small". */
     model: text('model').notNull(),
     embedding: vector('embedding', { dimensions: 1536 }).notNull(),
+    tenantId: text('tenant_id').default(sql`'__system__'`),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   },
   // HNSW index for fast cosine similarity search.

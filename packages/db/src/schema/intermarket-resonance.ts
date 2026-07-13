@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-import { date, doublePrecision, pgTable, timestamp } from 'drizzle-orm/pg-core';
+import { sql } from 'drizzle-orm';
+import { date, doublePrecision, pgTable, text, timestamp } from 'drizzle-orm/pg-core';
 
 /**
  * Historical intermarket resonance timeseries (Proposal 3).
@@ -35,6 +36,7 @@ export const intermarketResonance = pgTable('intermarket_resonance', {
   goldClose: doublePrecision('gold_close'),
   /** Calculated divergence score (standardized gold vs yield divergence). */
   divergenceScore: doublePrecision('divergence_score'),
+  tenantId: text('tenant_id').default(sql`'__system__'`),
   /** Timestamp this observation row was written. */
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
 });

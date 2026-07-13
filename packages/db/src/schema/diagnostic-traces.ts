@@ -28,12 +28,15 @@ export const diagnosticTraces = pgTable(
     stepCount: integer('step_count').notNull().default(0),
     errorCount: integer('error_count').notNull().default(0),
     status: text('status', { enum: ['completed', 'failed'] }).notNull(),
-    trace: jsonb('trace').notNull(), // full exportDiagnosticContext() output
+    summary: text('summary'),
+    metadata: jsonb('metadata'),
+    trace: jsonb('trace'), // full exportDiagnosticContext() output (nullable in prod)
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   },
   (t) => [
-    index('diag_traces_user_id_idx').on(t.userId),
-    index('diag_traces_thread_id_idx').on(t.threadId),
-    index('diag_traces_started_at_idx').on(t.startedAt),
+    index('diagnostic_traces_user_id_idx').on(t.userId),
+    index('diagnostic_traces_thread_id_idx').on(t.threadId),
+    index('diagnostic_traces_started_at_idx').on(t.startedAt),
   ],
 );
 

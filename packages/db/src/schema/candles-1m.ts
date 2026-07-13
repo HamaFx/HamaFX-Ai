@@ -24,6 +24,7 @@
 // `snapshots` nightly job (Phase 8 PR-11). 14d × 3 symbols × 1440 bars =
 // 60,480 rows max — trivial.
 
+import { sql } from 'drizzle-orm';
 import {
   doublePrecision,
   integer,
@@ -54,6 +55,7 @@ export const candles1m = pgTable(
     tickVolume: integer('tick_volume').notNull(),
     /** Stable string. Defaults to 'biquote-signalr' from the aggregator. */
     source: text('source').notNull().default('biquote-signalr'),
+    tenantId: text('tenant_id').default(sql`'__system__'`),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   },
   (t) => [primaryKey({ columns: [t.symbol, t.t] })],

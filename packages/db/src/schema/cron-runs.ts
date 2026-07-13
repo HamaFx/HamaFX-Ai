@@ -29,6 +29,7 @@
 // `note` carries the last `JobResult.note` string (≤ 500 chars) or
 // the error message when status='error'.
 
+import { sql } from 'drizzle-orm';
 import { pgTable, text, date, timestamp, index, primaryKey } from 'drizzle-orm/pg-core';
 
 export const cronRuns = pgTable(
@@ -40,6 +41,7 @@ export const cronRuns = pgTable(
       .notNull()
       .default('started'),
     note: text('note'),
+    tenantId: text('tenant_id').default(sql`'__system__'`),
     startedAt: timestamp('started_at', { withTimezone: true, mode: 'date' })
       .notNull()
       .defaultNow(),

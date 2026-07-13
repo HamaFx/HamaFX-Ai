@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import { sql } from 'drizzle-orm';
 import { doublePrecision, index, pgTable, text, timestamp } from 'drizzle-orm/pg-core';
 
 /**
@@ -44,6 +45,7 @@ export const economicEvents = pgTable(
      * (only patch rows where this is null on the next run).
      */
     actualsFilledAt: timestamp('actuals_filled_at', { withTimezone: true }),
+    tenantId: text('tenant_id').default(sql`'__system__'`),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   },
   (t) => [

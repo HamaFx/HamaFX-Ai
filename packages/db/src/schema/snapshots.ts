@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import { sql } from 'drizzle-orm';
 import { index, jsonb, pgTable, text, timestamp, unique, uuid } from 'drizzle-orm/pg-core';
 
 /**
@@ -31,6 +32,7 @@ export const snapshots = pgTable(
     asOf: timestamp('as_of', { withTimezone: true }).notNull(),
     /** Free-form JSON: { high, low, open, close, pivot, r1, s1, atr, ... } */
     data: jsonb('data').notNull(),
+    tenantId: text('tenant_id').default(sql`'__system__'`),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   },
   (t) => [

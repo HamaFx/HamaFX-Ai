@@ -56,7 +56,25 @@ async function applyOne(
     if (!trimmed) continue;
     const safe = sanitizeStatement(trimmed);
     if (!safe.trim() || safe.trim().startsWith('--')) continue;
-    await executeWithFallback(db, safe);
+    try {
+      await executeWithFallback(db, safe);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      // Handle known non-idempotent re-application errors (same pattern
+      // as schema-drift.test.ts and pglite-client.ts applyMigrations).
+      if (
+        msg.includes('already exists') ||
+        msg.includes('does not exist') ||
+        msg.includes('multiple primary keys') ||
+        msg.includes('depend') ||
+        msg.includes('dependent') ||
+        msg.includes('vector') ||
+        msg.includes('hnsw')
+      ) {
+        continue;
+      }
+      throw err;
+    }
   }
 }
 

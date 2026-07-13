@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import { sql } from 'drizzle-orm';
 import { boolean, integer, pgTable, real, text } from 'drizzle-orm/pg-core';
 
 export const symbolCatalog = pgTable('symbol_catalog', {
@@ -27,11 +28,13 @@ export const symbolCatalog = pgTable('symbol_catalog', {
   biquoteSymbol: text('biquote_symbol'),
   binanceSymbol: text('binance_symbol'),
   finnhubSymbol: text('finnhub_symbol'),
+  nDataSymbol: text('n_data_symbol'),
   pipSize: real('pip_size'),
   priceDecimals: integer('price_decimals'),
   currencyTags: text('currency_tags').array(),
   isActive: boolean('is_active').default(true),
   sortOrder: integer('sort_order').default(0),
+  tenantId: text('tenant_id').default(sql`'__system__'`),
 });
 
 export type SymbolCatalogRow = typeof symbolCatalog.$inferSelect;
