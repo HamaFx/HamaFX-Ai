@@ -18,6 +18,8 @@ import { redirect } from 'next/navigation';
 
 import {
   getLatestBriefing,
+  getPortfolioRiskReport,
+  getPortfolioSettings,
   listAlerts,
   listEntries,
   listRecentArticles,
@@ -47,9 +49,11 @@ export default async function DashboardPage() {
     listEntries(userId, { limit: 50 }),
     listRecentArticles(30),
     getLatestBriefing(userId),
+    getPortfolioRiskReport(userId),
+    getPortfolioSettings(userId),
   ]);
 
-  const [alertsR, eventsR, entriesR, newsR, briefingR] = settled;
+  const [alertsR, eventsR, entriesR, newsR, briefingR, riskR, settingsR] = settled;
 
   // Narrow helpers — never throw on a single failed source.
   const unwrap = <T,>(r: PromiseSettledResult<T>, fallback: T): T =>
@@ -60,6 +64,16 @@ export default async function DashboardPage() {
   const entries = unwrap(entriesR, []);
   const news = unwrap(newsR, []);
   const briefing = unwrap(briefingR, null);
+  const portfolioRisk = unwrap(riskR, null);
+  const portfolioSettings = unwrap(settingsR, null);
+
+  // Compute margin usage for the leverage gauge
+  const marginUsagePct =
+    portfolioRisk?.totalExposurePct ?? 0;
+  const marginDetail =
+    portfolioSettings?.accountBalance != null
+      ? `$${portfolioRisk?.totalExposureUsd?.toLocaleString(undefined, { maximumFractionDigits: 0 }) ?? '0'} / $${portfolioSettings.accountBalance.toLocaleString()} account`
+      : null;
 
   // Phase 5.6 — per-source error flags for widget error states.
   // Extract a useful error message from rejected promises (reason
@@ -73,6 +87,8 @@ export default async function DashboardPage() {
     entries: entriesR.status === 'rejected' ? reasonMsg(entriesR.reason) : null,
     news: newsR.status === 'rejected' ? reasonMsg(newsR.reason) : null,
     briefing: briefingR.status === 'rejected' ? reasonMsg(briefingR.reason) : null,
+    risk: riskR.status === 'rejected' ? reasonMsg(riskR.reason) : null,
+    settings: settingsR.status === 'rejected' ? reasonMsg(settingsR.reason) : null,
   };
   const hasAnyError = Object.values(fetchErrors).some(Boolean);
 
@@ -92,6 +108,8 @@ export default async function DashboardPage() {
       briefing={briefing}
       fetchErrors={fetchErrors}
       hasAnyError={hasAnyError}
+      marginUsagePct={marginUsagePct}
+      marginDetail={marginDetail}
     />
   );
 }

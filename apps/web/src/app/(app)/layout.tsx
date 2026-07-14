@@ -35,6 +35,7 @@ import { NavDrawerProvider } from '@/components/layout/nav-drawer-context';
 import { OfflineBanner } from '@/components/layout/offline-banner';
 import { SkipToContent } from '@/components/layout/skip-to-content';
 import { TopBar } from '@/components/layout/top-bar';
+import { TickerTape } from '@/components/layout/ticker-tape';
 import { CommandPalette, InstallNudge } from '@/components/layout/lazy-chrome';
 import { MotionRoot } from '@/components/ui/motion-config';
 import { Toaster } from '@/components/ui/toaster';
@@ -75,9 +76,10 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   return (
     <MotionRoot>
       <NavDrawerProvider>
-        <div className="bg-bg-base text-fg relative min-h-svh">
+        <div className="bg-bg text-fg relative min-h-svh">
           <SkipToContent />
           <TopBar />
+          <TickerTape />
           <main
             id="main-content"
             tabIndex={-1}

@@ -558,7 +558,7 @@ export function ChatScreen({
   }
 
   return (
-    <div className="bg-bg-base paint-isolated fixed inset-0 z-50 flex flex-col xl:grid xl:grid-cols-12 xl:h-screen xl:w-full xl:overflow-hidden">
+    <div className="bg-bg paint-isolated fixed inset-0 z-50 flex flex-col xl:grid xl:grid-cols-12 xl:h-screen xl:w-full xl:overflow-hidden">
       <ChatTopBar
         threadId={threadId}
         title={title}

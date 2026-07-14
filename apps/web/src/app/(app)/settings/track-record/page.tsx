@@ -94,7 +94,7 @@ function TrackRecordContent({ stats }: { stats: SignalStats }) {
             {stats.byModel.map((m: { model: string; hitRate: number; count: number }) => (
               <div key={m.model} className="flex items-center gap-3">
                 <span className="text-sm text-fg-subtle w-32 truncate">{m.model}</span>
-                <div className="flex-1 h-6 bg-bg-elev-1-elevated rounded-sm overflow-hidden">
+                <div className="flex-1 h-6 bg-bg-elev-1 rounded-sm overflow-hidden">
                   <div
                     className="h-full bg-fg rounded-sm transition-all"
                     style={{ width: `${m.hitRate * 100}%` }}
@@ -118,7 +118,7 @@ function TrackRecordContent({ stats }: { stats: SignalStats }) {
             {stats.byHorizon.map((h: { horizon: string; hitRate: number; count: number }) => (
               <div key={h.horizon} className="flex items-center gap-3">
                 <span className="text-sm text-fg-subtle w-20">{h.horizon}</span>
-                <div className="flex-1 h-6 bg-bg-elev-1-elevated rounded-sm overflow-hidden">
+                <div className="flex-1 h-6 bg-bg-elev-1 rounded-sm overflow-hidden">
                   <div
                     className="h-full bg-fg rounded-sm transition-all"
                     style={{ width: `${h.hitRate * 100}%` }}
@@ -142,7 +142,7 @@ function TrackRecordContent({ stats }: { stats: SignalStats }) {
             {stats.byAction.map((a: { action: string; hitRate: number; count: number }) => (
               <div key={a.action} className="flex items-center gap-3">
                 <span className="text-sm text-fg-subtle w-20 uppercase">{a.action}</span>
-                <div className="flex-1 h-6 bg-bg-elev-1-elevated rounded-sm overflow-hidden">
+                <div className="flex-1 h-6 bg-bg-elev-1 rounded-sm overflow-hidden">
                   <div
                     className="h-full bg-fg rounded-sm transition-all"
                     style={{ width: `${a.hitRate * 100}%` }}

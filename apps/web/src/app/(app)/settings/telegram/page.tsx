@@ -66,7 +66,7 @@ export default async function TelegramSettingsPage() {
             { cmd: '/help', desc: 'List all commands' },
           ].map((item) => (
             <div key={item.cmd} className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3">
-              <code className="rounded-sm bg-bg-elev-1-elevated px-2 py-0.5 font-mono text-xs whitespace-nowrap sm:w-64">
+              <code className="rounded-sm bg-bg-elev-2 px-2 py-0.5 font-mono text-xs whitespace-nowrap sm:w-64">
                 {item.cmd}
               </code>
               <span className="text-fg-subtle">{item.desc}</span>

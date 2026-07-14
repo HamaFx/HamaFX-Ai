@@ -28,8 +28,8 @@
 //     on focus (desktop only — hidden on touch).
 //   - Image thumbnail rail is keyboard-focusable for delete.
 
-import {IconArrowUp, IconPhotoPlus, IconMicrophone, IconSquare} from '@tabler/icons-react';
-import { useEffect, useRef, useState } from 'react';
+import {IconArrowUp, IconPhotoPlus, IconMicrophone, IconSquare, IconChartBar, IconNotebook, IconSettings, IconTerminal2} from '@tabler/icons-react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, m } from 'motion/react';
 import { toast } from 'sonner';
 
@@ -66,6 +66,47 @@ interface ComposerProps {
 const DEFAULT_LANG = 'en-US';
 const MAX_IMAGES = 4;
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
+
+// Slash commands for CLI-style chat composer.
+interface SlashCommand {
+  command: string;
+  description: string;
+  icon: React.ReactNode;
+  /** Placeholder text inserted when the command is selected. */
+  placeholder: string;
+  /** If true, selecting this command navigates rather than typing. */
+  action?: 'navigate';
+  href?: string;
+}
+
+const SLASH_COMMANDS: SlashCommand[] = [
+  {
+    command: '/chart',
+    description: 'Open chart for a symbol',
+    icon: <IconChartBar className="size-4" />,
+    placeholder: '/chart XAUUSD',
+  },
+  {
+    command: '/journal',
+    description: 'Draft a journal entry (buy/sell, symbol, R)',
+    icon: <IconNotebook className="size-4" />,
+    placeholder: '/journal buy XAUUSD 2R',
+  },
+  {
+    command: '/settings',
+    description: 'Open settings page',
+    icon: <IconSettings className="size-4" />,
+    placeholder: '/settings',
+    action: 'navigate',
+    href: '/settings',
+  },
+  {
+    command: '/analyze',
+    description: 'Run full AI analysis on a symbol',
+    icon: <IconTerminal2 className="size-4" />,
+    placeholder: '/analyze XAUUSD',
+  },
+];
 // MAX_TEXT_CHARS and SOFT_LIMIT_CHARS are imported from ./composer-helpers
 // so the thresholds can be unit-tested and shared with the route layer if
 // the cap ever needs server-side enforcement.
@@ -83,8 +124,10 @@ export function Composer({
   const [focused, setFocused] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const [isTouch, setIsTouch] = useState(false);
+  const [slashIndex, setSlashIndex] = useState(-1);
   const ref = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const slashMenuRef = useRef<HTMLDivElement>(null);
 
   // Detect touch once on mount so we can hide desktop-only affordances.
   // Using pointer: coarse correctly targets mobile devices and ignores touch-enabled laptops.
@@ -116,6 +159,33 @@ export function Composer({
     },
   });
 
+  // Slash command detection & filtering.
+  const slashActive = value.startsWith('/') && value.length < 40;
+  const slashQuery = slashActive ? value.slice(1).toLowerCase() : '';
+  const filteredCommands = useMemo(() => {
+    if (!slashActive) return [];
+    if (!slashQuery) return SLASH_COMMANDS;
+    return SLASH_COMMANDS.filter((c) =>
+      c.command.toLowerCase().includes(slashQuery),
+    );
+  }, [slashActive, slashQuery]);
+
+  function selectSlashCommand(cmd: SlashCommand) {
+    if (cmd.action === 'navigate' && cmd.href) {
+      window.location.href = cmd.href;
+      return;
+    }
+    setValue(cmd.placeholder);
+    setSlashIndex(-1);
+    // Place cursor at the end.
+    requestAnimationFrame(() => {
+      if (ref.current) {
+        const len = cmd.placeholder.length;
+        ref.current.setSelectionRange(len, len);
+      }
+    });
+  }
+
   function send() {
     const trimmed = value.trim();
     if (!trimmed || disabled || isStreaming) return;
@@ -123,10 +193,19 @@ export function Composer({
       setError(`Message too long (max ${MAX_TEXT_CHARS} chars)`);
       return;
     }
+    // If a slash-command action is selected, trigger it.
+    if (slashActive && slashIndex >= 0 && slashIndex < filteredCommands.length) {
+      const cmd = filteredCommands[slashIndex];
+      if (cmd) {
+        selectSlashCommand(cmd);
+        return;
+      }
+    }
     onSubmit(trimmed, images);
     setValue('');
     setImages([]);
     setError(null);
+    setSlashIndex(-1);
     if (!isTouch) {
       requestAnimationFrame(() => ref.current?.focus());
     }
@@ -274,9 +353,9 @@ export function Composer({
     <div className="sticky bottom-0 px-3 pb-[max(env(safe-area-inset-bottom),12px)] transition-all duration-300 w-full max-w-4xl mx-auto z-20">
       <form
         className={cn(
-          'bg-bg-elev-1 border border-border relative flex w-full flex-col overflow-hidden rounded-sm shadow-md transition-all duration-300',
-          focused && 'border-border',
-          dragOver && 'ring-2 ring-inset ring-border',
+          'bg-bg-elev-1 border border-border relative flex w-full flex-col overflow-hidden rounded-sm shadow-md transition-all duration-150 ease-in-out',
+          focused && 'border-brand/15',
+          dragOver && 'ring-2 ring-inset ring-brand/15',
         )}
         onSubmit={(e) => {
           e.preventDefault();
@@ -328,6 +407,60 @@ export function Composer({
           <p id="composer-error" role="alert" className="text-danger px-5 pt-2 text-xs">
             {error}
           </p>
+        ) : null}
+
+        {/* Slash command autocomplete dropdown */}
+        {slashActive && filteredCommands.length > 0 ? (
+          <div
+            ref={slashMenuRef}
+            role="listbox"
+            aria-label="Slash commands"
+            className="border-t border-border bg-bg-elev-2 px-2 py-1.5"
+          >
+            <p className="text-caption text-fg-subtle px-2 pb-1 font-mono uppercase tracking-wider">
+              Commands
+            </p>
+            {filteredCommands.map((cmd, i) => (
+              <button
+                key={cmd.command}
+                type="button"
+                role="option"
+                aria-selected={slashIndex === i}
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  selectSlashCommand(cmd);
+                }}
+                onMouseEnter={() => setSlashIndex(i)}
+                className={cn(
+                  'flex w-full items-center gap-3 rounded-sm px-2 py-2 text-left text-sm transition-colors',
+                  slashIndex === i
+                    ? 'bg-brand text-brand-fg'
+                    : 'text-fg-muted hover:bg-bg-elev-3 hover:text-fg',
+                )}
+              >
+                <span
+                  className={cn(
+                    'flex size-7 items-center justify-center rounded-sm',
+                    slashIndex === i ? 'text-brand-fg' : 'text-fg-subtle',
+                  )}
+                >
+                  {cmd.icon}
+                </span>
+                <div className="flex min-w-0 flex-1 flex-col">
+                  <span className="font-mono text-xs font-semibold">{cmd.command}</span>
+                  <span className="text-caption truncate opacity-70">{cmd.description}</span>
+                </div>
+                <kbd
+                  className={cn(
+                    'hidden rounded-sm border px-1.5 font-mono text-caption sm:inline',
+                    slashIndex === i ? 'border-brand-fg/30' : 'border-border',
+                  )}
+                >
+                  ⏎
+                </kbd>
+              </button>
+            ))}
+          </div>
         ) : null}
 
         {/* Textarea & Actions Row */}
@@ -390,7 +523,7 @@ export function Composer({
               aria-label="Chat message input"
               aria-describedby={error ? 'composer-error' : undefined}
               value={value}
-              onChange={(e) => setValue(e.target.value)}
+
               onFocus={() => setFocused(true)}
               onBlur={() => setFocused(false)}
               onPaste={handlePaste}
@@ -404,9 +537,56 @@ export function Composer({
                 '[field-sizing:content]',
               )}
               onKeyDown={(e) => {
+                // Slash command menu navigation
+                if (slashActive && filteredCommands.length > 0) {
+                  if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    setSlashIndex((prev) =>
+                      prev < filteredCommands.length - 1 ? prev + 1 : 0,
+                    );
+                    return;
+                  }
+                  if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    setSlashIndex((prev) =>
+                      prev > 0 ? prev - 1 : filteredCommands.length - 1,
+                    );
+                    return;
+                  }
+                  if (e.key === 'Escape') {
+                    e.preventDefault();
+                    setSlashIndex(-1);
+                    return;
+                  }
+                  if (e.key === 'Tab') {
+                    e.preventDefault();
+                    // Select the first/highlighted command on Tab.
+                    const idx = slashIndex >= 0 ? slashIndex : 0;
+                    const cmd = filteredCommands[idx];
+                    if (cmd) selectSlashCommand(cmd);
+                    return;
+                  }
+                }
                 if (e.key === 'Enter' && !e.shiftKey) {
                   e.preventDefault();
+                  // If a slash command is highlighted, select it.
+                  if (slashActive && slashIndex >= 0 && slashIndex < filteredCommands.length) {
+                    const cmd = filteredCommands[slashIndex];
+                    if (cmd) {
+                      selectSlashCommand(cmd);
+                      return;
+                    }
+                  }
                   send();
+                }
+              }}
+              onChange={(e) => {
+                setValue(e.target.value);
+                // Reset slash index when value changes
+                if (!e.target.value.startsWith('/')) {
+                  setSlashIndex(-1);
+                } else if (slashIndex >= filteredCommands.length) {
+                  setSlashIndex(-1);
                 }
               }}
             />

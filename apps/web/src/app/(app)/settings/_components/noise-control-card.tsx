@@ -306,7 +306,7 @@ export function NoiseControlCard({ initialConfig }: { initialConfig?: NoiseConfi
                 'rounded-sm px-3 py-1 text-xs font-medium transition-colors',
                 config.minSeverity === opt.value
                   ? 'bg-fg text-white'
-                  : 'bg-bg-elev-1-elevated text-fg-muted hover:text-fg',
+                  : 'bg-bg-elev-2 text-fg-muted hover:text-fg',
               )}
             >
               {opt.label}
@@ -331,7 +331,7 @@ export function NoiseControlCard({ initialConfig }: { initialConfig?: NoiseConfi
                   'rounded-sm px-3 py-1 text-xs font-medium transition-colors',
                   config.minSeverityDuringQuietHours === opt.value
                     ? 'bg-fg text-white'
-                    : 'bg-bg-elev-1-elevated text-fg-muted hover:text-fg',
+                    : 'bg-bg-elev-2 text-fg-muted hover:text-fg',
                 )}
               >
                 {opt.label}

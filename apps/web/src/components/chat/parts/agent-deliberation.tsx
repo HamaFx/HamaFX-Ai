@@ -31,9 +31,9 @@
 // The props interface is unchanged from the previous flat version so
 // `chat-screen.tsx` needs no edits.
 
-import { IconAlertCircle,  IconAlertTriangle,  IconRobot,  IconCpu,  IconCircleCheck,  IconNews,  IconShield,  IconTrendingUp } from '@tabler/icons-react';
+import { IconAlertCircle,  IconAlertTriangle,  IconRobot,  IconCpu,  IconCircleCheck,  IconNews,  IconShield,  IconTrendingUp,  IconTerminal2 } from '@tabler/icons-react';
 import { AnimatePresence, m } from 'motion/react';
-import type { ReactNode } from 'react';
+import { useMemo, type ReactNode } from 'react';
 
 import { cn } from '@/lib/cn';
 
@@ -108,6 +108,11 @@ export function AgentDeliberation({ agents, mode }: AgentDeliberationProps) {
         <IconCpu className="size-3.5" />
         <span>Multi-Agent {mode} mode</span>
       </div>
+
+      {/* Zone 0 — ASCII terminal telemetry log (replaces generic loading) */}
+      {!allDone ? (
+        <TelemetryLog agents={agents} />
+      ) : null}
 
       {/* Zone 1 — Agent ring */}
       <div className="flex flex-wrap items-start justify-center gap-3">
@@ -309,6 +314,99 @@ function ConnectorLines({ agents }: { agents: AgentProgress[] }) {
         />
       ))}
     </svg>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// TelemetryLog — ASCII terminal-style streaming status panel.
+// Renders CLI branch lines with status tags and a blinking cursor.
+// ---------------------------------------------------------------------------
+
+function TelemetryLog({ agents }: { agents: AgentProgress[] }) {
+  const lines = useMemo(() => {
+    const result: Array<{ line: string; tone: string }> = [];
+
+    // Header
+    result.push({ line: 'agent committee · session active', tone: 'text-fg-subtle' });
+    result.push({ line: '', tone: '' });
+
+    for (let i = 0; i < agents.length; i++) {
+      const a = agents[i]!;
+      const meta = AGENT_META[a.agentName] ?? FALLBACK_META;
+      const isLast = i === agents.length - 1;
+      const branch = isLast ? '└─' : '├─';
+
+      let statusTag: string;
+      let statusTone: string;
+      switch (a.status) {
+        case 'pending':
+          statusTag = '[ PENDING ]';
+          statusTone = 'text-fg-subtle/50';
+          break;
+        case 'running':
+          statusTag = '[ RUNNING ]';
+          statusTone = 'text-fg-subtle';
+          break;
+        case 'done':
+          statusTag = '[ COMPLETED ]';
+          statusTone = 'text-brand';
+          break;
+        case 'error':
+          statusTag = '[ FAILED ]';
+          statusTone = 'text-danger';
+          break;
+      }
+
+      const label = meta.label.padEnd(13, ' ');
+      result.push({
+        line: `${branch} ${label} ${statusTag}`,
+        tone: statusTone,
+      });
+    }
+
+    // Fusion line
+    const hasRunning = agents.some((a) => a.status === 'running');
+    const doneCount = agents.filter((a) => a.status === 'done').length;
+    if (hasRunning) {
+      result.push({ line: ' │', tone: 'text-fg-subtle' });
+      result.push({
+        line: ` └─► fusion engine  [ RUNNING ]`,
+        tone: 'text-fg-subtle',
+      });
+    } else if (doneCount > 0 && agents.some((a) => a.status !== 'done' && a.status !== 'error')) {
+      result.push({ line: ' │', tone: 'text-fg-subtle' });
+      result.push({
+        line: ` └─► fusion engine  [ WAITING ]`,
+        tone: 'text-fg-subtle/50',
+      });
+    }
+
+    return result;
+  }, [agents]);
+
+  return (
+    <div className="bg-[#050505] border border-border rounded-sm overflow-hidden">
+      <div className="flex items-center gap-2 border-b border-border px-3 py-2">
+        <IconTerminal2 className="size-3 text-fg-subtle" />
+        <span className="text-caption text-fg-subtle font-mono uppercase tracking-wider">
+          System Telemetry
+        </span>
+      </div>
+      <div className="px-3 py-2 font-mono text-xs leading-[1.6] select-none overflow-x-auto">
+        {lines.map((l, i) => {
+          if (!l.line) return <div key={i} className="h-1" />;
+          return (
+            <div key={i} className={l.tone || 'text-fg-subtle'}>
+              {l.line}
+            </div>
+          );
+        })}
+        {/* Blinking cursor — only shown while agents are actively running */}
+        {agents.some((a) => a.status === 'running') ? (
+          <span className="terminal-cursor text-fg-subtle">_</span>
+        ) : null}
+      </div>
+    </div>
   );
 }
 

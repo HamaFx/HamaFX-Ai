@@ -147,7 +147,7 @@ function PortfolioContent({
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-border bg-bg-elev-1-elevated">
+                <tr className="border-b border-border bg-bg-elev-1">
                   <th className="text-left py-2 px-4 text-fg-muted font-medium">Symbol</th>
                   <th className="text-left py-2 px-4 text-fg-muted font-medium">Direction</th>
                   <th className="text-right py-2 px-4 text-fg-muted font-medium">Lots</th>
@@ -230,7 +230,7 @@ function PortfolioContent({
             {riskReport.concentration.map((c) => (
               <div key={c.symbol} className="flex items-center gap-3">
                 <span className="text-sm text-fg w-20">{c.symbol}</span>
-                <div className="flex-1 h-2 bg-bg-elev-1-elevated rounded-sm overflow-hidden">
+                <div className="flex-1 h-2 bg-bg-elev-1 rounded-sm overflow-hidden">
                   <div
                     className={cn(
                       'h-full rounded-sm',

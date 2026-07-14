@@ -53,10 +53,10 @@ export const colors = {
 export type ColorToken = keyof typeof colors;
 
 export const radii = {
-  sm: '6px',
-  md: '10px',
-  lg: '16px',
-  xl: '22px',
+  sm: '2px',
+  md: '2px',
+  lg: '2px',
+  xl: '2px',
 } as const;
 
 export const motion = {

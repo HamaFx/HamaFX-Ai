@@ -33,7 +33,7 @@ import { IconEye, IconRefresh, IconAlertTriangle } from '@tabler/icons-react';
 import type { Symbol, Tick } from '@hamafx/shared';
 import { priceDecimals } from '@hamafx/shared';
 
-import { Sparkline } from '@/components/ui/sparkline';
+import { SparklineCanvas } from '@/components/ui/sparkline-canvas';
 import { usePrices } from '@/hooks/use-prices';
 import { cn } from '@/lib/cn';
 
@@ -169,13 +169,13 @@ function WatchRow({
       </div>
       <div className="flex items-center gap-3">
         {buf.length >= 2 ? (
-          <Sparkline
+          <SparklineCanvas
             values={buf}
-            className={cn('h-4 w-16', isBull ? 'text-bull' : 'text-bear')}
+            tone={isBull ? 'bull' : 'bear'}
             label={`${tick.symbol} trend`}
           />
         ) : (
-          <div className="h-4 w-16" aria-hidden />
+          <div className="h-6 w-16" aria-hidden />
         )}
         <span
           className={cn(

@@ -355,9 +355,36 @@ html {
   to { transform: rotate(360deg); }
 }
 
+@keyframes ticker-scroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.ticker-track {
+  display: flex;
+  width: max-content;
+  animation: ticker-scroll 60s linear infinite;
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ticker-track {
+    animation: none;
+  }
+}
+
 .agent-ring-active {
   background: conic-gradient(from 0deg, #FAFAFA, transparent, #FAFAFA);
   animation: spin-ring 2s linear infinite;
+}
+
+@keyframes blink-cursor {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}
+
+.terminal-cursor {
+  animation: blink-cursor 1s step-end infinite;
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -207,9 +207,9 @@ export function TelegramLinkCard(): React.JSX.Element {
         <div className="space-y-3">
           <p className="text-sm text-fg-subtle">
             Your Telegram account is connected. You can use bot commands like{' '}
-            <code className="rounded-sm bg-bg-elev-1-elevated px-1 py-0.5 text-xs">/price</code>,{' '}
-            <code className="rounded-sm bg-bg-elev-1-elevated px-1 py-0.5 text-xs">/analyze</code>,{' '}
-            <code className="rounded-sm bg-bg-elev-1-elevated px-1 py-0.5 text-xs">/ask</code>, and more.
+            <code className="rounded-sm bg-bg-elev-2 px-1 py-0.5 text-xs">/price</code>,{' '}
+            <code className="rounded-sm bg-bg-elev-2 px-1 py-0.5 text-xs">/analyze</code>,{' '}
+            <code className="rounded-sm bg-bg-elev-2 px-1 py-0.5 text-xs">/ask</code>, and more.
           </p>
           <a
             href={`https://t.me/HamaFXBot`}
@@ -269,7 +269,7 @@ export function TelegramLinkCard(): React.JSX.Element {
           ) : (
               <div className="space-y-3">
                 {/* Link code display */}
-                <div className="rounded-sm border border-border bg-bg-elev-1-elevated p-4 space-y-2">
+                <div className="rounded-sm border border-border bg-bg-elev-2 p-4 space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="text-xs text-fg-subtle">Your link code</span>
                     <span className="text-xs text-fg-subtle">

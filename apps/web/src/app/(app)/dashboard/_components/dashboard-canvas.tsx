@@ -59,6 +59,7 @@ import type {
 
 import { Button } from '@/components/ui/button';
 import { useConfirm } from '@/components/ui/confirm-drawer';
+import { LeverageGauge } from '@/components/ui/leverage-gauge';
 import {
   DEFAULT_LAYOUT,
   LAYOUT_STORAGE_KEY,
@@ -107,6 +108,10 @@ interface DashboardCanvasProps {
   entries: readonly JournalEntry[];
   news: readonly NewsArticle[];
   briefing: BriefingData;
+  /** Portfolio margin usage percentage for the leverage gauge. */
+  marginUsagePct?: number;
+  /** Formatted detail string for the leverage gauge, e.g. "$12,450 / $50,000". */
+  marginDetail?: string | null;
   /** Phase 5.6 — per-source error messages; null means fetch succeeded. */
   fetchErrors?: {
     alerts: string | null;
@@ -114,6 +119,8 @@ interface DashboardCanvasProps {
     entries: string | null;
     news: string | null;
     briefing: string | null;
+    risk?: string | null;
+    settings?: string | null;
   };
   hasAnyError?: boolean;
 }
@@ -131,7 +138,7 @@ const ALL_WIDGETS: WidgetType[] = [
   'news-pulse',
 ];
 
-export function DashboardCanvas(props: DashboardCanvasProps) {
+export function DashboardCanvas({ marginUsagePct = 0, marginDetail, ...props }: DashboardCanvasProps) {
   const [layout, setLayout, hydrated] = useLocalStorage<WidgetConfig[]>(
     LAYOUT_STORAGE_KEY,
     DEFAULT_LAYOUT,
@@ -218,9 +225,10 @@ export function DashboardCanvas(props: DashboardCanvasProps) {
   return (
     <div className="flex flex-col gap-4">
       {/* Header / controls */}
-      <div className="flex items-center justify-between gap-2">
-        <h1 className="text-fg text-xl font-bold tracking-tight">Dashboard</h1>
-        <div className="flex items-center gap-2">
+      <div className="flex flex-col gap-3">
+        <div className="flex items-center justify-between gap-2">
+          <h1 className="text-fg text-xl font-bold tracking-tight">Dashboard</h1>
+          <div className="flex items-center gap-2">
           {editMode && hidden.length > 0 ? (
             <AddWidgetMenu
               hidden={hidden}
@@ -252,6 +260,16 @@ export function DashboardCanvas(props: DashboardCanvasProps) {
             <IconAdjustmentsHorizontal className="size-4" />
             {editMode ? 'Done' : 'Customize'}
           </Button>
+        </div>
+        </div>
+
+        {/* ASCII leverage gauge — summary row below header */}
+        <div className="rounded-sm border border-border bg-bg-elev-1 px-4 py-3">
+          <LeverageGauge
+            usagePct={marginUsagePct}
+            label="Exposure"
+            detail={marginDetail ?? 'Connect your MT5 account to see live margin data'}
+          />
         </div>
       </div>
 
