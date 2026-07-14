@@ -19,12 +19,10 @@
 
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
-import { IconCreditCard } from '@tabler/icons-react';
 
 import { auth } from '@/auth';
 import { getDb, schema } from '@hamafx/db';
 import { eq, desc } from 'drizzle-orm';
-import { SettingsSection } from '../_components/settings-section';
 import { BillingPlans } from './_components/billing-plans';
 import { PaymentHistory } from './_components/payment-history';
 import { SubscriptionStatus } from './_components/subscription-status';
@@ -50,22 +48,21 @@ export default async function BillingPage() {
   const currentPlan = subscription ? allPlans.find((p) => p.id === subscription.planId) ?? null : null;
 
   return (
-    <div className="flex flex-col gap-8">
-      <SettingsSection
-        icon={<IconCreditCard className="size-4" />}
-        title="Billing"
-        description="Manage your subscription and payment method."
-      >
-        <SubscriptionStatus
-          subscription={subscription ? JSON.parse(JSON.stringify(subscription)) : null}
-          currentPlan={currentPlan ? JSON.parse(JSON.stringify(currentPlan)) : null}
-        />
-        <BillingPlans
-          plans={JSON.parse(JSON.stringify(allPlans))}
-          currentPlanId={subscription?.planId ?? null}
-        />
-        <PaymentHistory payments={JSON.parse(JSON.stringify(payments))} />
-      </SettingsSection>
+    <div className="flex flex-col gap-6 max-w-2xl">
+      <div className="flex flex-col gap-1">
+        <h2 className="text-fg text-lg font-semibold tracking-tight">Billing</h2>
+        <p className="text-fg-subtle text-sm">Manage your subscription and payment method.</p>
+      </div>
+
+      <SubscriptionStatus
+        subscription={subscription ? JSON.parse(JSON.stringify(subscription)) : null}
+        currentPlan={currentPlan ? JSON.parse(JSON.stringify(currentPlan)) : null}
+      />
+      <BillingPlans
+        plans={JSON.parse(JSON.stringify(allPlans))}
+        currentPlanId={subscription?.planId ?? null}
+      />
+      <PaymentHistory payments={JSON.parse(JSON.stringify(payments))} />
     </div>
   );
 }

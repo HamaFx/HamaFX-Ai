@@ -18,7 +18,7 @@
 
 import { useActionState, useEffect } from 'react';
 import { toast } from 'sonner';
-import {IconAlertTriangle, IconMail, IconArrowRight} from '@tabler/icons-react';
+import {IconAlertTriangle, IconMail, IconBrandTelegram} from '@tabler/icons-react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -125,10 +125,10 @@ export function UsageLimitsForm({
               className="size-4 accent-brand rounded-sm border-border cursor-pointer"
             />
             <div className="flex items-center gap-2">
-              <IconArrowRight className="size-4 text-fg-subtle" />
+              <IconBrandTelegram className="size-4 text-fg-subtle" />
               <div className="flex flex-col">
                 <span className="text-xs font-semibold text-fg">Telegram Alerts</span>
-                <span className="text-xs text-fg-subtle mt-0.5">Alerts via Telegram IconRobot</span>
+                <span className="text-xs text-fg-subtle mt-0.5">Alerts via Telegram bot</span>
               </div>
             </div>
           </label>
@@ -187,7 +187,7 @@ export function UsageLimitsForm({
 
       <div className="flex justify-end border-t border-border pt-4">
         <Button type="submit" loading={pending} className="min-w-[120px]">
-          IconDeviceFloppy Changes
+          Save Changes
         </Button>
       </div>
     </form>

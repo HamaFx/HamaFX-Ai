@@ -172,11 +172,7 @@ export function AIPrefsCard({ initialCustomInstructions }: { initialCustomInstru
       </header>
 
       <p className="text-fg-muted text-xs">
-        To pick which AI model handles each kind of turn, use{' '}
-        <Link href="/settings/models" className="text-fg hover:underline">
-          Settings → Models
-        </Link>
-        .        The choices there are server-side and apply to every chat turn.
+        Model choices are server-side and apply to every chat turn. Use the header link above to manage which models handle each kind of analysis.
       </p>
 
       <div className="flex flex-col gap-2 pt-1 pb-1">

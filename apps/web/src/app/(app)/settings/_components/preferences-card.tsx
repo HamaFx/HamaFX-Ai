@@ -25,6 +25,7 @@ import { Segmented } from '@/components/ui/segmented';
 import { Switch } from '@/components/ui/switch';
 
 import { SettingsRow } from './settings-row';
+import { RowDivider } from './row-divider';
 import { updateUIPrefsAction } from '../actions';
 
 interface Prefs {
@@ -174,8 +175,4 @@ export function PreferencesCard({
       />
     </section>
   );
-}
-
-function RowDivider() {
-  return <div className="border-border -mx-4 my-1 border-t" />;
 }

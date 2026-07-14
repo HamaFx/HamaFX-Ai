@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-// IconSettings island for Telegram test message. Uses sonner toasts for
+// Settings island for Telegram test message. Uses sonner toasts for
 // confirmation/error rather than inline status text.
 
 import { IconArrowRight } from '@tabler/icons-react';

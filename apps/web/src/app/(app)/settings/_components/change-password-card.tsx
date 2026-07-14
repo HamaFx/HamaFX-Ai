@@ -17,7 +17,7 @@ export function ChangePasswordCard() {
   const [changing, setChanging] = useState(false);
   const [done, setDone] = useState(false);
 
-  // Reset success state when dialog unmounts/remounts
+  // Reset success state on unmount
   useEffect(() => {
     return () => { setDone(false); };
   }, []);
@@ -49,10 +49,10 @@ export function ChangePasswordCard() {
   };
 
   return (
-    <div className="surface-panel p-4">
+    <div className="border border-border bg-bg-elev-1 rounded-sm flex flex-col gap-3 p-4">
       <div className="flex items-center gap-2">
         <IconLock className="text-fg-muted size-4" />
-        <h2 className="text-fg text-sm font-semibold">Change Password</h2>
+        <h2 className="text-fg text-base font-semibold tracking-tight">Change Password</h2>
       </div>
 
       {done ? (

@@ -23,10 +23,10 @@ export default async function ProfileSettingsPage() {
   if (!session) redirect('/login');
 
   return (
-    <div className="flex flex-col gap-6 max-w-xl">
-      <div>
-        <h2 className="text-lg font-semibold text-fg">Profile</h2>
-        <p className="text-sm text-fg-subtle">Manage your public profile and identity.</p>
+    <div className="flex flex-col gap-6 max-w-2xl">
+      <div className="flex flex-col gap-1">
+        <h2 className="text-fg text-lg font-semibold tracking-tight">Profile</h2>
+        <p className="text-fg-subtle text-sm">Manage your public profile and identity.</p>
       </div>
 
       <ProfileForm

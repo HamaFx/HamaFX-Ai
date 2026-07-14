@@ -545,7 +545,7 @@ export function SymbolsForm({ initialSymbols, catalog }: SymbolsFormProps) {
           </div>
         </div>
 
-        {/* Watchlist IconSearch */}
+        {/* Watchlist Search */}
         <div className="relative">
           <IconSearch className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-fg-muted" />
           <Input
@@ -556,7 +556,7 @@ export function SymbolsForm({ initialSymbols, catalog }: SymbolsFormProps) {
           />
         </div>
 
-        {/* Watchlist Table/IconList */}
+        {/* Watchlist Table/List */}
         <div className="flex flex-col gap-2">
           {filteredWatchlist.length > 0 && (
             <div className="flex items-center justify-between px-3 py-1.5 text-caption text-fg-subtle border-b border-border">
@@ -641,7 +641,7 @@ export function SymbolsForm({ initialSymbols, catalog }: SymbolsFormProps) {
           ))}
         </div>
 
-        {/* Catalog IconSearch & Bulk Add */}
+        {/* Catalog Search & Bulk Add */}
         <div className="flex flex-col sm:flex-row gap-2">
           <div className="relative flex-1">
             <IconSearch className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-fg-muted" />
@@ -671,7 +671,7 @@ export function SymbolsForm({ initialSymbols, catalog }: SymbolsFormProps) {
           </div>
         </div>
 
-        {/* Available Symbols IconList */}
+        {/* Available Symbols List */}
         <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2 min-h-[120px] pr-1">
           {paginatedCatalog.map((item) => (
             <li

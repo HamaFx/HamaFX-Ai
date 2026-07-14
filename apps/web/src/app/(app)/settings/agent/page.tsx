@@ -31,6 +31,7 @@ import { IconSettings } from '@tabler/icons-react';
 import { DisabledToolsForm } from './_components/disabled-tools-form';
 import { AnalysisModeForm } from './_components/analysis-mode-form';
 import { AgentModelOverrideForm } from './_components/agent-model-override-form';
+import { AIPrefsCard } from '../_components/ai-prefs-card';
 
 export const revalidate = 60;
 
@@ -50,6 +51,7 @@ export default async function AgentCataloguePage() {
       defaultAnalysisMode: schema.userSettings.defaultAnalysisMode,
       showAgentOpinions: schema.userSettings.showAgentOpinions,
       agentModelOverrides: schema.userSettings.agentModelOverrides,
+      customInstructions: schema.userSettings.customInstructions,
     })
     .from(schema.userSettings)
     .where(eq(schema.userSettings.userId, session.user.id));
@@ -60,6 +62,8 @@ export default async function AgentCataloguePage() {
   const agentModelOverrides = (settings?.agentModelOverrides as {
     technical?: string; fundamental?: string; risk?: string; sentiment?: string; decision?: string;
   } | null) ?? {};
+
+  const customInstructions = settings?.customInstructions ?? null;
 
   // Build the provider+model list for the override dropdowns.
   const providerModelList = BYOK_PROVIDERS_LIST.map((p) => ({
@@ -76,22 +80,24 @@ export default async function AgentCataloguePage() {
   const totalFailures = entries.reduce((s, e) => s + e.failures24h, 0);
 
   return (
-    <main className="mx-auto flex w-full max-w-2xl flex-col gap-6 px-4 py-4">
-      <header className="flex items-baseline justify-between gap-2">
-        <h1 className="text-fg text-xl font-bold">Agent</h1>
+    <div className="flex flex-col gap-6 max-w-2xl">
+      <div className="flex flex-col gap-1">
+        <h2 className="text-fg text-lg font-semibold tracking-tight">Agent</h2>
+        <p className="text-fg-subtle text-sm">
+          Every tool the agent can call. Counts and latencies come from{' '}
+          <code className="bg-bg-elev-2 text-fg rounded-sm px-1.5 py-0.5 font-mono text-xs">
+            chat_tool_telemetry
+          </code>{' '}
+          over the last 24 hours.
+        </p>
+      </div>
+
+      <div className="flex items-baseline justify-between gap-2">
         <span className="text-fg-subtle text-body-sm tabular-nums">
           last 24h · {totalInvocations} invocation{totalInvocations === 1 ? '' : 's'} ·{' '}
           {totalFailures} failure{totalFailures === 1 ? '' : 's'}
         </span>
-      </header>
-
-      <p className="text-fg-muted text-sm">
-        Every tool the agent can call. Counts and latencies come from{' '}
-        <code className="bg-bg-elev-2 text-fg rounded-sm px-1.5 py-0.5 font-mono text-xs">
-          chat_tool_telemetry
-        </code>{' '}
-        over the last 24 hours.
-      </p>
+      </div>
 
       <ul className="flex flex-col gap-2">
         {entries.map((e) => (
@@ -121,6 +127,8 @@ export default async function AgentCataloguePage() {
 
       <AgentModelOverrideForm initialOverrides={agentModelOverrides} providers={providerModelList} />
 
+      <AIPrefsCard initialCustomInstructions={customInstructions} />
+
       <section aria-labelledby="disabled-tools-heading" className="flex flex-col gap-3">
         <header className="flex items-center gap-2">
           <IconSettings className="size-4 text-fg-muted" />
@@ -137,7 +145,7 @@ export default async function AgentCataloguePage() {
           initialDisabledTools={disabledTools}
         />
       </section>
-    </main>
+    </div>
   );
 }
 

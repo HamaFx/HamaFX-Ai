@@ -44,14 +44,14 @@ export default async function TrackRecordPage() {
 function TrackRecordContent({ stats }: { stats: SignalStats }) {
   if (stats.total === 0) {
     return (
-      <div className="flex flex-col gap-6">
-        <div>
-          <h2 className="text-xl font-semibold text-fg">AI Track Record</h2>
-          <p className="mt-1 text-sm text-fg-subtle">
-            Every time the AI makes a directional recommendation, we track it and
-            later evaluate whether it was correct against actual price movement.
-          </p>
-        </div>
+    <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-1">
+        <h2 className="text-fg text-lg font-semibold tracking-tight">AI Track Record</h2>
+        <p className="text-fg-subtle text-sm">
+          Every time the AI makes a directional recommendation, we track it and
+          later evaluate whether it was correct against actual price movement.
+        </p>
+      </div>
         <EmptyState
           icon={<IconTarget className="size-8" />}
           title="No signals yet"
@@ -66,10 +66,9 @@ function TrackRecordContent({ stats }: { stats: SignalStats }) {
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Header */}
-      <div>
-        <h2 className="text-xl font-semibold text-fg">AI Track Record</h2>
-        <p className="mt-1 text-sm text-fg-subtle">
+      <div className="flex flex-col gap-1">
+        <h2 className="text-fg text-lg font-semibold tracking-tight">AI Track Record</h2>
+        <p className="text-fg-subtle text-sm">
           Accountability through transparency — see how the AI&apos;s predictions perform.
         </p>
       </div>

@@ -48,7 +48,7 @@ export async function AboutCard() {
     >
       <header className="flex items-center gap-3 pb-2">
         <h2 id="about-heading" className="text-fg text-base font-semibold tracking-tight">
-          Session
+          About
         </h2>
       </header>
 
@@ -63,7 +63,7 @@ export async function AboutCard() {
           when the user can name the exact build they're on. */}
       <div className="border-border -mx-4 mt-2 flex flex-col gap-1 border-t px-4 pt-3 text-caption">
         <p className="text-fg-subtle tabular-nums">
-          Build {buildId ?? 'unknown'} · Next.js 15 · Vercel deploy
+          Build {buildId ?? 'unknown'}
         </p>
         <p className="text-fg-subtle/70">
           XAUUSD · EURUSD · GBPUSD — personal copilot

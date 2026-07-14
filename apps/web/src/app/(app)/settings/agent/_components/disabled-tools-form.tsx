@@ -67,7 +67,7 @@ export function DisabledToolsForm({
       </div>
       <div className="flex justify-end">
         <Button type="submit" loading={pending} className="min-w-[120px]">
-          IconDeviceFloppy Changes
+          Save Changes
         </Button>
       </div>
     </form>

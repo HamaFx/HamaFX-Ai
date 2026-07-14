@@ -90,7 +90,7 @@ export function ExportImportKeys() {
     <details className="border border-border bg-bg-elev-1 rounded-sm overflow-hidden mt-2">
       <summary aria-label="Toggle backup and key migration section" className="cursor-pointer select-none px-4 py-3 flex items-center justify-between gap-3 hover:bg-bg-elev-2 transition-colors">
         <div className="flex flex-col">
-          <span className="text-sm font-medium text-fg">Backup & IconKey Migration</span>
+          <span className="text-sm font-medium text-fg">Backup & Key Migration</span>
           <span className="text-caption text-fg-subtle">
             Export your encrypted API keys for backup, or import them on another device.
           </span>

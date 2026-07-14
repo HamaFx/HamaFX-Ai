@@ -3,7 +3,7 @@
 import { usePathname } from 'next/navigation';
 import {IconArrowLeft, IconChevronRight} from '@tabler/icons-react';
 import { Link } from 'next-view-transitions';
-import {IconUser, IconKey, IconList, IconActivity, IconSettings, IconCpu, IconRobot, IconTarget, IconWallet, IconMessageCircle, IconCreditCard} from '@tabler/icons-react';
+import {IconUser, IconKey, IconList, IconActivity, IconSettings, IconCpu, IconRobot, IconTarget, IconWallet, IconMessageCircle, IconCreditCard, IconShield, IconBell, IconPalette, IconDatabase} from '@tabler/icons-react';
 import { cn } from '@/lib/cn';
 
 const NAV_ITEMS = [
@@ -13,6 +13,10 @@ const NAV_ITEMS = [
   { href: '/settings/models', label: 'Models', icon: IconCpu },
   { href: '/settings/agent', label: 'Agent', icon: IconRobot },
   { href: '/settings/symbols', label: 'Symbols', icon: IconList },
+  { href: '/settings/security', label: 'Security', icon: IconShield },
+  { href: '/settings/notifications', label: 'Notifications', icon: IconBell },
+  { href: '/settings/appearance', label: 'Appearance', icon: IconPalette },
+  { href: '/settings/data', label: 'Data', icon: IconDatabase },
   { href: '/settings/usage', label: 'Usage', icon: IconActivity },
   { href: '/settings/track-record', label: 'Track Record', icon: IconTarget },
   { href: '/settings/portfolio', label: 'Portfolio', icon: IconWallet },

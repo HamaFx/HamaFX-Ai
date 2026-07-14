@@ -19,7 +19,6 @@ import { redirect } from 'next/navigation';
 import { IconMessageCircle } from '@tabler/icons-react';
 
 import { auth } from '@/auth';
-import { PageHeader } from '@/components/layout/page-header';
 import { TelegramLinkCard } from '../_components/telegram-link-card';
 import { TestTelegramButton } from '../_components/test-telegram-button';
 
@@ -29,23 +28,23 @@ export default async function TelegramSettingsPage() {
   const session = await auth();
   if (!session?.user?.id) redirect('/login');
   return (
-    <div className="space-y-6">
-      <PageHeader
-        title="Telegram Bot"
-        description="Link your Telegram to control HamaFX with bot commands."
-      />
+    <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-1">
+        <h2 className="text-fg text-lg font-semibold tracking-tight">Telegram Bot</h2>
+        <p className="text-fg-subtle text-sm">Link your Telegram to control HamaFX with bot commands.</p>
+      </div>
 
       <section className="rounded-sm border border-border bg-bg-elev-1 p-6 space-y-4">
         <div className="flex items-center gap-2">
           <IconMessageCircle className="size-5 text-fg" />
-          <h2 className="text-lg font-semibold">Bot Linking</h2>
+          <h3 className="text-base font-semibold">Bot Linking</h3>
         </div>
 
         <TelegramLinkCard />
       </section>
 
       <section className="rounded-sm border border-border bg-bg-elev-1 p-6 space-y-4">
-        <h2 className="text-sm font-semibold text-fg-subtle">Test Notification</h2>
+        <h3 className="text-sm font-semibold text-fg-subtle">Test Notification</h3>
         <p className="text-sm text-fg-subtle">
           Send a test message to verify your Telegram bot is configured correctly.
         </p>
@@ -53,7 +52,7 @@ export default async function TelegramSettingsPage() {
       </section>
 
       <section className="rounded-sm border border-border bg-bg-elev-1 p-6 space-y-3">
-        <h2 className="text-sm font-semibold text-fg-subtle">Available Commands</h2>
+        <h3 className="text-sm font-semibold text-fg-subtle">Available Commands</h3>
         <div className="grid gap-2 text-sm">
           {[
             { cmd: '/price <symbol>', desc: 'Get current price (e.g. /price XAUUSD)' },

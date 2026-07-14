@@ -59,9 +59,9 @@ function PortfolioContent({
   if (positions.length === 0 && !settings.accountBalance) {
     return (
       <div className="flex flex-col gap-6">
-        <div>
-          <h2 className="text-xl font-semibold text-fg">Portfolio</h2>
-          <p className="mt-1 text-sm text-fg-subtle">
+        <div className="flex flex-col gap-1">
+          <h2 className="text-fg text-lg font-semibold tracking-tight">Portfolio</h2>
+          <p className="text-fg-subtle text-sm">
             Track your forex and gold positions with live P&amp;L, risk analysis, and
             AI-aware position sizing advice.
           </p>
@@ -69,7 +69,7 @@ function PortfolioContent({
         <EmptyState
           icon={<IconWallet />}
           title="No positions yet"
-          description="Add a position to start tracking your portfolio P&L and risk metrics. The AI can also see your positions when giving trading advice."
+          description="Portfolio positions are synced from your MT5/MT4 terminal via the HamaBridge EA. Once set up, open positions and risk metrics will appear here automatically."
         />
       </div>
     );
@@ -77,9 +77,9 @@ function PortfolioContent({
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h2 className="text-xl font-semibold text-fg">Portfolio</h2>
-        <p className="mt-1 text-sm text-fg-subtle">
+      <div className="flex flex-col gap-1">
+        <h2 className="text-fg text-lg font-semibold tracking-tight">Portfolio</h2>
+        <p className="text-fg-subtle text-sm">
           Open positions, live P&amp;L, and risk analysis.
         </p>
       </div>
@@ -253,9 +253,10 @@ function PortfolioContent({
         </div>
       )}
 
-      {/* Account IconSettings */}
+      {/* Account Settings */}
       <div className="rounded-sm border border-border bg-bg-elev-1 p-4">
-        <h3 className="text-sm font-semibold text-fg mb-3">Account IconSettings</h3>
+        <h3 className="text-sm font-semibold text-fg mb-3">Account Settings</h3>
+        <p className="text-xs text-fg-subtle mb-3">These values are synced from your linked MT5 account and are read-only here.</p>
         <dl className="grid grid-cols-2 gap-4 text-sm">
           <div>
             <dt className="text-fg-muted">Account Balance</dt>

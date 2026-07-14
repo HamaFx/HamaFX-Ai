@@ -147,7 +147,7 @@ export function MarketDataConfig({ initialProvider, finnhubKeySet }: MarketDataC
               <span className="text-xs text-fg-subtle leading-normal">{p.description}</span>
               {p.warn && (
                 <span className="text-xs text-warn font-semibold mt-1">
-                  ⚠️ Note: Finnhub API IconKey is not set above. Please add it to enable this provider.
+                  ⚠️ Note: Finnhub API key is not set above. Please add it to enable this provider.
                 </span>
               )}
             </div>
@@ -188,7 +188,7 @@ export function MarketDataConfig({ initialProvider, finnhubKeySet }: MarketDataC
         </Button>
 
         <Button type="submit" loading={pending} className="min-w-[120px]" size="sm">
-          IconDeviceFloppy Provider
+          Save Provider
         </Button>
       </div>
     </form>

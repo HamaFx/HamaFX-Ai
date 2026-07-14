@@ -15,7 +15,7 @@ interface SaveBarProps {
   ) => Promise<SaveKeysResult>;
   /**
    * When the user landed here from /chat with `?prompt=…`, show a
-   * "Skip and continue" link alongside the IconDeviceFloppy button.
+   * "Skip and continue" link alongside the Save button.
    */
   preservedPrompt?: string;
   /**
@@ -127,7 +127,7 @@ export function SaveBar({ action, preservedPrompt, children }: SaveBarProps) {
           ) : (
             <>
               <IconDeviceFloppy size={16} aria-hidden="true" />
-              IconDeviceFloppy Keys
+              Save Keys
             </>
           )}
         </Button>

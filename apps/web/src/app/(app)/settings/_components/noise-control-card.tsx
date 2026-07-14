@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-// F4 — Noise Control IconSettings Card
+// F4 — Noise Control Settings Card
 //
 // Client component for configuring notification noise control:
 // quiet hours, min severity, cooldown, dedup TTL, and daily digest mode.
@@ -60,36 +60,76 @@ export function NoiseControlCard({ initialConfig }: { initialConfig?: NoiseConfi
     },
   );
   const [saving, setSaving] = useState(false);
-  const savingRef = useRef(false);
+  const savingInFlight = useRef(false);
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [preview, setPreview] = useState<DigestPreview | null>(null);
   const [previewLoading, setPreviewLoading] = useState(false);
+  const previewTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Debounced save: fires 300ms after config stops changing
+  // Debounced save: fires 300ms after config stops changing.
+  // If a save is already in flight, schedule a trailing save for when it finishes.
+  // performSave and fetchPreview are intentionally not in the dep array — they're
+  // stable (useCallback with correct deps) and we clear the timer on cleanup.
   useEffect(() => {
-    if (savingRef.current) return;
-    const timer = setTimeout(() => {
-      setSaving(true);
-      savingRef.current = true;
-      fetch('/api/notifications/noise-config', {
-        method: 'PUT',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify(config),
-      })
-        .then(() => { setSaving(false); savingRef.current = false; })
-        .catch(() => { setSaving(false); savingRef.current = false; });
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    saveTimerRef.current = setTimeout(() => {
+      performSave();
     }, 300);
-    return () => clearTimeout(timer);
+    return () => {
+      if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [config]);
 
-  // Fetch preview when config changes
-  useEffect(() => {
-    setPreviewLoading(true);
-    fetch('/api/alerts/preview-digest')
-      .then((r) => r.ok ? r.json() : null)
-      .then((data) => setPreview(data))
-      .catch(() => setPreview(null))
-      .finally(() => setPreviewLoading(false));
+  const performSave = useCallback(() => {
+    // Queue a trailing save if one is already in flight
+    if (savingInFlight.current) {
+      saveTimerRef.current = setTimeout(() => performSave(), 100);
+      return;
+    }
+    setSaving(true);
+    savingInFlight.current = true;
+    const configToSave = config;
+    fetch('/api/notifications/noise-config', {
+      method: 'PUT',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(configToSave),
+    })
+      .then(() => {
+        setSaving(false);
+        savingInFlight.current = false;
+        // Fetch preview after successful save
+        fetchPreview();
+      })
+      .catch(() => {
+        setSaving(false);
+        savingInFlight.current = false;
+      });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [config]);
+
+  // Debounced preview fetch (only after saves, not on every keystroke)
+  const fetchPreview = useCallback(() => {
+    if (previewTimerRef.current) clearTimeout(previewTimerRef.current);
+    previewTimerRef.current = setTimeout(() => {
+      setPreviewLoading(true);
+      fetch('/api/alerts/preview-digest')
+        .then((r) => r.ok ? r.json() : null)
+        .then((data) => setPreview(data))
+        .catch(() => setPreview(null))
+        .finally(() => setPreviewLoading(false));
+    }, 500);
+  }, []);
+
+  // Fetch preview once on mount
+  useEffect(() => {
+    fetchPreview();
+    return () => {
+      if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+      if (previewTimerRef.current) clearTimeout(previewTimerRef.current);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const update = useCallback(
     (updates: Partial<NoiseConfig>) => {
@@ -123,6 +163,7 @@ export function NoiseControlCard({ initialConfig }: { initialConfig?: NoiseConfi
           <div className="flex items-center gap-2">
             <IconChartBar className="size-4 text-fg" />
             <span className="text-sm font-semibold text-fg">Alert preview</span>
+            <span className="text-xs text-fg-subtle">(based on saved settings)</span>
             {previewLoading && <span className="text-xs text-fg-muted">Refreshing…</span>}
           </div>
           <div className="grid grid-cols-3 gap-4 text-center">

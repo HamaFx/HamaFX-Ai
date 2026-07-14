@@ -457,7 +457,7 @@ export function ApiKeyCard({ provider, currentValue, health, usage, keyUpdatedAt
       {test.kind === 'ok' && dirty ? (
         <div className="flex items-center gap-2 text-xs text-success">
           <IconCircleCheck className="size-3.5 shrink-0" />
-          <span>New value passes validation. Click IconDeviceFloppy to apply.</span>
+          <span>New value passes validation. Click Save to apply.</span>
         </div>
       ) : null}
 

@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-// IconSettings island for Resend email test. Uses sonner toasts for
+// Settings island for Resend email test. Uses sonner toasts for
 // confirmation/error rather than inline status text.
 
 import { IconMail } from '@tabler/icons-react';

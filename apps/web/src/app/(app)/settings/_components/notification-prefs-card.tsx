@@ -83,9 +83,9 @@ export function NotificationPrefsCard({
             <tr className="border-b border-border">
               <th className="text-left py-2 pr-4 text-fg-muted font-medium">Event type</th>
               {CHANNELS.map((ch) => (
-                <th key={ch.key} className="text-center py-2 px-3 text-fg-muted font-medium">
+                <th key={ch.key} className="text-center py-2 px-3 text-caption font-semibold text-fg-muted uppercase tracking-wider">
                   <ch.icon className="size-4 mx-auto" aria-hidden="true" />
-                  <span className="sr-only">{ch.label}</span>
+                  <span className="block text-caption mt-0.5">{ch.label}</span>
                 </th>
               ))}
             </tr>

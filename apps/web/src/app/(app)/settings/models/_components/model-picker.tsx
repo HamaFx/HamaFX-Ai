@@ -238,7 +238,7 @@ export function ModelPicker({
               href="/settings/api-keys"
               className="text-fg hover:underline"
             >
-              IconSettings → API Keys
+              Settings → API Keys
             </a>{' '}
             {NO_PROVIDERS_COPY[kind]}.
           </p>

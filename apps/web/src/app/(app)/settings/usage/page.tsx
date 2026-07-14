@@ -140,7 +140,11 @@ export default async function UsagePage() {
   });
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-1">
+        <h2 className="text-fg text-lg font-semibold tracking-tight">Usage</h2>
+        <p className="text-fg-subtle text-sm">Token spend, daily-budget gauge, model breakdown, and recent turns.</p>
+      </div>
       <BudgetCard
         stats={stats}
         maxDailyUsd={maxDailyUsd}
@@ -200,7 +204,7 @@ function BudgetCard({
   monthlySpend: number;
   monthlyLimit: number | null;
 }) {
-  const pct = Math.min(100, (stats.todayUsd / maxDailyUsd) * 100);
+  const pct = maxDailyUsd > 0 ? Math.min(100, (stats.todayUsd / maxDailyUsd) * 100) : 0;
   const tone = pct >= 90 ? 'danger' : pct >= 60 ? 'warn' : 'success';
   const toneClass = tone === 'danger' ? 'bg-danger' : tone === 'warn' ? 'bg-warn' : 'bg-success';
 

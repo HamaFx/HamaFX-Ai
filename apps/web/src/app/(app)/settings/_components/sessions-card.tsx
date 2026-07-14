@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { useConfirm } from '@/components/ui/confirm-drawer';
 import { listSessionsAction, revokeSessionAction, signOutEverywhereAction } from '../actions';
 import { SettingsRow } from './settings-row';
+import { RowDivider } from './row-divider';
 
 interface Session {
   id: string;
@@ -151,7 +152,7 @@ export function SessionsCard() {
 
       {sessions.length > 0 && (
         <>
-          <hr className="border-border my-2" />
+          <RowDivider />
           <SettingsRow
             icon={<IconLogout className="size-4" />}
             label="Sign out everywhere"

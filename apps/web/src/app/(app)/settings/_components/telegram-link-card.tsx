@@ -16,8 +16,8 @@
  * limitations under the License.
  */
 
-// IconSettings island for linking/unlinking Telegram bot.
-// Phase 7D — IconSettings & Polish.
+// Settings island for linking/unlinking Telegram bot.
+// Phase 7D — Settings & Polish.
 
 import {IconCheck, IconLink, IconLoader2, IconUnlink, IconCopy, IconRefresh, IconExternalLink} from '@tabler/icons-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -218,7 +218,7 @@ export function TelegramLinkCard(): React.JSX.Element {
             className="inline-flex items-center gap-1.5 text-xs text-fg hover:text-fg/80 font-semibold transition-colors"
           >
             <IconExternalLink className="size-3" />
-            Open HamaFX IconRobot on Telegram
+            Open HamaFX Bot on Telegram
           </a>
           <Button
             type="button"
@@ -239,7 +239,7 @@ export function TelegramLinkCard(): React.JSX.Element {
         /* Not linked state */
         <div className="space-y-3">
           <p className="text-sm text-fg-subtle">
-            IconLink your Telegram to control HamaFX from your phone with bot commands.
+            Link your Telegram to control HamaFX from your phone with bot commands.
           </p>
 
           <a
@@ -249,7 +249,7 @@ export function TelegramLinkCard(): React.JSX.Element {
             className="inline-flex items-center gap-1.5 text-xs text-fg hover:text-fg/80 font-semibold transition-colors"
           >
             <IconExternalLink className="size-3" />
-            Open HamaFX IconRobot on Telegram
+            Open HamaFX Bot on Telegram
           </a>
 
           {!linkCode ? (
@@ -292,7 +292,7 @@ export function TelegramLinkCard(): React.JSX.Element {
                     </Button>
                   </div>
                   <p className="text-xs text-fg-subtle">
-                    IconArrowRight{' '}
+                    Send{' '}
                     <code className="font-mono">/link {linkCode.code}</code>{' '}
                     to the HamaFX bot on Telegram.
                   </p>
@@ -303,7 +303,7 @@ export function TelegramLinkCard(): React.JSX.Element {
                     className="inline-flex items-center gap-1.5 text-xs text-fg hover:text-fg/80 font-semibold transition-colors"
                   >
                     <IconExternalLink className="size-3" />
-                    Open HamaFX IconRobot on Telegram
+                    Open HamaFX Bot on Telegram
                   </a>
                 </div>
 

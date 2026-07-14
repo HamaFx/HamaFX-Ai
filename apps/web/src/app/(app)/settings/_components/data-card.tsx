@@ -31,6 +31,7 @@ import { useConfirm } from '@/components/ui/confirm-drawer';
 
 import { clearChatHistoryAction, deleteAccountAction, exportDataAction } from '../actions';
 import { SettingsRow } from './settings-row';
+import { RowDivider } from './row-divider';
 
 const KEY_BOOKMARKS = 'hamafx:news:bookmarks';
 const KEY_PREFS = 'hamafx:prefs';
@@ -287,7 +288,7 @@ export function DataCard() {
         }
       />
 
-      <hr className="border-border my-3" />
+      <RowDivider />
 
       {/* Delete account */}
       <div className="flex flex-col gap-3">
@@ -356,8 +357,4 @@ export function DataCard() {
       {confirmEl}
     </section>
   );
-}
-
-function RowDivider() {
-  return <div className="border-border -mx-4 my-1 border-t" />;
 }
