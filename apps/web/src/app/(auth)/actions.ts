@@ -21,7 +21,7 @@ const PASSWORD_MAX = 128; // P2-4: bcrypt truncates at 72 bytes, but 128 is a re
  * P2-7: Centralized redirect sanitizer. Blocks open redirects via
  * protocol-relative URLs, backslashes, and encoded // sequences.
  */
-export function sanitizeNext(next: string | undefined | null): string {
+export async function sanitizeNext(next: string | undefined | null): string {
   if (typeof next !== 'string' || next.length === 0) return '/chat';
   if (next.length > 500) return '/chat';
   if (!next.startsWith('/')) return '/chat';

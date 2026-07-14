@@ -173,36 +173,36 @@ describe('bcrypt cost parsing (FEAT-05 gradual re-hashing)', () => {
 });
 
 describe('sanitizeNext (P2-7)', () => {
-  it('preserves safe relative paths', () => {
-    expect(sanitizeNext('/settings')).toBe('/settings');
-    expect(sanitizeNext('/chat')).toBe('/chat');
+  it('preserves safe relative paths', async () => {
+    expect(await sanitizeNext('/settings')).toBe('/settings');
+    expect(await sanitizeNext('/chat')).toBe('/chat');
   });
 
-  it('blocks protocol-relative URLs', () => {
-    expect(sanitizeNext('//evil.com')).toBe('/chat');
+  it('blocks protocol-relative URLs', async () => {
+    expect(await sanitizeNext('//evil.com')).toBe('/chat');
   });
 
-  it('blocks absolute URLs', () => {
-    expect(sanitizeNext('https://evil.com')).toBe('/chat');
+  it('blocks absolute URLs', async () => {
+    expect(await sanitizeNext('https://evil.com')).toBe('/chat');
   });
 
-  it('blocks backslash injection', () => {
-    expect(sanitizeNext('\\evil.com')).toBe('/chat');
-    expect(sanitizeNext('/path\\evil')).toBe('/chat');
+  it('blocks backslash injection', async () => {
+    expect(await sanitizeNext('\\evil.com')).toBe('/chat');
+    expect(await sanitizeNext('/path\\evil')).toBe('/chat');
   });
 
-  it('blocks encoded double-slash', () => {
-    expect(sanitizeNext('/%2f%2fevil')).toBe('/chat');
+  it('blocks encoded double-slash', async () => {
+    expect(await sanitizeNext('/%2f%2fevil')).toBe('/chat');
   });
 
-  it('caps at 500 chars', () => {
-    expect(sanitizeNext('/' + 'a'.repeat(600))).toBe('/chat');
+  it('caps at 500 chars', async () => {
+    expect(await sanitizeNext('/' + 'a'.repeat(600))).toBe('/chat');
   });
 
-  it('falls back for null/undefined/empty', () => {
-    expect(sanitizeNext(null)).toBe('/chat');
-    expect(sanitizeNext(undefined)).toBe('/chat');
-    expect(sanitizeNext('')).toBe('/chat');
+  it('falls back for null/undefined/empty', async () => {
+    expect(await sanitizeNext(null)).toBe('/chat');
+    expect(await sanitizeNext(undefined)).toBe('/chat');
+    expect(await sanitizeNext('')).toBe('/chat');
   });
 });
 
