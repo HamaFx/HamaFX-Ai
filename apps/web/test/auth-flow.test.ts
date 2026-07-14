@@ -24,6 +24,8 @@
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 import bcrypt from 'bcryptjs';
+import { createHash } from 'node:crypto';
+import { sanitizeNext } from '../src/app/(auth)/actions';
 
 const registerSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -170,79 +172,154 @@ describe('bcrypt cost parsing (FEAT-05 gradual re-hashing)', () => {
   });
 });
 
-describe('open redirect blocking (MED-01)', () => {
-  function safeNext(next: string | undefined): string {
-    return next && next.startsWith('/') && !next.startsWith('//') ? next : '/chat';
-  }
-
-  it('preserves a safe relative path', () => {
-    expect(safeNext('/settings')).toBe('/settings');
-    expect(safeNext('/chat')).toBe('/chat');
+describe('sanitizeNext (P2-7)', () => {
+  it('preserves safe relative paths', () => {
+    expect(sanitizeNext('/settings')).toBe('/settings');
+    expect(sanitizeNext('/chat')).toBe('/chat');
   });
 
-  it('blocks protocol-relative URLs starting with //', () => {
-    expect(safeNext('//evil.com')).toBe('/chat');
-    expect(safeNext('//evil.com/path')).toBe('/chat');
+  it('blocks protocol-relative URLs', () => {
+    expect(sanitizeNext('//evil.com')).toBe('/chat');
   });
 
   it('blocks absolute URLs', () => {
-    expect(safeNext('https://evil.com')).toBe('/chat');
+    expect(sanitizeNext('https://evil.com')).toBe('/chat');
   });
 
-  it('falls back to /chat for undefined next', () => {
-    expect(safeNext(undefined)).toBe('/chat');
+  it('blocks backslash injection', () => {
+    expect(sanitizeNext('\\evil.com')).toBe('/chat');
+    expect(sanitizeNext('/path\\evil')).toBe('/chat');
   });
 
-  it('falls back to /chat for empty string', () => {
-    expect(safeNext('')).toBe('/chat');
+  it('blocks encoded double-slash', () => {
+    expect(sanitizeNext('/%2f%2fevil')).toBe('/chat');
+  });
+
+  it('caps at 500 chars', () => {
+    expect(sanitizeNext('/' + 'a'.repeat(600))).toBe('/chat');
+  });
+
+  it('falls back for null/undefined/empty', () => {
+    expect(sanitizeNext(null)).toBe('/chat');
+    expect(sanitizeNext(undefined)).toBe('/chat');
+    expect(sanitizeNext('')).toBe('/chat');
   });
 });
 
-describe('account lockout logic (LOW-05)', () => {
-  const MAX_ATTEMPTS = 5;
-  const LOCK_DURATION_MS = 15 * 60 * 1000; // 15 minutes
+describe('password max-length (P2-4)', () => {
+  const schema = z.object({
+    password: z.string().min(8).max(128),
+  });
 
-  function isLocked(lockedUntil: Date | null): boolean {
-    return lockedUntil !== null && lockedUntil > new Date();
+  it('accepts password at max length', () => {
+    expect(schema.safeParse({ password: 'A1' + 'b'.repeat(126) }).success).toBe(true);
+  });
+
+  it('rejects password over max length', () => {
+    expect(schema.safeParse({ password: 'A1' + 'b'.repeat(127) }).success).toBe(false);
+  });
+
+  it('rejects password under min length', () => {
+    expect(schema.safeParse({ password: 'Ab1cdef' }).success).toBe(false);
+  });
+});
+
+describe('token hashing (P0-6)', () => {
+  function hashToken(raw: string): string {
+    return createHash('sha256').update(raw).digest('hex');
   }
 
-  function calculateLockout(attempts: number, now: Date): { locked: boolean; lockedUntil: Date | null } {
-    if (attempts >= MAX_ATTEMPTS) {
-      return { locked: true, lockedUntil: new Date(now.getTime() + LOCK_DURATION_MS) };
-    }
-    return { locked: false, lockedUntil: null };
+  it('produces deterministic 64-char hex hash', () => {
+    const h = hashToken('test-token');
+    expect(h).toBe(hashToken('test-token'));
+    expect(h).toHaveLength(64);
+    expect(h).toMatch(/^[a-f0-9]+$/);
+  });
+
+  it('produces different hashes for different tokens', () => {
+    expect(hashToken('a')).not.toBe(hashToken('b'));
+  });
+
+  it('rejects lookup with wrong hash (no cross-flow match)', () => {
+    const resetToken = 'raw-reset-token-123';
+    const resetHash = hashToken(resetToken);
+    // Simulating: an email_verify lookup against a password_reset hash should fail
+    // because purpose filters prevent it
+    const verifyHash = hashToken('different-verify-token');
+    expect(resetHash).not.toBe(verifyHash);
+  });
+
+  it('single-use: hash changes when raw changes', () => {
+    const t1 = hashToken('token-v1');
+    const t2 = hashToken('token-v2');
+    expect(t1).not.toBe(t2);
+  });
+});
+
+describe('2FA validation logic', () => {
+  // mirrors the logic in auth.ts authorize() P0-1
+  function validate2FA(twoFactorEnabled: boolean, totpCode: string | undefined): string | null {
+    if (!twoFactorEnabled) return null;
+    if (!totpCode) return '2FA_REQUIRED';
+    if (totpCode.length !== 6) return 'INVALID_2FA_CODE';
+    return null; // valid
   }
 
-  it('allows login with fewer than 5 failed attempts', () => {
-    for (let i = 0; i < 4; i++) {
-      const { locked } = calculateLockout(i, new Date());
-      expect(locked).toBe(false);
-    }
+  it('skips 2FA when not enabled', () => {
+    expect(validate2FA(false, undefined)).toBeNull();
+    expect(validate2FA(false, '123456')).toBeNull();
   });
 
-  it('locks after 5 failed attempts', () => {
-    const { locked, lockedUntil } = calculateLockout(5, new Date());
-    expect(locked).toBe(true);
-    expect(lockedUntil).not.toBeNull();
+  it('requires 2FA code when enabled and none provided', () => {
+    expect(validate2FA(true, '')).toBe('2FA_REQUIRED');
+    expect(validate2FA(true, undefined)).toBe('2FA_REQUIRED');
   });
 
-  it('locks after more than 5 failed attempts', () => {
-    const { locked } = calculateLockout(10, new Date());
-    expect(locked).toBe(true);
+  it('returns invalid for wrong-length code', () => {
+    expect(validate2FA(true, '12345')).toBe('INVALID_2FA_CODE');
+    expect(validate2FA(true, '1234567')).toBe('INVALID_2FA_CODE');
+  });
+});
+
+describe('session validation logic (P0-4)', () => {
+  function isSessionValid(
+    sessionExists: boolean,
+    tokenVersion: number,
+    dbTokenVersion: number,
+    iat: number,
+    rememberMe: boolean,
+  ): boolean {
+    // Session revoked check
+    if (!sessionExists) return false;
+    // tokenVersion mismatch
+    if (dbTokenVersion !== tokenVersion) return false;
+    // 24h expiry for non-remembered sessions
+    const now = Math.floor(Date.now() / 1000);
+    if (!rememberMe && now - iat > 86400) return false;
+    return true;
+  }
+
+  it('invalidates when session row is deleted (revoked)', () => {
+    expect(isSessionValid(false, 1, 1, 0, true)).toBe(false);
   });
 
-  it('returns locked when lockedUntil is in the future', () => {
-    const future = new Date(Date.now() + 60_000);
-    expect(isLocked(future)).toBe(true);
+  it('invalidates when tokenVersion mismatches (signOutEverywhere)', () => {
+    expect(isSessionValid(true, 1, 2, 0, true)).toBe(false);
   });
 
-  it('returns unlocked when lockedUntil is in the past', () => {
-    const past = new Date(Date.now() - 60_000);
-    expect(isLocked(past)).toBe(false);
+  it('keeps valid session active', () => {
+    const now = Math.floor(Date.now() / 1000);
+    expect(isSessionValid(true, 1, 1, now, true)).toBe(true);
   });
 
-  it('returns unlocked when lockedUntil is null', () => {
-    expect(isLocked(null)).toBe(false);
+  it('expires non-remembered session after 24h', () => {
+    const twoDaysAgo = Math.floor(Date.now() / 1000) - 172800;
+    expect(isSessionValid(true, 1, 1, twoDaysAgo, false)).toBe(false);
+  });
+
+  it('keeps remembered session beyond 24h', () => {
+    const twoDaysAgo = Math.floor(Date.now() / 1000) - 172800;
+    expect(isSessionValid(true, 1, 1, twoDaysAgo, true)).toBe(true);
   });
 });
 

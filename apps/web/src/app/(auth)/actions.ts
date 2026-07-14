@@ -11,8 +11,25 @@ import { getDb, schema, withRateLimit } from '@hamafx/db';
 import { signIn } from '@/auth';
 import { createScopedLoggerWithContext } from '@/lib/logger';
 import { recordAuthEvent } from '@/lib/auth-anomaly';
+import { generateToken, hashToken } from '@/lib/auth-tokens';
 
 const BCRYPT_COST = 12;
+const PASSWORD_MIN = 8;
+const PASSWORD_MAX = 128; // P2-4: bcrypt truncates at 72 bytes, but 128 is a reasonable UX cap
+
+/**
+ * P2-7: Centralized redirect sanitizer. Blocks open redirects via
+ * protocol-relative URLs, backslashes, and encoded // sequences.
+ */
+export function sanitizeNext(next: string | undefined | null): string {
+  if (typeof next !== 'string' || next.length === 0) return '/chat';
+  if (next.length > 500) return '/chat';
+  if (!next.startsWith('/')) return '/chat';
+  if (next.startsWith('//')) return '/chat';
+  if (next.includes('\\')) return '/chat';
+  if (/%2f/i.test(next) && /%2f.*%2f/i.test(next)) return '/chat';
+  return next;
+}
 
 const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -47,33 +64,44 @@ export async function loginAction(prevState: unknown, formData: FormData) {
     return { error: 'Too many login attempts for this email. Please try again later.' };
   }
 
-  // MED-01: Prevent open redirect via protocol-relative URLs
-  const safeNext = next && next.startsWith('/') && !next.startsWith('//') ? next : '/chat';
+  // P2-7: Centralized redirect sanitizer
+  const safeNext = sanitizeNext(next);
+
+  // P0-4: Capture device info for session management
+  const ua = headersList.get('user-agent')?.slice(0, 255) || undefined;
 
   try {
-    recordAuthEvent('login_success');
     await signIn('credentials', {
       email: normalizedEmail,
       password,
       totpCode: formData.get('totpCode') as string || undefined,
       rememberMe: formData.get('rememberMe') as string || undefined,
+      deviceName: ua,
+      ip: clientIp !== 'unknown' ? clientIp : undefined,
       redirectTo: safeNext,
     });
+    // P1-1: Record login success ONLY after signIn resolves without throwing.
+    recordAuthEvent('login_success');
     return { success: true };
   } catch (error) {
     const errStr = String(error);
-    if (errStr.includes('NEXT_REDIRECT')) throw error;
+    // P3-2: isRedirectError from next/navigation unavailable in this
+    // Next.js version — fall back to string check for NEXT_REDIRECT.
+    if (errStr.includes('NEXT_REDIRECT')) {
+      recordAuthEvent('login_success');
+      throw error;
+    }
     if (error instanceof AuthError) {
       const message = error.message;
       if (message === 'ACCOUNT_LOCKED') {
-        recordAuthEvent('account_locked');
+        // recorded in authorize() — no duplicate
         return { error: 'Account temporarily locked due to too many failed attempts. Try again later.' };
       }
       if (message === '2FA_REQUIRED') {
         return { requires2FA: true, email: normalizedEmail };
       }
       if (message === 'INVALID_2FA_CODE') {
-        recordAuthEvent('2fa_failure');
+        // recorded in authorize() — no duplicate
         return { error: 'Invalid 2FA code', requires2FA: true };
       }
       recordAuthEvent('login_failure');
@@ -92,7 +120,8 @@ const registerSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
   email: z.string().email('Invalid email address'),
   password: z.string()
-    .min(8, 'Password must be at least 8 characters')
+    .min(PASSWORD_MIN, `Password must be at least ${PASSWORD_MIN} characters`)
+    .max(PASSWORD_MAX, `Password must be at most ${PASSWORD_MAX} characters`)
     .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
     .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
     .regex(/[0-9]/, 'Password must contain at least one number'),
@@ -155,20 +184,23 @@ export async function registerAction(prevState: unknown, formData: FormData) {
 
   // HIGH-04: Generate email verification token
   try {
-    const { randomBytes } = await import('node:crypto');
-    const verifyToken = randomBytes(32).toString('hex');
+    const { raw, hashed } = generateToken();
     const verifyExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
     await db.insert(schema.verificationTokens).values({
       identifier: normalizedEmail,
-      token: verifyToken,
+      token: hashed, // P0-6: store SHA-256 hash, not raw token
+      purpose: 'email_verify',
       expires: verifyExpires,
     });
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+    const verifyUrl = `${baseUrl}/api/auth/verify-email?token=${encodeURIComponent(raw)}`;
     if (process.env.NODE_ENV !== 'production') {
       createScopedLoggerWithContext({ component: 'auth-actions', action: 'register-verification-token' }).info(
-        `verify link: ${baseUrl}/api/auth/verify-email?token=${verifyToken}`,
+        `verify link: ${verifyUrl}`,
       );
     }
+    // P0-5: Actually send the verification email
+    await sendVerificationEmail(normalizedEmail, verifyUrl);
   } catch (err) {
     Sentry.captureException(err, {
       tags: { component: 'auth-actions', action: 'register-verification-token' },
@@ -185,6 +217,7 @@ export async function registerAction(prevState: unknown, formData: FormData) {
     await signIn('credentials', {
       email: normalizedEmail,
       password,
+      rememberMe: 'true', // new registrations get remembered by default
       redirectTo: '/onboarding',
     });
     return { success: true };
@@ -241,6 +274,43 @@ async function sendPasswordResetEmail(to: string, resetUrl: string) {
   }
 }
 
+/** P0-5: Send email verification link via Resend. */
+async function sendVerificationEmail(to: string, verifyUrl: string) {
+  const apiKey = process.env.RESEND_API_KEY;
+  const fromEmail = process.env.ALERT_FROM_EMAIL;
+  if (!apiKey || !fromEmail) {
+    createScopedLoggerWithContext({ component: 'auth-actions', action: 'send-verify-email' }).warn(
+      `RESEND_API_KEY or ALERT_FROM_EMAIL not set — logging verify link instead: ${verifyUrl}`,
+    );
+    return;
+  }
+  try {
+    const res = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        from: fromEmail,
+        to: [to],
+        subject: '[HamaFX-Ai] Verify your email address',
+        html: `<p>Welcome to HamaFX-Ai! Click the link below to verify your email address. This link expires in 24 hours.</p><p><a href="${verifyUrl}">${verifyUrl}</a></p>`,
+      }),
+    });
+    if (!res.ok) {
+      const text = await res.text().catch(() => '');
+      createScopedLoggerWithContext({ component: 'auth-actions', action: 'send-verify-email' }).error(
+        `Failed to send verify email: HTTP ${res.status} ${text.slice(0, 200)}`,
+      );
+    }
+  } catch (err) {
+    createScopedLoggerWithContext({ component: 'auth-actions', action: 'send-verify-email' }).error(
+      'Failed to send verify email: ' + String(err),
+    );
+  }
+}
+
 export async function forgotPasswordAction(prevState: unknown, formData: FormData) {
   return Sentry.withServerActionInstrumentation('forgotPasswordAction', { formData }, async () => {
     const raw = formData instanceof FormData ? Object.fromEntries(formData) : (formData ?? {});
@@ -259,16 +329,17 @@ export async function forgotPasswordAction(prevState: unknown, formData: FormDat
     // Don't reveal whether the email exists
     if (user) {
       try {
-        const { randomBytes } = await import('node:crypto');
-        const resetToken = randomBytes(32).toString('hex');
+        const { raw, hashed } = generateToken();
+        // P0-6: store SHA-256 hash with purpose discriminator
         await db.insert(schema.verificationTokens).values({
           identifier: email,
-          token: resetToken,
+          token: hashed,
+          purpose: 'password_reset',
           expires: new Date(Date.now() + 60 * 60 * 1000), // 1 hour
         });
         // BUG-10: use a consistent localhost fallback to avoid sending prod URLs in non-prod envs
         const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
-        const resetUrl = `${baseUrl}/reset-password?token=${resetToken}`;
+        const resetUrl = `${baseUrl}/reset-password?token=${encodeURIComponent(raw)}`;
         if (process.env.NODE_ENV !== 'production') {
           createScopedLoggerWithContext({ component: 'auth-actions', action: 'forgot-password' }).info(
             `reset link: ${resetUrl}`,
@@ -318,10 +389,13 @@ export async function resetPasswordAction(prevState: unknown, formData: FormData
     }
 
     const db = getDb();
+    // P0-6: Hash the incoming raw token and filter by purpose
+    const hashedToken = hashToken(token);
     const [vt] = await db.select()
       .from(schema.verificationTokens)
       .where(and(
-        eq(schema.verificationTokens.token, token),
+        eq(schema.verificationTokens.token, hashedToken),
+        eq(schema.verificationTokens.purpose, 'password_reset'),
         gt(schema.verificationTokens.expires, new Date()),
       ))
       .limit(1);
@@ -338,7 +412,10 @@ export async function resetPasswordAction(prevState: unknown, formData: FormData
         .returning({ id: schema.users.id });
       if (u) userId = u.id;
       await tx.delete(schema.verificationTokens)
-        .where(eq(schema.verificationTokens.token, token));
+        .where(and(
+          eq(schema.verificationTokens.token, hashedToken),
+          eq(schema.verificationTokens.purpose, 'password_reset'),
+        ));
     });
 
     // FEAT-03: Audit log for password reset
@@ -354,4 +431,57 @@ export async function resetPasswordAction(prevState: unknown, formData: FormData
 
     return { success: true, message: 'Password has been reset. You can now sign in.' };
   });
+}
+
+/**
+ * P0-5: Resend email verification link.
+ * Rate-limited: 3 requests per email per 5 minutes.
+ */
+export async function resendVerificationAction(email: string) {
+  const normalizedEmail = email.trim().toLowerCase();
+  if (!normalizedEmail || !normalizedEmail.includes('@')) {
+    return { error: 'Invalid email address' };
+  }
+
+  const rl = await withRateLimit(`resend-verify:${normalizedEmail}`, 'resend_verify', 3);
+  if (!rl.allowed) {
+    return { error: 'Too many requests. Please try again later.' };
+  }
+
+  const db = getDb();
+  const [user] = await db
+    .select({ id: schema.users.id, emailVerified: schema.users.emailVerified })
+    .from(schema.users)
+    .where(eq(schema.users.email, normalizedEmail))
+    .limit(1);
+
+  // Don't reveal whether the email exists or is already verified
+  if (!user || user.emailVerified) {
+    return { success: true, message: 'If the email is unverified, a new verification link has been sent.' };
+  }
+
+  try {
+    const { raw, hashed } = generateToken();
+    const verifyExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
+    await db.insert(schema.verificationTokens).values({
+      identifier: normalizedEmail,
+      token: hashed,
+      purpose: 'email_verify',
+      expires: verifyExpires,
+    });
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+    const verifyUrl = `${baseUrl}/api/auth/verify-email?token=${encodeURIComponent(raw)}`;
+    if (process.env.NODE_ENV !== 'production') {
+      createScopedLoggerWithContext({ component: 'auth-actions', action: 'resend-verify' }).info(
+        `verify link: ${verifyUrl}`,
+      );
+    }
+    await sendVerificationEmail(normalizedEmail, verifyUrl);
+  } catch (err) {
+    createScopedLoggerWithContext({ component: 'auth-actions', action: 'resend-verify' }).error(
+      'Failed to resend verification: ' + String(err),
+    );
+  }
+
+  return { success: true, message: 'If the email is unverified, a new verification link has been sent.' };
 }

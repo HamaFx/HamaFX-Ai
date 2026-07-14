@@ -57,7 +57,6 @@ export function AdminToolTelemetryTable() {
 
   useEffect(() => {
     void fetchRows();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   if (loading) {

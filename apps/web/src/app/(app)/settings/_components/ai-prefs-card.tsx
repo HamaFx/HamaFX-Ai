@@ -128,7 +128,9 @@ export function AIPrefsCard({ initialCustomInstructions }: { initialCustomInstru
     if (hydrated && serverInstructions !== (prefs?.customInstructions ?? '')) {
       setPrefs((prev) => ({ ...prev, customInstructions: serverInstructions }));
     }
-  }, [hydrated, serverInstructions]); // deliberately exclude prefs/setPrefs to avoid loops
+    // prefs and setPrefs deliberately excluded to avoid infinite sync loops
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hydrated, serverInstructions]);
 
   const customInstructions = hydrated
     ? (prefs?.customInstructions ?? '')

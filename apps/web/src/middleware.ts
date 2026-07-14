@@ -55,17 +55,21 @@ export default auth((req) => {
     return next;
   }
 
-  // ── CSRF double-submit cookie (state-changing /api/*) ──────────────────
-  const cookieToken = req.cookies.get('hfx_csrf')?.value;
-  let csrfToken = cookieToken;
+  // ── CSRF double-submit cookie ───────────────────────────────────────
+  // P1-3: Always set the cookie on every request (including GET) so the
+  // client always has a token before its first state-changing POST.
+  // P2-6: Use __Host- prefix in production for stronger cookie binding.
+  const csrfCookieName =
+    process.env.NODE_ENV === 'production' ? '__Host-hfx_csrf' : 'hfx_csrf';
+  let csrfToken = req.cookies.get(csrfCookieName)?.value;
   if (!csrfToken) {
     csrfToken = crypto.randomUUID();
   }
+
   const isStateChanging = ['POST', 'PUT', 'DELETE', 'PATCH'].includes(req.method);
   if (isStateChanging && req.nextUrl.pathname.startsWith('/api/') && !req.nextUrl.pathname.startsWith('/api/auth/')) {
-    // MED-02: Always require CSRF token for state-changing API requests
     const headerToken = req.headers.get('x-csrf-token');
-    if (!cookieToken || !headerToken || headerToken !== cookieToken) {
+    if (!csrfToken || !headerToken || headerToken !== csrfToken) {
       return new NextResponse('Forbidden - CSRF token missing or invalid', { status: 403 });
     }
   }
@@ -96,21 +100,16 @@ export default auth((req) => {
     next.headers.set('x-user-id', userId);
   }
 
-  // Preserve the incoming CSRF cookie on the response so the client keeps
-  // the same double-submit token across requests.
-  if (cookieToken) {
-    next.cookies.set('hfx_csrf', cookieToken, {
-      path: '/',
-      sameSite: 'lax',
-      secure: process.env.NODE_ENV === 'production',
-    });
-  } else {
-    next.cookies.set('hfx_csrf', csrfToken, {
-      path: '/',
-      sameSite: 'lax',
-      secure: process.env.NODE_ENV === 'production',
-    });
-  }
+  // P1-3 + P2-6: Always set the CSRF cookie on every response so the
+  // client always has a fresh token. In production, use __Host- prefix
+  // which requires Secure + Path=/ (automatically enforced by browsers).
+  const isProd = process.env.NODE_ENV === 'production';
+  next.cookies.set(csrfCookieName, csrfToken, {
+    path: '/',
+    sameSite: 'lax',
+    secure: isProd,
+    httpOnly: false, // double-submit pattern requires JS readability
+  });
   return next;
 });
 

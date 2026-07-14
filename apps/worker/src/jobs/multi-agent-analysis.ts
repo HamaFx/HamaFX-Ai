@@ -106,7 +106,7 @@ export async function runMultiAgentAnalysis(ctx: JobContext): Promise<JobResult>
       // The route handler already resolved this to a non-'single' mode
       // before queueing, so we use the stored mode to avoid re-detecting.
       const userText = extractUserMessageText(userMessage);
-      const mode = resolveMode((job.mode as AnalysisMode) ?? 'full', userText);
+      const _mode = resolveMode((job.mode as AnalysisMode) ?? 'full', userText);
 
       // Build progress handler that updates the job row.
       const progressEvents: Array<Record<string, unknown>> = [];

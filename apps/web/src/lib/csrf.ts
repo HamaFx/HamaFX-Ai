@@ -15,15 +15,19 @@
  */
 
 // CSRF protection utilities for the client side.
-// Phase 3 hardening §22.
+// Phase 3 hardening §22. P2-6: __Host- prefix in production.
 
 /**
- * Extracts the `hfx_csrf` cookie value set by the edge middleware.
+ * Extracts the CSRF cookie value set by the edge middleware.
+ * P2-6: Handles both `hfx_csrf` (dev) and `__Host-hfx_csrf` (prod) names.
  */
 export function getCsrfToken(): string | undefined {
   if (typeof document === 'undefined') return undefined;
-  const match = document.cookie.match(/(?:^|;\s*)hfx_csrf=([^;]*)/);
-  return match && match[1] !== undefined ? decodeURIComponent(match[1]) : undefined;
+  for (const name of ['__Host-hfx_csrf', 'hfx_csrf']) {
+    const match = document.cookie.match(new RegExp(`(?:^|;\\s*)${name}=([^;]*)`));
+    if (match?.[1] !== undefined) return decodeURIComponent(match[1]);
+  }
+  return undefined;
 }
 
 /**

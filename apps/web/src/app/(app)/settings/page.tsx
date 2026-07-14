@@ -20,7 +20,7 @@ import {IconKey, IconBell, IconRobot, IconDatabase, IconInfoCircle, IconShield} 
 
 import { auth } from '@/auth';
 import { getDb, schema } from '@hamafx/db';
-import { eq, asc } from 'drizzle-orm';
+import { eq, asc, and } from 'drizzle-orm';
 import type { NoiseConfig } from '@hamafx/shared';
 import { checkIsAdmin } from '@/lib/admin-check';
 import { AboutCard } from './_components/about-card';
@@ -39,6 +39,7 @@ import { SettingsSection } from './_components/settings-section';
 import { SystemStatusCard } from './_components/system-status-card';
 import { UsageGlance } from './_components/usage-glance';
 import { TwoFactorSetup } from './_components/two-factor-setup';
+import { LinkedAccountsCard } from './_components/linked-accounts-card';
 
 export const metadata: Metadata = { title: 'Settings | HamaFX' };
 // We render server components that hit the DB (push subscription count,
@@ -65,6 +66,17 @@ export default async function SettingsPage() {
   let notificationPrefs: Record<string, Record<string, boolean>> | null = null;
   let locale = 'en';
   let twoFactorEnabled = false;
+
+  // Check if user has linked Google account
+  const [googleAccount] = await db
+    .select({ id: schema.accounts.providerAccountId })
+    .from(schema.accounts)
+    .where(and(
+      eq(schema.accounts.userId, userId),
+      eq(schema.accounts.provider, 'google'),
+    ))
+    .limit(1);
+  const googleLinked = !!googleAccount;
 
       const [[userRow], [settings], list] = await Promise.all([
     db.select({
@@ -116,6 +128,7 @@ export default async function SettingsPage() {
       <SettingsSection icon={<IconKey className="size-4" />} title="Security" description="Password, two-factor, and active sessions">
         <ChangePasswordCard />
         <TwoFactorSetup enabled={twoFactorEnabled} />
+        <LinkedAccountsCard googleLinked={googleLinked} />
         <SessionsCard />
       </SettingsSection>
 

@@ -602,8 +602,10 @@ export async function importKeysAction(payload: string, password: string): Promi
 }
 
 /**
- * Server action to permanently delete the user's account and all associated data.
- * Requires password confirmation. Cascading DB deletes handle related records.
+ * P1-4: Soft-delete user account. Sets deletedAt, bumps tokenVersion to
+ * invalidate all sessions, nulls out PII, revokes sessions, and signs out.
+ * Requires password + 2FA confirmation. A purge job handles permanent
+ * deletion later.
  */
 export async function deleteAccountAction(password: string, totpCode?: string): Promise<ActionResult> {
   const session = await auth();
@@ -626,7 +628,6 @@ export async function deleteAccountAction(password: string, totpCode?: string): 
     if (!totpCode) {
       return { ok: false as const, error: '2FA code is required' };
     }
-    // HIGH-01: Decrypt the secret before verifying
     const decryptedSecret = user.twoFactorSecret ? decryptSecret(user.twoFactorSecret) : null;
     if (!decryptedSecret || !verifySync({ secret: decryptedSecret, token: totpCode }).valid) {
       return { ok: false as const, error: 'Invalid 2FA code' };
@@ -644,8 +645,23 @@ export async function deleteAccountAction(password: string, totpCode?: string): 
   }
 
   try {
-    await db.delete(schema.users)
+    const now = new Date();
+    // Soft-delete: set deletedAt, bump tokenVersion, purge PII
+    await db.update(schema.users)
+      .set({
+        deletedAt: now,
+        tokenVersion: sql`${schema.users.tokenVersion} + 1`,
+        name: null,
+        image: null,
+        email: `deleted-${session.user.id}@deleted.invalid`,
+        hashedPassword: null,
+        twoFactorSecret: null,
+        twoFactorEnabled: false,
+      })
       .where(eq(schema.users.id, session.user.id));
+    // Revoke all sessions
+    await db.delete(schema.userSessions)
+      .where(eq(schema.userSessions.userId, session.user.id));
     await signOut({ redirectTo: '/' });
     return { ok: true as const };
   } catch (err) {

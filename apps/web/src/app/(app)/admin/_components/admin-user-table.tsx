@@ -58,7 +58,6 @@ export function AdminUserTable() {
 
   useEffect(() => {
     void fetchUsers();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   if (loading) {

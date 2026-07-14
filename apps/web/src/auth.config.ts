@@ -20,6 +20,20 @@
 
 import type { NextAuthConfig } from 'next-auth';
 
+// P2-3: Prod boot invariant — AUTH_SECRET is mandatory in production.
+// The dev fallback must never be used in prod because it ships in the
+// public repo and would allow JWT forgery.
+if (
+  process.env.NODE_ENV === 'production' &&
+  !process.env.AUTH_SECRET &&
+  !process.env.NEXTAUTH_SECRET
+) {
+  throw new Error(
+    '[SECURITY] AUTH_SECRET (or NEXTAUTH_SECRET) must be set in production. ' +
+      'Generate: node -e "console.log(crypto.randomBytes(32).toString(\'hex\'))"',
+  );
+}
+
 // Dev fallback: ensures the Edge middleware never runs without a
 // signing secret (which would cause MissingSecret errors and break
 // the auth gate). In production AUTH_SECRET must be set explicitly.

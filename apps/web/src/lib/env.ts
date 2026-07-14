@@ -173,6 +173,14 @@ if (process.env.AUTH_MODE === 'legacy' && process.env.NODE_ENV === 'production')
   console.error('[SECURITY] AUTH_MODE=legacy is set in production! Authentication is disabled.');
 }
 
+// P2-5: Loud boot warning when AUTH_MODE=legacy is on in dev
+if (process.env.AUTH_MODE === 'legacy' && process.env.NODE_ENV !== 'production') {
+  console.warn(
+    '[AUTH] AUTH_MODE=legacy is enabled — all requests will use __system__ user. ' +
+      'Set AUTH_MODE=normal (or unset) for multi-user authentication.',
+  );
+}
+
 // MED-04: Deprecation warning for NEXTAUTH_SECRET
 if (process.env.NEXTAUTH_SECRET && !process.env.AUTH_SECRET) {
   console.warn('[env] NEXTAUTH_SECRET is deprecated. Use AUTH_SECRET instead.');

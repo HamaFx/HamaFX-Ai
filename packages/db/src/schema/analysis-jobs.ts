@@ -24,7 +24,6 @@
 import { pgTable, text, timestamp, jsonb, varchar, uuid } from 'drizzle-orm/pg-core';
 import { users } from './auth';
 import { chatThreads } from './chat';
-import { sql } from 'drizzle-orm';
 
 export const analysisJobs = pgTable('analysis_jobs', {
   id: uuid('id').primaryKey().defaultRandom(),

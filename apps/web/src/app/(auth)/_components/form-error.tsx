@@ -1,0 +1,53 @@
+'use client';
+
+/**
+ * Copyright 2026 HamaFX
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+// §5: Shared form error component with aria-live for screen readers.
+// Used by all auth pages for consistent error presentation.
+
+import { cn } from '@/lib/cn';
+
+interface FormErrorProps {
+  /** Error message to display. Renders nothing when empty. */
+  message: string;
+  /** Optional ID for aria-describedby linking. */
+  id?: string;
+  /** Use 'polite' for validation errors, 'assertive' for critical errors. */
+  ariaLive?: 'polite' | 'assertive';
+  /** Additional class names. */
+  className?: string;
+}
+
+export function FormError({
+  message,
+  id = 'form-error',
+  ariaLive = 'polite',
+  className,
+}: FormErrorProps) {
+  if (!message) return null;
+
+  return (
+    <p
+      id={id}
+      role="alert"
+      aria-live={ariaLive}
+      className={cn('text-danger text-sm', className)}
+    >
+      {message}
+    </p>
+  );
+}

@@ -157,10 +157,13 @@ export const verificationTokens = pgTable(
   'verificationToken',
   {
     identifier: text('identifier').notNull(),
+    /** SHA-256 hash of the raw token. The raw token is emailed to the user. */
     token: text('token').notNull().unique(),
+    /** Discriminates between token types to prevent cross-flow replay (P0-6). */
+    purpose: text('purpose').notNull(),
     expires: timestamp('expires', { withTimezone: true }).notNull(),
   },
-  (t) => [primaryKey({ columns: [t.identifier, t.token] })],
+  (t) => [primaryKey({ columns: [t.identifier, t.purpose, t.token] })],
 );
 
 export type VerificationTokenRow = typeof verificationTokens.$inferSelect;

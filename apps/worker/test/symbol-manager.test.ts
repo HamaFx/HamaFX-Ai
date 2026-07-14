@@ -46,8 +46,8 @@ describe('SymbolManager', () => {
     const mgr = new SymbolManager(log, 999_999);
 
     // Listen for the biquoteChanged event
-    let biquoteEvent: PerConsumerChangeEvent | null = null;
-    mgr.on('biquoteChanged', (ev) => { biquoteEvent = ev; });
+    let _biquoteEvent: PerConsumerChangeEvent | null = null;
+    mgr.on('biquoteChanged', (ev) => { _biquoteEvent = ev; });
 
     // The SymbolManager starts with an empty set. After a poll that
     // returns XAUUSD + EURUSD + GBPUSD, it should emit biquoteChanged

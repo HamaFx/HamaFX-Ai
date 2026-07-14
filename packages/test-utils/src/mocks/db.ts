@@ -5,7 +5,7 @@ export interface TestDbHandle {
 }
 
 export async function createTestDb(): Promise<TestDbHandle> {
-  // @ts-expect-error — @electric-sql/pglite is installed at the consumer level (not direct dep)
+  // @electric-sql/pglite is installed at the consumer level (not direct dep)
   const { PGlite } = await import('@electric-sql/pglite');
   const pg = new PGlite();
 
