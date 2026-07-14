@@ -42,6 +42,14 @@ describe('BYOK_PROVIDERS', () => {
       expect(spec.defaultModels.technical).toBeTruthy();
       expect(spec.defaultModels.summary).toBeTruthy();
       expect(typeof spec.factory).toBe('function');
+      expect(Array.isArray(spec.models)).toBe(true);
+      expect(spec.models.length).toBeGreaterThan(0);
+      // defaultModels must resolve to catalog entries (defineProvider also enforces this).
+      for (const domain of ['fundamental', 'technical', 'summary', 'vision', 'embedding'] as const) {
+        const id = spec.defaultModels[domain];
+        if (id == null) continue;
+        expect(spec.models.some((m) => m.modelId === id)).toBe(true);
+      }
     }
   });
 

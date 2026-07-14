@@ -180,6 +180,7 @@ import { PROVIDER_IDS } from '@hamafx/shared/byok';
 const PROVIDER_PRIORITY: ProviderId[] = [
   // Premium: prefer the strongest reasoning model when configured.
   'google',
+  'vertex',
   'anthropic',
   'openai',
   // Aggregators / alt providers.
@@ -205,6 +206,34 @@ function envFallbackKeys(env: ResolveModelEnv): ByokPayload {
   const out: ByokPayload = {};
   if (env.GOOGLE_GENERATIVE_AI_API_KEY) {
     out.google = env.GOOGLE_GENERATIVE_AI_API_KEY;
+  }
+  // Prefer explicit GOOGLE_APPLICATION_CREDENTIALS_JSON for Vertex BYOK.
+  // Path-based GOOGLE_APPLICATION_CREDENTIALS is handled by the Vertex
+  // SDK via process.env for `google-vertex/...` gateway-style ids, but
+  // BYOK factories need the JSON body itself.
+  if (env.GOOGLE_APPLICATION_CREDENTIALS_JSON) {
+    out.vertex = env.GOOGLE_APPLICATION_CREDENTIALS_JSON;
+  }
+  // Optional operator env keys (common self-host names). Only populate
+  // when present so we never invent empty credentials.
+  const processEnv = typeof process !== 'undefined' ? process.env : undefined;
+  if (processEnv) {
+    const map: Array<[keyof ByokPayload, string]> = [
+      ['anthropic', 'ANTHROPIC_API_KEY'],
+      ['openai', 'OPENAI_API_KEY'],
+      ['groq', 'GROQ_API_KEY'],
+      ['mistral', 'MISTRAL_API_KEY'],
+      ['openrouter', 'OPENROUTER_API_KEY'],
+      ['xai', 'XAI_API_KEY'],
+      ['deepseek', 'DEEPSEEK_API_KEY'],
+      ['iamhc', 'IAMHC_API_KEY'],
+    ];
+    for (const [field, envName] of map) {
+      const val = processEnv[envName];
+      if (typeof val === 'string' && val.length > 0) {
+        out[field] = val;
+      }
+    }
   }
   return out;
 }

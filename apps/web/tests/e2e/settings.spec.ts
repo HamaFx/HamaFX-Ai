@@ -89,7 +89,7 @@ test.describe('Settings', () => {
         route.fulfill({
           status: 200,
           contentType: 'application/json',
-          body: JSON.stringify({ chatModel: 'google:gemini-2.0-flash' }),
+          body: JSON.stringify({ chatModel: 'google:gemini-2.5-flash' }),
         });
       } else {
         route.continue();

@@ -29,6 +29,7 @@
 import { getDb, schema } from '@hamafx/db';
 import { sql, eq, gte, and } from 'drizzle-orm';
 import { sendDirectNotification } from './alerts/delivery';
+import { buildCatalogRateTable } from './byok-providers';
 
 interface ModelRate {
   /** USD per 1M input tokens. */
@@ -37,15 +38,37 @@ interface ModelRate {
   outputPerM: number;
 }
 
-const RATES: Record<string, ModelRate> = {
+// Static fallbacks for historical telemetry ids + tests. Live catalog
+// rates are merged from BYOK_PROVIDERS via buildCatalogRateTable() so
+// new models do not need a second hand-maintained table.
+const STATIC_RATES: Record<string, ModelRate> = {
+  // Conservative upper bounds used by unit tests / historical telemetry.
   'openai/gpt-4.1': { inputPerM: 5, outputPerM: 15 },
   'openai/gpt-4.1-mini': { inputPerM: 0.4, outputPerM: 1.6 },
   'openai/gpt-4o': { inputPerM: 5, outputPerM: 15 },
+  'openai/gpt-5.6-sol': { inputPerM: 5, outputPerM: 30 },
+  'openai/gpt-5.6-terra': { inputPerM: 2.5, outputPerM: 15 },
+  'openai/gpt-5.6-luna': { inputPerM: 1, outputPerM: 6 },
   'anthropic/claude-3.7-sonnet': { inputPerM: 3, outputPerM: 15 },
   'anthropic/claude-sonnet-4': { inputPerM: 3, outputPerM: 15 },
+  'anthropic/claude-sonnet-4-5': { inputPerM: 3, outputPerM: 15 },
+  'anthropic/claude-sonnet-5': { inputPerM: 3, outputPerM: 15 },
+  'anthropic/claude-opus-4-8': { inputPerM: 5, outputPerM: 25 },
+  'anthropic/claude-fable-5': { inputPerM: 5, outputPerM: 25 },
+  'anthropic/claude-haiku-4-5': { inputPerM: 1, outputPerM: 5 },
   'google/gemini-2.5-flash': { inputPerM: 0.3, outputPerM: 2.5 },
   'google/gemini-2.5-flash-lite': { inputPerM: 0.1, outputPerM: 0.4 },
   'google/gemini-2.5-pro': { inputPerM: 1.25, outputPerM: 10 },
+  'google/gemini-3.5-flash': { inputPerM: 0.3, outputPerM: 2.5 },
+  'xai/grok-4.5': { inputPerM: 2, outputPerM: 6 },
+  'xai/grok-4.3': { inputPerM: 1.25, outputPerM: 2.5 },
+  'deepseek/deepseek-v4-pro': { inputPerM: 0.435, outputPerM: 0.87 },
+  'deepseek/deepseek-v4-flash': { inputPerM: 0.14, outputPerM: 0.28 },
+};
+
+const RATES: Record<string, ModelRate> = {
+  ...buildCatalogRateTable(),
+  ...STATIC_RATES,
 };
 
 const FALLBACK_RATE: ModelRate = { inputPerM: 5, outputPerM: 15 };

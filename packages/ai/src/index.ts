@@ -27,6 +27,8 @@ export {
   BYOK_PROVIDERS_LIST,
   getProvider,
   defaultModelFor,
+  lookupModelRate,
+  buildCatalogRateTable,
   type ByokProviderSpec,
   type ByokProviderModels,
   type ModelDomain,

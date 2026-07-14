@@ -22,6 +22,17 @@
 // Node, not a server-component bundler) reference the provider list
 // without tripping the server-only guard.
 
+/**
+ * Canonical BYOK provider ids. Keep this list in lock-step with:
+ *   - ByokPayload fields below
+ *   - packages/ai/src/byok-providers.ts (BYOK_PROVIDERS registry)
+ *
+ * Adding a provider:
+ *   1. Append the id here and add an optional field on ByokPayload
+ *   2. Add defineProvider({...}) + registry entry in byok-providers.ts
+ *   3. Optionally wire an operator env fallback in model.ts envFallbackKeys()
+ *   4. Tests that hardcode PROVIDER_IDS mocks should include the new id
+ */
 export const PROVIDER_IDS = [
   'google',
   'vertex',
