@@ -18,20 +18,27 @@
 // /api/cron/briefings on Vercel (route stays as manual fallback).
 //
 // On every invocation, scan `economic_events` twice:
-//   - pre-event:  events with date ∈ [now+28m, now+32m]  → emitPreEvent
-//   - post-event: events with date ∈ [now-32m, now-28m] AND actual IS NOT NULL → emitPostEvent
+//   - pre-event:  events with date ∈ [now, now+2h]  → emitPreEvent
+//   - post-event: events with date ∈ [now-24h, now-5m] AND actual IS NOT NULL → emitPostEvent
 //
 // Each emit is idempotent at the (eventId, kind) primary key on
-// briefings_emitted, so the 5-minute systemd cadence (with possible
-// drift) is safe to re-run.
+// briefings_emitted, so any cadence (with possible drift) is safe to re-run.
+//
+// FIX 2026-07-15: Widened both windows from 4-minute slivers to generous
+// ranges so briefings aren't permanently missed during worker downtime.
+// The `wasEmitted` idempotency guard prevents duplicates.
 
 import { emitPostEvent, emitPreEvent, findHighImpactEventsInWindow } from '@hamafx/ai';
 import { getDb, schema } from '@hamafx/db';
 
 import type { JobContext, JobResult } from './types.js';
 
-const PRE_OFFSET_MS = 30 * 60 * 1000;
-const WINDOW_MS = 4 * 60 * 1000;
+/** Pre-event: scan high-impact events happening in the next 2 hours. */
+const PRE_WINDOW_MS = 2 * 60 * 60 * 1000;
+/** Post-event catch-up: scan events that happened in the last 24 hours. */
+const POST_CATCHUP_MS = 24 * 60 * 60 * 1000;
+/** Small offset to avoid picking up events that literally just fired. */
+const POST_GRACE_MS = 5 * 60 * 1000;
 
 export async function runBriefings(ctx: JobContext): Promise<JobResult> {
   const now = Date.now();
@@ -40,10 +47,13 @@ export async function runBriefings(ctx: JobContext): Promise<JobResult> {
   const db = getDb();
   const users = await db.select({ id: schema.users.id }).from(schema.users);
 
-  // --- Pre-event window: [now+28m, now+32m] ---
+  // --- Pre-event window: [now, now+2h] ---
+  // Any high-impact event happening in the next 2 hours gets a pre-event
+  // briefing. The idempotency check inside emitPreEvent prevents duplicates
+  // across consecutive runs.
   const preCandidates = await findHighImpactEventsInWindow({
-    fromMs: now + PRE_OFFSET_MS - WINDOW_MS / 2,
-    toMs: now + PRE_OFFSET_MS + WINDOW_MS / 2,
+    fromMs: now,
+    toMs: now + PRE_WINDOW_MS,
   });
 
   let preEmitted = 0;
@@ -62,10 +72,13 @@ export async function runBriefings(ctx: JobContext): Promise<JobResult> {
     }
   }
 
-  // --- Post-event window: [now-32m, now-28m] AND actual IS NOT NULL ---
+  // --- Post-event catch-up: [now-24h, now-5m] AND actual IS NOT NULL ---
+  // Scans the last 24 hours for high-impact events with reported actuals
+  // that haven't had a post-event briefing emitted yet. This catches up on
+  // briefings that were missed during worker downtime.
   const postCandidates = await findHighImpactEventsInWindow({
-    fromMs: now - PRE_OFFSET_MS - WINDOW_MS / 2,
-    toMs: now - PRE_OFFSET_MS + WINDOW_MS / 2,
+    fromMs: now - POST_CATCHUP_MS,
+    toMs: now - POST_GRACE_MS,
     requireActual: true,
   });
 

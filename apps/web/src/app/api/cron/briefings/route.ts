@@ -17,15 +17,14 @@
 // GET /api/cron/briefings — pre/post-event briefings.
 //
 // Phase 8 PR-10: this route is now a **manual-fallback path**. The
-// scheduled invocation runs on the GCE worker via
-// `hamafx-job-briefings.timer`. The route stays here so we can hand-trigger
-// during a worker outage:
+// scheduled invocation runs on the GCE worker via in-process scheduler.
+// The route stays here so we can hand-trigger during a worker outage:
 //
 //   curl -H "Authorization: Bearer $CRON_SECRET" $URL/api/cron/briefings
 //
 // Scans `economic_events` twice on each invocation:
-//   - pre-event:  events with `date` ∈ [now+28m, now+32m]  → emit
-//   - post-event: events with `date` ∈ [now-32m, now-28m] AND `actual IS NOT NULL` → emit
+//   - pre-event:  events with `date` ∈ [now, now+2h]  → emit
+//   - post-event: events with `date` ∈ [now-24h, now-5m] AND `actual IS NOT NULL` → emit
 //
 // Each emit is idempotent at the (eventId, kind) primary key on
 // `briefings_emitted`.
@@ -44,33 +43,34 @@ import { createScopedLoggerWithContext } from '@/lib/logger';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-const PRE_OFFSET_MS = 30 * 60 * 1000;
-const WINDOW_MS = 4 * 60 * 1000;
+/** Pre-event: scan high-impact events happening in the next 2 hours. */
+const PRE_WINDOW_MS = 2 * 60 * 60 * 1000;
+/** Post-event catch-up: scan events that happened in the last 24 hours. */
+const POST_CATCHUP_MS = 24 * 60 * 60 * 1000;
+/** Small offset to avoid picking up events that literally just fired. */
+const POST_GRACE_MS = 5 * 60 * 1000;
 
 export async function GET(req: Request): Promise<Response> {
   const log = createScopedLoggerWithContext({ component: 'cron', job: 'briefings' });
   return withCronAuth(req, async () => {
     const now = Date.now();
 
-    // --- Pre-event window: [now+28m, now+32m] ---
+    // --- Pre-event window: [now, now+2h] ---
     const preCandidates = await findHighImpactEventsInWindow({
-      fromMs: now + PRE_OFFSET_MS - WINDOW_MS / 2,
-      toMs: now + PRE_OFFSET_MS + WINDOW_MS / 2,
+      fromMs: now,
+      toMs: now + PRE_WINDOW_MS,
     });
 
     let preEmitted = 0;
-    // --- Post-event window: [now-32m, now-28m] AND actual IS NOT NULL ---
+    // --- Post-event catch-up: [now-24h, now-5m] AND actual IS NOT NULL ---
     const postCandidates = await findHighImpactEventsInWindow({
-      fromMs: now - PRE_OFFSET_MS - WINDOW_MS / 2,
-      toMs: now - PRE_OFFSET_MS + WINDOW_MS / 2,
+      fromMs: now - POST_CATCHUP_MS,
+      toMs: now - POST_GRACE_MS,
       requireActual: true,
     });
 
     let postEmitted = 0;
 
-    // Phase 3 §3.11 — iterate over real active users instead of the
-    // hardcoded '__system__' fallback. In self-host / legacy mode this
-    // returns ['__system__'] (the only user).
     const activeUsers = await getActiveUserIds();
 
     for (const userId of activeUsers) {
@@ -79,7 +79,6 @@ export async function GET(req: Request): Promise<Response> {
           const r = await emitPreEvent(userId, c.id);
           if (r.emitted) preEmitted += 1;
         } catch (err) {
-          // STAB-04 / OBS-01: capture to Sentry.
           Sentry.captureException(err, {
             tags: { job: 'cron/briefings', phase: 'pre', eventId: c.id, userId },
           });
@@ -92,7 +91,6 @@ export async function GET(req: Request): Promise<Response> {
           const r = await emitPostEvent(userId, c.id);
           if (r.emitted) postEmitted += 1;
         } catch (err) {
-          // STAB-04 / OBS-01: capture to Sentry.
           Sentry.captureException(err, {
             tags: { job: 'cron/briefings', phase: 'post', eventId: c.id, userId },
           });
