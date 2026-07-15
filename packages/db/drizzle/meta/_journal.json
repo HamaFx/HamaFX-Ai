@@ -351,6 +351,13 @@
       "when": 1784019600000,
       "tag": "0049_auth_token_purpose_hash",
       "breakpoints": true
+    },
+    {
+      "idx": 50,
+      "version": "7",
+      "when": 1784134266595,
+      "tag": "0050_fix_tenant_triggers",
+      "breakpoints": true
     }
   ]
 }

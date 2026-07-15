@@ -31,7 +31,7 @@ import { JOBS } from './jobs/index.js';
 import { acquireCronLock } from './cron-lock.js';
 
 // STAB-02: Maximum wall-clock time any scheduled job may run.
-const JOB_TIMEOUT_MS = 60_000;
+const JOB_TIMEOUT_MS = 120_000;
 
 // Jobs that run more often than once-per-day are inherently idempotent
 // at the application layer (briefings uses (eventId, kind) PK; alerts
