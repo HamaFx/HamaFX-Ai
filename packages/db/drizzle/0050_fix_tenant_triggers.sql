@@ -43,7 +43,7 @@ CREATE TRIGGER hamafx_chat_messages_tenant_id
   EXECUTE FUNCTION hamafx_set_chat_message_tenant_id();
 --> statement-breakpoint
 
--- 3. Create missing tenant triggers for all 12 user-scoped tables + briefings_emitted.
+-- 3. Create missing tenant triggers for all 22 user-scoped tables.
 --    Each trigger calls hamafx_set_tenant_id_from_user() which resolves tenant
 --    from NEW.user_id when the session setting app.current_tenant is unavailable.
 DO $$
@@ -53,14 +53,23 @@ BEGIN
   FOREACH tbl IN ARRAY ARRAY[
     'agent_opinions',
     'alerts',
+    'audit_logs',
     'bot_links',
     'briefings_emitted',
     'chat_telemetry',
+    'chat_tool_telemetry',
+    'cron_runs',
+    'daily_ai_spend',
+    'decision_signal_feedback',
     'decision_signals',
     'journal_entries',
     'memory_embeddings',
+    'notification_noise_state',
     'portfolio_positions',
+    'portfolio_settings',
     'provider_tests',
+    'push_subscriptions',
+    'rate_limits',
     'shared_snapshots',
     'user_sessions',
     'user_symbols'
