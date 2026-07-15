@@ -44,7 +44,9 @@ pnpm-debug.log*
 Thumbs.db
 
 # vercel
-.vercel/
+.vercel/**
+# Track project link config so AI agents can pull env from repo root
+!.vercel/project.json
 
 # drizzle — keep the migration journal but ignore the heavy snapshots
 packages/db/drizzle/meta/*
@@ -60,7 +62,6 @@ packages/db/drizzle/meta/*
 apps/web/.build-id
 apps/web/public/sw.js
 apps/web/public/sw-precache.json
-.vercel
 .env*.local
 .tmp/
 .env*

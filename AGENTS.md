@@ -71,6 +71,40 @@ pnpm --filter @hamafx/db migrate:apply   # apply to DATABASE_URL
 - **Run `pnpm --filter @hamafx/db migrate:status` before deploying** to check for pending migrations.
 - **The tracking table is `drizzle.__drizzle_migrations`** (not `public`). The config pins `migrationsSchema: 'drizzle'`.
 
+## Vercel CLI & Environment Variables
+
+> The project **hamafx-ai** is deployed on Vercel (production: https://hamafx-ai.vercel.app).
+> Your Vercel team is **Hama Projects** (org: `mahamad-ahmads-projects`).
+> A `.vercel/project.json` at the repo root links this project automatically.
+
+```
+# Check authentication status
+vercel whoami
+
+# Pull environment variables to .env.local (works from repo root!)
+vercel env pull .env.local
+
+# Pull production env vars instead of development
+vercel env pull .env.local --environment production
+
+# Link the project (only needed on fresh clones)
+cd apps/web && vercel link --project hamafx-ai --yes
+
+# View recent request logs (may need --scope on fresh auth)
+vercel logs --project hamafx-ai --scope mahamad-ahmads-projects --limit 50
+
+# Stream live logs (use Ctrl+C to stop)
+vercel logs --project hamafx-ai --scope mahamad-ahmads-projects --follow
+
+# List recent deployments
+vercel list hamafx-ai --scope mahamad-ahmads-projects
+```
+
+**Common gotchas for AI agents:**
+- The `.env.local` file is **gitignored** — do NOT commit it. It contains secrets (DB creds, API keys).
+- Auth tokens are stored via the Vercel CLI credential helper (not in `~/.vercel/config.json`). If auth breaks, run `vercel logout && vercel login`.
+- Env vars pulled include DB creds (`POSTGRES_URL`, `POSTGRES_HOST`), Supabase (`NEXT_PUBLIC_SUPABASE_URL`), AI model config, API secrets, and Google Vertex credentials.
+
 # AI Evals (manual, not in CI)
 pnpm --filter @hamafx/ai eval -- --base-url http://localhost:3000 --cookie "authjs.session-token=..." --cases
 ```
