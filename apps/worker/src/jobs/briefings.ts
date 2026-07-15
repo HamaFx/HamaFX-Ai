@@ -19,7 +19,7 @@
 //
 // On every invocation, scan `economic_events` twice:
 //   - pre-event:  events with date ∈ [now, now+2h]  → emitPreEvent
-//   - post-event: events with date ∈ [now-24h, now-5m] AND actual IS NOT NULL → emitPostEvent
+//   - post-event: events with date ∈ [now-30d, now-5m] AND actual IS NOT NULL → emitPostEvent
 //
 // Each emit is idempotent at the (eventId, kind) primary key on
 // briefings_emitted, so any cadence (with possible drift) is safe to re-run.
@@ -35,8 +35,8 @@ import type { JobContext, JobResult } from './types.js';
 
 /** Pre-event: scan high-impact events happening in the next 2 hours. */
 const PRE_WINDOW_MS = 2 * 60 * 60 * 1000;
-/** Post-event catch-up: scan events that happened in the last 24 hours. */
-const POST_CATCHUP_MS = 24 * 60 * 60 * 1000;
+/** Post-event catch-up: scan events that happened in the last 30 days. */
+const POST_CATCHUP_MS = 30 * 24 * 60 * 60 * 1000;
 /** Small offset to avoid picking up events that literally just fired. */
 const POST_GRACE_MS = 5 * 60 * 1000;
 
@@ -72,8 +72,8 @@ export async function runBriefings(ctx: JobContext): Promise<JobResult> {
     }
   }
 
-  // --- Post-event catch-up: [now-24h, now-5m] AND actual IS NOT NULL ---
-  // Scans the last 24 hours for high-impact events with reported actuals
+  // --- Post-event catch-up: [now-30d, now-5m] AND actual IS NOT NULL ---
+  // Scans the last 30 days for high-impact events with reported actuals
   // that haven't had a post-event briefing emitted yet. This catches up on
   // briefings that were missed during worker downtime.
   const postCandidates = await findHighImpactEventsInWindow({

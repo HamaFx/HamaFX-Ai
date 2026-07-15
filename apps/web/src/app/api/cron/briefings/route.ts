@@ -45,8 +45,8 @@ export const dynamic = 'force-dynamic';
 
 /** Pre-event: scan high-impact events happening in the next 2 hours. */
 const PRE_WINDOW_MS = 2 * 60 * 60 * 1000;
-/** Post-event catch-up: scan events that happened in the last 24 hours. */
-const POST_CATCHUP_MS = 24 * 60 * 60 * 1000;
+/** Post-event catch-up: scan events that happened in the last 30 days. */
+const POST_CATCHUP_MS = 30 * 24 * 60 * 60 * 1000;
 /** Small offset to avoid picking up events that literally just fired. */
 const POST_GRACE_MS = 5 * 60 * 1000;
 
