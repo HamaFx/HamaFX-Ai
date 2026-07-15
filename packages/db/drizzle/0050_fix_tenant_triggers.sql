@@ -1,13 +1,20 @@
--- Migration 0050 — Fix tenant-id triggers for chat_messages and briefings_emitted
+-- Migration 0050 — Fix tenant-id triggers
 --
--- Problem: The `hamafx_chat_messages_tenant_id` trigger was calling
--- `hamafx_set_tenant_id_from_user()` which resolves tenant from NEW."user_id" —
--- but `chat_messages` doesn't have a `user_id` column. The correct function is
--- `hamafx_set_chat_message_tenant_id()` which resolves through `chat_threads`.
+-- Fixes three classes of tenant-trigger problems discovered in production:
 --
--- Also adds `hamafx_briefings_tenant_id` trigger on `briefings_emitted` so
--- tenant_id is always populated even when `app.current_tenant` isn't set
--- (e.g. in the worker daemon).
+--   1. chat_messages: its trigger was calling hamafx_set_tenant_id_from_user()
+--      which resolves from NEW."user_id", a column chat_messages doesn't have.
+--      Fixed by switching to hamafx_set_chat_message_tenant_id() which resolves
+--      through the chat_threads relationship.
+--
+--   2. 12 tables that have user_id columns were missing their tenant triggers
+--      entirely, causing NOT-NULL violations when app.current_tenant is not set
+--      (e.g. in the worker daemon or chat tool handlers).
+--      Tables: agent_opinions, alerts, bot_links, chat_telemetry,
+--      decision_signals, journal_entries, memory_embeddings, portfolio_positions,
+--      provider_tests, shared_snapshots, user_sessions, user_symbols.
+--
+--   3. briefings_emitted: same missing-trigger pattern as group 2.
 --
 -- All statements are idempotent (safe to re-run).
 
@@ -36,23 +43,34 @@ CREATE TRIGGER hamafx_chat_messages_tenant_id
   EXECUTE FUNCTION hamafx_set_chat_message_tenant_id();
 --> statement-breakpoint
 
--- 3. Create trigger for briefings_emitted — resolves tenant from user_id
---    when the session setting app.current_tenant is not available.
-CREATE OR REPLACE FUNCTION hamafx_set_briefings_tenant_id()
-RETURNS trigger LANGUAGE plpgsql AS $$
+-- 3. Create missing tenant triggers for all 12 user-scoped tables + briefings_emitted.
+--    Each trigger calls hamafx_set_tenant_id_from_user() which resolves tenant
+--    from NEW.user_id when the session setting app.current_tenant is unavailable.
+DO $$
+DECLARE
+  tbl text;
 BEGIN
-  IF NEW."tenant_id" IS NULL THEN
-    NEW."tenant_id" := hamafx_resolve_tenant_id(NEW."user_id");
-  END IF;
-  RETURN NEW;
+  FOREACH tbl IN ARRAY ARRAY[
+    'agent_opinions',
+    'alerts',
+    'bot_links',
+    'briefings_emitted',
+    'chat_telemetry',
+    'decision_signals',
+    'journal_entries',
+    'memory_embeddings',
+    'portfolio_positions',
+    'provider_tests',
+    'shared_snapshots',
+    'user_sessions',
+    'user_symbols'
+  ] LOOP
+    EXECUTE format('DROP TRIGGER IF EXISTS %I ON %I', 'hamafx_' || tbl || '_tenant_id', tbl);
+    EXECUTE format(
+      'CREATE TRIGGER %I BEFORE INSERT OR UPDATE ON %I FOR EACH ROW EXECUTE FUNCTION hamafx_set_tenant_id_from_user()',
+      'hamafx_' || tbl || '_tenant_id',
+      tbl
+    );
+  END LOOP;
 END;
 $$;
---> statement-breakpoint
-
-DROP TRIGGER IF EXISTS hamafx_briefings_tenant_id ON "briefings_emitted";
---> statement-breakpoint
-
-CREATE TRIGGER hamafx_briefings_tenant_id
-  BEFORE INSERT OR UPDATE ON "briefings_emitted"
-  FOR EACH ROW
-  EXECUTE FUNCTION hamafx_set_briefings_tenant_id();
