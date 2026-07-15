@@ -355,7 +355,7 @@ export function Composer({
         className={cn(
           'bg-bg-elev-1 border border-border relative flex w-full flex-col overflow-hidden rounded-sm shadow-md transition-all duration-150 ease-in-out',
           focused && 'border-brand-border',
-          dragOver && 'ring-2 ring-inset ring-brand-border/30',
+          dragOver && 'ring-2 ring-inset ring-brand/25',
         )}
         onSubmit={(e) => {
           e.preventDefault();

@@ -36,7 +36,7 @@
   /* Subtle orange-tinted border — low light mixed with the brand colour.
      Used on "cool places" (active nav, hero panels, focus edges) to give
      a warm rim without recolouring the entire surface. */
-  --color-brand-border: #2D2218;
+  --color-brand-border: #402A18;
 
   /* ── Accent — aliased to brand for backward compat. Do not use; prefer
    *    --color-brand everywhere. ── */
