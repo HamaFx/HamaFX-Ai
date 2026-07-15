@@ -157,6 +157,30 @@ const CAPS_TEXT = {
   streaming: true,
 } as const;
 
+/**
+ * Normalize a PEM private key so it works with OpenSSL 3.x's stricter
+ * decoder. Environment variables often carry the key as one long line
+ * (no newlines), which the legacy `Sign.sign()` API rejects with
+ * `ERR_OSSL_UNSUPPORTED` / `DECODER routines::unsupported`.
+ *
+ * Duplicated from model.ts (can't import due to circular dep).
+ */
+function normalizePemPrivateKey(raw: string): string {
+  let key = raw.replace(/\r\n/g, '\n').trim();
+  const headerMatch = key.match(/^-----BEGIN [A-Z ]+PRIVATE KEY-----/m);
+  const footerMatch = key.match(/-----END [A-Z ]+PRIVATE KEY-----$/m);
+  if (!headerMatch || !footerMatch) return raw;
+  const header = headerMatch[0];
+  const footer = footerMatch[0];
+  let body = key
+    .replace(header, '')
+    .replace(footer, '')
+    .replace(/\s+/g, '');
+  if (body.length === 0) return raw;
+  const wrapped = body.match(/.{1,64}/g)?.join('\n') ?? body;
+  return `${header}\n${wrapped}\n${footer}\n`;
+}
+
 /** Shared factory for OpenAI-compatible chat APIs. */
 function openaiCompatibleFactory(
   name: string,
@@ -426,9 +450,13 @@ const VERTEX = defineProvider({
             'Vertex key is not valid service-account JSON (missing client_email or private_key)',
           );
         }
+        // Normalize the PEM private key so it works with OpenSSL 3.x.
+        // Environment variables often carry the key as one long line
+        // (no newlines), which the legacy Sign.sign() API rejects with
+        // ERR_OSSL_UNSUPPORTED / DECODER routines::unsupported.
         parsed = {
           client_email: obj.client_email,
-          private_key: obj.private_key,
+          private_key: normalizePemPrivateKey(obj.private_key),
         };
       } catch (err) {
         throw new Error(

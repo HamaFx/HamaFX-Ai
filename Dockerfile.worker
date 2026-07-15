@@ -44,6 +44,11 @@ ENV DEPLOYED_SHA=${DEPLOYED_SHA}
 
 ENV NODE_ENV=production
 ENV WORKER_MODE=docker
+# OpenSSL 3.x legacy provider — belt-and-suspenders for PEM key parsing
+# in the Google Auth library's JWT signing path. Without this flag,
+# flattened PEM keys (common when passed through env vars) fail with
+# ERR_OSSL_UNSUPPORTED / DECODER routines::unsupported.
+ENV NODE_OPTIONS=--openssl-legacy-provider
 
 EXPOSE 8081
 EXPOSE 8080

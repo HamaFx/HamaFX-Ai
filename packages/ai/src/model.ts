@@ -61,6 +61,48 @@ interface VertexCredentials {
   private_key_id?: string;
 }
 
+/**
+ * Normalize a PEM private key so it works with OpenSSL 3.x's stricter
+ * decoder. Environment variables often carry the key as one long line
+ * (no newlines), which the legacy `Sign.sign()` API rejects with
+ * `ERR_OSSL_UNSUPPORTED` / `DECODER routines::unsupported`.
+ *
+ * This function:
+ *   1. Strips any existing header/footer whitespace and normalises
+ *      CRLF → LF.
+ *   2. Extracts the base64 body.
+ *   3. Re-wraps the body at 64-char lines.
+ *   4. Emits a canonical PEM block with a trailing newline.
+ */
+function normalizePemPrivateKey(raw: string): string {
+  // Collapse CRLF → LF and trim surrounding whitespace.
+  let key = raw.replace(/\r\n/g, '\n').trim();
+
+  // Extract header and footer, then pull the base64 body from between them.
+  const headerMatch = key.match(/^-----BEGIN [A-Z ]+PRIVATE KEY-----/m);
+  const footerMatch = key.match(/-----END [A-Z ]+PRIVATE KEY-----$/m);
+  if (!headerMatch || !footerMatch) {
+    // Not a recognised PEM block — return as-is and let OpenSSL reject it
+    // with a readable error.
+    return raw;
+  }
+  const header = headerMatch[0];
+  const footer = footerMatch[0];
+
+  // Remove header, footer, and all whitespace to get the raw base64 body.
+  let body = key
+    .replace(header, '')
+    .replace(footer, '')
+    .replace(/\s+/g, '');
+
+  if (body.length === 0) return raw;
+
+  // Wrap at 64 characters.
+  const wrapped = body.match(/.{1,64}/g)?.join('\n') ?? body;
+
+  return `${header}\n${wrapped}\n${footer}\n`;
+}
+
 function parseVertexCredentials(json: string): VertexCredentials {
   const parsed = JSON.parse(json) as Record<string, unknown>;
   const clientEmail = parsed.client_email;
@@ -72,7 +114,7 @@ function parseVertexCredentials(json: string): VertexCredentials {
   }
   const creds: VertexCredentials = {
     client_email: clientEmail,
-    private_key: privateKey,
+    private_key: normalizePemPrivateKey(privateKey),
   };
   if (typeof parsed.private_key_id === 'string') {
     creds.private_key_id = parsed.private_key_id;
