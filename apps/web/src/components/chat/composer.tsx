@@ -354,8 +354,8 @@ export function Composer({
       <form
         className={cn(
           'bg-bg-elev-1 border border-border relative flex w-full flex-col overflow-hidden rounded-sm shadow-md transition-all duration-150 ease-in-out',
-          focused && 'border-brand/15',
-          dragOver && 'ring-2 ring-inset ring-brand/15',
+          focused && 'border-brand-border',
+          dragOver && 'ring-2 ring-inset ring-brand-border/30',
         )}
         onSubmit={(e) => {
           e.preventDefault();

@@ -77,9 +77,27 @@ export function TickerTape() {
     return { symbol: t.symbol, mid: t.mid.toFixed(decimals), isBull, changeStr };
   });
 
+  // Fallback: show static symbols when live prices aren't available yet
   if (items.length === 0) {
+    const fallbackSymbols = ['XAUUSD', 'EURUSD', 'GBPUSD', 'USDJPY', 'BTCUSD', 'US100'];
+    const fallback = fallbackSymbols.flatMap((s) => [
+      <span key={`${s}-label`} className="inline-flex items-center gap-1 shrink-0">
+        <span className="text-fg font-semibold tracking-tight">{s}</span>
+        <span className="text-fg-subtle tabular-nums">---.--</span>
+        <span className="text-fg-subtle/40 mx-2 select-none">·</span>
+      </span>,
+    ]);
     return (
-      <div className="border-b border-border/60 h-6 bg-bg" aria-hidden="true" />
+      <div
+        className="border-b border-border/60 bg-bg relative h-6 overflow-hidden"
+        aria-label="Market ticker tape — awaiting data"
+        role="marquee"
+      >
+        <div className="ticker-track font-mono text-caption leading-6 whitespace-nowrap">
+          {fallback}
+          {fallback}
+        </div>
+      </div>
     );
   }
 

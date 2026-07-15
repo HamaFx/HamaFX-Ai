@@ -161,8 +161,8 @@ function WatchRow({
   const isBull = last >= first;
   return (
     <li className="border-divider flex items-center justify-between gap-3 border-b py-2 last:border-0">
-      <div className="flex min-w-0 flex-col">
-        <span className="text-fg text-body-sm font-semibold">{tick.symbol}</span>
+      <div className="flex min-w-0 flex-col font-mono">
+        <span className="text-fg text-body-sm font-bold tracking-tight">{tick.symbol}</span>
         <span className="text-fg-subtle text-caption tabular-nums">
           {last.toFixed(decimals)}
         </span>

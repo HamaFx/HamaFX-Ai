@@ -55,27 +55,27 @@ export function LeverageGauge({ usagePct, label = 'Margin Used', detail }: Lever
   }, [usagePct]);
 
   return (
-    <div className="flex flex-col gap-1" aria-label={`${label}: ${usagePct.toFixed(1)}%`}>
+    <div className="flex flex-col gap-1.5 font-mono" aria-label={`${label}: ${usagePct.toFixed(1)}%`}>
       <div className="flex items-center justify-between gap-2">
-        <span className="text-caption text-fg-subtle font-medium uppercase tracking-wider">
+        <span className="text-caption text-fg-subtle font-semibold uppercase tracking-wider">
           {label}
         </span>
-        <span className={cn('text-caption font-semibold tabular-nums', toneClass)}>
+        <span className={cn('text-caption font-bold tabular-nums', toneClass)}>
           {usagePct.toFixed(1)}%
         </span>
       </div>
 
-      <div className="font-mono text-sm leading-none tracking-[0.05em] select-none" aria-hidden="true">
+      <div className="text-xs leading-none tracking-[0.08em] select-none" aria-hidden="true">
         <span className={cn(toneClass)}>
           {'█'.repeat(filled)}
         </span>
-        <span className="text-fg-subtle/25">
+        <span className="text-fg-subtle/40">
           {'░'.repeat(empty)}
         </span>
       </div>
 
       {detail ? (
-        <p className="text-caption text-fg-subtle tabular-nums">{detail}</p>
+        <p className="text-caption text-fg-subtle/60 tabular-nums">{detail}</p>
       ) : null}
     </div>
   );
