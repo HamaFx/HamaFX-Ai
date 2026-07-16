@@ -460,10 +460,15 @@ export function resolveChatModel(
   domain?: ModelDomain,
 ): ChatModelResolution {
   const stored = decryptByok(userSettings.aiApiKeys);
-  const keys: ByokPayload = {
-    ...envFallbackKeys(env),
-    ...(stored ?? {}),
-  };
+  const hasStoredKeys = stored && Object.keys(stored).length > 0;
+  // When a user has explicitly stored API keys in their settings, use ONLY
+  // those keys — don't include system-level env fallback keys. The env
+  // fallback (e.g. Google Vertex from server env vars) is a safety net for
+  // users who haven't configured their own key yet. Once a user has chosen
+  // a provider, that choice should be respected.
+  const keys: ByokPayload = hasStoredKeys
+    ? stored
+    : { ...envFallbackKeys(env), ...(stored ?? {}) };
   const configured = configuredProviders(keys);
   if (configured.length === 0) {
     throw new Error(
