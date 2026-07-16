@@ -6,20 +6,11 @@ vi.mock('@hamafx/db', () => ({
   getDb: vi.fn(() => ({ execute: mockDbExecute })),
 }));
 
-// Mock getUserFromRequest to return a known user — avoids HMAC issues in vitest.
-// getUserFromRequest is the only function from @/lib/api that needs mocking.
-const { vi: vitest } = await import('vitest');
-vitest.mock('@/lib/api', async () => {
-  const actual = await vi.importActual<typeof import('@/lib/api')>('@/lib/api');
-  return {
-    ...actual,
-    getUserFromRequest: () => Promise.resolve({ userId: 'test-user' }),
-  };
-});
-
 import { GET } from '@/app/api/health/route';
 
-const REQ = new Request('http://localhost/api/health');
+const MOCK_REQ = new Request('http://localhost/api/health', {
+  headers: { 'x-user-id': 'test-user' },
+});
 
 const ENV = {
   DATABASE_URL: 'test-db-url',
@@ -47,13 +38,17 @@ describe('GET /api/health', () => {
       { extname: 'vector', recent: '42', stuck: '0' },
     ]);
 
-    const response = await GET(REQ, { params: Promise.resolve(undefined as never) });
+    const response = await GET(MOCK_REQ, { params: Promise.resolve(undefined as never) });
     expect(response.status).toBe(200);
 
     const body = await response.json();
     expect(body.status).toBe('ok');
+    expect(body.version).toBe('abc123');
     expect(body.checks.db.ok).toBe(true);
     expect(body.checks.env.ok).toBe(true);
+    expect(body.checks.cron.ok).toBe(true);
+    expect(body.checks.cron.recentRuns).toBe(42);
+    expect(body.checks.cron.stuckRuns).toBe(0);
     expect(body.checks.pgvector.ok).toBe(true);
   });
 
@@ -63,18 +58,19 @@ describe('GET /api/health', () => {
     ]);
     delete process.env.DATABASE_URL;
 
-    const response = await GET(REQ, { params: Promise.resolve(undefined as never) });
+    const response = await GET(MOCK_REQ, { params: Promise.resolve(undefined as never) });
     expect(response.status).toBe(503);
 
     const body = await response.json();
     expect(body.status).toBe('error');
     expect(body.checks.env.ok).toBe(false);
+    expect(body.checks.db.ok).toBe(true);
   });
 
   it('returns 503 when db check fails', async () => {
     mockDbExecute.mockRejectedValue(new Error('connection refused'));
 
-    const response = await GET(REQ, { params: Promise.resolve(undefined as never) });
+    const response = await GET(MOCK_REQ, { params: Promise.resolve(undefined as never) });
     expect(response.status).toBe(503);
 
     const body = await response.json();
@@ -86,22 +82,29 @@ describe('GET /api/health', () => {
   it('reports pgvector not installed when extension is missing', async () => {
     mockDbExecute.mockResolvedValue([]);
 
-    const response = await GET(REQ, { params: Promise.resolve(undefined as never) });
+    const response = await GET(MOCK_REQ, { params: Promise.resolve(undefined as never) });
     expect(response.status).toBe(503);
 
     const body = await response.json();
     expect(body.status).toBe('error');
     expect(body.checks.pgvector.ok).toBe(false);
+    expect(body.checks.pgvector.message).toContain('pgvector extension not installed');
+    expect(body.checks.db.ok).toBe(true);
+    expect(body.checks.env.ok).toBe(true);
   });
 
   it('gracefully handles missing cron_runs table', async () => {
     mockDbExecute.mockResolvedValue([]);
 
-    const response = await GET(REQ, { params: Promise.resolve(undefined as never) });
+    const response = await GET(MOCK_REQ, { params: Promise.resolve(undefined as never) });
     expect(response.status).toBe(503);
 
     const body = await response.json();
     expect(body.status).toBe('error');
     expect(body.checks.cron.ok).toBe(true);
+    expect(body.checks.cron.message).toContain('cron_runs unavailable');
+    expect(body.checks.db.ok).toBe(true);
+    expect(body.checks.env.ok).toBe(true);
+    expect(body.checks.pgvector.ok).toBe(false);
   });
 });
