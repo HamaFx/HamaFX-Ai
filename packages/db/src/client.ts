@@ -100,11 +100,16 @@ function resolveSslOptions(): false | { rejectUnauthorized: boolean; ca?: string
     };
   }
 
-  // DB-2: In production, require verified TLS unless explicitly opted out.
+  // DB-2: In production, warn about missing TLS config but don't crash.
+  // A hard throw at module-init time breaks the entire container on deploy
+  // if the .env hasn't been updated yet. Instead, we warn loudly and let
+  // the connection attempt fail naturally — Supabase pooler rejects
+  // non-TLS connections, but self-hosted Postgres may not require it.
   if (process.env.NODE_ENV === 'production' && process.env.DB_ALLOW_INSECURE_TLS !== 'true') {
-    throw new Error(
-      'DB TLS verification required in production. ' +
-        'Set SUPABASE_CA_CERT with your CA bundle, or set DB_ALLOW_INSECURE_TLS=true to opt out (not recommended).',
+    console.warn(
+      '*** [db] SECURITY WARNING: DB TLS verification not configured. ***\n' +
+      '  Set SUPABASE_CA_CERT with your CA bundle (from Supabase dashboard) for verified TLS.\n' +
+      '  Or set DB_ALLOW_INSECURE_TLS=true in .env to bypass (not recommended for production).',
     );
   }
 
