@@ -31,19 +31,24 @@ describe('modes — autoDetectMode', () => {
     expect(autoDetectMode('Is it a good time to buy gold?')).toBe('full');
     expect(autoDetectMode('should I go long on GBPUSD?')).toBe('full');
   });
-  it('detects quick mode for price questions', () => {
-    expect(autoDetectMode("what's the price of XAUUSD?")).toBe('quick');
-    expect(autoDetectMode('current price for EURUSD')).toBe('quick');
-    expect(autoDetectMode('how much is gold right now?')).toBe('quick');
+  it('detects single mode for price questions (covered by LIVE_SNAPSHOT)', () => {
+    expect(autoDetectMode("what's the price of XAUUSD?")).toBe('single');
+    expect(autoDetectMode('current price for EURUSD')).toBe('single');
+    expect(autoDetectMode('how much is gold right now?')).toBe('single');
   });
   it('detects standard mode for analysis questions', () => {
     expect(autoDetectMode('analyze XAUUSD')).toBe('standard');
     expect(autoDetectMode('what is your outlook on EURUSD?')).toBe('standard');
     expect(autoDetectMode('what do you think about gold?')).toBe('standard');
   });
-  it('defaults to standard for ambiguous questions', () => {
-    expect(autoDetectMode('hello')).toBe('standard');
+  it('detects single mode for greetings and trivial messages', () => {
+    expect(autoDetectMode('hello')).toBe('single');
+    expect(autoDetectMode('hi')).toBe('single');
+    expect(autoDetectMode('thanks')).toBe('single');
+  });
+  it('defaults to standard for ambiguous questions (10+ chars, no keywords)', () => {
     expect(autoDetectMode('tell me about trading')).toBe('standard');
+    expect(autoDetectMode('anything interesting happening')).toBe('standard');
   });
 });
 
@@ -56,7 +61,8 @@ describe('modes — resolveMode', () => {
   });
   it('auto-detects when mode is auto', () => {
     expect(resolveMode('auto', 'should I buy XAUUSD?')).toBe('full');
-    expect(resolveMode('auto', "what's the price?")).toBe('quick');
+    // Price questions route to single (covered by LIVE_SNAPSHOT).
+    expect(resolveMode('auto', "what's the price?")).toBe('single');
     expect(resolveMode('auto', 'analyze EURUSD')).toBe('standard');
   });
 });

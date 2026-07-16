@@ -16,11 +16,14 @@
 
 // Multi-Agent Orchestration — pipeline coordinator.
 
-import { tryReserveBudget, applyBudgetDelta, BudgetExceededError } from '../cost';
+import { tryReserveBudget, applyBudgetDelta, BudgetExceededError, checkBudgetAlertsAndThresholds } from '../cost';
+import { resolveChatModel } from '../model';
 import { buildSharedContext, extractUserMessageText } from './context';
 import { selectAgents, resolveMode } from './modes';
 import { saveAgentOpinions } from './persistence';
 import { appendUserMessage, appendAssistantMessage, recordTelemetry } from '../persistence';
+import { enforceCitations } from '../verification';
+import { extractDecisionSignal, createDecisionSignal, type ExtractionContext } from '../decision-signals';
 import { TechnicalAgent } from './agents/technical-agent';
 import { FundamentalAgent } from './agents/fundamental-agent';
 import { RiskAgent } from './agents/risk-agent';
@@ -70,17 +73,33 @@ export async function runMultiAgentChat(args: RunMultiAgentArgs): Promise<MultiA
   }
 
   // ── Budget guardrail ── reserve estimated cost upfront ──
+  // B1 fix: use env.MAX_DAILY_USD instead of hardcoded 100.
   const estimatedCost = MODE_COST_ESTIMATE[mode] ?? 0.025;
-  const maxDailyUsd = userSettings.maxDailyUsd ?? 100;
+  const maxDailyUsd = userSettings.maxDailyUsd ?? env.MAX_DAILY_USD;
   const reservation = await tryReserveBudget(userId, estimatedCost, maxDailyUsd);
   if (!reservation.ok) {
     throw new BudgetExceededError(reservation.spent, reservation.max);
   }
 
+  // B2 fix — enforce monthly budget + provider thresholds before expensive multi-agent turns.
+  // Resolve the active provider once for the budget check (reuse single-agent semantics).
+  const activeProvider = resolveChatModel(userSettings, env).providerId;
+  const budgetCheck = await checkBudgetAlertsAndThresholds(userId, activeProvider);
+  if (budgetCheck.blocked) {
+    throw new Error(budgetCheck.blockedReason ?? 'Monthly budget limit reached');
+  }
+  // B2: honor nonEssentialDisabled by downgrading full → standard when near budget cap.
+  const effectiveMode = budgetCheck.nonEssentialDisabled && mode === 'full' ? 'standard' : mode;
+
   // ── Persist the user message first ──
   // This ensures the conversation survives even if all agents fail.
   // Do this AFTER budget reservation succeeds but BEFORE any agent work.
   await appendUserMessage(threadId, userMessage);
+
+  // Hoist symbol to function scope so Q2 signal extraction can use it.
+  const symbol = userSettings.defaultSymbol ?? 'XAUUSD';
+  // Snapshot data for Q2 signal extraction (captured inside try, used after).
+  let snapshotPrices: Record<string, unknown> | null = null;
 
   // ── Run specialists + fusion with budget-leak guard ──
   // Wrap the entire execution from shared-context build through
@@ -96,12 +115,13 @@ export async function runMultiAgentChat(args: RunMultiAgentArgs): Promise<MultiA
   let totalLatencyMs = 0;
 
   try {
-    const symbol = userSettings.defaultSymbol ?? 'XAUUSD';
     const ctxArgs: Parameters<typeof buildSharedContext>[0] = { symbol, userId, threadId, userMessage, history, userSettings, displayName, env, signal };
     if (customInstructions !== undefined) ctxArgs.customInstructions = customInstructions;
     const ctx = await buildSharedContext(ctxArgs);
+    // Capture snapshot prices for Q2 signal extraction (used after try block).
+    snapshotPrices = ctx.snapshot.prices as unknown as Record<string, unknown>;
 
-    const specialistNames = selectAgents(mode);
+    const specialistNames = selectAgents(effectiveMode);
     const specialists = specialistNames.map((name) => AGENT_FACTORIES[name]());
 
     onProgress?.({ type: 'specialists_start', agents: specialistNames });
@@ -124,6 +144,21 @@ export async function runMultiAgentChat(args: RunMultiAgentArgs): Promise<MultiA
     );
 
     validOpinions = opinions.filter((o): o is AgentOpinion => o !== null);
+
+    // P3: record per-specialist telemetry rows for usage attribution.
+    for (const op of validOpinions) {
+      void recordTelemetry({
+        userId,
+        threadId,
+        messageId: null,
+        model: op.model,
+        inputTokens: 0,
+        outputTokens: 0,
+        toolCalls: 0,
+        ms: op.latencyMs,
+        kind: `multi_specialist_${op.agentName}` as const,
+      }).catch((err) => console.warn('[multi-agent] specialist telemetry failed', err));
+    }
 
     onProgress?.({ type: 'fusion_start' });
 
@@ -167,20 +202,47 @@ export async function runMultiAgentChat(args: RunMultiAgentArgs): Promise<MultiA
     }
   }
 
+  // ── Q2: Citation enforcement on multi-agent output ──
+  // The fusion agent has no tools, so we pass the union of specialist tool names
+  // as if they were "invoked" — the numbers/claims in the final answer come from
+  // the specialists' tool results. A soft warning is correct because the data
+  // wasn't verified by a tool call in the fusion turn itself.
+  const specialistToolNames = [...new Set(validOpinions.flatMap((o) => {
+    const rd = o.rawData as Record<string, unknown>;
+    return Array.isArray(rd._tools) ? (rd._tools as string[]) : [];
+  }))];
+  let citationWarning: { type: string; unsupportedClaims: string[]; toolsInvoked: string[]; stance: string; createdAt: number } | null = null;
+  try {
+    citationWarning = enforceCitations({
+      text: finalText,
+      // Pass specialist tool names as if they were invoked this turn.
+      // Q2: The fusion agent has no tools, so we construct synthetic tool-call
+      // content parts that `readToolCallNames` (verification.ts) can recognize.
+      // This is intentionally coupled to verification.ts's shape expectations.
+      responseMessages: specialistToolNames.length > 0
+        ? [{ content: specialistToolNames.map((t) => ({ type: 'tool-call' as const, toolName: t })) }]
+        : [],
+    });
+  } catch { /* citation enforcer should never crash the pipeline */ }
+
   // ── Persist the assistant message ──
   // Build a UIMessage from the final text and persist it, getting a real
   // DB-generated messageId that satisfies the agent_opinions FK constraint.
+  let parts: UIMessage['parts'] = [{ type: 'text', text: finalText }];
+  if (citationWarning) {
+    parts = [...parts, citationWarning as unknown as UIMessage['parts'][number]];
+  }
   const assistantUi: UIMessage = {
     id: crypto.randomUUID(),
     role: 'assistant',
-    parts: [{ type: 'text', text: finalText }],
+    parts,
   };
   const { messageId: persistedMessageId } = await appendAssistantMessage(threadId, assistantUi);
 
   // ── Persist agent opinions ── link to the real assistant message ──
   if (validOpinions.length > 0) {
     await saveAgentOpinions({
-      userId, threadId, messageId: persistedMessageId, analysisMode: mode,
+      userId, threadId, messageId: persistedMessageId, analysisMode: effectiveMode,
       opinions: validOpinions.map((o) => ({
         agentName: o.agentName, bias: o.bias, confidence: o.confidence,
         reasoning: o.reasoning, rawData: o.rawData, model: o.model,
@@ -189,17 +251,46 @@ export async function runMultiAgentChat(args: RunMultiAgentArgs): Promise<MultiA
     }).catch((err) => console.error('[multi-agent] saveAgentOpinions failed', err));
   }
 
+  // ── Q2: Extract + persist decision signal from multi-agent output ──
+  // Fire-and-forget — never blocks the response.
+  if (snapshotPrices && persistedMessageId) {
+    const symbolKey = symbol as string;
+    const tick = snapshotPrices[symbolKey] as Record<string, unknown> | undefined;
+    const currentPrice = (tick && typeof tick.mid === 'number') ? tick.mid as number : 0;
+    if (currentPrice > 0) {
+      const signalCtx: ExtractionContext = {
+        symbol: symbolKey,
+        currentPrice,
+        userId,
+        threadId,
+        messageId: persistedMessageId,
+        model: `multi-agent/${effectiveMode}`,
+        analysisMode: effectiveMode,
+      };
+      try {
+        const payload = extractDecisionSignal(assistantUi, signalCtx);
+        if (payload) {
+          void createDecisionSignal(payload).catch((err) =>
+            console.warn('[multi-agent] decision signal persist failed', err),
+          );
+        }
+      } catch (err) {
+        console.warn('[multi-agent] decision signal extraction failed', err);
+      }
+    }
+  }
+
   // ── Record telemetry for the multi-agent turn ──
   void recordTelemetry({
     userId,
     threadId,
     messageId: persistedMessageId,
-    model: `multi-agent/${mode}`,
+    model: `multi-agent/${effectiveMode}`,
     inputTokens: 0,
     outputTokens: 0,
     toolCalls: 0,
     ms: totalLatencyMs,
   }).catch((err) => console.warn('[multi-agent] recordTelemetry failed', err));
 
-  return { finalText, agentOpinions: validOpinions, totalCostUsd, totalLatencyMs, mode, messageId: persistedMessageId };
+  return { finalText, agentOpinions: validOpinions, totalCostUsd, totalLatencyMs, mode: effectiveMode, messageId: persistedMessageId };
 }

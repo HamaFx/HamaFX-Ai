@@ -76,7 +76,7 @@ interface VertexCredentials {
  */
 function normalizePemPrivateKey(raw: string): string {
   // Collapse CRLF → LF and trim surrounding whitespace.
-  let key = raw.replace(/\r\n/g, '\n').trim();
+  const key = raw.replace(/\r\n/g, '\n').trim();
 
   // Extract header and footer, then pull the base64 body from between them.
   // Note: do NOT include `PRIVATE` in the character class — `[A-Z ]+` would
@@ -94,7 +94,7 @@ function normalizePemPrivateKey(raw: string): string {
   const footer = footerMatch[0];
 
   // Remove header, footer, and all whitespace to get the raw base64 body.
-  let body = key
+  const body = key
     .replace(header, '')
     .replace(footer, '')
     .replace(/\s+/g, '');

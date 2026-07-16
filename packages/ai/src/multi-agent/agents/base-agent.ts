@@ -16,15 +16,24 @@
 
 // Multi-Agent Orchestration — abstract base agent.
 
-import { generateText, type LanguageModel, type Tool } from 'ai';
+import { generateText, stepCountIs, type LanguageModel, type Tool } from 'ai';
 import { z } from 'zod';
-import { resolveChatModel, resolveModelForProvider } from '../../model';
+import { resolveChatModel, resolveModelForProvider, type ModelDomain } from '../../model';
 import { estimateCostUsd } from '../../cost';
 import { withToolContext, type ToolContext } from '../../tool-context';
 import type { ProviderId } from '@hamafx/shared';
 import type { SharedContext, AgentOpinion, AgentName, AgentBias, ModelTier } from '../types';
 import { AGENT_TIMEOUTS } from '../types';
 import { extractUserMessageText } from '../context';
+
+/** Q1 fix — map ModelTier to the ModelDomain used by resolveChatModel's tier selection. */
+function tierToDomain(tier: ModelTier): ModelDomain {
+  switch (tier) {
+    case 'fast': return 'summary';
+    case 'mid': return 'technical';
+    case 'strong': return 'fundamental';
+  }
+}
 
 export const baseOpinionSchema = z.object({
   bias: z.enum(['bullish', 'bearish', 'neutral']),
@@ -52,7 +61,10 @@ export abstract class BaseAgent {
         } catch { /* fall through */ }
       }
     }
-    const res = resolveChatModel(ctx.userSettings, ctx.env);
+    // Q1 fix: pass the agent's model tier as a domain to resolveChatModel so
+    // specialists can use different tiers (fast→summary, mid→technical, strong→fundamental).
+    const domain = tierToDomain(this.modelTier);
+    const res = resolveChatModel(ctx.userSettings, ctx.env, domain);
     return { model: res.model, modelId: res.modelId, providerId: res.providerId };
   }
 
@@ -60,15 +72,19 @@ export abstract class BaseAgent {
     const startMs = Date.now();
     const { model, modelId } = this.resolveModel(ctx);
     const sharedPrompt = ctx.snapshot ? `# LIVE MARKET CONTEXT\n${JSON.stringify(ctx.snapshot, null, 2)}\n` : '';
+    const prefetchedPrompt = ctx.prefetchedData
+      ? `\n\n${ctx.prefetchedData}\n\nPrefer the above pre-fetched data. Only call tools for data gaps or updates.\n`
+      : '';
     const userText = extractUserMessageText(ctx.userMessage);
-    const fullSystem = `${this.systemPrompt()}\n\n${sharedPrompt}`;
+    const fullSystem = `${this.systemPrompt()}\n\n${sharedPrompt}${prefetchedPrompt}`;
     const toolContext: ToolContext = {
       threadId: ctx.threadId,
       userId: ctx.userId,
       latestUserMessageText: userText,
       env: ctx.env,
       signal: ctx.signal,
-      budget: { spent: 0, max: ctx.userSettings.maxDailyUsd ?? 100 },
+            // B1 fix: use env.MAX_DAILY_USD instead of hardcoded 100.
+      budget: { spent: 0, max: ctx.userSettings.maxDailyUsd ?? ctx.env.MAX_DAILY_USD },
       userSettings: ctx.userSettings,
     };
     const timeoutMs = AGENT_TIMEOUTS[this.name] ?? 15_000;
@@ -79,7 +95,10 @@ export abstract class BaseAgent {
       const result = await withToolContext(toolContext, async () => generateText({
         model, system: fullSystem,
         messages: [{ role: 'user' as const, content: userText }],
-        tools: this.tools(), abortSignal: controller.signal, maxOutputTokens: 2000,
+        tools: this.tools(),
+        stopWhen: stepCountIs(ctx.env.MAX_TOOL_ITERATIONS ?? 6),
+        abortSignal: controller.signal,
+        maxOutputTokens: 3000,
       }));
       const latencyMs = Date.now() - startMs;
       const costUsd = estimateCostUsd(modelId, result.usage?.inputTokens ?? 0, result.usage?.outputTokens ?? 0);

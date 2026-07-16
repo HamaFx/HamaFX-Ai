@@ -18,7 +18,7 @@
 // `useChat`, runs the agent, and streams back the SDK's UI-message stream
 // for the client to consume.
 
-import { BudgetExceededError, runChat } from '@hamafx/ai';
+import { BudgetExceededError, getThread, runChat } from '@hamafx/ai';
 import { pickAiEnv } from '@hamafx/shared';
 import * as Sentry from '@sentry/nextjs';
 import { providerUnavailable } from '@hamafx/shared';
@@ -80,6 +80,13 @@ export const POST = withAuth<void>(async (req, { user }) => {
       const prefs = JSON.parse(aiPrefsHeader) as { customInstructions?: unknown };
       if (typeof prefs.customInstructions === 'string') customInstructions = prefs.customInstructions;
     } catch { /* ignore */ }
+  }
+
+  // S2 fix — verify thread ownership before any agent work runs.
+  // This check gates both single-agent and multi-agent paths.
+  const thread = await getThread(user.userId, body.threadId);
+  if (!thread) {
+    return Response.json({ error: { code: 'NOT_FOUND', message: 'Thread not found' } }, { status: 404 });
   }
 
   try {
@@ -202,6 +209,7 @@ export const POST = withAuth<void>(async (req, { user }) => {
       }
     }
 
+    // Single-agent fallback (both for explicit 'single' mode and when auto resolves to 'single').
     const result = await runChat({
       threadId: body.threadId, userId: user.userId,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -83,6 +83,10 @@ export interface SharedContext {
   signal: AbortSignal | null;
   /** Server env slice for model resolution + tool execution. */
   env: MultiAgentEnv;
+  /** Q4: Pre-fetched data block (candles, indicators, calendar, news)
+   *  fetched once by buildSharedContext so specialists don't each
+   *  re-fetch the same datasets. Injected into system prompts. */
+  prefetchedData?: string;
 }
 
 /**

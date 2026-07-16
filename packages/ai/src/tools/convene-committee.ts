@@ -22,7 +22,7 @@ import {
   type ConveneCommitteeOutput,
   type Symbol,
 } from '@hamafx/shared';
-import { tool, generateText } from 'ai';
+import { tool, generateText, stepCountIs } from 'ai';
 import type { z } from 'zod';
 
 import { getToolContext, type ToolContext } from '../tool-context';
@@ -113,7 +113,7 @@ No markdown fences, no preamble.`;
       model: resolveChatModel(ctx.userSettings, ctx.env).model,
       system: "You are an expert forex macroeconomic analyst. Always output raw JSON.",
       prompt,
-      ...(tools ? { tools } : {}),
+      ...(tools ? { tools, stopWhen: stepCountIs(3) } : {}),
     });
 
     const parsed = parseJson<Omit<CommitteeVerdict, 'persona' | 'sources'>>(text);

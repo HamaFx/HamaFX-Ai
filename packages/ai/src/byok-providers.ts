@@ -166,7 +166,7 @@ const CAPS_TEXT = {
  * Duplicated from model.ts (can't import due to circular dep).
  */
 function normalizePemPrivateKey(raw: string): string {
-  let key = raw.replace(/\r\n/g, '\n').trim();
+  const key = raw.replace(/\r\n/g, '\n').trim();
   // Note: `[A-Z ]+` must NOT include `PRIVATE` — greedily consumed,
   // leaving nothing for the literal match that follows.
   const headerMatch = key.match(/^-----BEGIN [A-Z ]+KEY-----/m);
@@ -174,7 +174,7 @@ function normalizePemPrivateKey(raw: string): string {
   if (!headerMatch || !footerMatch) return raw;
   const header = headerMatch[0];
   const footer = footerMatch[0];
-  let body = key
+  const body = key
     .replace(header, '')
     .replace(footer, '')
     .replace(/\s+/g, '');

@@ -208,6 +208,11 @@ const RuntimeEnv = z.object({
   MAX_DAILY_USD: z.coerce.number().positive().default(5),
   /** Hard cap on tool-loop iterations per chat turn. */
   MAX_TOOL_ITERATIONS: z.coerce.number().int().positive().default(6),
+  /** Q5 — enable semantic routing via cheap LLM classifier before keyword scoring. */
+  AI_SEMANTIC_ROUTING_ENABLED: z
+    .union([z.literal('0'), z.literal('1'), z.literal('true'), z.literal('false')])
+    .default('0')
+    .transform((v) => v === '1' || v === 'true'),
   LOG_PROMPTS: z
     .union([z.literal('0'), z.literal('1')])
     .default('0')
@@ -322,7 +327,8 @@ export type AiEnvKeys =
   | 'AI_EMBEDDING_MODEL'
   | 'MAX_DAILY_USD'
   | 'MAX_TOOL_ITERATIONS'
-  | 'LOG_PROMPTS';
+  | 'LOG_PROMPTS'
+  | 'AI_SEMANTIC_ROUTING_ENABLED';
 
 export function pickAiEnv(env: Pick<ServerEnv, AiEnvKeys>) {
   return {
@@ -338,6 +344,7 @@ export function pickAiEnv(env: Pick<ServerEnv, AiEnvKeys>) {
     MAX_DAILY_USD: env.MAX_DAILY_USD,
     MAX_TOOL_ITERATIONS: env.MAX_TOOL_ITERATIONS,
     LOG_PROMPTS: env.LOG_PROMPTS,
+    AI_SEMANTIC_ROUTING_ENABLED: env.AI_SEMANTIC_ROUTING_ENABLED,
   };
 }
 

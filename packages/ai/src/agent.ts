@@ -240,6 +240,15 @@ async function runChatInner(args: RunChatArgs) {
   // domain parameter tells resolveChatModel which defaultModels tier to use.
   const routingArgs: Parameters<typeof routeTurn>[0] = { userMessage };
   if (modelOverride !== undefined) routingArgs.modelOverride = modelOverride;
+  // Q5: wire semantic routing when env flag is enabled.
+  if (env.AI_SEMANTIC_ROUTING_ENABLED) {
+    const plannerModelId = derivePlannerModel(userSettings, env) ?? env.AI_DEFAULT_MODEL;
+    routingArgs.semanticRouting = {
+      modelId: plannerModelId,
+      env: pickAiEnv(env),
+      ...(signal ? { signal } : {}),
+    };
+  }
   const routing: RoutingDecision = await routeTurn(routingArgs);
   recordStep('routing', { domain: routing.domain, planRequired: routing.planRequired });
 
@@ -254,6 +263,9 @@ async function runChatInner(args: RunChatArgs) {
   let lastError: unknown = null;
   let currentModelOverride = modelOverride;
   let nonEssentialDisabled = false;
+  // P5: avoid re-running checkBudgetAlertsAndThresholds on every retry attempt.
+  // Each provider needs at most one check per turn.
+  const checkedProviders = new Set<string>();
 
   while (attempts < maxAttempts) {
     attempts++;
@@ -297,7 +309,14 @@ async function runChatInner(args: RunChatArgs) {
         providerId = res.providerId;
       }
       
-      const budgetCheck = await checkBudgetAlertsAndThresholds(userId, providerId);
+      // P5: skip budget check if we already checked this provider this turn.
+      let budgetCheck: Awaited<ReturnType<typeof checkBudgetAlertsAndThresholds>>;
+      if (providerId && checkedProviders.has(providerId)) {
+        budgetCheck = { blocked: false, nonEssentialDisabled };
+      } else {
+        if (providerId) checkedProviders.add(providerId);
+        budgetCheck = await checkBudgetAlertsAndThresholds(userId, providerId);
+      }
       if (budgetCheck.blocked) {
         if (budgetCheck.blockedReason?.includes('Monthly budget limit reached')) {
           throw new Error(budgetCheck.blockedReason);
@@ -575,6 +594,7 @@ async function runChatInner(args: RunChatArgs) {
                 messageId,
                 model: resolvedModelId,
                 snapshot,
+                responseMessages: response.messages,
               }).catch((err) =>
                 console.warn('[ai] decision signal extraction failed', err),
               );
@@ -850,6 +870,8 @@ async function extractAndPersistSignal(
     messageId: string;
     model: string;
     snapshot: LiveSnapshot;
+    /** C2 fix: AI SDK v5 response.messages from onFinish for structured tool-call data. */
+    responseMessages?: ReadonlyArray<{ role: string; content: unknown }>;
   },
 ): Promise<void> {
   // Resolve the symbol using documented precedence:
@@ -889,7 +911,7 @@ async function extractAndPersistSignal(
     threadId: ctx.threadId,
     messageId: ctx.messageId,
     model: ctx.model,
-  });
+  }, ctx.responseMessages);
 
   if (payload) {
     await createDecisionSignal(payload);

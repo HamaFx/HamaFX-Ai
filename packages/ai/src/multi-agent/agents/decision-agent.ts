@@ -16,7 +16,7 @@
 
 // Decision Agent — fuses all specialist opinions into a final unified response.
 
-import { generateText, streamText, type Tool } from 'ai';
+import { generateText, streamText, convertToModelMessages, type Tool, type ModelMessage } from 'ai';
 import { estimateCostUsd } from '../../cost';
 import { withToolContext, type ToolContext } from '../../tool-context';
 import { BaseAgent } from './base-agent';
@@ -86,18 +86,28 @@ Be concise but thorough. Use markdown formatting for readability.`;
     const sharedPrompt = buildSharedSystemPrompt(ctx, null);
     const system = `${this.systemPrompt()}\n\n${sharedPrompt}`;
     const userMessage = `## User Question\n${userText}\n\n## Specialist Agent Opinions\n${opinionsBlock}\n\n## Your Task\nSynthesize the above opinions into a final response for the user. Follow the response format from your instructions.`;
+    // Q3: include conversation history so follow-up turns have context.
+    const historyMessages: ModelMessage[] = ctx.history && ctx.history.length > 0
+      ? convertToModelMessages(ctx.history.filter((m) => m.role !== 'system'))
+      : [];
+    const messages: ModelMessage[] = [
+      ...historyMessages,
+      { role: 'user' as const, content: userMessage },
+    ];
     const toolContext: ToolContext = {
       threadId: execCtx.threadId,
       userId: execCtx.userId,
       latestUserMessageText: userText,
       env: execCtx.env,
       signal: execCtx.signal,
-      budget: { spent: 0, max: execCtx.userSettings.maxDailyUsd ?? 100 },
+      // B1 fix: use env.MAX_DAILY_USD instead of hardcoded 100.
+      budget: { spent: 0, max: execCtx.userSettings.maxDailyUsd ?? execCtx.env.MAX_DAILY_USD },
       userSettings: execCtx.userSettings,
     };
     const timeoutMs = AGENT_TIMEOUTS[this.name] ?? 30_000;
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), timeoutMs);
+    // P2 fix: add { once: true } to prevent listener leak on long-lived signals.
     if (execCtx.signal) execCtx.signal.addEventListener('abort', () => controller.abort(), { once: true });
     try {
       // P1-4/U1 — Use streamText for token-by-token fusion streaming.
@@ -105,7 +115,7 @@ Be concise but thorough. Use markdown formatting for readability.`;
       // Falls back to generateText when no callback is provided (e.g. tests).
       if (onTextChunk) {
         const sResult = await withToolContext(toolContext, async () =>
-          streamText({ model, system, messages: [{ role: 'user' as const, content: userMessage }], abortSignal: controller.signal, maxOutputTokens: 4000 }),
+          streamText({ model, system, messages, abortSignal: controller.signal, maxOutputTokens: 4000 }),
         );
         const latencyMs = Date.now() - startMs;
         let fullText = '';
@@ -121,7 +131,7 @@ Be concise but thorough. Use markdown formatting for readability.`;
         return { text: fullText, costUsd, latencyMs, modelId };
       }
       // Legacy: generateText for callers without streaming callback
-      const result = await withToolContext(toolContext, async () => generateText({ model, system, messages: [{ role: 'user' as const, content: userMessage }], abortSignal: controller.signal, maxOutputTokens: 4000 }));
+      const result = await withToolContext(toolContext, async () => generateText({ model, system, messages, abortSignal: controller.signal, maxOutputTokens: 4000 }));
       const latencyMs = Date.now() - startMs;
       const costUsd = estimateCostUsd(modelId, result.usage?.inputTokens ?? 0, result.usage?.outputTokens ?? 0);
       return { text: result.text, costUsd, latencyMs, modelId };

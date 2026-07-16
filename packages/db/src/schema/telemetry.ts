@@ -56,7 +56,13 @@ export type ChatTelemetryKind =
   | 'routing_generic'
   | 'plan_generated'
   | 'plan_skipped_budget'
-  | 'plan_failed';
+  | 'plan_failed'
+  // P3: per-specialist multi-agent telemetry breadcrumbs.
+  | 'multi_specialist_technical'
+  | 'multi_specialist_fundamental'
+  | 'multi_specialist_risk'
+  | 'multi_specialist_sentiment'
+  | 'multi_specialist_decision';
 
 /**
  * Per-turn AI telemetry — drives /settings/usage and the daily $ ceiling.

@@ -85,17 +85,3 @@ export class ProgressTracker {
 export function progressToSSE(event: ProgressEvent): string {
   return `data: ${JSON.stringify(event)}\n\n`;
 }
-
-export function createMultiAgentStreamResponse(progressEvents: ProgressEvent[], finalText: string, _mode: ResolvedMode): Response {
-  const encoder = new TextEncoder();
-  const stream = new ReadableStream({
-    start(controller) {
-      for (const event of progressEvents) controller.enqueue(encoder.encode(progressToSSE(event)));
-      const textPart = `data: ${JSON.stringify({ type: 'text', text: finalText })}\n\n`;
-      controller.enqueue(encoder.encode(textPart));
-      controller.enqueue(encoder.encode('data: [DONE]\n\n'));
-      controller.close();
-    },
-  });
-  return new Response(stream, { headers: { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', Connection: 'keep-alive' } });
-}

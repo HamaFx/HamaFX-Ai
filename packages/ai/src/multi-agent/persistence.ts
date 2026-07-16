@@ -17,7 +17,7 @@
 // Multi-Agent Orchestration — opinion persistence.
 
 import { getDb, schema } from '@hamafx/db';
-import { asc, eq } from 'drizzle-orm';
+import { and, asc, eq } from 'drizzle-orm';
 import type { AgentOpinionRow } from '@hamafx/db/schema';
 
 export interface SaveOpinionsArgs {
@@ -58,16 +58,17 @@ export async function saveAgentOpinions(args: SaveOpinionsArgs): Promise<void> {
   );
 }
 
+/** S1 fix — scope agent opinion queries by userId to prevent cross-tenant data leaks. */
 export async function listAgentOpinions(userId: string, threadId: string): Promise<AgentOpinionRow[]> {
   const db = getDb();
   return db.select().from(schema.agentOpinions)
-    .where(eq(schema.agentOpinions.threadId, threadId))
+    .where(and(eq(schema.agentOpinions.userId, userId), eq(schema.agentOpinions.threadId, threadId)))
     .orderBy(asc(schema.agentOpinions.createdAt));
 }
 
-export async function listMessageOpinions(messageId: string): Promise<AgentOpinionRow[]> {
+export async function listMessageOpinions(userId: string, messageId: string): Promise<AgentOpinionRow[]> {
   const db = getDb();
   return db.select().from(schema.agentOpinions)
-    .where(eq(schema.agentOpinions.messageId, messageId))
+    .where(and(eq(schema.agentOpinions.userId, userId), eq(schema.agentOpinions.messageId, messageId)))
     .orderBy(asc(schema.agentOpinions.createdAt));
 }

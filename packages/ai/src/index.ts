@@ -291,7 +291,6 @@ export {
   ProgressTracker,
   type AgentProgressPart,
   progressToSSE,
-  createMultiAgentStreamResponse,
   BaseAgent,
   TechnicalAgent,
   FundamentalAgent,

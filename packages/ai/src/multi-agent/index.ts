@@ -22,7 +22,7 @@ export type { AnalysisMode, ResolvedMode, AgentName, AgentBias, AgentOpinion, Sh
 export { AGENT_MODEL_TIER, MODE_COST_ESTIMATE, AGENT_TIMEOUTS } from './types';
 export { buildSharedContext, buildSharedSystemPrompt, extractUserMessageText } from './context';
 export { saveAgentOpinions, listAgentOpinions, listMessageOpinions, type SaveOpinionsArgs } from './persistence';
-export { ProgressTracker, type AgentProgressPart, progressToSSE, createMultiAgentStreamResponse } from './stream';
+export { ProgressTracker, type AgentProgressPart, progressToSSE } from './stream';
 export { BaseAgent } from './agents/base-agent';
 export { TechnicalAgent } from './agents/technical-agent';
 export { FundamentalAgent } from './agents/fundamental-agent';
