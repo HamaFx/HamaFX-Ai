@@ -120,20 +120,18 @@ export const PATCH = withAuth<void>(async (req, { user }) => {
     const { symbols } = await parseJsonBody(req, ReorderSchema);
     const db = getDb();
 
-    await db.transaction(async (tx) => {
-      for (let i = 0; i < symbols.length; i++) {
-        const symbol = symbols[i]!;
-        await tx
-          .update(schema.userSymbols)
-          .set({ displayOrder: i })
-          .where(
-            and(
-              eq(schema.userSymbols.userId, user.userId),
-              eq(schema.userSymbols.symbol, symbol)
-            )
-          );
-      }
-    });
+    // PERF-8: Bulk update with CASE WHEN instead of N sequential UPDATEs.
+    if (symbols.length > 0) {
+      const whenClauses = symbols.map((_s, i) =>
+        sql`WHEN ${eq(schema.userSymbols.symbol, symbols[i]!)} THEN ${i}`
+      );
+      await db
+        .update(schema.userSymbols)
+        .set({
+          displayOrder: sql`CASE ${sql.join(whenClauses, sql` `)} END`,
+        })
+        .where(eq(schema.userSymbols.userId, user.userId));
+    }
 
     return Response.json({ ok: true });
   } catch (err) {

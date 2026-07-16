@@ -12,9 +12,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- */
-
-import { beforeAll, describe, expect, it, vi } from 'vitest';
+ */import { beforeAll, describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
 
 import { AppError, validationError } from '@hamafx/shared';
@@ -212,12 +210,14 @@ describe('getUserFromRequest', () => {
     vi.mocked(mockAuth).mockResolvedValue(null);
   });
 
-  it('returns user from x-user-id header (fast path)', async () => {
+  it('rejects bare x-user-id header without signature (SEC-1)', async () => {
+    // SEC-1: bare x-user-id without a valid signature is rejected,
+    // falling through to auth() which is mocked to return null.
     const req = mockRequest('http://localhost', {
-      headers: { 'x-user-id': 'user-fast' },
+      headers: { 'x-user-id': 'user-no-sig' },
     });
     const user = await getUserFromRequest(req);
-    expect(user).toEqual({ userId: 'user-fast' });
+    expect(user).toBeNull();
   });
 
   it('falls through to auth() when no header is present', async () => {
@@ -257,7 +257,11 @@ describe('withAuth', () => {
     expect(body.error.code).toBe('UNAUTHORIZED');
   });
 
-  it('calls handler when user is authenticated', async () => {
+  it('calls handler when user resolves via auth() slow path', async () => {
+    // SEC-1: bare x-user-id is rejected → falls through to auth()
+    vi.mocked(mockAuth).mockResolvedValueOnce({
+      user: { id: 'user-1' },
+    } as never);
     const req = mockRequest('http://localhost', {
       headers: { 'x-user-id': 'user-1' },
     });
@@ -271,6 +275,9 @@ describe('withAuth', () => {
   });
 
   it('catches handler errors and returns error response', async () => {
+    vi.mocked(mockAuth).mockResolvedValueOnce({
+      user: { id: 'user-1' },
+    } as never);
     const req = mockRequest('http://localhost', {
       headers: { 'x-user-id': 'user-1' },
     });

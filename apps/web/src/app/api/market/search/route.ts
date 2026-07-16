@@ -23,6 +23,7 @@ import { BUILTIN_SYMBOLS } from '@hamafx/shared';
 import { z } from 'zod';
 
 import { errorResponse, withAuth } from '@/lib/api';
+import { withRateLimit } from '@hamafx/db';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -32,8 +33,18 @@ const QuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(50).default(20),
 });
 
-export const GET = withAuth<void>(async (req) => {
+const MARKET_READ_RATE_LIMIT = Number(process.env.MARKET_READ_RATE_LIMIT) || 120;
+
+export const GET = withAuth<void>(async (req, { user }) => {
   try {
+    // RL-5: per-user rate limit on market data reads.
+    const rl = await withRateLimit(user.userId, 'market_read', MARKET_READ_RATE_LIMIT);
+    if (!rl.allowed) {
+      return Response.json(
+        { error: { code: 'RATE_LIMITED', message: `Too many requests (${rl.count}/${rl.limit} per minute).` } },
+        { status: 429, headers: { 'Retry-After': '60' } },
+      );
+    }
     const url = new URL(req.url);
     const { q, limit } = QuerySchema.parse({
       q: url.searchParams.get('q') ?? '',

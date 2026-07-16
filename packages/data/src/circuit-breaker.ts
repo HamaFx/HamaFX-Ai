@@ -60,6 +60,8 @@ interface BreakerInternal {
   failures: number;
   halfOpenSuccesses: number;
   openedAt: number | null;
+  /** CLEAN-2: Single-flight guard for HALF_OPEN probes. */
+  probeInFlight: boolean;
   readonly opts: Required<CircuitBreakerOptions>;
 }
 
@@ -86,6 +88,7 @@ export function getCircuitBreaker(
       failures: 0,
       halfOpenSuccesses: 0,
       openedAt: null,
+      probeInFlight: false,
       opts: { ...DEFAULT_OPTS, ...opts },
     });
   }
@@ -110,6 +113,18 @@ export function getCircuitBreaker(
         // Transition to HALF_OPEN — allow one probe.
         internal.state = 'HALF_OPEN';
         internal.halfOpenSuccesses = 0;
+        internal.probeInFlight = false;
+      }
+
+      // CLEAN-2: Only one probe at a time in HALF_OPEN.
+      // If a probe is already in flight, fail fast without calling fn().
+      if (internal.state === 'HALF_OPEN') {
+        if (internal.probeInFlight) {
+          throw new Error(
+            `[circuit-breaker] ${providerName} is HALF_OPEN — probe already in flight`,
+          );
+        }
+        internal.probeInFlight = true;
       }
 
       try {
@@ -119,6 +134,10 @@ export function getCircuitBreaker(
       } catch (err) {
         onFailure(internal, providerName, now);
         throw err;
+      } finally {
+        if (internal.state === 'HALF_OPEN') {
+          internal.probeInFlight = false;
+        }
       }
     },
 

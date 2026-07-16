@@ -35,7 +35,7 @@ async function klinesCall(
   const timer = setTimeout(() => ctrl.abort(new Error('timeout')), DEFAULT_TIMEOUT_MS);
   if (opts.signal) {
     if (opts.signal.aborted) ctrl.abort(opts.signal.reason);
-    else opts.signal.addEventListener('abort', () => ctrl.abort(opts.signal!.reason));
+    else opts.signal.addEventListener('abort', () => ctrl.abort(opts.signal!.reason), { once: true });
   }
 
   let res: Response;
@@ -130,7 +130,7 @@ export async function fetchTickerPrice(
   const timer = setTimeout(() => ctrl.abort(new Error('timeout')), DEFAULT_TIMEOUT_MS);
   if (opts?.signal) {
     if (opts.signal.aborted) ctrl.abort(opts.signal.reason);
-    else opts.signal.addEventListener('abort', () => ctrl.abort(opts.signal!.reason));
+    else opts.signal.addEventListener('abort', () => ctrl.abort(opts.signal!.reason), { once: true });
   }
 
   let res: Response;

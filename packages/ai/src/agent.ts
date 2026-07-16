@@ -48,6 +48,7 @@ import {
   resolveOverrideModel,
   resolveModelForProvider,
   getVertexGoogleSearchTool,
+  supportsPromptCaching,
   type ModelDomain,
 } from './model';
 import { decryptByok, type ProviderId } from '@hamafx/shared/encryption';
@@ -73,8 +74,9 @@ import { waitUntil } from './wait-until';
 import { getDb, schema } from '@hamafx/db';
 import { extractDecisionSignal, createDecisionSignal } from './decision-signals';
 import type { UserSettingsRow } from '@hamafx/db/schema';
-import { and, eq } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import { extractRateLimits } from './rate-limits';
+import { noteLlmRateLimit, awaitLlmHeadroom } from './llm-throttle';
 import { withDiagnostics, recordStep, completeStep, recordError, exportDiagnosticContext } from './diagnostics';
 
 export interface RunChatArgs {
@@ -519,9 +521,13 @@ async function runChatInner(args: RunChatArgs) {
       delete (activeTools as Record<string, unknown>).replay_setup;
     }
 
+    // PERF-4: enable prompt caching for the stable system prefix.
     const streamArgs: Parameters<typeof streamText>[0] = {
       model: resolvedModel,
       system: systemPrompt,
+      ...(supportsPromptCaching(resolvedModelId)
+        ? { providerOptions: { anthropic: { cacheControl: { type: 'ephemeral' as const } } } }
+        : {}),
       messages: modelMessages,
       tools: routing.domain === 'fundamental' && env.GOOGLE_VERTEX_PROJECT
         ? { ...activeTools, googleSearch: getVertexGoogleSearchTool(env, userId) } 
@@ -602,26 +608,35 @@ async function runChatInner(args: RunChatArgs) {
           }
           const rateLimit = extractRateLimits(response.headers);
           if (rateLimit) {
-            try {
-              await db
-                .delete(schema.providerTests)
-                .where(
-                  and(
-                    eq(schema.providerTests.userId, userId),
-                    eq(schema.providerTests.providerId, providerId),
-                  ),
-                );
-              await db.insert(schema.providerTests).values({
-                userId,
-                providerId,
-                ok: true,
-                error: null,
-                testedAt: new Date().toISOString(),
-                rateLimit: rateLimit as { remainingRequests?: number; remainingTokens?: number; resetRequests?: string; resetTokens?: string; } | null,
-              });
-            } catch (err) {
-              console.warn('[ai] failed to save provider test rate limits', err);
-            }
+            noteLlmRateLimit(`${providerId}:${userId}`, rateLimit);
+            // PERF-6: single upsert off the response path (no DELETE+INSERT).
+            // The provider_tests PK is (user_id, provider_id) so ON CONFLICT
+            // DO UPDATE is safe and idempotent.
+            waitUntil(
+              db
+                .insert(schema.providerTests)
+                .values({
+                  userId,
+                  providerId,
+                  ok: true,
+                  error: null,
+                  testedAt: new Date().toISOString(),
+                  rateLimit: rateLimit as { remainingRequests?: number; remainingTokens?: number; resetRequests?: string; resetTokens?: string; } | null,
+                })
+                .onConflictDoUpdate({
+                  target: [schema.providerTests.userId, schema.providerTests.providerId],
+                  set: {
+                    ok: true,
+                    error: null,
+                    testedAt: new Date().toISOString(),
+                    rateLimit: rateLimit as { remainingRequests?: number; remainingTokens?: number; resetRequests?: string; resetTokens?: string; } | null,
+                  },
+                })
+                .execute()
+                .catch((err: unknown) =>
+                  console.warn('[ai] failed to save provider test rate limits', err),
+                ),
+            );
           }
           await recordTelemetry({
             userId,
@@ -676,6 +691,9 @@ async function runChatInner(args: RunChatArgs) {
     if (signal) streamArgs.abortSignal = signal;
 
     try {
+      // RL-3: pre-emptively gate on provider rate-limit headroom.
+      const headroomKey = `${providerId}:${userId}`;
+      await awaitLlmHeadroom(headroomKey, signal ? { signal } : {});
       recordStep('stream_text', { model: resolvedModelId, attempt: attempts });
       const result = await withToolContext(toolContext, () => Promise.resolve(streamText(streamArgs)));
       completeStep('stream_text', 'completed');

@@ -16,12 +16,23 @@
 
 import { listRecentArticles } from '@hamafx/ai';
 import { errorResponse, withAuth } from '@/lib/api';
+import { withRateLimit } from '@hamafx/db';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-export const GET = withAuth<void>(async (req) => {
+const NEWS_RATE_LIMIT = Number(process.env.NEWS_RATE_LIMIT) || 60;
+
+export const GET = withAuth<void>(async (req, { user }) => {
   try {
+    // RL-5: per-user rate limit on news reads.
+    const rl = await withRateLimit(user.userId, 'news_read', NEWS_RATE_LIMIT);
+    if (!rl.allowed) {
+      return Response.json(
+        { error: { code: 'RATE_LIMITED', message: `Too many requests (${rl.count}/${rl.limit} per minute).` } },
+        { status: 429, headers: { 'Retry-After': '60' } },
+      );
+    }
         const url = new URL(req.url);
     const offset = parseInt(url.searchParams.get('offset') ?? '0', 10);
     const limit = parseInt(url.searchParams.get('limit') ?? '20', 10);

@@ -45,6 +45,10 @@ const nextConfig = {
           },
           {
             key: 'Content-Security-Policy',
+            // SEC-2: Baseline CSP — 'unsafe-inline' retained for scripts until
+            // we can implement nonce-based CSP or compute specific 'sha256-…'
+            // hashes for Tailwind dark-mode toggle, TradingView widget, and
+            // service worker registration. See RELIABILITY_HARDENING_LOG.md.
             value: "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' https://s3.tradingview.com; style-src 'self' 'unsafe-inline' https://s3.tradingview.com; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' wss: https:;",
           },
         ],

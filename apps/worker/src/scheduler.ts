@@ -33,6 +33,10 @@ import { acquireCronLock } from './cron-lock.js';
 // STAB-02: Maximum wall-clock time any scheduled job may run.
 const JOB_TIMEOUT_MS = 120_000;
 
+// PERF-7: In-flight guard — ensures no two invocations of the same job
+// overlap. Complements the DB-level acquireCronLock for daily-cadence jobs.
+const _runningJobs = new Set<keyof typeof JOBS>();
+
 // Jobs that run more often than once-per-day are inherently idempotent
 // at the application layer (briefings uses (eventId, kind) PK; alerts
 // evaluates current state each minute). Skip the daily lock for them.
@@ -93,13 +97,24 @@ export function startScheduler(log: Logger): void {
     void runJobSafely('weekly-review', log);
   });
 
+  // DB-1 — Retention cleanup: Daily at 03:15 UTC
+  cron.schedule('15 3 * * *', () => {
+    void runJobSafely('retention', log);
+  });
+
   // U2 — Multi-agent analysis: poll every 3 seconds for pending jobs.
-  // Uses setInterval instead of cron because 3s is below cron's 1-minute
-  // minimum resolution. The job is idempotent (claims via FOR UPDATE SKIP
-  // LOCKED) and self-limiting (stops when no pending work found).
-  setInterval(() => {
-    void runJobSafely('multi-agent-analysis', log);
-  }, 3_000);
+  // PERF-7: Self-rescheduling setTimeout avoids pile-up when a poll
+  // exceeds 3s. The next tick is scheduled only after the current one
+  // settles (including DB transit + claim time).
+  const tick = () => {
+    void runJobSafely('multi-agent-analysis', log).finally(() => {
+      const next = setTimeout(tick, 3_000);
+      next.unref();
+    });
+  };
+  // Kick off the first tick at the configured interval (3s), not immediately.
+  const first = setTimeout(tick, 3_000);
+  first.unref();
 }
 
 async function runJobSafely(name: keyof typeof JOBS, log: Logger): Promise<void> {
@@ -108,6 +123,13 @@ async function runJobSafely(name: keyof typeof JOBS, log: Logger): Promise<void>
     log.error(`Scheduler attempted to run unknown job: ${name}`);
     return;
   }
+
+  // PERF-7: Guard against overlapping runs of the same job.
+  if (_runningJobs.has(name)) {
+    log.info(`Job ${name} skipped — previous run still in flight`);
+    return;
+  }
+  _runningJobs.add(name);
 
   // OBS-02: Per-run correlation ID so all log lines from one execution can
   // be filtered together in Loki / CloudWatch / journald.
@@ -160,5 +182,6 @@ async function runJobSafely(name: keyof typeof JOBS, log: Logger): Promise<void>
     await lock?.fail(err);
   } finally {
     clearTimeout(timeoutHandle);
+    _runningJobs.delete(name);
   }
 }

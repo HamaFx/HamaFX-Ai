@@ -18,14 +18,25 @@
 // GET /api/decision-signals?limit=50&status=active
 
 import { listSignals } from '@hamafx/ai';
+import { withRateLimit } from '@hamafx/db';
 
 import { errorResponse, withAuth } from '@/lib/api';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
+const DECISION_SIGNALS_RATE_LIMIT = Number(process.env.DECISION_SIGNALS_RATE_LIMIT) || 60;
+
 export const GET = withAuth<void>(async (req, { user }) => {
   try {
+    // RL-5: per-user rate limit on decision signals reads.
+    const rl = await withRateLimit(user.userId, 'decision_signals', DECISION_SIGNALS_RATE_LIMIT);
+    if (!rl.allowed) {
+      return Response.json(
+        { error: { code: 'RATE_LIMITED', message: `Too many requests (${rl.count}/${rl.limit} per minute).` } },
+        { status: 429, headers: { 'Retry-After': '60' } },
+      );
+    }
     const url = new URL(req.url);
     const limit = Math.min(Number(url.searchParams.get('limit') ?? '50'), 100);
     const status = url.searchParams.get('status') ?? undefined;

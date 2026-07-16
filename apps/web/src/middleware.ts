@@ -37,10 +37,11 @@ import NextAuth from 'next-auth';
 
 import { authConfig } from './auth.config';
 import { REQUEST_ID_HEADER, readOrCreateRequestId } from '@/lib/request-id';
+import { signUserId, USER_ID_HEADER, USER_ID_SIG_HEADER, getSigningSecret } from '@/lib/signed-user-header';
 
 const { auth } = NextAuth(authConfig);
 
-export default auth((req) => {
+export default auth(async (req) => {
   const requestId = readOrCreateRequestId(req);
 
   // ── Legacy Mode Fallback ──────────────────────────────────────────────
@@ -82,22 +83,37 @@ export default auth((req) => {
   // to inject as a header for downstream route handlers.
   const userId = req.auth?.user?.id ?? null;
 
+  // ── SEC-1: Sign the x-user-id header for defense-in-depth ──────────
+  // Route handlers verify the HMAC before trusting the fast-path
+  // header. A spoofed header without a valid signature falls through
+  // to the auth() slow path (JWT re-validation).
   const headers = new Headers(req.headers);
   headers.set(REQUEST_ID_HEADER, requestId);
+  // Strip any inbound spoofed signature header BEFORE we set our own.
+  headers.delete(USER_ID_SIG_HEADER);
   if (userId) {
-    headers.set('x-user-id', userId);
+    headers.set(USER_ID_HEADER, userId);
   } else {
     // We deliberately do NOT inject the legacy '__system__' fallback
     // here. Route handlers that require auth check the header themselves
     // and return 401 if absent (see lib/api.ts::getUserIdFromRequest).
     // Hiding auth in a fake header would defeat the gate.
-    headers.delete('x-user-id');
+    headers.delete(USER_ID_HEADER);
   }
 
   const next = NextResponse.next({ request: { headers } });
   next.headers.set(REQUEST_ID_HEADER, requestId);
   if (userId) {
-    next.headers.set('x-user-id', userId);
+    next.headers.set(USER_ID_HEADER, userId);
+    // Sign the userId + requestId pair so route handlers can verify
+    // the header was set by middleware, not a malicious client.
+    const secret = getSigningSecret();
+    if (secret) {
+      const sig = await signUserId(userId, requestId, secret);
+      next.headers.set(USER_ID_SIG_HEADER, sig);
+    }
+    // If secret is missing: signature is absent; route handlers
+    // will fall through to the auth() slow path. This is safe.
   }
 
   // P1-3 + P2-6: Always set the CSRF cookie on every response so the

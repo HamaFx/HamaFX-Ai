@@ -71,7 +71,8 @@ describe('Phase 4 — Security (file checks)', () => {
     );
 
     expect(clientSource).toContain('rejectUnauthorized: false');
-    expect(clientSource).toContain('self-signed');
+    // DB-2: TLS now mandatory in production
+    expect(clientSource).toContain('DB_ALLOW_INSECURE_TLS');
     expect(clientSource).toContain('SUPABASE_CA_CERT');
   });
 

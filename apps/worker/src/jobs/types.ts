@@ -48,4 +48,5 @@ export type JobName =
   | 'weekly-review'
   | 'resonance-sync'
   | 'alerts'
-  | 'multi-agent-analysis';
+  | 'multi-agent-analysis'
+  | 'retention';

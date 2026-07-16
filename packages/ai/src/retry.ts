@@ -28,6 +28,55 @@
 
 import { classifyStreamError } from './fallback';
 
+// ── Retry-After header parsing ─────────────────────────────────────────
+// Phase A RL-4 — Honor server-advertised retry delays.
+
+/**
+ * Extract a Retry-After hint from an error in milliseconds, or null.
+ * Reads (in order):
+ *   1. `err.responseHeaders?.['retry-after']`  (AI SDK APICallError)
+ *   2. `err.headers?.get('retry-after')`       (standard Response-like)
+ *   3. `err.retryAfter`                         (plain number or string)
+ * Supports both seconds (integer) and HTTP-date (RFC 7231) forms.
+ */
+export function getRetryAfterMs(err: unknown): number | null {
+  const raw = readRetryAfter(err);
+  if (raw === null) return null;
+
+  // Seconds: "120" or just 120
+  const seconds = Number(raw);
+  if (!Number.isNaN(seconds) && String(seconds) === String(raw).trim()) {
+    return Math.min(seconds * 1000, 60_000); // cap at 60s for safety
+  }
+
+  // HTTP-date: "Wed, 21 Oct 2015 07:28:00 GMT"
+  const parsed = Date.parse(String(raw));
+  if (!Number.isNaN(parsed)) {
+    const ms = parsed - Date.now();
+    return ms > 0 ? Math.min(ms, 60_000) : null;
+  }
+
+  return null;
+}
+
+function readRetryAfter(err: unknown): string | number | null {
+  if (!err || typeof err !== 'object') return null;
+  const e = err as Record<string, unknown>;
+
+  // AI SDK APICallError has responseHeaders
+  const responseHeaders = e.responseHeaders as Record<string, string> | undefined;
+  if (responseHeaders?.['retry-after']) return responseHeaders['retry-after'];
+
+  // Standard Response-like
+  const headers = e.headers as { get(name: string): string | null } | undefined;
+  if (headers?.get('retry-after')) return headers.get('retry-after')!;
+
+  // Bare field
+  if (e.retryAfter !== undefined) return e.retryAfter as string | number;
+
+  return null;
+}
+
 export interface RetryOptions {
   /** Max number of attempts (default 3 — 1 initial + 2 retries). */
   maxAttempts?: number;
@@ -35,6 +84,11 @@ export interface RetryOptions {
   baseDelayMs?: number;
   /** Maximum delay cap in ms (default 10_000ms). */
   maxDelayMs?: number;
+  /**
+   * Maximum delay when honoring a server Retry-After header (default 30_000ms).
+   * Caps the header value to prevent excessive waits from a buggy upstream.
+   */
+  maxRetryAfterMs?: number;
   /** AbortSignal to cancel retries on client disconnect. */
   signal?: AbortSignal | null;
   /**
@@ -71,6 +125,7 @@ export async function withRetry<T>(
     maxAttempts = 3,
     baseDelayMs = 500,
     maxDelayMs = 10_000,
+    maxRetryAfterMs = 30_000,
     signal = null,
     isRetryable = isTransientByDefault,
     onRetry,
@@ -98,7 +153,13 @@ export async function withRetry<T>(
       // Don't retry if we've been cancelled.
       if (signal?.aborted) throw err;
 
-      const delayMs = jitteredDelay(baseDelayMs, attempt, maxDelayMs);
+      // Honor server Retry-After header; use max(jittered, retryAfter, capped).
+      const retryAfterMs = getRetryAfterMs(err);
+      const baseDelay = jitteredDelay(baseDelayMs, attempt, maxDelayMs);
+      const delayMs =
+        retryAfterMs !== null
+          ? Math.min(Math.max(baseDelay, retryAfterMs), maxRetryAfterMs)
+          : baseDelay;
       onRetry?.(err, attempt, delayMs);
 
       await new Promise<void>((resolve, reject) => {

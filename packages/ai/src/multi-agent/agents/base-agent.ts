@@ -18,7 +18,7 @@
 
 import { generateText, stepCountIs, type LanguageModel, type Tool } from 'ai';
 import { z } from 'zod';
-import { resolveChatModel, resolveModelForProvider, type ModelDomain } from '../../model';
+import { resolveChatModel, resolveModelForProvider, supportsPromptCaching, type ModelDomain } from '../../model';
 import { estimateCostUsd } from '../../cost';
 import { withToolContext, type ToolContext } from '../../tool-context';
 import type { ProviderId } from '@hamafx/shared';
@@ -94,6 +94,9 @@ export abstract class BaseAgent {
     try {
       const result = await withToolContext(toolContext, async () => generateText({
         model, system: fullSystem,
+        ...(supportsPromptCaching(modelId)
+          ? { providerOptions: { anthropic: { cacheControl: { type: 'ephemeral' as const } } } }
+          : {}),
         messages: [{ role: 'user' as const, content: userText }],
         tools: this.tools(),
         stopWhen: stepCountIs(ctx.env.MAX_TOOL_ITERATIONS ?? 6),

@@ -38,10 +38,24 @@ interface Entry<T> {
  *   - When `maxStaleSeconds > 0` and the producer throws, the most recent
  *     cached value is served up to `expiresAt + maxStaleSeconds`.
  *   - Concurrent callers single-flight (existing behaviour, preserved).
+ *
+ * PERF-1: Bounded LRU + expired-entry sweep to prevent unbounded heap
+ * growth in the persistent worker process.
  */
 export class MemoryCache implements Cache {
   private readonly store = new Map<string, Entry<unknown>>();
   private readonly inflight = new Map<string, Promise<unknown>>();
+  private readonly maxEntries: number;
+
+  constructor(opts?: { maxEntries?: number }) {
+    this.maxEntries = opts?.maxEntries ?? 5000;
+    // Periodic sweep only in the long-lived worker — unref so it never
+    // holds the process open.
+    if (typeof process !== 'undefined' && process.env.HAMAFX_RUNTIME === 'worker') {
+      const timer = setInterval(() => this.sweep(), 60_000);
+      timer.unref();
+    }
+  }
 
   async fetch<T>(
     key: string,
@@ -63,8 +77,14 @@ export class MemoryCache implements Cache {
     const swrMs = (options.maxStaleSeconds ?? 0) * 1000;
     const tags = options.tags ?? [];
 
+    // Lazy sweep — bounded work per call.
+    this.lazySweep();
+
     const hit = this.store.get(key) as Entry<T> | undefined;
     if (hit && hit.expiresAt > now) {
+      // LRU: move to end of Map by re-inserting.
+      this.store.delete(key);
+      this.store.set(key, hit);
       return { value: hit.value, meta: { producedAt: hit.producedAt, stale: false } };
     }
 
@@ -97,6 +117,7 @@ export class MemoryCache implements Cache {
       try {
         const value = await producer();
         const producedAt = Date.now();
+        this.evictIfNeeded();
         this.store.set(key, {
           value,
           producedAt,
@@ -133,9 +154,59 @@ export class MemoryCache implements Cache {
     }
   }
 
+  // ── PERF-1: bounded LRU + sweep ──────────────────────────────────────
+
+  /**
+   * Evict the least-recently-used entry when the store exceeds maxEntries.
+   * Maps iterate in insertion order; the first key is the LRU entry.
+   */
+  private evictIfNeeded(): void {
+    while (this.store.size >= this.maxEntries) {
+      // Delete the first (oldest) entry — LRU eviction.
+      const first = this.store.keys().next();
+      if (first.done) break;
+      this.store.delete(first.value);
+    }
+  }
+
+  /**
+   * Opportunistic sweep: delete a bounded number of entries whose
+   * hardExpiresAt has passed. Called lazily on each fetchWithMeta.
+   */
+  private lazySweep(): void {
+    const now = Date.now();
+    let swept = 0;
+    const maxSweep = 32;
+    for (const [key, entry] of this.store) {
+      if (entry.hardExpiresAt < now) {
+        this.store.delete(key);
+        swept += 1;
+        if (swept >= maxSweep) break;
+      }
+    }
+  }
+
+  /** Full sweep — called by the periodic worker timer. */
+  sweep(): number {
+    const now = Date.now();
+    let swept = 0;
+    for (const [key, entry] of this.store) {
+      if (entry.hardExpiresAt < now) {
+        this.store.delete(key);
+        swept += 1;
+      }
+    }
+    return swept;
+  }
+
   /** Test helper. */
   clear(): void {
     this.store.clear();
     this.inflight.clear();
+  }
+
+  /** Expose store size for tests. */
+  get size(): number {
+    return this.store.size;
   }
 }

@@ -15,7 +15,7 @@
  */
 
 import { getDb } from '@hamafx/db';
-import { providerThrottle } from '@hamafx/db/schema';
+import { providerDailyQuota, providerThrottle } from '@hamafx/db/schema';
 import { sql } from 'drizzle-orm';
 
 // Per-provider self-throttle.
@@ -54,6 +54,26 @@ interface Bucket {
 
 const buckets = new Map<string, Bucket>();
 
+/**
+ * Resolve which throttle backend to use.
+ *
+ * - `NODE_ENV === 'test'` → in-memory (tests are isolated).
+ * - `THROTTLE_BACKEND === 'postgres'` → shared across instances.
+ * - `THROTTLE_BACKEND === 'memory'` → explicit single-process.
+ * - **Default** (unset): `'postgres'` when running on Vercel or the worker;
+ *   otherwise `'memory'` for local/single-process self-host.
+ */
+export function resolveThrottleBackend(): 'postgres' | 'memory' {
+  if (process.env.NODE_ENV === 'test') return 'memory';
+  if (process.env.THROTTLE_BACKEND === 'postgres') return 'postgres';
+  if (process.env.THROTTLE_BACKEND === 'memory') return 'memory';
+  // Default: postgres on Vercel or worker; memory for local self-host
+  if (process.env.VERCEL || process.env.HAMAFX_RUNTIME === 'worker') {
+    return 'postgres';
+  }
+  return 'memory';
+}
+
 function getBucket(provider: string, now: number): Bucket {
   const existing = buckets.get(provider);
   if (existing) return existing;
@@ -77,7 +97,7 @@ function effectiveLimit(cfg: ThrottleConfig, b: Bucket, now: number): number {
 export async function tryReserve(provider: string, cfg: ThrottleConfig): Promise<boolean> {
   const now = new Date();
 
-  if (process.env.THROTTLE_BACKEND !== 'postgres') {
+  if (resolveThrottleBackend() === 'memory') {
     const b = getBucket(provider, now.getTime());
     if (now.getTime() - b.windowStart >= cfg.windowMs) {
       b.count = 1;
@@ -89,6 +109,7 @@ export async function tryReserve(provider: string, cfg: ThrottleConfig): Promise
     return true;
   }
 
+  // Postgres backend — shared across instances
   const db = getDb();
   const backoffFrac = cfg.backoffFraction ?? 0.8;
 
@@ -137,12 +158,13 @@ export async function noteBackoff(provider: string, cfg: ThrottleConfig): Promis
   const cooloff = cfg.cooloffMs ?? 90_000;
   const until = new Date(now.getTime() + cooloff);
 
-  if (process.env.THROTTLE_BACKEND !== 'postgres') {
+  if (resolveThrottleBackend() === 'memory') {
     const b = getBucket(provider, now.getTime());
     b.backoffUntil = until.getTime();
     return;
   }
 
+  // Postgres backend — shared across instances
   const db = getDb();
   await db.insert(providerThrottle)
     .values({
@@ -159,7 +181,60 @@ export async function noteBackoff(provider: string, cfg: ThrottleConfig): Promis
     });
 }
 
+// ── Daily quota ────────────────────────────────────────────────────────
+// Phase A RL-2 — Shared daily counter to replace per-instance module globals.
+
+/** In-memory fallback for tests/single-process. */
+const dailyBuckets = new Map<string, { count: number; day: string }>();
+
+/**
+ * Reserve one daily call against a provider with a daily cap.
+ * Uses the same dual-backend pattern as {@link tryReserve}.
+ *
+ * The reservation is atomic: the count is incremented on success, so this
+ * replaces both the pre-flight gate AND the post-success increment.
+ *
+ * @param provider Provider name (e.g. `'twelvedata'`).
+ * @param cap      Absolute daily cap (e.g. 800 for TwelveData free tier).
+ * @param buffer   Safety buffer subtracted from cap (e.g. 20 → effective 780).
+ * @returns true if the daily quota allows another call.
+ */
+export async function tryReserveDaily(
+  provider: string,
+  cap: number,
+  buffer: number,
+): Promise<boolean> {
+  const effectiveCap = cap - buffer;
+  const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+
+  if (resolveThrottleBackend() === 'memory') {
+    const entry = dailyBuckets.get(provider);
+    if (!entry || entry.day !== today) {
+      dailyBuckets.set(provider, { count: 1, day: today });
+      return true;
+    }
+    if (entry.count >= effectiveCap) return false;
+    entry.count += 1;
+    return true;
+  }
+
+  // Postgres backend — shared across instances
+  const db = getDb();
+  const result = await db
+    .insert(providerDailyQuota)
+    .values({ provider, day: today, count: 1 })
+    .onConflictDoUpdate({
+      target: [providerDailyQuota.provider, providerDailyQuota.day],
+      set: { count: sql`${providerDailyQuota.count} + 1` },
+      where: sql`${providerDailyQuota.count} < ${effectiveCap}`,
+    })
+    .returning({ count: providerDailyQuota.count });
+
+  return result.length > 0;
+}
+
 /** Test helper. */
 export function _resetThrottle(): void {
   buckets.clear();
+  dailyBuckets.clear();
 }

@@ -20,6 +20,7 @@ export * from './schema/index';
 export { getDb, getAdminDb, closeAdminDb, closeDb, withTenantDb, schema } from './client';
 export { withUserScope } from './with-user-scope';
 export { withRateLimit, type RateLimitResult } from './rate-limit';
+export { runRetentionCleanup, type RetentionConfig, type RetentionResult } from './retention';
 export { getActiveUserIds } from './active-users';
 export {
   getSubscription,

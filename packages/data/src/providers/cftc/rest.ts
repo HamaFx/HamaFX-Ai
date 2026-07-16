@@ -82,7 +82,7 @@ export async function fetchLatestRows(args: FetchLatestArgs): Promise<CftcRow[]>
   const timer = setTimeout(() => ctrl.abort(new Error('timeout')), DEFAULT_TIMEOUT_MS);
   if (args.signal) {
     if (args.signal.aborted) ctrl.abort(args.signal.reason);
-    else args.signal.addEventListener('abort', () => ctrl.abort(args.signal!.reason));
+    else args.signal.addEventListener('abort', () => ctrl.abort(args.signal!.reason), { once: true });
   }
 
   let res: Response;

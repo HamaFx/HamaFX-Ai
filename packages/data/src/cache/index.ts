@@ -40,18 +40,23 @@ export {
   FRED_SERIES_TTL,
   type TtlPolicy,
 } from './ttl';
-export { tryReserve, noteBackoff, type ThrottleConfig, _resetThrottle } from './throttle';
+export { tryReserve, tryReserveDaily, noteBackoff, resolveThrottleBackend, type ThrottleConfig, _resetThrottle } from './throttle';
 
 /** Sentinel for the unscoped (legacy / self-host) cache namespace. */
 const GLOBAL_TENANT = '__global__';
 
+/** Maximum number of tenant caches to keep before evicting LRU tenants. */
+const MAX_TENANT_CACHES = 500;
+
 /**
  * Per-tenant cache registry. Each tenant gets its own `Cache` instance so
- * cached values are isolated. In the Next.js runtime each entry is a
- * `NextjsCache` (which wraps a `MemoryCache`); elsewhere it's a plain
- * `MemoryCache`.
+ * cached values are isolated. Tenants are capped and evicted LRU-style to
+ * prevent unbounded growth in multi-user deployments.
  */
 const _tenantCaches = new Map<string, Cache>();
+
+/** Track last-access timestamps for LRU tenant eviction. */
+const _tenantLastAccess = new Map<string, number>();
 
 /**
  * Resolve the cache implementation for the given tenant. Each tenant
@@ -68,10 +73,19 @@ const _tenantCaches = new Map<string, Cache>();
 export async function getDefaultCache(tenantId?: string): Promise<Cache> {
   const ns = tenantId ?? GLOBAL_TENANT;
   const existing = _tenantCaches.get(ns);
-  if (existing) return existing;
+  if (existing) {
+    _tenantLastAccess.set(ns, Date.now());
+    return existing;
+  }
 
   const cache = new MemoryCache();
   _tenantCaches.set(ns, cache);
+  _tenantLastAccess.set(ns, Date.now());
+
+  // PERF-2: evict LRU tenants when over cap (__global__ is exempt).
+  if (ns !== GLOBAL_TENANT) {
+    evictLruTenantsIfNeeded();
+  }
   return cache;
 }
 
@@ -79,20 +93,59 @@ export async function getDefaultCache(tenantId?: string): Promise<Cache> {
 export function getDefaultCacheSync(tenantId?: string): Cache {
   const ns = tenantId ?? GLOBAL_TENANT;
   const existing = _tenantCaches.get(ns);
-  if (existing) return existing;
+  if (existing) {
+    _tenantLastAccess.set(ns, Date.now());
+    return existing;
+  }
   const cache = new MemoryCache();
   _tenantCaches.set(ns, cache);
+  _tenantLastAccess.set(ns, Date.now());
+  if (ns !== GLOBAL_TENANT) {
+    evictLruTenantsIfNeeded();
+  }
   return cache;
 }
 
 /** Test/override hook — sets the cache for a specific tenant namespace. */
 export function setDefaultCache(c: Cache, tenantId?: string): void {
-  _tenantCaches.set(tenantId ?? GLOBAL_TENANT, c);
+  const ns = tenantId ?? GLOBAL_TENANT;
+  _tenantCaches.set(ns, c);
+  _tenantLastAccess.set(ns, Date.now());
+  if (ns !== GLOBAL_TENANT) {
+    evictLruTenantsIfNeeded();
+  }
 }
 
 /**
  * Phase 3 §3.10 — clear all tenant caches. Primarily for tests.
  */
 export function clearAllTenantCaches(): void {
+  for (const cache of _tenantCaches.values()) {
+    cache.clear();
+  }
   _tenantCaches.clear();
+  _tenantLastAccess.clear();
+}
+
+/**
+ * PERF-2: Evict the least-recently-accessed non-global tenant caches
+ * until the registry is at or below the cap.
+ */
+function evictLruTenantsIfNeeded(): void {
+  while (_tenantCaches.size > MAX_TENANT_CACHES) {
+    let lruTenant: string | null = null;
+    let lruTime = Infinity;
+    for (const [ns, time] of _tenantLastAccess) {
+      if (ns === GLOBAL_TENANT) continue;
+      if (time < lruTime) {
+        lruTime = time;
+        lruTenant = ns;
+      }
+    }
+    if (!lruTenant) break; // all entries are global — shouldn't happen
+    const evicted = _tenantCaches.get(lruTenant);
+    if (evicted) evicted.clear();
+    _tenantCaches.delete(lruTenant);
+    _tenantLastAccess.delete(lruTenant);
+  }
 }

@@ -26,11 +26,17 @@ import * as Sentry from '@sentry/nextjs';
 import { ProviderError, toAppError } from '@hamafx/data';
 import { AppError, type ErrorCode, validationError, formatErrorResponse } from '@hamafx/shared';
 import { ZodError, type z } from 'zod';
+import { createHmac, timingSafeEqual } from 'node:crypto';
 
 import { auth } from '@/auth';
 import { createScopedLoggerWithContext } from './logger';
 import { recordAuthEvent } from './auth-anomaly';
 import { REQUEST_ID_HEADER } from './request-id';
+import {
+  getSigningSecret,
+  USER_ID_HEADER,
+  USER_ID_SIG_HEADER,
+} from './signed-user-header';
 
 // ── Auth helpers (Phase A) ─────────────────────────────────────────────────
 
@@ -49,10 +55,35 @@ export interface RequestUser {
  * Returns null when neither path resolves — caller should 401.
  */
 export async function getUserFromRequest(req: Request): Promise<RequestUser | null> {
-  // Fast path: middleware already validated the session and set the header
-  const headerId = req.headers.get('x-user-id');
+  // Fast path: middleware already validated the session and set the
+  // signed header. Verify the HMAC before trusting it — a spoofed
+  // x-user-id without a valid signature falls through to auth() below.
+  // SEC-1: defense-in-depth against header impersonation.
+  const headerId = req.headers.get(USER_ID_HEADER);
   if (headerId) {
-    return { userId: headerId };
+    const sig = req.headers.get(USER_ID_SIG_HEADER);
+    const secret = getSigningSecret();
+    if (sig && secret) {
+      const requestId = req.headers.get(REQUEST_ID_HEADER);
+      if (requestId) {
+        // Verify HMAC using node:crypto (Node.js runtime only).
+        // Static import — api.ts is NOT used in Edge middleware.
+        const expected = createHmac('sha256', secret.slice(0, 128))
+          .update(`${headerId}.${requestId}`)
+          .digest('hex');
+        if (
+          expected.length === sig.length &&
+          timingSafeEqual(Buffer.from(expected), Buffer.from(sig))
+        ) {
+          return { userId: headerId };
+        }
+      }
+      // Signature missing or invalid — treat as untrusted, fall through
+      // to the auth() slow path below. Do NOT return the header value.
+    }
+    // If secret is missing or signature is absent, fall through to
+    // the auth() slow path. This is safe: the header is untrusted
+    // without a verifiable signature.
   }
 
   // Slow path: call NextAuth directly (admin routes, defense-in-depth)

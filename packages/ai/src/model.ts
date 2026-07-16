@@ -38,6 +38,7 @@
 import { google } from '@ai-sdk/google';
 import { createVertex } from '@ai-sdk/google-vertex';
 import type { LanguageModel } from 'ai';
+import { normalizePemPrivateKey } from './util/pem';
 
 export interface ResolveModelEnv {
   AI_GATEWAY_API_KEY?: string | undefined;
@@ -59,52 +60,6 @@ interface VertexCredentials {
   client_email: string;
   private_key: string;
   private_key_id?: string;
-}
-
-/**
- * Normalize a PEM private key so it works with OpenSSL 3.x's stricter
- * decoder. Environment variables often carry the key as one long line
- * (no newlines), which the legacy `Sign.sign()` API rejects with
- * `ERR_OSSL_UNSUPPORTED` / `DECODER routines::unsupported`.
- *
- * This function:
- *   1. Strips any existing header/footer whitespace and normalises
- *      CRLF → LF.
- *   2. Extracts the base64 body.
- *   3. Re-wraps the body at 64-char lines.
- *   4. Emits a canonical PEM block with a trailing newline.
- */
-function normalizePemPrivateKey(raw: string): string {
-  // Collapse CRLF → LF and trim surrounding whitespace.
-  const key = raw.replace(/\r\n/g, '\n').trim();
-
-  // Extract header and footer, then pull the base64 body from between them.
-  // Note: do NOT include `PRIVATE` in the character class — `[A-Z ]+` would
-  // greedily consume `PRIVATE KEY`, making the literal `PRIVATE KEY-----`
-  // never match.  Instead use `[A-Z ]+KEY-----` or just match the whole
-  // marker string directly.
-  const headerMatch = key.match(/^-----BEGIN [A-Z ]+KEY-----/m);
-  const footerMatch = key.match(/-----END [A-Z ]+KEY-----/m);
-  if (!headerMatch || !footerMatch) {
-    // Not a recognised PEM block — return as-is and let OpenSSL reject it
-    // with a readable error.
-    return raw;
-  }
-  const header = headerMatch[0];
-  const footer = footerMatch[0];
-
-  // Remove header, footer, and all whitespace to get the raw base64 body.
-  const body = key
-    .replace(header, '')
-    .replace(footer, '')
-    .replace(/\s+/g, '');
-
-  if (body.length === 0) return raw;
-
-  // Wrap at 64 characters.
-  const wrapped = body.match(/.{1,64}/g)?.join('\n') ?? body;
-
-  return `${header}\n${wrapped}\n${footer}\n`;
 }
 
 function parseVertexCredentials(json: string): VertexCredentials {
@@ -218,6 +173,7 @@ import {
   type ModelDomain,
 } from './byok-providers';
 import { extractRateLimits } from './rate-limits';
+import { noteLlmRateLimit } from './llm-throttle';
 import { generateText } from 'ai';
 import { PROVIDER_IDS } from '@hamafx/shared/byok';
 
@@ -372,6 +328,7 @@ export async function testProviderKey(
       abortSignal: AbortSignal.timeout(5_000),
     });
     const rateLimit = extractRateLimits(result.response?.headers);
+    if (rateLimit) noteLlmRateLimit(providerId, rateLimit);
     return { ok: true, rateLimit };
   } catch (err) {
     // AI SDK wraps provider errors with statusCode + responseBody. Pull
@@ -408,6 +365,20 @@ function extractErrorMessage(raw: string): string {
 // Re-export the registry helpers for downstream callers.
 export { BYOK_PROVIDERS, BYOK_PROVIDERS_LIST, defaultModelFor };
 export type { ModelDomain, ByokProviderSpec };
+
+// ───────────────────────────────────────────────────────────────────────
+// PERF-4 — Prompt caching capability detection.
+//
+// Anthropic supports explicit cache_control markers on the system prefix
+// via providerOptions, giving ~90% cost reduction on repeated prompts.
+// OpenAI-compatible providers do automatic prefix caching without markers.
+// Google/Vertex use a different context-caching API (not used here).
+// ───────────────────────────────────────────────────────────────────────
+
+/** Returns true when the resolved model supports explicit cache markers. */
+export function supportsPromptCaching(modelId: string): boolean {
+  return modelId.includes('anthropic');
+}
 
 // -----------------------------------------------------------------------
 // Phase F — single-model resolution

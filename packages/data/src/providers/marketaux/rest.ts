@@ -119,7 +119,7 @@ export async function fetchLatest(params: FetchNewsParams): Promise<RawMarketaux
   const timer = setTimeout(() => ctrl.abort(new Error('timeout')), DEFAULT_TIMEOUT_MS);
   if (params.signal) {
     if (params.signal.aborted) ctrl.abort(params.signal.reason);
-    else params.signal.addEventListener('abort', () => ctrl.abort(params.signal!.reason));
+    else params.signal.addEventListener('abort', () => ctrl.abort(params.signal!.reason), { once: true });
   }
 
   let res: Response;

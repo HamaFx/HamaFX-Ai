@@ -17,7 +17,7 @@
 // Tests for STAB-06: withRetry exponential backoff helper.
 
 import { describe, expect, it, vi } from 'vitest';
-import { withRetry } from './retry';
+import { withRetry, getRetryAfterMs } from './retry';
 import type * as RetryModule from './retry';
 
 // Speed up: make the retry helper skip real timer delays.
@@ -124,5 +124,70 @@ describe('withRetry — custom isRetryable', () => {
       withRetry(fn, { maxAttempts: 2, baseDelayMs: 0, isRetryable: () => true }),
     ).rejects.toThrow('always-retry');
     expect(fn).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe('getRetryAfterMs', () => {
+  it('parses seconds from retry-after header', () => {
+    const err = { responseHeaders: { 'retry-after': '2' } };
+    expect(getRetryAfterMs(err)).toBe(2000);
+  });
+
+  it('parses HTTP-date from retry-after header', () => {
+    const future = new Date(Date.now() + 5000).toUTCString();
+    const err = { responseHeaders: { 'retry-after': future } };
+    const ms = getRetryAfterMs(err);
+    expect(ms).toBeGreaterThan(0);
+    expect(ms).toBeLessThanOrEqual(6000);
+  });
+
+  it('caps seconds at 60_000ms', () => {
+    const err = { responseHeaders: { 'retry-after': '9999' } };
+    expect(getRetryAfterMs(err)).toBe(60_000);
+  });
+
+  it('returns null for past HTTP-dates', () => {
+    const past = new Date(Date.now() - 5000).toUTCString();
+    const err = { responseHeaders: { 'retry-after': past } };
+    expect(getRetryAfterMs(err)).toBeNull();
+  });
+
+  it('returns null when no retry-after is present', () => {
+    const err = { responseHeaders: {} };
+    expect(getRetryAfterMs(err)).toBeNull();
+  });
+
+  it('returns null for non-object errors', () => {
+    expect(getRetryAfterMs(null)).toBeNull();
+    expect(getRetryAfterMs('string')).toBeNull();
+  });
+
+  it('reads from headers.get()', () => {
+    const err = { headers: { get: () => '5' } };
+    expect(getRetryAfterMs(err)).toBe(5000);
+  });
+
+  it('reads from bare retryAfter field', () => {
+    const err = { retryAfter: 3 };
+    expect(getRetryAfterMs(err)).toBe(3000);
+  });
+});
+
+describe('withRetry — honors Retry-After header', () => {
+  // RL-4: getRetryAfterMs is already thoroughly unit-tested above.
+  // The integration with withRetry is tested implicitly via onRetry
+  // receiving the correct delayMs. We use a tiny Retry-After (1ms)
+  // so the test doesn't actually wait.
+  it('passes Retry-After delay through onRetry callback', async () => {
+    const err = Object.assign(new Error('rate limit'), {
+      statusCode: 429,
+      responseHeaders: { 'retry-after': '0.001' },
+    });
+    const fn = vi.fn().mockRejectedValueOnce(err).mockResolvedValue('ok');
+    const onRetry = vi.fn();
+
+    await withRetry(fn, { maxAttempts: 3, baseDelayMs: 0, maxRetryAfterMs: 100, onRetry });
+    // Retry-After 0.001s → 1ms; with baseDelayMs:0 jittered=0, max(0, 1) = 1.
+    expect(onRetry).toHaveBeenCalledWith(err, 0, 1);
   });
 });

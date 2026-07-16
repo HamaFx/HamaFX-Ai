@@ -26,7 +26,7 @@
 import { getPriceWithMeta } from '@hamafx/data';
 import { SYMBOLS, SymbolSchema, type Tick } from '@hamafx/shared';
 import { decryptByok } from '@hamafx/shared/encryption';
-import { schema, withTenantDb } from '@hamafx/db';
+import { schema, withRateLimit, withTenantDb } from '@hamafx/db';
 import { eq } from 'drizzle-orm';
 import { z } from 'zod';
 
@@ -68,10 +68,20 @@ interface TickWithMeta extends Tick {
   ageMs: number | null;
 }
 
+const MARKET_READ_RATE_LIMIT = Number(process.env.MARKET_READ_RATE_LIMIT) || 120;
+
 // Phase B: auth-gate. Market data is shared, but the gate prevents
 // anonymous scraping. The authenticated `user` is used to load provider preferences.
 export const GET = withAuth<void>(async (req, { user }) => {
   try {
+    // RL-5: per-user rate limit on market data reads.
+    const rl = await withRateLimit(user.userId, 'market_read', MARKET_READ_RATE_LIMIT);
+    if (!rl.allowed) {
+      return Response.json(
+        { error: { code: 'RATE_LIMITED', message: `Too many requests (${rl.count}/${rl.limit} per minute).` } },
+        { status: 429, headers: { 'Retry-After': '60' } },
+      );
+    }
     const url = new URL(req.url);
     // Repeated params: collect all `symbol` entries.
     const repeated = url.searchParams.getAll('symbol');

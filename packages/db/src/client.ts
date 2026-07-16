@@ -100,6 +100,14 @@ function resolveSslOptions(): false | { rejectUnauthorized: boolean; ca?: string
     };
   }
 
+  // DB-2: In production, require verified TLS unless explicitly opted out.
+  if (process.env.NODE_ENV === 'production' && process.env.DB_ALLOW_INSECURE_TLS !== 'true') {
+    throw new Error(
+      'DB TLS verification required in production. ' +
+        'Set SUPABASE_CA_CERT with your CA bundle, or set DB_ALLOW_INSECURE_TLS=true to opt out (not recommended).',
+    );
+  }
+
   return { rejectUnauthorized: false };
 }
 
@@ -118,11 +126,8 @@ export function getDb(): DbClient {
   // Supabase pooler in transaction mode requires `prepare: false`. The pooler
   // doesn't support prepared statements; postgres-js otherwise tries to use them.
   //
-  // TLS hardening (Phase 3 Session B): when SUPABASE_CA_CERT is present we verify
-  // the server certificate with rejectUnauthorized=true. Until that cert is wired in,
-  // we keep the legacy rejectUnauthorized=false fallback (accepting self-signed certs
-  // and connections without a CA bundle) so existing deployments do not break
-  // mid-rollout.
+  // DB-2: TLS verification is now mandatory in production without SUPABASE_CA_CERT.
+  // Dev/test and explicit DB_ALLOW_INSECURE_TLS=true opt-out still allow insecure TLS.
   _sql = postgres(url, {
     prepare: false,
     max: resolvePoolMax(),

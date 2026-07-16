@@ -19,6 +19,7 @@
 import { tryReserveBudget, applyBudgetDelta, BudgetExceededError, checkBudgetAlertsAndThresholds } from '../cost';
 import { resolveChatModel } from '../model';
 import { buildSharedContext, extractUserMessageText } from './context';
+import { limitConcurrency } from '../util/concurrency';
 import { selectAgents, resolveMode } from './modes';
 import { saveAgentOpinions } from './persistence';
 import { appendUserMessage, appendAssistantMessage, recordTelemetry } from '../persistence';
@@ -126,20 +127,26 @@ export async function runMultiAgentChat(args: RunMultiAgentArgs): Promise<MultiA
 
     onProgress?.({ type: 'specialists_start', agents: specialistNames });
 
+    // PERF-5: cap specialist fan-out concurrency to avoid 429 bursts
+    // on low-tier BYOK keys. Default 3, minimum 1, overridable via env.
+    const concurrency = Math.max(1, env.MULTI_AGENT_CONCURRENCY ?? 3);
+    const limit = limitConcurrency(concurrency);
     const opinions = await Promise.all(
       specialists.map(async (agent) => {
-        onProgress?.({ type: 'agent_start', agent: agent.name });
-        try {
-          const agentCtx: SharedContext = { ...ctx };
-          const opinion = await agent.run(agentCtx);
-          onProgress?.({ type: 'agent_done', agent: agent.name, opinion });
-          return opinion;
-        } catch (err) {
-          const msg = err instanceof Error ? err.message : String(err);
-          console.error(`[multi-agent] ${agent.name} failed`, err);
-          onProgress?.({ type: 'agent_error', agent: agent.name, error: msg });
-          return null;
-        }
+        return limit(async () => {
+          onProgress?.({ type: 'agent_start', agent: agent.name });
+          try {
+            const agentCtx: SharedContext = { ...ctx };
+            const opinion = await agent.run(agentCtx);
+            onProgress?.({ type: 'agent_done', agent: agent.name, opinion });
+            return opinion;
+          } catch (err) {
+            const msg = err instanceof Error ? err.message : String(err);
+            console.error(`[multi-agent] ${agent.name} failed`, err);
+            onProgress?.({ type: 'agent_error', agent: agent.name, error: msg });
+            return null;
+          }
+        });
       }),
     );
 

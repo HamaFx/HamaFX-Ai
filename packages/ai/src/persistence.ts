@@ -377,26 +377,23 @@ export async function forkThread(input: ForkThreadInput): Promise<ForkThreadResu
     //    URLs, since the user said "edit the text" not "edit the
     //    attachments"). For all other messages we copy verbatim.
     const cut = sourceMessages.slice(0, editIdx + 1);
-    const insertedIds: string[] = [];
-    for (let i = 0; i < cut.length; i++) {
-      const m = cut[i]!;
+    // PERF-8: Build all rows and insert in a single statement instead of
+    // N sequential round-trips inside the transaction.
+    const rows = cut.map((m, i) => {
       const isEditPoint = i === editIdx;
-      const newContent = isEditPoint ? newText : m.content;
-      // For the edit point we keep attachments/parts from the
-      // original message so an attached chart image still works.
-      const parts = isEditPoint ? m.parts : m.parts;
-      const [row] = await tx
-        .insert(schema.chatMessages)
-        .values({
-          threadId: newThreadId,
-          role: m.role,
-          content: newContent,
-          parts: parts ?? null,
-          createdAt: m.createdAt,
-        })
-        .returning({ id: schema.chatMessages.id, role: schema.chatMessages.role, content: schema.chatMessages.content });
-      insertedIds.push(row!.id);
-    }
+      return {
+        threadId: newThreadId,
+        role: m.role,
+        content: isEditPoint ? newText : m.content,
+        parts: (isEditPoint ? m.parts : m.parts) ?? null,
+        createdAt: m.createdAt,
+      };
+    });
+    const inserted = await tx
+      .insert(schema.chatMessages)
+      .values(rows)
+      .returning({ id: schema.chatMessages.id, role: schema.chatMessages.role, content: schema.chatMessages.content });
+    const insertedIds = inserted.map((r) => r!.id);
     await tx
       .update(schema.chatThreads)
       .set({ updatedAt: new Date() })

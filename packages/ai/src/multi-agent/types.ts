@@ -108,7 +108,10 @@ export type MultiAgentEnv = Pick<
   | 'MAX_DAILY_USD'
   | 'MAX_TOOL_ITERATIONS'
   | 'LOG_PROMPTS'
->;
+> & {
+  /** PERF-5: max concurrent specialist agents (default 3). */
+  MULTI_AGENT_CONCURRENCY?: number;
+};
 
 // ── Progress Events (for streaming) ─────────────────────────────────────
 

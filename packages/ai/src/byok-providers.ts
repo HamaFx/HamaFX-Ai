@@ -41,6 +41,7 @@ import { createVertex } from '@ai-sdk/google-vertex';
 import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
 import type { LanguageModel } from 'ai';
 import { PROVIDER_IDS, type ProviderId } from '@hamafx/shared/byok';
+import { normalizePemPrivateKey } from './util/pem';
 
 /** The five "domains" the agent routes between (see packages/ai/src/routing.ts). */
 export type ModelDomain = 'fundamental' | 'technical' | 'summary' | 'vision' | 'embedding';
@@ -157,31 +158,8 @@ const CAPS_TEXT = {
   streaming: true,
 } as const;
 
-/**
- * Normalize a PEM private key so it works with OpenSSL 3.x's stricter
- * decoder. Environment variables often carry the key as one long line
- * (no newlines), which the legacy `Sign.sign()` API rejects with
- * `ERR_OSSL_UNSUPPORTED` / `DECODER routines::unsupported`.
- *
- * Duplicated from model.ts (can't import due to circular dep).
- */
-function normalizePemPrivateKey(raw: string): string {
-  const key = raw.replace(/\r\n/g, '\n').trim();
-  // Note: `[A-Z ]+` must NOT include `PRIVATE` — greedily consumed,
-  // leaving nothing for the literal match that follows.
-  const headerMatch = key.match(/^-----BEGIN [A-Z ]+KEY-----/m);
-  const footerMatch = key.match(/-----END [A-Z ]+KEY-----/m);
-  if (!headerMatch || !footerMatch) return raw;
-  const header = headerMatch[0];
-  const footer = footerMatch[0];
-  const body = key
-    .replace(header, '')
-    .replace(footer, '')
-    .replace(/\s+/g, '');
-  if (body.length === 0) return raw;
-  const wrapped = body.match(/.{1,64}/g)?.join('\n') ?? body;
-  return `${header}\n${wrapped}\n${footer}\n`;
-}
+// normalizePemPrivateKey is imported from model.ts — previously
+// duplicated here (removed as part of SEC-4).
 
 /** Shared factory for OpenAI-compatible chat APIs. */
 function openaiCompatibleFactory(

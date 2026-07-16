@@ -44,13 +44,24 @@ ENV DEPLOYED_SHA=${DEPLOYED_SHA}
 
 ENV NODE_ENV=production
 ENV WORKER_MODE=docker
-# OpenSSL 3.x legacy provider — belt-and-suspenders for PEM key parsing
-# in the Google Auth library's JWT signing path. Without this flag,
-# flattened PEM keys (common when passed through env vars) fail with
-# ERR_OSSL_UNSUPPORTED / DECODER routines::unsupported.
-ENV NODE_OPTIONS=--openssl-legacy-provider
+# SEC-4: OpenSSL legacy provider flag REMOVED. Robust PEM normalization
+# in packages/ai/src/model.ts and byok-providers.ts handles flat/escaped
+# keys, so modern OpenSSL 3.x works without the legacy provider.
+# If Google Auth JWT signing fails after this change, verify the
+# normalizePemPrivateKey() function covers your key format.
 
 EXPOSE 8081
 EXPOSE 8080
+
+# SEC-3: Run as non-root user.
+# The node:20-slim image provides uid 1000 as 'node'.
+# Ports 8080/8081 are >1024 so non-root binding works.
+RUN chown -R node:node /app
+USER node
+
+# SEC-3: Container HEALTHCHECK against the real worker health endpoint.
+# apps/worker/src/index.ts serves /health on port 8081 (127.0.0.1).
+HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
+  CMD curl -fsS http://localhost:8081/health || exit 1
 
 CMD ["node", "dist/index.js"]

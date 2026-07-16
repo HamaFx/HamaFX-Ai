@@ -28,6 +28,7 @@ import { runWeeklyReview } from './weekly-review.js';
 import { runResonanceSync } from './resonance-sync.js';
 import { runAlerts } from './alerts.js';
 import { runMultiAgentAnalysis } from './multi-agent-analysis.js';
+import { runRetention } from './retention.js';
 import type { JobFn, JobName } from './types.js';
 
 export const JOBS: Record<JobName, { run: JobFn; description: string }> = {
@@ -70,6 +71,10 @@ export const JOBS: Record<JobName, { run: JobFn; description: string }> = {
   'multi-agent-analysis': {
     run: runMultiAgentAnalysis,
     description: 'U2 — Polls analysis_jobs table every 3s, runs multi-agent full-mode analysis for queued jobs.',
+  },
+  retention: {
+    run: runRetention,
+    description: 'DB-1 — Daily retention cleanup of telemetry, traces, rate_limits, and provider_daily_quota.',
   },
 };
 
