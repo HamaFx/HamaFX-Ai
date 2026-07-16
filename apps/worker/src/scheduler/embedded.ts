@@ -20,93 +20,125 @@
 // Heavy jobs use the existing JOBS registry. Light crons (news, alerts,
 // warm-cache) that normally hit Vercel endpoints are skipped in embedded
 // mode — they require API keys that most local dev users won't have.
+//
+// J-4: Each job entry stores its AbortController so a pending run can be
+// aborted on shutdown or when a new tick fires before the previous run
+// finished. Previously, controllers were created and immediately discarded,
+// making them uncancelable.
 
 import cron from 'node-cron';
 import { JOBS } from '../jobs/index.js';
 import type { Logger } from '../log.js';
 
-interface ScheduleEntry {
+/** Raw job definition — what we write in the registry. */
+interface ScheduleDef {
   name: string;
   cronExpression: string;
-  run: () => Promise<void>;
+  _rawRun: (signal: AbortSignal) => Promise<void>;
 }
 
-const SCHEDULES: ScheduleEntry[] = [
+/** Full job entry — with `run` wrapper + abort controller tracking. */
+interface ScheduleEntry extends ScheduleDef {
+  run: () => Promise<void>;
+  controller?: AbortController;
+}
+
+const RAW: ScheduleDef[] = [
   {
     name: 'briefings',
     cronExpression: '*/5 * * * *',
-    run: async () => {
+    async _rawRun(signal: AbortSignal) {
       await JOBS.briefings.run({
         log: console as unknown as Logger,
-        signal: new AbortController().signal,
+        signal,
       });
     },
   },
   {
     name: 'snapshots',
     cronExpression: '5 0 * * *', // 00:05 UTC daily
-    run: async () => {
+    async _rawRun(signal: AbortSignal) {
       await JOBS.snapshots.run({
         log: console as unknown as Logger,
-        signal: new AbortController().signal,
+        signal,
       });
     },
   },
   {
     name: 'resonance-sync',
     cronExpression: '0 1 * * *', // 01:00 UTC daily
-    run: async () => {
+    async _rawRun(signal: AbortSignal) {
       await JOBS['resonance-sync'].run({
         log: console as unknown as Logger,
-        signal: new AbortController().signal,
+        signal,
       });
     },
   },
   {
     name: 'cot',
     cronExpression: '0 22 * * 5', // Friday 22:00 UTC
-    run: async () => {
+    async _rawRun(signal: AbortSignal) {
       await JOBS.cot.run({
         log: console as unknown as Logger,
-        signal: new AbortController().signal,
+        signal,
       });
     },
   },
   {
     name: 'fred-actuals',
     cronExpression: '30 1 * * *', // 01:30 UTC daily
-    run: async () => {
+    async _rawRun(signal: AbortSignal) {
       await JOBS['fred-actuals'].run({
         log: console as unknown as Logger,
-        signal: new AbortController().signal,
+        signal,
       });
     },
   },
   {
     name: 'weekly-review',
     cronExpression: '0 18 * * 0', // Sunday 18:00 UTC
-    run: async () => {
+    async _rawRun(signal: AbortSignal) {
       await JOBS['weekly-review'].run({
         log: console as unknown as Logger,
-        signal: new AbortController().signal,
+        signal,
       });
     },
   },
   {
     name: 'embedding-backfill',
     cronExpression: '0 */6 * * *', // Every 6 hours
-    run: async () => {
+    async _rawRun(signal: AbortSignal) {
       await JOBS['embedding-backfill'].run({
         log: console as unknown as Logger,
-        signal: new AbortController().signal,
+        signal,
       });
     },
   },
 ];
 
+/** Transform raw definitions into full entries with abort-controller tracking. */
+function buildEntry(def: ScheduleDef): ScheduleEntry {
+  // `run: undefined!` is immediately overwritten below — it exists only to
+  // satisfy the required property in the ScheduleEntry interface.
+  const entry: ScheduleEntry = { ...def, run: undefined! };
+  entry.run = async () => {
+    // Best-effort cancellation of any previous run still in flight.
+    // The old job receives an abort signal but may not stop immediately;
+    // brief overlap is acceptable in dev mode.
+    entry.controller?.abort();
+    entry.controller = new AbortController();
+    await entry._rawRun(entry.controller.signal);
+  };
+  return entry;
+}
+
+const SCHEDULES: ScheduleEntry[] = RAW.map(buildEntry);
+
 /**
  * Start the embedded cron scheduler. Returns a stop function.
- * Each job is wrapped in try/catch so one failure doesn't affect others.
+ *
+ * Each job stores its AbortController so a pending run can be aborted
+ * on shutdown or when a new tick fires before the previous run finished.
  * Jobs that fail due to missing API keys log a warning and continue.
  */
 export function startEmbeddedScheduler(log: Logger): () => void {
@@ -127,6 +159,10 @@ export function startEmbeddedScheduler(log: Logger): () => void {
 
   return () => {
     log.info('scheduler: stopping all tasks');
+    // Abort any currently-running jobs before stopping the cron tasks.
+    for (const entry of SCHEDULES) {
+      entry.controller?.abort();
+    }
     tasks.forEach((t) => t.stop());
   };
 }

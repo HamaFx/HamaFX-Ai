@@ -133,8 +133,9 @@ async function runDenseNewsQuery(args: SubQueryArgs): Promise<RagRow[]> {
     LIMIT ${limit}
   `);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const rows = (result as any).rows ?? (result as unknown as RagRow[]);
+  // db.execute() returns a RowList in drizzle-orm v0.40+.
+  // Cast through unknown to access the underlying postgres-js result rows.
+  const rows = (result as unknown as RagRow[]);
   return (rows as RagRow[]).map((r) => ({
     ...r,
     publishedAt: r.publishedAt instanceof Date ? r.publishedAt : new Date(r.publishedAt),
@@ -180,8 +181,9 @@ async function runFtsNewsQuery(args: FtsSubQueryArgs): Promise<RagRow[]> {
     LIMIT ${limit}
   `);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const rows = (result as any).rows ?? (result as unknown as RagRow[]);
+  // db.execute() returns a RowList in drizzle-orm v0.40+.
+  // Cast through unknown to access the underlying postgres-js result rows.
+  const rows = (result as unknown as RagRow[]);
   return (rows as RagRow[]).map((r) => ({
     ...r,
     publishedAt: r.publishedAt instanceof Date ? r.publishedAt : new Date(r.publishedAt),

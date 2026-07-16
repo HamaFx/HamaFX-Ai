@@ -346,8 +346,9 @@ export async function searchMemory(args: SearchMemoryArgs): Promise<MemoryRow[]>
     `);
   });
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const rows = (result as any).rows ?? (result as unknown as MemoryRow[]);
+  // db.execute() returns a RowList in drizzle-orm v0.40+.
+  // Cast through unknown to access the underlying postgres-js result rows.
+  const rows = (result as unknown as MemoryRow[]);
   return (rows as Array<MemoryRow & { occurredAt: Date | string }>).map((r) => {
     const occurredMs =
       r.occurredAt instanceof Date ? r.occurredAt.getTime() : Date.parse(String(r.occurredAt));

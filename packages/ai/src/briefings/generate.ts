@@ -72,6 +72,9 @@ function envFromProcess(): BriefingsEnv {
     GOOGLE_VERTEX_LOCATION: process.env.GOOGLE_VERTEX_LOCATION,
     GOOGLE_APPLICATION_CREDENTIALS_JSON: process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON,
     GOOGLE_APPLICATION_CREDENTIALS: process.env.GOOGLE_APPLICATION_CREDENTIALS,
+    // O-5 note: defaults kept in sync with shared env module (packages/shared/src/env.ts).
+    // Cron jobs run without the full worker env validation; these defensive
+    // defaults keep briefings working when vars are unset.
     AI_DEFAULT_MODEL: process.env.AI_DEFAULT_MODEL ?? 'google-vertex/gemini-2.5-flash',
     MAX_DAILY_USD: Number.parseFloat(process.env.MAX_DAILY_USD ?? '5'),
     LOG_PROMPTS: process.env.LOG_PROMPTS === '1',

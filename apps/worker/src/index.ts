@@ -71,7 +71,9 @@ function installSignalHandlers(log: Logger): void {
   const handle = (signal: NodeJS.Signals): void => {
     if (state.shuttingDown) {
       log.warn('second signal received — exiting immediately', { signal });
-      process.exit(1);
+      // M-1: Flush Sentry before hard-exiting so the crash report isn't lost.
+      flushSentry(2_000).finally(() => process.exit(1));
+      return;
     }
     state.shuttingDown = true;
     log.info('shutdown signal received', { signal });
