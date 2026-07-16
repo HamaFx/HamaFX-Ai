@@ -210,10 +210,12 @@ export const POST = withAuth<void>(async (req, { user }) => {
     }
 
     // Single-agent fallback (both for explicit 'single' mode and when auto resolves to 'single').
+    // `last` is validated by Zod as a user-role message with content, so the
+    // UIMessage cast is safe — it carries the id/role/content/parts shape the
+    // SDK expects.
     const result = await runChat({
       threadId: body.threadId, userId: user.userId,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      userMessage: last as any,
+      userMessage: last as UIMessage,
       ...(body.modelOverride !== undefined && body.modelOverride !== null ? { modelOverride: body.modelOverride } : {}),
       ...(customInstructions ? { customInstructions } : {}),
       env: pickAiEnv(env),

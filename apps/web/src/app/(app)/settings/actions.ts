@@ -411,26 +411,27 @@ export async function updateApiKeysAction(
     }
 
     // STAB-10: Atomic write — all DB mutations inside one transaction.
+    const userId = session.user.id;
     await db.transaction(async (tx) => {
       await tx.update(schema.userSettings)
         .set({
           aiApiKeys: Object.keys(keys).length > 0 ? encryptByok(keys) : null,
           aiApiKeysUpdatedAt: Object.keys(newUpdatedAt).length > 0 ? newUpdatedAt : null,
         })
-        .where(eq(schema.userSettings.userId, session.user.id!));
+        .where(eq(schema.userSettings.userId, userId));
 
       for (const tr of testResults) {
         await tx
           .delete(schema.providerTests)
           .where(
             and(
-              eq(schema.providerTests.userId, session.user.id!),
+              eq(schema.providerTests.userId, userId),
               eq(schema.providerTests.providerId, tr.id),
             ),
           );
         if (tr.action === 'upsert') {
           await tx.insert(schema.providerTests).values({
-            userId: session.user.id!,
+            userId,
             providerId: tr.id,
             ok: tr.ok!,
             error: tr.ok ? null : (tr.error ?? 'unknown error'),
