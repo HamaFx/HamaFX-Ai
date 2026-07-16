@@ -32,7 +32,7 @@
 - **AI tests**: ✅ 695/695 (65 files)
 - **Data tests**: ✅ 130/130 (17 files)
 - **Worker tests**: ✅ 91/91
-- **Web tests**: 475/480 passed (5 pre-existing route-health.test.ts failures — unchanged from baseline, not hardening regressions)
+- **Web tests**: ✅ 528/528 (all passing, including 5 previously-failing route-health tests fixed with @/auth mock)
 - **SEC-1 regression tests**: ✅ 90/90 (api.test.ts 29/29 + middleware-matcher-coverage 61/61)
 
 ### UPG-1 next-auth spike note
