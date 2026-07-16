@@ -168,7 +168,7 @@ const CAPS_TEXT = {
 function normalizePemPrivateKey(raw: string): string {
   let key = raw.replace(/\r\n/g, '\n').trim();
   const headerMatch = key.match(/^-----BEGIN [A-Z ]+PRIVATE KEY-----/m);
-  const footerMatch = key.match(/-----END [A-Z ]+PRIVATE KEY-----$/m);
+  const footerMatch = key.match(/-----END [A-Z ]+PRIVATE KEY-----/m);
   if (!headerMatch || !footerMatch) return raw;
   const header = headerMatch[0];
   const footer = footerMatch[0];
