@@ -34,6 +34,7 @@ import type { LiveSnapshot } from './prompt/system';
 import {
   applyBudgetDelta,
   BudgetExceededError,
+  DEFAULT_MAX_DAILY_USD,
   DEFAULT_TURN_ESTIMATE_USD,
   estimateCostUsd,
   tryReserveBudget,
@@ -158,7 +159,10 @@ async function runChatInner(args: RunChatArgs) {
     userRow?.name?.trim() ||
     (userRow?.email ? userRow.email.split('@')[0] : null);
 
-  const maxDailyUsd = userSettings.maxDailyUsd ?? env.MAX_DAILY_USD;
+  // PHASE-L-HARDEN: defensive floor — when both userSettings and env
+  // are missing MAX_DAILY_USD the ceiling must be a finite number so
+  // tryReserveBudget never passes NaN to the bigint column.
+  const maxDailyUsd = userSettings.maxDailyUsd ?? env.MAX_DAILY_USD ?? DEFAULT_MAX_DAILY_USD;
 
   // 1) Hard ceiling — atomic reservation against today's running counter.
   //    Two concurrent turns sitting at 99% of the cap can't both pass:

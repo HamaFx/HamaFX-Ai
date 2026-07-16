@@ -57,6 +57,7 @@ export {
   getProviderMonthlySpend,
   checkBudgetAlertsAndThresholds,
   DEFAULT_TURN_ESTIMATE_USD,
+  DEFAULT_MAX_DAILY_USD,
   BudgetExceededError,
 } from './cost';
 export {

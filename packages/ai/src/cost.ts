@@ -76,6 +76,13 @@ const FALLBACK_RATE: ModelRate = { inputPerM: 5, outputPerM: 15 };
 export const DEFAULT_TURN_ESTIMATE_USD = 0.01;
 
 /**
+ * Default daily AI spend ceiling (USD). Mirrors the Zod schema's
+ * `MAX_DAILY_USD.default(5)`. Used as a last-resort fallback when
+ * neither `userSettings.maxDailyUsd` nor `env.MAX_DAILY_USD` is set.
+ */
+export const DEFAULT_MAX_DAILY_USD = 5;
+
+/**
  * Normalize a streamed model id to a `RATES` key. The agent persists the
  * literal id it streamed with — which is Vertex-prefixed by default
  * (`google-vertex/gemini-2.5-flash`) — but the RATES table is keyed by the
@@ -155,6 +162,27 @@ export async function tryReserveBudget(
   const estCents = Math.max(0, Math.ceil(estimatedUsd * 100));
   const capCents = Math.max(0, Math.ceil(capUsd * 100));
 
+  // NaN guard — when `capUsd` is `undefined` or `NaN` (e.g. when a
+  // caller bypasses the Zod-parsed env and passes a raw process.env
+  // where MAX_DAILY_USD is not set), `capCents` evaluates to `NaN`.
+  // On the first message the INSERT path skips the WHERE clause where
+  // `NaN` would sit, so the query succeeds. On the second message the
+  // row already exists, `ON CONFLICT DO UPDATE` evaluates the WHERE,
+  // and PostgreSQL rejects the `NaN` literal with:
+  //   invalid input syntax for type bigint: "NaN"
+  // Bail out deterministically so the caller can fall back without
+  // hitting the database with an invalid parameter.
+  // The `estCents` check is belt-and-suspenders — `estimatedUsd` is a
+  // constant today, but callers may pass dynamic values in the future.
+  if (!Number.isFinite(estCents) || !Number.isFinite(capCents)) {
+    console.warn(
+      '[ai] tryReserveBudget received non-finite value',
+      { estCents, capCents, capUsd },
+    );
+    const spent = await reservedSpendUsd(userId, now);
+    return { ok: false, spent, max: DEFAULT_MAX_DAILY_USD };
+  }
+
   if (estCents > capCents) {
     const spent = await reservedSpendUsd(userId, now);
     return { ok: false, spent, max: capUsd };
@@ -170,7 +198,11 @@ export async function tryReserveBudget(
       RETURNING total_usd_cents
     `,
   );
-  const list = (rows as unknown as Array<{ total_usd_cents: number | string }>);
+  // Handle both Drizzle v0.40+ RowList (array directly) and mock/legacy
+  // patterns that wrap results in { rows: [...] }.
+  const list = (Array.isArray(rows)
+    ? rows
+    : (rows as { rows?: unknown[] }).rows ?? []) as Array<{ total_usd_cents: number | string }>;
   const first = list[0];
   if (!first) {
     const spent = await reservedSpendUsd(userId, now);

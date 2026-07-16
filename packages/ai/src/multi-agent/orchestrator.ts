@@ -16,7 +16,7 @@
 
 // Multi-Agent Orchestration — pipeline coordinator.
 
-import { tryReserveBudget, applyBudgetDelta, BudgetExceededError, checkBudgetAlertsAndThresholds } from '../cost';
+import { tryReserveBudget, applyBudgetDelta, BudgetExceededError, checkBudgetAlertsAndThresholds, DEFAULT_MAX_DAILY_USD } from '../cost';
 import { resolveChatModel } from '../model';
 import { buildSharedContext, extractUserMessageText } from './context';
 import { limitConcurrency } from '../util/concurrency';
@@ -76,7 +76,7 @@ export async function runMultiAgentChat(args: RunMultiAgentArgs): Promise<MultiA
   // ── Budget guardrail ── reserve estimated cost upfront ──
   // B1 fix: use env.MAX_DAILY_USD instead of hardcoded 100.
   const estimatedCost = MODE_COST_ESTIMATE[mode] ?? 0.025;
-  const maxDailyUsd = userSettings.maxDailyUsd ?? env.MAX_DAILY_USD;
+  const maxDailyUsd = userSettings.maxDailyUsd ?? env.MAX_DAILY_USD ?? DEFAULT_MAX_DAILY_USD;
   const reservation = await tryReserveBudget(userId, estimatedCost, maxDailyUsd);
   if (!reservation.ok) {
     throw new BudgetExceededError(reservation.spent, reservation.max);

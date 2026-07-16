@@ -157,6 +157,30 @@ describe('tryReserveBudget', () => {
     const result = await tryReserveBudget('user-1', 0.01, 0.02);
     expect(result.ok).toBe(false);
   });
+
+  it('returns ok=false without crashing when capUsd is NaN', async () => {
+    // Simulate a misconfigured env where MAX_DAILY_USD is not parsed.
+    // The NaN guard must return { ok: false } instead of hitting the DB
+    // with an invalid bigint parameter.
+    const result = await tryReserveBudget('user-1', 0.01, NaN);
+    expect(result.ok).toBe(false);
+    // Falls back to the DEFAULT_MAX_DAILY_USD constant (5).
+    expect(result.max).toBe(5);
+  });
+
+  it('returns ok=false when capUsd is undefined (missing env)', async () => {
+    const result = await tryReserveBudget('user-1', 0.01, undefined as unknown as number);
+    expect(result.ok).toBe(false);
+    expect(result.max).toBe(5);
+  });
+
+  it('returns ok=false when estimatedUsd is NaN', async () => {
+    // Belt-and-suspenders: estCents is derived from a constant today,
+    // but the guard covers future dynamic callers.
+    const result = await tryReserveBudget('user-1', NaN, 5.0);
+    expect(result.ok).toBe(false);
+    expect(result.max).toBe(5);
+  });
 });
 
 describe('enforceDailyBudget', () => {

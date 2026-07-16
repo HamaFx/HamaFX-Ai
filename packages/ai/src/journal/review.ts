@@ -25,7 +25,7 @@ import type { UserSettingsRow } from '@hamafx/db/schema';
 
 import { computeStats } from './persistence';
 import { resolveChatModel } from '../model';
-import { tryReserveBudget, applyBudgetDelta, estimateCostUsd } from '../cost';
+import { tryReserveBudget, applyBudgetDelta, estimateCostUsd, DEFAULT_MAX_DAILY_USD } from '../cost';
 
 export interface ReviewTradeArgs {
   userId: string;
@@ -108,7 +108,7 @@ export async function reviewTrade(args: ReviewTradeArgs): Promise<TradeReviewRes
 
   // Budget guardrail: reserve a small estimate before the call.
   const estimatedUsd = 0.005;
-  const maxDailyUsd = userSettings.maxDailyUsd ?? env.MAX_DAILY_USD;
+  const maxDailyUsd = userSettings.maxDailyUsd ?? env.MAX_DAILY_USD ?? DEFAULT_MAX_DAILY_USD;
   const reservation = await tryReserveBudget(userId, estimatedUsd, maxDailyUsd);
   if (!reservation.ok) {
     throw new Error(
