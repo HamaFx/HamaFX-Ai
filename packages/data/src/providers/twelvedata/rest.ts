@@ -1,3 +1,4 @@
+import { checkAndIncrementDailyQuota } from '@hamafx/db';
 import type { Symbol, Timeframe } from '@hamafx/shared';
 import { z } from 'zod';
 
@@ -14,20 +15,10 @@ const DEFAULT_TIMEOUT_MS = 10_000;
 // Free tier: 8 req/min, 800/day. Self-throttle at 7 req/min to leave headroom.
 const THROTTLE: ThrottleConfig = { limit: 7, windowMs: 60_000 };
 
-// Daily quota tracking — free tier caps at 800 req/day, warn at 780.
-let dailyCount = 0;
-let dailyResetAt = Date.now() + 24 * 60 * 60 * 1000;
-
-function checkDailyQuota(): boolean {
-  if (Date.now() > dailyResetAt) {
-    dailyCount = 0;
-    dailyResetAt = Date.now() + 24 * 60 * 60 * 1000;
-  }
-  if (dailyCount >= 780) {
-    return false; // exhausted — leave 20 as buffer
-  }
-  return true;
-}
+// Daily quota enforced via DB-backed atomic counter (provider_daily_quota table).
+// Free tier: 800 req/day, enforced at 800 (the counter is atomic so no
+// per-instance drift; we let the provider's own 429 be the backstop).
+const DAILY_MAX = 800;
 
 interface CallOptions {
   signal?: AbortSignal;
@@ -80,13 +71,16 @@ async function rawFetch(
     );
   }
 
-  // Daily quota check
-  if (!opts.skipThrottle && !checkDailyQuota()) {
-    throw new ProviderError(
-      'PROVIDER_QUOTA_EXCEEDED',
-      PROVIDER,
-      'Daily API quota exhausted (800/day limit, 780 buffer reached)',
-    );
+  // Daily quota check (atomic DB-backed counter shared across all instances)
+  if (!opts.skipThrottle) {
+    const quota = await checkAndIncrementDailyQuota(PROVIDER, DAILY_MAX);
+    if (!quota.allowed) {
+      throw new ProviderError(
+        'PROVIDER_QUOTA_EXCEEDED',
+        PROVIDER,
+        `Daily API quota exhausted (${DAILY_MAX}/day limit, current count: ${quota.count})`,
+      );
+    }
   }
 
   const url = new URL(`${BASE_URL}${path}`);
@@ -142,10 +136,7 @@ async function rawFetch(
     }
   }
 
-  // Track daily quota
-  if (!opts.skipThrottle) {
-    dailyCount += 1;
-  }
+  // Daily quota already incremented atomically above — no module-level counter needed.
 
   return json;
 }

@@ -36,6 +36,7 @@ import {
 } from '@hamafx/ai';
 import { AlertRuleSchema, type AlertRule } from '@hamafx/shared';
 import { withRateLimit, getDb, schema } from '@hamafx/db';
+import { eq, desc } from 'drizzle-orm';
 import { z } from 'zod';
 
 import { errorResponse, parseJsonBody, withAuth } from '@/lib/api';
@@ -76,41 +77,17 @@ interface PreviewResult {
  */
 async function fetchCandles(
   rule: AlertRule,
-  lookbackDays: number,
+  _lookbackDays: number,
 ): Promise<SimCandle[]> {
-  const tf = rule.type === 'priceCross' ? '1h' : rule.tf;
   const db = getDb();
-  const cutoff = new Date(Date.now() - lookbackDays * 86_400_000);
 
-  // candles_1m has a (symbol, t) index. For TF aggregation we keep
-  // this simple: pull up to 1500 rows from the requested TF (the
-  // data layer normally has only the most-recent 24h in 1m; older
-  // is folded into 1h / 4h / 1d rows elsewhere). When the lookback
-  // spans more than 1500 candles we let the upstream table be the
-  // source of truth.
-  // For Phase B the implementation is intentionally minimal — the
-  // simulator accepts a candle list and the actual fetch is
-  // pluggable. This is a known limitation documented in the plan.
+  // Pull up to 1500 candles for the symbol from candles_1m, newest first.
   const rows = await db
     .select()
     .from(schema.candles1m)
-    .where(
-      // drizzle's and() — we have to use a workaround because
-      // the candles table is keyed by symbol + t. The
-      // implementation here is best-effort and is expected to
-      // be replaced by a dedicated historical-candles store in
-      // a follow-up.
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (undefined as any),
-    )
+    .where(eq(schema.candles1m.symbol, rule.symbol))
+    .orderBy(desc(schema.candles1m.t))
     .limit(1500);
-
-  // The above query is intentionally permissive: in the local dev
-  // (PGlite) the candles_1m table is sparsely populated. We fall
-  // back to an empty array so the simulator returns 0 fires
-  // rather than failing the request.
-  void tf;
-  void cutoff;
   return rows
     .map((r) => {
       const t = (r as { t?: number | Date | string }).t;

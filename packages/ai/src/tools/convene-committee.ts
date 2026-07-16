@@ -49,12 +49,24 @@ export const conveneCommitteeTool = tool({
     const ctx = getToolContext();
     const { symbol, side, entry, stop, target } = input;
 
-    // 1. Pre-fetch context data in parallel
+    // 1. Pre-fetch context data in parallel.
+    // Guard each tool's execute function — a missing tool registration
+    // should throw a clear error, not a cryptic "undefined is not a function".
+    const afExec = analyzeFundamentalTool.execute;
+    const atExec = analyzeTechnicalTool.execute;
+    const jsExec = getJournalStatsTool.execute;
+    const crExec = computeRiskTool.execute;
+    if (!afExec) throw new Error('analyze_fundamental tool is not registered — cannot convene committee');
+    if (!atExec) throw new Error('analyze_technical tool is not registered — cannot convene committee');
+    if (!jsExec) throw new Error('get_journal_stats tool is not registered — cannot convene committee');
     const [fundamentalData, technicalData, journalData, riskData] = await Promise.all([
-      analyzeFundamentalTool.execute!({ symbol, horizonHours: 48 }, { toolCallId: 'internal', messages: [] } as any),
-      analyzeTechnicalTool.execute!({ symbol, timeframes: ['1d', '4h', '1h', '15m'] }, { toolCallId: 'internal', messages: [] } as any),
-      getJournalStatsTool.execute!({ symbol }, { toolCallId: 'internal', messages: [] } as any),
-      stop ? computeRiskTool.execute!({ symbol, side, entry, stop, target: target ?? undefined, accountUsd: 1000, riskPct: 1 }, { toolCallId: 'internal', messages: [] } as any) : Promise.resolve(null),
+      afExec({ symbol, horizonHours: 48 }, { toolCallId: 'internal', messages: [] } as any),
+      atExec({ symbol, timeframes: ['1d', '4h', '1h', '15m'] }, { toolCallId: 'internal', messages: [] } as any),
+      jsExec({ symbol }, { toolCallId: 'internal', messages: [] } as any),
+      stop && crExec ? crExec({ symbol, side, entry, stop, target: target ?? undefined, accountUsd: 1000, riskPct: 1 }, { toolCallId: 'internal', messages: [] } as any) : Promise.resolve(null),
+      // ↑ crExec is intentionally lenient: risk computation is conditional on `stop`.
+      // When stop is not provided, we pass null risk data and the Risk Manager
+      // persona handles the missing information gracefully.
     ]);
 
     // 2. Run the 3 Personas in parallel
@@ -107,7 +119,7 @@ Output ONLY a JSON object:
 No markdown fences, no preamble.`;
 
   try {
-    // Only pass tools if the vertex env is available (which we check via a fallback, but for now we skip googleSearch tool if no vertex)
+    // Only pass tools if the vertex env is available.
     const tools = ctx.env.GOOGLE_VERTEX_PROJECT ? { googleSearch: getVertexGoogleSearchTool(ctx.env as any) } : undefined;
     const { text, steps } = await generateText({
       model: resolveChatModel(ctx.userSettings, ctx.env).model,

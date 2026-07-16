@@ -22,6 +22,7 @@ export { withUserScope } from './with-user-scope';
 export { withRateLimit, type RateLimitResult } from './rate-limit';
 export { runRetentionCleanup, type RetentionConfig, type RetentionResult } from './retention';
 export { getActiveUserIds } from './active-users';
+export { checkAndIncrementDailyQuota, type DailyQuotaResult } from './provider-quota';
 export {
   getSubscription,
   isSubscriptionActive,
