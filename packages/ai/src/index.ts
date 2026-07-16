@@ -255,6 +255,7 @@ export { buildToolCatalogue, type CatalogueEntry } from './catalogue';
 export { initLangfuse, shutdownLangfuse } from './instrumentation';
 
 export { extractRateLimits, type RateLimitData } from './rate-limits';
+export { noteLlmRateLimit, awaitLlmHeadroom } from './llm-throttle';
 
 // STAB-06: Exponential-backoff retry helper.
 export { withRetry, type RetryOptions } from './retry';

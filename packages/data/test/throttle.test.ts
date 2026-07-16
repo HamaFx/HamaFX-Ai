@@ -16,7 +16,7 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { _resetThrottle, noteBackoff, tryReserve } from '../src/cache/throttle';
+import { _resetThrottle, noteBackoff, resolveThrottleBackend, tryReserve, tryReserveDaily } from '../src/cache/throttle';
 
 describe('tryReserve', () => {
   beforeEach(() => {
@@ -86,5 +86,107 @@ describe('adaptive throttle — Phase 7a backoff', () => {
     let allowedRecovered = 0;
     for (let i = 0; i < 12; i += 1) if (await tryReserve('p', cfg)) allowedRecovered += 1;
     expect(allowedRecovered).toBe(10);
+  });
+});
+
+describe('resolveThrottleBackend', () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it('returns memory when NODE_ENV is test', () => {
+    vi.stubEnv('NODE_ENV', 'test');
+    vi.stubEnv('THROTTLE_BACKEND', '');
+    vi.stubEnv('VERCEL', '');
+    vi.stubEnv('HAMAFX_RUNTIME', '');
+    expect(resolveThrottleBackend()).toBe('memory');
+  });
+
+  it('returns postgres when THROTTLE_BACKEND=postgres', () => {
+    vi.stubEnv('NODE_ENV', 'production');
+    vi.stubEnv('THROTTLE_BACKEND', 'postgres');
+    vi.stubEnv('VERCEL', '');
+    vi.stubEnv('HAMAFX_RUNTIME', '');
+    expect(resolveThrottleBackend()).toBe('postgres');
+  });
+
+  it('returns memory when THROTTLE_BACKEND=memory (explicit opt-out)', () => {
+    vi.stubEnv('NODE_ENV', 'production');
+    vi.stubEnv('THROTTLE_BACKEND', 'memory');
+    vi.stubEnv('VERCEL', '1');
+    vi.stubEnv('HAMAFX_RUNTIME', '');
+    expect(resolveThrottleBackend()).toBe('memory');
+  });
+
+  it('returns postgres when VERCEL=1 and THROTTLE_BACKEND is unset', () => {
+    vi.stubEnv('NODE_ENV', 'production');
+    vi.stubEnv('THROTTLE_BACKEND', '');
+    vi.stubEnv('VERCEL', '1');
+    vi.stubEnv('HAMAFX_RUNTIME', '');
+    expect(resolveThrottleBackend()).toBe('postgres');
+  });
+
+  it('returns postgres when HAMAFX_RUNTIME=worker and THROTTLE_BACKEND is unset', () => {
+    vi.stubEnv('NODE_ENV', 'production');
+    vi.stubEnv('THROTTLE_BACKEND', '');
+    vi.stubEnv('VERCEL', '');
+    vi.stubEnv('HAMAFX_RUNTIME', 'worker');
+    expect(resolveThrottleBackend()).toBe('postgres');
+  });
+
+  it('returns memory when no deployment flags are set (local self-host)', () => {
+    vi.stubEnv('NODE_ENV', 'production');
+    vi.stubEnv('THROTTLE_BACKEND', '');
+    vi.stubEnv('VERCEL', '');
+    vi.stubEnv('HAMAFX_RUNTIME', '');
+    expect(resolveThrottleBackend()).toBe('memory');
+  });
+
+  it('returns memory when NODE_ENV=development and THROTTLE_BACKEND is unset', () => {
+    vi.stubEnv('NODE_ENV', 'development');
+    vi.stubEnv('THROTTLE_BACKEND', '');
+    vi.stubEnv('VERCEL', '');
+    vi.stubEnv('HAMAFX_RUNTIME', '');
+    expect(resolveThrottleBackend()).toBe('memory');
+  });
+});
+
+describe('tryReserveDaily (in-memory backend)', () => {
+  beforeEach(() => {
+    _resetThrottle();
+  });
+
+  it('allows up to cap - buffer calls then denies', async () => {
+    const cap = 10;
+    const buffer = 3; // effective cap = 7
+    // Allow 7 calls
+    for (let i = 0; i < 7; i += 1) {
+      expect(await tryReserveDaily('p', cap, buffer)).toBe(true);
+    }
+    // Deny the 8th
+    expect(await tryReserveDaily('p', cap, buffer)).toBe(false);
+  });
+
+  it('keeps separate quotas per provider', async () => {
+    const cap = 10;
+    const buffer = 5; // effective cap = 5
+    // Provider a uses 5, b uses 3
+    for (let i = 0; i < 5; i += 1) {
+      expect(await tryReserveDaily('a', cap, buffer)).toBe(true);
+    }
+    expect(await tryReserveDaily('a', cap, buffer)).toBe(false);
+    // Provider b still has room
+    expect(await tryReserveDaily('b', cap, buffer)).toBe(true);
+    expect(await tryReserveDaily('b', cap, buffer)).toBe(true);
+  });
+
+  it('buffers correctly at edge: allows cap-buffer, denies next', async () => {
+    const cap = 800;
+    const buffer = 20; // effective cap = 780
+    let allowed = 0;
+    for (let i = 0; i < 800; i += 1) {
+      if (await tryReserveDaily('twelvedata', cap, buffer)) allowed += 1;
+    }
+    expect(allowed).toBe(780);
   });
 });

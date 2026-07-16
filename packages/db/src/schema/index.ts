@@ -61,6 +61,8 @@ export * from './portfolio';
 export * from './noise-control';
 // F7 — Bot Platform with Commands
 export * from './bot-links';
+// Phase A RL-2 — Shared daily provider quota counter
+export * from './provider-daily-quota';
 // Phase B — Billing (NOWPayments / crypto)
 export * from './billing';
 // U2 — Background multi-agent analysis jobs

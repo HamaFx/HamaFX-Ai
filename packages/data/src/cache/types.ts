@@ -77,4 +77,7 @@ export interface Cache {
 
   /** Revalidate everything tagged with `tag`. No-op if not supported. */
   invalidateTag?(tag: string): Promise<void> | void;
+
+  /** Clear all entries. */
+  clear(): void;
 }
