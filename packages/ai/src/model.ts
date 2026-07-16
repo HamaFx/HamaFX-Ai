@@ -79,8 +79,12 @@ function normalizePemPrivateKey(raw: string): string {
   let key = raw.replace(/\r\n/g, '\n').trim();
 
   // Extract header and footer, then pull the base64 body from between them.
-  const headerMatch = key.match(/^-----BEGIN [A-Z ]+PRIVATE KEY-----/m);
-  const footerMatch = key.match(/-----END [A-Z ]+PRIVATE KEY-----$/m);
+  // Note: do NOT include `PRIVATE` in the character class — `[A-Z ]+` would
+  // greedily consume `PRIVATE KEY`, making the literal `PRIVATE KEY-----`
+  // never match.  Instead use `[A-Z ]+KEY-----` or just match the whole
+  // marker string directly.
+  const headerMatch = key.match(/^-----BEGIN [A-Z ]+KEY-----/m);
+  const footerMatch = key.match(/-----END [A-Z ]+KEY-----/m);
   if (!headerMatch || !footerMatch) {
     // Not a recognised PEM block — return as-is and let OpenSSL reject it
     // with a readable error.
