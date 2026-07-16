@@ -275,3 +275,25 @@ All 22 work orders implemented. See `RELIABILITY_HARDENING_LOG.md` for full deta
 - **H-11 🟠→✅:** Replaced `(undefined as any)` placeholder query in `alerts/preview/route.ts` with proper `eq(schema.candles1m.symbol, rule.symbol)` filter + `orderBy(desc(...))`.
 - **K-5 🟡→✅:** Verified — `llm-throttle.ts` already has `{ once: true }`.
 - **O-2 🟠→⚪:** Analyzed — `?? ''` pattern is intentional for multi-provider failover chains. Worker startup already validates required keys.
+
+---
+
+## ✅ Round 3 Fixes (2026-07-16)
+
+### Fixed:
+- **J-4 🟡→✅:** Rewrote `scheduler/embedded.ts` with two-interface `ScheduleDef`/`ScheduleEntry` pattern. Each job now stores its AbortController. Jobs are aborted on shutdown and best-effort cancelled before overlapping runs.
+- **M-1 🟡→✅:** Added `flushSentry(2_000).finally(() => process.exit(1))` to second SIGTERM handler so crash reports aren't lost.
+- **rag.ts 🟡→✅:** Replaced `(result as any).rows` with `(result as unknown as RagRow[])` for Drizzle v0.40+ RowList compatibility (2 places).
+- **memory-index.ts 🟡→✅:** Same Drizzle cast fix as rag.ts.
+- **O-5 🟡→⚪:** Analyzed — briefings defaults are defensive (cron context may not have full worker env). Kept production-safe values with sync-note comment.
+
+---
+
+## ✅ Round 4 Fixes (2026-07-16)
+
+### Fixed:
+- **Phase L 🟡→✅:** Audited all 9 routes using raw `req.json()`. Every single one validates with Zod (`schema.parse()` or `schema.safeParse()`) immediately after. The `parseJsonBody` wrapper is a convenience; these routes achieve the same result. **False alarm — no fixes needed.**
+- **cost.ts:173 🟡→✅:** Replaced `Array.isArray(rows) ? rows : (rows as { rows?: unknown[] }).rows ?? []` with clean `(rows as unknown as Array<{...}>)` cast. Removed redundant recast on next line.
+- **tools/index.ts `as any` ⚪:** Analyzed — 2 casts (`analyze_chart_image`, `summarize_thread`) are needed for AI SDK v5 tool type compatibility. Not fixable without SDK changes.
+- **with-user-scope.ts `as any` ⚪:** Analyzed — needed for drizzle column type complexity. Not fixable without drizzle API changes.
+- **auth.ts `as any` ⚪:** Analyzed — documented upstream NextAuth + Drizzle issues. Not fixable without library changes.

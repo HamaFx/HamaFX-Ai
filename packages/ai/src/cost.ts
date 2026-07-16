@@ -170,8 +170,8 @@ export async function tryReserveBudget(
       RETURNING total_usd_cents
     `,
   );
-  const list = Array.isArray(rows) ? rows : (rows as { rows?: unknown[] }).rows ?? [];
-  const first = (list as Array<{ total_usd_cents: number | string }>)[0];
+  const list = (rows as unknown as Array<{ total_usd_cents: number | string }>);
+  const first = list[0];
   if (!first) {
     const spent = await reservedSpendUsd(userId, now);
     return { ok: false, spent, max: capUsd };
