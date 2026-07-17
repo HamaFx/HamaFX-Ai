@@ -59,7 +59,15 @@ async function applyOne(
     try {
       await executeWithFallback(db, safe);
     } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
+      // drizzle-orm 0.45+ wraps PGlite errors with "Failed query:" prefix.
+      // Extract the underlying message from err.cause when present.
+      const causeMsg =
+        err instanceof Error && err.cause instanceof Error
+          ? err.cause.message
+          : undefined;
+      const msg =
+        causeMsg ??
+        (err instanceof Error ? err.message : String(err));
       // Handle known non-idempotent re-application errors (same pattern
       // as schema-drift.test.ts and pglite-client.ts applyMigrations).
       if (

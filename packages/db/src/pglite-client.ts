@@ -253,7 +253,15 @@ export async function applyMigrations(dataDir?: string): Promise<void> {
       try {
         await db.execute(safeStmt);
       } catch (err) {
-        const msg = err instanceof Error ? err.message : String(err);
+        // drizzle-orm 0.45+ wraps PGlite errors with "Failed query:" prefix.
+        // Extract the underlying message from err.cause when present.
+        const causeMsg =
+          err instanceof Error && err.cause instanceof Error
+            ? err.cause.message
+            : undefined;
+        const msg =
+          causeMsg ??
+          (err instanceof Error ? err.message : String(err));
         // Silently skip pgvector-related failures (PGlite lacks the
         // vector extension; the schema has a `real[]` fallback).
         if (msg.includes('vector') || msg.includes('hnsw') || msg.includes('extension')) {
@@ -352,7 +360,17 @@ export async function executeWithFallback(
   try {
     await db.execute(sql);
   } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
+    // drizzle-orm 0.45+ wraps PGlite errors with "Failed query:" prefix,
+    // placing the original error in err.cause. We must check the
+    // underlying error message, not the wrapper, to detect
+    // PGlite-incompatible multi-statement SQL.
+    const causeMsg =
+      err instanceof Error && err.cause instanceof Error
+        ? err.cause.message
+        : undefined;
+    const msg =
+      causeMsg ??
+      (err instanceof Error ? err.message : String(err));
     if (msg.includes('cannot insert multiple commands')) {
       try {
         await _pglite!.exec(sql);

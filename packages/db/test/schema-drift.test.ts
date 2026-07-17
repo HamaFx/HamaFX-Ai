@@ -50,7 +50,15 @@ async function applyOne(db: Awaited<ReturnType<typeof getPGliteDb>>, tag: string
     try {
       await executeWithFallback(db, safe);
     } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
+      // drizzle-orm 0.45+ wraps PGlite errors with "Failed query:" prefix.
+      // Extract the underlying message from err.cause when present, or
+      // use the stringified form as fallback.
+      const msg =
+        err instanceof Error && err.cause instanceof Error
+          ? err.cause.message
+          : err instanceof Error
+            ? err.message
+            : String(err);
       // Handle known non-idempotent re-application errors the same way
       // applyMigrations() in pglite-client does (see packages/db/src/pglite-client.ts).
       // These are safe to skip on re-run — the DDL already took effect.
