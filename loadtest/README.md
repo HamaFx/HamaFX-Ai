@@ -105,6 +105,7 @@ npm run seed           # Seed users for Strategy B
 | `K6_TARGET_RPS` | varies | Target requests/sec for load profiles |
 | `K6_SOAK_DURATION` | `1h` | Duration for soak test |
 | `K6_ENABLE_CHAT` | unset | Must be `true` to run chat load test |
+| `K6_LOADTEST_RELAXED` | `true` for Docker SUT | Relax p95/p99 thresholds 2-4× (POST endpoints slower w/o cache) |
 | `K6_CRON_SECRET` | unset | For cron endpoint tests |
 
 ### SUT env (for the throwaway SUT)
@@ -114,6 +115,12 @@ npm run seed           # Seed users for Strategy B
 | `MARKET_READ_RATE_LIMIT` | `100000` | Lifted for Strategy A |
 | `AUTH_MODE` | `legacy` | Skip auth for k6 |
 | `NODE_ENV` | `development` | Required for legacy auth bypass |
+| `LIVE_TICKS_MAX_AGE_MS` | `86400000` | 24h freshness window for seeded live_ticks |
+| `DB_DISABLE_SSL` | `true` | Skip TLS for local Docker Postgres |
+
+Auto-seeding: the `seed-ticks` service in docker-compose.loadtest.yml seeds
+XAUUSD/EURUSD/GBPUSD into the `live_ticks` table on startup, so the price
+endpoint works without a running worker.
 
 ## Output
 

@@ -87,5 +87,20 @@ services:
       start_period: 60s
     restart: unless-stopped
 
+  # One-off service: seeds live_ticks so the price endpoint works
+  # without a running worker.  Runs once after the app is healthy.
+  seed-ticks:
+    image: pgvector/pgvector:pg16
+    depends_on:
+      app:
+        condition: service_healthy
+    entrypoint:
+      - sh
+      - -c
+      - |
+        PGPASSWORD=loadtest psql -h db -U hamafx -d hamafx -f /seed.sql && echo "live_ticks seeded"
+    volumes:
+      - ./seed-live-ticks.sql:/seed.sql:ro
+
 volumes:
   pgdata-loadtest:

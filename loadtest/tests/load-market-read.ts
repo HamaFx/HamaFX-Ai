@@ -4,7 +4,7 @@
 import { sleep } from 'k6';
 import { env } from '../config/environments.js';
 import { averageLoad } from '../config/load-profiles.js';
-import { MARKET_READ, MARKET_READ_TAGGED } from '../config/thresholds.js';
+import { MARKET_READ, MARKET_READ_TAGGED_RELAXED } from '../config/thresholds.js';
 import { bootstrapAuth, applyAuth, pickUser } from '../lib/auth.js';
 import { marketRead } from '../scenarios/market-read.js';
 import { handleSummary } from '../lib/summary.js';
@@ -19,7 +19,7 @@ export const options = {
     http_req_failed: MARKET_READ.httpReqFailed,
     checks: MARKET_READ.checks,
     rate_limited: MARKET_READ.rateLimited,
-    ...MARKET_READ_TAGGED,
+    ...MARKET_READ_TAGGED_RELAXED,
   },
 };
 

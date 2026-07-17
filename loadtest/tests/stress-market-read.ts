@@ -5,7 +5,7 @@
 import { sleep } from 'k6';
 import { env } from '../config/environments.js';
 import { stress } from '../config/load-profiles.js';
-import { STRESS, MARKET_READ_TAGGED } from '../config/thresholds.js';
+import { STRESS, MARKET_READ_TAGGED_RELAXED } from '../config/thresholds.js';
 import { bootstrapAuth, applyAuth, pickUser } from '../lib/auth.js';
 import { marketRead } from '../scenarios/market-read.js';
 import { handleSummary } from '../lib/summary.js';
@@ -23,7 +23,7 @@ export const options = {
     http_req_failed: STRESS.httpReqFailed,
     checks: STRESS.checks,
     rate_limited: STRESS.rateLimited,
-    ...MARKET_READ_TAGGED,
+    ...MARKET_READ_TAGGED_RELAXED,
   },
 };
 

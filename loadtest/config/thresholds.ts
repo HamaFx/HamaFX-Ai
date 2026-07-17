@@ -24,6 +24,19 @@ export const MARKET_READ_TAGGED = {
   'http_req_duration{group:market_read}': ['p(95)<500', 'p(99)<1200'],
 };
 
+// ── Relaxed variants for load-test / CI environments where the SUT
+//     runs without a real worker, without provider API keys, and
+//     without production-grade caching.  POST-based indicator/structure
+//     calls are naturally 2-4× slower than cache-hit GETs.
+const RELAXED = isRelaxed();
+function isRelaxed(): boolean {
+  return __ENV['K6_LOADTEST_RELAXED'] === 'true';
+}
+
+export const MARKET_READ_TAGGED_RELAXED = RELAXED
+  ? { 'http_req_duration{group:market_read}': ['p(95)<2000', 'p(99)<4000'] }
+  : MARKET_READ_TAGGED;
+
 // ── read_mix (broad GET surface) ──
 export const READ_MIX: ThresholdPreset = {
   httpReqFailed: ['rate<0.01'],
@@ -40,6 +53,18 @@ export const READ_MIX_TAGGED = {
   'http_req_duration{group:thread_list}': ['p(95)<500', 'p(99)<1000'],
   'http_req_duration{group:health}': ['p(95)<300', 'p(99)<800'],
 };
+
+export const READ_MIX_TAGGED_RELAXED = RELAXED
+  ? {
+      'http_req_duration{group:market_read}': ['p(95)<2000', 'p(99)<4000'],
+      'http_req_duration{group:news_read}': ['p(95)<2000', 'p(99)<4000'],
+      'http_req_duration{group:calendar_read}': ['p(95)<2000', 'p(99)<4000'],
+      'http_req_duration{group:sentiment_read}': ['p(95)<2000', 'p(99)<4000'],
+      'http_req_duration{group:decision_signals}': ['p(95)<2000', 'p(99)<4000'],
+      'http_req_duration{group:thread_list}': ['p(95)<1000', 'p(99)<2000'],
+      'http_req_duration{group:health}': ['p(95)<500', 'p(99)<1500'],
+    }
+  : READ_MIX_TAGGED;
 
 // ── chat (POST /api/chat — full stream, expect slow) ──
 export const CHAT: ThresholdPreset = {
