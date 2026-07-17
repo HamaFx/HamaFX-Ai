@@ -1,7 +1,10 @@
 # 05 — API Routes
 
-> Comprehensive reference for all 30+ endpoints, auth flow, middleware,
-> CSRF hardening, cron pipelines, and shared patterns. Last updated: Phase 8.
+> Comprehensive reference for all 93 API routes, auth flow, middleware,
+> CSRF hardening, cron pipelines, and shared patterns. Last updated: Phase L.
+>
+> **Note:** This document describes all route files under `apps/web/src/app/api/`.
+> The route tree was last verified against commit `1803c17` (main).
 
 ---
 
@@ -16,11 +19,18 @@
 7. [Journal Routes](#7-journal-routes)
 8. [Push Notification Routes](#8-push-notification-routes)
 9. [Upload Route](#9-upload-route)
-10. [Admin Routes](#10-admin-routes)
-11. [Telegram Routes](#11-telegram-routes)
-12. [Cron Routes](#12-cron-routes)
-13. [Runtime Split](#13-runtime-split)
-14. [Response Envelope Reference](#14-response-envelope-reference)
+10. [Settings Routes](#10-settings-routes)
+11. [Admin Routes](#11-admin-routes)
+12. [Billing Routes](#12-billing-routes)
+13. [Bot Routes](#13-bot-routes)
+14. [Decision Signals Routes](#14-decision-signals-routes)
+15. [Portfolio Routes](#15-portfolio-routes)
+16. [Notification Routes](#16-notification-routes)
+17. [Telegram Routes](#17-telegram-routes)
+18. [Health Routes](#18-health-routes)
+19. [Cron Routes](#19-cron-routes)
+20. [Runtime Split](#20-runtime-split)
+21. [Response Envelope Reference](#21-response-envelope-reference)
 
 ---
 
@@ -49,10 +59,15 @@ Multi-tenant authentication managed by **NextAuth.js v5** (Auth.js). Uses a Cred
   | Path pattern        | Rationale                                   |
   |---------------------|---------------------------------------------|
   | `/login`            | The login surface itself                    |
-  | `/api/auth/*`       | Login + logout handlers                     |
+  | `/register`         | Registration page                           |
+  | `/forgot-password`  | Password reset request                      |
+  | `/reset-password`   | Password reset form                         |
+  | `/api/auth/*`       | Login + logout + verify-email handlers      |
   | `/api/cron/*`       | Cron-secret-protected internally            |
   | `/api/telegram/*`   | Telegram webhook (secret-token protected)   |
-  | `/share/*`          | Future public-share pages                   |
+  | `/api/dev/*`        | Dev-only login bypass                       |
+  | `/api/billing/webhook` | HMAC-signed, not session-auth           |
+  | `/share/*`          | Public share pages                          |
   | `_next/*`, static   | Next.js internals, favicon, manifest, icons |
 
 ### 1.3 NextAuth Configuration
@@ -554,7 +569,89 @@ not configured.
 
 ---
 
-## 10. Admin Routes
+## 10. Settings Routes
+
+### `GET /api/settings/catalog`
+
+Returns the full model catalog: supported providers, per-domain defaults, model lists, and capabilities.
+
+**Runtime**: nodejs
+
+**Auth**: Authenticated user (via `withAuth()`)
+
+**Response**: `200 { "domains": [...], "providers": [...], "total": N, "totalModels": N }` — See `CatalogResponse` in `packages/shared/src/byok.ts`.
+
+### `GET /api/me/keys` / `POST /api/me/keys`
+
+Get or set the user's encrypted BYOK API keys.
+
+**Runtime**: nodejs
+
+**Auth**: Authenticated user
+
+**GET Response**: `200 { "keys": { ... } }` — decrypted BYOK payload (never logged).
+**POST Body**: `{ "keys": ByokPayload }` — encrypts and stores.
+
+### `POST /api/settings/bulk-test`
+
+Tests all configured provider keys in parallel.
+
+**Runtime**: nodejs
+
+**Response**: `200 { "results": { "providerId": { "ok": true/false, "error": "..." } } }`
+
+### `POST /api/settings/test-provider`
+
+Test a single provider key.
+
+**Runtime**: nodejs
+
+| Field | Type | Required | Notes |
+|-------|------|----------|-------|
+| `provider` | ProviderId | Yes | Provider to test |
+| `apiKey` | string | No | Optional override key |
+
+**Response**: `200 { "ok": true/false, "model": "...", "latencyMs": N }`
+
+### `POST /api/settings/test-market-provider`
+
+Test a market data provider connection.
+
+**Runtime**: nodejs
+
+**Response**: `200 { "ok": true/false, "error": "..." }`
+
+### `POST /api/settings/chat-model`
+
+Set the user's default chat model override.
+
+### `POST /api/settings/vision-model`
+
+Set the user's default vision model override.
+
+### `POST /api/settings/embedding-model`
+
+Set the user's default embedding model override.
+
+### `POST /api/settings/analysis-mode`
+
+Set the user's default multi-agent analysis mode (`single`, `quick`, `standard`, `full`, `auto`).
+
+### `POST /api/settings/fallback-chain`
+
+Set the user's provider fallback chain (ordered list of provider IDs).
+
+### `POST /api/settings/symbols`
+
+Manage user's watched symbols.
+
+### `GET /api/settings/usage-by-provider` / `GET /api/settings/usage-by-agent`
+
+Return AI usage breakdowns for the current user.
+
+---
+
+## 11. Admin Routes
 
 ### `POST /api/admin/test-alert-email`
 
@@ -593,9 +690,152 @@ test route.
 
 **Requires**: `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`.
 
+### `POST /api/admin/flush`
+
+Flush internal caches (dev-only).
+
+### `POST /api/admin/impersonate`
+
+Dev-only user impersonation (requires `ENABLE_IMPERSONATION=true`).
+
+### `GET /api/admin/onboarding/status`, `POST /api/admin/onboarding/reset`, `GET /api/admin/onboarding/inspect`
+
+Admin onboarding management — inspect progress, reset wizard, check status for any user.
+
+### `GET /api/admin/diagnostics/tool-telemetry`
+
+Inspect recent AI tool call telemetry.
+
+### `GET /api/admin/diagnostics/traces`
+
+List persisted diagnostic traces.
+
+### `GET /api/admin/diagnostics/trace/[id]`
+
+Get a single diagnostic trace by ID.
+
+### `GET /api/admin/logs/stream`
+
+Real-time log stream (dev only, requires `ENABLE_LOG_STREAM=true`).
+
+### `GET /api/admin/features`
+
+List and toggle runtime feature flags.
+
 ---
 
-## 11. Telegram Routes
+## 12. Billing Routes
+
+### `POST /api/billing/checkout`
+
+Create a NOWPayments checkout session for a plan purchase.
+
+**Runtime**: nodejs
+
+**Body**: `{ "planId": string }`
+
+**Response**: `200 { "url": "https://nowpayments.io/payment/...", "paymentId": "..." }`
+
+### `GET /api/billing/portal`
+
+Get current subscription status and portal data.
+
+**Response**: `200 { "subscription": { ... }, "plans": [...] }`
+
+### `POST /api/billing/webhook`
+
+NOWPayments IPN webhook. HMAC-SHA512 signature verified before business logic.
+Exempt from middleware auth.
+
+**Runtime**: nodejs
+
+**Auth**: `x-nowpayments-sig` header verified against `NOWPAYMENTS_IPN_SECRET`. Returns 401 on mismatch.
+
+**Response**: `200 OK` (always acknowledged).
+
+---
+
+## 13. Bot Routes
+
+### `POST /api/bot/link-code`
+
+Generate a one-time link code for Telegram bot linking.
+
+**Runtime**: nodejs
+
+**Response**: `200 { "code": "ABC123", "expiresAt": N }`
+
+### `GET /api/bot/status`
+
+Check Telegram linking status.
+
+**Response**: `200 { "linked": true/false, "chatId": "..." }`
+
+### `POST /api/bot/unlink`
+
+Unlink Telegram from the user's account.
+
+**Response**: `200 { "ok": true }`
+
+---
+
+## 14. Decision Signals Routes
+
+### `GET /api/decision-signals`
+
+List decision signals for the current user.
+
+### `GET /api/decision-signals/stats`
+
+Aggregate decision signal statistics (win rate, by model, by horizon, etc.).
+
+### `POST /api/decision-signals/[id]/feedback`
+
+Submit user feedback for a decision signal.
+
+---
+
+## 15. Portfolio Routes
+
+### `GET /api/portfolio/positions`
+
+List open/closed portfolio positions.
+
+### `POST /api/portfolio/positions`
+
+Create a new position.
+
+### `GET /api/portfolio/positions/[id]`
+
+Get a single position.
+
+### `PATCH /api/portfolio/positions/[id]`
+
+Update (close/edit) a position.
+
+### `GET/POST /api/portfolio/settings`
+
+Get/update portfolio settings (account balance, risk parameters).
+
+### `GET /api/portfolio/risk`
+
+Get risk assessment for current portfolio.
+
+---
+
+## 16. Notification Routes
+
+### `GET/POST /api/notifications/route-config`
+
+Get/update notification routing configuration (which channels for which events).
+
+### `GET/POST /api/notifications/noise-config`
+
+Get/update noise control settings (suppress similar alerts, debounce intervals).
+
+---
+
+## 17. Telegram Routes
 
 ### `POST /api/telegram/webhook`
 
@@ -614,7 +854,30 @@ are logged but not surfaced to Telegram.
 
 ---
 
-## 12. Cron Routes
+## 18. Health Routes
+
+### `GET /api/health`
+
+Enhanced health check. Returns system status including DB connectivity, pgvector status, cron run health, and deployed version.
+
+**Runtime**: nodejs
+
+| Check | What it verifies |
+|-------|-----------------|
+| `db` | `SELECT 1` — DB connectivity + latency |
+| `env` | Required env vars present (no values exposed) |
+| `cron` | Recent cron runs + stuck job detection |
+| `pgvector` | pgvector extension installed |
+
+**Response**: `200 { "status": "ok", "checks": {...}, "version": "sha", "ts": "..." }` or `503` on failure.
+
+### `GET /api/health/db`
+
+Focused DB health check — connectivity + migration status.
+
+---
+
+## 19. Cron Routes
 
 All cron routes are `GET` endpoints gated by `withCronAuth()`. They accept
 either a `Bearer` token (`Authorization: Bearer <CRON_SECRET>`) or a valid
@@ -658,21 +921,20 @@ All return: `200 { "ok": true, "processed": <int>, "note": "<string>" }`
 
 ---
 
-## 13. Runtime Split
+## 20. Runtime Split
 
 | Runtime | Routes |
 |---------|--------|
-| **nodejs** | `/api/chat/*`, `/api/auth/*`, `/api/alerts/*`, `/api/journal/*`, `/api/push/*`, `/api/upload`, `/api/admin/*`, `/api/telegram/*`, all `/api/cron/*`, all `/api/market/*` |
+| **nodejs** | All API route handlers (`/api/chat/*`, `/api/auth/*`, `/api/alerts/*`, `/api/journal/*`, `/api/push/*`, `/api/upload`, `/api/settings/*`, `/api/admin/*`, `/api/billing/*`, `/api/bot/*`, `/api/decision-signals/*`, `/api/portfolio/*`, `/api/notifications/*`, `/api/telegram/*`, `/api/health/*`, all `/api/cron/*`, all `/api/market/*`, `/api/news`, `/api/calendar`, `/api/sentiment`, `/api/me/*`, `/api/onboarding/*`) |
 | **edge** | Middleware only (`middleware.ts`) |
 
 Currently all API route handlers run on `nodejs`. The edge runtime is
 reserved exclusively for middleware, where it authenticates via Web Crypto
-without Node-specific imports. Market data routes were previously on edge
-but were moved to nodejs for consistency with `@hamafx/data`.
+without Node-specific imports.
 
 ---
 
-## 14. Response Envelope Reference
+## 21. Response Envelope Reference
 
 ### Success
 
@@ -714,47 +976,114 @@ but were moved to nodejs for consistency with `@hamafx/data`.
 
 ## Endpoint Quick Index
 
-| Method   | Path                                | Group    |
-|----------|-------------------------------------|----------|
-| `POST`   | `/api/auth/callback/credentials`    | Auth     |
-| `POST`   | `/api/auth/logout`                  | Auth     |
-| `POST`   | `/api/chat`                         | Chat     |
-| `GET`    | `/api/chat/threads`                 | Chat     |
-| `POST`   | `/api/chat/threads`                 | Chat     |
-| `GET`    | `/api/chat/threads/[id]`            | Chat     |
-| `DELETE` | `/api/chat/threads/[id]`            | Chat     |
-| `GET`    | `/api/market/price`                 | Market   |
-| `GET`    | `/api/market/candles`               | Market   |
-| `POST`   | `/api/market/indicators`            | Market   |
-| `POST`   | `/api/market/structure`             | Market   |
-| `GET`    | `/api/alerts`                       | Alerts   |
-| `POST`   | `/api/alerts`                       | Alerts   |
-| `GET`    | `/api/alerts/[id]`                  | Alerts   |
-| `PATCH`  | `/api/alerts/[id]`                  | Alerts   |
-| `DELETE` | `/api/alerts/[id]`                  | Alerts   |
-| `GET`    | `/api/journal`                      | Journal  |
-| `POST`   | `/api/journal`                      | Journal  |
-| `GET`    | `/api/journal/[id]`                 | Journal  |
-| `PATCH`  | `/api/journal/[id]`                 | Journal  |
-| `DELETE` | `/api/journal/[id]`                 | Journal  |
-| `POST`   | `/api/push/subscribe`               | Push     |
-| `POST`   | `/api/push/unsubscribe`             | Push     |
-| `POST`   | `/api/upload`                       | Upload   |
-| `POST`   | `/api/admin/test-alert-email`       | Admin    |
-| `POST`   | `/api/admin/test-telegram`          | Admin    |
-| `POST`   | `/api/telegram/webhook`             | Telegram |
-| `GET`    | `/api/cron/warm-cache`              | Cron     |
-| `GET`    | `/api/cron/alerts`                  | Cron     |
-| `GET`    | `/api/cron/news`                    | Cron     |
-| `GET`    | `/api/cron/calendar`                | Cron     |
-| `GET`    | `/api/cron/snapshots`               | Cron     |
-| `GET`    | `/api/cron/briefings`               | Cron     |
-| `GET`    | `/api/cron/embedding-backfill`      | Cron     |
-| `GET`    | `/api/cron/cot`                     | Cron     |
-| `GET`    | `/api/cron/fred-actuals`            | Cron     |
-| `GET`    | `/api/cron/weekly-review`           | Cron     |
-| `GET`    | `/api/cron/cleanup-uploads`         | Cron     |
+| Method   | Path                                         | Group              |
+|----------|----------------------------------------------|--------------------|
+| `GET/POST` | `/api/auth/[...nextauth]`                  | Auth               |
+| `POST`   | `/api/auth/verify-email`                     | Auth               |
+| `POST`   | `/api/chat`                                  | Chat               |
+| `GET`    | `/api/chat/threads`                          | Chat               |
+| `POST`   | `/api/chat/threads`                          | Chat               |
+| `DELETE` | `/api/chat/threads/bulk-delete`              | Chat               |
+| `POST`   | `/api/chat/threads/fork`                     | Chat               |
+| `GET`    | `/api/chat/threads/[id]`                     | Chat               |
+| `DELETE` | `/api/chat/threads/[id]`                     | Chat               |
+| `GET`    | `/api/chat/threads/[id]/summary`             | Chat               |
+| `GET`    | `/api/chat/threads/[id]/opinions`            | Chat               |
+| `GET`    | `/api/chat/threads/[id]/export`              | Chat               |
+| `GET`    | `/api/chat/analysis-jobs/[jobId]`            | Chat               |
+| `GET`    | `/api/market/price`                          | Market             |
+| `GET`    | `/api/market/candles`                        | Market             |
+| `POST`   | `/api/market/indicators`                     | Market             |
+| `POST`   | `/api/market/structure`                      | Market             |
+| `GET`    | `/api/market/search`                         | Market             |
+| `GET`    | `/api/market/stream`                         | Market             |
+| `GET`    | `/api/news`                                  | News               |
+| `GET`    | `/api/calendar`                              | Calendar           |
+| `GET`    | `/api/sentiment`                             | Sentiment          |
+| `GET`    | `/api/alerts`                                | Alerts             |
+| `POST`   | `/api/alerts`                                | Alerts             |
+| `GET`    | `/api/alerts/preview`                        | Alerts             |
+| `GET`    | `/api/alerts/preview-digest`                 | Alerts             |
+| `GET`    | `/api/alerts/[id]`                           | Alerts             |
+| `PATCH`  | `/api/alerts/[id]`                           | Alerts             |
+| `DELETE` | `/api/alerts/[id]`                           | Alerts             |
+| `GET`    | `/api/journal`                               | Journal            |
+| `POST`   | `/api/journal`                               | Journal            |
+| `GET`    | `/api/journal/[id]`                          | Journal            |
+| `PATCH`  | `/api/journal/[id]`                          | Journal            |
+| `DELETE` | `/api/journal/[id]`                          | Journal            |
+| `POST`   | `/api/journal/import`                        | Journal            |
+| `GET`    | `/api/journal/review`                        | Journal            |
+| `POST`   | `/api/push/subscribe`                        | Push               |
+| `POST`   | `/api/push/unsubscribe`                      | Push               |
+| `POST`   | `/api/upload`                                | Upload             |
+| `POST`   | `/api/dev/login`                             | Dev                |
+| `GET`    | `/api/me/keys`                               | Settings           |
+| `POST`   | `/api/me/keys`                               | Settings           |
+| `GET`    | `/api/settings/catalog`                      | Settings           |
+| `POST`   | `/api/settings/bulk-test`                    | Settings           |
+| `POST`   | `/api/settings/test-provider`                | Settings           |
+| `POST`   | `/api/settings/test-market-provider`         | Settings           |
+| `POST`   | `/api/settings/chat-model`                   | Settings           |
+| `POST`   | `/api/settings/vision-model`                 | Settings           |
+| `POST`   | `/api/settings/embedding-model`              | Settings           |
+| `POST`   | `/api/settings/analysis-mode`                | Settings           |
+| `POST`   | `/api/settings/fallback-chain`               | Settings           |
+| `POST`   | `/api/settings/symbols`                      | Settings           |
+| `GET`    | `/api/settings/usage-by-provider`            | Settings           |
+| `GET`    | `/api/settings/usage-by-agent`               | Settings           |
+| `POST`   | `/api/admin/test-alert-email`                | Admin              |
+| `POST`   | `/api/admin/test-telegram`                   | Admin              |
+| `POST`   | `/api/admin/flush`                           | Admin              |
+| `POST`   | `/api/admin/impersonate`                     | Admin              |
+| `GET`    | `/api/admin/features`                        | Admin              |
+| `GET`    | `/api/admin/cron-history`                    | Admin              |
+| `GET`    | `/api/admin/users`                           | Admin              |
+| `GET`    | `/api/admin/logs/stream`                     | Admin              |
+| `GET`    | `/api/admin/onboarding/inspect`              | Admin              |
+| `POST`   | `/api/admin/onboarding/reset`                | Admin              |
+| `GET`    | `/api/admin/onboarding/status`               | Admin              |
+| `GET`    | `/api/admin/diagnostics/tool-telemetry`      | Admin              |
+| `GET`    | `/api/admin/diagnostics/traces`              | Admin              |
+| `GET`    | `/api/admin/diagnostics/trace/[id]`          | Admin              |
+| `POST`   | `/api/billing/checkout`                      | Billing            |
+| `GET`    | `/api/billing/portal`                        | Billing            |
+| `POST`   | `/api/billing/webhook`                       | Billing            |
+| `POST`   | `/api/bot/link-code`                         | Bot                |
+| `GET`    | `/api/bot/status`                            | Bot                |
+| `POST`   | `/api/bot/unlink`                            | Bot                |
+| `GET`    | `/api/decision-signals`                      | Decision Signals   |
+| `GET`    | `/api/decision-signals/stats`                | Decision Signals   |
+| `POST`   | `/api/decision-signals/[id]/feedback`        | Decision Signals   |
+| `GET`    | `/api/portfolio/positions`                   | Portfolio          |
+| `POST`   | `/api/portfolio/positions`                   | Portfolio          |
+| `GET`    | `/api/portfolio/positions/[id]`              | Portfolio          |
+| `PATCH`  | `/api/portfolio/positions/[id]`              | Portfolio          |
+| `GET`    | `/api/portfolio/settings`                    | Portfolio          |
+| `POST`   | `/api/portfolio/settings`                    | Portfolio          |
+| `GET`    | `/api/portfolio/risk`                        | Portfolio          |
+| `GET`    | `/api/notifications/route-config`            | Notifications      |
+| `POST`   | `/api/notifications/route-config`            | Notifications      |
+| `GET`    | `/api/notifications/noise-config`            | Notifications      |
+| `POST`   | `/api/notifications/noise-config`            | Notifications      |
+| `POST`   | `/api/telegram/webhook`                      | Telegram           |
+| `GET`    | `/api/health`                                | Health             |
+| `GET`    | `/api/health/db`                             | Health             |
+| `GET`    | `/api/onboarding/save-progress`              | Onboarding         |
+| `POST`   | `/api/onboarding/save-progress`              | Onboarding         |
+| `GET`    | `/api/cron/warm-cache`                       | Cron               |
+| `GET`    | `/api/cron/alerts`                           | Cron               |
+| `GET`    | `/api/cron/news`                             | Cron               |
+| `GET`    | `/api/cron/calendar`                         | Cron               |
+| `GET`    | `/api/cron/snapshots`                        | Cron               |
+| `GET`    | `/api/cron/briefings`                        | Cron               |
+| `GET`    | `/api/cron/embedding-backfill`               | Cron               |
+| `GET`    | `/api/cron/cot`                              | Cron               |
+| `GET`    | `/api/cron/fred-actuals`                     | Cron               |
+| `GET`    | `/api/cron/weekly-review`                    | Cron               |
+| `GET`    | `/api/cron/cleanup-uploads`                  | Cron               |
+| `GET`    | `/api/cron/cleanup-telemetry`                | Cron               |
+| `GET`    | `/api/cron/evaluate-signals`                 | Cron               |
+| `GET`    | `/api/cron/cleanup-tokens`                   | Cron               |
 
-**Total: 37 endpoints** (5 auth/chat state-changing, 4 chat threads, 4
-market, 5 alerts, 5 journal, 2 push, 1 upload, 2 admin, 1 telegram, 11
-cron).
+**Total: 93+ endpoint files** covering: Auth, Chat (13), Market (6), News/Calendar/Sentiment (3), Alerts (7), Journal (7), Push (2), Upload (1), Dev (1), Settings (12), Admin (12), Billing (3), Bot (3), Decision Signals (3), Portfolio (7), Notifications (4), Telegram (1), Health (2), Onboarding (1), Cron (13).

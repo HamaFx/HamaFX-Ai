@@ -6,7 +6,7 @@
 
 ## Overview
 
-90+ test files, 590+ test cases across all packages. Vitest is the test runner. Tests use the `--run` flag to avoid watch mode (otherwise timeouts in CI/automation). The `@hamafx/config` package provides shared vitest configurations. Playwright handles E2E testing.
+173 test files, 590+ test cases across all packages. Vitest is the test runner. Tests use the `--run` flag to avoid watch mode (otherwise timeouts in CI/automation). The `@hamafx/config` package provides shared vitest configurations. Playwright handles E2E testing (16 spec files).
 
 ## Running Tests
 
@@ -40,7 +40,7 @@ pnpm --filter @hamafx/web exec playwright test
 | `indicators` | 11 | SMC swings, structure, FVG, order blocks, liquidity, RSI, EMA, SMA |
 | `shared` | 4 | Env validation, error types, encryption, market phase |
 | `worker` | 17 | SignalR consumer, reconnect, tick buffer, candle aggregator, env, jobs |
-| `web` | 13 unit + 6 E2E | API integration, auth flow, CSRF, route health, settings actions, voice input |
+| `web` | 30+ unit + 16 E2E | API integration, auth flow, CSRF, route health, settings actions, voice input, admin routes, middleware, hooks, Playwright E2E (auth, chat, settings, isolation, multi-agent, service-worker, navigation, dashboard, responsive, accessibility, api-health, theme-tokens, admin-dashboard, nav-drawer, chat-ui, onboarding-replay) |
 | `test-utils` | — | Shared factories (users, threads, candles), mocks (db, fetch, llm, server-only) |
 
 ## Test Patterns
@@ -215,13 +215,23 @@ pnpm --filter @hamafx/ai eval -- \
 pnpm --filter @hamafx/web exec playwright test
 ```
 
-E2E tests in `apps/web/tests/e2e/`:
+E2E tests in `apps/web/tests/e2e/` (16 spec files):
 - `auth.spec.ts` — login flow, unauthenticated redirect
 - `chat.spec.ts` — chat interaction, streaming
+- `chat-ui.spec.ts` — chat UI component testing
 - `settings.spec.ts` — settings page, API keys
 - `isolation.spec.ts` — multi-tenant data isolation
 - `multi-agent.spec.ts` — committee deliberation
 - `service-worker.spec.ts` — PWA offline
+- `navigation.spec.ts` — all routes load without errors
+- `dashboard.spec.ts` — dashboard widget rendering
+- `responsive.spec.ts` — mobile viewport, no horizontal scroll
+- `accessibility.spec.ts` — labels, landmarks, headings, skip link
+- `api-health.spec.ts` — API endpoint smoke tests
+- `theme-tokens.spec.ts` — theme and design tokens
+- `admin-dashboard.spec.ts` — admin dashboard pages
+- `nav-drawer.spec.ts` — navigation drawer functionality
+- `onboarding-replay.spec.ts` — onboarding wizard replay
 
 Playwright config: `apps/web/playwright.config.ts`. Traces saved on first retry.
 

@@ -213,8 +213,8 @@ All four must pass. CI will run them again but catching locally saves time.
 
 | Runner | Scope | Files |
 |--------|-------|-------|
-| Vitest | Unit + integration | 90+ test files, 590+ test cases |
-| Playwright | E2E | 7 spec files in `apps/web/tests/e2e/` |
+| Vitest | Unit + integration | 173 test files, 590+ test cases |
+| Playwright | E2E | 16 spec files in `apps/web/tests/e2e/` |
 | AI Eval Harness | AI quality | `packages/ai/src/eval/` (manual, nightly in CI) |
 
 ### 6.2 Running Tests
@@ -261,10 +261,20 @@ E2E tests use Playwright with a real app instance:
 |------|-------|
 | `auth.spec.ts` | Login, register, logout |
 | `chat.spec.ts` | Chat flow, tool rendering |
+| `chat-ui.spec.ts` | Chat UI component testing |
 | `isolation.spec.ts` | Multi-tenant data isolation |
 | `multi-agent.spec.ts` | Committee deliberation |
 | `service-worker.spec.ts` | PWA service worker |
 | `settings.spec.ts` | Settings pages |
+| `navigation.spec.ts` | All routes load without errors |
+| `dashboard.spec.ts` | Dashboard widget rendering |
+| `responsive.spec.ts` | Mobile viewport, no horizontal scroll |
+| `accessibility.spec.ts` | Labels, landmarks, headings, skip link |
+| `api-health.spec.ts` | API endpoint smoke tests |
+| `theme-tokens.spec.ts` | Theme and design tokens |
+| `admin-dashboard.spec.ts` | Admin dashboard pages |
+| `nav-drawer.spec.ts` | Navigation drawer functionality |
+| `onboarding-replay.spec.ts` | Onboarding wizard replay |
 
 E2E tests require:
 - Running app (`pnpm dev:local`)

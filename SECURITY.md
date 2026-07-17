@@ -38,15 +38,17 @@ Please practice responsible disclosure. We commit to not taking legal action aga
 
 HamaFX-Ai uses NextAuth.js v5 with a Credentials provider (email + password, bcrypt). Sessions are JWT-based with a 30-day expiry. Account lockout activates after 5 failed login attempts (15-minute lockout).
 
-**Known issues** (documented in [docs/05-security-auth-compliance.md](docs/05-security-auth-compliance.md) §4):
+**Auth hardening completed** — see [docs/05-security-auth-compliance.md](docs/05-security-auth-compliance.md) for details.
 
 | Issue | Severity | Status |
 |-------|----------|--------|
-| Token version not checked in JWT callback — sessions not invalidated after password change | Critical | Unfixed |
-| `__system__` user assumption in cron jobs can bypass tenant scoping | Critical | Unfixed |
-| Deleted users retain valid JWTs until expiry | High | Unfixed |
+| Token version now checked in `session()` callback every 5 min — invalidates on mismatch | Critical | ✅ Fixed |
+| Signed `x-user-id` header (HMAC-SHA256) prevents spoofing; cron jobs use proper scoping | Critical | ✅ Fixed |
+| `authorized()` + `jwt()` + `session()` callbacks collectively validate user existence and token version | High | ✅ Fixed |
+| TOTP 2FA enforced at login | High | ✅ Fixed |
+| Account lockout after 5 failed attempts (15-min timeout) | Medium | ✅ Fixed |
 
-If you are working on auth code, read [docs/05-security-auth-compliance.md](docs/05-security-auth-compliance.md) before making changes.
+If you are working on auth code, read the current implementation at `apps/web/src/auth.ts` and `apps/web/src/auth.config.ts`.
 
 ### BYOK API Key Encryption
 

@@ -16,7 +16,7 @@ Realistic threats:
 
 Out of scope: DDoS, advanced persistent threats.
 
-> **Known auth issues:** The auth system has critical bugs documented in [`AUTH_FIX_PLAN.md`](../AUTH_FIX_PLAN.md) (planned, not yet written). Read the auth section of AGENTS.md before working on auth code.
+> **Auth status:** The auth system has been hardened. Features include: JWT session management, bcrypt password hashing, account lockout (5 attempts → 15 min), TOTP 2FA (enforced at login), timing-safe user enumeration prevention, signed `x-user-id` header (HMAC-SHA256) for route defense-in-depth, `userSessions` table for active session tracking with revoke support, and `tokenVersion` for "sign out everywhere". See [`auth.ts`](../apps/web/src/auth.ts) and [`auth.config.ts`](../apps/web/src/auth.config.ts) for the canonical implementation.
 
 ## Authentication: NextAuth.js v5
 
@@ -78,7 +78,7 @@ Double-submit cookie pattern:
 - Uses `otplib` for TOTP secret generation and verification.
 - QR code generated via `qrcode` library.
 - Secret stored in `users.twoFactorSecret` column.
-- **Note:** 2FA is not yet enforced during login — see `AUTH_FIX_PLAN.md` BUG-03 (plan not yet written).
+- **Note:** 2FA is enforced at login. Users with 2FA enabled must enter their TOTP code during the login flow. See `apps/web/src/auth.ts` → `authorize()` for the enforcement logic.
 
 ### Session Management
 

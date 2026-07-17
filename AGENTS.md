@@ -12,7 +12,7 @@
 - **Auth**: NextAuth.js v5 (Credentials provider, JWT strategy) + Drizzle adapter. BYOK per user (9-provider registry). Strict `userId` scoping on all user-data tables.
 - **Repo**: [github.com/HamaFx/HamaFX-Ai](https://github.com/HamaFx/HamaFX-Ai)
 
-> **Known issue:** The auth system has critical security bugs. See [`AUTH_FIX_PLAN.md`](./AUTH_FIX_PLAN.md) (not yet written — auth guidance in this file is current) for the full fix plan before touching auth code.
+> **Auth status:** The auth system has been hardened. Features include: JWT session management, bcrypt password hashing, account lockout (5 attempts → 15 min), TOTP 2FA (enforced at login), timing-safe user enumeration prevention, signed `x-user-id` header (HMAC-SHA256) for route defense-in-depth, `userSessions` table for active session tracking with revoke support, and `tokenVersion` for "sign out everywhere". See [`auth.ts`](./apps/web/src/auth.ts) and [`auth.config.ts`](./apps/web/src/auth.config.ts) for the canonical implementation.
 
 ## Quick Reference
 
@@ -25,10 +25,10 @@
 | Styling | Tailwind CSS v4 + shadcn/ui (Radix) |
 | AI SDK | Vercel AI SDK v5 (`ai` package) |
 | Models | Google Vertex AI + 9-provider BYOK registry |
-| DB | Postgres (Supabase) + pgvector. Drizzle ORM |
+| DB | Postgres (Supabase) + pgvector. Drizzle ORM (50 tables) |
 | Local DB | PGlite (embedded Postgres, zero setup) |
 | Charts | TradingView lightweight-charts v5 |
-| Tests | Vitest (90+ files, 590+ cases). Playwright E2E. |
+| Tests | Vitest (173 files, 590+ cases). Playwright E2E (16 spec files). |
 | Lint | ESLint flat config in `packages/config/eslint` |
 | TypeScript | Strict mode. `exactOptionalPropertyTypes`, `noUncheckedIndexedAccess` |
 
@@ -119,7 +119,7 @@ HamaFX-Ai/
 ├── packages/
 │   ├── ai/               # AI agent core — chat, 32 tools, routing, memory, persistence
 │   ├── data/             # Market data adapters — price, candles, news, failover, caching
-│   ├── db/               # Drizzle schema (40 tables) + Postgres/PGlite client
+│   ├── db/               # Drizzle schema (50 tables) + Postgres/PGlite client
 │   ├── indicators/       # Technical indicators — SMA, EMA, RSI, MACD, SMC structure
 │   ├── shared/           # Zod schemas, domain types, env validation, error codes, encryption
 │   ├── config/           # Shared ESLint, Prettier, TS configs (not compiled)
@@ -219,7 +219,7 @@ For fundamental/technical turns: cheap model generates JSON plan, persisted as s
 
 - **Auth flow**: NextAuth v5 (Credentials provider) with strict per-user
   `userId` scoping. Multi-tenant is load-bearing — do not regress to a
-  single-password gate. See `AUTH_FIX_PLAN.md` (planned, not yet written) for known auth issues.
+  single-password gate.
 - **Middleware**: Edge runtime constraint is intentional. Don't add DB calls there.
 - **Provider failover**: `runWithFailover()` pattern. Don't add direct provider calls.
 - **Tool pattern**: `inputSchema → module augmentation → execute`. Don't break the tool registry.
@@ -274,14 +274,19 @@ The project uses a single pino logger from `packages/shared/src/logger.ts` acros
 | [01-architecture.md](./docs/01-architecture.md) | System design, data flow diagrams, deployment topology |
 | [02-codebase.md](./docs/02-codebase.md) | Package details, conventions, file map, extension rules |
 | [03-ai-agent.md](./docs/03-ai-agent.md) | Agent internals, 32 tools, routing, memory, evals |
-| [04-data-layer.md](./docs/04-data-layer.md) | DB schema (40 tables), providers, caching, failover |
-| [05-api-routes.md](./docs/05-api-routes.md) | All 37+ API endpoints, auth, middleware, CSRF |
+| [04-data-layer.md](./docs/04-data-layer.md) | DB schema (50 tables), providers, caching, failover |
+| [05-api-routes.md](./docs/05-api-routes.md) | All 93 API routes, auth, middleware, CSRF |
+| [05-security-auth-compliance.md](./docs/05-security-auth-compliance.md) | Security, auth, compliance, BYOK, billing |
 | [06-frontend.md](./docs/06-frontend.md) | Pages, components, state, charts, PWA |
+| [06-deployment-self-hosting.md](./docs/06-deployment-self-hosting.md) | Deployment, self-hosting, CI/CD |
 | [07-worker.md](./docs/07-worker.md) | Worker daemon, SignalR, jobs, scheduler |
+| [07-agent-understanding.md](./docs/07-agent-understanding.md) | Agent guide for AI coding agents |
 | [08-deployment.md](./docs/08-deployment.md) | Production cloud deployment (Vercel + GCE) |
+| [08-agent-setup-run.md](./docs/08-agent-setup-run.md) | Dev environment setup and startup |
 | [09-testing.md](./docs/09-testing.md) | Test infrastructure, patterns, E2E, eval harness |
 | [10-security.md](./docs/10-security.md) | Auth, secrets, CSRF, BYOK encryption, secrets rotation |
 | [11-self-hosting.md](./docs/11-self-hosting.md) | Docker Compose self-hosting guide |
 | [13-first-run-setup.md](./docs/13-first-run-setup.md) | New user onboarding, dev-secret autogen, BYOK registry |
 | [15-debugging-and-tracing.md](./docs/15-debugging-and-tracing.md) | Debugging, OpenTelemetry, and request tracing |
-| [AUTH_FIX_PLAN.md](./AUTH_FIX_PLAN.md) | Auth system fix plan (critical bugs + improvements) — not yet written |
+| [e2e-testing.md](./docs/e2e-testing.md) | E2E test system architecture |
+| [SETTINGS_CLEANUP.md](./docs/SETTINGS_CLEANUP.md) | Settings restructure and bug fixes |

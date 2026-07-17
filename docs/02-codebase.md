@@ -192,20 +192,17 @@ A string literal union type `ToolName` enumerating all 32 AI tools registered in
 
 **Environment (env.ts):**
 
-Uses `@t3-oss/env-core` + Zod. Validates at startup. Covers:
+Uses Zod (`z.object`). Validates at startup. Covers (key subset):
 
-- `DATABASE_URL` (Postgres connection string)
-- `BIQUOTE_BASE_URL` (keyless), `FINNHUB_API_KEY`, `MARKETAUX_API_KEY`, `FRED_API_KEY`
-- `CFTC_API_KEY`
-- `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`
-- `SENTRY_DSN`
-- `HEALTHCHECKS_URL`
-- `OPENAI_API_KEY`, `ANTHROPIC_API_KEY` (model providers)
-- `PGLITE_DATA_DIR` (local dev DB path)
-- `NEXTAUTH_URL`, `NEXTAUTH_SECRET` (Authentication)
-- `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET` (OAuth)
-- `ENCRYPTION_SECRET`
-- Feature flags: `MULTI_USER_ENABLED`, `BYOK_ENABLED`, `UNLIMITED_SYMBOLS`, `PER_USER_BRIEFINGS`
+- **Database**: `DATABASE_URL` or `POSTGRES_URL`, `DIRECT_URL` or `POSTGRES_URL_NON_POOLING`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_CA_CERT`
+- **Auth**: `AUTH_SECRET`, `NEXTAUTH_SECRET` (deprecated fallback), `CRON_SECRET`, `ENCRYPTION_SECRET`
+- **AI Providers**: `AI_GATEWAY_API_KEY`, `GOOGLE_GENERATIVE_AI_API_KEY`, `GOOGLE_VERTEX_PROJECT`, `GOOGLE_VERTEX_LOCATION`, `GOOGLE_APPLICATION_CREDENTIALS_JSON`, `GOOGLE_APPLICATION_CREDENTIALS`, `AI_DEFAULT_MODEL`, `AI_TITLE_MODEL`, `AI_EMBEDDING_MODEL`
+- **Market Data**: `BIQUOTE_BASE_URL` (keyless), `FINNHUB_API_KEY`, `MARKETAUX_API_KEY`, `FRED_API_KEY`, `TRADING_ECONOMICS_KEY`, `ALPHAVANTAGE_API_KEY`
+- **Notifications**: `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`, `TELEGRAM_SECRET_TOKEN`, `RESEND_API_KEY`, `ALERT_TO_EMAIL`, `ALERT_FROM_EMAIL`, `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`
+- **Observability**: `SENTRY_DSN`, `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY`, `LANGFUSE_BASE_URL`
+- **Billing**: `NOWPAYMENTS_API_KEY`, `NOWPAYMENTS_IPN_SECRET`, `NOWPAYMENTS_API_BASE`
+- **Feature flags**: `MULTI_USER_ENABLED`, `BYOK_ENABLED`, `UNLIMITED_SYMBOLS`, `PER_USER_BRIEFINGS`, `AI_SEMANTIC_ROUTING_ENABLED`
+- **Runtime**: `NODE_ENV`, `MAX_DAILY_USD` (default 5), `MAX_TOOL_ITERATIONS` (default 6), `LOG_PROMPTS`, `SENTRY_DSN`
 
 All env vars must be strictly validated in `packages/shared/src/env.ts`.
 
@@ -233,7 +230,7 @@ All errors thrown at package boundaries carry one of these codes.
 ```
 db/
 ├── src/
-│   ├── schema/           # 20 Drizzle table definitions
+│   ├── schema/           # 33 Drizzle schema files (50 tables)
 │   │   ├── market.ts     # symbols, timeframes
 │   │   ├── ohlcv.ts      # candles, live_ticks
 │   │   ├── indicators.ts # computed indicator values
@@ -249,16 +246,21 @@ db/
 └── drizzle.config.ts     # Drizzle Kit config
 ```
 
-**20 Tables (key groups):**
+**50 Tables (key groups):**
 
 | Group | Tables |
 |---|---|
-| Market | `symbols`, `timeframes` |
-| OHLCV | `candles_1m`, `candles_5m`, `candles_15m`, `candles_30m`, `candles_1h`, `candles_4h`, `candles_1d`, `candles_1w`, `live_ticks` |
-| Indicators | `sma_values`, `ema_values`, `rsi_values`, `macd_values`, `smc_swings`, `smc_fvg`, `smc_order_blocks`, `smc_liquidity` |
-| Agent | `chat_threads`, `chat_messages`, `tool_calls`, `briefings`, `evals` |
-| Admin | `users`, `accounts`, `sessions`, `verification_tokens` |
-| External | `economic_events`, `cot_reports` |
+| Auth | `user`, `organization`, `organization_member`, `user_sessions`, `account`, `session`, `verificationToken`, `user_settings`, `user_symbols` |
+| Chat | `chat_threads`, `chat_messages`, `chat_tool_telemetry`, `chat_telemetry` |
+| Alerts | `alerts` |
+| Journal | `journal_entries` |
+| Market Data | `live_ticks`, `candles_1m`, `news_articles`, `news_embeddings`, `economic_events`, `cot_reports` |
+| Indicators & Structure | `snapshots`, `memory_embeddings`, `intermarket_resonance` |
+| Agent | `agent_opinions`, `decision_signals`, `decision_signal_outcomes`, `decision_signal_feedback`, `briefings_emitted`, `analysis_jobs` |
+| Billing | `plans`, `subscriptions`, `payments`, `ipn_events` |
+| Notifications | `push_subscriptions`, `bot_links`, `notification_noise_state` |
+| Rate Limiting | `rate_limits`, `provider_throttle`, `provider_daily_quota`, `daily_ai_spend` |
+| Admin & Debug | `feature_flags`, `cron_runs`, `diagnostic_traces`, `audit_logs`, `provider_tests`, `symbol_catalog`, `shared_snapshots` |
 
 **Client Factories:**
 
@@ -355,7 +357,11 @@ data/
 │   │   ├── finnhub/      # Fallback: REST quotes, news
 │   │   ├── marketaux/    # News sentiment analysis
 │   │   ├── fred/         # FRED macro-economic data
-│   │   └── cftc/         # Commitment of Traders reports
+│   │   ├── cftc/         # Commitment of Traders reports
+│   │   ├── twelvedata/   # Gold tick data (WebSocket)
+│   │   ├── binance/      # Crypto klines (WebSocket)
+│   │   ├── live-ticks/   # Incoming live tick provider
+│   │   └── candles-1m/   # 1-minute candle provider
 │   ├── cache/            # SWR (stale-while-revalidate) layer
 │   ├── failover.ts       # Health-aware provider failover
 │   ├── throttle.ts       # Rate limiter
@@ -371,6 +377,10 @@ data/
 | Marketaux | News + sentiment | REST | News articles, sentiment scores |
 | FRED | Macro-economic | REST | Interest rates, GDP, CPI, employment |
 | CFTC | CoT reports | REST | Commitment of Traders positioning data |
+| TwelveData | Gold tick data | WebSocket | Live gold ticks, daily quotas |
+| Binance | Crypto klines | WebSocket | BTC, ETH, SOL, BNB, XRP, ADA klines |
+| Live Ticks | Incoming tick buffer | SignalR | Normalized tick ingestion |
+| Candles 1m | 1-minute candle aggregation | DB UPSERT | OHLC from tick stream |
 
 **Cache Layer (SWR):**
 
@@ -558,17 +568,28 @@ For high-stakes decisions:
 
 ### packages/test-utils
 
-**Status:** Empty placeholder. Reserved for future on-chain analysis, DEX integration, or token sentiment.
+**Shared test infrastructure.**
 
-No imports, no exports, no dependents. Do not add code here without explicit approval.
+| Module | Source | Purpose |
+|--------|--------|---------|
+| Factories | `src/factories/` | `candles.ts`, `threads.ts`, `users.ts` — test data factories |
+| Mocks | `src/mocks/` | `db.ts`, `fetch.ts`, `llm.ts`, `server-only.ts` |
+| Helpers | `src/helpers/` | `vitest-base.ts`, `vitest.ts` — shared vitest setup |
 
 ---
 
 ### packages/config
 
-**Status:** Empty placeholder. Reserved for shared worker utilities extracted from `apps/worker`.
+**Shared ESLint, Prettier, Tailwind, and TypeScript configuration.** Not compiled, consumed directly by monorepo tooling.
 
-No imports, no exports, no dependents. Do not add code here without explicit approval.
+| File | Purpose |
+|---|---|
+| `eslint/index.js` | Shared ESLint flat config (ESLint 9) |
+| `prettier/index.js` | Shared Prettier config |
+| `tailwind/tokens.ts` | Tailwind CSS v4 design tokens |
+| `typescript/base.json` | Base TS strict config (`exactOptionalPropertyTypes`, `noUncheckedIndexedAccess`) |
+| `typescript/nextjs.json` | Extends base; adds JSX, bundler module resolution |
+| `typescript/node.json` | Extends base; targets Node 20 ESM |
 
 ---
 
@@ -584,14 +605,15 @@ No imports, no exports, no dependents. Do not add code here without explicit app
 web/
 ├── src/
 │   ├── app/                  # App Router
-│   │   ├── layout.tsx        # Root layout
-│   │   ├── page.tsx          # Landing / dashboard
+│   │   ├── layout.tsx        # Root layout (fonts, providers, metadata)
+│   │   ├── page.tsx          # Redirects to /chat
 │   │   ├── chat/             # AI chat interface
 │   │   ├── chart/            # Interactive TradingView charts
 │   │   ├── briefing/         # Daily/weekly briefing viewer
-│   │   ├── scan/             # Market scanner
-│   │   ├── macro/            # Macro dashboard (FRED, CoT)
-│   │   ├── auth/             # Login/logout
+│   │   ├── (auth)/           # Login, register, forgot-password, reset-password
+│   │   ├── (app)/            # Authenticated shell (chat, chart, dashboard, settings, etc.)
+│   │   ├── onboarding/       # New user onboarding wizard
+│   │   ├── share/            # Public snapshot share (HMAC-verified)
 │   │   ├── settings/         # User preferences
 │   │   ├── admin/            # Admin panel (cost, status)
 │   │   └── api/              # 30+ API routes
@@ -610,8 +632,11 @@ web/
 │   ├── lib/                  # Client-side utilities
 │   └── styles/               # Tailwind v4 globals
 ├── public/
-│   ├── sw.js                 # Service worker (PWA)
-│   └── manifest.json         # PWA manifest
+│   └── icons/                # PWA icon assets (generated by scripts/generate-icons.mjs)
+│── app/manifest.ts           # PWA manifest (programmatic)
+│── scripts/
+│   ├── sw.template.js        # Service worker template
+│   └── generate-sw.mjs       # SW generator (stamps build ID, precache manifest)
 ├── next.config.ts
 ├── tailwind.config.ts
 └── package.json

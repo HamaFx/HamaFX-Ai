@@ -81,6 +81,10 @@ apps/web/src/
 | `/settings/telegram` | `(app)/settings/telegram/page.tsx` | Telegram linking |
 | `/settings/track-record` | `(app)/settings/track-record/page.tsx` | Signal feedback / track record |
 | `/settings/usage` | `(app)/settings/usage/page.tsx` | Usage limits |
+| `/settings/security` | `(app)/settings/security/page.tsx` | Security settings (password, 2FA, sessions) |
+| `/settings/notifications` | `(app)/settings/notifications/page.tsx` | Notification preferences & noise control |
+| `/settings/appearance` | `(app)/settings/appearance/page.tsx` | Theme (light/dark/system) & locale |
+| `/settings/data` | `(app)/settings/data/page.tsx` | Data & cache management |
 | `/offline` | `(app)/offline/page.tsx` | Offline fallback page |
 
 ### 2.3 Other Routes

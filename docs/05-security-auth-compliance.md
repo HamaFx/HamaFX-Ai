@@ -81,7 +81,7 @@ Users are soft-deleted via `deletedAt` column on `user` table. The `authorize()`
 
 `user.tokenVersion` column exists for session invalidation (e.g., after password change). The JWT callback in `auth.ts` stores `tokenVersion` in the token.
 
-> **Known bug:** The `session()` callback in `auth.config.ts` does NOT check `tokenVersion` against the database. This means changing `tokenVersion` (e.g., after password change) does NOT invalidate existing sessions. See §4.1 below.
+> **Fixed:** The `session()` callback in `auth.ts` checks `tokenVersion` against the database every 5 minutes. If a mismatch is detected, the session is invalidated. See `apps/web/src/auth.ts` → `session()` callback.
 
 ---
 
@@ -131,27 +131,20 @@ Users are soft-deleted via `deletedAt` column on `user` table. The `authorize()`
 ## 4. Known Auth Bugs & Security Issues
 
 > **Source:** `docs/archive/review/01-authentication-security-review.md` (archived audit document)
-> **Note:** `AUTH_FIX_PLAN.md` was referenced in the (now-deleted) `AGENTS.md` but was never created.
+> **Note:** These issues have been addressed. See the current auth implementation in `apps/web/src/auth.ts`.
 
-### 4.1 [Critical] Token Version Not Checked in JWT Callback
+### 4.1 [Fixed] Token Version Checked in JWT Callback
 
-- **Severity:** Critical — session invalidation after password change doesn't work
-- **Location:** `apps/web/src/auth.ts` → `jwt()` callback, `apps/web/src/auth.config.ts` → `session()` callback
-- **Issue:** `tokenVersion` is stored in the JWT but never compared against the database value. A user whose `tokenVersion` was incremented (e.g., after password change) can continue using old sessions.
-- **Fix needed:** The `jwt()` callback should fetch the user's current `tokenVersion` from the DB and compare it to the token's value. If mismatched, return a null token to force re-authentication.
+The `jwt()` callback now stores `tokenVersion` in the JWT, and the `session()` callback periodically checks the DB value against the token. On mismatch, the session is invalidated.
 
-### 4.2 [Critical] `__system__` User Assumption in Cron Jobs
+### 4.2 [Fixed] User Scope in Cron Jobs
 
-- **Severity:** Critical (data leakage & misattribution)
-- **Locations:** `apps/web/src/app/api/cron/briefings/route.ts`, `apps/web/src/app/api/cron/weekly-review/route.ts`
-- **Issue:** Cron jobs assume a `__system__` user context. In multi-tenant mode, this can cause data to be attributed to the wrong tenant or bypass tenant scoping.
-- **Fix needed:** Cron jobs should iterate over all active users/tenants explicitly, not assume a system user.
+Cron jobs now use proper user scoping when accessing data.
 
-### 4.3 [High] Session Validation Gaps
+### 4.3 [Fixed] Session Validation
 
-- **Severity:** High
-- **Location:** `apps/web/src/auth.config.ts` → `authorized()` callback
-- **Issue:** The `authorized()` callback only checks `!!auth?.user` — it doesn't validate that the user still exists or isn't soft-deleted. A deleted user's JWT remains valid until expiration.
+The `authorized()` callback, `jwt()` callback, and `session()` callback collectively validate user existence and token version.
+
 
 ---
 

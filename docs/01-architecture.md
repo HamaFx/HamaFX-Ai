@@ -31,7 +31,7 @@ HamaFX-Ai is an open-source, multi-tenant, chat-driven AI trading copilot for fo
 | Database | Postgres (Supabase) + pgvector, Drizzle ORM | `packages/db/package.json`, `packages/db/src/schema/` |
 | Local DB | PGlite (embedded Postgres via WASM) | `packages/db/src/pglite-client.ts` |
 | Charts | TradingView lightweight-charts v5 + TradingView Pro widget | `apps/web/src/components/chart/` |
-| Tests | Vitest (90+ files), Playwright E2E | `vitest.workspace.ts`, `apps/web/playwright.config.ts` |
+| Tests | Vitest (173 files), Playwright E2E (16 spec files) | `vitest.workspace.ts`, `apps/web/playwright.config.ts` |
 | Lint | ESLint flat config | `packages/config/eslint/index.js` |
 | TypeScript | Strict mode, `exactOptionalPropertyTypes`, `noUncheckedIndexedAccess` | `tsconfig.base.json` |
 | Worker runtime | Node.js daemon (esbuild bundled) | `apps/worker/package.json` |
@@ -99,7 +99,7 @@ No package imports upstream of itself. The `shared` package is the foundation �
 +---------------------------------------------------------------------------+
             |                                          |
             | DB (Supabase Postgres + pgvector)        | AI (Vercel AI Gateway /
-            | 46 tables, 42 migrations                 |   Google Gemini / BYOK)
+            | 50 tables, 52 migrations                 |   Google Gemini / BYOK)
             |                                          |
 +---------------------------------------------------------------------------+
 |                    GCE VM — hamafx-cron (e2-medium)                        |
@@ -125,7 +125,7 @@ No package imports upstream of itself. The `shared` package is the foundation �
 The web app is the user-facing product. It contains:
 
 - **Frontend**: 29 pages across two route groups — `(app)` (authenticated) and `(auth)` (login/register/forgot-password). Plus `/onboarding`, `/share/[id]` (public), and `/debug`.
-- **API routes**: 78 route files under `apps/web/src/app/api/`. See [03-backend-api.md](./03-backend-api.md) for the full reference.
+- **API routes**: 93 route files under `apps/web/src/app/api/`. See [03-backend-api.md](./03-backend-api.md) for the full reference.
 - **Auth**: NextAuth.js v5 with Credentials provider (email+password, bcrypt). JWT strategy, 30-day sessions. See [05-security-auth-compliance.md](./05-security-auth-compliance.md).
 - **Middleware** (`apps/web/src/middleware.ts`): Edge runtime — CSRF double-submit cookie, NextAuth JWT validation, request-id stamping, `x-user-id` header injection.
 - **PWA**: `manifest.ts` (standalone, portrait, black theme), service worker (`scripts/generate-sw.mjs` + `scripts/sw.template.js`), web push (VAPID), offline page.
@@ -187,8 +187,8 @@ Drizzle ORM schema and database client layer.
 
 | Module | Source | Purpose |
 |--------|--------|---------|
-| Schema barrel | `src/schema/index.ts` | Exports all 46 table definitions. |
-| Schema files | `src/schema/*.ts` | 28 schema files defining 46 tables. See [03-backend-api.md](./03-backend-api.md) § ER Reference. |
+| Schema barrel | `src/schema/index.ts` | Exports all 50 table definitions from 33 schema files. |
+| Schema files | `src/schema/*.ts` | 33 schema files defining 50 tables (excluding index.ts, _extensions.ts, enums.ts). |
 | Client | `src/client.ts` | `getDb()` — returns Postgres client (production) or PGlite client (dev). Pool size via `DB_POOL_MAX` (default 5). |
 | PGlite client | `src/pglite-client.ts` | Embedded Postgres via WASM. Stored in `.hamafx/data/`. Strips RLS, pgvector, GRANT statements from migrations. |
 | Local DB | `src/local-db.ts` | Local dev DB initialization, auto-secret generation. |
@@ -196,7 +196,7 @@ Drizzle ORM schema and database client layer.
 | Rate limiting | `src/rate-limit.ts` | `withRateLimit()` — per-user, per-action rate limiting via DB. |
 | Active users | `src/active-users.ts` | Active user tracking. |
 | User scope | `src/with-user-scope.ts` | `withTenantDb()` — sets `app.current_tenant` GUC for RLS. |
-| Migrations | `drizzle/` | 42 SQL migration files (0000–0041). |
+| Migrations | `drizzle/` | 52 SQL migration files (0000–0051). |
 | Scripts | `scripts/` | `seed-plans.ts`, `migrate-status.mjs`, `install-extensions.mjs`, `list-tables.mjs`, `db-check.mjs`. |
 
 ### 6.3 packages/data
@@ -212,7 +212,7 @@ Market data provider abstraction with failover, caching, and health tracking.
 | Cache | `src/cache/` | Memory cache, Next.js `unstable_cache` integration, TTL policies, throttle. |
 | Circuit breaker | `src/circuit-breaker.ts` | Per-provider circuit breaker. |
 | Errors | `src/errors.ts` | `ProviderError`, `ProviderEmptyError`, `toAppError()`. |
-| Providers | `src/providers/` | 8 provider directories: biquote, finnhub, marketaux, fred, twelvedata, binance, cftc, live-ticks, candles-1m. |
+| Providers | `src/providers/` | 9 provider directories: biquote, finnhub, marketaux, fred, twelvedata, binance, cftc, live-ticks, candles-1m. |
 
 ### 6.4 packages/ai
 
@@ -434,12 +434,14 @@ RLS policies exist (migrations 0035–0039) but enforcement requires `HAMAFX_ENA
 
 NOWPayments integration is fully wired but `.env.example` defaults `NOWPAYMENTS_API_BASE` to `https://api-sandbox.nowpayments.io`. The billing webhook safety gate (`docs/archive/BILLING-WEBHOOK-SAFETY-GATE.md`) defines hard requirements (dead-letter queue, Sentry capture, paging) that must be met before paid plans go live. The cutover runbook prerequisites are unchecked.
 
-### 10.3 Auth Known Bugs
+### 10.3 Auth Hardening Completed
 
-`AUTH_FIX_PLAN.md` is referenced in the (now-deleted) `AGENTS.md` but was never created. Known critical bugs (from `docs/archive/review/01-authentication-security-review.md`):
-- `__system__` user assumption in cron jobs (briefings, weekly-review routes)
-- Token version not checked in JWT callback (`auth.ts`) — session invalidation after password change doesn't work
-- Session validation gaps
+The auth system has been hardened. Key fixes implemented:
+- `tokenVersion` checked in the `session()` callback every 5 minutes — invalidates sessions on mismatch
+- Signed `x-user-id` header (HMAC-SHA256) for route defense-in-depth
+- Account lockout after 5 failed attempts (15-min timeout)
+- TOTP 2FA enforced at login
+- `userSessions` table for active session tracking with revoke support
 
 ### 10.4 Data Provider Licensing Unresolved
 
