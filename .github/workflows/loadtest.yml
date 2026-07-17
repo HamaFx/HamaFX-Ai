@@ -1,0 +1,108 @@
+name: loadtest
+
+on:
+  workflow_dispatch:
+    inputs:
+      test:
+        description: 'Glob for k6 test files'
+        default: 'loadtest/tests/smoke-*.ts'
+        type: string
+      authMode:
+        description: 'Auth strategy (legacy|session)'
+        default: 'legacy'
+        type: choice
+        options:
+          - legacy
+          - session
+  schedule:
+    # Nightly at 3 AM UTC — offset from the existing 0 AM eval cron
+    - cron: '0 3 * * *'
+
+concurrency:
+  group: loadtest-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  k6:
+    name: k6 Load Test
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install workspace deps
+        run: pnpm install --frozen-lockfile
+
+      - name: Install k6 deps
+        working-directory: loadtest
+        run: npm install
+
+      - name: Typecheck k6 scripts
+        working-directory: loadtest
+        run: npm run typecheck
+
+      - name: Build the SUT
+        run: pnpm --filter @hamafx/web build
+
+      - name: Inspect k6 test scripts (dry-run)
+        working-directory: loadtest
+        run: |
+          for f in $(ls tests/smoke-*.ts); do
+            k6 inspect "$f" 2>&1 || true
+          done
+
+      # Bring up throwaway SUT with AUTH_MODE=legacy and lifted rate limits
+      - name: Start throwaway SUT
+        run: docker compose -f loadtest/docker-compose.loadtest.yml up -d --wait
+
+      - name: Wait for SUT to be ready
+        run: |
+          for i in $(seq 1 30); do
+            if curl -fsS http://localhost:3000/api/health > /dev/null 2>&1; then
+              echo "SUT ready after ${i}s"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "SUT did not become healthy in 60s"
+          exit 1
+
+      - name: Seed users (session mode only)
+        if: ${{ inputs.authMode == 'session' }}
+        working-directory: loadtest
+        run: K6_ALLOW_SEED=true npm run seed
+        env:
+          DATABASE_URL: postgres://hamafx:loadtest@localhost:5432/hamafx
+
+      - name: Install k6
+        uses: grafana/setup-k6-action@v1
+        with:
+          k6-version: '0.57.0'
+
+      - name: Run k6 load tests
+        uses: grafana/run-k6-action@v1
+        with:
+          path: ${{ inputs.test || 'loadtest/tests/smoke-*.ts' }}
+          flags: >-
+            -e K6_BASE_URL=http://localhost:3000
+            -e K6_AUTH_MODE=${{ inputs.authMode || 'legacy' }}
+          fail-fast: true
+
+      - name: Upload k6 results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: k6-results
+          path: loadtest/results/
+          retention-days: 30
+
+      - name: Tear down SUT
+        if: always()
+        run: docker compose -f loadtest/docker-compose.loadtest.yml down --volumes
