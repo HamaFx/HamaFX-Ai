@@ -22,6 +22,7 @@
 import { generateText } from 'ai';
 import type { JournalEntry, JournalStats, ServerEnv } from '@hamafx/shared';
 import type { UserSettingsRow } from '@hamafx/db/schema';
+import { createCategorizedLogger } from '@hamafx/shared/logger';
 
 import { computeStats } from './persistence';
 import { resolveChatModel } from '../model';
@@ -54,6 +55,8 @@ export interface TradeReviewResult {
   costUsd: number;
   latencyMs: number;
 }
+
+const rlog = createCategorizedLogger('ai', { component: 'journal-review' });
 
 const SYSTEM_PROMPT = `You are a disciplined trading coach reviewing a single closed trade from the user's journal.
 
@@ -138,7 +141,7 @@ export async function reviewTrade(args: ReviewTradeArgs): Promise<TradeReviewRes
     const delta = costUsd - estimatedUsd;
     if (Math.abs(delta) > 0.0001) {
       void applyBudgetDelta(userId, delta).catch((err) => {
-        console.warn('[journal/review] applyBudgetDelta failed', err);
+        rlog.warn('applyBudgetDelta failed', { err: String(err) });
       });
     }
 
@@ -154,7 +157,7 @@ export async function reviewTrade(args: ReviewTradeArgs): Promise<TradeReviewRes
     // Release the reservation on failure so the user isn't charged.
     void applyBudgetDelta(userId, -estimatedUsd).catch(() => undefined);
     if (env.LOG_PROMPTS) {
-      console.warn('[journal/review] LLM failed', err);
+      rlog.warn('LLM failed', { err: String(err) });
     }
     throw err;
   }

@@ -97,14 +97,10 @@ export const POST = withAuth<void>(async (req, { user }) => {
 
     if (analysisMode !== 'single') {
       const { runMultiAgentChat, resolveMode, extractUserMessageText, ProgressTracker, progressToSSE } = await import('@hamafx/ai');
-      const { getDb, schema } = await import('@hamafx/db');
-      const { eq } = await import('drizzle-orm');
+      const { getDb, schema, getUserWithSettings } = await import('@hamafx/db');
 
       const db = getDb();
-      const [userSettings, userRow] = await Promise.all([
-        db.select().from(schema.userSettings).where(eq(schema.userSettings.userId, user.userId)).then((rows) => rows[0]),
-        db.select({ name: schema.users.name, email: schema.users.email }).from(schema.users).where(eq(schema.users.id, user.userId)).then((rows) => rows[0]),
-      ]);
+      const { settings: userSettings, user: userRow } = await getUserWithSettings(user.userId);
 
       if (!userSettings) return errorResponse(new Error('User settings not found. Please complete onboarding.'));
 

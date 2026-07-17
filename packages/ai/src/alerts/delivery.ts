@@ -29,7 +29,7 @@
 //      and return without calling markFired so the next cron tick retries.
 
 import type { Alert } from '@hamafx/shared';
-import { logErrorContext } from '@hamafx/shared/logger';
+import { logErrorContext, createCategorizedLogger } from '@hamafx/shared/logger';
 
 import { describeRule, type EvaluatorEnv, type RuleReading } from './evaluator';
 import { markFiredForAlert as markFired } from './persistence';
@@ -38,6 +38,8 @@ import {
   listPushSubscriptions,
 } from '../push/persistence';
 import { sendWebPush } from '../push/send';
+
+const alog = createCategorizedLogger('ai', { component: 'alerts-delivery' });
 
 export interface DeliveryResult {
   alertId: string;
@@ -78,7 +80,7 @@ async function deliverEmail({ alert, reading, env }: DeliverArgs): Promise<Deliv
     // call markFired. The alert will keep matching every cron tick until the
     // user either deactivates it or fills in the env vars — which is the
     // signal the spec wants (Requirement 7.5 conditions on env vars present).
-    console.warn('[alerts] email channel not configured (RESEND_*); skipping');
+    alog.warn('email channel not configured (RESEND_*); skipping');
     return {
       alertId: alert.id,
       channel: 'email',
@@ -168,7 +170,7 @@ const TELEGRAM_API = 'https://api.telegram.org';
 
 async function deliverTelegram({ alert, reading, env }: DeliverArgs): Promise<DeliveryResult> {
   if (!env.TELEGRAM_BOT_TOKEN || !env.TELEGRAM_CHAT_ID) {
-    console.warn('[alerts] telegram channel not configured (TELEGRAM_*); skipping');
+    alog.warn('telegram channel not configured (TELEGRAM_*); skipping');
     return {
       alertId: alert.id,
       channel: 'telegram',
@@ -282,9 +284,7 @@ async function deliverWebPush({ alert, reading, env }: DeliverArgs): Promise<Del
       // Dead subscription — drop it and keep going. We don't count this as
       // a failure for the markFired decision; the alert was effectively
       // delivered to every still-valid subscriber.
-      console.warn(
-        `[alerts] dropping dead push subscription ${sub.id} (HTTP ${r.status}) for alert ${alert.id}`,
-      );
+      alog.warn(`dropping dead push subscription ${sub.id} (HTTP ${r.status}) for alert ${alert.id}`);
       await deletePushSubscription(alert.userId, sub.id);
       continue;
     }
@@ -304,10 +304,7 @@ async function deliverWebPush({ alert, reading, env }: DeliverArgs): Promise<Del
   if (!anyOk) {
     // Every active subscription returned 410/404 — none delivered. Still
     // mark the alert fired so we don't re-evaluate it forever; the user
-    // can re-subscribe and the next matching alert will fire normally.
-    console.warn(
-      `[alerts] all push subscriptions were dead for alert ${alert.id}; marking fired anyway`,
-    );
+    // can re-subscribe and the next matching alert will fire normally.alog.warn(`all push subscriptions were dead for alert ${alert.id}; marking fired anyway`);
   }
 
   await markFired(alert);

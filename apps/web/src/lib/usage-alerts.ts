@@ -1,12 +1,11 @@
 import 'server-only';
 
-import { getDb, schema } from '@hamafx/db';
+import { getDb, schema, getUserWithSettings } from '@hamafx/db';
 import {
   getMonthlySpend,
   getProviderMonthlySpend,
   sendDirectNotification,
 } from '@hamafx/ai';
-import { eq } from 'drizzle-orm';
 
 interface UsageAlertResult {
   alertsSent: number;
@@ -44,20 +43,11 @@ export async function checkAllUsageAlerts(): Promise<UsageAlertResult> {
 
     checkedUsers++;
 
-    const [userRow] = await db
-      .select({
-        email: schema.users.email,
-        alertEmail: schema.userSettings.alertEmail,
-        telegramBotToken: schema.userSettings.telegramBotToken,
-        telegramChatId: schema.userSettings.telegramChatId,
-      })
-      .from(schema.userSettings)
-      .innerJoin(schema.users, eq(schema.users.id, schema.userSettings.userId))
-      .where(eq(schema.userSettings.userId, settings.userId));
+    const { settings: fullSettings, user: userRow } = await getUserWithSettings(settings.userId);
 
-    const alertEmail = userRow?.alertEmail || userRow?.email;
-    const telegramBotToken = userRow?.telegramBotToken;
-    const telegramChatId = userRow?.telegramChatId;
+    const alertEmail = fullSettings?.alertEmail || userRow?.email;
+    const telegramBotToken = fullSettings?.telegramBotToken;
+    const telegramChatId = fullSettings?.telegramChatId;
 
     const channels: ('email' | 'telegram')[] = [];
     if (alertsConfig.email && alertEmail) channels.push('email');

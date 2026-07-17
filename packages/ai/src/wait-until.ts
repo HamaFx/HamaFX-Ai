@@ -31,6 +31,10 @@
 //
 // Phase 2 hardening §8.
 
+import { createCategorizedLogger } from '@hamafx/shared/logger';
+
+const wlog = createCategorizedLogger('ai', { component: 'wait-until' });
+
 type WaitUntilFn = (promise: Promise<unknown>) => void;
 
 let cached: WaitUntilFn | null = null;
@@ -56,7 +60,7 @@ async function resolveWaitUntil(): Promise<WaitUntilFn> {
       // Fall through to the shim — module isn't installed (worker / tests).
     }
     cached = (p) => {
-      p.catch((err) => console.warn('[ai] background promise rejected', err));
+      p.catch((err) => wlog.warn('background promise rejected', { err: String(err) }));
     };
   }
   return cached ?? ((p) => void p);

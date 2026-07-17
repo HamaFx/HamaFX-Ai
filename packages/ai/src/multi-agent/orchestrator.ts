@@ -24,7 +24,7 @@ import { selectAgents, resolveMode } from './modes';
 import { saveAgentOpinions } from './persistence';
 import { appendUserMessage, appendAssistantMessage, recordTelemetry } from '../persistence';
 import { enforceCitations } from '../verification';
-import { logErrorContext } from '@hamafx/shared/logger';
+import { logErrorContext, createCategorizedLogger } from '@hamafx/shared/logger';
 import { extractDecisionSignal, createDecisionSignal, type ExtractionContext } from '../decision-signals';
 import { TechnicalAgent } from './agents/technical-agent';
 import { FundamentalAgent } from './agents/fundamental-agent';
@@ -39,6 +39,8 @@ import type {
 import { MODE_COST_ESTIMATE } from './types';
 import type { UserSettingsRow } from '@hamafx/db/schema';
 import type { UIMessage } from 'ai';
+
+const mlog = createCategorizedLogger('ai', { component: 'multi-agent' });
 
 const AGENT_FACTORIES: Record<AgentName, () => BaseAgent> = {
   technical: () => new TechnicalAgent(),
@@ -165,7 +167,7 @@ export async function runMultiAgentChat(args: RunMultiAgentArgs): Promise<MultiA
         toolCalls: 0,
         ms: op.latencyMs,
         kind: `multi_specialist_${op.agentName}` as const,
-      }).catch((err) => console.warn('[multi-agent] specialist telemetry failed', err));
+      }).catch((err) => mlog.warn('specialist telemetry failed', { err: String(err) }));
     }
 
     onProgress?.({ type: 'fusion_start' });
@@ -197,7 +199,7 @@ export async function runMultiAgentChat(args: RunMultiAgentArgs): Promise<MultiA
     // Always reconcile, even when totalCostUsd is 0 (all specialists failed).
     const costDelta = totalCostUsd - estimatedCost;
     await applyBudgetDelta(userId, costDelta).catch((err) =>
-      console.warn('[multi-agent] applyBudgetDelta failed', err),
+      mlog.warn('applyBudgetDelta failed', { err: String(err) }),
     );
     reconciled = true;
   } finally {
@@ -205,7 +207,7 @@ export async function runMultiAgentChat(args: RunMultiAgentArgs): Promise<MultiA
       // Release the full reservation — any path that throws before
       // reconciliation must not leave the reservation stuck.
       await applyBudgetDelta(userId, -estimatedCost).catch((err) =>
-        console.warn('[multi-agent] failed to release budget reservation after error', err),
+        mlog.warn('failed to release budget reservation after error', { err: String(err) }),
       );
     }
   }
@@ -279,11 +281,11 @@ export async function runMultiAgentChat(args: RunMultiAgentArgs): Promise<MultiA
         const payload = extractDecisionSignal(assistantUi, signalCtx);
         if (payload) {
           void createDecisionSignal(payload).catch((err) =>
-            console.warn('[multi-agent] decision signal persist failed', err),
+            mlog.warn('decision signal persist failed', { err: String(err) }),
           );
         }
       } catch (err) {
-        console.warn('[multi-agent] decision signal extraction failed', err);
+        mlog.warn('decision signal extraction failed', { err: String(err) });
       }
     }
   }
@@ -298,7 +300,7 @@ export async function runMultiAgentChat(args: RunMultiAgentArgs): Promise<MultiA
     outputTokens: 0,
     toolCalls: 0,
     ms: totalLatencyMs,
-  }).catch((err) => console.warn('[multi-agent] recordTelemetry failed', err));
+  }).catch((err) => mlog.warn('recordTelemetry failed', { err: String(err) }));
 
   return { finalText, agentOpinions: validOpinions, totalCostUsd, totalLatencyMs, mode: effectiveMode, messageId: persistedMessageId };
 }

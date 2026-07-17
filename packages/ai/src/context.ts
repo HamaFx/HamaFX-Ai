@@ -25,8 +25,11 @@ import { getPrice } from '@hamafx/data';
 import { getDb, schema } from '@hamafx/db';
 import { SYMBOLS, type Symbol, type Tick, getMarketPhase } from '@hamafx/shared';
 import { desc, eq, asc } from 'drizzle-orm';
+import { createCategorizedLogger } from '@hamafx/shared/logger';
 
 import type { LiveSnapshot } from './prompt/system';
+
+const clog = createCategorizedLogger('ai', { component: 'context' });
 
 /**
  * London + New York are the two sessions where XAU and FX really move.
@@ -96,7 +99,7 @@ export async function buildLiveSnapshot(
         activeSymbols = list.map((item) => item.symbol);
       }
     } catch (err) {
-      console.warn('[context] failed to load user symbols for snapshot', err);
+      clog.warn('failed to load user symbols for snapshot', { err: String(err) });
     }
   })();
 

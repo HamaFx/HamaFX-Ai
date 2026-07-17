@@ -21,8 +21,11 @@ import { getDb, schema } from '@hamafx/db';
 import { getMessageText, type Symbol } from '@hamafx/shared';
 import type { ModelMessage, UIMessage } from 'ai';
 import { and, asc, desc, eq, lt } from 'drizzle-orm';
+import { createCategorizedLogger } from '@hamafx/shared/logger';
 
 import { estimateCostUsd } from './cost';
+
+const perlog = createCategorizedLogger('ai', { component: 'persistence' });
 
 // ---------------------------------------------------------------------------
 // Threads
@@ -572,6 +575,6 @@ export async function recordToolTelemetry(t: ToolTelemetryInput): Promise<void> 
       });
   } catch (err) {
     // Tool-telemetry failures must never crash a chat turn.
-    console.warn('[ai] tool telemetry insert failed', err);
+    perlog.warn('tool telemetry insert failed', { err: String(err) });
   }
 }

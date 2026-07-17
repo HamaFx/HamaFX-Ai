@@ -32,3 +32,4 @@ export {
   countJournalEntriesThisMonth,
   type SubscriptionWithPlan,
 } from './queries/billing';
+export { getUserWithSettings, type UserWithSettings } from './queries/user-settings';

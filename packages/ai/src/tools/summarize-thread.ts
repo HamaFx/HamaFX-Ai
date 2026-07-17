@@ -36,6 +36,7 @@ import {
 } from '@hamafx/shared';
 import { generateText, tool } from 'ai';
 import type { z } from 'zod';
+import { createCategorizedLogger } from '@hamafx/shared/logger';
 
 import { rememberThreadSynopsis } from '../memory/memory-index';
 import { resolveModel, derivePlannerModel } from '../model';
@@ -52,6 +53,8 @@ declare module '@hamafx/shared' {
 
 // Phase 3 hardening §1 — context flows in via AsyncLocalStorage. The
 // legacy `setSummarizeThreadContext()` was removed.
+
+const slog = createCategorizedLogger('ai', { component: 'summarize-thread' });
 
 const SYSTEM_PROMPT =
   'You synthesise the active trading-chat thread into JSON. Output JSON ONLY: { "synopsis": "<3-5 sentence paragraph>", "insights": [{ "text": "<short imperative>", "symbol": "XAUUSD"|"EURUSD"|"GBPUSD"|null }, ...] }. Provide 3 insights. No greetings, no preamble, no markdown fences.';
@@ -114,7 +117,7 @@ export const summarizeThreadTool = tool({
           insights = parsed.insights;
         }
       } catch (err) {
-        if (env.LOG_PROMPTS) console.warn('[summarize_thread] LLM failed', err);
+        if (env.LOG_PROMPTS) slog.warn('LLM failed', { err: String(err) });
       }
     }
 
@@ -143,7 +146,7 @@ export const summarizeThreadTool = tool({
         });
         remembered = true;
       } catch (err) {
-        if (env.LOG_PROMPTS) console.warn('[summarize_thread] remember failed', err);
+        if (env.LOG_PROMPTS) slog.warn('remember failed', { err: String(err) });
       }
     }
 

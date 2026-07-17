@@ -27,6 +27,9 @@ import {
   type AlertRule,
 } from '@hamafx/shared';
 import { and, asc, desc, eq, isNull } from 'drizzle-orm';
+import { createCategorizedLogger } from '@hamafx/shared/logger';
+
+const plog = createCategorizedLogger('ai', { component: 'alerts-persistence' });
 
 export interface CreateAlertInput {
   userId: string;
@@ -62,7 +65,7 @@ export async function listAlerts(
     try {
       out.push(rowToAlert(row));
     } catch (err) {
-      console.warn('[alerts] skipping unparseable rule', { id: row.id, err });
+      plog.warn('skipping unparseable rule', { id: row.id, err: String(err) });
     }
   }
   return out;
@@ -101,7 +104,7 @@ export async function listEvaluable(): Promise<Alert[]> {
       if (isInSnooze(alert, now)) continue;
       out.push(alert);
     } catch (err) {
-      console.warn('[alerts] skipping unparseable rule', { id: row.id, err });
+      plog.warn('skipping unparseable rule', { id: row.id, err: String(err) });
     }
   }
   return out;

@@ -29,6 +29,7 @@
 import cron from 'node-cron';
 import { JOBS } from '../jobs/index.js';
 import type { Logger } from '../log.js';
+import { createLogger } from '../log.js';
 
 /** Raw job definition — what we write in the registry. */
 interface ScheduleDef {
@@ -48,8 +49,9 @@ const RAW: ScheduleDef[] = [
     name: 'briefings',
     cronExpression: '*/5 * * * *',
     async _rawRun(signal: AbortSignal) {
+      const log = createLogger({ service: 'worker:job:briefings' });
       await JOBS.briefings.run({
-        log: console as unknown as Logger,
+        log,
         signal,
       });
     },
@@ -58,8 +60,9 @@ const RAW: ScheduleDef[] = [
     name: 'snapshots',
     cronExpression: '5 0 * * *', // 00:05 UTC daily
     async _rawRun(signal: AbortSignal) {
+      const log = createLogger({ service: 'worker:job:snapshots' });
       await JOBS.snapshots.run({
-        log: console as unknown as Logger,
+        log,
         signal,
       });
     },
@@ -68,8 +71,9 @@ const RAW: ScheduleDef[] = [
     name: 'resonance-sync',
     cronExpression: '0 1 * * *', // 01:00 UTC daily
     async _rawRun(signal: AbortSignal) {
+      const log = createLogger({ service: 'worker:job:resonance-sync' });
       await JOBS['resonance-sync'].run({
-        log: console as unknown as Logger,
+        log,
         signal,
       });
     },
@@ -78,8 +82,9 @@ const RAW: ScheduleDef[] = [
     name: 'cot',
     cronExpression: '0 22 * * 5', // Friday 22:00 UTC
     async _rawRun(signal: AbortSignal) {
+      const log = createLogger({ service: 'worker:job:cot' });
       await JOBS.cot.run({
-        log: console as unknown as Logger,
+        log,
         signal,
       });
     },
@@ -88,8 +93,9 @@ const RAW: ScheduleDef[] = [
     name: 'fred-actuals',
     cronExpression: '30 1 * * *', // 01:30 UTC daily
     async _rawRun(signal: AbortSignal) {
+      const log = createLogger({ service: 'worker:job:fred-actuals' });
       await JOBS['fred-actuals'].run({
-        log: console as unknown as Logger,
+        log,
         signal,
       });
     },
@@ -98,8 +104,9 @@ const RAW: ScheduleDef[] = [
     name: 'weekly-review',
     cronExpression: '0 18 * * 0', // Sunday 18:00 UTC
     async _rawRun(signal: AbortSignal) {
+      const log = createLogger({ service: 'worker:job:weekly-review' });
       await JOBS['weekly-review'].run({
-        log: console as unknown as Logger,
+        log,
         signal,
       });
     },
@@ -108,8 +115,9 @@ const RAW: ScheduleDef[] = [
     name: 'embedding-backfill',
     cronExpression: '0 */6 * * *', // Every 6 hours
     async _rawRun(signal: AbortSignal) {
+      const log = createLogger({ service: 'worker:job:embedding-backfill' });
       await JOBS['embedding-backfill'].run({
-        log: console as unknown as Logger,
+        log,
         signal,
       });
     },

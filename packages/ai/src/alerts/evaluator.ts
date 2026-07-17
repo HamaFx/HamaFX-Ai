@@ -42,9 +42,12 @@ import {
   type Tick,
   type Timeframe,
 } from '@hamafx/shared';
+import { createCategorizedLogger } from '@hamafx/shared/logger';
 
 import { deliverAlert, type DeliveryResult } from './delivery';
 import { listEvaluable, setRulePreviousValue } from './persistence';
+
+const elog = createCategorizedLogger('ai', { component: 'alerts-evaluator' });
 
 // ---------------------------------------------------------------------------
 // Rule decision: does this rule's reading meet the trigger?
@@ -391,7 +394,7 @@ export async function evaluateAlerts(
           try {
             await setRulePreviousValue(alert.id, alert.rule, reading.value);
           } catch (err) {
-            console.warn('[alerts] setRulePreviousValue failed', { id: alert.id, err });
+            elog.warn('setRulePreviousValue failed', { id: alert.id, err: String(err) });
           }
           continue;
         }

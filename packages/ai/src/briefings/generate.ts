@@ -39,6 +39,7 @@ import {
 } from '@hamafx/shared';
 import { generateText, type UIMessage } from 'ai';
 import { and, asc, eq } from 'drizzle-orm';
+import { createCategorizedLogger } from '@hamafx/shared/logger';
 
 import { dailySpendUsd } from '../cost';
 import { computeStats } from '../journal/persistence';
@@ -63,6 +64,8 @@ export interface BriefingsEnv {
   MAX_DAILY_USD: number;
   LOG_PROMPTS: boolean;
 }
+
+const blog = createCategorizedLogger('ai', { component: 'briefings' });
 
 function envFromProcess(): BriefingsEnv {
   return {
@@ -152,7 +155,7 @@ async function emitEventBriefing(
     ...(event.currency
       ? { symbol: symbolFromCurrency(event.currency) }
       : {}),
-  }).catch((err) => console.warn('[briefings] memory write failed', err));
+  }).catch((err) => blog.warn('memory write failed', { err: String(err) }));
 
   return { emitted: true };
 }
@@ -186,7 +189,7 @@ async function composeEventSummary(
     const cleaned = text.trim();
     return cleaned.length > 0 ? cleaned : deterministicEventSummary(event, kind);
   } catch (err) {
-    if (env.LOG_PROMPTS) console.warn('[briefings] LLM failed', err);
+    if (env.LOG_PROMPTS) blog.warn('LLM failed', { err: String(err) });
     return deterministicEventSummary(event, kind);
   }
 }
@@ -327,7 +330,7 @@ export async function emitWeeklyReview(userId: string): Promise<{ emitted: boole
     briefingKind: 'weekly_review',
     occurredAtMs: Date.now(),
     userId,
-  }).catch((err) => console.warn('[briefings] memory write failed', err));
+  }).catch((err) => blog.warn('memory write failed', { err: String(err) }));
 
   return { emitted: true };
 }
@@ -358,7 +361,7 @@ async function composeWeeklyReviewSummary(
     const cleaned = text.trim();
     return cleaned.length > 0 ? cleaned : det;
   } catch (err) {
-    if (env.LOG_PROMPTS) console.warn('[briefings] weekly LLM failed', err);
+    if (env.LOG_PROMPTS) blog.warn('weekly LLM failed', { err: String(err) });
     return det;
   }
 }

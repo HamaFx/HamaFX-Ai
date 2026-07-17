@@ -23,6 +23,7 @@
 import { cache } from 'react';
 import { getDb, schema } from '@hamafx/db';
 import { and, desc, eq, gte, lte, sql } from 'drizzle-orm';
+import { KNOWN_BYOK_PROVIDERS } from '@hamafx/shared';
 
 export interface TelemetryRow {
   id: string;
@@ -122,20 +123,6 @@ export function providerIdFromModel(modelId: string): string {
   if (slash === -1) return '';
   return modelId.slice(0, slash);
 }
-
-const KNOWN_BYOK_PROVIDERS = new Set([
-  'google',
-  'vertex',
-  'anthropic',
-  'openai',
-  'groq',
-  'mistral',
-  'openrouter',
-  'xai',
-  'deepseek',
-  'iamhc',
-]);
-
 /**
  * Map a raw provider prefix (from a model id) to a canonical BYOK
  * id. `google-vertex` -> `vertex` (Vertex AI). Empty string (no

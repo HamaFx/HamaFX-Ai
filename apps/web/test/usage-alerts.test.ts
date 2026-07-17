@@ -19,6 +19,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 vi.mock('@hamafx/db', () => ({
   getDb: vi.fn(),
   schema: { userSettings: 'userSettings', users: 'users' },
+  getUserWithSettings: vi.fn(),
 }));
 
 vi.mock('@hamafx/ai', () => ({
@@ -31,12 +32,13 @@ vi.mock('drizzle-orm', () => ({
   eq: (a: unknown, b: unknown) => ({ a, b, op: 'eq' }),
 }));
 
-import { getDb } from '@hamafx/db';
+import { getDb, getUserWithSettings } from '@hamafx/db';
 import { getMonthlySpend, getProviderMonthlySpend, sendDirectNotification } from '@hamafx/ai';
 
 import { checkAllUsageAlerts, resetSentAlerts } from '../src/lib/usage-alerts';
 
 const mockDb = vi.mocked(getDb);
+const mockGetUserWithSettings = vi.mocked(getUserWithSettings);
 const mockGetMonthlySpend = vi.mocked(getMonthlySpend);
 const mockGetProviderMonthlySpend = vi.mocked(getProviderMonthlySpend);
 const mockSendNotification = vi.mocked(sendDirectNotification);
@@ -51,15 +53,13 @@ function makeSettings(overrides: Record<string, unknown> = {}) {
     telegramBotToken: null,
     telegramChatId: null,
     ...overrides,
-  };
+  } as Record<string, unknown>;
 }
 
-function makeUserRow(overrides: Record<string, unknown> = {}) {
+function makeUser(overrides: Record<string, unknown> = {}) {
   return {
+    name: null,
     email: 'user@example.com',
-    alertEmail: null,
-    telegramBotToken: null,
-    telegramChatId: null,
     ...overrides,
   };
 }
@@ -71,15 +71,7 @@ afterEach(() => {
 
 describe('checkAllUsageAlerts', () => {
   it('returns zeros when there are no user settings', async () => {
-    const whereFn = vi.fn().mockResolvedValue([]);
-    const innerJoinFn = vi.fn().mockReturnValue({ where: whereFn });
-    const simpleFromResult = Promise.resolve([]);
-    const innerFromResult = { innerJoin: innerJoinFn };
-    let first = true;
-    const fromFn = vi.fn().mockImplementation(() => {
-      if (first) { first = false; return simpleFromResult; }
-      return innerFromResult;
-    });
+    const fromFn = vi.fn().mockResolvedValue([]);
     mockDb.mockReturnValue({ select: vi.fn().mockReturnValue({ from: fromFn }) } as never);
 
     const result = await checkAllUsageAlerts();
@@ -87,15 +79,7 @@ describe('checkAllUsageAlerts', () => {
   });
 
   it('skips users without budget limit or thresholds', async () => {
-    const whereFn = vi.fn().mockResolvedValue([]);
-    const innerJoinFn = vi.fn().mockReturnValue({ where: whereFn });
-    const simpleFromResult = Promise.resolve([makeSettings()]);
-    const innerFromResult = { innerJoin: innerJoinFn };
-    let first = true;
-    const fromFn = vi.fn().mockImplementation(() => {
-      if (first) { first = false; return simpleFromResult; }
-      return innerFromResult;
-    });
+    const fromFn = vi.fn().mockResolvedValue([makeSettings()]);
     mockDb.mockReturnValue({ select: vi.fn().mockReturnValue({ from: fromFn }) } as never);
 
     const result = await checkAllUsageAlerts();
@@ -103,15 +87,7 @@ describe('checkAllUsageAlerts', () => {
   });
 
   it('skips users without alert config channels', async () => {
-    const whereFn = vi.fn().mockResolvedValue([]);
-    const innerJoinFn = vi.fn().mockReturnValue({ where: whereFn });
-    const simpleFromResult = Promise.resolve([makeSettings({ monthlyBudgetLimit: 100, spendAlertsConfig: {} })]);
-    const innerFromResult = { innerJoin: innerJoinFn };
-    let first = true;
-    const fromFn = vi.fn().mockImplementation(() => {
-      if (first) { first = false; return simpleFromResult; }
-      return innerFromResult;
-    });
+    const fromFn = vi.fn().mockResolvedValue([makeSettings({ monthlyBudgetLimit: 100, spendAlertsConfig: {} })]);
     mockDb.mockReturnValue({ select: vi.fn().mockReturnValue({ from: fromFn }) } as never);
 
     const result = await checkAllUsageAlerts();
@@ -119,33 +95,25 @@ describe('checkAllUsageAlerts', () => {
   });
 
   it('skips users with alert config but no reachable channels', async () => {
-    const whereFn = vi.fn().mockResolvedValue([makeUserRow({ email: null, alertEmail: null })]);
-    const innerJoinFn = vi.fn().mockReturnValue({ where: whereFn });
-    const simpleFromResult = Promise.resolve([makeSettings({ monthlyBudgetLimit: 100, spendAlertsConfig: { email: true } })]);
-    const innerFromResult = { innerJoin: innerJoinFn };
-    let first = true;
-    const fromFn = vi.fn().mockImplementation(() => {
-      if (first) { first = false; return simpleFromResult; }
-      return innerFromResult;
-    });
+    const fromFn = vi.fn().mockResolvedValue([makeSettings({ monthlyBudgetLimit: 100, spendAlertsConfig: { email: true } })]);
     mockDb.mockReturnValue({ select: vi.fn().mockReturnValue({ from: fromFn }) } as never);
+    mockGetUserWithSettings.mockResolvedValue({
+      settings: makeSettings({ alertEmail: null }),
+      user: makeUser({ email: null }),
+    } as never);
 
     const result = await checkAllUsageAlerts();
-    // User is still "checked" (iterated) but no alert sent
     expect(result).toEqual({ alertsSent: 0, checkedUsers: 1 });
   });
 
   it('sends alert when monthly spend exceeds limit (100%)', async () => {
-    const whereFn = vi.fn().mockResolvedValue([makeUserRow()]);
-    const innerJoinFn = vi.fn().mockReturnValue({ where: whereFn });
-    const simpleFromResult = Promise.resolve([makeSettings({ monthlyBudgetLimit: 100, spendAlertsConfig: { email: true } })]);
-    const innerFromResult = { innerJoin: innerJoinFn };
-    let first = true;
-    const fromFn = vi.fn().mockImplementation(() => {
-      if (first) { first = false; return simpleFromResult; }
-      return innerFromResult;
-    });
+    const settings = makeSettings({ monthlyBudgetLimit: 100, spendAlertsConfig: { email: true } });
+    const fromFn = vi.fn().mockResolvedValue([settings]);
     mockDb.mockReturnValue({ select: vi.fn().mockReturnValue({ from: fromFn }) } as never);
+    mockGetUserWithSettings.mockResolvedValue({
+      settings: makeSettings({ alertEmail: 'user@example.com' }),
+      user: makeUser({ email: 'user@example.com' }),
+    } as never);
     mockGetMonthlySpend.mockResolvedValue(100);
     mockSendNotification.mockResolvedValue(undefined);
 
@@ -160,16 +128,13 @@ describe('checkAllUsageAlerts', () => {
   });
 
   it('sends alert when monthly spend reaches 80%', async () => {
-    const whereFn = vi.fn().mockResolvedValue([makeUserRow()]);
-    const innerJoinFn = vi.fn().mockReturnValue({ where: whereFn });
-    const simpleFromResult = Promise.resolve([makeSettings({ monthlyBudgetLimit: 100, spendAlertsConfig: { email: true } })]);
-    const innerFromResult = { innerJoin: innerJoinFn };
-    let first = true;
-    const fromFn = vi.fn().mockImplementation(() => {
-      if (first) { first = false; return simpleFromResult; }
-      return innerFromResult;
-    });
+    const settings = makeSettings({ monthlyBudgetLimit: 100, spendAlertsConfig: { email: true } });
+    const fromFn = vi.fn().mockResolvedValue([settings]);
     mockDb.mockReturnValue({ select: vi.fn().mockReturnValue({ from: fromFn }) } as never);
+    mockGetUserWithSettings.mockResolvedValue({
+      settings: makeSettings({ alertEmail: 'user@example.com' }),
+      user: makeUser({ email: 'user@example.com' }),
+    } as never);
     mockGetMonthlySpend.mockResolvedValue(80);
     mockSendNotification.mockResolvedValue(undefined);
 
@@ -184,16 +149,13 @@ describe('checkAllUsageAlerts', () => {
   });
 
   it('sends alert when monthly spend reaches 50%', async () => {
-    const whereFn = vi.fn().mockResolvedValue([makeUserRow()]);
-    const innerJoinFn = vi.fn().mockReturnValue({ where: whereFn });
-    const simpleFromResult = Promise.resolve([makeSettings({ monthlyBudgetLimit: 100, spendAlertsConfig: { email: true } })]);
-    const innerFromResult = { innerJoin: innerJoinFn };
-    let first = true;
-    const fromFn = vi.fn().mockImplementation(() => {
-      if (first) { first = false; return simpleFromResult; }
-      return innerFromResult;
-    });
+    const settings = makeSettings({ monthlyBudgetLimit: 100, spendAlertsConfig: { email: true } });
+    const fromFn = vi.fn().mockResolvedValue([settings]);
     mockDb.mockReturnValue({ select: vi.fn().mockReturnValue({ from: fromFn }) } as never);
+    mockGetUserWithSettings.mockResolvedValue({
+      settings: makeSettings({ alertEmail: 'user@example.com' }),
+      user: makeUser({ email: 'user@example.com' }),
+    } as never);
     mockGetMonthlySpend.mockResolvedValue(50);
     mockSendNotification.mockResolvedValue(undefined);
 
@@ -208,16 +170,13 @@ describe('checkAllUsageAlerts', () => {
   });
 
   it('sends per-provider threshold alert when exceeded', async () => {
-    const whereFn = vi.fn().mockResolvedValue([makeUserRow()]);
-    const innerJoinFn = vi.fn().mockReturnValue({ where: whereFn });
-    const simpleFromResult = Promise.resolve([makeSettings({ providerSpendingThresholds: { openai: 50 }, spendAlertsConfig: { email: true } })]);
-    const innerFromResult = { innerJoin: innerJoinFn };
-    let first = true;
-    const fromFn = vi.fn().mockImplementation(() => {
-      if (first) { first = false; return simpleFromResult; }
-      return innerFromResult;
-    });
+    const settings = makeSettings({ providerSpendingThresholds: { openai: 50 }, spendAlertsConfig: { email: true } });
+    const fromFn = vi.fn().mockResolvedValue([settings]);
     mockDb.mockReturnValue({ select: vi.fn().mockReturnValue({ from: fromFn }) } as never);
+    mockGetUserWithSettings.mockResolvedValue({
+      settings: makeSettings({ alertEmail: 'user@example.com' }),
+      user: makeUser({ email: 'user@example.com' }),
+    } as never);
     mockGetProviderMonthlySpend.mockResolvedValue(60);
     mockSendNotification.mockResolvedValue(undefined);
 
@@ -232,16 +191,13 @@ describe('checkAllUsageAlerts', () => {
   });
 
   it('sends alerts via telegram when configured', async () => {
-    const whereFn = vi.fn().mockResolvedValue([makeUserRow({ telegramBotToken: 'bot-token', telegramChatId: 'chat-id' })]);
-    const innerJoinFn = vi.fn().mockReturnValue({ where: whereFn });
-    const simpleFromResult = Promise.resolve([makeSettings({ monthlyBudgetLimit: 100, spendAlertsConfig: { telegram: true } })]);
-    const innerFromResult = { innerJoin: innerJoinFn };
-    let first = true;
-    const fromFn = vi.fn().mockImplementation(() => {
-      if (first) { first = false; return simpleFromResult; }
-      return innerFromResult;
-    });
+    const settings = makeSettings({ monthlyBudgetLimit: 100, spendAlertsConfig: { telegram: true } });
+    const fromFn = vi.fn().mockResolvedValue([settings]);
     mockDb.mockReturnValue({ select: vi.fn().mockReturnValue({ from: fromFn }) } as never);
+    mockGetUserWithSettings.mockResolvedValue({
+      settings: makeSettings({ telegramBotToken: 'bot-token', telegramChatId: 'chat-id' }),
+      user: makeUser({ email: 'user@example.com' }),
+    } as never);
     mockGetMonthlySpend.mockResolvedValue(100);
     mockSendNotification.mockResolvedValue(undefined);
 
@@ -256,16 +212,13 @@ describe('checkAllUsageAlerts', () => {
   });
 
   it('sends alerts via both email and telegram', async () => {
-    const whereFn = vi.fn().mockResolvedValue([makeUserRow({ telegramBotToken: 'bot', telegramChatId: 'chat' })]);
-    const innerJoinFn = vi.fn().mockReturnValue({ where: whereFn });
-    const simpleFromResult = Promise.resolve([makeSettings({ monthlyBudgetLimit: 100, spendAlertsConfig: { email: true, telegram: true } })]);
-    const innerFromResult = { innerJoin: innerJoinFn };
-    let first = true;
-    const fromFn = vi.fn().mockImplementation(() => {
-      if (first) { first = false; return simpleFromResult; }
-      return innerFromResult;
-    });
+    const settings = makeSettings({ monthlyBudgetLimit: 100, spendAlertsConfig: { email: true, telegram: true } });
+    const fromFn = vi.fn().mockResolvedValue([settings]);
     mockDb.mockReturnValue({ select: vi.fn().mockReturnValue({ from: fromFn }) } as never);
+    mockGetUserWithSettings.mockResolvedValue({
+      settings: makeSettings({ alertEmail: 'user@example.com', telegramBotToken: 'bot', telegramChatId: 'chat' }),
+      user: makeUser({ email: 'user@example.com' }),
+    } as never);
     mockGetMonthlySpend.mockResolvedValue(100);
     mockSendNotification.mockResolvedValue(undefined);
 
@@ -284,24 +237,18 @@ describe('checkAllUsageAlerts', () => {
       makeSettings({ userId: 'user-1', monthlyBudgetLimit: 100, spendAlertsConfig: { email: true } }),
       makeSettings({ userId: 'user-2', monthlyBudgetLimit: 200, spendAlertsConfig: { email: true } }),
     ];
-    const userRow1 = makeUserRow({ email: 'user1@test.com' });
-    const userRow2 = makeUserRow({ email: 'user2@test.com' });
-
-    let whereCallCount = 0;
-    const whereFn = vi.fn().mockImplementation(() => {
-      whereCallCount++;
-      if (whereCallCount === 1) return Promise.resolve([userRow1]);
-      return Promise.resolve([userRow2]);
-    });
-    const innerJoinFn = vi.fn().mockReturnValue({ where: whereFn });
-    const simpleFromResult = Promise.resolve(settings);
-    const innerFromResult = { innerJoin: innerJoinFn };
-    let firstSelect = true;
-    const fromFn = vi.fn().mockImplementation(() => {
-      if (firstSelect) { firstSelect = false; return simpleFromResult; }
-      return innerFromResult;
-    });
+    const fromFn = vi.fn().mockResolvedValue(settings);
     mockDb.mockReturnValue({ select: vi.fn().mockReturnValue({ from: fromFn }) } as never);
+
+    let callCount = 0;
+    mockGetUserWithSettings.mockImplementation((async () => {
+      callCount++;
+      if (callCount === 1) {
+        return { settings: makeSettings({ alertEmail: 'user1@test.com' }), user: makeUser({ email: 'user1@test.com' }) } as never;
+      }
+      return { settings: makeSettings({ alertEmail: 'user2@test.com' }), user: makeUser({ email: 'user2@test.com' }) } as never;
+    }) as never);
+
     mockGetMonthlySpend.mockResolvedValue(100);
     mockSendNotification.mockResolvedValue(undefined);
 
@@ -311,16 +258,13 @@ describe('checkAllUsageAlerts', () => {
   });
 
   it('does not send alerts when spend is below all thresholds', async () => {
-    const whereFn = vi.fn().mockResolvedValue([makeUserRow()]);
-    const innerJoinFn = vi.fn().mockReturnValue({ where: whereFn });
-    const simpleFromResult = Promise.resolve([makeSettings({ monthlyBudgetLimit: 100, spendAlertsConfig: { email: true } })]);
-    const innerFromResult = { innerJoin: innerJoinFn };
-    let first = true;
-    const fromFn = vi.fn().mockImplementation(() => {
-      if (first) { first = false; return simpleFromResult; }
-      return innerFromResult;
-    });
+    const settings = makeSettings({ monthlyBudgetLimit: 100, spendAlertsConfig: { email: true } });
+    const fromFn = vi.fn().mockResolvedValue([settings]);
     mockDb.mockReturnValue({ select: vi.fn().mockReturnValue({ from: fromFn }) } as never);
+    mockGetUserWithSettings.mockResolvedValue({
+      settings: makeSettings({ alertEmail: 'user@example.com' }),
+      user: makeUser({ email: 'user@example.com' }),
+    } as never);
     mockGetMonthlySpend.mockResolvedValue(10);
     mockSendNotification.mockResolvedValue(undefined);
 
@@ -329,16 +273,13 @@ describe('checkAllUsageAlerts', () => {
   });
 
   it('uses alertEmail over user email when both are present', async () => {
-    const whereFn = vi.fn().mockResolvedValue([makeUserRow({ alertEmail: 'alert@test.com' })]);
-    const innerJoinFn = vi.fn().mockReturnValue({ where: whereFn });
-    const simpleFromResult = Promise.resolve([makeSettings({ monthlyBudgetLimit: 100, spendAlertsConfig: { email: true } })]);
-    const innerFromResult = { innerJoin: innerJoinFn };
-    let first = true;
-    const fromFn = vi.fn().mockImplementation(() => {
-      if (first) { first = false; return simpleFromResult; }
-      return innerFromResult;
-    });
+    const settings = makeSettings({ monthlyBudgetLimit: 100, spendAlertsConfig: { email: true } });
+    const fromFn = vi.fn().mockResolvedValue([settings]);
     mockDb.mockReturnValue({ select: vi.fn().mockReturnValue({ from: fromFn }) } as never);
+    mockGetUserWithSettings.mockResolvedValue({
+      settings: makeSettings({ alertEmail: 'alert@test.com' }),
+      user: makeUser({ email: 'user@test.com' }),
+    } as never);
     mockGetMonthlySpend.mockResolvedValue(100);
     mockSendNotification.mockResolvedValue(undefined);
 

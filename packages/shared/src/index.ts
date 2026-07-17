@@ -125,6 +125,7 @@ export {
   type ModelDomain,
   type CatalogModel,
   type CatalogResponse,
+  KNOWN_BYOK_PROVIDERS,
 } from './byok';
 // Secret helpers (env-secrets.ts) intentionally NOT re-exported from the
 // barrel — importing them pulls node:crypto + `server-only` into the

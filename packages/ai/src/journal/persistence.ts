@@ -38,8 +38,11 @@ import {
   type TradeSide,
 } from '@hamafx/shared';
 import { and, asc, desc, eq, gte, lte } from 'drizzle-orm';
+import { createCategorizedLogger } from '@hamafx/shared/logger';
 
 import { rememberJournalEntry } from '../memory/memory-index';
+
+const jlog = createCategorizedLogger('ai', { component: 'journal' });
 
 // ---------------------------------------------------------------------------
 // CRUD
@@ -112,7 +115,7 @@ export async function createEntry(input: CreateJournalInput): Promise<JournalEnt
   // Best-effort memory write so `search_knowledge` can recall this trade.
   // Errors here must never block the journal-CRUD response.
   void rememberJournalEntry({ entryId: entry.id }).catch((err) => {
-    console.warn('[journal] memory upsert failed', err);
+    jlog.warn('memory upsert failed', { err: String(err) });
   });
 
   return entry;
@@ -178,7 +181,7 @@ export async function updateEntry(
   // Re-embed: outcomes and notes change the natural-language summary
   // we feed the memory index, so a stale row would mislead recall.
   void rememberJournalEntry({ entryId: entry.id }).catch((err) => {
-    console.warn('[journal] memory upsert failed', err);
+    jlog.warn('memory upsert failed', { err: String(err) });
   });
 
   return entry;

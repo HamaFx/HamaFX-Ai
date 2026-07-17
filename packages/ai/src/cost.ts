@@ -26,10 +26,12 @@
 // Phase A: budget is now per-user. All functions accept `userId` and scope
 // queries to the user's row in `daily_ai_spend` (composite PK: user_id, day).
 
-import { getDb, schema } from '@hamafx/db';
+import { getDb, schema, getUserWithSettings } from '@hamafx/db';
 import { sql, eq, gte, and } from 'drizzle-orm';
 import { sendDirectNotification } from './alerts/delivery';
 import { buildCatalogRateTable } from './byok-providers';
+import { KNOWN_BYOK_PROVIDERS } from '@hamafx/shared';
+import { createCategorizedLogger } from '@hamafx/shared/logger';
 
 interface ModelRate {
   /** USD per 1M input tokens. */
@@ -70,6 +72,8 @@ const RATES: Record<string, ModelRate> = {
   ...buildCatalogRateTable(),
   ...STATIC_RATES,
 };
+
+const log = createCategorizedLogger('ai', { component: 'cost' });
 
 const FALLBACK_RATE: ModelRate = { inputPerM: 5, outputPerM: 15 };
 
@@ -175,10 +179,7 @@ export async function tryReserveBudget(
   // The `estCents` check is belt-and-suspenders — `estimatedUsd` is a
   // constant today, but callers may pass dynamic values in the future.
   if (!Number.isFinite(estCents) || !Number.isFinite(capCents)) {
-    console.warn(
-      '[ai] tryReserveBudget received non-finite value',
-      { estCents, capCents, capUsd },
-    );
+    log.warn('tryReserveBudget received non-finite value', { estCents, capCents, capUsd });
     const spent = await reservedSpendUsd(userId, now);
     return { ok: false, spent, max: DEFAULT_MAX_DAILY_USD };
   }
@@ -291,18 +292,6 @@ export async function getProviderMonthlySpend(userId: string, providerId: string
       )
     );
 
-  const KNOWN_BYOK_PROVIDERS = new Set([
-    'google',
-    'vertex',
-    'anthropic',
-    'openai',
-    'groq',
-    'mistral',
-    'openrouter',
-    'xai',
-    'deepseek',
-    'iamhc',
-  ]);
   const providerIdFromModel = (modelId: string) => {
     const slash = modelId.indexOf('/');
     if (slash === -1) return '';
@@ -326,74 +315,42 @@ export async function getProviderMonthlySpend(userId: string, providerId: string
   return total;
 }
 
-async function triggerSpendAlert(
+function triggerSpendAlert(
   userId: string,
   percentage: string,
   spent: number,
   limit: number,
   config: { email?: boolean; telegram?: boolean },
 ) {
-  const db = getDb();
-  const [userRow] = await db
-    .select({
-      email: schema.users.email,
-      alertEmail: schema.userSettings.alertEmail,
-      telegramBotToken: schema.userSettings.telegramBotToken,
-      telegramChatId: schema.userSettings.telegramChatId,
-    })
-    .from(schema.userSettings)
-    .innerJoin(schema.users, eq(schema.users.id, schema.userSettings.userId))
-    .where(eq(schema.userSettings.userId, userId));
-
-  const alertEmail = userRow?.alertEmail || userRow?.email || process.env.ALERT_TO_EMAIL;
-  const telegramBotToken = userRow?.telegramBotToken || process.env.TELEGRAM_BOT_TOKEN;
-  const telegramChatId = userRow?.telegramChatId || process.env.TELEGRAM_CHAT_ID;
-
-  const channels: ('email' | 'telegram')[] = [];
-  if (config.email && alertEmail) channels.push('email');
-  if (config.telegram && telegramBotToken && telegramChatId) channels.push('telegram');
-
-  if (channels.length === 0) return;
-
-  const subject = `[HamaFX-Ai] Monthly Budget Alert: ${percentage} Reached`;
-  const body = `Your monthly AI spend has reached ${percentage} of your limit.\n\nSpent: $${spent.toFixed(2)} / $${limit.toFixed(2)}\n\n— HamaFX-Ai`;
-  const alertEnv: Parameters<typeof sendDirectNotification>[2] = {};
-  if (process.env.RESEND_API_KEY) alertEnv.RESEND_API_KEY = process.env.RESEND_API_KEY;
-  if (process.env.ALERT_FROM_EMAIL) alertEnv.ALERT_FROM_EMAIL = process.env.ALERT_FROM_EMAIL;
-  if (alertEmail) alertEnv.ALERT_TO_EMAIL = alertEmail;
-  if (telegramBotToken) alertEnv.TELEGRAM_BOT_TOKEN = telegramBotToken;
-  if (telegramChatId) alertEnv.TELEGRAM_CHAT_ID = telegramChatId;
-
-  await sendDirectNotification(
-    subject,
-    body,
-    alertEnv,
-    channels,
-  );
+  return triggerAlert(userId, config, {
+    subject: `[HamaFX-Ai] Monthly Budget Alert: ${percentage} Reached`,
+    body: `Your monthly AI spend has reached ${percentage} of your limit.\n\nSpent: $${spent.toFixed(2)} / $${limit.toFixed(2)}\n\n— HamaFX-Ai`,
+  });
 }
 
-async function triggerProviderAlert(
+function triggerProviderAlert(
   userId: string,
   providerId: string,
   spent: number,
   limit: number,
   config: { email?: boolean; telegram?: boolean },
 ) {
-  const db = getDb();
-  const [userRow] = await db
-    .select({
-      email: schema.users.email,
-      alertEmail: schema.userSettings.alertEmail,
-      telegramBotToken: schema.userSettings.telegramBotToken,
-      telegramChatId: schema.userSettings.telegramChatId,
-    })
-    .from(schema.userSettings)
-    .innerJoin(schema.users, eq(schema.users.id, schema.userSettings.userId))
-    .where(eq(schema.userSettings.userId, userId));
+  return triggerAlert(userId, config, {
+    subject: `[HamaFX-Ai] Provider Threshold Alert: ${providerId}`,
+    body: `Your monthly spend for provider "${providerId}" has exceeded your configured threshold.\n\nSpent: $${spent.toFixed(2)} / $${limit.toFixed(2)}\n\n— HamaFX-Ai`,
+  });
+}
 
-  const alertEmail = userRow?.alertEmail || userRow?.email || process.env.ALERT_TO_EMAIL;
-  const telegramBotToken = userRow?.telegramBotToken || process.env.TELEGRAM_BOT_TOKEN;
-  const telegramChatId = userRow?.telegramChatId || process.env.TELEGRAM_CHAT_ID;
+async function triggerAlert(
+  userId: string,
+  config: { email?: boolean; telegram?: boolean },
+  opts: { subject: string; body: string },
+) {
+  const { settings, user: userRow } = await getUserWithSettings(userId);
+
+  const alertEmail = settings?.alertEmail || userRow?.email || process.env.ALERT_TO_EMAIL;
+  const telegramBotToken = settings?.telegramBotToken || process.env.TELEGRAM_BOT_TOKEN;
+  const telegramChatId = settings?.telegramChatId || process.env.TELEGRAM_CHAT_ID;
 
   const channels: ('email' | 'telegram')[] = [];
   if (config.email && alertEmail) channels.push('email');
@@ -401,8 +358,6 @@ async function triggerProviderAlert(
 
   if (channels.length === 0) return;
 
-  const subject = `[HamaFX-Ai] Provider Threshold Alert: ${providerId}`;
-  const body = `Your monthly spend for provider "${providerId}" has exceeded your configured threshold.\n\nSpent: $${spent.toFixed(2)} / $${limit.toFixed(2)}\n\n— HamaFX-Ai`;
   const alertEnv: Parameters<typeof sendDirectNotification>[2] = {};
   if (process.env.RESEND_API_KEY) alertEnv.RESEND_API_KEY = process.env.RESEND_API_KEY;
   if (process.env.ALERT_FROM_EMAIL) alertEnv.ALERT_FROM_EMAIL = process.env.ALERT_FROM_EMAIL;
@@ -411,8 +366,8 @@ async function triggerProviderAlert(
   if (telegramChatId) alertEnv.TELEGRAM_CHAT_ID = telegramChatId;
 
   await sendDirectNotification(
-    subject,
-    body,
+    opts.subject,
+    opts.body,
     alertEnv,
     channels,
   );

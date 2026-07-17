@@ -27,6 +27,7 @@ import { generateText } from 'ai';
 
 import { resolveModel } from './model';
 import { maybeGetToolContext } from './tool-context';
+import { createCategorizedLogger } from '@hamafx/shared/logger';
 
 export interface GenerateTitleArgs {
   threadId: string;
@@ -70,6 +71,8 @@ export interface GenerateTitleResult {
   /** Wall-clock latency of the LLM call in ms; absent on fallback. */
   latencyMs?: number;
 }
+
+const tilog = createCategorizedLogger('ai', { component: 'title' });
 
 const MAX_CODEPOINTS = 60;
 const PROMPT_INPUT_BUDGET = 1024;
@@ -186,7 +189,7 @@ export async function generateTitle(args: GenerateTitleArgs): Promise<GenerateTi
     };
   } catch (err) {
     if (env.LOG_PROMPTS) {
-      console.warn('[ai] generateTitle failed', err);
+      tilog.warn('generateTitle failed', { err: String(err) });
     }
     return {
       title: deterministicFallbackTitle(firstUser),

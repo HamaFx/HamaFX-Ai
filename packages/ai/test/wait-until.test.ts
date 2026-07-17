@@ -2,10 +2,17 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('server-only', () => ({}));
 
+// Mock the structured logger used by wait-until's shim fallback
+const mockWarn = vi.fn();
+vi.mock('@hamafx/shared/logger', () => ({
+  createCategorizedLogger: () => ({ warn: mockWarn }),
+}));
+
 describe('waitUntil', () => {
   beforeEach(() => {
     vi.resetModules();
     vi.restoreAllMocks();
+    mockWarn.mockReset();
   });
 
   it('does not throw when called with a resolved promise', async () => {
@@ -22,7 +29,6 @@ describe('waitUntil', () => {
 
   it('handles a rejected promise via the shim catch handler', async () => {
     const mod = await import('../src/wait-until');
-    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const err = new Error('test error');
     const promise = new Promise((_, reject) => {
       // Delay long enough for the shim catch to be installed after
@@ -31,8 +37,7 @@ describe('waitUntil', () => {
     });
     mod.waitUntil(promise);
     await new Promise((r) => setTimeout(r, 200));
-    expect(warnSpy).toHaveBeenCalledWith('[ai] background promise rejected', err);
-    warnSpy.mockRestore();
+    expect(mockWarn).toHaveBeenCalledWith('background promise rejected', { err: String(err) });
   });
 
   it('accepts multiple sequential calls', async () => {
@@ -71,14 +76,12 @@ describe('waitUntil', () => {
 
   it('uses the shim fallback when @vercel/functions is not available', async () => {
     const mod = await import('../src/wait-until');
-    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const err = new Error('shim fallback');
     const promise = new Promise((_, reject) => {
       setTimeout(() => reject(err), 100);
     });
     mod.waitUntil(promise);
     await new Promise((r) => setTimeout(r, 200));
-    expect(warnSpy).toHaveBeenCalledWith('[ai] background promise rejected', err);
-    warnSpy.mockRestore();
+    expect(mockWarn).toHaveBeenCalledWith('background promise rejected', { err: String(err) });
   });
 });

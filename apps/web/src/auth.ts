@@ -301,21 +301,23 @@ export const { handlers, auth, signIn, signOut } = _nextAuth({
       if (!userId) {
         // Create new OAuth user
         userId = crypto.randomUUID();
-        // Use `as any` on tx to work around Drizzle transaction type narrowing
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        await (db.transaction as any)(async (tx: any) => {
-          await tx.insert(schema.users).values({
-            id: userId,
+        // Drizzle transaction types are complex with multi-table schemas.
+        // Use the same double-cast pattern as withTenantDb in client.ts.
+        const newUserId = userId; // narrow to string for the transaction closure
+        await db.transaction(async (tx) => {
+          const t = tx as unknown as typeof db;
+          await t.insert(schema.users).values({
+            id: newUserId,
             email,
             name: profile.name ?? email,
             image:
               profile.picture ??
               `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(String(profile.name ?? email))}`,
-            emailVerified: new Date(), // Google verified
-            hashedPassword: null, // OAuth-only account
+            emailVerified: new Date(),
+            hashedPassword: null,
           });
-          await tx.insert(schema.userSettings).values({
-            userId,
+          await t.insert(schema.userSettings).values({
+            userId: newUserId,
             onboardingCompleted: false,
             defaultSymbol: 'XAUUSD',
           });

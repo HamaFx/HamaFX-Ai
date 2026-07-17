@@ -29,6 +29,7 @@
 import { getCandles } from '@hamafx/data';
 import { computeIndicator } from '@hamafx/indicators';
 import { computeStructure } from '@hamafx/indicators';
+import { createCategorizedLogger } from '@hamafx/shared/logger';
 import {
   AnalyzeTechnicalInputSchema,
   priceDecimals,
@@ -50,6 +51,8 @@ declare module '@hamafx/shared' {
     analyze_technical: { input: z.infer<typeof InputSchema> };
   }
 }
+
+const tlog = createCategorizedLogger('ai', { component: 'analyze-technical' });
 
 /** Number of bars to scan for each per-tf computation. */
 const COUNT = 200;
@@ -123,7 +126,7 @@ async function readOneTimeframe(
     });
   } catch (err) {
     // Best-effort: surface the failure in the response, never bubble.
-    console.warn(`[analyze_technical] ${symbol} ${tf} failed`, err);
+    tlog.warn(`${symbol} ${tf} failed`, { err: String(err) });
     return null;
   }
 }

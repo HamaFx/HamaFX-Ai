@@ -47,6 +47,13 @@ export const PROVIDER_IDS = [
 ] as const;
 export type ProviderId = (typeof PROVIDER_IDS)[number];
 
+/**
+ * Deduplicated Set derived from PROVIDER_IDS — used by cost tracking
+ * and usage analytics to canonicalize provider prefixes from model IDs.
+ * Single source of truth; keep PROVIDER_IDS updated and this follows.
+ */
+export const KNOWN_BYOK_PROVIDERS: ReadonlySet<string> = new Set(PROVIDER_IDS);
+
 export interface ByokPayload {
   google?: string;
   /**

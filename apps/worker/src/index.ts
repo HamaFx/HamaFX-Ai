@@ -307,13 +307,11 @@ export async function runWorker(args: RunWorkerArgs): Promise<RunningWorker> {
         if (r.written > 0) {
           log.info('flushed live_ticks', { written: r.written, ticks: r.totalTicks });
         }
-        // Reset failure counter on success
         tickFlushFailureCount = 0;
       } catch (err) {
         tickFlushFailureCount += 1;
         log.error('flushLiveTicks failed', { err: String(err), consecutiveFailures: tickFlushFailureCount });
 
-        // Rate-limited Sentry capture for sustained failures
         const now = Date.now();
         if (tickFlushFailureCount >= 3 && now - lastTickFlushCaptureAt > TICK_FLUSH_CAPTURE_COOLDOWN_MS) {
           lastTickFlushCaptureAt = now;
@@ -325,6 +323,7 @@ export async function runWorker(args: RunWorkerArgs): Promise<RunningWorker> {
       }
     })();
   }, flushIntervalMs);
+  flushTimer.unref();
 
   // Healthchecks heartbeat — only fires if we've actually seen a tick in
   // the last 60s. A silent connection is treated as a failure so
@@ -340,6 +339,7 @@ export async function runWorker(args: RunWorkerArgs): Promise<RunningWorker> {
         void ping(env.HC_SIGNALR_UUID, 'fail', `no_ticks_for=${Math.floor(ageMs / 1000)}s`);
       }
     }, heartbeatIntervalMs);
+    heartbeatTimer.unref();
   }
 
   const stop = async (): Promise<void> => {

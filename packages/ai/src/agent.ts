@@ -20,7 +20,7 @@
 // HTTP shell.
 
 import { getMessageText, pickAiEnv, type AiEnvKeys, type ServerEnv } from '@hamafx/shared';
-import { logErrorContext } from '@hamafx/shared/logger';
+import { logErrorContext, createCategorizedLogger } from '@hamafx/shared/logger';
 import {
   convertToModelMessages,
   stepCountIs,
@@ -73,13 +73,14 @@ import { withToolContext, type ToolContext } from './tool-context';
 import { tools } from './tools';
 import { enforceCitations } from './verification';
 import { waitUntil } from './wait-until';
-import { getDb, schema } from '@hamafx/db';
+import { getDb, schema, getUserWithSettings } from '@hamafx/db';
 import { extractDecisionSignal, createDecisionSignal } from './decision-signals';
 import type { UserSettingsRow } from '@hamafx/db/schema';
-import { eq } from 'drizzle-orm';
 import { extractRateLimits } from './rate-limits';
 import { noteLlmRateLimit, awaitLlmHeadroom } from './llm-throttle';
 import { withDiagnostics, recordStep, completeStep, recordError, exportDiagnosticContext } from './diagnostics';
+
+const alog = createCategorizedLogger('ai', { component: 'agent' });
 
 export interface RunChatArgs {
   threadId: string;
@@ -139,16 +140,7 @@ async function runChatInner(args: RunChatArgs) {
   recordStep('chat_turn_start', { threadId, model: modelOverride ?? 'default' });
 
   const db = getDb();
-  const [userSettings, userRow] = await Promise.all([
-    db.select()
-      .from(schema.userSettings)
-      .where(eq(schema.userSettings.userId, userId))
-      .then((rows) => rows[0]),
-    db.select({ name: schema.users.name, email: schema.users.email })
-      .from(schema.users)
-      .where(eq(schema.users.id, userId))
-      .then((rows) => rows[0]),
-  ]);
+  const { settings: userSettings, user: userRow } = await getUserWithSettings(userId);
 
   if (!userSettings) {
     throw new Error('User settings not found. Please complete onboarding.');
@@ -360,9 +352,7 @@ async function runChatInner(args: RunChatArgs) {
         throw err;
       }
 
-      console.warn(
-        `[ai] Fallback triggered! Model resolution failed. Trying next fallback provider: "${nextFallback.providerId}"`,
-      );
+      alog.warn('Fallback triggered — model resolution failed', { nextProvider: nextFallback.providerId });
 
       fallbackInfo = makeFallbackPart(
         currentModelOverride ?? 'default',
@@ -436,7 +426,7 @@ async function runChatInner(args: RunChatArgs) {
                 : 'plan_failed',
         });
       } catch (err) {
-        console.warn('[ai] planner threw — falling back', err);
+        alog.warn('planner threw — falling back', { err: String(err) });
       }
     }
     void plannerStartedAt;
@@ -508,7 +498,7 @@ async function runChatInner(args: RunChatArgs) {
       toolCalls: 0,
       ms: 0,
       kind: `routing_${routing.domain}` as const,
-    }).catch((err) => console.warn('[ai] routing telemetry failed', err));
+    }).catch((err) => alog.warn('routing telemetry failed', { err: String(err) }));
 
     // 5) Stream. AI Gateway model strings ("openai/gpt-4.1") are accepted
     //    directly when AI_GATEWAY_API_KEY is set.
@@ -574,7 +564,7 @@ async function runChatInner(args: RunChatArgs) {
                 parts = [...baseParts, warning as unknown as UIMessage['parts'][number]];
               }
             } catch (err) {
-              console.warn('[ai] citation enforcer failed — skipping', err);
+              alog.warn('citation enforcer failed', { err: String(err) });
             }
 
             // Phase B — UX_UPGRADE_PLAN.md item 15.
@@ -607,7 +597,7 @@ async function runChatInner(args: RunChatArgs) {
                 snapshot,
                 responseMessages: response.messages,
               }).catch((err) =>
-                console.warn('[ai] decision signal extraction failed', err),
+                alog.warn('decision signal extraction failed', { err: String(err) }),
               );
             }
           }
@@ -639,7 +629,7 @@ async function runChatInner(args: RunChatArgs) {
                 })
                 .execute()
                 .catch((err: unknown) =>
-                  console.warn('[ai] failed to save provider test rate limits', err),
+                  alog.warn('failed to save provider test rate limits', { err: String(err) }),
                 ),
             );
           }
@@ -663,7 +653,7 @@ async function runChatInner(args: RunChatArgs) {
             usage?.outputTokens ?? 0,
           );
           await applyBudgetDelta(userId, actualCost - reservedUsd).catch((err) =>
-            console.warn('[ai] applyBudgetDelta failed', err),
+            alog.warn('applyBudgetDelta failed', { err: String(err) }),
           );
           if (env.LOG_PROMPTS) {
             console.info('[ai] finish reason=%s tokens=%o', finishReason, usage);
@@ -723,9 +713,7 @@ async function runChatInner(args: RunChatArgs) {
         throw err;
       }
 
-      console.warn(
-        `[ai] Fallback triggered! Provider "${providerId}" failed (${decision.reason}: ${decision.message}). Trying next fallback provider: "${nextFallback.providerId}"`,
-      );
+      alog.warn('Fallback triggered — provider failed', { provider: String(providerId), reason: decision.reason, message: decision.message, nextProvider: nextFallback.providerId });
 
       fallbackInfo = makeFallbackPart(
         currentModelOverride ?? `${providerId}:${bareModelId}`,
@@ -742,7 +730,7 @@ async function runChatInner(args: RunChatArgs) {
   // budget reservation we took at the top of the turn. Without this, repeated
   // failures inflate daily_ai_spend and prematurely trip BudgetExceededError.
   await applyBudgetDelta(userId, -reservedUsd).catch((err) =>
-    console.warn('[ai] failed to release budget reservation after exhausted retries', err),
+    alog.warn('failed to release budget reservation after exhausted retries', { err: String(err) }),
   );
   throw lastError ?? new Error('All fallback attempts failed');
 }

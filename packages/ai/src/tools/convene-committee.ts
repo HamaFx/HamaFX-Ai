@@ -136,8 +136,7 @@ No markdown fences, no preamble.`;
       ...(tools ? { tools, stopWhen: stepCountIs(3) } : {}),
     });
 
-    const parsed = parseJson<Omit<CommitteeVerdict, 'persona' | 'sources'>>(text);
-    if (!parsed) throw new Error('Parse failed');
+    const parsed = parseJsonOrThrow<Omit<CommitteeVerdict, 'persona' | 'sources'>>(text, 'economist');
 
     // Extract citations from the tool calls if available
     let sources: string[] = [];
@@ -194,8 +193,7 @@ No markdown fences, no preamble.`;
       system: "You are an expert forex technical analyst. Always output raw JSON.",
       prompt,
     });
-    const parsed = parseJson<Omit<CommitteeVerdict, 'persona'>>(text);
-    if (!parsed) throw new Error('Parse failed');
+    const parsed = parseJsonOrThrow<Omit<CommitteeVerdict, 'persona'>>(text, 'technician');
     return { persona: 'technician', ...parsed } as CommitteeVerdict;
   } catch (err) {
     logErrorContext(err, 'committee/technician_failed', {}, 'ai');
@@ -234,8 +232,7 @@ No markdown fences, no preamble.`;
       system: "You are an expert risk manager. Always output raw JSON.",
       prompt,
     });
-    const parsed = parseJson<Omit<CommitteeVerdict, 'persona'>>(text);
-    if (!parsed) throw new Error('Parse failed');
+    const parsed = parseJsonOrThrow<Omit<CommitteeVerdict, 'persona'>>(text, 'risk_manager');
     return { persona: 'risk_manager', ...parsed } as CommitteeVerdict;
   } catch (err) {
     logErrorContext(err, 'committee/risk_manager_failed', {}, 'ai');
@@ -265,8 +262,7 @@ No markdown fences, no preamble.`;
       system: "You are the head trader. Always output raw JSON.",
       prompt,
     });
-    const parsed = parseJson<any>(text);
-    if (!parsed) throw new Error('Parse failed');
+    const parsed = parseJsonOrThrow<any>(text, 'moderator');
     return {
       grade: parsed.grade ?? 'C',
       goNoGo: parsed.goNoGo ?? 'caution',
@@ -281,6 +277,16 @@ No markdown fences, no preamble.`;
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
+
+/**
+ * Parse JSON from LLM output, throwing on failure with the persona name
+ * for clearer error attribution.
+ */
+function parseJsonOrThrow<T>(text: string, persona: string): T {
+  const parsed = parseJson<T>(text);
+  if (!parsed) throw new Error(`Parse failed (${persona})`);
+  return parsed;
+}
 
 function parseJson<T>(text: string): T | null {
   try {
