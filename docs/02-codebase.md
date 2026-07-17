@@ -883,6 +883,8 @@ Pattern: `export * from './schema/index'` used within `@hamafx/db` to flatten ta
 - CI runs both PGlite and Postgres test suites.
 - PGlite runs in-memory or disk-backed depending on `PGLITE_DATA_DIR`.
 
+> **⚠️ drizzle-orm ≥0.45.2:** PGlite errors thrown through drizzle are wrapped with `"Failed query:"` prefix; the original error is in `err.cause`. Always extract via `err.cause.message` before checking error keywords like `"already exists"` or `"cannot insert multiple commands"`. See `packages/db/src/pglite-client.ts` for the canonical extraction pattern.
+
 ### Error Handling
 
 - Use error codes from `@hamafx/shared/errors.ts`.

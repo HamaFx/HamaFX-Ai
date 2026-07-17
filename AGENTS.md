@@ -205,6 +205,7 @@ For fundamental/technical turns: cheap model generates JSON plan, persisted as s
 - PGlite runs embedded Postgres via WASM, stored in `.hamafx/data/`
 - pgvector NOT available in PGlite — vector tables use `real[]` fallback
 - When adding new DB features: ensure they work without pgvector
+- **drizzle-orm ≥0.45.2 error wrapping:** PGlite errors thrown through drizzle are wrapped with a `"Failed query: {SQL}"` prefix. The original PGlite error is stored in `err.cause`. Any code that inspects PGlite error messages (e.g., checking for `"already exists"`, `"does not exist"`, `"cannot insert multiple commands"`) must extract the underlying message via `err instanceof Error && err.cause instanceof Error ? err.cause.message : err.message`. See `packages/db/src/pglite-client.ts` (both `executeWithFallback()` and `applyMigrations()`) and the test files `schema-drift.test.ts` / `full-migration-chain.test.ts` for the canonical pattern.
 
 ### Supabase Pooler
 - Uses transaction mode: `prepare: false` on Postgres client

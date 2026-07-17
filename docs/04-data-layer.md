@@ -420,6 +420,13 @@ When neither `DATABASE_URL` nor `POSTGRES_URL` is set, the system uses **PGlite*
 - **pgvector handling:** Vector-specific SQL (CREATE EXTENSION, vector column types, HNSW indexes) is rewritten — vector columns become `real[]` and HNSW indexes are skipped. Any statement referencing `vector` or `hnsw` that fails is silently caught.
 - **Unified entry point:** `getLocalDb()` in `packages/db/src/local-db.ts` auto-selects Postgres or PGlite.
 
+> **⚠️ drizzle-orm ≥0.45.2 — Error format change:** Starting with drizzle-orm 0.45.2, PGlite errors thrown through drizzle's query layer are wrapped with a `"Failed query: {SQL}"` prefix. The original PGlite error is placed in `err.cause`. Any code that inspects PGlite error messages must extract the underlying error:
+> ```ts
+> const causeMsg = err instanceof Error && err.cause instanceof Error ? err.cause.message : undefined;
+> const msg = causeMsg ?? (err instanceof Error ? err.message : String(err));
+> ```
+> This affects `executeWithFallback()` (multi-statement detection), `applyMigrations()` (idempotency guards), and the test helpers in `schema-drift.test.ts` and `full-migration-chain.test.ts`. When adding new error-message checks against PGlite, use the `err.cause` extraction pattern from `pglite-client.ts`.
+
 ### 2.4 Migrations
 
 - 40 migrations (`0000` through `0039`) in `packages/db/drizzle/`.
