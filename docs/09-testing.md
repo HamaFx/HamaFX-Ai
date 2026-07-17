@@ -372,3 +372,55 @@ describe('logErrorContext', () => {
 4. Coverage report
 
 15-minute timeout. No deploy step (Vercel handles that). No eval step (manual only).
+
+## Load & Performance Testing (k6)
+
+Backend HTTP load testing is handled by [Grafana k6](https://grafana.com/docs/k6/),
+a separate, standalone TypeScript project under `loadtest/`. It is **not** part of
+the pnpm workspace and talks to the running app only over HTTP.
+
+k6 fills the gap between Vitest (correctness), Playwright (UX), and Lighthouse
+(front-end vitals) by answering: *how many concurrent users can the API sustain?*
+
+### Quick Start
+
+```bash
+cd loadtest
+npm install
+npm run typecheck
+
+# Strategy A (legacy bypass, simplest)
+docker compose -f docker-compose.loadtest.yml up -d --wait
+k6 run -e K6_BASE_URL=http://localhost:3000 -e K6_AUTH_MODE=legacy tests/smoke-read-mix.ts
+```
+
+### Test Types
+
+| Type | Purpose | CI |
+|---|---|---|
+| Smoke | Validate script + SUT wiring | Nightly |
+| Average-load | Baseline latency SLOs (p95/p99) | Nightly |
+| Stress | Find the throughput ceiling | Manual only |
+| Spike | Surge → recovery validation | Manual only |
+| Soak | Memory/resource leak detection (hours) | Manual only |
+| Chat | LLM streaming latency (guarded) | Manual only |
+
+### CI
+
+`.github/workflows/loadtest.yml` runs smoke + average-load nightly at 3 AM UTC.
+All other test types are `workflow_dispatch` only. k6 **never gates PRs**.
+
+Full documentation: [`loadtest/README.md`](../loadtest/README.md).
+
+### Auth Strategies
+
+- **Strategy A (legacy)**: `AUTH_MODE=legacy`, single synthetic user, no cookies/CSRF.
+  Rate limits lifted in the throwaway SUT. Best for local throughput profiling.
+- **Strategy B (session)**: real NextAuth sessions for N seeded users, distributing
+  load across users so per-user rate limits reflect reality.
+
+### Out of Scope
+
+The worker (`apps/worker`) is not an end-user HTTP server; it cannot be load-tested
+via k6. Worker load is *indirect* (DB write pressure from tick volume). A separate
+harness would be needed for worker load characterization.
