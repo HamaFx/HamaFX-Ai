@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "build": "tsc -p tsconfig.build.json && cp -r lib/data dist/lib/data/",
     "typecheck": "tsc --noEmit",
     "smoke": "k6 run tests/smoke-read-mix.ts",
     "load": "k6 run tests/load-read-mix.ts",

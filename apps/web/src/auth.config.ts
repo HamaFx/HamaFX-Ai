@@ -59,8 +59,13 @@ export const authConfig: NextAuthConfig = {
   },
   callbacks: {
     authorized({ auth, request: { nextUrl } }) {
-      // MED-05: Only allow legacy mode in development
-      if (process.env.AUTH_MODE === 'legacy' && process.env.NODE_ENV !== 'production') return true;
+      // MED-05: Only allow legacy mode in development (or with explicit opt-in
+      // via ALLOW_LEGACY_AUTH — needed for Docker builds where NODE_ENV is
+      // always "production" at build time in Edge middleware).
+      if (
+        process.env.AUTH_MODE === 'legacy' &&
+        (process.env.NODE_ENV !== 'production' || process.env.ALLOW_LEGACY_AUTH === 'true')
+      ) return true;
 
       const isLoggedIn = !!auth?.user;
       const isOnAuth =

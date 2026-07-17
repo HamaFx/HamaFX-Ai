@@ -2,11 +2,11 @@
 // Models low-concurrency LLM streaming with generous latency thresholds.
 // Requires seeded users with threadIds (Strategy B only).
 import { sleep } from 'k6';
-import { env } from '../config/environments.ts';
-import { CHAT, CHAT_TAGGED } from '../config/thresholds.ts';
-import { bootstrapAuth, applyAuth, pickUser } from '../lib/auth.ts';
-import { chatTurn } from '../scenarios/chat.ts';
-import { handleSummary } from '../lib/summary.ts';
+import { env } from '../config/environments.js';
+import { CHAT, CHAT_TAGGED } from '../config/thresholds.js';
+import { bootstrapAuth, applyAuth, pickUser } from '../lib/auth.js';
+import { chatTurn } from '../scenarios/chat.js';
+import { handleSummary } from '../lib/summary.js';
 
 // Guard: refuse to run unless explicitly enabled.
 if (__ENV['K6_ENABLE_CHAT'] !== 'true') {

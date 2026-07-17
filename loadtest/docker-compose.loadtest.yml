@@ -34,12 +34,18 @@ services:
     build:
       context: ..
       dockerfile: Dockerfile
+      args:
+        # Needed during next build for NextAuth config validation
+        AUTH_SECRET: loadtest-auth-secret-32-chars-x
+        # Needed for Edge middleware legacy auth bypass in production builds
+        ALLOW_LEGACY_AUTH: "true"
     ports:
       - "3000:3000"
     environment:
       DATABASE_URL: postgres://hamafx:loadtest@db:5432/hamafx
       NODE_ENV: development
       AUTH_MODE: legacy
+      ALLOW_LEGACY_AUTH: "true"
       DB_POOL_MAX: "5"
       # Lift all rate limits so k6 can push throughput
       MARKET_READ_RATE_LIMIT: "100000"
@@ -53,10 +59,12 @@ services:
       AI_BULK_DELETE_RATE_LIMIT: "1000"
       JOURNAL_IMPORT_RATE_LIMIT: "1000"
       # Bootstrap secrets (throwaway — never use these in production)
-      AUTH_COOKIE_SECRET: loadtest-cookie-secret-32-chars-x
-      CRON_SECRET: loadtest-cron-secret
-      NEXTAUTH_SECRET: loadtest-nextauth-secret-32chars
-      ENCRYPTION_SECRET: loadtest-encryption-secret-32ch
+      # Must be >= 32 chars per auth env validation.
+      AUTH_COOKIE_SECRET: abcdef0123456789abcdef0123456789
+      CRON_SECRET: abcdef0123456789abcdef0123456789
+      NEXTAUTH_SECRET: abcdef0123456789abcdef0123456789
+      AUTH_SECRET: abcdef0123456789abcdef0123456789
+      ENCRYPTION_SECRET: abcdef0123456789abcdef0123456789
       NEXTAUTH_URL: http://localhost:3000
       # Required env vars for health check
       VAPID_PUBLIC_KEY: "placeholder"

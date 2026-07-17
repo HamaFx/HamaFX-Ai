@@ -41,18 +41,37 @@ import { signUserId, USER_ID_HEADER, USER_ID_SIG_HEADER, getSigningSecret } from
 
 const { auth } = NextAuth(authConfig);
 
-export default auth(async (req) => {
+// NB: explicit `any` annotation prevents a Next.js build error with
+// NextAuth v5 where the inferred return type of auth() references an
+// internal next-auth/lib/types path that tsc cannot resolve during
+// the next build declaration phase.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const middleware: any = auth(async (req) => {
   const requestId = readOrCreateRequestId(req);
 
   // ── Legacy Mode Fallback ──────────────────────────────────────────────
-  // MED-05: Only allow legacy mode in development
-  if (process.env.AUTH_MODE === 'legacy' && process.env.NODE_ENV !== 'production') {
+  // MED-05: Only allow legacy mode in development (or with explicit opt-in
+  // via ALLOW_LEGACY_AUTH — needed for Docker builds where NODE_ENV is
+  // always "production" at build time in Edge middleware).
+  if (
+    process.env.AUTH_MODE === 'legacy' &&
+    (process.env.NODE_ENV !== 'production' || process.env.ALLOW_LEGACY_AUTH === 'true')
+  ) {
     const headers = new Headers(req.headers);
     headers.set(REQUEST_ID_HEADER, requestId);
     headers.set('x-user-id', '__system__');
     const next = NextResponse.next({ request: { headers } });
     next.headers.set(REQUEST_ID_HEADER, requestId);
     next.headers.set('x-user-id', '__system__');
+    // Sign the x-user-id header so route handlers can verify the
+    // HMAC fast-path (lib/api.ts::getUserIdFromRequest). Without
+    // the signature, the fast path fails and the auth() slow path
+    // returns null, causing 401 on all wrapped endpoints.
+    const secret = getSigningSecret();
+    if (secret) {
+      const sig = await signUserId('__system__', requestId, secret);
+      next.headers.set(USER_ID_SIG_HEADER, sig);
+    }
     return next;
   }
 
@@ -128,6 +147,8 @@ export default auth(async (req) => {
   });
   return next;
 });
+
+export default middleware;
 
 export const config = {
   // Same exclusions as before — /api/auth is NextAuth's catch-all,

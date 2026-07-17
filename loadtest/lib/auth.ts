@@ -16,9 +16,20 @@
 
 import http from 'k6/http';
 import type { RefinedResponse, ResponseType } from 'k6/http';
-import type { SessionCtx } from '../config/environments';
-import { env } from '../config/environments';
-import seededUsers from './data/seeded-users.json' with { type: 'json' };
+import type { SessionCtx } from '../config/environments.js';
+import { env } from '../config/environments.js';
+
+// Load seeded users manifest at init time (k6 does NOT support
+// `import ... with { type: 'json' }` — esbuild hangs on it).
+let seededUsers: Array<{ email: string; threadId: string }> = [];
+try {
+  seededUsers = JSON.parse(
+    open('./data/seeded-users.json') as string,
+  ) as typeof seededUsers;
+} catch {
+  // File may not exist — fine for Strategy A (legacy mode).
+  seededUsers = [];
+}
 
 // ── Bootstrap (called in setup()) ──────────────────────────────────
 

@@ -1,7 +1,7 @@
 // Reusable check() helpers for k6 tests.
 import { check, type Checkers } from 'k6';
 import type { RefinedResponse, ResponseType } from 'k6/http';
-import { rateLimited, authFailures } from './metrics';
+import { rateLimited, authFailures } from './metrics.js';
 
 /**
  * Assert the response has a 200 status and its body is parseable JSON.

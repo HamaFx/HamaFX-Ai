@@ -2,15 +2,15 @@
 // Validates script wiring + SUT connectivity with minimal load.
 // Run this FIRST before any other load test.
 import { sleep } from 'k6';
-import { env } from '../config/environments.ts';
-import { smoke } from '../config/load-profiles.ts';
-import { MARKET_READ, MARKET_READ_TAGGED } from '../config/thresholds.ts';
-import { bootstrapAuth, applyAuth, pickUser } from '../lib/auth.ts';
-import { marketRead } from '../scenarios/market-read.ts';
-import { handleSummary } from '../lib/summary.ts';
+import { env } from '../config/environments.js';
+import { smoke } from '../config/load-profiles.js';
+import { MARKET_READ, MARKET_READ_TAGGED } from '../config/thresholds.js';
+import { bootstrapAuth, applyAuth, pickUser } from '../lib/auth.js';
+import { marketRead } from '../scenarios/market-read.js';
+import { handleSummary } from '../lib/summary.js';
 
 export const options = {
-  ...smoke('smoke-market-read', 1, 3),
+  ...smoke(1, 3),
   thresholds: {
     http_req_failed: MARKET_READ.httpReqFailed,
     checks: MARKET_READ.checks,

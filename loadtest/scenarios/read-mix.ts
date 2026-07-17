@@ -3,8 +3,8 @@
 import { sleep } from 'k6';
 import { SharedArray } from 'k6/data';
 import { randomItem } from 'https://jslib.k6.io/k6-utils/1.4.0/index.js';
-import { getJson } from '../lib/http';
-import type { SessionCtx } from '../config/environments';
+import { getJson } from '../lib/http.js';
+import type { SessionCtx } from '../config/environments.js';
 
 const symbols = new SharedArray('symbols', () =>
   JSON.parse(open('../lib/data/symbols.json') as string) as string[],

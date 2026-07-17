@@ -7,8 +7,8 @@
 
 import http from 'k6/http';
 import type { RefinedResponse, ResponseType, Params } from 'k6/http';
-import { env } from '../config/environments';
-import { record429, recordAuthFailure } from './checks';
+import { env } from '../config/environments.js';
+import { record429, recordAuthFailure } from './checks.js';
 
 export type HttpHeaders = Record<string, string>;
 

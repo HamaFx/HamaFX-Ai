@@ -30,6 +30,10 @@ COPY --from=deps /app/pnpm-lock.yaml ./
 COPY . .
 
 # Build only the web app (Turborepo handles transitive deps)
+ARG AUTH_SECRET
+ARG ALLOW_LEGACY_AUTH
+ENV AUTH_SECRET=$AUTH_SECRET
+ENV ALLOW_LEGACY_AUTH=$ALLOW_LEGACY_AUTH
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN pnpm turbo run build --filter=@hamafx/web...
 
@@ -44,8 +48,9 @@ COPY --from=builder /app/apps/web/.next/standalone ./
 COPY --from=builder /app/apps/web/.next/static ./apps/web/.next/static
 COPY --from=builder /app/apps/web/public ./apps/web/public
 
-# Copy drizzle migrations for auto-migrate on boot
+# Copy drizzle migrations and config for auto-migrate on boot
 COPY --from=builder /app/packages/db/drizzle ./packages/db/drizzle
+COPY --from=builder /app/packages/db/drizzle.config.ts ./packages/db/drizzle.config.ts
 
 # Copy entrypoint
 COPY apps/web/docker-entrypoint.sh /entrypoint.sh
