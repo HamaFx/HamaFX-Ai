@@ -25,6 +25,7 @@
 //   - Error safety: user-facing errors are sanitized (no internal details leaked).
 
 import { pickAiEnv, type ServerEnv } from '@hamafx/shared';
+import { logErrorContext } from '@hamafx/shared/logger';
 import type { UIMessage } from 'ai';
 import { runChat } from '../agent';
 import * as crypto from 'crypto';
@@ -113,7 +114,7 @@ async function sendBotResponse(
     if (response.imageCaption !== undefined) options.caption = response.imageCaption;
     if (response.parseMode !== undefined) options.parseMode = response.parseMode;
     await sendPhoto(botToken, chatId, response.image, options).catch((err: unknown) => {
-      console.error('[telegram] sendPhoto failed:', err instanceof Error ? err.message : err);
+      logErrorContext(err, 'telegram/sendPhoto_failed', {}, 'telegram');
     });
     return;
   }
@@ -122,7 +123,7 @@ async function sendBotResponse(
     const options: Parameters<typeof sendTextMessage>[3] = {};
     if (response.parseMode !== undefined) options.parseMode = response.parseMode;
     await sendTextMessage(botToken, chatId, response.text, options).catch((err: unknown) => {
-      console.error('[telegram] sendMessage failed:', err instanceof Error ? err.message : err);
+      logErrorContext(err, 'telegram/sendMessage_failed', {}, 'telegram');
     });
   }
 }
@@ -146,7 +147,7 @@ async function sendLinkPrompt(chatId: number, botToken: string): Promise<void> {
     ].join('\n'),
     [[{ text: '🔗 Open Settings', callback_data: 'open_settings' }]],
   ).catch((err: unknown) => {
-    console.error('[telegram] sendLinkPrompt failed:', err instanceof Error ? err.message : err);
+    logErrorContext(err, 'telegram/sendLinkPrompt_failed', {}, 'telegram');
   });
 }
 
@@ -180,7 +181,7 @@ export async function handleTelegramWebhook(update: TelegramUpdate, env: ServerE
 
   const botToken = env.TELEGRAM_BOT_TOKEN;
   if (!botToken) {
-    console.error('[telegram] TELEGRAM_BOT_TOKEN not configured');
+    logErrorContext(new Error('TELEGRAM_BOT_TOKEN not configured'), 'telegram/bot_token_missing', {}, 'telegram');
     markProcessed(updateId);
     return;
   }
@@ -275,7 +276,7 @@ async function handleCommand(
     const response = await dispatcher.dispatch(text, ctx);
     await sendBotResponse(chatId, response, botToken);
   } catch (err) {
-    console.error('[telegram] Command dispatch failed:', err);
+    logErrorContext(err, 'telegram/command_dispatch_failed', {}, 'telegram');
     await sendTextMessage(botToken, chatId, sanitizeError(err));
   }
 }
@@ -358,7 +359,7 @@ async function handleFreeFormMessage(
       aiResponseText || 'I processed your request. Check the web UI for full details.',
     );
   } catch (err) {
-    console.error('[telegram] AI agent failed:', err);
+    logErrorContext(err, 'telegram/ai_agent_failed', {}, 'telegram');
     await sendTextMessage(botToken, chatId, sanitizeError(err));
   }
 }

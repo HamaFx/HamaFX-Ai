@@ -184,7 +184,6 @@ export const POST = withAuth<void>(async (req, { user }) => {
                 extra: { threadId: body.threadId, userId: user.userId },
               });
               log.error({ err: String(err), threadId: body.threadId, mode: resolvedMode }, 'multi-agent chat failed');
-              console.error('[chat] multi-agent SSE error:', err);
               const errorMessage = err instanceof BudgetExceededError
                 ? 'Daily AI budget exceeded. Please try again tomorrow.'
                 : err instanceof Error
@@ -241,8 +240,7 @@ export const POST = withAuth<void>(async (req, { user }) => {
       extra: { threadId: body.threadId, userId: user.userId },
     });
     // Surface the actual error message to the client instead of a generic
-    // "Internal error". Log the full error to Vercel runtime logs.
-    console.error('[chat] outer catch error:', err);
+    // "Internal error". Log already captured via log.error() above.
     const message = err instanceof Error ? err.message : String(err);
     const requestId = req.headers.get('x-request-id');
     const errorHeaders: Record<string, string> = {};

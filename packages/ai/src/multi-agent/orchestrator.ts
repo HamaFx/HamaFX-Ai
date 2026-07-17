@@ -24,6 +24,7 @@ import { selectAgents, resolveMode } from './modes';
 import { saveAgentOpinions } from './persistence';
 import { appendUserMessage, appendAssistantMessage, recordTelemetry } from '../persistence';
 import { enforceCitations } from '../verification';
+import { logErrorContext } from '@hamafx/shared/logger';
 import { extractDecisionSignal, createDecisionSignal, type ExtractionContext } from '../decision-signals';
 import { TechnicalAgent } from './agents/technical-agent';
 import { FundamentalAgent } from './agents/fundamental-agent';
@@ -142,7 +143,7 @@ export async function runMultiAgentChat(args: RunMultiAgentArgs): Promise<MultiA
             return opinion;
           } catch (err) {
             const msg = err instanceof Error ? err.message : String(err);
-            console.error(`[multi-agent] ${agent.name} failed`, err);
+            logErrorContext(err, 'multi-agent/agent_failed', { agentName: agent.name }, 'ai');
             onProgress?.({ type: 'agent_error', agent: agent.name, error: msg });
             return null;
           }
@@ -177,7 +178,7 @@ export async function runMultiAgentChat(args: RunMultiAgentArgs): Promise<MultiA
       decisionCostUsd = decisionResult.costUsd;
       onProgress?.({ type: 'fusion_done' });
     } catch (err) {
-      console.error('[multi-agent] Decision agent failed', err);
+      logErrorContext(err, 'multi-agent/decision_agent_failed', {}, 'ai');
       onProgress?.({ type: 'fusion_done' });
       if (validOpinions.length > 0) {
         finalText = validOpinions
@@ -255,7 +256,7 @@ export async function runMultiAgentChat(args: RunMultiAgentArgs): Promise<MultiA
         reasoning: o.reasoning, rawData: o.rawData, model: o.model,
         costUsd: o.costUsd, latencyMs: o.latencyMs,
       })),
-    }).catch((err) => console.error('[multi-agent] saveAgentOpinions failed', err));
+    }).catch((err) => logErrorContext(err, 'multi-agent/save_opinions_failed', {}, 'ai'));
   }
 
   // ── Q2: Extract + persist decision signal from multi-agent output ──

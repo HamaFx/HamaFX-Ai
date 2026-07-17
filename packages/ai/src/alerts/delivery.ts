@@ -29,6 +29,7 @@
 //      and return without calling markFired so the next cron tick retries.
 
 import type { Alert } from '@hamafx/shared';
+import { logErrorContext } from '@hamafx/shared/logger';
 
 import { describeRule, type EvaluatorEnv, type RuleReading } from './evaluator';
 import { markFiredForAlert as markFired } from './persistence';
@@ -106,7 +107,7 @@ async function deliverEmail({ alert, reading, env }: DeliverArgs): Promise<Deliv
     });
   } catch (err) {
     const msg = err instanceof Error ? err.message : 'fetch failed';
-    console.error(`[alerts] resend fetch failed for alert ${alert.id}: ${msg}`);
+    logErrorContext(err, 'alerts/resend_fetch_failed', { alertId: alert.id }, 'email');
     return {
       alertId: alert.id,
       channel: 'email',
@@ -120,7 +121,7 @@ async function deliverEmail({ alert, reading, env }: DeliverArgs): Promise<Deliv
     const truncated = text.slice(0, 200);
     // Log here so the failure is visible in Vercel function logs even though
     // the evaluator only surfaces the DeliveryResult upward.
-    console.error(`[alerts] resend HTTP ${res.status} for alert ${alert.id}: ${truncated}`);
+    logErrorContext(new Error(`resend HTTP ${res.status}: ${truncated}`), 'alerts/resend_http_error', { alertId: alert.id, status: res.status }, 'email');
     return {
       alertId: alert.id,
       channel: 'email',
@@ -193,7 +194,7 @@ async function deliverTelegram({ alert, reading, env }: DeliverArgs): Promise<De
     };
   } catch (err) {
     const msg = err instanceof Error ? err.message : 'fetch failed';
-    console.error(`[alerts] telegram delivery failed for alert ${alert.id}: ${msg}`);
+    logErrorContext(err, 'alerts/telegram_delivery_failed', { alertId: alert.id }, 'telegram');
     return {
       alertId: alert.id,
       channel: 'telegram',
@@ -288,9 +289,7 @@ async function deliverWebPush({ alert, reading, env }: DeliverArgs): Promise<Del
       continue;
     }
     allOkOrGone = false;
-    console.error(
-      `[alerts] web-push HTTP ${r.status} for alert ${alert.id} sub ${sub.id}: ${r.message ?? ''}`,
-    );
+    logErrorContext(new Error(`web-push HTTP ${r.status}`), 'alerts/webpush_http_error', { alertId: alert.id, subscriptionId: sub.id, status: r.status }, 'push');
   }
 
   if (!allOkOrGone) {
@@ -347,7 +346,7 @@ export async function sendDirectNotification(
       });
       emailSent = res.ok;
     } catch (err) {
-      console.error('[alerts] direct email delivery failed', err);
+      logErrorContext(err, 'alerts/direct_email_failed', {}, 'email');
     }
   }
 
@@ -365,7 +364,7 @@ export async function sendDirectNotification(
       });
       telegramSent = res.ok;
     } catch (err) {
-      console.error('[alerts] direct telegram delivery failed', err);
+      logErrorContext(err, 'alerts/direct_telegram_failed', {}, 'telegram');
     }
   }
 

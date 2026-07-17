@@ -35,6 +35,8 @@ import { verifySync } from 'otplib';
 import { decryptSecret } from '@hamafx/shared/encryption';
 import { authConfig } from './auth.config';
 import { getDb, schema } from '@hamafx/db';
+import { logErrorContext } from '@hamafx/shared/logger';
+import { getAuthEnv } from '@/lib/env';
 import { recordAuthEvent } from '@/lib/auth-anomaly';
 
 // `NextAuth()` returns a value whose inferred type carries deep paths into
@@ -50,8 +52,9 @@ const _nextAuth = NextAuth as any;
 const IMPERSONATION_ENABLED =
   process.env.NODE_ENV !== 'production' && process.env.ENABLE_IMPERSONATION === 'true';
 
+const _authEnv = (() => { try { return getAuthEnv(); } catch { return {} as Record<string, string | undefined>; } })();
 const GOOGLE_ENABLED =
-  !!(process.env.AUTH_GOOGLE_ID && process.env.AUTH_GOOGLE_SECRET);
+  !!(_authEnv.AUTH_GOOGLE_ID && _authEnv.AUTH_GOOGLE_SECRET);
 
 /**
  * Known bcrypt hash used for constant-time comparison when no user is found.
@@ -119,7 +122,7 @@ export const { handlers, auth, signIn, signOut } = _nextAuth({
             ))
             .limit(1);
         } catch (err) {
-          console.error('[auth] DB error fetching user:', err);
+          logErrorContext(err, 'auth/db_fetch_user_failed', {}, 'auth');
           return null; // fail closed on unexpected DB errors
         }
 
@@ -142,7 +145,7 @@ export const { handlers, auth, signIn, signOut } = _nextAuth({
         try {
           passwordValid = await bcrypt.compare(password, user.hashedPassword);
         } catch (err) {
-          console.error('[auth] bcrypt error:', err);
+          logErrorContext(err, 'auth/bcrypt_error', {}, 'auth');
           return null; // fail closed on unexpected bcrypt errors
         }
 
@@ -226,8 +229,8 @@ export const { handlers, auth, signIn, signOut } = _nextAuth({
     ...(GOOGLE_ENABLED
       ? [
           Google({
-            clientId: process.env.AUTH_GOOGLE_ID!,
-            clientSecret: process.env.AUTH_GOOGLE_SECRET!,
+            clientId: _authEnv.AUTH_GOOGLE_ID!,
+            clientSecret: _authEnv.AUTH_GOOGLE_SECRET!,
             allowDangerousEmailAccountLinking: false, // we link explicitly in signIn
           }),
         ]

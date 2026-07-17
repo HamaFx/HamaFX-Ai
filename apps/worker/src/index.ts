@@ -506,14 +506,15 @@ const isEntryPoint = (() => {
 
 if (isEntryPoint) {
   main().catch((err: unknown) => {
-    console.error(
-      JSON.stringify({
-        ts: new Date().toISOString(),
-        level: 'error',
-        msg: 'worker bootstrap failed',
-        err: String(err),
-      }),
-    );
+    const msg = JSON.stringify({
+      ts: new Date().toISOString(),
+      level: 'error',
+      msg: 'worker bootstrap failed',
+      err: String(err),
+    });
+    // Use process.stderr so the structured JSON error goes to stderr
+    // where the systemd journal / container runtime can capture it.
+    process.stderr.write(msg + '\n');
     process.exit(1);
   });
 }

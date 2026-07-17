@@ -15,6 +15,7 @@
  */
 
 /* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any, prefer-const */
+import { logErrorContext } from '@hamafx/shared/logger';
 import { getDb, schema } from '@hamafx/db';
 import {
   ConveneCommitteeInputSchema,
@@ -162,7 +163,7 @@ No markdown fences, no preamble.`;
       sources: sources.length > 0 ? sources : undefined,
     };
   } catch (err) {
-    console.error('Economist failed:', err);
+    logErrorContext(err, 'committee/economist_failed', {}, 'ai');
     return fallbackVerdict('economist');
   }
 }
@@ -197,7 +198,7 @@ No markdown fences, no preamble.`;
     if (!parsed) throw new Error('Parse failed');
     return { persona: 'technician', ...parsed } as CommitteeVerdict;
   } catch (err) {
-    console.error('Technician failed:', err);
+    logErrorContext(err, 'committee/technician_failed', {}, 'ai');
     return fallbackVerdict('technician');
   }
 }
@@ -237,7 +238,7 @@ No markdown fences, no preamble.`;
     if (!parsed) throw new Error('Parse failed');
     return { persona: 'risk_manager', ...parsed } as CommitteeVerdict;
   } catch (err) {
-    console.error('Risk Manager failed:', err);
+    logErrorContext(err, 'committee/risk_manager_failed', {}, 'ai');
     return fallbackVerdict('risk_manager');
   }
 }
@@ -272,7 +273,7 @@ No markdown fences, no preamble.`;
       consensus: parsed.consensus ?? 'The committee was unable to reach a firm consensus. Proceed with caution.',
     };
   } catch (err) {
-    console.error('Moderator failed:', err);
+    logErrorContext(err, 'committee/moderator_failed', {}, 'ai');
     return { grade: 'C', goNoGo: 'caution', consensus: 'Moderator analysis failed. Proceed with caution.' };
   }
 }
