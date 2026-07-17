@@ -67,3 +67,5 @@ export * from './provider-daily-quota';
 export * from './billing';
 // U2 — Background multi-agent analysis jobs
 export * from './analysis-jobs';
+// Telegram webhook idempotency dedup
+export * from './telegram-updates';

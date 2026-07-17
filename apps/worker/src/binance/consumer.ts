@@ -1,9 +1,27 @@
+/**
+ * Copyright 2026 HamaFX
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+// Binance WebSocket consumer — extends BaseWsConsumer for kline streams.
+
 import WebSocket from 'ws';
 import type { Logger } from '../log.js';
+import { BaseWsConsumer } from '../base-ws-consumer.js';
 import type { NormalizedTick } from '../signalr/consumer.js';
 
 const BINANCE_WS_BASE = process.env.BINANCE_WS_URL ?? 'wss://stream.binance.com:9443';
-const RECONNECT_DELAYS_MS = [1_000, 2_000, 5_000, 10_000, 30_000];
 const PING_INTERVAL_MS = 3 * 60 * 1_000;
 const MAX_EMPTY_MINUTES = 10;
 
@@ -14,112 +32,68 @@ export interface BinanceStreamConsumerOptions {
   log: Logger;
 }
 
-export class BinanceStreamConsumer {
-  private ws: WebSocket | null = null;
-  private destroyed = false;
-  private reconnectAttempt = 0;
-  private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
-  private pingTimer: ReturnType<typeof setInterval> | null = null;
+export class BinanceStreamConsumer extends BaseWsConsumer {
   private lastMessageAt = 0;
-  private readonly symbols: string[];
+  private symbols: string[];
   private readonly onTick: (tick: NormalizedTick) => void;
-  private readonly onActivity: (() => void) | undefined;
-  private readonly log: Logger;
 
   constructor(opts: BinanceStreamConsumerOptions) {
+    super(opts.log, opts.onActivity);
     this.symbols = opts.symbols;
     this.onTick = opts.onTick;
-    this.onActivity = opts.onActivity;
-    this.log = opts.log;
   }
 
-  async start(): Promise<void> {
-    if (this.destroyed) return;
-    this.connect();
-  }
-
-  /**
-   * Update subscriptions dynamically. Reconnects with the new symbol set.
-   */
+  /** Update subscriptions dynamically. Reconnects with the new symbol set. */
   async updateSubscriptions(added: string[], removed: string[]): Promise<void> {
     const newSet = new Set(this.symbols);
     for (const s of added) newSet.add(s);
     for (const s of removed) newSet.delete(s);
-    
+
     this.symbols.length = 0;
     this.symbols.push(...newSet);
-    
+
     // Reconnect with updated streams
     if (this.ws && !this.destroyed) {
       this.ws.close(4000, 'subscription update');
     }
   }
 
-  async stop(): Promise<void> {
-    this.destroyed = true;
-    if (this.reconnectTimer) clearTimeout(this.reconnectTimer);
-    if (this.pingTimer) clearInterval(this.pingTimer);
-    if (this.ws) {
-      this.ws.on('open', () => {});
-      this.ws.on('message', () => {});
-      this.ws.on('error', () => {});
-      this.ws.on('close', () => {});
-      this.ws.close();
-      this.ws = null;
-    }
-  }
+  // ── BaseWsConsumer overrides ────────────────────────────────────────
 
-  private connect(): void {
-    if (this.destroyed) return;
-
-    // Don't connect when there are no symbols — subscribing to the
-    // all-market !miniTicker@arr stream would flood the worker with
-    // hundreds of tickers per second.
+  protected override buildUrl(): string {
     if (this.symbols.length === 0) {
       this.log.info('binance ws skipping — no symbols configured');
-      return;
+      return '';
     }
-
     const streams = this.symbols
       .map((s) => `${s.toLowerCase()}@kline_1m`)
       .join('/');
-    const url = `${BINANCE_WS_BASE}/stream?streams=${streams}`;
-
-    this.log.info('binance ws connecting', { url: url.slice(0, 80) });
-
-    try {
-      this.ws = new WebSocket(url);
-    } catch (err) {
-      this.log.error('binance ws creation failed', { err: String(err) });
-      this.scheduleReconnect();
-      return;
-    }
-
-    this.ws.on('open', () => {
-      this.log.info('binance ws connected');
-      this.reconnectAttempt = 0;
-      this.lastMessageAt = Date.now();
-      this.startPing();
-    });
-
-    this.ws.on('message', (data: WebSocket.Data) => {
-      this.lastMessageAt = Date.now();
-      this.onActivity?.();
-      this.handleMessage(data);
-    });
-
-    this.ws.on('error', (err: Error) => {
-      this.log.warn('binance ws error', { err: String(err) });
-    });
-
-    this.ws.on('close', (code: number, reason: Buffer) => {
-      this.log.warn('binance ws closed', { code, reason: reason.toString() });
-      this.stopPing();
-      if (!this.destroyed) this.scheduleReconnect();
-    });
+    return `${BINANCE_WS_BASE}/stream?streams=${streams}`;
   }
 
-  private handleMessage(data: WebSocket.Data): void {
+  protected override onOpen(): void {
+    this.log.info('binance ws connected');
+    this.lastMessageAt = Date.now();
+  }
+
+  protected override buildHeartbeatIntervalMs(): number {
+    return PING_INTERVAL_MS;
+  }
+
+  protected override sendHeartbeat(): void {
+    if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+      this.ws.ping();
+    }
+    const idleSec = (Date.now() - this.lastMessageAt) / 1_000;
+    if (idleSec > MAX_EMPTY_MINUTES * 60 && this.ws) {
+      this.log.warn('binance ws idle — reconnecting', { idleSec });
+      this.ws.close(4000, 'idle timeout');
+    }
+  }
+
+  protected override handleMessage(data: WebSocket.Data): void {
+    this.lastMessageAt = Date.now();
+
     try {
       const msg = JSON.parse(data.toString());
       if (!msg || !msg.data) return;
@@ -142,35 +116,6 @@ export class BinanceStreamConsumer {
       this.onTick(tick);
     } catch (err) {
       this.log.warn('binance ws parse error', { err: String(err) });
-    }
-  }
-
-  private scheduleReconnect(): void {
-    if (this.destroyed) return;
-    const delay = RECONNECT_DELAYS_MS[Math.min(this.reconnectAttempt, RECONNECT_DELAYS_MS.length - 1)]!;
-    this.reconnectAttempt += 1;
-    this.log.info('binance ws reconnect in', { delayMs: delay, attempt: this.reconnectAttempt });
-    this.reconnectTimer = setTimeout(() => this.connect(), delay);
-  }
-
-  private startPing(): void {
-    this.stopPing();
-    this.pingTimer = setInterval(() => {
-      if (this.ws && this.ws.readyState === WebSocket.OPEN) {
-        this.ws.ping();
-      }
-      const idleSec = (Date.now() - this.lastMessageAt) / 1_000;
-      if (idleSec > MAX_EMPTY_MINUTES * 60 && this.ws) {
-        this.log.warn('binance ws idle — reconnecting', { idleSec });
-        this.ws.close(4000, 'idle timeout');
-      }
-    }, PING_INTERVAL_MS);
-  }
-
-  private stopPing(): void {
-    if (this.pingTimer) {
-      clearInterval(this.pingTimer);
-      this.pingTimer = null;
     }
   }
 }

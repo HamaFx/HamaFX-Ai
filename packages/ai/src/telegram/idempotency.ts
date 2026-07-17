@@ -78,3 +78,72 @@ export function _resetForTesting(): void {
   processed.clear();
   lastCleanup = Date.now();
 }
+
+// ---------------------------------------------------------------------------
+// DB-backed idempotency (for multi-instance Vercel deployments)
+//
+// The in-memory Map above works for single-instance deployments but is
+// ineffective when Vercel runs multiple serverless instances — each
+// instance has its own Map, so a retried update_id can land on a
+// different instance and bypass dedup.
+//
+// For multi-instance production use, create a `telegram_updates` table:
+//
+//   CREATE TABLE IF NOT EXISTS telegram_updates (
+//     update_id BIGINT PRIMARY KEY,
+//     processed_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+//   );
+//
+// Then use the DbTelegramIdempotency class below, which uses
+// INSERT ... ON CONFLICT DO NOTHING for atomic dedup.
+//
+// Cron cleanup (runs daily, deletes rows older than 1 hour):
+//   DELETE FROM telegram_updates WHERE processed_at < NOW() - INTERVAL '1 hour';
+// ---------------------------------------------------------------------------
+
+import { getDb } from '@hamafx/db';
+import { sql } from 'drizzle-orm';
+
+/**
+ * DB-backed idempotency guard for Telegram webhook updates.
+ *
+ * Uses INSERT ... ON CONFLICT DO NOTHING to atomically check-and-mark
+ * an update_id as processed. Requires the `telegram_updates` table
+ * (see migration instructions above).
+ *
+ * Falls back to in-memory mode when the table doesn't exist or
+ * `DATABASE_URL` is not configured (Edge runtime, local dev without DB).
+ */
+export class DbTelegramIdempotency {
+  private fallback = new Map<number, number>();
+
+  async isDuplicate(updateId: number): Promise<boolean> {
+    try {
+      const db = getDb();
+      const result = await db.execute(
+        sql`INSERT INTO telegram_updates (update_id) VALUES (${updateId}) ON CONFLICT (update_id) DO NOTHING RETURNING update_id`,
+      );
+      // If the row was inserted (not a conflict), it's not a duplicate.
+      // The row count tells us: 0 = duplicate (conflict), 1 = new.
+      const rows = (result as { rows?: unknown[] }).rows ?? (Array.isArray(result) ? result : []);
+      return rows.length === 0;
+    } catch {
+      // Table doesn't exist or DB unavailable — fall back to in-memory.
+      return this.fallbackCheck(updateId);
+    }
+  }
+
+  private fallbackCheck(updateId: number): boolean {
+    const now = Date.now();
+    if (this.fallback.has(updateId)) return true;
+    this.fallback.set(updateId, now);
+    // Prune old entries (keep last 1000)
+    if (this.fallback.size > 1000) {
+      const cutoff = now - 5 * 60 * 1000;
+      for (const [key, ts] of this.fallback) {
+        if (ts < cutoff) this.fallback.delete(key);
+      }
+    }
+    return false;
+  }
+}

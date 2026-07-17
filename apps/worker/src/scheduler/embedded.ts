@@ -69,7 +69,7 @@ const RAW: ScheduleDef[] = [
   },
   {
     name: 'resonance-sync',
-    cronExpression: '0 1 * * *', // 01:00 UTC daily
+    cronExpression: '0 23 * * *', // 23:00 UTC daily (matches main scheduler)
     async _rawRun(signal: AbortSignal) {
       const log = createLogger({ service: 'worker:job:resonance-sync' });
       await JOBS['resonance-sync'].run({
@@ -117,6 +117,39 @@ const RAW: ScheduleDef[] = [
     async _rawRun(signal: AbortSignal) {
       const log = createLogger({ service: 'worker:job:embedding-backfill' });
       await JOBS['embedding-backfill'].run({
+        log,
+        signal,
+      });
+    },
+  },
+  {
+    name: 'alerts',
+    cronExpression: '* * * * *', // Every minute
+    async _rawRun(signal: AbortSignal) {
+      const log = createLogger({ service: 'worker:job:alerts' });
+      await JOBS.alerts.run({
+        log,
+        signal,
+      });
+    },
+  },
+  {
+    name: 'retention',
+    cronExpression: '15 3 * * *', // 03:15 UTC daily
+    async _rawRun(signal: AbortSignal) {
+      const log = createLogger({ service: 'worker:job:retention' });
+      await JOBS.retention.run({
+        log,
+        signal,
+      });
+    },
+  },
+  {
+    name: 'multi-agent-analysis',
+    cronExpression: '* * * * *', // Every minute (but job is idempotent via claim pattern)
+    async _rawRun(signal: AbortSignal) {
+      const log = createLogger({ service: 'worker:job:multi-agent-analysis' });
+      await JOBS['multi-agent-analysis'].run({
         log,
         signal,
       });
