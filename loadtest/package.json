@@ -1,0 +1,19 @@
+{
+  "name": "hamafx-loadtest",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "smoke": "k6 run tests/smoke-read-mix.ts",
+    "load": "k6 run tests/load-read-mix.ts",
+    "stress": "k6 run tests/stress-market-read.ts",
+    "spike": "k6 run tests/spike-read-mix.ts",
+    "soak": "k6 run tests/soak-read-mix.ts",
+    "seed": "node lib/seed/seed-users.mjs"
+  },
+  "devDependencies": {
+    "@types/k6": "^0.57.0",
+    "typescript": "^5.7.2"
+  }
+}
