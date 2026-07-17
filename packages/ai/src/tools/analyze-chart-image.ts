@@ -42,7 +42,7 @@ import {
   AnalyzeChartImageOutputSchema,
   type AnalyzeChartImageOutput,
 } from '@hamafx/shared';
-import { generateText, type ModelMessage } from 'ai';
+import { generateText, tool, type ModelMessage } from 'ai';
 import { and, desc, eq } from 'drizzle-orm';
 import type { z } from 'zod';
 
@@ -93,11 +93,11 @@ const NO_IMAGE: AnalyzeChartImageOutput = {
   sourceImageRef: '',
 };
 
-export const analyzeChartImageTool = {
+export const analyzeChartImageTool = tool({
   description:
     "Run a structured technical readout on the most recent chart screenshot the user attached this turn. Returns a typed observation: identified symbol/timeframe, trend, bias, labelled price levels, and an English observation paragraph. Use whenever the user attaches an image and asks anything chart-shaped. Returns observed='no image attached' if there's no image to analyse.",
   inputSchema: InputSchema,
-  execute: async (input: z.infer<typeof InputSchema>): Promise<AnalyzeChartImageOutput> => {
+  execute: async (input: z.infer<typeof InputSchema>, _options): Promise<AnalyzeChartImageOutput> => {
     const ctx = maybeGetToolContext();
     if (!ctx) return NO_CONTEXT;
     const { threadId, env } = ctx;
@@ -186,7 +186,7 @@ export const analyzeChartImageTool = {
       };
     }
   },
-};
+});
 
 // ---------------------------------------------------------------------------
 // Helpers

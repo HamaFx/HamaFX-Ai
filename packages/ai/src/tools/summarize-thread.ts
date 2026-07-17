@@ -34,7 +34,7 @@ import {
   type Symbol,
   type ThreadInsight,
 } from '@hamafx/shared';
-import { generateText } from 'ai';
+import { generateText, tool } from 'ai';
 import type { z } from 'zod';
 
 import { rememberThreadSynopsis } from '../memory/memory-index';
@@ -64,11 +64,11 @@ const NO_CONTEXT_OUTPUT = (threadId: string): SummarizeThreadOutput => ({
   remembered: false,
 });
 
-export const summarizeThreadTool = {
+export const summarizeThreadTool = tool({
   description:
     "One-paragraph synopsis of the active chat thread plus three durable insights. Use when the user asks 'wrap this up', 'TL;DR what we just discussed', or wants to save the conclusion for later. With `remember=true` the synopsis is embedded into the memory index so future turns can retrieve it via `search_knowledge`.",
   inputSchema: InputSchema,
-  execute: async (input: z.infer<typeof InputSchema>): Promise<SummarizeThreadOutput> => {
+  execute: async (input: z.infer<typeof InputSchema>, _options): Promise<SummarizeThreadOutput> => {
     const ctx = maybeGetToolContext();
     if (!ctx) return NO_CONTEXT_OUTPUT('');
     const { threadId, env, budget } = ctx;
@@ -155,7 +155,7 @@ export const summarizeThreadTool = {
       remembered,
     };
   },
-};
+});
 
 // ---------------------------------------------------------------------------
 // helpers

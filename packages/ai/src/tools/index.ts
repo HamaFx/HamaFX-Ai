@@ -73,8 +73,7 @@ export const tools = {
   get_journal_stats: withTelemetry('get_journal_stats', getJournalStatsTool),
   annotate_chart: withTelemetry('annotate_chart', annotateChartTool),
   // Phase 3 tools
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  analyze_chart_image: withTelemetry('analyze_chart_image', analyzeChartImageTool as any),
+  analyze_chart_image: withTelemetry('analyze_chart_image', analyzeChartImageTool),
   get_correlation: withTelemetry('get_correlation', getCorrelationTool),
   get_cot: withTelemetry('get_cot', getCoTTool),
   share_snapshot: withTelemetry('share_snapshot', shareSnapshotTool),
@@ -86,8 +85,7 @@ export const tools = {
   get_seasonality: withTelemetry('get_seasonality', getSeasonalityTool),
   compute_position_health: withTelemetry('compute_position_health', computePositionHealthTool),
   replay_setup: withTelemetry('replay_setup', replaySetupTool),
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  summarize_thread: withTelemetry('summarize_thread', summarizeThreadTool as any),
+  summarize_thread: withTelemetry('summarize_thread', summarizeThreadTool),
   // Phase 7c tools
   verify_call: withTelemetry('verify_call', verifyCallTool),
   convene_committee: withTelemetry('convene_committee', conveneCommitteeTool),

@@ -14,7 +14,7 @@
   "scripts": {
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "test": "vitest --run",
+    "test": "vitest run",
     "clean": "rm -rf node_modules .turbo dist",
     "migrate:gen": "drizzle-kit generate",
     "migrate:gen:custom": "drizzle-kit generate --custom",
@@ -27,7 +27,7 @@
   "dependencies": {
     "@electric-sql/pglite": "^0.5.3",
     "@hamafx/shared": "workspace:*",
-    "drizzle-orm": "^0.38.3",
+    "drizzle-orm": "^0.45.2",
     "postgres": "^3.4.5"
   },
   "devDependencies": {

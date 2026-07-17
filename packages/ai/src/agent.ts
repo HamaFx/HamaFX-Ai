@@ -20,6 +20,7 @@
 // HTTP shell.
 
 import { getMessageText, pickAiEnv, type AiEnvKeys, type ServerEnv } from '@hamafx/shared';
+import { logErrorContext } from '@hamafx/shared/logger';
 import {
   convertToModelMessages,
   stepCountIs,
@@ -669,7 +670,7 @@ async function runChatInner(args: RunChatArgs) {
           }
         } catch (err) {
           // Persistence failures must not crash the stream — log and move on.
-          console.error('[ai] persistence/telemetry failed', err);
+          logErrorContext(err, 'persistence/telemetry_failed', { threadId }, 'ai');
         }
 
         // Phase 2 hardening §8 — auto-title is the slow tail of onFinish:
@@ -803,7 +804,7 @@ async function runAutoTitleBackground(args: {
       kind,
     });
   } catch (err) {
-    console.error('[ai] auto-title (background) failed', err);
+    logErrorContext(err, 'auto-title_background_failed', { threadId }, 'ai');
   }
 }
 

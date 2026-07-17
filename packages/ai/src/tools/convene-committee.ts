@@ -24,6 +24,7 @@ import {
 } from '@hamafx/shared';
 import { tool, generateText, stepCountIs } from 'ai';
 import type { z } from 'zod';
+import type { ResolveModelEnv } from '../model';
 
 import { getToolContext, type ToolContext } from '../tool-context';
 import { resolveChatModel, getVertexGoogleSearchTool } from '../model';
@@ -59,11 +60,16 @@ export const conveneCommitteeTool = tool({
     if (!afExec) throw new Error('analyze_fundamental tool is not registered — cannot convene committee');
     if (!atExec) throw new Error('analyze_technical tool is not registered — cannot convene committee');
     if (!jsExec) throw new Error('get_journal_stats tool is not registered — cannot convene committee');
+    // Internal tool execution options used when the committee calls sub-tools directly.
+    // We intentionally pass an empty messages array (never[] — assignable to any T[])
+    // and a minimal toolCallId because these are internal calls, not user-facing tool
+    // invocations. An empty array is the correct shape: no user messages to report.
+    const internalExecOpts = { toolCallId: 'internal', messages: [] };
     const [fundamentalData, technicalData, journalData, riskData] = await Promise.all([
-      afExec({ symbol, horizonHours: 48 }, { toolCallId: 'internal', messages: [] } as any),
-      atExec({ symbol, timeframes: ['1d', '4h', '1h', '15m'] }, { toolCallId: 'internal', messages: [] } as any),
-      jsExec({ symbol }, { toolCallId: 'internal', messages: [] } as any),
-      stop && crExec ? crExec({ symbol, side, entry, stop, target: target ?? undefined, accountUsd: 1000, riskPct: 1 }, { toolCallId: 'internal', messages: [] } as any) : Promise.resolve(null),
+      afExec({ symbol, horizonHours: 48 }, internalExecOpts),
+      atExec({ symbol, timeframes: ['1d', '4h', '1h', '15m'] }, internalExecOpts),
+      jsExec({ symbol }, internalExecOpts),
+      stop && crExec ? crExec({ symbol, side, entry, stop, target: target ?? undefined, accountUsd: 1000, riskPct: 1 }, internalExecOpts) : Promise.resolve(null),
       // ↑ crExec is intentionally lenient: risk computation is conditional on `stop`.
       // When stop is not provided, we pass null risk data and the Risk Manager
       // persona handles the missing information gracefully.
@@ -120,7 +126,8 @@ No markdown fences, no preamble.`;
 
   try {
     // Only pass tools if the vertex env is available.
-    const tools = ctx.env.GOOGLE_VERTEX_PROJECT ? { googleSearch: getVertexGoogleSearchTool(ctx.env as any) } : undefined;
+    const vertexEnv: Pick<ResolveModelEnv, 'GOOGLE_VERTEX_PROJECT' | 'GOOGLE_VERTEX_LOCATION' | 'GOOGLE_APPLICATION_CREDENTIALS_JSON' | 'GOOGLE_APPLICATION_CREDENTIALS'> = ctx.env;
+    const tools = ctx.env.GOOGLE_VERTEX_PROJECT ? { googleSearch: getVertexGoogleSearchTool(vertexEnv) } : undefined;
     const { text, steps } = await generateText({
       model: resolveChatModel(ctx.userSettings, ctx.env).model,
       system: "You are an expert forex macroeconomic analyst. Always output raw JSON.",

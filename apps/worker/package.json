@@ -9,7 +9,7 @@
     "dev": "tsx watch src/index.ts",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "test": "vitest --run",
+    "test": "vitest run",
     "clean": "rm -rf node_modules .turbo dist"
   },
   "dependencies": {
@@ -23,7 +23,7 @@
     "@opentelemetry/sdk-node": "^0.219.0",
     "@sentry/node": "^10.54.0",
     "@types/node-cron": "^3.0.11",
-    "drizzle-orm": "^0.38.3",
+    "drizzle-orm": "^0.45.2",
     "node-cron": "^4.3.0",
     "postgres": "^3.4.5",
     "ws": "^8.21.0",

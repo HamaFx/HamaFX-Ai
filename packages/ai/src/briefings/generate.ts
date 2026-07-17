@@ -275,7 +275,6 @@ export async function emitWeeklyReview(userId: string): Promise<{ emitted: boole
         } satisfies BriefingMessagePart,
       ],
     };
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { messageId } = await appendAssistantMessage(
       thread.id,
       ui as UIMessage,

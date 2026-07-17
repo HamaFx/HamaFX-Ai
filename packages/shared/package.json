@@ -19,7 +19,7 @@
   "scripts": {
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "test": "vitest --run",
+    "test": "vitest run",
     "clean": "rm -rf node_modules .turbo"
   },
   "dependencies": {
