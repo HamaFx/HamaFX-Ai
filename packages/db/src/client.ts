@@ -92,6 +92,13 @@ function resolveStatementTimeout(): number {
  * the same Node process.
  */
 function resolveSslOptions(): false | { rejectUnauthorized: boolean; ca?: string } {
+  // DB_DISABLE_SSL: explicit opt-out of TLS (e.g. Docker Compose, CI).
+  // Must be checked FIRST because Next.js statically replaces
+  // process.env.NODE_ENV at build time, which means production/non-prod
+  // branches get dead-code-eliminated. This custom env var is NOT
+  // statically evaluated by Next.js, so it survives the build.
+  if (process.env.DB_DISABLE_SSL === 'true') return false;
+
   const ca = process.env.SUPABASE_CA_CERT?.replace(/\\n/g, '\n').trim();
   if (ca) {
     return {

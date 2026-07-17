@@ -44,6 +44,7 @@ services:
     environment:
       DATABASE_URL: postgres://hamafx:loadtest@db:5432/hamafx
       NODE_ENV: development
+      DB_DISABLE_SSL: "true"
       AUTH_MODE: legacy
       ALLOW_LEGACY_AUTH: "true"
       DB_POOL_MAX: "5"
@@ -77,11 +78,8 @@ services:
       db:
         condition: service_healthy
     healthcheck:
-      # Use /api/auth/csrf for health check because /api/health is wrapped in
-      # withAuth and the legacy mode middleware doesn't sign the x-user-id
-      # header, causing the HMAC fast-path to fail and the auth() slow path
-      # to return 401.
-      test: ["CMD-SHELL", "curl -f http://localhost:3000/api/auth/csrf || exit 1"]
+      # Use /api/health now that the DB+pgvector checks pass.
+      test: ["CMD-SHELL", "curl -sf http://localhost:3000/api/health | grep -q '\"ok\"' || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3

@@ -288,29 +288,12 @@ CREATE POLICY tenant_isolation ON decision_signal_outcomes
 --> statement-breakpoint
 
 -- ── NextAuth tables (have user_id + tenant_id) ──────────────────────────
--- account and session are NextAuth adapter tables. They have tenant_id
--- from the Phase 3 migrations. RLS on them ensures auth sessions are
--- tenant-scoped too.
+-- account and session are NextAuth adapter tables. They do NOT have
+-- tenant_id (migration 0039 removes RLS from them). Their RLS blocks
+-- are skipped here to avoid breaking the migration chain.
 
-ALTER TABLE account ENABLE ROW LEVEL SECURITY;
---> statement-breakpoint
-ALTER TABLE account FORCE ROW LEVEL SECURITY;
---> statement-breakpoint
-CREATE POLICY tenant_isolation ON account
-  FOR ALL
-  USING (tenant_id = current_setting('app.current_tenant', true))
-  WITH CHECK (tenant_id = current_setting('app.current_tenant', true));
---> statement-breakpoint
-
-ALTER TABLE session ENABLE ROW LEVEL SECURITY;
---> statement-breakpoint
-ALTER TABLE session FORCE ROW LEVEL SECURITY;
---> statement-breakpoint
-CREATE POLICY tenant_isolation ON session
-  FOR ALL
-  USING (tenant_id = current_setting('app.current_tenant', true))
-  WITH CHECK (tenant_id = current_setting('app.current_tenant', true));
---> statement-breakpoint
+-- RLS on account and session intentionally skipped — they lack tenant_id.
+-- Migration 0039 drops any residual policies and disables RLS on them.
 
 -- ── Tables NOT getting RLS (global/shared) ──────────────────────────────
 -- These tables are intentionally NOT RLS-protected because they contain
