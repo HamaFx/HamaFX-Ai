@@ -1,0 +1,84 @@
+# HamaFX-Ai — throwaway SUT for k6 load testing.
+#
+# THIS IS NOT FOR PRODUCTION USE.
+# - No persistent volumes (DB is ephemeral).
+# - AUTH_MODE=legacy for simple single-user auth in k6.
+# - All rate limits lifted so k6 tests don't 429 immediately.
+# - Cheap/stub LLM model for guarded chat load.
+#
+# Quick start:
+#   docker compose -f loadtest/docker-compose.loadtest.yml up -d --wait
+#   curl -fsS localhost:3000/api/health   # (needs auth — see README)
+#
+# For Strategy B (real NextAuth sessions), see README.
+
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_DB: hamafx
+      POSTGRES_USER: hamafx
+      POSTGRES_PASSWORD: loadtest
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata-loadtest:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U hamafx -d hamafx"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  app:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: postgres://hamafx:loadtest@db:5432/hamafx
+      NODE_ENV: development
+      AUTH_MODE: legacy
+      DB_POOL_MAX: "5"
+      # Lift all rate limits so k6 can push throughput
+      MARKET_READ_RATE_LIMIT: "100000"
+      NEWS_RATE_LIMIT: "100000"
+      SENTIMENT_RATE_LIMIT: "100000"
+      CALENDAR_RATE_LIMIT: "100000"
+      DECISION_SIGNALS_RATE_LIMIT: "100000"
+      AI_CHAT_RATE_LIMIT: "1000"
+      AI_ALERT_PREVIEW_RATE_LIMIT: "1000"
+      AI_EXPORT_RATE_LIMIT: "1000"
+      AI_BULK_DELETE_RATE_LIMIT: "1000"
+      JOURNAL_IMPORT_RATE_LIMIT: "1000"
+      # Bootstrap secrets (throwaway — never use these in production)
+      AUTH_COOKIE_SECRET: loadtest-cookie-secret-32-chars-x
+      CRON_SECRET: loadtest-cron-secret
+      NEXTAUTH_SECRET: loadtest-nextauth-secret-32chars
+      ENCRYPTION_SECRET: loadtest-encryption-secret-32ch
+      NEXTAUTH_URL: http://localhost:3000
+      # Required env vars for health check
+      VAPID_PUBLIC_KEY: "placeholder"
+      VAPID_PRIVATE_KEY: "placeholder"
+      VAPID_SUBJECT: "mailto:test@example.com"
+      RESEND_API_KEY: "placeholder"
+    env_file:
+      - ../.env
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      # Use /api/auth/csrf for health check because /api/health is wrapped in
+      # withAuth and the legacy mode middleware doesn't sign the x-user-id
+      # header, causing the HMAC fast-path to fail and the auth() slow path
+      # to return 401.
+      test: ["CMD-SHELL", "curl -f http://localhost:3000/api/auth/csrf || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    restart: unless-stopped
+
+volumes:
+  pgdata-loadtest:
