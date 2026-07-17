@@ -45,6 +45,7 @@ services:
       DATABASE_URL: postgres://hamafx:loadtest@db:5432/hamafx
       NODE_ENV: development
       DB_DISABLE_SSL: "true"
+      LIVE_TICKS_MAX_AGE_MS: "86400000"
       AUTH_MODE: legacy
       ALLOW_LEGACY_AUTH: "true"
       DB_POOL_MAX: "5"

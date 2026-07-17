@@ -49,8 +49,19 @@ const PROVIDER = 'live-ticks';
  * a 50-second-old price as if it were live. The lower threshold puts
  * a hard ceiling on tick-age that the route handler can surface via
  * the `ageMs` field below.
+ *
+ * Override with LIVE_TICKS_MAX_AGE_MS env var for load-testing / CI
+ * environments where the worker isn't running and live_ticks is
+ * seeded statically.
  */
-const MAX_AGE_MS = 5_000;
+const DEFAULT_MAX_AGE_MS = 5_000;
+
+function resolveMaxAgeMs(override?: number): number {
+  if (override !== undefined) return override;
+  const env = Number(process.env.LIVE_TICKS_MAX_AGE_MS);
+  if (Number.isFinite(env) && env > 0) return env;
+  return DEFAULT_MAX_AGE_MS;
+}
 
 export interface FetchLiveTickArgs {
   symbol: Symbol;
@@ -78,7 +89,7 @@ export interface LiveTickResult {
  */
 export async function fetchLiveTick(args: FetchLiveTickArgs): Promise<LiveTickResult> {
   const db = args.db ?? (await loadDb());
-  const maxAgeMs = args.maxAgeMs ?? MAX_AGE_MS;
+  const maxAgeMs = resolveMaxAgeMs(args.maxAgeMs);
   const now = Date.now();
   const cutoff = new Date(now - maxAgeMs);
 
