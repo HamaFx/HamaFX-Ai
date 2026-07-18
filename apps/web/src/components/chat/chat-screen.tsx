@@ -54,6 +54,9 @@ import { AnimatePresence, m } from 'motion/react';
 import { cn } from '@/lib/cn';
 import { getCsrfToken } from '@/lib/csrf';
 import { useConfirm } from '@/components/ui/confirm-drawer';
+import { useAutoScroll } from '@/hooks/use-auto-scroll';
+import { useThreadTitle } from '@/hooks/use-thread-title';
+import { useMultiAgentChat } from '@/hooks/use-multi-agent-chat';
 
 import { ChatTopBar, type ThreadSummary, type AnalysisMode } from './chat-top-bar';
 import { Composer } from './composer';
@@ -86,24 +89,15 @@ export function ChatScreen({
   const autoSubmittedRef = useRef<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
-  const [title, setTitle] = useState(initialTitle);
   const [analysisMode, setAnalysisMode] = useState<AnalysisMode>('auto');
-  const [agentProgress, setAgentProgress] = useState<{
-    agents: Array<{ agentName: string; status: 'pending' | 'running' | 'done' | 'error'; opinion?: { agentName: string; bias: 'bullish' | 'bearish' | 'neutral'; confidence: number; reasoning: string }; error?: string }>;
-    mode: string;
-  } | null>(null);
 
-  // One-shot model override — set right before calling regenerate() so the
-  // body builder picks it up. Cleared after the request resolves.
+  // One-shot model override.
   const modelOverrideRef = useRef<string | null>(null);
 
-  const [showScrollFab, setShowScrollFab] = useState(false);
   const [dismissedError, setDismissedError] = useState(false);
-  const [isMultiAgentStreaming, setIsMultiAgentStreaming] = useState(false);
-    const [confirmEl, confirm] = useConfirm();
-  const titleFetchedRef = useRef<Record<string, boolean>>({});
+  const [confirmEl, confirm] = useConfirm();
 
-  // Phase 1.5 — thread summary header state (effect wired after useChat).
+  // Phase 1.5 — thread summary header state.
   const [summary, setSummary] = useState<{ synopsis: string; insights: Array<{ text: string; symbol?: string | null }> } | null>(null);
 
   const transport = useMemo(
@@ -114,7 +108,7 @@ export function ChatScreen({
           const override = modelOverrideRef.current;
           const csrf = getCsrfToken();
           const prefsJson = typeof window !== 'undefined' ? window.localStorage.getItem('hamafx:ai-prefs') : null;
-          
+
           const reqBody = {
             modelOverride: override ?? undefined,
             analysisMode,
@@ -141,8 +135,15 @@ export function ChatScreen({
     messages: initialMessages,
   });
 
-  // Ref to hold the latest messages array — avoids stale closure in
-  // multi-agent SSE handler where the captured `messages` may be outdated.
+  // H2: Thread title fetching via dedicated hook.
+  const { title } = useThreadTitle({
+    threadId,
+    initialTitle,
+    status,
+    messageCount: messages.length,
+  });
+
+  // Ref to hold the latest messages array — avoids stale closure.
   const messagesRef = useRef(messages);
   useEffect(() => {
     messagesRef.current = messages;
@@ -160,172 +161,57 @@ export function ChatScreen({
     }
   }, [messages.length, threadId, summary]);
 
-  // ── Multi-Agent SSE handling ──
-  // When analysisMode is not 'single', the /api/chat endpoint returns a
-  // custom SSE stream with progress events + final text. We intercept the
-  // fetch to parse these events and update the UI accordingly.
-  const multiAgentFetchRef = useRef<AbortController | null>(null);
+  // H2: Multi-agent SSE handling via dedicated hook.
+  const {
+    sendMultiAgentMessage,
+    isMultiAgentStreaming,
+    agentProgress,
+    setAgentProgress,
+    multiAgentFetchRef,
+  } = useMultiAgentChat({ threadId, analysisMode, messagesRef, setMessages, lastUserTextRef });
 
-  const sendMultiAgentMessage = useCallback(async (text: string) => {
-    lastUserTextRef.current = text;
-    setAgentProgress(null);
+  // H2: Auto-scroll via dedicated hook (isStreaming defined before use).
+  const isStreaming = useMemo(() => {
+    if (status === 'submitted' || status === 'streaming') return true;
+    if (isMultiAgentStreaming) return true;
+    return false;
+  }, [status, isMultiAgentStreaming]);
 
-    // Add user message to the list immediately
-    const userMsg = {
-      id: crypto.randomUUID(),
-      role: 'user' as const,
-      parts: [{ type: 'text' as const, text }],
-    } as unknown as UIMessage;
-    const assistantMsgId = crypto.randomUUID();
-    const assistantMsg = {
-      id: assistantMsgId,
-      role: 'assistant' as const,
-      parts: [{ type: 'text' as const, text: '' }],
-    } as unknown as UIMessage;
-    setMessages((prev) => [...prev, userMsg, assistantMsg]);
-    setIsMultiAgentStreaming(true);
+  const { showScrollFab, scrollToBottom } = useAutoScroll({
+    scrollRef,
+    dependency: messages,
+    resetKey: threadId,
+    isStreaming,
+  });
 
-    const controller = new AbortController();
-    multiAgentFetchRef.current = controller;
-
-    try {
-      const csrf = getCsrfToken();
-      const prefsJson = typeof window !== 'undefined' ? window.localStorage.getItem('hamafx:ai-prefs') : null;
-      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-      if (csrf) headers['X-CSRF-Token'] = csrf;
-      if (prefsJson) headers['X-AI-Prefs'] = prefsJson;
-
-      const res = await fetch('/api/chat', {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({
-          threadId,
-          analysisMode,
-          messages: [...messagesRef.current, userMsg],
-        }),
-        signal: controller.signal,
-      });
-
-      if (!res.ok) {
-        const errBody = await res.json().catch(() => null);
-        throw new Error(errBody?.error?.message ?? `HTTP ${res.status}`);
-      }
-
-      // U2 — Full mode: detect queued job response (JSON, not SSE).
-      const contentType = res.headers.get('content-type') ?? '';
-      if (contentType.includes('application/json')) {
-        const json = await res.json() as { type?: string; jobId?: string };
-        if (json.type === 'analysis-queued' && json.jobId) {
-          // Start polling for the background job result.
-          const POLL_INTERVAL_MS = 2_000;
-          const MAX_POLL_TIME_MS = 5 * 60_000;
-          const startPoll = Date.now();
-
-          while (Date.now() - startPoll < MAX_POLL_TIME_MS) {
-            if (controller.signal.aborted) return;
-            await new Promise((r) => setTimeout(r, POLL_INTERVAL_MS));
-            if (controller.signal.aborted) return;
-
-            try {
-              const pollRes = await fetch(`/api/chat/analysis-jobs/${json.jobId}`, {
-                headers: { 'X-CSRF-Token': getCsrfToken() ?? '' },
-                signal: controller.signal,
-              });
-              if (!pollRes.ok) continue;
-              const pollJson = await pollRes.json() as {
-                status?: string; progress?: Array<Record<string, unknown>>;
-                result?: { finalText?: string; agentOpinions?: unknown };
-                error?: string;
-              };
-
-              // Render progress from the job's progress events.
-              if (Array.isArray(pollJson.progress) && pollJson.progress.length > 0) {
-                const lastProgress = pollJson.progress[pollJson.progress.length - 1] as Record<string, unknown> | undefined;
-                if (lastProgress && lastProgress.type === 'data-agent-progress') {
-                  setAgentProgress((lastProgress as { data: typeof agentProgress }).data);
-                }
-              }
-
-              if (pollJson.status === 'complete' && pollJson.result?.finalText) {
-                setMessages((prev) => prev.map((m) =>
-                  m.id === assistantMsgId
-                    ? { ...m, parts: [{ type: 'text' as const, text: pollJson.result!.finalText! }] } as UIMessage
-                    : m,
-                ));
-                setAgentProgress(null);
-                return;
-              }
-
-              if (pollJson.status === 'failed') {
-                throw new Error(pollJson.error ?? 'Background analysis failed.');
-              }
-            } catch (err) {
-              if (controller.signal.aborted) return;
-              throw err;
-            }
-          }
-          throw new Error('Background analysis timed out after 5 minutes.');
-        }
-        throw new Error(`Unexpected JSON response: ${JSON.stringify(json)}`);
-      }
-
-      const reader = res.body?.getReader();
-      if (!reader) throw new Error('No response body');
-      const decoder = new TextDecoder();
-      let buffer = '';
-      let finalText = '';
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split('\n');
-        buffer = lines.pop() ?? '';
-
-        for (const line of lines) {
-          if (!line.startsWith('data: ')) continue;
-          const data = line.slice(6).trim();
-          if (data === '[DONE]') continue;
-          let parsed;
-          try {
-            parsed = JSON.parse(data);
-          } catch {
-            continue; // skip non-JSON lines
-          }
-          if (parsed.type === 'data-agent-progress') {
-            setAgentProgress(parsed.data);
-          } else if (parsed.type === 'text') {
-            finalText += parsed.text;
-            // Update the assistant message content progressively
-            setMessages((prev) => prev.map((m) =>
-              m.id === assistantMsgId
-                ? { ...m, parts: [{ type: 'text' as const, text: finalText }] } as UIMessage
-                : m,
-            ));
-          } else if (parsed.type === 'metadata') {
-            // Metadata received — opinions, cost, etc.
-            // Could store for later display
-          } else if (parsed.type === 'error') {
-            throw new Error(parsed.error as string);
-          }
-        }
-      }
-
-      setAgentProgress(null);
-    } catch (err) {
-      if (controller.signal.aborted) return;
-      const errMsg = err instanceof Error ? err.message : String(err);
-      setMessages((prev) => prev.map((m) =>
-        m.id === assistantMsgId
-          ? { ...m, parts: [{ type: 'text' as const, text: `⚠️ Error: ${errMsg}` }] } as UIMessage
-          : m,
-      ));
-      setAgentProgress(null);
-    } finally {
-      multiAgentFetchRef.current = null;
-      setIsMultiAgentStreaming(false);
+  // Auto-submit a prompt passed via ?prompt= (Ask AI deep links).
+  useEffect(() => {
+    if (!autoSubmitPrompt) return;
+    if (autoSubmittedRef.current === threadId) return;
+    if (messages.length > 0) return;
+    if (isStreaming) return;
+    autoSubmittedRef.current = threadId;
+    lastUserTextRef.current = autoSubmitPrompt;
+    if (analysisMode !== 'single') {
+      void sendMultiAgentMessage(autoSubmitPrompt);
+    } else {
+      void sendMessage({ text: autoSubmitPrompt });
     }
-  }, [analysisMode, setMessages, threadId]);
+  }, [autoSubmitPrompt, threadId, messages.length, isStreaming, sendMessage, analysisMode, sendMultiAgentMessage]);
+
+  // Clear model override after stream settles.
+  useEffect(() => {
+    if (status === 'ready' || (error && status === 'error')) {
+      modelOverrideRef.current = null;
+    }
+  }, [status, error]);
+
+  // Reset error dismissal when new stream starts.
+  useEffect(() => {
+    if (isStreaming) {
+      setDismissedError(false);
+    }
+  }, [isStreaming]);
 
   const handleCopy = useCallback((text: string) => {
     void navigator.clipboard.writeText(text);
@@ -419,11 +305,6 @@ export function ChatScreen({
     }
   }, [threadId, router, sendMessage, setMessages, analysisMode, sendMultiAgentMessage, confirm]);
 
-  const isStreaming = useMemo(() => {
-    if (status === 'submitted' || status === 'streaming') return true;
-    if (isMultiAgentStreaming) return true;
-    return false;
-  }, [status, isMultiAgentStreaming]);
   const isEmpty = messages.length === 0;
 
   // Last assistant message id — gets the Regenerate affordance.
@@ -434,128 +315,6 @@ export function ChatScreen({
     }
     return undefined;
   }, [messages]);
-
-  // Auto-submit a prompt passed via ?prompt= (Ask AI deep links).
-  // Fires once per thread, only on a fresh thread, never during streaming.
-  useEffect(() => {
-    if (!autoSubmitPrompt) return;
-    if (autoSubmittedRef.current === threadId) return;
-    if (messages.length > 0) return;
-    if (isStreaming) return;
-    autoSubmittedRef.current = threadId;
-    lastUserTextRef.current = autoSubmitPrompt;
-    if (analysisMode !== 'single') {
-      void sendMultiAgentMessage(autoSubmitPrompt);
-    } else {
-      void sendMessage({ text: autoSubmitPrompt });
-    }
-  }, [autoSubmitPrompt, threadId, messages.length, isStreaming, sendMessage, analysisMode, sendMultiAgentMessage]);
-
-  // Clear model override after the stream settles (ready or error),
-  // so a failed regenerate doesn't leak its override into the next send.
-  useEffect(() => {
-    if (status === 'ready' || (error && status === 'error')) {
-      modelOverrideRef.current = null;
-    }
-  }, [status, error]);
-
-  // Reset error dismissal when new stream starts
-  useEffect(() => {
-    if (isStreaming) {
-      setDismissedError(false);
-    }
-  }, [isStreaming]);
-
-  // Track scroll position to show/hide the "Scroll to Bottom" FAB
-  useEffect(() => {
-    const el = scrollRef.current;
-    if (!el) return;
-    const handleScroll = () => {
-      const dist = el.scrollHeight - el.scrollTop - el.clientHeight;
-      setShowScrollFab(dist > 240);
-    };
-    el.addEventListener('scroll', handleScroll, { passive: true });
-    handleScroll();
-    return () => el.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  // After streaming completes, re-fetch thread to pick up the LLM-
-  // generated title.
-  useEffect(() => {
-    if (status !== 'ready' || messages.length < 2) return;
-    if (titleFetchedRef.current[threadId]) return;
-    let cancelled = false;
-    void (async () => {
-      try {
-        const res = await fetch(`/api/chat/threads/${threadId}`);
-        if (!res.ok || cancelled) return;
-        const json = (await res.json()) as {
-          thread?: { title: string | null; titleSource: string | null };
-        };
-        const t = json.thread;
-        if (t?.titleSource === 'llm' && t.title && !cancelled) {
-          setTitle(t.title);
-          titleFetchedRef.current[threadId] = true;
-          if (typeof document !== 'undefined') {
-            document.title = `${t.title} · HamaFX-Ai`;
-          }
-        }
-      } catch {
-        /* silent */
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [status, messages.length, threadId]);
-
-  // Abort any in-flight multi-agent fetch when the component unmounts,
-  // preventing background SSE streams from updating unmounted state.
-  useEffect(() => {
-    return () => {
-      if (multiAgentFetchRef.current) {
-        multiAgentFetchRef.current.abort();
-        multiAgentFetchRef.current = null;
-      }
-    };
-  }, []);
-
-  // Initial scroll-to-bottom. Instant, not smooth — smooth on mount is
-  // what produced the "drift" effect on slow devices.
-  useEffect(() => {
-    const el = scrollRef.current;
-    if (!el) return;
-    requestAnimationFrame(() => {
-      el.scrollTop = el.scrollHeight;
-    });
-  }, [threadId]);
-
-  // Auto-scroll on new content, but only if the user is close to the
-  // bottom. Distance < 240 means "user is following the conversation" —
-  // we keep them at the bottom. During streaming use instant scroll
-  // (invoke `scrollTop` directly) to avoid queuing a smooth animation per
-  // every stream token, which causes visible jank and wastes CPU.
-  // After streaming stops, fall back to smooth for the final position.
-  useEffect(() => {
-    const el = scrollRef.current;
-    if (!el) return;
-    const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
-    if (distanceFromBottom < 240) {
-      requestAnimationFrame(() => {
-        if (isStreaming) {
-          el.scrollTop = el.scrollHeight;
-        } else {
-          el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
-        }
-      });
-    }
-  }, [messages, isStreaming]);
-
-  function scrollToBottom() {
-    const el = scrollRef.current;
-    if (!el) return;
-    el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
-  }
 
   return (
     <div className="bg-bg paint-isolated fixed inset-0 z-50 flex flex-col xl:grid xl:grid-cols-12 xl:h-screen xl:w-full xl:overflow-hidden">

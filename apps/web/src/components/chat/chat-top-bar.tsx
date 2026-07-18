@@ -29,7 +29,7 @@
 import type { Symbol } from '@hamafx/shared';
 import {IconLoader2, IconMessages, IconDotsCircleHorizontal, IconPlus, IconSearch, IconBolt, IconTrash, IconCheck, IconFileDownload, IconCpu, IconChevronDown} from '@tabler/icons-react';
 import { useRouter } from 'next/navigation';
-import { useEffect, useMemo, useRef, useState, useTransition } from 'react';
+import { useEffect, useMemo, useState, useTransition } from 'react';
 import { toast } from 'sonner';
 
 import { NavTrigger } from '@/components/layout/nav-trigger';
@@ -40,6 +40,7 @@ import { cn } from '@/lib/cn';
 import { fetchCsrf } from '@/lib/csrf';
 import { SymbolChip } from '@/components/ui/symbol-chip';
 import { formatRelative } from '@/lib/format';
+import { usePopupMenu } from '@/hooks/use-popup-menu';
 
 export type AnalysisMode = 'single' | 'quick' | 'standard' | 'full' | 'auto';
 
@@ -79,61 +80,15 @@ interface ChatTopBarProps {
 export function ChatTopBar({ threadId, title, pinnedSymbol, threads, isStreaming, analysisMode = 'auto', onAnalysisModeChange }: ChatTopBarProps) {
   const router = useRouter();
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [modeMenuOpen, setModeMenuOpen] = useState(false);
   const [pending, startTransition] = useTransition();
   const [unpinning, setUnpinning] = useState(false);
   const [confirmEl, confirm] = useConfirm();
-  const menuRef = useRef<HTMLDivElement>(null);
-  const triggerRef = useRef<HTMLButtonElement>(null);
-  const modeMenuRef = useRef<HTMLDivElement>(null);
 
-  // Click-out / escape close for the overflow menu.
-  useEffect(() => {
-    if (!menuOpen) return;
-    
-    // Focus first element on open
-    const focusable = menuRef.current?.querySelectorAll<HTMLButtonElement>('[role="menuitem"]');
-    const firstItem = focusable?.[0];
-    if (firstItem) {
-      firstItem.focus();
-    }
-
-    function onPointerDown(e: PointerEvent) {
-      if (!menuRef.current) return;
-      if (!menuRef.current.contains(e.target as Node)) setMenuOpen(false);
-    }
-    function onKey(e: KeyboardEvent) {
-      if (e.key === 'Escape') {
-        setMenuOpen(false);
-        triggerRef.current?.focus();
-      }
-    }
-    window.addEventListener('pointerdown', onPointerDown);
-    window.addEventListener('keydown', onKey);
-    return () => {
-      window.removeEventListener('pointerdown', onPointerDown);
-      window.removeEventListener('keydown', onKey);
-    };
-  }, [menuOpen]);
-
-  // Click-out / escape close for the analysis mode menu.
-  useEffect(() => {
-    if (!modeMenuOpen) return;
-    function onPointerDown(e: PointerEvent) {
-      if (!modeMenuRef.current) return;
-      if (!modeMenuRef.current.contains(e.target as Node)) setModeMenuOpen(false);
-    }
-    function onKey(e: KeyboardEvent) {
-      if (e.key === 'Escape') setModeMenuOpen(false);
-    }
-    window.addEventListener('pointerdown', onPointerDown);
-    window.addEventListener('keydown', onKey);
-    return () => {
-      window.removeEventListener('pointerdown', onPointerDown);
-      window.removeEventListener('keydown', onKey);
-    };
-  }, [modeMenuOpen]);
+  // M4: Popup menus via dedicated hook.
+  const overflowMenu = usePopupMenu();
+  const modeMenu = usePopupMenu({ focusFirstOnOpen: false });
+  const { open: menuOpen, setOpen: setMenuOpen, menuRef, triggerRef } = overflowMenu;
+  const { open: modeMenuOpen, setOpen: setModeMenuOpen, menuRef: modeMenuRef } = modeMenu;
 
   function newChat() {
     startTransition(async () => {

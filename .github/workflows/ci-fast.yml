@@ -30,6 +30,12 @@ jobs:
       # Phase 0.5: real build gate so a broken `next build` is caught in PR CI,
       # not only later by Vercel.
       - run: pnpm turbo run build
+      # L1: Bundle analysis — run with ANALYZE=true to surface size regressions.
+      # The @next/bundle-analyzer generates a report but doesn't fail the build.
+      - name: Bundle Analysis
+        if: github.event_name == 'pull_request'
+        run: ANALYZE=true pnpm --filter @hamafx/web build
+        continue-on-error: true
 
   unit-tests:
     name: Unit Tests (Fast)

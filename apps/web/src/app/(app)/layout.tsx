@@ -15,7 +15,7 @@
  */
 
 import { redirect } from 'next/navigation';
-import { cache } from 'react';
+import { cache, Suspense } from 'react';
 import { eq } from 'drizzle-orm';
 import { auth } from '@/auth';
 import { getDb, schema } from '@hamafx/db';
@@ -86,12 +86,18 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             className="mx-auto w-full max-w-2xl px-4 pt-4 xl:max-w-7xl xl:px-6 focus:outline-none"
             style={{ viewTransitionName: 'main-content', paddingBottom: 'calc(env(safe-area-inset-bottom) + 24px)' }}
           >
-            {/* Phase B — UX_UPGRADE_PLAN.md item 12. PWA install hint.
-                Sticky-positioned below the top bar (drawn here so it
-                sits at the top of the page, above page content but
-                below the nav drawer overlay). */}
+            {/* Phase B — UX_UPGRADE_PLAN.md item 12. PWA install hint. */}
             <InstallNudge />
-            {children}
+            {/* H1: Suspense boundary for route-level streaming. */}
+            <Suspense
+              fallback={
+                <div className="flex min-h-[40svh] items-center justify-center">
+                  <div className="shimmer h-32 w-full max-w-md rounded-sm" />
+                </div>
+              }
+            >
+              {children}
+            </Suspense>
           </main>
           <NavDrawer {...(userName !== undefined ? { userName } : {})} {...(userEmail !== undefined ? { userEmail } : {})} {...(userId !== undefined ? { userId } : {})} isAdmin={isAdmin} />
           <OfflineBanner />

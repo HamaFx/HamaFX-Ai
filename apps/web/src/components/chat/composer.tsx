@@ -29,11 +29,13 @@
 //   - Image thumbnail rail is keyboard-focusable for delete.
 
 import {IconArrowUp, IconPhotoPlus, IconMicrophone, IconSquare, IconChartBar, IconNotebook, IconSettings, IconTerminal2} from '@tabler/icons-react';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import Image from 'next/image';
 import { AnimatePresence, m } from 'motion/react';
 import { toast } from 'sonner';
 
 import { useVoiceInput } from '@/hooks/use-voice-input';
+import { useSlashCommands } from '@/hooks/use-slash-commands';
 import { cn } from '@/lib/cn';
 import { fetchCsrf } from '@/lib/csrf';
 
@@ -124,10 +126,8 @@ export function Composer({
   const [focused, setFocused] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const [isTouch, setIsTouch] = useState(false);
-  const [slashIndex, setSlashIndex] = useState(-1);
   const ref = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const slashMenuRef = useRef<HTMLDivElement>(null);
 
   // Detect touch once on mount so we can hide desktop-only affordances.
   // Using pointer: coarse correctly targets mobile devices and ignores touch-enabled laptops.
@@ -159,32 +159,29 @@ export function Composer({
     },
   });
 
-  // Slash command detection & filtering.
-  const slashActive = value.startsWith('/') && value.length < 40;
-  const slashQuery = slashActive ? value.slice(1).toLowerCase() : '';
-  const filteredCommands = useMemo(() => {
-    if (!slashActive) return [];
-    if (!slashQuery) return SLASH_COMMANDS;
-    return SLASH_COMMANDS.filter((c) =>
-      c.command.toLowerCase().includes(slashQuery),
-    );
-  }, [slashActive, slashQuery]);
+  // M3: Slash commands via dedicated hook.
+  const {
+    slashActive,
+    filteredCommands,
+    slashIndex,
+    setSlashIndex,
+    selectSlashCommand,
+    handleSlashKeyDown,
+    handleSlashChange,
+  } = useSlashCommands({
+    value,
+    setValue,
+    textareaRef: ref,
+    commands: SLASH_COMMANDS.map((c) => ({
+      command: c.command,
+      description: c.description,
+      placeholder: c.placeholder,
+      action: c.action,
+      href: c.href,
+    })) as readonly { command: string; description: string; placeholder: string; action?: 'navigate'; href?: string }[],
+  });
 
-  function selectSlashCommand(cmd: SlashCommand) {
-    if (cmd.action === 'navigate' && cmd.href) {
-      window.location.href = cmd.href;
-      return;
-    }
-    setValue(cmd.placeholder);
-    setSlashIndex(-1);
-    // Place cursor at the end.
-    requestAnimationFrame(() => {
-      if (ref.current) {
-        const len = cmd.placeholder.length;
-        ref.current.setSelectionRange(len, len);
-      }
-    });
-  }
+
 
   function send() {
     const trimmed = value.trim();
@@ -385,9 +382,12 @@ export function Composer({
           <ul className="flex flex-wrap gap-2 px-5 pb-1 pt-4" aria-label="Attached images">
             {images.map((img, idx) => (
               <li key={img.id} className="relative">
-                <img
+                <Image
                   src={img.url}
                   alt={`Attached image ${idx + 1} of ${images.length}`}
+                  width={56}
+                  height={56}
+                  unoptimized
                   className="border-border size-14 rounded-sm border object-cover"
                 />
                 <button
@@ -412,7 +412,6 @@ export function Composer({
         {/* Slash command autocomplete dropdown */}
         {slashActive && filteredCommands.length > 0 ? (
           <div
-            ref={slashMenuRef}
             role="listbox"
             aria-label="Slash commands"
             className="border-t border-border bg-bg-elev-2 px-2 py-1.5"
@@ -420,46 +419,50 @@ export function Composer({
             <p className="text-caption text-fg-subtle px-2 pb-1 font-mono uppercase tracking-wider">
               Commands
             </p>
-            {filteredCommands.map((cmd, i) => (
-              <button
-                key={cmd.command}
-                type="button"
-                role="option"
-                aria-selected={slashIndex === i}
-                onMouseDown={(e) => {
-                  e.preventDefault();
-                  selectSlashCommand(cmd);
-                }}
-                onMouseEnter={() => setSlashIndex(i)}
-                className={cn(
-                  'flex w-full items-center gap-3 rounded-sm px-2 py-2 text-left text-sm transition-colors',
-                  slashIndex === i
-                    ? 'bg-brand text-brand-fg'
-                    : 'text-fg-muted hover:bg-bg-elev-3 hover:text-fg',
-                )}
-              >
-                <span
+            {filteredCommands.map((cmd, i) => {
+              // Reconstruct original SlashCommand to get icon.
+              const orig = SLASH_COMMANDS.find((c) => c.command === cmd.command);
+              return (
+                <button
+                  key={cmd.command}
+                  type="button"
+                  role="option"
+                  aria-selected={slashIndex === i}
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    selectSlashCommand(cmd);
+                  }}
+                  onMouseEnter={() => setSlashIndex(i)}
                   className={cn(
-                    'flex size-7 items-center justify-center rounded-sm',
-                    slashIndex === i ? 'text-brand-fg' : 'text-fg-subtle',
+                    'flex w-full items-center gap-3 rounded-sm px-2 py-2 text-left text-sm transition-colors',
+                    slashIndex === i
+                      ? 'bg-brand text-brand-fg'
+                      : 'text-fg-muted hover:bg-bg-elev-3 hover:text-fg',
                   )}
                 >
-                  {cmd.icon}
-                </span>
-                <div className="flex min-w-0 flex-1 flex-col">
-                  <span className="font-mono text-xs font-semibold">{cmd.command}</span>
-                  <span className="text-caption truncate opacity-70">{cmd.description}</span>
-                </div>
-                <kbd
-                  className={cn(
-                    'hidden rounded-sm border px-1.5 font-mono text-caption sm:inline',
-                    slashIndex === i ? 'border-brand-fg/30' : 'border-border',
-                  )}
-                >
-                  ⏎
-                </kbd>
-              </button>
-            ))}
+                  <span
+                    className={cn(
+                      'flex size-7 items-center justify-center rounded-sm',
+                      slashIndex === i ? 'text-brand-fg' : 'text-fg-subtle',
+                    )}
+                  >
+                    {orig?.icon}
+                  </span>
+                  <div className="flex min-w-0 flex-1 flex-col">
+                    <span className="font-mono text-xs font-semibold">{cmd.command}</span>
+                    <span className="text-caption truncate opacity-70">{cmd.description}</span>
+                  </div>
+                  <kbd
+                    className={cn(
+                      'hidden rounded-sm border px-1.5 font-mono text-caption sm:inline',
+                      slashIndex === i ? 'border-brand-fg/30' : 'border-border',
+                    )}
+                  >
+                    ⏎
+                  </kbd>
+                </button>
+              );
+            })}
           </div>
         ) : null}
 
@@ -537,57 +540,15 @@ export function Composer({
                 '[field-sizing:content]',
               )}
               onKeyDown={(e) => {
-                // Slash command menu navigation
-                if (slashActive && filteredCommands.length > 0) {
-                  if (e.key === 'ArrowDown') {
-                    e.preventDefault();
-                    setSlashIndex((prev) =>
-                      prev < filteredCommands.length - 1 ? prev + 1 : 0,
-                    );
-                    return;
-                  }
-                  if (e.key === 'ArrowUp') {
-                    e.preventDefault();
-                    setSlashIndex((prev) =>
-                      prev > 0 ? prev - 1 : filteredCommands.length - 1,
-                    );
-                    return;
-                  }
-                  if (e.key === 'Escape') {
-                    e.preventDefault();
-                    setSlashIndex(-1);
-                    return;
-                  }
-                  if (e.key === 'Tab') {
-                    e.preventDefault();
-                    // Select the first/highlighted command on Tab.
-                    const idx = slashIndex >= 0 ? slashIndex : 0;
-                    const cmd = filteredCommands[idx];
-                    if (cmd) selectSlashCommand(cmd);
-                    return;
-                  }
-                }
+                // M3: Slash command keyboard nav via hook.
+                if (handleSlashKeyDown(e)) return;
                 if (e.key === 'Enter' && !e.shiftKey) {
                   e.preventDefault();
-                  // If a slash command is highlighted, select it.
-                  if (slashActive && slashIndex >= 0 && slashIndex < filteredCommands.length) {
-                    const cmd = filteredCommands[slashIndex];
-                    if (cmd) {
-                      selectSlashCommand(cmd);
-                      return;
-                    }
-                  }
                   send();
                 }
               }}
               onChange={(e) => {
-                setValue(e.target.value);
-                // Reset slash index when value changes
-                if (!e.target.value.startsWith('/')) {
-                  setSlashIndex(-1);
-                } else if (slashIndex >= filteredCommands.length) {
-                  setSlashIndex(-1);
-                }
+                handleSlashChange(e.target.value);
               }}
             />
           </div>

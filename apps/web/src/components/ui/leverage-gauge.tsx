@@ -23,13 +23,24 @@
 //   Over 80%    → danger red   (text-danger animate-pulse)
 //
 // Displays 20 fixed-length character slots: █ for filled, ░ for empty.
+//
+// M1: Converted from client to server component — the inline computations
+// are pure and don't require React hooks.
 
-'use client';
-
-import { useMemo } from 'react';
 import { cn } from '@/lib/cn';
 
 const SLOTS = 20;
+
+function computeFilled(usagePct: number): number {
+  const clamped = Math.max(0, Math.min(usagePct / 100, 1));
+  return Math.round(clamped * SLOTS);
+}
+
+function computeTone(usagePct: number): string {
+  if (usagePct > 80) return 'text-danger animate-pulse';
+  if (usagePct >= 50) return 'text-brand';
+  return 'text-fg-subtle';
+}
 
 interface LeverageGaugeProps {
   /** Current margin usage as a percentage (0–100+). */
@@ -41,18 +52,9 @@ interface LeverageGaugeProps {
 }
 
 export function LeverageGauge({ usagePct, label = 'Margin Used', detail }: LeverageGaugeProps) {
-  const filled = useMemo(() => {
-    const clamped = Math.max(0, Math.min(usagePct / 100, 1));
-    return Math.round(clamped * SLOTS);
-  }, [usagePct]);
-
+  const filled = computeFilled(usagePct);
   const empty = SLOTS - filled;
-
-  const toneClass = useMemo(() => {
-    if (usagePct > 80) return 'text-danger animate-pulse';
-    if (usagePct >= 50) return 'text-brand';
-    return 'text-fg-subtle';
-  }, [usagePct]);
+  const toneClass = computeTone(usagePct);
 
   return (
     <div className="flex flex-col gap-1.5 font-mono" aria-label={`${label}: ${usagePct.toFixed(1)}%`}>
