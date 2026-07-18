@@ -8,7 +8,7 @@
 import http from 'k6/http';
 import type { RefinedResponse, ResponseType, Params } from 'k6/http';
 import { env } from '../config/environments.js';
-import { record429, recordAuthFailure } from './checks.js';
+import { record429, recordAuthFailure, expectOk } from './checks.js';
 
 export type HttpHeaders = Record<string, string>;
 
@@ -38,6 +38,7 @@ export function getJson(
     ...(extraParams ?? {}),
   };
   const res = http.get(url, params);
+  expectOk(res);
   record429(res);
   recordAuthFailure(res);
   return res;
@@ -65,6 +66,7 @@ export function postJson(
     ...(extraParams ?? {}),
   };
   const res = http.post(url, JSON.stringify(body), params);
+  expectOk(res);
   record429(res);
   recordAuthFailure(res);
   return res;

@@ -14,8 +14,8 @@ const RPS_STEPS = (__ENV['K6_STRESS_STEPS'] ?? '50,100,200,400')
   .split(',')
   .map(Number);
 
-const PRE_ALLOCATED_VUS = parseInt(__ENV['K6_PRE_ALLOCATED_VUS'] ?? '50', 10);
-const MAX_VUS = parseInt(__ENV['K6_MAX_VUS'] ?? '250', 10);
+const PRE_ALLOCATED_VUS = parseInt(__ENV['K6_PRE_ALLOCATED_VUS'] ?? '100', 10);
+const MAX_VUS = parseInt(__ENV['K6_MAX_VUS'] ?? '400', 10);
 
 export const options = {
   ...stress(RPS_STEPS, '1m', PRE_ALLOCATED_VUS, MAX_VUS),

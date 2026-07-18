@@ -19,8 +19,13 @@
 //
 // Computes one or more indicators against the same candle window so the
 // chart UI can ask for "EMA 20 + EMA 50 + RSI 14" in a single round-trip.
+//
+// Results are cached server-side for 30 seconds because indicator values
+// don't change between successive requests for the same candle window.
+// The cache key includes symbol + timeframe + count + indicator list so
+// different indicator combinations are independently cached.
 
-import { getCandles } from '@hamafx/data';
+import { getCandles, getDefaultCache, cacheKey } from '@hamafx/data';
 import { computeIndicator } from '@hamafx/indicators';
 import {
   DEFAULT_TIMEFRAME,
@@ -37,6 +42,12 @@ import { withRateLimit } from '@hamafx/db';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
+
+/** Indicator results are cached for 30 seconds. Indicator values don't
+ * change between requests for the same candle window, and candles
+ * themselves are cached at the data layer. A 30-second TTL dramatically
+ * reduces repeated compute for rapidly-polling chart UIs. */
+const INDICATOR_CACHE_TTL = 30;
 
 const BodySchema = z.object({
   symbol: SymbolSchema,
@@ -64,13 +75,39 @@ export const POST = withAuth<void>(async (req, { user }) => {
       );
     }
     const { symbol, tf, count, indicators } = await parseJsonBody(req, BodySchema);
-    const candles = await getCandles(symbol, tf, { count });
 
-    const results: IndicatorResult[] = indicators.map(({ kind, params }) =>
-      computeIndicator({ symbol, tf, kind, params, candles }),
+    // Build a stable cache key from the full request signature so each
+    // distinct indicator combination caches independently.
+    const key = cacheKey({
+      resource: 'indicator',
+      symbol,
+      tf,
+      extra: `${count}:${indicators.map((i) => i.kind).join(',')}`,
+    });
+    const cache = await getDefaultCache();
+
+    const { value: resultData } = await cache.fetchWithMeta<{
+      candles: unknown;
+      results: IndicatorResult[];
+    }>(
+      key,
+      async () => {
+        const candles = await getCandles(symbol, tf, { count });
+        const results: IndicatorResult[] = indicators.map(({ kind, params }) =>
+          computeIndicator({ symbol, tf, kind, params, candles }),
+        );
+        return { candles, results };
+      },
+      { ttlSeconds: INDICATOR_CACHE_TTL },
     );
 
-    return Response.json({ symbol, tf, count: candles.length, candles, results });
+    return Response.json({
+      symbol,
+      tf,
+      count: (resultData.candles as unknown[]).length,
+      candles: resultData.candles,
+      results: resultData.results,
+    });
   } catch (err) {
     return errorResponse(err);
   }

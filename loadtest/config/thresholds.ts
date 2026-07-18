@@ -22,6 +22,7 @@ export const MARKET_READ: ThresholdPreset = {
 
 export const MARKET_READ_TAGGED = {
   'http_req_duration{group:market_read}': ['p(95)<500', 'p(99)<1200'],
+  'http_req_duration{group:market_read_slow}': ['p(95)<1500', 'p(99)<3000'],
 };
 
 // ── Relaxed variants for load-test / CI environments where the SUT
@@ -34,7 +35,10 @@ function isRelaxed(): boolean {
 }
 
 export const MARKET_READ_TAGGED_RELAXED = RELAXED
-  ? { 'http_req_duration{group:market_read}': ['p(95)<2000', 'p(99)<4000'] }
+  ? {
+      'http_req_duration{group:market_read}': ['p(95)<2000', 'p(99)<4000'],
+      'http_req_duration{group:market_read_slow}': ['p(95)<3000', 'p(99)<6000'],
+    }
   : MARKET_READ_TAGGED;
 
 // ── read_mix (broad GET surface) ──

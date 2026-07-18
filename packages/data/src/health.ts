@@ -72,6 +72,19 @@ function trim(st: State, now: number): void {
   if (i > 0) st.samples.splice(0, i);
 }
 
+/**
+ * Count consecutive trailing failures. Returns 0 when the last sample
+ * is a success or there are no samples.
+ */
+function consecutiveFailures(st: State): number {
+  let count = 0;
+  for (let i = st.samples.length - 1; i >= 0; i--) {
+    if (!st.samples[i]!.ok) count += 1;
+    else break;
+  }
+  return count;
+}
+
 export function recordSuccess(provider: string): void {
   const now = Date.now();
   const st = s(provider);
@@ -118,17 +131,46 @@ export function getHealth(provider: string): HealthSnapshot {
 
 /**
  * Score a provider for failover ordering. Higher = healthier.
+ *
+ * Uses exponential decay: each consecutive trailing failure doubles its
+ * weight, so a burst of 5 consecutive failures penalises the provider
+ * much harder than 5 failures scattered across 50 successes.
+ *
  *  - Unknown (no samples): neutral 0.5 — give it a chance.
  *  - Mostly fresh successes: ~1.0.
- *  - Recent burst of failures: drops toward 0 quickly.
+ *  - Consecutive failures: drops toward 0 exponentially so the failover
+ *    chain quickly bypasses a provider that has entered a persistent
+ *    failure state (e.g. closed market, expired API key).
  *
  * `runWithFailover` sorts attempts by score descending while preserving
  * the caller-provided order on ties.
  */
 export function getScore(provider: string): number {
-  const h = getHealth(provider);
-  if (h.samples === 0) return 0.5;
-  return Math.max(0, 1 - h.failureRate);
+  const st = s(provider);
+  const now = Date.now();
+  trim(st, now);
+
+  if (st.samples.length === 0) return 0.5;
+
+  const consec = consecutiveFailures(st);
+  let weightedFailures = 0;
+  let weightedTotal = 0;
+
+  for (let idx = 0; idx < st.samples.length; idx++) {
+    const sample = st.samples[idx]!;
+    weightedTotal += 1;
+    if (!sample.ok) {
+      // Penalty is 2^{consecutive position from the end} so recent
+      // consecutive failures dominate the score. A single isolated
+      // failure counts as 1; 3 consecutive failures count as 1+2+4=7.
+      const positionFromEnd = st.samples.length - 1 - idx;
+      const distance = Math.max(0, consec - positionFromEnd - 1);
+      weightedFailures += Math.pow(2, distance);
+    }
+  }
+
+  const failureRate = weightedFailures / weightedTotal;
+  return Math.max(0, 1 - failureRate);
 }
 
 /** Test helper. */

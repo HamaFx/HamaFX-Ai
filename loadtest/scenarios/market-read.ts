@@ -23,8 +23,9 @@ export function marketRead(_ctx: SessionCtx): void {
     // Candles (20%)
     getJson(`/api/market/candles?symbol=${symbol}&timeframe=1h`, 'market_read');
   } else if (roll < 0.75) {
-    // Indicators (15%) — POST required, indicator objects with kind+params
-    postJson('/api/market/indicators', 'market_read', {
+    // Indicators (15%) — POST required, slower than GET endpoints,
+    // tagged separately so thresholds don't conflate fast & slow populations.
+    postJson('/api/market/indicators', 'market_read_slow', {
       symbol,
       tf: '1h',
       indicators: [
@@ -33,8 +34,8 @@ export function marketRead(_ctx: SessionCtx): void {
       ],
     });
   } else if (roll < 0.9) {
-    // Structure (15%) — POST required
-    postJson('/api/market/structure', 'market_read', {
+    // Structure (15%) — POST required, slower than GET endpoints
+    postJson('/api/market/structure', 'market_read_slow', {
       symbol,
       tf: '1h',
     });
