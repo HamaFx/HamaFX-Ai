@@ -555,6 +555,8 @@ export interface ToolTelemetryInput {
   ms: number;
   ok: boolean;
   errorCode?: string | null;
+  /** F7-obs — estimated character count of the tool's output. */
+  outputChars?: number | null;
 }
 
 export async function recordToolTelemetry(t: ToolTelemetryInput): Promise<void> {
@@ -572,6 +574,7 @@ export async function recordToolTelemetry(t: ToolTelemetryInput): Promise<void> 
         ms: t.ms,
         ok: t.ok,
         errorCode: t.errorCode ?? null,
+        outputChars: t.outputChars ?? null,
       });
   } catch (err) {
     // Tool-telemetry failures must never crash a chat turn.

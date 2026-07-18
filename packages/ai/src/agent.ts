@@ -42,6 +42,7 @@ import {
   checkBudgetAlertsAndThresholds,
 } from './cost';
 import { classifyStreamError, makeFallbackPart, type FallbackPartPayload } from './fallback';
+import { estimateContextUsage } from './token-estimate';
 import { compactThread } from './memory/thread-summary';
 import {
   derivePlannerModel,
@@ -263,6 +264,81 @@ async function runChatInner(args: RunChatArgs) {
   // P5: avoid re-running checkBudgetAlertsAndThresholds on every retry attempt.
   // Each provider needs at most one check per turn.
   const checkedProviders = new Set<string>();
+  // F1 — capture narrowed settings for use in the inner retry helper.
+  const settings = userSettings;
+
+  /**
+   * Resolves the model for the current retry attempt (respects override
+   * or routing domain). Also checks provider budget thresholds.
+   * Throws on budget blocks or provider threshold violations; the caller
+   * converts those into fallback decisions in the catch block.
+   */
+  async function resolveModelForTurn(): Promise<{
+    resolvedModel: LanguageModel;
+    resolvedModelId: string;
+    providerId: ProviderId;
+    nonEssentialDisabled: boolean;
+  }> {
+    const domainParam = toModelDomain(routing.domain);
+    let resolvedModel: LanguageModel;
+    let resolvedModelId: string;
+    let providerId: ProviderId;
+
+    if (typeof currentModelOverride === 'string' && currentModelOverride.length > 0) {
+      const resolved = resolveOverrideModel({
+        override: currentModelOverride,
+        userSettings: settings,
+        env,
+      });
+      if (resolved) {
+        resolvedModel = resolved.model;
+        resolvedModelId = resolved.modelId;
+        providerId = resolved.providerId;
+      } else {
+        // AI-1: Log when a user-specified model override cannot be
+        // resolved and falls back to default.
+        alog.warn('Model override not resolved — falling back', {
+          override: currentModelOverride,
+        });
+        const sep = currentModelOverride.indexOf(':');
+        const possibleProviderId = (sep >= 0 ? currentModelOverride.slice(0, sep) : currentModelOverride) as ProviderId;
+        if (PROVIDER_IDS.includes(possibleProviderId)) {
+          const res = resolveModelForProvider(possibleProviderId, settings, env);
+          resolvedModel = res.model;
+          resolvedModelId = res.modelId;
+          providerId = res.providerId;
+        } else {
+          const res = resolveChatModel(settings, env, domainParam);
+          resolvedModel = res.model;
+          resolvedModelId = res.modelId;
+          providerId = res.providerId;
+        }
+      }
+    } else {
+      const res = resolveChatModel(settings, env, domainParam);
+      resolvedModel = res.model;
+      resolvedModelId = res.modelId;
+      providerId = res.providerId;
+    }
+
+    // P5: skip budget check if we already checked this provider this turn.
+    let budgetCheck: Awaited<ReturnType<typeof checkBudgetAlertsAndThresholds>>;
+    if (providerId && checkedProviders.has(providerId)) {
+      budgetCheck = { blocked: false, nonEssentialDisabled };
+    } else {
+      if (providerId) checkedProviders.add(providerId);
+      budgetCheck = await checkBudgetAlertsAndThresholds(userId, providerId);
+    }
+    if (budgetCheck.blocked) {
+      if (budgetCheck.blockedReason?.includes('Monthly budget limit reached')) {
+        throw new Error(budgetCheck.blockedReason);
+      } else {
+        throw new Error(`PROVIDER_THRESHOLD_EXCEEDED: ${budgetCheck.blockedReason}`);
+      }
+    }
+
+    return { resolvedModel, resolvedModelId, providerId, nonEssentialDisabled: budgetCheck.nonEssentialDisabled };
+  }
 
   while (attempts < maxAttempts) {
     attempts++;
@@ -271,63 +347,11 @@ async function runChatInner(args: RunChatArgs) {
     let providerId: ProviderId | undefined;
 
     try {
-      const domainParam = toModelDomain(routing.domain);
-
-      if (typeof currentModelOverride === 'string' && currentModelOverride.length > 0) {
-        const resolved = resolveOverrideModel({
-          override: currentModelOverride,
-          userSettings,
-          env,
-        });
-        if (resolved) {
-          resolvedModel = resolved.model;
-          resolvedModelId = resolved.modelId;
-          providerId = resolved.providerId;
-        } else {
-          // AI-1: Log when a user-specified model override cannot be
-          // resolved and falls back to default. The user may not
-          // realize their override was ignored.
-          alog.warn('Model override not resolved — falling back', {
-            override: currentModelOverride,
-          });
-          // If override couldn't be resolved, try resolving model for the override provider ID if it is one of PROVIDER_IDS
-          const sep = currentModelOverride.indexOf(':');
-          const possibleProviderId = (sep >= 0 ? currentModelOverride.slice(0, sep) : currentModelOverride) as ProviderId;
-          if (PROVIDER_IDS.includes(possibleProviderId)) {
-            const res = resolveModelForProvider(possibleProviderId, userSettings, env);
-            resolvedModel = res.model;
-            resolvedModelId = res.modelId;
-            providerId = res.providerId;
-          } else {
-            const res = resolveChatModel(userSettings, env, domainParam);
-            resolvedModel = res.model;
-            resolvedModelId = res.modelId;
-            providerId = res.providerId;
-          }
-        }
-      } else {
-        const res = resolveChatModel(userSettings, env, domainParam);
-        resolvedModel = res.model;
-        resolvedModelId = res.modelId;
-        providerId = res.providerId;
-      }
-      
-      // P5: skip budget check if we already checked this provider this turn.
-      let budgetCheck: Awaited<ReturnType<typeof checkBudgetAlertsAndThresholds>>;
-      if (providerId && checkedProviders.has(providerId)) {
-        budgetCheck = { blocked: false, nonEssentialDisabled };
-      } else {
-        if (providerId) checkedProviders.add(providerId);
-        budgetCheck = await checkBudgetAlertsAndThresholds(userId, providerId);
-      }
-      if (budgetCheck.blocked) {
-        if (budgetCheck.blockedReason?.includes('Monthly budget limit reached')) {
-          throw new Error(budgetCheck.blockedReason);
-        } else {
-          throw new Error(`PROVIDER_THRESHOLD_EXCEEDED: ${budgetCheck.blockedReason}`);
-        }
-      }
-      nonEssentialDisabled = budgetCheck.nonEssentialDisabled;
+      const result = await resolveModelForTurn();
+      resolvedModel = result.resolvedModel;
+      resolvedModelId = result.resolvedModelId;
+      providerId = result.providerId;
+      nonEssentialDisabled = result.nonEssentialDisabled;
     } catch (err) {
       lastError = err;
       const isProviderThresholdErr = err instanceof Error && err.message.startsWith('PROVIDER_THRESHOLD_EXCEEDED');
@@ -338,8 +362,7 @@ async function runChatInner(args: RunChatArgs) {
         throw err;
       }
 
-
-      // Fallback! Get next provider from chain
+      // Fallback! Determine current provider for chain walk.
       const currentProvider = providerId ?? ((typeof currentModelOverride === 'string' && currentModelOverride.length > 0)
         ? (currentModelOverride.includes(':') ? currentModelOverride.split(':')[0] : currentModelOverride)
         : 'google') as ProviderId;
@@ -358,8 +381,13 @@ async function runChatInner(args: RunChatArgs) {
 
       alog.warn('Fallback triggered — model resolution failed', { nextProvider: nextFallback.providerId });
 
+      // The fallback marker shows which model was attempted.
+      // Note: path 1 doesn't have a resolved providerId yet (resolution
+      // itself failed), so we use 'auto' vs the current override string.
+      // Path 2 (stream failure) uses the actual providerId:bareModelId
+      // because model resolution succeeded before the stream errored.
       fallbackInfo = makeFallbackPart(
-        currentModelOverride ?? 'default',
+        currentModelOverride ?? 'auto',
         decision,
       );
 
@@ -375,7 +403,6 @@ async function runChatInner(args: RunChatArgs) {
     //     turn so the chat surface renders a collapsible "Thinking" pill
     //     above the assistant's answer. Failures fall back deterministically
     //     and never block the main streamText call.
-    let plannerStartedAt = 0;
     let plannerResult: Awaited<ReturnType<typeof runPlanner>> | null = null;
     const parts = resolvedModelId.split('/');
     const bareModelId = parts.length > 1 ? parts[1] : resolvedModelId;
@@ -393,7 +420,6 @@ async function runChatInner(args: RunChatArgs) {
           },
           env
         ) ?? env.AI_DEFAULT_MODEL;
-      plannerStartedAt = Date.now();
       try {
         plannerResult = await runPlanner({
           threadId,
@@ -433,7 +459,6 @@ async function runChatInner(args: RunChatArgs) {
         alog.warn('planner threw — falling back', { err: String(err) });
       }
     }
-    void plannerStartedAt;
 
     // The base system prompt is unchanged; we prepend the (optional) thread
     // summary as a system note so the model has continuity beyond the verbatim
@@ -450,6 +475,32 @@ async function runChatInner(args: RunChatArgs) {
 
     if (customInstructions && customInstructions.trim().length > 0) {
       systemPrompt += `\n\n<USER_CUSTOM_INSTRUCTIONS>\n${customInstructions}\n</USER_CUSTOM_INSTRUCTIONS>`;
+    }
+
+    // F4 — Context-window-aware token estimation. Warn (or truncate) when
+    // the conversation approaches the model's context limit. Helps prevent
+    // silent crashes on long threads with smaller-context models like Claude.
+    // Uses a per-attempt COPY so truncation doesn't persist across retries
+    // when switching to a larger-context provider.
+    let effectiveMessages = modelMessages;
+    const totalContentLen = effectiveMessages.reduce((sum, m) => sum + (typeof m.content === 'string' ? m.content.length : JSON.stringify(m.content).length), 0);
+    const contextEstimate = estimateContextUsage(
+      resolvedModelId,
+      systemPrompt.length,
+      effectiveMessages.length,
+      totalContentLen,
+    );
+    if (contextEstimate.warningNote) {
+      systemPrompt = `${contextEstimate.warningNote}\n\n${systemPrompt}`;
+    }
+    if (contextEstimate.shouldTruncate && contextEstimate.suggestedKeepCount) {
+      recordStep('context_truncation', {
+        estimatedTokens: contextEstimate.estimatedTokens,
+        contextLimit: contextEstimate.contextLimit,
+        originalCount: effectiveMessages.length,
+        keptCount: contextEstimate.suggestedKeepCount,
+      });
+      effectiveMessages = effectiveMessages.slice(-contextEstimate.suggestedKeepCount);
     }
 
     // Phase 3 hardening §1 — `withToolContext` replaces the per-module
@@ -527,7 +578,7 @@ async function runChatInner(args: RunChatArgs) {
       ...(supportsPromptCaching(resolvedModelId)
         ? { providerOptions: { anthropic: { cacheControl: { type: 'ephemeral' as const } } } }
         : {}),
-      messages: modelMessages,
+      messages: effectiveMessages,
       tools: routing.domain === 'fundamental' && env.GOOGLE_VERTEX_PROJECT
         ? { ...activeTools, googleSearch: getVertexGoogleSearchTool(env, userId) } 
         : activeTools,
@@ -684,6 +735,13 @@ async function runChatInner(args: RunChatArgs) {
       return result;
     } catch (err) {
       lastError = err;
+      // F13 — don't retry when the client disconnected. The user closed the
+      // tab, so any retry would produce a response nobody reads while still
+      // consuming the daily budget. Throw immediately; the exhaustion handler
+      // at the bottom of the loop releases the reservation once.
+      if (signal?.aborted) {
+        throw err;
+      }
       const decision = classifyStreamError(err);
       if (!decision.fallback) {
         throw err;
@@ -704,6 +762,9 @@ async function runChatInner(args: RunChatArgs) {
 
       alog.warn('Fallback triggered — provider failed', { provider: String(providerId), reason: decision.reason, message: decision.message, nextProvider: nextFallback.providerId });
 
+      // F2 — unified fallback part construction. Uses the override string
+      // when available (same as model-resolution path), otherwise shows the
+      // current provider that failed.
       fallbackInfo = makeFallbackPart(
         currentModelOverride ?? `${providerId}:${bareModelId}`,
         decision,

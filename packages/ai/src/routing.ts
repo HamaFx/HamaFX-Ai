@@ -183,29 +183,29 @@ export async function routeTurn(args: RouteTurnOptions): Promise<RoutingDecision
 // ---------------------------------------------------------------------------
 
 const FUNDAMENTAL_PATTERNS: Array<{ re: RegExp; weight: number }> = [
-  { re: /\b(why|because|driver|reason|cause|implication|catalyst)\b/, weight: 2 },
-  { re: /\b(fundamental|macro|policy|monetary|hawkish|dovish|stagflation)\b/, weight: 3 },
+  { re: /\b(why|because|driver|reason|cause|implication|catalyst|going\s+up|going\s+down|rally|sell-?off|behind\s+the|what's\s+driving|what\s+is\s+driving)\b/, weight: 2 },
+  { re: /\b(fundamental|macro|policy|monetary|hawkish|dovish|stagflation|balance\s+sheet|quantitative|tightening|easing)\b/, weight: 3 },
   {
-    re: /\b(fed|fomc|powell|ecb|lagarde|boe|bailey|cpi|nfp|pce|gdp|ppi|pmi|jobs|jobless)\b/,
+    re: /\b(fed|fomc|powell|ecb|lagarde|boe|bailey|boj|rba|rbnz|cpi|nfp|pce|gdp|ppi|pmi|jobs|jobless|claims|unemployment|retail\s+sales)\b/,
     weight: 3,
   },
-  { re: /\b(real yield|yields|10y|treasury|treasuries|dxy|dollar index)\b/, weight: 2 },
-  { re: /\b(geopolit|war|tariff|sanction|risk-?on|risk-?off)\b/, weight: 2 },
-  { re: /\b(scenario|outlook|forecast|expect)\b/, weight: 1 },
-  { re: /\b(committee|review my trade|rate my setup|should i take|trade idea)\b/, weight: 3 },
+  { re: /\b(real yield|yields|10y|treasury|treasuries|dxy|dollar index|usdx|bond|bonds|spread|spreads)\b/, weight: 2 },
+  { re: /\b(geopolit|war|tariff|sanction|risk-?on|risk-?off|safe\s*haven|flight\s*to)\b/, weight: 2 },
+  { re: /\b(scenario|outlook|forecast|expect|positioning|sentiment|bullish|bearish)\b/, weight: 1 },
+  { re: /\b(committee|review my trade|rate my setup|should i take|trade idea|worried\s+about|concerned\s+about)\b/, weight: 3 },
 ];
 
 const TECHNICAL_PATTERNS: Array<{ re: RegExp; weight: number }> = [
-  { re: /\b(chart|candle|candles|bar|bars|wick|body)\b/, weight: 1 },
+  { re: /\b(chart|candle|candles|bar|bars|wick|body|pattern|patterns|formation|flag|wedge|triangle|double\s*(top|bottom)|head\s*and\s*shoulders)\b/, weight: 1 },
   {
-    re: /\b(rsi|macd|ema|sma|bollinger|atr|stoch|stochastic|adx|ichimoku|pivot|pivots)\b/,
+    re: /\b(rsi|macd|ema|sma|bollinger|atr|stoch|stochastic|adx|ichimoku|pivot|pivots|fibonacci|fib|retracement|volume|vol|vwap)\b/,
     weight: 3,
   },
-  { re: /\b(bos|choch|fvg|fair value gap|order block|liquidity|sweep|smc|ict)\b/, weight: 3 },
-  { re: /\b(timeframe|tf|1m|5m|15m|30m|1h|4h|1d|1w|daily|weekly|hourly)\b/, weight: 1 },
-  { re: /\b(support|resistance|breakout|rejection|trend|reversal|range)\b/, weight: 2 },
-  { re: /\b(top-?down|bias|setup|invalidation|stop)\b/, weight: 2 },
-  { re: /\b(price|level|levels|key level)\b/, weight: 1 },
+  { re: /\b(bos|choch|fvg|fair value gap|order block|order\s*flow|liquidity|sweep|smc|ict|imbalance|mitigation)\b/, weight: 3 },
+  { re: /\b(timeframe|tf|1m|5m|15m|30m|1h|4h|1d|1w|daily|weekly|hourly|intraday|swing)\b/, weight: 1 },
+  { re: /\b(support|resistance|breakout|rejection|trend|reversal|range|consolidation|channel|pullback|retest)\b/, weight: 2 },
+  { re: /\b(top-?down|bias|setup|invalidation|stop|entry|target|risk\s*reward|r\s*:?\s*r)\b/, weight: 2 },
+  { re: /\b(price|level|levels|key level|cable|fibre|gold|xau|eur|gbp|dollar)\b/, weight: 1 },
 ];
 
 const SUMMARY_PATTERNS: Array<{ re: RegExp; weight: number }> = [

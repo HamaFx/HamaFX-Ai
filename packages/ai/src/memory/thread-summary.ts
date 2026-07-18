@@ -32,6 +32,8 @@
 // `convertToModelMessages` exactly like before. That keeps the agent's
 // streamText invocation untouched.
 
+import { createHash } from 'node:crypto';
+
 import { getDb, schema } from '@hamafx/db';
 import type { ServerEnv } from '@hamafx/shared';
 import { generateText } from 'ai';
@@ -236,15 +238,9 @@ function deterministicSummary(older: DbMessage[]): string {
 }
 
 function digestOf(messages: DbMessage[]): string {
-  // Cheap, stable: roles + first-N chars of each message's content.
-  const parts = messages.map((m) => `${m.role}:${m.content.slice(0, 120)}`).join('|');
-  return djb2(parts).toString(16);
-}
-
-function djb2(input: string): number {
-  let h = 5381;
-  for (let i = 0; i < input.length; i += 1) {
-    h = ((h << 5) + h + input.charCodeAt(i)) & 0xffffffff;
-  }
-  return h >>> 0;
+  // F5 — use SHA-256 for collision resistance and 500 chars per message
+  // (previously 120) to reduce false-positive cache hits when only the
+  // suffix of a message differs.
+  const parts = messages.map((m) => `${m.role}:${m.content.slice(0, 500)}`).join('|');
+  return createHash('sha256').update(parts).digest('hex');
 }

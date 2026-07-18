@@ -51,6 +51,10 @@ export const chatToolTelemetry = pgTable(
     ok: boolean('ok').notNull().default(true),
     /** Optional short error code captured when `ok=false`. */
     errorCode: text('error_code'),
+    /** F7-obs — estimated character count of the tool's output. Proxy for
+     *  token consumption; helps identify which tools produce the largest
+     *  responses and contribute most to context-window usage. */
+    outputChars: integer('output_chars'),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   },
   (t) => [

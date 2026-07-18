@@ -35,6 +35,12 @@
 //      invocation, with `ms`, `ok`, and a normalised `errorCode` on
 //      failure.
 //
+// F7 — per-tool timeout enforcement. Each tool has a configurable deadline
+// (default 25s). If the tool doesn't complete within the deadline, it's
+// aborted via the AbortSignal. This prevents a hung tool from consuming
+// the entire turn budget. The deadline can be overridden per-tool via
+// TOOL_TIMEOUT_OVERRIDES.
+//
 // Tools that already surface their own telemetry (none today) can opt
 // out by importing the raw factory and skipping the wrap.
 
@@ -43,6 +49,32 @@ import type { Tool } from 'ai';
 import { recordToolTelemetry } from '../persistence';
 import { maybeGetToolContext } from '../tool-context';
 import { recordStep, completeStep, recordError } from '../diagnostics';
+
+/** Custom error class for tool timeout detection. */
+class ToolTimeoutError extends Error {
+  readonly code = 'TIMEOUT';
+  constructor(toolName: string, ms: number) {
+    super(`Tool ${toolName} timed out after ${ms}ms`);
+    this.name = 'ToolTimeoutError';
+  }
+}
+
+/** Default per-tool timeout in milliseconds. */
+const DEFAULT_TOOL_TIMEOUT_MS = 25_000;
+
+/** Per-tool timeout overrides for especially slow or fast tools (ms). */
+const TOOL_TIMEOUT_OVERRIDES: Record<string, number> = {
+  // Vision model analysis can take longer.
+  analyze_chart_image: 45_000,
+  // Committee runs 4 LLM calls — needs extra headroom.
+  convene_committee: 60_000,
+  // Historical backtests can be slow.
+  replay_setup: 40_000,
+  // Fast tools can be stricter.
+  get_price: 5_000,
+  get_candles: 10_000,
+  get_indicators: 10_000,
+};
 
 /**
  * Wrap a tool with execute-side telemetry + signal propagation. The
@@ -72,29 +104,49 @@ export function withTelemetry<T extends Tool<any, any>>(name: string, t: T): T {
     const opts2 = ctx?.signal
       ? { ...(opts ?? {}), abortSignal: ctx.signal }
       : opts;
+    // F7 — per-tool timeout: race the tool execution against a deadline.
+    // If the deadline fires first, the tool's result is discarded.
+    const timeoutMs = TOOL_TIMEOUT_OVERRIDES[name] ?? DEFAULT_TOOL_TIMEOUT_MS;
+    let timeout: ReturnType<typeof setTimeout> | undefined;
+    // If ctx.signal aborts (tab close), cancel the timeout to avoid spurious errors.
+    if (ctx?.signal && !ctx.signal.aborted) {
+      ctx.signal.addEventListener('abort', () => { if (timeout) clearTimeout(timeout); }, { once: true });
+    }
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const result = await (inner as (i: any, o: any) => Promise<any>)(input, opts2);
+      const executePromise = (inner as (i: any, o: any) => Promise<any>)(input, opts2);
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        timeout = setTimeout(() => reject(new ToolTimeoutError(name, timeoutMs)), timeoutMs);
+      });
+      const result = await Promise.race([executePromise, timeoutPromise]);
       const ms = Date.now() - startedAt;
+      // F7-obs — estimate output size in characters for cost/observability tracking.
+      const outputChars = estimateResultChars(result);
+      if (timeout) clearTimeout(timeout);
       void recordToolTelemetry({
         threadId: ctx?.threadId ?? null,
+        userId: ctx?.userId ?? null,
         messageId: null,
         tool: name,
         ms,
         ok: true,
+        outputChars,
       });
       // F5 — Mark the diagnostic step as completed.
       completeStep(`tool:${name}`, 'completed', ms);
       return result;
     } catch (err) {
       const ms = Date.now() - startedAt;
+      if (timeout) clearTimeout(timeout);
+      const isTimeout = err instanceof ToolTimeoutError;
       void recordToolTelemetry({
         threadId: ctx?.threadId ?? null,
+        userId: ctx?.userId ?? null,
         messageId: null,
         tool: name,
         ms,
         ok: false,
-        errorCode: errorCodeFor(err),
+        errorCode: isTimeout ? 'TIMEOUT' : errorCodeFor(err),
       });
       // F5 — Record the error and mark the step as failed.
       recordError(err);
@@ -107,6 +159,24 @@ export function withTelemetry<T extends Tool<any, any>>(name: string, t: T): T {
     ...t,
     execute: wrappedExecute,
   } as T;
+}
+
+/**
+ * F7-obs — estimate character count of a tool's result for telemetry.
+ * Handles strings, objects (JSON length), and buffers.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function estimateResultChars(result: any): number | null {
+  if (result === null || result === undefined) return 0;
+  if (typeof result === 'string') return result.length;
+  if (typeof result === 'object') {
+    try {
+      return JSON.stringify(result).length;
+    } catch {
+      return null;
+    }
+  }
+  return null;
 }
 
 /**

@@ -38,10 +38,14 @@
  * and decides whether to fall back.
  */
 
+/** Regex for context-window overflow error messages across providers. */
+const CTX_OVERFLOW_RX = /context\s*(length|window|limit|size)|maximum\s*context|reduce\s*the\s*length|too\s*many\s*tokens|max[_-]?tokens|input\s*is\s*too\s*(long|large)|exceeds\s*(the\s*)?(context|limit|maximum)/;
+
 export type FallbackReason =
   | 'auth' // 401 / 403
   | 'rate-limit' // 429
   | 'upstream' // 5xx
+  | 'context-overflow' // context window exceeded (400 — retry with larger-model provider)
   | 'timeout' // network timeout
   | 'unknown'; // anything else
 
@@ -75,6 +79,14 @@ export function classifyStreamError(err: unknown): FallbackDecision {
   }
   if (statusCode !== null && statusCode >= 500 && statusCode < 600) {
     return { fallback: true, reason: 'upstream', message: `Override provider returned HTTP ${statusCode}` };
+  }
+  // F15 — context-window errors. Providers return these when the message
+  // history exceeds their context limit. Common response codes: 400 (Bad Request),
+  // 413 (Payload Too Large). Also checked when no status code is present
+  // (e.g. errors wrapped by SDKs or proxies). Falling back to a different
+  // provider (e.g. Claude 200K → Gemini 1M) is the correct remediation.
+  if ((statusCode === 400 || statusCode === 413 || statusCode === null) && CTX_OVERFLOW_RX.test(lowerMessage)) {
+    return { fallback: true, reason: 'context-overflow', message: 'Context window exceeded — trying a larger-model provider' };
   }
   if (/timeout|timed?\s*out|aborted|network|fetch\s*failed/.test(lowerMessage)) {
     return { fallback: true, reason: 'timeout', message: 'Override provider timed out' };
