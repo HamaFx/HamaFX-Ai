@@ -16,8 +16,8 @@
 
 // Base WebSocket consumer — shared lifecycle for raw WS connections.
 //
-// TwelveDataWsConsumer and BinanceStreamConsumer both manage identical
-// WebSocket patterns: connect, reconnect with exponential backoff,
+// BinanceStreamConsumer manages a WebSocket pattern: connect, reconnect
+// with exponential backoff,
 // heartbeat/ping timers, destroyed-flag guards, and event listener
 // cleanup on stop. This base class extracts those patterns so new
 // WS providers need only implement `buildUrl()`, `handleMessage()`,

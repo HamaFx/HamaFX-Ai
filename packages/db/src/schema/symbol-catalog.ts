@@ -24,7 +24,6 @@ export const symbolCatalog = pgTable('symbol_catalog', {
   exchange: text('exchange'),
   tvTicker: text('tv_ticker'),
   // Provider-specific symbol formats (added in market data architecture redesign)
-  twelveDataSymbol: text('twelve_data_symbol'),
   biquoteSymbol: text('biquote_symbol'),
   binanceSymbol: text('binance_symbol'),
   finnhubSymbol: text('finnhub_symbol'),

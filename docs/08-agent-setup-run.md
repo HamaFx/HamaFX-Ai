@@ -121,7 +121,6 @@ docker compose up -d
 | `FINNHUB_API_KEY` | Recommended | Fallback FX, news, calendar |
 | `MARKETAUX_API_KEY` | Recommended | Financial news + sentiment |
 | `FRED_API_KEY` | Recommended | Macro data, economic calendar |
-| `TWELVEDATA_API_KEY` | Optional | Gold live ticks (WebSocket) |
 | `BIQUOTE_BASE_URL` | Optional (default: `https://biquote.io`) | BiQuote REST base URL |
 | `BINANCE_CRYPTO_SYMBOLS` | Optional (default: `BTCUSDT,ETHUSDT,...`) | Crypto symbols for Binance WS |
 

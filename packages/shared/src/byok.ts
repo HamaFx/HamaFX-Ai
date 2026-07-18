@@ -75,7 +75,6 @@ export interface ByokPayload {
   xai?: string;
   deepseek?: string;
   finnhub?: string;
-  twelvedata?: string;
   iamhc?: string;
 }
 

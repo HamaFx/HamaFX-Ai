@@ -111,7 +111,7 @@ Self-hosters are responsible for:
 
 ### Data Provider Licensing
 
-HamaFX-Ai integrates with multiple market data providers (BiQuote, Finnhub, Marketaux, FRED, TwelveData, Binance, CFTC). **No provider terms of service are included in this repository.** If you redistribute market data to paying subscribers, you are responsible for verifying each provider's redistribution terms and obtaining appropriate licenses. See [docs/02-data-flows.md](docs/02-data-flows.md) §6 for the licensing status table.
+HamaFX-Ai integrates with multiple market data providers (BiQuote, Finnhub, Marketaux, FRED, Binance, CFTC). **No provider terms of service are included in this repository.** If you redistribute market data to paying subscribers, you are responsible for verifying each provider's redistribution terms and obtaining appropriate licenses. See [docs/02-data-flows.md](docs/02-data-flows.md) §6 for the licensing status table.
 
 ## Security Measures in CI/CD
 

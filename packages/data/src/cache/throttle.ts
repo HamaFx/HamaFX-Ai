@@ -194,8 +194,8 @@ const dailyBuckets = new Map<string, { count: number; day: string }>();
  * The reservation is atomic: the count is incremented on success, so this
  * replaces both the pre-flight gate AND the post-success increment.
  *
- * @param provider Provider name (e.g. `'twelvedata'`).
- * @param cap      Absolute daily cap (e.g. 800 for TwelveData free tier).
+ * @param provider Provider name (e.g. `'finnhub'`).
+ * @param cap      Absolute daily cap (e.g. 800 for free-tier providers).
  * @param buffer   Safety buffer subtracted from cap (e.g. 20 → effective 780).
  * @returns true if the daily quota allows another call.
  */

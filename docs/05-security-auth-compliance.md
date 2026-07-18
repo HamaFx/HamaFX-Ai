@@ -269,7 +269,6 @@ Stored in `.hamafx/dev-secrets.json` (gitignored). Re-loaded on next boot.
 | Finnhub | **Unresolved** — free tier terms unclear for redistribution | No terms file in repo |
 | Marketaux | **Unresolved** — free tier terms unclear for redistribution | No terms file in repo |
 | FRED | Generally permitted with attribution (Federal Reserve public data) | No attribution file in repo |
-| TwelveData | **Unresolved** — free tier terms unclear for redistribution | No terms file in repo |
 | Binance | **Unresolved** — public stream terms unclear for redistribution | No terms file in repo |
 | CFTC | Permitted (U.S. government work, public domain) | No terms file in repo |
 

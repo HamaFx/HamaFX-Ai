@@ -102,13 +102,12 @@ export const GET = withAuth<void>(async (req, { user }) => {
 
     const decrypted = settings?.aiApiKeys ? decryptByok(settings.aiApiKeys) : null;
     const finnhubKey = decrypted?.finnhub ?? '';
-    const twelvedataKey = decrypted?.twelvedata ?? process.env.TWELVEDATA_API_KEY ?? '';
     const marketDataProvider = settings?.marketDataProvider ?? 'biquote';
 
     const results = await Promise.all(
       params.symbol.map((s) =>
         getPriceWithMeta(s, {
-          apiKeys: { finnhub: finnhubKey, twelvedata: twelvedataKey },
+          apiKeys: { finnhub: finnhubKey },
           marketDataProvider,
         })
       )

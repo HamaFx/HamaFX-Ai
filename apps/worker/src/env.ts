@@ -115,18 +115,6 @@ const WorkerEnvSchema = z.object({
    * VMs since stream.binance.com blocks US IPs (HTTP 451).
    */
   BINANCE_WS_URL: optionalUrl,
-
-  /**
-   * Twelve Data API key — required for gold live ticks (WebSocket) and
-   * historical candle data. Free tier: 8 req/min, 800 req/day, 8 WS streams.
-   */
-  TWELVEDATA_API_KEY: optionalNonEmpty,
-
-  /**
-   * Optional override for the Twelve Data WebSocket URL (for testing).
-   * Defaults to wss://ws.twelvedata.com/v1
-   */
-  TWELVEDATA_WS_URL: optionalUrl,
 });
 
 export type WorkerEnv = z.infer<typeof WorkerEnvSchema>;

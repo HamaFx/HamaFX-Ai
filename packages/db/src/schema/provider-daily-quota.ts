@@ -18,7 +18,7 @@ import { date, integer, pgTable, primaryKey, text } from 'drizzle-orm/pg-core';
 
 /**
  * Phase A RL-2 — Shared daily quota counter for providers with a daily cap
- * (e.g. TwelveData free tier 800/day).
+ * (e.g. free-tier providers with 800 req/day).
  *
  * Replaces module-global `dailyCount`/`dailyResetAt` that were per-instance
  * and lost on cold start. The atomic upsert ensures correctness across

@@ -15,7 +15,7 @@
  */
 
 // Phase J-1 — Atomic daily quota enforcement for providers with daily caps
-// (e.g. TwelveData free tier 800 req/day).
+// (e.g. free-tier providers with 800 req/day).
 //
 // Uses the `provider_daily_quota` table with a single atomic
 // INSERT..ON CONFLICT..DO UPDATE..RETURNING query so the check and
@@ -42,7 +42,7 @@ export interface DailyQuotaResult {
  * Uses `INSERT..ON CONFLICT DO UPDATE` with `RETURNING count` so the
  * entire operation is a single serialized statement. No TOCTOU race.
  *
- * @param provider - Provider identifier (e.g. 'twelvedata').
+ * @param provider - Provider identifier (e.g. 'finnhub').
  * @param maxPerDay - Maximum allowed calls per UTC day.
  * @returns `{ allowed, count }` — `allowed` is true when count ≤ max.
  */

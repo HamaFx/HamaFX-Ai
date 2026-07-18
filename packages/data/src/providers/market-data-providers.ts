@@ -19,8 +19,6 @@ import { CandleSchema } from '@hamafx/shared';
 import type { MarketDataProvider } from './market-data-provider';
 import * as biquote from './biquote';
 import * as finnhub from './finnhub';
-import * as twelvedata from './twelvedata';
-import { toTwelveDataSymbol } from './twelvedata/map';
 import * as binance from './binance';
 import { fetchLiveTick } from './live-ticks';
 import { fetchCandles1m } from './candles-1m';
@@ -181,61 +179,6 @@ export const liveTicksProvider: MarketDataProvider = {
   }
 };
 
-export const twelvedataProvider: MarketDataProvider = {
-  id: 'twelvedata',
-  displayName: 'Twelve Data REST',
-  async testConnection(apiKeys?: Record<string, string>): Promise<{ ok: boolean; error?: string }> {
-    try {
-      const apiKey = apiKeys?.twelvedata ?? process.env.TWELVEDATA_API_KEY;
-      if (!apiKey) {
-        return { ok: false, error: 'Twelve Data API Key is required' };
-      }
-      await twelvedata.fetchPrice('EUR/USD', { apiKey });
-      return { ok: true };
-    } catch (err) {
-      return { ok: false, error: err instanceof Error ? err.message : String(err) };
-    }
-  },
-  async fetchTick(symbol: Symbol, options?: { signal?: AbortSignal; apiKeys?: Record<string, string> }): Promise<Tick> {
-    const apiKey = options?.apiKeys?.twelvedata ?? process.env.TWELVEDATA_API_KEY ?? '';
-    // ARCH-6: use /price endpoint (lighter than /quote)
-    const res = await twelvedata.fetchPrice(toTwelveDataSymbol(symbol), {
-      apiKey,
-      ...(options?.signal ? { signal: options.signal } : {}),
-    });
-    return {
-      symbol,
-      bid: res.price,
-      ask: res.price,
-      mid: res.price,
-      ts: Date.now(),
-      source: 'twelvedata',
-    };
-  },
-  async fetchCandles(symbol: Symbol, tf: Timeframe, count: number, options?: { signal?: AbortSignal; apiKeys?: Record<string, string> }): Promise<Candle[]> {
-    const apiKey = options?.apiKeys?.twelvedata ?? process.env.TWELVEDATA_API_KEY ?? '';
-    const raw = await twelvedata.fetchCandles(symbol, tf, count, {
-      apiKey,
-      ...(options?.signal ? { signal: options.signal } : {}),
-    });
-    const fetchedAt = Date.now();
-    return raw.map((bar) =>
-      CandleSchema.parse({
-        symbol,
-        tf,
-        t: bar.t,
-        o: bar.o,
-        h: bar.h,
-        l: bar.l,
-        c: bar.c,
-        v: bar.v,
-        source: 'twelvedata',
-        fetchedAt,
-      }),
-    );
-  }
-};
-
 export const binanceProvider: MarketDataProvider = {
   id: 'binance',
   displayName: 'Binance REST',
@@ -284,7 +227,6 @@ export const binanceProvider: MarketDataProvider = {
 };
 
 export const MARKET_DATA_PROVIDERS: Record<string, MarketDataProvider> = {
-  'twelvedata': twelvedataProvider,
   'binance': binanceProvider,
   'biquote': biquoteProvider,
   'finnhub': finnhubProvider,

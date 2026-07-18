@@ -42,8 +42,6 @@ export interface PerConsumerChangeEvent {
   removed: string[];
 }
 
-const MAX_TD_WS_SLOTS = 8; // Free tier limit
-
 export class SymbolManager extends EventEmitter {
   private symbols: Set<string> = new Set();
   private pollTimer: NodeJS.Timeout | null = null;
@@ -60,8 +58,7 @@ export class SymbolManager extends EventEmitter {
   /**
    * Start polling the database for active symbols.
    * Emits per-consumer events when symbol sets change:
-   *   - 'twelvedataChanged' → TD consumer updates (8-slot budget)
-   *   - 'biquoteChanged' → BiQuote consumer updates (all forex)
+   *   - 'biquoteChanged' → BiQuote consumer updates (all forex/gold)
    *   - 'binanceChanged' → Binance consumer updates (all crypto)
    *   - 'symbolsChanged' → aggregate event (backward compat)
    */
@@ -135,13 +132,6 @@ export class SymbolManager extends EventEmitter {
         });
 
         // Emit per-consumer events
-        const tdSlots = this.assignTwelveDataSlots(activeSymbols);
-        this.emit('twelvedataChanged', { 
-          symbols: tdSlots,
-          added: tdSlots,
-          removed: [],
-        });
-
         const biquoteSymbols = activeSymbols
           .filter((s) => s.category === 'forex' || s.category === 'gold')
           .map((s) => s.symbol);
@@ -171,7 +161,6 @@ export class SymbolManager extends EventEmitter {
 
         this.log.info('Active symbols changed', { 
           total: this.symbols.size, 
-          tdSlots: tdSlots.length,
           biquote: biquoteSymbols.length,
           binance: binanceSymbols.length,
           added, 
@@ -187,37 +176,6 @@ export class SymbolManager extends EventEmitter {
     } finally {
       this.isPolling = false;
     }
-  }
-
-  /**
-   * Assign up to 8 Twelve Data WS slots.
-   * Priority: gold first (always), then most-watched forex pairs.
-   */
-  private assignTwelveDataSlots(activeSymbols: ActiveSymbol[]): string[] {
-    const gold = activeSymbols.filter((s) => s.category === 'gold');
-    const forex = activeSymbols
-      .filter((s) => s.category === 'forex')
-      .sort((a, b) => b.watchlistCount - a.watchlistCount);
-
-    const slots: string[] = [];
-    
-    // Gold always gets slot 1
-    for (const g of gold) {
-      const def = getSymbolDefinition(g.symbol);
-      slots.push(def.twelveData);
-      if (slots.length >= MAX_TD_WS_SLOTS) break;
-    }
-    
-    // Fill remaining with top forex
-    for (const f of forex) {
-      if (slots.length >= MAX_TD_WS_SLOTS) break;
-      const def = getSymbolDefinition(f.symbol);
-      if (!slots.includes(def.twelveData)) {
-        slots.push(def.twelveData);
-      }
-    }
-    
-    return slots;
   }
 
   private hasSetChanged(a: Set<string>, b: Set<string>): boolean {

@@ -358,7 +358,6 @@ data/
 │   │   ├── marketaux/    # News sentiment analysis
 │   │   ├── fred/         # FRED macro-economic data
 │   │   ├── cftc/         # Commitment of Traders reports
-│   │   ├── twelvedata/   # Gold tick data (WebSocket)
 │   │   ├── binance/      # Crypto klines (WebSocket)
 │   │   ├── live-ticks/   # Incoming live tick provider
 │   │   └── candles-1m/   # 1-minute candle provider
@@ -377,7 +376,7 @@ data/
 | Marketaux | News + sentiment | REST | News articles, sentiment scores |
 | FRED | Macro-economic | REST | Interest rates, GDP, CPI, employment |
 | CFTC | CoT reports | REST | Commitment of Traders positioning data |
-| TwelveData | Gold tick data | WebSocket | Live gold ticks, daily quotas |
+
 | Binance | Crypto klines | WebSocket | BTC, ETH, SOL, BNB, XRP, ADA klines |
 | Live Ticks | Incoming tick buffer | SignalR | Normalized tick ingestion |
 | Candles 1m | 1-minute candle aggregation | DB UPSERT | OHLC from tick stream |

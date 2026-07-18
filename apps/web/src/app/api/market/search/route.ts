@@ -17,7 +17,7 @@
 // GET /api/market/search?q=EUR&limit=20
 //
 // Searches BUILTIN_SYMBOLS list locally (no API credit cost).
-// Filters by internal symbol, display name, or Twelve Data symbol.
+// Filters by internal symbol or display name.
 
 import { BUILTIN_SYMBOLS } from '@hamafx/shared';
 import { z } from 'zod';
@@ -55,8 +55,7 @@ export const GET = withAuth<void>(async (req, { user }) => {
     const results = BUILTIN_SYMBOLS
       .filter((s) =>
         s.internal.includes(query) ||
-        s.display.toUpperCase().includes(query) ||
-        s.twelveData.toUpperCase().includes(query),
+        s.display.toUpperCase().includes(query),
       )
       .slice(0, limit)
       .map((s) => ({

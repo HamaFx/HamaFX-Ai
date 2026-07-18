@@ -26,20 +26,17 @@
 //     surface it via `<StaleIndicator/>`.
 //
 // Phase 8 PR-8 final order:
-//   1. live-ticks   — Postgres snapshot table maintained by the worker.
-//                     When the row is fresh, /api/market/price is served
-//                     directly from Postgres with zero outbound HTTP.
-//   2. biquote      — REST fallback when the worker is down.
-//   3. finnhub      — third tier.
-//
-// PR-19 removed Twelve Data entirely. After two weeks of soak with
-// BiQuote as primary, the chat-telemetry showed Twelve Data was not
-// being selected, so the dependency + key + adapter were retired.
+  //   1. live-ticks   — Postgres snapshot table maintained by the worker.
+  //                     When the row is fresh, /api/market/price is served
+  //                     directly from Postgres with zero outbound HTTP.
+  //   2. biquote      — REST fallback when the worker is down.
+  //   3. finnhub      — third tier.
+  //
+  // Twelve Data removed — BiQuote primary covers forex/gold.
 
 import { SymbolSchema, getSymbolDefinition, type Symbol, type Tick } from '@hamafx/shared';
 
 import * as biquote from '../providers/biquote';
-import * as twelvedata from '../providers/twelvedata';
 import * as binance from '../providers/binance';
 import { fetchLiveTick } from '../providers/live-ticks';
 import { cacheKey, cacheTag, getDefaultCache, PRICE_TTL } from '../cache';
@@ -60,7 +57,6 @@ export interface GetPriceOptions {
   apiKeys?: Partial<{
     finnhub: string;
     biquoteBaseUrl: string;
-    twelvedata: string;
   }>;
   marketDataProvider?: string;
 }
@@ -86,7 +82,6 @@ function resolveKeys(opts: GetPriceOptions) {
     finnhub: opts.apiKeys?.finnhub ?? process.env.FINNHUB_API_KEY ?? '',
     biquoteBaseUrl:
       opts.apiKeys?.biquoteBaseUrl ?? process.env.BIQUOTE_BASE_URL ?? 'https://biquote.io',
-    twelvedata: opts.apiKeys?.twelvedata ?? process.env.TWELVEDATA_API_KEY ?? '',
   };
 }
 
@@ -161,21 +156,7 @@ export async function getPriceWithMeta(
         });
       }
 
-      // 3. Twelve Data as final fallback (if API key configured)
-      if (keys.twelvedata) {
-        attempts.push({
-          name: 'twelvedata',
-          run: async () => {
-            const res = await twelvedata.fetchPrice(def.twelveData, {
-              apiKey: keys.twelvedata,
-              ...(opts.signal ? { signal: opts.signal } : {}),
-            });
-            return { price: res.price, provider: 'twelvedata', ageMs: null };
-          },
-        });
-      }
-
-      // 4. Finnhub as last resort (if key configured)
+      // 3. Finnhub as last resort (if key configured)
       if (keys.finnhub) {
         attempts.push({
           name: 'finnhub',

@@ -15,7 +15,7 @@
 | **Finnhub** | Fallback FX prices/candles, secondary news, economic calendar | Yes | `packages/data/src/providers/finnhub/` | `FINNHUB_API_KEY` |
 | **Marketaux** | Primary financial news + sentiment scoring | Yes | `packages/data/src/providers/marketaux/` | `MARKETAUX_API_KEY` |
 | **FRED** | Macro time-series (CPI, NFP, unemployment) + economic calendar + intermarket resonance | Yes | `packages/data/src/providers/fred/` | `FRED_API_KEY` |
-| **TwelveData** | Gold live ticks (WebSocket) + historical candles | Yes | `packages/data/src/providers/twelvedata/` | `TWELVEDATA_API_KEY` |
+
 | **Binance** | Crypto WebSocket consumer (BTC, ETH, SOL, BNB, XRP, ADA) | No (public streams) | `packages/data/src/providers/binance/` | `BINANCE_CRYPTO_SYMBOLS` (default: `BTCUSDT,ETHUSDT,SOLUSDT,BNBUSDT,XRPUSDT,ADAUSDT`) |
 | **CFTC** | Commitment-of-Traders reports | No (public API) | `packages/data/src/providers/cftc/` | None |
 | **AlphaVantage** | Backup historical FX (deep history) | Yes | **No provider directory exists** | `ALPHAVANTAGE_API_KEY` (in `.env.example` but no implementation) |
@@ -76,20 +76,6 @@
 
 **Licensing status:** FRED is a free public API from the Federal Reserve Bank of St. Louis. Terms at fred.stlouisfed.org. **Redistribution of FRED data is generally permitted with attribution.** No attribution file in repo.
 
-### 1.6 TwelveData — Gold Live Ticks
-
-**REST endpoints** (`packages/data/src/providers/twelvedata/rest.ts`):
-- `fetchCandles(symbol, interval, from, to)` — historical candles
-- `fetchQuote(symbol)` — real-time quote
-- `fetchPrice(symbol)` — simple price
-
-**WebSocket consumer** (worker only — `apps/worker/src/twelvedata/consumer.ts`):
-- WSS URL: `wss://ws.twelvedata.com/v1` (configurable via `TWELVEDATA_WS_URL`)
-- Subscribes to: XAUUSD (gold)
-- Free tier: 8 req/min, 800 req/day, 8 WS streams
-
-**Licensing status:** TwelveData free tier exists. **Redistribution rights for paying subscribers are unresolved.** No terms file in repo.
-
 ### 1.7 Binance — Crypto
 
 **REST endpoints** (`packages/data/src/providers/binance/rest.ts`):
@@ -122,7 +108,7 @@
 +------------------------------------------------------------------+
 |                    ADAPTER (e.g. getPrice)                        |
 |                                                                  |
-|  1. Build provider list (e.g. [biquote, finnhub, twelvedata])    |
+|  1. Build provider list (e.g. [biquote, finnhub])    |
 |  2. Reorder by health score (getScore per provider)              |
 |     - Pinned providers stay in position                          |
 |  3. Try each provider in order:                                  |
@@ -134,9 +120,7 @@
 |     |     Success? → recordSuccess, return result                |
 |     |     Fail?    → recordFailure, continue                     |
 |     v                                                            |
-|     +---> Provider C (twelvedata)                                |
-|           Success? → recordSuccess, return result                |
-|           Fail?    → recordFailure, re-throw FIRST error         |
+
 +------------------------------------------------------------------+
 ```
 
@@ -428,7 +412,7 @@ BiQuote     SignalR       TickBuffer    live_ticks    Candle1mAggregator
 | Finnhub | Yes | Yes (limited) | **Unresolved** | No |
 | Marketaux | Yes | Yes (limited) | **Unresolved** | No |
 | FRED | Yes | Yes (public) | Generally permitted with attribution | No |
-| TwelveData | Yes | Yes (8 req/min, 800/day) | **Unresolved** | No |
+
 | Binance | No | Yes (public streams) | **Unresolved** | No |
 | CFTC | No | Yes (public domain) | Permitted (U.S. government work) | No |
 

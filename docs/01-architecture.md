@@ -89,7 +89,7 @@ No package imports upstream of itself. The `shared` package is the foundation �
 |  | Edge Middleware  |  | /api/chat        |  | /api/market/*             ||
 |  | (auth.ts config) |  | runChat()        |  | @hamafx/data              ||
 |  | JWT + CSRF + RID |  | streamText + 32  |  | BiQuote→Finnhub failover  ||
-|  |                  |  | tools            |  | + TwelveData + Binance    ||
+|  |                  |  | tools            |  | + Binance                ||
 |  +------------------+  +--------+---------+  +---------------------------+|
 |                                 |                                         |
 |  +------------------+  +--------+---------+  +---------------------------+|
@@ -110,8 +110,8 @@ No package imports upstream of itself. The `shared` package is the foundation �
 |  | TickBuffer→DB     |  |  tick stream)     |  |  4 light cron pokes)  |  |
 |  +-------------------+  +-------------------+  +-----------------------+  |
 |  +-------------------+  +-------------------+  +-----------------------+  |
-|  | Binance WS        |  | TwelveData WS     |  | MT5 Bridge            |  |
-|  | (crypto ticks)    |  | (gold ticks)      |  | (TCP:8080)            |  |
+|  | Binance WS        |  |                     |  | MT5 Bridge            |  |
+|  | (crypto ticks)    |  |                     |  | (TCP:8080)            |  |
 |  +-------------------+  +-------------------+  +-----------------------+  |
 +---------------------------------------------------------------------------+
 ```
@@ -146,7 +146,6 @@ The worker is a persistent Node.js process that handles real-time data ingestion
 | TickBuffer | `apps/worker/src/signalr/tick-buffer.ts` | Buffers ticks, flushes to `live_ticks` table at 1Hz |
 | Candle1mAggregator | `apps/worker/src/aggregator/candle-1m.ts` | Builds 1-minute OHLC candles from tick stream, UPSERTs to `candles_1m` on close |
 | Binance WS Consumer | `apps/worker/src/binance/consumer.ts` | Live crypto klines (BTC, ETH, SOL, BNB, XRP, ADA) |
-| TwelveData WS Consumer | `apps/worker/src/twelvedata/consumer.ts` | Live gold ticks via WebSocket |
 | MT5 Bridge Server | `apps/worker/src/mt5-server.ts` | TCP server on port 8080, receives ticks from MT5 Expert Advisor |
 | Scheduler | `apps/worker/src/scheduler.ts` | node-cron schedule for Docker mode (alerts every min, briefings every 5 min, etc.) |
 | Job Runner CLI | `apps/worker/src/runner/cli.ts` | Entry point for systemd one-shot jobs: `node dist/runner/cli.js <name>` |
@@ -212,7 +211,7 @@ Market data provider abstraction with failover, caching, and health tracking.
 | Cache | `src/cache/` | Memory cache, Next.js `unstable_cache` integration, TTL policies, throttle. |
 | Circuit breaker | `src/circuit-breaker.ts` | Per-provider circuit breaker. |
 | Errors | `src/errors.ts` | `ProviderError`, `ProviderEmptyError`, `toAppError()`. |
-| Providers | `src/providers/` | 9 provider directories: biquote, finnhub, marketaux, fred, twelvedata, binance, cftc, live-ticks, candles-1m. |
+| Providers | `src/providers/` | 8 provider directories: biquote, finnhub, marketaux, fred, binance, cftc, live-ticks, candles-1m. |
 
 ### 6.4 packages/ai
 
@@ -384,7 +383,7 @@ The chat flow from user message to streamed response:
 |                    WORKER PROCESS (apps/worker)                    |
 |                                                                   |
 |  +-----------------+  +-----------------+  +-------------------+  |
-|  | SignalR Consumer|  | Binance WS      |  | TwelveData WS    |  |
+|  | SignalR Consumer|  | Binance WS      |  |                   |  |
 |  | (BiQuote ticks) |  | (crypto klines) |  | (gold ticks)     |  |
 |  | onTick → buffer |  | onTick → buffer |  | onTick → buffer  |  |
 |  +--------+--------+  +--------+--------+  +--------+----------+  |

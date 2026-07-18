@@ -178,7 +178,7 @@ All unit files in `infra/cron-vm/units/`:
 | `FINNHUB_API_KEY` | Finnhub API key |
 | `MARKETAUX_API_KEY` | Marketaux API key |
 | `FRED_API_KEY` | FRED API key |
-| `TWELVEDATA_API_KEY` | TwelveData API key |
+
 
 ---
 

@@ -185,7 +185,7 @@ describe('tryReserveDaily (in-memory backend)', () => {
     const buffer = 20; // effective cap = 780
     let allowed = 0;
     for (let i = 0; i < 800; i += 1) {
-      if (await tryReserveDaily('twelvedata', cap, buffer)) allowed += 1;
+      if (await tryReserveDaily('test-provider', cap, buffer)) allowed += 1;
     }
     expect(allowed).toBe(780);
   });

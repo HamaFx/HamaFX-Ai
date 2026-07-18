@@ -48,8 +48,7 @@
     "VAPID_PRIVATE_KEY",
     "VAPID_SUBJECT",
     "FRED_API_KEY",
-    "FINNHUB_API_KEY",
-    "TWELVEDATA_API_KEY"
+    "FINNHUB_API_KEY"
   ],
   "tasks": {
     "build": {
