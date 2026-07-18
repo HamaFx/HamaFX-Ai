@@ -29,13 +29,16 @@ const mlog = createCategorizedLogger('ai', { component: 'message-text' });
  * the injection phrases, not partial word matches).
  */
 const INJECTION_PATTERNS: ReadonlyArray<{ rx: RegExp; label: string }> = [
-  // Classic "ignore all instructions" jailbreaks. Narrowed to avoid
-  // false positives on legitimate queries like "ignore the previous
-  // guidelines?". Requires "instructions" specifically, not broader
-  // terms like "rules" or "guidelines" which appear in trading UX.
-  { rx: /ignore\s+(all|previous|above|the)\s+instructions\b/i, label: 'ignore-instructions' },
-  // "You are now a different/unrestricted AI" — role override attacks.
-  { rx: /you\s+(are|have become|are now)\s+(no\s+longer\s+)?(a\s+)?(different|another|unrestricted|uncensored|evil|malicious)\s+(ai|assistant|model|bot|system)\b/i, label: 'role-override' },
+  // Classic "ignore all instructions" jailbreaks. Allows stacked
+  // modifiers like "ignore all previous instructions" or "ignore the above
+  // instructions". Narrowed to require "instructions" specifically.
+  { rx: /ignore\s+(the\s+)?(all\s+)?(previous\s+)?(above\s+)?instructions\b/i, label: 'ignore-instructions' },
+  // "You are now a/an [adjective] AI" — role override attacks.
+  // Pattern A: "you are no longer [a/an] AI/assistant" (no adjective needed).
+  { rx: /you\s+(are|have become|are now)\s+no\s+longer\s+(an?\s+)?(ai|assistant|model|bot|system)\b/i, label: 'role-override' },
+  // Pattern B: "you are [a/an] ADJECTIVE AI/assistant" (adjective required
+  // to avoid false-positives on "you are an AI assistant").
+  { rx: /you\s+(are|have become|are now)\s+(an?\s+)?(different|another|unrestricted|uncensored|evil|malicious)\s+(ai|assistant|model|bot|system)\b/i, label: 'role-override' },
   // DAN mode jailbreaks — only match the specific "DAN mode" phrase.
   // Dropped the loose is/can/will patterns that false-positive on "Dan is".
   { rx: /DAN\s+mode\b/i, label: 'dan-jailbreak' },
