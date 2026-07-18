@@ -29,6 +29,23 @@ export function setup() {
     http.get(`${env.baseUrl}/api/market/price?symbol=XAUUSD`);
     http.get(`${env.baseUrl}/api/chat/threads`);
     http.get(`${env.baseUrl}/api/news`);
+
+    // Warm the compute-heavy POST endpoints to prime server caches and
+    // JIT compilation before the broader read-mix VU iterations run.
+    http.post(
+      `${env.baseUrl}/api/market/indicators`,
+      JSON.stringify({
+        symbol: 'XAUUSD',
+        tf: '1h',
+        indicators: [{ kind: 'sma', params: { period: 20 } }],
+      }),
+      { headers: { 'Content-Type': 'application/json' } },
+    );
+    http.post(
+      `${env.baseUrl}/api/market/structure`,
+      JSON.stringify({ symbol: 'XAUUSD', tf: '1h' }),
+      { headers: { 'Content-Type': 'application/json' } },
+    );
   }
 
   return ctxs;

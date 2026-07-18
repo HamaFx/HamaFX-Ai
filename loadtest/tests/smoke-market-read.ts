@@ -30,6 +30,23 @@ export function setup() {
     http.get(`${env.baseUrl}/api/health`);
     http.get(`${env.baseUrl}/api/market/price?symbol=XAUUSD`);
     http.get(`${env.baseUrl}/api/market/candles?symbol=XAUUSD&timeframe=1h`);
+
+    // Warm the compute-heavy POST endpoints — these benefit most from
+    // a hot JIT compiler and populated DB/cache pipelines.
+    http.post(
+      `${env.baseUrl}/api/market/indicators`,
+      JSON.stringify({
+        symbol: 'XAUUSD',
+        tf: '1h',
+        indicators: [{ kind: 'sma', params: { period: 20 } }],
+      }),
+      { headers: { 'Content-Type': 'application/json' } },
+    );
+    http.post(
+      `${env.baseUrl}/api/market/structure`,
+      JSON.stringify({ symbol: 'XAUUSD', tf: '1h' }),
+      { headers: { 'Content-Type': 'application/json' } },
+    );
   }
 
   return ctxs;
