@@ -5,6 +5,7 @@
 //   (d) record 429s via record429
 //   (e) run basic status checks
 
+import { check } from 'k6';
 import http from 'k6/http';
 import type { RefinedResponse, ResponseType, Params } from 'k6/http';
 import { env } from '../config/environments.js';
@@ -67,6 +68,88 @@ export function postJson(
   };
   const res = http.post(url, JSON.stringify(body), params);
   expectOk(res);
+  record429(res);
+  recordAuthFailure(res);
+  return res;
+}
+
+/**
+ * Perform an authed PATCH request with a JSON body.
+ */
+export function patchJson(
+  path: string,
+  group: string,
+  body: unknown,
+  extraHeaders?: HttpHeaders,
+  extraParams?: Partial<Params>,
+): RefinedResponse<ResponseType | undefined> {
+  const url = `${env.baseUrl}${path}`;
+  const params: Params = {
+    headers: {
+      'Content-Type': 'application/json',
+      ..._csrfHeader,
+      ...(extraHeaders ?? {}),
+    },
+    tags: { group },
+    ...(extraParams ?? {}),
+  };
+  const res = http.patch(url, JSON.stringify(body), params);
+  expectOk(res);
+  record429(res);
+  recordAuthFailure(res);
+  return res;
+}
+
+/**
+ * Perform an authed PUT request with a JSON body.
+ */
+export function putJson(
+  path: string,
+  group: string,
+  body: unknown,
+  extraHeaders?: HttpHeaders,
+  extraParams?: Partial<Params>,
+): RefinedResponse<ResponseType | undefined> {
+  const url = `${env.baseUrl}${path}`;
+  const params: Params = {
+    headers: {
+      'Content-Type': 'application/json',
+      ..._csrfHeader,
+      ...(extraHeaders ?? {}),
+    },
+    tags: { group },
+    ...(extraParams ?? {}),
+  };
+  const res = http.put(url, JSON.stringify(body), params);
+  expectOk(res);
+  record429(res);
+  recordAuthFailure(res);
+  return res;
+}
+
+/**
+ * Perform an authed DELETE request.
+ */
+export function deleteReq(
+  path: string,
+  group: string,
+  extraHeaders?: HttpHeaders,
+  extraParams?: Partial<Params>,
+): RefinedResponse<ResponseType | undefined> {
+  const url = `${env.baseUrl}${path}`;
+  const params: Params = {
+    headers: {
+      ..._csrfHeader,
+      ...(extraHeaders ?? {}),
+    },
+    tags: { group },
+    ...(extraParams ?? {}),
+  };
+  const res = http.del(url, null, params);
+  // DELETE may return 204 No Content — accept 200 or 204
+  check(res, {
+    'delete status is 200/204': (r) => r.status === 200 || r.status === 204,
+  });
   record429(res);
   recordAuthFailure(res);
   return res;

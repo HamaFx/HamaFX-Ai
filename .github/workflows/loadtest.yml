@@ -26,7 +26,7 @@ jobs:
   k6:
     name: k6 Load Test
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
 
@@ -54,7 +54,7 @@ jobs:
       - name: Inspect k6 test scripts (dry-run)
         working-directory: loadtest
         run: |
-          for f in $(ls tests/smoke-*.ts); do
+          for f in $(ls tests/*.ts); do
             k6 inspect "$f" 2>&1 || true
           done
 
@@ -86,7 +86,10 @@ jobs:
         with:
           k6-version: '0.57.0'
 
-      - name: Run k6 load tests
+      # ── Smoke tests (read-mix + write-mix) ────────────────────────
+      # The write-mix smoke test (smoke-write-mix.ts) matches the
+      # smoke-*.ts glob automatically.
+      - name: Run k6 smoke tests (read + write mix)
         uses: grafana/run-k6-action@v1
         with:
           path: ${{ inputs.test || 'loadtest/tests/smoke-*.ts' }}
@@ -94,6 +97,29 @@ jobs:
             -e K6_BASE_URL=http://localhost:3000
             -e K6_AUTH_MODE=${{ inputs.authMode || 'legacy' }}
           fail-fast: true
+
+      # ── Average-load tests (read-mix + write-mix) ─────────────────
+      # Only run on nightly schedule; workflow_dispatch users can run
+      # load tests by setting the test glob explicitly.
+      - name: Run k6 load tests (read-mix)
+        if: ${{ github.event_name == 'schedule' }}
+        uses: grafana/run-k6-action@v1
+        with:
+          path: loadtest/tests/load-read-mix.ts
+          flags: >-
+            -e K6_BASE_URL=http://localhost:3000
+            -e K6_AUTH_MODE=${{ inputs.authMode || 'legacy' }}
+          fail-fast: false
+
+      - name: Run k6 load tests (write-mix)
+        if: ${{ github.event_name == 'schedule' }}
+        uses: grafana/run-k6-action@v1
+        with:
+          path: loadtest/tests/load-write-mix.ts
+          flags: >-
+            -e K6_BASE_URL=http://localhost:3000
+            -e K6_AUTH_MODE=${{ inputs.authMode || 'legacy' }}
+          fail-fast: false
 
       - name: Upload k6 results
         if: always()
