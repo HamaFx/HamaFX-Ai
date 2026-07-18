@@ -15,7 +15,7 @@
  */
 
 import { sql } from 'drizzle-orm';
-import { bigint, date, pgTable, primaryKey, text } from 'drizzle-orm/pg-core';
+import { date, doublePrecision, pgTable, primaryKey, text } from 'drizzle-orm/pg-core';
 
 import { organization, users } from './auth';
 
@@ -42,8 +42,11 @@ export const dailyAiSpend = pgTable(
       .references(() => organization.id, { onDelete: 'cascade' }),
     /** UTC calendar day (`YYYY-MM-DD`). */
     day: date('day').notNull(),
-    /** Running estimated spend in USD cents — see helper docs. */
-    totalUsdCents: bigint('total_usd_cents', { mode: 'number' }).notNull().default(0),
+    /** Running estimated spend in USD cents (fractional for accurate accumulation).
+     *  Stored as double precision so repeated small additions don't lose
+     *  precision — individual telemetry rows use float USD values, and
+     *  summing them into a bigint column caused truncation drift. */
+    totalUsdCents: doublePrecision('total_usd_cents').notNull().default(0),
   },
   (t) => [primaryKey({ columns: [t.userId, t.day] })],
 );

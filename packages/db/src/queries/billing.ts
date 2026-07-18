@@ -19,7 +19,7 @@
 // These functions provide a cached lookup of a tenant's active subscription
 // and associated plan, used by feature gating checks across the app.
 
-import { eq, and, desc } from 'drizzle-orm';
+import { eq, and, desc, gte, lt } from 'drizzle-orm';
 
 import { getDb, schema } from '../index';
 
@@ -138,7 +138,7 @@ export function getEffectiveTokenCap(sub: SubscriptionWithPlan | null): number |
 export async function countActiveAlerts(tenantId: string): Promise<number> {
   const db = getDb();
   const result = await db
-    .select({ count: schema.alerts.id })
+    .select({ id: schema.alerts.id })
     .from(schema.alerts)
     .where(
       and(
@@ -157,6 +157,7 @@ export async function countJournalEntriesThisMonth(tenantId: string): Promise<nu
   const db = getDb();
   const now = new Date();
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  const nextMonthStart = new Date(now.getFullYear(), now.getMonth() + 1, 1);
 
   const result = await db
     .select({ id: schema.journalEntries.id })
@@ -164,7 +165,8 @@ export async function countJournalEntriesThisMonth(tenantId: string): Promise<nu
     .where(
       and(
         eq(schema.journalEntries.tenantId, tenantId),
-        eq(schema.journalEntries.openedAt, monthStart),
+        gte(schema.journalEntries.openedAt, monthStart),
+        lt(schema.journalEntries.openedAt, nextMonthStart),
       ),
     );
   return result.length;

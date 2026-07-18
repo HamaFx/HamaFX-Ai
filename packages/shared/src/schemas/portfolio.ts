@@ -50,7 +50,7 @@ export const PortfolioPositionSchema = z.object({
   closePrice: z.number().nullable(),
   status: PositionStatusSchema,
   notes: z.string().nullable(),
-  linkedSignalId: z.string().uuid().nullable(),
+  linkedSignalId: z.string().uuid().nullable().optional(),
   createdAt: z.number().int(),
   updatedAt: z.number().int(),
 });

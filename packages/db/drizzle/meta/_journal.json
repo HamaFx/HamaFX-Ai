@@ -372,6 +372,48 @@
       "when": 1784382730000,
       "tag": "0052_drop_decision_signals",
       "breakpoints": true
+    },
+    {
+      "idx": 53,
+      "version": "7",
+      "when": 1784400000000,
+      "tag": "0053_add_analysis_jobs_trace_id",
+      "breakpoints": true
+    },
+    {
+      "idx": 54,
+      "version": "7",
+      "when": 1784400000001,
+      "tag": "0054_fix_subscriptions_partial_unique",
+      "breakpoints": true
+    },
+    {
+      "idx": 55,
+      "version": "7",
+      "when": 1784400000002,
+      "tag": "0055_drop_cron_runs_trigger",
+      "breakpoints": true
+    },
+    {
+      "idx": 56,
+      "version": "7",
+      "when": 1784400000003,
+      "tag": "0056_add_audit_logs_tenant_created_idx",
+      "breakpoints": true
+    },
+    {
+      "idx": 57,
+      "version": "7",
+      "when": 1784400000004,
+      "tag": "0057_change_daily_ai_spend_float",
+      "breakpoints": true
+    },
+    {
+      "idx": 58,
+      "version": "7",
+      "when": 1784400000005,
+      "tag": "0058_drop_linked_signal_id",
+      "breakpoints": true
     }
   ]
 }

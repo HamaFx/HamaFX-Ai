@@ -17,13 +17,11 @@
 // DB-1: Retention cleanup for high-write operational tables.
 //
 // Shared between the web cron route (Vercel) and the worker job (GCE VM).
-// Uses direct DELETE statements — these tables are bounded by retention
-// windows (hours to 90 days) and the volumes are manageable with a single
-// statement each.
+// Uses batched DELETEs with LIMIT to avoid long-running transactions that
+// could time out Vercel functions or hold locks for extended periods.
 
 import { getDb } from './client';
-import * as schema from './schema/index';
-import { lt } from 'drizzle-orm';
+import { sql } from 'drizzle-orm';
 
 export interface RetentionConfig {
   /** Retention window in days for chat_telemetry + tool_telemetry. Default 90. */
@@ -54,6 +52,34 @@ export interface RetentionResult {
  * Scoped strictly to operational tables — never touches user-content tables
  * (chat_messages, journal, alerts, portfolio).
  */
+/**
+ * Delete rows from a table in batches of `batchSize` to avoid
+ * long-running transactions on large tables.
+ *
+ * Uses `ctid IN (SELECT ctid ... LIMIT $batchSize)` which works on
+ * any table regardless of primary key structure.
+ */
+async function deleteBatched(
+  db: ReturnType<typeof getDb>,
+  tableName: string,
+  whereColumn: string,
+  cutoff: string,
+  batchSize = 1000,
+): Promise<number> {
+  let total = 0;
+  while (true) {
+    const result = await db.execute(
+      sql.raw(
+        `DELETE FROM "${tableName}" WHERE ctid IN (SELECT ctid FROM "${tableName}" WHERE "${whereColumn}" < '${cutoff}' LIMIT ${batchSize})`,
+      ),
+    );
+    const count = (result as { count?: number }).count ?? 0;
+    total += count;
+    if (count < batchSize) break;
+  }
+  return total;
+}
+
 export async function runRetentionCleanup(
   config: RetentionConfig = {},
 ): Promise<RetentionResult> {
@@ -64,39 +90,33 @@ export async function runRetentionCleanup(
 
   const telemetryCutoff = new Date(
     now.getTime() - telemetryRetention * 24 * 60 * 60 * 1000,
-  );
+  ).toISOString();
   const traceCutoff = new Date(
     now.getTime() - traceRetention * 24 * 60 * 60 * 1000,
-  );
-  const rateLimitCutoff = new Date(now.getTime() - 2 * 60 * 60 * 1000);
+  ).toISOString();
+  const rateLimitCutoff = new Date(
+    now.getTime() - 2 * 60 * 60 * 1000,
+  ).toISOString();
   const dailyQuotaCutoffStr = new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000)
     .toISOString()
     .slice(0, 10);
 
-  const t1 = await db
-    .delete(schema.chatTelemetry)
-    .where(lt(schema.chatTelemetry.createdAt, telemetryCutoff));
-  const telemetryDeleted = t1.length ?? 0;
-
-  const t2 = await db
-    .delete(schema.chatToolTelemetry)
-    .where(lt(schema.chatToolTelemetry.createdAt, telemetryCutoff));
-  const toolTelemetryDeleted = t2.length ?? 0;
-
-  const t3 = await db
-    .delete(schema.diagnosticTraces)
-    .where(lt(schema.diagnosticTraces.createdAt, traceCutoff));
-  const tracesDeleted = t3.length ?? 0;
-
-  const t4 = await db
-    .delete(schema.rateLimits)
-    .where(lt(schema.rateLimits.windowStart, rateLimitCutoff));
-  const rateLimitsDeleted = t4.length ?? 0;
-
-  const t5 = await db
-    .delete(schema.providerDailyQuota)
-    .where(lt(schema.providerDailyQuota.day, dailyQuotaCutoffStr));
-  const providerDailyQuotaDeleted = t5.length ?? 0;
+  const telemetryDeleted = await deleteBatched(
+    db, 'chat_telemetry', 'created_at', telemetryCutoff,
+  );
+  const toolTelemetryDeleted = await deleteBatched(
+    db, 'chat_tool_telemetry', 'created_at', telemetryCutoff,
+  );
+  const tracesDeleted = await deleteBatched(
+    db, 'diagnostic_traces', 'created_at', traceCutoff,
+  );
+  const rateLimitsDeleted = await deleteBatched(
+    db, 'rate_limits', 'window_start', rateLimitCutoff,
+  );
+  // provider_daily_quota has a `day` column of type `date` — use string comparison.
+  const providerDailyQuotaDeleted = await deleteBatched(
+    db, 'provider_daily_quota', 'day', dailyQuotaCutoffStr,
+  );
 
   return {
     telemetryDeleted,
@@ -112,4 +132,27 @@ export async function runRetentionCleanup(
       `dailyQuota=${providerDailyQuotaDeleted}`,
     ].join(', '),
   };
+}
+
+/**
+ * Run VACUUM ANALYZE on operational tables to update query planner
+ * statistics and reclaim dead tuples. Safe to run on a live database;
+ * VACUUM does not block reads or writes.
+ *
+ * Should be invoked by the nightly cron job AFTER retention cleanup.
+ */
+export async function runVacuumAnalyze(): Promise<void> {
+  const db = getDb();
+  // Operational tables that accumulate the most churn.
+  const tables = [
+    'chat_telemetry',
+    'chat_tool_telemetry',
+    'rate_limits',
+    'provider_daily_quota',
+    'diagnostic_traces',
+    'chat_messages',
+  ];
+  for (const table of tables) {
+    await db.execute(sql.raw(`VACUUM ANALYZE "${table}"`));
+  }
 }

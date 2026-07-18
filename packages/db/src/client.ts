@@ -184,10 +184,13 @@ const rlsEnabled = process.env.HAMAFX_ENABLE_RLS === 'true' || process.env.HAMAF
  * Run work inside a transaction that sets the current tenant GUC for
  * RLS-aware query paths.
  *
- * When RLS is disabled (self-host / legacy mode), this still runs the
- * work in a transaction but does NOT set the GUC — RLS policies either
- * don't exist (migration not applied) or are bypassed by the connection
- * role (BYPASSRLS).
+ * Always wraps work in a transaction — callers depend on this for
+ * atomic multi-statement writes (e.g., inserting chat messages +
+ * telemetry in one unit). When RLS is disabled (self-host / legacy
+ * mode), the GUC is not set but the transaction wrapper is preserved.
+ *
+ * For read-only operations, prefer `withTenantDbRO` which skips the
+ * transaction when RLS is disabled.
  */
 export async function withTenantDb<T>(
   tenantId: string,
@@ -201,7 +204,102 @@ export async function withTenantDb<T>(
   });
 }
 
+/**
+ * Read-only variant of withTenantDb.
+ *
+ * When RLS is enabled: runs in a READ ONLY transaction with the tenant
+ * GUC set. Postgres can optimise read-only transactions (no lock
+ * contention, no WAL writes).
+ *
+ * When RLS is disabled (self-host / legacy mode): skips the transaction
+ * entirely and runs directly against the pool — no GUC needed and no
+ * atomicity requirement for reads.
+ */
+export async function withTenantDbRO<T>(
+  tenantId: string,
+  work: (db: DbClient) => Promise<T>,
+): Promise<T> {
+  if (!rlsEnabled) {
+    return work(getDb());
+  }
+  return getDb().transaction(async (tx) => {
+    // SET TRANSACTION READ ONLY must come before any other statement
+    // in the transaction. set_config doesn't modify data so the order
+    // is safe, but READ ONLY first is idiomatic.
+    await tx.execute(sql`SET TRANSACTION READ ONLY`);
+    await tx.execute(sql`SELECT set_config('app.current_tenant', ${tenantId}, true)`);
+    return work(tx as unknown as DbClient);
+  });
+}
+
+/**
+ * Retry a database operation on transient errors (connection drops,
+ * serialization failures, deadlocks). Uses exponential backoff.
+ *
+ * postgres-js handles reconnection for existing pool connections,
+ * but transient errors during initial connection or during query
+ * execution can still surface. This helper retries those.
+ *
+ * @param fn — the operation to retry
+ * @param maxRetries — max retry attempts (default 3, for 4 total attempts)
+ * @param baseDelayMs — initial delay before first retry (default 100ms)
+ */
+export async function withDbRetry<T>(
+  fn: () => Promise<T>,
+  maxRetries = 3,
+  baseDelayMs = 100,
+): Promise<T> {
+  let lastError: unknown;
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      return await fn();
+    } catch (err) {
+      lastError = err;
+      if (attempt === maxRetries) break;
+
+      const msg = err instanceof Error ? err.message : String(err);
+      // Only retry on transient errors — not on constraint violations,
+      // syntax errors, or auth failures.
+      if (
+        !msg.includes('connection') &&
+        !msg.includes('timeout') &&
+        !msg.includes('deadlock') &&
+        !msg.includes('serialization') &&
+        !msg.includes('could not serialize') &&
+        !msg.includes('Connection terminated') &&
+        !msg.includes('Connection reset') &&
+        !msg.includes('connect ECONNREFUSED') &&
+        !msg.includes('connect ETIMEDOUT') &&
+        !msg.includes('read ECONNRESET')
+      ) {
+        throw err;
+      }
+
+      const delay = baseDelayMs * Math.pow(2, attempt);
+      await new Promise((resolve) => setTimeout(resolve, delay));
+    }
+  }
+  throw lastError;
+}
+
 // ── Phase 3 §3.4 — BYPASSRLS admin client ──────────────────────────────
+
+/**
+ * Check database connectivity with a lightweight query.
+ * Returns `true` if the database is reachable and responding.
+ *
+ * Useful for health-check endpoints and pre-flight checks before
+ * critical operations. Does NOT throw — returns false on any error.
+ */
+export async function checkDbHealth(): Promise<boolean> {
+  try {
+    const db = getDb();
+    await db.execute(sql`SELECT 1`);
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 let _adminClient: DbClient | null = null;
 let _adminSql: ReturnType<typeof postgres> | null = null;

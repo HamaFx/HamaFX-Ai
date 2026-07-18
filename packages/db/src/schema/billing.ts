@@ -121,7 +121,12 @@ export const subscriptions = pgTable(
   },
   (t) => [
     index('subscriptions_tenant_idx').on(t.tenantId),
-    uniqueIndex('subscriptions_tenant_active_idx').on(t.tenantId, t.status),
+    // Partial unique index: only one active/trialing subscription per tenant.
+    // Allows multiple historical rows (canceled, expired, past_due) for the
+    // same tenant without violating the constraint.
+    uniqueIndex('subscriptions_tenant_active_idx')
+      .on(t.tenantId)
+      .where(sql`status IN ('active', 'trialing')`),
   ],
 );
 

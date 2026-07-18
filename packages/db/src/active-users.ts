@@ -25,7 +25,7 @@
 // users who signed up but never interacted. For self-host (legacy mode)
 // where only `__system__` exists, the query returns that single row.
 
-import { and, eq, isNull, sql } from 'drizzle-orm';
+import { and, eq, isNull } from 'drizzle-orm';
 
 import { getDb, schema } from './index';
 
@@ -42,16 +42,14 @@ export async function getActiveUserIds(): Promise<string[]> {
   const db = getDb();
 
   // Query users that are not soft-deleted and have at least one chat thread.
-  // Uses EXISTS subquery via raw SQL for Drizzle compatibility.
+  // Uses INNER JOIN instead of correlated EXISTS subquery for better
+  // performance — Postgres can use a hash join rather than executing
+  // the subquery once per user row.
   const rows = await db
-    .select({ id: schema.users.id })
+    .selectDistinct({ id: schema.users.id })
     .from(schema.users)
-    .where(
-      and(
-        isNull(schema.users.deletedAt),
-        sql`EXISTS (SELECT 1 FROM chat_threads WHERE chat_threads.user_id = ${schema.users.id} LIMIT 1)`,
-      ),
-    );
+    .innerJoin(schema.chatThreads, eq(schema.chatThreads.userId, schema.users.id))
+    .where(isNull(schema.users.deletedAt));
 
   const userIds = rows.map((r) => r.id);
 

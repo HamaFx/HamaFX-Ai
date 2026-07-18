@@ -20,6 +20,12 @@
 // Stores data in .hamafx/data/ (gitignored). Runs migrations on first boot.
 //
 // NEVER import this module from Edge/middleware code — PGlite is Node-only.
+//
+// NOTE (DB Audit M4): The PGlite migration tracking table
+// `__drizzle_migrations` is created in the `public` schema, while
+// production drizzle-kit uses the `drizzle` schema. This is intentional
+// — PGlite doesn't support custom schemas reliably, and the tracking
+// table only needs to be queryable by the PGlite runner itself.
 
 import { existsSync, mkdirSync, readFileSync, readdirSync } from 'node:fs';
 import { join, resolve } from 'node:path';

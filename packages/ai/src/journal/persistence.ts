@@ -137,54 +137,67 @@ export async function updateEntry(
   id: string,
   input: UpdateJournalInput,
 ): Promise<JournalEntry | null> {
-  const existing = await getEntry(userId, id);
-  if (!existing) return null;
+  // Wrap in a transaction with SELECT ... FOR UPDATE to prevent
+  // concurrent update races: two requests reading the same entry
+  // and computing different rMultiple/outcome values would silently
+  // overwrite each other without row-level locking.
+  return getDb().transaction(async (tx) => {
+    const rows = await tx
+      .select()
+      .from(schema.journalEntries)
+      .where(and(eq(schema.journalEntries.id, id), eq(schema.journalEntries.userId, userId)))
+      .for('update')
+      .limit(1);
+    const row = rows[0];
+    if (!row) return null;
+    const existing = rowToEntry(row);
 
-  const patch: Partial<typeof schema.journalEntries.$inferInsert> = {};
+    const patch: Partial<typeof schema.journalEntries.$inferInsert> = {};
 
-  if (input.closedAt !== undefined) {
-    patch.closedAt = input.closedAt === null ? null : new Date(input.closedAt);
-  }
-  if (input.exit !== undefined) patch.exit = input.exit;
-  if (input.stop !== undefined) patch.stop = input.stop;
-  if (input.target !== undefined) patch.target = input.target;
-  if (input.size !== undefined) patch.size = input.size;
-  if (input.outcome !== undefined) patch.outcome = TradeOutcomeSchema.parse(input.outcome);
-  if (input.notes !== undefined) patch.notes = input.notes;
-  if (input.tags !== undefined) patch.tags = input.tags;
-
-  // Auto-compute outcome + rMultiple when we have enough data.
-  const exit = input.exit ?? existing.exit;
-  const stop = input.stop ?? existing.stop;
-  const closedAt = (input.closedAt ?? existing.closedAt) as number | null;
-  if (exit !== null && stop !== null && closedAt !== null) {
-    const r = computeRMultiple({
-      side: existing.side,
-      entry: existing.entry,
-      stop,
-      exit,
-    });
-    patch.rMultiple = r;
-    if (input.outcome === undefined) {
-      patch.outcome = r > 0.05 ? 'win' : r < -0.05 ? 'loss' : 'breakeven';
+    if (input.closedAt !== undefined) {
+      patch.closedAt = input.closedAt === null ? null : new Date(input.closedAt);
     }
-  }
+    if (input.exit !== undefined) patch.exit = input.exit;
+    if (input.stop !== undefined) patch.stop = input.stop;
+    if (input.target !== undefined) patch.target = input.target;
+    if (input.size !== undefined) patch.size = input.size;
+    if (input.outcome !== undefined) patch.outcome = TradeOutcomeSchema.parse(input.outcome);
+    if (input.notes !== undefined) patch.notes = input.notes;
+    if (input.tags !== undefined) patch.tags = input.tags;
 
-  const updated = await getDb()
-    .update(schema.journalEntries)
-    .set(patch)
-    .where(and(eq(schema.journalEntries.id, id), eq(schema.journalEntries.userId, userId)))
-    .returning();
-  if (!updated[0]) return null;
-  const entry = rowToEntry(updated[0]);
+    // Auto-compute outcome + rMultiple when we have enough data.
+    const exit = input.exit ?? existing.exit;
+    const stop = input.stop ?? existing.stop;
+    const closedAt = (input.closedAt ?? existing.closedAt) as number | null;
+    if (exit !== null && stop !== null && closedAt !== null) {
+      const r = computeRMultiple({
+        side: existing.side,
+        entry: existing.entry,
+        stop,
+        exit,
+      });
+      patch.rMultiple = r;
+      if (input.outcome === undefined) {
+        patch.outcome = r > 0.05 ? 'win' : r < -0.05 ? 'loss' : 'breakeven';
+      }
+    }
 
-  // Re-embed: outcomes and notes change the natural-language summary
-  // we feed the memory index, so a stale row would mislead recall.
-  void rememberJournalEntry({ entryId: entry.id }).catch((err) => {
-    jlog.warn('memory upsert failed', { err: String(err) });
+    const updated = await tx
+      .update(schema.journalEntries)
+      .set(patch)
+      .where(and(eq(schema.journalEntries.id, id), eq(schema.journalEntries.userId, userId)))
+      .returning();
+    if (!updated[0]) return null;
+    const entry = rowToEntry(updated[0]);
+
+    // Re-embed: outcomes and notes change the natural-language summary
+    // we feed the memory index, so a stale row would mislead recall.
+    void rememberJournalEntry({ entryId: entry.id }).catch((err) => {
+      jlog.warn('memory upsert failed', { err: String(err) });
+    });
+
+    return entry;
   });
-
-  return entry;
 }
 
 export async function deleteEntry(userId: string, id: string): Promise<boolean> {

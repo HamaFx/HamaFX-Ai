@@ -195,7 +195,6 @@ describe('Phase 6 — Task 27: Full migration chain (all migrations on fresh PGl
     );
     expect(alertChecks.length).toBeGreaterThan(0);
   });
-  });
 
   it('key indexes exist', async () => {
     const db = await getPGliteDb(dir);

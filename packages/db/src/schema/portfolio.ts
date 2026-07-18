@@ -67,8 +67,6 @@ export const portfolioPositions = pgTable(
     /** "open" | "closed". */
     status: text('status').notNull().default('open'),
     notes: text('notes'),
-    /** Optional link to a position source (e.g. a trade journal entry). */
-    linkedSignalId: uuid('linked_signal_id'),
     /** Phase 8 §41 — soft-delete support. Null = active. */
     deletedAt: timestamp('deleted_at', { withTimezone: true }),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),

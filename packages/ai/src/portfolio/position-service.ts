@@ -51,7 +51,6 @@ export async function createPosition(
       takeProfit: input.takeProfit ?? null,
       openedAt: input.openedAt ? new Date(input.openedAt) : new Date(),
       notes: input.notes ?? null,
-      linkedSignalId: input.linkedSignalId ?? null,
       status: 'open',
     })
     .returning();
@@ -211,7 +210,6 @@ function rowToPosition(row: typeof schema.portfolioPositions.$inferSelect): Port
     closePrice: row.closePrice,
     status: row.status as PositionStatus,
     notes: row.notes,
-    linkedSignalId: row.linkedSignalId,
     createdAt: row.createdAt.getTime(),
     updatedAt: row.updatedAt.getTime(),
   };
