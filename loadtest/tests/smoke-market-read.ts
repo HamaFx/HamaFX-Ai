@@ -2,6 +2,7 @@
 // Validates script wiring + SUT connectivity with minimal load.
 // Run this FIRST before any other load test.
 import { sleep } from 'k6';
+import http from 'k6/http';
 import { env } from '../config/environments.js';
 import { smoke } from '../config/load-profiles.js';
 import { MARKET_READ, MARKET_READ_TAGGED_RELAXED } from '../config/thresholds.js';
@@ -20,7 +21,18 @@ export const options = {
 };
 
 export function setup() {
-  return bootstrapAuth();
+  const ctxs = bootstrapAuth();
+
+  // Warmup: prime DB connection pool, JIT compilation, and server caches
+  // before any VU iterations start. Raw http.get() works in setup() but
+  // cookieJar() and __VU/__ITER do not.
+  if (env.authMode === 'legacy') {
+    http.get(`${env.baseUrl}/api/health`);
+    http.get(`${env.baseUrl}/api/market/price?symbol=XAUUSD`);
+    http.get(`${env.baseUrl}/api/market/candles?symbol=XAUUSD&timeframe=1h`);
+  }
+
+  return ctxs;
 }
 
 export default function (
