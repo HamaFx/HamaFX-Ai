@@ -119,8 +119,7 @@ const EXPECTED_TABLES = [
   'push_subscriptions', 'memory_embeddings', 'daily_ai_spend',
   'rate_limits', 'live_ticks', 'candles_1m', 'provider_throttle',
   'intermarket_resonance', 'audit_logs', 'provider_tests',
-  'symbol_catalog', 'cron_runs', 'decision_signals',
-  'decision_signal_outcomes', 'decision_signal_feedback',
+  'symbol_catalog', 'cron_runs',
   'portfolio_positions', 'portfolio_settings',
   'notification_noise_state', 'bot_links',
   // Phase B — Billing (NOWPayments / crypto), migration 0040
@@ -195,11 +194,7 @@ describe('Phase 6 — Task 27: Full migration chain (all migrations on fresh PGl
       `SELECT conname FROM pg_constraint WHERE contype = 'c' AND conrelid = '"alerts"'::regclass AND conname LIKE '%snooze%'`,
     );
     expect(alertChecks.length).toBeGreaterThan(0);
-
-    const { rows: sigChecks } = await db.execute(
-      `SELECT conname FROM pg_constraint WHERE contype = 'c' AND conrelid = '"decision_signals"'::regclass AND conname LIKE '%confidence%'`,
-    );
-    expect(sigChecks.length).toBeGreaterThan(0);
+  });
   });
 
   it('key indexes exist', async () => {

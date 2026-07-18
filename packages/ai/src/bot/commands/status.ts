@@ -52,17 +52,6 @@ export const statusCommand: BotCommand = {
           ),
         );
 
-      // Count active decision signals
-      const [signalRow] = await db
-        .select({ count: sql<number>`count(*)::int` })
-        .from(schema.decisionSignals)
-        .where(
-          and(
-            eq(schema.decisionSignals.userId, ctx.userId),
-            eq(schema.decisionSignals.status, 'active'),
-          ),
-        );
-
       // Get market phase
       const phase = getMarketPhase();
       const weekend = isForexWeekend();
@@ -76,10 +65,7 @@ export const statusCommand: BotCommand = {
         '',
         '📊 Your Overview',
         `Open Positions: ${positionRow?.count ?? 0}`,
-        `Active Alerts: ${alertRow?.count ?? 0}`,
-        `Active Signals: ${signalRow?.count ?? 0}`,
-        '',
-        'System operational',
+        `Active Alerts: ${alertRow?.count ?? 0}`,        '','System operational',
       ];
 
       return {

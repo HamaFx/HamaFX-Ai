@@ -38,30 +38,6 @@ export const journalOutcomeEnum = pgEnum('journal_outcome', ['open', 'win', 'los
 // ── Portfolio position status ───────────────────────────────────────────
 export const portfolioStatusEnum = pgEnum('portfolio_status', ['open', 'closed']);
 
-// ── Decision signal action ──────────────────────────────────────────────
-export const signalActionEnum = pgEnum('signal_action', ['buy', 'sell', 'hold', 'reduce', 'add', 'avoid']);
-
-// ── Decision signal bias ────────────────────────────────────────────────
-export const signalBiasEnum = pgEnum('signal_bias', ['bullish', 'bearish', 'neutral']);
-
-// ── Decision signal status ──────────────────────────────────────────────
-export const signalStatusEnum = pgEnum('signal_status', ['active', 'expired', 'invalidated', 'closed']);
-
-// ── Decision signal source type ─────────────────────────────────────────
-export const signalSourceEnum = pgEnum('signal_source', ['chat', 'alert', 'briefing', 'manual']);
-
-// ── Decision signal horizon ─────────────────────────────────────────────
-export const signalHorizonEnum = pgEnum('signal_horizon', ['intraday', '1d', '3d', '5d', '10d', 'swing']);
-
-// ── Decision signal outcome ─────────────────────────────────────────────
-export const signalOutcomeEnum = pgEnum('signal_outcome', ['hit', 'miss', 'neutral']);
-
-// ── Decision signal eval status ─────────────────────────────────────────
-export const signalEvalStatusEnum = pgEnum('signal_eval_status', ['completed', 'unable']);
-
-// ── Decision signal feedback ────────────────────────────────────────────
-export const signalFeedbackEnum = pgEnum('signal_feedback', ['useful', 'not_useful']);
-
 // ── Briefing kind ───────────────────────────────────────────────────────
 export const briefingKindEnum = pgEnum('briefing_kind', ['pre', 'post', 'weekly_review']);
 

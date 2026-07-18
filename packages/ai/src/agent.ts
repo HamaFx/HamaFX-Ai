@@ -74,7 +74,6 @@ import { tools } from './tools';
 import { enforceCitations } from './verification';
 import { waitUntil } from './wait-until';
 import { getDb, schema, getUserWithSettings } from '@hamafx/db';
-import { extractDecisionSignal, createDecisionSignal } from './decision-signals';
 import type { UserSettingsRow } from '@hamafx/db/schema';
 import { extractRateLimits } from './rate-limits';
 import { noteLlmRateLimit, awaitLlmHeadroom } from './llm-throttle';
@@ -584,22 +583,7 @@ async function runChatInner(args: RunChatArgs) {
             };
             ({ messageId } = await appendAssistantMessage(threadId, ui));
 
-            // F1 — Decision Signal Tracking. Extract a directional signal
-            // from the assistant's response and persist it. Fire-and-forget:
-            // never blocks the chat response. Only creates a signal when a
-            // clear directional recommendation (buy/sell/reduce/add) is found.
-            if (messageId) {
-              void extractAndPersistSignal(ui, {
-                userId,
-                threadId,
-                messageId,
-                model: resolvedModelId,
-                snapshot,
-                responseMessages: response.messages,
-              }).catch((err) =>
-                alog.warn('decision signal extraction failed', { err: String(err) }),
-              );
-            }
+
           }
           const rateLimit = extractRateLimits(response.headers);
           if (rateLimit) {
@@ -861,70 +845,4 @@ function pickNextFallbackProvider(
   return null;
 }
 
-// ---------------------------------------------------------------------------
-// F1 — Decision Signal Tracking helper.
-//
-// Extracts a directional signal from the assistant's response and persists
-// it as a decision_signal row. Fire-and-forget: the caller wraps this in
-// void + .catch() so it never blocks or crashes the chat response.
-//
-// The symbol is resolved from (1) the thread's pinnedSymbol, (2) the user
-// message text, or (3) the first symbol found in the snapshot prices.
-// The current price comes from the live snapshot.
-// ---------------------------------------------------------------------------
 
-async function extractAndPersistSignal(
-  uiMessage: UIMessage,
-  ctx: {
-    userId: string;
-    threadId: string;
-    messageId: string;
-    model: string;
-    snapshot: LiveSnapshot;
-    /** C2 fix: AI SDK v5 response.messages from onFinish for structured tool-call data. */
-    responseMessages?: ReadonlyArray<{ role: string; content: unknown }>;
-  },
-): Promise<void> {
-  // Resolve the symbol using documented precedence:
-  //   (1) Symbol mentioned in the assistant's response text.
-  //   (2) First symbol found in the live snapshot prices.
-  const text = Array.isArray(uiMessage.parts)
-    ? uiMessage.parts
-        .filter((p) => (p as { type?: string }).type === 'text')
-        .map((p) => (p as { text: string }).text)
-        .join(' ')
-    : '';
-  const SUPPORTED = ['XAUUSD', 'EURUSD', 'GBPUSD'] as const;
-  let symbol: string | undefined;
-  for (const s of SUPPORTED) {
-    if (text.toUpperCase().includes(s)) {
-      symbol = s;
-      break;
-    }
-  }
-
-  // Fall back to the first available symbol from the snapshot.
-  if (!symbol) {
-    const symbolEntries = Object.entries(ctx.snapshot.prices);
-    if (symbolEntries.length === 0) return;
-    const [firstSym, tick] = symbolEntries[0]!;
-    if (!tick || typeof tick.mid !== 'number') return;
-    symbol = firstSym;
-  }
-
-  const tick = ctx.snapshot.prices[symbol as keyof typeof ctx.snapshot.prices];
-  if (!tick || typeof tick.mid !== 'number') return;
-
-  const payload = extractDecisionSignal(uiMessage, {
-    symbol,
-    currentPrice: tick.mid,
-    userId: ctx.userId,
-    threadId: ctx.threadId,
-    messageId: ctx.messageId,
-    model: ctx.model,
-  }, ctx.responseMessages);
-
-  if (payload) {
-    await createDecisionSignal(payload);
-  }
-}

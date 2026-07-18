@@ -25,7 +25,6 @@ import { saveAgentOpinions } from './persistence';
 import { appendUserMessage, appendAssistantMessage, recordTelemetry } from '../persistence';
 import { enforceCitations } from '../verification';
 import { logErrorContext, createCategorizedLogger } from '@hamafx/shared/logger';
-import { extractDecisionSignal, createDecisionSignal, type ExtractionContext } from '../decision-signals';
 import { TechnicalAgent } from './agents/technical-agent';
 import { FundamentalAgent } from './agents/fundamental-agent';
 import { RiskAgent } from './agents/risk-agent';
@@ -259,35 +258,6 @@ export async function runMultiAgentChat(args: RunMultiAgentArgs): Promise<MultiA
         costUsd: o.costUsd, latencyMs: o.latencyMs,
       })),
     }).catch((err) => logErrorContext(err, 'multi-agent/save_opinions_failed', {}, 'ai'));
-  }
-
-  // ── Q2: Extract + persist decision signal from multi-agent output ──
-  // Fire-and-forget — never blocks the response.
-  if (snapshotPrices && persistedMessageId) {
-    const symbolKey = symbol as string;
-    const tick = snapshotPrices[symbolKey] as Record<string, unknown> | undefined;
-    const currentPrice = (tick && typeof tick.mid === 'number') ? tick.mid as number : 0;
-    if (currentPrice > 0) {
-      const signalCtx: ExtractionContext = {
-        symbol: symbolKey,
-        currentPrice,
-        userId,
-        threadId,
-        messageId: persistedMessageId,
-        model: `multi-agent/${effectiveMode}`,
-        analysisMode: effectiveMode,
-      };
-      try {
-        const payload = extractDecisionSignal(assistantUi, signalCtx);
-        if (payload) {
-          void createDecisionSignal(payload).catch((err) =>
-            mlog.warn('decision signal persist failed', { err: String(err) }),
-          );
-        }
-      } catch (err) {
-        mlog.warn('decision signal extraction failed', { err: String(err) });
-      }
-    }
   }
 
   // ── Record telemetry for the multi-agent turn ──

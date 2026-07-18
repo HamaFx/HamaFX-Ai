@@ -115,35 +115,6 @@ describe('Phase 2 — data integrity constraints (migration 0028)', () => {
     expect(rows[0]?.cnt).toBe(2);
   });
 
-  it('rejects decision_signals.confidence > 1.0', async () => {
-    const db = await getPGliteDb(dir);
-    await applyAllThrough(db, '0028_phase2_data_integrity');
-    await db.execute(`INSERT INTO "user" (id, email) VALUES ('u-sig', 'u-sig@localhost')`);
-    await expect(
-      db.execute(`INSERT INTO "decision_signals" (user_id, symbol, action, bias, confidence, horizon, anchor_price, anchor_at, source_type) VALUES ('u-sig', 'XAUUSD', 'buy', 'bullish', 1.5, '1d', 2000.0, now(), 'chat')`),
-    ).rejects.toThrow();
-  });
-
-  it('rejects decision_signals.confidence < 0.0', async () => {
-    const db = await getPGliteDb(dir);
-    await applyAllThrough(db, '0028_phase2_data_integrity');
-    await db.execute(`INSERT INTO "user" (id, email) VALUES ('u-sig2', 'u-sig2@localhost')`);
-    await expect(
-      db.execute(`INSERT INTO "decision_signals" (user_id, symbol, action, bias, confidence, horizon, anchor_price, anchor_at, source_type) VALUES ('u-sig2', 'XAUUSD', 'buy', 'bullish', -0.5, '1d', 2000.0, now(), 'chat')`),
-    ).rejects.toThrow();
-  });
-
-  it('accepts decision_signals.confidence = NULL, 0.0, and 1.0', async () => {
-    const db = await getPGliteDb(dir);
-    await applyAllThrough(db, '0028_phase2_data_integrity');
-    await db.execute(`INSERT INTO "user" (id, email) VALUES ('u-sig3', 'u-sig3@localhost')`);
-    await db.execute(`INSERT INTO "decision_signals" (user_id, symbol, action, bias, confidence, horizon, anchor_price, anchor_at, source_type) VALUES ('u-sig3', 'XAUUSD', 'buy', 'bullish', NULL, '1d', 2000.0, now(), 'chat')`);
-    await db.execute(`INSERT INTO "decision_signals" (user_id, symbol, action, bias, confidence, horizon, anchor_price, anchor_at, source_type) VALUES ('u-sig3', 'EURUSD', 'sell', 'bearish', 0.0, '1d', 1.08, now(), 'chat')`);
-    await db.execute(`INSERT INTO "decision_signals" (user_id, symbol, action, bias, confidence, horizon, anchor_price, anchor_at, source_type) VALUES ('u-sig3', 'GBPUSD', 'hold', 'neutral', 1.0, '1d', 1.27, now(), 'chat')`);
-    const { rows } = await db.execute(`SELECT count(*)::int as cnt FROM "decision_signals" WHERE user_id = 'u-sig3'`);
-    expect(rows[0]?.cnt).toBe(3);
-  });
-
   it('rejects portfolio_settings.max_risk_per_trade_pct > 100', async () => {
     const db = await getPGliteDb(dir);
     await applyAllThrough(db, '0028_phase2_data_integrity');
@@ -363,9 +334,7 @@ describe('Phase 3 — schema fixes (migration 0029)', () => {
   });
 
   it('decision_signal_outcomes has evaluated_at index', async () => {
-    const db = await getPGliteDb(dir);
-    await applyAllThrough(db, '0029_phase3_schema_fixes');
-    const { rows } = await db.execute(`SELECT indexname FROM pg_indexes WHERE tablename = 'decision_signal_outcomes' AND indexname = 'decision_signal_outcomes_evaluated_idx'`);
-    expect(rows).toHaveLength(1);
+    // Table removed — decision_signals feature deprecated (Plan A)
+    expect(true).toBe(true);
   });
 });

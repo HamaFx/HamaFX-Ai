@@ -138,8 +138,8 @@ export function writeMix(ctx: SessionCtx): void {
     });
   } else if (!ctx.threadId && roll < 0.37) {
     // Strategy A: no threadId available — thread-by-ID operations fall
-    // through. Redirect to signal stats to keep the distribution uniform.
-    getJson('/api/decision-signals/stats', 'signal_stats');
+    // through. Use health check as filler.
+    getJson('/api/health', 'health');
   }
   // ── Alert operations (20%) ──────────────────────────────────────
   else if (roll < 0.48) {
@@ -235,10 +235,7 @@ export function writeMix(ctx: SessionCtx): void {
     getJson('/api/portfolio/risk', 'risk_read');
   }
   // ── Other write operations (15%) ────────────────────────────────
-  else if (roll < 0.88) {
-    // GET /api/decision-signals/stats — signal stats (3%)
-    getJson('/api/decision-signals/stats', 'signal_stats');
-  } else if (roll < 0.91) {
+  else if (roll < 0.91) {
     // POST /api/onboarding/save-progress — save onboarding (3%)
     postJson('/api/onboarding/save-progress', 'onboarding', {
       step: Math.floor(Math.random() * 5) + 1,

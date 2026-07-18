@@ -87,12 +87,6 @@ describe('Phase 3 Session A — multi-tenancy foundation', () => {
       `INSERT INTO "chat_messages" ("id", "thread_id", "role", "content") VALUES ('22222222-2222-4222-8222-222222222222', '11111111-1111-4111-8111-111111111111', 'user', 'legacy message')`,
     );
     await db.execute(
-      `INSERT INTO "decision_signals" ("id", "user_id", "symbol", "action", "bias", "horizon", "anchor_price", "anchor_at", "source_type") VALUES ('33333333-3333-4333-8333-333333333333', 'u-phase3-existing', 'XAUUSD', 'buy', 'bullish', 'intraday', 2300, now(), 'chat')`,
-    );
-    await db.execute(
-      `INSERT INTO "decision_signal_outcomes" ("id", "signal_id", "horizon", "eval_status") VALUES ('44444444-4444-4444-8444-444444444444', '33333333-3333-4333-8333-333333333333', '1d', 'completed')`,
-    );
-    await db.execute(
       `INSERT INTO "journal_entries" ("id", "user_id", "symbol", "side", "opened_at", "entry") VALUES ('55555555-5555-4555-8555-555555555555', 'u-phase3-existing', 'XAUUSD', 'long', now(), 2310)`,
     );
 
@@ -113,8 +107,6 @@ describe('Phase 3 Session A — multi-tenancy foundation', () => {
       ['user_settings', `user_id = 'u-phase3-existing'`],
       ['chat_threads', `id = '11111111-1111-4111-8111-111111111111'`],
       ['chat_messages', `id = '22222222-2222-4222-8222-222222222222'`],
-      ['decision_signals', `id = '33333333-3333-4333-8333-333333333333'`],
-      ['decision_signal_outcomes', `id = '44444444-4444-4444-8444-444444444444'`],
       ['journal_entries', `id = '55555555-5555-4555-8555-555555555555'`],
     ] as const) {
       const result = await db.execute(`SELECT tenant_id FROM "${table}" WHERE ${predicate}`);
@@ -125,7 +117,7 @@ describe('Phase 3 Session A — multi-tenancy foundation', () => {
       SELECT table_name, is_nullable
       FROM information_schema.columns
       WHERE column_name = 'tenant_id'
-        AND table_name IN ('journal_entries', 'chat_messages', 'decision_signal_outcomes')
+        AND table_name IN ('journal_entries', 'chat_messages')
       ORDER BY table_name
     `);
     expect(

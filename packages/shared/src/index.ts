@@ -37,7 +37,6 @@ export * from './schemas/structure';
 export * from './schemas/chat';
 export * from './schemas/alerts';
 export * from './schemas/journal';
-export * from './schemas/decision-signals';
 // F2 — Portfolio Management
 export * from './schemas/portfolio';
 // F3 — Social Sentiment Integration

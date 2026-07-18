@@ -29,8 +29,6 @@ import {
   AlertSchema,
   JournalEntrySchema,
   JournalStatsSchema,
-  DecisionSignalSchema,
-  DecisionSignalOutcomeSchema,
   PortfolioPositionSchema,
   PortfolioSettingsSchema,
   PortfolioRiskReportSchema,
@@ -605,115 +603,6 @@ describe('JournalStatsSchema', () => {
   it('rejects winRate out of range', () => {
     expect(() => JournalStatsSchema.parse({ ...valid, winRate: 1.5 })).toThrow();
     expect(() => JournalStatsSchema.parse({ ...valid, winRate: -0.1 })).toThrow();
-  });
-});
-
-// ---------------------------------------------------------------------------
-// DecisionSignalSchema
-// ---------------------------------------------------------------------------
-describe('DecisionSignalSchema', () => {
-  const valid = {
-    id: '550e8400-e29b-41d4-a716-446655440004',
-    userId: 'user-1',
-    threadId: '550e8400-e29b-41d4-a716-446655440005',
-    messageId: '550e8400-e29b-41d4-a716-446655440006',
-    symbol: 'XAUUSD',
-    action: 'buy' as const,
-    bias: 'bullish' as const,
-    confidence: 0.85,
-    entryLow: 2380.0,
-    entryHigh: 2390.0,
-    stopLoss: 2360.0,
-    takeProfit: 2420.0,
-    horizon: 'swing' as const,
-    anchorPrice: 2385.0,
-    anchorAt: 1748378101000,
-    sourceType: 'chat' as const,
-    model: 'gpt-4',
-    analysisMode: 'technical',
-    status: 'active' as const,
-    metadata: {},
-    createdAt: 1748378101000,
-    updatedAt: 1748378102000,
-  };
-
-  it('accepts a valid signal', () => {
-    expect(() => DecisionSignalSchema.parse(valid)).not.toThrow();
-  });
-
-  it('accepts nullable fields', () => {
-    const parsed = DecisionSignalSchema.parse({
-      ...valid,
-      threadId: null,
-      messageId: null,
-      confidence: null,
-      entryLow: null,
-      entryHigh: null,
-      stopLoss: null,
-      takeProfit: null,
-      model: null,
-      analysisMode: null,
-    });
-    expect(parsed.threadId).toBeNull();
-    expect(parsed.confidence).toBeNull();
-  });
-
-  it('accepts all actions', () => {
-    for (const action of ['buy', 'sell', 'hold', 'reduce', 'add', 'avoid'] as const) {
-      expect(() => DecisionSignalSchema.parse({ ...valid, action })).not.toThrow();
-    }
-  });
-
-  it('accepts all signal statuses', () => {
-    for (const status of ['active', 'expired', 'invalidated', 'closed'] as const) {
-      expect(() => DecisionSignalSchema.parse({ ...valid, status })).not.toThrow();
-    }
-  });
-});
-
-// ---------------------------------------------------------------------------
-// DecisionSignalOutcomeSchema
-// ---------------------------------------------------------------------------
-describe('DecisionSignalOutcomeSchema', () => {
-  const valid = {
-    id: '550e8400-e29b-41d4-a716-446655440007',
-    signalId: '550e8400-e29b-41d4-a716-446655440004',
-    horizon: '1d',
-    evalStatus: 'completed' as const,
-    unableReason: null,
-    outcome: 'hit' as const,
-    directionCorrect: true,
-    priceReturnPct: 0.5,
-    hitStopLoss: false,
-    hitTakeProfit: true,
-    firstHit: 'target' as const,
-    firstHitDays: 1,
-    endPrice: 2410.0,
-    evaluatedAt: 1748378200000,
-    engineVersion: 'v1',
-  };
-
-  it('accepts a valid outcome', () => {
-    expect(() => DecisionSignalOutcomeSchema.parse(valid)).not.toThrow();
-  });
-
-  it('accepts nullable fields for unable eval', () => {
-    const parsed = DecisionSignalOutcomeSchema.parse({
-      ...valid,
-      evalStatus: 'unable',
-      unableReason: 'Insufficient price data',
-      outcome: null,
-      directionCorrect: null,
-      priceReturnPct: null,
-      hitStopLoss: null,
-      hitTakeProfit: null,
-      firstHit: null,
-      firstHitDays: null,
-      endPrice: null,
-    });
-    expect(parsed.evalStatus).toBe('unable');
-    expect(parsed.unableReason).toBe('Insufficient price data');
-    expect(parsed.outcome).toBeNull();
   });
 });
 

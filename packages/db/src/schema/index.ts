@@ -53,8 +53,6 @@ export * from './cron-runs';
 export * from './diagnostic-traces';
 // Admin — runtime feature flags
 export * from './feature-flags';
-// F1 — Decision Signal Tracking + Outcome Evaluation
-export * from './decision-signals';
 // F2 — Portfolio Management
 export * from './portfolio';
 // F4 — Notification Noise Control

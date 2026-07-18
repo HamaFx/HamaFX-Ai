@@ -32,7 +32,6 @@ import { statusCommand } from './commands/status';
 import { chartCommand } from './commands/chart';
 import { alertCommand } from './commands/alert';
 import { positionsCommand } from './commands/positions';
-import { trackCommand } from './commands/track';
 import { linkCommand } from './commands/link';
 import { newsCommand } from './commands/news';
 import { calendarCommand } from './commands/calendar';
@@ -53,7 +52,6 @@ export class BotDispatcher {
     this.register(chartCommand);
     this.register(alertCommand);
     this.register(positionsCommand);
-    this.register(trackCommand);
     this.register(linkCommand);
     // New commands (F7+ upgrade)
     this.register(newsCommand);

@@ -53,7 +53,6 @@ export const READ_MIX_TAGGED = {
   'http_req_duration{group:news_read}': ['p(95)<800', 'p(99)<1500'],
   'http_req_duration{group:calendar_read}': ['p(95)<800', 'p(99)<1500'],
   'http_req_duration{group:sentiment_read}': ['p(95)<800', 'p(99)<1500'],
-  'http_req_duration{group:decision_signals}': ['p(95)<800', 'p(99)<1500'],
   'http_req_duration{group:thread_list}': ['p(95)<500', 'p(99)<1000'],
   'http_req_duration{group:health}': ['p(95)<300', 'p(99)<800'],
 };
@@ -64,7 +63,6 @@ export const READ_MIX_TAGGED_RELAXED = RELAXED
       'http_req_duration{group:news_read}': ['p(95)<2000', 'p(99)<4000'],
       'http_req_duration{group:calendar_read}': ['p(95)<2000', 'p(99)<4000'],
       'http_req_duration{group:sentiment_read}': ['p(95)<2000', 'p(99)<4000'],
-      'http_req_duration{group:decision_signals}': ['p(95)<2000', 'p(99)<4000'],
       'http_req_duration{group:thread_list}': ['p(95)<1000', 'p(99)<2000'],
       'http_req_duration{group:health}': ['p(95)<500', 'p(99)<1500'],
     }
@@ -109,8 +107,6 @@ export const WRITE_MIX_TAGGED = {
   'http_req_duration{group:position_read}': ['p(95)<500', 'p(99)<1000'],
   'http_req_duration{group:position_close}': ['p(95)<800', 'p(99)<1500'],
   'http_req_duration{group:risk_read}': ['p(95)<1000', 'p(99)<2000'],
-  'http_req_duration{group:signal_feedback}': ['p(95)<500', 'p(99)<1000'],
-  'http_req_duration{group:signal_stats}': ['p(95)<500', 'p(99)<1000'],
   'http_req_duration{group:onboarding}': ['p(95)<500', 'p(99)<1000'],
   'http_req_duration{group:noise_config}': ['p(95)<500', 'p(99)<1000'],
   'http_req_duration{group:push_subscribe}': ['p(95)<500', 'p(99)<1000'],
@@ -136,8 +132,6 @@ export const WRITE_MIX_TAGGED_RELAXED = RELAXED
       'http_req_duration{group:position_read}': ['p(95)<2000', 'p(99)<4000'],
       'http_req_duration{group:position_close}': ['p(95)<2000', 'p(99)<4000'],
       'http_req_duration{group:risk_read}': ['p(95)<3000', 'p(99)<5000'],
-      'http_req_duration{group:signal_feedback}': ['p(95)<2000', 'p(99)<4000'],
-      'http_req_duration{group:signal_stats}': ['p(95)<2000', 'p(99)<4000'],
       'http_req_duration{group:onboarding}': ['p(95)<1000', 'p(99)<2000'],
       'http_req_duration{group:noise_config}': ['p(95)<1000', 'p(99)<2000'],
       'http_req_duration{group:push_subscribe}': ['p(95)<1000', 'p(99)<2000'],

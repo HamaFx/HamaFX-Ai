@@ -43,8 +43,7 @@ import { eq, type SQL } from 'drizzle-orm';
  *
  *   chatThreads, chatTelemetry, chatToolTelemetry, alerts,
  *   journalEntries, memoryEmbeddings, pushSubscriptions,
- *   sharedSnapshots, userSymbols, agentOpinions, decisionSignals,
- *   decisionSignalFeedback, portfolioPositions, portfolioSettings,
+ *   sharedSnapshots, userSymbols, agentOpinions, portfolioPositions, portfolioSettings,
  *   notificationNoiseState, botLinks, providerTests, briefingsEmitted,
  *   dailyAiSpend, userSessions, rateLimits, auditLogs, userSettings.
  *

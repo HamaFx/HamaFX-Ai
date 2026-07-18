@@ -35,7 +35,6 @@ import {
 } from 'drizzle-orm/pg-core';
 
 import { organization, users } from './auth';
-import { decisionSignals } from './decision-signals';
 
 // ---------------------------------------------------------------------------
 // portfolio_positions
@@ -68,10 +67,8 @@ export const portfolioPositions = pgTable(
     /** "open" | "closed". */
     status: text('status').notNull().default('open'),
     notes: text('notes'),
-    /** Optional link to a decision signal that generated this position. */
-    linkedSignalId: uuid('linked_signal_id').references(() => decisionSignals.id, {
-      onDelete: 'set null',
-    }),
+    /** Optional link to a position source (e.g. a trade journal entry). */
+    linkedSignalId: uuid('linked_signal_id'),
     /** Phase 8 §41 — soft-delete support. Null = active. */
     deletedAt: timestamp('deleted_at', { withTimezone: true }),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),

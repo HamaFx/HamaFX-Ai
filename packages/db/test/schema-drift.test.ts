@@ -94,7 +94,7 @@ function getSchemaTableColumns(): Map<string, string[]> {
     'briefings.ts', 'cot.ts', 'share.ts', 'push.ts', 'memory.ts',
     'daily-ai-spend.ts', 'rate-limits.ts', 'live-ticks.ts', 'candles-1m.ts',
     'throttle.ts', 'intermarket-resonance.ts', 'audit.ts', 'provider-tests.ts',
-    'symbol-catalog.ts', 'cron-runs.ts', 'decision-signals.ts', 'portfolio.ts',
+    'symbol-catalog.ts', 'cron-runs.ts', 'portfolio.ts',
     'noise-control.ts', 'bot-links.ts', 'billing.ts',
   ];
   for (const file of files) {
@@ -140,7 +140,7 @@ describe('Phase 6 — Task 28: Schema drift detection', () => {
     const db = await getPGliteDb(dir);
     await applyAll(db);
     const schemaTables = getSchemaTableColumns();
-    const tablesToCheck = ['journal_entries', 'decision_signals', 'portfolio_positions', 'alerts', 'chat_telemetry'];
+    const tablesToCheck = ['journal_entries', 'portfolio_positions', 'alerts', 'chat_telemetry'];
     for (const tableName of tablesToCheck) {
       const schemaCols = schemaTables.get(tableName);
       if (!schemaCols) continue;

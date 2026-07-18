@@ -52,7 +52,7 @@ export interface RetentionResult {
  *
  * Idempotent and safe to run repeatedly.
  * Scoped strictly to operational tables — never touches user-content tables
- * (chat_messages, journal, alerts, decision_signals, portfolio).
+ * (chat_messages, journal, alerts, portfolio).
  */
 export async function runRetentionCleanup(
   config: RetentionConfig = {},

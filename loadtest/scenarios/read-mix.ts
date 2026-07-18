@@ -43,12 +43,6 @@ export function readMix(_ctx: SessionCtx): void {
     sleep(0.3 + Math.random() * 0.5);
   }
 
-  // ── Decision signals ───────────────────────────────────────────
-  if (Math.random() < 0.2) {
-    getJson('/api/decision-signals', 'decision_signals');
-    sleep(0.3 + Math.random() * 0.5);
-  }
-
   // ── Thread list ────────────────────────────────────────────────
   if (Math.random() < 0.3) {
     getJson('/api/chat/threads', 'thread_list');

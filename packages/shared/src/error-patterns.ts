@@ -92,8 +92,8 @@ export const ERROR_PATTERNS: ErrorPattern[] = [
     code: 'PROVIDER_UNAVAILABLE',
     description: 'Market data provider is unavailable',
     suggestedFix:
-      'Check if the provider API key is valid. Use /api/settings/test-provider to test. Check circuit breaker state in packages/data/src/circuit-breaker.ts.',
-    relatedFiles: ['packages/data/src/circuit-breaker.ts', 'packages/data/src/failover.ts'],
+      'Check if the provider API key is valid. Use /api/settings/test-provider to test. Check provider health scoring in packages/data/src/health.ts.',
+    relatedFiles: ['packages/data/src/failover.ts', 'packages/data/src/health.ts'],
     retryable: true,
   },
   {

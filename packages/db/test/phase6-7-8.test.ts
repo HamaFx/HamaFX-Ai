@@ -79,7 +79,6 @@ describe('Phase 7 — Code Quality & Polish', () => {
   it('withUserScope JSDoc lists all user-scoped tables', () => {
     const source = readFileSync(join(HERE, '..', 'src', 'with-user-scope.ts'), 'utf-8');
     expect(source).toContain('agentOpinions');
-    expect(source).toContain('decisionSignals');
     expect(source).toContain('portfolioPositions');
     expect(source).toContain('portfolioSettings');
     expect(source).toContain('botLinks');
@@ -110,7 +109,7 @@ describe('Phase 7 — Code Quality & Polish', () => {
     expect(migration).toContain('"user"');
     expect(migration).toContain('"chat_threads"');
     expect(migration).toContain('"journal_entries"');
-    expect(migration).toContain('"decision_signals"');
+
   });
 
   it('migration 0031 adds update_updated_at trigger function', () => {
@@ -119,7 +118,7 @@ describe('Phase 7 — Code Quality & Polish', () => {
     expect(migration).toContain('BEFORE UPDATE');
     expect(migration).toContain('trg_updated_at_user');
     expect(migration).toContain('trg_updated_at_journal_entries');
-    expect(migration).toContain('trg_updated_at_decision_signals');
+
   });
 
   it('migration 0031 is in the journal', () => {
@@ -162,7 +161,7 @@ describe('Phase 8 — Improvements', () => {
     const migration = readFileSync(join(DRIZZLE_DIR, '0032_phase8_soft_delete_enums_fts.sql'), 'utf-8');
     expect(migration).toContain('ALTER TABLE "journal_entries" ADD COLUMN IF NOT EXISTS "deleted_at"');
     expect(migration).toContain('ALTER TABLE "portfolio_positions" ADD COLUMN IF NOT EXISTS "deleted_at"');
-    expect(migration).toContain('ALTER TABLE "decision_signals" ADD COLUMN IF NOT EXISTS "deleted_at"');
+
   });
 
   it('schema files have deleted_at columns', () => {
@@ -174,9 +173,6 @@ describe('Phase 8 — Improvements', () => {
     expect(portfolioSource).toContain('deletedAt');
     expect(portfolioSource).toContain('deleted_at');
 
-    const signalsSource = readFileSync(join(HERE, '..', 'src', 'schema', 'decision-signals.ts'), 'utf-8');
-    expect(signalsSource).toContain('deletedAt');
-    expect(signalsSource).toContain('deleted_at');
   });
 
   it('user-settings-split-plan.md document exists', () => {
@@ -188,9 +184,6 @@ describe('Phase 8 — Improvements', () => {
     expect(migration).toContain('CREATE TYPE user_role');
     expect(migration).toContain('CREATE TYPE journal_outcome');
     expect(migration).toContain('CREATE TYPE portfolio_status');
-    expect(migration).toContain('CREATE TYPE signal_action');
-    expect(migration).toContain('CREATE TYPE signal_bias');
-    expect(migration).toContain('CREATE TYPE signal_status');
     expect(migration).toContain('CREATE TYPE briefing_kind');
     expect(migration).toContain('CREATE TYPE bot_platform');
   });
@@ -203,7 +196,7 @@ describe('Phase 8 — Improvements', () => {
     expect(source).toContain('pgEnum');
     expect(source).toContain('userRoleEnum');
     expect(source).toContain('journalOutcomeEnum');
-    expect(source).toContain('signalActionEnum');
+    expect(source).toContain('portfolioStatusEnum');
     expect(source).toContain('briefingKindEnum');
     expect(source).toContain('botPlatformEnum');
   });

@@ -119,7 +119,6 @@ describe('BotDispatcher', () => {
     expect(names).toContain('chart');
     expect(names).toContain('alert');
     expect(names).toContain('positions');
-    expect(names).toContain('track');
     expect(names).toContain('link');
   });
 
