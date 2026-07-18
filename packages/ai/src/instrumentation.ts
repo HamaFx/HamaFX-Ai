@@ -30,6 +30,9 @@
 
 import { NodeSDK } from '@opentelemetry/sdk-node';
 import { LangfuseSpanProcessor } from '@langfuse/otel';
+import { createCategorizedLogger } from '@hamafx/shared/logger';
+
+const llog = createCategorizedLogger('system', { component: 'langfuse' });
 
 let _sdk: NodeSDK | null = null;
 let _started = false;
@@ -51,9 +54,7 @@ export function initLangfuse(): void {
   // Silently skip when not configured — no crash, no env validation.
   if (!publicKey || !secretKey || !baseUrl) {
     if (process.env.NODE_ENV === 'development') {
-      console.info(
-        '[langfuse] skipping — LANGFUSE_PUBLIC_KEY, LANGFUSE_SECRET_KEY, or LANGFUSE_BASE_URL not set',
-      );
+      llog.info('skipping — LANGFUSE_PUBLIC_KEY, LANGFUSE_SECRET_KEY, or LANGFUSE_BASE_URL not set');
     }
     return;
   }
@@ -71,7 +72,7 @@ export function initLangfuse(): void {
   });
 
   _sdk.start();
-  console.info('[langfuse] OpenTelemetry tracing enabled → %s', baseUrl);
+  llog.info(`OpenTelemetry tracing enabled → ${baseUrl}`);
 }
 
 /**
@@ -84,8 +85,8 @@ export async function shutdownLangfuse(): Promise<void> {
   if (!_sdk) return;
   try {
     await _sdk.shutdown();
-    console.info('[langfuse] tracing shut down cleanly');
+    llog.info('tracing shut down cleanly');
   } catch (err) {
-    console.warn('[langfuse] shutdown failed (non-fatal)', err);
+    llog.warn('shutdown failed (non-fatal)', { err: String(err) });
   }
 }

@@ -41,6 +41,10 @@
 //     Credentials (ADC) available (automatic on GCE / Cloud Run).
 //   - `none` / unset: no-op (use .env files as before).
 
+import { createCategorizedLogger } from './logger';
+
+const vlog = createCategorizedLogger('system', { component: 'vault' });
+
 /** Names of secrets to fetch from the vault. */
 const VAULT_SECRET_NAMES = [
   'DATABASE_URL',
@@ -94,14 +98,14 @@ async function getGcpAccessToken(): Promise<string | null> {
     });
 
     if (!res.ok) {
-      console.warn(`[vault] Metadata server returned ${res.status}`);
+      vlog.warn(`metadata server returned ${res.status}`);
       return null;
     }
 
     const data = (await res.json()) as { access_token?: string };
     return data.access_token ?? null;
   } catch (err) {
-    console.warn('[vault] Failed to get GCP access token from metadata server:', err);
+    vlog.warn('failed to get GCP access token from metadata server', { err: String(err) });
     return null;
   }
 }
@@ -121,7 +125,7 @@ async function fetchGcpSecret(
 
     if (!res.ok) {
       if (res.status === 404) return null; // Secret doesn't exist — skip
-      console.warn(`[vault] GCP Secret Manager returned ${res.status} for ${secretName}`);
+      vlog.warn(`GCP Secret Manager returned ${res.status} for ${secretName}`);
       return null;
     }
 
@@ -130,8 +134,7 @@ async function fetchGcpSecret(
 
     // Secret Manager returns base64-encoded values.
     return Buffer.from(data.payload.data, 'base64').toString('utf-8');
-  } catch (err) {
-    console.warn(`[vault] Failed to fetch ${secretName} from GCP Secret Manager:`, err);
+  } catch (err) {      vlog.warn({ err: String(err) }, `failed to fetch ${secretName} from GCP Secret Manager`);
     return null;
   }
 }
@@ -159,15 +162,15 @@ export async function loadSecretsFromVault(): Promise<void> {
   if (provider === 'gcp-secret-manager') {
     const projectId = process.env.GCP_PROJECT_ID;
     if (!projectId) {
-      console.warn('[vault] SECRETS_VAULT_PROVIDER=gcp-secret-manager but GCP_PROJECT_ID is not set');
+      vlog.warn('SECRETS_VAULT_PROVIDER=gcp-secret-manager but GCP_PROJECT_ID is not set');
       return;
     }
 
-    console.info(`[vault] Loading secrets from GCP Secret Manager (project: ${projectId})`);
+    vlog.info(`loading secrets from GCP Secret Manager (project: ${projectId})`);
 
     const accessToken = await getGcpAccessToken();
     if (!accessToken) {
-      console.warn('[vault] Could not obtain GCP access token — skipping vault load');
+      vlog.warn('could not obtain GCP access token — skipping vault load');
       return;
     }
 
@@ -183,11 +186,11 @@ export async function loadSecretsFromVault(): Promise<void> {
       }
     }
 
-    console.info(`[vault] Loaded ${loaded} secrets from GCP Secret Manager`);
+    vlog.info(`loaded ${loaded} secrets from GCP Secret Manager`);
     return;
   }
 
-  console.warn(`[vault] Unknown SECRETS_VAULT_PROVIDER: ${provider}`);
+  vlog.warn(`unknown SECRETS_VAULT_PROVIDER: ${provider}`);
 }
 
 /**

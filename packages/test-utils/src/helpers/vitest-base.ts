@@ -43,10 +43,10 @@ export function createProjectConfig(opts: ProjectOptions): UserWorkspaceConfig {
             include: ['src/**/*.ts'],
             exclude: ['src/**/*.test.ts', 'src/index.ts'],
             thresholds: {
-              statements: coverage.statements ?? 0,
-              branches: coverage.branches ?? 0,
-              functions: coverage.functions ?? 0,
-              lines: coverage.lines ?? 0,
+              statements: coverage.statements ?? 50,
+              branches: coverage.branches ?? 40,
+              functions: coverage.functions ?? 50,
+              lines: coverage.lines ?? 50,
             },
           },
         }

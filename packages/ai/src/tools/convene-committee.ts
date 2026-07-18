@@ -14,14 +14,13 @@
  * limitations under the License.
  */
 
-/* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any, prefer-const */
 import { logErrorContext } from '@hamafx/shared/logger';
 import { getDb, schema } from '@hamafx/db';
 import {
   ConveneCommitteeInputSchema,
+  type ConveneCommitteeInput,
   type CommitteeVerdict,
   type ConveneCommitteeOutput,
-  type Symbol,
 } from '@hamafx/shared';
 import { tool, generateText, stepCountIs } from 'ai';
 import type { z } from 'zod';
@@ -104,7 +103,13 @@ export const conveneCommitteeTool = tool({
 // Persona Runners
 // ---------------------------------------------------------------------------
 
-async function runEconomist(input: any, data: any, ctx: ToolContext): Promise<CommitteeVerdict> {
+interface ModeratorResult {
+  grade: 'A' | 'B' | 'C' | 'D' | 'F';
+  goNoGo: 'go' | 'caution' | 'no-go';
+  consensus: string;
+}
+
+async function runEconomist(input: ConveneCommitteeInput, data: unknown, ctx: ToolContext): Promise<CommitteeVerdict> {
   const prompt = `You are The Economist on a trading committee. Evaluate this trade:
 Symbol: ${input.symbol}
 Side: ${input.side}
@@ -167,7 +172,7 @@ No markdown fences, no preamble.`;
   }
 }
 
-async function runTechnician(input: any, data: any, ctx: ToolContext): Promise<CommitteeVerdict> {
+async function runTechnician(input: ConveneCommitteeInput, data: unknown, ctx: ToolContext): Promise<CommitteeVerdict> {
   const prompt = `You are The Technician on a trading committee. Evaluate this trade:
 Symbol: ${input.symbol}
 Side: ${input.side}
@@ -201,8 +206,7 @@ No markdown fences, no preamble.`;
   }
 }
 
-async function runRiskManager(input: any, journalData: any, riskData: any, ctx: ToolContext): Promise<CommitteeVerdict> {
-  const prompt = `You are The Risk Manager on a trading committee. Evaluate this trade:
+async function runRiskManager(input: ConveneCommitteeInput, journalData: unknown, riskData: unknown, ctx: ToolContext): Promise<CommitteeVerdict> {    const prompt = `You are The Risk Manager on a trading committee. Evaluate this trade:
 Symbol: ${input.symbol}
 Side: ${input.side}
 Entry: ${input.entry}
@@ -210,7 +214,7 @@ Stop: ${input.stop || 'None'}
 Target: ${input.target || 'None'}
 
 User's Journal Stats for ${input.symbol}:
-${JSON.stringify(journalData.bySymbol || [], null, 2)}
+${JSON.stringify((journalData as { bySymbol?: unknown[] } | null)?.bySymbol ?? [], null, 2)}
 
 Position Sizing & Risk Profile:
 ${JSON.stringify(riskData || 'No stop loss provided, extreme risk.', null, 2)}
@@ -240,7 +244,7 @@ No markdown fences, no preamble.`;
   }
 }
 
-async function runModerator(input: any, e: CommitteeVerdict, t: CommitteeVerdict, r: CommitteeVerdict, ctx: ToolContext) {
+async function runModerator(input: ConveneCommitteeInput, e: CommitteeVerdict, t: CommitteeVerdict, r: CommitteeVerdict, ctx: ToolContext): Promise<ModeratorResult> {
   const prompt = `You are the Committee Moderator. You have received three reports for a ${input.side} trade on ${input.symbol} at ${input.entry}.
 
 Economist: ${e.verdict} (${e.confidence}/10) - ${e.recommendation}
@@ -262,7 +266,7 @@ No markdown fences, no preamble.`;
       system: "You are the head trader. Always output raw JSON.",
       prompt,
     });
-    const parsed = parseJsonOrThrow<any>(text, 'moderator');
+    const parsed = parseJsonOrThrow<ModeratorResult>(text, 'moderator');
     return {
       grade: parsed.grade ?? 'C',
       goNoGo: parsed.goNoGo ?? 'caution',

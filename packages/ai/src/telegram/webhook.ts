@@ -25,7 +25,7 @@
 //   - Error safety: user-facing errors are sanitized (no internal details leaked).
 
 import { pickAiEnv, type ServerEnv } from '@hamafx/shared';
-import { logErrorContext } from '@hamafx/shared/logger';
+import { logErrorContext, createCategorizedLogger } from '@hamafx/shared/logger';
 import type { UIMessage } from 'ai';
 import { runChat } from '../agent';
 import * as crypto from 'crypto';
@@ -41,6 +41,8 @@ import {
 } from './client';
 import { isDuplicateUpdate, markProcessed } from './idempotency';
 import { checkRateLimit } from './rate-limiter';
+
+const twlog = createCategorizedLogger('telegram', { component: 'webhook' });
 
 export interface TelegramUpdate {
   update_id: number;
@@ -160,7 +162,7 @@ export async function handleTelegramWebhook(update: TelegramUpdate, env: ServerE
 
   // ── Idempotency: skip duplicate updates from Telegram retries ──
   if (isDuplicateUpdate(updateId)) {
-    console.info(`[telegram] Skipping duplicate update_id=${updateId}`);
+    twlog.info(`skipping duplicate update_id=${updateId}`);
     return;
   }
 
@@ -174,7 +176,7 @@ export async function handleTelegramWebhook(update: TelegramUpdate, env: ServerE
 
   // Reject messages from bots (anti-spam)
   if (update.message?.from?.is_bot || update.callback_query?.from?.is_bot) {
-    console.warn(`[telegram] Rejecting bot message from chat_id=${chatId}`);
+    twlog.warn(`rejecting bot message from chat_id=${chatId}`);
     markProcessed(updateId);
     return;
   }

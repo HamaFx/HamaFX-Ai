@@ -23,6 +23,9 @@
 //   - Lightweight: uses plain fetch, no extra dependencies.
 
 import { withRetry } from '../retry';
+import { createCategorizedLogger } from '@hamafx/shared/logger';
+
+const tlog = createCategorizedLogger('telegram', { component: 'client' });
 
 const TELEGRAM_API_BASE = 'https://api.telegram.org';
 const SAFE_CHUNK_LENGTH = 4000; // Leave headroom for formatting
@@ -101,9 +104,9 @@ export async function telegramApiCall<T = TelegramApiResponse>(
         return false;
       },
       onRetry: (err, attempt, delayMs) => {
-        console.warn(
-          `[telegram-api] Retrying ${method} (attempt ${attempt + 1}) after ${Math.round(delayMs)}ms:`,
-          err instanceof Error ? err.message : String(err),
+        tlog.warn(
+          `retrying ${method} (attempt ${attempt + 1}) after ${Math.round(delayMs)}ms`,
+          { err: err instanceof Error ? err.message : String(err) },
         );
       },
     },

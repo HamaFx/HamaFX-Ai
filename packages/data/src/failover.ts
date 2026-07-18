@@ -41,6 +41,9 @@
 
 import { ProviderEmptyError, ProviderError } from './errors';
 import { getScore, recordFailure, recordSuccess } from './health';
+import { createCategorizedLogger } from '@hamafx/shared/logger';
+
+const flog = createCategorizedLogger('market_data', { component: 'failover' });
 
 export interface ProviderAttempt<T> {
   name: string;
@@ -96,9 +99,7 @@ export async function runWithFailover<T>(
         // Empty != failure. The provider has nothing to offer right
         // now — try the next one without dinging its health score.
         // This is the fix for the live-ticks demotion bug.
-        console.info(
-          `[data] provider ${a.name} returned empty: ${err.message} — trying next`,
-        );
+        flog.info(`provider ${a.name} returned empty: ${err.message} — trying next`);
         continue;
       }
       if (!(err instanceof ProviderError)) {
@@ -107,7 +108,7 @@ export async function runWithFailover<T>(
         throw err;
       }
       recordFailure(a.name);
-      console.warn(`[data] provider ${a.name} failed (${err.code}): ${err.message} — trying next`);
+      flog.warn(`provider ${a.name} failed (${err.code}): ${err.message} — trying next`);
       if (!firstError) firstError = err;
       if (!bestError || rankProviderError(err) > rankProviderError(bestError)) {
         bestError = err;

@@ -178,7 +178,6 @@ export async function withCronAuth(
     Sentry.captureException(err, {
       tags: { component: 'cron', route: routeTag(req), kind: 'handler-error' },
     });
-    // OBS-09 (Phase 5.3): Use pino logger instead of console.error
     createScopedLoggerWithContext({ component: 'cron', route: routeTag(req) }).error(
       { err: String(err) },
       'cron handler error',
@@ -221,7 +220,6 @@ export async function runCronJob(name: string, fn: () => Promise<void>, options:
     Sentry.captureException(error, {
       tags: { component: 'cron', job: name, kind: 'job-error' },
     });
-    // OBS-09 (Phase 5.3): Use pino logger instead of console.error
     createScopedLoggerWithContext({ component: 'cron', job: name }).error(
       { err: String(error) },
       `cron job ${name} failed`,
