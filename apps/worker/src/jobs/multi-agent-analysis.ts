@@ -27,6 +27,7 @@
 import { getDb, schema } from '@hamafx/db';
 import { eq, asc, lt, and } from 'drizzle-orm';
 import { pickAiEnv } from '@hamafx/shared';
+import { traceIdStorage } from '@hamafx/shared/logger';
 import type { UIMessage } from 'ai';
 import type { JobContext, JobResult } from './types.js';
 import type { AnalysisMode } from '@hamafx/ai';
@@ -75,8 +76,12 @@ export async function runMultiAgentAnalysis(ctx: JobContext): Promise<JobResult>
     }
 
     const job = claimResult;
-    ctx.log.info('Claimed analysis job', { jobId: job.id, userId: job.userId });
+    ctx.log.info('Claimed analysis job', { jobId: job.id, userId: job.userId, traceId: job.traceId });
 
+    // OBS-1: If the web request attached a diagnostic traceId, wrap the
+    // entire job processing in the traceId context so all log lines from
+    // this worker run carry the same traceId as the originating chat turn.
+    const processJob = async () => {
     try {
       // Dynamically import the multi-agent orchestrator — the worker
       // bundle includes @hamafx/ai (used by initLangfuse).
@@ -173,6 +178,14 @@ export async function runMultiAgentAnalysis(ctx: JobContext): Promise<JobResult>
         })
         .where(eq(schema.analysisJobs.id, job.id));
       processed++;
+    }
+    };
+
+    // OBS-1: Run job processing inside the traceId context when available.
+    if (job.traceId) {
+      await traceIdStorage.run(job.traceId, processJob);
+    } else {
+      await processJob();
     }
   }
 

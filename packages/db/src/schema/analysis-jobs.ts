@@ -64,6 +64,11 @@ export const analysisJobs = pgTable('analysis_jobs', {
   /** Worker-assigned correlation id for log tracing. */
   workerRunId: text('worker_run_id'),
 
+  /** Diagnostic traceId from the originating web request (OBS-1).
+   *  Propagated so worker logs can be correlated with the chat turn
+   *  that queued the job. Nullable for backward compatibility. */
+  traceId: text('trace_id'),
+
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
 

@@ -160,7 +160,13 @@ export const { handlers, auth, signIn, signOut } = _nextAuth({
               })
               .where(eq(schema.users.id, user.id));
           } catch {
-            /* fail open — lockout is best-effort */
+            /* fail open — lockout is best-effort; DB may be unavailable */
+            logErrorContext(
+              new Error('Failed to increment failed login attempts'),
+              'auth/lockout_increment',
+              { userId: user.id },
+              'auth',
+            );
           }
           return null;
         }
@@ -172,7 +178,13 @@ export const { handlers, auth, signIn, signOut } = _nextAuth({
             .set({ failedLoginAttempts: 0, lockedUntil: null })
             .where(eq(schema.users.id, user.id));
         } catch {
-          /* fail open */
+          /* fail open — reset is best-effort */
+          logErrorContext(
+            new Error('Failed to reset lockout counter'),
+            'auth/lockout_reset',
+            { userId: user.id },
+            'auth',
+          );
         }
 
         // ── P0-1: Enforce 2FA at login ─────────────────────────────────
@@ -376,7 +388,13 @@ export const { handlers, auth, signIn, signOut } = _nextAuth({
                 VALUES (${sessionId}, ${user.id}, ${(user.deviceName as string) ?? null}, ${(user.ip as string) ?? null})`,
           );
         } catch {
-          /* fail open */
+          /* fail open — session insert is best-effort */
+          logErrorContext(
+            new Error('Failed to create user session'),
+            'auth/session_insert',
+            { userId: user.id, sessionId },
+            'auth',
+          );
         }
       }
       if (token.tokenVersion === undefined) {
@@ -419,6 +437,12 @@ export const { handlers, auth, signIn, signOut } = _nextAuth({
           token.tvCheckedAt = now;
         } catch {
           // DB error — fail open
+          logErrorContext(
+            new Error('Failed to check tokenVersion'),
+            'auth/token_version_check',
+            {},
+            'auth',
+          );
         }
       }
 
@@ -440,6 +464,12 @@ export const { handlers, auth, signIn, signOut } = _nextAuth({
           token.sessionCheckAt = now;
         } catch {
           // DB error — fail open
+          logErrorContext(
+            new Error('Failed to validate session'),
+            'auth/session_validate',
+            {},
+            'auth',
+          );
         }
       }
 
@@ -455,6 +485,12 @@ export const { handlers, auth, signIn, signOut } = _nextAuth({
           token.lastActiveUpdate = now;
         } catch {
           // fail open
+          logErrorContext(
+            new Error('Failed to update last active time'),
+            'auth/last_active_update',
+            {},
+            'auth',
+          );
         }
       }
       return session;

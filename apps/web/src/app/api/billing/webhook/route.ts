@@ -28,6 +28,7 @@ import { createScopedLoggerWithContext } from '@/lib/logger';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
+export const maxDuration = 30;
 
 interface IpnPayload {
   payment_id: string;

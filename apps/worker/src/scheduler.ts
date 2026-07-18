@@ -26,12 +26,14 @@
 
 import cron from 'node-cron';
 import { getDb } from '@hamafx/db';
+import { sql } from 'drizzle-orm';
 import type { Logger } from './log.js';
 import { JOBS } from './jobs/index.js';
 import { acquireCronLock } from './cron-lock.js';
 
 // STAB-02: Maximum wall-clock time any scheduled job may run.
-const JOB_TIMEOUT_MS = 120_000;
+// Overridable via JOB_TIMEOUT_MS env var for jobs that need more time.
+const JOB_TIMEOUT_MS = Number(process.env.JOB_TIMEOUT_MS) || 120_000;
 
 // PERF-7: In-flight guard — ensures no two invocations of the same job
 // overlap. Complements the DB-level acquireCronLock for daily-cadence jobs.
@@ -56,6 +58,11 @@ const SKIP_DAILY_LOCK = new Set<keyof typeof JOBS>([
 
 export function startScheduler(log: Logger): void {
   log.info('Starting node-cron scheduler for Docker mode');
+
+  // WK-2: Clean up stale cron_runs rows from previous crashes before
+  // the first timer fires. Rows stuck in 'started' status for > 5 min
+  // are marked as 'error' so the health endpoint stops reporting them.
+  void cleanupStaleCronRuns(log);
 
   // Alerts: Every minute
   cron.schedule('* * * * *', () => {
@@ -115,6 +122,37 @@ export function startScheduler(log: Logger): void {
   // Kick off the first tick at the configured interval (3s), not immediately.
   const first = setTimeout(tick, 3_000);
   first.unref();
+}
+
+/**
+ * WK-2: Mark stale cron_runs rows as 'error' on startup.
+ *
+ * After a crash or forced restart, rows left in 'started' status are
+ * cleaned up so the health endpoint (/api/health) stops reporting them
+ * as stuck and the idempotency lock releases for the next scheduled run.
+ * Rows older than 5 minutes are considered stale.
+ */
+async function cleanupStaleCronRuns(log: Logger): Promise<void> {
+  try {
+    const db = getDb();
+    const result = await db.execute(sql`
+      UPDATE cron_runs
+      SET status = 'error',
+          finished_at = now(),
+          note = COALESCE(note, 'marked stale on scheduler startup')
+      WHERE status = 'started'
+        AND started_at < now() - INTERVAL '5 minutes'
+    `);
+
+    // In drizzle-orm, execute() returns RowList which may have .length
+    // as an array-like property. Cast to access count of affected rows.
+    const count = Array.isArray(result) ? result.length : (result as { length?: number }).length ?? 0;
+    if (count > 0) {
+      log.warn(`Cleaned up ${count} stale cron_runs row(s) from previous run`);
+    }
+  } catch (err) {
+    log.warn('Failed to clean up stale cron_runs rows (non-fatal)', { err: String(err) });
+  }
 }
 
 async function runJobSafely(name: keyof typeof JOBS, log: Logger): Promise<void> {

@@ -57,6 +57,15 @@ const middleware: any = auth(async (req) => {
     process.env.AUTH_MODE === 'legacy' &&
     (process.env.NODE_ENV !== 'production' || process.env.ALLOW_LEGACY_AUTH === 'true')
   ) {
+    // MED-05: Warn when legacy auth is explicitly enabled in production-like
+    // environments — this is a security-sensitive escape hatch.
+    if (process.env.ALLOW_LEGACY_AUTH === 'true') {
+      console.warn(
+        '[SECURITY] ALLOW_LEGACY_AUTH is enabled — legacy auth mode is active. ' +
+        'All requests will bypass normal authentication. ' +
+        'Ensure this is intentional and disable it for production deployments.',
+      );
+    }
     const headers = new Headers(req.headers);
     headers.set(REQUEST_ID_HEADER, requestId);
     headers.set('x-user-id', '__system__');
@@ -141,7 +150,7 @@ const middleware: any = auth(async (req) => {
   const isProd = process.env.NODE_ENV === 'production';
   next.cookies.set(csrfCookieName, csrfToken, {
     path: '/',
-    sameSite: 'lax',
+    sameSite: 'strict',
     secure: isProd,
     httpOnly: false, // double-submit pattern requires JS readability
   });

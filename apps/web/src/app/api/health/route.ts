@@ -104,6 +104,34 @@ async function checkCronRuns(): Promise<CheckResult & { recentRuns?: number; stu
   }
 }
 
+async function checkAnalysisJobs(): Promise<CheckResult & { pending?: number; stuckRunning?: number; stalePending?: number }> {
+  try {
+    const db = getDb();
+    const [row] = await db.execute<{ pending: string; stuck_running: string; stale_pending: string }>(sql`
+      SELECT
+        COUNT(*) FILTER (WHERE status = 'pending')::text AS pending,
+        COUNT(*) FILTER (
+          WHERE status = 'running'
+          AND started_at < now() - INTERVAL '5 minutes'
+        )::text AS stuck_running,
+        COUNT(*) FILTER (
+          WHERE status = 'pending'
+          AND created_at < now() - INTERVAL '10 minutes'
+        )::text AS stale_pending
+      FROM analysis_jobs
+    `);
+    return {
+      ok: true,
+      pending: Number(row?.pending ?? 0),
+      stuckRunning: Number(row?.stuck_running ?? 0),
+      stalePending: Number(row?.stale_pending ?? 0),
+    };
+  } catch {
+    // analysis_jobs table may not exist yet (pre-migration). Non-fatal.
+    return { ok: true, message: 'analysis_jobs unavailable (may need migration)' };
+  }
+}
+
 function checkEnv(): CheckResult {
   const required = ['DATABASE_URL', 'AUTH_COOKIE_SECRET', 'CRON_SECRET'];
   const missing = required.filter((k) => !process.env[k]);
@@ -114,7 +142,7 @@ function checkEnv(): CheckResult {
 }
 
 export const GET = withAuth<void>(async () => {
-  const [dbCheck, cronCheck] = await Promise.all([checkDb(), checkCronRuns()]);
+  const [dbCheck, cronCheck, analysisCheck] = await Promise.all([checkDb(), checkCronRuns(), checkAnalysisJobs()]);
   const envCheck = checkEnv();
   const pgvectorCheck = await checkPgvector();
 
@@ -124,7 +152,10 @@ export const GET = withAuth<void>(async () => {
   // Now: a missing pgvector extension or stuck cron runs cause a 503
   // (degraded state), so uptime monitors correctly detect the issue.
   const cronOk = cronCheck.ok && (cronCheck.stuckRuns ?? 0) === 0;
-  const allOk = dbCheck.ok && envCheck.ok && pgvectorCheck.ok && cronOk;
+  // CH-1: analysis jobs with stale pending rows (>10 min unclaimed) indicate
+  // the worker is not processing the queue — treat as degraded.
+  const analysisOk = analysisCheck.ok && (analysisCheck.stalePending ?? 0) === 0;
+  const allOk = dbCheck.ok && envCheck.ok && pgvectorCheck.ok && cronOk && analysisOk;
   const status = allOk ? 'ok' : 'error';
   const httpStatus = allOk ? 200 : 503;
 
@@ -138,6 +169,7 @@ export const GET = withAuth<void>(async () => {
         env: envCheck,
         cron: cronCheck,
         pgvector: pgvectorCheck,
+        analysisJobs: analysisCheck,
       },
     },
     { status: httpStatus },

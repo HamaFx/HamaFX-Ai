@@ -51,11 +51,9 @@ import {
   resolveModelForProvider,
   getVertexGoogleSearchTool,
   supportsPromptCaching,
-  type ModelDomain,
 } from './model';
 import { decryptByok, type ProviderId } from '@hamafx/shared/encryption';
 import { PROVIDER_IDS } from '@hamafx/shared/byok';
-import { BYOK_PROVIDERS } from './byok-providers';
 import {
   appendAssistantMessage,
   appendUserMessage,
@@ -67,8 +65,9 @@ import {
 import { runPlanner } from './planner';
 import { buildSystemPrompt, userContextFromSettings } from './prompt/system';
 import { extractUserMessageText } from './message-text';
-import { routeTurn, type RoutingDecision, type RoutingDomain } from './routing';
+import { routeTurn, type RoutingDecision } from './routing';
 import { generateTitle } from './title';
+import { toModelDomain, pickNextFallbackProvider } from './model-resolution';
 import { withToolContext, type ToolContext } from './tool-context';
 import { tools } from './tools';
 import { enforceCitations } from './verification';
@@ -285,6 +284,12 @@ async function runChatInner(args: RunChatArgs) {
           resolvedModelId = resolved.modelId;
           providerId = resolved.providerId;
         } else {
+          // AI-1: Log when a user-specified model override cannot be
+          // resolved and falls back to default. The user may not
+          // realize their override was ignored.
+          alog.warn('Model override not resolved — falling back', {
+            override: currentModelOverride,
+          });
           // If override couldn't be resolved, try resolving model for the override provider ID if it is one of PROVIDER_IDS
           const sep = currentModelOverride.indexOf(':');
           const possibleProviderId = (sep >= 0 ? currentModelOverride.slice(0, sep) : currentModelOverride) as ProviderId;
@@ -796,53 +801,6 @@ function countToolCalls(messages: readonly { content: unknown }[]): number {
     }
   }
   return n;
-}
-
-// ---------------------------------------------------------------------------
-// P2-6 — Domain-to-model-tier mapping.
-//
-// Maps a routing domain to the corresponding ModelDomain tier.
-// 'generic' has no specific tier → falls back to 'technical'.
-// ---------------------------------------------------------------------------
-
-function toModelDomain(domain: RoutingDomain): ModelDomain {
-  return domain === 'generic' ? 'technical' : domain;
-}
-
-// ---------------------------------------------------------------------------
-// P2-8 — Shared fallback provider walker.
-//
-// Extracted from the two near-identical fallback blocks (resolution catch
-// and stream catch). Walks the user's aiFallbackChain past the current
-// provider, returns the first subsequent provider with a usable key.
-// Picks the domain-appropriate model tier (fundamental→pro, summary→cheap,
-// etc.) instead of always defaulting to 'technical'.
-// ---------------------------------------------------------------------------
-
-function pickNextFallbackProvider(
-  chain: string[],
-  currentProviderId: ProviderId | string | undefined,
-  decryptedByokKeys: ReturnType<typeof decryptByok> | null,
-  envGoogleKey: string | undefined,
-  routingDomain: RoutingDomain,
-): { providerId: ProviderId; modelId: string | null } | null {
-  const currentProvider: ProviderId | string = currentProviderId || 'google';
-  const idx = chain.indexOf(currentProvider);
-  const startIdx = idx === -1 ? -1 : idx;
-
-  for (let i = startIdx + 1; i < chain.length; i++) {
-    const pid = chain[i] as ProviderId;
-    const key = decryptedByokKeys?.[pid] || (pid === 'google' ? envGoogleKey : undefined);
-
-    if (typeof key === 'string' && key.trim().length > 0) {
-      const spec = BYOK_PROVIDERS[pid];
-      // Pick the domain-appropriate tier — not always 'technical'.
-      const tier = toModelDomain(routingDomain);
-      const modelId = spec?.defaultModels[tier] ?? spec?.defaultModels.technical ?? null;
-      return { providerId: pid, modelId };
-    }
-  }
-  return null;
 }
 
 

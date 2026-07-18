@@ -29,12 +29,18 @@ import type { UIMessage } from 'ai';
 import { errorResponse, parseJsonBody, withAuth } from '@/lib/api';
 import { getServerEnv } from '@/lib/env';
 import { createRequestLogger } from '@/lib/logger';
+import { traceIdStorage } from '@hamafx/shared/logger';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
 
 const CHAT_RATE_LIMIT = Number(process.env.AI_CHAT_RATE_LIMIT ?? '30');
+
+/** OBS-1: Read the current diagnostic traceId from AsyncLocalStorage. */
+function getDiagnosticTraceId(): string | null {
+  return traceIdStorage.getStore() ?? null;
+}
 
 const BodySchema = z.object({
   threadId: z.string().uuid(),
@@ -79,7 +85,7 @@ export const POST = withAuth<void>(async (req, { user }) => {
     try {
       const prefs = JSON.parse(aiPrefsHeader) as { customInstructions?: unknown };
       if (typeof prefs.customInstructions === 'string') customInstructions = prefs.customInstructions;
-    } catch { /* ignore */ }
+    } catch { /* ignore malformed AI prefs header */ }
   }
 
   // S2 fix — verify thread ownership before any agent work runs.
@@ -122,6 +128,9 @@ export const POST = withAuth<void>(async (req, { user }) => {
               historyParts: body.messages.slice(0, -1),
               mode: 'full',
               status: 'pending',
+              // OBS-1: propagate the diagnostic traceId so worker
+              // logs can be correlated with this chat turn.
+              traceId: getDiagnosticTraceId(),
             })
             .returning({ id: schema.analysisJobs.id });
 
@@ -147,6 +156,17 @@ export const POST = withAuth<void>(async (req, { user }) => {
               const part = tracker.buildPart();
               controller.enqueue(encoder.encode(`data: ${JSON.stringify(part)}\n\n`));
             };
+
+            // CH-2: SSE heartbeat — send a comment line every 25s to
+            // keep the connection alive under Vercel's 60s maxDuration.
+            // Prevents the stream from being closed without an error.
+            const heartbeat = setInterval(() => {
+              try {
+                controller.enqueue(encoder.encode(': hb\n\n'));
+              } catch {
+                clearInterval(heartbeat);
+              }
+            }, 25_000);
 
             try {
               const result = await runMultiAgentChat({
@@ -189,6 +209,7 @@ export const POST = withAuth<void>(async (req, { user }) => {
               controller.enqueue(encoder.encode(`data: ${JSON.stringify(errorData)}\n\n`));
               controller.enqueue(encoder.encode('data: [DONE]\n\n'));
             } finally {
+              clearInterval(heartbeat);
               controller.close();
             }
           },
