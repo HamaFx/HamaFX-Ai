@@ -194,7 +194,7 @@ describe('EconomicEventSchema', () => {
     forecast: 3.1,
     previous: 3.0,
     unit: '%',
-    source: 'trading-economics',
+    source: 'fred',
   };
 
   it('accepts a valid event', () => {

@@ -268,7 +268,7 @@ export function DashboardCanvas({ marginUsagePct = 0, marginDetail, ...props }: 
           <LeverageGauge
             usagePct={marginUsagePct}
             label="Exposure"
-            detail={marginDetail ?? 'Connect your MT5 account to see live margin data'}
+            detail={marginDetail ?? 'No connected account — set up portfolio settings to track exposure'}
           />
         </div>
       </div>

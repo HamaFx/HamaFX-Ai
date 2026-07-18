@@ -132,9 +132,7 @@ const CacheEnv = z.object({
 const ProvidersEnv = z.object({
   // BiQuote is the primary; Finnhub is the fallback.
   FINNHUB_API_KEY: z.string().min(1).optional(),
-  ALPHAVANTAGE_API_KEY: z.string().min(1).optional(),
   MARKETAUX_API_KEY: z.string().min(1).optional(),
-  TRADING_ECONOMICS_KEY: z.string().min(1).optional(),
   FRED_API_KEY: z.string().min(1).optional(),
   /**
    * BiQuote (https://biquote.io) — free, no-key REST + SignalR market data.

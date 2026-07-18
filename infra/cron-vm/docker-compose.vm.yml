@@ -27,7 +27,6 @@ services:
     # Ports bound to localhost ONLY — not accessible from the internet
     ports:
       - "127.0.0.1:8081:8081"   # Health server + BiQuote proxy
-      - "127.0.0.1:8080:8080"   # MT5 bridge
 
     # No persistent volumes — all state lives in Supabase Postgres.
     # The worker is stateless: in-memory tick buffer + candle aggregator

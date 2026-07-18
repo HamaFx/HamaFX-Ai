@@ -55,7 +55,6 @@ import {
   type NormalizedTick,
 } from './signalr/consumer.js';
 import { TickBuffer } from './signalr/tick-buffer.js';
-import { startMT5Server } from './mt5-server.js';
 import { SymbolManager } from './symbol-manager.js';
 
 interface ShutdownState {
@@ -138,22 +137,11 @@ export async function runWorker(args: RunWorkerArgs): Promise<RunningWorker> {
   const buffer = new TickBuffer();
   const db = getDb();
 
-  const MT5_FALLBACK_TIMEOUT_MS = 5_000;
-
   let lastTickAt = 0;
-  let lastMt5TickAt = 0;
 
   // Shared tick handler to push ticks to database buffer, trigger 1m candle aggregations, and notify watchdog
-  // Priority: MT5 > BiQuote > Binance
   const handleIncomingTick = (tick: NormalizedTick) => {
     const now = Date.now();
-    
-    if (tick.source === 'mt5-local') {
-      lastMt5TickAt = now;
-    } else if (tick.source === 'biquote-signalr') {
-      // Drop BiQuote ticks if MT5 is active
-      if (now - lastMt5TickAt < MT5_FALLBACK_TIMEOUT_MS) return;
-    }
 
     buffer.push(tick);
     aggregator.feed(tick);
@@ -250,13 +238,6 @@ export async function runWorker(args: RunWorkerArgs): Promise<RunningWorker> {
     log: log.with({ module: 'binance-ws' }),
   });
 
-  // Start the Headless MT5 TCP bridge server on the whitelisted local loopback port
-  const mt5Server = startMT5Server({
-    port: env.MT5_BRIDGE_PORT,
-    log: log.with({ module: 'mt5-server' }),
-    onTick: handleIncomingTick,
-  });
-
   await consumer.start();        // BiQuote SignalR
   await binanceConsumer.start(); // Binance WS
   symbolManager.start();
@@ -324,7 +305,6 @@ export async function runWorker(args: RunWorkerArgs): Promise<RunningWorker> {
     
     // Gracefully shut down all services in parallel
     await Promise.all([
-      mt5Server.stop(),
       consumer.stop(),
       binanceConsumer.stop(),
     ]);

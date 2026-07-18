@@ -69,7 +69,7 @@ function PortfolioContent({
         <EmptyState
           icon={<IconWallet />}
           title="No positions yet"
-          description="Portfolio positions are synced from your MT5/MT4 terminal via the HamaBridge EA. Once set up, open positions and risk metrics will appear here automatically."
+          description="Add your positions manually to start tracking live P&amp;L, risk metrics, and performance analysis."
         />
       </div>
     );
@@ -256,7 +256,7 @@ function PortfolioContent({
       {/* Account Settings */}
       <div className="rounded-sm border border-border bg-bg-elev-1 p-4">
         <h3 className="text-sm font-semibold text-fg mb-3">Account Settings</h3>
-        <p className="text-xs text-fg-subtle mb-3">These values are synced from your linked MT5 account and are read-only here.</p>
+        <p className="text-xs text-fg-subtle mb-3">Set your account balance and risk preferences below.</p>
         <dl className="grid grid-cols-2 gap-4 text-sm">
           <div>
             <dt className="text-fg-muted">Account Balance</dt>

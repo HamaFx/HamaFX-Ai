@@ -43,8 +43,7 @@ export const LiveTickSchema = z.object({
    * to add new sources without a schema migration:
    *   - 'biquote-signalr' — preferred path, written by the worker's hub consumer
    *   - 'biquote-rest'    — REST polling fallback
-   *   - 'finnhub-rest'    — fallback to Finnhub on BiQuote outage
-   *   - 'alpha-vantage'   — last-resort
+   *   - 'finnhub-rest'    — fallback to Finnhub on BiQuote outage    *   - 'finnhub-rest'    — fallback
    */
   source: z.string().min(1),
 });

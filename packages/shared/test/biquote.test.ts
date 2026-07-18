@@ -172,7 +172,7 @@ describe('LiveTickSchema', () => {
   it('accepts the REST and Finnhub fallback sources (open string, by design)', () => {
     expect(() => LiveTickSchema.parse({ ...valid, source: 'biquote-rest' })).not.toThrow();
     expect(() => LiveTickSchema.parse({ ...valid, source: 'finnhub-rest' })).not.toThrow();
-    expect(() => LiveTickSchema.parse({ ...valid, source: 'alpha-vantage' })).not.toThrow();
+    expect(() => LiveTickSchema.parse({ ...valid, source: 'finnhub-rest' })).not.toThrow();
   });
 
   it('rejects invalid format symbols (length constraints)', () => {

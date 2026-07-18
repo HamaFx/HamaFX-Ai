@@ -46,8 +46,7 @@ export const liveTicks = pgTable('live_ticks', {
    * want to introduce new sources without a schema migration:
    *   - 'biquote-signalr'  — preferred path (worker hub consumer)
    *   - 'biquote-rest'     — REST polling fallback
-   *   - 'finnhub-rest'     — fallback on BiQuote outage
-   *   - 'alpha-vantage'    — last-resort
+   *   - 'finnhub-rest'     — fallback on BiQuote outage    *   - 'finnhub-rest'     — fallback
    */
   source: text('source').notNull(),
   tenantId: text('tenant_id').default(sql`'__system__'`),
