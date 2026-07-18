@@ -23,7 +23,6 @@ import { auth } from '@/auth';
 import { getDb, schema, withRateLimit } from '@hamafx/db';
 import { eq, inArray } from 'drizzle-orm';
 import * as Sentry from '@sentry/nextjs';
-import { revalidatePath } from 'next/cache';
 import { verifySync } from 'otplib';
 import { decryptSecret } from '@hamafx/shared/encryption';
 import { type ActionResult, verifyAccountPassword } from './_actions-shared';

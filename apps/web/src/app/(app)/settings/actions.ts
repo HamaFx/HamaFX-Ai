@@ -1,5 +1,3 @@
-'use server';
-
 /**
  * Copyright 2026 HamaFX
  *
