@@ -179,8 +179,9 @@ if ! gcloud compute firewall-rules describe hamafx-webhook --project="$(gcloud c
   log 'firewall rule hamafx-webhook created'
 fi
 
-log 'enabling + starting webhook service'
-systemctl enable --now hamafx-webhook.service 2>/dev/null || true
+log 'enabling + starting webhook service (systemd direct, not socket)'
+systemctl enable hamafx-webhook.service 2>/dev/null
+systemctl start hamafx-webhook.service 2>/dev/null || log 'WARNING: webhook service failed to start (check journalctl -u hamafx-webhook.service)'
 
 log 'building and starting the worker container (first build takes ~2-3 min)'
 cd "$INSTALL_DIR"
