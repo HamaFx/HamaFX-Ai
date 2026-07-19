@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 
+export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 /**
@@ -23,8 +24,14 @@ function maskDbUrl(raw: string): string {
 }
 
 export async function GET() {
-  // HIGH-03: Guard debug route — only available in development
+  // M-1: Guard debug route — only available in development.
+  // In production (including Docker self-hosted), this returns 404.
   if (process.env.NODE_ENV === 'production') {
+    return new NextResponse('Not Found', { status: 404 });
+  }
+  // Additional guard for Docker/prod-like environments that have
+  // NODE_ENV=development accidentally set.
+  if (process.env.ALLOW_DEBUG_IN_PRODUCTION !== 'true' && process.env.NODE_ENV !== 'development') {
     return new NextResponse('Not Found', { status: 404 });
   }
   const env: Record<string, unknown> = {

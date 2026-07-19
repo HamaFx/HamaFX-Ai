@@ -2,7 +2,9 @@
 # Multi-stage build: deps → build → runtime
 # Uses Next.js standalone output for minimal final image.
 
-FROM node:20-slim AS base
+# L-3: Base image pinned to a specific minor version for reproducible builds.
+# Update to the latest Node.js 20.x minor periodically via Dependabot.
+FROM node:20.18-slim AS base
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
 RUN corepack enable && corepack prepare pnpm@9.15.4 --activate
@@ -31,9 +33,7 @@ COPY . .
 
 # Build only the web app (Turborepo handles transitive deps)
 ARG AUTH_SECRET
-ARG ALLOW_LEGACY_AUTH
 ENV AUTH_SECRET=$AUTH_SECRET
-ENV ALLOW_LEGACY_AUTH=$ALLOW_LEGACY_AUTH
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN pnpm turbo run build --filter=@hamafx/web...
 

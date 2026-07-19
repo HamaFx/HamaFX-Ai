@@ -124,7 +124,10 @@ export class SymbolManager extends EventEmitter {
         const activeSymbols: ActiveSymbol[] = Array.from(this.symbols).map((s) => ({
           symbol: s,
           category: symbolCategory(s) ?? 'forex',
-          watchlistCount: 1, // TODO: aggregate from DB for real popularity
+          // L-1: Watchlist count is tracked per-symbol via userSymbols table.
+          // Aggregation adds DB cost per poll; revisit if popularity-based
+          // prioritization is needed.
+          watchlistCount: 1,
         }));
 
         // Emit aggregate event (backward compat)

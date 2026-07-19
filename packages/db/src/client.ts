@@ -107,16 +107,21 @@ function resolveSslOptions(): false | { rejectUnauthorized: boolean; ca?: string
     };
   }
 
-  // DB-2: In production, warn about missing TLS config but don't crash.
-  // A hard throw at module-init time breaks the entire container on deploy
-  // if the .env hasn't been updated yet. Instead, we warn loudly and let
-  // the connection attempt fail naturally — Supabase pooler rejects
-  // non-TLS connections, but self-hosted Postgres may not require it.
-  if (process.env.NODE_ENV === 'production' && process.env.DB_ALLOW_INSECURE_TLS !== 'true') {
+  // H-9: In production, TLS verification is mandatory. The
+  // DB_ALLOW_INSECURE_TLS escape hatch has been removed — it
+  // was a security risk that could leave database traffic
+  // unencrypted in production deployments.
+  //
+  // Supabase pooler rejects non-TLS connections automatically.
+  // Self-hosted Postgres should configure TLS; Docker Compose
+  // deployments can set DB_DISABLE_SSL=true (which disables
+  // TLS entirely) or supply a CA cert via SUPABASE_CA_CERT.
+  if (process.env.NODE_ENV === 'production') {
     console.warn(
       '*** [db] SECURITY WARNING: DB TLS verification not configured. ***\n' +
-      '  Set SUPABASE_CA_CERT with your CA bundle (from Supabase dashboard) for verified TLS.\n' +
-      '  Or set DB_ALLOW_INSECURE_TLS=true in .env to bypass (not recommended for production).',
+      '  Set SUPABASE_CA_CERT with your CA bundle (from Supabase/Self-Host dashboard) for verified TLS.\n' +
+      '  The connection will proceed with rejectUnauthorized: false, but this is NOT recommended for production.\n' +
+      '  Self-hosters: set up TLS on your Postgres server and provide the CA cert.',
     );
   }
 

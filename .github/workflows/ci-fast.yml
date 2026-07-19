@@ -27,6 +27,10 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm turbo run lint
       - run: pnpm turbo run typecheck
+      # L-2: Audit dependencies for known vulnerabilities at PR time.
+      # Blocks the build on CRITICAL severity advisories.
+      # Once existing advisories are addressed, raise to --audit-level=high.
+      - run: pnpm audit --audit-level=critical
       # Phase 0.5: real build gate so a broken `next build` is caught in PR CI,
       # not only later by Vercel.
       - run: pnpm turbo run build

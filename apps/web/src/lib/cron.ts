@@ -38,6 +38,7 @@
 // auth contract obvious.
 
 import * as Sentry from '@sentry/nextjs';
+import { timingSafeEqual } from 'node:crypto';
 
 import { getAuthEnv } from './env';
 import { createScopedLoggerWithContext } from './logger';
@@ -78,13 +79,12 @@ async function getKey(secret: string): Promise<CryptoKey> {
   ]);
 }
 
-function timingSafeEqual(a: string, b: string): boolean {
+// H-8: Use Node's crypto.timingSafeEqual (C++ implementation, guaranteed
+// constant-time) instead of a custom JS implementation that V8's JIT
+// optimizer could potentially de-constant-time.
+function constantTimeEqual(a: string, b: string): boolean {
   if (a.length !== b.length) return false;
-  let result = 0;
-  for (let i = 0; i < a.length; i++) {
-    result |= a.charCodeAt(i) ^ b.charCodeAt(i);
-  }
-  return result === 0;
+  return timingSafeEqual(Buffer.from(a), Buffer.from(b));
 }
 
 async function verifyAuthToken(
@@ -151,7 +151,7 @@ export async function withCronAuth(
   // Path 1: Bearer token (cron schedulers).
   const header = req.headers.get('authorization') ?? '';
   const expected = `Bearer ${env.CRON_SECRET}`;
-  const hasBearerAuth = header.length > 0 && timingSafeEqual(header, expected);
+  const hasBearerAuth = header.length > 0 && constantTimeEqual(header, expected);
 
   // Path 2: Session cookie (admin UI refresh buttons).
   let hasSessionAuth = false;

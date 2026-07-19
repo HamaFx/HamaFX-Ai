@@ -18,7 +18,7 @@ import { eq } from 'drizzle-orm';
 import { z } from 'zod';
 
 import { getDb, schema } from '@hamafx/db';
-import { signIn } from '@/auth';
+import { signIn, generateImpersonationChallenge } from '@/auth';
 
 import { withAdminAuth } from '@/lib/admin-auth';
 import { parseJsonBody } from '@/lib/api';
@@ -49,7 +49,11 @@ export const POST = withAdminAuth(async (req) => {
   }
 
   try {
-    await signIn('impersonate', { userId, redirect: false });
+    // H-1: Generate a signed challenge token that the impersonation
+    // provider verifies. This prevents direct calls to the impersonation
+    // provider from bypassing the admin check in this route.
+    const challenge = generateImpersonationChallenge();
+    await signIn('impersonate', { userId, challenge, redirect: false });
     return Response.json({ ok: true, redirect: '/chat' });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);

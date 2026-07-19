@@ -39,17 +39,32 @@ const nextConfig = {
           { key: 'X-Frame-Options', value: 'DENY' },
           { key: 'X-Content-Type-Options', value: 'nosniff' },
           { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+          // M-7: Additional security headers
+          // M-7: HSTS — 1 year, no preload/subdomains initially.
+          // Self-hosters can harden further once HTTPS is confirmed stable.
+          { key: 'Strict-Transport-Security', value: 'max-age=31536000' },
+          { key: 'Cross-Origin-Opener-Policy', value: 'same-origin' },
+          { key: 'Cross-Origin-Resource-Policy', value: 'same-origin' },
           {
             key: 'Permissions-Policy',
             value: 'camera=(), microphone=(self), geolocation=()',
           },
           {
             key: 'Content-Security-Policy',
-            // SEC-2: Baseline CSP — 'unsafe-inline' retained for scripts until
-            // we can implement nonce-based CSP or compute specific 'sha256-…'
-            // hashes for Tailwind dark-mode toggle, TradingView widget, and
-            // service worker registration. See RELIABILITY_HARDENING_LOG.md.
-            value: "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' https://s3.tradingview.com; style-src 'self' 'unsafe-inline' https://s3.tradingview.com; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' wss: https:;",
+            // C-3: Baseline CSP (static fallback). The production CSP with
+            // per-request nonces is set dynamically in middleware.ts and
+            // overrides this header. This static CSP serves as a fallback
+            // for requests that bypass middleware.
+            // - 'unsafe-eval' REMOVED — blocks arbitrary code execution.
+            // - 'strict-dynamic' ADDED — trust propagation from nonce'd scripts.
+            // - 'unsafe-inline' retained: Next.js App Router injects inline
+            //   <script> tags for hydration that cannot pick up per-request
+            //   nonces without framework-level support. The middleware CSP
+            //   adds 'nonce-{value}' alongside 'unsafe-inline' for full coverage.
+            // L-4: Tightened img-src and connect-src from wildcards to known
+            // domains: Supabase Storage, TradingView CDN, and Vercel analytics.
+            // The middleware CSP (with nonce) also uses these directives.
+            value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'strict-dynamic' https://s3.tradingview.com; style-src 'self' 'unsafe-inline' https://s3.tradingview.com; img-src 'self' data: blob: https://*.supabase.co https://*.supabase.in https://s3.tradingview.com https://api.dicebear.com; font-src 'self' data:; connect-src 'self' wss: https://*.supabase.co https://*.biquote.io https://*.binance.com https://api.resend.com https://*.nowpayments.io https://*.tradingview.com https://api.dicebear.com;",
           },
         ],
       },

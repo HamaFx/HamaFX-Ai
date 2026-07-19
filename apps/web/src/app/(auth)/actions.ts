@@ -14,7 +14,9 @@ import { recordAuthEvent } from '@/lib/auth-anomaly';
 import { generateToken, hashToken } from '@/lib/auth-tokens';
 
 const BCRYPT_COST = 12;
-const PASSWORD_MIN = 8;
+// L-5: Minimum password length of 10 (NIST SP 800-63B recommends 8 as
+// absolute minimum; 10 provides additional brute-force resistance).
+const PASSWORD_MIN = 10;
 const PASSWORD_MAX = 128; // P2-4: bcrypt truncates at 72 bytes, but 128 is a reasonable UX cap
 
 /**
@@ -67,7 +69,11 @@ export async function loginAction(prevState: unknown, formData: FormData) {
   // P2-7: Centralized redirect sanitizer
   const safeNext = sanitizeNext(next);
 
-  // P0-4: Capture device info for session management
+  // P0-4: Capture device info for session management.
+  // L-7: User-Agent is truncated to 255 chars and only stored in the
+  // session DB row. It is NOT rendered unsanitized in any UI — admin
+  // dashboards use React's built-in escaping. If a raw-html rendering
+  // path is added, it must encode this value first.
   const ua = headersList.get('user-agent')?.slice(0, 255) || undefined;
 
   try {
@@ -378,7 +384,7 @@ export async function resetPasswordAction(prevState: unknown, formData: FormData
 
     const parsed = z.object({
       password: z.string()
-        .min(8, 'Password must be at least 8 characters')
+        .min(PASSWORD_MIN, `Password must be at least ${PASSWORD_MIN} characters`)
         .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
         .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
         .regex(/[0-9]/, 'Password must contain at least one number'),
@@ -400,7 +406,14 @@ export async function resetPasswordAction(prevState: unknown, formData: FormData
       ))
       .limit(1);
 
-    if (!vt) return { error: 'Invalid or expired reset link' };
+    if (!vt) {
+      // M-6: Run a dummy bcrypt compare to normalize response timing.
+      // Using a pre-computed hash (same pattern as auth.ts) is much
+      // faster than a full bcrypt.hash() while providing the same
+      // constant-time guarantee against token enumeration.
+      await bcrypt.compare('dummy-timing-defense', '$2b$12$LyYuAYJhLrPU7mAIQPzVNu5HBJ/neEmE2uZZDD5ayPPROn5ruSaJ2');
+      return { error: 'Invalid or expired reset link' };
+    }
 
     const hashedPassword = await bcrypt.hash(password, BCRYPT_COST);
 

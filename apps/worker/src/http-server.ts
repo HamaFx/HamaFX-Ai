@@ -44,10 +44,20 @@ export function createHealthServer(deps: HealthServerDeps): http.Server {
   const BIQUOTE_BASE = process.env.BIQUOTE_BASE_URL ?? 'https://biquote.io';
   const PROXY_TOKEN = process.env.BIQUOTE_PROXY_TOKEN;
 
+  // H-3: BIQUOTE_PROXY_TOKEN is required in production. Without it,
+  // the proxy is wide open to anyone who can reach port 8081 (even
+  // though it's bound to 127.0.0.1, local processes could abuse it).
+  const isProd = process.env.NODE_ENV === 'production';
+  if (isProd && !PROXY_TOKEN) {
+    log.error('BIQUOTE_PROXY_TOKEN is not set in production — BiQuote proxy will reject all requests');
+  }
+
   return http.createServer(async (req, res) => {
     // BiQuote proxy: /biquote/api/XAUUSD/ohlc?interval=60&limit=100
     if (req.url?.startsWith('/biquote')) {
-      // Require bearer-token auth when BIQUOTE_PROXY_TOKEN is configured
+      // H-3: Require bearer-token auth in production.
+      // In production the proxy always requires a valid token.
+      // In dev, the token is optional for convenience.
       if (PROXY_TOKEN) {
         const auth = req.headers.authorization;
         if (auth !== `Bearer ${PROXY_TOKEN}`) {
@@ -55,6 +65,11 @@ export function createHealthServer(deps: HealthServerDeps): http.Server {
           res.end(JSON.stringify({ status: 'error', message: 'forbidden' }));
           return;
         }
+      } else if (isProd) {
+        // No token configured in production — reject all requests.
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ status: 'error', message: 'BiQuote proxy not configured (missing BIQUOTE_PROXY_TOKEN)' }));
+        return;
       }
       const rest = req.url.slice('/biquote'.length) || '/';
       const target = `${BIQUOTE_BASE}${rest}`;

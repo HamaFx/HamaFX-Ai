@@ -119,6 +119,28 @@ export function TextPart({ text, role, isStreaming }: TextPartProps) {
 // Shiki Dynamic Highlighting Component
 // ---------------------------------------------------------------------------
 
+// ── H-7: Shiki HTML sanitization ──────────────────────────────────
+
+/**
+ * Defense-in-depth strip of dangerous content from Shiki-generated HTML.
+ * Shiki produces only trusted <span> elements, but this guard strips:
+ * - <script> and <iframe> elements
+ * - inline event handlers (onclick, onerror, etc.)
+ * - javascript: protocol URLs
+ * - data:text/html protocol URLs
+ */
+function sanitizeShikiHtml(html: string): string {
+  return html
+    // Strip script and iframe elements entirely
+    .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '')
+    .replace(/<iframe\b[^>]*>[\s\S]*?<\/iframe>/gi, '')
+    // Neutralize inline event handlers
+    .replace(/\bon\w+\s*=/gi, 'data-sanitized-on=')
+    // Neutralize dangerous URL protocols
+    .replace(/\bjavascript\s*:/gi, 'data-sanitized:')
+    .replace(/\bdata\s*:\s*text\/html/gi, 'data-sanitized:');
+}
+
 function ShikiCode({ code, lang }: { code: string; lang: string }) {
   const [html, setHtml] = useState<string | null>(null);
 
@@ -146,7 +168,12 @@ function ShikiCode({ code, lang }: { code: string; lang: string }) {
   }, [code, lang]);
 
   if (html) {
-    return <div dangerouslySetInnerHTML={{ __html: html }} className="shiki-container" />;
+    // H-7: Defense-in-depth sanitization before dangerouslySetInnerHTML.
+    // Shiki produces only <span class="..."> elements and text nodes,
+    // but we strip any script/iframe/event-handler patterns as a
+    // safety net against potential Shiki bugs or future changes.
+    const safeHtml = sanitizeShikiHtml(html);
+    return <div dangerouslySetInnerHTML={{ __html: safeHtml }} className="shiki-container" />;
   }
 
   return (

@@ -33,7 +33,7 @@
 // the last 24 hours so the system-status card can detect stuck jobs.
 
 import { NextResponse } from 'next/server';
-import { getDb } from '@hamafx/db';
+import { getDb, withRateLimit } from '@hamafx/db';
 import { sql } from 'drizzle-orm';
 import { REQUIRED_HEALTH_ENV_VARS } from '@hamafx/shared/env-secrets';
 
@@ -142,7 +142,18 @@ function checkEnv(): CheckResult {
   return { ok: true };
 }
 
-export const GET = withAuth<void>(async () => {
+// M-12: Rate limit health endpoint to prevent abuse.
+const HEALTH_RATE_LIMIT = 30; // 30 requests per minute
+
+export const GET = withAuth<void>(async (req, { user }) => {
+  // M-12: Rate limit health checks per user.
+  const rl = await withRateLimit(user.userId, 'health', HEALTH_RATE_LIMIT);
+  if (!rl.allowed) {
+    return NextResponse.json(
+      { status: 'rate_limited', message: 'Too many health checks' },
+      { status: 429 },
+    );
+  }
   const [dbCheck, cronCheck, analysisCheck] = await Promise.all([checkDb(), checkCronRuns(), checkAnalysisJobs()]);
   const envCheck = checkEnv();
   const pgvectorCheck = await checkPgvector();

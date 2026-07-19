@@ -34,6 +34,21 @@ if (
   );
 }
 
+// C-2: Hard-block AUTH_MODE=legacy in production. Legacy auth mode
+// bypasses all authentication — it must NEVER be active when
+// NODE_ENV=production. Previously ALLOW_LEGACY_AUTH provided an
+// escape hatch; that has been removed as a security risk.
+if (
+  process.env.AUTH_MODE === 'legacy' &&
+  process.env.NODE_ENV === 'production'
+) {
+  throw new Error(
+    '[SECURITY] AUTH_MODE=legacy is forbidden in production. ' +
+      'Legacy auth mode bypasses all authentication and must only be used in development. ' +
+      'Unset AUTH_MODE or set it to "normal" for production deployments.',
+  );
+}
+
 // Dev fallback: ensures the Edge middleware never runs without a
 // signing secret (which would cause MissingSecret errors and break
 // the auth gate). In production AUTH_SECRET must be set explicitly.
@@ -59,12 +74,12 @@ export const authConfig: NextAuthConfig = {
   },
   callbacks: {
     authorized({ auth, request: { nextUrl } }) {
-      // MED-05: Only allow legacy mode in development (or with explicit opt-in
-      // via ALLOW_LEGACY_AUTH — needed for Docker builds where NODE_ENV is
-      // always "production" at build time in Edge middleware).
+      // C-2: Legacy mode is ONLY allowed when NODE_ENV !== 'production'.
+      // The ALLOW_LEGACY_AUTH escape hatch has been removed — legacy auth
+      // in production is now a hard error at module load time (see above).
       if (
         process.env.AUTH_MODE === 'legacy' &&
-        (process.env.NODE_ENV !== 'production' || process.env.ALLOW_LEGACY_AUTH === 'true')
+        process.env.NODE_ENV !== 'production'
       ) return true;
 
       const isLoggedIn = !!auth?.user;

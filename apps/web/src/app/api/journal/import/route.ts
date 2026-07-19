@@ -6,14 +6,16 @@ import { errorResponse, withAuth } from '@/lib/api';
 const ImportRowSchema = z.object({
   symbol: z.enum(['XAUUSD', 'EURUSD', 'GBPUSD']),
   side: z.enum(['long', 'short']),
-  entry: z.number().positive(),
-  stop: z.number().positive().nullable().optional(),
-  target: z.number().positive().nullable().optional(),
-  exit: z.number().positive().nullable().optional(),
-  size: z.number().positive().nullable().optional(),
-  openedAt: z.number().int(),
-  closedAt: z.number().int().nullable().optional(),
-  notes: z.string().nullable().optional(),
+  // M-11: Add sensible bounds for forex price/date values to
+  // prevent data corruption from malformed imports.
+  entry: z.number().min(0.1).max(5000),
+  stop: z.number().min(0.1).max(5000).nullable().optional(),
+  target: z.number().min(0.1).max(5000).nullable().optional(),
+  exit: z.number().min(0.1).max(5000).nullable().optional(),
+  size: z.number().min(0.01).max(1000).nullable().optional(),
+  openedAt: z.number().int().min(946684800000).max(4102444800000), // 2000-2100
+  closedAt: z.number().int().min(946684800000).max(4102444800000).nullable().optional(),
+  notes: z.string().max(5000).nullable().optional(),
 });
 
 const ImportPayloadSchema = z.object({

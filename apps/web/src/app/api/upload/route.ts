@@ -50,8 +50,10 @@ const ALLOWED_MEDIA_TYPES = new Set<string>([
   'image/png',
   'image/webp',
   'image/gif',
-  'image/heic',
-  'image/heif',
+  // H-6: HEIC/HEIF removed — these container formats can carry
+  // multiple images, depth maps, and metadata. Sharp's HEIC parser
+  // has a smaller security track record than JPEG/PNG/WebP.
+  // See: https://github.com/lovell/sharp/issues?q=heif+security
 ]);
 
 export const POST = withAuth<void>(async (req, { user }) => {

@@ -57,7 +57,9 @@ const BodySchema = z.object({
       z.object({
         id: z.string(),
         role: z.enum(['user', 'assistant', 'system']),
-        content: z.string().default(''),
+        // M-10: Cap individual message content at 50k chars to prevent
+        // memory exhaustion from extremely long messages.
+        content: z.string().max(50_000, 'Message too long').default(''),
         parts: z.array(z.unknown()).default([]),
       }),
     )
@@ -208,9 +210,11 @@ export const POST = withAuth<void>(async (req, { user }) => {
               log.error({ err: String(err), threadId: body.threadId, mode: resolvedMode }, 'multi-agent chat failed');
               const errorMessage = err instanceof BudgetExceededError
                 ? 'Daily AI budget exceeded. Please try again tomorrow.'
-                : err instanceof Error
-                  ? err.message
-                  : String(err);
+                : process.env.NODE_ENV === 'production'
+                  ? 'An unexpected error occurred. Please try again.'
+                  : err instanceof Error
+                    ? err.message
+                    : String(err);
               const errorData = { type: 'error', error: errorMessage };
               controller.enqueue(encoder.encode(`data: ${JSON.stringify(errorData)}\n\n`));
               controller.enqueue(encoder.encode('data: [DONE]\n\n'));
@@ -270,12 +274,16 @@ export const POST = withAuth<void>(async (req, { user }) => {
       tags: { component: 'chat', mode: 'single', route: '/api/chat' },
       extra: { threadId: body.threadId, userId: user.userId },
     });
-    // Surface the actual error message to the client instead of a generic
-    // "Internal error". Log already captured via log.error() above.
-    const message = err instanceof Error ? err.message : String(err);
+    // M-3: In production, return a generic error message to avoid
+    // leaking internal details (model names, tool names, DB structure).
+    // In development, return the full error for debugging.
     const requestId = req.headers.get('x-request-id');
     const errorHeaders: Record<string, string> = {};
     if (requestId) errorHeaders['x-request-id'] = requestId;
+    const isProd = process.env.NODE_ENV === 'production';
+    const message = isProd
+      ? 'An unexpected error occurred. Please try again.'
+      : err instanceof Error ? err.message : String(err);
     return Response.json(
       { error: { code: 'CHAT_FAILED', message, ...(requestId ? { requestId } : {}) } },
       { status: 500, headers: errorHeaders },
