@@ -16,7 +16,8 @@
 
 'use client';
 
-import { useState } from 'react';
+import { Suspense, useState, type ComponentType } from 'react';
+import dynamic from 'next/dynamic';
 import {
   IconRefresh,
   IconHistory,
@@ -29,31 +30,72 @@ import {
 } from '@tabler/icons-react';
 
 import { cn } from '@/lib/cn';
+import { SkeletonCard } from '@/components/ui/skeleton';
 
-import { AdminOnboardingControl } from './_components/admin-onboarding-control';
-import { AdminCronTable } from './_components/admin-cron-table';
-import { AdminToolTelemetryTable } from './_components/admin-tool-telemetry-table';
-import { AdminDiagnosticTraces } from './_components/admin-diagnostic-traces';
-import { AdminUserTable } from './_components/admin-user-table';
-import { AdminFeatureFlags } from './_components/admin-feature-flags';
-import { AdminLogViewer } from './_components/admin-log-viewer';
-import { AdminSystemHealth } from './_components/admin-system-health';
+// ---- Lazy-loaded admin sub-components ----
+// Each tab's component is only loaded when the user navigates to it.
+// The `loading:` fallback shows a skeleton while the chunk downloads.
+
+function TabFallback() {
+  return <SkeletonCard className="h-64" lines={8} />;
+}
+
+const AdminSystemHealth = dynamic(
+  () => import('./_components/admin-system-health').then((m) => m.AdminSystemHealth),
+  { loading: TabFallback },
+) as ComponentType;
+
+const AdminOnboardingControl = dynamic(
+  () => import('./_components/admin-onboarding-control').then((m) => m.AdminOnboardingControl),
+  { loading: TabFallback },
+) as ComponentType;
+
+const AdminCronTable = dynamic(
+  () => import('./_components/admin-cron-table').then((m) => m.AdminCronTable),
+  { loading: TabFallback },
+) as ComponentType;
+
+const AdminToolTelemetryTable = dynamic(
+  () => import('./_components/admin-tool-telemetry-table').then((m) => m.AdminToolTelemetryTable),
+  { loading: TabFallback },
+) as ComponentType;
+
+const AdminDiagnosticTraces = dynamic(
+  () => import('./_components/admin-diagnostic-traces').then((m) => m.AdminDiagnosticTraces),
+  { loading: TabFallback },
+) as ComponentType;
+
+const AdminUserTable = dynamic(
+  () => import('./_components/admin-user-table').then((m) => m.AdminUserTable),
+  { loading: TabFallback },
+) as ComponentType;
+
+const AdminFeatureFlags = dynamic(
+  () => import('./_components/admin-feature-flags').then((m) => m.AdminFeatureFlags),
+  { loading: TabFallback },
+) as ComponentType;
+
+const AdminLogViewer = dynamic(
+  () => import('./_components/admin-log-viewer').then((m) => m.AdminLogViewer),
+  { loading: TabFallback },
+) as ComponentType;
 
 const TABS = [
-  { id: 'health', label: 'Health', icon: IconHeartbeat, component: AdminSystemHealth },
-  { id: 'onboarding', label: 'Onboarding', icon: IconRefresh, component: AdminOnboardingControl },
-  { id: 'cron', label: 'Cron', icon: IconHistory, component: AdminCronTable },
-  { id: 'telemetry', label: 'Telemetry', icon: IconTool, component: AdminToolTelemetryTable },
-  { id: 'traces', label: 'Traces', icon: IconStethoscope, component: AdminDiagnosticTraces },
-  { id: 'users', label: 'Users', icon: IconUsers, component: AdminUserTable },
-  { id: 'features', label: 'Features', icon: IconFlag, component: AdminFeatureFlags },
-  { id: 'logs', label: 'Logs', icon: IconTerminal, component: AdminLogViewer },
+  { id: 'health', label: 'Health', icon: IconHeartbeat, Component: AdminSystemHealth },
+  { id: 'onboarding', label: 'Onboarding', icon: IconRefresh, Component: AdminOnboardingControl },
+  { id: 'cron', label: 'Cron', icon: IconHistory, Component: AdminCronTable },
+  { id: 'telemetry', label: 'Telemetry', icon: IconTool, Component: AdminToolTelemetryTable },
+  { id: 'traces', label: 'Traces', icon: IconStethoscope, Component: AdminDiagnosticTraces },
+  { id: 'users', label: 'Users', icon: IconUsers, Component: AdminUserTable },
+  { id: 'features', label: 'Features', icon: IconFlag, Component: AdminFeatureFlags },
+  { id: 'logs', label: 'Logs', icon: IconTerminal, Component: AdminLogViewer },
 ] as const;
 
 export default function AdminPage() {
   const [activeTab, setActiveTab] = useState<string>('health');
 
-  const ActiveComponent = TABS.find((t) => t.id === activeTab)?.component ?? AdminOnboardingControl;
+  const tab = TABS.find((t) => t.id === activeTab) ?? TABS[0];
+  const ActiveComponent = tab.Component;
 
   return (
     <div className="flex flex-col gap-6">
@@ -86,7 +128,9 @@ export default function AdminPage() {
       </nav>
 
       <section aria-live="polite" className="min-h-[300px]">
-        <ActiveComponent />
+        <Suspense fallback={<TabFallback />}>
+          <ActiveComponent />
+        </Suspense>
       </section>
     </div>
   );

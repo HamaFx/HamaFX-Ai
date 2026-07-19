@@ -17,6 +17,7 @@
  */
 
 import {IconCheck, IconCopy} from '@tabler/icons-react';
+import DOMPurify from 'dompurify';
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -122,23 +123,33 @@ export function TextPart({ text, role, isStreaming }: TextPartProps) {
 // ── H-7: Shiki HTML sanitization ──────────────────────────────────
 
 /**
- * Defense-in-depth strip of dangerous content from Shiki-generated HTML.
- * Shiki produces only trusted <span> elements, but this guard strips:
- * - <script> and <iframe> elements
- * - inline event handlers (onclick, onerror, etc.)
- * - javascript: protocol URLs
- * - data:text/html protocol URLs
+ * Defense-in-depth sanitization of Shiki-generated HTML using DOMPurify.
+ * Shiki produces only trusted <span>/<pre>/<code> elements with class and
+ * style attributes, but this guard ensures any dangerous content (script
+ * tags, inline event handlers, javascript: URLs) is stripped by a proper
+ * HTML parser rather than regex — regex-based sanitization is known to be
+ * bypassable with adversarial inputs (malformed nested tags, svg onload,
+ * style url(javascript:...), etc.).
+ *
+ * Replaced the previous regex strip (H-1 audit fix) with DOMPurify, which
+ * parses HTML into a DOM tree and removes disallowed nodes/attributes.
+ * The allow-list is minimal: only the tags/attrs Shiki actually emits.
  */
 function sanitizeShikiHtml(html: string): string {
-  return html
-    // Strip script and iframe elements entirely
-    .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '')
-    .replace(/<iframe\b[^>]*>[\s\S]*?<\/iframe>/gi, '')
-    // Neutralize inline event handlers
-    .replace(/\bon\w+\s*=/gi, 'data-sanitized-on=')
-    // Neutralize dangerous URL protocols
-    .replace(/\bjavascript\s*:/gi, 'data-sanitized:')
-    .replace(/\bdata\s*:\s*text\/html/gi, 'data-sanitized:');
+  // DOMPurify requires a DOM environment. This function is only called
+  // from ShikiCode's render path after the effect sets `html` (client-
+  // side only), so the SSR branch is dead in practice — kept as a
+  // defensive guard in case a future caller invokes it during SSR.
+  if (typeof window === 'undefined') return html;
+  return DOMPurify.sanitize(html, {
+    // Shiki emits <pre class="shiki ..." style="..." tabindex="0">
+    // wrapping <code> with <span style="color:..."> tokens. The
+    // tabindex="0" is intentional — it makes long code blocks
+    // keyboard-focusable for horizontal scrolling (CSS: overflow-x:
+    // auto on .shiki). Stripping it would be an a11y regression.
+    ALLOWED_TAGS: ['pre', 'code', 'span', 'br'],
+    ALLOWED_ATTR: ['class', 'style', 'tabindex'],
+  });
 }
 
 function ShikiCode({ code, lang }: { code: string; lang: string }) {

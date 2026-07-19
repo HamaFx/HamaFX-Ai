@@ -83,6 +83,7 @@ const nextConfig = {
   },
 
   experimental: {
+    optimizePackageImports: ['@tabler/icons-react'],
     serverActions: { bodySizeLimit: '2mb' },
   },
 };

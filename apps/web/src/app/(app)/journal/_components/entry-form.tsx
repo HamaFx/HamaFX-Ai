@@ -33,7 +33,7 @@ import { Input } from '@/components/ui/input';
 import { Segmented } from '@/components/ui/segmented';
 import { TagInput } from '@/components/ui/tag-input';
 import { cn } from '@/lib/cn';
-import { fetchCsrf } from '@/lib/csrf';
+import { apiFetch, apiMutate } from '@/lib/api-client';
 import {IconCamera, IconX} from '@tabler/icons-react';
 
 const entrySchema = z.object({
@@ -112,9 +112,7 @@ export function EntryForm({ onCreated }: EntryFormProps) {
     try {
       const fd = new FormData();
       fd.append('file', file);
-      const res = await fetch('/api/upload', { method: 'POST', body: fd });
-      if (!res.ok) throw new Error(`Upload HTTP ${res.status}`);
-      const data = (await res.json()) as { url?: string };
+      const data = await apiFetch<{ url?: string }>('/api/upload', { method: 'POST', body: fd });
       if (data.url) setScreenshotUrl(data.url);
     } catch {
       toast.error('Screenshot upload failed');
@@ -164,7 +162,7 @@ export function EntryForm({ onCreated }: EntryFormProps) {
     }
 
     try {
-      const res = await fetchCsrf('/api/journal', {
+      await apiMutate('/api/journal', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
@@ -180,12 +178,6 @@ export function EntryForm({ onCreated }: EntryFormProps) {
           screenshotUrl: screenshotUrl,
         }),
       });
-      if (!res.ok) {
-        const body = (await res.json().catch(() => null)) as {
-          error?: { message?: string };
-        } | null;
-        throw new Error(body?.error?.message ?? `HTTP ${res.status}`);
-      }
       setEntry('');
       setStop('');
       setTarget('');
@@ -355,6 +347,7 @@ function Field({
 }) {
   const showError = error !== undefined && error !== null;
   const id = label.toLowerCase().replace(/[^a-z]/g, '-');
+  const errorId = `${id}-error`;
   return (
     <div className="flex flex-col gap-2">
       <label className="text-fg-subtle text-body-sm uppercase tracking-wide" htmlFor={id}>
@@ -368,8 +361,9 @@ function Field({
         inputMode="decimal"
         required={required}
         error={!!error}
+        {...(showError ? { 'aria-describedby': errorId } : {})}
       />
-      {showError ? <p className="text-danger text-xs mt-0.5">{error}</p> : null}
+      {showError ? <p id={errorId} role="alert" className="text-danger text-xs mt-0.5">{error}</p> : null}
     </div>
   );
 }
@@ -378,15 +372,17 @@ function useTagSuggestions() {
   const { data: allEntries } = useQuery<JournalEntry[]>({
     queryKey: ['journal', 'all-tags'],
     queryFn: async () => {
-      const res = await fetch('/api/journal?limit=500');
-      if (!res.ok) return [];
-      const data = (await res.json()) as { entries: unknown[] };
-      return data.entries
-        .map((e) => {
-          const parsed = JournalEntrySchema.safeParse(e);
-          return parsed.success ? parsed.data : null;
-        })
-        .filter((e): e is JournalEntry => e !== null);
+      try {
+        const data = await apiFetch<{ entries: unknown[] }>('/api/journal?limit=500');
+        return data.entries
+          .map((e) => {
+            const parsed = JournalEntrySchema.safeParse(e);
+            return parsed.success ? parsed.data : null;
+          })
+          .filter((e): e is JournalEntry => e !== null);
+      } catch {
+        return [];
+      }
     },
     staleTime: 60_000,
   });

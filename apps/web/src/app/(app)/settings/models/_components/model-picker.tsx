@@ -22,7 +22,7 @@ import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
 import { SkeletonCard } from '@/components/ui/skeleton';
-import { withCsrf } from '@/lib/csrf';
+import { apiFetch, apiMutate } from '@/lib/api-client';
 
 import type { ProviderMeta } from '@hamafx/shared';
 
@@ -127,13 +127,10 @@ export function ModelPicker({
     let cancelled = false;
     void (async () => {
       try {
-        const res = await fetch(endpoint, {
-          ...withCsrf(),
-          cache: 'no-store',
-        });
-        if (!res.ok) return;
-        const data = (await res.json()) as Record<string, string | null>;
+        const data = await apiFetch<Record<string, string | null>>(endpoint, { cache: 'no-store' });
         if (!cancelled) setValue(data[responseKey] ?? null);
+      } catch {
+        // ignore fetch failures — the picker just stays un-hydrated
       } finally {
         if (!cancelled) setHydrated(true);
       }
@@ -152,18 +149,11 @@ export function ModelPicker({
         const providerId = next.slice(0, sep);
         const modelId = next.slice(sep + 1);
 
-        const res = await fetch(endpoint, {
+        const data = await apiMutate<Record<string, string>>(endpoint, {
           method: 'PUT',
-          ...withCsrf({
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ providerId, modelId }),
-          }),
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ providerId, modelId }),
         });
-        if (!res.ok) {
-          const text = await res.text();
-          throw new Error(`HTTP ${res.status}: ${text.slice(0, 120)}`);
-        }
-        const data = (await res.json()) as Record<string, string>;
         setValue(data[responseKey] ?? null);
         setSave({ kind: 'idle' });
         toast.success(`${TITLES[kind]} updated`);
@@ -180,11 +170,7 @@ export function ModelPicker({
   async function clearOverride() {
     setSave({ kind: 'pending' });
     try {
-      const res = await fetch(endpoint, {
-        method: 'DELETE',
-        ...withCsrf(),
-      });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      await apiMutate(endpoint, { method: 'DELETE' });
       setValue(null);
       setSave({ kind: 'idle' });
       toast.success('Cleared override — using fallback');

@@ -20,7 +20,7 @@ import {IconCpu, IconCheck, IconLoader2, IconArrowBackUp} from '@tabler/icons-re
 import { useState, useTransition } from 'react';
 import { toast } from 'sonner';
 
-import { getCsrfToken } from '@/lib/csrf';
+import { apiMutate } from '@/lib/api-client';
 
 type AgentName = 'technical' | 'fundamental' | 'risk' | 'sentiment' | 'decision';
 
@@ -94,19 +94,13 @@ export function AgentModelOverrideForm({ initialOverrides, providers }: AgentMod
   function save() {
     startTransition(async () => {
       try {
-        const csrf = getCsrfToken();
-        const res = await fetch('/api/settings/analysis-mode', {
+        await apiMutate('/api/settings/analysis-mode', {
           method: 'PATCH',
           headers: {
             'Content-Type': 'application/json',
-            ...(csrf ? { 'X-CSRF-Token': csrf } : {}),
           },
           body: JSON.stringify({ agentModelOverrides: overrides }),
         });
-        if (!res.ok) {
-          const body = await res.json().catch(() => null);
-          throw new Error(body?.error?.message ?? `HTTP ${res.status}`);
-        }
         setSaved(true);
         toast.success('Agent model overrides saved');
         setTimeout(() => setSaved(false), 2000);

@@ -21,10 +21,11 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
+import { useConfirm } from '@/components/ui/confirm-drawer';
 import { Switch } from '@/components/ui/switch';
 import { SkeletonCard } from '@/components/ui/skeleton';
 import { SettingsSection } from '@/app/(app)/settings/_components/settings-section';
-import { fetchCsrf } from '@/lib/csrf';
+import { apiFetch, apiMutate } from '@/lib/api-client';
 
 interface OnboardingStatus {
   userId: string;
@@ -41,15 +42,15 @@ export function AdminOnboardingControl() {
   const [loading, setLoading] = useState(false);
   const [resetting, setResetting] = useState(false);
   const [fullReset, setFullReset] = useState(false);
+  const [confirmEl, confirm] = useConfirm();
 
   const fetchStatus = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/admin/onboarding/status');
-      if (!res.ok) throw new Error(await res.text());
-      const data = (await res.json()) as OnboardingStatus;
-      setStatus(data);    } catch {
-        toast.error('Failed to load onboarding status');
+      const data = await apiFetch<OnboardingStatus>('/api/admin/onboarding/status');
+      setStatus(data);
+    } catch {
+      toast.error('Failed to load onboarding status');
     } finally {
       setLoading(false);
     }
@@ -60,15 +61,20 @@ export function AdminOnboardingControl() {
   }, [fetchStatus]);
 
   async function handleReset() {
-    if (!confirm('Reset onboarding? This will require going through the wizard again.')) return;
+    const ok = await confirm({
+      title: 'Reset onboarding?',
+      description: 'This will require going through the wizard again.',
+      confirmLabel: 'Reset',
+      tone: 'danger',
+    });
+    if (!ok) return;
     setResetting(true);
     try {
-      const res = await fetchCsrf('/api/admin/onboarding/reset', {
+      await apiMutate('/api/admin/onboarding/reset', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ mode: fullReset ? 'full' : 'soft' }),
       });
-      if (!res.ok) throw new Error(await res.text());
       toast.success('Onboarding reset. Redirecting...');
       router.push('/onboarding');
     } catch {
@@ -121,6 +127,7 @@ export function AdminOnboardingControl() {
           </Button>
         </div>
       </SettingsSection>
+      {confirmEl}
     </div>
   );
 }

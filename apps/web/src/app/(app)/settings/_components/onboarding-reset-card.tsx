@@ -23,7 +23,7 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { useConfirm } from '@/components/ui/confirm-drawer';
 import { Switch } from '@/components/ui/switch';
-import { fetchCsrf } from '@/lib/csrf';
+import { apiMutate } from '@/lib/api-client';
 
 export function OnboardingResetCard() {
   const router = useRouter();
@@ -41,12 +41,11 @@ export function OnboardingResetCard() {
     if (!ok) return;
     setResetting(true);
     try {
-      const res = await fetchCsrf('/api/admin/onboarding/reset', {
+      await apiMutate('/api/admin/onboarding/reset', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ mode: fullReset ? 'full' : 'soft' }),
       });
-      if (!res.ok) throw new Error(await res.text());
       toast.success('Onboarding reset. Redirecting...');
       router.push('/onboarding');
     } catch {

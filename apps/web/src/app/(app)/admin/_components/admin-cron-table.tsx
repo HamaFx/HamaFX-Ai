@@ -17,10 +17,14 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { IconHistory } from '@tabler/icons-react';
 import { toast } from 'sonner';
 
+import { Button } from '@/components/ui/button';
+import { EmptyState } from '@/components/ui/empty-state';
 import { SkeletonCard } from '@/components/ui/skeleton';
 import { SettingsSection } from '@/app/(app)/settings/_components/settings-section';
+import { apiFetch, ApiError } from '@/lib/api-client';
 import { cn } from '@/lib/cn';
 
 interface CronRun {
@@ -37,18 +41,25 @@ export function AdminCronTable() {
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
 
+  // H-3: migrated from raw `fetch` + `await res.text()` to the typed
+  // `apiFetch` wrapper. The wrapper parses the standard error envelope,
+  // throws `ApiError` with `code`/`status`/`requestId`, and handles
+  // timeout/network errors. The `requestId` is surfaced in the toast
+  // description so bug reports are traceable to a single server log line.
   const fetchRuns = async () => {
     setLoading(true);
     setFetchError(null);
     try {
-      const res = await fetch('/api/admin/cron-history?days=7');
-      if (!res.ok) throw new Error(await res.text());
-      const data = (await res.json()) as { runs: CronRun[] };
+      const data = await apiFetch<{ runs: CronRun[] }>('/api/admin/cron-history?days=7');
       setRuns(data.runs);
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Failed to load cron history';
       setFetchError(msg);
-      toast.error(msg);
+      if (err instanceof ApiError && err.requestId) {
+        toast.error(msg, { description: `Ref: ${err.requestId}` });
+      } else {
+        toast.error(msg);
+      }
     } finally {
       setLoading(false);
     }
@@ -67,9 +78,9 @@ export function AdminCronTable() {
       <SettingsSection title="Cron History" description="Recent cron job runs.">
         <div className="flex flex-col items-center gap-3 py-8 text-center">
           <p className="text-sm text-danger">{fetchError}</p>
-          <button type="button" onClick={fetchRuns} className="text-sm text-fg underline hover:no-underline">
+          <Button variant="secondary" size="sm" onClick={fetchRuns}>
             Retry
-          </button>
+          </Button>
         </div>
       </SettingsSection>
     );
@@ -90,8 +101,13 @@ export function AdminCronTable() {
           <tbody>
             {runs.length === 0 ? (
               <tr>
-                <td colSpan={4} className="text-fg-subtle px-4 py-4 text-center">
-                  No cron runs found.
+                <td colSpan={4} className="px-4 py-6">
+                  <EmptyState
+                    icon={<IconHistory className="size-6" />}
+                    title="No cron runs found"
+                    description="Cron job history from the last 7 days will appear here."
+                    bare
+                  />
                 </td>
               </tr>
             ) : (

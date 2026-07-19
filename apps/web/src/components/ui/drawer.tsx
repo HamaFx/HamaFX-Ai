@@ -74,6 +74,13 @@ const DrawerContent = React.forwardRef<
     [ref],
   );
 
+  // M-1 audit fix: gate the focus-management effect with an empty deps
+  // array so it runs exactly once on mount (when the drawer opens), not
+  // on every render of DrawerContent. vaul portals DrawerContent in only
+  // when the Root is open, so mount == open. Without the deps array the
+  // effect would re-focus the first focusable element on any parent state
+  // change (e.g. typing into an input inside the drawer), which both
+  // wastes work and can yank focus away from the user mid-interaction.
   React.useEffect(() => {
     const el = contentRef.current;
     if (!el) return;
@@ -94,7 +101,7 @@ const DrawerContent = React.forwardRef<
     } else {
       el.focus();
     }
-  });
+  }, []);
 
   return (
     <DrawerPortal>

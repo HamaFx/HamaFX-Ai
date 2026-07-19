@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useActionState, useEffect, useState } from 'react';
 import {IconLock, IconCheck, IconEye, IconEyeOff} from '@tabler/icons-react';
 import { toast } from 'sonner';
 
@@ -8,45 +8,43 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { changePasswordAction } from '../actions';
 
+type FormState = { ok: boolean; error: string };
+
 export function ChangePasswordCard() {
-  const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
-  const [totpCode, setTotpCode] = useState('');
   const [showCurrent, setShowCurrent] = useState(false);
   const [showNew, setShowNew] = useState(false);
-  const [changing, setChanging] = useState(false);
-  const [done, setDone] = useState(false);
+  // key forces form remount on success → clears all uncontrolled inputs
+  const [formKey, setFormKey] = useState(0);
 
-  // Reset success state on unmount
-  useEffect(() => {
-    return () => { setDone(false); };
-  }, []);
+  const [state, action, pending] = useActionState(
+    async (_prev: FormState, formData: FormData): Promise<FormState> => {
+      const currentPassword = formData.get('currentPassword') as string;
+      const newPw = formData.get('newPassword') as string;
+      const totpCode = (formData.get('totpCode') as string) || undefined;
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!currentPassword || !newPassword) return;
-    setChanging(true);
-    try {
-      const res = await changePasswordAction(
-        currentPassword,
-        newPassword,
-        totpCode || undefined,
-      );
-      if (res.ok) {
-        toast.success('Password changed');
-        setDone(true);
-        setCurrentPassword('');
-        setNewPassword('');
-        setTotpCode('');
-      } else {
-        toast.error('error' in res ? (res.error ?? 'Failed to change password') : 'Failed to change password');
+      if (!currentPassword || !newPw) {
+        return { ok: false, error: 'Both password fields are required' };
       }
-    } catch {
-      toast.error('Failed to change password');
-    } finally {
-      setChanging(false);
+
+      const res = await changePasswordAction(currentPassword, newPw, totpCode);
+      return {
+        ok: res.ok,
+        error: 'error' in res ? (res.error ?? '') : '',
+      };
+    },
+    { ok: false, error: '' },
+  );
+
+  useEffect(() => {
+    if (state.ok) {
+      toast.success('Password changed');
+      setNewPassword('');
+      setFormKey((k) => k + 1); // remount form to clear all inputs
+    } else if (state.error) {
+      toast.error(state.error);
     }
-  };
+  }, [state.ok, state.error]);
 
   return (
     <div className="border border-border bg-bg-elev-1 rounded-sm flex flex-col gap-3 p-4">
@@ -55,22 +53,21 @@ export function ChangePasswordCard() {
         <h2 className="text-fg text-base font-semibold tracking-tight">Change Password</h2>
       </div>
 
-      {done ? (
+      {state.ok ? (
         <div className="flex items-center gap-2 text-sm text-success">
           <IconCheck className="size-4" />
           Password changed successfully
         </div>
       ) : (
-        <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+        <form key={formKey} action={action} className="flex flex-col gap-3">
           <div className="relative">
             <Input
+              name="currentPassword"
               type={showCurrent ? 'text' : 'password'}
               autoComplete="current-password"
               placeholder="Current password"
-              value={currentPassword}
-              onChange={(e) => setCurrentPassword(e.target.value)}
               required
-              disabled={changing}
+              disabled={pending}
             />
             <button
               type="button"
@@ -84,6 +81,7 @@ export function ChangePasswordCard() {
           </div>
           <div className="relative">
             <Input
+              name="newPassword"
               type={showNew ? 'text' : 'password'}
               autoComplete="new-password"
               placeholder="New password"
@@ -91,7 +89,7 @@ export function ChangePasswordCard() {
               onChange={(e) => setNewPassword(e.target.value)}
               required
               minLength={8}
-              disabled={changing}
+              disabled={pending}
             />
             <button
               type="button"
@@ -119,16 +117,15 @@ export function ChangePasswordCard() {
             </div>
           )}
           <Input
+            name="totpCode"
             type="text"
             inputMode="numeric"
             pattern="[0-9]*"
             maxLength={6}
             placeholder="2FA code (if enabled)"
-            value={totpCode}
-            onChange={(e) => setTotpCode(e.target.value)}
-            disabled={changing}
+            disabled={pending}
           />
-          <Button type="submit" size="sm" loading={changing} disabled={changing}>
+          <Button type="submit" size="sm" loading={pending} disabled={pending}>
             Change password
           </Button>
         </form>

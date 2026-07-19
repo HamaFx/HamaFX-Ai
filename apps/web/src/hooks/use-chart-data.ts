@@ -114,7 +114,7 @@ export function useChartData(
   // H5: Only depend on indicatorsKey, not the raw indicators array.
   // M5: Debounce adjacent timeframe prefetch by 2s — avoids racing on
   // rapid timeframe switches (user clicking 1m → 5m → 15m → 30m → 1h).
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- indicators intentionally omitted, we use indicatorsKey for stable identity across renders.
+  // indicators intentionally omitted — we use indicatorsKey for stable identity.
   useEffect(() => {
     if (!enabled) return;
 
@@ -146,6 +146,7 @@ export function useChartData(
     }, 2_000); // M5: 2s debounce
 
     return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [symbol, tf, count, indicatorsKey, enabled, queryClient]);
 
   return {

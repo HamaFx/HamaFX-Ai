@@ -30,6 +30,7 @@ import { EventCard } from '@/components/calendar/event-card';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
+import { apiFetch } from '@/lib/api-client';
 import { cn } from '@/lib/cn';
 import { formatRelative } from '@/lib/format';
 import { startOfDay } from '@/lib/datetime';
@@ -63,9 +64,7 @@ export function CalendarView({ initialEvents }: CalendarViewProps) {
   const { data: events = initialEvents, isLoading, isError, error, refetch } = useQuery<EconomicEvent[]>({
     queryKey: ['calendar'],
     queryFn: async () => {
-      const res = await fetch('/api/calendar');
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      return (await res.json()) as EconomicEvent[];
+      return apiFetch<EconomicEvent[]>('/api/calendar');
     },
     initialData: initialEvents,
   });
@@ -82,8 +81,7 @@ export function CalendarView({ initialEvents }: CalendarViewProps) {
   function manualRefresh() {
     startTransition(async () => {
       try {
-        const res = await fetch('/api/cron/calendar');
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        await apiFetch('/api/cron/calendar');
         toast.success('Calendar refreshed');
         refetch();
         setLastRefreshed(Date.now());

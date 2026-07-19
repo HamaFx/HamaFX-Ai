@@ -36,7 +36,7 @@ import { Segmented } from '@/components/ui/segmented';
 import { StaleIndicator } from '@/components/ui/stale-indicator';
 import { Tooltip } from '@/components/ui/tooltip';
 import { cn } from '@/lib/cn';
-import { fetchCsrf } from '@/lib/csrf';
+import { apiFetch, apiMutate } from '@/lib/api-client';
 import { formatRelative } from '@/lib/format';
 import { useMemo } from 'react';
 
@@ -53,21 +53,18 @@ export function AlertList() {
   const { data, isLoading, isFetching, isError, error } = useQuery<{ alerts: Alert[] }>({
     queryKey: ALERTS_QUERY_KEY,
     queryFn: async () => {
-      const res = await fetch('/api/alerts');
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      return (await res.json()) as { alerts: Alert[] };
+      return apiFetch<{ alerts: Alert[] }>('/api/alerts');
     },
     staleTime: 10_000,
   });
 
   const toggle = useMutation({
     mutationFn: async ({ id, active }: { id: string; active: boolean }) => {
-      const res = await fetchCsrf(`/api/alerts/${id}`, {
+      await apiMutate(`/api/alerts/${id}`, {
         method: 'PATCH',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ active, firedAt: active ? null : undefined }),
       });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
     },
     onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: ALERTS_QUERY_KEY });
@@ -78,8 +75,7 @@ export function AlertList() {
 
   const remove = useMutation({
     mutationFn: async (id: string) => {
-      const res = await fetchCsrf(`/api/alerts/${id}`, { method: 'DELETE' });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      await apiMutate(`/api/alerts/${id}`, { method: 'DELETE' });
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ALERTS_QUERY_KEY });

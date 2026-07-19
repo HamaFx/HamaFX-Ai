@@ -32,7 +32,7 @@ import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Segmented } from '@/components/ui/segmented';
-import { fetchCsrf } from '@/lib/csrf';
+import { apiMutate } from '@/lib/api-client';
 import { cn } from '@/lib/cn';
 
 type RuleType = 'priceCross' | 'candleClose' | 'indicatorCross';
@@ -146,16 +146,11 @@ export function AlertForm({ initialSymbol, onCreated }: AlertFormProps) {
       return;
     }
     try {
-      const res = await fetchCsrf('/api/alerts/preview', {
+      const data = await apiMutate<{ count?: number; unsupported?: boolean }>('/api/alerts/preview', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ rule: validation.data.rule, lookbackDays: 90 }),
       });
-      if (!res.ok) {
-        const body = (await res.json().catch(() => null)) as { error?: { message?: string } } | null;
-        throw new Error(body?.error?.message ?? `HTTP ${res.status}`);
-      }
-      const data = (await res.json()) as { count?: number; unsupported?: boolean };
       if (data.unsupported) {
         toast.success('Configuration valid', {
           description: 'Rule syntax is correct (preview not available for indicator rules)',
@@ -213,7 +208,7 @@ export function AlertForm({ initialSymbol, onCreated }: AlertFormProps) {
     const data = validation.data;
 
     try {
-      const res = await fetchCsrf('/api/alerts', {
+      await apiMutate('/api/alerts', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
@@ -223,12 +218,6 @@ export function AlertForm({ initialSymbol, onCreated }: AlertFormProps) {
           snoozeHours: data.snoozeHours,
         }),
       });
-      if (!res.ok) {
-        const body = (await res.json().catch(() => null)) as {
-          error?: { message?: string };
-        } | null;
-        throw new Error(body?.error?.message ?? `HTTP ${res.status}`);
-      }
       setLevel('');
       setNote('');
       toast.success('Alert created', { description: `${symbol} ${direction} ${data.rule.level}` });
@@ -301,12 +290,14 @@ export function AlertForm({ initialSymbol, onCreated }: AlertFormProps) {
             ))}
           </div>
           <Input
+            id="alert-indicator"
             value={indicator}
             onChange={(e) => setIndicator(e.target.value)}
             onBlur={() => touch('indicator')}
             placeholder="rsi:14, ema:50, macd:12,26,9"
+            {...(fieldErrors.indicator ? { 'aria-describedby': 'alert-indicator-error' } : {})}
           />
-          {fieldErrors.indicator ? <p className="text-danger text-xs">{fieldErrors.indicator}</p> : null}
+          {fieldErrors.indicator ? <p id="alert-indicator-error" role="alert" className="text-danger text-xs">{fieldErrors.indicator}</p> : null}
         </div>
       ) : null}
 
@@ -334,8 +325,9 @@ export function AlertForm({ initialSymbol, onCreated }: AlertFormProps) {
           onBlur={() => touch('level')}
           inputMode="decimal"
           placeholder={symbol === 'XAUUSD' ? 'e.g. 2400' : 'e.g. 1.0850'}
+          {...(fieldErrors.level ? { 'aria-describedby': 'alert-level-error' } : {})}
         />
-        {fieldErrors.level ? <p className="text-danger text-xs">{fieldErrors.level}</p> : null}
+        {fieldErrors.level ? <p id="alert-level-error" role="alert" className="text-danger text-xs">{fieldErrors.level}</p> : null}
       </div>
 
       {/* Phase B — UX_UPGRADE_PLAN.md item 10. Live preview of how
@@ -381,7 +373,7 @@ export function AlertForm({ initialSymbol, onCreated }: AlertFormProps) {
             Telegram
           </label>
         </div>
-        {fieldErrors.channels ? <p className="text-danger text-xs">{fieldErrors.channels}</p> : null}
+        {fieldErrors.channels ? <p id="alert-channels-error" role="alert" className="text-danger text-xs">{fieldErrors.channels}</p> : null}
       </div>
 
       <div className="flex flex-col gap-2">
@@ -395,8 +387,9 @@ export function AlertForm({ initialSymbol, onCreated }: AlertFormProps) {
           onBlur={() => touch('note')}
           placeholder="why am I watching this level?"
           maxLength={280}
+          {...(fieldErrors.note ? { 'aria-describedby': 'alert-note-error' } : {})}
         />
-        {fieldErrors.note ? <p className="text-danger text-xs">{fieldErrors.note}</p> : null}
+        {fieldErrors.note ? <p id="alert-note-error" role="alert" className="text-danger text-xs">{fieldErrors.note}</p> : null}
       </div>
 
       {/*
@@ -425,7 +418,7 @@ export function AlertForm({ initialSymbol, onCreated }: AlertFormProps) {
         />
       </div>
 
-      {error ? <p className="text-danger text-sm">{error}</p> : null}
+      {error ? <p id="alert-form-error" role="alert" className="text-danger text-sm">{error}</p> : null}
 
       <div className="flex flex-col gap-2 mt-2">
         <Button
@@ -522,20 +515,15 @@ function PreviewCallout(props: PreviewCalloutProps) {
     setState({ kind: 'loading' });
     timerRef.current = setTimeout(async () => {
       try {
-        const res = await fetchCsrf('/api/alerts/preview', {
+        const data = await apiMutate<{
+          count?: number;
+          avgHoldMs?: number;
+          unsupported?: boolean;
+        }>('/api/alerts/preview', {
           method: 'POST',
           headers: { 'content-type': 'application/json' },
           body: JSON.stringify({ rule, lookbackDays: 90 }),
         });
-        if (!res.ok) {
-          setState({ kind: 'empty' });
-          return;
-        }
-        const data = (await res.json()) as {
-          count?: number;
-          avgHoldMs?: number;
-          unsupported?: boolean;
-        };
         if (data.unsupported) {
           setState({ kind: 'unsupported' });
           return;

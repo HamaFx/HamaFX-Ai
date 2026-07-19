@@ -17,10 +17,14 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { IconTool } from '@tabler/icons-react';
 import { toast } from 'sonner';
 
+import { Button } from '@/components/ui/button';
+import { EmptyState } from '@/components/ui/empty-state';
 import { SkeletonCard } from '@/components/ui/skeleton';
 import { SettingsSection } from '@/app/(app)/settings/_components/settings-section';
+import { apiFetch } from '@/lib/api-client';
 import { cn } from '@/lib/cn';
 
 interface ToolTelemetryRow {
@@ -42,9 +46,9 @@ export function AdminToolTelemetryTable() {
     setLoading(true);
     setFetchError(null);
     try {
-      const res = await fetch('/api/admin/diagnostics/tool-telemetry?limit=50');
-      if (!res.ok) throw new Error(await res.text());
-      const data = (await res.json()) as { entries: ToolTelemetryRow[] };
+      const data = await apiFetch<{ entries: ToolTelemetryRow[] }>(
+        '/api/admin/diagnostics/tool-telemetry?limit=50',
+      );
       setRows(data.entries);
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Failed to load tool telemetry';
@@ -68,9 +72,9 @@ export function AdminToolTelemetryTable() {
       <SettingsSection title="Tool Telemetry" description="Recent AI tool calls.">
         <div className="flex flex-col items-center gap-3 py-8 text-center">
           <p className="text-sm text-danger">{fetchError}</p>
-          <button type="button" onClick={fetchRows} className="text-sm text-fg underline hover:no-underline">
+          <Button variant="secondary" size="sm" onClick={fetchRows}>
             Retry
-          </button>
+          </Button>
         </div>
       </SettingsSection>
     );
@@ -92,8 +96,13 @@ export function AdminToolTelemetryTable() {
           <tbody>
             {rows.length === 0 ? (
               <tr>
-                <td colSpan={5} className="text-fg-subtle px-4 py-4 text-center">
-                  No telemetry found.
+                <td colSpan={5} className="px-4 py-6">
+                  <EmptyState
+                    icon={<IconTool className="size-6" />}
+                    title="No telemetry found"
+                    description="AI tool call telemetry from recent chat sessions will appear here."
+                    bare
+                  />
                 </td>
               </tr>
             ) : (

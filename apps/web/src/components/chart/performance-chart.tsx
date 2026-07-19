@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 /**
@@ -19,15 +18,17 @@
 
 // Premium Cumulative R-Multiple Performance Chart using lightweight-charts.
 // Visualizes equity growth over time with clean canvas styling.
+//
+// H-2 audit fix: removed the file-level `eslint-disable
+// @typescript-eslint/no-explicit-any` — the chart instance and area
+// series are now typed via the lightweight-charts v5 public APIs.
 
 import type { JournalEntry } from '@hamafx/shared';
-import type * as LightweightCharts from 'lightweight-charts';
+import type { IChartApi, ISeriesApi, UTCTimestamp } from 'lightweight-charts';
 import {IconTrendingUp, IconAward} from '@tabler/icons-react';
 import { useEffect, useMemo, useRef } from 'react';
 
 import { getThemeColors } from './chart';
-
-type UTCTimestamp = LightweightCharts.UTCTimestamp;
 
 interface PerformanceChartProps {
   entries: JournalEntry[];
@@ -41,8 +42,8 @@ export function PerformanceChart({
   height = 220,
 }: PerformanceChartProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
-  const chartRef = useRef<any>(null);
-  const seriesRef = useRef<any>(null);
+  const chartRef = useRef<IChartApi | null>(null);
+  const seriesRef = useRef<ISeriesApi<'Area'> | null>(null);
 
   // IconFilter closed trades and calculate cumulative R-multiple series chronologically
   const chartData = useMemo(() => {
@@ -95,10 +96,19 @@ export function PerformanceChart({
       if (cancelled || !containerRef.current) return;
 
       const colors = getThemeColors(theme);
-      
-      const createChartFn = ('createChart' in lc) 
-        ? lc.createChart 
-        : ((lc as any).default?.createChart as any);
+
+      // Lightweight-charts v5 exposes `createChart` as a named export.
+      // The `default` fallback covers CommonJS interop shims that assign
+      // the module to `.default` instead of using named exports.
+      // We avoid `'createChart' in lc` narrowing (which makes the false
+      // branch `never` because TS knows the property always exists) by
+      // using `??` instead — at the type level `lc.createChart` is
+      // always defined, but at runtime a misconfigured bundler could
+      // leave it undefined, so the fallback is defensive.
+      const createChartFn =
+        lc.createChart ??
+        (lc as unknown as { default?: { createChart: typeof lc.createChart } }).default?.createChart;
+      if (!createChartFn) throw new Error('lightweight-charts createChart not found');
 
       const chart = createChartFn(containerRef.current, {
         height,

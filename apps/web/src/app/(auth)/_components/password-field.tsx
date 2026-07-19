@@ -40,6 +40,8 @@ interface PasswordFieldProps {
   placeholder?: string;
   showStrengthMeter?: boolean;
   error?: boolean;
+  /** ID of the error element for aria-describedby linking. */
+  errorId?: string;
 }
 
 export function PasswordField({
@@ -57,6 +59,7 @@ export function PasswordField({
   placeholder,
   showStrengthMeter,
   error,
+  errorId,
 }: PasswordFieldProps) {
   const [show, setShow] = useState(false);
   const [capsLockOn, setCapsLockOn] = useState(false);
@@ -93,6 +96,7 @@ export function PasswordField({
           }}
           onKeyUp={(e) => setCapsLockOn((e.nativeEvent as KeyboardEvent).getModifierState?.('CapsLock') ?? false)}
           {...(error !== undefined ? { error } : {})}
+          {...(error && errorId ? { 'aria-describedby': errorId } : {})}
         />
         <button
           type="button"

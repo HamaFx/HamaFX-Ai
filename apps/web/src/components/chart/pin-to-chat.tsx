@@ -38,7 +38,7 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 
 import { Tooltip } from '@/components/ui/tooltip';
-import { fetchCsrf } from '@/lib/csrf';
+import { apiMutate } from '@/lib/api-client';
 
 export interface PinToChatProps {
   symbol: Symbol;
@@ -54,13 +54,11 @@ export function PinToChat({ symbol, prompt }: PinToChatProps) {
     if (pending) return;
     setPending(true);
     try {
-      const res = await fetchCsrf('/api/chat/threads', {
+      const json = await apiMutate<{ thread?: { id?: string } }>('/api/chat/threads', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ pinnedSymbol: symbol }),
       });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const json = (await res.json()) as { thread?: { id?: string } };
       const threadId = json.thread?.id;
       if (!threadId) throw new Error('server did not return a thread id');
       const promptText = prompt ?? `Ask about ${symbol}`;

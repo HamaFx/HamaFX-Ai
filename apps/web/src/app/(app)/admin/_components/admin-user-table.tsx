@@ -17,10 +17,14 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { IconUsers } from '@tabler/icons-react';
 import { toast } from 'sonner';
 
+import { Button } from '@/components/ui/button';
+import { EmptyState } from '@/components/ui/empty-state';
 import { SkeletonCard } from '@/components/ui/skeleton';
 import { SettingsSection } from '@/app/(app)/settings/_components/settings-section';
+import { apiFetch } from '@/lib/api-client';
 import { cn } from '@/lib/cn';
 
 interface UserSummary {
@@ -42,9 +46,9 @@ export function AdminUserTable() {
     setLoading(true);
     setFetchError(null);
     try {
-      const res = await fetch('/api/admin/users?limit=50&offset=0');
-      if (!res.ok) throw new Error(await res.text());
-      const data = (await res.json()) as { users: UserSummary[]; total: number };
+      const data = await apiFetch<{ users: UserSummary[]; total: number }>(
+        '/api/admin/users?limit=50&offset=0',
+      );
       setUsers(data.users);
       setTotal(data.total);
     } catch (err) {
@@ -69,9 +73,9 @@ export function AdminUserTable() {
       <SettingsSection title="Users" description="Registered users.">
         <div className="flex flex-col items-center gap-3 py-8 text-center">
           <p className="text-sm text-danger">{fetchError}</p>
-          <button type="button" onClick={fetchUsers} className="text-sm text-fg underline hover:no-underline">
+          <Button variant="secondary" size="sm" onClick={fetchUsers}>
             Retry
-          </button>
+          </Button>
         </div>
       </SettingsSection>
     );
@@ -92,8 +96,13 @@ export function AdminUserTable() {
           <tbody>
             {users.length === 0 ? (
               <tr>
-                <td colSpan={4} className="text-fg-subtle px-4 py-4 text-center">
-                  No users found.
+                <td colSpan={4} className="px-4 py-6">
+                  <EmptyState
+                    icon={<IconUsers className="size-6" />}
+                    title="No users found"
+                    description="Registered users will appear here."
+                    bare
+                  />
                 </td>
               </tr>
             ) : (

@@ -53,6 +53,7 @@ import { AnimatePresence, m } from 'motion/react';
 
 import { cn } from '@/lib/cn';
 import { getCsrfToken } from '@/lib/csrf';
+import { apiMutate } from '@/lib/api-client';
 import { useConfirm } from '@/components/ui/confirm-drawer';
 import { useAutoScroll } from '@/hooks/use-auto-scroll';
 import { useThreadTitle } from '@/hooks/use-thread-title';
@@ -268,30 +269,15 @@ export function ChatScreen({
       });
       if (!ok) return;
       try {
-        const csrf = getCsrfToken();
-        const res = await fetch('/api/chat/threads/fork', {
+        const { threadId: newThreadId } = await apiMutate<{ threadId: string }>('/api/chat/threads/fork', {
           method: 'POST',
-          headers: {
-            'content-type': 'application/json',
-            'x-csrf-token': csrf ?? '',
-          },
+          headers: { 'content-type': 'application/json' },
           body: JSON.stringify({
             sourceThreadId: threadId,
             atMessageId: messageId,
             newText,
           }),
         });
-        if (!res.ok) {
-          const body = (await res.json().catch(() => null)) as {
-            error?: { message?: string };
-          } | null;
-          throw new Error(
-            body?.error?.message ?? `HTTP ${res.status}`,
-          );
-        }
-        const { threadId: newThreadId } = (await res.json()) as {
-          threadId: string;
-        };
         toast.success('Forked into a new thread');
         router.push(`/chat/${newThreadId}`);
       } catch (err) {

@@ -13,23 +13,15 @@ import {
 import {
   SortableContext,
   sortableKeyboardCoordinates,
-  useSortable,
   verticalListSortingStrategy,
   arrayMove,
 } from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { IconArrowDown,  IconArrowUp,  IconDownload,  IconGripVertical,  IconPlus,  IconSearch,  IconTrash,  IconUpload } from '@tabler/icons-react';
+import { IconDownload,  IconPlus,  IconSearch,  IconTrash,  IconUpload } from '@tabler/icons-react';
 import { toast } from 'sonner';
 import { usePrices } from '@/hooks/use-prices';
-
-interface SymbolItem {
-  symbol: string;
-  name?: string;
-  category?: string;
-  displayOrder: number;
-}
+import { SortableSymbolRow, type SymbolItem } from './sortable-symbol-row';
 
 interface SymbolCatalogItem {
   symbol: string;
@@ -37,123 +29,6 @@ interface SymbolCatalogItem {
   category: string;
   isActive: boolean | null;
   sortOrder: number | null;
-}
-
-interface SortableSymbolRowProps {
-  item: SymbolItem;
-  index: number;
-  priceMap: Map<string, number>;
-  isSelected: boolean;
-  onToggleSelect: (symbol: string) => void;
-  onRemove: (symbol: string) => void;
-  onMove: (index: number, direction: 'up' | 'down') => void;
-  totalItems: number;
-}
-
-function SortableSymbolRow({
-  item,
-  index,
-  priceMap,
-  isSelected,
-  onToggleSelect,
-  onRemove,
-  onMove,
-  totalItems,
-}: SortableSymbolRowProps) {
-  const price = priceMap.get(item.symbol);
-  const decimals = item.symbol === 'XAUUSD' ? 2 : 5;
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: item.symbol });
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-  };
-
-  return (
-    <div
-      key={item.symbol}
-      ref={setNodeRef}
-      style={style}
-      className={`flex items-center justify-between p-3 rounded-sm border transition-all ${
-        isDragging
-          ? 'border-border shadow-lg z-10 opacity-90 bg-bg-elev-2'
-          : isSelected
-            ? 'bg-bg-elev-1 border-border shadow-sm'
-            : 'bg-bg-elev-1 border-border hover:border-fg-subtle/30'
-      }`}
-    >
-      <div className="flex items-center gap-3 min-w-0">
-        <button
-          type="button"
-          className="size-6 flex items-center justify-center text-fg-muted hover:text-fg cursor-grab active:cursor-grabbing touch-none shrink-0"
-          aria-label={`Drag to reorder ${item.symbol}`}
-          {...attributes}
-          {...listeners}
-        >
-          <IconGripVertical className="size-3.5" />
-        </button>
-        <input
-          type="checkbox"
-          checked={isSelected}
-          onChange={() => onToggleSelect(item.symbol)}
-          aria-label={`Select ${item.symbol}`}
-          className="rounded-sm border-border bg-bg-elev-1 text-fg focus:ring-fg size-3.5 cursor-pointer shrink-0"
-        />
-        <div className="flex flex-col min-w-0">
-          <div className="flex items-baseline gap-2">
-            <span className="font-mono text-sm font-semibold text-fg">{item.symbol}</span>
-            <span className="text-xs uppercase font-mono px-1 rounded-sm bg-bg-elev-2 text-fg-subtle border border-border shrink-0">
-              {item.category}
-            </span>
-          </div>
-          <span className="text-caption text-fg-subtle truncate">{item.name}</span>
-        </div>
-      </div>
-
-      <div className="flex items-center gap-3 shrink-0">
-        <div className="flex flex-col items-end">
-          <span className="font-mono text-xs font-semibold text-fg">
-            {price !== undefined ? price.toFixed(decimals) : '\u2014'}
-          </span>
-          {price !== undefined && (
-            <span className="text-xs text-fg-muted uppercase tracking-wider">Live</span>
-          )}
-        </div>
-
-        {/* Arrow buttons — keyboard-only fallback, visually hidden on small screens */}
-        <div className="hidden sm:flex items-center border border-border rounded-sm bg-bg-elev-1">
-          <button
-            type="button"
-            onClick={() => onMove(index, 'up')}
-            disabled={index === 0}
-            aria-label="Move symbol up"
-            className="p-1 text-fg-subtle hover:text-fg disabled:opacity-30 disabled:hover:text-fg-subtle cursor-pointer"
-          >
-            <IconArrowUp className="size-3.5" />
-          </button>
-          <div className="w-px h-3.5 bg-divider/60" />
-          <button
-            type="button"
-            onClick={() => onMove(index, 'down')}
-            disabled={index === totalItems - 1}
-            aria-label="Move symbol down"
-            className="p-1 text-fg-subtle hover:text-fg disabled:opacity-30 disabled:hover:text-fg-subtle cursor-pointer"
-          >
-            <IconArrowDown className="size-3.5" />
-          </button>
-        </div>
-
-        <button
-          type="button"
-          onClick={() => onRemove(item.symbol)}
-          aria-label={`Remove ${item.symbol} from watchlist`}
-          className="p-1.5 text-fg-subtle hover:text-danger hover:bg-danger/10 rounded-sm transition-colors cursor-pointer"
-        >
-          <IconTrash className="size-3.5" />
-        </button>
-      </div>
-    </div>
-  );
 }
 
 interface SymbolsFormProps {

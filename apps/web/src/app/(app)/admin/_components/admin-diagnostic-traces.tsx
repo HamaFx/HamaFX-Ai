@@ -17,11 +17,14 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import { IconStethoscope } from '@tabler/icons-react';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
+import { EmptyState } from '@/components/ui/empty-state';
 import { SkeletonCard } from '@/components/ui/skeleton';
 import { SettingsSection } from '@/app/(app)/settings/_components/settings-section';
+import { apiFetch } from '@/lib/api-client';
 import { cn } from '@/lib/cn';
 
 interface DiagnosticTraceSummary {
@@ -43,9 +46,9 @@ export function AdminDiagnosticTraces() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch('/api/admin/diagnostics/traces?limit=20');
-      if (!res.ok) throw new Error(await res.text());
-      const data = (await res.json()) as { traces: DiagnosticTraceSummary[] };
+      const data = await apiFetch<{ traces: DiagnosticTraceSummary[] }>(
+        '/api/admin/diagnostics/traces?limit=20',
+      );
       setTraces(data.traces);
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Unknown error';
@@ -92,8 +95,13 @@ export function AdminDiagnosticTraces() {
           <tbody>
             {traces.length === 0 ? (
               <tr>
-                <td colSpan={4} className="text-fg-subtle px-4 py-4 text-center">
-                  No traces found.
+                <td colSpan={4} className="px-4 py-6">
+                  <EmptyState
+                    icon={<IconStethoscope className="size-6" />}
+                    title="No traces found"
+                    description="Diagnostic traces will appear here after chat sessions complete."
+                    bare
+                  />
                 </td>
               </tr>
             ) : (

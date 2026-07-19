@@ -23,7 +23,7 @@ import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { SkeletonCard } from '@/components/ui/skeleton';
 import { SettingsSection } from '@/app/(app)/settings/_components/settings-section';
-import { fetchCsrf } from '@/lib/csrf';
+import { apiFetch, apiMutate } from '@/lib/api-client';
 
 export function AdminFeatureFlags() {
   const [features, setFeatures] = useState<Record<string, boolean>>({});
@@ -34,9 +34,7 @@ export function AdminFeatureFlags() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch('/api/admin/features');
-      if (!res.ok) throw new Error(await res.text());
-      const data = (await res.json()) as { features: Record<string, boolean> };
+      const data = await apiFetch<{ features: Record<string, boolean> }>('/api/admin/features');
       setFeatures(data.features);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error');
@@ -52,12 +50,11 @@ export function AdminFeatureFlags() {
 
   async function toggle(key: string, next: boolean) {
     try {
-      const res = await fetchCsrf('/api/admin/features', {
+      await apiMutate('/api/admin/features', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ [key]: next }),
       });
-      if (!res.ok) throw new Error(await res.text());
       setFeatures((prev) => ({ ...prev, [key]: next }));
       toast.success(`Feature ${key} ${next ? 'enabled' : 'disabled'}`);
     } catch {

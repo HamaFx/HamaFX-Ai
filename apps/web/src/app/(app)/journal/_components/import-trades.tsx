@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/cn';
-import { getCsrfToken } from '@/lib/csrf';
+import { apiMutate } from '@/lib/api-client';
 
 interface ParsedTrade {
   symbol: string;
@@ -86,17 +86,12 @@ export function ImportTrades({ onImported }: { onImported?: () => void }) {
     if (!parsed || parsed.length === 0) return;
     setImporting(true);
     try {
-      const csrf = getCsrfToken();
-      const headers: Record<string, string> = { 'content-type': 'application/json' };
-      if (csrf) headers['X-CSRF-Token'] = csrf;
-      const res = await fetch('/api/journal/import', {
+      const { count } = await apiMutate<{ count: number }>('/api/journal/import', {
         method: 'POST',
-        headers,
+        headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ trades: parsed }),
       });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = (await res.json()) as { count: number };
-      toast.success(`Imported ${data.count} trades`);
+      toast.success(`Imported ${count} trades`);
       setParsed(null);
       setOpen(false);
       onImported?.();

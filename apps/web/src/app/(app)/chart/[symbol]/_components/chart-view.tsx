@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 /**
@@ -19,8 +18,12 @@
 
 // Client orchestration for the upgraded chart page.
 // Combines dynamic price feeds, structure events, active indicators, and customized styling.
+//
+// H-2 audit fix: removed the file-level `eslint-disable
+// @typescript-eslint/no-explicit-any` — `activeIndicatorsRequest` now
+// uses the shared `IndicatorRequest` type from @hamafx/shared.
 
-import { type Symbol, type Candle, msPerTimeframe } from '@hamafx/shared';
+import { type Symbol, type Candle, type IndicatorRequest, msPerTimeframe } from '@hamafx/shared';
 import { IconAdjustmentsHorizontal } from '@tabler/icons-react';
 import dynamic from 'next/dynamic';
 import { Link } from 'next-view-transitions';
@@ -156,9 +159,12 @@ export function ChartView({ symbol, watchlist }: { symbol: Symbol; watchlist: st
     return () => obs.disconnect();
   }, []);
 
-  // Compute indicators query requests based on toggles
-  const activeIndicatorsRequest = useMemo(() => {
-    const list: any[] = [];
+  // Compute indicators query requests based on toggles.
+  // H-2: typed as IndicatorRequest[] instead of any[] — the
+  // `IndicatorRequest` schema allows params to be a record of
+  // number|string|boolean, matching the inline objects below.
+  const activeIndicatorsRequest = useMemo<IndicatorRequest[]>(() => {
+    const list: IndicatorRequest[] = [];
     if (indicators.ema20) list.push({ kind: 'ema', params: { period: 20 } });
     if (indicators.ema50) list.push({ kind: 'ema', params: { period: 50 } });
     if (indicators.ema200) list.push({ kind: 'ema', params: { period: 200 } });

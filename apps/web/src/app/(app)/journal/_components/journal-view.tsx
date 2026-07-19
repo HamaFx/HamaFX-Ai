@@ -25,6 +25,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {IconPlus, IconBook, IconActivity, IconRefresh, IconUpload} from '@tabler/icons-react';
 import { useState } from 'react';
 
+import { apiFetch } from '@/lib/api-client';
 import { cn } from '@/lib/cn';
 
 import {
@@ -64,9 +65,7 @@ export function JournalView() {
   const { data, isLoading, isFetching, isError, error } = useQuery<JournalResponse>({
     queryKey: QKEY,
     queryFn: async () => {
-      const res = await fetch('/api/journal');
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      return (await res.json()) as JournalResponse;
+      return apiFetch<JournalResponse>('/api/journal');
     },
     staleTime: 10_000,
   });

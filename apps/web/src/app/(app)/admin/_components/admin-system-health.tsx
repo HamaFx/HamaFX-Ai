@@ -41,6 +41,7 @@ import { toast } from 'sonner';
 
 import { SkeletonCard } from '@/components/ui/skeleton';
 import { SettingsSection } from '@/app/(app)/settings/_components/settings-section';
+import { apiFetch } from '@/lib/api-client';
 import { cn } from '@/lib/cn';
 
 // ── Types ────────────────────────────────────────────────────────────────
@@ -302,9 +303,7 @@ export function AdminSystemHealth() {
     setLoading(true);
     setFetchError(null);
     try {
-      const res = await fetch('/api/admin/health-slo');
-      if (!res.ok) throw new Error(await res.text());
-      const json = (await res.json()) as HealthSloData;
+      const json = await apiFetch<HealthSloData>('/api/admin/health-slo');
       setData(json);
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Failed to load system health';

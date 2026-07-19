@@ -42,6 +42,7 @@ import { ArticleCard } from '@/components/news/article-card';
 import { useBookmarks } from '@/components/news/use-bookmarks';
 import { EmptyState } from '@/components/ui/empty-state';
 import { SkeletonCard } from '@/components/ui/skeleton';
+import { apiFetch } from '@/lib/api-client';
 import { cn } from '@/lib/cn';
 import { formatRelative } from '@/lib/format';
 import { startOfDay } from '@/lib/datetime';
@@ -120,8 +121,7 @@ export function NewsView({ initialArticles }: NewsViewProps) {
   function manualRefresh() {
     startTransition(async () => {
       try {
-        const res = await fetch('/api/cron/news');
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        await apiFetch('/api/cron/news');
         toast.success('News refreshed');
         router.refresh();
         setLastRefreshed(Date.now());
