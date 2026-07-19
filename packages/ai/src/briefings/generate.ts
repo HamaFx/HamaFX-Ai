@@ -46,6 +46,7 @@ import { computeStats } from '../journal/persistence';
 import { rememberBriefing } from '../memory/memory-index';
 import { resolveModel } from '../model';
 import { appendAssistantMessage } from '../persistence';
+import { telemetryConfig } from '../telemetry';
 
 import {
   getOrCreateBriefingsThread,
@@ -185,6 +186,7 @@ async function composeEventSummary(
       system:
         'You are HamaFX-Ai writing a briefing for the single user. Be concise (max 6 short bullets). No greetings, no signoffs. Plain text, no markdown headings, no emoji.',
       prompt,
+      ...telemetryConfig(),
     });
     const cleaned = text.trim();
     return cleaned.length > 0 ? cleaned : deterministicEventSummary(event, kind);
@@ -357,6 +359,7 @@ async function composeWeeklyReviewSummary(
       system:
         'You are HamaFX-Ai writing the user\'s weekly trading review. Be concise (max 5 short bullets). No greetings or signoffs. Plain text.',
       prompt: `Stats:\n${det}\n\nWrite the review.`,
+      ...telemetryConfig(),
     });
     const cleaned = text.trim();
     return cleaned.length > 0 ? cleaned : det;

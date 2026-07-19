@@ -2,6 +2,8 @@
 # infra/cron-vm/scripts/verify-restore.sh — Weekly disaster-recovery rehearsal.
 #
 # Phase 8 PR-17. Runs Sunday 04:00 UTC via hamafx-verify-restore.timer.
+# PR-08: Also verifies GCS bucket configuration (versioning enabled,
+# retention policy active) to protect against accidental deletion.
 #
 # A backup you've never restored is a backup you don't have. This script:
 #   1. Pulls the latest db/*.dump.gz from GCS into a temp file.
@@ -57,6 +59,38 @@ ping_hc() {
 log() { printf '%s [verify-restore] %s\n' "$(date -u +%FT%TZ)" "$*"; }
 
 ping_hc start
+
+# ------------------------------------------------------------------ Verify bucket hardening (PR-08)
+# GCS bucket versioning and retention lock protect backups from accidental
+# or malicious deletion. If these are not configured, the verify-restore
+# still proceeds but flags a warning in the healthchecks.io ping body.
+log 'checking GCS bucket configuration'
+BUCKET_WARNINGS=''
+
+# Check versioning
+if gsutil versioning get "gs://${GCS_BACKUP_BUCKET}" 2>/dev/null | grep -q 'Enabled'; then
+  log "GCS versioning: enabled ✓"
+else
+  BUCKET_WARNINGS="${BUCKET_WARNINGS}versioning_disabled "
+  log 'WARNING: GCS bucket versioning is NOT enabled — backups can be deleted without recourse'
+fi
+
+# Check retention policy (requires uniform bucket-level access)
+if gsutil retention get "gs://${GCS_BACKUP_BUCKET}" 2>/dev/null | grep -q 'Retention'; then
+  log "GCS retention policy: active ✓"
+else
+  BUCKET_WARNINGS="${BUCKET_WARNINGS}no_retention_policy "
+  log 'WARNING: GCS bucket has no retention policy — backups can be deleted immediately'
+fi
+
+# Check the verify/last-success.txt from last week exists (chain of custody)
+if gsutil -q ls "gs://${GCS_BACKUP_BUCKET}/verify/last-success.txt" 2>/dev/null; then
+  PREV_VERIFY="$(gsutil cat "gs://${GCS_BACKUP_BUCKET}/verify/last-success.txt" 2>/dev/null || echo 'unreadable')"
+  log "previous verify success: ${PREV_VERIFY:0:120}"
+else
+  BUCKET_WARNINGS="${BUCKET_WARNINGS}no_previous_verify_file "
+  log 'NOTE: no previous verify/last-success.txt (first run or file was deleted)'
+fi
 
 # ------------------------------------------------------------------ Pull latest
 LATEST="$(gsutil ls -l "gs://${GCS_BACKUP_BUCKET}/db/*.dump.gz" 2>/dev/null \
@@ -124,7 +158,12 @@ HNSW_INDEX_COUNT="$(PGPASSWORD=verify psql -h 127.0.0.1 -p "$LOCAL_PG_PORT" -U v
 log "journal_entries=$JOURNAL_ROWS chat_threads=$THREADS_ROWS hnsw_indexes=$HNSW_INDEX_COUNT"
 
 if [[ "$JOURNAL_ROWS" =~ ^[0-9]+$ ]] && [[ "$THREADS_ROWS" =~ ^[0-9]+$ ]] && [[ "$HNSW_INDEX_COUNT" =~ ^[0-9]+$ ]] && (( HNSW_INDEX_COUNT > 0 )); then
-  ping_hc success "journal=$JOURNAL_ROWS threads=$THREADS_ROWS hnsw=$HNSW_INDEX_COUNT dump=$LATEST"
+  # PR-08: Include GCS bucket status in healthchecks ping body
+  BUCKET_STATUS="versioning=$(gsutil versioning get "gs://${GCS_BACKUP_BUCKET}" 2>/dev/null | grep -c 'Enabled' || echo 0)"
+  if [[ -n "$BUCKET_WARNINGS" ]]; then
+    BUCKET_STATUS="${BUCKET_STATUS} warnings=${BUCKET_WARNINGS% }"
+  fi
+  ping_hc success "journal=$JOURNAL_ROWS threads=$THREADS_ROWS hnsw=$HNSW_INDEX_COUNT dump=$LATEST ${BUCKET_STATUS}"
   echo "$(date -u +%FT%TZ) journal=$JOURNAL_ROWS threads=$THREADS_ROWS hnsw=$HNSW_INDEX_COUNT dump=$LATEST" \
     | gsutil -q cp - "gs://${GCS_BACKUP_BUCKET}/verify/last-success.txt"
 else

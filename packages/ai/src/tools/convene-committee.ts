@@ -28,6 +28,7 @@ import type { ResolveModelEnv } from '../model';
 
 import { getToolContext, type ToolContext } from '../tool-context';
 import { resolveChatModel, getVertexGoogleSearchTool } from '../model';
+import { telemetryConfig } from '../telemetry';
 
 import { analyzeFundamentalTool } from './analyze-fundamental';
 import { analyzeTechnicalTool } from './analyze-technical';
@@ -138,6 +139,7 @@ No markdown fences, no preamble.`;
       model: resolveChatModel(ctx.userSettings, ctx.env).model,
       system: "You are an expert forex macroeconomic analyst. Always output raw JSON.",
       prompt,
+      ...telemetryConfig(),
       ...(tools ? { tools, stopWhen: stepCountIs(3) } : {}),
     });
 
@@ -197,6 +199,7 @@ No markdown fences, no preamble.`;
       model: resolveChatModel(ctx.userSettings, ctx.env).model,
       system: "You are an expert forex technical analyst. Always output raw JSON.",
       prompt,
+      ...telemetryConfig(),
     });
     const parsed = parseJsonOrThrow<Omit<CommitteeVerdict, 'persona'>>(text, 'technician');
     return { persona: 'technician', ...parsed } as CommitteeVerdict;
@@ -235,6 +238,7 @@ No markdown fences, no preamble.`;
       model: resolveChatModel(ctx.userSettings, ctx.env).model,
       system: "You are an expert risk manager. Always output raw JSON.",
       prompt,
+      ...telemetryConfig(),
     });
     const parsed = parseJsonOrThrow<Omit<CommitteeVerdict, 'persona'>>(text, 'risk_manager');
     return { persona: 'risk_manager', ...parsed } as CommitteeVerdict;
@@ -265,6 +269,7 @@ No markdown fences, no preamble.`;
       model: resolveChatModel(ctx.userSettings, ctx.env).model,
       system: "You are the head trader. Always output raw JSON.",
       prompt,
+      ...telemetryConfig(),
     });
     const parsed = parseJsonOrThrow<ModeratorResult>(text, 'moderator');
     return {

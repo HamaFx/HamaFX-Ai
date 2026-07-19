@@ -38,6 +38,7 @@ import { generateText, type UIMessage } from 'ai';
 
 import { resolveModel } from './model';
 import { maybeGetToolContext } from './tool-context';
+import { telemetryConfig } from './telemetry';
 import type { RoutingDecision } from './routing';
 
 export type PlannerEnv = Pick<
@@ -186,6 +187,7 @@ export async function runPlanner(args: RunPlannerArgs): Promise<PlanResult> {
       model: resolveModel(modelId, args.env, ctx?.userId),
       system: SYSTEM_PROMPT,
       prompt,
+      ...telemetryConfig(),
     };
     if (args.signal) callArgs.abortSignal = args.signal;
     const { text, usage } = await generateText(callArgs);

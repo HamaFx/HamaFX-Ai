@@ -3,8 +3,12 @@ import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 const mockDbExecute = vi.hoisted(() => vi.fn());
 const mockAuthFn = vi.hoisted(() => vi.fn());
 
+const mockWithRateLimit = vi.hoisted(() => vi.fn());
+
 vi.mock('@hamafx/db', () => ({
   getDb: vi.fn(() => ({ execute: mockDbExecute })),
+  withRateLimit: mockWithRateLimit,
+  schema: {},
 }));
 
 // Mock @/auth so the SEC-1 slow path (auth() fallback) returns a session.
@@ -30,6 +34,7 @@ beforeEach(() => {
   for (const [k, v] of Object.entries(ENV)) {
     process.env[k] = v;
   }
+  mockWithRateLimit.mockResolvedValue({ allowed: true, count: 0, limit: 30 });
   // SEC-1: provide a valid auth session so the slow-path in getUserFromRequest
   // succeeds when the fast-path HMAC verification is skipped (no signature header).
   mockAuthFn.mockResolvedValue({

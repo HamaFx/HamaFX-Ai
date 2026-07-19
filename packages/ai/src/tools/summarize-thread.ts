@@ -42,6 +42,7 @@ import { rememberThreadSynopsis } from '../memory/memory-index';
 import { resolveModel, derivePlannerModel } from '../model';
 import { listMessages } from '../persistence';
 import { maybeGetToolContext } from '../tool-context';
+import { telemetryConfig } from '../telemetry';
 
 const InputSchema = SummarizeThreadInputSchema;
 
@@ -110,6 +111,7 @@ export const summarizeThreadTool = tool({
           model: resolveModel(modelId, env),
           system: SYSTEM_PROMPT,
           prompt: transcript,
+          ...telemetryConfig(),
         });
         const parsed = parseModelJson(text);
         if (parsed) {

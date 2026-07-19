@@ -19,6 +19,7 @@
 import { generateText, streamText, convertToModelMessages, type Tool, type ModelMessage } from 'ai';
 import { estimateCostUsd } from '../../cost';
 import { withToolContext, type ToolContext } from '../../tool-context';
+import { telemetryConfig } from '../../telemetry';
 import { BaseAgent } from './base-agent';
 import { buildSharedSystemPrompt, extractUserMessageText } from '../context';
 import type { AgentName, AgentBias, ModelTier, AgentOpinion, SharedContext, MultiAgentEnv } from '../types';
@@ -116,7 +117,7 @@ Be concise but thorough. Use markdown formatting for readability.`;
       // Falls back to generateText when no callback is provided (e.g. tests).
       if (onTextChunk) {
         const sResult = await withToolContext(toolContext, async () =>
-          streamText({ model, system, messages, abortSignal: controller.signal, maxOutputTokens: 4000 }),
+          streamText({ model, system, messages, abortSignal: controller.signal, maxOutputTokens: 4000, ...telemetryConfig() }),
         );
         const latencyMs = Date.now() - startMs;
         let fullText = '';
@@ -132,7 +133,7 @@ Be concise but thorough. Use markdown formatting for readability.`;
         return { text: fullText, costUsd, latencyMs, modelId };
       }
       // Legacy: generateText for callers without streaming callback
-      const result = await withToolContext(toolContext, async () => generateText({ model, system, messages, abortSignal: controller.signal, maxOutputTokens: 4000 }));
+      const result = await withToolContext(toolContext, async () => generateText({ model, system, messages, abortSignal: controller.signal, maxOutputTokens: 4000, ...telemetryConfig() }));
       const latencyMs = Date.now() - startMs;
       const costUsd = estimateCostUsd(modelId, result.usage?.inputTokens ?? 0, result.usage?.outputTokens ?? 0);
       return { text: result.text, costUsd, latencyMs, modelId };

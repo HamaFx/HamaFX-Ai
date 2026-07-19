@@ -31,6 +31,7 @@ import {
   type Tool,
 } from 'ai';
 
+import { telemetryConfig } from './telemetry';
 import { buildLiveSnapshot } from './context';
 import type { LiveSnapshot } from './prompt/system';
 import {
@@ -591,6 +592,7 @@ async function runChatInner(args: RunChatArgs) {
     const streamArgs: Parameters<typeof streamText>[0] = {
       model: resolvedModel,
       system: systemPrompt,
+      ...telemetryConfig(),
       ...(supportsPromptCaching(resolvedModelId)
         ? { providerOptions: { anthropic: { cacheControl: { type: 'ephemeral' as const } } } }
         : {}),

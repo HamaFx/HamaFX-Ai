@@ -48,6 +48,7 @@ import type { z } from 'zod';
 
 import { resolveModel, resolveVisionModel } from '../model';
 import { maybeGetToolContext } from '../tool-context';
+import { telemetryConfig } from '../telemetry';
 
 const InputSchema = AnalyzeChartImageInputSchema;
 
@@ -156,6 +157,7 @@ export const analyzeChartImageTool = tool({
         model: vision.model,
         system: SYSTEM_PROMPT,
         messages,
+        ...telemetryConfig(),
       });
 
       // Try strict parse first; if the model returned plain text, build a

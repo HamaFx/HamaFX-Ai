@@ -24,6 +24,8 @@ scripts/scratch/
 .env.development
 .env.preview
 .env.*.local
+.env.production.local
+.env.vercel
 !.env.example
 
 # logs

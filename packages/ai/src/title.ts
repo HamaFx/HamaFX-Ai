@@ -27,6 +27,7 @@ import { generateText } from 'ai';
 
 import { resolveModel } from './model';
 import { maybeGetToolContext } from './tool-context';
+import { telemetryConfig } from './telemetry';
 import { createCategorizedLogger } from '@hamafx/shared/logger';
 
 export interface GenerateTitleArgs {
@@ -164,6 +165,7 @@ export async function generateTitle(args: GenerateTitleArgs): Promise<GenerateTi
       model: resolveModel(args.titleModelId, env, ctx?.userId),
       system: SYSTEM_PROMPT,
       prompt: userPrompt,
+      ...telemetryConfig(),
     };
     if (signal) generateArgs.abortSignal = signal;
 

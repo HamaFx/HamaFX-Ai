@@ -26,10 +26,10 @@ export default defineConfig({
         'src/app/**/page.tsx',
       ],
       thresholds: {
-        statements: 5,
-        branches: 5,
-        functions: 5,
-        lines: 5,
+        statements: 15,
+        branches: 10,
+        functions: 10,
+        lines: 15,
       },
     },
     server: {

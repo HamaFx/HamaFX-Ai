@@ -184,6 +184,99 @@ If `BIQUOTE_BASE_URL` ever requires a key, `CRON_SECRET` is the
 analogue here — rotate it in Vercel envs first, then in
 `/opt/hamafx/.env` on the VM.
 
+## Scenario 6 — Recover `/opt/hamafx/.env` from GCP Secret Manager
+
+If the VM disk is lost or the env file is accidentally deleted, restore
+from the GCP Secret Manager backup (set up via `infra/cron-vm/scripts/backup-env.sh`):
+
+```bash
+# Retrieve the latest version of the env file backup
+gcloud secrets versions access latest --secret=hamafx-vm-env > /opt/hamafx/.env
+chmod 600 /opt/hamafx/.env
+chown hamafx:hamafx /opt/hamafx/.env
+
+# Verify critical values are present
+grep -q 'DATABASE_URL' /opt/hamafx/.env && echo "DATABASE_URL: OK"
+grep -q 'CRON_SECRET' /opt/hamafx/.env && echo "CRON_SECRET: OK"
+grep -q 'HC_SIGNALR_UUID' /opt/hamafx/.env && echo "HC_SIGNALR_UUID: OK"
+
+# Restart the worker to pick up new env
+sudo systemctl restart hamafx-worker
+```
+
+**If the secret doesn't exist in Secret Manager**, reconstruct manually:
+- `DATABASE_URL` — from Supabase dashboard → Project Settings → Database → Connection pooling
+- `CRON_SECRET` — must match Vercel's `CRON_SECRET` env var; regenerate if needed:
+  ```bash
+  node -e "console.log(require('crypto').randomBytes(24).toString('hex'))"
+  ```
+  Then update BOTH Vercel env vars AND `/opt/hamafx/.env`.
+- `HC_*_UUID` values — from healthchecks.io dashboard; create new checks if UUIDs are lost
+- `GCS_BACKUP_BUCKET` — `hamafx-backups-hamafx-78845`
+
+## Scenario 7 — Rotate CRON_SECRET
+
+If CRON_SECRET is compromised or needs periodic rotation:
+
+```bash
+# 1. Generate a new secret
+NEW_SECRET=$(node -e "console.log(require('crypto').randomBytes(24).toString('hex'))")
+echo "New CRON_SECRET: $NEW_SECRET"
+
+# 2. Update Vercel FIRST (so the web layer accepts the new secret)
+#    Go to Vercel Dashboard → Project Settings → Environment Variables
+#    Update CRON_SECRET to the new value for Production environment.
+#    Or via CLI:
+#    vercel env add CRON_SECRET production --force
+#    Deploy to apply: vercel --prod
+
+# 3. Update the VM env file SECOND (after Vercel is accepting the new secret)
+gcloud compute ssh hamafx-cron --zone=us-central1-a --project=$PROJECT_ID \
+  --command="sudo sed -i 's/^CRON_SECRET=.*/CRON_SECRET=$NEW_SECRET/' /opt/hamafx/.env"
+
+# 4. No restart needed — the light cron services read env at each invocation.
+#    But restart the worker if it uses CRON_SECRET:
+gcloud compute ssh hamafx-cron --zone=us-central1-a --project=$PROJECT_ID \
+  --command="sudo systemctl restart hamafx-worker"
+
+# 5. Verify both sides work
+gcloud compute ssh hamafx-cron --zone=us-central1-a --project=$PROJECT_ID \
+  --command="sudo -u hamafx bash -c 'source /opt/hamafx/.env; curl -fsS -H \"Authorization: Bearer \$CRON_SECRET\" \$PRODUCTION_URL/api/health/public'"
+```
+
+**IMPORTANT:** Always update Vercel before the VM. If you update the VM first,
+all cron pokes will fail with 401 until Vercel is also updated.
+
+## Scenario 8 — Back up `/opt/hamafx/.env` to GCP Secret Manager
+
+```bash
+# One-time: create the secret in GCP Secret Manager
+gcloud secrets create hamafx-vm-env \
+  --replication-policy=automatic \
+  --project=$PROJECT_ID
+
+# Push the current env file
+gcloud compute ssh hamafx-cron --zone=us-central1-a --project=$PROJECT_ID \
+  --command="gcloud secrets versions add hamafx-vm-env \
+    --data-file=/opt/hamafx/.env \
+    --project=$PROJECT_ID"
+
+# Grant the VM's service account access to read AND write the secret
+SA=$(gcloud compute instances describe hamafx-cron \
+  --zone=us-central1-a --project=$PROJECT_ID \
+  --format='get(serviceAccounts[0].email)')
+# For reading (recovery / verification)
+gcloud secrets add-iam-policy-binding hamafx-vm-env \
+  --member="serviceAccount:$SA" \
+  --role=roles/secretmanager.secretAccessor \
+  --project=$PROJECT_ID
+# For writing (daily backup via backup-env.sh)
+gcloud secrets add-iam-policy-binding hamafx-vm-env \
+  --member="serviceAccount:$SA" \
+  --role=roles/secretmanager.secretVersionAdder \
+  --project=$PROJECT_ID
+```
+
 ## Health-check ground truth
 
 A green dashboard at https://healthchecks.io/ with these checks recently

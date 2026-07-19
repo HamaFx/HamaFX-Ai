@@ -175,6 +175,7 @@ import {
 import { extractRateLimits } from './rate-limits';
 import { noteLlmRateLimit } from './llm-throttle';
 import { isCircuitOpen } from './model-circuit-breaker';
+import { telemetryConfig } from './telemetry';
 import { generateText } from 'ai';
 import { PROVIDER_IDS } from '@hamafx/shared/byok';
 
@@ -324,6 +325,7 @@ export async function testProviderKey(
       model,
       prompt: 'ping',
       maxOutputTokens: 1,
+      ...telemetryConfig(),
       // Abort quickly on auth failures — most providers respond in <1s
       // with 401/403; if we time out, the test was 5s of waiting.
       abortSignal: AbortSignal.timeout(5_000),

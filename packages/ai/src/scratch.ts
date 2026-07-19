@@ -16,6 +16,7 @@
 
 import { createVertex } from '@ai-sdk/google-vertex';
 import { generateText } from 'ai';
+import { telemetryConfig } from './telemetry';
 
 async function main() {
   const vertex = createVertex({
@@ -32,6 +33,7 @@ async function main() {
       googleSearch: vertex.tools.googleSearch({}),
     },
     prompt: 'What are the top news stories about EUR/USD today? Be brief.',
+    ...telemetryConfig(),
   });
 
   console.info(result.text);

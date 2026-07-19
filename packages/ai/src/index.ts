@@ -254,6 +254,7 @@ export { buildToolCatalogue, type CatalogueEntry } from './catalogue';
 
 // Langfuse / OpenTelemetry instrumentation
 export { initLangfuse, shutdownLangfuse } from './instrumentation';
+export { telemetryConfig } from './telemetry';
 
 export { extractRateLimits, type RateLimitData } from './rate-limits';
 export { noteLlmRateLimit, awaitLlmHeadroom } from './llm-throttle';

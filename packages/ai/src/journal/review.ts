@@ -26,6 +26,7 @@ import { createCategorizedLogger } from '@hamafx/shared/logger';
 
 import { computeStats } from './persistence';
 import { resolveChatModel } from '../model';
+import { telemetryConfig } from '../telemetry';
 import { tryReserveBudget, applyBudgetDelta, estimateCostUsd, DEFAULT_MAX_DAILY_USD } from '../cost';
 
 export interface ReviewTradeArgs {
@@ -128,6 +129,7 @@ export async function reviewTrade(args: ReviewTradeArgs): Promise<TradeReviewRes
       system: SYSTEM_PROMPT,
       prompt: userPrompt,
       maxOutputTokens: 800,
+      ...telemetryConfig(),
     };
     if (signal) callArgs.abortSignal = signal;
 

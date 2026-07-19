@@ -34,8 +34,10 @@ beforeEach(() => {
 
 describe('acquireCronLock', () => {
   it('returns a CronLock when INSERT succeeds (row returned)', async () => {
-    // Simulate successful INSERT returning a row.
-    mockExecute.mockResolvedValueOnce([{ job_name: 'snapshots' }]);
+    // M-8: reclaim check first, then INSERT.
+    mockExecute
+      .mockResolvedValueOnce([])                       // reclaim: no stale lock
+      .mockResolvedValueOnce([{ job_name: 'snapshots' }]); // INSERT: succeeded
 
     const db = { execute: mockExecute } as unknown as Parameters<typeof acquireCronLock>[1];
     const lock = await acquireCronLock('snapshots', db);
@@ -46,8 +48,10 @@ describe('acquireCronLock', () => {
   });
 
   it('returns null when INSERT conflicts (no row returned)', async () => {
-    // Simulate ON CONFLICT DO NOTHING — nothing returned.
-    mockExecute.mockResolvedValueOnce([]);
+    // M-8: reclaim check first, then INSERT.
+    mockExecute
+      .mockResolvedValueOnce([])  // reclaim: no stale lock
+      .mockResolvedValueOnce([]); // insert: conflict, nothing returned
 
     const db = { execute: mockExecute } as unknown as Parameters<typeof acquireCronLock>[1];
     const lock = await acquireCronLock('snapshots', db);
@@ -56,34 +60,37 @@ describe('acquireCronLock', () => {
   });
 
   it('lock.done() executes an UPDATE setting status=done', async () => {
-    // Acquire lock.
+    // M-8: reclaim + INSERT + UPDATE done
     mockExecute
+      .mockResolvedValueOnce([])                       // reclaim: no stale lock
       .mockResolvedValueOnce([{ job_name: 'briefings' }]) // INSERT
-      .mockResolvedValueOnce([]); // UPDATE done
+      .mockResolvedValueOnce([]);                      // UPDATE done
 
     const db = { execute: mockExecute } as unknown as Parameters<typeof acquireCronLock>[1];
     const lock = await acquireCronLock('briefings', db);
     expect(lock).not.toBeNull();
     await lock!.done('processed=5');
 
-    // Two calls: INSERT + UPDATE.
-    expect(mockExecute).toHaveBeenCalledTimes(2);
+    // Three calls: reclaim + INSERT + UPDATE.
+    expect(mockExecute).toHaveBeenCalledTimes(3);
   });
 
   it('lock.fail() executes an UPDATE setting status=error', async () => {
     mockExecute
-      .mockResolvedValueOnce([{ job_name: 'cot' }]) // INSERT
-      .mockResolvedValueOnce([]); // UPDATE error
+      .mockResolvedValueOnce([])                       // reclaim: no stale lock
+      .mockResolvedValueOnce([{ job_name: 'cot' }])    // INSERT
+      .mockResolvedValueOnce([]);                      // UPDATE error
 
     const db = { execute: mockExecute } as unknown as Parameters<typeof acquireCronLock>[1];
     const lock = await acquireCronLock('cot', db);
     await lock!.fail(new Error('timeout'));
 
-    expect(mockExecute).toHaveBeenCalledTimes(2);
+    expect(mockExecute).toHaveBeenCalledTimes(3);
   });
 
   it('note is truncated to 500 chars in done()', async () => {
     mockExecute
+      .mockResolvedValueOnce([])                       // reclaim: no stale lock
       .mockResolvedValueOnce([{ job_name: 'fred-actuals' }])
       .mockResolvedValueOnce([]);
 
@@ -92,8 +99,6 @@ describe('acquireCronLock', () => {
     const longNote = 'x'.repeat(1000);
     await lock!.done(longNote);
 
-    // The SQL template literal should carry a note of max 500 chars.
-    // We can't easily inspect the SQL directly, but this test exercises the path.
-    expect(mockExecute).toHaveBeenCalledTimes(2);
+    expect(mockExecute).toHaveBeenCalledTimes(3);
   });
 });

@@ -21,6 +21,7 @@ import { z } from 'zod';
 import { resolveChatModel, resolveModelForProvider, supportsPromptCaching, type ModelDomain } from '../../model';
 import { estimateCostUsd } from '../../cost';
 import { withToolContext, type ToolContext } from '../../tool-context';
+import { telemetryConfig } from '../../telemetry';
 import type { ProviderId } from '@hamafx/shared';
 import type { SharedContext, AgentOpinion, AgentName, AgentBias, ModelTier } from '../types';
 import { AGENT_TIMEOUTS } from '../types';
@@ -95,6 +96,7 @@ export abstract class BaseAgent {
     try {
       const result = await withToolContext(toolContext, async () => generateText({
         model, system: fullSystem,
+        ...telemetryConfig(),
         ...(supportsPromptCaching(modelId)
           ? { providerOptions: { anthropic: { cacheControl: { type: 'ephemeral' as const } } } }
           : {}),

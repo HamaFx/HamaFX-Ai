@@ -45,6 +45,7 @@ import { and, desc, eq } from 'drizzle-orm';
 import { dailySpendUsd } from '../cost';
 import { resolveModel } from '../model';
 import { maybeGetToolContext } from '../tool-context';
+import { telemetryConfig } from '../telemetry';
 import type { DbMessage } from '../persistence';
 
 const KEEP_VERBATIM = 12;
@@ -246,6 +247,7 @@ async function generateSummary(
       system:
         "You compress chat history into a 4-bullet system note for a trading copilot. Capture: (1) the symbol(s) under discussion, (2) the user's active question/setup, (3) any prior facts or numbers cited, (4) any open follow-up. No greetings, no filler.",
       prompt: transcript,
+      ...telemetryConfig(),
     };
     if (signal) callArgs.abortSignal = signal;
     const { text } = await generateText(callArgs);

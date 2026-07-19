@@ -21,6 +21,10 @@
 //
 // SECURITY: binds to 127.0.0.1 only — NOT exposed to the public internet.
 // The BiQuote proxy requires bearer-token auth when BIQUOTE_PROXY_TOKEN is set.
+// PR-11: In production, a missing BIQUOTE_PROXY_TOKEN makes proxy requests
+// return 503 (Service Unavailable) rather than 500 — the proxy is an
+// optional pathway; its absence should be a soft degradation, not a
+// hard error that would trigger Sentry alerts on every proxy request.
 
 import * as http from 'http';
 import type { Logger } from './log.js';
@@ -33,6 +37,8 @@ export interface HealthServerDeps {
   isSignalRConnected: () => boolean;
   /** H4 fix — count of ticks dropped due to onTick handler errors. */
   getDroppedTicks?: () => number;
+  /** PR-11 — whether the BiQuote proxy has a valid token configured. */
+  isProxyConfigured?: () => boolean;
 }
 
 /**
@@ -47,9 +53,12 @@ export function createHealthServer(deps: HealthServerDeps): http.Server {
   // H-3: BIQUOTE_PROXY_TOKEN is required in production. Without it,
   // the proxy is wide open to anyone who can reach port 8081 (even
   // though it's bound to 127.0.0.1, local processes could abuse it).
+  // PR-11: Downgraded from error to warn — a missing proxy token is a
+  // configuration gap, not a server crash. The proxy returns 503 for
+  // all requests when unconfigured; the health endpoint still works.
   const isProd = process.env.NODE_ENV === 'production';
   if (isProd && !PROXY_TOKEN) {
-    log.error('BIQUOTE_PROXY_TOKEN is not set in production — BiQuote proxy will reject all requests');
+    log.warn('BIQUOTE_PROXY_TOKEN is not set — BiQuote proxy will reject all requests');
   }
 
   return http.createServer(async (req, res) => {
@@ -67,7 +76,14 @@ export function createHealthServer(deps: HealthServerDeps): http.Server {
         }
       } else if (isProd) {
         // No token configured in production — reject all requests.
-        res.writeHead(500, { 'Content-Type': 'application/json' });
+        // PR-11: Return 503 (Service Unavailable) rather than 500.
+        // A missing proxy token is a configuration issue, not a server
+        // error. Retry-After is set to a large value so clients don't
+        // hammer the endpoint when the proxy is permanently unconfigured.
+        res.writeHead(503, {
+          'Content-Type': 'application/json',
+          'Retry-After': '86400',
+        });
         res.end(JSON.stringify({ status: 'error', message: 'BiQuote proxy not configured (missing BIQUOTE_PROXY_TOKEN)' }));
         return;
       }
@@ -92,6 +108,7 @@ export function createHealthServer(deps: HealthServerDeps): http.Server {
       return;
     }
     // Health endpoint — returns real worker state (tick age, SignalR status, uptime)
+    // PR-11: Also reports whether the BiQuote proxy has a valid token configured.
     if (req.url === '/health' || req.url === '/api/health' || req.url === '/') {
       const lastTickAt = getLastTickAt();
       const ageMs = Date.now() - lastTickAt;
@@ -103,6 +120,7 @@ export function createHealthServer(deps: HealthServerDeps): http.Server {
         signalrConnected: isSignalRConnected(),
         droppedTicks: deps.getDroppedTicks?.() ?? 0,
         uptimeMs: process.uptime() * 1000,
+        proxyConfigured: deps.isProxyConfigured?.() ?? Boolean(PROXY_TOKEN),
       }));
     } else {
       res.writeHead(404);

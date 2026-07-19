@@ -25,6 +25,7 @@ import {
   IconUsers,
   IconFlag,
   IconTerminal,
+  IconHeartbeat,
 } from '@tabler/icons-react';
 
 import { cn } from '@/lib/cn';
@@ -36,8 +37,10 @@ import { AdminDiagnosticTraces } from './_components/admin-diagnostic-traces';
 import { AdminUserTable } from './_components/admin-user-table';
 import { AdminFeatureFlags } from './_components/admin-feature-flags';
 import { AdminLogViewer } from './_components/admin-log-viewer';
+import { AdminSystemHealth } from './_components/admin-system-health';
 
 const TABS = [
+  { id: 'health', label: 'Health', icon: IconHeartbeat, component: AdminSystemHealth },
   { id: 'onboarding', label: 'Onboarding', icon: IconRefresh, component: AdminOnboardingControl },
   { id: 'cron', label: 'Cron', icon: IconHistory, component: AdminCronTable },
   { id: 'telemetry', label: 'Telemetry', icon: IconTool, component: AdminToolTelemetryTable },
@@ -48,7 +51,7 @@ const TABS = [
 ] as const;
 
 export default function AdminPage() {
-  const [activeTab, setActiveTab] = useState<string>('onboarding');
+  const [activeTab, setActiveTab] = useState<string>('health');
 
   const ActiveComponent = TABS.find((t) => t.id === activeTab)?.component ?? AdminOnboardingControl;
 

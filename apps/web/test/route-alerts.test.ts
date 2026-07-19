@@ -20,6 +20,7 @@ const mockWithRateLimit = vi.hoisted(() => vi.fn());
 
 vi.mock('@hamafx/db', () => ({
   withRateLimit: mockWithRateLimit,
+  schema: {},
 }));
 
 import { auth } from '@/auth';
