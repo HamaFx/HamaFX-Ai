@@ -188,7 +188,12 @@ export async function runWorker(args: RunWorkerArgs): Promise<RunningWorker> {
   let candleFailureCount = 0;
 
   const aggregator = new Candle1mAggregator((bar: ClosedCandle) => {
-    void (async () => {
+    // STAB-21: Race flushClosedCandle against a 10s safety timeout.
+    // The callback is fire-and-forget (void), so a hung DB connection
+    // would silently accumulate unresolved promises. The timeout ensures
+    // the callback always settles so GC can reclaim resources.
+    const CANDLE_FLUSH_TIMEOUT_MS = 10_000;
+    const flushPromise = (async () => {
       try {
         await flushClosedCandle({ db, log, bar });
         log.info('candle closed', {
@@ -218,6 +223,15 @@ export async function runWorker(args: RunWorkerArgs): Promise<RunningWorker> {
         }
       }
     })();
+
+    const timeoutPromise = new Promise<void>((resolve) => {
+      setTimeout(() => {
+        log.warn('flushClosedCandle timed out', { symbol: bar.symbol });
+        resolve();
+      }, CANDLE_FLUSH_TIMEOUT_MS);
+    });
+
+    void Promise.race([flushPromise, timeoutPromise]);
   });
 
   const consumer = new SignalRConsumer({
@@ -425,7 +439,10 @@ export async function main(): Promise<void> {
   });
 
   if (env.WORKER_MODE === 'docker') {
-    startScheduler(log);
+    const stopScheduler = startScheduler(log);
+    // STAB-10: Register scheduler stop function so cron tasks are
+    // torn down cleanly on shutdown.
+    onShutdown(stopScheduler);
   }
 
   // Send unhandled rejections / uncaught exceptions to Sentry before the
@@ -448,25 +465,40 @@ export async function main(): Promise<void> {
   const worker = await runWorker({ env, log });
 
   // ── HTTP server: health checks + BiQuote REST proxy ──────────────────
-  const healthServer = createHealthServer({
-    log,
-    getLastTickAt: worker.getLastTickAt,
-    isSignalRConnected: () => worker.consumer.isStarted(),
-    // H4 fix — expose dropped-tick counter for health monitoring.
-    getDroppedTicks: () => worker.consumer.droppedTicks(),
-  });
+  // STAB-03: Wrap post-startup initialisation in try/catch so the worker's
+  // stop() is always called if the health server or shutdown registrations
+  // fail. This ensures timers (heartbeat, flush, batch) are properly cleared.
+  // healthServer is hoisted so the catch block can close the port.
+  let healthServer: ReturnType<typeof createHealthServer> | null = null;
+  try {
+    healthServer = createHealthServer({
+      log,
+      getLastTickAt: worker.getLastTickAt,
+      isSignalRConnected: () => worker.consumer.isStarted(),
+      // H4 fix — expose dropped-tick counter for health monitoring.
+      getDroppedTicks: () => worker.consumer.droppedTicks(),
+    });
 
-  healthServer.listen(8081, '127.0.0.1', () => {
-    log.info('Health server listening on 127.0.0.1:8081');
-  });
+    healthServer.listen(8081, '127.0.0.1', () => {
+      log.info('Health server listening on 127.0.0.1:8081');
+    });
 
-  onShutdown(() => closeDb());
-  onShutdown(() => {
-    healthServer.close();
-    return worker.stop();
-  });
-  onShutdown(() => flushSentry(2_000));
-  onShutdown(() => shutdownLangfuse());
+    onShutdown(() => closeDb());
+    onShutdown(() => {
+      healthServer!.close();
+      return worker.stop();
+    });
+    onShutdown(() => flushSentry(2_000));
+    onShutdown(() => shutdownLangfuse());
+  } catch (err) {
+    // STAB-03: Clean up worker resources if post-startup initialisation
+    // fails. Without this, internal timers (heartbeat, flush, batch)
+    // would leak because onShutdown was never registered.
+    log.error('post-startup initialisation failed — tearing down worker', { err: String(err) });
+    healthServer?.close();
+    await worker.stop();
+    throw err;
+  }
 
   log.info('worker running — feeding live_ticks from BiQuote SignalR');
 }

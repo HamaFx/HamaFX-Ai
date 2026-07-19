@@ -269,6 +269,10 @@ async function runChatInner(args: RunChatArgs) {
   const checkedProviders = new Set<string>();
   // F1 — capture narrowed settings for use in the inner retry helper.
   const settings = userSettings;
+  // STAB-02: Track whether the budget reservation has already been released
+  // (on non-retryable error or client disconnect) so the post-loop release
+  // doesn't double-count and underflow the daily_ai_spend counter.
+  let budgetReleased = false;
 
   /**
    * Resolves the model for the current retry attempt (respects override
@@ -362,6 +366,11 @@ async function runChatInner(args: RunChatArgs) {
         ? { fallback: true, reason: 'rate-limit' as const, message: err.message }
         : classifyStreamError(err);
       if (!decision.fallback) {
+        // STAB-02: Release budget reservation on non-retryable error.
+        // Without this, permanent provider failures (e.g. invalid API key)
+        // inflate daily_ai_spend and prematurely trip BudgetExceededError.
+        await applyBudgetDelta(userId, -reservedUsd).catch(() => {});
+        budgetReleased = true;
         throw err;
       }
 
@@ -755,13 +764,18 @@ async function runChatInner(args: RunChatArgs) {
       }
       // F13 — don't retry when the client disconnected. The user closed the
       // tab, so any retry would produce a response nobody reads while still
-      // consuming the daily budget. Throw immediately; the exhaustion handler
-      // at the bottom of the loop releases the reservation once.
+      // consuming the daily budget. Release the reservation immediately.
       if (signal?.aborted) {
+        // STAB-02: Release budget reservation on client disconnect.
+        await applyBudgetDelta(userId, -reservedUsd).catch(() => {});
+        budgetReleased = true;
         throw err;
       }
       const decision = classifyStreamError(err);
       if (!decision.fallback) {
+        // STAB-02: Release budget reservation on non-retryable stream error.
+        await applyBudgetDelta(userId, -reservedUsd).catch(() => {});
+        budgetReleased = true;
         throw err;
       }
 
@@ -795,9 +809,13 @@ async function runChatInner(args: RunChatArgs) {
   // All retry attempts exhausted without a successful stream — release the
   // budget reservation we took at the top of the turn. Without this, repeated
   // failures inflate daily_ai_spend and prematurely trip BudgetExceededError.
-  await applyBudgetDelta(userId, -reservedUsd).catch((err) =>
-    alog.warn('failed to release budget reservation after exhausted retries', { err: String(err) }),
-  );
+  // STAB-02: Skip if already released on a non-retryable error or client
+  // disconnect to avoid double-counting.
+  if (!budgetReleased) {
+    await applyBudgetDelta(userId, -reservedUsd).catch((err) =>
+      alog.warn('failed to release budget reservation after exhausted retries', { err: String(err) }),
+    );
+  }
   throw lastError ?? new Error('All fallback attempts failed');
 }
 

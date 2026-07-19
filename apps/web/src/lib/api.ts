@@ -259,24 +259,49 @@ export async function parseJsonBody<S extends z.ZodTypeAny>(
   // Stream the body so we can stop early if the client lied about the
   // length (or never set one). A 50 MB attacker payload should be killed
   // around byte ~6 MB, not after the whole thing has been buffered.
+  // STAB-05: Also enforce a hard time limit on body reading (5s) to
+  // prevent slow-loris-style attacks from tying up function instances.
+  const BODY_READ_TIMEOUT_MS = 5_000;
   const body = req.body;
   let buf: Uint8Array;
   if (body) {
     const reader = body.getReader();
     const chunks: Uint8Array[] = [];
     let total = 0;
-    while (true) {
-      const { value, done } = await reader.read();
-      if (done) break;
-      if (value) {
-        total += value.byteLength;
-        if (total > max) {
-          // Drop the reader so the underlying stream can be freed.
-          await reader.cancel().catch(() => undefined);
-          throw validationError(`Payload too large (max ${max} bytes)`);
+    try {
+      while (true) {
+        // STAB-05: Race reader.read() against a timeout so a slow
+        // client can't hold the function open indefinitely.
+        const readTimeout = AbortSignal.timeout(BODY_READ_TIMEOUT_MS);
+        const readResult = await Promise.race([
+          reader.read(),
+          new Promise<never>((_, reject) => {
+            readTimeout.addEventListener(
+              'abort',
+              () => reject(new Error('Body read timed out')),
+              { once: true },
+            );
+          }),
+        ]);
+        const { value, done } = readResult;
+        if (done) break;
+        if (value) {
+          total += value.byteLength;
+          if (total > max) {
+            // Drop the reader so the underlying stream can be freed.
+            await reader.cancel().catch(() => undefined);
+            throw validationError(`Payload too large (max ${max} bytes)`);
+          }
+          chunks.push(value);
         }
-        chunks.push(value);
       }
+    } catch (err) {
+      // Ensure the reader is released even on timeout or overflow.
+      await reader.cancel().catch(() => undefined);
+      if (err instanceof Error && err.message === 'Body read timed out') {
+        throw validationError('Request body read timed out');
+      }
+      throw err;
     }
     buf = new Uint8Array(total);
     let off = 0;

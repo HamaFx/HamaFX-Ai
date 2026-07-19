@@ -18,7 +18,7 @@
 
 import {IconBolt, IconX} from '@tabler/icons-react';
 import Link from 'next/link';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 
 import { useLocalStorage } from '@/hooks/use-local-storage';
 import { useConfirm } from '@/components/ui/confirm-drawer';
@@ -115,11 +115,19 @@ const DEFAULTS: AIPrefs = {
  *      Removing the misleading selectors here; users who want to
  *      change the chat model follow the "Manage models →" link below.
  */
-let _aiSyncTimer: ReturnType<typeof setTimeout> | undefined;
-
 export function AIPrefsCard({ initialCustomInstructions }: { initialCustomInstructions?: string | null }) {
   const [prefs, setPrefs, hydrated] = useLocalStorage<AIPrefs>(AI_PREFS_STORAGE_KEY, DEFAULTS);
   const [confirmEl, confirm] = useConfirm();
+  // STAB-16: Move the debounce timer into a useRef so it's cleaned
+  // up on unmount. Previously a module-level `let` variable would
+  // fire callbacks on stale component state after navigation.
+  const aiSyncTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  // Clean up the timer on unmount.
+  useEffect(() => {
+    return () => {
+      if (aiSyncTimerRef.current) clearTimeout(aiSyncTimerRef.current);
+    };
+  }, []);
 
   // Always sync server value to localStorage (DB is source of truth).
   // Resolves drift from cross-device DB changes or cleared localStorage.
@@ -142,8 +150,8 @@ export function AIPrefsCard({ initialCustomInstructions }: { initialCustomInstru
 
   function handleInstructionsChange(value: string) {
     update('customInstructions', value);
-    if (_aiSyncTimer) clearTimeout(_aiSyncTimer);
-    _aiSyncTimer = setTimeout(() => {
+    if (aiSyncTimerRef.current) clearTimeout(aiSyncTimerRef.current);
+    aiSyncTimerRef.current = setTimeout(() => {
       updateAiPrefsAction(value);
     }, 500);
   }

@@ -42,7 +42,6 @@ async function klinesCall(
   try {
     res = await fetch(url, { signal: ctrl.signal, cache: 'no-store' });
   } catch (cause) {
-    clearTimeout(timer);
     const isAbort = (cause as Error)?.name === 'AbortError';
     throw new ProviderError(
       isAbort ? 'PROVIDER_TIMEOUT' : 'PROVIDER_HTTP_ERROR',
@@ -50,8 +49,9 @@ async function klinesCall(
       isAbort ? 'request timed out' : 'fetch failed',
       { cause },
     );
+  } finally {
+    clearTimeout(timer);
   }
-  clearTimeout(timer);
 
   if (!res.ok) {
     if (res.status === 429) await noteBackoff(PROVIDER, THROTTLE);
@@ -137,7 +137,6 @@ export async function fetchTickerPrice(
   try {
     res = await fetch(url, { signal: ctrl.signal, cache: 'no-store' });
   } catch (cause) {
-    clearTimeout(timer);
     const isAbort = (cause as Error)?.name === 'AbortError';
     throw new ProviderError(
       isAbort ? 'PROVIDER_TIMEOUT' : 'PROVIDER_HTTP_ERROR',
@@ -145,8 +144,9 @@ export async function fetchTickerPrice(
       isAbort ? 'request timed out' : 'fetch failed',
       { cause },
     );
+  } finally {
+    clearTimeout(timer);
   }
-  clearTimeout(timer);
 
   if (!res.ok) {
     throw new ProviderError(

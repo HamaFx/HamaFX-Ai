@@ -126,7 +126,6 @@ export async function fetchLatest(params: FetchNewsParams): Promise<RawMarketaux
   try {
     res = await fetch(url, { signal: ctrl.signal, cache: 'no-store' });
   } catch (cause) {
-    clearTimeout(timer);
     const isAbort = (cause as Error)?.name === 'AbortError';
     throw new ProviderError(
       isAbort ? 'PROVIDER_TIMEOUT' : 'PROVIDER_HTTP_ERROR',
@@ -134,8 +133,9 @@ export async function fetchLatest(params: FetchNewsParams): Promise<RawMarketaux
       isAbort ? 'request timed out' : 'fetch failed',
       { cause },
     );
+  } finally {
+    clearTimeout(timer);
   }
-  clearTimeout(timer);
 
   if (!res.ok) {
     const json: unknown = await res.json().catch(() => null);

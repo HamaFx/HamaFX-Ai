@@ -71,6 +71,9 @@ export class SymbolManager extends EventEmitter {
     this.pollTimer = setInterval(() => {
       void this.poll();
     }, this.pollIntervalMs);
+    // STAB-06: Unref the poll timer so it doesn't prevent the Node.js
+    // process from exiting during graceful shutdown.
+    this.pollTimer.unref();
     
     this.log.info('SymbolManager started polling', { intervalMs: this.pollIntervalMs });
   }

@@ -177,13 +177,15 @@ async function pollBackgroundJob(
   setMessages: React.Dispatch<React.SetStateAction<UIMessage[]>>,
   setAgentProgress: React.Dispatch<React.SetStateAction<AgentProgress | null>>,
 ): Promise<void> {
-  const POLL_INTERVAL_MS = 2_000;
+  const MIN_POLL_MS = 2_000;
+  const MAX_POLL_MS = 10_000; // STAB-11: cap backoff at 10s
   const MAX_POLL_TIME_MS = 5 * 60_000;
   const startPoll = Date.now();
+  let pollIntervalMs = MIN_POLL_MS;
 
   while (Date.now() - startPoll < MAX_POLL_TIME_MS) {
     if (controller.signal.aborted) return;
-    await new Promise((r) => setTimeout(r, POLL_INTERVAL_MS));
+    await new Promise((r) => setTimeout(r, pollIntervalMs));
     if (controller.signal.aborted) return;
 
     try {
@@ -223,8 +225,15 @@ async function pollBackgroundJob(
       if (pollJson.status === 'failed') {
         throw new Error(pollJson.error ?? 'Background analysis failed.');
       }
+
+      // STAB-11: Reset backoff on successful poll (job still pending but server is responsive).
+      pollIntervalMs = MIN_POLL_MS;
     } catch (err) {
       if (controller.signal.aborted) return;
+      // STAB-11: Linear backoff on fetch errors to reduce redundant requests.
+      pollIntervalMs = Math.min(pollIntervalMs + 2_000, MAX_POLL_MS);
+      // Only re-throw if the error is not transient (non-2xx HTTP is already skipped via `continue`).
+      if (err instanceof TypeError) continue; // Network error — retry with backoff
       throw err;
     }
   }
@@ -238,6 +247,13 @@ async function pollBackgroundJob(
 // state on a rAF-aligned cadence — imperceptible to the user but
 // reduces state updates by ~10x.
 const SSE_FLUSH_INTERVAL_MS = 100;
+
+// STAB-01: Per-chunk read timeout for the SSE stream.
+// If the server hangs mid-stream (stuck tool call, network stall), the
+// reader.read() call will block indefinitely. Wrapping it in a timeout
+// prevents the browser tab from hanging forever — the error propagates
+// up and the error banner renders a retry button.
+const SSE_READ_TIMEOUT_MS = 120_000; // 2 minutes per chunk
 
 async function streamSSE(
   res: Response,
@@ -267,7 +283,27 @@ async function streamSSE(
   };
 
   while (true) {
-    const { done, value } = await reader.read();
+    // STAB-01: Race reader.read() against a timeout so a hung server
+    // stream doesn't block the browser tab indefinitely.
+    const readTimeout = AbortSignal.timeout(SSE_READ_TIMEOUT_MS);
+    let readResult: ReadableStreamReadResult<Uint8Array>;
+    try {
+      readResult = await Promise.race([
+        reader.read(),
+        new Promise<never>((_, reject) => {
+          readTimeout.addEventListener(
+            'abort',
+            () => reject(new DOMException('SSE stream read timed out', 'TimeoutError')),
+            { once: true },
+          );
+        }),
+      ]);
+    } catch (err) {
+      // Cancel the reader so the underlying stream is released.
+      await reader.cancel().catch(() => {});
+      throw err;
+    }
+    const { done, value } = readResult;
     if (done) break;
     buffer += decoder.decode(value, { stream: true });
     const lines = buffer.split('\n');

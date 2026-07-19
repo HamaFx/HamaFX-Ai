@@ -50,7 +50,7 @@ export function useSubPaneChart<TSeries>({
   initSeries,
   updateData,
 }: SubPaneOptions<TSeries>) {
-  const lc = useLightweightCharts();
+  const { lc } = useLightweightCharts();
   const theme = useChartTheme(containerEl, settings);
   const chartRef = useRef<LightweightCharts.IChartApi | null>(null);
   const seriesRef = useRef<TSeries | null>(null);
@@ -64,8 +64,17 @@ export function useSubPaneChart<TSeries>({
   useEffect(() => {
     if (!lc || !containerEl) return;
 
-    // Avoid rebuilding sub-panes when mainChart reference changes but identity is the same
-    if (mainChart === mainChartRef.current && chartRef.current) {
+    // STAB-14: Compare mainChart identity by its underlying chart API,
+    // not by the wrapper object reference. This prevents unnecessary
+    // destroy/recreate cycles when the parent passes a new wrapper
+    // object that points to the same underlying chart.
+    const previousApi =
+      mainChartRef.current?.getChartApi?.() as LightweightCharts.IChartApi | undefined;
+    const currentApi =
+      mainChart?.getChartApi?.() as LightweightCharts.IChartApi | undefined;
+    if (previousApi && currentApi && previousApi === currentApi && chartRef.current) {
+      // Update the ref but don't rebuild — same underlying chart.
+      mainChartRef.current = mainChart;
       return;
     }
 

@@ -74,11 +74,17 @@ export abstract class BaseWsConsumer {
     this.destroyed = true;
     this.clearTimers();
     if (this.ws) {
-      // Null out all listeners so no reconnect fires after stop.
-      this.ws.on('open', () => {});
-      this.ws.on('message', () => {});
-      this.ws.on('error', () => {});
-      this.ws.on('close', () => {});
+      // STAB-23: Use removeAllListeners + property nulling instead of
+      // reassigning no-op listeners. Some WebSocket implementations
+      // (including the `ws` library) keep internal listener arrays even
+      // after .close(). Removing them explicitly prevents potential memory
+      // leaks if the instance is later re-inspected. The `onclose = null`
+      // pattern also inhibits reconnect-on-close fire-and-forget.
+      this.ws.removeAllListeners();
+      this.ws.onclose = null;
+      this.ws.onmessage = null;
+      this.ws.onerror = null;
+      this.ws.onopen = null;
       this.ws.close();
       this.ws = null;
     }

@@ -152,12 +152,19 @@ export function ChatScreen({
   // Phase 1.5 — fetch thread summary once the thread grows past 20 messages.
   useEffect(() => {
     if (messages.length > 20 && !summary) {
-      fetch(`/api/chat/threads/${threadId}/summary`)
+      // STAB-15: Use an AbortController to cancel in-flight fetches
+      // when the component unmounts or threadId changes, preventing
+      // stale responses from overwriting the current thread's summary.
+      const ac = new AbortController();
+      fetch(`/api/chat/threads/${threadId}/summary`, { signal: ac.signal })
         .then((res) => (res.ok ? res.json() : null))
         .then((data) => {
           if (data && typeof data.synopsis === 'string') setSummary(data);
         })
-        .catch(() => {});
+        .catch((err) => {
+          if (err instanceof DOMException && err.name === 'AbortError') return;
+        });
+      return () => ac.abort();
     }
   }, [messages.length, threadId, summary]);
 

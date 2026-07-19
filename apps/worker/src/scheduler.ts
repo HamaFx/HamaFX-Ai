@@ -38,6 +38,11 @@ const JOB_TIMEOUT_MS = Number(process.env.JOB_TIMEOUT_MS) || 120_000;
 // PERF-7: In-flight guard — ensures no two invocations of the same job
 // overlap. Complements the DB-level acquireCronLock for daily-cadence jobs.
 const _runningJobs = new Set<keyof typeof JOBS>();
+// STAB-19: Track when each running job started so we can detect stuck
+// entries (e.g., a synchronous throw before the finally block, or a crash
+// between _runningJobs.add() and the try block). Entries older than 2×
+// JOB_TIMEOUT_MS are pruned by a periodic cleanup timer.
+const _jobStartedAt = new Map<keyof typeof JOBS, number>();
 
 // Jobs that run more often than once-per-day are inherently idempotent
 // at the application layer (briefings uses (eventId, kind) PK; alerts
@@ -56,7 +61,12 @@ const SKIP_DAILY_LOCK = new Set<keyof typeof JOBS>([
   'multi-agent-analysis',
 ]);
 
-export function startScheduler(log: Logger): void {
+export function startScheduler(log: Logger): () => void {
+  // STAB-10: Keep references to all scheduled tasks so we can stop
+  // them on shutdown. Previously these were fire-and-forget.
+  const tasks: ReturnType<typeof cron.schedule>[] = [];
+  let multiAgentTimer: NodeJS.Timeout | null = null;
+
   log.info('Starting node-cron scheduler for Docker mode');
 
   // WK-2: Clean up stale cron_runs rows from previous crashes before
@@ -65,49 +75,49 @@ export function startScheduler(log: Logger): void {
   void cleanupStaleCronRuns(log);
 
   // Alerts: Every minute
-  cron.schedule('* * * * *', () => {
+  tasks.push(cron.schedule('* * * * *', () => {
     void runJobSafely('alerts', log);
-  });
+  }));
 
   // Briefings: Every 5 minutes
-  cron.schedule('*/5 * * * *', () => {
+  tasks.push(cron.schedule('*/5 * * * *', () => {
     void runJobSafely('briefings', log);
-  });
+  }));
 
   // Embedding backfill: Every 6 hours (aligned with systemd timer)
-  cron.schedule('0 */6 * * *', () => {
+  tasks.push(cron.schedule('0 */6 * * *', () => {
     void runJobSafely('embedding-backfill', log);
-  });
+  }));
 
   // Snapshots: Daily at 00:05 UTC (aligned with systemd timer)
-  cron.schedule('5 0 * * *', () => {
+  tasks.push(cron.schedule('5 0 * * *', () => {
     void runJobSafely('snapshots', log);
-  });
+  }));
 
   // CoT: Weekly on Friday at 22:00 UTC (aligned with systemd timer)
-  cron.schedule('0 22 * * 5', () => {
+  tasks.push(cron.schedule('0 22 * * 5', () => {
     void runJobSafely('cot', log);
-  });
+  }));
 
   // FRED Actuals: Daily at 01:30 UTC (aligned with systemd timer)
-  cron.schedule('30 1 * * *', () => {
+  tasks.push(cron.schedule('30 1 * * *', () => {
     void runJobSafely('fred-actuals', log);
-  });
+  }));
 
   // Resonance Sync: Daily at 23:00 UTC
-  cron.schedule('0 23 * * *', () => {
+  tasks.push(cron.schedule('0 23 * * *', () => {
     void runJobSafely('resonance-sync', log);
-  });
+  }));
 
   // Weekly Review: Sunday at 18:00 UTC
-  cron.schedule('0 18 * * 0', () => {
+  tasks.push(cron.schedule('0 18 * * 0', () => {
     void runJobSafely('weekly-review', log);
-  });
+  }));
 
   // DB-1 — Retention cleanup: Daily at 03:15 UTC
-  cron.schedule('15 3 * * *', () => {
+  tasks.push(cron.schedule('15 3 * * *', () => {
     void runJobSafely('retention', log);
-  });
+  }));
 
   // U2 — Multi-agent analysis: poll every 3 seconds for pending jobs.
   // PERF-7: Self-rescheduling setTimeout avoids pile-up when a poll
@@ -115,13 +125,41 @@ export function startScheduler(log: Logger): void {
   // settles (including DB transit + claim time).
   const tick = () => {
     void runJobSafely('multi-agent-analysis', log).finally(() => {
-      const next = setTimeout(tick, 3_000);
-      next.unref();
+      multiAgentTimer = setTimeout(tick, 3_000);
+      multiAgentTimer.unref();
     });
   };
   // Kick off the first tick at the configured interval (3s), not immediately.
-  const first = setTimeout(tick, 3_000);
-  first.unref();
+  multiAgentTimer = setTimeout(tick, 3_000);
+  multiAgentTimer.unref();
+
+  // STAB-19: Periodic cleanup — scan for stuck jobs that exceed 2× the
+  // timeout. If a run throws synchronously between _runningJobs.add() and
+  // the try block's finally, the entry remains forever. This timer prunes
+  // stale entries so the job can run again on its next schedule.
+  const stuckCleanupTimer = setInterval(() => {
+    const now = Date.now();
+    const cutoff = 2 * JOB_TIMEOUT_MS;
+    for (const [name, startedAt] of _jobStartedAt) {
+      if (now - startedAt > cutoff) {
+        log.warn(`Pruning stuck job from _runningJobs: ${name}`, {
+          stuckForMs: now - startedAt,
+        });
+        _runningJobs.delete(name);
+        _jobStartedAt.delete(name);
+      }
+    }
+  }, 30_000);
+  stuckCleanupTimer.unref();
+
+  // STAB-10: Return a stop function that tears down all cron tasks,
+  // the multi-agent poll timer, and the stuck-job cleanup timer.
+  return () => {
+    log.info('scheduler: stopping all tasks');
+    clearInterval(stuckCleanupTimer);
+    if (multiAgentTimer) { clearTimeout(multiAgentTimer); multiAgentTimer = null; }
+    for (const t of tasks) t.stop();
+  };
 }
 
 /**
@@ -168,6 +206,7 @@ async function runJobSafely(name: keyof typeof JOBS, log: Logger): Promise<void>
     return;
   }
   _runningJobs.add(name);
+  _jobStartedAt.set(name, Date.now());
 
   // OBS-02: Per-run correlation ID so all log lines from one execution can
   // be filtered together in Loki / CloudWatch / journald.
@@ -182,15 +221,32 @@ async function runJobSafely(name: keyof typeof JOBS, log: Logger): Promise<void>
       lock = await acquireCronLock(name, getDb());
       if (!lock) {
         jobLog.info('Job skipped - already ran today (idempotency guard)');
+        _runningJobs.delete(name);
+        _jobStartedAt.delete(name);
         return;
       }
     } catch (lockErr) {
-      // Lock acquisition failed (DB unavailable?). Log and proceed without
-      // idempotency rather than silently skipping - a missed run is worse
-      // than a duplicate for most jobs.
-      jobLog.warn('Failed to acquire cron lock, proceeding without idempotency guard', {
+      // Lock acquisition failed (DB unavailable?). Retry once before
+      // proceeding without the lock — a duplicate is acceptable for
+      // idempotent jobs, but a missed run is worse (STAB-07).
+      jobLog.warn('Failed to acquire cron lock, retrying once', {
         err: String(lockErr),
       });
+      try {
+        await new Promise((r) => setTimeout(r, 500));
+        lock = await acquireCronLock(name, getDb());
+        if (!lock) {
+          jobLog.info('Job skipped - already ran today (idempotency guard, after retry)');
+          _runningJobs.delete(name);
+          _jobStartedAt.delete(name);
+          return;
+        }
+      } catch (retryErr) {
+        // Both attempts failed — proceed without the lock.
+        jobLog.warn('Failed to acquire cron lock after retry, proceeding without idempotency guard', {
+          err: String(retryErr),
+        });
+      }
     }
   }
 
@@ -221,5 +277,6 @@ async function runJobSafely(name: keyof typeof JOBS, log: Logger): Promise<void>
   } finally {
     clearTimeout(timeoutHandle);
     _runningJobs.delete(name);
+    _jobStartedAt.delete(name);
   }
 }

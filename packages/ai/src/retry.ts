@@ -174,7 +174,17 @@ export async function withRetry<T>(
 
       await new Promise<void>((resolve, reject) => {
         const timer = setTimeout(resolve, delayMs);
-        // Allow abort to cancel the sleep too.
+        // STAB-22: Defensive abort check BEFORE adding the listener.
+        // If the signal was already aborted between the top-of-loop check
+        // and this Promise, the listener would never fire and the sleep
+        // would complete after delayMs — adding a latency spike before
+        // the caller sees the abort. Checking once more here catches that
+        // narrow window.
+        if (signal?.aborted) {
+          clearTimeout(timer);
+          reject(new DOMException('Aborted', 'AbortError'));
+          return;
+        }
         signal?.addEventListener('abort', () => {
           clearTimeout(timer);
           reject(new DOMException('Aborted', 'AbortError'));

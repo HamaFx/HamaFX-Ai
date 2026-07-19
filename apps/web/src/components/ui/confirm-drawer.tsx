@@ -38,7 +38,7 @@
 //    its own portal-mounted drawer.
 
 import { IconAlertTriangle } from '@tabler/icons-react';
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import {
   Drawer,
@@ -146,6 +146,16 @@ export function useConfirm(): readonly [React.ReactNode, (opts: ConfirmOptions) 
   const [busy, setBusy] = useState(false);
   const [options, setOptions] = useState<ConfirmOptions>({ title: '' });
   const resolveRef = useRef<((v: boolean) => void) | null>(null);
+
+  // STAB-20: Resolve any pending promise on unmount so callers that
+  // `await confirm(...)` don't hang forever if the component is torn down
+  // before the user dismisses the drawer.
+  useEffect(() => {
+    return () => {
+      resolveRef.current?.(false);
+      resolveRef.current = null;
+    };
+  }, []);
 
   const confirm = useCallback((opts: ConfirmOptions): Promise<boolean> => {
     setOptions(opts);

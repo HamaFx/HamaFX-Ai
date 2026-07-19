@@ -96,9 +96,15 @@ export function useVoiceInput({ lang, onText, onError }: UseVoiceInputArgs): Use
   }, []);
 
   // Stop any in-flight session on unmount so the hook never leaks.
+  // STAB-18: abort() can throw if the recognition session already ended
+  // (race between onend/onerror and unmount). Wrap in try/catch.
   useEffect(() => {
     return () => {
-      ref.current?.abort();
+      try {
+        ref.current?.abort();
+      } catch {
+        // Recognition already stopped — no-op.
+      }
       ref.current = null;
     };
   }, []);
