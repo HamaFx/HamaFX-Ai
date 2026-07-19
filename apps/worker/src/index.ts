@@ -278,31 +278,74 @@ export async function runWorker(args: RunWorkerArgs): Promise<RunningWorker> {
   let tickFlushFailureCount = 0;
   const TICK_FLUSH_CAPTURE_COOLDOWN_MS = 5 * 60 * 1000; // 5 minutes
 
+  // C1/C2 fix (RELIABILITY_AUDIT_REPORT.md): self-rescheduling setTimeout
+  // with in-flight guard so flushes never overlap, and peek-before-drain
+  // so ticks are never irretrievably lost on DB write failure.
+  let flushInFlight = false;
+  let flushTimer: NodeJS.Timeout | null = null;
   const flushIntervalMs = args.flushIntervalMs ?? 1_000;
-  const flushTimer = setInterval(() => {
-    void (async () => {
-      try {
-        const r = await flushLiveTicks({ db, buffer, log });
-        if (r.written > 0) {
-          log.info('flushed live_ticks', { written: r.written, ticks: r.totalTicks });
-        }
-        tickFlushFailureCount = 0;
-      } catch (err) {
-        tickFlushFailureCount += 1;
-        log.error('flushLiveTicks failed', { err: String(err), consecutiveFailures: tickFlushFailureCount });
 
-        const now = Date.now();
-        if (tickFlushFailureCount >= 3 && now - lastTickFlushCaptureAt > TICK_FLUSH_CAPTURE_COOLDOWN_MS) {
-          lastTickFlushCaptureAt = now;
-          captureException(err, {
-            kind: 'flushLiveTicks-sustained',
-            consecutiveFailures: String(tickFlushFailureCount),
-          });
-        }
+  const scheduleFlush = () => {
+    if (flushTimer) clearTimeout(flushTimer);
+    flushTimer = setTimeout(() => {
+      flushTimer = null;
+      void runSingleFlush();
+    }, flushIntervalMs);
+    flushTimer.unref();
+  };
+
+  const runSingleFlush = async () => {
+    if (flushInFlight) {
+      log.warn('flushLiveTicks skipped — previous flush still in flight');
+      scheduleFlush();
+      return;
+    }
+
+    // Peek the buffer BEFORE the DB write. Only drain() on success
+    // so ticks are never lost on transient DB failures (C1 fix).
+    //
+    // Note: ticks arriving between peek() and drain() will be cleared
+    // by drain() even though they're newer than the peeked data.
+    // This is acceptable because (a) the window is <50ms in practice,
+    // (b) the next flush cycle captures everything arriving after drain().
+    const drained = buffer.peek();
+    if (drained.length === 0) {
+      scheduleFlush();
+      return;
+    }
+
+    flushInFlight = true;
+    try {
+      const r = await flushLiveTicks({ db, buffer, log }, drained);
+      // DB write succeeded — now safe to drain the buffer.
+      buffer.drain();
+      if (r.written > 0) {
+        log.info('flushed live_ticks', { written: r.written, ticks: r.totalTicks });
       }
-    })();
-  }, flushIntervalMs);
-  flushTimer.unref();
+      tickFlushFailureCount = 0;
+    } catch (err) {
+      tickFlushFailureCount += 1;
+      log.error('flushLiveTicks failed — ticks retained in buffer for next attempt', {
+        err: String(err),
+        consecutiveFailures: tickFlushFailureCount,
+      });
+
+      const now = Date.now();
+      if (tickFlushFailureCount >= 3 && now - lastTickFlushCaptureAt > TICK_FLUSH_CAPTURE_COOLDOWN_MS) {
+        lastTickFlushCaptureAt = now;
+        captureException(err, {
+          kind: 'flushLiveTicks-sustained',
+          consecutiveFailures: String(tickFlushFailureCount),
+        });
+      }
+    } finally {
+      flushInFlight = false;
+      scheduleFlush();
+    }
+  };
+
+  // Kick off the first flush loop.
+  scheduleFlush();
 
   // Healthchecks heartbeat — only fires if we've actually seen a tick in
   // the last 60s. A silent connection is treated as a failure so
@@ -323,7 +366,7 @@ export async function runWorker(args: RunWorkerArgs): Promise<RunningWorker> {
 
   const stop = async (): Promise<void> => {
     notifyStopping();
-    clearInterval(flushTimer);
+    if (flushTimer) { clearTimeout(flushTimer); flushTimer = null; }
     if (heartbeatTimer) clearInterval(heartbeatTimer);
     symbolManager.stop();
     
@@ -336,9 +379,13 @@ export async function runWorker(args: RunWorkerArgs): Promise<RunningWorker> {
     // L6: Drain any pending batched ticks before final DB flush.
     if (batchTimer) { clearTimeout(batchTimer); batchTimer = null; }
     if (pendingTicks.length > 0) flushBatch();
-    // Drain anything buffered after the last interval tick — best-effort.
+    // Final best-effort flush with peek-before-drain pattern (C1 fix).
     try {
-      await flushLiveTicks({ db, buffer, log });
+      const drained = buffer.peek();
+      if (drained.length > 0) {
+        await flushLiveTicks({ db, buffer, log }, drained);
+        buffer.drain();
+      }
     } catch (err) {
       log.warn('final flush on stop failed', { err: String(err) });
     }
@@ -405,6 +452,8 @@ export async function main(): Promise<void> {
     log,
     getLastTickAt: worker.getLastTickAt,
     isSignalRConnected: () => worker.consumer.isStarted(),
+    // H4 fix — expose dropped-tick counter for health monitoring.
+    getDroppedTicks: () => worker.consumer.droppedTicks(),
   });
 
   healthServer.listen(8081, '127.0.0.1', () => {

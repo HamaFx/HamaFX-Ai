@@ -38,6 +38,8 @@
 import 'server-only';
 
 import { createCipheriv, createDecipheriv, randomBytes, pbkdf2Sync } from 'node:crypto';
+import { internalError } from './errors';
+import { logErrorContext } from './logger';
 
 const ALGORITHM = 'aes-256-gcm';
 const IV_LENGTH = 12; // 96 bits, standard for GCM
@@ -58,11 +60,13 @@ import { PROVIDER_IDS, type ByokPayload, type ProviderId } from './byok';
 function getEncryptionKey(): Buffer {
   const secret = process.env.ENCRYPTION_SECRET;
   if (!secret) {
-    throw new Error('ENCRYPTION_SECRET not set — cannot encrypt/decrypt BYOK keys');
+    // L1 fix (RELIABILITY_AUDIT_REPORT.md) — throw AppError so the
+    // error handling pipeline can properly classify and log it.
+    throw internalError('ENCRYPTION_SECRET not set — cannot encrypt/decrypt BYOK keys');
   }
   const key = Buffer.from(secret, 'hex');
   if (key.length !== 32) {
-    throw new Error(
+    throw internalError(
       `ENCRYPTION_SECRET must be 32 bytes (64 hex chars), got ${secret.length} chars (${key.length} bytes)`,
     );
   }
@@ -114,7 +118,10 @@ export function decryptByok(encrypted: string | null | undefined): ByokPayload |
     const parsed = JSON.parse(decrypted);
     if (typeof parsed !== 'object' || parsed === null) return null;
     return parsed as ByokPayload;
-  } catch {
+  } catch (err) {
+    // M1 fix (RELIABILITY_AUDIT_REPORT.md) — log decryption failures so
+    // operators can detect BYOK key corruption in production.
+    logErrorContext(err, 'decrypt_byok', { module: 'encryption' }, 'system');
     return null;
   }
 }
@@ -184,7 +191,9 @@ export function decryptWithPassword(encrypted: string, password: string): unknow
     decrypted += decipher.final('utf8');
 
     return JSON.parse(decrypted);
-  } catch {
+  } catch (err) {
+    // M1 fix — same structured logging for generic secret decryption failures.
+    logErrorContext(err, 'decrypt_secret', { module: 'encryption' }, 'system');
     return null;
   }
 }

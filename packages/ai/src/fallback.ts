@@ -39,7 +39,7 @@
  */
 
 /** Regex for context-window overflow error messages across providers. */
-const CTX_OVERFLOW_RX = /context\s*(length|window|limit|size)|maximum\s*context|reduce\s*the\s*length|too\s*many\s*tokens|max[_-]?tokens|input\s*is\s*too\s*(long|large)|exceeds\s*(the\s*)?(context|limit|maximum)/;
+const CTX_OVERFLOW_RX = /context\s*(length|window|limit|size)|maximum\s*context|reduce\s*the\s*length|too\s*many\s*tokens|max[_-]?tokens|input\s*is\s*too\s*(long|large)|exceeds\s*(the\s*)?(context|limit|maximum)|token\s*(count\s*)?exceeds|too\s*(long|large|many)|exceed\w*\s*(the\s*)?(context|limit|max)/;
 
 export type FallbackReason =
   | 'auth' // 401 / 403
@@ -47,7 +47,8 @@ export type FallbackReason =
   | 'upstream' // 5xx
   | 'context-overflow' // context window exceeded (400 — retry with larger-model provider)
   | 'timeout' // network timeout
-  | 'unknown'; // anything else
+  | 'hard-error' // non-auth 4xx (400, 404, 405, etc.) — not retryable
+  | 'unknown'; // genuinely unclassifiable — retry once as cheap insurance (C3 fix)
 
 export interface FallbackDecision {
   fallback: boolean;
@@ -90,6 +91,12 @@ export function classifyStreamError(err: unknown): FallbackDecision {
   }
   if (/timeout|timed?\s*out|aborted|network|fetch\s*failed/.test(lowerMessage)) {
     return { fallback: true, reason: 'timeout', message: 'Override provider timed out' };
+  }
+  // Non-auth 4xx (400, 404, 405, 406, etc.) — these are hard client errors
+  // that retrying won't fix. Distinct from 'unknown' (no status code, no
+  // pattern) which IS worth retrying once (C3 fix — RELIABILITY_AUDIT_REPORT.md).
+  if (statusCode !== null && statusCode >= 400 && statusCode < 500) {
+    return { fallback: false, reason: 'hard-error', message };
   }
   return { fallback: false, reason: 'unknown', message };
 }

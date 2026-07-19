@@ -49,9 +49,12 @@ export class MemoryCache implements Cache {
 
   constructor(opts?: { maxEntries?: number }) {
     this.maxEntries = opts?.maxEntries ?? 5000;
-    // Periodic sweep only in the long-lived worker — unref so it never
-    // holds the process open.
-    if (typeof process !== 'undefined' && process.env.HAMAFX_RUNTIME === 'worker') {
+    // M2 (RELIABILITY_AUDIT_REPORT.md) — periodic sweep for ALL runtimes,
+    // not just the long-lived worker. Vercel function instances can live
+    // long enough (warm reuse) to accumulate expired entries that the lazy
+    // sweep alone won't clear if the instance serves unique cache keys.
+    // `unref()` keeps the timer from holding the process open.
+    if (typeof process !== 'undefined') {
       const timer = setInterval(() => this.sweep(), 60_000);
       timer.unref();
     }

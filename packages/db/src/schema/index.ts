@@ -67,3 +67,5 @@ export * from './billing';
 export * from './analysis-jobs';
 // Telegram webhook idempotency dedup
 export * from './telegram-updates';
+// H1 — Shared provider health store for cross-instance failover scoring
+export * from './provider-health';

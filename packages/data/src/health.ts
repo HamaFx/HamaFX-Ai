@@ -24,24 +24,27 @@
 // Health windows are short (5 min default) so a single bad minute doesn't
 // permanently sideline a provider — it self-heals on the next success.
 //
-// Phase 2 hardening §6 — scope: this state is per-Lambda-instance.
+// H1 (RELIABILITY_AUDIT_REPORT.md) — Cross-instance health sharing.
 //
-// On Vercel each function instance owns its own copy; a provider that
-// fails on instance A may still look healthy to instance B for a few
-// minutes. The pre-fix concern was that this divergence let one
-// instance prefer a degraded provider. With Phase 2 §2 in place
-// (pinned providers + ProviderEmptyError), the only providers that
-// flap between instances are biquote-rest and finnhub — both REST and
-// similar latency, so the residual user impact is negligible. The
-// pinned mechanism is the production lever for "I always want X
-// first"; this scoring is only the tiebreaker between unpinned
-// alternatives.
+// The in-memory samples track per-instance state (fast path). On failure,
+// we also write to a lightweight Postgres-backed `provider_health` table
+// so *other* Vercel instances can see that a provider is degraded. The
+// DB write is fire-and-forget — no caller blocks on health telemetry.
+// `getScore()` merges in-memory and DB state, taking the worst-case
+// consecutive-failure count across all instances.
 //
-// If we ever need cross-instance consistency (e.g. shared "back off
-// from biquote for 5 min"), promote this to a Postgres-backed counter
-// behind the same `recordSuccess` / `recordFailure` API.
+// DB reads are guarded behind a short cache (10s) so the fast path (single
+// in-memory lookup) is preserved for the steady state.
+
+import { getDb, schema } from '@hamafx/db';
+import { eq, sql } from 'drizzle-orm';
+
+const { providerHealth } = schema;
 
 const WINDOW_MS = 5 * 60 * 1000;
+
+/** Minimum interval between DB cross-instance reads for the same provider. */
+const DB_CACHE_MS = 10_000;
 
 interface Sample {
   /** ms epoch UTC. */
@@ -53,7 +56,17 @@ interface State {
   samples: Sample[];
 }
 
+interface DbCacheEntry {
+  /** Epoch ms when the DB was last read for this provider. */
+  readAt: number;
+  /** Cached `consecutive_failures` from the DB. */
+  consecutiveFailures: number;
+  /** Cached `last_failure_at` epoch ms from the DB. */
+  lastFailureAt: number;
+}
+
 const state = new Map<string, State>();
+const dbCache = new Map<string, DbCacheEntry>();
 
 function s(provider: string): State {
   let st = state.get(provider);
@@ -90,6 +103,10 @@ export function recordSuccess(provider: string): void {
   const st = s(provider);
   st.samples.push({ t: now, ok: true });
   trim(st, now);
+
+  // H1 — reset the cross-instance failure counter in the DB.
+  // Fire-and-forget: a caller never blocks on health telemetry.
+  void dbRecordSuccess(provider);
 }
 
 export function recordFailure(provider: string): void {
@@ -97,7 +114,111 @@ export function recordFailure(provider: string): void {
   const st = s(provider);
   st.samples.push({ t: now, ok: false });
   trim(st, now);
+
+  // H1 — bump the cross-instance failure counter in the DB.
+  // Fire-and-forget: a caller never blocks on health telemetry.
+  void dbRecordFailure(provider);
 }
+
+// ── H1 DB-backed cross-instance state ────────────────────────────────────
+
+async function dbRecordSuccess(provider: string): Promise<void> {
+  try {
+    const db = getDb();
+    await db
+      .insert(providerHealth)
+      .values({
+        provider,
+        lastSuccessAt: sql`now()`,
+        consecutiveFailures: 0,
+      })
+      .onConflictDoUpdate({
+        target: providerHealth.provider,
+        set: {
+          lastSuccessAt: sql`now()`,
+          consecutiveFailures: 0,
+        },
+      });
+  } catch {
+    // Best-effort — DB may be unavailable. In-memory state is authoritative
+    // for this instance.
+  }
+}
+
+async function dbRecordFailure(provider: string): Promise<void> {
+  try {
+    const db = getDb();
+    await db
+      .insert(providerHealth)
+      .values({
+        provider,
+        lastFailureAt: sql`now()`,
+        consecutiveFailures: 1,
+      })
+      .onConflictDoUpdate({
+        target: providerHealth.provider,
+        set: {
+          lastFailureAt: sql`now()`,
+          consecutiveFailures: sql`${providerHealth.consecutiveFailures} + 1`,
+        },
+      });
+  } catch {
+    // Best-effort.
+  }
+}
+
+/** Read the cross-instance state from the DB, cached for DB_CACHE_MS. */
+function getDbConsecutiveFailures(provider: string): number {
+  const cached = dbCache.get(provider);
+  const now = Date.now();
+  if (cached && now - cached.readAt < DB_CACHE_MS) {
+    // Check freshness: if the cached last_failure is older than the window,
+    // treat as zero (provider has recovered).
+    if (cached.lastFailureAt > 0 && now - cached.lastFailureAt > WINDOW_MS) {
+      return 0;
+    }
+    return cached.consecutiveFailures;
+  }
+
+  // Cold cache — fire a best-effort DB read. On the very first call for
+  // a provider, we return 0 (fail-open, no penalty) while the async read
+  // populates the cache for the next call. This avoids blocking failover
+  // ordering on DB latency while still getting cross-instance state within
+  // one scoring cycle.
+  void populateDbCache(provider, now);
+
+  // Return cached value (possibly zero for first call) while the async read
+  // is in flight. This is fail-open: an uninitialised cache returns 0,
+  // which is the neutral/no-penalty position.
+  if (cached) return cached.consecutiveFailures;
+  return 0;
+}
+
+async function populateDbCache(provider: string, readAt: number): Promise<void> {
+  try {
+    const db = getDb();
+    const rows = await db
+      .select({
+        consecutiveFailures: providerHealth.consecutiveFailures,
+        lastFailureAt: providerHealth.lastFailureAt,
+      })
+      .from(providerHealth)
+      .where(eq(providerHealth.provider, provider))
+      .limit(1);
+
+    const row = rows[0];
+    const lastMs = row?.lastFailureAt ? row.lastFailureAt.getTime() : 0;
+    dbCache.set(provider, {
+      readAt,
+      consecutiveFailures: row?.consecutiveFailures ?? 0,
+      lastFailureAt: lastMs,
+    });
+  } catch {
+    // Best-effort — cache stays stale until next attempt.
+  }
+}
+
+// ── Public API ───────────────────────────────────────────────────────────
 
 export interface HealthSnapshot {
   /** Number of samples in the current 5-minute window. */
@@ -132,27 +253,40 @@ export function getHealth(provider: string): HealthSnapshot {
 /**
  * Score a provider for failover ordering. Higher = healthier.
  *
- * Uses exponential decay: each consecutive trailing failure doubles its
- * weight, so a burst of 5 consecutive failures penalises the provider
- * much harder than 5 failures scattered across 50 successes.
+ * Merges in-memory samples (fast, per-instance) with cross-instance DB
+ * state (H1 fix). Uses the maximum consecutive-failure count from either
+ * source, so if ANY instance sees the provider failing, the score
+ * reflects the worst case.
  *
- *  - Unknown (no samples): neutral 0.5 — give it a chance.
+ * Exponential decay: each consecutive trailing failure doubles its weight.
+ *
+ *  - Unknown (no samples, no DB): neutral 0.5 — give it a chance.
  *  - Mostly fresh successes: ~1.0.
- *  - Consecutive failures: drops toward 0 exponentially so the failover
- *    chain quickly bypasses a provider that has entered a persistent
- *    failure state (e.g. closed market, expired API key).
- *
- * `runWithFailover` sorts attempts by score descending while preserving
- * the caller-provided order on ties.
+ *  - Consecutive failures: drops toward 0 exponentially.
  */
 export function getScore(provider: string): number {
   const st = s(provider);
   const now = Date.now();
   trim(st, now);
 
-  if (st.samples.length === 0) return 0.5;
+  // H1 — merge cross-instance failure count from the DB.
+  const dbConsec = getDbConsecutiveFailures(provider);
 
-  const consec = consecutiveFailures(st);
+  if (st.samples.length === 0) {
+    // No local samples — use DB state if available.
+    if (dbConsec === 0) return 0.5;
+    // DB shows consecutive failures — compute score from that alone.
+    const total = dbConsec;
+    let weighted = 0;
+    for (let i = 0; i < dbConsec; i++) {
+      weighted += Math.pow(2, i);
+    }
+    return Math.max(0, 1 - weighted / total);
+  }
+
+  const localConsec = consecutiveFailures(st);
+  // Take the worst of local and cross-instance.
+  const consec = Math.max(localConsec, dbConsec);
   let weightedFailures = 0;
   let weightedTotal = 0;
 
@@ -176,4 +310,5 @@ export function getScore(provider: string): number {
 /** Test helper. */
 export function _resetHealth(): void {
   state.clear();
+  dbCache.clear();
 }

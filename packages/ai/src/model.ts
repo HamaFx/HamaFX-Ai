@@ -174,6 +174,7 @@ import {
 } from './byok-providers';
 import { extractRateLimits } from './rate-limits';
 import { noteLlmRateLimit } from './llm-throttle';
+import { isCircuitOpen } from './model-circuit-breaker';
 import { generateText } from 'ai';
 import { PROVIDER_IDS } from '@hamafx/shared/byok';
 
@@ -468,12 +469,18 @@ export function resolveChatModel(
               (m: { modelId: string }) => m.modelId === bareModelId,
             );
             if (known) {
-              return {
-                model: spec.factory(apiKey)(bareModelId),
-                modelId: `${spec.id}/${bareModelId}`,
-                providerId,
-                bareModelId,
-              };
+              // M4 fix — check circuit breaker even for explicit picks.
+              if (isCircuitOpen(providerId)) {
+                // Fall through to priority-loop fallback rather than
+                // using a degraded provider.
+              } else {
+                return {
+                  model: spec.factory(apiKey)(bareModelId),
+                  modelId: `${spec.id}/${bareModelId}`,
+                  providerId,
+                  bareModelId,
+                };
+              }
             }
           }
         }
@@ -490,9 +497,19 @@ export function resolveChatModel(
   const priority = configured.slice().sort(
     (a, b) => PROVIDER_PRIORITY.indexOf(a) - PROVIDER_PRIORITY.indexOf(b),
   );
-  const providerId = priority[0];
+
+  // M4 (RELIABILITY_AUDIT_REPORT.md) — skip providers whose circuit is
+  // open (3+ consecutive failures within 60s window). Falls through to
+  // the next-priority provider.
+  let providerId: ProviderId | undefined;
+  for (const p of priority) {
+    if (!isCircuitOpen(p)) {
+      providerId = p;
+      break;
+    }
+  }
   if (!providerId) {
-    throw new Error('No configured provider available.');
+    throw new Error('No configured provider available (all circuits are open).');
   }
   const spec = BYOK_PROVIDERS[providerId];
   const apiKey = keys[providerId]!;
@@ -512,12 +529,22 @@ export function resolveChatModel(
 
 /**
  * Resolve a model specifically for a given provider ID.
+ *
+ * M4 fix — checks the circuit breaker before returning. If the
+ * requested provider's circuit is open (3+ consecutive failures),
+ * the caller gets a clear error rather than silently hitting a
+ * degraded provider.
  */
 export function resolveModelForProvider(
   providerId: ProviderId,
   userSettings: Pick<UserSettingsRow, 'aiApiKeys'>,
   env: ResolveModelEnv,
 ): ChatModelResolution {
+  if (isCircuitOpen(providerId)) {
+    throw new Error(
+      `Provider ${providerId} is temporarily unavailable (circuit open).`,
+    );
+  }
   const stored = decryptByok(userSettings.aiApiKeys);
   const keys: ByokPayload = {
     ...envFallbackKeys(env),

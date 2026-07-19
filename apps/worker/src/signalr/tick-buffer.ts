@@ -58,9 +58,28 @@ export class TickBuffer {
   }
 
   /**
+   * Peek at the buffer without clearing it. Returns the same data as
+   * `drain()` would, but leaves the slots intact. Callers should call
+   * `drain()` only after successfully persisting the peeked data so
+   * ticks are never irretrievably lost (C1 fix — RELIABILITY_AUDIT_REPORT.md).
+   */
+  peek(): Array<{ tick: NormalizedTick; observed: number }> {
+    if (this.slots.size === 0) return [];
+    const out: Array<{ tick: NormalizedTick; observed: number }> = [];
+    for (const slot of this.slots.values()) {
+      out.push({ tick: slot.tick, observed: slot.observed });
+    }
+    return out;
+  }
+
+  /**
    * Drain the buffer. Returns the latest tick per symbol since the last
    * call, oldest-symbol-first by observation order. Calling drain with no
    * pending ticks returns an empty array.
+   *
+   * NOTE: Prefer calling `peek()` first and only draining after the data
+   * has been successfully persisted. If `drain()` is called before the
+   * DB write and the write fails, those ticks are permanently lost.
    */
   drain(): Array<{ tick: NormalizedTick; observed: number }> {
     if (this.slots.size === 0) return [];

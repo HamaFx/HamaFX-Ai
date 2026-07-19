@@ -236,9 +236,18 @@ export async function withTenantDbRO<T>(
  * Retry a database operation on transient errors (connection drops,
  * serialization failures, deadlocks). Uses exponential backoff.
  *
- * postgres-js handles reconnection for existing pool connections,
- * but transient errors during initial connection or during query
- * execution can still surface. This helper retries those.
+ * postgres-js surfaces PostgreSQL errors with a `code` property
+ * containing the SQLSTATE value. We check SQLSTATE classes rather
+ * than error message strings for reliability across postgres-js
+ * versions and locale settings (H5 fix — RELIABILITY_AUDIT_REPORT.md).
+ *
+ * SQLSTATE classes:
+ *   08xxx  — connection exceptions
+ *   40P01  — deadlock detected
+ *   40001  — serialization failure
+ *   57Pxx  — admin shutdown / operator intervention
+ *   53300  — too many connections
+ *   58P01  — cannot connect to database
  *
  * @param fn — the operation to retry
  * @param maxRetries — max retry attempts (default 3, for 4 total attempts)
@@ -257,22 +266,42 @@ export async function withDbRetry<T>(
       lastError = err;
       if (attempt === maxRetries) break;
 
-      const msg = err instanceof Error ? err.message : String(err);
-      // Only retry on transient errors — not on constraint violations,
-      // syntax errors, or auth failures.
-      if (
-        !msg.includes('connection') &&
-        !msg.includes('timeout') &&
-        !msg.includes('deadlock') &&
-        !msg.includes('serialization') &&
-        !msg.includes('could not serialize') &&
-        !msg.includes('Connection terminated') &&
-        !msg.includes('Connection reset') &&
-        !msg.includes('connect ECONNREFUSED') &&
-        !msg.includes('connect ETIMEDOUT') &&
-        !msg.includes('read ECONNRESET')
-      ) {
-        throw err;
+      const code = extractSqlState(err);
+
+      // Retry on SQLSTATE classes:
+      //   08xxx — connection exception (connection dropped, broken)
+      //   40P01 — deadlock detected
+      //   40001 — serialization failure
+      //   57Pxx — operator intervention (admin shutdown, restart)
+      //   53300 — too many connections
+      const retryable =
+        code !== null &&
+        (code.startsWith('08') ||
+          code === '40P01' ||
+          code === '40001' ||
+          code.startsWith('57') ||
+          code === '53300');
+
+      if (!retryable) {
+        // Known non-retryable SQLSTATE — throw immediately.
+        if (code !== null) throw err;
+        // No SQLSTATE code available — fall back to legacy string-matching
+        // on error messages (postgres-js may wrap the original error).
+        const msg = err instanceof Error ? err.message : String(err);
+        if (
+          !msg.includes('connection') &&
+          !msg.includes('timeout') &&
+          !msg.includes('deadlock') &&
+          !msg.includes('serialization') &&
+          !msg.includes('could not serialize') &&
+          !msg.includes('Connection terminated') &&
+          !msg.includes('Connection reset') &&
+          !msg.includes('connect ECONNREFUSED') &&
+          !msg.includes('connect ETIMEDOUT') &&
+          !msg.includes('read ECONNRESET')
+        ) {
+          throw err;
+        }
       }
 
       const delay = baseDelayMs * Math.pow(2, attempt);
@@ -280,6 +309,17 @@ export async function withDbRetry<T>(
     }
   }
   throw lastError;
+}
+
+/**
+ * Extract the SQLSTATE code from a postgres-js error.
+ * postgres-js errors have a `code` property (e.g., '08P01', '40P01').
+ */
+function extractSqlState(err: unknown): string | null {
+  if (typeof err !== 'object' || err === null) return null;
+  const e = err as Record<string, unknown>;
+  if (typeof e.code === 'string' && e.code.length === 5) return e.code;
+  return null;
 }
 
 // ── Phase 3 §3.4 — BYPASSRLS admin client ──────────────────────────────

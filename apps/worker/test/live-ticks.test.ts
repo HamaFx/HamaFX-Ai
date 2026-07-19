@@ -66,7 +66,8 @@ describe('flushLiveTicks', () => {
     const { db } = makeFakeDb();
     const buffer = new TickBuffer();
 
-    const r = await flushLiveTicks({ db, buffer, log });
+    const drained = buffer.peek();
+    const r = await flushLiveTicks({ db, buffer, log }, drained);
     expect(r).toEqual({ written: 0, totalTicks: 0 });
   });
 
@@ -77,7 +78,10 @@ describe('flushLiveTicks', () => {
     buffer.push(tick('EURUSD', 1.085));
     buffer.push(tick('GBPUSD', 1.27));
 
-    const r = await flushLiveTicks({ db, buffer, log });
+    const drained = buffer.peek();
+    const r = await flushLiveTicks({ db, buffer, log }, drained);
+    // DB write succeeded (fake DB) — safe to drain.
+    buffer.drain();
 
     expect(r.written).toBe(3);
     expect(captured.rows).toHaveLength(3);
@@ -99,7 +103,9 @@ describe('flushLiveTicks', () => {
     buffer.push(tick('XAUUSD', 2392));
     buffer.push(tick('EURUSD', 1.085));
 
-    const r = await flushLiveTicks({ db, buffer, log });
+    const drained = buffer.peek();
+    const r = await flushLiveTicks({ db, buffer, log }, drained);
+    buffer.drain();
     expect(r.written).toBe(2);
     expect(r.totalTicks).toBe(4);
   });
@@ -109,7 +115,9 @@ describe('flushLiveTicks', () => {
     const buffer = new TickBuffer();
     buffer.push(tick('XAUUSD', 2390));
 
-    await flushLiveTicks({ db, buffer, log });
+    const drained = buffer.peek();
+    await flushLiveTicks({ db, buffer, log }, drained);
+    buffer.drain();
     expect(buffer.size()).toBe(0);
   });
 
@@ -118,7 +126,9 @@ describe('flushLiveTicks', () => {
     const buffer = new TickBuffer();
     buffer.push(tick('XAUUSD', 2390));
 
-    await flushLiveTicks({ db, buffer, log });
+    const drained = buffer.peek();
+    await flushLiveTicks({ db, buffer, log }, drained);
+    buffer.drain();
     expect(captured.conflictConfig).not.toBeNull();
     const set = (captured.conflictConfig as { set: Record<string, unknown> }).set;
     expect(Object.keys(set).sort()).toEqual([

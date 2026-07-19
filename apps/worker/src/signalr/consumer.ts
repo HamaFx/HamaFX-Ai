@@ -283,13 +283,25 @@ export class SignalRConsumer {
       this.opts.onTick(normalized);
       this.opts.onActivity?.();
     } catch (err) {
-      this.opts.log.error('onTick handler threw', { err: String(err) });
+      this._droppedTicks += 1;
+      this.opts.log.error('onTick handler threw — tick dropped', {
+        err: String(err),
+        droppedTicks: this._droppedTicks,
+      });
     }
   }
 
   /** Test introspection. */
   isStarted(): boolean {
     return this.started;
+  }
+
+  /** H4 fix — count of ticks dropped due to onTick handler errors. */
+  private _droppedTicks = 0;
+
+  /** Return the current dropped-tick count for health monitoring. */
+  droppedTicks(): number {
+    return this._droppedTicks;
   }
 }
 

@@ -35,6 +35,7 @@
 import { NextResponse } from 'next/server';
 import { getDb } from '@hamafx/db';
 import { sql } from 'drizzle-orm';
+import { REQUIRED_HEALTH_ENV_VARS } from '@hamafx/shared/env-secrets';
 
 import { withAuth } from '@/lib/api';
 
@@ -112,7 +113,7 @@ async function checkAnalysisJobs(): Promise<CheckResult & { pending?: number; st
         COUNT(*) FILTER (WHERE status = 'pending')::text AS pending,
         COUNT(*) FILTER (
           WHERE status = 'running'
-          AND started_at < now() - INTERVAL '5 minutes'
+          AND started_at < now() - INTERVAL '30 seconds'
         )::text AS stuck_running,
         COUNT(*) FILTER (
           WHERE status = 'pending'
@@ -133,7 +134,7 @@ async function checkAnalysisJobs(): Promise<CheckResult & { pending?: number; st
 }
 
 function checkEnv(): CheckResult {
-  const required = ['DATABASE_URL', 'AUTH_COOKIE_SECRET', 'CRON_SECRET'];
+  const required = REQUIRED_HEALTH_ENV_VARS as readonly string[];
   const missing = required.filter((k) => !process.env[k]);
   if (missing.length > 0) {
     return { ok: false, message: `missing env vars: ${missing.join(', ')}` };

@@ -35,6 +35,12 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
 
+// M6 (RELIABILITY_AUDIT_REPORT.md) — hard timeout just before Vercel's
+// 60s maxDuration so the function can return a clean error instead of
+// being killed mid-response. 55s leaves 5s of headroom for response
+// serialization and error handling.
+const ROUTE_TIMEOUT_MS = 55_000;
+
 const CHAT_RATE_LIMIT = Number(process.env.AI_CHAT_RATE_LIMIT ?? '30');
 
 /** OBS-1: Read the current diagnostic traceId from AsyncLocalStorage. */
@@ -229,13 +235,21 @@ export const POST = withAuth<void>(async (req, { user }) => {
     // `last` is validated by Zod as a user-role message with content, so the
     // UIMessage cast is safe — it carries the id/role/content/parts shape the
     // SDK expects.
+    //
+    // M6 (RELIABILITY_AUDIT_REPORT.md) — hard route-level timeout so the
+    // function can return a clean error before Vercel kills it at 60s.
+    const timeoutSignal = AbortSignal.timeout(ROUTE_TIMEOUT_MS);
+    const signal = req.signal
+      ? AbortSignal.any([req.signal as AbortSignal, timeoutSignal])
+      : timeoutSignal;
+
     const result = await runChat({
       threadId: body.threadId, userId: user.userId,
       userMessage: last as UIMessage,
       ...(body.modelOverride !== undefined && body.modelOverride !== null ? { modelOverride: body.modelOverride } : {}),
       ...(customInstructions ? { customInstructions } : {}),
       env: pickAiEnv(env),
-      ...(req.signal ? { signal: req.signal } : {}),
+      signal,
     });
 
     return result.toUIMessageStreamResponse();

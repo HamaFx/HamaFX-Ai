@@ -39,17 +39,22 @@ export interface LiveTicksWriterArgs {
 }
 
 /**
- * Drain the buffer once and UPSERT each symbol's latest tick.
+ * Write drained tick data to the database. The caller is responsible for
+ * draining the buffer AFTER this call succeeds — if the caller drains
+ * before and this throws, the ticks are permanently lost.
  *
- * Returns a small summary so callers can log throughput. Errors in the DB
- * write bubble up — the caller (the flush loop) decides whether to retry
- * or log + continue.
+ * Use `buffer.peek()` to snapshot the buffer, call this function with
+ * the snapshot, and only call `buffer.drain()` on success.
+ *
+ * Returns a small summary so callers can log throughput.
  */
-export async function flushLiveTicks(args: LiveTicksWriterArgs): Promise<{
+export async function flushLiveTicks(
+  args: LiveTicksWriterArgs,
+  drained: Array<{ tick: NormalizedTick; observed: number }>,
+): Promise<{
   written: number;
   totalTicks: number;
 }> {
-  const drained = args.buffer.drain();
   if (drained.length === 0) return { written: 0, totalTicks: 0 };
 
   const totalTicks = drained.reduce((sum, d) => sum + d.observed, 0);

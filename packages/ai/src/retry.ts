@@ -108,9 +108,19 @@ function jitteredDelay(base: number, attempt: number, max: number): number {
   return Math.min(Math.random() * exponential, max);
 }
 
+/**
+ * Default retry predicate: retries transient errors (rate-limit, upstream
+ * failures, timeouts) PLUS unclassified errors. Reasoning: the cost of
+ * retrying an unclassified error once is minimal (usually a fast 4xx),
+ * while NOT retrying a genuine transient error with a novel error shape
+ * causes unnecessary user-facing chat failures (C3 fix —
+ * RELIABILITY_AUDIT_REPORT.md).
+ */
 function isTransientByDefault(err: unknown): boolean {
   const { reason } = classifyStreamError(err);
-  return reason === 'rate-limit' || reason === 'upstream' || reason === 'timeout';
+  // 'unknown' covers provider SDK errors with novel shapes that the
+  // classifier doesn't recognise yet — retrying once is cheap insurance.
+  return reason === 'rate-limit' || reason === 'upstream' || reason === 'timeout' || reason === 'unknown';
 }
 
 /**

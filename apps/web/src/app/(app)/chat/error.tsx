@@ -40,7 +40,8 @@ export default function ChatError({ error, reset }: ChatErrorProps) {
     >
       <h1 className="text-danger text-base font-semibold">Chat unavailable</h1>
       <p className="text-fg-muted text-sm">
-        Something went wrong while loading the chat. Please try again.
+        Something went wrong while loading the chat. Your conversation
+        is preserved — tapping Retry will restore it.
       </p>
       <div>
         <Button type="button" onClick={() => reset()} size="sm" variant="secondary">

@@ -261,6 +261,9 @@ export { noteLlmRateLimit, awaitLlmHeadroom } from './llm-throttle';
 // STAB-06: Exponential-backoff retry helper.
 export { withRetry, type RetryOptions } from './retry';
 
+// M4 — Model circuit breaker for repeated failures.
+export { recordModelSuccess, recordModelFailure, isCircuitOpen, _resetCircuits } from './model-circuit-breaker';
+
 // Multi-Agent Orchestration
 export {
   runMultiAgentChat,

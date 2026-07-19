@@ -31,6 +31,8 @@ export interface HealthServerDeps {
   getLastTickAt: () => number;
   /** Returns whether the SignalR consumer is connected. */
   isSignalRConnected: () => boolean;
+  /** H4 fix — count of ticks dropped due to onTick handler errors. */
+  getDroppedTicks?: () => number;
 }
 
 /**
@@ -84,6 +86,7 @@ export function createHealthServer(deps: HealthServerDeps): http.Server {
         status: healthy ? 'ok' : 'degraded',
         lastTickAgeMs: ageMs,
         signalrConnected: isSignalRConnected(),
+        droppedTicks: deps.getDroppedTicks?.() ?? 0,
         uptimeMs: process.uptime() * 1000,
       }));
     } else {

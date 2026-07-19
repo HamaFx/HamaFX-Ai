@@ -43,44 +43,21 @@ export interface UpsertSnapshotArgs<TData> {
 }
 
 /**
- * Upsert a snapshot row. Idempotent on `(symbol, kind, asOf)`: if a row
- * already exists for the same triplet we update its `data`; otherwise we
- * insert. Drizzle has no `onConflict` for non-unique columns so we do the
- * lookup ourselves.
+ * Upsert a snapshot row. Idempotent on the `snapshots_symbol_kind_asof_uk`
+ * UNIQUE constraint (Phase 3 §15). Uses ON CONFLICT DO UPDATE so even
+ * when the cron lock is bypassed (DB unavailable during acquireCronLock),
+ * concurrent inserts for the same (symbol, kind, asOf) triplet are safe —
+ * the second one updates instead of creating a duplicate (H2 fix).
  */
 export async function upsertSnapshot<TData>(args: UpsertSnapshotArgs<TData>): Promise<void> {
   const { symbol, kind, asOf, data } = args;
-  // Phase 1 hardening §9 — wrap the lookup + write in one transaction.
-  // The pre-fix code was vulnerable to a "lost upsert" race where two
-  // concurrent callers both read no-row, both inserted, and the table
-  // ended up with duplicate rows for the same (symbol, kind, asOf).
-  // Postgres serialises the SELECT … FOR UPDATE inside the transaction
-  // so the write side is consistent.
-  await getDb().transaction(async (tx) => {
-    const existing = await tx
-      .select({ id: schema.snapshots.id })
-      .from(schema.snapshots)
-      .where(
-        and(
-          eq(schema.snapshots.symbol, symbol),
-          eq(schema.snapshots.kind, kind),
-          eq(schema.snapshots.asOf, asOf),
-        ),
-      )
-      .for('update')
-      .limit(1);
-
-    if (existing.length > 0 && existing[0]) {
-      await tx
-        .update(schema.snapshots)
-        .set({ data: data as Record<string, unknown> })
-        .where(eq(schema.snapshots.id, existing[0].id));
-      return;
-    }
-    await tx
-      .insert(schema.snapshots)
-      .values({ symbol, kind, asOf, data: data as Record<string, unknown> });
-  });
+  await getDb()
+    .insert(schema.snapshots)
+    .values({ symbol, kind, asOf, data: data as Record<string, unknown> })
+    .onConflictDoUpdate({
+      target: [schema.snapshots.symbol, schema.snapshots.kind, schema.snapshots.asOf],
+      set: { data: data as Record<string, unknown> },
+    });
 }
 
 /**
