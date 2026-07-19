@@ -105,12 +105,11 @@ export async function GET(request: Request): Promise<Response> {
 
   // Minimal check: DB connectivity only.
   let dbOk = false;
-  let dbLatencyMs = 0;
   try {
     const start = Date.now();
     const db = getDb();
     await db.execute(sql`SELECT 1`);
-    dbLatencyMs = Date.now() - start;
+    void start; // latency not exposed in public endpoint
     dbOk = true;
   } catch {
     // DB unreachable — will return 503 below

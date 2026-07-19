@@ -34,7 +34,7 @@
 import { sql } from 'drizzle-orm';
 import { z } from 'zod';
 
-import { getDb, schema } from '@hamafx/db';
+import { getDb } from '@hamafx/db';
 
 import { withAdminAuth } from '@/lib/admin-auth';
 import { parseSearchParams } from '@/lib/api';
@@ -235,7 +235,6 @@ export const GET = withAdminAuth(async (req) => {
   }
 
   // ── Analysis Jobs ─────────────────────────────────────────────────────
-  let analysisPending = 0;
   let analysisStuck = 0;
   let analysisStale = 0;
   try {
@@ -252,7 +251,6 @@ export const GET = withAdminAuth(async (req) => {
         )::text AS stuck
       FROM analysis_jobs
     `);
-    analysisPending = Number(ajRow?.pending ?? 0);
     analysisStale = Number(ajRow?.stale ?? 0);
     analysisStuck = Number(ajRow?.stuck ?? 0);
     if (analysisStale > 0) {
