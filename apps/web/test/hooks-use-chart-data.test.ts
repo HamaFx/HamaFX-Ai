@@ -112,6 +112,7 @@ describe('useChartData', () => {
   });
 
   it('prefetches adjacent timeframes when enabled', async () => {
+    vi.useFakeTimers();
     mockFetchCandles.mockResolvedValue([mockCandle()]);
 
     renderHook(
@@ -119,12 +120,13 @@ describe('useChartData', () => {
       { wrapper: createWrapper() },
     );
 
+    // M5: Prefetch is now debounced by 2s — advance timers to trigger it.
+    await vi.advanceTimersByTimeAsync(2_500);
+
     // Adjacent timeframes for '1h' are ['30m', '4h']
-    await waitFor(() => {
-      expect(mockFetchCandles).toHaveBeenCalledWith('XAUUSD', '30m', 300, expect.any(Object));
-    });
-    await waitFor(() => {
-      expect(mockFetchCandles).toHaveBeenCalledWith('XAUUSD', '4h', 300, expect.any(Object));
-    });
+    expect(mockFetchCandles).toHaveBeenCalledWith('XAUUSD', '30m', 300, expect.any(Object));
+    expect(mockFetchCandles).toHaveBeenCalledWith('XAUUSD', '4h', 300, expect.any(Object));
+
+    vi.useRealTimers();
   });
 });

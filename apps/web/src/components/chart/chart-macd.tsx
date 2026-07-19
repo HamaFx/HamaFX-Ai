@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-import { useCallback, useState } from 'react';
+import { memo, useCallback, useState } from 'react';
 import type * as LightweightCharts from 'lightweight-charts';
 import type { Candle, IndicatorResult } from '@hamafx/shared';
 import { SERIES_BEAR_HEX, SERIES_BULL_HEX, SERIES_MACD_HEX, SERIES_SIGNAL_HEX } from './chart-colors';
@@ -39,7 +39,18 @@ interface MACDSeries {
   histSeries: LightweightCharts.ISeriesApi<LightweightCharts.SeriesType>;
 }
 
-export function ChartMACD({ result, candles, mainChart, settings, onReady }: ChartMACDProps) {
+function areMACDPropsEqual(prev: ChartMACDProps, next: ChartMACDProps): boolean {
+  if (prev.settings !== next.settings) return false;
+  if (prev.mainChart !== next.mainChart) return false;
+  if (prev.onReady !== next.onReady) return false;
+  if (prev.result !== next.result) return false;
+  const pc = prev.candles.length > 0 ? prev.candles[prev.candles.length - 1] : null;
+  const nc = next.candles.length > 0 ? next.candles[next.candles.length - 1] : null;
+  if (!pc || !nc) return pc === nc;
+  return pc.t === nc.t && pc.o === nc.o && pc.h === nc.h && pc.l === nc.l && pc.c === nc.c;
+}
+
+export const ChartMACD = memo(function ChartMACD({ result, candles, mainChart, settings, onReady }: ChartMACDProps) {
   const [containerEl, setContainerEl] = useState<HTMLDivElement | null>(null);
 
   const initSeries = useCallback((lc: typeof LightweightCharts, chart: LightweightCharts.IChartApi) => {
@@ -92,4 +103,4 @@ export function ChartMACD({ result, candles, mainChart, settings, onReady }: Cha
   });
 
   return <div ref={setContainerEl} className="h-full w-full" />;
-}
+}, areMACDPropsEqual);

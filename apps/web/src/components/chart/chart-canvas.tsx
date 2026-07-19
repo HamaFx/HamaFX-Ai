@@ -22,8 +22,8 @@
 //
 // Per PLAN.md §4.3 — extracted from the 939-LOC chart.tsx monolith.
 
+import { memo, useEffect, useImperativeHandle, useRef, useState, type Ref } from 'react';
 import type * as LightweightCharts from 'lightweight-charts';
-import { useEffect, useImperativeHandle, useRef, useState, type Ref } from 'react';
 
 import { SERIES_ATR_HEX } from './chart-colors';
 import type { Candle, IndicatorResult, Symbol } from '@hamafx/shared';
@@ -67,7 +67,21 @@ function getIndicatorColor(kind: string, period: number): string {
   return '#f43f5e';
 }
 
-export function ChartCanvas({
+function areCanvasPropsEqual(prev: ChartCanvasProps, next: ChartCanvasProps): boolean {
+  if (prev.symbol !== next.symbol) return false;
+  if (prev.settings !== next.settings) return false;
+  if (prev.heightClass !== next.heightClass) return false;
+  if (prev.overlays !== next.overlays) return false;
+  if (prev.indicatorResults !== next.indicatorResults) return false;
+  // Compare candles by length + last candle OHLC.
+  if (prev.candles.length !== next.candles.length) return false;
+  const pc = prev.candles.length > 0 ? prev.candles[prev.candles.length - 1] : null;
+  const nc = next.candles.length > 0 ? next.candles[next.candles.length - 1] : null;
+  if (!pc || !nc) return pc === nc;
+  return pc.t === nc.t && pc.o === nc.o && pc.h === nc.h && pc.l === nc.l && pc.c === nc.c;
+}
+
+export const ChartCanvas = memo(function ChartCanvas({
   symbol,
   candles,
   indicatorResults,
@@ -210,7 +224,7 @@ export function ChartCanvas({
       </div>
     </div>
   );
-}
+}, areCanvasPropsEqual);
 
 // ---------------------------------------------------------------------------
 

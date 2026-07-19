@@ -86,6 +86,7 @@ export abstract class BaseAgent {
             // B1 fix: use env.MAX_DAILY_USD instead of hardcoded 100.
       budget: { spent: 0, max: ctx.userSettings.maxDailyUsd ?? ctx.env.MAX_DAILY_USD },
       userSettings: ctx.userSettings,
+      toolTelemetryBuffer: [],  // M4: batch telemetry inserts
     };
     const timeoutMs = AGENT_TIMEOUTS[this.name] ?? 15_000;
     const controller = new AbortController();

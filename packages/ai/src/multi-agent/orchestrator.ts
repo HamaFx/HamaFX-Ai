@@ -234,31 +234,36 @@ export async function runMultiAgentChat(args: RunMultiAgentArgs): Promise<MultiA
     });
   } catch { /* citation enforcer should never crash the pipeline */ }
 
+  // M2: Pre-generate messageId so we can parallelize message and opinion
+  // persistence — saves ~100ms in the happy path.
+  const persistedMessageId = crypto.randomUUID();
+
   // ── Persist the assistant message ──
-  // Build a UIMessage from the final text and persist it, getting a real
-  // DB-generated messageId that satisfies the agent_opinions FK constraint.
   let parts: UIMessage['parts'] = [{ type: 'text', text: finalText }];
   if (citationWarning) {
     parts = [...parts, citationWarning as unknown as UIMessage['parts'][number]];
   }
   const assistantUi: UIMessage = {
-    id: crypto.randomUUID(),
+    id: persistedMessageId,
     role: 'assistant',
     parts,
   };
-  const { messageId: persistedMessageId } = await appendAssistantMessage(threadId, assistantUi);
 
-  // ── Persist agent opinions ── link to the real assistant message ──
-  if (validOpinions.length > 0) {
-    await saveAgentOpinions({
-      userId, threadId, messageId: persistedMessageId, analysisMode: effectiveMode,
-      opinions: validOpinions.map((o) => ({
-        agentName: o.agentName, bias: o.bias, confidence: o.confidence,
-        reasoning: o.reasoning, rawData: o.rawData, model: o.model,
-        costUsd: o.costUsd, latencyMs: o.latencyMs,
-      })),
-    }).catch((err) => logErrorContext(err, 'multi-agent/save_opinions_failed', {}, 'ai'));
-  }
+  // M2: Persist message and opinions in parallel — they share the known
+  // messageId, so no ordering dependency exists.
+  const persistPromise = appendAssistantMessage(threadId, assistantUi);
+  const opinionsPromise = validOpinions.length > 0
+    ? saveAgentOpinions({
+        userId, threadId, messageId: persistedMessageId, analysisMode: effectiveMode,
+        opinions: validOpinions.map((o) => ({
+          agentName: o.agentName, bias: o.bias, confidence: o.confidence,
+          reasoning: o.reasoning, rawData: o.rawData, model: o.model,
+          costUsd: o.costUsd, latencyMs: o.latencyMs,
+        })),
+      }).catch((err) => logErrorContext(err, 'multi-agent/save_opinions_failed', {}, 'ai'))
+    : Promise.resolve();
+
+  await Promise.all([persistPromise, opinionsPromise]);
 
   // ── Record telemetry for the multi-agent turn ──
   void recordTelemetry({

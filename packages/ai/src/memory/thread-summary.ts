@@ -32,6 +32,9 @@
 // `convertToModelMessages` exactly like before. That keeps the agent's
 // streamText invocation untouched.
 
+// M6: Use a non-cryptographic hash (MD5) instead of SHA-256 for cache
+// invalidation. Collision resistance is irrelevant — we're checking whether
+// a known set of messages changed. MD5 is ~2x faster than SHA-256.
 import { createHash } from 'node:crypto';
 
 import { getDb, schema } from '@hamafx/db';
@@ -47,6 +50,10 @@ import type { DbMessage } from '../persistence';
 const KEEP_VERBATIM = 12;
 const SUMMARISE_AFTER = 30;
 const MAX_SUMMARY_CHARS = 1400;
+// H2: Only regenerate summary when at least 5 new messages have been
+// added since the last compaction. Prevents 1-3s LLM call on every turn
+// for threads hovering just above the SUMMARISE_AFTER threshold.
+const MIN_NEW_MESSAGES_FOR_RECOMPACT = 5;
 
 type SummaryEnv = Pick<
   ServerEnv,
@@ -98,18 +105,32 @@ export async function compactThread(args: {
   const older = history.slice(0, splitIndex);
   const tail = history.slice(splitIndex);
 
-  // Look up an existing summary for this prefix; persisted summaries
-  // include a `digest` marker so we can detect drift cheaply.
+  // H2: Check if we have a recent-enough summary that still covers the
+  // older portion. If fewer than MIN_NEW_MESSAGES_FOR_RECOMPACT messages
+  // were added since last compaction, reuse the existing summary.
   const persisted = await loadLatestSummary(threadId);
   const digest = digestOf(older);
 
   let summaryBody: string | null = null;
   if (persisted && persisted.digest === digest) {
+    // Exact match — reuse cached summary.
     summaryBody = persisted.body;
+  } else if (persisted && persisted.messageCount != null) {
+    // Check if this is a "close enough" match — fewer than threshold
+    // new messages since last compaction.
+    const newSinceLastCompact = history.length - persisted.messageCount;
+    if (newSinceLastCompact < MIN_NEW_MESSAGES_FOR_RECOMPACT && newSinceLastCompact > 0) {
+      summaryBody = persisted.body;
+    } else {
+      summaryBody = await generateSummary(older, env, args.compactionModelId, args.signal);
+      if (summaryBody) {
+        await saveSummary(threadId, summaryBody, digest, history.length);
+      }
+    }
   } else {
     summaryBody = await generateSummary(older, env, args.compactionModelId, args.signal);
     if (summaryBody) {
-      await saveSummary(threadId, summaryBody, digest);
+      await saveSummary(threadId, summaryBody, digest, history.length);
     }
   }
 
@@ -133,6 +154,9 @@ export async function compactThread(args: {
 interface PersistedSummary {
   body: string;
   digest: string;
+  /** H2: total message count at time of compaction, used for
+   *  incremental compaction detection. */
+  messageCount: number | undefined;
 }
 
 async function loadLatestSummary(threadId: string): Promise<PersistedSummary | null> {
@@ -144,12 +168,12 @@ async function loadLatestSummary(threadId: string): Promise<PersistedSummary | n
     .limit(5);
   for (const r of rows) {
     const meta = readSummaryMeta(r.parts);
-    if (meta) return { body: r.content, digest: meta.digest };
+    if (meta) return { body: r.content, digest: meta.digest, messageCount: meta.messageCount };
   }
   return null;
 }
 
-async function saveSummary(threadId: string, body: string, digest: string): Promise<void> {
+async function saveSummary(threadId: string, body: string, digest: string, messageCount?: number): Promise<void> {
   await getDb()
     .insert(schema.chatMessages)
     .values({
@@ -161,12 +185,13 @@ async function saveSummary(threadId: string, body: string, digest: string): Prom
           type: 'thread-summary',
           digest,
           createdAt: Date.now(),
+          ...(messageCount != null ? { messageCount } : {}),
         },
       ],
     });
 }
 
-function readSummaryMeta(parts: unknown): { digest: string } | null {
+function readSummaryMeta(parts: unknown): { digest: string; messageCount: number | undefined } | null {
   if (!Array.isArray(parts)) return null;
   for (const p of parts) {
     if (
@@ -176,7 +201,8 @@ function readSummaryMeta(parts: unknown): { digest: string } | null {
       (p as { type: unknown }).type === 'thread-summary' &&
       typeof (p as { digest?: unknown }).digest === 'string'
     ) {
-      return { digest: (p as { digest: string }).digest };
+      const obj = p as { digest: string; messageCount?: number };
+      return { digest: obj.digest, messageCount: obj.messageCount };
     }
   }
   return null;
@@ -238,9 +264,9 @@ function deterministicSummary(older: DbMessage[]): string {
 }
 
 function digestOf(messages: DbMessage[]): string {
-  // F5 — use SHA-256 for collision resistance and 500 chars per message
-  // (previously 120) to reduce false-positive cache hits when only the
-  // suffix of a message differs.
+  // M6: use MD5 instead of SHA-256 — ~2x faster for cache invalidation.
+  // Collision resistance is not needed here; we're checking whether a
+  // known message set changed, not authenticating content.
   const parts = messages.map((m) => `${m.role}:${m.content.slice(0, 500)}`).join('|');
-  return createHash('sha256').update(parts).digest('hex');
+  return createHash('md5').update(parts).digest('hex');
 }

@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-import { useCallback, useState } from 'react';
+import { memo, useCallback, useState } from 'react';
 import type * as LightweightCharts from 'lightweight-charts';
 import type { Candle, IndicatorResult } from '@hamafx/shared';
 import { SERIES_ATR_HEX } from './chart-colors';
@@ -33,7 +33,20 @@ export interface ChartATRProps {
 
 type UTCTimestamp = LightweightCharts.UTCTimestamp;
 
-export function ChartATR({ result, candles, mainChart, settings, onReady }: ChartATRProps) {
+function areATRPropsEqual(prev: ChartATRProps, next: ChartATRProps): boolean {
+  if (prev.settings !== next.settings) return false;
+  if (prev.mainChart !== next.mainChart) return false;
+  if (prev.onReady !== next.onReady) return false;
+  // Compare result values by reference (indicator results change rarely).
+  if (prev.result !== next.result) return false;
+  // Compare last candle timestamp + OHLC — the only values that matter for ATR.
+  const pc = prev.candles.length > 0 ? prev.candles[prev.candles.length - 1] : null;
+  const nc = next.candles.length > 0 ? next.candles[next.candles.length - 1] : null;
+  if (!pc || !nc) return pc === nc;
+  return pc.t === nc.t && pc.o === nc.o && pc.h === nc.h && pc.l === nc.l && pc.c === nc.c;
+}
+
+export const ChartATR = memo(function ChartATR({ result, candles, mainChart, settings, onReady }: ChartATRProps) {
   const [containerEl, setContainerEl] = useState<HTMLDivElement | null>(null);
 
   const initSeries = useCallback((lc: typeof LightweightCharts, chart: LightweightCharts.IChartApi) => {
@@ -73,4 +86,4 @@ export function ChartATR({ result, candles, mainChart, settings, onReady }: Char
   });
 
   return <div ref={setContainerEl} className="h-full w-full" />;
-}
+}, areATRPropsEqual);

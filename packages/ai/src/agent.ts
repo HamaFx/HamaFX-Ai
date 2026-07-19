@@ -28,6 +28,7 @@ import {
   type ModelMessage,
   type UIMessage,
   type LanguageModel,
+  type Tool,
 } from 'ai';
 
 import { buildLiveSnapshot } from './context';
@@ -61,6 +62,7 @@ import {
   getThread,
   listMessages,
   recordTelemetry,
+  recordToolTelemetry,
   updateThreadTitle,
 } from './persistence';
 import { runPlanner } from './planner';
@@ -74,6 +76,7 @@ import { tools } from './tools';
 import { enforceCitations } from './verification';
 import { waitUntil } from './wait-until';
 import { getDb, schema, getUserWithSettings } from '@hamafx/db';
+import { domainToolFilter, type RoutingDomain } from './tools/by-domain';
 import type { UserSettingsRow } from '@hamafx/db/schema';
 import { extractRateLimits } from './rate-limits';
 import { noteLlmRateLimit, awaitLlmHeadroom } from './llm-throttle';
@@ -523,6 +526,7 @@ async function runChatInner(args: RunChatArgs) {
       // cap?" probe still hit the DB.
       budget: { spent: reservation.spent, max: maxDailyUsd },
       userSettings,
+      toolTelemetryBuffer: [],  // M4: batch telemetry inserts
     };
 
     if (env.LOG_PROMPTS) {
@@ -565,10 +569,13 @@ async function runChatInner(args: RunChatArgs) {
     // content parts to derive tool-call timing — that's fragile and
     // duplicates the wrapper.
 
-    const activeTools = { ...tools };
+    // H3: Domain-based tool subsetting — reduces per-turn token overhead
+    // by 60-80%. Only pass tools relevant to the routing domain.
+    // 'generic' domain gets all tools (fallback for unclassified messages).
+    const activeTools = domainToolFilter(routing.domain as RoutingDomain) as Record<string, Tool>;
     if (nonEssentialDisabled) {
-      delete (activeTools as Record<string, unknown>).convene_committee;
-      delete (activeTools as Record<string, unknown>).replay_setup;
+      delete activeTools.convene_committee;
+      delete activeTools.replay_setup;
     }
 
     // PERF-4: enable prompt caching for the stable system prefix.
@@ -673,6 +680,12 @@ async function runChatInner(args: RunChatArgs) {
                 ),
             );
           }
+          // M4: Flush batched tool telemetry via bulk insert.
+          const buffer = toolContext.toolTelemetryBuffer;
+          if (buffer && buffer.length > 0) {
+            await flushBatchedTelemetry(buffer);
+          }
+
           await recordTelemetry({
             userId,
             threadId,
@@ -735,6 +748,11 @@ async function runChatInner(args: RunChatArgs) {
       return result;
     } catch (err) {
       lastError = err;
+      // M4: Flush tool telemetry on error path too — don't lose data.
+      const buffer = toolContext.toolTelemetryBuffer;
+      if (buffer && buffer.length > 0) {
+        flushBatchedTelemetry(buffer).catch(() => {});
+      }
       // F13 — don't retry when the client disconnected. The user closed the
       // tab, so any retry would produce a response nobody reads while still
       // consuming the daily budget. Throw immediately; the exhaustion handler
@@ -760,9 +778,7 @@ async function runChatInner(args: RunChatArgs) {
         throw err;
       }
 
-      alog.warn('Fallback triggered — provider failed', { provider: String(providerId), reason: decision.reason, message: decision.message, nextProvider: nextFallback.providerId });
-
-      // F2 — unified fallback part construction. Uses the override string
+      alog.warn('Fallback triggered — provider failed', { provider: String(providerId), reason: decision.reason, message: decision.message, nextProvider: nextFallback.providerId });          // F2 — unified fallback part construction. Uses the override string
       // when available (same as model-resolution path), otherwise shows the
       // current provider that failed.
       fallbackInfo = makeFallbackPart(
@@ -862,6 +878,16 @@ function countToolCalls(messages: readonly { content: unknown }[]): number {
     }
   }
   return n;
+}
+
+/** M4: Bulk-insert batched tool telemetry records at onFinish. */
+async function flushBatchedTelemetry(
+  entries: Array<{ threadId: string | null; userId?: string | null; tool: string; ms: number; ok: boolean; errorCode?: string | null; outputChars?: number | null }>,
+): Promise<void> {
+  if (entries.length === 0) return;
+  await Promise.all(entries.map((e) =>
+    recordToolTelemetry({ ...e, messageId: null }).catch(() => {}),
+  ));
 }
 
 

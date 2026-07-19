@@ -50,7 +50,7 @@ export class SymbolManager extends EventEmitter {
 
   constructor(
     private readonly log: Logger,
-    private readonly pollIntervalMs = 60_000,
+    private readonly pollIntervalMs = 300_000,  // M1: 5 min — symbol changes are administrative, not real-time.
   ) {
     super();
   }

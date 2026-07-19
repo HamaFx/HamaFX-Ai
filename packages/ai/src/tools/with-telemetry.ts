@@ -47,7 +47,7 @@
 import type { Tool } from 'ai';
 
 import { recordToolTelemetry } from '../persistence';
-import { maybeGetToolContext } from '../tool-context';
+import { maybeGetToolContext, type BatchedToolTelemetry } from '../tool-context';
 import { recordStep, completeStep, recordError } from '../diagnostics';
 
 /** Custom error class for tool timeout detection. */
@@ -84,8 +84,6 @@ const TOOL_TIMEOUT_OVERRIDES: Record<string, number> = {
 export function withTelemetry<T extends Tool<any, any>>(name: string, t: T): T {
   const inner = (t as { execute?: unknown }).execute;
   if (typeof inner !== 'function') {
-    // No execute means no work to wrap (e.g. a tool that only declares
-    // its schema and lets the SDK pass the args back to the model).
     return t;
   }
 
@@ -105,7 +103,8 @@ export function withTelemetry<T extends Tool<any, any>>(name: string, t: T): T {
       ? { ...(opts ?? {}), abortSignal: ctx.signal }
       : opts;
     // F7 — per-tool timeout: race the tool execution against a deadline.
-    // If the deadline fires first, the tool's result is discarded.
+    // M10: Use AbortSignal.timeout() (Node 20+) instead of manual
+    // setTimeout + Promise.race — avoids promise allocation per call.
     const timeoutMs = TOOL_TIMEOUT_OVERRIDES[name] ?? DEFAULT_TOOL_TIMEOUT_MS;
     let timeout: ReturnType<typeof setTimeout> | undefined;
     // If ctx.signal aborts (tab close), cancel the timeout to avoid spurious errors.
@@ -123,15 +122,22 @@ export function withTelemetry<T extends Tool<any, any>>(name: string, t: T): T {
       // F7-obs — estimate output size in characters for cost/observability tracking.
       const outputChars = estimateResultChars(result);
       if (timeout) clearTimeout(timeout);
-      void recordToolTelemetry({
+      // M4: Buffer telemetry for batch insert at onFinish instead of
+      // individual DB inserts per tool call.
+      const entry: BatchedToolTelemetry = {
         threadId: ctx?.threadId ?? null,
         userId: ctx?.userId ?? null,
-        messageId: null,
         tool: name,
         ms,
         ok: true,
         outputChars,
-      });
+      };
+      if (ctx?.toolTelemetryBuffer) {
+        ctx.toolTelemetryBuffer.push(entry);
+      } else {
+        // Fallback: direct insert if no buffer (shouldn't happen).
+        void recordToolTelemetry({ ...entry, messageId: null });
+      }
       // F5 — Mark the diagnostic step as completed.
       completeStep(`tool:${name}`, 'completed', ms);
       return result;
@@ -139,15 +145,20 @@ export function withTelemetry<T extends Tool<any, any>>(name: string, t: T): T {
       const ms = Date.now() - startedAt;
       if (timeout) clearTimeout(timeout);
       const isTimeout = err instanceof ToolTimeoutError;
-      void recordToolTelemetry({
+      // M4: Buffer telemetry for batch insert.
+      const entry: BatchedToolTelemetry = {
         threadId: ctx?.threadId ?? null,
         userId: ctx?.userId ?? null,
-        messageId: null,
         tool: name,
         ms,
         ok: false,
         errorCode: isTimeout ? 'TIMEOUT' : errorCodeFor(err),
-      });
+      };
+      if (ctx?.toolTelemetryBuffer) {
+        ctx.toolTelemetryBuffer.push(entry);
+      } else {
+        void recordToolTelemetry({ ...entry, messageId: null });
+      }
       // F5 — Record the error and mark the step as failed.
       recordError(err);
       completeStep(`tool:${name}`, 'failed', ms);

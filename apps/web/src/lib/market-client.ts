@@ -87,7 +87,8 @@ async function fetchWithRetry(
   init?: RequestInit & { timeout?: number; retries?: number },
 ): Promise<Response> {
   const maxRetries = init?.retries ?? 2;
-  let delay = 500;
+  // PERF-M8: start at 200ms for faster first retry on transient network blips.
+  let delay = 200;
 
   for (let i = 0; i <= maxRetries; i++) {
     try {

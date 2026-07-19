@@ -41,6 +41,9 @@ const BUILD_ID_FILE = resolve(WEB_ROOT, '.build-id');
  * `/` is intentionally absent because it redirects to `/chat`; `/chat` is
  * precached directly so the offline shell renders without a redirect chain.
  */
+// L8: Precache list is intentionally small — exact URLs only (SW cache.addAll
+// requires exact matches, not globs). Runtime caching via the SW fetch handler
+// covers the fingerprinted JS/CSS bundles dynamically.
 const PRECACHE_URLS = Object.freeze([
   '/chat',
   '/offline',

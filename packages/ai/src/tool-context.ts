@@ -42,6 +42,18 @@ export type ToolEnv = Pick<
 
 import type { UserSettingsRow } from '@hamafx/db/schema';
 
+/** M4: Batched tool-telemetry record — accumulated during a turn and
+ *  bulk-inserted at onFinish to reduce DB connection pressure. */
+export interface BatchedToolTelemetry {
+  threadId: string | null;
+  userId?: string | null;
+  tool: string;
+  ms: number;
+  ok: boolean;
+  errorCode?: string | null;
+  outputChars?: number | null;
+}
+
 export interface ToolContext {
   threadId: string;
   /** Phase A — the authenticated user making this request. */
@@ -52,11 +64,16 @@ export interface ToolContext {
   signal: AbortSignal | null;
   budget: { spent: number; max: number };
   userSettings: UserSettingsRow;
+  /** M4: Buffer for batching tool telemetry inserts. Optional — callers
+   *  that don't pass it get direct inserts (backward-compatible). */
+  toolTelemetryBuffer?: BatchedToolTelemetry[];
 }
 
 const store = new AsyncLocalStorage<ToolContext>();
 
 export function withToolContext<T>(ctx: ToolContext, fn: () => Promise<T>): Promise<T> {
+  // M4: Ensure tool telemetry buffer is initialized.
+  if (!ctx.toolTelemetryBuffer) ctx.toolTelemetryBuffer = [];
   return store.run(ctx, fn);
 }
 

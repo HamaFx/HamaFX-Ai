@@ -233,6 +233,12 @@ async function pollBackgroundJob(
 
 // ── SSE stream parsing ──
 
+// C2: Throttle setMessages to ~10 updates/sec instead of per-token.
+// Uses a mutable ref to accumulate text chunks, then flushes to React
+// state on a rAF-aligned cadence — imperceptible to the user but
+// reduces state updates by ~10x.
+const SSE_FLUSH_INTERVAL_MS = 100;
+
 async function streamSSE(
   res: Response,
   controller: AbortController,
@@ -245,6 +251,20 @@ async function streamSSE(
   const decoder = new TextDecoder();
   let buffer = '';
   let finalText = '';
+  let lastFlush = 0;
+  let pendingFlush: ReturnType<typeof setTimeout> | null = null;
+
+  const flushText = () => {
+    pendingFlush = null;
+    const text = finalText;
+    setMessages((prev) =>
+      prev.map((m) =>
+        m.id === assistantMsgId
+          ? ({ ...m, parts: [{ type: 'text' as const, text }] } as UIMessage)
+          : m,
+      ),
+    );
+  };
 
   while (true) {
     const { done, value } = await reader.read();
@@ -267,18 +287,25 @@ async function streamSSE(
         setAgentProgress(parsed.data as AgentProgress);
       } else if (parsed.type === 'text') {
         finalText += parsed.text as string;
-        setMessages((prev) =>
-          prev.map((m) =>
-            m.id === assistantMsgId
-              ? ({ ...m, parts: [{ type: 'text' as const, text: finalText }] } as UIMessage)
-              : m,
-          ),
-        );
+        // Throttle: flush at most every SSE_FLUSH_INTERVAL_MS.
+        const now = Date.now();
+        if (now - lastFlush >= SSE_FLUSH_INTERVAL_MS) {
+          lastFlush = now;
+          flushText();
+        } else if (!pendingFlush) {
+          pendingFlush = setTimeout(() => {
+            lastFlush = Date.now();
+            flushText();
+          }, SSE_FLUSH_INTERVAL_MS - (now - lastFlush));
+        }
       } else if (parsed.type === 'error') {
         throw new Error(parsed.error as string);
       }
     }
   }
 
+  // Final flush: ensure all accumulated text is rendered.
+  if (pendingFlush) clearTimeout(pendingFlush);
+  flushText();
   setAgentProgress(null);
 }

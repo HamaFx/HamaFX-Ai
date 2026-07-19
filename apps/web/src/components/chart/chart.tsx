@@ -34,7 +34,7 @@
 //   - use-chart-theme.ts — theme hook
 
 import {IconMaximize, IconZoomIn, IconZoomOut} from '@tabler/icons-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { AnimatePresence, m } from 'motion/react';
 
 import { cn } from '@/lib/cn';
@@ -71,6 +71,11 @@ export function Chart({
   const macdResult = useMemo(() => indicatorResults?.find((r) => r.kind === 'macd'), [indicatorResults]);
   const atrResult = useMemo(() => indicatorResults?.find((r) => r.kind === 'atr'), [indicatorResults]);
 
+  // L2: stable callback references to prevent re-renders in sub-panes.
+  const handleZoomIn = useCallback(() => mainChart?.zoomIn(), [mainChart]);
+  const handleZoomOut = useCallback(() => mainChart?.zoomOut(), [mainChart]);
+  const handleResetView = useCallback(() => mainChart?.resetView(), [mainChart]);
+
   return (
     <div className={cn('flex flex-col gap-2', className)}>
       {/* Primary Candlestick Pane */}
@@ -88,7 +93,7 @@ export function Chart({
         {/* Floating zoom and pan controls overlay */}
         <div className="border-border bg-bg-elev-2 absolute right-4 bottom-4 z-10 flex items-center gap-1 rounded-sm border p-1 shadow-lg ">
           <button
-            onClick={() => mainChart?.zoomIn()}
+            onClick={handleZoomIn}
             className="text-fg-muted hover:bg-bg-elev-3 hover:text-fg flex size-11 cursor-pointer items-center justify-center rounded-sm transition-all"
             title="Zoom In"
             aria-label="Zoom in"
@@ -97,7 +102,7 @@ export function Chart({
             <IconZoomIn className="size-4" />
           </button>
           <button
-            onClick={() => mainChart?.zoomOut()}
+            onClick={handleZoomOut}
             className="text-fg-muted hover:bg-bg-elev-3 hover:text-fg flex size-11 cursor-pointer items-center justify-center rounded-sm transition-all"
             title="Zoom Out"
             aria-label="Zoom out"
@@ -106,7 +111,7 @@ export function Chart({
             <IconZoomOut className="size-4" />
           </button>
           <button
-            onClick={() => mainChart?.resetView()}
+            onClick={handleResetView}
             className="text-fg-muted hover:bg-bg-elev-3 hover:text-fg flex size-11 cursor-pointer items-center justify-center rounded-sm transition-all"
             title="Reset View"
             aria-label="Reset view"

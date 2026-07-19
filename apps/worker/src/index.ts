@@ -139,15 +139,39 @@ export async function runWorker(args: RunWorkerArgs): Promise<RunningWorker> {
 
   let lastTickAt = 0;
 
-  // Shared tick handler to push ticks to database buffer, trigger 1m candle aggregations, and notify watchdog
-  const handleIncomingTick = (tick: NormalizedTick) => {
-    const now = Date.now();
+  // L6: Batch ticks before feeding to aggregator and buffer.
+  // During high-volume windows (news events), ticks arrive faster than
+  // they can be individually processed. Batched feeding reduces method
+  // call overhead and Map lookups in both the buffer and aggregator.
+  let pendingTicks: NormalizedTick[] = [];
+  let batchTimer: NodeJS.Timeout | null = null;
+  const BATCH_MS = 50; // flush every 50ms — imperceptible delay for candles
 
-    buffer.push(tick);
-    aggregator.feed(tick);
-    args.onTick?.(tick);
+  const flushBatch = () => {
+    if (pendingTicks.length === 0) return;
+    const ticks = pendingTicks;
+    pendingTicks = [];
+    const now = Date.now();
+    for (const tick of ticks) {
+      buffer.push(tick);
+      aggregator.feed(tick);
+    }
+    args.onTick?.(ticks[ticks.length - 1]!);
     lastTickAt = now;
     notifyWatchdog();
+  };
+
+  const handleIncomingTick = (tick: NormalizedTick) => {
+    pendingTicks.push(tick);
+    if (!batchTimer) {
+      batchTimer = setTimeout(() => {
+        batchTimer = null;
+        flushBatch();
+      }, BATCH_MS);
+    }
+    // Notify watchdog immediately on first tick in batch so healthchecks
+    // stay responsive.
+    if (pendingTicks.length === 1) notifyWatchdog();
   };
 
   // 1m candle aggregator — emits ClosedCandle events on minute rollover.
@@ -309,6 +333,9 @@ export async function runWorker(args: RunWorkerArgs): Promise<RunningWorker> {
       binanceConsumer.stop(),
     ]);
 
+    // L6: Drain any pending batched ticks before final DB flush.
+    if (batchTimer) { clearTimeout(batchTimer); batchTimer = null; }
+    if (pendingTicks.length > 0) flushBatch();
     // Drain anything buffered after the last interval tick — best-effort.
     try {
       await flushLiveTicks({ db, buffer, log });

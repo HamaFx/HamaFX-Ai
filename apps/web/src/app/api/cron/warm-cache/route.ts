@@ -49,6 +49,10 @@ const SLOW_TIMEFRAMES_EVERY_10_MIN: Array<'4h'> = ['4h'];
 /** Stagger candle requests so the throttle sees them spread out. */
 const STAGGER_MS = 1500;
 
+/** H4: Max concurrent candle fetches — avoids 9s serial delay while still
+ *  respecting the per-provider throttle. */
+const MAX_CONCURRENT = 2;
+
 export async function GET(req: Request): Promise<Response> {
   const log = createScopedLoggerWithContext({ component: 'cron', job: 'warm-cache' });
   return withCronAuth(req, async () => {
@@ -69,27 +73,35 @@ export async function GET(req: Request): Promise<Response> {
       }),
     );
 
-    // Candles: serialise with a small stagger so the per-provider throttle
-    // sees the requests spread out across the window rather than a burst.
-    //
-    // Phase 3 hardening §14 — `4h` is warmed every ~10 cron ticks
-    // instead of every tick. The 4h chart is opened rarely enough that
-    // a 10-minute "first visit is slow" tax is invisible, but warming
-    // it every 2 min would burn meaningful quota.
+    // H4: Parallelize candle warming with a concurrency cap instead of
+    // serial execution. 3 symbols × 2 tfs × 1.5s stagger = 9s serial.
+    // With MAX_CONCURRENT=2, total time drops to ~4.5s.
     const minute = new Date().getUTCMinutes();
     const slowTfs: ReadonlyArray<'4h'> = minute % 10 === 0 ? SLOW_TIMEFRAMES_EVERY_10_MIN : [];
     const tfs: ReadonlyArray<'1h' | '4h'> = [...TIMEFRAMES_TO_WARM, ...slowTfs];
 
+    // Build all candle fetch tasks.
+    const tasks: Array<() => Promise<void>> = [];
     for (const symbol of SYMBOLS) {
       for (const tf of tfs) {
-        try {
-          await getCandlesWithMeta(symbol, tf, { count: 200 });
-          processed += 1;
-        } catch (err) {
-          const message = err instanceof Error ? err.message : String(err);
-          errors.push({ key: `candles:${symbol}:${tf}`, message });
-          log.warn('candles warm failed', { symbol, tf, message });
-        }
+        tasks.push(async () => {
+          try {
+            await getCandlesWithMeta(symbol, tf, { count: 200 });
+            processed += 1;
+          } catch (err) {
+            const message = err instanceof Error ? err.message : String(err);
+            errors.push({ key: `candles:${symbol}:${tf}`, message });
+            log.warn('candles warm failed', { symbol, tf, message });
+          }
+        });
+      }
+    }
+
+    // Execute with concurrency cap + stagger between batches.
+    for (let i = 0; i < tasks.length; i += MAX_CONCURRENT) {
+      const batch = tasks.slice(i, i + MAX_CONCURRENT);
+      await Promise.all(batch.map((t) => t()));
+      if (i + MAX_CONCURRENT < tasks.length) {
         await new Promise((r) => setTimeout(r, STAGGER_MS));
       }
     }

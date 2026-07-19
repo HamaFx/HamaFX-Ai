@@ -24,10 +24,17 @@ const QuerySchema = z.object({
     }),
 });
 
+// H6: Cap iterations to prevent infinite loop holding DB connections.
+const MAX_ITERATIONS = 1200;
+// M9: Measure fetch duration and sleep only the remainder of the 3s window.
+const POLL_INTERVAL_MS = 3_000;
+
 async function* generatePrices(keys: Record<string, string>, symbols: string[]): AsyncGenerator<string> {
-  while (true) {
+  let iteration = 0;
+  while (iteration < MAX_ITERATIONS) {
+    iteration++;
+    const fetchStart = Date.now();
     try {
-      // ARCH-1 fix: parallel fetch instead of sequential loop
       const results = await Promise.all(
         symbols.map((s) => getPriceWithMeta(s, { apiKeys: keys })),
       );
@@ -36,7 +43,10 @@ async function* generatePrices(keys: Record<string, string>, symbols: string[]):
     } catch (err) {
       yield `data: ${JSON.stringify({ error: String(err), ts: Date.now() })}\n\n`;
     }
-    await new Promise((resolve) => setTimeout(resolve, 3_000));
+    // M9: Only sleep the remaining time — if fetch took 500ms, sleep 2500ms.
+    const elapsed = Date.now() - fetchStart;
+    const sleepMs = Math.max(0, POLL_INTERVAL_MS - elapsed);
+    await new Promise((resolve) => setTimeout(resolve, sleepMs));
   }
 }
 

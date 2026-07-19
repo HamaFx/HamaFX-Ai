@@ -19,18 +19,27 @@
 // Single composition root for client-side providers. Order matters:
 //   - NuqsAdapter must wrap anything that reads URL state via `useQueryState`.
 //   - QueryClientProvider must wrap any data hooks.
+//
+// M7: Lazy-load SwRegister — it returns null and defers internally via
+// requestIdleCallback. TimeProvider is kept synchronous because it wraps
+// {children} and lazy-loading it would flash a blank app for ~50-200ms.
 import { NuqsAdapter } from 'nuqs/adapters/next/app';
+import dynamic from 'next/dynamic';
 
 import { QueryProvider } from './query-provider';
-import { SwRegister } from './sw-register';
 import { TimeProvider } from './time-provider';
+
+const LazySwRegister = dynamic(
+  () => import('./sw-register').then((m) => ({ default: m.SwRegister })),
+  { ssr: false },
+);
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <QueryProvider>
       <NuqsAdapter>
         <TimeProvider>
-          <SwRegister />
+          <LazySwRegister />
           {children}
         </TimeProvider>
       </NuqsAdapter>

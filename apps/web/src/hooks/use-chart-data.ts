@@ -111,31 +111,42 @@ export function useChartData(
     retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 8000),
   });
 
-  // Adjacent Timeframes Background Prefetcher
+  // H5: Only depend on indicatorsKey, not the raw indicators array.
+  // M5: Debounce adjacent timeframe prefetch by 2s — avoids racing on
+  // rapid timeframe switches (user clicking 1m → 5m → 15m → 30m → 1h).
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- indicators intentionally omitted, we use indicatorsKey for stable identity across renders.
   useEffect(() => {
     if (!enabled) return;
 
-    const adjacent = getAdjacentTimeframes(tf);
-    for (const adjTf of adjacent) {
-      const prefetchKey = indicators.length === 0
-        ? ['market', 'candles', symbol, adjTf, count]
-        : ['market', 'chartData', symbol, adjTf, count, indicatorsKey];
+    const timer = setTimeout(() => {
+      const adjacent = getAdjacentTimeframes(tf);
+      for (const adjTf of adjacent) {
+        const prefetchKey = indicators.length === 0
+          ? ['market', 'candles', symbol, adjTf, count]
+          : ['market', 'chartData', symbol, adjTf, count, indicatorsKey];
 
-      void queryClient.prefetchQuery({
-        queryKey: prefetchKey,
-        queryFn: async ({ signal }) => {
-          if (indicators.length === 0) {
-            const candles = await fetchCandles(symbol, adjTf, count, { signal });
-            return { candles, results: null };
-          } else {
-            const res = await fetchChartData(symbol, adjTf, indicators, count, { signal });
-            return { candles: res.candles, results: res.results };
-          }
-        },
-        staleTime: refetchIntervalFor(adjTf) / 2,
-      });
-    }
-  }, [symbol, tf, count, indicators, enabled, indicatorsKey, queryClient]);
+        // Skip prefetch if fresh data already exists in cache.
+        const existing = queryClient.getQueryData(prefetchKey);
+        if (existing !== undefined) continue;
+
+        void queryClient.prefetchQuery({
+          queryKey: prefetchKey,
+          queryFn: async ({ signal }) => {
+            if (indicators.length === 0) {
+              const candles = await fetchCandles(symbol, adjTf, count, { signal });
+              return { candles, results: null };
+            } else {
+              const res = await fetchChartData(symbol, adjTf, indicators, count, { signal });
+              return { candles: res.candles, results: res.results };
+            }
+          },
+          staleTime: refetchIntervalFor(adjTf) / 2,
+        });
+      }
+    }, 2_000); // M5: 2s debounce
+
+    return () => clearTimeout(timer);
+  }, [symbol, tf, count, indicatorsKey, enabled, queryClient]);
 
   return {
     candles: data?.candles ?? [],

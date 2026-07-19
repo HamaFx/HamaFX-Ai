@@ -22,6 +22,7 @@
 // We use 3 s polling when the tab is visible; TanStack Query auto-pauses
 // when offline / hidden. (Phase 7 task 7.7 — aligned comment with actual
 // POLL_MS value; docs/06-frontend.md updated to match.)
+import { useMemo } from 'react';
 import type { Symbol, Tick } from '@hamafx/shared';
 import { useQuery } from '@tanstack/react-query';
 
@@ -33,8 +34,8 @@ export function usePrices(
   symbols: readonly Symbol[],
   options?: { enabled?: boolean },
 ) {
-  // Stable key: sort so [XAU, EUR] and [EUR, XAU] hit the same cache entry.
-  const key = [...symbols].sort();
+  // L1: memoize sorted key to avoid new array reference on every render.
+  const key = useMemo(() => [...symbols].sort(), [symbols]);
   return useQuery<Tick[]>({
     queryKey: ['market', 'price', key],
     queryFn: ({ signal }) => fetchPrices(key, { signal }),
