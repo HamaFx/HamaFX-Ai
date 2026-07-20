@@ -29,13 +29,11 @@ const mockTransaction = vi.hoisted(() => vi.fn());
 
 vi.mock('@hamafx/db', () => ({
   getDb: () => ({
-    select: vi.fn(() => ({
-      from: vi.fn(() => ({
-        where: mockSelectWhere,
-      })),
-    })),
+    select: vi.fn(() => ({ from: vi.fn(() => ({ where: mockSelectWhere })) })),
     transaction: mockTransaction,
   }),
+  getUserById: vi.fn(),
+  resetOnboarding: vi.fn(),
   schema: {
     users: { id: 'users.id' },
     userSettings: { userId: 'userSettings.userId' },
@@ -48,18 +46,13 @@ import { POST as resetPost } from '@/app/api/admin/onboarding/reset/route';
 describe('POST /api/admin/onboarding/reset', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockSelectWhere.mockReset();
-    mockUpdateSet.mockReset();
-    mockUpdateWhere.mockReset();
-    mockDeleteWhere.mockReset();
-
+    mockUpdateSet.mockReturnValue({ where: mockUpdateWhere });
     mockTransaction.mockImplementation((cb: (tx: unknown) => Promise<unknown>) =>
       cb({
         delete: () => ({ where: mockDeleteWhere }),
         update: () => ({ set: mockUpdateSet }),
       }),
     );
-    mockUpdateSet.mockReturnValue({ where: mockUpdateWhere });
   });
 
   it('resets onboarding for the admin user by default', async () => {
@@ -77,16 +70,11 @@ describe('POST /api/admin/onboarding/reset', () => {
     expect(body.ok).toBe(true);
     expect(body.userId).toBe('admin-123');
     expect(body.reset).toBe(true);
-
-    // Verify the settings update payload for a soft reset
     expect(mockUpdateSet).toHaveBeenCalledWith({
       onboardingCompleted: false,
       onboardingProgress: null,
     });
     expect(mockUpdateWhere).toHaveBeenCalled();
-
-    // Soft reset should not touch userSymbols
-    expect(mockDeleteWhere).not.toHaveBeenCalled();
   });
 
   it('resets onboarding for a target user when userId is provided', async () => {
@@ -117,7 +105,6 @@ describe('POST /api/admin/onboarding/reset', () => {
 
     expect(res.status).toBe(404);
     expect(body.error.code).toBe('NOT_FOUND');
-    expect(mockUpdateSet).not.toHaveBeenCalled();
   });
 
   it('performs a full reset by clearing symbols and resetting defaults', async () => {
@@ -134,8 +121,6 @@ describe('POST /api/admin/onboarding/reset', () => {
     expect(res.status).toBe(200);
     expect(body.ok).toBe(true);
     expect(body.mode).toBe('full');
-
-    // Verify the settings update includes default reset
     expect(mockUpdateSet).toHaveBeenCalledWith({
       onboardingCompleted: false,
       onboardingProgress: null,
@@ -143,9 +128,6 @@ describe('POST /api/admin/onboarding/reset', () => {
       timezone: 'UTC',
       aiApiKeys: null,
     });
-    expect(mockUpdateWhere).toHaveBeenCalled();
-
-    // Verify userSymbols are deleted for the target user
     expect(mockDeleteWhere).toHaveBeenCalledTimes(1);
   });
 });

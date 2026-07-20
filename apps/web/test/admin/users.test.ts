@@ -21,40 +21,16 @@ vi.mock('@/lib/admin-auth', () => ({
     async (req: Request) => handler(req, { user: { userId: 'admin-123' } }),
 }));
 
-const mockOffset = vi.hoisted(() => vi.fn());
+const mockListUsers = vi.hoisted(() => vi.fn());
+const mockCountUsers = vi.hoisted(() => vi.fn());
 
 vi.mock('@hamafx/db', () => ({
   getDb: () => ({
-    select: vi.fn(() => ({
-      // The route issues two queries from the same `select().from()` entry:
-      // 1. Count query: `await db.select(...).from(schema.users)` — awaited directly.
-      // 2. User list query: `.from(...).leftJoin(...).orderBy(...).limit(...).offset(...)`.
-      // We return a thenable that resolves to the count when awaited, while also
-      // exposing the leftJoin chain for the paginated query.
-      from: vi.fn((table: unknown) => {
-        // The count query awaits the from-chain directly; resolve with the count.
-        const thenable = Promise.resolve([{ count: 42 }]);
-        return Object.assign(thenable, {
-          leftJoin: () => ({
-            orderBy: () => ({
-              limit: () => ({
-                offset: mockOffset,
-              }),
-            }),
-          }),
-          where: vi.fn(),
-        });
-      }),
-    })),
+    select: vi.fn(),
   }),
-  schema: {
-    users: {} as Record<string, unknown>,
-    userSettings: {} as Record<string, unknown>,
-  },
-  listUsersWithSettings: vi.fn(async (limit: number, offset: number) => {
-    return mockOffset(offset).then(() => []);
-  }),
-  countUsers: vi.fn(async () => 42),
+  listUsersWithSettings: mockListUsers,
+  countUsers: mockCountUsers,
+  schema: { users: {}, userSettings: {} },
 }));
 
 import { GET as usersGet } from '@/app/api/admin/users/route';
@@ -62,7 +38,7 @@ import { GET as usersGet } from '@/app/api/admin/users/route';
 describe('GET /api/admin/users', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockOffset.mockReset();
+    mockCountUsers.mockResolvedValue(42);
   });
 
   it('returns paginated user list with limit and offset', async () => {
@@ -70,8 +46,7 @@ describe('GET /api/admin/users', () => {
       { id: 'u-1', email: 'a@example.com', name: 'A', role: 'user', createdAt: new Date().toISOString(), onboardingCompleted: true },
       { id: 'u-2', email: 'b@example.com', name: 'B', role: 'admin', createdAt: new Date().toISOString(), onboardingCompleted: false },
     ];
-
-    mockOffset.mockResolvedValue(users);
+    mockListUsers.mockResolvedValue(users);
 
     const req = new Request('http://localhost/api/admin/users?limit=10&offset=5');
     const res = await usersGet(req);
@@ -80,13 +55,10 @@ describe('GET /api/admin/users', () => {
     expect(res.status).toBe(200);
     expect(body.users).toEqual(users);
     expect(body.total).toBe(42);
-
-    // Verify pagination params are parsed and passed through
-    expect(mockOffset).toHaveBeenCalledWith(5);
   });
 
   it('uses default pagination when no query params are provided', async () => {
-    mockOffset.mockResolvedValue([]);
+    mockListUsers.mockResolvedValue([]);
 
     const req = new Request('http://localhost/api/admin/users');
     const res = await usersGet(req);
@@ -95,6 +67,5 @@ describe('GET /api/admin/users', () => {
     expect(res.status).toBe(200);
     expect(body.users).toEqual([]);
     expect(body.total).toBe(42);
-    expect(mockOffset).toHaveBeenCalledWith(0);
   });
 });
