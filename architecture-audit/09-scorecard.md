@@ -1,6 +1,6 @@
 # 09 — Scorecard
 
-## Overall Architecture Score: 8.3/10
+## Overall Architecture Score: 8.4/10
 
 | Principle | Score | Weight | Weighted |
 |-----------|-------|--------|----------|
@@ -8,9 +8,9 @@
 | Open/Closed (OCP) | 8.5 | × 2.0 | 17.0 |
 | Liskov Substitution (LSP) | 8.5 | × 1.5 | 12.75 |
 | Interface Segregation (ISP) | 8.0 | × 1.5 | 12.0 |
-| Dependency Inversion (DIP) | 8.5 | × 2.0 | 17.0 |
+| Dependency Inversion (DIP) | 9.0 | × 2.0 | 18.0 |
 | Cross-Architecture | 7.5 | × 1.0 | 7.5 |
-| **Weighted Total** | | **10.0** | **83.25/100** |
+| **Weighted Total** | | **10.0** | **84.25/100** |
 
 ### Derived Scores
 
@@ -118,9 +118,9 @@ The average of our 6 scores (7.3) reflects the current state — good production
 | OCP | 8.5 | 9.0 | Low |
 | LSP | 8.5 | 9.0 | Low |
 | ISP | 8.0 | 8.5 | Low |
-| DIP | 8.5 | 9.0 | Low |
+| DIP | 9.0 | 9.5 | Low |
 | Cross-Architecture | 7.5 | 8.5 | Medium |
-| **Overall** | **8.3** | **8.7** | |
+| **Overall** | **8.4** | **8.7** | |
 
 ---
 

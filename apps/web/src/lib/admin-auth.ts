@@ -21,7 +21,8 @@
 import { eq, sql } from 'drizzle-orm';
 
 import { auth } from '@/auth';
-import { getDb, schema } from '@hamafx/db';
+import { schema } from '@hamafx/db';
+import { getDb } from '@hamafx/ai';
 
 import { createRequestLogger } from './logger';
 

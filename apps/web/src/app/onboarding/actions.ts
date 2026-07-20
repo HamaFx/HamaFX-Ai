@@ -20,7 +20,8 @@ import 'server-only';
 
 import { z } from 'zod';
 import { auth } from '@/auth';
-import { getDb, schema } from '@hamafx/db';
+import { schema } from '@hamafx/db';
+import { getDb } from '@hamafx/ai';
 import { eq } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import type { ByokPayload } from '@hamafx/shared/encryption';

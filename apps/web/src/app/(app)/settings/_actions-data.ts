@@ -20,7 +20,8 @@
 
 import { deleteAllThreads } from '@hamafx/ai';
 import { auth } from '@/auth';
-import { getDb, schema, withRateLimit } from '@hamafx/db';
+import { schema, withRateLimit } from '@hamafx/db'
+import { getDb } from '@hamafx/ai';
 import { eq, inArray } from 'drizzle-orm';
 import * as Sentry from '@sentry/nextjs';
 import { verifySync } from 'otplib';

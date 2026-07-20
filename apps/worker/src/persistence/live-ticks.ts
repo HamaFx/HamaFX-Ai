@@ -23,7 +23,7 @@
 // route will read in PR-8. Until PR-8 lands, this code path simply makes
 // the data available for inspection in the DB.
 
-import type { getDb } from '@hamafx/db';
+import type { getDb } from '@hamafx/ai';
 import { liveTicks } from '@hamafx/db/schema';
 import { sql } from 'drizzle-orm';
 

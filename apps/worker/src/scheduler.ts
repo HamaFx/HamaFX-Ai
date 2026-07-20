@@ -25,7 +25,7 @@
 // long loops.
 
 import cron from 'node-cron';
-import { getDb } from '@hamafx/db';
+import { getDb } from '@hamafx/ai';
 import { sql } from 'drizzle-orm';
 import type { Logger } from './log.js';
 import { JOBS } from './jobs/index.js';

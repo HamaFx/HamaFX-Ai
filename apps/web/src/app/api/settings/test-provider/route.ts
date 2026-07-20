@@ -16,7 +16,8 @@
 
 import { testProviderKey } from '@hamafx/ai';
 import { PROVIDER_IDS, type ProviderId } from '@hamafx/shared/encryption';
-import { getDb, schema } from '@hamafx/db';
+import { schema } from '@hamafx/db';
+import { getDb } from '@hamafx/ai';
 import { and, eq } from 'drizzle-orm';
 import { errorResponse, parseJsonBody, withAuth } from '@/lib/api';
 import { z } from 'zod';

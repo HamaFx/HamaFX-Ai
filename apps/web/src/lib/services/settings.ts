@@ -24,7 +24,8 @@
 // call service → format Response.
 
 import { testProviderKey } from '@hamafx/ai';
-import { getDb, schema, getUserWithSettings, updateUserSettingsField, withRateLimit } from '@hamafx/db';
+import { schema, getUserWithSettings, updateUserSettingsField, withRateLimit } from '@hamafx/db'
+import { getDb } from '@hamafx/ai';
 import { decryptByok, PROVIDER_IDS } from '@hamafx/shared/encryption';
 import type { ProviderId } from '@hamafx/shared/encryption';
 import { eq } from 'drizzle-orm';

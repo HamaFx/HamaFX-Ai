@@ -30,7 +30,8 @@
 //   4. start SignalR consumer + Binance WS consumer + the 1Hz flush loop.
 //   5. heartbeat to healthchecks.io every 30s while the consumer is alive.
 
-import { closeDb, getDb } from '@hamafx/db';
+import { closeDb } from '@hamafx/db'
+import { getDb } from '@hamafx/ai';
 import { initLangfuse, shutdownLangfuse } from '@hamafx/ai';
 
 import { Candle1mAggregator, type ClosedCandle } from './aggregator/candle-1m.js';

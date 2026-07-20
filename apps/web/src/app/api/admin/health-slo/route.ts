@@ -34,7 +34,7 @@
 import { sql } from 'drizzle-orm';
 import { z } from 'zod';
 
-import { getDb } from '@hamafx/db';
+import { getDb } from '@hamafx/ai';
 
 import { withAdminAuth } from '@/lib/admin-auth';
 import { parseSearchParams } from '@/lib/api';

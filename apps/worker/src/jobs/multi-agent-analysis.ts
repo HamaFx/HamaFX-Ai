@@ -24,7 +24,8 @@
 // same @hamafx/ai import as the Vercel route handler. No new network
 // paths needed — communication is through the Postgres DB.
 
-import { getDb, schema } from '@hamafx/db';
+import { schema } from '@hamafx/db';
+import { getDb } from '@hamafx/ai';
 import { eq, asc, lt, and } from 'drizzle-orm';
 import { pickAiEnv } from '@hamafx/shared';
 import { traceIdStorage } from '@hamafx/shared/logger';

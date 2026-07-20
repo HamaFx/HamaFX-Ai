@@ -19,7 +19,8 @@
 // API keys domain actions: BYOK key management, export/import, market data provider selection.
 
 import { auth } from '@/auth';
-import { getDb, schema, withRateLimit } from '@hamafx/db';
+import { schema, withRateLimit } from '@hamafx/db'
+import { getDb } from '@hamafx/ai';
 import { eq, and } from 'drizzle-orm';
 import * as Sentry from '@sentry/nextjs';
 import { revalidatePath } from 'next/cache';

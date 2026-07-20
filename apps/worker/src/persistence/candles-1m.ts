@@ -22,7 +22,7 @@
 // writes (e.g. to amortize Postgres round-trips during weekend gap
 // catch-up) we add a small buffer here.
 
-import type { getDb } from '@hamafx/db';
+import type { getDb } from '@hamafx/ai';
 import { candles1m } from '@hamafx/db/schema';
 
 import type { ClosedCandle } from '../aggregator/candle-1m.js';

@@ -38,7 +38,7 @@
 // acquire the lock by updating the expired row instead of skipping.
 
 import { sql } from 'drizzle-orm';
-import { type getDb } from '@hamafx/db';
+import { type getDb } from '@hamafx/ai';
 
 type DbClient = ReturnType<typeof getDb>;
 

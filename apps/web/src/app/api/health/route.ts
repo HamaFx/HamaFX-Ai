@@ -33,7 +33,8 @@
 // the last 24 hours so the system-status card can detect stuck jobs.
 
 import { NextResponse } from 'next/server';
-import { getDb, withRateLimit } from '@hamafx/db';
+import { withRateLimit } from '@hamafx/db';
+import { getDb } from '@hamafx/ai';
 import { sql } from 'drizzle-orm';
 import { REQUIRED_HEALTH_ENV_VARS } from '@hamafx/shared/env-secrets';
 

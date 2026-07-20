@@ -20,7 +20,8 @@
 
 import { auth } from '@/auth';
 import { eq, and, sql } from 'drizzle-orm';
-import { withRateLimit, getDb, schema, updateUserDisplayName } from '@hamafx/db';
+import { withRateLimit, schema, updateUserDisplayName } from '@hamafx/db'
+import { getDb } from '@hamafx/ai';
 import * as Sentry from '@sentry/nextjs';
 import { revalidatePath } from 'next/cache';
 import { PROVIDER_IDS } from '@hamafx/shared/encryption';

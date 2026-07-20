@@ -27,7 +27,7 @@
 
 import { computeDailySnapshot, previousUtcMidnight, upsertSnapshot } from '@hamafx/ai';
 import { getCandles } from '@hamafx/data';
-import { getDb } from '@hamafx/db';
+import { getDb } from '@hamafx/ai';
 import { candles1m } from '@hamafx/db/schema';
 import { SYMBOLS } from '@hamafx/shared';
 import { lt, sql } from 'drizzle-orm';

@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-import { getDb, schema } from '@hamafx/db';
+import { schema } from '@hamafx/db';
+import { getDb } from '@hamafx/ai';
 import { fred } from '@hamafx/data';
 import { and, eq, gte, lte } from 'drizzle-orm';
 import { sql } from 'drizzle-orm';
