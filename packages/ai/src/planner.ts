@@ -32,7 +32,8 @@
 // roundtrip auditable and lets us cache the plan on the message row
 // independently of the model's tool-loop output.
 
-import { getDb, schema } from '@hamafx/db';
+import { schema } from '@hamafx/db';
+import { getDb } from './db';
 import type { ServerEnv, UserPlanPart } from '@hamafx/shared';
 import { generateText, type UIMessage } from 'ai';
 

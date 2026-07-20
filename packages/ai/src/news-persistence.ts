@@ -18,7 +18,8 @@
 // route file) so the same logic is reusable from a future Fly.io worker
 // without duplicating SQL.
 
-import { getDb, schema } from '@hamafx/db';
+import { schema } from '@hamafx/db';
+import { getDb } from './db';
 import {
   type EconomicEvent,
   type EventCurrency,

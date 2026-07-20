@@ -20,7 +20,8 @@
 // per-tag breakdowns via SQL group-bys. Empty filter sets return an
 // all-zero stats block + empty breakdown arrays — never throws.
 
-import { getDb, schema } from '@hamafx/db';
+import { schema } from '@hamafx/db';
+import { getDb } from '../db';
 import {
   GetJournalStatsInputSchema,
   type GetJournalStatsOutput,

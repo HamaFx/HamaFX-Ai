@@ -20,7 +20,8 @@
 // modest in personal mode (low single digits of turns/day), so a 30-day
 // scan is well under 100 ms even cold.
 
-import { getDb, schema } from '@hamafx/db';
+import { schema } from '@hamafx/db';
+import { getDb } from './db';
 import { and, desc, eq, gte, lte, sql } from 'drizzle-orm';
 import { KNOWN_BYOK_PROVIDERS } from '@hamafx/shared';
 

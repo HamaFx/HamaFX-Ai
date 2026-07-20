@@ -19,7 +19,8 @@
 // CRUD for portfolio_positions and portfolio_settings tables.
 // Row ↔ domain object mapping follows the same pattern as decision-signals.
 
-import { getDb, schema } from '@hamafx/db';
+import { schema } from '@hamafx/db';
+import { getDb } from '../db';
 import { and, desc, eq } from 'drizzle-orm';
 
 import type {

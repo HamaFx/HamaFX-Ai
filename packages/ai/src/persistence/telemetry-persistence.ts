@@ -17,7 +17,8 @@
 // P1 — Telemetry persistence (SRP split from persistence.ts).
 // Turn-level and tool-level telemetry writers.
 
-import { getDb, schema } from '@hamafx/db';
+import { schema } from '@hamafx/db';
+import { getDb } from '../db';
 import { createCategorizedLogger } from '@hamafx/shared/logger';
 
 import { estimateCostUsd } from '../cost';

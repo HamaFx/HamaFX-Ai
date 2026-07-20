@@ -17,7 +17,8 @@
 // Calendar persistence — upsert EconomicEvent[] into the DB.
 // Same shape as news-persistence.ts so the cron handler stays uniform.
 
-import { getDb, schema } from '@hamafx/db';
+import { schema } from '@hamafx/db';
+import { getDb } from './db';
 import type { EconomicEvent, EventCurrency, Importance } from '@hamafx/shared';
 import { and, eq, isNull, lt } from 'drizzle-orm';
 

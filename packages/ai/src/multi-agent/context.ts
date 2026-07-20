@@ -25,7 +25,8 @@ import type { SharedContext, MultiAgentEnv } from './types';
 import { getCandles } from '@hamafx/data';
 // P0-2: multi-agent pre-fetch still uses getDb() directly since
 // ToolContext is not set up in the multi-agent pipeline yet.
-import { getDb as getDbDirect, schema } from '@hamafx/db';
+import { schema } from '@hamafx/db';
+import { getDb as getDbDirect } from '../db';
 import { gte, lte, and } from 'drizzle-orm';
 
 function userContextFromSettings(displayName: string | null, settings: UserSettingsRow) {

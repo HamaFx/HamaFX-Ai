@@ -25,7 +25,8 @@
 // so the chat part can surface a single status line instead of a misleading
 // "everything is quiet".
 
-import { getDb, schema } from '@hamafx/db';
+import { schema } from '@hamafx/db';
+import { getDb } from '../db';
 import {
   AnalyzeFundamentalInputSchema,
   type AnalyzeFundamentalOutput,

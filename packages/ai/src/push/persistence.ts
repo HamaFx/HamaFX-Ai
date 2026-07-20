@@ -24,7 +24,8 @@
 // dead — remove it"; the delivery layer calls `deletePushSubscription`
 // or `deletePushSubscriptionByEndpoint` to clean up.
 
-import { getDb, schema } from '@hamafx/db';
+import { schema } from '@hamafx/db';
+import { getDb } from '../db';
 import { eq } from 'drizzle-orm';
 
 export interface PushSubscriptionRow {

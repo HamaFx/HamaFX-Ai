@@ -22,7 +22,8 @@
 // Missing entries silently drop out of the snapshot.
 
 import { getPrice } from '@hamafx/data';
-import { getDb, schema, listUserSymbols } from '@hamafx/db';
+import { schema, listUserSymbols } from '@hamafx/db';
+import { getDb } from './db';
 import { SYMBOLS, type Symbol, type Tick, getMarketPhase } from '@hamafx/shared';
 import { desc, eq } from 'drizzle-orm';
 import { createCategorizedLogger } from '@hamafx/shared/logger';

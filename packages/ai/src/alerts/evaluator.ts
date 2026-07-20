@@ -30,7 +30,8 @@
 // active until a channel returns 2xx so transient delivery errors retry on
 // the next cron tick.
 
-import { getDb, schema } from '@hamafx/db';
+import { schema } from '@hamafx/db';
+import { getDb } from '../db';
 import { eq, inArray } from 'drizzle-orm';
 import { getCandles, getPrice } from '@hamafx/data';
 import { computeIndicator } from '@hamafx/indicators';

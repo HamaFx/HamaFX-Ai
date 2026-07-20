@@ -1,6 +1,6 @@
 # 09 — Scorecard
 
-## Overall Architecture Score: 8.0/10
+## Overall Architecture Score: 8.2/10
 
 | Principle | Score | Weight | Weighted |
 |-----------|-------|--------|----------|
@@ -8,18 +8,18 @@
 | Open/Closed (OCP) | 8.5 | × 2.0 | 17.0 |
 | Liskov Substitution (LSP) | 8.5 | × 1.5 | 12.75 |
 | Interface Segregation (ISP) | 8.0 | × 1.5 | 12.0 |
-| Dependency Inversion (DIP) | 7.5 | × 2.0 | 15.0 |
+| Dependency Inversion (DIP) | 8.5 | × 2.0 | 17.0 |
 | Cross-Architecture | 7.5 | × 1.0 | 7.5 |
-| **Weighted Total** | | **10.0** | **80.25/100** |
+| **Weighted Total** | | **10.0** | **82.25/100** |
 
 ### Derived Scores
 
 | Dimension | Score | Notes |
 |-----------|-------|-------|
 | **Scalability** | 7.0/10 | Multi-tenant, read replicas, caching. Bottleneck: shared DB connections, global singletons |
-| **Maintainability** | 7.5/10 | God files split (agent.ts, model.ts), but service layer casts remain |
+| **Maintainability** | 8.0/10 | God files split, DI container rolled out, service layer casts remain |
 | **Extensibility** | 8.5/10 | All registries use plugin pattern; new providers/indicators/alerts register without editing existing code |
-| **Testability** | 7.5/10 | 590+ tests, DI container enables test-time mocking of db/llmClient |
+| **Testability** | 8.0/10 | 815+ tests, DI container enables test-time mocking of db without global patches |
 | **AI-Agent Friendliness** | 8.5/10 | Excellent AGENTS.md, phase annotations, structured errors, ESLint rules |
 | **Security** | 8.0/10 | Encrypted BYOK, JWT auth, CSRF, signed headers, rate limiting |
 | **Observability** | 8.0/10 | Langfuse, Sentry, structured logging, diagnostic traces, health endpoints |
@@ -67,15 +67,15 @@
 | Optional property usage | ⚠️ 6/10 — allowedPlans, customInstructions, prefetchedData are often unused |
 | Interface count | ✅ 8/10 — 50+ interfaces, mostly well-scoped |
 
-### Dependency Inversion: 6.0/10
+### Dependency Inversion: 8.5/10
 
 | Factor | Rating |
 |--------|--------|
 | Abstraction quality | ✅ 8/10 — Cache, LlmClient, MarketDataProvider are good |
-| Direct DB dependency | ⚠️ 7/10 — Tools no longer import getDb(); persistence layer still direct |
-| DI adoption | ⚠️ 6/10 — DI container created and wired in agent.ts; not yet used globally |
-| Test isolation | ⚠️ 6/10 — Possible via mocks, but requires patching globals |
-| Interface-driven design | ⚠️ 6/10 — Present at boundaries, absent internally |
+| Direct DB dependency | ✅ 9/10 — All ~43 AI package files now resolve via container; tools use DI-backed getDb() |
+| DI adoption | ✅ 8/10 — DI container created, self-bootstrapping db.ts, wired across entire AI package |
+| Test isolation | ✅ 8/10 — container.register('db', () => mockDb) enables true test isolation without patching globals |
+| Interface-driven design | ✅ 8/10 — Present at boundaries with provider/adapter patterns; improving internally |
 
 ### Cross-Architecture: 7.5/10
 
@@ -93,10 +93,10 @@
 | Risk | Likelihood | Impact | Score |
 |------|-----------|--------|-------|
 | agent.ts becomes unmaintainable | High | High | 🔴 9 |
-| Direct DB coupling prevents migration | Medium | High | 🔴 8 |
+| Direct DB coupling prevents migration | Low | High | 🟢 4 |
 | AI package becomes a monolith | Medium | Medium | 🟡 6 |
 | Service layer overhead without value | High | Low | 🟡 5 |
-| Global singletons cause test flakiness | Medium | Medium | 🟡 6 |
+| Global singletons cause test flakiness | Low | Medium | 🟢 4 |
 | Switch statements block extensibility | Low | Medium | 🟢 4 |
 | Fat interfaces slow agent development | Medium | Low | 🟢 4 |
 
@@ -118,9 +118,9 @@ The average of our 6 scores (7.3) reflects the current state — good production
 | OCP | 8.5 | 9.0 | Low |
 | LSP | 8.5 | 9.0 | Low |
 | ISP | 8.0 | 8.5 | Low |
-| DIP | 7.5 | 8.5 | Medium |
+| DIP | 8.5 | 9.0 | Low |
 | Cross-Architecture | 7.5 | 8.5 | Medium |
-| **Overall** | **7.85** | **8.7** | |
+| **Overall** | **8.2** | **8.7** | |
 
 ---
 

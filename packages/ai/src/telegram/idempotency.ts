@@ -101,7 +101,7 @@ export function _resetForTesting(): void {
 //   DELETE FROM telegram_updates WHERE processed_at < NOW() - INTERVAL '1 hour';
 // ---------------------------------------------------------------------------
 
-import { getDb } from '@hamafx/db';
+import { getDb } from '../db';
 import { sql } from 'drizzle-orm';
 
 /**

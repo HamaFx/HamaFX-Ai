@@ -20,7 +20,8 @@
 // Until that cron runs the table is empty and this tool returns an empty
 // array — that's fine, the model handles it gracefully.
 
-import { getDb, schema } from '@hamafx/db';
+import { schema } from '@hamafx/db';
+import { getDb } from '../db';
 import { SymbolSchema, type GetNewsOutput, type ToolNewsItem } from '@hamafx/shared';
 import { tool } from 'ai';
 import { and, desc, eq, gte, sql } from 'drizzle-orm';

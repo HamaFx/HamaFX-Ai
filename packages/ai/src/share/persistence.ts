@@ -21,7 +21,8 @@
 // at `/share/[id]` verifies the token, looks up the row by id, and
 // renders title + body + (optional) overlay.
 
-import { getDb, schema } from '@hamafx/db';
+import { schema } from '@hamafx/db';
+import { getDb } from '../db';
 import type { AnnotateChartOutput, Symbol, Timeframe } from '@hamafx/shared';
 import { eq } from 'drizzle-orm';
 

@@ -20,7 +20,8 @@
 // `cftc:<symbol>:<YYYY-MM-DD>`, so the cron handler can re-run on the same
 // week without producing duplicate rows.
 
-import { getDb, schema } from '@hamafx/db';
+import { schema } from '@hamafx/db';
+import { getDb } from '../db';
 import type { CoTSample, Symbol } from '@hamafx/shared';
 import { and, desc, eq } from 'drizzle-orm';
 

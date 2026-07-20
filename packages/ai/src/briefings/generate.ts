@@ -29,7 +29,8 @@
 // Failures are logged and swallowed: the cron handler reports `processed`
 // vs total, never propagates a partial failure as a 500.
 
-import { getDb, schema } from '@hamafx/db';
+import { schema } from '@hamafx/db';
+import { getDb } from '../db';
 import {
   type BriefingMessagePart,
   type EconomicEvent,

@@ -29,7 +29,8 @@ import { logErrorContext, createCategorizedLogger } from '@hamafx/shared/logger'
 import type { UIMessage } from 'ai';
 import { runChat } from '../agent';
 import * as crypto from 'crypto';
-import { getDb, schema } from '@hamafx/db';
+import { schema } from '@hamafx/db';
+import { getDb } from '../db';
 import { eq } from 'drizzle-orm';
 import { getBotDispatcher, resolveBotUser, type BotContext, type BotResponse } from '../bot';
 import {

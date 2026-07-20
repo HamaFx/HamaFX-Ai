@@ -23,7 +23,8 @@
 // Noise config and route config are stored as JSONB in the existing
 // user_settings table (notificationPreferences field).
 
-import { getDb, schema } from '@hamafx/db';
+import { schema } from '@hamafx/db';
+import { getDb } from '../db';
 import { and, eq, lt } from 'drizzle-orm';
 
 import type { NoiseState } from './noise-control';

@@ -26,7 +26,6 @@
 // won't duplicate registrations.
 
 import { container } from '@hamafx/shared';
-import { getDb } from '@hamafx/db';
 import { VercelLlmClient } from './llm-client';
 import type { LlmClient } from './llm-client';
 
@@ -37,19 +36,18 @@ export const TOKENS = {
 } as const;
 
 /**
- * Register core services in the DI container. Idempotent — safe to
- * call multiple times (subsequent calls replace factories).
+ * Register the LLM client in the DI container.
+ *
+ * Note: The DB client is registered by `./db.ts` on first import —
+ * no need to register it here. This avoids a circular dependency
+ * through the AI barrel.
  */
 export function bootstrapServices(): void {
-  // Database client — lazy singleton via @hamafx/db's getDb().
-  container.register(TOKENS.DB, () => getDb());
-
   // LLM client — Vercel AI SDK wrapper. Stateless, but the container
   // caches it so every consumer gets the same instance.
   container.register(TOKENS.LLM_CLIENT, () => new VercelLlmClient());
 }
 
 // Auto-bootstrap on first import. In production (Vercel) this runs
-// once per cold start; in tests, callers override registrations after
-// import.
+// once per cold start.
 bootstrapServices();

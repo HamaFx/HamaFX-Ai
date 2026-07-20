@@ -16,6 +16,10 @@
 
 // Public barrel for @hamafx/ai. The route handler imports from here.
 
+// P2-3 — Auto-bootstrap DI container services on first import.
+// Every consumer of @hamafx/ai gets db + llmClient registered.
+import './services';
+
 export { runChat } from './agent';
 export { type RunChatArgs } from './types';
 export { toolRegistry, type ToolRegistry } from './tools';
@@ -269,6 +273,10 @@ export {
 export { runPlanner, type PlanResult, type PlannerEnv } from './planner';
 export { enforceCitations } from './verification';
 export { buildToolCatalogue, type CatalogueEntry } from './catalogue';
+
+// P2-3 — DI-backed getDb() wrapper.
+// Prefer this over importing getDb from @hamafx/db directly.
+export { getDb } from './db';
 
 // Langfuse / OpenTelemetry instrumentation
 export { initLangfuse, shutdownLangfuse } from './instrumentation';

@@ -17,7 +17,8 @@
 // P1 — Message persistence (SRP split from persistence.ts).
 // Message CRUD + parts stripping. Thread and telemetry live in their own modules.
 
-import { getDb, schema } from '@hamafx/db';
+import { schema } from '@hamafx/db';
+import { getDb } from '../db';
 import { getMessageText } from '@hamafx/shared';
 import type { UIMessage } from 'ai';
 import { asc, eq } from 'drizzle-orm';

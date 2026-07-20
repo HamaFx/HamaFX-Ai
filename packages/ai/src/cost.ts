@@ -26,7 +26,8 @@
 // Phase A: budget is now per-user. All functions accept `userId` and scope
 // queries to the user's row in `daily_ai_spend` (composite PK: user_id, day).
 
-import { getDb, schema, getUserWithSettings } from '@hamafx/db';
+import { schema, getUserWithSettings } from '@hamafx/db';
+import { getDb } from './db';
 import { sql, eq, gte, and } from 'drizzle-orm';
 import { sendDirectNotification } from './alerts/delivery';
 import { buildCatalogRateTable } from './byok-providers';

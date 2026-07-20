@@ -18,7 +18,8 @@
 // and the AI `set_alert` tool. SQL stays here so all callers see the same
 // row → DTO mapping.
 
-import { getDb, schema } from '@hamafx/db';
+import { schema } from '@hamafx/db';
+import { getDb } from '../db';
 import {
   AlertChannelSchema,
   AlertRuleSchema,

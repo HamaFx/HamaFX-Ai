@@ -25,7 +25,8 @@
 // can recall journal context. The memory call is fire-and-forget — the
 // CRUD response never waits on it.
 
-import { getDb, schema } from '@hamafx/db';
+import { schema } from '@hamafx/db';
+import { getDb } from '../db';
 import {
   JournalEntrySchema,
   SymbolSchema,

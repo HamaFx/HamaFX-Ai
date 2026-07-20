@@ -25,7 +25,8 @@
 //   expectedPips   = atr_pips * sqrt(barsInHorizon) * eventMultiplier
 
 import { getCandles, getPrice } from '@hamafx/data';
-import { getDb, schema } from '@hamafx/db';
+import { schema } from '@hamafx/db';
+import { getDb } from '../db';
 import { atr } from '@hamafx/indicators';
 import {
   ForecastVolatilityInputSchema,

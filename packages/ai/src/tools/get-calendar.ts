@@ -19,7 +19,8 @@
 // Queries the `economic_events` table populated by /api/cron/calendar.
 // Empty until Phase 1c — the tool handles that gracefully.
 
-import { getDb, schema } from '@hamafx/db';
+import { schema } from '@hamafx/db';
+import { getDb } from '../db';
 import type { GetCalendarOutput } from '@hamafx/shared';
 import { tool } from 'ai';
 import { and, asc, gte, inArray, lte, sql } from 'drizzle-orm';

@@ -26,7 +26,8 @@
 //
 // See DSA_FEATURE_EXPANSION_PLAN.md §F7.4 for the design.
 
-import { getDb, schema } from '@hamafx/db';
+import { schema } from '@hamafx/db';
+import { getDb } from '../db';
 import { eq, and } from 'drizzle-orm';
 import { randomBytes } from 'crypto';
 

@@ -37,7 +37,8 @@
 // a known set of messages changed. MD5 is ~2x faster than SHA-256.
 import { createHash } from 'node:crypto';
 
-import { getDb, schema } from '@hamafx/db';
+import { schema } from '@hamafx/db';
+import { getDb } from '../db';
 import type { ServerEnv } from '@hamafx/shared';
 import { generateText } from 'ai';
 import { and, desc, eq } from 'drizzle-orm';

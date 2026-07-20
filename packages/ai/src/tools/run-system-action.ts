@@ -20,7 +20,8 @@ import {
   forbidden,
 } from '@hamafx/shared';
 import { fred } from '@hamafx/data';
-import { getDb, schema } from '@hamafx/db';
+import { schema } from '@hamafx/db';
+import { getDb } from '../db';
 import { tool } from 'ai';
 import { and, eq, gte, lte, sql } from 'drizzle-orm';
 import type { z } from 'zod';

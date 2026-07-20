@@ -36,7 +36,8 @@
 
 import { createHash } from 'node:crypto';
 
-import { getDb, schema } from '@hamafx/db';
+import { schema } from '@hamafx/db';
+import { getDb } from '../db';
 import {
   AnalyzeChartImageInputSchema,
   AnalyzeChartImageOutputSchema,

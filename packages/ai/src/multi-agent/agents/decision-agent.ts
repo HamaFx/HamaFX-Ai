@@ -19,7 +19,7 @@
 import { generateText, streamText, convertToModelMessages, type Tool, type ModelMessage } from 'ai';
 import { estimateCostUsd } from '../../cost';
 import { withToolContext, type ToolContext } from '../../tool-context';
-import { getDb } from '@hamafx/db';
+import { getDb } from '../../db';
 import { telemetryConfig } from '../../telemetry';
 import { BaseAgent } from './base-agent';
 import { buildSharedSystemPrompt, extractUserMessageText } from '../context';

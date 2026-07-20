@@ -17,7 +17,8 @@
 // P1 — Thread persistence (SRP split from persistence.ts).
 // Thread CRUD + fork logic. Messages and telemetry live in their own modules.
 
-import { getDb, schema } from '@hamafx/db';
+import { schema } from '@hamafx/db';
+import { getDb } from '../db';
 import type { Symbol } from '@hamafx/shared';
 import { and, asc, desc, eq, lt } from 'drizzle-orm';
 

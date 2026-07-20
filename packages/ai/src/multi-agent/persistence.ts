@@ -16,7 +16,8 @@
 
 // Multi-Agent Orchestration — opinion persistence.
 
-import { getDb, schema } from '@hamafx/db';
+import { schema } from '@hamafx/db';
+import { getDb } from '../db';
 import { and, asc, eq } from 'drizzle-orm';
 import type { AgentOpinionRow } from '@hamafx/db/schema';
 

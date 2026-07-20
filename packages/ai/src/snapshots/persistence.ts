@@ -22,7 +22,8 @@
 // can't fire. For Phase 2's volume (3 symbols × 1 kind × 1/day) this is
 // fine — we never have duplicate rows in practice.
 
-import { getDb, schema } from '@hamafx/db';
+import { schema } from '@hamafx/db';
+import { getDb } from '../db';
 import type { Symbol } from '@hamafx/shared';
 import { and, desc, eq } from 'drizzle-orm';
 

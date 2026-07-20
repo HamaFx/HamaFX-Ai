@@ -22,7 +22,8 @@ import {
   type ResonanceObservation,
   type Symbol,
 } from '@hamafx/shared';
-import { getDb, schema } from '@hamafx/db';
+import { schema } from '@hamafx/db';
+import { getDb } from '../db';
 import { tool } from 'ai';
 import { desc } from 'drizzle-orm';
 import type { z } from 'zod';

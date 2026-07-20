@@ -17,7 +17,8 @@
 import { writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
-import { getDb, schema } from '@hamafx/db';
+import { schema } from '@hamafx/db';
+import { getDb } from '../db';
 import { createCategorizedLogger } from '@hamafx/shared/logger';
 
 const log = createCategorizedLogger('ai', { component: 'trace-persistence' });

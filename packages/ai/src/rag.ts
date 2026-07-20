@@ -30,7 +30,8 @@
 // hybrid path is opt-in via the new `memoryKinds` argument so existing
 // behaviour stays bit-stable when the agent doesn't ask for memory.
 
-import { getDb, schema } from '@hamafx/db';
+import { schema } from '@hamafx/db';
+import { getDb } from './db';
 import type { NewsSentiment, SearchKnowledgeItem, Symbol } from '@hamafx/shared';
 import { sql } from 'drizzle-orm';
 

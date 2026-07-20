@@ -24,7 +24,8 @@
 // user), but the schema now requires user_id. Pass a constant system user ID
 // until Phase D implements per-user briefings.
 
-import { getDb, schema } from '@hamafx/db';
+import { schema } from '@hamafx/db';
+import { getDb } from '../db';
 import { and, desc, eq, gte as dgte, lte as dlte, isNotNull as disNotNull } from 'drizzle-orm';
 
 import type { DbThread } from '../persistence';

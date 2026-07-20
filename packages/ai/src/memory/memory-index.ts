@@ -31,7 +31,8 @@
 // All paths are guarded by the daily AI budget so a runaway agent loop
 // can't burn embedding spend in a side-effect.
 
-import { getDb, schema, withTenantDb } from '@hamafx/db';
+import { schema, withTenantDb } from '@hamafx/db';
+import { getDb } from '../db';
 import type { UserSettingsRow } from '@hamafx/db/schema';
 import type { ServerEnv, Symbol, ThreadInsight } from '@hamafx/shared';
 import { desc, eq, gte, sql } from 'drizzle-orm';

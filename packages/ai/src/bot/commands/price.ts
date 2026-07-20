@@ -18,7 +18,8 @@
 // /price XAUUSD → current gold price
 
 import type { BotCommand, BotResponse } from '../types';
-import { getDb, schema } from '@hamafx/db';
+import { schema } from '@hamafx/db';
+import { getDb } from '../../db';
 import { eq, desc } from 'drizzle-orm';
 
 export const priceCommand: BotCommand = {
