@@ -55,7 +55,13 @@ vi.mock('@hamafx/db', async (importOriginal) => {
 
 vi.mock('@sentry/nextjs', () => ({ captureException: vi.fn() }));
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }));
-vi.mock('@hamafx/ai', () => ({ deleteAllThreads: vi.fn() }));
+vi.mock('@hamafx/ai', async (importOriginal) => {
+  const actual = await importOriginal() as Record<string, unknown>;
+  return {
+    ...actual,
+    deleteAllThreads: vi.fn(),
+  };
+});
 
 import { mockNextAuthSession } from './auth-helpers';
 

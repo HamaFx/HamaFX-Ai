@@ -29,16 +29,21 @@ import { GET as GET_ONE, PATCH, DELETE } from '@/app/api/alerts/[id]/route';
 
 const USER_ID = 'test-user-001';
 
+const now = Date.now();
+
+const createdAtStr = new Date(now).toISOString();
+
 const mockAlert = {
   id: '550e8400-e29b-41d4-a716-446655440000',
   userId: USER_ID,
   rule: { type: 'priceCross', symbol: 'XAUUSD', level: 2000, direction: 'above' },
   channels: ['email'],
   note: 'alert note',
+  snoozeHours: 0,
   active: true,
   firedAt: null,
-  snoozeHours: 0,
-  createdAt: Date.now(),
+  createdAt: createdAtStr,
+  updatedAt: createdAtStr,
 };
 
 const validCreatePayload = {
@@ -166,7 +171,8 @@ describe('POST /api/alerts', () => {
     expect(response.status).toBe(429);
 
     const body = await response.json();
-    expect(body.error).toContain('Too many requests');
+    expect(body.error.message).toBe('Too many requests');
+    expect(body.error.code).toBe('RATE_LIMITED');
   });
 });
 

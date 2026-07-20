@@ -24,25 +24,28 @@ import { PATCH, DELETE } from '@/app/api/journal/[id]/route';
 
 const USER_ID = 'test-user-001';
 
+const now = Date.now();
+
+const createdAtStr = new Date(now).toISOString();
+
 const mockEntry = {
   id: '550e8400-e29b-41d4-a716-446655440001',
-  userId: USER_ID,
   symbol: 'XAUUSD',
   side: 'long',
-  openedAt: Date.now() - 3600000,
-  closedAt: null,
   entry: 2000.5,
+  exit: null,
   stop: 1995.0,
   target: 2010.0,
-  exit: null,
   size: null,
-  outcome: 'open',
-  rMultiple: null,
   notes: 'test entry',
   tags: ['test'],
+  screenshotUrl: null,
   attachments: [],
-  createdAt: Date.now(),
-  updatedAt: Date.now(),
+  openedAt: now - 3600000,
+  closedAt: null,
+  outcome: 'open',
+  createdAt: createdAtStr,
+  updatedAt: createdAtStr,
 };
 
 const validCreatePayload = {
