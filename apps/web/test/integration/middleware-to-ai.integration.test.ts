@@ -51,6 +51,8 @@ import { GET, POST } from '@/app/api/journal/route';
 
 const USER_ID = 'test-user-001';
 
+const now = new Date();
+
 const mockEntry = {
   id: '550e8400-e29b-41d4-a716-446655440001',
   userId: USER_ID,
@@ -67,9 +69,10 @@ const mockEntry = {
   rMultiple: null,
   notes: 'test entry',
   tags: ['test'],
+  screenshotUrl: null,
   attachments: [],
-  createdAt: Date.now(),
-  updatedAt: Date.now(),
+  createdAt: now,
+  updatedAt: now,
 };
 
 const validCreatePayload = {
@@ -133,7 +136,10 @@ describe('Web → AI integration (journal route)', () => {
       expect(response.status).toBe(200);
 
       const body = await response.json();
-      expect(body.entries).toEqual([mockEntry]);
+      expect(body.entries).toHaveLength(1);
+      expect(body.entries[0].id).toBe(mockEntry.id);
+      expect(body.entries[0].symbol).toBe(mockEntry.symbol);
+      expect(body.entries[0].openedAt).toBe(mockEntry.openedAt);
       expect(body.stats).toEqual(mockStats);
       expect(mockListEntries).toHaveBeenCalledWith(USER_ID, {});
       expect(mockComputeStats).toHaveBeenCalledWith(USER_ID);

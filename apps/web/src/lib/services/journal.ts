@@ -76,12 +76,14 @@ export interface EntryDTO {
   symbol: string;
   side: string;
   entry: number;
+  exit: number | null;
   stop: number | null;
   target: number | null;
   size: number | null;
   notes: string | null;
   tags: string[];
   screenshotUrl: string | null;
+  attachments: string[];
   openedAt: number;
   closedAt: number | null;
   outcome: string | null;
@@ -98,12 +100,14 @@ function toEntryDTO(e: JournalEntry): EntryDTO {
     symbol: e.symbol,
     side: e.side,
     entry: e.entry,
+    exit: e.exit,
     stop: e.stop,
     target: e.target,
     size: e.size,
     notes: e.notes,
     tags: e.tags,
     screenshotUrl: e.screenshotUrl ?? null,
+    attachments: e.attachments ?? [],
     openedAt: e.openedAt,
     closedAt: e.closedAt,
     outcome: e.outcome,
