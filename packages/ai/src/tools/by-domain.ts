@@ -15,7 +15,7 @@
  */
 
 import type { Tool } from 'ai';
-import { tools as allTools, type ToolRegistry } from './index';
+import { toolRegistry } from './index';
 
 export type RoutingDomain = 'fundamental' | 'technical' | 'generic';
 
@@ -64,17 +64,29 @@ const DOMAIN_TOOLS: Record<Exclude<RoutingDomain, 'generic'>, ReadonlySet<string
  * Return a filtered copy of the tool registry containing only tools
  * relevant to the given routing domain. 'generic' domains get all tools.
  */
+/**
+ * Filter tools by routing domain, with optional per-tenant plan gating (PF-16).
+ *
+ * @param domain - The routing domain to filter for.
+ * @param plan - Optional tenant plan (e.g. 'free', 'pro'). When set, only
+ *   tools allowed for that plan are returned. Falls back to all tools when
+ *   plan is undefined.
+ */
 export function domainToolFilter(
   domain: RoutingDomain,
-): Partial<ToolRegistry> {
+  plan?: string,
+): Record<string, Tool> {
+  const allTools = plan
+    ? toolRegistry.resolveForPlan(undefined, plan)
+    : toolRegistry.resolve();
+
   if (domain === 'generic') return allTools;
 
   const allowed = DOMAIN_TOOLS[domain];
-  const filtered: Partial<ToolRegistry> = {};
-  for (const [name, tool] of Object.entries(allTools)) {
-    if (allowed.has(name)) {
-      (filtered as Record<string, Tool>)[name] = tool;
-    }
+  const filtered: Record<string, Tool> = {};
+  for (const name of allowed) {
+    const tool = allTools[name];
+    if (tool) filtered[name] = tool;
   }
   return filtered;
 }

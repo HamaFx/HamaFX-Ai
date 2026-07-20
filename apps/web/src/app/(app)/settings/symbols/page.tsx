@@ -16,8 +16,9 @@
 
 import { redirect } from 'next/navigation';
 import { auth } from '@/auth';
-import { getDb, schema } from '@hamafx/db';
+import { getWatchlistWithCatalog } from '@hamafx/db';
 import { eq, asc } from 'drizzle-orm';
+import { getDb, schema } from '@hamafx/db';
 import { SymbolsForm } from '../_components/symbols-form';
 
 export default async function SymbolsSettingsPage() {
@@ -33,22 +34,20 @@ export default async function SymbolsSettingsPage() {
     .orderBy(schema.symbolCatalog.sortOrder);
 
   // Fetch the user's watchlist with catalog metadata
-  const symbols = await db.select({
-    symbol: schema.symbolCatalog.symbol,
-    name: schema.symbolCatalog.name,
-    category: schema.symbolCatalog.category,
-    exchange: schema.symbolCatalog.exchange,
-    tvTicker: schema.symbolCatalog.tvTicker,
-    pipSize: schema.symbolCatalog.pipSize,
-    priceDecimals: schema.symbolCatalog.priceDecimals,
-    currencyTags: schema.symbolCatalog.currencyTags,
-    isActive: schema.symbolCatalog.isActive,
-    displayOrder: schema.userSymbols.displayOrder,
-  })
-    .from(schema.userSymbols)
-    .innerJoin(schema.symbolCatalog, eq(schema.userSymbols.symbol, schema.symbolCatalog.symbol))
-    .where(eq(schema.userSymbols.userId, session.user.id))
-    .orderBy(asc(schema.userSymbols.displayOrder));
+  const rawSymbols = await getWatchlistWithCatalog(session.user.id);
+  // Map to the component's expected shape — WatchlistEntry has nullable fields
+  const symbols = rawSymbols.map((s) => ({
+    ...s,
+    name: s.name ?? '',
+    category: s.category ?? '',
+    exchange: s.exchange ?? '',
+    tvTicker: s.tvTicker ?? '',
+    pipSize: s.pipSize ?? 0,
+    priceDecimals: s.priceDecimals ?? 0,
+    currencyTags: s.currencyTags ?? [],
+    isActive: s.isActive ?? false,
+    displayOrder: s.displayOrder ?? 0,
+  }));
 
   return (
     <div className="flex flex-col gap-6 max-w-2xl">

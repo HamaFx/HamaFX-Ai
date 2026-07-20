@@ -7,7 +7,7 @@ import { AuthError } from 'next-auth';
 import { headers } from 'next/headers';
 import { z } from 'zod';
 
-import { getDb, schema, withRateLimit } from '@hamafx/db';
+import { getDb, schema, withRateLimit, userExistsByEmail, createUserWithSettings, createVerificationToken, findVerificationToken, updatePasswordByEmail, createAuditLog } from '@hamafx/db';
 import { signIn } from '@/auth';
 import { createScopedLoggerWithContext } from '@/lib/logger';
 import { recordAuthEvent } from '@/lib/auth-anomaly';
@@ -156,10 +156,8 @@ export async function registerAction(prevState: unknown, formData: FormData) {
     return { error: 'Too many registration attempts. Please try again later.' };
   }
 
-  const db = getDb();
-
-  const existingUser = await db.select().from(schema.users).where(eq(schema.users.email, normalizedEmail)).limit(1);
-  if (existingUser.length > 0) {
+  const existingUser = await userExistsByEmail(normalizedEmail);
+  if (existingUser) {
     return { error: 'An account with this email already exists' };
   }
 
@@ -168,36 +166,18 @@ export async function registerAction(prevState: unknown, formData: FormData) {
 
   // STAB-10: Wrap the users + userSettings insert in a single transaction
   // so a partial failure (e.g. userSettings FK violation) rolls back the user row.
-  await db.transaction(async (tx) => {
-    const [u] = await tx.insert(schema.users).values({
-      id: newUserId,
-      name,
-      email: normalizedEmail,
-      hashedPassword,
-      image: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(name)}`,
-    }).returning();
-
-    if (!u) throw new Error('Failed to create user');
-
-    await tx.insert(schema.userSettings).values({
-      userId: u.id,
-      onboardingCompleted: false,
-      defaultSymbol: 'XAUUSD',
-    });
-
-    return [u];
+  await createUserWithSettings({
+    id: newUserId,
+    email: normalizedEmail,
+    name,
+    hashedPassword,
   });
 
   // HIGH-04: Generate email verification token
   try {
     const { raw, hashed } = generateToken();
     const verifyExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
-    await db.insert(schema.verificationTokens).values({
-      identifier: normalizedEmail,
-      token: hashed, // P0-6: store SHA-256 hash, not raw token
-      purpose: 'email_verify',
-      expires: verifyExpires,
-    });
+    await createVerificationToken(normalizedEmail, hashed, 'email_verify', verifyExpires);
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
     const verifyUrl = `${baseUrl}/api/auth/verify-email?token=${encodeURIComponent(raw)}`;
     if (process.env.NODE_ENV !== 'production') {

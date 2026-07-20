@@ -51,9 +51,11 @@ import * as ai from '@hamafx/ai';
 import * as data from '@hamafx/data';
 
 import { runSnapshots } from '../src/jobs/snapshots';
+import { TenantRouter } from '../src/tenant-router';
 import { createLogger } from '../src/log';
 
 const log = createLogger({ service: 'test', forceJson: true });
+const testRouter = new TenantRouter();
 
 beforeEach(() => {
   vi.mocked(ai.computeDailySnapshot).mockReset();
@@ -67,7 +69,7 @@ describe('runSnapshots', () => {
     vi.mocked(ai.computeDailySnapshot).mockReturnValue({} as never);
     vi.mocked(ai.upsertSnapshot).mockResolvedValue(undefined as never);
 
-    const r = await runSnapshots({ log });
+    const r = await runSnapshots({ log, signal: new AbortController().signal, tenantRouter: testRouter });
     expect(r.processed).toBe(3); // XAUUSD, EURUSD, GBPUSD
     expect(r.note).toMatch(/symbols=3\/3/);
     expect(r.note).toMatch(/pruned=0/);
@@ -84,7 +86,7 @@ describe('runSnapshots', () => {
     vi.mocked(ai.computeDailySnapshot).mockReturnValue({} as never);
     vi.mocked(ai.upsertSnapshot).mockResolvedValue(undefined as never);
 
-    const r = await runSnapshots({ log });
+    const r = await runSnapshots({ log, signal: new AbortController().signal, tenantRouter: testRouter });
     expect(r.processed).toBe(2);
     expect(r.note).toMatch(/symbols=2\/3/);
     expect(r.note).toMatch(/errors=1/);

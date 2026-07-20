@@ -52,3 +52,28 @@ export async function getUserWithSettings(
 
   return { settings, user: userRow };
 }
+
+/**
+ * List all user settings rows. Used by background job that checks
+ * spending alerts across every user.
+ */
+export async function listAllUserSettings(): Promise<typeof schema.userSettings.$inferSelect[]> {
+  const db = getDb();
+  return db.select().from(schema.userSettings);
+}
+
+/**
+ * Update a single field on the userSettings row for a given userId.
+ * Uses a partial update so only the provided field is changed.
+ */
+export async function updateUserSettingsField<K extends keyof typeof schema.userSettings.$inferInsert>(
+  userId: string,
+  field: K,
+  value: (typeof schema.userSettings.$inferInsert)[K],
+): Promise<void> {
+  const db = getDb();
+  await db
+    .update(schema.userSettings)
+    .set({ [field]: value } as Partial<typeof schema.userSettings.$inferInsert>)
+    .where(eq(schema.userSettings.userId, userId));
+}

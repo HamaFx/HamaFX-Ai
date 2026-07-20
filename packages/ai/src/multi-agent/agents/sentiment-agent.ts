@@ -19,7 +19,7 @@
 import { z } from 'zod';
 import type { Tool } from 'ai';
 import { BaseAgent, baseOpinionSchema } from './base-agent';
-import { tools as allTools } from '../../tools';
+import { toolRegistry } from '../../tools';
 import type { AgentName, AgentBias, ModelTier } from '../types';
 
 const sentimentSchema = baseOpinionSchema.extend({
@@ -60,11 +60,8 @@ before forming your sentiment assessment.`;
   }
 
   tools(): Record<string, Tool> {
-    return {
-      get_news: allTools.get_news,
-      search_knowledge: allTools.search_knowledge,
-      get_social_sentiment: allTools.get_social_sentiment,
-    };
+    const reg = toolRegistry.resolve(['get_news', 'search_knowledge', 'get_social_sentiment']);
+    return reg as Record<string, Tool>;
   }
 
   protected parseOutput(text: string): { bias: AgentBias; confidence: number; reasoning: string; rawData: Record<string, unknown> } {

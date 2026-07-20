@@ -28,6 +28,7 @@
 
 import cron from 'node-cron';
 import { JOBS } from '../jobs/index.js';
+import { tenantRouter } from '../tenant-router.js';
 import type { Logger } from '../log.js';
 import { createLogger } from '../log.js';
 
@@ -53,6 +54,7 @@ const RAW: ScheduleDef[] = [
       await JOBS.briefings.run({
         log,
         signal,
+        tenantRouter,
       });
     },
   },
@@ -64,6 +66,7 @@ const RAW: ScheduleDef[] = [
       await JOBS.snapshots.run({
         log,
         signal,
+        tenantRouter,
       });
     },
   },
@@ -75,6 +78,7 @@ const RAW: ScheduleDef[] = [
       await JOBS['resonance-sync'].run({
         log,
         signal,
+        tenantRouter,
       });
     },
   },
@@ -86,6 +90,7 @@ const RAW: ScheduleDef[] = [
       await JOBS.cot.run({
         log,
         signal,
+        tenantRouter,
       });
     },
   },
@@ -97,6 +102,7 @@ const RAW: ScheduleDef[] = [
       await JOBS['fred-actuals'].run({
         log,
         signal,
+        tenantRouter,
       });
     },
   },
@@ -108,6 +114,7 @@ const RAW: ScheduleDef[] = [
       await JOBS['weekly-review'].run({
         log,
         signal,
+        tenantRouter,
       });
     },
   },
@@ -119,6 +126,7 @@ const RAW: ScheduleDef[] = [
       await JOBS['embedding-backfill'].run({
         log,
         signal,
+        tenantRouter,
       });
     },
   },
@@ -130,6 +138,7 @@ const RAW: ScheduleDef[] = [
       await JOBS.alerts.run({
         log,
         signal,
+        tenantRouter,
       });
     },
   },
@@ -141,6 +150,7 @@ const RAW: ScheduleDef[] = [
       await JOBS.retention.run({
         log,
         signal,
+        tenantRouter,
       });
     },
   },
@@ -152,6 +162,7 @@ const RAW: ScheduleDef[] = [
       await JOBS['multi-agent-analysis'].run({
         log,
         signal,
+        tenantRouter,
       });
     },
   },

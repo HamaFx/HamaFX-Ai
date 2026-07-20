@@ -28,8 +28,7 @@
 // per provider.
 
 import { configuredProviders, decryptByok } from '@hamafx/shared/encryption';
-import { getDb, schema } from '@hamafx/db';
-import { eq } from 'drizzle-orm';
+import { getUserWithSettings } from '@hamafx/db';
 
 import { errorResponse, withAuth } from '@/lib/api';
 
@@ -38,11 +37,7 @@ export const dynamic = 'force-dynamic';
 
 export const GET = withAuth<void>(async (_req, { user }) => {
   try {
-    const db = getDb();
-    const [settings] = await db
-      .select({ aiApiKeys: schema.userSettings.aiApiKeys })
-      .from(schema.userSettings)
-      .where(eq(schema.userSettings.userId, user.userId));
+    const { settings } = await getUserWithSettings(user.userId);
     const providers = configuredProviders(decryptByok(settings?.aiApiKeys));
     return Response.json({ providers });
   } catch (err) {

@@ -14,9 +14,7 @@
  * limitations under the License.
  */
 
-import { eq } from 'drizzle-orm';
-
-import { getDb, schema } from '@hamafx/db';
+import { getDiagnosticTrace } from '@hamafx/db';
 
 import { getAdminUser } from '@/lib/admin-auth';
 
@@ -34,11 +32,7 @@ export const GET = async (req: Request, { params }: { params: Promise<{ id: stri
 
   const { id } = await params;
 
-  const db = getDb();
-  const [trace] = await db
-    .select()
-    .from(schema.diagnosticTraces)
-    .where(eq(schema.diagnosticTraces.id, id));
+  const trace = await getDiagnosticTrace(id);
 
   if (!trace) {
     return Response.json({ error: { code: 'NOT_FOUND', message: 'Trace not found' } }, { status: 404 });

@@ -21,8 +21,7 @@ import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 
 import { auth } from '@/auth';
-import { getDb, schema } from '@hamafx/db';
-import { eq, desc } from 'drizzle-orm';
+import { listActivePlans, getUserSubscription, getUserPayments } from '@hamafx/db';
 import { BillingPlans } from './_components/billing-plans';
 import { PaymentHistory } from './_components/payment-history';
 import { SubscriptionStatus } from './_components/subscription-status';
@@ -37,14 +36,11 @@ export default async function BillingPage() {
   }
 
   const userId = session.user.id;
-  const db = getDb();
 
-  // Fetch plans, subscription, and payments server-side.
-  const allPlans = await db.select().from(schema.plans).where(eq(schema.plans.isActive, true));
-  const subs = await db.select().from(schema.subscriptions).where(eq(schema.subscriptions.tenantId, userId)).limit(1);
-  const payments = await db.select().from(schema.payments).where(eq(schema.payments.tenantId, userId)).orderBy(desc(schema.payments.createdAt)).limit(20);
+  const allPlans = await listActivePlans();
+  const subscription = await getUserSubscription(userId);
+  const payments = await getUserPayments(userId, 20);
 
-  const subscription = subs[0] ?? null;
   const currentPlan = subscription ? allPlans.find((p) => p.id === subscription.planId) ?? null : null;
 
   return (

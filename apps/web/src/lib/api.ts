@@ -21,6 +21,7 @@
 //   - normalised provider/AppError → HTTP mapping
 //   - X-Request-Id propagation (Phase 7a)
 //   - Phase A: getUserFromRequest() + withAuth() for multi-user scoping
+//   - PF-10: compose() middleware chain
 
 import * as Sentry from '@sentry/nextjs';
 import { ProviderError, toAppError } from '@hamafx/data';
@@ -201,6 +202,23 @@ export function errorResponse(err: unknown, req?: Request): Response {
     return formatErrorResponse(validationError('Invalid request', err.flatten()), options);
   }
 
+  // PF-22: Handle rate-limit and validation errors thrown from service
+  // functions as plain Error objects with a numeric `statusCode` property.
+  if (err instanceof Error && typeof (err as unknown as Record<string, unknown>).statusCode === 'number') {
+    const statusCode = (err as unknown as Record<string, unknown>).statusCode as number;
+    const extraHeaders = (err as unknown as Record<string, unknown>).headers as Record<string, string> | undefined;
+    return Response.json(
+      {
+        error: {
+          code: statusCode === 429 ? 'RATE_LIMITED' : 'VALIDATION',
+          message: err.message,
+          ...(requestId ? { requestId } : {}),
+        },
+      },
+      { status: statusCode, headers: { ...headers, ...extraHeaders } },
+    );
+  }
+
   Sentry.captureException(err, {
     tags: { component: 'api', route, kind: 'unhandled-error' },
     extra: { requestId },
@@ -237,6 +255,96 @@ function maxJsonBodyBytes(): number {
   const n = Number(raw);
   if (!Number.isFinite(n) || n <= 0) return DEFAULT_MAX_BODY_BYTES;
   return Math.floor(n);
+}
+
+// ── PF-10: Middleware chain ───────────────────────────────────────────────────
+
+/**
+ * A middleware function in the chain.
+ * Takes a request + context and returns a Response or delegates to `next`.
+ */
+export type Middleware<T, R> = (
+  req: Request,
+  ctx: { params: Promise<T> } & R,
+  next: () => Promise<Response>,
+) => Promise<Response>;
+
+/**
+ * Compose multiple middleware functions into a single handler.
+ *
+ * Middleware executes left-to-right. Each middleware can:
+ *   - Short-circuit by returning a Response directly
+ *   - Delegate to the next middleware by calling `await next()`
+ *
+ * The innermost middleware is the actual route handler.
+ *
+ * @example
+ * ```ts
+ * const GET = compose(
+ *   withAuth,
+ *   rateLimit(100, '1m'),
+ *   async (req, { user }) => {
+ *     return Response.json({ hello: user.userId });
+ *   },
+ * );
+ * ```
+ */
+export function compose<T, R extends Record<string, unknown> = Record<string, unknown>>(
+  ...middlewares: Array<
+    Middleware<T, R>
+  >
+): (req: Request, ctx: { params: Promise<T> }) => Promise<Response> {
+  return async (req: Request, ctx: { params: Promise<T> }): Promise<Response> => {
+    let index = -1;
+
+    const dispatch = async (i: number): Promise<Response> => {
+      if (i <= index) {
+        throw new Error('next() called multiple times');
+      }
+      index = i;
+
+      const middleware = middlewares[i];
+      if (!middleware) {
+        throw new Error('No handler registered');
+      }
+
+      return middleware(
+        req,
+        ctx as { params: Promise<T> } & R,
+        async () => dispatch(i + 1),
+      );
+    };
+
+    return dispatch(0);
+  };
+}
+
+/**
+ * PF-10 — Make `withAuth` compatible with the `compose()` chain.
+ * Returns a middleware function that extracts the user and passes
+ * it downstream via context.
+ */
+export function authMiddleware<T>(): Middleware<T, { user: RequestUser }> {
+  return async (req, ctx, next) => {
+    const user = await getUserFromRequest(req);
+    if (!user) {
+      recordAuthEvent('unauthorized_401');
+      const requestId = readRequestId(req);
+      const headers: Record<string, string> = {};
+      if (requestId) headers[REQUEST_ID_HEADER] = requestId;
+      return Response.json(
+        {
+          error: {
+            code: 'UNAUTHORIZED' as const,
+            message: 'Authentication required',
+            ...(requestId ? { requestId } : {}),
+          },
+        },
+        { status: 401, headers },
+      );
+    }
+    return next();
+  };
 }
 
 export async function parseJsonBody<S extends z.ZodTypeAny>(

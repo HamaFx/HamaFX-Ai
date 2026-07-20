@@ -34,18 +34,18 @@ export default async function SecurityPage() {
   const userId = session.user.id;
   const db = getDb();
 
-  const [[userRow], [googleAccount]] = await Promise.all([
-    db.select({ twoFactorEnabled: schema.users.twoFactorEnabled })
-      .from(schema.users)
-      .where(eq(schema.users.id, userId)),
-    db.select({ providerAccountId: schema.accounts.providerAccountId })
-      .from(schema.accounts)
-      .where(and(
-        eq(schema.accounts.userId, userId),
-        eq(schema.accounts.provider, 'google'),
-      ))
-      .limit(1),
-  ]);
+  const [userRow] = await db
+    .select({ twoFactorEnabled: schema.users.twoFactorEnabled })
+    .from(schema.users)
+    .where(eq(schema.users.id, userId));
+  const [googleAccount] = await db
+    .select({ providerAccountId: schema.accounts.providerAccountId })
+    .from(schema.accounts)
+    .where(and(
+      eq(schema.accounts.userId, userId),
+      eq(schema.accounts.provider, 'google'),
+    ))
+    .limit(1);
 
   const twoFactorEnabled = userRow?.twoFactorEnabled ?? false;
   const googleLinked = !!googleAccount;

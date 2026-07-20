@@ -14,10 +14,9 @@
  * limitations under the License.
  */
 
-import { eq } from 'drizzle-orm';
 import { z } from 'zod';
 
-import { getDb, schema } from '@hamafx/db';
+import { getUserById } from '@hamafx/db';
 import { signIn, generateImpersonationChallenge } from '@/auth';
 
 import { withAdminAuth } from '@/lib/admin-auth';
@@ -37,12 +36,7 @@ export const POST = withAdminAuth(async (req) => {
 
   const { userId } = await parseJsonBody(req, impersonateSchema);
 
-  const db = getDb();
-  const [targetUser] = await db
-    .select({ id: schema.users.id })
-    .from(schema.users)
-    .where(eq(schema.users.id, userId))
-    .limit(1);
+  const targetUser = await getUserById(userId);
 
   if (!targetUser) {
     return Response.json({ error: { code: 'NOT_FOUND', message: 'User not found' } }, { status: 404 });

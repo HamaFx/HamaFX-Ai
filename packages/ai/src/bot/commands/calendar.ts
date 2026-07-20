@@ -19,8 +19,7 @@
 // /calendar 10 → next 10 events
 
 import type { BotCommand, BotResponse } from '../types';
-import { getDb, schema } from '@hamafx/db';
-import { gte, asc } from 'drizzle-orm';
+import { queries } from '@hamafx/db';
 
 export const calendarCommand: BotCommand = {
   name: 'calendar',
@@ -30,24 +29,9 @@ export const calendarCommand: BotCommand = {
     try {
       const firstArg = args[0];
       const limit = firstArg ? Math.min(parseInt(firstArg, 10) || 5, 15) : 5;
-      const db = getDb();
-      const now = new Date();
-
-      const events = await db
-        .select({
-          event: schema.economicEvents.title,
-          country: schema.economicEvents.country,
-          currency: schema.economicEvents.currency,
-          impact: schema.economicEvents.importance,
-          datetime: schema.economicEvents.date,
-          actual: schema.economicEvents.actual,
-          forecast: schema.economicEvents.forecast,
-          previous: schema.economicEvents.previous,
-        })
-        .from(schema.economicEvents)
-        .where(gte(schema.economicEvents.date, now))
-        .orderBy(asc(schema.economicEvents.date))
-        .limit(limit);
+      const now = Date.now();
+      // Events up to 90 days out
+      const events = await queries.news.listUpcomingEvents(now, now + 90 * 24 * 60 * 60 * 1000, limit);
 
       if (events.length === 0) {
         return { text: '📅 No upcoming economic events found.' };
@@ -56,19 +40,19 @@ export const calendarCommand: BotCommand = {
       const lines: string[] = ['📅 Upcoming Economic Events', ''];
 
       for (const ev of events) {
-        const time = new Date(ev.datetime).toLocaleString('en-US', {
+        const time = new Date(ev.date).toLocaleString('en-US', {
           month: 'short',
           day: 'numeric',
           hour: '2-digit',
           minute: '2-digit',
         });
         const impactIcon =
-          ev.impact === 'high' ? '🔴' :
-          ev.impact === 'medium' ? '🟡' : '🟢';
+          ev.importance === 'high' ? '🔴' :
+          ev.importance === 'medium' ? '🟡' : '🟢';
         const actualStr = ev.actual !== null ? ` | Actual: ${ev.actual}` : '';
         const forecastStr = ev.forecast !== null ? ` | Forecast: ${ev.forecast}` : '';
 
-        lines.push(`${impactIcon} ${ev.event}`);
+        lines.push(`${impactIcon} ${ev.title}`);
         lines.push(`   ${ev.country} ${ev.currency ?? ''} · ${time}${forecastStr}${actualStr}`);
         lines.push('');
       }

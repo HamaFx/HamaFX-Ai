@@ -17,7 +17,7 @@
 import { auth } from '@/auth';
 import { redirect } from 'next/navigation';
 import { buildCatalogForUser } from '@/lib/catalog-server';
-import { getDb, schema } from '@hamafx/db';
+import { getUserWithSettings, getDb, schema } from '@hamafx/db';
 import { eq } from 'drizzle-orm';
 import { formatRelative } from '@/lib/format';
 import {
@@ -58,14 +58,7 @@ export default async function ApiKeysSettingsPage({
   const fromChat = sp.from === 'chat';
   const preservedPrompt = sp.prompt && sp.prompt.trim().length > 0 ? sp.prompt : null;
 
-  const db = getDb();
-  const [settings] = await db.select({
-    aiApiKeys: schema.userSettings.aiApiKeys,
-    aiApiKeysUpdatedAt: schema.userSettings.aiApiKeysUpdatedAt,
-    marketDataProvider: schema.userSettings.marketDataProvider,
-  })
-    .from(schema.userSettings)
-    .where(eq(schema.userSettings.userId, session.user.id));
+  const { settings } = await getUserWithSettings(session.user.id);
 
   const decrypted = settings?.aiApiKeys ? decryptByok(settings.aiApiKeys) : null;
 
@@ -73,6 +66,7 @@ export default async function ApiKeysSettingsPage({
   // snapshot per provider so the badge can render without waiting
   // for the user to click "Test". Single round-trip; the row PK
   // is (userId, providerId) so the result is naturally keyed.
+  const db = getDb();
   const healthRows = await db
     .select({
       providerId: schema.providerTests.providerId,

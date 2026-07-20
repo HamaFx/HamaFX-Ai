@@ -25,10 +25,12 @@
 // where there is only one user).
 
 import { MemoryCache } from './memory';
+import { RedisCache } from './redis';
 import type { Cache } from './types';
 
 export type { Cache, CacheEntryMeta, CacheFetchOptions } from './types';
 export { MemoryCache } from './memory';
+export { RedisCache } from './redis';
 export { cacheKey, cacheTag, type CacheResource, type KeyParts } from './keys';
 export {
   PRICE_TTL,
@@ -62,10 +64,10 @@ const _tenantLastAccess = new Map<string, number>();
  * Resolve the cache implementation for the given tenant. Each tenant
  * gets its own isolated `Cache` instance.
  *
- *  - Inside Next.js (`process.env.NEXT_RUNTIME` set, OR `next/cache` resolves):
- *    uses a per-tenant `MemoryCache` (the Next.js Data Cache is
- *    request-scoped and doesn't provide cross-tenant isolation guarantees).
- *  - Otherwise (tests, scripts, plain Node): uses a per-tenant `MemoryCache`.
+ * PF-14: Auto-selects RedisCache when `REDIS_URL` env var is set.
+ * Falls back to per-tenant MemoryCache when Redis is not configured.
+ * This enables multi-instance cache sharing in Vercel deployments
+ * without changing consumer code.
  *
  * @param tenantId  The tenant identifier (typically `userId`). Omit for
  *                  the shared global cache (legacy / self-host compatibility).
@@ -78,7 +80,12 @@ export async function getDefaultCache(tenantId?: string): Promise<Cache> {
     return existing;
   }
 
-  const cache = new MemoryCache();
+  // PF-14: When REDIS_URL is configured, use a single shared Redis cache
+  // (all tenants share the same Redis instance, keyed by namespace).
+  const cache: Cache = process.env.REDIS_URL
+    ? new RedisCache({ url: process.env.REDIS_URL, keyPrefix: `cache:${ns}:` })
+    : new MemoryCache();
+
   _tenantCaches.set(ns, cache);
   _tenantLastAccess.set(ns, Date.now());
 
@@ -97,7 +104,11 @@ export function getDefaultCacheSync(tenantId?: string): Cache {
     _tenantLastAccess.set(ns, Date.now());
     return existing;
   }
-  const cache = new MemoryCache();
+
+  const cache: Cache = process.env.REDIS_URL
+    ? new RedisCache({ url: process.env.REDIS_URL, keyPrefix: `cache:${ns}:` })
+    : new MemoryCache();
+
   _tenantCaches.set(ns, cache);
   _tenantLastAccess.set(ns, Date.now());
   if (ns !== GLOBAL_TENANT) {

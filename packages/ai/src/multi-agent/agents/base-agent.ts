@@ -18,7 +18,7 @@
 
 import { generateText, stepCountIs, type LanguageModel, type Tool } from 'ai';
 import { z } from 'zod';
-import { resolveChatModel, resolveModelForProvider, supportsPromptCaching, type ModelDomain } from '../../model';
+import { resolveChatModel, resolveModelForProvider, supportsPromptCaching, TIER_TO_DOMAIN, type ModelDomain } from '../../model';
 import { estimateCostUsd } from '../../cost';
 import { withToolContext, type ToolContext } from '../../tool-context';
 import { telemetryConfig } from '../../telemetry';
@@ -29,11 +29,12 @@ import { extractUserMessageText } from '../context';
 
 /** Q1 fix — map ModelTier to the ModelDomain used by resolveChatModel's tier selection. */
 function tierToDomain(tier: ModelTier): ModelDomain {
-  switch (tier) {
-    case 'fast': return 'summary';
-    case 'mid': return 'technical';
-    case 'strong': return 'fundamental';
+  const domain = TIER_TO_DOMAIN[tier];
+  if (!domain) {
+    // Safety net for unknown tiers — default to 'technical'.
+    return 'technical';
   }
+  return domain;
 }
 
 export const baseOpinionSchema = z.object({

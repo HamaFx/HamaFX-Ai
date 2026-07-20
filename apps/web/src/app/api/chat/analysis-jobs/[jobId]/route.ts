@@ -18,8 +18,7 @@
 //
 // Polling endpoint for background multi-agent analysis jobs.
 
-import { getDb, schema } from '@hamafx/db';
-import { eq } from 'drizzle-orm';
+import { getAnalysisJob } from '@hamafx/db';
 import { withAuth } from '@/lib/api';
 
 export const runtime = 'nodejs';
@@ -35,21 +34,7 @@ export const GET = withAuth<{ jobId: string }>(async (req, ctx) => {
     return Response.json({ error: { code: 'VALIDATION', message: 'Invalid jobId' } }, { status: 400 });
   }
 
-  const db = getDb();
-  const [job] = await db
-    .select({
-      id: schema.analysisJobs.id,
-      userId: schema.analysisJobs.userId,
-      status: schema.analysisJobs.status,
-      progress: schema.analysisJobs.progress,
-      result: schema.analysisJobs.result,
-      error: schema.analysisJobs.error,
-      createdAt: schema.analysisJobs.createdAt,
-      completedAt: schema.analysisJobs.completedAt,
-    })
-    .from(schema.analysisJobs)
-    .where(eq(schema.analysisJobs.id, jobId))
-    .limit(1);
+  const job = await getAnalysisJob(jobId);
 
   if (!job) {
     return Response.json({ error: { code: 'NOT_FOUND', message: 'Job not found' } }, { status: 404 });

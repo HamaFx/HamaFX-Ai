@@ -18,8 +18,7 @@
 // POST { id: string }
 
 import { getEntry, reviewTrade } from '@hamafx/ai';
-import { getDb, schema } from '@hamafx/db';
-import { eq } from 'drizzle-orm';
+import { getUserWithSettings } from '@hamafx/db';
 import { z } from 'zod';
 
 import { errorResponse, parseJsonBody, withAuth } from '@/lib/api';
@@ -51,11 +50,7 @@ export const POST = withAuth<void>(async (req, { user }) => {
       );
     }
 
-    const [userSettings] = await getDb()
-      .select()
-      .from(schema.userSettings)
-      .where(eq(schema.userSettings.userId, user.userId))
-      .limit(1);
+    const { settings: userSettings } = await getUserWithSettings(user.userId);
 
     if (!userSettings) {
       return Response.json(

@@ -36,8 +36,7 @@ import { createThread, listThreads } from '@hamafx/ai';
 import { redirect } from 'next/navigation';
 
 import { auth } from '@/auth';
-import { getDb, schema } from '@hamafx/db';
-import { eq } from 'drizzle-orm';
+import { getUserApiKeys } from '@hamafx/db';
 
 export const dynamic = 'force-dynamic';
 
@@ -56,12 +55,8 @@ export default async function ChatLanding({ searchParams }: PageProps) {
   // configured provider. We check aiApiKeys on the user's settings
   // row, decrypt, and ask `configuredProviders()` whether any key is
   // present. A single DB round-trip; the helper is pure.
-  const db = getDb();
-  const [settings] = await db
-    .select({ aiApiKeys: schema.userSettings.aiApiKeys })
-    .from(schema.userSettings)
-    .where(eq(schema.userSettings.userId, userId));
-  const providers = configuredProviders(decryptByok(settings?.aiApiKeys));
+  const encryptedKeys = await getUserApiKeys(userId);
+  const providers = configuredProviders(decryptByok(encryptedKeys));
   if (providers.length === 0) {
     const params = new URLSearchParams({ from: 'chat' });
     if (prompt && prompt.trim().length > 0) params.set('prompt', prompt);

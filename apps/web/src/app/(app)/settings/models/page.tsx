@@ -19,8 +19,7 @@ import Link from 'next/link';
 
 import { auth } from '@/auth';
 import { buildCatalogForUser } from '@/lib/catalog-server';
-import { getDb, schema } from '@hamafx/db';
-import { eq } from 'drizzle-orm';
+import { getUserWithSettings } from '@hamafx/db';
 
 import {
   ChatModelPicker,
@@ -62,16 +61,7 @@ export default async function ModelsSettingsPage() {
     redirect('/login');
   }
 
-  const db = getDb();
-  const [userRow] = await db
-    .select({
-      aiFallbackChain: schema.userSettings.aiFallbackChain,
-      chatModel: schema.userSettings.chatModel,
-      visionModel: schema.userSettings.visionModel,
-      embeddingModel: schema.userSettings.embeddingModel,
-    })
-    .from(schema.userSettings)
-    .where(eq(schema.userSettings.userId, session.user.id));
+  const { settings: userRow } = await getUserWithSettings(session.user.id);
 
   const catalog = await buildCatalogForUser(session.user.id);
 

@@ -1,6 +1,6 @@
 import 'server-only';
 
-import { getDb, schema, getUserWithSettings } from '@hamafx/db';
+import { getUserWithSettings, listAllUserSettings } from '@hamafx/db';
 import {
   getMonthlySpend,
   getProviderMonthlySpend,
@@ -19,11 +19,7 @@ export function resetSentAlerts() {
 }
 
 export async function checkAllUsageAlerts(): Promise<UsageAlertResult> {
-  const db = getDb();
-
-  const allSettings = await db
-    .select()
-    .from(schema.userSettings);
+  const allSettings = await listAllUserSettings();
 
   let alertsSent = 0;
   let checkedUsers = 0;

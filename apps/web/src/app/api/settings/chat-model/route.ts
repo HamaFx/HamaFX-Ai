@@ -29,9 +29,8 @@
 // Auth: NextAuth session gate. Per-user data only.
 
 import { BYOK_PROVIDERS } from '@hamafx/ai';
-import { getDb, schema } from '@hamafx/db';
+import { getUserWithSettings, updateUserSettingsField } from '@hamafx/db';
 import { PROVIDER_IDS, type ProviderId } from '@hamafx/shared/encryption';
-import { eq } from 'drizzle-orm';
 import { z } from 'zod';
 
 import {
@@ -50,12 +49,8 @@ const PutBodySchema = z.object({
 
 export const GET = withAuth<void>(async (_req, { user }) => {
   try {
-    const db = getDb();
-    const [row] = await db
-      .select({ chatModel: schema.userSettings.chatModel })
-      .from(schema.userSettings)
-      .where(eq(schema.userSettings.userId, user.userId));
-    return Response.json({ chatModel: row?.chatModel ?? null });
+    const { settings } = await getUserWithSettings(user.userId);
+    return Response.json({ chatModel: settings?.chatModel ?? null });
   } catch (err) {
     return errorResponse(err);
   }
@@ -114,11 +109,7 @@ export const PUT = withAuth<void>(async (req, { user }) => {
 
   const value = `${body.providerId}:${bareModelId}`;
   try {
-    const db = getDb();
-    await db
-      .update(schema.userSettings)
-      .set({ chatModel: value })
-      .where(eq(schema.userSettings.userId, user.userId));
+    await updateUserSettingsField(user.userId, 'chatModel', value);
     return Response.json({ ok: true, chatModel: value });
   } catch (err) {
     return errorResponse(err);
@@ -127,11 +118,7 @@ export const PUT = withAuth<void>(async (req, { user }) => {
 
 export const DELETE = withAuth<void>(async (_req, { user }) => {
   try {
-    const db = getDb();
-    await db
-      .update(schema.userSettings)
-      .set({ chatModel: null })
-      .where(eq(schema.userSettings.userId, user.userId));
+    await updateUserSettingsField(user.userId, 'chatModel', null);
     return Response.json({ ok: true, chatModel: null });
   } catch (err) {
     return errorResponse(err);

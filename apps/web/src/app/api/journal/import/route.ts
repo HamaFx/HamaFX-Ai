@@ -1,4 +1,4 @@
-import { getDb, schema, withRateLimit } from '@hamafx/db';
+import { withRateLimit, createJournalEntry } from '@hamafx/db';
 import { z } from 'zod';
 
 import { errorResponse, withAuth } from '@/lib/api';
@@ -40,7 +40,6 @@ export const POST = withAuth<void>(async (req, { user }) => {
     const body = await req.json();
     const { trades } = ImportPayloadSchema.parse(body);
 
-    const db = getDb();
     const created = [];
 
     for (const trade of trades) {
@@ -63,24 +62,21 @@ export const POST = withAuth<void>(async (req, { user }) => {
           : 'open';
       }
 
-      const [row] = await db
-        .insert(schema.journalEntries)
-        .values({
-          userId: user.userId,
-          symbol: trade.symbol,
-          side: trade.side,
-          entry: trade.entry,
-          stop: trade.stop ?? null,
-          target: trade.target ?? null,
-          exit,
-          size: trade.size ?? null,
-          openedAt: new Date(trade.openedAt),
-          closedAt: closedAt !== null ? new Date(closedAt) : null,
-          outcome,
-          rMultiple,
-          notes: trade.notes ?? null,
-        })
-        .returning();
+      const row = await createJournalEntry({
+        userId: user.userId,
+        symbol: trade.symbol,
+        side: trade.side,
+        entry: trade.entry,
+        stop: trade.stop ?? null,
+        target: trade.target ?? null,
+        exit,
+        size: trade.size ?? null,
+        openedAt: new Date(trade.openedAt),
+        closedAt: closedAt !== null ? new Date(closedAt) : null,
+        outcome,
+        rMultiple,
+        notes: trade.notes ?? null,
+      });
 
       created.push(row);
     }

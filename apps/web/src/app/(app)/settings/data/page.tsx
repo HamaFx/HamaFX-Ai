@@ -17,8 +17,7 @@
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { auth } from '@/auth';
-import { getDb, schema } from '@hamafx/db';
-import { eq, asc } from 'drizzle-orm';
+import { getUserWithSettings, listUserSymbols } from '@hamafx/db';
 import { DataCard } from '../_components/data-card';
 import { PreferencesCard } from '../_components/preferences-card';
 
@@ -30,23 +29,12 @@ export default async function DataPage() {
   if (!session?.user?.id) redirect('/login');
 
   const userId = session.user.id;
-  const db = getDb();
 
-  const [settingsRows, symbolRows] = await Promise.all([
-    db.select({
-      defaultSymbol: schema.userSettings.defaultSymbol,
-      timeFormat: schema.userSettings.timeFormat,
-      reduceMotion: schema.userSettings.reduceMotion,
-    })
-      .from(schema.userSettings)
-      .where(eq(schema.userSettings.userId, userId)),
-    db.select({ symbol: schema.userSymbols.symbol })
-      .from(schema.userSymbols)
-      .where(eq(schema.userSymbols.userId, userId))
-      .orderBy(asc(schema.userSymbols.displayOrder)),
+  const [{ settings }, symbolRows] = await Promise.all([
+    getUserWithSettings(userId),
+    listUserSymbols(userId),
   ]);
 
-  const settings = settingsRows[0] ?? null;
   const list = symbolRows;
 
   let watchlist: string[] = ['XAUUSD', 'EURUSD', 'GBPUSD'];

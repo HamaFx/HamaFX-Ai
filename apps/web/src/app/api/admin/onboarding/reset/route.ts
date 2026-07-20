@@ -14,10 +14,9 @@
  * limitations under the License.
  */
 
-import { eq } from 'drizzle-orm';
 import { z } from 'zod';
 
-import { getDb, schema } from '@hamafx/db';
+import { getUserById, resetOnboarding } from '@hamafx/db';
 
 import { withAdminAuth } from '@/lib/admin-auth';
 import { parseJsonBody } from '@/lib/api';
@@ -34,37 +33,14 @@ export const POST = withAdminAuth(async (req, { user: admin }) => {
   const body = await parseJsonBody(req, resetSchema);
   const targetUserId = body.userId ?? admin.userId;
 
-  const db = getDb();
-
   // Verify target user exists
-  const [targetUser] = await db
-    .select({ id: schema.users.id })
-    .from(schema.users)
-    .where(eq(schema.users.id, targetUserId));
+  const targetUser = await getUserById(targetUserId);
 
   if (!targetUser) {
     return Response.json({ error: { code: 'NOT_FOUND', message: 'User not found' } }, { status: 404 });
   }
 
-  await db.transaction(async (tx) => {
-    // Always clear onboarding completion and progress
-    const update: Partial<typeof schema.userSettings.$inferInsert> = {
-      onboardingCompleted: false,
-      onboardingProgress: null,
-    };
-
-    if (body.mode === 'full') {
-      update.defaultSymbol = 'XAUUSD';
-      update.timezone = 'UTC';
-      update.aiApiKeys = null;
-      await tx.delete(schema.userSymbols).where(eq(schema.userSymbols.userId, targetUserId));
-    }
-
-    await tx
-      .update(schema.userSettings)
-      .set(update)
-      .where(eq(schema.userSettings.userId, targetUserId));
-  });
+  await resetOnboarding(targetUserId, body.mode);
 
   return Response.json({ ok: true, userId: targetUserId, reset: true, mode: body.mode });
 });

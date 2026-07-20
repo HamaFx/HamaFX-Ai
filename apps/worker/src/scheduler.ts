@@ -30,6 +30,7 @@ import { sql } from 'drizzle-orm';
 import type { Logger } from './log.js';
 import { JOBS } from './jobs/index.js';
 import { acquireCronLock } from './cron-lock.js';
+import { tenantRouter } from './tenant-router.js';
 
 // STAB-02: Maximum wall-clock time any scheduled job may run.
 // Overridable via JOB_TIMEOUT_MS env var for jobs that need more time.
@@ -74,50 +75,20 @@ export function startScheduler(log: Logger): () => void {
   // are marked as 'error' so the health endpoint stops reporting them.
   void cleanupStaleCronRuns(log);
 
-  // Alerts: Every minute
-  tasks.push(cron.schedule('* * * * *', () => {
-    void runJobSafely('alerts', log);
-  }));
-
-  // Briefings: Every 5 minutes
-  tasks.push(cron.schedule('*/5 * * * *', () => {
-    void runJobSafely('briefings', log);
-  }));
-
-  // Embedding backfill: Every 6 hours (aligned with systemd timer)
-  tasks.push(cron.schedule('0 */6 * * *', () => {
-    void runJobSafely('embedding-backfill', log);
-  }));
-
-  // Snapshots: Daily at 00:05 UTC (aligned with systemd timer)
-  tasks.push(cron.schedule('5 0 * * *', () => {
-    void runJobSafely('snapshots', log);
-  }));
-
-  // CoT: Weekly on Friday at 22:00 UTC (aligned with systemd timer)
-  tasks.push(cron.schedule('0 22 * * 5', () => {
-    void runJobSafely('cot', log);
-  }));
-
-  // FRED Actuals: Daily at 01:30 UTC (aligned with systemd timer)
-  tasks.push(cron.schedule('30 1 * * *', () => {
-    void runJobSafely('fred-actuals', log);
-  }));
-
-  // Resonance Sync: Daily at 23:00 UTC
-  tasks.push(cron.schedule('0 23 * * *', () => {
-    void runJobSafely('resonance-sync', log);
-  }));
-
-  // Weekly Review: Sunday at 18:00 UTC
-  tasks.push(cron.schedule('0 18 * * 0', () => {
-    void runJobSafely('weekly-review', log);
-  }));
-
-  // DB-1 — Retention cleanup: Daily at 03:15 UTC
-  tasks.push(cron.schedule('15 3 * * *', () => {
-    void runJobSafely('retention', log);
-  }));
+  // PF-04 — Schedule all jobs from the JOBS registry.
+  // Iterates the registry and sets up cron for every entry with a
+  // non-null schedule. Multi-agent-analysis uses setTimeout below.
+  const jobEntries = Object.entries(JOBS) as Array<[keyof typeof JOBS, (typeof JOBS)[keyof typeof JOBS]]>;
+  for (const [name, job] of jobEntries) {
+    if (job.schedule === null) {
+      log.info(`Job ${name} has no cron schedule — skipping cron registration`);
+      continue;
+    }
+    tasks.push(cron.schedule(job.schedule, () => {
+      void runJobSafely(name, log);
+    }));
+    log.info(`Scheduled job ${name} at "${job.schedule}"`);
+  }
 
   // U2 — Multi-agent analysis: poll every 3 seconds for pending jobs.
   // PERF-7: Self-rescheduling setTimeout avoids pile-up when a poll
@@ -260,7 +231,7 @@ async function runJobSafely(name: keyof typeof JOBS, log: Logger): Promise<void>
 
   try {
     const startMs = Date.now();
-    const result = await job.run({ log: jobLog, signal: ac.signal });
+    const result = await job.run({ log: jobLog, signal: ac.signal, tenantRouter });
     const durationMs = Date.now() - startMs;
 
     jobLog.info('Job completed successfully', {

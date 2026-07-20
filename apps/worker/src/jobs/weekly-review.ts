@@ -23,22 +23,23 @@
 
 import { emitWeeklyReview } from '@hamafx/ai';
 
-import { getDb, schema } from '@hamafx/db';
+import { getActiveUserIds } from '@hamafx/db';
 
 import type { JobContext, JobResult } from './types.js';
 
 export async function runWeeklyReview(ctx: JobContext): Promise<JobResult> {
-  const db = getDb();
-  const users = await db.select({ id: schema.users.id }).from(schema.users);
+  const userIds = await getActiveUserIds();
   
   let emittedCount = 0;
-  for (const u of users) {
+  for (const userId of userIds) {
     if (ctx.signal?.aborted) break;
+    // PF-23: Skip tenants that belong to another worker partition.
+    if (!ctx.tenantRouter.isMyTenant(userId)) continue;
     try {
-      const r = await emitWeeklyReview(u.id);
+      const r = await emitWeeklyReview(userId);
       if (r.emitted) emittedCount++;
     } catch (err) {
-      ctx.log.error('weekly-review failed for user', { userId: u.id, err: String(err) });
+      ctx.log.error('weekly-review failed for user', { userId, err: String(err) });
     }
   }
 

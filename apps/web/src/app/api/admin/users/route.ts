@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-import { desc, sql } from 'drizzle-orm';
-import { z } from 'zod';
+// PF-22 — /api/admin/users — list users (thin controller).
 
-import { getDb, schema } from '@hamafx/db';
+import { z } from 'zod';
 
 import { withAdminAuth } from '@/lib/admin-auth';
 import { parseSearchParams } from '@/lib/api';
+import { listUsersService } from '@/lib/services/admin';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -32,28 +32,6 @@ const querySchema = z.object({
 
 export const GET = withAdminAuth(async (req) => {
   const { limit, offset } = parseSearchParams(req, querySchema);
-
-  const db = getDb();
-
-  const [users, countRows] = await Promise.all([
-    db
-      .select({
-        id: schema.users.id,
-        email: schema.users.email,
-        name: schema.users.name,
-        role: schema.users.role,
-        createdAt: schema.users.createdAt,
-        onboardingCompleted: schema.userSettings.onboardingCompleted,
-      })
-      .from(schema.users)
-      .leftJoin(schema.userSettings, sql`${schema.userSettings.userId} = ${schema.users.id}`)
-      .orderBy(desc(schema.users.createdAt))
-      .limit(limit)
-      .offset(offset),
-    db.select({ count: sql<number>`count(*)` }).from(schema.users),
-  ]);
-
-  const total = countRows[0]?.count ?? 0;
-
-  return Response.json({ users, total });
+  const result = await listUsersService(limit, offset);
+  return Response.json(result);
 });

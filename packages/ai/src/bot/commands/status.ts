@@ -18,8 +18,8 @@
 // /status → shows system health, market phase, and user's open positions count.
 
 import type { BotCommand, BotResponse, BotContext } from '../types';
-import { getDb, schema } from '@hamafx/db';
-import { eq, and, sql } from 'drizzle-orm';
+import { listOpenPositions } from '@hamafx/db';
+import { countActiveAlerts } from '@hamafx/db';
 import { getMarketPhase, isForexWeekend } from '@hamafx/shared';
 
 export const statusCommand: BotCommand = {
@@ -28,29 +28,8 @@ export const statusCommand: BotCommand = {
   description: 'System status: /status',
   handler: async (_args: string[], ctx: BotContext): Promise<BotResponse> => {
     try {
-      const db = getDb();
-
-      // Count open positions
-      const [positionRow] = await db
-        .select({ count: sql<number>`count(*)::int` })
-        .from(schema.portfolioPositions)
-        .where(
-          and(
-            eq(schema.portfolioPositions.userId, ctx.userId),
-            eq(schema.portfolioPositions.status, 'open'),
-          ),
-        );
-
-      // Count active alerts
-      const [alertRow] = await db
-        .select({ count: sql<number>`count(*)::int` })
-        .from(schema.alerts)
-        .where(
-          and(
-            eq(schema.alerts.userId, ctx.userId),
-            eq(schema.alerts.active, true),
-          ),
-        );
+      const positions = await listOpenPositions(ctx.userId);
+      const alertsCount = await countActiveAlerts(ctx.userId);
 
       // Get market phase
       const phase = getMarketPhase();
@@ -64,8 +43,8 @@ export const statusCommand: BotCommand = {
         weekend ? '⚠️ Weekend — markets closed' : '✅ Markets open',
         '',
         '📊 Your Overview',
-        `Open Positions: ${positionRow?.count ?? 0}`,
-        `Active Alerts: ${alertRow?.count ?? 0}`,        '','System operational',
+        `Open Positions: ${positions.length}`,
+        `Active Alerts: ${alertsCount}`,        '','System operational',
       ];
 
       return {

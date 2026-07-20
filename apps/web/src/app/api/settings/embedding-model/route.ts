@@ -34,9 +34,8 @@
 // Auth: NextAuth session gate. Per-user data only.
 
 import { BYOK_PROVIDERS } from '@hamafx/ai';
-import { getDb, schema } from '@hamafx/db';
+import { getUserWithSettings, updateUserSettingsField } from '@hamafx/db';
 import { PROVIDER_IDS, type ProviderId } from '@hamafx/shared/encryption';
-import { eq } from 'drizzle-orm';
 import { z } from 'zod';
 
 import { errorResponse, parseJsonBody, withAuth } from '@/lib/api';
@@ -51,12 +50,8 @@ const PutBodySchema = z.object({
 
 export const GET = withAuth<void>(async (_req, { user }) => {
   try {
-    const db = getDb();
-    const [row] = await db
-      .select({ embeddingModel: schema.userSettings.embeddingModel })
-      .from(schema.userSettings)
-      .where(eq(schema.userSettings.userId, user.userId));
-    return Response.json({ embeddingModel: row?.embeddingModel ?? null });
+    const { settings } = await getUserWithSettings(user.userId);
+    return Response.json({ embeddingModel: settings?.embeddingModel ?? null });
   } catch (err) {
     return errorResponse(err);
   }
@@ -109,11 +104,7 @@ export const PUT = withAuth<void>(async (req, { user }) => {
 
   const value = `${body.providerId}:${bareModelId}`;
   try {
-    const db = getDb();
-    await db
-      .update(schema.userSettings)
-      .set({ embeddingModel: value })
-      .where(eq(schema.userSettings.userId, user.userId));
+    await updateUserSettingsField(user.userId, 'embeddingModel', value);
     return Response.json({ ok: true, embeddingModel: value });
   } catch (err) {
     return errorResponse(err);
@@ -122,11 +113,7 @@ export const PUT = withAuth<void>(async (req, { user }) => {
 
 export const DELETE = withAuth<void>(async (_req, { user }) => {
   try {
-    const db = getDb();
-    await db
-      .update(schema.userSettings)
-      .set({ embeddingModel: null })
-      .where(eq(schema.userSettings.userId, user.userId));
+    await updateUserSettingsField(user.userId, 'embeddingModel', null);
     return Response.json({ ok: true, embeddingModel: null });
   } catch (err) {
     return errorResponse(err);

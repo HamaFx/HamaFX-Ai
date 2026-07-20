@@ -36,9 +36,11 @@ import * as ai from '@hamafx/ai';
 import { cftc } from '@hamafx/data';
 
 import { runCoT } from '../src/jobs/cot';
+import { TenantRouter } from '../src/tenant-router';
 import { createLogger } from '../src/log';
 
 const log = createLogger({ service: 'test', forceJson: true });
+const testRouter = new TenantRouter();
 
 beforeEach(() => {
   vi.mocked(ai.upsertCoTReport).mockReset();
@@ -62,7 +64,7 @@ describe('runCoT', () => {
     vi.mocked(cftc.fetchLatestRows).mockResolvedValue([SAMPLE_ROW, SAMPLE_ROW]);
     vi.mocked(ai.upsertCoTReport).mockResolvedValue(undefined as never);
 
-    const r = await runCoT({ log });
+    const r = await runCoT({ log, signal: new AbortController().signal, tenantRouter: testRouter });
     // 3 supported symbols × 2 rows = 6 upserts; processed = symbols handled
     expect(r.processed).toBe(3);
     expect(r.note).toMatch(/upserted=6/);
@@ -76,7 +78,7 @@ describe('runCoT', () => {
       .mockResolvedValueOnce([SAMPLE_ROW]);
     vi.mocked(ai.upsertCoTReport).mockResolvedValue(undefined as never);
 
-    const r = await runCoT({ log });
+    const r = await runCoT({ log, signal: new AbortController().signal, tenantRouter: testRouter });
     expect(r.processed).toBe(2);
     expect(r.note).toMatch(/errors=1/);
   });
@@ -89,7 +91,7 @@ describe('runCoT', () => {
     ] as never);
     vi.mocked(ai.upsertCoTReport).mockResolvedValue(undefined as never);
 
-    await runCoT({ log });
+    await runCoT({ log, signal: new AbortController().signal, tenantRouter: testRouter });
     // 3 symbols × 1 valid row each
     expect(ai.upsertCoTReport).toHaveBeenCalledTimes(3);
   });

@@ -19,7 +19,7 @@
 // /alert EURUSD < 1.0850 → creates a priceCross alert when EURUSD goes below 1.0850.
 
 import type { BotCommand, BotResponse, BotContext } from '../types';
-import { getDb, schema } from '@hamafx/db';
+import { createAlert } from '@hamafx/db';
 
 interface ParsedAlert {
   symbol: string;
@@ -67,9 +67,6 @@ export const alertCommand: BotCommand = {
     }
 
     try {
-      const db = getDb();
-
-      // Create a priceCross alert rule (matching the AlertRule schema)
       const rule = {
         type: 'priceCross',
         symbol: parsed.symbol,
@@ -77,11 +74,10 @@ export const alertCommand: BotCommand = {
         direction: parsed.direction,
       };
 
-      await db.insert(schema.alerts).values({
+      await createAlert({
         userId: ctx.userId,
         rule,
         channels: ['telegram'],
-        active: true,
       });
 
       const dirText = parsed.direction === 'above' ? '↑ above' : '↓ below';

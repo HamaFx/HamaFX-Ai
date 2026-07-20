@@ -14,13 +14,16 @@
  * limitations under the License.
  */
 
-// /api/journal/[id] — read / patch (close, edit) / delete.
-
-import { deleteEntry, getEntry, updateEntry } from '@hamafx/ai';
-import { TradeOutcomeSchema } from '@hamafx/shared';
-import { z } from 'zod';
+// PF-22 — Controller for /api/journal/[id].
+// Thin HTTP layer; business logic delegates to the JournalService.
 
 import { errorResponse, parseJsonBody, withAuth } from '@/lib/api';
+import {
+  JournalPatchSchema,
+  getJournalEntryService,
+  updateJournalEntryService,
+  deleteJournalEntryService,
+} from '@/lib/services/journal';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -28,7 +31,7 @@ export const dynamic = 'force-dynamic';
 export const GET = withAuth<{ id: string }>(async (_req, { params, user }) => {
   try {
     const { id } = await params;
-    const entry = await getEntry(user.userId, id);
+    const entry = await getJournalEntryService(user.userId, id);
     if (!entry) {
       return Response.json(
         { error: { code: 'NOT_FOUND', message: 'entry not found' } },
@@ -41,22 +44,11 @@ export const GET = withAuth<{ id: string }>(async (_req, { params, user }) => {
   }
 });
 
-const PatchSchema = z.object({
-  closedAt: z.number().int().nullable().optional(),
-  exit: z.number().nullable().optional(),
-  stop: z.number().nullable().optional(),
-  target: z.number().nullable().optional(),
-  size: z.number().nullable().optional(),
-  outcome: TradeOutcomeSchema.optional(),
-  notes: z.string().max(5000).nullable().optional(),
-  tags: z.array(z.string().max(40)).max(10).optional(),
-});
-
 export const PATCH = withAuth<{ id: string }>(async (req, { params, user }) => {
   try {
     const { id } = await params;
-    const input = await parseJsonBody(req, PatchSchema);
-    const entry = await updateEntry(user.userId, id, input);
+    const input = await parseJsonBody(req, JournalPatchSchema);
+    const entry = await updateJournalEntryService(user.userId, id, input);
     if (!entry) {
       return Response.json(
         { error: { code: 'NOT_FOUND', message: 'entry not found' } },
@@ -72,7 +64,7 @@ export const PATCH = withAuth<{ id: string }>(async (req, { params, user }) => {
 export const DELETE = withAuth<{ id: string }>(async (_req, { params, user }) => {
   try {
     const { id } = await params;
-    const deleted = await deleteEntry(user.userId, id);
+    const deleted = await deleteJournalEntryService(user.userId, id);
     if (!deleted) {
       return Response.json(
         { error: { code: 'NOT_FOUND', message: 'entry not found' } },

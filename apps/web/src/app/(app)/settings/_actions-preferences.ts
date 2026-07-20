@@ -19,8 +19,8 @@
 // Preferences domain actions: profile, UI, AI prefs, notifications, usage budget, symbols, locale.
 
 import { auth } from '@/auth';
-import { getDb, schema, withRateLimit } from '@hamafx/db';
 import { eq, and, sql } from 'drizzle-orm';
+import { withRateLimit, getDb, schema, updateUserDisplayName } from '@hamafx/db';
 import * as Sentry from '@sentry/nextjs';
 import { revalidatePath } from 'next/cache';
 import { PROVIDER_IDS } from '@hamafx/shared/encryption';
@@ -55,11 +55,7 @@ export async function updateProfileAction(formData: FormData): Promise<ActionRes
   }
 
   try {
-    const db = getDb();
-    await db
-      .update(schema.users)
-      .set({ name })
-      .where(eq(schema.users.id, session.user.id));
+    await updateUserDisplayName(session.user.id, name);
 
     revalidatePath('/settings/profile');
     return { ok: true as const };

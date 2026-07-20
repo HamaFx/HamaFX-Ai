@@ -4,7 +4,7 @@ import { eq } from 'drizzle-orm';
 import { z } from 'zod';
 
 import { auth } from '@/auth';
-import { getDb, schema } from '@hamafx/db';
+import { getUserApiKeys } from '@hamafx/db';
 import { decryptByok } from '@hamafx/shared/encryption';
 
 export const runtime = 'nodejs';
@@ -66,12 +66,8 @@ export const GET = async (req: Request) => {
 
   const symbols = parsed.data.symbol.length > 0 ? parsed.data.symbol : ['XAUUSD'];
 
-  const db = getDb();
-  const [settings] = await db
-    .select({ aiApiKeys: schema.userSettings.aiApiKeys })
-    .from(schema.userSettings)
-    .where(eq(schema.userSettings.userId, session.user.id));
-  const keys: Record<string, string> = (decryptByok(settings?.aiApiKeys) ?? {}) as unknown as Record<string, string>;
+  const encryptedKeys = await getUserApiKeys(session.user.id);
+  const keys: Record<string, string> = (decryptByok(encryptedKeys) ?? {}) as unknown as Record<string, string>;
 
   const stream = generatePrices(keys, symbols);
   const encoder = new TextEncoder();

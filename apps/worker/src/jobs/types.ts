@@ -19,12 +19,38 @@
 
 import type { Logger } from '../log.js';
 
-export interface JobContext {
+// -----------------------------------------------------------------------
+// PF-09 — ISP-compliant job context split.
+//
+// `JobCoreContext` contains the fields every job needs (log).
+// `JobCancellableContext` extends it with an abort signal for jobs
+// that support cancellation. The `JobFn` type accepts the cancellable
+// variant because all current jobs support signals (via the scheduler's
+// AbortController or the runner CLI's SIGTERM handler).
+// -----------------------------------------------------------------------
+
+export interface JobCoreContext {
   /** Logger pre-tagged with `service: 'worker:job:<name>'`. */
   log: Logger;
-  /** Aborted when systemd sends SIGTERM during a run. Jobs SHOULD honour it. */
-  signal?: AbortSignal | undefined;
+  /**
+   * PF-23 — Tenant router for partitioned worker deployments.
+   * Determines whether this worker instance owns a given tenant.
+   * Always returns true in single-worker mode.
+   */
+  tenantRouter: import('../tenant-router.js').TenantRouter;
 }
+
+export interface JobCancellableContext extends JobCoreContext {
+  /** Aborted when systemd sends SIGTERM during a run. Jobs SHOULD honour it. */
+  signal: AbortSignal;
+}
+
+/**
+ * Backward-compatible alias — use `JobCoreContext` or `JobCancellableContext`
+ * directly for new code.
+ * @deprecated Prefer `JobCoreContext` or `JobCancellableContext`.
+ */
+export type JobContext = JobCancellableContext;
 
 export interface JobResult {
   /** Rows / items processed (definition is per-job). */
@@ -33,8 +59,8 @@ export interface JobResult {
   note?: string | undefined;
 }
 
-/** A registered job's run function. */
-export type JobFn = (ctx: JobContext) => Promise<JobResult>;
+/** A registered job's run function. Accepts the cancellable variant. */
+export type JobFn = (ctx: JobCancellableContext) => Promise<JobResult>;
 
 /**
  * The full set of jobs that can be invoked from the runner CLI.
@@ -50,3 +76,29 @@ export type JobName =
   | 'alerts'
   | 'multi-agent-analysis'
   | 'retention';
+
+/**
+ * PF-04 — Registered job with schedule and healthchecks.io metadata.
+ *
+ * Each job has:
+ *   - `name`: unique identifier matching the JobName type.
+ *   - `description`: one-line explanation for healthchecks.io ping bodies.
+ *   - `run`: the async function that executes the job.
+ *   - `schedule`: optional cron expression. `null` means the job is not
+ *     scheduled on a timer (e.g., multi-agent-analysis uses setTimeout).
+ *   - `hcUuidEnvVar`: optional key in the WorkerEnv that holds the
+ *     healthchecks.io UUID for this job's heartbeats.
+ */
+export interface JobRegistration {
+  name: JobName;
+  description: string;
+  run: JobFn;
+  /** Cron expression for node-cron scheduling. `null` = no cron schedule. */
+  schedule: string | null;
+  /**
+   * Env var key on the WorkerEnv that holds the healthchecks.io UUID
+   * for this job. When set, the runner CLI reads `env[hcUuidEnvVar]`
+   * instead of using a switch statement.
+   */
+  hcUuidEnvVar?: keyof import('../env.js').WorkerEnv | undefined;
+}

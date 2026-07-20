@@ -14,10 +14,9 @@
  * limitations under the License.
  */
 
-import { desc, eq } from 'drizzle-orm';
 import { z } from 'zod';
 
-import { getDb, schema } from '@hamafx/db';
+import { listDiagnosticTraces } from '@hamafx/db';
 
 import { withAdminAuth } from '@/lib/admin-auth';
 import { parseSearchParams } from '@/lib/api';
@@ -33,22 +32,7 @@ const querySchema = z.object({
 export const GET = withAdminAuth(async (req) => {
   const { threadId, limit } = parseSearchParams(req, querySchema);
 
-  const db = getDb();
-  const traces = await db
-    .select({
-      id: schema.diagnosticTraces.id,
-      userId: schema.diagnosticTraces.userId,
-      threadId: schema.diagnosticTraces.threadId,
-      startedAt: schema.diagnosticTraces.startedAt,
-      durationMs: schema.diagnosticTraces.durationMs,
-      stepCount: schema.diagnosticTraces.stepCount,
-      errorCount: schema.diagnosticTraces.errorCount,
-      status: schema.diagnosticTraces.status,
-    })
-    .from(schema.diagnosticTraces)
-    .where(threadId ? eq(schema.diagnosticTraces.threadId, threadId) : undefined)
-    .orderBy(desc(schema.diagnosticTraces.startedAt))
-    .limit(limit);
+  const traces = await listDiagnosticTraces({ threadId, limit });
 
   return Response.json({ traces });
 });

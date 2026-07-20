@@ -34,9 +34,8 @@
 // Auth: NextAuth session gate. Per-user data only.
 
 import { BYOK_PROVIDERS } from '@hamafx/ai';
-import { getDb, schema } from '@hamafx/db';
+import { getUserWithSettings, updateUserSettingsField } from '@hamafx/db';
 import { PROVIDER_IDS, type ProviderId } from '@hamafx/shared/encryption';
-import { eq } from 'drizzle-orm';
 import { z } from 'zod';
 
 import { errorResponse, parseJsonBody, withAuth } from '@/lib/api';
@@ -51,12 +50,8 @@ const PutBodySchema = z.object({
 
 export const GET = withAuth<void>(async (_req, { user }) => {
   try {
-    const db = getDb();
-    const [row] = await db
-      .select({ visionModel: schema.userSettings.visionModel })
-      .from(schema.userSettings)
-      .where(eq(schema.userSettings.userId, user.userId));
-    return Response.json({ visionModel: row?.visionModel ?? null });
+    const { settings } = await getUserWithSettings(user.userId);
+    return Response.json({ visionModel: settings?.visionModel ?? null });
   } catch (err) {
     return errorResponse(err);
   }
@@ -110,11 +105,7 @@ export const PUT = withAuth<void>(async (req, { user }) => {
 
   const value = `${body.providerId}:${bareModelId}`;
   try {
-    const db = getDb();
-    await db
-      .update(schema.userSettings)
-      .set({ visionModel: value })
-      .where(eq(schema.userSettings.userId, user.userId));
+    await updateUserSettingsField(user.userId, 'visionModel', value);
     return Response.json({ ok: true, visionModel: value });
   } catch (err) {
     return errorResponse(err);
@@ -123,11 +114,7 @@ export const PUT = withAuth<void>(async (req, { user }) => {
 
 export const DELETE = withAuth<void>(async (_req, { user }) => {
   try {
-    const db = getDb();
-    await db
-      .update(schema.userSettings)
-      .set({ visionModel: null })
-      .where(eq(schema.userSettings.userId, user.userId));
+    await updateUserSettingsField(user.userId, 'visionModel', null);
     return Response.json({ ok: true, visionModel: null });
   } catch (err) {
     return errorResponse(err);

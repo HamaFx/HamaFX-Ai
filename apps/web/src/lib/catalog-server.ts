@@ -18,14 +18,13 @@ import 'server-only';
 
 import { cache } from 'react';
 import { BYOK_PROVIDERS_LIST } from '@hamafx/ai';
-import { getDb, schema } from '@hamafx/db';
+import { getProviderHealthForUser, getUserApiKeys } from '@hamafx/db';
 import { decryptByok } from '@hamafx/shared/encryption';
 import {
   type CatalogResponse,
   type ModelDomain,
   type ProviderId,
 } from '@hamafx/shared';
-import { eq } from 'drizzle-orm';
 
 /**
  * Phase F — the catalog body that `/api/settings/catalog` returns.
@@ -43,24 +42,12 @@ export const buildCatalogForUser = cache(async function buildCatalogForUser(
   userId: string,
 ): Promise<CatalogResponse> {
 
-  const db = getDb();
-  const [settings] = await db
-    .select({ aiApiKeys: schema.userSettings.aiApiKeys })
-    .from(schema.userSettings)
-    .where(eq(schema.userSettings.userId, userId));
-  const decrypted = settings?.aiApiKeys ? decryptByok(settings.aiApiKeys) : null;
+  const encryptedKeys = await getUserApiKeys(userId);
+  const decrypted = encryptedKeys ? decryptByok(encryptedKeys) : null;
 
   // Latest health snapshot per provider (one row per (user, provider)
   // so this is a single round-trip).
-  const healthRows = await db
-    .select({
-      providerId: schema.providerTests.providerId,
-      ok: schema.providerTests.ok,
-      error: schema.providerTests.error,
-      testedAt: schema.providerTests.testedAt,
-    })
-    .from(schema.providerTests)
-    .where(eq(schema.providerTests.userId, userId));
+  const healthRows = await getProviderHealthForUser(userId);
   const healthByProvider = new Map(healthRows.map((h) => [h.providerId, h]));
 
   const providers = BYOK_PROVIDERS_LIST.map((p) => {

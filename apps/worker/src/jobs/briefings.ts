@@ -29,7 +29,7 @@
 // The `wasEmitted` idempotency guard prevents duplicates.
 
 import { emitPostEvent, emitPreEvent, findHighImpactEventsInWindow } from '@hamafx/ai';
-import { getDb, schema } from '@hamafx/db';
+import { getActiveUserIds } from '@hamafx/db';
 
 import type { JobContext, JobResult } from './types.js';
 
@@ -44,8 +44,7 @@ export async function runBriefings(ctx: JobContext): Promise<JobResult> {
   const now = Date.now();
   const log = ctx.log;
 
-  const db = getDb();
-  const users = await db.select({ id: schema.users.id }).from(schema.users);
+  const userIds = await getActiveUserIds();
 
   // --- Pre-event window: [now, now+2h] ---
   // Any high-impact event happening in the next 2 hours gets a pre-event
@@ -62,12 +61,14 @@ export async function runBriefings(ctx: JobContext): Promise<JobResult> {
       log.warn('briefings aborted', { phase: 'pre' });
       break;
     }
-    for (const u of users) {
+    for (const userId of userIds) {
+      // PF-23: Skip tenants that belong to another worker partition.
+      if (!ctx.tenantRouter.isMyTenant(userId)) continue;
       try {
-        const r = await emitPreEvent(u.id, c.id);
+        const r = await emitPreEvent(userId, c.id);
         if (r.emitted) preEmitted += 1;
       } catch (err) {
-        log.error('emitPreEvent failed', { userId: u.id, eventId: c.id, err: String(err) });
+        log.error('emitPreEvent failed', { userId, eventId: c.id, err: String(err) });
       }
     }
   }
@@ -88,12 +89,14 @@ export async function runBriefings(ctx: JobContext): Promise<JobResult> {
       log.warn('briefings aborted', { phase: 'post' });
       break;
     }
-    for (const u of users) {
+    for (const userId of userIds) {
+      // PF-23: Skip tenants that belong to another worker partition.
+      if (!ctx.tenantRouter.isMyTenant(userId)) continue;
       try {
-        const r = await emitPostEvent(u.id, c.id);
+        const r = await emitPostEvent(userId, c.id);
         if (r.emitted) postEmitted += 1;
       } catch (err) {
-        log.error('emitPostEvent failed', { userId: u.id, eventId: c.id, err: String(err) });
+        log.error('emitPostEvent failed', { userId, eventId: c.id, err: String(err) });
       }
     }
   }

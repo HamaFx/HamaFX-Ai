@@ -19,8 +19,7 @@
 
 import type { BotCommand, BotResponse, BotContext } from '../types';
 import { getBotLink } from '../linking';
-import { getDb, schema } from '@hamafx/db';
-import { eq } from 'drizzle-orm';
+import { getUserWithSettings } from '@hamafx/db';
 
 export const settingsCommand: BotCommand = {
   name: 'settings',
@@ -29,18 +28,7 @@ export const settingsCommand: BotCommand = {
   handler: async (_args: string[], ctx: BotContext): Promise<BotResponse> => {
     try {
       const link = await getBotLink(ctx.userId, 'telegram');
-
-      // Fetch user's model settings
-      const db = getDb();
-      const [userSettings] = await db
-        .select({
-          defaultModels: schema.userSettings.defaultModels,
-          defaultSymbol: schema.userSettings.defaultSymbol,
-          timezone: schema.userSettings.timezone,
-        })
-        .from(schema.userSettings)
-        .where(eq(schema.userSettings.userId, ctx.userId))
-        .limit(1);
+      const { settings } = await getUserWithSettings(ctx.userId);
 
       const linkedAt = link ? new Date(link.linkedAt).toLocaleDateString('en-US', {
         year: 'numeric',
@@ -48,8 +36,8 @@ export const settingsCommand: BotCommand = {
         day: 'numeric',
       }) : 'Not linked';
 
-      const modelInfo = userSettings?.defaultModels
-        ? Object.entries(userSettings.defaultModels)
+      const modelInfo = settings?.defaultModels
+        ? Object.entries(settings.defaultModels)
             .map(([domain, model]) => `${domain}: ${model}`)
             .join(', ')
         : 'Default (Gemini 2.5 Flash)';
@@ -59,8 +47,8 @@ export const settingsCommand: BotCommand = {
         '',
         `🔗 Telegram: ${link ? `Linked since ${linkedAt}` : 'Not linked'}`,
         `🤖 AI Models: ${modelInfo}`,
-        `📊 Default Symbol: ${userSettings?.defaultSymbol ?? 'XAUUSD'}`,
-        `🕐 Timezone: ${userSettings?.timezone ?? 'UTC'}`,
+        `📊 Default Symbol: ${settings?.defaultSymbol ?? 'XAUUSD'}`,
+        `🕐 Timezone: ${settings?.timezone ?? 'UTC'}`,
         '',
         'Manage full settings at:',
         '🔗 hamafx.ai/settings',

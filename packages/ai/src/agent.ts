@@ -32,6 +32,7 @@ import {
 } from 'ai';
 
 import { telemetryConfig } from './telemetry';
+import { getLlmClient } from './llm-client';
 import { buildLiveSnapshot } from './context';
 import type { LiveSnapshot } from './prompt/system';
 import {
@@ -73,33 +74,18 @@ import { routeTurn, type RoutingDecision } from './routing';
 import { generateTitle } from './title';
 import { toModelDomain, pickNextFallbackProvider } from './model-resolution';
 import { withToolContext, type ToolContext } from './tool-context';
-import { tools } from './tools';
+import { toolRegistry } from './tools';
 import { enforceCitations } from './verification';
 import { waitUntil } from './wait-until';
 import { getDb, schema, getUserWithSettings } from '@hamafx/db';
 import { domainToolFilter, type RoutingDomain } from './tools/by-domain';
+import type { RunChatArgs } from './types';
 import type { UserSettingsRow } from '@hamafx/db/schema';
 import { extractRateLimits } from './rate-limits';
 import { noteLlmRateLimit, awaitLlmHeadroom } from './llm-throttle';
 import { withDiagnostics, recordStep, completeStep, recordError, exportDiagnosticContext } from './diagnostics';
 
 const alog = createCategorizedLogger('ai', { component: 'agent' });
-
-export interface RunChatArgs {
-  threadId: string;
-  /** Phase A — the authenticated user owning this chat turn. */
-  userId: string;
-  /** Most recent user UIMessage to append + answer. */
-  userMessage: UIMessage;
-  /** Whole env — caller passes the already-validated ServerEnv env subset. */
-  env: Pick<ServerEnv, AiEnvKeys>;
-  /** Optional model override (e.g. coming from thread.modelOverride). */
-  modelOverride?: string | null;
-  /** Custom instructions to append to the system prompt. */
-  customInstructions?: string;
-  /** Aborts streaming + tool calls when the client disconnects. */
-  signal?: AbortSignal;
-}
 /**
  * Runs one chat turn end-to-end:
  *   1. Daily-budget guardrail.
@@ -582,7 +568,11 @@ async function runChatInner(args: RunChatArgs) {
     // H3: Domain-based tool subsetting — reduces per-turn token overhead
     // by 60-80%. Only pass tools relevant to the routing domain.
     // 'generic' domain gets all tools (fallback for unclassified messages).
-    const activeTools = domainToolFilter(routing.domain as RoutingDomain) as Record<string, Tool>;
+    // PF-16: pass the user's plan tier for per-tenant tool gating.
+    // USER_PLAN_TIER is an optional env field that may not exist in all
+    // deployments. When undefined, all tools are available.
+    const userPlan = (env as Record<string, unknown>).USER_PLAN_TIER as string | undefined;
+    const activeTools = domainToolFilter(routing.domain as RoutingDomain, userPlan) as Record<string, Tool>;
     if (nonEssentialDisabled) {
       delete activeTools.convene_committee;
       delete activeTools.replay_setup;
@@ -754,7 +744,22 @@ async function runChatInner(args: RunChatArgs) {
       const headroomKey = `${providerId}:${userId}`;
       await awaitLlmHeadroom(headroomKey, signal ? { signal } : {});
       recordStep('stream_text', { model: resolvedModelId, attempt: attempts });
-      const result = await withToolContext(toolContext, () => Promise.resolve(streamText(streamArgs)));
+      const result = await withToolContext(toolContext, async () => {
+        const client = getLlmClient();
+        const streamTextOpts: Record<string, unknown> = {
+          model: resolvedModel,
+          system: systemPrompt,
+          messages: effectiveMessages,
+          telemetry: telemetryConfig(),
+        };
+        if (streamArgs.tools) streamTextOpts.tools = streamArgs.tools;
+        if (streamArgs.stopWhen) streamTextOpts.stopWhen = streamArgs.stopWhen;
+        if (signal) streamTextOpts.abortSignal = signal;
+        if (streamArgs.providerOptions) streamTextOpts.providerOptions = streamArgs.providerOptions;
+        if (streamArgs.onFinish) streamTextOpts.onFinish = streamArgs.onFinish;
+
+        return client.streamText(streamTextOpts as unknown as Parameters<typeof client.streamText>[0]);
+      });
       completeStep('stream_text', 'completed');
       return result;
     } catch (err) {

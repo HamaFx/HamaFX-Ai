@@ -14,10 +14,9 @@
  * limitations under the License.
  */
 
-import { lt } from 'drizzle-orm';
 import { z } from 'zod';
 
-import { getDb, schema } from '@hamafx/db';
+import { deleteOldCronRuns } from '@hamafx/db';
 
 import { withAdminAuth } from '@/lib/admin-auth';
 import { parseJsonBody } from '@/lib/api';
@@ -37,12 +36,10 @@ export const POST = withAdminAuth(async (req) => {
   const { target } = await parseJsonBody(req, flushSchema);
   const flushed: string[] = [];
 
-  const db = getDb();
-
   if (target === 'cron_locks' || target === 'all') {
     // Remove stuck cron locks (started but not finished for > 1 hour)
     const cutoff = new Date(Date.now() - 60 * 60 * 1000);
-    await db.delete(schema.cronRuns).where(lt(schema.cronRuns.startedAt, cutoff));
+    await deleteOldCronRuns(cutoff);
     flushed.push('cron_locks');
   }
 

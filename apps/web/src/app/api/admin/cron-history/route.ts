@@ -14,10 +14,9 @@
  * limitations under the License.
  */
 
-import { desc, gte, sql } from 'drizzle-orm';
 import { z } from 'zod';
 
-import { getDb, schema } from '@hamafx/db';
+import { listCronRuns } from '@hamafx/db';
 
 import { withAdminAuth } from '@/lib/admin-auth';
 import { parseSearchParams } from '@/lib/api';
@@ -33,18 +32,9 @@ const querySchema = z.object({
 export const GET = withAdminAuth(async (req) => {
   const { days, jobName } = parseSearchParams(req, querySchema);
 
-  const db = getDb();
   const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
 
-  const runs = await db
-    .select()
-    .from(schema.cronRuns)
-    .where(
-      jobName
-        ? sql`${schema.cronRuns.jobName} = ${jobName} AND ${schema.cronRuns.startedAt} >= ${since}`
-        : gte(schema.cronRuns.startedAt, since),
-    )
-    .orderBy(desc(schema.cronRuns.startedAt));
+  const runs = await listCronRuns({ since, jobName });
 
   return Response.json({ runs });
 });

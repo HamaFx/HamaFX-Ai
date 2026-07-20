@@ -37,9 +37,11 @@ import * as ai from '@hamafx/ai';
 import { fred } from '@hamafx/data';
 
 import { runFredActuals } from '../src/jobs/fred-actuals';
+import { TenantRouter } from '../src/tenant-router';
 import { createLogger } from '../src/log';
 
 const log = createLogger({ service: 'test', forceJson: true });
+const testRouter = new TenantRouter();
 const ORIGINAL_FRED_KEY = process.env['FRED_API_KEY'];
 
 beforeEach(() => {
@@ -61,7 +63,7 @@ describe('runFredActuals', () => {
     delete process.env['FRED_API_KEY'];
     vi.mocked(ai.listFredEventsMissingActual).mockResolvedValue([{ id: 'fred:50:2026-05-01' } as never]);
 
-    const r = await runFredActuals({ log });
+    const r = await runFredActuals({ log, signal: new AbortController().signal, tenantRouter: testRouter });
     expect(r.processed).toBe(0);
     expect(r.note).toBe('FRED_API_KEY missing');
     expect(ai.listFredEventsMissingActual).not.toHaveBeenCalled();
@@ -88,7 +90,7 @@ describe('runFredActuals', () => {
     ]);
     vi.mocked(ai.patchEventActual).mockResolvedValue(undefined as never);
 
-    const r = await runFredActuals({ log });
+    const r = await runFredActuals({ log, signal: new AbortController().signal, tenantRouter: testRouter });
     expect(r.processed).toBe(2);
     expect(r.note).toMatch(/filled=2/);
     expect(ai.patchEventActual).toHaveBeenCalledWith(
@@ -110,7 +112,7 @@ describe('runFredActuals', () => {
     // missing-meta branch — skip seriesId.
     vi.mocked(fred.fredMeta).mockReturnValue(null);
 
-    const r = await runFredActuals({ log });
+    const r = await runFredActuals({ log, signal: new AbortController().signal, tenantRouter: testRouter });
     expect(r.note).toMatch(/skipped=2/);
   });
 });

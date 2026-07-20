@@ -14,20 +14,18 @@
  * limitations under the License.
  */
 
-// /api/portfolio/risk — get portfolio risk report.
-// GET /api/portfolio/risk
-
-import { getPortfolioRiskReport } from '@hamafx/ai';
+// PF-22 — /api/portfolio/risk — risk report (thin controller).
 
 import { errorResponse, withAuth } from '@/lib/api';
+import { getRiskReportService } from '@/lib/services/portfolio';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 export const GET = withAuth<void>(async (_req, { user }) => {
   try {
-    const report = await getPortfolioRiskReport(user.userId);
-    return Response.json({ report });
+    const result = await getRiskReportService(user.userId);
+    return Response.json(result);
   } catch (err) {
     return errorResponse(err);
   }

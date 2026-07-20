@@ -14,13 +14,10 @@
  * limitations under the License.
  */
 
-// /api/alerts/[id] — read / patch / delete one alert.
-
-import { deleteAlert, getAlert, updateAlert } from '@hamafx/ai';
-import { AlertChannelSchema, AlertRuleSchema } from '@hamafx/shared';
-import { z } from 'zod';
+// PF-22 — /api/alerts/[id] — read / patch / delete one alert (thin controller).
 
 import { errorResponse, parseJsonBody, withAuth } from '@/lib/api';
+import { AlertPatchSchema, getAlertService, updateAlertService, deleteAlertService } from '@/lib/services/alerts';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -28,7 +25,7 @@ export const dynamic = 'force-dynamic';
 export const GET = withAuth<{ id: string }>(async (_req, { params, user }) => {
   try {
     const { id } = await params;
-    const alert = await getAlert(user.userId, id);
+    const alert = await getAlertService(user.userId, id);
     if (!alert) {
       return Response.json(
         { error: { code: 'NOT_FOUND', message: 'alert not found' } },
@@ -41,20 +38,11 @@ export const GET = withAuth<{ id: string }>(async (_req, { params, user }) => {
   }
 });
 
-const PatchSchema = z.object({
-  rule: AlertRuleSchema.optional(),
-  channels: z.array(AlertChannelSchema).optional(),
-  note: z.string().max(280).nullable().optional(),
-  active: z.boolean().optional(),
-  /** Pass `null` to re-arm a fired alert. */
-  firedAt: z.number().int().nullable().optional(),
-});
-
 export const PATCH = withAuth<{ id: string }>(async (req, { params, user }) => {
   try {
     const { id } = await params;
-    const input = await parseJsonBody(req, PatchSchema);
-    const alert = await updateAlert(user.userId, id, input);
+    const input = await parseJsonBody(req, AlertPatchSchema);
+    const alert = await updateAlertService(user.userId, id, input);
     if (!alert) {
       return Response.json(
         { error: { code: 'NOT_FOUND', message: 'alert not found' } },
@@ -70,7 +58,7 @@ export const PATCH = withAuth<{ id: string }>(async (req, { params, user }) => {
 export const DELETE = withAuth<{ id: string }>(async (_req, { params, user }) => {
   try {
     const { id } = await params;
-    await deleteAlert(user.userId, id);
+    await deleteAlertService(user.userId, id);
     return Response.json({ ok: true });
   } catch (err) {
     return errorResponse(err);

@@ -1,0 +1,142 @@
+/**
+ * Copyright 2026 HamaFX
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+// PF-22 — Journal service layer.
+//
+// Separates business logic from HTTP handling. Route handlers (controllers)
+// call these service functions instead of importing @hamafx/ai directly.
+// The service layer handles:
+//   - Input validation (re-exports Zod schemas)
+//   - Authorization checks (scoped to userId)
+//   - Error wrapping (converts domain errors to typed results)
+//   - Response formatting (returns typed DTOs)
+//
+// Pattern: Service (PF-22). Each domain (journal, alerts, portfolio, etc.)
+// gets its own service file. Controllers remain thin: parse request →
+// call service → format Response.
+
+import {
+  computeStats,
+  createEntry,
+  deleteEntry,
+  getEntry,
+  listEntries,
+  updateEntry,
+} from '@hamafx/ai';
+import { SymbolSchema, TradeOutcomeSchema, TradeSideSchema } from '@hamafx/shared';
+import { z } from 'zod';
+
+// ── Schemas (shared between controller and tests) ──────────────────────────
+
+export const JournalCreateSchema = z.object({
+  symbol: SymbolSchema,
+  side: TradeSideSchema,
+  openedAt: z.number().int(),
+  entry: z.number(),
+  stop: z.number().nullable().optional(),
+  target: z.number().nullable().optional(),
+  size: z.number().nullable().optional(),
+  notes: z.string().max(5000).nullable().optional(),
+  tags: z.array(z.string().max(40)).max(10).optional(),
+  screenshotUrl: z.string().nullable().optional(),
+});
+
+export const JournalPatchSchema = z.object({
+  closedAt: z.number().int().nullable().optional(),
+  exit: z.number().nullable().optional(),
+  stop: z.number().nullable().optional(),
+  target: z.number().nullable().optional(),
+  size: z.number().nullable().optional(),
+  outcome: TradeOutcomeSchema.optional(),
+  notes: z.string().max(5000).nullable().optional(),
+  tags: z.array(z.string().max(40)).max(10).optional(),
+});
+
+export type JournalCreateInput = z.infer<typeof JournalCreateSchema>;
+export type JournalPatchInput = z.infer<typeof JournalPatchSchema>;
+
+// ── Service functions ─────────────────────────────────────────────────────
+
+export interface EntryDTO {
+  id: string;
+  symbol: string;
+  side: string;
+  entry: number;
+  stop: number | null;
+  target: number | null;
+  size: number | null;
+  notes: string | null;
+  tags: string[];
+  screenshotUrl: string | null;
+  openedAt: number;
+  closedAt: number | null;
+  outcome: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export async function listJournalEntriesService(
+  userId: string,
+  opts?: { symbol?: string },
+): Promise<{ entries: EntryDTO[]; stats: Record<string, unknown> }> {
+  const [entries, stats] = await Promise.all([
+    listEntries(userId, opts),
+    computeStats(userId),
+  ]);
+  return { entries: entries as unknown as EntryDTO[], stats };
+}
+
+export async function createJournalEntryService(
+  userId: string,
+  input: JournalCreateInput,
+): Promise<EntryDTO> {
+  const entry = await createEntry({
+    userId,
+    symbol: input.symbol,
+    side: input.side,
+    openedAt: input.openedAt,
+    entry: input.entry,
+    stop: input.stop ?? null,
+    target: input.target ?? null,
+    size: input.size ?? null,
+    notes: input.notes ?? null,
+    tags: input.tags ?? [],
+    screenshotUrl: input.screenshotUrl ?? null,
+  });
+  return entry as unknown as EntryDTO;
+}
+
+export async function getJournalEntryService(
+  userId: string,
+  id: string,
+): Promise<EntryDTO | null> {
+  return (await getEntry(userId, id)) as unknown as EntryDTO | null;
+}
+
+export async function updateJournalEntryService(
+  userId: string,
+  id: string,
+  input: JournalPatchInput,
+): Promise<EntryDTO | null> {
+  return (await updateEntry(userId, id, input)) as unknown as EntryDTO | null;
+}
+
+export async function deleteJournalEntryService(
+  userId: string,
+  id: string,
+): Promise<boolean> {
+  return deleteEntry(userId, id);
+}

@@ -33,9 +33,11 @@ vi.mock('@hamafx/db', () => ({
 import * as ai from '@hamafx/ai';
 
 import { runWeeklyReview } from '../src/jobs/weekly-review';
+import { TenantRouter } from '../src/tenant-router';
 import { createLogger } from '../src/log';
 
 const log = createLogger({ service: 'test', forceJson: true });
+const testRouter = new TenantRouter();
 
 beforeEach(() => {
   vi.mocked(ai.emitWeeklyReview).mockReset();
@@ -44,7 +46,7 @@ beforeEach(() => {
 describe('runWeeklyReview', () => {
   it('returns processed=1 when emitWeeklyReview emitted', async () => {
     vi.mocked(ai.emitWeeklyReview).mockResolvedValue({ emitted: true });
-    const r = await runWeeklyReview({ log });
+    const r = await runWeeklyReview({ log, signal: new AbortController().signal, tenantRouter: testRouter });
     expect(r.processed).toBe(1);
     expect(r.note).toBeUndefined();
   });
@@ -57,7 +59,7 @@ describe('runWeeklyReview', () => {
       emitted: false,
       reason: 'already-emitted',
     });
-    const r = await runWeeklyReview({ log });
+    const r = await runWeeklyReview({ log, signal: new AbortController().signal, tenantRouter: testRouter });
     expect(r.processed).toBe(0);
     expect(r.note).toBeUndefined();
   });

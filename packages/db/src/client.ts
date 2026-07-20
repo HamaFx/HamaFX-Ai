@@ -86,6 +86,40 @@ function resolveStatementTimeout(): number {
   return isWorker ? DEFAULT_WORKER_STATEMENT_TIMEOUT : DEFAULT_WEB_STATEMENT_TIMEOUT;
 }
 
+// PF-15 — read-replica client. Initialised lazily, separate pool.
+let _replicaClient: DbClient | null = null;
+let _replicaSql: ReturnType<typeof postgres> | null = null;
+
+/**
+ * Lazy-initialised drizzle client for read-only replicas.
+ * Uses `DATABASE_URL_REPLICA` when set; falls back to the primary
+ * connection when no replica is configured (single-node deployments).
+ */
+export function getDbRO(): DbClient {
+  if (_replicaClient) return _replicaClient;
+
+  const url = process.env.DATABASE_URL_REPLICA;
+  if (!url) {
+    // No replica configured — fall through to the primary pool
+    return getDb();
+  }
+
+  _replicaSql = postgres(url, {
+    prepare: false,
+    max: Math.min(resolvePoolMax(), 3), // replica pool is smaller
+    idle_timeout: 20,
+    connect_timeout: 10,
+    max_lifetime: 60 * 30,
+    ssl: resolveSslOptions(),
+    connection: {
+      statement_timeout: resolveStatementTimeout(),
+    },
+  });
+
+  _replicaClient = drizzle(_replicaSql, { schema });
+  return _replicaClient;
+}
+
 /**
  * Lazy-initialised drizzle client. We use a module-scope singleton so cold
  * Vercel functions reuse the same connection pool across invocations within
@@ -161,13 +195,23 @@ export function getDb(): DbClient {
   return _client;
 }
 
-/** For tests / scripts only — closes the underlying pool. */
+/** For tests / scripts only — closes the replica pool. */
+export async function closeReplicaDb(): Promise<void> {
+  if (_replicaSql) {
+    await _replicaSql.end({ timeout: 5 });
+    _replicaSql = null;
+    _replicaClient = null;
+  }
+}
+
+/** For tests / scripts only — closes the underlying pool(s). */
 export async function closeDb(): Promise<void> {
   if (_sql) {
     await _sql.end({ timeout: 5 });
     _sql = null;
     _client = null;
   }
+  await closeReplicaDb();
 }
 
 /**
@@ -225,12 +269,11 @@ export async function withTenantDbRO<T>(
   work: (db: DbClient) => Promise<T>,
 ): Promise<T> {
   if (!rlsEnabled) {
-    return work(getDb());
+    // PF-15: Use read replica when available
+    return work(getDbRO());
   }
-  return getDb().transaction(async (tx) => {
-    // SET TRANSACTION READ ONLY must come before any other statement
-    // in the transaction. set_config doesn't modify data so the order
-    // is safe, but READ ONLY first is idiomatic.
+  const db = getDbRO();
+  return db.transaction(async (tx) => {
     await tx.execute(sql`SET TRANSACTION READ ONLY`);
     await tx.execute(sql`SELECT set_config('app.current_tenant', ${tenantId}, true)`);
     return work(tx as unknown as DbClient);

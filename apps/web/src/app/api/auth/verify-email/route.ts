@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
-import { and, eq, gt } from 'drizzle-orm';
-import { getDb, schema } from '@hamafx/db';
+import { findVerificationToken, deleteVerificationToken, verifyUserEmail } from '@hamafx/db';
 import { hashToken } from '@/lib/auth-tokens';
 
 /**
@@ -19,30 +18,16 @@ export async function GET(req: Request) {
   // P0-6: Hash the incoming raw token and filter by purpose
   const hashedToken = hashToken(rawToken);
 
-  const db = getDb();
-  const [vt] = await db.select()
-    .from(schema.verificationTokens)
-    .where(and(
-      eq(schema.verificationTokens.token, hashedToken),
-      eq(schema.verificationTokens.purpose, 'email_verify'),
-      gt(schema.verificationTokens.expires, new Date()),
-    ))
-    .limit(1);
+  const vt = await findVerificationToken(hashedToken, 'email_verify');
 
   if (!vt) {
     return NextResponse.json({ error: 'Invalid or expired token' }, { status: 400 });
   }
 
-  await db.update(schema.users)
-    .set({ emailVerified: new Date() })
-    .where(eq(schema.users.email, vt.identifier));
+  await verifyUserEmail(vt.identifier);
 
   // Single-use: delete after consumption (defense-in-depth: filter by purpose too)
-  await db.delete(schema.verificationTokens)
-    .where(and(
-      eq(schema.verificationTokens.token, hashedToken),
-      eq(schema.verificationTokens.purpose, 'email_verify'),
-    ));
+  await deleteVerificationToken(hashedToken, 'email_verify');
 
   return NextResponse.redirect(new URL('/login?verified=true', req.url));
 }

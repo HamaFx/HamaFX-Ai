@@ -20,8 +20,7 @@
 // DB read on render.
 
 import { buildToolCatalogue, BYOK_PROVIDERS_LIST } from '@hamafx/ai';
-import { getDb, schema } from '@hamafx/db';
-import { eq } from 'drizzle-orm';
+import { getUserWithSettings } from '@hamafx/db';
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { auth } from '@/auth';
@@ -44,17 +43,7 @@ export default async function AgentCataloguePage() {
   const session = await auth();
   if (!session?.user?.id) redirect('/login');
 
-  const db = getDb();
-  const [settings] = await db
-    .select({
-      disabledTools: schema.userSettings.disabledTools,
-      defaultAnalysisMode: schema.userSettings.defaultAnalysisMode,
-      showAgentOpinions: schema.userSettings.showAgentOpinions,
-      agentModelOverrides: schema.userSettings.agentModelOverrides,
-      customInstructions: schema.userSettings.customInstructions,
-    })
-    .from(schema.userSettings)
-    .where(eq(schema.userSettings.userId, session.user.id));
+  const { settings } = await getUserWithSettings(session.user.id);
 
   const disabledTools = settings?.disabledTools ?? [];
   const analysisMode = (settings?.defaultAnalysisMode ?? 'auto') as 'single' | 'quick' | 'standard' | 'full' | 'auto';

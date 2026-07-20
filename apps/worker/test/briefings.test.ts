@@ -36,9 +36,11 @@ vi.mock('@hamafx/db', () => ({
 import * as ai from '@hamafx/ai';
 
 import { runBriefings } from '../src/jobs/briefings';
+import { TenantRouter } from '../src/tenant-router';
 import { createLogger } from '../src/log';
 
 const log = createLogger({ service: 'test', forceJson: true });
+const testRouter = new TenantRouter();
 
 beforeEach(() => {
   vi.mocked(ai.emitPreEvent).mockReset();
@@ -54,7 +56,7 @@ describe('runBriefings', () => {
     vi.mocked(ai.emitPreEvent).mockResolvedValue({ emitted: true });
     vi.mocked(ai.emitPostEvent).mockResolvedValue({ emitted: true });
 
-    const r = await runBriefings({ log });
+    const r = await runBriefings({ log, signal: new AbortController().signal, tenantRouter: testRouter });
     expect(r.processed).toBe(3);
     expect(r.note).toMatch(/pre=2\/2/);
     expect(r.note).toMatch(/post=1\/1/);
@@ -68,7 +70,7 @@ describe('runBriefings', () => {
       .mockRejectedValueOnce(new Error('boom'))
       .mockResolvedValueOnce({ emitted: true });
 
-    const r = await runBriefings({ log });
+    const r = await runBriefings({ log, signal: new AbortController().signal, tenantRouter: testRouter });
     // Both candidates were considered, even though one failed.
     expect(r.processed).toBe(2);
     expect(r.note).toMatch(/pre=1\/2/);
@@ -84,7 +86,7 @@ describe('runBriefings', () => {
       return { emitted: true };
     });
 
-    await runBriefings({ log, signal: ac.signal });
+    await runBriefings({ log, signal: ac.signal, tenantRouter: testRouter });
     expect(ai.emitPreEvent).toHaveBeenCalledTimes(1);
   });
 });

@@ -14,14 +14,15 @@
  * limitations under the License.
  */
 
-// /api/chat/threads — list + create chat threads.
-// Phase A: scoped by userId from the NextAuth session.
-
-import { createThread, listThreads } from '@hamafx/ai';
-import { SymbolSchema } from '@hamafx/shared';
-import { z } from 'zod';
+// PF-22 — /api/chat/threads — list + create (thin controller).
 
 import { errorResponse, getUserFromRequest, parseJsonBody } from '@/lib/api';
+import { listThreadsService, createThreadService } from '@/lib/services/chat';
+import { z } from 'zod';
+
+const CreateBodySchema = z
+  .object({ pinnedSymbol: z.string().nullable().optional() })
+  .default({});
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -32,23 +33,15 @@ export async function GET(req: Request): Promise<Response> {
     return Response.json({ error: { code: 'UNAUTHORIZED', message: 'Authentication required' } }, { status: 401 });
   }
   try {
-    // PERF-07: Cursor-based pagination. ?before=<epoch ms>&limit=<N>
     const url = new URL(req.url);
     const limit = Math.min(Number(url.searchParams.get('limit') ?? '50'), 100);
-    const before = url.searchParams.get('before');
-    const beforeMs = before ? Number(before) : null;
-    const { threads, nextCursor } = await listThreads(user.userId, limit, beforeMs);
-    return Response.json({ threads, nextCursor });
+    const beforeMs = url.searchParams.get('before') ? Number(url.searchParams.get('before')) : null;
+    const result = await listThreadsService(user.userId, limit, beforeMs);
+    return Response.json(result);
   } catch (err) {
     return errorResponse(err);
   }
 }
-
-const CreateBodySchema = z
-  .object({
-    pinnedSymbol: SymbolSchema.nullable().optional(),
-  })
-  .default({});
 
 export async function POST(req: Request): Promise<Response> {
   const user = await getUserFromRequest(req);
@@ -57,8 +50,8 @@ export async function POST(req: Request): Promise<Response> {
   }
   try {
     const { pinnedSymbol } = await parseJsonBody(req, CreateBodySchema);
-    const thread = await createThread(user.userId, { pinnedSymbol: pinnedSymbol ?? null });
-    return Response.json({ thread }, { status: 201 });
+    const result = await createThreadService(user.userId, pinnedSymbol ?? null);
+    return Response.json(result, { status: 201 });
   } catch (err) {
     return errorResponse(err);
   }

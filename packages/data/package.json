@@ -20,6 +20,7 @@
     "@hamafx/db": "workspace:*",
     "@hamafx/shared": "workspace:*",
     "drizzle-orm": "^0.45.2",
+    "redis": "^4.7.0",
     "zod": "^3.23.8"
   },
   "devDependencies": {

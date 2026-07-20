@@ -15,7 +15,7 @@
  */
 
 import { EventEmitter } from 'node:events';
-import { getDb, schema } from '@hamafx/db';
+import { listDistinctSymbols } from '@hamafx/db';
 import {
   getSymbolDefinition,
   isKnownSymbol,
@@ -94,14 +94,9 @@ export class SymbolManager extends EventEmitter {
     this.isPolling = true;
 
     try {
-      const db = getDb();
-      // Fetch distinct symbols from user watchlists with count for popularity
-      const rows = await db
-        .selectDistinct({ symbol: schema.userSymbols.symbol })
-        .from(schema.userSymbols);
-
+      const symbols = await listDistinctSymbols();
       const newSymbols = new Set(
-        rows.map((r) => r.symbol).filter((s) => isKnownSymbol(s)),
+        symbols.filter((s) => isKnownSymbol(s)),
       );
       
       // If the database has no symbols, fallback to defaults

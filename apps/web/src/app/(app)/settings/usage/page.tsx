@@ -37,8 +37,7 @@ import { EmptyState } from '@/components/ui/empty-state';
 import { cn } from '@/lib/cn';
 import { getServerEnv } from '@/lib/env';
 import { formatRelative } from '@/lib/format';
-import { getDb, schema } from '@hamafx/db';
-import { eq, gte, and } from 'drizzle-orm';
+import { getUserWithSettings, listMtdAgentOpinions, listTelemetry as listDbTelemetry } from '@hamafx/db';
 import { UsageLimitsForm } from './_components/usage-limits-form';
 
 export const metadata: Metadata = { title: 'Usage | HamaFX' };
@@ -57,48 +56,16 @@ export default async function UsagePage() {
   const session = await auth();
   if (!session?.user?.id) redirect('/login');
 
-  const db = getDb();
   const startOfMonth = new Date(Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth(), 1));
 
-  const [stats, recent, settings, mtdRows, monthlySpend, agentOpinionRows] = await Promise.all([
+  const { settings } = await getUserWithSettings(session.user.id);
+
+  const [stats, recent, mtdRows, monthlySpend, agentOpinionRows] = await Promise.all([
     computeUsage(session.user.id),
     listTelemetry(session.user.id, 20),
-    db
-      .select({
-        monthlyBudgetLimit: schema.userSettings.monthlyBudgetLimit,
-        providerSpendingThresholds: schema.userSettings.providerSpendingThresholds,
-        spendAlertsConfig: schema.userSettings.spendAlertsConfig,
-      })
-      .from(schema.userSettings)
-      .where(eq(schema.userSettings.userId, session.user.id))
-      .then((rows) => rows[0] ?? null),
-    db
-      .select({
-        model: schema.chatTelemetry.model,
-        estCostUsd: schema.chatTelemetry.estCostUsd,
-      })
-      .from(schema.chatTelemetry)
-      .where(
-        and(
-          eq(schema.chatTelemetry.userId, session.user.id),
-          gte(schema.chatTelemetry.createdAt, startOfMonth)
-        )
-      ),
+    listDbTelemetry(session.user.id, { from: startOfMonth, to: new Date() }),
     getMonthlySpend(session.user.id),
-    db
-      .select({
-        agentName: schema.agentOpinions.agentName,
-        analysisMode: schema.agentOpinions.analysisMode,
-        costUsd: schema.agentOpinions.costUsd,
-        latencyMs: schema.agentOpinions.latencyMs,
-      })
-      .from(schema.agentOpinions)
-      .where(
-        and(
-          eq(schema.agentOpinions.userId, session.user.id),
-          gte(schema.agentOpinions.createdAt, startOfMonth)
-        )
-      ),
+    listMtdAgentOpinions(session.user.id, startOfMonth),
   ]);
 
   const KNOWN_BYOK_PROVIDERS = new Set([

@@ -17,8 +17,7 @@
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { auth } from '@/auth';
-import { getDb, schema } from '@hamafx/db';
-import { eq } from 'drizzle-orm';
+import { getUserWithSettings } from '@hamafx/db';
 import { AppearanceCard } from '../_components/appearance-card';
 
 export const metadata: Metadata = { title: 'Appearance | Settings | HamaFX' };
@@ -29,15 +28,8 @@ export default async function AppearancePage() {
   if (!session?.user?.id) redirect('/login');
 
   const userId = session.user.id;
-  const db = getDb();
 
-  const [settings] = await db
-    .select({
-      theme: schema.userSettings.theme,
-      language: schema.userSettings.language,
-    })
-    .from(schema.userSettings)
-    .where(eq(schema.userSettings.userId, userId));
+  const { settings } = await getUserWithSettings(userId);
 
   return (
     <div className="flex flex-col gap-6 max-w-2xl">

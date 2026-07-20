@@ -17,7 +17,7 @@
 import { z } from 'zod';
 import type { Tool } from 'ai';
 import { BaseAgent, baseOpinionSchema } from './base-agent';
-import { tools as allTools } from '../../tools';
+import { toolRegistry } from '../../tools';
 import type { AgentName, AgentBias, ModelTier } from '../types';
 
 const technicalSchema = baseOpinionSchema.extend({
@@ -53,7 +53,8 @@ Use the available tools to fetch real candle data, indicators, and market struct
   }
 
   tools(): Record<string, Tool> {
-    return { get_candles: allTools.get_candles, get_indicators: allTools.get_indicators, get_price: allTools.get_price, get_market_structure: allTools.get_market_structure, get_session_levels: allTools.get_session_levels, get_intermarket: allTools.get_intermarket, get_intermarket_resonance: allTools.get_intermarket_resonance, get_correlation: allTools.get_correlation, get_seasonality: allTools.get_seasonality };
+    const reg = toolRegistry.resolve(['get_candles', 'get_indicators', 'get_price', 'get_market_structure', 'get_session_levels', 'get_intermarket', 'get_intermarket_resonance', 'get_correlation', 'get_seasonality']);
+    return reg as Record<string, Tool>;
   }
 
   protected parseOutput(text: string): { bias: AgentBias; confidence: number; reasoning: string; rawData: Record<string, unknown> } {

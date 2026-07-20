@@ -18,8 +18,7 @@
 // Imported by each domain file to avoid circular dependencies and duplication.
 
 import bcrypt from 'bcryptjs';
-import { getDb, schema } from '@hamafx/db';
-import { eq } from 'drizzle-orm';
+import { getUserPasswordHash } from '@hamafx/db';
 
 export const NAME_MIN = 1;
 export const NAME_MAX = 80;
@@ -40,10 +39,7 @@ export type SaveKeysResult =
  * password set (OAuth-only) or the password doesn't match.
  */
 export async function verifyAccountPassword(userId: string, password: string): Promise<boolean> {
-  const db = getDb();
-  const [user] = await db.select({ hashedPassword: schema.users.hashedPassword })
-    .from(schema.users)
-    .where(eq(schema.users.id, userId));
-  if (!user?.hashedPassword) return false;
-  return bcrypt.compare(password, user.hashedPassword);
+  const hashedPassword = await getUserPasswordHash(userId);
+  if (!hashedPassword) return false;
+  return bcrypt.compare(password, hashedPassword);
 }

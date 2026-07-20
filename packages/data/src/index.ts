@@ -38,6 +38,7 @@ export {
   setDefaultCache,
   clearAllTenantCaches,
   MemoryCache,
+  RedisCache,
   cacheKey,
   cacheTag,
   PRICE_TTL,

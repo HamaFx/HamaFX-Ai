@@ -1,84 +1,31 @@
-import { getNoiseConfig } from '@hamafx/ai';
-import type { NoiseConfig, Severity } from '@hamafx/shared';
-import { SEVERITY_RANK } from '@hamafx/shared';
+/**
+ * Copyright 2026 HamaFX
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+// PF-22 — /api/alerts/preview-digest — noise config preview (thin controller).
 
 import { errorResponse, withAuth } from '@/lib/api';
+import { previewDigestService } from '@/lib/services/alerts';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-const SEVERITY_LABELS: Severity[] = ['info', 'warning', 'error', 'critical'];
-
-interface SimBreakdown {
-  total: number;
-  allowed: number;
-  blocked: number;
-  bySeverity: { severity: Severity; total: number; allowed: number; blocked: number }[];
-  digestMode: boolean;
-}
-
-const BASE_VOLUMES: Record<Severity, number> = {
-  info: 80,
-  warning: 40,
-  error: 15,
-  critical: 5,
-};
-
-function simulateBreakdown(config: NoiseConfig, time: Date): SimBreakdown {
-  const hour = time.getUTCHours();
-  const qh = config.quietHours;
-  const qhStart = qh?.start ?? '';
-  const qhEnd = qh?.end ?? '';
-  const qhStartH = parseInt(qhStart.split(':')[0] ?? '0', 10);
-  const qhEndH = parseInt(qhEnd.split(':')[0] ?? '0', 10);
-  const inQuietHours = qh !== null && hour >= qhStartH && hour < qhEndH;
-
-  const effectiveMinSeverity = inQuietHours
-    ? config.minSeverityDuringQuietHours
-    : config.minSeverity;
-
-  const minRank = SEVERITY_RANK[effectiveMinSeverity] ?? 0;
-
-  let total = 0;
-  let allowed = 0;
-  let blocked = 0;
-
-  const bySeverity = SEVERITY_LABELS.map((severity) => {
-    const raw = BASE_VOLUMES[severity];
-    const sevRank = SEVERITY_RANK[severity] ?? 0;
-    const isBlocked = sevRank < minRank;
-    const sevAllowed = isBlocked ? 0 : raw;
-    const sevBlocked = isBlocked ? raw : 0;
-
-    total += raw;
-    allowed += sevAllowed;
-    blocked += sevBlocked;
-
-    return { severity, total: raw, allowed: sevAllowed, blocked: sevBlocked };
-  });
-
-  return {
-    total,
-    allowed,
-    blocked,
-    bySeverity,
-    digestMode: config.dailyDigestMode,
-  };
-}
-
 export const GET = withAuth<void>(async (_req, { user }) => {
   try {
-    const config = await getNoiseConfig(user.userId);
-    const breakdown = simulateBreakdown(config, new Date());
-    const allowedPct = breakdown.total > 0 ? Math.round((breakdown.allowed / breakdown.total) * 100) : 100;
-    const blockedPct = 100 - allowedPct;
-
-    return Response.json({
-      breakdown,
-      allowedPct,
-      blockedPct,
-      dailyEstimate: breakdown.allowed * 3,
-    });
+    const result = await previewDigestService(user.userId);
+    return Response.json(result);
   } catch (err) {
     return errorResponse(err);
   }

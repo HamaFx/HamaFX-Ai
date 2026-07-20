@@ -25,11 +25,13 @@ export default defineConfig({
         'src/app/**/loading.tsx',
         'src/app/**/page.tsx',
       ],
+      // PF-20 — Raised from 30/25/25/30 to 50/50/50/50 to match
+      // the other packages (ai, db, shared all target 50+).
       thresholds: {
-        statements: 15,
-        branches: 10,
-        functions: 10,
-        lines: 15,
+        statements: 50,
+        branches: 50,
+        functions: 50,
+        lines: 50,
       },
     },
     server: {

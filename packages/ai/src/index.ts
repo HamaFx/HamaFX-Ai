@@ -16,8 +16,16 @@
 
 // Public barrel for @hamafx/ai. The route handler imports from here.
 
-export { runChat, type RunChatArgs } from './agent';
-export { tools, type ToolRegistry } from './tools';
+export { runChat } from './agent';
+export { type RunChatArgs } from './types';
+export { toolRegistry, type ToolRegistry } from './tools';
+export {
+  getThreadStateHandler,
+  canTransitionThread,
+  getInitialThreadState,
+  type ThreadState,
+  type ThreadStateHandler,
+} from './thread-state';
 export { buildSystemPrompt, type LiveSnapshot } from './prompt/system';
 export { buildLiveSnapshot } from './context';
 export * from './wait-until';
@@ -42,9 +50,14 @@ export {
   derivePlannerModel,
   deriveTitleModel,
   testProviderKey,
+  routeModelByDomain,
+  MODEL_ROUTER,
+  TIER_TO_DOMAIN,
   type ChatModelResolution,
   type VisionModelResolution,
   type EmbeddingModelResolution,
+  type DomainRoutingStrategy,
+  type DomainRoutingContext,
 } from './model';
 export {
   estimateCostUsd,
@@ -122,6 +135,11 @@ export {
   type EvaluationResult,
   type RuleReading,
 } from './alerts/evaluator';
+export {
+  specFromRule,
+  type AlertSpec,
+  type RuleReading as SpecRuleReading,
+} from './alerts/spec';
 export { deliverAlert, sendDirectNotification, type DeliveryResult } from './alerts/delivery';
 export {
   simulateAlert,
@@ -256,6 +274,19 @@ export { buildToolCatalogue, type CatalogueEntry } from './catalogue';
 export { initLangfuse, shutdownLangfuse } from './instrumentation';
 export { telemetryConfig } from './telemetry';
 
+// PF-07 — LlmClient abstraction
+//
+// The default `getLlmClient()` returns a `VercelLlmClient` that wraps
+// the Vercel AI SDK. Override via `setLlmClient()` (e.g. in tests).
+export { getLlmClient, setLlmClient, VercelLlmClient } from './llm-client';
+export type { LlmClient, GenerateTextOpts, GenerateTextResult, StreamTextOpts, StreamTextResult } from './llm-client';
+
+export {
+  reserveBudget,
+  reconcileBudget,
+  releaseBudget,
+  type BudgetReservation,
+} from './budget-guard';
 export { extractRateLimits, type RateLimitData } from './rate-limits';
 export { noteLlmRateLimit, awaitLlmHeadroom } from './llm-throttle';
 

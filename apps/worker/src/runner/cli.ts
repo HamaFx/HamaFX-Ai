@@ -31,32 +31,21 @@ import { JOBS, type JobName } from '../jobs/index.js';
 import { createLogger } from '../log.js';
 import { captureException, flushSentry, initSentry } from '../sentry.js';
 import { closeDb } from '@hamafx/db';
+import { tenantRouter } from '../tenant-router.js';
 
 function isKnownJob(name: string): name is JobName {
   return name in JOBS;
 }
 
+/**
+ * Resolve the healthchecks.io UUID for a job from the JOBS registry.
+ * Each job registration carries its `hcUuidEnvVar` so the mapping is
+ * data-driven rather than a switch statement (PF-04).
+ */
 function resolveHcUuid(env: ReturnType<typeof loadEnv>, name: JobName): string | undefined {
-  // Map job name to its env var. Each job has its own UUID so we can wire
-  // independent alerts in healthchecks.io.
-  switch (name) {
-    case 'embedding-backfill':
-      return env.HC_JOB_EMBEDDING_BACKFILL_UUID;
-    case 'briefings':
-      return env.HC_JOB_BRIEFINGS_UUID;
-    case 'snapshots':
-      return env.HC_JOB_SNAPSHOTS_UUID;
-    case 'cot':
-      return env.HC_JOB_COT_UUID;
-    case 'fred-actuals':
-      return env.HC_JOB_FRED_ACTUALS_UUID;
-    case 'weekly-review':
-      return env.HC_JOB_WEEKLY_REVIEW_UUID;
-    case 'resonance-sync':
-      return env.HC_JOB_RESONANCE_SYNC_UUID;
-    case 'alerts':
-      return env.HC_JOB_ALERTS_UUID;
-  }
+  const job = JOBS[name];
+  if (!job?.hcUuidEnvVar) return undefined;
+  return env[job.hcUuidEnvVar];
 }
 
 async function main(): Promise<number> {
@@ -101,7 +90,7 @@ async function main(): Promise<number> {
 
   try {
     const result = await withHeartbeat(hcUuid, async () => {
-      const r = await job.run({ log, signal: ac.signal });
+      const r = await job.run({ log, signal: ac.signal, tenantRouter });
       return r;
     });
     log.info('job completed', { processed: result.processed, note: result.note });

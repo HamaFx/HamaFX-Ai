@@ -14,10 +14,9 @@
  * limitations under the License.
  */
 
-import { desc, eq } from 'drizzle-orm';
 import { z } from 'zod';
 
-import { getDb, schema } from '@hamafx/db';
+import { listToolTelemetry } from '@hamafx/db';
 
 import { withAdminAuth } from '@/lib/admin-auth';
 import { parseSearchParams } from '@/lib/api';
@@ -34,17 +33,7 @@ const querySchema = z.object({
 export const GET = withAdminAuth(async (req) => {
   const { threadId, ok, limit } = parseSearchParams(req, querySchema);
 
-  const db = getDb();
-  const entries = await db
-    .select()
-    .from(schema.chatToolTelemetry)
-    .where(
-      threadId
-        ? eq(schema.chatToolTelemetry.threadId, threadId)
-        : undefined,
-    )
-    .orderBy(desc(schema.chatToolTelemetry.createdAt))
-    .limit(limit);
+  const entries = await listToolTelemetry({ threadId, limit });
 
   const filtered = ok ? entries.filter((e) => (ok === 'true' ? e.ok : !e.ok)) : entries;
 

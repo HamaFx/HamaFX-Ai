@@ -14,52 +14,28 @@
  * limitations under the License.
  */
 
-import { getDb, schema } from '@hamafx/db';
-import { PROVIDER_IDS, type ProviderId } from '@hamafx/shared/encryption';
-import { eq } from 'drizzle-orm';
-import { z } from 'zod';
+// PF-22 — /api/settings/fallback-chain — AI provider fallback chain (thin controller).
 
-import {
-  errorResponse,
-  parseJsonBody,
-  withAuth,
-} from '@/lib/api';
+import { errorResponse, parseJsonBody, withAuth } from '@/lib/api';
+import { FallbackChainPutSchema, getFallbackChainService, updateFallbackChainService } from '@/lib/services/settings';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-const PutBodySchema = z.object({
-  fallbackChain: z.array(z.enum(PROVIDER_IDS as readonly [ProviderId, ...ProviderId[]])),
-});
-
 export const GET = withAuth<void>(async (_req, { user }) => {
   try {
-    const db = getDb();
-    const [row] = await db
-      .select({ aiFallbackChain: schema.userSettings.aiFallbackChain })
-      .from(schema.userSettings)
-      .where(eq(schema.userSettings.userId, user.userId));
-    return Response.json({ fallbackChain: row?.aiFallbackChain ?? [] });
+    const result = await getFallbackChainService(user.userId);
+    return Response.json(result);
   } catch (err) {
     return errorResponse(err);
   }
 });
 
 export const PUT = withAuth<void>(async (req, { user }) => {
-  let body: z.infer<typeof PutBodySchema>;
   try {
-    body = await parseJsonBody(req, PutBodySchema);
-  } catch (err) {
-    return errorResponse(err);
-  }
-
-  try {
-    const db = getDb();
-    await db
-      .update(schema.userSettings)
-      .set({ aiFallbackChain: body.fallbackChain })
-      .where(eq(schema.userSettings.userId, user.userId));
-    return Response.json({ ok: true, fallbackChain: body.fallbackChain });
+    const body = await parseJsonBody(req, FallbackChainPutSchema);
+    const result = await updateFallbackChainService(user.userId, body.fallbackChain);
+    return Response.json({ ok: true, ...result });
   } catch (err) {
     return errorResponse(err);
   }

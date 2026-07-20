@@ -17,8 +17,7 @@
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { auth } from '@/auth';
-import { getDb, schema } from '@hamafx/db';
-import { eq } from 'drizzle-orm';
+import { getUserWithSettings } from '@hamafx/db';
 import type { NoiseConfig } from '@hamafx/shared';
 import { NoiseControlCard } from '../_components/noise-control-card';
 import { NotificationPrefsCard } from '../_components/notification-prefs-card';
@@ -39,18 +38,13 @@ export default async function NotificationsPage() {
   if (!session?.user?.id) redirect('/login');
 
   const userId = session.user.id;
-  const db = getDb();
 
-  const [settings] = await db
-    .select({ notificationPreferences: schema.userSettings.notificationPreferences })
-    .from(schema.userSettings)
-    .where(eq(schema.userSettings.userId, userId));
-
-  const noiseConfig = settings?.notificationPreferences && typeof settings.notificationPreferences === 'object'
-    ? (settings.notificationPreferences as Record<string, unknown>).noiseConfig as NoiseConfig | undefined
-    : undefined;
+  const { settings } = await getUserWithSettings(userId);
 
   const notificationPrefs = settings?.notificationPreferences as Record<string, Record<string, boolean>> | null;
+  const noiseConfig = notificationPrefs && typeof notificationPrefs === 'object'
+    ? (notificationPrefs as Record<string, unknown>).noiseConfig as NoiseConfig | undefined
+    : undefined;
 
   const env = getServerEnv();
   const emailReady = Boolean(env.RESEND_API_KEY) && Boolean(env.ALERT_FROM_EMAIL);

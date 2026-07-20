@@ -46,47 +46,24 @@ import { createCategorizedLogger } from '@hamafx/shared/logger';
 
 import { deliverAlert, type DeliveryResult } from './delivery';
 import { listEvaluable, setRulePreviousValue } from './persistence';
+import { specFromRule, type RuleReading } from './spec';
 
 const elog = createCategorizedLogger('ai', { component: 'alerts-evaluator' });
 
 // ---------------------------------------------------------------------------
-// Rule decision: does this rule's reading meet the trigger?
-// Pure function of inputs + rule — easy to unit test.
+// PF-08 — Alert rule specification evaluation.
+//
+// The decision logic (decideMatch / decideCross) has been migrated to
+// the specification pattern in `spec.ts`. The `specFromRule()` factory
+// converts a persisted AlertRule into a composable AlertSpec, and the
+// spec decides whether the reading satisfies the trigger.
+//
+// The legacy `decideMatch` and `decideCross` exports are re-exported
+// from `spec.ts` for backward compatibility.
 // ---------------------------------------------------------------------------
 
-export interface RuleReading {
-  /** The numeric value compared against `rule.level`. */
-  value: number;
-  /** Optional source label that ends up in the notification body. */
-  source: string;
-}
-
-/** "above" → reading >= level; "below" → reading <= level. */
-export function decideMatch(direction: 'above' | 'below', value: number, level: number): boolean {
-  return direction === 'above' ? value >= level : value <= level;
-}
-
-/**
- * Crossing detection. Returns true iff the indicator value transitioned
- * through `level` between the previous evaluator tick and the current one.
- *
- *   above: prev <  level  AND  curr >= level
- *   below: prev >  level  AND  curr <= level
- *
- * On the first tick (no baseline yet) the function returns false — the
- * caller is expected to seed `previousValue` with `curr` and wait for the
- * next tick. This is what stops an `RSI > 70` alert from firing on an
- * already-overbought instrument the moment it's created.
- */
-export function decideCross(
-  direction: 'above' | 'below',
-  prev: number | null | undefined,
-  curr: number,
-  level: number,
-): boolean {
-  if (prev === null || prev === undefined) return false;
-  return direction === 'above' ? prev < level && curr >= level : prev > level && curr <= level;
-}
+export { decideMatch, decideCross } from './spec';
+export type { RuleReading, CrossContext } from './spec';
 
 // ---------------------------------------------------------------------------
 // Per-rule readings.
@@ -383,25 +360,26 @@ export async function evaluateAlerts(
       // baseline (persisted on the rule) against the current value. If
       // there's no baseline yet, seed it and skip — the alert never fires
       // immediately on creation.
-      let isMatch: boolean;
-      if (alert.rule.type === 'indicatorCross') {
-        const prev = alert.rule.previousValue ?? null;
-        isMatch = decideCross(alert.rule.direction, prev, reading.value, alert.rule.level);
-        if (!isMatch) {
-          // Seed / refresh the baseline so the next tick has the right
-          // anchor. Best-effort: failures here just mean the next tick
-          // re-seeds.
-          try {
-            await setRulePreviousValue(alert.id, alert.rule, reading.value);
-          } catch (err) {
-            elog.warn('setRulePreviousValue failed', { id: alert.id, err: String(err) });
-          }
-          continue;
+      // PF-08 — Use the specification pattern to evaluate the rule.
+      const spec = specFromRule(alert.rule);
+      const cross = alert.rule.type === 'indicatorCross'
+        ? { previousValue: alert.rule.previousValue ?? null }
+        : undefined;
+      const isMatch = spec.isSatisfiedBy(reading, cross);
+
+      if (alert.rule.type === 'indicatorCross' && !isMatch) {
+        // Seed / refresh the baseline so the next tick has the right
+        // anchor. Best-effort: failures here just mean the next tick
+        // re-seeds.
+        try {
+          await setRulePreviousValue(alert.id, alert.rule, reading.value);
+        } catch (err) {
+          elog.warn('setRulePreviousValue failed', { id: alert.id, err: String(err) });
         }
-      } else {
-        isMatch = decideMatch(alert.rule.direction, reading.value, alert.rule.level);
-        if (!isMatch) continue;
+        continue;
       }
+
+      if (!isMatch) continue;
 
       matched += 1;
 

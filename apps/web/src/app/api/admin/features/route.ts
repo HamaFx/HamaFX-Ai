@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
+// PF-22 — /api/admin/features — feature flags (thin controller).
 
 import { z } from 'zod';
 
-import { getDb, schema } from '@hamafx/db';
-
 import { withAdminAuth } from '@/lib/admin-auth';
 import { parseJsonBody } from '@/lib/api';
+import { listFeaturesService, upsertFeaturesService } from '@/lib/services/admin';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -28,32 +28,12 @@ export const dynamic = 'force-dynamic';
 const toggleSchema = z.record(z.boolean());
 
 export const GET = withAdminAuth(async () => {
-  const db = getDb();
-  const rows = await db.select().from(schema.featureFlags);
-
-  const features: Record<string, boolean> = {};
-  for (const row of rows) {
-    features[row.key] = row.enabled;
-  }
-
-  return Response.json({ features });
+  const result = await listFeaturesService();
+  return Response.json(result);
 });
 
 export const POST = withAdminAuth(async (req, { user }) => {
   const body = await parseJsonBody(req, toggleSchema);
-
-  const db = getDb();
-  await db.transaction(async (tx) => {
-    for (const [key, enabled] of Object.entries(body)) {
-      await tx
-        .insert(schema.featureFlags)
-        .values({ key, enabled, updatedBy: user.userId })
-        .onConflictDoUpdate({
-          target: schema.featureFlags.key,
-          set: { enabled, updatedAt: new Date(), updatedBy: user.userId },
-        });
-    }
-  });
-
+  await upsertFeaturesService(body, user.userId);
   return Response.json({ ok: true });
 });

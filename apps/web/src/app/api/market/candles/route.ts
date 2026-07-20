@@ -14,39 +14,24 @@
  * limitations under the License.
  */
 
-// GET /api/market/candles?symbol=XAUUSD&tf=1h&count=300
-//
-// OHLC window for a single symbol/timeframe. Defaults: tf=1h, count=300.
-//
-// Phase 7a: response carries `stale: boolean` so the chart / hooks can
-// render `<StaleIndicator/>` when the data layer falls back to SWR.
-
-import { getCandlesWithMeta } from '@hamafx/data';
-import { DEFAULT_TIMEFRAME, SymbolSchema, TimeframeSchema } from '@hamafx/shared';
-import { decryptByok } from '@hamafx/shared/encryption';
-import { schema, withRateLimit, withTenantDb } from '@hamafx/db';
-import { eq } from 'drizzle-orm';
-import { z } from 'zod';
+// PF-22 — /api/market/candles — OHLC data (thin controller).
 
 import { errorResponse, parseSearchParams, withAuth } from '@/lib/api';
+import { checkMarketRateLimit, getCandlesService } from '@/lib/services/market';
+import { z } from 'zod';
+
+const QuerySchema = z.object({
+  symbol: z.string(),
+  tf: z.string().default('1h'),
+  count: z.coerce.number().int().min(1).max(5000).default(300),
+});
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-const QuerySchema = z.object({
-  symbol: SymbolSchema,
-  tf: TimeframeSchema.default(DEFAULT_TIMEFRAME),
-  count: z.coerce.number().int().min(1).max(5000).default(300),
-});
-
-const MARKET_READ_RATE_LIMIT = Number(process.env.MARKET_READ_RATE_LIMIT) || 120;
-
-// Phase B: auth-gate. Market data is shared, but the gate prevents
-// anonymous scraping. The authenticated `user` is used to load provider preferences.
 export const GET = withAuth<void>(async (req, { user }) => {
   try {
-    // RL-5: per-user rate limit on market data reads.
-    const rl = await withRateLimit(user.userId, 'market_read', MARKET_READ_RATE_LIMIT);
+    const rl = await checkMarketRateLimit(user.userId);
     if (!rl.allowed) {
       return Response.json(
         { error: { code: 'RATE_LIMITED', message: `Too many requests (${rl.count}/${rl.limit} per minute).` } },
@@ -54,37 +39,12 @@ export const GET = withAuth<void>(async (req, { user }) => {
       );
     }
     const { symbol, tf, count } = parseSearchParams(req, QuerySchema);
-
-    const [settings] = await withTenantDb(user.userId, async (db) => {
-      const rows = await db
-        .select({
-          aiApiKeys: schema.userSettings.aiApiKeys,
-          marketDataProvider: schema.userSettings.marketDataProvider,
-        })
-        .from(schema.userSettings)
-        .where(eq(schema.userSettings.userId, user.userId));
-      return rows;
-    });
-
-    const decrypted = settings?.aiApiKeys ? decryptByok(settings.aiApiKeys) : null;
-    const finnhubKey = decrypted?.finnhub ?? '';
-    const marketDataProvider = settings?.marketDataProvider ?? 'biquote';
-
-    const r = await getCandlesWithMeta(symbol, tf, {
-      count,
-      apiKeys: { finnhub: finnhubKey },
-      marketDataProvider,
-    });
-    return Response.json(
-      { symbol, tf, candles: r.candles, stale: r.stale, producedAt: r.producedAt },
-      {
-        headers: {
-          // 5 s for 1m last-bar tier; longer tfs are cached internally too,
-          // and revalidate twice as long for stale-while-revalidate.
-          'cache-control': `private, max-age=0, s-maxage=${tf === '1m' ? 5 : 30}, stale-while-revalidate=300`,
-        },
+    const result = await getCandlesService(user.userId, symbol, tf as '1m' | '5m' | '15m' | '30m' | '1h' | '4h' | '1d' | '1w', count);
+    return Response.json(result, {
+      headers: {
+        'cache-control': `private, max-age=0, s-maxage=${tf === '1m' ? 5 : 30}, stale-while-revalidate=300`,
       },
-    );
+    });
   } catch (err) {
     return errorResponse(err);
   }

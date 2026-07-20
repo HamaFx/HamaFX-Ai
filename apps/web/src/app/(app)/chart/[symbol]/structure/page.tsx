@@ -19,8 +19,7 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 
 import { auth } from '@/auth';
-import { getDb, schema } from '@hamafx/db';
-import { eq, asc } from 'drizzle-orm';
+import { listUserSymbols } from '@hamafx/db';
 import { ChartView } from '../_components/chart-view';
 
 interface PageProps {
@@ -37,14 +36,10 @@ export default async function StructureChartPage({ params }: PageProps) {
   if (!isKnownSymbol(symbol)) notFound();
 
   const session = await auth();
-  const db = getDb();
   
   let userSymbolsList: string[] = [];
   if (session?.user?.id) {
-    const list = await db.select({ symbol: schema.userSymbols.symbol })
-      .from(schema.userSymbols)
-      .where(eq(schema.userSymbols.userId, session.user.id))
-      .orderBy(asc(schema.userSymbols.displayOrder));
+    const list = await listUserSymbols(session.user.id);
     userSymbolsList = list.map((item) => item.symbol);
   }
 

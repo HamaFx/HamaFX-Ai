@@ -26,8 +26,7 @@
 // the UI can show "deleted N conversations" instead of a generic
 // success toast.
 
-import { getDb, schema, withRateLimit } from '@hamafx/db';
-import { and, eq, inArray } from 'drizzle-orm';
+import { withRateLimit, batchDeleteThreads } from '@hamafx/db';
 import { z } from 'zod';
 
 import { errorResponse, parseJsonBody, withAuth } from '@/lib/api';
@@ -75,19 +74,7 @@ export const POST = withAuth<void>(async (req, { user }) => {
     return errorResponse(err);
   }
 
-  const db = getDb();
-  // `inArray` is the canonical Drizzle pattern for batch IN clauses.
-  // The `userId` check in the WHERE clause makes this idempotent for
-  // ids that belong to other users — those rows simply won't match.
-  const deleted = await db
-    .delete(schema.chatThreads)
-    .where(
-      and(
-        eq(schema.chatThreads.userId, user.userId),
-        inArray(schema.chatThreads.id, body.ids),
-      ),
-    )
-    .returning({ id: schema.chatThreads.id });
+  const deleted = await batchDeleteThreads(user.userId, body.ids);
 
   return Response.json({ deleted: deleted.length });
 });

@@ -15,147 +15,21 @@
  */
 
 // Model resolver: maps a model id string to whatever the AI SDK v5 needs to
-// route the call. We support three transports (see packages/shared/src/env.ts):
+// route the call.
 //
-//   1. Google Vertex AI (direct), id prefix `google-vertex/`:
-//      Uses `@ai-sdk/google-vertex`. Always direct — bypasses the gateway —
-//      so usage bills against the GCP project's Vertex AI quota/credits.
-//      Requires GOOGLE_VERTEX_PROJECT + GOOGLE_VERTEX_LOCATION, and either
-//      GOOGLE_APPLICATION_CREDENTIALS_JSON (single-line SA key JSON) or
-//      GOOGLE_APPLICATION_CREDENTIALS (path).
+// SRP (architecture-audit/02): This module was split from an 800-line God
+// module into focused sub-modules. Vertex AI client creation + resolveModel
+// lives in `./vertex-factory.ts`; provider key testing lives in
+// `./provider-tester.ts`. This file keeps domain-model routing, BYOK
+// resolution, and override resolution.
 //
-//   2. Vercel AI Gateway, any other prefixed id (e.g. `openai/gpt-4.1`,
-//      `google/gemini-2.5-flash`) when AI_GATEWAY_API_KEY is set:
-//      The SDK accepts the string directly. Billed by Vercel.
-//
-//   3. Direct Google Gemini API, id prefix `google/` when
-//      GOOGLE_GENERATIVE_AI_API_KEY is set and the gateway is not:
-//      Strip the prefix and use `@ai-sdk/google`.
-//
-// `google-vertex/` always wins over the gateway, so adding the gateway key
-// does NOT silently flip Vertex traffic onto Vercel's bill.
+// Pattern: Factory + Strategy (architecture-audit/08). The `MODEL_ROUTER`
+// record implements the Strategy pattern, `resolveChatModel`/`resolveVisionModel`
+// are Factory methods that return `LanguageModel` instances.
 
-import { google } from '@ai-sdk/google';
-import { createVertex } from '@ai-sdk/google-vertex';
 import type { LanguageModel } from 'ai';
-import { normalizePemPrivateKey } from './util/pem';
-
-export interface ResolveModelEnv {
-  AI_GATEWAY_API_KEY?: string | undefined;
-  GOOGLE_GENERATIVE_AI_API_KEY?: string | undefined;
-  GOOGLE_VERTEX_PROJECT?: string | undefined;
-  GOOGLE_VERTEX_LOCATION?: string | undefined;
-  GOOGLE_APPLICATION_CREDENTIALS_JSON?: string | undefined;
-  GOOGLE_APPLICATION_CREDENTIALS?: string | undefined;
-  /**
-   * Phase D2 — operator-set platform default for the embedding model
-   * (RAG / memory / news embeddings). The default
-   * `openai/text-embedding-3-small` works for most deployments
-   * because it can route through the AI Gateway.
-   */
-  AI_EMBEDDING_MODEL?: string | undefined;
-}
-
-interface VertexCredentials {
-  client_email: string;
-  private_key: string;
-  private_key_id?: string;
-}
-
-function parseVertexCredentials(json: string): VertexCredentials {
-  const parsed = JSON.parse(json) as Record<string, unknown>;
-  const clientEmail = parsed.client_email;
-  const privateKey = parsed.private_key;
-  if (typeof clientEmail !== 'string' || typeof privateKey !== 'string') {
-    throw new Error(
-      'GOOGLE_APPLICATION_CREDENTIALS_JSON is missing client_email or private_key',
-    );
-  }
-  const creds: VertexCredentials = {
-    client_email: clientEmail,
-    private_key: normalizePemPrivateKey(privateKey),
-  };
-  if (typeof parsed.private_key_id === 'string') {
-    creds.private_key_id = parsed.private_key_id;
-  }
-  return creds;
-}
-
-// Phase 3 §3.10 — per-tenant Vertex client cache. The previous global
-// singleton (`cachedVertex` / `cachedVertexKey`) could share a Vertex AI
-// client instance across tenants. Now each tenant gets its own cached
-// client, keyed by a composite of tenantId + credentials.
-const _vertexCache = new Map<string, ReturnType<typeof createVertex>>();
-
-function getVertex(env: ResolveModelEnv, tenantId?: string): ReturnType<typeof createVertex> {
-  if (!env.GOOGLE_VERTEX_PROJECT || !env.GOOGLE_VERTEX_LOCATION) {
-    throw new Error(
-      'GOOGLE_VERTEX_PROJECT and GOOGLE_VERTEX_LOCATION are required for `google-vertex/...` models',
-    );
-  }
-
-  // Cache key includes everything that affects auth so dev hot-reloads pick up changes.
-  // Phase 3 §3.10 — include tenantId in the cache key so tenants are isolated.
-  const cacheKey = `${tenantId ?? '__global__'}|${env.GOOGLE_VERTEX_PROJECT}|${env.GOOGLE_VERTEX_LOCATION}|${env.GOOGLE_APPLICATION_CREDENTIALS_JSON ?? ''}|${env.GOOGLE_APPLICATION_CREDENTIALS ?? ''}`;
-  const cached = _vertexCache.get(cacheKey);
-  if (cached) return cached;
-
-  const config: Parameters<typeof createVertex>[0] = {
-    project: env.GOOGLE_VERTEX_PROJECT,
-    location: env.GOOGLE_VERTEX_LOCATION,
-  };
-
-  if (env.GOOGLE_APPLICATION_CREDENTIALS_JSON) {
-    const creds = parseVertexCredentials(env.GOOGLE_APPLICATION_CREDENTIALS_JSON);
-    config.googleAuthOptions = { credentials: creds };
-  }
-  // If only GOOGLE_APPLICATION_CREDENTIALS (a path) is set, google-auth-library
-  // reads it automatically from process.env — no extra wiring needed.
-
-  const vertex = createVertex(config);
-  _vertexCache.set(cacheKey, vertex);
-  return vertex;
-}
-
-/**
- * Resolve a model id to either:
- *   - a `LanguageModel` instance (Vertex or direct Gemini), or
- *   - the same string (gateway mode).
- *
- * Throws if no transport is configured for the requested id.
- */
-export function resolveModel(modelId: string, env: ResolveModelEnv, tenantId?: string): LanguageModel | string {
-  if (modelId.startsWith('google-vertex/')) {
-    const bareId = modelId.slice('google-vertex/'.length);
-    return getVertex(env, tenantId)(bareId);
-  }
-
-  if (env.AI_GATEWAY_API_KEY) {
-    return modelId;
-  }
-
-  if (modelId.startsWith('google/')) {
-    if (!env.GOOGLE_GENERATIVE_AI_API_KEY) {
-      throw new Error(
-        'GOOGLE_GENERATIVE_AI_API_KEY is required to use a `google/...` model when AI_GATEWAY_API_KEY is not set',
-      );
-    }
-    const bareId = modelId.slice('google/'.length);
-    return google(bareId);
-  }
-
-  throw new Error(
-    `Cannot resolve model "${modelId}". Use a "google-vertex/..." id with GOOGLE_VERTEX_PROJECT+GOOGLE_VERTEX_LOCATION, set AI_GATEWAY_API_KEY for gateway routing, or use a "google/..." id with GOOGLE_GENERATIVE_AI_API_KEY.`,
-  );
-}
-
-/**
- * Returns the Google Search grounding tool via the Vertex AI provider.
- * This tool must be used with a `google-vertex/` model.
- */
-export function getVertexGoogleSearchTool(env: ResolveModelEnv, tenantId?: string) {
-  return getVertex(env, tenantId).tools.googleSearch({});
-}
+import { resolveModel, getVertexGoogleSearchTool, type ResolveModelEnv } from './vertex-factory';
+import { testProviderKey } from './provider-tester';
 
 import {
   decryptByok,
@@ -172,11 +46,7 @@ import {
   type ByokProviderSpec,
   type ModelDomain,
 } from './byok-providers';
-import { extractRateLimits } from './rate-limits';
-import { noteLlmRateLimit } from './llm-throttle';
 import { isCircuitOpen } from './model-circuit-breaker';
-import { telemetryConfig } from './telemetry';
-import { generateText } from 'ai';
 import { PROVIDER_IDS } from '@hamafx/shared/byok';
 
 /**
@@ -242,132 +112,125 @@ function envFallbackKeys(env: ResolveModelEnv): ByokPayload {
   return out;
 }
 
-/**
- * Test the validity of a provider API key by instantiating a tiny request.
- * Returns null on success, an error message on failure.
- *
- * Used by the /api/settings/test-provider route to give the user feedback
- * without doing a full chat turn.
- */
-export async function testProviderKey(
-  providerId: ProviderId,
-  apiKey: string,
-): Promise<{ ok: true; rateLimit?: unknown } | { ok: false; error: string }> {
-  const spec = BYOK_PROVIDERS[providerId];
-  if (!spec) return { ok: false, error: `Unknown provider: ${providerId}` };
-
-  // Length floor depends on the key shape. Most providers use opaque
-  // strings >= 16 chars. Vertex is a service-account JSON document
-  // (>= 512 chars typically). We pick the right floor per provider.
-  const minLen = providerId === 'vertex' ? 256 : 8;
-  if (!apiKey || apiKey.length < minLen) {
-    if (providerId === 'vertex') {
-      return {
-        ok: false,
-        error: 'Vertex service-account JSON looks too short. Did you paste the whole file?',
-      };
-    }
-    return { ok: false, error: 'API key is too short' };
-  }
-
-  // Provider-specific shape validation BEFORE we call factory() —
-  // factory() throws on bad JSON for vertex but we want a friendlier
-  // error message that names the field that's missing.
-  if (providerId === 'vertex') {
-    try {
-      const obj = JSON.parse(apiKey) as Record<string, unknown>;
-      if (typeof obj.client_email !== 'string') {
-        return { ok: false, error: 'Service account JSON is missing client_email' };
-      }
-      if (typeof obj.private_key !== 'string') {
-        return { ok: false, error: 'Service account JSON is missing private_key' };
-      }
-      if (!obj.client_email.includes('@')) {
-        return { ok: false, error: 'Service account JSON client_email is not an email' };
-      }
-      if (!obj.private_key.includes('BEGIN PRIVATE KEY')) {
-        return { ok: false, error: 'Service account private_key is not a PEM key' };
-      }
-      if (!process.env.GOOGLE_VERTEX_PROJECT && typeof obj.project_id !== 'string') {
-        return {
-          ok: false,
-          error:
-            'Set GOOGLE_VERTEX_PROJECT env or include project_id in the service-account JSON',
-        };
-      }
-    } catch (err) {
-      return {
-        ok: false,
-        error: `Service account JSON could not be parsed: ${err instanceof Error ? err.message : 'unknown error'}`,
-      };
-    }
-  }
-
-  // Phase D — bug fix: the previous version of this function only
-  // instantiated `spec.factory(apiKey)`, which for the OpenAI-compatible
-  // shim (Mistral/OpenRouter/xAI/DeepSeek/Groq) and the Anthropic SDK is a
-  // pure local construction — it stores the key in a closure and returns a
-  // builder without ever contacting the provider. That meant the test
-  // returned `ok: true` for any well-formed string, even complete junk.
-  // Users saw "key works" and the actual chat then failed with a 401.
-  //
-  // The fix: actually call the provider with the cheapest model we know.
-  // We budget `maxOutputTokens: 1` so the round-trip costs pennies, and we
-  // use `fundamental` because every BYOK spec defines one (chat-capable).
-  // Vertex is special-cased — the SA JSON is parsed locally for shape
-  // before we even reach here (above), and we still call the model to
-  // prove the credentials are accepted by the GCP IAM endpoint.
-  try {
-    const builder = spec.factory(apiKey);
-    const modelId = spec.defaultModels.fundamental;
-    const model = builder(modelId);
-    const result = await generateText({
-      model,
-      prompt: 'ping',
-      maxOutputTokens: 1,
-      ...telemetryConfig(),
-      // Abort quickly on auth failures — most providers respond in <1s
-      // with 401/403; if we time out, the test was 5s of waiting.
-      abortSignal: AbortSignal.timeout(5_000),
-    });
-    const rateLimit = extractRateLimits(result.response?.headers);
-    if (rateLimit) noteLlmRateLimit(providerId, rateLimit);
-    return { ok: true, rateLimit };
-  } catch (err) {
-    // AI SDK wraps provider errors with statusCode + responseBody. Pull
-    // the most useful line out for the UI to display. Example shapes:
-    //   APICallError: "Provider API error: 401 Unauthorized" (OpenAI)
-    //   APICallError: "Provider returned error 401 from ... "
-    //   InvalidResponseDataError: ...
-    //   plain Error: "fetch failed" (network down)
-    const message =
-      err instanceof Error
-        ? // APICallError exposes .statusCode and .responseBody
-          (err as { statusCode?: number; responseBody?: string }).statusCode !==
-          undefined
-          ? `HTTP ${(err as { statusCode?: number }).statusCode} — ${extractErrorMessage(err.message)}`
-          : extractErrorMessage(err.message)
-        : String(err);
-    return { ok: false, error: message };
-  }
-}
-
-/**
- * Strip a verbose AI SDK error down to the user-facing sentence.
- * The SDK often appends stack-trace-style noise (URLs, provider
- * name in brackets). For the api-keys card we want a single line.
- */
-function extractErrorMessage(raw: string): string {
-  // Take only the first line; most error messages from the SDK are
-  // newline-free but `APICallError` sometimes embeds a JSON blob.
-  const firstLine = raw.split('\n')[0]?.trim() ?? raw;
-  // Trim trailing dots for consistency (UI will append its own).
-  return firstLine.replace(/\.+$/, '').slice(0, 160);
-}
+// Re-export extracted modules for backward compatibility.
+export { testProviderKey } from './provider-tester';
+export { resolveModel, getVertexGoogleSearchTool, type ResolveModelEnv } from './vertex-factory';
 
 // Re-export the registry helpers for downstream callers.
 export { BYOK_PROVIDERS, BYOK_PROVIDERS_LIST, defaultModelFor };
 export type { ModelDomain, ByokProviderSpec };
+
+// -----------------------------------------------------------------------
+// PF-03 — Domain-based model routing via strategy map.
+//
+// Replaces the previous if/else chain in model selection with an
+// open-for-extension, closed-for-modification strategy map.
+// Adding a new domain means adding a strategy entry — the
+// dispatch function `routeTurn()` stays unchanged.
+// -----------------------------------------------------------------------
+
+/** Context passed to each domain routing strategy. */
+export interface DomainRoutingContext {
+  userSettings: Pick<UserSettingsRow, 'aiApiKeys' | 'chatModel'>;
+  env: ResolveModelEnv;
+}
+
+/**
+ * A strategy that resolves a LanguageModel for a given domain.
+ * Each strategy is a self-contained unit that knows how to pick
+ * the right model tier for its domain.
+ */
+export interface DomainRoutingStrategy {
+  /** Human-readable description for telemetry / debugging. */
+  description: string;
+  /** Resolve the model for this domain. */
+  resolve: (ctx: DomainRoutingContext) => ChatModelResolution;
+}
+
+/**
+ * Strategy map — domain → model resolution strategy.
+ *
+ * Every chat-routable domain has an entry here. Adding a new domain
+ * (e.g., `sentiment`) requires adding an entry to this map — the
+ * dispatch function remains unchanged (OCP compliance).
+ *
+ * Each strategy calls `resolveChatModel` with the appropriate
+ * domain tier, which lets the BYOK provider system pick the
+ * user's preferred model for that capability tier.
+ */
+export const MODEL_ROUTER: Record<ModelDomain, DomainRoutingStrategy> = {
+  fundamental: {
+    description: 'Uses the strongest reasoning model — macro/news/catalyst analysis.',
+    resolve: (ctx) => resolveChatModel(ctx.userSettings, ctx.env, 'fundamental'),
+  },
+  technical: {
+    description: 'Uses the mid-tier model — chart/indicator/structure analysis.',
+    resolve: (ctx) => resolveChatModel(ctx.userSettings, ctx.env, 'technical'),
+  },
+  summary: {
+    description: 'Uses the cheapest/lite model — recaps, summaries, listings.',
+    resolve: (ctx) => resolveChatModel(ctx.userSettings, ctx.env, 'summary'),
+  },
+  vision: {
+    description: 'Uses a vision-capable model — image/chart analysis.',
+    resolve: (ctx) => resolveChatModel(ctx.userSettings, ctx.env, 'vision'),
+  },
+  embedding: {
+    description: 'Embedding resolution — use resolveEmbeddingModel() instead.',
+    resolve: () => {
+      throw new Error(
+        'MODEL_ROUTER.embedding is not supported. Use resolveEmbeddingModel() for embedding model resolution.',
+      );
+    },
+  },
+};
+
+/**
+ * Map ModelTier → ModelDomain for the multi-agent system.
+ * Replaces the switch statement in base-agent.ts with a lookup map.
+ */
+export const TIER_TO_DOMAIN: Record<string, ModelDomain> = {
+  fast: 'summary' as const,
+  mid: 'technical' as const,
+  strong: 'fundamental' as const,
+};
+
+/**
+ * Resolve a model for a given domain using the MODEL_ROUTER strategy map.
+ *
+ * This is the primary entry point for domain-based model selection.
+ * It replaces the previous if/else chain with a strategy map,
+ * making the routing open for extension (add a strategy) and closed
+ * for modification (don't edit this function).
+ *
+ * NOTE: This function is named `routeModelByDomain` (not `routeTurn`)
+ * to avoid a name collision with `routeTurn` in routing.ts, which
+ * classifies user messages into a routing domain. Both names are
+ * exported from the barrel index.ts.
+ *
+ * Throws if the domain has no registered strategy.
+ *
+ * @example
+ * ```ts
+ * const { model, modelId, providerId } = routeModelByDomain('technical', {
+ *   userSettings: { aiApiKeys: '...', chatModel: null },
+ *   env: { GOOGLE_GENERATIVE_AI_API_KEY: '...' },
+ * });
+ * ```
+ */
+export function routeModelByDomain(
+  domain: ModelDomain,
+  ctx: DomainRoutingContext,
+): ChatModelResolution {
+  const strategy = MODEL_ROUTER[domain];
+  if (!strategy) {
+    throw new Error(
+      `No model routing strategy registered for domain: "${domain}". ` +
+      `Available domains: ${(Object.keys(MODEL_ROUTER) as ModelDomain[]).join(', ')}.`,
+    );
+  }
+  return strategy.resolve(ctx);
+}
 
 // ───────────────────────────────────────────────────────────────────────
 // PERF-4 — Prompt caching capability detection.

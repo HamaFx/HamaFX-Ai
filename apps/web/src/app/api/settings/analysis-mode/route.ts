@@ -14,88 +14,27 @@
  * limitations under the License.
  */
 
-// /api/settings/analysis-mode — Multi-Agent analysis mode settings.
-//
-//   GET    /api/settings/analysis-mode
-//     → { defaultAnalysisMode, showAgentOpinions }
-//
-//   PATCH  /api/settings/analysis-mode
-//     body: { defaultAnalysisMode?, showAgentOpinions? }
-//     → { ok: true }
-//
-// Auth: NextAuth session gate. Per-user data only.
-
-import { getDb, schema } from '@hamafx/db';
-import { eq } from 'drizzle-orm';
-import { z } from 'zod';
+// PF-22 — /api/settings/analysis-mode — analysis mode settings (thin controller).
 
 import { errorResponse, parseJsonBody, withAuth } from '@/lib/api';
+import { AnalysisModePatchSchema, getAnalysisModeService, updateAnalysisModeService } from '@/lib/services/settings';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-const PatchBodySchema = z.object({
-  defaultAnalysisMode: z.enum(['single', 'quick', 'standard', 'full', 'auto']).optional(),
-  showAgentOpinions: z.boolean().optional(),
-  agentModelOverrides: z.object({
-    technical: z.string().optional(),
-    fundamental: z.string().optional(),
-    risk: z.string().optional(),
-    sentiment: z.string().optional(),
-    decision: z.string().optional(),
-  }).optional(),
-});
-
 export const GET = withAuth<void>(async (_req, { user }) => {
   try {
-    const db = getDb();
-    const [row] = await db
-      .select({
-        defaultAnalysisMode: schema.userSettings.defaultAnalysisMode,
-        showAgentOpinions: schema.userSettings.showAgentOpinions,
-        agentModelOverrides: schema.userSettings.agentModelOverrides,
-      })
-      .from(schema.userSettings)
-      .where(eq(schema.userSettings.userId, user.userId));
-    return Response.json({
-      defaultAnalysisMode: row?.defaultAnalysisMode ?? 'auto',
-      showAgentOpinions: row?.showAgentOpinions ?? true,
-      agentModelOverrides: row?.agentModelOverrides ?? {},
-    });
+    const result = await getAnalysisModeService(user.userId);
+    return Response.json(result);
   } catch (err) {
     return errorResponse(err);
   }
 });
 
 export const PATCH = withAuth<void>(async (req, { user }) => {
-  let body: z.infer<typeof PatchBodySchema>;
   try {
-    body = await parseJsonBody(req, PatchBodySchema);
-  } catch (err) {
-    return errorResponse(err);
-  }
-
-  const updates: Record<string, unknown> = {};
-  if (body.defaultAnalysisMode !== undefined) {
-    updates.defaultAnalysisMode = body.defaultAnalysisMode;
-  }
-  if (body.showAgentOpinions !== undefined) {
-    updates.showAgentOpinions = body.showAgentOpinions;
-  }
-  if (body.agentModelOverrides !== undefined) {
-    updates.agentModelOverrides = body.agentModelOverrides;
-  }
-
-  if (Object.keys(updates).length === 0) {
-    return Response.json({ error: { message: 'No fields to update' } }, { status: 400 });
-  }
-
-  try {
-    const db = getDb();
-    await db
-      .update(schema.userSettings)
-      .set(updates)
-      .where(eq(schema.userSettings.userId, user.userId));
+    const body = await parseJsonBody(req, AnalysisModePatchSchema);
+    await updateAnalysisModeService(user.userId, body);
     return Response.json({ ok: true });
   } catch (err) {
     return errorResponse(err);

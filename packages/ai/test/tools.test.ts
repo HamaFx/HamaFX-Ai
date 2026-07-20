@@ -54,50 +54,57 @@ vi.mock('@hamafx/data', () => ({
   ProviderError: class ProviderError extends Error {},
 }));
 
-import { tools } from '../src/tools/index';
+import { toolRegistry } from '../src/tools/index';
 
 describe('tools registry', () => {
   it('contains all expected tool entries', () => {
+    // PF-13: Tools are now registered in category-group order
+    // (market → analysis → journal → system)
     const expectedKeys = [
+      // Market (10)
       'get_price',
       'get_candles',
       'get_indicators',
       'get_market_structure',
+      'get_correlation',
+      'get_cot',
+      'get_intermarket',
+      'get_intermarket_resonance',
+      'get_session_levels',
+      'get_seasonality',
+      // Analysis (7)
+      'analyze_technical',
+      'analyze_fundamental',
+      'analyze_chart_image',
+      'annotate_chart',
+      'forecast_volatility',
+      'compute_risk',
+      'compute_position_health',
+      // Journal (8)
+      'log_journal',
+      'get_journal_stats',
       'get_news',
       'get_calendar',
       'set_alert',
-      'log_journal',
       'search_knowledge',
-      'analyze_technical',
-      'analyze_fundamental',
-      'get_journal_stats',
-      'annotate_chart',
-      'analyze_chart_image',
-      'get_correlation',
-      'get_cot',
       'share_snapshot',
-      'compute_risk',
-      'get_session_levels',
-      'get_intermarket',
-      'forecast_volatility',
-      'get_seasonality',
-      'compute_position_health',
-      'replay_setup',
       'summarize_thread',
-      'verify_call',
-      'convene_committee',
-      'get_intermarket_resonance',
+      // System (7)
       'get_system_diagnostics',
       'run_system_action',
       'get_portfolio_snapshot',
       'get_social_sentiment',
+      'verify_call',
+      'convene_committee',
+      'replay_setup',
     ];
-    expect(Object.keys(tools)).toEqual(expectedKeys);
-    expect(Object.keys(tools).length).toBe(32);
+    expect(toolRegistry.listNames()).toEqual(expectedKeys);
+    expect(toolRegistry.listNames().length).toBe(32);
   });
 
   it('every tool has description, inputSchema, and execute', () => {
-    for (const [name, tool] of Object.entries(tools)) {
+    const allTools = toolRegistry.resolve();
+    for (const [name, tool] of Object.entries(allTools)) {
       expect(tool.description, `${name} missing description`).toBeTruthy();
       expect(tool.inputSchema, `${name} missing inputSchema`).toBeDefined();
       expect(tool.execute, `${name} missing execute`).toBeDefined();
@@ -105,20 +112,23 @@ describe('tools registry', () => {
   });
 
   it('every tool name matches the withTelemetry wrapper name', () => {
-    for (const [name] of Object.entries(tools)) {
+    for (const name of toolRegistry.listNames()) {
       expect(name).toMatch(/^[a-z_]+$/);
     }
   });
 
   it('get_price tool has correct input schema', () => {
-    const schema = tools.get_price.inputSchema as unknown as { describe: () => string };
+    const allTools = toolRegistry.resolve();
+    const schema = (allTools.get_price as { inputSchema: unknown }).inputSchema as unknown as { describe: () => string };
     expect(schema.describe()).toBeTruthy();
   });
 
   it('compute_risk tool validates input schema', () => {
-    const schema = tools.compute_risk.inputSchema as {
-      safeParse: (v: unknown) => { success: boolean; error?: unknown };
+    const allTools = toolRegistry.resolve();
+    const computeRisk = allTools['compute_risk'] as {
+      inputSchema: { safeParse: (v: unknown) => { success: boolean; error?: unknown } };
     };
+    const schema = computeRisk.inputSchema;
     const valid = schema.safeParse({
       symbol: 'EURUSD',
       side: 'long',
@@ -141,9 +151,11 @@ describe('tools registry', () => {
   });
 
   it('get_calendar tool validates input schema', () => {
-    const schema = tools.get_calendar.inputSchema as {
-      safeParse: (v: unknown) => { success: boolean };
+    const allTools = toolRegistry.resolve();
+    const cal = allTools['get_calendar'] as {
+      inputSchema: { safeParse: (v: unknown) => { success: boolean } };
     };
+    const schema = cal.inputSchema;
     const valid = schema.safeParse({});
     expect(valid.success).toBe(true);
 

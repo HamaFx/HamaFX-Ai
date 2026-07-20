@@ -19,7 +19,7 @@
 import { z } from 'zod';
 import type { Tool } from 'ai';
 import { BaseAgent, baseOpinionSchema } from './base-agent';
-import { tools as allTools } from '../../tools';
+import { toolRegistry } from '../../tools';
 import { getMarketPhase } from '@hamafx/shared';
 import type { AgentName, AgentBias, ModelTier } from '../types';
 
@@ -94,14 +94,8 @@ before forming your assessment.${liquidityRiskNote}`;
   }
 
   tools(): Record<string, Tool> {
-    return {
-      get_news: allTools.get_news,
-      get_calendar: allTools.get_calendar,
-      get_correlation: allTools.get_correlation,
-      get_cot: allTools.get_cot,
-      compute_risk: allTools.compute_risk,
-      compute_position_health: allTools.compute_position_health,
-    };
+    const reg = toolRegistry.resolve(['get_news', 'get_calendar', 'get_correlation', 'get_cot', 'compute_risk', 'compute_position_health']);
+    return reg as Record<string, Tool>;
   }
 
   protected parseOutput(text: string): { bias: AgentBias; confidence: number; reasoning: string; rawData: Record<string, unknown> } {

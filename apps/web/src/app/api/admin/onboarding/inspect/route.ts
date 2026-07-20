@@ -14,10 +14,9 @@
  * limitations under the License.
  */
 
-import { eq } from 'drizzle-orm';
 import { z } from 'zod';
 
-import { getDb, schema } from '@hamafx/db';
+import { getUserWithSettings, listUserSymbols } from '@hamafx/db';
 import { decryptByok } from '@hamafx/shared/encryption';
 
 import { withAdminAuth } from '@/lib/admin-auth';
@@ -34,25 +33,8 @@ export const GET = withAdminAuth(async (req, { user: admin }) => {
   const { userId } = parseSearchParams(req, querySchema);
   const targetUserId = userId ?? admin.userId;
 
-  const db = getDb();
-
-  const [settings] = await db
-    .select({
-      onboardingCompleted: schema.userSettings.onboardingCompleted,
-      onboardingProgress: schema.userSettings.onboardingProgress,
-      defaultSymbol: schema.userSettings.defaultSymbol,
-      timezone: schema.userSettings.timezone,
-      language: schema.userSettings.language,
-      aiApiKeys: schema.userSettings.aiApiKeys,
-    })
-    .from(schema.userSettings)
-    .where(eq(schema.userSettings.userId, targetUserId));
-
-  const symbols = await db
-    .select({ symbol: schema.userSymbols.symbol })
-    .from(schema.userSymbols)
-    .where(eq(schema.userSymbols.userId, targetUserId))
-    .orderBy(schema.userSymbols.displayOrder);
+  const { settings } = await getUserWithSettings(targetUserId);
+  const symbols = await listUserSymbols(targetUserId);
 
   let hasApiKeys = false;
   let apiProviders: string[] = [];

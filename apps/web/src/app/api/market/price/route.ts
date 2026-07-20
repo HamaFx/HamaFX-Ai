@@ -14,68 +14,32 @@
  * limitations under the License.
  */
 
-// GET /api/market/price?symbol=XAUUSD[&symbol=EURUSD]...
-//
-// Latest mid price for one or more symbols. Browser polls this every 1.5 s;
-// the data adapter caches at 3 s so most calls don't hit the upstream.
-//
-// Phase 7a: when the data layer falls back to a stale-while-error cached
-// value, the response carries `stale: true` per symbol AND a top-level
-// `anyStale` flag so the UI can show `<StaleIndicator/>` without iterating.
+// PF-22 — /api/market/price — latest prices (thin controller).
 
-import { getPriceWithMeta } from '@hamafx/data';
-import { SYMBOLS, SymbolSchema, type Tick } from '@hamafx/shared';
-import { decryptByok } from '@hamafx/shared/encryption';
-import { schema, withRateLimit, withTenantDb } from '@hamafx/db';
-import { eq } from 'drizzle-orm';
+import { SYMBOLS } from '@hamafx/shared';
 import { z } from 'zod';
 
 import { errorResponse, withAuth } from '@/lib/api';
-
-export const runtime = 'nodejs';
-export const dynamic = 'force-dynamic';
+import { checkMarketRateLimit, getPriceService } from '@/lib/services/market';
 
 const QuerySchema = z.object({
-  // `symbol` may appear once or many times via repeated query params.
-  // We accept either a comma-separated string or repeated `?symbol=` pairs.
   symbol: z
-    .union([SymbolSchema, z.array(SymbolSchema), z.string()])
+    .union([z.string(), z.array(z.string()), z.string()])
     .optional()
     .transform((v) => {
       if (v === undefined) return SYMBOLS.slice();
       if (Array.isArray(v)) return v;
-      // CSV form: "XAUUSD,EURUSD"
-      const parts = String(v)
-        .split(',')
-        .map((s) => s.trim())
-        .filter(Boolean);
-      const parsed = parts.map((s) => SymbolSchema.parse(s));
-      return parsed.length === 0 ? SYMBOLS.slice() : parsed;
+      const parts = String(v).split(',').map((s) => s.trim()).filter(Boolean);
+      return parts.length === 0 ? SYMBOLS.slice() : parts;
     }),
 });
 
-interface TickWithMeta extends Tick {
-  /** True iff served from a stale-while-error fallback. */
-  stale: boolean;
-  /** ms epoch UTC the upstream produced this value. */
-  producedAt: number;
-  /**
-   * Phase 2 hardening §3 — milliseconds since the worker observed the
-   * tick. Only meaningful when the live-ticks provider served the
-   * value; `null` for REST fallbacks. The chart UI / chat tools
-   * should refuse to quote a value with `ageMs > 5000` as live.
-   */
-  ageMs: number | null;
-}
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
-const MARKET_READ_RATE_LIMIT = Number(process.env.MARKET_READ_RATE_LIMIT) || 120;
-
-// Phase B: auth-gate. Market data is shared, but the gate prevents
-// anonymous scraping. The authenticated `user` is used to load provider preferences.
 export const GET = withAuth<void>(async (req, { user }) => {
   try {
-    // RL-5: per-user rate limit on market data reads.
-    const rl = await withRateLimit(user.userId, 'market_read', MARKET_READ_RATE_LIMIT);
+    const rl = await checkMarketRateLimit(user.userId);
     if (!rl.allowed) {
       return Response.json(
         { error: { code: 'RATE_LIMITED', message: `Too many requests (${rl.count}/${rl.limit} per minute).` } },
@@ -83,54 +47,16 @@ export const GET = withAuth<void>(async (req, { user }) => {
       );
     }
     const url = new URL(req.url);
-    // Repeated params: collect all `symbol` entries.
     const repeated = url.searchParams.getAll('symbol');
     const params = QuerySchema.parse({
       symbol: repeated.length > 1 ? repeated : (url.searchParams.get('symbol') ?? undefined),
     });
 
-    const [settings] = await withTenantDb(user.userId, async (db) => {
-      const rows = await db
-        .select({
-          aiApiKeys: schema.userSettings.aiApiKeys,
-          marketDataProvider: schema.userSettings.marketDataProvider,
-        })
-        .from(schema.userSettings)
-        .where(eq(schema.userSettings.userId, user.userId));
-      return rows;
+    const result = await getPriceService(user.userId, params.symbol);
+    return Response.json(result, {
+      headers: { 'cache-control': `private, max-age=0, s-maxage=3, stale-while-revalidate=15` },
     });
-
-    const decrypted = settings?.aiApiKeys ? decryptByok(settings.aiApiKeys) : null;
-    const finnhubKey = decrypted?.finnhub ?? '';
-    const marketDataProvider = settings?.marketDataProvider ?? 'biquote';
-
-    const results = await Promise.all(
-      params.symbol.map((s) =>
-        getPriceWithMeta(s, {
-          apiKeys: { finnhub: finnhubKey },
-          marketDataProvider,
-        })
-      )
-    );
-    const ticks: TickWithMeta[] = results.map((r) => ({
-      ...r.tick,
-      stale: r.stale,
-      producedAt: r.producedAt,
-      ageMs: r.ageMs,
-    }));
-    const anyStale = ticks.some((t) => t.stale);
-    return Response.json(
-      { ticks, anyStale },
-      { headers: cacheHeaders(3) },
-    );
   } catch (err) {
     return errorResponse(err);
   }
 });
-
-/** CDN-friendly cache headers — short TTL aligned with the data layer. */
-function cacheHeaders(ttlSeconds: number): Record<string, string> {
-  return {
-    'cache-control': `private, max-age=0, s-maxage=${ttlSeconds}, stale-while-revalidate=${ttlSeconds * 5}`,
-  };
-}

@@ -38,7 +38,7 @@
 // acquire the lock by updating the expired row instead of skipping.
 
 import { sql } from 'drizzle-orm';
-import { type getDb, schema } from '@hamafx/db';
+import { type getDb } from '@hamafx/db';
 
 type DbClient = ReturnType<typeof getDb>;
 
@@ -129,4 +129,3 @@ function buildLock(db: DbClient, jobName: string, today: string): CronLock {
 }
 
 // Expose schema for convenience (re-exported from @hamafx/db).
-export { schema };

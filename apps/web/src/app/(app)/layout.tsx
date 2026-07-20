@@ -16,17 +16,12 @@
 
 import { redirect } from 'next/navigation';
 import { cache, Suspense } from 'react';
-import { eq } from 'drizzle-orm';
 import { auth } from '@/auth';
-import { getDb, schema } from '@hamafx/db';
+import { getUserWithSettings } from '@hamafx/db';
 import { checkIsAdmin } from '@/lib/admin-check';
 
 const getOnboardingStatus = cache(async (userId: string) => {
-  const db = getDb();
-  const [settings] = await db
-    .select({ onboardingCompleted: schema.userSettings.onboardingCompleted })
-    .from(schema.userSettings)
-    .where(eq(schema.userSettings.userId, userId));
+  const { settings } = await getUserWithSettings(userId);
   return settings?.onboardingCompleted ?? false;
 });
 

@@ -22,9 +22,9 @@
 // Missing entries silently drop out of the snapshot.
 
 import { getPrice } from '@hamafx/data';
-import { getDb, schema } from '@hamafx/db';
+import { getDb, schema, listUserSymbols } from '@hamafx/db';
 import { SYMBOLS, type Symbol, type Tick, getMarketPhase } from '@hamafx/shared';
-import { desc, eq, asc } from 'drizzle-orm';
+import { desc, eq } from 'drizzle-orm';
 import { createCategorizedLogger } from '@hamafx/shared/logger';
 
 import type { LiveSnapshot } from './prompt/system';
@@ -90,11 +90,7 @@ export async function buildLiveSnapshot(
   const watchlistPromise = (async () => {
     if (!opts.userId) return;
     try {
-      const list = await db
-        .select({ symbol: schema.userSymbols.symbol })
-        .from(schema.userSymbols)
-        .where(eq(schema.userSymbols.userId, opts.userId))
-        .orderBy(asc(schema.userSymbols.displayOrder));
+      const list = await listUserSymbols(opts.userId);
       if (list.length > 0) {
         activeSymbols = list.map((item) => item.symbol);
       }

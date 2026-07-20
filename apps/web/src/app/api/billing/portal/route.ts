@@ -17,9 +17,8 @@
 // GET /api/billing/portal — returns the user's subscription, plans, and payments.
 // Auth required.
 
-import { eq, desc } from 'drizzle-orm';
+import { listActivePlans, getUserSubscription, getUserPayments } from '@hamafx/db';
 
-import { getDb, schema } from '@hamafx/db';
 import { errorResponse, withAuth } from '@/lib/api';
 
 export const runtime = 'nodejs';
@@ -27,15 +26,9 @@ export const dynamic = 'force-dynamic';
 
 export const GET = withAuth<void>(async (_req, { user }) => {
   try {
-    const db = getDb();
-
-    const allPlans = await db.select().from(schema.plans).where(eq(schema.plans.isActive, true));
-
-    const subs = await db.select().from(schema.subscriptions).where(eq(schema.subscriptions.tenantId, user.userId)).limit(1);
-
-    const subscription = subs[0] ?? null;
-
-    const payments = await db.select().from(schema.payments).where(eq(schema.payments.tenantId, user.userId)).orderBy(desc(schema.payments.createdAt)).limit(20);
+    const allPlans = await listActivePlans();
+    const subscription = await getUserSubscription(user.userId);
+    const payments = await getUserPayments(user.userId, 20);
 
     let currentPlan = null;
     if (subscription) {

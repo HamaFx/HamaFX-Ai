@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import { getDb, schema } from '@hamafx/db';
-import { eq } from 'drizzle-orm';
+
+import { updateUserSettingsField } from '@hamafx/db';
 
 import { errorResponse, withAuth } from '@/lib/api';
 
@@ -22,13 +22,7 @@ export const POST = withAuth<void>(async (req, { user }) => {
     const body = await req.json();
     const parsed = ProgressSchema.parse(body);
 
-    const db = getDb();
-    await db
-      .update(schema.userSettings)
-      .set({
-        onboardingProgress: parsed as unknown as Record<string, unknown>,
-      })
-      .where(eq(schema.userSettings.userId, user.userId));
+    await updateUserSettingsField(user.userId, 'onboardingProgress', parsed as unknown as Record<string, unknown>);
 
     return Response.json({ ok: true });
   } catch (err) {

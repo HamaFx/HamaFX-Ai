@@ -55,6 +55,8 @@ const DbEnv = z
     POSTGRES_URL: z.string().url().optional(),
     DIRECT_URL: z.string().url().optional(),
     POSTGRES_URL_NON_POOLING: z.string().url().optional(),
+    /** PF-15: Read-only replica URL for read-heavy queries. */
+    DATABASE_URL_REPLICA: z.string().url().optional(),
     SUPABASE_CA_CERT: z.string().optional(),
     SUPABASE_URL: z.string().url().optional(),
     SUPABASE_SERVICE_ROLE_KEY: z.string().optional(),

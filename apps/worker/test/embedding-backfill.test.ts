@@ -28,10 +28,12 @@ vi.mock('@hamafx/ai', () => ({
 import * as ai from '@hamafx/ai';
 
 import { runEmbeddingBackfill } from '../src/jobs/embedding-backfill';
+import { TenantRouter } from '../src/tenant-router';
 import { createLogger } from '../src/log';
 
 const log = createLogger({ service: 'test', forceJson: true });
-const ctx = { log };
+const testRouter = new TenantRouter();
+const ctx = { log, signal: new AbortController().signal, tenantRouter: testRouter };
 
 beforeEach(() => {
   vi.mocked(ai.backfillEmbeddings).mockReset();
@@ -80,7 +82,7 @@ describe('runEmbeddingBackfill', () => {
     });
 
     const ac = new AbortController();
-    await runEmbeddingBackfill({ log, signal: ac.signal });
+    await runEmbeddingBackfill({ log, signal: ac.signal, tenantRouter: testRouter });
 
     const args = vi.mocked(ai.backfillEmbeddings).mock.calls[0]?.[0] as Record<string, unknown> | undefined;
     expect(args?.['signal']).toBe(ac.signal);

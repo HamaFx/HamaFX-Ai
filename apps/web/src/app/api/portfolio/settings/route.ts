@@ -14,30 +14,18 @@
  * limitations under the License.
  */
 
-// /api/portfolio/settings — get or update portfolio settings.
-// GET  /api/portfolio/settings
-// PUT  /api/portfolio/settings
-
-import { getPortfolioSettings, savePortfolioSettings } from '@hamafx/ai';
-import { z } from 'zod';
-import type { PortfolioSettings } from '@hamafx/shared';
+// PF-22 — /api/portfolio/settings — get / update settings (thin controller).
 
 import { errorResponse, withAuth } from '@/lib/api';
+import { getPortfolioSettingsService, savePortfolioSettingsService, PortfolioUpdateSettingsSchema } from '@/lib/services/portfolio';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-const UpdateSettingsSchema = z.object({
-  accountBalance: z.number().nullable().optional(),
-  baseCurrency: z.string().optional(),
-  maxRiskPerTradePct: z.number().min(0).max(100).optional(),
-  maxTotalExposurePct: z.number().min(0).max(100).optional(),
-});
-
 export const GET = withAuth<void>(async (_req, { user }) => {
   try {
-    const settings = await getPortfolioSettings(user.userId);
-    return Response.json({ settings });
+    const result = await getPortfolioSettingsService(user.userId);
+    return Response.json(result);
   } catch (err) {
     return errorResponse(err);
   }
@@ -46,15 +34,9 @@ export const GET = withAuth<void>(async (_req, { user }) => {
 export const PUT = withAuth<void>(async (req, { user }) => {
   try {
     const body = await req.json();
-    const input = UpdateSettingsSchema.parse(body);
-
-    // Clean undefined values to prevent overwriting existing settings with undefined during spread merges
-    const cleaned = Object.fromEntries(
-      Object.entries(input).filter(([_, v]) => v !== undefined)
-    ) as Partial<Pick<PortfolioSettings, 'accountBalance' | 'baseCurrency' | 'maxRiskPerTradePct' | 'maxTotalExposurePct'>>;
-
-    const settings = await savePortfolioSettings(user.userId, cleaned);
-    return Response.json({ settings });
+    const input = PortfolioUpdateSettingsSchema.parse(body);
+    const result = await savePortfolioSettingsService(user.userId, input);
+    return Response.json(result);
   } catch (err) {
     return errorResponse(err);
   }

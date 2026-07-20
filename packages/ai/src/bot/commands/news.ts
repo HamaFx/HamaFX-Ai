@@ -19,8 +19,7 @@
 // /news XAUUSD → news filtered to a symbol
 
 import type { BotCommand, BotResponse } from '../types';
-import { getDb, schema } from '@hamafx/db';
-import { desc, sql } from 'drizzle-orm';
+import { queries } from '@hamafx/db';
 
 export const newsCommand: BotCommand = {
   name: 'news',
@@ -28,44 +27,18 @@ export const newsCommand: BotCommand = {
   description: 'Latest market news: /news [symbol]',
   handler: async (args: string[]): Promise<BotResponse> => {
     try {
-      const db = getDb();
-      const limit = 5;
-
       const symbolStr = args[0];
-      const query = symbolStr
-        ? db
-            .select({
-              headline: schema.newsArticles.title,
-              source: schema.newsArticles.source,
-              url: schema.newsArticles.url,
-              publishedAt: schema.newsArticles.publishedAt,
-              sentiment: schema.newsArticles.sentiment,
-            })
-            .from(schema.newsArticles)
-            .where(sql`${schema.newsArticles.symbols} @> ARRAY[${symbolStr.toUpperCase()}]`)
-            .orderBy(desc(schema.newsArticles.publishedAt))
-            .limit(limit)
-        : db
-            .select({
-              headline: schema.newsArticles.title,
-              source: schema.newsArticles.source,
-              url: schema.newsArticles.url,
-              publishedAt: schema.newsArticles.publishedAt,
-              sentiment: schema.newsArticles.sentiment,
-            })
-            .from(schema.newsArticles)
-            .orderBy(desc(schema.newsArticles.publishedAt))
-            .limit(limit);
+      const articles = await queries.news.listRecentArticles(5, 0, {
+        ...(symbolStr ? { symbol: symbolStr.toUpperCase() } : {}),
+      });
 
-      const news = await query;
-
-      if (news.length === 0) {
+      if (articles.length === 0) {
         return { text: '📭 No recent news available. The market may be closed.' };
       }
 
       const lines: string[] = ['📰 Latest Market News', ''];
 
-      for (const item of news) {
+      for (const item of articles) {
         const time = new Date(item.publishedAt).toLocaleDateString('en-US', {
           month: 'short',
           day: 'numeric',
@@ -75,7 +48,7 @@ export const newsCommand: BotCommand = {
         const sentimentIcon =
           item.sentiment === 'positive' ? '🟢' :
           item.sentiment === 'negative' ? '🔴' : '⚪';
-        lines.push(`${sentimentIcon} ${item.headline}`);
+        lines.push(`${sentimentIcon} ${item.title}`);
         lines.push(`   ${item.source} · ${time}`);
         if (item.url) lines.push(`   🔗 ${item.url}`);
         lines.push('');

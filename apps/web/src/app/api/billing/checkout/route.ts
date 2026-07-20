@@ -18,10 +18,9 @@
 // the hosted checkout URL.
 // Auth required. Body: { planId: string } → { checkoutUrl: string }
 
-import { eq } from 'drizzle-orm';
 import { z } from 'zod';
 
-import { getDb, schema } from '@hamafx/db';
+import { getPlan, upsertSubscription, createPayment } from '@hamafx/db';
 import { errorResponse, parseJsonBody, withAuth } from '@/lib/api';
 import { getServerEnv } from '@/lib/env';
 import { createInvoice } from '@/lib/nowpayments';
@@ -37,15 +36,12 @@ export const POST = withAuth<void>(async (req, { user }) => {
   try {
     const body = await parseJsonBody(req, CheckoutSchema);
     const env = getServerEnv();
-    const db = getDb();
 
-    const planRows = await db.select().from(schema.plans).where(eq(schema.plans.id, body.planId)).limit(1);
+    const plan = await getPlan(body.planId);
 
-    if (planRows.length === 0) {
+    if (!plan) {
       return Response.json({ error: { code: 'NOT_FOUND', message: 'Plan not found' } }, { status: 404 });
     }
-
-    const plan = planRows[0]!;
 
     if (plan.priceUsdCents === 0) {
       return Response.json({ error: { code: 'BAD_REQUEST', message: 'Free plan does not require checkout' } }, { status: 400 });
@@ -69,28 +65,17 @@ export const POST = withAuth<void>(async (req, { user }) => {
       cancelled_url: `${appUrl}/settings/billing?status=cancelled`,
     });
 
-    // Create or update subscription
-    const existingSubs = await db.select().from(schema.subscriptions).where(eq(schema.subscriptions.tenantId, user.userId)).limit(1);
+    const subscriptionId = await upsertSubscription(user.userId, {
+      planId: plan.id,
+      nowpaymentsInvoiceId: invoice.id,
+    });
 
-    let subscriptionId: string;
-
-    if (existingSubs.length > 0) {
-      const sub = existingSubs[0]!;
-      await db.update(schema.subscriptions).set({
-        planId: plan.id, status: 'active', nowpaymentsInvoiceId: invoice.id, updatedAt: new Date(),
-      }).where(eq(schema.subscriptions.id, sub.id));
-      subscriptionId = sub.id;
-    } else {
-      const [newSub] = await db.insert(schema.subscriptions).values({
-        tenantId: user.userId, planId: plan.id, status: 'active', nowpaymentsInvoiceId: invoice.id,
-      }).returning();
-      subscriptionId = newSub!.id;
-    }
-
-    await db.insert(schema.payments).values({
-      subscriptionId, tenantId: user.userId,
-      nowpaymentsPaymentId: invoice.id, nowpaymentsInvoiceId: invoice.id,
-      status: 'waiting', payCurrency: plan.payCurrency ?? 'usdt',
+    await createPayment({
+      subscriptionId,
+      userId: user.userId,
+      nowpaymentsPaymentId: invoice.id,
+      nowpaymentsInvoiceId: invoice.id,
+      payCurrency: plan.payCurrency ?? 'usdt',
     });
 
     return Response.json({ checkoutUrl: invoice.invoice_url });

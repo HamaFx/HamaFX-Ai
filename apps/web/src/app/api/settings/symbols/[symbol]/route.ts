@@ -15,8 +15,7 @@
  */
 
 import { withAuth, errorResponse } from '@/lib/api';
-import { getDb, schema } from '@hamafx/db';
-import { eq, and } from 'drizzle-orm';
+import { removeUserSymbol } from '@hamafx/db';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -24,17 +23,7 @@ export const dynamic = 'force-dynamic';
 export const DELETE = withAuth<{ symbol: string }>(async (_req, { params, user }) => {
   try {
     const { symbol } = await params;
-    const db = getDb();
-
-    await db
-      .delete(schema.userSymbols)
-      .where(
-        and(
-          eq(schema.userSymbols.userId, user.userId),
-          eq(schema.userSymbols.symbol, symbol)
-        )
-      );
-
+    await removeUserSymbol(user.userId, symbol);
     return Response.json({ ok: true, symbol });
   } catch (err) {
     return errorResponse(err);

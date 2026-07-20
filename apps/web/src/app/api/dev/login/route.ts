@@ -2,8 +2,7 @@ import bcrypt from 'bcryptjs';
 import { NextResponse } from 'next/server';
 import crypto from 'node:crypto';
 import { signIn } from '@/auth';
-import { getDb, schema } from '@hamafx/db';
-import { eq } from 'drizzle-orm';
+import { getUserById, createUserWithSettings } from '@hamafx/db';
 import { createScopedLoggerWithContext } from '@/lib/logger';
 
 export const runtime = 'nodejs';
@@ -56,14 +55,10 @@ export async function GET() {
 
   try {
     // Ensure the dev user exists in the DB so FK constraints (user_settings, etc.) pass.
-    const db = getDb();
-    const [existing] = await db
-      .select({ id: schema.users.id })
-      .from(schema.users)
-      .where(eq(schema.users.id, userId));
+    const existing = await getUserById(userId);
     if (!existing) {
       const hashedPassword = await bcrypt.hash(DEV_PASSWORD, 12);
-      await db.insert(schema.users).values({
+      await createUserWithSettings({
         id: userId,
         email,
         name: 'Dev User',

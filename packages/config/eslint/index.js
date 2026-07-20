@@ -62,6 +62,19 @@ export default [
           ],
         },
       ],
+      'no-restricted-imports': [
+        'warn',
+        {
+          paths: [
+            {
+              name: '@hamafx/ai',
+              importNames: ['runChat', 'createThread', 'listThreads', 'getThread', 'listMessages'],
+              message:
+                'Prefer sub-path imports — use @hamafx/ai/agent, @hamafx/ai/persistence, etc.',
+            },
+          ],
+        },
+      ],
       'react-hooks/rules-of-hooks': 'error',
       'react-hooks/exhaustive-deps': 'warn',
     },

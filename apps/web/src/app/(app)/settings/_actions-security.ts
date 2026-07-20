@@ -20,8 +20,20 @@
 
 import bcrypt from 'bcryptjs';
 import { auth, signOut } from '@/auth';
-import { getDb, schema, withRateLimit } from '@hamafx/db';
 import { eq, and, sql } from 'drizzle-orm';
+import {
+  withRateLimit,
+  getDb,
+  schema,
+  updateTwoFactorSecret,
+  getTwoFactorSecret,
+  setTwoFactorEnabled,
+  createAuditLog,
+  listUserSessions as dbListUserSessions,
+  revokeUserSession as dbRevokeUserSession,
+  deleteUserSessions as dbDeleteUserSessions,
+  incrementTokenVersion,
+} from '@hamafx/db';
 import * as Sentry from '@sentry/nextjs';
 import { revalidatePath } from 'next/cache';
 import { generateSecret, generateURI, verifySync } from 'otplib';
@@ -49,10 +61,7 @@ export async function setupTwoFactorAction(): Promise<ActionResult<{ secret: str
     const otpauth = generateURI({ secret, issuer: service, label: session.user.email ?? session.user.id });
     const qrDataUrl = await QRCode.toDataURL(otpauth);
 
-    const db = getDb();
-    await db.update(schema.users)
-      .set({ twoFactorSecret: encryptSecret(secret) })
-      .where(eq(schema.users.id, session.user.id));
+    await updateTwoFactorSecret(session.user.id, encryptSecret(secret));
 
     return { ok: true, data: { secret, qrDataUrl } };
   } catch (err) {
@@ -76,16 +85,12 @@ export async function verifyTwoFactorAction(token: string): Promise<ActionResult
   }
 
   try {
-    const db = getDb();
-    const [user] = await db.select({ twoFactorSecret: schema.users.twoFactorSecret })
-      .from(schema.users)
-      .where(eq(schema.users.id, session.user.id));
-
-    if (!user?.twoFactorSecret) {
+    const twoFactorSecret = await getTwoFactorSecret(session.user.id);
+    if (!twoFactorSecret) {
       return { ok: false, error: 'No 2FA secret found. Start setup first.' };
     }
 
-    const decryptedSecret = decryptSecret(user.twoFactorSecret);
+    const decryptedSecret = decryptSecret(twoFactorSecret);
     if (!decryptedSecret) {
       return { ok: false, error: '2FA secret is corrupted. Please disable and re-enable 2FA.' };
     }
@@ -96,9 +101,7 @@ export async function verifyTwoFactorAction(token: string): Promise<ActionResult
       return { ok: false, error: 'Invalid code. Try again.' };
     }
 
-    await db.update(schema.users)
-      .set({ twoFactorEnabled: true })
-      .where(eq(schema.users.id, session.user.id));
+    await setTwoFactorEnabled(session.user.id, true);
 
     revalidatePath('/settings');
     return { ok: true };
@@ -123,16 +126,12 @@ export async function disableTwoFactorAction(token: string): Promise<ActionResul
   }
 
   try {
-    const db = getDb();
-    const [user] = await db.select({ twoFactorSecret: schema.users.twoFactorSecret })
-      .from(schema.users)
-      .where(eq(schema.users.id, session.user.id));
-
-    if (!user?.twoFactorSecret) {
+    const twoFactorSecret = await getTwoFactorSecret(session.user.id);
+    if (!twoFactorSecret) {
       return { ok: false, error: '2FA is not configured' };
     }
 
-    const decryptedSecret = decryptSecret(user.twoFactorSecret);
+    const decryptedSecret = decryptSecret(twoFactorSecret);
     if (!decryptedSecret) {
       return { ok: false, error: '2FA secret is corrupted. Please disable and re-enable 2FA.' };
     }
@@ -143,18 +142,11 @@ export async function disableTwoFactorAction(token: string): Promise<ActionResul
       return { ok: false, error: 'Invalid code. Try again.' };
     }
 
-    await db.update(schema.users)
-      .set({ twoFactorSecret: null, twoFactorEnabled: false })
-      .where(eq(schema.users.id, session.user.id));
+    await updateTwoFactorSecret(session.user.id, null);
+    await setTwoFactorEnabled(session.user.id, false);
 
     // FEAT-03: Audit log for 2FA disabled
-    try {
-      await db.insert(schema.auditLogs).values({
-        userId: session.user.id,
-        action: '2fa_disabled',
-        metadata: {},
-      });
-    } catch { /* fail open */ }
+    await createAuditLog(session.user.id, '2fa_disabled');
 
     revalidatePath('/settings');
     return { ok: true };
@@ -180,18 +172,7 @@ export async function listSessionsAction(): Promise<ActionResult<{
   }
 
   try {
-    const db = getDb();
-    const rows = await db.select({
-      id: schema.userSessions.id,
-      deviceName: schema.userSessions.deviceName,
-      ip: schema.userSessions.ip,
-      createdAt: schema.userSessions.createdAt,
-      lastActiveAt: schema.userSessions.lastActiveAt,
-    })
-      .from(schema.userSessions)
-      .where(eq(schema.userSessions.userId, session.user.id))
-      .orderBy(schema.userSessions.createdAt);
-
+    const rows = await dbListUserSessions(session.user.id);
     const currentSessionId = (session as { sessionId?: string }).sessionId ?? null;
 
     return { ok: true as const, data: { sessions: rows, currentSessionId } };
@@ -213,12 +194,7 @@ export async function revokeSessionAction(sessionId: string): Promise<ActionResu
   }
 
   try {
-    const db = getDb();
-    await db.delete(schema.userSessions)
-      .where(and(
-        eq(schema.userSessions.id, sessionId),
-        eq(schema.userSessions.userId, authSession.user.id),
-      ));
+    await dbRevokeUserSession(sessionId, authSession.user.id);
 
     revalidatePath('/settings');
     return { ok: true as const };
@@ -240,14 +216,8 @@ export async function signOutEverywhereAction(): Promise<ActionResult> {
   }
 
   try {
-    const db = getDb();
-    // Delete all session records for the user
-    await db.delete(schema.userSessions)
-      .where(eq(schema.userSessions.userId, authSession.user.id));
-    // Increment tokenVersion to invalidate JWTs on next refresh
-    await db.update(schema.users)
-      .set({ tokenVersion: sql`${schema.users.tokenVersion} + 1` })
-      .where(eq(schema.users.id, authSession.user.id));
+    await dbDeleteUserSessions(authSession.user.id);
+    await incrementTokenVersion(authSession.user.id);
 
     revalidatePath('/settings');
     return { ok: true as const };
