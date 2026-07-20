@@ -31,6 +31,7 @@ import {
   updateThreadPinnedSymbol,
   listMessages as aiListMessages,
 } from '@hamafx/ai';
+import type { DbThread } from '@hamafx/ai';
 
 // ── DTOs ─────────────────────────────────────────────────────────────────────
 
@@ -53,6 +54,20 @@ export interface ThreadWithMessagesResult {
   messages: unknown[];
 }
 
+// ── DTO mappers ──────────────────────────────────────────────────────────────
+
+/** Map domain DbThread → ThreadDTO (number timestamps → Date objects, userId injected by caller). */
+function toThreadDTO(t: DbThread, userId: string): ThreadDTO {
+  return {
+    id: t.id,
+    userId,
+    title: t.title,
+    pinnedSymbol: t.pinnedSymbol,
+    createdAt: new Date(t.createdAt),
+    updatedAt: new Date(t.updatedAt),
+  };
+}
+
 // ── Service functions ────────────────────────────────────────────────────────
 
 export async function listThreadsService(
@@ -61,7 +76,7 @@ export async function listThreadsService(
   beforeMs: number | null = null,
 ): Promise<ThreadListResult> {
   const { threads, nextCursor } = await aiListThreads(userId, limit, beforeMs);
-  return { threads: threads as unknown as ThreadDTO[], nextCursor };
+  return { threads: threads.map((t) => toThreadDTO(t, userId)), nextCursor };
 }
 
 export async function createThreadService(
@@ -69,14 +84,15 @@ export async function createThreadService(
   pinnedSymbol: string | null,
 ): Promise<{ thread: ThreadDTO }> {
   const thread = await aiCreateThread(userId, { pinnedSymbol });
-  return { thread: thread as unknown as ThreadDTO };
+  return { thread: toThreadDTO(thread, userId) };
 }
 
 export async function getThreadService(
   userId: string,
   id: string,
 ): Promise<ThreadDTO | null> {
-  return (await aiGetThread(userId, id)) as unknown as ThreadDTO | null;
+  const thread = await aiGetThread(userId, id);
+  return thread ? toThreadDTO(thread, userId) : null;
 }
 
 export async function getThreadWithMessagesService(
@@ -86,7 +102,7 @@ export async function getThreadWithMessagesService(
   const thread = await aiGetThread(userId, id);
   if (!thread) return null;
   const messages = await aiListMessages(userId, id);
-  return { thread: thread as unknown as ThreadDTO, messages };
+  return { thread: toThreadDTO(thread, userId), messages };
 }
 
 export async function deleteThreadService(userId: string, id: string): Promise<void> {

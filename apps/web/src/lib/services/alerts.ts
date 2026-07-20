@@ -37,8 +37,8 @@ import {
   getNoiseConfig,
   type SimCandle,
 } from '@hamafx/ai';
+import type { Alert, AlertRule, NoiseConfig, Severity } from '@hamafx/shared';
 import { AlertChannelSchema, AlertRuleSchema, SEVERITY_RANK } from '@hamafx/shared';
-import type { AlertRule, NoiseConfig, Severity } from '@hamafx/shared';
 import { getRecentCandles, withRateLimit } from '@hamafx/db';
 import { z } from 'zod';
 
@@ -103,6 +103,24 @@ export interface PreviewDigestDTO {
   dailyEstimate: number;
 }
 
+// ── DTO mappers ──────────────────────────────────────────────────────────────
+
+/** Map domain Alert → AlertDTO (number timestamps → Date objects, field name mapping). */
+function toAlertDTO(a: Alert): AlertDTO {
+  return {
+    id: a.id,
+    userId: a.userId,
+    rule: a.rule,
+    channels: a.channels,
+    note: a.note,
+    snoozeHours: a.snoozeHours,
+    active: a.active,
+    firedAt: a.lastFiredAt ?? a.firedAt ?? null,
+    createdAt: new Date(a.createdAt),
+    updatedAt: new Date(a.createdAt), // Alert has no updatedAt; use createdAt as fallback
+  };
+}
+
 // ── Service functions ────────────────────────────────────────────────────────
 
 export async function listAlertsService(
@@ -110,7 +128,7 @@ export async function listAlertsService(
   opts?: { activeOnly?: boolean },
 ): Promise<{ alerts: AlertDTO[] }> {
   const alerts = await aiListAlerts(userId, opts);
-  return { alerts: alerts as unknown as AlertDTO[] };
+  return { alerts: alerts.map(toAlertDTO) };
 }
 
 export async function createAlertService(
@@ -123,14 +141,15 @@ export async function createAlertService(
   }
 
   const alert = await aiCreateAlert({ ...input, userId });
-  return { alert: alert as unknown as AlertDTO };
+  return { alert: toAlertDTO(alert) };
 }
 
 export async function getAlertService(
   userId: string,
   id: string,
 ): Promise<AlertDTO | null> {
-  return (await aiGetAlert(userId, id)) as unknown as AlertDTO | null;
+  const alert = await aiGetAlert(userId, id);
+  return alert ? toAlertDTO(alert) : null;
 }
 
 export async function updateAlertService(
@@ -138,7 +157,8 @@ export async function updateAlertService(
   id: string,
   input: AlertPatchInput,
 ): Promise<AlertDTO | null> {
-  return (await aiUpdateAlert(userId, id, input)) as unknown as AlertDTO | null;
+  const alert = await aiUpdateAlert(userId, id, input);
+  return alert ? toAlertDTO(alert) : null;
 }
 
 export async function deleteAlertService(userId: string, id: string): Promise<void> {

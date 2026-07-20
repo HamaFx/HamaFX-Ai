@@ -36,6 +36,7 @@ import {
   listEntries,
   updateEntry,
 } from '@hamafx/ai';
+import type { JournalEntry } from '@hamafx/shared';
 import { SymbolSchema, TradeOutcomeSchema, TradeSideSchema } from '@hamafx/shared';
 import { z } from 'zod';
 
@@ -68,7 +69,7 @@ export const JournalPatchSchema = z.object({
 export type JournalCreateInput = z.infer<typeof JournalCreateSchema>;
 export type JournalPatchInput = z.infer<typeof JournalPatchSchema>;
 
-// ── Service functions ─────────────────────────────────────────────────────
+// ── DTOs ────────────────────────────────────────────────────────────────────
 
 export interface EntryDTO {
   id: string;
@@ -88,6 +89,31 @@ export interface EntryDTO {
   updatedAt: Date;
 }
 
+// ── DTO mappers ─────────────────────────────────────────────────────────────
+
+/** Map domain JournalEntry → EntryDTO (number timestamps → Date objects). */
+function toEntryDTO(e: JournalEntry): EntryDTO {
+  return {
+    id: e.id,
+    symbol: e.symbol,
+    side: e.side,
+    entry: e.entry,
+    stop: e.stop,
+    target: e.target,
+    size: e.size,
+    notes: e.notes,
+    tags: e.tags,
+    screenshotUrl: e.screenshotUrl ?? null,
+    openedAt: e.openedAt,
+    closedAt: e.closedAt,
+    outcome: e.outcome,
+    createdAt: new Date(e.createdAt),
+    updatedAt: new Date(e.updatedAt),
+  };
+}
+
+// ── Service functions ─────────────────────────────────────────────────────
+
 export async function listJournalEntriesService(
   userId: string,
   opts?: { symbol?: string },
@@ -96,7 +122,7 @@ export async function listJournalEntriesService(
     listEntries(userId, opts),
     computeStats(userId),
   ]);
-  return { entries: entries as unknown as EntryDTO[], stats };
+  return { entries: entries.map(toEntryDTO), stats };
 }
 
 export async function createJournalEntryService(
@@ -116,14 +142,15 @@ export async function createJournalEntryService(
     tags: input.tags ?? [],
     screenshotUrl: input.screenshotUrl ?? null,
   });
-  return entry as unknown as EntryDTO;
+  return toEntryDTO(entry);
 }
 
 export async function getJournalEntryService(
   userId: string,
   id: string,
 ): Promise<EntryDTO | null> {
-  return (await getEntry(userId, id)) as unknown as EntryDTO | null;
+  const entry = await getEntry(userId, id);
+  return entry ? toEntryDTO(entry) : null;
 }
 
 export async function updateJournalEntryService(
@@ -131,7 +158,8 @@ export async function updateJournalEntryService(
   id: string,
   input: JournalPatchInput,
 ): Promise<EntryDTO | null> {
-  return (await updateEntry(userId, id, input)) as unknown as EntryDTO | null;
+  const entry = await updateEntry(userId, id, input);
+  return entry ? toEntryDTO(entry) : null;
 }
 
 export async function deleteJournalEntryService(

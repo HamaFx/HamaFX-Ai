@@ -1,23 +1,23 @@
 # 09 — Scorecard
 
-## Overall Architecture Score: 8.2/10
+## Overall Architecture Score: 8.3/10
 
 | Principle | Score | Weight | Weighted |
 |-----------|-------|--------|----------|
-| Single Responsibility (SRP) | 8.0 | × 2.0 | 16.0 |
+| Single Responsibility (SRP) | 8.5 | × 2.0 | 17.0 |
 | Open/Closed (OCP) | 8.5 | × 2.0 | 17.0 |
 | Liskov Substitution (LSP) | 8.5 | × 1.5 | 12.75 |
 | Interface Segregation (ISP) | 8.0 | × 1.5 | 12.0 |
 | Dependency Inversion (DIP) | 8.5 | × 2.0 | 17.0 |
 | Cross-Architecture | 7.5 | × 1.0 | 7.5 |
-| **Weighted Total** | | **10.0** | **82.25/100** |
+| **Weighted Total** | | **10.0** | **83.25/100** |
 
 ### Derived Scores
 
 | Dimension | Score | Notes |
 |-----------|-------|-------|
 | **Scalability** | 7.0/10 | Multi-tenant, read replicas, caching. Bottleneck: shared DB connections, global singletons |
-| **Maintainability** | 8.0/10 | God files split, DI container rolled out, service layer casts remain |
+| **Maintainability** | 8.3/10 | God files split, DI container rolled out, DTO casts replaced with typed mappers |
 | **Extensibility** | 8.5/10 | All registries use plugin pattern; new providers/indicators/alerts register without editing existing code |
 | **Testability** | 8.0/10 | 815+ tests, DI container enables test-time mocking of db without global patches |
 | **AI-Agent Friendliness** | 8.5/10 | Excellent AGENTS.md, phase annotations, structured errors, ESLint rules |
@@ -114,13 +114,13 @@ The average of our 6 scores (7.3) reflects the current state — good production
 
 | Principle | Current | Target | Effort |
 |-----------|---------|--------|--------|
-| SRP | 8.0 | 8.5 | Medium |
+| SRP | 8.5 | 9.0 | Low |
 | OCP | 8.5 | 9.0 | Low |
 | LSP | 8.5 | 9.0 | Low |
 | ISP | 8.0 | 8.5 | Low |
 | DIP | 8.5 | 9.0 | Low |
 | Cross-Architecture | 7.5 | 8.5 | Medium |
-| **Overall** | **8.2** | **8.7** | |
+| **Overall** | **8.3** | **8.7** | |
 
 ---
 
