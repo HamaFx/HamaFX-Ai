@@ -1,16 +1,16 @@
 # 09 — Scorecard
 
-## Overall Architecture Score: 7.85/10
+## Overall Architecture Score: 8.0/10
 
 | Principle | Score | Weight | Weighted |
 |-----------|-------|--------|----------|
-| Single Responsibility (SRP) | 7.5 | × 2.0 | 15.0 |
+| Single Responsibility (SRP) | 8.0 | × 2.0 | 16.0 |
 | Open/Closed (OCP) | 8.5 | × 2.0 | 17.0 |
 | Liskov Substitution (LSP) | 8.5 | × 1.5 | 12.75 |
-| Interface Segregation (ISP) | 7.5 | × 1.5 | 11.25 |
+| Interface Segregation (ISP) | 8.0 | × 1.5 | 12.0 |
 | Dependency Inversion (DIP) | 7.5 | × 2.0 | 15.0 |
 | Cross-Architecture | 7.5 | × 1.0 | 7.5 |
-| **Weighted Total** | | **10.0** | **78.5/100** |
+| **Weighted Total** | | **10.0** | **80.25/100** |
 
 ### Derived Scores
 
@@ -27,15 +27,15 @@
 
 ## Detailed Score Breakdown
 
-### Single Responsibility: 6.5/10
+### Single Responsibility: 8.0/10
 
 | Factor | Rating |
 |--------|--------|
-| Module cohesion | ⚠️ 6/10 — agent.ts and model.ts are overstuffed |
+| Module cohesion | ✅ 7/10 — agent.ts and model.ts split into focused modules |
 | Function size | ✅ 8/10 — Most functions are focused and small |
 | Package boundaries | ✅ 9/10 — Clear separation at package level |
 | Component responsibility | ⚠️ 6/10 — Some React components mix concerns |
-| Avoidance of God classes | ⚠️ 7/10 — Two God files split; service layer casts remain |
+| Avoidance of God classes | ✅ 8/10 — persistence.ts split into 3 modules; service layer casts remain |
 
 ### Open/Closed: 7.5/10
 
@@ -57,13 +57,13 @@
 | Null/error handling | ✅ 8/10 — No unexpected nulls or throws in subtypes |
 | Polymorphism correctness | ✅ 8/10 — State and agent patterns are clean |
 
-### Interface Segregation: 7.0/10
+### Interface Segregation: 8.0/10
 
 | Factor | Rating |
 |--------|--------|
-| Interface size | ✅ 8/10 — SharedContext split into focused types |
+| Interface size | ✅ 8/10 — SharedContext and multi-agent types split into focused interfaces |
 | Method relevance | ✅ 8/10 — Most interfaces have only relevant methods |
-| Client-specific interfaces | ⚠️ 6/10 — Context types are one-size-fits-all |
+| Client-specific interfaces | ✅ 7/10 — AgentBaseContext/DataConfig/IO context split done |
 | Optional property usage | ⚠️ 6/10 — allowedPlans, customInstructions, prefetchedData are often unused |
 | Interface count | ✅ 8/10 — 50+ interfaces, mostly well-scoped |
 
@@ -114,10 +114,10 @@ The average of our 6 scores (7.3) reflects the current state — good production
 
 | Principle | Current | Target | Effort |
 |-----------|---------|--------|--------|
-| SRP | 7.5 | 8.5 | Medium |
+| SRP | 8.0 | 8.5 | Medium |
 | OCP | 8.5 | 9.0 | Low |
 | LSP | 8.5 | 9.0 | Low |
-| ISP | 7.5 | 8.5 | Low |
+| ISP | 8.0 | 8.5 | Low |
 | DIP | 7.5 | 8.5 | Medium |
 | Cross-Architecture | 7.5 | 8.5 | Medium |
 | **Overall** | **7.85** | **8.7** | |

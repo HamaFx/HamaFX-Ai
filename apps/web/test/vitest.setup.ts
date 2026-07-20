@@ -23,6 +23,14 @@
 
 import { webcrypto } from 'node:crypto';
 
+// Set DB env vars for tests that import the real @hamafx/db module
+// (e.g. settings-actions.test.ts uses importOriginal). Tests use mocked
+// DB clients so no actual connection is needed — the env var just needs
+// to exist so getDb()'s module-level guard doesn't throw.
+if (!process.env.DATABASE_URL && !process.env.POSTGRES_URL) {
+  process.env.DATABASE_URL = 'postgres://test:test@localhost:5432/test';
+}
+
 // Don't clobber a real global if one already exists (e.g. Node 21+
 // exposes `globalThis.crypto` natively).
 if (!globalThis.crypto || !globalThis.crypto.subtle) {
