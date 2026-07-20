@@ -25,7 +25,7 @@ import { tool } from 'ai';
 import { desc, sql } from 'drizzle-orm';
 import type { z } from 'zod';
 
-import { getToolContext } from '../tool-context';
+import { getToolContext, maybeGetToolContext } from '../tool-context';
 
 const InputSchema = GetSystemDiagnosticsInputSchema;
 
@@ -40,7 +40,7 @@ export const getSystemDiagnosticsTool = tool({
     'Query the real-time operational health, connection latency, database record volumes, active synchronized files status, remaining daily budget, and verified environment variables in the Copilot system.',
   inputSchema: InputSchema,
   execute: async ({ verbose, forceProbe }): Promise<GetSystemDiagnosticsOutput> => {
-    const db = getDb();
+    const db = maybeGetToolContext()?.db ?? getDb();
     const ctx = getToolContext();
 
     const dbStart = Date.now();

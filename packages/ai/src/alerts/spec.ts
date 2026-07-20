@@ -28,6 +28,7 @@
 //   const combined = new AndSpec([spec1, spec2]);
 
 import type { AlertRule } from '@hamafx/shared';
+import { alertRuleRegistry } from './rule-registry';
 
 // ── Core types ─────────────────────────────────────────────────────────────
 
@@ -192,11 +193,5 @@ export function decideCross(
 }
 
 export function specFromRule(rule: AlertRule): AlertSpec {
-  switch (rule.type) {
-    case 'priceCross':
-    case 'candleClose':
-      return new LevelSpec(rule.direction, rule.level);
-    case 'indicatorCross':
-      return new CrossingSpec(rule.direction, rule.level);
-  }
+  return alertRuleRegistry.get(rule.type).specFactory(rule);
 }

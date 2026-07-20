@@ -39,6 +39,8 @@ import { tool } from 'ai';
 import { and, asc, gte, inArray, lte } from 'drizzle-orm';
 import type { z } from 'zod';
 
+import { maybeGetToolContext } from '../tool-context';
+
 const InputSchema = ForecastVolatilityInputSchema;
 
 declare module '@hamafx/shared' {
@@ -159,7 +161,8 @@ interface EventRow {
 }
 
 async function listHighImpactEventsInWindow(args: EventLookupArgs): Promise<EventRow[]> {
-  const rows = await getDb()
+  const db = maybeGetToolContext()?.db ?? getDb();
+  const rows = await db
     .select()
     .from(schema.economicEvents)
     .where(

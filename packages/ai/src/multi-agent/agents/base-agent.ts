@@ -21,6 +21,7 @@ import { z } from 'zod';
 import { resolveChatModel, resolveModelForProvider, supportsPromptCaching, TIER_TO_DOMAIN, type ModelDomain } from '../../model';
 import { estimateCostUsd } from '../../cost';
 import { withToolContext, type ToolContext } from '../../tool-context';
+import { getDb } from '@hamafx/db';
 import { telemetryConfig } from '../../telemetry';
 import type { ProviderId } from '@hamafx/shared';
 import type { SharedContext, AgentOpinion, AgentName, AgentBias, ModelTier } from '../types';
@@ -85,9 +86,10 @@ export abstract class BaseAgent {
       latestUserMessageText: userText,
       env: ctx.env,
       signal: ctx.signal,
-            // B1 fix: use env.MAX_DAILY_USD instead of hardcoded 100.
+      // B1 fix: use env.MAX_DAILY_USD instead of hardcoded 100.
       budget: { spent: 0, max: ctx.userSettings.maxDailyUsd ?? ctx.env.MAX_DAILY_USD },
       userSettings: ctx.userSettings,
+      db: getDb(),  // P0-2 — inject DB client
       toolTelemetryBuffer: [],  // M4: batch telemetry inserts
     };
     const timeoutMs = AGENT_TIMEOUTS[this.name] ?? 15_000;

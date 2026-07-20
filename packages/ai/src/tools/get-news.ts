@@ -26,6 +26,8 @@ import { tool } from 'ai';
 import { and, desc, eq, gte, sql } from 'drizzle-orm';
 import { z } from 'zod';
 
+import { maybeGetToolContext } from '../tool-context';
+
 const InputSchema = z.object({
   /** Optional symbol filter. Omit to get cross-symbol macro coverage. */
   symbol: SymbolSchema.optional(),
@@ -59,7 +61,9 @@ export const getNewsTool = tool({
       filters.push(sql`abs(${schema.newsArticles.sentimentScore}) >= ${minSentiment}`);
     }
 
-    const rows = await getDb()
+    const db = maybeGetToolContext()?.db ?? getDb();
+
+    const rows = await db
       .select()
       .from(schema.newsArticles)
       .where(and(...filters))
@@ -68,7 +72,7 @@ export const getNewsTool = tool({
 
     // Detect "pipeline empty" so the UI can surface the right message.
     if (rows.length === 0) {
-      const probe = await getDb()
+      const probe = await db
         .select({ id: schema.newsArticles.id })
         .from(schema.newsArticles)
         .limit(1);

@@ -47,7 +47,7 @@ import { and, desc, eq } from 'drizzle-orm';
 import type { z } from 'zod';
 
 import { resolveModel, resolveVisionModel } from '../model';
-import { maybeGetToolContext } from '../tool-context';
+import { maybeGetToolContext, type ToolDb } from '../tool-context';
 import { telemetryConfig } from '../telemetry';
 
 const InputSchema = AnalyzeChartImageInputSchema;
@@ -103,7 +103,7 @@ export const analyzeChartImageTool = tool({
     if (!ctx) return NO_CONTEXT;
     const { threadId, env } = ctx;
 
-    const imagePart = await findLatestImagePart(threadId);
+    const imagePart = await findLatestImagePart(threadId, ctx.db ?? getDb());
     if (!imagePart) return NO_IMAGE;
 
     const sourceImageRef = sourceRefFor(imagePart);
@@ -194,8 +194,8 @@ export const analyzeChartImageTool = tool({
 // Helpers
 // ---------------------------------------------------------------------------
 
-async function findLatestImagePart(threadId: string): Promise<ImagePartShape | null> {
-  const rows = await getDb()
+async function findLatestImagePart(threadId: string, db: ToolDb): Promise<ImagePartShape | null> {
+  const rows = await db
     .select({ parts: schema.chatMessages.parts })
     .from(schema.chatMessages)
     .where(and(eq(schema.chatMessages.threadId, threadId), eq(schema.chatMessages.role, 'user')))

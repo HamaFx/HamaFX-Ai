@@ -27,7 +27,7 @@ import { tool } from 'ai';
 import { desc } from 'drizzle-orm';
 import type { z } from 'zod';
 
-import { getToolContext } from '../tool-context';
+import { maybeGetToolContext } from '../tool-context';
 
 const InputSchema = GetIntermarketResonanceInputSchema;
 
@@ -43,7 +43,7 @@ export const getIntermarketResonanceTool = tool({
   inputSchema: InputSchema,
   execute: async ({ symbol, days }): Promise<GetIntermarketResonanceOutput> => {
     const requestedSymbol: Symbol = symbol ?? 'XAUUSD';
-    const db = getDb();
+    const db = maybeGetToolContext()?.db ?? getDb();
 
     // 1. Query the intermarket_resonance table
     const rows = await db

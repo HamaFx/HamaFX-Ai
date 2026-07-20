@@ -19,6 +19,7 @@
 import { generateText, streamText, convertToModelMessages, type Tool, type ModelMessage } from 'ai';
 import { estimateCostUsd } from '../../cost';
 import { withToolContext, type ToolContext } from '../../tool-context';
+import { getDb } from '@hamafx/db';
 import { telemetryConfig } from '../../telemetry';
 import { BaseAgent } from './base-agent';
 import { buildSharedSystemPrompt, extractUserMessageText } from '../context';
@@ -104,6 +105,7 @@ Be concise but thorough. Use markdown formatting for readability.`;
       // B1 fix: use env.MAX_DAILY_USD instead of hardcoded 100.
       budget: { spent: 0, max: execCtx.userSettings.maxDailyUsd ?? execCtx.env.MAX_DAILY_USD },
       userSettings: execCtx.userSettings,
+      db: getDb(),  // P0-2 — inject DB client
       toolTelemetryBuffer: [],  // M4: batch telemetry inserts
     };
     const timeoutMs = AGENT_TIMEOUTS[this.name] ?? 30_000;

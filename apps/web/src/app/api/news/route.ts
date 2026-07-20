@@ -15,7 +15,7 @@
  */
 
 import { listRecentArticles } from '@hamafx/ai';
-import { compose, authMiddleware, errorResponse } from '@/lib/api';
+import { compose, authMiddleware, errorResponse, type RequestUser } from '@/lib/api';
 import { withRateLimit } from '@hamafx/db';
 
 export const runtime = 'nodejs';
@@ -25,7 +25,7 @@ const NEWS_RATE_LIMIT = Number(process.env.NEWS_RATE_LIMIT) || 60;
 
 // PF-10 — Migrated to compose() middleware chain.
 // The auth check (authMiddleware) runs first, then the handler.
-export const GET = compose<void, { user: import('@/lib/api').RequestUser }>(
+export const GET = compose<void, { user: RequestUser }>(
   authMiddleware<void>(),
   async (req, ctx) => {
     const { user } = ctx;

@@ -25,6 +25,8 @@ export type DataErrorCode =
   | 'PROVIDER_HTTP_ERROR'
   | 'PROVIDER_PARSE_ERROR'
   | 'PROVIDER_QUOTA_EXCEEDED'
+  | 'PROVIDER_NO_API_KEY'
+  | 'PROVIDER_UNSUPPORTED_SYMBOL'
   | 'NO_PROVIDER_AVAILABLE';
 
 export class ProviderError extends Error {

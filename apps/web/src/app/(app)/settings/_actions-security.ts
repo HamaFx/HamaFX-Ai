@@ -20,7 +20,7 @@
 
 import bcrypt from 'bcryptjs';
 import { auth, signOut } from '@/auth';
-import { eq, and, sql } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import {
   withRateLimit,
   getDb,

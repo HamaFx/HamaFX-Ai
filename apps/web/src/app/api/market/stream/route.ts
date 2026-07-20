@@ -1,6 +1,5 @@
 import { getPriceWithMeta } from '@hamafx/data';
 import { SymbolSchema } from '@hamafx/shared';
-import { eq } from 'drizzle-orm';
 import { z } from 'zod';
 
 import { auth } from '@/auth';

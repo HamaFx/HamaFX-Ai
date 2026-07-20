@@ -40,7 +40,16 @@ export type ToolEnv = Pick<
   | 'LOG_PROMPTS'
 >;
 
+import type { DbClient } from '@hamafx/db';
 import type { UserSettingsRow } from '@hamafx/db/schema';
+
+/**
+ * P0-2 — Database abstraction injected into tools via ToolContext.
+ * Tools use this instead of importing `getDb()` from `@hamafx/db`.
+ * The type is the Drizzle client (re-exported from @hamafx/db);
+ * in tests, a mock can be injected.
+ */
+export type ToolDb = DbClient;
 
 /** M4: Batched tool-telemetry record — accumulated during a turn and
  *  bulk-inserted at onFinish to reduce DB connection pressure. */
@@ -64,6 +73,16 @@ export interface ToolContext {
   signal: AbortSignal | null;
   budget: { spent: number; max: number };
   userSettings: UserSettingsRow;
+  /**
+   * P0-2 — Database client injected by runChat(). Tools use this
+   * instead of importing `getDb()` from `@hamafx/db` directly.
+   * DIP: tools depend on an injected abstraction, not a module-level
+   * singleton. In tests, a mock can be injected via withToolContext().
+   *
+   * Optional for backward compatibility with test contexts that
+   * construct ToolContext without DB access.
+   */
+  db?: ToolDb;
   /** M4: Buffer for batching tool telemetry inserts. Optional — callers
    *  that don't pass it get direct inserts (backward-compatible). */
   toolTelemetryBuffer?: BatchedToolTelemetry[];

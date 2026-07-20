@@ -25,6 +25,8 @@ import { tool } from 'ai';
 import { and, asc, gte, inArray, lte, sql } from 'drizzle-orm';
 import { z } from 'zod';
 
+import { maybeGetToolContext } from '../tool-context';
+
 const ImportanceSchema = z.enum(['low', 'medium', 'high']);
 const CurrencySchema = z.enum(['USD', 'EUR', 'GBP']);
 
@@ -69,7 +71,9 @@ export const getCalendarTool = tool({
       filters.push(inArray(schema.economicEvents.currency, currencies));
     }
 
-    const rows = await getDb()
+    const db = maybeGetToolContext()?.db ?? getDb();
+
+    const rows = await db
       .select()
       .from(schema.economicEvents)
       .where(and(...filters))
@@ -77,7 +81,7 @@ export const getCalendarTool = tool({
       .limit(50);
 
     if (rows.length === 0) {
-      const probe = await getDb()
+      const probe = await db
         .select({ id: schema.economicEvents.id })
         .from(schema.economicEvents)
         .limit(1);

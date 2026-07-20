@@ -58,36 +58,48 @@ export interface AgentOpinion {
  * Context shared across all specialist agents in a multi-agent turn.
  * Fetched ONCE by the orchestrator and passed to each agent's `run()`.
  *
- * This avoids redundant tool calls when 4 agents all need the same
- * candle data. Each agent receives the full context but its system
- * prompt tells it to focus only on its dimension.
+ * P1-2 — Split into focused sub-interfaces for ISP compliance.
+ * Each agent declares which context slices it needs via composition
+ * (e.g. `TechnicalAgentContext extends AgentBaseContext, AgentDataContext, AgentIOContext`).
+ * The full `SharedContext` remains for backward compatibility.
  */
-export interface SharedContext {
-  /** Trading symbol, e.g. 'XAUUSD'. */
+
+/** Core identity — always needed. */
+export interface AgentBaseContext {
   symbol: string;
-  /** Thread ID for tool context scoping. */
   threadId: string;
-  /** User ID for tool context scoping. */
   userId: string;
-  /** Live snapshot from buildLiveSnapshot — prices, session, health. */
+}
+
+/** Pre-fetched data block — avoids redundant tool calls. */
+export interface AgentDataContext {
   snapshot: LiveSnapshot;
-  /** User's settings row (for model overrides, custom instructions, etc.). */
-  userSettings: UserSettingsRow;
-  /** Free-form custom instructions from user settings. */
-  customInstructions?: string;
-  /** The user's message that triggered this turn. */
-  userMessage: UIMessage;
-  /** Conversation history (compact, model-ready). */
-  history: UIMessage[];
-  /** AbortSignal for cancellation / timeout. */
-  signal: AbortSignal | null;
-  /** Server env slice for model resolution + tool execution. */
-  env: MultiAgentEnv;
-  /** Q4: Pre-fetched data block (candles, indicators, calendar, news)
-   *  fetched once by buildSharedContext so specialists don't each
-   *  re-fetch the same datasets. Injected into system prompts. */
   prefetchedData?: string;
 }
+
+/** User configuration — settings and custom instructions. */
+export interface AgentConfigContext {
+  userSettings: UserSettingsRow;
+  customInstructions?: string;
+}
+
+/** I/O context — the user message, conversation history, signal, env. */
+export interface AgentIOContext {
+  userMessage: UIMessage;
+  history: UIMessage[];
+  signal: AbortSignal | null;
+  env: MultiAgentEnv;
+}
+
+/**
+ * Full shared context — backward-compatible composition of all sub-contexts.
+ * Prefer the focused interfaces when adding new agent code.
+ */
+export interface SharedContext
+  extends AgentBaseContext,
+    AgentDataContext,
+    AgentConfigContext,
+    AgentIOContext {}
 
 /**
  * Env slice needed by the multi-agent pipeline.

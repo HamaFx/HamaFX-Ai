@@ -26,6 +26,7 @@ import { z } from 'zod';
 import { createAlert } from '../alerts/persistence';
 import { getToolContext } from '../tool-context';
 import { assertMutationIntent } from './mutation-guard';
+import { alertRuleRegistry } from '../alerts/rule-registry';
 
 const InputSchema = z.object({
   rule: AlertRuleSchema,
@@ -40,14 +41,10 @@ declare module '@hamafx/shared' {
 }
 
 function describeRule(rule: z.infer<typeof AlertRuleSchema>): string {
-  switch (rule.type) {
-    case 'priceCross':
-      return `${rule.symbol} price ${rule.direction} ${rule.level}`;
-    case 'candleClose':
-      return `${rule.symbol} ${rule.tf} close ${rule.direction} ${rule.level}`;
-    case 'indicatorCross':
-      return `${rule.symbol} ${rule.tf} ${rule.indicator} ${rule.direction} ${rule.level}`;
-  }
+  // P1-3 — delegate to plugin registry instead of switch(rule.type).
+  // The Zod-inferred type is compatible with AlertRule for the describe() contract.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return alertRuleRegistry.get(rule.type).describe(rule as any);
 }
 
 export const setAlertTool = tool({

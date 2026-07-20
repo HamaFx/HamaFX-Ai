@@ -79,4 +79,12 @@ export {
   binanceProvider,
 } from './providers/market-data-providers';
 
+// P2-2 — Market Data Provider Plugin Registry.
+// Replace hardcoded provider imports with discoverable plugins.
+export { marketDataProviders, MarketDataProviderRegistry } from './providers/provider-registry';
+export type { MarketDataProvider as IMarketDataProvider, ProviderFetchOptions } from './providers/provider-registry';
+
+// P2-2 — Auto-register provider adapters on import.
+import './providers/provider-adapters';
+
 

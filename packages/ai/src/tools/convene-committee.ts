@@ -15,7 +15,7 @@
  */
 
 import { logErrorContext } from '@hamafx/shared/logger';
-import { getDb, schema } from '@hamafx/db';
+import { schema } from '@hamafx/db';
 import {
   ConveneCommitteeInputSchema,
   type ConveneCommitteeInput,

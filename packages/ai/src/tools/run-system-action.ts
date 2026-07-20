@@ -25,7 +25,7 @@ import { tool } from 'ai';
 import { and, eq, gte, lte, sql } from 'drizzle-orm';
 import type { z } from 'zod';
 
-import { getToolContext } from '../tool-context';
+import { getToolContext, maybeGetToolContext } from '../tool-context';
 import { assertMutationIntent } from './mutation-guard';
 
 const InputSchema = RunSystemActionInputSchema;
@@ -37,7 +37,7 @@ declare module '@hamafx/shared' {
 }
 
 async function assertOperatorRole(userId: string): Promise<void> {
-  const db = getDb();
+  const db = maybeGetToolContext()?.db ?? getDb();
   const [caller] = await db
     .select({ role: schema.users.role })
     .from(schema.users)
@@ -59,7 +59,7 @@ export const runSystemActionTool = tool({
 
     const startedAt = Date.now();
     const consoleLogs: string[] = [];
-    const db = getDb();
+    const db = maybeGetToolContext()?.db ?? getDb();
 
     consoleLogs.push(`[devops] Initiating action: ${action.toUpperCase()}`);
     consoleLogs.push(`[devops] Thread ID: ${ctx.threadId}`);

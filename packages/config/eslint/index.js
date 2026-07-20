@@ -79,6 +79,43 @@ export default [
       'react-hooks/exhaustive-deps': 'warn',
     },
   },
+  // PF-22 — API route files must import from @/lib/services/*, not from
+  // domain packages directly. This enforces the Controller+Service pattern
+  // so business logic stays in services, not spread across route handlers.
+  {
+    files: ['src/app/api/**/route.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'warn',
+        {
+          paths: [
+            {
+              name: '@hamafx/ai',
+              message: 'API routes must import from @/lib/services/* instead of @hamafx/ai directly. Import domain functions through the service layer.',
+            },
+            {
+              name: '@hamafx/data',
+              message: 'API routes must import from @/lib/services/* instead of @hamafx/data directly. Import data functions through the service layer.',
+            },
+            {
+              name: '@hamafx/db',
+              message: 'API routes must import from @/lib/services/* instead of @hamafx/db directly. Import database functions through the service layer.',
+            },
+            {
+              name: '@hamafx/shared',
+              message: 'API routes must import from @/lib/services/* instead of @hamafx/shared directly. Import shared utilities through the service layer.',
+            },
+          ],
+          patterns: [
+            {
+              group: ['@hamafx/*'],
+              message: 'API routes must import from @/lib/services/* instead of @hamafx/* directly.',
+            },
+          ],
+        },
+      ],
+    },
+  },
   {
     ignores: [
       '**/node_modules/**',

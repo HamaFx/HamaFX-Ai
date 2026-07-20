@@ -17,7 +17,7 @@
 import { redirect } from 'next/navigation';
 import { auth } from '@/auth';
 import { getWatchlistWithCatalog } from '@hamafx/db';
-import { eq, asc } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import { getDb, schema } from '@hamafx/db';
 import { SymbolsForm } from '../_components/symbols-form';
 

@@ -23,7 +23,9 @@ import type { UserSettingsRow } from '@hamafx/db/schema';
 import type { UIMessage } from 'ai';
 import type { SharedContext, MultiAgentEnv } from './types';
 import { getCandles } from '@hamafx/data';
-import { getDb, schema } from '@hamafx/db';
+// P0-2: multi-agent pre-fetch still uses getDb() directly since
+// ToolContext is not set up in the multi-agent pipeline yet.
+import { getDb as getDbDirect, schema } from '@hamafx/db';
 import { gte, lte, and } from 'drizzle-orm';
 
 function userContextFromSettings(displayName: string | null, settings: UserSettingsRow) {
@@ -76,7 +78,7 @@ async function prefetchCandlesBlock(symbol: string): Promise<string> {
 /** Q4: Pre-fetch upcoming calendar events — share across all specialists. */
 async function prefetchCalendarBlock(): Promise<string> {
   try {
-    const db = getDb();
+    const db = getDbDirect();
     const now = new Date();
     const weekOut = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
     const rows = await db

@@ -42,11 +42,13 @@ import {
   type Tick,
   type Timeframe,
 } from '@hamafx/shared';
+import { msPerTimeframe } from '@hamafx/shared';
 import { createCategorizedLogger } from '@hamafx/shared/logger';
 
 import { deliverAlert, type DeliveryResult } from './delivery';
 import { listEvaluable, setRulePreviousValue } from './persistence';
 import { specFromRule, type RuleReading } from './spec';
+import { alertRuleRegistry } from './rule-registry';
 
 const elog = createCategorizedLogger('ai', { component: 'alerts-evaluator' });
 
@@ -123,26 +125,6 @@ function defaultPeriod(kind: IndicatorKind): number {
   return kind === 'rsi' || kind === 'atr' ? 14 : 20;
 }
 
-function tfMs(tf: Timeframe): number {
-  switch (tf) {
-    case '1m':
-      return 60_000;
-    case '5m':
-      return 5 * 60_000;
-    case '15m':
-      return 15 * 60_000;
-    case '30m':
-      return 30 * 60_000;
-    case '1h':
-      return 60 * 60_000;
-    case '4h':
-      return 4 * 60 * 60_000;
-    case '1d':
-      return 24 * 60 * 60_000;
-    case '1w':
-      return 7 * 24 * 60 * 60_000;
-  }
-}
 
 export function lastClosedBar(candles: Candle[], tf: Timeframe): Candle | null {
   // A bar is closed iff its open time + timeframe duration is in the past
@@ -150,7 +132,7 @@ export function lastClosedBar(candles: Candle[], tf: Timeframe): Candle | null {
   // looked for bars whose OPEN time was ≥ 1 timeframe ago, which returned
   // the bar BEFORE the most recently closed one — alerts on a 1h chart
   // compared against a candle that closed roughly 2h ago.
-  const tfDur = tfMs(tf);
+  const tfDur = msPerTimeframe(tf);
   const now = Date.now();
   for (let i = candles.length - 1; i >= 0; i -= 1) {
     const bar = candles[i]!;
@@ -405,13 +387,5 @@ export async function evaluateAlerts(
 // Re-exports so callers can run the orchestrator AND build human-readable
 // labels for the same rule shape.
 export function describeRule(rule: AlertRule): string {
-  const sym: Symbol = rule.symbol;
-  switch (rule.type) {
-    case 'priceCross':
-      return `${sym} price ${rule.direction} ${rule.level}`;
-    case 'candleClose':
-      return `${sym} ${rule.tf} close ${rule.direction} ${rule.level}`;
-    case 'indicatorCross':
-      return `${sym} ${rule.tf} ${rule.indicator} ${rule.direction} ${rule.level}`;
-  }
+  return alertRuleRegistry.get(rule.type).describe(rule);
 }

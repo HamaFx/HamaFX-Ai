@@ -19,7 +19,7 @@
 export * from './schema/index';
 // PF-15 — Export `getDbRO` so consumers can route read queries to
 // read replicas. `withTenantDbRO` also uses `getDbRO` internally.
-export { getDb, getDbRO, getAdminDb, closeAdminDb, closeDb, closeReplicaDb, withTenantDb, withTenantDbRO, withDbRetry, checkDbHealth, schema } from './client';
+export { getDb, getDbRO, getAdminDb, closeAdminDb, closeDb, closeReplicaDb, withTenantDb, withTenantDbRO, withDbRetry, checkDbHealth, schema, type DbClient } from './client';
 export { withUserScope } from './with-user-scope';
 export { traceQuery, withTracing } from './tracing';
 export { withRateLimit, type RateLimitResult } from './rate-limit';

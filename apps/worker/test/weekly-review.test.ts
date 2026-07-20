@@ -28,6 +28,7 @@ vi.mock('@hamafx/db', () => ({
     })),
   }),
   schema: { users: { id: 'id' } },
+  getActiveUserIds: vi.fn(async () => ['u1']),
 }));
 
 import * as ai from '@hamafx/ai';

@@ -51,6 +51,10 @@ vi.mock('@hamafx/db', () => ({
     users: {} as Record<string, unknown>,
     userSettings: {} as Record<string, unknown>,
   },
+  listUsersWithSettings: vi.fn(async (limit: number, offset: number) => {
+    return mockOffset(offset).then(() => []);
+  }),
+  countUsers: vi.fn(async () => 42),
 }));
 
 import { GET as usersGet } from '@/app/api/admin/users/route';

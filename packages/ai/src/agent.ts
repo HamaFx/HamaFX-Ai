@@ -32,7 +32,7 @@ import {
 } from 'ai';
 
 import { telemetryConfig } from './telemetry';
-import { getLlmClient } from './llm-client';
+import type { LlmClient } from './llm-client';
 import { buildLiveSnapshot } from './context';
 import type { LiveSnapshot } from './prompt/system';
 import {
@@ -61,29 +61,37 @@ import { PROVIDER_IDS } from '@hamafx/shared/byok';
 import {
   appendAssistantMessage,
   appendUserMessage,
-  getThread,
   listMessages,
   recordTelemetry,
-  recordToolTelemetry,
-  updateThreadTitle,
 } from './persistence';
 import { runPlanner } from './planner';
 import { buildSystemPrompt, userContextFromSettings } from './prompt/system';
 import { extractUserMessageText } from './message-text';
 import { routeTurn, type RoutingDecision } from './routing';
-import { generateTitle } from './title';
+// generateTitle — moved to chat/auto-title.ts (P0-1)
 import { toModelDomain, pickNextFallbackProvider } from './model-resolution';
 import { withToolContext, type ToolContext } from './tool-context';
 import { toolRegistry } from './tools';
 import { enforceCitations } from './verification';
 import { waitUntil } from './wait-until';
-import { getDb, schema, getUserWithSettings } from '@hamafx/db';
+import { schema, getUserWithSettings, type DbClient } from '@hamafx/db';
+// P2-3 — DI container for testability. Services are registered in
+// services.ts (auto-bootstrap on import). Tests can override via
+// container.register('db', () => mockDb).
+import { container } from '@hamafx/shared';
+// P2-3 — auto-register services (db, llmClient) in the container.
+import './services';
 import { domainToolFilter, type RoutingDomain } from './tools/by-domain';
 import type { RunChatArgs } from './types';
-import type { UserSettingsRow } from '@hamafx/db/schema';
+// UserSettingsRow — moved to chat/auto-title.ts (P0-1)
 import { extractRateLimits } from './rate-limits';
 import { noteLlmRateLimit, awaitLlmHeadroom } from './llm-throttle';
 import { withDiagnostics, recordStep, completeStep, recordError, exportDiagnosticContext } from './diagnostics';
+
+// P0-1 — Extracted pipeline stages from this file.
+import { resolveModelForTurn, type ResolveModelContext } from './chat/resolve-model';
+import { countToolCalls, flushBatchedTelemetry } from './chat/helpers';
+import { runAutoTitleBackground } from './chat/auto-title';
 
 const alog = createCategorizedLogger('ai', { component: 'agent' });
 /**
@@ -128,7 +136,7 @@ async function runChatInner(args: RunChatArgs) {
   // F5 — Record the start of the chat turn.
   recordStep('chat_turn_start', { threadId, model: modelOverride ?? 'default' });
 
-  const db = getDb();
+  const db = container.resolve<DbClient>('db');
   const { settings: userSettings, user: userRow } = await getUserWithSettings(userId);
 
   if (!userSettings) {
@@ -261,78 +269,17 @@ async function runChatInner(args: RunChatArgs) {
   // doesn't double-count and underflow the daily_ai_spend counter.
   let budgetReleased = false;
 
-  /**
-   * Resolves the model for the current retry attempt (respects override
-   * or routing domain). Also checks provider budget thresholds.
-   * Throws on budget blocks or provider threshold violations; the caller
-   * converts those into fallback decisions in the catch block.
-   */
-  async function resolveModelForTurn(): Promise<{
-    resolvedModel: LanguageModel;
-    resolvedModelId: string;
-    providerId: ProviderId;
-    nonEssentialDisabled: boolean;
-  }> {
-    const domainParam = toModelDomain(routing.domain);
-    let resolvedModel: LanguageModel;
-    let resolvedModelId: string;
-    let providerId: ProviderId;
-
-    if (typeof currentModelOverride === 'string' && currentModelOverride.length > 0) {
-      const resolved = resolveOverrideModel({
-        override: currentModelOverride,
-        userSettings: settings,
-        env,
-      });
-      if (resolved) {
-        resolvedModel = resolved.model;
-        resolvedModelId = resolved.modelId;
-        providerId = resolved.providerId;
-      } else {
-        // AI-1: Log when a user-specified model override cannot be
-        // resolved and falls back to default.
-        alog.warn('Model override not resolved — falling back', {
-          override: currentModelOverride,
-        });
-        const sep = currentModelOverride.indexOf(':');
-        const possibleProviderId = (sep >= 0 ? currentModelOverride.slice(0, sep) : currentModelOverride) as ProviderId;
-        if (PROVIDER_IDS.includes(possibleProviderId)) {
-          const res = resolveModelForProvider(possibleProviderId, settings, env);
-          resolvedModel = res.model;
-          resolvedModelId = res.modelId;
-          providerId = res.providerId;
-        } else {
-          const res = resolveChatModel(settings, env, domainParam);
-          resolvedModel = res.model;
-          resolvedModelId = res.modelId;
-          providerId = res.providerId;
-        }
-      }
-    } else {
-      const res = resolveChatModel(settings, env, domainParam);
-      resolvedModel = res.model;
-      resolvedModelId = res.modelId;
-      providerId = res.providerId;
-    }
-
-    // P5: skip budget check if we already checked this provider this turn.
-    let budgetCheck: Awaited<ReturnType<typeof checkBudgetAlertsAndThresholds>>;
-    if (providerId && checkedProviders.has(providerId)) {
-      budgetCheck = { blocked: false, nonEssentialDisabled };
-    } else {
-      if (providerId) checkedProviders.add(providerId);
-      budgetCheck = await checkBudgetAlertsAndThresholds(userId, providerId);
-    }
-    if (budgetCheck.blocked) {
-      if (budgetCheck.blockedReason?.includes('Monthly budget limit reached')) {
-        throw new Error(budgetCheck.blockedReason);
-      } else {
-        throw new Error(`PROVIDER_THRESHOLD_EXCEEDED: ${budgetCheck.blockedReason}`);
-      }
-    }
-
-    return { resolvedModel, resolvedModelId, providerId, nonEssentialDisabled: budgetCheck.nonEssentialDisabled };
-  }
+  // P0-1 — resolveModelForTurn extracted to chat/resolve-model.ts.
+  // All closure-captured variables are now explicit in ResolveModelContext.
+  const resolveCtx: ResolveModelContext = {
+    currentModelOverride,
+    settings,
+    env,
+    nonEssentialDisabled,
+    checkedProviders,
+    userId,
+    routing,
+  };
 
   while (attempts < maxAttempts) {
     attempts++;
@@ -341,7 +288,11 @@ async function runChatInner(args: RunChatArgs) {
     let providerId: ProviderId | undefined;
 
     try {
-      const result = await resolveModelForTurn();
+      // P0-1 — Refresh mutable fields in the context before each attempt
+      // (currentModelOverride and nonEssentialDisabled change during retries).
+      resolveCtx.currentModelOverride = currentModelOverride;
+      resolveCtx.nonEssentialDisabled = nonEssentialDisabled;
+      const result = await resolveModelForTurn(resolveCtx);
       resolvedModel = result.resolvedModel;
       resolvedModelId = result.resolvedModelId;
       providerId = result.providerId;
@@ -517,11 +468,9 @@ async function runChatInner(args: RunChatArgs) {
       latestUserMessageText: extractUserMessageText(userMessage),
       env: pickAiEnv(env),
       signal: signal ?? null,
-      // The reservation we just took is the freshest budget snapshot we
-      // can offer. Helpers that need a stricter "have we crossed the
-      // cap?" probe still hit the DB.
       budget: { spent: reservation.spent, max: maxDailyUsd },
       userSettings,
+      db,  // P0-2 — inject DB client so tools don't import @hamafx/db directly
       toolTelemetryBuffer: [],  // M4: batch telemetry inserts
     };
 
@@ -745,7 +694,7 @@ async function runChatInner(args: RunChatArgs) {
       await awaitLlmHeadroom(headroomKey, signal ? { signal } : {});
       recordStep('stream_text', { model: resolvedModelId, attempt: attempts });
       const result = await withToolContext(toolContext, async () => {
-        const client = getLlmClient();
+        const client = container.resolve<LlmClient>('llmClient');
         const streamTextOpts: Record<string, unknown> = {
           model: resolvedModel,
           system: systemPrompt,
@@ -826,93 +775,7 @@ async function runChatInner(args: RunChatArgs) {
   throw lastError ?? new Error('All fallback attempts failed');
 }
 
-/**
- * Slow tail of `onFinish` (Phase 2 hardening §8). Runs the auto-title
- * generator on first turn and persists the result; failures are logged
- * but never crash the stream because the response is already closed by
- * the time we reach this code.
- */
-async function runAutoTitleBackground(args: {
-  threadId: string;
-  userId: string;
-  userSettings: UserSettingsRow;
-  env: RunChatArgs['env'];
-  signal: AbortSignal | null;
-}): Promise<void> {
-  const { threadId, userId, userSettings, env, signal } = args;
-  try {
-    const thread = await getThread(userId, threadId);
-    if (!thread || thread.title !== null) return;
-    const all = await listMessages(userId, threadId, 50);
-    const firstUser = (all.find((m) => m.role === 'user')?.content ?? '').slice(0, 1024);
-    const firstAssistant = (all.find((m) => m.role === 'assistant')?.content ?? '').slice(0, 1024);
-    if (firstUser.length === 0 || firstAssistant.length === 0) return;
-
-    const titleStartedAt = Date.now();
-    // Phase F — derive the title model from the user's chat model
-    // (cheapest tier of the same provider, falling back to
-    // AI_DEFAULT_MODEL on miss). Removes the per-deployment
-    // AI_TITLE_MODEL env-var dependency.
-    const titleModelId =
-      deriveTitleModel(userSettings, env) ?? env.AI_DEFAULT_MODEL;
-    const titleArgs: Parameters<typeof generateTitle>[0] = {
-      threadId,
-      firstUser,
-      firstAssistant,
-      titleModelId,
-      env: pickAiEnv(env),
-    };
-    if (signal) titleArgs.signal = signal;
-    const titleResult = await generateTitle(titleArgs);
-    await updateThreadTitle(threadId, titleResult.title, titleResult.source);
-    const kind: 'title_generated' | 'title_skipped_budget' | 'title_failed' =
-      titleResult.source === 'llm'
-        ? 'title_generated'
-        : titleResult.reason === 'budget'
-          ? 'title_skipped_budget'
-          : 'title_failed';
-    await recordTelemetry({
-      userId,
-      threadId,
-      messageId: null,
-      model: titleModelId,
-      inputTokens: titleResult.inputTokens ?? 0,
-      outputTokens: titleResult.outputTokens ?? 0,
-      toolCalls: 0,
-      ms: titleResult.latencyMs ?? Date.now() - titleStartedAt,
-      kind,
-    });
-  } catch (err) {
-    logErrorContext(err, 'auto-title_background_failed', { threadId }, 'ai');
-  }
-}
-
-function countToolCalls(messages: readonly { content: unknown }[]): number {
-  let n = 0;
-  for (const m of messages) {
-    if (!Array.isArray(m.content)) continue;
-    for (const part of m.content) {
-      if (
-        part &&
-        typeof part === 'object' &&
-        'type' in part &&
-        (part as { type: string }).type === 'tool-call'
-      ) {
-        n += 1;
-      }
-    }
-  }
-  return n;
-}
-
-/** M4: Bulk-insert batched tool telemetry records at onFinish. */
-async function flushBatchedTelemetry(
-  entries: Array<{ threadId: string | null; userId?: string | null; tool: string; ms: number; ok: boolean; errorCode?: string | null; outputChars?: number | null }>,
-): Promise<void> {
-  if (entries.length === 0) return;
-  await Promise.all(entries.map((e) =>
-    recordToolTelemetry({ ...e, messageId: null }).catch(() => {}),
-  ));
-}
+// P0-1 — runAutoTitleBackground, countToolCalls, and flushBatchedTelemetry
+// extracted to chat/auto-title.ts and chat/helpers.ts.
 
 

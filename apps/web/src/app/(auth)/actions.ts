@@ -7,7 +7,7 @@ import { AuthError } from 'next-auth';
 import { headers } from 'next/headers';
 import { z } from 'zod';
 
-import { getDb, schema, withRateLimit, userExistsByEmail, createUserWithSettings, createVerificationToken, findVerificationToken, updatePasswordByEmail, createAuditLog } from '@hamafx/db';
+import { getDb, schema, withRateLimit, userExistsByEmail, createUserWithSettings, createVerificationToken } from '@hamafx/db';
 import { signIn } from '@/auth';
 import { createScopedLoggerWithContext } from '@/lib/logger';
 import { recordAuthEvent } from '@/lib/auth-anomaly';

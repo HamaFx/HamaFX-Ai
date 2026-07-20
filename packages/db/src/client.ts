@@ -78,7 +78,7 @@ function resolvePoolMax(): number {
 const DEFAULT_WEB_STATEMENT_TIMEOUT = 8000;
 const DEFAULT_WORKER_STATEMENT_TIMEOUT = 30000;
 
-type DbClient = ReturnType<typeof drizzle>;
+export type DbClient = ReturnType<typeof drizzle>;
 
 function resolveStatementTimeout(): number {
   if (process.env.NODE_ENV === 'test') return 30000;

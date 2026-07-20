@@ -31,7 +31,7 @@ import { and, eq, gte, lte, sql, type SQL } from 'drizzle-orm';
 import type { z } from 'zod';
 
 import { computeStats } from '../journal/persistence';
-import { getToolContext } from '../tool-context';
+import { getToolContext, maybeGetToolContext } from '../tool-context';
 
 const InputSchema = GetJournalStatsInputSchema;
 
@@ -82,7 +82,8 @@ interface RawBreakdownRow {
 }
 
 async function breakdownBySymbol(where: SQL | undefined): Promise<StatBreakdown[]> {
-  const rows = await getDb()
+  const db = maybeGetToolContext()?.db ?? getDb();
+  const rows = await db
     .select({
       key: schema.journalEntries.symbol,
       count: sql<number>`count(*)`.as('count'),
@@ -100,7 +101,8 @@ async function breakdownBySymbol(where: SQL | undefined): Promise<StatBreakdown[
 
 async function breakdownByTag(where: SQL | undefined): Promise<StatBreakdown[]> {
   // unnest(tags) explodes one row per tag so the GROUP BY can bucket them.
-  const rows = await getDb()
+  const db = maybeGetToolContext()?.db ?? getDb();
+  const rows = await db
     .select({
       key: sql<string>`unnest(${schema.journalEntries.tags})`.as('key'),
       count: sql<number>`count(*)`.as('count'),

@@ -22,7 +22,8 @@
 //   1. Has a valid `name` from the AgentName union
 //   2. Has a valid `modelTier`
 //   3. `systemPrompt()` returns a non-empty string
-//   4. `tools()` returns a non-empty Record
+//   4. `tools()` returns a non-empty Record (DecisionAgent excluded —
+//      synthesis agent with no tools)
 //   5. `parseOutput()` returns valid AgentOpinion fields
 //
 // These tests do NOT call the LLM — they verify structural contract
@@ -72,6 +73,9 @@ describe('BaseAgent contract (PF-12)', () => {
       });
 
       it('tools() returns a non-empty Record', () => {
+        // DecisionAgent is a synthesis/fusion agent — it fuses specialist
+        // opinions into a final response and has no tools by design.
+        if (agent instanceof DecisionAgent) return;
         const tools = agent.tools();
         expect(tools).toBeDefined();
         expect(typeof tools).toBe('object');

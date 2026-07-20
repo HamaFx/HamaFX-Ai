@@ -41,6 +41,8 @@ import { tool } from 'ai';
 import { and, desc, eq, gte, inArray, lte, or, sql } from 'drizzle-orm';
 import type { z } from 'zod';
 
+import { maybeGetToolContext } from '../tool-context';
+
 const InputSchema = AnalyzeFundamentalInputSchema;
 
 declare module '@hamafx/shared' {
@@ -113,7 +115,8 @@ interface EventQuery {
 }
 
 async function fetchEventsInWindow(args: EventQuery): Promise<EconomicEvent[]> {
-  const rows = await getDb()
+  const db = maybeGetToolContext()?.db ?? getDb();
+  const rows = await db
     .select()
     .from(schema.economicEvents)
     .where(
@@ -153,7 +156,8 @@ async function fetchHeadlinesForCurrencies(args: HeadlineQuery): Promise<ToolNew
   const tags = [args.symbol, ...args.currencies] as SymbolOrCurrencyTag[];
   const limit = NEWS_PER_CURRENCY * args.currencies.length + NEWS_PER_CURRENCY;
 
-  const rows = await getDb()
+  const db = maybeGetToolContext()?.db ?? getDb();
+  const rows = await db
     .select()
     .from(schema.newsArticles)
     .where(sql`${schema.newsArticles.symbols} && ARRAY[${sql.join(tags.map((t) => sql`${t}`), sql`, `)}]::text[]`)

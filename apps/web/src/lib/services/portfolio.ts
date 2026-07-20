@@ -33,8 +33,7 @@ import {
   savePortfolioSettings as aiSavePortfolioSettings,
   getPortfolioRiskReport as aiGetPortfolioRiskReport,
 } from '@hamafx/ai';
-import { CreatePositionInputSchema, ClosePositionInputSchema } from '@hamafx/shared';
-import type { PortfolioSettings } from '@hamafx/shared';
+import type { CreatePositionInputSchema, ClosePositionInputSchema, PortfolioSettings } from '@hamafx/shared';
 import { z } from 'zod';
 
 // ── Schemas ─────────────────────────────────────────────────────────────────
@@ -65,7 +64,7 @@ export interface PositionDTO {
   closedAt: string | null;
 }
 
-export interface PortfolioSettingsDTO extends PortfolioSettings {}
+export type PortfolioSettingsDTO = PortfolioSettings;
 
 export interface RiskReportDTO {
   totalExposure: number;

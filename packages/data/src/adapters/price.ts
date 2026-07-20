@@ -34,14 +34,16 @@
   //
   // Twelve Data removed — BiQuote primary covers forex/gold.
 
-import { SymbolSchema, getSymbolDefinition, type Symbol, type Tick } from '@hamafx/shared';
+import { SymbolSchema, type Symbol, type Tick } from '@hamafx/shared';
 
-import * as biquote from '../providers/biquote';
-import * as binance from '../providers/binance';
-import { fetchLiveTick } from '../providers/live-ticks';
 import { cacheKey, cacheTag, getDefaultCache, PRICE_TTL } from '../cache';
 import { runWithFailover, type ProviderAttempt } from '../failover';
-import * as finnhub from '../providers/finnhub';
+
+// P2-2 — Build provider attempts from the plugin registry instead of
+// hardcoded imports. Adding a new provider means registering a plugin
+// — no adapter code changes (OCP).
+import '../providers/provider-adapters'; // side-effect: register providers
+import { marketDataProviders } from '../providers/provider-registry';
 
 export interface GetPriceOptions {
   signal?: AbortSignal;
@@ -58,6 +60,7 @@ export interface GetPriceOptions {
     finnhub: string;
     biquoteBaseUrl: string;
   }>;
+  /** @deprecated — provider ordering is now handled by the plugin registry. */
   marketDataProvider?: string;
 }
 
@@ -104,7 +107,6 @@ export async function getPriceWithMeta(
   opts: GetPriceOptions = {},
 ): Promise<PriceResult> {
   const symbol = SymbolSchema.parse(symbolInput);
-  const def = getSymbolDefinition(symbol); // NEW: get symbol definition for category routing
   const keys = resolveKeys(opts);
   const ttl = opts.ttlSeconds ?? PRICE_TTL.ttlSeconds;
   const swr = opts.maxStaleSeconds ?? PRICE_TTL.maxStaleSeconds;
@@ -116,60 +118,23 @@ export async function getPriceWithMeta(
   const r = await cache.fetchWithMeta<{ tick: Tick; ageMs: number | null }>(
     key,
     async () => {
-      const attempts: ProviderAttempt<{ price: number; provider: string; ageMs: number | null }>[] = [];
-
-      // 1. live-ticks (always pinned first — Postgres snapshot from worker)
-      attempts.push({
-        name: 'live-ticks',
-        pinned: true,
-        run: async () => {
-          const r = await fetchLiveTick({ symbol });
-          return { price: r.price, provider: r.provider, ageMs: r.ageMs };
-        },
-      });
-
-      // 2. Source-specific REST fallback based on category
-      if (def.category === 'crypto' && def.binance) {
-        // Crypto → Binance REST (free, unlimited)
-        attempts.push({
-          name: 'binance',
+      // P2-2 — Build provider attempts from the plugin registry.
+      // Providers declare their own fetchPrice logic (pinned, key guards,
+      // category routing) — the adapter just iterates and runs failover.
+      const providers = marketDataProviders.list();
+      const attempts: ProviderAttempt<{ price: number; provider: string; ageMs: number | null }>[] =
+        providers.map((p) => ({
+          name: p.name,
+          pinned: p.pinned ?? false,
           run: async () => {
-            const price = await binance.fetchTickerPrice(def.binance!, {
+            const result = await p.fetchPrice(symbol, {
               ...(opts.signal ? { signal: opts.signal } : {}),
-            });
-            return { price, provider: 'binance', ageMs: null };
-          },
-        });
-      } else {
-        // Gold/Forex → BiQuote REST (free, unlimited)
-        attempts.push({
-          name: 'biquote',
-          run: async () => {
-            const tick = await biquote.fetchTick(symbol, {
               baseUrl: keys.biquoteBaseUrl,
-              ...(opts.signal ? { signal: opts.signal } : {}),
-            });
-            // BUG-3 fix: mid is now optional, compute fallback
-            const mid = tick.mid ?? ((tick.bid + tick.ask) / 2);
-            return { price: mid, provider: 'biquote', ageMs: null };
-          },
-        });
-      }
-
-      // 3. Finnhub as last resort (if key configured)
-      if (keys.finnhub) {
-        attempts.push({
-          name: 'finnhub',
-          run: async () => ({
-            ...(await finnhub.fetchPrice(symbol, {
               apiKey: keys.finnhub,
-              ...(opts.signal ? { signal: opts.signal } : {}),
-            })),
-            provider: 'finnhub',
-            ageMs: null,
-          }),
-        });
-      }
+            });
+            return { price: result.price, provider: result.provider, ageMs: result.ageMs ?? null };
+          },
+        }));
 
       if (opts.marketDataProvider) {
         attempts.forEach((attempt) => {

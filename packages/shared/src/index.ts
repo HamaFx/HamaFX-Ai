@@ -131,6 +131,10 @@ export {
 // client bundle. Consumers must import directly:
 //   import { generateSecret } from '@hamafx/shared/env-secrets';
 //
+// P2-3 — Lightweight DI container.
+// Replaces module-level singletons with a central registry.
+export { container, Container } from './container';
+
 // Phase 3 §3.9 — vault secrets loader also NOT re-exported from the barrel
 // (it pulls google-auth-library dynamically). Consumers must import directly:
 //   import { loadSecretsFromVault } from '@hamafx/shared/vault';
