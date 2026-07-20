@@ -21,24 +21,24 @@ vi.mock('@/lib/admin-auth', () => ({
     async (req: Request) => handler(req, { user: { userId: 'admin-123' } }),
 }));
 
-const mockSelectWhere = vi.hoisted(() => vi.fn());
-const mockUpdateSet = vi.hoisted(() => vi.fn());
-const mockUpdateWhere = vi.hoisted(() => vi.fn());
-const mockDeleteWhere = vi.hoisted(() => vi.fn());
-const mockTransaction = vi.hoisted(() => vi.fn());
+const mockGetUserById = vi.hoisted(() => vi.fn());
+const mockResetOnboarding = vi.hoisted(() => vi.fn());
+
+// Self-referencing proxy for transitive schema imports (e.g. @hamafx/data/health.ts).
+const schemaProxy = vi.hoisted(() => {
+  const p: Record<string, unknown> = {};
+  return new Proxy(p, {
+    get: (_target, prop) => {
+      if (prop === 'then' || typeof prop === 'symbol') return undefined;
+      return schemaProxy;
+    },
+  });
+});
 
 vi.mock('@hamafx/db', () => ({
-  getDb: () => ({
-    select: vi.fn(() => ({ from: vi.fn(() => ({ where: mockSelectWhere })) })),
-    transaction: mockTransaction,
-  }),
-  getUserById: vi.fn(),
-  resetOnboarding: vi.fn(),
-  schema: {
-    users: { id: 'users.id' },
-    userSettings: { userId: 'userSettings.userId' },
-    userSymbols: { userId: 'userSymbols.userId' },
-  },
+  getUserById: mockGetUserById,
+  resetOnboarding: mockResetOnboarding,
+  schema: schemaProxy,
 }));
 
 import { POST as resetPost } from '@/app/api/admin/onboarding/reset/route';
@@ -46,17 +46,10 @@ import { POST as resetPost } from '@/app/api/admin/onboarding/reset/route';
 describe('POST /api/admin/onboarding/reset', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockUpdateSet.mockReturnValue({ where: mockUpdateWhere });
-    mockTransaction.mockImplementation((cb: (tx: unknown) => Promise<unknown>) =>
-      cb({
-        delete: () => ({ where: mockDeleteWhere }),
-        update: () => ({ set: mockUpdateSet }),
-      }),
-    );
   });
 
   it('resets onboarding for the admin user by default', async () => {
-    mockSelectWhere.mockResolvedValue([{ id: 'admin-123' }]);
+    mockGetUserById.mockResolvedValue({ id: 'admin-123' });
 
     const req = new Request('http://localhost/api/admin/onboarding/reset', {
       method: 'POST',
@@ -70,15 +63,12 @@ describe('POST /api/admin/onboarding/reset', () => {
     expect(body.ok).toBe(true);
     expect(body.userId).toBe('admin-123');
     expect(body.reset).toBe(true);
-    expect(mockUpdateSet).toHaveBeenCalledWith({
-      onboardingCompleted: false,
-      onboardingProgress: null,
-    });
-    expect(mockUpdateWhere).toHaveBeenCalled();
+    expect(mockGetUserById).toHaveBeenCalledWith('admin-123');
+    expect(mockResetOnboarding).toHaveBeenCalledWith('admin-123', 'soft');
   });
 
   it('resets onboarding for a target user when userId is provided', async () => {
-    mockSelectWhere.mockResolvedValue([{ id: 'target-456' }]);
+    mockGetUserById.mockResolvedValue({ id: 'target-456' });
 
     const req = new Request('http://localhost/api/admin/onboarding/reset', {
       method: 'POST',
@@ -90,10 +80,12 @@ describe('POST /api/admin/onboarding/reset', () => {
 
     expect(res.status).toBe(200);
     expect(body.userId).toBe('target-456');
+    expect(mockGetUserById).toHaveBeenCalledWith('target-456');
+    expect(mockResetOnboarding).toHaveBeenCalledWith('target-456', 'soft');
   });
 
   it('returns 404 when target user does not exist', async () => {
-    mockSelectWhere.mockResolvedValue([]);
+    mockGetUserById.mockResolvedValue(null);
 
     const req = new Request('http://localhost/api/admin/onboarding/reset', {
       method: 'POST',
@@ -105,10 +97,11 @@ describe('POST /api/admin/onboarding/reset', () => {
 
     expect(res.status).toBe(404);
     expect(body.error.code).toBe('NOT_FOUND');
+    expect(mockResetOnboarding).not.toHaveBeenCalled();
   });
 
   it('performs a full reset by clearing symbols and resetting defaults', async () => {
-    mockSelectWhere.mockResolvedValue([{ id: 'target-456' }]);
+    mockGetUserById.mockResolvedValue({ id: 'target-456' });
 
     const req = new Request('http://localhost/api/admin/onboarding/reset', {
       method: 'POST',
@@ -121,13 +114,6 @@ describe('POST /api/admin/onboarding/reset', () => {
     expect(res.status).toBe(200);
     expect(body.ok).toBe(true);
     expect(body.mode).toBe('full');
-    expect(mockUpdateSet).toHaveBeenCalledWith({
-      onboardingCompleted: false,
-      onboardingProgress: null,
-      defaultSymbol: 'XAUUSD',
-      timezone: 'UTC',
-      aiApiKeys: null,
-    });
-    expect(mockDeleteWhere).toHaveBeenCalledTimes(1);
+    expect(mockResetOnboarding).toHaveBeenCalledWith('target-456', 'full');
   });
 });

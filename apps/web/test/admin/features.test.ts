@@ -21,23 +21,26 @@ vi.mock('@/lib/admin-auth', () => ({
     async (req: Request) => handler(req, { user: { userId: 'admin-123' } }),
 }));
 
-const mockFrom = vi.hoisted(() => vi.fn());
-const mockValues = vi.hoisted(() => vi.fn());
-const mockOnConflictDoUpdate = vi.hoisted(() => vi.fn());
-const mockTransaction = vi.hoisted(() => vi.fn());
 const mockListFeatureFlags = vi.hoisted(() => vi.fn());
+const mockUpsertFeatureFlag = vi.hoisted(() => vi.fn());
+
+// Self-referencing proxy for transitive schema imports (e.g. @hamafx/data/health.ts).
+const schemaProxy = vi.hoisted(() => {
+  const p: Record<string, unknown> = {};
+  return new Proxy(p, {
+    get: (_target, prop) => {
+      if (prop === 'then' || typeof prop === 'symbol') return undefined;
+      return schemaProxy;
+    },
+  });
+});
 
 vi.mock('@hamafx/db', () => ({
-  getDb: () => ({
-    select: vi.fn(() => ({ from: mockFrom })),
-    insert: vi.fn(() => ({ values: mockValues })),
-    transaction: mockTransaction,
-  }),
   listFeatureFlags: mockListFeatureFlags,
-  upsertFeatureFlag: vi.fn(),
+  upsertFeatureFlag: mockUpsertFeatureFlag,
   listUsersWithSettings: vi.fn(),
   countUsers: vi.fn(),
-  schema: { featureFlags: { key: 'featureFlags.key' } },
+  schema: schemaProxy,
 }));
 
 import { GET as featuresGet, POST as featuresPost } from '@/app/api/admin/features/route';
@@ -67,13 +70,6 @@ describe('GET /api/admin/features', () => {
 describe('POST /api/admin/features', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockValues.mockReturnValue({ onConflictDoUpdate: mockOnConflictDoUpdate });
-    mockOnConflictDoUpdate.mockResolvedValue(undefined);
-    mockTransaction.mockImplementation((cb: (tx: unknown) => Promise<unknown>) =>
-      cb({
-        insert: () => ({ values: mockValues }),
-      }),
-    );
   });
 
   it('updates all feature flags in a transaction', async () => {
@@ -87,6 +83,9 @@ describe('POST /api/admin/features', () => {
 
     expect(res.status).toBe(200);
     expect(body.ok).toBe(true);
-    expect(mockValues).toHaveBeenCalledTimes(2);
+    // The admin service calls upsertFeatureFlag for each toggle
+    expect(mockUpsertFeatureFlag).toHaveBeenCalledTimes(2);
+    expect(mockUpsertFeatureFlag).toHaveBeenCalledWith('newDashboard', true, 'admin-123');
+    expect(mockUpsertFeatureFlag).toHaveBeenCalledWith('betaChat', false, 'admin-123');
   });
 });

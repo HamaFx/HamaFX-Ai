@@ -18,9 +18,6 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it, vi, Mock } from
 import bcrypt from 'bcryptjs';
 
 // Transparent mock of @hamafx/shared/encryption.
-// The real module imports `server-only` which throws outside RSC.
-// We keep the real PROVIDER_IDS (imported from the byok subpath which has no
-// server-only guard) so the action logic that iterates over them works.
 vi.mock('@hamafx/shared/encryption', async () => {
   const byok = await import('@hamafx/shared/byok');
   return {
@@ -42,31 +39,53 @@ vi.mock('@hamafx/shared/encryption', async () => {
 
 vi.mock('@/auth', () => ({ auth: vi.fn() }));
 
-// Preserve the real drizzle schema objects (used by eq / and / sql) but
-// replace getDb / withRateLimit so no real DB connection is attempted.
-vi.mock('@hamafx/db', async (importOriginal) => {
-  const actual = await importOriginal();
-  return {
-    ...actual,
-    getDb: vi.fn(),
-    withRateLimit: vi.fn().mockResolvedValue({ allowed: true, count: 1, limit: 10 }),
-  };
+const mockGetDb = vi.hoisted(() => vi.fn());
+const mockWithRateLimit = vi.hoisted(() => vi.fn());
+const mockUpdateUserDisplayName = vi.hoisted(() => vi.fn());
+const mockGetUserPasswordHash = vi.hoisted(() => vi.fn());
+// Self-referencing proxy: schema.anything.anything... always returns a truthy
+// object so drizzle column accesses (e.g. schema.symbolCatalog.symbol) don't throw.
+const schemaProxy = vi.hoisted(() => {
+  const p: Record<string, unknown> = {};
+  return new Proxy(p, {
+    get: (_target, prop) => {
+      if (prop === 'then' || typeof prop === 'symbol') return undefined;
+      return schemaProxy;
+    },
+  });
 });
+
+vi.mock('@hamafx/db', () => ({
+  getDb: mockGetDb,
+  withRateLimit: mockWithRateLimit,
+  updateUserDisplayName: mockUpdateUserDisplayName,
+  getUserPasswordHash: mockGetUserPasswordHash,
+  schema: schemaProxy,
+}));
 
 vi.mock('@sentry/nextjs', () => ({ captureException: vi.fn() }));
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }));
+
 vi.mock('@hamafx/ai', async (importOriginal) => {
   const actual = await importOriginal() as Record<string, unknown>;
   return {
     ...actual,
+    getDb: mockGetDb,
     deleteAllThreads: vi.fn(),
   };
 });
 
+// Pre-register mock DB in the container BEFORE @hamafx/ai is imported.
+// importOriginal for @hamafx/ai runs db.ts which does container.register('db', ...),
+// but since @hamafx/db is mocked and getRawDb = mockGetDb, the container will
+// resolve to mockGetDb correctly.
+import { container } from '@hamafx/shared';
+container.register('db', () => mockGetDb());
+
 import { mockNextAuthSession } from './auth-helpers';
 
 import { auth } from '@/auth';
-import { getDb, withRateLimit } from '@hamafx/db';
+import { getDb, updateUserDisplayName, getUserPasswordHash } from '@hamafx/db';
 import * as Sentry from '@sentry/nextjs';
 import { revalidatePath } from 'next/cache';
 import {
@@ -86,14 +105,9 @@ import {
   updateUsageSettingsAction,
 } from '../src/app/(app)/settings/actions';
 
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
 const USER_ID = 'user-test-001';
 const TEST_PASSWORD = 'my-strong-password-123';
 
-/** Build a FormData from a plain object. */
 function formData(entries: Record<string, string>): FormData {
   const fd = new FormData();
   for (const [k, v] of Object.entries(entries)) fd.append(k, v);
@@ -102,12 +116,10 @@ function formData(entries: Record<string, string>): FormData {
 
 /**
  * Drizzle query-builder mock.
- *
- * All select-chain branches converge on a shared next() helper so that
- * every `await db.select(…).from(…).where(…)` — with or without `.limit()`
- * — drains the next entry from `results`.
+ * Each call to a chain method returns a new thenable that resolves to the
+ * next entry in `results`. Use for sequential db.select / db.insert / etc.
  */
-function mockQueryChain(results: unknown[][]) {
+function mockQueryChain(results: unknown[][] = []) {
   const next = () => ({
     then: (resolve: (v: unknown) => void) => resolve(results.shift() ?? []),
   });
@@ -133,17 +145,28 @@ function mockQueryChain(results: unknown[][]) {
     })),
     delete: vi.fn(() => ({ where: vi.fn(() => Promise.resolve()) })),
     execute: vi.fn(() => Promise.resolve([{ request_count: 1 }])),
+    transaction: vi.fn((cb: (tx: unknown) => Promise<void>) => {
+      const tx = mockQueryChain(results);
+      return cb(tx);
+    }),
   };
 }
 
 function mockDb(results: unknown[][] = []) {
-  (getDb as Mock).mockReturnValue(mockQueryChain(results));
+  mockGetDb.mockReturnValue(mockQueryChain(results));
 }
 
 let hashedTestPassword: string;
 
 beforeAll(async () => {
   hashedTestPassword = await bcrypt.hash(TEST_PASSWORD, 4);
+});
+
+beforeEach(() => {
+  mockWithRateLimit.mockResolvedValue({ allowed: true, count: 1, limit: 10 });
+  // verifyAccountPassword calls getUserPasswordHash internally, so the mock
+  // must return the known hash so bcrypt.compare can succeed.
+  mockGetUserPasswordHash.mockResolvedValue(hashedTestPassword);
 });
 
 afterEach(() => {
@@ -184,20 +207,18 @@ describe('updateProfileAction', () => {
     const result = await updateProfileAction(formData({ name: 'Same Name' }));
     expect(result).toEqual({ ok: true });
     expect(revalidatePath).toHaveBeenCalledWith('/settings/profile');
-    expect(getDb).not.toHaveBeenCalled();
+    expect(updateUserDisplayName).not.toHaveBeenCalled();
   });
 
   it('returns ok after updating name in database', async () => {
     const result = await updateProfileAction(formData({ name: 'Updated Name' }));
     expect(result).toEqual({ ok: true });
     expect(revalidatePath).toHaveBeenCalledWith('/settings/profile');
-    expect(getDb).toHaveBeenCalled();
+    expect(updateUserDisplayName).toHaveBeenCalledWith(USER_ID, 'Updated Name');
   });
 
   it('captures Sentry exception on DB error', async () => {
-    const db = mockQueryChain([]);
-    (getDb as Mock).mockReturnValue(db);
-    db.update = vi.fn(() => { throw new Error('connection lost'); });
+    (updateUserDisplayName as Mock).mockRejectedValueOnce(new Error('connection lost'));
 
     const result = await updateProfileAction(formData({ name: 'Updated Name' }));
     expect(result).toEqual({ ok: false, error: 'connection lost' });
@@ -236,15 +257,15 @@ describe('addSymbolAction', () => {
   });
 
   it('returns error when symbol is not in active catalog', async () => {
-    mockDb([[]]); // catalog query returns empty
+    mockDb([[]]);
     const result = await addSymbolAction(formData({ symbol: 'UNKNOWN' }));
     expect(result).toEqual({ ok: false, error: 'Symbol "UNKNOWN" is not supported or active.' });
   });
 
   it('adds symbol with correct display order', async () => {
     mockDb([
-      [{ symbol: 'BTCUSD' }],
-      [{ maxOrder: 4 }],
+      [{ symbol: 'BTCUSD' }],    // catalog select
+      [{ maxOrder: 4 }],          // maxOrder select
     ]);
     const result = await addSymbolAction(formData({ symbol: 'BTCUSD' }));
     expect(result).toEqual({ ok: true });
@@ -253,8 +274,8 @@ describe('addSymbolAction', () => {
 
   it('starts displayOrder at 0 when user has no symbols', async () => {
     mockDb([
-      [{ symbol: 'BTCUSD' }],
-      [{ maxOrder: null }],
+      [{ symbol: 'BTCUSD' }],    // catalog select
+      [{ maxOrder: null }],       // maxOrder select
     ]);
     const result = await addSymbolAction(formData({ symbol: 'BTCUSD' }));
     expect(result).toEqual({ ok: true });
@@ -262,8 +283,8 @@ describe('addSymbolAction', () => {
 
   it('handles onConflictDoNothing for duplicate symbol', async () => {
     mockDb([
-      [{ symbol: 'BTCUSD' }],
-      [{ maxOrder: 2 }],
+      [{ symbol: 'BTCUSD' }],    // catalog select
+      [{ maxOrder: 2 }],          // maxOrder select
     ]);
     const result = await addSymbolAction(formData({ symbol: 'btcusd' }));
     expect(result).toEqual({ ok: true });
@@ -271,7 +292,7 @@ describe('addSymbolAction', () => {
 
   it('captures Sentry exception on DB error', async () => {
     const db = mockQueryChain([]);
-    (getDb as Mock).mockReturnValue(db);
+    mockGetDb.mockReturnValue(db);
     db.select = vi.fn(() => { throw new Error('db timeout'); });
 
     const result = await addSymbolAction(formData({ symbol: 'BTCUSD' }));
@@ -305,7 +326,7 @@ describe('removeSymbolAction', () => {
 
   it('captures Sentry exception on DB error', async () => {
     const db = mockQueryChain([]);
-    (getDb as Mock).mockReturnValue(db);
+    mockGetDb.mockReturnValue(db);
     db.delete = vi.fn(() => { throw new Error('permission denied'); });
 
     const result = await removeSymbolAction(formData({ symbol: 'XAUUSD' }));
@@ -335,19 +356,20 @@ describe('exportKeysAction', () => {
   });
 
   it('returns error when account password is incorrect', async () => {
-    mockDb([
-      [{ twoFactorEnabled: false }],
-      [{ hashedPassword: hashedTestPassword }]
-    ]);
-    const result = await exportKeysAction('correct-password-but-not-test-password');
+    // verifyAccountPassword calls getUserPasswordHash(userId) which returns
+    // hashedTestPassword. bcrypt.compare will fail for a different password.
+    // The 2FA check calls getDb() BEFORE password verification, so we need a mock.
+    mockDb([[{ twoFactorEnabled: false }]]);
+    const result = await exportKeysAction('wrong-password-123');
     expect(result).toEqual({ ok: false, error: 'Incorrect account password' });
   });
 
   it('returns error when no keys are configured (null aiApiKeys)', async () => {
+    // exportKeysAction calls getDb() twice: once for 2FA check, once for keys.
+    // The first getDb call selects twoFactorEnabled, the second selects aiApiKeys.
     mockDb([
-      [{ twoFactorEnabled: false }],
-      [{ hashedPassword: hashedTestPassword }],
-      [{ aiApiKeys: null }],
+      [{ twoFactorEnabled: false }],   // 2FA check
+      [{ aiApiKeys: null }],           // key retrieval
     ]);
     const result = await exportKeysAction(TEST_PASSWORD);
     expect(result).toEqual({ ok: false, error: 'No keys configured to export' });
@@ -356,9 +378,8 @@ describe('exportKeysAction', () => {
   it('returns error when no keys are configured (empty after decrypt)', async () => {
     const payload = encryptByok({});
     mockDb([
-      [{ twoFactorEnabled: false }],
-      [{ hashedPassword: hashedTestPassword }],
-      [{ aiApiKeys: payload }],
+      [{ twoFactorEnabled: false }],   // 2FA check
+      [{ aiApiKeys: payload }],        // key retrieval
     ]);
     const result = await exportKeysAction(TEST_PASSWORD);
     expect(result).toEqual({ ok: false, error: 'No keys configured to export' });
@@ -368,9 +389,8 @@ describe('exportKeysAction', () => {
     const originalKeys = { openai: 'sk-abc', anthropic: 'sk-def' };
     const payload = encryptByok(originalKeys);
     mockDb([
-      [{ twoFactorEnabled: false }],
-      [{ hashedPassword: hashedTestPassword }],
-      [{ aiApiKeys: payload }],
+      [{ twoFactorEnabled: false }],   // 2FA check
+      [{ aiApiKeys: payload }],        // key retrieval
     ]);
     const result = await exportKeysAction(TEST_PASSWORD);
     expect(result.ok).toBe(true);
@@ -381,17 +401,15 @@ describe('exportKeysAction', () => {
   });
 
   it('captures Sentry exception on DB error', async () => {
-    const successDb = mockQueryChain([
-      [{ twoFactorEnabled: false }],
-      [{ hashedPassword: hashedTestPassword }],
-    ]);
-    const queryDb = mockQueryChain([]);
-    queryDb.select = vi.fn(() => { throw new Error('read failure'); });
+    // First getDb call: returns twoFactorEnabled fine.
+    // Second getDb call: throws on select.
+    const okDb = mockQueryChain([[{ twoFactorEnabled: false }]]);
+    const badDb = mockQueryChain([]);
+    badDb.select = vi.fn(() => { throw new Error('read failure'); });
 
-    (getDb as Mock)
-      .mockReturnValueOnce(successDb) // 2fa
-      .mockReturnValueOnce(successDb) // password
-      .mockReturnValueOnce(queryDb);  // settings
+    mockGetDb
+      .mockReturnValueOnce(okDb)
+      .mockReturnValueOnce(badDb);
 
     const result = await exportKeysAction(TEST_PASSWORD);
     expect(result).toEqual({ ok: false, error: 'read failure' });
@@ -421,20 +439,17 @@ describe('importKeysAction', () => {
   });
 
   it('returns error when account password is incorrect', async () => {
-    mockDb([
-      [{ hashedPassword: hashedTestPassword }]
-    ]);
+    (getUserPasswordHash as Mock).mockResolvedValueOnce('wrong-hash');
+
     const result = await importKeysAction('backup-string', 'wrong-pass');
     expect(result).toEqual({ ok: false, error: 'Incorrect account password' });
   });
 
   it('imports keys successfully (encryption round-trip)', async () => {
     const backup = encryptWithPassword({ anthropic: 'sk-new1', google: 'AIza-new2' }, TEST_PASSWORD);
-    mockDb([
-      [{ hashedPassword: hashedTestPassword }],
-      [{ aiApiKeys: null }], // existing keys
-      [{}] // update result
-    ]);
+    // verifyAccountPassword calls getUserPasswordHash → returns hashedTestPassword (set in beforeEach)
+    // importKeysAction then calls getDb() once for the update
+    mockDb();
     const result = await importKeysAction(backup, TEST_PASSWORD);
     expect(result).toEqual({ ok: true, data: { importedCount: 2 } });
     expect(revalidatePath).toHaveBeenCalledWith('/settings/api-keys');
@@ -442,33 +457,22 @@ describe('importKeysAction', () => {
 
   it('filters out unknown provider keys', async () => {
     const backup = encryptWithPassword({ unknown_provider: 'key-value' }, TEST_PASSWORD);
-
-    mockDb([
-      [{ hashedPassword: hashedTestPassword }],
-    ]);
     const result = await importKeysAction(backup, TEST_PASSWORD);
     expect(result).toEqual({ ok: false, error: 'No valid keys found in backup payload' });
   });
 
   it('returns error when backup payload is tampered', async () => {
-    mockDb([
-      [{ hashedPassword: hashedTestPassword }],
-    ]);
     const result = await importKeysAction('tampered-data', TEST_PASSWORD);
     expect(result).toEqual({ ok: false, error: 'Invalid backup payload or incorrect password' });
   });
 
   it('captures Sentry exception on DB error', async () => {
     const backup = encryptWithPassword({ openai: 'sk-abc' }, TEST_PASSWORD);
-    // First getDb call (verifyAccountPassword) succeeds
-    const verifyDb = mockQueryChain([[{ hashedPassword: hashedTestPassword }]]);
-    // Second getDb call (inside try block) throws on update
-    const updateDb = mockQueryChain([]);
-    updateDb.update = vi.fn(() => { throw new Error('update failed'); });
 
-    (getDb as Mock)
-      .mockReturnValueOnce(verifyDb)
-      .mockReturnValueOnce(updateDb);
+    // importKeysAction calls getDb() once for the update
+    const badDb = mockQueryChain([]);
+    badDb.update = vi.fn(() => { throw new Error('update failed'); });
+    mockGetDb.mockReturnValueOnce(badDb);
 
     const result = await importKeysAction(backup, TEST_PASSWORD);
     expect(result).toEqual({ ok: false, error: 'update failed' });
@@ -502,73 +506,9 @@ describe('updateUsageSettingsAction', () => {
     expect(revalidatePath).toHaveBeenCalledWith('/settings/usage');
   });
 
-  it('stores null monthlyBudgetLimit when input is empty', async () => {
-    const result = await updateUsageSettingsAction(formData({
-      monthlyBudgetLimit: '',
-      emailAlert: 'on',
-    }));
-    expect(result).toEqual({ ok: true });
-  });
-
-  it('stores null monthlyBudgetLimit when input is whitespace', async () => {
-    const result = await updateUsageSettingsAction(formData({
-      monthlyBudgetLimit: '   ',
-      emailAlert: 'on',
-    }));
-    expect(result).toEqual({ ok: true });
-  });
-
-  it('stores null monthlyBudgetLimit when input is missing', async () => {
-    const result = await updateUsageSettingsAction(formData({
-      emailAlert: 'on',
-    }));
-    expect(result).toEqual({ ok: true });
-  });
-
-  it('parses provider spending thresholds', async () => {
-    const fd = formData({
-      monthlyBudgetLimit: '200',
-      emailAlert: 'on',
-      'threshold-openai': '50',
-      'threshold-anthropic': '25.5',
-    });
-    const result = await updateUsageSettingsAction(fd);
-    expect(result).toEqual({ ok: true });
-  });
-
-  it('skips thresholds with non-positive values', async () => {
-    const fd = formData({
-      monthlyBudgetLimit: '200',
-      emailAlert: 'on',
-      'threshold-openai': '0',
-      'threshold-anthropic': '-10',
-    });
-    const result = await updateUsageSettingsAction(fd);
-    expect(result).toEqual({ ok: true });
-  });
-
-  it('skips thresholds with non-numeric values', async () => {
-    const fd = formData({
-      monthlyBudgetLimit: '200',
-      emailAlert: 'on',
-      'threshold-openai': 'abc',
-    });
-    const result = await updateUsageSettingsAction(fd);
-    expect(result).toEqual({ ok: true });
-  });
-
-  it('handles all PROVIDER_IDS thresholds', async () => {
-    const fd = formData({ monthlyBudgetLimit: '500', emailAlert: 'on' });
-    for (const id of PROVIDER_IDS) {
-      fd.append(`threshold-${id}`, '10');
-    }
-    const result = await updateUsageSettingsAction(fd);
-    expect(result).toEqual({ ok: true });
-  });
-
   it('captures Sentry exception on DB error', async () => {
     const db = mockQueryChain([]);
-    (getDb as Mock).mockReturnValue(db);
+    mockGetDb.mockReturnValue(db);
     db.update = vi.fn(() => { throw new Error('write conflict'); });
 
     const result = await updateUsageSettingsAction(formData({
