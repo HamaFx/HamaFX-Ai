@@ -18,6 +18,11 @@
 // model selection, prompt assembly, tool wiring, persistence, telemetry,
 // and the daily-budget guardrail in one place so route code stays a thin
 // HTTP shell.
+//
+// SRP-1: The retry/fallback loop and budget reservation have been extracted
+// to chat-retry-loop.ts and budget-reservation.ts. runChatInner now reads
+// top-to-bottom as: setup → reserveTurnBudget → build messages → route →
+// runChatWithFallback → budget.reconcile().
 
 import { getMessageText, pickAiEnv, type AiEnvKeys, type ServerEnv } from '@hamafx/shared';
 import { logErrorContext, createCategorizedLogger } from '@hamafx/shared/logger';
@@ -32,19 +37,15 @@ import {
 } from 'ai';
 
 import { telemetryConfig } from './telemetry';
-import type { LlmClient } from './llm-client';
+
 import { buildLiveSnapshot } from './context';
 import type { LiveSnapshot } from './prompt/system';
 import {
-  applyBudgetDelta,
-  BudgetExceededError,
   DEFAULT_MAX_DAILY_USD,
-  DEFAULT_TURN_ESTIMATE_USD,
   estimateCostUsd,
-  tryReserveBudget,
   checkBudgetAlertsAndThresholds,
 } from './cost';
-import { classifyStreamError, makeFallbackPart, type FallbackPartPayload } from './fallback';
+import type { FallbackPartPayload } from './fallback';
 import { estimateContextUsage } from './token-estimate';
 import { compactThread } from './memory/thread-summary';
 import {
@@ -69,12 +70,12 @@ import { buildSystemPrompt, userContextFromSettings } from './prompt/system';
 import { extractUserMessageText } from './message-text';
 import { routeTurn, type RoutingDecision } from './routing';
 // generateTitle — moved to chat/auto-title.ts (P0-1)
-import { toModelDomain, pickNextFallbackProvider } from './model-resolution';
+import { toModelDomain } from './model-resolution';
 import { withToolContext, type ToolContext } from './tool-context';
 import { toolRegistry } from './tools';
 import { enforceCitations } from './verification';
 import { waitUntil } from './wait-until';
-import { schema, getUserWithSettings, type DbClient } from '@hamafx/db';
+import { schema, getUserWithSettings } from '@hamafx/db';
 // P2-3 — DI container for testability. Services are registered in
 // services.ts (auto-bootstrap on import). Tests can override via
 // container.register('db', () => mockDb).
@@ -92,6 +93,9 @@ import { withDiagnostics, recordStep, completeStep, recordError, exportDiagnosti
 import { resolveModelForTurn, type ResolveModelContext } from './chat/resolve-model';
 import { countToolCalls, flushBatchedTelemetry } from './chat/helpers';
 import { runAutoTitleBackground } from './chat/auto-title';
+import { reserveTurnBudget, type BudgetHandle } from './budget-reservation';
+import { runChatWithFallback, type AttemptContext, type AttemptResult } from './chat-retry-loop';
+import { DB, LLM_CLIENT } from './tokens';
 
 const alog = createCategorizedLogger('ai', { component: 'agent' });
 /**
@@ -129,14 +133,15 @@ export async function runChat(args: RunChatArgs) {
   });
 }
 
-async function runChatInner(args: RunChatArgs) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function runChatInner(args: RunChatArgs): Promise<any> {
   const { threadId, userId, userMessage, env, modelOverride, customInstructions, signal } = args;
   const startedAt = Date.now();
 
   // F5 — Record the start of the chat turn.
   recordStep('chat_turn_start', { threadId, model: modelOverride ?? 'default' });
 
-  const db = container.resolve<DbClient>('db');
+  const db = container.resolve(DB);
   const { settings: userSettings, user: userRow } = await getUserWithSettings(userId);
 
   if (!userSettings) {
@@ -155,15 +160,7 @@ async function runChatInner(args: RunChatArgs) {
   const maxDailyUsd = userSettings.maxDailyUsd ?? env.MAX_DAILY_USD ?? DEFAULT_MAX_DAILY_USD;
 
   // 1) Hard ceiling — atomic reservation against today's running counter.
-  //    Two concurrent turns sitting at 99% of the cap can't both pass:
-  //    Postgres serialises the row-level UPDATE so exactly one wins. A
-  //    `recordTelemetry` call at the end reconciles the reservation with
-  //    the actual cost (delta between estimated and observed).
-  const reservation = await tryReserveBudget(userId, DEFAULT_TURN_ESTIMATE_USD, maxDailyUsd);
-  if (!reservation.ok) {
-    throw new BudgetExceededError(reservation.spent, reservation.max);
-  }
-  const reservedUsd = DEFAULT_TURN_ESTIMATE_USD;
+  const budget = await reserveTurnBudget({ userId, maxDailyUsd });
 
   // 2) Persist the user message before we start streaming. If the model fails
   //    we still want the prompt in history so retries can resume.
@@ -251,531 +248,369 @@ async function runChatInner(args: RunChatArgs) {
   // PERF-05: Decrypt BYOK keys once per request, not once per retry attempt.
   // AES-256-GCM is synchronous CPU work; hoisting it avoids 1-4 redundant
   // decryptions when the retry loop fires on transient provider errors.
-  const decryptedByokKeys = userSettings.aiApiKeys ? decryptByok(userSettings.aiApiKeys) : null;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const decryptedByokKeys: any = userSettings.aiApiKeys ? decryptByok(userSettings.aiApiKeys) : null;
+
+  // ── Retry / fallback loop ──────────────────────────────────────────
+  // SRP-1: The retry loop + fallback chain is extracted to runChatWithFallback.
+  // The attempt callback handles model resolution, planning, and streaming.
 
   let fallbackInfo: FallbackPartPayload | null = null;
-  let attempts = 0;
-  const maxAttempts = 5;
-  let lastError: unknown = null;
-  let currentModelOverride = modelOverride;
-  let nonEssentialDisabled = false;
-  // P5: avoid re-running checkBudgetAlertsAndThresholds on every retry attempt.
-  // Each provider needs at most one check per turn.
-  const checkedProviders = new Set<string>();
-  // F1 — capture narrowed settings for use in the inner retry helper.
-  const settings = userSettings;
-  // STAB-02: Track whether the budget reservation has already been released
-  // (on non-retryable error or client disconnect) so the post-loop release
-  // doesn't double-count and underflow the daily_ai_spend counter.
-  let budgetReleased = false;
 
-  // P0-1 — resolveModelForTurn extracted to chat/resolve-model.ts.
-  // All closure-captured variables are now explicit in ResolveModelContext.
+  // resolveCtx is a shared object — checkedProviders persists across attempts.
+  const checkedProviders = new Set<string>();
   const resolveCtx: ResolveModelContext = {
-    currentModelOverride,
-    settings,
+    currentModelOverride: modelOverride,
+    settings: userSettings,
     env,
-    nonEssentialDisabled,
+    nonEssentialDisabled: false,
     checkedProviders,
     userId,
     routing,
   };
 
-  while (attempts < maxAttempts) {
-    attempts++;
-    let resolvedModel: LanguageModel;
-    let resolvedModelId: string;
-    let providerId: ProviderId | undefined;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const streamResult: any = await runChatWithFallback({
+    maxAttempts: 5,
+    initialModelOverride: modelOverride ?? undefined,
+    userId,
+    budget,
+    signal,
+    userSettings: { aiFallbackChain: userSettings.aiFallbackChain as unknown },
+    decryptedByokKeys: decryptedByokKeys as unknown,
+    env: { GOOGLE_GENERATIVE_AI_API_KEY: env.GOOGLE_GENERATIVE_AI_API_KEY },
+    routing,
+    onFallback: (info) => { fallbackInfo = info; },
+    attempt: async (attemptCtx): Promise<AttemptResult> => {
+      // ── Model resolution ────────────────────────────────────────────
+      let resolvedModel: LanguageModel;
+      let resolvedModelId: string;
+      let providerId: ProviderId | undefined;
 
-    try {
-      // P0-1 — Refresh mutable fields in the context before each attempt
-      // (currentModelOverride and nonEssentialDisabled change during retries).
-      resolveCtx.currentModelOverride = currentModelOverride;
-      resolveCtx.nonEssentialDisabled = nonEssentialDisabled;
-      const result = await resolveModelForTurn(resolveCtx);
-      resolvedModel = result.resolvedModel;
-      resolvedModelId = result.resolvedModelId;
-      providerId = result.providerId;
-      nonEssentialDisabled = result.nonEssentialDisabled;
-    } catch (err) {
-      lastError = err;
-      const isProviderThresholdErr = err instanceof Error && err.message.startsWith('PROVIDER_THRESHOLD_EXCEEDED');
-      const decision = isProviderThresholdErr
-        ? { fallback: true, reason: 'rate-limit' as const, message: err.message }
-        : classifyStreamError(err);
-      if (!decision.fallback) {
-        // STAB-02: Release budget reservation on non-retryable error.
-        // Without this, permanent provider failures (e.g. invalid API key)
-        // inflate daily_ai_spend and prematurely trip BudgetExceededError.
-        await applyBudgetDelta(userId, -reservedUsd).catch(() => {});
-        budgetReleased = true;
-        throw err;
-      }
-
-      // Fallback! Determine current provider for chain walk.
-      const currentProvider = providerId ?? ((typeof currentModelOverride === 'string' && currentModelOverride.length > 0)
-        ? (currentModelOverride.includes(':') ? currentModelOverride.split(':')[0] : currentModelOverride)
-        : 'google') as ProviderId;
-
-      const nextFallback = pickNextFallbackProvider(
-        userSettings.aiFallbackChain ?? [],
-        currentProvider,
-        decryptedByokKeys,
-        env.GOOGLE_GENERATIVE_AI_API_KEY,
-        routing.domain,
-      );
-
-      if (!nextFallback) {
-        throw err;
-      }
-
-      alog.warn('Fallback triggered — model resolution failed', { nextProvider: nextFallback.providerId });
-
-      // The fallback marker shows which model was attempted.
-      // Note: path 1 doesn't have a resolved providerId yet (resolution
-      // itself failed), so we use 'auto' vs the current override string.
-      // Path 2 (stream failure) uses the actual providerId:bareModelId
-      // because model resolution succeeded before the stream errored.
-      fallbackInfo = makeFallbackPart(
-        currentModelOverride ?? 'auto',
-        decision,
-      );
-
-      currentModelOverride = nextFallback.modelId
-        ? `${nextFallback.providerId}:${nextFallback.modelId}`
-        : nextFallback.providerId;
-      continue;
-    }
-
-    // 4b) Plan-then-act (Phase 7c). Runs only when `routing.planRequired`
-    //     is true (fundamental + technical domains today). The planner
-    //     persists a `data-plan` system-message right before the streaming
-    //     turn so the chat surface renders a collapsible "Thinking" pill
-    //     above the assistant's answer. Failures fall back deterministically
-    //     and never block the main streamText call.
-    let plannerResult: Awaited<ReturnType<typeof runPlanner>> | null = null;
-    const parts = resolvedModelId.split('/');
-    const bareModelId = parts.length > 1 ? parts[1] : resolvedModelId;
-
-    if (routing.planRequired) {
-      // Phase F — derive the planner model from the chat model rather
-      // than reading env.AI_SUMMARY_MODEL (which no longer exists).
-      // The planner is a separate cheap-model call, so we use the same
-      // provider's spec.defaultModels.summary tier.
-      const plannerModelId =
-        derivePlannerModel(
-          {
-            aiApiKeys: userSettings.aiApiKeys,
-            chatModel: `${providerId}:${bareModelId}`,
-          },
-          env
-        ) ?? env.AI_DEFAULT_MODEL;
       try {
-        plannerResult = await runPlanner({
-          threadId,
-          userMessage,
-          routing,
-          plannerModelId,
-          env: pickAiEnv(env),
-          ...(signal ? { signal } : {}),
-        });
-        if (plannerResult.source === 'llm' && env.LOG_PROMPTS) {
-          console.info(
-            '[ai] planner ok (steps=%d, tools=%o)',
-            plannerResult.plan.steps.length,
-            plannerResult.plan.expectedTools,
-          );
+        resolveCtx.currentModelOverride = attemptCtx.currentModelOverride;
+        resolveCtx.nonEssentialDisabled = attemptCtx.nonEssentialDisabled;
+        const result = await resolveModelForTurn(resolveCtx);
+        resolvedModel = result.resolvedModel;
+        resolvedModelId = result.resolvedModelId;
+        providerId = result.providerId;
+        // Update shared context from result (may have been changed by budget checks)
+        if (result.nonEssentialDisabled !== undefined) {
+          resolveCtx.nonEssentialDisabled = result.nonEssentialDisabled;
         }
-        // Telemetry — record a single row tagged `kind: 'plan_*'` so the
-        // /settings/usage page can see how often the planner runs and how
-        // much it costs. Best-effort; never blocks the chat.
-        void recordTelemetry({
-          userId,
-          threadId,
-          messageId: plannerResult.messageId,
-          model: plannerModelId,
-          inputTokens: plannerResult.inputTokens,
-          outputTokens: plannerResult.outputTokens,
-          toolCalls: 0,
-          ms: plannerResult.ms,
-          kind:
-            plannerResult.source === 'llm'
-              ? 'plan_generated'
-              : plannerResult.reason === 'budget'
-                ? 'plan_skipped_budget'
-                : 'plan_failed',
-        });
       } catch (err) {
-        alog.warn('planner threw — falling back', { err: String(err) });
+        return { success: false, error: err, nonEssentialDisabled: attemptCtx.nonEssentialDisabled };
       }
-    }
 
-    // The base system prompt is unchanged; we prepend the (optional) thread
-    // summary as a system note so the model has continuity beyond the verbatim
-    // tail. The plan-then-act expansion (Phase 7c) lands here too — for now
-    // we just record `planRequired` in telemetry so routing decisions are
-    // auditable today.
-    const baseSystem = buildSystemPrompt(
-      snapshot,
-      userContextFromSettings(displayName ?? null, userSettings),
-    );
-    let systemPrompt = compaction.extraSystem
-      ? `${compaction.extraSystem}\n\n${baseSystem}`
-      : baseSystem;
+      // ── Planner ─────────────────────────────────────────────────────
+      let plannerResult: Awaited<ReturnType<typeof runPlanner>> | null = null;
+      const parts = resolvedModelId.split('/');
+      const bareModelId = parts.length > 1 ? parts[1] : resolvedModelId;
 
-    if (customInstructions && customInstructions.trim().length > 0) {
-      systemPrompt += `\n\n<USER_CUSTOM_INSTRUCTIONS>\n${customInstructions}\n</USER_CUSTOM_INSTRUCTIONS>`;
-    }
-
-    // F4 — Context-window-aware token estimation. Warn (or truncate) when
-    // the conversation approaches the model's context limit. Helps prevent
-    // silent crashes on long threads with smaller-context models like Claude.
-    // Uses a per-attempt COPY so truncation doesn't persist across retries
-    // when switching to a larger-context provider.
-    let effectiveMessages = modelMessages;
-    const totalContentLen = effectiveMessages.reduce((sum, m) => sum + (typeof m.content === 'string' ? m.content.length : JSON.stringify(m.content).length), 0);
-    const contextEstimate = estimateContextUsage(
-      resolvedModelId,
-      systemPrompt.length,
-      effectiveMessages.length,
-      totalContentLen,
-    );
-    if (contextEstimate.warningNote) {
-      systemPrompt = `${contextEstimate.warningNote}\n\n${systemPrompt}`;
-    }
-    if (contextEstimate.shouldTruncate && contextEstimate.suggestedKeepCount) {
-      recordStep('context_truncation', {
-        estimatedTokens: contextEstimate.estimatedTokens,
-        contextLimit: contextEstimate.contextLimit,
-        originalCount: effectiveMessages.length,
-        keptCount: contextEstimate.suggestedKeepCount,
-      });
-      effectiveMessages = effectiveMessages.slice(-contextEstimate.suggestedKeepCount);
-    }
-
-    // Phase 3 hardening §1 — `withToolContext` replaces the per-module
-    // setter pattern (`setAnalyzeChartImageContext`,
-    // `setSummarizeThreadContext`). Async-local storage means concurrent
-    // turns on the same warm Lambda see their own context and can't
-    // overwrite each other's threadId. The signal is piped through so
-    // long-running tools can short-circuit when the user closes the tab
-    // (Phase 3 §3). The budget snapshot is cached so multiple LLM-side
-    // helpers (planner, title, summarize_thread) don't each issue their
-    // own SUM query (Phase 3 §4).
-    const toolContext: ToolContext = {
-      threadId,
-      userId,
-      latestUserMessageText: extractUserMessageText(userMessage),
-      env: pickAiEnv(env),
-      signal: signal ?? null,
-      budget: { spent: reservation.spent, max: maxDailyUsd },
-      userSettings,
-      db,  // P0-2 — inject DB client so tools don't import @hamafx/db directly
-      toolTelemetryBuffer: [],  // M4: batch telemetry inserts
-    };
-
-    if (env.LOG_PROMPTS) {
-      console.info(
-        '[ai] routing domain=%s model=%s plan=%s rationale=%s',
-        routing.domain,
-        resolvedModelId,
-        routing.planRequired,
-        routing.rationale,
-      );
-      console.info('[ai] system prompt:\n%s', systemPrompt);
-      console.info(
-        '[ai] history (%d msgs, compacted %d)',
-        modelMessages.length,
-        compaction.compacted,
-      );
-    }
-
-    // Telemetry breadcrumb for the routing decision — useful for /settings/usage
-    // breakdowns. Best-effort; failures here never block the chat.
-    void recordTelemetry({
-      userId,
-      threadId,
-      messageId: null,
-      model: resolvedModelId,
-      inputTokens: 0,
-      outputTokens: 0,
-      toolCalls: 0,
-      ms: 0,
-      kind: `routing_${routing.domain}` as const,
-    }).catch((err) => alog.warn('routing telemetry failed', { err: String(err) }));
-
-    // 5) Stream. AI Gateway model strings ("openai/gpt-4.1") are accepted
-    //    directly when AI_GATEWAY_API_KEY is set.
-    //
-    // Phase 3 hardening §2 — per-tool telemetry now lives in
-    // `withTelemetry()` on each tool, NOT in `onStepFinish` here. The
-    // step-finish hook is left empty so we still have a hook point for
-    // future SDK-side step instrumentation, but it no longer parses
-    // content parts to derive tool-call timing — that's fragile and
-    // duplicates the wrapper.
-
-    // H3: Domain-based tool subsetting — reduces per-turn token overhead
-    // by 60-80%. Only pass tools relevant to the routing domain.
-    // 'generic' domain gets all tools (fallback for unclassified messages).
-    // PF-16: pass the user's plan tier for per-tenant tool gating.
-    // USER_PLAN_TIER is an optional env field that may not exist in all
-    // deployments. When undefined, all tools are available.
-    const userPlan = (env as Record<string, unknown>).USER_PLAN_TIER as string | undefined;
-    const activeTools = domainToolFilter(routing.domain as RoutingDomain, userPlan) as Record<string, Tool>;
-    if (nonEssentialDisabled) {
-      delete activeTools.convene_committee;
-      delete activeTools.replay_setup;
-    }
-
-    // PERF-4: enable prompt caching for the stable system prefix.
-    const streamArgs: Parameters<typeof streamText>[0] = {
-      model: resolvedModel,
-      system: systemPrompt,
-      ...telemetryConfig(),
-      ...(supportsPromptCaching(resolvedModelId)
-        ? { providerOptions: { anthropic: { cacheControl: { type: 'ephemeral' as const } } } }
-        : {}),
-      messages: effectiveMessages,
-      tools: routing.domain === 'fundamental' && env.GOOGLE_VERTEX_PROJECT
-        ? { ...activeTools, googleSearch: getVertexGoogleSearchTool(env, userId) } 
-        : activeTools,
-      stopWhen: stepCountIs(env.MAX_TOOL_ITERATIONS),
-
-      onFinish: async ({ usage, finishReason, response }) => {
+      if (routing.planRequired) {
+        const plannerModelId =
+          derivePlannerModel(
+            {
+              aiApiKeys: userSettings.aiApiKeys,
+              chatModel: `${providerId}:${bareModelId}`,
+            },
+            env,
+          ) ?? env.AI_DEFAULT_MODEL;
         try {
-          const assistantUiMsg = response.messages.at(-1);
-          let messageId: string | null = null;
-          if (assistantUiMsg && assistantUiMsg.role === 'assistant') {
-            // Convert the model-shaped response back to a UIMessage shape.
-            const baseParts: UIMessage['parts'] = Array.isArray(assistantUiMsg.content)
-              ? (assistantUiMsg.content as UIMessage['parts'])
-              : [{ type: 'text', text: String(assistantUiMsg.content) }];
-
-            // Phase 7c: post-finish citation enforcement. We append a
-            // `data-citation-warning` part when the assistant's text quotes
-            // numbers / events that aren't backed by a tool call this turn.
-            // The check is heuristic and `stance: 'soft'` so false positives
-            // render as muted footer pills, not blocking errors.
-            let parts: UIMessage['parts'] = baseParts;
-            try {
-              const assistantText = baseParts
-                .filter(
-                  (p): p is { type: 'text'; text: string } =>
-                    typeof p === 'object' &&
-                    p !== null &&
-                    (p as { type?: string }).type === 'text' &&
-                    typeof (p as { text?: unknown }).text === 'string',
-                )
-                .map((p) => p.text)
-                .join('\n');
-              const warning = enforceCitations({
-                text: assistantText,
-                responseMessages: response.messages,
-              });
-              if (warning) {
-                parts = [...baseParts, warning as unknown as UIMessage['parts'][number]];
-              }
-            } catch (err) {
-              alog.warn('citation enforcer failed', { err: String(err) });
-            }
-
-            // Phase B — UX_UPGRADE_PLAN.md item 15.
-            // Append the fallback marker so the chat surface can show
-            // "Override unavailable, used <default>." inline with the
-            // assistant's reply. The renderer (apps/web) already
-            // understands `data-fallback` from the markdown export
-            // pipeline so we reuse the same shape.
-            if (fallbackInfo) {
-              parts = [...parts, fallbackInfo as unknown as UIMessage['parts'][number]];
-            }
-
-            const ui: UIMessage = {
-              id: crypto.randomUUID(),
-              role: 'assistant',
-              parts,
-            };
-            ({ messageId } = await appendAssistantMessage(threadId, ui));
-
-
+          plannerResult = await runPlanner({
+            threadId,
+            userMessage,
+            routing,
+            plannerModelId,
+            env: pickAiEnv(env),
+            ...(signal ? { signal } : {}),
+          });
+          if (plannerResult.source === 'llm' && env.LOG_PROMPTS) {
+            console.info(
+              '[ai] planner ok (steps=%d, tools=%o)',
+              plannerResult.plan.steps.length,
+              plannerResult.plan.expectedTools,
+            );
           }
-          const rateLimit = extractRateLimits(response.headers);
-          if (rateLimit) {
-            noteLlmRateLimit(`${providerId}:${userId}`, rateLimit);
-            // PERF-6: single upsert off the response path (no DELETE+INSERT).
-            // The provider_tests PK is (user_id, provider_id) so ON CONFLICT
-            // DO UPDATE is safe and idempotent.
-            waitUntil(
-              db
-                .insert(schema.providerTests)
-                .values({
-                  userId,
-                  providerId,
-                  ok: true,
-                  error: null,
-                  testedAt: new Date().toISOString(),
-                  rateLimit: rateLimit as { remainingRequests?: number; remainingTokens?: number; resetRequests?: string; resetTokens?: string; } | null,
-                })
-                .onConflictDoUpdate({
-                  target: [schema.providerTests.userId, schema.providerTests.providerId],
-                  set: {
+          void recordTelemetry({
+            userId,
+            threadId,
+            messageId: plannerResult.messageId,
+            model: plannerModelId,
+            inputTokens: plannerResult.inputTokens,
+            outputTokens: plannerResult.outputTokens,
+            toolCalls: 0,
+            ms: plannerResult.ms,
+            kind:
+              plannerResult.source === 'llm'
+                ? 'plan_generated'
+                : plannerResult.reason === 'budget'
+                  ? 'plan_skipped_budget'
+                  : 'plan_failed',
+          });
+        } catch (err) {
+          alog.warn('planner threw — falling back', { err: String(err) });
+        }
+      }
+
+      // ── System prompt + context estimation ──────────────────────────
+      const baseSystem = buildSystemPrompt(
+        snapshot,
+        userContextFromSettings(displayName ?? null, userSettings),
+      );
+      let systemPrompt = compaction.extraSystem
+        ? `${compaction.extraSystem}\n\n${baseSystem}`
+        : baseSystem;
+
+      if (customInstructions && customInstructions.trim().length > 0) {
+        systemPrompt += `\n\n<USER_CUSTOM_INSTRUCTIONS>\n${customInstructions}\n</USER_CUSTOM_INSTRUCTIONS>`;
+      }
+
+      // F4 — Context-window-aware token estimation.
+      let effectiveMessages = modelMessages;
+      const totalContentLen = effectiveMessages.reduce((sum, m) => sum + (typeof m.content === 'string' ? m.content.length : JSON.stringify(m.content).length), 0);
+      const contextEstimate = estimateContextUsage(
+        resolvedModelId,
+        systemPrompt.length,
+        effectiveMessages.length,
+        totalContentLen,
+      );
+      if (contextEstimate.warningNote) {
+        systemPrompt = `${contextEstimate.warningNote}\n\n${systemPrompt}`;
+      }
+      if (contextEstimate.shouldTruncate && contextEstimate.suggestedKeepCount) {
+        recordStep('context_truncation', {
+          estimatedTokens: contextEstimate.estimatedTokens,
+          contextLimit: contextEstimate.contextLimit,
+          originalCount: effectiveMessages.length,
+          keptCount: contextEstimate.suggestedKeepCount,
+        });
+        effectiveMessages = effectiveMessages.slice(-contextEstimate.suggestedKeepCount);
+      }
+
+      // ── Tool context ────────────────────────────────────────────────
+      const toolContext: ToolContext = {
+        threadId,
+        userId,
+        latestUserMessageText: extractUserMessageText(userMessage),
+        env: pickAiEnv(env),
+        signal: signal ?? null,
+        budget: { spent: budget.spent, max: maxDailyUsd },
+        userSettings,
+        db,
+        toolTelemetryBuffer: [],
+      };
+
+      if (env.LOG_PROMPTS) {
+        console.info(
+          '[ai] routing domain=%s model=%s plan=%s rationale=%s',
+          routing.domain,
+          resolvedModelId,
+          routing.planRequired,
+          routing.rationale,
+        );
+        console.info('[ai] system prompt:\n%s', systemPrompt);
+        console.info(
+          '[ai] history (%d msgs, compacted %d)',
+          modelMessages.length,
+          compaction.compacted,
+        );
+      }
+
+      // Routing telemetry breadcrumb
+      void recordTelemetry({
+        userId,
+        threadId,
+        messageId: null,
+        model: resolvedModelId,
+        inputTokens: 0,
+        outputTokens: 0,
+        toolCalls: 0,
+        ms: 0,
+        kind: `routing_${routing.domain}` as const,
+      }).catch((err) => alog.warn('routing telemetry failed', { err: String(err) }));
+
+      // ── Tool filtering ──────────────────────────────────────────────
+      const userPlan = (env as Record<string, unknown>).USER_PLAN_TIER as string | undefined;
+      const activeTools = domainToolFilter(routing.domain as RoutingDomain, userPlan) as Record<string, Tool>;
+      const modelNonEssentialDisabled = resolveCtx.nonEssentialDisabled;
+      if (modelNonEssentialDisabled) {
+        delete activeTools.convene_committee;
+        delete activeTools.replay_setup;
+      }
+
+      // ── Stream args ─────────────────────────────────────────────────
+      const streamArgs: Parameters<typeof streamText>[0] = {
+        model: resolvedModel,
+        system: systemPrompt,
+        ...telemetryConfig(),
+        ...(supportsPromptCaching(resolvedModelId)
+          ? { providerOptions: { anthropic: { cacheControl: { type: 'ephemeral' as const } } } }
+          : {}),
+        messages: effectiveMessages,
+        tools: routing.domain === 'fundamental' && env.GOOGLE_VERTEX_PROJECT
+          ? { ...activeTools, googleSearch: getVertexGoogleSearchTool(env, userId) }
+          : activeTools,
+        stopWhen: stepCountIs(env.MAX_TOOL_ITERATIONS),
+
+        onFinish: async ({ usage, finishReason, response }) => {
+          try {
+            const assistantUiMsg = response.messages.at(-1);
+            let messageId: string | null = null;
+            if (assistantUiMsg && assistantUiMsg.role === 'assistant') {
+              const baseParts: UIMessage['parts'] = Array.isArray(assistantUiMsg.content)
+                ? (assistantUiMsg.content as UIMessage['parts'])
+                : [{ type: 'text', text: String(assistantUiMsg.content) }];
+
+              let parts: UIMessage['parts'] = baseParts;
+              try {
+                const assistantText = baseParts
+                  .filter(
+                    (p): p is { type: 'text'; text: string } =>
+                      typeof p === 'object' &&
+                      p !== null &&
+                      (p as { type?: string }).type === 'text' &&
+                      typeof (p as { text?: unknown }).text === 'string',
+                  )
+                  .map((p) => p.text)
+                  .join('\n');
+                const warning = enforceCitations({
+                  text: assistantText,
+                  responseMessages: response.messages,
+                });
+                if (warning) {
+                  parts = [...baseParts, warning as unknown as UIMessage['parts'][number]];
+                }
+              } catch (err) {
+                alog.warn('citation enforcer failed', { err: String(err) });
+              }
+
+              if (fallbackInfo) {
+                parts = [...parts, fallbackInfo as unknown as UIMessage['parts'][number]];
+              }
+
+              const ui: UIMessage = {
+                id: crypto.randomUUID(),
+                role: 'assistant',
+                parts,
+              };
+              ({ messageId } = await appendAssistantMessage(threadId, ui));
+            }
+            const rateLimit = extractRateLimits(response.headers);
+            if (rateLimit) {
+              noteLlmRateLimit(`${providerId}:${userId}`, rateLimit);
+              waitUntil(
+                db
+                  .insert(schema.providerTests)
+                  .values({
+                    userId,
+                    providerId,
                     ok: true,
                     error: null,
                     testedAt: new Date().toISOString(),
                     rateLimit: rateLimit as { remainingRequests?: number; remainingTokens?: number; resetRequests?: string; resetTokens?: string; } | null,
-                  },
-                })
-                .execute()
-                .catch((err: unknown) =>
-                  alog.warn('failed to save provider test rate limits', { err: String(err) }),
-                ),
+                  })
+                  .onConflictDoUpdate({
+                    target: [schema.providerTests.userId, schema.providerTests.providerId],
+                    set: {
+                      ok: true,
+                      error: null,
+                      testedAt: new Date().toISOString(),
+                      rateLimit: rateLimit as { remainingRequests?: number; remainingTokens?: number; resetRequests?: string; resetTokens?: string; } | null,
+                    },
+                  })
+                  .execute()
+                  .catch((err: unknown) =>
+                    alog.warn('failed to save provider test rate limits', { err: String(err) }),
+                  ),
+              );
+            }
+            const buffer = toolContext.toolTelemetryBuffer;
+            if (buffer && buffer.length > 0) {
+              await flushBatchedTelemetry(buffer);
+            }
+
+            await recordTelemetry({
+              userId,
+              threadId,
+              messageId,
+              model: resolvedModelId,
+              inputTokens: usage?.inputTokens ?? 0,
+              outputTokens: usage?.outputTokens ?? 0,
+              toolCalls: countToolCalls(response.messages),
+              ms: Date.now() - startedAt,
+            });
+            // Reconcile budget reservation with actual cost
+            const actualCost = estimateCostUsd(
+              resolvedModelId,
+              usage?.inputTokens ?? 0,
+              usage?.outputTokens ?? 0,
             );
-          }
-          // M4: Flush batched tool telemetry via bulk insert.
-          const buffer = toolContext.toolTelemetryBuffer;
-          if (buffer && buffer.length > 0) {
-            await flushBatchedTelemetry(buffer);
+            await budget.reconcile(actualCost);
+            if (env.LOG_PROMPTS) {
+              console.info('[ai] finish reason=%s tokens=%o', finishReason, usage);
+            }
+          } catch (err) {
+            logErrorContext(err, 'persistence/telemetry_failed', { threadId }, 'ai');
           }
 
-          await recordTelemetry({
-            userId,
-            threadId,
-            messageId,
-            model: resolvedModelId,
-            inputTokens: usage?.inputTokens ?? 0,
-            outputTokens: usage?.outputTokens ?? 0,
-            toolCalls: countToolCalls(response.messages),
-            ms: Date.now() - startedAt,
-          });
-          // Reconcile the budget reservation with the actual post-call cost.
-          // Positive delta = we underestimated; negative = release. Keeps
-          // the running counter in `daily_ai_spend` aligned with the audit
-          // SUM in `chat_telemetry`.
-          const actualCost = estimateCostUsd(
-            resolvedModelId,
-            usage?.inputTokens ?? 0,
-            usage?.outputTokens ?? 0,
+          waitUntil(
+            runAutoTitleBackground({
+              threadId,
+              userId,
+              userSettings: {
+                ...userSettings,
+                chatModel: `${providerId}:${bareModelId}`,
+              },
+              env,
+              signal: signal ?? null,
+            }),
           );
-          await applyBudgetDelta(userId, actualCost - reservedUsd).catch((err) =>
-            alog.warn('applyBudgetDelta failed', { err: String(err) }),
-          );
-          if (env.LOG_PROMPTS) {
-            console.info('[ai] finish reason=%s tokens=%o', finishReason, usage);
-          }
-        } catch (err) {
-          // Persistence failures must not crash the stream — log and move on.
-          logErrorContext(err, 'persistence/telemetry_failed', { threadId }, 'ai');
+        },
+      };
+      if (signal) streamArgs.abortSignal = signal;
+
+      // ── Stream ──────────────────────────────────────────────────────
+      try {
+        const headroomKey = `${providerId}:${userId}`;
+        await awaitLlmHeadroom(headroomKey, signal ? { signal } : {});
+        recordStep('stream_text', { model: resolvedModelId, attempt: attemptCtx.attemptNumber });
+        const result = await withToolContext(toolContext, async () => {
+          const client = container.resolve(LLM_CLIENT);
+          const streamTextOpts: Record<string, unknown> = {
+            model: resolvedModel,
+            system: systemPrompt,
+            messages: effectiveMessages,
+            telemetry: telemetryConfig(),
+          };
+          if (streamArgs.tools) streamTextOpts.tools = streamArgs.tools;
+          if (streamArgs.stopWhen) streamTextOpts.stopWhen = streamArgs.stopWhen;
+          if (signal) streamTextOpts.abortSignal = signal;
+          if (streamArgs.providerOptions) streamTextOpts.providerOptions = streamArgs.providerOptions;
+          if (streamArgs.onFinish) streamTextOpts.onFinish = streamArgs.onFinish;
+
+          return client.streamText(streamTextOpts as unknown as Parameters<typeof client.streamText>[0]);
+        });
+        completeStep('stream_text', 'completed');
+        return { success: true, value: result };
+      } catch (err) {
+        const buffer = toolContext.toolTelemetryBuffer;
+        if (buffer && buffer.length > 0) {
+          flushBatchedTelemetry(buffer).catch(() => {});
         }
-
-        // Phase 2 hardening §8 — auto-title is the slow tail of onFinish:
-        // a 1-3 s LLM call that the user doesn't need to see before the
-        // streaming dots disappear. Hand it off to `waitUntil` so Vercel
-        // keeps the function alive long enough for the title to land,
-        // but the response stream closes immediately. Outside Vercel
-        // (worker / tests) `waitUntil` is a fire-and-forget shim.
-        waitUntil(
-          runAutoTitleBackground({
-            threadId,
-            userId,
-            userSettings: {
-              ...userSettings,
-              chatModel: `${providerId}:${bareModelId}`,
-            },
-            env,
-            signal: signal ?? null,
-          }),
-        );
-      },
-    };
-    if (signal) streamArgs.abortSignal = signal;
-
-    try {
-      // RL-3: pre-emptively gate on provider rate-limit headroom.
-      const headroomKey = `${providerId}:${userId}`;
-      await awaitLlmHeadroom(headroomKey, signal ? { signal } : {});
-      recordStep('stream_text', { model: resolvedModelId, attempt: attempts });
-      const result = await withToolContext(toolContext, async () => {
-        const client = container.resolve<LlmClient>('llmClient');
-        const streamTextOpts: Record<string, unknown> = {
-          model: resolvedModel,
-          system: systemPrompt,
-          messages: effectiveMessages,
-          telemetry: telemetryConfig(),
+        return {
+          success: false,
+          error: err,
+          providerId,
+          bareModelId,
+          nonEssentialDisabled: resolveCtx.nonEssentialDisabled,
         };
-        if (streamArgs.tools) streamTextOpts.tools = streamArgs.tools;
-        if (streamArgs.stopWhen) streamTextOpts.stopWhen = streamArgs.stopWhen;
-        if (signal) streamTextOpts.abortSignal = signal;
-        if (streamArgs.providerOptions) streamTextOpts.providerOptions = streamArgs.providerOptions;
-        if (streamArgs.onFinish) streamTextOpts.onFinish = streamArgs.onFinish;
-
-        return client.streamText(streamTextOpts as unknown as Parameters<typeof client.streamText>[0]);
-      });
-      completeStep('stream_text', 'completed');
-      return result;
-    } catch (err) {
-      lastError = err;
-      // M4: Flush tool telemetry on error path too — don't lose data.
-      const buffer = toolContext.toolTelemetryBuffer;
-      if (buffer && buffer.length > 0) {
-        flushBatchedTelemetry(buffer).catch(() => {});
       }
-      // F13 — don't retry when the client disconnected. The user closed the
-      // tab, so any retry would produce a response nobody reads while still
-      // consuming the daily budget. Release the reservation immediately.
-      if (signal?.aborted) {
-        // STAB-02: Release budget reservation on client disconnect.
-        await applyBudgetDelta(userId, -reservedUsd).catch(() => {});
-        budgetReleased = true;
-        throw err;
-      }
-      const decision = classifyStreamError(err);
-      if (!decision.fallback) {
-        // STAB-02: Release budget reservation on non-retryable stream error.
-        await applyBudgetDelta(userId, -reservedUsd).catch(() => {});
-        budgetReleased = true;
-        throw err;
-      }
+    },
+  });
 
-      // Fallback! Get next provider from chain
-      const nextFallback = pickNextFallbackProvider(
-        userSettings.aiFallbackChain ?? [],
-        providerId,
-        decryptedByokKeys,
-        env.GOOGLE_GENERATIVE_AI_API_KEY,
-        routing.domain,
-      );
-
-      if (!nextFallback) {
-        throw err;
-      }
-
-      alog.warn('Fallback triggered — provider failed', { provider: String(providerId), reason: decision.reason, message: decision.message, nextProvider: nextFallback.providerId });          // F2 — unified fallback part construction. Uses the override string
-      // when available (same as model-resolution path), otherwise shows the
-      // current provider that failed.
-      fallbackInfo = makeFallbackPart(
-        currentModelOverride ?? `${providerId}:${bareModelId}`,
-        decision,
-      );
-
-      currentModelOverride = nextFallback.modelId
-        ? `${nextFallback.providerId}:${nextFallback.modelId}`
-        : nextFallback.providerId;
-    }
-  }
-
-  // All retry attempts exhausted without a successful stream — release the
-  // budget reservation we took at the top of the turn. Without this, repeated
-  // failures inflate daily_ai_spend and prematurely trip BudgetExceededError.
-  // STAB-02: Skip if already released on a non-retryable error or client
-  // disconnect to avoid double-counting.
-  if (!budgetReleased) {
-    await applyBudgetDelta(userId, -reservedUsd).catch((err) =>
-      alog.warn('failed to release budget reservation after exhausted retries', { err: String(err) }),
-    );
-  }
-  throw lastError ?? new Error('All fallback attempts failed');
+  return streamResult;
 }
 
 // P0-1 — runAutoTitleBackground, countToolCalls, and flushBatchedTelemetry
 // extracted to chat/auto-title.ts and chat/helpers.ts.
-
-

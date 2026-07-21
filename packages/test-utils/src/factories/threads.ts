@@ -39,3 +39,7 @@ export function makeMessage(overrides?: Partial<MockMessage>): MockMessage {
     createdAt: overrides?.createdAt ?? new Date(),
   };
 }
+
+export function resetThreadCounter(): void {
+  _threadIdCounter = 0;
+}

@@ -42,6 +42,12 @@ export interface ProviderFetchOptions {
  * Each provider implements fetchPrice (latest tick) and optionally
  * fetchCandles (OHLCV history). Providers that don't support candles
  * are skipped by the candles adapter.
+ *
+ * Capability methods (all optional — providers declare what they can do):
+ *   - fetchCandles  — OHLCV history. Returns null when unsupported.
+ *   - testConnection — connectivity probe for the settings UI.
+ *   - supports       — per-provider guard: can this provider serve this
+ *                      symbol/timeframe at all?
  */
 export interface MarketDataProvider {
   /** Unique provider name (e.g. 'biquote', 'finnhub', 'binance'). */
@@ -61,8 +67,21 @@ export interface MarketDataProvider {
     /** ms since the upstream observed the value. null for REST providers. */
     ageMs?: number | null;
   }>;
-  /** Fetch OHLCV candles. Returns null if the provider doesn't support candles. */
+  /**
+   * Fetch OHLCV candles. Returns null when the provider cannot serve this
+   * symbol/timeframe (no throw — callers skip null gracefully).
+   */
   fetchCandles?(symbol: Symbol, tf: Timeframe, count: number, opts?: ProviderFetchOptions): Promise<Candle[] | null>;
+  /**
+   * Optional connectivity probe for the settings "test provider" button.
+   * Returns { ok: true } on success, { ok: false, error } on failure.
+   */
+  testConnection?(opts?: ProviderFetchOptions): Promise<{ ok: boolean; error?: string }>;
+  /**
+   * Optional per-provider guard: can this provider serve this symbol/tf?
+   * Defaults to true when not implemented (provider is tried unconditionally).
+   */
+  supports?(symbol: Symbol, tf?: Timeframe): boolean;
 }
 
 // --- Registry ------------------------------------------------------------

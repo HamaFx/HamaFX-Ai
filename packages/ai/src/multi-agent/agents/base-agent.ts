@@ -18,25 +18,15 @@
 
 import { generateText, stepCountIs, type LanguageModel, type Tool } from 'ai';
 import { z } from 'zod';
-import { resolveChatModel, resolveModelForProvider, supportsPromptCaching, TIER_TO_DOMAIN, type ModelDomain } from '../../model';
+import { supportsPromptCaching } from '../../model';
 import { estimateCostUsd } from '../../cost';
 import { withToolContext, type ToolContext } from '../../tool-context';
 import { getDb } from '../../db';
 import { telemetryConfig } from '../../telemetry';
-import type { ProviderId } from '@hamafx/shared';
 import type { SharedContext, AgentOpinion, AgentName, AgentBias, ModelTier } from '../types';
 import { AGENT_TIMEOUTS } from '../types';
 import { extractUserMessageText } from '../context';
-
-/** Q1 fix — map ModelTier to the ModelDomain used by resolveChatModel's tier selection. */
-function tierToDomain(tier: ModelTier): ModelDomain {
-  const domain = TIER_TO_DOMAIN[tier];
-  if (!domain) {
-    // Safety net for unknown tiers — default to 'technical'.
-    return 'technical';
-  }
-  return domain;
-}
+import { resolveAgentModel, safeParseJson } from './agent-model';
 
 export const baseOpinionSchema = z.object({
   bias: z.enum(['bullish', 'bearish', 'neutral']),
@@ -51,24 +41,8 @@ export abstract class BaseAgent {
   abstract tools(): Record<string, Tool>;
   protected abstract parseOutput(text: string): { bias: AgentBias; confidence: number; reasoning: string; rawData: Record<string, unknown> };
 
-  protected resolveModel(ctx: SharedContext): { model: LanguageModel; modelId: string; providerId: ProviderId } {
-    const overrides = ctx.userSettings.agentModelOverrides;
-    const agentOverride = overrides?.[this.name];
-    if (agentOverride && typeof agentOverride === 'string' && agentOverride.length > 0) {
-      const sep = agentOverride.indexOf(':');
-      if (sep >= 0) {
-        const providerIdRaw = agentOverride.slice(0, sep) as ProviderId;
-        try {
-          const res = resolveModelForProvider(providerIdRaw, ctx.userSettings, ctx.env);
-          return { model: res.model, modelId: `${providerIdRaw}/${agentOverride.slice(sep + 1)}`, providerId: providerIdRaw };
-        } catch { /* fall through */ }
-      }
-    }
-    // Q1 fix: pass the agent's model tier as a domain to resolveChatModel so
-    // specialists can use different tiers (fast→summary, mid→technical, strong→fundamental).
-    const domain = tierToDomain(this.modelTier);
-    const res = resolveChatModel(ctx.userSettings, ctx.env, domain);
-    return { model: res.model, modelId: res.modelId, providerId: res.providerId };
+  protected resolveModel(ctx: SharedContext): { model: LanguageModel; modelId: string; providerId: ReturnType<typeof resolveAgentModel>['providerId'] } {
+    return resolveAgentModel(ctx, this.name, this.modelTier);
   }
 
   async run(ctx: SharedContext): Promise<AgentOpinion> {
@@ -117,12 +91,6 @@ export abstract class BaseAgent {
   }
 
   protected safeParseJson(text: string): Record<string, unknown> | null {
-    try { return JSON.parse(text); } catch {
-      const m = text.match(/```(?:json)?\s*([\s\S]*?)```/);
-      if (m?.[1]) { try { return JSON.parse(m[1].trim()); } catch { /* continue */ } }
-      const f = text.indexOf('{'), l = text.lastIndexOf('}');
-      if (f >= 0 && l > f) { try { return JSON.parse(text.slice(f, l + 1)); } catch { /* continue */ } }
-      return null;
-    }
+    return safeParseJson(text);
   }
 }

@@ -38,7 +38,8 @@ import { sql } from 'drizzle-orm';
 import { embedTexts, vectorLiteral } from './embeddings';
 import { searchMemory, type MemoryKind, type MemoryRow } from './memory/memory-index';
 
-interface RagRow {
+/** Exported for testing — RAG result row shape. */
+export interface RagRow {
   id: string;
   title: string;
   summary: string | null;
@@ -200,7 +201,8 @@ async function runFtsNewsQuery(args: FtsSubQueryArgs): Promise<RagRow[]> {
 // RRF + time decay
 // ---------------------------------------------------------------------------
 
-function rrfFuse(rankings: RagRow[][]): RagRow[] {
+/** Exported for testing — pure RRF fusion algorithm. */
+export function rrfFuse(rankings: RagRow[][]): RagRow[] {
   const fused = new Map<string, { row: RagRow; score: number; bestSimilarity: number }>();
   for (const list of rankings) {
     list.forEach((row, idx) => {
@@ -229,7 +231,8 @@ function rrfFuse(rankings: RagRow[][]): RagRow[] {
     }));
 }
 
-function decayRow(row: RagRow, halflifeDays: number): RagRow {
+/** Exported for testing — pure time-decay function. */
+export function decayRow(row: RagRow, halflifeDays: number): RagRow {
   const ageDays = Math.max(
     0,
     (Date.now() - row.publishedAt.getTime()) / (24 * 60 * 60 * 1000),

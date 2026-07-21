@@ -14,20 +14,16 @@
  * limitations under the License.
  */
 
-import type { Symbol, Timeframe, Tick, Candle } from '@hamafx/shared';
+// DIP-2 — Typed DI tokens. Single source of truth for the container's
+// token↔type mapping. Every register() / resolve() call in packages/ai
+// should use these tokens instead of magic strings.
+//
+// Using token<T>('key') means resolve(token) infers T without a manual
+// generic parameter — a typo or wrong type is a compile error.
 
-export interface MarketDataProvider {
-  id: string;
-  displayName: string;
-  testConnection(apiKeys?: Record<string, string>): Promise<{ ok: boolean; error?: string }>;
-  fetchTick(
-    symbol: Symbol,
-    options?: { signal?: AbortSignal; apiKeys?: Record<string, string> }
-  ): Promise<Tick>;
-  fetchCandles(
-    symbol: Symbol,
-    tf: Timeframe,
-    count: number,
-    options?: { signal?: AbortSignal; apiKeys?: Record<string, string> }
-  ): Promise<Candle[]>;
-}
+import { token } from '@hamafx/shared';
+import type { LlmClient } from './llm-client';
+import type { DbClient } from '@hamafx/db';
+
+export const DB = token<DbClient>('db');
+export const LLM_CLIENT = token<LlmClient>('llmClient');

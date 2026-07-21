@@ -30,17 +30,18 @@
 import { container } from '@hamafx/shared';
 import { getDb as getRawDb } from '@hamafx/db';
 import type { DbClient } from '@hamafx/db';
+import { DB } from './tokens';
 
 // Self-bootstrap: register the real DB factory on first import.
 // Idempotent — subsequent imports won't re-register (container.register
 // overwrites, and the factory is the same). Tests override by calling
-// container.register('db', () => mockDb) BEFORE importing any module
+// container.register(DB, () => mockDb) BEFORE importing any module
 // that calls getDb().
-container.register('db', () => getRawDb());
+container.register(DB, () => getRawDb());
 
 /**
  * Returns the singleton Drizzle database client via the DI container.
  */
 export function getDb(): DbClient {
-  return container.resolve<DbClient>('db');
+  return container.resolve(DB);
 }

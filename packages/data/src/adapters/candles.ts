@@ -31,21 +31,21 @@
   //   1w:                              finnhub (biquote unsupported)
 
 import {
-  CandleSchema,
   SymbolSchema,
-  getSymbolDefinition,
   type Candle,
   type Symbol,
   type Timeframe,
 } from '@hamafx/shared';
 
-import * as biquote from '../providers/biquote';
-import * as binance from '../providers/binance';
-import { fetchCandles1m } from '../providers/candles-1m';
 import { cacheKey, cacheTag, candleTtl, getDefaultCache } from '../cache';
 import { ProviderError } from '../errors';
 import { runWithFailover, type ProviderAttempt } from '../failover';
-import * as finnhub from '../providers/finnhub';
+
+// P2-2 — Build provider attempts from the plugin registry instead of
+// hardcoded imports. Adding a new provider means registering a plugin
+// — no adapter code changes (OCP).
+import '../providers/provider-adapters'; // side-effect: register providers
+import { marketDataProviders } from '../providers/provider-registry';
 
 export interface GetCandlesOptions {
   signal?: AbortSignal;
@@ -97,151 +97,43 @@ export async function getCandlesWithMeta(
   opts: GetCandlesOptions = {},
 ): Promise<CandlesResult> {
   const symbol = SymbolSchema.parse(symbolInput);
-  const def = getSymbolDefinition(symbol); // NEW: get symbol definition for category routing
   const count = Math.max(1, Math.min(opts.count ?? DEFAULT_COUNT, MAX_COUNT));
   const keys = resolveKeys(opts);
   const policy = candleTtl(tf, true);
-  // BUG-1 fix: BiQuote tops out at 1000 bars per series (was 2000)
-  const biquoteCount = Math.min(count, 1000);
 
   const cache = await getDefaultCache();
   const key = cacheKey({ resource: 'candles', symbol, tf, extra: `n${count}` });
   const tags = [cacheTag('candles'), cacheTag('candles', symbol)];
 
-  const isCrypto = def.category === 'crypto' && !!def.binance;
-
   const r = await cache.fetchWithMeta<Candle[]>(
     key,
     async () => {
-      const attempts: ProviderAttempt<Candle[]>[] = [];
-
-      // Phase 8 PR-8 — `candles_1m` (worker-maintained) is the freshest
-      // 1m source. Skip for non-1m timeframes (the table only stores 1m
-      // bars; higher TFs come from BiQuote).
-      //
-      // Phase 2 hardening §2 — pinned so a transient empty result during
-      // worker restart doesn't permanently demote this attempt below the
-      // BiQuote REST fallback in the health-aware reorder.
-      if (tf === '1m') {
-        attempts.push({
-          name: 'candles-1m',
-          pinned: true,
+      // P2-2 — Build provider attempts from the plugin registry.
+      // Providers declare their own fetchCandles logic (category routing,
+      // key guards, timeframe filtering) via optional supports()/fetchCandles()
+      // — the adapter just iterates and runs failover.
+      const providers = marketDataProviders.list();
+      const attempts: ProviderAttempt<Candle[]>[] = providers
+        .filter((p) => typeof p.fetchCandles === 'function' && (p.supports?.(symbol, tf) ?? true))
+        .map((p) => ({
+          name: p.name,
+          pinned: p.pinned ?? false,
           run: async () => {
-            const r = await fetchCandles1m({ symbol, count });
-            const fetchedAt = Date.now();
-            return r.bars.map((bar) =>
-              CandleSchema.parse({
-                symbol,
-                tf,
-                t: bar.t,
-                o: bar.o,
-                h: bar.h,
-                l: bar.l,
-                c: bar.c,
-                v: bar.v,
-                source: r.provider,
-                fetchedAt,
-              }),
-            );
-          },
-        });
-      }
-
-      // Crypto → Binance (primary).
-      // Forex/Gold → BiQuote first (free, unlimited), then Finnhub.
-      if (isCrypto) {
-        attempts.push({
-          name: 'binance',
-          run: async () => {
-            const raw = await binance.fetchCandles(def.binance!, tf, count, {
+            const c = await p.fetchCandles!(symbol, tf, count, {
               ...(opts.signal ? { signal: opts.signal } : {}),
-            });
-            const fetchedAt = Date.now();
-            return raw.map((bar) =>
-              CandleSchema.parse({
-                symbol,
-                tf,
-                t: bar.t,
-                o: bar.o,
-                h: bar.h,
-                l: bar.l,
-                c: bar.c,
-                v: bar.v,
-                source: 'binance',
-                fetchedAt,
-              }),
-            );
-          },
-        });
-      }
-
-      if (def.category !== 'crypto' && tf !== '1w') {
-        attempts.push({
-          name: 'biquote',
-          run: async () => {
-            const raw = await biquote.fetchOhlc({
-              symbol: def.biquote as Symbol,
-              tf,
-              count: biquoteCount,
-              baseUrl: keys.biquoteBaseUrl,
-              ...(opts.signal ? { signal: opts.signal } : {}),
-            });
-            const fetchedAt = Date.now();
-            return raw.map((bar) =>
-              CandleSchema.parse({
-                symbol,
-                tf,
-                t: Date.parse(bar.openTime),
-                o: bar.open,
-                h: bar.high,
-                l: bar.low,
-                c: bar.close,
-                // Forex volume is 0 from BiQuote; keep null in our DTO.
-                v: bar.volume > 0 ? bar.volume : null,
-                source: 'biquote',
-                fetchedAt,
-              }),
-            );
-          },
-        });
-      }
-
-      if (keys.finnhub) {
-        attempts.push({
-          name: 'finnhub',
-          run: async () => {
-            const raw = await finnhub.fetchCandles({
-              symbol,
-              tf,
-              count,
               apiKey: keys.finnhub,
-              ...(opts.signal ? { signal: opts.signal } : {}),
+              baseUrl: keys.biquoteBaseUrl,
             });
-            const fetchedAt = Date.now();
-            return raw.map((bar) =>
-              CandleSchema.parse({
-                symbol,
-                tf,
-                t: bar.t,
-                o: bar.o,
-                h: bar.h,
-                l: bar.l,
-                c: bar.c,
-                v: bar.v,
-                source: 'finnhub',
-                fetchedAt,
-              }),
-            );
+            if (!c) throw new ProviderError('PROVIDER_HTTP_ERROR', p.name, 'provider returned null for symbol/tf');
+            return c;
           },
-        });
-      }
+        }));
 
       if (attempts.length === 0) {
-        const missing = isCrypto ? 'use Binance' : 'set FINNHUB_API_KEY or use BiQuote';
         throw new ProviderError(
           'NO_PROVIDER_AVAILABLE',
           'none',
-          `no candle provider configured (${missing})`,
+          'no candle provider configured — set FINNHUB_API_KEY or ensure a provider supports this symbol/timeframe',
         );
       }
 

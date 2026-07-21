@@ -13,7 +13,7 @@
   "scripts": {
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "test": "echo 'test-utils: implicit coverage via consumers'",
+    "test": "vitest run",
     "clean": "rm -rf node_modules .turbo"
   },
   "dependencies": {

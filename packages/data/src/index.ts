@@ -70,17 +70,9 @@ export * as cftc from './providers/cftc';
 export * as fred from './providers/fred';
 export * as binance from './providers/binance';
 export * as biquote from './providers/biquote';
-export { type MarketDataProvider } from './providers/market-data-provider';
-export {
-  MARKET_DATA_PROVIDERS,
-  biquoteProvider,
-  finnhubProvider,
-  liveTicksProvider,
-  binanceProvider,
-} from './providers/market-data-providers';
 
 // P2-2 — Market Data Provider Plugin Registry.
-// Replace hardcoded provider imports with discoverable plugins.
+// Adding a new provider means registering a plugin — no adapter code changes (OCP).
 export { marketDataProviders, MarketDataProviderRegistry } from './providers/provider-registry';
 export type { MarketDataProvider as IMarketDataProvider, ProviderFetchOptions } from './providers/provider-registry';
 

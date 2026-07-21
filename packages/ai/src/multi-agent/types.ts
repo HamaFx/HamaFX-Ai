@@ -34,6 +34,9 @@ export type ResolvedMode = 'single' | 'quick' | 'standard' | 'full';
 // ── Agent Opinions ──────────────────────────────────────────────────────
 
 export type AgentName = 'technical' | 'fundamental' | 'risk' | 'sentiment' | 'decision';
+
+/** Specialist agents that implement BaseAgent.run(). Excludes 'decision' — that is a synthesizer with its own fuse() entrypoint (LSP-1 fix). */
+export type SpecialistAgentName = Exclude<AgentName, 'decision'>;
 export type AgentBias = 'bullish' | 'bearish' | 'neutral';
 
 /**
@@ -57,49 +60,24 @@ export interface AgentOpinion {
 /**
  * Context shared across all specialist agents in a multi-agent turn.
  * Fetched ONCE by the orchestrator and passed to each agent's `run()`.
- *
- * P1-2 — Split into focused sub-interfaces for ISP compliance.
- * Each agent declares which context slices it needs via composition
- * (e.g. `TechnicalAgentContext extends AgentBaseContext, AgentDataContext, AgentIOContext`).
- * The full `SharedContext` remains for backward compatibility.
  */
-
-/** Core identity — always needed. */
-export interface AgentBaseContext {
+export interface SharedContext {
+  // identity
   symbol: string;
   threadId: string;
   userId: string;
-}
-
-/** Pre-fetched data block — avoids redundant tool calls. */
-export interface AgentDataContext {
+  // data
   snapshot: LiveSnapshot;
   prefetchedData?: string;
-}
-
-/** User configuration — settings and custom instructions. */
-export interface AgentConfigContext {
+  // config
   userSettings: UserSettingsRow;
   customInstructions?: string;
-}
-
-/** I/O context — the user message, conversation history, signal, env. */
-export interface AgentIOContext {
+  // io
   userMessage: UIMessage;
   history: UIMessage[];
   signal: AbortSignal | null;
   env: MultiAgentEnv;
 }
-
-/**
- * Full shared context — backward-compatible composition of all sub-contexts.
- * Prefer the focused interfaces when adding new agent code.
- */
-export interface SharedContext
-  extends AgentBaseContext,
-    AgentDataContext,
-    AgentConfigContext,
-    AgentIOContext {}
 
 /**
  * Env slice needed by the multi-agent pipeline.

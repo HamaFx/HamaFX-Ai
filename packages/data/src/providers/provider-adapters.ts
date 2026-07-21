@@ -23,8 +23,12 @@
 //
 // After registration, adapters like price.ts can build ProviderAttempt[]
 // from `marketDataProviders.list()` instead of hardcoded imports (OCP).
+//
+// Provider-selection policy (crypto→binance, forex→biquote→finnhub,
+// 1m→candles-1m) lives in each provider's `supports()` / `fetchCandles()`
+// so adapters just iterate the registry.
 
-import type { Symbol, Tick } from '@hamafx/shared';
+import type { Symbol, Tick, Timeframe, Candle } from '@hamafx/shared';
 import { getSymbolDefinition } from '@hamafx/shared';
 import { ProviderError } from '../errors';
 import {
@@ -36,6 +40,8 @@ import * as biquote from './biquote';
 import * as binance from './binance';
 import * as finnhub from './finnhub';
 import { fetchLiveTick } from './live-ticks';
+import { fetchCandles1m } from './candles-1m';
+import { toCandle, toCandleFromBiquote } from './to-candle';
 
 // ── Provider adapter wrappers ────────────────────────────────────────
 
@@ -47,6 +53,25 @@ const liveTicksProvider: MarketDataProvider = {
   async fetchPrice(symbol: Symbol, _opts?: ProviderFetchOptions) {
     const r = await fetchLiveTick({ symbol });
     return { price: r.price, provider: r.provider, ageMs: r.ageMs };
+  },
+  async fetchCandles(symbol: Symbol, tf: Timeframe, count: number): Promise<Candle[] | null> {
+    if (tf !== '1m') return null; // LSP-2 fix — no throw, just skip
+    const r = await fetchCandles1m({ symbol, count });
+    const fetchedAt = Date.now();
+    return r.bars.map((bar) =>
+      toCandle(bar, { symbol, tf, source: r.provider, fetchedAt }),
+    );
+  },
+  supports(_symbol: Symbol, tf?: Timeframe): boolean {
+    return tf === '1m';
+  },
+  async testConnection(): Promise<{ ok: boolean; error?: string }> {
+    try {
+      await fetchLiveTick({ symbol: 'XAUUSD' });
+      return { ok: true };
+    } catch (err) {
+      return { ok: false, error: err instanceof Error ? err.message : String(err) };
+    }
   },
 };
 
@@ -64,6 +89,36 @@ const biquoteProvider: MarketDataProvider = {
     const mid = tick.mid ?? ((tick.bid + tick.ask) / 2);
     return { price: mid, provider: 'biquote', ageMs: null };
   },
+  async fetchCandles(symbol: Symbol, tf: Timeframe, count: number, opts?: ProviderFetchOptions): Promise<Candle[] | null> {
+    // BiQuote doesn't support weekly bars.
+    if (tf === '1w') return null;
+    const baseUrl = opts?.baseUrl ?? process.env.BIQUOTE_BASE_URL ?? 'https://biquote.io';
+    const raw = await biquote.fetchOhlc({
+      symbol,
+      tf,
+      count: Math.min(count, 1000),
+      baseUrl,
+      ...(opts?.signal ? { signal: opts.signal } : {}),
+    });
+    const fetchedAt = Date.now();
+    return raw.map((bar) =>
+      toCandleFromBiquote(bar, { symbol, tf, fetchedAt }),
+    );
+  },
+  supports(symbol: Symbol, tf?: Timeframe): boolean {
+    const def = getSymbolDefinition(symbol);
+    if (!def || def.category === 'crypto') return false;
+    return !tf || tf !== '1w';
+  },
+  async testConnection(opts?: ProviderFetchOptions): Promise<{ ok: boolean; error?: string }> {
+    try {
+      const baseUrl = opts?.baseUrl ?? process.env.BIQUOTE_BASE_URL ?? 'https://biquote.io';
+      await biquote.fetchTick('XAUUSD', { baseUrl, skipThrottle: true });
+      return { ok: true };
+    } catch (err) {
+      return { ok: false, error: err instanceof Error ? err.message : String(err) };
+    }
+  },
 };
 
 /** Wraps the Finnhub REST provider — always registered; key resolved at call time. */
@@ -78,7 +133,7 @@ function createFinnhubProvider(): MarketDataProvider {
         throw new ProviderError(
           'PROVIDER_NO_API_KEY',
           'finnhub',
-          'Finnhub API key not configured — set FINNHUB_API_KEY or pass via apiKeys',
+          'Finnhub API key not configured — set FINNHUB_API_KEY or pass via apiKey',
         );
       }
       const result = await finnhub.fetchPrice(symbol, {
@@ -86,6 +141,39 @@ function createFinnhubProvider(): MarketDataProvider {
         ...(opts?.signal ? { signal: opts.signal } : {}),
       });
       return { price: result.price, provider: 'finnhub', ageMs: null };
+    },
+    async fetchCandles(symbol: Symbol, tf: Timeframe, count: number, opts?: ProviderFetchOptions): Promise<Candle[] | null> {
+      const key = opts?.apiKey ?? process.env.FINNHUB_API_KEY;
+      if (!key) return null;
+      const raw = await finnhub.fetchCandles({
+        symbol,
+        tf,
+        count,
+        apiKey: key,
+        ...(opts?.signal ? { signal: opts.signal } : {}),
+      });
+      const fetchedAt = Date.now();
+      return raw.map((bar) =>
+        toCandle(bar, { symbol, tf, source: 'finnhub', fetchedAt }),
+      );
+    },
+    supports(_symbol: Symbol, _tf?: Timeframe): boolean {
+      // Finnhub can serve any symbol/timeframe with a valid API key.
+      // The key check happens at call time in fetchCandles (returns null
+      // when key is missing) so that opts-based keys also work.
+      return true;
+    },
+    async testConnection(opts?: ProviderFetchOptions): Promise<{ ok: boolean; error?: string }> {
+      try {
+        const apiKey = opts?.apiKey ?? process.env.FINNHUB_API_KEY;
+        if (!apiKey) {
+          return { ok: false, error: 'Finnhub API Key is required' };
+        }
+        await finnhub.fetchPrice('XAUUSD', { apiKey });
+        return { ok: true };
+      } catch (err) {
+        return { ok: false, error: err instanceof Error ? err.message : String(err) };
+      }
     },
   };
 }
@@ -108,6 +196,29 @@ const binanceProvider: MarketDataProvider = {
       ...(opts?.signal ? { signal: opts.signal } : {}),
     });
     return { price, provider: 'binance', ageMs: null };
+  },
+  async fetchCandles(symbol: Symbol, tf: Timeframe, count: number, opts?: ProviderFetchOptions): Promise<Candle[] | null> {
+    const def = getSymbolDefinition(symbol);
+    if (!def?.binance) return null;
+    const raw = await binance.fetchCandles(def.binance, tf, count, {
+      ...(opts?.signal ? { signal: opts.signal } : {}),
+    });
+    const fetchedAt = Date.now();
+    return raw.map((bar) =>
+      toCandle(bar, { symbol, tf, source: 'binance', fetchedAt }),
+    );
+  },
+  supports(symbol: Symbol, _tf?: Timeframe): boolean {
+    const def = getSymbolDefinition(symbol);
+    return !!def?.binance;
+  },
+  async testConnection(): Promise<{ ok: boolean; error?: string }> {
+    try {
+      await binance.fetchCandles('BTCUSDT', '1h', 1);
+      return { ok: true };
+    } catch (err) {
+      return { ok: false, error: err instanceof Error ? err.message : String(err) };
+    }
   },
 };
 

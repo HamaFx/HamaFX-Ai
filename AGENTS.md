@@ -183,6 +183,27 @@ For fundamental/technical turns: cheap model generates JSON plan, persisted as s
 - **Local Docker**: Postgres 16 + pgvector, `./docker/init-secrets.sh && docker compose up -d`
 - **Production**: Vercel (web) + GCE VM (worker), systemd timers
 
+### 8. DB-Access Convention (DIP-1)
+
+**Rule:** Inside `packages/ai`, resolve `db` / `llmClient` via the typed DI container tokens (`DB`, `LLM_CLIENT` from `./tokens`). Everywhere else (`apps/web`, `apps/worker`, other packages), import `getDb` directly from `@hamafx/db`.
+
+```ts
+// packages/ai — use the container
+import { DB, LLM_CLIENT } from './tokens';
+const db = container.resolve(DB); // typed as DbClient
+const client = container.resolve(LLM_CLIENT); // typed as LlmClient
+
+// apps/web, apps/worker — direct imports
+import { getDb } from '@hamafx/db';
+const db = getDb();
+```
+
+**Tokens are typed:** `DB` is `Token<DbClient>`, `LLM_CLIENT` is `Token<LlmClient>`. Use `token<T>(key)` from `@hamafx/shared` to create new ones. Never use string literals — `container.resolve<T>('db')` has no compile-time link between the string and `T`.
+
+**Rationale:** The AI runtime benefits from injectable `db`/`llmClient` for testing long agent flows. Next.js server actions/route handlers are already the composition edge and read cleanly with direct `getDb()`. The split prevents the test-footgun where `container.register('db', …)` silently fails to intercept direct `getDb()` importers.
+
+### 9. Deployment Modes (continued)
+
 ## File Naming Conventions
 
 | Pattern | Example |

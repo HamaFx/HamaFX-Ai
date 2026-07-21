@@ -16,9 +16,9 @@
 
 // Multi-Agent Orchestration — mode definitions + routing logic.
 
-import type { AnalysisMode, ResolvedMode, AgentName } from './types';
+import type { AnalysisMode, ResolvedMode, SpecialistAgentName } from './types';
 
-export function selectAgents(mode: ResolvedMode): AgentName[] {
+export function selectAgents(mode: ResolvedMode): SpecialistAgentName[] {
   switch (mode) {
     case 'single':
       return [];

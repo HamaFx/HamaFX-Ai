@@ -6,7 +6,7 @@
 
 ## Overview
 
-173 test files, 590+ test cases across all packages. Vitest is the test runner. Tests use the `--run` flag to avoid watch mode (otherwise timeouts in CI/automation). The `@hamafx/config` package provides shared vitest configurations. Playwright handles E2E testing (16 spec files).
+207 test files, ~2,019 `it` blocks across all packages (including 16 E2E spec files). Vitest is the test runner for unit/integration tests; Playwright handles E2E testing. The `@hamafx/test-utils` package provides shared factories, mocks, and vitest helpers. Tests use the `--run` flag to avoid watch mode (otherwise timeouts in CI/automation).
 
 ## Running Tests
 
@@ -34,14 +34,14 @@ pnpm --filter @hamafx/web exec playwright test
 
 | Package | Test Files | Key Areas |
 |---------|-----------|-----------|
-| `ai` | 42 | Tools, routing, verification, planner, committee, alerts, briefings, memory, cost, diagnostics |
-| `data` | 15 | Provider maps, rest endpoints, candles, live-ticks, news adapter, price adapter, throttle |
-| `db` | 5 | Schema validation, migration chain, locks, rate-limit row shape |
-| `indicators` | 11 | SMC swings, structure, FVG, order blocks, liquidity, RSI, EMA, SMA |
-| `shared` | 4 | Env validation, error types, encryption, market phase |
-| `worker` | 17 | SignalR consumer, reconnect, tick buffer, candle aggregator, env, jobs |
-| `web` | 30+ unit + 16 E2E | API integration, auth flow, CSRF, route health, settings actions, voice input, admin routes, middleware, hooks, Playwright E2E (auth, chat, settings, isolation, multi-agent, service-worker, navigation, dashboard, responsive, accessibility, api-health, theme-tokens, admin-dashboard, nav-drawer, chat-ui, onboarding-replay) |
-| `test-utils` | — | Shared factories (users, threads, candles), mocks (db, fetch, llm, server-only) |
+| `ai` | 78 | Tools, routing, verification, planner, committee, alerts, briefings, memory, cost, diagnostics, budget, retry-loop, contract tests, budget-guard, thread-state |
+| `data` | 19 | Provider maps, rest endpoints, candles, live-ticks, news adapter, price adapter, throttle, failover, chaos, cache, to-candle mapper, storage, cache-index |
+| `db` | 14 | Schema validation, migration chain, phase migrations, rate-limit, user-scope, isolated DB, hash stability |
+| `indicators` | 16 | SMC swings, structure, FVG, order blocks, liquidity, RSI, EMA, SMA, MACD, asian-range, defaults, pdh-pdl, registry |
+| `shared` | 11 | Env validation, error types, encryption, market phase, logger, bug-report, biquote, error-patterns, tool-io, billing-features | 65% |
+| `worker` | 19 | SignalR consumer, reconnect, tick buffer, candle aggregator, env, jobs, scheduler, cron-lock, briefings, cot, review |
+| `web` | 45 unit + 16 E2E | API integration, auth flow, CSRF, route health, settings actions, voice input, admin routes, middleware, hooks, Playwright E2E (auth, chat, chat-ui, settings, isolation, multi-agent, service-worker, navigation, dashboard, responsive, accessibility, api-health, theme-tokens, admin-dashboard, nav-drawer, onboarding-replay) |
+| `test-utils` | 6 | Factories (users, candles, threads), mocks (llm, fetch), helpers (vitest) — self-tested as of July 2026 |
 
 ## Test Patterns
 
@@ -360,18 +360,103 @@ describe('logErrorContext', () => {
 6. **Prefer `withIsolatedTx` for DB tests** — wraps in a transaction that auto-rolls back.
 7. **Mark jsdom tests explicitly** — add `// @vitest-environment jsdom` at the top of the file.
 8. **Keep tests fast** — avoid network calls, real timers, and file I/O in unit tests.
+9. **Use shared factories** — `@hamafx/test-utils` provides `makeUser`, `makeCandles`, `makeThread`, etc.
+10. **Test factories and mocks** — `@hamafx/test-utils` has its own test suite ensuring factory correctness.
+
+## Snapshot Testing
+
+Vitest snapshot testing is available for complex output shapes that are tedious to
+assert field-by-field. Use `toMatchSnapshot()` for stable, deterministic outputs:
+
+```typescript
+import { describe, expect, it } from 'vitest';
+
+describe('Candle formatting', () => {
+  it('produces consistent candle array structure', () => {
+    const candles = makeCandles([100, 102, 105]);
+    // Snapshot captures the full shape — open/high/low/close/timestamps/etc.
+    expect(candles).toMatchSnapshot();
+  });
+});
+```
+
+**When to use snapshots:**
+- Complex DTO shapes with nested fields (tool outputs, API responses)
+- Regression tests for data transformations (candle mapping, indicator calculations)
+- UI rendering output that's tedious to assert field-by-field
+
+**When NOT to use snapshots:**
+- Values that change per run (timestamps, UUIDs, random data)
+- Simple scalar assertions (use `toBe`, `toEqual`)
+- Tests that need to communicate intent (snapshots hide expected values)
+
+Snapshots are stored in `__snapshots__/` directories next to test files. Review
+snapshot diffs in PR reviews to catch unintended output changes.
+
+## Contract Testing (LSP Compliance)
+
+Use `describe.each` with a registry of implementations to verify that every subclass
+satisfies its base contract:
+
+```typescript
+import { describe, it, expect } from 'vitest';
+
+// PF-12 — verify every BaseAgent subclass satisfies the specialist contract
+const ALL_SPECIALISTS: BaseAgent[] = [
+  new TechnicalAgent(),
+  new FundamentalAgent(),
+  new RiskAgent(),
+  new SentimentAgent(),
+];
+
+describe.each(ALL_SPECIALISTS.map((a) => ({ agent: a, name: a.constructor.name })))(
+  '$name',
+  ({ agent }) => {
+    it('has a valid AgentName', () => {
+      expect(VALID_AGENT_NAMES).toContain(agent.name);
+    });
+
+    it('tools() returns a non-empty Record', () => {
+      expect(Object.keys(agent.tools()).length).toBeGreaterThan(0);
+    });
+
+    it('parseOutput() handles valid JSON input', () => {
+      const result = agent.parseOutput(JSON.stringify({
+        bias: 'bullish', confidence: 0.85, reasoning: '...',
+      }));
+      expect(result.bias).toMatch(/^(bullish|bearish|neutral)$/);
+    });
+  },
+);
+```
+
+This pattern guarantees that adding a new agent implementation won't silently
+violate the contract — the test suite will fail until the new class satisfies
+every `it` block in the table.
+
+See `packages/ai/test/base-agent-contract.test.ts` for the canonical example.
 
 ## CI
 
-`.github/workflows/ci-fast.yml` runs on every PR and push to main:
-1. `lint-and-typecheck`: `pnpm turbo run lint typecheck`
-2. `unit-tests`: `pnpm turbo run test`
+Three-tier CI pipeline:
 
-`.github/workflows/ci-slow.yml` runs nightly and on main:
-3. `e2e-tests`: Playwright tests
-4. Coverage report
+### ci-fast.yml (every PR)
+1. `lint-and-typecheck`: ESLint + TypeScript + `pnpm audit --audit-level=critical` + build + bundle analysis
+2. `unit-tests`: `pnpm turbo run test -- --coverage` + empty-guard + coverage report
+3. `e2e-tests`: Playwright (2-way shard), HTML + JUnit reports, failure artifacts
 
-15-minute timeout. No deploy step (Vercel handles that). No eval step (manual only).
+### ci-slow.yml (push to main + nightly)
+1. `lint-and-typecheck`: Full lint + typecheck
+2. `unit-tests`: Full suite with coverage
+3. `e2e-tests`: Playwright (4-way shard for faster execution)
+4. `nightly-eval`: AI eval harness (schedule only)
+
+### loadtest.yml (nightly 3 AM UTC + manual dispatch)
+k6 smoke + average-load tests against a throwaway Docker SUT. **Never gates PRs.**
+
+Concurrency is managed via `cancel-in-progress: true` across all workflows.
+All workflows use `pnpm install --frozen-lockfile` for reproducible installs.
+30-minute timeouts on E2E, 60-minute on load tests.
 
 ## Load & Performance Testing (k6)
 

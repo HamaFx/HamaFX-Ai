@@ -21,20 +21,40 @@
 // with a factory function. On first `resolve()`, the factory runs and
 // the result is cached.  Subsequent calls return the cached instance.
 //
-// Usage:
-//   container.register('db', () => getDb());
-//   container.register('llmClient', () => new VercelLlmClient());
+// DIP-2: Tokens can be typed via `Token<T>` so `resolve(token)` infers
+// `T` without a manual generic. String tokens still work for backward
+// compatibility.
 //
-//   const db = container.resolve<DbClient>('db');       // cached
-//   const client = container.resolve<LlmClient>('llmClient'); // cached
+// Usage:
+//   const DB = token<DbClient>('db');
+//   container.register(DB, () => getDb());
+//   const db = container.resolve(DB);  // typed as DbClient, no generic
 //
 // Tests override registrations:
-//   container.register('db', () => mockDb);
+//   container.register(DB, () => mockDb);
 //   // ... run tests ...
 //   container.clear();
 
 /** A factory function that creates or returns a service instance. */
 type Factory<T> = () => T;
+
+/**
+ * Typed token for the DI container. Carries a phantom type parameter
+ * so `resolve(token)` infers the correct return type without a manual
+ * generic parameter.
+ *
+ * Use the `token<T>(key)` helper to create one.
+ */
+export interface Token<T> {
+  readonly key: string;
+  /** Phantom type — never assigned at runtime, only used for inference. */
+  readonly _t?: T;
+}
+
+/** Create a typed token with key `key`. */
+export function token<T>(key: string): Token<T> {
+  return { key };
+}
 
 /**
  * Lightweight DI container.
@@ -49,38 +69,50 @@ export class Container {
   private readonly factories = new Map<string, Factory<unknown>>();
   private readonly instances = new Map<string, unknown>();
 
-  /** Register a factory for a token. Overwrites any previous registration AND clears the cached instance. */
-  register<T>(token: string, factory: Factory<T>): void {
-    this.factories.set(token, factory as Factory<unknown>);
-    this.instances.delete(token); // invalidate cached instance on re-registration
+  /** Register a factory for a typed token. Overwrites any previous registration AND clears the cached instance. */
+  register<T>(token: Token<T>, factory: Factory<T>): void;
+  /** Register a factory for a string token (backward compatibility). */
+  register<T>(token: string, factory: Factory<T>): void;
+  register<T>(token: Token<T> | string, factory: Factory<T>): void {
+    const key = typeof token === 'string' ? token : token.key;
+    this.factories.set(key, factory as Factory<unknown>);
+    this.instances.delete(key); // invalidate cached instance on re-registration
   }
 
   /**
-   * Resolve a registered service by token. The factory runs on the first
+   * Resolve a registered service by typed token. The factory runs on the first
    * call; subsequent calls return the cached instance. Throws if no
    * factory is registered for the token.
    */
-  resolve<T>(token: string): T {
+  resolve<T>(token: Token<T>): T;
+  /** Resolve by string token (backward compatibility). */
+  resolve<T>(token: string): T;
+  resolve<T>(token: Token<T> | string): T {
+    const key = typeof token === 'string' ? token : token.key;
     // Return cached instance if available.
-    if (this.instances.has(token)) return this.instances.get(token) as T;
+    if (this.instances.has(key)) return this.instances.get(key) as T;
 
-    const factory = this.factories.get(token);
+    const factory = this.factories.get(key);
     if (!factory) {
       throw new Error(
-        `No service registered for token "${token}". ` +
+        `No service registered for token "${key}". ` +
         `Available tokens: ${[...this.factories.keys()].join(', ') || '(none)'}. ` +
-        `Register via container.register('${token}', () => ...).`,
+        `Register via container.register('${key}', () => ...).`,
       );
     }
 
     const instance = factory();
-    this.instances.set(token, instance);
+    this.instances.set(key, instance);
     return instance as T;
   }
 
-  /** Check whether a token has been registered. */
-  has(token: string): boolean {
-    return this.factories.has(token);
+  /** Check whether a typed token has been registered. */
+  has(token: Token<unknown>): boolean;
+  /** Check whether a string token has been registered (backward compatibility). */
+  has(token: string): boolean;
+  has(token: Token<unknown> | string): boolean {
+    const key = typeof token === 'string' ? token : token.key;
+    return this.factories.has(key);
   }
 
   /** Remove all registrations and cached instances. Useful for test teardown. */

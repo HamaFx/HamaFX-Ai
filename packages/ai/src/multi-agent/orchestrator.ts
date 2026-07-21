@@ -32,7 +32,7 @@ import { SentimentAgent } from './agents/sentiment-agent';
 import { DecisionAgent } from './agents/decision-agent';
 import type { BaseAgent } from './agents/base-agent';
 import type {
-  AnalysisMode, AgentOpinion, AgentName,
+  AnalysisMode, AgentOpinion, AgentName, SpecialistAgentName,
   SharedContext, MultiAgentResult, ProgressEvent, MultiAgentEnv,
 } from './types';
 import { MODE_COST_ESTIMATE } from './types';
@@ -41,12 +41,14 @@ import type { UIMessage } from 'ai';
 
 const mlog = createCategorizedLogger('ai', { component: 'multi-agent' });
 
-const AGENT_FACTORIES: Record<AgentName, () => BaseAgent> = {
+// LSP-1 fix: DecisionAgent is NOT a BaseAgent (it's a synthesizer with fuse(),
+// not run()). The factory map is typed SpecialistAgentName so 'decision'
+// CANNOT be accidentally added — the type system enforces the separation.
+const AGENT_FACTORIES: Record<SpecialistAgentName, () => BaseAgent> = {
   technical: () => new TechnicalAgent(),
   fundamental: () => new FundamentalAgent(),
   risk: () => new RiskAgent(),
   sentiment: () => new SentimentAgent(),
-  decision: () => new DecisionAgent(),
 };
 
 export interface RunMultiAgentArgs {

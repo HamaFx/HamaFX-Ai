@@ -20,6 +20,7 @@ export function createMockLlm() {
     },
     setResponses(resps: MockLlmResponse[]): void {
       _responses = resps;
+      _callCount = 0;
     },
     clear(): void {
       _responses = [];

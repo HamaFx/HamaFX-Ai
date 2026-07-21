@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { MARKET_DATA_PROVIDERS } from '@hamafx/data';
+import { marketDataProviders } from '@hamafx/data';
 import { errorResponse, parseJsonBody, withAuth } from '@/lib/api';
 import { z } from 'zod';
 
@@ -34,18 +34,26 @@ export const POST = withAuth<void>(async (req) => {
     return errorResponse(err);
   }
 
-  const providerInstance = MARKET_DATA_PROVIDERS[body.provider];
-  if (!providerInstance) {
+  let providerInstance;
+  try {
+    providerInstance = marketDataProviders.get(body.provider);
+  } catch {
     return Response.json(
       { ok: false, error: `Invalid provider: ${body.provider}` },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
-  const result = await providerInstance.testConnection({
-    finnhub: body.apiKey ?? '',
-    biquoteBaseUrl: body.apiKey ?? '',
-  });
+  if (!providerInstance.testConnection) {
+    return Response.json(
+      { ok: false, error: `Provider "${body.provider}" does not support connection testing` },
+      { status: 400 },
+    );
+  }
+
+  const result = await providerInstance.testConnection(
+    body.apiKey ? { apiKey: body.apiKey, baseUrl: body.apiKey } : undefined,
+  );
 
   if (!result.ok) {
     return Response.json(

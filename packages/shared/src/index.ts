@@ -133,7 +133,7 @@ export {
 //
 // P2-3 — Lightweight DI container.
 // Replaces module-level singletons with a central registry.
-export { container, Container } from './container';
+export { container, Container, token, type Token } from './container';
 
 // Phase 3 §3.9 — vault secrets loader also NOT re-exported from the barrel
 // (it pulls google-auth-library dynamically). Consumers must import directly:

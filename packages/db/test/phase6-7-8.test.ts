@@ -32,10 +32,10 @@ const REPO_ROOT = join(HERE, '..', '..', '..');
 describe('Phase 6 — Testing', () => {
   it('coverage thresholds are set', () => {
     const config = readFileSync(join(HERE, '..', 'vitest.config.ts'), 'utf-8');
-    expect(config).toContain('statements: 25');
-    expect(config).toContain('branches: 25');
-    expect(config).toContain('functions: 25');
-    expect(config).toContain('lines: 25');
+    expect(config).toContain('statements: 43');
+    expect(config).toContain('branches: 50');
+    expect(config).toContain('functions: 10');
+    expect(config).toContain('lines: 43');
   });
 
   it('full-migration-chain.test.ts exists', () => {

@@ -42,20 +42,21 @@ import { SentimentAgent } from '../src/multi-agent/agents/sentiment-agent';
 import { DecisionAgent } from '../src/multi-agent/agents/decision-agent';
 import type { AgentName } from '../src/multi-agent/types';
 
-// Collect all concrete agent instances for contract testing.
-const ALL_AGENTS: BaseAgent[] = [
+// LSP-1 fix: DecisionAgent no longer extends BaseAgent — it is a synthesizer
+// with its own fuse() entrypoint, not a specialist with run().
+// Only genuine specialists are tested against the BaseAgent contract.
+const ALL_SPECIALISTS: BaseAgent[] = [
   new TechnicalAgent(),
   new FundamentalAgent(),
   new RiskAgent(),
   new SentimentAgent(),
-  new DecisionAgent(),
 ];
 
 const VALID_AGENT_NAMES: AgentName[] = ['technical', 'fundamental', 'risk', 'sentiment', 'decision'];
 const VALID_TIERS = ['fast', 'mid', 'strong'] as const;
 
 describe('BaseAgent contract (PF-12)', () => {
-  describe.each(ALL_AGENTS.map((agent, i) => ({ agent, index: i, name: agent.constructor.name })))(
+  describe.each(ALL_SPECIALISTS.map((agent, i) => ({ agent, index: i, name: agent.constructor.name })))(
     '$name',
     ({ agent }) => {
       it('has a valid AgentName', () => {
@@ -73,9 +74,6 @@ describe('BaseAgent contract (PF-12)', () => {
       });
 
       it('tools() returns a non-empty Record', () => {
-        // DecisionAgent is a synthesis/fusion agent — it fuses specialist
-        // opinions into a final response and has no tools by design.
-        if (agent instanceof DecisionAgent) return;
         const tools = agent.tools();
         expect(tools).toBeDefined();
         expect(typeof tools).toBe('object');
@@ -109,4 +107,23 @@ describe('BaseAgent contract (PF-12)', () => {
       });
     },
   );
+
+  describe('DecisionAgent (LSP-1 — not a BaseAgent, tested separately)', () => {
+    const decision = new DecisionAgent();
+
+    it('has correct name and tier', () => {
+      expect(decision.name).toBe('decision');
+      expect(decision.modelTier).toBe('strong');
+    });
+
+    it('exposes fuse() for opinion synthesis', () => {
+      expect(typeof decision.fuse).toBe('function');
+    });
+
+    it('systemPrompt() returns a non-empty string', () => {
+      const prompt = decision.systemPrompt();
+      expect(typeof prompt).toBe('string');
+      expect(prompt.length).toBeGreaterThan(50);
+    });
+  });
 });

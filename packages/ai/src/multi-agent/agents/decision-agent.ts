@@ -15,19 +15,23 @@
  */
 
 // Decision Agent — fuses all specialist opinions into a final unified response.
+//
+// LSP-1 fix: DecisionAgent no longer extends BaseAgent. It is a *synthesizer*,
+// not a specialist — its real entrypoint is fuse(), not run(). Shared model
+// resolution and JSON-parsing helpers are imported from agent-model.ts.
 
 import { generateText, streamText, convertToModelMessages, type Tool, type ModelMessage } from 'ai';
 import { estimateCostUsd } from '../../cost';
 import { withToolContext, type ToolContext } from '../../tool-context';
 import { getDb } from '../../db';
 import { telemetryConfig } from '../../telemetry';
-import { BaseAgent } from './base-agent';
+import { resolveAgentModel } from './agent-model';
 import { buildSharedSystemPrompt, extractUserMessageText } from '../context';
 import type { AgentName, AgentBias, ModelTier, AgentOpinion, SharedContext, MultiAgentEnv } from '../types';
 import { AGENT_TIMEOUTS } from '../types';
 import type { UserSettingsRow } from '@hamafx/db/schema';
 
-export class DecisionAgent extends BaseAgent {
+export class DecisionAgent {
   readonly name: AgentName = 'decision';
   readonly modelTier: ModelTier = 'strong';
 
@@ -65,9 +69,11 @@ If a specialist agent is missing (unavailable), note it explicitly:
 Be concise but thorough. Use markdown formatting for readability.`;
   }
 
+  /** Always returns an empty tool set — DecisionAgent has no tools by design. */
   tools(): Record<string, Tool> { return {}; }
 
-  protected parseOutput(text: string): { bias: AgentBias; confidence: number; reasoning: string; rawData: Record<string, unknown> } {
+  /** Parse the fusion output to extract bias and confidence for telemetry. */
+  parseOutput(text: string): { bias: AgentBias; confidence: number; reasoning: string; rawData: Record<string, unknown> } {
     const lower = text.toLowerCase();
     let bias: AgentBias = 'neutral';
     if (lower.includes('bullish') || lower.includes('buy') || lower.includes('long')) bias = 'bullish';
@@ -82,7 +88,7 @@ Be concise but thorough. Use markdown formatting for readability.`;
     onTextChunk?: (chunk: string) => void,
   ): Promise<{ text: string; costUsd: number; latencyMs: number; modelId: string }> {
     const startMs = Date.now();
-    const { model, modelId } = this.resolveModel(ctx);
+    const { model, modelId } = resolveAgentModel(ctx, this.name, this.modelTier);
     const opinionsBlock = this.buildOpinionsBlock(opinions);
     const userText = extractUserMessageText(ctx.userMessage);
     const sharedPrompt = buildSharedSystemPrompt(ctx, null);

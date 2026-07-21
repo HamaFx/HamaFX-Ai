@@ -27,13 +27,7 @@
 
 import { container } from '@hamafx/shared';
 import { VercelLlmClient } from './llm-client';
-import type { LlmClient } from './llm-client';
-
-/** Token names for the DI container. */
-export const TOKENS = {
-  DB: 'db',
-  LLM_CLIENT: 'llmClient',
-} as const;
+import { LLM_CLIENT } from './tokens';
 
 /**
  * Register the LLM client in the DI container.
@@ -45,7 +39,7 @@ export const TOKENS = {
 export function bootstrapServices(): void {
   // LLM client — Vercel AI SDK wrapper. Stateless, but the container
   // caches it so every consumer gets the same instance.
-  container.register(TOKENS.LLM_CLIENT, () => new VercelLlmClient());
+  container.register(LLM_CLIENT, () => new VercelLlmClient());
 }
 
 // Auto-bootstrap on first import. In production (Vercel) this runs

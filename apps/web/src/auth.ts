@@ -40,6 +40,7 @@ import { getDb } from '@hamafx/ai';
 import { logErrorContext } from '@hamafx/shared/logger';
 import { getAuthEnv } from '@/lib/env';
 import { recordAuthEvent } from '@/lib/auth-anomaly';
+import { provisionUserOnSignIn } from '@/lib/auth/provision-user';
 
 // `NextAuth()` returns a value whose inferred type carries deep paths into
 // `@auth/core/providers`. That inferred type isn't portable across pnpm
@@ -362,78 +363,21 @@ export const { handlers, auth, signIn, signOut } = _nextAuth({
      * user_settings for first-time Google sign-ins. Google emails are
      * pre-verified so emailVerified is set automatically.
      */
+    // SRP-3: signIn callback delegates provisioning + account linking to
+    // provisionUserOnSignIn (typed, testable). The callback stays thin glue.
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     async signIn({ user, account, profile }: { user: any; account: any; profile: any }) {
-      if (account?.provider !== 'google') return true;
-      if (!profile?.email || profile.email_verified === false) return false;
+      const decision = await provisionUserOnSignIn({ user, account, profile });
+      if (!decision.allow) return false;
 
-      const email = profile.email.toLowerCase().trim();
-      const db = getDb();
-
-      // Find existing user by email (link accounts)
-      const [existing] = await db
-        .select({ id: schema.users.id, tokenVersion: schema.users.tokenVersion })
-        .from(schema.users)
-        .where(and(eq(schema.users.email, email), isNull(schema.users.deletedAt)))
-        .limit(1);
-
-      let userId = existing?.id;
-
-      if (!userId) {
-        // Create new OAuth user
-        userId = crypto.randomUUID();
-        // Drizzle transaction types are complex with multi-table schemas.
-        // Use the same double-cast pattern as withTenantDb in client.ts.
-        const newUserId = userId; // narrow to string for the transaction closure
-        await db.transaction(async (tx) => {
-          const t = tx as unknown as typeof db;
-          await t.insert(schema.users).values({
-            id: newUserId,
-            email,
-            name: profile.name ?? email,
-            image:
-              profile.picture ??
-              `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(String(profile.name ?? email))}`,
-            emailVerified: new Date(),
-            hashedPassword: null,
-          });
-          await t.insert(schema.userSettings).values({
-            userId: newUserId,
-            onboardingCompleted: false,
-            defaultSymbol: 'XAUUSD',
-          });
-        });
-      } else {
-        // Ensure emailVerified is set for linked accounts
-        await db
-          .update(schema.users)
-          .set({ emailVerified: new Date() })
-          .where(eq(schema.users.id, userId));
+      // Merge DB identity fields onto the user object so JWT callback uses them
+      if (decision.userFields) {
+        user.id = decision.userFields.id;
+        user.tokenVersion = decision.userFields.tokenVersion;
+        user.emailVerified = decision.userFields.emailVerified;
+        user.rememberMe = decision.userFields.rememberMe;
+        user.sessionId = decision.userFields.sessionId;
       }
-
-      // Upsert account link row
-      await db
-        .insert(schema.accounts)
-        .values({
-          userId,
-          type: account.type as string,
-          provider: 'google',
-          providerAccountId: account.providerAccountId as string,
-          access_token: (account.access_token as string) ?? null,
-          refresh_token: (account.refresh_token as string) ?? null,
-          expires_at: (account.expires_at as number) ?? null,
-          token_type: (account.token_type as string) ?? null,
-          scope: (account.scope as string) ?? null,
-          id_token: (account.id_token as string) ?? null,
-        })
-        .onConflictDoNothing();
-
-      // Stash canonical DB id + tokenVersion so JWT callback uses them
-      user.id = userId;
-      user.tokenVersion = existing?.tokenVersion ?? 0;
-      user.emailVerified = new Date();
-      user.rememberMe = true; // OAuth users default to remembered
-      user.sessionId = crypto.randomUUID();
 
       return true;
     },

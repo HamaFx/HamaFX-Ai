@@ -211,7 +211,8 @@ export async function rememberJournalEntry(
   });
 }
 
-function composeJournalText(row: typeof schema.journalEntries.$inferSelect): string {
+/** Exported for testing — composes a searchable text from a journal entry row. */
+export function composeJournalText(row: typeof schema.journalEntries.$inferSelect): string {
   const lines = [
     `${row.side === 'long' ? 'Long' : 'Short'} ${row.symbol} @ ${row.entry}`,
     row.stop !== null ? `stop ${row.stop}` : null,

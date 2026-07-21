@@ -197,7 +197,8 @@ async function composeEventSummary(
   }
 }
 
-function buildEventPrompt(event: EconomicEvent, kind: 'pre' | 'post'): string {
+/** Exported for testing — builds the LLM prompt for an event briefing. */
+export function buildEventPrompt(event: EconomicEvent, kind: 'pre' | 'post'): string {
   const iso = new Date(event.date).toISOString();
   const lines = [
     `Event: ${event.title}`,
@@ -223,7 +224,8 @@ function buildEventPrompt(event: EconomicEvent, kind: 'pre' | 'post'): string {
   return lines.join('\n');
 }
 
-function deterministicEventSummary(event: EconomicEvent, kind: 'pre' | 'post'): string {
+/** Exported for testing — deterministic fallback summary for event briefings. */
+export function deterministicEventSummary(event: EconomicEvent, kind: 'pre' | 'post'): string {
   const iso = new Date(event.date).toISOString();
   if (kind === 'pre') {
     return [
@@ -240,7 +242,8 @@ function deterministicEventSummary(event: EconomicEvent, kind: 'pre' | 'post'): 
   ].join('\n');
 }
 
-function surpriseLabel(event: EconomicEvent): string {
+/** Exported for testing — labels the surprise direction of an economic event. */
+export function surpriseLabel(event: EconomicEvent): string {
   if (event.actual === null || event.forecast === null) return 'No surprise detectable.';
   const diff = event.actual - event.forecast;
   if (Math.abs(diff) < 1e-9) return 'Print matched forecast.';
@@ -370,7 +373,8 @@ async function composeWeeklyReviewSummary(
   }
 }
 
-function deterministicWeeklyReview(stats: Awaited<ReturnType<typeof computeStats>>): string {
+/** Exported for testing — deterministic fallback for the weekly review summary. */
+export function deterministicWeeklyReview(stats: Awaited<ReturnType<typeof computeStats>>): string {
   return [
     `Last 7 days — ${stats.count} trade${stats.count === 1 ? '' : 's'} (${stats.wins}W / ${stats.losses}L / ${stats.breakevens}BE / ${stats.open} open).`,
     `Win rate: ${(stats.winRate * 100).toFixed(1)}% · Avg R: ${stats.avgR.toFixed(2)} · Total R: ${stats.totalR.toFixed(2)}.`,
@@ -405,7 +409,8 @@ async function loadEvent(eventId: string): Promise<EconomicEvent | null> {
 }
 
 /** ISO-week key like "2026-W22" — stable across UTC days within the week. */
-function isoWeekKey(d: Date): string {
+/** Exported for testing — ISO week key calculation. */
+export function isoWeekKey(d: Date): string {
   // Algorithm from https://en.wikipedia.org/wiki/ISO_week_date#Algorithms
   const target = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
   const dayNum = (target.getUTCDay() + 6) % 7;
@@ -423,7 +428,8 @@ function isoWeekKey(d: Date): string {
  * to XAUUSD because gold is the most directly USD-exposed leg in our
  * scope.
  */
-function symbolFromCurrency(currency: EventCurrency): Symbol {
+/** Exported for testing — maps currency to symbol for briefing context. */
+export function symbolFromCurrency(currency: EventCurrency): Symbol {
   if (currency === 'EUR') return 'EURUSD';
   if (currency === 'GBP') return 'GBPUSD';
   return 'XAUUSD';
