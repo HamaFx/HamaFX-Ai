@@ -15,10 +15,6 @@ import { recordAuthEvent } from '@/lib/auth-anomaly';
 import { generateToken, hashToken } from '@/lib/auth-tokens';
 
 const BCRYPT_COST = 12;
-// L-5: Minimum password length of 10 (NIST SP 800-63B recommends 8 as
-// absolute minimum; 10 provides additional brute-force resistance).
-const PASSWORD_MIN = 10;
-const PASSWORD_MAX = 128; // P2-4: bcrypt truncates at 72 bytes, but 128 is a reasonable UX cap
 
 /**
  * P2-7: Centralized redirect sanitizer. Blocks open redirects via
@@ -111,6 +107,12 @@ export async function loginAction(prevState: unknown, formData: FormData) {
         // recorded in authorize() — no duplicate
         return { error: 'Invalid 2FA code', requires2FA: true };
       }
+      if (message === '2FA_LOCKED') {
+        return { error: 'Too many failed 2FA attempts. Try again in 15 minutes.', requires2FA: true };
+      }
+      if (message === '2FA_RATE_LIMITED') {
+        return { error: 'Too many 2FA attempts. Please try again shortly.', requires2FA: true };
+      }
       recordAuthEvent('login_failure');
       return { error: 'Invalid email or password' };
     }
@@ -123,15 +125,12 @@ export async function loginAction(prevState: unknown, formData: FormData) {
   });
 }
 
+import { passwordSchema } from '@/lib/validation';
+
 const registerSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
   email: z.string().email('Invalid email address'),
-  password: z.string()
-    .min(PASSWORD_MIN, `Password must be at least ${PASSWORD_MIN} characters`)
-    .max(PASSWORD_MAX, `Password must be at most ${PASSWORD_MAX} characters`)
-    .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
-    .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
-    .regex(/[0-9]/, 'Password must contain at least one number'),
+  password: passwordSchema,
 });
 
 export async function registerAction(prevState: unknown, formData: FormData) {
@@ -363,13 +362,7 @@ export async function resetPasswordAction(prevState: unknown, formData: FormData
       return { error: 'Too many reset attempts. Please try again later.' };
     }
 
-    const parsed = z.object({
-      password: z.string()
-        .min(PASSWORD_MIN, `Password must be at least ${PASSWORD_MIN} characters`)
-        .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
-        .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
-        .regex(/[0-9]/, 'Password must contain at least one number'),
-    }).safeParse({ password });
+    const parsed = z.object({ password: passwordSchema }).safeParse({ password });
 
     if (!parsed.success) {
       return { error: parsed.error.errors[0]?.message ?? 'Invalid password' };

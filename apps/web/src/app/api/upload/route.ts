@@ -28,7 +28,7 @@
 // cross-site form posts. (The §22 CSRF token would add belt-and-
 // braces double-submit on top.)
 
-import { validationError, providerUnavailable } from '@hamafx/shared';
+import { validationError, providerUnavailable, AppError } from '@hamafx/shared';
 
 import { errorResponse, withAuth } from '@/lib/api';
 import { getServerEnv } from '@/lib/env';
@@ -61,7 +61,7 @@ export const POST = withAuth<void>(async (req, { user }) => {
     // STAB-12: Rate limit uploads — 20 per user per minute.
     const rl = await withRateLimit(user.userId, 'upload', 20);
     if (!rl.allowed) {
-      return Response.json({ error: 'Too many uploads. Please wait a moment.' }, { status: 429 });
+      return errorResponse(new AppError('RATE_LIMITED', 'Too many uploads. Please wait a moment.', 429), req);
     }
 
     // Pre-check the content-length header so an oversize request is

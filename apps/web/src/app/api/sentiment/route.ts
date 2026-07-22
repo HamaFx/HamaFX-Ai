@@ -18,7 +18,7 @@
 // GET /api/sentiment?symbol=XAUUSD
 
 import { getSentimentService } from '@hamafx/ai';
-import { SymbolSchema } from '@hamafx/shared';
+import { SymbolSchema, AppError } from '@hamafx/shared';
 import { withRateLimit } from '@hamafx/db';
 
 import { errorResponse, withAuth } from '@/lib/api';
@@ -41,12 +41,12 @@ export const GET = withAuth<void>(async (req, { user: _user }) => {
     const url = new URL(req.url);
     const symbol = url.searchParams.get('symbol');
     if (!symbol) {
-      return Response.json({ error: 'Missing symbol parameter' }, { status: 400 });
+      return errorResponse(new AppError('VALIDATION', 'Missing symbol parameter', 400));
     }
 
     const parsed = SymbolSchema.safeParse(symbol.toUpperCase());
     if (!parsed.success) {
-      return Response.json({ error: 'Invalid symbol' }, { status: 400 });
+      return errorResponse(new AppError('VALIDATION', 'Invalid symbol', 400, { issues: parsed.error.issues }));
     }
 
     const service = getSentimentService();

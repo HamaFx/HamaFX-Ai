@@ -385,7 +385,7 @@ function TelemetryLog({ agents }: { agents: AgentProgress[] }) {
   }, [agents]);
 
   return (
-    <div className="bg-[#050505] border border-border rounded-sm overflow-hidden">
+    <div className="bg-bg-elev-1 border border-border rounded-sm overflow-hidden">
       <div className="flex items-center gap-2 border-b border-border px-3 py-2">
         <IconTerminal2 className="size-3 text-fg-subtle" />
         <span className="text-caption text-fg-subtle font-mono uppercase tracking-wider">

@@ -363,8 +363,8 @@ new QueryClient({
     queries: {
       staleTime: 30_000,        // 30s — most data is market data
       gcTime: 5 * 60_000,       // 5min — aggressive cleanup for personal mode
-      retry: 1,                 // Surface errors, don't mask provider issues
-      refetchOnWindowFocus: true,
+      retry: 2,                 // Two retries for transient failures
+      refetchOnWindowFocus: false, // Personal mode: no refetch on focus
     },
     mutations: { retry: 0 },
   },
@@ -379,7 +379,7 @@ new QueryClient({
 | 5m, 15m, 30m, 1h, 4h | 30,000ms (30s) | 15,000ms |
 | 1d, 1w | 300,000ms (5min) | 150,000ms |
 
-**Price polling**: 1,500ms, paused when tab is hidden or offline.
+**Price polling**: 3,000ms (3s), paused when tab is hidden or offline.
 
 **Adjacent timeframe prefetching**: When viewing one timeframe, the two adjacent timeframes are prefetched in the background for instant switching.
 
@@ -430,8 +430,7 @@ new QueryClient({
 
 | Token | Value | Usage |
 |---|---|---|
-| `--topbar-h` | 56px | TopBar and ChatTopBar height |
-| `--touch-min` | 44px | Minimum touch target size |
+| `--topbar-h` | 48px | TopBar and ChatTopBar height |
 | `--fab-bottom` | `env(safe-area-inset-bottom) + 16px` | FAB positioning |
 
 **Keyframes**: shimmer (skeleton loading), stale-pulse (data staleness), mic-pulse (voice recording), scroll-fab (auto-hiding "Latest" button).
@@ -528,5 +527,5 @@ Set via `next.config.mjs` `headers()`:
 | `vaul` | Drawer primitive for NavDrawer |
 | `motion` (framer-motion) | Composer button morph, layout animations |
 | `sonner` | Toast notifications |
-| `lucide-react` | Icon library |
+| `@tabler/icons-react` | Icon library |
 | `tailwindcss` v4 | Styling framework |

@@ -18,6 +18,8 @@ import { auth } from '@/auth';
 import { redirect } from 'next/navigation';
 import { ProfileForm } from '../_components/profile-form';
 
+export const dynamic = 'force-dynamic';
+
 export default async function ProfileSettingsPage() {
   const session = await auth();
   if (!session) redirect('/login');

@@ -29,6 +29,7 @@ import { toast } from 'sonner';
 import { z } from 'zod';
 
 import { Button } from '@/components/ui/button';
+import { Field } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Segmented } from '@/components/ui/segmented';
 import { TagInput } from '@/components/ui/tag-input';
@@ -228,27 +229,55 @@ export function EntryForm({ onCreated }: EntryFormProps) {
       <div className="grid grid-cols-2 gap-3">
         <Field
           label="Entry"
-          value={entry}
-          setValue={(v) => { setEntry(v); setFieldError('entry', null); }}
+          htmlFor="entry"
           required
           error={fieldErrors.entry ?? null}
-          onBlur={() => setFieldError('entry', validateEntry(entry))}
-        />
+        >
+          <Input
+            id="entry"
+            value={entry}
+            onChange={(e) => { setEntry(e.target.value); setFieldError('entry', null); }}
+            onBlur={() => setFieldError('entry', validateEntry(entry))}
+            inputMode="decimal"
+            error={!!fieldErrors.entry}
+          />
+        </Field>
         <Field
           label="Stop (optional)"
-          value={stop}
-          setValue={(v) => { setStop(v); setFieldError('stop', null); }}
+          htmlFor="stop"
           error={fieldErrors.stop ?? null}
-          onBlur={() => setFieldError('stop', validateStop(stop))}
-        />
+        >
+          <Input
+            id="stop"
+            value={stop}
+            onChange={(e) => { setStop(e.target.value); setFieldError('stop', null); }}
+            onBlur={() => setFieldError('stop', validateStop(stop))}
+            inputMode="decimal"
+            error={!!fieldErrors.stop}
+          />
+        </Field>
         <Field
           label="Target (optional)"
-          value={target}
-          setValue={(v) => { setTarget(v); setFieldError('target', null); }}
+          htmlFor="target"
           error={fieldErrors.target ?? null}
-          onBlur={() => setFieldError('target', validateTarget(target))}
-        />
-        <Field label="Size in lots (optional)" value={size} setValue={setSize} />
+        >
+          <Input
+            id="target"
+            value={target}
+            onChange={(e) => { setTarget(e.target.value); setFieldError('target', null); }}
+            onBlur={() => setFieldError('target', validateTarget(target))}
+            inputMode="decimal"
+            error={!!fieldErrors.target}
+          />
+        </Field>
+        <Field label="Size in lots (optional)" htmlFor="size">
+          <Input
+            id="size"
+            value={size}
+            onChange={(e) => setSize(e.target.value)}
+            inputMode="decimal"
+          />
+        </Field>
       </div>
 
       <div className="flex flex-col gap-2">
@@ -313,9 +342,10 @@ export function EntryForm({ onCreated }: EntryFormProps) {
         onChange={setTags}
         suggestions={tagSuggestions}
         placeholder="Add tags (e.g. London breakout, trend continuation)"
+        label="Tags"
       />
 
-      {error ? <p className="text-danger text-sm">{error}</p> : null}
+      {error ? <p className="text-danger text-sm" role="alert">{error}</p> : null}
 
       <Button
         type="submit"
@@ -327,44 +357,6 @@ export function EntryForm({ onCreated }: EntryFormProps) {
         {busy ? 'Saving…' : 'Save entry'}
       </Button>
     </form>
-  );
-}
-
-function Field({
-  label,
-  value,
-  setValue,
-  required,
-  error,
-  onBlur,
-}: {
-  label: string;
-  value: string;
-  setValue: (v: string) => void;
-  required?: boolean;
-  error?: string | null | undefined;
-  onBlur?: () => void;
-}) {
-  const showError = error !== undefined && error !== null;
-  const id = label.toLowerCase().replace(/[^a-z]/g, '-');
-  const errorId = `${id}-error`;
-  return (
-    <div className="flex flex-col gap-2">
-      <label className="text-fg-subtle text-body-sm uppercase tracking-wide" htmlFor={id}>
-        {label}
-      </label>
-      <Input
-        id={id}
-        value={value}
-        onChange={(e) => setValue(e.target.value)}
-        onBlur={onBlur}
-        inputMode="decimal"
-        required={required}
-        error={!!error}
-        {...(showError ? { 'aria-describedby': errorId } : {})}
-      />
-      {showError ? <p id={errorId} role="alert" className="text-danger text-xs mt-0.5">{error}</p> : null}
-    </div>
   );
 }
 

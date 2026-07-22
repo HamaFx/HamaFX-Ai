@@ -27,7 +27,7 @@
   /* ── Text — from owner's palette photo ── */
   --color-fg: #F0F0F0;
   --color-fg-muted: #808080;
-  --color-fg-subtle: #555555;
+  --color-fg-subtle: #737373;
 
   /* ── Brand — orange accent (#F07010). Used with EXTREME RESTRAINT. ── */
   --color-brand: #F56E0F;
@@ -148,8 +148,6 @@ html {
   --space-8: 64px;
   --space-9: 80px;
   --space-10: 96px;
-
-  --touch-min: 44px;
 }
 
 /* -------------------------------------------------------------------------

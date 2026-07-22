@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { setupTwoFactorAction, verifyTwoFactorAction, disableTwoFactorAction } from '../actions';
+import { setupTwoFactorAction, verifyTwoFactorAction, regenerateBackupCodesAction, disableTwoFactorAction } from '../actions';
 
 interface TwoFactorSetupProps {
   enabled: boolean;
@@ -16,6 +16,7 @@ export function TwoFactorSetup({ enabled }: TwoFactorSetupProps) {
   const [isSettingUp, setIsSettingUp] = useState(false);
   const [secret, setSecret] = useState<string | null>(null);
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
+  const [backupCodes, setBackupCodes] = useState<string[]>([]);
   const [token, setToken] = useState('');
   const [verifying, setVerifying] = useState(false);
   const [disabling, setDisabling] = useState(false);
@@ -28,6 +29,7 @@ export function TwoFactorSetup({ enabled }: TwoFactorSetupProps) {
       if (res.ok && res.data) {
         setSecret(res.data.secret);
         setQrDataUrl(res.data.qrDataUrl);
+        setBackupCodes(res.data.backupCodes);
         setStep('show_qr');
       } else {
         toast.error('error' in res ? (res.error ?? 'Failed to start setup') : 'Failed to start setup');
@@ -85,6 +87,23 @@ export function TwoFactorSetup({ enabled }: TwoFactorSetupProps) {
     }
   };
 
+  const handleCopyBackupCodes = () => {
+    if (backupCodes.length > 0) {
+      navigator.clipboard.writeText(backupCodes.join('\n'));
+      toast.success('Backup codes copied to clipboard');
+    }
+  };
+
+  const handleRegenerateBackupCodes = async () => {
+    const res = await regenerateBackupCodesAction();
+    if (res.ok && res.data) {
+      setBackupCodes(res.data.backupCodes);
+      toast.success('Backup codes regenerated');
+    } else {
+      toast.error('error' in res ? (res.error ?? 'Failed to regenerate') : 'Failed to regenerate');
+    }
+  };
+
   if (enabled && step !== 'done') {
     return (
       <div className="border border-border bg-bg-elev-1 rounded-sm p-4 flex flex-col gap-4">
@@ -136,6 +155,43 @@ export function TwoFactorSetup({ enabled }: TwoFactorSetupProps) {
         <p className="text-caption text-fg-subtle">
           2FA is active. Next time you perform a sensitive action (export keys, delete account), you'll need your authenticator app code.
         </p>
+        {backupCodes.length > 0 && (
+          <div className="w-full border border-border bg-bg rounded-sm p-3 flex flex-col gap-2">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium text-fg">Backup Codes</span>
+              <button
+                type="button"
+                onClick={handleCopyBackupCodes}
+                className="p-1 text-fg-subtle hover:text-fg cursor-pointer"
+                aria-label="Copy all backup codes"
+              >
+                <IconCopy className="size-3.5" />
+              </button>
+            </div>
+            <p className="text-caption text-fg-subtle">
+              Save these single-use codes in a safe place. They are only shown once.
+            </p>
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+              {backupCodes.map((code) => (
+                <code
+                  key={code}
+                  className="text-xs bg-bg-elev-2 px-2 py-1 rounded-sm border border-border font-mono text-center select-all"
+                >
+                  {code}
+                </code>
+              ))}
+            </div>
+          </div>
+        )}
+        <Button
+          type="button"
+          variant="secondary"
+          size="sm"
+          onClick={handleRegenerateBackupCodes}
+          className="w-fit"
+        >
+          Regenerate backup codes
+        </Button>
       </div>
     );
   }
@@ -146,26 +202,54 @@ export function TwoFactorSetup({ enabled }: TwoFactorSetupProps) {
         <div className="flex items-center gap-2">
           <IconShield className="size-4 text-fg" />
           <span className="text-sm font-medium text-fg">Set Up Two-Factor Authentication</span>
-        </div>
-        <div className="flex flex-col items-center gap-3">
-          <img src={qrDataUrl} alt="Scan this QR code with your authenticator app" className="size-40 border border-border rounded-sm" />
-          <p className="text-caption text-fg-subtle text-center max-w-sm">
-            Scan this QR code with your authenticator app (e.g., Google Authenticator, Authy).
-          </p>
-          <div className="flex items-center gap-2">
-            <code className="text-xs bg-bg-elev-2 px-2 py-1 rounded-sm border border-border font-mono select-all">
-              {secret}
-            </code>
-            <button
-              type="button"
-              onClick={handleCopySecret}
-              className="p-1 text-fg-subtle hover:text-fg cursor-pointer"
-              aria-label="Copy secret"
-            >
-              <IconCopy className="size-3.5" />
-            </button>
+        </div>          <div className="flex flex-col items-center gap-3">
+            <img src={qrDataUrl} alt="Scan this QR code with your authenticator app" className="size-40 border border-border rounded-sm" />
+            <p className="text-caption text-fg-subtle text-center max-w-sm">
+              Scan this QR code with your authenticator app (e.g., Google Authenticator, Authy).
+            </p>
+            <div className="flex items-center gap-2">
+              <code className="text-xs bg-bg-elev-2 px-2 py-1 rounded-sm border border-border font-mono select-all">
+                {secret}
+              </code>
+              <button
+                type="button"
+                onClick={handleCopySecret}
+                className="p-1 text-fg-subtle hover:text-fg cursor-pointer"
+                aria-label="Copy secret"
+              >
+                <IconCopy className="size-3.5" />
+              </button>
+            </div>
           </div>
-        </div>
+
+          {backupCodes.length > 0 && (
+            <div className="w-full border border-border bg-bg-elev-1 rounded-sm p-3 flex flex-col gap-2">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-fg">Backup Codes</span>
+                <button
+                  type="button"
+                  onClick={handleCopyBackupCodes}
+                  className="p-1 text-fg-subtle hover:text-fg cursor-pointer"
+                  aria-label="Copy all backup codes"
+                >
+                  <IconCopy className="size-3.5" />
+                </button>
+              </div>
+              <p className="text-caption text-fg-subtle">
+                Save these single-use codes in a safe place. They are only shown once.
+              </p>
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+                {backupCodes.map((code) => (
+                  <code
+                    key={code}
+                    className="text-xs bg-bg-elev-2 px-2 py-1 rounded-sm border border-border font-mono text-center select-all"
+                  >
+                    {code}
+                  </code>
+                ))}
+              </div>
+            </div>
+          )}
         <div className="flex items-center gap-2">
           <Input
             value={token}

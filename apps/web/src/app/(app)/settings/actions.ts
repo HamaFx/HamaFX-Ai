@@ -24,6 +24,7 @@ export type { ActionResult, SaveKeysResult } from './_actions-shared';
 export {
   setupTwoFactorAction,
   verifyTwoFactorAction,
+  regenerateBackupCodesAction,
   disableTwoFactorAction,
   listSessionsAction,
   revokeSessionAction,

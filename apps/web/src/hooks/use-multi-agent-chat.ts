@@ -47,6 +47,8 @@ interface UseMultiAgentChatOptions {
   setMessages: React.Dispatch<React.SetStateAction<UIMessage[]>>;
   /** Ref tracking the last user-sent text, used by the error retry button. */
   lastUserTextRef: React.RefObject<string>;
+  /** Server-side AI custom instructions; avoids stale localStorage values. */
+  customInstructions?: string;
 }
 
 interface UseMultiAgentChatResult {
@@ -63,6 +65,7 @@ export function useMultiAgentChat({
   messagesRef,
   setMessages,
   lastUserTextRef,
+  customInstructions,
 }: UseMultiAgentChatOptions): UseMultiAgentChatResult {
   const [isMultiAgentStreaming, setIsMultiAgentStreaming] = useState(false);
   const [agentProgress, setAgentProgress] = useState<AgentProgress | null>(null);
@@ -102,10 +105,7 @@ export function useMultiAgentChat({
 
       try {
         const csrf = getCsrfToken();
-        const prefsJson =
-          typeof window !== 'undefined'
-            ? window.localStorage.getItem('hamafx:ai-prefs')
-            : null;
+        const prefsJson = customInstructions ? JSON.stringify({ customInstructions }) : null;
         const headers: Record<string, string> = { 'Content-Type': 'application/json' };
         if (csrf) headers['X-CSRF-Token'] = csrf;
         if (prefsJson) headers['X-AI-Prefs'] = prefsJson;
@@ -156,7 +156,7 @@ export function useMultiAgentChat({
         setIsMultiAgentStreaming(false);
       }
     },
-    [analysisMode, setMessages, threadId, messagesRef, lastUserTextRef],
+    [analysisMode, setMessages, threadId, messagesRef, lastUserTextRef, customInstructions],
   );
 
   return {

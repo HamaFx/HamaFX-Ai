@@ -22,6 +22,8 @@ import { auth } from '@/auth';
 import { TelegramLinkCard } from '../_components/telegram-link-card';
 import { TestTelegramButton } from '../_components/test-telegram-button';
 
+export const dynamic = 'force-dynamic';
+
 export const metadata: Metadata = { title: 'Telegram | Settings | HamaFX' };
 
 export default async function TelegramSettingsPage() {

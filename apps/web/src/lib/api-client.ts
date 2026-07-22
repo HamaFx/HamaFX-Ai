@@ -101,6 +101,11 @@ export interface ApiFetchOptions {
    * header on GET anyway.
    */
   skipCsrf?: boolean;
+  /**
+   * Number of retries on transient network/timeout errors. Default 0.
+   * Server-side 4xx/5xx errors are not retried.
+   */
+  retries?: number;
 }
 
 // ── Internal helpers ───────────────────────────────────────────────────
@@ -239,6 +244,7 @@ export async function apiFetch<T = unknown>(
     timeout = 10_000,
     json = true,
     skipCsrf = false,
+    retries = 0,
     ...restInit
   } = init;
 
@@ -254,31 +260,54 @@ export async function apiFetch<T = unknown>(
   };
   const finalInit = skipCsrf ? baseInit : withCsrf(baseInit);
 
-  const res = await fetchWithTimeout(input, finalInit, timeout);
+  let delay = 200;
+  for (let i = 0; i <= retries; i++) {
+    try {
+      const res = await fetchWithTimeout(input, finalInit, timeout);
 
-  // Raw Response mode — caller handles non-2xx.
-  if (!json) {
-    return res as unknown as T;
+      // Raw Response mode — caller handles non-2xx.
+      if (!json) {
+        return res as unknown as T;
+      }
+
+      if (!res.ok) {
+        const body = await parseErrorBody(res);
+        throw new ApiError(res.status, body);
+      }
+
+      // 2xx — parse JSON. An empty 204 No Content returns null.
+      const text = await res.text();
+      if (!text) return null as unknown as T;
+      try {
+        return JSON.parse(text) as T;
+      } catch (err) {
+        const parseRequestId = res.headers.get(REQUEST_ID_HEADER) ?? undefined;
+        throw new ApiError(res.status, {
+          code: 'PARSE_ERROR',
+          message: `Failed to parse response JSON: ${err instanceof Error ? err.message : String(err)}`,
+          ...(parseRequestId !== undefined ? { requestId: parseRequestId } : {}),
+        });
+      }
+    } catch (err) {
+      // Server-side errors and caller aborts are not retried.
+      const isAbort = err instanceof Error && err.name === 'AbortError';
+      if (isAbort) throw err;
+      if (err instanceof ApiError) {
+        const isRetryable = err.code === 'TIMEOUT' || err.code === 'NETWORK_ERROR';
+        if (!isRetryable) throw err;
+      }
+      if (i === retries) throw err;
+
+      console.warn(
+        `[api-client] Fetch failed (attempt ${i + 1}/${retries + 1}). Retrying in ${delay}ms...`,
+        err,
+      );
+      await new Promise((resolve) => setTimeout(resolve, delay));
+      delay *= 2;
+    }
   }
 
-  if (!res.ok) {
-    const body = await parseErrorBody(res);
-    throw new ApiError(res.status, body);
-  }
-
-  // 2xx — parse JSON. An empty 204 No Content returns null.
-  const text = await res.text();
-  if (!text) return null as unknown as T;
-  try {
-    return JSON.parse(text) as T;
-  } catch (err) {
-    const parseRequestId = res.headers.get(REQUEST_ID_HEADER) ?? undefined;
-    throw new ApiError(res.status, {
-      code: 'PARSE_ERROR',
-      message: `Failed to parse response JSON: ${err instanceof Error ? err.message : String(err)}`,
-      ...(parseRequestId !== undefined ? { requestId: parseRequestId } : {}),
-    });
-  }
+  throw new Error('All retries failed');
 }
 
 /**

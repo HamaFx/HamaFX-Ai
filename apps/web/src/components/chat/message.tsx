@@ -36,7 +36,7 @@
 import type { UIMessage } from 'ai';
 import {IconCheck, IconChevronDown, IconCopy, IconEdit, IconArrowBackUp} from '@tabler/icons-react';
 import { useReducedMotion } from 'motion/react';
-import { memo, useEffect, useMemo, useState } from 'react';
+import { memo, useEffect, useMemo, useState, type ReactNode, type CSSProperties } from 'react';
 import { m } from 'motion/react';
 import { useCopied } from '@/hooks/use-copied';
 
@@ -50,6 +50,7 @@ import { ChatToolPart, type ToolPartState } from './parts/registry';
 import { PlanPart } from './parts/plan';
 import { TextPart } from './parts/text';
 import { MessageFooter } from './_components/message-footer';
+import { RegenModelPicker } from './_components/regen-model-picker';
 
 interface MessageProps {
   message: UIMessage;
@@ -67,7 +68,7 @@ interface MessageProps {
  * models from providers the user has a key for, grouped by provider
  * and tagged with tier + price.
  */
-import { RegenModelPicker } from './_components/regen-model-picker';
+const REGEN_MENU_TRIGGER = 'regen-menu-trigger';
 
 function MessageImpl({ message, onCopy, onRegenerate, onEdit, isStreaming }: MessageProps) {
   const isUser = message.role === 'user';
@@ -92,7 +93,7 @@ function MessageImpl({ message, onCopy, onRegenerate, onEdit, isStreaming }: Mes
     const handleOutsideClick = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
       const insideMenu = target.closest(`#regen-menu-${message.id}`);
-      const insideBtn = target.closest(`button[aria-label="Regenerate with a different model"]`);
+      const insideBtn = target.closest(`button[data-action="${REGEN_MENU_TRIGGER}"]`);
       if (!insideMenu && !insideBtn) {
         setIsOpenFallback(false);
       }
@@ -299,10 +300,11 @@ function MessageImpl({ message, onCopy, onRegenerate, onEdit, isStreaming }: Mes
                       popoverTarget={hasPopoverSupport ? `regen-menu-${message.id}` : undefined}
                       onClick={hasPopoverSupport ? undefined : () => setIsOpenFallback(!isOpenFallback)}
                       aria-label="Regenerate with a different model"
+                      data-action={REGEN_MENU_TRIGGER}
                       className="bg-bg-elev-1 border border-border text-fg-muted hover:text-fg focus-visible:ring-fg inline-flex size-8 items-center justify-center rounded-sm border-l border-divider transition-colors focus:outline-none focus-visible:ring-2"
                       style={
                         hasPopoverSupport
-                          ? ({ anchorName: `--regen-btn-${message.id}` } as React.CSSProperties)
+                          ? ({ anchorName: `--regen-btn-${message.id}` } as CSSProperties)
                           : undefined
                       }
                     >
@@ -326,7 +328,7 @@ function MessageImpl({ message, onCopy, onRegenerate, onEdit, isStreaming }: Mes
                             bottom: 'calc(anchor(top) + 8px)',
                             right: 'anchor(right)',
                             position: 'fixed'
-                          } as React.CSSProperties)
+                          } as CSSProperties)
                         : { minWidth: '12rem' }
                     }
                   >
@@ -390,7 +392,7 @@ function renderPart(
   part: UIMessage['parts'][number],
   idx: number,
   _role: UIMessage['role'],
-): React.ReactNode {
+): ReactNode {
   if (part.type === 'reasoning') return null;
   if (part.type.startsWith('source-') || part.type === 'file' || part.type === 'step-start')
     return null;

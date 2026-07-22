@@ -15,19 +15,15 @@
  */
 
 import { test, expect } from '@playwright/test';
-import { ensureTestUser, loginAs } from './test-utils';
+// With AUTH_MODE=legacy, all auth checks are bypassed — no authenticateAs needed.
+import { ensureTestUser } from './test-utils';
 
 test.describe('Onboarding replay', () => {
-  test.beforeAll(async () => {
-    await ensureTestUser('admin@example.com', 'password123', 'admin');
-  });
-
   test('admin can reset onboarding from settings page', async ({ browser }) => {
     const context = await browser.newContext();
     const page = await context.newPage();
 
-    await loginAs(page, 'admin@example.com', 'password123');
-
+    await ensureTestUser('admin@example.com', 'password123', 'admin');
     await page.goto('/settings');
     await expect(page).toHaveURL('/settings');
 
@@ -52,8 +48,7 @@ test.describe('Onboarding replay', () => {
     const context = await browser.newContext();
     const page = await context.newPage();
 
-    await loginAs(page, 'admin@example.com', 'password123');
-
+    await ensureTestUser('admin@example.com', 'password123', 'admin');
     await page.goto('/admin');
     await expect(page).toHaveURL('/admin');
 

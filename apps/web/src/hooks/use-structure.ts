@@ -31,6 +31,10 @@ import { fetchStructure } from '@/lib/market-client';
 /**
  * Structure data refreshes less frequently than candles — it only changes
  * when bars close, so 15-60 s for intraday and 5 min for higher TFs.
+ *
+ * NOTE: This intentionally diverges from `lib/datetime.ts:refetchIntervalFor`
+ * because SMC events change only on bar close; the shared candle helper is
+ * tuned for live price updates and would over-fetch structure unnecessarily.
  */
 function refetchIntervalFor(tf: Timeframe): number {
   switch (tf) {

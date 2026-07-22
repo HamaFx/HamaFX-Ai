@@ -15,11 +15,10 @@
  */
 
 // Typed client for /api/market/*. Used by hooks and AI tools.
-// Centralises:
-//   - URL building
-//   - JSON parsing with the error envelope from src/lib/api.ts
-//   - response shape typing (no zod here — the routes already validate; we
-//     trust them and keep the client tiny)
+// Phase B/P2 hardening: delegates to `api-client.ts` so market requests
+// share the same timeout, CSRF, and error handling as the rest of the
+// app. The old `MarketApiError` / `fetchWithTimeout` duplication is gone;
+// `ApiError` from `api-client` is re-exported for backward compatibility.
 
 import type {
   Candle,
@@ -31,123 +30,10 @@ import type {
   Tick,
   Timeframe,
 } from '@hamafx/shared';
+import { apiFetch, ApiError } from './api-client';
 
-export interface ApiError {
-  code: string;
-  message: string;
-  details?: unknown;
-}
-
-export class MarketApiError extends Error {
-  readonly code: string;
-  readonly details?: unknown;
-  readonly status: number;
-
-  constructor(status: number, body: ApiError) {
-    super(body.message);
-    this.name = 'MarketApiError';
-    this.code = body.code;
-    this.status = status;
-    if (body.details !== undefined) this.details = body.details;
-  }
-}
-
-async function fetchWithTimeout(
-  input: RequestInfo | URL,
-  init?: RequestInit & { timeout?: number },
-): Promise<Response> {
-  const timeout = init?.timeout ?? 10000; // default 10s
-  const controller = new AbortController();
-  const signal = controller.signal;
-
-  if (init?.signal) {
-    init.signal.addEventListener('abort', () => controller.abort());
-  }
-
-  const timeoutId = setTimeout(() => controller.abort(), timeout);
-
-  try {
-    const res = await fetch(input, { ...init, signal });
-    clearTimeout(timeoutId);
-    return res;
-  } catch (e) {
-    clearTimeout(timeoutId);
-    if (e instanceof Error && e.name === 'AbortError') {
-      if (init?.signal?.aborted) {
-        throw e;
-      }
-      throw new Error(`Request timed out after ${timeout}ms`);
-    }
-    throw e;
-  }
-}
-
-async function fetchWithRetry(
-  input: RequestInfo | URL,
-  init?: RequestInit & { timeout?: number; retries?: number },
-): Promise<Response> {
-  const maxRetries = init?.retries ?? 2;
-  // PERF-M8: start at 200ms for faster first retry on transient network blips.
-  let delay = 200;
-
-  for (let i = 0; i <= maxRetries; i++) {
-    try {
-      return await fetchWithTimeout(input, init);
-    } catch (err) {
-      const isAbort = err instanceof Error && err.name === 'AbortError' && init?.signal?.aborted;
-      if (isAbort || i === maxRetries) {
-        throw err;
-      }
-      console.warn(`[market-client] Fetch failed (attempt ${i + 1}/${maxRetries + 1}). Retrying in ${delay}ms...`, err);
-      await new Promise((resolve) => setTimeout(resolve, delay));
-      delay *= 2;
-    }
-  }
-  throw new Error('All retries failed');
-}
-
-async function safeFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
-  try {
-    return await fetchWithRetry(input, init);
-  } catch (e) {
-    if (e instanceof Error && e.name === 'AbortError') {
-      throw e;
-    }
-    throw new Error(`Network connection error: ${e instanceof Error ? e.message : 'failed to fetch market data'}. Please verify your connection.`);
-  }
-}
-
-
-async function parse<T>(res: Response): Promise<T> {
-  let text = '';
-  try {
-    text = await res.text();
-  } catch (e) {
-    throw new Error(`Failed to read response body: ${e instanceof Error ? e.message : String(e)}`);
-  }
-
-  let json: unknown;
-  try {
-    json = text ? JSON.parse(text) : null;
-  } catch (e) {
-    if (!res.ok) {
-      throw new MarketApiError(res.status, {
-        code: 'HTTP_ERROR',
-        message: `HTTP ${res.status}: ${text.slice(0, 100) || 'unknown error'}`,
-      });
-    }
-    throw new Error(`Failed to parse response JSON: ${e instanceof Error ? e.message : String(e)}`);
-  }
-
-  if (!res.ok) {
-    const err = (json as { error?: ApiError } | null)?.error ?? {
-      code: 'UNKNOWN',
-      message: `HTTP ${res.status}`,
-    };
-    throw new MarketApiError(res.status, err);
-  }
-  return json as T;
-}
+/** @deprecated Use the `ApiError` class from `./api-client` directly. */
+export class MarketApiError extends ApiError {}
 
 export interface FetchOptions {
   signal?: AbortSignal;
@@ -160,10 +46,11 @@ export async function fetchPrices(
 ): Promise<Tick[]> {
   const params = new URLSearchParams();
   for (const s of symbols) params.append('symbol', s);
-  const init: RequestInit = { cache: 'no-store' };
-  if (opts.signal) init.signal = opts.signal;
-  const res = await safeFetch(`/api/market/price?${params.toString()}`, init);
-  const body = await parse<{ ticks: Tick[] }>(res);
+  const body = await apiFetch<{ ticks: Tick[] }>(`/api/market/price?${params.toString()}`, {
+    cache: 'no-store',
+    ...(opts.signal ? { signal: opts.signal } : {}),
+    retries: 2,
+  });
   return body.ticks;
 }
 
@@ -175,10 +62,14 @@ export async function fetchCandles(
   opts: FetchOptions = {},
 ): Promise<Candle[]> {
   const params = new URLSearchParams({ symbol, tf, count: String(count) });
-  const init: RequestInit = { cache: 'no-store' };
-  if (opts.signal) init.signal = opts.signal;
-  const res = await safeFetch(`/api/market/candles?${params.toString()}`, init);
-  const body = await parse<{ symbol: Symbol; tf: Timeframe; candles: Candle[] }>(res);
+  const body = await apiFetch<{ symbol: Symbol; tf: Timeframe; candles: Candle[] }>(
+    `/api/market/candles?${params.toString()}`,
+    {
+      cache: 'no-store',
+      ...(opts.signal ? { signal: opts.signal } : {}),
+      retries: 2,
+    },
+  );
   return body.candles;
 }
 
@@ -195,7 +86,7 @@ export async function fetchIndicators(
   count = 300,
   opts: FetchOptions = {},
 ): Promise<IndicatorResult[]> {
-  const init: RequestInit = {
+  const body = await apiFetch<{ results: IndicatorResult[] }>('/api/market/indicators', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({
@@ -204,10 +95,9 @@ export async function fetchIndicators(
       count,
       indicators: indicators.map((i) => ({ kind: i.kind, params: i.params ?? {} })),
     }),
-  };
-  if (opts.signal) init.signal = opts.signal;
-  const res = await safeFetch('/api/market/indicators', init);
-  const body = await parse<{ results: IndicatorResult[] }>(res);
+    ...(opts.signal ? { signal: opts.signal } : {}),
+    retries: 2,
+  });
   return body.results;
 }
 
@@ -227,7 +117,7 @@ export async function fetchChartData(
   count = 300,
   opts: FetchOptions = {},
 ): Promise<ChartDataResponse> {
-  const init: RequestInit = {
+  return apiFetch<ChartDataResponse>('/api/market/indicators', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({
@@ -236,10 +126,9 @@ export async function fetchChartData(
       count,
       indicators: indicators.map((i) => ({ kind: i.kind, params: i.params ?? {} })),
     }),
-  };
-  if (opts.signal) init.signal = opts.signal;
-  const res = await safeFetch('/api/market/indicators', init);
-  return parse<ChartDataResponse>(res);
+    ...(opts.signal ? { signal: opts.signal } : {}),
+    retries: 2,
+  });
 }
 
 export interface FetchStructureOptions extends FetchOptions {
@@ -255,7 +144,7 @@ export async function fetchStructure(
   tf: Timeframe,
   opts: FetchStructureOptions = {},
 ): Promise<StructureResult> {
-  const init: RequestInit = {
+  return apiFetch<StructureResult>('/api/market/structure', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({
@@ -265,8 +154,7 @@ export async function fetchStructure(
       ...(opts.kinds ? { kinds: opts.kinds } : {}),
       lookback: opts.lookback ?? 3,
     }),
-  };
-  if (opts.signal) init.signal = opts.signal;
-  const res = await safeFetch('/api/market/structure', init);
-  return parse<StructureResult>(res);
+    ...(opts.signal ? { signal: opts.signal } : {}),
+    retries: 2,
+  });
 }

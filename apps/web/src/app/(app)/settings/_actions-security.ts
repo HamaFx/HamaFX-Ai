@@ -34,17 +34,41 @@ import {
   deleteUserSessions as dbDeleteUserSessions,
   incrementTokenVersion,
 } from '@hamafx/db';
+import { randomBytes } from 'node:crypto';
 import * as Sentry from '@sentry/nextjs';
 import { revalidatePath } from 'next/cache';
 import { generateSecret, generateURI, verifySync } from 'otplib';
 import QRCode from 'qrcode';
 import { encryptSecret, decryptSecret } from '@hamafx/shared/encryption';
+import { passwordSchema } from '@/lib/validation';
 import { type ActionResult, verifyAccountPassword } from './_actions-shared';
+
+// Visually distinct alphabet: excludes , O, I, l and ambiguous characters.
+const BACKUP_CODE_ALPHABET = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
+
+/**
+ * P2-6: generate a fresh set of single-use TOTP backup codes.
+ * Returns { raw, hashed } so the raw codes can be shown once while only
+ * hashes are persisted.
+ */
+async function generateBackupCodes(): Promise<{ raw: string; hashed: string }[]> {
+  const codes: { raw: string; hashed: string }[] = [];
+  for (let i = 0; i < 10; i++) {
+    const bytes = randomBytes(10);
+    let raw = '';
+    for (const byte of bytes) {
+      raw += BACKUP_CODE_ALPHABET[byte % BACKUP_CODE_ALPHABET.length];
+    }
+    const hashed = await bcrypt.hash(raw, 10);
+    codes.push({ raw, hashed });
+  }
+  return codes;
+}
 
 /**
  * Server action to generate a TOTP secret and return QR code data URL.
  */
-export async function setupTwoFactorAction(): Promise<ActionResult<{ secret: string; qrDataUrl: string }>> {
+export async function setupTwoFactorAction(): Promise<ActionResult<{ secret: string; qrDataUrl: string; backupCodes: string[] }>> {
   const session = await auth();
   if (!session?.user?.id) {
     return { ok: false, error: 'Unauthorized' };
@@ -61,12 +85,55 @@ export async function setupTwoFactorAction(): Promise<ActionResult<{ secret: str
     const otpauth = generateURI({ secret, issuer: service, label: session.user.email ?? session.user.id });
     const qrDataUrl = await QRCode.toDataURL(otpauth);
 
-    await updateTwoFactorSecret(session.user.id, encryptSecret(secret));
+    const codes = await generateBackupCodes();
 
-    return { ok: true, data: { secret, qrDataUrl } };
+    await updateTwoFactorSecret(session.user.id, encryptSecret(secret));
+    await getDb()
+      .update(schema.users)
+      .set({
+        twoFactorBackupCodes: codes.map((c) => c.hashed),
+        failed2faAttempts: 0,
+        twoFactorLockedUntil: null,
+      })
+      .where(eq(schema.users.id, session.user.id));
+
+    return { ok: true, data: { secret, qrDataUrl, backupCodes: codes.map((c) => c.raw) } };
   } catch (err) {
     Sentry.captureException(err);
     return { ok: false, error: 'Failed to generate 2FA setup' };
+  }
+}
+
+/**
+ * P2-6: Regenerate TOTP backup codes for an existing 2FA-enabled user.
+ * Returns the new raw codes so they can be displayed once.
+ */
+export async function regenerateBackupCodesAction(): Promise<ActionResult<{ backupCodes: string[] }>> {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return { ok: false, error: 'Unauthorized' };
+  }
+
+  const rl = await withRateLimit(session.user.id, 'settings_2fa_regenerate', 5);
+  if (!rl.allowed) {
+    return { ok: false, error: 'Too many requests. Try again later.' };
+  }
+
+  try {
+    const codes = await generateBackupCodes();
+    await getDb()
+      .update(schema.users)
+      .set({
+        twoFactorBackupCodes: codes.map((c) => c.hashed),
+        failed2faAttempts: 0,
+        twoFactorLockedUntil: null,
+      })
+      .where(eq(schema.users.id, session.user.id));
+
+    return { ok: true, data: { backupCodes: codes.map((c) => c.raw) } };
+  } catch (err) {
+    Sentry.captureException(err);
+    return { ok: false, error: 'Failed to regenerate backup codes' };
   }
 }
 
@@ -143,6 +210,14 @@ export async function disableTwoFactorAction(token: string): Promise<ActionResul
     }
 
     await updateTwoFactorSecret(session.user.id, null);
+    await getDb()
+      .update(schema.users)
+      .set({
+        twoFactorBackupCodes: null,
+        failed2faAttempts: 0,
+        twoFactorLockedUntil: null,
+      })
+      .where(eq(schema.users.id, session.user.id));
     await setTwoFactorEnabled(session.user.id, false);
 
     // FEAT-03: Audit log for 2FA disabled
@@ -255,10 +330,10 @@ export async function changePasswordAction(
     }
   }
 
-  if (newPassword.length < 8) return { ok: false, error: 'Password must be at least 8 characters' };
-  if (!/[A-Z]/.test(newPassword)) return { ok: false, error: 'Password must contain at least one uppercase letter' };
-  if (!/[a-z]/.test(newPassword)) return { ok: false, error: 'Password must contain at least one lowercase letter' };
-  if (!/[0-9]/.test(newPassword)) return { ok: false, error: 'Password must contain at least one number' };
+  const parsedPassword = passwordSchema.safeParse(newPassword);
+  if (!parsedPassword.success) {
+    return { ok: false, error: parsedPassword.error.errors[0]?.message ?? 'Invalid password' };
+  }
 
   const hashedPassword = await bcrypt.hash(newPassword, 12);
   await db.update(schema.users)

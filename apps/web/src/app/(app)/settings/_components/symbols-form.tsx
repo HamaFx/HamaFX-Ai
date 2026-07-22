@@ -21,6 +21,8 @@ import { Input } from '@/components/ui/input';
 import { IconDownload,  IconPlus,  IconSearch,  IconTrash,  IconUpload } from '@tabler/icons-react';
 import { toast } from 'sonner';
 import { usePrices } from '@/hooks/use-prices';
+import { cn } from '@/lib/cn';
+import { Segmented } from '@/components/ui/segmented';
 import { SortableSymbolRow, type SymbolItem } from './sortable-symbol-row';
 
 interface SymbolCatalogItem {
@@ -36,6 +38,14 @@ interface SymbolsFormProps {
   catalog: SymbolCatalogItem[];
 }
 
+const CATEGORIES: { value: string; label: string }[] = [
+  { value: 'all', label: 'All' },
+  { value: 'forex', label: 'Forex' },
+  { value: 'metals', label: 'Metals' },
+  { value: 'crypto', label: 'Crypto' },
+  { value: 'indices', label: 'Indices' },
+];
+
 export function SymbolsForm({ initialSymbols, catalog }: SymbolsFormProps) {
   const [watchlist, setWatchlist] = useState<SymbolItem[]>(initialSymbols);
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -47,7 +57,7 @@ export function SymbolsForm({ initialSymbols, catalog }: SymbolsFormProps) {
   const [catalogPage, setCatalogPage] = useState(0);
   const CATALOG_PAGE_SIZE = 20;
   const [isEditing, setIsEditing] = useState(false);
-  
+
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const sensors = useSensors(
@@ -308,10 +318,10 @@ export function SymbolsForm({ initialSymbols, catalog }: SymbolsFormProps) {
               },
             ]);
             successCount++;
+          }          } catch {
+            // Bulk-add failures are surfaced in the final toast count.
+            // Individual symbol errors are intentionally non-blocking.
           }
-        } catch {
-          console.warn(`[settings] failed to bulk-add symbol ${sym}`);
-        }
       }
     }
 
@@ -376,7 +386,8 @@ export function SymbolsForm({ initialSymbols, catalog }: SymbolsFormProps) {
               successCount++;
             }
           } catch {
-            console.warn(`[settings] failed to import symbol ${sym}`);
+            // Import failures are surfaced in the final toast count.
+            // Individual symbol errors are intentionally non-blocking.
           }
         }
       }
@@ -398,7 +409,7 @@ export function SymbolsForm({ initialSymbols, catalog }: SymbolsFormProps) {
               variant="ghost"
               size="sm"
               onClick={handleExport}
-              className="text-fg-subtle hover:text-fg h-8 text-xs gap-1.5 cursor-pointer"
+              className="text-fg-subtle hover:text-fg h-11 text-xs gap-1.5 cursor-pointer"
             >
               <IconDownload className="size-3.5" /> Export
             </Button>
@@ -406,7 +417,7 @@ export function SymbolsForm({ initialSymbols, catalog }: SymbolsFormProps) {
               variant="ghost"
               size="sm"
               onClick={() => fileInputRef.current?.click()}
-              className="text-fg-subtle hover:text-fg h-8 text-xs gap-1.5 cursor-pointer"
+              className="text-fg-subtle hover:text-fg h-11 text-xs gap-1.5 cursor-pointer"
             >
               <IconUpload className="size-3.5" /> Import
             </Button>
@@ -422,12 +433,16 @@ export function SymbolsForm({ initialSymbols, catalog }: SymbolsFormProps) {
 
         {/* Watchlist Search */}
         <div className="relative">
+          <label htmlFor="watchlist-search" className="sr-only">
+            Search watchlist symbols
+          </label>
           <IconSearch className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-fg-muted" />
           <Input
+            id="watchlist-search"
             value={watchlistSearch}
             onChange={(e) => setWatchlistSearch(e.target.value)}
             placeholder="Search watchlist symbols..."
-            className="pl-9 bg-bg-elev-1 h-9 text-sm"
+            className="pl-9 bg-bg-elev-1 h-11 text-sm"
           />
         </div>
 
@@ -436,14 +451,21 @@ export function SymbolsForm({ initialSymbols, catalog }: SymbolsFormProps) {
           {filteredWatchlist.length > 0 && (
             <div className="flex items-center justify-between px-3 py-1.5 text-caption text-fg-subtle border-b border-border">
               <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={selected.size === filteredWatchlist.length && filteredWatchlist.length > 0}
-                  onChange={handleToggleSelectAll}
-                  aria-label="Select all symbols"
-                  className="rounded-sm border-border bg-bg-elev-1 text-fg focus:ring-fg size-3.5 cursor-pointer"
-                />
-                <span>Select All</span>
+                <label
+                  htmlFor="select-all"
+                  className="inline-flex items-center gap-2 cursor-pointer min-h-[44px]"
+                >
+                  <span className="flex items-center justify-center size-[44px]">
+                    <input
+                      id="select-all"
+                      type="checkbox"
+                      checked={selected.size === filteredWatchlist.length && filteredWatchlist.length > 0}
+                      onChange={handleToggleSelectAll}
+                      className="rounded-sm border-border bg-bg-elev-1 text-fg focus:ring-fg size-5 cursor-pointer"
+                    />
+                  </span>
+                  <span className="text-sm">Select All</span>
+                </label>
               </div>
               {selected.size > 0 && (
                 <button
@@ -499,47 +521,49 @@ export function SymbolsForm({ initialSymbols, catalog }: SymbolsFormProps) {
         <h3 className="font-semibold text-fg text-sm uppercase tracking-wider">Available Symbol Catalog</h3>
 
         {/* Category Tabs */}
-        <div className="flex bg-bg-elev-2 p-0.5 rounded-sm border border-border overflow-x-auto scrollbar-none">
-          {['all', 'forex', 'metals', 'crypto', 'indices'].map((cat) => (
-            <button
-              key={cat}
-              type="button"
-              onClick={() => setActiveCategory(cat)}
-              className={`px-3 py-1.5 text-xs font-semibold rounded-sm transition-all cursor-pointer shrink-0 uppercase tracking-wide ${
-                activeCategory === cat
-                  ? 'bg-bg-elev-1 text-fg shadow-sm'
-                  : 'text-fg-muted hover:text-fg'
-              }`}
-            >
-              {cat}
-            </button>
-          ))}
-        </div>
+        <Segmented
+          value={activeCategory}
+          onChange={(next) => setActiveCategory(next)}
+          options={CATEGORIES}
+          role="radiogroup"
+          label="Filter catalog by category"
+          srLabel
+          size="md"
+          className="w-full"
+        />
 
         {/* Catalog Search & Bulk Add */}
         <div className="flex flex-col sm:flex-row gap-2">
           <div className="relative flex-1">
+            <label htmlFor="catalog-search" className="sr-only">
+              Search catalog by symbol or name
+            </label>
             <IconSearch className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-fg-muted" />
             <Input
+              id="catalog-search"
               value={catalogSearch}
               onChange={(e) => setCatalogSearch(e.target.value)}
               placeholder="Search catalog by symbol or name..."
-              className="pl-9 bg-bg-elev-1 h-9 text-sm"
+              className="pl-9 bg-bg-elev-1 h-11 text-sm"
             />
           </div>
-          
+
           <div className="flex gap-2">
+            <label htmlFor="bulk-symbols" className="sr-only">
+              Bulk add symbols
+            </label>
             <Input
+              id="bulk-symbols"
               value={bulkInput}
               onChange={(e) => setBulkInput(e.target.value)}
               placeholder="Bulk symbols (comma separated)"
-              className="bg-bg-elev-1 h-9 text-sm w-44"
+              className="bg-bg-elev-1 h-11 text-sm w-44"
             />
             <Button
               type="button"
               onClick={handleBulkAdd}
               disabled={isBulkAdding || !bulkInput.trim()}
-              className="h-9 px-3 text-xs gap-1 cursor-pointer"
+              className="h-11 px-3 text-xs gap-1 cursor-pointer"
             >
               <IconPlus className="size-3.5" /> Bulk Add
             </Button>
@@ -551,7 +575,10 @@ export function SymbolsForm({ initialSymbols, catalog }: SymbolsFormProps) {
           {paginatedCatalog.map((item) => (
             <li
               key={item.symbol}
-              className="flex items-center justify-between p-3 rounded-sm border border-border bg-bg-elev-1 hover:border-fg-subtle/30"
+              className={cn(
+                'flex items-center justify-between p-3 rounded-sm border border-border bg-bg-elev-1',
+                'hover:border-fg-subtle/30',
+              )}
             >
               <div className="flex flex-col">
                 <div className="flex items-baseline gap-2">
@@ -567,7 +594,7 @@ export function SymbolsForm({ initialSymbols, catalog }: SymbolsFormProps) {
                 variant="secondary"
                 size="sm"
                 onClick={() => handleAdd(item.symbol)}
-                className="h-8 w-8 p-0 cursor-pointer text-fg-subtle hover:text-fg"
+                className="h-11 w-11 p-0 text-fg-subtle hover:text-fg"
                 aria-label={`Add ${item.symbol} to watchlist`}
               >
                 <IconPlus className="size-4" />
@@ -592,7 +619,11 @@ export function SymbolsForm({ initialSymbols, catalog }: SymbolsFormProps) {
                 type="button"
                 onClick={() => setCatalogPage((p) => Math.max(0, p - 1))}
                 disabled={catalogPage === 0}
-                className="px-2.5 py-1 text-xs font-medium rounded-sm border border-border bg-bg-elev-1 text-fg-subtle hover:text-fg hover:border-border disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+                className={cn(
+                  'h-11 px-3 text-xs font-medium rounded-sm border border-border bg-bg-elev-1',
+                  'text-fg-subtle hover:text-fg hover:border-border',
+                  'disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer',
+                )}
               >
                 Previous
               </button>
@@ -603,7 +634,11 @@ export function SymbolsForm({ initialSymbols, catalog }: SymbolsFormProps) {
                 type="button"
                 onClick={() => setCatalogPage((p) => Math.min(totalPages - 1, p + 1))}
                 disabled={catalogPage >= totalPages - 1}
-                className="px-2.5 py-1 text-xs font-medium rounded-sm border border-border bg-bg-elev-1 text-fg-subtle hover:text-fg hover:border-border disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+                className={cn(
+                  'h-11 px-3 text-xs font-medium rounded-sm border border-border bg-bg-elev-1',
+                  'text-fg-subtle hover:text-fg hover:border-border',
+                  'disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer',
+                )}
               >
                 Next
               </button>

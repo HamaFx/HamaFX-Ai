@@ -23,9 +23,10 @@
 // Gated by the password cookie middleware.
 
 import { deletePushSubscriptionByEndpoint } from '@hamafx/ai';
+import { AppError } from '@hamafx/shared';
 import { z } from 'zod';
 
-import { withAuth } from '@/lib/api';
+import { errorResponse, withAuth } from '@/lib/api';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -43,7 +44,7 @@ export const POST = withAuth<void>(async (req, { user }) => {
   }
   const parsed = BodySchema.safeParse(raw);
   if (!parsed.success) {
-    return Response.json({ error: 'invalid_body', issues: parsed.error.issues }, { status: 400 });
+    return errorResponse(new AppError('VALIDATION', 'Invalid request body', 400, { issues: parsed.error.issues }), req);
   }
 
   await deletePushSubscriptionByEndpoint(user.userId, parsed.data.endpoint);

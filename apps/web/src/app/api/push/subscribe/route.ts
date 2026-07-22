@@ -27,9 +27,10 @@
 
 import { savePushSubscription } from '@hamafx/ai';
 import { withRateLimit } from '@hamafx/db';
+import { AppError } from '@hamafx/shared';
 import { z } from 'zod';
 
-import { withAuth } from '@/lib/api';
+import { errorResponse, withAuth } from '@/lib/api';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -46,7 +47,7 @@ export const POST = withAuth<void>(async (req, { user }) => {
   // STAB-12: Rate limit — 10 subscribe attempts per user per minute.
   const rl = await withRateLimit(user.userId, 'push_subscribe', 10);
   if (!rl.allowed) {
-    return Response.json({ error: 'Too many requests' }, { status: 429 });
+    return errorResponse(new AppError('RATE_LIMITED', 'Too many requests', 429), req);
   }
 
   const missing: string[] = [];
@@ -64,7 +65,7 @@ export const POST = withAuth<void>(async (req, { user }) => {
   }
   const parsed = BodySchema.safeParse(raw);
   if (!parsed.success) {
-    return Response.json({ error: 'invalid_body', issues: parsed.error.issues }, { status: 400 });
+    return errorResponse(new AppError('VALIDATION', 'Invalid request body', 400, { issues: parsed.error.issues }), req);
   }
 
   const userAgent = req.headers.get('user-agent') ?? null;

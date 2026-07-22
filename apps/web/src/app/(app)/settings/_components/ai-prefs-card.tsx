@@ -22,13 +22,14 @@ import { useEffect, useRef } from 'react';
 
 import { useLocalStorage } from '@/hooks/use-local-storage';
 import { useConfirm } from '@/components/ui/confirm-drawer';
+import { migrateLocalStorageKey } from '@/lib/storage';
 import { updateAiPrefsAction } from '../actions';
 
 export interface AIPrefs {
   customInstructions: string;
 }
 
-export const AI_PREFS_STORAGE_KEY = 'hamafx:ai-prefs';
+export const AI_PREFS_STORAGE_KEY = 'hamafx:ai-prefs:v1';
 
 /**
  * Phase A — UX_UPGRADE_PLAN.md item 6.
@@ -116,6 +117,11 @@ const DEFAULTS: AIPrefs = {
  *      change the chat model follow the "Manage models →" link below.
  */
 export function AIPrefsCard({ initialCustomInstructions }: { initialCustomInstructions?: string | null }) {
+  // Migrate from the legacy unversioned key once.
+  useEffect(() => {
+    migrateLocalStorageKey('hamafx:ai-prefs', AI_PREFS_STORAGE_KEY);
+  }, []);
+
   const [prefs, setPrefs, hydrated] = useLocalStorage<AIPrefs>(AI_PREFS_STORAGE_KEY, DEFAULTS);
   const [confirmEl, confirm] = useConfirm();
   // STAB-16: Move the debounce timer into a useRef so it's cleaned

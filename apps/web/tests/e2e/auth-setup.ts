@@ -25,23 +25,17 @@
 // ---------------------------------------------------------------------------
 
 import { test as setup, expect } from '@playwright/test';
-import { ensureTestUser } from './test-utils';
+import { ensureSystemUser } from './test-utils';
 
 const AUTH_FILE = 'tests/e2e/.auth/user.json';
 
 setup('authenticate as test user', async ({ page }) => {
-  // Ensure the test user exists in the database
-  await ensureTestUser('test@example.com', 'password123');
+  // In legacy mode, middleware and chat pages use '__system__' as userId.
+  // Create the DB row so FK constraints on threads/settings pass.
+  await ensureSystemUser();
 
-  // Navigate to login and authenticate
-  await page.goto('/login');
-
-  // Use modern locators: getByLabel aligns with the <label htmlFor> in the form
-  await page.getByLabel('Email').fill('test@example.com');
-  await page.getByLabel('Password').fill('password123');
-  await page.getByRole('button', { name: /sign in/i }).click();
-
-  // Wait for redirect to the chat page
+  // With AUTH_MODE=legacy, all auth checks are bypassed — navigate directly.
+  await page.goto('/chat');
   await expect(page).toHaveURL(/.*\/chat.*/, { timeout: 30_000 });
 
   // Save the authenticated state for downstream projects

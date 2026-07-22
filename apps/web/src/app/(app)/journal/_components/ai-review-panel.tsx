@@ -137,7 +137,7 @@ export function AiReviewPanel({ entry }: AiReviewPanelProps) {
         <div className="flex flex-col gap-3">
           <div
             className={cn(
-              'prose prose-sm max-w-none dark:prose-invert',
+              'prose prose-sm max-w-none prose-invert',
               'text-fg [&_h2]:text-base [&_h2]:font-semibold [&_h2]:mt-4 [&_h2]:mb-2',
               '[&_ul]:list-disc [&_ul]:pl-5 [&_li]:mb-1',
               '[&_p]:text-sm [&_p]:leading-[1.4] [&_p]:text-fg-subtle'

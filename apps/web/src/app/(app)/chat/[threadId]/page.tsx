@@ -23,6 +23,7 @@ import { z } from 'zod';
 // `useChat` experience.
 
 import { getThread, listMessages, listThreads } from '@hamafx/ai';
+import { getUserWithSettings } from '@hamafx/db';
 import type { Metadata } from 'next';
 import { notFound, redirect } from 'next/navigation';
 
@@ -48,7 +49,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const { threadId } = await params;
   // Phase B — IDOR fix. Only fetch the thread if the current user owns it.
   const session = await auth();
-  const userId = session?.user?.id;
+  const userId =
+    process.env.AUTH_MODE === 'legacy' && process.env.NODE_ENV !== 'production'
+      ? '__system__'
+      : session?.user?.id;
   if (!userId) return { title: 'Chat' };
   const thread = await getThread(userId, threadId);
   return { title: thread?.title ?? 'Chat' };
@@ -56,16 +60,21 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function ChatThreadPage({ params, searchParams }: PageProps) {
   const session = await auth();
-  const userId = session?.user?.id;
+  const userId =
+    process.env.AUTH_MODE === 'legacy' && process.env.NODE_ENV !== 'production'
+      ? '__system__'
+      : session?.user?.id;
   if (!userId) redirect('/login');
 
   const { threadId } = await params;
 
-  const [thread, dbMessages, { threads: allThreads }] = await Promise.all([
+  const [thread, dbMessages, { threads: allThreads }, { settings }] = await Promise.all([
     getThread(userId, threadId),
     listMessages(userId, threadId, 200),
     listThreads(userId, 50),
+    getUserWithSettings(userId),
   ]);
+  const customInstructions = settings?.customInstructions;
   if (!thread) notFound();
 
   const initialMessages = dbMessages
@@ -96,6 +105,7 @@ export default async function ChatThreadPage({ params, searchParams }: PageProps
         updatedAt: t.updatedAt,
       }))}
       pinnedSymbol={thread.pinnedSymbol}
+      initialCustomInstructions={customInstructions ?? null}
       autoSubmitPrompt={prompt ?? null}
     />
   );

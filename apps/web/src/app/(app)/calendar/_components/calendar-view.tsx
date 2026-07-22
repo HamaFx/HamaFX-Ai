@@ -21,10 +21,10 @@
 
 import type { EconomicEvent } from '@hamafx/shared';
 import {IconFilter, IconRefresh, IconCalendarX} from '@tabler/icons-react';
-import { useCallback, useEffect, useMemo, useState, useTransition } from 'react';
+import { useEffect, useMemo, useState, useTransition } from 'react';
 import { toast } from 'sonner';
 import { useQuery } from '@tanstack/react-query';
-import { useQueryState } from 'nuqs';
+import { parseAsBoolean, parseAsStringLiteral, useQueryState } from 'nuqs';
 
 import { EventCard } from '@/components/calendar/event-card';
 import { EmptyState } from '@/components/ui/empty-state';
@@ -35,11 +35,7 @@ import { cn } from '@/lib/cn';
 import { formatRelative } from '@/lib/format';
 import { startOfDay } from '@/lib/datetime';
 
-import {
-  CalendarToolbar,
-  type CurrencyFilter,
-  type ImportanceFilter,
-} from './calendar-toolbar';
+import { CalendarToolbar } from './calendar-toolbar';
 
 interface CalendarViewProps {
   initialEvents: EconomicEvent[];
@@ -47,19 +43,20 @@ interface CalendarViewProps {
 
 const AUTO_REFRESH_MS = 5 * 60_000;
 
+const IMPORTANCE_VALUES = ['all', 'high', 'medium', 'low'] as const;
+const CURRENCY_VALUES = ['all', 'USD', 'EUR', 'GBP'] as const;
+
+const importanceParser = parseAsStringLiteral(IMPORTANCE_VALUES).withDefault('all');
+const currencyParser = parseAsStringLiteral(CURRENCY_VALUES).withDefault('all');
+const showPastParser = parseAsBoolean.withDefault(false);
+
 export function CalendarView({ initialEvents }: CalendarViewProps) {
   const [pending, startTransition] = useTransition();
-  const [importance, setImportance] = useQueryState('importance', { defaultValue: 'all' }) as [ImportanceFilter, (val: ImportanceFilter) => void];
-  const [currency, setCurrency] = useQueryState('currency', { defaultValue: 'all' }) as [CurrencyFilter, (val: CurrencyFilter) => void];
+  const [importance, setImportance] = useQueryState('importance', importanceParser);
+  const [currency, setCurrency] = useQueryState('currency', currencyParser);
   // Phase 2.5.5 — sync showPast to URL via nuqs so filtered state survives navigation.
-  const [showPastParam, setShowPastParam] = useQueryState('showPast', { defaultValue: 'false' });
-  const showPast = showPastParam === 'true';
+  const [showPast, setShowPast] = useQueryState('showPast', showPastParser);
   const [lastRefreshed, setLastRefreshed] = useState(Date.now());
-
-  // Stable setter for the toolbar — maps boolean back to URL string.
-  const setShowPast = useCallback((v: boolean) => {
-    setShowPastParam(v ? 'true' : null);
-  }, [setShowPastParam]);
 
   const { data: events = initialEvents, isLoading, isError, error, refetch } = useQuery<EconomicEvent[]>({
     queryKey: ['calendar'],

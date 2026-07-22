@@ -29,9 +29,10 @@
 //   502 { error: string }        on Resend non-2xx (response text truncated)
 
 
+import { AppError } from '@hamafx/shared';
 import { z } from 'zod';
 
-import { withAuth } from '@/lib/api';
+import { errorResponse, withAuth } from '@/lib/api';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -51,7 +52,7 @@ export const POST = withAuth<void>(async (req) => {
   const raw = await safeReadJson(req);
   const parsed = BodySchema.safeParse(raw);
   if (!parsed.success) {
-    return Response.json({ error: 'invalid_body', issues: parsed.error.issues }, { status: 400 });
+    return errorResponse(new AppError('VALIDATION', 'Invalid request body', 400, { issues: parsed.error.issues }), req);
   }
   const body = parsed.data;
 

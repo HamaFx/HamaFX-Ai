@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { isKnownSymbol } from '@hamafx/shared';
+import { BUILTIN_SYMBOLS, isKnownSymbol } from '@hamafx/shared';
 import type { Metadata } from 'next';
 import { notFound, redirect } from 'next/navigation';
 
@@ -25,6 +25,13 @@ import { ProChartView } from './_components/pro-chart-view';
 interface PageProps {
   params: Promise<{ symbol: string }>;
   searchParams: Promise<{ tf?: string }>;
+}
+
+export const dynamic = 'force-dynamic';
+export const dynamicParams = true;
+
+export async function generateStaticParams() {
+  return BUILTIN_SYMBOLS.map((s) => ({ symbol: s.internal }));
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {

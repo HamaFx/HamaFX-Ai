@@ -35,12 +35,13 @@ import Google from 'next-auth/providers/google';
 import { verifySync } from 'otplib';
 import { decryptSecret } from '@hamafx/shared/encryption';
 import { authConfig } from './auth.config';
-import { schema } from '@hamafx/db';
+import { schema, withRateLimit } from '@hamafx/db';
 import { getDb } from '@hamafx/ai';
 import { logErrorContext } from '@hamafx/shared/logger';
 import { getAuthEnv } from '@/lib/env';
 import { recordAuthEvent } from '@/lib/auth-anomaly';
 import { provisionUserOnSignIn } from '@/lib/auth/provision-user';
+import { validateSession } from '@/lib/auth/session-validators';
 
 // `NextAuth()` returns a value whose inferred type carries deep paths into
 // `@auth/core/providers`. That inferred type isn't portable across pnpm
@@ -146,6 +147,9 @@ export const { handlers, auth, signIn, signOut } = _nextAuth({
           twoFactorSecret: string | null;
           lockedUntil: Date | null;
           failedLoginAttempts: number;
+          twoFactorBackupCodes: string[] | null;
+          failed2faAttempts: number;
+          twoFactorLockedUntil: Date | null;
           emailVerified: Date | null;
         } | undefined;
         try {
@@ -159,9 +163,12 @@ export const { handlers, auth, signIn, signOut } = _nextAuth({
               tokenVersion: schema.users.tokenVersion,
               twoFactorEnabled: schema.users.twoFactorEnabled,
               twoFactorSecret: schema.users.twoFactorSecret,
-              lockedUntil: schema.users.lockedUntil,
-              failedLoginAttempts: schema.users.failedLoginAttempts,
-              emailVerified: schema.users.emailVerified,
+          lockedUntil: schema.users.lockedUntil,
+          failedLoginAttempts: schema.users.failedLoginAttempts,
+          twoFactorBackupCodes: schema.users.twoFactorBackupCodes,
+          failed2faAttempts: schema.users.failed2faAttempts,
+          twoFactorLockedUntil: schema.users.twoFactorLockedUntil,
+          emailVerified: schema.users.emailVerified,
             })
             .from(schema.users)
             .where(and(
@@ -235,7 +242,7 @@ export const { handlers, auth, signIn, signOut } = _nextAuth({
           );
         }
 
-        // ── P0-1: Enforce 2FA at login ─────────────────────────────────
+        // ── P0-1 / P2-6: Enforce 2FA at login with backup-code fallback ─────────────────────────────────
         if (user.twoFactorEnabled) {
           const totpCode =
             typeof credentials?.totpCode === 'string'
@@ -244,15 +251,80 @@ export const { handlers, auth, signIn, signOut } = _nextAuth({
           if (!totpCode) {
             throw new AuthError('2FA_REQUIRED');
           }
+
+          // P2-6: dedicated 2FA lockout
+          if (user.twoFactorLockedUntil && user.twoFactorLockedUntil > new Date()) {
+            throw new AuthError('2FA_LOCKED');
+          }
+
+          // P2-6: per-user 2FA rate limit (separate from login rate limits)
+          let rateLimitAllowed = true;
+          try {
+            const rl2fa = await withRateLimit(user.id, '2fa_verify', 10);
+            rateLimitAllowed = rl2fa.allowed;
+          } catch {
+            // withRateLimit may throw on DB outage — fail open to avoid
+            // locking users out when the DB is unavailable.
+          }
+          if (!rateLimitAllowed) {
+            throw new AuthError('2FA_RATE_LIMITED');
+          }
+
           const secret = user.twoFactorSecret
             ? decryptSecret(user.twoFactorSecret)
             : null;
-          if (
-            !secret ||
-            !verifySync({ secret, token: totpCode }).valid
-          ) {
+
+          let valid2FA = false;
+
+          if (secret && verifySync({ secret, token: totpCode }).valid) {
+            valid2FA = true;
+          } else if (user.twoFactorBackupCodes && user.twoFactorBackupCodes.length > 0) {
+            // P2-6: fallback to single-use backup codes
+            const hashedCodes = user.twoFactorBackupCodes;
+            for (const hashed of hashedCodes) {
+              if (await bcrypt.compare(totpCode, hashed)) {
+                valid2FA = true;
+                // Consume the single-use backup code.
+                try {
+                  const remaining = user.twoFactorBackupCodes!.filter((h) => h !== hashed);
+                  await db
+                    .update(schema.users)
+                    .set({ twoFactorBackupCodes: remaining })
+                    .where(eq(schema.users.id, user.id));
+                } catch (err) {
+                  logErrorContext(err, 'auth/consume_backup_code', { userId: user.id }, 'auth');
+                }
+                break;
+              }
+            }
+          }
+
+          if (!valid2FA) {
             recordAuthEvent('2fa_failure');
+            // P2-6: increment failed 2FA attempts and lock after 5
+            try {
+              await db
+                .update(schema.users)
+                .set({
+                  failed2faAttempts: sql`${schema.users.failed2faAttempts} + 1`,
+                  twoFactorLockedUntil:
+                    sql`CASE WHEN ${schema.users.failed2faAttempts} + 1 >= 5 THEN NOW() + INTERVAL '15 minutes' ELSE NULL END`,
+                })
+                .where(eq(schema.users.id, user.id));
+            } catch (err) {
+              logErrorContext(err, 'auth/2fa_lockout_increment', { userId: user.id }, 'auth');
+            }
             throw new AuthError('INVALID_2FA_CODE');
+          }
+
+          // Reset 2FA failure counter on success
+          try {
+            await db
+              .update(schema.users)
+              .set({ failed2faAttempts: 0, twoFactorLockedUntil: null })
+              .where(eq(schema.users.id, user.id));
+          } catch (err) {
+            logErrorContext(err, 'auth/2fa_lockout_reset', { userId: user.id }, 'auth');
           }
         }
 
@@ -429,84 +501,19 @@ export const { handlers, auth, signIn, signOut } = _nextAuth({
       }
       const now = Math.floor(Date.now() / 1000);
 
-      // FEAT-04: Without rememberMe, invalidate sessions older than 24h
-      if (token.iat && token.rememberMe !== true && now - (token.iat as number) > 86400) {
-        return { ...session, user: undefined, expires: '0' };
+      let db;
+      try {
+        db = getDb();
+      } catch {
+        // DB unavailable — keep the session alive rather than locking the user out.
+        return session;
       }
 
-      // H-4: tokenVersion check every 60s (reduced from 300s for
-      // faster session invalidation after password change / sign-out).
-      const lastChecked = token.tvCheckedAt as number | undefined;
-      if (!lastChecked || now - lastChecked > 60) {
-        try {
-          const db = getDb();
-          const [u] = await db
-            .select({ tv: schema.users.tokenVersion })
-            .from(schema.users)
-            .where(eq(schema.users.id, token.id))
-            .limit(1);
-          if (u && u.tv !== token.tokenVersion) {
-            return { ...session, user: undefined, expires: '0' };
-          }
-          token.tvCheckedAt = now;
-        } catch {
-          // DB error — fail open
-          logErrorContext(
-            new Error('Failed to check tokenVersion'),
-            'auth/token_version_check',
-            {},
-            'auth',
-          );
-        }
+      const invalidated = await validateSession(db, token, session, now, { failClosed: false });
+      if (invalidated) {
+        return invalidated;
       }
 
-      // P0-4: Validate session still exists (revokeSessionAction deletes it)
-      const sessionId = token.sessionId as string | undefined;
-      const lastSessionCheck = token.sessionCheckAt as number | undefined;
-      if (sessionId && (!lastSessionCheck || now - lastSessionCheck > 300)) {
-        try {
-          const db = getDb();
-          const [sess] = await db
-            .select({ id: schema.userSessions.id })
-            .from(schema.userSessions)
-            .where(eq(schema.userSessions.id, sessionId))
-            .limit(1);
-          if (!sess) {
-            // Session was revoked — invalidate
-            return { ...session, user: undefined, expires: '0' };
-          }
-          token.sessionCheckAt = now;
-        } catch {
-          // DB error — fail open
-          logErrorContext(
-            new Error('Failed to validate session'),
-            'auth/session_validate',
-            {},
-            'auth',
-          );
-        }
-      }
-
-      // FEAT-02: Track last active time every 15 min
-      const lastActiveUpdate = token.lastActiveUpdate as number | undefined;
-      if (sessionId && (!lastActiveUpdate || now - lastActiveUpdate > 900)) {
-        try {
-          const db = getDb();
-          await db
-            .update(schema.userSessions)
-            .set({ lastActiveAt: new Date() })
-            .where(eq(schema.userSessions.id, sessionId));
-          token.lastActiveUpdate = now;
-        } catch {
-          // fail open
-          logErrorContext(
-            new Error('Failed to update last active time'),
-            'auth/last_active_update',
-            {},
-            'auth',
-          );
-        }
-      }
       return session;
     },
   },

@@ -53,6 +53,12 @@ export const users = pgTable('user', {
   failedLoginAttempts: integer('failed_login_attempts').notNull().default(0),
   /** LOW-05: Timestamp until which the account is locked. */
   lockedUntil: timestamp('locked_until', { withTimezone: true }),
+  /** P2-6: Hashed TOTP backup codes for account recovery. */
+  twoFactorBackupCodes: text('two_factor_backup_codes').array(),
+  /** P2-6: Consecutive failed 2FA attempts for lockout. */
+  failed2faAttempts: integer('failed_2fa_attempts').notNull().default(0),
+  /** P2-6: Timestamp until which 2FA verification is locked. */
+  twoFactorLockedUntil: timestamp('two_factor_locked_until', { withTimezone: true }),
   createdAt: timestamp('createdAt', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updatedAt', { withTimezone: true })
     .defaultNow()

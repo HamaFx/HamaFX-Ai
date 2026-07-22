@@ -15,7 +15,7 @@ const LOCALES: { value: string; label: string }[] = [
   { value: 'ru', label: 'Русский' },
 ];
 
-export function AppearanceCard({ initialLocale }: { initialTheme?: string | null; initialLocale?: string }) {
+export function AppearanceCard({ initialLocale }: { initialLocale?: string }) {
   const [locale, setLocale] = useState(initialLocale ?? 'en');
 
   const handleLocaleChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {

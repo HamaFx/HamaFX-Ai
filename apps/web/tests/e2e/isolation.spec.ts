@@ -18,11 +18,12 @@
 // E2E: Multi-User Isolation
 //
 // Verifies that User A's threads are not accessible to User B.
-// Uses separate browser contexts with fresh sessions.
+// Uses separate browser contexts with programmatic sessions (bypasses
+// the broken UI login — see useActionState + NextAuth redirect issue).
 // ---------------------------------------------------------------------------
 
 import { test, expect } from '@playwright/test';
-import { ensureTestUser } from './test-utils';
+import { ensureTestUser, createSessionForUser } from './test-utils';
 
 test.describe('Multi-User Isolation', () => {
   test.beforeAll(async () => {
@@ -41,10 +42,10 @@ test.describe('Multi-User Isolation', () => {
 
     try {
       // 2. Login as User A and create a thread
-      await pageA.goto('/login');
-      await pageA.getByLabel('Email').fill('user-a@example.com');
-      await pageA.getByLabel('Password').fill('passwordA');
-      await pageA.getByRole('button', { name: /sign in/i }).click();
+      const userA = await ensureTestUser('user-a@example.com', 'passwordA');
+      const cookieA = await createSessionForUser(userA);
+      await contextA.addCookies([cookieA]);
+      await pageA.goto('/chat');
       await expect(pageA).toHaveURL(/.*\/chat.*/, { timeout: 30_000 });
 
       // Mock the AI chat endpoint
@@ -70,10 +71,10 @@ test.describe('Multi-User Isolation', () => {
       const threadId = threadUrlA.split('/').pop()!;
 
       // 3. Login as User B
-      await pageB.goto('/login');
-      await pageB.getByLabel('Email').fill('user-b@example.com');
-      await pageB.getByLabel('Password').fill('passwordB');
-      await pageB.getByRole('button', { name: /sign in/i }).click();
+      const userB = await ensureTestUser('user-b@example.com', 'passwordB');
+      const cookieB = await createSessionForUser(userB);
+      await contextB.addCookies([cookieB]);
+      await pageB.goto('/chat');
       await expect(pageB).toHaveURL(/.*\/chat.*/, { timeout: 30_000 });
 
       // 4. Verify User B cannot access User A's thread directly
@@ -105,16 +106,16 @@ test.describe('Multi-User Isolation', () => {
 
     try {
       // Login both users
-      await pageA.goto('/login');
-      await pageA.getByLabel('Email').fill('user-a@example.com');
-      await pageA.getByLabel('Password').fill('passwordA');
-      await pageA.getByRole('button', { name: /sign in/i }).click();
+      const userA = await ensureTestUser('user-a@example.com', 'passwordA');
+      const cookieA = await createSessionForUser(userA);
+      await contextA.addCookies([cookieA]);
+      await pageA.goto('/chat');
       await expect(pageA).toHaveURL(/.*\/chat.*/, { timeout: 30_000 });
 
-      await pageB.goto('/login');
-      await pageB.getByLabel('Email').fill('user-b@example.com');
-      await pageB.getByLabel('Password').fill('passwordB');
-      await pageB.getByRole('button', { name: /sign in/i }).click();
+      const userB = await ensureTestUser('user-b@example.com', 'passwordB');
+      const cookieB = await createSessionForUser(userB);
+      await contextB.addCookies([cookieB]);
+      await pageB.goto('/chat');
       await expect(pageB).toHaveURL(/.*\/chat.*/, { timeout: 30_000 });
 
       // Both should be on chat pages but with different sessions

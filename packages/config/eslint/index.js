@@ -50,8 +50,12 @@ export default [
         'error',
         { prefer: 'type-imports', fixStyle: 'inline-type-imports' },
       ],
+      // P2-9: Merged no-restricted-imports — the first declaration was
+      // silently overridden by the second. Both `patterns` and `paths`
+      // are now combined in a single rule so deep-relative-import and
+      // sub-path enforcement both fire.
       'no-restricted-imports': [
-        'error',
+        'warn',
         {
           patterns: [
             {
@@ -60,11 +64,6 @@ export default [
                 'Use path aliases (@/, @shared/, @ai/, @data/, @indicators/, @db/) instead of deep relative imports.',
             },
           ],
-        },
-      ],
-      'no-restricted-imports': [
-        'warn',
-        {
           paths: [
             {
               name: '@hamafx/ai',

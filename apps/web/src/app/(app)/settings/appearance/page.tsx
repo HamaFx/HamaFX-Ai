@@ -39,7 +39,6 @@ export default async function AppearancePage() {
       </div>
 
       <AppearanceCard
-        initialTheme={settings?.theme ?? null}
         initialLocale={settings?.language ?? 'en'}
       />
     </div>

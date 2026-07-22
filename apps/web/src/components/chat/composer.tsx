@@ -29,7 +29,7 @@
 //   - Image thumbnail rail is keyboard-focusable for delete.
 
 import {IconArrowUp, IconPhotoPlus, IconMicrophone, IconSquare, IconChartBar, IconNotebook, IconSettings, IconTerminal2} from '@tabler/icons-react';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import Image from 'next/image';
 import { AnimatePresence, m } from 'motion/react';
 import { toast } from 'sonner';
@@ -38,6 +38,7 @@ import { useVoiceInput } from '@/hooks/use-voice-input';
 import { useSlashCommands } from '@/hooks/use-slash-commands';
 import { cn } from '@/lib/cn';
 import { fetchCsrf } from '@/lib/csrf';
+import { ComposerSlashMenu, type SlashMenuCommand } from './composer-slash-menu';
 
 import {
   MAX_TEXT_CHARS,
@@ -73,7 +74,7 @@ const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 interface SlashCommand {
   command: string;
   description: string;
-  icon: React.ReactNode;
+  icon: ReactNode;
   /** Placeholder text inserted when the command is selected. */
   placeholder: string;
   /** If true, selecting this command navigates rather than typing. */
@@ -335,6 +336,10 @@ export function Composer({
   const charCount = value.length;
   const overLimit = charCount > MAX_TEXT_CHARS;
   const canSend = !disabled && !isStreaming && value.trim().length > 0 && !overLimit;
+  const activeCommandId =
+    slashActive && filteredCommands[slashIndex]
+      ? `slash-cmd-${filteredCommands[slashIndex].command}`
+      : undefined;
 
   // Char-count tone — pure helper from composer-helpers so the
   // thresholds are unit-tested in test/composer-helpers.test.ts.
@@ -409,62 +414,14 @@ export function Composer({
           </p>
         ) : null}
 
-        {/* Slash command autocomplete dropdown */}
-        {slashActive && filteredCommands.length > 0 ? (
-          <div
-            role="listbox"
-            aria-label="Slash commands"
-            className="border-t border-border bg-bg-elev-2 px-2 py-1.5"
-          >
-            <p className="text-caption text-fg-subtle px-2 pb-1 font-mono uppercase tracking-wider">
-              Commands
-            </p>
-            {filteredCommands.map((cmd, i) => {
-              // Reconstruct original SlashCommand to get icon.
-              const orig = SLASH_COMMANDS.find((c) => c.command === cmd.command);
-              return (
-                <button
-                  key={cmd.command}
-                  type="button"
-                  role="option"
-                  aria-selected={slashIndex === i}
-                  onMouseDown={(e) => {
-                    e.preventDefault();
-                    selectSlashCommand(cmd);
-                  }}
-                  onMouseEnter={() => setSlashIndex(i)}
-                  className={cn(
-                    'flex w-full items-center gap-3 rounded-sm px-2 py-2 text-left text-sm transition-colors',
-                    slashIndex === i
-                      ? 'bg-brand text-brand-fg'
-                      : 'text-fg-muted hover:bg-bg-elev-3 hover:text-fg',
-                  )}
-                >
-                  <span
-                    className={cn(
-                      'flex size-7 items-center justify-center rounded-sm',
-                      slashIndex === i ? 'text-brand-fg' : 'text-fg-subtle',
-                    )}
-                  >
-                    {orig?.icon}
-                  </span>
-                  <div className="flex min-w-0 flex-1 flex-col">
-                    <span className="font-mono text-xs font-semibold">{cmd.command}</span>
-                    <span className="text-caption truncate opacity-70">{cmd.description}</span>
-                  </div>
-                  <kbd
-                    className={cn(
-                      'hidden rounded-sm border px-1.5 font-mono text-caption sm:inline',
-                      slashIndex === i ? 'border-brand-fg/30' : 'border-border',
-                    )}
-                  >
-                    ⏎
-                  </kbd>
-                </button>
-              );
-            })}
-          </div>
-        ) : null}
+        <ComposerSlashMenu
+          active={slashActive && filteredCommands.length > 0}
+          commands={filteredCommands as readonly SlashMenuCommand[]}
+          allCommands={SLASH_COMMANDS}
+          activeIndex={slashIndex}
+          onSelect={selectSlashCommand}
+          onHover={setSlashIndex}
+        />
 
         {/* Textarea & Actions Row */}
         <div className="flex items-end gap-2 px-2 pb-2 pt-2">
@@ -525,6 +482,9 @@ export function Composer({
               ref={ref}
               aria-label="Chat message input"
               aria-describedby={error ? 'composer-error' : undefined}
+              aria-expanded={slashActive && filteredCommands.length > 0}
+              aria-controls="slash-command-listbox"
+              aria-activedescendant={activeCommandId}
               value={value}
 
               onFocus={() => setFocused(true)}

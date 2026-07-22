@@ -27,7 +27,7 @@
 import { SYMBOLS, TIMEFRAMES, type Symbol, type Timeframe } from '@hamafx/shared';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
-import { z } from 'zod';
+import { AlertCreateSchema } from '@/lib/services/alerts.schema';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -37,34 +37,10 @@ import { cn } from '@/lib/cn';
 
 type RuleType = 'priceCross' | 'candleClose' | 'indicatorCross';
 
-const alertSchema = z.object({
-  rule: z.discriminatedUnion('type', [
-    z.object({
-      type: z.literal('priceCross'),
-      symbol: z.string().min(1, 'Symbol is required'),
-      level: z.number({ invalid_type_error: 'Level must be a number' }).positive('Level must be positive'),
-      direction: z.enum(['above', 'below']),
-    }),
-    z.object({
-      type: z.literal('candleClose'),
-      symbol: z.string().min(1, 'Symbol is required'),
-      tf: z.string().min(1, 'Timeframe is required'),
-      level: z.number({ invalid_type_error: 'Level must be a number' }).positive('Level must be positive'),
-      direction: z.enum(['above', 'below']),
-    }),
-    z.object({
-      type: z.literal('indicatorCross'),
-      symbol: z.string().min(1, 'Symbol is required'),
-      tf: z.string().min(1, 'Timeframe is required'),
-      indicator: z.string().min(1, 'Indicator is required'),
-      level: z.number({ invalid_type_error: 'Level must be a number' }).positive('Level must be positive'),
-      direction: z.enum(['above', 'below']),
-    }),
-  ]),
-  channels: z.array(z.enum(['email', 'telegram'])).min(1, 'At least one notification channel is required'),
-  note: z.string().max(1000, 'Note must be under 1000 characters').nullable().optional(),
-  snoozeHours: z.number().min(0).max(168).optional(),
-});
+const parsedSnoozeHours = (raw: string): number => {
+  const n = Number(raw);
+  return Number.isFinite(n) ? Math.max(0, Math.min(168, Math.floor(n))) : 0;
+};
 
 interface AlertFormProps {
   /** Defaults to the first symbol — most users land here from /chart and
@@ -74,6 +50,30 @@ interface AlertFormProps {
 }
 
 const COMMON_INDICATORS = ['rsi:14', 'ema:50', 'ema:200', 'sma:50', 'atr:14'] as const;
+
+function buildRuleObject(
+  type: RuleType,
+  symbol: Symbol,
+  tf: Timeframe,
+  indicator: string,
+  level: string,
+  direction: 'above' | 'below',
+):
+  | { type: 'priceCross'; symbol: Symbol; level: number; direction: 'above' | 'below' }
+  | { type: 'candleClose'; symbol: Symbol; tf: Timeframe; level: number; direction: 'above' | 'below' }
+  | { type: 'indicatorCross'; symbol: Symbol; tf: Timeframe; indicator: string; level: number; direction: 'above' | 'below' }
+  | null {
+  const numericLevel = level ? Number(level) : NaN;
+  if (!Number.isFinite(numericLevel)) return null;
+  switch (type) {
+    case 'priceCross':
+      return { type: 'priceCross', symbol, level: numericLevel, direction };
+    case 'candleClose':
+      return { type: 'candleClose', symbol, tf, level: numericLevel, direction };
+    case 'indicatorCross':
+      return { type: 'indicatorCross', symbol, tf, indicator, level: numericLevel, direction };
+  }
+}
 
 export function AlertForm({ initialSymbol, onCreated }: AlertFormProps) {
   const [type, setType] = useState<RuleType>('priceCross');
@@ -110,8 +110,8 @@ export function AlertForm({ initialSymbol, onCreated }: AlertFormProps) {
     if (touched.has('channels') && channels.length === 0) {
       errs.channels = 'Select at least one delivery method';
     }
-    if (touched.has('note') && note.length > 1000) {
-      errs.note = 'Note must be under 1000 characters';
+    if (touched.has('note') && note.length > 280) {
+      errs.note = 'Note must be under 280 characters';
     }
     return errs;
   }, [level, indicator, channels, note, touched, type]);
@@ -120,25 +120,17 @@ export function AlertForm({ initialSymbol, onCreated }: AlertFormProps) {
     setTesting(true);
     setError(null);
     setTouched(new Set(['level', 'indicator', 'channels']));
-    const parsedSnooze = snoozeHours ? Number(snoozeHours) : 0;
-    const ruleObj =
-      type === 'priceCross'
-        ? { type: 'priceCross' as const, symbol, level: level ? Number(level) : NaN, direction }
-        : type === 'candleClose'
-          ? { type: 'candleClose' as const, symbol, tf, level: level ? Number(level) : NaN, direction }
-          : {
-              type: 'indicatorCross' as const,
-              symbol,
-              tf,
-              indicator,
-              level: level ? Number(level) : NaN,
-              direction,
-            };
-    const validation = alertSchema.safeParse({
+    const ruleObj = buildRuleObject(type, symbol, tf, indicator, level, direction);
+    if (!ruleObj) {
+      setTesting(false);
+      setError('Enter a valid level');
+      return;
+    }
+    const validation = AlertCreateSchema.safeParse({
       rule: ruleObj,
       channels,
       note: note.trim() || null,
-      snoozeHours: parsedSnooze,
+      snoozeHours: parsedSnoozeHours(snoozeHours),
     });
     if (!validation.success) {
       setTesting(false);
@@ -177,26 +169,18 @@ export function AlertForm({ initialSymbol, onCreated }: AlertFormProps) {
     setSubmitting(true);
     setError(null);
 
-    const parsedSnooze = snoozeHours ? Number(snoozeHours) : 0;
-    const ruleObj =
-      type === 'priceCross'
-        ? { type: 'priceCross' as const, symbol, level: level ? Number(level) : NaN, direction }
-        : type === 'candleClose'
-          ? { type: 'candleClose' as const, symbol, tf, level: level ? Number(level) : NaN, direction }
-          : {
-              type: 'indicatorCross' as const,
-              symbol,
-              tf,
-              indicator,
-              level: level ? Number(level) : NaN,
-              direction,
-            };
+    const ruleObj = buildRuleObject(type, symbol, tf, indicator, level, direction);
+    if (!ruleObj) {
+      setSubmitting(false);
+      setError('Enter a valid level');
+      return;
+    }
 
-    const validation = alertSchema.safeParse({
+    const validation = AlertCreateSchema.safeParse({
       rule: ruleObj,
       channels,
       note: note.trim() || null,
-      snoozeHours: parsedSnooze,
+      snoozeHours: parsedSnoozeHours(snoozeHours),
     });
 
     if (!validation.success) {
@@ -271,7 +255,12 @@ export function AlertForm({ initialSymbol, onCreated }: AlertFormProps) {
 
       {type === 'indicatorCross' ? (
         <div className="flex flex-col gap-2">
-          <span className="text-fg-subtle text-body-sm uppercase tracking-wide">Indicator</span>
+          <label
+            htmlFor="alert-indicator"
+            className="text-fg-subtle text-body-sm uppercase tracking-wide"
+          >
+            Indicator
+          </label>
           <div className="flex flex-wrap gap-2">
             {COMMON_INDICATORS.map((ind) => (
               <button
@@ -343,8 +332,8 @@ export function AlertForm({ initialSymbol, onCreated }: AlertFormProps) {
         level={level}
       />
 
-      <div className="flex flex-col gap-2">
-        <span className="text-fg-subtle text-body-sm uppercase tracking-wide">Delivery Methods</span>
+      <fieldset className="flex flex-col gap-2">
+        <legend className="text-fg-subtle text-body-sm uppercase tracking-wide">Delivery Methods</legend>
         <div className="flex gap-4">
           <label className="flex items-center gap-2 text-sm text-fg cursor-pointer">
             <input
@@ -374,7 +363,7 @@ export function AlertForm({ initialSymbol, onCreated }: AlertFormProps) {
           </label>
         </div>
         {fieldErrors.channels ? <p id="alert-channels-error" role="alert" className="text-danger text-xs">{fieldErrors.channels}</p> : null}
-      </div>
+      </fieldset>
 
       <div className="flex flex-col gap-2">
         <label className="text-fg-subtle text-body-sm uppercase tracking-wide" htmlFor="alert-note">
@@ -472,24 +461,6 @@ type PreviewState =
   | { kind: 'empty' }
   | { kind: 'ok'; count: number; avgHoldMs: number };
 
-function buildRule(p: {
-  type: RuleType;
-  symbol: Symbol;
-  tf: Timeframe;
-  direction: 'above' | 'below';
-  level: string;
-}): unknown | null {
-  const numericLevel = Number(p.level);
-  if (!Number.isFinite(numericLevel)) return null;
-  if (p.type === 'priceCross') {
-    return { type: 'priceCross', symbol: p.symbol, level: numericLevel, direction: p.direction };
-  }
-  if (p.type === 'candleClose') {
-    return { type: 'candleClose', symbol: p.symbol, tf: p.tf, level: numericLevel, direction: p.direction };
-  }
-  return null;
-}
-
 function PreviewCallout(props: PreviewCalloutProps) {
   const [state, setState] = useState<PreviewState>({ kind: 'idle' });
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -507,7 +478,7 @@ function PreviewCallout(props: PreviewCalloutProps) {
       setState({ kind: 'unsupported' });
       return;
     }
-    const rule = buildRule({ type, symbol, tf, direction, level });
+    const rule = buildRuleObject(type, symbol, tf, '', level, direction);
     if (!rule) {
       setState({ kind: 'idle' });
       return;

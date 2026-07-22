@@ -175,3 +175,32 @@ export function safeSetItem<T>(key: string, value: T): boolean {
     return false;
   }
 }
+
+/**
+ * Migrate a value stored under an old localStorage key to a new key.
+ * The value is JSON-parsed, optionally transformed, and written under
+ * the new key; the old key is then removed. If the new key already
+ * exists, no action is taken. This follows the `hamafx:dashboard-layout:v1`
+ * versioning precedent.
+ */
+export function migrateLocalStorageKey<T>(
+  oldKey: string,
+  newKey: string,
+  transform?: (value: unknown) => T,
+): void {
+  if (typeof window === 'undefined') return;
+  if (window.localStorage.getItem(newKey) !== null) return;
+
+  const raw = window.localStorage.getItem(oldKey);
+  if (raw === null) return;
+
+  try {
+    const parsed = JSON.parse(raw) as unknown;
+    const migrated = transform ? transform(parsed) : parsed;
+    window.localStorage.setItem(newKey, JSON.stringify(migrated));
+  } catch {
+    /* old value was corrupt; continue to remove the old key */
+  } finally {
+    window.localStorage.removeItem(oldKey);
+  }
+}

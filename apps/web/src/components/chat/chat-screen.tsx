@@ -72,6 +72,9 @@ interface ChatScreenProps {
   initialMessages: UIMessage[];
   initialThreads: ThreadSummary[];
   pinnedSymbol: Symbol | null;
+  /** Server-side AI custom instructions. Using the DB value as the
+   *  source of truth prevents cross-device drift from localStorage. */
+  initialCustomInstructions?: string | null;
   /** Optional prompt to auto-submit on mount. Used by deep-link
    *  affordances elsewhere in the app (Ask AI from a news article or
    *  calendar event). Sent at most once per thread. */
@@ -84,6 +87,7 @@ export function ChatScreen({
   initialMessages,
   initialThreads,
   pinnedSymbol,
+  initialCustomInstructions,
   autoSubmitPrompt,
 }: ChatScreenProps) {
   const lastUserTextRef = useRef<string>('');
@@ -98,6 +102,12 @@ export function ChatScreen({
   const [dismissedError, setDismissedError] = useState(false);
   const [confirmEl, confirm] = useConfirm();
 
+  // P3: DB is the source of truth for AI custom instructions so that
+  // changes made on another device are reflected immediately on the
+  // next page load. The prop comes from the server component and is
+  // stable for the lifetime of this client view.
+  const customInstructions = initialCustomInstructions ?? '';
+
   // Phase 1.5 — thread summary header state.
   const [summary, setSummary] = useState<{ synopsis: string; insights: Array<{ text: string; symbol?: string | null }> } | null>(null);
 
@@ -108,7 +118,8 @@ export function ChatScreen({
         prepareSendMessagesRequest: ({ messages, id }) => {
           const override = modelOverrideRef.current;
           const csrf = getCsrfToken();
-          const prefsJson = typeof window !== 'undefined' ? window.localStorage.getItem('hamafx:ai-prefs') : null;
+          const prefs = { customInstructions };
+          const prefsJson = customInstructions ? JSON.stringify(prefs) : null;
 
           const reqBody = {
             modelOverride: override ?? undefined,
@@ -127,7 +138,7 @@ export function ChatScreen({
             : { body: reqBody };
         },
       }),
-    [threadId, analysisMode],
+    [threadId, analysisMode, customInstructions],
   );
 
   const { messages, setMessages, sendMessage, regenerate, stop, status, error } = useChat({
@@ -176,7 +187,14 @@ export function ChatScreen({
     agentProgress,
     setAgentProgress,
     multiAgentFetchRef,
-  } = useMultiAgentChat({ threadId, analysisMode, messagesRef, setMessages, lastUserTextRef });
+  } = useMultiAgentChat({
+    threadId,
+    analysisMode,
+    messagesRef,
+    setMessages,
+    lastUserTextRef,
+    customInstructions,
+  });
 
   // H2: Auto-scroll via dedicated hook (isStreaming defined before use).
   const isStreaming = useMemo(() => {

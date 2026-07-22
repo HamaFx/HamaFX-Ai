@@ -27,6 +27,7 @@ import { Switch } from '@/components/ui/switch';
 import { SettingsRow } from './settings-row';
 import { RowDivider } from './row-divider';
 import { updateUIPrefsAction } from '../actions';
+import { migrateLocalStorageKey } from '@/lib/storage';
 
 interface Prefs {
   defaultSymbol: Symbol;
@@ -34,7 +35,7 @@ interface Prefs {
   reduceMotion: boolean;
 }
 
-const STORAGE_KEY = 'hamafx:prefs';
+const STORAGE_KEY = 'hamafx:prefs:v1';
 
 const DEFAULTS: Prefs = {
   defaultSymbol: 'XAUUSD',
@@ -49,6 +50,11 @@ export function PreferencesCard({
   watchlist?: string[];
   initialPrefs?: { defaultSymbol?: string | null; timeFormat?: string | null; reduceMotion?: boolean | null };
 }) {
+  // Migrate from the legacy unversioned key once.
+  useEffect(() => {
+    migrateLocalStorageKey('hamafx:prefs', STORAGE_KEY);
+  }, []);
+
   const [prefs, setPrefs, hydrated] = useLocalStorage<Prefs>(STORAGE_KEY, DEFAULTS);
 
   // Always sync server value to localStorage (DB is source of truth).

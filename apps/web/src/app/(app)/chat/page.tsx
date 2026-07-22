@@ -46,7 +46,10 @@ interface PageProps {
 
 export default async function ChatLanding({ searchParams }: PageProps) {
   const session = await auth();
-  const userId = session?.user?.id;
+  const userId =
+    process.env.AUTH_MODE === 'legacy' && process.env.NODE_ENV !== 'production'
+      ? '__system__'
+      : session?.user?.id;
   if (!userId) redirect('/login');
 
   const { prompt } = await searchParams;
@@ -55,12 +58,15 @@ export default async function ChatLanding({ searchParams }: PageProps) {
   // configured provider. We check aiApiKeys on the user's settings
   // row, decrypt, and ask `configuredProviders()` whether any key is
   // present. A single DB round-trip; the helper is pure.
-  const encryptedKeys = await getUserApiKeys(userId);
-  const providers = configuredProviders(decryptByok(encryptedKeys));
-  if (providers.length === 0) {
-    const params = new URLSearchParams({ from: 'chat' });
-    if (prompt && prompt.trim().length > 0) params.set('prompt', prompt);
-    redirect(`/settings/api-keys?${params.toString()}`);
+  // Skip API-keys check in legacy mode (__system__ has no keys configured)
+  if (process.env.AUTH_MODE !== 'legacy' || process.env.NODE_ENV === 'production') {
+    const encryptedKeys = await getUserApiKeys(userId);
+    const providers = configuredProviders(decryptByok(encryptedKeys));
+    if (providers.length === 0) {
+      const params = new URLSearchParams({ from: 'chat' });
+      if (prompt && prompt.trim().length > 0) params.set('prompt', prompt);
+      redirect(`/settings/api-keys?${params.toString()}`);
+    }
   }
 
   if (prompt && prompt.trim().length > 0) {

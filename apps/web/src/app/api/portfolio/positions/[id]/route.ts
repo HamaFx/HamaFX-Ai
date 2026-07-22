@@ -17,6 +17,7 @@
 // PF-22 — /api/portfolio/positions/[id] — get / close / delete (thin controller).
 
 import { errorResponse, withAuth } from '@/lib/api';
+import { AppError } from '@hamafx/shared';
 import { getPositionService, closePositionService, deletePositionService } from '@/lib/services/portfolio';
 import { ClosePositionInputSchema } from '@hamafx/shared';
 
@@ -28,7 +29,7 @@ export const GET = withAuth<{ id: string }>(async (_req, { user, params }) => {
     const { id } = await params;
     const position = await getPositionService(user.userId, id);
     if (!position) {
-      return Response.json({ error: 'Position not found' }, { status: 404 });
+      return errorResponse(new AppError('NOT_FOUND', 'Position not found', 404));
     }
     return Response.json({ position });
   } catch (err) {
@@ -43,7 +44,7 @@ export const PATCH = withAuth<{ id: string }>(async (req, { user, params }) => {
     const input = ClosePositionInputSchema.parse(body);
     const position = await closePositionService(user.userId, id, input);
     if (!position) {
-      return Response.json({ error: 'Position not found or already closed' }, { status: 404 });
+      return errorResponse(new AppError('NOT_FOUND', 'Position not found or already closed', 404));
     }
     return Response.json({ position });
   } catch (err) {

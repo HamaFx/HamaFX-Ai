@@ -83,8 +83,12 @@ const nextConfig = {
   },
 
   experimental: {
-    optimizePackageImports: ['@tabler/icons-react'],
+    optimizePackageImports: ['@tabler/icons-react', 'motion', 'react-markdown', 'dompurify'],
     serverActions: { bodySizeLimit: '2mb' },
+  },
+
+  compiler: {
+    removeConsole: process.env.NODE_ENV === 'production' ? { exclude: ['error'] } : undefined,
   },
 };
 

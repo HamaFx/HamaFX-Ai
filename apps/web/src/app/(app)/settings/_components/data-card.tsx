@@ -34,7 +34,7 @@ import { SettingsRow } from './settings-row';
 import { RowDivider } from './row-divider';
 
 const KEY_BOOKMARKS = 'hamafx:news:bookmarks';
-const KEY_PREFS = 'hamafx:prefs';
+const KEY_PREFS = 'hamafx:prefs:v1';
 
 interface Counts {
   bookmarks: number;

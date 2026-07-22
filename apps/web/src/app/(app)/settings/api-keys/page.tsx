@@ -37,6 +37,8 @@ import { SaveBar } from './_components/save-bar';
 import { MarketDataConfig } from './_components/market-data-config';
 import { ExportImportKeys } from './_components/export-import-keys';
 
+export const dynamic = 'force-dynamic';
+
 /**
  * Default export — the page component. Server-component shell that
  * fetches the catalog and renders the BYOK cards + bulk-test button.

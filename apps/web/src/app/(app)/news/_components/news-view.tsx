@@ -36,7 +36,7 @@ import { useEffect, useMemo, useRef, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { useInfiniteQuery } from '@tanstack/react-query';
-import { useQueryState } from 'nuqs';
+import { parseAsString, parseAsStringLiteral, useQueryState } from 'nuqs';
 
 import { ArticleCard } from '@/components/news/article-card';
 import { useBookmarks } from '@/components/news/use-bookmarks';
@@ -47,7 +47,7 @@ import { cn } from '@/lib/cn';
 import { formatRelative } from '@/lib/format';
 import { startOfDay } from '@/lib/datetime';
 
-import { NewsToolbar, type SentimentFilter, type SymbolFilter } from './news-toolbar';
+import { NewsToolbar } from './news-toolbar';
 
 interface NewsViewProps {
   initialArticles: NewsArticle[];
@@ -56,13 +56,18 @@ interface NewsViewProps {
 const AUTO_REFRESH_MS = 5 * 60_000;
 const SEARCH_DEBOUNCE_MS = 300;
 
+const SENTIMENT_VALUES = ['all', 'positive', 'negative', 'neutral'] as const;
+const sentimentParser = parseAsStringLiteral(SENTIMENT_VALUES).withDefault('all');
+const symbolParser = parseAsString.withDefault('all');
+const queryParser = parseAsString.withDefault('');
+
 export function NewsView({ initialArticles }: NewsViewProps) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
-  const [query, setQuery] = useQueryState('q', { defaultValue: '' });
+  const [query, setQuery] = useQueryState('q', queryParser);
   const [queryInput, setQueryInput] = useState(query);
-  const [sentiment, setSentiment] = useQueryState('sentiment', { defaultValue: 'all' }) as [SentimentFilter, (val: SentimentFilter) => void];
-  const [symbol, setSymbol] = useQueryState('symbol', { defaultValue: 'all' }) as [SymbolFilter, (val: SymbolFilter) => void];
+  const [sentiment, setSentiment] = useQueryState('sentiment', sentimentParser);
+  const [symbol, setSymbol] = useQueryState('symbol', symbolParser);
   const [savedOnly, setSavedOnly] = useState(false);
   const [lastRefreshed, setLastRefreshed] = useState(Date.now());
   const { count: savedCount, list: savedIds } = useBookmarks();
