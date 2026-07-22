@@ -1,0 +1,2552 @@
+{
+  "schema_version": "1.0",
+  "total_routes": 92,
+  "routes": [
+    {
+      "methods": [
+        "GET"
+      ],
+      "path": "/api/admin/architecture-explorer",
+      "handler": "apps/web/src/app/api/admin/architecture-explorer/route.ts",
+      "package": "@hamafx/web",
+      "exports": [
+        "runtime",
+        "dynamic",
+        "GET"
+      ]
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "path": "/api/admin/cron-history",
+      "handler": "apps/web/src/app/api/admin/cron-history/route.ts",
+      "package": "@hamafx/web",
+      "exports": [
+        "runtime",
+        "dynamic",
+        "GET"
+      ]
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "path": "/api/admin/diagnostics/tool-telemetry",
+      "handler": "apps/web/src/app/api/admin/diagnostics/tool-telemetry/route.ts",
+      "package": "@hamafx/web",
+      "exports": [
+        "runtime",
+        "dynamic",
+        "GET"
+      ]
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "path": "/api/admin/diagnostics/trace/:id",
+      "handler": "apps/web/src/app/api/admin/diagnostics/trace/[id]/route.ts",
+      "package": "@hamafx/web",
+      "exports": [
+        "runtime",
+        "dynamic",
+        "GET"
+      ]
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "path": "/api/admin/diagnostics/traces",
+      "handler": "apps/web/src/app/api/admin/diagnostics/traces/route.ts",
+      "package": "@hamafx/web",
+      "exports": [
+        "runtime",
+        "dynamic",
+        "GET"
+      ]
+    },
+    {
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "path": "/api/admin/features",
+      "handler": "apps/web/src/app/api/admin/features/route.ts",
+      "package": "@hamafx/web",
+      "exports": [
+        "runtime",
+        "dynamic",
+        "GET",
+        "POST"
+      ]
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "path": "/api/admin/flush",
+      "handler": "apps/web/src/app/api/admin/flush/route.ts",
+      "package": "@hamafx/web",
+      "exports": [
+        "runtime",
+        "dynamic",
+        "POST"
+      ]
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "path": "/api/admin/health-slo",
+      "handler": "apps/web/src/app/api/admin/health-slo/route.ts",
+      "package": "@hamafx/web",
+      "exports": [
+        "runtime",
+        "dynamic",
+        "GET"
+      ]
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "path": "/api/admin/impersonate",
+      "handler": "apps/web/src/app/api/admin/impersonate/route.ts",
+      "package": "@hamafx/web",
+      "exports": [
+        "runtime",
+        "dynamic",
+        "POST"
+      ]
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "path": "/api/admin/logs/stream",
+      "handler": "apps/web/src/app/api/admin/logs/stream/route.ts",
+      "package": "@hamafx/web",
+      "exports": [
+        "runtime",
+        "dynamic",
+        "GET"
+      ]
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "path": "/api/admin/onboarding/inspect",
+      "handler": "apps/web/src/app/api/admin/onboarding/inspect/route.ts",
+      "package": "@hamafx/web",
+      "exports": [
+        "runtime",
+        "dynamic",
+        "GET"
+      ]
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "path": "/api/admin/onboarding/reset",
+      "handler": "apps/web/src/app/api/admin/onboarding/reset/route.ts",
+      "package": "@hamafx/web",
+      "exports": [
+        "runtime",
+        "dynamic",
+        "POST"
+      ]
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "path": "/api/admin/onboarding/status",
+      "handler": "apps/web/src/app/api/admin/onboarding/status/route.ts",
+      "package": "@hamafx/web",
+      "exports": [
+        "runtime",
+        "dynamic",
+        "GET"
+      ]
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "path": "/api/admin/test-alert-email",
+      "handler": "apps/web/src/app/api/admin/test-alert-email/route.ts",
+      "package": "@hamafx/web",
+      "exports": [
+        "runtime",
+        "dynamic",
+        "POST"
+      ]
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "path": "/api/admin/test-telegram",
+      "handler": "apps/web/src/app/api/admin/test-telegram/route.ts",
+      "package": "@hamafx/web",
+      "exports": [
+        "runtime",
+        "dynamic",
+        "POST"
+      ]
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "path": "/api/admin/users",
+      "handler": "apps/web/src/app/api/admin/users/route.ts",
+      "package": "@hamafx/web",
+      "exports": [
+        "runtime",
+        "dynamic",
+        "GET"
+      ]
+    },
+    {
+      "methods": [
+        "GET",
+        "PATCH",
+        "DELETE"
+      ],
+      "path": "/api/alerts/:id",
+      "handler": "apps/web/src/app/api/alerts/[id]/route.ts",
+      "package": "@hamafx/web",
+      "exports": [
+        "runtime",
+        "dynamic",
+        "GET",
+        "PATCH",
+        "DELETE"
+      ]
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "path": "/api/alerts/preview",
+      "handler": "apps/web/src/app/api/alerts/preview/route.ts",
+      "package": "@hamafx/web",
+      "exports": [
+        "runtime",
+        "dynamic",
+        "POST"
+      ]
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "path": "/api/alerts/preview-digest",
+      "handler": "apps/web/src/app/api/alerts/preview-digest/route.ts",
+      "package": "@hamafx/web",
+      "exports": [
+        "runtime",
+        "dynamic",
+        "GET"
+      ]
+    },
+    {
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "path": "/api/alerts",
+      "handler": "apps/web/src/app/api/alerts/route.ts",
+      "package": "@hamafx/web",
+      "exports": [
+        "runtime",
+        "dynamic",
+        "GET",
+        "POST"
+      ]
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "path": "/api/auth/:nextauth*",
+      "handler": "apps/web/src/app/api/auth/[...nextauth]/route.ts",
+      "package": "@hamafx/web",
+      "exports": []
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "path": "/api/auth/verify-email",
+      "handler": "apps/web/src/app/api/auth/verify-email/route.ts",
+      "package": "@hamafx/web",
+      "exports": [
+        "GET"
+      ]
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "path": "/api/billing/checkout",
+      "handler": "apps/web/src/app/api/billing/checkout/route.ts",
+      "package": "@hamafx/web",
+      "exports": [
+        "runtime",
+        "dynamic",
+        "POST"
+      ]
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "path": "/api/billing/portal",
+      "handler": "apps/web/src/app/api/billing/portal/route.ts",
+      "package": "@hamafx/web",
+      "exports": [
+        "runtime",
+        "dynamic",
+        "GET"
+      ]
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "path": "/api/billing/webhook",
+      "handler": "apps/web/src/app/api/billing/webhook/route.ts",
+      "package": "@hamafx/web",
+      "exports": [
+        "runtime",
+        "dynamic",
+        "maxDuration",
+        "POST"
+      ]
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "path": "/api/bot/link-code",
+      "handler": "apps/web/src/app/api/bot/link-code/route.ts",
+      "package": "@hamafx/web",
+      "exports": [
+        "runtime",
+        "dynamic",
+        "POST"
+      ]
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "path": "/api/bot/status",
+      "handler": "apps/web/src/app/api/bot/status/route.ts",
+      "package": "@hamafx/web",
+      "exports": [
+        "runtime",
+        "dynamic",
+        "GET"
+      ]
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "path": "/api/bot/unlink",
+      "handler": "apps/web/src/app/api/bot/unlink/route.ts",
+      "package": "@hamafx/web",
+      "exports": [
+        "runtime",
+        "dynamic",
+        "POST"
+      ]
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "path": "/api/calendar",
+      "handler": "apps/web/src/app/api/calendar/route.ts",
+      "package": "@hamafx/web",
+      "exports": [
+        "runtime",
+        "dynamic",
+        "GET"
+      ]
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "path": "/api/chat/analysis-jobs/:jobId",
+      "handler": "apps/web/src/app/api/chat/analysis-jobs/[jobId]/route.ts",
+      "package": "@hamafx/web",
+      "exports": [
+        "runtime",
+        "dynamic",
+        "GET"
+      ]
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "path": "/api/chat",
+      "handler": "apps/web/src/app/api/chat/route.ts",
+      "package": "@hamafx/web",
+      "exports": [
+        "runtime",
+        "dynamic",
+        "maxDuration",
+        "POST"
+      ]
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "path": "/api/chat/threads/:id/export",
+      "handler": "apps/web/src/app/api/chat/threads/[id]/export/route.ts",
+      "package": "@hamafx/web",
+      "exports": [
+        "runtime",
+        "dynamic",
+        "GET"
+      ]
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "path": "/api/chat/threads/:id/opinions",
+      "handler": "apps/web/src/app/api/chat/threads/[id]/opinions/route.ts",
+      "package": "@hamafx/web",
+      "exports": [
+        "runtime",
+        "dynamic",
+        "GET"
+      ]
+    },
+    {
+      "methods": [
+        "GET",
+        "DELETE",
+        "PATCH"
+      ],
+      "path": "/api/chat/threads/:id",
+      "handler": "apps/web/src/app/api/chat/threads/[id]/route.ts",
+      "package": "@hamafx/web",
+      "exports": [
+        "runtime",
+        "dynamic",
+        "GET",
+        "DELETE",
+        "PATCH"
+      ]
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "path": "/api/chat/threads/:id/summary",
+      "handler": "apps/web/src/app/api/chat/threads/[id]/summary/route.ts",
+      "package": "@hamafx/web",
+      "exports": [
+        "runtime",
+        "dynamic",
+        "GET"
+      ]
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "path": "/api/chat/threads/bulk-delete",
+      "handler": "apps/web/src/app/api/chat/threads/bulk-delete/route.ts",
+      "package": "@hamafx/web",
+      "exports": [
+        "runtime",
+        "dynamic",
+        "POST"
+      ]
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "path": "/api/chat/threads/fork",
+      "handler": "apps/web/src/app/api/chat/threads/fork/route.ts",
+      "package": "@hamafx/web",
+      "exports": [
+        "runtime",
+        "dynamic",
+        "POST"
+      ]
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "path": "/api/chat/threads",
+      "handler": "apps/web/src/app/api/chat/threads/route.ts",
+      "package": "@hamafx/web",
+      "exports": [
+        "runtime",
+        "dynamic",
+        "GET",
+        "POST"
+      ]
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "path": "/api/cron/alerts",
+      "handler": "apps/web/src/app/api/cron/alerts/route.ts",
+      "package": "@hamafx/web",
+      "exports": [
+        "runtime",
+        "dynamic",
+        "maxDuration",
+        "GET"
+      ]
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "path": "/api/cron/briefings",
+      "handler": "apps/web/src/app/api/cron/briefings/route.ts",
+      "package": "@hamafx/web",
+      "exports": [
+        "runtime",
+        "dynamic",
+        "GET"
+      ]
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "path": "/api/cron/calendar",
+      "handler": "apps/web/src/app/api/cron/calendar/route.ts",
+      "package": "@hamafx/web",
+      "exports": [
+        "runtime",
+        "dynamic",
+        "maxDuration",
+        "GET"
+      ]
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "path": "/api/cron/cleanup-telemetry",
+      "handler": "apps/web/src/app/api/cron/cleanup-telemetry/route.ts",
+      "package": "@hamafx/web",
+      "exports": [
+        "runtime",
+        "dynamic",
+        "GET"
+      ]
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "path": "/api/cron/cleanup-tokens",
+      "handler": "apps/web/src/app/api/cron/cleanup-tokens/route.ts",
+      "package": "@hamafx/web",
+      "exports": [
+        "runtime",
+        "dynamic",
+        "GET"
+      ]
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "path": "/api/cron/cleanup-uploads",
+      "handler": "apps/web/src/app/api/cron/cleanup-uploads/route.ts",
+      "package": "@hamafx/web",
+      "exports": [
+        "runtime",
+        "dynamic",
+        "maxDuration",
+        "GET"
+      ]
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "path": "/api/cron/cot",
+      "handler": "apps/web/src/app/api/cron/cot/route.ts",
+      "package": "@hamafx/web",
+      "exports": [
+        "runtime",
+        "dynamic",
+        "GET"
+      ]
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "path": "/api/cron/embedding-backfill",
+      "handler": "apps/web/src/app/api/cron/embedding-backfill/route.ts",
+      "package": "@hamafx/web",
+      "exports": [
+        "runtime",
+        "dynamic",
+        "maxDuration",
+        "GET"
+      ]
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "path": "/api/cron/fred-actuals",
+      "handler": "apps/web/src/app/api/cron/fred-actuals/route.ts",
+      "package": "@hamafx/web",
+      "exports": [
+        "runtime",
+        "dynamic",
+        "GET"
+      ]
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "path": "/api/cron/news",
+      "handler": "apps/web/src/app/api/cron/news/route.ts",
+      "package": "@hamafx/web",
+      "exports": [
+        "runtime",
+        "dynamic",
+        "maxDuration",
+        "GET"
+      ]
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "path": "/api/cron/snapshots",
+      "handler": "apps/web/src/app/api/cron/snapshots/route.ts",
+      "package": "@hamafx/web",
+      "exports": [
+        "runtime",
+        "dynamic",
+        "GET"
+      ]
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "path": "/api/cron/warm-cache",
+      "handler": "apps/web/src/app/api/cron/warm-cache/route.ts",
+      "package": "@hamafx/web",
+      "exports": [
+        "runtime",
+        "dynamic",
+        "maxDuration",
+        "GET"
+      ]
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "path": "/api/cron/weekly-review",
+      "handler": "apps/web/src/app/api/cron/weekly-review/route.ts",
+      "package": "@hamafx/web",
+      "exports": [
+        "runtime",
+        "dynamic",
+        "GET"
+      ]
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "path": "/api/dev/login",
+      "handler": "apps/web/src/app/api/dev/login/route.ts",
+      "package": "@hamafx/web",
+      "exports": [
+        "runtime",
+        "dynamic",
+        "GET"
+      ]
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "path": "/api/health/db",
+      "handler": "apps/web/src/app/api/health/db/route.ts",
+      "package": "@hamafx/web",
+      "exports": [
+        "runtime",
+        "dynamic",
+        "GET"
+      ]
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "path": "/api/health/public",
+      "handler": "apps/web/src/app/api/health/public/route.ts",
+      "package": "@hamafx/web",
+      "exports": [
+        "runtime",
+        "dynamic",
+        "GET"
+      ]
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "path": "/api/health",
+      "handler": "apps/web/src/app/api/health/route.ts",
+      "package": "@hamafx/web",
+      "exports": [
+        "runtime",
+        "dynamic",
+        "GET"
+      ]
+    },
+    {
+      "methods": [
+        "GET",
+        "PATCH",
+        "DELETE"
+      ],
+      "path": "/api/journal/:id",
+      "handler": "apps/web/src/app/api/journal/[id]/route.ts",
+      "package": "@hamafx/web",
+      "exports": [
+        "runtime",
+        "dynamic",
+        "GET",
+        "PATCH",
+        "DELETE"
+      ]
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "path": "/api/journal/import",
+      "handler": "apps/web/src/app/api/journal/import/route.ts",
+      "package": "@hamafx/web",
+      "exports": [
+        "runtime",
+        "dynamic",
+        "POST"
+      ]
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "path": "/api/journal/review",
+      "handler": "apps/web/src/app/api/journal/review/route.ts",
+      "package": "@hamafx/web",
+      "exports": [
+        "runtime",
+        "dynamic",
+        "POST"
+      ]
+    },
+    {
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "path": "/api/journal",
+      "handler": "apps/web/src/app/api/journal/route.ts",
+      "package": "@hamafx/web",
+      "exports": [
+        "runtime",
+        "dynamic",
+        "GET",
+        "POST"
+      ]
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "path": "/api/market/candles",
+      "handler": "apps/web/src/app/api/market/candles/route.ts",
+      "package": "@hamafx/web",
+      "exports": [
+        "runtime",
+        "dynamic",
+        "GET"
+      ]
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "path": "/api/market/indicators",
+      "handler": "apps/web/src/app/api/market/indicators/route.ts",
+      "package": "@hamafx/web",
+      "exports": [
+        "runtime",
+        "dynamic",
+        "POST"
+      ]
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "path": "/api/market/price",
+      "handler": "apps/web/src/app/api/market/price/route.ts",
+      "package": "@hamafx/web",
+      "exports": [
+        "runtime",
+        "dynamic",
+        "GET"
+      ]
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "path": "/api/market/search",
+      "handler": "apps/web/src/app/api/market/search/route.ts",
+      "package": "@hamafx/web",
+      "exports": [
+        "runtime",
+        "dynamic",
+        "GET"
+      ]
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "path": "/api/market/stream",
+      "handler": "apps/web/src/app/api/market/stream/route.ts",
+      "package": "@hamafx/web",
+      "exports": [
+        "runtime",
+        "dynamic",
+        "GET"
+      ]
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "path": "/api/market/structure",
+      "handler": "apps/web/src/app/api/market/structure/route.ts",
+      "package": "@hamafx/web",
+      "exports": [
+        "runtime",
+        "dynamic",
+        "POST"
+      ]
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "path": "/api/me/keys",
+      "handler": "apps/web/src/app/api/me/keys/route.ts",
+      "package": "@hamafx/web",
+      "exports": [
+        "runtime",
+        "dynamic",
+        "GET"
+      ]
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "path": "/api/news",
+      "handler": "apps/web/src/app/api/news/route.ts",
+      "package": "@hamafx/web",
+      "exports": [
+        "runtime",
+        "dynamic",
+        "GET"
+      ]
+    },
+    {
+      "methods": [
+        "GET",
+        "PUT"
+      ],
+      "path": "/api/notifications/noise-config",
+      "handler": "apps/web/src/app/api/notifications/noise-config/route.ts",
+      "package": "@hamafx/web",
+      "exports": [
+        "runtime",
+        "dynamic",
+        "GET",
+        "PUT"
+      ]
+    },
+    {
+      "methods": [
+        "GET",
+        "PUT"
+      ],
+      "path": "/api/notifications/route-config",
+      "handler": "apps/web/src/app/api/notifications/route-config/route.ts",
+      "package": "@hamafx/web",
+      "exports": [
+        "runtime",
+        "dynamic",
+        "GET",
+        "PUT"
+      ]
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "path": "/api/onboarding/save-progress",
+      "handler": "apps/web/src/app/api/onboarding/save-progress/route.ts",
+      "package": "@hamafx/web",
+      "exports": [
+        "runtime",
+        "dynamic",
+        "POST"
+      ]
+    },
+    {
+      "methods": [
+        "GET",
+        "PATCH",
+        "DELETE"
+      ],
+      "path": "/api/portfolio/positions/:id",
+      "handler": "apps/web/src/app/api/portfolio/positions/[id]/route.ts",
+      "package": "@hamafx/web",
+      "exports": [
+        "runtime",
+        "dynamic",
+        "GET",
+        "PATCH",
+        "DELETE"
+      ]
+    },
+    {
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "path": "/api/portfolio/positions",
+      "handler": "apps/web/src/app/api/portfolio/positions/route.ts",
+      "package": "@hamafx/web",
+      "exports": [
+        "runtime",
+        "dynamic",
+        "GET",
+        "POST"
+      ]
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "path": "/api/portfolio/risk",
+      "handler": "apps/web/src/app/api/portfolio/risk/route.ts",
+      "package": "@hamafx/web",
+      "exports": [
+        "runtime",
+        "dynamic",
+        "GET"
+      ]
+    },
+    {
+      "methods": [
+        "GET",
+        "PUT"
+      ],
+      "path": "/api/portfolio/settings",
+      "handler": "apps/web/src/app/api/portfolio/settings/route.ts",
+      "package": "@hamafx/web",
+      "exports": [
+        "runtime",
+        "dynamic",
+        "GET",
+        "PUT"
+      ]
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "path": "/api/push/subscribe",
+      "handler": "apps/web/src/app/api/push/subscribe/route.ts",
+      "package": "@hamafx/web",
+      "exports": [
+        "runtime",
+        "dynamic",
+        "POST"
+      ]
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "path": "/api/push/unsubscribe",
+      "handler": "apps/web/src/app/api/push/unsubscribe/route.ts",
+      "package": "@hamafx/web",
+      "exports": [
+        "runtime",
+        "dynamic",
+        "POST"
+      ]
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "path": "/api/sentiment",
+      "handler": "apps/web/src/app/api/sentiment/route.ts",
+      "package": "@hamafx/web",
+      "exports": [
+        "runtime",
+        "dynamic",
+        "GET"
+      ]
+    },
+    {
+      "methods": [
+        "GET",
+        "PATCH"
+      ],
+      "path": "/api/settings/analysis-mode",
+      "handler": "apps/web/src/app/api/settings/analysis-mode/route.ts",
+      "package": "@hamafx/web",
+      "exports": [
+        "runtime",
+        "dynamic",
+        "GET",
+        "PATCH"
+      ]
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "path": "/api/settings/bulk-test",
+      "handler": "apps/web/src/app/api/settings/bulk-test/route.ts",
+      "package": "@hamafx/web",
+      "exports": [
+        "runtime",
+        "dynamic",
+        "POST"
+      ]
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "path": "/api/settings/catalog",
+      "handler": "apps/web/src/app/api/settings/catalog/route.ts",
+      "package": "@hamafx/web",
+      "exports": [
+        "runtime",
+        "dynamic",
+        "GET"
+      ]
+    },
+    {
+      "methods": [
+        "GET",
+        "PUT",
+        "DELETE"
+      ],
+      "path": "/api/settings/chat-model",
+      "handler": "apps/web/src/app/api/settings/chat-model/route.ts",
+      "package": "@hamafx/web",
+      "exports": [
+        "runtime",
+        "dynamic",
+        "GET",
+        "PUT",
+        "DELETE"
+      ]
+    },
+    {
+      "methods": [
+        "GET",
+        "PUT",
+        "DELETE"
+      ],
+      "path": "/api/settings/embedding-model",
+      "handler": "apps/web/src/app/api/settings/embedding-model/route.ts",
+      "package": "@hamafx/web",
+      "exports": [
+        "runtime",
+        "dynamic",
+        "GET",
+        "PUT",
+        "DELETE"
+      ]
+    },
+    {
+      "methods": [
+        "GET",
+        "PUT"
+      ],
+      "path": "/api/settings/fallback-chain",
+      "handler": "apps/web/src/app/api/settings/fallback-chain/route.ts",
+      "package": "@hamafx/web",
+      "exports": [
+        "runtime",
+        "dynamic",
+        "GET",
+        "PUT"
+      ]
+    },
+    {
+      "methods": [
+        "DELETE"
+      ],
+      "path": "/api/settings/symbols/:symbol",
+      "handler": "apps/web/src/app/api/settings/symbols/[symbol]/route.ts",
+      "package": "@hamafx/web",
+      "exports": [
+        "runtime",
+        "dynamic",
+        "DELETE"
+      ]
+    },
+    {
+      "methods": [
+        "GET",
+        "POST",
+        "PATCH"
+      ],
+      "path": "/api/settings/symbols",
+      "handler": "apps/web/src/app/api/settings/symbols/route.ts",
+      "package": "@hamafx/web",
+      "exports": [
+        "runtime",
+        "dynamic",
+        "GET",
+        "POST",
+        "PATCH"
+      ]
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "path": "/api/settings/test-market-provider",
+      "handler": "apps/web/src/app/api/settings/test-market-provider/route.ts",
+      "package": "@hamafx/web",
+      "exports": [
+        "runtime",
+        "dynamic",
+        "POST"
+      ]
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "path": "/api/settings/test-provider",
+      "handler": "apps/web/src/app/api/settings/test-provider/route.ts",
+      "package": "@hamafx/web",
+      "exports": [
+        "runtime",
+        "dynamic",
+        "POST"
+      ]
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "path": "/api/settings/usage-by-agent",
+      "handler": "apps/web/src/app/api/settings/usage-by-agent/route.ts",
+      "package": "@hamafx/web",
+      "exports": [
+        "runtime",
+        "dynamic",
+        "GET"
+      ]
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "path": "/api/settings/usage-by-provider",
+      "handler": "apps/web/src/app/api/settings/usage-by-provider/route.ts",
+      "package": "@hamafx/web",
+      "exports": [
+        "runtime",
+        "dynamic",
+        "GET"
+      ]
+    },
+    {
+      "methods": [
+        "GET",
+        "PUT",
+        "DELETE"
+      ],
+      "path": "/api/settings/vision-model",
+      "handler": "apps/web/src/app/api/settings/vision-model/route.ts",
+      "package": "@hamafx/web",
+      "exports": [
+        "runtime",
+        "dynamic",
+        "GET",
+        "PUT",
+        "DELETE"
+      ]
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "path": "/api/telegram/webhook",
+      "handler": "apps/web/src/app/api/telegram/webhook/route.ts",
+      "package": "@hamafx/web",
+      "exports": [
+        "runtime",
+        "dynamic",
+        "GET",
+        "POST"
+      ]
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "path": "/api/upload",
+      "handler": "apps/web/src/app/api/upload/route.ts",
+      "package": "@hamafx/web",
+      "exports": [
+        "runtime",
+        "dynamic",
+        "POST"
+      ]
+    }
+  ],
+  "routes_by_domain": {
+    "admin": [
+      {
+        "methods": [
+          "GET"
+        ],
+        "path": "/api/admin/architecture-explorer",
+        "handler": "apps/web/src/app/api/admin/architecture-explorer/route.ts",
+        "package": "@hamafx/web",
+        "exports": [
+          "runtime",
+          "dynamic",
+          "GET"
+        ]
+      },
+      {
+        "methods": [
+          "GET"
+        ],
+        "path": "/api/admin/cron-history",
+        "handler": "apps/web/src/app/api/admin/cron-history/route.ts",
+        "package": "@hamafx/web",
+        "exports": [
+          "runtime",
+          "dynamic",
+          "GET"
+        ]
+      },
+      {
+        "methods": [
+          "GET"
+        ],
+        "path": "/api/admin/diagnostics/tool-telemetry",
+        "handler": "apps/web/src/app/api/admin/diagnostics/tool-telemetry/route.ts",
+        "package": "@hamafx/web",
+        "exports": [
+          "runtime",
+          "dynamic",
+          "GET"
+        ]
+      },
+      {
+        "methods": [
+          "GET"
+        ],
+        "path": "/api/admin/diagnostics/trace/:id",
+        "handler": "apps/web/src/app/api/admin/diagnostics/trace/[id]/route.ts",
+        "package": "@hamafx/web",
+        "exports": [
+          "runtime",
+          "dynamic",
+          "GET"
+        ]
+      },
+      {
+        "methods": [
+          "GET"
+        ],
+        "path": "/api/admin/diagnostics/traces",
+        "handler": "apps/web/src/app/api/admin/diagnostics/traces/route.ts",
+        "package": "@hamafx/web",
+        "exports": [
+          "runtime",
+          "dynamic",
+          "GET"
+        ]
+      },
+      {
+        "methods": [
+          "GET",
+          "POST"
+        ],
+        "path": "/api/admin/features",
+        "handler": "apps/web/src/app/api/admin/features/route.ts",
+        "package": "@hamafx/web",
+        "exports": [
+          "runtime",
+          "dynamic",
+          "GET",
+          "POST"
+        ]
+      },
+      {
+        "methods": [
+          "POST"
+        ],
+        "path": "/api/admin/flush",
+        "handler": "apps/web/src/app/api/admin/flush/route.ts",
+        "package": "@hamafx/web",
+        "exports": [
+          "runtime",
+          "dynamic",
+          "POST"
+        ]
+      },
+      {
+        "methods": [
+          "GET"
+        ],
+        "path": "/api/admin/health-slo",
+        "handler": "apps/web/src/app/api/admin/health-slo/route.ts",
+        "package": "@hamafx/web",
+        "exports": [
+          "runtime",
+          "dynamic",
+          "GET"
+        ]
+      },
+      {
+        "methods": [
+          "POST"
+        ],
+        "path": "/api/admin/impersonate",
+        "handler": "apps/web/src/app/api/admin/impersonate/route.ts",
+        "package": "@hamafx/web",
+        "exports": [
+          "runtime",
+          "dynamic",
+          "POST"
+        ]
+      },
+      {
+        "methods": [
+          "GET"
+        ],
+        "path": "/api/admin/logs/stream",
+        "handler": "apps/web/src/app/api/admin/logs/stream/route.ts",
+        "package": "@hamafx/web",
+        "exports": [
+          "runtime",
+          "dynamic",
+          "GET"
+        ]
+      },
+      {
+        "methods": [
+          "GET"
+        ],
+        "path": "/api/admin/onboarding/inspect",
+        "handler": "apps/web/src/app/api/admin/onboarding/inspect/route.ts",
+        "package": "@hamafx/web",
+        "exports": [
+          "runtime",
+          "dynamic",
+          "GET"
+        ]
+      },
+      {
+        "methods": [
+          "POST"
+        ],
+        "path": "/api/admin/onboarding/reset",
+        "handler": "apps/web/src/app/api/admin/onboarding/reset/route.ts",
+        "package": "@hamafx/web",
+        "exports": [
+          "runtime",
+          "dynamic",
+          "POST"
+        ]
+      },
+      {
+        "methods": [
+          "GET"
+        ],
+        "path": "/api/admin/onboarding/status",
+        "handler": "apps/web/src/app/api/admin/onboarding/status/route.ts",
+        "package": "@hamafx/web",
+        "exports": [
+          "runtime",
+          "dynamic",
+          "GET"
+        ]
+      },
+      {
+        "methods": [
+          "POST"
+        ],
+        "path": "/api/admin/test-alert-email",
+        "handler": "apps/web/src/app/api/admin/test-alert-email/route.ts",
+        "package": "@hamafx/web",
+        "exports": [
+          "runtime",
+          "dynamic",
+          "POST"
+        ]
+      },
+      {
+        "methods": [
+          "POST"
+        ],
+        "path": "/api/admin/test-telegram",
+        "handler": "apps/web/src/app/api/admin/test-telegram/route.ts",
+        "package": "@hamafx/web",
+        "exports": [
+          "runtime",
+          "dynamic",
+          "POST"
+        ]
+      },
+      {
+        "methods": [
+          "GET"
+        ],
+        "path": "/api/admin/users",
+        "handler": "apps/web/src/app/api/admin/users/route.ts",
+        "package": "@hamafx/web",
+        "exports": [
+          "runtime",
+          "dynamic",
+          "GET"
+        ]
+      }
+    ],
+    "alerts": [
+      {
+        "methods": [
+          "GET",
+          "PATCH",
+          "DELETE"
+        ],
+        "path": "/api/alerts/:id",
+        "handler": "apps/web/src/app/api/alerts/[id]/route.ts",
+        "package": "@hamafx/web",
+        "exports": [
+          "runtime",
+          "dynamic",
+          "GET",
+          "PATCH",
+          "DELETE"
+        ]
+      },
+      {
+        "methods": [
+          "POST"
+        ],
+        "path": "/api/alerts/preview",
+        "handler": "apps/web/src/app/api/alerts/preview/route.ts",
+        "package": "@hamafx/web",
+        "exports": [
+          "runtime",
+          "dynamic",
+          "POST"
+        ]
+      },
+      {
+        "methods": [
+          "GET"
+        ],
+        "path": "/api/alerts/preview-digest",
+        "handler": "apps/web/src/app/api/alerts/preview-digest/route.ts",
+        "package": "@hamafx/web",
+        "exports": [
+          "runtime",
+          "dynamic",
+          "GET"
+        ]
+      },
+      {
+        "methods": [
+          "GET",
+          "POST"
+        ],
+        "path": "/api/alerts",
+        "handler": "apps/web/src/app/api/alerts/route.ts",
+        "package": "@hamafx/web",
+        "exports": [
+          "runtime",
+          "dynamic",
+          "GET",
+          "POST"
+        ]
+      }
+    ],
+    "auth": [
+      {
+        "methods": [
+          "GET"
+        ],
+        "path": "/api/auth/:nextauth*",
+        "handler": "apps/web/src/app/api/auth/[...nextauth]/route.ts",
+        "package": "@hamafx/web",
+        "exports": []
+      },
+      {
+        "methods": [
+          "GET"
+        ],
+        "path": "/api/auth/verify-email",
+        "handler": "apps/web/src/app/api/auth/verify-email/route.ts",
+        "package": "@hamafx/web",
+        "exports": [
+          "GET"
+        ]
+      }
+    ],
+    "billing": [
+      {
+        "methods": [
+          "POST"
+        ],
+        "path": "/api/billing/checkout",
+        "handler": "apps/web/src/app/api/billing/checkout/route.ts",
+        "package": "@hamafx/web",
+        "exports": [
+          "runtime",
+          "dynamic",
+          "POST"
+        ]
+      },
+      {
+        "methods": [
+          "GET"
+        ],
+        "path": "/api/billing/portal",
+        "handler": "apps/web/src/app/api/billing/portal/route.ts",
+        "package": "@hamafx/web",
+        "exports": [
+          "runtime",
+          "dynamic",
+          "GET"
+        ]
+      },
+      {
+        "methods": [
+          "GET"
+        ],
+        "path": "/api/billing/webhook",
+        "handler": "apps/web/src/app/api/billing/webhook/route.ts",
+        "package": "@hamafx/web",
+        "exports": [
+          "runtime",
+          "dynamic",
+          "maxDuration",
+          "POST"
+        ]
+      }
+    ],
+    "bot": [
+      {
+        "methods": [
+          "POST"
+        ],
+        "path": "/api/bot/link-code",
+        "handler": "apps/web/src/app/api/bot/link-code/route.ts",
+        "package": "@hamafx/web",
+        "exports": [
+          "runtime",
+          "dynamic",
+          "POST"
+        ]
+      },
+      {
+        "methods": [
+          "GET"
+        ],
+        "path": "/api/bot/status",
+        "handler": "apps/web/src/app/api/bot/status/route.ts",
+        "package": "@hamafx/web",
+        "exports": [
+          "runtime",
+          "dynamic",
+          "GET"
+        ]
+      },
+      {
+        "methods": [
+          "POST"
+        ],
+        "path": "/api/bot/unlink",
+        "handler": "apps/web/src/app/api/bot/unlink/route.ts",
+        "package": "@hamafx/web",
+        "exports": [
+          "runtime",
+          "dynamic",
+          "POST"
+        ]
+      }
+    ],
+    "calendar": [
+      {
+        "methods": [
+          "GET"
+        ],
+        "path": "/api/calendar",
+        "handler": "apps/web/src/app/api/calendar/route.ts",
+        "package": "@hamafx/web",
+        "exports": [
+          "runtime",
+          "dynamic",
+          "GET"
+        ]
+      }
+    ],
+    "chat": [
+      {
+        "methods": [
+          "GET"
+        ],
+        "path": "/api/chat/analysis-jobs/:jobId",
+        "handler": "apps/web/src/app/api/chat/analysis-jobs/[jobId]/route.ts",
+        "package": "@hamafx/web",
+        "exports": [
+          "runtime",
+          "dynamic",
+          "GET"
+        ]
+      },
+      {
+        "methods": [
+          "POST"
+        ],
+        "path": "/api/chat",
+        "handler": "apps/web/src/app/api/chat/route.ts",
+        "package": "@hamafx/web",
+        "exports": [
+          "runtime",
+          "dynamic",
+          "maxDuration",
+          "POST"
+        ]
+      },
+      {
+        "methods": [
+          "GET"
+        ],
+        "path": "/api/chat/threads/:id/export",
+        "handler": "apps/web/src/app/api/chat/threads/[id]/export/route.ts",
+        "package": "@hamafx/web",
+        "exports": [
+          "runtime",
+          "dynamic",
+          "GET"
+        ]
+      },
+      {
+        "methods": [
+          "GET"
+        ],
+        "path": "/api/chat/threads/:id/opinions",
+        "handler": "apps/web/src/app/api/chat/threads/[id]/opinions/route.ts",
+        "package": "@hamafx/web",
+        "exports": [
+          "runtime",
+          "dynamic",
+          "GET"
+        ]
+      },
+      {
+        "methods": [
+          "GET",
+          "DELETE",
+          "PATCH"
+        ],
+        "path": "/api/chat/threads/:id",
+        "handler": "apps/web/src/app/api/chat/threads/[id]/route.ts",
+        "package": "@hamafx/web",
+        "exports": [
+          "runtime",
+          "dynamic",
+          "GET",
+          "DELETE",
+          "PATCH"
+        ]
+      },
+      {
+        "methods": [
+          "GET"
+        ],
+        "path": "/api/chat/threads/:id/summary",
+        "handler": "apps/web/src/app/api/chat/threads/[id]/summary/route.ts",
+        "package": "@hamafx/web",
+        "exports": [
+          "runtime",
+          "dynamic",
+          "GET"
+        ]
+      },
+      {
+        "methods": [
+          "POST"
+        ],
+        "path": "/api/chat/threads/bulk-delete",
+        "handler": "apps/web/src/app/api/chat/threads/bulk-delete/route.ts",
+        "package": "@hamafx/web",
+        "exports": [
+          "runtime",
+          "dynamic",
+          "POST"
+        ]
+      },
+      {
+        "methods": [
+          "POST"
+        ],
+        "path": "/api/chat/threads/fork",
+        "handler": "apps/web/src/app/api/chat/threads/fork/route.ts",
+        "package": "@hamafx/web",
+        "exports": [
+          "runtime",
+          "dynamic",
+          "POST"
+        ]
+      },
+      {
+        "methods": [
+          "GET"
+        ],
+        "path": "/api/chat/threads",
+        "handler": "apps/web/src/app/api/chat/threads/route.ts",
+        "package": "@hamafx/web",
+        "exports": [
+          "runtime",
+          "dynamic",
+          "GET",
+          "POST"
+        ]
+      }
+    ],
+    "cron": [
+      {
+        "methods": [
+          "GET"
+        ],
+        "path": "/api/cron/alerts",
+        "handler": "apps/web/src/app/api/cron/alerts/route.ts",
+        "package": "@hamafx/web",
+        "exports": [
+          "runtime",
+          "dynamic",
+          "maxDuration",
+          "GET"
+        ]
+      },
+      {
+        "methods": [
+          "GET"
+        ],
+        "path": "/api/cron/briefings",
+        "handler": "apps/web/src/app/api/cron/briefings/route.ts",
+        "package": "@hamafx/web",
+        "exports": [
+          "runtime",
+          "dynamic",
+          "GET"
+        ]
+      },
+      {
+        "methods": [
+          "GET"
+        ],
+        "path": "/api/cron/calendar",
+        "handler": "apps/web/src/app/api/cron/calendar/route.ts",
+        "package": "@hamafx/web",
+        "exports": [
+          "runtime",
+          "dynamic",
+          "maxDuration",
+          "GET"
+        ]
+      },
+      {
+        "methods": [
+          "GET"
+        ],
+        "path": "/api/cron/cleanup-telemetry",
+        "handler": "apps/web/src/app/api/cron/cleanup-telemetry/route.ts",
+        "package": "@hamafx/web",
+        "exports": [
+          "runtime",
+          "dynamic",
+          "GET"
+        ]
+      },
+      {
+        "methods": [
+          "GET"
+        ],
+        "path": "/api/cron/cleanup-tokens",
+        "handler": "apps/web/src/app/api/cron/cleanup-tokens/route.ts",
+        "package": "@hamafx/web",
+        "exports": [
+          "runtime",
+          "dynamic",
+          "GET"
+        ]
+      },
+      {
+        "methods": [
+          "GET"
+        ],
+        "path": "/api/cron/cleanup-uploads",
+        "handler": "apps/web/src/app/api/cron/cleanup-uploads/route.ts",
+        "package": "@hamafx/web",
+        "exports": [
+          "runtime",
+          "dynamic",
+          "maxDuration",
+          "GET"
+        ]
+      },
+      {
+        "methods": [
+          "GET"
+        ],
+        "path": "/api/cron/cot",
+        "handler": "apps/web/src/app/api/cron/cot/route.ts",
+        "package": "@hamafx/web",
+        "exports": [
+          "runtime",
+          "dynamic",
+          "GET"
+        ]
+      },
+      {
+        "methods": [
+          "GET"
+        ],
+        "path": "/api/cron/embedding-backfill",
+        "handler": "apps/web/src/app/api/cron/embedding-backfill/route.ts",
+        "package": "@hamafx/web",
+        "exports": [
+          "runtime",
+          "dynamic",
+          "maxDuration",
+          "GET"
+        ]
+      },
+      {
+        "methods": [
+          "GET"
+        ],
+        "path": "/api/cron/fred-actuals",
+        "handler": "apps/web/src/app/api/cron/fred-actuals/route.ts",
+        "package": "@hamafx/web",
+        "exports": [
+          "runtime",
+          "dynamic",
+          "GET"
+        ]
+      },
+      {
+        "methods": [
+          "GET"
+        ],
+        "path": "/api/cron/news",
+        "handler": "apps/web/src/app/api/cron/news/route.ts",
+        "package": "@hamafx/web",
+        "exports": [
+          "runtime",
+          "dynamic",
+          "maxDuration",
+          "GET"
+        ]
+      },
+      {
+        "methods": [
+          "GET"
+        ],
+        "path": "/api/cron/snapshots",
+        "handler": "apps/web/src/app/api/cron/snapshots/route.ts",
+        "package": "@hamafx/web",
+        "exports": [
+          "runtime",
+          "dynamic",
+          "GET"
+        ]
+      },
+      {
+        "methods": [
+          "GET"
+        ],
+        "path": "/api/cron/warm-cache",
+        "handler": "apps/web/src/app/api/cron/warm-cache/route.ts",
+        "package": "@hamafx/web",
+        "exports": [
+          "runtime",
+          "dynamic",
+          "maxDuration",
+          "GET"
+        ]
+      },
+      {
+        "methods": [
+          "GET"
+        ],
+        "path": "/api/cron/weekly-review",
+        "handler": "apps/web/src/app/api/cron/weekly-review/route.ts",
+        "package": "@hamafx/web",
+        "exports": [
+          "runtime",
+          "dynamic",
+          "GET"
+        ]
+      }
+    ],
+    "dev": [
+      {
+        "methods": [
+          "GET"
+        ],
+        "path": "/api/dev/login",
+        "handler": "apps/web/src/app/api/dev/login/route.ts",
+        "package": "@hamafx/web",
+        "exports": [
+          "runtime",
+          "dynamic",
+          "GET"
+        ]
+      }
+    ],
+    "health": [
+      {
+        "methods": [
+          "GET"
+        ],
+        "path": "/api/health/db",
+        "handler": "apps/web/src/app/api/health/db/route.ts",
+        "package": "@hamafx/web",
+        "exports": [
+          "runtime",
+          "dynamic",
+          "GET"
+        ]
+      },
+      {
+        "methods": [
+          "GET"
+        ],
+        "path": "/api/health/public",
+        "handler": "apps/web/src/app/api/health/public/route.ts",
+        "package": "@hamafx/web",
+        "exports": [
+          "runtime",
+          "dynamic",
+          "GET"
+        ]
+      },
+      {
+        "methods": [
+          "GET"
+        ],
+        "path": "/api/health",
+        "handler": "apps/web/src/app/api/health/route.ts",
+        "package": "@hamafx/web",
+        "exports": [
+          "runtime",
+          "dynamic",
+          "GET"
+        ]
+      }
+    ],
+    "journal": [
+      {
+        "methods": [
+          "GET",
+          "PATCH",
+          "DELETE"
+        ],
+        "path": "/api/journal/:id",
+        "handler": "apps/web/src/app/api/journal/[id]/route.ts",
+        "package": "@hamafx/web",
+        "exports": [
+          "runtime",
+          "dynamic",
+          "GET",
+          "PATCH",
+          "DELETE"
+        ]
+      },
+      {
+        "methods": [
+          "POST"
+        ],
+        "path": "/api/journal/import",
+        "handler": "apps/web/src/app/api/journal/import/route.ts",
+        "package": "@hamafx/web",
+        "exports": [
+          "runtime",
+          "dynamic",
+          "POST"
+        ]
+      },
+      {
+        "methods": [
+          "POST"
+        ],
+        "path": "/api/journal/review",
+        "handler": "apps/web/src/app/api/journal/review/route.ts",
+        "package": "@hamafx/web",
+        "exports": [
+          "runtime",
+          "dynamic",
+          "POST"
+        ]
+      },
+      {
+        "methods": [
+          "GET",
+          "POST"
+        ],
+        "path": "/api/journal",
+        "handler": "apps/web/src/app/api/journal/route.ts",
+        "package": "@hamafx/web",
+        "exports": [
+          "runtime",
+          "dynamic",
+          "GET",
+          "POST"
+        ]
+      }
+    ],
+    "market": [
+      {
+        "methods": [
+          "GET"
+        ],
+        "path": "/api/market/candles",
+        "handler": "apps/web/src/app/api/market/candles/route.ts",
+        "package": "@hamafx/web",
+        "exports": [
+          "runtime",
+          "dynamic",
+          "GET"
+        ]
+      },
+      {
+        "methods": [
+          "POST"
+        ],
+        "path": "/api/market/indicators",
+        "handler": "apps/web/src/app/api/market/indicators/route.ts",
+        "package": "@hamafx/web",
+        "exports": [
+          "runtime",
+          "dynamic",
+          "POST"
+        ]
+      },
+      {
+        "methods": [
+          "GET"
+        ],
+        "path": "/api/market/price",
+        "handler": "apps/web/src/app/api/market/price/route.ts",
+        "package": "@hamafx/web",
+        "exports": [
+          "runtime",
+          "dynamic",
+          "GET"
+        ]
+      },
+      {
+        "methods": [
+          "GET"
+        ],
+        "path": "/api/market/search",
+        "handler": "apps/web/src/app/api/market/search/route.ts",
+        "package": "@hamafx/web",
+        "exports": [
+          "runtime",
+          "dynamic",
+          "GET"
+        ]
+      },
+      {
+        "methods": [
+          "GET"
+        ],
+        "path": "/api/market/stream",
+        "handler": "apps/web/src/app/api/market/stream/route.ts",
+        "package": "@hamafx/web",
+        "exports": [
+          "runtime",
+          "dynamic",
+          "GET"
+        ]
+      },
+      {
+        "methods": [
+          "POST"
+        ],
+        "path": "/api/market/structure",
+        "handler": "apps/web/src/app/api/market/structure/route.ts",
+        "package": "@hamafx/web",
+        "exports": [
+          "runtime",
+          "dynamic",
+          "POST"
+        ]
+      }
+    ],
+    "me": [
+      {
+        "methods": [
+          "GET"
+        ],
+        "path": "/api/me/keys",
+        "handler": "apps/web/src/app/api/me/keys/route.ts",
+        "package": "@hamafx/web",
+        "exports": [
+          "runtime",
+          "dynamic",
+          "GET"
+        ]
+      }
+    ],
+    "news": [
+      {
+        "methods": [
+          "GET"
+        ],
+        "path": "/api/news",
+        "handler": "apps/web/src/app/api/news/route.ts",
+        "package": "@hamafx/web",
+        "exports": [
+          "runtime",
+          "dynamic",
+          "GET"
+        ]
+      }
+    ],
+    "notifications": [
+      {
+        "methods": [
+          "GET",
+          "PUT"
+        ],
+        "path": "/api/notifications/noise-config",
+        "handler": "apps/web/src/app/api/notifications/noise-config/route.ts",
+        "package": "@hamafx/web",
+        "exports": [
+          "runtime",
+          "dynamic",
+          "GET",
+          "PUT"
+        ]
+      },
+      {
+        "methods": [
+          "GET",
+          "PUT"
+        ],
+        "path": "/api/notifications/route-config",
+        "handler": "apps/web/src/app/api/notifications/route-config/route.ts",
+        "package": "@hamafx/web",
+        "exports": [
+          "runtime",
+          "dynamic",
+          "GET",
+          "PUT"
+        ]
+      }
+    ],
+    "onboarding": [
+      {
+        "methods": [
+          "POST"
+        ],
+        "path": "/api/onboarding/save-progress",
+        "handler": "apps/web/src/app/api/onboarding/save-progress/route.ts",
+        "package": "@hamafx/web",
+        "exports": [
+          "runtime",
+          "dynamic",
+          "POST"
+        ]
+      }
+    ],
+    "portfolio": [
+      {
+        "methods": [
+          "GET",
+          "PATCH",
+          "DELETE"
+        ],
+        "path": "/api/portfolio/positions/:id",
+        "handler": "apps/web/src/app/api/portfolio/positions/[id]/route.ts",
+        "package": "@hamafx/web",
+        "exports": [
+          "runtime",
+          "dynamic",
+          "GET",
+          "PATCH",
+          "DELETE"
+        ]
+      },
+      {
+        "methods": [
+          "GET",
+          "POST"
+        ],
+        "path": "/api/portfolio/positions",
+        "handler": "apps/web/src/app/api/portfolio/positions/route.ts",
+        "package": "@hamafx/web",
+        "exports": [
+          "runtime",
+          "dynamic",
+          "GET",
+          "POST"
+        ]
+      },
+      {
+        "methods": [
+          "GET"
+        ],
+        "path": "/api/portfolio/risk",
+        "handler": "apps/web/src/app/api/portfolio/risk/route.ts",
+        "package": "@hamafx/web",
+        "exports": [
+          "runtime",
+          "dynamic",
+          "GET"
+        ]
+      },
+      {
+        "methods": [
+          "GET",
+          "PUT"
+        ],
+        "path": "/api/portfolio/settings",
+        "handler": "apps/web/src/app/api/portfolio/settings/route.ts",
+        "package": "@hamafx/web",
+        "exports": [
+          "runtime",
+          "dynamic",
+          "GET",
+          "PUT"
+        ]
+      }
+    ],
+    "push": [
+      {
+        "methods": [
+          "POST"
+        ],
+        "path": "/api/push/subscribe",
+        "handler": "apps/web/src/app/api/push/subscribe/route.ts",
+        "package": "@hamafx/web",
+        "exports": [
+          "runtime",
+          "dynamic",
+          "POST"
+        ]
+      },
+      {
+        "methods": [
+          "POST"
+        ],
+        "path": "/api/push/unsubscribe",
+        "handler": "apps/web/src/app/api/push/unsubscribe/route.ts",
+        "package": "@hamafx/web",
+        "exports": [
+          "runtime",
+          "dynamic",
+          "POST"
+        ]
+      }
+    ],
+    "sentiment": [
+      {
+        "methods": [
+          "GET"
+        ],
+        "path": "/api/sentiment",
+        "handler": "apps/web/src/app/api/sentiment/route.ts",
+        "package": "@hamafx/web",
+        "exports": [
+          "runtime",
+          "dynamic",
+          "GET"
+        ]
+      }
+    ],
+    "settings": [
+      {
+        "methods": [
+          "GET",
+          "PATCH"
+        ],
+        "path": "/api/settings/analysis-mode",
+        "handler": "apps/web/src/app/api/settings/analysis-mode/route.ts",
+        "package": "@hamafx/web",
+        "exports": [
+          "runtime",
+          "dynamic",
+          "GET",
+          "PATCH"
+        ]
+      },
+      {
+        "methods": [
+          "POST"
+        ],
+        "path": "/api/settings/bulk-test",
+        "handler": "apps/web/src/app/api/settings/bulk-test/route.ts",
+        "package": "@hamafx/web",
+        "exports": [
+          "runtime",
+          "dynamic",
+          "POST"
+        ]
+      },
+      {
+        "methods": [
+          "GET"
+        ],
+        "path": "/api/settings/catalog",
+        "handler": "apps/web/src/app/api/settings/catalog/route.ts",
+        "package": "@hamafx/web",
+        "exports": [
+          "runtime",
+          "dynamic",
+          "GET"
+        ]
+      },
+      {
+        "methods": [
+          "GET",
+          "PUT",
+          "DELETE"
+        ],
+        "path": "/api/settings/chat-model",
+        "handler": "apps/web/src/app/api/settings/chat-model/route.ts",
+        "package": "@hamafx/web",
+        "exports": [
+          "runtime",
+          "dynamic",
+          "GET",
+          "PUT",
+          "DELETE"
+        ]
+      },
+      {
+        "methods": [
+          "GET",
+          "PUT",
+          "DELETE"
+        ],
+        "path": "/api/settings/embedding-model",
+        "handler": "apps/web/src/app/api/settings/embedding-model/route.ts",
+        "package": "@hamafx/web",
+        "exports": [
+          "runtime",
+          "dynamic",
+          "GET",
+          "PUT",
+          "DELETE"
+        ]
+      },
+      {
+        "methods": [
+          "GET",
+          "PUT"
+        ],
+        "path": "/api/settings/fallback-chain",
+        "handler": "apps/web/src/app/api/settings/fallback-chain/route.ts",
+        "package": "@hamafx/web",
+        "exports": [
+          "runtime",
+          "dynamic",
+          "GET",
+          "PUT"
+        ]
+      },
+      {
+        "methods": [
+          "DELETE"
+        ],
+        "path": "/api/settings/symbols/:symbol",
+        "handler": "apps/web/src/app/api/settings/symbols/[symbol]/route.ts",
+        "package": "@hamafx/web",
+        "exports": [
+          "runtime",
+          "dynamic",
+          "DELETE"
+        ]
+      },
+      {
+        "methods": [
+          "GET",
+          "POST",
+          "PATCH"
+        ],
+        "path": "/api/settings/symbols",
+        "handler": "apps/web/src/app/api/settings/symbols/route.ts",
+        "package": "@hamafx/web",
+        "exports": [
+          "runtime",
+          "dynamic",
+          "GET",
+          "POST",
+          "PATCH"
+        ]
+      },
+      {
+        "methods": [
+          "POST"
+        ],
+        "path": "/api/settings/test-market-provider",
+        "handler": "apps/web/src/app/api/settings/test-market-provider/route.ts",
+        "package": "@hamafx/web",
+        "exports": [
+          "runtime",
+          "dynamic",
+          "POST"
+        ]
+      },
+      {
+        "methods": [
+          "POST"
+        ],
+        "path": "/api/settings/test-provider",
+        "handler": "apps/web/src/app/api/settings/test-provider/route.ts",
+        "package": "@hamafx/web",
+        "exports": [
+          "runtime",
+          "dynamic",
+          "POST"
+        ]
+      },
+      {
+        "methods": [
+          "GET"
+        ],
+        "path": "/api/settings/usage-by-agent",
+        "handler": "apps/web/src/app/api/settings/usage-by-agent/route.ts",
+        "package": "@hamafx/web",
+        "exports": [
+          "runtime",
+          "dynamic",
+          "GET"
+        ]
+      },
+      {
+        "methods": [
+          "GET"
+        ],
+        "path": "/api/settings/usage-by-provider",
+        "handler": "apps/web/src/app/api/settings/usage-by-provider/route.ts",
+        "package": "@hamafx/web",
+        "exports": [
+          "runtime",
+          "dynamic",
+          "GET"
+        ]
+      },
+      {
+        "methods": [
+          "GET",
+          "PUT",
+          "DELETE"
+        ],
+        "path": "/api/settings/vision-model",
+        "handler": "apps/web/src/app/api/settings/vision-model/route.ts",
+        "package": "@hamafx/web",
+        "exports": [
+          "runtime",
+          "dynamic",
+          "GET",
+          "PUT",
+          "DELETE"
+        ]
+      }
+    ],
+    "telegram": [
+      {
+        "methods": [
+          "GET"
+        ],
+        "path": "/api/telegram/webhook",
+        "handler": "apps/web/src/app/api/telegram/webhook/route.ts",
+        "package": "@hamafx/web",
+        "exports": [
+          "runtime",
+          "dynamic",
+          "GET",
+          "POST"
+        ]
+      }
+    ],
+    "upload": [
+      {
+        "methods": [
+          "POST"
+        ],
+        "path": "/api/upload",
+        "handler": "apps/web/src/app/api/upload/route.ts",
+        "package": "@hamafx/web",
+        "exports": [
+          "runtime",
+          "dynamic",
+          "POST"
+        ]
+      }
+    ]
+  }
+}

@@ -13,6 +13,8 @@ import {
   IconFlag,
   IconTerminal,
   IconHeartbeat,
+  IconChartDots,
+  IconExternalLink,
 } from '@tabler/icons-react';
 
 import { cn } from '@/lib/cn';
@@ -85,7 +87,7 @@ export default function AdminPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <nav aria-label="Admin sections" className="border-border border-b">
+      <nav aria-label="Admin sections" className="border-border flex items-center justify-between border-b">
         <ul className="flex flex-wrap gap-1">
           {TABS.map((tab) => {
             const Icon = tab.icon;
@@ -111,6 +113,21 @@ export default function AdminPage() {
             );
           })}
         </ul>
+
+        <a
+          href="/api/admin/architecture-explorer"
+          target="_blank"
+          rel="noopener noreferrer"
+          className={cn(
+            'inline-flex items-center gap-2 px-4 py-2 text-sm font-medium transition-colors',
+            'border-b-2 border-transparent text-fg-muted hover:text-fg hover:border-brand',
+          )}
+          title="Open interactive architecture explorer in a new tab"
+        >
+          <IconChartDots className="size-4" aria-hidden="true" />
+          Architecture Explorer
+          <IconExternalLink className="size-3 text-fg-muted" aria-hidden="true" />
+        </a>
       </nav>
 
       <section aria-live="polite" className="min-h-[300px]">

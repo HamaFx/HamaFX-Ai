@@ -1,0 +1,215 @@
+{
+  "schema_version": "1.0",
+  "flows": [
+    {
+      "name": "AI Chat Pipeline",
+      "steps": [
+        {
+          "order": 1,
+          "step": "User sends message",
+          "component": "/api/chat route handler"
+        },
+        {
+          "order": 2,
+          "step": "Rate limit check",
+          "component": "withRateLimit()"
+        },
+        {
+          "order": 3,
+          "step": "Thread ownership verification",
+          "component": "getThread()"
+        },
+        {
+          "order": 4,
+          "step": "Budget guardrail",
+          "component": "tryReserveBudget() — atomic INSERT ON CONFLICT"
+        },
+        {
+          "order": 5,
+          "step": "Persist user message",
+          "component": "appendUserMessage()"
+        },
+        {
+          "order": 6,
+          "step": "Load history + live snapshot",
+          "component": "listMessages() + buildLiveSnapshot()"
+        },
+        {
+          "order": 7,
+          "step": "Thread compaction",
+          "component": "compactThread() — rolling summary"
+        },
+        {
+          "order": 8,
+          "step": "Domain routing",
+          "component": "routeTurn() — keyword scoring + optional semantic"
+        },
+        {
+          "order": 9,
+          "step": "Model resolution",
+          "component": "resolveChatModel() — domain→tier mapping"
+        },
+        {
+          "order": 10,
+          "step": "Planner (if planRequired)",
+          "component": "runPlanner() — cheap model generates JSON plan"
+        },
+        {
+          "order": 11,
+          "step": "Tool filtering",
+          "component": "domainToolFilter() — per-domain tool set"
+        },
+        {
+          "order": 12,
+          "step": "Stream with tools",
+          "component": "streamText() — up to 5 retry attempts"
+        },
+        {
+          "order": 13,
+          "step": "Citation enforcement",
+          "component": "enforceCitations() — post-finish fact-check"
+        },
+        {
+          "order": 14,
+          "step": "Budget reconciliation",
+          "component": "budget.reconcile() — adjust to actual cost"
+        },
+        {
+          "order": 15,
+          "step": "Auto-title",
+          "component": "runAutoTitleBackground() — background"
+        },
+        {
+          "order": 16,
+          "step": "Return stream",
+          "component": "result.toUIMessageStreamResponse()"
+        }
+      ]
+    },
+    {
+      "name": "Multi-Agent Committee",
+      "steps": [
+        {
+          "order": 1,
+          "step": "Budget guardrail",
+          "component": "tryReserveBudget()"
+        },
+        {
+          "order": 2,
+          "step": "Persist user message",
+          "component": "appendUserMessage()"
+        },
+        {
+          "order": 3,
+          "step": "Build shared context",
+          "component": "buildSharedContext() — snapshot + prefetch"
+        },
+        {
+          "order": 4,
+          "step": "Resolve mode",
+          "component": "resolveMode() — quick/standard/full/auto"
+        },
+        {
+          "order": 5,
+          "step": "Run specialists in parallel",
+          "component": "TechnicalAgent + FundamentalAgent + RiskAgent + SentimentAgent"
+        },
+        {
+          "order": 6,
+          "step": "Decision agent fusion",
+          "component": "DecisionAgent.fuse() — token-by-token streaming"
+        },
+        {
+          "order": 7,
+          "step": "Citation enforcement",
+          "component": "enforceCitations() — delegated from specialists"
+        },
+        {
+          "order": 8,
+          "step": "Persist message + opinions",
+          "component": "appendAssistantMessage() + saveAgentOpinions()"
+        },
+        {
+          "order": 9,
+          "step": "Budget reconciliation",
+          "component": "applyBudgetDelta()"
+        }
+      ]
+    },
+    {
+      "name": "Worker Tick Processing",
+      "steps": [
+        {
+          "order": 1,
+          "step": "SignalR connection",
+          "component": "SignalRConsumer.connect()"
+        },
+        {
+          "order": 2,
+          "step": "Receive tick",
+          "component": "SignalR message handler"
+        },
+        {
+          "order": 3,
+          "step": "Buffer tick",
+          "component": "TickBuffer.push() — stores latest per symbol"
+        },
+        {
+          "order": 4,
+          "step": "1Hz flush",
+          "component": "flushLiveTicks() — UPSERT into live_ticks"
+        },
+        {
+          "order": 5,
+          "step": "Candle aggregation",
+          "component": "Candle1mAggregator — open/high/low/close bar"
+        },
+        {
+          "order": 6,
+          "step": "Candle close",
+          "component": "flushClosedCandle() — UPSERT into candles_1m"
+        }
+      ]
+    },
+    {
+      "name": "Auth Flow",
+      "steps": [
+        {
+          "order": 1,
+          "step": "Request enters",
+          "component": "Edge Middleware"
+        },
+        {
+          "order": 2,
+          "step": "JWT check",
+          "component": "NextAuth JWT strategy"
+        },
+        {
+          "order": 3,
+          "step": "CSRF validation",
+          "component": "Middleware CSRF check"
+        },
+        {
+          "order": 4,
+          "step": "signed x-user-id header",
+          "component": "HMAC-SHA256 for defense-in-depth"
+        },
+        {
+          "order": 5,
+          "step": "Route handler",
+          "component": "withAuth() wrapper"
+        },
+        {
+          "order": 6,
+          "step": "Session validation",
+          "component": "userSessions table + tokenVersion check"
+        },
+        {
+          "order": 7,
+          "step": "User scoping",
+          "component": "strict userId scoping on all queries"
+        }
+      ]
+    }
+  ]
+}

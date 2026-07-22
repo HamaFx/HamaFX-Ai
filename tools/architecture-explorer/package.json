@@ -1,0 +1,20 @@
+{
+  "name": "hamafx-architecture-explorer",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Self-contained architecture explorer for HamaFX-Ai",
+  "type": "module",
+  "scripts": {
+    "scan": "tsx src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "ignore": "^5.3.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.5.0"
+  }
+}

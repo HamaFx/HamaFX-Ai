@@ -1,0 +1,121 @@
+{
+  "schema_version": "1.0",
+  "feature_count": 12,
+  "features": [
+    {
+      "name": "AI Chat (Single-Agent)",
+      "package": "@hamafx/ai",
+      "modules": [
+        "agent.ts",
+        "routing.ts",
+        "planner.ts",
+        "verification.ts",
+        "chat-retry-loop.ts"
+      ],
+      "description": "Streaming chat with domain-based routing, plan-then-act, 32 tools, 5-attempt retry"
+    },
+    {
+      "name": "Multi-Agent Committee",
+      "package": "@hamafx/ai",
+      "modules": [
+        "multi-agent/orchestrator.ts",
+        "multi-agent/agents/"
+      ],
+      "description": "4 specialist agents + 1 decision agent with token-by-token fusion streaming"
+    },
+    {
+      "name": "Live Market Data",
+      "package": "@hamafx/data",
+      "modules": [
+        "adapters/price.ts",
+        "adapters/candles.ts",
+        "failover.ts",
+        "cache/"
+      ],
+      "description": "BiQuote SignalR → TickBuffer → live_ticks with Finnhub REST fallback"
+    },
+    {
+      "name": "Technical Indicators",
+      "package": "@hamafx/indicators",
+      "modules": [
+        "moving-averages.ts",
+        "rsi.ts",
+        "macd.ts",
+        "bollinger.ts",
+        "smc/"
+      ],
+      "description": "SMA, EMA, RSI, MACD, Bollinger Bands, SMC (FVG, order blocks, liquidity, swings, BOS/CHoCH)"
+    },
+    {
+      "name": "Alert Engine",
+      "package": "@hamafx/ai",
+      "modules": [
+        "alerts/evaluator.ts",
+        "alerts/delivery.ts",
+        "alerts/persistence.ts"
+      ],
+      "description": "Rule evaluation, delivery (email/push/telegram), snooze, simulation"
+    },
+    {
+      "name": "Trading Journal",
+      "package": "@hamafx/ai",
+      "modules": [
+        "journal/persistence.ts",
+        "journal/review.ts"
+      ],
+      "description": "Trade logging, R-multiple computation, AI-powered trade review"
+    },
+    {
+      "name": "Portfolio Management",
+      "package": "@hamafx/ai",
+      "modules": [
+        "portfolio/"
+      ],
+      "description": "Position tracking, PnL computation, risk reporting"
+    },
+    {
+      "name": "Background Jobs",
+      "package": "@hamafx/worker",
+      "modules": [
+        "scheduler.ts",
+        "jobs/"
+      ],
+      "description": "7+ cron jobs: briefings, snapshots, COT, weekly review, embedding backfill, candle flush"
+    },
+    {
+      "name": "Push Notifications",
+      "package": "@hamafx/ai",
+      "modules": [
+        "push/send.ts",
+        "push/persistence.ts"
+      ],
+      "description": "Web Push API with VAPID, subscription management"
+    },
+    {
+      "name": "Bot Platform",
+      "package": "@hamafx/ai",
+      "modules": [
+        "bot/",
+        "telegram/"
+      ],
+      "description": "Telegram bot with commands, link codes, idempotency, rate limiting"
+    },
+    {
+      "name": "BYOK Provider Registry",
+      "package": "@hamafx/ai",
+      "modules": [
+        "byok-providers.ts",
+        "_providers/"
+      ],
+      "description": "9 AI providers with Bring-Your-Own-Key support, fallback chain, model catalog"
+    },
+    {
+      "name": "Social Sentiment",
+      "package": "@hamafx/ai",
+      "modules": [
+        "sentiment/"
+      ],
+      "description": "Social media sentiment integration for contrarian signals"
+    }
+  ]
+}

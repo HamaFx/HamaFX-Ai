@@ -1,0 +1,1353 @@
+// ═══════════════════════════════════════════════════════════════════════
+// HamaFX-Ai Architecture Explorer — Phase 3
+// ═══════════════════════════════════════════════════════════════════════
+
+const DATA = JSON.parse(\`${jsonData}\`);
+let NODES = DATA.nodes.map(n => ({...n, x:0, y:0, vx:0, vy:0, fx:null, fy:null}));
+let EDGES = DATA.edges.map(e => ({...e}));
+
+// ── Color & Label Maps ──
+const COLORS={package:'#89b4fa',app:'#a6e3a1',module:'#6c7086',api_route:'#74c7ec',component:'#cba6f7',tool:'#f5c2e7',agent:'#f38ba8',table:'#94e2d5',provider:'#fab387',job:'#f9e2af',service:'#89dceb',middleware:'#b4befe',config:'#a6adc8',schema:'#eba0ac',flow:'#f2cdcd'};
+const ICONS={package:'📦',app:'🚀',module:'📁',api_route:'🔗',component:'🧩',tool:'🔧',agent:'🤖',table:'🗄️',provider:'🌐',job:'⏰',service:'⚙️',middleware:'🛡️',config:'⚙️',schema:'📐',flow:'🔄'};
+const TYPES={package:'Package',app:'Application',module:'Module',api_route:'API Route',component:'Component',tool:'AI Tool',agent:'Agent',table:'DB Table',provider:'Provider',job:'Job',service:'Service',middleware:'Middleware',config:'Config',schema:'Schema',flow:'Flow'};
+const RADII={package:14,app:14,module:7,api_route:8,component:7,tool:7,agent:9,table:7,provider:11,job:8,service:9,middleware:7,config:6,schema:6,flow:9};
+
+// ── Global State ──
+let svg, g, zoom, simulation, link, node;
+let selectedNode = null, paused = false;
+let currentLayout = 'force';
+let currentView = 'overall_architecture';
+let collapsedPkgs = new Set();
+let groups = [];
+let groupCounter = 0;
+let isSelecting = false, selectStart = null;
+let playbackRestoreTimer = null; // Phase 8: module-level instead of window._playbackRestore
+const impactCache = new Map(); // Phase 8: cache computeImpact results per nodeId
+
+// ── View definitions from architecture model ──
+// Extend views with analysis view
+const ANALYSIS_VIEW = {
+  name:'Architecture Analysis',
+  description:'Hotspots, circular dependencies, dead code, orphans, and structural issues.',
+  nodeTypes:['package','module','component','tool','agent','api_route','table'],
+  edgeTypes:['depends_on','imports','calls'],
+  layout:'force-directed'
+};
+const VIEWS = {...(DATA.views||{}), architecture_analysis: ANALYSIS_VIEW};
+const ANALYSIS = DATA.analysis || {};
+const VIEW_LAYOUT_MAP = {
+  'force-directed':'force','tree':'tree','radial':'radial','grid':'grid',
+  'flowchart':'tree','er':'force'
+};
+
+
+// ── Dimensions ──
+const canvas = document.getElementById('canvas');
+let W = canvas.clientWidth, H = canvas.clientHeight;
+
+// ── SVG Setup ──
+svg = d3.select('#canvas').append('svg').attr('width',W).attr('height',H);
+const defs = svg.append('defs');
+
+// Edge arrow markers
+const arrowTypes = ['depends_on','imports','calls','routes_to','falls_back_to','registers','writes_to'];
+arrowTypes.forEach(t => {
+  defs.append('marker').attr('id','arrow-'+t).attr('viewBox','0 -4 8 8').attr('refX',18).attr('refY',0)
+    .attr('markerWidth',5).attr('markerHeight',5).attr('orient','auto')
+    .append('path').attr('d','M0,-4L8,0L0,4').attr('class','edge-arrow');
+});
+
+// Gradient for animated edges
+const grad = defs.append('linearGradient').attr('id','edgeFlow').attr('gradientUnits','userSpaceOnUse');
+grad.append('stop').attr('offset','0%').attr('stop-color','var(--accent2)').attr('stop-opacity',0);
+grad.append('stop').attr('offset','50%').attr('stop-color','var(--accent2)').attr('stop-opacity',.8);
+grad.append('stop').attr('offset','100%').attr('stop-color','var(--accent2)').attr('stop-opacity',0);
+
+zoom = d3.zoom().scaleExtent([0.08, 5]).on('zoom', onZoom);
+svg.call(zoom);
+g = svg.append('g');
+
+// ── Simulation ──
+simulation = d3.forceSimulation(NODES)
+  .force('link', d3.forceLink(EDGES).id(d=>d.id).distance(70))
+  .force('charge', d3.forceManyBody().strength(-250))
+  .force('center', d3.forceCenter(0,0))
+  .force('collision', d3.forceCollide().radius(d=>(RADII[d.type]||7)+8))
+  .alphaDecay(0.015);
+
+// ── Render edges ──
+link = g.append('g').selectAll('line').data(EDGES).join('line')
+  .attr('class', d=>'edge '+d.type)
+  .attr('marker-end', d=>'url(#arrow-'+d.type+')');
+
+// ── Render nodes ──
+node = g.append('g').selectAll('g').data(NODES).join('g')
+  .attr('class', d=>'node-group type-'+d.type)
+  .call(d3.drag().on('start',dragStart).on('drag',dragged).on('end',dragEnd));
+
+// Precompute connection counts for semantic sizing (avoids O(n*m) filter per node)
+const connCountMap=new Map();
+NODES.forEach(n=>{let c=0;EDGES.forEach(e=>{const s=e.source?.id||e.source;const t=e.target?.id||e.target;if(s===n.id||t===n.id)c++});connCountMap.set(n.id,c)});
+
+node.append('circle')
+  .attr('r', d=>{const base=RADII[d.type]||7;const connCount=connCountMap.get(d.id)||0;return Math.max(base,Math.min(base*1.8,base+connCount*0.4))})
+  .attr('fill', d=>COLORS[d.type]||'#6c7086')
+  .attr('stroke', d=>d3.color(COLORS[d.type]||'#6c7086').darker(0.55));
+
+node.append('text')
+  .text(d=>d.name.length>22?d.name.slice(0,20)+'…':d.name)
+  .attr('dy', d=>(RADII[d.type]||7)+11)
+  .attr('font-size', d=>d.type==='package'||d.type==='app'?'11px':'9px');
+
+// ── Events ──
+node.on('click',(ev,d)=>{ev.stopPropagation();selectNode(ev,d)})
+  .on('dblclick',(ev,d)=>{ev.stopPropagation();focusNode(d)})
+  .on('contextmenu',(ev,d)=>{ev.preventDefault();showCtxMenu(ev,d)})
+  .on('mouseenter',(ev,d)=>{showTooltip(ev,d);highlight(d)})
+  .on('mouseleave',()=>{hideTooltip();clearHighlights()});
+
+svg.on('click',deselectNode);
+
+// Rubber-band selection (viewport-relative coords for CSS positioning)
+svg.on('mousedown',(ev)=>{if(ev.shiftKey){isSelecting=true;selectStart={x:ev.clientX,y:ev.clientY};document.getElementById('selection-rect').style.display='block'}});
+svg.on('mousemove',(ev)=>{if(!isSelecting)return;const r=document.getElementById('selection-rect');const x=Math.min(selectStart.x,ev.clientX);const y=Math.min(selectStart.y,ev.clientY);r.style.left=x+'px';r.style.top=y+'px';r.style.width=Math.abs(ev.clientX-selectStart.x)+'px';r.style.height=Math.abs(ev.clientY-selectStart.y)+'px'});
+svg.on('mouseup',()=>{if(!isSelecting)return;isSelecting=false;document.getElementById('selection-rect').style.display='none'});
+
+let lastMiniMapUpdate=0;
+simulation.on('tick',()=>{
+  link.attr('x1',d=>d.source.x).attr('y1',d=>d.source.y)
+      .attr('x2',d=>d.target.x).attr('y2',d=>d.target.y);
+  node.attr('transform',d=>'translate('+d.x+','+d.y+')');
+  // Throttle mini-map to every 500ms for performance
+  const now=Date.now();
+  if(now-lastMiniMapUpdate>500){updateMiniMap();lastMiniMapUpdate=now;}
+});
+
+// ── Initialize ──
+initTheme();
+applyLayout('force', true);
+switchView('overall_architecture', true);
+buildLegend(); buildFilters(); updateCounts();
+svgoInit();
+restoreLayout();
+addAriaLabels();
+// Hide loading overlay
+setTimeout(()=>{
+  const ld=document.getElementById('loading');
+  if(ld)ld.classList.add('hidden');
+}, 300);
+console.log('Architecture Explorer ready - '+NODES.length+' nodes, '+EDGES.length+' edges, '+Object.keys(VIEWS).length+' views');
+
+// Global error handler — shows toast instead of silently breaking
+window.addEventListener('error',e=>{
+  showToast('Error: '+(e.message||'Unknown error'));
+  console.error('Explorer runtime error:',e.error||e);
+});
+window.addEventListener('unhandledrejection',e=>{
+  showToast('Error: '+(e.reason?.message||String(e.reason||'Promise rejected')));
+  console.error('Explorer unhandled rejection:',e.reason);
+});
+
+// ═══════════════════════════════════════════════════════════════════════
+// THEME SUPPORT
+// ═══════════════════════════════════════════════════════════════════════
+
+function initTheme(){
+  const saved=localStorage.getItem('hamafx-theme')||'dark';
+  document.documentElement.setAttribute('data-theme',saved);
+}
+function toggleTheme(){
+  const cur=document.documentElement.getAttribute('data-theme')||'dark';
+  const next=cur==='dark'?'light':'dark';
+  document.documentElement.setAttribute('data-theme',next);
+  localStorage.setItem('hamafx-theme',next);
+  document.getElementById('btn-theme').textContent=next==='dark'?'🌙':'☀️';
+  showToast('Theme: '+(next==='dark'?'🌙 Dark':'☀️ Light'));
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// EXPORT FUNCTIONS
+// ═══════════════════════════════════════════════════════════════════════
+
+function exportPng(){
+  const svgEl=svg.node();
+  if(!svgEl)return;
+  const clone=svgEl.cloneNode(true);
+  clone.setAttribute('xmlns','http://www.w3.org/2000/svg');
+  const s=new XMLSerializer().serializeToString(clone);
+  const blob=new Blob([s],{type:'image/svg+xml'});
+  const url=URL.createObjectURL(blob);
+  const img=new Image();
+  img.onload=()=>{
+    const c=document.createElement('canvas');
+    c.width=W*2;c.height=H*2;
+    const ctx=c.getContext('2d');
+    ctx.fillStyle=getComputedStyle(document.body).getPropertyValue('--bg').trim()||'#0f1117';
+    ctx.fillRect(0,0,c.width,c.height);
+    ctx.drawImage(img,0,0,c.width,c.height);
+    c.toBlob(b=>{
+      if(!b)return;
+      const a=document.createElement('a');
+      a.download='hamafx-architecture-'+currentView+'.png';
+      a.href=URL.createObjectURL(b);a.click();
+      showToast('PNG exported ✓');
+    },'image/png');
+    URL.revokeObjectURL(url);
+  };
+  img.src=url;
+}
+
+function exportSvg(){
+  const svgEl=svg.node();
+  if(!svgEl)return;
+  const clone=svgEl.cloneNode(true);
+  clone.setAttribute('xmlns','http://www.w3.org/2000/svg');
+  const s=new XMLSerializer().serializeToString(clone);
+  const blob=new Blob(['<?xml version="1.0" encoding="UTF-8"?>\n'+s],{type:'image/svg+xml'});
+  const a=document.createElement('a');
+  a.download='hamafx-architecture-'+currentView+'.svg';
+  a.href=URL.createObjectURL(blob);a.click();
+  showToast('SVG exported ✓');
+}
+
+function exportJson(){
+  // Strip simulation state from nodes before export
+  const clean=JSON.parse(JSON.stringify(DATA));
+  clean.nodes.forEach(n=>{delete n.x;delete n.y;delete n.vx;delete n.vy;delete n.fx;delete n.fy});
+  const blob=new Blob([JSON.stringify(clean,null,2)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.download='hamafx-architecture.json';
+  a.href=URL.createObjectURL(blob);a.click();
+  showToast('JSON exported ✓');
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// ARIA & ACCESSIBILITY
+// ═══════════════════════════════════════════════════════════════════════
+
+function addAriaLabels(){
+  document.getElementById('search').setAttribute('aria-label','Search nodes by name or path');
+  document.getElementById('view-select').setAttribute('aria-label','Select architecture view');
+  document.getElementById('layout-select').setAttribute('aria-label','Select graph layout');
+  document.getElementById('minimap').setAttribute('role','navigation');
+  document.getElementById('minimap').setAttribute('aria-label','Mini-map navigation');
+  document.getElementById('panel').setAttribute('role','complementary');
+  document.getElementById('panel').setAttribute('aria-label','Node details panel');
+  document.getElementById('legend').setAttribute('role','list');
+  document.getElementById('legend').setAttribute('aria-label','Color legend');
+  node.attr('role','button').attr('aria-label',d=>(ICONS[d.type]||'')+' '+d.name+', '+TYPES[d.type]+', '+(connCountMap.get(d.id)||0)+' connections');
+  svg.attr('role','application').attr('aria-label','Architecture graph. Use arrow keys to navigate connected nodes when a node is selected.');
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// DEEP ANALYSIS ENGINE DISPLAY
+// ═══════════════════════════════════════════════════════════════════════
+
+function applyAnalysisIndicators(show) {
+  if (!show) {
+    node.select('circle').attr('stroke-width', 1.5).attr('stroke-dasharray', null);
+    g.selectAll('.hotspot-glow').remove();
+    return;
+  }
+
+  // Get hotspot node IDs
+  const hotspotIds = new Set((ANALYSIS.hotspots||[]).map(h => h.nodeId));
+  const cycleIds = new Set();
+  (ANALYSIS.cyclicDependencies||[]).forEach(c => c.nodes.forEach(n => cycleIds.add(n)));
+  const orphanIds = new Set((ANALYSIS.deadOrOrphanFiles||[]).map(d => d.nodeId));
+
+  // Highlight hotspots with CSS glow (moves with nodes naturally)
+  node.classed('hotspot-node', d => hotspotIds.has(d.id));
+
+  // Mark cycle members and orphans via CSS classes
+  node.classed('cycle-node', d => cycleIds.has(d.id));
+  node.classed('orphan-node', d => orphanIds.has(d.id));
+}
+
+function buildAnalysisPanel() {
+  const panel = document.getElementById('analysis-panel');
+  if (!panel) return;
+
+  const s = ANALYSIS.summary || {};
+  const hotspots = ANALYSIS.hotspots || [];
+  const cycles = ANALYSIS.cyclicDependencies || [];
+  const dead = ANALYSIS.deadOrOrphanFiles || [];
+  const shared = ANALYSIS.sharedUtilities || [];
+  const chains = ANALYSIS.dependencyChains || [];
+
+  panel.innerHTML = \`
+    <div class="analysis-card">
+      <h4>🔬 Architecture Analysis</h4>
+      <div class="analysis-grid">
+        <div class="analysis-stat danger"><span class="val">\${s.totalCycles||0}</span><span class="lbl">Circular Deps</span></div>
+        <div class="analysis-stat warn"><span class="val">\${s.hotspotCount||0}</span><span class="lbl">Hotspots</span></div>
+        <div class="analysis-stat info"><span class="val">\${s.deadOrOrphanCount||0}</span><span class="lbl">Dead/Orphans</span></div>
+        <div class="analysis-stat ok"><span class="val">\${s.sharedUtilityCount||0}</span><span class="lbl">Shared Utils</span></div>
+        <div class="analysis-stat"><span class="val">\${s.avgCoupling||0}</span><span class="lbl">Avg Coupling</span></div>
+        <div class="analysis-stat"><span class="val">\${s.maxChainLength||0}</span><span class="lbl">Max Chain</span></div>
+      </div>
+    </div>
+
+    \${hotspots.length > 0 ? \`
+    <div class="analysis-card">
+      <h4>🔥 Top Hotspots</h4>
+      <div class="analysis-list">
+        \${hotspots.slice(0,8).map(h => '<div class="analysis-item"><span class="ai-name">'+h.name+'</span><span class="ai-meta">('+h.type+') score:'+h.score+' in:'+h.incoming+' out:'+h.outgoing+'</span></div>').join('')}
+      </div>
+    </div>\` : ''}
+
+    \${cycles.length > 0 ? \`
+    <div class="analysis-card">
+      <h4>🔄 Circular Dependencies</h4>
+      <div class="analysis-list">
+        \${cycles.slice(0,5).map(c => '<div class="analysis-item cycle"><span class="ai-name">'+c.length+' nodes</span><span class="ai-meta">'+c.nodes.slice(0,3).join(', ')+(c.nodes.length>3?' +'+(c.nodes.length-3)+' more':'')+'</span></div>').join('')}
+      </div>
+    </div>\` : ''}
+
+    \${dead.length > 0 ? \`
+    <div class="analysis-card">
+      <h4>💀 Dead Code & Orphans</h4>
+      <div class="analysis-list">
+        \${dead.slice(0,8).map(d => '<div class="analysis-item dead"><span class="ai-name">'+d.name+'</span><span class="ai-meta">'+d.reason+'</span></div>').join('')}
+      </div>
+    </div>\` : ''}
+
+    \${shared.length > 0 ? \`
+    <div class="analysis-card">
+      <h4>⭐ Shared Utilities</h4>
+      <div class="analysis-list">
+        \${shared.slice(0,8).map(u => '<div class="analysis-item shared"><span class="ai-name">'+u.name+'</span><span class="ai-meta">imported by '+u.count+' files</span></div>').join('')}
+      </div>
+    </div>\` : ''}
+
+    \${chains.length > 0 ? \`
+    <div class="analysis-card">
+      <h4>🛤️ Longest Dependency Chains</h4>
+      <div class="analysis-list">
+        \${chains.slice(0,5).map(c => '<div class="analysis-item chain"><span class="ai-name">'+c.startName+' → '+c.endName+'</span><span class="ai-meta">'+c.length+' hops</span></div>').join('')}
+      </div>
+    </div>\` : ''}
+  \`;
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// SPECIALIZED ARCHITECTURE VIEWS
+// ═══════════════════════════════════════════════════════════════════════
+
+function switchView(viewKey, instant) {
+  currentView = viewKey;
+  const viewDef = VIEWS[viewKey];
+  if (!viewDef) return;
+
+  // Update dropdown
+  const vs = document.getElementById('view-select');
+  if (vs) vs.value = viewKey;
+
+  // Get allowed types from view definition
+  const allowedNodeTypes = new Set(viewDef.nodeTypes || []);
+  const allowedEdgeTypes = new Set(viewDef.edgeTypes || []);
+
+  // Filter nodes and edges
+  node.style('display', d => allowedNodeTypes.has(d.type) ? null : 'none');
+  link.style('display', e => allowedEdgeTypes.has(e.type) ? null : 'none');
+
+  // Apply default layout for this view (preserve pinned positions)
+  const layoutKey = VIEW_LAYOUT_MAP[viewDef.layout] || 'force';
+  applyViewLayout(layoutKey, instant);
+
+  // Show view description
+  const desc = viewDef.description || '';
+  const truncated = desc.length > 60 ? desc.slice(0,60)+'…' : desc;
+  showToast((viewDef.name||viewKey).replace(/_/g,' ')+': '+truncated);
+
+  // Toggle analysis panel for analysis view
+  const ap = document.getElementById('analysis-panel');
+  if (ap) { ap.style.display = viewKey === 'architecture_analysis' ? 'block' : 'none'; }
+  if (viewKey === 'architecture_analysis') buildAnalysisPanel();
+
+  // Apply visual indicators for analysis view
+  applyAnalysisIndicators(viewKey === 'architecture_analysis');
+
+  // Update status bar
+  document.getElementById('status-layout').textContent = 'View: '+(viewDef.name||viewKey)+' · Layout: '+layoutKey.charAt(0).toUpperCase()+layoutKey.slice(1);
+
+  // Update legend to show only relevant types
+  buildLegend();
+
+  updateCounts();
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// LAYOUT ENGINE
+// ═══════════════════════════════════════════════════════════════════════
+
+/** Layout switch that preserves pinned node positions (for view switching). */
+/** Re-apply the current view's type filter (used after search clear). */
+function reapplyViewFilter() {
+  const viewDef = VIEWS[currentView];
+  if (!viewDef) { node.style('display',null); link.style('display',null); return; }
+  const allowedNodeTypes = new Set(viewDef.nodeTypes || []);
+  const allowedEdgeTypes = new Set(viewDef.edgeTypes || []);
+  node.style('display', d => allowedNodeTypes.has(d.type) ? null : 'none');
+  link.style('display', e => allowedEdgeTypes.has(e.type) ? null : 'none');
+}
+
+function applyViewLayout(layout, instant) {
+  applyLayout(layout, instant, true);
+}
+
+function applyLayout(layout, instant, keepPinned) {
+  const duration = instant ? 0 : 600;
+  currentLayout = layout;
+  document.getElementById('layout-select').value = layout;
+  document.getElementById('status-layout').textContent = 'Layout: '+layout.charAt(0).toUpperCase()+layout.slice(1);
+
+  // Release any pinned nodes (skip when switching views to preserve positions)
+  if (!keepPinned) NODES.forEach(n => { n.fx = null; n.fy = null; });
+
+  switch(layout) {
+    case 'force':
+      simulation.force('x', null).force('y', null);
+      simulation.alpha(1).restart();
+      break;
+    case 'tree':
+      simulation.stop();
+      applyTreeLayout(duration, keepPinned);
+      break;
+    case 'radial':
+      simulation.stop();
+      applyRadialLayout(duration, keepPinned);
+      break;
+    case 'grid':
+      simulation.stop();
+      applyGridLayout(duration, keepPinned);
+      break;
+  }
+
+  if (layout === 'force') showToast('Layout: Force-directed');
+  else if (layout === 'tree') showToast('Layout: Hierarchical Tree');
+  else if (layout === 'radial') showToast('Layout: Radial');
+  else if (layout === 'grid') showToast('Layout: Grid');
+}
+
+function applyTreeLayout(duration, keepPinned) {
+  // Build parent-child hierarchy from edges (packages → modules)
+  const pkgNodes = NODES.filter(n => n.type === 'package');
+  const roots = pkgNodes.length > 0 ? pkgNodes : [NODES[0]];
+  const treeData = buildTree(roots);
+  if (!treeData) return;
+
+  const treeLayout = d3.tree().size([W*2, H*1.8]).nodeSize([40, 120]);
+  const root = d3.hierarchy(treeData);
+  treeLayout(root);
+
+  // Map back positions
+  const posMap = new Map();
+  root.each(d => { if (d.data.id) posMap.set(d.data.id, {x:d.x-W, y:d.y-H*0.7}); });
+
+  transitionNodes(posMap, duration, keepPinned);
+}
+
+function applyRadialLayout(duration, keepPinned) {
+  const pkgNodes = NODES.filter(n => n.type === 'package');
+  const roots = pkgNodes.length > 0 ? pkgNodes : [NODES[0]];
+  const treeData = buildTree(roots);
+  if (!treeData) return;
+
+  const radius = Math.min(W, H) * 1.2;
+  const radialLayout = d3.cluster().size([2*Math.PI, radius]);
+  const root = d3.hierarchy(treeData);
+  radialLayout(root);
+
+  const posMap = new Map();
+  root.each(d => { if (d.data.id) posMap.set(d.data.id, {x:d.y*Math.cos(d.x-Math.PI/2), y:d.y*Math.sin(d.x-Math.PI/2)}); });
+
+  transitionNodes(posMap, duration, keepPinned);
+}
+
+function applyGridLayout(duration, keepPinned) {
+  const visible = NODES.filter(n => n.x !== undefined && !collapsedPkgs.has(n.pkg));
+  const cols = Math.ceil(Math.sqrt(visible.length));
+  const spacing = Math.max(50, Math.min(120, W*0.8/cols));
+  const posMap = new Map();
+  visible.forEach((n, i) => {
+    posMap.set(n.id, {
+      x: (i % cols - cols/2) * spacing,
+      y: (Math.floor(i/cols) - Math.floor(visible.length/cols)/2) * spacing
+    });
+  });
+  transitionNodes(posMap, duration, keepPinned);
+}
+
+function buildTree(roots) {
+  const childrenMap = new Map();
+  NODES.forEach(n => { childrenMap.set(n.id, []); });
+  EDGES.forEach(e => {
+    const src = e.source?.id || e.source;
+    const tgt = e.target?.id || e.target;
+    if (childrenMap.has(src)) childrenMap.get(src).push(NODES.find(n=>n.id===tgt));
+  });
+
+  const visited = new Set();
+  function makeNode(n) {
+    if (visited.has(n.id)) return null; // Cycle guard
+    visited.add(n.id);
+    const children = (childrenMap.get(n.id)||[]).map(makeNode).filter(Boolean);
+    return { id:n.id, name:n.name, type:n.type, children:children.length>0?children:undefined };
+  }
+
+  const trees = roots.map(makeNode).filter(Boolean);
+  if (trees.length === 1) return trees[0];
+  return { id:'__root__', name:'Project Root', type:'package', children:trees };
+}
+
+function transitionNodes(posMap, duration, keepPinned) {
+  node.transition().duration(duration)
+    .attr('transform', d => {
+      const pos = posMap.get(d.id);
+      // Skip pinned nodes when keepPinned is true (preserves dragged positions)
+      if (keepPinned && (d.fx !== null || d.fy !== null)) return 'translate('+(d.x||0)+','+(d.y||0)+')';
+      if (pos) { d.x = pos.x; d.y = pos.y; }
+      return 'translate('+(d.x||0)+','+(d.y||0)+')';
+    });
+
+  link.transition().duration(duration)
+    .attr('x1', d=>d.source.x).attr('y1', d=>d.source.y)
+    .attr('x2', d=>d.target.x).attr('y2', d=>d.target.y);
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// COLLAPSE / EXPAND
+// ═══════════════════════════════════════════════════════════════════════
+
+function togglePackageCollapse(pkgName) {
+  if (collapsedPkgs.has(pkgName)) {
+    collapsedPkgs.delete(pkgName);
+  } else {
+    collapsedPkgs.add(pkgName);
+  }
+  applyCollapse();
+}
+
+function collapseAll() {
+  if (collapsedPkgs.size > 0) {
+    collapsedPkgs.clear();
+  } else {
+    const pkgs = new Set(NODES.map(n=>n.pkg).filter(Boolean));
+    pkgs.forEach(p=>collapsedPkgs.add(p));
+  }
+  applyCollapse();
+}
+
+function applyCollapse() {
+  node.style('display', d => collapsedPkgs.has(d.pkg) ? 'none' : null);
+  link.style('display', e => {
+    const s = NODES.find(n=>n.id===(e.source?.id||e.source));
+    const t = NODES.find(n=>n.id===(e.target?.id||e.target));
+    if (!s||!t) return null;
+    return (collapsedPkgs.has(s.pkg)||collapsedPkgs.has(t.pkg)) ? 'none' : null;
+  });
+  document.getElementById('status-collapsed').textContent = 'Collapsed: '+collapsedPkgs.size;
+  updateCounts();
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// NODE GROUPING
+// ═══════════════════════════════════════════════════════════════════════
+
+function createGroup() {
+  const selected = node.filter('.selected');
+  if (selected.size() < 2) { showToast('Select 2+ nodes with Shift+click first'); return; }
+  groupCounter++;
+  const groupId = 'grp-'+groupCounter;
+  const memberIds = new Set(selected.data().map(d=>d.id));
+  groups.push({id:groupId, members:memberIds, label:'Group '+groupCounter});
+
+  // Visual: add group badge
+  const selData = selected.data();
+  const cx = selData.reduce((s,d)=>s+d.x,0)/selData.length;
+  const cy = selData.reduce((s,d)=>s+d.y,0)/selData.length;
+
+  const badgeG = g.append('g').attr('class','group-badge-g').attr('transform','translate('+cx+','+cy+')');
+  badgeG.append('rect').attr('class','group-badge').attr('x',-40).attr('y',-12).attr('width',80).attr('height',24);
+  badgeG.append('text').attr('class','group-badge-text').text('Group '+groupCounter);
+
+  document.getElementById('status-groups').textContent = 'Groups: '+groups.length;
+  showToast('Created Group '+groupCounter+' ('+memberIds.size+' nodes)');
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// SAVE / RESTORE LAYOUT
+// ═══════════════════════════════════════════════════════════════════════
+
+function saveLayout() {
+  const positions = {};
+  NODES.forEach(n => { if (n.x!==undefined) positions[n.id] = {x:n.x, y:n.y}; });
+  const state = {positions, layout:currentLayout, view:currentView, collapsed:[...collapsedPkgs], groups};
+  localStorage.setItem('hamafx-explorer-state', JSON.stringify(state));
+  showToast('Layout saved ✓');
+}
+
+function restoreLayout() {
+  try {
+    const raw = localStorage.getItem('hamafx-explorer-state');
+    if (!raw) return;
+    const state = JSON.parse(raw);
+    if (state.positions) {
+      Object.entries(state.positions).forEach(([id,pos]) => {
+        const n = NODES.find(n=>n.id===id);
+        if (n) { n.x = pos.x; n.y = pos.y; n.fx = pos.x; n.fy = pos.y; }
+      });
+      node.attr('transform', d=>'translate('+(d.x||0)+','+(d.y||0)+')');
+    }
+    if (state.collapsed) { collapsedPkgs = new Set(state.collapsed); applyCollapse(); }
+    if (state.groups) { groups = state.groups; document.getElementById('status-groups').textContent='Groups: '+groups.length; }
+    if (state.layout && state.layout !== currentLayout) {
+      // Only update the dropdown, don't re-run layout (preserves restored positions)
+      currentLayout = state.layout;
+      document.getElementById('layout-select').value = state.layout;
+    }
+    if (state.view && state.view !== currentView) {
+      currentView = state.view;
+      document.getElementById('view-select').value = state.view;
+    }
+    if (state.positions) {
+      document.getElementById('status-layout').textContent = 'View: '+currentView.replace(/_/g,' ')+' · Layout: '+currentLayout.charAt(0).toUpperCase()+currentLayout.slice(1);
+    }
+    showToast('Layout restored ✓');
+  } catch(e) { /* ignore corrupt state */ }
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// SVG EXPORT
+// ═══════════════════════════════════════════════════════════════════════
+
+function svgoInit() {
+  // Store initial view for export
+  window._exportState = {svgo:svg};
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// DRAG HANDLERS
+// ═══════════════════════════════════════════════════════════════════════
+
+function dragStart(ev) {
+  if (!ev.active && currentLayout==='force') simulation.alphaTarget(0.3).restart();
+  ev.subject.fx = ev.subject.x; ev.subject.fy = ev.subject.y;
+}
+function dragged(ev) {
+  ev.subject.fx = ev.x; ev.subject.fy = ev.y;
+}
+function dragEnd(ev) {
+  if (!ev.active && currentLayout==='force') simulation.alphaTarget(0);
+  if (currentLayout !== 'force') { ev.subject.fx = null; ev.subject.fy = null; }
+  else { ev.subject.fx = null; ev.subject.fy = null; }
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// ZOOM
+// ═══════════════════════════════════════════════════════════════════════
+
+function onZoom(ev) {
+  g.attr('transform', ev.transform);
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// NODE SELECTION & PANEL
+// ═══════════════════════════════════════════════════════════════════════
+
+function selectNode(ev, d) {
+  // If called from ctxmenu (no real event), ev is undefined → treat as single-select
+  if (ev?.shiftKey) { // Multi-select — toggle this node
+    const d3node = d3.select(node.filter(n2=>n2.id===d.id).node());
+    const wasSelected = d3node.classed('selected');
+    node.classed('selected', n => n.id === d.id ? !wasSelected : d3.select(node.filter(n2=>n2.id===n.id).node()).classed('selected'));
+    const count = node.filter('.selected').size();
+    showToast(count+' nodes selected');
+    return;
+  }
+  selectedNode = d;
+  document.getElementById('panel').classList.add('open');
+  renderPanel(d);
+  node.classed('selected', n=>n.id===d.id);
+  // Phase 8: Invoke plugin hooks
+  try{
+    const plugins=window.__HAMAFX_PLUGINS__||{};
+    Object.values(plugins).forEach(p=>{if(p.onNodeClick)try{p.onNodeClick(d,ev)}catch(e){console.warn('Plugin hook error:',e)}});
+  }catch(e){}
+}
+
+function deselectNode() {
+  selectedNode = null;
+  document.getElementById('panel').classList.remove('open');
+  node.classed('selected', false);
+}
+
+function focusNode(d) {
+  const t = d3.zoomIdentity.translate(W/2,H/2).scale(2.5).translate(-d.x,-d.y);
+  svg.transition().duration(500).call(zoom.transform, t);
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// HIGHLIGHTING
+// ═══════════════════════════════════════════════════════════════════════
+
+function highlight(d) {
+  const connected = new Set(); connected.add(d.id);
+  EDGES.forEach(e=>{
+    const s=e.source?.id||e.source; const t=e.target?.id||e.target;
+    if(s===d.id)connected.add(t); if(t===d.id)connected.add(s);
+  });
+  node.classed('highlighted', n=>n.id===d.id).classed('dimmed', n=>!connected.has(n.id));
+  link.classed('highlighted', e=>(e.source?.id||e.source)===d.id||(e.target?.id||e.target)===d.id)
+    .classed('dimmed', e=>(e.source?.id||e.source)!==d.id&&(e.target?.id||e.target)!==d.id);
+}
+
+function clearHighlights() {
+  node.classed('highlighted dimmed', false);
+  link.classed('highlighted dimmed', false);
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// TOOLTIP & CONTEXT MENU
+// ═══════════════════════════════════════════════════════════════════════
+
+function showTooltip(ev, d) {
+  const t=document.getElementById('tooltip');
+  t.querySelector('.tt-name').textContent=(ICONS[d.type]||'')+' '+d.name;
+  t.querySelector('.tt-type').textContent=TYPES[d.type]||d.type;
+  t.classList.add('visible');
+  t.style.left=(ev.clientX+12)+'px'; t.style.top=(ev.clientY-8)+'px';
+}
+function hideTooltip(){document.getElementById('tooltip').classList.remove('visible')}
+
+function showCtxMenu(ev, d) {
+  const m=document.getElementById('ctxmenu');
+  m.innerHTML=\`
+    <button data-a="focus">🔍 Focus</button>
+    <button data-a="neighbors">👥 Highlight neighbors</button>
+    <button data-a="collapse">📁 Toggle collapse package</button>
+    <button data-a="select">☑️ Add to selection</button>
+    <button data-a="impact">💥 Impact Analysis</button>
+    <button data-a="info">ℹ️ Details</button>
+  \`;
+  m.style.left=ev.clientX+'px'; m.style.top=ev.clientY+'px'; m.classList.add('open');
+  m.onclick=e=>{
+    const a=e.target.dataset.a;
+    if(a==='focus')focusNode(d); if(a==='neighbors'){selectNode(null,d);highlight(d);}
+    if(a==='collapse')togglePackageCollapse(d.pkg);
+    if(a==='select'){const dn=d3.select(node.filter(n2=>n2.id===d.id).node());const ws=dn.classed('selected');node.classed('selected',n=>n.id===d.id?!ws:d3.select(node.filter(n2=>n2.id===n.id).node()).classed('selected'))}
+    if(a==='impact'){selectNode(null,d);showImpactAnalysis()}
+    if(a==='info')selectNode(null,d); m.classList.remove('open');
+  };
+  setTimeout(()=>document.addEventListener('click',()=>m.classList.remove('open'),{once:true}),10);
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// SIDE PANEL
+// ═══════════════════════════════════════════════════════════════════════
+
+function renderPanel(d) {
+  const c=document.getElementById('panel-content');
+  const m=d.metadata||{};
+  const edges=EDGES.filter(e=>(e.source?.id||e.source)===d.id||(e.target?.id||e.target)===d.id);
+  const out=edges.filter(e=>(e.source?.id||e.source)===d.id);
+  const inc=edges.filter(e=>(e.target?.id||e.target)===d.id);
+  c.innerHTML=\`
+    <h3>\${ICONS[d.type]||''} \${d.name}</h3>
+    <div class="meta">Type: <b>\${TYPES[d.type]||d.type}</b></div>
+    <div class="meta">Package: \${d.pkg||'(root)'}</div>
+    \${d.description?'<div class="desc">'+d.description+'</div>':''}
+    \${d.path?'<div class="meta" style="font-family:var(--font-mono);font-size:10px">📂 '+d.path+'</div>':''}
+    <div class="section"><h4>Outgoing (\${out.length})</h4>
+      \${out.slice(0,12).map(e=>{const t=NODES.find(n=>n.id===(e.target?.id||e.target));return'<span class="tag import">→ '+(t?.name||e.target)+'</span>'}).join('')}
+    </div>
+    <div class="section"><h4>Incoming (\${inc.length})</h4>
+      \${inc.slice(0,12).map(e=>{const s=NODES.find(n=>n.id===(e.source?.id||e.source));return'<span class="tag export">← '+(s?.name||e.source)+'</span>'}).join('')}
+    </div>
+    \${m.exports?.length?'<div class="section"><h4>Exports</h4>'+m.exports.slice(0,10).map(e=>'<span class="tag">'+e+'</span>').join('')+'</div>':''}
+    \${m.functions?.length?'<div class="section"><h4>Functions</h4>'+m.functions.slice(0,10).map(e=>'<span class="tag">'+e+'</span>').join('')+'</div>':''}
+    \${m.columns?'<div class="section"><h4>Columns ('+m.columns.length+')</h4>'+m.columns.slice(0,20).map(e=>'<span class="tag">'+e+'</span>').join('')+'</div>':''}
+  \`;
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// MINI-MAP WITH VIEWPORT
+// ═══════════════════════════════════════════════════════════════════════
+
+function updateMiniMap() {
+  const mmSvg=d3.select('#minimap svg');
+  mmSvg.selectAll('*').remove();
+  const b=getGraphBounds();
+  const pad=20, mmW=170, mmH=120, mgn=8;
+  const gW=b.maxX-b.minX+2*pad, gH=b.maxY-b.minY+2*pad;
+  const sc=Math.min((mmW-2*mgn)/gW,(mmH-2*mgn)/gH);
+
+  // Background
+  mmSvg.append('rect').attr('class','mm-bg').attr('width',mmW).attr('height',mmH);
+
+  // Nodes
+  mmSvg.selectAll('circle').data(NODES.filter(n=>n.x!==undefined)).join('circle')
+    .attr('cx',d=>mgn+(d.x-b.minX+pad)*sc).attr('cy',d=>mgn+(d.y-b.minY+pad)*sc)
+    .attr('r',1.2).attr('fill',d=>COLORS[d.type]||'#6c7086');
+
+  // Viewport rect
+  const t=d3.zoomTransform(svg.node());
+  const vx=(-t.x/t.k-b.minX+pad)*sc+mgn;
+  const vy=(-t.y/t.k-b.minY+pad)*sc+mgn;
+  const vw=W/t.k*sc, vh=H/t.k*sc;
+  mmSvg.append('rect').attr('class','viewport')
+    .attr('x',vx).attr('y',vy).attr('width',vw).attr('height',vh);
+}
+
+// Mini-map click navigation
+document.getElementById('minimap').addEventListener('click', function(ev) {
+  const rect=this.getBoundingClientRect();
+  const mx=ev.clientX-rect.left, my=ev.clientY-rect.top;
+  const b=getGraphBounds(); const pad=20, mmW=170, mmH=120, mgn=8;
+  const sc=Math.min((mmW-2*mgn)/(b.maxX-b.minX+2*pad),(mmH-2*mgn)/(b.maxY-b.minY+2*pad));
+  const gx=(mx-mgn)/sc+b.minX-pad, gy=(my-mgn)/sc+b.minY-pad;
+  const t=d3.zoomIdentity.translate(W/2-gx*zoom.scale(),H/2-gy*zoom.scale());
+  svg.transition().duration(300).call(zoom.transform, t);
+});
+
+function getGraphBounds() {
+  let x1=Infinity,y1=Infinity,x2=-Infinity,y2=-Infinity;
+  NODES.forEach(d=>{if(d.x<x1)x1=d.x;if(d.y<y1)y1=d.y;if(d.x>x2)x2=d.x;if(d.y>y2)y2=d.y;});
+  return{minX:x1===Infinity?-500:x1,minY:y1===Infinity?-500:y1,maxX:x2===-Infinity?500:x2,maxY:y2===-Infinity?500:y2};
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// LEGEND & FILTERS & COUNTS
+// ═══════════════════════════════════════════════════════════════════════
+
+function buildLegend() {
+  // Show only types relevant to current view
+  const viewDef = VIEWS[currentView];
+  const allowedTypes = viewDef ? new Set(viewDef.nodeTypes) : null;
+  const entries = Object.entries(COLORS).filter(([t]) => !allowedTypes || allowedTypes.has(t));
+  document.getElementById('legend').innerHTML = entries.map(([t,c])=>
+    '<div class="item"><span class="dot" style="background:'+c+'"></span><span>'+(TYPES[t]||t)+'</span></div>'
+  ).join('');
+}
+
+function buildFilters() {
+  const f=document.getElementById('filters');
+  const types=[...new Set(NODES.map(n=>n.type))].sort();
+  const pkgs=[...new Set(NODES.map(n=>n.pkg).filter(Boolean))].sort();
+  f.innerHTML='<div style="font-size:11px;font-weight:600;color:var(--accent);padding:2px">Types</div>'+
+    types.map(t=>'<label><input type="checkbox" checked data-ft="'+t+'" onchange="applyFilters()"> '+(ICONS[t]||'')+' '+(TYPES[t]||t)+' ('+NODES.filter(n=>n.type===t).length+')</label>').join('')+
+    '<div style="font-size:11px;font-weight:600;color:var(--accent);padding:2px;margin-top:6px">Packages</div>'+
+    pkgs.map(p=>'<label><input type="checkbox" checked data-fp="'+p.replace(/"/g,'&quot;')+'" onchange="applyFilters()"> 📦 '+p+' ('+NODES.filter(n=>n.pkg===p).length+')</label>').join('');
+}
+
+function applyFilters() {
+  const ct=new Set([...document.querySelectorAll('#filters [data-ft]:checked')].map(e=>e.dataset.ft));
+  const cp=new Set([...document.querySelectorAll('#filters [data-fp]:checked')].map(e=>e.dataset.fp));
+  node.style('display',d=>(ct.has(d.type)&&cp.has(d.pkg||''))?null:'none');
+  link.style('display',e=>{
+    const s=NODES.find(n=>n.id===(e.source?.id||e.source));
+    const t=NODES.find(n=>n.id===(e.target?.id||e.target));
+    return s&&t&&ct.has(s.type)&&cp.has(s.pkg||'')&&ct.has(t.type)&&cp.has(t.pkg||'')?null:'none';
+  });
+}
+
+function updateCounts() {
+  const vis=node.filter(function(){return d3.select(this).style('display')!=='none'}).size();
+  document.getElementById('node-count').textContent=vis+'/'+NODES.length+' nodes · '+EDGES.length+' edges';
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// TOAST
+// ═══════════════════════════════════════════════════════════════════════
+
+let toastTimer;
+function showToast(msg) {
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>t.classList.remove('show'), 1800);
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// SEARCH
+// ═══════════════════════════════════════════════════════════════════════
+
+// Search listener removed — replaced by Phase 8 NLP-enhanced search below
+// (The NLP handler includes original substring fallback for backward compat)
+
+// ═══════════════════════════════════════════════════════════════════════
+// BUTTON HANDLERS
+// ═══════════════════════════════════════════════════════════════════════
+
+document.getElementById('view-select').addEventListener('change', function(){switchView(this.value)});
+document.getElementById('layout-select').addEventListener('change', function(){applyLayout(this.value)});
+document.getElementById('btn-fit').addEventListener('click',()=>{
+  const b=getGraphBounds();
+  const sc=Math.min(W/(b.maxX-b.minX+40),H/(b.maxY-b.minY+40))*0.85;
+  svg.transition().duration(500).call(zoom.transform,d3.zoomIdentity.translate(W/2-(b.minX+b.maxX)/2*sc,H/2-(b.minY+b.maxY)/2*sc).scale(sc));
+});
+document.getElementById('btn-pause').addEventListener('click',function(){
+  paused=!paused;
+  if(paused){simulation.stop();this.classList.add('active');this.textContent='▶️';}
+  else{simulation.alpha(1).restart();this.classList.remove('active');this.textContent='⏯️';}
+});
+document.getElementById('btn-collapse').addEventListener('click',collapseAll);
+document.getElementById('btn-group').addEventListener('click',createGroup);
+document.getElementById('btn-filters').addEventListener('click',function(){document.getElementById('filters').classList.toggle('open');this.classList.toggle('active')});
+document.getElementById('btn-save').addEventListener('click',saveLayout);
+document.getElementById('btn-restore').addEventListener('click',restoreLayout);
+document.getElementById('btn-fullscreen').addEventListener('click',()=>{if(document.fullscreenElement)document.exitFullscreen();else document.documentElement.requestFullscreen()});
+document.getElementById('btn-theme').addEventListener('click',toggleTheme);
+document.getElementById('btn-export-png').addEventListener('click',exportPng);
+document.getElementById('btn-export-svg').addEventListener('click',exportSvg);
+document.getElementById('btn-export-json').addEventListener('click',exportJson);
+document.getElementById('close-panel').addEventListener('click',deselectNode);
+
+// ═══════════════════════════════════════════════════════════════════════
+// KEYBOARD SHORTCUTS
+// ═══════════════════════════════════════════════════════════════════════
+
+document.addEventListener('keydown',e=>{
+  if(e.target.tagName==='INPUT')return;
+  const k=e.key.toLowerCase();
+  if(e.ctrlKey&&k==='k'){e.preventDefault();document.getElementById('search').focus()}
+  if(e.ctrlKey&&k==='s'){e.preventDefault();saveLayout()}
+  if(e.ctrlKey&&k==='r'){e.preventDefault();restoreLayout()}
+  if(k==='escape')deselectNode();
+  if(e.ctrlKey&&k==='e'){e.preventDefault();exportPng();}
+  if(e.ctrlKey&&k==='j'){e.preventDefault();exportJson();}
+  if(k==='t'&&!e.ctrlKey&&!e.metaKey)toggleTheme();
+  if(k==='arrowright'){if(selectedNode){const out=EDGES.filter(ed=>(ed.source?.id||ed.source)===selectedNode.id);if(out.length>0){const tgt=NODES.find(n=>n.id===(out[0].target?.id||out[0].target));if(tgt){selectNode(null,tgt);focusNode(tgt)}}}}
+  if(k==='arrowleft'){if(selectedNode){const inc=EDGES.filter(ed=>(ed.target?.id||ed.target)===selectedNode.id);if(inc.length>0){const src=NODES.find(n=>n.id===(inc[0].source?.id||inc[0].source));if(src){selectNode(null,src);focusNode(src)}}}}
+  if(k==='f'&&!e.ctrlKey){const b=getGraphBounds();const sc=Math.min(W/(b.maxX-b.minX+40),H/(b.maxY-b.minY+40))*0.5;svg.transition().duration(400).call(zoom.transform,d3.zoomIdentity.translate(W/2,H/2).scale(sc))}
+  if(k==='+'||k==='='){svg.transition().duration(200).call(zoom.scaleBy,1.25)}
+  if(k==='-'){svg.transition().duration(200).call(zoom.scaleBy,.8)}
+  if(k==='g')createGroup();
+  if(k==='v')document.getElementById('view-select').focus();
+  if(k==='l')document.getElementById('layout-select').focus();
+  if(k==='0')switchView('overall_architecture');
+  if(k==='1')switchView('dependency_graph');
+  if(k==='2')switchView('api_explorer');
+  if(k==='3')switchView('database_explorer');
+  if(k==='4')switchView('ai_workflow');
+  if(k==='5')switchView('tool_execution');
+  if(k==='6')switchView('background_jobs');
+  if(k==='7')switchView('authentication_flow');
+  if(k==='8')switchView('infrastructure');
+  if(k==='9')switchView('request_lifecycle');
+  if(e.code==='Digit1'&&e.shiftKey)applyLayout('force');
+  if(e.code==='Digit2'&&e.shiftKey)applyLayout('tree');
+  if(e.code==='Digit3'&&e.shiftKey)applyLayout('radial');
+  if(e.code==='Digit4'&&e.shiftKey)applyLayout('grid');
+  // Phase 8 shortcuts
+  if(k==='i')showImpactAnalysis();
+  if(k==='r')togglePanel('recommendations-panel');
+  if(k==='u')togglePanel('summaries-panel');
+  if(k==='n')togglePanel('snapshots-panel');
+  if(k==='p')togglePlayback();
+});
+
+// ═══════════════════════════════════════════════════════════════════════
+// PHASE 8: NATURAL LANGUAGE SEARCH
+// ═══════════════════════════════════════════════════════════════════════
+
+let nlpResults=[];
+let nlpActiveIdx=-1;
+
+function nlpSearch(query){
+  const ss=document.getElementById('search-suggestions');
+  if(!query||query.length<2){ss.classList.remove('open');nlpResults=[];nlpActiveIdx=-1;return}
+  const tokens=query.toLowerCase().split(/\s+/);
+  // Score each node: name match + type match + path match + description match
+  const scored=NODES.map(n=>{
+    let score=0;
+    const nl=n.name.toLowerCase();
+    const nt=(TYPES[n.type]||n.type).toLowerCase();
+    const np=(n.path||'').toLowerCase();
+    const nd=(n.description||'').toLowerCase();
+    const pn=(n.pkg||'').toLowerCase();
+    tokens.forEach(t=>{
+      if(nl===t)score+=10;else if(nl.includes(t))score+=6;else if(nl.startsWith(t))score+=4;
+      if(nt===t)score+=8;else if(nt.includes(t))score+=3;
+      if(np.includes(t))score+=2;
+      if(nd.includes(t))score+=1.5;
+      if(pn.includes(t))score+=1;
+    });
+    // Bonus for short names and high-connectivity
+    if(nl.length<12)score+=1;
+    return{node:n,score};
+  }).filter(s=>s.score>0).sort((a,b)=>b.score-a.score);
+  nlpResults=scored.slice(0,15);
+  nlpActiveIdx=-1;
+  if(nlpResults.length===0){ss.classList.remove('open');return}
+  ss.innerHTML=nlpResults.map((r,i)=>\`<div class="search-suggestion\${i===0?' active':''}" data-idx="\${i}"><span class="ss-name">\${ICONS[r.node.type]||''} \${r.node.name}</span><span class="ss-type">\${TYPES[r.node.type]||r.node.type}</span><span class="ss-score">\${r.score.toFixed(1)}</span></div>\`).join('');
+  ss.classList.add('open');
+  nlpActiveIdx=0;
+  // Click handler
+  ss.querySelectorAll('.search-suggestion').forEach(el=>{el.addEventListener('click',()=>{const idx=parseInt(el.dataset.idx);if(!isNaN(idx)&&nlpResults[idx]){selectNode(null,nlpResults[idx].node);focusNode(nlpResults[idx].node);}ss.classList.remove('open')})});
+}
+
+// Enhanced search with NLP
+document.getElementById('search').addEventListener('input',e=>{
+  const q=e.target.value.trim().toLowerCase();
+  nlpSearch(q);
+  // Original search logic (fallback for quick filtering)
+  if(!q){node.style('display',null);link.style('display',null);reapplyViewFilter();updateCounts();return;}
+  // NLP search runs for all query lengths. Substring filter also runs for graph filtering.
+  const matched=new Set();
+  NODES.forEach(d=>{if(d.name.toLowerCase().includes(q)||(d.path||'').toLowerCase().includes(q)||(d.pkg||'').toLowerCase().includes(q))matched.add(d.id)});
+  if(matched.size===0){node.style('display','none');link.style('display','none')}
+  else{node.style('display',d=>matched.has(d.id)?null:'none');link.style('display',e=>{const s=e.source?.id||e.source;const t=e.target?.id||e.target;return matched.has(s)&&matched.has(t)?null:'none'})}
+  updateCounts();
+});
+
+// Close NLP suggestions on blur
+document.getElementById('search').addEventListener('blur',()=>{setTimeout(()=>document.getElementById('search-suggestions').classList.remove('open'),200)});
+// Keyboard nav for suggestions
+document.getElementById('search').addEventListener('keydown',e=>{
+  const ss=document.getElementById('search-suggestions');
+  if(!ss.classList.contains('open'))return;
+  if(e.key==='ArrowDown'){e.preventDefault();nlpActiveIdx=Math.min(nlpActiveIdx+1,nlpResults.length-1);updateSuggestionActive()}
+  if(e.key==='ArrowUp'){e.preventDefault();nlpActiveIdx=Math.max(nlpActiveIdx-1,0);updateSuggestionActive()}
+  if(e.key==='Enter'&&nlpActiveIdx>=0&&nlpResults[nlpActiveIdx]){e.preventDefault();selectNode(null,nlpResults[nlpActiveIdx].node);focusNode(nlpResults[nlpActiveIdx].node);ss.classList.remove('open');nlpSearch('')}
+  if(e.key==='Escape'){ss.classList.remove('open')}
+});
+function updateSuggestionActive(){
+  document.querySelectorAll('#search-suggestions .search-suggestion').forEach((el,i)=>{el.classList.toggle('active',i===nlpActiveIdx)});
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// PHASE 8: IMPACT ANALYSIS — "What breaks if I change this?"
+// ═══════════════════════════════════════════════════════════════════════
+
+function computeImpact(nodeId){
+  // Return cached result if available (avoids BFS on every click)
+  if(impactCache.has(nodeId))return impactCache.get(nodeId);
+  // BFS downstream: who depends on me?
+  const affected=new Set();
+  const queue=[nodeId];
+  const visited=new Set();
+  visited.add(nodeId);
+  while(queue.length>0){
+    const cur=queue.shift();
+    EDGES.forEach(e=>{
+      const tgt=e.target?.id||e.target;
+      const src=e.source?.id||e.source;
+      if(tgt===cur&&!visited.has(src)){visited.add(src);affected.add(src);queue.push(src)}
+    });
+  }
+  // BFS upstream: what do I depend on?
+  const dependsOn=new Set();
+  const q2=[nodeId];
+  const v2=new Set();
+  v2.add(nodeId);
+  while(q2.length>0){
+    const cur=q2.shift();
+    EDGES.forEach(e=>{
+      const tgt=e.target?.id||e.target;
+      const src=e.source?.id||e.source;
+      if(src===cur&&!v2.has(tgt)){v2.add(tgt);dependsOn.add(tgt);q2.push(tgt)}
+    });
+  }
+  const result={
+    nodeId,
+    affected:[...affected],
+    dependsOn:[...dependsOn],
+    directDependents:[...affected].filter(id=>EDGES.some(e=>{const s=e.source?.id||e.source;const t=e.target?.id||e.target;return s===id&&t===nodeId})),
+    directDependencies:[...dependsOn].filter(id=>EDGES.some(e=>{const s=e.source?.id||e.source;const t=e.target?.id||e.target;return s===nodeId&&t===id})),
+    riskScore:Math.min(100,Math.round(affected.size*2.5))
+  };
+  impactCache.set(nodeId,result);
+  return result;
+}
+
+function showImpactAnalysis(){
+  if(!selectedNode){showToast('Select a node first to analyze impact');return}
+  const imp=computeImpact(selectedNode.id);
+  const panel=document.getElementById('panel');
+  panel.classList.add('open');
+  const c=document.getElementById('panel-content');
+  const riskLabel=imp.riskScore>60?'high':imp.riskScore>30?'medium':'low';
+  const allAffected=[...imp.affected].map(id=>NODES.find(n=>n.id===id)).filter(Boolean);
+  const allDeps=[...imp.dependsOn].map(id=>NODES.find(n=>n.id===id)).filter(Boolean);
+  c.innerHTML=\`
+    <h3>💥 Impact Analysis: <span style="color:var(--orange)">\${selectedNode.name}</span></h3>
+    <div class="impact-section">
+      <h4>⚠️ Risk Level</h4>
+      <div class="impact-risk \${riskLabel}">\${riskLabel.toUpperCase()}: \${imp.riskScore}/100</div>
+      <div class="impact-count">Changing this node could affect <b>\${imp.affected.length}</b> downstream nodes.</div>
+    </div>
+    <div class="impact-section">
+      <h4>📥 Depends On (\${imp.dependsOn.length})</h4>
+      <div class="impact-list">\${allDeps.slice(0,20).map(n=>'<span class="impact-node" onclick="selectNode(null,NODES.find(x=>x.id===\\''+n.id+'\\'));focusNode(NODES.find(x=>x.id===\\''+n.id+'\\'))" title="'+n.path+'">'+(ICONS[n.type]||'')+' '+n.name+'</span>').join('')||'<span style="font-size:10px;color:var(--text3)">None — this is a leaf node</span>'}</div>
+    </div>
+    <div class="impact-section">
+      <h4>📤 Affected Downstream (\${imp.affected.length})</h4>
+      <div class="impact-list">\${allAffected.slice(0,20).map(n=>'<span class="impact-node" onclick="selectNode(null,NODES.find(x=>x.id===\\''+n.id+'\\'));focusNode(NODES.find(x=>x.id===\\''+n.id+'\\'))" title="'+n.path+'">'+(ICONS[n.type]||'')+' '+n.name+'</span>').join('')||'<span style="font-size:10px;color:var(--text3)">No downstream dependents — safe to change</span>'}</div>
+    </div>
+    <button class="top-btn" onclick="selectNode(null,selectedNode);renderPanel(selectedNode)" style="margin-top:8px;width:100%">← Back to Details</button>
+  \`;
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// PHASE 8: SMART SUMMARIES & RECOMMENDATIONS
+// ═══════════════════════════════════════════════════════════════════════
+
+function buildRecommendationsPanel(){
+  const recs=DATA.recommendations||[];
+  const c=document.getElementById('rec-content');
+  if(recs.length===0){c.innerHTML='<div style="color:var(--text3);font-size:11px">No recommendations — architecture looks healthy!</div>';return}
+  c.innerHTML=recs.map(r=>\`
+    <div class="rec-card severity-\${r.severity}">
+      <div class="rec-title">\${r.severity==='high'?'🔴':r.severity==='medium'?'🟠':r.severity==='low'?'🟡':'🔵'} \${r.title}</div>
+      <div class="rec-desc">\${r.description}</div>
+      <div class="rec-suggestion">💬 \${r.suggestion}</div>
+      <div class="rec-category">\${r.category}</div>
+    </div>
+  \`).join('');
+}
+
+function buildSummariesPanel(){
+  const sums=DATA.smartSummaries||[];
+  const c=document.getElementById('summary-content');
+  if(sums.length===0){c.innerHTML='<div style="color:var(--text3);font-size:11px">No summaries available.</div>';return}
+  c.innerHTML=sums.map(s=>\`
+    <div class="summary-card">
+      <h4>\${s.title}</h4>
+      <div class="sum-stats">\${(s.stats||[]).map(st=>'<span class="sum-stat">'+st.label+': '+st.value+'</span>').join('')}</div>
+      <div class="sum-text">\${s.summary}</div>
+      \${(s.highlights||[]).map(h=>'<div class="sum-highlight">✨ '+h+'</div>').join('')}
+      \${(s.warnings||[]).map(w=>'<div class="sum-warning">⚠️ '+w+'</div>').join('')}
+    </div>
+  \`).join('');
+}
+
+function togglePanel(panelId){
+  const panels=['recommendations-panel','summaries-panel','snapshots-panel'];
+  const target=document.getElementById(panelId);
+  if(!target)return;
+  // Close others first
+  panels.forEach(p=>{if(p!==panelId){const el=document.getElementById(p);if(el)el.style.display='none'}});
+  const isOpen=target.style.display==='block';
+  target.style.display=isOpen?'none':'block';
+  if(panelId==='recommendations-panel'&&!isOpen)buildRecommendationsPanel();
+  if(panelId==='summaries-panel'&&!isOpen)buildSummariesPanel();
+  if(panelId==='snapshots-panel'&&!isOpen)buildSnapshotsPanel();
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// PHASE 8: GRAPH SNAPSHOTS
+// ═══════════════════════════════════════════════════════════════════════
+
+let snapshots=JSON.parse(localStorage.getItem('hamafx-snapshots')||'[]');
+let selectedSnapshots=[];
+
+function saveSnapshot(){
+  const name=prompt('Snapshot name:','Snapshot '+snapshots.length);
+  if(!name)return;
+  const positions={};
+  NODES.forEach(n=>{if(n.x!==undefined)positions[n.id]={x:n.x,y:n.y}});
+  snapshots.push({
+    id:'snap-'+Date.now(),
+    name,
+    description:'View: '+currentView+' | Layout: '+currentLayout,
+    createdAt:new Date().toISOString(),
+    nodeCount:NODES.length,
+    edgeCount:EDGES.length,
+    viewKey:currentView,
+    nodeIds:NODES.map(n=>n.id),
+    edgeIds:EDGES.map(e=>e.id),
+    positions
+  });
+  localStorage.setItem('hamafx-snapshots',JSON.stringify(snapshots));
+  showToast('Snapshot \"'+name+'\" saved ✓');
+  buildSnapshotsPanel();
+}
+
+function deleteSnapshot(id){
+  snapshots=snapshots.filter(s=>s.id!==id);
+  localStorage.setItem('hamafx-snapshots',JSON.stringify(snapshots));
+  selectedSnapshots=selectedSnapshots.filter(s=>s!==id);
+  buildSnapshotsPanel();
+}
+
+function restoreSnapshot(id){
+  const snap=snapshots.find(s=>s.id===id);
+  if(!snap)return;
+  if(snap.positions){
+    Object.entries(snap.positions).forEach(([nid,pos])=>{
+      const n=NODES.find(x=>x.id===nid);
+      if(n){n.x=pos.x;n.y=pos.y;n.fx=pos.x;n.fy=pos.y}
+    });
+    node.attr('transform',d=>'translate('+(d.x||0)+','+(d.y||0)+')');
+  }
+  if(snap.viewKey&&snap.viewKey!==currentView)switchView(snap.viewKey,true);
+  showToast('Snapshot \"'+snap.name+'\" restored ✓');
+}
+
+function compareSelectedSnapshots(){
+  if(selectedSnapshots.length!==2){showToast('Select exactly 2 snapshots to compare');return}
+  const a=snapshots.find(s=>s.id===selectedSnapshots[0]);
+  const b=snapshots.find(s=>s.id===selectedSnapshots[1]);
+  if(!a||!b)return;
+  const setA=new Set(a.nodeIds);
+  const setB=new Set(b.nodeIds);
+  const added=[...setB].filter(id=>!setA.has(id));
+  const removed=[...setA].filter(id=>!setB.has(id));
+  const panel=document.getElementById('panel');
+  panel.classList.add('open');
+  document.getElementById('panel-content').innerHTML=\`
+    <h3>📸 Compare Snapshots</h3>
+    <div class="meta"><b>\${a.name}</b> (\${a.nodeCount} nodes) vs <b>\${b.name}</b> (\${b.nodeCount} nodes)</div>
+    <div class="impact-section">
+      <h4>➕ Added (\${added.length})</h4>
+      <div class="impact-list">\${added.slice(0,20).map(id=>{const n=NODES.find(x=>x.id===id);return n?'<span class="impact-node">'+(ICONS[n.type]||'')+' '+n.name+'</span>':''}).join('')||'<span style="font-size:10px;color:var(--text3)">None</span>'}</div>
+    </div>
+    <div class="impact-section">
+      <h4>➖ Removed (\${removed.length})</h4>
+      <div class="impact-list">\${removed.slice(0,20).map(id=>{const n=NODES.find(x=>x.id===id);return n?'<span class="impact-node">'+(ICONS[n.type]||'')+' '+n.name+'</span>':''}).join('')||'<span style="font-size:10px;color:var(--text3)">None</span>'}</div>
+    </div>
+  \`;
+}
+
+function buildSnapshotsPanel(){
+  const c=document.getElementById('snapshot-content');
+  if(snapshots.length===0){c.innerHTML='<div style="color:var(--text3);font-size:11px">No snapshots yet. Create one to compare architecture versions.</div>';return}
+  c.innerHTML=snapshots.map(s=>\`
+    <div class="snapshot-card\${selectedSnapshots.includes(s.id)?' active':''}" onclick="toggleSnapshotSelect('\${s.id}')">
+      <div class="snap-name">\${s.name}</div>
+      <div class="snap-meta">\${s.nodeCount} nodes · \${s.edgeCount} edges · \${new Date(s.createdAt).toLocaleDateString()}</div>
+      <div class="snap-meta">\${s.description}</div>
+      <div style="margin-top:4px">
+        <button class="top-btn" onclick="event.stopPropagation();restoreSnapshot('\${s.id}')" style="font-size:10px;padding:2px 6px">↩ Restore</button>
+        <button class="top-btn" onclick="event.stopPropagation();deleteSnapshot('\${s.id}')" style="font-size:10px;padding:2px 6px">🗑 Delete</button>
+      </div>
+    </div>
+  \`).join('');
+}
+
+function toggleSnapshotSelect(id){
+  if(selectedSnapshots.includes(id))selectedSnapshots=selectedSnapshots.filter(s=>s!==id);
+  else{selectedSnapshots.push(id);if(selectedSnapshots.length>2)selectedSnapshots.shift()}
+  buildSnapshotsPanel();
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// PHASE 8: ANIMATED EVOLUTION PLAYBACK
+// ═══════════════════════════════════════════════════════════════════════
+
+let playbackActive=false;
+let playbackIdx=0;
+let playbackTimer=null;
+const timeline=DATA.evolutionTimeline||[];
+
+function togglePlayback(){
+  const pp=document.getElementById('playback-panel');
+  if(!timeline.length){showToast('No git history data available for playback');return}
+  if(playbackActive){stopPlayback();pp.classList.remove('open');return}
+  pp.classList.add('open');
+  const slider=document.getElementById('playback-slider');
+  slider.max=timeline.length-1;
+  slider.value=playbackIdx;
+  document.getElementById('playback-label').textContent='0 / '+(timeline.length-1);
+  slider.oninput=()=>{playbackIdx=parseInt(slider.value);updatePlaybackFrame()};
+  startPlayback();
+}
+
+function startPlayback(){
+  playbackActive=true;
+  document.getElementById('playback-play').textContent='⏸';
+  document.getElementById('playback-play').onclick=stopPlayback;
+  playbackStep();
+}
+
+function stopPlayback(){
+  playbackActive=false;
+  if(playbackTimer)clearTimeout(playbackTimer);
+  document.getElementById('playback-play').textContent='▶';
+  document.getElementById('playback-play').onclick=startPlayback;
+}
+
+function playbackStep(){
+  if(!playbackActive||playbackIdx>=timeline.length){stopPlayback();return}
+  updatePlaybackFrame();
+  playbackIdx++;
+  document.getElementById('playback-slider').value=playbackIdx;
+  playbackTimer=setTimeout(playbackStep,400);
+}
+
+function updatePlaybackFrame(){
+  if(playbackIdx>=timeline.length)return;
+  const frame=timeline[playbackIdx];
+  document.getElementById('playback-label').textContent=playbackIdx+' / '+(timeline.length-1);
+  // Highlight touched nodes
+  const touched=new Set(frame.touchedNodes||[]);
+  const allTouched=NODES.filter(n=>touched.has(n.id));
+  node.style('opacity',d=>touched.has(d.id)?1:.3);
+  link.style('opacity',e=>{
+    const s=e.source?.id||e.source;const t=e.target?.id||e.target;
+    return touched.has(s)||touched.has(t)?1:.1;
+  });
+  showToast('📜 '+frame.shortHash+': '+frame.message.slice(0,60)+' ('+frame.activeNodeCount+' nodes active)');
+  // Restore after 2s
+  clearTimeout(playbackRestoreTimer);
+  playbackRestoreTimer=setTimeout(()=>{node.style('opacity',null);link.style('opacity',null)},2000);
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// PHASE 8: EXTENSIBILITY — Plugin Hooks
+// ═══════════════════════════════════════════════════════════════════════
+
+// Plugin system: external code can register callbacks
+window.__HAMAFX_PLUGINS__={};
+window.registerPlugin=function(name,hooks){
+  window.__HAMAFX_PLUGINS__[name]=hooks;
+  console.log('🔌 Plugin registered: '+name+' (hooks: '+Object.keys(hooks).join(', ')+')');
+};
+
+// Expose plugin hooks info from DATA
+const hooks=DATA.pluginHooks||[];
+if(hooks.length>0)console.log('🔌 Available plugin hooks: '+hooks.map(h=>h.name).join(', '));
+
+// ═══════════════════════════════════════════════════════════════════════
+// PHASE 8: BUTTON HANDLERS
+// ═══════════════════════════════════════════════════════════════════════
+
+document.getElementById('btn-impact').addEventListener('click',showImpactAnalysis);
+document.getElementById('btn-recommendations').addEventListener('click',()=>togglePanel('recommendations-panel'));
+document.getElementById('btn-summaries').addEventListener('click',()=>togglePanel('summaries-panel'));
+document.getElementById('btn-snapshots').addEventListener('click',()=>togglePanel('snapshots-panel'));
+document.getElementById('btn-new-snapshot').addEventListener('click',saveSnapshot);
+document.getElementById('btn-compare-snapshots').addEventListener('click',compareSelectedSnapshots);
+document.getElementById('btn-playback').addEventListener('click',togglePlayback);
+document.getElementById('btn-close-playback').addEventListener('click',()=>{stopPlayback();document.getElementById('playback-panel').classList.remove('open')});
+
+// Extend renderPanel to show impact analysis summary at the bottom
+const origRenderPanel=renderPanel;
+renderPanel=function(d){
+  origRenderPanel(d);
+  const c=document.getElementById('panel-content');
+  const imp=computeImpact(d.id);
+  const riskLabel=imp.riskScore>60?'high':imp.riskScore>30?'medium':'low';
+  c.innerHTML+=\`
+    <div class="impact-section" style="margin-top:16px">
+      <h4>💥 Impact (\${riskLabel.toUpperCase()})</h4>
+      <div class="impact-risk \${riskLabel}" style="margin-bottom:4px">Risk: \${imp.riskScore}/100</div>
+      <div class="impact-count">\${imp.affected.length} downstream · \${imp.dependsOn.length} upstream</div>
+      <button class="top-btn" onclick="showImpactAnalysis()" style="margin-top:6px;width:100%">🔍 Full Impact Analysis</button>
+    </div>
+  \`;
+};
+
+console.log('🚀 Phase 8 advanced features loaded');
+console.log('   NLP Search | Impact Analysis | Summaries | Recommendations | Snapshots | Playback | Plugins');
+
+// ═══════════════════════════════════════════════════════════════════════
+// RESIZE
+// ═══════════════════════════════════════════════════════════════════════
+
+window.addEventListener('resize',()=>{
+  W=canvas.clientWidth; H=canvas.clientHeight;
+  svg.attr('width',W).attr('height',H);
+});

@@ -1,0 +1,116 @@
+<!-- Top Bar -->
+<div id="topbar">
+  <h1>🏗️ Explorer</h1>
+  <span class="sep"></span>
+  <input type="text" id="search" placeholder="Search nodes... (Ctrl+K)" autocomplete="off">
+  <span class="sep"></span>
+  <select id="view-select" title="Architecture view" style="max-width:160px">
+    <option value="overall_architecture">🗺️ Overall</option>
+    <option value="feature_map">🧩 Features</option>
+    <option value="folder_structure">📂 Folders</option>
+    <option value="dependency_graph">🔗 Dependencies</option>
+    <option value="api_explorer">🔌 API</option>
+    <option value="database_explorer">🗄️ Database</option>
+    <option value="authentication_flow">🔐 Auth</option>
+    <option value="ai_workflow">🤖 AI Workflow</option>
+    <option value="tool_execution">🔧 Tools</option>
+    <option value="request_lifecycle">🔄 Requests</option>
+    <option value="background_jobs">⏰ Jobs</option>
+    <option value="infrastructure">☁️ Infra</option>
+    <option value="runtime_architecture">⚡ Runtime</option>
+    <option value="build_architecture">🏗️ Build</option>
+    <option value="state_management">📊 State</option>
+    <option value="configuration">⚙️ Config</option>
+    <option value="environment_variables">🔑 Env Vars</option>
+    <option value="architecture_analysis">🔬 Analysis</option>
+  </select>
+  <span class="sep"></span>
+  <select id="layout-select" title="Layout algorithm">
+    <option value="force">⊚ Force</option>
+    <option value="tree">🌲 Tree</option>
+    <option value="radial">◎ Radial</option>
+    <option value="grid">⊞ Grid</option>
+  </select>
+  <button class="top-btn" id="btn-fit" title="Fit to view (F)">⊞ Fit</button>
+  <button class="top-btn hide-mobile" id="btn-pause" title="Pause/Resume simulation">⏯️</button>
+  <button class="top-btn hide-mobile" id="btn-collapse" title="Collapse/Expand all packages">📁</button>
+  <button class="top-btn hide-mobile" id="btn-group" title="Group selected nodes (G)">🔗 Group</button>
+  <button class="top-btn" id="btn-filters" title="Toggle filters">🔍</button>
+  <button class="top-btn hide-mobile" id="btn-save" title="Save layout (Ctrl+S)">💾</button>
+  <button class="top-btn hide-mobile" id="btn-restore" title="Restore saved layout (Ctrl+R)">📂</button>
+  <<button class="top-btn hide-mobile" id="btn-export-png" title="Export PNG">🖼️</button>
+  <button class="top-btn hide-mobile" id="btn-export-svg" title="Export SVG">📐</button>
+  <button class="top-btn hide-mobile" id="btn-export-json" title="Export JSON">📋</button>
+  <button class="top-btn" id="btn-theme" title="Toggle theme">🌓</button>
+  <button class="top-btn" id="btn-fullscreen" title="Fullscreen">⛶</button>
+  <span class="sep"></span>
+  <button class="top-btn hide-mobile" id="btn-impact" title="Impact Analysis (I)">💥 Impact</button>
+  <button class="top-btn hide-mobile" id="btn-recommendations" title="Show recommendations (R)">💡 Recs</button>
+  <button class="top-btn hide-mobile" id="btn-summaries" title="Smart summaries (U)">📝 Summary</button>
+  <button class="top-btn hide-mobile" id="btn-snapshots" title="Snapshots (N)">📸 Snap</button>
+  <button class="top-btn hide-mobile" id="btn-playback" title="Evolution playback (P)">▶ Play</button>
+  <span class="sep"></span>
+  <span id="node-count"></span>
+</div>
+
+<!-- Canvas -->
+<div id="canvas"></div>
+<div id="selection-rect"></div>
+
+<!-- Side Panel -->
+<div id="panel">
+  <button id="close-panel">✕</button>
+  <div id="panel-content"></div>
+</div>
+
+<!-- Mini-map -->
+<div id="minimap"><svg></svg></div>
+
+<!-- Legend -->
+<div id="legend"></div>
+
+<!-- Filters -->
+<div id="filters"></div>
+
+<!-- Tooltip -->
+<div id="tooltip"><div class="tt-name"></div><div class="tt-type"></div></div>
+
+<!-- Context Menu -->
+<div id="ctxmenu"></div>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<!-- Loading overlay -->
+<div id="loading"><div class="loader"></div><div class="loading-text">Loading architecture...</div></div>
+
+<!-- Analysis Panel -->
+<div id="analysis-panel" style="display:none"></div>
+
+<!-- Phase 8: Recommendations Panel -->
+<div id="recommendations-panel"><h4 style="margin-bottom:8px;color:var(--accent)">💡 Recommendations</h4><div id="rec-content"></div></div>
+
+<!-- Phase 8: Smart Summaries Panel -->
+<div id="summaries-panel"><h4 style="margin-bottom:8px;color:var(--accent)">📝 Smart Summaries</h4><div id="summary-content"></div></div>
+
+<!-- Phase 8: Snapshots Panel -->
+<div id="snapshots-panel"><h4 style="margin-bottom:8px;color:var(--accent)">📸 Snapshots</h4><div id="snapshot-content"></div><button class="top-btn" id="btn-new-snapshot" style="margin-top:8px;width:100%">+ New Snapshot</button><button class="top-btn" id="btn-compare-snapshots" style="margin-top:4px;width:100%">↔ Compare (select 2)</button></div>
+
+<!-- Phase 8: Playback Panel -->
+<div id="playback-panel">
+  <button id="playback-play">▶</button>
+  <input type="range" id="playback-slider" min="0" max="0" value="0" step="1">
+  <span id="playback-label">0 / 0</span>
+  <button class="top-btn" id="btn-close-playback">✕</button>
+</div>
+
+<!-- NLP search suggestions dropdown -->
+<div id="search-suggestions"></div>
+
+<!-- Status bar -->
+<div id="statusbar">
+  <span id="status-layout">Layout: Force</span>
+  <span id="status-collapsed">Collapsed: 0</span>
+  <span id="status-groups">Groups: 0</span>
+</div>
+

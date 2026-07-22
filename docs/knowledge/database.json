@@ -1,0 +1,2294 @@
+{
+  "schema_version": "1.0",
+  "total_tables": 49,
+  "tables": [
+    {
+      "name": "agent_opinions",
+      "columns": [
+        "id",
+        "userId",
+        "threadId",
+        "tenantId",
+        "messageId",
+        "agentName",
+        "bias",
+        "confidence",
+        "reasoning",
+        "rawData",
+        "model",
+        "costUsd",
+        "latencyMs",
+        "analysisMode",
+        "createdAt"
+      ],
+      "schema_file": "packages/db/src/schema/agent-opinions.ts",
+      "package": "@hamafx/db"
+    },
+    {
+      "name": "alerts",
+      "columns": [
+        "id",
+        "userId",
+        "rule",
+        "tenantId",
+        "channels",
+        "note",
+        "active",
+        "firedAt",
+        "lastFiredAt",
+        "snoozeHours",
+        "createdAt"
+      ],
+      "schema_file": "packages/db/src/schema/alerts.ts",
+      "package": "@hamafx/db"
+    },
+    {
+      "name": "analysis_jobs",
+      "columns": [
+        "id",
+        "userId",
+        "threadId",
+        "userMessageText",
+        "userMessageParts",
+        "historyParts",
+        "mode",
+        "status",
+        "progress",
+        "result",
+        "error",
+        "workerRunId",
+        "traceId",
+        "createdAt",
+        "updatedAt",
+        "startedAt",
+        "completedAt",
+        "name",
+        "columns",
+        "name",
+        "columns"
+      ],
+      "schema_file": "packages/db/src/schema/analysis-jobs.ts",
+      "package": "@hamafx/db"
+    },
+    {
+      "name": "audit_logs",
+      "columns": [
+        "id",
+        "userId",
+        "tenantId",
+        "action",
+        "metadata",
+        "createdAt"
+      ],
+      "schema_file": "packages/db/src/schema/audit.ts",
+      "package": "@hamafx/db"
+    },
+    {
+      "name": "user",
+      "columns": [
+        "id",
+        "name",
+        "email",
+        "emailVerified",
+        "image",
+        "hashedPassword",
+        "role",
+        "deletedAt",
+        "tokenVersion",
+        "twoFactorSecret",
+        "twoFactorEnabled",
+        "failedLoginAttempts",
+        "lockedUntil",
+        "twoFactorBackupCodes",
+        "failed2faAttempts",
+        "twoFactorLockedUntil",
+        "createdAt",
+        "updatedAt",
+        "id",
+        "name",
+        "plan",
+        "createdAt",
+        "deletedAt",
+        "orgId",
+        "userId",
+        "role",
+        "addedAt",
+        "id",
+        "userId",
+        "tenantId",
+        "deviceName",
+        "ip",
+        "createdAt",
+        "lastActiveAt",
+        "userId",
+        "provider",
+        "providerAccountId",
+        "refresh_token",
+        "access_token",
+        "expires_at",
+        "token_type",
+        "scope",
+        "id_token",
+        "session_state",
+        "sessionToken",
+        "userId",
+        "expires"
+      ],
+      "schema_file": "packages/db/src/schema/auth.ts",
+      "package": "@hamafx/db"
+    },
+    {
+      "name": "organization",
+      "columns": [
+        "id",
+        "name",
+        "plan",
+        "createdAt",
+        "deletedAt",
+        "orgId",
+        "userId",
+        "role",
+        "addedAt",
+        "id",
+        "userId",
+        "tenantId",
+        "deviceName",
+        "ip",
+        "createdAt",
+        "lastActiveAt",
+        "userId",
+        "provider",
+        "providerAccountId",
+        "refresh_token",
+        "access_token",
+        "expires_at",
+        "token_type",
+        "scope",
+        "id_token",
+        "session_state",
+        "sessionToken",
+        "userId",
+        "expires",
+        "identifier",
+        "token",
+        "purpose",
+        "expires",
+        "userId",
+        "tenantId",
+        "defaultSymbol",
+        "timezone",
+        "language",
+        "reduceMotion",
+        "telegramBotToken",
+        "telegramChatId",
+        "alertEmail"
+      ],
+      "schema_file": "packages/db/src/schema/auth.ts",
+      "package": "@hamafx/db"
+    },
+    {
+      "name": "organization_member",
+      "columns": [
+        "orgId",
+        "userId",
+        "role",
+        "addedAt",
+        "id",
+        "userId",
+        "tenantId",
+        "deviceName",
+        "ip",
+        "createdAt",
+        "lastActiveAt",
+        "userId",
+        "provider",
+        "providerAccountId",
+        "refresh_token",
+        "access_token",
+        "expires_at",
+        "token_type",
+        "scope",
+        "id_token",
+        "session_state",
+        "sessionToken",
+        "userId",
+        "expires",
+        "identifier",
+        "token",
+        "purpose",
+        "expires",
+        "userId",
+        "tenantId",
+        "defaultSymbol",
+        "timezone",
+        "language",
+        "reduceMotion",
+        "telegramBotToken",
+        "telegramChatId",
+        "alertEmail",
+        "aiApiKeys"
+      ],
+      "schema_file": "packages/db/src/schema/auth.ts",
+      "package": "@hamafx/db"
+    },
+    {
+      "name": "user_sessions",
+      "columns": [
+        "id",
+        "userId",
+        "tenantId",
+        "deviceName",
+        "ip",
+        "createdAt",
+        "lastActiveAt",
+        "userId",
+        "provider",
+        "providerAccountId",
+        "refresh_token",
+        "access_token",
+        "expires_at",
+        "token_type",
+        "scope",
+        "id_token",
+        "session_state",
+        "sessionToken",
+        "userId",
+        "expires",
+        "identifier",
+        "token",
+        "purpose",
+        "expires",
+        "userId",
+        "tenantId",
+        "defaultSymbol",
+        "timezone",
+        "language",
+        "reduceMotion",
+        "telegramBotToken",
+        "telegramChatId",
+        "alertEmail",
+        "aiApiKeys",
+        "defaultModels",
+        "chatModel",
+        "visionModel"
+      ],
+      "schema_file": "packages/db/src/schema/auth.ts",
+      "package": "@hamafx/db"
+    },
+    {
+      "name": "account",
+      "columns": [
+        "userId",
+        "provider",
+        "providerAccountId",
+        "refresh_token",
+        "access_token",
+        "expires_at",
+        "token_type",
+        "scope",
+        "id_token",
+        "session_state",
+        "sessionToken",
+        "userId",
+        "expires",
+        "identifier",
+        "token",
+        "purpose",
+        "expires",
+        "userId",
+        "tenantId",
+        "defaultSymbol",
+        "timezone",
+        "language",
+        "reduceMotion",
+        "telegramBotToken",
+        "telegramChatId",
+        "alertEmail",
+        "aiApiKeys",
+        "defaultModels",
+        "chatModel",
+        "visionModel",
+        "embeddingModel",
+        "aiFallbackChain",
+        "maxDailyUsd",
+        "monthlyBudgetLimit",
+        "providerSpendingThresholds",
+        "spendAlertsConfig",
+        "spendAlertsState"
+      ],
+      "schema_file": "packages/db/src/schema/auth.ts",
+      "package": "@hamafx/db"
+    },
+    {
+      "name": "session",
+      "columns": [
+        "sessionToken",
+        "userId",
+        "expires",
+        "identifier",
+        "token",
+        "purpose",
+        "expires",
+        "userId",
+        "tenantId",
+        "defaultSymbol",
+        "timezone",
+        "language",
+        "reduceMotion",
+        "telegramBotToken",
+        "telegramChatId",
+        "alertEmail",
+        "aiApiKeys",
+        "defaultModels",
+        "chatModel",
+        "visionModel",
+        "embeddingModel",
+        "aiFallbackChain",
+        "maxDailyUsd",
+        "monthlyBudgetLimit",
+        "providerSpendingThresholds",
+        "spendAlertsConfig",
+        "spendAlertsState",
+        "aiApiKeysUpdatedAt",
+        "marketDataProvider",
+        "theme",
+        "notificationPreferences",
+        "customInstructions",
+        "timeFormat",
+        "disabledTools"
+      ],
+      "schema_file": "packages/db/src/schema/auth.ts",
+      "package": "@hamafx/db"
+    },
+    {
+      "name": "verificationToken",
+      "columns": [
+        "identifier",
+        "token",
+        "purpose",
+        "expires",
+        "userId",
+        "tenantId",
+        "defaultSymbol",
+        "timezone",
+        "language",
+        "reduceMotion",
+        "telegramBotToken",
+        "telegramChatId",
+        "alertEmail",
+        "aiApiKeys",
+        "defaultModels",
+        "chatModel",
+        "visionModel",
+        "embeddingModel",
+        "aiFallbackChain",
+        "maxDailyUsd",
+        "monthlyBudgetLimit",
+        "providerSpendingThresholds",
+        "spendAlertsConfig",
+        "spendAlertsState",
+        "aiApiKeysUpdatedAt",
+        "marketDataProvider",
+        "theme",
+        "notificationPreferences",
+        "customInstructions",
+        "timeFormat",
+        "disabledTools",
+        "onboardingCompleted",
+        "onboardingProgress"
+      ],
+      "schema_file": "packages/db/src/schema/auth.ts",
+      "package": "@hamafx/db"
+    },
+    {
+      "name": "user_settings",
+      "columns": [
+        "userId",
+        "tenantId",
+        "defaultSymbol",
+        "timezone",
+        "language",
+        "reduceMotion",
+        "telegramBotToken",
+        "telegramChatId",
+        "alertEmail",
+        "aiApiKeys",
+        "defaultModels",
+        "chatModel",
+        "visionModel",
+        "embeddingModel",
+        "aiFallbackChain",
+        "maxDailyUsd",
+        "monthlyBudgetLimit",
+        "providerSpendingThresholds",
+        "spendAlertsConfig",
+        "spendAlertsState",
+        "aiApiKeysUpdatedAt",
+        "marketDataProvider",
+        "theme",
+        "notificationPreferences",
+        "customInstructions",
+        "timeFormat",
+        "disabledTools",
+        "onboardingCompleted",
+        "onboardingProgress",
+        "defaultAnalysisMode",
+        "showAgentOpinions",
+        "agentModelOverrides"
+      ],
+      "schema_file": "packages/db/src/schema/auth.ts",
+      "package": "@hamafx/db"
+    },
+    {
+      "name": "user_symbols",
+      "columns": [
+        "userId",
+        "tenantId",
+        "symbol",
+        "displayOrder",
+        "addedAt"
+      ],
+      "schema_file": "packages/db/src/schema/auth.ts",
+      "package": "@hamafx/db"
+    },
+    {
+      "name": "plans",
+      "columns": [
+        "id",
+        "name",
+        "nowpaymentsPlanId",
+        "priceUsdCents",
+        "payCurrency",
+        "interval",
+        "features",
+        "monthlyTokenCap",
+        "isActive",
+        "createdAt",
+        "updatedAt",
+        "id",
+        "tenantId",
+        "planId",
+        "status",
+        "nowpaymentsRecurringId",
+        "nowpaymentsInvoiceId",
+        "currentPeriodEnd",
+        "trialEnd",
+        "canceledAt",
+        "createdAt",
+        "updatedAt",
+        "id",
+        "subscriptionId",
+        "onDelete",
+        "tenantId",
+        "nowpaymentsPaymentId",
+        "nowpaymentsInvoiceId",
+        "status",
+        "payAmount",
+        "payCurrency",
+        "usdAmountCents",
+        "txHash",
+        "ipnPayload",
+        "createdAt",
+        "updatedAt",
+        "id",
+        "nowpaymentsPaymentId",
+        "paymentStatus"
+      ],
+      "schema_file": "packages/db/src/schema/billing.ts",
+      "package": "@hamafx/db"
+    },
+    {
+      "name": "subscriptions",
+      "columns": [
+        "id",
+        "tenantId",
+        "planId",
+        "status",
+        "nowpaymentsRecurringId",
+        "nowpaymentsInvoiceId",
+        "currentPeriodEnd",
+        "trialEnd",
+        "canceledAt",
+        "createdAt",
+        "updatedAt",
+        "id",
+        "subscriptionId",
+        "onDelete",
+        "tenantId",
+        "nowpaymentsPaymentId",
+        "nowpaymentsInvoiceId",
+        "status",
+        "payAmount",
+        "payCurrency",
+        "usdAmountCents",
+        "txHash",
+        "ipnPayload",
+        "createdAt",
+        "updatedAt",
+        "id",
+        "nowpaymentsPaymentId",
+        "paymentStatus",
+        "bodyHash",
+        "rawBody",
+        "processed",
+        "error",
+        "receivedAt",
+        "processedAt"
+      ],
+      "schema_file": "packages/db/src/schema/billing.ts",
+      "package": "@hamafx/db"
+    },
+    {
+      "name": "payments",
+      "columns": [
+        "id",
+        "subscriptionId",
+        "onDelete",
+        "tenantId",
+        "nowpaymentsPaymentId",
+        "nowpaymentsInvoiceId",
+        "status",
+        "payAmount",
+        "payCurrency",
+        "usdAmountCents",
+        "txHash",
+        "ipnPayload",
+        "createdAt",
+        "updatedAt",
+        "id",
+        "nowpaymentsPaymentId",
+        "paymentStatus",
+        "bodyHash",
+        "rawBody",
+        "processed",
+        "error",
+        "receivedAt",
+        "processedAt"
+      ],
+      "schema_file": "packages/db/src/schema/billing.ts",
+      "package": "@hamafx/db"
+    },
+    {
+      "name": "ipn_events",
+      "columns": [
+        "id",
+        "nowpaymentsPaymentId",
+        "paymentStatus",
+        "bodyHash",
+        "rawBody",
+        "processed",
+        "error",
+        "receivedAt",
+        "processedAt"
+      ],
+      "schema_file": "packages/db/src/schema/billing.ts",
+      "package": "@hamafx/db"
+    },
+    {
+      "name": "bot_links",
+      "columns": [
+        "userId",
+        "tenantId",
+        "platform",
+        "chatId",
+        "linkedAt"
+      ],
+      "schema_file": "packages/db/src/schema/bot-links.ts",
+      "package": "@hamafx/db"
+    },
+    {
+      "name": "briefings_emitted",
+      "columns": [
+        "userId",
+        "tenantId",
+        "eventId",
+        "kind",
+        "messageId",
+        "createdAt"
+      ],
+      "schema_file": "packages/db/src/schema/briefings.ts",
+      "package": "@hamafx/db"
+    },
+    {
+      "name": "economic_events",
+      "columns": [
+        "id",
+        "title",
+        "country",
+        "currency",
+        "importance",
+        "date",
+        "actual",
+        "forecast",
+        "previous",
+        "unit",
+        "source",
+        "actualsFilledAt",
+        "tenantId",
+        "createdAt"
+      ],
+      "schema_file": "packages/db/src/schema/calendar.ts",
+      "package": "@hamafx/db"
+    },
+    {
+      "name": "candles_1m",
+      "columns": [
+        "symbol",
+        "t",
+        "o",
+        "h",
+        "l",
+        "c",
+        "v",
+        "tickVolume",
+        "source",
+        "tenantId",
+        "createdAt"
+      ],
+      "schema_file": "packages/db/src/schema/candles-1m.ts",
+      "package": "@hamafx/db"
+    },
+    {
+      "name": "chat_threads",
+      "columns": [
+        "id",
+        "userId",
+        "title",
+        "tenantId",
+        "pinnedSymbol",
+        "modelOverride",
+        "titleSource",
+        "isBriefings",
+        "analysisMode",
+        "createdAt",
+        "updatedAt",
+        "id",
+        "threadId",
+        "tenantId",
+        "role",
+        "content",
+        "parts",
+        "createdAt"
+      ],
+      "schema_file": "packages/db/src/schema/chat.ts",
+      "package": "@hamafx/db"
+    },
+    {
+      "name": "chat_messages",
+      "columns": [
+        "id",
+        "threadId",
+        "tenantId",
+        "role",
+        "content",
+        "parts",
+        "createdAt"
+      ],
+      "schema_file": "packages/db/src/schema/chat.ts",
+      "package": "@hamafx/db"
+    },
+    {
+      "name": "cot_reports",
+      "columns": [
+        "id",
+        "symbol",
+        "reportDate",
+        "dealerLong",
+        "dealerShort",
+        "assetLong",
+        "assetShort",
+        "leveragedLong",
+        "leveragedShort",
+        "otherLong",
+        "otherShort",
+        "source",
+        "raw",
+        "tenantId",
+        "createdAt"
+      ],
+      "schema_file": "packages/db/src/schema/cot.ts",
+      "package": "@hamafx/db"
+    },
+    {
+      "name": "cron_runs",
+      "columns": [
+        "jobName",
+        "runDate",
+        "status",
+        "note",
+        "tenantId",
+        "startedAt",
+        "finishedAt"
+      ],
+      "schema_file": "packages/db/src/schema/cron-runs.ts",
+      "package": "@hamafx/db"
+    },
+    {
+      "name": "daily_ai_spend",
+      "columns": [
+        "userId",
+        "tenantId",
+        "day",
+        "totalUsdCents"
+      ],
+      "schema_file": "packages/db/src/schema/daily-ai-spend.ts",
+      "package": "@hamafx/db"
+    },
+    {
+      "name": "diagnostic_traces",
+      "columns": [
+        "id",
+        "userId",
+        "threadId",
+        "startedAt",
+        "durationMs",
+        "stepCount",
+        "errorCount",
+        "status",
+        "summary",
+        "metadata",
+        "trace",
+        "createdAt"
+      ],
+      "schema_file": "packages/db/src/schema/diagnostic-traces.ts",
+      "package": "@hamafx/db"
+    },
+    {
+      "name": "feature_flags",
+      "columns": [
+        "key",
+        "enabled",
+        "updatedAt",
+        "updatedBy"
+      ],
+      "schema_file": "packages/db/src/schema/feature-flags.ts",
+      "package": "@hamafx/db"
+    },
+    {
+      "name": "intermarket_resonance",
+      "columns": [
+        "date",
+        "realYieldPct",
+        "breakevenInflationPct",
+        "dxyIndex",
+        "goldClose",
+        "divergenceScore",
+        "tenantId",
+        "createdAt"
+      ],
+      "schema_file": "packages/db/src/schema/intermarket-resonance.ts",
+      "package": "@hamafx/db"
+    },
+    {
+      "name": "journal_entries",
+      "columns": [
+        "id",
+        "userId",
+        "symbol",
+        "tenantId",
+        "side",
+        "openedAt",
+        "closedAt",
+        "entry",
+        "stop",
+        "target",
+        "exit",
+        "size",
+        "outcome",
+        "rMultiple",
+        "notes",
+        "tags",
+        "screenshotUrl",
+        "attachments",
+        "deletedAt",
+        "createdAt",
+        "updatedAt"
+      ],
+      "schema_file": "packages/db/src/schema/journal.ts",
+      "package": "@hamafx/db"
+    },
+    {
+      "name": "live_ticks",
+      "columns": [
+        "symbol",
+        "bid",
+        "ask",
+        "mid",
+        "ts",
+        "source",
+        "tenantId",
+        "updatedAt"
+      ],
+      "schema_file": "packages/db/src/schema/live-ticks.ts",
+      "package": "@hamafx/db"
+    },
+    {
+      "name": "memory_embeddings",
+      "columns": [
+        "id",
+        "userId",
+        "kind",
+        "tenantId",
+        "sourceId",
+        "symbol",
+        "text",
+        "model",
+        "meta",
+        "embedding",
+        "occurredAt",
+        "createdAt"
+      ],
+      "schema_file": "packages/db/src/schema/memory.ts",
+      "package": "@hamafx/db"
+    },
+    {
+      "name": "news_articles",
+      "columns": [
+        "id",
+        "title",
+        "summary",
+        "url",
+        "source",
+        "publisher",
+        "publishedAt",
+        "symbols",
+        "sentiment",
+        "sentimentScore",
+        "topics",
+        "tenantId",
+        "createdAt",
+        "articleId",
+        "model",
+        "embedding",
+        "tenantId",
+        "createdAt"
+      ],
+      "schema_file": "packages/db/src/schema/news.ts",
+      "package": "@hamafx/db"
+    },
+    {
+      "name": "news_embeddings",
+      "columns": [
+        "articleId",
+        "model",
+        "embedding",
+        "tenantId",
+        "createdAt"
+      ],
+      "schema_file": "packages/db/src/schema/news.ts",
+      "package": "@hamafx/db"
+    },
+    {
+      "name": "notification_noise_state",
+      "columns": [
+        "userId",
+        "dedupKey",
+        "tenantId",
+        "routeType",
+        "lastSentAt",
+        "expiresAt"
+      ],
+      "schema_file": "packages/db/src/schema/noise-control.ts",
+      "package": "@hamafx/db"
+    },
+    {
+      "name": "portfolio_positions",
+      "columns": [
+        "id",
+        "userId",
+        "symbol",
+        "tenantId",
+        "direction",
+        "lotSize",
+        "entryPrice",
+        "stopLoss",
+        "takeProfit",
+        "openedAt",
+        "closedAt",
+        "closePrice",
+        "status",
+        "notes",
+        "deletedAt",
+        "createdAt",
+        "updatedAt",
+        "userId",
+        "tenantId",
+        "accountBalance",
+        "baseCurrency",
+        "maxRiskPerTradePct",
+        "maxTotalExposurePct",
+        "updatedAt"
+      ],
+      "schema_file": "packages/db/src/schema/portfolio.ts",
+      "package": "@hamafx/db"
+    },
+    {
+      "name": "portfolio_settings",
+      "columns": [
+        "userId",
+        "tenantId",
+        "accountBalance",
+        "baseCurrency",
+        "maxRiskPerTradePct",
+        "maxTotalExposurePct",
+        "updatedAt"
+      ],
+      "schema_file": "packages/db/src/schema/portfolio.ts",
+      "package": "@hamafx/db"
+    },
+    {
+      "name": "provider_daily_quota",
+      "columns": [
+        "provider",
+        "day",
+        "count"
+      ],
+      "schema_file": "packages/db/src/schema/provider-daily-quota.ts",
+      "package": "@hamafx/db"
+    },
+    {
+      "name": "provider_health",
+      "columns": [
+        "provider",
+        "lastSuccessAt",
+        "lastFailureAt",
+        "consecutiveFailures",
+        "updatedAt"
+      ],
+      "schema_file": "packages/db/src/schema/provider-health.ts",
+      "package": "@hamafx/db"
+    },
+    {
+      "name": "provider_tests",
+      "columns": [
+        "userId",
+        "tenantId",
+        "providerId",
+        "ok",
+        "error",
+        "testedAt",
+        "rateLimit"
+      ],
+      "schema_file": "packages/db/src/schema/provider-tests.ts",
+      "package": "@hamafx/db"
+    },
+    {
+      "name": "push_subscriptions",
+      "columns": [
+        "id",
+        "userId",
+        "endpoint",
+        "tenantId",
+        "p256dh",
+        "auth",
+        "userAgent",
+        "createdAt"
+      ],
+      "schema_file": "packages/db/src/schema/push.ts",
+      "package": "@hamafx/db"
+    },
+    {
+      "name": "rate_limits",
+      "columns": [
+        "userId",
+        "tenantId",
+        "endpointGroup",
+        "windowStart",
+        "requestCount"
+      ],
+      "schema_file": "packages/db/src/schema/rate-limits.ts",
+      "package": "@hamafx/db"
+    },
+    {
+      "name": "shared_snapshots",
+      "columns": [
+        "id",
+        "userId",
+        "title",
+        "tenantId",
+        "body",
+        "overlay",
+        "symbol",
+        "tf",
+        "expiresAt",
+        "createdAt"
+      ],
+      "schema_file": "packages/db/src/schema/share.ts",
+      "package": "@hamafx/db"
+    },
+    {
+      "name": "snapshots",
+      "columns": [
+        "id",
+        "symbol",
+        "kind",
+        "asOf",
+        "data",
+        "tenantId",
+        "createdAt"
+      ],
+      "schema_file": "packages/db/src/schema/snapshots.ts",
+      "package": "@hamafx/db"
+    },
+    {
+      "name": "symbol_catalog",
+      "columns": [
+        "symbol",
+        "name",
+        "category",
+        "exchange",
+        "tvTicker",
+        "biquoteSymbol",
+        "binanceSymbol",
+        "finnhubSymbol",
+        "nDataSymbol",
+        "pipSize",
+        "priceDecimals",
+        "currencyTags",
+        "isActive",
+        "sortOrder",
+        "tenantId"
+      ],
+      "schema_file": "packages/db/src/schema/symbol-catalog.ts",
+      "package": "@hamafx/db"
+    },
+    {
+      "name": "telegram_updates",
+      "columns": [
+        "updateId",
+        "processedAt"
+      ],
+      "schema_file": "packages/db/src/schema/telegram-updates.ts",
+      "package": "@hamafx/db"
+    },
+    {
+      "name": "chat_telemetry",
+      "columns": [
+        "id",
+        "userId",
+        "threadId",
+        "tenantId",
+        "messageId",
+        "model",
+        "inputTokens",
+        "outputTokens",
+        "toolCalls",
+        "ms",
+        "estCostUsd",
+        "kind",
+        "createdAt"
+      ],
+      "schema_file": "packages/db/src/schema/telemetry.ts",
+      "package": "@hamafx/db"
+    },
+    {
+      "name": "provider_throttle",
+      "columns": [
+        "provider",
+        "windowStartedAt",
+        "count",
+        "backoffUntil"
+      ],
+      "schema_file": "packages/db/src/schema/throttle.ts",
+      "package": "@hamafx/db"
+    },
+    {
+      "name": "chat_tool_telemetry",
+      "columns": [
+        "id",
+        "userId",
+        "threadId",
+        "tenantId",
+        "messageId",
+        "tool",
+        "ms",
+        "ok",
+        "errorCode",
+        "outputChars",
+        "createdAt"
+      ],
+      "schema_file": "packages/db/src/schema/tool-telemetry.ts",
+      "package": "@hamafx/db"
+    }
+  ],
+  "tables_by_schema_file": {
+    "packages/db/src/schema/agent-opinions.ts": [
+      {
+        "name": "agent_opinions",
+        "columns": [
+          "id",
+          "userId",
+          "threadId",
+          "tenantId",
+          "messageId",
+          "agentName",
+          "bias",
+          "confidence",
+          "reasoning",
+          "rawData",
+          "model",
+          "costUsd",
+          "latencyMs",
+          "analysisMode",
+          "createdAt"
+        ],
+        "schema_file": "packages/db/src/schema/agent-opinions.ts",
+        "package": "@hamafx/db"
+      }
+    ],
+    "packages/db/src/schema/alerts.ts": [
+      {
+        "name": "alerts",
+        "columns": [
+          "id",
+          "userId",
+          "rule",
+          "tenantId",
+          "channels",
+          "note",
+          "active",
+          "firedAt",
+          "lastFiredAt",
+          "snoozeHours",
+          "createdAt"
+        ],
+        "schema_file": "packages/db/src/schema/alerts.ts",
+        "package": "@hamafx/db"
+      }
+    ],
+    "packages/db/src/schema/analysis-jobs.ts": [
+      {
+        "name": "analysis_jobs",
+        "columns": [
+          "id",
+          "userId",
+          "threadId",
+          "userMessageText",
+          "userMessageParts",
+          "historyParts",
+          "mode",
+          "status",
+          "progress",
+          "result",
+          "error",
+          "workerRunId",
+          "traceId",
+          "createdAt",
+          "updatedAt",
+          "startedAt",
+          "completedAt",
+          "name",
+          "columns",
+          "name",
+          "columns"
+        ],
+        "schema_file": "packages/db/src/schema/analysis-jobs.ts",
+        "package": "@hamafx/db"
+      }
+    ],
+    "packages/db/src/schema/audit.ts": [
+      {
+        "name": "audit_logs",
+        "columns": [
+          "id",
+          "userId",
+          "tenantId",
+          "action",
+          "metadata",
+          "createdAt"
+        ],
+        "schema_file": "packages/db/src/schema/audit.ts",
+        "package": "@hamafx/db"
+      }
+    ],
+    "packages/db/src/schema/auth.ts": [
+      {
+        "name": "user",
+        "columns": [
+          "id",
+          "name",
+          "email",
+          "emailVerified",
+          "image",
+          "hashedPassword",
+          "role",
+          "deletedAt",
+          "tokenVersion",
+          "twoFactorSecret",
+          "twoFactorEnabled",
+          "failedLoginAttempts",
+          "lockedUntil",
+          "twoFactorBackupCodes",
+          "failed2faAttempts",
+          "twoFactorLockedUntil",
+          "createdAt",
+          "updatedAt",
+          "id",
+          "name",
+          "plan",
+          "createdAt",
+          "deletedAt",
+          "orgId",
+          "userId",
+          "role",
+          "addedAt",
+          "id",
+          "userId",
+          "tenantId",
+          "deviceName",
+          "ip",
+          "createdAt",
+          "lastActiveAt",
+          "userId",
+          "provider",
+          "providerAccountId",
+          "refresh_token",
+          "access_token",
+          "expires_at",
+          "token_type",
+          "scope",
+          "id_token",
+          "session_state",
+          "sessionToken",
+          "userId",
+          "expires"
+        ],
+        "schema_file": "packages/db/src/schema/auth.ts",
+        "package": "@hamafx/db"
+      },
+      {
+        "name": "organization",
+        "columns": [
+          "id",
+          "name",
+          "plan",
+          "createdAt",
+          "deletedAt",
+          "orgId",
+          "userId",
+          "role",
+          "addedAt",
+          "id",
+          "userId",
+          "tenantId",
+          "deviceName",
+          "ip",
+          "createdAt",
+          "lastActiveAt",
+          "userId",
+          "provider",
+          "providerAccountId",
+          "refresh_token",
+          "access_token",
+          "expires_at",
+          "token_type",
+          "scope",
+          "id_token",
+          "session_state",
+          "sessionToken",
+          "userId",
+          "expires",
+          "identifier",
+          "token",
+          "purpose",
+          "expires",
+          "userId",
+          "tenantId",
+          "defaultSymbol",
+          "timezone",
+          "language",
+          "reduceMotion",
+          "telegramBotToken",
+          "telegramChatId",
+          "alertEmail"
+        ],
+        "schema_file": "packages/db/src/schema/auth.ts",
+        "package": "@hamafx/db"
+      },
+      {
+        "name": "organization_member",
+        "columns": [
+          "orgId",
+          "userId",
+          "role",
+          "addedAt",
+          "id",
+          "userId",
+          "tenantId",
+          "deviceName",
+          "ip",
+          "createdAt",
+          "lastActiveAt",
+          "userId",
+          "provider",
+          "providerAccountId",
+          "refresh_token",
+          "access_token",
+          "expires_at",
+          "token_type",
+          "scope",
+          "id_token",
+          "session_state",
+          "sessionToken",
+          "userId",
+          "expires",
+          "identifier",
+          "token",
+          "purpose",
+          "expires",
+          "userId",
+          "tenantId",
+          "defaultSymbol",
+          "timezone",
+          "language",
+          "reduceMotion",
+          "telegramBotToken",
+          "telegramChatId",
+          "alertEmail",
+          "aiApiKeys"
+        ],
+        "schema_file": "packages/db/src/schema/auth.ts",
+        "package": "@hamafx/db"
+      },
+      {
+        "name": "user_sessions",
+        "columns": [
+          "id",
+          "userId",
+          "tenantId",
+          "deviceName",
+          "ip",
+          "createdAt",
+          "lastActiveAt",
+          "userId",
+          "provider",
+          "providerAccountId",
+          "refresh_token",
+          "access_token",
+          "expires_at",
+          "token_type",
+          "scope",
+          "id_token",
+          "session_state",
+          "sessionToken",
+          "userId",
+          "expires",
+          "identifier",
+          "token",
+          "purpose",
+          "expires",
+          "userId",
+          "tenantId",
+          "defaultSymbol",
+          "timezone",
+          "language",
+          "reduceMotion",
+          "telegramBotToken",
+          "telegramChatId",
+          "alertEmail",
+          "aiApiKeys",
+          "defaultModels",
+          "chatModel",
+          "visionModel"
+        ],
+        "schema_file": "packages/db/src/schema/auth.ts",
+        "package": "@hamafx/db"
+      },
+      {
+        "name": "account",
+        "columns": [
+          "userId",
+          "provider",
+          "providerAccountId",
+          "refresh_token",
+          "access_token",
+          "expires_at",
+          "token_type",
+          "scope",
+          "id_token",
+          "session_state",
+          "sessionToken",
+          "userId",
+          "expires",
+          "identifier",
+          "token",
+          "purpose",
+          "expires",
+          "userId",
+          "tenantId",
+          "defaultSymbol",
+          "timezone",
+          "language",
+          "reduceMotion",
+          "telegramBotToken",
+          "telegramChatId",
+          "alertEmail",
+          "aiApiKeys",
+          "defaultModels",
+          "chatModel",
+          "visionModel",
+          "embeddingModel",
+          "aiFallbackChain",
+          "maxDailyUsd",
+          "monthlyBudgetLimit",
+          "providerSpendingThresholds",
+          "spendAlertsConfig",
+          "spendAlertsState"
+        ],
+        "schema_file": "packages/db/src/schema/auth.ts",
+        "package": "@hamafx/db"
+      },
+      {
+        "name": "session",
+        "columns": [
+          "sessionToken",
+          "userId",
+          "expires",
+          "identifier",
+          "token",
+          "purpose",
+          "expires",
+          "userId",
+          "tenantId",
+          "defaultSymbol",
+          "timezone",
+          "language",
+          "reduceMotion",
+          "telegramBotToken",
+          "telegramChatId",
+          "alertEmail",
+          "aiApiKeys",
+          "defaultModels",
+          "chatModel",
+          "visionModel",
+          "embeddingModel",
+          "aiFallbackChain",
+          "maxDailyUsd",
+          "monthlyBudgetLimit",
+          "providerSpendingThresholds",
+          "spendAlertsConfig",
+          "spendAlertsState",
+          "aiApiKeysUpdatedAt",
+          "marketDataProvider",
+          "theme",
+          "notificationPreferences",
+          "customInstructions",
+          "timeFormat",
+          "disabledTools"
+        ],
+        "schema_file": "packages/db/src/schema/auth.ts",
+        "package": "@hamafx/db"
+      },
+      {
+        "name": "verificationToken",
+        "columns": [
+          "identifier",
+          "token",
+          "purpose",
+          "expires",
+          "userId",
+          "tenantId",
+          "defaultSymbol",
+          "timezone",
+          "language",
+          "reduceMotion",
+          "telegramBotToken",
+          "telegramChatId",
+          "alertEmail",
+          "aiApiKeys",
+          "defaultModels",
+          "chatModel",
+          "visionModel",
+          "embeddingModel",
+          "aiFallbackChain",
+          "maxDailyUsd",
+          "monthlyBudgetLimit",
+          "providerSpendingThresholds",
+          "spendAlertsConfig",
+          "spendAlertsState",
+          "aiApiKeysUpdatedAt",
+          "marketDataProvider",
+          "theme",
+          "notificationPreferences",
+          "customInstructions",
+          "timeFormat",
+          "disabledTools",
+          "onboardingCompleted",
+          "onboardingProgress"
+        ],
+        "schema_file": "packages/db/src/schema/auth.ts",
+        "package": "@hamafx/db"
+      },
+      {
+        "name": "user_settings",
+        "columns": [
+          "userId",
+          "tenantId",
+          "defaultSymbol",
+          "timezone",
+          "language",
+          "reduceMotion",
+          "telegramBotToken",
+          "telegramChatId",
+          "alertEmail",
+          "aiApiKeys",
+          "defaultModels",
+          "chatModel",
+          "visionModel",
+          "embeddingModel",
+          "aiFallbackChain",
+          "maxDailyUsd",
+          "monthlyBudgetLimit",
+          "providerSpendingThresholds",
+          "spendAlertsConfig",
+          "spendAlertsState",
+          "aiApiKeysUpdatedAt",
+          "marketDataProvider",
+          "theme",
+          "notificationPreferences",
+          "customInstructions",
+          "timeFormat",
+          "disabledTools",
+          "onboardingCompleted",
+          "onboardingProgress",
+          "defaultAnalysisMode",
+          "showAgentOpinions",
+          "agentModelOverrides"
+        ],
+        "schema_file": "packages/db/src/schema/auth.ts",
+        "package": "@hamafx/db"
+      },
+      {
+        "name": "user_symbols",
+        "columns": [
+          "userId",
+          "tenantId",
+          "symbol",
+          "displayOrder",
+          "addedAt"
+        ],
+        "schema_file": "packages/db/src/schema/auth.ts",
+        "package": "@hamafx/db"
+      }
+    ],
+    "packages/db/src/schema/billing.ts": [
+      {
+        "name": "plans",
+        "columns": [
+          "id",
+          "name",
+          "nowpaymentsPlanId",
+          "priceUsdCents",
+          "payCurrency",
+          "interval",
+          "features",
+          "monthlyTokenCap",
+          "isActive",
+          "createdAt",
+          "updatedAt",
+          "id",
+          "tenantId",
+          "planId",
+          "status",
+          "nowpaymentsRecurringId",
+          "nowpaymentsInvoiceId",
+          "currentPeriodEnd",
+          "trialEnd",
+          "canceledAt",
+          "createdAt",
+          "updatedAt",
+          "id",
+          "subscriptionId",
+          "onDelete",
+          "tenantId",
+          "nowpaymentsPaymentId",
+          "nowpaymentsInvoiceId",
+          "status",
+          "payAmount",
+          "payCurrency",
+          "usdAmountCents",
+          "txHash",
+          "ipnPayload",
+          "createdAt",
+          "updatedAt",
+          "id",
+          "nowpaymentsPaymentId",
+          "paymentStatus"
+        ],
+        "schema_file": "packages/db/src/schema/billing.ts",
+        "package": "@hamafx/db"
+      },
+      {
+        "name": "subscriptions",
+        "columns": [
+          "id",
+          "tenantId",
+          "planId",
+          "status",
+          "nowpaymentsRecurringId",
+          "nowpaymentsInvoiceId",
+          "currentPeriodEnd",
+          "trialEnd",
+          "canceledAt",
+          "createdAt",
+          "updatedAt",
+          "id",
+          "subscriptionId",
+          "onDelete",
+          "tenantId",
+          "nowpaymentsPaymentId",
+          "nowpaymentsInvoiceId",
+          "status",
+          "payAmount",
+          "payCurrency",
+          "usdAmountCents",
+          "txHash",
+          "ipnPayload",
+          "createdAt",
+          "updatedAt",
+          "id",
+          "nowpaymentsPaymentId",
+          "paymentStatus",
+          "bodyHash",
+          "rawBody",
+          "processed",
+          "error",
+          "receivedAt",
+          "processedAt"
+        ],
+        "schema_file": "packages/db/src/schema/billing.ts",
+        "package": "@hamafx/db"
+      },
+      {
+        "name": "payments",
+        "columns": [
+          "id",
+          "subscriptionId",
+          "onDelete",
+          "tenantId",
+          "nowpaymentsPaymentId",
+          "nowpaymentsInvoiceId",
+          "status",
+          "payAmount",
+          "payCurrency",
+          "usdAmountCents",
+          "txHash",
+          "ipnPayload",
+          "createdAt",
+          "updatedAt",
+          "id",
+          "nowpaymentsPaymentId",
+          "paymentStatus",
+          "bodyHash",
+          "rawBody",
+          "processed",
+          "error",
+          "receivedAt",
+          "processedAt"
+        ],
+        "schema_file": "packages/db/src/schema/billing.ts",
+        "package": "@hamafx/db"
+      },
+      {
+        "name": "ipn_events",
+        "columns": [
+          "id",
+          "nowpaymentsPaymentId",
+          "paymentStatus",
+          "bodyHash",
+          "rawBody",
+          "processed",
+          "error",
+          "receivedAt",
+          "processedAt"
+        ],
+        "schema_file": "packages/db/src/schema/billing.ts",
+        "package": "@hamafx/db"
+      }
+    ],
+    "packages/db/src/schema/bot-links.ts": [
+      {
+        "name": "bot_links",
+        "columns": [
+          "userId",
+          "tenantId",
+          "platform",
+          "chatId",
+          "linkedAt"
+        ],
+        "schema_file": "packages/db/src/schema/bot-links.ts",
+        "package": "@hamafx/db"
+      }
+    ],
+    "packages/db/src/schema/briefings.ts": [
+      {
+        "name": "briefings_emitted",
+        "columns": [
+          "userId",
+          "tenantId",
+          "eventId",
+          "kind",
+          "messageId",
+          "createdAt"
+        ],
+        "schema_file": "packages/db/src/schema/briefings.ts",
+        "package": "@hamafx/db"
+      }
+    ],
+    "packages/db/src/schema/calendar.ts": [
+      {
+        "name": "economic_events",
+        "columns": [
+          "id",
+          "title",
+          "country",
+          "currency",
+          "importance",
+          "date",
+          "actual",
+          "forecast",
+          "previous",
+          "unit",
+          "source",
+          "actualsFilledAt",
+          "tenantId",
+          "createdAt"
+        ],
+        "schema_file": "packages/db/src/schema/calendar.ts",
+        "package": "@hamafx/db"
+      }
+    ],
+    "packages/db/src/schema/candles-1m.ts": [
+      {
+        "name": "candles_1m",
+        "columns": [
+          "symbol",
+          "t",
+          "o",
+          "h",
+          "l",
+          "c",
+          "v",
+          "tickVolume",
+          "source",
+          "tenantId",
+          "createdAt"
+        ],
+        "schema_file": "packages/db/src/schema/candles-1m.ts",
+        "package": "@hamafx/db"
+      }
+    ],
+    "packages/db/src/schema/chat.ts": [
+      {
+        "name": "chat_threads",
+        "columns": [
+          "id",
+          "userId",
+          "title",
+          "tenantId",
+          "pinnedSymbol",
+          "modelOverride",
+          "titleSource",
+          "isBriefings",
+          "analysisMode",
+          "createdAt",
+          "updatedAt",
+          "id",
+          "threadId",
+          "tenantId",
+          "role",
+          "content",
+          "parts",
+          "createdAt"
+        ],
+        "schema_file": "packages/db/src/schema/chat.ts",
+        "package": "@hamafx/db"
+      },
+      {
+        "name": "chat_messages",
+        "columns": [
+          "id",
+          "threadId",
+          "tenantId",
+          "role",
+          "content",
+          "parts",
+          "createdAt"
+        ],
+        "schema_file": "packages/db/src/schema/chat.ts",
+        "package": "@hamafx/db"
+      }
+    ],
+    "packages/db/src/schema/cot.ts": [
+      {
+        "name": "cot_reports",
+        "columns": [
+          "id",
+          "symbol",
+          "reportDate",
+          "dealerLong",
+          "dealerShort",
+          "assetLong",
+          "assetShort",
+          "leveragedLong",
+          "leveragedShort",
+          "otherLong",
+          "otherShort",
+          "source",
+          "raw",
+          "tenantId",
+          "createdAt"
+        ],
+        "schema_file": "packages/db/src/schema/cot.ts",
+        "package": "@hamafx/db"
+      }
+    ],
+    "packages/db/src/schema/cron-runs.ts": [
+      {
+        "name": "cron_runs",
+        "columns": [
+          "jobName",
+          "runDate",
+          "status",
+          "note",
+          "tenantId",
+          "startedAt",
+          "finishedAt"
+        ],
+        "schema_file": "packages/db/src/schema/cron-runs.ts",
+        "package": "@hamafx/db"
+      }
+    ],
+    "packages/db/src/schema/daily-ai-spend.ts": [
+      {
+        "name": "daily_ai_spend",
+        "columns": [
+          "userId",
+          "tenantId",
+          "day",
+          "totalUsdCents"
+        ],
+        "schema_file": "packages/db/src/schema/daily-ai-spend.ts",
+        "package": "@hamafx/db"
+      }
+    ],
+    "packages/db/src/schema/diagnostic-traces.ts": [
+      {
+        "name": "diagnostic_traces",
+        "columns": [
+          "id",
+          "userId",
+          "threadId",
+          "startedAt",
+          "durationMs",
+          "stepCount",
+          "errorCount",
+          "status",
+          "summary",
+          "metadata",
+          "trace",
+          "createdAt"
+        ],
+        "schema_file": "packages/db/src/schema/diagnostic-traces.ts",
+        "package": "@hamafx/db"
+      }
+    ],
+    "packages/db/src/schema/feature-flags.ts": [
+      {
+        "name": "feature_flags",
+        "columns": [
+          "key",
+          "enabled",
+          "updatedAt",
+          "updatedBy"
+        ],
+        "schema_file": "packages/db/src/schema/feature-flags.ts",
+        "package": "@hamafx/db"
+      }
+    ],
+    "packages/db/src/schema/intermarket-resonance.ts": [
+      {
+        "name": "intermarket_resonance",
+        "columns": [
+          "date",
+          "realYieldPct",
+          "breakevenInflationPct",
+          "dxyIndex",
+          "goldClose",
+          "divergenceScore",
+          "tenantId",
+          "createdAt"
+        ],
+        "schema_file": "packages/db/src/schema/intermarket-resonance.ts",
+        "package": "@hamafx/db"
+      }
+    ],
+    "packages/db/src/schema/journal.ts": [
+      {
+        "name": "journal_entries",
+        "columns": [
+          "id",
+          "userId",
+          "symbol",
+          "tenantId",
+          "side",
+          "openedAt",
+          "closedAt",
+          "entry",
+          "stop",
+          "target",
+          "exit",
+          "size",
+          "outcome",
+          "rMultiple",
+          "notes",
+          "tags",
+          "screenshotUrl",
+          "attachments",
+          "deletedAt",
+          "createdAt",
+          "updatedAt"
+        ],
+        "schema_file": "packages/db/src/schema/journal.ts",
+        "package": "@hamafx/db"
+      }
+    ],
+    "packages/db/src/schema/live-ticks.ts": [
+      {
+        "name": "live_ticks",
+        "columns": [
+          "symbol",
+          "bid",
+          "ask",
+          "mid",
+          "ts",
+          "source",
+          "tenantId",
+          "updatedAt"
+        ],
+        "schema_file": "packages/db/src/schema/live-ticks.ts",
+        "package": "@hamafx/db"
+      }
+    ],
+    "packages/db/src/schema/memory.ts": [
+      {
+        "name": "memory_embeddings",
+        "columns": [
+          "id",
+          "userId",
+          "kind",
+          "tenantId",
+          "sourceId",
+          "symbol",
+          "text",
+          "model",
+          "meta",
+          "embedding",
+          "occurredAt",
+          "createdAt"
+        ],
+        "schema_file": "packages/db/src/schema/memory.ts",
+        "package": "@hamafx/db"
+      }
+    ],
+    "packages/db/src/schema/news.ts": [
+      {
+        "name": "news_articles",
+        "columns": [
+          "id",
+          "title",
+          "summary",
+          "url",
+          "source",
+          "publisher",
+          "publishedAt",
+          "symbols",
+          "sentiment",
+          "sentimentScore",
+          "topics",
+          "tenantId",
+          "createdAt",
+          "articleId",
+          "model",
+          "embedding",
+          "tenantId",
+          "createdAt"
+        ],
+        "schema_file": "packages/db/src/schema/news.ts",
+        "package": "@hamafx/db"
+      },
+      {
+        "name": "news_embeddings",
+        "columns": [
+          "articleId",
+          "model",
+          "embedding",
+          "tenantId",
+          "createdAt"
+        ],
+        "schema_file": "packages/db/src/schema/news.ts",
+        "package": "@hamafx/db"
+      }
+    ],
+    "packages/db/src/schema/noise-control.ts": [
+      {
+        "name": "notification_noise_state",
+        "columns": [
+          "userId",
+          "dedupKey",
+          "tenantId",
+          "routeType",
+          "lastSentAt",
+          "expiresAt"
+        ],
+        "schema_file": "packages/db/src/schema/noise-control.ts",
+        "package": "@hamafx/db"
+      }
+    ],
+    "packages/db/src/schema/portfolio.ts": [
+      {
+        "name": "portfolio_positions",
+        "columns": [
+          "id",
+          "userId",
+          "symbol",
+          "tenantId",
+          "direction",
+          "lotSize",
+          "entryPrice",
+          "stopLoss",
+          "takeProfit",
+          "openedAt",
+          "closedAt",
+          "closePrice",
+          "status",
+          "notes",
+          "deletedAt",
+          "createdAt",
+          "updatedAt",
+          "userId",
+          "tenantId",
+          "accountBalance",
+          "baseCurrency",
+          "maxRiskPerTradePct",
+          "maxTotalExposurePct",
+          "updatedAt"
+        ],
+        "schema_file": "packages/db/src/schema/portfolio.ts",
+        "package": "@hamafx/db"
+      },
+      {
+        "name": "portfolio_settings",
+        "columns": [
+          "userId",
+          "tenantId",
+          "accountBalance",
+          "baseCurrency",
+          "maxRiskPerTradePct",
+          "maxTotalExposurePct",
+          "updatedAt"
+        ],
+        "schema_file": "packages/db/src/schema/portfolio.ts",
+        "package": "@hamafx/db"
+      }
+    ],
+    "packages/db/src/schema/provider-daily-quota.ts": [
+      {
+        "name": "provider_daily_quota",
+        "columns": [
+          "provider",
+          "day",
+          "count"
+        ],
+        "schema_file": "packages/db/src/schema/provider-daily-quota.ts",
+        "package": "@hamafx/db"
+      }
+    ],
+    "packages/db/src/schema/provider-health.ts": [
+      {
+        "name": "provider_health",
+        "columns": [
+          "provider",
+          "lastSuccessAt",
+          "lastFailureAt",
+          "consecutiveFailures",
+          "updatedAt"
+        ],
+        "schema_file": "packages/db/src/schema/provider-health.ts",
+        "package": "@hamafx/db"
+      }
+    ],
+    "packages/db/src/schema/provider-tests.ts": [
+      {
+        "name": "provider_tests",
+        "columns": [
+          "userId",
+          "tenantId",
+          "providerId",
+          "ok",
+          "error",
+          "testedAt",
+          "rateLimit"
+        ],
+        "schema_file": "packages/db/src/schema/provider-tests.ts",
+        "package": "@hamafx/db"
+      }
+    ],
+    "packages/db/src/schema/push.ts": [
+      {
+        "name": "push_subscriptions",
+        "columns": [
+          "id",
+          "userId",
+          "endpoint",
+          "tenantId",
+          "p256dh",
+          "auth",
+          "userAgent",
+          "createdAt"
+        ],
+        "schema_file": "packages/db/src/schema/push.ts",
+        "package": "@hamafx/db"
+      }
+    ],
+    "packages/db/src/schema/rate-limits.ts": [
+      {
+        "name": "rate_limits",
+        "columns": [
+          "userId",
+          "tenantId",
+          "endpointGroup",
+          "windowStart",
+          "requestCount"
+        ],
+        "schema_file": "packages/db/src/schema/rate-limits.ts",
+        "package": "@hamafx/db"
+      }
+    ],
+    "packages/db/src/schema/share.ts": [
+      {
+        "name": "shared_snapshots",
+        "columns": [
+          "id",
+          "userId",
+          "title",
+          "tenantId",
+          "body",
+          "overlay",
+          "symbol",
+          "tf",
+          "expiresAt",
+          "createdAt"
+        ],
+        "schema_file": "packages/db/src/schema/share.ts",
+        "package": "@hamafx/db"
+      }
+    ],
+    "packages/db/src/schema/snapshots.ts": [
+      {
+        "name": "snapshots",
+        "columns": [
+          "id",
+          "symbol",
+          "kind",
+          "asOf",
+          "data",
+          "tenantId",
+          "createdAt"
+        ],
+        "schema_file": "packages/db/src/schema/snapshots.ts",
+        "package": "@hamafx/db"
+      }
+    ],
+    "packages/db/src/schema/symbol-catalog.ts": [
+      {
+        "name": "symbol_catalog",
+        "columns": [
+          "symbol",
+          "name",
+          "category",
+          "exchange",
+          "tvTicker",
+          "biquoteSymbol",
+          "binanceSymbol",
+          "finnhubSymbol",
+          "nDataSymbol",
+          "pipSize",
+          "priceDecimals",
+          "currencyTags",
+          "isActive",
+          "sortOrder",
+          "tenantId"
+        ],
+        "schema_file": "packages/db/src/schema/symbol-catalog.ts",
+        "package": "@hamafx/db"
+      }
+    ],
+    "packages/db/src/schema/telegram-updates.ts": [
+      {
+        "name": "telegram_updates",
+        "columns": [
+          "updateId",
+          "processedAt"
+        ],
+        "schema_file": "packages/db/src/schema/telegram-updates.ts",
+        "package": "@hamafx/db"
+      }
+    ],
+    "packages/db/src/schema/telemetry.ts": [
+      {
+        "name": "chat_telemetry",
+        "columns": [
+          "id",
+          "userId",
+          "threadId",
+          "tenantId",
+          "messageId",
+          "model",
+          "inputTokens",
+          "outputTokens",
+          "toolCalls",
+          "ms",
+          "estCostUsd",
+          "kind",
+          "createdAt"
+        ],
+        "schema_file": "packages/db/src/schema/telemetry.ts",
+        "package": "@hamafx/db"
+      }
+    ],
+    "packages/db/src/schema/throttle.ts": [
+      {
+        "name": "provider_throttle",
+        "columns": [
+          "provider",
+          "windowStartedAt",
+          "count",
+          "backoffUntil"
+        ],
+        "schema_file": "packages/db/src/schema/throttle.ts",
+        "package": "@hamafx/db"
+      }
+    ],
+    "packages/db/src/schema/tool-telemetry.ts": [
+      {
+        "name": "chat_tool_telemetry",
+        "columns": [
+          "id",
+          "userId",
+          "threadId",
+          "tenantId",
+          "messageId",
+          "tool",
+          "ms",
+          "ok",
+          "errorCode",
+          "outputChars",
+          "createdAt"
+        ],
+        "schema_file": "packages/db/src/schema/tool-telemetry.ts",
+        "package": "@hamafx/db"
+      }
+    ]
+  }
+}

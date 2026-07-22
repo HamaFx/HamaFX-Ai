@@ -1,0 +1,232 @@
+{
+  "schema_version": "1.0",
+  "tool_count": 32,
+  "tools": [
+    {
+      "name": "analyze_chart_image",
+      "description": "Copyright 2026 HamaFX",
+      "file": "packages/ai/src/tools/analyze-chart-image.ts"
+    },
+    {
+      "name": "analyze_fundamental",
+      "description": "Aggregate the upcoming high/medium-impact macro events for a symbol",
+      "file": "packages/ai/src/tools/analyze-fundamental.ts"
+    },
+    {
+      "name": "analyze_technical",
+      "description": "Multi-timeframe technical readout (trend, bias, momentum, structure, levels) for a symbol. Use for any ",
+      "file": "packages/ai/src/tools/analyze-technical.ts"
+    },
+    {
+      "name": "annotate_chart",
+      "description": "Copyright 2026 HamaFX",
+      "file": "packages/ai/src/tools/annotate-chart.ts"
+    },
+    {
+      "name": "compute_position_health",
+      "description": "For each currently-open journal entry, compute live P/L in pips and R-multiples plus distance to stop and target. Use when the user asks ",
+      "file": "packages/ai/src/tools/compute-position-health.ts"
+    },
+    {
+      "name": "compute_risk",
+      "description": "Compute position size, USD risk/reward, and pips-to-stop/target from a (symbol, side, entry, stop, target?, accountUsd, riskPct) tuple. Pure-function — no provider calls. Use when the user asks ",
+      "file": "packages/ai/src/tools/compute-risk.ts"
+    },
+    {
+      "name": "convene_committee",
+      "description": "Convene a Multi-Agent Trading Committee (Economist, Technician, Risk Manager) to evaluate a trade setup. Use whenever the user asks ",
+      "file": "packages/ai/src/tools/convene-committee.ts"
+    },
+    {
+      "name": "forecast_volatility",
+      "description": "Copyright 2026 HamaFX",
+      "file": "packages/ai/src/tools/forecast-volatility.ts"
+    },
+    {
+      "name": "get_calendar",
+      "description": "Copyright 2026 HamaFX",
+      "file": "packages/ai/src/tools/get-calendar.ts"
+    },
+    {
+      "name": "get_candles",
+      "description": "Fetch OHLC candles for one symbol at one timeframe (e.g. XAUUSD 1h). Use to confirm a recent swing high/low or to feed a pattern read. For RSI/MACD/EMA/etc. prefer get_indicators.",
+      "file": "packages/ai/src/tools/get-candles.ts"
+    },
+    {
+      "name": "get_correlation",
+      "description": "Pearson correlation matrix over close-to-close returns for XAUUSD/EURUSD/GBPUSD at the given timeframe + window, plus a USD-strength proxy (",
+      "file": "packages/ai/src/tools/get-correlation.ts"
+    },
+    {
+      "name": "get_co_t",
+      "description": "Last N weeks of CFTC Commitment-of-Traders rows for one symbol (default XAUUSD). Use to answer ",
+      "file": "packages/ai/src/tools/get-cot.ts"
+    },
+    {
+      "name": "get_indicators",
+      "description": "Compute indicators (sma, ema, rsi, macd, atr, bollinger, pivots) on a (symbol, timeframe) window. Returns the last 30 points of each series — enough for ",
+      "file": "packages/ai/src/tools/get-indicators.ts"
+    },
+    {
+      "name": "get_intermarket_resonance",
+      "description": "Evaluate Gold (XAUUSD) or major currencies",
+      "file": "packages/ai/src/tools/get-intermarket-resonance.ts"
+    },
+    {
+      "name": "get_intermarket",
+      "description": "Cross-asset pulse: USD-strength proxy + 24h change, gold",
+      "file": "packages/ai/src/tools/get-intermarket.ts"
+    },
+    {
+      "name": "get_journal_stats",
+      "description": "Copyright 2026 HamaFX",
+      "file": "packages/ai/src/tools/get-journal-stats.ts"
+    },
+    {
+      "name": "get_market_structure",
+      "description": "Copyright 2026 HamaFX",
+      "file": "packages/ai/src/tools/get-market-structure.ts"
+    },
+    {
+      "name": "get_news",
+      "description": "Copyright 2026 HamaFX",
+      "file": "packages/ai/src/tools/get-news.ts"
+    },
+    {
+      "name": "get_portfolio_snapshot",
+      "description": "Get a snapshot of the user\\",
+      "file": "packages/ai/src/tools/get-portfolio-snapshot.ts"
+    },
+    {
+      "name": "get_price",
+      "description": "Fetch the most recent mid price for one or more supported symbols (XAUUSD, EURUSD, GBPUSD). Use only when the LIVE_SNAPSHOT in the system prompt is missing the symbol or older than 10 seconds.",
+      "file": "packages/ai/src/tools/get-price.ts"
+    },
+    {
+      "name": "get_seasonality",
+      "description": "Per-month / per-weekday / per-hour return seasonality for a symbol. Returns median percent return, IQR, win rate, and sample count per bucket. Use for ",
+      "file": "packages/ai/src/tools/get-seasonality.ts"
+    },
+    {
+      "name": "get_session_levels",
+      "description": "Compute today",
+      "file": "packages/ai/src/tools/get-session-levels.ts"
+    },
+    {
+      "name": "get_social_sentiment",
+      "description": "Copyright 2026 HamaFX",
+      "file": "packages/ai/src/tools/get-social-sentiment.ts"
+    },
+    {
+      "name": "get_system_diagnostics",
+      "description": "Query the real-time operational health, connection latency, database record volumes, active synchronized files status, remaining daily budget, and verified environment variables in the Copilot system.",
+      "file": "packages/ai/src/tools/get-system-diagnostics.ts"
+    },
+    {
+      "name": "log_journal",
+      "description": "Record a trade entry in the journal. Returns the new entry id + a summary line. Status is ",
+      "file": "packages/ai/src/tools/log-journal.ts"
+    },
+    {
+      "name": "replay_setup",
+      "description": "Copyright 2026 HamaFX",
+      "file": "packages/ai/src/tools/replay-setup.ts"
+    },
+    {
+      "name": "run_system_action",
+      "description": "Trigger the operator-only FRED resonance historical sync. This tool is only for explicit user requests to run the resonance backfill/sync and is unavailable for canned cache or migration theatrics.",
+      "file": "packages/ai/src/tools/run-system-action.ts"
+    },
+    {
+      "name": "search_knowledge",
+      "description": "Copyright 2026 HamaFX",
+      "file": "packages/ai/src/tools/search-knowledge.ts"
+    },
+    {
+      "name": "set_alert",
+      "description": "Create a one-shot price / indicator / candle-close alert. Fires when the rule first matches and then deactivates. The user can resend by editing the alert in /alerts.",
+      "file": "packages/ai/src/tools/set-alert.ts"
+    },
+    {
+      "name": "share_snapshot",
+      "description": "Copyright 2026 HamaFX",
+      "file": "packages/ai/src/tools/share-snapshot.ts"
+    },
+    {
+      "name": "summarize_thread",
+      "description": "One-paragraph synopsis of the active chat thread plus three durable insights. Use when the user asks ",
+      "file": "packages/ai/src/tools/summarize-thread.ts"
+    },
+    {
+      "name": "verify_call",
+      "description": "Copyright 2026 HamaFX",
+      "file": "packages/ai/src/tools/verify-call.ts"
+    }
+  ],
+  "agent_count": 4,
+  "agents": [
+    {
+      "name": "FundamentalAgent",
+      "file": "packages/ai/src/multi-agent/agents/fundamental-agent.ts",
+      "extendedFrom": "BaseAgent"
+    },
+    {
+      "name": "RiskAgent",
+      "file": "packages/ai/src/multi-agent/agents/risk-agent.ts",
+      "extendedFrom": "BaseAgent"
+    },
+    {
+      "name": "SentimentAgent",
+      "file": "packages/ai/src/multi-agent/agents/sentiment-agent.ts",
+      "extendedFrom": "BaseAgent"
+    },
+    {
+      "name": "TechnicalAgent",
+      "file": "packages/ai/src/multi-agent/agents/technical-agent.ts",
+      "extendedFrom": "BaseAgent"
+    }
+  ],
+  "routing": {
+    "domains": [
+      "fundamental",
+      "technical",
+      "summary",
+      "vision",
+      "generic"
+    ],
+    "description": "Domain-based turn classification: keyword scoring + optional semantic routing via LLM"
+  },
+  "multi_agent": {
+    "modes": [
+      "single",
+      "quick",
+      "standard",
+      "full",
+      "auto"
+    ],
+    "description": "Single-agent, quick (1 specialist), standard (2), full (4, queued to worker), auto-detect",
+    "specialists": [
+      "technical",
+      "fundamental",
+      "risk",
+      "sentiment"
+    ],
+    "synthesizer": "decision"
+  },
+  "model_tiers": [
+    "fast",
+    "mid",
+    "strong"
+  ],
+  "byok_providers": [
+    "google",
+    "anthropic",
+    "openai",
+    "groq",
+    "deepseek",
+    "xai",
+    "openrouter",
+    "github",
+    "cerebras"
+  ]
+}
