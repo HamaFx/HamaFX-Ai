@@ -609,6 +609,7 @@
         "json-generator/generateArchitectureJson",
         "html-generator/generateHtml",
         "knowledge-generator/KnowledgeOutput",
+        "obsidian-generator/generateObsidianVault",
         "analysis/analyzeArchitecture",
         "advanced-features/analyzeImpact",
         "git-history/scanGitHistory"

@@ -1,0 +1,42 @@
+---
+type: module
+package: "@hamafx/web"
+path: "apps/web/src/lib/fuzzy-match.ts"
+incoming: 1
+outgoing: 1
+risk: low
+tags: [module, hamafxweb]
+aliases: [fuzzy-match/FuzzyMatch]
+---
+
+# 📁 fuzzy-match/FuzzyMatch
+
+> **Module** · `@hamafx/web` · `apps/web/src/lib/fuzzy-match.ts`
+
+
+Module: apps/web/src/lib/fuzzy-match.ts
+
+
+## 📊 Connections
+
+| | Count |
+|---|---|
+| Incoming dependencies | 1 |
+| Outgoing dependencies | 1 |
+| Risk level | LOW |
+
+
+### 📤 Depends On
+[[@hamafx-web]]
+
+
+### 📥 Depended On By
+[[fuzzy-match.test]]
+
+
+
+## 📦 Exports
+- `FuzzyMatch`
+- `fuzzyMatch`
+- `rankByQuery`
+

@@ -1,0 +1,54 @@
+---
+type: module
+package: "loadtest"
+path: "loadtest/config/thresholds.ts"
+incoming: 15
+outgoing: 1
+risk: medium
+tags: [module, loadtest]
+aliases: [thresholds/ThresholdPreset]
+---
+
+# 📁 thresholds/ThresholdPreset
+
+> **Module** · `loadtest` · `loadtest/config/thresholds.ts`
+
+
+Module: loadtest/config/thresholds.ts
+
+
+## 📊 Connections
+
+| | Count |
+|---|---|
+| Incoming dependencies | 15 |
+| Outgoing dependencies | 1 |
+| Risk level | MEDIUM |
+
+
+### 📤 Depends On
+[[loadtest]]
+
+
+### 📥 Depended On By
+[[load-chat-default]] · [[load-config-mix-default]] · [[load-market-read-default]] · [[load-read-mix-default]] · [[load-write-mix-default]] · [[smoke-config-mix-default]] · [[smoke-market-read-default]] · [[smoke-read-mix-default]] · [[smoke-write-mix-default]] · [[soak-read-mix-default]] · [[soak-write-mix-default]] · [[spike-read-mix-default]] · [[spike-write-mix-default]] · [[stress-market-read-default]] · [[stress-write-mix-default]]
+
+
+
+## 📦 Exports
+- `ThresholdPreset`
+- `MARKET_READ`
+- `MARKET_READ_TAGGED`
+- `MARKET_READ_TAGGED_RELAXED`
+- `READ_MIX`
+- `READ_MIX_TAGGED`
+- `READ_MIX_TAGGED_RELAXED`
+- `CHAT`
+- `CHAT_TAGGED`
+- `WRITE_MIX`
+- `WRITE_MIX_TAGGED`
+- `WRITE_MIX_TAGGED_RELAXED`
+- `CONFIG_MIX`
+- `CONFIG_MIX_TAGGED`
+- `CONFIG_MIX_TAGGED_RELAXED`
+

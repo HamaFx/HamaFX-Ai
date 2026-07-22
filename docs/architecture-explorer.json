@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "generatedAt": "2026-07-22T23:20:19.761Z",
+  "generatedAt": "2026-07-22T23:40:55.164Z",
   "project": {
     "name": "HamaFX-Ai",
     "rootPath": "/home/ubuntu/HamaFX-Ai",
@@ -3756,7 +3756,7 @@
       "name": "tool:architecture-explorer",
       "path": "tools/architecture-explorer",
       "type": "package",
-      "description": "Package: tool:architecture-explorer (16 nodes)",
+      "description": "Package: tool:architecture-explorer (17 nodes)",
       "dependsOn": [
         "types/NodeType",
         "graph-model/GraphModel",
@@ -3769,6 +3769,7 @@
         "json-generator/generateArchitectureJson",
         "html-generator/generateHtml",
         "knowledge-generator/KnowledgeOutput",
+        "obsidian-generator/generateObsidianVault",
         "analysis/analyzeArchitecture",
         "advanced-features/analyzeImpact",
         "git-history/scanGitHistory"
@@ -3797,6 +3798,7 @@
         "generateArchitectureJson",
         "KnowledgeOutput",
         "generateKnowledgeArtifacts",
+        "generateObsidianVault",
         "ScannedFile",
         "getPackageName",
         "ScanResult",
@@ -8073,7 +8075,7 @@
           "GET"
         ],
         "functions": [],
-        "size": 1249,
+        "size": 1709,
         "routePath": "/api/admin/architecture-explorer",
         "httpMethod": "GET"
       }
@@ -13769,7 +13771,7 @@
         "functions": [
           "setCspHeader"
         ],
-        "size": 8888
+        "size": 9108
       }
     },
     {
@@ -27658,7 +27660,7 @@
           "parseArgs",
           "main"
         ],
-        "size": 7198
+        "size": 7463
       }
     },
     {
@@ -27707,6 +27709,33 @@
     {
       "id": "n1253",
       "type": "module",
+      "name": "obsidian-generator/generateObsidianVault",
+      "pkg": "tool:architecture-explorer",
+      "path": "tools/architecture-explorer/src/obsidian-generator.ts",
+      "description": "Module: tools/architecture-explorer/src/obsidian-generator.ts",
+      "metadata": {
+        "exports": [
+          "generateObsidianVault"
+        ],
+        "functions": [
+          "sanitizeFilename",
+          "uniqueNodeFilename",
+          "buildWikiLinkMap",
+          "wikiLink",
+          "resolveNodeId",
+          "generateObsidianVault",
+          "generateDashboard",
+          "generateTypeIndex",
+          "incomingCountFor",
+          "outgoingCountFor",
+          "generateNodeMarkdown"
+        ],
+        "size": 11810
+      }
+    },
+    {
+      "id": "n1254",
+      "type": "module",
       "name": "scanner/ScannedFile",
       "pkg": "tool:architecture-explorer",
       "path": "tools/architecture-explorer/src/scanner.ts",
@@ -27747,7 +27776,7 @@
       }
     },
     {
-      "id": "n1254",
+      "id": "n1255",
       "type": "module",
       "name": "scripts/getScripts",
       "pkg": "tool:architecture-explorer",
@@ -27764,7 +27793,7 @@
       }
     },
     {
-      "id": "n1255",
+      "id": "n1256",
       "type": "module",
       "name": "styles/getStyles",
       "pkg": "tool:architecture-explorer",
@@ -27781,7 +27810,7 @@
       }
     },
     {
-      "id": "n1256",
+      "id": "n1257",
       "type": "module",
       "name": "types/NodeType",
       "pkg": "tool:architecture-explorer",
@@ -27823,7 +27852,7 @@
       }
     },
     {
-      "id": "n1257",
+      "id": "n1258",
       "type": "module",
       "name": "run",
       "pkg": "tool:lighthouse",
@@ -27846,7 +27875,7 @@
       }
     },
     {
-      "id": "n1258",
+      "id": "n1259",
       "type": "module",
       "name": "vitest.config/defineConfig",
       "pkg": "root",
@@ -27861,7 +27890,7 @@
       }
     },
     {
-      "id": "n1259",
+      "id": "n1260",
       "type": "module",
       "name": "vitest.workspace/defineWorkspace",
       "pkg": "root",
@@ -27876,7 +27905,7 @@
       }
     },
     {
-      "id": "n1260",
+      "id": "n1261",
       "type": "table",
       "name": "agent_opinions",
       "pkg": "@hamafx/db",
@@ -27904,7 +27933,7 @@
       }
     },
     {
-      "id": "n1261",
+      "id": "n1262",
       "type": "table",
       "name": "alerts",
       "pkg": "@hamafx/db",
@@ -27928,7 +27957,7 @@
       }
     },
     {
-      "id": "n1262",
+      "id": "n1263",
       "type": "table",
       "name": "analysis_jobs",
       "pkg": "@hamafx/db",
@@ -27962,7 +27991,7 @@
       }
     },
     {
-      "id": "n1263",
+      "id": "n1264",
       "type": "table",
       "name": "audit_logs",
       "pkg": "@hamafx/db",
@@ -27981,7 +28010,7 @@
       }
     },
     {
-      "id": "n1264",
+      "id": "n1265",
       "type": "table",
       "name": "user",
       "pkg": "@hamafx/db",
@@ -28041,7 +28070,7 @@
       }
     },
     {
-      "id": "n1265",
+      "id": "n1266",
       "type": "table",
       "name": "organization",
       "pkg": "@hamafx/db",
@@ -28096,7 +28125,7 @@
       }
     },
     {
-      "id": "n1266",
+      "id": "n1267",
       "type": "table",
       "name": "organization_member",
       "pkg": "@hamafx/db",
@@ -28147,7 +28176,7 @@
       }
     },
     {
-      "id": "n1267",
+      "id": "n1268",
       "type": "table",
       "name": "user_sessions",
       "pkg": "@hamafx/db",
@@ -28197,7 +28226,7 @@
       }
     },
     {
-      "id": "n1268",
+      "id": "n1269",
       "type": "table",
       "name": "account",
       "pkg": "@hamafx/db",
@@ -28247,7 +28276,7 @@
       }
     },
     {
-      "id": "n1269",
+      "id": "n1270",
       "type": "table",
       "name": "session",
       "pkg": "@hamafx/db",
@@ -28294,7 +28323,7 @@
       }
     },
     {
-      "id": "n1270",
+      "id": "n1271",
       "type": "table",
       "name": "verificationToken",
       "pkg": "@hamafx/db",
@@ -28340,7 +28369,7 @@
       }
     },
     {
-      "id": "n1271",
+      "id": "n1272",
       "type": "table",
       "name": "user_settings",
       "pkg": "@hamafx/db",
@@ -28385,7 +28414,7 @@
       }
     },
     {
-      "id": "n1272",
+      "id": "n1273",
       "type": "table",
       "name": "user_symbols",
       "pkg": "@hamafx/db",
@@ -28403,7 +28432,7 @@
       }
     },
     {
-      "id": "n1273",
+      "id": "n1274",
       "type": "table",
       "name": "plans",
       "pkg": "@hamafx/db",
@@ -28455,7 +28484,7 @@
       }
     },
     {
-      "id": "n1274",
+      "id": "n1275",
       "type": "table",
       "name": "subscriptions",
       "pkg": "@hamafx/db",
@@ -28502,7 +28531,7 @@
       }
     },
     {
-      "id": "n1275",
+      "id": "n1276",
       "type": "table",
       "name": "payments",
       "pkg": "@hamafx/db",
@@ -28538,7 +28567,7 @@
       }
     },
     {
-      "id": "n1276",
+      "id": "n1277",
       "type": "table",
       "name": "ipn_events",
       "pkg": "@hamafx/db",
@@ -28560,7 +28589,7 @@
       }
     },
     {
-      "id": "n1277",
+      "id": "n1278",
       "type": "table",
       "name": "bot_links",
       "pkg": "@hamafx/db",
@@ -28578,7 +28607,7 @@
       }
     },
     {
-      "id": "n1278",
+      "id": "n1279",
       "type": "table",
       "name": "briefings_emitted",
       "pkg": "@hamafx/db",
@@ -28597,7 +28626,7 @@
       }
     },
     {
-      "id": "n1279",
+      "id": "n1280",
       "type": "table",
       "name": "economic_events",
       "pkg": "@hamafx/db",
@@ -28624,7 +28653,7 @@
       }
     },
     {
-      "id": "n1280",
+      "id": "n1281",
       "type": "table",
       "name": "candles_1m",
       "pkg": "@hamafx/db",
@@ -28648,7 +28677,7 @@
       }
     },
     {
-      "id": "n1281",
+      "id": "n1282",
       "type": "table",
       "name": "chat_threads",
       "pkg": "@hamafx/db",
@@ -28679,7 +28708,7 @@
       }
     },
     {
-      "id": "n1282",
+      "id": "n1283",
       "type": "table",
       "name": "chat_messages",
       "pkg": "@hamafx/db",
@@ -28699,7 +28728,7 @@
       }
     },
     {
-      "id": "n1283",
+      "id": "n1284",
       "type": "table",
       "name": "cot_reports",
       "pkg": "@hamafx/db",
@@ -28727,7 +28756,7 @@
       }
     },
     {
-      "id": "n1284",
+      "id": "n1285",
       "type": "table",
       "name": "cron_runs",
       "pkg": "@hamafx/db",
@@ -28747,7 +28776,7 @@
       }
     },
     {
-      "id": "n1285",
+      "id": "n1286",
       "type": "table",
       "name": "daily_ai_spend",
       "pkg": "@hamafx/db",
@@ -28764,7 +28793,7 @@
       }
     },
     {
-      "id": "n1286",
+      "id": "n1287",
       "type": "table",
       "name": "diagnostic_traces",
       "pkg": "@hamafx/db",
@@ -28789,7 +28818,7 @@
       }
     },
     {
-      "id": "n1287",
+      "id": "n1288",
       "type": "table",
       "name": "feature_flags",
       "pkg": "@hamafx/db",
@@ -28806,7 +28835,7 @@
       }
     },
     {
-      "id": "n1288",
+      "id": "n1289",
       "type": "table",
       "name": "intermarket_resonance",
       "pkg": "@hamafx/db",
@@ -28827,7 +28856,7 @@
       }
     },
     {
-      "id": "n1289",
+      "id": "n1290",
       "type": "table",
       "name": "journal_entries",
       "pkg": "@hamafx/db",
@@ -28861,7 +28890,7 @@
       }
     },
     {
-      "id": "n1290",
+      "id": "n1291",
       "type": "table",
       "name": "live_ticks",
       "pkg": "@hamafx/db",
@@ -28882,7 +28911,7 @@
       }
     },
     {
-      "id": "n1291",
+      "id": "n1292",
       "type": "table",
       "name": "memory_embeddings",
       "pkg": "@hamafx/db",
@@ -28907,7 +28936,7 @@
       }
     },
     {
-      "id": "n1292",
+      "id": "n1293",
       "type": "table",
       "name": "news_articles",
       "pkg": "@hamafx/db",
@@ -28938,7 +28967,7 @@
       }
     },
     {
-      "id": "n1293",
+      "id": "n1294",
       "type": "table",
       "name": "news_embeddings",
       "pkg": "@hamafx/db",
@@ -28956,7 +28985,7 @@
       }
     },
     {
-      "id": "n1294",
+      "id": "n1295",
       "type": "table",
       "name": "notification_noise_state",
       "pkg": "@hamafx/db",
@@ -28975,7 +29004,7 @@
       }
     },
     {
-      "id": "n1295",
+      "id": "n1296",
       "type": "table",
       "name": "portfolio_positions",
       "pkg": "@hamafx/db",
@@ -29012,7 +29041,7 @@
       }
     },
     {
-      "id": "n1296",
+      "id": "n1297",
       "type": "table",
       "name": "portfolio_settings",
       "pkg": "@hamafx/db",
@@ -29032,7 +29061,7 @@
       }
     },
     {
-      "id": "n1297",
+      "id": "n1298",
       "type": "table",
       "name": "provider_daily_quota",
       "pkg": "@hamafx/db",
@@ -29048,7 +29077,7 @@
       }
     },
     {
-      "id": "n1298",
+      "id": "n1299",
       "type": "table",
       "name": "provider_health",
       "pkg": "@hamafx/db",
@@ -29066,7 +29095,7 @@
       }
     },
     {
-      "id": "n1299",
+      "id": "n1300",
       "type": "table",
       "name": "provider_tests",
       "pkg": "@hamafx/db",
@@ -29086,7 +29115,7 @@
       }
     },
     {
-      "id": "n1300",
+      "id": "n1301",
       "type": "table",
       "name": "push_subscriptions",
       "pkg": "@hamafx/db",
@@ -29107,7 +29136,7 @@
       }
     },
     {
-      "id": "n1301",
+      "id": "n1302",
       "type": "table",
       "name": "rate_limits",
       "pkg": "@hamafx/db",
@@ -29125,7 +29154,7 @@
       }
     },
     {
-      "id": "n1302",
+      "id": "n1303",
       "type": "table",
       "name": "shared_snapshots",
       "pkg": "@hamafx/db",
@@ -29148,7 +29177,7 @@
       }
     },
     {
-      "id": "n1303",
+      "id": "n1304",
       "type": "table",
       "name": "snapshots",
       "pkg": "@hamafx/db",
@@ -29168,7 +29197,7 @@
       }
     },
     {
-      "id": "n1304",
+      "id": "n1305",
       "type": "table",
       "name": "symbol_catalog",
       "pkg": "@hamafx/db",
@@ -29196,7 +29225,7 @@
       }
     },
     {
-      "id": "n1305",
+      "id": "n1306",
       "type": "table",
       "name": "telegram_updates",
       "pkg": "@hamafx/db",
@@ -29211,7 +29240,7 @@
       }
     },
     {
-      "id": "n1306",
+      "id": "n1307",
       "type": "table",
       "name": "chat_telemetry",
       "pkg": "@hamafx/db",
@@ -29237,7 +29266,7 @@
       }
     },
     {
-      "id": "n1307",
+      "id": "n1308",
       "type": "table",
       "name": "provider_throttle",
       "pkg": "@hamafx/db",
@@ -29254,7 +29283,7 @@
       }
     },
     {
-      "id": "n1308",
+      "id": "n1309",
       "type": "table",
       "name": "chat_tool_telemetry",
       "pkg": "@hamafx/db",
@@ -29278,7 +29307,7 @@
       }
     },
     {
-      "id": "n1309",
+      "id": "n1310",
       "type": "api_route",
       "name": "GET /api/admin/architecture-explorer",
       "pkg": "@hamafx/web",
@@ -29295,7 +29324,7 @@
       }
     },
     {
-      "id": "n1310",
+      "id": "n1311",
       "type": "api_route",
       "name": "GET /api/admin/cron-history",
       "pkg": "@hamafx/web",
@@ -29312,7 +29341,7 @@
       }
     },
     {
-      "id": "n1311",
+      "id": "n1312",
       "type": "api_route",
       "name": "GET /api/admin/diagnostics/tool-telemetry",
       "pkg": "@hamafx/web",
@@ -29329,7 +29358,7 @@
       }
     },
     {
-      "id": "n1312",
+      "id": "n1313",
       "type": "api_route",
       "name": "GET /api/admin/diagnostics/trace/:id",
       "pkg": "@hamafx/web",
@@ -29346,7 +29375,7 @@
       }
     },
     {
-      "id": "n1313",
+      "id": "n1314",
       "type": "api_route",
       "name": "GET /api/admin/diagnostics/traces",
       "pkg": "@hamafx/web",
@@ -29363,7 +29392,7 @@
       }
     },
     {
-      "id": "n1314",
+      "id": "n1315",
       "type": "api_route",
       "name": "GET,POST /api/admin/features",
       "pkg": "@hamafx/web",
@@ -29381,7 +29410,7 @@
       }
     },
     {
-      "id": "n1315",
+      "id": "n1316",
       "type": "api_route",
       "name": "POST /api/admin/flush",
       "pkg": "@hamafx/web",
@@ -29398,7 +29427,7 @@
       }
     },
     {
-      "id": "n1316",
+      "id": "n1317",
       "type": "api_route",
       "name": "GET /api/admin/health-slo",
       "pkg": "@hamafx/web",
@@ -29415,7 +29444,7 @@
       }
     },
     {
-      "id": "n1317",
+      "id": "n1318",
       "type": "api_route",
       "name": "POST /api/admin/impersonate",
       "pkg": "@hamafx/web",
@@ -29432,7 +29461,7 @@
       }
     },
     {
-      "id": "n1318",
+      "id": "n1319",
       "type": "api_route",
       "name": "GET /api/admin/logs/stream",
       "pkg": "@hamafx/web",
@@ -29449,7 +29478,7 @@
       }
     },
     {
-      "id": "n1319",
+      "id": "n1320",
       "type": "api_route",
       "name": "GET /api/admin/onboarding/inspect",
       "pkg": "@hamafx/web",
@@ -29466,7 +29495,7 @@
       }
     },
     {
-      "id": "n1320",
+      "id": "n1321",
       "type": "api_route",
       "name": "POST /api/admin/onboarding/reset",
       "pkg": "@hamafx/web",
@@ -29483,7 +29512,7 @@
       }
     },
     {
-      "id": "n1321",
+      "id": "n1322",
       "type": "api_route",
       "name": "GET /api/admin/onboarding/status",
       "pkg": "@hamafx/web",
@@ -29500,7 +29529,7 @@
       }
     },
     {
-      "id": "n1322",
+      "id": "n1323",
       "type": "api_route",
       "name": "POST /api/admin/test-alert-email",
       "pkg": "@hamafx/web",
@@ -29517,7 +29546,7 @@
       }
     },
     {
-      "id": "n1323",
+      "id": "n1324",
       "type": "api_route",
       "name": "POST /api/admin/test-telegram",
       "pkg": "@hamafx/web",
@@ -29534,7 +29563,7 @@
       }
     },
     {
-      "id": "n1324",
+      "id": "n1325",
       "type": "api_route",
       "name": "GET /api/admin/users",
       "pkg": "@hamafx/web",
@@ -29551,7 +29580,7 @@
       }
     },
     {
-      "id": "n1325",
+      "id": "n1326",
       "type": "api_route",
       "name": "GET,PATCH,DELETE /api/alerts/:id",
       "pkg": "@hamafx/web",
@@ -29570,7 +29599,7 @@
       }
     },
     {
-      "id": "n1326",
+      "id": "n1327",
       "type": "api_route",
       "name": "POST /api/alerts/preview",
       "pkg": "@hamafx/web",
@@ -29587,7 +29616,7 @@
       }
     },
     {
-      "id": "n1327",
+      "id": "n1328",
       "type": "api_route",
       "name": "GET /api/alerts/preview-digest",
       "pkg": "@hamafx/web",
@@ -29604,7 +29633,7 @@
       }
     },
     {
-      "id": "n1328",
+      "id": "n1329",
       "type": "api_route",
       "name": "GET,POST /api/alerts",
       "pkg": "@hamafx/web",
@@ -29622,7 +29651,7 @@
       }
     },
     {
-      "id": "n1329",
+      "id": "n1330",
       "type": "api_route",
       "name": "GET /api/auth/:nextauth*",
       "pkg": "@hamafx/web",
@@ -29634,7 +29663,7 @@
       }
     },
     {
-      "id": "n1330",
+      "id": "n1331",
       "type": "api_route",
       "name": "GET /api/auth/verify-email",
       "pkg": "@hamafx/web",
@@ -29648,7 +29677,7 @@
       }
     },
     {
-      "id": "n1331",
+      "id": "n1332",
       "type": "api_route",
       "name": "POST /api/billing/checkout",
       "pkg": "@hamafx/web",
@@ -29665,7 +29694,7 @@
       }
     },
     {
-      "id": "n1332",
+      "id": "n1333",
       "type": "api_route",
       "name": "GET /api/billing/portal",
       "pkg": "@hamafx/web",
@@ -29682,7 +29711,7 @@
       }
     },
     {
-      "id": "n1333",
+      "id": "n1334",
       "type": "api_route",
       "name": "GET /api/billing/webhook",
       "pkg": "@hamafx/web",
@@ -29699,7 +29728,7 @@
       }
     },
     {
-      "id": "n1334",
+      "id": "n1335",
       "type": "api_route",
       "name": "POST /api/bot/link-code",
       "pkg": "@hamafx/web",
@@ -29716,7 +29745,7 @@
       }
     },
     {
-      "id": "n1335",
+      "id": "n1336",
       "type": "api_route",
       "name": "GET /api/bot/status",
       "pkg": "@hamafx/web",
@@ -29733,7 +29762,7 @@
       }
     },
     {
-      "id": "n1336",
+      "id": "n1337",
       "type": "api_route",
       "name": "POST /api/bot/unlink",
       "pkg": "@hamafx/web",
@@ -29750,7 +29779,7 @@
       }
     },
     {
-      "id": "n1337",
+      "id": "n1338",
       "type": "api_route",
       "name": "GET /api/calendar",
       "pkg": "@hamafx/web",
@@ -29767,7 +29796,7 @@
       }
     },
     {
-      "id": "n1338",
+      "id": "n1339",
       "type": "api_route",
       "name": "GET /api/chat/analysis-jobs/:jobId",
       "pkg": "@hamafx/web",
@@ -29784,7 +29813,7 @@
       }
     },
     {
-      "id": "n1339",
+      "id": "n1340",
       "type": "api_route",
       "name": "POST /api/chat",
       "pkg": "@hamafx/web",
@@ -29802,7 +29831,7 @@
       }
     },
     {
-      "id": "n1340",
+      "id": "n1341",
       "type": "api_route",
       "name": "GET /api/chat/threads/:id/export",
       "pkg": "@hamafx/web",
@@ -29819,7 +29848,7 @@
       }
     },
     {
-      "id": "n1341",
+      "id": "n1342",
       "type": "api_route",
       "name": "GET /api/chat/threads/:id/opinions",
       "pkg": "@hamafx/web",
@@ -29836,7 +29865,7 @@
       }
     },
     {
-      "id": "n1342",
+      "id": "n1343",
       "type": "api_route",
       "name": "GET,DELETE,PATCH /api/chat/threads/:id",
       "pkg": "@hamafx/web",
@@ -29855,7 +29884,7 @@
       }
     },
     {
-      "id": "n1343",
+      "id": "n1344",
       "type": "api_route",
       "name": "GET /api/chat/threads/:id/summary",
       "pkg": "@hamafx/web",
@@ -29872,7 +29901,7 @@
       }
     },
     {
-      "id": "n1344",
+      "id": "n1345",
       "type": "api_route",
       "name": "POST /api/chat/threads/bulk-delete",
       "pkg": "@hamafx/web",
@@ -29889,7 +29918,7 @@
       }
     },
     {
-      "id": "n1345",
+      "id": "n1346",
       "type": "api_route",
       "name": "POST /api/chat/threads/fork",
       "pkg": "@hamafx/web",
@@ -29906,7 +29935,7 @@
       }
     },
     {
-      "id": "n1346",
+      "id": "n1347",
       "type": "api_route",
       "name": "GET /api/chat/threads",
       "pkg": "@hamafx/web",
@@ -29923,7 +29952,7 @@
       }
     },
     {
-      "id": "n1347",
+      "id": "n1348",
       "type": "api_route",
       "name": "GET /api/cron/alerts",
       "pkg": "@hamafx/web",
@@ -29940,7 +29969,7 @@
       }
     },
     {
-      "id": "n1348",
+      "id": "n1349",
       "type": "api_route",
       "name": "GET /api/cron/briefings",
       "pkg": "@hamafx/web",
@@ -29956,7 +29985,7 @@
       }
     },
     {
-      "id": "n1349",
+      "id": "n1350",
       "type": "api_route",
       "name": "GET /api/cron/calendar",
       "pkg": "@hamafx/web",
@@ -29973,7 +30002,7 @@
       }
     },
     {
-      "id": "n1350",
+      "id": "n1351",
       "type": "api_route",
       "name": "GET /api/cron/cleanup-telemetry",
       "pkg": "@hamafx/web",
@@ -29989,7 +30018,7 @@
       }
     },
     {
-      "id": "n1351",
+      "id": "n1352",
       "type": "api_route",
       "name": "GET /api/cron/cleanup-tokens",
       "pkg": "@hamafx/web",
@@ -30005,7 +30034,7 @@
       }
     },
     {
-      "id": "n1352",
+      "id": "n1353",
       "type": "api_route",
       "name": "GET /api/cron/cleanup-uploads",
       "pkg": "@hamafx/web",
@@ -30022,7 +30051,7 @@
       }
     },
     {
-      "id": "n1353",
+      "id": "n1354",
       "type": "api_route",
       "name": "GET /api/cron/cot",
       "pkg": "@hamafx/web",
@@ -30038,7 +30067,7 @@
       }
     },
     {
-      "id": "n1354",
+      "id": "n1355",
       "type": "api_route",
       "name": "GET /api/cron/embedding-backfill",
       "pkg": "@hamafx/web",
@@ -30055,7 +30084,7 @@
       }
     },
     {
-      "id": "n1355",
+      "id": "n1356",
       "type": "api_route",
       "name": "GET /api/cron/fred-actuals",
       "pkg": "@hamafx/web",
@@ -30071,7 +30100,7 @@
       }
     },
     {
-      "id": "n1356",
+      "id": "n1357",
       "type": "api_route",
       "name": "GET /api/cron/news",
       "pkg": "@hamafx/web",
@@ -30088,7 +30117,7 @@
       }
     },
     {
-      "id": "n1357",
+      "id": "n1358",
       "type": "api_route",
       "name": "GET /api/cron/snapshots",
       "pkg": "@hamafx/web",
@@ -30104,7 +30133,7 @@
       }
     },
     {
-      "id": "n1358",
+      "id": "n1359",
       "type": "api_route",
       "name": "GET /api/cron/warm-cache",
       "pkg": "@hamafx/web",
@@ -30121,7 +30150,7 @@
       }
     },
     {
-      "id": "n1359",
+      "id": "n1360",
       "type": "api_route",
       "name": "GET /api/cron/weekly-review",
       "pkg": "@hamafx/web",
@@ -30137,7 +30166,7 @@
       }
     },
     {
-      "id": "n1360",
+      "id": "n1361",
       "type": "api_route",
       "name": "GET /api/dev/login",
       "pkg": "@hamafx/web",
@@ -30153,7 +30182,7 @@
       }
     },
     {
-      "id": "n1361",
+      "id": "n1362",
       "type": "api_route",
       "name": "GET /api/health/db",
       "pkg": "@hamafx/web",
@@ -30170,7 +30199,7 @@
       }
     },
     {
-      "id": "n1362",
+      "id": "n1363",
       "type": "api_route",
       "name": "GET /api/health/public",
       "pkg": "@hamafx/web",
@@ -30186,7 +30215,7 @@
       }
     },
     {
-      "id": "n1363",
+      "id": "n1364",
       "type": "api_route",
       "name": "GET /api/health",
       "pkg": "@hamafx/web",
@@ -30203,7 +30232,7 @@
       }
     },
     {
-      "id": "n1364",
+      "id": "n1365",
       "type": "api_route",
       "name": "GET,PATCH,DELETE /api/journal/:id",
       "pkg": "@hamafx/web",
@@ -30222,7 +30251,7 @@
       }
     },
     {
-      "id": "n1365",
+      "id": "n1366",
       "type": "api_route",
       "name": "POST /api/journal/import",
       "pkg": "@hamafx/web",
@@ -30239,7 +30268,7 @@
       }
     },
     {
-      "id": "n1366",
+      "id": "n1367",
       "type": "api_route",
       "name": "POST /api/journal/review",
       "pkg": "@hamafx/web",
@@ -30256,7 +30285,7 @@
       }
     },
     {
-      "id": "n1367",
+      "id": "n1368",
       "type": "api_route",
       "name": "GET,POST /api/journal",
       "pkg": "@hamafx/web",
@@ -30274,7 +30303,7 @@
       }
     },
     {
-      "id": "n1368",
+      "id": "n1369",
       "type": "api_route",
       "name": "GET /api/market/candles",
       "pkg": "@hamafx/web",
@@ -30291,7 +30320,7 @@
       }
     },
     {
-      "id": "n1369",
+      "id": "n1370",
       "type": "api_route",
       "name": "POST /api/market/indicators",
       "pkg": "@hamafx/web",
@@ -30308,7 +30337,7 @@
       }
     },
     {
-      "id": "n1370",
+      "id": "n1371",
       "type": "api_route",
       "name": "GET /api/market/price",
       "pkg": "@hamafx/web",
@@ -30325,7 +30354,7 @@
       }
     },
     {
-      "id": "n1371",
+      "id": "n1372",
       "type": "api_route",
       "name": "GET /api/market/search",
       "pkg": "@hamafx/web",
@@ -30342,7 +30371,7 @@
       }
     },
     {
-      "id": "n1372",
+      "id": "n1373",
       "type": "api_route",
       "name": "GET /api/market/stream",
       "pkg": "@hamafx/web",
@@ -30359,7 +30388,7 @@
       }
     },
     {
-      "id": "n1373",
+      "id": "n1374",
       "type": "api_route",
       "name": "POST /api/market/structure",
       "pkg": "@hamafx/web",
@@ -30376,7 +30405,7 @@
       }
     },
     {
-      "id": "n1374",
+      "id": "n1375",
       "type": "api_route",
       "name": "GET /api/me/keys",
       "pkg": "@hamafx/web",
@@ -30393,7 +30422,7 @@
       }
     },
     {
-      "id": "n1375",
+      "id": "n1376",
       "type": "api_route",
       "name": "GET /api/news",
       "pkg": "@hamafx/web",
@@ -30410,7 +30439,7 @@
       }
     },
     {
-      "id": "n1376",
+      "id": "n1377",
       "type": "api_route",
       "name": "GET,PUT /api/notifications/noise-config",
       "pkg": "@hamafx/web",
@@ -30428,7 +30457,7 @@
       }
     },
     {
-      "id": "n1377",
+      "id": "n1378",
       "type": "api_route",
       "name": "GET,PUT /api/notifications/route-config",
       "pkg": "@hamafx/web",
@@ -30446,7 +30475,7 @@
       }
     },
     {
-      "id": "n1378",
+      "id": "n1379",
       "type": "api_route",
       "name": "POST /api/onboarding/save-progress",
       "pkg": "@hamafx/web",
@@ -30463,7 +30492,7 @@
       }
     },
     {
-      "id": "n1379",
+      "id": "n1380",
       "type": "api_route",
       "name": "GET,PATCH,DELETE /api/portfolio/positions/:id",
       "pkg": "@hamafx/web",
@@ -30482,7 +30511,7 @@
       }
     },
     {
-      "id": "n1380",
+      "id": "n1381",
       "type": "api_route",
       "name": "GET,POST /api/portfolio/positions",
       "pkg": "@hamafx/web",
@@ -30500,7 +30529,7 @@
       }
     },
     {
-      "id": "n1381",
+      "id": "n1382",
       "type": "api_route",
       "name": "GET /api/portfolio/risk",
       "pkg": "@hamafx/web",
@@ -30517,7 +30546,7 @@
       }
     },
     {
-      "id": "n1382",
+      "id": "n1383",
       "type": "api_route",
       "name": "GET,PUT /api/portfolio/settings",
       "pkg": "@hamafx/web",
@@ -30535,7 +30564,7 @@
       }
     },
     {
-      "id": "n1383",
+      "id": "n1384",
       "type": "api_route",
       "name": "POST /api/push/subscribe",
       "pkg": "@hamafx/web",
@@ -30552,7 +30581,7 @@
       }
     },
     {
-      "id": "n1384",
+      "id": "n1385",
       "type": "api_route",
       "name": "POST /api/push/unsubscribe",
       "pkg": "@hamafx/web",
@@ -30569,7 +30598,7 @@
       }
     },
     {
-      "id": "n1385",
+      "id": "n1386",
       "type": "api_route",
       "name": "GET /api/sentiment",
       "pkg": "@hamafx/web",
@@ -30586,7 +30615,7 @@
       }
     },
     {
-      "id": "n1386",
+      "id": "n1387",
       "type": "api_route",
       "name": "GET,PATCH /api/settings/analysis-mode",
       "pkg": "@hamafx/web",
@@ -30604,7 +30633,7 @@
       }
     },
     {
-      "id": "n1387",
+      "id": "n1388",
       "type": "api_route",
       "name": "POST /api/settings/bulk-test",
       "pkg": "@hamafx/web",
@@ -30621,7 +30650,7 @@
       }
     },
     {
-      "id": "n1388",
+      "id": "n1389",
       "type": "api_route",
       "name": "GET /api/settings/catalog",
       "pkg": "@hamafx/web",
@@ -30638,7 +30667,7 @@
       }
     },
     {
-      "id": "n1389",
+      "id": "n1390",
       "type": "api_route",
       "name": "GET,PUT,DELETE /api/settings/chat-model",
       "pkg": "@hamafx/web",
@@ -30657,7 +30686,7 @@
       }
     },
     {
-      "id": "n1390",
+      "id": "n1391",
       "type": "api_route",
       "name": "GET,PUT,DELETE /api/settings/embedding-model",
       "pkg": "@hamafx/web",
@@ -30676,7 +30705,7 @@
       }
     },
     {
-      "id": "n1391",
+      "id": "n1392",
       "type": "api_route",
       "name": "GET,PUT /api/settings/fallback-chain",
       "pkg": "@hamafx/web",
@@ -30694,7 +30723,7 @@
       }
     },
     {
-      "id": "n1392",
+      "id": "n1393",
       "type": "api_route",
       "name": "DELETE /api/settings/symbols/:symbol",
       "pkg": "@hamafx/web",
@@ -30711,7 +30740,7 @@
       }
     },
     {
-      "id": "n1393",
+      "id": "n1394",
       "type": "api_route",
       "name": "GET,POST,PATCH /api/settings/symbols",
       "pkg": "@hamafx/web",
@@ -30730,7 +30759,7 @@
       }
     },
     {
-      "id": "n1394",
+      "id": "n1395",
       "type": "api_route",
       "name": "POST /api/settings/test-market-provider",
       "pkg": "@hamafx/web",
@@ -30747,7 +30776,7 @@
       }
     },
     {
-      "id": "n1395",
+      "id": "n1396",
       "type": "api_route",
       "name": "POST /api/settings/test-provider",
       "pkg": "@hamafx/web",
@@ -30764,7 +30793,7 @@
       }
     },
     {
-      "id": "n1396",
+      "id": "n1397",
       "type": "api_route",
       "name": "GET /api/settings/usage-by-agent",
       "pkg": "@hamafx/web",
@@ -30781,7 +30810,7 @@
       }
     },
     {
-      "id": "n1397",
+      "id": "n1398",
       "type": "api_route",
       "name": "GET /api/settings/usage-by-provider",
       "pkg": "@hamafx/web",
@@ -30798,7 +30827,7 @@
       }
     },
     {
-      "id": "n1398",
+      "id": "n1399",
       "type": "api_route",
       "name": "GET,PUT,DELETE /api/settings/vision-model",
       "pkg": "@hamafx/web",
@@ -30817,7 +30846,7 @@
       }
     },
     {
-      "id": "n1399",
+      "id": "n1400",
       "type": "api_route",
       "name": "GET /api/telegram/webhook",
       "pkg": "@hamafx/web",
@@ -30834,7 +30863,7 @@
       }
     },
     {
-      "id": "n1400",
+      "id": "n1401",
       "type": "api_route",
       "name": "POST /api/upload",
       "pkg": "@hamafx/web",
@@ -30854,7 +30883,7 @@
   "edges": [
     {
       "id": "e1",
-      "source": "n1260",
+      "source": "n1261",
       "target": "n1039",
       "type": "belongs_to",
       "metadata": {
@@ -30863,7 +30892,7 @@
     },
     {
       "id": "e2",
-      "source": "n1261",
+      "source": "n1262",
       "target": "n1040",
       "type": "belongs_to",
       "metadata": {
@@ -30872,7 +30901,7 @@
     },
     {
       "id": "e3",
-      "source": "n1262",
+      "source": "n1263",
       "target": "n1041",
       "type": "belongs_to",
       "metadata": {
@@ -30881,7 +30910,7 @@
     },
     {
       "id": "e4",
-      "source": "n1263",
+      "source": "n1264",
       "target": "n1042",
       "type": "belongs_to",
       "metadata": {
@@ -30890,15 +30919,6 @@
     },
     {
       "id": "e5",
-      "source": "n1264",
-      "target": "n1043",
-      "type": "belongs_to",
-      "metadata": {
-        "relationship": "defined in"
-      }
-    },
-    {
-      "id": "e6",
       "source": "n1265",
       "target": "n1043",
       "type": "belongs_to",
@@ -30907,7 +30927,7 @@
       }
     },
     {
-      "id": "e7",
+      "id": "e6",
       "source": "n1266",
       "target": "n1043",
       "type": "belongs_to",
@@ -30916,7 +30936,7 @@
       }
     },
     {
-      "id": "e8",
+      "id": "e7",
       "source": "n1267",
       "target": "n1043",
       "type": "belongs_to",
@@ -30925,7 +30945,7 @@
       }
     },
     {
-      "id": "e9",
+      "id": "e8",
       "source": "n1268",
       "target": "n1043",
       "type": "belongs_to",
@@ -30934,7 +30954,7 @@
       }
     },
     {
-      "id": "e10",
+      "id": "e9",
       "source": "n1269",
       "target": "n1043",
       "type": "belongs_to",
@@ -30943,7 +30963,7 @@
       }
     },
     {
-      "id": "e11",
+      "id": "e10",
       "source": "n1270",
       "target": "n1043",
       "type": "belongs_to",
@@ -30952,7 +30972,7 @@
       }
     },
     {
-      "id": "e12",
+      "id": "e11",
       "source": "n1271",
       "target": "n1043",
       "type": "belongs_to",
@@ -30961,7 +30981,7 @@
       }
     },
     {
-      "id": "e13",
+      "id": "e12",
       "source": "n1272",
       "target": "n1043",
       "type": "belongs_to",
@@ -30970,16 +30990,16 @@
       }
     },
     {
-      "id": "e14",
+      "id": "e13",
       "source": "n1273",
-      "target": "n1044",
+      "target": "n1043",
       "type": "belongs_to",
       "metadata": {
         "relationship": "defined in"
       }
     },
     {
-      "id": "e15",
+      "id": "e14",
       "source": "n1274",
       "target": "n1044",
       "type": "belongs_to",
@@ -30988,7 +31008,7 @@
       }
     },
     {
-      "id": "e16",
+      "id": "e15",
       "source": "n1275",
       "target": "n1044",
       "type": "belongs_to",
@@ -30997,7 +31017,7 @@
       }
     },
     {
-      "id": "e17",
+      "id": "e16",
       "source": "n1276",
       "target": "n1044",
       "type": "belongs_to",
@@ -31006,8 +31026,17 @@
       }
     },
     {
-      "id": "e18",
+      "id": "e17",
       "source": "n1277",
+      "target": "n1044",
+      "type": "belongs_to",
+      "metadata": {
+        "relationship": "defined in"
+      }
+    },
+    {
+      "id": "e18",
+      "source": "n1278",
       "target": "n1045",
       "type": "belongs_to",
       "metadata": {
@@ -31016,7 +31045,7 @@
     },
     {
       "id": "e19",
-      "source": "n1278",
+      "source": "n1279",
       "target": "n1046",
       "type": "belongs_to",
       "metadata": {
@@ -31025,7 +31054,7 @@
     },
     {
       "id": "e20",
-      "source": "n1279",
+      "source": "n1280",
       "target": "n1047",
       "type": "belongs_to",
       "metadata": {
@@ -31034,7 +31063,7 @@
     },
     {
       "id": "e21",
-      "source": "n1280",
+      "source": "n1281",
       "target": "n1048",
       "type": "belongs_to",
       "metadata": {
@@ -31043,15 +31072,6 @@
     },
     {
       "id": "e22",
-      "source": "n1281",
-      "target": "n1049",
-      "type": "belongs_to",
-      "metadata": {
-        "relationship": "defined in"
-      }
-    },
-    {
-      "id": "e23",
       "source": "n1282",
       "target": "n1049",
       "type": "belongs_to",
@@ -31060,8 +31080,17 @@
       }
     },
     {
-      "id": "e24",
+      "id": "e23",
       "source": "n1283",
+      "target": "n1049",
+      "type": "belongs_to",
+      "metadata": {
+        "relationship": "defined in"
+      }
+    },
+    {
+      "id": "e24",
+      "source": "n1284",
       "target": "n1050",
       "type": "belongs_to",
       "metadata": {
@@ -31070,7 +31099,7 @@
     },
     {
       "id": "e25",
-      "source": "n1284",
+      "source": "n1285",
       "target": "n1051",
       "type": "belongs_to",
       "metadata": {
@@ -31079,7 +31108,7 @@
     },
     {
       "id": "e26",
-      "source": "n1285",
+      "source": "n1286",
       "target": "n1052",
       "type": "belongs_to",
       "metadata": {
@@ -31088,7 +31117,7 @@
     },
     {
       "id": "e27",
-      "source": "n1286",
+      "source": "n1287",
       "target": "n1053",
       "type": "belongs_to",
       "metadata": {
@@ -31097,7 +31126,7 @@
     },
     {
       "id": "e28",
-      "source": "n1287",
+      "source": "n1288",
       "target": "n1055",
       "type": "belongs_to",
       "metadata": {
@@ -31106,7 +31135,7 @@
     },
     {
       "id": "e29",
-      "source": "n1288",
+      "source": "n1289",
       "target": "n1057",
       "type": "belongs_to",
       "metadata": {
@@ -31115,7 +31144,7 @@
     },
     {
       "id": "e30",
-      "source": "n1289",
+      "source": "n1290",
       "target": "n1058",
       "type": "belongs_to",
       "metadata": {
@@ -31124,7 +31153,7 @@
     },
     {
       "id": "e31",
-      "source": "n1290",
+      "source": "n1291",
       "target": "n1059",
       "type": "belongs_to",
       "metadata": {
@@ -31133,7 +31162,7 @@
     },
     {
       "id": "e32",
-      "source": "n1291",
+      "source": "n1292",
       "target": "n1060",
       "type": "belongs_to",
       "metadata": {
@@ -31142,15 +31171,6 @@
     },
     {
       "id": "e33",
-      "source": "n1292",
-      "target": "n1061",
-      "type": "belongs_to",
-      "metadata": {
-        "relationship": "defined in"
-      }
-    },
-    {
-      "id": "e34",
       "source": "n1293",
       "target": "n1061",
       "type": "belongs_to",
@@ -31159,8 +31179,17 @@
       }
     },
     {
-      "id": "e35",
+      "id": "e34",
       "source": "n1294",
+      "target": "n1061",
+      "type": "belongs_to",
+      "metadata": {
+        "relationship": "defined in"
+      }
+    },
+    {
+      "id": "e35",
+      "source": "n1295",
       "target": "n1062",
       "type": "belongs_to",
       "metadata": {
@@ -31169,15 +31198,6 @@
     },
     {
       "id": "e36",
-      "source": "n1295",
-      "target": "n1063",
-      "type": "belongs_to",
-      "metadata": {
-        "relationship": "defined in"
-      }
-    },
-    {
-      "id": "e37",
       "source": "n1296",
       "target": "n1063",
       "type": "belongs_to",
@@ -31186,8 +31206,17 @@
       }
     },
     {
-      "id": "e38",
+      "id": "e37",
       "source": "n1297",
+      "target": "n1063",
+      "type": "belongs_to",
+      "metadata": {
+        "relationship": "defined in"
+      }
+    },
+    {
+      "id": "e38",
+      "source": "n1298",
       "target": "n1064",
       "type": "belongs_to",
       "metadata": {
@@ -31196,7 +31225,7 @@
     },
     {
       "id": "e39",
-      "source": "n1298",
+      "source": "n1299",
       "target": "n1065",
       "type": "belongs_to",
       "metadata": {
@@ -31205,7 +31234,7 @@
     },
     {
       "id": "e40",
-      "source": "n1299",
+      "source": "n1300",
       "target": "n1066",
       "type": "belongs_to",
       "metadata": {
@@ -31214,7 +31243,7 @@
     },
     {
       "id": "e41",
-      "source": "n1300",
+      "source": "n1301",
       "target": "n1067",
       "type": "belongs_to",
       "metadata": {
@@ -31223,7 +31252,7 @@
     },
     {
       "id": "e42",
-      "source": "n1301",
+      "source": "n1302",
       "target": "n1068",
       "type": "belongs_to",
       "metadata": {
@@ -31232,7 +31261,7 @@
     },
     {
       "id": "e43",
-      "source": "n1302",
+      "source": "n1303",
       "target": "n1069",
       "type": "belongs_to",
       "metadata": {
@@ -31241,7 +31270,7 @@
     },
     {
       "id": "e44",
-      "source": "n1303",
+      "source": "n1304",
       "target": "n1070",
       "type": "belongs_to",
       "metadata": {
@@ -31250,7 +31279,7 @@
     },
     {
       "id": "e45",
-      "source": "n1304",
+      "source": "n1305",
       "target": "n1071",
       "type": "belongs_to",
       "metadata": {
@@ -31259,7 +31288,7 @@
     },
     {
       "id": "e46",
-      "source": "n1305",
+      "source": "n1306",
       "target": "n1072",
       "type": "belongs_to",
       "metadata": {
@@ -31268,7 +31297,7 @@
     },
     {
       "id": "e47",
-      "source": "n1306",
+      "source": "n1307",
       "target": "n1073",
       "type": "belongs_to",
       "metadata": {
@@ -31277,7 +31306,7 @@
     },
     {
       "id": "e48",
-      "source": "n1307",
+      "source": "n1308",
       "target": "n1074",
       "type": "belongs_to",
       "metadata": {
@@ -31286,7 +31315,7 @@
     },
     {
       "id": "e49",
-      "source": "n1308",
+      "source": "n1309",
       "target": "n1075",
       "type": "belongs_to",
       "metadata": {
@@ -31295,7 +31324,7 @@
     },
     {
       "id": "e50",
-      "source": "n1309",
+      "source": "n1310",
       "target": "n200",
       "type": "belongs_to",
       "metadata": {
@@ -31304,7 +31333,7 @@
     },
     {
       "id": "e51",
-      "source": "n1310",
+      "source": "n1311",
       "target": "n201",
       "type": "belongs_to",
       "metadata": {
@@ -31313,7 +31342,7 @@
     },
     {
       "id": "e52",
-      "source": "n1311",
+      "source": "n1312",
       "target": "n202",
       "type": "belongs_to",
       "metadata": {
@@ -31322,7 +31351,7 @@
     },
     {
       "id": "e53",
-      "source": "n1312",
+      "source": "n1313",
       "target": "n203",
       "type": "belongs_to",
       "metadata": {
@@ -31331,7 +31360,7 @@
     },
     {
       "id": "e54",
-      "source": "n1313",
+      "source": "n1314",
       "target": "n204",
       "type": "belongs_to",
       "metadata": {
@@ -31340,7 +31369,7 @@
     },
     {
       "id": "e55",
-      "source": "n1314",
+      "source": "n1315",
       "target": "n205",
       "type": "belongs_to",
       "metadata": {
@@ -31349,7 +31378,7 @@
     },
     {
       "id": "e56",
-      "source": "n1315",
+      "source": "n1316",
       "target": "n206",
       "type": "belongs_to",
       "metadata": {
@@ -31358,7 +31387,7 @@
     },
     {
       "id": "e57",
-      "source": "n1316",
+      "source": "n1317",
       "target": "n207",
       "type": "belongs_to",
       "metadata": {
@@ -31367,7 +31396,7 @@
     },
     {
       "id": "e58",
-      "source": "n1317",
+      "source": "n1318",
       "target": "n208",
       "type": "belongs_to",
       "metadata": {
@@ -31376,7 +31405,7 @@
     },
     {
       "id": "e59",
-      "source": "n1318",
+      "source": "n1319",
       "target": "n209",
       "type": "belongs_to",
       "metadata": {
@@ -31385,7 +31414,7 @@
     },
     {
       "id": "e60",
-      "source": "n1319",
+      "source": "n1320",
       "target": "n210",
       "type": "belongs_to",
       "metadata": {
@@ -31394,7 +31423,7 @@
     },
     {
       "id": "e61",
-      "source": "n1320",
+      "source": "n1321",
       "target": "n211",
       "type": "belongs_to",
       "metadata": {
@@ -31403,7 +31432,7 @@
     },
     {
       "id": "e62",
-      "source": "n1321",
+      "source": "n1322",
       "target": "n212",
       "type": "belongs_to",
       "metadata": {
@@ -31412,7 +31441,7 @@
     },
     {
       "id": "e63",
-      "source": "n1322",
+      "source": "n1323",
       "target": "n213",
       "type": "belongs_to",
       "metadata": {
@@ -31421,7 +31450,7 @@
     },
     {
       "id": "e64",
-      "source": "n1323",
+      "source": "n1324",
       "target": "n214",
       "type": "belongs_to",
       "metadata": {
@@ -31430,7 +31459,7 @@
     },
     {
       "id": "e65",
-      "source": "n1324",
+      "source": "n1325",
       "target": "n215",
       "type": "belongs_to",
       "metadata": {
@@ -31439,7 +31468,7 @@
     },
     {
       "id": "e66",
-      "source": "n1325",
+      "source": "n1326",
       "target": "n216",
       "type": "belongs_to",
       "metadata": {
@@ -31448,7 +31477,7 @@
     },
     {
       "id": "e67",
-      "source": "n1326",
+      "source": "n1327",
       "target": "n217",
       "type": "belongs_to",
       "metadata": {
@@ -31457,7 +31486,7 @@
     },
     {
       "id": "e68",
-      "source": "n1327",
+      "source": "n1328",
       "target": "n218",
       "type": "belongs_to",
       "metadata": {
@@ -31466,7 +31495,7 @@
     },
     {
       "id": "e69",
-      "source": "n1328",
+      "source": "n1329",
       "target": "n219",
       "type": "belongs_to",
       "metadata": {
@@ -31475,7 +31504,7 @@
     },
     {
       "id": "e70",
-      "source": "n1329",
+      "source": "n1330",
       "target": "n220",
       "type": "belongs_to",
       "metadata": {
@@ -31484,7 +31513,7 @@
     },
     {
       "id": "e71",
-      "source": "n1330",
+      "source": "n1331",
       "target": "n221",
       "type": "belongs_to",
       "metadata": {
@@ -31493,7 +31522,7 @@
     },
     {
       "id": "e72",
-      "source": "n1331",
+      "source": "n1332",
       "target": "n222",
       "type": "belongs_to",
       "metadata": {
@@ -31502,7 +31531,7 @@
     },
     {
       "id": "e73",
-      "source": "n1332",
+      "source": "n1333",
       "target": "n223",
       "type": "belongs_to",
       "metadata": {
@@ -31511,7 +31540,7 @@
     },
     {
       "id": "e74",
-      "source": "n1333",
+      "source": "n1334",
       "target": "n224",
       "type": "belongs_to",
       "metadata": {
@@ -31520,7 +31549,7 @@
     },
     {
       "id": "e75",
-      "source": "n1334",
+      "source": "n1335",
       "target": "n225",
       "type": "belongs_to",
       "metadata": {
@@ -31529,7 +31558,7 @@
     },
     {
       "id": "e76",
-      "source": "n1335",
+      "source": "n1336",
       "target": "n226",
       "type": "belongs_to",
       "metadata": {
@@ -31538,7 +31567,7 @@
     },
     {
       "id": "e77",
-      "source": "n1336",
+      "source": "n1337",
       "target": "n227",
       "type": "belongs_to",
       "metadata": {
@@ -31547,7 +31576,7 @@
     },
     {
       "id": "e78",
-      "source": "n1337",
+      "source": "n1338",
       "target": "n228",
       "type": "belongs_to",
       "metadata": {
@@ -31556,7 +31585,7 @@
     },
     {
       "id": "e79",
-      "source": "n1338",
+      "source": "n1339",
       "target": "n229",
       "type": "belongs_to",
       "metadata": {
@@ -31565,7 +31594,7 @@
     },
     {
       "id": "e80",
-      "source": "n1339",
+      "source": "n1340",
       "target": "n230",
       "type": "belongs_to",
       "metadata": {
@@ -31574,7 +31603,7 @@
     },
     {
       "id": "e81",
-      "source": "n1340",
+      "source": "n1341",
       "target": "n231",
       "type": "belongs_to",
       "metadata": {
@@ -31583,7 +31612,7 @@
     },
     {
       "id": "e82",
-      "source": "n1341",
+      "source": "n1342",
       "target": "n232",
       "type": "belongs_to",
       "metadata": {
@@ -31592,7 +31621,7 @@
     },
     {
       "id": "e83",
-      "source": "n1342",
+      "source": "n1343",
       "target": "n233",
       "type": "belongs_to",
       "metadata": {
@@ -31601,7 +31630,7 @@
     },
     {
       "id": "e84",
-      "source": "n1343",
+      "source": "n1344",
       "target": "n234",
       "type": "belongs_to",
       "metadata": {
@@ -31610,7 +31639,7 @@
     },
     {
       "id": "e85",
-      "source": "n1344",
+      "source": "n1345",
       "target": "n235",
       "type": "belongs_to",
       "metadata": {
@@ -31619,7 +31648,7 @@
     },
     {
       "id": "e86",
-      "source": "n1345",
+      "source": "n1346",
       "target": "n236",
       "type": "belongs_to",
       "metadata": {
@@ -31628,7 +31657,7 @@
     },
     {
       "id": "e87",
-      "source": "n1346",
+      "source": "n1347",
       "target": "n237",
       "type": "belongs_to",
       "metadata": {
@@ -31637,7 +31666,7 @@
     },
     {
       "id": "e88",
-      "source": "n1347",
+      "source": "n1348",
       "target": "n238",
       "type": "belongs_to",
       "metadata": {
@@ -31646,7 +31675,7 @@
     },
     {
       "id": "e89",
-      "source": "n1348",
+      "source": "n1349",
       "target": "n239",
       "type": "belongs_to",
       "metadata": {
@@ -31655,7 +31684,7 @@
     },
     {
       "id": "e90",
-      "source": "n1349",
+      "source": "n1350",
       "target": "n240",
       "type": "belongs_to",
       "metadata": {
@@ -31664,7 +31693,7 @@
     },
     {
       "id": "e91",
-      "source": "n1350",
+      "source": "n1351",
       "target": "n241",
       "type": "belongs_to",
       "metadata": {
@@ -31673,7 +31702,7 @@
     },
     {
       "id": "e92",
-      "source": "n1351",
+      "source": "n1352",
       "target": "n242",
       "type": "belongs_to",
       "metadata": {
@@ -31682,7 +31711,7 @@
     },
     {
       "id": "e93",
-      "source": "n1352",
+      "source": "n1353",
       "target": "n243",
       "type": "belongs_to",
       "metadata": {
@@ -31691,7 +31720,7 @@
     },
     {
       "id": "e94",
-      "source": "n1353",
+      "source": "n1354",
       "target": "n244",
       "type": "belongs_to",
       "metadata": {
@@ -31700,7 +31729,7 @@
     },
     {
       "id": "e95",
-      "source": "n1354",
+      "source": "n1355",
       "target": "n245",
       "type": "belongs_to",
       "metadata": {
@@ -31709,7 +31738,7 @@
     },
     {
       "id": "e96",
-      "source": "n1355",
+      "source": "n1356",
       "target": "n246",
       "type": "belongs_to",
       "metadata": {
@@ -31718,7 +31747,7 @@
     },
     {
       "id": "e97",
-      "source": "n1356",
+      "source": "n1357",
       "target": "n247",
       "type": "belongs_to",
       "metadata": {
@@ -31727,7 +31756,7 @@
     },
     {
       "id": "e98",
-      "source": "n1357",
+      "source": "n1358",
       "target": "n248",
       "type": "belongs_to",
       "metadata": {
@@ -31736,7 +31765,7 @@
     },
     {
       "id": "e99",
-      "source": "n1358",
+      "source": "n1359",
       "target": "n249",
       "type": "belongs_to",
       "metadata": {
@@ -31745,7 +31774,7 @@
     },
     {
       "id": "e100",
-      "source": "n1359",
+      "source": "n1360",
       "target": "n250",
       "type": "belongs_to",
       "metadata": {
@@ -31754,7 +31783,7 @@
     },
     {
       "id": "e101",
-      "source": "n1360",
+      "source": "n1361",
       "target": "n251",
       "type": "belongs_to",
       "metadata": {
@@ -31763,7 +31792,7 @@
     },
     {
       "id": "e102",
-      "source": "n1361",
+      "source": "n1362",
       "target": "n252",
       "type": "belongs_to",
       "metadata": {
@@ -31772,7 +31801,7 @@
     },
     {
       "id": "e103",
-      "source": "n1362",
+      "source": "n1363",
       "target": "n253",
       "type": "belongs_to",
       "metadata": {
@@ -31781,7 +31810,7 @@
     },
     {
       "id": "e104",
-      "source": "n1363",
+      "source": "n1364",
       "target": "n254",
       "type": "belongs_to",
       "metadata": {
@@ -31790,7 +31819,7 @@
     },
     {
       "id": "e105",
-      "source": "n1364",
+      "source": "n1365",
       "target": "n255",
       "type": "belongs_to",
       "metadata": {
@@ -31799,7 +31828,7 @@
     },
     {
       "id": "e106",
-      "source": "n1365",
+      "source": "n1366",
       "target": "n256",
       "type": "belongs_to",
       "metadata": {
@@ -31808,7 +31837,7 @@
     },
     {
       "id": "e107",
-      "source": "n1366",
+      "source": "n1367",
       "target": "n257",
       "type": "belongs_to",
       "metadata": {
@@ -31817,7 +31846,7 @@
     },
     {
       "id": "e108",
-      "source": "n1367",
+      "source": "n1368",
       "target": "n258",
       "type": "belongs_to",
       "metadata": {
@@ -31826,7 +31855,7 @@
     },
     {
       "id": "e109",
-      "source": "n1368",
+      "source": "n1369",
       "target": "n259",
       "type": "belongs_to",
       "metadata": {
@@ -31835,7 +31864,7 @@
     },
     {
       "id": "e110",
-      "source": "n1369",
+      "source": "n1370",
       "target": "n260",
       "type": "belongs_to",
       "metadata": {
@@ -31844,7 +31873,7 @@
     },
     {
       "id": "e111",
-      "source": "n1370",
+      "source": "n1371",
       "target": "n261",
       "type": "belongs_to",
       "metadata": {
@@ -31853,7 +31882,7 @@
     },
     {
       "id": "e112",
-      "source": "n1371",
+      "source": "n1372",
       "target": "n262",
       "type": "belongs_to",
       "metadata": {
@@ -31862,7 +31891,7 @@
     },
     {
       "id": "e113",
-      "source": "n1372",
+      "source": "n1373",
       "target": "n263",
       "type": "belongs_to",
       "metadata": {
@@ -31871,7 +31900,7 @@
     },
     {
       "id": "e114",
-      "source": "n1373",
+      "source": "n1374",
       "target": "n264",
       "type": "belongs_to",
       "metadata": {
@@ -31880,7 +31909,7 @@
     },
     {
       "id": "e115",
-      "source": "n1374",
+      "source": "n1375",
       "target": "n265",
       "type": "belongs_to",
       "metadata": {
@@ -31889,7 +31918,7 @@
     },
     {
       "id": "e116",
-      "source": "n1375",
+      "source": "n1376",
       "target": "n266",
       "type": "belongs_to",
       "metadata": {
@@ -31898,7 +31927,7 @@
     },
     {
       "id": "e117",
-      "source": "n1376",
+      "source": "n1377",
       "target": "n267",
       "type": "belongs_to",
       "metadata": {
@@ -31907,7 +31936,7 @@
     },
     {
       "id": "e118",
-      "source": "n1377",
+      "source": "n1378",
       "target": "n268",
       "type": "belongs_to",
       "metadata": {
@@ -31916,7 +31945,7 @@
     },
     {
       "id": "e119",
-      "source": "n1378",
+      "source": "n1379",
       "target": "n269",
       "type": "belongs_to",
       "metadata": {
@@ -31925,7 +31954,7 @@
     },
     {
       "id": "e120",
-      "source": "n1379",
+      "source": "n1380",
       "target": "n270",
       "type": "belongs_to",
       "metadata": {
@@ -31934,7 +31963,7 @@
     },
     {
       "id": "e121",
-      "source": "n1380",
+      "source": "n1381",
       "target": "n271",
       "type": "belongs_to",
       "metadata": {
@@ -31943,7 +31972,7 @@
     },
     {
       "id": "e122",
-      "source": "n1381",
+      "source": "n1382",
       "target": "n272",
       "type": "belongs_to",
       "metadata": {
@@ -31952,7 +31981,7 @@
     },
     {
       "id": "e123",
-      "source": "n1382",
+      "source": "n1383",
       "target": "n273",
       "type": "belongs_to",
       "metadata": {
@@ -31961,7 +31990,7 @@
     },
     {
       "id": "e124",
-      "source": "n1383",
+      "source": "n1384",
       "target": "n274",
       "type": "belongs_to",
       "metadata": {
@@ -31970,7 +31999,7 @@
     },
     {
       "id": "e125",
-      "source": "n1384",
+      "source": "n1385",
       "target": "n275",
       "type": "belongs_to",
       "metadata": {
@@ -31979,7 +32008,7 @@
     },
     {
       "id": "e126",
-      "source": "n1385",
+      "source": "n1386",
       "target": "n276",
       "type": "belongs_to",
       "metadata": {
@@ -31988,7 +32017,7 @@
     },
     {
       "id": "e127",
-      "source": "n1386",
+      "source": "n1387",
       "target": "n277",
       "type": "belongs_to",
       "metadata": {
@@ -31997,7 +32026,7 @@
     },
     {
       "id": "e128",
-      "source": "n1387",
+      "source": "n1388",
       "target": "n278",
       "type": "belongs_to",
       "metadata": {
@@ -32006,7 +32035,7 @@
     },
     {
       "id": "e129",
-      "source": "n1388",
+      "source": "n1389",
       "target": "n279",
       "type": "belongs_to",
       "metadata": {
@@ -32015,7 +32044,7 @@
     },
     {
       "id": "e130",
-      "source": "n1389",
+      "source": "n1390",
       "target": "n280",
       "type": "belongs_to",
       "metadata": {
@@ -32024,7 +32053,7 @@
     },
     {
       "id": "e131",
-      "source": "n1390",
+      "source": "n1391",
       "target": "n281",
       "type": "belongs_to",
       "metadata": {
@@ -32033,7 +32062,7 @@
     },
     {
       "id": "e132",
-      "source": "n1391",
+      "source": "n1392",
       "target": "n282",
       "type": "belongs_to",
       "metadata": {
@@ -32042,7 +32071,7 @@
     },
     {
       "id": "e133",
-      "source": "n1392",
+      "source": "n1393",
       "target": "n283",
       "type": "belongs_to",
       "metadata": {
@@ -32051,7 +32080,7 @@
     },
     {
       "id": "e134",
-      "source": "n1393",
+      "source": "n1394",
       "target": "n284",
       "type": "belongs_to",
       "metadata": {
@@ -32060,7 +32089,7 @@
     },
     {
       "id": "e135",
-      "source": "n1394",
+      "source": "n1395",
       "target": "n285",
       "type": "belongs_to",
       "metadata": {
@@ -32069,7 +32098,7 @@
     },
     {
       "id": "e136",
-      "source": "n1395",
+      "source": "n1396",
       "target": "n286",
       "type": "belongs_to",
       "metadata": {
@@ -32078,7 +32107,7 @@
     },
     {
       "id": "e137",
-      "source": "n1396",
+      "source": "n1397",
       "target": "n287",
       "type": "belongs_to",
       "metadata": {
@@ -32087,7 +32116,7 @@
     },
     {
       "id": "e138",
-      "source": "n1397",
+      "source": "n1398",
       "target": "n288",
       "type": "belongs_to",
       "metadata": {
@@ -32096,7 +32125,7 @@
     },
     {
       "id": "e139",
-      "source": "n1398",
+      "source": "n1399",
       "target": "n289",
       "type": "belongs_to",
       "metadata": {
@@ -32105,7 +32134,7 @@
     },
     {
       "id": "e140",
-      "source": "n1399",
+      "source": "n1400",
       "target": "n290",
       "type": "belongs_to",
       "metadata": {
@@ -32114,7 +32143,7 @@
     },
     {
       "id": "e141",
-      "source": "n1400",
+      "source": "n1401",
       "target": "n291",
       "type": "belongs_to",
       "metadata": {
@@ -79016,7 +79045,7 @@
     {
       "id": "e4120",
       "source": "n1242",
-      "target": "n1256",
+      "target": "n1257",
       "type": "depends_on",
       "metadata": {
         "symbols": [
@@ -79035,7 +79064,7 @@
     {
       "id": "e4121",
       "source": "n1242",
-      "target": "n1256",
+      "target": "n1257",
       "type": "depends_on",
       "metadata": {
         "symbols": [
@@ -79061,7 +79090,7 @@
     {
       "id": "e4123",
       "source": "n1243",
-      "target": "n1256",
+      "target": "n1257",
       "type": "depends_on",
       "metadata": {
         "symbols": [
@@ -79092,7 +79121,7 @@
     {
       "id": "e4125",
       "source": "n1243",
-      "target": "n1256",
+      "target": "n1257",
       "type": "depends_on",
       "metadata": {
         "symbols": [
@@ -79117,7 +79146,7 @@
     {
       "id": "e4127",
       "source": "n1244",
-      "target": "n1256",
+      "target": "n1257",
       "type": "depends_on",
       "metadata": {
         "symbols": [
@@ -79131,7 +79160,7 @@
     {
       "id": "e4128",
       "source": "n1244",
-      "target": "n1256",
+      "target": "n1257",
       "type": "depends_on",
       "metadata": {
         "symbols": [
@@ -79145,7 +79174,7 @@
     {
       "id": "e4129",
       "source": "n1244",
-      "target": "n1253",
+      "target": "n1254",
       "type": "depends_on",
       "metadata": {
         "symbols": [
@@ -79171,7 +79200,7 @@
     {
       "id": "e4131",
       "source": "n1244",
-      "target": "n1256",
+      "target": "n1257",
       "type": "depends_on",
       "metadata": {
         "symbols": [
@@ -79185,7 +79214,7 @@
     {
       "id": "e4132",
       "source": "n1244",
-      "target": "n1256",
+      "target": "n1257",
       "type": "depends_on",
       "metadata": {
         "symbols": [
@@ -79199,7 +79228,7 @@
     {
       "id": "e4133",
       "source": "n1244",
-      "target": "n1253",
+      "target": "n1254",
       "type": "depends_on",
       "metadata": {
         "symbols": [
@@ -79219,7 +79248,7 @@
     {
       "id": "e4135",
       "source": "n1245",
-      "target": "n1256",
+      "target": "n1257",
       "type": "depends_on",
       "metadata": {
         "symbols": [
@@ -79237,7 +79266,7 @@
     {
       "id": "e4136",
       "source": "n1245",
-      "target": "n1253",
+      "target": "n1254",
       "type": "depends_on",
       "metadata": {
         "symbols": [
@@ -79250,7 +79279,7 @@
     {
       "id": "e4137",
       "source": "n1245",
-      "target": "n1256",
+      "target": "n1257",
       "type": "depends_on",
       "metadata": {
         "symbols": [
@@ -79268,7 +79297,7 @@
     {
       "id": "e4138",
       "source": "n1245",
-      "target": "n1253",
+      "target": "n1254",
       "type": "depends_on",
       "metadata": {
         "symbols": [
@@ -79288,7 +79317,7 @@
     {
       "id": "e4140",
       "source": "n1246",
-      "target": "n1256",
+      "target": "n1257",
       "type": "depends_on",
       "metadata": {
         "symbols": [
@@ -79302,7 +79331,7 @@
     {
       "id": "e4141",
       "source": "n1246",
-      "target": "n1256",
+      "target": "n1257",
       "type": "depends_on",
       "metadata": {
         "symbols": [
@@ -79323,7 +79352,7 @@
     {
       "id": "e4143",
       "source": "n1247",
-      "target": "n1256",
+      "target": "n1257",
       "type": "depends_on",
       "metadata": {
         "symbols": [
@@ -79339,7 +79368,7 @@
     {
       "id": "e4144",
       "source": "n1247",
-      "target": "n1256",
+      "target": "n1257",
       "type": "depends_on",
       "metadata": {
         "symbols": [
@@ -79362,7 +79391,7 @@
     {
       "id": "e4146",
       "source": "n1248",
-      "target": "n1256",
+      "target": "n1257",
       "type": "depends_on",
       "metadata": {
         "symbols": [
@@ -79375,7 +79404,7 @@
     {
       "id": "e4147",
       "source": "n1248",
-      "target": "n1255",
+      "target": "n1256",
       "type": "depends_on",
       "metadata": {
         "symbols": [
@@ -79401,7 +79430,7 @@
     {
       "id": "e4149",
       "source": "n1248",
-      "target": "n1254",
+      "target": "n1255",
       "type": "depends_on",
       "metadata": {
         "symbols": [
@@ -79414,7 +79443,7 @@
     {
       "id": "e4150",
       "source": "n1248",
-      "target": "n1256",
+      "target": "n1257",
       "type": "depends_on",
       "metadata": {
         "symbols": [
@@ -79441,7 +79470,7 @@
     {
       "id": "e4153",
       "source": "n1250",
-      "target": "n1253",
+      "target": "n1254",
       "type": "depends_on",
       "metadata": {
         "symbols": [
@@ -79540,7 +79569,20 @@
     {
       "id": "e4160",
       "source": "n1250",
-      "target": "n1256",
+      "target": "n1253",
+      "type": "depends_on",
+      "metadata": {
+        "symbols": [
+          "generateObsidianVault"
+        ],
+        "isTypeOnly": false,
+        "source": "tools/architecture-explorer/src/obsidian-generator"
+      }
+    },
+    {
+      "id": "e4161",
+      "source": "n1250",
+      "target": "n1257",
       "type": "depends_on",
       "metadata": {
         "symbols": [
@@ -79552,9 +79594,9 @@
       }
     },
     {
-      "id": "e4161",
+      "id": "e4162",
       "source": "n1250",
-      "target": "n1256",
+      "target": "n1257",
       "type": "depends_on",
       "metadata": {
         "symbols": [
@@ -79566,16 +79608,16 @@
       }
     },
     {
-      "id": "e4162",
+      "id": "e4163",
       "source": "n1250",
       "target": "n15",
       "type": "belongs_to",
       "metadata": {}
     },
     {
-      "id": "e4163",
+      "id": "e4164",
       "source": "n1251",
-      "target": "n1256",
+      "target": "n1257",
       "type": "depends_on",
       "metadata": {
         "symbols": [
@@ -79592,7 +79634,7 @@
       }
     },
     {
-      "id": "e4164",
+      "id": "e4165",
       "source": "n1251",
       "target": "n1247",
       "type": "depends_on",
@@ -79605,7 +79647,7 @@
       }
     },
     {
-      "id": "e4165",
+      "id": "e4166",
       "source": "n1251",
       "target": "n1243",
       "type": "depends_on",
@@ -79618,7 +79660,7 @@
       }
     },
     {
-      "id": "e4166",
+      "id": "e4167",
       "source": "n1251",
       "target": "n1242",
       "type": "depends_on",
@@ -79634,7 +79676,7 @@
       }
     },
     {
-      "id": "e4167",
+      "id": "e4168",
       "source": "n1251",
       "target": "n1246",
       "type": "depends_on",
@@ -79649,9 +79691,9 @@
       }
     },
     {
-      "id": "e4168",
+      "id": "e4169",
       "source": "n1251",
-      "target": "n1256",
+      "target": "n1257",
       "type": "depends_on",
       "metadata": {
         "symbols": [
@@ -79668,14 +79710,14 @@
       }
     },
     {
-      "id": "e4169",
+      "id": "e4170",
       "source": "n1251",
       "target": "n15",
       "type": "belongs_to",
       "metadata": {}
     },
     {
-      "id": "e4170",
+      "id": "e4171",
       "source": "n1252",
       "target": "n1247",
       "type": "depends_on",
@@ -79688,9 +79730,9 @@
       }
     },
     {
-      "id": "e4171",
+      "id": "e4172",
       "source": "n1252",
-      "target": "n1256",
+      "target": "n1257",
       "type": "depends_on",
       "metadata": {
         "symbols": [
@@ -79699,25 +79741,25 @@
         ],
         "isTypeOnly": false,
         "source": "tools/architecture-explorer/src/types"
-      }
-    },
-    {
-      "id": "e4172",
-      "source": "n1252",
-      "target": "n1253",
-      "type": "depends_on",
-      "metadata": {
-        "symbols": [
-          "ScannedFile"
-        ],
-        "isTypeOnly": false,
-        "source": "tools/architecture-explorer/src/scanner"
       }
     },
     {
       "id": "e4173",
       "source": "n1252",
-      "target": "n1256",
+      "target": "n1254",
+      "type": "depends_on",
+      "metadata": {
+        "symbols": [
+          "ScannedFile"
+        ],
+        "isTypeOnly": false,
+        "source": "tools/architecture-explorer/src/scanner"
+      }
+    },
+    {
+      "id": "e4174",
+      "source": "n1252",
+      "target": "n1257",
       "type": "depends_on",
       "metadata": {
         "symbols": [
@@ -79729,9 +79771,9 @@
       }
     },
     {
-      "id": "e4174",
+      "id": "e4175",
       "source": "n1252",
-      "target": "n1253",
+      "target": "n1254",
       "type": "depends_on",
       "metadata": {
         "symbols": [
@@ -79742,89 +79784,122 @@
       }
     },
     {
-      "id": "e4175",
+      "id": "e4176",
       "source": "n1252",
       "target": "n15",
       "type": "belongs_to",
       "metadata": {}
     },
     {
-      "id": "e4176",
-      "source": "n1253",
-      "target": "n1256",
-      "type": "depends_on",
-      "metadata": {
-        "symbols": [
-          "ScanOptions"
-        ],
-        "isTypeOnly": false,
-        "source": "tools/architecture-explorer/src/types"
-      }
-    },
-    {
       "id": "e4177",
       "source": "n1253",
-      "target": "n1256",
+      "target": "n1257",
       "type": "depends_on",
       "metadata": {
         "symbols": [
-          "ScanOptions"
+          "ArchitectureModel"
         ],
-        "isTypeOnly": true,
+        "isTypeOnly": false,
         "source": "tools/architecture-explorer/src/types"
       }
     },
     {
       "id": "e4178",
       "source": "n1253",
-      "target": "n15",
-      "type": "belongs_to",
-      "metadata": {}
+      "target": "n1257",
+      "type": "depends_on",
+      "metadata": {
+        "symbols": [
+          "ArchitectureModel"
+        ],
+        "isTypeOnly": true,
+        "source": "tools/architecture-explorer/src/types"
+      }
     },
     {
       "id": "e4179",
-      "source": "n1254",
+      "source": "n1253",
       "target": "n15",
       "type": "belongs_to",
       "metadata": {}
     },
     {
       "id": "e4180",
+      "source": "n1254",
+      "target": "n1257",
+      "type": "depends_on",
+      "metadata": {
+        "symbols": [
+          "ScanOptions"
+        ],
+        "isTypeOnly": false,
+        "source": "tools/architecture-explorer/src/types"
+      }
+    },
+    {
+      "id": "e4181",
+      "source": "n1254",
+      "target": "n1257",
+      "type": "depends_on",
+      "metadata": {
+        "symbols": [
+          "ScanOptions"
+        ],
+        "isTypeOnly": true,
+        "source": "tools/architecture-explorer/src/types"
+      }
+    },
+    {
+      "id": "e4182",
+      "source": "n1254",
+      "target": "n15",
+      "type": "belongs_to",
+      "metadata": {}
+    },
+    {
+      "id": "e4183",
       "source": "n1255",
       "target": "n15",
       "type": "belongs_to",
       "metadata": {}
     },
     {
-      "id": "e4181",
+      "id": "e4184",
       "source": "n1256",
       "target": "n15",
       "type": "belongs_to",
       "metadata": {}
     },
     {
-      "id": "e4182",
+      "id": "e4185",
       "source": "n1257",
+      "target": "n15",
+      "type": "belongs_to",
+      "metadata": {}
+    },
+    {
+      "id": "e4186",
+      "source": "n1258",
       "target": "n16",
       "type": "belongs_to",
       "metadata": {}
     },
     {
-      "id": "e4183",
-      "source": "n1258",
-      "target": "n1",
-      "type": "belongs_to",
-      "metadata": {}
-    },
-    {
-      "id": "e4184",
+      "id": "e4187",
       "source": "n1259",
       "target": "n1",
       "type": "belongs_to",
       "metadata": {}
     },
     {
-      "id": "e4185",
+      "id": "e4188",
+      "source": "n1260",
+      "target": "n1",
+      "type": "belongs_to",
+      "metadata": {}
+    },
+    {
+      "id": "e4189",
       "source": "n791",
       "target": "n821",
       "type": "registers",
@@ -79833,7 +79908,7 @@
       }
     },
     {
-      "id": "e4186",
+      "id": "e4190",
       "source": "n792",
       "target": "n821",
       "type": "registers",
@@ -79842,7 +79917,7 @@
       }
     },
     {
-      "id": "e4187",
+      "id": "e4191",
       "source": "n793",
       "target": "n821",
       "type": "registers",
@@ -79851,7 +79926,7 @@
       }
     },
     {
-      "id": "e4188",
+      "id": "e4192",
       "source": "n794",
       "target": "n821",
       "type": "registers",
@@ -79860,7 +79935,7 @@
       }
     },
     {
-      "id": "e4189",
+      "id": "e4193",
       "source": "n796",
       "target": "n821",
       "type": "registers",
@@ -79869,7 +79944,7 @@
       }
     },
     {
-      "id": "e4190",
+      "id": "e4194",
       "source": "n797",
       "target": "n821",
       "type": "registers",
@@ -79878,7 +79953,7 @@
       }
     },
     {
-      "id": "e4191",
+      "id": "e4195",
       "source": "n798",
       "target": "n821",
       "type": "registers",
@@ -79887,7 +79962,7 @@
       }
     },
     {
-      "id": "e4192",
+      "id": "e4196",
       "source": "n799",
       "target": "n821",
       "type": "registers",
@@ -79896,7 +79971,7 @@
       }
     },
     {
-      "id": "e4193",
+      "id": "e4197",
       "source": "n800",
       "target": "n821",
       "type": "registers",
@@ -79905,7 +79980,7 @@
       }
     },
     {
-      "id": "e4194",
+      "id": "e4198",
       "source": "n801",
       "target": "n821",
       "type": "registers",
@@ -79914,7 +79989,7 @@
       }
     },
     {
-      "id": "e4195",
+      "id": "e4199",
       "source": "n802",
       "target": "n821",
       "type": "registers",
@@ -79923,7 +79998,7 @@
       }
     },
     {
-      "id": "e4196",
+      "id": "e4200",
       "source": "n803",
       "target": "n821",
       "type": "registers",
@@ -79932,7 +80007,7 @@
       }
     },
     {
-      "id": "e4197",
+      "id": "e4201",
       "source": "n804",
       "target": "n821",
       "type": "registers",
@@ -79941,7 +80016,7 @@
       }
     },
     {
-      "id": "e4198",
+      "id": "e4202",
       "source": "n805",
       "target": "n821",
       "type": "registers",
@@ -79950,7 +80025,7 @@
       }
     },
     {
-      "id": "e4199",
+      "id": "e4203",
       "source": "n806",
       "target": "n821",
       "type": "registers",
@@ -79959,7 +80034,7 @@
       }
     },
     {
-      "id": "e4200",
+      "id": "e4204",
       "source": "n807",
       "target": "n821",
       "type": "registers",
@@ -79968,7 +80043,7 @@
       }
     },
     {
-      "id": "e4201",
+      "id": "e4205",
       "source": "n808",
       "target": "n821",
       "type": "registers",
@@ -79977,7 +80052,7 @@
       }
     },
     {
-      "id": "e4202",
+      "id": "e4206",
       "source": "n809",
       "target": "n821",
       "type": "registers",
@@ -79986,7 +80061,7 @@
       }
     },
     {
-      "id": "e4203",
+      "id": "e4207",
       "source": "n810",
       "target": "n821",
       "type": "registers",
@@ -79995,7 +80070,7 @@
       }
     },
     {
-      "id": "e4204",
+      "id": "e4208",
       "source": "n811",
       "target": "n821",
       "type": "registers",
@@ -80004,7 +80079,7 @@
       }
     },
     {
-      "id": "e4205",
+      "id": "e4209",
       "source": "n812",
       "target": "n821",
       "type": "registers",
@@ -80013,7 +80088,7 @@
       }
     },
     {
-      "id": "e4206",
+      "id": "e4210",
       "source": "n813",
       "target": "n821",
       "type": "registers",
@@ -80022,7 +80097,7 @@
       }
     },
     {
-      "id": "e4207",
+      "id": "e4211",
       "source": "n814",
       "target": "n821",
       "type": "registers",
@@ -80031,7 +80106,7 @@
       }
     },
     {
-      "id": "e4208",
+      "id": "e4212",
       "source": "n815",
       "target": "n821",
       "type": "registers",
@@ -80040,7 +80115,7 @@
       }
     },
     {
-      "id": "e4209",
+      "id": "e4213",
       "source": "n818",
       "target": "n821",
       "type": "registers",
@@ -80049,7 +80124,7 @@
       }
     },
     {
-      "id": "e4210",
+      "id": "e4214",
       "source": "n822",
       "target": "n821",
       "type": "registers",
@@ -80058,7 +80133,7 @@
       }
     },
     {
-      "id": "e4211",
+      "id": "e4215",
       "source": "n823",
       "target": "n821",
       "type": "registers",
@@ -80067,7 +80142,7 @@
       }
     },
     {
-      "id": "e4212",
+      "id": "e4216",
       "source": "n824",
       "target": "n821",
       "type": "registers",
@@ -80076,7 +80151,7 @@
       }
     },
     {
-      "id": "e4213",
+      "id": "e4217",
       "source": "n825",
       "target": "n821",
       "type": "registers",
@@ -80085,7 +80160,7 @@
       }
     },
     {
-      "id": "e4214",
+      "id": "e4218",
       "source": "n826",
       "target": "n821",
       "type": "registers",
@@ -80094,7 +80169,7 @@
       }
     },
     {
-      "id": "e4215",
+      "id": "e4219",
       "source": "n827",
       "target": "n821",
       "type": "registers",
@@ -80103,7 +80178,7 @@
       }
     },
     {
-      "id": "e4216",
+      "id": "e4220",
       "source": "n829",
       "target": "n821",
       "type": "registers",
@@ -80589,20 +80664,20 @@
         "outgoing": 1
       },
       {
+        "nodeId": "n1257",
+        "name": "types/NodeType",
+        "type": "module",
+        "score": 53.9,
+        "incoming": 26,
+        "outgoing": 1
+      },
+      {
         "nodeId": "n1136",
         "name": "tool-io/UiTextPart",
         "type": "module",
         "score": 53.3,
         "incoming": 1,
         "outgoing": 67
-      },
-      {
-        "nodeId": "n1256",
-        "name": "types/NodeType",
-        "type": "module",
-        "score": 50.6,
-        "incoming": 24,
-        "outgoing": 1
       },
       {
         "nodeId": "n589",
@@ -81120,9 +81195,9 @@
         "count": 26
       },
       {
-        "nodeId": "n1256",
+        "nodeId": "n1257",
         "name": "types/NodeType",
-        "count": 24
+        "count": 26
       },
       {
         "nodeId": "n589",
@@ -81155,14 +81230,14 @@
         "count": 17
       },
       {
-        "nodeId": "n314",
-        "name": "chart-types/ChartSettings",
+        "nodeId": "n15",
+        "name": "tool:architecture-explorer",
         "count": 16
       },
       {
-        "nodeId": "n15",
-        "name": "tool:architecture-explorer",
-        "count": 15
+        "nodeId": "n314",
+        "name": "chart-types/ChartSettings",
+        "count": 16
       }
     ],
     "moduleMetrics": [
@@ -82290,6 +82365,30 @@
   },
   "gitHistory": {
     "commits": [
+      {
+        "hash": "d136fbd86df007db442e2b4491e118bcc878d732",
+        "shortHash": "d136fbd8",
+        "date": "2026-07-22T23:30:49Z",
+        "author": "HamaFx",
+        "message": "chore: remove 18 outdated manual docs replaced by auto-generated explorer",
+        "files": []
+      },
+      {
+        "hash": "5823bff71744abf8038993bc9ba05bff8912cdc7",
+        "shortHash": "5823bff7",
+        "date": "2026-07-22T23:24:59Z",
+        "author": "HamaFx",
+        "message": "fix: skip CSP strict-dynamic for architecture explorer route",
+        "files": []
+      },
+      {
+        "hash": "bda3fb50a07ed295e3dcf82ee8531ee6424c799f",
+        "shortHash": "bda3fb50",
+        "date": "2026-07-22T23:21:16Z",
+        "author": "HamaFx",
+        "message": "fix: serve D3.js from local domain instead of CDN to bypass CSP strict-dynamic",
+        "files": []
+      },
       {
         "hash": "d279f2ea065d82ef9d9e67a1f0a8cd0a16fc177d",
         "shortHash": "d279f2ea",
@@ -86265,60 +86364,12 @@
         "author": "HamaFx",
         "message": "Fix eslint errors for Vercel build",
         "files": []
-      },
-      {
-        "hash": "dc7971605fa446258bff1e49678bce49fe787435",
-        "shortHash": "dc797160",
-        "date": "2026-06-19T11:28:10Z",
-        "author": "HamaFx",
-        "message": "docs: complete v2.0 multi-tenant documentation updates",
-        "files": []
-      },
-      {
-        "hash": "1334c1aebc45e9503b455b045d219492a7f3a714",
-        "shortHash": "1334c1ae",
-        "date": "2026-06-19T01:02:35Z",
-        "author": "hermes",
-        "message": "feat(phase-b): withUserScope helper, rate limit, market auth, system prompt",
-        "files": []
-      },
-      {
-        "hash": "e877ee5fd6e81b6b8d522e4ae8b0b03d40a666d4",
-        "shortHash": "e877ee5f",
-        "date": "2026-06-19T00:30:54Z",
-        "author": "hermes",
-        "message": "feat(db): enforce user_id NOT NULL on all 8 user-scoped tables",
-        "files": []
       }
     ],
     "fileChanges": {},
     "nodeChanges": {}
   },
   "evolutionTimeline": [
-    {
-      "date": "2026-06-19T00:30:54Z",
-      "hash": "e877ee5fd6e81b6b8d522e4ae8b0b03d40a666d4",
-      "shortHash": "e877ee5f",
-      "message": "feat(db): enforce user_id NOT NULL on all 8 user-scoped tables",
-      "activeNodeCount": 0,
-      "touchedNodes": []
-    },
-    {
-      "date": "2026-06-19T01:02:35Z",
-      "hash": "1334c1aebc45e9503b455b045d219492a7f3a714",
-      "shortHash": "1334c1ae",
-      "message": "feat(phase-b): withUserScope helper, rate limit, market auth, system prompt",
-      "activeNodeCount": 0,
-      "touchedNodes": []
-    },
-    {
-      "date": "2026-06-19T11:28:10Z",
-      "hash": "dc7971605fa446258bff1e49678bce49fe787435",
-      "shortHash": "dc797160",
-      "message": "docs: complete v2.0 multi-tenant documentation updates",
-      "activeNodeCount": 0,
-      "touchedNodes": []
-    },
     {
       "date": "2026-06-19T11:51:39Z",
       "hash": "11e0dc8cc7897f7e1a7449d532e20cafc76fb8df",
@@ -90294,6 +90345,30 @@
       "message": "fix: add d3js.org to CSP script-src for architecture explorer",
       "activeNodeCount": 0,
       "touchedNodes": []
+    },
+    {
+      "date": "2026-07-22T23:21:16Z",
+      "hash": "bda3fb50a07ed295e3dcf82ee8531ee6424c799f",
+      "shortHash": "bda3fb50",
+      "message": "fix: serve D3.js from local domain instead of CDN to bypass CSP strict-dynamic",
+      "activeNodeCount": 0,
+      "touchedNodes": []
+    },
+    {
+      "date": "2026-07-22T23:24:59Z",
+      "hash": "5823bff71744abf8038993bc9ba05bff8912cdc7",
+      "shortHash": "5823bff7",
+      "message": "fix: skip CSP strict-dynamic for architecture explorer route",
+      "activeNodeCount": 0,
+      "touchedNodes": []
+    },
+    {
+      "date": "2026-07-22T23:30:49Z",
+      "hash": "d136fbd86df007db442e2b4491e118bcc878d732",
+      "shortHash": "d136fbd8",
+      "message": "chore: remove 18 outdated manual docs replaced by auto-generated explorer",
+      "activeNodeCount": 0,
+      "touchedNodes": []
     }
   ],
   "smartSummaries": [
@@ -90322,11 +90397,11 @@
     {
       "viewKey": "feature_map",
       "title": "Feature Map",
-      "summary": "Feature Map: Contains 1004 modules with 0 connections across 14 packages.",
+      "summary": "Feature Map: Contains 1005 modules with 0 connections across 14 packages.",
       "stats": [
         {
           "label": "Nodes",
-          "value": "1004"
+          "value": "1005"
         },
         {
           "label": "Edges",
@@ -90334,7 +90409,7 @@
         }
       ],
       "highlights": [
-        "Large view with 1004 nodes — use search or filters for focused exploration.",
+        "Large view with 1005 nodes — use search or filters for focused exploration.",
         "Spans 14 packages — indicates broad cross-cutting architecture."
       ],
       "warnings": [
@@ -90345,19 +90420,19 @@
     {
       "viewKey": "folder_structure",
       "title": "Folder Structure",
-      "summary": "Folder Structure: Contains 16 packages, 1004 modules, 184 api_routes with 1188 connections across 16 packages.",
+      "summary": "Folder Structure: Contains 16 packages, 1005 modules, 184 api_routes with 1189 connections across 16 packages.",
       "stats": [
         {
           "label": "Nodes",
-          "value": "1204"
+          "value": "1205"
         },
         {
           "label": "Edges",
-          "value": "1188"
+          "value": "1189"
         }
       ],
       "highlights": [
-        "Large view with 1204 nodes — use search or filters for focused exploration.",
+        "Large view with 1205 nodes — use search or filters for focused exploration.",
         "Spans 16 packages — indicates broad cross-cutting architecture."
       ],
       "warnings": []
@@ -90365,19 +90440,19 @@
     {
       "viewKey": "dependency_graph",
       "title": "Dependency Graph",
-      "summary": "Dependency Graph: Contains 16 packages, 1004 modules, 184 api_routes, 111 components, 4 agents, 32 tools with 2741 connections across 16 packages.",
+      "summary": "Dependency Graph: Contains 16 packages, 1005 modules, 184 api_routes, 111 components, 4 agents, 32 tools with 2744 connections across 16 packages.",
       "stats": [
         {
           "label": "Nodes",
-          "value": "1351"
+          "value": "1352"
         },
         {
           "label": "Edges",
-          "value": "2741"
+          "value": "2744"
         }
       ],
       "highlights": [
-        "Large view with 1351 nodes — use search or filters for focused exploration.",
+        "Large view with 1352 nodes — use search or filters for focused exploration.",
         "Spans 16 packages — indicates broad cross-cutting architecture."
       ],
       "warnings": []
@@ -90404,11 +90479,11 @@
     {
       "viewKey": "database_explorer",
       "title": "Database Explorer",
-      "summary": "Database Explorer: Contains 1004 modules, 49 tables with 49 connections across 14 packages.",
+      "summary": "Database Explorer: Contains 1005 modules, 49 tables with 49 connections across 14 packages.",
       "stats": [
         {
           "label": "Nodes",
-          "value": "1053"
+          "value": "1054"
         },
         {
           "label": "Edges",
@@ -90416,7 +90491,7 @@
         }
       ],
       "highlights": [
-        "Large view with 1053 nodes — use search or filters for focused exploration.",
+        "Large view with 1054 nodes — use search or filters for focused exploration.",
         "Spans 14 packages — indicates broad cross-cutting architecture."
       ],
       "warnings": [
@@ -90448,11 +90523,11 @@
     {
       "viewKey": "ai_workflow",
       "title": "AI Workflow",
-      "summary": "AI Workflow: Contains 1004 modules, 32 tools with 46 connections across 14 packages.",
+      "summary": "AI Workflow: Contains 1005 modules, 32 tools with 46 connections across 14 packages.",
       "stats": [
         {
           "label": "Nodes",
-          "value": "1036"
+          "value": "1037"
         },
         {
           "label": "Edges",
@@ -90460,7 +90535,7 @@
         }
       ],
       "highlights": [
-        "Large view with 1036 nodes — use search or filters for focused exploration.",
+        "Large view with 1037 nodes — use search or filters for focused exploration.",
         "Spans 14 packages — indicates broad cross-cutting architecture."
       ],
       "warnings": [
@@ -90470,11 +90545,11 @@
     {
       "viewKey": "tool_execution",
       "title": "Tool Execution Flow",
-      "summary": "Tool Execution Flow: Contains 1004 modules, 32 tools with 46 connections across 14 packages.",
+      "summary": "Tool Execution Flow: Contains 1005 modules, 32 tools with 46 connections across 14 packages.",
       "stats": [
         {
           "label": "Nodes",
-          "value": "1036"
+          "value": "1037"
         },
         {
           "label": "Edges",
@@ -90482,7 +90557,7 @@
         }
       ],
       "highlights": [
-        "Large view with 1036 nodes — use search or filters for focused exploration.",
+        "Large view with 1037 nodes — use search or filters for focused exploration.",
         "Spans 14 packages — indicates broad cross-cutting architecture."
       ],
       "warnings": [
@@ -90492,11 +90567,11 @@
     {
       "viewKey": "request_lifecycle",
       "title": "Request Lifecycle",
-      "summary": "Request Lifecycle: Contains 1004 modules, 184 api_routes, 32 tools with 0 connections across 14 packages.",
+      "summary": "Request Lifecycle: Contains 1005 modules, 184 api_routes, 32 tools with 0 connections across 14 packages.",
       "stats": [
         {
           "label": "Nodes",
-          "value": "1220"
+          "value": "1221"
         },
         {
           "label": "Edges",
@@ -90504,7 +90579,7 @@
         }
       ],
       "highlights": [
-        "Large view with 1220 nodes — use search or filters for focused exploration.",
+        "Large view with 1221 nodes — use search or filters for focused exploration.",
         "Spans 14 packages — indicates broad cross-cutting architecture."
       ],
       "warnings": [
@@ -90617,11 +90692,11 @@
     {
       "viewKey": "configuration",
       "title": "Configuration",
-      "summary": "Configuration: Contains 1004 modules with 0 connections across 14 packages.",
+      "summary": "Configuration: Contains 1005 modules with 0 connections across 14 packages.",
       "stats": [
         {
           "label": "Nodes",
-          "value": "1004"
+          "value": "1005"
         },
         {
           "label": "Edges",
@@ -90629,7 +90704,7 @@
         }
       ],
       "highlights": [
-        "Large view with 1004 nodes — use search or filters for focused exploration.",
+        "Large view with 1005 nodes — use search or filters for focused exploration.",
         "Spans 14 packages — indicates broad cross-cutting architecture."
       ],
       "warnings": [
@@ -90640,11 +90715,11 @@
     {
       "viewKey": "environment_variables",
       "title": "Environment Variables",
-      "summary": "Environment Variables: Contains 1004 modules with 0 connections across 14 packages.",
+      "summary": "Environment Variables: Contains 1005 modules with 0 connections across 14 packages.",
       "stats": [
         {
           "label": "Nodes",
-          "value": "1004"
+          "value": "1005"
         },
         {
           "label": "Edges",
@@ -90652,7 +90727,7 @@
         }
       ],
       "highlights": [
-        "Large view with 1004 nodes — use search or filters for focused exploration.",
+        "Large view with 1005 nodes — use search or filters for focused exploration.",
         "Spans 14 packages — indicates broad cross-cutting architecture."
       ],
       "warnings": [
@@ -91314,7 +91389,6 @@
         "n565",
         "n566",
         "n567",
-        "n1309",
         "n1310",
         "n1311",
         "n1312",
@@ -91405,7 +91479,8 @@
         "n1397",
         "n1398",
         "n1399",
-        "n1400"
+        "n1400",
+        "n1401"
       ],
       "suggestion": "Split \"@hamafx/web\" into smaller sub-packages organized by feature or layer."
     },
@@ -91804,7 +91879,6 @@
         "n1094",
         "n1095",
         "n1096",
-        "n1260",
         "n1261",
         "n1262",
         "n1263",
@@ -91852,7 +91926,8 @@
         "n1305",
         "n1306",
         "n1307",
-        "n1308"
+        "n1308",
+        "n1309"
       ],
       "suggestion": "Split \"@hamafx/db\" into smaller sub-packages organized by feature or layer."
     },

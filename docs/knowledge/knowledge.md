@@ -1,6 +1,6 @@
 # HamaFX-Ai Architecture Knowledge Base
 
-> **Auto-generated**: 2026-07-22T23:20:19.761Z
+> **Auto-generated**: 2026-07-22T23:40:55.164Z
 > **Schema version**: 1.0
 > **Purpose**: AI-agent-optimized architecture overview for rapid project understanding
 
@@ -35,12 +35,12 @@
 | **@hamafx/shared** | `packages/shared` | package | Package: @hamafx/shared (84 nodes) |
 | **@hamafx/test-utils** | `packages/test-utils` | package | Package: @hamafx/test-utils (19 nodes) |
 | **scripts** | `scripts` | package | Package: scripts (7 nodes) |
-| **tool:architecture-explorer** | `tools/architecture-explorer` | package | Package: tool:architecture-explorer (16 nodes) |
+| **tool:architecture-explorer** | `tools/architecture-explorer` | package | Package: tool:architecture-explorer (17 nodes) |
 | **tool:lighthouse** | `tools/lighthouse` | package | Package: tool:lighthouse (2 nodes) |
 
 **Dependency chain**: `config → shared → db + indicators → data → ai → web + worker`
 
-**Total**: 16 packages, **1400** architecture nodes
+**Total**: 16 packages, **1401** architecture nodes
 
 ## Architecture Layers
 

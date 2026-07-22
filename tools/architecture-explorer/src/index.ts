@@ -16,6 +16,7 @@ import { GraphModel } from './graph-model.js';
 import { generateArchitectureJson } from './json-generator.js';
 import { generateHtml } from './html-generator.js';
 import { generateKnowledgeArtifacts } from './knowledge-generator.js';
+import { generateObsidianVault } from './obsidian-generator.js';
 import type { ParsedFile, ScanOptions } from './types.js';
 
 function parseArgs(): ScanOptions {
@@ -163,6 +164,11 @@ async function main(): Promise<void> {
     fs.writeFileSync(filePath, data, 'utf-8');
     console.log(`   ${filename}: ${(fs.statSync(filePath).size / 1024).toFixed(1)} KB`);
   }
+
+  // 9. Generate Obsidian vault
+  console.log('📓 Generating Obsidian vault...');
+  const obsidianDir = path.resolve(opts.rootDir, 'docs', 'obsidian');
+  generateObsidianVault(model, obsidianDir);
 
   // Print summary
   console.log('');

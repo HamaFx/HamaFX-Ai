@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "generated_at": "2026-07-22T23:20:19.761Z",
+  "generated_at": "2026-07-22T23:40:55.164Z",
   "project": {
     "name": "HamaFX-Ai",
     "rootPath": "/home/ubuntu/HamaFX-Ai",
@@ -634,7 +634,7 @@
     {
       "name": "tool:architecture-explorer",
       "path": "tools/architecture-explorer",
-      "nodeCount": 16,
+      "nodeCount": 17,
       "dependsOn": [
         "types/NodeType",
         "graph-model/GraphModel",
@@ -647,6 +647,7 @@
         "json-generator/generateArchitectureJson",
         "html-generator/generateHtml",
         "knowledge-generator/KnowledgeOutput",
+        "obsidian-generator/generateObsidianVault",
         "analysis/analyzeArchitecture",
         "advanced-features/analyzeImpact",
         "git-history/scanGitHistory"

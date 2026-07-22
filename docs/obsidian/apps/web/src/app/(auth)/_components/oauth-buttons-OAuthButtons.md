@@ -1,0 +1,40 @@
+---
+type: module
+package: "@hamafx/web"
+path: "apps/web/src/app/(auth)/_components/oauth-buttons.tsx"
+incoming: 2
+outgoing: 1
+risk: low
+tags: [module, hamafxweb]
+aliases: [oauth-buttons/OAuthButtons]
+---
+
+# 📁 oauth-buttons/OAuthButtons
+
+> **Module** · `@hamafx/web` · `apps/web/src/app/(auth)/_components/oauth-buttons.tsx`
+
+
+Module: apps/web/src/app/(auth)/_components/oauth-buttons.tsx
+
+
+## 📊 Connections
+
+| | Count |
+|---|---|
+| Incoming dependencies | 2 |
+| Outgoing dependencies | 1 |
+| Risk level | LOW |
+
+
+### 📤 Depends On
+[[@hamafx-web]]
+
+
+### 📥 Depended On By
+[[page-LoginPage]] · [[page-RegisterPage]]
+
+
+
+## 📦 Exports
+- `OAuthButtons`
+
