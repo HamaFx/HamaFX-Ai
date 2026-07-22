@@ -22,7 +22,7 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 
 import { Button } from '@/components/ui/button';
-import { withCsrf } from '@/lib/csrf';
+import { apiMutate } from '@/lib/api-client';
 import type { ProviderMeta } from '@hamafx/shared';
 
 
@@ -115,16 +115,11 @@ export function FallbackChainPicker({
     setChain(newChain);
     startTransition(async () => {
       try {
-        const res = await fetch('/api/settings/fallback-chain', {
+        await apiMutate('/api/settings/fallback-chain', {
           method: 'PUT',
-          ...withCsrf({
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ fallbackChain: newChain }),
-          }),
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ fallbackChain: newChain }),
         });
-        if (!res.ok) {
-          throw new Error(`HTTP ${res.status}`);
-        }
         toast.success('Fallback chain updated');
       } catch {
         toast.error('Failed to update fallback chain');

@@ -1,0 +1,9 @@
+{
+  "_comment": "Per-pattern raw (uncompressed) JS chunk limits. Patterns are matched against relative paths under .next/static/chunks. Limits are applied from most-specific to most-generic; the first matching pattern wins. To recalibrate, run `pnpm --filter @hamafx/web build` and inspect .next/static/chunks, then adjust `maxBytes` so limits sit ~10% above the largest observed chunk.",
+  "limits": [
+    { "pattern": "app/(app)/chat/**/*.js", "maxBytes": 524288, "description": "Chat route chunks (512 KB)" },
+    { "pattern": "app/**/*.js", "maxBytes": 768000, "description": "App route chunks (750 KB)" },
+    { "pattern": "pages/**/*.js", "maxBytes": 524288, "description": "Pages-router chunks (512 KB)" },
+    { "pattern": "**/*.js", "maxBytes": 870000, "description": "Fallback for any other JS chunk (≈849 KB, calibrated 10% above largest shared chunk)" }
+  ]
+}

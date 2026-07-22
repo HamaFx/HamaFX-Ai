@@ -20,11 +20,13 @@
 //
 // Handles:
 //   - Click-outside to close
-//   - Escape key to close
+//   - Escape key to close + return focus to trigger
 //   - Optional focus-first-item on open
-//   - Optional trigger ref for focus return
+//   - Roving keyboard navigation (ArrowUp/Down, Home, End, Tab wrap)
+//   - Focus stays inside the menu while it is open
+//   - ARIA attributes for trigger and menu
 
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState, useCallback, useId } from 'react';
 
 interface UsePopupMenuOptions {
   /** Whether to auto-focus the first menuitem on open. */
@@ -38,6 +40,21 @@ interface UsePopupMenuResult {
   triggerRef: React.RefObject<HTMLButtonElement | null>;
   close: () => void;
   toggle: () => void;
+  /** HTML id generated for the menu; useful for aria-controls. */
+  menuId: string;
+  /** ARIA props to spread onto the trigger button. */
+  triggerProps: {
+    'aria-haspopup': 'menu';
+    'aria-expanded': boolean;
+    'aria-controls': string;
+  };
+  /** ARIA + keyboard props to spread onto the menu container. */
+  menuProps: {
+    id: string;
+    role: 'menu';
+    'aria-orientation': 'vertical';
+    onKeyDown: React.KeyboardEventHandler<HTMLDivElement>;
+  };
 }
 
 export function usePopupMenu(opts: UsePopupMenuOptions = {}): UsePopupMenuResult {
@@ -45,39 +62,148 @@ export function usePopupMenu(opts: UsePopupMenuOptions = {}): UsePopupMenuResult
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
+  const menuId = useId();
+  const activeIndexRef = useRef<number>(-1);
 
-  // Click-outside + Escape to close.
+  const close = useCallback(() => setOpen(false), []);
+  const toggle = useCallback(() => setOpen((v) => !v), []);
+
+  const getFocusable = useCallback((): HTMLButtonElement[] => {
+    if (!menuRef.current) return [];
+    return Array.from(menuRef.current.querySelectorAll<HTMLButtonElement>('[role="menuitem"]'));
+  }, []);
+
+  const focusItem = useCallback(
+    (index: number, focusable: HTMLButtonElement[]) => {
+      if (focusable.length === 0) return;
+      const clamped = Math.max(0, Math.min(index, focusable.length - 1));
+      activeIndexRef.current = clamped;
+      focusable[clamped]?.focus();
+    },
+    [],
+  );
+
+  // Focus first item on open (if requested). Return focus to trigger on close.
+  useEffect(() => {
+    if (!open) {
+      activeIndexRef.current = -1;
+      return;
+    }
+
+    const focusable = getFocusable();
+    if (focusFirstOnOpen && focusable.length > 0) {
+      focusItem(0, focusable);
+    }
+  }, [open, focusFirstOnOpen, focusItem, getFocusable]);
+
+  // Click-outside + Escape + focus trap.
   useEffect(() => {
     if (!open) return;
 
-    // Focus first element on open.
-    if (focusFirstOnOpen) {
-      const focusable = menuRef.current?.querySelectorAll<HTMLButtonElement>(
-        '[role="menuitem"]',
-      );
-      focusable?.[0]?.focus();
-    }
-
     function onPointerDown(e: PointerEvent) {
-      if (!menuRef.current) return;
-      if (!menuRef.current.contains(e.target as Node)) setOpen(false);
-    }
-    function onKey(e: KeyboardEvent) {
-      if (e.key === 'Escape') {
+      const target = e.target as Node;
+      if (!menuRef.current || !triggerRef.current) return;
+      if (!menuRef.current.contains(target) && !triggerRef.current.contains(target)) {
         setOpen(false);
-        triggerRef.current?.focus();
       }
     }
+
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        setOpen(false);
+        triggerRef.current?.focus();
+        return;
+      }
+
+      // Keep focus inside the menu while it is open.
+      if (e.key === 'Tab' && menuRef.current) {
+        const focusable = getFocusable();
+        if (focusable.length === 0) return;
+        const active = document.activeElement as HTMLElement | null;
+        const activeIndex = focusable.indexOf(active as HTMLButtonElement);
+        const isShift = e.shiftKey;
+        if (activeIndex === -1) {
+          e.preventDefault();
+          focusItem(0, focusable);
+          return;
+        }
+        if (isShift && activeIndex === 0) {
+          e.preventDefault();
+          focusItem(focusable.length - 1, focusable);
+          return;
+        }
+        if (!isShift && activeIndex === focusable.length - 1) {
+          e.preventDefault();
+          focusItem(0, focusable);
+          return;
+        }
+        // Otherwise let the default Tab behavior happen.
+      }
+    }
+
     window.addEventListener('pointerdown', onPointerDown);
     window.addEventListener('keydown', onKey);
     return () => {
       window.removeEventListener('pointerdown', onPointerDown);
       window.removeEventListener('keydown', onKey);
     };
-  }, [open, focusFirstOnOpen]);
+  }, [open, focusItem, getFocusable]);
 
-  const close = useCallback(() => setOpen(false), []);
-  const toggle = useCallback(() => setOpen((v) => !v), []);
+  const onMenuKeyDown = useCallback<React.KeyboardEventHandler<HTMLDivElement>>(
+    (e) => {
+      const focusable = getFocusable();
+      if (focusable.length === 0) return;
 
-  return { open, setOpen, menuRef, triggerRef, close, toggle };
+      const active = document.activeElement as HTMLElement | null;
+      activeIndexRef.current = focusable.indexOf(active as HTMLButtonElement);
+
+      switch (e.key) {
+        case 'ArrowDown': {
+          e.preventDefault();
+          const next = (activeIndexRef.current + 1) % focusable.length;
+          focusItem(next, focusable);
+          break;
+        }
+        case 'ArrowUp': {
+          e.preventDefault();
+          const prev = (activeIndexRef.current - 1 + focusable.length) % focusable.length;
+          focusItem(prev, focusable);
+          break;
+        }
+        case 'Home': {
+          e.preventDefault();
+          focusItem(0, focusable);
+          break;
+        }
+        case 'End': {
+          e.preventDefault();
+          focusItem(focusable.length - 1, focusable);
+          break;
+        }
+      }
+    },
+    [focusItem, getFocusable],
+  );
+
+  return {
+    open,
+    setOpen,
+    menuRef,
+    triggerRef,
+    close,
+    toggle,
+    menuId,
+    triggerProps: {
+      'aria-haspopup': 'menu',
+      'aria-expanded': open,
+      'aria-controls': menuId,
+    },
+    menuProps: {
+      id: menuId,
+      role: 'menu',
+      'aria-orientation': 'vertical',
+      onKeyDown: onMenuKeyDown,
+    },
+  };
 }

@@ -35,7 +35,7 @@ export function GetIntermarketPart({
   state,
   errorMessage,
 }: ToolPartProps<'get_intermarket'>) {
-  if (state === 'error') return <ErrorCard {...(errorMessage ? { message: errorMessage } : {})} />;
+  if (state === 'error') return <ErrorCard message={errorMessage} />;
   if (state === 'loading' || !output) return <SkeletonCard />;
 
   const tone = REGIME_TONE[output.regime];

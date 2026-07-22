@@ -92,9 +92,9 @@ export function NewsView({ initialArticles }: NewsViewProps) {
       if (symbol && symbol !== 'all') params.set('symbol', symbol);
       if (query) params.set('q', query);
 
-      const r = await fetch(`/api/news?${params.toString()}`);
-      if (!r.ok) throw new Error('Failed to fetch news');
-      return r.json() as Promise<{ items: NewsArticle[]; hasMore: boolean; nextOffset: number }>;
+      return apiFetch<{ items: NewsArticle[]; hasMore: boolean; nextOffset: number }>(
+        `/api/news?${params.toString()}`,
+      );
     },
     getNextPageParam: (last: { hasMore: boolean; nextOffset: number }) => last.hasMore ? last.nextOffset : undefined,
     initialPageParam: 0,

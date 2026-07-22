@@ -40,7 +40,7 @@ export function AnnotateChartPart({
   errorMessage,
 }: ToolPartProps<'annotate_chart'>) {
   if (state === 'error') {
-    return <ErrorCard {...(errorMessage ? { message: errorMessage } : {})} />;
+    return <ErrorCard message={errorMessage} />;
   }
   if (state === 'loading' || !output) {
     return <SkeletonCard />;

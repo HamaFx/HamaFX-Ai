@@ -31,14 +31,14 @@
 
 import { IconBell,  IconBook,  IconCalendar,  IconSettings,  IconLayoutDashboard,  IconChartLine,  IconLogout,  IconMessageCircle,  IconNews,  IconTarget,  IconShield } from '@tabler/icons-react';
 import { Link } from 'next-view-transitions';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { useEffect, useMemo } from 'react';
 import { Drawer as DrawerPrimitive } from 'vaul';
-import { useQueryClient } from '@tanstack/react-query';
+
 import { toast } from 'sonner';
 
 import { cn } from '@/lib/cn';
-import { withCsrf } from '@/lib/csrf';
+import { signOut } from 'next-auth/react';
 
 import { useNavDrawer } from './nav-drawer-context';
 
@@ -98,7 +98,6 @@ const ADMIN: readonly NavItem[] = [
 export function NavDrawer({ userName, userEmail, userId: _userId, isAdmin }: { userName?: string; userEmail?: string; userId?: string; isAdmin?: boolean }) {
   const { open, setOpen } = useNavDrawer();
   const pathname = usePathname();
-  const router = useRouter();
 
   // D3 — Removed dead localStorage last-path tracking (never read back).
 
@@ -112,21 +111,12 @@ export function NavDrawer({ userName, userEmail, userId: _userId, isAdmin }: { u
     return candidates.some((p) => pathname === p || pathname.startsWith(`${p}/`));
   }
 
-  const queryClient = useQueryClient();
-
   async function logout() {
     try {
-      const res = await fetch('/api/auth/signout', { method: 'POST', ...withCsrf() });
-      if (!res.ok) {
-        toast.error('Failed to log out. Please try again.');
-        return;
-      }
-      queryClient.clear();
-      setOpen(false);
-      router.push('/login');
-      router.refresh();
-    } catch {
-      toast.error('Failed to log out. Please check your network connection.');
+      // NextAuth handles the server sign-out and full-page redirect.
+      await signOut({ callbackUrl: '/login', redirect: true });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to log out. Please try again.');
     }
   }
 

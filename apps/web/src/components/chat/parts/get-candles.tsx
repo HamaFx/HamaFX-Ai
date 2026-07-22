@@ -47,7 +47,7 @@ interface GetCandlesPartProps {
 
 export function GetCandlesPart({ output, state, errorMessage }: GetCandlesPartProps) {
   if (state === 'error') {
-    return <CandlesCardError {...(errorMessage ? { message: errorMessage } : {})} />;
+    return <CandlesCardError message={errorMessage} />;
   }
   if (state === 'loading' || !output) {
     return <CandlesCardSkeleton />;

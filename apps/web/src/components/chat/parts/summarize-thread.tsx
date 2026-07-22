@@ -26,7 +26,7 @@ export function SummarizeThreadPart({
   state,
   errorMessage,
 }: ToolPartProps<'summarize_thread'>) {
-  if (state === 'error') return <ErrorCard {...(errorMessage ? { message: errorMessage } : {})} />;
+  if (state === 'error') return <ErrorCard message={errorMessage} />;
   if (state === 'loading' || !output) return <SkeletonCard />;
 
   return (

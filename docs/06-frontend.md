@@ -81,7 +81,6 @@ Shared by all authenticated pages under `/(app)/`. Renders:
 <MotionRoot>                   # framer-motion config
   <NavDrawerProvider>          # single source of truth for menu state
     <SkipToContent />          # a11y skip link
-    <AmbientBackground />      # fixed -z-10 subtle warm orb
     <SwRegister />             # deferred SW registration
     <TopBar />                 # sticky glass pill (hidden on /chat)
     <main id="main-content">   # max-w-2xl centered
@@ -362,7 +361,7 @@ new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 30_000,        // 30s — most data is market data
-      gcTime: 5 * 60_000,       // 5min — aggressive cleanup for personal mode
+      gcTime: 5 * 60_000,       // 5min — aggressive cleanup
       retry: 2,                 // Two retries for transient failures
       refetchOnWindowFocus: false, // Personal mode: no refetch on focus
     },

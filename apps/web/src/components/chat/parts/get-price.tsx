@@ -36,7 +36,7 @@ interface GetPricePartProps {
 
 export function GetPricePart({ output, state, errorMessage }: GetPricePartProps) {
   if (state === 'error') {
-    return <PriceCardError {...(errorMessage ? { message: errorMessage } : {})} />;
+    return <PriceCardError message={errorMessage} />;
   }
   if (state === 'loading' || !output) {
     return <PriceCardSkeleton />;

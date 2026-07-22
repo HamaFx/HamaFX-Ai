@@ -34,6 +34,10 @@ jobs:
       # Phase 0.5: real build gate so a broken `next build` is caught in PR CI,
       # not only later by Vercel.
       - run: pnpm turbo run build
+      # Phase 0.6: enforce JS chunk size budgets so severe bundle bloat is caught
+      # before it reaches Vercel.
+      - name: Bundle Size Guard
+        run: pnpm --filter @hamafx/web bundle-size:check
       # L1: Bundle analysis — run with ANALYZE=true to surface size regressions.
       # The @next/bundle-analyzer generates a report but doesn't fail the build.
       - name: Bundle Analysis

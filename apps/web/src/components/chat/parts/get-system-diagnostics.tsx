@@ -28,7 +28,7 @@ export function GetSystemDiagnosticsPart({
   errorMessage,
 }: ToolPartProps<'get_system_diagnostics'>) {
   if (state === 'error') {
-    return <ErrorCard {...(errorMessage ? { message: errorMessage } : {})} />;
+    return <ErrorCard message={errorMessage} />;
   }
   if (state === 'loading' || !output) {
     return <SkeletonCard />;

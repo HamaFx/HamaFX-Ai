@@ -30,7 +30,7 @@ import { m } from 'motion/react';
 import type { ToolPartProps } from './registry';
 
 export function ComputeRiskPart({ output, state, errorMessage }: ToolPartProps<'compute_risk'>) {
-  if (state === 'error') return <ErrorCard {...(errorMessage ? { message: errorMessage } : {})} />;
+  if (state === 'error') return <ErrorCard message={errorMessage} />;
   if (state === 'loading' || !output) return <SkeletonCard />;
 
   const tone = output.invalidDirection ? 'border-warn/40' : 'border-border';

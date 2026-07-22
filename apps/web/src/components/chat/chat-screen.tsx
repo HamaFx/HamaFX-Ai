@@ -44,7 +44,7 @@
 
 import { useChat } from '@ai-sdk/react';
 import type { Symbol } from '@hamafx/shared';
-import { DefaultChatTransport, type UIMessage } from 'ai';
+import type { UIMessage } from 'ai';
 import {IconArrowDown, IconArrowBackUp, IconX} from '@tabler/icons-react';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -53,11 +53,11 @@ import { AnimatePresence, m } from 'motion/react';
 
 import { cn } from '@/lib/cn';
 import { getCsrfToken } from '@/lib/csrf';
-import { apiMutate } from '@/lib/api-client';
+import { apiFetch, apiMutate } from '@/lib/api-client';
 import { useConfirm } from '@/components/ui/confirm-drawer';
 import { useAutoScroll } from '@/hooks/use-auto-scroll';
 import { useThreadTitle } from '@/hooks/use-thread-title';
-import { useMultiAgentChat } from '@/hooks/use-multi-agent-chat';
+import { createHamaFxChatTransport, type AgentProgress } from '@/lib/chat-transport';
 
 import { ChatTopBar, type ThreadSummary, type AnalysisMode } from './chat-top-bar';
 import { Composer } from './composer';
@@ -100,6 +100,7 @@ export function ChatScreen({
   const modelOverrideRef = useRef<string | null>(null);
 
   const [dismissedError, setDismissedError] = useState(false);
+  const [agentProgress, setAgentProgress] = useState<AgentProgress | null>(null);
   const [confirmEl, confirm] = useConfirm();
 
   // P3: DB is the source of truth for AI custom instructions so that
@@ -111,11 +112,14 @@ export function ChatScreen({
   // Phase 1.5 — thread summary header state.
   const [summary, setSummary] = useState<{ synopsis: string; insights: Array<{ text: string; symbol?: string | null }> } | null>(null);
 
+  const onAgentProgressRef = useRef<(progress: AgentProgress | null) => void>(() => {});
+  const singleTurnOverrideRef = useRef<'single' | null>(null);
+
   const transport = useMemo(
     () =>
-      new DefaultChatTransport({
+      createHamaFxChatTransport({
         api: '/api/chat',
-        prepareSendMessagesRequest: ({ messages, id }) => {
+        prepareSendMessagesRequest: ({ messages, id, body }) => {
           const override = modelOverrideRef.current;
           const csrf = getCsrfToken();
           const prefs = { customInstructions };
@@ -123,10 +127,11 @@ export function ChatScreen({
 
           const reqBody = {
             modelOverride: override ?? undefined,
-            analysisMode,
+            analysisMode: singleTurnOverrideRef.current ?? analysisMode,
             threadId,
             id,
             messages,
+            ...body,
           };
 
           const headers: Record<string, string> = {};
@@ -137,9 +142,14 @@ export function ChatScreen({
             ? { headers, body: reqBody }
             : { body: reqBody };
         },
+        onAgentProgress: (p) => onAgentProgressRef.current(p),
       }),
     [threadId, analysisMode, customInstructions],
   );
+
+  useEffect(() => {
+    onAgentProgressRef.current = (p) => setAgentProgress(p);
+  });
 
   const { messages, setMessages, sendMessage, regenerate, stop, status, error } = useChat({
     id: threadId,
@@ -168,8 +178,10 @@ export function ChatScreen({
       // when the component unmounts or threadId changes, preventing
       // stale responses from overwriting the current thread's summary.
       const ac = new AbortController();
-      fetch(`/api/chat/threads/${threadId}/summary`, { signal: ac.signal })
-        .then((res) => (res.ok ? res.json() : null))
+      apiFetch<{ synopsis: string; insights: Array<{ text: string; symbol?: string | null }> }>(
+        `/api/chat/threads/${threadId}/summary`,
+        { signal: ac.signal },
+      )
         .then((data) => {
           if (data && typeof data.synopsis === 'string') setSummary(data);
         })
@@ -180,28 +192,8 @@ export function ChatScreen({
     }
   }, [messages.length, threadId, summary]);
 
-  // H2: Multi-agent SSE handling via dedicated hook.
-  const {
-    sendMultiAgentMessage,
-    isMultiAgentStreaming,
-    agentProgress,
-    setAgentProgress,
-    multiAgentFetchRef,
-  } = useMultiAgentChat({
-    threadId,
-    analysisMode,
-    messagesRef,
-    setMessages,
-    lastUserTextRef,
-    customInstructions,
-  });
-
   // H2: Auto-scroll via dedicated hook (isStreaming defined before use).
-  const isStreaming = useMemo(() => {
-    if (status === 'submitted' || status === 'streaming') return true;
-    if (isMultiAgentStreaming) return true;
-    return false;
-  }, [status, isMultiAgentStreaming]);
+  const isStreaming = useMemo(() => status === 'submitted' || status === 'streaming', [status]);
 
   const { showScrollFab, scrollToBottom } = useAutoScroll({
     scrollRef,
@@ -218,12 +210,8 @@ export function ChatScreen({
     if (isStreaming) return;
     autoSubmittedRef.current = threadId;
     lastUserTextRef.current = autoSubmitPrompt;
-    if (analysisMode !== 'single') {
-      void sendMultiAgentMessage(autoSubmitPrompt);
-    } else {
-      void sendMessage({ text: autoSubmitPrompt });
-    }
-  }, [autoSubmitPrompt, threadId, messages.length, isStreaming, sendMessage, analysisMode, sendMultiAgentMessage]);
+    void sendMessage({ text: autoSubmitPrompt });
+  }, [autoSubmitPrompt, threadId, messages.length, isStreaming, sendMessage]);
 
   // Clear model override after stream settles.
   useEffect(() => {
@@ -246,30 +234,8 @@ export function ChatScreen({
 
   const handleRegenerate = useCallback((opts?: { modelOverride?: string }) => {
     if (opts?.modelOverride) modelOverrideRef.current = opts.modelOverride;
-    if (analysisMode !== 'single') {
-      // For multi-agent regenerate, re-send the last user message.
-      // Read messages from the ref so this callback doesn't need `messages`
-      // in its dependency array (keeps the handler stable across stream tokens).
-      const lastUser = [...messagesRef.current].reverse().find((m) => m.role === 'user');
-      if (lastUser) {
-        // Remove the last assistant message
-        setMessages((prev) => {
-          const idx = prev.findIndex((m) => m.id === lastUser.id);
-          return prev.slice(0, idx + 1);
-        });
-        // AI SDK v5: UIMessage has `parts`, not `content`. Build the text from parts.
-        const text = Array.isArray(lastUser.parts)
-          ? lastUser.parts
-              .filter((p) => (p as { type?: string }).type === 'text')
-              .map((p) => (p as { text: string }).text)
-              .join('')
-          : '';
-        void sendMultiAgentMessage(text);
-      }
-      return;
-    }
     void regenerate();
-  }, [regenerate, analysisMode, setMessages, sendMultiAgentMessage]);
+  }, [regenerate]);
 
   const handleEdit = useCallback(async (messageId: string, newText: string) => {
     // Read messages from the ref so this callback is stable across stream tokens
@@ -309,12 +275,8 @@ export function ChatScreen({
     }
     const sliced = cur.slice(0, idx);
     setMessages(sliced);
-    if (analysisMode !== 'single') {
-      void sendMultiAgentMessage(newText);
-    } else {
-      void sendMessage({ text: newText });
-    }
-  }, [threadId, router, sendMessage, setMessages, analysisMode, sendMultiAgentMessage, confirm]);
+    void sendMessage({ text: newText });
+  }, [threadId, router, sendMessage, setMessages, confirm]);
 
   const isEmpty = messages.length === 0;
 
@@ -328,7 +290,7 @@ export function ChatScreen({
   }, [messages]);
 
   return (
-    <div className="bg-bg paint-isolated fixed inset-0 z-50 flex flex-col xl:grid xl:grid-cols-12 xl:h-screen xl:w-full xl:overflow-hidden">
+    <div className="bg-bg paint-isolated fixed inset-0 z-50 flex flex-col">
       <ChatTopBar
         threadId={threadId}
         title={title}
@@ -339,7 +301,7 @@ export function ChatScreen({
         onAnalysisModeChange={setAnalysisMode}
       />
 
-      <div ref={scrollRef} className="scrollbar-hide no-overscroll relative flex-1 overflow-y-auto xl:col-span-6 xl:h-full xl:overflow-y-auto">
+      <div ref={scrollRef} className="scrollbar-hide no-overscroll relative flex-1 overflow-y-auto">
         <div className="mx-auto max-w-2xl px-4 py-4">
           {summary ? (
             <div className="px-3 pt-2">
@@ -358,23 +320,19 @@ export function ChatScreen({
           {isEmpty ? (
             <EmptyChatState
               pinnedSymbol={pinnedSymbol}
-              {...(isStreaming ? { disabled: true } : {})}
+              disabled={isStreaming}
               onSelect={(text) => {
                 lastUserTextRef.current = text;
-                if (analysisMode !== 'single') {
-                  void sendMultiAgentMessage(text);
-                } else {
-                  void sendMessage({ text });
-                }
+                void sendMessage({ text });
               }}
             />
           ) : (
             <MessageList
               messages={messages}
-              {...(isStreaming ? { isStreaming } : {})}
+              isStreaming={isStreaming}
               showTypingIndicator={status === 'submitted'}
               scrollContainerRef={scrollRef}
-              {...(lastAssistantId ? { lastAssistantId } : {})}
+              lastAssistantId={lastAssistantId}
               onCopy={handleCopy}
               onRegenerate={handleRegenerate}
               onEdit={handleEdit}
@@ -399,11 +357,7 @@ export function ChatScreen({
                     type="button"
                     onClick={() => {
                       if (lastUserTextRef.current) {
-                        if (analysisMode !== 'single') {
-                          void sendMultiAgentMessage(lastUserTextRef.current);
-                        } else {
-                          void sendMessage({ text: lastUserTextRef.current });
-                        }
+                        void sendMessage({ text: lastUserTextRef.current });
                       }
                     }}
                     aria-label="Retry"
@@ -452,30 +406,24 @@ export function ChatScreen({
               lastUserTextRef.current = text;
               if (analysisMode !== 'single' && images.length > 0) {
                 toast('Image analysis runs in single-agent mode. Switching to single-agent for this turn.');
-              } else if (analysisMode !== 'single') {
-                void sendMultiAgentMessage(text);
-                return;
+                singleTurnOverrideRef.current = 'single';
               }
               if (images.length === 0) {
                 void sendMessage({ text });
-                return;
+              } else {
+                void sendMessage({
+                  text,
+                  files: images.map((img) => ({
+                    type: 'file' as const,
+                    mediaType: img.mediaType,
+                    url: img.url,
+                    filename: img.name,
+                  })),
+                });
               }
-              void sendMessage({
-                text,
-                files: images.map((img) => ({
-                  type: 'file' as const,
-                  mediaType: img.mediaType,
-                  url: img.url,
-                  filename: img.name,
-                })),
-              });
+              singleTurnOverrideRef.current = null;
             }}
           onStop={() => {
-            if (multiAgentFetchRef.current) {
-              multiAgentFetchRef.current.abort();
-              multiAgentFetchRef.current = null;
-              setAgentProgress(null);
-            }
             stop();
           }}
           isStreaming={isStreaming}
@@ -517,8 +465,8 @@ function EmptyChatState({ pinnedSymbol, disabled, onSelect }: EmptyChatStateProp
       <div className="w-full max-w-md">
         <QuickPrompts
           onSelect={onSelect}
-          {...(pinnedSymbol !== undefined ? { pinnedSymbol } : {})}
-          {...(disabled ? { disabled: true } : {})}
+          pinnedSymbol={pinnedSymbol}
+          disabled={disabled}
         />
       </div>
     </div>

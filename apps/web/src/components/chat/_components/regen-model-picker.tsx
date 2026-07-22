@@ -19,8 +19,8 @@
 import { useEffect, useRef, useState } from 'react';
 import {IconCircleCheck, IconLoader2} from '@tabler/icons-react';
 
-import { withCsrf } from '@/lib/csrf';
 import type { CatalogResponse } from '@hamafx/shared';
+import { apiFetch } from '@/lib/api-client';
 
 interface CacheData {
   catalog: CatalogResponse | null;
@@ -80,31 +80,18 @@ export function RegenModelPicker({ popoverId, activeModelId, onPick }: RegenMode
       }
 
       try {
-        const [catRes, modelRes] = await Promise.all([
-          fetch('/api/settings/catalog', { ...withCsrf(), cache: 'no-store' }),
-          fetch('/api/settings/chat-model', {
-            ...withCsrf(),
-            cache: 'no-store',
-          }),
+        const [catData, modelData] = await Promise.all([
+          apiFetch<CatalogResponse>('/api/settings/catalog', { cache: 'no-store' }),
+          apiFetch<{ chatModel: string | null }>('/api/settings/chat-model', { cache: 'no-store' }),
         ]);
         if (cancelled) return;
 
-        let fetchedCatalog: CatalogResponse | null = null;
-        let fetchedChatModel: string | null = null;
-
-        if (catRes.ok) {
-          fetchedCatalog = await catRes.json();
-          setCatalog(fetchedCatalog);
-        }
-        if (modelRes.ok) {
-          const data = (await modelRes.json()) as { chatModel: string | null };
-          fetchedChatModel = data.chatModel;
-          setChatModel(fetchedChatModel);
-        }
+        setCatalog(catData);
+        setChatModel(modelData.chatModel);
 
         moduleCache = {
-          catalog: fetchedCatalog || (moduleCache ? moduleCache.catalog : null),
-          chatModel: fetchedChatModel || (moduleCache ? moduleCache.chatModel : null),
+          catalog: catData,
+          chatModel: modelData.chatModel,
           fetchedAt: Date.now(),
         };
       } catch (err) {

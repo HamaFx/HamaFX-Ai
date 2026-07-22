@@ -33,7 +33,7 @@ export function AnalyzeFundamentalPart({
   errorMessage,
 }: ToolPartProps<'analyze_fundamental'>) {
   if (state === 'error') {
-    return <ErrorCard {...(errorMessage ? { message: errorMessage } : {})} />;
+    return <ErrorCard message={errorMessage} />;
   }
   if (state === 'loading' || !output) {
     return <SkeletonCard />;

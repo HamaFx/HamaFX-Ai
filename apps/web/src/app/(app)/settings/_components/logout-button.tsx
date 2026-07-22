@@ -21,19 +21,15 @@
 
 import { IconLogout } from '@tabler/icons-react';
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { useQueryClient } from '@tanstack/react-query';
+import { signOut } from 'next-auth/react';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
 import { useConfirm } from '@/components/ui/confirm-drawer';
-import { withCsrf } from '@/lib/csrf';
 
 export function LogoutButton() {
   const [pending, setPending] = useState(false);
   const [confirmEl, confirm] = useConfirm();
-  const router = useRouter();
-  const queryClient = useQueryClient();
 
   async function logout() {
     const ok = await confirm({
@@ -45,15 +41,7 @@ export function LogoutButton() {
     if (!ok) return;
     setPending(true);
     try {
-      const res = await fetch('/api/auth/signout', { method: 'POST', ...withCsrf() });
-      if (!res.ok) {
-        toast.error('Failed to log out. Please try again.');
-        setPending(false);
-        return;
-      }
-      queryClient.clear();
-      router.push('/login');
-      router.refresh();
+      await signOut({ callbackUrl: '/login', redirect: true });
     } catch {
       toast.error('Failed to log out. Please check your network connection.');
       setPending(false);

@@ -21,7 +21,7 @@ import { IconCircleCheck,  IconEye,  IconEyeOff,  IconLoader2,  IconCircleX,  Ic
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ProviderInfoDot } from '@/components/ui/provider-info-dot';
-import { withCsrf } from '@/lib/csrf';
+import { apiMutate } from '@/lib/api-client';
 import { useConfirm } from '@/components/ui/confirm-drawer';
 import { toast } from 'sonner';
 import { formatRelative } from '@/lib/format';
@@ -82,32 +82,19 @@ export function ApiKeyCard({ provider, currentValue, health, usage, keyUpdatedAt
     setTest({ kind: 'pending' });
     startTransition(async () => {
       try {
-        const res = await fetch('/api/settings/test-provider', {
-          method: 'POST',
-          ...withCsrf({
+        const data = await apiMutate<{ ok: boolean; error?: string }>(
+          '/api/settings/test-provider',
+          {
+            method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ provider: provider.id, apiKey: value.trim() }),
-          }),
-        });
-        const text = await res.text();
-        const looksLikeJson = text.trimStart().startsWith('{');
-        let errorMessage: string;
-        if (looksLikeJson) {
-          try {
-            const data = JSON.parse(text) as { ok: boolean; error?: string };
-            if (!res.ok || !data.ok) {
-              errorMessage = data.error ?? `HTTP ${res.status}`;
-            } else {
-              setTest({ kind: 'ok' });
-              return;
-            }
-          } catch {
-            errorMessage = `HTTP ${res.status}: ${text.slice(0, 120)}`;
-          }
+          },
+        );
+        if (!data.ok) {
+          setTest({ kind: 'err', message: data.error ?? 'Provider test failed' });
         } else {
-          errorMessage = `HTTP ${res.status}: ${text.slice(0, 120)}`;
+          setTest({ kind: 'ok' });
         }
-        setTest({ kind: 'err', message: errorMessage });
       } catch (err) {
         setTest({
           kind: 'err',

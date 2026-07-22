@@ -21,7 +21,7 @@ import { toast } from 'sonner';
 import {IconDatabase, IconLoader2, IconCircleCheck, IconCircleX} from '@tabler/icons-react';
 import { Button } from '@/components/ui/button';
 import { updateMarketDataProviderAction } from '../../actions';
-import { withCsrf } from '@/lib/csrf';
+import { apiMutate } from '@/lib/api-client';
 
 interface MarketDataConfigProps {
   initialProvider: string;
@@ -62,16 +62,16 @@ export function MarketDataConfig({ initialProvider, finnhubKeySet }: MarketDataC
     setTest({ kind: 'pending' });
     startTestTransition(async () => {
       try {
-        const res = await fetch('/api/settings/test-market-provider', {
-          method: 'POST',
-          ...withCsrf({
+        const data = await apiMutate<{ ok: boolean; error?: string }>(
+          '/api/settings/test-market-provider',
+          {
+            method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ provider: selected }),
-          }),
-        });
-        const data = await res.json();
-        if (!res.ok || !data.ok) {
-          setTest({ kind: 'err', message: data.error ?? `HTTP ${res.status}` });
+          },
+        );
+        if (!data.ok) {
+          setTest({ kind: 'err', message: data.error ?? 'Provider test failed' });
         } else {
           setTest({ kind: 'ok' });
         }

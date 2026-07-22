@@ -43,7 +43,7 @@ interface LogJournalPartProps {
 
 export function LogJournalPart({ output, state, errorMessage }: LogJournalPartProps) {
   if (state === 'error') {
-    return <LogJournalError {...(errorMessage ? { message: errorMessage } : {})} />;
+    return <LogJournalError message={errorMessage} />;
   }
   if (state === 'loading' || !output) {
     return <LogJournalSkeleton />;

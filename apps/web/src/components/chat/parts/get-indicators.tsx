@@ -53,7 +53,7 @@ interface GetIndicatorsPartProps {
 
 export function GetIndicatorsPart({ output, state, errorMessage }: GetIndicatorsPartProps) {
   if (state === 'error') {
-    return <IndicatorsCardError {...(errorMessage ? { message: errorMessage } : {})} />;
+    return <IndicatorsCardError message={errorMessage} />;
   }
   if (state === 'loading' || !output) {
     return <IndicatorsCardSkeleton />;

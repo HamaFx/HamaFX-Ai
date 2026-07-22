@@ -191,6 +191,11 @@ pnpm turbo run test -- --run
 
 # Build (catches next build errors)
 pnpm turbo run build
+
+# Bundle-size guard (run after build)
+pnpm --filter @hamafx/web bundle-size:check
+# If the guard fails legitimately, update `apps/web/bundle-size-limits.json`
+# so limits sit ~10% above the largest observed chunk.
 ```
 
 All four must pass. CI will run them again but catching locally saves time.

@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import {IconCircleCheck, IconLoader2, IconPlayerPlay, IconCircleX} from '@tabler/icons-react';
 
 import { Button } from '@/components/ui/button';
-import { withCsrf } from '@/lib/csrf';
+import { apiFetch, parseErrorBody } from '@/lib/api-client';
 import { toast } from 'sonner';
 
 interface BulkTestButtonProps {
@@ -34,15 +34,13 @@ export function BulkTestButton({ disabled }: BulkTestButtonProps) {
     setProgress(null);
     startTransition(async () => {
       try {
-        const res = await fetch('/api/settings/bulk-test', {
+        const res = await apiFetch<Response>('/api/settings/bulk-test', {
           method: 'POST',
-          ...withCsrf(),
+          json: false,
         });
         if (!res.ok) {
-          const body = (await res.json().catch(() => null)) as {
-            error?: { message?: string };
-          } | null;
-          throw new Error(body?.error?.message ?? `HTTP ${res.status}`);
+          const body = await parseErrorBody(res);
+          throw new Error(body.message);
         }
 
         const reader = res.body?.getReader();

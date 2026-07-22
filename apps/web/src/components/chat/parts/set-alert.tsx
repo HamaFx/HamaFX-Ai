@@ -42,7 +42,7 @@ interface SetAlertPartProps {
 
 export function SetAlertPart({ output, state, errorMessage }: SetAlertPartProps) {
   if (state === 'error') {
-    return <SetAlertError {...(errorMessage ? { message: errorMessage } : {})} />;
+    return <SetAlertError message={errorMessage} />;
   }
   if (state === 'loading' || !output) {
     return <SetAlertSkeleton />;

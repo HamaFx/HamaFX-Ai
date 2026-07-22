@@ -66,7 +66,7 @@ export function ConveneCommitteePart({
   errorMessage,
 }: ToolPartProps<'convene_committee'>) {
   if (state === 'error') {
-    return <ErrorCard {...(errorMessage ? { message: errorMessage } : {})} />;
+    return <ErrorCard message={errorMessage} />;
   }
   if (state === 'loading' || !output) {
     return <SkeletonCard />;

@@ -37,7 +37,7 @@ const CAVEAT_GLYPH: Record<string, string> = {
 };
 
 export function VerifyCallPart({ output, state, errorMessage }: ToolPartProps<'verify_call'>) {
-  if (state === 'error') return <ErrorCard {...(errorMessage ? { message: errorMessage } : {})} />;
+  if (state === 'error') return <ErrorCard message={errorMessage} />;
   if (state === 'loading' || !output) return <SkeletonCard />;
 
   const tone = output.agree ? 'border-bull/40' : 'border-warn/40';

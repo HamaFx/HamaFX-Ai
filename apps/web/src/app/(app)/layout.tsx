@@ -60,11 +60,18 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       userId = session.user.id;
       userName = session.user.name ?? undefined;
       userEmail = session.user.email ?? undefined;
-      const onboardingCompleted = await getOnboardingStatus(session.user.id);
+      // Parallelize the two independent data fetches. The admin check only
+      // matters once we know onboarding is complete, but it is independent
+      // of the settings fetch, so running them together saves ~one network
+      // round-trip on every authenticated page load.
+      const [onboardingCompleted, admin] = await Promise.all([
+        getOnboardingStatus(session.user.id),
+        checkIsAdmin(),
+      ]);
       if (!onboardingCompleted) {
         redirect('/onboarding');
       }
-      isAdmin = await checkIsAdmin();
+      isAdmin = admin;
     }
   }
 

@@ -46,7 +46,7 @@ export function GetMarketStructurePart({
   errorMessage,
 }: GetMarketStructurePartProps) {
   if (state === 'error') {
-    return <StructureError {...(errorMessage ? { message: errorMessage } : {})} />;
+    return <StructureError message={errorMessage} />;
   }
   if (state === 'loading' || !output) {
     return <StructureSkeleton />;

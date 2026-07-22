@@ -57,7 +57,7 @@ function cleanNewsText(raw: string): string {
 
 export function GetNewsPart({ output, state, errorMessage }: GetNewsPartProps) {
   if (state === 'error') {
-    return <NewsCardError {...(errorMessage ? { message: errorMessage } : {})} />;
+    return <NewsCardError message={errorMessage} />;
   }
   if (state === 'loading' || !output) {
     return <NewsCardSkeleton />;

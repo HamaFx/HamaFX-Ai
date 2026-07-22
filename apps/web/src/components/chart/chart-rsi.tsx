@@ -17,11 +17,11 @@
  */
 
 import { memo, useCallback, useState } from 'react';
-import type * as LightweightCharts from 'lightweight-charts';
 import type { Candle, IndicatorResult } from '@hamafx/shared';
 import { SERIES_RSI_HEX, SERIES_RSI_REF_HEX } from './chart-colors';
 import type { ChartSettings, MainChartInstance } from './chart-types';
 import { useSubPaneChart } from './use-sub-pane-chart';
+import { chartTime, type IChartApi, type ISeriesApi, type LcModule, type Time } from './lc-adapter';
 
 export interface ChartRSIProps {
   result: IndicatorResult;
@@ -30,8 +30,6 @@ export interface ChartRSIProps {
   settings: ChartSettings | null | undefined;
   onReady?: (host: MainChartInstance) => void;
 }
-
-type UTCTimestamp = LightweightCharts.UTCTimestamp;
 
 function areRSIPropsEqual(prev: ChartRSIProps, next: ChartRSIProps): boolean {
   if (prev.settings !== next.settings) return false;
@@ -47,7 +45,7 @@ function areRSIPropsEqual(prev: ChartRSIProps, next: ChartRSIProps): boolean {
 export const ChartRSI = memo(function ChartRSI({ result, candles, mainChart, settings, onReady }: ChartRSIProps) {
   const [containerEl, setContainerEl] = useState<HTMLDivElement | null>(null);
 
-  const initSeries = useCallback((lc: typeof LightweightCharts, chart: LightweightCharts.IChartApi) => {
+  const initSeries = useCallback((lc: LcModule, chart: IChartApi) => {
     const series = chart.addSeries(lc.LineSeries, {
       color: SERIES_RSI_HEX,
       lineWidth: 2,
@@ -59,7 +57,7 @@ export const ChartRSI = memo(function ChartRSI({ result, candles, mainChart, set
     return series;
   }, []);
 
-  const updateData = useCallback((series: LightweightCharts.ISeriesApi<LightweightCharts.SeriesType>, result: IndicatorResult, candles: Candle[]) => {
+  const updateData = useCallback((series: ISeriesApi<'Line'>, result: IndicatorResult, candles: Candle[]) => {
     series.setData(
       result.values
         .map((v, idx) => {
@@ -67,11 +65,11 @@ export const ChartRSI = memo(function ChartRSI({ result, candles, mainChart, set
           const candle = candles[idx];
           if (!candle) return null;
           return {
-            time: Math.floor(candle.t / 1000) as unknown as UTCTimestamp,
+            time: chartTime(candle.t),
             value: typeof v === 'number' ? v : (v as { value?: number })?.value ?? null,
           };
         })
-        .filter((d): d is { time: UTCTimestamp; value: number } => d !== null && d.value !== null)
+        .filter((d): d is { time: Time; value: number } => d !== null && d.value !== null)
     );
   }, []);
 

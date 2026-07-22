@@ -26,6 +26,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Switch } from '@/components/ui/switch';
 import { cn } from '@/lib/cn';
 import type { NoiseConfig, Severity } from '@hamafx/shared';
+import { apiFetch, apiMutate } from '@/lib/api-client';
 
 const SEVERITY_OPTIONS: { value: Severity; label: string }[] = [
   { value: 'info', label: 'Info' },
@@ -90,7 +91,7 @@ export function NoiseControlCard({ initialConfig }: { initialConfig?: NoiseConfi
     setSaving(true);
     savingInFlight.current = true;
     const configToSave = config;
-    fetch('/api/notifications/noise-config', {
+    apiMutate('/api/notifications/noise-config', {
       method: 'PUT',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify(configToSave),
@@ -110,11 +111,9 @@ export function NoiseControlCard({ initialConfig }: { initialConfig?: NoiseConfi
 
   // Debounced preview fetch (only after saves, not on every keystroke)
   const fetchPreview = useCallback(() => {
-    if (previewTimerRef.current) clearTimeout(previewTimerRef.current);
-    previewTimerRef.current = setTimeout(() => {
+    if (previewTimerRef.current) clearTimeout(previewTimerRef.current);      previewTimerRef.current = setTimeout(() => {
       setPreviewLoading(true);
-      fetch('/api/alerts/preview-digest')
-        .then((r) => r.ok ? r.json() : null)
+      apiFetch<DigestPreview | null>('/api/alerts/preview-digest')
         .then((data) => setPreview(data))
         .catch(() => setPreview(null))
         .finally(() => setPreviewLoading(false));

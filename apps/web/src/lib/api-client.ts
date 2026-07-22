@@ -327,3 +327,4 @@ export async function apiMutate<T = unknown>(
 }
 
 export { fetchCsrf, withCsrf };
+export { parseErrorBody };

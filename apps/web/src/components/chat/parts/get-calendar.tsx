@@ -50,7 +50,7 @@ const IMPACT_LABEL: Record<ToolCalendarItem['importance'], string> = {
 
 export function GetCalendarPart({ output, state, errorMessage }: GetCalendarPartProps) {
   if (state === 'error') {
-    return <CalendarError {...(errorMessage ? { message: errorMessage } : {})} />;
+    return <CalendarError message={errorMessage} />;
   }
   if (state === 'loading' || !output) {
     return <CalendarSkeleton />;

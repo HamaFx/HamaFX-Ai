@@ -32,7 +32,7 @@ import type { ToolPartProps } from './registry';
 
 export function GetCoTPart({ output, state, errorMessage }: ToolPartProps<'get_cot'>) {
   if (state === 'error') {
-    return <ErrorCard {...(errorMessage ? { message: errorMessage } : {})} />;
+    return <ErrorCard message={errorMessage} />;
   }
   if (state === 'loading' || !output) {
     return <SkeletonCard />;

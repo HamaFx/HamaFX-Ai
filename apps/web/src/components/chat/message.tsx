@@ -38,6 +38,16 @@ import {IconCheck, IconChevronDown, IconCopy, IconEdit, IconArrowBackUp} from '@
 import { useReducedMotion } from 'motion/react';
 import { memo, useEffect, useMemo, useState, type ReactNode, type CSSProperties } from 'react';
 import { m } from 'motion/react';
+import {
+  CitationWarningPartSchema,
+  FallbackPartSchema,
+  StreamToolPartSchema,
+  UserPlanPartSchema,
+  VerifyWarningPartSchema,
+  type CitationWarningPart,
+  type FallbackPart,
+  type StreamToolState,
+} from '@hamafx/shared';
 import { useCopied } from '@/hooks/use-copied';
 
 import { Tooltip } from '@/components/ui/tooltip';
@@ -105,20 +115,18 @@ function MessageImpl({ message, onCopy, onRegenerate, onEdit, isStreaming }: Mes
   // Phase 7c — system messages: render planner cards but suppress
   // anything else (rolling-summary notes are internal context only).
   if (isSystem) {
-    const planPart = (message.parts ?? []).find(
+    const rawPlan = (message.parts ?? []).find(
       (p) =>
         p !== null &&
         typeof p === 'object' &&
         (p as { type?: string }).type === 'data-plan',
     );
-    if (planPart) {
+    const planParse = rawPlan ? UserPlanPartSchema.safeParse(rawPlan) : null;
+    if (planParse?.success) {
       return (
         <div className="flex w-full justify-start">
           <div className="w-full max-w-[88%]">
-            <PlanPart
-              plan={planPart as unknown as Parameters<typeof PlanPart>[0]['plan']}
-              {...(isStreaming !== undefined ? { streaming: isStreaming } : {})}
-            />
+            <PlanPart plan={planParse.data} streaming={isStreaming} />
           </div>
         </div>
       );
@@ -215,9 +223,15 @@ function MessageImpl({ message, onCopy, onRegenerate, onEdit, isStreaming }: Mes
                 );
               }
               if (part.type.startsWith('tool-')) {
-                const p = part as StreamToolPart;
+                const toolParse = StreamToolPartSchema.safeParse(part);
+                if (!toolParse.success) {
+                  // Defensive: malformed tool parts are dropped rather than
+                  // crashing the chat surface.
+                  return null;
+                }
+                const p = toolParse.data;
                 const name = part.type.slice('tool-'.length);
-                const streamState: StreamToolState = p.state ?? 'output-available';
+                const streamState = p.state ?? 'output-available';
                 const errorMessage = p.errorText;
                 return (
                   <MemoizedToolPart
@@ -225,7 +239,7 @@ function MessageImpl({ message, onCopy, onRegenerate, onEdit, isStreaming }: Mes
                     name={name}
                     output={p.output ?? null}
                     state={toPartState(streamState)}
-                    {...(errorMessage !== undefined ? { errorMessage } : {})}
+                    errorMessage={errorMessage}
                   />
                 );
               }
@@ -334,7 +348,7 @@ function MessageImpl({ message, onCopy, onRegenerate, onEdit, isStreaming }: Mes
                   >
                     <RegenModelPicker
                       popoverId={`regen-menu-${message.id}`}
-                      activeModelId={(message as unknown as { metadata?: { model?: string } }).metadata?.model ?? null}
+                      activeModelId={getMessageModel(message)}
                       onPick={(modelId) => {
                         onRegenerate({ modelOverride: modelId });
                         setIsOpenFallback(false);
@@ -369,23 +383,10 @@ export const Message = memo(MessageImpl, (prev, next) => {
   return true;
 });
 
-/** AI SDK v5 streamed tool-part state vocabulary. */
-type StreamToolState =
-  | 'input-streaming'
-  | 'input-available'
-  | 'output-available'
-  | 'output-error';
-
 function toPartState(state: StreamToolState): ToolPartState {
   if (state === 'output-available') return 'done';
   if (state === 'output-error') return 'error';
   return 'loading';
-}
-
-interface StreamToolPart {
-  state?: StreamToolState;
-  output?: unknown;
-  errorText?: string;
 }
 
 function renderPart(
@@ -402,42 +403,44 @@ function renderPart(
   // into a sibling system message before the turn (data-plan, handled
   // at the message level above).
   if (part.type === 'data-citation-warning') {
-    // The persisted JSON shape matches `CitationWarningPart` exactly.
-    return (
-      <CitationWarningPartView
-        key={idx}
-        part={part as unknown as Parameters<typeof CitationWarningPartView>[0]['part']}
-      />
-    );
+    const parsed = CitationWarningPartSchema.safeParse(part);
+    if (!parsed.success) {
+      return (
+        <FallbackPartView
+          key={idx}
+          part={malformedFallback('citation warning')}
+        />
+      );
+    }
+    return <CitationWarningPartView key={idx} part={parsed.data} />;
   }
   if (part.type === 'data-verify-warning') {
+    const parsed = VerifyWarningPartSchema.safeParse(part);
+    if (!parsed.success) {
+      return (
+        <FallbackPartView
+          key={idx}
+          part={malformedFallback('verify warning')}
+        />
+      );
+    }
     // For now reuse the citation warning's tone-styled card with a custom
     // header; a bespoke verify-warning component can graduate later.
-    return (
-      <CitationWarningPartView
-        key={idx}
-        part={
-          {
-            type: 'data-citation-warning',
-            unsupportedClaims: ((part as unknown as { caveats?: string[] }).caveats ?? []),
-            toolsInvoked: [],
-            stance: 'strict',
-            createdAt:
-              (part as unknown as { createdAt?: number }).createdAt ?? Date.now(),
-          } as Parameters<typeof CitationWarningPartView>[0]['part']
-        }
-      />
-    );
+    return <CitationWarningPartView key={idx} part={citationWarningFromVerify(parsed.data)} />;
   }
   if (part.type === 'data-plan') {
     // Defensive fallback — the planner persists plans on a sibling
     // system message and this branch is unreachable in practice.
-    return (
-      <PlanPart
-        key={idx}
-        plan={part as unknown as Parameters<typeof PlanPart>[0]['plan']}
-      />
-    );
+    const parsed = UserPlanPartSchema.safeParse(part);
+    if (!parsed.success) {
+      return (
+        <FallbackPartView
+          key={idx}
+          part={malformedFallback('plan')}
+        />
+      );
+    }
+    return <PlanPart key={idx} plan={parsed.data} />;
   }
 
   // Phase B — UX_UPGRADE_PLAN.md item 15. Inline card explaining
@@ -445,16 +448,44 @@ function renderPart(
   // used instead. The amber tone is distinct from citation
   // warnings (bear) so the user can tell them apart at a glance.
   if (part.type === 'data-fallback') {
-    return (
-      <FallbackPartView
-        key={idx}
-        part={
-          part as unknown as Parameters<typeof FallbackPartView>[0]['part']
-        }
-      />
-    );
+    const parsed = FallbackPartSchema.safeParse(part);
+    if (!parsed.success) {
+      return null;
+    }
+    return <FallbackPartView key={idx} part={parsed.data} />;
   }
 
+  return null;
+}
+
+function malformedFallback(label: string): FallbackPart {
+  return {
+    type: 'data-fallback',
+    message: `Malformed ${label} part`,
+  };
+}
+
+function citationWarningFromVerify(verify: { caveats: string[]; createdAt: number }): CitationWarningPart {
+  return {
+    type: 'data-citation-warning',
+    unsupportedClaims: verify.caveats,
+    toolsInvoked: [],
+    stance: 'strict',
+    createdAt: verify.createdAt,
+    findings: verify.caveats.map((text) => ({ text, supported: false, supportingTool: null })),
+  };
+}
+
+function getMessageModel(message: UIMessage): string | null {
+  const meta = message.metadata;
+  if (
+    meta &&
+    typeof meta === 'object' &&
+    'model' in meta &&
+    typeof meta.model === 'string'
+  ) {
+    return meta.model;
+  }
   return null;
 }
 
@@ -494,7 +525,7 @@ const MemoizedToolPart = memo(function MemoizedToolPart({
       name={name}
       output={output}
       state={state}
-      {...(errorMessage !== undefined ? { errorMessage } : {})}
+      errorMessage={errorMessage}
     />
   );
 });

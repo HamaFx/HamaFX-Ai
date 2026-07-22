@@ -110,7 +110,7 @@ export const POST = withAuth<void>(async (req, { user }) => {
     const analysisMode = body.analysisMode ?? 'single';
 
     if (analysisMode !== 'single') {
-      const { runMultiAgentChat, resolveMode, extractUserMessageText, ProgressTracker, progressToSSE } = await import('@hamafx/ai');
+      const { runMultiAgentChat, resolveMode, extractUserMessageText, ProgressTracker } = await import('@hamafx/ai');
       const { getDb, schema, getUserWithSettings } = await import('@hamafx/db');
 
       const db = getDb();
@@ -153,28 +153,22 @@ export const POST = withAuth<void>(async (req, { user }) => {
           });
         }
 
-        // Quick and Standard modes — synchronous SSE streaming as before.
-        // Set up SSE streaming with progress events + final text.
+        // Quick and Standard modes — synchronous data stream in the AI SDK v5
+        // line-delimited JSON format so the client can use a single transport.
         const encoder = new TextEncoder();
+        const messageId = crypto.randomUUID();
         const stream = new ReadableStream({
           async start(controller) {
             const tracker = new ProgressTracker(resolvedMode, resolvedMode === 'quick' ? ['technical'] : resolvedMode === 'standard' ? ['technical', 'fundamental'] : ['technical', 'fundamental', 'risk', 'sentiment']);
 
-            const enqueueProgress = () => {
-              const part = tracker.buildPart();
-              controller.enqueue(encoder.encode(`data: ${JSON.stringify(part)}\n\n`));
-            };
+            const send = (chunk: object) => controller.enqueue(encoder.encode(`${JSON.stringify(chunk)}\n`));
 
-            // CH-2: SSE heartbeat — send a comment line every 25s to
-            // keep the connection alive under Vercel's 60s maxDuration.
-            // Prevents the stream from being closed without an error.
-            const heartbeat = setInterval(() => {
-              try {
-                controller.enqueue(encoder.encode(': hb\n\n'));
-              } catch {
-                clearInterval(heartbeat);
-              }
-            }, 25_000);
+            let textStarted = false;
+            const startText = () => {
+              if (textStarted) return;
+              textStarted = true;
+              send({ type: 'text-start', id: messageId });
+            };
 
             try {
               const result = await runMultiAgentChat({
@@ -184,24 +178,26 @@ export const POST = withAuth<void>(async (req, { user }) => {
                 ...(req.signal ? { signal: req.signal } : { signal: null }), analysisMode,
                 onProgress: (event) => {
                   tracker.update(event);
-                  // Also send individual progress events for granular client handling
-                  controller.enqueue(encoder.encode(progressToSSE(event)));
-                  enqueueProgress();
+                  send(tracker.buildPart());
                 },
-                // P1-4/U1 — stream fusion text token-by-token via SSE
+                // P1-4/U1 — stream fusion text token-by-token as AI SDK text-delta chunks.
                 onTextChunk: (chunk) => {
-                  const textData = { type: 'text', text: chunk };
-                  controller.enqueue(encoder.encode(`data: ${JSON.stringify(textData)}\n\n`));
+                  startText();
+                  send({ type: 'text-delta', id: messageId, delta: chunk });
                 },
               });
 
-              // P1-4/U1: Text chunks already streamed via onTextChunk — no need for final blob.
+              startText();
+              send({ type: 'text-end', id: messageId });
 
-              // Send metadata (cost, latency, opinions, mode, persisted messageId)
-              const metaData = { type: 'metadata', data: { agentOpinions: result.agentOpinions, mode: result.mode, totalCostUsd: result.totalCostUsd, totalLatencyMs: result.totalLatencyMs, messageId: result.messageId } };
-              controller.enqueue(encoder.encode(`data: ${JSON.stringify(metaData)}\n\n`));
-
-              controller.enqueue(encoder.encode('data: [DONE]\n\n'));
+              // Surface cost/latency/opinions as a transient data part. The client can
+              // choose to ignore it; it will not be persisted because it is transient.
+              send({
+                type: 'data-multi-agent-meta',
+                id: messageId,
+                data: { agentOpinions: result.agentOpinions, mode: result.mode, totalCostUsd: result.totalCostUsd, totalLatencyMs: result.totalLatencyMs, messageId: result.messageId },
+                transient: true,
+              });
             } catch (err) {
               Sentry.captureException(err, {
                 tags: { component: 'chat', mode: 'multi-agent', route: '/api/chat' },
@@ -215,11 +211,8 @@ export const POST = withAuth<void>(async (req, { user }) => {
                   : err instanceof Error
                     ? err.message
                     : String(err);
-              const errorData = { type: 'error', error: errorMessage };
-              controller.enqueue(encoder.encode(`data: ${JSON.stringify(errorData)}\n\n`));
-              controller.enqueue(encoder.encode('data: [DONE]\n\n'));
+              send({ type: 'error', errorText: errorMessage });
             } finally {
-              clearInterval(heartbeat);
               controller.close();
             }
           },
@@ -227,7 +220,7 @@ export const POST = withAuth<void>(async (req, { user }) => {
 
         return new Response(stream, {
           headers: {
-            'Content-Type': 'text/event-stream',
+            'Content-Type': 'text/plain; charset=utf-8',
             'Cache-Control': 'no-cache',
             'Connection': 'keep-alive',
           },

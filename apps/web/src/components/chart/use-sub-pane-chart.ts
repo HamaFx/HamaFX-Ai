@@ -15,11 +15,20 @@
  */
 
 import { useEffect, useRef, useState } from 'react';
-import type * as LightweightCharts from 'lightweight-charts';
 import type { Candle, IndicatorResult } from '@hamafx/shared';
 import type { MainChartInstance, ChartSettings } from './chart-types';
 import { useChartTheme } from './use-chart-theme';
 import { useLightweightCharts } from './use-lightweight-charts';
+import {
+  createChart,
+  type ChartOptionsInput,
+  type IChartApi,
+  type ISeriesApi,
+  type LcModule,
+  type LogicalRange,
+  type MouseEventParams,
+  type SeriesType,
+} from './lc-adapter';
 
 export interface SubPaneOptions<TSeries> {
   containerEl: HTMLDivElement | null;
@@ -28,15 +37,12 @@ export interface SubPaneOptions<TSeries> {
   candles: Candle[];
   result: IndicatorResult;
   onReady?: ((host: MainChartInstance) => void) | undefined;
-  initSeries: (
-    lc: typeof LightweightCharts,
-    chart: LightweightCharts.IChartApi
-  ) => TSeries;
+  initSeries: (lc: LcModule, chart: IChartApi) => TSeries;
   updateData: (
     series: TSeries,
     result: IndicatorResult,
     candles: Candle[],
-    lc: typeof LightweightCharts
+    lc: LcModule
   ) => void;
 }
 
@@ -51,8 +57,7 @@ export function useSubPaneChart<TSeries>({
   updateData,
 }: SubPaneOptions<TSeries>) {
   const { lc } = useLightweightCharts();
-  const theme = useChartTheme(containerEl, settings);
-  const chartRef = useRef<LightweightCharts.IChartApi | null>(null);
+  const theme = useChartTheme(containerEl, settings);    const chartRef = useRef<IChartApi | null>(null);
   const seriesRef = useRef<TSeries | null>(null);
   const onReadyRef = useRef(onReady);
   onReadyRef.current = onReady;
@@ -69,9 +74,9 @@ export function useSubPaneChart<TSeries>({
     // destroy/recreate cycles when the parent passes a new wrapper
     // object that points to the same underlying chart.
     const previousApi =
-      mainChartRef.current?.getChartApi?.() as LightweightCharts.IChartApi | undefined;
+      mainChartRef.current?.getChartApi?.() as IChartApi | undefined;
     const currentApi =
-      mainChart?.getChartApi?.() as LightweightCharts.IChartApi | undefined;
+      mainChart?.getChartApi?.() as IChartApi | undefined;
     if (previousApi && currentApi && previousApi === currentApi && chartRef.current) {
       // Update the ref but don't rebuild — same underlying chart.
       mainChartRef.current = mainChart;
@@ -88,13 +93,7 @@ export function useSubPaneChart<TSeries>({
     }
     mainChartRef.current = mainChart;
 
-    const createChartFn =
-      'createChart' in lc
-        ? lc.createChart
-        : (lc as unknown as { default?: { createChart: typeof LightweightCharts.createChart } }).default?.createChart;
-    if (!createChartFn) return;
-
-    const chart = createChartFn(containerEl, {
+    const chart = createChart(lc, containerEl, {
       layout: {
         background: { color: theme.colors.bg },
         textColor: theme.colors.text,
@@ -117,7 +116,7 @@ export function useSubPaneChart<TSeries>({
     seriesRef.current = series;
 
     const instance: MainChartInstance = {
-      applyOptions: (opts) => chart.applyOptions(opts as never),
+      applyOptions: (opts) => chart.applyOptions(opts as ChartOptionsInput),
       applyDecimals: () => {},
       setCandles: () => {},
       updateLastCandle: () => {},
@@ -176,7 +175,7 @@ export function useSubPaneChart<TSeries>({
     const chart = chartRef.current;
     if (!chart || !mainChart) return;
 
-    const mainApi = mainChart.getChartApi() as LightweightCharts.IChartApi | null;
+    const mainApi = mainChart.getChartApi() as IChartApi | null;
     if (!mainApi) return;
 
     const mainTs = mainApi.timeScale();
@@ -188,7 +187,7 @@ export function useSubPaneChart<TSeries>({
       subTs.setVisibleLogicalRange(range);
     }
 
-    const handleRangeChange = (r: LightweightCharts.LogicalRange | null) => {
+    const handleRangeChange = (r: LogicalRange | null) => {
       if (!r) return;
       subTs.setVisibleLogicalRange(r);
     };
@@ -196,14 +195,14 @@ export function useSubPaneChart<TSeries>({
     mainTs.subscribeVisibleLogicalRangeChange(handleRangeChange);
 
     // Crosshair Sync
-    const handleMainCrosshairMove = (param: LightweightCharts.MouseEventParams<LightweightCharts.Time>) => {
+    const handleMainCrosshairMove = (param: MouseEventParams) => {
       if (param.point === undefined) return; // Prevent loops
       if (param.time && seriesRef.current) {
         const currentSeries = seriesRef.current;
         const firstSeries =
           typeof (currentSeries as { setData?: unknown }).setData === 'function'
-            ? (currentSeries as unknown as LightweightCharts.ISeriesApi<LightweightCharts.SeriesType>)
-            : (Object.values(currentSeries as unknown as Record<string, LightweightCharts.ISeriesApi<LightweightCharts.SeriesType>>)[0]);
+            ? (currentSeries as unknown as ISeriesApi<SeriesType>)
+            : (Object.values(currentSeries as unknown as Record<string, ISeriesApi<SeriesType>>)[0]);
         if (firstSeries) {
           chart.setCrosshairPosition(0, param.time, firstSeries);
         }

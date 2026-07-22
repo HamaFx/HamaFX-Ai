@@ -20,16 +20,25 @@
 // large threads efficiently, rendering only the visible messages in the DOM.
 
 import type { UIMessage } from 'ai';
-import { memo } from 'react';
+import { memo, useEffect, useState } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { Message } from './message';
 
 // Phase 7 task 7.3 — sr-only polite live region so screen readers announce
 // streamed assistant text. Mirrors the pattern in chart-canvas.tsx.
+// The visual stream updates at ~10Hz, but the live region is debounced
+// so screen readers don't announce every token.
 function StreamingLiveRegion({ text }: { text: string }) {
+  const [debouncedText, setDebouncedText] = useState(text);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedText(text), 1000);
+    return () => clearTimeout(timer);
+  }, [text]);
+
   return (
     <div role="status" aria-live="polite" className="sr-only">
-      {text}
+      {debouncedText}
     </div>
   );
 }
@@ -134,12 +143,14 @@ export const MessageList = memo(function MessageList({
           >
             <Message
               message={m}
-              {...(isStreaming !== undefined ? { isStreaming } : {})}
-              {...(onCopy ? { onCopy } : {})}
-              {...(onRegenerate && m.id === lastAssistantId && !isStreaming
-                ? { onRegenerate }
-                : {})}
-              {...(onEdit ? { onEdit } : {})}
+              isStreaming={isStreaming}
+              onCopy={onCopy}
+              onRegenerate={
+                onRegenerate && m.id === lastAssistantId && !isStreaming
+                  ? onRegenerate
+                  : undefined
+              }
+              onEdit={onEdit}
             />
             {isStreaming && m.role === 'assistant' && (
               <StreamingLiveRegion

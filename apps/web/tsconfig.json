@@ -2,6 +2,7 @@
   "extends": "@hamafx/config/typescript/nextjs",
   "compilerOptions": {
     "baseUrl": ".",
+    "exactOptionalPropertyTypes": false,
     "paths": {
       "@/*": ["./src/*"],
       "@shared/*": ["../../packages/shared/src/*"],

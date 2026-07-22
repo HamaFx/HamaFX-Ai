@@ -29,7 +29,7 @@ export function ComputePositionHealthPart({
   state,
   errorMessage,
 }: ToolPartProps<'compute_position_health'>) {
-  if (state === 'error') return <ErrorCard {...(errorMessage ? { message: errorMessage } : {})} />;
+  if (state === 'error') return <ErrorCard message={errorMessage} />;
   if (state === 'loading' || !output) return <SkeletonCard />;
 
   if (output.empty) {

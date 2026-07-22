@@ -26,7 +26,7 @@ export function ForecastVolatilityPart({
   state,
   errorMessage,
 }: ToolPartProps<'forecast_volatility'>) {
-  if (state === 'error') return <ErrorCard {...(errorMessage ? { message: errorMessage } : {})} />;
+  if (state === 'error') return <ErrorCard message={errorMessage} />;
   if (state === 'loading' || !output) return <SkeletonCard />;
 
   return (

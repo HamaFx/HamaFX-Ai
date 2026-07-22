@@ -86,8 +86,6 @@ export function ChatTopBar({ threadId, title, pinnedSymbol, threads, isStreaming
   // M4: Popup menus via dedicated hook.
   const overflowMenu = usePopupMenu();
   const modeMenu = usePopupMenu({ focusFirstOnOpen: false });
-  const { open: menuOpen, setOpen: setMenuOpen, menuRef, triggerRef } = overflowMenu;
-  const { open: modeMenuOpen, setOpen: setModeMenuOpen, menuRef: modeMenuRef } = modeMenu;
 
   function newChat() {
     startTransition(async () => {
@@ -108,7 +106,7 @@ export function ChatTopBar({ threadId, title, pinnedSymbol, threads, isStreaming
   }
 
   async function deleteCurrent() {
-    setMenuOpen(false);
+    overflowMenu.setOpen(false);
     const ok = await confirm({
       title: 'Delete this conversation?',
       description: 'Messages and tool calls in this thread will be removed permanently.',
@@ -138,7 +136,7 @@ export function ChatTopBar({ threadId, title, pinnedSymbol, threads, isStreaming
    * attachment; we just open the URL in the same tab.
    */
   function exportThread() {
-    setMenuOpen(false);
+    overflowMenu.setOpen(false);
     const exportUrl = `/api/chat/threads/${threadId}/export`;
     const newWindow = window.open(exportUrl, '_blank', 'noopener,noreferrer');
     if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
@@ -208,22 +206,21 @@ export function ChatTopBar({ threadId, title, pinnedSymbol, threads, isStreaming
 
         {/* Analysis Mode Selector */}
         {onAnalysisModeChange && (
-          <div className="relative" ref={modeMenuRef}>
+          <div className="relative" ref={modeMenu.menuRef}>
             <button
               type="button"
-              onClick={() => setModeMenuOpen((v) => !v)}
+              onClick={() => modeMenu.setOpen((v) => !v)}
               aria-label="Analysis mode"
-              aria-expanded={modeMenuOpen}
-              aria-haspopup="menu"
+              {...modeMenu.triggerProps}
               className="text-fg-muted hover:text-fg hover:bg-bg-elev-2 active:bg-bg-elev-3 inline-flex items-center gap-1 rounded-sm px-2.5 py-1.5 text-caption font-medium transition-colors shrink-0"
             >
               <IconCpu className="size-3.5" />
               <span className="hidden sm:inline">{MODE_LABELS[analysisMode]}</span>
               <IconChevronDown className="size-3" />
             </button>
-            {modeMenuOpen ? (
+            {modeMenu.open ? (
               <div
-                role="menu"
+                {...modeMenu.menuProps}
                 className="bg-bg-elev-1 border border-border shadow-xl absolute right-0 top-full z-50 mt-2 w-56 rounded-sm p-1.5"
               >
                 {(Object.keys(MODE_LABELS) as AnalysisMode[]).map((mode) => (
@@ -233,7 +230,7 @@ export function ChatTopBar({ threadId, title, pinnedSymbol, threads, isStreaming
                     type="button"
                     onClick={() => {
                       onAnalysisModeChange(mode);
-                      setModeMenuOpen(false);
+                      modeMenu.setOpen(false);
                     }}
                     className={cn(
                       'flex w-full items-center justify-between gap-2 rounded-sm px-3 py-2 text-left text-sm transition-colors',
@@ -266,56 +263,27 @@ export function ChatTopBar({ threadId, title, pinnedSymbol, threads, isStreaming
           </button>
         </Tooltip>
 
-        <div className="relative" ref={menuRef}>
+        <div className="relative" ref={overflowMenu.menuRef}>
           <button
-            ref={triggerRef}
+            ref={overflowMenu.triggerRef}
             type="button"
-            onClick={() => setMenuOpen((v) => !v)}
+            onClick={() => overflowMenu.setOpen((v) => !v)}
             aria-label="Conversation menu"
-            aria-expanded={menuOpen}
-            aria-haspopup="menu"
+            {...overflowMenu.triggerProps}
             className="text-fg-muted hover:text-fg hover:bg-bg-elev-2 active:bg-bg-elev-3 inline-flex size-11 shrink-0 items-center justify-center rounded-sm transition-colors"
           >
             <IconDotsCircleHorizontal className="size-5" />
           </button>
-          {menuOpen ? (
+          {overflowMenu.open ? (
             <div
-              role="menu"
-              onKeyDown={(e) => {
-                const focusable = menuRef.current?.querySelectorAll<HTMLButtonElement>('[role="menuitem"]');
-                if (!focusable || focusable.length === 0) return;
-                const elements = Array.from(focusable);
-                const activeIndex = elements.indexOf(document.activeElement as HTMLButtonElement);
-                if (e.key === 'ArrowDown') {
-                  e.preventDefault();
-                  const nextIdx = (activeIndex + 1) % elements.length;
-                  elements[nextIdx]?.focus();
-                } else if (e.key === 'ArrowUp') {
-                  e.preventDefault();
-                  const prevIdx = (activeIndex - 1 + elements.length) % elements.length;
-                  elements[prevIdx]?.focus();
-                } else if (e.key === 'Escape') {
-                  e.preventDefault();
-                  setMenuOpen(false);
-                  triggerRef.current?.focus();
-                } else if (e.key === 'Tab') {
-                  const isShift = e.shiftKey;
-                  if (isShift && activeIndex === 0) {
-                    e.preventDefault();
-                    elements[elements.length - 1]?.focus();
-                  } else if (!isShift && activeIndex === elements.length - 1) {
-                    e.preventDefault();
-                    elements[0]?.focus();
-                  }
-                }
-              }}
+              {...overflowMenu.menuProps}
               className="surface-elevated absolute right-0 top-12 z-50 w-56 overflow-hidden rounded-sm text-body-sm"
             >
               <button
                 role="menuitem"
                 type="button"
                 onClick={() => {
-                  setMenuOpen(false);
+                  overflowMenu.setOpen(false);
                   setDrawerOpen(true);
                 }}
                 className="text-fg hover:bg-bg-elev-2 flex min-h-[48px] w-full items-center gap-2 px-4 py-3 text-left"

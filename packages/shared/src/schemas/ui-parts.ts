@@ -147,7 +147,91 @@ export const CommitteeReportPartSchema = z.object({
 export type CommitteeReportPart = z.infer<typeof CommitteeReportPartSchema>;
 
 // ---------------------------------------------------------------------------
+// data-fallback — emitted when a model override fails and the default is used
+// ---------------------------------------------------------------------------
+
+export const FallbackPartSchema = z.object({
+  type: z.literal('data-fallback'),
+  reason: z.enum(['auth', 'rate-limit', 'upstream', 'timeout', 'unknown']).optional(),
+  override: z.string().optional(),
+  message: z.string().optional(),
+});
+export type FallbackPart = z.infer<typeof FallbackPartSchema>;
+
+// ---------------------------------------------------------------------------
 // Union for the chat-surface dispatcher
+// ---------------------------------------------------------------------------
+
+// ---------------------------------------------------------------------------
+// Source / citation parts (AI SDK v5 source parts + custom cite_sources tool)
+// ---------------------------------------------------------------------------
+
+export const SourceUrlPartSchema = z.object({
+  type: z.literal('source-url'),
+  url: z.string(),
+  title: z.string().optional(),
+});
+export type SourceUrlPart = z.infer<typeof SourceUrlPartSchema>;
+
+export const SourceDocumentPartSchema = z.object({
+  type: z.literal('source-document'),
+  url: z.string(),
+  title: z.string().optional(),
+});
+export type SourceDocumentPart = z.infer<typeof SourceDocumentPartSchema>;
+
+export const CiteSourceSchema = z.object({
+  url: z.string(),
+  title: z.string().optional(),
+});
+export type CiteSource = z.infer<typeof CiteSourceSchema>;
+
+export const CiteSourcesPartSchema = z.object({
+  type: z.literal('tool-cite_sources'),
+  output: z.array(CiteSourceSchema),
+});
+export type CiteSourcesPart = z.infer<typeof CiteSourcesPartSchema>;
+
+// ---------------------------------------------------------------------------
+// Message metadata rendered by the chat footer
+// ---------------------------------------------------------------------------
+
+export const UsageMetaSchema = z.object({
+  promptTokens: z.number().int(),
+  completionTokens: z.number().int(),
+  cost: z.number().optional(),
+});
+export type UsageMeta = z.infer<typeof UsageMetaSchema>;
+
+export const UIMessageMetadataSchema = z.object({
+  model: z.string().optional(),
+  usage: UsageMetaSchema.optional(),
+  createdAt: z.coerce.date().optional(),
+});
+export type UIMessageMetadata = z.infer<typeof UIMessageMetadataSchema>;
+
+// ---------------------------------------------------------------------------
+// Streamed tool parts (AI SDK v5 `tool-<name>` parts)
+// ---------------------------------------------------------------------------
+
+export const StreamToolStateSchema = z.enum([
+  'input-streaming',
+  'input-available',
+  'output-available',
+  'output-error',
+]);
+export type StreamToolState = z.infer<typeof StreamToolStateSchema>;
+
+export const StreamToolPartSchema = z.object({
+  type: z.string(),
+  state: StreamToolStateSchema.optional(),
+  output: z.unknown().optional(),
+  errorText: z.string().optional(),
+});
+export type StreamToolPart = z.infer<typeof StreamToolPartSchema>;
+
+// ---------------------------------------------------------------------------
+// Union of all chat-surface dispatchable parts (UI-only data parts plus AI SDK source parts)
 // ---------------------------------------------------------------------------
 
 export const UiPartSchema = z.discriminatedUnion('type', [
@@ -155,6 +239,10 @@ export const UiPartSchema = z.discriminatedUnion('type', [
   CitationWarningPartSchema,
   VerifyWarningPartSchema,
   CommitteeReportPartSchema,
+  FallbackPartSchema,
+  SourceUrlPartSchema,
+  SourceDocumentPartSchema,
+  CiteSourcesPartSchema,
 ]);
 export type UiPart = z.infer<typeof UiPartSchema>;
 

@@ -24,6 +24,12 @@
 // chaining — metadata is only present on finished assistant turns.
 
 import type { UIMessage } from 'ai';
+import {
+  CiteSourcesPartSchema,
+  SourceDocumentPartSchema,
+  SourceUrlPartSchema,
+  UIMessageMetadataSchema,
+} from '@hamafx/shared';
 import {IconRobot, IconChevronDown, IconChevronRight, IconLink as LinkIcon} from '@tabler/icons-react';
 import { useState } from 'react';
 
@@ -31,15 +37,14 @@ interface MessageFooterProps {
   message: UIMessage;
 }
 
-interface UsageMeta {
-  promptTokens: number;
-  completionTokens: number;
-  cost?: number;
-}
-
 interface Citation {
   url: string;
   title?: string;
+}
+
+function parseMeta(message: UIMessage) {
+  const parsed = UIMessageMetadataSchema.safeParse(message.metadata ?? {});
+  return parsed.success ? parsed.data : {};
 }
 
 /**
@@ -61,24 +66,19 @@ export function formatModelLabel(model: string): string {
 export function MessageFooter({ message }: MessageFooterProps) {
   const [open, setOpen] = useState(false);
 
-  const meta = message.metadata as
-    | { model?: string; usage?: UsageMeta; createdAt?: string | number | Date }
-    | undefined;
-  const model = meta?.model;
-  const usage = meta?.usage;
+  const meta = parseMeta(message);
+  const model = meta.model;
+  const usage = meta.usage;
 
   const citations = extractCitations(message);
 
   // Nothing to show if there's no model and no usage and no citations.
   if (!model && !usage && citations.length === 0) return null;
 
-  const rawTime = meta?.createdAt ?? (message as unknown as { createdAt?: string | number | Date }).createdAt;
-  const time =
-    rawTime instanceof Date
-      ? rawTime.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })
-      : typeof rawTime === 'number' || typeof rawTime === 'string'
-        ? new Date(rawTime).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })
-        : null;
+  const rawTime = meta.createdAt;
+  const time = rawTime
+    ? rawTime.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })
+    : null;
 
   return (
     <div className="flex flex-col gap-0">
@@ -142,6 +142,10 @@ export function MessageFooter({ message }: MessageFooterProps) {
   );
 }
 
+function getPartType(part: object): string | undefined {
+  return 'type' in part && typeof part.type === 'string' ? part.type : undefined;
+}
+
 /**
  * Extract citation links from message parts. The AI SDK emits source parts
  * (`source-url` / `source-document`) and we also accept a `tool-cite_sources`
@@ -151,20 +155,26 @@ function extractCitations(message: UIMessage): Citation[] {
   const out: Citation[] = [];
   for (const part of message.parts) {
     if (!part || typeof part !== 'object') continue;
-    const t = (part as { type?: string }).type;
-    if (t === 'source-url' || t === 'source-document') {
-      const url = (part as { url?: string }).url;
-      const title = (part as { title?: string }).title;
-      if (url) out.push({ url, ...(title ? { title } : {}) });
-    } else if (t === 'tool-cite_sources') {
-      const sources = (part as { output?: unknown }).output;
-      if (Array.isArray(sources)) {
-        for (const s of sources) {
-          if (s && typeof s === 'object') {
-            const url = (s as { url?: string }).url;
-            const title = (s as { title?: string }).title;
-            if (url) out.push({ url, ...(title ? { title } : {}) });
-          }
+    const t = getPartType(part);
+    if (t === 'source-url') {
+      const parsed = SourceUrlPartSchema.safeParse(part);
+      if (parsed.success) {
+        out.push({ url: parsed.data.url, title: parsed.data.title });
+      }
+      continue;
+    }
+    if (t === 'source-document') {
+      const parsed = SourceDocumentPartSchema.safeParse(part);
+      if (parsed.success) {
+        out.push({ url: parsed.data.url, title: parsed.data.title });
+      }
+      continue;
+    }
+    if (t === 'tool-cite_sources') {
+      const parsed = CiteSourcesPartSchema.safeParse(part);
+      if (parsed.success) {
+        for (const s of parsed.data.output) {
+          out.push({ url: s.url, title: s.title });
         }
       }
     }

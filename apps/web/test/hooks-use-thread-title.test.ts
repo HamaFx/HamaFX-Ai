@@ -1,12 +1,17 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { renderHook, act, waitFor } from '@testing-library/react';
+import { renderHook, act } from '@testing-library/react';
+import { apiFetch } from '@/lib/api-client';
 import { useThreadTitle } from '../src/hooks/use-thread-title';
+
+vi.mock('@/lib/api-client', () => ({ apiFetch: vi.fn(), apiMutate: vi.fn() }));
+
+const apiFetchMock = vi.mocked(apiFetch);
 
 describe('useThreadTitle', () => {
   beforeEach(() => {
     vi.useFakeTimers();
-    global.fetch = vi.fn();
+    apiFetchMock.mockReset();
   });
 
   afterEach(() => {
@@ -30,10 +35,7 @@ describe('useThreadTitle', () => {
     let resolveJson: (value: unknown) => void;
     const jsonPromise = new Promise((resolve) => { resolveJson = resolve; });
 
-    const fetchMock = vi.mocked(global.fetch).mockResolvedValue({
-      ok: true,
-      json: () => jsonPromise,
-    } as Response);
+    apiFetchMock.mockReturnValue(jsonPromise as Promise<unknown>);
 
     const { result } = renderHook(() =>
       useThreadTitle({
@@ -46,7 +48,7 @@ describe('useThreadTitle', () => {
 
     // Wait for the fetch to be called
     await vi.waitFor(() => {
-      expect(fetchMock).toHaveBeenCalledWith('/api/chat/threads/thread-2');
+      expect(apiFetchMock).toHaveBeenCalledWith('/api/chat/threads/thread-2', { skipCsrf: true });
     });
 
     // Resolve the JSON promise
@@ -58,8 +60,6 @@ describe('useThreadTitle', () => {
   });
 
   it('does not fetch when messageCount < 2', () => {
-    const fetchMock = vi.mocked(global.fetch);
-
     renderHook(() =>
       useThreadTitle({
         threadId: 'thread-3',
@@ -69,12 +69,10 @@ describe('useThreadTitle', () => {
       }),
     );
 
-    expect(fetchMock).not.toHaveBeenCalled();
+    expect(apiFetchMock).not.toHaveBeenCalled();
   });
 
   it('does not fetch when status is not ready', () => {
-    const fetchMock = vi.mocked(global.fetch);
-
     renderHook(() =>
       useThreadTitle({
         threadId: 'thread-4',
@@ -84,11 +82,11 @@ describe('useThreadTitle', () => {
       }),
     );
 
-    expect(fetchMock).not.toHaveBeenCalled();
+    expect(apiFetchMock).not.toHaveBeenCalled();
   });
 
   it('keeps initial title when fetch fails', async () => {
-    vi.mocked(global.fetch).mockRejectedValue(new Error('Network error'));
+    apiFetchMock.mockRejectedValue(new Error('Network error'));
 
     const { result } = renderHook(() =>
       useThreadTitle({
@@ -107,15 +105,11 @@ describe('useThreadTitle', () => {
   });
 
   it('deduplicates fetches by threadId', async () => {
-    const fetchMock = vi.mocked(global.fetch).mockResolvedValue({
-      ok: true,
-      json: () =>
-        Promise.resolve({
-          thread: { title: 'Analysis', titleSource: 'llm' },
-        }),
-    } as Response);
+    apiFetchMock.mockResolvedValue({
+      thread: { title: 'Analysis', titleSource: 'llm' },
+    });
 
-    const { result, rerender } = renderHook(
+    const { rerender } = renderHook(
       (props) => useThreadTitle(props),
       {
         initialProps: {
@@ -131,7 +125,7 @@ describe('useThreadTitle', () => {
       await vi.runAllTimersAsync();
     });
 
-    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(apiFetchMock).toHaveBeenCalledTimes(1);
 
     // Rerender with same threadId should not fetch again
     rerender({
@@ -146,6 +140,6 @@ describe('useThreadTitle', () => {
     });
 
     // Still only one call
-    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(apiFetchMock).toHaveBeenCalledTimes(1);
   });
 });

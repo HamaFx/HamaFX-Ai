@@ -25,6 +25,7 @@ import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
 import { toast } from 'sonner';
 
+import { apiFetch } from '@/lib/api-client';
 import { Button } from '@/components/ui/button';
 
 interface RefreshButtonProps {
@@ -43,19 +44,11 @@ export function RefreshButton({ endpoint, label = 'Refresh now' }: RefreshButton
     setRefreshing(true);
     startTransition(async () => {
       try {
-        const res = await fetch(endpoint);
-        if (res.ok) {
-          const json = (await res.json().catch(() => ({}))) as {
-            processed?: number;
-            note?: string;
-          };
-          toast.success('Refreshed', {
-            description: json.note ?? `Processed ${json.processed ?? 0} items`,
-          });
-          router.refresh();
-        } else {
-          toast.error('Refresh failed', { description: `HTTP ${res.status}` });
-        }
+        const json = await apiFetch<{ processed?: number; note?: string }>(endpoint);
+        toast.success('Refreshed', {
+          description: json.note ?? `Processed ${json.processed ?? 0} items`,
+        });
+        router.refresh();
       } catch (err) {
         toast.error('Refresh failed', {
           description: err instanceof Error ? err.message : 'Network error',

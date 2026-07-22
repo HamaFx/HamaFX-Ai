@@ -17,11 +17,11 @@
  */
 
 import { memo, useCallback, useState } from 'react';
-import type * as LightweightCharts from 'lightweight-charts';
 import type { Candle, IndicatorResult } from '@hamafx/shared';
 import { SERIES_BEAR_HEX, SERIES_BULL_HEX, SERIES_MACD_HEX, SERIES_SIGNAL_HEX } from './chart-colors';
 import type { ChartSettings, MainChartInstance } from './chart-types';
 import { useSubPaneChart } from './use-sub-pane-chart';
+import { chartTime, type IChartApi, type ISeriesApi, type LcModule, type Time } from './lc-adapter';
 
 export interface ChartMACDProps {
   result: IndicatorResult;
@@ -31,12 +31,10 @@ export interface ChartMACDProps {
   onReady?: (host: MainChartInstance) => void;
 }
 
-type UTCTimestamp = LightweightCharts.UTCTimestamp;
-
 interface MACDSeries {
-  macdSeries: LightweightCharts.ISeriesApi<LightweightCharts.SeriesType>;
-  signalSeries: LightweightCharts.ISeriesApi<LightweightCharts.SeriesType>;
-  histSeries: LightweightCharts.ISeriesApi<LightweightCharts.SeriesType>;
+  macdSeries: ISeriesApi<'Line'>;
+  signalSeries: ISeriesApi<'Line'>;
+  histSeries: ISeriesApi<'Histogram'>;
 }
 
 function areMACDPropsEqual(prev: ChartMACDProps, next: ChartMACDProps): boolean {
@@ -53,7 +51,7 @@ function areMACDPropsEqual(prev: ChartMACDProps, next: ChartMACDProps): boolean 
 export const ChartMACD = memo(function ChartMACD({ result, candles, mainChart, settings, onReady }: ChartMACDProps) {
   const [containerEl, setContainerEl] = useState<HTMLDivElement | null>(null);
 
-  const initSeries = useCallback((lc: typeof LightweightCharts, chart: LightweightCharts.IChartApi) => {
+  const initSeries = useCallback((lc: LcModule, chart: IChartApi) => {
     const macdSeries = chart.addSeries(lc.LineSeries, { color: SERIES_MACD_HEX, lineWidth: 2, priceLineVisible: false });
     const signalSeries = chart.addSeries(lc.LineSeries, { color: SERIES_SIGNAL_HEX, lineWidth: 2, priceLineVisible: false });
     const histSeries = chart.addSeries(lc.HistogramSeries, { color: SERIES_BULL_HEX, priceFormat: { type: 'volume' }, priceLineVisible: false });
@@ -61,15 +59,15 @@ export const ChartMACD = memo(function ChartMACD({ result, candles, mainChart, s
   }, []);
 
   const updateData = useCallback((series: MACDSeries, result: IndicatorResult, candles: Candle[]) => {
-    const macdData: { time: UTCTimestamp; value: number }[] = [];
-    const signalData: { time: UTCTimestamp; value: number }[] = [];
-    const histData: { time: UTCTimestamp; value: number; color?: string }[] = [];
+    const macdData: { time: Time; value: number }[] = [];
+    const signalData: { time: Time; value: number }[] = [];
+    const histData: { time: Time; value: number; color?: string }[] = [];
 
     result.values.forEach((v, idx) => {
       if (!v || typeof v !== 'object') return;
       const candle = candles[idx];
       if (!candle) return;
-      const t = Math.floor(candle.t / 1000) as unknown as UTCTimestamp;
+      const t = chartTime(candle.t);
       
       const vTyped = v as { macd?: number | null; signal?: number | null; hist?: number | null; histogram?: number | null };
       

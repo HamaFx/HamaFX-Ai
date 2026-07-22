@@ -25,7 +25,7 @@ import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/cn';
-import { fetchCsrf } from '@/lib/csrf';
+import { apiFetch, apiMutate } from '@/lib/api-client';
 
 interface LinkStatus {
   linked: boolean;
@@ -51,11 +51,8 @@ export function TelegramLinkCard(): React.JSX.Element {
 
   const fetchStatus = useCallback(async () => {
     try {
-      const res = await fetch('/api/bot/status');
-      if (res.ok) {
-        const data = (await res.json()) as LinkStatus;
-        setStatus(data);
-      }
+      const data = await apiFetch<LinkStatus>('/api/bot/status');
+      setStatus(data);
     } catch {
       // ignore
     } finally {
@@ -78,18 +75,15 @@ export function TelegramLinkCard(): React.JSX.Element {
         return;
       }
       try {
-        const res = await fetch('/api/bot/status');
-        if (res.ok) {
-          const data = (await res.json()) as LinkStatus;
-          if (data.linked) {
-            setStatus(data);
-            setLinkCode(null);
-            setPolling(false);
-            if (pollingRef.current) clearInterval(pollingRef.current);
-            toast.success('Telegram linked!', {
-              description: 'Your Telegram account is now connected.',
-            });
-          }
+        const data = await apiFetch<LinkStatus>('/api/bot/status');
+        if (data.linked) {
+          setStatus(data);
+          setLinkCode(null);
+          setPolling(false);
+          if (pollingRef.current) clearInterval(pollingRef.current);
+          toast.success('Telegram linked!', {
+            description: 'Your Telegram account is now connected.',
+          });
         }
       } catch {
         // ignore polling errors
@@ -107,25 +101,19 @@ export function TelegramLinkCard(): React.JSX.Element {
     setGenerating(true);
     setCopied(false);
     try {
-      const res = await fetchCsrf('/api/bot/link-code', { method: 'POST' });
-      if (res.ok) {
-        const data = (await res.json()) as LinkCodeResponse;
-        if (data.alreadyLinked) {
-          toast.info('Already linked', {
-            description: 'Your Telegram is already connected. Unlink first to re-link.',
-          });
-          await fetchStatus();
-          return;
-        }
-        setLinkCode(data);
-        toast.success('Link code generated', {
-          description: 'Send the code to the HamaFX bot on Telegram',
+      const data = await apiMutate<LinkCodeResponse>('/api/bot/link-code', { method: 'POST' });
+      if (data.alreadyLinked) {
+        toast.info('Already linked', {
+          description: 'Your Telegram is already connected. Unlink first to re-link.',
         });
-        startPolling();
-      } else {
-        const text = await res.text().catch(() => 'Failed to generate code');
-        toast.error('Failed', { description: text });
+        await fetchStatus();
+        return;
       }
+      setLinkCode(data);
+      toast.success('Link code generated', {
+        description: 'Send the code to the HamaFX bot on Telegram',
+      });
+      startPolling();
     } catch (err) {
       toast.error('Failed', {
         description: err instanceof Error ? err.message : 'unknown error',
@@ -138,14 +126,10 @@ export function TelegramLinkCard(): React.JSX.Element {
   async function unlink(): Promise<void> {
     setUnlinking(true);
     try {
-      const res = await fetchCsrf('/api/bot/unlink', { method: 'POST' });
-      if (res.ok) {
-        toast.success('Telegram unlinked');
-        setStatus({ linked: false });
-        setLinkCode(null);
-      } else {
-        toast.error('Failed to unlink');
-      }
+      await apiMutate('/api/bot/unlink', { method: 'POST' });
+      toast.success('Telegram unlinked');
+      setStatus({ linked: false });
+      setLinkCode(null);
     } catch (err) {
       toast.error('Failed', {
         description: err instanceof Error ? err.message : 'unknown error',

@@ -22,7 +22,7 @@ import { toast } from 'sonner';
 import type { ProviderMeta } from '@hamafx/shared';
 import type { SymbolCatalogRow } from '@hamafx/db';
 import { completeOnboardingAction } from '@/app/onboarding/actions';
-import { withCsrf } from '@/lib/csrf';
+import { apiMutate } from '@/lib/api-client';
 
 import { WizardStepper } from './_components/wizard-stepper';
 import { WizardStepProfile } from './_components/wizard-step-profile';
@@ -121,11 +121,11 @@ export function OnboardingWizard({ initialName, providers, symbolsCatalog, initi
   useEffect(() => {
     if (step <= 1) return;
     const timer = setTimeout(() => {
-      fetch('/api/onboarding/save-progress', withCsrf({
+      apiMutate('/api/onboarding/save-progress', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ step, name, timezone, defaultSymbol, selectedProvider, tradingStyle, selectedSymbols }),
-      })).catch((err) => {
+      }).catch((err) => {
         console.warn('onboarding save-progress failed', err);
       });
     }, 2000);
@@ -168,16 +168,16 @@ export function OnboardingWizard({ initialName, providers, symbolsCatalog, initi
     setTestState({ kind: 'pending' });
     startTest(async () => {
       try {
-        const res = await fetch('/api/settings/test-provider', {
-          method: 'POST',
-          ...withCsrf({
+        const data = await apiMutate<{ ok: boolean; error?: string }>(
+          '/api/settings/test-provider',
+          {
+            method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ provider: selectedProvider, apiKey: apiKey.trim() }),
-          }),
-        });
-        const data = (await res.json()) as { ok: boolean; error?: string };
-        if (!res.ok || !data.ok) {
-          setTestState({ kind: 'err', message: data.error ?? `HTTP ${res.status}` });
+          },
+        );
+        if (!data.ok) {
+          setTestState({ kind: 'err', message: data.error ?? 'Provider test failed' });
         } else {
           setTestState({ kind: 'ok' });
         }

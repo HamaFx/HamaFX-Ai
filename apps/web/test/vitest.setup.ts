@@ -21,6 +21,7 @@
 //
 // This file is loaded via `setupFiles` in vitest.config.ts.
 
+import '@testing-library/jest-dom/vitest';
 import { webcrypto } from 'node:crypto';
 
 // Set DB env vars for tests that import the real @hamafx/db module
@@ -36,4 +37,16 @@ if (!process.env.DATABASE_URL && !process.env.POSTGRES_URL) {
 if (!globalThis.crypto || !globalThis.crypto.subtle) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   (globalThis as any).crypto = webcrypto;
+}
+
+// jsdom does not implement PointerEvent, but several components and hooks
+// listen for pointer events. Provide a minimal polyfill for tests.
+if (typeof PointerEvent === 'undefined') {
+  class PointerEventPolyfill extends Event {
+    constructor(type: string, options: EventInit = {}) {
+      super(type, options);
+    }
+  }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  (globalThis as any).PointerEvent = PointerEventPolyfill;
 }

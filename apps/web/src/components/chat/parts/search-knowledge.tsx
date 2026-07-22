@@ -34,7 +34,7 @@ export function SearchKnowledgePart({
   errorMessage,
 }: ToolPartProps<'search_knowledge'>) {
   if (state === 'error') {
-    return <RagCardError {...(errorMessage ? { message: errorMessage } : {})} />;
+    return <RagCardError message={errorMessage} />;
   }
   if (state === 'loading' || !output) {
     return <RagCardSkeleton />;

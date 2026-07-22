@@ -23,14 +23,30 @@
 // Per PLAN.md §4.3 — extracted from the 939-LOC chart.tsx monolith.
 
 import { memo, useEffect, useImperativeHandle, useRef, useState, type Ref } from 'react';
-import type * as LightweightCharts from 'lightweight-charts';
-
 import { SERIES_ATR_HEX } from './chart-colors';
 import type { Candle, IndicatorResult, Symbol } from '@hamafx/shared';
 import { priceDecimals } from '@hamafx/shared';
 import type { ChartSettings, MainChartInstance } from './chart-types';
 import type { OverlaySet } from './overlays';
 import { useChartTheme } from './use-chart-theme';
+import {
+  addCandlestickSeries,
+  addLineSeries,
+  asLineWidth,
+  chartTime,
+  createChart,
+  createPriceLine,
+  removePriceLine,
+  removeSeries,
+  setMarkers,
+  type ChartOptionsInput,
+  type IChartApi,
+  type ISeriesApi,
+  type LcModule,
+  type SeriesMarker,
+  type SeriesType,
+  type Time,
+} from './lc-adapter';
 
 export type ChartCanvasHandle = MainChartInstance;
 
@@ -44,9 +60,6 @@ export interface ChartCanvasProps {
   /** Imperative ref the orchestrator attaches zoom in/out/reset to. */
   handleRef: Ref<ChartCanvasHandle>;
 }
-
-type LcModule = typeof LightweightCharts;
-type UTCTimestamp = LightweightCharts.UTCTimestamp;
 
 const PIVOT_COLORS = {
   pp: '#94a3b8', r1: '#f87171', r2: '#ef4444', r3: '#b91c1c',
@@ -175,7 +188,7 @@ export const ChartCanvas = memo(function ChartCanvas({
   useEffect(() => {
     const instance = instanceRef.current;
     if (!instance) return;
-    const chart = instance.getChartApi() as { applyOptions: (opts: unknown) => void } | null;
+    const chart = instance.getChartApi() as IChartApi | null;
     if (!chart) return;
     chart.applyOptions({
       layout: { background: { color: theme.colors.bg }, textColor: theme.colors.text },
@@ -191,7 +204,7 @@ export const ChartCanvas = memo(function ChartCanvas({
   useImperativeHandle(
     handleRef,
     (): ChartCanvasHandle => ({
-      applyOptions: (opts) => instanceRef.current?.applyOptions(opts as never),
+      applyOptions: (opts) => instanceRef.current?.applyOptions(opts),
       applyDecimals: (d) => instanceRef.current?.applyDecimals(d),
       setCandles: (c) => instanceRef.current?.setCandles(c),
       updateLastCandle: (c) => instanceRef.current?.updateLastCandle(c),
@@ -236,17 +249,11 @@ function createMainChart(
 ): MainChartInstance {
   const gridStyle = theme.gridStyle;
 
-  const createChartFn = ('createChart' in lc)
-    ? lc.createChart
-    : // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (lc as any).default?.createChart;
-  if (!createChartFn) throw new Error('Could not find createChart function in imported module');
-
   const fontFamily =
     getComputedStyle(container).getPropertyValue('--font-sans').trim() ||
     'system-ui, sans-serif';
 
-  const chart = createChartFn(container, {
+  const chart = createChart(lc, container, {
     layout: { background: { color: theme.colors.bg }, textColor: theme.colors.text, fontFamily },
     grid: {
       vertLines: { color: theme.gridColor, style: gridStyle },
@@ -265,7 +272,7 @@ function createMainChart(
   const bullColor = cs.getPropertyValue('--color-bull').trim();
   const bearColor = cs.getPropertyValue('--color-bear').trim();
 
-  const candleSeries = chart.addSeries(lc.CandlestickSeries, {
+  const candleSeries = addCandlestickSeries(chart, lc, {
     upColor: bullColor,
     downColor: bearColor,
     borderUpColor: bullColor,
@@ -276,12 +283,12 @@ function createMainChart(
   });
 
   let priceLineHandles: ReturnType<typeof candleSeries.createPriceLine>[] = [];
-  let indicatorLineHandles: ReturnType<typeof chart.addSeries>[] = [];
+  let indicatorLineHandles: ISeriesApi<SeriesType>[] = [];
   let currentCandles: Candle[] = [];
 
   return {
     applyOptions(opts: unknown) {
-      chart.applyOptions(opts as never);
+      chart.applyOptions(opts as ChartOptionsInput);
     },
     applyDecimals(d: number) {
       candleSeries.applyOptions({ priceFormat: { type: 'price', precision: d, minMove: 1 / 10 ** d } });
@@ -290,7 +297,7 @@ function createMainChart(
       currentCandles = candles;
       candleSeries.setData(
         candles.map((c) => ({
-          time: Math.floor(c.t / 1000) as unknown as UTCTimestamp,
+          time: chartTime(c.t),
           open: c.o, high: c.h, low: c.l, close: c.c,
         })),
       );
@@ -305,7 +312,7 @@ function createMainChart(
         last.c = candle.close;
       }
       candleSeries.update({
-        time: candle.time as unknown as UTCTimestamp,
+        time: chartTime(candle.time * 1000),
         open: candle.open,
         high: candle.high,
         low: candle.low,
@@ -313,46 +320,29 @@ function createMainChart(
       });
     },
     setOverlays(overlays: OverlaySet | null) {
-      const chartAny = chart as unknown as {
-        setMarkers?: (
-          series: LightweightCharts.ISeriesApi<LightweightCharts.SeriesType>,
-          markers: unknown[]
-        ) => void;
-      };
-      const seriesAny = candleSeries as unknown as {
-        setMarkers?: (markers: unknown[]) => void;
-      };
-      const markers = (overlays?.markers ?? []).map((m) => ({ ...m, size: Number(m.size) }));
-      if (typeof chartAny.setMarkers === 'function') {
-        chartAny.setMarkers(candleSeries, markers);
-      } else if (typeof seriesAny.setMarkers === 'function') {
-        seriesAny.setMarkers(markers);
-      }
+      const markers = (overlays?.markers ?? []).map((m) => ({ ...m, size: Number(m.size) })) as SeriesMarker[];
+      setMarkers(candleSeries, markers);
+
       for (const h of priceLineHandles) {
-        try {
-          candleSeries.removePriceLine(h);
-        } catch {
-          // Price line may already have been removed; ignore.
-        }
+        removePriceLine(candleSeries, h);
       }
       priceLineHandles = [];
       for (const pl of overlays?.priceLines ?? []) {
         priceLineHandles.push(
-          candleSeries.createPriceLine({
-            ...pl,
-            lineWidth: Number(pl.lineWidth) as 1 | 2 | 3 | 4,
-            lineStyle: Number(pl.lineStyle) as 0 | 1 | 2 | 3 | 4,
+          createPriceLine(candleSeries, {
+            price: pl.price,
+            color: pl.color,
+            lineWidth: Number(pl.lineWidth),
+            lineStyle: Number(pl.lineStyle),
+            axisLabelVisible: pl.axisLabelVisible,
+            title: pl.title,
           }),
         );
       }
     },
     setIndicators(results: IndicatorResult[] | null) {
       for (const s of indicatorLineHandles) {
-        try {
-          chart.removeSeries(s);
-        } catch {
-          // Series may already have been removed; ignore.
-        }
+        removeSeries(chart, s);
       }
       indicatorLineHandles = [];
       if (!results) return;
@@ -361,57 +351,56 @@ function createMainChart(
         if (res.kind === 'ema' || res.kind === 'sma') {
           const period = res.params.period ?? 20;
           const color = getIndicatorColor(res.kind, period as number);
-          const series = chart.addSeries(lc.LineSeries, {
+          const series = addLineSeries(chart, lc, {
             color, lineWidth: 2,
             title: `${res.kind.toUpperCase()} ${period}`,
             priceLineVisible: false,
           });
-          indicatorLineHandles.push(series);
+          indicatorLineHandles.push(series as ISeriesApi<SeriesType>);
           series.setData(
             res.values.map((v, idx) => {
               if (v === null || v === undefined) return null;
               const value =
                 typeof v === 'number'
                   ? v
-                  : // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    (v as any)?.value ?? null;
+                  : (v as { value?: number | null })?.value ?? null;
               if (value === null) return null;
               const candle = currentCandles[idx];
               if (!candle) return null;
               return {
-                time: Math.floor(candle.t / 1000) as unknown as UTCTimestamp,
+                time: chartTime(candle.t),
                 value,
               };
-            }).filter((d): d is { time: UTCTimestamp; value: number } => d !== null),
+            }).filter((d): d is { time: Time; value: number } => d !== null),
           );
         } else if (res.kind === 'bollinger') {
           const color = '#f5b041';
-          const basisSeries = chart.addSeries(lc.LineSeries, { color, lineWidth: 1.5, title: 'BB Basis', priceLineVisible: false });
-          const upperSeries = chart.addSeries(lc.LineSeries, { color: '#7d8693', lineWidth: 1, lineStyle: 1, title: 'BB Upper', priceLineVisible: false });
-          const lowerSeries = chart.addSeries(lc.LineSeries, { color: '#7d8693', lineWidth: 1, lineStyle: 1, title: 'BB Lower', priceLineVisible: false });
-          indicatorLineHandles.push(basisSeries, upperSeries, lowerSeries);
-          // The intermediate arrays hold points shaped exactly like
-          // LineSeries expects (`{ time, value }`). Using a tuple
-          // type here would require importing lightweight-charts'
-          // `LineData` everywhere — the lightweight-charts types
-          // are looser than ours. The eslint-disable below keeps
-          // the boundary explicit.
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const basisData: any[] = [],
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            upperData: any[] = [],
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            lowerData: any[] = [];
+          const basisSeries = addLineSeries(chart, lc, {
+            color, lineWidth: asLineWidth(1.5), title: 'BB Basis', priceLineVisible: false,
+          });
+          const upperSeries = addLineSeries(chart, lc, {
+            color: '#7d8693', lineWidth: 2, lineStyle: 1, title: 'BB Upper', priceLineVisible: false,
+          });
+          const lowerSeries = addLineSeries(chart, lc, {
+            color: '#7d8693', lineWidth: 2, lineStyle: 1, title: 'BB Lower', priceLineVisible: false,
+          });
+          indicatorLineHandles.push(
+            basisSeries as ISeriesApi<SeriesType>,
+            upperSeries as ISeriesApi<SeriesType>,
+            lowerSeries as ISeriesApi<SeriesType>,
+          );
+          const basisData: { time: Time; value: number }[] = [];
+          const upperData: { time: Time; value: number }[] = [];
+          const lowerData: { time: Time; value: number }[] = [];
           res.values.forEach((v, idx) => {
             if (!v || typeof v !== 'object') return;
             const candle = currentCandles[idx];
             if (!candle) return;
-            const t = Math.floor(candle.t / 1000) as unknown as UTCTimestamp;
+            const t = chartTime(candle.t);
             const basisVal =
               v.middle !== undefined
                 ? v.middle
-                : // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                  (v as any).basis;
+                : (v as { basis?: number }).basis;
             if (basisVal !== null && basisVal !== undefined) basisData.push({ time: t, value: basisVal });
             if (v.upper !== null && v.upper !== undefined) upperData.push({ time: t, value: v.upper });
             if (v.lower !== null && v.lower !== undefined) lowerData.push({ time: t, value: v.lower });
@@ -422,24 +411,26 @@ function createMainChart(
         } else if (res.kind === 'pivots') {
           const levels = ['pp', 'r1', 'r2', 'r3', 's1', 's2', 's3'] as const;
           for (const lvl of levels) {
-            const series = chart.addSeries(lc.LineSeries, {
+            const series = addLineSeries(chart, lc, {
               color: PIVOT_COLORS[lvl],
-              lineWidth: lvl === 'pp' ? 1.5 : 1,
-              lineStyle: lvl === 'pp' ? 0 : 2,
+              // lightweight-charts v5 types LineWidth as integer union, but
+              // the canvas renderer accepts fractional widths at runtime.
+              lineWidth: lvl === 'pp' ? asLineWidth(1.5) : 2,
+              lineStyle: lvl === 'pp' ? 0 : 1,
               title: PIVOT_TITLES[lvl],
               priceLineVisible: false,
             });
-            indicatorLineHandles.push(series);
+            indicatorLineHandles.push(series as ISeriesApi<SeriesType>);
             series.setData(
               res.values.map((v, idx) => {
                 if (!v || typeof v !== 'object' || v[lvl] === null || v[lvl] === undefined) return null;
                 const candle = currentCandles[idx];
                 if (!candle) return null;
                 return {
-                  time: Math.floor(candle.t / 1000) as unknown as UTCTimestamp,
+                  time: chartTime(candle.t),
                   value: v[lvl] as number,
                 };
-              }).filter((d): d is { time: UTCTimestamp; value: number } => d !== null),
+              }).filter((d): d is { time: Time; value: number } => d !== null),
             );
           }
         }
@@ -466,7 +457,6 @@ function createMainChart(
     },
     resetView() {
       chart.timeScale().fitContent();
-      chart.priceScale('right').resetMode();
     },
     getChartApi() {
       return chart;

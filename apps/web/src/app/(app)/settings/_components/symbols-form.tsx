@@ -22,6 +22,7 @@ import { IconDownload,  IconPlus,  IconSearch,  IconTrash,  IconUpload } from '@
 import { toast } from 'sonner';
 import { usePrices } from '@/hooks/use-prices';
 import { cn } from '@/lib/cn';
+import { apiMutate } from '@/lib/api-client';
 import { Segmented } from '@/components/ui/segmented';
 import { SortableSymbolRow, type SymbolItem } from './sortable-symbol-row';
 
@@ -157,12 +158,11 @@ export function SymbolsForm({ initialSymbols, catalog }: SymbolsFormProps) {
     setIsEditing(true);
 
     try {
-      const res = await fetch('/api/settings/symbols', {
+      await apiMutate('/api/settings/symbols', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ symbols: newList.map((s) => s.symbol) }),
       });
-      if (!res.ok) throw new Error();
       setIsEditing(false);
     } catch {
       toast.error('Failed to update symbol order');
@@ -199,12 +199,11 @@ export function SymbolsForm({ initialSymbols, catalog }: SymbolsFormProps) {
     setIsEditing(true);
 
     try {
-      const res = await fetch('/api/settings/symbols', {
+      await apiMutate('/api/settings/symbols', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ symbol: normalized }),
       });
-      if (!res.ok) throw new Error();
       toast.success(`${normalized} added to watchlist`);
       setIsEditing(false);
     } catch {
@@ -225,10 +224,9 @@ export function SymbolsForm({ initialSymbols, catalog }: SymbolsFormProps) {
     setIsEditing(true);
 
     try {
-      const res = await fetch(`/api/settings/symbols/${symbol}`, {
+      await apiMutate(`/api/settings/symbols/${symbol}`, {
         method: 'DELETE',
       });
-      if (!res.ok) throw new Error();
       toast.success(`${symbol} removed from watchlist`);
       setIsEditing(false);
     } catch {
@@ -248,10 +246,11 @@ export function SymbolsForm({ initialSymbols, catalog }: SymbolsFormProps) {
     setIsEditing(true);
 
     try {
-      const promises = toDelete.map((sym) =>
-        fetch(`/api/settings/symbols/${sym}`, { method: 'DELETE' })
+      await Promise.all(
+        toDelete.map((sym) =>
+          apiMutate(`/api/settings/symbols/${sym}`, { method: 'DELETE' })
+        ),
       );
-      await Promise.all(promises);
       toast.success(`Successfully removed ${toDelete.length} symbols`);
       setIsEditing(false);
     } catch {
@@ -273,12 +272,11 @@ export function SymbolsForm({ initialSymbols, catalog }: SymbolsFormProps) {
     setWatchlist(newList);
     setIsEditing(true);
 
-    fetch('/api/settings/symbols', {
+    apiMutate('/api/settings/symbols', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ symbols: newList.map((s) => s.symbol) }),
-    }).then((res) => {
-      if (!res.ok) throw new Error();
+    }).then(() => {
       setIsEditing(false);
     }).catch(() => {
       toast.error('Failed to update symbol order');
@@ -302,26 +300,25 @@ export function SymbolsForm({ initialSymbols, catalog }: SymbolsFormProps) {
       const catalogItem = catalog.find((c) => c.symbol === sym);
       if (catalogItem && !watchlist.some((w) => w.symbol === sym)) {
         try {
-          const res = await fetch('/api/settings/symbols', {
+          await apiMutate('/api/settings/symbols', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ symbol: sym }),
           });
-          if (res.ok) {
-            setWatchlist((prev) => [
-              ...prev,
-              {
-                symbol: sym,
-                name: catalogItem.name,
-                category: catalogItem.category,
-                displayOrder: prev.length,
-              },
-            ]);
-            successCount++;
-          }          } catch {
-            // Bulk-add failures are surfaced in the final toast count.
-            // Individual symbol errors are intentionally non-blocking.
-          }
+          setWatchlist((prev) => [
+            ...prev,
+            {
+              symbol: sym,
+              name: catalogItem.name,
+              category: catalogItem.category,
+              displayOrder: prev.length,
+            },
+          ]);
+          successCount++;
+        } catch {
+          // Bulk-add failures are surfaced in the final toast count.
+          // Individual symbol errors are intentionally non-blocking.
+        }
       }
     }
 
@@ -368,23 +365,21 @@ export function SymbolsForm({ initialSymbols, catalog }: SymbolsFormProps) {
         const catalogItem = catalog.find((c) => c.symbol === sym);
         if (catalogItem && !watchlist.some((w) => w.symbol === sym)) {
           try {
-            const res = await fetch('/api/settings/symbols', {
+            await apiMutate('/api/settings/symbols', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ symbol: sym }),
             });
-            if (res.ok) {
-              setWatchlist((prev) => [
-                ...prev,
-                {
-                  symbol: sym,
-                  name: catalogItem.name,
-                  category: catalogItem.category,
-                  displayOrder: prev.length,
-                },
-              ]);
-              successCount++;
-            }
+            setWatchlist((prev) => [
+              ...prev,
+              {
+                symbol: sym,
+                name: catalogItem.name,
+                category: catalogItem.category,
+                displayOrder: prev.length,
+              },
+            ]);
+            successCount++;
           } catch {
             // Import failures are surfaced in the final toast count.
             // Individual symbol errors are intentionally non-blocking.

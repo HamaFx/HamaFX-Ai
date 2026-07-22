@@ -24,7 +24,7 @@ import { useTransition } from 'react';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
-import { withCsrf } from '@/lib/csrf';
+import { apiMutate, ApiError } from '@/lib/api-client';
 
 interface SuccessBody {
   id?: string | null;
@@ -34,56 +34,35 @@ interface MissingBody {
   missing?: unknown;
 }
 
-interface ErrorBody {
-  error?: unknown;
-}
-
 export function TestTelegramButton(): React.JSX.Element {
   const [pending, startTransition] = useTransition();
 
   function send(): void {
     startTransition(async () => {
       try {
-        const res = await fetch('/api/admin/test-telegram', {
-          method: 'POST',
-          ...withCsrf({ headers: { 'content-type': 'application/json' }, body: '{}' }),
+        const json = await apiMutate<SuccessBody | MissingBody>(
+          '/api/admin/test-telegram',
+          {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: '{}',
+          },
+        );
+        const typed = json as SuccessBody;
+        toast.success('Telegram sent', {
+          description: `message id: ${typed.id ?? 'unknown'}`,
         });
-
-        if (res.ok) {
-          const json = (await res.json().catch(() => ({}))) as SuccessBody;
-          toast.success('Telegram sent', {
-            description: `message id: ${json.id ?? 'unknown'}`,
-          });
-          return;
-        }
-
-        if (res.status === 503) {
-          const json = (await res.json().catch(() => ({}))) as MissingBody;
-          const vars = Array.isArray(json.missing)
-            ? json.missing.filter((v): v is string => typeof v === 'string')
+      } catch (err) {
+        if (err instanceof ApiError && err.status === 503) {
+          const missing = (err.details as { missing?: unknown } | undefined)?.missing;
+          const vars = Array.isArray(missing)
+            ? missing.filter((v): v is string => typeof v === 'string')
             : [];
           toast.error('Telegram not configured', {
-            description: `Missing: ${vars.join(', ')}`,
+            description: vars.length > 0 ? `Missing: ${vars.join(', ')}` : err.message,
           });
           return;
         }
-
-        let message = `HTTP ${res.status}`;
-        const text = await res.text().catch(() => '');
-        if (text) {
-          try {
-            const parsed = JSON.parse(text) as ErrorBody;
-            if (typeof parsed.error === 'string' && parsed.error) {
-              message = parsed.error;
-            } else {
-              message = text.slice(0, 200);
-            }
-          } catch {
-            message = text.slice(0, 200);
-          }
-        }
-        toast.error('Telegram failed', { description: message });
-      } catch (err) {
         toast.error('Telegram failed', {
           description: err instanceof Error ? err.message : 'unknown error',
         });

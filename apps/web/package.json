@@ -12,6 +12,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "analyze": "ANALYZE=true next build",
+    "bundle-size:check": "node scripts/bundle-size-guard.mjs",
     "generate:icons": "node scripts/generate-icons.mjs",
     "clean": "rm -rf node_modules .turbo .next"
   },
