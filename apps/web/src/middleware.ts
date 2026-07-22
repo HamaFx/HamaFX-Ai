@@ -40,7 +40,7 @@ function setCspHeader(response: NextResponse, nonce: string): void {
     'Content-Security-Policy',
     [
       "default-src 'self'",
-      `script-src 'self' 'nonce-${nonce}' 'unsafe-inline' 'strict-dynamic' https://s3.tradingview.com`,
+      `script-src 'self' 'nonce-${nonce}' 'unsafe-inline' 'strict-dynamic' https://s3.tradingview.com https://d3js.org`,
       "style-src 'self' 'unsafe-inline' https://s3.tradingview.com",
       "img-src 'self' data: blob: https://*.supabase.co https://*.supabase.in https://s3.tradingview.com https://api.dicebear.com",
       "font-src 'self' data:",
