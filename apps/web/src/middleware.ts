@@ -169,7 +169,11 @@ const middleware: any = auth(async (req) => {
   });
 
   // C-3: Set CSP header with per-request nonce.
-  setCspHeader(next, cspNonce);
+  // Skip for the architecture explorer — it's a standalone admin page
+  // with its own inline scripts that don't carry the middleware nonce.
+  if (req.nextUrl.pathname !== '/api/admin/architecture-explorer') {
+    setCspHeader(next, cspNonce);
+  }
 
   return next;
 });
