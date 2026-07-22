@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "generated_at": "2026-07-22T22:50:34.114Z",
+  "generated_at": "2026-07-22T23:20:19.761Z",
   "project": {
     "name": "HamaFX-Ai",
     "rootPath": "/home/ubuntu/HamaFX-Ai",
@@ -32,7 +32,7 @@
     {
       "name": "@hamafx/web",
       "path": "packages/web",
-      "nodeCount": 643,
+      "nodeCount": 644,
       "dependsOn": [
         "env-loader/loadE2eEnv",
         "alert-form/AlertForm",

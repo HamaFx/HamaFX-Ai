@@ -1,6 +1,6 @@
 # HamaFX-Ai Architecture Knowledge Base
 
-> **Auto-generated**: 2026-07-22T22:50:34.114Z
+> **Auto-generated**: 2026-07-22T23:20:19.761Z
 > **Schema version**: 1.0
 > **Purpose**: AI-agent-optimized architecture overview for rapid project understanding
 
@@ -22,7 +22,7 @@
 | Package | Path | Type | Purpose |
 |---------|------|------|---------|
 | **root** | `root` | package | Package: root (3 nodes) |
-| **@hamafx/web** | `packages/web` | package | Package: @hamafx/web (643 nodes) |
+| **@hamafx/web** | `packages/web` | package | Package: @hamafx/web (644 nodes) |
 | **@hamafx/worker** | `packages/worker` | package | Package: @hamafx/worker (58 nodes) |
 | **docs** | `docs` | package | Package: docs (1 nodes) |
 | **infra** | `infra` | package | Package: infra (1 nodes) |
@@ -40,7 +40,7 @@
 
 **Dependency chain**: `config → shared → db + indicators → data → ai → web + worker`
 
-**Total**: 16 packages, **1399** architecture nodes
+**Total**: 16 packages, **1400** architecture nodes
 
 ## Architecture Layers
 
@@ -145,7 +145,7 @@ User Message → Rate Limit → Thread Check → Budget Guard → History Load �
 
 - **Circular Dependencies**: 6
 - **Architecture Hotspots**: 50
-- **Dead Code / Orphans**: 1095
+- **Dead Code / Orphans**: 1098
 - **Shared Utilities**: 40
 - **Average Coupling**: 0.22
 - **Max Dependency Chain**: 3 hops

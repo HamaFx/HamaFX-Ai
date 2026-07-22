@@ -22,7 +22,7 @@ export function generateHtml(model: ArchitectureModel): string {
 <title>HamaFX-Ai Architecture Explorer</title>
 ${getStyles()}
 ${getHtmlTemplate()}
-<script src="https://d3js.org/d3.v7.min.js"></script>
+<script src="/d3.v7.min.js"></script>
 ${getScripts(jsonData)}
 </script>
 </body>
