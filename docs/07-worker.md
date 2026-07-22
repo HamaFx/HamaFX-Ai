@@ -2,7 +2,7 @@
 
 ## Overview
 
-The HamaFX-Ai worker (`apps/worker/`) is a persistent Node.js daemon that runs on a GCE VM under systemd. It maintains live tick feeds from BiQuote (via SignalR) and MetaTrader 5 (via a local TCP bridge), aggregates 1-minute candles in-process, and executes seven scheduled heavy jobs via systemd one-shot timers.
+The HamaFX-Ai worker (`apps/worker/`) is a persistent Node.js daemon that runs on a GCE VM under systemd. It maintains live tick feeds from BiQuote (via SignalR), aggregates 1-minute candles in-process, and executes seven scheduled heavy jobs via systemd one-shot timers.
 
 | Property | Value |
 |---|---|
@@ -25,16 +25,16 @@ The HamaFX-Ai worker (`apps/worker/`) is a persistent Node.js daemon that runs o
 │  │                     (Type=notify)                     │   │
 │  │                                                      │   │
 │  │  ┌──────────┐    ┌──────────┐    ┌──────────────┐   │   │
-│  │  │  SignalR │    │  MT5     │    │ systemd-notify│   │   │
-│  │  │ Consumer │    │  Bridge  │    │ (READY/WATCHDOG)  │   │
-│  │  │ (BiQuote)│    │ (TCP:8080)   └──────────────┘   │   │
+│  │  │  SignalR │    │ systemd-notify│   │   │
+│  │  │ Consumer │    │ (READY/WATCHDOG)  │   │
+│  │  │ (BiQuote)│   └──────────────┘   │   │
 │  │  └────┬─────┘    └────┬─────┘                      │   │
 │  │       │               │                             │   │
 │  │       └───────┬───────┘                             │   │
 │  │               ▼                                     │   │
 │  │  ┌──────────────────────┐                           │   │
-│  │  │  handleIncomingTick  │  ◄── MT5 primary,         │   │
-│  │  │                      │      BiQuote fallback     │   │
+│  │  │  handleIncomingTick  │  ◄── BiQuote primary       │   │
+│  │  │                      │      tick handler          │   │
 │  │  └──────┬───────────────┘                           │   │
 │  │         │                                           │   │
 │  │    ┌────┴────┐                                      │   │
@@ -100,20 +100,14 @@ Pipeline steps:
 1. **Creates `TickBuffer`** — per-symbol latest-tick map.
 2. **Creates `Candle1mAggregator`** — in-process 1-minute bar tracker. On each closed bar, calls `flushClosedCandle()` to persist.
 3. **Connects `SignalRConsumer`** — builds a real `@microsoft/signalr` `HubConnection` (lazy-imported so tests don't need the package). Subscribes to all three symbols.
-4. **Starts MT5 bridge** — `startMT5Server()` on localhost. Receives newline-delimited JSON from the MetaTrader 5 EA.
-5. **Shared tick handler** — `handleIncomingTick()` routes ticks from both sources:
+4. **Shared tick handler** — `handleIncomingTick()` routes ticks from the SignalR consumer:
 
    ```
    handleIncomingTick(tick):
-     if tick.source === 'mt5-local':
-       lastMt5TickAt = now
-     elif tick.source === 'biquote-signalr' AND (now - lastMt5TickAt) < 15s:
-       DROP  // MT5 is primary; BiQuote is fallback during MT5 active window
-     else:
-       buffer.push(tick)
-       aggregator.feed(tick)
-       onTick?(tick)
-       notifyWatchdog()
+     buffer.push(tick)
+     aggregator.feed(tick)
+     onTick?(tick)
+     notifyWatchdog()
    ```
 
 6. **Notify systemd** — `notifyReady()` + `notifyStatus('signalr connected; tick stream active')` so the unit transitions to `active (running)`.
@@ -265,27 +259,6 @@ ON CONFLICT DO NOTHING
 ```
 
 Idempotent on `(symbol, t)` — worker restarts that re-emit the same bar are safe.
-
-## MT5 Bridge
-
-File: `apps/worker/src/mt5-server.ts` (95 lines)
-
-A local TCP server that receives newline-delimited JSON tick frames from a MetaTrader 5 Expert Advisor running on the same machine (or accessible via loopback).
-
-### Protocol
-
-- **Transport**: raw TCP on `127.0.0.1:{MT5_BRIDGE_PORT}` (default 8080)
-- **Framing**: newline-delimited JSON (one JSON object per line)
-- **Frame format**:
-  ```json
-  {"symbol": "XAUUSD", "bid": 2955.32, "ask": 2955.68, "ts": 1718700000000}
-  ```
-- **Validation**: symbol must be one of XAUUSD/EURUSD/GBPUSD; bid/ask must be finite numbers
-- **Output**: produces `NormalizedTick` with `source: 'mt5-local'`
-
-### MT5 as primary source
-
-The shared `handleIncomingTick()` enforces MT5 priority: when an MT5 tick arrives, `lastMt5TickAt` is updated. BiQuote ticks are silently dropped if MT5 has been active within the last 15 seconds. This prevents stale BiQuote data from overwriting local MT5 ticks when both are connected.
 
 ## systemd Integration
 
@@ -488,7 +461,6 @@ systemd's `EnvironmentFile=` loads `KEY=` as the literal empty string. Zod's `.o
 | `HC_JOB_RESONANCE_SYNC_UUID` | `undefined` | Per-job healthcheck UUID |
 | `SENTRY_DSN` | `undefined` | Sentry error reporting (no-op when unset) |
 | `DEPLOYED_SHA` | `'unknown'` | Written by `update.sh` to `/opt/hamafx/.deployed-sha` |
-| `MT5_BRIDGE_PORT` | `8080` | TCP port for local MT5 bridge (1024–65535) |
 
 ## Healthchecks
 
@@ -521,7 +493,6 @@ apps/worker/src/
 ├── sentry.ts                   # Sentry init + captureException + flush
 ├── healthchecks.ts             # healthchecks.io client (ping, withHeartbeat)
 ├── sd-notify.ts                # systemd notification (READY/WATCHDOG/STATUS/STOPPING)
-├── mt5-server.ts               # MT5 TCP bridge server
 ├── signalr/
 │   ├── consumer.ts             # SignalRConsumer (hub connection, tick validation)
 │   ├── tick-buffer.ts          # TickBuffer (per-symbol latest tick map)
@@ -552,7 +523,6 @@ apps/worker/src/
 | Decision | Rationale |
 |---|---|
 | **TickBuffer → 1 Hz flush** | Collapse 200+ ticks/s per symbol into 3 UPSERTs/s. Prevents burning Supabase quota. |
-| **MT5 primary, BiQuote fallback** | Local MT5 ticks are lower latency and don't depend on external service. 15 s inactivity window before failing over to BiQuote. |
 | **In-process candle aggregation** | No external dependency. Minute-boundary rollover is deterministic. Pure data = testable. |
 | **Systemd timers for jobs, not embedded cron** | One job failure can't crash the main consumer. Each job has its own cgroup, memory limit, timeout, and healthcheck. |
 | **Job runner CLI as separate entry point** | Same codebase, separate process. systemd oneshot units invoke it directly. Each gets its own Sentry service name. |

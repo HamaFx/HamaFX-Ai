@@ -357,7 +357,7 @@ provider_throttle (standalone)
 | bid | double precision | |
 | ask | double precision | |
 | mid | double precision | (bid + ask) / 2 |
-| source | text | 'biquote-signalr', 'mt5-local', 'binance-ws' |
+| source | text | 'biquote-signalr', 'binance-ws' |
 
 #### `candles_1m` (candles-1m.ts)
 

@@ -63,7 +63,6 @@
   "devDependencies": {
     "@hamafx/config": "workspace:*",
     "@hamafx/test-utils": "workspace:*",
-    "@opentelemetry/shim-opencensus": "^0.219.0",
     "@types/node": "^20.14.10",
     "@types/react": "^19.0.0",
     "@types/web-push": "^3.6.4",

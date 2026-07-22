@@ -433,17 +433,7 @@ pnpm --filter @hamafx/web tsx scripts/setup-telegram-webhook.ts
 
 ---
 
-## 14. MT5 Bridge Setup (Optional)
-
-1. Install the `HamaBridge.mq5` Expert Advisor in MT5 (`tools/mt5/HamaBridge.mq5`)
-2. Enable local sockets in MT5: Tools → Options → Expert Advisors → Allow WebRequest/Sockets
-3. The EA connects to `127.0.0.1:8080` and streams ticks from Market Watch
-4. The worker's `mt5-server.ts` listens on port 8080 and ingests ticks
-5. For headless MT5: use `tools/mt5/mt5-headless.service` systemd unit
-
----
-
-## 15. Clean Rebuild
+## 14. Clean Rebuild
 
 ```bash
 # Clean everything

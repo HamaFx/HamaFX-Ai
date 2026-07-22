@@ -78,7 +78,7 @@ HamaFX-Ai is an **autonomous AI trading companion that lives in your pocket**. C
 | 🔐 | **Bring Your Own Key (BYOK)** | Zero vendor lock-in. Connect Gemini, Claude, OpenAI, Groq, DeepSeek, Mistral, OpenRouter, xAI, or Vertex AI keys — encrypted at rest with **AES-256-GCM**. |
 | 📱 | **Progressive Web App** | Mobile-first, installable on iOS/Android. Sub-second loads, virtualized feeds, SWR caching, web push notifications, offline fallback. |
 | 🟢 | **Zero-Database Dev** | PGlite (embedded Postgres via WASM) boots the entire stack in <5 seconds. No database to install, no Docker required. |
-| 📡 | **Live Tick Pipeline** | BiQuote SignalR WebSocket + Binance WS + MT5 Bridge → 1Hz tick buffer → 1m candle aggregation. |
+| 📡 | **Live Tick Pipeline** | BiQuote SignalR WebSocket + Binance WS → 1Hz tick buffer → 1m candle aggregation. |
 | 🔄 | **Provider Failover** | Health-aware failover across 8 market data providers with circuit breakers, adaptive throttling, and pinned primary sources. |
 | ⚡ | **Budget Guardrail** | Atomic `INSERT..ON CONFLICT` daily spend cap (`MAX_DAILY_USD`). Concurrent turns at 99% cap serialize correctly. |
 | 🛡️ | **Citation Enforcement** | Post-finish fact-check scans every assistant turn for unsupported price/event claims and flags them. |
@@ -296,8 +296,8 @@ That's it. You're running HamaFX-Ai.
 |  | TickBuffer -> DB  |  |  tick stream)     |  |  4 light cron pokes)  |  |
 |  +-------------------+  +-------------------+  +-----------------------+  |
 |  +-------------------+  +-------------------+  +-----------------------+  |
-|  | Binance WS        |  |                     |  | MT5 Bridge            |  |
-|  | (crypto ticks)    |  | (gold ticks)      |  | (TCP:8080)            |  |
+|  | Binance WS        |  |                     |  |                     |  |
+|  | (crypto ticks)    |  | (gold ticks)      |  |                     |  |
 |  +-------------------+  +-------------------+  +-----------------------+  |
 +---------------------------------------------------------------------------+
 ```
@@ -319,7 +319,7 @@ HamaFX-Ai/
 │   └── test-utils/       # Test factories, mocks, vitest helpers
 ├── docs/                 # 8 technical docs + archived legacy docs
 ├── infra/cron-vm/        # GCE VM setup + 22 systemd timers + backup scripts
-├── tools/                # MT5 bridge (MQL5) + Lighthouse
+├── tools/                # Lighthouse
 └── scripts/              # dev.ts, predeploy-migrate.mjs
 ```
 

@@ -431,7 +431,7 @@ ai/
 │   │   ├── news/         # getNews, getSentiment, getEconomicCalendar, ...
 │   │   ├── macro/        # getFRED, getCOT, getYieldCurve, ...
 │   │   ├── analysis/     # runScan, compareCorrelation, detectDivergence, ...
-│   │   ├── account/      # getPositions, getOrders, getBalance, getPnL (MT5 via worker)
+│   │   ├── account/      # getPositions, getOrders, getBalance, getPnL
 │   │   ├── admin/        # getStatus, getMetrics, getCostReport
 │   │   └── index.ts      # Tool registry (name → implementation map)
 │   ├── agent.ts          # Chat orchestration loop
@@ -737,7 +737,6 @@ worker/
 │   ├── health.ts             # Healthchecks.io heartbeat pings
 │   ├── sentry.ts             # Sentry error reporting init
 │   ├── bridge/
-│   │   └── mt5.ts            # MetaTrader 5 bridge (position/order sync)
 │   └── systemd.ts            # systemd notify + watchdog integration
 ├── systemd/
 │   └── hamafx-worker.service # systemd unit file
@@ -804,12 +803,7 @@ worker/
 - Captures unhandled rejections and uncaught exceptions.
 - Context: includes job name, symbol, timeframe where applicable.
 
-**MT5 Bridge (`bridge/mt5.ts`):**
 
-- Bridges MetaTrader 5 account data.
-- Queries open positions, pending orders, account balance, PnL.
-- Exposes as tool-callable endpoints through the worker's internal API.
-- Used by `@hamafx/ai` account tools (getPositions, getOrders, getPnl).
 
 **systemd Integration:**
 

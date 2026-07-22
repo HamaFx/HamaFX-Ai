@@ -70,13 +70,12 @@ Read [01-architecture.md](./01-architecture.md) for the full architecture. Summa
 
 These are referenced in the AI system prompt and risk computation tools (`compute_risk`, `compute_position_health`).
 
-### 3.4 TradingView / MT5
+### 3.4 TradingView
 
 | Touchpoint | Source | Purpose |
 |------------|--------|---------|
 | TradingView Pro widget | `apps/web/src/components/chart/tradingview-widget.tsx` | Embedded charting |
 | lightweight-charts v5 | `apps/web/src/components/chart/` | SMC overlay charts |
-| MT5 Bridge | `tools/mt5/HamaBridge.mq5` | Streams ticks from MetaTrader 5 to worker via TCP |
 
 ---
 

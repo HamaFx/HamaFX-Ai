@@ -29,7 +29,6 @@
     "check-console-errors": "node scripts/check-console-errors.mjs"
   },
   "dependencies": {
-    "tough-cookie": "^4.1.4",
     "ws": "^8.21.0"
   },
   "devDependencies": {

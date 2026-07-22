@@ -220,26 +220,7 @@ Vertex AI also provides Google Search grounding via `getVertexGoogleSearchTool()
 **Bot linking:** `POST /api/bot/link-code` — generates linking code, `POST /api/bot/unlink`
 **Setup script:** `apps/web/scripts/setup-telegram-webhook.ts`
 
-**Env vars:** `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`, `TELEGRAM_SECRET_TOKEN`
-
-### 4.2 MT5 Bridge
-
-**Source:** `tools/mt5/HamaBridge.mq5` (MQL5 Expert Advisor)
-
-The MT5 bridge is an auxiliary tool that streams ticks from MetaTrader 5's Market Watch to the worker via TCP:
-
-```
-+----------------+      TCP socket       +------------------+
-| MT5 Terminal   |  ----(127.0.0.1:8080)---->  Worker       |
-| (HamaBridge    |  JSON tick messages  |  (mt5-server.ts) |
-|  .mq5 EA)      |                      |                  |
-+----------------+                      +------------------+
-```
-
-**systemd service:** `tools/mt5/mt5-headless.service` — runs MT5 in headless mode
-**Worker server:** `apps/worker/src/mt5-server.ts` — TCP server on port 8080
-
-### 4.3 Resend (Email)
+**Env vars:** `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`, `TELEGRAM_SECRET_TOKEN`### 4.2 Resend (Email)
 
 **Env vars:** `RESEND_API_KEY`, `ALERT_FROM_EMAIL`, `ALERT_TO_EMAIL`
 

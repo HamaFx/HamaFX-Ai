@@ -58,7 +58,7 @@ HamaFX-Ai is in pre-release development. The project has shipped through Phases 
 
 **Phase 6–7:** AI agent expansion — 32 tools, plan-then-act, citation enforcement, budget guardrail, tool telemetry, multi-agent committee (5 agents), decision signal tracking, intermarket resonance, social sentiment, portfolio management.
 
-**Phase 8:** Worker daemon (SignalR consumer, tick buffer, 1m candle aggregator), Binance WS consumer, MT5 bridge, systemd timers (22 units), healthchecks.io integration, GCE VM infra, self-update mechanism.
+**Phase 8:** Worker daemon (SignalR consumer, tick buffer, 1m candle aggregator), Binance WS consumer, systemd timers (22 units), healthchecks.io integration, GCE VM infra, self-update mechanism.
 
 **Phase 9:** Multi-tenant v2 — RLS foundation (migrations 0035–0039), BYPASSRLS admin role, tenant constraints, NOWPayments billing (plans, subscriptions, payments, IPN webhook), billing gate (feature gating).
 

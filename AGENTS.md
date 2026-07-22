@@ -126,7 +126,7 @@ HamaFX-Ai/
 │   └── test-utils/       # Shared test factories, mocks, vitest helpers
 ├── docs/                 # Architecture + API + deployment docs (you are here)
 ├── infra/cron-vm/        # GCE VM setup script + systemd units
-├── tools/                # Lighthouse + MT5 bridge (auxiliary tooling)
+├── tools/                # Lighthouse
 └── scripts/              # dev.ts (local dev entrypoint), predeploy-migrate.mjs
 ```
 

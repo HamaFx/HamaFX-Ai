@@ -57,7 +57,7 @@ HamaFX-Ai/
 │   └── test-utils/       # Shared test factories, mocks, vitest helpers
 ├── docs/                 # This documentation set
 ├── infra/cron-vm/        # GCE VM setup script + systemd units + backup scripts
-├── tools/                # Lighthouse + MT5 bridge (auxiliary tooling)
+├── tools/                # Lighthouse
 └── scripts/              # dev.ts (local dev entrypoint), predeploy-migrate.mjs
 ```
 
@@ -110,7 +110,7 @@ No package imports upstream of itself. The `shared` package is the foundation �
 |  | TickBuffer→DB     |  |  tick stream)     |  |  4 light cron pokes)  |  |
 |  +-------------------+  +-------------------+  +-----------------------+  |
 |  +-------------------+  +-------------------+  +-----------------------+  |
-|  | Binance WS        |  |                     |  | MT5 Bridge            |  |
+|  | Binance WS        |  |                     |  |                     |  |
 |  | (crypto ticks)    |  |                     |  | (TCP:8080)            |  |
 |  +-------------------+  +-------------------+  +-----------------------+  |
 +---------------------------------------------------------------------------+
@@ -146,7 +146,6 @@ The worker is a persistent Node.js process that handles real-time data ingestion
 | TickBuffer | `apps/worker/src/signalr/tick-buffer.ts` | Buffers ticks, flushes to `live_ticks` table at 1Hz |
 | Candle1mAggregator | `apps/worker/src/aggregator/candle-1m.ts` | Builds 1-minute OHLC candles from tick stream, UPSERTs to `candles_1m` on close |
 | Binance WS Consumer | `apps/worker/src/binance/consumer.ts` | Live crypto klines (BTC, ETH, SOL, BNB, XRP, ADA) |
-| MT5 Bridge Server | `apps/worker/src/mt5-server.ts` | TCP server on port 8080, receives ticks from MT5 Expert Advisor |
 | Scheduler | `apps/worker/src/scheduler.ts` | node-cron schedule for Docker mode (alerts every min, briefings every 5 min, etc.) |
 | Job Runner CLI | `apps/worker/src/runner/cli.ts` | Entry point for systemd one-shot jobs: `node dist/runner/cli.js <name>` |
 | Healthchecks.io | `apps/worker/src/healthchecks.ts` | Heartbeat pings every 30s while consumer is alive |
@@ -396,8 +395,8 @@ The chat flow from user message to streamed response:
 |           |                                                       |
 |           v                                                       |
 |  +-----------------+  +-----------------+  +-------------------+  |
-|  | Candle1mAggregator| | MT5 Bridge     |  | Healthchecks.io   |  |
-|  | (UPSERT on close)|  | (TCP:8080)     |  | (30s heartbeat)   |  |
+|  | Candle1mAggregator| | Healthchecks.io   |  |                   |  |
+|  | (UPSERT on close)|  | (30s heartbeat)   |  |                   |  |
 |  +-----------------+  +-----------------+  +-------------------+  |
 |                                                                   |
 |  +-----------------+  +-----------------+  +-------------------+  |
