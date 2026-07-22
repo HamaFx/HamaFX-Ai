@@ -25,7 +25,7 @@ import { IconBrandGoogle, IconLink } from '@tabler/icons-react';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
-import { SettingsRow } from './settings-row';
+import { SettingsRow } from '../settings-row';
 
 interface LinkedAccountsCardProps {
   /** Whether the user has a Google account linked. */

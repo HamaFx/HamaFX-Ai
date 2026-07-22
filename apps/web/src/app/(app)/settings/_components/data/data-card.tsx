@@ -29,9 +29,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useConfirm } from '@/components/ui/confirm-drawer';
 
-import { clearChatHistoryAction, deleteAccountAction, exportDataAction } from '../actions';
-import { SettingsRow } from './settings-row';
-import { RowDivider } from './row-divider';
+import { clearChatHistoryAction, deleteAccountAction, exportDataAction } from '../../actions';
+import { SettingsRow } from '../settings-row';
+import { RowDivider } from '../row-divider';
 
 const KEY_BOOKMARKS = 'hamafx:news:bookmarks';
 const KEY_PREFS = 'hamafx:prefs:v1';

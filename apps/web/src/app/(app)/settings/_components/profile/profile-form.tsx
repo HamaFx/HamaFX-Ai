@@ -19,7 +19,7 @@
 import { useActionState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { updateProfileAction } from '../actions';
+import { updateProfileAction } from '../../actions';
 import { toast } from 'sonner';
 
 interface ProfileFormProps {

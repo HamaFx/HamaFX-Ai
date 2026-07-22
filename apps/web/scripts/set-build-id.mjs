@@ -22,7 +22,7 @@
 import { execSync } from 'node:child_process';
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const WEB_ROOT = resolve(__dirname, '..');
@@ -37,7 +37,7 @@ const ENV_KEY = 'NEXT_PUBLIC_BUILD_ID';
  *
  * @returns {string} 7-char lowercase hex
  */
-function resolveGitSha() {
+export function resolveGitSha() {
   const fromEnv =
     process.env.VERCEL_GIT_COMMIT_SHA ??
     process.env.GITHUB_SHA ??
@@ -69,7 +69,7 @@ function resolveGitSha() {
  * @param {string} key
  * @param {string} value
  */
-function upsertEnvLine(path, key, value) {
+export function upsertEnvLine(path, key, value) {
   const line = `${key}=${value}`;
   if (!existsSync(path)) {
     writeFileSync(path, `${line}\n`, 'utf8');
@@ -89,10 +89,15 @@ function upsertEnvLine(path, key, value) {
   writeFileSync(path, lines.join('\n'), 'utf8');
 }
 
-function main() {
+/** Build id is `<git-sha>-<epoch>`. */
+export function resolveBuildId() {
   const sha = resolveGitSha();
   const epoch = Math.floor(Date.now() / 1000);
-  const buildId = `${sha}-${epoch}`;
+  return `${sha}-${epoch}`;
+}
+
+export function main() {
+  const buildId = resolveBuildId();
 
   writeFileSync(BUILD_ID_FILE, `${buildId}\n`, 'utf8');
   upsertEnvLine(ENV_FILE, ENV_KEY, buildId);
@@ -101,4 +106,15 @@ function main() {
   console.log(`[set-build-id] ${ENV_KEY}=${buildId}`);
 }
 
-main();
+function isMain() {
+  if (!process.argv[1]) return false;
+  try {
+    return import.meta.url === pathToFileURL(process.argv[1]).href;
+  } catch {
+    return false;
+  }
+}
+
+if (isMain()) {
+  main();
+}

@@ -1,18 +1,4 @@
-/**
- * Copyright 2026 HamaFX
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions.
- * limitations under the License.
- */
+// SPDX-License-Identifier: Apache-2.0
 
 // H-3 audit fix: typed client for non-React-Query API calls.
 //
@@ -322,6 +308,13 @@ export async function apiMutate<T = unknown>(
   input: RequestInfo | URL,
   init: RequestInit & ApiFetchOptions = {},
 ): Promise<T> {
+  // apiMutate is intent-signaling: it MUST be used for state-changing
+  // requests. GETs are reads and have no business being "mutations".
+  if (init.method?.toUpperCase() === 'GET') {
+    return Promise.reject(
+      new TypeError('apiMutate cannot be used for GET requests; use apiFetch instead.'),
+    );
+  }
   // Force skipCsrf=false — mutations always need CSRF.
   return apiFetch<T>(input, { ...init, skipCsrf: false });
 }

@@ -23,7 +23,7 @@ import { useEffect, useRef } from 'react';
 import { useLocalStorage } from '@/hooks/use-local-storage';
 import { useConfirm } from '@/components/ui/confirm-drawer';
 import { migrateLocalStorageKey } from '@/lib/storage';
-import { updateAiPrefsAction } from '../actions';
+import { updateAiPrefsAction } from '../../actions';
 
 export interface AIPrefs {
   customInstructions: string;

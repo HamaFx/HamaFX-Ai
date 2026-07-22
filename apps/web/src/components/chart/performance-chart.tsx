@@ -24,11 +24,12 @@
 // series are now typed via the lightweight-charts v5 public APIs.
 
 import type { JournalEntry } from '@hamafx/shared';
-import type { IChartApi, ISeriesApi, UTCTimestamp } from 'lightweight-charts';
+import type { IChartApi, ISeriesApi } from 'lightweight-charts';
 import {IconTrendingUp, IconAward} from '@tabler/icons-react';
 import { useEffect, useMemo, useRef } from 'react';
 
 import { getThemeColors } from './chart';
+import { buildEquityCurve } from './performance-chart-data';
 
 interface PerformanceChartProps {
   entries: JournalEntry[];
@@ -45,38 +46,11 @@ export function PerformanceChart({
   const chartRef = useRef<IChartApi | null>(null);
   const seriesRef = useRef<ISeriesApi<'Area'> | null>(null);
 
-  // IconFilter closed trades and calculate cumulative R-multiple series chronologically
-  const chartData = useMemo(() => {
-    const closed = entries
-      .filter(
-        (e): e is JournalEntry & { closedAt: number; rMultiple: number } =>
-          e.closedAt !== null && e.rMultiple !== null && e.rMultiple !== undefined
-      )
-      .sort((a, b) => a.openedAt - b.openedAt); // order by trade entry/opened date
-
-    let sum = 0;
-    const result: { time: UTCTimestamp; value: number }[] = [];
-
-    closed.forEach((e) => {
-      sum += e.rMultiple;
-      const t = Math.floor(e.closedAt / 1000);
-
-      // Lightweight-charts requires strictly increasing times
-      const last = result[result.length - 1];
-      const time = last && t <= (last.time as unknown as number)
-        ? ((last.time as unknown as number) + 1) as unknown as UTCTimestamp
-        : t as unknown as UTCTimestamp;
-
-      result.push({ time, value: sum });
-    });
-
-    return result;
-  }, [entries]);
-
-  const totalR = useMemo(() => {
-    if (chartData.length === 0) return 0;
-    return chartData[chartData.length - 1]!.value;
-  }, [chartData]);
+  // This component renders an area chart of cumulative R-multiple, which is
+  // a different chart type than the candlestick `ChartCanvas`. They therefore
+  // do not share the same rendering infrastructure; the shared logic is the
+  // pure data transformation in `performance-chart-data.ts`.
+  const { data: chartData, totalR } = useMemo(() => buildEquityCurve(entries), [entries]);
 
   // Handle Chart Lifecycle
   useEffect(() => {

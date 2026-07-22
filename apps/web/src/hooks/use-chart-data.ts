@@ -107,6 +107,9 @@ export function useChartData(
     refetchInterval: enabled ? refetchIntervalFor(tf) : false,
     refetchIntervalInBackground: false,
     staleTime: refetchIntervalFor(tf) / 2,
+    // NOTE: retry:3 × 8s cap can stack retries and adjacent-TF prefetching when
+    // a provider is flaky. The 2s prefetch debounce already mitigates this;
+    // monitor connection saturation before raising these values (audit §5.2).
     retry: 3,
     retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 8000),
   });

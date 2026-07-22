@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { changePasswordAction } from '../actions';
+import { changePasswordAction } from '../../actions';
 
 type FormState = { ok: boolean; error: string };
 

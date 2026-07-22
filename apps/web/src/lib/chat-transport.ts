@@ -32,6 +32,10 @@ import {
   type PrepareSendMessagesRequest,
   type HttpChatTransportInitOptions,
 } from 'ai';
+import {
+  AnalysisQueuedEventSchema,
+  ChatStreamEventSchema,
+} from '@hamafx/shared';
 import { getCsrfToken } from '@/lib/csrf';
 
 /** Shape emitted by the server for agent deliberation progress. */
@@ -106,20 +110,55 @@ function transformSseToDataStream(res: Response, onProgress: (p: AgentProgress |
             }
             if (!parsed) continue;
 
-            if (parsed.type === 'data-agent-progress') {
-              const progress = (parsed.data ?? parsed) as AgentProgress;
-              onProgress(progress);
-              controller.enqueue(
-                encodeChunk({ type: 'data-agent-progress', id, data: progress, transient: true }),
-              );
-            } else if (parsed.type === 'text' && typeof parsed.text === 'string') {
-              if (!started) {
+            const streamEvent = ChatStreamEventSchema.safeParse(parsed);
+            if (!streamEvent.success) {
+              // Unknown / malformed event — don't crash the stream.
+              continue;
+            }
+            const event = streamEvent.data;
+
+            switch (event.type) {
+              case 'text-start': {
                 started = true;
-                controller.enqueue(encodeChunk({ type: 'text-start', id }));
+                controller.enqueue(encodeChunk({ type: 'text-start', id: event.id }));
+                break;
               }
-              controller.enqueue(encodeChunk({ type: 'text-delta', id, delta: parsed.text }));
-            } else if (parsed.type === 'error' && typeof parsed.error === 'string') {
-              controller.enqueue(encodeChunk({ type: 'error', errorText: parsed.error }));
+              case 'text-delta': {
+                if (!started) {
+                  started = true;
+                  controller.enqueue(encodeChunk({ type: 'text-start', id: event.id }));
+                }
+                controller.enqueue(encodeChunk({ type: 'text-delta', id: event.id, delta: event.delta }));
+                break;
+              }
+              case 'text-end': {
+                started = true;
+                controller.enqueue(encodeChunk({ type: 'text-end', id: event.id }));
+                break;
+              }
+              case 'data-multi-agent-meta': {
+                controller.enqueue(
+                  encodeChunk({
+                    type: 'data',
+                    id: event.id,
+                    data: event.data,
+                    transient: event.transient,
+                  }),
+                );
+                break;
+              }
+              case 'data-agent-progress': {
+                const progress = (event.data ?? event) as AgentProgress;
+                onProgress(progress);
+                controller.enqueue(
+                  encodeChunk({ type: 'data-agent-progress', id, data: progress, transient: true }),
+                );
+                break;
+              }
+              case 'error': {
+                controller.enqueue(encodeChunk({ type: 'error', errorText: event.errorText }));
+                break;
+              }
             }
             // metadata and [DONE] are intentionally ignored on the legacy SSE path.
           }
@@ -267,11 +306,9 @@ async function hamaFxFetch(
       return res;
     }
 
-    if (typeof json === 'object' && json !== null && (json as Record<string, unknown>).type === 'analysis-queued') {
-      const jobId = (json as Record<string, unknown>).jobId;
-      if (typeof jobId === 'string') {
-        return pollJobToStreamResponse(jobId, init?.signal ?? undefined, onProgress);
-      }
+    const queued = AnalysisQueuedEventSchema.safeParse(json);
+    if (queued.success) {
+      return pollJobToStreamResponse(queued.data.jobId, init?.signal ?? undefined, onProgress);
     }
     // Any other JSON response is not a valid chat stream; let it fail downstream.
     return res;

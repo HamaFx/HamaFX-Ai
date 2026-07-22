@@ -88,6 +88,9 @@ export * from './schemas/ui-parts';
 // Briefings (cron-emitted assistant messages in the dedicated thread)
 export * from './schemas/briefings';
 
+// /api/chat SSE + queued response events (keeps route and transport contract in sync)
+export * from './schemas/chat-stream';
+
 // AI tool plumbing
 export * from './ai/tool-names';
 export { isTextPart, getTextFromParts, getMessageText } from './ai/tool-io';

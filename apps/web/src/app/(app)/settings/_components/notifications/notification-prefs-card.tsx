@@ -4,7 +4,7 @@ import {IconBell, IconMail, IconDeviceMobile} from '@tabler/icons-react';
 import { useCallback, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { Switch } from '@/components/ui/switch';
-import { updateNotificationPrefsAction } from '../actions';
+import { updateNotificationPrefsAction } from '../../actions';
 
 type EventType = 'alerts' | 'briefings' | 'weekly_review' | 'usage_warnings';
 type Channel = 'email' | 'push' | 'telegram';

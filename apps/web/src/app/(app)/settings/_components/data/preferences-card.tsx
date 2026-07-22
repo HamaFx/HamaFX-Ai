@@ -24,9 +24,9 @@ import { useLocalStorage } from '@/hooks/use-local-storage';
 import { Segmented } from '@/components/ui/segmented';
 import { Switch } from '@/components/ui/switch';
 
-import { SettingsRow } from './settings-row';
-import { RowDivider } from './row-divider';
-import { updateUIPrefsAction } from '../actions';
+import { SettingsRow } from '../settings-row';
+import { RowDivider } from '../row-divider';
+import { updateUIPrefsAction } from '../../actions';
 import { migrateLocalStorageKey } from '@/lib/storage';
 
 interface Prefs {

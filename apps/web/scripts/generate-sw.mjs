@@ -15,36 +15,28 @@
  *   - `apps/web/public/sw.js`              — `__BUILD_ID__` substituted
  *   - `apps/web/public/sw-precache.json`   — precache list from design §6
  *
- * The SW source template lives at `apps/web/scripts/sw.template.js` and is
- * authored in task 13.2. While that file does not yet exist, this script
- * logs a warning and only writes the precache manifest, so `next build`
- * succeeds end-to-end before 13.2 lands.
+ * The SW source template lives at `apps/web/scripts/sw.template.js`.
  *
  * Requirements: 5.5, 5.6, 5.7
  */
 
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const WEB_ROOT = resolve(__dirname, '..');
-const TEMPLATE_FILE = resolve(WEB_ROOT, 'scripts/sw.template.js');
-const SW_OUT_FILE = resolve(WEB_ROOT, 'public/sw.js');
-const PRECACHE_OUT_FILE = resolve(WEB_ROOT, 'public/sw-precache.json');
-const BUILD_ID_FILE = resolve(WEB_ROOT, '.build-id');
+export const TEMPLATE_FILE = resolve(WEB_ROOT, 'scripts/sw.template.js');
+export const SW_OUT_FILE = resolve(WEB_ROOT, 'public/sw.js');
+export const PRECACHE_OUT_FILE = resolve(WEB_ROOT, 'public/sw-precache.json');
+export const BUILD_ID_FILE = resolve(WEB_ROOT, '.build-id');
 
 /**
- * Precache list — must match design §6 exactly. The SW's `install` handler
- * fetches this file and `addAll`s its contents.
- *
- * `/` is intentionally absent because it redirects to `/chat`; `/chat` is
- * precached directly so the offline shell renders without a redirect chain.
+ * Precache list — exact URLs only (SW cache.addAll requires exact matches,
+ * not globs). Runtime caching via the SW fetch handler covers the
+ * fingerprinted JS/CSS bundles dynamically.
  */
-// L8: Precache list is intentionally small — exact URLs only (SW cache.addAll
-// requires exact matches, not globs). Runtime caching via the SW fetch handler
-// covers the fingerprinted JS/CSS bundles dynamically.
-const PRECACHE_URLS = Object.freeze([
+export const PRECACHE_URLS = Object.freeze([
   '/chat',
   '/offline',
   '/icons/icon-192.png',
@@ -59,7 +51,7 @@ const PRECACHE_URLS = Object.freeze([
  *
  * @returns {string}
  */
-function resolveBuildId() {
+export function resolveBuildId() {
   const fromEnv = process.env.NEXT_PUBLIC_BUILD_ID;
   if (fromEnv && fromEnv.length > 0) return fromEnv;
 
@@ -76,7 +68,7 @@ function resolveBuildId() {
   return epoch;
 }
 
-function main() {
+export function main() {
   const buildId = resolveBuildId();
 
   mkdirSync(dirname(PRECACHE_OUT_FILE), { recursive: true });
@@ -92,11 +84,11 @@ function main() {
 
   if (!existsSync(TEMPLATE_FILE)) {
     // eslint-disable-next-line no-console
-    console.warn(
-      `[generate-sw] template not found at ${TEMPLATE_FILE}; skipping public/sw.js. ` +
-        `(Will be generated once task 13.2 lands the template.)`,
+    console.error(
+      `[generate-sw] template not found at ${TEMPLATE_FILE}. ` +
+        `Service worker cannot be generated; failing the build.`,
     );
-    return;
+    process.exit(1);
   }
 
   const template = readFileSync(TEMPLATE_FILE, 'utf8');
@@ -106,4 +98,15 @@ function main() {
   console.log(`[generate-sw] wrote ${SW_OUT_FILE} (build id: ${buildId})`);
 }
 
-main();
+function isMain() {
+  if (!process.argv[1]) return false;
+  try {
+    return import.meta.url === pathToFileURL(process.argv[1]).href;
+  } catch {
+    return false;
+  }
+}
+
+if (isMain()) {
+  main();
+}

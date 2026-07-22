@@ -6,9 +6,9 @@ import { signOut } from 'next-auth/react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { useConfirm } from '@/components/ui/confirm-drawer';
-import { listSessionsAction, revokeSessionAction, signOutEverywhereAction } from '../actions';
-import { SettingsRow } from './settings-row';
-import { RowDivider } from './row-divider';
+import { listSessionsAction, revokeSessionAction, signOutEverywhereAction } from '../../actions';
+import { SettingsRow } from '../settings-row';
+import { RowDivider } from '../row-divider';
 
 interface Session {
   id: string;

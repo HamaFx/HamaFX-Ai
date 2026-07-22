@@ -1,18 +1,4 @@
-/**
- * Copyright 2026 HamaFX
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+// SPDX-License-Identifier: Apache-2.0
 
 // /api/chat — streaming chat endpoint. Receives a UI messages array from
 // `useChat`, runs the agent, and streams back the SDK's UI-message stream
@@ -25,6 +11,10 @@ import { providerUnavailable } from '@hamafx/shared';
 import { withRateLimit } from '@hamafx/db';
 import { z } from 'zod';
 import type { UIMessage } from 'ai';
+import {
+  AnalysisQueuedEventSchema,
+  ChatStreamEventSchema,
+} from '@hamafx/shared';
 
 import { errorResponse, parseJsonBody, withAuth } from '@/lib/api';
 import { getServerEnv } from '@/lib/env';
@@ -146,22 +136,32 @@ export const POST = withAuth<void>(async (req, { user }) => {
             return Response.json({ error: { code: 'INTERNAL', message: 'Failed to queue analysis job' } }, { status: 500 });
           }
 
-          return Response.json({
+          const queued = AnalysisQueuedEventSchema.parse({
             type: 'analysis-queued',
             jobId: job.id,
             status: 'queued',
           });
+          return Response.json(queued);
         }
 
-        // Quick and Standard modes — synchronous data stream in the AI SDK v5
-        // line-delimited JSON format so the client can use a single transport.
+        // Quick and Standard modes — SSE event stream with a documented
+        // event envelope. The format is line-delimited `data: <json>` so it
+        // can be consumed by either an EventSource or the AI SDK transport.
         const encoder = new TextEncoder();
         const messageId = crypto.randomUUID();
         const stream = new ReadableStream({
           async start(controller) {
             const tracker = new ProgressTracker(resolvedMode, resolvedMode === 'quick' ? ['technical'] : resolvedMode === 'standard' ? ['technical', 'fundamental'] : ['technical', 'fundamental', 'risk', 'sentiment']);
+            const streamLog = createRequestLogger(req, user);
 
-            const send = (chunk: object) => controller.enqueue(encoder.encode(`${JSON.stringify(chunk)}\n`));
+            const send = (chunk: object) => {
+              const parsed = ChatStreamEventSchema.safeParse(chunk);
+              if (!parsed.success) {
+                streamLog.warn({ chunk }, 'invalid chat stream event shape');
+                return;
+              }
+              controller.enqueue(encoder.encode(`data: ${JSON.stringify(parsed.data)}\n\n`));
+            };
 
             let textStarted = false;
             const startText = () => {
@@ -220,7 +220,7 @@ export const POST = withAuth<void>(async (req, { user }) => {
 
         return new Response(stream, {
           headers: {
-            'Content-Type': 'text/plain; charset=utf-8',
+            'Content-Type': 'text/event-stream; charset=utf-8',
             'Cache-Control': 'no-cache',
             'Connection': 'keep-alive',
           },

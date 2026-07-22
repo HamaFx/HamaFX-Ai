@@ -80,6 +80,14 @@ interface MessageProps {
  */
 const REGEN_MENU_TRIGGER = 'regen-menu-trigger';
 
+/**
+ * Custom event used by the popover fallback to close *all* open
+ * regenerate menus when the user clicks outside any of them. The native
+ * Popover API handles this automatically; this only applies to the manual
+ * fallback for browsers without support.
+ */
+const REGEN_CLOSE_ALL = 'hamafx:close-regen-menus';
+
 function MessageImpl({ message, onCopy, onRegenerate, onEdit, isStreaming }: MessageProps) {
   const isUser = message.role === 'user';
   const isSystem = message.role === 'system';
@@ -102,15 +110,25 @@ function MessageImpl({ message, onCopy, onRegenerate, onEdit, isStreaming }: Mes
     if (hasPopoverSupport || !isOpenFallback) return;
     const handleOutsideClick = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
-      const insideMenu = target.closest(`#regen-menu-${message.id}`);
+      const insideMenu = target.closest(`[id^='regen-menu-']`);
       const insideBtn = target.closest(`button[data-action="${REGEN_MENU_TRIGGER}"]`);
       if (!insideMenu && !insideBtn) {
-        setIsOpenFallback(false);
+        // Close every open regenerate menu, not just this one
+        // (audit §6.4 — multiple menus could be open in the fallback path).
+        document.dispatchEvent(new CustomEvent(REGEN_CLOSE_ALL));
       }
     };
     document.addEventListener('click', handleOutsideClick);
     return () => document.removeEventListener('click', handleOutsideClick);
-  }, [hasPopoverSupport, isOpenFallback, message.id]);
+  }, [hasPopoverSupport, isOpenFallback]);
+
+  // Listen for the global close-all signal (fallback path only).
+  useEffect(() => {
+    if (hasPopoverSupport) return;
+    const handler = () => setIsOpenFallback(false);
+    document.addEventListener(REGEN_CLOSE_ALL, handler);
+    return () => document.removeEventListener(REGEN_CLOSE_ALL, handler);
+  }, [hasPopoverSupport]);
 
   // Phase 7c — system messages: render planner cards but suppress
   // anything else (rolling-summary notes are internal context only).
@@ -372,7 +390,10 @@ export const Message = memo(MessageImpl, (prev, next) => {
   if (prev.onCopy !== next.onCopy) return false;
   if (prev.isStreaming !== next.isStreaming) return false;
 
-  // Compare parts array
+  // Compare parts array. Reference equality is valid here because the
+  // AI SDK v5 returns new part objects on each stream tick, and the
+  // multi-agent path rebuilds the `parts` array on every flush, so the
+  // memo correctly busts when the message content changes.
   if (prev.message.parts !== next.message.parts) {
     if (!prev.message.parts || !next.message.parts) return false;
     if (prev.message.parts.length !== next.message.parts.length) return false;

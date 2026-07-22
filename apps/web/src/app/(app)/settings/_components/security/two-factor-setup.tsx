@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { setupTwoFactorAction, verifyTwoFactorAction, regenerateBackupCodesAction, disableTwoFactorAction } from '../actions';
+import { setupTwoFactorAction, verifyTwoFactorAction, regenerateBackupCodesAction, disableTwoFactorAction } from '../../actions';
 
 interface TwoFactorSetupProps {
   enabled: boolean;

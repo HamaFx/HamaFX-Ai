@@ -1,28 +1,14 @@
-/**
- * Copyright 2026 HamaFX
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+// SPDX-License-Identifier: Apache-2.0
 
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { auth } from '@/auth';
 import { getUserWithSettings } from '@hamafx/db';
 import type { NoiseConfig } from '@hamafx/shared';
-import { NoiseControlCard } from '../_components/noise-control-card';
-import { NotificationPrefsCard } from '../_components/notification-prefs-card';
-import { TestEmailButton } from '../_components/test-email-button';
-import { EnableWebPushButton } from '../_components/enable-web-push-button';
+import { NoiseControlCard } from '../_components/notifications/noise-control-card';
+import { NotificationPrefsCard } from '../_components/notifications/notification-prefs-card';
+import { TestEmailButton } from '../_components/notifications/test-email-button';
+import { EnableWebPushButton } from '../_components/notifications/enable-web-push-button';
 import { SettingsRow } from '../_components/settings-row';
 import { RowDivider } from '../_components/row-divider';
 import { IconMail, IconBell } from '@tabler/icons-react';
