@@ -4,8 +4,10 @@ package: "@hamafx/worker"
 path: "apps/worker/src/healthchecks.ts"
 incoming: 3
 outgoing: 1
+connections: 4
 risk: low
-tags: [module, hamafxworker]
+layer: core
+tags: [type/module, hamafx-worker, layer/core]
 aliases: [healthchecks/PingStatus]
 ---
 
@@ -23,14 +25,17 @@ Module: apps/worker/src/healthchecks.ts
 |---|---|
 | Incoming dependencies | 3 |
 | Outgoing dependencies | 1 |
-| Risk level | LOW |
+| Total connections | 4 |
+| Risk level | **LOW** |
+| Layer | `core` |
+| Package tag | `#hamafx-worker` |
 
 
-### 📤 Depends On
+### 📤 Depends On (1)
 [[@hamafx-worker]]
 
 
-### 📥 Depended On By
+### 📥 Depended On By (3)
 [[index-onShutdown]] · [[cli]] · [[healthchecks.test]]
 
 
@@ -40,3 +45,10 @@ Module: apps/worker/src/healthchecks.ts
 - `ping`
 - `withHeartbeat`
 
+
+## 🔍 Explore
+
+- **Local Graph:** Right-click this file → "Open local graph"
+- **Backlinks:** Open the right sidebar → "Backlinks"
+- Use `#type/module` to find all Modules
+- Use `#hamafx-worker` to find all files in this package

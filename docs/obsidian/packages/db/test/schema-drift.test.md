@@ -4,8 +4,10 @@ package: "@hamafx/db"
 path: "packages/db/test/schema-drift.test.ts"
 incoming: 0
 outgoing: 3
+connections: 3
 risk: low
-tags: [module, hamafxdb]
+layer: core
+tags: [type/module, hamafx-db, layer/core]
 aliases: [schema-drift.test]
 ---
 
@@ -23,12 +25,22 @@ Module: packages/db/test/schema-drift.test.ts
 |---|---|
 | Incoming dependencies | 0 |
 | Outgoing dependencies | 3 |
-| Risk level | LOW |
+| Total connections | 3 |
+| Risk level | **LOW** |
+| Layer | `core` |
+| Package tag | `#hamafx-db` |
 
 
-### 📤 Depends On
+### 📤 Depends On (3)
 [[vitest-installServerOnlyStub]] · [[pglite-client-sanitizeStatement]] · [[@hamafx-db]]
 
 
 
 
+
+## 🔍 Explore
+
+- **Local Graph:** Right-click this file → "Open local graph"
+- **Backlinks:** Open the right sidebar → "Backlinks"
+- Use `#type/module` to find all Modules
+- Use `#hamafx-db` to find all files in this package

@@ -4,8 +4,10 @@ package: "@hamafx/worker"
 path: "apps/worker/src/jobs/cot.ts"
 incoming: 2
 outgoing: 6
+connections: 8
 risk: low
-tags: [module, hamafxworker]
+layer: core
+tags: [type/module, hamafx-worker, layer/core]
 aliases: [cot/runCoT]
 ---
 
@@ -23,14 +25,17 @@ Module: apps/worker/src/jobs/cot.ts
 |---|---|
 | Incoming dependencies | 2 |
 | Outgoing dependencies | 6 |
-| Risk level | LOW |
+| Total connections | 8 |
+| Risk level | **LOW** |
+| Layer | `core` |
+| Package tag | `#hamafx-worker` |
 
 
-### 📤 Depends On
+### 📤 Depends On (5)
 [[@hamafx-ai]] · [[@hamafx-data]] · [[@hamafx-shared]] · [[types-JobCoreContext]] · [[@hamafx-worker]]
 
 
-### 📥 Depended On By
+### 📥 Depended On By (2)
 [[index-JOBS]] · [[cot-job.test]]
 
 
@@ -38,3 +43,10 @@ Module: apps/worker/src/jobs/cot.ts
 ## 📦 Exports
 - `runCoT`
 
+
+## 🔍 Explore
+
+- **Local Graph:** Right-click this file → "Open local graph"
+- **Backlinks:** Open the right sidebar → "Backlinks"
+- Use `#type/module` to find all Modules
+- Use `#hamafx-worker` to find all files in this package

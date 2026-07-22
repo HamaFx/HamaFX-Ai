@@ -4,8 +4,10 @@ package: "@hamafx/web"
 path: "apps/web/src/components/chat/parts/_shared.tsx"
 incoming: 0
 outgoing: 1
+connections: 1
 risk: low
-tags: [component, hamafxweb]
+layer: ui
+tags: [type/component, hamafx-web, layer/ui]
 aliases: [_shared/SharedSkeletonCardProps]
 ---
 
@@ -23,10 +25,13 @@ React component: _shared
 |---|---|
 | Incoming dependencies | 0 |
 | Outgoing dependencies | 1 |
-| Risk level | LOW |
+| Total connections | 1 |
+| Risk level | **LOW** |
+| Layer | `ui` |
+| Package tag | `#hamafx-web` |
 
 
-### 📤 Depends On
+### 📤 Depends On (1)
 [[@hamafx-web]]
 
 
@@ -38,3 +43,10 @@ React component: _shared
 - `SharedErrorCardProps`
 - `PartErrorCard`
 
+
+## 🔍 Explore
+
+- **Local Graph:** Right-click this file → "Open local graph"
+- **Backlinks:** Open the right sidebar → "Backlinks"
+- Use `#type/component` to find all Components
+- Use `#hamafx-web` to find all files in this package

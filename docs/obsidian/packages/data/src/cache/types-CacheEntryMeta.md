@@ -4,8 +4,10 @@ package: "@hamafx/data"
 path: "packages/data/src/cache/types.ts"
 incoming: 6
 outgoing: 1
+connections: 7
 risk: low
-tags: [module, hamafxdata]
+layer: core
+tags: [type/module, hamafx-data, layer/core]
 aliases: [types/CacheEntryMeta]
 ---
 
@@ -23,14 +25,17 @@ Module: packages/data/src/cache/types.ts
 |---|---|
 | Incoming dependencies | 6 |
 | Outgoing dependencies | 1 |
-| Risk level | LOW |
+| Total connections | 7 |
+| Risk level | **LOW** |
+| Layer | `core` |
+| Package tag | `#hamafx-data` |
 
 
-### 📤 Depends On
+### 📤 Depends On (1)
 [[@hamafx-data]]
 
 
-### 📥 Depended On By
+### 📥 Depended On By (3)
 [[index-getDefaultCache]] · [[memory-MemoryCache]] · [[redis-RedisCache]]
 
 
@@ -40,3 +45,10 @@ Module: packages/data/src/cache/types.ts
 - `CacheFetchOptions`
 - `Cache`
 
+
+## 🔍 Explore
+
+- **Local Graph:** Right-click this file → "Open local graph"
+- **Backlinks:** Open the right sidebar → "Backlinks"
+- Use `#type/module` to find all Modules
+- Use `#hamafx-data` to find all files in this package

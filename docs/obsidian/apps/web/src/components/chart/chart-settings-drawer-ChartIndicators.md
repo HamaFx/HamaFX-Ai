@@ -4,8 +4,10 @@ package: "@hamafx/web"
 path: "apps/web/src/components/chart/chart-settings-drawer.tsx"
 incoming: 0
 outgoing: 3
+connections: 3
 risk: low
-tags: [component, hamafxweb]
+layer: ui
+tags: [type/component, hamafx-web, layer/ui]
 aliases: [chart-settings-drawer/ChartIndicators]
 ---
 
@@ -23,10 +25,13 @@ React component: chart-settings-drawer
 |---|---|
 | Incoming dependencies | 0 |
 | Outgoing dependencies | 3 |
-| Risk level | LOW |
+| Total connections | 3 |
+| Risk level | **LOW** |
+| Layer | `ui` |
+| Package tag | `#hamafx-web` |
 
 
-### 📤 Depends On
+### 📤 Depends On (2)
 [[chart-Chart]] · [[@hamafx-web]]
 
 
@@ -36,3 +41,10 @@ React component: chart-settings-drawer
 - `ChartIndicators`
 - `ChartSettingsDrawer`
 
+
+## 🔍 Explore
+
+- **Local Graph:** Right-click this file → "Open local graph"
+- **Backlinks:** Open the right sidebar → "Backlinks"
+- Use `#type/component` to find all Components
+- Use `#hamafx-web` to find all files in this package

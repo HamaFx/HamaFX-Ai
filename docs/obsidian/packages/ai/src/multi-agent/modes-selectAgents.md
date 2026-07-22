@@ -4,8 +4,10 @@ package: "@hamafx/ai"
 path: "packages/ai/src/multi-agent/modes.ts"
 incoming: 3
 outgoing: 3
+connections: 6
 risk: low
-tags: [module, hamafxai]
+layer: core
+tags: [type/module, hamafx-ai, layer/core]
 aliases: [modes/selectAgents]
 ---
 
@@ -23,14 +25,17 @@ Module: packages/ai/src/multi-agent/modes.ts
 |---|---|
 | Incoming dependencies | 3 |
 | Outgoing dependencies | 3 |
-| Risk level | LOW |
+| Total connections | 6 |
+| Risk level | **LOW** |
+| Layer | `core` |
+| Package tag | `#hamafx-ai` |
 
 
-### 📤 Depends On
+### 📤 Depends On (2)
 [[types-AnalysisMode]] · [[@hamafx-ai]]
 
 
-### 📥 Depended On By
+### 📥 Depended On By (2)
 [[orchestrator-RunMultiAgentArgs]] · [[modes.test]]
 
 
@@ -42,3 +47,10 @@ Module: packages/ai/src/multi-agent/modes.ts
 - `ModeMeta`
 - `MODE_OPTIONS`
 
+
+## 🔍 Explore
+
+- **Local Graph:** Right-click this file → "Open local graph"
+- **Backlinks:** Open the right sidebar → "Backlinks"
+- Use `#type/module` to find all Modules
+- Use `#hamafx-ai` to find all files in this package

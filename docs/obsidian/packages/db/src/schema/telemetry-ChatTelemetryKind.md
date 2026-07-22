@@ -4,8 +4,10 @@ package: "@hamafx/db"
 path: "packages/db/src/schema/telemetry.ts"
 incoming: 1
 outgoing: 2
+connections: 3
 risk: low
-tags: [module, hamafxdb]
+layer: core
+tags: [type/module, hamafx-db, layer/core]
 aliases: [telemetry/ChatTelemetryKind]
 ---
 
@@ -23,14 +25,17 @@ Database schema (1 tables)
 |---|---|
 | Incoming dependencies | 1 |
 | Outgoing dependencies | 2 |
-| Risk level | LOW |
+| Total connections | 3 |
+| Risk level | **LOW** |
+| Layer | `core` |
+| Package tag | `#hamafx-db` |
 
 
-### 📤 Depends On
+### 📤 Depends On (2)
 [[auth-users]] · [[@hamafx-db]]
 
 
-### 📥 Depended On By
+### 📥 Depended On By (1)
 [[chat_telemetry]]
 
 
@@ -41,3 +46,10 @@ Database schema (1 tables)
 - `ChatTelemetryRow`
 - `ChatTelemetryInsert`
 
+
+## 🔍 Explore
+
+- **Local Graph:** Right-click this file → "Open local graph"
+- **Backlinks:** Open the right sidebar → "Backlinks"
+- Use `#type/module` to find all Modules
+- Use `#hamafx-db` to find all files in this package

@@ -4,8 +4,10 @@ package: "@hamafx/web"
 path: "apps/web/src/app/(app)/settings/notifications/page.tsx"
 incoming: 0
 outgoing: 11
+connections: 11
 risk: low
-tags: [module, hamafxweb]
+layer: core
+tags: [type/module, hamafx-web, layer/core]
 aliases: [page/async]
 ---
 
@@ -23,10 +25,13 @@ Module: apps/web/src/app/(app)/settings/notifications/page.tsx
 |---|---|
 | Incoming dependencies | 0 |
 | Outgoing dependencies | 11 |
-| Risk level | LOW |
+| Total connections | 11 |
+| Risk level | **LOW** |
+| Layer | `core` |
+| Package tag | `#hamafx-web` |
 
 
-### 📤 Depends On
+### 📤 Depends On (10)
 [[@hamafx-db]] · [[@hamafx-shared]] · [[noise-control-card-NoiseControlCard]] · [[notification-prefs-card-NotificationPrefsCard]] · [[test-email-button-TestEmailButton]] · [[enable-web-push-button-EnableWebPushButton]] · [[settings-row-SettingsRow]] · [[row-divider-RowDivider]] · [[@hamafx-ai]] · [[@hamafx-web]]
 
 
@@ -37,3 +42,10 @@ Module: apps/web/src/app/(app)/settings/notifications/page.tsx
 - `revalidate`
 - `async`
 
+
+## 🔍 Explore
+
+- **Local Graph:** Right-click this file → "Open local graph"
+- **Backlinks:** Open the right sidebar → "Backlinks"
+- Use `#type/module` to find all Modules
+- Use `#hamafx-web` to find all files in this package

@@ -4,8 +4,10 @@ package: "@hamafx/ai"
 path: "packages/ai/test/verify-call.test.ts"
 incoming: 0
 outgoing: 3
+connections: 3
 risk: low
-tags: [module, hamafxai]
+layer: core
+tags: [type/module, hamafx-ai, layer/core]
 aliases: [verify-call.test]
 ---
 
@@ -23,12 +25,22 @@ Module: packages/ai/test/verify-call.test.ts
 |---|---|
 | Incoming dependencies | 0 |
 | Outgoing dependencies | 3 |
-| Risk level | LOW |
+| Total connections | 3 |
+| Risk level | **LOW** |
+| Layer | `core` |
+| Package tag | `#hamafx-ai` |
 
 
-### 📤 Depends On
+### 📤 Depends On (3)
 [[vitest-installServerOnlyStub]] · [[verify_call]] · [[@hamafx-ai]]
 
 
 
 
+
+## 🔍 Explore
+
+- **Local Graph:** Right-click this file → "Open local graph"
+- **Backlinks:** Open the right sidebar → "Backlinks"
+- Use `#type/module` to find all Modules
+- Use `#hamafx-ai` to find all files in this package

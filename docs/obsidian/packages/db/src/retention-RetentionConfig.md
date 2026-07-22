@@ -4,8 +4,10 @@ package: "@hamafx/db"
 path: "packages/db/src/retention.ts"
 incoming: 0
 outgoing: 2
+connections: 2
 risk: low
-tags: [module, hamafxdb]
+layer: core
+tags: [type/module, hamafx-db, layer/core]
 aliases: [retention/RetentionConfig]
 ---
 
@@ -23,10 +25,13 @@ Module: packages/db/src/retention.ts
 |---|---|
 | Incoming dependencies | 0 |
 | Outgoing dependencies | 2 |
-| Risk level | LOW |
+| Total connections | 2 |
+| Risk level | **LOW** |
+| Layer | `core` |
+| Package tag | `#hamafx-db` |
 
 
-### 📤 Depends On
+### 📤 Depends On (2)
 [[client-DbClient]] · [[@hamafx-db]]
 
 
@@ -38,3 +43,10 @@ Module: packages/db/src/retention.ts
 - `runRetentionCleanup`
 - `runVacuumAnalyze`
 
+
+## 🔍 Explore
+
+- **Local Graph:** Right-click this file → "Open local graph"
+- **Backlinks:** Open the right sidebar → "Backlinks"
+- Use `#type/module` to find all Modules
+- Use `#hamafx-db` to find all files in this package

@@ -4,8 +4,10 @@ package: "@hamafx/db"
 path: "packages/db/src/schema/portfolio.ts"
 incoming: 2
 outgoing: 2
+connections: 4
 risk: low
-tags: [module, hamafxdb]
+layer: core
+tags: [type/module, hamafx-db, layer/core]
 aliases: [portfolio/portfolioPositions]
 ---
 
@@ -23,14 +25,17 @@ Database schema (2 tables)
 |---|---|
 | Incoming dependencies | 2 |
 | Outgoing dependencies | 2 |
-| Risk level | LOW |
+| Total connections | 4 |
+| Risk level | **LOW** |
+| Layer | `core` |
+| Package tag | `#hamafx-db` |
 
 
-### 📤 Depends On
+### 📤 Depends On (2)
 [[auth-users]] · [[@hamafx-db]]
 
 
-### 📥 Depended On By
+### 📥 Depended On By (2)
 [[portfolio_positions]] · [[portfolio_settings]]
 
 
@@ -39,3 +44,10 @@ Database schema (2 tables)
 - `portfolioPositions`
 - `portfolioSettings`
 
+
+## 🔍 Explore
+
+- **Local Graph:** Right-click this file → "Open local graph"
+- **Backlinks:** Open the right sidebar → "Backlinks"
+- Use `#type/module` to find all Modules
+- Use `#hamafx-db` to find all files in this package

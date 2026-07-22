@@ -4,8 +4,10 @@ package: "@hamafx/web"
 path: "apps/web/src/app/(app)/alerts/_components/alert-form.tsx"
 incoming: 1
 outgoing: 2
+connections: 3
 risk: low
-tags: [module, hamafxweb]
+layer: core
+tags: [type/module, hamafx-web, layer/core]
 aliases: [alert-form/AlertForm]
 ---
 
@@ -23,14 +25,17 @@ Module: apps/web/src/app/(app)/alerts/_components/alert-form.tsx
 |---|---|
 | Incoming dependencies | 1 |
 | Outgoing dependencies | 2 |
-| Risk level | LOW |
+| Total connections | 3 |
+| Risk level | **LOW** |
+| Layer | `core` |
+| Package tag | `#hamafx-web` |
 
 
-### 📤 Depends On
+### 📤 Depends On (2)
 [[@hamafx-shared]] · [[@hamafx-web]]
 
 
-### 📥 Depended On By
+### 📥 Depended On By (1)
 [[alert-list-ALERTS_QUERY_KEY]]
 
 
@@ -38,3 +43,10 @@ Module: apps/web/src/app/(app)/alerts/_components/alert-form.tsx
 ## 📦 Exports
 - `AlertForm`
 
+
+## 🔍 Explore
+
+- **Local Graph:** Right-click this file → "Open local graph"
+- **Backlinks:** Open the right sidebar → "Backlinks"
+- Use `#type/module` to find all Modules
+- Use `#hamafx-web` to find all files in this package

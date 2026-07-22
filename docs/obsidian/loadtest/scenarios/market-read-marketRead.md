@@ -4,8 +4,10 @@ package: "loadtest"
 path: "loadtest/scenarios/market-read.ts"
 incoming: 3
 outgoing: 4
+connections: 7
 risk: low
-tags: [module, loadtest]
+layer: core
+tags: [type/module, loadtest, layer/core]
 aliases: [market-read/marketRead]
 ---
 
@@ -23,14 +25,17 @@ Module: loadtest/scenarios/market-read.ts
 |---|---|
 | Incoming dependencies | 3 |
 | Outgoing dependencies | 4 |
-| Risk level | LOW |
+| Total connections | 7 |
+| Risk level | **LOW** |
+| Layer | `core` |
+| Package tag | `#loadtest` |
 
 
-### 📤 Depends On
+### 📤 Depends On (3)
 [[http-HttpHeaders]] · [[environments-SessionCtx]] · [[loadtest]]
 
 
-### 📥 Depended On By
+### 📥 Depended On By (3)
 [[load-market-read-default]] · [[smoke-market-read-default]] · [[stress-market-read-default]]
 
 
@@ -38,3 +43,10 @@ Module: loadtest/scenarios/market-read.ts
 ## 📦 Exports
 - `marketRead`
 
+
+## 🔍 Explore
+
+- **Local Graph:** Right-click this file → "Open local graph"
+- **Backlinks:** Open the right sidebar → "Backlinks"
+- Use `#type/module` to find all Modules
+- Use `#loadtest` to find all files in this package

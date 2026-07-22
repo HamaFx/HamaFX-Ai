@@ -4,8 +4,10 @@ package: "@hamafx/web"
 path: "apps/web/src/components/chat/quick-prompts.tsx"
 incoming: 1
 outgoing: 3
+connections: 4
 risk: low
-tags: [component, hamafxweb]
+layer: ui
+tags: [type/component, hamafx-web, layer/ui]
 aliases: [quick-prompts/QuickPrompts]
 ---
 
@@ -23,14 +25,17 @@ React component: quick-prompts
 |---|---|
 | Incoming dependencies | 1 |
 | Outgoing dependencies | 3 |
-| Risk level | LOW |
+| Total connections | 4 |
+| Risk level | **LOW** |
+| Layer | `ui` |
+| Package tag | `#hamafx-web` |
 
 
-### 📤 Depends On
+### 📤 Depends On (2)
 [[@hamafx-shared]] · [[@hamafx-web]]
 
 
-### 📥 Depended On By
+### 📥 Depended On By (1)
 [[chat-screen-ChatScreen]]
 
 
@@ -38,3 +43,10 @@ React component: quick-prompts
 ## 📦 Exports
 - `QuickPrompts`
 
+
+## 🔍 Explore
+
+- **Local Graph:** Right-click this file → "Open local graph"
+- **Backlinks:** Open the right sidebar → "Backlinks"
+- Use `#type/component` to find all Components
+- Use `#hamafx-web` to find all files in this package

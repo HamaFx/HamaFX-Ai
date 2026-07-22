@@ -1,0 +1,83 @@
+/* HamaFX-Ai Developer Vault — Custom CSS Snippet
+ * Enhances the Obsidian vault for code architecture browsing.
+ *
+ * To enable: Settings → Appearance → CSS snippets → toggle "developer" on
+ */
+
+/* ── Callouts ── */
+.callout[data-callout="danger"] {
+  --callout-color: 220, 60, 60;
+  border-left: 4px solid rgb(var(--callout-color));
+}
+.callout[data-callout="warning"] {
+  --callout-color: 220, 180, 60;
+  border-left: 4px solid rgb(var(--callout-color));
+}
+
+/* ── Tables ── */
+.markdown-rendered table {
+  font-size: 0.85em;
+  border-collapse: collapse;
+  width: 100%;
+}
+.markdown-rendered th {
+  background: var(--table-header-background);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 0.75em;
+  padding: 8px 12px;
+}
+.markdown-rendered td {
+  padding: 6px 12px;
+  border-bottom: 1px solid var(--table-border-color);
+}
+
+/* ── Dashboard Styling ── */
+.dashboard .markdown-rendered h2 {
+  border-bottom: 2px solid var(--text-accent);
+  padding-bottom: 6px;
+  margin-top: 28px;
+}
+
+/* ── Tags ── */
+.tag[href="#type/package"],
+.tag[href="#type/app"] { --tag-color: #e06c75; --tag-background: #e06c7533; }
+.tag[href="#type/api_route"],
+.tag[href="#type/route"] { --tag-color: #61afef; --tag-background: #61afef33; }
+.tag[href="#type/component"] { --tag-color: #d19a66; --tag-background: #d19a6633; }
+.tag[href="#type/tool"] { --tag-color: #56b6c2; --tag-background: #56b6c233; }
+.tag[href="#type/table"] { --tag-color: #e5c07b; --tag-background: #e5c07b33; }
+.tag[href="#type/agent"] { --tag-color: #c678dd; --tag-background: #c678dd33; }
+.tag[href="#type/job"] { --tag-color: #d19a66; --tag-background: #d19a6633; }
+.tag[href="#type/config"],
+.tag[href="#type/schema"] { --tag-color: #abb2bf; --tag-background: #abb2bf33; }
+.tag[href="#risk/high"] { --tag-color: #e06c75; --tag-background: #e06c7533; font-weight: 700; }
+.tag[href="#risk/medium"] { --tag-color: #d19a66; --tag-background: #d19a6633; }
+
+/* ── Graph View ── */
+.workspace-leaf-content[data-type="graph"] .view-content {
+  background: var(--background-primary);
+}
+
+/* ── Properties View ── */
+.metadata-properties-heading { font-size: 0.85em !important; }
+.metadata-property-key { font-size: 0.8em; opacity: 0.8; }
+.metadata-property-value { font-family: var(--font-monospace); font-size: 0.85em; }
+
+/* ── Links ── */
+.internal-link { color: var(--text-accent); }
+.internal-link:hover { text-decoration: underline; }
+
+/* ── Code ── */
+code {
+  font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', var(--font-monospace);
+  font-size: 0.9em;
+  background: var(--code-background);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb-bg); border-radius: 4px; }

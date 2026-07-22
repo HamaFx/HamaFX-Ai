@@ -4,8 +4,10 @@ package: "@hamafx/ai"
 path: "packages/ai/src/routing.ts"
 incoming: 10
 outgoing: 5
+connections: 15
 risk: low
-tags: [module, hamafxai]
+layer: core
+tags: [type/module, hamafx-ai, layer/core]
 aliases: [routing/RoutingDomain]
 ---
 
@@ -23,14 +25,17 @@ Module: packages/ai/src/routing.ts
 |---|---|
 | Incoming dependencies | 10 |
 | Outgoing dependencies | 5 |
-| Risk level | LOW |
+| Total connections | 15 |
+| Risk level | **LOW** |
+| Layer | `core` |
+| Package tag | `#hamafx-ai` |
 
 
-### 📤 Depends On
+### 📤 Depends On (4)
 [[model]] · [[semantic-routing-SemanticRoutingDomain]] · [[routing-keywords-RoutingKeywordPattern]] · [[@hamafx-ai]]
 
 
-### 📥 Depended On By
+### 📥 Depended On By (6)
 [[agent-runChat]] · [[resolve-model-ResolveModelContext]] · [[chat-retry-loop-AttemptContext]] · [[model-resolution-toModelDomain]] · [[planner-PlannerEnv]] · [[routing.test]]
 
 
@@ -41,3 +46,10 @@ Module: packages/ai/src/routing.ts
 - `RouteTurnOptions`
 - `routeTurn`
 
+
+## 🔍 Explore
+
+- **Local Graph:** Right-click this file → "Open local graph"
+- **Backlinks:** Open the right sidebar → "Backlinks"
+- Use `#type/module` to find all Modules
+- Use `#hamafx-ai` to find all files in this package

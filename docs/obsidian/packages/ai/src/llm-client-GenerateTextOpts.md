@@ -4,8 +4,10 @@ package: "@hamafx/ai"
 path: "packages/ai/src/llm-client.ts"
 incoming: 3
 outgoing: 1
+connections: 4
 risk: low
-tags: [module, hamafxai]
+layer: core
+tags: [type/module, hamafx-ai, layer/core]
 aliases: [llm-client/GenerateTextOpts]
 ---
 
@@ -23,14 +25,17 @@ Module: packages/ai/src/llm-client.ts
 |---|---|
 | Incoming dependencies | 3 |
 | Outgoing dependencies | 1 |
-| Risk level | LOW |
+| Total connections | 4 |
+| Risk level | **LOW** |
+| Layer | `core` |
+| Package tag | `#hamafx-ai` |
 
 
-### 📤 Depends On
+### 📤 Depends On (1)
 [[@hamafx-ai]]
 
 
-### 📥 Depended On By
+### 📥 Depended On By (2)
 [[services-bootstrapServices]] · [[tokens-DB]]
 
 
@@ -45,3 +50,10 @@ Module: packages/ai/src/llm-client.ts
 - `getLlmClient`
 - `setLlmClient`
 
+
+## 🔍 Explore
+
+- **Local Graph:** Right-click this file → "Open local graph"
+- **Backlinks:** Open the right sidebar → "Backlinks"
+- Use `#type/module` to find all Modules
+- Use `#hamafx-ai` to find all files in this package

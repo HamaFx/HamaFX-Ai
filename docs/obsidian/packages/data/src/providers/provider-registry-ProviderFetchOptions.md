@@ -4,8 +4,10 @@ package: "@hamafx/data"
 path: "packages/data/src/providers/provider-registry.ts"
 incoming: 3
 outgoing: 3
+connections: 6
 risk: low
-tags: [module, hamafxdata]
+layer: core
+tags: [type/module, hamafx-data, layer/core]
 aliases: [provider-registry/ProviderFetchOptions]
 ---
 
@@ -23,14 +25,17 @@ Module: packages/data/src/providers/provider-registry.ts
 |---|---|
 | Incoming dependencies | 3 |
 | Outgoing dependencies | 3 |
-| Risk level | LOW |
+| Total connections | 6 |
+| Risk level | **LOW** |
+| Layer | `core` |
+| Package tag | `#hamafx-data` |
 
 
-### 📤 Depends On
+### 📤 Depends On (2)
 [[@hamafx-shared]] · [[@hamafx-data]]
 
 
-### 📥 Depended On By
+### 📥 Depended On By (3)
 [[candles-GetCandlesOptions]] · [[price-GetPriceOptions]] · [[provider-adapters-bootstrapMarketDataProviders]]
 
 
@@ -41,3 +46,10 @@ Module: packages/data/src/providers/provider-registry.ts
 - `MarketDataProviderRegistry`
 - `marketDataProviders`
 
+
+## 🔍 Explore
+
+- **Local Graph:** Right-click this file → "Open local graph"
+- **Backlinks:** Open the right sidebar → "Backlinks"
+- Use `#type/module` to find all Modules
+- Use `#hamafx-data` to find all files in this package

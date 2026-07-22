@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "generatedAt": "2026-07-22T23:40:55.164Z",
+  "generatedAt": "2026-07-22T23:54:34.148Z",
   "project": {
     "name": "HamaFX-Ai",
     "rootPath": "/home/ubuntu/HamaFX-Ai",
@@ -27720,17 +27720,24 @@
         "functions": [
           "sanitizeFilename",
           "uniqueNodeFilename",
+          "nodeFilePath",
           "buildWikiLinkMap",
           "wikiLink",
           "resolveNodeId",
+          "makeTag",
+          "makeLayer",
+          "generateObsidianConfig",
+          "hexToRgb",
           "generateObsidianVault",
           "generateDashboard",
-          "generateTypeIndex",
-          "incomingCountFor",
-          "outgoingCountFor",
+          "generateTypeIndices",
+          "generateTimelineDashboard",
+          "generatePackageOverview",
+          "generatePackageMocs",
+          "generateArchitectureCanvas",
           "generateNodeMarkdown"
         ],
-        "size": 11810
+        "size": 31621
       }
     },
     {
@@ -82366,6 +82373,14 @@
   "gitHistory": {
     "commits": [
       {
+        "hash": "b367849a82b32cc37729d80d961e5d8c7ce01ad9",
+        "shortHash": "b367849a",
+        "date": "2026-07-22T23:41:47Z",
+        "author": "HamaFx",
+        "message": "feat: add Obsidian vault generator with 1,401 node files + 10 dashboards",
+        "files": []
+      },
+      {
         "hash": "d136fbd86df007db442e2b4491e118bcc878d732",
         "shortHash": "d136fbd8",
         "date": "2026-07-22T23:30:49Z",
@@ -86356,28 +86371,12 @@
         "author": "HamaFx",
         "message": "chore: add env vars to turbo.json globalEnv for vercel build",
         "files": []
-      },
-      {
-        "hash": "11e0dc8cc7897f7e1a7449d532e20cafc76fb8df",
-        "shortHash": "11e0dc8c",
-        "date": "2026-06-19T11:51:39Z",
-        "author": "HamaFx",
-        "message": "Fix eslint errors for Vercel build",
-        "files": []
       }
     ],
     "fileChanges": {},
     "nodeChanges": {}
   },
   "evolutionTimeline": [
-    {
-      "date": "2026-06-19T11:51:39Z",
-      "hash": "11e0dc8cc7897f7e1a7449d532e20cafc76fb8df",
-      "shortHash": "11e0dc8c",
-      "message": "Fix eslint errors for Vercel build",
-      "activeNodeCount": 0,
-      "touchedNodes": []
-    },
     {
       "date": "2026-06-19T11:58:13Z",
       "hash": "3292a88a4826cb09b239b965c756ca3d02e084ad",
@@ -90367,6 +90366,14 @@
       "hash": "d136fbd86df007db442e2b4491e118bcc878d732",
       "shortHash": "d136fbd8",
       "message": "chore: remove 18 outdated manual docs replaced by auto-generated explorer",
+      "activeNodeCount": 0,
+      "touchedNodes": []
+    },
+    {
+      "date": "2026-07-22T23:41:47Z",
+      "hash": "b367849a82b32cc37729d80d961e5d8c7ce01ad9",
+      "shortHash": "b367849a",
+      "message": "feat: add Obsidian vault generator with 1,401 node files + 10 dashboards",
       "activeNodeCount": 0,
       "touchedNodes": []
     }

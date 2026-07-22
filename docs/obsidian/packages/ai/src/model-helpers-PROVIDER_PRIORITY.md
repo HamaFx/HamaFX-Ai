@@ -4,8 +4,10 @@ package: "@hamafx/ai"
 path: "packages/ai/src/model-helpers.ts"
 incoming: 4
 outgoing: 7
+connections: 11
 risk: low
-tags: [module, hamafxai]
+layer: core
+tags: [type/module, hamafx-ai, layer/core]
 aliases: [model-helpers/PROVIDER_PRIORITY]
 ---
 
@@ -23,14 +25,17 @@ Module: packages/ai/src/model-helpers.ts
 |---|---|
 | Incoming dependencies | 4 |
 | Outgoing dependencies | 7 |
-| Risk level | LOW |
+| Total connections | 11 |
+| Risk level | **LOW** |
+| Layer | `core` |
+| Package tag | `#hamafx-ai` |
 
 
-### 📤 Depends On
+### 📤 Depends On (4)
 [[@hamafx-shared]] · [[byok-providers]] · [[vertex-factory-ResolveModelEnv]] · [[@hamafx-ai]]
 
 
-### 📥 Depended On By
+### 📥 Depended On By (4)
 [[model-chat-ChatModelResolution]] · [[model-embedding-EmbeddingModelResolution]] · [[model-override-OverrideResolution]] · [[model-vision-VisionModelResolution]]
 
 
@@ -41,3 +46,10 @@ Module: packages/ai/src/model-helpers.ts
 - `supportsPromptCaching`
 - `parsePickedModelId`
 
+
+## 🔍 Explore
+
+- **Local Graph:** Right-click this file → "Open local graph"
+- **Backlinks:** Open the right sidebar → "Backlinks"
+- Use `#type/module` to find all Modules
+- Use `#hamafx-ai` to find all files in this package

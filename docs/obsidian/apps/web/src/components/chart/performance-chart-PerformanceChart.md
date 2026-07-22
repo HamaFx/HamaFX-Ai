@@ -4,8 +4,10 @@ package: "@hamafx/web"
 path: "apps/web/src/components/chart/performance-chart.tsx"
 incoming: 0
 outgoing: 5
+connections: 5
 risk: low
-tags: [component, hamafxweb]
+layer: ui
+tags: [type/component, hamafx-web, layer/ui]
 aliases: [performance-chart/PerformanceChart]
 ---
 
@@ -23,10 +25,13 @@ React component: performance-chart
 |---|---|
 | Incoming dependencies | 0 |
 | Outgoing dependencies | 5 |
-| Risk level | LOW |
+| Total connections | 5 |
+| Risk level | **LOW** |
+| Layer | `ui` |
+| Package tag | `#hamafx-web` |
 
 
-### 📤 Depends On
+### 📤 Depends On (4)
 [[@hamafx-shared]] · [[chart-Chart]] · [[performance-chart-data-EquityPoint]] · [[@hamafx-web]]
 
 
@@ -35,3 +40,10 @@ React component: performance-chart
 ## 📦 Exports
 - `PerformanceChart`
 
+
+## 🔍 Explore
+
+- **Local Graph:** Right-click this file → "Open local graph"
+- **Backlinks:** Open the right sidebar → "Backlinks"
+- Use `#type/component` to find all Components
+- Use `#hamafx-web` to find all files in this package

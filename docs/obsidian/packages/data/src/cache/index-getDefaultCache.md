@@ -4,8 +4,10 @@ package: "@hamafx/data"
 path: "packages/data/src/cache/index.ts"
 incoming: 4
 outgoing: 5
+connections: 9
 risk: low
-tags: [module, hamafxdata]
+layer: core
+tags: [type/module, hamafx-data, layer/core]
 aliases: [index/getDefaultCache]
 ---
 
@@ -23,14 +25,17 @@ Module: packages/data/src/cache/index.ts
 |---|---|
 | Incoming dependencies | 4 |
 | Outgoing dependencies | 5 |
-| Risk level | LOW |
+| Total connections | 9 |
+| Risk level | **LOW** |
+| Layer | `core` |
+| Package tag | `#hamafx-data` |
 
 
-### 📤 Depends On
+### 📤 Depends On (4)
 [[memory-MemoryCache]] · [[redis-RedisCache]] · [[types-CacheEntryMeta]] · [[@hamafx-data]]
 
 
-### 📥 Depended On By
+### 📥 Depended On By (4)
 [[candles-GetCandlesOptions]] · [[price-GetPriceOptions]] · [[cache-index.test]] · [[price-adapter.test]]
 
 
@@ -41,3 +46,10 @@ Module: packages/data/src/cache/index.ts
 - `setDefaultCache`
 - `clearAllTenantCaches`
 
+
+## 🔍 Explore
+
+- **Local Graph:** Right-click this file → "Open local graph"
+- **Backlinks:** Open the right sidebar → "Backlinks"
+- Use `#type/module` to find all Modules
+- Use `#hamafx-data` to find all files in this package

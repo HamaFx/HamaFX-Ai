@@ -4,8 +4,10 @@ package: "@hamafx/ai"
 path: "packages/ai/src/journal/persistence.ts"
 incoming: 6
 outgoing: 6
+connections: 12
 risk: low
-tags: [module, hamafxai]
+layer: core
+tags: [type/module, hamafx-ai, layer/core]
 aliases: [persistence/CreateJournalInput]
 ---
 
@@ -23,14 +25,17 @@ Module: packages/ai/src/journal/persistence.ts
 |---|---|
 | Incoming dependencies | 6 |
 | Outgoing dependencies | 6 |
-| Risk level | LOW |
+| Total connections | 12 |
+| Risk level | **LOW** |
+| Layer | `core` |
+| Package tag | `#hamafx-ai` |
 
 
-### 📤 Depends On
+### 📤 Depends On (5)
 [[@hamafx-db]] · [[db-getDb]] · [[@hamafx-shared]] · [[memory-index-MemoryKind]] · [[@hamafx-ai]]
 
 
-### 📥 Depended On By
+### 📥 Depended On By (6)
 [[generate-BriefingsEnv]] · [[review-ReviewTradeArgs]] · [[compute_position_health]] · [[get_journal_stats]] · [[log_journal]] · [[journal-stats.test]]
 
 
@@ -47,3 +52,10 @@ Module: packages/ai/src/journal/persistence.ts
 - `summarize`
 - `computeStats`
 
+
+## 🔍 Explore
+
+- **Local Graph:** Right-click this file → "Open local graph"
+- **Backlinks:** Open the right sidebar → "Backlinks"
+- Use `#type/module` to find all Modules
+- Use `#hamafx-ai` to find all files in this package

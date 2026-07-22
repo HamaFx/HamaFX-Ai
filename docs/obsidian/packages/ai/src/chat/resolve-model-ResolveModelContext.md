@@ -4,8 +4,10 @@ package: "@hamafx/ai"
 path: "packages/ai/src/chat/resolve-model.ts"
 incoming: 1
 outgoing: 14
+connections: 15
 risk: low
-tags: [module, hamafxai]
+layer: core
+tags: [type/module, hamafx-ai, layer/core]
 aliases: [resolve-model/ResolveModelContext]
 ---
 
@@ -23,14 +25,17 @@ Module: packages/ai/src/chat/resolve-model.ts
 |---|---|
 | Incoming dependencies | 1 |
 | Outgoing dependencies | 14 |
-| Risk level | LOW |
+| Total connections | 15 |
+| Risk level | **LOW** |
+| Layer | `core` |
+| Package tag | `#hamafx-ai` |
 
 
-### 📤 Depends On
+### 📤 Depends On (8)
 [[types-RunChatArgs]] · [[@hamafx-db]] · [[@hamafx-shared]] · [[cost-DEFAULT_TURN_ESTIMATE_USD]] · [[model]] · [[model-resolution-toModelDomain]] · [[routing-RoutingDomain]] · [[@hamafx-ai]]
 
 
-### 📥 Depended On By
+### 📥 Depended On By (1)
 [[agent-runChat]]
 
 
@@ -40,3 +45,10 @@ Module: packages/ai/src/chat/resolve-model.ts
 - `ResolveModelResult`
 - `resolveModelForTurn`
 
+
+## 🔍 Explore
+
+- **Local Graph:** Right-click this file → "Open local graph"
+- **Backlinks:** Open the right sidebar → "Backlinks"
+- Use `#type/module` to find all Modules
+- Use `#hamafx-ai` to find all files in this package

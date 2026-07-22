@@ -4,8 +4,10 @@ package: "@hamafx/shared"
 path: "packages/shared/src/billing/features.ts"
 incoming: 1
 outgoing: 2
+connections: 3
 risk: low
-tags: [module, hamafxshared]
+layer: core
+tags: [type/module, hamafx-shared, layer/core]
 aliases: [features/PLAN_FEATURES]
 ---
 
@@ -23,14 +25,17 @@ Module: packages/shared/src/billing/features.ts
 |---|---|
 | Incoming dependencies | 1 |
 | Outgoing dependencies | 2 |
-| Risk level | LOW |
+| Total connections | 3 |
+| Risk level | **LOW** |
+| Layer | `core` |
+| Package tag | `#hamafx-shared` |
 
 
-### 📤 Depends On
+### 📤 Depends On (1)
 [[@hamafx-shared]]
 
 
-### 📥 Depended On By
+### 📥 Depended On By (1)
 [[billing-features.test]]
 
 
@@ -43,3 +48,10 @@ Module: packages/shared/src/billing/features.ts
 - `FREE_PLAN_ALERT_LIMIT`
 - `FREE_PLAN_JOURNAL_MONTHLY_LIMIT`
 
+
+## 🔍 Explore
+
+- **Local Graph:** Right-click this file → "Open local graph"
+- **Backlinks:** Open the right sidebar → "Backlinks"
+- Use `#type/module` to find all Modules
+- Use `#hamafx-shared` to find all files in this package

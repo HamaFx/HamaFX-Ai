@@ -4,8 +4,10 @@ package: "@hamafx/indicators"
 path: "packages/indicators/eslint.config.js"
 incoming: 0
 outgoing: 2
+connections: 2
 risk: low
-tags: [module, hamafxindicators]
+layer: core
+tags: [type/module, hamafx-indicators, layer/core]
 aliases: [eslint.config/config]
 ---
 
@@ -23,10 +25,13 @@ Module: packages/indicators/eslint.config.js
 |---|---|
 | Incoming dependencies | 0 |
 | Outgoing dependencies | 2 |
-| Risk level | LOW |
+| Total connections | 2 |
+| Risk level | **LOW** |
+| Layer | `core` |
+| Package tag | `#hamafx-indicators` |
 
 
-### 📤 Depends On
+### 📤 Depends On (2)
 [[@hamafx-config]] · [[@hamafx-indicators]]
 
 
@@ -35,3 +40,10 @@ Module: packages/indicators/eslint.config.js
 ## 📦 Exports
 - `config`
 
+
+## 🔍 Explore
+
+- **Local Graph:** Right-click this file → "Open local graph"
+- **Backlinks:** Open the right sidebar → "Backlinks"
+- Use `#type/module` to find all Modules
+- Use `#hamafx-indicators` to find all files in this package

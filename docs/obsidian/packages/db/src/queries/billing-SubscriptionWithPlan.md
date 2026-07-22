@@ -4,8 +4,10 @@ package: "@hamafx/db"
 path: "packages/db/src/queries/billing.ts"
 incoming: 0
 outgoing: 2
+connections: 2
 risk: low
-tags: [module, hamafxdb]
+layer: core
+tags: [type/module, hamafx-db, layer/core]
 aliases: [billing/SubscriptionWithPlan]
 ---
 
@@ -23,10 +25,13 @@ Module: packages/db/src/queries/billing.ts
 |---|---|
 | Incoming dependencies | 0 |
 | Outgoing dependencies | 2 |
-| Risk level | LOW |
+| Total connections | 2 |
+| Risk level | **LOW** |
+| Layer | `core` |
+| Package tag | `#hamafx-db` |
 
 
-### 📤 Depends On
+### 📤 Depends On (2)
 [[index_tool-architecture-explorer|index]] · [[@hamafx-db]]
 
 
@@ -41,3 +46,10 @@ Module: packages/db/src/queries/billing.ts
 - `countActiveAlerts`
 - `countJournalEntriesThisMonth`
 
+
+## 🔍 Explore
+
+- **Local Graph:** Right-click this file → "Open local graph"
+- **Backlinks:** Open the right sidebar → "Backlinks"
+- Use `#type/module` to find all Modules
+- Use `#hamafx-db` to find all files in this package

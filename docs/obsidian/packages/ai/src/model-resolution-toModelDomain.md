@@ -4,8 +4,10 @@ package: "@hamafx/ai"
 path: "packages/ai/src/model-resolution.ts"
 incoming: 4
 outgoing: 9
+connections: 13
 risk: low
-tags: [module, hamafxai]
+layer: core
+tags: [type/module, hamafx-ai, layer/core]
 aliases: [model-resolution/toModelDomain]
 ---
 
@@ -23,14 +25,17 @@ Module: packages/ai/src/model-resolution.ts
 |---|---|
 | Incoming dependencies | 4 |
 | Outgoing dependencies | 9 |
-| Risk level | LOW |
+| Total connections | 13 |
+| Risk level | **LOW** |
+| Layer | `core` |
+| Package tag | `#hamafx-ai` |
 
 
-### 📤 Depends On
+### 📤 Depends On (5)
 [[model]] · [[routing-RoutingDomain]] · [[@hamafx-shared]] · [[byok-providers]] · [[@hamafx-ai]]
 
 
-### 📥 Depended On By
+### 📥 Depended On By (4)
 [[agent-runChat]] · [[resolve-model-ResolveModelContext]] · [[chat-retry-loop-AttemptContext]] · [[model-resolution.test]]
 
 
@@ -39,3 +44,10 @@ Module: packages/ai/src/model-resolution.ts
 - `toModelDomain`
 - `pickNextFallbackProvider`
 
+
+## 🔍 Explore
+
+- **Local Graph:** Right-click this file → "Open local graph"
+- **Backlinks:** Open the right sidebar → "Backlinks"
+- Use `#type/module` to find all Modules
+- Use `#hamafx-ai` to find all files in this package

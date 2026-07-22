@@ -4,8 +4,10 @@ package: "loadtest"
 path: "loadtest/config/load-profiles.ts"
 incoming: 14
 outgoing: 1
-risk: medium
-tags: [module, loadtest]
+connections: 15
+risk: low
+layer: core
+tags: [type/module, loadtest, layer/core]
 aliases: [load-profiles/LoadProfileOptions]
 ---
 
@@ -23,14 +25,17 @@ Module: loadtest/config/load-profiles.ts
 |---|---|
 | Incoming dependencies | 14 |
 | Outgoing dependencies | 1 |
-| Risk level | MEDIUM |
+| Total connections | 15 |
+| Risk level | **LOW** |
+| Layer | `core` |
+| Package tag | `#loadtest` |
 
 
-### 📤 Depends On
+### 📤 Depends On (1)
 [[loadtest]]
 
 
-### 📥 Depended On By
+### 📥 Depended On By (14)
 [[load-config-mix-default]] · [[load-market-read-default]] · [[load-read-mix-default]] · [[load-write-mix-default]] · [[smoke-config-mix-default]] · [[smoke-market-read-default]] · [[smoke-read-mix-default]] · [[smoke-write-mix-default]] · [[soak-read-mix-default]] · [[soak-write-mix-default]] · [[spike-read-mix-default]] · [[spike-write-mix-default]] · [[stress-market-read-default]] · [[stress-write-mix-default]]
 
 
@@ -43,3 +48,10 @@ Module: loadtest/config/load-profiles.ts
 - `spike`
 - `soak`
 
+
+## 🔍 Explore
+
+- **Local Graph:** Right-click this file → "Open local graph"
+- **Backlinks:** Open the right sidebar → "Backlinks"
+- Use `#type/module` to find all Modules
+- Use `#loadtest` to find all files in this package

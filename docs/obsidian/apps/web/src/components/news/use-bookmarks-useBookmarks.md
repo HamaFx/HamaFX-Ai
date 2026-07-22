@@ -4,8 +4,10 @@ package: "@hamafx/web"
 path: "apps/web/src/components/news/use-bookmarks.tsx"
 incoming: 1
 outgoing: 2
+connections: 3
 risk: low
-tags: [component, hamafxweb]
+layer: ui
+tags: [type/component, hamafx-web, layer/ui]
 aliases: [use-bookmarks/useBookmarks]
 ---
 
@@ -23,14 +25,17 @@ React component: use-bookmarks
 |---|---|
 | Incoming dependencies | 1 |
 | Outgoing dependencies | 2 |
-| Risk level | LOW |
+| Total connections | 3 |
+| Risk level | **LOW** |
+| Layer | `ui` |
+| Package tag | `#hamafx-web` |
 
 
-### 📤 Depends On
+### 📤 Depends On (2)
 [[bookmarks-context-BookmarksProvider]] · [[@hamafx-web]]
 
 
-### 📥 Depended On By
+### 📥 Depended On By (1)
 [[article-card-ArticleCard]]
 
 
@@ -38,3 +43,10 @@ React component: use-bookmarks
 ## 📦 Exports
 - `useBookmarks`
 
+
+## 🔍 Explore
+
+- **Local Graph:** Right-click this file → "Open local graph"
+- **Backlinks:** Open the right sidebar → "Backlinks"
+- Use `#type/component` to find all Components
+- Use `#hamafx-web` to find all files in this package

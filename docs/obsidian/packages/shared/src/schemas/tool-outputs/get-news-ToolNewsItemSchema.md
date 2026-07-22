@@ -4,8 +4,10 @@ package: "@hamafx/shared"
 path: "packages/shared/src/schemas/tool-outputs/get-news.ts"
 incoming: 4
 outgoing: 2
+connections: 6
 risk: low
-tags: [module, hamafxshared]
+layer: core
+tags: [type/module, hamafx-shared, layer/core]
 aliases: [get-news/ToolNewsItemSchema]
 ---
 
@@ -23,14 +25,17 @@ Module: packages/shared/src/schemas/tool-outputs/get-news.ts
 |---|---|
 | Incoming dependencies | 4 |
 | Outgoing dependencies | 2 |
-| Risk level | LOW |
+| Total connections | 6 |
+| Risk level | **LOW** |
+| Layer | `core` |
+| Package tag | `#hamafx-shared` |
 
 
-### 📤 Depends On
+### 📤 Depends On (2)
 [[news-SymbolOrCurrencyTagSchema]] · [[@hamafx-shared]]
 
 
-### 📥 Depended On By
+### 📥 Depended On By (3)
 [[tool-io-UiTextPart]] · [[analyze-fundamental-AnalyzeFundamentalInputSchema]] · [[search-knowledge-SearchKnowledgeInputSchema]]
 
 
@@ -41,3 +46,10 @@ Module: packages/shared/src/schemas/tool-outputs/get-news.ts
 - `GetNewsOutputSchema`
 - `GetNewsOutput`
 
+
+## 🔍 Explore
+
+- **Local Graph:** Right-click this file → "Open local graph"
+- **Backlinks:** Open the right sidebar → "Backlinks"
+- Use `#type/module` to find all Modules
+- Use `#hamafx-shared` to find all files in this package

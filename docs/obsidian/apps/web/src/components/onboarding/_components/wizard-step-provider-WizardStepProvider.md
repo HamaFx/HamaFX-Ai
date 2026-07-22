@@ -4,8 +4,10 @@ package: "@hamafx/web"
 path: "apps/web/src/components/onboarding/_components/wizard-step-provider.tsx"
 incoming: 1
 outgoing: 5
+connections: 6
 risk: low
-tags: [component, hamafxweb]
+layer: ui
+tags: [type/component, hamafx-web, layer/ui]
 aliases: [wizard-step-provider/WizardStepProvider]
 ---
 
@@ -23,14 +25,17 @@ React component: wizard-step-provider
 |---|---|
 | Incoming dependencies | 1 |
 | Outgoing dependencies | 5 |
-| Risk level | LOW |
+| Total connections | 6 |
+| Risk level | **LOW** |
+| Layer | `ui` |
+| Package tag | `#hamafx-web` |
 
 
-### 📤 Depends On
+### 📤 Depends On (3)
 [[@hamafx-shared]] · [[wizard-types-TradingStyle]] · [[@hamafx-web]]
 
 
-### 📥 Depended On By
+### 📥 Depended On By (1)
 [[wizard-OnboardingWizard]]
 
 
@@ -38,3 +43,10 @@ React component: wizard-step-provider
 ## 📦 Exports
 - `WizardStepProvider`
 
+
+## 🔍 Explore
+
+- **Local Graph:** Right-click this file → "Open local graph"
+- **Backlinks:** Open the right sidebar → "Backlinks"
+- Use `#type/component` to find all Components
+- Use `#hamafx-web` to find all files in this package

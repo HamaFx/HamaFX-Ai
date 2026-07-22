@@ -4,8 +4,10 @@ package: "@hamafx/web"
 path: "apps/web/src/auth.ts"
 incoming: 1
 outgoing: 6
+connections: 7
 risk: low
-tags: [module, hamafxweb]
+layer: core
+tags: [type/module, hamafx-web, layer/core]
 aliases: [auth/generateImpersonationChallenge]
 ---
 
@@ -23,14 +25,17 @@ Module: apps/web/src/auth.ts
 |---|---|
 | Incoming dependencies | 1 |
 | Outgoing dependencies | 6 |
-| Risk level | LOW |
+| Total connections | 7 |
+| Risk level | **LOW** |
+| Layer | `core` |
+| Package tag | `#hamafx-web` |
 
 
-### 📤 Depends On
+### 📤 Depends On (5)
 [[@hamafx-shared]] · [[auth.config-authConfig]] · [[@hamafx-db]] · [[@hamafx-ai]] · [[@hamafx-web]]
 
 
-### 📥 Depended On By
+### 📥 Depended On By (1)
 [[nextauth-wiring.test]]
 
 
@@ -38,3 +43,10 @@ Module: apps/web/src/auth.ts
 ## 📦 Exports
 - `generateImpersonationChallenge`
 
+
+## 🔍 Explore
+
+- **Local Graph:** Right-click this file → "Open local graph"
+- **Backlinks:** Open the right sidebar → "Backlinks"
+- Use `#type/module` to find all Modules
+- Use `#hamafx-web` to find all files in this package

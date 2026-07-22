@@ -4,8 +4,10 @@ package: "@hamafx/config"
 path: "packages/config/prettier/index.js"
 incoming: 0
 outgoing: 2
+connections: 2
 risk: low
-tags: [module, hamafxconfig]
+layer: core
+tags: [type/module, hamafx-config, layer/core]
 aliases: [index/default]
 ---
 
@@ -23,10 +25,13 @@ Module: packages/config/prettier/index.js
 |---|---|
 | Incoming dependencies | 0 |
 | Outgoing dependencies | 2 |
-| Risk level | LOW |
+| Total connections | 2 |
+| Risk level | **LOW** |
+| Layer | `core` |
+| Package tag | `#hamafx-config` |
 
 
-### 📤 Depends On
+### 📤 Depends On (1)
 [[@hamafx-config]]
 
 
@@ -35,3 +40,10 @@ Module: packages/config/prettier/index.js
 ## 📦 Exports
 - `default`
 
+
+## 🔍 Explore
+
+- **Local Graph:** Right-click this file → "Open local graph"
+- **Backlinks:** Open the right sidebar → "Backlinks"
+- Use `#type/module` to find all Modules
+- Use `#hamafx-config` to find all files in this package

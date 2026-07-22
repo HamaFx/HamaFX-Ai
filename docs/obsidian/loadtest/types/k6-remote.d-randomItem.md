@@ -4,8 +4,10 @@ package: "loadtest"
 path: "loadtest/types/k6-remote.d.ts"
 incoming: 0
 outgoing: 1
+connections: 1
 risk: low
-tags: [module, loadtest]
+layer: core
+tags: [type/module, loadtest, layer/core]
 aliases: [k6-remote.d/randomItem]
 ---
 
@@ -23,10 +25,13 @@ Module: loadtest/types/k6-remote.d.ts
 |---|---|
 | Incoming dependencies | 0 |
 | Outgoing dependencies | 1 |
-| Risk level | LOW |
+| Total connections | 1 |
+| Risk level | **LOW** |
+| Layer | `core` |
+| Package tag | `#loadtest` |
 
 
-### 📤 Depends On
+### 📤 Depends On (1)
 [[loadtest]]
 
 
@@ -37,3 +42,10 @@ Module: loadtest/types/k6-remote.d.ts
 - `uuidv4`
 - `textSummary`
 
+
+## 🔍 Explore
+
+- **Local Graph:** Right-click this file → "Open local graph"
+- **Backlinks:** Open the right sidebar → "Backlinks"
+- Use `#type/module` to find all Modules
+- Use `#loadtest` to find all files in this package

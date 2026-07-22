@@ -4,8 +4,10 @@ package: "@hamafx/ai"
 path: "packages/ai/src/telemetry.ts"
 incoming: 12
 outgoing: 1
-risk: medium
-tags: [module, hamafxai]
+connections: 13
+risk: low
+layer: core
+tags: [type/module, hamafx-ai, layer/core]
 aliases: [telemetry/telemetryConfig]
 ---
 
@@ -23,14 +25,17 @@ Module: packages/ai/src/telemetry.ts
 |---|---|
 | Incoming dependencies | 12 |
 | Outgoing dependencies | 1 |
-| Risk level | MEDIUM |
+| Total connections | 13 |
+| Risk level | **LOW** |
+| Layer | `core` |
+| Package tag | `#hamafx-ai` |
 
 
-### 📤 Depends On
+### 📤 Depends On (1)
 [[@hamafx-ai]]
 
 
-### 📥 Depended On By
+### 📥 Depended On By (12)
 [[agent-runChat]] · [[generate-BriefingsEnv]] · [[review-ReviewTradeArgs]] · [[thread-summary-CompactResult]] · [[base-agent-baseOpinionSchema]] · [[decision]] · [[planner-PlannerEnv]] · [[provider-tester-testProviderKey]] · [[title-GenerateTitleArgs]] · [[analyze_chart_image]] · [[convene_committee]] · [[summarize_thread]]
 
 
@@ -38,3 +43,10 @@ Module: packages/ai/src/telemetry.ts
 ## 📦 Exports
 - `telemetryConfig`
 
+
+## 🔍 Explore
+
+- **Local Graph:** Right-click this file → "Open local graph"
+- **Backlinks:** Open the right sidebar → "Backlinks"
+- Use `#type/module` to find all Modules
+- Use `#hamafx-ai` to find all files in this package

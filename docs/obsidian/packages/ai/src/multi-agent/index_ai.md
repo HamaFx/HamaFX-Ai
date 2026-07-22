@@ -4,8 +4,10 @@ package: "@hamafx/ai"
 path: "packages/ai/src/multi-agent/index.ts"
 incoming: 0
 outgoing: 1
+connections: 1
 risk: low
-tags: [module, hamafxai]
+layer: core
+tags: [type/module, hamafx-ai, layer/core]
 aliases: [index]
 ---
 
@@ -23,12 +25,22 @@ Module: packages/ai/src/multi-agent/index.ts
 |---|---|
 | Incoming dependencies | 0 |
 | Outgoing dependencies | 1 |
-| Risk level | LOW |
+| Total connections | 1 |
+| Risk level | **LOW** |
+| Layer | `core` |
+| Package tag | `#hamafx-ai` |
 
 
-### 📤 Depends On
+### 📤 Depends On (1)
 [[@hamafx-ai]]
 
 
 
 
+
+## 🔍 Explore
+
+- **Local Graph:** Right-click this file → "Open local graph"
+- **Backlinks:** Open the right sidebar → "Backlinks"
+- Use `#type/module` to find all Modules
+- Use `#hamafx-ai` to find all files in this package

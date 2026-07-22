@@ -4,8 +4,10 @@ package: "@hamafx/web"
 path: "apps/web/next-env.d.ts"
 incoming: 0
 outgoing: 1
+connections: 1
 risk: low
-tags: [module, hamafxweb]
+layer: core
+tags: [type/module, hamafx-web, layer/core]
 aliases: [next-env.d]
 ---
 
@@ -23,12 +25,22 @@ Module: apps/web/next-env.d.ts
 |---|---|
 | Incoming dependencies | 0 |
 | Outgoing dependencies | 1 |
-| Risk level | LOW |
+| Total connections | 1 |
+| Risk level | **LOW** |
+| Layer | `core` |
+| Package tag | `#hamafx-web` |
 
 
-### 📤 Depends On
+### 📤 Depends On (1)
 [[@hamafx-web]]
 
 
 
 
+
+## 🔍 Explore
+
+- **Local Graph:** Right-click this file → "Open local graph"
+- **Backlinks:** Open the right sidebar → "Backlinks"
+- Use `#type/module` to find all Modules
+- Use `#hamafx-web` to find all files in this package

@@ -4,8 +4,10 @@ package: "@hamafx/web"
 path: "apps/web/src/components/news/article-card.tsx"
 incoming: 0
 outgoing: 4
+connections: 4
 risk: low
-tags: [component, hamafxweb]
+layer: ui
+tags: [type/component, hamafx-web, layer/ui]
 aliases: [article-card/ArticleCard]
 ---
 
@@ -23,10 +25,13 @@ React component: article-card
 |---|---|
 | Incoming dependencies | 0 |
 | Outgoing dependencies | 4 |
-| Risk level | LOW |
+| Total connections | 4 |
+| Risk level | **LOW** |
+| Layer | `ui` |
+| Package tag | `#hamafx-web` |
 
 
-### 📤 Depends On
+### 📤 Depends On (3)
 [[@hamafx-shared]] · [[use-bookmarks-useBookmarks]] · [[@hamafx-web]]
 
 
@@ -35,3 +40,10 @@ React component: article-card
 ## 📦 Exports
 - `ArticleCard`
 
+
+## 🔍 Explore
+
+- **Local Graph:** Right-click this file → "Open local graph"
+- **Backlinks:** Open the right sidebar → "Backlinks"
+- Use `#type/component` to find all Components
+- Use `#hamafx-web` to find all files in this package

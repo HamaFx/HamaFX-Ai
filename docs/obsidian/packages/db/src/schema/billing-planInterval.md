@@ -4,8 +4,10 @@ package: "@hamafx/db"
 path: "packages/db/src/schema/billing.ts"
 incoming: 5
 outgoing: 2
+connections: 7
 risk: low
-tags: [module, hamafxdb]
+layer: core
+tags: [type/module, hamafx-db, layer/core]
 aliases: [billing/planInterval]
 ---
 
@@ -23,14 +25,17 @@ Database schema (4 tables)
 |---|---|
 | Incoming dependencies | 5 |
 | Outgoing dependencies | 2 |
-| Risk level | LOW |
+| Total connections | 7 |
+| Risk level | **LOW** |
+| Layer | `core` |
+| Package tag | `#hamafx-db` |
 
 
-### 📤 Depends On
+### 📤 Depends On (2)
 [[auth-users]] · [[@hamafx-db]]
 
 
-### 📥 Depended On By
+### 📥 Depended On By (5)
 [[plans]] · [[subscriptions]] · [[payments]] · [[ipn_events]] · [[seed-plans]]
 
 
@@ -52,3 +57,10 @@ Database schema (4 tables)
 - `IpnEventRow`
 - `IpnEventInsert`
 
+
+## 🔍 Explore
+
+- **Local Graph:** Right-click this file → "Open local graph"
+- **Backlinks:** Open the right sidebar → "Backlinks"
+- Use `#type/module` to find all Modules
+- Use `#hamafx-db` to find all files in this package

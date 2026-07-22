@@ -4,8 +4,10 @@ package: "@hamafx/web"
 path: "apps/web/src/lib/billing-gate.ts"
 incoming: 0
 outgoing: 3
+connections: 3
 risk: low
-tags: [module, hamafxweb]
+layer: core
+tags: [type/module, hamafx-web, layer/core]
 aliases: [billing-gate/BillingGateResult]
 ---
 
@@ -23,10 +25,13 @@ Module: apps/web/src/lib/billing-gate.ts
 |---|---|
 | Incoming dependencies | 0 |
 | Outgoing dependencies | 3 |
-| Risk level | LOW |
+| Total connections | 3 |
+| Risk level | **LOW** |
+| Layer | `core` |
+| Package tag | `#hamafx-web` |
 
 
-### 📤 Depends On
+### 📤 Depends On (3)
 [[@hamafx-db]] · [[@hamafx-shared]] · [[@hamafx-web]]
 
 
@@ -39,3 +44,10 @@ Module: apps/web/src/lib/billing-gate.ts
 - `checkJournalLimit`
 - `getUserTokenCap`
 
+
+## 🔍 Explore
+
+- **Local Graph:** Right-click this file → "Open local graph"
+- **Backlinks:** Open the right sidebar → "Backlinks"
+- Use `#type/module` to find all Modules
+- Use `#hamafx-web` to find all files in this package

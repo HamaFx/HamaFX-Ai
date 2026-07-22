@@ -4,8 +4,10 @@ package: "@hamafx/shared"
 path: "packages/shared/test/market-phase.test.ts"
 incoming: 0
 outgoing: 3
+connections: 3
 risk: low
-tags: [module, hamafxshared]
+layer: core
+tags: [type/module, hamafx-shared, layer/core]
 aliases: [market-phase.test]
 ---
 
@@ -23,12 +25,22 @@ Module: packages/shared/test/market-phase.test.ts
 |---|---|
 | Incoming dependencies | 0 |
 | Outgoing dependencies | 3 |
-| Risk level | LOW |
+| Total connections | 3 |
+| Risk level | **LOW** |
+| Layer | `core` |
+| Package tag | `#hamafx-shared` |
 
 
-### 📤 Depends On
+### 📤 Depends On (3)
 [[vitest-installServerOnlyStub]] · [[market-phase-ForexSession]] · [[@hamafx-shared]]
 
 
 
 
+
+## 🔍 Explore
+
+- **Local Graph:** Right-click this file → "Open local graph"
+- **Backlinks:** Open the right sidebar → "Backlinks"
+- Use `#type/module` to find all Modules
+- Use `#hamafx-shared` to find all files in this package

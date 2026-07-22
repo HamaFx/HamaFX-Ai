@@ -4,8 +4,10 @@ package: "@hamafx/test-utils"
 path: "packages/test-utils/src/mocks/llm.test.ts"
 incoming: 0
 outgoing: 3
+connections: 3
 risk: low
-tags: [module, hamafxtest-utils]
+layer: core
+tags: [type/module, hamafx-test-utils, layer/core]
 aliases: [llm.test]
 ---
 
@@ -23,12 +25,22 @@ Module: packages/test-utils/src/mocks/llm.test.ts
 |---|---|
 | Incoming dependencies | 0 |
 | Outgoing dependencies | 3 |
-| Risk level | LOW |
+| Total connections | 3 |
+| Risk level | **LOW** |
+| Layer | `core` |
+| Package tag | `#hamafx-test-utils` |
 
 
-### 📤 Depends On
+### 📤 Depends On (3)
 [[vitest-installServerOnlyStub]] · [[llm-MockLlmResponse]] · [[@hamafx-test-utils]]
 
 
 
 
+
+## 🔍 Explore
+
+- **Local Graph:** Right-click this file → "Open local graph"
+- **Backlinks:** Open the right sidebar → "Backlinks"
+- Use `#type/module` to find all Modules
+- Use `#hamafx-test-utils` to find all files in this package

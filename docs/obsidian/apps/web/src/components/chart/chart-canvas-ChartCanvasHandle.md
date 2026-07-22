@@ -4,8 +4,10 @@ package: "@hamafx/web"
 path: "apps/web/src/components/chart/chart-canvas.tsx"
 incoming: 1
 outgoing: 11
+connections: 12
 risk: low
-tags: [component, hamafxweb]
+layer: ui
+tags: [type/component, hamafx-web, layer/ui]
 aliases: [chart-canvas/ChartCanvasHandle]
 ---
 
@@ -23,14 +25,17 @@ React component: chart-canvas
 |---|---|
 | Incoming dependencies | 1 |
 | Outgoing dependencies | 11 |
-| Risk level | LOW |
+| Total connections | 12 |
+| Risk level | **LOW** |
+| Layer | `ui` |
+| Package tag | `#hamafx-web` |
 
 
-### 📤 Depends On
+### 📤 Depends On (7)
 [[chart-colors-SERIES_BULL_HEX]] · [[@hamafx-shared]] · [[chart-types-ChartSettings]] · [[overlays-MarkerPrimitive]] · [[use-chart-theme-ChartTheme]] · [[lc-adapter-LcModule]] · [[@hamafx-web]]
 
 
-### 📥 Depended On By
+### 📥 Depended On By (1)
 [[chart-Chart]]
 
 
@@ -40,3 +45,10 @@ React component: chart-canvas
 - `ChartCanvasProps`
 - `ChartCanvas`
 
+
+## 🔍 Explore
+
+- **Local Graph:** Right-click this file → "Open local graph"
+- **Backlinks:** Open the right sidebar → "Backlinks"
+- Use `#type/component` to find all Components
+- Use `#hamafx-web` to find all files in this package

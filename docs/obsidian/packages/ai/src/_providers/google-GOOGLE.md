@@ -4,8 +4,10 @@ package: "@hamafx/ai"
 path: "packages/ai/src/_providers/google.ts"
 incoming: 1
 outgoing: 2
+connections: 3
 risk: low
-tags: [module, hamafxai]
+layer: core
+tags: [type/module, hamafx-ai, layer/core]
 aliases: [google/GOOGLE]
 ---
 
@@ -23,14 +25,17 @@ Module: packages/ai/src/_providers/google.ts
 |---|---|
 | Incoming dependencies | 1 |
 | Outgoing dependencies | 2 |
-| Risk level | LOW |
+| Total connections | 3 |
+| Risk level | **LOW** |
+| Layer | `core` |
+| Package tag | `#hamafx-ai` |
 
 
-### 📤 Depends On
+### 📤 Depends On (2)
 [[helpers-CAPS_FULL]] · [[@hamafx-ai]]
 
 
-### 📥 Depended On By
+### 📥 Depended On By (1)
 [[registry-BYOK_PROVIDERS]]
 
 
@@ -38,3 +43,10 @@ Module: packages/ai/src/_providers/google.ts
 ## 📦 Exports
 - `GOOGLE`
 
+
+## 🔍 Explore
+
+- **Local Graph:** Right-click this file → "Open local graph"
+- **Backlinks:** Open the right sidebar → "Backlinks"
+- Use `#type/module` to find all Modules
+- Use `#hamafx-ai` to find all files in this package

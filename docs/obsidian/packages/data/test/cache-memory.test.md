@@ -4,8 +4,10 @@ package: "@hamafx/data"
 path: "packages/data/test/cache-memory.test.ts"
 incoming: 0
 outgoing: 3
+connections: 3
 risk: low
-tags: [module, hamafxdata]
+layer: core
+tags: [type/module, hamafx-data, layer/core]
 aliases: [cache-memory.test]
 ---
 
@@ -23,12 +25,22 @@ Module: packages/data/test/cache-memory.test.ts
 |---|---|
 | Incoming dependencies | 0 |
 | Outgoing dependencies | 3 |
-| Risk level | LOW |
+| Total connections | 3 |
+| Risk level | **LOW** |
+| Layer | `core` |
+| Package tag | `#hamafx-data` |
 
 
-### 📤 Depends On
+### 📤 Depends On (3)
 [[vitest-installServerOnlyStub]] · [[memory-MemoryCache]] · [[@hamafx-data]]
 
 
 
 
+
+## 🔍 Explore
+
+- **Local Graph:** Right-click this file → "Open local graph"
+- **Backlinks:** Open the right sidebar → "Backlinks"
+- Use `#type/module` to find all Modules
+- Use `#hamafx-data` to find all files in this package

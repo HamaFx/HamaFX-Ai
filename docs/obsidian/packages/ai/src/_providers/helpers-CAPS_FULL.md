@@ -4,8 +4,10 @@ package: "@hamafx/ai"
 path: "packages/ai/src/_providers/helpers.ts"
 incoming: 6
 outgoing: 3
+connections: 9
 risk: low
-tags: [module, hamafxai]
+layer: core
+tags: [type/module, hamafx-ai, layer/core]
 aliases: [helpers/CAPS_FULL]
 ---
 
@@ -23,14 +25,17 @@ Module: packages/ai/src/_providers/helpers.ts
 |---|---|
 | Incoming dependencies | 6 |
 | Outgoing dependencies | 3 |
-| Risk level | LOW |
+| Total connections | 9 |
+| Risk level | **LOW** |
+| Layer | `core` |
+| Package tag | `#hamafx-ai` |
 
 
-### 📤 Depends On
+### 📤 Depends On (2)
 [[types-ModelDomain]] · [[@hamafx-ai]]
 
 
-### 📥 Depended On By
+### 📥 Depended On By (6)
 [[anthropic-ANTHROPIC]] · [[google-GOOGLE]] · [[groq-mistral-openrouter-GROQ]] · [[openai-OPENAI]] · [[vertex-VERTEX]] · [[xai-deepseek-iamhc-XAI]]
 
 
@@ -41,3 +46,10 @@ Module: packages/ai/src/_providers/helpers.ts
 - `openaiCompatibleFactory`
 - `defineProvider`
 
+
+## 🔍 Explore
+
+- **Local Graph:** Right-click this file → "Open local graph"
+- **Backlinks:** Open the right sidebar → "Backlinks"
+- Use `#type/module` to find all Modules
+- Use `#hamafx-ai` to find all files in this package

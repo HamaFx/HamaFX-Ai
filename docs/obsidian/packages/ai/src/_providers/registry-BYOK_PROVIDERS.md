@@ -4,8 +4,10 @@ package: "@hamafx/ai"
 path: "packages/ai/src/_providers/registry.ts"
 incoming: 0
 outgoing: 10
+connections: 10
 risk: low
-tags: [module, hamafxai]
+layer: core
+tags: [type/module, hamafx-ai, layer/core]
 aliases: [registry/BYOK_PROVIDERS]
 ---
 
@@ -23,10 +25,13 @@ Module: packages/ai/src/_providers/registry.ts
 |---|---|
 | Incoming dependencies | 0 |
 | Outgoing dependencies | 10 |
-| Risk level | LOW |
+| Total connections | 10 |
+| Risk level | **LOW** |
+| Layer | `core` |
+| Package tag | `#hamafx-ai` |
 
 
-### 📤 Depends On
+### 📤 Depends On (9)
 [[@hamafx-shared]] · [[google-GOOGLE]] · [[vertex-VERTEX]] · [[anthropic-ANTHROPIC]] · [[openai-OPENAI]] · [[groq-mistral-openrouter-GROQ]] · [[xai-deepseek-iamhc-XAI]] · [[types-ModelDomain]] · [[@hamafx-ai]]
 
 
@@ -40,3 +45,10 @@ Module: packages/ai/src/_providers/registry.ts
 - `lookupModelRate`
 - `buildCatalogRateTable`
 
+
+## 🔍 Explore
+
+- **Local Graph:** Right-click this file → "Open local graph"
+- **Backlinks:** Open the right sidebar → "Backlinks"
+- Use `#type/module` to find all Modules
+- Use `#hamafx-ai` to find all files in this package

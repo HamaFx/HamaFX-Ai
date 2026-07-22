@@ -4,8 +4,10 @@ package: "@hamafx/worker"
 path: "apps/worker/src/sentry.ts"
 incoming: 2
 outgoing: 3
+connections: 5
 risk: low
-tags: [module, hamafxworker]
+layer: core
+tags: [type/module, hamafx-worker, layer/core]
 aliases: [sentry/initSentry]
 ---
 
@@ -23,14 +25,17 @@ Module: apps/worker/src/sentry.ts
 |---|---|
 | Incoming dependencies | 2 |
 | Outgoing dependencies | 3 |
-| Risk level | LOW |
+| Total connections | 5 |
+| Risk level | **LOW** |
+| Layer | `core` |
+| Package tag | `#hamafx-worker` |
 
 
-### 📤 Depends On
+### 📤 Depends On (2)
 [[env-WorkerEnv]] · [[@hamafx-worker]]
 
 
-### 📥 Depended On By
+### 📥 Depended On By (2)
 [[index-onShutdown]] · [[cli]]
 
 
@@ -40,3 +45,10 @@ Module: apps/worker/src/sentry.ts
 - `captureException`
 - `flushSentry`
 
+
+## 🔍 Explore
+
+- **Local Graph:** Right-click this file → "Open local graph"
+- **Backlinks:** Open the right sidebar → "Backlinks"
+- Use `#type/module` to find all Modules
+- Use `#hamafx-worker` to find all files in this package

@@ -4,8 +4,10 @@ package: "@hamafx/ai"
 path: "packages/ai/src/planner.ts"
 incoming: 2
 outgoing: 10
+connections: 12
 risk: low
-tags: [module, hamafxai]
+layer: core
+tags: [type/module, hamafx-ai, layer/core]
 aliases: [planner/PlannerEnv]
 ---
 
@@ -23,14 +25,17 @@ Module: packages/ai/src/planner.ts
 |---|---|
 | Incoming dependencies | 2 |
 | Outgoing dependencies | 10 |
-| Risk level | LOW |
+| Total connections | 12 |
+| Risk level | **LOW** |
+| Layer | `core` |
+| Package tag | `#hamafx-ai` |
 
 
-### 📤 Depends On
+### 📤 Depends On (8)
 [[@hamafx-db]] · [[db-getDb]] · [[@hamafx-shared]] · [[model]] · [[tool-context-ToolEnv]] · [[telemetry-telemetryConfig]] · [[routing-RoutingDomain]] · [[@hamafx-ai]]
 
 
-### 📥 Depended On By
+### 📥 Depended On By (2)
 [[agent-runChat]] · [[planner.test]]
 
 
@@ -41,3 +46,10 @@ Module: packages/ai/src/planner.ts
 - `PlanResult`
 - `runPlanner`
 
+
+## 🔍 Explore
+
+- **Local Graph:** Right-click this file → "Open local graph"
+- **Backlinks:** Open the right sidebar → "Backlinks"
+- Use `#type/module` to find all Modules
+- Use `#hamafx-ai` to find all files in this package

@@ -4,8 +4,10 @@ package: "@hamafx/ai"
 path: "packages/ai/src/tools/get-system-diagnostics.ts"
 incoming: 2
 outgoing: 6
+connections: 8
 risk: low
-tags: [tool, hamafxai]
+layer: ai
+tags: [type/tool, hamafx-ai, layer/ai]
 aliases: [get_system_diagnostics]
 ---
 
@@ -23,14 +25,17 @@ Query the real-time operational health, connection latency, database record volu
 |---|---|
 | Incoming dependencies | 2 |
 | Outgoing dependencies | 6 |
-| Risk level | LOW |
+| Total connections | 8 |
+| Risk level | **LOW** |
+| Layer | `ai` |
+| Package tag | `#hamafx-ai` |
 
 
-### 📤 Depends On
+### 📤 Depends On (6)
 [[@hamafx-shared]] · [[@hamafx-db]] · [[db-getDb]] · [[tool-context-ToolEnv]] · [[@hamafx-ai]] · [[registry-ToolPlugin]]
 
 
-### 📥 Depended On By
+### 📥 Depended On By (2)
 [[system]] · [[get-system-diagnostics.test]]
 
 
@@ -38,3 +43,10 @@ Query the real-time operational health, connection latency, database record volu
 ## 📦 Exports
 - `getSystemDiagnosticsTool`
 
+
+## 🔍 Explore
+
+- **Local Graph:** Right-click this file → "Open local graph"
+- **Backlinks:** Open the right sidebar → "Backlinks"
+- Use `#type/tool` to find all AI Tools
+- Use `#hamafx-ai` to find all files in this package

@@ -4,8 +4,10 @@ package: "loadtest"
 path: "loadtest/tests/smoke-config-mix.ts"
 incoming: 0
 outgoing: 8
+connections: 8
 risk: low
-tags: [module, loadtest]
+layer: core
+tags: [type/module, loadtest, layer/core]
 aliases: [smoke-config-mix/default]
 ---
 
@@ -23,10 +25,13 @@ Module: loadtest/tests/smoke-config-mix.ts
 |---|---|
 | Incoming dependencies | 0 |
 | Outgoing dependencies | 8 |
-| Risk level | LOW |
+| Total connections | 8 |
+| Risk level | **LOW** |
+| Layer | `core` |
+| Package tag | `#loadtest` |
 
 
-### 📤 Depends On
+### 📤 Depends On (8)
 [[environments-SessionCtx]] · [[load-profiles-LoadProfileOptions]] · [[thresholds-ThresholdPreset]] · [[auth-default]] · [[checks-expectOk]] · [[config-mix-configMix]] · [[summary-handleSummary]] · [[loadtest]]
 
 
@@ -37,3 +42,10 @@ Module: loadtest/tests/smoke-config-mix.ts
 - `setup`
 - `default`
 
+
+## 🔍 Explore
+
+- **Local Graph:** Right-click this file → "Open local graph"
+- **Backlinks:** Open the right sidebar → "Backlinks"
+- Use `#type/module` to find all Modules
+- Use `#loadtest` to find all files in this package

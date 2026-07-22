@@ -4,8 +4,10 @@ package: "@hamafx/db"
 path: "packages/db/src/schema/chat.ts"
 incoming: 5
 outgoing: 2
+connections: 7
 risk: low
-tags: [module, hamafxdb]
+layer: core
+tags: [type/module, hamafx-db, layer/core]
 aliases: [chat/chatThreads]
 ---
 
@@ -23,14 +25,17 @@ Database schema (2 tables)
 |---|---|
 | Incoming dependencies | 5 |
 | Outgoing dependencies | 2 |
-| Risk level | LOW |
+| Total connections | 7 |
+| Risk level | **LOW** |
+| Layer | `core` |
+| Package tag | `#hamafx-db` |
 
 
-### 📤 Depends On
+### 📤 Depends On (2)
 [[auth-users]] · [[@hamafx-db]]
 
 
-### 📥 Depended On By
+### 📥 Depended On By (5)
 [[chat_threads]] · [[chat_messages]] · [[agent-opinions-agentOpinions]] · [[analysis-jobs-analysisJobs]] · [[briefings-briefingsEmitted]]
 
 
@@ -39,3 +44,10 @@ Database schema (2 tables)
 - `chatThreads`
 - `chatMessages`
 
+
+## 🔍 Explore
+
+- **Local Graph:** Right-click this file → "Open local graph"
+- **Backlinks:** Open the right sidebar → "Backlinks"
+- Use `#type/module` to find all Modules
+- Use `#hamafx-db` to find all files in this package

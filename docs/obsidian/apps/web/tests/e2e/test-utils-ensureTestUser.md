@@ -4,8 +4,10 @@ package: "@hamafx/web"
 path: "apps/web/tests/e2e/test-utils.ts"
 incoming: 6
 outgoing: 2
+connections: 8
 risk: low
-tags: [module, hamafxweb]
+layer: core
+tags: [type/module, hamafx-web, layer/core]
 aliases: [test-utils/ensureTestUser]
 ---
 
@@ -23,14 +25,17 @@ Module: apps/web/tests/e2e/test-utils.ts
 |---|---|
 | Incoming dependencies | 6 |
 | Outgoing dependencies | 2 |
-| Risk level | LOW |
+| Total connections | 8 |
+| Risk level | **LOW** |
+| Layer | `core` |
+| Package tag | `#hamafx-web` |
 
 
-### 📤 Depends On
+### 📤 Depends On (2)
 [[@hamafx-db]] · [[@hamafx-web]]
 
 
-### 📥 Depended On By
+### 📥 Depended On By (6)
 [[admin-dashboard.spec]] · [[auth-setup]] · [[auth.spec]] · [[fixtures-ChatMockOptions]] · [[isolation.spec]] · [[onboarding-replay.spec]]
 
 
@@ -41,3 +46,10 @@ Module: apps/web/tests/e2e/test-utils.ts
 - `authenticateAs`
 - `ensureSystemUser`
 
+
+## 🔍 Explore
+
+- **Local Graph:** Right-click this file → "Open local graph"
+- **Backlinks:** Open the right sidebar → "Backlinks"
+- Use `#type/module` to find all Modules
+- Use `#hamafx-web` to find all files in this package

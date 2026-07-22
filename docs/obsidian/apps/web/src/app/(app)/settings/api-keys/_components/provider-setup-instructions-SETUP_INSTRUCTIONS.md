@@ -4,8 +4,10 @@ package: "@hamafx/web"
 path: "apps/web/src/app/(app)/settings/api-keys/_components/provider-setup-instructions.ts"
 incoming: 1
 outgoing: 1
+connections: 2
 risk: low
-tags: [module, hamafxweb]
+layer: core
+tags: [type/module, hamafx-web, layer/core]
 aliases: [provider-setup-instructions/SETUP_INSTRUCTIONS]
 ---
 
@@ -23,14 +25,17 @@ Module: apps/web/src/app/(app)/settings/api-keys/_components/provider-setup-inst
 |---|---|
 | Incoming dependencies | 1 |
 | Outgoing dependencies | 1 |
-| Risk level | LOW |
+| Total connections | 2 |
+| Risk level | **LOW** |
+| Layer | `core` |
+| Package tag | `#hamafx-web` |
 
 
-### 📤 Depends On
+### 📤 Depends On (1)
 [[@hamafx-web]]
 
 
-### 📥 Depended On By
+### 📥 Depended On By (1)
 [[api-key-card-ApiKeyCard]]
 
 
@@ -38,3 +43,10 @@ Module: apps/web/src/app/(app)/settings/api-keys/_components/provider-setup-inst
 ## 📦 Exports
 - `SETUP_INSTRUCTIONS`
 
+
+## 🔍 Explore
+
+- **Local Graph:** Right-click this file → "Open local graph"
+- **Backlinks:** Open the right sidebar → "Backlinks"
+- Use `#type/module` to find all Modules
+- Use `#hamafx-web` to find all files in this package

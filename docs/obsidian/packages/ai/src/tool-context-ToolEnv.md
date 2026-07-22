@@ -4,8 +4,10 @@ package: "@hamafx/ai"
 path: "packages/ai/src/tool-context.ts"
 incoming: 33
 outgoing: 7
+connections: 40
 risk: high
-tags: [module, hamafxai]
+layer: core
+tags: [type/module, hamafx-ai, layer/core, risk/high]
 aliases: [tool-context/ToolEnv]
 ---
 
@@ -23,15 +25,19 @@ Module: packages/ai/src/tool-context.ts
 |---|---|
 | Incoming dependencies | 33 |
 | Outgoing dependencies | 7 |
-| Risk level | HIGH |
+| Total connections | 40 |
+| Risk level | **HIGH** |
+| Layer | `core` |
+| Package tag | `#hamafx-ai` |
 
 
-### 📤 Depends On
+### 📤 Depends On (3)
 [[@hamafx-shared]] · [[@hamafx-db]] · [[@hamafx-ai]]
 
 
-### 📥 Depended On By
-[[agent-runChat]] · [[thread-summary-CompactResult]] · [[base-agent-baseOpinionSchema]] · [[decision]] · [[planner-PlannerEnv]] · [[title-GenerateTitleArgs]] · [[analyze_chart_image]] · [[analyze_fundamental]] · [[compute_position_health]] · [[convene_committee]] · [[forecast_volatility]] · [[get_calendar]] · [[get_intermarket_resonance]] · [[get_journal_stats]] · [[get_news]]
+### 📥 Depended On By (33)
+[[agent-runChat]] · [[thread-summary-CompactResult]] · [[base-agent-baseOpinionSchema]] · [[decision]] · [[planner-PlannerEnv]] · [[title-GenerateTitleArgs]] · [[analyze_chart_image]] · [[analyze_fundamental]] · [[compute_position_health]] · [[convene_committee]] · [[forecast_volatility]] · [[get_calendar]] · [[get_intermarket_resonance]] · [[get_journal_stats]] · [[get_news]] · [[get_portfolio_snapshot]] · [[get_social_sentiment]] · [[get_system_diagnostics]] · [[log_journal]] · [[mutation-guard-assertMutationIntent]]
+> ... and 13 more
 
 
 
@@ -44,3 +50,10 @@ Module: packages/ai/src/tool-context.ts
 - `getToolContext`
 - `maybeGetToolContext`
 
+
+## 🔍 Explore
+
+- **Local Graph:** Right-click this file → "Open local graph"
+- **Backlinks:** Open the right sidebar → "Backlinks"
+- Use `#type/module` to find all Modules
+- Use `#hamafx-ai` to find all files in this package

@@ -4,8 +4,10 @@ package: "@hamafx/worker"
 path: "apps/worker/src/cron-lock.ts"
 incoming: 2
 outgoing: 2
+connections: 4
 risk: low
-tags: [module, hamafxworker]
+layer: core
+tags: [type/module, hamafx-worker, layer/core]
 aliases: [cron-lock/CronLock]
 ---
 
@@ -23,14 +25,17 @@ Module: apps/worker/src/cron-lock.ts
 |---|---|
 | Incoming dependencies | 2 |
 | Outgoing dependencies | 2 |
-| Risk level | LOW |
+| Total connections | 4 |
+| Risk level | **LOW** |
+| Layer | `core` |
+| Package tag | `#hamafx-worker` |
 
 
-### 📤 Depends On
+### 📤 Depends On (2)
 [[@hamafx-ai]] · [[@hamafx-worker]]
 
 
-### 📥 Depended On By
+### 📥 Depended On By (2)
 [[scheduler-startScheduler]] · [[cron-lock.test]]
 
 
@@ -39,3 +44,10 @@ Module: apps/worker/src/cron-lock.ts
 - `CronLock`
 - `acquireCronLock`
 
+
+## 🔍 Explore
+
+- **Local Graph:** Right-click this file → "Open local graph"
+- **Backlinks:** Open the right sidebar → "Backlinks"
+- Use `#type/module` to find all Modules
+- Use `#hamafx-worker` to find all files in this package

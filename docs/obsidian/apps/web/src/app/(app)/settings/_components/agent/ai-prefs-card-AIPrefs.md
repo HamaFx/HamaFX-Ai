@@ -4,8 +4,10 @@ package: "@hamafx/web"
 path: "apps/web/src/app/(app)/settings/_components/agent/ai-prefs-card.tsx"
 incoming: 2
 outgoing: 2
+connections: 4
 risk: low
-tags: [module, hamafxweb]
+layer: core
+tags: [type/module, hamafx-web, layer/core]
 aliases: [ai-prefs-card/AIPrefs]
 ---
 
@@ -23,14 +25,17 @@ Module: apps/web/src/app/(app)/settings/_components/agent/ai-prefs-card.tsx
 |---|---|
 | Incoming dependencies | 2 |
 | Outgoing dependencies | 2 |
-| Risk level | LOW |
+| Total connections | 4 |
+| Risk level | **LOW** |
+| Layer | `core` |
+| Package tag | `#hamafx-web` |
 
 
-### 📤 Depends On
+### 📤 Depends On (2)
 [[actions]] · [[@hamafx-web]]
 
 
-### 📥 Depended On By
+### 📥 Depended On By (2)
 [[page-async]] · [[instruction-presets.test]]
 
 
@@ -44,3 +49,10 @@ Module: apps/web/src/app/(app)/settings/_components/agent/ai-prefs-card.tsx
 - `appendPreset`
 - `AIPrefsCard`
 
+
+## 🔍 Explore
+
+- **Local Graph:** Right-click this file → "Open local graph"
+- **Backlinks:** Open the right sidebar → "Backlinks"
+- Use `#type/module` to find all Modules
+- Use `#hamafx-web` to find all files in this package

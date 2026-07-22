@@ -4,8 +4,10 @@ package: "infra"
 path: "infra"
 incoming: 0
 outgoing: 0
+connections: 0
 risk: low
-tags: [package, infra]
+layer: package
+tags: [type/package, infra, layer/package]
 aliases: [infra]
 ---
 
@@ -23,9 +25,19 @@ Package: infra
 |---|---|
 | Incoming dependencies | 0 |
 | Outgoing dependencies | 0 |
-| Risk level | LOW |
+| Total connections | 0 |
+| Risk level | **LOW** |
+| Layer | `package` |
+| Package tag | `#infra` |
 
 
 
 
 
+
+## 🔍 Explore
+
+- **Local Graph:** Right-click this file → "Open local graph"
+- **Backlinks:** Open the right sidebar → "Backlinks"
+- Use `#type/package` to find all Packages
+- Use `#infra` to find all files in this package

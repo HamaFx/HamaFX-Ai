@@ -4,8 +4,10 @@ package: "@hamafx/web"
 path: "apps/web/src/lib/usage-alerts.ts"
 incoming: 1
 outgoing: 3
+connections: 4
 risk: low
-tags: [module, hamafxweb]
+layer: core
+tags: [type/module, hamafx-web, layer/core]
 aliases: [usage-alerts/resetSentAlerts]
 ---
 
@@ -23,14 +25,17 @@ Module: apps/web/src/lib/usage-alerts.ts
 |---|---|
 | Incoming dependencies | 1 |
 | Outgoing dependencies | 3 |
-| Risk level | LOW |
+| Total connections | 4 |
+| Risk level | **LOW** |
+| Layer | `core` |
+| Package tag | `#hamafx-web` |
 
 
-### 📤 Depends On
+### 📤 Depends On (3)
 [[@hamafx-db]] · [[@hamafx-ai]] · [[@hamafx-web]]
 
 
-### 📥 Depended On By
+### 📥 Depended On By (1)
 [[usage-alerts.test]]
 
 
@@ -39,3 +44,10 @@ Module: apps/web/src/lib/usage-alerts.ts
 - `resetSentAlerts`
 - `checkAllUsageAlerts`
 
+
+## 🔍 Explore
+
+- **Local Graph:** Right-click this file → "Open local graph"
+- **Backlinks:** Open the right sidebar → "Backlinks"
+- Use `#type/module` to find all Modules
+- Use `#hamafx-web` to find all files in this package

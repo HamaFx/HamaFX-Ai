@@ -4,8 +4,10 @@ package: "loadtest"
 path: "loadtest/lib/http.ts"
 incoming: 6
 outgoing: 3
+connections: 9
 risk: low
-tags: [module, loadtest]
+layer: core
+tags: [type/module, loadtest, layer/core]
 aliases: [http/HttpHeaders]
 ---
 
@@ -23,14 +25,17 @@ Module: loadtest/lib/http.ts
 |---|---|
 | Incoming dependencies | 6 |
 | Outgoing dependencies | 3 |
-| Risk level | LOW |
+| Total connections | 9 |
+| Risk level | **LOW** |
+| Layer | `core` |
+| Package tag | `#loadtest` |
 
 
-### 📤 Depends On
+### 📤 Depends On (3)
 [[environments-SessionCtx]] · [[checks-expectOk]] · [[loadtest]]
 
 
-### 📥 Depended On By
+### 📥 Depended On By (6)
 [[http-server-HealthServerDeps]] · [[chat-chatTurn]] · [[config-mix-configMix]] · [[market-read-marketRead]] · [[read-mix-readMix]] · [[write-mix-writeMix]]
 
 
@@ -45,3 +50,10 @@ Module: loadtest/lib/http.ts
 - `deleteReq`
 - `getJsonSafe`
 
+
+## 🔍 Explore
+
+- **Local Graph:** Right-click this file → "Open local graph"
+- **Backlinks:** Open the right sidebar → "Backlinks"
+- Use `#type/module` to find all Modules
+- Use `#loadtest` to find all files in this package

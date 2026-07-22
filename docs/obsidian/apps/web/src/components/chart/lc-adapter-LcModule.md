@@ -4,8 +4,10 @@ package: "@hamafx/web"
 path: "apps/web/src/components/chart/lc-adapter.ts"
 incoming: 5
 outgoing: 1
+connections: 6
 risk: low
-tags: [module, hamafxweb]
+layer: core
+tags: [type/module, hamafx-web, layer/core]
 aliases: [lc-adapter/LcModule]
 ---
 
@@ -23,14 +25,17 @@ Module: apps/web/src/components/chart/lc-adapter.ts
 |---|---|
 | Incoming dependencies | 5 |
 | Outgoing dependencies | 1 |
-| Risk level | LOW |
+| Total connections | 6 |
+| Risk level | **LOW** |
+| Layer | `core` |
+| Package tag | `#hamafx-web` |
 
 
-### 📤 Depends On
+### 📤 Depends On (1)
 [[@hamafx-web]]
 
 
-### 📥 Depended On By
+### 📥 Depended On By (5)
 [[chart-atr-ChartATRProps]] · [[chart-canvas-ChartCanvasHandle]] · [[chart-macd-ChartMACDProps]] · [[chart-rsi-ChartRSIProps]] · [[use-sub-pane-chart-SubPaneOptions]]
 
 
@@ -52,3 +57,10 @@ Module: apps/web/src/components/chart/lc-adapter.ts
 - `LineData`
 - `CandlestickData`
 
+
+## 🔍 Explore
+
+- **Local Graph:** Right-click this file → "Open local graph"
+- **Backlinks:** Open the right sidebar → "Backlinks"
+- Use `#type/module` to find all Modules
+- Use `#hamafx-web` to find all files in this package

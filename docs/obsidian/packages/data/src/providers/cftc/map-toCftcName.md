@@ -4,8 +4,10 @@ package: "@hamafx/data"
 path: "packages/data/src/providers/cftc/map.ts"
 incoming: 0
 outgoing: 3
+connections: 3
 risk: low
-tags: [module, hamafxdata]
+layer: core
+tags: [type/module, hamafx-data, layer/core]
 aliases: [map/toCftcName]
 ---
 
@@ -23,10 +25,13 @@ Module: packages/data/src/providers/cftc/map.ts
 |---|---|
 | Incoming dependencies | 0 |
 | Outgoing dependencies | 3 |
-| Risk level | LOW |
+| Total connections | 3 |
+| Risk level | **LOW** |
+| Layer | `core` |
+| Package tag | `#hamafx-data` |
 
 
-### 📤 Depends On
+### 📤 Depends On (2)
 [[@hamafx-shared]] · [[@hamafx-data]]
 
 
@@ -35,3 +40,10 @@ Module: packages/data/src/providers/cftc/map.ts
 ## 📦 Exports
 - `toCftcName`
 
+
+## 🔍 Explore
+
+- **Local Graph:** Right-click this file → "Open local graph"
+- **Backlinks:** Open the right sidebar → "Backlinks"
+- Use `#type/module` to find all Modules
+- Use `#hamafx-data` to find all files in this package

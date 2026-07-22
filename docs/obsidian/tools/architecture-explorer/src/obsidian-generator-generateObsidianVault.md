@@ -4,8 +4,10 @@ package: "tool:architecture-explorer"
 path: "tools/architecture-explorer/src/obsidian-generator.ts"
 incoming: 1
 outgoing: 3
+connections: 4
 risk: low
-tags: [module, tool:architecture-explorer]
+layer: core
+tags: [type/module, tool:architecture-explorer, layer/core]
 aliases: [obsidian-generator/generateObsidianVault]
 ---
 
@@ -23,14 +25,17 @@ Module: tools/architecture-explorer/src/obsidian-generator.ts
 |---|---|
 | Incoming dependencies | 1 |
 | Outgoing dependencies | 3 |
-| Risk level | LOW |
+| Total connections | 4 |
+| Risk level | **LOW** |
+| Layer | `core` |
+| Package tag | `#tool:architecture-explorer` |
 
 
-### 📤 Depends On
+### 📤 Depends On (2)
 [[types-NodeType]] · [[tool-architecture-explorer]]
 
 
-### 📥 Depended On By
+### 📥 Depended On By (1)
 [[index_tool-architecture-explorer|index]]
 
 
@@ -38,3 +43,10 @@ Module: tools/architecture-explorer/src/obsidian-generator.ts
 ## 📦 Exports
 - `generateObsidianVault`
 
+
+## 🔍 Explore
+
+- **Local Graph:** Right-click this file → "Open local graph"
+- **Backlinks:** Open the right sidebar → "Backlinks"
+- Use `#type/module` to find all Modules
+- Use `#tool:architecture-explorer` to find all files in this package

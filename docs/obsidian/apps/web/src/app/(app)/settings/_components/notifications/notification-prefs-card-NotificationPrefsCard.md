@@ -4,8 +4,10 @@ package: "@hamafx/web"
 path: "apps/web/src/app/(app)/settings/_components/notifications/notification-prefs-card.tsx"
 incoming: 1
 outgoing: 2
+connections: 3
 risk: low
-tags: [module, hamafxweb]
+layer: core
+tags: [type/module, hamafx-web, layer/core]
 aliases: [notification-prefs-card/NotificationPrefsCard]
 ---
 
@@ -23,14 +25,17 @@ Module: apps/web/src/app/(app)/settings/_components/notifications/notification-p
 |---|---|
 | Incoming dependencies | 1 |
 | Outgoing dependencies | 2 |
-| Risk level | LOW |
+| Total connections | 3 |
+| Risk level | **LOW** |
+| Layer | `core` |
+| Package tag | `#hamafx-web` |
 
 
-### 📤 Depends On
+### 📤 Depends On (2)
 [[actions]] · [[@hamafx-web]]
 
 
-### 📥 Depended On By
+### 📥 Depended On By (1)
 [[page-async]]
 
 
@@ -38,3 +43,10 @@ Module: apps/web/src/app/(app)/settings/_components/notifications/notification-p
 ## 📦 Exports
 - `NotificationPrefsCard`
 
+
+## 🔍 Explore
+
+- **Local Graph:** Right-click this file → "Open local graph"
+- **Backlinks:** Open the right sidebar → "Backlinks"
+- Use `#type/module` to find all Modules
+- Use `#hamafx-web` to find all files in this package

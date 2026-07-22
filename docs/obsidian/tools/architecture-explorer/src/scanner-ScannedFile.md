@@ -4,8 +4,10 @@ package: "tool:architecture-explorer"
 path: "tools/architecture-explorer/src/scanner.ts"
 incoming: 7
 outgoing: 3
+connections: 10
 risk: low
-tags: [module, tool:architecture-explorer]
+layer: core
+tags: [type/module, tool:architecture-explorer, layer/core]
 aliases: [scanner/ScannedFile]
 ---
 
@@ -23,14 +25,17 @@ Module: tools/architecture-explorer/src/scanner.ts
 |---|---|
 | Incoming dependencies | 7 |
 | Outgoing dependencies | 3 |
-| Risk level | LOW |
+| Total connections | 10 |
+| Risk level | **LOW** |
+| Layer | `core` |
+| Package tag | `#tool:architecture-explorer` |
 
 
-### 📤 Depends On
+### 📤 Depends On (2)
 [[types-NodeType]] · [[tool-architecture-explorer]]
 
 
-### 📥 Depended On By
+### 📥 Depended On By (4)
 [[analyzer-Analyzer]] · [[extractor-extractFile]] · [[index_tool-architecture-explorer|index]] · [[knowledge-generator-KnowledgeOutput]]
 
 
@@ -49,3 +54,10 @@ Module: tools/architecture-explorer/src/scanner.ts
 - `getToolFiles`
 - `getAgentFiles`
 
+
+## 🔍 Explore
+
+- **Local Graph:** Right-click this file → "Open local graph"
+- **Backlinks:** Open the right sidebar → "Backlinks"
+- Use `#type/module` to find all Modules
+- Use `#tool:architecture-explorer` to find all files in this package

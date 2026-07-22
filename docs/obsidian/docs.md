@@ -4,8 +4,10 @@ package: "docs"
 path: "docs"
 incoming: 0
 outgoing: 0
+connections: 0
 risk: low
-tags: [package, docs]
+layer: package
+tags: [type/package, docs, layer/package]
 aliases: [docs]
 ---
 
@@ -23,9 +25,19 @@ Package: docs
 |---|---|
 | Incoming dependencies | 0 |
 | Outgoing dependencies | 0 |
-| Risk level | LOW |
+| Total connections | 0 |
+| Risk level | **LOW** |
+| Layer | `package` |
+| Package tag | `#docs` |
 
 
 
 
 
+
+## 🔍 Explore
+
+- **Local Graph:** Right-click this file → "Open local graph"
+- **Backlinks:** Open the right sidebar → "Backlinks"
+- Use `#type/package` to find all Packages
+- Use `#docs` to find all files in this package

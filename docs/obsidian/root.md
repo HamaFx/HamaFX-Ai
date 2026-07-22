@@ -4,8 +4,10 @@ package: "root"
 path: "root"
 incoming: 2
 outgoing: 0
+connections: 2
 risk: low
-tags: [package, root]
+layer: package
+tags: [type/package, root, layer/package]
 aliases: [root]
 ---
 
@@ -23,12 +25,22 @@ Package: root
 |---|---|
 | Incoming dependencies | 2 |
 | Outgoing dependencies | 0 |
-| Risk level | LOW |
+| Total connections | 2 |
+| Risk level | **LOW** |
+| Layer | `package` |
+| Package tag | `#root` |
 
 
 
-### 📥 Depended On By
+### 📥 Depended On By (2)
 [[vitest.config-defineConfig]] · [[vitest.workspace-defineWorkspace]]
 
 
 
+
+## 🔍 Explore
+
+- **Local Graph:** Right-click this file → "Open local graph"
+- **Backlinks:** Open the right sidebar → "Backlinks"
+- Use `#type/package` to find all Packages
+- Use `#root` to find all files in this package

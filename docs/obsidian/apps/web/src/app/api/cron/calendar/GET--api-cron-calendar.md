@@ -4,8 +4,10 @@ package: "@hamafx/web"
 path: "apps/web/src/app/api/cron/calendar/route.ts"
 incoming: 0
 outgoing: 1
+connections: 1
 risk: low
-tags: [api_route, hamafxweb]
+layer: api
+tags: [type/api_route, hamafx-web, layer/api]
 aliases: [GET /api/cron/calendar]
 ---
 
@@ -23,7 +25,10 @@ API Route: GET /api/cron/calendar
 |---|---|
 | Incoming dependencies | 0 |
 | Outgoing dependencies | 1 |
-| Risk level | LOW |
+| Total connections | 1 |
+| Risk level | **LOW** |
+| Layer | `api` |
+| Package tag | `#hamafx-web` |
 
 
 
@@ -35,3 +40,10 @@ API Route: GET /api/cron/calendar
 - `maxDuration`
 - `GET`
 
+
+## 🔍 Explore
+
+- **Local Graph:** Right-click this file → "Open local graph"
+- **Backlinks:** Open the right sidebar → "Backlinks"
+- Use `#type/api_route` to find all API Routes
+- Use `#hamafx-web` to find all files in this package

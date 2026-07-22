@@ -4,8 +4,10 @@ package: "@hamafx/test-utils"
 path: "packages/test-utils/eslint.config.js"
 incoming: 0
 outgoing: 2
+connections: 2
 risk: low
-tags: [module, hamafxtest-utils]
+layer: core
+tags: [type/module, hamafx-test-utils, layer/core]
 aliases: [eslint.config/config]
 ---
 
@@ -23,10 +25,13 @@ Module: packages/test-utils/eslint.config.js
 |---|---|
 | Incoming dependencies | 0 |
 | Outgoing dependencies | 2 |
-| Risk level | LOW |
+| Total connections | 2 |
+| Risk level | **LOW** |
+| Layer | `core` |
+| Package tag | `#hamafx-test-utils` |
 
 
-### 📤 Depends On
+### 📤 Depends On (2)
 [[@hamafx-config]] · [[@hamafx-test-utils]]
 
 
@@ -35,3 +40,10 @@ Module: packages/test-utils/eslint.config.js
 ## 📦 Exports
 - `config`
 
+
+## 🔍 Explore
+
+- **Local Graph:** Right-click this file → "Open local graph"
+- **Backlinks:** Open the right sidebar → "Backlinks"
+- Use `#type/module` to find all Modules
+- Use `#hamafx-test-utils` to find all files in this package

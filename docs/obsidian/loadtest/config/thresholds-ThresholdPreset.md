@@ -4,8 +4,10 @@ package: "loadtest"
 path: "loadtest/config/thresholds.ts"
 incoming: 15
 outgoing: 1
+connections: 16
 risk: medium
-tags: [module, loadtest]
+layer: core
+tags: [type/module, loadtest, layer/core, risk/medium]
 aliases: [thresholds/ThresholdPreset]
 ---
 
@@ -23,14 +25,17 @@ Module: loadtest/config/thresholds.ts
 |---|---|
 | Incoming dependencies | 15 |
 | Outgoing dependencies | 1 |
-| Risk level | MEDIUM |
+| Total connections | 16 |
+| Risk level | **MEDIUM** |
+| Layer | `core` |
+| Package tag | `#loadtest` |
 
 
-### 📤 Depends On
+### 📤 Depends On (1)
 [[loadtest]]
 
 
-### 📥 Depended On By
+### 📥 Depended On By (15)
 [[load-chat-default]] · [[load-config-mix-default]] · [[load-market-read-default]] · [[load-read-mix-default]] · [[load-write-mix-default]] · [[smoke-config-mix-default]] · [[smoke-market-read-default]] · [[smoke-read-mix-default]] · [[smoke-write-mix-default]] · [[soak-read-mix-default]] · [[soak-write-mix-default]] · [[spike-read-mix-default]] · [[spike-write-mix-default]] · [[stress-market-read-default]] · [[stress-write-mix-default]]
 
 
@@ -52,3 +57,10 @@ Module: loadtest/config/thresholds.ts
 - `CONFIG_MIX_TAGGED`
 - `CONFIG_MIX_TAGGED_RELAXED`
 
+
+## 🔍 Explore
+
+- **Local Graph:** Right-click this file → "Open local graph"
+- **Backlinks:** Open the right sidebar → "Backlinks"
+- Use `#type/module` to find all Modules
+- Use `#loadtest` to find all files in this package

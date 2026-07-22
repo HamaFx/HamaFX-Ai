@@ -4,8 +4,10 @@ package: "@hamafx/data"
 path: "packages/data/src/providers/finnhub/rest.ts"
 incoming: 1
 outgoing: 6
+connections: 7
 risk: low
-tags: [module, hamafxdata]
+layer: core
+tags: [type/module, hamafx-data, layer/core]
 aliases: [rest/fetchPrice]
 ---
 
@@ -23,14 +25,17 @@ Module: packages/data/src/providers/finnhub/rest.ts
 |---|---|
 | Incoming dependencies | 1 |
 | Outgoing dependencies | 6 |
-| Risk level | LOW |
+| Total connections | 7 |
+| Risk level | **LOW** |
+| Layer | `core` |
+| Package tag | `#hamafx-data` |
 
 
-### 📤 Depends On
+### 📤 Depends On (5)
 [[@hamafx-shared]] · [[throttle-ThrottleConfig]] · [[errors-DataErrorCode]] · [[map-toFinnhubSymbol]] · [[@hamafx-data]]
 
 
-### 📥 Depended On By
+### 📥 Depended On By (1)
 [[finnhub-candles-map.test]]
 
 
@@ -45,3 +50,10 @@ Module: packages/data/src/providers/finnhub/rest.ts
 - `FetchNewsArgs`
 - `fetchNews`
 
+
+## 🔍 Explore
+
+- **Local Graph:** Right-click this file → "Open local graph"
+- **Backlinks:** Open the right sidebar → "Backlinks"
+- Use `#type/module` to find all Modules
+- Use `#hamafx-data` to find all files in this package

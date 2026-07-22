@@ -4,8 +4,10 @@ package: "tool:architecture-explorer"
 path: "tools/architecture-explorer/src/html-template.ts"
 incoming: 1
 outgoing: 1
+connections: 2
 risk: low
-tags: [module, tool:architecture-explorer]
+layer: core
+tags: [type/module, tool:architecture-explorer, layer/core]
 aliases: [html-template/getHtmlTemplate]
 ---
 
@@ -23,14 +25,17 @@ Module: tools/architecture-explorer/src/html-template.ts
 |---|---|
 | Incoming dependencies | 1 |
 | Outgoing dependencies | 1 |
-| Risk level | LOW |
+| Total connections | 2 |
+| Risk level | **LOW** |
+| Layer | `core` |
+| Package tag | `#tool:architecture-explorer` |
 
 
-### 📤 Depends On
+### 📤 Depends On (1)
 [[tool-architecture-explorer]]
 
 
-### 📥 Depended On By
+### 📥 Depended On By (1)
 [[html-generator-generateHtml]]
 
 
@@ -38,3 +43,10 @@ Module: tools/architecture-explorer/src/html-template.ts
 ## 📦 Exports
 - `getHtmlTemplate`
 
+
+## 🔍 Explore
+
+- **Local Graph:** Right-click this file → "Open local graph"
+- **Backlinks:** Open the right sidebar → "Backlinks"
+- Use `#type/module` to find all Modules
+- Use `#tool:architecture-explorer` to find all files in this package

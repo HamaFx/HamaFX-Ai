@@ -4,8 +4,10 @@ package: "@hamafx/data"
 path: "packages/data/src/providers/binance/rest.ts"
 incoming: 0
 outgoing: 7
+connections: 7
 risk: low
-tags: [module, hamafxdata]
+layer: core
+tags: [type/module, hamafx-data, layer/core]
 aliases: [rest/fetchCandles]
 ---
 
@@ -23,10 +25,13 @@ Module: packages/data/src/providers/binance/rest.ts
 |---|---|
 | Incoming dependencies | 0 |
 | Outgoing dependencies | 7 |
-| Risk level | LOW |
+| Total connections | 7 |
+| Risk level | **LOW** |
+| Layer | `core` |
+| Package tag | `#hamafx-data` |
 
 
-### 📤 Depends On
+### 📤 Depends On (6)
 [[@hamafx-shared]] · [[throttle-ThrottleConfig]] · [[errors-DataErrorCode]] · [[map-toBinanceInterval]] · [[types-BinanceKline]] · [[@hamafx-data]]
 
 
@@ -36,3 +41,10 @@ Module: packages/data/src/providers/binance/rest.ts
 - `fetchCandles`
 - `fetchTickerPrice`
 
+
+## 🔍 Explore
+
+- **Local Graph:** Right-click this file → "Open local graph"
+- **Backlinks:** Open the right sidebar → "Backlinks"
+- Use `#type/module` to find all Modules
+- Use `#hamafx-data` to find all files in this package

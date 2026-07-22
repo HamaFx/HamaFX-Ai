@@ -4,8 +4,10 @@ package: "@hamafx/ai"
 path: "packages/ai/test/prompt.test.ts"
 incoming: 0
 outgoing: 4
+connections: 4
 risk: low
-tags: [module, hamafxai]
+layer: core
+tags: [type/module, hamafx-ai, layer/core]
 aliases: [prompt.test]
 ---
 
@@ -23,12 +25,22 @@ Module: packages/ai/test/prompt.test.ts
 |---|---|
 | Incoming dependencies | 0 |
 | Outgoing dependencies | 4 |
-| Risk level | LOW |
+| Total connections | 4 |
+| Risk level | **LOW** |
+| Layer | `core` |
+| Package tag | `#hamafx-ai` |
 
 
-### 📤 Depends On
+### 📤 Depends On (4)
 [[vitest-installServerOnlyStub]] · [[system-LiveSnapshot]] · [[@hamafx-shared]] · [[@hamafx-ai]]
 
 
 
 
+
+## 🔍 Explore
+
+- **Local Graph:** Right-click this file → "Open local graph"
+- **Backlinks:** Open the right sidebar → "Backlinks"
+- Use `#type/module` to find all Modules
+- Use `#hamafx-ai` to find all files in this package

@@ -4,8 +4,10 @@ package: "@hamafx/indicators"
 path: "packages/indicators/src/smc/swings.ts"
 incoming: 4
 outgoing: 3
+connections: 7
 risk: low
-tags: [module, hamafxindicators]
+layer: core
+tags: [type/module, hamafx-indicators, layer/core]
 aliases: [swings/FindSwingsOptions]
 ---
 
@@ -23,14 +25,17 @@ Module: packages/indicators/src/smc/swings.ts
 |---|---|
 | Incoming dependencies | 4 |
 | Outgoing dependencies | 3 |
-| Risk level | LOW |
+| Total connections | 7 |
+| Risk level | **LOW** |
+| Layer | `core` |
+| Package tag | `#hamafx-indicators` |
 
 
-### 📤 Depends On
+### 📤 Depends On (2)
 [[@hamafx-shared]] · [[@hamafx-indicators]]
 
 
-### 📥 Depended On By
+### 📥 Depended On By (4)
 [[index-ComputeStructureArgs]] · [[smc-liquidity.test]] · [[smc-structure.test]] · [[smc-swings.test]]
 
 
@@ -39,3 +44,10 @@ Module: packages/indicators/src/smc/swings.ts
 - `FindSwingsOptions`
 - `findSwings`
 
+
+## 🔍 Explore
+
+- **Local Graph:** Right-click this file → "Open local graph"
+- **Backlinks:** Open the right sidebar → "Backlinks"
+- Use `#type/module` to find all Modules
+- Use `#hamafx-indicators` to find all files in this package

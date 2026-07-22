@@ -4,8 +4,10 @@ package: "@hamafx/web"
 path: "apps/web/src/lib/services/alerts.ts"
 incoming: 0
 outgoing: 7
+connections: 7
 risk: low
-tags: [module, hamafxweb]
+layer: core
+tags: [type/module, hamafx-web, layer/core]
 aliases: [alerts/AlertDTO]
 ---
 
@@ -23,10 +25,13 @@ Module: apps/web/src/lib/services/alerts.ts
 |---|---|
 | Incoming dependencies | 0 |
 | Outgoing dependencies | 7 |
-| Risk level | LOW |
+| Total connections | 7 |
+| Risk level | **LOW** |
+| Layer | `core` |
+| Package tag | `#hamafx-web` |
 
 
-### 📤 Depends On
+### 📤 Depends On (5)
 [[@hamafx-ai]] · [[@hamafx-shared]] · [[@hamafx-db]] · [[alerts.schema-AlertCreateSchema]] · [[@hamafx-web]]
 
 
@@ -44,3 +49,10 @@ Module: apps/web/src/lib/services/alerts.ts
 - `previewAlertRuleService`
 - `previewDigestService`
 
+
+## 🔍 Explore
+
+- **Local Graph:** Right-click this file → "Open local graph"
+- **Backlinks:** Open the right sidebar → "Backlinks"
+- Use `#type/module` to find all Modules
+- Use `#hamafx-web` to find all files in this package

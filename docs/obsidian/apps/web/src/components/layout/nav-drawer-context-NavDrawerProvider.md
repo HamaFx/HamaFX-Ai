@@ -4,8 +4,10 @@ package: "@hamafx/web"
 path: "apps/web/src/components/layout/nav-drawer-context.tsx"
 incoming: 2
 outgoing: 1
+connections: 3
 risk: low
-tags: [component, hamafxweb]
+layer: ui
+tags: [type/component, hamafx-web, layer/ui]
 aliases: [nav-drawer-context/NavDrawerProvider]
 ---
 
@@ -23,14 +25,17 @@ React component: nav-drawer-context
 |---|---|
 | Incoming dependencies | 2 |
 | Outgoing dependencies | 1 |
-| Risk level | LOW |
+| Total connections | 3 |
+| Risk level | **LOW** |
+| Layer | `ui` |
+| Package tag | `#hamafx-web` |
 
 
-### 📤 Depends On
+### 📤 Depends On (1)
 [[@hamafx-web]]
 
 
-### 📥 Depended On By
+### 📥 Depended On By (2)
 [[nav-drawer-NavDrawer]] · [[nav-trigger-NavTrigger]]
 
 
@@ -41,3 +46,10 @@ React component: nav-drawer-context
 - `useNavDrawerActions`
 - `useNavDrawer`
 
+
+## 🔍 Explore
+
+- **Local Graph:** Right-click this file → "Open local graph"
+- **Backlinks:** Open the right sidebar → "Backlinks"
+- Use `#type/component` to find all Components
+- Use `#hamafx-web` to find all files in this package

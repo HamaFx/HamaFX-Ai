@@ -4,8 +4,10 @@ package: "@hamafx/shared"
 path: "packages/shared/src/schemas/calendar.ts"
 incoming: 2
 outgoing: 1
+connections: 3
 risk: low
-tags: [module, hamafxshared]
+layer: core
+tags: [type/module, hamafx-shared, layer/core]
 aliases: [calendar/ImportanceSchema]
 ---
 
@@ -23,14 +25,17 @@ Module: packages/shared/src/schemas/calendar.ts
 |---|---|
 | Incoming dependencies | 2 |
 | Outgoing dependencies | 1 |
-| Risk level | LOW |
+| Total connections | 3 |
+| Risk level | **LOW** |
+| Layer | `core` |
+| Package tag | `#hamafx-shared` |
 
 
-### 📤 Depends On
+### 📤 Depends On (1)
 [[@hamafx-shared]]
 
 
-### 📥 Depended On By
+### 📥 Depended On By (2)
 [[analyze-fundamental-AnalyzeFundamentalInputSchema]] · [[get-calendar-ToolCalendarItemSchema]]
 
 
@@ -45,3 +50,10 @@ Module: packages/shared/src/schemas/calendar.ts
 - `EconomicEventSchema`
 - `EconomicEvent`
 
+
+## 🔍 Explore
+
+- **Local Graph:** Right-click this file → "Open local graph"
+- **Backlinks:** Open the right sidebar → "Backlinks"
+- Use `#type/module` to find all Modules
+- Use `#hamafx-shared` to find all files in this package

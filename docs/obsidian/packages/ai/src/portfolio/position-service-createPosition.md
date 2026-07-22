@@ -4,8 +4,10 @@ package: "@hamafx/ai"
 path: "packages/ai/src/portfolio/position-service.ts"
 incoming: 1
 outgoing: 5
+connections: 6
 risk: low
-tags: [module, hamafxai]
+layer: core
+tags: [type/module, hamafx-ai, layer/core]
 aliases: [position-service/createPosition]
 ---
 
@@ -23,14 +25,17 @@ Module: packages/ai/src/portfolio/position-service.ts
 |---|---|
 | Incoming dependencies | 1 |
 | Outgoing dependencies | 5 |
-| Risk level | LOW |
+| Total connections | 6 |
+| Risk level | **LOW** |
+| Layer | `core` |
+| Package tag | `#hamafx-ai` |
 
 
-### 📤 Depends On
+### 📤 Depends On (4)
 [[@hamafx-db]] · [[db-getDb]] · [[@hamafx-shared]] · [[@hamafx-ai]]
 
 
-### 📥 Depended On By
+### 📥 Depended On By (1)
 [[risk-service-computePnL]]
 
 
@@ -45,3 +50,10 @@ Module: packages/ai/src/portfolio/position-service.ts
 - `getPortfolioSettings`
 - `savePortfolioSettings`
 
+
+## 🔍 Explore
+
+- **Local Graph:** Right-click this file → "Open local graph"
+- **Backlinks:** Open the right sidebar → "Backlinks"
+- Use `#type/module` to find all Modules
+- Use `#hamafx-ai` to find all files in this package

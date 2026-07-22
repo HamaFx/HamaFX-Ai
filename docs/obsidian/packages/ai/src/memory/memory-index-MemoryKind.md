@@ -4,8 +4,10 @@ package: "@hamafx/ai"
 path: "packages/ai/src/memory/memory-index.ts"
 incoming: 8
 outgoing: 9
-risk: low
-tags: [module, hamafxai]
+connections: 17
+risk: medium
+layer: core
+tags: [type/module, hamafx-ai, layer/core, risk/medium]
 aliases: [memory-index/MemoryKind]
 ---
 
@@ -23,14 +25,17 @@ Module: packages/ai/src/memory/memory-index.ts
 |---|---|
 | Incoming dependencies | 8 |
 | Outgoing dependencies | 9 |
-| Risk level | LOW |
+| Total connections | 17 |
+| Risk level | **MEDIUM** |
+| Layer | `core` |
+| Package tag | `#hamafx-ai` |
 
 
-### 📤 Depends On
+### 📤 Depends On (6)
 [[@hamafx-db]] · [[db-getDb]] · [[@hamafx-shared]] · [[cost-DEFAULT_TURN_ESTIMATE_USD]] · [[embeddings-EmbedTextsArgs]] · [[@hamafx-ai]]
 
 
-### 📥 Depended On By
+### 📥 Depended On By (7)
 [[generate-BriefingsEnv]] · [[persistence-CreateJournalInput]] · [[rag-RagRow]] · [[search_knowledge]] · [[summarize_thread]] · [[compose-journal-text.test]] · [[rag.test]]
 
 
@@ -49,3 +54,10 @@ Module: packages/ai/src/memory/memory-index.ts
 - `searchMemory`
 - `countMemory`
 
+
+## 🔍 Explore
+
+- **Local Graph:** Right-click this file → "Open local graph"
+- **Backlinks:** Open the right sidebar → "Backlinks"
+- Use `#type/module` to find all Modules
+- Use `#hamafx-ai` to find all files in this package

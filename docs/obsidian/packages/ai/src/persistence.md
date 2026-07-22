@@ -4,8 +4,10 @@ package: "@hamafx/ai"
 path: "packages/ai/src/persistence.ts"
 incoming: 14
 outgoing: 1
-risk: medium
-tags: [module, hamafxai]
+connections: 15
+risk: low
+layer: core
+tags: [type/module, hamafx-ai, layer/core]
 aliases: [persistence]
 ---
 
@@ -23,15 +25,25 @@ Module: packages/ai/src/persistence.ts
 |---|---|
 | Incoming dependencies | 14 |
 | Outgoing dependencies | 1 |
-| Risk level | MEDIUM |
+| Total connections | 15 |
+| Risk level | **LOW** |
+| Layer | `core` |
+| Package tag | `#hamafx-ai` |
 
 
-### 📤 Depends On
+### 📤 Depends On (1)
 [[@hamafx-ai]]
 
 
-### 📥 Depended On By
+### 📥 Depended On By (12)
 [[agent-runChat]] · [[generate-BriefingsEnv]] · [[persistence-getOrCreateBriefingsThread]] · [[auto-title-runAutoTitleBackground]] · [[helpers-countToolCalls]] · [[thread-summary-CompactResult]] · [[orchestrator-RunMultiAgentArgs]] · [[summarize_thread]] · [[with-telemetry-withTelemetry]] · [[chat-helpers.test]] · [[fork-thread.test]] · [[idor-persistence.test]]
 
 
 
+
+## 🔍 Explore
+
+- **Local Graph:** Right-click this file → "Open local graph"
+- **Backlinks:** Open the right sidebar → "Backlinks"
+- Use `#type/module` to find all Modules
+- Use `#hamafx-ai` to find all files in this package

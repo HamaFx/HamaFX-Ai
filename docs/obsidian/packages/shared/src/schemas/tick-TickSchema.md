@@ -4,8 +4,10 @@ package: "@hamafx/shared"
 path: "packages/shared/src/schemas/tick.ts"
 incoming: 1
 outgoing: 2
+connections: 3
 risk: low
-tags: [module, hamafxshared]
+layer: core
+tags: [type/module, hamafx-shared, layer/core]
 aliases: [tick/TickSchema]
 ---
 
@@ -23,14 +25,17 @@ Module: packages/shared/src/schemas/tick.ts
 |---|---|
 | Incoming dependencies | 1 |
 | Outgoing dependencies | 2 |
-| Risk level | LOW |
+| Total connections | 3 |
+| Risk level | **LOW** |
+| Layer | `core` |
+| Package tag | `#hamafx-shared` |
 
 
-### 📤 Depends On
+### 📤 Depends On (2)
 [[symbols-SYMBOLS]] · [[@hamafx-shared]]
 
 
-### 📥 Depended On By
+### 📥 Depended On By (1)
 [[get-price-GetPriceOutputSchema]]
 
 
@@ -39,3 +44,10 @@ Module: packages/shared/src/schemas/tick.ts
 - `TickSchema`
 - `Tick`
 
+
+## 🔍 Explore
+
+- **Local Graph:** Right-click this file → "Open local graph"
+- **Backlinks:** Open the right sidebar → "Backlinks"
+- Use `#type/module` to find all Modules
+- Use `#hamafx-shared` to find all files in this package

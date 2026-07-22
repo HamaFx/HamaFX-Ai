@@ -4,8 +4,10 @@ package: "@hamafx/data"
 path: "packages/data/src/health.ts"
 incoming: 6
 outgoing: 2
+connections: 8
 risk: low
-tags: [module, hamafxdata]
+layer: core
+tags: [type/module, hamafx-data, layer/core]
 aliases: [health/recordSuccess]
 ---
 
@@ -23,14 +25,17 @@ Module: packages/data/src/health.ts
 |---|---|
 | Incoming dependencies | 6 |
 | Outgoing dependencies | 2 |
-| Risk level | LOW |
+| Total connections | 8 |
+| Risk level | **LOW** |
+| Layer | `core` |
+| Package tag | `#hamafx-data` |
 
 
-### 📤 Depends On
+### 📤 Depends On (2)
 [[@hamafx-db]] · [[@hamafx-data]]
 
 
-### 📥 Depended On By
+### 📥 Depended On By (6)
 [[failover-ProviderAttempt]] · [[chaos-failover.test]] · [[failover-pinned.test]] · [[failover.test]] · [[health.test]] · [[price-adapter.test]]
 
 
@@ -43,3 +48,10 @@ Module: packages/data/src/health.ts
 - `getScore`
 - `_resetHealth`
 
+
+## 🔍 Explore
+
+- **Local Graph:** Right-click this file → "Open local graph"
+- **Backlinks:** Open the right sidebar → "Backlinks"
+- Use `#type/module` to find all Modules
+- Use `#hamafx-data` to find all files in this package

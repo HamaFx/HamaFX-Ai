@@ -4,8 +4,10 @@ package: "@hamafx/shared"
 path: "packages/shared/src/errors.ts"
 incoming: 3
 outgoing: 1
+connections: 4
 risk: low
-tags: [module, hamafxshared]
+layer: core
+tags: [type/module, hamafx-shared, layer/core]
 aliases: [errors/ERROR_CODES]
 ---
 
@@ -23,14 +25,17 @@ Module: packages/shared/src/errors.ts
 |---|---|
 | Incoming dependencies | 3 |
 | Outgoing dependencies | 1 |
-| Risk level | LOW |
+| Total connections | 4 |
+| Risk level | **LOW** |
+| Layer | `core` |
+| Package tag | `#hamafx-shared` |
 
 
-### 📤 Depends On
+### 📤 Depends On (1)
 [[@hamafx-shared]]
 
 
-### 📥 Depended On By
+### 📥 Depended On By (3)
 [[bug-report-DiagnosticStep]] · [[encryption-encryptByok]] · [[error-patterns-ErrorPattern]]
 
 
@@ -50,3 +55,10 @@ Module: packages/shared/src/errors.ts
 - `internalError`
 - `formatErrorResponse`
 
+
+## 🔍 Explore
+
+- **Local Graph:** Right-click this file → "Open local graph"
+- **Backlinks:** Open the right sidebar → "Backlinks"
+- Use `#type/module` to find all Modules
+- Use `#hamafx-shared` to find all files in this package

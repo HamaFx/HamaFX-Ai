@@ -4,8 +4,10 @@ package: "@hamafx/data"
 path: "packages/data/src/adapters/candles.ts"
 incoming: 0
 outgoing: 6
+connections: 6
 risk: low
-tags: [module, hamafxdata]
+layer: core
+tags: [type/module, hamafx-data, layer/core]
 aliases: [candles/GetCandlesOptions]
 ---
 
@@ -23,10 +25,13 @@ Module: packages/data/src/adapters/candles.ts
 |---|---|
 | Incoming dependencies | 0 |
 | Outgoing dependencies | 6 |
-| Risk level | LOW |
+| Total connections | 6 |
+| Risk level | **LOW** |
+| Layer | `core` |
+| Package tag | `#hamafx-data` |
 
 
-### 📤 Depends On
+### 📤 Depends On (6)
 [[@hamafx-shared]] · [[index-getDefaultCache]] · [[errors-DataErrorCode]] · [[failover-ProviderAttempt]] · [[provider-registry-ProviderFetchOptions]] · [[@hamafx-data]]
 
 
@@ -38,3 +43,10 @@ Module: packages/data/src/adapters/candles.ts
 - `getCandles`
 - `getCandlesWithMeta`
 
+
+## 🔍 Explore
+
+- **Local Graph:** Right-click this file → "Open local graph"
+- **Backlinks:** Open the right sidebar → "Backlinks"
+- Use `#type/module` to find all Modules
+- Use `#hamafx-data` to find all files in this package

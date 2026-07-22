@@ -4,8 +4,10 @@ package: "@hamafx/web"
 path: "apps/web/src/components/chat/chat-top-bar.tsx"
 incoming: 3
 outgoing: 4
+connections: 7
 risk: low
-tags: [component, hamafxweb]
+layer: ui
+tags: [type/component, hamafx-web, layer/ui]
 aliases: [chat-top-bar/AnalysisMode]
 ---
 
@@ -23,14 +25,17 @@ React component: chat-top-bar
 |---|---|
 | Incoming dependencies | 3 |
 | Outgoing dependencies | 4 |
-| Risk level | LOW |
+| Total connections | 7 |
+| Risk level | **LOW** |
+| Layer | `ui` |
+| Package tag | `#hamafx-web` |
 
 
-### 📤 Depends On
+### 📤 Depends On (3)
 [[@hamafx-shared]] · [[thread-switcher-ThreadSwitcher]] · [[@hamafx-web]]
 
 
-### 📥 Depended On By
+### 📥 Depended On By (2)
 [[thread-switcher-ThreadSwitcher]] · [[chat-screen-ChatScreen]]
 
 
@@ -40,3 +45,10 @@ React component: chat-top-bar
 - `ThreadSummary`
 - `ChatTopBar`
 
+
+## 🔍 Explore
+
+- **Local Graph:** Right-click this file → "Open local graph"
+- **Backlinks:** Open the right sidebar → "Backlinks"
+- Use `#type/component` to find all Components
+- Use `#hamafx-web` to find all files in this package

@@ -4,8 +4,10 @@ package: "@hamafx/data"
 path: "packages/data/src/providers/to-candle.ts"
 incoming: 2
 outgoing: 4
+connections: 6
 risk: low
-tags: [module, hamafxdata]
+layer: core
+tags: [type/module, hamafx-data, layer/core]
 aliases: [to-candle/StandardBar]
 ---
 
@@ -23,14 +25,17 @@ Module: packages/data/src/providers/to-candle.ts
 |---|---|
 | Incoming dependencies | 2 |
 | Outgoing dependencies | 4 |
-| Risk level | LOW |
+| Total connections | 6 |
+| Risk level | **LOW** |
+| Layer | `core` |
+| Package tag | `#hamafx-data` |
 
 
-### 📤 Depends On
+### 📤 Depends On (2)
 [[@hamafx-shared]] · [[@hamafx-data]]
 
 
-### 📥 Depended On By
+### 📥 Depended On By (2)
 [[provider-adapters-bootstrapMarketDataProviders]] · [[to-candle.test]]
 
 
@@ -41,3 +46,10 @@ Module: packages/data/src/providers/to-candle.ts
 - `BiquoteOhlcBar`
 - `toCandleFromBiquote`
 
+
+## 🔍 Explore
+
+- **Local Graph:** Right-click this file → "Open local graph"
+- **Backlinks:** Open the right sidebar → "Backlinks"
+- Use `#type/module` to find all Modules
+- Use `#hamafx-data` to find all files in this package

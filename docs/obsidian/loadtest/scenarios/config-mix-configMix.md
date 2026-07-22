@@ -4,8 +4,10 @@ package: "loadtest"
 path: "loadtest/scenarios/config-mix.ts"
 incoming: 2
 outgoing: 4
+connections: 6
 risk: low
-tags: [module, loadtest]
+layer: core
+tags: [type/module, loadtest, layer/core]
 aliases: [config-mix/configMix]
 ---
 
@@ -23,14 +25,17 @@ Module: loadtest/scenarios/config-mix.ts
 |---|---|
 | Incoming dependencies | 2 |
 | Outgoing dependencies | 4 |
-| Risk level | LOW |
+| Total connections | 6 |
+| Risk level | **LOW** |
+| Layer | `core` |
+| Package tag | `#loadtest` |
 
 
-### 📤 Depends On
+### 📤 Depends On (4)
 [[http-HttpHeaders]] · [[checks-expectOk]] · [[environments-SessionCtx]] · [[loadtest]]
 
 
-### 📥 Depended On By
+### 📥 Depended On By (2)
 [[load-config-mix-default]] · [[smoke-config-mix-default]]
 
 
@@ -38,3 +43,10 @@ Module: loadtest/scenarios/config-mix.ts
 ## 📦 Exports
 - `configMix`
 
+
+## 🔍 Explore
+
+- **Local Graph:** Right-click this file → "Open local graph"
+- **Backlinks:** Open the right sidebar → "Backlinks"
+- Use `#type/module` to find all Modules
+- Use `#loadtest` to find all files in this package

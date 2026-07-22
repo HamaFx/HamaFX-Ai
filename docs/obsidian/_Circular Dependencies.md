@@ -2,14 +2,13 @@
 type: dashboard
 title: "Circular Dependencies"
 count: 6
-tags: [dashboard, analysis]
+tags: [dashboard, analysis, risk/high]
 ---
 
-# 🔄 Circular Dependencies
+# 🔄 Circular Dependencies (6)
 
-## Found 6 cycles
-
-> Circular dependencies create tight coupling — extract shared interfaces to break them.
+> Circular dependencies create tight coupling — extract shared interfaces or
+> introduce a facade layer to break them.
 
 - 🔄 23 nodes: [[run-system-action-RunSystemActionPart]] → [[get-system-diagnostics-GetSystemDiagnosticsPart]] → [[get-intermarket-resonance-GetIntermarketResonancePart]] → [[verify-call-VerifyCallPart]] → [[summarize-thread-SummarizeThreadPart]] → [[share-snapshot-ShareSnapshotPart]] → [[search-knowledge-SearchKnowledgePart]] → [[replay-setup-ReplaySetupPart]] → [[get-session-levels-GetSessionLevelsPart]] → [[get-seasonality-GetSeasonalityPart]] → [[get-journal-stats-GetJournalStatsPart]] → [[get-intermarket-GetIntermarketPart]] → [[get-cot-GetCoTPart]] → [[get-correlation-GetCorrelationPart]] → [[forecast-volatility-ForecastVolatilityPart]] → [[convene-committee-ConveneCommitteePart]] → [[compute-risk-ComputeRiskPart]] → [[compute-position-health-ComputePositionHealthPart]] → [[annotate-chart-AnnotateChartPart]] → [[analyze-technical-AnalyzeTechnicalPart]] → [[analyze-fundamental-AnalyzeFundamentalPart]] → [[analyze-chart-image-AnalyzeChartImagePart]] → [[registry-ToolPartState]]
 - 🔄 2 nodes: [[chat-top-bar-AnalysisMode]] → [[thread-switcher-ThreadSwitcher]]

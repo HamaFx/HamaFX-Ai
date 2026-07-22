@@ -4,8 +4,10 @@ package: "@hamafx/shared"
 path: "packages/shared/src/logger.ts"
 incoming: 3
 outgoing: 4
+connections: 7
 risk: low
-tags: [module, hamafxshared]
+layer: core
+tags: [type/module, hamafx-shared, layer/core]
 aliases: [logger/LOG_CATEGORIES]
 ---
 
@@ -23,14 +25,17 @@ Module: packages/shared/src/logger.ts
 |---|---|
 | Incoming dependencies | 3 |
 | Outgoing dependencies | 4 |
-| Risk level | LOW |
+| Total connections | 7 |
+| Risk level | **LOW** |
+| Layer | `core` |
+| Package tag | `#hamafx-shared` |
 
 
-### 📤 Depends On
+### 📤 Depends On (4)
 [[error-patterns-ErrorPattern]] · [[log-stream-LogStreamClient]] · [[bug-report-DiagnosticStep]] · [[@hamafx-shared]]
 
 
-### 📥 Depended On By
+### 📥 Depended On By (3)
 [[encryption-encryptByok]] · [[vault-loadSecretsFromVault]] · [[logger.test]]
 
 
@@ -48,3 +53,10 @@ Module: packages/shared/src/logger.ts
 - `AgentLogData`
 - `logForAgent`
 
+
+## 🔍 Explore
+
+- **Local Graph:** Right-click this file → "Open local graph"
+- **Backlinks:** Open the right sidebar → "Backlinks"
+- Use `#type/module` to find all Modules
+- Use `#hamafx-shared` to find all files in this package

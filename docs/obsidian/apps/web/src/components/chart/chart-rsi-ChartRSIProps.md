@@ -4,8 +4,10 @@ package: "@hamafx/web"
 path: "apps/web/src/components/chart/chart-rsi.tsx"
 incoming: 1
 outgoing: 8
+connections: 9
 risk: low
-tags: [component, hamafxweb]
+layer: ui
+tags: [type/component, hamafx-web, layer/ui]
 aliases: [chart-rsi/ChartRSIProps]
 ---
 
@@ -23,14 +25,17 @@ React component: chart-rsi
 |---|---|
 | Incoming dependencies | 1 |
 | Outgoing dependencies | 8 |
-| Risk level | LOW |
+| Total connections | 9 |
+| Risk level | **LOW** |
+| Layer | `ui` |
+| Package tag | `#hamafx-web` |
 
 
-### 📤 Depends On
+### 📤 Depends On (6)
 [[@hamafx-shared]] · [[chart-colors-SERIES_BULL_HEX]] · [[chart-types-ChartSettings]] · [[use-sub-pane-chart-SubPaneOptions]] · [[lc-adapter-LcModule]] · [[@hamafx-web]]
 
 
-### 📥 Depended On By
+### 📥 Depended On By (1)
 [[chart-Chart]]
 
 
@@ -39,3 +44,10 @@ React component: chart-rsi
 - `ChartRSIProps`
 - `ChartRSI`
 
+
+## 🔍 Explore
+
+- **Local Graph:** Right-click this file → "Open local graph"
+- **Backlinks:** Open the right sidebar → "Backlinks"
+- Use `#type/component` to find all Components
+- Use `#hamafx-web` to find all files in this package

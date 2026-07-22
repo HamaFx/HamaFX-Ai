@@ -4,8 +4,10 @@ package: "@hamafx/worker"
 path: "apps/worker/test/empty.ts"
 incoming: 0
 outgoing: 1
+connections: 1
 risk: low
-tags: [module, hamafxworker]
+layer: core
+tags: [type/module, hamafx-worker, layer/core]
 aliases: [empty]
 ---
 
@@ -23,12 +25,22 @@ Module: apps/worker/test/empty.ts
 |---|---|
 | Incoming dependencies | 0 |
 | Outgoing dependencies | 1 |
-| Risk level | LOW |
+| Total connections | 1 |
+| Risk level | **LOW** |
+| Layer | `core` |
+| Package tag | `#hamafx-worker` |
 
 
-### 📤 Depends On
+### 📤 Depends On (1)
 [[@hamafx-worker]]
 
 
 
 
+
+## 🔍 Explore
+
+- **Local Graph:** Right-click this file → "Open local graph"
+- **Backlinks:** Open the right sidebar → "Backlinks"
+- Use `#type/module` to find all Modules
+- Use `#hamafx-worker` to find all files in this package

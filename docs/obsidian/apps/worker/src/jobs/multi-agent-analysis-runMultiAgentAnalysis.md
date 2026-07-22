@@ -4,8 +4,10 @@ package: "@hamafx/worker"
 path: "apps/worker/src/jobs/multi-agent-analysis.ts"
 incoming: 1
 outgoing: 9
+connections: 10
 risk: low
-tags: [module, hamafxworker]
+layer: core
+tags: [type/module, hamafx-worker, layer/core]
 aliases: [multi-agent-analysis/runMultiAgentAnalysis]
 ---
 
@@ -23,14 +25,17 @@ Module: apps/worker/src/jobs/multi-agent-analysis.ts
 |---|---|
 | Incoming dependencies | 1 |
 | Outgoing dependencies | 9 |
-| Risk level | LOW |
+| Total connections | 10 |
+| Risk level | **LOW** |
+| Layer | `core` |
+| Package tag | `#hamafx-worker` |
 
 
-### 📤 Depends On
+### 📤 Depends On (5)
 [[@hamafx-db]] · [[@hamafx-ai]] · [[@hamafx-shared]] · [[types-JobCoreContext]] · [[@hamafx-worker]]
 
 
-### 📥 Depended On By
+### 📥 Depended On By (1)
 [[index-JOBS]]
 
 
@@ -38,3 +43,10 @@ Module: apps/worker/src/jobs/multi-agent-analysis.ts
 ## 📦 Exports
 - `runMultiAgentAnalysis`
 
+
+## 🔍 Explore
+
+- **Local Graph:** Right-click this file → "Open local graph"
+- **Backlinks:** Open the right sidebar → "Backlinks"
+- Use `#type/module` to find all Modules
+- Use `#hamafx-worker` to find all files in this package

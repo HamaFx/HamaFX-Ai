@@ -4,8 +4,10 @@ package: "@hamafx/indicators"
 path: "packages/indicators/src/indicator-registry.ts"
 incoming: 2
 outgoing: 11
+connections: 13
 risk: low
-tags: [module, hamafxindicators]
+layer: core
+tags: [type/module, hamafx-indicators, layer/core]
 aliases: [indicator-registry/IndicatorPlugin]
 ---
 
@@ -23,14 +25,17 @@ Module: packages/indicators/src/indicator-registry.ts
 |---|---|
 | Incoming dependencies | 2 |
 | Outgoing dependencies | 11 |
-| Risk level | LOW |
+| Total connections | 13 |
+| Risk level | **LOW** |
+| Layer | `core` |
+| Package tag | `#hamafx-indicators` |
 
 
-### 📤 Depends On
+### 📤 Depends On (8)
 [[@hamafx-shared]] · [[atr-atr]] · [[bollinger-BollingerPoint]] · [[macd-MacdPoint]] · [[moving-averages-sma]] · [[pivots-ClassicPivots]] · [[rsi-rsi]] · [[@hamafx-indicators]]
 
 
-### 📥 Depended On By
+### 📥 Depended On By (1)
 [[registry-ComputeArgs]]
 
 
@@ -40,3 +45,10 @@ Module: packages/indicators/src/indicator-registry.ts
 - `IndicatorRegistry`
 - `indicatorRegistry`
 
+
+## 🔍 Explore
+
+- **Local Graph:** Right-click this file → "Open local graph"
+- **Backlinks:** Open the right sidebar → "Backlinks"
+- Use `#type/module` to find all Modules
+- Use `#hamafx-indicators` to find all files in this package

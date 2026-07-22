@@ -4,8 +4,10 @@ package: "@hamafx/data"
 path: "packages/data/src/cache/memory.ts"
 incoming: 4
 outgoing: 3
+connections: 7
 risk: low
-tags: [module, hamafxdata]
+layer: core
+tags: [type/module, hamafx-data, layer/core]
 aliases: [memory/MemoryCache]
 ---
 
@@ -23,14 +25,17 @@ Module: packages/data/src/cache/memory.ts
 |---|---|
 | Incoming dependencies | 4 |
 | Outgoing dependencies | 3 |
-| Risk level | LOW |
+| Total connections | 7 |
+| Risk level | **LOW** |
+| Layer | `core` |
+| Package tag | `#hamafx-data` |
 
 
-### 📤 Depends On
+### 📤 Depends On (2)
 [[types-CacheEntryMeta]] · [[@hamafx-data]]
 
 
-### 📥 Depended On By
+### 📥 Depended On By (4)
 [[index-getDefaultCache]] · [[cache-memory.test]] · [[cache-swr-inflight.test]] · [[price-adapter.test]]
 
 
@@ -38,3 +43,10 @@ Module: packages/data/src/cache/memory.ts
 ## 📦 Exports
 - `MemoryCache`
 
+
+## 🔍 Explore
+
+- **Local Graph:** Right-click this file → "Open local graph"
+- **Backlinks:** Open the right sidebar → "Backlinks"
+- Use `#type/module` to find all Modules
+- Use `#hamafx-data` to find all files in this package

@@ -4,8 +4,10 @@ package: "@hamafx/web"
 path: "apps/web/src/lib/services/market.ts"
 incoming: 0
 outgoing: 8
+connections: 8
 risk: low
-tags: [module, hamafxweb]
+layer: core
+tags: [type/module, hamafx-web, layer/core]
 aliases: [market/CandleResultDTO]
 ---
 
@@ -23,10 +25,13 @@ Module: apps/web/src/lib/services/market.ts
 |---|---|
 | Incoming dependencies | 0 |
 | Outgoing dependencies | 8 |
-| Risk level | LOW |
+| Total connections | 8 |
+| Risk level | **LOW** |
+| Layer | `core` |
+| Package tag | `#hamafx-web` |
 
 
-### 📤 Depends On
+### 📤 Depends On (5)
 [[@hamafx-data]] · [[@hamafx-indicators]] · [[@hamafx-shared]] · [[@hamafx-db]] · [[@hamafx-web]]
 
 
@@ -44,3 +49,10 @@ Module: apps/web/src/lib/services/market.ts
 - `searchSymbolsService`
 - `getIndicatorsService`
 
+
+## 🔍 Explore
+
+- **Local Graph:** Right-click this file → "Open local graph"
+- **Backlinks:** Open the right sidebar → "Backlinks"
+- Use `#type/module` to find all Modules
+- Use `#hamafx-web` to find all files in this package

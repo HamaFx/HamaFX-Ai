@@ -4,8 +4,10 @@ package: "@hamafx/indicators"
 path: "packages/indicators/src/smc/liquidity.ts"
 incoming: 2
 outgoing: 3
+connections: 5
 risk: low
-tags: [module, hamafxindicators]
+layer: core
+tags: [type/module, hamafx-indicators, layer/core]
 aliases: [liquidity/DetectLiquiditySweepsOptions]
 ---
 
@@ -23,14 +25,17 @@ Module: packages/indicators/src/smc/liquidity.ts
 |---|---|
 | Incoming dependencies | 2 |
 | Outgoing dependencies | 3 |
-| Risk level | LOW |
+| Total connections | 5 |
+| Risk level | **LOW** |
+| Layer | `core` |
+| Package tag | `#hamafx-indicators` |
 
 
-### 📤 Depends On
+### 📤 Depends On (2)
 [[@hamafx-shared]] · [[@hamafx-indicators]]
 
 
-### 📥 Depended On By
+### 📥 Depended On By (2)
 [[index-ComputeStructureArgs]] · [[smc-liquidity.test]]
 
 
@@ -39,3 +44,10 @@ Module: packages/indicators/src/smc/liquidity.ts
 - `DetectLiquiditySweepsOptions`
 - `detectLiquiditySweeps`
 
+
+## 🔍 Explore
+
+- **Local Graph:** Right-click this file → "Open local graph"
+- **Backlinks:** Open the right sidebar → "Backlinks"
+- Use `#type/module` to find all Modules
+- Use `#hamafx-indicators` to find all files in this package

@@ -4,8 +4,10 @@ package: "@hamafx/web"
 path: "apps/web/src/lib/market-client.ts"
 incoming: 0
 outgoing: 4
+connections: 4
 risk: low
-tags: [module, hamafxweb]
+layer: core
+tags: [type/module, hamafx-web, layer/core]
 aliases: [market-client/MarketApiError]
 ---
 
@@ -23,10 +25,13 @@ Module: apps/web/src/lib/market-client.ts
 |---|---|
 | Incoming dependencies | 0 |
 | Outgoing dependencies | 4 |
-| Risk level | LOW |
+| Total connections | 4 |
+| Risk level | **LOW** |
+| Layer | `core` |
+| Package tag | `#hamafx-web` |
 
 
-### 📤 Depends On
+### 📤 Depends On (3)
 [[@hamafx-shared]] · [[api-client-ApiErrorBody]] · [[@hamafx-web]]
 
 
@@ -44,3 +49,10 @@ Module: apps/web/src/lib/market-client.ts
 - `FetchStructureOptions`
 - `fetchStructure`
 
+
+## 🔍 Explore
+
+- **Local Graph:** Right-click this file → "Open local graph"
+- **Backlinks:** Open the right sidebar → "Backlinks"
+- Use `#type/module` to find all Modules
+- Use `#hamafx-web` to find all files in this package

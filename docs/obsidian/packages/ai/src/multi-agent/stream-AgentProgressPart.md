@@ -4,8 +4,10 @@ package: "@hamafx/ai"
 path: "packages/ai/src/multi-agent/stream.ts"
 incoming: 2
 outgoing: 3
+connections: 5
 risk: low
-tags: [module, hamafxai]
+layer: core
+tags: [type/module, hamafx-ai, layer/core]
 aliases: [stream/AgentProgressPart]
 ---
 
@@ -23,14 +25,17 @@ Module: packages/ai/src/multi-agent/stream.ts
 |---|---|
 | Incoming dependencies | 2 |
 | Outgoing dependencies | 3 |
-| Risk level | LOW |
+| Total connections | 5 |
+| Risk level | **LOW** |
+| Layer | `core` |
+| Package tag | `#hamafx-ai` |
 
 
-### 📤 Depends On
+### 📤 Depends On (2)
 [[types-AnalysisMode]] · [[@hamafx-ai]]
 
 
-### 📥 Depended On By
+### 📥 Depended On By (2)
 [[fallback.test]] · [[stream.test]]
 
 
@@ -40,3 +45,10 @@ Module: packages/ai/src/multi-agent/stream.ts
 - `ProgressTracker`
 - `progressToSSE`
 
+
+## 🔍 Explore
+
+- **Local Graph:** Right-click this file → "Open local graph"
+- **Backlinks:** Open the right sidebar → "Backlinks"
+- Use `#type/module` to find all Modules
+- Use `#hamafx-ai` to find all files in this package

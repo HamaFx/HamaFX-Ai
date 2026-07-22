@@ -4,8 +4,10 @@ package: "@hamafx/db"
 path: "packages/db/src/schema/index.ts"
 incoming: 2
 outgoing: 1
+connections: 3
 risk: low
-tags: [module, hamafxdb]
+layer: core
+tags: [type/module, hamafx-db, layer/core]
 aliases: [index]
 ---
 
@@ -23,15 +25,25 @@ Database schema (0 tables)
 |---|---|
 | Incoming dependencies | 2 |
 | Outgoing dependencies | 1 |
-| Risk level | LOW |
+| Total connections | 3 |
+| Risk level | **LOW** |
+| Layer | `core` |
+| Package tag | `#hamafx-db` |
 
 
-### 📤 Depends On
+### 📤 Depends On (1)
 [[@hamafx-db]]
 
 
-### 📥 Depended On By
+### 📥 Depended On By (2)
 [[client-DbClient]] · [[pglite-client-sanitizeStatement]]
 
 
 
+
+## 🔍 Explore
+
+- **Local Graph:** Right-click this file → "Open local graph"
+- **Backlinks:** Open the right sidebar → "Backlinks"
+- Use `#type/module` to find all Modules
+- Use `#hamafx-db` to find all files in this package

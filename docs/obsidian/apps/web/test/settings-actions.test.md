@@ -4,8 +4,10 @@ package: "@hamafx/web"
 path: "apps/web/test/settings-actions.test.ts"
 incoming: 0
 outgoing: 7
+connections: 7
 risk: low
-tags: [module, hamafxweb]
+layer: core
+tags: [type/module, hamafx-web, layer/core]
 aliases: [settings-actions.test]
 ---
 
@@ -23,12 +25,22 @@ Module: apps/web/test/settings-actions.test.ts
 |---|---|
 | Incoming dependencies | 0 |
 | Outgoing dependencies | 7 |
-| Risk level | LOW |
+| Total connections | 7 |
+| Risk level | **LOW** |
+| Layer | `core` |
+| Package tag | `#hamafx-web` |
 
 
-### 📤 Depends On
+### 📤 Depends On (6)
 [[vitest-installServerOnlyStub]] · [[@hamafx-shared]] · [[auth-helpers-mockNextAuthSession]] · [[@hamafx-db]] · [[actions]] · [[@hamafx-web]]
 
 
 
 
+
+## 🔍 Explore
+
+- **Local Graph:** Right-click this file → "Open local graph"
+- **Backlinks:** Open the right sidebar → "Backlinks"
+- Use `#type/module` to find all Modules
+- Use `#hamafx-web` to find all files in this package

@@ -1,0 +1,447 @@
+{
+  "nodes": [
+    {
+      "id": "n1",
+      "type": "file",
+      "file": "./root.md",
+      "x": 50,
+      "y": 50,
+      "width": 320,
+      "height": 180
+    },
+    {
+      "id": "n2",
+      "type": "file",
+      "file": "packages/@hamafx-web.md",
+      "x": 500,
+      "y": 50,
+      "width": 320,
+      "height": 180
+    },
+    {
+      "id": "n3",
+      "type": "file",
+      "file": "packages/@hamafx-worker.md",
+      "x": 950,
+      "y": 50,
+      "width": 320,
+      "height": 180
+    },
+    {
+      "id": "n4",
+      "type": "file",
+      "file": "./docs.md",
+      "x": 1400,
+      "y": 50,
+      "width": 320,
+      "height": 180
+    },
+    {
+      "id": "n5",
+      "type": "file",
+      "file": "./infra.md",
+      "x": 50,
+      "y": 500,
+      "width": 320,
+      "height": 180
+    },
+    {
+      "id": "n6",
+      "type": "file",
+      "file": "./loadtest.md",
+      "x": 500,
+      "y": 500,
+      "width": 320,
+      "height": 180
+    },
+    {
+      "id": "n7",
+      "type": "file",
+      "file": "packages/@hamafx-ai.md",
+      "x": 950,
+      "y": 500,
+      "width": 320,
+      "height": 180
+    },
+    {
+      "id": "n8",
+      "type": "file",
+      "file": "packages/@hamafx-config.md",
+      "x": 1400,
+      "y": 500,
+      "width": 320,
+      "height": 180
+    },
+    {
+      "id": "n9",
+      "type": "file",
+      "file": "packages/@hamafx-data.md",
+      "x": 50,
+      "y": 950,
+      "width": 320,
+      "height": 180
+    },
+    {
+      "id": "n10",
+      "type": "file",
+      "file": "packages/@hamafx-db.md",
+      "x": 500,
+      "y": 950,
+      "width": 320,
+      "height": 180
+    },
+    {
+      "id": "n11",
+      "type": "file",
+      "file": "packages/@hamafx-indicators.md",
+      "x": 950,
+      "y": 950,
+      "width": 320,
+      "height": 180
+    },
+    {
+      "id": "n12",
+      "type": "file",
+      "file": "packages/@hamafx-shared.md",
+      "x": 1400,
+      "y": 950,
+      "width": 320,
+      "height": 180
+    },
+    {
+      "id": "n13",
+      "type": "file",
+      "file": "packages/@hamafx-test-utils.md",
+      "x": 50,
+      "y": 1400,
+      "width": 320,
+      "height": 180
+    },
+    {
+      "id": "n14",
+      "type": "file",
+      "file": "./scripts.md",
+      "x": 500,
+      "y": 1400,
+      "width": 320,
+      "height": 180
+    },
+    {
+      "id": "n15",
+      "type": "file",
+      "file": "tools/tool-architecture-explorer.md",
+      "x": 950,
+      "y": 1400,
+      "width": 320,
+      "height": 180
+    },
+    {
+      "id": "n16",
+      "type": "file",
+      "file": "tools/tool-lighthouse.md",
+      "x": 1400,
+      "y": 1400,
+      "width": 320,
+      "height": 180
+    }
+  ],
+  "edges": [
+    {
+      "id": "@hamafx/web→@hamafx/config",
+      "fromNode": "n2",
+      "toNode": "n8",
+      "fromSide": "right",
+      "toSide": "left",
+      "label": "1 deps",
+      "color": "1"
+    },
+    {
+      "id": "@hamafx/web→@hamafx/shared",
+      "fromNode": "n2",
+      "toNode": "n12",
+      "fromSide": "right",
+      "toSide": "left",
+      "label": "268 deps",
+      "color": "5"
+    },
+    {
+      "id": "@hamafx/web→@hamafx/ai",
+      "fromNode": "n2",
+      "toNode": "n7",
+      "fromSide": "right",
+      "toSide": "left",
+      "label": "72 deps",
+      "color": "5"
+    },
+    {
+      "id": "@hamafx/web→@hamafx/db",
+      "fromNode": "n2",
+      "toNode": "n10",
+      "fromSide": "right",
+      "toSide": "left",
+      "label": "83 deps",
+      "color": "5"
+    },
+    {
+      "id": "@hamafx/web→@hamafx/data",
+      "fromNode": "n2",
+      "toNode": "n9",
+      "fromSide": "right",
+      "toSide": "left",
+      "label": "12 deps",
+      "color": "3"
+    },
+    {
+      "id": "@hamafx/web→@hamafx/indicators",
+      "fromNode": "n2",
+      "toNode": "n11",
+      "fromSide": "right",
+      "toSide": "left",
+      "label": "2 deps",
+      "color": "1"
+    },
+    {
+      "id": "@hamafx/web→@hamafx/test-utils",
+      "fromNode": "n2",
+      "toNode": "n13",
+      "fromSide": "right",
+      "toSide": "left",
+      "label": "58 deps",
+      "color": "5"
+    },
+    {
+      "id": "@hamafx/worker→@hamafx/config",
+      "fromNode": "n3",
+      "toNode": "n8",
+      "fromSide": "right",
+      "toSide": "left",
+      "label": "1 deps",
+      "color": "1"
+    },
+    {
+      "id": "@hamafx/worker→@hamafx/shared",
+      "fromNode": "n3",
+      "toNode": "n12",
+      "fromSide": "right",
+      "toSide": "left",
+      "label": "11 deps",
+      "color": "3"
+    },
+    {
+      "id": "@hamafx/worker→@hamafx/ai",
+      "fromNode": "n3",
+      "toNode": "n7",
+      "fromSide": "right",
+      "toSide": "left",
+      "label": "26 deps",
+      "color": "5"
+    },
+    {
+      "id": "@hamafx/worker→loadtest",
+      "fromNode": "n3",
+      "toNode": "n6",
+      "fromSide": "right",
+      "toSide": "left",
+      "label": "1 deps",
+      "color": "1"
+    },
+    {
+      "id": "@hamafx/worker→@hamafx/db",
+      "fromNode": "n3",
+      "toNode": "n10",
+      "fromSide": "right",
+      "toSide": "left",
+      "label": "11 deps",
+      "color": "3"
+    },
+    {
+      "id": "@hamafx/worker→@hamafx/data",
+      "fromNode": "n3",
+      "toNode": "n9",
+      "fromSide": "right",
+      "toSide": "left",
+      "label": "9 deps",
+      "color": "1"
+    },
+    {
+      "id": "@hamafx/worker→@hamafx/test-utils",
+      "fromNode": "n3",
+      "toNode": "n13",
+      "fromSide": "right",
+      "toSide": "left",
+      "label": "19 deps",
+      "color": "3"
+    },
+    {
+      "id": "@hamafx/ai→@hamafx/config",
+      "fromNode": "n7",
+      "toNode": "n8",
+      "fromSide": "right",
+      "toSide": "left",
+      "label": "1 deps",
+      "color": "1"
+    },
+    {
+      "id": "@hamafx/ai→@hamafx/shared",
+      "fromNode": "n7",
+      "toNode": "n12",
+      "fromSide": "right",
+      "toSide": "left",
+      "label": "202 deps",
+      "color": "5"
+    },
+    {
+      "id": "@hamafx/ai→@hamafx/db",
+      "fromNode": "n7",
+      "toNode": "n10",
+      "fromSide": "right",
+      "toSide": "left",
+      "label": "96 deps",
+      "color": "5"
+    },
+    {
+      "id": "@hamafx/ai→@hamafx/data",
+      "fromNode": "n7",
+      "toNode": "n9",
+      "fromSide": "right",
+      "toSide": "left",
+      "label": "22 deps",
+      "color": "5"
+    },
+    {
+      "id": "@hamafx/ai→@hamafx/indicators",
+      "fromNode": "n7",
+      "toNode": "n11",
+      "fromSide": "right",
+      "toSide": "left",
+      "label": "13 deps",
+      "color": "3"
+    },
+    {
+      "id": "@hamafx/ai→@hamafx/test-utils",
+      "fromNode": "n7",
+      "toNode": "n13",
+      "fromSide": "right",
+      "toSide": "left",
+      "label": "96 deps",
+      "color": "5"
+    },
+    {
+      "id": "@hamafx/data→@hamafx/config",
+      "fromNode": "n9",
+      "toNode": "n8",
+      "fromSide": "right",
+      "toSide": "left",
+      "label": "1 deps",
+      "color": "1"
+    },
+    {
+      "id": "@hamafx/data→@hamafx/shared",
+      "fromNode": "n9",
+      "toNode": "n12",
+      "fromSide": "right",
+      "toSide": "left",
+      "label": "43 deps",
+      "color": "5"
+    },
+    {
+      "id": "@hamafx/data→@hamafx/db",
+      "fromNode": "n9",
+      "toNode": "n10",
+      "fromSide": "right",
+      "toSide": "left",
+      "label": "9 deps",
+      "color": "1"
+    },
+    {
+      "id": "@hamafx/data→@hamafx/test-utils",
+      "fromNode": "n9",
+      "toNode": "n13",
+      "fromSide": "right",
+      "toSide": "left",
+      "label": "19 deps",
+      "color": "3"
+    },
+    {
+      "id": "@hamafx/db→@hamafx/config",
+      "fromNode": "n10",
+      "toNode": "n8",
+      "fromSide": "right",
+      "toSide": "left",
+      "label": "1 deps",
+      "color": "1"
+    },
+    {
+      "id": "@hamafx/db→@hamafx/test-utils",
+      "fromNode": "n10",
+      "toNode": "n13",
+      "fromSide": "right",
+      "toSide": "left",
+      "label": "17 deps",
+      "color": "3"
+    },
+    {
+      "id": "@hamafx/indicators→@hamafx/config",
+      "fromNode": "n11",
+      "toNode": "n8",
+      "fromSide": "right",
+      "toSide": "left",
+      "label": "1 deps",
+      "color": "1"
+    },
+    {
+      "id": "@hamafx/indicators→@hamafx/shared",
+      "fromNode": "n11",
+      "toNode": "n12",
+      "fromSide": "right",
+      "toSide": "left",
+      "label": "56 deps",
+      "color": "5"
+    },
+    {
+      "id": "@hamafx/indicators→@hamafx/test-utils",
+      "fromNode": "n11",
+      "toNode": "n13",
+      "fromSide": "right",
+      "toSide": "left",
+      "label": "16 deps",
+      "color": "3"
+    },
+    {
+      "id": "@hamafx/shared→@hamafx/config",
+      "fromNode": "n12",
+      "toNode": "n8",
+      "fromSide": "right",
+      "toSide": "left",
+      "label": "1 deps",
+      "color": "1"
+    },
+    {
+      "id": "@hamafx/shared→@hamafx/test-utils",
+      "fromNode": "n12",
+      "toNode": "n13",
+      "fromSide": "right",
+      "toSide": "left",
+      "label": "12 deps",
+      "color": "3"
+    },
+    {
+      "id": "@hamafx/test-utils→@hamafx/config",
+      "fromNode": "n13",
+      "toNode": "n8",
+      "fromSide": "right",
+      "toSide": "left",
+      "label": "1 deps",
+      "color": "1"
+    },
+    {
+      "id": "@hamafx/test-utils→@hamafx/shared",
+      "fromNode": "n13",
+      "toNode": "n12",
+      "fromSide": "right",
+      "toSide": "left",
+      "label": "4 deps",
+      "color": "1"
+    }
+  ]
+}

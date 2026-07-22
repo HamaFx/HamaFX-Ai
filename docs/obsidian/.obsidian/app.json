@@ -1,0 +1,17 @@
+{
+  "showFrontmatter": true,
+  "showLineNumber": false,
+  "strictLineBreaks": false,
+  "rightToLeft": false,
+  "showInlineTitle": true,
+  "defaultViewMode": "source",
+  "livePreview": true,
+  "showUnsupportedFiles": true,
+  "attachmentFolderPath": "./",
+  "promptDelete": false,
+  "newFileLocation": "current",
+  "alwaysUpdateLinks": true,
+  "userIgnoreFilters": [
+    ".obsidian/"
+  ]
+}

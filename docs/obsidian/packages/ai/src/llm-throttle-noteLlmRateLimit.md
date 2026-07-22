@@ -4,8 +4,10 @@ package: "@hamafx/ai"
 path: "packages/ai/src/llm-throttle.ts"
 incoming: 3
 outgoing: 3
+connections: 6
 risk: low
-tags: [module, hamafxai]
+layer: core
+tags: [type/module, hamafx-ai, layer/core]
 aliases: [llm-throttle/noteLlmRateLimit]
 ---
 
@@ -23,14 +25,17 @@ Module: packages/ai/src/llm-throttle.ts
 |---|---|
 | Incoming dependencies | 3 |
 | Outgoing dependencies | 3 |
-| Risk level | LOW |
+| Total connections | 6 |
+| Risk level | **LOW** |
+| Layer | `core` |
+| Package tag | `#hamafx-ai` |
 
 
-### 📤 Depends On
+### 📤 Depends On (2)
 [[rate-limits-RateLimitData]] · [[@hamafx-ai]]
 
 
-### 📥 Depended On By
+### 📥 Depended On By (3)
 [[agent-runChat]] · [[provider-tester-testProviderKey]] · [[llm-throttle.test]]
 
 
@@ -39,3 +44,10 @@ Module: packages/ai/src/llm-throttle.ts
 - `noteLlmRateLimit`
 - `awaitLlmHeadroom`
 
+
+## 🔍 Explore
+
+- **Local Graph:** Right-click this file → "Open local graph"
+- **Backlinks:** Open the right sidebar → "Backlinks"
+- Use `#type/module` to find all Modules
+- Use `#hamafx-ai` to find all files in this package

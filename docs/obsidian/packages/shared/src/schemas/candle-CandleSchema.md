@@ -4,8 +4,10 @@ package: "@hamafx/shared"
 path: "packages/shared/src/schemas/candle.ts"
 incoming: 1
 outgoing: 3
+connections: 4
 risk: low
-tags: [module, hamafxshared]
+layer: core
+tags: [type/module, hamafx-shared, layer/core]
 aliases: [candle/CandleSchema]
 ---
 
@@ -23,14 +25,17 @@ Module: packages/shared/src/schemas/candle.ts
 |---|---|
 | Incoming dependencies | 1 |
 | Outgoing dependencies | 3 |
-| Risk level | LOW |
+| Total connections | 4 |
+| Risk level | **LOW** |
+| Layer | `core` |
+| Package tag | `#hamafx-shared` |
 
 
-### 📤 Depends On
+### 📤 Depends On (3)
 [[symbols-SYMBOLS]] · [[timeframes-TIMEFRAMES]] · [[@hamafx-shared]]
 
 
-### 📥 Depended On By
+### 📥 Depended On By (1)
 [[get-candles-GetCandlesOutputSchema]]
 
 
@@ -39,3 +44,10 @@ Module: packages/shared/src/schemas/candle.ts
 - `CandleSchema`
 - `Candle`
 
+
+## 🔍 Explore
+
+- **Local Graph:** Right-click this file → "Open local graph"
+- **Backlinks:** Open the right sidebar → "Backlinks"
+- Use `#type/module` to find all Modules
+- Use `#hamafx-shared` to find all files in this package

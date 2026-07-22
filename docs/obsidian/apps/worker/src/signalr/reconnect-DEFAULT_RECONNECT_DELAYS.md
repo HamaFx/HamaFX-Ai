@@ -4,8 +4,10 @@ package: "@hamafx/worker"
 path: "apps/worker/src/signalr/reconnect.ts"
 incoming: 1
 outgoing: 1
+connections: 2
 risk: low
-tags: [module, hamafxworker]
+layer: core
+tags: [type/module, hamafx-worker, layer/core]
 aliases: [reconnect/DEFAULT_RECONNECT_DELAYS]
 ---
 
@@ -23,14 +25,17 @@ Module: apps/worker/src/signalr/reconnect.ts
 |---|---|
 | Incoming dependencies | 1 |
 | Outgoing dependencies | 1 |
-| Risk level | LOW |
+| Total connections | 2 |
+| Risk level | **LOW** |
+| Layer | `core` |
+| Package tag | `#hamafx-worker` |
 
 
-### 📤 Depends On
+### 📤 Depends On (1)
 [[@hamafx-worker]]
 
 
-### 📥 Depended On By
+### 📥 Depended On By (1)
 [[consumer-NormalizedTick]]
 
 
@@ -39,3 +44,10 @@ Module: apps/worker/src/signalr/reconnect.ts
 - `DEFAULT_RECONNECT_DELAYS`
 - `jitteredDelay`
 
+
+## 🔍 Explore
+
+- **Local Graph:** Right-click this file → "Open local graph"
+- **Backlinks:** Open the right sidebar → "Backlinks"
+- Use `#type/module` to find all Modules
+- Use `#hamafx-worker` to find all files in this package

@@ -4,8 +4,10 @@ package: "@hamafx/worker"
 path: "apps/worker/src/signalr/tick-buffer.ts"
 incoming: 5
 outgoing: 5
+connections: 10
 risk: low
-tags: [module, hamafxworker]
+layer: core
+tags: [type/module, hamafx-worker, layer/core]
 aliases: [tick-buffer/TickBuffer]
 ---
 
@@ -23,14 +25,17 @@ Module: apps/worker/src/signalr/tick-buffer.ts
 |---|---|
 | Incoming dependencies | 5 |
 | Outgoing dependencies | 5 |
-| Risk level | LOW |
+| Total connections | 10 |
+| Risk level | **LOW** |
+| Layer | `core` |
+| Package tag | `#hamafx-worker` |
 
 
-### 📤 Depends On
+### 📤 Depends On (3)
 [[@hamafx-shared]] · [[consumer-NormalizedTick]] · [[@hamafx-worker]]
 
 
-### 📥 Depended On By
+### 📥 Depended On By (4)
 [[index-onShutdown]] · [[live-ticks-LiveTicksWriterArgs]] · [[live-ticks.test]] · [[tick-buffer.test]]
 
 
@@ -38,3 +43,10 @@ Module: apps/worker/src/signalr/tick-buffer.ts
 ## 📦 Exports
 - `TickBuffer`
 
+
+## 🔍 Explore
+
+- **Local Graph:** Right-click this file → "Open local graph"
+- **Backlinks:** Open the right sidebar → "Backlinks"
+- Use `#type/module` to find all Modules
+- Use `#hamafx-worker` to find all files in this package

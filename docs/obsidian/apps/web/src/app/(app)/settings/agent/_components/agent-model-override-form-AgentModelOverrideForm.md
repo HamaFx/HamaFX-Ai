@@ -4,8 +4,10 @@ package: "@hamafx/web"
 path: "apps/web/src/app/(app)/settings/agent/_components/agent-model-override-form.tsx"
 incoming: 1
 outgoing: 1
+connections: 2
 risk: low
-tags: [module, hamafxweb]
+layer: core
+tags: [type/module, hamafx-web, layer/core]
 aliases: [agent-model-override-form/AgentModelOverrideForm]
 ---
 
@@ -23,14 +25,17 @@ Module: apps/web/src/app/(app)/settings/agent/_components/agent-model-override-f
 |---|---|
 | Incoming dependencies | 1 |
 | Outgoing dependencies | 1 |
-| Risk level | LOW |
+| Total connections | 2 |
+| Risk level | **LOW** |
+| Layer | `core` |
+| Package tag | `#hamafx-web` |
 
 
-### 📤 Depends On
+### 📤 Depends On (1)
 [[@hamafx-web]]
 
 
-### 📥 Depended On By
+### 📥 Depended On By (1)
 [[page-async]]
 
 
@@ -38,3 +43,10 @@ Module: apps/web/src/app/(app)/settings/agent/_components/agent-model-override-f
 ## 📦 Exports
 - `AgentModelOverrideForm`
 
+
+## 🔍 Explore
+
+- **Local Graph:** Right-click this file → "Open local graph"
+- **Backlinks:** Open the right sidebar → "Backlinks"
+- Use `#type/module` to find all Modules
+- Use `#hamafx-web` to find all files in this package

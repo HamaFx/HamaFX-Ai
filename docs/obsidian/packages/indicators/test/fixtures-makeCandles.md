@@ -4,8 +4,10 @@ package: "@hamafx/indicators"
 path: "packages/indicators/test/fixtures.ts"
 incoming: 6
 outgoing: 3
+connections: 9
 risk: low
-tags: [module, hamafxindicators]
+layer: core
+tags: [type/module, hamafx-indicators, layer/core]
 aliases: [fixtures/makeCandles]
 ---
 
@@ -23,14 +25,17 @@ Module: packages/indicators/test/fixtures.ts
 |---|---|
 | Incoming dependencies | 6 |
 | Outgoing dependencies | 3 |
-| Risk level | LOW |
+| Total connections | 9 |
+| Risk level | **LOW** |
+| Layer | `core` |
+| Package tag | `#hamafx-indicators` |
 
 
-### 📤 Depends On
+### 📤 Depends On (2)
 [[@hamafx-shared]] · [[@hamafx-indicators]]
 
 
-### 📥 Depended On By
+### 📥 Depended On By (6)
 [[atr.test]] · [[bollinger.test]] · [[macd.test]] · [[moving-averages.test]] · [[pivots.test]] · [[rsi.test]]
 
 
@@ -38,3 +43,10 @@ Module: packages/indicators/test/fixtures.ts
 ## 📦 Exports
 - `makeCandles`
 
+
+## 🔍 Explore
+
+- **Local Graph:** Right-click this file → "Open local graph"
+- **Backlinks:** Open the right sidebar → "Backlinks"
+- Use `#type/module` to find all Modules
+- Use `#hamafx-indicators` to find all files in this package

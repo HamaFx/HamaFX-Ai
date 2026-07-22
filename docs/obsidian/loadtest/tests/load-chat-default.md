@@ -4,8 +4,10 @@ package: "loadtest"
 path: "loadtest/tests/load-chat.ts"
 incoming: 0
 outgoing: 6
+connections: 6
 risk: low
-tags: [module, loadtest]
+layer: core
+tags: [type/module, loadtest, layer/core]
 aliases: [load-chat/default]
 ---
 
@@ -23,10 +25,13 @@ Module: loadtest/tests/load-chat.ts
 |---|---|
 | Incoming dependencies | 0 |
 | Outgoing dependencies | 6 |
-| Risk level | LOW |
+| Total connections | 6 |
+| Risk level | **LOW** |
+| Layer | `core` |
+| Package tag | `#loadtest` |
 
 
-### 📤 Depends On
+### 📤 Depends On (6)
 [[environments-SessionCtx]] · [[thresholds-ThresholdPreset]] · [[auth-default]] · [[chat-chatTurn]] · [[summary-handleSummary]] · [[loadtest]]
 
 
@@ -37,3 +42,10 @@ Module: loadtest/tests/load-chat.ts
 - `setup`
 - `default`
 
+
+## 🔍 Explore
+
+- **Local Graph:** Right-click this file → "Open local graph"
+- **Backlinks:** Open the right sidebar → "Backlinks"
+- Use `#type/module` to find all Modules
+- Use `#loadtest` to find all files in this package

@@ -4,8 +4,10 @@ package: "@hamafx/worker"
 path: "apps/worker/src/jobs/embedding-backfill.ts"
 incoming: 2
 outgoing: 4
+connections: 6
 risk: low
-tags: [module, hamafxworker]
+layer: core
+tags: [type/module, hamafx-worker, layer/core]
 aliases: [embedding-backfill/runEmbeddingBackfill]
 ---
 
@@ -23,14 +25,17 @@ Module: apps/worker/src/jobs/embedding-backfill.ts
 |---|---|
 | Incoming dependencies | 2 |
 | Outgoing dependencies | 4 |
-| Risk level | LOW |
+| Total connections | 6 |
+| Risk level | **LOW** |
+| Layer | `core` |
+| Package tag | `#hamafx-worker` |
 
 
-### 📤 Depends On
+### 📤 Depends On (3)
 [[@hamafx-ai]] · [[types-JobCoreContext]] · [[@hamafx-worker]]
 
 
-### 📥 Depended On By
+### 📥 Depended On By (2)
 [[index-JOBS]] · [[embedding-backfill.test]]
 
 
@@ -38,3 +43,10 @@ Module: apps/worker/src/jobs/embedding-backfill.ts
 ## 📦 Exports
 - `runEmbeddingBackfill`
 
+
+## 🔍 Explore
+
+- **Local Graph:** Right-click this file → "Open local graph"
+- **Backlinks:** Open the right sidebar → "Backlinks"
+- Use `#type/module` to find all Modules
+- Use `#hamafx-worker` to find all files in this package

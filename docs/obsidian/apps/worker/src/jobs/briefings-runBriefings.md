@@ -4,8 +4,10 @@ package: "@hamafx/worker"
 path: "apps/worker/src/jobs/briefings.ts"
 incoming: 2
 outgoing: 5
+connections: 7
 risk: low
-tags: [module, hamafxworker]
+layer: core
+tags: [type/module, hamafx-worker, layer/core]
 aliases: [briefings/runBriefings]
 ---
 
@@ -23,14 +25,17 @@ Module: apps/worker/src/jobs/briefings.ts
 |---|---|
 | Incoming dependencies | 2 |
 | Outgoing dependencies | 5 |
-| Risk level | LOW |
+| Total connections | 7 |
+| Risk level | **LOW** |
+| Layer | `core` |
+| Package tag | `#hamafx-worker` |
 
 
-### 📤 Depends On
+### 📤 Depends On (4)
 [[@hamafx-ai]] · [[@hamafx-db]] · [[types-JobCoreContext]] · [[@hamafx-worker]]
 
 
-### 📥 Depended On By
+### 📥 Depended On By (2)
 [[index-JOBS]] · [[briefings.test]]
 
 
@@ -38,3 +43,10 @@ Module: apps/worker/src/jobs/briefings.ts
 ## 📦 Exports
 - `runBriefings`
 
+
+## 🔍 Explore
+
+- **Local Graph:** Right-click this file → "Open local graph"
+- **Backlinks:** Open the right sidebar → "Backlinks"
+- Use `#type/module` to find all Modules
+- Use `#hamafx-worker` to find all files in this package

@@ -4,8 +4,10 @@ package: "@hamafx/shared"
 path: "packages/shared/src/encryption.ts"
 incoming: 1
 outgoing: 4
+connections: 5
 risk: low
-tags: [module, hamafxshared]
+layer: core
+tags: [type/module, hamafx-shared, layer/core]
 aliases: [encryption/encryptByok]
 ---
 
@@ -23,14 +25,17 @@ Module: packages/shared/src/encryption.ts
 |---|---|
 | Incoming dependencies | 1 |
 | Outgoing dependencies | 4 |
-| Risk level | LOW |
+| Total connections | 5 |
+| Risk level | **LOW** |
+| Layer | `core` |
+| Package tag | `#hamafx-shared` |
 
 
-### 📤 Depends On
+### 📤 Depends On (4)
 [[errors-ERROR_CODES]] · [[logger-LOG_CATEGORIES]] · [[byok-PROVIDER_IDS]] · [[@hamafx-shared]]
 
 
-### 📥 Depended On By
+### 📥 Depended On By (1)
 [[encryption.test]]
 
 
@@ -45,3 +50,10 @@ Module: packages/shared/src/encryption.ts
 - `encryptSecret`
 - `decryptSecret`
 
+
+## 🔍 Explore
+
+- **Local Graph:** Right-click this file → "Open local graph"
+- **Backlinks:** Open the right sidebar → "Backlinks"
+- Use `#type/module` to find all Modules
+- Use `#hamafx-shared` to find all files in this package

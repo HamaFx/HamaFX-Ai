@@ -2,202 +2,206 @@
 type: index
 category: "api_route"
 count: 184
-tags: [index, api_route]
+tags: [index, type/api_route]
 ---
 
 # 🔗 API Routes (184)
 
-## Dataview
-
-```dataview
-TABLE package, path, incoming, outgoing
-WHERE type = "api_route"
-SORT incoming DESC
+## DataviewJS — Sorted by Most Connected
+```dataviewjs
+const pages = dv.pages().where(p => p.type === "api_route");
+dv.table(
+  ['Name', 'Package', 'Path', 'Incoming', 'Outgoing', 'Risk'],
+  pages.sort(p => -(p.incoming + p.outgoing), 'desc').map(p => [
+    p.file.link, p.package || '', p.path || '', p.incoming, p.outgoing,
+    p.risk ? p.risk.toUpperCase() : ''
+  ])
+);
 ```
 
 ## Full List
 
-- [[GET--api-admin-architecture-explorer]] — `apps/web/src/app/api/admin/architecture-explorer/route.ts`  *(in: 1, out: 1)*
-- [[GET--api-admin-cron-history]] — `apps/web/src/app/api/admin/cron-history/route.ts`  *(in: 1, out: 2)*
-- [[GET--api-admin-diagnostics-tool-telemetry]] — `apps/web/src/app/api/admin/diagnostics/tool-telemetry/route.ts`  *(in: 1, out: 2)*
-- [[GET--api-admin-diagnostics-trace--id]] — `apps/web/src/app/api/admin/diagnostics/trace/[id]/route.ts`  *(in: 1, out: 2)*
-- [[GET--api-admin-diagnostics-traces]] — `apps/web/src/app/api/admin/diagnostics/traces/route.ts`  *(in: 1, out: 2)*
-- [[GET,POST--api-admin-features]] — `apps/web/src/app/api/admin/features/route.ts`  *(in: 1, out: 1)*
-- [[POST--api-admin-flush]] — `apps/web/src/app/api/admin/flush/route.ts`  *(in: 1, out: 2)*
-- [[GET--api-admin-health-slo]] — `apps/web/src/app/api/admin/health-slo/route.ts`  *(in: 1, out: 2)*
-- [[POST--api-admin-impersonate]] — `apps/web/src/app/api/admin/impersonate/route.ts`  *(in: 1, out: 2)*
-- [[GET--api-admin-logs-stream]] — `apps/web/src/app/api/admin/logs/stream/route.ts`  *(in: 1, out: 2)*
-- [[GET--api-admin-onboarding-inspect]] — `apps/web/src/app/api/admin/onboarding/inspect/route.ts`  *(in: 1, out: 3)*
-- [[POST--api-admin-onboarding-reset]] — `apps/web/src/app/api/admin/onboarding/reset/route.ts`  *(in: 1, out: 2)*
-- [[GET--api-admin-onboarding-status]] — `apps/web/src/app/api/admin/onboarding/status/route.ts`  *(in: 1, out: 2)*
-- [[POST--api-admin-test-alert-email]] — `apps/web/src/app/api/admin/test-alert-email/route.ts`  *(in: 1, out: 2)*
-- [[POST--api-admin-test-telegram]] — `apps/web/src/app/api/admin/test-telegram/route.ts`  *(in: 1, out: 2)*
-- [[GET--api-admin-users]] — `apps/web/src/app/api/admin/users/route.ts`  *(in: 1, out: 1)*
-- [[GET,PATCH,DELETE--api-alerts--id]] — `apps/web/src/app/api/alerts/[id]/route.ts`  *(in: 1, out: 1)*
-- [[POST--api-alerts-preview]] — `apps/web/src/app/api/alerts/preview/route.ts`  *(in: 1, out: 1)*
-- [[GET--api-alerts-preview-digest]] — `apps/web/src/app/api/alerts/preview-digest/route.ts`  *(in: 1, out: 1)*
-- [[GET,POST--api-alerts]] — `apps/web/src/app/api/alerts/route.ts`  *(in: 1, out: 1)*
-- [[GET--api-auth--nextauth-]] — `apps/web/src/app/api/auth/[...nextauth]/route.ts`  *(in: 1, out: 1)*
-- [[GET--api-auth-verify-email]] — `apps/web/src/app/api/auth/verify-email/route.ts`  *(in: 1, out: 3)*
-- [[POST--api-billing-checkout]] — `apps/web/src/app/api/billing/checkout/route.ts`  *(in: 1, out: 2)*
-- [[GET--api-billing-portal]] — `apps/web/src/app/api/billing/portal/route.ts`  *(in: 1, out: 2)*
-- [[GET--api-billing-webhook]] — `apps/web/src/app/api/billing/webhook/route.ts`  *(in: 1, out: 2)*
-- [[POST--api-bot-link-code]] — `apps/web/src/app/api/bot/link-code/route.ts`  *(in: 1, out: 2)*
-- [[GET--api-bot-status]] — `apps/web/src/app/api/bot/status/route.ts`  *(in: 1, out: 2)*
-- [[POST--api-bot-unlink]] — `apps/web/src/app/api/bot/unlink/route.ts`  *(in: 1, out: 2)*
-- [[GET--api-calendar]] — `apps/web/src/app/api/calendar/route.ts`  *(in: 1, out: 1)*
-- [[GET--api-chat-analysis-jobs--jobId]] — `apps/web/src/app/api/chat/analysis-jobs/[jobId]/route.ts`  *(in: 1, out: 2)*
-- [[POST--api-chat]] — `apps/web/src/app/api/chat/route.ts`  *(in: 1, out: 7)*
-- [[GET--api-chat-threads--id-export]] — `apps/web/src/app/api/chat/threads/[id]/export/route.ts`  *(in: 1, out: 3)*
-- [[GET--api-chat-threads--id-opinions]] — `apps/web/src/app/api/chat/threads/[id]/opinions/route.ts`  *(in: 1, out: 2)*
-- [[GET,DELETE,PATCH--api-chat-threads--id]] — `apps/web/src/app/api/chat/threads/[id]/route.ts`  *(in: 1, out: 1)*
-- [[GET--api-chat-threads--id-summary]] — `apps/web/src/app/api/chat/threads/[id]/summary/route.ts`  *(in: 1, out: 2)*
-- [[POST--api-chat-threads-bulk-delete]] — `apps/web/src/app/api/chat/threads/bulk-delete/route.ts`  *(in: 1, out: 2)*
-- [[POST--api-chat-threads-fork]] — `apps/web/src/app/api/chat/threads/fork/route.ts`  *(in: 1, out: 2)*
-- [[GET--api-chat-threads]] — `apps/web/src/app/api/chat/threads/route.ts`  *(in: 1, out: 1)*
-- [[GET--api-cron-alerts]] — `apps/web/src/app/api/cron/alerts/route.ts`  *(in: 1, out: 2)*
-- [[GET--api-cron-briefings]] — `apps/web/src/app/api/cron/briefings/route.ts`  *(in: 1, out: 3)*
-- [[GET--api-cron-calendar]] — `apps/web/src/app/api/cron/calendar/route.ts`  *(in: 1, out: 3)*
-- [[GET--api-cron-cleanup-telemetry]] — `apps/web/src/app/api/cron/cleanup-telemetry/route.ts`  *(in: 1, out: 2)*
-- [[GET--api-cron-cleanup-tokens]] — `apps/web/src/app/api/cron/cleanup-tokens/route.ts`  *(in: 1, out: 2)*
-- [[GET--api-cron-cleanup-uploads]] — `apps/web/src/app/api/cron/cleanup-uploads/route.ts`  *(in: 1, out: 1)*
-- [[GET--api-cron-cot]] — `apps/web/src/app/api/cron/cot/route.ts`  *(in: 1, out: 4)*
-- [[GET--api-cron-embedding-backfill]] — `apps/web/src/app/api/cron/embedding-backfill/route.ts`  *(in: 1, out: 2)*
-- [[GET--api-cron-fred-actuals]] — `apps/web/src/app/api/cron/fred-actuals/route.ts`  *(in: 1, out: 3)*
-- [[GET--api-cron-news]] — `apps/web/src/app/api/cron/news/route.ts`  *(in: 1, out: 3)*
-- [[GET--api-cron-snapshots]] — `apps/web/src/app/api/cron/snapshots/route.ts`  *(in: 1, out: 4)*
-- [[GET--api-cron-warm-cache]] — `apps/web/src/app/api/cron/warm-cache/route.ts`  *(in: 1, out: 3)*
-- [[GET--api-cron-weekly-review]] — `apps/web/src/app/api/cron/weekly-review/route.ts`  *(in: 1, out: 3)*
-- [[GET--api-dev-login]] — `apps/web/src/app/api/dev/login/route.ts`  *(in: 1, out: 2)*
-- [[GET--api-health-db]] — `apps/web/src/app/api/health/db/route.ts`  *(in: 1, out: 2)*
-- [[GET--api-health-public]] — `apps/web/src/app/api/health/public/route.ts`  *(in: 1, out: 2)*
-- [[GET--api-health]] — `apps/web/src/app/api/health/route.ts`  *(in: 1, out: 4)*
-- [[GET,PATCH,DELETE--api-journal--id]] — `apps/web/src/app/api/journal/[id]/route.ts`  *(in: 1, out: 1)*
-- [[POST--api-journal-import]] — `apps/web/src/app/api/journal/import/route.ts`  *(in: 1, out: 2)*
-- [[POST--api-journal-review]] — `apps/web/src/app/api/journal/review/route.ts`  *(in: 1, out: 3)*
-- [[GET,POST--api-journal]] — `apps/web/src/app/api/journal/route.ts`  *(in: 1, out: 1)*
-- [[GET--api-market-candles]] — `apps/web/src/app/api/market/candles/route.ts`  *(in: 1, out: 1)*
-- [[POST--api-market-indicators]] — `apps/web/src/app/api/market/indicators/route.ts`  *(in: 1, out: 1)*
-- [[GET--api-market-price]] — `apps/web/src/app/api/market/price/route.ts`  *(in: 1, out: 2)*
-- [[GET--api-market-search]] — `apps/web/src/app/api/market/search/route.ts`  *(in: 1, out: 1)*
-- [[GET--api-market-stream]] — `apps/web/src/app/api/market/stream/route.ts`  *(in: 1, out: 5)*
-- [[POST--api-market-structure]] — `apps/web/src/app/api/market/structure/route.ts`  *(in: 1, out: 5)*
-- [[GET--api-me-keys]] — `apps/web/src/app/api/me/keys/route.ts`  *(in: 1, out: 3)*
-- [[GET--api-news]] — `apps/web/src/app/api/news/route.ts`  *(in: 1, out: 3)*
-- [[GET,PUT--api-notifications-noise-config]] — `apps/web/src/app/api/notifications/noise-config/route.ts`  *(in: 1, out: 3)*
-- [[GET,PUT--api-notifications-route-config]] — `apps/web/src/app/api/notifications/route-config/route.ts`  *(in: 1, out: 3)*
-- [[POST--api-onboarding-save-progress]] — `apps/web/src/app/api/onboarding/save-progress/route.ts`  *(in: 1, out: 2)*
-- [[GET,PATCH,DELETE--api-portfolio-positions--id]] — `apps/web/src/app/api/portfolio/positions/[id]/route.ts`  *(in: 1, out: 3)*
-- [[GET,POST--api-portfolio-positions]] — `apps/web/src/app/api/portfolio/positions/route.ts`  *(in: 1, out: 2)*
-- [[GET--api-portfolio-risk]] — `apps/web/src/app/api/portfolio/risk/route.ts`  *(in: 1, out: 1)*
-- [[GET,PUT--api-portfolio-settings]] — `apps/web/src/app/api/portfolio/settings/route.ts`  *(in: 1, out: 1)*
-- [[POST--api-push-subscribe]] — `apps/web/src/app/api/push/subscribe/route.ts`  *(in: 1, out: 4)*
-- [[POST--api-push-unsubscribe]] — `apps/web/src/app/api/push/unsubscribe/route.ts`  *(in: 1, out: 3)*
-- [[GET--api-sentiment]] — `apps/web/src/app/api/sentiment/route.ts`  *(in: 1, out: 4)*
-- [[GET,PATCH--api-settings-analysis-mode]] — `apps/web/src/app/api/settings/analysis-mode/route.ts`  *(in: 1, out: 1)*
-- [[POST--api-settings-bulk-test]] — `apps/web/src/app/api/settings/bulk-test/route.ts`  *(in: 1, out: 1)*
-- [[GET--api-settings-catalog]] — `apps/web/src/app/api/settings/catalog/route.ts`  *(in: 1, out: 1)*
-- [[GET,PUT,DELETE--api-settings-chat-model]] — `apps/web/src/app/api/settings/chat-model/route.ts`  *(in: 1, out: 4)*
-- [[GET,PUT,DELETE--api-settings-embedding-model]] — `apps/web/src/app/api/settings/embedding-model/route.ts`  *(in: 1, out: 4)*
-- [[GET,PUT--api-settings-fallback-chain]] — `apps/web/src/app/api/settings/fallback-chain/route.ts`  *(in: 1, out: 1)*
-- [[DELETE--api-settings-symbols--symbol]] — `apps/web/src/app/api/settings/symbols/[symbol]/route.ts`  *(in: 1, out: 2)*
-- [[GET,POST,PATCH--api-settings-symbols]] — `apps/web/src/app/api/settings/symbols/route.ts`  *(in: 1, out: 3)*
-- [[POST--api-settings-test-market-provider]] — `apps/web/src/app/api/settings/test-market-provider/route.ts`  *(in: 1, out: 2)*
-- [[POST--api-settings-test-provider]] — `apps/web/src/app/api/settings/test-provider/route.ts`  *(in: 1, out: 5)*
-- [[GET--api-settings-usage-by-agent]] — `apps/web/src/app/api/settings/usage-by-agent/route.ts`  *(in: 1, out: 3)*
-- [[GET--api-settings-usage-by-provider]] — `apps/web/src/app/api/settings/usage-by-provider/route.ts`  *(in: 1, out: 2)*
-- [[GET,PUT,DELETE--api-settings-vision-model]] — `apps/web/src/app/api/settings/vision-model/route.ts`  *(in: 1, out: 4)*
-- [[GET--api-telegram-webhook]] — `apps/web/src/app/api/telegram/webhook/route.ts`  *(in: 1, out: 2)*
-- [[POST--api-upload]] — `apps/web/src/app/api/upload/route.ts`  *(in: 1, out: 3)*
-- [[GET--api-admin-architecture-explorer]] — `apps/web/src/app/api/admin/architecture-explorer/route.ts`  *(in: 0, out: 1)*
-- [[GET--api-admin-cron-history]] — `apps/web/src/app/api/admin/cron-history/route.ts`  *(in: 0, out: 1)*
-- [[GET--api-admin-diagnostics-tool-telemetry]] — `apps/web/src/app/api/admin/diagnostics/tool-telemetry/route.ts`  *(in: 0, out: 1)*
-- [[GET--api-admin-diagnostics-trace--id]] — `apps/web/src/app/api/admin/diagnostics/trace/[id]/route.ts`  *(in: 0, out: 1)*
-- [[GET--api-admin-diagnostics-traces]] — `apps/web/src/app/api/admin/diagnostics/traces/route.ts`  *(in: 0, out: 1)*
-- [[GET,POST--api-admin-features]] — `apps/web/src/app/api/admin/features/route.ts`  *(in: 0, out: 1)*
-- [[POST--api-admin-flush]] — `apps/web/src/app/api/admin/flush/route.ts`  *(in: 0, out: 1)*
-- [[GET--api-admin-health-slo]] — `apps/web/src/app/api/admin/health-slo/route.ts`  *(in: 0, out: 1)*
-- [[POST--api-admin-impersonate]] — `apps/web/src/app/api/admin/impersonate/route.ts`  *(in: 0, out: 1)*
-- [[GET--api-admin-logs-stream]] — `apps/web/src/app/api/admin/logs/stream/route.ts`  *(in: 0, out: 1)*
-- [[GET--api-admin-onboarding-inspect]] — `apps/web/src/app/api/admin/onboarding/inspect/route.ts`  *(in: 0, out: 1)*
-- [[POST--api-admin-onboarding-reset]] — `apps/web/src/app/api/admin/onboarding/reset/route.ts`  *(in: 0, out: 1)*
-- [[GET--api-admin-onboarding-status]] — `apps/web/src/app/api/admin/onboarding/status/route.ts`  *(in: 0, out: 1)*
-- [[POST--api-admin-test-alert-email]] — `apps/web/src/app/api/admin/test-alert-email/route.ts`  *(in: 0, out: 1)*
-- [[POST--api-admin-test-telegram]] — `apps/web/src/app/api/admin/test-telegram/route.ts`  *(in: 0, out: 1)*
-- [[GET--api-admin-users]] — `apps/web/src/app/api/admin/users/route.ts`  *(in: 0, out: 1)*
-- [[GET,PATCH,DELETE--api-alerts--id]] — `apps/web/src/app/api/alerts/[id]/route.ts`  *(in: 0, out: 1)*
-- [[POST--api-alerts-preview]] — `apps/web/src/app/api/alerts/preview/route.ts`  *(in: 0, out: 1)*
-- [[GET--api-alerts-preview-digest]] — `apps/web/src/app/api/alerts/preview-digest/route.ts`  *(in: 0, out: 1)*
-- [[GET,POST--api-alerts]] — `apps/web/src/app/api/alerts/route.ts`  *(in: 0, out: 1)*
-- [[GET--api-auth--nextauth-]] — `apps/web/src/app/api/auth/[...nextauth]/route.ts`  *(in: 0, out: 1)*
-- [[GET--api-auth-verify-email]] — `apps/web/src/app/api/auth/verify-email/route.ts`  *(in: 0, out: 1)*
-- [[POST--api-billing-checkout]] — `apps/web/src/app/api/billing/checkout/route.ts`  *(in: 0, out: 1)*
-- [[GET--api-billing-portal]] — `apps/web/src/app/api/billing/portal/route.ts`  *(in: 0, out: 1)*
-- [[GET--api-billing-webhook]] — `apps/web/src/app/api/billing/webhook/route.ts`  *(in: 0, out: 1)*
-- [[POST--api-bot-link-code]] — `apps/web/src/app/api/bot/link-code/route.ts`  *(in: 0, out: 1)*
-- [[GET--api-bot-status]] — `apps/web/src/app/api/bot/status/route.ts`  *(in: 0, out: 1)*
-- [[POST--api-bot-unlink]] — `apps/web/src/app/api/bot/unlink/route.ts`  *(in: 0, out: 1)*
-- [[GET--api-calendar]] — `apps/web/src/app/api/calendar/route.ts`  *(in: 0, out: 1)*
-- [[GET--api-chat-analysis-jobs--jobId]] — `apps/web/src/app/api/chat/analysis-jobs/[jobId]/route.ts`  *(in: 0, out: 1)*
-- [[POST--api-chat]] — `apps/web/src/app/api/chat/route.ts`  *(in: 0, out: 1)*
-- [[GET--api-chat-threads--id-export]] — `apps/web/src/app/api/chat/threads/[id]/export/route.ts`  *(in: 0, out: 1)*
-- [[GET--api-chat-threads--id-opinions]] — `apps/web/src/app/api/chat/threads/[id]/opinions/route.ts`  *(in: 0, out: 1)*
-- [[GET,DELETE,PATCH--api-chat-threads--id]] — `apps/web/src/app/api/chat/threads/[id]/route.ts`  *(in: 0, out: 1)*
-- [[GET--api-chat-threads--id-summary]] — `apps/web/src/app/api/chat/threads/[id]/summary/route.ts`  *(in: 0, out: 1)*
-- [[POST--api-chat-threads-bulk-delete]] — `apps/web/src/app/api/chat/threads/bulk-delete/route.ts`  *(in: 0, out: 1)*
-- [[POST--api-chat-threads-fork]] — `apps/web/src/app/api/chat/threads/fork/route.ts`  *(in: 0, out: 1)*
-- [[GET--api-chat-threads]] — `apps/web/src/app/api/chat/threads/route.ts`  *(in: 0, out: 1)*
-- [[GET--api-cron-alerts]] — `apps/web/src/app/api/cron/alerts/route.ts`  *(in: 0, out: 1)*
-- [[GET--api-cron-briefings]] — `apps/web/src/app/api/cron/briefings/route.ts`  *(in: 0, out: 1)*
-- [[GET--api-cron-calendar]] — `apps/web/src/app/api/cron/calendar/route.ts`  *(in: 0, out: 1)*
-- [[GET--api-cron-cleanup-telemetry]] — `apps/web/src/app/api/cron/cleanup-telemetry/route.ts`  *(in: 0, out: 1)*
-- [[GET--api-cron-cleanup-tokens]] — `apps/web/src/app/api/cron/cleanup-tokens/route.ts`  *(in: 0, out: 1)*
-- [[GET--api-cron-cleanup-uploads]] — `apps/web/src/app/api/cron/cleanup-uploads/route.ts`  *(in: 0, out: 1)*
-- [[GET--api-cron-cot]] — `apps/web/src/app/api/cron/cot/route.ts`  *(in: 0, out: 1)*
-- [[GET--api-cron-embedding-backfill]] — `apps/web/src/app/api/cron/embedding-backfill/route.ts`  *(in: 0, out: 1)*
-- [[GET--api-cron-fred-actuals]] — `apps/web/src/app/api/cron/fred-actuals/route.ts`  *(in: 0, out: 1)*
-- [[GET--api-cron-news]] — `apps/web/src/app/api/cron/news/route.ts`  *(in: 0, out: 1)*
-- [[GET--api-cron-snapshots]] — `apps/web/src/app/api/cron/snapshots/route.ts`  *(in: 0, out: 1)*
-- [[GET--api-cron-warm-cache]] — `apps/web/src/app/api/cron/warm-cache/route.ts`  *(in: 0, out: 1)*
-- [[GET--api-cron-weekly-review]] — `apps/web/src/app/api/cron/weekly-review/route.ts`  *(in: 0, out: 1)*
-- [[GET--api-dev-login]] — `apps/web/src/app/api/dev/login/route.ts`  *(in: 0, out: 1)*
-- [[GET--api-health-db]] — `apps/web/src/app/api/health/db/route.ts`  *(in: 0, out: 1)*
-- [[GET--api-health-public]] — `apps/web/src/app/api/health/public/route.ts`  *(in: 0, out: 1)*
-- [[GET--api-health]] — `apps/web/src/app/api/health/route.ts`  *(in: 0, out: 1)*
-- [[GET,PATCH,DELETE--api-journal--id]] — `apps/web/src/app/api/journal/[id]/route.ts`  *(in: 0, out: 1)*
-- [[POST--api-journal-import]] — `apps/web/src/app/api/journal/import/route.ts`  *(in: 0, out: 1)*
-- [[POST--api-journal-review]] — `apps/web/src/app/api/journal/review/route.ts`  *(in: 0, out: 1)*
-- [[GET,POST--api-journal]] — `apps/web/src/app/api/journal/route.ts`  *(in: 0, out: 1)*
-- [[GET--api-market-candles]] — `apps/web/src/app/api/market/candles/route.ts`  *(in: 0, out: 1)*
-- [[POST--api-market-indicators]] — `apps/web/src/app/api/market/indicators/route.ts`  *(in: 0, out: 1)*
-- [[GET--api-market-price]] — `apps/web/src/app/api/market/price/route.ts`  *(in: 0, out: 1)*
-- [[GET--api-market-search]] — `apps/web/src/app/api/market/search/route.ts`  *(in: 0, out: 1)*
-- [[GET--api-market-stream]] — `apps/web/src/app/api/market/stream/route.ts`  *(in: 0, out: 1)*
-- [[POST--api-market-structure]] — `apps/web/src/app/api/market/structure/route.ts`  *(in: 0, out: 1)*
-- [[GET--api-me-keys]] — `apps/web/src/app/api/me/keys/route.ts`  *(in: 0, out: 1)*
-- [[GET--api-news]] — `apps/web/src/app/api/news/route.ts`  *(in: 0, out: 1)*
-- [[GET,PUT--api-notifications-noise-config]] — `apps/web/src/app/api/notifications/noise-config/route.ts`  *(in: 0, out: 1)*
-- [[GET,PUT--api-notifications-route-config]] — `apps/web/src/app/api/notifications/route-config/route.ts`  *(in: 0, out: 1)*
-- [[POST--api-onboarding-save-progress]] — `apps/web/src/app/api/onboarding/save-progress/route.ts`  *(in: 0, out: 1)*
-- [[GET,PATCH,DELETE--api-portfolio-positions--id]] — `apps/web/src/app/api/portfolio/positions/[id]/route.ts`  *(in: 0, out: 1)*
-- [[GET,POST--api-portfolio-positions]] — `apps/web/src/app/api/portfolio/positions/route.ts`  *(in: 0, out: 1)*
-- [[GET--api-portfolio-risk]] — `apps/web/src/app/api/portfolio/risk/route.ts`  *(in: 0, out: 1)*
-- [[GET,PUT--api-portfolio-settings]] — `apps/web/src/app/api/portfolio/settings/route.ts`  *(in: 0, out: 1)*
-- [[POST--api-push-subscribe]] — `apps/web/src/app/api/push/subscribe/route.ts`  *(in: 0, out: 1)*
-- [[POST--api-push-unsubscribe]] — `apps/web/src/app/api/push/unsubscribe/route.ts`  *(in: 0, out: 1)*
-- [[GET--api-sentiment]] — `apps/web/src/app/api/sentiment/route.ts`  *(in: 0, out: 1)*
-- [[GET,PATCH--api-settings-analysis-mode]] — `apps/web/src/app/api/settings/analysis-mode/route.ts`  *(in: 0, out: 1)*
-- [[POST--api-settings-bulk-test]] — `apps/web/src/app/api/settings/bulk-test/route.ts`  *(in: 0, out: 1)*
-- [[GET--api-settings-catalog]] — `apps/web/src/app/api/settings/catalog/route.ts`  *(in: 0, out: 1)*
-- [[GET,PUT,DELETE--api-settings-chat-model]] — `apps/web/src/app/api/settings/chat-model/route.ts`  *(in: 0, out: 1)*
-- [[GET,PUT,DELETE--api-settings-embedding-model]] — `apps/web/src/app/api/settings/embedding-model/route.ts`  *(in: 0, out: 1)*
-- [[GET,PUT--api-settings-fallback-chain]] — `apps/web/src/app/api/settings/fallback-chain/route.ts`  *(in: 0, out: 1)*
-- [[DELETE--api-settings-symbols--symbol]] — `apps/web/src/app/api/settings/symbols/[symbol]/route.ts`  *(in: 0, out: 1)*
-- [[GET,POST,PATCH--api-settings-symbols]] — `apps/web/src/app/api/settings/symbols/route.ts`  *(in: 0, out: 1)*
-- [[POST--api-settings-test-market-provider]] — `apps/web/src/app/api/settings/test-market-provider/route.ts`  *(in: 0, out: 1)*
-- [[POST--api-settings-test-provider]] — `apps/web/src/app/api/settings/test-provider/route.ts`  *(in: 0, out: 1)*
-- [[GET--api-settings-usage-by-agent]] — `apps/web/src/app/api/settings/usage-by-agent/route.ts`  *(in: 0, out: 1)*
-- [[GET--api-settings-usage-by-provider]] — `apps/web/src/app/api/settings/usage-by-provider/route.ts`  *(in: 0, out: 1)*
-- [[GET,PUT,DELETE--api-settings-vision-model]] — `apps/web/src/app/api/settings/vision-model/route.ts`  *(in: 0, out: 1)*
-- [[GET--api-telegram-webhook]] — `apps/web/src/app/api/telegram/webhook/route.ts`  *(in: 0, out: 1)*
-- [[POST--api-upload]] — `apps/web/src/app/api/upload/route.ts`  *(in: 0, out: 1)*
+- [[POST--api-chat]] · `@hamafx/web` · `apps/web/src/app/api/chat/route.ts`  *(↖1 ↗7 = 8)*
+- [[GET--api-market-stream]] · `@hamafx/web` · `apps/web/src/app/api/market/stream/route.ts`  *(↖1 ↗5 = 6)*
+- [[POST--api-market-structure]] · `@hamafx/web` · `apps/web/src/app/api/market/structure/route.ts`  *(↖1 ↗5 = 6)*
+- [[POST--api-settings-test-provider]] · `@hamafx/web` · `apps/web/src/app/api/settings/test-provider/route.ts`  *(↖1 ↗5 = 6)*
+- [[GET--api-cron-cot]] · `@hamafx/web` · `apps/web/src/app/api/cron/cot/route.ts`  *(↖1 ↗4 = 5)*
+- [[GET--api-cron-snapshots]] · `@hamafx/web` · `apps/web/src/app/api/cron/snapshots/route.ts`  *(↖1 ↗4 = 5)*
+- [[GET--api-health]] · `@hamafx/web` · `apps/web/src/app/api/health/route.ts`  *(↖1 ↗4 = 5)*
+- [[POST--api-push-subscribe]] · `@hamafx/web` · `apps/web/src/app/api/push/subscribe/route.ts`  *(↖1 ↗4 = 5)*
+- [[GET--api-sentiment]] · `@hamafx/web` · `apps/web/src/app/api/sentiment/route.ts`  *(↖1 ↗4 = 5)*
+- [[GET,PUT,DELETE--api-settings-chat-model]] · `@hamafx/web` · `apps/web/src/app/api/settings/chat-model/route.ts`  *(↖1 ↗4 = 5)*
+- [[GET,PUT,DELETE--api-settings-embedding-model]] · `@hamafx/web` · `apps/web/src/app/api/settings/embedding-model/route.ts`  *(↖1 ↗4 = 5)*
+- [[GET,PUT,DELETE--api-settings-vision-model]] · `@hamafx/web` · `apps/web/src/app/api/settings/vision-model/route.ts`  *(↖1 ↗4 = 5)*
+- [[GET--api-admin-onboarding-inspect]] · `@hamafx/web` · `apps/web/src/app/api/admin/onboarding/inspect/route.ts`  *(↖1 ↗3 = 4)*
+- [[GET--api-auth-verify-email]] · `@hamafx/web` · `apps/web/src/app/api/auth/verify-email/route.ts`  *(↖1 ↗3 = 4)*
+- [[GET--api-chat-threads--id-export]] · `@hamafx/web` · `apps/web/src/app/api/chat/threads/[id]/export/route.ts`  *(↖1 ↗3 = 4)*
+- [[GET--api-cron-briefings]] · `@hamafx/web` · `apps/web/src/app/api/cron/briefings/route.ts`  *(↖1 ↗3 = 4)*
+- [[GET--api-cron-calendar]] · `@hamafx/web` · `apps/web/src/app/api/cron/calendar/route.ts`  *(↖1 ↗3 = 4)*
+- [[GET--api-cron-fred-actuals]] · `@hamafx/web` · `apps/web/src/app/api/cron/fred-actuals/route.ts`  *(↖1 ↗3 = 4)*
+- [[GET--api-cron-news]] · `@hamafx/web` · `apps/web/src/app/api/cron/news/route.ts`  *(↖1 ↗3 = 4)*
+- [[GET--api-cron-warm-cache]] · `@hamafx/web` · `apps/web/src/app/api/cron/warm-cache/route.ts`  *(↖1 ↗3 = 4)*
+- [[GET--api-cron-weekly-review]] · `@hamafx/web` · `apps/web/src/app/api/cron/weekly-review/route.ts`  *(↖1 ↗3 = 4)*
+- [[POST--api-journal-review]] · `@hamafx/web` · `apps/web/src/app/api/journal/review/route.ts`  *(↖1 ↗3 = 4)*
+- [[GET--api-me-keys]] · `@hamafx/web` · `apps/web/src/app/api/me/keys/route.ts`  *(↖1 ↗3 = 4)*
+- [[GET--api-news]] · `@hamafx/web` · `apps/web/src/app/api/news/route.ts`  *(↖1 ↗3 = 4)*
+- [[GET,PUT--api-notifications-noise-config]] · `@hamafx/web` · `apps/web/src/app/api/notifications/noise-config/route.ts`  *(↖1 ↗3 = 4)*
+- [[GET,PUT--api-notifications-route-config]] · `@hamafx/web` · `apps/web/src/app/api/notifications/route-config/route.ts`  *(↖1 ↗3 = 4)*
+- [[GET,PATCH,DELETE--api-portfolio-positions--id]] · `@hamafx/web` · `apps/web/src/app/api/portfolio/positions/[id]/route.ts`  *(↖1 ↗3 = 4)*
+- [[POST--api-push-unsubscribe]] · `@hamafx/web` · `apps/web/src/app/api/push/unsubscribe/route.ts`  *(↖1 ↗3 = 4)*
+- [[GET,POST,PATCH--api-settings-symbols]] · `@hamafx/web` · `apps/web/src/app/api/settings/symbols/route.ts`  *(↖1 ↗3 = 4)*
+- [[GET--api-settings-usage-by-agent]] · `@hamafx/web` · `apps/web/src/app/api/settings/usage-by-agent/route.ts`  *(↖1 ↗3 = 4)*
+- [[POST--api-upload]] · `@hamafx/web` · `apps/web/src/app/api/upload/route.ts`  *(↖1 ↗3 = 4)*
+- [[GET--api-admin-cron-history]] · `@hamafx/web` · `apps/web/src/app/api/admin/cron-history/route.ts`  *(↖1 ↗2 = 3)*
+- [[GET--api-admin-diagnostics-tool-telemetry]] · `@hamafx/web` · `apps/web/src/app/api/admin/diagnostics/tool-telemetry/route.ts`  *(↖1 ↗2 = 3)*
+- [[GET--api-admin-diagnostics-trace--id]] · `@hamafx/web` · `apps/web/src/app/api/admin/diagnostics/trace/[id]/route.ts`  *(↖1 ↗2 = 3)*
+- [[GET--api-admin-diagnostics-traces]] · `@hamafx/web` · `apps/web/src/app/api/admin/diagnostics/traces/route.ts`  *(↖1 ↗2 = 3)*
+- [[POST--api-admin-flush]] · `@hamafx/web` · `apps/web/src/app/api/admin/flush/route.ts`  *(↖1 ↗2 = 3)*
+- [[GET--api-admin-health-slo]] · `@hamafx/web` · `apps/web/src/app/api/admin/health-slo/route.ts`  *(↖1 ↗2 = 3)*
+- [[POST--api-admin-impersonate]] · `@hamafx/web` · `apps/web/src/app/api/admin/impersonate/route.ts`  *(↖1 ↗2 = 3)*
+- [[GET--api-admin-logs-stream]] · `@hamafx/web` · `apps/web/src/app/api/admin/logs/stream/route.ts`  *(↖1 ↗2 = 3)*
+- [[POST--api-admin-onboarding-reset]] · `@hamafx/web` · `apps/web/src/app/api/admin/onboarding/reset/route.ts`  *(↖1 ↗2 = 3)*
+- [[GET--api-admin-onboarding-status]] · `@hamafx/web` · `apps/web/src/app/api/admin/onboarding/status/route.ts`  *(↖1 ↗2 = 3)*
+- [[POST--api-admin-test-alert-email]] · `@hamafx/web` · `apps/web/src/app/api/admin/test-alert-email/route.ts`  *(↖1 ↗2 = 3)*
+- [[POST--api-admin-test-telegram]] · `@hamafx/web` · `apps/web/src/app/api/admin/test-telegram/route.ts`  *(↖1 ↗2 = 3)*
+- [[POST--api-billing-checkout]] · `@hamafx/web` · `apps/web/src/app/api/billing/checkout/route.ts`  *(↖1 ↗2 = 3)*
+- [[GET--api-billing-portal]] · `@hamafx/web` · `apps/web/src/app/api/billing/portal/route.ts`  *(↖1 ↗2 = 3)*
+- [[GET--api-billing-webhook]] · `@hamafx/web` · `apps/web/src/app/api/billing/webhook/route.ts`  *(↖1 ↗2 = 3)*
+- [[POST--api-bot-link-code]] · `@hamafx/web` · `apps/web/src/app/api/bot/link-code/route.ts`  *(↖1 ↗2 = 3)*
+- [[GET--api-bot-status]] · `@hamafx/web` · `apps/web/src/app/api/bot/status/route.ts`  *(↖1 ↗2 = 3)*
+- [[POST--api-bot-unlink]] · `@hamafx/web` · `apps/web/src/app/api/bot/unlink/route.ts`  *(↖1 ↗2 = 3)*
+- [[GET--api-chat-analysis-jobs--jobId]] · `@hamafx/web` · `apps/web/src/app/api/chat/analysis-jobs/[jobId]/route.ts`  *(↖1 ↗2 = 3)*
+- [[GET--api-chat-threads--id-opinions]] · `@hamafx/web` · `apps/web/src/app/api/chat/threads/[id]/opinions/route.ts`  *(↖1 ↗2 = 3)*
+- [[GET--api-chat-threads--id-summary]] · `@hamafx/web` · `apps/web/src/app/api/chat/threads/[id]/summary/route.ts`  *(↖1 ↗2 = 3)*
+- [[POST--api-chat-threads-bulk-delete]] · `@hamafx/web` · `apps/web/src/app/api/chat/threads/bulk-delete/route.ts`  *(↖1 ↗2 = 3)*
+- [[POST--api-chat-threads-fork]] · `@hamafx/web` · `apps/web/src/app/api/chat/threads/fork/route.ts`  *(↖1 ↗2 = 3)*
+- [[GET--api-cron-alerts]] · `@hamafx/web` · `apps/web/src/app/api/cron/alerts/route.ts`  *(↖1 ↗2 = 3)*
+- [[GET--api-cron-cleanup-telemetry]] · `@hamafx/web` · `apps/web/src/app/api/cron/cleanup-telemetry/route.ts`  *(↖1 ↗2 = 3)*
+- [[GET--api-cron-cleanup-tokens]] · `@hamafx/web` · `apps/web/src/app/api/cron/cleanup-tokens/route.ts`  *(↖1 ↗2 = 3)*
+- [[GET--api-cron-embedding-backfill]] · `@hamafx/web` · `apps/web/src/app/api/cron/embedding-backfill/route.ts`  *(↖1 ↗2 = 3)*
+- [[GET--api-dev-login]] · `@hamafx/web` · `apps/web/src/app/api/dev/login/route.ts`  *(↖1 ↗2 = 3)*
+- [[GET--api-health-db]] · `@hamafx/web` · `apps/web/src/app/api/health/db/route.ts`  *(↖1 ↗2 = 3)*
+- [[GET--api-health-public]] · `@hamafx/web` · `apps/web/src/app/api/health/public/route.ts`  *(↖1 ↗2 = 3)*
+- [[POST--api-journal-import]] · `@hamafx/web` · `apps/web/src/app/api/journal/import/route.ts`  *(↖1 ↗2 = 3)*
+- [[GET--api-market-price]] · `@hamafx/web` · `apps/web/src/app/api/market/price/route.ts`  *(↖1 ↗2 = 3)*
+- [[POST--api-onboarding-save-progress]] · `@hamafx/web` · `apps/web/src/app/api/onboarding/save-progress/route.ts`  *(↖1 ↗2 = 3)*
+- [[GET,POST--api-portfolio-positions]] · `@hamafx/web` · `apps/web/src/app/api/portfolio/positions/route.ts`  *(↖1 ↗2 = 3)*
+- [[DELETE--api-settings-symbols--symbol]] · `@hamafx/web` · `apps/web/src/app/api/settings/symbols/[symbol]/route.ts`  *(↖1 ↗2 = 3)*
+- [[POST--api-settings-test-market-provider]] · `@hamafx/web` · `apps/web/src/app/api/settings/test-market-provider/route.ts`  *(↖1 ↗2 = 3)*
+- [[GET--api-settings-usage-by-provider]] · `@hamafx/web` · `apps/web/src/app/api/settings/usage-by-provider/route.ts`  *(↖1 ↗2 = 3)*
+- [[GET--api-telegram-webhook]] · `@hamafx/web` · `apps/web/src/app/api/telegram/webhook/route.ts`  *(↖1 ↗2 = 3)*
+- [[GET--api-admin-architecture-explorer]] · `@hamafx/web` · `apps/web/src/app/api/admin/architecture-explorer/route.ts`  *(↖1 ↗1 = 2)*
+- [[GET,POST--api-admin-features]] · `@hamafx/web` · `apps/web/src/app/api/admin/features/route.ts`  *(↖1 ↗1 = 2)*
+- [[GET--api-admin-users]] · `@hamafx/web` · `apps/web/src/app/api/admin/users/route.ts`  *(↖1 ↗1 = 2)*
+- [[GET,PATCH,DELETE--api-alerts--id]] · `@hamafx/web` · `apps/web/src/app/api/alerts/[id]/route.ts`  *(↖1 ↗1 = 2)*
+- [[POST--api-alerts-preview]] · `@hamafx/web` · `apps/web/src/app/api/alerts/preview/route.ts`  *(↖1 ↗1 = 2)*
+- [[GET--api-alerts-preview-digest]] · `@hamafx/web` · `apps/web/src/app/api/alerts/preview-digest/route.ts`  *(↖1 ↗1 = 2)*
+- [[GET,POST--api-alerts]] · `@hamafx/web` · `apps/web/src/app/api/alerts/route.ts`  *(↖1 ↗1 = 2)*
+- [[GET--api-auth--nextauth-]] · `@hamafx/web` · `apps/web/src/app/api/auth/[...nextauth]/route.ts`  *(↖1 ↗1 = 2)*
+- [[GET--api-calendar]] · `@hamafx/web` · `apps/web/src/app/api/calendar/route.ts`  *(↖1 ↗1 = 2)*
+- [[GET,DELETE,PATCH--api-chat-threads--id]] · `@hamafx/web` · `apps/web/src/app/api/chat/threads/[id]/route.ts`  *(↖1 ↗1 = 2)*
+- [[GET--api-chat-threads]] · `@hamafx/web` · `apps/web/src/app/api/chat/threads/route.ts`  *(↖1 ↗1 = 2)*
+- [[GET--api-cron-cleanup-uploads]] · `@hamafx/web` · `apps/web/src/app/api/cron/cleanup-uploads/route.ts`  *(↖1 ↗1 = 2)*
+- [[GET,PATCH,DELETE--api-journal--id]] · `@hamafx/web` · `apps/web/src/app/api/journal/[id]/route.ts`  *(↖1 ↗1 = 2)*
+- [[GET,POST--api-journal]] · `@hamafx/web` · `apps/web/src/app/api/journal/route.ts`  *(↖1 ↗1 = 2)*
+- [[GET--api-market-candles]] · `@hamafx/web` · `apps/web/src/app/api/market/candles/route.ts`  *(↖1 ↗1 = 2)*
+- [[POST--api-market-indicators]] · `@hamafx/web` · `apps/web/src/app/api/market/indicators/route.ts`  *(↖1 ↗1 = 2)*
+- [[GET--api-market-search]] · `@hamafx/web` · `apps/web/src/app/api/market/search/route.ts`  *(↖1 ↗1 = 2)*
+- [[GET--api-portfolio-risk]] · `@hamafx/web` · `apps/web/src/app/api/portfolio/risk/route.ts`  *(↖1 ↗1 = 2)*
+- [[GET,PUT--api-portfolio-settings]] · `@hamafx/web` · `apps/web/src/app/api/portfolio/settings/route.ts`  *(↖1 ↗1 = 2)*
+- [[GET,PATCH--api-settings-analysis-mode]] · `@hamafx/web` · `apps/web/src/app/api/settings/analysis-mode/route.ts`  *(↖1 ↗1 = 2)*
+- [[POST--api-settings-bulk-test]] · `@hamafx/web` · `apps/web/src/app/api/settings/bulk-test/route.ts`  *(↖1 ↗1 = 2)*
+- [[GET--api-settings-catalog]] · `@hamafx/web` · `apps/web/src/app/api/settings/catalog/route.ts`  *(↖1 ↗1 = 2)*
+- [[GET,PUT--api-settings-fallback-chain]] · `@hamafx/web` · `apps/web/src/app/api/settings/fallback-chain/route.ts`  *(↖1 ↗1 = 2)*
+- [[GET--api-admin-architecture-explorer]] · `@hamafx/web` · `apps/web/src/app/api/admin/architecture-explorer/route.ts`  *(↖0 ↗1 = 1)*
+- [[GET--api-admin-cron-history]] · `@hamafx/web` · `apps/web/src/app/api/admin/cron-history/route.ts`  *(↖0 ↗1 = 1)*
+- [[GET--api-admin-diagnostics-tool-telemetry]] · `@hamafx/web` · `apps/web/src/app/api/admin/diagnostics/tool-telemetry/route.ts`  *(↖0 ↗1 = 1)*
+- [[GET--api-admin-diagnostics-trace--id]] · `@hamafx/web` · `apps/web/src/app/api/admin/diagnostics/trace/[id]/route.ts`  *(↖0 ↗1 = 1)*
+- [[GET--api-admin-diagnostics-traces]] · `@hamafx/web` · `apps/web/src/app/api/admin/diagnostics/traces/route.ts`  *(↖0 ↗1 = 1)*
+- [[GET,POST--api-admin-features]] · `@hamafx/web` · `apps/web/src/app/api/admin/features/route.ts`  *(↖0 ↗1 = 1)*
+- [[POST--api-admin-flush]] · `@hamafx/web` · `apps/web/src/app/api/admin/flush/route.ts`  *(↖0 ↗1 = 1)*
+- [[GET--api-admin-health-slo]] · `@hamafx/web` · `apps/web/src/app/api/admin/health-slo/route.ts`  *(↖0 ↗1 = 1)*
+- [[POST--api-admin-impersonate]] · `@hamafx/web` · `apps/web/src/app/api/admin/impersonate/route.ts`  *(↖0 ↗1 = 1)*
+- [[GET--api-admin-logs-stream]] · `@hamafx/web` · `apps/web/src/app/api/admin/logs/stream/route.ts`  *(↖0 ↗1 = 1)*
+- [[GET--api-admin-onboarding-inspect]] · `@hamafx/web` · `apps/web/src/app/api/admin/onboarding/inspect/route.ts`  *(↖0 ↗1 = 1)*
+- [[POST--api-admin-onboarding-reset]] · `@hamafx/web` · `apps/web/src/app/api/admin/onboarding/reset/route.ts`  *(↖0 ↗1 = 1)*
+- [[GET--api-admin-onboarding-status]] · `@hamafx/web` · `apps/web/src/app/api/admin/onboarding/status/route.ts`  *(↖0 ↗1 = 1)*
+- [[POST--api-admin-test-alert-email]] · `@hamafx/web` · `apps/web/src/app/api/admin/test-alert-email/route.ts`  *(↖0 ↗1 = 1)*
+- [[POST--api-admin-test-telegram]] · `@hamafx/web` · `apps/web/src/app/api/admin/test-telegram/route.ts`  *(↖0 ↗1 = 1)*
+- [[GET--api-admin-users]] · `@hamafx/web` · `apps/web/src/app/api/admin/users/route.ts`  *(↖0 ↗1 = 1)*
+- [[GET,PATCH,DELETE--api-alerts--id]] · `@hamafx/web` · `apps/web/src/app/api/alerts/[id]/route.ts`  *(↖0 ↗1 = 1)*
+- [[POST--api-alerts-preview]] · `@hamafx/web` · `apps/web/src/app/api/alerts/preview/route.ts`  *(↖0 ↗1 = 1)*
+- [[GET--api-alerts-preview-digest]] · `@hamafx/web` · `apps/web/src/app/api/alerts/preview-digest/route.ts`  *(↖0 ↗1 = 1)*
+- [[GET,POST--api-alerts]] · `@hamafx/web` · `apps/web/src/app/api/alerts/route.ts`  *(↖0 ↗1 = 1)*
+- [[GET--api-auth--nextauth-]] · `@hamafx/web` · `apps/web/src/app/api/auth/[...nextauth]/route.ts`  *(↖0 ↗1 = 1)*
+- [[GET--api-auth-verify-email]] · `@hamafx/web` · `apps/web/src/app/api/auth/verify-email/route.ts`  *(↖0 ↗1 = 1)*
+- [[POST--api-billing-checkout]] · `@hamafx/web` · `apps/web/src/app/api/billing/checkout/route.ts`  *(↖0 ↗1 = 1)*
+- [[GET--api-billing-portal]] · `@hamafx/web` · `apps/web/src/app/api/billing/portal/route.ts`  *(↖0 ↗1 = 1)*
+- [[GET--api-billing-webhook]] · `@hamafx/web` · `apps/web/src/app/api/billing/webhook/route.ts`  *(↖0 ↗1 = 1)*
+- [[POST--api-bot-link-code]] · `@hamafx/web` · `apps/web/src/app/api/bot/link-code/route.ts`  *(↖0 ↗1 = 1)*
+- [[GET--api-bot-status]] · `@hamafx/web` · `apps/web/src/app/api/bot/status/route.ts`  *(↖0 ↗1 = 1)*
+- [[POST--api-bot-unlink]] · `@hamafx/web` · `apps/web/src/app/api/bot/unlink/route.ts`  *(↖0 ↗1 = 1)*
+- [[GET--api-calendar]] · `@hamafx/web` · `apps/web/src/app/api/calendar/route.ts`  *(↖0 ↗1 = 1)*
+- [[GET--api-chat-analysis-jobs--jobId]] · `@hamafx/web` · `apps/web/src/app/api/chat/analysis-jobs/[jobId]/route.ts`  *(↖0 ↗1 = 1)*
+- [[POST--api-chat]] · `@hamafx/web` · `apps/web/src/app/api/chat/route.ts`  *(↖0 ↗1 = 1)*
+- [[GET--api-chat-threads--id-export]] · `@hamafx/web` · `apps/web/src/app/api/chat/threads/[id]/export/route.ts`  *(↖0 ↗1 = 1)*
+- [[GET--api-chat-threads--id-opinions]] · `@hamafx/web` · `apps/web/src/app/api/chat/threads/[id]/opinions/route.ts`  *(↖0 ↗1 = 1)*
+- [[GET,DELETE,PATCH--api-chat-threads--id]] · `@hamafx/web` · `apps/web/src/app/api/chat/threads/[id]/route.ts`  *(↖0 ↗1 = 1)*
+- [[GET--api-chat-threads--id-summary]] · `@hamafx/web` · `apps/web/src/app/api/chat/threads/[id]/summary/route.ts`  *(↖0 ↗1 = 1)*
+- [[POST--api-chat-threads-bulk-delete]] · `@hamafx/web` · `apps/web/src/app/api/chat/threads/bulk-delete/route.ts`  *(↖0 ↗1 = 1)*
+- [[POST--api-chat-threads-fork]] · `@hamafx/web` · `apps/web/src/app/api/chat/threads/fork/route.ts`  *(↖0 ↗1 = 1)*
+- [[GET--api-chat-threads]] · `@hamafx/web` · `apps/web/src/app/api/chat/threads/route.ts`  *(↖0 ↗1 = 1)*
+- [[GET--api-cron-alerts]] · `@hamafx/web` · `apps/web/src/app/api/cron/alerts/route.ts`  *(↖0 ↗1 = 1)*
+- [[GET--api-cron-briefings]] · `@hamafx/web` · `apps/web/src/app/api/cron/briefings/route.ts`  *(↖0 ↗1 = 1)*
+- [[GET--api-cron-calendar]] · `@hamafx/web` · `apps/web/src/app/api/cron/calendar/route.ts`  *(↖0 ↗1 = 1)*
+- [[GET--api-cron-cleanup-telemetry]] · `@hamafx/web` · `apps/web/src/app/api/cron/cleanup-telemetry/route.ts`  *(↖0 ↗1 = 1)*
+- [[GET--api-cron-cleanup-tokens]] · `@hamafx/web` · `apps/web/src/app/api/cron/cleanup-tokens/route.ts`  *(↖0 ↗1 = 1)*
+- [[GET--api-cron-cleanup-uploads]] · `@hamafx/web` · `apps/web/src/app/api/cron/cleanup-uploads/route.ts`  *(↖0 ↗1 = 1)*
+- [[GET--api-cron-cot]] · `@hamafx/web` · `apps/web/src/app/api/cron/cot/route.ts`  *(↖0 ↗1 = 1)*
+- [[GET--api-cron-embedding-backfill]] · `@hamafx/web` · `apps/web/src/app/api/cron/embedding-backfill/route.ts`  *(↖0 ↗1 = 1)*
+- [[GET--api-cron-fred-actuals]] · `@hamafx/web` · `apps/web/src/app/api/cron/fred-actuals/route.ts`  *(↖0 ↗1 = 1)*
+- [[GET--api-cron-news]] · `@hamafx/web` · `apps/web/src/app/api/cron/news/route.ts`  *(↖0 ↗1 = 1)*
+- [[GET--api-cron-snapshots]] · `@hamafx/web` · `apps/web/src/app/api/cron/snapshots/route.ts`  *(↖0 ↗1 = 1)*
+- [[GET--api-cron-warm-cache]] · `@hamafx/web` · `apps/web/src/app/api/cron/warm-cache/route.ts`  *(↖0 ↗1 = 1)*
+- [[GET--api-cron-weekly-review]] · `@hamafx/web` · `apps/web/src/app/api/cron/weekly-review/route.ts`  *(↖0 ↗1 = 1)*
+- [[GET--api-dev-login]] · `@hamafx/web` · `apps/web/src/app/api/dev/login/route.ts`  *(↖0 ↗1 = 1)*
+- [[GET--api-health-db]] · `@hamafx/web` · `apps/web/src/app/api/health/db/route.ts`  *(↖0 ↗1 = 1)*
+- [[GET--api-health-public]] · `@hamafx/web` · `apps/web/src/app/api/health/public/route.ts`  *(↖0 ↗1 = 1)*
+- [[GET--api-health]] · `@hamafx/web` · `apps/web/src/app/api/health/route.ts`  *(↖0 ↗1 = 1)*
+- [[GET,PATCH,DELETE--api-journal--id]] · `@hamafx/web` · `apps/web/src/app/api/journal/[id]/route.ts`  *(↖0 ↗1 = 1)*
+- [[POST--api-journal-import]] · `@hamafx/web` · `apps/web/src/app/api/journal/import/route.ts`  *(↖0 ↗1 = 1)*
+- [[POST--api-journal-review]] · `@hamafx/web` · `apps/web/src/app/api/journal/review/route.ts`  *(↖0 ↗1 = 1)*
+- [[GET,POST--api-journal]] · `@hamafx/web` · `apps/web/src/app/api/journal/route.ts`  *(↖0 ↗1 = 1)*
+- [[GET--api-market-candles]] · `@hamafx/web` · `apps/web/src/app/api/market/candles/route.ts`  *(↖0 ↗1 = 1)*
+- [[POST--api-market-indicators]] · `@hamafx/web` · `apps/web/src/app/api/market/indicators/route.ts`  *(↖0 ↗1 = 1)*
+- [[GET--api-market-price]] · `@hamafx/web` · `apps/web/src/app/api/market/price/route.ts`  *(↖0 ↗1 = 1)*
+- [[GET--api-market-search]] · `@hamafx/web` · `apps/web/src/app/api/market/search/route.ts`  *(↖0 ↗1 = 1)*
+- [[GET--api-market-stream]] · `@hamafx/web` · `apps/web/src/app/api/market/stream/route.ts`  *(↖0 ↗1 = 1)*
+- [[POST--api-market-structure]] · `@hamafx/web` · `apps/web/src/app/api/market/structure/route.ts`  *(↖0 ↗1 = 1)*
+- [[GET--api-me-keys]] · `@hamafx/web` · `apps/web/src/app/api/me/keys/route.ts`  *(↖0 ↗1 = 1)*
+- [[GET--api-news]] · `@hamafx/web` · `apps/web/src/app/api/news/route.ts`  *(↖0 ↗1 = 1)*
+- [[GET,PUT--api-notifications-noise-config]] · `@hamafx/web` · `apps/web/src/app/api/notifications/noise-config/route.ts`  *(↖0 ↗1 = 1)*
+- [[GET,PUT--api-notifications-route-config]] · `@hamafx/web` · `apps/web/src/app/api/notifications/route-config/route.ts`  *(↖0 ↗1 = 1)*
+- [[POST--api-onboarding-save-progress]] · `@hamafx/web` · `apps/web/src/app/api/onboarding/save-progress/route.ts`  *(↖0 ↗1 = 1)*
+- [[GET,PATCH,DELETE--api-portfolio-positions--id]] · `@hamafx/web` · `apps/web/src/app/api/portfolio/positions/[id]/route.ts`  *(↖0 ↗1 = 1)*
+- [[GET,POST--api-portfolio-positions]] · `@hamafx/web` · `apps/web/src/app/api/portfolio/positions/route.ts`  *(↖0 ↗1 = 1)*
+- [[GET--api-portfolio-risk]] · `@hamafx/web` · `apps/web/src/app/api/portfolio/risk/route.ts`  *(↖0 ↗1 = 1)*
+- [[GET,PUT--api-portfolio-settings]] · `@hamafx/web` · `apps/web/src/app/api/portfolio/settings/route.ts`  *(↖0 ↗1 = 1)*
+- [[POST--api-push-subscribe]] · `@hamafx/web` · `apps/web/src/app/api/push/subscribe/route.ts`  *(↖0 ↗1 = 1)*
+- [[POST--api-push-unsubscribe]] · `@hamafx/web` · `apps/web/src/app/api/push/unsubscribe/route.ts`  *(↖0 ↗1 = 1)*
+- [[GET--api-sentiment]] · `@hamafx/web` · `apps/web/src/app/api/sentiment/route.ts`  *(↖0 ↗1 = 1)*
+- [[GET,PATCH--api-settings-analysis-mode]] · `@hamafx/web` · `apps/web/src/app/api/settings/analysis-mode/route.ts`  *(↖0 ↗1 = 1)*
+- [[POST--api-settings-bulk-test]] · `@hamafx/web` · `apps/web/src/app/api/settings/bulk-test/route.ts`  *(↖0 ↗1 = 1)*
+- [[GET--api-settings-catalog]] · `@hamafx/web` · `apps/web/src/app/api/settings/catalog/route.ts`  *(↖0 ↗1 = 1)*
+- [[GET,PUT,DELETE--api-settings-chat-model]] · `@hamafx/web` · `apps/web/src/app/api/settings/chat-model/route.ts`  *(↖0 ↗1 = 1)*
+- [[GET,PUT,DELETE--api-settings-embedding-model]] · `@hamafx/web` · `apps/web/src/app/api/settings/embedding-model/route.ts`  *(↖0 ↗1 = 1)*
+- [[GET,PUT--api-settings-fallback-chain]] · `@hamafx/web` · `apps/web/src/app/api/settings/fallback-chain/route.ts`  *(↖0 ↗1 = 1)*
+- [[DELETE--api-settings-symbols--symbol]] · `@hamafx/web` · `apps/web/src/app/api/settings/symbols/[symbol]/route.ts`  *(↖0 ↗1 = 1)*
+- [[GET,POST,PATCH--api-settings-symbols]] · `@hamafx/web` · `apps/web/src/app/api/settings/symbols/route.ts`  *(↖0 ↗1 = 1)*
+- [[POST--api-settings-test-market-provider]] · `@hamafx/web` · `apps/web/src/app/api/settings/test-market-provider/route.ts`  *(↖0 ↗1 = 1)*
+- [[POST--api-settings-test-provider]] · `@hamafx/web` · `apps/web/src/app/api/settings/test-provider/route.ts`  *(↖0 ↗1 = 1)*
+- [[GET--api-settings-usage-by-agent]] · `@hamafx/web` · `apps/web/src/app/api/settings/usage-by-agent/route.ts`  *(↖0 ↗1 = 1)*
+- [[GET--api-settings-usage-by-provider]] · `@hamafx/web` · `apps/web/src/app/api/settings/usage-by-provider/route.ts`  *(↖0 ↗1 = 1)*
+- [[GET,PUT,DELETE--api-settings-vision-model]] · `@hamafx/web` · `apps/web/src/app/api/settings/vision-model/route.ts`  *(↖0 ↗1 = 1)*
+- [[GET--api-telegram-webhook]] · `@hamafx/web` · `apps/web/src/app/api/telegram/webhook/route.ts`  *(↖0 ↗1 = 1)*
+- [[POST--api-upload]] · `@hamafx/web` · `apps/web/src/app/api/upload/route.ts`  *(↖0 ↗1 = 1)*

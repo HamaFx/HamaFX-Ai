@@ -4,8 +4,10 @@ package: "@hamafx/ai"
 path: "packages/ai/src/model-chat.ts"
 incoming: 1
 outgoing: 12
+connections: 13
 risk: low
-tags: [module, hamafxai]
+layer: core
+tags: [type/module, hamafx-ai, layer/core]
 aliases: [model-chat/ChatModelResolution]
 ---
 
@@ -23,14 +25,17 @@ Module: packages/ai/src/model-chat.ts
 |---|---|
 | Incoming dependencies | 1 |
 | Outgoing dependencies | 12 |
-| Risk level | LOW |
+| Total connections | 13 |
+| Risk level | **LOW** |
+| Layer | `core` |
+| Package tag | `#hamafx-ai` |
 
 
-### 📤 Depends On
+### 📤 Depends On (7)
 [[@hamafx-db]] · [[@hamafx-shared]] · [[model-circuit-breaker-recordModelSuccess]] · [[byok-providers]] · [[vertex-factory-ResolveModelEnv]] · [[model-helpers-PROVIDER_PRIORITY]] · [[@hamafx-ai]]
 
 
-### 📥 Depended On By
+### 📥 Depended On By (1)
 [[model-strategy-DomainRoutingContext]]
 
 
@@ -42,3 +47,10 @@ Module: packages/ai/src/model-chat.ts
 - `derivePlannerModel`
 - `deriveTitleModel`
 
+
+## 🔍 Explore
+
+- **Local Graph:** Right-click this file → "Open local graph"
+- **Backlinks:** Open the right sidebar → "Backlinks"
+- Use `#type/module` to find all Modules
+- Use `#hamafx-ai` to find all files in this package

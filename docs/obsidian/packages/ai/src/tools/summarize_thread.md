@@ -4,8 +4,10 @@ package: "@hamafx/ai"
 path: "packages/ai/src/tools/summarize-thread.ts"
 incoming: 1
 outgoing: 9
+connections: 10
 risk: low
-tags: [tool, hamafxai]
+layer: ai
+tags: [type/tool, hamafx-ai, layer/ai]
 aliases: [summarize_thread]
 ---
 
@@ -23,14 +25,17 @@ One-paragraph synopsis of the active chat thread plus three durable insights. Us
 |---|---|
 | Incoming dependencies | 1 |
 | Outgoing dependencies | 9 |
-| Risk level | LOW |
+| Total connections | 10 |
+| Risk level | **LOW** |
+| Layer | `ai` |
+| Package tag | `#hamafx-ai` |
 
 
-### 📤 Depends On
+### 📤 Depends On (8)
 [[@hamafx-shared]] · [[memory-index-MemoryKind]] · [[model]] · [[persistence]] · [[tool-context-ToolEnv]] · [[telemetry-telemetryConfig]] · [[@hamafx-ai]] · [[registry-ToolPlugin]]
 
 
-### 📥 Depended On By
+### 📥 Depended On By (1)
 [[journal]]
 
 
@@ -38,3 +43,10 @@ One-paragraph synopsis of the active chat thread plus three durable insights. Us
 ## 📦 Exports
 - `summarizeThreadTool`
 
+
+## 🔍 Explore
+
+- **Local Graph:** Right-click this file → "Open local graph"
+- **Backlinks:** Open the right sidebar → "Backlinks"
+- Use `#type/tool` to find all AI Tools
+- Use `#hamafx-ai` to find all files in this package

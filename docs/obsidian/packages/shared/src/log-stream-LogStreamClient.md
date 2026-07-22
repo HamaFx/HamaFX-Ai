@@ -4,8 +4,10 @@ package: "@hamafx/shared"
 path: "packages/shared/src/log-stream.ts"
 incoming: 1
 outgoing: 1
+connections: 2
 risk: low
-tags: [module, hamafxshared]
+layer: core
+tags: [type/module, hamafx-shared, layer/core]
 aliases: [log-stream/LogStreamClient]
 ---
 
@@ -23,14 +25,17 @@ Module: packages/shared/src/log-stream.ts
 |---|---|
 | Incoming dependencies | 1 |
 | Outgoing dependencies | 1 |
-| Risk level | LOW |
+| Total connections | 2 |
+| Risk level | **LOW** |
+| Layer | `core` |
+| Package tag | `#hamafx-shared` |
 
 
-### 📤 Depends On
+### 📤 Depends On (1)
 [[@hamafx-shared]]
 
 
-### 📥 Depended On By
+### 📥 Depended On By (1)
 [[logger-LOG_CATEGORIES]]
 
 
@@ -40,3 +45,10 @@ Module: packages/shared/src/log-stream.ts
 - `LogStreamHub`
 - `logStreamHub`
 
+
+## 🔍 Explore
+
+- **Local Graph:** Right-click this file → "Open local graph"
+- **Backlinks:** Open the right sidebar → "Backlinks"
+- Use `#type/module` to find all Modules
+- Use `#hamafx-shared` to find all files in this package

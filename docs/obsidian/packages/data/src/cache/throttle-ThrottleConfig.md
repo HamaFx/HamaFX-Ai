@@ -4,8 +4,10 @@ package: "@hamafx/data"
 path: "packages/data/src/cache/throttle.ts"
 incoming: 11
 outgoing: 3
-risk: medium
-tags: [module, hamafxdata]
+connections: 14
+risk: low
+layer: core
+tags: [type/module, hamafx-data, layer/core]
 aliases: [throttle/ThrottleConfig]
 ---
 
@@ -23,14 +25,17 @@ Module: packages/data/src/cache/throttle.ts
 |---|---|
 | Incoming dependencies | 11 |
 | Outgoing dependencies | 3 |
-| Risk level | MEDIUM |
+| Total connections | 14 |
+| Risk level | **LOW** |
+| Layer | `core` |
+| Package tag | `#hamafx-data` |
 
 
-### 📤 Depends On
+### 📤 Depends On (2)
 [[@hamafx-db]] · [[@hamafx-data]]
 
 
-### 📥 Depended On By
+### 📥 Depended On By (11)
 [[rest-fetchCandles]] · [[rest-fetchTick]] · [[rest-CftcRow]] · [[rest-fetchPrice]] · [[rest-FredReleaseDate]] · [[rest-DEFAULT_SEARCH]] · [[biquote-rest.test]] · [[calendar-adapter.test]] · [[news-adapter.test]] · [[price-adapter.test]] · [[throttle.test]]
 
 
@@ -43,3 +48,10 @@ Module: packages/data/src/cache/throttle.ts
 - `tryReserveDaily`
 - `_resetThrottle`
 
+
+## 🔍 Explore
+
+- **Local Graph:** Right-click this file → "Open local graph"
+- **Backlinks:** Open the right sidebar → "Backlinks"
+- Use `#type/module` to find all Modules
+- Use `#hamafx-data` to find all files in this package

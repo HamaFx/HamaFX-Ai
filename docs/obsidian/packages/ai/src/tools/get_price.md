@@ -4,8 +4,10 @@ package: "@hamafx/ai"
 path: "packages/ai/src/tools/get-price.ts"
 incoming: 3
 outgoing: 4
+connections: 7
 risk: low
-tags: [tool, hamafxai]
+layer: ai
+tags: [type/tool, hamafx-ai, layer/ai]
 aliases: [get_price]
 ---
 
@@ -23,14 +25,17 @@ Fetch the most recent mid price for one or more supported symbols (XAUUSD, EURUS
 |---|---|
 | Incoming dependencies | 3 |
 | Outgoing dependencies | 4 |
-| Risk level | LOW |
+| Total connections | 7 |
+| Risk level | **LOW** |
+| Layer | `ai` |
+| Package tag | `#hamafx-ai` |
 
 
-### 📤 Depends On
+### 📤 Depends On (4)
 [[@hamafx-data]] · [[@hamafx-shared]] · [[@hamafx-ai]] · [[registry-ToolPlugin]]
 
 
-### 📥 Depended On By
+### 📥 Depended On By (3)
 [[market]] · [[get-price.test]] · [[ai-data.integration.test]]
 
 
@@ -38,3 +43,10 @@ Fetch the most recent mid price for one or more supported symbols (XAUUSD, EURUS
 ## 📦 Exports
 - `getPriceTool`
 
+
+## 🔍 Explore
+
+- **Local Graph:** Right-click this file → "Open local graph"
+- **Backlinks:** Open the right sidebar → "Backlinks"
+- Use `#type/tool` to find all AI Tools
+- Use `#hamafx-ai` to find all files in this package

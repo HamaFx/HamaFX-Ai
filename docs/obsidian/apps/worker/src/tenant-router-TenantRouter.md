@@ -4,8 +4,10 @@ package: "@hamafx/worker"
 path: "apps/worker/src/tenant-router.ts"
 incoming: 9
 outgoing: 1
+connections: 10
 risk: low
-tags: [module, hamafxworker]
+layer: core
+tags: [type/module, hamafx-worker, layer/core]
 aliases: [tenant-router/TenantRouter]
 ---
 
@@ -23,14 +25,17 @@ Module: apps/worker/src/tenant-router.ts
 |---|---|
 | Incoming dependencies | 9 |
 | Outgoing dependencies | 1 |
-| Risk level | LOW |
+| Total connections | 10 |
+| Risk level | **LOW** |
+| Layer | `core` |
+| Package tag | `#hamafx-worker` |
 
 
-### 📤 Depends On
+### 📤 Depends On (1)
 [[@hamafx-worker]]
 
 
-### 📥 Depended On By
+### 📥 Depended On By (9)
 [[cli]] · [[embedded-startEmbeddedScheduler]] · [[scheduler-startScheduler]] · [[briefings.test]] · [[cot-job.test]] · [[embedding-backfill.test]] · [[fred-actuals.test]] · [[snapshots-job.test]] · [[weekly-review.test]]
 
 
@@ -39,3 +44,10 @@ Module: apps/worker/src/tenant-router.ts
 - `TenantRouter`
 - `tenantRouter`
 
+
+## 🔍 Explore
+
+- **Local Graph:** Right-click this file → "Open local graph"
+- **Backlinks:** Open the right sidebar → "Backlinks"
+- Use `#type/module` to find all Modules
+- Use `#hamafx-worker` to find all files in this package

@@ -4,8 +4,10 @@ package: "tool:lighthouse"
 path: "tools/lighthouse/run.mjs"
 incoming: 0
 outgoing: 1
+connections: 1
 risk: low
-tags: [module, tool:lighthouse]
+layer: core
+tags: [type/module, tool:lighthouse, layer/core]
 aliases: [run]
 ---
 
@@ -23,12 +25,22 @@ Module: tools/lighthouse/run.mjs
 |---|---|
 | Incoming dependencies | 0 |
 | Outgoing dependencies | 1 |
-| Risk level | LOW |
+| Total connections | 1 |
+| Risk level | **LOW** |
+| Layer | `core` |
+| Package tag | `#tool:lighthouse` |
 
 
-### 📤 Depends On
+### 📤 Depends On (1)
 [[tool-lighthouse]]
 
 
 
 
+
+## 🔍 Explore
+
+- **Local Graph:** Right-click this file → "Open local graph"
+- **Backlinks:** Open the right sidebar → "Backlinks"
+- Use `#type/module` to find all Modules
+- Use `#tool:lighthouse` to find all files in this package

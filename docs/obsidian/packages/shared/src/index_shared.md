@@ -4,8 +4,10 @@ package: "@hamafx/shared"
 path: "packages/shared/src/index.ts"
 incoming: 7
 outgoing: 3
+connections: 10
 risk: low
-tags: [module, hamafxshared]
+layer: core
+tags: [type/module, hamafx-shared, layer/core]
 aliases: [index]
 ---
 
@@ -23,15 +25,25 @@ Module: packages/shared/src/index.ts
 |---|---|
 | Incoming dependencies | 7 |
 | Outgoing dependencies | 3 |
-| Risk level | LOW |
+| Total connections | 10 |
+| Risk level | **LOW** |
+| Layer | `core` |
+| Package tag | `#hamafx-shared` |
 
 
-### 📤 Depends On
+### 📤 Depends On (1)
 [[@hamafx-shared]]
 
 
-### 📥 Depended On By
+### 📥 Depended On By (5)
 [[biquote.test]] · [[bug-report.test]] · [[error-patterns.test]] · [[errors.test]] · [[schemas.test]]
 
 
 
+
+## 🔍 Explore
+
+- **Local Graph:** Right-click this file → "Open local graph"
+- **Backlinks:** Open the right sidebar → "Backlinks"
+- Use `#type/module` to find all Modules
+- Use `#hamafx-shared` to find all files in this package
