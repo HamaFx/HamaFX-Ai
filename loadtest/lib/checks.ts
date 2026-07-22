@@ -4,12 +4,16 @@ import type { RefinedResponse, ResponseType } from 'k6/http';
 import { rateLimited, authFailures } from './metrics.js';
 
 /**
- * Assert the response has a 200 status and its body is parseable JSON.
+ * Assert the response has a 2xx status and its body is parseable JSON.
+ * Accepts 200, 201 (Created), and 204 (No Content) — the three most
+ * common success codes across GET, POST, PUT, PATCH, and DELETE.
  */
 export function expectOk(res: RefinedResponse<ResponseType | undefined>): boolean {
   return check(res, {
-    'status is 200': (r) => r.status === 200,
+    'status is 2xx': (r) => r.status >= 200 && r.status < 300,
     'body is json': (r) => {
+      // 204 No Content has no body — skip JSON parse check.
+      if (r.status === 204) return true;
       try {
         JSON.parse(r.body as string);
         return true;

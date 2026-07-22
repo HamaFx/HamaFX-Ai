@@ -15,10 +15,12 @@
 // They're included at low probability for code-path coverage only.
 
 import { sleep } from 'k6';
+import http from 'k6/http';
 import { SharedArray } from 'k6/data';
 import { randomItem } from 'https://jslib.k6.io/k6-utils/1.4.0/index.js';
 import { getJson, postJson, patchJson, putJson, deleteReq } from '../lib/http.js';
-import type { SessionCtx } from '../config/environments.js';
+import { expectStatus, record429, recordAuthFailure } from '../lib/checks.js';
+import { env, type SessionCtx } from '../config/environments.js';
 
 const symbols = new SharedArray('symbols', () =>
   JSON.parse(open('../lib/data/symbols.json') as string) as string[],
@@ -61,7 +63,7 @@ function chatModelForProvider(provider: string): string {
  *   ▸ Usage stats           10%  (by-agent + by-provider aggregations)
  *   ▸ Provider tests        10%  (test-provider, test-market, bulk — likely 400)
  */
-export function configMix(_ctx: SessionCtx): void {
+export function configMix(ctx: SessionCtx): void {
   const roll = Math.random();
   const symbol = pickSymbol();
 
@@ -156,22 +158,43 @@ export function configMix(_ctx: SessionCtx): void {
   // ── Provider tests (10%) ────────────────────────────────────────
   else if (roll < 0.94) {
     // POST /api/settings/test-provider — test a BYOK key (4%)
-    // Expected to 400 (no valid API key in test env) — code-path coverage
-    postJson('/api/settings/test-provider', 'provider_test', {
-      provider: randomProvider(),
-      apiKey: 'k6-test-key-placeholder-that-will-fail-12345',
-    });
+    // Expected 400/401 with invalid API key — uses raw http.post with wide status.
+    const tpRes = http.post(
+      `${env.baseUrl}/api/settings/test-provider`,
+      JSON.stringify({
+        provider: randomProvider(),
+        apiKey: 'k6-test-key-placeholder',
+      }),
+      { headers: { 'Content-Type': 'application/json', 'x-csrf-token': ctx.csrfToken }, tags: { group: 'provider_test' } },
+    );
+    expectStatus(tpRes, [200, 400, 401]);
+    record429(tpRes);
+    recordAuthFailure(tpRes);
   } else if (roll < 0.97) {
     // POST /api/settings/test-market-provider — test market data key (3%)
-    postJson('/api/settings/test-market-provider', 'market_provider_test', {
-      provider: 'finnhub',
-      apiKey: 'k6-test-key-placeholder',
-    });
+    // Expected 400 with placeholder key — uses raw http.post with wide status.
+    const tmpRes = http.post(
+      `${env.baseUrl}/api/settings/test-market-provider`,
+      JSON.stringify({
+        provider: 'finnhub',
+        apiKey: 'k6-test-key-placeholder',
+      }),
+      { headers: { 'Content-Type': 'application/json', 'x-csrf-token': ctx.csrfToken }, tags: { group: 'market_provider_test' } },
+    );
+    expectStatus(tmpRes, [200, 400]);
+    record429(tmpRes);
+    recordAuthFailure(tmpRes);
   } else {
     // POST /api/settings/bulk-test — test all configured providers (3%)
-    // Rate-limited to 2 calls / 5min — expect 429 after first hit.
-    // Returns ndjson stream — exercises streaming response path.
-    postJson('/api/settings/bulk-test', 'bulk_test', {});
+    // Expected 400 with no valid keys — uses raw http.post with wide status.
+    const btRes = http.post(
+      `${env.baseUrl}/api/settings/bulk-test`,
+      JSON.stringify({}),
+      { headers: { 'Content-Type': 'application/json', 'x-csrf-token': ctx.csrfToken }, tags: { group: 'bulk_test' } },
+    );
+    expectStatus(btRes, [200, 400, 429]);
+    record429(btRes);
+    recordAuthFailure(btRes);
   }
 
   // Randomized think-time: 0.3–2 seconds

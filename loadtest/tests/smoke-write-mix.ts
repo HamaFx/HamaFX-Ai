@@ -11,6 +11,7 @@ import { env } from '../config/environments.js';
 import { smoke } from '../config/load-profiles.js';
 import { WRITE_MIX, WRITE_MIX_TAGGED_RELAXED } from '../config/thresholds.js';
 import { bootstrapAuth, applyAuth, pickUser } from '../lib/auth.js';
+import { expectOk } from '../lib/checks.js';
 import { writeMix } from '../scenarios/write-mix.js';
 import { handleSummary } from '../lib/summary.js';
 
@@ -32,7 +33,7 @@ export function setup() {
   // endpoints have resources to operate on.
   if (env.authMode === 'legacy') {
     // 1. Prime health + general readiness
-    http.get(`${env.baseUrl}/api/health`);
+    expectOk(http.get(`${env.baseUrl}/api/health`));
 
     // 2. Create a seed thread (will be used by GET/PATCH/POST/fork in VU iterations)
     const threadRes = http.post(
@@ -48,27 +49,26 @@ export function setup() {
       // ignore parse failures
     }
 
-    // 3. Warm the compute-heavy POST endpoints — these benefit most from
-    //    a hot JIT compiler and populated DB/cache pipelines.
-    http.post(
+    // 3. Warm the compute-heavy POST endpoints.
+    expectOk(http.post(
       `${env.baseUrl}/api/alerts/preview`,
       JSON.stringify({
-        rule: { type: 'priceCross', symbol: 'XAUUSD', condition: 'above', threshold: 2100, timeframe: '1h' },
+        rule: { type: 'priceCross', symbol: 'XAUUSD', direction: 'above', level: 2100 },
         lookbackDays: 30,
       }),
       { headers: { 'Content-Type': 'application/json' } },
-    );
-    http.post(
+    ));
+    expectOk(http.post(
       `${env.baseUrl}/api/alerts`,
       JSON.stringify({
-        rule: { type: 'priceCross', symbol: 'XAUUSD', condition: 'above', threshold: 2100, timeframe: '1h' },
+        rule: { type: 'priceCross', symbol: 'XAUUSD', direction: 'above', level: 2100 },
         channels: ['email'],
         note: 'k6 warmup',
         snoozeHours: 0,
       }),
       { headers: { 'Content-Type': 'application/json' } },
-    );
-    http.post(
+    ));
+    expectOk(http.post(
       `${env.baseUrl}/api/journal`,
       JSON.stringify({
         symbol: 'XAUUSD',
@@ -82,21 +82,21 @@ export function setup() {
         tags: ['k6', 'warmup'],
       }),
       { headers: { 'Content-Type': 'application/json' } },
-    );
-    http.post(
+    ));
+    expectOk(http.post(
       `${env.baseUrl}/api/portfolio/positions`,
       JSON.stringify({
         symbol: 'XAUUSD',
-        side: 'long',
-        entry: 1950,
-        stop: 1900,
-        target: 2050,
-        size: 1,
+        direction: 'long',
+        entryPrice: 1950,
+        stopLoss: 1900,
+        takeProfit: 2050,
+        lotSize: 1,
         openedAt: Date.now(),
       }),
       { headers: { 'Content-Type': 'application/json' } },
-    );
-    http.post(
+    ));
+    expectOk(http.post(
       `${env.baseUrl}/api/onboarding/save-progress`,
       JSON.stringify({
         step: 5,
@@ -105,8 +105,8 @@ export function setup() {
         tradingStyle: 'swing',
       }),
       { headers: { 'Content-Type': 'application/json' } },
-    );
-    http.post(
+    ));
+    expectOk(http.post(
       `${env.baseUrl}/api/journal/import`,
       JSON.stringify({
         trades: [
@@ -115,7 +115,7 @@ export function setup() {
         ],
       }),
       { headers: { 'Content-Type': 'application/json' } },
-    );
+    ));
   }
 
   return ctxs;

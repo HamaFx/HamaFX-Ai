@@ -17,12 +17,12 @@
 // (verified against route.ts source files).
 
 import { sleep } from 'k6';
+import http from 'k6/http';
 import { SharedArray } from 'k6/data';
 import { randomItem } from 'https://jslib.k6.io/k6-utils/1.4.0/index.js';
-// deleteReq is imported for completeness but not used in the current
-// write-mix (deletes would destroy resources other VUs depend on).
 import { getJson, postJson, patchJson } from '../lib/http.js';
-import type { SessionCtx } from '../config/environments.js';
+import { expectStatus, record429, recordAuthFailure } from '../lib/checks.js';
+import { env, type SessionCtx } from '../config/environments.js';
 
 const symbols = new SharedArray('symbols', () =>
   JSON.parse(open('../lib/data/symbols.json') as string) as string[],
@@ -50,12 +50,9 @@ function randomAlertType(): 'priceCross' | 'candleClose' {
   return Math.random() < 0.5 ? 'priceCross' : 'candleClose';
 }
 
-/** Pick a random condition for the alert type. */
-function randomCondition(type: string): string {
-  if (type === 'priceCross') {
-    return randomItem(['above', 'below']);
-  }
-  return randomItem(['crosses_above', 'crosses_below']);
+/** Pick a random direction for the alert rule. */
+function randomDirection(): string {
+  return randomItem(['above', 'below']);
 }
 
 /** Generate a plausible price around 2000 for XAUUSD. */
@@ -129,13 +126,20 @@ export function writeMix(ctx: SessionCtx): void {
     getJson(`/api/chat/threads/${ctx.threadId}/opinions`, 'thread_opinions');
   } else if (roll < 0.37 && ctx.threadId) {
     // POST /api/chat/threads/fork — fork thread (2%, needs threadId)
-    // Uses a garbage atMessageId which will 400, but still exercises
-    // the auth, routing, and body parsing code paths.
-    postJson('/api/chat/threads/fork', 'thread_fork', {
-      sourceThreadId: ctx.threadId,
-      atMessageId: '00000000-0000-0000-0000-000000000000',
-      newText: 'Can you elaborate on that analysis?',
-    });
+    // Expected 400 with garbage atMessageId — exercises auth + routing code paths.
+    // Uses raw http.post with wide status acceptance to avoid inflating failure rate.
+    const forkRes = http.post(
+      `${env.baseUrl}/api/chat/threads/fork`,
+      JSON.stringify({
+        sourceThreadId: ctx.threadId,
+        atMessageId: '00000000-0000-0000-0000-000000000000',
+        newText: 'Can you elaborate on that analysis?',
+      }),
+      { headers: { 'Content-Type': 'application/json', 'x-csrf-token': ctx.csrfToken }, tags: { group: 'thread_fork' } },
+    );
+    expectStatus(forkRes, [200, 201, 400]);
+    record429(forkRes);
+    recordAuthFailure(forkRes);
   } else if (!ctx.threadId && roll < 0.37) {
     // Strategy A: no threadId available — thread-by-ID operations fall
     // through. Use health check as filler.
@@ -145,28 +149,28 @@ export function writeMix(ctx: SessionCtx): void {
   else if (roll < 0.48) {
     // POST /api/alerts/preview — alert rule preview (8%)
     const alertType = randomAlertType();
-    const body = {
+    const body: Record<string, unknown> = {
       rule: {
         type: alertType,
         symbol,
-        condition: randomCondition(alertType),
-        threshold: Math.round(entryPrice * (alertType === 'priceCross' ? 1 : 100)) / 100,
-        timeframe: '1h',
+        direction: randomDirection(),
+        level: Math.round(entryPrice * (alertType === 'priceCross' ? 1 : 100)) / 100,
       },
       lookbackDays: Math.floor(Math.random() * 90) + 1,
     };
+    if (alertType === 'candleClose') (body.rule as Record<string, unknown>).tf = '1h';
     postJson('/api/alerts/preview', 'alert_preview', body);
   } else if (roll < 0.55) {
     // POST /api/alerts — create alert (7%)
     const alertType = randomAlertType();
+    const rule: Record<string, unknown> = {
+      type: alertType,
+      symbol,        direction: randomDirection(),
+      level: Math.round(entryPrice * 1.02 * 100) / 100,
+    };
+    if (alertType === 'candleClose') rule.tf = '1h';
     postJson('/api/alerts', 'alert_create', {
-      rule: {
-        type: alertType,
-        symbol,
-        condition: randomCondition(alertType),
-        threshold: Math.round(entryPrice * 1.02 * 100) / 100,
-        timeframe: '1h',
-      },
+      rule,
       channels: randomItem([['email'], ['push'], ['email', 'push']]),
       note: 'k6 load test',
       snoozeHours: 0,
@@ -220,11 +224,11 @@ export function writeMix(ctx: SessionCtx): void {
     // POST /api/portfolio/positions — create position (4%)
     postJson('/api/portfolio/positions', 'position_create', {
       symbol,
-      side: randomSide(),
-      entry: entryPrice,
-      stop: plausibleStop(symbol, entryPrice, 'long'),
-      target: plausibleTarget(symbol, entryPrice, 'long'),
-      size: Math.floor(Math.random() * 5) + 1,
+      direction: randomSide(),
+      entryPrice: entryPrice,
+      stopLoss: plausibleStop(symbol, entryPrice, 'long'),
+      takeProfit: plausibleTarget(symbol, entryPrice, 'long'),
+      lotSize: Math.floor(Math.random() * 5) + 1,
       openedAt: now(),
     });
   } else if (roll < 0.83) {
@@ -252,17 +256,24 @@ export function writeMix(ctx: SessionCtx): void {
     // GET /api/notifications/route-config — notification routing (3%)
     getJson('/api/notifications/route-config', 'noise_config');
   } else if (roll < 0.99) {
-    // POST /api/push/subscribe — push subscription (2% — kept low because
-    // VAPID keys are placeholder in docker-compose.loadtest.yml, so this
-    // returns 503 in CI, inflating failure rate).
-    const endpoint = `https://fcm.googleapis.com/fcm/send/k6-loadtest-${__VU}-${__ITER}`;
-    postJson('/api/push/subscribe', 'push_subscribe', {
-      endpoint,
-      keys: {
-        p256dh: 'BP4YQmI7q3J8XkZz6w1v2y3r4s5t6u7v8w9x0y1z2a3b4c5d6e7f8g9h0i1j2k3l4m5n6o7p8q9r0',
-        auth: 'k6-test-auth-token-abcdef1234567890',
-      },
-    });
+    // POST /api/push/subscribe — push subscription (2%)
+    // Expected 503 with placeholder VAPID keys in test environments.
+    // Uses raw http.post with wide status acceptance to avoid inflating failure rate.
+    const pushEndpoint = `https://fcm.googleapis.com/fcm/send/k6-loadtest-${__VU}-${__ITER}`;
+    const pushRes = http.post(
+      `${env.baseUrl}/api/push/subscribe`,
+      JSON.stringify({
+        endpoint: pushEndpoint,
+        keys: {
+          p256dh: 'BP4YQmI7q3J8XkZz6w1v2y3r4s5t6u7v8w9x0y1z2a3b4c5d6e7f8g9h0i1j2k3l4m5n6o7p8q9r0',
+          auth: 'k6-test-auth-token-abcdef1234567890',
+        },
+      }),
+      { headers: { 'Content-Type': 'application/json', 'x-csrf-token': ctx.csrfToken }, tags: { group: 'push_subscribe' } },
+    );
+    expectStatus(pushRes, [200, 201, 400, 401, 503]);
+    record429(pushRes);
+    recordAuthFailure(pushRes);
   } else {
     // Fallback (1%) — GET /api/health as a safe round-out
     getJson('/api/health', 'health');

@@ -7,6 +7,7 @@ import { env } from '../config/environments.js';
 import { smoke } from '../config/load-profiles.js';
 import { CONFIG_MIX, CONFIG_MIX_TAGGED_RELAXED } from '../config/thresholds.js';
 import { bootstrapAuth, applyAuth, pickUser } from '../lib/auth.js';
+import { expectOk } from '../lib/checks.js';
 import { configMix } from '../scenarios/config-mix.js';
 import { handleSummary } from '../lib/summary.js';
 
@@ -26,22 +27,22 @@ export function setup() {
   // Warmup: prime DB connection pool, JIT compilation, and server caches
   // before any VU iterations start. Hits each config endpoint type once.
   if (env.authMode === 'legacy') {
-    http.get(`${env.baseUrl}/api/health`);
-    http.get(`${env.baseUrl}/api/settings/symbols`);
-    http.get(`${env.baseUrl}/api/settings/catalog`);
-    http.get(`${env.baseUrl}/api/settings/chat-model`);
-    http.get(`${env.baseUrl}/api/settings/analysis-mode`);
-    http.get(`${env.baseUrl}/api/settings/fallback-chain`);
-    http.get(`${env.baseUrl}/api/settings/usage-by-agent`);
-    http.get(`${env.baseUrl}/api/settings/usage-by-provider`);
-    http.get(`${env.baseUrl}/api/notifications/noise-config`);
+    expectOk(http.get(`${env.baseUrl}/api/health`));
+    expectOk(http.get(`${env.baseUrl}/api/settings/symbols`));
+    expectOk(http.get(`${env.baseUrl}/api/settings/catalog`));
+    expectOk(http.get(`${env.baseUrl}/api/settings/chat-model`));
+    expectOk(http.get(`${env.baseUrl}/api/settings/analysis-mode`));
+    expectOk(http.get(`${env.baseUrl}/api/settings/fallback-chain`));
+    expectOk(http.get(`${env.baseUrl}/api/settings/usage-by-agent`));
+    expectOk(http.get(`${env.baseUrl}/api/settings/usage-by-provider`));
+    expectOk(http.get(`${env.baseUrl}/api/notifications/noise-config`));
 
     // Warm model config PUT path (may 400 if model not in spec — still primes JIT)
-    http.put(
+    expectOk(http.put(
       `${env.baseUrl}/api/settings/chat-model`,
       JSON.stringify({ providerId: 'google', modelId: 'gemini-2.5-pro' }),
       { headers: { 'Content-Type': 'application/json' } },
-    );
+    ));
   }
 
   return ctxs;
