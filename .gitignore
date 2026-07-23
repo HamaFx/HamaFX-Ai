@@ -72,6 +72,3 @@ apps/web/public/sw-precache.json
 K6_LOAD_TESTING_LOG.md
 loadtest/results/
 loadtest/node_modules/
-# ignore generated deployment copies except the architecture explorer (needed by the route handler)
-apps/web/docs/*
-!apps/web/docs/architecture-explorer.html

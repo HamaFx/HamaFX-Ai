@@ -1,0 +1,6 @@
+# HamaFX-Ai — Allow all crawlers for main content
+# but disallow the architecture explorer (admin-only internal tool).
+# The route handler at /api/admin/architecture-explorer is already auth-gated.
+User-agent: *
+Allow: /
+Disallow: /architecture-explorer.html

@@ -209,11 +209,12 @@ try {
   // Copy architecture explorer HTML into the app directory for deployment.
   // This ensures the admin-only /api/admin/architecture-explorer route works.
   const srcHtml = resolve(repoRoot, 'docs', 'architecture-explorer.html');
-  const dstDir = resolve(repoRoot, 'apps', 'web', 'docs');
+  // Copy to public/ so it's included in static build output and accessible at runtime
+  // via process.cwd() + '/public/architecture-explorer.html'
+  const dstDir = resolve(repoRoot, 'apps', 'web', 'public');
   if (existsSync(srcHtml)) {
-    if (!existsSync(dstDir)) mkdirSync(dstDir, { recursive: true });
     copyFileSync(srcHtml, resolve(dstDir, 'architecture-explorer.html'));
-    console.log('[predeploy-migrate] Copied architecture-explorer.html for admin route');
+    console.log('[predeploy-migrate] Copied architecture-explorer.html to public/ for admin route');
   } else {
     console.warn('[predeploy-migrate] Skipped: architecture-explorer.html not found in docs/');
   }

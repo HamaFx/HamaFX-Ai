@@ -16,7 +16,7 @@ export const dynamic = 'force-dynamic';
 
 const EXPLORER_CSP = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline' https://d3js.org",
+  "script-src 'self' 'unsafe-inline'",
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob:",
   "font-src 'self' data:",
@@ -31,8 +31,9 @@ const HTML_HEADERS = {
 };
 
 export const GET = withAdminAuth(async () => {
-  // The HTML file is copied into apps/web/docs/ by predeploy-migrate.mjs.
-  const htmlPath = resolve(process.cwd(), 'docs', 'architecture-explorer.html');
+  // The HTML file is copied into apps/web/public/ by predeploy-migrate.mjs.
+  // public/ is guaranteed to be available in Vercel serverless functions.
+  const htmlPath = resolve(process.cwd(), 'public', 'architecture-explorer.html');
 
   try {
     const html = readFileSync(htmlPath, 'utf-8');
