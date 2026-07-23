@@ -185,6 +185,6 @@ export const config = {
   // /api/cron is cron-secret-protected, /share is public, /auth is the
   // login surface. /api/billing/webhook is HMAC-signed (not session-auth).
   matcher: [
-    '/((?!auth|share|api/auth|api/dev/login|api/cron|api/telegram|api/billing/webhook|debug|sw\\.js|sw-precache\\.json|_next/static|_next/image|favicon\\.ico|manifest\\.webmanifest|icons|robots\\.txt|sitemap\\.xml|d3\\.v7\\.min\\.js).*)',
+    '/((?!auth|share|api/auth|api/dev/login|api/cron|api/telegram|api/billing/webhook|debug|sw\\.js|sw-precache\\.json|_next/static|_next/image|favicon\\.ico|manifest\\.webmanifest|icons|robots\\.txt|sitemap\\.xml|d3\\.v7\\.min\\.js|architecture-explorer\\.html).*)',
   ],
 };

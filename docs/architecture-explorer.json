@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "generatedAt": "2026-07-22T23:54:34.148Z",
+  "generatedAt": "2026-07-23T01:51:45.446Z",
   "project": {
     "name": "HamaFX-Ai",
     "rootPath": "/home/ubuntu/HamaFX-Ai",
@@ -8075,7 +8075,7 @@
           "GET"
         ],
         "functions": [],
-        "size": 1709,
+        "size": 1771,
         "routePath": "/api/admin/architecture-explorer",
         "httpMethod": "GET"
       }
@@ -13771,7 +13771,7 @@
         "functions": [
           "setCspHeader"
         ],
-        "size": 9108
+        "size": 9156
       }
     },
     {
@@ -27435,7 +27435,7 @@
         "functions": [
           "redactUrl"
         ],
-        "size": 8986
+        "size": 9079
       }
     },
     {
@@ -82373,6 +82373,70 @@
   "gitHistory": {
     "commits": [
       {
+        "hash": "e6bc058a6cea958114c94def372684137cbc84c9",
+        "shortHash": "e6bc058a",
+        "date": "2026-07-23T01:14:38Z",
+        "author": "HamaFx",
+        "message": "fix: 3 more stale 32→33 references in README.md anchor, checklist, diagram",
+        "files": []
+      },
+      {
+        "hash": "404fe95ae6054dc89f2322df997e118a2a102f33",
+        "shortHash": "404fe95a",
+        "date": "2026-07-23T01:13:42Z",
+        "author": "HamaFx",
+        "message": "docs: update README.md — replace stale docs refs, update numbers, add explorer",
+        "files": []
+      },
+      {
+        "hash": "fb57beb9ff4f2cb9065b0f3b6a725c300c430b59",
+        "shortHash": "fb57beb9",
+        "date": "2026-07-23T01:00:56Z",
+        "author": "HamaFx",
+        "message": "fix: AI Evals formatting — moved inside code block",
+        "files": []
+      },
+      {
+        "hash": "76836128b427f1f49940018e41b486cf8e06ba63",
+        "shortHash": "76836128",
+        "date": "2026-07-23T01:00:21Z",
+        "author": "HamaFx",
+        "message": "docs: fully update AGENTS.md for AI coding agents",
+        "files": []
+      },
+      {
+        "hash": "46c2848dd6ddd9e3ade8c1198c6ef35a0d964dfe",
+        "shortHash": "46c2848d",
+        "date": "2026-07-23T00:53:47Z",
+        "author": "HamaFx",
+        "message": "fix: exclude d3.v7.min.js from middleware matcher for performance",
+        "files": []
+      },
+      {
+        "hash": "655ac64f78b188d2b537e4fc2888058c81f2c004",
+        "shortHash": "655ac64f",
+        "date": "2026-07-23T00:50:13Z",
+        "author": "HamaFx",
+        "message": "fix: architecture explorer loading stuck — file not deployed to Vercel",
+        "files": []
+      },
+      {
+        "hash": "a0ea54251169a1c55e52d481c8de41a868bf6bd8",
+        "shortHash": "a0ea5425",
+        "date": "2026-07-23T00:44:22Z",
+        "author": "HamaFx",
+        "message": "fix: commit architecture-explorer.html to Vercel deploy (was gitignored)",
+        "files": []
+      },
+      {
+        "hash": "fe8482b3dabb9d5747f567ca01594b470bae5d45",
+        "shortHash": "fe8482b3",
+        "date": "2026-07-22T23:56:14Z",
+        "author": "HamaFx",
+        "message": "feat(obsidian): comprehensive vault upgrade with 14 enhancements",
+        "files": []
+      },
+      {
         "hash": "b367849a82b32cc37729d80d961e5d8c7ce01ad9",
         "shortHash": "b367849a",
         "date": "2026-07-22T23:41:47Z",
@@ -86307,140 +86371,12 @@
         "author": "HamaFx",
         "message": "chore: remove completed plans/ folder",
         "files": []
-      },
-      {
-        "hash": "2c94ef82539452c92cff3356bc3875b190a4d04c",
-        "shortHash": "2c94ef82",
-        "date": "2026-06-19T23:03:13Z",
-        "author": "HamaFx",
-        "message": "fix(web): strip server-only fields before passing provider spec to client",
-        "files": []
-      },
-      {
-        "hash": "9daa64a250c0d04af0bcf1b1e3632c8329bd6793",
-        "shortHash": "9daa64a2",
-        "date": "2026-06-19T20:50:48Z",
-        "author": "HamaFx",
-        "message": "docs: README quick-start reflects auto-gen secrets + new first-run doc",
-        "files": []
-      },
-      {
-        "hash": "7234d06690e166e54f039f438e5a59c554f49146",
-        "shortHash": "7234d066",
-        "date": "2026-06-19T20:10:20Z",
-        "author": "HamaFx",
-        "message": "feat(ai): env-key fallback to BYOK + Edge crypto test polyfill",
-        "files": []
-      },
-      {
-        "hash": "365eb9ef795b9fa05f53ecce55e945cd20b9ff1c",
-        "shortHash": "365eb9ef",
-        "date": "2026-06-19T19:58:35Z",
-        "author": "HamaFx",
-        "message": "feat(ai): expand BYOK to 8 providers + onboarding wizard step",
-        "files": []
-      },
-      {
-        "hash": "59a64230727f6e35545da5fb75495d62873ea002",
-        "shortHash": "59a64230",
-        "date": "2026-06-19T18:47:04Z",
-        "author": "HamaFx",
-        "message": "feat(env): auto-generate dev secrets with persistence",
-        "files": []
-      },
-      {
-        "hash": "b57522a2ba3bc96a5dfe6898e578d71f591fe812",
-        "shortHash": "b57522a2",
-        "date": "2026-06-19T17:40:32Z",
-        "author": "HamaFx",
-        "message": "fix(db): make migration 0009 idempotent + lint cleanup",
-        "files": []
-      },
-      {
-        "hash": "ba4cc281d393abf6c68da236645c78ddaeeb26bf",
-        "shortHash": "ba4cc281",
-        "date": "2026-06-19T12:07:19Z",
-        "author": "HamaFx",
-        "message": "trigger vercel deployment with updated settings",
-        "files": []
-      },
-      {
-        "hash": "3292a88a4826cb09b239b965c756ca3d02e084ad",
-        "shortHash": "3292a88a",
-        "date": "2026-06-19T11:58:13Z",
-        "author": "HamaFx",
-        "message": "chore: add env vars to turbo.json globalEnv for vercel build",
-        "files": []
       }
     ],
     "fileChanges": {},
     "nodeChanges": {}
   },
   "evolutionTimeline": [
-    {
-      "date": "2026-06-19T11:58:13Z",
-      "hash": "3292a88a4826cb09b239b965c756ca3d02e084ad",
-      "shortHash": "3292a88a",
-      "message": "chore: add env vars to turbo.json globalEnv for vercel build",
-      "activeNodeCount": 0,
-      "touchedNodes": []
-    },
-    {
-      "date": "2026-06-19T12:07:19Z",
-      "hash": "ba4cc281d393abf6c68da236645c78ddaeeb26bf",
-      "shortHash": "ba4cc281",
-      "message": "trigger vercel deployment with updated settings",
-      "activeNodeCount": 0,
-      "touchedNodes": []
-    },
-    {
-      "date": "2026-06-19T17:40:32Z",
-      "hash": "b57522a2ba3bc96a5dfe6898e578d71f591fe812",
-      "shortHash": "b57522a2",
-      "message": "fix(db): make migration 0009 idempotent + lint cleanup",
-      "activeNodeCount": 0,
-      "touchedNodes": []
-    },
-    {
-      "date": "2026-06-19T18:47:04Z",
-      "hash": "59a64230727f6e35545da5fb75495d62873ea002",
-      "shortHash": "59a64230",
-      "message": "feat(env): auto-generate dev secrets with persistence",
-      "activeNodeCount": 0,
-      "touchedNodes": []
-    },
-    {
-      "date": "2026-06-19T19:58:35Z",
-      "hash": "365eb9ef795b9fa05f53ecce55e945cd20b9ff1c",
-      "shortHash": "365eb9ef",
-      "message": "feat(ai): expand BYOK to 8 providers + onboarding wizard step",
-      "activeNodeCount": 0,
-      "touchedNodes": []
-    },
-    {
-      "date": "2026-06-19T20:10:20Z",
-      "hash": "7234d06690e166e54f039f438e5a59c554f49146",
-      "shortHash": "7234d066",
-      "message": "feat(ai): env-key fallback to BYOK + Edge crypto test polyfill",
-      "activeNodeCount": 0,
-      "touchedNodes": []
-    },
-    {
-      "date": "2026-06-19T20:50:48Z",
-      "hash": "9daa64a250c0d04af0bcf1b1e3632c8329bd6793",
-      "shortHash": "9daa64a2",
-      "message": "docs: README quick-start reflects auto-gen secrets + new first-run doc",
-      "activeNodeCount": 0,
-      "touchedNodes": []
-    },
-    {
-      "date": "2026-06-19T23:03:13Z",
-      "hash": "2c94ef82539452c92cff3356bc3875b190a4d04c",
-      "shortHash": "2c94ef82",
-      "message": "fix(web): strip server-only fields before passing provider spec to client",
-      "activeNodeCount": 0,
-      "touchedNodes": []
-    },
     {
       "date": "2026-06-19T23:21:36Z",
       "hash": "7daba32f984c057dcf9ae3e7f1468cd05496259d",
@@ -90374,6 +90310,70 @@
       "hash": "b367849a82b32cc37729d80d961e5d8c7ce01ad9",
       "shortHash": "b367849a",
       "message": "feat: add Obsidian vault generator with 1,401 node files + 10 dashboards",
+      "activeNodeCount": 0,
+      "touchedNodes": []
+    },
+    {
+      "date": "2026-07-22T23:56:14Z",
+      "hash": "fe8482b3dabb9d5747f567ca01594b470bae5d45",
+      "shortHash": "fe8482b3",
+      "message": "feat(obsidian): comprehensive vault upgrade with 14 enhancements",
+      "activeNodeCount": 0,
+      "touchedNodes": []
+    },
+    {
+      "date": "2026-07-23T00:44:22Z",
+      "hash": "a0ea54251169a1c55e52d481c8de41a868bf6bd8",
+      "shortHash": "a0ea5425",
+      "message": "fix: commit architecture-explorer.html to Vercel deploy (was gitignored)",
+      "activeNodeCount": 0,
+      "touchedNodes": []
+    },
+    {
+      "date": "2026-07-23T00:50:13Z",
+      "hash": "655ac64f78b188d2b537e4fc2888058c81f2c004",
+      "shortHash": "655ac64f",
+      "message": "fix: architecture explorer loading stuck — file not deployed to Vercel",
+      "activeNodeCount": 0,
+      "touchedNodes": []
+    },
+    {
+      "date": "2026-07-23T00:53:47Z",
+      "hash": "46c2848dd6ddd9e3ade8c1198c6ef35a0d964dfe",
+      "shortHash": "46c2848d",
+      "message": "fix: exclude d3.v7.min.js from middleware matcher for performance",
+      "activeNodeCount": 0,
+      "touchedNodes": []
+    },
+    {
+      "date": "2026-07-23T01:00:21Z",
+      "hash": "76836128b427f1f49940018e41b486cf8e06ba63",
+      "shortHash": "76836128",
+      "message": "docs: fully update AGENTS.md for AI coding agents",
+      "activeNodeCount": 0,
+      "touchedNodes": []
+    },
+    {
+      "date": "2026-07-23T01:00:56Z",
+      "hash": "fb57beb9ff4f2cb9065b0f3b6a725c300c430b59",
+      "shortHash": "fb57beb9",
+      "message": "fix: AI Evals formatting — moved inside code block",
+      "activeNodeCount": 0,
+      "touchedNodes": []
+    },
+    {
+      "date": "2026-07-23T01:13:42Z",
+      "hash": "404fe95ae6054dc89f2322df997e118a2a102f33",
+      "shortHash": "404fe95a",
+      "message": "docs: update README.md — replace stale docs refs, update numbers, add explorer",
+      "activeNodeCount": 0,
+      "touchedNodes": []
+    },
+    {
+      "date": "2026-07-23T01:14:38Z",
+      "hash": "e6bc058a6cea958114c94def372684137cbc84c9",
+      "shortHash": "e6bc058a",
+      "message": "fix: 3 more stale 32→33 references in README.md anchor, checklist, diagram",
       "activeNodeCount": 0,
       "touchedNodes": []
     }

@@ -38,7 +38,7 @@
   <button class="top-btn" id="btn-filters" title="Toggle filters">🔍</button>
   <button class="top-btn hide-mobile" id="btn-save" title="Save layout (Ctrl+S)">💾</button>
   <button class="top-btn hide-mobile" id="btn-restore" title="Restore saved layout (Ctrl+R)">📂</button>
-  <<button class="top-btn hide-mobile" id="btn-export-png" title="Export PNG">🖼️</button>
+  <button class="top-btn hide-mobile" id="btn-export-png" title="Export PNG">🖼️</button>
   <button class="top-btn hide-mobile" id="btn-export-svg" title="Export SVG">📐</button>
   <button class="top-btn hide-mobile" id="btn-export-json" title="Export JSON">📋</button>
   <button class="top-btn" id="btn-theme" title="Toggle theme">🌓</button>
