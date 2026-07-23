@@ -33,27 +33,6 @@ const nextConfig = {
 
   async headers() {
     return [
-      // Architecture Explorer — standalone admin page with its own inline
-      // scripts. It gets a permissive CSP that allows inline scripts and
-      // same-origin D3.js, overriding the strict-dynamic baseline below.
-      {
-        source: '/api/admin/architecture-explorer',
-        headers: [
-          {
-            key: 'Content-Security-Policy',
-            value: "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self';",
-          },
-        ],
-      },
-      {
-        source: '/architecture-explorer.html',
-        headers: [
-          {
-            key: 'Content-Security-Policy',
-            value: "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self';",
-          },
-        ],
-      },
       {
         source: '/(.*)',
         headers: [
@@ -85,7 +64,7 @@ const nextConfig = {
             // L-4: Tightened img-src and connect-src from wildcards to known
             // domains: Supabase Storage, TradingView CDN, and Vercel analytics.
             // The middleware CSP (with nonce) also uses these directives.
-            value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'strict-dynamic' https://s3.tradingview.com https://d3js.org; style-src 'self' 'unsafe-inline' https://s3.tradingview.com; img-src 'self' data: blob: https://*.supabase.co https://*.supabase.in https://s3.tradingview.com https://api.dicebear.com; font-src 'self' data:; connect-src 'self' wss: https://*.supabase.co https://*.biquote.io https://*.binance.com https://api.resend.com https://*.nowpayments.io https://*.tradingview.com https://api.dicebear.com;",
+            value: "default-src 'self'; script-src 'self' 'unsafe-inline' https://s3.tradingview.com https://d3js.org; style-src 'self' 'unsafe-inline' https://s3.tradingview.com; img-src 'self' data: blob: https://*.supabase.co https://*.supabase.in https://s3.tradingview.com https://api.dicebear.com; font-src 'self' data:; connect-src 'self' wss: https://*.supabase.co https://*.biquote.io https://*.binance.com https://api.resend.com https://*.nowpayments.io https://*.tradingview.com https://api.dicebear.com;",
           },
         ],
       },
