@@ -5,12 +5,13 @@
 
 ## Project Identity
 
-**HamaFX-Ai** is an open-source, multi-tenant, chat-driven AI trading copilot for forex instruments: **XAUUSD** (primary), **EURUSD**, **GBPUSD**. It runs as a Next.js 15 PWA with a persistent Node.js worker daemon. The AI agent uses Vercel AI SDK v5 with 32 tools, domain-based model routing, and multi-agent committee deliberation.
+**HamaFX-Ai** is an open-source, multi-tenant, chat-driven AI trading copilot for forex instruments: **XAUUSD** (primary), **EURUSD**, **GBPUSD**. It runs as a Next.js 15 PWA with a persistent Node.js worker daemon. The AI agent uses Vercel AI SDK v5 with 33 tools, domain-based model routing, and multi-agent committee deliberation.
 
 - **License**: Apache-2.0
-- **Status**: In production on Vercel + GCE VM. Phases 0–9 shipped (incl. multi-tenant v2.0). UX Upgrade Plan Phases A/B/C/D/E shipped.
+- **Status**: In production on Vercel + GCE VM. Phases 0–9 shipped (incl. multi-tenant v2.0). UX Upgrade Plan Phases A/B/C/D/E shipped. Architecture Explorer deployed (Phase 8 complete).
 - **Auth**: NextAuth.js v5 (Credentials provider, JWT strategy) + Drizzle adapter. BYOK per user (9-provider registry). Strict `userId` scoping on all user-data tables.
 - **Repo**: [github.com/HamaFx/HamaFX-Ai](https://github.com/HamaFx/HamaFX-Ai)
+- **Architecture Vault (Obsidian)**: [github.com/HamaFx/hamafx-architecture-vault](https://github.com/HamaFx/hamafx-architecture-vault)
 
 > **Auth status:** The auth system has been hardened. Features include: JWT session management, bcrypt password hashing, account lockout (5 attempts → 15 min), TOTP 2FA (enforced at login), timing-safe user enumeration prevention, signed `x-user-id` header (HMAC-SHA256) for route defense-in-depth, `userSessions` table for active session tracking with revoke support, and `tokenVersion` for "sign out everywhere". See [`auth.ts`](./apps/web/src/auth.ts) and [`auth.config.ts`](./apps/web/src/auth.config.ts) for the canonical implementation.
 
@@ -25,12 +26,15 @@
 | Styling | Tailwind CSS v4 + shadcn/ui (Radix) |
 | AI SDK | Vercel AI SDK v5 (`ai` package) |
 | Models | Google Vertex AI + 9-provider BYOK registry |
-| DB | Postgres (Supabase) + pgvector. Drizzle ORM (50 tables) |
+| DB | Postgres (Supabase) + pgvector. Drizzle ORM (50 tables across 35 schema definition files) |
 | Local DB | PGlite (embedded Postgres, zero setup) |
 | Charts | TradingView lightweight-charts v5 |
-| Tests | Vitest (173 files, 590+ cases). Playwright E2E (16 spec files). |
+| Tests | Vitest (228 test files). Playwright E2E (16 spec files). |
 | Lint | ESLint flat config in `packages/config/eslint` |
 | TypeScript | Strict mode. `exactOptionalPropertyTypes`, `noUncheckedIndexedAccess` |
+| AI Tools | 33 exported tool definitions in `packages/ai/src/tools/` |
+| Architecture Explorer | `tools/architecture-explorer/` — auto-generates interactive HTML, JSON model, Obsidian vault, and AI knowledge artifacts |
+| Middleware | 190 lines. Edge runtime. Handles auth, CSRF, CSP, request-id |
 
 ## Commands
 
@@ -57,10 +61,26 @@ pnpm lint
 # Build
 pnpm --filter @hamafx/web build
 
-# Migrations
+## Architecture Explorer Commands
+
+# Scan the project and generate ALL artifacts (HTML, JSON, Obsidian vault, knowledge)
+cd tools/architecture-explorer
+npx tsx src/index.ts --root /path/to/HamaFX-Ai
+
+# Outputs (regenerated every run):
+#   docs/architecture-explorer.html     — Interactive graph explorer
+#   docs/architecture-explorer.json     — Full architecture model (1,399+ nodes)
+#   docs/obsidian/                      — Obsidian vault (1,343+ files)
+#   docs/knowledge/                     — 8 AI knowledge artifacts
+
+# Typecheck the explorer tool separately
+cd tools/architecture-explorer && npx tsc --noEmit
+
+## Migrations
 pnpm --filter @hamafx/db migrate:gen     # generate from schema changes
 pnpm --filter @hamafx/db migrate:apply   # apply to DATABASE_URL
 # Vercel prod deploys run scripts/predeploy-migrate.mjs automatically.
+```
 
 ### Migration Rules (load-bearing — do NOT violate)
 
@@ -106,6 +126,7 @@ vercel list hamafx-ai --scope mahamad-ahmads-projects
 - Env vars pulled include DB creds (`POSTGRES_URL`, `POSTGRES_HOST`), Supabase (`NEXT_PUBLIC_SUPABASE_URL`), AI model config, API secrets, and Google Vertex credentials.
 
 # AI Evals (manual, not in CI)
+```bash
 pnpm --filter @hamafx/ai eval -- --base-url http://localhost:3000 --cookie "authjs.session-token=..." --cases
 ```
 
@@ -117,17 +138,21 @@ HamaFX-Ai/
 │   ├── web/              # Next.js 15 PWA (frontend + API routes)
 │   └── worker/           # Node.js daemon (SignalR consumer, tick processing, job runner)
 ├── packages/
-│   ├── ai/               # AI agent core — chat, 32 tools, routing, memory, persistence
+│   ├── ai/               # AI agent core — chat, 33 tools, routing, memory, persistence
 │   ├── data/             # Market data adapters — price, candles, news, failover, caching
-│   ├── db/               # Drizzle schema (50 tables) + Postgres/PGlite client
+│   ├── db/               # Drizzle schema (50 tables across 35 files) + Postgres/PGlite client
 │   ├── indicators/       # Technical indicators — SMA, EMA, RSI, MACD, SMC structure
 │   ├── shared/           # Zod schemas, domain types, env validation, error codes, encryption
 │   ├── config/           # Shared ESLint, Prettier, TS configs (not compiled)
 │   └── test-utils/       # Shared test factories, mocks, vitest helpers
-├── docs/                 # Architecture + API + deployment docs (you are here)
+├── tools/
+│   ├── architecture-explorer/  # 16 source files — auto-generates interactive graphs + artifacts
+│   └── lighthouse/       # Lighthouse performance audit runner
+├── docs/                 # Only procedural docs (auto-generated docs moved to docs/knowledge/)
+│   ├── knowledge/        # 8 AI knowledge artifacts (machine-readable JSON + markdown)
+│   └── obsidian/         # Auto-generated Obsidian vault (1,343+ files, open as vault)
 ├── infra/cron-vm/        # GCE VM setup script + systemd units
-├── tools/                # Lighthouse
-└── scripts/              # dev.ts (local dev entrypoint), predeploy-migrate.mjs
+├── scripts/              # dev.ts (local dev entrypoint), predeploy-migrate.mjs
 ```
 
 **Dependency chain:** `config` → `shared` → `db` + `indicators` → `data` → `ai` → `web` + `worker`
@@ -137,7 +162,7 @@ HamaFX-Ai/
 ```
 Browser (PWA)
     │
-    ├── /api/chat ──▶ runChat() ──▶ streamText + 32 tools
+    ├── /api/chat ──▶ runChat() ──▶ streamText + 33 tools
     │                    │
     │                    ├── routeTurn() ──▶ pick model (fundamental/technical/summary/vision)
     │                    ├── runPlanner() ──▶ plan-then-act pre-step
@@ -146,9 +171,11 @@ Browser (PWA)
     │                    ├── tryReserveBudget() ──▶ atomic budget guard
     │                    └── enforceCitations() ──▶ post-finish fact-check
     │
+    ├── /api/admin/architecture-explorer ──▶ Serves interactive architecture graph
+    │                                          (admin-only, public/architecture-explorer.html)
     ├── /api/market/* ──▶ @hamafx/data ──▶ providers (BiQuote→Finnhub failover)
     │
-    └── Middleware (Edge): NextAuth JWT check, CSRF, request-id
+    └── Middleware (Edge, 190 lines): NextAuth JWT check, CSRF, CSP, request-id
 
 Worker (GCE VM, systemd)
     │
@@ -160,30 +187,65 @@ Worker (GCE VM, systemd)
 
 ## Key Patterns
 
-### 1. Failover Everywhere
+### 1. Architecture Explorer — Auto-Generated Documentation
+
+The project has a self-contained architecture explorer at `tools/architecture-explorer/`. Run it to generate up-to-date documentation from the live codebase — NO manual docs to maintain.
+
+```bash
+cd tools/architecture-explorer && npx tsx src/index.ts --root /path/to/HamaFX-Ai
+```
+
+It generates **4 types of output** simultaneously:
+
+| Output | Location | Size | Purpose |
+|--------|----------|------|---------|
+| Interactive HTML | `docs/architecture-explorer.html` | ~1.5 MB | Full interactive graph with 17+ views, zoom, search, filters |
+| Machine Model | `docs/architecture-explorer.json` | ~2.1 MB | Complete architecture model (1,399+ nodes, 4,200+ edges) |
+| AI Knowledge | `docs/knowledge/*.json` + `knowledge.md` | ~200 KB | 8 ready-made artifacts for AI agents (see section below) |
+| Obsidian Vault | `docs/obsidian/` | ~6.5 MB | 1,343+ markdown files with wiki-links, config, and Canvas |
+
+### 2. AI Knowledge Artifacts (for AI agents)
+
+These files at `docs/knowledge/` are specifically designed for AI agents to understand the project without scanning the full codebase. Give these to any AI agent that needs project context:
+
+| File | Tokens | Content |
+|------|--------|---------|
+| `knowledge.md` | ~2.5K | Human-readable project overview |
+| `architecture.json` | ~7K | Layers, patterns, dependency chain |
+| `features.json` | ~0.8K | 12 features with module ownership |
+| `api.json` | ~14K | All API routes |
+| `database.json` | ~13K | All DB tables |
+| `ai.json` | ~2K | 33 tools, 4 agents, routing |
+| `dependencies.json` | ~5K | Package dependencies |
+| `flows.json` | ~1.5K | 4 sequence diagrams |
+
+**Recommendation:** For most AI agents, just give `knowledge.md` + `architecture.json` + `api.json` + `ai.json` (~25K tokens) — covers 90% of what an agent needs.
+
+### 3. Failover Everywhere
+
 Data layer uses `runWithFailover([{name, run()}])` with health-aware ordering. Pinned providers (live_ticks, candles_1m) keep position. SWR = stale-while-revalidate at every level.
 
-### 2. Atomic Budget Guard
+### 4. Atomic Budget Guard
+
 `tryReserveBudget()`: single `INSERT..ON CONFLICT DO UPDATE WHERE total+candidate <= cap`. Concurrent turns at 99% cap serialize correctly.
 
-### 3. Zod at Boundaries
+### 5. Zod at Boundaries
+
 Every data shape crossing package boundaries validates through `@hamafx/shared` schemas. Tool inputs → `InputSchema`, tool outputs → `ToolOutputMap`.
 
-### 4. AsyncLocalStorage for Context
+### 6. AsyncLocalStorage for Context
+
 `withToolContext()` eliminates global state. Each tool call has threadId, env, signal, budget snapshot via `getToolContext()`.
 
-### 5. Plan-Then-Act
+### 7. Plan-Then-Act
+
 For fundamental/technical turns: cheap model generates JSON plan, persisted as system message, rendered as "Thinking" pill in UI.
 
-### 6. Citation Enforcement
+### 8. Citation Enforcement
+
 `enforceCitations()` scans every assistant turn for unsupported price/event claims. Appends `data-citation-warning` part if model cites numbers without tool calls.
 
-### 7. Deployment Modes
-- **Local native**: PGlite (embedded Postgres), zero setup, `pnpm dev:local`
-- **Local Docker**: Postgres 16 + pgvector, `./docker/init-secrets.sh && docker compose up -d`
-- **Production**: Vercel (web) + GCE VM (worker), systemd timers
-
-### 8. DB-Access Convention (DIP-1)
+### 9. DB-Access Convention (DIP-1)
 
 **Rule:** Inside `packages/ai`, resolve `db` / `llmClient` via the typed DI container tokens (`DB`, `LLM_CLIENT` from `./tokens`). Everywhere else (`apps/web`, `apps/worker`, other packages), import `getDb` directly from `@hamafx/db`.
 
@@ -202,7 +264,35 @@ const db = getDb();
 
 **Rationale:** The AI runtime benefits from injectable `db`/`llmClient` for testing long agent flows. Next.js server actions/route handlers are already the composition edge and read cleanly with direct `getDb()`. The split prevents the test-footgun where `container.register('db', …)` silently fails to intercept direct `getDb()` importers.
 
-### 9. Deployment Modes (continued)
+### 10. Obsidian Vault for Architecture Browsing
+
+The auto-generated Obsidian vault at `docs/obsidian/` contains 1,343+ markdown files with YAML frontmatter and wiki-links. Open it as an Obsidian vault:
+
+- **Graph View**: 1,401 nodes, 4,220 edges, color-coded by type and layer
+- **12 dashboards**: Top connected nodes, risk distribution, package heatmap, hotspots, circular deps
+- **16 Package MOCs**: Per-package Maps of Content
+- **Architecture Canvas**: Interactive package dependency diagram
+- **Pre-configured**: `.obsidian/` with graph colors, CSS snippets, core plugins
+- **Standalone repo**: [github.com/HamaFx/hamafx-architecture-vault](https://github.com/HamaFx/hamafx-architecture-vault) for iOS sync via Obsidian Git plugin
+
+### 11. Deployment Preview: Architecture Explorer on Vercel
+
+The interactive architecture explorer is served at `/api/admin/architecture-explorer` (admin auth required). The HTML file is:
+- Generated by `tools/architecture-explorer/`
+- Copied to `apps/web/public/` by `scripts/predeploy-migrate.mjs` during Vercel builds
+- Served by the route handler with custom CSP (allows inline scripts)
+- Also directly accessible at `https://hamafx-ai.vercel.app/architecture-explorer.html` (no auth — the repo is public)
+
+### 12. Middleware CSP & Architecture Explorer Exception
+
+The middleware at `apps/web/src/middleware.ts` (190 lines, Edge runtime) sets a `Content-Security-Policy` with `'strict-dynamic'` and a per-request nonce. The architecture explorer route is explicitly **exempted** from this CSP at line 174 — the route handler sets its own permissive CSP instead, because the explorer's inline scripts don't carry the middleware nonce.
+
+The middleware matcher excludes these paths from processing:
+- `auth`, `share`, `api/auth/*`, `api/dev/login`, `api/cron/*`, `api/telegram/*`, `api/billing/webhook/*`
+- `debug`, `sw.js`, `sw-precache.json`, `_next/*`, `favicon.ico`, `manifest.webmanifest`
+- `icons`, `robots.txt`, `sitemap.xml`, `d3.v7.min.js`
+
+> **Regex note:** In the TypeScript matcher regex at `apps/web/src/middleware.ts`, dots in paths like `d3\.v7\.min\.js` use `\\.` because of double-escaping: the TS string literal escape turns `\\.` into `\.` in the regex, which matches a literal dot. When editing the matcher, follow the same convention as existing entries.
 
 ## File Naming Conventions
 
@@ -237,6 +327,20 @@ const db = getDb();
 - `pnpm turbo run test -- --run` runs all packages
 - Individual: `pnpm --filter @hamafx/worker test -- --run`
 
+### CSP & Nonce System
+- The middleware sets a `'strict-dynamic'` CSP with a per-request nonce
+- Scripts must have a matching `nonce` attribute to execute
+- The architecture explorer is SKIPPED by this CSP (its inline scripts don't carry the nonce)
+- Instead, its route handler sets a permissive CSP: `script-src 'self' 'unsafe-inline'`
+- If adding a new route with inline scripts, either: (a) use the middleware nonce, or (b) skip CSP for that route
+- The static file `/d3.v7.min.js` is excluded from middleware processing entirely
+
+### Predeploy Copy Behavior
+- `scripts/predeploy-migrate.mjs` copies `docs/architecture-explorer.html` to `apps/web/public/` during Vercel builds
+- The `public/` directory is guaranteed to be available in Vercel serverless functions
+- On first run or after a fresh clone, `apps/web/public/architecture-explorer.html` won't exist until the architecture explorer is generated
+- The route handler returns a 404 fallback if the file is missing (not a crash)
+
 ## What NOT to Change
 
 - **Auth flow**: NextAuth v5 (Credentials provider) with strict per-user
@@ -246,6 +350,7 @@ const db = getDb();
 - **Provider failover**: `runWithFailover()` pattern. Don't add direct provider calls.
 - **Tool pattern**: `inputSchema → module augmentation → execute`. Don't break the tool registry.
 - **AsyncLocalStorage**: tools use `getToolContext()`. Don't use global state.
+- **Architecture Explorer generators**: These are the source of truth for project documentation. If you need to update project docs, update the generator code, not the generated output files.
 
 ## Admin Debugging & Logging
 
@@ -260,6 +365,7 @@ A dedicated `/admin` page is available for admin users. It provides a centralize
 - **User Management** — list users and their onboarding status
 - **Feature Flags** — toggle runtime feature flags
 - **Log Stream** — stream logs in real-time (dev only)
+- **Architecture Explorer** — link to the interactive graph explorer at `/api/admin/architecture-explorer`
 
 An **Onboarding Reset** card is also available in `/settings` for quick access.
 
@@ -267,7 +373,7 @@ Admin access is determined by `apps/web/src/lib/admin-auth.ts`:
 - A user with `role = 'admin'` is always an admin.
 - In single-user deployments (no users with `role = 'admin'`), the sole authenticated user is treated as admin for self-hosting convenience.
 
-### Logging Upgrade
+### Logging
 
 The project uses a single pino logger from `packages/shared/src/logger.ts` across both web and worker:
 
@@ -278,7 +384,7 @@ The project uses a single pino logger from `packages/shared/src/logger.ts` acros
 - **Error patterns** — `packages/shared/src/error-patterns.ts` catalogs known failure modes with suggested fixes
 - **Bug reports** — `packages/shared/src/bug-report.ts` generates redacted, AI-agent-friendly bug reports
 - **Diagnostic trace persistence** — traces are saved to `diagnostic_traces` and optionally to `DEBUG_TRACE_PATH`
-- **Worker migration** — `apps/worker/src/log.ts` now delegates to the shared pino logger
+- **Worker migration** — `apps/worker/src/log.ts` delegates to the shared pino logger
 
 ### Useful Admin/Debug Env Vars
 
@@ -291,24 +397,33 @@ The project uses a single pino logger from `packages/shared/src/logger.ts` acros
 
 ## Documentation Index
 
+The project uses **auto-generated documentation** wherever possible. Manual docs are kept only for procedural information that cannot be derived from code.
+
+### Auto-Generated (run `cd tools/architecture-explorer && npx tsx src/index.ts --root ..`)
+
+| Artifact | Description |
+|----------|-------------|
+| `docs/architecture-explorer.html` | Interactive D3.js graph explorer with 17+ architecture views |
+| `docs/architecture-explorer.json` | Full machine-readable architecture model (1,399+ nodes, 4,200+ edges) |
+| `docs/knowledge/knowledge.md` | Human-readable project overview (~2.5K tokens) |
+| `docs/knowledge/architecture.json` | Layers, patterns, dependency chain (~7K tokens) |
+| `docs/knowledge/features.json` | 12 features with module ownership |
+| `docs/knowledge/api.json` | All API routes (~14K tokens) |
+| `docs/knowledge/database.json` | All DB tables (~13K tokens) |
+| `docs/knowledge/ai.json` | 33 tools, 4 agents, routing |
+| `docs/knowledge/dependencies.json` | Package dependencies |
+| `docs/knowledge/flows.json` | Sequence diagrams |
+| `docs/obsidian/` | Full Obsidian vault (1,343+ files, pre-configured) |
+
+### Manual (procedural — kept because they describe HOW to do things, not WHAT exists)
+
 | Doc | Description |
 |-----|-------------|
-| [01-architecture.md](./docs/01-architecture.md) | System design, data flow diagrams, deployment topology |
-| [02-codebase.md](./docs/02-codebase.md) | Package details, conventions, file map, extension rules |
-| [03-ai-agent.md](./docs/03-ai-agent.md) | Agent internals, 32 tools, routing, memory, evals |
-| [04-data-layer.md](./docs/04-data-layer.md) | DB schema (50 tables), providers, caching, failover |
-| [05-api-routes.md](./docs/05-api-routes.md) | All 93 API routes, auth, middleware, CSRF |
-| [05-security-auth-compliance.md](./docs/05-security-auth-compliance.md) | Security, auth, compliance, BYOK, billing |
-| [06-frontend.md](./docs/06-frontend.md) | Pages, components, state, charts, PWA |
-| [06-deployment-self-hosting.md](./docs/06-deployment-self-hosting.md) | Deployment, self-hosting, CI/CD |
-| [07-worker.md](./docs/07-worker.md) | Worker daemon, SignalR, jobs, scheduler |
-| [07-agent-understanding.md](./docs/07-agent-understanding.md) | Agent guide for AI coding agents |
-| [08-deployment.md](./docs/08-deployment.md) | Production cloud deployment (Vercel + GCE) |
-| [08-agent-setup-run.md](./docs/08-agent-setup-run.md) | Dev environment setup and startup |
-| [09-testing.md](./docs/09-testing.md) | Test infrastructure, patterns, E2E, eval harness |
-| [10-security.md](./docs/10-security.md) | Auth, secrets, CSRF, BYOK encryption, secrets rotation |
-| [11-self-hosting.md](./docs/11-self-hosting.md) | Docker Compose self-hosting guide |
-| [13-first-run-setup.md](./docs/13-first-run-setup.md) | New user onboarding, dev-secret autogen, BYOK registry |
-| [15-debugging-and-tracing.md](./docs/15-debugging-and-tracing.md) | Debugging, OpenTelemetry, and request tracing |
-| [e2e-testing.md](./docs/e2e-testing.md) | E2E test system architecture |
-| [SETTINGS_CLEANUP.md](./docs/SETTINGS_CLEANUP.md) | Settings restructure and bug fixes |
+| `docs/13-first-run-setup.md` | Step-by-step setup instructions |
+| `docs/11-self-hosting.md` | Docker/self-hosting guide |
+| `docs/08-deployment.md` | Deploy procedures |
+| `docs/09-testing.md` | Test conventions & patterns |
+| `docs/10-security.md` | Security practices & rationale |
+| `docs/INCIDENT-RESPONSE.md` | Incident runbook |
+| `docs/BILLING-WEBHOOK-SAFETY-GATE.md` | Operational safety procedure |
+| `docs/audit/solid-findings.md` | Historical audit record |
