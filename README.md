@@ -307,19 +307,21 @@ That's it. You're running HamaFX-Ai.
 ```
 HamaFX-Ai/
 ├── apps/
-│   ├── web/              # Next.js 15 PWA (29 pages, 78 API routes)
+│   ├── web/              # Next.js 15 PWA (29 pages, ~92 API routes)
 │   └── worker/           # Node.js daemon (SignalR, ticks, jobs)
 ├── packages/
-│   ├── ai/               # 32 tools, routing, multi-agent, memory, persistence
+│   ├── ai/               # 33 tools, routing, multi-agent, memory, persistence
 │   ├── data/             # 8 market data providers, failover, caching
-│   ├── db/               # 46 tables, 42 migrations, Postgres + PGlite
+│   ├── db/               # 50 tables across 35 schema files, 42 migrations, Postgres + PGlite
 │   ├── indicators/       # RSI, MACD, ATR, Bollinger, SMC structure
 │   ├── shared/           # Zod schemas, env validation, AES-256-GCM encryption
 │   ├── config/           # ESLint, Prettier, TypeScript configs
 │   └── test-utils/       # Test factories, mocks, vitest helpers
-├── docs/                 # 8 technical docs + archived legacy docs
+├── docs/                 # Procedural docs + auto-generated knowledge/ and obsidian/ vault
 ├── infra/cron-vm/        # GCE VM setup + 22 systemd timers + backup scripts
-├── tools/                # Lighthouse
+├── tools/
+│   ├── architecture-explorer/  # 16 source files — auto-generates interactive graphs + artifacts
+│   └── lighthouse/       # Lighthouse performance audit runner
 └── scripts/              # dev.ts, predeploy-migrate.mjs
 ```
 
@@ -327,7 +329,7 @@ HamaFX-Ai/
 
 ---
 
-## 🤖 AI Agent & 32 Tools
+## 🤖 AI Agent & 33 Tools
 
 The agent core (`packages/ai/`) uses Vercel AI SDK v5 with domain-based model routing, plan-then-act reasoning, citation enforcement, and a daily budget guardrail.
 
@@ -347,10 +349,10 @@ Incoming Turn
            +--> Assemble Context -> Pull Memory/RAG -> Run Verification
 ```
 
-### The 32 Tools
+### The 33 Tools
 
 <details>
-<summary><b>🔍 Expand the full 32 tools matrix</b></summary>
+<summary><b>🔍 Expand the full 33 tools matrix</b></summary>
 
 | Domain | Tools | Description |
 |:---|:---|:---|
@@ -364,6 +366,8 @@ Incoming Turn
 | **📊 Portfolio & Sentiment** | `get_portfolio_snapshot` · `get_social_sentiment` | Portfolio state, retail/social sentiment |
 
 </details>
+
+> Full, always-updated tool listing available in the [AI knowledge artifact](docs/knowledge/ai.json).
 
 ---
 
@@ -427,7 +431,7 @@ User Message
 | Worker | Node.js daemon (esbuild bundled) |
 | Scheduler | node-cron (Docker) / systemd timers (production) |
 | Monorepo | Turborepo 2 + pnpm 9.15.4 |
-| Testing | Vitest (90+ files, 590+ cases) + Playwright E2E |
+| Testing | Vitest (228 test files) + Playwright E2E |
 | Observability | Sentry · Langfuse (self-hosted) · healthchecks.io |
 | CI/CD | GitHub Actions (7 workflows) + Changesets |
 | Container | Docker (multi-stage, Trivy-scanned, GHCR) |
@@ -438,16 +442,19 @@ User Message
 
 The full documentation set lives in [`docs/`](docs/). Every claim is verified against the actual codebase.
 
-| Doc | Read when |
-|-----|-----------|
-| [**01 — Architecture**](docs/01-architecture.md) | You want to understand the system design, deployment modes, and worker architecture |
-| [**02 — Data Flows**](docs/02-data-flows.md) | You need to understand data providers, AI providers, failover, or licensing |
-| [**03 — Backend & API**](docs/03-backend-api.md) | You're working on API routes, database schema, or migrations |
-| [**04 — Frontend & UX**](docs/04-frontend-ux.md) | You're working on pages, components, charts, or PWA features |
-| [**05 — Security & Auth**](docs/05-security-auth-compliance.md) | You're touching auth, encryption, RLS, billing, or compliance |
-| [**06 — Deployment**](docs/06-deployment-self-hosting.md) | You're deploying, self-hosting, or setting up CI/CD |
-| [**07 — Agent Guide**](docs/07-agent-understanding.md) | You're an AI coding agent about to work on this repo |
-| [**08 — Setup & Run**](docs/08-agent-setup-run.md) | You need to set up a dev environment or fix a startup issue |
+| Resource | Read when |
+|----------|-----------|
+| [**🏗️ Architecture Explorer**](/api/admin/architecture-explorer) | You want an interactive graph explorer with 17+ architecture views, filters, and search — always up to date |
+| [**📖 AGENTS.md**](AGENTS.md) | You're an AI coding agent about to work on this repo — canonical source of truth for the project |
+| [**📚 Knowledge Artifacts**](docs/knowledge/) | You need machine-readable JSON summaries of all API routes, DB tables, AI tools, and flows |
+| [**🗄️ Obsidian Vault**](docs/obsidian/) | You want to explore the architecture as an interactive Obsidian graph — open folder as vault |
+| [**⚠️ Self-Hosting**](docs/11-self-hosting.md) | You're deploying with Docker or self-hosting |
+| [**🔐 Security**](docs/10-security.md) | You're touching auth, encryption, RLS, billing, or compliance |
+| [**🧪 Testing**](docs/09-testing.md) | You need to run or write tests |
+| [**🚀 First-Run Setup**](docs/13-first-run-setup.md) | You need step-by-step setup instructions |
+| [**📦 Deployment**](docs/08-deployment.md) | You're deploying to production |
+
+> 🆕 Most structural documentation is now **auto-generated** by the [Architecture Explorer](tools/architecture-explorer/). Run `cd tools/architecture-explorer && npx tsx src/index.ts --root ..` to regenerate from the live codebase.
 
 **Community docs:** [CONTRIBUTING.md](CONTRIBUTING.md) · [SECURITY.md](SECURITY.md) · [SUPPORT.md](SUPPORT.md) · [CHANGELOG.md](CHANGELOG.md) · [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)
 
@@ -502,8 +509,9 @@ FRED_API_KEY=...
 > [!NOTE]
 > **Server operators** who want to provide a server-wide AI fallback (so users don't need their own keys) can set `AI_GATEWAY_API_KEY`, `GOOGLE_GENERATIVE_AI_API_KEY`, or `GOOGLE_VERTEX_*` in the server environment. These act as fallbacks when a user hasn't added their own key. Most self-hosters should use BYOK mode instead.
 
-📖 **Full self-hosting guide:** [docs/06-deployment-self-hosting.md](docs/06-deployment-self-hosting.md)
-📖 **Full env var reference:** [docs/08-agent-setup-run.md](docs/08-agent-setup-run.md) (78 vars documented)
+📖 **Full self-hosting guide:** [docs/11-self-hosting.md](docs/11-self-hosting.md)
+📖 **Full env var reference:** [docs/13-first-run-setup.md](docs/13-first-run-setup.md)
+📖 **Architecture explorer (interactive):** [`/api/admin/architecture-explorer`](/api/admin/architecture-explorer) (admin login required)
 
 ---
 
