@@ -25,7 +25,9 @@ const EXPLORER_CSP = [
 
 const HTML_HEADERS = {
   'Content-Type': 'text/html; charset=utf-8',
-  'Cache-Control': 'public, max-age=300',
+  // no-cache prevents Vercel edge CDN from serving stale CSP headers
+  'Cache-Control': 'no-cache, no-store, must-revalidate',
+  'CDN-Cache-Control': 'no-cache',
   'Content-Security-Policy': EXPLORER_CSP,
   'X-Content-Type-Options': 'nosniff',
 };
