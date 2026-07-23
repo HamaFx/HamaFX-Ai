@@ -33,6 +33,27 @@ const nextConfig = {
 
   async headers() {
     return [
+      // Architecture Explorer — standalone admin page with its own inline
+      // scripts. It gets a permissive CSP that allows inline scripts and
+      // same-origin D3.js, overriding the strict-dynamic baseline below.
+      {
+        source: '/api/admin/architecture-explorer',
+        headers: [
+          {
+            key: 'Content-Security-Policy',
+            value: "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self';",
+          },
+        ],
+      },
+      {
+        source: '/architecture-explorer.html',
+        headers: [
+          {
+            key: 'Content-Security-Policy',
+            value: "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self';",
+          },
+        ],
+      },
       {
         source: '/(.*)',
         headers: [
