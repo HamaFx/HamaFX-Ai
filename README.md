@@ -54,7 +54,7 @@
   <a href="#-features">✨ Features</a> ·
   <a href="#-quick-start">🚀 Quick Start</a> ·
   <a href="#-architecture">🏗️ Architecture</a> ·
-  <a href="#-ai-agent--32-tools">🤖 AI Agent</a> ·
+  <a href="#-ai-agent--33-tools">🤖 AI Agent</a> ·
   <a href="#-multi-agent-deliberation">🧠 Multi-Agent</a> ·
   <a href="#-tech-stack">📦 Tech Stack</a> ·
   <a href="#-documentation">📚 Docs</a> ·
@@ -146,7 +146,7 @@ Then open **http://localhost:3000**
 
 What works:
 - ✅ Full web app, AI chat, charts, journal, alerts
-- ✅ All 32 AI tools, multi-agent deliberation
+- ✅ All 33 AI tools, multi-agent deliberation
 - ✅ Hot reload — changes appear instantly
 
 What doesn't work (needs Docker):
@@ -278,7 +278,7 @@ That's it. You're running HamaFX-Ai.
 |  +------------------+  +------------------+  +---------------------------+|
 |  | Edge Middleware  |  | /api/chat        |  | /api/market/*             ||
 |  | (auth + CSRF)    |  | runChat()        |  | @hamafx/data              ||
-|  | JWT + request-id |  | streamText + 32  |  | BiQuote->Finnhub failover ||
+|  | JWT + request-id |  | streamText + 33  |  | BiQuote->Finnhub failover ||
 |  +------------------+  | tools            |  +---------------------------+|
 |                        +--------+---------+  +---------------------------+|
 |  +------------------+           |            | /api/billing/*            ||
