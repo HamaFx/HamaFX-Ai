@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "generatedAt": "2026-07-23T01:51:45.446Z",
+  "generatedAt": "2026-07-23T16:33:31.721Z",
   "project": {
     "name": "HamaFX-Ai",
     "rootPath": "/home/ubuntu/HamaFX-Ai",
@@ -27627,7 +27627,7 @@
         "functions": [
           "generateHtml"
         ],
-        "size": 914
+        "size": 1266
       }
     },
     {
@@ -27796,7 +27796,7 @@
         "functions": [
           "getScripts"
         ],
-        "size": 471
+        "size": 908
       }
     },
     {
@@ -82373,6 +82373,14 @@
   "gitHistory": {
     "commits": [
       {
+        "hash": "0e8d36f35f8752b1fb17df0103bb19877b44c7a8",
+        "shortHash": "0e8d36f3",
+        "date": "2026-07-23T01:52:22Z",
+        "author": "HamaFx",
+        "message": "fix: root cause of architecture explorer loading stuck — <<button syntax error",
+        "files": []
+      },
+      {
         "hash": "e6bc058a6cea958114c94def372684137cbc84c9",
         "shortHash": "e6bc058a",
         "date": "2026-07-23T01:14:38Z",
@@ -86363,28 +86371,12 @@
         "author": "HamaFx",
         "message": "feat(design): complete R1 token foundation — typography scale, numeric scale, fg-subtle WCAG bump, pill radius",
         "files": []
-      },
-      {
-        "hash": "7daba32f984c057dcf9ae3e7f1468cd05496259d",
-        "shortHash": "7daba32f",
-        "date": "2026-06-19T23:21:36Z",
-        "author": "HamaFx",
-        "message": "chore: remove completed plans/ folder",
-        "files": []
       }
     ],
     "fileChanges": {},
     "nodeChanges": {}
   },
   "evolutionTimeline": [
-    {
-      "date": "2026-06-19T23:21:36Z",
-      "hash": "7daba32f984c057dcf9ae3e7f1468cd05496259d",
-      "shortHash": "7daba32f",
-      "message": "chore: remove completed plans/ folder",
-      "activeNodeCount": 0,
-      "touchedNodes": []
-    },
     {
       "date": "2026-06-19T23:50:51Z",
       "hash": "d545854cc66270419fb5fef753d2158ab7152cce",
@@ -90374,6 +90366,14 @@
       "hash": "e6bc058a6cea958114c94def372684137cbc84c9",
       "shortHash": "e6bc058a",
       "message": "fix: 3 more stale 32→33 references in README.md anchor, checklist, diagram",
+      "activeNodeCount": 0,
+      "touchedNodes": []
+    },
+    {
+      "date": "2026-07-23T01:52:22Z",
+      "hash": "0e8d36f35f8752b1fb17df0103bb19877b44c7a8",
+      "shortHash": "0e8d36f3",
+      "message": "fix: root cause of architecture explorer loading stuck — <<button syntax error",
       "activeNodeCount": 0,
       "touchedNodes": []
     }

@@ -10,9 +10,13 @@ import { getHtmlTemplate } from './html-template.js';
 import { getScripts } from './scripts.js';
 
 export function generateHtml(model: ArchitectureModel): string {
-  const jsonData = JSON.stringify(model)
-    .replace(/`/g, '\\`')
-    .replace(/\$/g, '\\$');
+  // Base64-encode the JSON payload to avoid ALL escaping issues.
+  // Template literals and JSON.parse() had chronic corruption when the
+  // model contained `, $, \$ or other special characters in description
+  // strings.  Base64 (A-Za-z0-9+/=) has zero overlap with JavaScript or
+  // HTML syntax, so it is unconditionally safe.
+  const jsonPayload = JSON.stringify(model);
+  const base64 = Buffer.from(jsonPayload, 'utf-8').toString('base64');
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -23,7 +27,7 @@ export function generateHtml(model: ArchitectureModel): string {
 ${getStyles()}
 ${getHtmlTemplate()}
 <script src="/d3.v7.min.js"></script>
-${getScripts(jsonData)}
+${getScripts(base64)}
 </script>
 </body>
 </html>`;

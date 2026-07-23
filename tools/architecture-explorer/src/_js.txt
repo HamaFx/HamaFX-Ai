@@ -2,7 +2,8 @@
 // HamaFX-Ai Architecture Explorer — Phase 3
 // ═══════════════════════════════════════════════════════════════════════
 
-const DATA = JSON.parse(\`${jsonData}\`);
+const _b64 = atob('${jsonData}');
+const DATA = JSON.parse(new TextDecoder('utf-8').decode(Uint8Array.from(_b64, c => c.charCodeAt(0))));
 let NODES = DATA.nodes.map(n => ({...n, x:0, y:0, vx:0, vy:0, fx:null, fy:null}));
 let EDGES = DATA.edges.map(e => ({...e}));
 
@@ -1080,11 +1081,11 @@ function showImpactAnalysis(){
     </div>
     <div class="impact-section">
       <h4>📥 Depends On (\${imp.dependsOn.length})</h4>
-      <div class="impact-list">\${allDeps.slice(0,20).map(n=>'<span class="impact-node" onclick="selectNode(null,NODES.find(x=>x.id===\\''+n.id+'\\'));focusNode(NODES.find(x=>x.id===\\''+n.id+'\\'))" title="'+n.path+'">'+(ICONS[n.type]||'')+' '+n.name+'</span>').join('')||'<span style="font-size:10px;color:var(--text3)">None — this is a leaf node</span>'}</div>
+      <div class="impact-list">\${allDeps.slice(0,20).map(n=>`<span class="impact-node" onclick="selectNode(null,NODES.find(x=>x.id===\'+n.id+'\'));focusNode(NODES.find(x=>x.id===\'+n.id+'\'))" title="\${n.path}">\${ICONS[n.type]||''} \${n.name}</span>`).join('')||'<span style="font-size:10px;color:var(--text3)">None — this is a leaf node</span>'}</div>
     </div>
     <div class="impact-section">
       <h4>📤 Affected Downstream (\${imp.affected.length})</h4>
-      <div class="impact-list">\${allAffected.slice(0,20).map(n=>'<span class="impact-node" onclick="selectNode(null,NODES.find(x=>x.id===\\''+n.id+'\\'));focusNode(NODES.find(x=>x.id===\\''+n.id+'\\'))" title="'+n.path+'">'+(ICONS[n.type]||'')+' '+n.name+'</span>').join('')||'<span style="font-size:10px;color:var(--text3)">No downstream dependents — safe to change</span>'}</div>
+      <div class="impact-list">\${allAffected.slice(0,20).map(n=>`<span class="impact-node" onclick="selectNode(null,NODES.find(x=>x.id===\'+n.id+'\'));focusNode(NODES.find(x=>x.id===\'+n.id+'\'))" title="\${n.path}">\${ICONS[n.type]||''} \${n.name}</span>`).join('')||'<span style="font-size:10px;color:var(--text3)">No downstream dependents — safe to change</span>'}</div>
     </div>
     <button class="top-btn" onclick="selectNode(null,selectedNode);renderPanel(selectedNode)" style="margin-top:8px;width:100%">← Back to Details</button>
   \`;
