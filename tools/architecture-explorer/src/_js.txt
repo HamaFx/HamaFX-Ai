@@ -2,8 +2,7 @@
 // HamaFX-Ai Architecture Explorer — Phase 3
 // ═══════════════════════════════════════════════════════════════════════
 
-const _b64 = atob('${jsonData}');
-const DATA = JSON.parse(new TextDecoder('utf-8').decode(Uint8Array.from(_b64, c => c.charCodeAt(0))));
+const DATA = JSON.parse(document.getElementById('arch-data').textContent);
 let NODES = DATA.nodes.map(n => ({...n, x:0, y:0, vx:0, vy:0, fx:null, fy:null}));
 let EDGES = DATA.edges.map(e => ({...e}));
 

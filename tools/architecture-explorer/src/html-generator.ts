@@ -10,13 +10,12 @@ import { getHtmlTemplate } from './html-template.js';
 import { getScripts } from './scripts.js';
 
 export function generateHtml(model: ArchitectureModel): string {
-  // Base64-encode the JSON payload to avoid ALL escaping issues.
-  // Template literals and JSON.parse() had chronic corruption when the
-  // model contained `, $, \$ or other special characters in description
-  // strings.  Base64 (A-Za-z0-9+/=) has zero overlap with JavaScript or
-  // HTML syntax, so it is unconditionally safe.
-  const jsonPayload = JSON.stringify(model);
-  const base64 = Buffer.from(jsonPayload, 'utf-8').toString('base64');
+  // Embed the JSON payload in a dedicated <script type="application/json">
+  // element.  This completely separates data from executable code, avoiding
+  // ALL escaping issues (no template literals, no base64, no TextDecoder).
+  // The only thing we guard against is </script> inside the JSON, which
+  // would prematurely close the data element.
+  const jsonPayload = JSON.stringify(model).replace(/<\/script>/gi, '<\\/script>');
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -27,7 +26,10 @@ export function generateHtml(model: ArchitectureModel): string {
 ${getStyles()}
 ${getHtmlTemplate()}
 <script src="/d3.v7.min.js"></script>
-${getScripts(base64)}
+<script type="application/json" id="arch-data">
+${jsonPayload}
+</script>
+${getScripts()}
 </script>
 </body>
 </html>`;
