@@ -125,8 +125,9 @@ vercel list hamafx-ai --scope mahamad-ahmads-projects
 - Auth tokens are stored via the Vercel CLI credential helper (not in `~/.vercel/config.json`). If auth breaks, run `vercel logout && vercel login`.
 - Env vars pulled include DB creds (`POSTGRES_URL`, `POSTGRES_HOST`), Supabase (`NEXT_PUBLIC_SUPABASE_URL`), AI model config, API secrets, and Google Vertex credentials.
 
+```
+
 # AI Evals (manual, not in CI)
-```bash
 pnpm --filter @hamafx/ai eval -- --base-url http://localhost:3000 --cookie "authjs.session-token=..." --cases
 ```
 
