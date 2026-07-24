@@ -2,12 +2,12 @@
 type: module
 package: "@hamafx/db"
 path: "packages/db/src/schema/auth.ts"
-incoming: 29
+incoming: 30
 outgoing: 1
-connections: 30
-risk: medium
+connections: 31
+risk: high
 layer: core
-tags: [type/module, hamafx-db, layer/core, risk/medium]
+tags: [type/module, hamafx-db, layer/core, risk/high]
 aliases: [auth/users]
 ---
 
@@ -23,10 +23,10 @@ Database schema (9 tables)
 
 | | Count |
 |---|---|
-| Incoming dependencies | 29 |
+| Incoming dependencies | 30 |
 | Outgoing dependencies | 1 |
-| Total connections | 30 |
-| Risk level | **MEDIUM** |
+| Total connections | 31 |
+| Risk level | **HIGH** |
 | Layer | `core` |
 | Package tag | `#hamafx-db` |
 
@@ -35,9 +35,9 @@ Database schema (9 tables)
 [[@hamafx-db]]
 
 
-### 📥 Depended On By (29)
-[[user]] · [[organization]] · [[organization_member]] · [[user_sessions]] · [[account]] · [[session]] · [[verificationToken]] · [[user_settings]] · [[user_symbols]] · [[agent-opinions-agentOpinions]] · [[alerts-alerts]] · [[analysis-jobs-analysisJobs]] · [[audit-auditLogs]] · [[billing-planInterval]] · [[bot-links-botLinks]] · [[briefings-briefingsEmitted]] · [[chat-chatThreads]] · [[daily-ai-spend-dailyAiSpend]] · [[diagnostic-traces-diagnosticTraces]] · [[journal-journalEntries]]
-> ... and 9 more
+### 📥 Depended On By (30)
+[[user]] · [[organization]] · [[organization_member]] · [[user_sessions]] · [[account]] · [[session]] · [[verificationToken]] · [[user_settings]] · [[user_symbols]] · [[admin-audit-adminAuditLogs]] · [[agent-opinions-agentOpinions]] · [[alerts-alerts]] · [[analysis-jobs-analysisJobs]] · [[audit-auditLogs]] · [[billing-planInterval]] · [[bot-links-botLinks]] · [[briefings-briefingsEmitted]] · [[chat-chatThreads]] · [[daily-ai-spend-dailyAiSpend]] · [[diagnostic-traces-diagnosticTraces]]
+> ... and 10 more
 
 
 

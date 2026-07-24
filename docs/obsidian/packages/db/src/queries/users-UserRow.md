@@ -44,6 +44,8 @@ Module: packages/db/src/queries/users.ts
 - `listUsersWithSettings`
 - `getUserPasswordHash`
 - `countUsers`
+- `countAdmins`
+- `updateUserRole`
 
 
 ## 🔍 Explore

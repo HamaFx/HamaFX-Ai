@@ -2,9 +2,9 @@
 type: module
 package: "@hamafx/web"
 path: "apps/web/src/lib/api-client.ts"
-incoming: 1
+incoming: 2
 outgoing: 3
-connections: 4
+connections: 5
 risk: low
 layer: core
 tags: [type/module, hamafx-web, layer/core]
@@ -23,9 +23,9 @@ Module: apps/web/src/lib/api-client.ts
 
 | | Count |
 |---|---|
-| Incoming dependencies | 1 |
+| Incoming dependencies | 2 |
 | Outgoing dependencies | 3 |
-| Total connections | 4 |
+| Total connections | 5 |
 | Risk level | **LOW** |
 | Layer | `core` |
 | Package tag | `#hamafx-web` |
@@ -35,8 +35,8 @@ Module: apps/web/src/lib/api-client.ts
 [[csrf-getCsrfToken]] · [[request-id-readOrCreateRequestId]] · [[@hamafx-web]]
 
 
-### 📥 Depended On By (1)
-[[market-client-MarketApiError]]
+### 📥 Depended On By (2)
+[[market-client-MarketApiError]] · [[toast-api-error-toastApiError]]
 
 
 

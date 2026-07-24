@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "generated_at": "2026-07-23T16:45:30.238Z",
+  "generated_at": "2026-07-24T17:54:10.212Z",
   "project": {
     "name": "HamaFX-Ai",
     "rootPath": "/home/ubuntu/HamaFX-Ai",
@@ -32,9 +32,10 @@
     {
       "name": "@hamafx/web",
       "path": "packages/web",
-      "nodeCount": 644,
+      "nodeCount": 669,
       "dependsOn": [
         "env-loader/loadE2eEnv",
+        "admin-error-block/AdminErrorBlock",
         "alert-form/AlertForm",
         "alert-list/ALERTS_QUERY_KEY",
         "calendar-toolbar/ImportanceFilter",
@@ -212,6 +213,7 @@
         "env/AuthEnv",
         "api/RequestUser",
         "api-client/ApiErrorBody",
+        "admin-dtos/SliSnapshot",
         "alerts.schema/AlertCreateSchema",
         "vitest/installServerOnlyStub",
         "cn/cn",
@@ -273,8 +275,8 @@
         "alerts/runAlerts",
         "multi-agent-analysis/runMultiAgentAnalysis",
         "retention/runRetention",
-        "index/JOBS",
         "tenant-router/TenantRouter",
+        "index/JOBS",
         "cron-lock/CronLock",
         "reconnect/DEFAULT_RECONNECT_DELAYS",
         "vitest/installServerOnlyStub"
@@ -508,7 +510,7 @@
     {
       "name": "@hamafx/db",
       "path": "packages/db",
-      "nodeCount": 154,
+      "nodeCount": 157,
       "dependsOn": [
         "billing/planInterval",
         "client/DbClient",

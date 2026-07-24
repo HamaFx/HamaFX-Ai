@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "total_routes": 92,
+  "total_routes": 95,
   "routes": [
     {
       "methods": [
@@ -8,6 +8,19 @@
       ],
       "path": "/api/admin/architecture-explorer",
       "handler": "apps/web/src/app/api/admin/architecture-explorer/route.ts",
+      "package": "@hamafx/web",
+      "exports": [
+        "runtime",
+        "dynamic",
+        "GET"
+      ]
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "path": "/api/admin/audit",
+      "handler": "apps/web/src/app/api/admin/audit/route.ts",
       "package": "@hamafx/web",
       "exports": [
         "runtime",
@@ -110,6 +123,19 @@
     },
     {
       "methods": [
+        "GET"
+      ],
+      "path": "/api/admin/impersonate/probe",
+      "handler": "apps/web/src/app/api/admin/impersonate/probe/route.ts",
+      "package": "@hamafx/web",
+      "exports": [
+        "runtime",
+        "dynamic",
+        "GET"
+      ]
+    },
+    {
+      "methods": [
         "POST"
       ],
       "path": "/api/admin/impersonate",
@@ -197,6 +223,19 @@
         "runtime",
         "dynamic",
         "POST"
+      ]
+    },
+    {
+      "methods": [
+        "PATCH"
+      ],
+      "path": "/api/admin/users/:id/role",
+      "handler": "apps/web/src/app/api/admin/users/[id]/role/route.ts",
+      "package": "@hamafx/web",
+      "exports": [
+        "runtime",
+        "dynamic",
+        "PATCH"
       ]
     },
     {
@@ -1272,6 +1311,19 @@
         "methods": [
           "GET"
         ],
+        "path": "/api/admin/audit",
+        "handler": "apps/web/src/app/api/admin/audit/route.ts",
+        "package": "@hamafx/web",
+        "exports": [
+          "runtime",
+          "dynamic",
+          "GET"
+        ]
+      },
+      {
+        "methods": [
+          "GET"
+        ],
         "path": "/api/admin/cron-history",
         "handler": "apps/web/src/app/api/admin/cron-history/route.ts",
         "package": "@hamafx/web",
@@ -1354,6 +1406,19 @@
         ],
         "path": "/api/admin/health-slo",
         "handler": "apps/web/src/app/api/admin/health-slo/route.ts",
+        "package": "@hamafx/web",
+        "exports": [
+          "runtime",
+          "dynamic",
+          "GET"
+        ]
+      },
+      {
+        "methods": [
+          "GET"
+        ],
+        "path": "/api/admin/impersonate/probe",
+        "handler": "apps/web/src/app/api/admin/impersonate/probe/route.ts",
         "package": "@hamafx/web",
         "exports": [
           "runtime",
@@ -1450,6 +1515,19 @@
           "runtime",
           "dynamic",
           "POST"
+        ]
+      },
+      {
+        "methods": [
+          "PATCH"
+        ],
+        "path": "/api/admin/users/:id/role",
+        "handler": "apps/web/src/app/api/admin/users/[id]/role/route.ts",
+        "package": "@hamafx/web",
+        "exports": [
+          "runtime",
+          "dynamic",
+          "PATCH"
         ]
       },
       {

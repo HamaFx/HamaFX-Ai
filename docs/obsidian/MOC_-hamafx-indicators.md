@@ -3,13 +3,13 @@ type: moc
 package: "@hamafx/indicators"
 nodes: 39
 totalIncoming: 102
-totalOutgoing: 160
+totalOutgoing: 159
 tags: [moc, hamafx-indicators]
 ---
 
 # 📦 @hamafx/indicators
 
-> **Map of Content** · 39 files · 102 incoming + 160 outgoing = 262 connections
+> **Map of Content** · 39 files · 102 incoming + 159 outgoing = 261 connections
 
 ## DataviewJS — All Files in This Package
 ```dataviewjs
@@ -26,8 +26,8 @@ dv.table(
 ## Files by Type
 
 ### 📁 Module (38)
-- [[indicator-registry-IndicatorPlugin]] *(2↖ 11↗)*
 - [[property.test]] *(0↖ 11↗)*
+- [[indicator-registry-IndicatorPlugin]] *(2↖ 10↗)*
 - [[index-ComputeStructureArgs]] *(0↖ 9↗)*
 - [[smc-liquidity.test]] *(0↖ 6↗)*
 - [[smc-structure.test]] *(0↖ 6↗)*

@@ -1,11 +1,11 @@
 ---
 type: index
 category: "table"
-count: 49
+count: 50
 tags: [index, type/table]
 ---
 
-# 🗄️ DB Tables (49)
+# 🗄️ DB Tables (50)
 
 ## DataviewJS — Sorted by Most Connected
 ```dataviewjs
@@ -21,6 +21,7 @@ dv.table(
 
 ## Full List
 
+- [[admin_audit_log]] · `@hamafx/db` · `packages/db/src/schema/admin-audit.ts`  *(↖0 ↗1 = 1)*
 - [[agent_opinions]] · `@hamafx/db` · `packages/db/src/schema/agent-opinions.ts`  *(↖0 ↗1 = 1)*
 - [[alerts]] · `@hamafx/db` · `packages/db/src/schema/alerts.ts`  *(↖0 ↗1 = 1)*
 - [[analysis_jobs]] · `@hamafx/db` · `packages/db/src/schema/analysis-jobs.ts`  *(↖0 ↗1 = 1)*

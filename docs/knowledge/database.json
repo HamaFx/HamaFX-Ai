@@ -1,7 +1,21 @@
 {
   "schema_version": "1.0",
-  "total_tables": 49,
+  "total_tables": 50,
   "tables": [
+    {
+      "name": "admin_audit_log",
+      "columns": [
+        "id",
+        "actorUserId",
+        "action",
+        "targetUserId",
+        "onDelete",
+        "metadata",
+        "createdAt"
+      ],
+      "schema_file": "packages/db/src/schema/admin-audit.ts",
+      "package": "@hamafx/db"
+    },
     {
       "name": "agent_opinions",
       "columns": [
@@ -1112,6 +1126,22 @@
     }
   ],
   "tables_by_schema_file": {
+    "packages/db/src/schema/admin-audit.ts": [
+      {
+        "name": "admin_audit_log",
+        "columns": [
+          "id",
+          "actorUserId",
+          "action",
+          "targetUserId",
+          "onDelete",
+          "metadata",
+          "createdAt"
+        ],
+        "schema_file": "packages/db/src/schema/admin-audit.ts",
+        "package": "@hamafx/db"
+      }
+    ],
     "packages/db/src/schema/agent-opinions.ts": [
       {
         "name": "agent_opinions",

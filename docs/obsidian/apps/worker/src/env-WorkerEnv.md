@@ -2,9 +2,9 @@
 type: module
 package: "@hamafx/worker"
 path: "apps/worker/src/env.ts"
-incoming: 5
+incoming: 7
 outgoing: 1
-connections: 6
+connections: 8
 risk: low
 layer: core
 tags: [type/module, hamafx-worker, layer/core]
@@ -23,9 +23,9 @@ Module: apps/worker/src/env.ts
 
 | | Count |
 |---|---|
-| Incoming dependencies | 5 |
+| Incoming dependencies | 7 |
 | Outgoing dependencies | 1 |
-| Total connections | 6 |
+| Total connections | 8 |
 | Risk level | **LOW** |
 | Layer | `core` |
 | Package tag | `#hamafx-worker` |
@@ -35,8 +35,8 @@ Module: apps/worker/src/env.ts
 [[@hamafx-worker]]
 
 
-### 📥 Depended On By (4)
-[[index-onShutdown]] · [[cli]] · [[sentry-initSentry]] · [[env.test]]
+### 📥 Depended On By (5)
+[[index-onShutdown]] · [[types-JobCoreContext]] · [[cli]] · [[sentry-initSentry]] · [[env.test]]
 
 
 

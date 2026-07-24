@@ -10,6 +10,7 @@
       "name": "@hamafx/web",
       "depends_on": [
         "env-loader/loadE2eEnv",
+        "admin-error-block/AdminErrorBlock",
         "alert-form/AlertForm",
         "alert-list/ALERTS_QUERY_KEY",
         "calendar-toolbar/ImportanceFilter",
@@ -187,6 +188,7 @@
         "env/AuthEnv",
         "api/RequestUser",
         "api-client/ApiErrorBody",
+        "admin-dtos/SliSnapshot",
         "alerts.schema/AlertCreateSchema",
         "vitest/installServerOnlyStub",
         "cn/cn",
@@ -247,8 +249,8 @@
         "alerts/runAlerts",
         "multi-agent-analysis/runMultiAgentAnalysis",
         "retention/runRetention",
-        "index/JOBS",
         "tenant-router/TenantRouter",
+        "index/JOBS",
         "cron-lock/CronLock",
         "reconnect/DEFAULT_RECONNECT_DELAYS",
         "vitest/installServerOnlyStub"

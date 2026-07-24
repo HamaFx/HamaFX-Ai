@@ -2,9 +2,9 @@
 type: package
 package: "@hamafx/db"
 path: "packages/db"
-incoming: 303
+incoming: 307
 outgoing: 0
-connections: 303
+connections: 307
 risk: high
 layer: package
 tags: [type/package, hamafx-db, layer/package, risk/high]
@@ -23,18 +23,18 @@ Package: @hamafx/db
 
 | | Count |
 |---|---|
-| Incoming dependencies | 303 |
+| Incoming dependencies | 307 |
 | Outgoing dependencies | 0 |
-| Total connections | 303 |
+| Total connections | 307 |
 | Risk level | **HIGH** |
 | Layer | `package` |
 | Package tag | `#hamafx-db` |
 
 
 
-### 📥 Depended On By (249)
-[[page-async]] · [[layout-async]] · [[_actions-api-keys-updateApiKeysAction]] · [[_actions-data-clearChatHistoryAction]] · [[_actions-preferences-updateProfileAction]] · [[_actions-security-setupTwoFactorAction]] · [[_actions-shared-NAME_MIN]] · [[system-status-card-SystemStatusCard]] · [[actions-sanitizeNext]] · [[GET--api-admin-cron-history]] · [[GET--api-admin-diagnostics-tool-telemetry]] · [[GET--api-admin-diagnostics-trace--id]] · [[GET--api-admin-diagnostics-traces]] · [[POST--api-admin-flush]] · [[POST--api-admin-impersonate]] · [[GET--api-admin-onboarding-inspect]] · [[POST--api-admin-onboarding-reset]] · [[GET--api-admin-onboarding-status]] · [[GET--api-auth-verify-email]] · [[POST--api-billing-checkout]]
-> ... and 229 more
+### 📥 Depended On By (253)
+[[page-async]] · [[layout-async]] · [[_actions-api-keys-updateApiKeysAction]] · [[_actions-data-clearChatHistoryAction]] · [[_actions-preferences-updateProfileAction]] · [[_actions-security-setupTwoFactorAction]] · [[_actions-shared-NAME_MIN]] · [[system-status-card-SystemStatusCard]] · [[actions-sanitizeNext]] · [[GET--api-admin-audit]] · [[GET--api-admin-cron-history]] · [[GET--api-admin-diagnostics-tool-telemetry]] · [[GET--api-admin-diagnostics-trace--id]] · [[GET--api-admin-diagnostics-traces]] · [[POST--api-admin-flush]] · [[GET--api-admin-health-slo]] · [[POST--api-admin-impersonate]] · [[GET--api-admin-onboarding-inspect]] · [[POST--api-admin-onboarding-reset]] · [[GET--api-admin-onboarding-status]]
+> ... and 233 more
 
 
 

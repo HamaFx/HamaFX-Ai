@@ -2,9 +2,9 @@
 type: module
 package: "@hamafx/db"
 path: "packages/db/src/client.ts"
-incoming: 35
+incoming: 37
 outgoing: 2
-connections: 37
+connections: 39
 risk: high
 layer: core
 tags: [type/module, hamafx-db, layer/core, risk/high]
@@ -23,9 +23,9 @@ Module: packages/db/src/client.ts
 
 | | Count |
 |---|---|
-| Incoming dependencies | 35 |
+| Incoming dependencies | 37 |
 | Outgoing dependencies | 2 |
-| Total connections | 37 |
+| Total connections | 39 |
 | Risk level | **HIGH** |
 | Layer | `core` |
 | Package tag | `#hamafx-db` |
@@ -35,9 +35,9 @@ Module: packages/db/src/client.ts
 [[index_tool-architecture-explorer|index]] · [[@hamafx-db]]
 
 
-### 📥 Depended On By (35)
-[[seed-plans]] · [[local-db-getLocalDb]] · [[provider-quota-DailyQuotaResult]] · [[agent-opinions-AgentOpinionRow]] · [[alerts-AlertRow]] · [[analysis-jobs-AnalysisJobRow]] · [[auth-AuthUserRow]] · [[billing-extras-listActivePlans]] · [[candles-CandleRow]] · [[chat-telemetry-listToolTelemetry]] · [[cot-CotReportRow]] · [[cron-runs-CronRunRow]] · [[diagnostic-traces-DiagnosticTraceRow]] · [[feature-flags-FeatureFlagRow]] · [[ipn-events-findIpnEvent]] · [[journal-JournalRow]] · [[news-articles-NewsArticleRow]] · [[onboarding-ResetMode]] · [[portfolio-PositionRow]] · [[provider-tests-getProviderHealthForUser]]
-> ... and 15 more
+### 📥 Depended On By (36)
+[[seed-plans]] · [[local-db-getLocalDb]] · [[provider-quota-DailyQuotaResult]] · [[admin-audit-recordAdminAudit]] · [[agent-opinions-AgentOpinionRow]] · [[alerts-AlertRow]] · [[analysis-jobs-AnalysisJobRow]] · [[auth-AuthUserRow]] · [[billing-extras-listActivePlans]] · [[candles-CandleRow]] · [[chat-telemetry-listToolTelemetry]] · [[cot-CotReportRow]] · [[cron-runs-CronRunRow]] · [[diagnostic-traces-DiagnosticTraceRow]] · [[feature-flags-FeatureFlagRow]] · [[ipn-events-findIpnEvent]] · [[journal-JournalRow]] · [[news-articles-NewsArticleRow]] · [[onboarding-ResetMode]] · [[portfolio-PositionRow]]
+> ... and 16 more
 
 
 

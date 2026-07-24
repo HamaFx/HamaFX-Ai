@@ -2,9 +2,9 @@
 type: package
 package: "@hamafx/web"
 path: "packages/web"
-incoming: 551
+incoming: 573
 outgoing: 0
-connections: 551
+connections: 573
 risk: high
 layer: package
 tags: [type/package, hamafx-web, layer/package, risk/high]
@@ -23,18 +23,18 @@ Package: @hamafx/web
 
 | | Count |
 |---|---|
-| Incoming dependencies | 551 |
+| Incoming dependencies | 573 |
 | Outgoing dependencies | 0 |
-| Total connections | 551 |
+| Total connections | 573 |
 | Risk level | **HIGH** |
 | Layer | `package` |
 | Package tag | `#hamafx-web` |
 
 
 
-### 📥 Depended On By (525)
-[[eslint.config-config]] · [[next-env.d]] · [[next.config-withSentryConfig]] · [[playwright.config-defineConfig]] · [[postcss.config-default]] · [[d3.v7.min]] · [[bundle-size-guard]] · [[generate-icons]] · [[generate-sw-TEMPLATE_FILE]] · [[set-build-id-resolveGitSha]] · [[setup-telegram-webhook]] · [[sw.template]] · [[admin-cron-table-AdminCronTable]] · [[admin-diagnostic-traces-AdminDiagnosticTraces]] · [[admin-feature-flags-AdminFeatureFlags]] · [[admin-log-viewer-AdminLogViewer]] · [[admin-onboarding-control-AdminOnboardingControl]] · [[admin-system-health-AdminSystemHealth]] · [[admin-tool-telemetry-table-AdminToolTelemetryTable]] · [[admin-user-table-AdminUserTable]]
-> ... and 505 more
+### 📥 Depended On By (547)
+[[eslint.config-config]] · [[next-env.d]] · [[next.config-withSentryConfig]] · [[playwright.config-defineConfig]] · [[postcss.config-default]] · [[d3.v7.min]] · [[bundle-size-guard]] · [[generate-icons]] · [[generate-sw-TEMPLATE_FILE]] · [[set-build-id-resolveGitSha]] · [[setup-telegram-webhook]] · [[sw.template]] · [[admin-audit-table-AdminAuditTable]] · [[admin-cron-table-AdminCronTable]] · [[admin-dev-tools-AdminDevTools]] · [[admin-diagnostic-traces-AdminDiagnosticTraces]] · [[admin-error-block-AdminErrorBlock]] · [[admin-feature-flags-AdminFeatureFlags]] · [[admin-log-viewer-AdminLogViewer]] · [[admin-onboarding-control-AdminOnboardingControl]]
+> ... and 527 more
 
 
 

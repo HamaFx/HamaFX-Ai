@@ -1,6 +1,6 @@
 # HamaFX-Ai Architecture Knowledge Base
 
-> **Auto-generated**: 2026-07-23T16:45:30.238Z
+> **Auto-generated**: 2026-07-24T17:54:10.212Z
 > **Schema version**: 1.0
 > **Purpose**: AI-agent-optimized architecture overview for rapid project understanding
 
@@ -12,7 +12,7 @@
 
 - **Stack**: Next.js 15 (App Router) + React 19 + TypeScript (strict)
 - **AI**: Vercel AI SDK v5, Google Vertex AI + 9-provider BYOK registry
-- **Database**: PostgreSQL (Supabase) + pgvector, Drizzle ORM (49+ tables)
+- **Database**: PostgreSQL (Supabase) + pgvector, Drizzle ORM (50+ tables)
 - **Auth**: NextAuth.js v5 (Credentials provider, JWT strategy)
 - **Charts**: TradingView lightweight-charts v5
 - **Monorepo**: pnpm workspaces + Turborepo 2
@@ -22,7 +22,7 @@
 | Package | Path | Type | Purpose |
 |---------|------|------|---------|
 | **root** | `root` | package | Package: root (3 nodes) |
-| **@hamafx/web** | `packages/web` | package | Package: @hamafx/web (644 nodes) |
+| **@hamafx/web** | `packages/web` | package | Package: @hamafx/web (669 nodes) |
 | **@hamafx/worker** | `packages/worker` | package | Package: @hamafx/worker (58 nodes) |
 | **docs** | `docs` | package | Package: docs (1 nodes) |
 | **infra** | `infra` | package | Package: infra (1 nodes) |
@@ -30,7 +30,7 @@
 | **@hamafx/ai** | `packages/ai` | package | Package: @hamafx/ai (273 nodes) |
 | **@hamafx/config** | `packages/config` | package | Package: @hamafx/config (4 nodes) |
 | **@hamafx/data** | `packages/data` | package | Package: @hamafx/data (64 nodes) |
-| **@hamafx/db** | `packages/db` | package | Package: @hamafx/db (154 nodes) |
+| **@hamafx/db** | `packages/db` | package | Package: @hamafx/db (157 nodes) |
 | **@hamafx/indicators** | `packages/indicators` | package | Package: @hamafx/indicators (39 nodes) |
 | **@hamafx/shared** | `packages/shared` | package | Package: @hamafx/shared (84 nodes) |
 | **@hamafx/test-utils** | `packages/test-utils` | package | Package: @hamafx/test-utils (19 nodes) |
@@ -40,15 +40,15 @@
 
 **Dependency chain**: `config → shared → db + indicators → data → ai → web + worker`
 
-**Total**: 16 packages, **1401** architecture nodes
+**Total**: 16 packages, **1429** architecture nodes
 
 ## Architecture Layers
 
 1. **Presentation** (`@hamafx/web`) — Next.js 15 PWA, React 19, Tailwind CSS v4, shadcn/ui, TradingView charts
-2. **API Gateway** (`@hamafx/web` middleware) — NextAuth JWT, CSRF, rate limiting, 184 API routes
+2. **API Gateway** (`@hamafx/web` middleware) — NextAuth JWT, CSRF, rate limiting, 190 API routes
 3. **AI Agent** (`@hamafx/ai`) — Chat routing, plan-then-act, 32 tools, 4 agents, memory, citations
 4. **Data** (`@hamafx/data`) — Provider failover, caching (SWR), throttling, BiQuote→Finnhub
-5. **Persistence** (`@hamafx/db`) — Drizzle ORM, 49+ tables, Postgres (Supabase) + PGlite
+5. **Persistence** (`@hamafx/db`) — Drizzle ORM, 50+ tables, Postgres (Supabase) + PGlite
 6. **Worker** (`@hamafx/worker`) — SignalR consumer, TickBuffer, Candle1mAggregator, 7+ cron jobs
 7. **Infrastructure** — Vercel (web) + GCE VM (worker), Docker Compose, systemd timers
 
@@ -112,12 +112,13 @@ User Message → Rate Limit → Thread Check → Budget Guard → History Load �
 
 ## API Surface
 
-184 routes across major domains:
-- **/src**: 184 endpoints
+190 routes across major domains:
+- **/src**: 190 endpoints
 
 ## Database
 
-49+ tables in PostgreSQL (Supabase) + pgvector:
+50+ tables in PostgreSQL (Supabase) + pgvector:
+- **admin_audit_log** (7 columns)
 - **agent_opinions** (15 columns)
 - **alerts** (11 columns)
 - **analysis_jobs** (21 columns)
@@ -137,15 +138,14 @@ User Message → Rate Limit → Thread Check → Budget Guard → History Load �
 - **ipn_events** (9 columns)
 - **bot_links** (5 columns)
 - **briefings_emitted** (6 columns)
-- **economic_events** (14 columns)
-- ... and 29 more tables
+- ... and 30 more tables
 
 ## Analysis Summary
 
 
 - **Circular Dependencies**: 6
 - **Architecture Hotspots**: 50
-- **Dead Code / Orphans**: 1098
+- **Dead Code / Orphans**: 1136
 - **Shared Utilities**: 40
 - **Average Coupling**: 0.22
 - **Max Dependency Chain**: 3 hops

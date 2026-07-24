@@ -1,11 +1,11 @@
 ---
 type: index
 category: "api_route"
-count: 184
+count: 190
 tags: [index, type/api_route]
 ---
 
-# 🔗 API Routes (184)
+# 🔗 API Routes (190)
 
 ## DataviewJS — Sorted by Most Connected
 ```dataviewjs
@@ -52,6 +52,7 @@ dv.table(
 - [[GET,POST,PATCH--api-settings-symbols]] · `@hamafx/web` · `apps/web/src/app/api/settings/symbols/route.ts`  *(↖1 ↗3 = 4)*
 - [[GET--api-settings-usage-by-agent]] · `@hamafx/web` · `apps/web/src/app/api/settings/usage-by-agent/route.ts`  *(↖1 ↗3 = 4)*
 - [[POST--api-upload]] · `@hamafx/web` · `apps/web/src/app/api/upload/route.ts`  *(↖1 ↗3 = 4)*
+- [[GET--api-admin-audit]] · `@hamafx/web` · `apps/web/src/app/api/admin/audit/route.ts`  *(↖1 ↗2 = 3)*
 - [[GET--api-admin-cron-history]] · `@hamafx/web` · `apps/web/src/app/api/admin/cron-history/route.ts`  *(↖1 ↗2 = 3)*
 - [[GET--api-admin-diagnostics-tool-telemetry]] · `@hamafx/web` · `apps/web/src/app/api/admin/diagnostics/tool-telemetry/route.ts`  *(↖1 ↗2 = 3)*
 - [[GET--api-admin-diagnostics-trace--id]] · `@hamafx/web` · `apps/web/src/app/api/admin/diagnostics/trace/[id]/route.ts`  *(↖1 ↗2 = 3)*
@@ -92,6 +93,8 @@ dv.table(
 - [[GET--api-telegram-webhook]] · `@hamafx/web` · `apps/web/src/app/api/telegram/webhook/route.ts`  *(↖1 ↗2 = 3)*
 - [[GET--api-admin-architecture-explorer]] · `@hamafx/web` · `apps/web/src/app/api/admin/architecture-explorer/route.ts`  *(↖1 ↗1 = 2)*
 - [[GET,POST--api-admin-features]] · `@hamafx/web` · `apps/web/src/app/api/admin/features/route.ts`  *(↖1 ↗1 = 2)*
+- [[GET--api-admin-impersonate-probe]] · `@hamafx/web` · `apps/web/src/app/api/admin/impersonate/probe/route.ts`  *(↖1 ↗1 = 2)*
+- [[PATCH--api-admin-users--id-role]] · `@hamafx/web` · `apps/web/src/app/api/admin/users/[id]/role/route.ts`  *(↖1 ↗1 = 2)*
 - [[GET--api-admin-users]] · `@hamafx/web` · `apps/web/src/app/api/admin/users/route.ts`  *(↖1 ↗1 = 2)*
 - [[GET,PATCH,DELETE--api-alerts--id]] · `@hamafx/web` · `apps/web/src/app/api/alerts/[id]/route.ts`  *(↖1 ↗1 = 2)*
 - [[POST--api-alerts-preview]] · `@hamafx/web` · `apps/web/src/app/api/alerts/preview/route.ts`  *(↖1 ↗1 = 2)*
@@ -114,6 +117,7 @@ dv.table(
 - [[GET--api-settings-catalog]] · `@hamafx/web` · `apps/web/src/app/api/settings/catalog/route.ts`  *(↖1 ↗1 = 2)*
 - [[GET,PUT--api-settings-fallback-chain]] · `@hamafx/web` · `apps/web/src/app/api/settings/fallback-chain/route.ts`  *(↖1 ↗1 = 2)*
 - [[GET--api-admin-architecture-explorer]] · `@hamafx/web` · `apps/web/src/app/api/admin/architecture-explorer/route.ts`  *(↖0 ↗1 = 1)*
+- [[GET--api-admin-audit]] · `@hamafx/web` · `apps/web/src/app/api/admin/audit/route.ts`  *(↖0 ↗1 = 1)*
 - [[GET--api-admin-cron-history]] · `@hamafx/web` · `apps/web/src/app/api/admin/cron-history/route.ts`  *(↖0 ↗1 = 1)*
 - [[GET--api-admin-diagnostics-tool-telemetry]] · `@hamafx/web` · `apps/web/src/app/api/admin/diagnostics/tool-telemetry/route.ts`  *(↖0 ↗1 = 1)*
 - [[GET--api-admin-diagnostics-trace--id]] · `@hamafx/web` · `apps/web/src/app/api/admin/diagnostics/trace/[id]/route.ts`  *(↖0 ↗1 = 1)*
@@ -121,6 +125,7 @@ dv.table(
 - [[GET,POST--api-admin-features]] · `@hamafx/web` · `apps/web/src/app/api/admin/features/route.ts`  *(↖0 ↗1 = 1)*
 - [[POST--api-admin-flush]] · `@hamafx/web` · `apps/web/src/app/api/admin/flush/route.ts`  *(↖0 ↗1 = 1)*
 - [[GET--api-admin-health-slo]] · `@hamafx/web` · `apps/web/src/app/api/admin/health-slo/route.ts`  *(↖0 ↗1 = 1)*
+- [[GET--api-admin-impersonate-probe]] · `@hamafx/web` · `apps/web/src/app/api/admin/impersonate/probe/route.ts`  *(↖0 ↗1 = 1)*
 - [[POST--api-admin-impersonate]] · `@hamafx/web` · `apps/web/src/app/api/admin/impersonate/route.ts`  *(↖0 ↗1 = 1)*
 - [[GET--api-admin-logs-stream]] · `@hamafx/web` · `apps/web/src/app/api/admin/logs/stream/route.ts`  *(↖0 ↗1 = 1)*
 - [[GET--api-admin-onboarding-inspect]] · `@hamafx/web` · `apps/web/src/app/api/admin/onboarding/inspect/route.ts`  *(↖0 ↗1 = 1)*
@@ -128,6 +133,7 @@ dv.table(
 - [[GET--api-admin-onboarding-status]] · `@hamafx/web` · `apps/web/src/app/api/admin/onboarding/status/route.ts`  *(↖0 ↗1 = 1)*
 - [[POST--api-admin-test-alert-email]] · `@hamafx/web` · `apps/web/src/app/api/admin/test-alert-email/route.ts`  *(↖0 ↗1 = 1)*
 - [[POST--api-admin-test-telegram]] · `@hamafx/web` · `apps/web/src/app/api/admin/test-telegram/route.ts`  *(↖0 ↗1 = 1)*
+- [[PATCH--api-admin-users--id-role]] · `@hamafx/web` · `apps/web/src/app/api/admin/users/[id]/role/route.ts`  *(↖0 ↗1 = 1)*
 - [[GET--api-admin-users]] · `@hamafx/web` · `apps/web/src/app/api/admin/users/route.ts`  *(↖0 ↗1 = 1)*
 - [[GET,PATCH,DELETE--api-alerts--id]] · `@hamafx/web` · `apps/web/src/app/api/alerts/[id]/route.ts`  *(↖0 ↗1 = 1)*
 - [[POST--api-alerts-preview]] · `@hamafx/web` · `apps/web/src/app/api/alerts/preview/route.ts`  *(↖0 ↗1 = 1)*

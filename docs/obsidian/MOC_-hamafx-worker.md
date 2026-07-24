@@ -2,14 +2,14 @@
 type: moc
 package: "@hamafx/worker"
 nodes: 58
-totalIncoming: 196
-totalOutgoing: 274
+totalIncoming: 200
+totalOutgoing: 278
 tags: [moc, hamafx-worker]
 ---
 
 # 📦 @hamafx/worker
 
-> **Map of Content** · 58 files · 196 incoming + 274 outgoing = 470 connections
+> **Map of Content** · 58 files · 200 incoming + 278 outgoing = 478 connections
 
 ## DataviewJS — All Files in This Package
 ```dataviewjs
@@ -35,6 +35,7 @@ dv.table(
 - [[cli]] *(0↖ 8↗)*
 - [[cot-job.test]] *(0↖ 8↗)*
 - [[fred-actuals.test]] *(0↖ 8↗)*
+- [[types-JobCoreContext]] *(22↖ 7↗)*
 - [[scheduler-startScheduler]] *(1↖ 7↗)*
 - [[live-ticks.test]] *(0↖ 7↗)*
 - [[snapshots-job.test]] *(0↖ 7↗)*
@@ -63,7 +64,6 @@ dv.table(
 - [[signalr-consumer.test]] *(0↖ 4↗)*
 - [[signalr-reconnect.test]] *(0↖ 4↗)*
 - [[base-ws-consumer]] *(1↖ 3↗)*
-- [[types-JobCoreContext]] *(22↖ 3↗)*
 - [[sentry-initSentry]] *(2↖ 3↗)*
 - [[cron-lock.test]] *(0↖ 3↗)*
 - [[env.test]] *(0↖ 3↗)*
@@ -76,11 +76,11 @@ dv.table(
 - [[scheduler.test]] *(0↖ 2↗)*
 - [[build]] *(0↖ 1↗)*
 - [[index_tool-architecture-explorer|index]] *(1↖ 1↗)*
-- [[env-WorkerEnv]] *(5↖ 1↗)*
+- [[env-WorkerEnv]] *(7↖ 1↗)*
 - [[healthchecks-PingStatus]] *(3↖ 1↗)*
 - [[sd-notify-notifyWatchdog]] *(1↖ 1↗)*
 - [[reconnect-DEFAULT_RECONNECT_DELAYS]] *(1↖ 1↗)*
-- [[tenant-router-TenantRouter]] *(9↖ 1↗)*
+- [[tenant-router-TenantRouter]] *(11↖ 1↗)*
 - [[empty]] *(0↖ 1↗)*
 - [[vitest.config-defineConfig]] *(0↖ 1↗)*
 

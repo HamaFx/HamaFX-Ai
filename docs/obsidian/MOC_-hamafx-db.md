@@ -1,15 +1,15 @@
 ---
 type: moc
 package: "@hamafx/db"
-nodes: 154
-totalIncoming: 427
-totalOutgoing: 246
+nodes: 157
+totalIncoming: 435
+totalOutgoing: 252
 tags: [moc, hamafx-db]
 ---
 
 # 📦 @hamafx/db
 
-> **Map of Content** · 154 files · 427 incoming + 246 outgoing = 673 connections
+> **Map of Content** · 157 files · 435 incoming + 252 outgoing = 687 connections
 
 ## DataviewJS — All Files in This Package
 ```dataviewjs
@@ -25,9 +25,10 @@ dv.table(
 
 ## Files by Type
 
-### 📁 Module (104)
+### 📁 Module (106)
 - [[seed-plans]] *(0↖ 3↗)*
 - [[local-db-getLocalDb]] *(0↖ 3↗)*
+- [[admin-audit-recordAdminAudit]] *(0↖ 3↗)*
 - [[agent-opinions-agentOpinions]] *(1↖ 3↗)*
 - [[analysis-jobs-analysisJobs]] *(1↖ 3↗)*
 - [[briefings-briefingsEmitted]] *(1↖ 3↗)*
@@ -45,7 +46,7 @@ dv.table(
 - [[with-user-scope.test]] *(0↖ 3↗)*
 - [[eslint.config-config]] *(0↖ 2↗)*
 - [[active-users-getActiveUserIds]] *(0↖ 2↗)*
-- [[client-DbClient]] *(35↖ 2↗)*
+- [[client-DbClient]] *(37↖ 2↗)*
 - [[pglite-client-sanitizeStatement]] *(9↖ 2↗)*
 - [[provider-quota-DailyQuotaResult]] *(0↖ 2↗)*
 - [[agent-opinions-AgentOpinionRow]] *(0↖ 2↗)*
@@ -79,6 +80,7 @@ dv.table(
 - [[watchlist-WatchlistEntry]] *(0↖ 2↗)*
 - [[rate-limit-RateLimitResult]] *(0↖ 2↗)*
 - [[retention-RetentionConfig]] *(0↖ 2↗)*
+- [[admin-audit-adminAuditLogs]] *(1↖ 2↗)*
 - [[alerts-alerts]] *(1↖ 2↗)*
 - [[audit-auditLogs]] *(1↖ 2↗)*
 - [[billing-planInterval]] *(5↖ 2↗)*
@@ -110,7 +112,7 @@ dv.table(
 - [[index_tool-architecture-explorer|index]] *(2↖ 1↗)*
 - [[index_tool-architecture-explorer|index]] *(0↖ 1↗)*
 - [[_extensions]] *(0↖ 1↗)*
-- [[auth-users]] *(29↖ 1↗)*
+- [[auth-users]] *(30↖ 1↗)*
 - [[calendar-economicEvents]] *(1↖ 1↗)*
 - [[candles-1m-candles1m]] *(1↖ 1↗)*
 - [[cot-cotReports]] *(1↖ 1↗)*
@@ -131,7 +133,8 @@ dv.table(
 - [[with-user-scope-withUserScope]] *(1↖ 1↗)*
 - [[vitest.config-defineConfig]] *(0↖ 1↗)*
 
-### 🗄️ DB Table (49)
+### 🗄️ DB Table (50)
+- [[admin_audit_log]] *(0↖ 1↗)*
 - [[agent_opinions]] *(0↖ 1↗)*
 - [[alerts]] *(0↖ 1↗)*
 - [[analysis_jobs]] *(0↖ 1↗)*
@@ -183,5 +186,5 @@ dv.table(
 - [[chat_tool_telemetry]] *(0↖ 1↗)*
 
 ### 📦 Package (1)
-- [[@hamafx-db]] *(303↖ 0↗)*
+- [[@hamafx-db]] *(307↖ 0↗)*
 

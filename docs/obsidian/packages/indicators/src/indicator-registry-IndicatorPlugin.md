@@ -3,8 +3,8 @@ type: module
 package: "@hamafx/indicators"
 path: "packages/indicators/src/indicator-registry.ts"
 incoming: 2
-outgoing: 11
-connections: 13
+outgoing: 10
+connections: 12
 risk: low
 layer: core
 tags: [type/module, hamafx-indicators, layer/core]
@@ -24,8 +24,8 @@ Module: packages/indicators/src/indicator-registry.ts
 | | Count |
 |---|---|
 | Incoming dependencies | 2 |
-| Outgoing dependencies | 11 |
-| Total connections | 13 |
+| Outgoing dependencies | 10 |
+| Total connections | 12 |
 | Risk level | **LOW** |
 | Layer | `core` |
 | Package tag | `#hamafx-indicators` |

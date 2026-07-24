@@ -1,15 +1,15 @@
 ---
 type: moc
 package: "@hamafx/web"
-nodes: 644
-totalIncoming: 1000
-totalOutgoing: 1496
+nodes: 669
+totalIncoming: 1037
+totalOutgoing: 1544
 tags: [moc, hamafx-web]
 ---
 
 # 📦 @hamafx/web
 
-> **Map of Content** · 644 files · 1000 incoming + 1496 outgoing = 2496 connections
+> **Map of Content** · 669 files · 1037 incoming + 1544 outgoing = 2581 connections
 
 ## DataviewJS — All Files in This Package
 ```dataviewjs
@@ -25,7 +25,7 @@ dv.table(
 
 ## Files by Type
 
-### 📁 Module (348)
+### 📁 Module (366)
 - [[dashboard-canvas-DashboardCanvas]] *(1↖ 14↗)*
 - [[journal-view-JournalView]] *(1↖ 12↗)*
 - [[page-async]] *(0↖ 11↗)*
@@ -85,6 +85,7 @@ dv.table(
 - [[use-chart-theme-ChartTheme]] *(2↖ 4↗)*
 - [[admin-auth-AdminUser]] *(1↖ 4↗)*
 - [[market-client-MarketApiError]] *(0↖ 4↗)*
+- [[admin-listFeaturesService]] *(0↖ 4↗)*
 - [[chat-ThreadDTO]] *(0↖ 4↗)*
 - [[portfolio-PortfolioUpdateSettingsSchema]] *(0↖ 4↗)*
 - [[nextauth-wiring.test]] *(0↖ 4↗)*
@@ -128,12 +129,13 @@ dv.table(
 - [[use-price-stream-usePriceStream]] *(0↖ 3↗)*
 - [[use-prices-usePrices]] *(1↖ 3↗)*
 - [[use-structure-UseStructureOptions]] *(1↖ 3↗)*
-- [[api-client-ApiErrorBody]] *(1↖ 3↗)*
+- [[api-client-ApiErrorBody]] *(2↖ 3↗)*
 - [[provision-user-SignInInput]] *(0↖ 3↗)*
 - [[session-validators-SessionToken]] *(0↖ 3↗)*
 - [[billing-gate-BillingGateResult]] *(0↖ 3↗)*
 - [[cron-withCronAuth]] *(0↖ 3↗)*
 - [[env-AuthEnv]] *(1↖ 3↗)*
+- [[admin-health-ComputeHealthSloOptions]] *(0↖ 3↗)*
 - [[usage-alerts-resetSentAlerts]] *(1↖ 3↗)*
 - [[api-payload-size.test]] *(0↖ 3↗)*
 - [[auth-flow.test]] *(0↖ 3↗)*
@@ -164,6 +166,13 @@ dv.table(
 - [[fixtures-ChatMockOptions]] *(11↖ 3↗)*
 - [[eslint.config-config]] *(0↖ 2↗)*
 - [[playwright.config-defineConfig]] *(0↖ 2↗)*
+- [[admin-audit-table-AdminAuditTable]] *(0↖ 2↗)*
+- [[admin-cron-table-AdminCronTable]] *(0↖ 2↗)*
+- [[admin-diagnostic-traces-AdminDiagnosticTraces]] *(0↖ 2↗)*
+- [[admin-feature-flags-AdminFeatureFlags]] *(0↖ 2↗)*
+- [[admin-system-health-AdminSystemHealth]] *(0↖ 2↗)*
+- [[admin-tool-telemetry-table-AdminToolTelemetryTable]] *(0↖ 2↗)*
+- [[admin-user-table-AdminUserTable]] *(0↖ 2↗)*
 - [[alert-form-AlertForm]] *(1↖ 2↗)*
 - [[page-AlertsPage]] *(0↖ 2↗)*
 - [[page-JournalPage]] *(0↖ 2↗)*
@@ -189,16 +198,25 @@ dv.table(
 - [[use-tf-useTimeframe]] *(1↖ 2↗)*
 - [[admin-check-checkIsAdmin]] *(0↖ 2↗)*
 - [[chat-transport-AgentProgress]] *(0↖ 2↗)*
-- [[admin-FeatureFlagsDTO]] *(0↖ 2↗)*
 - [[alerts.schema-AlertCreateSchema]] *(1↖ 2↗)*
+- [[toast-api-error-toastApiError]] *(0↖ 2↗)*
 - [[middleware-middleware]] *(0↖ 2↗)*
 - [[news-service-NewsFilters]] *(0↖ 2↗)*
 - [[admin-auth.test]] *(0↖ 2↗)*
+- [[admin-health.test]] *(0↖ 2↗)*
+- [[diagnostic-traces.test]] *(0↖ 2↗)*
 - [[features.test]] *(0↖ 2↗)*
+- [[onboarding-inspect.test]] *(0↖ 2↗)*
 - [[onboarding-reset.test]] *(0↖ 2↗)*
+- [[test-alert-telegram.test]] *(0↖ 2↗)*
+- [[users-role.test]] *(0↖ 2↗)*
 - [[users.test]] *(0↖ 2↗)*
+- [[admin-error-block.test]] *(0↖ 2↗)*
+- [[admin-page.test]] *(0↖ 2↗)*
+- [[admin-system-health.test]] *(0↖ 2↗)*
 - [[agent-deliberation.test]] *(0↖ 2↗)*
 - [[auth-helpers-mockNextAuthSession]] *(1↖ 2↗)*
+- [[badge.test]] *(0↖ 2↗)*
 - [[billing-contract.test]] *(0↖ 2↗)*
 - [[build-scripts.test]] *(0↖ 2↗)*
 - [[bundle-size-guard.test]] *(0↖ 2↗)*
@@ -207,6 +225,7 @@ dv.table(
 - [[composer.test]] *(0↖ 2↗)*
 - [[dev-secrets.test]] *(0↖ 2↗)*
 - [[empty-state.test]] *(0↖ 2↗)*
+- [[format-number.test]] *(0↖ 2↗)*
 - [[middleware-to-ai.integration.test]] *(0↖ 2↗)*
 - [[middleware-matcher-coverage.test]] *(0↖ 2↗)*
 - [[middleware.test]] *(0↖ 2↗)*
@@ -247,14 +266,10 @@ dv.table(
 - [[set-build-id-resolveGitSha]] *(0↖ 1↗)*
 - [[setup-telegram-webhook]] *(0↖ 1↗)*
 - [[sw.template]] *(0↖ 1↗)*
-- [[admin-cron-table-AdminCronTable]] *(0↖ 1↗)*
-- [[admin-diagnostic-traces-AdminDiagnosticTraces]] *(0↖ 1↗)*
-- [[admin-feature-flags-AdminFeatureFlags]] *(0↖ 1↗)*
+- [[admin-dev-tools-AdminDevTools]] *(0↖ 1↗)*
+- [[admin-error-block-AdminErrorBlock]] *(7↖ 1↗)*
 - [[admin-log-viewer-AdminLogViewer]] *(0↖ 1↗)*
 - [[admin-onboarding-control-AdminOnboardingControl]] *(0↖ 1↗)*
-- [[admin-system-health-AdminSystemHealth]] *(0↖ 1↗)*
-- [[admin-tool-telemetry-table-AdminToolTelemetryTable]] *(0↖ 1↗)*
-- [[admin-user-table-AdminUserTable]] *(0↖ 1↗)*
 - [[error-AdminError]] *(0↖ 1↗)*
 - [[layout-async]] *(0↖ 1↗)*
 - [[loading-AdminLoading]] *(0↖ 1↗)*
@@ -351,16 +366,19 @@ dv.table(
 - [[use-voice-input-UseVoiceInputArgs]] *(1↖ 1↗)*
 - [[instrumentation-client-onRouterTransitionStart]] *(0↖ 1↗)*
 - [[instrumentation-register]] *(0↖ 1↗)*
+- [[admin-rate-limit-AdminRateLimitResult]] *(0↖ 1↗)*
 - [[auth-anomaly-recordAuthEvent]] *(1↖ 1↗)*
 - [[auth-tokens-generateToken]] *(0↖ 1↗)*
 - [[cn-cn]] *(1↖ 1↗)*
 - [[commands-CommandGroup]] *(0↖ 1↗)*
 - [[csrf-getCsrfToken]] *(2↖ 1↗)*
 - [[datetime-startOfDay]] *(0↖ 1↗)*
+- [[format-number-formatMs]] *(0↖ 1↗)*
 - [[format-formatRelative]] *(1↖ 1↗)*
 - [[fuzzy-match-FuzzyMatch]] *(1↖ 1↗)*
 - [[nowpayments-NowPaymentsInvoice]] *(0↖ 1↗)*
 - [[request-id-readOrCreateRequestId]] *(3↖ 1↗)*
+- [[admin-dtos-SliSnapshot]] *(4↖ 1↗)*
 - [[session-TradingSession]] *(1↖ 1↗)*
 - [[signed-user-header-USER_ID_HEADER]] *(1↖ 1↗)*
 - [[storage-ChatImageUploadEnv]] *(1↖ 1↗)*
@@ -375,7 +393,7 @@ dv.table(
 - [[service-worker.spec]] *(0↖ 1↗)*
 - [[vitest.config-defineConfig]] *(0↖ 1↗)*
 
-### 🔗 API Route (184)
+### 🔗 API Route (190)
 - [[POST--api-chat]] *(1↖ 7↗)*
 - [[GET--api-market-stream]] *(1↖ 5↗)*
 - [[POST--api-market-structure]] *(1↖ 5↗)*
@@ -407,6 +425,7 @@ dv.table(
 - [[GET,POST,PATCH--api-settings-symbols]] *(1↖ 3↗)*
 - [[GET--api-settings-usage-by-agent]] *(1↖ 3↗)*
 - [[POST--api-upload]] *(1↖ 3↗)*
+- [[GET--api-admin-audit]] *(1↖ 2↗)*
 - [[GET--api-admin-cron-history]] *(1↖ 2↗)*
 - [[GET--api-admin-diagnostics-tool-telemetry]] *(1↖ 2↗)*
 - [[GET--api-admin-diagnostics-trace--id]] *(1↖ 2↗)*
@@ -447,6 +466,8 @@ dv.table(
 - [[GET--api-telegram-webhook]] *(1↖ 2↗)*
 - [[GET--api-admin-architecture-explorer]] *(1↖ 1↗)*
 - [[GET,POST--api-admin-features]] *(1↖ 1↗)*
+- [[GET--api-admin-impersonate-probe]] *(1↖ 1↗)*
+- [[PATCH--api-admin-users--id-role]] *(1↖ 1↗)*
 - [[GET--api-admin-users]] *(1↖ 1↗)*
 - [[GET,PATCH,DELETE--api-alerts--id]] *(1↖ 1↗)*
 - [[POST--api-alerts-preview]] *(1↖ 1↗)*
@@ -469,6 +490,7 @@ dv.table(
 - [[GET--api-settings-catalog]] *(1↖ 1↗)*
 - [[GET,PUT--api-settings-fallback-chain]] *(1↖ 1↗)*
 - [[GET--api-admin-architecture-explorer]] *(0↖ 1↗)*
+- [[GET--api-admin-audit]] *(0↖ 1↗)*
 - [[GET--api-admin-cron-history]] *(0↖ 1↗)*
 - [[GET--api-admin-diagnostics-tool-telemetry]] *(0↖ 1↗)*
 - [[GET--api-admin-diagnostics-trace--id]] *(0↖ 1↗)*
@@ -476,6 +498,7 @@ dv.table(
 - [[GET,POST--api-admin-features]] *(0↖ 1↗)*
 - [[POST--api-admin-flush]] *(0↖ 1↗)*
 - [[GET--api-admin-health-slo]] *(0↖ 1↗)*
+- [[GET--api-admin-impersonate-probe]] *(0↖ 1↗)*
 - [[POST--api-admin-impersonate]] *(0↖ 1↗)*
 - [[GET--api-admin-logs-stream]] *(0↖ 1↗)*
 - [[GET--api-admin-onboarding-inspect]] *(0↖ 1↗)*
@@ -483,6 +506,7 @@ dv.table(
 - [[GET--api-admin-onboarding-status]] *(0↖ 1↗)*
 - [[POST--api-admin-test-alert-email]] *(0↖ 1↗)*
 - [[POST--api-admin-test-telegram]] *(0↖ 1↗)*
+- [[PATCH--api-admin-users--id-role]] *(0↖ 1↗)*
 - [[GET--api-admin-users]] *(0↖ 1↗)*
 - [[GET,PATCH,DELETE--api-alerts--id]] *(0↖ 1↗)*
 - [[POST--api-alerts-preview]] *(0↖ 1↗)*
@@ -561,7 +585,7 @@ dv.table(
 - [[GET--api-telegram-webhook]] *(0↖ 1↗)*
 - [[POST--api-upload]] *(0↖ 1↗)*
 
-### 🧩 Component (111)
+### 🧩 Component (112)
 - [[registry-ToolPartState]] *(45↖ 35↗)*
 - [[wizard-OnboardingWizard]] *(0↖ 13↗)*
 - [[chart-canvas-ChartCanvasHandle]] *(1↖ 11↗)*
@@ -657,6 +681,7 @@ dv.table(
 - [[sw-register-SwRegister]] *(0↖ 1↗)*
 - [[time-provider-TimeProvider]] *(1↖ 1↗)*
 - [[animated-number-AnimatedNumber]] *(0↖ 1↗)*
+- [[badge-BadgeTone]] *(0↖ 1↗)*
 - [[button-ButtonProps]] *(1↖ 1↗)*
 - [[drawer]] *(0↖ 1↗)*
 - [[empty-state-EmptyState]] *(0↖ 1↗)*
@@ -675,5 +700,5 @@ dv.table(
 - [[tooltip-Tooltip]] *(0↖ 1↗)*
 
 ### 📦 Package (1)
-- [[@hamafx-web]] *(551↖ 0↗)*
+- [[@hamafx-web]] *(573↖ 0↗)*
 

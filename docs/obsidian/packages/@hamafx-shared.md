@@ -2,9 +2,9 @@
 type: package
 package: "@hamafx/shared"
 path: "packages/shared"
-incoming: 671
+incoming: 670
 outgoing: 0
-connections: 671
+connections: 670
 risk: high
 layer: package
 tags: [type/package, hamafx-shared, layer/package, risk/high]
@@ -23,9 +23,9 @@ Package: @hamafx/shared
 
 | | Count |
 |---|---|
-| Incoming dependencies | 671 |
+| Incoming dependencies | 670 |
 | Outgoing dependencies | 0 |
-| Total connections | 671 |
+| Total connections | 670 |
 | Risk level | **HIGH** |
 | Layer | `package` |
 | Package tag | `#hamafx-shared` |

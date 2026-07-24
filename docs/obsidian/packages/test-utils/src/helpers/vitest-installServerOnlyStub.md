@@ -2,9 +2,9 @@
 type: module
 package: "@hamafx/test-utils"
 path: "packages/test-utils/src/helpers/vitest.ts"
-incoming: 245
+incoming: 255
 outgoing: 2
-connections: 247
+connections: 257
 risk: high
 layer: core
 tags: [type/module, hamafx-test-utils, layer/core, risk/high]
@@ -23,9 +23,9 @@ Module: packages/test-utils/src/helpers/vitest.ts
 
 | | Count |
 |---|---|
-| Incoming dependencies | 245 |
+| Incoming dependencies | 255 |
 | Outgoing dependencies | 2 |
-| Total connections | 247 |
+| Total connections | 257 |
 | Risk level | **HIGH** |
 | Layer | `core` |
 | Package tag | `#hamafx-test-utils` |
@@ -35,9 +35,9 @@ Module: packages/test-utils/src/helpers/vitest.ts
 [[@hamafx-test-utils]]
 
 
-### 📥 Depended On By (232)
-[[admin-auth.test]] · [[features.test]] · [[onboarding-reset.test]] · [[users.test]] · [[agent-deliberation.test]] · [[api-payload-size.test]] · [[api.test]] · [[auth-flow.test]] · [[auth-helpers-mockNextAuthSession]] · [[billing-contract.test]] · [[build-scripts.test]] · [[bundle-size-guard.test]] · [[chat-shared.test]] · [[chat-transport.test]] · [[cn.test]] · [[composer-helpers.test]] · [[composer.test]] · [[csrf.test]] · [[dev-secrets.test]] · [[empty-state.test]]
-> ... and 212 more
+### 📥 Depended On By (242)
+[[admin-auth.test]] · [[admin-health.test]] · [[diagnostic-traces.test]] · [[features.test]] · [[onboarding-inspect.test]] · [[onboarding-reset.test]] · [[test-alert-telegram.test]] · [[users-role.test]] · [[users.test]] · [[admin-error-block.test]] · [[admin-page.test]] · [[admin-system-health.test]] · [[agent-deliberation.test]] · [[api-payload-size.test]] · [[api.test]] · [[auth-flow.test]] · [[auth-helpers-mockNextAuthSession]] · [[badge.test]] · [[billing-contract.test]] · [[build-scripts.test]]
+> ... and 222 more
 
 
 

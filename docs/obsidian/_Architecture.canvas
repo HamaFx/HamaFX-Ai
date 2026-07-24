@@ -170,7 +170,7 @@
       "toNode": "n7",
       "fromSide": "right",
       "toSide": "left",
-      "label": "72 deps",
+      "label": "71 deps",
       "color": "5"
     },
     {
@@ -179,7 +179,7 @@
       "toNode": "n10",
       "fromSide": "right",
       "toSide": "left",
-      "label": "83 deps",
+      "label": "85 deps",
       "color": "5"
     },
     {
@@ -206,7 +206,7 @@
       "toNode": "n13",
       "fromSide": "right",
       "toSide": "left",
-      "label": "58 deps",
+      "label": "68 deps",
       "color": "5"
     },
     {
@@ -395,7 +395,7 @@
       "toNode": "n12",
       "fromSide": "right",
       "toSide": "left",
-      "label": "56 deps",
+      "label": "55 deps",
       "color": "5"
     },
     {

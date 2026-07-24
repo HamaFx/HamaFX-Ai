@@ -2,9 +2,9 @@
 type: module
 package: "@hamafx/worker"
 path: "apps/worker/src/tenant-router.ts"
-incoming: 9
+incoming: 11
 outgoing: 1
-connections: 10
+connections: 12
 risk: low
 layer: core
 tags: [type/module, hamafx-worker, layer/core]
@@ -23,9 +23,9 @@ Module: apps/worker/src/tenant-router.ts
 
 | | Count |
 |---|---|
-| Incoming dependencies | 9 |
+| Incoming dependencies | 11 |
 | Outgoing dependencies | 1 |
-| Total connections | 10 |
+| Total connections | 12 |
 | Risk level | **LOW** |
 | Layer | `core` |
 | Package tag | `#hamafx-worker` |
@@ -35,8 +35,8 @@ Module: apps/worker/src/tenant-router.ts
 [[@hamafx-worker]]
 
 
-### 📥 Depended On By (9)
-[[cli]] · [[embedded-startEmbeddedScheduler]] · [[scheduler-startScheduler]] · [[briefings.test]] · [[cot-job.test]] · [[embedding-backfill.test]] · [[fred-actuals.test]] · [[snapshots-job.test]] · [[weekly-review.test]]
+### 📥 Depended On By (10)
+[[types-JobCoreContext]] · [[cli]] · [[embedded-startEmbeddedScheduler]] · [[scheduler-startScheduler]] · [[briefings.test]] · [[cot-job.test]] · [[embedding-backfill.test]] · [[fred-actuals.test]] · [[snapshots-job.test]] · [[weekly-review.test]]
 
 
 

@@ -3,8 +3,8 @@ type: module
 package: "@hamafx/worker"
 path: "apps/worker/src/jobs/types.ts"
 incoming: 22
-outgoing: 3
-connections: 25
+outgoing: 7
+connections: 29
 risk: medium
 layer: core
 tags: [type/module, hamafx-worker, layer/core, risk/medium]
@@ -24,15 +24,15 @@ Module: apps/worker/src/jobs/types.ts
 | | Count |
 |---|---|
 | Incoming dependencies | 22 |
-| Outgoing dependencies | 3 |
-| Total connections | 25 |
+| Outgoing dependencies | 7 |
+| Total connections | 29 |
 | Risk level | **MEDIUM** |
 | Layer | `core` |
 | Package tag | `#hamafx-worker` |
 
 
-### 📤 Depends On (2)
-[[log-Logger]] · [[@hamafx-worker]]
+### 📤 Depends On (4)
+[[log-Logger]] · [[tenant-router-TenantRouter]] · [[env-WorkerEnv]] · [[@hamafx-worker]]
 
 
 ### 📥 Depended On By (11)
