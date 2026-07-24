@@ -16,7 +16,7 @@ function createMockDb(scenario: 'healthy' | 'missing-live-ticks' | 'stale-tick' 
       callIndex += 1;
 
       if (callIndex === 1) {
-        return [{ '?column?': 1 }];
+        return { rows: [{ '?column?': 1 }] };
       }
 
       if (callIndex === 2) {
@@ -24,27 +24,27 @@ function createMockDb(scenario: 'healthy' | 'missing-live-ticks' | 'stale-tick' 
           throw new Error('relation "live_ticks" does not exist');
         }
         return scenario === 'stale-tick'
-          ? [{ symbol_count: 3, newest_age_s: 90 }]
-          : [{ symbol_count: 2, newest_age_s: 30 }];
+          ? { rows: [{ symbol_count: 3, newest_age_s: 90 }] }
+          : { rows: [{ symbol_count: 2, newest_age_s: 30 }] };
       }
 
       if (callIndex === 3) {
-        return [{ total: '10', done: '9', stuck: '1' }];
+        return { rows: [{ total: '10', done: '9', stuck: '1' }] };
       }
 
       if (callIndex === 4) {
-        return [{ total: '100', ok: '99' }];
+        return { rows: [{ total: '100', ok: '99' }] };
       }
 
       if (callIndex === 5) {
-        return [{ turns: '50' }];
+        return { rows: [{ turns: '50' }] };
       }
 
       if (callIndex === 6) {
-        return [{ stale: '0', stuck: '0' }];
+        return { rows: [{ stale: '0', stuck: '0' }] };
       }
 
-      return [];
+      return { rows: [] };
     }),
   };
 }

@@ -18,6 +18,15 @@ export interface ComputeHealthSloOptions {
 }
 
 /** Minimal DB surface needed by the health service. */
+/** Helper: extract rows from db.execute() which returns {rows: [...]} across all drivers. */
+function extractRows(result: unknown): Record<string, unknown>[] {
+  if (result && typeof result === 'object' && 'rows' in result && Array.isArray((result as Record<string, unknown>).rows)) {
+    return (result as Record<string, unknown>).rows as Record<string, unknown>[];
+  }
+  return [];
+}
+
+/** Minimal DB surface needed by the health service. */
 export interface HealthSloDb {
   execute: (query: string | SQLWrapper) => Promise<unknown>;
 }
@@ -249,12 +258,14 @@ async function queryTickAggregate(
   db: HealthSloDb,
 ): Promise<TickAggregate | null> {
   try {
-    const [row] = (await db.execute(sql`
+    const result = await db.execute(sql`
       SELECT
         COUNT(DISTINCT symbol)::int AS symbol_count,
         EXTRACT(EPOCH FROM (NOW() - MAX(ts)))::int AS newest_age_s
       FROM live_ticks
-    `)) as Array<{ symbol_count: number; newest_age_s: number | null }>;
+    `);
+    const rows = extractRows(result);
+    const row = rows[0] as { symbol_count: number; newest_age_s: number | null } | undefined;
 
     return {
       symbolCount: Number(row?.symbol_count ?? 0),
@@ -270,7 +281,7 @@ async function queryCronAggregate(
   since: Date,
 ): Promise<CronAggregate | null> {
   try {
-    const [row] = (await db.execute(sql`
+    const result = await db.execute(sql`
       SELECT
         COUNT(*)::text AS total,
         COUNT(*) FILTER (WHERE status = 'done')::text AS done,
@@ -280,7 +291,9 @@ async function queryCronAggregate(
         )::text AS stuck
       FROM cron_runs
       WHERE started_at >= ${since}
-    `)) as Array<{ total: string; done: string; stuck: string }>;
+    `);
+    const rows = extractRows(result);
+    const row = rows[0] as { total: string; done: string; stuck: string } | undefined;
 
     return {
       total: Number(row?.total ?? 0),
@@ -297,13 +310,15 @@ async function queryToolAggregate(
   since: Date,
 ): Promise<ToolAggregate | null> {
   try {
-    const [row] = (await db.execute(sql`
+    const result = await db.execute(sql`
       SELECT
         COUNT(*)::text AS total,
         COUNT(*) FILTER (WHERE ok = true)::text AS ok
       FROM chat_tool_telemetry
       WHERE created_at >= ${since}
-    `)) as Array<{ total: string; ok: string }>;
+    `);
+    const rows = extractRows(result);
+    const row = rows[0] as { total: string; ok: string } | undefined;
 
     return {
       total: Number(row?.total ?? 0),
@@ -319,11 +334,13 @@ async function queryChatAggregate(
   since: Date,
 ): Promise<ChatAggregate | null> {
   try {
-    const [row] = (await db.execute(sql`
+    const result = await db.execute(sql`
       SELECT COUNT(*)::text AS turns
       FROM chat_telemetry
       WHERE kind IS NULL AND created_at >= ${since}
-    `)) as Array<{ turns: string }>;
+    `);
+    const rows = extractRows(result);
+    const row = rows[0] as { turns: string } | undefined;
 
     return { turns: Number(row?.turns ?? 0) };
   } catch {
@@ -335,7 +352,7 @@ async function queryAnalysisAggregate(
   db: HealthSloDb,
 ): Promise<AnalysisAggregate | null> {
   try {
-    const [row] = (await db.execute(sql`
+    const result = await db.execute(sql`
       SELECT
         COUNT(*) FILTER (
           WHERE status = 'pending'
@@ -346,7 +363,9 @@ async function queryAnalysisAggregate(
           AND started_at < NOW() - INTERVAL '30 seconds'
         )::text AS stuck
       FROM analysis_jobs
-    `)) as Array<{ stale: string; stuck: string }>;
+    `);
+    const rows = extractRows(result);
+    const row = rows[0] as { stale: string; stuck: string } | undefined;
 
     return {
       stale: Number(row?.stale ?? 0),

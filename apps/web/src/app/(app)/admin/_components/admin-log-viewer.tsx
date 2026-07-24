@@ -17,7 +17,7 @@ import { Switch } from '@/components/ui/switch';
 import { SettingsSection } from '@/app/(app)/settings/_components/settings-section';
 import { cn } from '@/lib/cn';
 
-type LogStatus = 'idle' | 'connecting' | 'connected' | 'not_enabled' | 'error';
+type LogStatus = 'idle' | 'connecting' | 'connected' | 'not_enabled' | 'production' | 'error';
 
 const MAX_LINES = 200;
 const RECONNECT_BASE_MS = 1000;
@@ -75,9 +75,16 @@ export function AdminLogViewer() {
     setNotEnabledMsg('');
     setStatus('connecting');
 
-    // Pre-flight: fetch to distinguish 503 (not enabled) from network errors.
+    // Pre-flight: fetch to distinguish 503 (not enabled) / 403 (production) from network errors.
     try {
       const res = await fetch('/api/admin/logs/stream', { method: 'GET' });
+      if (res.status === 403) {
+        setNotEnabledMsg(
+          'Log streaming is disabled in production. Run locally with ENABLE_LOG_STREAM=true to view live logs.',
+        );
+        setStatus('production');
+        return;
+      }
       if (res.status === 503) {
         try {
           const body = await res.json();
@@ -156,6 +163,7 @@ export function AdminLogViewer() {
     connecting: { label: 'Connecting…', color: 'bg-warn animate-pulse' },
     connected: { label: 'Connected', color: 'bg-success' },
     not_enabled: { label: 'Disabled', color: 'bg-fg-subtle' },
+    production: { label: 'Production', color: 'bg-fg-subtle' },
     error: { label: 'Disconnected', color: 'bg-danger' },
   }[status];
 
@@ -171,7 +179,9 @@ export function AdminLogViewer() {
           ? 'Live log stream. Connected.'
           : status === 'not_enabled'
             ? 'Log streaming is not available.'
-            : 'Real-time server log stream.'
+            : status === 'production'
+              ? 'Not available in production.'
+              : 'Real-time server log stream.'
       }
     >
       <div className="flex flex-col gap-3">
@@ -245,7 +255,7 @@ export function AdminLogViewer() {
 
         {/* Log area */}
         <div className="border-border bg-bg-elev-1 flex h-[400px] flex-col overflow-hidden rounded-sm border font-mono text-xs">
-          {status === 'not_enabled' ? (
+          {status === 'not_enabled' || status === 'production' ? (
             <div className="flex h-full flex-col items-center justify-center gap-2 px-4">
               <p className="text-fg-subtle text-sm">{notEnabledMsg || 'Log streaming is not enabled.'}</p>
             </div>
