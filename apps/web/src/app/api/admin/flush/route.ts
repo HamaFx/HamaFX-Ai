@@ -20,25 +20,40 @@ export const POST = withAdminAuth(async (req) => {
   }
 
   const { target } = await parseJsonBody(req, flushSchema);
-  const flushed: string[] = [];
+  const results: Array<{
+    target: string;
+    status: 'flushed' | 'unsupported';
+    reason?: string;
+    affected?: number;
+  }> = [];
 
   if (target === 'cron_locks' || target === 'all') {
     // Remove stuck cron locks (started but not finished for > 1 hour)
     const cutoff = new Date(Date.now() - 60 * 60 * 1000);
     await deleteOldCronRuns(cutoff);
-    flushed.push('cron_locks');
+    results.push({ target: 'cron_locks', status: 'flushed' });
   }
 
   if (target === 'cache' || target === 'all') {
-    // In-memory caches are per-instance; best-effort signal via response
-    flushed.push('cache');
+    // In-memory caches are per-instance; there is no way to flush them
+    // globally. Signal that this target is unsupported.
+    results.push({
+      target: 'cache',
+      status: 'unsupported',
+      reason: 'In-memory caches are per-instance and cannot be flushed remotely',
+    });
   }
 
   if (target === 'sessions' || target === 'all') {
-    // Sessions are JWT-based; we can't globally invalidate without rotating secrets.
-    // Mark as best-effort.
-    flushed.push('sessions');
+    // Sessions are JWT-based; we can't globally invalidate without rotating
+    // secrets. Direct operators to the "sign out everywhere" / tokenVersion
+    // bump path instead.
+    results.push({
+      target: 'sessions',
+      status: 'unsupported',
+      reason: 'JWT sessions are stateless; use tokenVersion bump or sign-out-everywhere',
+    });
   }
 
-  return Response.json({ ok: true, flushed });
+  return Response.json({ results });
 });

@@ -23,7 +23,7 @@
 //
 // Pattern mirrors ToolRegistry, IndicatorRegistry, and AlertRuleRegistry.
 
-import type { Tick, Symbol, Candle, Timeframe } from '@hamafx/shared';
+import type { Symbol, Candle, Timeframe } from '@hamafx/shared';
 
 // --- Plugin interface ----------------------------------------------------
 

@@ -9,6 +9,7 @@ vi.mock('@/lib/admin-auth', () => ({
 
 const mockListFeatureFlags = vi.hoisted(() => vi.fn());
 const mockUpsertFeatureFlag = vi.hoisted(() => vi.fn());
+const mockRecordAdminAudit = vi.hoisted(() => vi.fn());
 
 // Self-referencing proxy for transitive schema imports (e.g. @hamafx/data/health.ts).
 const schemaProxy = vi.hoisted(() => {
@@ -26,6 +27,7 @@ vi.mock('@hamafx/db', () => ({
   upsertFeatureFlag: mockUpsertFeatureFlag,
   listUsersWithSettings: vi.fn(),
   countUsers: vi.fn(),
+  recordAdminAudit: mockRecordAdminAudit,
   schema: schemaProxy,
 }));
 

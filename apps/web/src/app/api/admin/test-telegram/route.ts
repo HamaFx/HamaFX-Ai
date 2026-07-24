@@ -2,22 +2,35 @@
 
 // POST /api/admin/test-telegram
 //
-// Sends a one-shot Telegram message via the configured bot so the single
-// user can confirm `TELEGRAM_BOT_TOKEN` + `TELEGRAM_CHAT_ID` are wired
-// correctly end-to-end. Mirrors the existing `/api/admin/test-alert-email`
-// route exactly: same auth, same status codes, same body shapes.
+// Sends a one-shot Telegram message via the configured bot so the
+// operator can confirm `TELEGRAM_BOT_TOKEN` + `TELEGRAM_CHAT_ID` are
+// wired correctly end-to-end.
+//
+// Security:
+//   - Requires admin authentication (withAdminAuth).
+//   - The caller-controlled `chatId` override is ignored unless the
+//     operator explicitly sets TELEGRAM_TEST_ALLOW_OVERRIDE=true. When
+//     overrides are enabled, an optional TELEGRAM_TEST_CHAT_ID_ALLOWLIST
+//     restricts the permitted chat IDs (comma-separated). This prevents
+//     the route from becoming an open relay for arbitrary Telegram chats.
+//   - Rate-limited to 5 requests per minute per admin.
 //
 // Responses:
-//   200 { id }                   on Telegram 2xx; `id` is the message_id
-//   401 { error: 'unauthorized' } when the session cookie is missing/invalid
-//   503 { missing: string[] }    when one or more required env vars are unset
-//                                 (variable NAMES only, never values)
-//   502 { error: string }        on Telegram non-2xx (response text truncated)
+//   200 { id }                         on Telegram 2xx; `id` is the message_id
+//   400 { error: { code, message } }   on validation / allowlist failure
+//   401 { error: { code, message } }   when the session cookie is missing/invalid
+//   403 { error: { code, message } }   when the authenticated user is not an admin
+//   429 { error: { code, message } }   when the per-admin rate limit is exceeded
+//   503 { missing: string[] }          when one or more required env vars are unset
+//                                      (variable NAMES only, never values)
+//   502 { error: string }              on Telegram non-2xx (response text truncated)
 
 import { AppError } from '@hamafx/shared';
 import { z } from 'zod';
 
-import { errorResponse, withAuth } from '@/lib/api';
+import { withAdminAuth } from '@/lib/admin-auth';
+import { errorResponse, parseJsonBody } from '@/lib/api';
+import { checkAdminRateLimit } from '@/lib/admin-rate-limit';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -25,7 +38,7 @@ export const dynamic = 'force-dynamic';
 const BodySchema = z.object({
   /** Override the chat id for this single test send. */
   chatId: z.string().min(1).optional(),
-});
+}).default({});
 
 const TELEGRAM_API = 'https://api.telegram.org';
 const TEXT_BODY =
@@ -37,28 +50,38 @@ interface TelegramResponse {
   description?: string;
 }
 
-export const POST = withAuth<void>(async (req) => {
-  // 2. Parse body — accept empty body as `{}`.
-  const raw = await safeReadJson(req);
-  const parsed = BodySchema.safeParse(raw);
-  if (!parsed.success) {
-    return errorResponse(new AppError('VALIDATION', 'Invalid request body', 400, { issues: parsed.error.issues }), req);
-  }
-  const body = parsed.data;
+export const POST = withAdminAuth(async (req, { user }) => {
+  const body = await parseJsonBody(req, BodySchema);
 
-  // 3. Env contract.
   const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN ?? '';
   const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID ?? '';
 
+  const override = deriveTelegramRecipient(body.chatId);
+  if (!override.ok) {
+    return errorResponse(new AppError('VALIDATION', override.error, 400), req);
+  }
+
+  const chatId = override.chatId ?? TELEGRAM_CHAT_ID;
+
+  const rateLimit = checkAdminRateLimit(user.userId);
+  if (!rateLimit.allowed) {
+    const headers: Record<string, string> = {};
+    if (rateLimit.retryAfter !== undefined) {
+      headers['Retry-After'] = String(rateLimit.retryAfter);
+    }
+    return Response.json(
+      { error: { code: 'RATE_LIMITED', message: 'Too many requests. Please wait a moment.' } },
+      { status: 429, headers },
+    );
+  }
+
   const missing: string[] = [];
   if (!TELEGRAM_BOT_TOKEN) missing.push('TELEGRAM_BOT_TOKEN');
-  if (!TELEGRAM_CHAT_ID && !body.chatId) missing.push('TELEGRAM_CHAT_ID');
+  if (!chatId) missing.push('TELEGRAM_CHAT_ID');
   if (missing.length > 0) {
     return Response.json({ missing }, { status: 503 });
   }
 
-  // 4. Send.
-  const chatId = body.chatId ?? TELEGRAM_CHAT_ID;
   const tgResponse = await fetch(`${TELEGRAM_API}/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
@@ -82,12 +105,39 @@ export const POST = withAuth<void>(async (req) => {
   return Response.json({ id: messageId === null ? null : String(messageId) }, { status: 200 });
 });
 
-async function safeReadJson(req: Request): Promise<unknown> {
-  try {
-    const text = await req.text();
-    if (!text) return {};
-    return JSON.parse(text) as unknown;
-  } catch {
-    return {};
+interface RecipientResult {
+  ok: true;
+  chatId?: string;
+}
+
+interface RecipientError {
+  ok: false;
+  error: string;
+}
+
+function deriveTelegramRecipient(bodyChatId: string | undefined): RecipientResult | RecipientError {
+  const allowOverride = process.env.TELEGRAM_TEST_ALLOW_OVERRIDE === 'true';
+  if (!allowOverride || !bodyChatId) {
+    return { ok: true };
   }
+
+  const allowlistRaw = process.env.TELEGRAM_TEST_CHAT_ID_ALLOWLIST;
+  if (!allowlistRaw) {
+    // Override is enabled but no allowlist is configured; ignore the override
+    // and fall back to the configured chat ID.
+    return { ok: true };
+  }
+
+  const allowlist = allowlistRaw
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
+  if (!allowlist.includes(bodyChatId)) {
+    return {
+      ok: false,
+      error: 'chatId not in TELEGRAM_TEST_CHAT_ID_ALLOWLIST',
+    };
+  }
+
+  return { ok: true, chatId: bodyChatId };
 }

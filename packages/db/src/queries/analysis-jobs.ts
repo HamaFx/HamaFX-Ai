@@ -16,7 +16,7 @@
 
 // Analysis jobs query helpers.
 
-import { and, asc, desc, eq, lt } from 'drizzle-orm';
+import { and, asc, eq, lt } from 'drizzle-orm';
 import { getDb, schema } from '../client';
 
 export type AnalysisJobRow = typeof schema.analysisJobs.$inferSelect;

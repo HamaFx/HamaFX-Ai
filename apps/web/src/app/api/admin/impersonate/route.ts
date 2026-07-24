@@ -7,6 +7,7 @@ import { signIn, generateImpersonationChallenge } from '@/auth';
 
 import { withAdminAuth } from '@/lib/admin-auth';
 import { parseJsonBody } from '@/lib/api';
+import { recordAdminAudit } from '@/lib/services/admin';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -15,7 +16,7 @@ const impersonateSchema = z.object({
   userId: z.string(),
 });
 
-export const POST = withAdminAuth(async (req) => {
+export const POST = withAdminAuth(async (req, { user: admin }) => {
   if (process.env.NODE_ENV === 'production' || process.env.ENABLE_IMPERSONATION !== 'true') {
     return Response.json({ error: { code: 'FORBIDDEN', message: 'Impersonation is disabled' } }, { status: 403 });
   }
@@ -34,6 +35,9 @@ export const POST = withAdminAuth(async (req) => {
     // provider from bypassing the admin check in this route.
     const challenge = generateImpersonationChallenge();
     await signIn('impersonate', { userId, challenge, redirect: false });
+
+    await recordAdminAudit(admin.userId, 'impersonate.start', userId);
+
     return Response.json({ ok: true, redirect: '/chat' });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);

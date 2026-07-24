@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "generatedAt": "2026-07-23T16:33:31.721Z",
+  "generatedAt": "2026-07-23T16:45:30.238Z",
   "project": {
     "name": "HamaFX-Ai",
     "rootPath": "/home/ubuntu/HamaFX-Ai",
@@ -27627,7 +27627,7 @@
         "functions": [
           "generateHtml"
         ],
-        "size": 1266
+        "size": 1317
       }
     },
     {
@@ -27796,7 +27796,7 @@
         "functions": [
           "getScripts"
         ],
-        "size": 908
+        "size": 652
       }
     },
     {
@@ -82373,6 +82373,14 @@
   "gitHistory": {
     "commits": [
       {
+        "hash": "aa6cdd84f8287dedab652aae7d2ea0b3912195ed",
+        "shortHash": "aa6cdd84",
+        "date": "2026-07-23T16:34:58Z",
+        "author": "HamaFx",
+        "message": "fix: architecture explorer loading stuck — root cause: JSON escaping corruption",
+        "files": []
+      },
+      {
         "hash": "0e8d36f35f8752b1fb17df0103bb19877b44c7a8",
         "shortHash": "0e8d36f3",
         "date": "2026-07-23T01:52:22Z",
@@ -86363,28 +86371,12 @@
         "author": "HamaFx",
         "message": "feat(news): collapse ArticleCard to three-zone hierarchy with hover-revealed actions (PLAN.md §4.4)",
         "files": []
-      },
-      {
-        "hash": "d545854cc66270419fb5fef753d2158ab7152cce",
-        "shortHash": "d545854c",
-        "date": "2026-06-19T23:50:51Z",
-        "author": "HamaFx",
-        "message": "feat(design): complete R1 token foundation — typography scale, numeric scale, fg-subtle WCAG bump, pill radius",
-        "files": []
       }
     ],
     "fileChanges": {},
     "nodeChanges": {}
   },
   "evolutionTimeline": [
-    {
-      "date": "2026-06-19T23:50:51Z",
-      "hash": "d545854cc66270419fb5fef753d2158ab7152cce",
-      "shortHash": "d545854c",
-      "message": "feat(design): complete R1 token foundation — typography scale, numeric scale, fg-subtle WCAG bump, pill radius",
-      "activeNodeCount": 0,
-      "touchedNodes": []
-    },
     {
       "date": "2026-06-19T23:54:31Z",
       "hash": "d4094c084f495956df90b51def6f64219e3f499b",
@@ -90374,6 +90366,14 @@
       "hash": "0e8d36f35f8752b1fb17df0103bb19877b44c7a8",
       "shortHash": "0e8d36f3",
       "message": "fix: root cause of architecture explorer loading stuck — <<button syntax error",
+      "activeNodeCount": 0,
+      "touchedNodes": []
+    },
+    {
+      "date": "2026-07-23T16:34:58Z",
+      "hash": "aa6cdd84f8287dedab652aae7d2ea0b3912195ed",
+      "shortHash": "aa6cdd84",
+      "message": "fix: architecture explorer loading stuck — root cause: JSON escaping corruption",
       "activeNodeCount": 0,
       "touchedNodes": []
     }

@@ -2,7 +2,7 @@
 
 import { logStreamHub } from '@hamafx/shared';
 
-import { getAdminUser } from '@/lib/admin-auth';
+import { withAdminAuth } from '@/lib/admin-auth';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -11,19 +11,9 @@ export const dynamic = 'force-dynamic';
  * Dev-only SSE endpoint that streams captured log lines to the admin UI.
  * Requires `ENABLE_LOG_STREAM=true` and `NODE_ENV=development`.
  */
-export const GET = async (_req: Request) => {
-  if (process.env.NODE_ENV === 'production') {
-    return Response.json({ error: { code: 'FORBIDDEN', message: 'Log streaming is disabled in production' } }, { status: 403 });
-  }
-
-  const { admin, reason } = await getAdminUser();
-  if (!admin) {
-    const status = reason === 'unauthenticated' ? 401 : 403;
-    const code = reason === 'unauthenticated' ? 'UNAUTHORIZED' : 'FORBIDDEN';
-    const message = reason === 'unauthenticated' ? 'Authentication required' : 'Admin access required';
-    return Response.json({ error: { code, message } }, { status });
-  }
-
+// Environment gate is checked first so the dev-only endpoint does not
+// leak its existence in production before any auth checks run.
+const adminStreamHandler = withAdminAuth(async (_req) => {
   if (!logStreamHub.isEnabled()) {
     return Response.json(
       { error: { code: 'NOT_ENABLED', message: 'Log streaming is not enabled. Set ENABLE_LOG_STREAM=true' } },
@@ -49,4 +39,15 @@ export const GET = async (_req: Request) => {
       Connection: 'keep-alive',
     },
   });
+});
+
+export const GET = async (req: Request, ctx: { params: Promise<Record<string, never>> }) => {
+  if (process.env.NODE_ENV === 'production') {
+    return Response.json(
+      { error: { code: 'FORBIDDEN', message: 'Log streaming is disabled in production' } },
+      { status: 403 },
+    );
+  }
+
+  return adminStreamHandler(req, ctx);
 };

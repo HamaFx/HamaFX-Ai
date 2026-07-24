@@ -59,6 +59,8 @@ describe('setDefaultCache', () => {
       clear: vi.fn(),
       has: vi.fn(),
       delete: vi.fn(),
+      fetch: vi.fn(),
+      fetchWithMeta: vi.fn(),
     };
 
     setDefaultCache(replacement, 'tenant-a');
@@ -75,6 +77,8 @@ describe('setDefaultCache', () => {
       clear: vi.fn(),
       has: vi.fn(),
       delete: vi.fn(),
+      fetch: vi.fn(),
+      fetchWithMeta: vi.fn(),
     };
     setDefaultCache(replacement);
     expect(getDefaultCacheSync()).toBe(replacement);

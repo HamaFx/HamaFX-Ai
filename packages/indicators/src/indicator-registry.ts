@@ -21,8 +21,7 @@
 // implementing a new file + registering it — no existing code changes.
 // This mirrors the ToolRegistry pattern from packages/ai/src/tools/registry.ts.
 
-import type { Candle, IndicatorKind, IndicatorResult, Symbol, Timeframe } from '@hamafx/shared';
-import { IndicatorKindSchema } from '@hamafx/shared';
+import type { Candle, IndicatorKind } from '@hamafx/shared';
 import { z } from 'zod';
 
 // --- Plugin definition --------------------------------------------------

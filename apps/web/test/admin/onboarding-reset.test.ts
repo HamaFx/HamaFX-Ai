@@ -9,6 +9,7 @@ vi.mock('@/lib/admin-auth', () => ({
 
 const mockGetUserById = vi.hoisted(() => vi.fn());
 const mockResetOnboarding = vi.hoisted(() => vi.fn());
+const mockRecordAdminAudit = vi.hoisted(() => vi.fn());
 
 // Self-referencing proxy for transitive schema imports (e.g. @hamafx/data/health.ts).
 const schemaProxy = vi.hoisted(() => {
@@ -24,6 +25,7 @@ const schemaProxy = vi.hoisted(() => {
 vi.mock('@hamafx/db', () => ({
   getUserById: mockGetUserById,
   resetOnboarding: mockResetOnboarding,
+  recordAdminAudit: mockRecordAdminAudit,
   schema: schemaProxy,
 }));
 

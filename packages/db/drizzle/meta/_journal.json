@@ -421,6 +421,20 @@
       "when": 1784467519459,
       "tag": "0060_provider_health",
       "breakpoints": true
+    },
+    {
+      "idx": 60,
+      "version": "7",
+      "when": 1784467519460,
+      "tag": "0061_add_2fa_backup_codes",
+      "breakpoints": true
+    },
+    {
+      "idx": 61,
+      "version": "7",
+      "when": 1784467519461,
+      "tag": "0062_admin_audit_log",
+      "breakpoints": true
     }
   ]
 }

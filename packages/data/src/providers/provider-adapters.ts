@@ -28,7 +28,7 @@
 // 1m→candles-1m) lives in each provider's `supports()` / `fetchCandles()`
 // so adapters just iterate the registry.
 
-import type { Symbol, Tick, Timeframe, Candle } from '@hamafx/shared';
+import type { Symbol, Timeframe, Candle } from '@hamafx/shared';
 import { getSymbolDefinition } from '@hamafx/shared';
 import { ProviderError } from '../errors';
 import {

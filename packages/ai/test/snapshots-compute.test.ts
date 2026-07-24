@@ -7,6 +7,10 @@ import type { Candle } from '@hamafx/shared';
 
 function makeCandle(overrides: Partial<Candle> = {}): Candle {
   return {
+    symbol: 'XAUUSD' as Candle['symbol'],
+    tf: '1h' as Candle['tf'],
+    source: 'test',
+    fetchedAt: 0,
     t: 0, o: 100, h: 110, l: 90, c: 105, v: 1000,
     ...overrides,
   };

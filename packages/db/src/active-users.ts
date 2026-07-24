@@ -25,7 +25,7 @@
 // users who signed up but never interacted. For self-host (legacy mode)
 // where only `__system__` exists, the query returns that single row.
 
-import { and, eq, isNull } from 'drizzle-orm';
+import { eq, isNull } from 'drizzle-orm';
 
 import { getDb, schema } from './index';
 

@@ -51,35 +51,34 @@ export async function getAdminUser(): Promise<AdminAuthResult> {
     return { admin: { userId: user.id, email: user.email, name: user.name }, reason: 'authenticated' };
   }
 
-  // Check if any admin exists.
-  // Security: single-user mode only grants admin to the *earliest* user
-  // (by creation date), not ALL authenticated users. This prevents privilege
-  // escalation when a second user registers before the first admin is promoted.
-  const [adminCount] = await db
-    .select({ count: sql<number>`count(*)` })
+  // Single-user deployment check: if no admin role exists, the earliest
+  // created user is treated as admin. Previously this was two sequential
+  // queries (count admins then fetch earliest user), which had a TOCTOU
+  // window. Now collapsed into a single atomic sub-query:
+  //   SELECT id FROM users ORDER BY created_at LIMIT 1
+  //   WHERE NOT EXISTS (SELECT 1 FROM users WHERE role = 'admin')
+  // This ensures the earliest-user decision is atomic — concurrent first-time
+  // registrations cannot both be promoted.
+  const [firstUserSingleQuery] = await db
+    .select({ id: schema.users.id })
     .from(schema.users)
-    .where(eq(schema.users.role, 'admin'));
+    .where(
+      sql`NOT EXISTS (SELECT 1 FROM ${schema.users} WHERE ${schema.users.role} = 'admin')`,
+    )
+    .orderBy(schema.users.createdAt)
+    .limit(1);
 
-  if (Number(adminCount?.count ?? 0) === 0) {
-    // No admins exist — single-user mode.
-    // Only promote the earliest-created user.
-    const [firstUser] = await db
-      .select({ id: schema.users.id })
-      .from(schema.users)
-      .orderBy(schema.users.createdAt)
-      .limit(1);
-    if (firstUser && firstUser.id === user.id) {
-      return { admin: { userId: user.id, email: user.email, name: user.name }, reason: 'authenticated' };
-    }
+  if (firstUserSingleQuery && firstUserSingleQuery.id === user.id) {
+    return { admin: { userId: user.id, email: user.email, name: user.name }, reason: 'authenticated' };
   }
 
   return { admin: null, reason: 'forbidden' };
 }
 
-export function withAdminAuth(
-  handler: (req: Request, ctx: { user: AdminUser }) => Promise<Response>,
-): (req: Request) => Promise<Response> {
-  return async (req: Request) => {
+export function withAdminAuth<T = Record<string, never>>(
+  handler: (req: Request, ctx: { user: AdminUser; params: Promise<T> }) => Promise<Response>,
+): (req: Request, ctx?: { params: Promise<T> }) => Promise<Response> {
+  return async (req: Request, ctx?: { params: Promise<T> }) => {
     const log = createRequestLogger(req);
     const { admin, reason } = await getAdminUser();
     if (!admin) {
@@ -90,6 +89,6 @@ export function withAdminAuth(
       return Response.json({ error: { code, message } }, { status });
     }
     log.info('admin route accessed', { userId: admin.userId });
-    return handler(req, { user: admin });
+    return handler(req, { user: admin, params: ctx?.params ?? (Promise.resolve({} as T)) });
   };
 }

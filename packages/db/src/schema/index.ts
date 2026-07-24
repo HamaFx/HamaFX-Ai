@@ -53,6 +53,8 @@ export * from './cron-runs';
 export * from './diagnostic-traces';
 // Admin — runtime feature flags
 export * from './feature-flags';
+// S-2 — Admin audit log for privileged actions
+export * from './admin-audit';
 // F2 — Portfolio Management
 export * from './portfolio';
 // F4 — Notification Noise Control

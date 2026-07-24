@@ -18,7 +18,8 @@
 //
 // These decouple the admin API routes from the schema/users table.
 
-import { desc, eq, sql } from 'drizzle-orm';
+import { desc, eq, ilike, or, sql } from 'drizzle-orm';
+
 import { getDb, schema } from '../client';
 
 /** Minimal user shape returned by getUserById. */
@@ -52,12 +53,22 @@ export async function getUserById(userId: string): Promise<UserRow | undefined> 
 
 /**
  * List users with their settings joined in, ordered by creation date (newest first).
+ * Optional `q` filters by email or name (case-insensitive substring match).
  */
 export async function listUsersWithSettings(
   limit: number,
   offset: number,
+  q?: string,
 ): Promise<UserWithSettingsRow[]> {
   const db = getDb();
+  const filter = q?.trim();
+  const whereClause = filter
+    ? or(
+        ilike(schema.users.email, `%${filter}%`),
+        ilike(schema.users.name, `%${filter}%`),
+      )
+    : undefined;
+
   return db
     .select({
       id: schema.users.id,
@@ -72,6 +83,7 @@ export async function listUsersWithSettings(
       schema.userSettings,
       sql`${schema.userSettings.userId} = ${schema.users.id}`,
     )
+    .where(whereClause)
     .orderBy(desc(schema.users.createdAt))
     .limit(limit)
     .offset(offset);
@@ -89,11 +101,47 @@ export async function getUserPasswordHash(userId: string): Promise<string | null
   return user?.hashedPassword ?? null;
 }
 
-/** Total count of users. */
-export async function countUsers(): Promise<number> {
+/** Total count of users, optionally filtered by email/name. */
+export async function countUsers(q?: string): Promise<number> {
+  const db = getDb();
+  const filter = q?.trim();
+  const whereClause = filter
+    ? or(
+        ilike(schema.users.email, `%${filter}%`),
+        ilike(schema.users.name, `%${filter}%`),
+      )
+    : undefined;
+
+  const [row] = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(schema.users)
+    .where(whereClause);
+  return row?.count ?? 0;
+}
+
+/** Count users with an explicit admin role. */
+export async function countAdmins(): Promise<number> {
   const db = getDb();
   const [row] = await db
     .select({ count: sql<number>`count(*)` })
-    .from(schema.users);
+    .from(schema.users)
+    .where(eq(schema.users.role, 'admin'));
   return row?.count ?? 0;
+}
+
+/**
+ * Update a user's role. Returns the updated row or undefined if the user
+ * does not exist.
+ */
+export async function updateUserRole(
+  userId: string,
+  role: string,
+): Promise<{ id: string; role: string | null } | undefined> {
+  const db = getDb();
+  const [row] = await db
+    .update(schema.users)
+    .set({ role })
+    .where(eq(schema.users.id, userId))
+    .returning({ id: schema.users.id, role: schema.users.role });
+  return row;
 }

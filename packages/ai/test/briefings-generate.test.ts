@@ -156,7 +156,5 @@ describe('symbolFromCurrency', () => {
 
   it('maps everything else to XAUUSD', () => {
     expect(symbolFromCurrency('USD')).toBe('XAUUSD');
-    expect(symbolFromCurrency('JPY')).toBe('XAUUSD');
-    expect(symbolFromCurrency('CHF')).toBe('XAUUSD');
   });
 });

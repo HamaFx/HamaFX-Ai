@@ -16,7 +16,6 @@
 
 // Feature flag query helpers.
 
-import { eq } from 'drizzle-orm';
 import { getDb, schema } from '../client';
 
 export type FeatureFlagRow = typeof schema.featureFlags.$inferSelect;

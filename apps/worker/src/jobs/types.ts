@@ -18,6 +18,8 @@
 // every job file harder to skim.
 
 import type { Logger } from '../log.js';
+import type { TenantRouter } from '../tenant-router.js';
+import type { WorkerEnv } from '../env.js';
 
 // -----------------------------------------------------------------------
 // PF-09 — ISP-compliant job context split.
@@ -37,7 +39,7 @@ export interface JobCoreContext {
    * Determines whether this worker instance owns a given tenant.
    * Always returns true in single-worker mode.
    */
-  tenantRouter: import('../tenant-router.js').TenantRouter;
+  tenantRouter: TenantRouter;
 }
 
 export interface JobCancellableContext extends JobCoreContext {
@@ -100,5 +102,5 @@ export interface JobRegistration {
    * for this job. When set, the runner CLI reads `env[hcUuidEnvVar]`
    * instead of using a switch statement.
    */
-  hcUuidEnvVar?: keyof import('../env.js').WorkerEnv | undefined;
+  hcUuidEnvVar?: keyof WorkerEnv | undefined;
 }

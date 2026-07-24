@@ -3,35 +3,30 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { IconHistory } from '@tabler/icons-react';
-import { toast } from 'sonner';
+import { IconHistory, IconDownload } from '@tabler/icons-react';
 
+import { Badge, type BadgeTone } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
 import { SkeletonCard } from '@/components/ui/skeleton';
 import { SettingsSection } from '@/app/(app)/settings/_components/settings-section';
-import { apiFetch, ApiError } from '@/lib/api-client';
-import { cn } from '@/lib/cn';
+import { AdminErrorBlock } from './admin-error-block';
+import { apiFetch } from '@/lib/api-client';
+import { toastApiError } from '@/lib/toast-api-error';
+import { formatRelativeTime, formatAbsoluteTime, downloadCSV } from '@/lib/format-number';
+import type { CronRun } from '@/lib/services/admin-dtos';
 
-interface CronRun {
-  id: string;
-  jobName: string;
-  status: 'started' | 'done' | 'error';
-  note: string | null;
-  startedAt: string;
-  finishedAt: string | null;
-}
+const STATUS_TONE: Record<CronRun['status'], BadgeTone> = {
+  done: 'success',
+  error: 'danger',
+  started: 'warn',
+};
 
 export function AdminCronTable() {
   const [runs, setRuns] = useState<CronRun[]>([]);
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
 
-  // H-3: migrated from raw `fetch` + `await res.text()` to the typed
-  // `apiFetch` wrapper. The wrapper parses the standard error envelope,
-  // throws `ApiError` with `code`/`status`/`requestId`, and handles
-  // timeout/network errors. The `requestId` is surfaced in the toast
-  // description so bug reports are traceable to a single server log line.
   const fetchRuns = async () => {
     setLoading(true);
     setFetchError(null);
@@ -41,11 +36,7 @@ export function AdminCronTable() {
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Failed to load cron history';
       setFetchError(msg);
-      if (err instanceof ApiError && err.requestId) {
-        toast.error(msg, { description: `Ref: ${err.requestId}` });
-      } else {
-        toast.error(msg);
-      }
+      toastApiError(err, msg);
     } finally {
       setLoading(false);
     }
@@ -55,6 +46,18 @@ export function AdminCronTable() {
     void fetchRuns();
   }, []);
 
+  function handleExport() {
+    downloadCSV(
+      runs.map((r) => ({
+        jobName: r.jobName,
+        status: r.status,
+        startedAt: r.startedAt,
+        note: r.note ?? '',
+      })),
+      `cron-history-${new Date().toISOString().slice(0, 10)}.csv`,
+    );
+  }
+
   if (loading) {
     return <SkeletonCard lines={4} />;
   }
@@ -62,19 +65,27 @@ export function AdminCronTable() {
   if (fetchError) {
     return (
       <SettingsSection title="Cron History" description="Recent cron job runs.">
-        <div className="flex flex-col items-center gap-3 py-8 text-center">
-          <p className="text-sm text-danger">{fetchError}</p>
-          <Button variant="secondary" size="sm" onClick={fetchRuns}>
-            Retry
-          </Button>
-        </div>
+        <AdminErrorBlock message={fetchError} onRetry={fetchRuns} />
       </SettingsSection>
     );
   }
 
+  const description = 'Recent cron job runs.';
+
   return (
-    <SettingsSection title="Cron History" description="Recent cron job runs.">
-      <div className="border-border overflow-hidden rounded-sm border">
+    <SettingsSection title="Cron History" description={description}>
+      <div className="flex justify-end gap-2 pb-3">
+        <Button variant="secondary" size="sm" onClick={fetchRuns}>
+          Refresh
+        </Button>
+        {runs.length > 0 && (
+          <Button variant="ghost" size="sm" onClick={handleExport}>
+            <IconDownload className="size-4" aria-hidden="true" />
+            CSV
+          </Button>
+        )}
+      </div>
+      <div className="border-border overflow-x-auto overflow-hidden rounded-sm border">
         <table className="w-full text-sm">
           <thead className="bg-bg-elev-2 text-fg-subtle">
             <tr>
@@ -101,21 +112,12 @@ export function AdminCronTable() {
                 <tr key={run.id} className="border-border border-t">
                   <td className="text-fg px-4 py-2">{run.jobName}</td>
                   <td className="px-4 py-2">
-                    <span
-                      className={cn(
-                        'rounded-sm px-2 py-0.5 text-xs font-bold uppercase',
-                        run.status === 'done'
-                          ? 'bg-success/10 text-success'
-                          : run.status === 'error'
-                            ? 'bg-danger/10 text-danger'
-                            : 'bg-warn/10 text-warn',
-                      )}
-                    >
-                      {run.status}
-                    </span>
+                    <Badge tone={STATUS_TONE[run.status]}>{run.status}</Badge>
                   </td>
                   <td className="text-fg-subtle px-4 py-2">
-                    {new Date(run.startedAt).toLocaleString()}
+                    <span title={formatAbsoluteTime(run.startedAt)}>
+                      {formatRelativeTime(run.startedAt)}
+                    </span>
                   </td>
                   <td className="text-fg-subtle px-4 py-2">{run.note ?? '—'}</td>
                 </tr>

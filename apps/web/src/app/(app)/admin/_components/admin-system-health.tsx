@@ -8,7 +8,7 @@
 
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import {
   IconDatabase,
   IconActivity,
@@ -23,38 +23,15 @@ import {
   IconChartDots,
   IconInfoCircle,
 } from '@tabler/icons-react';
-import { toast } from 'sonner';
-
 import { SkeletonCard } from '@/components/ui/skeleton';
 import { SettingsSection } from '@/app/(app)/settings/_components/settings-section';
+import { AdminErrorBlock } from './admin-error-block';
 import { apiFetch } from '@/lib/api-client';
+import { toastApiError } from '@/lib/toast-api-error';
 import { cn } from '@/lib/cn';
+import type { HealthSloData, SliSnapshot } from '@/lib/services/admin-dtos';
 
 // ── Types ────────────────────────────────────────────────────────────────
-
-interface SliSnapshot {
-  key: string;
-  label: string;
-  current: number | null;
-  sloTarget: number;
-  window: string;
-  success: number;
-  total: number;
-  errorBudget: number | null;
-  informational?: boolean;
-  details?: string;
-}
-
-interface HealthSloData {
-  ts: string;
-  dbLatencyMs: number;
-  dbOk: boolean;
-  overall: 'healthy' | 'degraded' | 'unhealthy';
-  langfuseActive: boolean;
-  langfuseBaseUrl: string | null;
-  slis: SliSnapshot[];
-  anomalies: string[];
-}
 
 // ── Icon map ─────────────────────────────────────────────────────────────
 
@@ -110,7 +87,9 @@ function OverallBanner({ data }: { data: HealthSloData }) {
           <config.Icon className={cn('relative size-5', config.text)} aria-hidden="true" />
         </span>
         <div>
-          <p className={cn('text-lg font-bold', config.text)}>{config.label}</p>
+          <p key={overall} aria-live="polite" aria-atomic="true" className={cn('text-lg font-bold', config.text)}>
+            {config.label}
+          </p>
           <p className="text-fg-subtle text-xs">
             Last checked: {new Date(ts).toLocaleTimeString()}
           </p>
@@ -284,31 +263,68 @@ export function AdminSystemHealth() {
   const [data, setData] = useState<HealthSloData | null>(null);
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
+  const [windowHours, setWindowHours] = useState(24);
+  const abortRef = useRef<AbortController | null>(null);
+  const isVisibleRef = useRef(false);
+  const inFlightRef = useRef(false);
+  const windowHoursRef = useRef(windowHours);
+
+  useEffect(() => {
+    windowHoursRef.current = windowHours;
+  }, [windowHours]);
 
   const fetchHealth = useCallback(async () => {
+    if (inFlightRef.current) return;
+    inFlightRef.current = true;
+
+    abortRef.current?.abort();
+    abortRef.current = new AbortController();
+
     setLoading(true);
     setFetchError(null);
     try {
-      const json = await apiFetch<HealthSloData>('/api/admin/health-slo');
+      const json = await apiFetch<HealthSloData>(`/api/admin/health-slo?hours=${windowHoursRef.current}`, {
+        signal: abortRef.current.signal,
+      });
       setData(json);
     } catch (err) {
+      if (err instanceof Error && err.name === 'AbortError') return;
       const msg = err instanceof Error ? err.message : 'Failed to load system health';
       setFetchError(msg);
-      toast.error(msg);
+      toastApiError(err, msg);
     } finally {
       setLoading(false);
+      inFlightRef.current = false;
     }
   }, []);
 
   useEffect(() => {
-    void fetchHealth();
-
-    // Auto-refresh every 30 seconds
-    const interval = setInterval(() => {
+    isVisibleRef.current = document.visibilityState === 'visible';
+    if (isVisibleRef.current) {
       void fetchHealth();
+    }
+
+    const interval = setInterval(() => {
+      if (isVisibleRef.current) {
+        void fetchHealth();
+      }
     }, 30_000);
 
-    return () => clearInterval(interval);
+    const handleVisibility = () => {
+      const visible = document.visibilityState === 'visible';
+      isVisibleRef.current = visible;
+      if (visible) {
+        void fetchHealth();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibility);
+
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', handleVisibility);
+      abortRef.current?.abort();
+    };
   }, [fetchHealth]);
 
   if (loading && !data) {
@@ -322,16 +338,7 @@ export function AdminSystemHealth() {
   if (fetchError && !data) {
     return (
       <SettingsSection title="System Health" description="Real-time SLI/SLO monitoring.">
-        <div className="flex flex-col items-center gap-3 py-8 text-center">
-          <p className="text-sm text-danger">{fetchError}</p>
-          <button
-            type="button"
-            onClick={fetchHealth}
-            className="text-sm text-fg underline hover:no-underline"
-          >
-            Retry
-          </button>
-        </div>
+        <AdminErrorBlock message={fetchError} onRetry={fetchHealth} />
       </SettingsSection>
     );
   }
@@ -344,7 +351,28 @@ export function AdminSystemHealth() {
       description={`SLI metrics over the last ${data.slis[0]?.window ?? '24h'}. Refreshes every 30s.`}
     >
       <div className="flex flex-col gap-4">
-        <div className="flex justify-end">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-1 rounded-sm bg-bg-elev-1 border border-border p-0.5">
+            {[1, 24, 168, 720].map((hours) => {
+              const label = hours === 1 ? '1h' : hours <= 24 ? `${hours}h` : hours <= 168 ? '7d' : '30d';
+              return (
+                <button
+                  key={hours}
+                  type="button"
+                  onClick={() => setWindowHours(hours)}
+                  disabled={loading}
+                  className={cn(
+                    'rounded-sm px-3 py-1 text-xs font-medium transition-colors',
+                    windowHours === hours
+                      ? 'bg-brand text-brand-fg'
+                      : 'text-fg-muted hover:text-fg hover:bg-bg-elev-2',
+                  )}
+                >
+                  {label}
+                </button>
+              );
+            })}
+          </div>
           <button
             type="button"
             onClick={fetchHealth}

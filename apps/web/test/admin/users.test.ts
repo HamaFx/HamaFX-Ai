@@ -16,6 +16,7 @@ vi.mock('@hamafx/db', () => ({
   }),
   listUsersWithSettings: mockListUsers,
   countUsers: mockCountUsers,
+  recordAdminAudit: vi.fn(),
   schema: { users: {}, userSettings: {} },
 }));
 

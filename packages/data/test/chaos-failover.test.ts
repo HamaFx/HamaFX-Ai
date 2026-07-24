@@ -22,7 +22,7 @@
 //   2. Provider failover on timeout (PROVIDER_TIMEOUT)
 //   3. Circuit-breaker open/close behaviour integrated with failover
 
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 
 import { ProviderError } from '../src/errors';
 import { _resetHealth } from '../src/health';

@@ -168,9 +168,16 @@ export {
   getUserPasswordHash,
   listUsersWithSettings,
   countUsers,
+  countAdmins,
+  updateUserRole,
   type UserRow,
   type UserWithSettingsRow,
 } from './queries/users';
+export {
+  recordAdminAudit,
+  listAdminAuditLogs,
+} from './queries/admin-audit';
+export type { AdminAuditLogRow, AdminAuditLogInsert } from './schema/admin-audit';
 export {
   listToolTelemetry,
 } from './queries/chat-telemetry';

@@ -6,6 +6,7 @@ import { getUserById, resetOnboarding } from '@hamafx/db';
 
 import { withAdminAuth } from '@/lib/admin-auth';
 import { parseJsonBody } from '@/lib/api';
+import { recordAdminAudit } from '@/lib/services/admin';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -27,6 +28,8 @@ export const POST = withAdminAuth(async (req, { user: admin }) => {
   }
 
   await resetOnboarding(targetUserId, body.mode);
+
+  await recordAdminAudit(admin.userId, 'onboarding.reset', targetUserId, { mode: body.mode });
 
   return Response.json({ ok: true, userId: targetUserId, reset: true, mode: body.mode });
 });

@@ -14,6 +14,14 @@ import { withAdminAuth } from '@/lib/admin-auth';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
+// SECURITY: The explorer HTML contains inline scripts that do not carry the
+// middleware nonce. We use 'unsafe-inline' in the CSP because hashing all
+// inline scripts would require the generator to output stable hashes. This
+// route is admin-only so the risk is limited.
+//
+// The file contents are cached at module scope after the first successful
+// read so we don't hit disk on every request.
+
 const EXPLORER_CSP = [
   "default-src 'self'",
   "script-src 'self' 'unsafe-inline'",
@@ -32,13 +40,21 @@ const HTML_HEADERS = {
   'X-Content-Type-Options': 'nosniff',
 };
 
+const htmlPath = resolve(process.cwd(), 'public', 'architecture-explorer.html');
+let cachedHtml: string | null = null;
+
+function loadHtml(): string {
+  if (cachedHtml !== null) return cachedHtml;
+  cachedHtml = readFileSync(htmlPath, 'utf-8');
+  return cachedHtml;
+}
+
 export const GET = withAdminAuth(async () => {
   // The HTML file is copied into apps/web/public/ by predeploy-migrate.mjs.
   // public/ is guaranteed to be available in Vercel serverless functions.
-  const htmlPath = resolve(process.cwd(), 'public', 'architecture-explorer.html');
 
   try {
-    const html = readFileSync(htmlPath, 'utf-8');
+    const html = loadHtml();
     return new Response(html, { headers: HTML_HEADERS });
   } catch {
     return new Response(
