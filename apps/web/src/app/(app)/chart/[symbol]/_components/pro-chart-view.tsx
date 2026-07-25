@@ -16,60 +16,20 @@
  * limitations under the License.
  */
 
-import { type Symbol } from '@hamafx/shared';
-import React, { useMemo } from 'react';
+import type { Symbol, Timeframe } from '@hamafx/shared';
 
-import { PriceTag } from '@/components/chart/price-tag';
-import { SymbolPicker } from '@/components/chart/symbol-picker';
-import { TimeframePicker } from '@/components/chart/timeframe-picker';
-import { PinToChat } from '@/components/chart/pin-to-chat';
-import { StaleIndicator } from '@/components/ui/stale-indicator';
-import { useChartData } from '@/hooks/use-chart-data';
-import { useTimeframe } from '@/hooks/use-tf';
 import { TradingViewWidget } from './tradingview-widget';
 
-export function ProChartView({ symbol, watchlist }: { symbol: Symbol; watchlist: string[] }) {
-  const [tf, setTf] = useTimeframe();
-
-  // Pro chart uses TradingView widget which loads its own data.
-  // Only need a minimal candle count for PriceTag reference close + StaleIndicator.
-  const { candles, isLoading, isFetching } = useChartData(symbol, tf, [], 2);
-
-  const referenceClose = useMemo(() => {
-    return candles && candles.length > 0 ? (candles[candles.length - 1]?.c ?? null) : null;
-  }, [candles]);
-
-  // Map settings.theme if needed. For now, all hamfx themes are dark/slate/navy, so 'dark' is default.
-  const tvTheme = 'dark';
-
+export function ProChartView({
+  symbol,
+  tf,
+}: {
+  symbol: Symbol;
+  tf: Timeframe;
+}) {
   return (
-    <div className="-mx-4 flex flex-col animate-in fade-in duration-300">
-      {/* Sticky floating sub-header */}
-      <div
-        className="sticky z-20 px-4 pt-3 pb-2 transition-all"
-        style={{ top: 'calc(var(--topbar-h) + env(safe-area-inset-top))' }}
-      >
-        <header className="border border-border bg-bg-elev-1 rounded-sm flex flex-col gap-3 p-3">
-          <div className="flex flex-wrap items-center justify-between gap-3 px-1">
-            <SymbolPicker active={symbol} watchlist={watchlist} />
-            <PriceTag symbol={symbol} referencePrice={referenceClose} />
-          </div>
-          <div className="flex flex-wrap items-center justify-between gap-2 px-1">
-            <div className="scrollbar-hide -mx-1 flex-1 overflow-x-auto px-1">
-              <TimeframePicker value={tf} onChange={setTf} />
-            </div>
-            <div className="flex shrink-0 items-center gap-2">
-              <StaleIndicator isFetching={isFetching && !isLoading} />
-
-              <PinToChat symbol={symbol} />
-            </div>
-          </div>
-        </header>
-      </div>
-
-      <div className="flex flex-col gap-4 px-4 py-4">
-        <TradingViewWidget symbol={symbol} tf={tf} theme={tvTheme} />
-      </div>
+    <div className="animate-in fade-in duration-300">
+      <TradingViewWidget symbol={symbol} tf={tf} theme="dark" />
     </div>
   );
 }

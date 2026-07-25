@@ -1,15 +1,14 @@
 // SPDX-License-Identifier: Apache-2.0
 
-import { BUILTIN_SYMBOLS, isKnownSymbol } from '@hamafx/shared';
+import { BUILTIN_SYMBOLS, DEFAULT_TIMEFRAME, isKnownSymbol } from '@hamafx/shared';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 
-import { auth } from '@/auth';
-import { listUserSymbols } from '@hamafx/db';
 import { ProChartView } from './_components/pro-chart-view';
 
 interface PageProps {
   params: Promise<{ symbol: string }>;
+  searchParams: Promise<{ tf?: string }>;
 }
 
 export const dynamic = 'force-dynamic';
@@ -24,19 +23,12 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   return { title: isKnownSymbol(symbol) ? `${symbol} · Chart` : 'Chart' };
 }
 
-export default async function ChartPage({ params }: PageProps) {
+export default async function ChartPage({ params, searchParams }: PageProps) {
   const { symbol } = await params;
   if (!isKnownSymbol(symbol)) notFound();
 
-  const session = await auth();
-  
-  let userSymbolsList: string[] = [];
-  if (session?.user?.id) {
-    const list = await listUserSymbols(session.user.id);
-    userSymbolsList = list.map((item) => item.symbol);
-  }
+  const sp = await searchParams;
+  const tf = (sp.tf ?? DEFAULT_TIMEFRAME) as '1m' | '5m' | '15m' | '30m' | '1h' | '4h' | '1d' | '1w';
 
-  const watchlist = userSymbolsList.length > 0 ? userSymbolsList : ['XAUUSD', 'EURUSD', 'GBPUSD'];
-
-  return <ProChartView symbol={symbol} watchlist={watchlist} />;
+  return <ProChartView symbol={symbol} tf={tf} />;
 }

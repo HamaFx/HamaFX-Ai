@@ -180,8 +180,8 @@ export function TradingViewWidget({ symbol, tf, theme = 'dark' }: TradingViewWid
         <div
           id={containerId}
           ref={containerRef}
-          className="border-border bg-bg-elev-1 rounded-sm border"
-          style={{ height: '70svh' }}
+          className="w-full"
+          style={{ height: '100dvh' }}
           aria-label={`${symbol} ${tf} chart (TradingView)`}
         />
       )}
