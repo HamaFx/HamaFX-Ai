@@ -18,6 +18,7 @@
 
 import type { Symbol, Timeframe } from '@hamafx/shared';
 import { getSymbolDefinition, isKnownSymbol } from '@hamafx/shared';
+import { Link } from 'next-view-transitions';
 import Script from 'next/script';
 import { useEffect, useRef, useState, useId } from 'react';
 
@@ -53,11 +54,6 @@ const SYMBOL_TO_TV: Record<string, string> = {
   GBPUSD: 'OANDA:GBPUSD',
 };
 
-/**
- * Resolve a symbol to its TradingView ticker.
- * Uses SymbolDefinition.tradingView from the catalog for known symbols,
- * falls back to the hardcoded map, then to OANDA:{symbol}.
- */
 function resolveTvSymbol(symbol: string): string {
   if (isKnownSymbol(symbol)) {
     return getSymbolDefinition(symbol).tradingView;
@@ -76,7 +72,7 @@ const TF_TO_TV_INTERVAL: Record<Timeframe, string> = {
   '1w': 'W',
 };
 
-const LOAD_TIMEOUT_MS = 8000;
+const LOAD_TIMEOUT_MS = 6000;
 
 interface TradingViewWidgetProps {
   symbol: Symbol;
@@ -90,68 +86,61 @@ export function TradingViewWidget({ symbol, tf, theme = 'dark' }: TradingViewWid
   const containerRef = useRef<HTMLDivElement | null>(null);
   type WidgetInstance = { remove: () => void };
   const widgetRef = useRef<WidgetInstance | null>(null);
-  const [loadFailed, setLoadFailed] = useState(false);
-  const [scriptLoaded, setScriptLoaded] = useState(false);
+  const [state, setState] = useState<'loading' | 'ready' | 'failed'>('loading');
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // Try to create the widget once the container and TradingView API are both ready.
+  const tryCreate = (tv: TradingViewGlobal) => {
+    if (!containerRef.current || widgetRef.current) return;
+    try {
+      const w = new tv.widget({
+        container_id: containerId,
+        symbol: resolveTvSymbol(symbol),
+        interval: TF_TO_TV_INTERVAL[tf] || '60',
+        theme,
+        timezone: 'Etc/UTC',
+        locale: 'en',
+        style: '1',
+        enable_publishing: false,
+        hide_top_toolbar: false,
+        hide_legend: false,
+        withdateranges: true,
+        allow_symbol_change: false,
+        autosize: true,
+      });
+      widgetRef.current = w as WidgetInstance;
+      setState('ready');
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+        timerRef.current = null;
+      }
+    } catch (err) {
+      console.warn('[pro-chart] TradingView widget construct failed', err);
+      setState('failed');
+    }
+  };
+
   useEffect(() => {
-    let cancelled = false;
-    let initialized = false;
-
+    // If TradingView is already available (script cached from prior navigation),
+    // try immediately. Otherwise, wait for the Script onLoad callback.
     const tv = typeof window !== 'undefined' ? window.TradingView : undefined;
-    if (tv && !initialized) {
-      initialized = true;
-      initWidget(tv);
-      return;
+    if (tv) {
+      tryCreate(tv);
     }
 
-    if (loadFailed) return;
-
-    if (scriptLoaded) {
-      const tvNew = typeof window !== 'undefined' ? window.TradingView : undefined;
-      if (tvNew && !initialized) {
-        initialized = true;
-        initWidget(tvNew);
-      } else if (!tvNew) {
-        setLoadFailed(true);
-      }
-      return;
+    // Set a timeout — if TradingView never becomes available, show fallback.
+    if (!widgetRef.current) {
+      timerRef.current = setTimeout(() => {
+        const tvCheck = typeof window !== 'undefined' ? window.TradingView : undefined;
+        if (tvCheck && containerRef.current && !widgetRef.current) {
+          tryCreate(tvCheck);
+        } else if (!tvCheck) {
+          setState('failed');
+        }
+      }, LOAD_TIMEOUT_MS);
     }
 
-    timerRef.current = setTimeout(() => {
-      const tvCheck = typeof window !== 'undefined' ? window.TradingView : undefined;
-      if (!cancelled && !tvCheck) {
-        setLoadFailed(true);
-      }
-    }, LOAD_TIMEOUT_MS);
-
-    function initWidget(tv: TradingViewGlobal) {
-      try {
-        const w = new tv.widget({
-          container_id: containerId,
-          symbol: resolveTvSymbol(symbol),
-          interval: TF_TO_TV_INTERVAL[tf] || '60',
-          theme: theme,
-          timezone: 'Etc/UTC',
-          locale: 'en',
-          style: '1',
-          enable_publishing: false,
-          hide_top_toolbar: false,
-          hide_legend: false,
-          withdateranges: true,
-          allow_symbol_change: false,
-          autosize: true,
-        });
-        widgetRef.current = w as WidgetInstance;
-      } catch (err) {
-        console.warn('[pro-chart] TradingView widget construct failed', err);
-        setLoadFailed(true);
-      }
-    }
-
-    const container = containerRef.current;
     return () => {
-      cancelled = true;
       if (timerRef.current) {
         clearTimeout(timerRef.current);
         timerRef.current = null;
@@ -160,47 +149,62 @@ export function TradingViewWidget({ symbol, tf, theme = 'dark' }: TradingViewWid
         widgetRef.current.remove();
         widgetRef.current = null;
       }
-      if (container) {
-        container.innerHTML = '';
-      }
     };
-  }, [containerId, symbol, tf, scriptLoaded, loadFailed, theme]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [containerId, symbol, tf, theme]);
+
+  // Called when the tv.js <Script> finishes loading.
+  const handleScriptLoad = () => {
+    const tv = typeof window !== 'undefined' ? window.TradingView : undefined;
+    if (tv) tryCreate(tv);
+  };
+
+  const height = 'calc(100vh - 4rem)';
 
   return (
     <>
+      {/* Always render the Script so it actually loads. */}
       <Script
         src="https://s3.tradingview.com/tv.js"
         strategy="afterInteractive"
-        onLoad={() => setScriptLoaded(true)}
-        onError={() => setLoadFailed(true)}
+        onLoad={handleScriptLoad}
+        onError={() => setState('failed')}
       />
-      {loadFailed ? (
-        <FallbackMessage symbol={symbol} />
-      ) : (
+
+      <div className="relative w-full" style={{ height }}>
+        {/* The TradingView container — always rendered so the widget has a target. */}
         <div
           id={containerId}
           ref={containerRef}
-          className="w-full"
-          style={{ height: '100dvh' }}
+          className="absolute inset-0"
           aria-label={`${symbol} ${tf} chart (TradingView)`}
         />
-      )}
-      <p className="text-fg-subtle pt-2 text-caption">Powered by TradingView</p>
-    </>
-  );
-}
 
-function FallbackMessage(_props: { symbol: Symbol }) {
-  return (
-    <div
-      role="alert"
-      className="border-bear/30 bg-bg-elev-1 text-fg-muted flex flex-col gap-2 rounded-sm border p-4 text-sm"
-    >
-      <p className="text-bear font-semibold">TradingView did not load.</p>
-      <p>
-        The Advanced Charting Widget could not reach <code>s3.tradingview.com</code>.
-        Some networks block third-party scripts; please try refreshing the page.
-      </p>
-    </div>
+        {/* Loading skeleton — shown on top until the widget fills the container. */}
+        {state === 'loading' && (
+          <div className="bg-bg-elev-1 border-border absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 rounded-sm border">
+            <div className="bg-bg-elev-2 h-3 w-48 animate-pulse rounded-sm" />
+            <div className="bg-bg-elev-2 h-3 w-32 animate-pulse rounded-sm" />
+            <p className="text-fg-subtle mt-2 text-xs">Loading chart...</p>
+          </div>
+        )}
+
+        {/* Error fallback — shown when TradingView fails to load. */}
+        {state === 'failed' && (
+          <div className="bg-bg-elev-1 border-border absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 rounded-sm border p-6 text-center">
+            <p className="text-bear text-lg font-semibold">Chart unavailable</p>
+            <p className="text-fg-muted max-w-xs text-sm">
+              The TradingView widget could not load. This may happen on networks that block third-party scripts.
+            </p>
+            <Link
+              href="/chat"
+              className="bg-bg-elev-2 hover:bg-bg-elev-3 border-border text-fg rounded-sm border px-4 py-2 text-sm transition-colors"
+            >
+              Open chat →
+            </Link>
+          </div>
+        )}
+      </div>
+    </>
   );
 }
