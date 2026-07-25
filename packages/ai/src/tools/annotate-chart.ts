@@ -17,14 +17,12 @@
 // Tool: annotate_chart.
 //
 // Computes SMC + session-level annotations for a (symbol, tf, count) window
-// and emits an OverlaySet — markers + price lines — that the chart UI's
-// existing renderer accepts directly. The deep link in the chat part
-// reuses these primitives via `?overlays=...` URL state.
+// and returns markers + price lines that the AI can reason about. The chat
+// part renders a summary card with a deep link to the Pro chart at the
+// relevant symbol/timeframe.
 //
 // The palette is hard-coded (matches the chart's CSS-token defaults) so
-// the tool runs in any environment without reading the DOM. Lightweight
-// charts is happy with hex strings; deeper theme integration can come
-// later.
+// the tool runs in any environment without reading the DOM.
 
 import { getCandles } from '@hamafx/data';
 import {
@@ -68,7 +66,7 @@ void PALETTE;
 
 export const annotateChartTool = tool({
   description:
-    "Compute chart annotations (swings, BOS/CHoCH, FVG, order blocks, liquidity sweeps, previous-day high/low, Asian session range) for a symbol/timeframe and return them as the OverlaySet the chart UI consumes. Use when the user asks to 'mark', 'show', or 'annotate' something on the chart. Output's `markers` and `priceLines` arrays plug straight into lightweight-charts; the chat part renders a one-line summary plus a deep link with the chosen overlays pre-toggled.",
+    "Compute chart annotations (swings, BOS/CHoCH, FVG, order blocks, liquidity sweeps, previous-day high/low, Asian session range) for a symbol/timeframe. Use when the user asks to 'mark', 'show', or 'annotate' something on the chart. The chat part renders a summary card with counts per kind and a deep link to open the Pro chart at this symbol/timeframe.",
   inputSchema: InputSchema,
   execute: async ({ symbol, tf, kinds, lookback, count }): Promise<AnnotateChartOutput> => {
     const candles = await getCandles(symbol, tf, { count });
@@ -250,7 +248,7 @@ export const annotateChartTool = tool({
       }
     }
 
-    // lightweight-charts requires markers in chronological order.
+    // Sort markers in chronological order.
     markers.sort((a, b) => a.time - b.time);
 
     // Materialize the counts object so missing kinds show as 0.
@@ -279,7 +277,7 @@ export const annotateChartTool = tool({
 // Helpers
 // ---------------------------------------------------------------------------
 
-/** Convert a candle index to a lightweight-charts UTC seconds timestamp. */
+/** Convert a candle index to a UTC seconds timestamp. */
 function bartime(candles: Candle[], i: number): number | null {
   const c = candles[i];
   if (!c) return null;

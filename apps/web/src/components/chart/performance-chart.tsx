@@ -28,7 +28,6 @@ import type { IChartApi, ISeriesApi } from 'lightweight-charts';
 import {IconTrendingUp, IconAward} from '@tabler/icons-react';
 import { useEffect, useMemo, useRef } from 'react';
 
-import { getThemeColors } from './chart';
 import { buildEquityCurve } from './performance-chart-data';
 
 interface PerformanceChartProps {
@@ -47,9 +46,8 @@ export function PerformanceChart({
   const seriesRef = useRef<ISeriesApi<'Area'> | null>(null);
 
   // This component renders an area chart of cumulative R-multiple, which is
-  // a different chart type than the candlestick `ChartCanvas`. They therefore
-  // do not share the same rendering infrastructure; the shared logic is the
-  // pure data transformation in `performance-chart-data.ts`.
+  // a standalone chart type. The shared logic is the pure data
+  // transformation in `performance-chart-data.ts`.
   const { data: chartData, totalR } = useMemo(() => buildEquityCurve(entries), [entries]);
 
   // Handle Chart Lifecycle
@@ -69,7 +67,7 @@ export function PerformanceChart({
     void import('lightweight-charts').then((lc) => {
       if (cancelled || !containerRef.current) return;
 
-      const colors = getThemeColors(theme);
+      const colors = getPerfChartColors(theme);
 
       // Lightweight-charts v5 exposes `createChart` as a named export.
       // The `default` fallback covers CommonJS interop shims that assign
@@ -155,12 +153,27 @@ export function PerformanceChart({
   useEffect(() => {
     const chart = chartRef.current;
     if (!chart) return;
-    const colors = getThemeColors(theme);
+    const colors = getPerfChartColors(theme);
     chart.applyOptions({
       layout: { textColor: colors.text },
       grid: { horzLines: { color: colors.grid } },
     });
   }, [theme]);
+
+// ── Inline theme helpers (replaces the deleted ./chart-themes.ts) ──
+
+const PERF_THEME_COLORS: Record<string, { text: string; grid: string }> = {
+  black: { text: '#a1a8b3', grid: '#1f1f1f' },
+  slate: { text: '#94a3b8', grid: '#1e293b' },
+  navy: { text: '#64748b', grid: '#0f172a' },
+  classic: { text: '#a1a8b3', grid: '#262a35' },
+};
+
+function getPerfChartColors(theme: string): { text: string; grid: string } {
+  return PERF_THEME_COLORS[theme] ?? PERF_THEME_COLORS.black!;
+}
+
+// ── Component ──
 
   if (chartData.length < 2) {
     return (

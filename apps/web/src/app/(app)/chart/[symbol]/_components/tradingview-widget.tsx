@@ -18,7 +18,6 @@
 
 import type { Symbol, Timeframe } from '@hamafx/shared';
 import { getSymbolDefinition, isKnownSymbol } from '@hamafx/shared';
-import { Link } from 'next-view-transitions';
 import Script from 'next/script';
 import { useEffect, useRef, useState, useId } from 'react';
 
@@ -191,7 +190,7 @@ export function TradingViewWidget({ symbol, tf, theme = 'dark' }: TradingViewWid
   );
 }
 
-function FallbackMessage({ symbol }: { symbol: Symbol }) {
+function FallbackMessage(_props: { symbol: Symbol }) {
   return (
     <div
       role="alert"
@@ -200,11 +199,8 @@ function FallbackMessage({ symbol }: { symbol: Symbol }) {
       <p className="text-bear font-semibold">TradingView did not load.</p>
       <p>
         The Advanced Charting Widget could not reach <code>s3.tradingview.com</code>.
-        Some networks block third-party scripts; the bundled chart still works.
+        Some networks block third-party scripts; please try refreshing the page.
       </p>
-      <Link href={`/chart/${symbol}/structure`} className="text-fg text-sm underline-offset-2 hover:underline">
-        ← back to structure chart
-      </Link>
     </div>
   );
 }

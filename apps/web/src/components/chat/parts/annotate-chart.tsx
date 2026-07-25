@@ -32,19 +32,8 @@ export function AnnotateChartPart({
     return <SkeletonCard />;
   }
 
-  // The chart's `OverlayToggle` only handles SMC kinds. PDH/PDL and
-  // Asian-range render as price lines without a toggle, so we omit them
-  // from the URL state — the deep link still pre-toggles whatever the
-  // tool actually computed.
-  const TOGGLEABLE: AnnotateChartKind[] = [
-    'swings',
-    'bos_choch',
-    'fvg',
-    'order_blocks',
-    'liquidity',
-  ];
-  const overlayParam = TOGGLEABLE.filter((k) => (output.countsByKind[k] ?? 0) > 0).join(',');
-
+  // Deep-link to the Pro chart so the user can visually verify the
+  // levels the AI identified.
   return (
     <div className="border-border bg-bg-elev-1 rounded-sm border p-3">
       <header className="mb-2 flex items-baseline justify-between gap-2">
@@ -72,7 +61,7 @@ export function AnnotateChartPart({
       </ul>
 
       <Link
-        href={`/chart/${output.symbol}/structure?tf=${output.tf}${overlayParam ? `&overlays=${overlayParam}` : ''}`}
+        href={`/chart/${output.symbol}?tf=${output.tf}`}
         className="text-fg focus-visible:ring-fg mt-3 block min-h-[36px] text-right text-body-sm font-medium underline-offset-2 outline-none hover:underline focus-visible:ring-2"
       >
         open in chart →

@@ -2,7 +2,7 @@
 
 import { BUILTIN_SYMBOLS, isKnownSymbol } from '@hamafx/shared';
 import type { Metadata } from 'next';
-import { notFound, redirect } from 'next/navigation';
+import { notFound } from 'next/navigation';
 
 import { auth } from '@/auth';
 import { listUserSymbols } from '@hamafx/db';
@@ -10,7 +10,6 @@ import { ProChartView } from './_components/pro-chart-view';
 
 interface PageProps {
   params: Promise<{ symbol: string }>;
-  searchParams: Promise<{ tf?: string }>;
 }
 
 export const dynamic = 'force-dynamic';
@@ -25,17 +24,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   return { title: isKnownSymbol(symbol) ? `${symbol} · Chart` : 'Chart' };
 }
 
-export default async function ChartPage({ params, searchParams }: PageProps) {
+export default async function ChartPage({ params }: PageProps) {
   const { symbol } = await params;
   if (!isKnownSymbol(symbol)) notFound();
-
-  const sp = await searchParams;
-  const tf = sp.tf;
-
-  if (process.env.NEXT_PUBLIC_TRADINGVIEW_ENABLED !== '1') {
-    const dest = `/chart/${symbol}/structure` + (tf ? `?tf=${tf}` : '');
-    redirect(dest);
-  }
 
   const session = await auth();
   

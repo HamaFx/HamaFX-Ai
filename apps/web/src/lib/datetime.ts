@@ -79,7 +79,7 @@ export function handleRadioKeyDown(e: React.KeyboardEvent): void {
  * Refresh interval per chart timeframe.
  *
  * Extracted from duplicated definitions in use-candles.ts,
- * use-chart-data.ts, and use-structure.ts.
+ * use-chart-data.ts.
  */
 
 export function refetchIntervalFor(tf: '1m' | '5m' | '15m' | '30m' | '1h' | '4h' | '1d' | '1w'): number {
