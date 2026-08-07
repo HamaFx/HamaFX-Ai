@@ -103,7 +103,7 @@ SQL_FOOTER=") sub;"
 
 FULL_SQL="${SQL_HEADER}${SQL_BODY}${SQL_FOOTER}"
 
-if ! psql --dbname="$DB_URL" -A -t -v user_id="$USER_ID" -c "$FULL_SQL" | gsutil -q cp - "$TARGET"; then
+if ! psql --dbname="$DB_URL" -A -t -v user_id="$USER_ID" -c "$FULL_SQL" | gcloud storage cp - "$TARGET" --quiet; then
   log "export failed for user_id=${USER_ID}"
   ping_hc fail "export failed for ${USER_ID}"
   exit 1

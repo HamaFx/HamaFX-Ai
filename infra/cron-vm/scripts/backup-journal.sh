@@ -39,14 +39,14 @@ ping_hc start
 log "exporting journal_entries → $TARGET"
 
 # `psql` with -A -t -c gives unaligned, tuples-only output — perfect for
-# streaming `json_agg` straight into gsutil. Empty table case yields
+# streaming `json_agg` straight into gcloud storage. Empty table case yields
 # the literal string `null` which we coerce to `[]`.
 set -o pipefail
 if ! psql "$JOURNAL_DB_URL" -A -t \
   -c "SELECT COALESCE(json_agg(j), '[]'::json) FROM journal_entries j;" \
-  | gsutil -q cp - "$TARGET"; then
-  log 'psql | gsutil failed'
-  ping_hc fail "psql/gsutil failed at $DATE_UTC"
+  | gcloud storage cp - "$TARGET" --quiet; then
+  log 'psql | gcloud storage failed'
+  ping_hc fail "psql/gcloud storage failed at $DATE_UTC"
   exit 1
 fi
 

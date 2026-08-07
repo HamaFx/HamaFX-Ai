@@ -61,14 +61,14 @@ log() { printf '%s [verify-restore] %s\n' "$(date -u +%FT%TZ)" "$*"; }
 ping_hc start
 
 # ------------------------------------------------------------------ Verify bucket hardening (PR-08)
-# GCS bucket versioning and retention lock protect backups from accidental
+# GCS bucket versioning and retention policy protect backups from accidental
 # or malicious deletion. If these are not configured, the verify-restore
 # still proceeds but flags a warning in the healthchecks.io ping body.
 log 'checking GCS bucket configuration'
 BUCKET_WARNINGS=''
 
 # Check versioning
-if gsutil versioning get "gs://${GCS_BACKUP_BUCKET}" 2>/dev/null | grep -q 'Enabled'; then
+if gcloud storage buckets describe "gs://${GCS_BACKUP_BUCKET}" --format='value(versioning.enabled)' 2>/dev/null | grep -qx 'True'; then
   log "GCS versioning: enabled ✓"
 else
   BUCKET_WARNINGS="${BUCKET_WARNINGS}versioning_disabled "
@@ -76,16 +76,16 @@ else
 fi
 
 # Check retention policy (requires uniform bucket-level access)
-if gsutil retention get "gs://${GCS_BACKUP_BUCKET}" 2>/dev/null | grep -q 'Retention'; then
+if gcloud storage buckets describe "gs://${GCS_BACKUP_BUCKET}" --format='value(retentionPolicy.retentionPeriod)' 2>/dev/null | grep -qE '^[1-9][0-9]*$'; then
   log "GCS retention policy: active ✓"
 else
   BUCKET_WARNINGS="${BUCKET_WARNINGS}no_retention_policy "
   log 'WARNING: GCS bucket has no retention policy — backups can be deleted immediately'
 fi
 
-# Check the verify/last-success.txt from last week exists (chain of custody)
-if gsutil -q ls "gs://${GCS_BACKUP_BUCKET}/verify/last-success.txt" 2>/dev/null; then
-  PREV_VERIFY="$(gsutil cat "gs://${GCS_BACKUP_BUCKET}/verify/last-success.txt" 2>/dev/null || echo 'unreadable')"
+# Check that verify/last-success.txt from last week exists (chain of custody)
+if gcloud storage ls "gs://${GCS_BACKUP_BUCKET}/verify/last-success.txt" >/dev/null 2>&1; then
+  PREV_VERIFY="$(gcloud storage cat "gs://${GCS_BACKUP_BUCKET}/verify/last-success.txt" 2>/dev/null || echo 'unreadable')"
   log "previous verify success: ${PREV_VERIFY:0:120}"
 else
   BUCKET_WARNINGS="${BUCKET_WARNINGS}no_previous_verify_file "
@@ -93,9 +93,7 @@ else
 fi
 
 # ------------------------------------------------------------------ Pull latest
-LATEST="$(gsutil ls -l "gs://${GCS_BACKUP_BUCKET}/db/*.dump.gz" 2>/dev/null \
-  | sort -k2 \
-  | awk '/dump.gz/ {print $3}' \
+LATEST="$(gcloud storage ls --format='value(name)' "gs://${GCS_BACKUP_BUCKET}/db/*.dump.gz" 2>/dev/null \
   | tail -n1)"
 if [[ -z "$LATEST" ]]; then
   log 'no dumps in bucket'
@@ -103,7 +101,7 @@ if [[ -z "$LATEST" ]]; then
   exit 1
 fi
 log "latest dump: $LATEST"
-gsutil -q cp "$LATEST" "$DUMP_GZ"
+gcloud storage cp "$LATEST" "$DUMP_GZ" --quiet
 gunzip -c "$DUMP_GZ" > "$DUMP"
 
 # ------------------------------------------------------------------ Boot Postgres
@@ -159,13 +157,13 @@ log "journal_entries=$JOURNAL_ROWS chat_threads=$THREADS_ROWS hnsw_indexes=$HNSW
 
 if [[ "$JOURNAL_ROWS" =~ ^[0-9]+$ ]] && [[ "$THREADS_ROWS" =~ ^[0-9]+$ ]] && [[ "$HNSW_INDEX_COUNT" =~ ^[0-9]+$ ]] && (( HNSW_INDEX_COUNT > 0 )); then
   # PR-08: Include GCS bucket status in healthchecks ping body
-  BUCKET_STATUS="versioning=$(gsutil versioning get "gs://${GCS_BACKUP_BUCKET}" 2>/dev/null | grep -c 'Enabled' || echo 0)"
+  BUCKET_STATUS="versioning=$(gcloud storage buckets describe "gs://${GCS_BACKUP_BUCKET}" --format='value(versioning.enabled)' 2>/dev/null || echo unknown)"
   if [[ -n "$BUCKET_WARNINGS" ]]; then
     BUCKET_STATUS="${BUCKET_STATUS} warnings=${BUCKET_WARNINGS% }"
   fi
   ping_hc success "journal=$JOURNAL_ROWS threads=$THREADS_ROWS hnsw=$HNSW_INDEX_COUNT dump=$LATEST ${BUCKET_STATUS}"
   echo "$(date -u +%FT%TZ) journal=$JOURNAL_ROWS threads=$THREADS_ROWS hnsw=$HNSW_INDEX_COUNT dump=$LATEST" \
-    | gsutil -q cp - "gs://${GCS_BACKUP_BUCKET}/verify/last-success.txt"
+    | gcloud storage cp - "gs://${GCS_BACKUP_BUCKET}/verify/last-success.txt" --quiet
 else
   ping_hc fail "restore verification failed (rows or hnsw indexes missing)"
   exit 1

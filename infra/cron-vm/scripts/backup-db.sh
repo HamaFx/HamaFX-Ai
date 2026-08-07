@@ -52,16 +52,16 @@ log "dumping → $TARGET"
 set -o pipefail
 if ! pg_dump --format=custom --no-owner --no-privileges --dbname="$DB_DUMP_URL" \
   | gzip --rsyncable \
-  | gsutil -q cp - "$TARGET"; then
-  log 'pg_dump | gzip | gsutil failed'
+  | gcloud storage cp - "$TARGET" --quiet; then
+  log 'pg_dump | gzip | gcloud storage failed'
   ping_hc fail "pg_dump pipeline failed at $DATE_UTC"
   exit 1
 fi
 
 DURATION=$(( $(date +%s) - START ))
 
-# `gsutil stat` to confirm the object exists + report its size.
-SIZE_BYTES="$(gsutil stat "$TARGET" 2>/dev/null | awk '/Content-Length/ {print $2}' || echo 0)"
+# Confirm the object exists and report its size.
+SIZE_BYTES="$(gcloud storage objects describe "$TARGET" --format='value(size)' 2>/dev/null || echo 0)"
 
 log "done size=${SIZE_BYTES}B duration=${DURATION}s"
 ping_hc success "size=${SIZE_BYTES}B duration=${DURATION}s target=${TARGET}"
