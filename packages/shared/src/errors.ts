@@ -21,6 +21,7 @@ export const ERROR_CODES = [
   'VALIDATION',
   'UNAUTHORIZED',
   'FORBIDDEN',
+  'CONFLICT',
   'NOT_FOUND',
   'RATE_LIMITED',
   'PROVIDER_UNAVAILABLE',
@@ -86,6 +87,9 @@ export const forbidden = (message = 'Forbidden'): AppError =>
 
 export const rateLimited = (message = 'Too Many Requests'): AppError =>
   new AppError('RATE_LIMITED', message, 429);
+
+export const conflict = (message = 'Conflict', details?: unknown): AppError =>
+  new AppError('CONFLICT', message, 409, details);
 
 export const notFound = (message = 'Not found'): AppError =>
   new AppError('NOT_FOUND', message, 404);

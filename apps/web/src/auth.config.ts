@@ -6,33 +6,29 @@
 
 import type { NextAuthConfig } from 'next-auth';
 
-// P2-3: Prod boot invariant — AUTH_SECRET is mandatory in production.
-// The dev fallback must never be used in prod because it ships in the
-// public repo and would allow JWT forgery.
-if (
-  process.env.NODE_ENV === 'production' &&
-  !process.env.AUTH_SECRET &&
-  !process.env.NEXTAUTH_SECRET
-) {
-  throw new Error(
-    '[SECURITY] AUTH_SECRET (or NEXTAUTH_SECRET) must be set in production. ' +
-      'Generate: node -e "console.log(crypto.randomBytes(32).toString(\'hex\'))"',
-  );
-}
+// P2-3 / C-2: Production invariants are checked when middleware handles a
+// request, not at module evaluation time. Next.js evaluates this Edge config
+// during `next build`; request-time checks keep builds hermetic without
+// creating an environment-variable bypass that could weaken runtime auth.
+export function assertProductionSecurity(): void {
+  if (
+    process.env.NODE_ENV === 'production' &&
+    !process.env.AUTH_SECRET &&
+    !process.env.NEXTAUTH_SECRET
+  ) {
+    throw new Error(
+      '[SECURITY] AUTH_SECRET (or NEXTAUTH_SECRET) must be set in production. ' +
+        'Generate: node -e "console.log(crypto.randomBytes(32).toString(\'hex\'))"',
+    );
+  }
 
-// C-2: Hard-block AUTH_MODE=legacy in production. Legacy auth mode
-// bypasses all authentication — it must NEVER be active when
-// NODE_ENV=production. Previously ALLOW_LEGACY_AUTH provided an
-// escape hatch; that has been removed as a security risk.
-if (
-  process.env.AUTH_MODE === 'legacy' &&
-  process.env.NODE_ENV === 'production'
-) {
-  throw new Error(
-    '[SECURITY] AUTH_MODE=legacy is forbidden in production. ' +
-      'Legacy auth mode bypasses all authentication and must only be used in development. ' +
-      'Unset AUTH_MODE or set it to "normal" for production deployments.',
-  );
+  if (process.env.AUTH_MODE === 'legacy' && process.env.NODE_ENV === 'production') {
+    throw new Error(
+      '[SECURITY] AUTH_MODE=legacy is forbidden in production. ' +
+        'Legacy auth mode bypasses all authentication and must only be used in development. ' +
+        'Unset AUTH_MODE or set it to "normal" for production deployments.',
+    );
+  }
 }
 
 // Dev fallback: ensures the Edge middleware never runs without a
@@ -60,9 +56,10 @@ export const authConfig: NextAuthConfig = {
   },
   callbacks: {
     authorized({ auth, request: { nextUrl } }) {
+      assertProductionSecurity();
       // C-2: Legacy mode is ONLY allowed when NODE_ENV !== 'production'.
       // The ALLOW_LEGACY_AUTH escape hatch has been removed — legacy auth
-      // in production is now a hard error at module load time (see above).
+      // in production is now a hard error when middleware handles a request.
       if (
         process.env.AUTH_MODE === 'legacy' &&
         process.env.NODE_ENV !== 'production'

@@ -36,6 +36,7 @@ describe('ERROR_CODES', () => {
       'VALIDATION',
       'UNAUTHORIZED',
       'FORBIDDEN',
+      'CONFLICT',
       'NOT_FOUND',
       'RATE_LIMITED',
       'PROVIDER_UNAVAILABLE',
@@ -45,7 +46,7 @@ describe('ERROR_CODES', () => {
   });
 
   it('is a readonly tuple', () => {
-    expect(ERROR_CODES.length).toBe(8);
+    expect(ERROR_CODES.length).toBe(9);
   });
 });
 

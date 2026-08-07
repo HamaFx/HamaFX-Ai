@@ -20,15 +20,10 @@ export const GET = withAuth<{ jobId: string }>(async (req, ctx) => {
     return Response.json({ error: { code: 'VALIDATION', message: 'Invalid jobId' } }, { status: 400 });
   }
 
-  const job = await getAnalysisJob(jobId);
+  const job = await getAnalysisJob(ctx.user.userId, jobId);
 
   if (!job) {
     return Response.json({ error: { code: 'NOT_FOUND', message: 'Job not found' } }, { status: 404 });
-  }
-
-  // IDOR guard: only the owning user can poll their own jobs.
-  if (job.userId !== ctx.user.userId) {
-    return Response.json({ error: { code: 'FORBIDDEN', message: 'Not your job' } }, { status: 403 });
   }
 
   return Response.json({

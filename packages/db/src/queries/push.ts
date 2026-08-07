@@ -30,12 +30,17 @@ export async function listPushSubscriptions(userId: string): Promise<PushSubscri
     .where(eq(schema.pushSubscriptions.userId, userId));
 }
 
-export async function getPushSubscriptionByEndpoint(endpoint: string): Promise<PushSubscriptionRow | undefined> {
+export async function getPushSubscriptionByEndpoint(userId: string, endpoint: string): Promise<PushSubscriptionRow | undefined> {
   const db = getDb();
   const rows = await db
     .select()
     .from(schema.pushSubscriptions)
-    .where(eq(schema.pushSubscriptions.endpoint, endpoint))
+    .where(
+      and(
+        eq(schema.pushSubscriptions.endpoint, endpoint),
+        eq(schema.pushSubscriptions.userId, userId),
+      ),
+    )
     .limit(1);
   return rows[0];
 }
@@ -53,7 +58,14 @@ export async function deletePushSubscription(id: string, userId: string): Promis
     .where(and(eq(schema.pushSubscriptions.id, id), eq(schema.pushSubscriptions.userId, userId)));
 }
 
-export async function deletePushSubscriptionByEndpoint(endpoint: string): Promise<void> {
+export async function deletePushSubscriptionByEndpoint(userId: string, endpoint: string): Promise<void> {
   const db = getDb();
-  await db.delete(schema.pushSubscriptions).where(eq(schema.pushSubscriptions.endpoint, endpoint));
+  await db
+    .delete(schema.pushSubscriptions)
+    .where(
+      and(
+        eq(schema.pushSubscriptions.endpoint, endpoint),
+        eq(schema.pushSubscriptions.userId, userId),
+      ),
+    );
 }

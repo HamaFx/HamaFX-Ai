@@ -11,9 +11,12 @@
 //   401 { error: 'unauthorized' }    when the session cookie is missing/invalid
 //   503 { missing: string[] }        when VAPID keys are not configured
 
-import { savePushSubscription } from '@hamafx/ai';
+import {
+  PushSubscriptionConflictError,
+  savePushSubscription,
+} from '@hamafx/ai';
 import { withRateLimit } from '@hamafx/db';
-import { AppError } from '@hamafx/shared';
+import { AppError, conflict } from '@hamafx/shared';
 import { z } from 'zod';
 
 import { errorResponse, withAuth } from '@/lib/api';
@@ -55,13 +58,24 @@ export const POST = withAuth<void>(async (req, { user }) => {
   }
 
   const userAgent = req.headers.get('user-agent') ?? null;
-  const row = await savePushSubscription({
-    userId: user.userId,
-    endpoint: parsed.data.endpoint,
-    p256dh: parsed.data.keys.p256dh,
-    auth: parsed.data.keys.auth,
-    userAgent,
-  });
+  let row: Awaited<ReturnType<typeof savePushSubscription>>;
+  try {
+    row = await savePushSubscription({
+      userId: user.userId,
+      endpoint: parsed.data.endpoint,
+      p256dh: parsed.data.keys.p256dh,
+      auth: parsed.data.keys.auth,
+      userAgent,
+    });
+  } catch (error) {
+    if (error instanceof PushSubscriptionConflictError) {
+      return errorResponse(
+        conflict('This push endpoint is already registered to another user.'),
+        req,
+      );
+    }
+    throw error;
+  }
 
   return Response.json({ id: row.id }, { status: 200 });
 });

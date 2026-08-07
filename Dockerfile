@@ -31,11 +31,15 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/pnpm-lock.yaml ./
 COPY . .
 
-# Build only the web app (Turborepo handles transitive deps)
-ARG AUTH_SECRET
-ENV AUTH_SECRET=$AUTH_SECRET
+# Build only the web app (Turborepo handles transitive deps).
+# Explicitly neutralize local legacy-auth settings during image creation;
+# runtime authentication is still enforced by auth.config.ts/middleware.
 ENV NEXT_TELEMETRY_DISABLED=1
-RUN pnpm turbo run build --filter=@hamafx/web...
+RUN AUTH_MODE=normal pnpm turbo run build --filter=@hamafx/web...
+
+# Prepare the small production dependency tree used by the runtime migrator.
+# Next.js standalone tracing does not see this separately-run .mjs script.
+RUN pnpm --filter=@hamafx/db deploy --prod /runtime/db
 
 # ── Runner ────────────────────────────────────────────────
 FROM base AS runner
@@ -48,9 +52,15 @@ COPY --from=builder /app/apps/web/.next/standalone ./
 COPY --from=builder /app/apps/web/.next/static ./apps/web/.next/static
 COPY --from=builder /app/apps/web/public ./apps/web/public
 
-# Copy drizzle migrations and config for auto-migrate on boot
+# Copy drizzle migrations and the runtime migrator for auto-migrate on boot.
 COPY --from=builder /app/packages/db/drizzle ./packages/db/drizzle
 COPY --from=builder /app/packages/db/drizzle.config.ts ./packages/db/drizzle.config.ts
+
+# Keep migrator dependencies isolated from Next.js standalone's traced tree.
+# ESM resolves these packages from the migrator's local node_modules.
+COPY --from=builder /runtime/db/node_modules ./runtime-migrate/node_modules
+COPY --from=builder /app/apps/web/scripts/migrate-runtime.mjs ./runtime-migrate/migrate-runtime.mjs
+COPY --from=builder /app/apps/web/scripts/wait-for-db.mjs ./runtime-migrate/wait-for-db.mjs
 
 # Copy entrypoint
 COPY apps/web/docker-entrypoint.sh /entrypoint.sh

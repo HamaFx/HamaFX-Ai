@@ -24,7 +24,7 @@
 // Pattern mirrors ToolRegistry (packages/ai/src/tools/registry.ts)
 // and IndicatorRegistry (packages/indicators/src/indicator-registry.ts).
 
-import type { AlertRule, Symbol, Timeframe } from '@hamafx/shared';
+import type { AlertRule } from '@hamafx/shared';
 import { LevelSpec, CrossingSpec, type AlertSpec } from './spec';
 
 // --- Plugin definition --------------------------------------------------

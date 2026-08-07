@@ -15,7 +15,6 @@
  */
 
 import { logErrorContext } from '@hamafx/shared/logger';
-import { schema } from '@hamafx/db';
 import {
   ConveneCommitteeInputSchema,
   type ConveneCommitteeInput,
@@ -146,7 +145,7 @@ No markdown fences, no preamble.`;
     const parsed = parseJsonOrThrow<Omit<CommitteeVerdict, 'persona' | 'sources'>>(text, 'economist');
 
     // Extract citations from the tool calls if available
-    let sources: string[] = [];
+    const sources: string[] = [];
     for (const step of steps) {
       if (step.toolResults) {
         for (const res of step.toolResults) {

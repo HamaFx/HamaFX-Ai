@@ -62,7 +62,7 @@ vi.mock('@hamafx/db', () => ({
 vi.mock('../src/alerts/persistence', () => ({
   listEvaluable: vi.fn(),
   setRulePreviousValue: vi.fn(async () => undefined),
-  markFired: vi.fn(async () => undefined),
+  markFiredForAlert: vi.fn(async () => undefined),
 }));
 
 vi.mock('../src/alerts/delivery', () => ({

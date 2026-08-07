@@ -1,0 +1,10 @@
+[Unit]
+Description=Billing webhook DLQ alert every hour
+
+[Timer]
+OnCalendar=hourly
+RandomizedDelaySec=60
+Unit=hamafx-billing-dlq.service
+
+[Install]
+WantedBy=timers.target

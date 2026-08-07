@@ -126,12 +126,22 @@ export function getDbRO(): DbClient {
  * the same Node process.
  */
 function resolveSslOptions(): false | { rejectUnauthorized: boolean; ca?: string } {
-  // DB_DISABLE_SSL: explicit opt-out of TLS (e.g. Docker Compose, CI).
-  // Must be checked FIRST because Next.js statically replaces
-  // process.env.NODE_ENV at build time, which means production/non-prod
-  // branches get dead-code-eliminated. This custom env var is NOT
-  // statically evaluated by Next.js, so it survives the build.
-  if (process.env.DB_DISABLE_SSL === 'true') return false;
+  // DB_DISABLE_SSL is permitted only for the bundled plain-TCP Docker
+  // database (or non-production test/dev). A production deployment outside
+  // that explicit local boundary must fail closed rather than silently
+  // disabling database TLS.
+  if (process.env.DB_DISABLE_SSL === 'true') {
+    if (
+      process.env.NODE_ENV !== 'production' ||
+      process.env.HAMAFX_LOCAL_DOCKER === 'true'
+    ) {
+      return false;
+    }
+    throw new Error(
+      '[db] DB_DISABLE_SSL=true is only permitted with HAMAFX_LOCAL_DOCKER=true; ' +
+        'configure verified TLS for production databases.',
+    );
+  }
 
   const ca = process.env.SUPABASE_CA_CERT?.replace(/\\n/g, '\n').trim();
   if (ca) {
@@ -177,8 +187,9 @@ export function getDb(): DbClient {
   // Supabase pooler in transaction mode requires `prepare: false`. The pooler
   // doesn't support prepared statements; postgres-js otherwise tries to use them.
   //
-  // DB-2: TLS verification is now mandatory in production without SUPABASE_CA_CERT.
-  // Dev/test and explicit DB_ALLOW_INSECURE_TLS=true opt-out still allow insecure TLS.
+  // DB-2: TLS verification is mandatory for non-local production deployments.
+  // Local Compose explicitly opts out through HAMAFX_LOCAL_DOCKER=true and
+  // DB_DISABLE_SSL=true.
   _sql = postgres(url, {
     prepare: false,
     max: resolvePoolMax(),

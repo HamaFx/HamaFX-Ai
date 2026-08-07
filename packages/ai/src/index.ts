@@ -245,6 +245,7 @@ export {
   deletePushSubscriptionByEndpoint,
   type PushSubscriptionRow,
   type SavePushSubscriptionArgs,
+  PushSubscriptionConflictError,
 } from './push/persistence';
 export { sendWebPush, type SendWebPushResult, type VapidEnv } from './push/send';
 

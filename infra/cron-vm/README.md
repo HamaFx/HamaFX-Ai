@@ -38,6 +38,7 @@ Firewall rules are configured by `_provision.sh` during VM setup.
 | `/api/cron/calendar` | Every 15 min | FRED calendar ingestion |
 | `/api/cron/alerts` | Every 5 min | Alert evaluation + delivery |
 | `/api/cron/warm-cache` | Every 2 min | Pre-fetches the most-used market data so first chat / chart load is hot (Phase 7a) |
+| `/api/cron/billing-dlq` | Every hour | Alerts on stale authenticated billing webhook failures |
 | **(worker)** `briefings` | Every 5 min | Pre/post event briefings (Phase 8 PR-10) |
 | **(worker)** `snapshots` | 00:05 UTC daily | Daily HLOC/pivots/ATR + candles_1m prune (Phase 8 PR-11) |
 | **(worker)** `embedding-backfill` | Every 6 hours | News embedding computation (Phase 8 PR-9) |
@@ -46,10 +47,11 @@ Firewall rules are configured by `_provision.sh` during VM setup.
 | **(worker)** `cot` | Friday 22:00 UTC | CFTC CoT ingestion (Phase 8 PR-12) |
 
 Phase 8 PR-15 — the legacy `cron` daemon is replaced by **systemd
-timers**. All timers are driven from `infra/cron-vm/units/*`. The light
-crons (top four rows above) still poke Vercel via curl. The heavy jobs
+timers**. All timers are driven from `infra/cron-vm/units/*`.The light crons (top five rows above) still poke Vercel via curl. The heavy jobs
 (rows tagged "(worker)") run as systemd `oneshot` services on the VM
-itself; their Vercel route counterparts remain as manual-fallback paths.
+itself; their Vercel route counterparts remain as manual-fallback paths. The
+billing DLQ alert is also a VM-managed light cron because Vercel Hobby does
+not support hourly Vercel Cron schedules.
 
 ## Setup / Update
 

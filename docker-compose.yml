@@ -74,6 +74,10 @@ services:
       - "3000:3000"
     environment:
       DATABASE_URL: postgres://hamafx:${POSTGRES_PASSWORD}@db:5432/hamafx
+      HAMAFX_LOCAL_DOCKER: "true"
+      # The bundled Postgres service is plain TCP. This explicit local-only
+      # flag prevents the production DB client from attempting TLS against it.
+      DB_DISABLE_SSL: "true"
       NODE_ENV: production
       # PERF-06: Tune the postgres-js connection pool. 5 connections per web
       # instance covers concurrent tool calls + budget + telemetry without
@@ -116,6 +120,10 @@ services:
       DATABASE_URL: postgres://hamafx:${POSTGRES_PASSWORD}@db:5432/hamafx
       NODE_ENV: production
       WORKER_MODE: docker
+      HAMAFX_LOCAL_DOCKER: "true"
+      # The bundled Postgres service is plain TCP; production deployments
+      # outside this Compose profile must not set this flag.
+      DB_DISABLE_SSL: "true"
       # PERF-06: Worker pool — 3 is sufficient for tick-flush + cron inserts.
       HAMAFX_RUNTIME: worker
       WORKER_DB_POOL_MAX: "3"

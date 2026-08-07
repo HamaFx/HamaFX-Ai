@@ -14,13 +14,93 @@
  * limitations under the License.
  */
 
-// IPN (NOWPayments) webhook query helpers.
+// IPN (NOWPayments) webhook and checkout safety query helpers.
 
-import { and, eq } from 'drizzle-orm';
+import { randomUUID } from 'node:crypto';
+import { and, eq, isNull, lt, or, sql } from 'drizzle-orm';
 import { getDb, schema } from '../client';
 
+export type IpnClaim =
+  | { kind: 'claimed'; event: typeof schema.ipnEvents.$inferSelect }
+  | { kind: 'processed' }
+  | { kind: 'in_progress' };
+
 /**
- * Find an IPN event by payment ID + status (for idempotency check).
+ * Atomically claim an IPN event for processing.
+ *
+ * A unique key protects against concurrent deliveries. Failed claims are
+ * released and can be claimed again, while successful claims remain done.
+ */
+export async function claimIpnEvent(data: {
+  nowpaymentsPaymentId: string;
+  paymentStatus: string;
+  bodyHash: string;
+  rawBody: unknown;
+}): Promise<IpnClaim> {
+  const db = getDb();
+  const [inserted] = await db
+    .insert(schema.ipnEvents)
+    .values({
+      nowpaymentsPaymentId: data.nowpaymentsPaymentId,
+      paymentStatus: data.paymentStatus,
+      bodyHash: data.bodyHash,
+      rawBody: data.rawBody,
+      processing: true,
+      processingAt: new Date(),
+    })
+    .onConflictDoNothing({
+      target: [schema.ipnEvents.nowpaymentsPaymentId, schema.ipnEvents.paymentStatus],
+    })
+    .returning();
+
+  if (inserted) return { kind: 'claimed', event: inserted };
+
+  const [existing] = await db
+    .select()
+    .from(schema.ipnEvents)
+    .where(
+      and(
+        eq(schema.ipnEvents.nowpaymentsPaymentId, data.nowpaymentsPaymentId),
+        eq(schema.ipnEvents.paymentStatus, data.paymentStatus),
+      ),
+    )
+    .limit(1);
+
+  if (!existing || existing.processed) return { kind: 'processed' };
+  const leaseExpired =
+    existing.processing &&
+    (!existing.processingAt || existing.processingAt < new Date(Date.now() - 5 * 60_000));
+  if (existing.processing && !leaseExpired) return { kind: 'in_progress' };
+
+  const [reclaimed] = await db
+    .update(schema.ipnEvents)
+    .set({
+      processing: true,
+      processingAt: new Date(),
+      bodyHash: data.bodyHash,
+      rawBody: data.rawBody,
+      error: null,
+      receivedAt: new Date(),
+    })
+    .where(
+      and(
+        eq(schema.ipnEvents.nowpaymentsPaymentId, data.nowpaymentsPaymentId),
+        eq(schema.ipnEvents.paymentStatus, data.paymentStatus),
+        eq(schema.ipnEvents.processed, false),
+        or(
+          eq(schema.ipnEvents.processing, false),
+          isNull(schema.ipnEvents.processingAt),
+          lt(schema.ipnEvents.processingAt, new Date(Date.now() - 5 * 60_000)),
+        ),
+      ),
+    )
+    .returning();
+
+  return reclaimed ? { kind: 'claimed', event: reclaimed } : { kind: 'in_progress' };
+}
+
+/**
+ * Legacy lookup retained for callers and operational tooling.
  */
 export async function findIpnEvent(paymentId: string, paymentStatus: string) {
   const db = getDb();
@@ -37,9 +117,7 @@ export async function findIpnEvent(paymentId: string, paymentStatus: string) {
   return existing[0] ?? null;
 }
 
-/**
- * Insert a new IPN event. Catches duplicate key errors gracefully.
- */
+/** Insert an IPN event for legacy/manual callers. */
 export async function insertIpnEvent(data: {
   nowpaymentsPaymentId: string;
   paymentStatus: string;
@@ -47,25 +125,15 @@ export async function insertIpnEvent(data: {
   rawBody: unknown;
 }): Promise<void> {
   const db = getDb();
-  try {
-    await db.insert(schema.ipnEvents).values({
-      nowpaymentsPaymentId: data.nowpaymentsPaymentId,
-      paymentStatus: data.paymentStatus,
-      bodyHash: data.bodyHash,
-      rawBody: data.rawBody,
+  await db
+    .insert(schema.ipnEvents)
+    .values(data)
+    .onConflictDoNothing({
+      target: [schema.ipnEvents.nowpaymentsPaymentId, schema.ipnEvents.paymentStatus],
     });
-  } catch (err) {
-    if (String(err).includes('duplicate') || String(err).includes('unique')) {
-      // Duplicate — concurrent insert, ignore
-      return;
-    }
-    throw err;
-  }
 }
 
-/**
- * Mark an IPN event as processed.
- */
+/** Mark a claimed IPN event as successfully processed. */
 export async function markIpnProcessed(
   paymentId: string,
   paymentStatus: string,
@@ -74,7 +142,7 @@ export async function markIpnProcessed(
   const db = getDb();
   await db
     .update(schema.ipnEvents)
-    .set({ processed: true, error, processedAt: new Date() })
+    .set({ processed: true, processing: false, processingAt: null, error, processedAt: new Date() })
     .where(
       and(
         eq(schema.ipnEvents.nowpaymentsPaymentId, paymentId),
@@ -83,13 +151,149 @@ export async function markIpnProcessed(
     );
 }
 
-/**
- * Update a payment row status and associated fields.
- */
+/** Release a failed claim so a provider retry or operator replay can retry it. */
+export async function markIpnFailed(
+  paymentId: string,
+  paymentStatus: string,
+  error: string,
+): Promise<void> {
+  const db = getDb();
+  await db
+    .update(schema.ipnEvents)
+    .set({ processed: false, processing: false, processingAt: null, error, processedAt: null })
+    .where(
+      and(
+        eq(schema.ipnEvents.nowpaymentsPaymentId, paymentId),
+        eq(schema.ipnEvents.paymentStatus, paymentStatus),
+      ),
+    );
+}
+
+/** Persist an authenticated webhook failure for manual replay. */
+export async function recordBillingWebhookFailure(data: {
+  eventType: string;
+  eventId: string;
+  payload: unknown;
+  error: string;
+}): Promise<void> {
+  const db = getDb();
+  await db
+    .insert(schema.billingWebhookDlq)
+    .values({
+      provider: 'nowpayments',
+      eventType: data.eventType,
+      eventId: data.eventId,
+      payload: data.payload,
+      error: data.error,
+    })
+    .onConflictDoUpdate({
+      target: [
+        schema.billingWebhookDlq.provider,
+        schema.billingWebhookDlq.eventId,
+        schema.billingWebhookDlq.eventType,
+      ],
+      set: {
+        payload: data.payload,
+        error: data.error,
+        status: 'pending',
+        replayedAt: null,
+        replayStartedAt: null,
+        replayToken: null,
+      },
+    });
+}
+
+/** Count pending authenticated webhook failures older than the alert threshold. */
+export async function countStaleBillingWebhookFailures(cutoff: Date): Promise<number> {
+  const db = getDb();
+  const [row] = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(schema.billingWebhookDlq)
+    .where(
+      and(
+        eq(schema.billingWebhookDlq.status, 'pending'),
+        lt(schema.billingWebhookDlq.receivedAt, cutoff),
+      ),
+    );
+  return Number(row?.count ?? 0);
+}
+
+/** Get one DLQ entry for an authenticated operator replay. */
+export async function getBillingWebhookFailure(id: string) {
+  const db = getDb();
+  const [entry] = await db
+    .select()
+    .from(schema.billingWebhookDlq)
+    .where(eq(schema.billingWebhookDlq.id, id))
+    .limit(1);
+  return entry ?? null;
+}
+
+/** Atomically reserve a pending DLQ entry for replay. */
+export async function claimBillingWebhookReplay(id: string) {
+  const db = getDb();
+  const replayCutoff = new Date(Date.now() - 10 * 60_000);
+  const replayToken = randomUUID();
+  const [entry] = await db
+    .update(schema.billingWebhookDlq)
+    .set({ status: 'replaying', replayStartedAt: new Date(), replayToken })
+    .where(
+      and(
+        eq(schema.billingWebhookDlq.id, id),
+        or(
+          eq(schema.billingWebhookDlq.status, 'pending'),
+          and(
+            eq(schema.billingWebhookDlq.status, 'replaying'),
+            or(
+              isNull(schema.billingWebhookDlq.replayStartedAt),
+              lt(schema.billingWebhookDlq.replayStartedAt, replayCutoff),
+            ),
+          ),
+        ),
+      ),
+    )
+    .returning();
+  return entry ?? null;
+}
+
+/** Mark a successfully replayed DLQ entry owned by this replay lease. */
+export async function markBillingWebhookReplayed(id: string, replayToken: string): Promise<void> {
+  const db = getDb();
+  const [updated] = await db
+    .update(schema.billingWebhookDlq)
+    .set({ status: 'replayed', replayedAt: new Date(), replayStartedAt: null, replayToken: null })
+    .where(
+      and(
+        eq(schema.billingWebhookDlq.id, id),
+        eq(schema.billingWebhookDlq.status, 'replaying'),
+        eq(schema.billingWebhookDlq.replayToken, replayToken),
+      ),
+    )
+    .returning();
+  if (!updated) throw new Error('DLQ replay lease was lost before completion');
+}
+
+/** Release a failed replay owned by this replay lease back to the queue. */
+export async function releaseBillingWebhookReplay(id: string, error: string, replayToken: string): Promise<void> {
+  const db = getDb();
+  await db
+    .update(schema.billingWebhookDlq)
+    .set({ status: 'pending', error, replayStartedAt: null, replayToken: null })
+    .where(
+      and(
+        eq(schema.billingWebhookDlq.id, id),
+        eq(schema.billingWebhookDlq.status, 'replaying'),
+        eq(schema.billingWebhookDlq.replayToken, replayToken),
+      ),
+    );
+}
+
+/** Update a payment row status and associated fields. */
 export async function updatePaymentStatus(
   paymentId: string,
   data: {
     status: string;
+    nowpaymentsPaymentId?: string;
     txHash?: string | null;
     payAmount?: string | null;
     payCurrency?: string | null;
@@ -101,6 +305,7 @@ export async function updatePaymentStatus(
     status: data.status,
     updatedAt: new Date(),
   };
+  if (data.nowpaymentsPaymentId !== undefined) updateData.nowpaymentsPaymentId = data.nowpaymentsPaymentId;
   if (data.txHash !== undefined) updateData.txHash = data.txHash;
   if (data.payAmount !== undefined) updateData.payAmount = data.payAmount;
   if (data.payCurrency !== undefined) updateData.payCurrency = data.payCurrency;
@@ -110,24 +315,43 @@ export async function updatePaymentStatus(
 }
 
 /**
- * Get a payment by NOWPayments payment ID.
+ * Resolve a payment by provider payment ID and, when supplied, invoice ID.
+ * If both identifiers resolve to different rows, reject the webhook instead
+ * of allowing an ambiguous cross-invoice update.
  */
-export async function getPaymentByNowpaymentsId(nowpaymentsPaymentId: string) {
+export async function getPaymentByNowpaymentsId(
+  nowpaymentsPaymentId: string,
+  nowpaymentsInvoiceId?: string,
+) {
   const db = getDb();
-  const [payment] = await db
+  const [byPaymentId] = await db
     .select()
     .from(schema.payments)
     .where(eq(schema.payments.nowpaymentsPaymentId, nowpaymentsPaymentId))
     .limit(1);
-  return payment ?? null;
+
+  if (!nowpaymentsInvoiceId) return byPaymentId ?? null;
+
+  const [byInvoiceId] = await db
+    .select()
+    .from(schema.payments)
+    .where(eq(schema.payments.nowpaymentsInvoiceId, nowpaymentsInvoiceId))
+    .limit(1);
+
+  // Older payment rows may not have stored an invoice ID. In that case an
+  // exact payment-ID match remains authoritative; reject only a proven
+  // cross-row mismatch.
+  if (byPaymentId && !byInvoiceId) return byPaymentId;
+  if (byPaymentId && byInvoiceId && byPaymentId.id !== byInvoiceId.id) {
+    throw new Error('NOWPayments payment ID and invoice ID refer to different payment rows');
+  }
+  return byInvoiceId ?? null;
 }
 
 /** Subscription status mapper from NOWPayments status. */
 export type SubscriptionStatus = 'active' | 'past_due' | 'canceled';
 
-/**
- * Update subscription status based on payment outcome.
- */
+/** Update subscription status based on payment outcome. */
 export async function updateSubscriptionFromPayment(
   subscriptionId: string,
   paymentStatus: string,

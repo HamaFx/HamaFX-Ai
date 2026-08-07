@@ -24,41 +24,34 @@
 // top-to-bottom as: setup → reserveTurnBudget → build messages → route →
 // runChatWithFallback → budget.reconcile().
 
-import { getMessageText, pickAiEnv, type AiEnvKeys, type ServerEnv } from '@hamafx/shared';
+import { getMessageText, pickAiEnv } from '@hamafx/shared';
 import { logErrorContext, createCategorizedLogger } from '@hamafx/shared/logger';
 import {
   convertToModelMessages,
   stepCountIs,
-  streamText,
   type ModelMessage,
   type UIMessage,
   type LanguageModel,
   type Tool,
 } from 'ai';
+import type { streamText } from 'ai';
 
 import { telemetryConfig } from './telemetry';
 
 import { buildLiveSnapshot } from './context';
-import type { LiveSnapshot } from './prompt/system';
 import {
   DEFAULT_MAX_DAILY_USD,
   estimateCostUsd,
-  checkBudgetAlertsAndThresholds,
 } from './cost';
 import type { FallbackPartPayload } from './fallback';
 import { estimateContextUsage } from './token-estimate';
 import { compactThread } from './memory/thread-summary';
 import {
   derivePlannerModel,
-  deriveTitleModel,
-  resolveChatModel,
-  resolveOverrideModel,
-  resolveModelForProvider,
   getVertexGoogleSearchTool,
   supportsPromptCaching,
 } from './model';
 import { decryptByok, type ProviderId } from '@hamafx/shared/encryption';
-import { PROVIDER_IDS } from '@hamafx/shared/byok';
 import {
   appendAssistantMessage,
   appendUserMessage,
@@ -70,9 +63,7 @@ import { buildSystemPrompt, userContextFromSettings } from './prompt/system';
 import { extractUserMessageText } from './message-text';
 import { routeTurn, type RoutingDecision } from './routing';
 // generateTitle — moved to chat/auto-title.ts (P0-1)
-import { toModelDomain } from './model-resolution';
 import { withToolContext, type ToolContext } from './tool-context';
-import { toolRegistry } from './tools';
 import { enforceCitations } from './verification';
 import { waitUntil } from './wait-until';
 import { schema, getUserWithSettings } from '@hamafx/db';
@@ -93,8 +84,8 @@ import { withDiagnostics, recordStep, completeStep, recordError, exportDiagnosti
 import { resolveModelForTurn, type ResolveModelContext } from './chat/resolve-model';
 import { countToolCalls, flushBatchedTelemetry } from './chat/helpers';
 import { runAutoTitleBackground } from './chat/auto-title';
-import { reserveTurnBudget, type BudgetHandle } from './budget-reservation';
-import { runChatWithFallback, type AttemptContext, type AttemptResult } from './chat-retry-loop';
+import { reserveTurnBudget } from './budget-reservation';
+import { runChatWithFallback, type AttemptResult } from './chat-retry-loop';
 import { DB, LLM_CLIENT } from './tokens';
 
 const alog = createCategorizedLogger('ai', { component: 'agent' });

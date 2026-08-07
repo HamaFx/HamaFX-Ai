@@ -22,8 +22,7 @@
 
 import type { ModelDomain } from './model';
 import type { RoutingDomain } from './routing';
-import type { ProviderId } from '@hamafx/shared/encryption';
-import { decryptByok } from '@hamafx/shared/encryption';
+import type { ByokPayload, ProviderId } from '@hamafx/shared/encryption';
 import { BYOK_PROVIDERS } from './byok-providers';
 
 // ---------------------------------------------------------------------------
@@ -49,7 +48,7 @@ export function toModelDomain(domain: RoutingDomain): ModelDomain {
 export function pickNextFallbackProvider(
   chain: string[],
   currentProviderId: ProviderId | string | undefined,
-  decryptedByokKeys: ReturnType<typeof decryptByok> | null,
+  decryptedByokKeys: ByokPayload | null,
   envGoogleKey: string | undefined,
   routingDomain: RoutingDomain,
 ): { providerId: ProviderId; modelId: string | null } | null {

@@ -183,11 +183,11 @@ export async function updateAlert(userId: string, id: string, input: UpdateAlert
 }
 
 /** Mark fired + deactivate (one-shot semantics — see schemas/alerts.ts). */
-export async function markFired(id: string, when = new Date()): Promise<void> {
+export async function markFired(userId: string, id: string, when = new Date()): Promise<void> {
   await getDb()
     .update(schema.alerts)
     .set({ firedAt: when, active: false })
-    .where(eq(schema.alerts.id, id));
+    .where(and(eq(schema.alerts.id, id), eq(schema.alerts.userId, userId)));
 }
 
 /**
@@ -196,13 +196,14 @@ export async function markFired(id: string, when = new Date()): Promise<void> {
  * is the snooze path; the one-shot path above stays unchanged.
  */
 export async function markFiredSnoozed(
+  userId: string,
   id: string,
   when = new Date(),
 ): Promise<void> {
   await getDb()
     .update(schema.alerts)
     .set({ lastFiredAt: when })
-    .where(eq(schema.alerts.id, id));
+    .where(and(eq(schema.alerts.id, id), eq(schema.alerts.userId, userId)));
 }
 
 /**
@@ -238,9 +239,9 @@ export function isInSnooze(
  */
 export async function markFiredForAlert(alert: Alert, when = new Date()): Promise<void> {
   if (alert.snoozeHours > 0) {
-    await markFiredSnoozed(alert.id, when);
+    await markFiredSnoozed(alert.userId, alert.id, when);
   } else {
-    await markFired(alert.id, when);
+    await markFired(alert.userId, alert.id, when);
   }
 }
 
@@ -250,7 +251,7 @@ export async function markFiredForAlert(alert: Alert, when = new Date()): Promis
  * preserve the discriminated-union shape — Drizzle's JSONB column doesn't
  * support partial paths.
  */
-export async function setRulePreviousValue(id: string, rule: AlertRule, value: number): Promise<void> {
+export async function setRulePreviousValue(userId: string, id: string, rule: AlertRule, value: number): Promise<void> {
   if (rule.type !== 'indicatorCross') return;
   const next = { ...rule, previousValue: value };
   // Re-validate: if the rule was edited concurrently, the in-memory copy
@@ -260,7 +261,7 @@ export async function setRulePreviousValue(id: string, rule: AlertRule, value: n
   await getDb()
     .update(schema.alerts)
     .set({ rule: validated })
-    .where(eq(schema.alerts.id, id));
+    .where(and(eq(schema.alerts.id, id), eq(schema.alerts.userId, userId)));
 }
 
 export async function deleteAlert(userId: string, id: string): Promise<void> {

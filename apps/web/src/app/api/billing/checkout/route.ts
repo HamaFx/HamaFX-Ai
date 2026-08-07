@@ -6,7 +6,15 @@
 
 import { z } from 'zod';
 
-import { getPlan, upsertSubscription, createPayment } from '@hamafx/db';
+import {
+  claimCheckoutAttempt,
+  completeCheckoutAttempt,
+  createPayment,
+  failCheckoutAttempt,
+  getPlan,
+  saveCheckoutInvoice,
+  upsertSubscription,
+} from '@hamafx/db';
 import { errorResponse, parseJsonBody, withAuth } from '@/lib/api';
 import { getServerEnv } from '@/lib/env';
 import { createInvoice } from '@/lib/nowpayments';
@@ -18,9 +26,18 @@ const CheckoutSchema = z.object({
   planId: z.string().uuid('Invalid plan ID'),
 });
 
+const IDEMPOTENCY_KEY_MAX_LENGTH = 200;
+
 export const POST = withAuth<void>(async (req, { user }) => {
   try {
     const body = await parseJsonBody(req, CheckoutSchema);
+    const idempotencyKey = req.headers.get('idempotency-key')?.trim();
+    if (!idempotencyKey || idempotencyKey.length > IDEMPOTENCY_KEY_MAX_LENGTH) {
+      return Response.json(
+        { error: { code: 'VALIDATION', message: 'A valid Idempotency-Key header is required' } },
+        { status: 400 },
+      );
+    }
     const env = getServerEnv();
 
     const plan = await getPlan(body.planId);
@@ -37,34 +54,93 @@ export const POST = withAuth<void>(async (req, { user }) => {
       return Response.json({ error: { code: 'NOT_CONFIGURED', message: 'Billing is not configured' } }, { status: 503 });
     }
 
+    const claim = await claimCheckoutAttempt({
+      userId: user.userId,
+      planId: plan.id,
+      idempotencyKey,
+    });
+
+    if (claim.kind === 'completed') {
+      return Response.json({
+        checkoutUrl: claim.attempt.checkoutUrl,
+        invoiceId: claim.attempt.invoiceId,
+        idempotent: true,
+      });
+    }
+    if (claim.kind === 'in_progress') {
+      return Response.json(
+        { error: { code: 'CONFLICT', message: 'Checkout is already being created for this Idempotency-Key' } },
+        { status: 409 },
+      );
+    }
+    if (claim.kind === 'conflict') {
+      return Response.json(
+        { error: { code: 'CONFLICT', message: 'Idempotency-Key was already used for another plan' } },
+        { status: 409 },
+      );
+    }
+
     const appUrl = env.NEXT_PUBLIC_APP_URL;
-    const orderId = `${user.userId}-${plan.id}-${Date.now()}`;
+    const orderId = `${user.userId}-${plan.id}-${idempotencyKey}`;
     const priceAmount = plan.priceUsdCents / 100;
 
-    const invoice = await createInvoice({
-      price_amount: priceAmount,
-      price_currency: 'usd',
-      pay_currency: plan.payCurrency ?? 'usdt',
-      order_id: orderId,
-      order_description: `${plan.name} subscription — HamaFX-Ai`,
-      success_url: `${appUrl}/settings/billing?status=success`,
-      cancelled_url: `${appUrl}/settings/billing?status=cancelled`,
-    });
+    try {
+      const recoveredInvoice =
+        claim.kind === 'claimed' &&
+        claim.attempt.invoiceId &&
+        claim.attempt.checkoutUrl
+          ? {
+              id: claim.attempt.invoiceId,
+              invoice_url: claim.attempt.checkoutUrl,
+            }
+          : null;
+      const invoice = recoveredInvoice ?? (await createInvoice({
+        price_amount: priceAmount,
+        price_currency: 'usd',
+        pay_currency: plan.payCurrency ?? 'usdt',
+        order_id: orderId,
+        order_description: `${plan.name} subscription — HamaFX-Ai`,
+        success_url: `${appUrl}/settings/billing?status=success`,
+        cancelled_url: `${appUrl}/settings/billing?status=cancelled`,
+      }));
 
-    const subscriptionId = await upsertSubscription(user.userId, {
-      planId: plan.id,
-      nowpaymentsInvoiceId: invoice.id,
-    });
+      if (!recoveredInvoice) {
+        await saveCheckoutInvoice({
+          attemptId: claim.attempt.id,
+          invoiceId: invoice.id,
+          checkoutUrl: invoice.invoice_url,
+          processingToken: claim.attempt.processingToken!,
+        });
+      }
 
-    await createPayment({
-      subscriptionId,
-      userId: user.userId,
-      nowpaymentsPaymentId: invoice.id,
-      nowpaymentsInvoiceId: invoice.id,
-      payCurrency: plan.payCurrency ?? 'usdt',
-    });
+      const subscriptionId = await upsertSubscription(user.userId, {
+        planId: plan.id,
+        nowpaymentsInvoiceId: invoice.id,
+      });
 
-    return Response.json({ checkoutUrl: invoice.invoice_url });
+      await createPayment({
+        subscriptionId,
+        userId: user.userId,
+        nowpaymentsInvoiceId: invoice.id,
+        payCurrency: plan.payCurrency ?? 'usdt',
+      });
+
+      await completeCheckoutAttempt({
+        attemptId: claim.attempt.id,
+        invoiceId: invoice.id,
+        checkoutUrl: invoice.invoice_url,
+        processingToken: claim.attempt.processingToken!,
+      });
+
+      return Response.json({ checkoutUrl: invoice.invoice_url, invoiceId: invoice.id });
+    } catch (err) {
+      await failCheckoutAttempt(
+        claim.attempt.id,
+        err instanceof Error ? err.message : String(err),
+        claim.attempt.processingToken!,
+      );
+      throw err;
+    }
   } catch (err) {
     return errorResponse(err, req);
   }

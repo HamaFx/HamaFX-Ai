@@ -20,7 +20,7 @@
 // specialist contract it doesn't honor (LSP-1 fix).
 
 import type { LanguageModel } from 'ai';
-import { resolveChatModel, resolveModelForProvider, supportsPromptCaching, TIER_TO_DOMAIN, type ModelDomain } from '../../model';
+import { resolveChatModel, resolveModelForProvider, TIER_TO_DOMAIN, type ModelDomain } from '../../model';
 import type { ProviderId } from '@hamafx/shared';
 import type { SharedContext, ModelTier, AgentName } from '../types';
 

@@ -79,12 +79,19 @@ if (vercelEnv && vercelEnv !== 'production') {
   process.exit(0);
 }
 
-const envVars = [
-  { name: 'DIRECT_URL', val: process.env.DIRECT_URL },
-  { name: 'POSTGRES_URL_NON_POOLING', val: process.env.POSTGRES_URL_NON_POOLING },
-  { name: 'DATABASE_URL', val: process.env.DATABASE_URL },
-  { name: 'POSTGRES_URL', val: process.env.POSTGRES_URL },
-];
+const isProductionDeploy =
+  vercelEnv === 'production' || process.env.NODE_ENV === 'production';
+const envVars = isProductionDeploy
+  ? [
+      { name: 'DIRECT_URL', val: process.env.DIRECT_URL },
+      { name: 'POSTGRES_URL_NON_POOLING', val: process.env.POSTGRES_URL_NON_POOLING },
+    ]
+  : [
+      { name: 'DIRECT_URL', val: process.env.DIRECT_URL },
+      { name: 'POSTGRES_URL_NON_POOLING', val: process.env.POSTGRES_URL_NON_POOLING },
+      { name: 'DATABASE_URL', val: process.env.DATABASE_URL },
+      { name: 'POSTGRES_URL', val: process.env.POSTGRES_URL },
+    ];
 
 let url = null;
 let urlName = null;
@@ -99,16 +106,18 @@ for (const { name, val } of envVars) {
 if (!url) {
   const found = envVars.filter((e) => e.val && e.val.length > 0).map((e) => e.name);
   console.error(
-    '[predeploy-migrate] No DB connection string found. Available env vars: ' +
+    '[predeploy-migrate] No migration-safe DB connection string found. Available env vars: ' +
       (found.length > 0 ? found.join(', ') : 'none') +
-      '. Set DIRECT_URL or POSTGRES_URL_NON_POOLING before deploying to ensure DDL works.',
+      (isProductionDeploy
+        ? '. Production Vercel deploys require DIRECT_URL or POSTGRES_URL_NON_POOLING.'
+        : '. Set DIRECT_URL or POSTGRES_URL_NON_POOLING before deploying to ensure DDL works.'),
   );
   process.exit(1);
 }
 
 console.log('[predeploy-migrate] Using %s — %s', urlName, redactUrl(url));
 
-if (urlName === 'DATABASE_URL' || urlName === 'POSTGRES_URL') {
+if (!isProductionDeploy && (urlName === 'DATABASE_URL' || urlName === 'POSTGRES_URL')) {
   console.warn('[predeploy-migrate] WARNING: %s may be a pooled connection (e.g. PgBouncer).', urlName);
   console.warn('[predeploy-migrate] DDL through a pooler can fail or hang. Set DIRECT_URL or');
   console.warn('[predeploy-migrate] POSTGRES_URL_NON_POOLING for reliable migrations.');
@@ -196,13 +205,17 @@ try {
 }
 
 try {
-  // Pass the connection string via DATABASE_URL — drizzle-kit reads
-  // it from env (see packages/db/drizzle.config.ts). We use
+  // Pass the connection string via DIRECT_URL — drizzle-kit and the
+  // extension preflight both prefer a direct/session connection. We use
   // execFileSync so the URL never appears in `ps` output.
   execFileSync('pnpm', ['--filter', '@hamafx/db', 'migrate:apply'], {
     cwd: repoRoot,
     stdio: 'inherit',
-    env: { ...process.env, DATABASE_URL: url },
+    env: {
+      ...process.env,
+      DIRECT_URL: url,
+      DATABASE_URL: url,
+    },
   });
   console.log('[predeploy-migrate] OK — pending migrations applied');
 

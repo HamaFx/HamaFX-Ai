@@ -30,7 +30,7 @@
 // compliance only (LSP compliance).
 
 import { describe, it, expect } from 'vitest';
-import { BaseAgent } from '../src/multi-agent/agents/base-agent';
+import type { BaseAgent } from '../src/multi-agent/agents/base-agent';
 
 // PF-12: Load the tool registry (via side-effect imports) before tests run
 // so agent.tools() returns non-empty tool sets.

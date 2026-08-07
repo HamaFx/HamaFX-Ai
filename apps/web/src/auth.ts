@@ -39,6 +39,21 @@ import { validateSession } from '@/lib/auth/session-validators';
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const _nextAuth = NextAuth as any;
 
+function assertProductionSecurity(): void {
+  if (
+    process.env.NODE_ENV === 'production' &&
+    !process.env.AUTH_SECRET &&
+    !process.env.NEXTAUTH_SECRET
+  ) {
+    throw new Error(
+      '[SECURITY] AUTH_SECRET (or NEXTAUTH_SECRET) must be set in production.',
+    );
+  }
+  if (process.env.AUTH_MODE === 'legacy' && process.env.NODE_ENV === 'production') {
+    throw new Error('[SECURITY] AUTH_MODE=legacy is forbidden in production.');
+  }
+}
+
 const IMPERSONATION_ENABLED =
   process.env.NODE_ENV !== 'production' && process.env.ENABLE_IMPERSONATION === 'true';
 
@@ -113,6 +128,7 @@ export const { handlers, auth, signIn, signOut } = _nextAuth({
         ip: { label: 'IP Address', type: 'text' },
       },
       async authorize(credentials, _req) {
+        assertProductionSecurity();
         const email =
           typeof credentials?.email === 'string' ? credentials.email.toLowerCase().trim() : '';
         const password =
@@ -425,6 +441,7 @@ export const { handlers, auth, signIn, signOut } = _nextAuth({
     // provisionUserOnSignIn (typed, testable). The callback stays thin glue.
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     async signIn({ user, account, profile }: { user: any; account: any; profile: any }) {
+      assertProductionSecurity();
       const decision = await provisionUserOnSignIn({ user, account, profile });
       if (!decision.allow) return false;
 
@@ -441,6 +458,7 @@ export const { handlers, auth, signIn, signOut } = _nextAuth({
     },
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     async jwt({ token, user }: { token: any; user: any }) {
+      assertProductionSecurity();
       if (user) {
         token.id = user.id;
         token.tokenVersion = user.tokenVersion ?? 0;
@@ -475,6 +493,7 @@ export const { handlers, auth, signIn, signOut } = _nextAuth({
     },
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     async session({ session, token }: { session: any; token: any }) {
+      assertProductionSecurity();
       if (session.user && token.id) {
         session.user.id = token.id;
       }

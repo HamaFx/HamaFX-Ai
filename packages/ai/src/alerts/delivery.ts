@@ -32,7 +32,7 @@ import type { Alert } from '@hamafx/shared';
 import { logErrorContext, createCategorizedLogger } from '@hamafx/shared/logger';
 
 import { describeRule, type EvaluatorEnv, type RuleReading } from './evaluator';
-import { markFiredForAlert as markFired } from './persistence';
+import { markFiredForAlert } from './persistence';
 import {
   deletePushSubscription,
   listPushSubscriptions,
@@ -135,7 +135,7 @@ async function deliverEmail({ alert, reading, env }: DeliverArgs): Promise<Deliv
   // 2xx response — only now do we mark the alert as fired. This is the single
   // point where markFired is called for the email channel; the evaluator does
   // not call it separately.
-  await markFired(alert);
+  await markFiredForAlert(alert);
   return { alertId: alert.id, channel: 'email', ok: true };
 }
 
@@ -189,6 +189,7 @@ async function deliverTelegram({ alert, reading, env }: DeliverArgs): Promise<De
     await sendTextMessage(env.TELEGRAM_BOT_TOKEN, env.TELEGRAM_CHAT_ID, text, {
       parseMode: 'MarkdownV2',
     });
+    await markFiredForAlert(alert);
     return {
       alertId: alert.id,
       channel: 'telegram',
@@ -204,9 +205,6 @@ async function deliverTelegram({ alert, reading, env }: DeliverArgs): Promise<De
       message: msg,
     };
   }
-
-  await markFired(alert);
-  return { alertId: alert.id, channel: 'telegram', ok: true };
 }
 
 function renderTelegramBody(alert: Alert, reading: RuleReading): string {
@@ -304,10 +302,11 @@ async function deliverWebPush({ alert, reading, env }: DeliverArgs): Promise<Del
   if (!anyOk) {
     // Every active subscription returned 410/404 — none delivered. Still
     // mark the alert fired so we don't re-evaluate it forever; the user
-    // can re-subscribe and the next matching alert will fire normally.alog.warn(`all push subscriptions were dead for alert ${alert.id}; marking fired anyway`);
+    // can re-subscribe and the next matching alert will fire normally.
+    alog.warn(`all push subscriptions were dead for alert ${alert.id}; marking fired anyway`);
   }
 
-  await markFired(alert);
+  await markFiredForAlert(alert);
   return { alertId: alert.id, channel: 'web-push', ok: true };
 }
 

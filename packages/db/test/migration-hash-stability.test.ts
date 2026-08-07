@@ -66,7 +66,11 @@ function computeCurrentHashes(): Record<string, string> {
 
 function loadBaseline(): HashesFile | null {
   if (!existsSync(HASHES_PATH)) return null;
-  return JSON.parse(readFileSync(HASHES_PATH, 'utf-8')) as HashesFile;
+  const contents = readFileSync(HASHES_PATH, 'utf-8').trim();
+  // The hash file is generated/ignored in some working trees. Treat an
+  // empty cache like a missing baseline so the guard can self-heal.
+  if (!contents) return null;
+  return JSON.parse(contents) as HashesFile;
 }
 
 function saveBaseline(hashes: Record<string, string>): void {

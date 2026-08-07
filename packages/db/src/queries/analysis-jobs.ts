@@ -78,12 +78,17 @@ export async function failStaleJobs(staleCutoff: Date): Promise<void> {
 /**
  * Get a single analysis job by ID. Returns null if not found.
  */
-export async function getAnalysisJob(jobId: string): Promise<AnalysisJobRow | null> {
+export async function getAnalysisJob(userId: string, jobId: string): Promise<AnalysisJobRow | null> {
   const db = getDb();
   const [job] = await db
     .select()
     .from(schema.analysisJobs)
-    .where(eq(schema.analysisJobs.id, jobId))
+    .where(
+      and(
+        eq(schema.analysisJobs.id, jobId),
+        eq(schema.analysisJobs.userId, userId),
+      ),
+    )
     .limit(1);
   return job ?? null;
 }

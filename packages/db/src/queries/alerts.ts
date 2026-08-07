@@ -117,6 +117,7 @@ export async function createAlert(
  * Update an existing alert.
  */
 export async function updateAlert(
+  userId: string,
   alertId: string,
   input: UpdateAlertInput,
 ): Promise<AlertRow | null> {
@@ -130,7 +131,12 @@ export async function updateAlert(
       ...(input.active !== undefined ? { active: input.active } : {}),
       ...(input.snoozeHours !== undefined ? { snoozeHours: input.snoozeHours } : {}),
     })
-    .where(eq(schema.alerts.id, alertId))
+    .where(
+      and(
+        eq(schema.alerts.id, alertId),
+        eq(schema.alerts.userId, userId),
+      ),
+    )
     .returning();
   return rows[0] ?? null;
 }
@@ -138,11 +144,16 @@ export async function updateAlert(
 /**
  * Delete an alert by ID.
  */
-export async function deleteAlert(alertId: string): Promise<void> {
+export async function deleteAlert(userId: string, alertId: string): Promise<void> {
   const db = getDb();
   await db
     .delete(schema.alerts)
-    .where(eq(schema.alerts.id, alertId));
+    .where(
+      and(
+        eq(schema.alerts.id, alertId),
+        eq(schema.alerts.userId, userId),
+      ),
+    );
 }
 
 /**
@@ -167,6 +178,7 @@ export async function listActiveAlerts(
  * Mark an alert as fired, setting firedAt and lastFiredAt.
  */
 export async function markAlertFired(
+  userId: string,
   alertId: string,
 ): Promise<void> {
   const db = getDb();
@@ -177,5 +189,10 @@ export async function markAlertFired(
       firedAt: now,
       lastFiredAt: now,
     })
-    .where(eq(schema.alerts.id, alertId));
+    .where(
+      and(
+        eq(schema.alerts.id, alertId),
+        eq(schema.alerts.userId, userId),
+      ),
+    );
 }

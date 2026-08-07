@@ -124,6 +124,7 @@ const EXPECTED_TABLES = [
   'notification_noise_state', 'bot_links',
   // Phase B — Billing (NOWPayments / crypto), migration 0040
   'plans', 'subscriptions', 'payments', 'ipn_events',
+  'billing_webhook_dlq', 'billing_checkout_attempts',
   // Phase 3 — Multi-tenancy, migrations 0035–0041
   'organization', 'organization_member',
 ];
@@ -194,6 +195,28 @@ describe('Phase 6 — Task 27: Full migration chain (all migrations on fresh PGl
       `SELECT conname FROM pg_constraint WHERE contype = 'c' AND conrelid = '"alerts"'::regclass AND conname LIKE '%snooze%'`,
     );
     expect(alertChecks.length).toBeGreaterThan(0);
+  });
+
+  it('billing safety-gate columns and indexes exist', async () => {
+    const db = await getPGliteDb(dir);
+    await applyAll(db);
+
+    const { rows: checkoutColumns } = await db.execute(
+      `SELECT column_name FROM information_schema.columns WHERE table_name = 'billing_checkout_attempts'`,
+    );
+    const checkoutColumnNames = checkoutColumns.map((r: Record<string, unknown>) => r.column_name);
+    expect(checkoutColumnNames).toContain('processing_at');
+
+    const { rows: invoiceIndex } = await db.execute(
+      `SELECT indexname FROM pg_indexes WHERE tablename = 'payments' AND indexname = 'payments_nowpayments_invoice_id_idx'`,
+    );
+    expect(invoiceIndex).toHaveLength(1);
+
+    const { rows: replayColumns } = await db.execute(
+      `SELECT column_name FROM information_schema.columns WHERE table_name = 'billing_webhook_dlq'`,
+    );
+    const replayColumnNames = replayColumns.map((r: Record<string, unknown>) => r.column_name);
+    expect(replayColumnNames).toContain('replay_started_at');
   });
 
   it('key indexes exist', async () => {

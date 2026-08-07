@@ -40,7 +40,9 @@ vi.mock('../src/cost', () => ({
 
 // We need the real BudgetExceededError class for instanceof checks.
 const BudgetExceededErrorActual = (
-  await vi.importActual<typeof import('../src/cost')>('../src/cost')
+  await vi.importActual('../src/cost') as unknown as {
+    BudgetExceededError: new (...args: never[]) => Error;
+  }
 ).BudgetExceededError;
 
 import { reserveTurnBudget } from '../src/budget-reservation';

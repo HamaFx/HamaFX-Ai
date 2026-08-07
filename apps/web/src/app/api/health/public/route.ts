@@ -98,7 +98,8 @@ export async function GET(request: Request): Promise<Response> {
     void start; // latency not exposed in public endpoint
     dbOk = true;
   } catch {
-    // DB unreachable — will return 503 below
+    // DB unreachable — return 503 below. Keep the public response minimal;
+    // detailed connection errors must never be exposed to uptime monitors.
   }
 
   const healthy = dbOk;

@@ -355,7 +355,7 @@ export async function evaluateAlerts(
         // anchor. Best-effort: failures here just mean the next tick
         // re-seeds.
         try {
-          await setRulePreviousValue(alert.id, alert.rule, reading.value);
+          await setRulePreviousValue(alert.userId, alert.id, alert.rule, reading.value);
         } catch (err) {
           elog.warn('setRulePreviousValue failed', { id: alert.id, err: String(err) });
         }

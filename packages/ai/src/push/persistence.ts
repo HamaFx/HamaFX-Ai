@@ -26,7 +26,7 @@
 
 import { schema } from '@hamafx/db';
 import { getDb } from '../db';
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 
 export interface PushSubscriptionRow {
   id: string;
@@ -36,6 +36,13 @@ export interface PushSubscriptionRow {
   auth: string;
   userAgent: string | null;
   createdAt: number;
+}
+
+export class PushSubscriptionConflictError extends Error {
+  constructor() {
+    super('Push subscription endpoint belongs to another user');
+    this.name = 'PushSubscriptionConflictError';
+  }
 }
 
 export interface SavePushSubscriptionArgs {
@@ -59,12 +66,11 @@ function rowToSub(row: typeof schema.pushSubscriptions.$inferSelect): PushSubscr
 }
 
 /** All active subscriptions. The delivery loop fans out across this list. */
-export async function listPushSubscriptions(userId?: string): Promise<PushSubscriptionRow[]> {
-  const query = getDb().select().from(schema.pushSubscriptions);
-  if (userId) {
-    query.where(eq(schema.pushSubscriptions.userId, userId));
-  }
-  const rows = await query;
+export async function listPushSubscriptions(userId: string): Promise<PushSubscriptionRow[]> {
+  const rows = await getDb()
+    .select()
+    .from(schema.pushSubscriptions)
+    .where(eq(schema.pushSubscriptions.userId, userId));
   return rows.map(rowToSub);
 }
 
@@ -86,25 +92,43 @@ export async function savePushSubscription(
     })
     .onConflictDoUpdate({
       target: schema.pushSubscriptions.endpoint,
+      // Never overwrite userId on an endpoint conflict. The endpoint is
+      // globally unique; preserving its owner prevents a caller from
+      // transferring another user's subscription by replaying its endpoint.
+      // The WHERE clause also prevents a different user from overwriting the
+      // owner's keys or user-agent metadata.
       set: {
-        userId: args.userId,
         p256dh: args.p256dh,
         auth: args.auth,
         userAgent: args.userAgent ?? null,
       },
+      setWhere: eq(schema.pushSubscriptions.userId, args.userId),
     })
     .returning();
+  if (inserted.length === 0) {
+    throw new PushSubscriptionConflictError();
+  }
   return rowToSub(inserted[0]!);
 }
 
 export async function deletePushSubscription(userId: string, id: string): Promise<void> {
   await getDb()
     .delete(schema.pushSubscriptions)
-    .where(eq(schema.pushSubscriptions.id, id));
+    .where(
+      and(
+        eq(schema.pushSubscriptions.id, id),
+        eq(schema.pushSubscriptions.userId, userId),
+      ),
+    );
 }
 
 export async function deletePushSubscriptionByEndpoint(userId: string, endpoint: string): Promise<void> {
   await getDb()
     .delete(schema.pushSubscriptions)
-    .where(eq(schema.pushSubscriptions.endpoint, endpoint));
+    .where(
+      and(
+        eq(schema.pushSubscriptions.endpoint, endpoint),
+        eq(schema.pushSubscriptions.userId, userId),
+      ),
+    );
 }

@@ -32,7 +32,7 @@ import { SentimentAgent } from './agents/sentiment-agent';
 import { DecisionAgent } from './agents/decision-agent';
 import type { BaseAgent } from './agents/base-agent';
 import type {
-  AnalysisMode, AgentOpinion, AgentName, SpecialistAgentName,
+  AnalysisMode, AgentOpinion, SpecialistAgentName,
   SharedContext, MultiAgentResult, ProgressEvent, MultiAgentEnv,
 } from './types';
 import { MODE_COST_ESTIMATE } from './types';
@@ -103,8 +103,6 @@ export async function runMultiAgentChat(args: RunMultiAgentArgs): Promise<MultiA
 
   // Hoist symbol to function scope so Q2 signal extraction can use it.
   const symbol = userSettings.defaultSymbol ?? 'XAUUSD';
-  // Snapshot data for Q2 signal extraction (captured inside try, used after).
-  let snapshotPrices: Record<string, unknown> | null = null;
 
   // ── Run specialists + fusion with budget-leak guard ──
   // Wrap the entire execution from shared-context build through
@@ -123,9 +121,6 @@ export async function runMultiAgentChat(args: RunMultiAgentArgs): Promise<MultiA
     const ctxArgs: Parameters<typeof buildSharedContext>[0] = { symbol, userId, threadId, userMessage, history, userSettings, displayName, env, signal };
     if (customInstructions !== undefined) ctxArgs.customInstructions = customInstructions;
     const ctx = await buildSharedContext(ctxArgs);
-    // Capture snapshot prices for Q2 signal extraction (used after try block).
-    snapshotPrices = ctx.snapshot.prices as unknown as Record<string, unknown>;
-
     const specialistNames = selectAgents(effectiveMode);
     const specialists = specialistNames.map((name) => AGENT_FACTORIES[name]());
 

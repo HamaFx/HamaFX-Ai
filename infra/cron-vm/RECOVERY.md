@@ -299,6 +299,7 @@ firing means everything is fine:
 | weekly-review | weekly Sun 18:00 UTC | `HC_JOB_WEEKLY_REVIEW_UUID` |
 | resonance-sync | daily 23:00 UTC | `HC_JOB_RESONANCE_SYNC_UUID` |
 | alerts | every 5 min | `HC_JOB_ALERTS_UUID` |
+| billing DLQ alert | every hour | `HC_BILLING_DLQ_UUID` |
 | cleanup-uploads | daily 03:00 UTC | `HC_CLEANUP_UPLOADS_UUID` |
 | db backup | daily 03:00 UTC | `HC_BACKUP_DB_UUID` |
 | journal backup | daily 03:05 UTC | `HC_BACKUP_JOURNAL_UUID` |

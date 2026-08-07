@@ -25,7 +25,6 @@ import type { ProviderId } from '@hamafx/shared/encryption';
 import { BYOK_PROVIDERS } from './byok-providers';
 import { extractRateLimits } from './rate-limits';
 import { noteLlmRateLimit } from './llm-throttle';
-import { isCircuitOpen } from './model-circuit-breaker';
 import { telemetryConfig } from './telemetry';
 
 /**

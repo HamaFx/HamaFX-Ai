@@ -203,6 +203,10 @@ export {
   getUserPayments,
   upsertSubscription,
   createPayment,
+  claimCheckoutAttempt,
+  saveCheckoutInvoice,
+  completeCheckoutAttempt,
+  failCheckoutAttempt,
 } from './queries/billing-extras';
 export {
   getUserByEmail,
@@ -238,10 +242,18 @@ export {
 export {
   findIpnEvent,
   insertIpnEvent,
+  claimIpnEvent,
   markIpnProcessed,
+  markIpnFailed,
+  recordBillingWebhookFailure,
   updatePaymentStatus,
   getPaymentByNowpaymentsId,
   updateSubscriptionFromPayment,
+  countStaleBillingWebhookFailures,
+  getBillingWebhookFailure,
+  claimBillingWebhookReplay,
+  markBillingWebhookReplayed,
+  releaseBillingWebhookReplay,
 } from './queries/ipn-events';
 export {
   getRecentCandles,

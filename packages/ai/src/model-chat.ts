@@ -17,8 +17,7 @@
 // P1-1 — Extracted from model.ts. Chat model resolution: resolveChatModel,
 // resolveModelForProvider, derivePlannerModel, and deriveTitleModel.
 //
-// Dependency: model-helpers.ts (PROVIDER_PRIORITY, envFallbackKeys,
-// parsePickedModelId).
+// Dependency: model-helpers.ts (PROVIDER_PRIORITY, envFallbackKeys).
 
 import type { LanguageModel } from 'ai';
 import type { UserSettingsRow } from '@hamafx/db/schema';
@@ -36,7 +35,6 @@ import type { ResolveModelEnv } from './vertex-factory';
 import {
   PROVIDER_PRIORITY,
   envFallbackKeys,
-  parsePickedModelId,
 } from './model-helpers';
 
 // -----------------------------------------------------------------------

@@ -29,7 +29,7 @@ export const meCommand: BotCommand = {
   handler: async (_args: string[], ctx: BotContext): Promise<BotResponse> => {
     try {
       const link = await getBotLink(ctx.userId, 'telegram');
-      const { settings, user: userRow } = await getUserWithSettings(ctx.userId);
+      const { user: userRow } = await getUserWithSettings(ctx.userId);
       const dailyCostUsd = await dailySpendUsd(ctx.userId);
       const alertsCount = await countActiveAlerts(ctx.userId);
 

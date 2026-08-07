@@ -20,6 +20,7 @@ vi.mock('@/auth', () => ({
 }));
 
 import { GET } from '@/app/api/health/route';
+import { GET as GET_PUBLIC } from '@/app/api/health/public/route';
 
 const MOCK_REQ = new Request('http://localhost/api/health');
 
@@ -48,6 +49,24 @@ afterEach(() => {
     delete process.env[k];
   }
   vi.clearAllMocks();
+});
+
+describe('GET /api/health/public', () => {
+  it('returns 200 when the public database probe succeeds', async () => {
+    mockDbExecute.mockResolvedValue([{ ok: 1 }]);
+
+    const response = await GET_PUBLIC(new Request('http://localhost/api/health/public'));
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toMatchObject({ status: 'ok' });
+  });
+
+  it('returns 503 when the public database probe fails', async () => {
+    mockDbExecute.mockRejectedValue(new Error('connection refused'));
+
+    const response = await GET_PUBLIC(new Request('http://localhost/api/health/public'));
+    expect(response.status).toBe(503);
+    await expect(response.json()).resolves.toMatchObject({ status: 'error' });
+  });
 });
 
 describe('GET /api/health', () => {
