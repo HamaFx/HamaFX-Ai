@@ -2,7 +2,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import {IconCheck, IconLoader2} from '@tabler/icons-react';
 import { cn } from '@/lib/cn';
 import { fetchCsrf } from '@/lib/csrf';
@@ -20,14 +20,20 @@ interface Plan {
 export function BillingPlans({ plans, currentPlanId }: { plans: Plan[]; currentPlanId: string | null }) {
   const [loading, setLoading] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const checkoutKeys = useRef(new Map<string, string>());
 
   async function handleCheckout(planId: string) {
     setError(null);
     setLoading(planId);
     try {
+      const idempotencyKey = checkoutKeys.current.get(planId) ?? crypto.randomUUID();
+      checkoutKeys.current.set(planId, idempotencyKey);
       const res = await fetchCsrf('/api/billing/checkout', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Idempotency-Key': idempotencyKey,
+        },
         body: JSON.stringify({ planId }),
       });
       const data = await res.json();
@@ -36,6 +42,7 @@ export function BillingPlans({ plans, currentPlanId }: { plans: Plan[]; currentP
         return;
       }
       if (data.checkoutUrl) {
+        checkoutKeys.current.delete(planId);
         window.location.href = data.checkoutUrl;
       }
     } catch (err) {
