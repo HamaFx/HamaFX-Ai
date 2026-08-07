@@ -129,20 +129,20 @@ export async function tryReserve(provider: string, cfg: ThrottleConfig): Promise
       target: providerThrottle.provider,
       set: {
         count: sql`CASE 
-          WHEN ${providerThrottle.windowStartedAt} + ${windowInterval} <= ${now} THEN 1
+          WHEN ${providerThrottle.windowStartedAt} + ${windowInterval} <= CURRENT_TIMESTAMP THEN 1
           ELSE ${providerThrottle.count} + 1
         END`,
         windowStartedAt: sql`CASE 
-          WHEN ${providerThrottle.windowStartedAt} + ${windowInterval} <= ${now} THEN ${now}
+          WHEN ${providerThrottle.windowStartedAt} + ${windowInterval} <= CURRENT_TIMESTAMP THEN CURRENT_TIMESTAMP
           ELSE ${providerThrottle.windowStartedAt}
         END`
       },
       where: sql`
-        (${providerThrottle.windowStartedAt} + ${windowInterval} <= ${now})
+        (${providerThrottle.windowStartedAt} + ${windowInterval} <= CURRENT_TIMESTAMP)
         OR
         (
           ${providerThrottle.count} < CASE
-            WHEN ${providerThrottle.backoffUntil} > ${now} THEN ${effectiveBackoffLimit}
+            WHEN ${providerThrottle.backoffUntil} > CURRENT_TIMESTAMP THEN ${effectiveBackoffLimit}
             ELSE ${cfg.limit}::numeric
           END
         )
