@@ -112,6 +112,11 @@ export async function tryReserve(provider: string, cfg: ThrottleConfig): Promise
   // Postgres backend — shared across instances
   const db = getDb();
   const backoffFrac = cfg.backoffFraction ?? 0.8;
+  // PostgreSQL cannot infer the type of a bound parameter multiplied by an
+  // interval (or by another bound numeric). Cast both sides explicitly so
+  // this remains valid through postgres-js/Drizzle parameterization.
+  const windowInterval = sql`${cfg.windowMs}::double precision * interval '1 millisecond'`;
+  const effectiveBackoffLimit = sql`GREATEST(1::numeric, FLOOR(${cfg.limit}::numeric * ${backoffFrac}::numeric))`;
 
   const result = await db.insert(providerThrottle)
     .values({
@@ -124,21 +129,21 @@ export async function tryReserve(provider: string, cfg: ThrottleConfig): Promise
       target: providerThrottle.provider,
       set: {
         count: sql`CASE 
-          WHEN ${providerThrottle.windowStartedAt} + interval '1 millisecond' * ${cfg.windowMs} <= ${now} THEN 1
+          WHEN ${providerThrottle.windowStartedAt} + ${windowInterval} <= ${now} THEN 1
           ELSE ${providerThrottle.count} + 1
         END`,
         windowStartedAt: sql`CASE 
-          WHEN ${providerThrottle.windowStartedAt} + interval '1 millisecond' * ${cfg.windowMs} <= ${now} THEN ${now}
+          WHEN ${providerThrottle.windowStartedAt} + ${windowInterval} <= ${now} THEN ${now}
           ELSE ${providerThrottle.windowStartedAt}
         END`
       },
       where: sql`
-        (${providerThrottle.windowStartedAt} + interval '1 millisecond' * ${cfg.windowMs} <= ${now})
+        (${providerThrottle.windowStartedAt} + ${windowInterval} <= ${now})
         OR
         (
           ${providerThrottle.count} < CASE
-            WHEN ${providerThrottle.backoffUntil} > ${now} THEN GREATEST(1, FLOOR(${cfg.limit} * ${backoffFrac}))
-            ELSE ${cfg.limit}
+            WHEN ${providerThrottle.backoffUntil} > ${now} THEN ${effectiveBackoffLimit}
+            ELSE ${cfg.limit}::numeric
           END
         )
       `
