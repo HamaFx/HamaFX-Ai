@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
-// Root 404. Plain server component — middleware already handles unauthed
+// Root 404. Plain server component — the request proxy already handles unauthed
 // requests by redirecting to /login, so this page is reached only when
 // authed users hit a typo'd URL.
 

@@ -212,7 +212,7 @@ export function generateArchitectureJson(
       techStack: {
         runtime: 'Node.js >= 20.11',
         packageManager: 'pnpm 9.15.4',
-        framework: 'Next.js 15 (App Router) + React 19',
+        framework: 'Next.js 16 (App Router) + React 19',
         language: 'TypeScript (strict)',
         styling: 'Tailwind CSS v4 + shadcn/ui (Radix)',
         ai: 'Vercel AI SDK v5',
@@ -264,7 +264,7 @@ export function generateArchitectureJson(
       techStack: {
         runtime: 'Node.js >= 20.11',
         packageManager: 'pnpm 9.15.4',
-        framework: 'Next.js 15 (App Router) + React 19',
+        framework: 'Next.js 16 (App Router) + React 19',
         language: 'TypeScript (strict)',
         styling: 'Tailwind CSS v4 + shadcn/ui (Radix)',
         ai: 'Vercel AI SDK v5',

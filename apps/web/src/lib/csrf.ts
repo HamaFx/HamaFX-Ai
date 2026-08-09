@@ -4,7 +4,7 @@
 // Phase 3 hardening §22. P2-6: __Host- prefix in production.
 
 /**
- * Extracts the CSRF cookie value set by the edge middleware.
+ * Extracts the CSRF cookie value set by the request proxy.
  * P2-6: Handles both `hfx_csrf` (dev) and `__Host-hfx_csrf` (prod) names.
  */
 export function getCsrfToken(): string | undefined {

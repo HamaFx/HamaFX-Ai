@@ -5,7 +5,7 @@
 // Persists a browser-issued PushSubscription. Idempotent on `endpoint`
 // (re-subscribing from the same browser overwrites `p256dh`/`auth`).
 //
-// Gated by the password cookie middleware. Returns:
+// Gated by the request proxy auth gate. Returns:
 //   200 { id }                       on success
 //   400 { error: 'invalid_body' }    on schema parse failure
 //   401 { error: 'unauthorized' }    when the session cookie is missing/invalid

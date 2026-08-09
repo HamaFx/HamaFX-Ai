@@ -1,10 +1,21 @@
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { withSentryConfig } from '@sentry/nextjs';
+
+const workspaceRoot = path.resolve(fileURLToPath(new URL('../..', import.meta.url)));
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: process.env.VERCEL ? undefined : 'standalone',
 
   reactStrictMode: true,
+
+  // This monorepo's lockfile and workspace packages live two levels above
+  // apps/web. Explicitly setting the root avoids Turbopack guessing a
+  // parent directory outside the repository.
+  turbopack: {
+    root: workspaceRoot,
+  },
 
   transpilePackages: [
     '@hamafx/shared',
@@ -16,8 +27,6 @@ const nextConfig = {
   ],
 
   typescript: { ignoreBuildErrors: false },
-  eslint: { ignoreDuringBuilds: false },
-
   images: {
     remotePatterns: [
       {
@@ -52,18 +61,18 @@ const nextConfig = {
           {
             key: 'Content-Security-Policy',
             // C-3: Baseline CSP (static fallback). The production CSP with
-            // per-request nonces is set dynamically in middleware.ts and
+            // per-request nonces is set dynamically in proxy.ts and
             // overrides this header. This static CSP serves as a fallback
             // for requests that bypass middleware.
             // - 'unsafe-eval' REMOVED — blocks arbitrary code execution.
             // - 'strict-dynamic' ADDED — trust propagation from nonce'd scripts.
             // - 'unsafe-inline' retained: Next.js App Router injects inline
             //   <script> tags for hydration that cannot pick up per-request
-            //   nonces without framework-level support. The middleware CSP
+            //   nonces without framework-level support. The proxy CSP
             //   adds 'nonce-{value}' alongside 'unsafe-inline' for full coverage.
             // L-4: Tightened img-src and connect-src from wildcards to known
             // domains: Supabase Storage, TradingView CDN, and Vercel analytics.
-            // The middleware CSP (with nonce) also uses these directives.
+            // The proxy CSP (with nonce) also uses these directives.
             value: "default-src 'self'; script-src 'self' 'unsafe-inline' https://s3.tradingview.com https://d3js.org; style-src 'self' 'unsafe-inline' https://s3.tradingview.com; img-src 'self' data: blob: https://*.supabase.co https://*.supabase.in https://s3.tradingview.com https://api.dicebear.com; font-src 'self' data:; connect-src 'self' wss: https://*.supabase.co https://*.biquote.io https://*.binance.com https://api.resend.com https://*.nowpayments.io https://*.tradingview.com https://api.dicebear.com;",
           },
         ],

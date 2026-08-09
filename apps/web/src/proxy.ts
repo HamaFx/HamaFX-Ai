@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
-// Edge middleware — runs on every matched request.
+// Request proxy — runs on every matched request.
 //
 // Uses NextAuth v5's Edge-safe auth() wrapper. The full config (with the
 // DrizzleAdapter and Credentials provider) lives in `auth.ts` (Node only);
-// the middleware only needs the JWT verifier and the `authorized` callback
+// the proxy only needs the JWT verifier and the `authorized` callback
 // from `auth.config.ts`, so the Edge bundle stays slim.
 //
 // What this does, in order:
@@ -54,7 +54,7 @@ function setCspHeader(response: NextResponse, nonce: string): void {
 // internal next-auth/lib/types path that tsc cannot resolve during
 // the next build declaration phase.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const middleware: any = auth(async (req) => {
+const proxy: any = auth(async (req) => {
   const requestId = readOrCreateRequestId(req);
 
   // ── C-3: Generate nonce early (used by both legacy and normal paths) ─
@@ -148,7 +148,7 @@ const middleware: any = auth(async (req) => {
   if (userId) {
     next.headers.set(USER_ID_HEADER, userId);
     // Sign the userId + requestId pair so route handlers can verify
-    // the header was set by middleware, not a malicious client.
+    // the header was set by the proxy, not a malicious client.
     const secret = getSigningSecret();
     if (secret) {
       const sig = await signUserId(userId, requestId, secret);
@@ -170,7 +170,7 @@ const middleware: any = auth(async (req) => {
 
   // C-3: Set CSP header with per-request nonce.
   // Skip for the architecture explorer — it's a standalone admin page
-  // with its own inline scripts that don't carry the middleware nonce.
+  // with its own inline scripts that don't carry the proxy nonce.
   if (req.nextUrl.pathname !== '/api/admin/architecture-explorer') {
     setCspHeader(next, cspNonce);
   }
@@ -178,7 +178,7 @@ const middleware: any = auth(async (req) => {
   return next;
 });
 
-export default middleware;
+export default proxy;
 
 export const config = {
   // Same exclusions as before — /api/auth is NextAuth's catch-all,

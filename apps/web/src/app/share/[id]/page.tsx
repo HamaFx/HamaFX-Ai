@@ -2,7 +2,7 @@
 
 // /share/[id] — public read route for analysis snapshots.
 //
-// Bypassed by the password gate (see middleware.ts) and verified instead
+// Bypassed by the password gate (see proxy.ts) and verified instead
 // by an HMAC-signed token in the `?t=<token>` query param. The route
 // renders markdown body, branded frame, chart annotations, and OG image.
 //

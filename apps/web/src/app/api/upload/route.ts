@@ -8,7 +8,7 @@
 // (not the bytes) in the chat message. With four 5 MB images this
 // keeps `/api/chat` request bodies under ~50 KB instead of ~27 MB.
 //
-// Auth: this is gated by the global middleware so only the logged-in
+// Auth: this is gated by the global request proxy so only the logged-in
 // user can upload. CSRF risk is the same as for other state-changing
 // endpoints — the cookie carries `SameSite=Lax`, which blocks
 // cross-site form posts. (The §22 CSRF token would add belt-and-

@@ -2,17 +2,16 @@
 
 // SEC-1: Signed x-user-id header to prevent impersonation.
 //
-// middleware.ts (Edge) signs the userId + requestId with HMAC-SHA256.
+// proxy.ts signs the userId + requestId with HMAC-SHA256.
 // getUserFromRequest() (Node.js route handler) verifies the signature
 // before trusting the header.
 //
 // The secret is NEXTAUTH_SECRET / AUTH_SECRET — the same key used by
 // NextAuth.js for JWT signing. No new secret required.
 //
-// NOTE: This file is imported by BOTH middleware (Edge runtime) and
-// route handlers (Node.js runtime). Only Edge-safe APIs (Web Crypto,
-// process.env) are used here. The Node.js HMAC verification is done
-// inline in api.ts to keep the Edge bundle clean.
+// NOTE: This file is imported by BOTH proxy and route handlers. Only
+// Web Crypto APIs and process.env are used here. The Node.js HMAC
+// verification is done inline in api.ts.
 
 export const USER_ID_HEADER = 'x-user-id';
 export const USER_ID_SIG_HEADER = 'x-user-id-sig';
@@ -20,7 +19,7 @@ export const USER_ID_SIG_HEADER = 'x-user-id-sig';
 /**
  * Sign a userId + requestId pair using HMAC-SHA256.
  *
- * Designed for the Edge runtime (Web Crypto API) so middleware can use it.
+ * Uses the Web Crypto API so the proxy can use it in any supported runtime.
  * Uses NEXTAUTH_SECRET (or AUTH_SECRET) as the signing key.
  */
 export async function signUserId(

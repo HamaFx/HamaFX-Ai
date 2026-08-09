@@ -28,7 +28,7 @@ Out of scope: DDoS, advanced persistent threats.
 | Session strategy | JWT (stateless) |
 | Database adapter | `@auth/drizzle-adapter` |
 | Credentials provider | Email + Password (bcrypt) |
-| Middleware | Edge middleware (NextAuth + CSRF) |
+| Request boundary | Next.js proxy (NextAuth + CSRF) |
 | 2FA | TOTP via `otplib` (setup in settings, not yet enforced at login) |
 
 ### Setup
@@ -50,7 +50,7 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 
 ### Auth Flow
 
-1. Visiting any `(app)/*` route hits `middleware.ts`, which checks for a valid NextAuth JWT session cookie.
+1. Visiting any `(app)/*` route hits `proxy.ts`, which checks for a valid NextAuth JWT session cookie.
 2. If invalid/missing → redirect to `/login` with `?next=` preserving the original URL.
 3. User submits email + password on `/login` → `loginAction()` server action → `signIn('credentials')`.
 4. `authorize()` in `auth.ts` validates credentials against the DB (bcrypt compare).

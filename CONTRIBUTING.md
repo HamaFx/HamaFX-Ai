@@ -73,7 +73,7 @@ config → shared → db + indicators → data → ai → web + worker
 | `@hamafx/data` | `packages/data/` | Market data providers (BiQuote, Finnhub, Marketaux, FRED, etc.) with failover |
 | `@hamafx/ai` | `packages/ai/` | AI agent core — 32 tools, model routing, multi-agent committee, memory, persistence |
 | `@hamafx/test-utils` | `packages/test-utils/` | Shared test factories, mocks, vitest helpers |
-| `@hamafx/web` | `apps/web/` | Next.js 15 PWA — 29 pages, 78 API routes, auth, chat, charts |
+| `@hamafx/web` | `apps/web/` | Next.js 16 PWA — 29 pages, 78 API routes, auth, chat, charts |
 | `@hamafx/worker` | `apps/worker/` | Node.js daemon — SignalR consumer, tick processing, scheduled jobs |
 
 **Rule:** No package may import upstream of itself in the dependency chain. `shared` is the foundation — everything depends on it, it depends on nothing but `config`.
@@ -344,7 +344,7 @@ Read [docs/07-agent-understanding.md](docs/07-agent-understanding.md) §5 for th
 | Live-money paths | Risk calculations affect trading | All risk math must be tested. Never round or simplify without instruction. |
 | RLS policies | Tenant isolation | Never disable RLS. New tables need RLS policies + `tenant_id`. |
 | Billing webhook | Real money | HMAC-SHA512 verification before any business logic. |
-| Middleware | Edge runtime | No DB calls, no Node.js imports in `middleware.ts`. |
+| Request proxy | Node.js runtime | No direct DB calls; keep auth/security boundary logic small and request-scoped in `proxy.ts`. |
 
 ---
 

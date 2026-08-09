@@ -6,7 +6,7 @@
 // responds 200, even when the row was already gone — unsubscribing should
 // be idempotent from the caller's perspective.
 //
-// Gated by the password cookie middleware.
+// Gated by the request proxy auth gate.
 
 import { deletePushSubscriptionByEndpoint } from '@hamafx/ai';
 import { AppError } from '@hamafx/shared';

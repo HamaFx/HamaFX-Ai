@@ -40,7 +40,7 @@
     <img src="https://img.shields.io/badge/Node.js-%E2%89%A520.11-339933?style=for-the-badge&logo=node.js&logoColor=white" alt="Node.js">
   </a>
   <a href="https://nextjs.org">
-    <img src="https://img.shields.io/badge/Next.js-15-black?style=for-the-badge&logo=next.js" alt="Next.js 15">
+    <img src="https://img.shields.io/badge/Next.js-16-black?style=for-the-badge&logo=next.js" alt="Next.js 16">
   </a>
   <a href="https://www.typescriptlang.org">
     <img src="https://img.shields.io/badge/TypeScript-5.7-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript">
@@ -273,7 +273,7 @@ That's it. You're running HamaFX-Ai.
             |                      |                       |
             v                      v                       v
 +---------------------------------------------------------------------------+
-|                        VERCEL — apps/web (Next.js 15)                      |
+|                        VERCEL — apps/web (Next.js 16)                      |
 |                                                                           |
 |  +------------------+  +------------------+  +---------------------------+|
 |  | Edge Middleware  |  | /api/chat        |  | /api/market/*             ||
@@ -307,7 +307,7 @@ That's it. You're running HamaFX-Ai.
 ```
 HamaFX-Ai/
 ├── apps/
-│   ├── web/              # Next.js 15 PWA (29 pages, ~92 API routes)
+│   ├── web/              # Next.js 16 PWA (29 pages, ~92 API routes)
 │   └── worker/           # Node.js daemon (SignalR, ticks, jobs)
 ├── packages/
 │   ├── ai/               # 33 tools, routing, multi-agent, memory, persistence
@@ -421,7 +421,7 @@ User Message
 
 | Layer | Technology |
 |-------|-----------|
-| Framework | Next.js 15 (App Router) + React 19 |
+| Framework | Next.js 16 (App Router) + React 19 |
 | Language | TypeScript 5.7 (strict, `exactOptionalPropertyTypes`) |
 | Styling | Tailwind CSS v4 + shadcn/ui (Radix) |
 | AI | Vercel AI SDK v5 + 9-provider BYOK registry |

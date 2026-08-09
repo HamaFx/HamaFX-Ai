@@ -83,8 +83,8 @@ export const ERROR_PATTERNS: ErrorPattern[] = [
     pattern: /CSRF.*missing.*invalid/i,
     description: 'CSRF token validation failed',
     suggestedFix:
-      'Ensure the hfx_csrf cookie is set and the x-csrf-token header matches it. Check middleware.ts CSRF logic and withCsrf() helper.',
-    relatedFiles: ['apps/web/src/middleware.ts', 'apps/web/src/lib/csrf.ts'],
+      'Ensure the hfx_csrf cookie is set and the x-csrf-token header matches it. Check proxy.ts CSRF logic and withCsrf() helper.',
+    relatedFiles: ['apps/web/src/proxy.ts', 'apps/web/src/lib/csrf.ts'],
     retryable: false,
   },
   {
@@ -102,7 +102,7 @@ export const ERROR_PATTERNS: ErrorPattern[] = [
     description: 'Authentication required or session expired',
     suggestedFix:
       'Check the auth session cookie / JWT. If expired, redirect to /login. Verify NEXTAUTH_SECRET and tokenVersion.',
-    relatedFiles: ['apps/web/src/auth.ts', 'apps/web/src/middleware.ts'],
+    relatedFiles: ['apps/web/src/auth.ts', 'apps/web/src/proxy.ts'],
     retryable: false,
   },
   {

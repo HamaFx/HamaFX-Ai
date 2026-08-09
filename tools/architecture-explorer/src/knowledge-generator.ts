@@ -52,8 +52,8 @@ function generateArchitecture(model: ArchitectureModel, nodes: ReturnType<GraphM
   }));
 
   const layers = [
-    { name: 'Presentation', packages: ['@hamafx/web'], responsibility: 'Next.js 15 PWA, React 19 UI, TradingView charts, 96 API routes' },
-    { name: 'API Gateway', packages: ['@hamafx/web'], responsibility: 'NextAuth JWT, CSRF, rate limiting, middleware' },
+    { name: 'Presentation', packages: ['@hamafx/web'], responsibility: 'Next.js 16 PWA, React 19 UI, TradingView charts, 96 API routes' },
+    { name: 'API Gateway', packages: ['@hamafx/web'], responsibility: 'NextAuth JWT, CSRF, rate limiting, request proxy' },
     { name: 'AI Agent', packages: ['@hamafx/ai'], responsibility: 'Chat routing, 32 tools, multi-agent committee, memory, citations' },
     { name: 'Data', packages: ['@hamafx/data'], responsibility: 'Provider failover, caching (SWR), throttling, BiQuote→Finnhub' },
     { name: 'Persistence', packages: ['@hamafx/db'], responsibility: 'Drizzle ORM, 48+ tables, Postgres + PGlite' },
@@ -290,9 +290,9 @@ function generateFlows() {
       {
         name: 'Auth Flow',
         steps: [
-          { order: 1, step: 'Request enters', component: 'Edge Middleware' },
+          { order: 1, step: 'Request enters', component: 'Request Proxy' },
           { order: 2, step: 'JWT check', component: 'NextAuth JWT strategy' },
-          { order: 3, step: 'CSRF validation', component: 'Middleware CSRF check' },
+          { order: 3, step: 'CSRF validation', component: 'Proxy CSRF check' },
           { order: 4, step: 'signed x-user-id header', component: 'HMAC-SHA256 for defense-in-depth' },
           { order: 5, step: 'Route handler', component: 'withAuth() wrapper' },
           { order: 6, step: 'Session validation', component: 'userSessions table + tokenVersion check' },
@@ -328,7 +328,7 @@ function generateKnowledgeMarkdown(
 
 **HamaFX-Ai** is an open-source (Apache-2.0), multi-tenant, chat-driven AI trading copilot for forex instruments: **XAUUSD** (primary), **EURUSD**, **GBPUSD**.
 
-- **Stack**: Next.js 15 (App Router) + React 19 + TypeScript (strict)
+- **Stack**: Next.js 16 (App Router) + React 19 + TypeScript (strict)
 - **AI**: Vercel AI SDK v5, Google Vertex AI + 9-provider BYOK registry
 - **Database**: PostgreSQL (Supabase) + pgvector, Drizzle ORM (${tableNodes.length}+ tables)
 - **Auth**: NextAuth.js v5 (Credentials provider, JWT strategy)
@@ -347,8 +347,8 @@ ${model.packages.map(p => `| **${p.name}** | \`${p.path}\` | ${p.type} | ${p.des
 
 ## Architecture Layers
 
-1. **Presentation** (\`@hamafx/web\`) — Next.js 15 PWA, React 19, Tailwind CSS v4, shadcn/ui, TradingView charts
-2. **API Gateway** (\`@hamafx/web\` middleware) — NextAuth JWT, CSRF, rate limiting, ${routeNodes.length} API routes
+1. **Presentation** (\`@hamafx/web\`) — Next.js 16 PWA, React 19, Tailwind CSS v4, shadcn/ui, TradingView charts
+2. **API Gateway** (\`@hamafx/web\` request proxy) — NextAuth JWT, CSRF, rate limiting, ${routeNodes.length} API routes
 3. **AI Agent** (\`@hamafx/ai\`) — Chat routing, plan-then-act, ${toolNodes.length} tools, ${agentNodes.length} agents, memory, citations
 4. **Data** (\`@hamafx/data\`) — Provider failover, caching (SWR), throttling, BiQuote→Finnhub
 5. **Persistence** (\`@hamafx/db\`) — Drizzle ORM, ${tableNodes.length}+ tables, Postgres (Supabase) + PGlite

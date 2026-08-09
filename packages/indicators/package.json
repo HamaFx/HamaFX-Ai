@@ -22,7 +22,7 @@
     "@hamafx/test-utils": "workspace:*",
     "@types/node": "^20.14.10",
     "eslint": "^9.17.0",
-    "typescript": "^5.7.2",
+    "typescript": "^7.0.2",
     "fast-check": "^4.1.0",
     "vitest": "^3.2.7"
   },

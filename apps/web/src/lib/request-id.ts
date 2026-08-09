@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
-// Phase 7a: every request gets a stable id, set by middleware and echoed
+// Phase 7a: every request gets a stable id, set by the request proxy and echoed
 // on every response. Logs use it as a correlation key so a UI bug report
 // (`X-Request-Id: <uuid>`) maps to a single Vercel log line.
 //

@@ -17,7 +17,7 @@ vi.mock('next-auth', () => ({
 // Import after the mock is established. Use a dynamic import factory so the
 // module is re-evaluated for each test and the mock is wired correctly.
 async function loadMiddleware(): Promise<MiddlewareFn> {
-  const { default: mw } = await import('../src/middleware');
+  const { default: mw } = await import('../src/proxy');
   return mw as MiddlewareFn;
 }
 

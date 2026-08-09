@@ -82,7 +82,7 @@ The NOWPayments billing webhook (`/api/billing/webhook`) verifies HMAC-SHA512 si
 
 ### CSRF Protection
 
-All state-changing API requests (POST, PUT, DELETE, PATCH) require a CSRF double-submit cookie. The `hfx_csrf` cookie must match the `x-csrf-token` header. This is enforced in Edge middleware (`apps/web/src/middleware.ts`).
+All state-changing API requests (POST, PUT, DELETE, PATCH) require a CSRF double-submit cookie. The `hfx_csrf` cookie must match the `x-csrf-token` header. This is enforced in the request proxy (`apps/web/src/proxy.ts`).
 
 ### Content Security Policy
 

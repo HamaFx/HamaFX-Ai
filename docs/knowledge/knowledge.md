@@ -10,7 +10,7 @@
 
 **HamaFX-Ai** is an open-source (Apache-2.0), multi-tenant, chat-driven AI trading copilot for forex instruments: **XAUUSD** (primary), **EURUSD**, **GBPUSD**.
 
-- **Stack**: Next.js 15 (App Router) + React 19 + TypeScript (strict)
+- **Stack**: Next.js 16 (App Router) + React 19 + TypeScript (strict)
 - **AI**: Vercel AI SDK v5, Google Vertex AI + 9-provider BYOK registry
 - **Database**: PostgreSQL (Supabase) + pgvector, Drizzle ORM (50+ tables)
 - **Auth**: NextAuth.js v5 (Credentials provider, JWT strategy)
@@ -44,7 +44,7 @@
 
 ## Architecture Layers
 
-1. **Presentation** (`@hamafx/web`) — Next.js 15 PWA, React 19, Tailwind CSS v4, shadcn/ui, TradingView charts
+1. **Presentation** (`@hamafx/web`) — Next.js 16 PWA, React 19, Tailwind CSS v4, shadcn/ui, TradingView charts
 2. **API Gateway** (`@hamafx/web` middleware) — NextAuth JWT, CSRF, rate limiting, 190 API routes
 3. **AI Agent** (`@hamafx/ai`) — Chat routing, plan-then-act, 32 tools, 4 agents, memory, citations
 4. **Data** (`@hamafx/data`) — Provider failover, caching (SWR), throttling, BiQuote→Finnhub

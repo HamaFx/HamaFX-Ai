@@ -10,19 +10,20 @@ import { join, relative } from 'path';
 const WEB_DIR = join(import.meta.dirname, '..', 'src');
 
 /**
- * The middleware matcher regex from middleware.ts.
+ * The proxy matcher regex from proxy.ts.
  * Next.js applies this against the pathname WITHOUT a leading `/`.
- * Keep in sync with middleware.ts `config.matcher`.
+ * Keep in sync with proxy.ts `config.matcher`.
  */
 const MATCHER_REGEX =
-  /^((?!auth|share|api\/auth|api\/dev|api\/cron|api\/telegram|api\/billing\/webhook|api\/health\/public|debug|sw\.js|sw-precache\.json|_next\/static|_next\/image|favicon\.ico|manifest\.webmanifest|icons|robots\.txt|sitemap\.xml).)*$/;
+  /^((?!auth|share|api\/auth|api\/dev\/login|api\/cron|api\/telegram|api\/billing\/webhook|api\/health\/public|api\/admin\/architecture-explorer|debug|sw\.js|sw-precache\.json|_next\/static|_next\/image|favicon\.ico|manifest\.webmanifest|icons|robots\.txt|sitemap\.xml|d3\.v7\.min\.js|architecture-explorer\.html).)*$/;
 
 /** Exclusion prefixes — routes intentionally NOT covered by middleware. */
 const EXCLUDED_PREFIXES = [
-  'auth', 'share', 'api/auth', 'api/dev', 'api/cron', 'api/telegram',
-  'api/billing/webhook', 'api/health/public', 'debug', 'sw.js', 'sw-precache.json',
-  '_next/static', '_next/image', 'favicon.ico', 'manifest.webmanifest',
-  'icons', 'robots.txt', 'sitemap.xml',
+  'auth', 'share', 'api/auth', 'api/dev/login', 'api/cron', 'api/telegram',
+  'api/billing/webhook', 'api/health/public', 'api/admin/architecture-explorer',
+  'debug', 'sw.js', 'sw-precache.json', '_next/static', '_next/image',
+  'favicon.ico', 'manifest.webmanifest', 'icons', 'robots.txt', 'sitemap.xml',
+  'd3.v7.min.js', 'architecture-explorer.html',
 ];
 
 /** Find all route.ts files recursively. */
@@ -90,7 +91,7 @@ describe('middleware matcher coverage (SEC-1)', () => {
       expect(
         MATCHER_REGEX.test(pathNoSlash),
         `Route "${urlPath}" is NOT covered by middleware matcher. ` +
-          'Update middleware.ts config.matcher or add an exclusion.',
+          'Update proxy.ts config.matcher or add an exclusion.',
       ).toBe(true);
     });
   }

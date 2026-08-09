@@ -5,7 +5,7 @@
 
 ## Project Identity
 
-**HamaFX-Ai** is an open-source, multi-tenant, chat-driven AI trading copilot for forex instruments: **XAUUSD** (primary), **EURUSD**, **GBPUSD**. It runs as a Next.js 15 PWA with a persistent Node.js worker daemon. The AI agent uses Vercel AI SDK v5 with 33 tools, domain-based model routing, and multi-agent committee deliberation.
+**HamaFX-Ai** is an open-source, multi-tenant, chat-driven AI trading copilot for forex instruments: **XAUUSD** (primary), **EURUSD**, **GBPUSD**. It runs as a Next.js 16 PWA with a persistent Node.js worker daemon. The AI agent uses Vercel AI SDK v5 with 33 tools, domain-based model routing, and multi-agent committee deliberation.
 
 - **License**: Apache-2.0
 - **Status**: In production on Vercel + GCE VM. Phases 0–9 shipped (incl. multi-tenant v2.0). UX Upgrade Plan Phases A/B/C/D/E shipped. Architecture Explorer deployed (Phase 8 complete).
@@ -22,7 +22,7 @@
 | Package manager | pnpm 9.15.4 |
 | Node | >= 20.11 |
 | Monorepo tool | Turborepo 2 |
-| Framework | Next.js 15 App Router + React 19 |
+| Framework | Next.js 16 App Router + React 19 |
 | Styling | Tailwind CSS v4 + shadcn/ui (Radix) |
 | AI SDK | Vercel AI SDK v5 (`ai` package) |
 | Models | Google Vertex AI + 9-provider BYOK registry |
@@ -34,7 +34,7 @@
 | TypeScript | Strict mode. `exactOptionalPropertyTypes`, `noUncheckedIndexedAccess` |
 | AI Tools | 33 exported tool definitions in `packages/ai/src/tools/` |
 | Architecture Explorer | `tools/architecture-explorer/` — auto-generates interactive HTML, JSON model, Obsidian vault, and AI knowledge artifacts |
-| Middleware | 190 lines. Edge runtime. Handles auth, CSRF, CSP, request-id |
+| Request proxy | 190 lines. Handles auth, CSRF, CSP, request-id |
 
 ## Commands
 
@@ -136,7 +136,7 @@ pnpm --filter @hamafx/ai eval -- --base-url http://localhost:3000 --cookie "auth
 ```
 HamaFX-Ai/
 ├── apps/
-│   ├── web/              # Next.js 15 PWA (frontend + API routes)
+│   ├── web/              # Next.js 16 PWA (frontend + API routes)
 │   └── worker/           # Node.js daemon (SignalR consumer, tick processing, job runner)
 ├── packages/
 │   ├── ai/               # AI agent core — chat, 33 tools, routing, memory, persistence
@@ -176,7 +176,7 @@ Browser (PWA)
     │                                          (admin-only, public/architecture-explorer.html)
     ├── /api/market/* ──▶ @hamafx/data ──▶ providers (BiQuote→Finnhub failover)
     │
-    └── Middleware (Edge, 190 lines): NextAuth JWT check, CSRF, CSP, request-id
+    └── Request proxy (190 lines): NextAuth JWT check, CSRF, CSP, request-id
 
 Worker (GCE VM, systemd)
     │
@@ -286,14 +286,14 @@ The interactive architecture explorer is served at `/api/admin/architecture-expl
 
 ### 12. Middleware CSP & Architecture Explorer Exception
 
-The middleware at `apps/web/src/middleware.ts` (190 lines, Edge runtime) sets a `Content-Security-Policy` with `'strict-dynamic'` and a per-request nonce. The architecture explorer route is explicitly **exempted** from this CSP at line 174 — the route handler sets its own permissive CSP instead, because the explorer's inline scripts don't carry the middleware nonce.
+The request proxy at `apps/web/src/proxy.ts` (190 lines, Node.js runtime) sets a `Content-Security-Policy` with `'strict-dynamic'` and a per-request nonce. The architecture explorer route is explicitly **exempted** from this CSP at line 174 — the route handler sets its own permissive CSP instead, because the explorer's inline scripts don't carry the proxy nonce.
 
-The middleware matcher excludes these paths from processing:
+The proxy matcher excludes these paths from processing:
 - `auth`, `share`, `api/auth/*`, `api/dev/login`, `api/cron/*`, `api/telegram/*`, `api/billing/webhook/*`
 - `debug`, `sw.js`, `sw-precache.json`, `_next/*`, `favicon.ico`, `manifest.webmanifest`
 - `icons`, `robots.txt`, `sitemap.xml`, `d3.v7.min.js`
 
-> **Regex note:** In the TypeScript matcher regex at `apps/web/src/middleware.ts`, dots in paths like `d3\.v7\.min\.js` use `\\.` because of double-escaping: the TS string literal escape turns `\\.` into `\.` in the regex, which matches a literal dot. When editing the matcher, follow the same convention as existing entries.
+> **Regex note:** In the TypeScript matcher regex at `apps/web/src/proxy.ts`, dots in paths like `d3\.v7\.min\.js` use `\\.` because of double-escaping: the TS string literal escape turns `\\.` into `\.` in the regex, which matches a literal dot. When editing the matcher, follow the same convention as existing entries.
 
 ## File Naming Conventions
 
@@ -308,9 +308,9 @@ The middleware matcher excludes these paths from processing:
 
 ## Common Pitfalls
 
-### Edge Runtime Constraints
-- Middleware runs on Edge: no `postgres-js`, no `fs`, no Node APIs
-- `@hamafx/db` is Node-only — never import from Edge middleware
+### Request Proxy Constraints
+- The proxy runs on Node.js by default: keep direct database work out of the request boundary
+- `@hamafx/db` is not imported by the proxy; keep the auth/security boundary lightweight
 - Auth env is split: `getAuthEnv()` (Edge-safe) vs `getServerEnv()` (full)
 
 ### PGlite vs Postgres
@@ -329,11 +329,11 @@ The middleware matcher excludes these paths from processing:
 - Individual: `pnpm --filter @hamafx/worker test -- --run`
 
 ### CSP & Nonce System
-- The middleware sets a `'strict-dynamic'` CSP with a per-request nonce
+- The proxy sets a `'strict-dynamic'` CSP with a per-request nonce
 - Scripts must have a matching `nonce` attribute to execute
 - The architecture explorer is SKIPPED by this CSP (its inline scripts don't carry the nonce)
 - Instead, its route handler sets a permissive CSP: `script-src 'self' 'unsafe-inline'`
-- If adding a new route with inline scripts, either: (a) use the middleware nonce, or (b) skip CSP for that route
+- If adding a new route with inline scripts, either: (a) use the proxy nonce, or (b) skip CSP for that route
 - The static file `/d3.v7.min.js` is excluded from middleware processing entirely
 
 ### Predeploy Copy Behavior
@@ -347,7 +347,7 @@ The middleware matcher excludes these paths from processing:
 - **Auth flow**: NextAuth v5 (Credentials provider) with strict per-user
   `userId` scoping. Multi-tenant is load-bearing — do not regress to a
   single-password gate.
-- **Middleware**: Edge runtime constraint is intentional. Don't add DB calls there.
+- **Request proxy**: Keep the request-boundary security logic lightweight. Don't add database calls there.
 - **Provider failover**: `runWithFailover()` pattern. Don't add direct provider calls.
 - **Tool pattern**: `inputSchema → module augmentation → execute`. Don't break the tool registry.
 - **AsyncLocalStorage**: tools use `getToolContext()`. Don't use global state.

@@ -4,7 +4,7 @@
 // Requires admin authentication — not publicly accessible.
 // The CSP is explicitly set to allow inline scripts and same-origin resources
 // because the explorer's scripts don't have the nonce that the main app's
-// middleware CSP requires via 'strict-dynamic'.
+// proxy CSP requires via 'strict-dynamic'.
 
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
@@ -15,7 +15,7 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 // SECURITY: The explorer HTML contains inline scripts that do not carry the
-// middleware nonce. We use 'unsafe-inline' in the CSP because hashing all
+// proxy nonce. We use 'unsafe-inline' in the CSP because hashing all
 // inline scripts would require the generator to output stable hashes. This
 // route is admin-only so the risk is limited.
 //

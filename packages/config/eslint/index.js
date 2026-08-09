@@ -122,6 +122,8 @@ export default [
       '**/.turbo/**',
       '**/dist/**',
       '**/coverage/**',
+      '**/.vercel/**',
+      '**/public/**',
       '**/drizzle/**',
       '**/*.config.{js,mjs,ts}',
       '**/next-env.d.ts',

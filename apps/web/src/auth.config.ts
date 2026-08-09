@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: Apache-2.0
 
-// NextAuth v5 Edge-compatible configuration.
-// Imported by middleware.ts (Edge runtime) — must NOT import Node.js modules.
+// NextAuth v5 request-boundary-compatible configuration.
+// Imported by proxy.ts — must remain free of Node.js-only modules.
 // Full configuration (providers, adapter) lives in auth.ts (Node runtime).
 
 import type { NextAuthConfig } from 'next-auth';
 
-// P2-3 / C-2: Production invariants are checked when middleware handles a
-// request, not at module evaluation time. Next.js evaluates this Edge config
+// P2-3 / C-2: Production invariants are checked when the proxy handles a
+// request, not at module evaluation time. Next.js evaluates this config
 // during `next build`; request-time checks keep builds hermetic without
 // creating an environment-variable bypass that could weaken runtime auth.
 export function assertProductionSecurity(): void {
@@ -31,7 +31,7 @@ export function assertProductionSecurity(): void {
   }
 }
 
-// Dev fallback: ensures the Edge middleware never runs without a
+// Dev fallback: ensures the request proxy never runs without a
 // signing secret (which would cause MissingSecret errors and break
 // the auth gate). In production AUTH_SECRET must be set explicitly.
 const nextAuthSecret =
@@ -59,7 +59,7 @@ export const authConfig: NextAuthConfig = {
       assertProductionSecurity();
       // C-2: Legacy mode is ONLY allowed when NODE_ENV !== 'production'.
       // The ALLOW_LEGACY_AUTH escape hatch has been removed — legacy auth
-      // in production is now a hard error when middleware handles a request.
+      // in production is now a hard error when the proxy handles a request.
       if (
         process.env.AUTH_MODE === 'legacy' &&
         process.env.NODE_ENV !== 'production'

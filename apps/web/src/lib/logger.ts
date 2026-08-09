@@ -20,7 +20,7 @@ import type { RequestUser } from './api';
 /**
  * Create a request-scoped child logger that carries `requestId`, `userId`,
  * and `service` on every log line. The requestId is read from the
- * `X-Request-Id` header stamped by middleware.
+ * `X-Request-Id` header stamped by the request proxy.
  */
 export function createRequestLogger(req?: Request, user?: RequestUser | null): CategorizedLogger {
   const context: Record<string, unknown> = { service: 'web' };

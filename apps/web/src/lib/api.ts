@@ -36,7 +36,7 @@ export interface RequestUser {
 /**
  * Extract the authenticated user from the request.
  *
- * Fast path: reads `x-user-id` header injected by middleware (Edge, no DB).
+ * Fast path: reads `x-user-id` header injected by proxy (no DB).
  * Slow path: calls `auth()` for defense-in-depth (Node, reads JWT cookie).
  *
  * Returns null when neither path resolves — caller should 401.
@@ -54,7 +54,7 @@ export async function getUserFromRequest(req: Request): Promise<RequestUser | nu
       const requestId = req.headers.get(REQUEST_ID_HEADER);
       if (requestId) {
         // Verify HMAC using node:crypto (Node.js runtime only).
-        // Static import — api.ts is NOT used in Edge middleware.
+        // Static import — api.ts is not used by the request proxy.
         const expected = createHmac('sha256', secret.slice(0, 128))
           .update(`${headerId}.${requestId}`)
           .digest('hex');

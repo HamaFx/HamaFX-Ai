@@ -44,7 +44,7 @@ const isCI = !!process.env.CI;
 function buildWebServerCommand(): string {
   const encKey = process.env.ENCRYPTION_SECRET;
   const baseCmd = isCI ? 'pnpm build && pnpm start' : 'pnpm dev';
-  // Webpack is the default in Next.js 15. Avoid --turbo flag.
+  // Next.js 16 uses Turbopack by default; no bundler flag is needed.
   if (encKey) {
     return `ENCRYPTION_SECRET=${encKey} ${baseCmd}`;
   }

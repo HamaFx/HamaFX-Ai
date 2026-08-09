@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 // Lazy, cached env access. Three scopes:
-//   - getAuthEnv(): only auth-related vars. Safe to use from Edge middleware
+//   - getAuthEnv(): only auth-related vars. Safe to use from the request proxy
 //     because it doesn't require AI / DB / data-provider keys to be set.
 //   - getServerEnv(): the full ServerEnv (Auth + DB + AI + Cache + Providers + ...).
 //     Used by route handlers that actually need those keys.
