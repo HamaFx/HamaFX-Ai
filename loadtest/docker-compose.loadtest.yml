@@ -8,7 +8,7 @@
 #
 # Quick start:
 #   docker compose -f loadtest/docker-compose.loadtest.yml up -d --wait
-#   curl -fsS localhost:3000/api/health   # (needs auth — see README)
+#   curl -fsS localhost:3000/api/health/public
 #
 # For Strategy B (real NextAuth sessions), see README.
 
@@ -76,8 +76,8 @@ services:
       db:
         condition: service_healthy
     healthcheck:
-      # Use /api/health now that the DB+pgvector checks pass.
-      test: ["CMD-SHELL", "curl -sf http://localhost:3000/api/health | grep -q '\"ok\"' || exit 1"]
+      # Use the minimal unauthenticated probe; /api/health requires a session.
+      test: ["CMD-SHELL", "curl -sf http://localhost:3000/api/health/public | grep -q '\"status\":\"ok\"' || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3

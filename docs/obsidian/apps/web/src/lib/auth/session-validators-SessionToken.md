@@ -2,9 +2,9 @@
 type: module
 package: "@hamafx/web"
 path: "apps/web/src/lib/auth/session-validators.ts"
-incoming: 0
+incoming: 1
 outgoing: 3
-connections: 3
+connections: 4
 risk: low
 layer: core
 tags: [type/module, hamafx-web, layer/core]
@@ -23,9 +23,9 @@ Module: apps/web/src/lib/auth/session-validators.ts
 
 | | Count |
 |---|---|
-| Incoming dependencies | 0 |
+| Incoming dependencies | 1 |
 | Outgoing dependencies | 3 |
-| Total connections | 3 |
+| Total connections | 4 |
 | Risk level | **LOW** |
 | Layer | `core` |
 | Package tag | `#hamafx-web` |
@@ -34,6 +34,9 @@ Module: apps/web/src/lib/auth/session-validators.ts
 ### 📤 Depends On (3)
 [[@hamafx-shared]] · [[@hamafx-db]] · [[@hamafx-web]]
 
+
+### 📥 Depended On By (1)
+[[session-validation-policy.test]]
 
 
 

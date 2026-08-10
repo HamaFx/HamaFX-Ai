@@ -54,7 +54,7 @@ function generateArchitecture(model: ArchitectureModel, nodes: ReturnType<GraphM
   const layers = [
     { name: 'Presentation', packages: ['@hamafx/web'], responsibility: 'Next.js 16 PWA, React 19 UI, TradingView charts, 96 API routes' },
     { name: 'API Gateway', packages: ['@hamafx/web'], responsibility: 'NextAuth JWT, CSRF, rate limiting, request proxy' },
-    { name: 'AI Agent', packages: ['@hamafx/ai'], responsibility: 'Chat routing, 32 tools, multi-agent committee, memory, citations' },
+    { name: 'AI Agent', packages: ['@hamafx/ai'], responsibility: 'Chat routing, registered tools, multi-agent committee, memory, citations' },
     { name: 'Data', packages: ['@hamafx/data'], responsibility: 'Provider failover, caching (SWR), throttling, BiQuote→Finnhub' },
     { name: 'Persistence', packages: ['@hamafx/db'], responsibility: 'Drizzle ORM, 48+ tables, Postgres + PGlite' },
     { name: 'Indicators', packages: ['@hamafx/indicators'], responsibility: 'SMA, EMA, RSI, MACD, Bollinger, SMC concepts' },
@@ -103,7 +103,7 @@ function generateArchitecture(model: ArchitectureModel, nodes: ReturnType<GraphM
 // ── features.json ──
 function generateFeatures() {
   const features = [
-    { name: 'AI Chat (Single-Agent)', package: '@hamafx/ai', modules: ['agent.ts', 'routing.ts', 'planner.ts', 'verification.ts', 'chat-retry-loop.ts'], description: 'Streaming chat with domain-based routing, plan-then-act, 32 tools, 5-attempt retry' },
+    { name: 'AI Chat (Single-Agent)', package: '@hamafx/ai', modules: ['agent.ts', 'routing.ts', 'planner.ts', 'verification.ts', 'chat-retry-loop.ts'], description: 'Streaming chat with domain-based routing, plan-then-act, registered tools, 5-attempt retry' },
     { name: 'Multi-Agent Committee', package: '@hamafx/ai', modules: ['multi-agent/orchestrator.ts', 'multi-agent/agents/'], description: '4 specialist agents + 1 decision agent with token-by-token fusion streaming' },
     { name: 'Live Market Data', package: '@hamafx/data', modules: ['adapters/price.ts', 'adapters/candles.ts', 'failover.ts', 'cache/'], description: 'BiQuote SignalR → TickBuffer → live_ticks with Finnhub REST fallback' },
     { name: 'Technical Indicators', package: '@hamafx/indicators', modules: ['moving-averages.ts', 'rsi.ts', 'macd.ts', 'bollinger.ts', 'smc/'], description: 'SMA, EMA, RSI, MACD, Bollinger Bands, SMC (FVG, order blocks, liquidity, swings, BOS/CHoCH)' },
@@ -326,10 +326,10 @@ function generateKnowledgeMarkdown(
 
 ## Project Overview
 
-**HamaFX-Ai** is an open-source (Apache-2.0), single-user BYOK, chat-driven AI trading copilot for forex instruments: **XAUUSD** (primary), **EURUSD**, **GBPUSD**.
+**HamaFX-Ai** is an open-source (Apache-2.0), single-user BYOK, chat-driven AI trading copilot for gold, forex, and supported crypto instruments: **XAUUSD** (primary), canonical forex pairs, and Binance crypto pairs.
 
 - **Stack**: Next.js 16 (App Router) + React 19 + TypeScript (strict)
-- **AI**: Vercel AI SDK v5, Google Vertex AI + 9-provider BYOK registry
+- **AI**: Vercel AI SDK v5, Google Vertex AI + 10-provider BYOK registry
 - **Database**: PostgreSQL (Supabase) + pgvector, Drizzle ORM (${tableNodes.length}+ tables)
 - **Auth**: NextAuth.js v5 (Credentials provider, JWT strategy; owner-first single-user OSS mode)
 - **Charts**: TradingView lightweight-charts v5

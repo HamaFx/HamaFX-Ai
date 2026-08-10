@@ -21,10 +21,22 @@
 import { describe, expect, it } from 'vitest';
 
 import { synth4HFrom1H, type FinnhubCandle } from '../src/providers/finnhub/rest';
+import { toFinnhubSymbol } from '../src/providers/finnhub/map';
 
 function bar(tIsoUtc: string, o: number, h: number, l: number, c: number, v = 1): FinnhubCandle {
   return { t: new Date(tIsoUtc).getTime(), o, h, l, c, v };
 }
+
+describe('Finnhub symbol mapping', () => {
+  it('uses catalog mappings for canonical crypto symbols', () => {
+    expect(toFinnhubSymbol('BTCUSDT')).toBe('BINANCE:BTCUSDT');
+    expect(toFinnhubSymbol(' ethusdt ')).toBe('BINANCE:ETHUSDT');
+  });
+
+  it('normalizes canonical FX mappings', () => {
+    expect(toFinnhubSymbol(' eurusd ')).toBe('OANDA:EUR_USD');
+  });
+});
 
 describe('synth4HFrom1H', () => {
   it('aggregates four consecutive 1H bars in a 04:00–08:00 UTC bucket', () => {

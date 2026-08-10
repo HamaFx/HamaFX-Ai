@@ -58,7 +58,7 @@ declare module '@hamafx/shared' {
 const slog = createCategorizedLogger('ai', { component: 'summarize-thread' });
 
 const SYSTEM_PROMPT =
-  'You synthesise the active trading-chat thread into JSON. Output JSON ONLY: { "synopsis": "<3-5 sentence paragraph>", "insights": [{ "text": "<short imperative>", "symbol": "XAUUSD"|"EURUSD"|"GBPUSD"|null }, ...] }. Provide 3 insights. No greetings, no preamble, no markdown fences.';
+  'You synthesise the active trading-chat thread into JSON. Output JSON ONLY: { "synopsis": "<3-5 sentence paragraph>", "insights": [{ "text": "<short imperative>", "symbol": "<canonical supported symbol>"|null }, ...] }. Provide 3 insights. No greetings, no preamble, no markdown fences.';
 
 const NO_CONTEXT_OUTPUT = (threadId: string): SummarizeThreadOutput => ({
   threadId,

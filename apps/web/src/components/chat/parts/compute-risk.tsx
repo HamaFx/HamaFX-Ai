@@ -43,14 +43,19 @@ export function ComputeRiskPart({ output, state, errorMessage }: ToolPartProps<'
       <dl className="grid grid-cols-2 gap-2 text-xs">
         <Row k="Entry" v={pretty(output.entry, 5)} />
         <Row k="Stop" v={pretty(output.stop, 5)} />
-        <Row k="Pips to stop" v={`${pretty(output.pipsToStop, 1)}`} />
+        <Row k={`${output.distanceUnit === 'price' ? 'Price' : 'Pips'} to stop`} v={`${pretty(output.pipsToStop, 1)}`} />
         <Row
-          k="Pips to target"
+          k={`${output.distanceUnit === 'price' ? 'Price' : 'Pips'} to target`}
           v={output.pipsToTarget !== null ? pretty(output.pipsToTarget, 1) : '—'}
         />
-        <Row k="Size (lots)" v={pretty(output.positionSizeLots, 2)} />
-        <Row k="Size (units)" v={pretty(Math.round(output.positionSizeUnits), 0)} />
-        <Row k="Pip $/lot" v={`$${pretty(output.pipValueUsdPerLot, 2)}`} />
+        <Row
+          k={`Size (${output.quantityUnit})`}
+          v={pretty(
+            output.quantityUnit === 'lots' ? output.positionSizeLots : output.positionSizeUnits,
+            output.quantityUnit === 'coins' ? 4 : output.quantityUnit === 'ounces' ? 2 : 2,
+          )}
+        />
+        <Row k={`${output.distanceUnit === 'price' ? 'Value' : 'Pip'} $/${output.quantityUnit}`} v={`$${pretty(output.pipValueUsdPerLot, 2)}`} />
         <Row
           k="Reward"
           v={output.rewardUsd !== null ? `$${pretty(output.rewardUsd, 2)}` : '—'}

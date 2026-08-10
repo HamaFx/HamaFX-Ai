@@ -15,7 +15,7 @@
  */
 
 // F7+ — /news command: fetch latest market news.
-// /news → latest forex/gold news
+// /news → latest gold, forex, and crypto market news
 // /news XAUUSD → news filtered to a symbol
 
 import type { BotCommand, BotResponse } from '../types';

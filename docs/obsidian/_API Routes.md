@@ -24,6 +24,7 @@ dv.table(
 - [[POST--api-chat]] · `@hamafx/web` · `apps/web/src/app/api/chat/route.ts`  *(↖1 ↗7 = 8)*
 - [[GET--api-market-stream]] · `@hamafx/web` · `apps/web/src/app/api/market/stream/route.ts`  *(↖1 ↗5 = 6)*
 - [[POST--api-settings-test-provider]] · `@hamafx/web` · `apps/web/src/app/api/settings/test-provider/route.ts`  *(↖1 ↗5 = 6)*
+- [[GET--api-admin-onboarding-inspect]] · `@hamafx/web` · `apps/web/src/app/api/admin/onboarding/inspect/route.ts`  *(↖1 ↗4 = 5)*
 - [[GET--api-cron-cot]] · `@hamafx/web` · `apps/web/src/app/api/cron/cot/route.ts`  *(↖1 ↗4 = 5)*
 - [[GET--api-cron-snapshots]] · `@hamafx/web` · `apps/web/src/app/api/cron/snapshots/route.ts`  *(↖1 ↗4 = 5)*
 - [[GET--api-health]] · `@hamafx/web` · `apps/web/src/app/api/health/route.ts`  *(↖1 ↗4 = 5)*
@@ -32,7 +33,7 @@ dv.table(
 - [[GET,PUT,DELETE--api-settings-chat-model]] · `@hamafx/web` · `apps/web/src/app/api/settings/chat-model/route.ts`  *(↖1 ↗4 = 5)*
 - [[GET,PUT,DELETE--api-settings-embedding-model]] · `@hamafx/web` · `apps/web/src/app/api/settings/embedding-model/route.ts`  *(↖1 ↗4 = 5)*
 - [[GET,PUT,DELETE--api-settings-vision-model]] · `@hamafx/web` · `apps/web/src/app/api/settings/vision-model/route.ts`  *(↖1 ↗4 = 5)*
-- [[GET--api-admin-onboarding-inspect]] · `@hamafx/web` · `apps/web/src/app/api/admin/onboarding/inspect/route.ts`  *(↖1 ↗3 = 4)*
+- [[GET--api-admin-onboarding-status]] · `@hamafx/web` · `apps/web/src/app/api/admin/onboarding/status/route.ts`  *(↖1 ↗3 = 4)*
 - [[GET--api-auth-verify-email]] · `@hamafx/web` · `apps/web/src/app/api/auth/verify-email/route.ts`  *(↖1 ↗3 = 4)*
 - [[GET--api-chat-threads--id-export]] · `@hamafx/web` · `apps/web/src/app/api/chat/threads/[id]/export/route.ts`  *(↖1 ↗3 = 4)*
 - [[GET--api-cron-briefings]] · `@hamafx/web` · `apps/web/src/app/api/cron/briefings/route.ts`  *(↖1 ↗3 = 4)*
@@ -41,6 +42,7 @@ dv.table(
 - [[GET--api-cron-news]] · `@hamafx/web` · `apps/web/src/app/api/cron/news/route.ts`  *(↖1 ↗3 = 4)*
 - [[GET--api-cron-warm-cache]] · `@hamafx/web` · `apps/web/src/app/api/cron/warm-cache/route.ts`  *(↖1 ↗3 = 4)*
 - [[GET--api-cron-weekly-review]] · `@hamafx/web` · `apps/web/src/app/api/cron/weekly-review/route.ts`  *(↖1 ↗3 = 4)*
+- [[POST--api-journal-import]] · `@hamafx/web` · `apps/web/src/app/api/journal/import/route.ts`  *(↖1 ↗3 = 4)*
 - [[POST--api-journal-review]] · `@hamafx/web` · `apps/web/src/app/api/journal/review/route.ts`  *(↖1 ↗3 = 4)*
 - [[GET--api-me-keys]] · `@hamafx/web` · `apps/web/src/app/api/me/keys/route.ts`  *(↖1 ↗3 = 4)*
 - [[GET--api-news]] · `@hamafx/web` · `apps/web/src/app/api/news/route.ts`  *(↖1 ↗3 = 4)*
@@ -62,7 +64,6 @@ dv.table(
 - [[POST--api-admin-impersonate]] · `@hamafx/web` · `apps/web/src/app/api/admin/impersonate/route.ts`  *(↖1 ↗2 = 3)*
 - [[GET--api-admin-logs-stream]] · `@hamafx/web` · `apps/web/src/app/api/admin/logs/stream/route.ts`  *(↖1 ↗2 = 3)*
 - [[POST--api-admin-onboarding-reset]] · `@hamafx/web` · `apps/web/src/app/api/admin/onboarding/reset/route.ts`  *(↖1 ↗2 = 3)*
-- [[GET--api-admin-onboarding-status]] · `@hamafx/web` · `apps/web/src/app/api/admin/onboarding/status/route.ts`  *(↖1 ↗2 = 3)*
 - [[POST--api-admin-test-alert-email]] · `@hamafx/web` · `apps/web/src/app/api/admin/test-alert-email/route.ts`  *(↖1 ↗2 = 3)*
 - [[POST--api-admin-test-telegram]] · `@hamafx/web` · `apps/web/src/app/api/admin/test-telegram/route.ts`  *(↖1 ↗2 = 3)*
 - [[POST--api-billing-checkout]] · `@hamafx/web` · `apps/web/src/app/api/billing/checkout/route.ts`  *(↖1 ↗2 = 3)*
@@ -84,7 +85,6 @@ dv.table(
 - [[GET--api-dev-login]] · `@hamafx/web` · `apps/web/src/app/api/dev/login/route.ts`  *(↖1 ↗2 = 3)*
 - [[GET--api-health-db]] · `@hamafx/web` · `apps/web/src/app/api/health/db/route.ts`  *(↖1 ↗2 = 3)*
 - [[GET--api-health-public]] · `@hamafx/web` · `apps/web/src/app/api/health/public/route.ts`  *(↖1 ↗2 = 3)*
-- [[POST--api-journal-import]] · `@hamafx/web` · `apps/web/src/app/api/journal/import/route.ts`  *(↖1 ↗2 = 3)*
 - [[GET--api-market-price]] · `@hamafx/web` · `apps/web/src/app/api/market/price/route.ts`  *(↖1 ↗2 = 3)*
 - [[POST--api-onboarding-save-progress]] · `@hamafx/web` · `apps/web/src/app/api/onboarding/save-progress/route.ts`  *(↖1 ↗2 = 3)*
 - [[GET,POST--api-portfolio-positions]] · `@hamafx/web` · `apps/web/src/app/api/portfolio/positions/route.ts`  *(↖1 ↗2 = 3)*

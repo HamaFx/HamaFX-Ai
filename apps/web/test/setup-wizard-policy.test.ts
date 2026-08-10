@@ -14,6 +14,8 @@ describe('beginner setup wizard policy', () => {
     expect(setup).toContain('Full mode is unavailable because Docker Desktop is not running.');
     expect(setup).toContain('Simple mode needs pnpm or Corepack');
     expect(setup).toContain('BYOK_ENABLED: \'1\'');
+    expect(setup).toContain('The server must use it to call your selected provider');
+    expect(setup).not.toContain('never leaves your device');
   });
 
   it('preserves existing configuration while safely updating selected values', () => {

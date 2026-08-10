@@ -52,7 +52,7 @@ export async function AboutCard() {
           Build {buildId ?? 'unknown'}
         </p>
         <p className="text-fg-subtle/70">
-          XAUUSD · EURUSD · GBPUSD — personal copilot
+          Gold · forex · crypto — personal copilot
         </p>
       </div>
     </section>

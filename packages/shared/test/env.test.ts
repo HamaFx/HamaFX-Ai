@@ -331,9 +331,11 @@ describe('parseServerEnv — defaults and transforms', () => {
     ).toThrow(/Multi-user\/RLS mode is disabled|REGISTRATION_MODE=open requires/i);
   });
 
-  it('transforms UNLIMITED_SYMBOLS="false" to boolean false', () => {
-    const env = parseServerEnv({ ...MINIMAL_ENV, NODE_ENV: 'test', UNLIMITED_SYMBOLS: 'false' });
-    expect(env.UNLIMITED_SYMBOLS).toBe(false);
+  it('keeps deprecated UNLIMITED_SYMBOLS disabled regardless of input', () => {
+    const falseEnv = parseServerEnv({ ...MINIMAL_ENV, NODE_ENV: 'test', UNLIMITED_SYMBOLS: 'false' });
+    const trueEnv = parseServerEnv({ ...MINIMAL_ENV, NODE_ENV: 'test', UNLIMITED_SYMBOLS: 'true' });
+    expect(falseEnv.UNLIMITED_SYMBOLS).toBe(false);
+    expect(trueEnv.UNLIMITED_SYMBOLS).toBe(false);
   });
 
   it('defaults AI_DEFAULT_MODEL', () => {

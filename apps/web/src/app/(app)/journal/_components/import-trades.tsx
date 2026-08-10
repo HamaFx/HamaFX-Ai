@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/cn';
 import { apiMutate } from '@/lib/api-client';
+import { isKnownSymbol } from '@hamafx/shared';
 
 interface ParsedTrade {
   symbol: string;
@@ -34,7 +35,7 @@ export function ImportTrades({ onImported }: { onImported?: () => void }) {
       const cols = line.split(',').map((c) => c.trim());
       if (cols.length < 4) continue;
       const symbol = cols[0]!.toUpperCase();
-      if (!['XAUUSD', 'EURUSD', 'GBPUSD'].includes(symbol)) continue;
+      if (!isKnownSymbol(symbol)) continue;
       const side = cols[1]!.toLowerCase() === 'sell' ? 'short' : 'long';
       const entry = Number(cols[2]);
       if (!Number.isFinite(entry) || entry <= 0) continue;

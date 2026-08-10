@@ -161,7 +161,7 @@
       "toNode": "n12",
       "fromSide": "right",
       "toSide": "left",
-      "label": "240 deps",
+      "label": "247 deps",
       "color": "5"
     },
     {
@@ -179,7 +179,7 @@
       "toNode": "n10",
       "fromSide": "right",
       "toSide": "left",
-      "label": "84 deps",
+      "label": "86 deps",
       "color": "5"
     },
     {
@@ -206,7 +206,7 @@
       "toNode": "n13",
       "fromSide": "right",
       "toSide": "left",
-      "label": "71 deps",
+      "label": "74 deps",
       "color": "5"
     },
     {
@@ -341,7 +341,7 @@
       "toNode": "n12",
       "fromSide": "right",
       "toSide": "left",
-      "label": "43 deps",
+      "label": "42 deps",
       "color": "5"
     },
     {
@@ -359,8 +359,8 @@
       "toNode": "n13",
       "fromSide": "right",
       "toSide": "left",
-      "label": "20 deps",
-      "color": "3"
+      "label": "21 deps",
+      "color": "5"
     },
     {
       "id": "@hamafx/db→@hamafx/config",
@@ -372,12 +372,21 @@
       "color": "1"
     },
     {
+      "id": "@hamafx/db→@hamafx/shared",
+      "fromNode": "n10",
+      "toNode": "n12",
+      "fromSide": "right",
+      "toSide": "left",
+      "label": "3 deps",
+      "color": "1"
+    },
+    {
       "id": "@hamafx/db→@hamafx/test-utils",
       "fromNode": "n10",
       "toNode": "n13",
       "fromSide": "right",
       "toSide": "left",
-      "label": "17 deps",
+      "label": "18 deps",
       "color": "3"
     },
     {
@@ -422,7 +431,7 @@
       "toNode": "n13",
       "fromSide": "right",
       "toSide": "left",
-      "label": "12 deps",
+      "label": "13 deps",
       "color": "3"
     },
     {

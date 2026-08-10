@@ -123,7 +123,9 @@ export async function getPriceWithMeta(
       // category routing) — the adapter just iterates and runs failover.
       const providers = marketDataProviders.list();
       const attempts: ProviderAttempt<{ price: number; provider: string; ageMs: number | null }>[] =
-        providers.map((p) => ({
+        providers
+          .filter((p) => p.supports?.(symbol) ?? true)
+          .map((p) => ({
           name: p.name,
           pinned: p.pinned ?? false,
           run: async () => {

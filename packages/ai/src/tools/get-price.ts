@@ -21,12 +21,12 @@
 // transparently — the AI never talks to a provider directly.
 
 import { getPrice, ProviderError } from '@hamafx/data';
-import { SymbolSchema, type GetPriceOutput } from '@hamafx/shared';
+import { ALL_SYMBOLS, SymbolSchema, type GetPriceOutput } from '@hamafx/shared';
 import { tool } from 'ai';
 import { z } from 'zod';
 
 const InputSchema = z.object({
-  symbols: z.array(SymbolSchema).min(1).max(3),
+  symbols: z.array(SymbolSchema).min(1).max(ALL_SYMBOLS.length),
 });
 
 // Module-augment the shared ToolIOMap so consumers get strongly-typed inputs
@@ -41,7 +41,7 @@ declare module '@hamafx/shared' {
 
 export const getPriceTool = tool({
   description:
-    'Fetch the most recent mid price for one or more supported symbols (XAUUSD, EURUSD, GBPUSD). Use only when the LIVE_SNAPSHOT in the system prompt is missing the symbol or older than 10 seconds.',
+    'Fetch the most recent mid price for one or more symbols supported by the canonical gold, forex, and crypto catalog. Use only when the LIVE_SNAPSHOT in the system prompt is missing the symbol or older than 10 seconds.',
   inputSchema: InputSchema,
   execute: async ({ symbols }): Promise<GetPriceOutput> => {
     const ticks = await Promise.all(

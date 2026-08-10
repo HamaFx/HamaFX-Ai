@@ -152,10 +152,11 @@ services:
       db:
         condition: service_healthy
     # INFRA-01: Health check so Docker/Compose knows when the app is ready.
-    # Polls /api/health which verifies DB connectivity. 3 retries × 10s =
-    # 30s grace period for Next.js cold start.
+    # Polls the minimal unauthenticated probe. The richer /api/health route
+    # requires a session and is intentionally not suitable for Docker.
+    # 3 retries × 10s = 30s grace period for Next.js cold start.
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:3000/api/health || exit 1"]
+      test: ["CMD-SHELL", "curl -f http://localhost:3000/api/health/public || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3

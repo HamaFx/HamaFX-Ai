@@ -487,7 +487,8 @@ async function main() {
   line();
   console.log(`  After registering, you'll add your AI provider key via the`);
   console.log(`  ${paint('onboarding wizard', 'bold')} or ${paint('Settings → API Keys', 'bold')}.`);
-  console.log(`  Your key is encrypted at rest (AES-256-GCM) and never leaves your device.`);
+  console.log(`  Your key is encrypted at rest (AES-256-GCM) on your instance.`);
+  console.log(`  The server must use it to call your selected provider; protect your instance, database, backups, and encryption secret.`);
   line();
   console.log(`  ${paint('Supported providers:', 'bold')}`);
   line();

@@ -22,14 +22,15 @@ import { z } from 'zod';
 import { auth } from '@/auth';
 import { schema } from '@hamafx/db';
 import { getDb } from '@hamafx/ai';
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import type { ByokPayload } from '@hamafx/shared/encryption';
 import { encryptByok, decryptByok } from '@hamafx/shared/encryption';
 import type { PROVIDER_IDS } from '@hamafx/shared/byok';
+import { DEFAULT_WATCHLIST_SYMBOLS, normalizeSymbol } from '@hamafx/shared';
 import { createScopedLoggerWithContext } from '@/lib/logger';
 
-const symbolSchema = z.string().toUpperCase().regex(/^[A-Z0-9/]{1,10}$/);
+const symbolSchema = z.string().regex(/^[A-Z0-9/]{1,20}$/).transform(normalizeSymbol);
 
 export type TradingStyle = 'scalper' | 'day_trader' | 'swing' | 'position';
 
@@ -66,15 +67,45 @@ export async function completeOnboardingAction(formData: FormData) {
   }
 
   try {
-    // Validate symbols
-    if (payload.symbols && Array.isArray(payload.symbols)) {
-      for (const sym of payload.symbols) {
-        const parsed = symbolSchema.safeParse(sym);
-        if (!parsed.success) {
-          return { ok: false as const, error: `Invalid symbol: "${sym}"` };
-        }
+    const requestedSymbols = payload.symbols && Array.isArray(payload.symbols) && payload.symbols.length > 0
+      ? payload.symbols.map(normalizeSymbol)
+      : [...DEFAULT_WATCHLIST_SYMBOLS];
+
+    if (new Set(requestedSymbols).size !== requestedSymbols.length) {
+      return { ok: false as const, error: 'Duplicate symbols are not allowed' };
+    }
+
+    for (const sym of requestedSymbols) {
+      const parsed = symbolSchema.safeParse(sym);
+      if (!parsed.success) {
+        return { ok: false as const, error: `Invalid symbol: "${sym}"` };
       }
     }
+
+    const requestedDefault = normalizeSymbol(
+      payload.defaultSymbol ?? requestedSymbols[0] ?? DEFAULT_WATCHLIST_SYMBOLS[0],
+    );
+    if (!requestedSymbols.includes(requestedDefault)) {
+      return { ok: false as const, error: `Default symbol "${requestedDefault}" must be in the watchlist` };
+    }
+
+    // The database catalog is authoritative at the user boundary.
+    const db = getDb();
+    const activeRows = await db
+      .select({ symbol: schema.symbolCatalog.symbol })
+      .from(schema.symbolCatalog)
+      .where(
+        and(
+          eq(schema.symbolCatalog.isActive, true),
+          eq(schema.symbolCatalog.tenantId, '__system__'),
+        ),
+      );
+    const activeSymbols = new Set(activeRows.map((row) => row.symbol));
+    const unsupported = requestedSymbols.find((symbol) => !activeSymbols.has(symbol));
+    if (unsupported) {
+      return { ok: false as const, error: `Symbol "${unsupported}" is not supported or active` };
+    }
+
 
     // Validate tradingStyle if provided (BUG-1: tradingStyle now persisted server-side)
     let validatedTradingStyle: TradingStyle | undefined;
@@ -86,7 +117,6 @@ export async function completeOnboardingAction(formData: FormData) {
       validatedTradingStyle = ts.data;
     }
 
-    const db = getDb();
     await db.transaction(async (tx) => {
       // Save displayName to users table if provided
       if (payload.displayName && typeof payload.displayName === 'string') {
@@ -133,7 +163,7 @@ export async function completeOnboardingAction(formData: FormData) {
       if (existingSettings.length === 0) {
         await tx.insert(schema.userSettings).values({
           userId,
-          defaultSymbol: payload.defaultSymbol || 'XAUUSD',
+          defaultSymbol: requestedDefault,
           timezone: payload.timezone || 'UTC',
           aiApiKeys: encryptedKeys,
           onboardingCompleted: true,
@@ -143,7 +173,7 @@ export async function completeOnboardingAction(formData: FormData) {
         await tx
           .update(schema.userSettings)
           .set({
-            defaultSymbol: payload.defaultSymbol || 'XAUUSD',
+            defaultSymbol: requestedDefault,
             timezone: payload.timezone || 'UTC',
             aiApiKeys: encryptedKeys,
             onboardingCompleted: true,
@@ -154,9 +184,7 @@ export async function completeOnboardingAction(formData: FormData) {
 
       // 3. Add default or custom watchlist.
       try {
-        const watchSymbols = payload.symbols && Array.isArray(payload.symbols) && payload.symbols.length > 0
-          ? payload.symbols
-          : ['XAUUSD', 'EURUSD', 'GBPUSD'];
+        const watchSymbols = requestedSymbols;
 
         await tx.delete(schema.userSymbols).where(eq(schema.userSymbols.userId, userId));
 

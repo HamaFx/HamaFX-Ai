@@ -42,7 +42,7 @@ interface SymbolsFormProps {
 const CATEGORIES: { value: string; label: string }[] = [
   { value: 'all', label: 'All' },
   { value: 'forex', label: 'Forex' },
-  { value: 'metals', label: 'Metals' },
+  { value: 'gold', label: 'Gold' },
   { value: 'crypto', label: 'Crypto' },
   { value: 'indices', label: 'Indices' },
 ];

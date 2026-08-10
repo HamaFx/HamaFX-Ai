@@ -3,8 +3,8 @@ type: module
 package: "@hamafx/web"
 path: "apps/web/src/lib/auth/provision-user.ts"
 incoming: 0
-outgoing: 3
-connections: 3
+outgoing: 4
+connections: 4
 risk: low
 layer: core
 tags: [type/module, hamafx-web, layer/core]
@@ -24,15 +24,15 @@ Module: apps/web/src/lib/auth/provision-user.ts
 | | Count |
 |---|---|
 | Incoming dependencies | 0 |
-| Outgoing dependencies | 3 |
-| Total connections | 3 |
+| Outgoing dependencies | 4 |
+| Total connections | 4 |
 | Risk level | **LOW** |
 | Layer | `core` |
 | Package tag | `#hamafx-web` |
 
 
-### 📤 Depends On (3)
-[[@hamafx-db]] · [[@hamafx-ai]] · [[@hamafx-web]]
+### 📤 Depends On (4)
+[[@hamafx-db]] · [[@hamafx-ai]] · [[@hamafx-shared]] · [[@hamafx-web]]
 
 
 

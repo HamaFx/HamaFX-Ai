@@ -2,9 +2,9 @@
 type: module
 package: "@hamafx/db"
 path: "packages/db/src/pglite-client.ts"
-incoming: 9
+incoming: 10
 outgoing: 2
-connections: 11
+connections: 12
 risk: low
 layer: core
 tags: [type/module, hamafx-db, layer/core]
@@ -23,9 +23,9 @@ Module: packages/db/src/pglite-client.ts
 
 | | Count |
 |---|---|
-| Incoming dependencies | 9 |
+| Incoming dependencies | 10 |
 | Outgoing dependencies | 2 |
-| Total connections | 11 |
+| Total connections | 12 |
 | Risk level | **LOW** |
 | Layer | `core` |
 | Package tag | `#hamafx-db` |
@@ -35,8 +35,8 @@ Module: packages/db/src/pglite-client.ts
 [[index_tool-architecture-explorer|index]] · [[@hamafx-db]]
 
 
-### 📥 Depended On By (9)
-[[local-db-getLocalDb]] · [[full-migration-chain.test]] · [[migration-0013-chat-model.test]] · [[migration-0014.test]] · [[migration-rename.test]] · [[phase2-3-migrations.test]] · [[phase3-multitenancy-session-a.test]] · [[phase4-5-migrations.test-encryptSecret]] · [[schema-drift.test]]
+### 📥 Depended On By (10)
+[[local-db-getLocalDb]] · [[full-migration-chain.test]] · [[migration-0013-chat-model.test]] · [[migration-0014.test]] · [[migration-rename.test]] · [[phase2-3-migrations.test]] · [[phase3-multitenancy-session-a.test]] · [[phase4-5-migrations.test-encryptSecret]] · [[schema-drift.test]] · [[symbol-catalog-activation.test]]
 
 
 

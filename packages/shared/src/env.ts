@@ -241,10 +241,11 @@ const RuntimeEnv = z.object({
     .union([z.literal('0'), z.literal('1'), z.literal('true'), z.literal('false')])
     .default('0')
     .transform((v) => v === '1' || v === 'true'),
+  /** Deprecated compatibility flag; symbol provider boundaries always enforce the canonical catalog. */
   UNLIMITED_SYMBOLS: z
     .union([z.literal('0'), z.literal('1'), z.literal('true'), z.literal('false')])
     .default('0')
-    .transform((v) => v === '1' || v === 'true'),
+    .transform(() => false),
   PER_USER_BRIEFINGS: z
     .union([z.literal('0'), z.literal('1'), z.literal('true'), z.literal('false')])
     .default('0')

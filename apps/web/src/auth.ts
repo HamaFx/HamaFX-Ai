@@ -209,39 +209,38 @@ export const { handlers, auth, signIn, signOut } = _nextAuth({
         if (!passwordValid) {
           // ── P2-2: Atomic SQL increment (no read-modify-write race) ──
           try {
-            await db
+            const [updated] = await db
               .update(schema.users)
               .set({
                 failedLoginAttempts: sql`${schema.users.failedLoginAttempts} + 1`,
                 lockedUntil: sql`CASE WHEN ${schema.users.failedLoginAttempts} + 1 >= 5 THEN NOW() + INTERVAL '15 minutes' ELSE NULL END`,
               })
-              .where(eq(schema.users.id, user.id));
-          } catch {
-            /* fail open — lockout is best-effort; DB may be unavailable */
-            logErrorContext(
-              new Error('Failed to increment failed login attempts'),
-              'auth/lockout_increment',
-              { userId: user.id },
-              'auth',
-            );
+              .where(eq(schema.users.id, user.id))
+              .returning({ id: schema.users.id });
+            if (!updated) throw new Error('Failed login lockout update matched no user');
+          } catch (err) {
+            // Lockout persistence is a security control. If the counter cannot
+            // be recorded, do not turn a failed password into an untracked
+            // retry opportunity.
+            logErrorContext(err, 'auth/lockout_increment', { userId: user.id }, 'auth');
+            throw new AuthError('AUTH_SYSTEM_ERROR');
           }
           return null;
         }
 
         // ── Reset lockout counter on successful password ───────────────
         try {
-          await db
+          const [updated] = await db
             .update(schema.users)
             .set({ failedLoginAttempts: 0, lockedUntil: null })
-            .where(eq(schema.users.id, user.id));
-        } catch {
-          /* fail open — reset is best-effort */
-          logErrorContext(
-            new Error('Failed to reset lockout counter'),
-            'auth/lockout_reset',
-            { userId: user.id },
-            'auth',
-          );
+            .where(eq(schema.users.id, user.id))
+            .returning({ id: schema.users.id });
+          if (!updated) throw new Error('Failed login lockout reset matched no user');
+        } catch (err) {
+          // A successful password must not proceed while stale lockout state
+          // cannot be cleared; otherwise the next failure may be untracked.
+          logErrorContext(err, 'auth/lockout_reset', { userId: user.id }, 'auth');
+          throw new AuthError('AUTH_SYSTEM_ERROR');
         }
 
         // ── P0-1 / P2-6: Enforce 2FA at login with backup-code fallback ─────────────────────────────────
@@ -264,9 +263,12 @@ export const { handlers, auth, signIn, signOut } = _nextAuth({
           try {
             const rl2fa = await withRateLimit(user.id, '2fa_verify', 10);
             rateLimitAllowed = rl2fa.allowed;
-          } catch {
-            // withRateLimit may throw on DB outage — fail open to avoid
-            // locking users out when the DB is unavailable.
+          } catch (err) {
+            // 2FA rate limiting is a security control, not an availability
+            // optimization. If the limiter cannot be reached, do not allow
+            // verification to continue without a brute-force ceiling.
+            logErrorContext(err, 'auth/2fa_rate_limit_unavailable', { userId: user.id }, 'auth');
+            throw new AuthError('2FA_SYSTEM_ERROR');
           }
           if (!rateLimitAllowed) {
             throw new AuthError('2FA_RATE_LIMITED');
@@ -285,16 +287,27 @@ export const { handlers, auth, signIn, signOut } = _nextAuth({
             const hashedCodes = user.twoFactorBackupCodes;
             for (const hashed of hashedCodes) {
               if (await bcrypt.compare(totpCode, hashed)) {
-                valid2FA = true;
-                // Consume the single-use backup code.
+                // A backup code is single-use. Do not authenticate unless its
+                // consumption is persisted successfully.
                 try {
-                  const remaining = user.twoFactorBackupCodes!.filter((h) => h !== hashed);
-                  await db
+                  // Remove atomically and require the hash to still be
+                  // present. Concurrent attempts cannot consume the same
+                  // backup code twice.
+                  const [updated] = await db
                     .update(schema.users)
-                    .set({ twoFactorBackupCodes: remaining })
-                    .where(eq(schema.users.id, user.id));
+                    .set({
+                      twoFactorBackupCodes: sql`array_remove(${schema.users.twoFactorBackupCodes}, ${hashed})`,
+                    })
+                        .where(and(
+                      eq(schema.users.id, user.id),
+                      sql`${schema.users.twoFactorBackupCodes} @> ARRAY[${hashed}]::text[]`,
+                    ))
+                    .returning({ id: schema.users.id });
+                  if (!updated) throw new Error('Backup-code consumption updated no user');
+                  valid2FA = true;
                 } catch (err) {
                   logErrorContext(err, 'auth/consume_backup_code', { userId: user.id }, 'auth');
+                  throw new AuthError('2FA_SYSTEM_ERROR');
                 }
                 break;
               }
@@ -305,28 +318,37 @@ export const { handlers, auth, signIn, signOut } = _nextAuth({
             recordAuthEvent('2fa_failure');
             // P2-6: increment failed 2FA attempts and lock after 5
             try {
-              await db
+              const [updated] = await db
                 .update(schema.users)
                 .set({
                   failed2faAttempts: sql`${schema.users.failed2faAttempts} + 1`,
                   twoFactorLockedUntil:
                     sql`CASE WHEN ${schema.users.failed2faAttempts} + 1 >= 5 THEN NOW() + INTERVAL '15 minutes' ELSE NULL END`,
                 })
-                .where(eq(schema.users.id, user.id));
+                .where(eq(schema.users.id, user.id))
+                .returning({ id: schema.users.id });
+              if (!updated) throw new Error('Failed 2FA lockout update matched no user');
             } catch (err) {
+              // Do not reveal whether the code was invalid while allowing the
+              // attempt to go uncounted. The limiter and lockout are both
+              // security controls, so persistence failure fails closed.
               logErrorContext(err, 'auth/2fa_lockout_increment', { userId: user.id }, 'auth');
+              throw new AuthError('2FA_SYSTEM_ERROR');
             }
             throw new AuthError('INVALID_2FA_CODE');
           }
 
           // Reset 2FA failure counter on success
           try {
-            await db
+            const [updated] = await db
               .update(schema.users)
               .set({ failed2faAttempts: 0, twoFactorLockedUntil: null })
-              .where(eq(schema.users.id, user.id));
+              .where(eq(schema.users.id, user.id))
+              .returning({ id: schema.users.id });
+            if (!updated) throw new Error('Failed 2FA lockout reset matched no user');
           } catch (err) {
             logErrorContext(err, 'auth/2fa_lockout_reset', { userId: user.id }, 'auth');
+            throw new AuthError('2FA_SYSTEM_ERROR');
           }
         }
 
@@ -476,14 +498,11 @@ export const { handlers, auth, signIn, signOut } = _nextAuth({
             sql`INSERT INTO ${schema.userSessions} (id, user_id, device_name, ip)
                 VALUES (${sessionId}, ${user.id}, ${(user.deviceName as string) ?? null}, ${(user.ip as string) ?? null})`,
           );
-        } catch {
-          /* fail open — session insert is best-effort */
-          logErrorContext(
-            new Error('Failed to create user session'),
-            'auth/session_insert',
-            { userId: user.id, sessionId },
-            'auth',
-          );
+        } catch (err) {
+          // Session validation can only revoke tracked sessions. Never mint an
+          // authenticated JWT that has no corresponding revocable DB row.
+          logErrorContext(err, 'auth/session_insert', { userId: user.id, sessionId }, 'auth');
+          throw new AuthError('SESSION_SYSTEM_ERROR');
         }
       }
       if (token.tokenVersion === undefined) {
@@ -509,12 +528,14 @@ export const { handlers, auth, signIn, signOut } = _nextAuth({
       let db;
       try {
         db = getDb();
-      } catch {
-        // DB unavailable — keep the session alive rather than locking the user out.
-        return session;
+      } catch (err) {
+        // Revocation and token-version checks are security controls. If the
+        // database cannot be reached, do not continue with an unchecked JWT.
+        logErrorContext(err, 'auth/session_database_unavailable', {}, 'auth');
+        return { ...session, user: undefined, expires: '0' };
       }
 
-      const invalidated = await validateSession(db, token, session, now, { failClosed: false });
+      const invalidated = await validateSession(db, token, session, now, { failClosed: true });
       if (invalidated) {
         return invalidated;
       }

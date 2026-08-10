@@ -2,9 +2,9 @@
 type: module
 package: "@hamafx/data"
 path: "packages/data/src/providers/binance/rest.ts"
-incoming: 0
-outgoing: 7
-connections: 7
+incoming: 1
+outgoing: 8
+connections: 9
 risk: low
 layer: core
 tags: [type/module, hamafx-data, layer/core]
@@ -23,9 +23,9 @@ Module: packages/data/src/providers/binance/rest.ts
 
 | | Count |
 |---|---|
-| Incoming dependencies | 0 |
-| Outgoing dependencies | 7 |
-| Total connections | 7 |
+| Incoming dependencies | 1 |
+| Outgoing dependencies | 8 |
+| Total connections | 9 |
 | Risk level | **LOW** |
 | Layer | `core` |
 | Package tag | `#hamafx-data` |
@@ -34,6 +34,9 @@ Module: packages/data/src/providers/binance/rest.ts
 ### 📤 Depends On (6)
 [[@hamafx-shared]] · [[throttle-ThrottleConfig]] · [[errors-DataErrorCode]] · [[map-toBinanceInterval]] · [[types-BinanceKline]] · [[@hamafx-data]]
 
+
+### 📥 Depended On By (1)
+[[binance-map.test]]
 
 
 

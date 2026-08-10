@@ -5,11 +5,11 @@
 
 ## Project Identity
 
-**HamaFX-Ai** is an open-source, multi-tenant, chat-driven AI trading copilot for forex instruments: **XAUUSD** (primary), **EURUSD**, **GBPUSD**. It runs as a Next.js 16 PWA with a persistent Node.js worker daemon. The AI agent uses Vercel AI SDK v5 with 33 tools, domain-based model routing, and multi-agent committee deliberation.
+**HamaFX-Ai** is an open-source, multi-tenant, chat-driven AI trading copilot for **gold, forex, and crypto**: **XAUUSD** (primary), a canonical forex catalog, and supported Binance crypto pairs. It runs as a Next.js 16 PWA with a persistent Node.js worker daemon. The AI agent uses Vercel AI SDK v5 with 32 registered tools, domain-based model routing, and multi-agent committee deliberation.
 
 - **License**: Apache-2.0
 - **Status**: In production on Vercel + GCE VM. Phases 0–9 shipped (incl. multi-tenant v2.0). UX Upgrade Plan Phases A/B/C/D/E shipped. Architecture Explorer deployed (Phase 8 complete).
-- **Auth**: NextAuth.js v5 (Credentials provider, JWT strategy) + Drizzle adapter. BYOK per user (9-provider registry). Strict `userId` scoping on all user-data tables.
+- **Auth**: NextAuth.js v5 (Credentials provider, JWT strategy) + Drizzle adapter. BYOK per user (10-provider registry). Strict `userId` scoping on all user-data tables.
 - **Repo**: [github.com/HamaFx/HamaFX-Ai](https://github.com/HamaFx/HamaFX-Ai)
 - **Architecture Vault (Obsidian)**: [github.com/HamaFx/hamafx-architecture-vault](https://github.com/HamaFx/hamafx-architecture-vault)
 
@@ -25,14 +25,14 @@
 | Framework | Next.js 16 App Router + React 19 |
 | Styling | Tailwind CSS v4 + shadcn/ui (Radix) |
 | AI SDK | Vercel AI SDK v5 (`ai` package) |
-| Models | Google Vertex AI + 9-provider BYOK registry |
+| Models | Google Vertex AI + 10-provider BYOK registry |
 | DB | Postgres (Supabase) + pgvector. Drizzle ORM (50 tables across 35 schema definition files) |
 | Local DB | PGlite (embedded Postgres, zero setup) |
 | Charts | TradingView lightweight-charts v5 |
 | Tests | Vitest (228 test files). Playwright E2E (16 spec files). |
 | Lint | ESLint flat config in `packages/config/eslint` |
 | TypeScript | Strict mode. `exactOptionalPropertyTypes`, `noUncheckedIndexedAccess` |
-| AI Tools | 33 exported tool definitions in `packages/ai/src/tools/` |
+| AI Tools | 32 registered tool definitions in `packages/ai/src/tools/` |
 | Architecture Explorer | `tools/architecture-explorer/` — auto-generates interactive HTML, JSON model, Obsidian vault, and AI knowledge artifacts |
 | Request proxy | 190 lines. Handles auth, CSRF, CSP, request-id |
 
@@ -139,7 +139,7 @@ HamaFX-Ai/
 │   ├── web/              # Next.js 16 PWA (frontend + API routes)
 │   └── worker/           # Node.js daemon (SignalR consumer, tick processing, job runner)
 ├── packages/
-│   ├── ai/               # AI agent core — chat, 33 tools, routing, memory, persistence
+│   ├── ai/               # AI agent core — chat, 32 registered tools, routing, memory, persistence
 │   ├── data/             # Market data adapters — price, candles, news, failover, caching
 │   ├── db/               # Drizzle schema (50 tables across 35 files) + Postgres/PGlite client
 │   ├── indicators/       # Technical indicators — SMA, EMA, RSI, MACD, SMC structure
@@ -163,7 +163,7 @@ HamaFX-Ai/
 ```
 Browser (PWA)
     │
-    ├── /api/chat ──▶ runChat() ──▶ streamText + 33 tools
+    ├── /api/chat ──▶ runChat() ──▶ streamText + 32 registered tools
     │                    │
     │                    ├── routeTurn() ──▶ pick model (fundamental/technical/summary/vision)
     │                    ├── runPlanner() ──▶ plan-then-act pre-step
@@ -216,7 +216,7 @@ These files at `docs/knowledge/` are specifically designed for AI agents to unde
 | `features.json` | ~0.8K | 12 features with module ownership |
 | `api.json` | ~14K | All API routes |
 | `database.json` | ~13K | All DB tables |
-| `ai.json` | ~2K | 33 tools, 4 agents, routing |
+| `ai.json` | ~2K | 32 tools, 4 agents, routing |
 | `dependencies.json` | ~5K | Package dependencies |
 | `flows.json` | ~1.5K | 4 sequence diagrams |
 
@@ -411,7 +411,7 @@ The project uses **auto-generated documentation** wherever possible. Manual docs
 | `docs/knowledge/features.json` | 12 features with module ownership |
 | `docs/knowledge/api.json` | All API routes (~14K tokens) |
 | `docs/knowledge/database.json` | All DB tables (~13K tokens) |
-| `docs/knowledge/ai.json` | 33 tools, 4 agents, routing |
+| `docs/knowledge/ai.json` | 32 tools, 4 agents, routing |
 | `docs/knowledge/dependencies.json` | Package dependencies |
 | `docs/knowledge/flows.json` | Sequence diagrams |
 | `docs/obsidian/` | Full Obsidian vault (1,343+ files, pre-configured) |

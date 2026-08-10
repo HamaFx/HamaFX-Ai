@@ -15,7 +15,7 @@
  */
 
 // BiQuote SignalR consumer. Holds a single persistent hub connection,
-// subscribes to the three supported symbols, validates incoming ticks
+// subscribes to the active gold/forex symbols, validates incoming ticks
 // against the BiquoteSignalRTick schema, normalises them to LiveTick
 // shape, and hands them to a caller-supplied `onTick` handler.
 //
@@ -233,7 +233,7 @@ export class SignalRConsumer {
 
   /**
    * Handle one raw tick. Validates against BiquoteSignalRTickSchema,
-   * drops if the symbol isn't one of our three, normalises to a
+   * drops if the symbol isn't in the canonical catalog, normalises to a
    * LiveTick-shaped DTO, and dispatches to `onTick`.
    *
    * Exposed for tests; SignalR itself drives this via `on('ReceiveTick', ...)`.

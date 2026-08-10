@@ -33,6 +33,11 @@ describe('biquote map', () => {
     expect(toBiquoteSymbol('GBPUSD')).toBe('GBPUSD');
   });
 
+  it('fails fast for symbols without a BiQuote catalog mapping', () => {
+    expect(() => toBiquoteSymbol('BTCUSDT')).toThrow(/no catalog mapping/);
+    expect(() => toBiquoteSymbol('DOGEUSDT')).toThrow(/no catalog mapping/);
+  });
+
   it('maps every BiQuote-supported timeframe', () => {
     expect(toBiquoteTimeframe('1m')).toBe('1m');
     expect(toBiquoteTimeframe('5m')).toBe('5m');
@@ -60,14 +65,17 @@ describe('biquote map', () => {
 });
 
 describe('assertSupportedSymbol', () => {
-  it('returns the symbol unchanged for valid inputs', () => {
+  it('returns canonical symbols for valid mapped inputs', () => {
     expect(assertSupportedSymbol('XAUUSD')).toBe('XAUUSD');
     expect(assertSupportedSymbol('EURUSD')).toBe('EURUSD');
     expect(assertSupportedSymbol('GBPUSD')).toBe('GBPUSD');
+    expect(assertSupportedSymbol(' eurusd ')).toBe('EURUSD');
   });
 
-  it('throws ProviderError for any unsupported instrument', () => {
+  it('throws ProviderError for unsupported or unmapped instruments', () => {
     expect(() => assertSupportedSymbol('BTCUSD')).toThrow(ProviderError);
+    expect(() => assertSupportedSymbol('BTCUSDT')).toThrow(ProviderError);
+    expect(() => assertSupportedSymbol('DOGEUSDT')).toThrow(ProviderError);
     expect(() => assertSupportedSymbol('GARAN')).toThrow(ProviderError);
     expect(() => assertSupportedSymbol('ZZZZZZ')).toThrow(ProviderError);
   });

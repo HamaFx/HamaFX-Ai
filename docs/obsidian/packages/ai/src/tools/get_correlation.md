@@ -16,7 +16,7 @@ aliases: [get_correlation]
 > **AI Tool** · `@hamafx/ai` · `packages/ai/src/tools/get-correlation.ts`
 
 
-Pearson correlation matrix over close-to-close returns for XAUUSD/EURUSD/GBPUSD at the given timeframe + window, plus a USD-strength proxy (
+Pearson correlation matrix over close-to-close returns for the legacy CFTC/intermarket trio XAUUSD/EURUSD/GBPUSD at the given timeframe + window, plus a USD-strength proxy (
 
 
 ## 📊 Connections

@@ -16,7 +16,7 @@
 
 // Tool: get_intermarket.
 //
-// Cross-asset pulse: USD-strength proxy (50/50 EUR/GBP), gold 24h pulse,
+// Cross-asset pulse for the legacy CFTC/intermarket trio: USD-strength proxy (50/50 EUR/GBP), gold 24h pulse,
 // and the XAU↔DXY-proxy correlation in the requested window. Regime is
 // derived deterministically from the signs and magnitudes; `regimeBreak`
 // flags when the correlation has flipped sign (the pair is *typically*
@@ -46,7 +46,7 @@ const DXY_FORMULA =
 
 export const getIntermarketTool = tool({
   description:
-    "Cross-asset pulse: USD-strength proxy + 24h change, gold's 24h percent change, and XAU↔DXY-proxy correlation in the chosen window. Flags `regimeBreak` when the typical XAU↔DXY anti-correlation has flipped. Use for any 'what's the dollar doing', 'is gold tracking the dollar today', or 'risk on or off' prompt — captures the macro pulse the agent needs to stop guessing.",
+    "Cross-asset pulse for the legacy CFTC/intermarket trio: USD-strength proxy + 24h change, gold's 24h percent change, and XAU↔DXY-proxy correlation in the chosen window. This intentionally narrow feature does not limit the broader gold, forex, and crypto catalog. Flags `regimeBreak` when the typical XAU↔DXY anti-correlation has flipped. Use for any 'what's the dollar doing', 'is gold tracking the dollar today', or 'risk on or off' prompt — captures the macro pulse the agent needs to stop guessing.",
   inputSchema: InputSchema,
   execute: async ({ tf, windowBars }): Promise<GetIntermarketOutput> => {
     const need = windowBars + 1;

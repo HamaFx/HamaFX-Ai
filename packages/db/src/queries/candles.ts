@@ -16,7 +16,7 @@
 
 // Candle query helpers — market data and alert simulation.
 
-import { eq, desc } from 'drizzle-orm';
+import { and, eq, desc } from 'drizzle-orm';
 import { getDb, schema } from '../client';
 
 /** A candle row from candles_1m (subset of relevant fields). */
@@ -53,6 +53,9 @@ export async function listActiveSymbols() {
   return db
     .select()
     .from(schema.symbolCatalog)
-    .where(eq(schema.symbolCatalog.isActive, true))
+    .where(and(
+      eq(schema.symbolCatalog.isActive, true),
+      eq(schema.symbolCatalog.tenantId, '__system__'),
+    ))
     .orderBy(schema.symbolCatalog.sortOrder);
 }

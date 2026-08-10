@@ -42,15 +42,20 @@ Module: packages/shared/src/symbol-catalog.ts
 
 ## 📦 Exports
 - `SymbolCategory`
+- `SymbolDataProvider`
+- `SymbolQuantityUnit`
+- `SymbolPriceDistanceUnit`
+- `SymbolSettlementCurrency`
+- `SymbolQuoteCurrency`
+- `SymbolCapabilities`
 - `SymbolDefinition`
 - `BUILTIN_SYMBOLS`
 - `SYMBOL_MAP`
+- `normalizeSymbol`
 - `isKnownSymbol`
 - `getSymbolDefinition`
 - `tryGetSymbolDefinition`
 - `ALL_SYMBOLS`
-- `symbolsByCategory`
-- `symbolCategory`
 
 
 ## 🔍 Explore

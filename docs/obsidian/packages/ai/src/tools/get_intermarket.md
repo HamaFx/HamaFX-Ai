@@ -16,7 +16,7 @@ aliases: [get_intermarket]
 > **AI Tool** · `@hamafx/ai` · `packages/ai/src/tools/get-intermarket.ts`
 
 
-Cross-asset pulse: USD-strength proxy + 24h change, gold
+Cross-asset pulse for the legacy CFTC/intermarket trio: USD-strength proxy + 24h change, gold
 
 
 ## 📊 Connections

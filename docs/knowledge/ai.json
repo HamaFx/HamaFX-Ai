@@ -29,7 +29,7 @@
     },
     {
       "name": "compute_risk",
-      "description": "Compute position size, USD risk/reward, and pips-to-stop/target from a (symbol, side, entry, stop, target?, accountUsd, riskPct) tuple. Pure-function — no provider calls. Use when the user asks",
+      "description": "Copyright 2026 HamaFX",
       "file": "packages/ai/src/tools/compute-risk.ts"
     },
     {
@@ -54,7 +54,7 @@
     },
     {
       "name": "get_correlation",
-      "description": "Pearson correlation matrix over close-to-close returns for XAUUSD/EURUSD/GBPUSD at the given timeframe + window, plus a USD-strength proxy (",
+      "description": "Pearson correlation matrix over close-to-close returns for the legacy CFTC/intermarket trio XAUUSD/EURUSD/GBPUSD at the given timeframe + window, plus a USD-strength proxy (",
       "file": "packages/ai/src/tools/get-correlation.ts"
     },
     {
@@ -74,7 +74,7 @@
     },
     {
       "name": "get_intermarket",
-      "description": "Cross-asset pulse: USD-strength proxy + 24h change, gold",
+      "description": "Cross-asset pulse for the legacy CFTC/intermarket trio: USD-strength proxy + 24h change, gold",
       "file": "packages/ai/src/tools/get-intermarket.ts"
     },
     {
@@ -99,7 +99,7 @@
     },
     {
       "name": "get_price",
-      "description": "Fetch the most recent mid price for one or more supported symbols (XAUUSD, EURUSD, GBPUSD). Use only when the LIVE_SNAPSHOT in the system prompt is missing the symbol or older than 10 seconds.",
+      "description": "Copyright 2026 HamaFX",
       "file": "packages/ai/src/tools/get-price.ts"
     },
     {

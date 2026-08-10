@@ -63,7 +63,9 @@ const liveTicksProvider: MarketDataProvider = {
     );
   },
   supports(_symbol: Symbol, tf?: Timeframe): boolean {
-    return tf === '1m';
+    // Price requests omit a timeframe; live snapshots support those too.
+    // For candle requests, this provider is intentionally limited to 1m.
+    return tf === undefined || tf === '1m';
   },
   async testConnection(): Promise<{ ok: boolean; error?: string }> {
     try {

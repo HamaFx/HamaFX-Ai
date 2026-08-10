@@ -3,8 +3,8 @@ type: module
 package: "@hamafx/data"
 path: "packages/data/test/finnhub-candles-map.test.ts"
 incoming: 0
-outgoing: 3
-connections: 3
+outgoing: 4
+connections: 4
 risk: low
 layer: core
 tags: [type/module, hamafx-data, layer/core]
@@ -24,15 +24,15 @@ Module: packages/data/test/finnhub-candles-map.test.ts
 | | Count |
 |---|---|
 | Incoming dependencies | 0 |
-| Outgoing dependencies | 3 |
-| Total connections | 3 |
+| Outgoing dependencies | 4 |
+| Total connections | 4 |
 | Risk level | **LOW** |
 | Layer | `core` |
 | Package tag | `#hamafx-data` |
 
 
-### 📤 Depends On (3)
-[[vitest-installServerOnlyStub]] · [[rest-fetchPrice]] · [[@hamafx-data]]
+### 📤 Depends On (4)
+[[vitest-installServerOnlyStub]] · [[rest-fetchPrice]] · [[map-toFinnhubSymbol]] · [[@hamafx-data]]
 
 
 

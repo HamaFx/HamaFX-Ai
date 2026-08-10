@@ -19,7 +19,7 @@
 import { useEffect, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import type { ProviderMeta } from '@hamafx/shared';
+import { DEFAULT_WATCHLIST_SYMBOLS, type ProviderMeta } from '@hamafx/shared';
 import type { SymbolCatalogRow } from '@hamafx/db';
 import { completeOnboardingAction } from '@/app/onboarding/actions';
 import { apiMutate } from '@/lib/api-client';
@@ -51,8 +51,8 @@ export function OnboardingWizard({ initialName, providers, symbolsCatalog, initi
     Intl.DateTimeFormat().resolvedOptions().timeZone,
   );
   const [tradingStyle, setTradingStyle] = useState<TradingStyle>('day_trader');
-  const [selectedSymbols, setSelectedSymbols] = useState<string[]>(['XAUUSD', 'EURUSD', 'GBPUSD']);
-  const [defaultSymbol, setDefaultSymbol] = useState('XAUUSD');
+  const [selectedSymbols, setSelectedSymbols] = useState<string[]>([...DEFAULT_WATCHLIST_SYMBOLS]);
+  const [defaultSymbol, setDefaultSymbol] = useState<string>(DEFAULT_WATCHLIST_SYMBOLS[0]);
   const [selectedProvider, setSelectedProvider] = useState<string | null>(null);
   const [apiKey, setApiKey] = useState('');
   const [revealed, setRevealed] = useState(false);
@@ -196,7 +196,7 @@ export function OnboardingWizard({ initialName, providers, symbolsCatalog, initi
         const currentPrefs = JSON.parse(localStorage.getItem('hamafx:prefs') || '{}');
         localStorage.setItem('hamafx:prefs', JSON.stringify({
           ...currentPrefs,
-          defaultSymbol: defaultSymbol || selectedSymbols[0] || 'XAUUSD',
+          defaultSymbol: defaultSymbol || selectedSymbols[0] || DEFAULT_WATCHLIST_SYMBOLS[0],
           timeFormat: currentPrefs.timeFormat || '24h',
           reduceMotion: currentPrefs.reduceMotion || false,
           tradingStyle: tradingStyle,
@@ -208,7 +208,7 @@ export function OnboardingWizard({ initialName, providers, symbolsCatalog, initi
       const payload = {
         displayName: name,
         timezone,
-        defaultSymbol: defaultSymbol || selectedSymbols[0] || 'XAUUSD',
+        defaultSymbol: defaultSymbol || selectedSymbols[0] || DEFAULT_WATCHLIST_SYMBOLS[0],
         symbols: selectedSymbols,
         tradingStyle,
         apiKeys: selectedProvider && apiKey.trim().length > 0
@@ -239,7 +239,7 @@ export function OnboardingWizard({ initialName, providers, symbolsCatalog, initi
       fd.append('payload', JSON.stringify({
         displayName: name,
         timezone,
-        defaultSymbol: selectedSymbols[0] || 'XAUUSD',
+        defaultSymbol: selectedSymbols[0] || DEFAULT_WATCHLIST_SYMBOLS[0],
         symbols: selectedSymbols,
         tradingStyle,
         apiKeys: {},

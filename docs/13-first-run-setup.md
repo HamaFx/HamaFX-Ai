@@ -39,7 +39,7 @@ For local dev to start, the schema only requires:
 
 ## Choosing a Provider
 
-The web app's BYOK registry supports 9 providers. The registry lives in `packages/ai/src/byok-providers.ts`.
+The web app's BYOK registry supports 10 providers. The registry lives in `packages/ai/src/byok-providers.ts`.
 
 | Provider | Free tier | Notes |
 |----------|-----------|-------|
@@ -52,6 +52,7 @@ The web app's BYOK registry supports 9 providers. The registry lives in `package
 | OpenRouter | — | One key for 100+ models |
 | xAI (Grok) | — | Strong reasoning |
 | DeepSeek | — | Low-cost open weights |
+| IAMHC API | — | Aggregated multi-model access |
 
 You can also pass an `OPENAI_API_KEY`-style env var directly without going through the registry — `resolveUserModel()` will surface operator-provided keys as a fallback when no BYOK is configured yet.
 
@@ -60,8 +61,8 @@ You can also pass an `OPENAI_API_KEY`-style env var directly without going throu
 First-time users land on `/onboarding` after `/register`. The wizard has four steps:
 
 1. **Display name** — what the agent calls you
-2. **Trading preferences** — timezone, default symbol (XAUUSD / EURUSD / GBPUSD)
-3. **AI provider** — pick one of the 9 cards, paste your key, hit **Test Connection** to verify, or skip and configure later in Settings
+2. **Trading preferences** — timezone, default symbol from the supported gold, forex, and crypto catalog (XAUUSD, EURUSD, GBPUSD, BTCUSDT, ETHUSDT, and more)
+3. **AI provider** — pick one of the 10 cards, paste your key, hit **Test Connection** to verify, or skip and configure later in Settings
 4. **Confirmation** — review and finish
 
 You can return to any step via Settings. The wizard never blocks — the chat works as long as you have *some* AI key set, either via wizard, Settings, or env.
@@ -102,7 +103,7 @@ You can mix and match providers — the routing layer in `packages/ai/src/model.
 |---------|------|
 | Schema validation | `packages/shared/src/env.ts` |
 | Secret generation + persistence | `packages/shared/src/env-secrets.ts`, `apps/web/src/lib/env.ts` |
-| BYOK registry (9 providers) | `packages/ai/src/byok-providers.ts` |
+| BYOK registry (10 providers) | `packages/ai/src/byok-providers.ts` |
 | Provider routing / fallback | `packages/ai/src/model.ts` |
 | Onboarding wizard | `apps/web/src/components/onboarding/wizard.tsx` |
 | API keys UI | `apps/web/src/app/(app)/settings/api-keys/` |

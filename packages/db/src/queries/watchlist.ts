@@ -57,7 +57,13 @@ export async function getWatchlistWithCatalog(userId: string): Promise<Watchlist
       schema.symbolCatalog,
       eq(schema.userSymbols.symbol, schema.symbolCatalog.symbol),
     )
-    .where(eq(schema.userSymbols.userId, userId))
+    .where(
+      and(
+        eq(schema.userSymbols.userId, userId),
+        eq(schema.symbolCatalog.isActive, true),
+        eq(schema.symbolCatalog.tenantId, '__system__'),
+      ),
+    )
     .orderBy(asc(schema.userSymbols.displayOrder));
 }
 
@@ -73,6 +79,7 @@ export async function isSymbolInCatalog(symbol: string): Promise<boolean> {
       and(
         eq(schema.symbolCatalog.symbol, symbol),
         eq(schema.symbolCatalog.isActive, true),
+        eq(schema.symbolCatalog.tenantId, '__system__'),
       ),
     )
     .limit(1);

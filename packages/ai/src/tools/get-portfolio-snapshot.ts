@@ -77,7 +77,7 @@ declare module '@hamafx/shared' {
 
 export const getPortfolioSnapshotTool = tool({
   description:
-    'Get a snapshot of the user\'s open forex/gold positions with live P&L, risk metrics, and concentration alerts. Use when the user asks about their positions, portfolio, exposure, or wants trading advice that should account for existing positions.',
+    'Get a snapshot of the user\'s open gold, forex, and crypto positions with live P&L, risk metrics, and concentration alerts. Use when the user asks about their positions, portfolio, exposure, or wants trading advice that should account for existing positions.',
   inputSchema: InputSchema,
   execute: async ({ includeRisk }): Promise<GetPortfolioSnapshotOutput> => {
     const { userId } = getToolContext();

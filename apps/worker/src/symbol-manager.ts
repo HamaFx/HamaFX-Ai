@@ -17,6 +17,7 @@
 import { EventEmitter } from 'node:events';
 import { listDistinctSymbols } from '@hamafx/db';
 import {
+  DEFAULT_WATCHLIST_SYMBOLS,
   getSymbolDefinition,
   isKnownSymbol,
   symbolCategory,
@@ -58,7 +59,7 @@ export class SymbolManager extends EventEmitter {
   /**
    * Start polling the database for active symbols.
    * Emits per-consumer events when symbol sets change:
-   *   - 'biquoteChanged' → BiQuote consumer updates (all forex/gold)
+   *   - 'biquoteChanged' → BiQuote consumer updates (gold + forex)
    *   - 'binanceChanged' → Binance consumer updates (all crypto)
    *   - 'symbolsChanged' → aggregate event (backward compat)
    */
@@ -101,9 +102,7 @@ export class SymbolManager extends EventEmitter {
       
       // If the database has no symbols, fallback to defaults
       if (newSymbols.size === 0) {
-        newSymbols.add('XAUUSD');
-        newSymbols.add('EURUSD');
-        newSymbols.add('GBPUSD');
+        for (const symbol of DEFAULT_WATCHLIST_SYMBOLS) newSymbols.add(symbol);
       }
 
       if (this.hasSetChanged(this.symbols, newSymbols)) {

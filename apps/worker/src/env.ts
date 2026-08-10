@@ -103,7 +103,7 @@ const WorkerEnvSchema = z.object({
 
   /**
    * Comma-separated list of crypto symbols for the Binance WebSocket
-   * consumer. Defaults to BTCUSDT,ETHUSDT.
+   * consumer. Defaults to the six catalog crypto pairs.
    */
   BINANCE_CRYPTO_SYMBOLS: optionalNonEmpty,
 

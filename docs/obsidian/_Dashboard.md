@@ -14,8 +14,8 @@ cssclasses: [dashboard]
 
 | Metric | Value |
 |--------|-------|
-| Total Nodes | 1420 |
-| Total Edges | 4190 |
+| Total Nodes | 1426 |
+| Total Edges | 4219 |
 | Packages | 16 |
 | API Routes | 192 |
 | Database Tables | 52 |
@@ -23,7 +23,7 @@ cssclasses: [dashboard]
 | Components | 105 |
 | Circular Dependencies | 6 |
 | Architecture Hotspots | 50 |
-| Dead / Orphan Files | 1162 |
+| Dead / Orphan Files | 1178 |
 
 ## 🔍 Live Queries
 

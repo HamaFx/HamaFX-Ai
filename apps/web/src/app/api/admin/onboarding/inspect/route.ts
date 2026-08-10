@@ -4,6 +4,7 @@ import { z } from 'zod';
 
 import { getUserWithSettings, listUserSymbols } from '@hamafx/db';
 import { decryptByok } from '@hamafx/shared/encryption';
+import { DEFAULT_WATCHLIST_SYMBOLS } from '@hamafx/shared';
 
 import { withAdminAuth } from '@/lib/admin-auth';
 import { parseSearchParams } from '@/lib/api';
@@ -43,7 +44,7 @@ export const GET = withAdminAuth(async (req, { user: admin }) => {
     onboardingCompleted: settings?.onboardingCompleted ?? false,
     onboardingProgress: settings?.onboardingProgress ?? null,
     userSettings: {
-      defaultSymbol: settings?.defaultSymbol ?? 'XAUUSD',
+      defaultSymbol: settings?.defaultSymbol ?? DEFAULT_WATCHLIST_SYMBOLS[0],
       timezone: settings?.timezone ?? 'UTC',
       language: settings?.language ?? 'en',
     },

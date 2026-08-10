@@ -114,6 +114,12 @@ export async function loginAction(prevState: unknown, formData: FormData) {
       if (message === '2FA_RATE_LIMITED') {
         return { error: 'Too many 2FA attempts. Please try again shortly.', requires2FA: true };
       }
+      if (message === '2FA_SYSTEM_ERROR') {
+        return { error: 'Unable to verify 2FA right now. Please try again.', requires2FA: true };
+      }
+      if (message === 'AUTH_SYSTEM_ERROR' || message === 'SESSION_SYSTEM_ERROR') {
+        return { error: 'Unable to sign in right now. Please try again.' };
+      }
       recordAuthEvent('login_failure');
       return { error: 'Invalid email or password' };
     }

@@ -18,7 +18,7 @@
 
 /**
  * <SymbolChip> — branded chip showing a single trading symbol
- * (XAUUSD / EURUSD / GBPUSD). Used by:
+ * (for example XAUUSD / EURUSD / BTCUSDT). Used by:
  *   - ChatTopBar to show the thread's pinned symbol
  *   - ChartView's toolbar to show the current symbol (with pin action)
  *

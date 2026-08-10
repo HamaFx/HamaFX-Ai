@@ -3,8 +3,8 @@ type: module
 package: "@hamafx/web"
 path: "apps/web/src/app/(app)/journal/_components/import-trades.tsx"
 incoming: 1
-outgoing: 1
-connections: 2
+outgoing: 2
+connections: 3
 risk: low
 layer: core
 tags: [type/module, hamafx-web, layer/core]
@@ -24,15 +24,15 @@ Module: apps/web/src/app/(app)/journal/_components/import-trades.tsx
 | | Count |
 |---|---|
 | Incoming dependencies | 1 |
-| Outgoing dependencies | 1 |
-| Total connections | 2 |
+| Outgoing dependencies | 2 |
+| Total connections | 3 |
 | Risk level | **LOW** |
 | Layer | `core` |
 | Package tag | `#hamafx-web` |
 
 
-### 📤 Depends On (1)
-[[@hamafx-web]]
+### 📤 Depends On (2)
+[[@hamafx-shared]] · [[@hamafx-web]]
 
 
 ### 📥 Depended On By (1)

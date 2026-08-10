@@ -17,6 +17,7 @@
 // Onboarding query helpers — admin reset operations.
 
 import { eq } from 'drizzle-orm';
+import { DEFAULT_WATCHLIST_SYMBOLS } from '@hamafx/shared';
 import { getDb, schema } from '../client';
 
 export type ResetMode = 'full' | 'soft';
@@ -43,7 +44,7 @@ export async function resetOnboarding(
     };
 
     if (mode === 'full') {
-      update.defaultSymbol = 'XAUUSD';
+      update.defaultSymbol = DEFAULT_WATCHLIST_SYMBOLS[0];
       update.timezone = 'UTC';
       update.aiApiKeys = null;
       await tx

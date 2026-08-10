@@ -22,7 +22,7 @@ dv.table(
 ## Full List
 
 - [[registry-ToolPartState]] · `@hamafx/web` · `apps/web/src/components/chat/parts/registry.tsx`  *(↖45 ↗35 = 80)*
-- [[wizard-OnboardingWizard]] · `@hamafx/web` · `apps/web/src/components/onboarding/wizard.tsx`  *(↖0 ↗13 = 13)*
+- [[wizard-OnboardingWizard]] · `@hamafx/web` · `apps/web/src/components/onboarding/wizard.tsx`  *(↖0 ↗12 = 12)*
 - [[message-Message]] · `@hamafx/web` · `apps/web/src/components/chat/message.tsx`  *(↖1 ↗10 = 11)*
 - [[chat-screen-ChatScreen]] · `@hamafx/web` · `apps/web/src/components/chat/chat-screen.tsx`  *(↖0 ↗9 = 9)*
 - [[analyze-fundamental-AnalyzeFundamentalPart]] · `@hamafx/web` · `apps/web/src/components/chat/parts/analyze-fundamental.tsx`  *(↖1 ↗5 = 6)*

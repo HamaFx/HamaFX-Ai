@@ -20,10 +20,8 @@ const TAPE_SYMBOLS: Symbol[] = [
   'EURUSD',
   'GBPUSD',
   'USDJPY',
-  'BTCUSD',
-  'US100',
-  'US30',
-  'XAGUSD',
+  'BTCUSDT',
+  'ETHUSDT',
 ];
 
 function pctChange(prev: number, cur: number): string {
@@ -65,7 +63,7 @@ export function TickerTape() {
 
   // Fallback: show static symbols when live prices aren't available yet
   if (items.length === 0) {
-    const fallbackSymbols = ['XAUUSD', 'EURUSD', 'GBPUSD', 'USDJPY', 'BTCUSD', 'US100'];
+    const fallbackSymbols = ['XAUUSD', 'EURUSD', 'GBPUSD', 'USDJPY', 'BTCUSDT', 'ETHUSDT'];
     const fallback = fallbackSymbols.flatMap((s) => [
       <span key={`${s}-label`} className="inline-flex items-center gap-1 shrink-0">
         <span className="text-fg font-semibold tracking-tight">{s}</span>

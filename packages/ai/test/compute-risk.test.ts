@@ -28,6 +28,9 @@ const exec = computeRiskTool.execute as unknown as (input: unknown) => Promise<{
   rrRatio: number | null;
   pipsToStop: number;
   pipsToTarget: number | null;
+  distanceUnit: 'pips' | 'price';
+  quantityUnit: 'lots' | 'ounces' | 'coins';
+  pipValueUsdPerLot: number;
   positionSizeLots: number;
   positionSizeUnits: number;
   invalidDirection: boolean;
@@ -51,6 +54,8 @@ describe('compute_risk — Phase 7b', () => {
     expect(r.pipsToStop).toBeCloseTo(30, 6);
     expect(r.positionSizeLots).toBeCloseTo(100 / (30 * 10), 6);
     expect(r.positionSizeUnits).toBeCloseTo(((100 / (30 * 10)) * 100_000), 0);
+    expect(r.distanceUnit).toBe('pips');
+    expect(r.quantityUnit).toBe('lots');
     expect(r.rrRatio).toBeCloseTo(70 / 30, 6);
     expect(r.invalidDirection).toBe(false);
   });
@@ -70,8 +75,29 @@ describe('compute_risk — Phase 7b', () => {
     expect(r.riskUsd).toBeCloseTo(100, 6);
     // 100 / (100 * 10) = 0.1 lot
     expect(r.positionSizeLots).toBeCloseTo(0.1, 6);
+    expect(r.distanceUnit).toBe('pips');
+    expect(r.quantityUnit).toBe('ounces');
     expect(r.rrRatio).toBeCloseTo(20 / 10, 6); // RR 2 (target is 20$, stop is 10$)
     expect(r.invalidDirection).toBe(false);
+  });
+
+  it('sizes BTCUSDT with raw price distance and coin units', async () => {
+    const r = await exec({
+      symbol: 'BTCUSDT',
+      side: 'long',
+      entry: 60_000,
+      stop: 59_000,
+      target: 62_000,
+      accountUsd: 10_000,
+      riskPct: 1,
+    });
+    expect(r.distanceUnit).toBe('price');
+    expect(r.pipsToStop).toBe(1_000);
+    expect(r.pipValueUsdPerLot).toBe(1);
+    expect(r.quantityUnit).toBe('coins');
+    expect(r.positionSizeLots).toBeCloseTo(0.1, 6);
+    expect(r.positionSizeUnits).toBeCloseTo(0.1, 6);
+    expect(r.rrRatio).toBe(2);
   });
 
   it('returns null reward + RR when target is omitted', async () => {
@@ -113,6 +139,20 @@ describe('compute_risk — Phase 7b', () => {
     expect(short.invalidDirection).toBe(true);
   });
 
+  it('rejects non-USD-quoted forex pairs until conversion data is available', () => {
+    const schema = computeRiskTool.inputSchema as { safeParse: (v: unknown) => { success: boolean } };
+    expect(
+      schema.safeParse({
+        symbol: 'USDJPY',
+        side: 'long',
+        entry: 150,
+        stop: 149.5,
+        accountUsd: 10_000,
+        riskPct: 1,
+      }).success,
+    ).toBe(false);
+  });
+
   it('caps riskPct at 10 % via the input schema', async () => {
     // The AI SDK validates the input schema before invoking `execute()`,
     // so we exercise the schema directly here. `tool({})` exposes the
@@ -144,5 +184,6 @@ describe('compute_risk — Phase 7b', () => {
     expect(r.summary).toMatch(/lots/);
     expect(r.summary).toMatch(/at risk/);
     expect(r.summary).toMatch(/RR/);
+    expect(r.distanceUnit).toBe('pips');
   });
 });

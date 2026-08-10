@@ -1,10 +1,10 @@
 {
   "schema_version": "1.0",
-  "generated_at": "2026-08-10T03:37:22.462Z",
+  "generated_at": "2026-08-10T19:59:22.439Z",
   "project": {
     "name": "HamaFX-Ai",
     "rootPath": ".",
-    "description": "Single-user BYOK, chat-driven AI trading copilot for forex instruments (XAUUSD, EURUSD, GBPUSD)",
+    "description": "Single-user BYOK, chat-driven AI trading copilot for gold, forex, and supported crypto instruments (XAUUSD, canonical forex pairs, Binance crypto pairs)",
     "license": "Apache-2.0",
     "repository": "github.com/HamaFx/HamaFX-Ai",
     "techStack": {
@@ -32,7 +32,7 @@
     {
       "name": "@hamafx/web",
       "path": "packages/web",
-      "nodeCount": 654,
+      "nodeCount": 657,
       "dependsOn": [
         "env-loader/loadE2eEnv",
         "admin-error-block/AdminErrorBlock",
@@ -214,6 +214,7 @@
         "use-voice-input/UseVoiceInputArgs",
         "auth/generateImpersonationChallenge",
         "provider-info-dot/buildProviderTooltip",
+        "session-validators/SessionToken",
         "session/TradingSession",
         "auth-helpers/mockNextAuthSession",
         "storage/ChatImageUploadEnv",
@@ -457,7 +458,7 @@
     {
       "name": "@hamafx/data",
       "path": "packages/data",
-      "nodeCount": 65,
+      "nodeCount": 66,
       "dependsOn": [
         "errors/DataErrorCode",
         "index",
@@ -478,6 +479,7 @@
         "index/FetchCandles1mArgs",
         "to-candle/StandardBar",
         "vitest/installServerOnlyStub",
+        "rest/fetchCandles",
         "rest/fetchTick",
         "calendar/FetchCalendarOptions",
         "rest/fetchPrice",
@@ -490,7 +492,7 @@
     {
       "name": "@hamafx/db",
       "path": "packages/db",
-      "nodeCount": 160,
+      "nodeCount": 161,
       "dependsOn": [
         "billing/planInterval",
         "client/DbClient",
@@ -531,7 +533,7 @@
     {
       "name": "@hamafx/shared",
       "path": "packages/shared",
-      "nodeCount": 84,
+      "nodeCount": 85,
       "dependsOn": [
         "analyze-chart-image/AnalyzeChartImageInputSchema",
         "analyze-fundamental/AnalyzeFundamentalInputSchema",
@@ -662,7 +664,7 @@
       "packages": [
         "@hamafx/ai"
       ],
-      "responsibility": "Chat routing, 32 tools, multi-agent committee, memory, citations"
+      "responsibility": "Chat routing, registered tools, multi-agent committee, memory, citations"
     },
     {
       "name": "Data",

@@ -17,7 +17,7 @@
 // Per-symbol tick buffer.
 //
 // The SignalR consumer dispatches `BiquoteTick` events as fast as BiQuote
-// pushes them — that's many hundreds per second across the three symbols
+// pushes them — that's many hundreds per second across active symbols
 // during high-volume windows. Writing every one of those to Postgres would
 // burn quota and starve other queries.
 //

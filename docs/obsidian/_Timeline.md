@@ -10,12 +10,12 @@ tags: [dashboard, timeline]
 
 ## Top Activity Hotspots
 
-- 📅 [[@hamafx-shared]] — **991** connections · `@hamafx/shared`
-- 📅 [[@hamafx-web]] — **862.9** connections · `@hamafx/web`
+- 📅 [[@hamafx-shared]] — **1006.1** connections · `@hamafx/shared`
+- 📅 [[@hamafx-web]] — **867.4** connections · `@hamafx/web`
 - 📅 [[@hamafx-ai]] — **582.1** connections · `@hamafx/ai`
-- 📅 [[@hamafx-db]] — **486.8** connections · `@hamafx/db`
-- 📅 [[vitest-installServerOnlyStub]] — **415.1** connections · `@hamafx/test-utils`
-- 📅 [[@hamafx-data]] — **179.2** connections · `@hamafx/data`
+- 📅 [[@hamafx-db]] — **491.4** connections · `@hamafx/db`
+- 📅 [[vitest-installServerOnlyStub]] — **424.2** connections · `@hamafx/test-utils`
+- 📅 [[@hamafx-data]] — **180.8** connections · `@hamafx/data`
 - 📅 [[registry-ToolPartState]] — **104** connections · `@hamafx/web`
 - 📅 [[@hamafx-worker]] — **103.1** connections · `@hamafx/worker`
 - 📅 [[@hamafx-indicators]] — **95.2** connections · `@hamafx/indicators`

@@ -119,8 +119,10 @@ npm run seed           # Seed users for Strategy B
 | `DB_DISABLE_SSL` | `true` | Skip TLS for local Docker Postgres |
 
 Auto-seeding: the `seed-ticks` service in docker-compose.loadtest.yml seeds
-XAUUSD/EURUSD/GBPUSD into the `live_ticks` table on startup, so the price
-endpoint works without a running worker.
+the core gold/forex fixture symbols (XAUUSD, EURUSD, GBPUSD) into the
+`live_ticks` table on startup, so the price endpoint works without a running
+worker. This is a deliberately small load-test fixture, not the full product
+catalog.
 
 ## Output
 

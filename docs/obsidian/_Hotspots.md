@@ -14,12 +14,12 @@ Files with the highest connectivity — changes here may cascade across the syst
 
 ## Top 30 Hotspots
 
-- 🔥 [[@hamafx-shared]] — score: **991** *(in: 642, out: 0)*
-- 🔥 [[@hamafx-web]] — score: **862.9** *(in: 557, out: 0)*
+- 🔥 [[@hamafx-shared]] — score: **1006.1** *(in: 652, out: 0)*
+- 🔥 [[@hamafx-web]] — score: **867.4** *(in: 560, out: 0)*
 - 🔥 [[@hamafx-ai]] — score: **582.1** *(in: 371, out: 0)*
-- 🔥 [[@hamafx-db]] — score: **486.8** *(in: 308, out: 0)*
-- 🔥 [[vitest-installServerOnlyStub]] — score: **415.1** *(in: 260, out: 2)*
-- 🔥 [[@hamafx-data]] — score: **179.2** *(in: 106, out: 0)*
+- 🔥 [[@hamafx-db]] — score: **491.4** *(in: 311, out: 0)*
+- 🔥 [[vitest-installServerOnlyStub]] — score: **424.2** *(in: 266, out: 2)*
+- 🔥 [[@hamafx-data]] — score: **180.8** *(in: 107, out: 0)*
 - 🔥 [[registry-ToolPartState]] — score: **104** *(in: 45, out: 35)*
 - 🔥 [[@hamafx-worker]] — score: **103.1** *(in: 57, out: 0)*
 - 🔥 [[@hamafx-indicators]] — score: **95.2** *(in: 52, out: 0)*

@@ -2,9 +2,12 @@ import { withRateLimit, createJournalEntry } from '@hamafx/db';
 import { z } from 'zod';
 
 import { errorResponse, withAuth } from '@/lib/api';
+import { ALL_SYMBOLS } from '@hamafx/shared';
 
 const ImportRowSchema = z.object({
-  symbol: z.enum(['XAUUSD', 'EURUSD', 'GBPUSD']),
+  symbol: z.string().transform((value) => value.trim().toUpperCase()).refine((value) => ALL_SYMBOLS.includes(value), {
+    message: 'Unsupported symbol',
+  }),
   side: z.enum(['long', 'short']),
   // M-11: Add sensible bounds for forex price/date values to
   // prevent data corruption from malformed imports.

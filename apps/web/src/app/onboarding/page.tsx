@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { redirect } from 'next/navigation';
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 
 import { auth } from '@/auth';
 import { buildCatalogForUser } from '@/lib/catalog-server';
@@ -33,7 +33,10 @@ export default async function OnboardingPage() {
     db
       .select()
       .from(schema.symbolCatalog)
-      .where(eq(schema.symbolCatalog.isActive, true))
+      .where(and(
+        eq(schema.symbolCatalog.isActive, true),
+        eq(schema.symbolCatalog.tenantId, '__system__'),
+      ))
       .orderBy(schema.symbolCatalog.sortOrder),
   ]);
   const providers = catalog.providers;

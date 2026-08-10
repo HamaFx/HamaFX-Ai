@@ -11,6 +11,7 @@ import { and, eq, isNull, sql } from 'drizzle-orm';
 import { schema } from '@hamafx/db';
 import { getDb } from '@hamafx/ai';
 import { getServerEnv } from '@/lib/env';
+import { DEFAULT_WATCHLIST_SYMBOLS } from '@hamafx/shared';
 
 // ── Typed inputs ──────────────────────────────────────────────────────
 
@@ -121,7 +122,7 @@ export async function provisionUserOnSignIn(input: SignInInput): Promise<SignInD
         await t.insert(schema.userSettings).values({
           userId: newUserId,
           onboardingCompleted: false,
-          defaultSymbol: 'XAUUSD',
+          defaultSymbol: DEFAULT_WATCHLIST_SYMBOLS[0],
         });
       });
     } catch (error) {

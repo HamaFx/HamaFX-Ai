@@ -28,8 +28,8 @@ const DEFAULT_WATCHLIST: Symbol[] = [
   'EURUSD',
   'GBPUSD',
   'USDJPY',
-  'BTCUSD',
-  'US100',
+  'BTCUSDT',
+  'ETHUSDT',
 ];
 
 const BUFFER_SIZE = 10;

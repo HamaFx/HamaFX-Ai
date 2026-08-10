@@ -92,6 +92,8 @@ describe('ComputeRiskOutputSchema', () => {
     rrRatio: 2.33,
     pipsToStop: 30,
     pipsToTarget: 70,
+    distanceUnit: 'pips',
+    quantityUnit: 'lots',
     pipValueUsdPerLot: 10,
     positionSizeLots: 0.3333,
     positionSizeUnits: 33333,

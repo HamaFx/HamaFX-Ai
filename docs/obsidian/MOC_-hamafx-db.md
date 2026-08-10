@@ -1,15 +1,15 @@
 ---
 type: moc
 package: "@hamafx/db"
-nodes: 160
-totalIncoming: 438
-totalOutgoing: 255
+nodes: 161
+totalIncoming: 442
+totalOutgoing: 261
 tags: [moc, hamafx-db]
 ---
 
 # 📦 @hamafx/db
 
-> **Map of Content** · 160 files · 438 incoming + 255 outgoing = 693 connections
+> **Map of Content** · 161 files · 442 incoming + 261 outgoing = 703 connections
 
 ## DataviewJS — All Files in This Package
 ```dataviewjs
@@ -25,10 +25,13 @@ dv.table(
 
 ## Files by Type
 
-### 📁 Module (107)
+### 📁 Module (108)
+- [[symbol-catalog-activation.test]] *(0↖ 4↗)*
 - [[seed-plans]] *(0↖ 3↗)*
 - [[local-db-getLocalDb]] *(0↖ 3↗)*
 - [[admin-audit-recordAdminAudit]] *(0↖ 3↗)*
+- [[auth-AuthUserRow]] *(0↖ 3↗)*
+- [[onboarding-ResetMode]] *(0↖ 3↗)*
 - [[agent-opinions-agentOpinions]] *(1↖ 3↗)*
 - [[analysis-jobs-analysisJobs]] *(1↖ 3↗)*
 - [[briefings-briefingsEmitted]] *(1↖ 3↗)*
@@ -47,12 +50,11 @@ dv.table(
 - [[eslint.config-config]] *(0↖ 2↗)*
 - [[active-users-getActiveUserIds]] *(0↖ 2↗)*
 - [[client-DbClient]] *(37↖ 2↗)*
-- [[pglite-client-sanitizeStatement]] *(9↖ 2↗)*
+- [[pglite-client-sanitizeStatement]] *(10↖ 2↗)*
 - [[provider-quota-DailyQuotaResult]] *(0↖ 2↗)*
 - [[agent-opinions-AgentOpinionRow]] *(0↖ 2↗)*
 - [[alerts-AlertRow]] *(0↖ 2↗)*
 - [[analysis-jobs-AnalysisJobRow]] *(0↖ 2↗)*
-- [[auth-AuthUserRow]] *(0↖ 2↗)*
 - [[billing-extras-listActivePlans]] *(0↖ 2↗)*
 - [[billing-SubscriptionWithPlan]] *(0↖ 2↗)*
 - [[candles-CandleRow]] *(0↖ 2↗)*
@@ -64,7 +66,6 @@ dv.table(
 - [[ipn-events-IpnClaim]] *(0↖ 2↗)*
 - [[journal-JournalRow]] *(0↖ 2↗)*
 - [[news-articles-NewsArticleRow]] *(0↖ 2↗)*
-- [[onboarding-ResetMode]] *(0↖ 2↗)*
 - [[portfolio-PositionRow]] *(0↖ 2↗)*
 - [[provider-tests-getProviderHealthForUser]] *(0↖ 2↗)*
 - [[push-PushSubscriptionRow]] *(0↖ 2↗)*
@@ -189,5 +190,5 @@ dv.table(
 - [[chat_tool_telemetry]] *(0↖ 1↗)*
 
 ### 📦 Package (1)
-- [[@hamafx-db]] *(308↖ 0↗)*
+- [[@hamafx-db]] *(311↖ 0↗)*
 

@@ -1,15 +1,15 @@
 ---
 type: moc
 package: "@hamafx/web"
-nodes: 654
-totalIncoming: 971
-totalOutgoing: 1450
+nodes: 657
+totalIncoming: 975
+totalOutgoing: 1466
 tags: [moc, hamafx-web]
 ---
 
 # 📦 @hamafx/web
 
-> **Map of Content** · 654 files · 971 incoming + 1450 outgoing = 2421 connections
+> **Map of Content** · 657 files · 975 incoming + 1466 outgoing = 2441 connections
 
 ## DataviewJS — All Files in This Package
 ```dataviewjs
@@ -25,13 +25,13 @@ dv.table(
 
 ## Files by Type
 
-### 📁 Module (356)
+### 📁 Module (359)
 - [[dashboard-canvas-DashboardCanvas]] *(1↖ 14↗)*
 - [[journal-view-JournalView]] *(1↖ 12↗)*
 - [[page-async]] *(0↖ 11↗)*
 - [[page-async]] *(0↖ 11↗)*
+- [[actions-TradingStyle]] *(0↖ 9↗)*
 - [[page-async]] *(0↖ 8↗)*
-- [[actions-TradingStyle]] *(0↖ 8↗)*
 - [[market-CandleResultDTO]] *(0↖ 8↗)*
 - [[api-RequestUser]] *(4↖ 7↗)*
 - [[alerts-AlertDTO]] *(0↖ 7↗)*
@@ -47,6 +47,7 @@ dv.table(
 - [[preferences-card-PreferencesCard]] *(1↖ 5↗)*
 - [[api-key-card-ApiKeyCard]] *(1↖ 5↗)*
 - [[page-async]] *(0↖ 5↗)*
+- [[page-async]] *(0↖ 5↗)*
 - [[page-LoginPage]] *(0↖ 5↗)*
 - [[page-RegisterPage]] *(0↖ 5↗)*
 - [[catalog-server-buildCatalogForUser]] *(0↖ 5↗)*
@@ -54,6 +55,7 @@ dv.table(
 - [[calendar-CalendarEventDTO]] *(0↖ 5↗)*
 - [[journal-JournalCreateSchema]] *(0↖ 5↗)*
 - [[api.test]] *(0↖ 5↗)*
+- [[session-validation-policy.test]] *(0↖ 5↗)*
 - [[alert-list-ALERTS_QUERY_KEY]] *(1↖ 4↗)*
 - [[calendar-view-CalendarView]] *(1↖ 4↗)*
 - [[page-async]] *(0↖ 4↗)*
@@ -75,9 +77,9 @@ dv.table(
 - [[page-async]] *(0↖ 4↗)*
 - [[page-async]] *(0↖ 4↗)*
 - [[page-async]] *(0↖ 4↗)*
-- [[page-async]] *(0↖ 4↗)*
 - [[reset-password-form-ResetPasswordForm]] *(1↖ 4↗)*
 - [[admin-auth-AdminUser]] *(1↖ 4↗)*
+- [[provision-user-SignInInput]] *(0↖ 4↗)*
 - [[market-client-MarketApiError]] *(0↖ 4↗)*
 - [[admin-listFeaturesService]] *(0↖ 4↗)*
 - [[chat-ThreadDTO]] *(0↖ 4↗)*
@@ -119,8 +121,7 @@ dv.table(
 - [[use-price-stream-usePriceStream]] *(0↖ 3↗)*
 - [[use-prices-usePrices]] *(1↖ 3↗)*
 - [[api-client-ApiErrorBody]] *(2↖ 3↗)*
-- [[provision-user-SignInInput]] *(0↖ 3↗)*
-- [[session-validators-SessionToken]] *(0↖ 3↗)*
+- [[session-validators-SessionToken]] *(1↖ 3↗)*
 - [[billing-gate-BillingGateResult]] *(0↖ 3↗)*
 - [[cron-withCronAuth]] *(0↖ 3↗)*
 - [[env-AuthEnv]] *(1↖ 3↗)*
@@ -146,6 +147,7 @@ dv.table(
 - [[hooks-use-thread-title.test]] *(0↖ 3↗)*
 - [[hooks-use-voice-input.test]] *(0↖ 3↗)*
 - [[instruction-presets.test]] *(0↖ 3↗)*
+- [[phase4-phase5-policy.test]] *(0↖ 3↗)*
 - [[provider-info-dot.test]] *(0↖ 3↗)*
 - [[session.test]] *(0↖ 3↗)*
 - [[storage.test]] *(0↖ 3↗)*
@@ -163,6 +165,7 @@ dv.table(
 - [[admin-user-table-AdminUserTable]] *(0↖ 2↗)*
 - [[alert-form-AlertForm]] *(1↖ 2↗)*
 - [[page-AlertsPage]] *(0↖ 2↗)*
+- [[import-trades-ImportTrades]] *(1↖ 2↗)*
 - [[page-JournalPage]] *(0↖ 2↗)*
 - [[layout-async]] *(0↖ 2↗)*
 - [[_actions-shared-NAME_MIN]] *(4↖ 2↗)*
@@ -203,6 +206,7 @@ dv.table(
 - [[admin-page.test]] *(0↖ 2↗)*
 - [[admin-system-health.test]] *(0↖ 2↗)*
 - [[agent-deliberation.test]] *(0↖ 2↗)*
+- [[auth-2fa-policy.test]] *(0↖ 2↗)*
 - [[auth-helpers-mockNextAuthSession]] *(1↖ 2↗)*
 - [[badge.test]] *(0↖ 2↗)*
 - [[billing-contract.test]] *(0↖ 2↗)*
@@ -284,7 +288,6 @@ dv.table(
 - [[loading-DashboardLoading]] *(0↖ 1↗)*
 - [[error-AppError]] *(0↖ 1↗)*
 - [[breakdown-table-BreakdownTable]] *(1↖ 1↗)*
-- [[import-trades-ImportTrades]] *(1↖ 1↗)*
 - [[error-JournalError]] *(0↖ 1↗)*
 - [[loading-JournalLoading]] *(0↖ 1↗)*
 - [[refresh-button-RefreshButton]] *(2↖ 1↗)*
@@ -387,6 +390,7 @@ dv.table(
 - [[POST--api-chat]] *(1↖ 7↗)*
 - [[GET--api-market-stream]] *(1↖ 5↗)*
 - [[POST--api-settings-test-provider]] *(1↖ 5↗)*
+- [[GET--api-admin-onboarding-inspect]] *(1↖ 4↗)*
 - [[GET--api-cron-cot]] *(1↖ 4↗)*
 - [[GET--api-cron-snapshots]] *(1↖ 4↗)*
 - [[GET--api-health]] *(1↖ 4↗)*
@@ -395,7 +399,7 @@ dv.table(
 - [[GET,PUT,DELETE--api-settings-chat-model]] *(1↖ 4↗)*
 - [[GET,PUT,DELETE--api-settings-embedding-model]] *(1↖ 4↗)*
 - [[GET,PUT,DELETE--api-settings-vision-model]] *(1↖ 4↗)*
-- [[GET--api-admin-onboarding-inspect]] *(1↖ 3↗)*
+- [[GET--api-admin-onboarding-status]] *(1↖ 3↗)*
 - [[GET--api-auth-verify-email]] *(1↖ 3↗)*
 - [[GET--api-chat-threads--id-export]] *(1↖ 3↗)*
 - [[GET--api-cron-briefings]] *(1↖ 3↗)*
@@ -404,6 +408,7 @@ dv.table(
 - [[GET--api-cron-news]] *(1↖ 3↗)*
 - [[GET--api-cron-warm-cache]] *(1↖ 3↗)*
 - [[GET--api-cron-weekly-review]] *(1↖ 3↗)*
+- [[POST--api-journal-import]] *(1↖ 3↗)*
 - [[POST--api-journal-review]] *(1↖ 3↗)*
 - [[GET--api-me-keys]] *(1↖ 3↗)*
 - [[GET--api-news]] *(1↖ 3↗)*
@@ -425,7 +430,6 @@ dv.table(
 - [[POST--api-admin-impersonate]] *(1↖ 2↗)*
 - [[GET--api-admin-logs-stream]] *(1↖ 2↗)*
 - [[POST--api-admin-onboarding-reset]] *(1↖ 2↗)*
-- [[GET--api-admin-onboarding-status]] *(1↖ 2↗)*
 - [[POST--api-admin-test-alert-email]] *(1↖ 2↗)*
 - [[POST--api-admin-test-telegram]] *(1↖ 2↗)*
 - [[POST--api-billing-checkout]] *(1↖ 2↗)*
@@ -447,7 +451,6 @@ dv.table(
 - [[GET--api-dev-login]] *(1↖ 2↗)*
 - [[GET--api-health-db]] *(1↖ 2↗)*
 - [[GET--api-health-public]] *(1↖ 2↗)*
-- [[POST--api-journal-import]] *(1↖ 2↗)*
 - [[GET--api-market-price]] *(1↖ 2↗)*
 - [[POST--api-onboarding-save-progress]] *(1↖ 2↗)*
 - [[GET,POST--api-portfolio-positions]] *(1↖ 2↗)*
@@ -579,7 +582,7 @@ dv.table(
 
 ### 🧩 Component (105)
 - [[registry-ToolPartState]] *(45↖ 35↗)*
-- [[wizard-OnboardingWizard]] *(0↖ 13↗)*
+- [[wizard-OnboardingWizard]] *(0↖ 12↗)*
 - [[message-Message]] *(1↖ 10↗)*
 - [[chat-screen-ChatScreen]] *(0↖ 9↗)*
 - [[analyze-fundamental-AnalyzeFundamentalPart]] *(1↖ 5↗)*
@@ -685,5 +688,5 @@ dv.table(
 - [[tooltip-Tooltip]] *(0↖ 1↗)*
 
 ### 📦 Package (1)
-- [[@hamafx-web]] *(557↖ 0↗)*
+- [[@hamafx-web]] *(560↖ 0↗)*
 

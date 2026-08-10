@@ -26,8 +26,8 @@ export interface SessionToken {
 interface ValidateOptions {
   /**
    * When true, DB errors during validation invalidate the session.
-   * Default false (fail open) so users are not locked out when the
-   * DB is temporarily unreachable.
+   * Defaults to true because revocation and token-version checks are
+   * security controls, not optional metadata.
    */
   failClosed?: boolean;
 }
@@ -49,6 +49,8 @@ export async function validateSession(
   nowSeconds: number,
   opts: ValidateOptions = {},
 ): Promise<unknown | null> {
+  const failClosed = opts.failClosed ?? true;
+
   // FEAT-04: Without rememberMe, invalidate sessions older than 24h.
   if (token.iat && token.rememberMe !== true && nowSeconds - token.iat > SESSION_AGE_LIMIT_SECONDS) {
     return invalidatedSession(session);
@@ -88,13 +90,15 @@ export async function validateSession(
       token.tvCheckedAt = nowSeconds;
     } catch (err) {
       logErrorContext(err, 'auth/session_validation', {}, 'auth');
-      if (opts.failClosed) {
+      if (failClosed) {
         return invalidatedSession(session);
       }
     }
   }
 
-  // FEAT-02: Track last active time every 15 min.
+  // FEAT-02: Track last active time every 15 min. Under the selected
+  // fail-closed policy, this write is part of the session-security check:
+  // if it cannot complete, do not keep serving an unchecked session.
   const lastActiveUpdate = token.lastActiveUpdate;
   const sessionId = token.sessionId;
   if (sessionId && (!lastActiveUpdate || nowSeconds - lastActiveUpdate > LAST_ACTIVE_INTERVAL_SECONDS)) {
@@ -106,7 +110,7 @@ export async function validateSession(
       token.lastActiveUpdate = nowSeconds;
     } catch (err) {
       logErrorContext(err, 'auth/last_active_update', {}, 'auth');
-      if (opts.failClosed) {
+      if (failClosed) {
         return invalidatedSession(session);
       }
     }

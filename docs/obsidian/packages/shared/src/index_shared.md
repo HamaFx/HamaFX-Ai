@@ -2,9 +2,9 @@
 type: module
 package: "@hamafx/shared"
 path: "packages/shared/src/index.ts"
-incoming: 7
+incoming: 8
 outgoing: 3
-connections: 10
+connections: 11
 risk: low
 layer: core
 tags: [type/module, hamafx-shared, layer/core]
@@ -23,9 +23,9 @@ Module: packages/shared/src/index.ts
 
 | | Count |
 |---|---|
-| Incoming dependencies | 7 |
+| Incoming dependencies | 8 |
 | Outgoing dependencies | 3 |
-| Total connections | 10 |
+| Total connections | 11 |
 | Risk level | **LOW** |
 | Layer | `core` |
 | Package tag | `#hamafx-shared` |
@@ -35,8 +35,8 @@ Module: packages/shared/src/index.ts
 [[@hamafx-shared]]
 
 
-### 📥 Depended On By (5)
-[[biquote.test]] · [[bug-report.test]] · [[error-patterns.test]] · [[errors.test]] · [[schemas.test]]
+### 📥 Depended On By (6)
+[[biquote.test]] · [[bug-report.test]] · [[error-patterns.test]] · [[errors.test]] · [[schemas.test]] · [[symbol-catalog.test]]
 
 
 

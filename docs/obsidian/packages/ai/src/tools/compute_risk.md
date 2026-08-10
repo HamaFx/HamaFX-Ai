@@ -16,7 +16,7 @@ aliases: [compute_risk]
 > **AI Tool** · `@hamafx/ai` · `packages/ai/src/tools/compute-risk.ts`
 
 
-Compute position size, USD risk/reward, and pips-to-stop/target from a (symbol, side, entry, stop, target?, accountUsd, riskPct) tuple. Pure-function — no provider calls. Use when the user asks
+Copyright 2026 HamaFX
 
 
 ## 📊 Connections

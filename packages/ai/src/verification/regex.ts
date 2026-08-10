@@ -26,9 +26,9 @@
 //
 // Three exported building blocks:
 //
-//   - `PRICE_TOKEN`: per-symbol price-shape probe. Anchored to our
-//     three supported instruments (XAUUSD 4-digit thousands, FX
-//     0.xxxx / 1.xxxx).
+//   - `PRICE_TOKEN`: conservative price-shape probe. It covers the
+//     current gold and common FX display ranges; crypto values are
+//     validated through tool outputs rather than this heuristic.
 //   - `EVENT_TOKEN`: high-impact macro events the model is most prone
 //     to invent.
 //   - `ATTRIBUTION_TOKEN`: explicit reference verbs. The pre-fix list
@@ -39,7 +39,8 @@
 // in a heuristic that runs on every assistant turn.
 
 /**
- * Matches a price-shaped token for one of our three supported symbols.
+ * Matches a conservative gold/FX price-shaped token used by citation checks;
+ * crypto values are supported through tool-backed claims rather than this regex.
  *
  *   - XAUUSD: `1xxx.xx`–`4xxxx.xx` (gold typically trades 1500–4000;
  *     the upper bound covers a black-swan spike).

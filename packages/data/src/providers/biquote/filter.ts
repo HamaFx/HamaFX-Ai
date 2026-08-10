@@ -16,25 +16,33 @@
 
 // Symbol whitelist for the BiQuote provider. BiQuote covers thousands of
 // instruments (BIST stocks, crypto, indices, commodities, FX); we
-// constrain ourselves to known symbols from the catalog.
+// constrain ourselves to canonical catalog symbols with an explicit mapping.
 //
-// The UNLIMITED_SYMBOLS env flag bypasses the check for testing.
+// Provider calls are always restricted to the canonical catalog. The former
+// UNLIMITED_SYMBOLS escape hatch is intentionally ignored so production and
+// local behavior cannot diverge.
 
-import { isKnownSymbol, type Symbol } from '@hamafx/shared';
+import { getSymbolDefinition, type Symbol } from '@hamafx/shared';
 
 import { ProviderError } from '../../errors';
 
 const PROVIDER = 'biquote';
 
 export function assertSupportedSymbol(symbol: string): Symbol {
-  const isUnlimited = process.env.UNLIMITED_SYMBOLS === 'true' || process.env.UNLIMITED_SYMBOLS === '1';
-  if (!isUnlimited && !isKnownSymbol(symbol)) {
+  const canonical = symbol.trim().toUpperCase();
+  let definition;
+  try {
+    definition = getSymbolDefinition(canonical);
+  } catch {
+    definition = null;
+  }
+
+  if (!definition || definition.biquote === null) {
     throw new ProviderError(
       'PROVIDER_HTTP_ERROR',
       PROVIDER,
-      `unsupported symbol "${symbol}" — biquote adapter is restricted to known symbols`,
+      `unsupported symbol "${symbol}" — biquote adapter is restricted to catalog symbols with a BiQuote mapping`,
     );
   }
-  return symbol;
+  return canonical;
 }
-

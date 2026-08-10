@@ -73,7 +73,7 @@ config → shared → db + indicators → data → ai → web + worker
 | `@hamafx/db` | `packages/db/` | Drizzle ORM schema (46 tables), Postgres/PGlite client, migrations |
 | `@hamafx/indicators` | `packages/indicators/` | Technical indicators (RSI, MACD, ATR, Bollinger, SMC) |
 | `@hamafx/data` | `packages/data/` | Market data providers (BiQuote, Finnhub, Marketaux, FRED, etc.) with failover |
-| `@hamafx/ai` | `packages/ai/` | AI agent core — 32 tools, model routing, multi-agent committee, memory, persistence |
+| `@hamafx/ai` | `packages/ai/` | AI agent core — 32 registered tools, model routing, multi-agent committee, memory, persistence |
 | `@hamafx/test-utils` | `packages/test-utils/` | Shared test factories, mocks, vitest helpers |
 | `@hamafx/web` | `apps/web/` | Next.js 16 PWA — 29 pages, 78 API routes, auth, chat, charts |
 | `@hamafx/worker` | `apps/worker/` | Node.js daemon — SignalR consumer, tick processing, scheduled jobs |

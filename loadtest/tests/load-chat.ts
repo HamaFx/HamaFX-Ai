@@ -22,7 +22,6 @@ const ITERATIONS = parseInt(__ENV['K6_CHAT_ITERS'] ?? '5', 10);
 export const options = {
   scenarios: {
     chat: {
-      name: 'load-chat',
       executor: 'per-vu-iterations',
       vus: VUS,
       iterations: ITERATIONS,

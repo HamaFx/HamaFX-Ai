@@ -54,11 +54,11 @@ HamaFX-Ai is in pre-release development. The project has shipped through Phases 
 
 **Phase 2:** Alert system, trading journal, economic calendar (FRED), news feed (Marketaux), dashboard with widgets, chart engine (TradingView + lightweight-charts).
 
-**Phase 3:** Multi-user auth (NextAuth v5), BYOK (9-provider registry, AES-256-GCM encryption), web push (VAPID), PWA service worker, CSP headers, CSRF protection, account lockout.
+**Phase 3:** Multi-user auth (NextAuth v5), BYOK (10-provider registry, AES-256-GCM encryption), web push (VAPID), PWA service worker, CSP headers, CSRF protection, account lockout.
 
 **Phase 4–5:** Security hardening, soft-delete, Postgres enums, FTS, observability (Sentry, Langfuse), incident response playbook, backup/restore scripts.
 
-**Phase 6–7:** AI agent expansion — 32 tools, plan-then-act, citation enforcement, budget guardrail, tool telemetry, multi-agent committee (5 agents), decision signal tracking, intermarket resonance, social sentiment, portfolio management.
+**Phase 6–7:** AI agent expansion — 32 registered tools, plan-then-act, citation enforcement, budget guardrail, tool telemetry, multi-agent committee (5 agents), decision signal tracking, intermarket resonance, social sentiment, portfolio management.
 
 **Phase 8:** Worker daemon (SignalR consumer, tick buffer, 1m candle aggregator), Binance WS consumer, systemd timers (22 units), healthchecks.io integration, GCE VM infra, self-update mechanism.
 

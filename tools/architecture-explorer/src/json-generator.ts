@@ -82,7 +82,7 @@ const VIEWS: Record<string, ViewDefinition> = {
   },
   tool_execution: {
     name: 'Tool Execution Flow',
-    description: 'All 32 AI tools with their input/output schemas and dependencies.',
+    description: 'All registered AI tools with their input/output schemas and dependencies.',
     nodeTypes: ['tool', 'schema', 'module'],
     edgeTypes: ['calls', 'validates', 'registers'],
     layout: 'force-directed',
@@ -206,7 +206,7 @@ export function generateArchitectureJson(
     project: {
       name: 'HamaFX-Ai',
       rootPath: '.',
-      description: 'Single-user BYOK, chat-driven AI trading copilot for forex instruments (XAUUSD, EURUSD, GBPUSD)',
+      description: 'Single-user BYOK, chat-driven AI trading copilot for gold, forex, and supported crypto instruments (XAUUSD, canonical forex pairs, Binance crypto pairs)',
       license: 'Apache-2.0',
       repository: 'github.com/HamaFx/HamaFX-Ai',
       techStack: {
@@ -258,7 +258,7 @@ export function generateArchitectureJson(
     project: {
       name: 'HamaFX-Ai',
       rootPath: '.',
-      description: 'Single-user BYOK, chat-driven AI trading copilot for forex instruments (XAUUSD, EURUSD, GBPUSD)',
+      description: 'Single-user BYOK, chat-driven AI trading copilot for gold, forex, and supported crypto instruments (XAUUSD, canonical forex pairs, Binance crypto pairs)',
       license: 'Apache-2.0',
       repository: 'github.com/HamaFx/HamaFX-Ai',
       techStack: {

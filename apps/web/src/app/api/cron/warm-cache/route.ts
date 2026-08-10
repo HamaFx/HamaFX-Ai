@@ -7,7 +7,7 @@
 // few minutes.
 //
 // Schedule: every 2 minutes via the GCE-VM crontab. Idempotent + fast.
-// Tight scope on purpose: prices for all 3 symbols + the single most-
+// Tight scope on purpose: prices for the legacy CFTC/intermarket trio + the single most-
 // requested candle key (1h × 200). 4h is requested rarely enough that
 // burning quota on it inside warm-cache hits the per-provider self-throttle
 // AND the upstream's quota — leave it to lazy fetch on first user view.
@@ -24,7 +24,8 @@ export const maxDuration = 30;
 
 /**
  * Tight scope on purpose. BiQuote's free tier covers FX + XAU at 10 req/min
- * via our internal self-throttle; warming 3 symbols × 1 tf leaves headroom
+ * via our internal self-throttle; warming the three legacy CFTC/intermarket
+ * symbols × 1 tf leaves headroom
  * for the live polling that follows. 1h on every tick; 4h every 10 minutes
  * (low-frequency tier — see Phase 3 hardening §14).
  */

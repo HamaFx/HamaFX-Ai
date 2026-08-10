@@ -2,7 +2,7 @@
 
 # HamaFX-Ai
 
-### Your self-hosted AI copilot for gold and forex research.
+### Your self-hosted AI copilot for gold, forex, and crypto research.
 
 Chat with market data, technical structure, macro context, risk math, journals, alerts, and multi-agent analysis — using **your own AI provider keys** and your own infrastructure.
 
@@ -34,7 +34,8 @@ Chat with market data, technical structure, macro context, risk math, journals, 
 HamaFX-Ai turns a chat window into a market-research workspace for:
 
 - **Gold:** `XAUUSD`
-- **Forex:** `EURUSD`, `GBPUSD`
+- **Forex:** EURUSD, GBPUSD, USDJPY, AUDUSD, USDCAD, NZDUSD, USDCHF, EURGBP, EURJPY, GBPJPY, AUDJPY
+- **Crypto:** BTCUSDT, ETHUSDT, SOLUSDT, BNBUSDT, XRPUSDT, ADAUSDT
 - **Your workflow:** analysis, risk planning, journaling, alerts, and review
 
 Instead of jumping between charts, indicators, news tabs, spreadsheets, and notes, you can ask one question and let the copilot gather structured context before answering.
@@ -328,7 +329,7 @@ apps/
 └── worker/               Persistent worker for ticks, candles, and scheduled jobs
 
 packages/
-├── ai/                   Agent runtime, 32 tools, routing, memory, multi-agent flow
+├── ai/                   Agent runtime, 32 registered tools, routing, memory, multi-agent flow
 ├── data/                 Market data adapters, providers, failover, caching
 ├── db/                   Drizzle schema, PostgreSQL/PGlite clients, migrations
 ├── indicators/           Technical indicators and market-structure calculations

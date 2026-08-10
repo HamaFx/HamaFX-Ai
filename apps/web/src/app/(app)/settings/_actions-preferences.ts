@@ -290,7 +290,11 @@ export async function addSymbolAction(formData: FormData): Promise<ActionResult>
 
     const inCatalog = await db.select({ symbol: schema.symbolCatalog.symbol })
       .from(schema.symbolCatalog)
-      .where(and(eq(schema.symbolCatalog.symbol, symbol), eq(schema.symbolCatalog.isActive, true)))
+      .where(and(
+        eq(schema.symbolCatalog.symbol, symbol),
+        eq(schema.symbolCatalog.isActive, true),
+        eq(schema.symbolCatalog.tenantId, '__system__'),
+      ))
       .limit(1);
 
     if (inCatalog.length === 0) {

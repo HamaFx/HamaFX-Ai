@@ -3,7 +3,7 @@
 import { redirect } from 'next/navigation';
 import { auth } from '@/auth';
 import { getWatchlistWithCatalog } from '@hamafx/db';
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { getDb, schema } from '@hamafx/db';
 import { SymbolsForm } from '../_components/symbols/symbols-form';
 
@@ -16,7 +16,10 @@ export default async function SymbolsSettingsPage() {
   // Fetch the active symbol catalog for the search/combobox options
   const catalog = await db.select()
     .from(schema.symbolCatalog)
-    .where(eq(schema.symbolCatalog.isActive, true))
+    .where(and(
+      eq(schema.symbolCatalog.isActive, true),
+      eq(schema.symbolCatalog.tenantId, '__system__'),
+    ))
     .orderBy(schema.symbolCatalog.sortOrder);
 
   // Fetch the user's watchlist with catalog metadata

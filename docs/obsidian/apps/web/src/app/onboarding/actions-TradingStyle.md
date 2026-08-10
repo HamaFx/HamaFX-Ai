@@ -3,8 +3,8 @@ type: module
 package: "@hamafx/web"
 path: "apps/web/src/app/onboarding/actions.ts"
 incoming: 0
-outgoing: 8
-connections: 8
+outgoing: 9
+connections: 9
 risk: low
 layer: core
 tags: [type/module, hamafx-web, layer/core]
@@ -24,8 +24,8 @@ Module: apps/web/src/app/onboarding/actions.ts
 | | Count |
 |---|---|
 | Incoming dependencies | 0 |
-| Outgoing dependencies | 8 |
-| Total connections | 8 |
+| Outgoing dependencies | 9 |
+| Total connections | 9 |
 | Risk level | **LOW** |
 | Layer | `core` |
 | Package tag | `#hamafx-web` |

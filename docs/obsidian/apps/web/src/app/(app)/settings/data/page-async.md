@@ -3,8 +3,8 @@ type: module
 package: "@hamafx/web"
 path: "apps/web/src/app/(app)/settings/data/page.tsx"
 incoming: 0
-outgoing: 4
-connections: 4
+outgoing: 5
+connections: 5
 risk: low
 layer: core
 tags: [type/module, hamafx-web, layer/core]
@@ -24,15 +24,15 @@ Module: apps/web/src/app/(app)/settings/data/page.tsx
 | | Count |
 |---|---|
 | Incoming dependencies | 0 |
-| Outgoing dependencies | 4 |
-| Total connections | 4 |
+| Outgoing dependencies | 5 |
+| Total connections | 5 |
 | Risk level | **LOW** |
 | Layer | `core` |
 | Package tag | `#hamafx-web` |
 
 
-### 📤 Depends On (4)
-[[@hamafx-db]] · [[data-card-DataCard]] · [[preferences-card-PreferencesCard]] · [[@hamafx-web]]
+### 📤 Depends On (5)
+[[@hamafx-db]] · [[@hamafx-shared]] · [[data-card-DataCard]] · [[preferences-card-PreferencesCard]] · [[@hamafx-web]]
 
 
 

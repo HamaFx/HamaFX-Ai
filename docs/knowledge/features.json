@@ -12,7 +12,7 @@
         "verification.ts",
         "chat-retry-loop.ts"
       ],
-      "description": "Streaming chat with domain-based routing, plan-then-act, 32 tools, 5-attempt retry"
+      "description": "Streaming chat with domain-based routing, plan-then-act, registered tools, 5-attempt retry"
     },
     {
       "name": "Multi-Agent Committee",

@@ -125,7 +125,7 @@ ENCRYPTION_SECRET=               # random 32-byte hex for data encryption
 MULTI_USER_ENABLED=false
 HAMAFX_ENABLE_RLS=false
 BYOK_ENABLED=true
-UNLIMITED_SYMBOLS=true
+UNLIMITED_SYMBOLS=false                 # deprecated; the canonical 18-symbol catalog is always enforced
 PER_USER_BRIEFINGS=true
 
 # --- Supabase (DB only — we don't use Supabase Auth) ---

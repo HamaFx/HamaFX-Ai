@@ -2,8 +2,8 @@
 type: module
 package: "@hamafx/data"
 path: "packages/data/src/providers/finnhub/map.ts"
-incoming: 1
-outgoing: 3
+incoming: 2
+outgoing: 2
 connections: 4
 risk: low
 layer: core
@@ -23,8 +23,8 @@ Module: packages/data/src/providers/finnhub/map.ts
 
 | | Count |
 |---|---|
-| Incoming dependencies | 1 |
-| Outgoing dependencies | 3 |
+| Incoming dependencies | 2 |
+| Outgoing dependencies | 2 |
 | Total connections | 4 |
 | Risk level | **LOW** |
 | Layer | `core` |
@@ -35,8 +35,8 @@ Module: packages/data/src/providers/finnhub/map.ts
 [[@hamafx-shared]] · [[@hamafx-data]]
 
 
-### 📥 Depended On By (1)
-[[rest-fetchPrice]]
+### 📥 Depended On By (2)
+[[rest-fetchPrice]] · [[finnhub-candles-map.test]]
 
 
 

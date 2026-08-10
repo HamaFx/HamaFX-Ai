@@ -2,14 +2,14 @@
 type: moc
 package: "@hamafx/test-utils"
 nodes: 19
-totalIncoming: 283
+totalIncoming: 289
 totalOutgoing: 36
 tags: [moc, hamafx-test-utils]
 ---
 
 # 📦 @hamafx/test-utils
 
-> **Map of Content** · 19 files · 283 incoming + 36 outgoing = 319 connections
+> **Map of Content** · 19 files · 289 incoming + 36 outgoing = 325 connections
 
 ## DataviewJS — All Files in This Package
 ```dataviewjs
@@ -34,7 +34,7 @@ dv.table(
 - [[fetch.test]] *(0↖ 3↗)*
 - [[llm.test]] *(0↖ 3↗)*
 - [[eslint.config-config]] *(0↖ 2↗)*
-- [[vitest-installServerOnlyStub]] *(260↖ 2↗)*
+- [[vitest-installServerOnlyStub]] *(266↖ 2↗)*
 - [[threads-MockThread]] *(1↖ 1↗)*
 - [[users-MockUser]] *(1↖ 1↗)*
 - [[vitest-base-createProjectConfig]] *(0↖ 1↗)*

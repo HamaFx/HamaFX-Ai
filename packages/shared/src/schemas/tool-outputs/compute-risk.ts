@@ -19,14 +19,14 @@
 // Pure-function position-sizing: given an entry, stop, optional target, an
 // account size, and a risk percent, return everything a trader actually
 // puts on the ticket. The reward + RR fields are nullable when no target
-// is supplied. Everything in account-currency is USD because that's the
-// quote of every supported pair.
+// is supplied. The pure function currently accepts only USD/USDT-quoted instruments
+// because no FX conversion feed is part of this contract.
 //
 // Source of truth: packages/ai/src/tools/compute-risk.ts execute() return type.
 
 import { z } from 'zod';
 
-import { SymbolSchema } from '../../symbols';
+import { getSymbolDefinition, SymbolSchema } from '../../symbols';
 
 export const TradeDirectionSchema = z.enum(['long', 'short']);
 export type TradeDirection = z.infer<typeof TradeDirectionSchema>;
@@ -46,6 +46,13 @@ export const ComputeRiskInputSchema = z
   .refine((v) => v.entry !== v.stop, {
     message: 'entry and stop cannot be equal',
     path: ['stop'],
+  })
+  .refine((v) => {
+    const definition = getSymbolDefinition(v.symbol);
+    return definition.quoteCurrency === 'USD' || definition.quoteCurrency === 'USDT';
+  }, {
+    message: 'Risk sizing currently requires a USD- or USDT-quoted symbol',
+    path: ['symbol'],
   });
 export type ComputeRiskInput = z.infer<typeof ComputeRiskInputSchema>;
 
@@ -61,10 +68,14 @@ export const ComputeRiskOutputSchema = z.object({
   rewardUsd: z.number().nullable(),
   /** Reward / risk; null if no target. */
   rrRatio: z.number().nullable(),
-  /** Distance entry → stop, in pips (always positive). */
+  /** Distance entry → stop in the catalog unit (pips or raw price units). */
   pipsToStop: z.number(),
   pipsToTarget: z.number().nullable(),
-  /** USD value of one pip per 1 standard lot. */
+  /** Distance unit used by the symbol: pips for gold/forex, price for crypto. */
+  distanceUnit: z.enum(['pips', 'price']),
+  /** Quantity unit used by the symbol: lots, ounces, or coins. */
+  quantityUnit: z.enum(['lots', 'ounces', 'coins']),
+  /** USD/USDT value of one distance unit per standard lot or coin. */
   pipValueUsdPerLot: z.number(),
   /**
    * Position size to put on the ticket. Both forms emitted so the user

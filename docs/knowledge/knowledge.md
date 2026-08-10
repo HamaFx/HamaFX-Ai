@@ -1,6 +1,6 @@
 # HamaFX-Ai Architecture Knowledge Base
 
-> **Auto-generated**: 2026-08-10T03:37:22.462Z
+> **Auto-generated**: 2026-08-10T19:59:22.439Z
 > **Schema version**: 1.0
 > **Purpose**: AI-agent-optimized architecture overview for rapid project understanding
 
@@ -8,10 +8,10 @@
 
 ## Project Overview
 
-**HamaFX-Ai** is an open-source (Apache-2.0), single-user BYOK, chat-driven AI trading copilot for forex instruments: **XAUUSD** (primary), **EURUSD**, **GBPUSD**.
+**HamaFX-Ai** is an open-source (Apache-2.0), single-user BYOK, chat-driven AI trading copilot for gold, forex, and supported crypto instruments: **XAUUSD** (primary), canonical forex pairs, and Binance crypto pairs.
 
 - **Stack**: Next.js 16 (App Router) + React 19 + TypeScript (strict)
-- **AI**: Vercel AI SDK v5, Google Vertex AI + 9-provider BYOK registry
+- **AI**: Vercel AI SDK v5, Google Vertex AI + 10-provider BYOK registry
 - **Database**: PostgreSQL (Supabase) + pgvector, Drizzle ORM (52+ tables)
 - **Auth**: NextAuth.js v5 (Credentials provider, JWT strategy; owner-first single-user OSS mode)
 - **Charts**: TradingView lightweight-charts v5
@@ -22,17 +22,17 @@
 | Package | Path | Type | Purpose |
 |---------|------|------|---------|
 | **root** | `root` | package | Package: root (3 nodes) |
-| **@hamafx/web** | `packages/web` | package | Package: @hamafx/web (654 nodes) |
+| **@hamafx/web** | `packages/web` | package | Package: @hamafx/web (657 nodes) |
 | **@hamafx/worker** | `packages/worker` | package | Package: @hamafx/worker (58 nodes) |
 | **docs** | `docs` | package | Package: docs (1 nodes) |
 | **infra** | `infra` | package | Package: infra (1 nodes) |
 | **loadtest** | `loadtest` | package | Package: loadtest (31 nodes) |
 | **@hamafx/ai** | `packages/ai` | package | Package: @hamafx/ai (274 nodes) |
 | **@hamafx/config** | `packages/config` | package | Package: @hamafx/config (4 nodes) |
-| **@hamafx/data** | `packages/data` | package | Package: @hamafx/data (65 nodes) |
-| **@hamafx/db** | `packages/db` | package | Package: @hamafx/db (160 nodes) |
+| **@hamafx/data** | `packages/data` | package | Package: @hamafx/data (66 nodes) |
+| **@hamafx/db** | `packages/db` | package | Package: @hamafx/db (161 nodes) |
 | **@hamafx/indicators** | `packages/indicators` | package | Package: @hamafx/indicators (39 nodes) |
-| **@hamafx/shared** | `packages/shared` | package | Package: @hamafx/shared (84 nodes) |
+| **@hamafx/shared** | `packages/shared` | package | Package: @hamafx/shared (85 nodes) |
 | **@hamafx/test-utils** | `packages/test-utils` | package | Package: @hamafx/test-utils (19 nodes) |
 | **scripts** | `scripts` | package | Package: scripts (8 nodes) |
 | **tool:architecture-explorer** | `tools/architecture-explorer` | package | Package: tool:architecture-explorer (17 nodes) |
@@ -40,7 +40,7 @@
 
 **Dependency chain**: `config → shared → db + indicators → data → ai → web + worker`
 
-**Total**: 16 packages, **1420** architecture nodes
+**Total**: 16 packages, **1426** architecture nodes
 
 ## OSS Runtime Boundary
 
@@ -81,21 +81,21 @@ User Message → Rate Limit → Thread Check → Budget Guard → History Load �
 - **analyze_technical** — Multi-timeframe technical readout (trend, bias, momentum, structure, levels) for a symbol. Use for any
 - **annotate_chart** — Compute chart annotations (swings, BOS/CHoCH, FVG, order blocks, liquidity sweeps, previous-day high/low, Asian session range) for a symbol/timeframe. Use when the user asks to
 - **compute_position_health** — For each currently-open journal entry, compute live P/L in pips and R-multiples plus distance to stop and target. Use when the user asks
-- **compute_risk** — Compute position size, USD risk/reward, and pips-to-stop/target from a (symbol, side, entry, stop, target?, accountUsd, riskPct) tuple. Pure-function — no provider calls. Use when the user asks
+- **compute_risk** — Copyright 2026 HamaFX
 - **convene_committee** — Convene a Multi-Agent Trading Committee (Economist, Technician, Risk Manager) to evaluate a trade setup. Use whenever the user asks
 - **forecast_volatility** — Copyright 2026 HamaFX
 - **get_calendar** — Copyright 2026 HamaFX
 - **get_candles** — Fetch OHLC candles for one symbol at one timeframe (e.g. XAUUSD 1h). Use to confirm a recent swing high/low or to feed a pattern read. For RSI/MACD/EMA/etc. prefer get_indicators.
-- **get_correlation** — Pearson correlation matrix over close-to-close returns for XAUUSD/EURUSD/GBPUSD at the given timeframe + window, plus a USD-strength proxy (
+- **get_correlation** — Pearson correlation matrix over close-to-close returns for the legacy CFTC/intermarket trio XAUUSD/EURUSD/GBPUSD at the given timeframe + window, plus a USD-strength proxy (
 - **get_co_t** — Last N weeks of CFTC Commitment-of-Traders rows for one symbol (default XAUUSD). Use to answer
 - **get_indicators** — Compute indicators (sma, ema, rsi, macd, atr, bollinger, pivots) on a (symbol, timeframe) window. Returns the last 30 points of each series — enough for
 - **get_intermarket_resonance** — Evaluate Gold (XAUUSD) or major currencies
-- **get_intermarket** — Cross-asset pulse: USD-strength proxy + 24h change, gold
+- **get_intermarket** — Cross-asset pulse for the legacy CFTC/intermarket trio: USD-strength proxy + 24h change, gold
 - **get_journal_stats** — Copyright 2026 HamaFX
 - **get_market_structure** — Copyright 2026 HamaFX
 - **get_news** — Copyright 2026 HamaFX
 - **get_portfolio_snapshot** — Get a snapshot of the user\
-- **get_price** — Fetch the most recent mid price for one or more supported symbols (XAUUSD, EURUSD, GBPUSD). Use only when the LIVE_SNAPSHOT in the system prompt is missing the symbol or older than 10 seconds.
+- **get_price** — Copyright 2026 HamaFX
 - **get_seasonality** — Per-month / per-weekday / per-hour return seasonality for a symbol. Returns median percent return, IQR, win rate, and sample count per bucket. Use for
 - **get_session_levels** — Compute today
 - **get_social_sentiment** — Copyright 2026 HamaFX
@@ -149,7 +149,7 @@ User Message → Rate Limit → Thread Check → Budget Guard → History Load �
 
 - **Circular Dependencies**: 6
 - **Architecture Hotspots**: 50
-- **Dead Code / Orphans**: 1162
+- **Dead Code / Orphans**: 1178
 - **Shared Utilities**: 40
 - **Average Coupling**: 0.22
 - **Max Dependency Chain**: 3 hops

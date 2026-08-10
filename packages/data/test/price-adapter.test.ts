@@ -18,7 +18,7 @@
 // The price adapter now tries:
 //   1. live_ticks pseudo-provider (Phase 8 PR-8)
 //   2. BiQuote REST (Phase 8 PR-4)
-//   3. Twelve Data
+//   3. Binance for canonical crypto pairs
 //   4. Finnhub
 // so tests need to be explicit about which provider is expected to answer.
 
@@ -124,7 +124,7 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
-describe('getPrice — provider order (Phase 8: biquote first)', () => {
+describe('getPrice — provider order (Phase 8: live-ticks, then catalog-routed providers)', () => {
   it('returns a normalised Tick from biquote when available', async () => {
     globalThis.fetch = createRoutedFetch([
       {
@@ -265,5 +265,37 @@ describe('getPrice — live_ticks pseudo-provider (Phase 8 PR-8)', () => {
     const tick = await getPrice('XAUUSD');
     expect(tick.source).toBe('biquote');
     expect(tick.mid).toBe(2400);
+  });
+
+  it('routes crypto to Binance without probing unsupported BiQuote or Finnhub providers', async () => {
+    let biquoteCalls = 0;
+    let finnhubCalls = 0;
+    globalThis.fetch = createRoutedFetch([
+      {
+        match: (u) => u.includes('biquote.io/api/'),
+        respond: () => {
+          biquoteCalls += 1;
+          return { status: 500, body: { message: 'BiQuote must not be called for crypto' } };
+        },
+      },
+      {
+        match: (u) => u.includes('finnhub.io'),
+        respond: () => {
+          finnhubCalls += 1;
+          return { status: 500, body: { message: 'Finnhub must not be called after Binance succeeds' } };
+        },
+      },
+      {
+        match: (u) => u.includes('api.binance.com/api/v3/ticker/price'),
+        respond: () => ({ body: { symbol: 'BTCUSDT', price: '65000.25' } }),
+      },
+    ]);
+
+    const tick = await getPrice('BTCUSDT');
+
+    expect(tick.source).toBe('binance');
+    expect(tick.mid).toBe(65000.25);
+    expect(biquoteCalls).toBe(0);
+    expect(finnhubCalls).toBe(0);
   });
 });

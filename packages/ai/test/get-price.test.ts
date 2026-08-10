@@ -99,14 +99,15 @@ describe('get_price — Phase 0.10', () => {
     expect(schema.safeParse({ symbols: [] }).success).toBe(false);
   });
 
-  it('validates input schema — max 3 symbols', () => {
+  it('validates input schema — max canonical catalog size', () => {
     const schema = getPriceTool.inputSchema as { safeParse: (v: unknown) => { success: boolean } };
-    expect(
-      schema.safeParse({ symbols: ['EURUSD', 'GBPUSD', 'XAUUSD'] }).success,
-    ).toBe(true);
-    expect(
-      schema.safeParse({ symbols: ['EURUSD', 'GBPUSD', 'XAUUSD', 'AUDUSD'] }).success,
-    ).toBe(false);
+    const canonicalSymbols = [
+      'XAUUSD', 'EURUSD', 'GBPUSD', 'USDJPY', 'AUDUSD', 'USDCAD', 'NZDUSD', 'USDCHF',
+      'EURGBP', 'EURJPY', 'GBPJPY', 'AUDJPY',
+      'BTCUSDT', 'ETHUSDT', 'SOLUSDT', 'BNBUSDT', 'XRPUSDT', 'ADAUSDT',
+    ];
+    expect(schema.safeParse({ symbols: canonicalSymbols }).success).toBe(true);
+    expect(schema.safeParse({ symbols: [...canonicalSymbols, 'XAUUSD'] }).success).toBe(false);
   });
 
   it('rejects unknown symbols', () => {

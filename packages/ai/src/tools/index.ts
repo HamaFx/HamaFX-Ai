@@ -16,7 +16,8 @@
 
 // PF-02 — Tool plugin registry barrel.
 // PF-13 — Tools are now registered via category sub-files (market, analysis, journal, system).
-// All 32 tools register themselves via the singleton `toolRegistry`.
+// All tools register themselves via the singleton `toolRegistry`; the canonical
+// identifier list lives in `@hamafx/shared` as `TOOL_NAMES`.
 //
 // Adding a new tool: implement it in a sibling file, add a register()
 // call to the appropriate category file, and add its import + entry there.

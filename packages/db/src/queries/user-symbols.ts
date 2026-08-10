@@ -37,7 +37,17 @@ export async function listDistinctSymbols(): Promise<string[]> {
   const db = getDb();
   const rows = await db
     .selectDistinct({ symbol: schema.userSymbols.symbol })
-    .from(schema.userSymbols);
+    .from(schema.userSymbols)
+    .innerJoin(
+      schema.symbolCatalog,
+      eq(schema.userSymbols.symbol, schema.symbolCatalog.symbol),
+    )
+    .where(
+      and(
+        eq(schema.symbolCatalog.isActive, true),
+        eq(schema.symbolCatalog.tenantId, '__system__'),
+      ),
+    );
   return rows.map((r) => r.symbol);
 }
 

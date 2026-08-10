@@ -1,15 +1,15 @@
 ---
 type: moc
 package: "@hamafx/shared"
-nodes: 84
-totalIncoming: 792
-totalOutgoing: 250
+nodes: 85
+totalIncoming: 803
+totalOutgoing: 253
 tags: [moc, hamafx-shared]
 ---
 
 # 📦 @hamafx/shared
 
-> **Map of Content** · 84 files · 792 incoming + 250 outgoing = 1042 connections
+> **Map of Content** · 85 files · 803 incoming + 253 outgoing = 1056 connections
 
 ## DataviewJS — All Files in This Package
 ```dataviewjs
@@ -25,7 +25,7 @@ dv.table(
 
 ## Files by Type
 
-### 📁 Module (83)
+### 📁 Module (84)
 - [[tool-io-UiTextPart]] *(1↖ 67↗)*
 - [[encryption-encryptByok]] *(1↖ 4↗)*
 - [[logger-LOG_CATEGORIES]] *(3↖ 4↗)*
@@ -35,7 +35,7 @@ dv.table(
 - [[bug-report.test]] *(0↖ 4↗)*
 - [[env.test]] *(0↖ 4↗)*
 - [[error-patterns.test]] *(0↖ 4↗)*
-- [[index_tool-architecture-explorer|index]] *(7↖ 3↗)*
+- [[index_tool-architecture-explorer|index]] *(8↖ 3↗)*
 - [[alerts-AlertChannelSchema]] *(0↖ 3↗)*
 - [[candle-CandleSchema]] *(1↖ 3↗)*
 - [[indicator-IndicatorKindSchema]] *(1↖ 3↗)*
@@ -60,6 +60,7 @@ dv.table(
 - [[logger.test]] *(0↖ 3↗)*
 - [[market-phase.test]] *(0↖ 3↗)*
 - [[schemas.test]] *(0↖ 3↗)*
+- [[symbol-catalog.test]] *(0↖ 3↗)*
 - [[tool-io.test]] *(0↖ 3↗)*
 - [[eslint.config-config]] *(0↖ 2↗)*
 - [[features-PLAN_FEATURES]] *(1↖ 2↗)*
@@ -111,5 +112,5 @@ dv.table(
 - [[vitest.config-defineConfig]] *(0↖ 1↗)*
 
 ### 📦 Package (1)
-- [[@hamafx-shared]] *(642↖ 0↗)*
+- [[@hamafx-shared]] *(652↖ 0↗)*
 

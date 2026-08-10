@@ -264,10 +264,11 @@ function priceDecimalsForSymbol(s: string): number {
   // `output.symbol` is `string` in the envelope (intentionally loose), but
   // each result carries the canonical `Symbol`. Use the per-result symbol
   // when it matches one we know about; otherwise default to 2 decimals.
-  if (s === 'XAUUSD' || s === 'EURUSD' || s === 'GBPUSD') {
+  try {
     return priceDecimals(s satisfies Symbol);
+  } catch {
+    return 2;
   }
-  return 2;
 }
 
 // --- Loading / error placeholders ---------------------------------------

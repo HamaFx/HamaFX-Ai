@@ -32,7 +32,7 @@ import { gte, lte, and } from 'drizzle-orm';
 function userContextFromSettings(displayName: string | null, settings: UserSettingsRow) {
   return {
     displayName: displayName ?? '',
-    defaultSymbol: settings.defaultSymbol as 'XAUUSD' | 'EURUSD' | 'GBPUSD' | 'USDJPY' | 'BTCUSD' | 'ETHUSD',
+    defaultSymbol: settings.defaultSymbol,
     timezone: settings.timezone,
     language: settings.language,
   };

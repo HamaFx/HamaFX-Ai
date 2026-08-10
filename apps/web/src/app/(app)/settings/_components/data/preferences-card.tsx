@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-import { isKnownSymbol, type Symbol } from '@hamafx/shared';
+import { DEFAULT_WATCHLIST_SYMBOLS, isKnownSymbol, type Symbol } from '@hamafx/shared';
 import {IconClock, IconBolt, IconTrendingUp} from '@tabler/icons-react';
 import { useCallback, useEffect } from 'react';
 import { toast } from 'sonner';
@@ -38,13 +38,13 @@ interface Prefs {
 const STORAGE_KEY = 'hamafx:prefs:v1';
 
 const DEFAULTS: Prefs = {
-  defaultSymbol: 'XAUUSD',
+  defaultSymbol: DEFAULT_WATCHLIST_SYMBOLS[0],
   timeFormat: '24h',
   reduceMotion: false,
 };
 
 export function PreferencesCard({
-  watchlist = ['XAUUSD', 'EURUSD', 'GBPUSD'],
+  watchlist = [...DEFAULT_WATCHLIST_SYMBOLS],
   initialPrefs,
 }: {
   watchlist?: string[];
@@ -88,7 +88,9 @@ export function PreferencesCard({
       
       // Sanitize defaultSymbol from localStorage using isSymbol and ensuring it is present in the watchlist
       if (!isKnownSymbol(prefs.defaultSymbol) || !watchlist.includes(prefs.defaultSymbol)) {
-        const defaultSym = watchlist.includes('XAUUSD') ? 'XAUUSD' : (watchlist[0] || DEFAULTS.defaultSymbol);
+        const defaultSym = watchlist.includes(DEFAULT_WATCHLIST_SYMBOLS[0])
+          ? DEFAULT_WATCHLIST_SYMBOLS[0]
+          : (watchlist[0] || DEFAULTS.defaultSymbol);
         // Avoid infinite updates if it is already matching
         if (prefs.defaultSymbol !== defaultSym) {
           update('defaultSymbol', defaultSym);

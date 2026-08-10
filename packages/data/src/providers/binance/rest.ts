@@ -1,7 +1,9 @@
 import type { Symbol, Timeframe } from '@hamafx/shared';
 
+import { getSymbolDefinition } from '@hamafx/shared';
 import { noteBackoff, tryReserve, type ThrottleConfig } from '../../cache/throttle';
 import { ProviderError } from '../../errors';
+
 import { isCryptoSymbol, toBinanceInterval } from './map';
 import { parseKline, type NormalizedBinanceCandle } from './types';
 
@@ -98,7 +100,8 @@ export async function fetchCandles(
   count: number,
   opts: CallOptions = {},
 ): Promise<NormalizedBinanceCandle[]> {
-  if (!isCryptoSymbol(symbol)) {
+  const canonical = symbol.trim().toUpperCase();
+  if (!isCryptoSymbol(canonical)) {
     throw new ProviderError(
       'PROVIDER_HTTP_ERROR',
       PROVIDER,
@@ -110,21 +113,27 @@ export async function fetchCandles(
   const limit = Math.min(count, 1000);
 
   return klinesCall(
-    { symbol: symbol.toUpperCase(), interval, limit: String(limit) },
+    { symbol: getSymbolDefinition(canonical).binance!, interval, limit: String(limit) },
     opts,
   );
 }
 
-/**
- * GET /api/v3/ticker/price?symbol=BTCUSDT — 1 weight.
- * Lightweight price fetch returning just the current price.
- */
+/** GET /api/v3/ticker/price?symbol=BTCUSDT — lightweight current price fetch. */
 export async function fetchTickerPrice(
   symbol: string,
   opts?: { signal?: AbortSignal },
 ): Promise<number> {
+  const canonical = symbol.trim().toUpperCase();
+  if (!isCryptoSymbol(canonical)) {
+    throw new ProviderError(
+      'PROVIDER_HTTP_ERROR',
+      PROVIDER,
+      `unsupported symbol "${symbol}" — binance only supports canonical crypto pairs`,
+    );
+  }
+
   const url = new URL(`${BASE_URL}/api/v3/ticker/price`);
-  url.searchParams.set('symbol', symbol.toUpperCase());
+  url.searchParams.set('symbol', getSymbolDefinition(canonical).binance!);
 
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(new Error('timeout')), DEFAULT_TIMEOUT_MS);

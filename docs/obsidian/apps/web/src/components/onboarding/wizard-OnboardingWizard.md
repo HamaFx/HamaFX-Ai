@@ -3,8 +3,8 @@ type: component
 package: "@hamafx/web"
 path: "apps/web/src/components/onboarding/wizard.tsx"
 incoming: 0
-outgoing: 13
-connections: 13
+outgoing: 12
+connections: 12
 risk: low
 layer: ui
 tags: [type/component, hamafx-web, layer/ui]
@@ -24,8 +24,8 @@ React component: wizard
 | | Count |
 |---|---|
 | Incoming dependencies | 0 |
-| Outgoing dependencies | 13 |
-| Total connections | 13 |
+| Outgoing dependencies | 12 |
+| Total connections | 12 |
 | Risk level | **LOW** |
 | Layer | `ui` |
 | Package tag | `#hamafx-web` |

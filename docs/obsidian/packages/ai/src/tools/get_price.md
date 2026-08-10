@@ -16,7 +16,7 @@ aliases: [get_price]
 > **AI Tool** · `@hamafx/ai` · `packages/ai/src/tools/get-price.ts`
 
 
-Fetch the most recent mid price for one or more supported symbols (XAUUSD, EURUSD, GBPUSD). Use only when the LIVE_SNAPSHOT in the system prompt is missing the symbol or older than 10 seconds.
+Copyright 2026 HamaFX
 
 
 ## 📊 Connections

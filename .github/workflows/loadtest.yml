@@ -4,8 +4,8 @@ on:
   workflow_dispatch:
     inputs:
       test:
-        description: 'Glob for k6 test files'
-        default: 'loadtest/tests/smoke-*.ts'
+        description: 'Glob for compiled k6 test files under loadtest/dist/tests/'
+        default: 'loadtest/dist/tests/smoke-*.js'
         type: string
       authMode:
         description: 'Auth strategy (legacy|session)'
@@ -51,11 +51,23 @@ jobs:
       - name: Build the SUT
         run: pnpm --filter @hamafx/web build
 
+      - name: Build k6 test scripts
+        working-directory: loadtest
+        run: npm run build
+
+      - name: Install k6
+        uses: grafana/setup-k6-action@v1
+        with:
+          k6-version: '0.57.0'
+
       - name: Inspect k6 test scripts (dry-run)
         working-directory: loadtest
         run: |
-          for f in $(ls tests/*.ts); do
-            k6 inspect "$f" 2>&1 || true
+          # Inspect compiled JavaScript. k6 does not transpile TypeScript or
+          # resolve the .js import specifiers emitted by the TS source tree.
+          # The chat guard is enabled for inspection only; no load test runs.
+          for f in dist/tests/*.js; do
+            k6 inspect -e K6_ENABLE_CHAT=true "$f"
           done
 
       # Bring up throwaway SUT with AUTH_MODE=legacy and lifted rate limits
@@ -65,7 +77,7 @@ jobs:
       - name: Wait for SUT to be ready
         run: |
           for i in $(seq 1 30); do
-            if curl -fsS http://localhost:3000/api/health > /dev/null 2>&1; then
+            if curl -fsS http://localhost:3000/api/health/public > /dev/null 2>&1; then
               echo "SUT ready after ${i}s"
               exit 0
             fi
@@ -81,18 +93,13 @@ jobs:
         env:
           DATABASE_URL: postgres://hamafx:loadtest@localhost:5432/hamafx
 
-      - name: Install k6
-        uses: grafana/setup-k6-action@v1
-        with:
-          k6-version: '0.57.0'
-
       # ── Smoke tests (read-mix + write-mix) ────────────────────────
       # The write-mix smoke test (smoke-write-mix.ts) matches the
       # smoke-*.ts glob automatically.
       - name: Run k6 smoke tests (read + write mix)
         uses: grafana/run-k6-action@v1
         with:
-          path: ${{ inputs.test || 'loadtest/tests/smoke-*.ts' }}
+          path: ${{ inputs.test || 'loadtest/dist/tests/smoke-*.js' }}
           flags: >-
             -e K6_BASE_URL=http://localhost:3000
             -e K6_AUTH_MODE=${{ inputs.authMode || 'legacy' }}
@@ -105,7 +112,7 @@ jobs:
         if: ${{ github.event_name == 'schedule' }}
         uses: grafana/run-k6-action@v1
         with:
-          path: loadtest/tests/load-read-mix.ts
+          path: loadtest/dist/tests/load-read-mix.js
           flags: >-
             -e K6_BASE_URL=http://localhost:3000
             -e K6_AUTH_MODE=${{ inputs.authMode || 'legacy' }}
@@ -115,7 +122,7 @@ jobs:
         if: ${{ github.event_name == 'schedule' }}
         uses: grafana/run-k6-action@v1
         with:
-          path: loadtest/tests/load-write-mix.ts
+          path: loadtest/dist/tests/load-write-mix.js
           flags: >-
             -e K6_BASE_URL=http://localhost:3000
             -e K6_AUTH_MODE=${{ inputs.authMode || 'legacy' }}

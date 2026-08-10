@@ -3,8 +3,8 @@ type: module
 package: "@hamafx/db"
 path: "packages/db/src/queries/auth.ts"
 incoming: 0
-outgoing: 2
-connections: 2
+outgoing: 3
+connections: 3
 risk: low
 layer: core
 tags: [type/module, hamafx-db, layer/core]
@@ -24,15 +24,15 @@ Module: packages/db/src/queries/auth.ts
 | | Count |
 |---|---|
 | Incoming dependencies | 0 |
-| Outgoing dependencies | 2 |
-| Total connections | 2 |
+| Outgoing dependencies | 3 |
+| Total connections | 3 |
 | Risk level | **LOW** |
 | Layer | `core` |
 | Package tag | `#hamafx-db` |
 
 
-### 📤 Depends On (2)
-[[client-DbClient]] · [[@hamafx-db]]
+### 📤 Depends On (3)
+[[@hamafx-shared]] · [[client-DbClient]] · [[@hamafx-db]]
 
 
 

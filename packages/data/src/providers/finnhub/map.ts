@@ -17,7 +17,7 @@
 // Finnhub ↔ internal mapping. Reference: https://finnhub.io/docs/api
 // FX is exposed via the OANDA forex feed: e.g. "OANDA:XAU_USD".
 
-import type { Symbol, Timeframe } from '@hamafx/shared';
+import { getSymbolDefinition, isKnownSymbol, type Symbol, type Timeframe } from '@hamafx/shared';
 
 const TO_FINNHUB_SYMBOL: Record<Symbol, string> = {
   XAUUSD: 'OANDA:XAU_USD',
@@ -39,9 +39,11 @@ const TO_FINNHUB_RESOLUTION: Record<Timeframe, string> = {
 };
 
 export function toFinnhubSymbol(symbol: Symbol): string {
-  if (TO_FINNHUB_SYMBOL[symbol]) return TO_FINNHUB_SYMBOL[symbol];
-  if (symbol.length === 6 && !symbol.includes(':')) {
-    return `OANDA:${symbol.slice(0, 3)}_${symbol.slice(3)}`;
+  const canonical = symbol.trim().toUpperCase();
+  if (TO_FINNHUB_SYMBOL[canonical]) return TO_FINNHUB_SYMBOL[canonical];
+  if (isKnownSymbol(canonical)) return getSymbolDefinition(canonical).finnhub;
+  if (canonical.length === 6 && !canonical.includes(':')) {
+    return `OANDA:${canonical.slice(0, 3)}_${canonical.slice(3)}`;
   }
   return symbol;
 }

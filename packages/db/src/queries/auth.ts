@@ -17,6 +17,7 @@
 // Auth query helpers — login, registration, password reset, verification tokens.
 
 import { and, eq, gt, isNull, sql } from 'drizzle-orm';
+import { DEFAULT_WATCHLIST_SYMBOLS } from '@hamafx/shared';
 import { getDb, schema } from '../client';
 
 export interface AuthUserRow {
@@ -128,7 +129,7 @@ export async function createUserWithSettings(
     await tx.insert(schema.userSettings).values({
       userId: input.id,
       onboardingCompleted: false,
-      defaultSymbol: 'XAUUSD',
+      defaultSymbol: DEFAULT_WATCHLIST_SYMBOLS[0],
     });
   });
 }

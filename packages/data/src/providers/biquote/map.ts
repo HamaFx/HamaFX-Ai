@@ -31,13 +31,14 @@ import { getSymbolDefinition, isKnownSymbol, type Symbol, type Timeframe } from 
 /**
  * BiQuote uses our concatenated symbol codes verbatim (`XAUUSD`,
  * `EURUSD`, `GBPUSD`, etc.). For known catalog symbols we use the
- * `biquote` field from SymbolDefinition; for unknown symbols we pass
- * through as-is (the filter layer rejects unknowns unless
- * UNLIMITED_SYMBOLS is set).
+ * `biquote` field from SymbolDefinition. Provider call sites validate the
+ * symbol first, so an unavailable mapping cannot reach the upstream API.
  */
 export function toBiquoteSymbol(symbol: Symbol): string {
-  const def = isKnownSymbol(symbol) ? getSymbolDefinition(symbol) : null;
-  return def?.biquote ?? symbol;
+  const canonical = symbol.trim().toUpperCase();
+  const def = isKnownSymbol(canonical) ? getSymbolDefinition(canonical) : null;
+  if (def?.biquote) return def.biquote;
+  throw new Error(`biquote: no catalog mapping for symbol "${symbol}"`);
 }
 
 /**

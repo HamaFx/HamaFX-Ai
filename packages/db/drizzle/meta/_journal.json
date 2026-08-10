@@ -442,6 +442,13 @@
       "when": 1785922200000,
       "tag": "0063_billing_safety_gate",
       "breakpoints": true
+    },
+    {
+      "idx": 63,
+      "version": "7",
+      "when": 1786383600000,
+      "tag": "0064_phase2_symbol_catalog_activation",
+      "breakpoints": true
     }
   ]
 }

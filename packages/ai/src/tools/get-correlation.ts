@@ -20,8 +20,8 @@
 // all pairs of supported symbols at a given timeframe + window, plus a
 // derived USD-strength proxy ("DXY proxy") computed from the FX legs.
 //
-// The proxy is **not** a true DXY (no JPY, CAD, SEK, CHF) — we only have
-// EURUSD and GBPUSD. The formula is captured verbatim in
+// The proxy is **not** a true DXY (no JPY, CAD, SEK, CHF) — it is an
+// intentionally narrow intermarket feature using EURUSD and GBPUSD. The formula is captured verbatim in
 // `dxyProxy.formula` so any agent answer that quotes the value can also
 // quote the formula, and the UI labels the value as a proxy clearly.
 
@@ -55,7 +55,7 @@ const ONE_DAY_MS = 24 * 60 * 60 * 1000;
 
 export const getCorrelationTool = tool({
   description:
-    "Pearson correlation matrix over close-to-close returns for XAUUSD/EURUSD/GBPUSD at the given timeframe + window, plus a USD-strength proxy ('DXY proxy') computed from EURUSD and GBPUSD with 50/50 weights. Use for any 'are EUR and GBP both selling off' / 'how correlated is gold to the dollar' / 'what's the dollar doing today' prompt. Returns the formula verbatim so you can cite it.",
+    "Pearson correlation matrix over close-to-close returns for the legacy CFTC/intermarket trio XAUUSD/EURUSD/GBPUSD at the given timeframe + window, plus a USD-strength proxy ('DXY proxy') computed from EURUSD and GBPUSD with 50/50 weights. This intentionally narrow feature does not limit the broader product catalog. Use for any 'are EUR and GBP both selling off' / 'how correlated is gold to the dollar' / 'what's the dollar doing today' prompt. Returns the formula verbatim so you can cite it.",
   inputSchema: InputSchema,
   execute: async ({ tf, windowBars }): Promise<GetCorrelationOutput> => {
     const need = windowBars + 1;

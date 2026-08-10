@@ -265,7 +265,7 @@ export async function runWorker(args: RunWorkerArgs): Promise<RunningWorker> {
   });
 
   // Binance WebSocket consumer for live crypto klines.
-  const cryptoSymbols = (env.BINANCE_CRYPTO_SYMBOLS ?? 'BTCUSDT,ETHUSDT')
+  const cryptoSymbols = (env.BINANCE_CRYPTO_SYMBOLS ?? 'BTCUSDT,ETHUSDT,SOLUSDT,BNBUSDT,XRPUSDT,ADAUSDT')
     .split(',')
     .map((s) => s.trim())
     .filter(Boolean);
