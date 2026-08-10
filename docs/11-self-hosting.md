@@ -4,18 +4,27 @@
 
 ## Prerequisites
 
-- **Docker** and **Docker Compose V2** installed on your host.
+- **Docker Desktop** installed and running on your computer.
 - At least 2GB of RAM (4GB recommended).
+- For the easiest setup, download the project, open its folder, and run `pnpm setup`. Choose **Full mode** when the wizard asks. The wizard creates the `.env` file automatically; you do not need Bash or manual secret commands.
 - A domain name (optional, but recommended if exposing to the internet).
 - This guide deploys one owner account per instance; it is not a shared-hosting guide.
 
-## 1. Clone & Configure
+## 1. Download & Configure
+
+### Recommended: use the setup wizard
+
+```bash
+pnpm setup
+```
+
+Choose **Full mode**. It generates secure settings, preserves any existing `.env` values, and starts the Docker stack for you. After the browser opens, register the owner account and add your AI provider key inside the onboarding screen.
+
+### Manual setup (advanced)
 
 ```bash
 git clone https://github.com/HamaFx/HamaFX-Ai.git
 cd HamaFX-Ai
-
-# Copy the example environment file
 cp .env.example .env
 ```
 

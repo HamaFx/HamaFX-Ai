@@ -96,7 +96,7 @@ function generateArchitecture(model: ArchitectureModel, nodes: ReturnType<GraphM
       { name: 'NOWPayments', type: 'Billing', protocol: 'REST', role: 'Crypto payments' },
       { name: 'Telegram', type: 'Bot', protocol: 'Webhook', role: 'Bot platform' },
     ],
-    byok_providers: ['google', 'anthropic', 'openai', 'groq', 'deepseek', 'xai', 'openrouter', 'github', 'cerebras'],
+    byok_providers: ['google', 'vertex', 'anthropic', 'openai', 'groq', 'mistral', 'openrouter', 'xai', 'deepseek', 'iamhc'],
   };
 }
 
@@ -232,7 +232,7 @@ function generateAi(parsedFiles: Map<string, ParsedFile>) {
       synthesizer: 'decision',
     },
     model_tiers: modelTiers,
-    byok_providers: ['google', 'anthropic', 'openai', 'groq', 'deepseek', 'xai', 'openrouter', 'github', 'cerebras'],
+    byok_providers: ['google', 'vertex', 'anthropic', 'openai', 'groq', 'mistral', 'openrouter', 'xai', 'deepseek', 'iamhc'],
   };
 }
 
@@ -384,7 +384,7 @@ ${toolNodes.map(t => `- **${t.name}** — ${t.description}`).join('\n')}
 ### Model Routing
 - **Domains**: fundamental, technical, summary, vision, generic
 - **Tiers**: fast (technical/sentiment), mid (fundamental/risk), strong (decision)
-- **BYOK**: 9 providers (google, anthropic, openai, groq, deepseek, xai, openrouter, github, cerebras)
+- **BYOK**: 10 providers (google, vertex, anthropic, openai, groq, mistral, openrouter, xai, deepseek, iamhc)
 
 ## API Surface
 

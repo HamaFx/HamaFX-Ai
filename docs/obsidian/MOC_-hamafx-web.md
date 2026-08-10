@@ -1,15 +1,15 @@
 ---
 type: moc
 package: "@hamafx/web"
-nodes: 653
-totalIncoming: 970
-totalOutgoing: 1448
+nodes: 654
+totalIncoming: 971
+totalOutgoing: 1450
 tags: [moc, hamafx-web]
 ---
 
 # 📦 @hamafx/web
 
-> **Map of Content** · 653 files · 970 incoming + 1448 outgoing = 2418 connections
+> **Map of Content** · 654 files · 971 incoming + 1450 outgoing = 2421 connections
 
 ## DataviewJS — All Files in This Package
 ```dataviewjs
@@ -25,7 +25,7 @@ dv.table(
 
 ## Files by Type
 
-### 📁 Module (355)
+### 📁 Module (356)
 - [[dashboard-canvas-DashboardCanvas]] *(1↖ 14↗)*
 - [[journal-view-JournalView]] *(1↖ 12↗)*
 - [[page-async]] *(0↖ 11↗)*
@@ -226,6 +226,7 @@ dv.table(
 - [[route-journal.test]] *(0↖ 2↗)*
 - [[runtime-migrate-policy.test]] *(0↖ 2↗)*
 - [[service-worker.test]] *(0↖ 2↗)*
+- [[setup-wizard-policy.test]] *(0↖ 2↗)*
 - [[sparkline.test]] *(0↖ 2↗)*
 - [[stale-indicator.test]] *(0↖ 2↗)*
 - [[tool-card.test]] *(0↖ 2↗)*
@@ -684,5 +685,5 @@ dv.table(
 - [[tooltip-Tooltip]] *(0↖ 1↗)*
 
 ### 📦 Package (1)
-- [[@hamafx-web]] *(556↖ 0↗)*
+- [[@hamafx-web]] *(557↖ 0↗)*
 

@@ -23,18 +23,18 @@
  * registration. No server-level AI keys are required to boot the app.
  *
  * This wizard:
- *   1. Checks prerequisites (Node, pnpm, Git, Docker)
- *   2. Helps choose a setup mode (Local Dev vs Docker)
- *   3. Explains the BYOK model and lists supported providers
+ *   1. Checks available prerequisites (Node, package manager, Docker)
+ *   2. Helps choose a setup mode (Simple vs Full)
+ *   3. Explains the BYOK model and lists all supported providers
  *   4. Collects optional market data provider keys (env-level)
  *   5. Generates secrets & writes config (BYOK_ENABLED=1)
  *   6. Installs dependencies and offers to start the app
  *
- * Usage:  pnpm setup   (or: node scripts/setup.mjs)
+ * Usage:  pnpm setup   (or: corepack pnpm setup / node scripts/setup.mjs)
  */
 
-import { execSync, spawn } from 'node:child_process';
-import { existsSync, writeFileSync, readFileSync, appendFileSync } from 'node:fs';
+import { execFileSync, execSync, spawn } from 'node:child_process';
+import { chmodSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { createInterface } from 'node:readline/promises';
 import { stdin, stdout } from 'node:process';
 import { resolve, dirname } from 'node:path';
@@ -161,13 +161,140 @@ function stepHeader(title) {
 // ── Utility ──────────────────────────────────────────────────────────────────
 
 function hasBin(cmd) {
-  try { execSync(`command -v ${cmd}`, { stdio: 'ignore' }); return true; }
-  catch { return false; }
+  try {
+    if (process.platform === 'win32') {
+      execFileSync('where', [cmd], { stdio: 'ignore' });
+    } else {
+      execSync(`command -v ${cmd}`, { stdio: 'ignore' });
+    }
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 function getVersion(cmd, flag = '--version') {
-  try { return execSync(`${cmd} ${flag}`, { encoding: 'utf-8' }).trim(); }
+  try { return execFileSync(cmd, [flag], { encoding: 'utf-8' }).trim(); }
   catch { return null; }
+}
+
+function canUseDocker() {
+  if (!hasBin('docker')) return false;
+  try {
+    execFileSync('docker', ['compose', 'version'], { stdio: 'ignore', timeout: 5_000 });
+    execFileSync('docker', ['info'], { stdio: 'ignore', timeout: 5_000 });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function waitForDocker(timeoutMs = 60_000) {
+  const started = Date.now();
+  while (Date.now() - started < timeoutMs) {
+    if (canUseDocker()) return true;
+    await new Promise((resolvePromise) => setTimeout(resolvePromise, 2_000));
+  }
+  return false;
+}
+
+function getPackageManager() {
+  if (hasBin('pnpm')) return { command: 'pnpm', prefix: [] };
+  if (hasBin('corepack')) return { command: 'corepack', prefix: ['pnpm'] };
+  return null;
+}
+
+function runPackageManager(args, options = {}) {
+  const manager = getPackageManager();
+  if (!manager) throw new Error('pnpm or Corepack was not found');
+  return execFileSync(manager.command, [...manager.prefix, ...args], options);
+}
+
+function packageManagerLabel() {
+  const manager = getPackageManager();
+  return manager?.command === 'corepack' ? 'corepack pnpm' : 'pnpm';
+}
+
+function upsertEnvFile(filePath, values) {
+  const existing = existsSync(filePath) ? readFileSync(filePath, 'utf8') : '';
+  const lines = existing ? existing.split(/\r?\n/) : [];
+
+  for (const [key, value] of Object.entries(values)) {
+    if (/\r|\n/.test(String(value))) throw new Error(`${key} contains an invalid line break`);
+    const index = lines.findIndex((line) => line.startsWith(`${key}=`));
+    const nextLine = `${key}=${value}`;
+    if (index >= 0) lines[index] = nextLine;
+    else lines.push(nextLine);
+  }
+
+  const content = `${lines.filter((line, index) => index < lines.length - 1 || line !== '').join('\n').replace(/\n+$/, '')}\n`;
+  writeFileSync(filePath, content, { mode: 0o600 });
+  chmodSync(filePath, 0o600);
+}
+
+function randomHex(bytes) {
+  return randomBytes(bytes).toString('hex');
+}
+
+function ensureDockerEnv(filePath) {
+  const defaults = {
+    POSTGRES_PASSWORD: randomHex(16),
+    BACKUP_INTERVAL_SECONDS: '86400',
+    BACKUP_RETENTION_DAYS: '7',
+    BACKUP_MAX_AGE_SECONDS: '172800',
+    LANGFUSE_NEXTAUTH_SECRET: randomHex(32),
+    LANGFUSE_SALT: randomHex(16),
+    AUTH_SECRET: randomHex(32),
+    NEXTAUTH_URL: 'http://localhost:3000',
+    CRON_SECRET: randomHex(16),
+    ENCRYPTION_SECRET: randomHex(32),
+    BYOK_ENABLED: '1',
+    MULTI_USER_ENABLED: '0',
+    REGISTRATION_MODE: 'owner-first',
+    HAMAFX_ENABLE_RLS: '0',
+  };
+  const existing = existsSync(filePath) ? readFileSync(filePath, 'utf8') : '';
+  const lines = existing ? existing.split(/\r?\n/) : [];
+  const missing = {};
+
+  for (const [key, value] of Object.entries(defaults)) {
+    const index = lines.findIndex((line) => line.startsWith(`${key}=`));
+    const current = index >= 0 ? lines[index].slice(key.length + 1) : '';
+    if (!current) missing[key] = value;
+  }
+
+  upsertEnvFile(filePath, missing);
+}
+
+
+function openBrowser(url) {
+  try {
+    if (process.platform === 'win32') {
+      spawn('cmd', ['/c', 'start', '', url], { detached: true, stdio: 'ignore' }).unref();
+    } else if (process.platform === 'darwin') {
+      spawn('open', [url], { detached: true, stdio: 'ignore' }).unref();
+    } else if (hasBin('xdg-open')) {
+      spawn('xdg-open', [url], { detached: true, stdio: 'ignore' }).unref();
+    } else {
+      info(`Open this address in your browser: ${url}`);
+    }
+  } catch {
+    info(`Open this address in your browser: ${url}`);
+  }
+}
+
+async function waitForApp(url, timeoutMs = 120_000) {
+  const started = Date.now();
+  while (Date.now() - started < timeoutMs) {
+    try {
+      const response = await fetch(url);
+      if (response.ok) return true;
+    } catch {
+      // The server is still starting.
+    }
+    await new Promise((resolvePromise) => setTimeout(resolvePromise, 2_000));
+  }
+  return false;
 }
 
 function maskKey(key) {
@@ -216,6 +343,7 @@ const BYOK_PROVIDERS_INFO = [
   { name: 'xAI (Grok)',       tier: 'Medium',  hint: 'xai-…',           url: 'https://console.x.ai',                                color: 'white' },
   { name: 'DeepSeek',         tier: 'Low',     hint: 'sk-…',            url: 'https://platform.deepseek.com/api_keys',              color: 'cyan' },
   { name: 'Google Vertex AI', tier: 'Medium',  hint: 'Service account',  url: 'https://console.cloud.google.com/vertex-ai',          color: 'sky' },
+  { name: 'IAMHC API',        tier: 'Low',     hint: 'sk-…',               url: 'https://api.iamhc.cn',                              color: 'lavender' },
 ];
 
 const MARKET_DATA_PROVIDERS = [
@@ -247,48 +375,33 @@ async function main() {
   rl = createInterface({ input: stdin, output: stdout });
 
   // ── Step 1: Prerequisites ──────────────────────────────────────────────
-  stepHeader('Checking prerequisites');
+  stepHeader('Checking what is available on this computer');
 
-  const checks = [
-    { name: 'Node.js', bin: 'node', minVersion: '20', installHint: 'https://nodejs.org/ (install v20+)' },
-    { name: 'pnpm', bin: 'pnpm', minVersion: '9', installHint: 'npm install -g pnpm  (or: corepack enable)' },
-    { name: 'Git', bin: 'git', minVersion: null, installHint: 'https://git-scm.com/' },
-  ];
+  const nodeVersion = getVersion('node');
+  const nodeMajor = nodeVersion?.match(/v?(\d+)/)?.[1];
+  const nodeOk = Boolean(nodeMajor && Number(nodeMajor) >= 20);
+  const packageManager = getPackageManager();
+  let dockerReady = canUseDocker();
 
-  let allOk = true;
-
-  for (const { name, bin, minVersion, installHint } of checks) {
-    if (hasBin(bin)) {
-      const ver = getVersion(bin);
-      if (minVersion && ver) {
-        const major = ver.match(/v?(\d+)/)?.[1];
-        if (major && Number(major) >= Number(minVersion)) {
-          ok(`${name} ${paint(ver, 'dim')}`);
-        } else {
-          warn(`${name} ${ver} — needs v${minVersion}+`);
-          console.log(`    ${paint('Upgrade:', 'dim')} ${installHint}`);
-          allOk = false;
-        }
-      } else {
-        ok(`${name} ${paint(ver ?? '', 'dim')}`);
-      }
-    } else {
-      fail(`${name} not found`);
-      console.log(`    ${paint('Install:', 'dim')} ${installHint}`);
-      allOk = false;
-    }
+  if (nodeOk) ok(`Node.js ${paint(nodeVersion ?? '', 'dim')}`);
+  else {
+    fail(`Node.js 20+ is required${nodeVersion ? ` (found ${nodeVersion})` : ''}`);
+    console.log(`    ${paint('Install:', 'dim')} https://nodejs.org/`);
   }
 
-  const hasDocker = hasBin('docker');
-  if (hasDocker) {
-    ok(`Docker ${paint(getVersion('docker') ?? '', 'dim')}`);
-  } else {
-    console.log(`  ${paint('○', 'gray')} Docker ${paint('not found (optional — needed for Docker mode)', 'dim')}`);
-  }
+  if (packageManager) ok(`${packageManagerLabel()} available`);
+  else console.log(`  ${paint('○', 'gray')} pnpm ${paint('not found (only needed for Local mode)', 'dim')}`);
 
-  if (!allOk) {
+  if (hasBin('git')) ok(`Git ${paint(getVersion('git') ?? '', 'dim')}`);
+  else console.log(`  ${paint('○', 'gray')} Git ${paint('not found (not needed when using a downloaded folder)', 'dim')}`);
+
+  if (dockerReady) ok(`Docker ${paint(getVersion('docker') ?? '', 'dim')} is running`);
+  else if (hasBin('docker')) warn('Docker is installed but not running — start Docker Desktop for Full mode');
+  else console.log(`  ${paint('○', 'gray')} Docker ${paint('not found (needed only for Full mode)', 'dim')}`);
+
+  if (!nodeOk) {
     line();
-    fail('Some prerequisites are missing. Install them and re-run: pnpm setup');
+    fail('Node.js 20 or newer is required. Install it, then run setup again.');
     rl.close();
     process.exit(1);
   }
@@ -315,40 +428,56 @@ async function main() {
     ['!', 'More resource usage', '~2GB RAM recommended'],
   ];
 
-  box('Local Dev (PGlite)', [
-    `${paint('Recommended for:', 'bold')} trying the app & contributing`,
+  box('Simple mode (lightweight)', [
+    `${paint('Recommended for:', 'bold')} trying the app quickly`,
     '',
     ...localFeatures.map(([icon, feat, desc]) =>
       `${icon === '✓' ? paint('✓', 'green') : paint('✗', 'red')}  ${feat.padEnd(28)} ${paint(desc, 'dim')}`
     ),
     '',
-    `${paint('Command:', 'bold')} pnpm dev:local`,
+    `${paint('What it does:', 'bold')} runs the app on this computer`,
   ], { color: 'cyan', minWidth: 54 });
 
   line();
 
-  box('Docker Compose (Full Features)', [
-    `${paint('Recommended for:', 'bold')} self-hosting & full features`,
+  box('Full mode (Docker)', [
+    `${paint('Recommended for:', 'bold')} a complete self-hosted install`,
     '',
     ...dockerFeatures.map(([icon, feat, desc]) =>
       `${icon === '✓' ? paint('✓', 'green') : icon === '!' ? paint('!', 'yellow') : paint('✗', 'red')}  ${feat.padEnd(28)} ${paint(desc, 'dim')}`
     ),
     '',
-    `${paint('Command:', 'bold')} docker compose up -d`,
+    `${paint('What it does:', 'bold')} runs the complete app automatically`,
   ], { color: 'teal', minWidth: 54 });
 
   line();
 
-  if (!hasDocker) {
-    info('Docker not detected — Local Dev mode is your only option.');
+  if (!dockerReady && hasBin('docker')) {
+    const retry = await rl.question(`  Docker Desktop is not ready. Wait up to 60 seconds for it? ${paint('[Y/n]', 'dim')} `);
+    if (retry.trim().toLowerCase() !== 'n') {
+      startSpinner('Waiting for Docker Desktop');
+      dockerReady = await waitForDocker();
+      stopSpinner(dockerReady ? 'Docker Desktop is ready' : null);
+    }
+  }
+
+  if (!dockerReady) {
+    info('Full mode is unavailable because Docker Desktop is not running.');
     selectedMode = 'local';
   } else {
-    const choice = await rl.question(`  Choose mode ${paint('[1=Local / 2=Docker]', 'dim')} (default: 1): `);
-    selectedMode = choice.trim() === '2' ? 'docker' : 'local';
+    const choice = await rl.question(`  Choose mode ${paint('[1=Simple / 2=Full]', 'dim')} (default: 2): `);
+    selectedMode = choice.trim() === '1' ? 'local' : 'docker';
+  }
+
+  if (selectedMode === 'local' && !packageManager) {
+    line();
+    fail('Simple mode needs pnpm or Corepack. Install Node.js with Corepack enabled, then run setup again.');
+    rl.close();
+    process.exit(1);
   }
 
   line();
-  console.log(`  ${paint('→', 'green')} Selected: ${paint(selectedMode === 'docker' ? 'Docker Compose' : 'Local Dev', 'bold', selectedMode === 'docker' ? 'teal' : 'cyan')}`);
+  console.log(`  ${paint('→', 'green')} Selected: ${paint(selectedMode === 'docker' ? 'Full mode (Docker)' : 'Simple mode', 'bold', selectedMode === 'docker' ? 'teal' : 'cyan')}`);
 
   // ── Step 3: BYOK Explanation ───────────────────────────────────────────
   stepHeader('AI Providers — Bring Your Own Key (BYOK)');
@@ -370,7 +499,7 @@ async function main() {
   }
 
   line();
-  info('You can add multiple providers and switch between them in the app.');
+  info(`You can add multiple providers from the ${BYOK_PROVIDERS_INFO.length} supported options and switch between them in the app.`);
   info('Free tier providers (Google Gemini, Groq) are great for trying it out.');
 
   // ── Step 4: Market Data Keys (Optional) ────────────────────────────────
@@ -401,11 +530,13 @@ async function main() {
       const provider = MARKET_DATA_PROVIDERS[idx - 1];
       const key = (await rl.question(`    ${provider.label} API key: `)).trim();
 
-      if (key) {
+      if (!key) {
+        warn(`No key for ${provider.label} — skipping`);
+      } else if (/\r|\n/.test(key)) {
+        warn(`${provider.label} key contains an invalid line break — skipping`);
+      } else {
         collectedMarketKeys[provider.envKey] = key;
         ok(`${provider.label} key saved ${paint(maskKey(key), 'dim')}`);
-      } else {
-        warn(`No key for ${provider.label} — skipping`);
       }
     }
   } else {
@@ -417,83 +548,17 @@ async function main() {
 
   if (selectedMode === 'local') {
     const envLocalPath = resolve(repoRoot, '.env.local');
-    let existing = '';
-    if (existsSync(envLocalPath)) {
-      existing = readFileSync(envLocalPath, 'utf-8');
-      info(`Existing .env.local found — merging new keys`);
-    }
-
-    const lines = [];
-
-    // Enable BYOK mode
-    if (!existing.includes('BYOK_ENABLED=')) {
-      lines.push('BYOK_ENABLED=1');
-    } else {
-      existing = existing.replace(/^BYOK_ENABLED=.*/m, 'BYOK_ENABLED=1');
-    }
-
-    // Write market data keys
-    for (const [key, val] of Object.entries(collectedMarketKeys)) {
-      if (!existing.includes(`${key}=`)) {
-        lines.push(`${key}=${val}`);
-      } else {
-        existing = existing.replace(new RegExp(`^${key}=.*$`, 'm'), `${key}=${val}`);
-      }
-    }
-
-    if (lines.length > 0) {
-      if (existing && !existing.endsWith('\n')) appendFileSync(envLocalPath, '\n');
-      appendFileSync(envLocalPath, lines.join('\n') + '\n');
-      ok(`Wrote ${lines.length} env var(s) to ${paint('.env.local', 'dim')}`);
-    } else if (existing) {
-      ok(`.env.local already configured ${paint('(no changes needed)', 'dim')}`);
-    }
-
-    ok(`BYOK mode enabled ${paint('(BYOK_ENABLED=1)', 'dim')}`);
+    const values = { BYOK_ENABLED: '1', ...collectedMarketKeys };
+    upsertEnvFile(envLocalPath, values);
+    ok(`Saved simple-mode settings to ${paint('.env.local', 'dim')}`);
     ok(`Auth & encryption secrets auto-generate to ${paint('.hamafx/dev-secrets.json', 'dim')} on first boot`);
   } else {
-    // Docker mode
-    const initScript = resolve(repoRoot, 'docker/init-secrets.sh');
-    if (existsSync(initScript)) {
-      try {
-        execSync(`bash "${initScript}"`, { stdio: 'pipe', cwd: repoRoot });
-        ok('Docker secrets generated via init-secrets.sh');
-      } catch {
-        info('init-secrets.sh: .env already exists — keeping it');
-      }
-    }
-
+    // Full mode: generate required settings in Node so Windows users do not
+    // need Bash or a separate shell script.
     const envPath = resolve(repoRoot, '.env');
-    let envExisting = '';
-    if (existsSync(envPath)) {
-      envExisting = readFileSync(envPath, 'utf-8');
-    }
-
-    const lines = [];
-
-    // Enable BYOK mode
-    if (!envExisting.includes('BYOK_ENABLED=')) {
-      lines.push('BYOK_ENABLED=1');
-    } else {
-      envExisting = envExisting.replace(/^BYOK_ENABLED=.*/m, 'BYOK_ENABLED=1');
-    }
-
-    // Write market data keys
-    for (const [key, val] of Object.entries(collectedMarketKeys)) {
-      if (!envExisting.includes(`${key}=`)) {
-        lines.push(`${key}=${val}`);
-      } else {
-        envExisting = envExisting.replace(new RegExp(`^${key}=.*$`, 'm'), `${key}=${val}`);
-      }
-    }
-
-    if (lines.length > 0) {
-      if (envExisting && !envExisting.endsWith('\n')) appendFileSync(envPath, '\n');
-      appendFileSync(envPath, lines.join('\n') + '\n');
-      ok(`Wrote ${lines.length} env var(s) to ${paint('.env', 'dim')}`);
-    }
-
-    ok(`BYOK mode enabled ${paint('(BYOK_ENABLED=1)', 'dim')}`);
+    ensureDockerEnv(envPath);
+    upsertEnvFile(envPath, { BYOK_ENABLED: '1', ...collectedMarketKeys });
+    ok(`Saved full-mode settings to ${paint('.env', 'dim')}`);
   }
 
   // ── Step 6: Install Dependencies ───────────────────────────────────────
@@ -502,13 +567,13 @@ async function main() {
   if (selectedMode === 'local') {
     startSpinner('Running pnpm install');
     try {
-      execSync('pnpm install --frozen-lockfile', { stdio: 'pipe', cwd: repoRoot });
+      runPackageManager(['install', '--frozen-lockfile'], { stdio: 'pipe', cwd: repoRoot });
       stopSpinner('Dependencies installed (frozen lockfile)');
     } catch {
       stopSpinner();
       startSpinner('Retrying without lockfile');
       try {
-        execSync('pnpm install', { stdio: 'pipe', cwd: repoRoot });
+        runPackageManager(['install'], { stdio: 'pipe', cwd: repoRoot });
         stopSpinner('Dependencies installed');
       } catch {
         stopSpinner();
@@ -528,7 +593,7 @@ async function main() {
   line();
 
   const summaryLines = [
-    `${paint('Mode:', 'bold')}           ${selectedMode === 'docker' ? 'Docker Compose' : 'Local Dev (PGlite)'}`,
+    `${paint('Mode:', 'bold')}           ${selectedMode === 'docker' ? 'Full mode (Docker)' : 'Simple mode'}`,
     `${paint('AI providers:', 'bold')}     ${paint('BYOK — add keys after registration', 'cyan')}`,
     `${paint('Market data:', 'bold')}      ${Object.keys(collectedMarketKeys).length || paint('none (optional)', 'dim')}`,
   ];
@@ -556,7 +621,7 @@ async function main() {
   line();
 
   if (selectedMode === 'local') {
-    console.log(`  ${paint('Start command:', 'bold')} ${paint('pnpm dev:local', 'green')}`);
+    console.log(`  ${paint('Start command:', 'bold')} ${paint(`${packageManagerLabel()} dev:local`, 'green')}`);
     console.log(`  ${paint('App URL:', 'bold')}       http://localhost:3000`);
     console.log(`  ${paint('Register:', 'bold')}      http://localhost:3000/register`);
     line();
@@ -571,17 +636,31 @@ async function main() {
 
       rl.close();
 
-      const child = spawn('pnpm', ['dev:local'], {
+      const manager = getPackageManager();
+      if (!manager) {
+        fail('The package manager is no longer available. Please restart setup.');
+        process.exit(1);
+      }
+      const child = spawn(manager.command, [...manager.prefix, 'dev:local'], {
         cwd: repoRoot,
         stdio: 'inherit',
         env: { ...process.env, HAMAFX_LOCAL_DEV: '1' },
       });
 
+      child.on('spawn', async () => {
+        info('Waiting for the app to become ready...');
+        if (await waitForApp('http://localhost:3000')) {
+          ok('The app is ready. Opening it in your browser.');
+          openBrowser('http://localhost:3000');
+        } else {
+          warn('The app is still starting. Open http://localhost:3000 in a moment.');
+        }
+      });
       child.on('exit', (code) => process.exit(code ?? 0));
     } else {
       line();
       console.log(`  ${paint('Run when ready:', 'dim')}`);
-      console.log(`  ${paint('pnpm dev:local', 'green')}`);
+      console.log(`  ${paint(`${packageManagerLabel()} dev:local`, 'green')}`);
       line();
       rl.close();
     }
@@ -607,16 +686,21 @@ async function main() {
         stdio: 'inherit',
       });
 
-      child.on('exit', (code) => {
+      child.on('exit', async (code) => {
         if (code === 0) {
           line();
-          ok('Docker stack is running!');
+          info('Waiting for the app to become ready...');
+          const ready = await waitForApp('http://localhost:3000', 180_000);
+          if (ready) {
+            ok('Full mode is ready. Opening it in your browser.');
+            openBrowser('http://localhost:3000');
+          } else {
+            warn('The containers started, but the app is still warming up. Open http://localhost:3000 in a moment.');
+          }
           line();
           console.log(`  ${paint('Web app:', 'bold')}    http://localhost:3000`);
-          console.log(`  ${paint('Langfuse:', 'bold')}   http://localhost:3001`);
-          line();
-          console.log(`  ${paint('Logs:', 'dim')}  docker compose logs -f app`);
-          console.log(`  ${paint('Stop:', 'dim')}  docker compose down`);
+          console.log(`  ${paint('Logs:', 'dim')}       docker compose logs -f app`);
+          console.log(`  ${paint('Stop:', 'dim')}       docker compose down`);
           line();
         } else {
           fail('Docker compose failed. Check the output above.');

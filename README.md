@@ -1,101 +1,438 @@
-<h1 align="center">HamaFX-Ai</h1>
+<div align="center">
 
-<p align="center">
-  <strong>The Open-Source, Single-User BYOK AI Trading Copilot.</strong><br>
-  <sub>Chat-driven · Mobile-first · Multi-Agent Deliberation · BYOK · Self-hostable</sub>
+# HamaFX-Ai
+
+### Your self-hosted AI copilot for gold and forex research.
+
+Chat with market data, technical structure, macro context, risk math, journals, alerts, and multi-agent analysis — using **your own AI provider keys** and your own infrastructure.
+
+<p>
+  <a href="https://github.com/HamaFx/HamaFX-Ai/actions/workflows/ci-fast.yml"><img src="https://img.shields.io/github/actions/workflow/status/HamaFx/HamaFX-Ai/ci-fast.yml?branch=main&style=flat-square&label=CI" alt="CI status"></a>
+  <a href="https://github.com/HamaFx/HamaFX-Ai/blob/main/LICENSE"><img src="https://img.shields.io/github/license/HamaFx/HamaFX-Ai?style=flat-square" alt="Apache 2.0 license"></a>
+  <a href="https://github.com/HamaFx/HamaFX-Ai/releases"><img src="https://img.shields.io/github/v/release/HamaFx/HamaFX-Ai?display_name=tag&style=flat-square&label=release" alt="Latest release"></a>
+  <a href="https://github.com/HamaFx/HamaFX-Ai"><img src="https://img.shields.io/github/stars/HamaFx/HamaFX-Ai?style=flat-square" alt="GitHub stars"></a>
 </p>
 
-<p align="center">
-  <a href="https://github.com/HamaFx/HamaFX-Ai/actions/workflows/ci-fast.yml">
-    <img src="https://img.shields.io/github/actions/workflow/status/HamaFx/HamaFX-Ai/ci-fast.yml?style=for-the-badge&logo=vitest&logoColor=white&label=CI" alt="CI Status">
-  </a>
-  <a href="https://github.com/HamaFx/HamaFX-Ai/actions/workflows/ci-slow.yml">
-    <img src="https://img.shields.io/github/actions/workflow/status/HamaFx/HamaFX-Ai/ci-slow.yml?style=for-the-badge&logo=github&logoColor=white&label=E2E" alt="E2E Status">
-  </a>
-  <a href="https://github.com/HamaFx/HamaFX-Ai/blob/main/LICENSE">
-    <img src="https://img.shields.io/github/license/HamaFx/HamaFX-Ai?style=for-the-badge&color=8a93a3" alt="License">
-  </a>
-  <br>
-  <a href="https://github.com/HamaFx/HamaFX-Ai">
-    <img src="https://img.shields.io/github/stars/HamaFx/HamaFX-Ai?style=for-the-badge&color=FFD700&logo=star&logoColor=white" alt="Stars">
-  </a>
-  <a href="https://github.com/HamaFx/HamaFX-Ai/forks">
-    <img src="https://img.shields.io/github/forks/HamaFx/HamaFX-Ai?style=for-the-badge&color=blue&logo=githubforks&logoColor=white" alt="Forks">
-  </a>
-  <a href="https://github.com/HamaFx/HamaFX-Ai/issues">
-    <img src="https://img.shields.io/github/issues/HamaFx/HamaFX-Ai?style=for-the-badge&color=orange" alt="Issues">
-  </a>
-  <a href="https://github.com/HamaFx/HamaFX-Ai/pulls">
-    <img src="https://img.shields.io/github/issues-pr/HamaFx/HamaFX-Ai?style=for-the-badge&color=blueviolet" alt="Pull Requests">
-  </a>
-  <br>
-  <a href="https://www.npmjs.com/package/pnpm">
-    <img src="https://img.shields.io/badge/pnpm-9.15.4-F69220?style=for-the-badge&logo=pnpm&logoColor=white" alt="pnpm">
-  </a>
-  <a href="https://nodejs.org">
-    <img src="https://img.shields.io/badge/Node.js-%E2%89%A520.11-339933?style=for-the-badge&logo=node.js&logoColor=white" alt="Node.js">
-  </a>
-  <a href="https://nextjs.org">
-    <img src="https://img.shields.io/badge/Next.js-16-black?style=for-the-badge&logo=next.js" alt="Next.js 16">
-  </a>
-  <a href="https://www.typescriptlang.org">
-    <img src="https://img.shields.io/badge/TypeScript-5.7-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript">
-  </a>
-  <a href="https://tailwindcss.com">
-    <img src="https://img.shields.io/badge/Tailwind-v4-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white" alt="Tailwind CSS v4">
-  </a>
+<p>
+  <a href="#-quick-start">Get started</a> ·
+  <a href="#-what-you-can-do">Explore features</a> ·
+  <a href="#-architecture">Architecture</a> ·
+  <a href="docs/11-self-hosting.md">Self-hosting guide</a> ·
+  <a href="CONTRIBUTING.md">Contribute</a>
 </p>
 
-<p align="center">
-  <a href="#-features">✨ Features</a> ·
-  <a href="#-quick-start">🚀 Quick Start</a> ·
-  <a href="#-architecture">🏗️ Architecture</a> ·
-  <a href="#-ai-agent--33-tools">🤖 AI Agent</a> ·
-  <a href="#-multi-agent-deliberation">🧠 Multi-Agent</a> ·
-  <a href="#-tech-stack">📦 Tech Stack</a> ·
-  <a href="#-documentation">📚 Docs</a> ·
-  <a href="#-self-hosting">🐳 Self-Hosting</a> ·
-  <a href="#-contributing">Contributing</a>
-</p>
+</div>
+
+> **OSS release boundary:** The public release is currently a **single-user, self-hosted preview**. BYOK is enabled by default. Shared multi-user PostgreSQL, open registration, and runtime RLS mode are intentionally disabled until tenant isolation is complete. See [the security boundary](#-important-oss-boundary).
+
+> **Trading disclaimer:** HamaFX-Ai is a research and workflow tool, not financial advice, a broker, or an automated trading system. Market data can be delayed or wrong. Always verify information independently and trade at your own risk.
 
 ---
 
-## ✨ Features
+## 🌌 What is HamaFX-Ai?
 
-HamaFX-Ai is an **autonomous AI trading companion that lives in your pocket**. Chat with it about gold (XAU/USD) and forex markets like you'd talk to a seasoned macro fund trader — it monitors live tick feeds, executes structural charting math, checks macroeconomic calendars, and drafts risk-verified trade plans.
+HamaFX-Ai turns a chat window into a market-research workspace for:
 
-| | Feature | What it does |
-|---|---------|-------------|
-| 💬 | **Chat-First Workflow** | Every feature — charting, alerts, journal, risk — is controllable through conversation. Deep-linked system prompts start targeted analyses instantly. |
-| 📊 | **TradingView Charting** | Interactive TradingView charts with symbol and timeframe controls. |
-| 🧠 | **Plan-Then-Act Reasoning** | Analytical queries generate a visible execution plan ("Thinking" pill) before tools are called — so you see *why* the agent is doing what it's doing. |
-| 🏛️ | **Multi-Agent Committee** | 5 specialist agents (Technical, Fundamental, Risk, Sentiment, Decision) evaluate in parallel and fuse into a consensus grade (A/B/C/D/F). |
-| 🔐 | **Bring Your Own Key (BYOK)** | Zero vendor lock-in. Connect Gemini, Claude, OpenAI, Groq, DeepSeek, Mistral, OpenRouter, xAI, or Vertex AI keys — encrypted at rest with **AES-256-GCM**. |
-| 📱 | **Progressive Web App** | Mobile-first, installable on iOS/Android. Sub-second loads, virtualized feeds, SWR caching, web push notifications, offline fallback. |
-| 🟢 | **Zero-Database Dev** | PGlite (embedded Postgres via WASM) boots the entire stack in <5 seconds. No database to install, no Docker required. |
-| 📡 | **Live Tick Pipeline** | BiQuote SignalR WebSocket + Binance WS → 1Hz tick buffer → 1m candle aggregation. |
-| 🔄 | **Provider Failover** | Health-aware failover across 8 market data providers with circuit breakers, adaptive throttling, and pinned primary sources. |
-| ⚡ | **Budget Guardrail** | Atomic `INSERT..ON CONFLICT` daily spend cap (`MAX_DAILY_USD`). Concurrent turns at 99% cap serialize correctly. |
-| 🛡️ | **Citation Enforcement** | Post-finish fact-check scans every assistant turn for unsupported price/event claims and flags them. |
-| 🤖 | **Telegram Bot** | 16 bot commands — alert, analyze, ask, calendar, chart, committee, news, price, positions, and more — with rate limiting and idempotency. |
+- **Gold:** `XAUUSD`
+- **Forex:** `EURUSD`, `GBPUSD`
+- **Your workflow:** analysis, risk planning, journaling, alerts, and review
 
----
+Instead of jumping between charts, indicators, news tabs, spreadsheets, and notes, you can ask one question and let the copilot gather structured context before answering.
 
-## 🚀 Quick Start
+```text
+You:    “Analyze XAUUSD on the 1H chart and tell me what would invalidate the idea.”
 
-### What You'll Need
+Agent:  1. Reads current price and candles
+        2. Computes indicators and market structure
+        3. Checks macro/news context when relevant
+        4. Runs risk and verification logic
+        5. Explains the result with citations and uncertainty
+```
 
-| Requirement | Version | Get it |
-|-------------|---------|--------|
-| **Node.js** | v20 or higher | [Download →](https://nodejs.org/) |
-| **pnpm** | v9 or higher | `npm install -g pnpm` |
-| **An AI API key** | Any provider | See [BYOK](#-what-is-byok-bring-your-own-key) below |
+HamaFX-Ai is designed to be **self-hosted first**: you control the deployment, the database, the encryption secret, and which AI provider receives your prompts.
 
-That's it. No database to install. No Docker required (unless you want it).
+<p align="center">
+  <img src="docs/assets/hamafx-login.png" alt="HamaFX-Ai login screen" width="100%">
+</p>
+
+<p align="center"><sub>The current interface uses a dark, data-first trading-terminal design.</sub></p>
 
 ---
 
-### Option 1: One-Command Setup (Recommended)
+## ✨ Why people use it
+
+|     | Capability                 | What it means in practice                                                                                |
+| --- | -------------------------- | -------------------------------------------------------------------------------------------------------- |
+| 💬  | **Chat-first research**    | Ask questions in plain language instead of assembling every analysis manually.                           |
+| 📈  | **Technical context**      | Candles, indicators, market structure, sessions, correlations, seasonality, and volatility.              |
+| 🌍  | **Macro context**          | News, economic calendar events, CFTC positioning, intermarket relationships, and sentiment.              |
+| 🧮  | **Risk math**              | Position sizing, stop/target distances, R-multiples, open-position health, and guardrails.               |
+| 🧠  | **Multi-agent analysis**   | Technical, fundamental, risk, and sentiment specialists can analyze a setup before a decision synthesis. |
+| 📝  | **Trading journal**        | Record trades, review decisions, compute statistics, and build durable memory from your process.         |
+| 🔔  | **Alerts**                 | Create one-shot price, indicator, and candle-close alerts through chat.                                  |
+| 📊  | **Interactive charts**     | Use TradingView charts alongside the conversational workflow.                                            |
+| 🔐  | **BYOK**                   | Bring keys from supported providers; credentials are encrypted at rest on your instance.                 |
+| 📱  | **PWA experience**         | Use the responsive web app on desktop or install it on a mobile device.                                  |
+| 🛡️  | **Operational guardrails** | Authentication, CSRF protection, rate limits, cost budgets, telemetry, retries, and citation checks.     |
+
+---
+
+## 🚀 Quick start
+
+The easiest path is the built-in setup wizard. It explains each choice and creates the configuration for you.
+
+### 1. Install the prerequisites
+
+You need:
+
+- [Node.js 20.11+](https://nodejs.org/)
+- [pnpm 9+](https://pnpm.io/installation) — or Node.js Corepack enabled
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/) only if you want **Full mode**
+
+### 2. Download the project
+
+You can clone it with Git or download the repository as a ZIP from GitHub.
+
+```bash
+git clone https://github.com/HamaFx/HamaFX-Ai.git
+cd HamaFX-Ai
+```
+
+### 3. Start the setup wizard
+
+```bash
+pnpm setup
+```
+
+The wizard offers two choices:
+
+| Mode       | Choose it when                          | What it provides                                                             |
+| ---------- | --------------------------------------- | ---------------------------------------------------------------------------- |
+| **Simple** | You want to try the app quickly         | Embedded PGlite database, no Docker, fast local startup                      |
+| **Full**   | You want the complete self-hosted stack | PostgreSQL + pgvector, worker, live pipeline, backups, and all core features |
+
+The wizard will:
+
+- Check your computer and explain anything missing.
+- Wait for Docker Desktop if it is still starting.
+- Generate secure local settings automatically.
+- Preserve existing environment settings.
+- Keep AI keys out of the terminal setup flow.
+- Start the app and wait for it to become healthy.
+- Open the app in your browser when possible.
+
+### 4. Create your owner account
+
+When the app opens:
+
+1. Register the first account.
+2. Complete the onboarding flow.
+3. Add an AI provider key in the app under **Settings → API Keys**.
+4. Start with a question such as:
+
+```text
+“What is the current XAUUSD price, and what technical context should I check next?”
+```
+
+Your AI key is encrypted at rest using your instance's `ENCRYPTION_SECRET`. It is sent to the selected provider only when the app uses that provider; HamaFX-Ai does not provide a shared maintainer key in the OSS setup.
+
+### Manual commands
+
+```bash
+# Simple mode
+pnpm install
+pnpm dev:local
+
+# Full mode — Docker Desktop must be running
+./docker/init-secrets.sh
+docker compose up -d --build
+
+# Open the app
+# http://localhost:3000
+```
+
+For detailed deployment, updates, backups, restore, reverse proxy, and troubleshooting instructions, see the [self-hosting guide](docs/11-self-hosting.md).
+
+---
+
+## 🔑 Bring Your Own Key (BYOK)
+
+HamaFX-Ai does not bundle AI access. You bring the provider account and pay the provider directly, where applicable.
+
+### Supported AI providers
+
+| Provider                                                       | Best suited for                   | Pricing note                             |
+| -------------------------------------------------------------- | --------------------------------- | ---------------------------------------- |
+| [Google Gemini](https://aistudio.google.com/apikey)            | Fast general analysis and vision  | Free and paid options vary by model      |
+| [Google Vertex AI](https://console.cloud.google.com/vertex-ai) | Google Cloud deployments          | Usage billed through Google Cloud        |
+| [Anthropic](https://console.anthropic.com/settings/keys)       | Reasoning and analysis            | Paid provider                            |
+| [OpenAI](https://platform.openai.com/api-keys)                 | General-purpose and vision models | Paid provider                            |
+| [Groq](https://console.groq.com/keys)                          | Fast, low-latency inference       | Free and paid options vary               |
+| [Mistral](https://console.mistral.ai/api-keys)                 | European provider option          | Free and paid options vary               |
+| [OpenRouter](https://openrouter.ai/keys)                       | Access to multiple model families | Provider/model dependent                 |
+| [xAI](https://console.x.ai)                                    | Grok reasoning and agentic tools  | Paid provider                            |
+| [DeepSeek](https://platform.deepseek.com/api_keys)             | Low-cost reasoning                | Provider pricing applies                 |
+| IAMHC API                                                      | Aggregated multi-model access     | Check IAMHC terms and pricing before use |
+
+> Provider names, models, and capabilities change over time. Treat the in-app catalog and each provider's official documentation as the source of truth.
+
+### What BYOK does — and does not — mean
+
+- **You control billing:** HamaFX-Ai does not pay for your model usage in self-hosted mode.
+- **You control storage:** keys are encrypted in your database using your `ENCRYPTION_SECRET`.
+- **You control deployment:** run locally, on your own server, or with Docker.
+- **The server still handles requests:** a self-hosted HamaFX-Ai instance must access the key to call the selected provider. Protect the server, database, backups, and encryption secret accordingly.
+- **Never commit secrets:** keep `.env`, `.env.local`, `.hamafx/`, provider keys, database URLs, and service-account files out of Git.
+
+---
+
+## 🧭 What you can do
+
+### Ask questions naturally
+
+```text
+“Compare the technical bias on XAUUSD and EURUSD.”
+“Show me the London session range.”
+“What macro events could affect gold today?”
+“Calculate position size for a $10,000 account risking 0.5%.”
+“Review my last five journal entries.”
+“Set an alert if XAUUSD closes above yesterday’s high.”
+```
+
+### Use 32 focused AI tools
+
+The agent routes work to typed tools instead of relying on free-form model guesses.
+
+<details>
+<summary><strong>View the tool catalogue</strong></summary>
+
+| Area                              | Tools                                                                                                                                               |
+| --------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Live market data**              | `get_price`, `get_candles`, `get_indicators`, `get_market_structure`, `get_session_levels`                                                          |
+| **Technical analysis**            | `analyze_technical`, `annotate_chart`, `forecast_volatility`, `replay_setup`                                                                        |
+| **Macro and cross-market**        | `get_news`, `get_calendar`, `get_cot`, `get_correlation`, `get_intermarket`, `get_intermarket_resonance`, `get_seasonality`, `get_social_sentiment` |
+| **Risk and verification**         | `compute_risk`, `compute_position_health`, `verify_call`, `get_portfolio_snapshot`                                                                  |
+| **Journal and memory**            | `log_journal`, `get_journal_stats`, `search_knowledge`, `summarize_thread`                                                                          |
+| **Actions and sharing**           | `set_alert`, `share_snapshot`                                                                                                                       |
+| **Research modes and operations** | `analyze_fundamental`, `analyze_chart_image`, `convene_committee`, `get_system_diagnostics`, `run_system_action`                                    |
+
+The exact catalogue is maintained in [`docs/knowledge/ai.json`](docs/knowledge/ai.json).
+
+</details>
+
+### Use multi-agent deliberation when a question deserves it
+
+The committee can run specialist perspectives in parallel:
+
+```mermaid
+flowchart LR
+    Q[Your question] --> R[Domain router]
+    R --> T[Technical]
+    R --> F[Fundamental]
+    R --> Risk[Risk]
+    R --> S[Sentiment]
+    T --> D[Decision synthesis]
+    F --> D
+    Risk --> D
+    S --> D
+    D --> A[Structured answer]
+```
+
+The risk perspective can veto unsafe recommendations, while the final synthesis explains where the specialists agree or disagree. It is decision support — not an autonomous trading signal.
+
+---
+
+## 🧱 Simple mode vs Full mode
+
+|                          | Simple mode                    | Full mode                 |
+| ------------------------ | ------------------------------ | ------------------------- |
+| Database                 | Embedded PGlite                | PostgreSQL 16 + pgvector  |
+| Docker                   | Not required                   | Required                  |
+| Web app                  | ✅                             | ✅                        |
+| AI chat                  | ✅                             | ✅                        |
+| Journal and alerts       | ✅                             | ✅                        |
+| Technical tools          | ✅                             | ✅                        |
+| Vector search / RAG      | Unavailable in Simple mode     | ✅                        |
+| Worker and live pipeline | Not included                   | ✅                        |
+| Automated backups        | Not included                   | ✅                        |
+| Langfuse observability   | Not included                   | Optional profile          |
+| Best for                 | Trying, learning, contributing | Long-running self-hosting |
+
+Simple mode is intentionally lightweight. Full mode is the recommended choice when you want the complete self-hosted product rather than a local preview.
+
+---
+
+## 🔒 Important OSS boundary
+
+This public repository is intentionally conservative about multi-user hosting.
+
+### Supported today
+
+- Single-user self-hosted instances.
+- Owner-first registration.
+- BYOK with encrypted credentials.
+- Explicit user ownership checks in application queries.
+- Local Simple mode with PGlite.
+- Full Docker mode with PostgreSQL and the worker.
+
+### Not enabled in this OSS release
+
+- Shared multi-user PostgreSQL deployments.
+- Open registration for an instance shared by unrelated users.
+- Runtime `MULTI_USER_ENABLED=1`.
+- Runtime `HAMAFX_ENABLE_RLS=1`.
+- Hosted billing and maintainer-operated SaaS infrastructure.
+
+The environment validation and runtime migration guard fail closed when unsupported shared modes are requested. This is a deliberate safety boundary, not a claim that tenant isolation is complete.
+
+Read the [security documentation](docs/10-security.md) and [OSS release checklist](docs/14-oss-release-checklist.md) before exposing an instance to the internet.
+
+---
+
+## 🏗️ Architecture
+
+At a high level, HamaFX-Ai is a Next.js PWA plus a persistent worker, organized as a pnpm/Turborepo monorepo.
+
+```mermaid
+flowchart TB
+    Browser[Browser / PWA]
+    Web[apps/web\nNext.js App Router\nAuth · Chat · API · UI]
+    AI[packages/ai\nAgent · Tools · Routing\nMemory · Cost guards]
+    Data[packages/data\nMarket adapters\nFailover · Caching]
+    DB[packages/db\nDrizzle · PostgreSQL\nPGlite · Migrations]
+    Shared[packages/shared\nSchemas · Env · Encryption]
+    Worker[apps/worker\nLive ticks · Candles\nJobs · Scheduler]
+    Providers[AI + market providers]
+
+    Browser --> Web
+    Web --> AI
+    Web --> Data
+    Web --> DB
+    Worker --> Data
+    Worker --> DB
+    AI --> Data
+    AI --> DB
+    Web --> Shared
+    AI --> Shared
+    Data --> Shared
+    DB --> Shared
+    AI --> Providers
+    Data --> Providers
+```
+
+### Repository map
+
+```text
+apps/
+├── web/                  Next.js app, PWA, auth, chat UI, API routes
+└── worker/               Persistent worker for ticks, candles, and scheduled jobs
+
+packages/
+├── ai/                   Agent runtime, 32 tools, routing, memory, multi-agent flow
+├── data/                 Market data adapters, providers, failover, caching
+├── db/                   Drizzle schema, PostgreSQL/PGlite clients, migrations
+├── indicators/           Technical indicators and market-structure calculations
+├── shared/               Zod schemas, environment validation, encryption, shared types
+├── config/               Shared TypeScript, ESLint, and formatting configuration
+└── test-utils/           Factories, mocks, and shared Vitest helpers
+
+docs/                     Procedural guides and generated architecture knowledge
+scripts/                  Setup wizard, local development, build and release helpers
+tools/                    Architecture Explorer and Lighthouse tooling
+```
+
+The dependency direction is intentionally layered:
+
+```text
+config → shared → db + indicators → data → ai → web + worker
+```
+
+For a generated graph of the live codebase, see the [Architecture Explorer](docs/architecture-explorer.html) or the machine-readable [knowledge artifacts](docs/knowledge/).
+
+---
+
+## 🛡️ Security and privacy posture
+
+The project includes security controls appropriate for a self-hosted application, including:
+
+- NextAuth/Auth.js credentials authentication with JWT sessions.
+- bcrypt password hashing and account lockout.
+- Optional TOTP two-factor authentication.
+- CSRF protection and a request-boundary security proxy.
+- AES-256-GCM encryption for BYOK and other protected secrets at rest.
+- Strict user ownership scoping in data access paths.
+- Rate limits, daily AI budget limits, and tool-loop limits.
+- Structured logs with secret redaction.
+- Optional Sentry and Langfuse integrations rather than mandatory telemetry.
+- Dependency, CodeQL, build, unit-test, and E2E workflows in GitHub Actions.
+
+No security system is perfect. Please report vulnerabilities privately according to [SECURITY.md](SECURITY.md), not in a public issue.
+
+---
+
+## 🧪 Development and testing
+
+### Local development
+
+```bash
+pnpm setup                 # Beginner-friendly setup wizard
+pnpm dev:local             # Simple mode with PGlite
+pnpm dev                   # Turbo development command
+```
+
+### Quality checks
+
+```bash
+pnpm lint
+pnpm typecheck
+pnpm turbo run test -- --run
+pnpm turbo run build
+pnpm --filter @hamafx/web bundle-size:check
+```
+
+### End-to-end tests
+
+```bash
+pnpm --filter @hamafx/web exec playwright test
+```
+
+### AI evaluation harness
+
+The repository includes manual AI acceptance cases that verify expected and forbidden tool behavior:
+
+```bash
+pnpm --filter @hamafx/ai eval -- \
+  --base-url http://localhost:3000 \
+  --cookie "authjs.session-token=..." \
+  --cases
+```
+
+See the [testing guide](docs/09-testing.md) for test patterns, database isolation, provider mocking, E2E coverage, and CI behavior.
+
+---
+
+## 📚 Documentation map
+
+| If you want to…                       | Start here                                                                                                 |
+| ------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| Install without guessing              | [`pnpm setup`](#-quick-start) and [First-run setup](docs/13-first-run-setup.md)                            |
+| Run the complete Docker stack         | [Self-hosting guide](docs/11-self-hosting.md)                                                              |
+| Understand the system                 | [Architecture guide](docs/01-architecture.md) and [Architecture Explorer](docs/architecture-explorer.html) |
+| Understand AI tools and flows         | [AI knowledge artifact](docs/knowledge/ai.json)                                                            |
+| Understand security and secrets       | [Security guide](docs/10-security.md)                                                                      |
+| Run or write tests                    | [Testing guide](docs/09-testing.md)                                                                        |
+| Deploy the maintainer-hosted topology | [Deployment guide](docs/08-deployment.md)                                                                  |
+| Contribute code                       | [CONTRIBUTING.md](CONTRIBUTING.md)                                                                         |
+| Report a vulnerability                | [SECURITY.md](SECURITY.md)                                                                                 |
+| See project changes                   | [CHANGELOG.md](CHANGELOG.md)                                                                               |
+
+Generated documentation is produced by the [Architecture Explorer](tools/architecture-explorer/). Update generator source rather than hand-editing generated artifacts.
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome — whether that means fixing a bug, improving docs, adding a provider, writing tests, or making setup easier for the next person.
 
 ```bash
 git clone https://github.com/HamaFx/HamaFX-Ai.git
@@ -103,482 +440,53 @@ cd HamaFX-Ai
 pnpm setup
 ```
 
-The interactive wizard handles everything for you:
-
-```
-  ┌─────────────────────────────────────────────────────┐
-  │         HamaFX-Ai  —  Setup Wizard                  │
-  └─────────────────────────────────────────────────────┘
-
-  [1/6] ✅ Checking prerequisites      → Node, pnpm, Git, Docker
-  [2/6] 🤔 Choose setup mode           → Local Dev or Docker?
-  [3/6] 🔑 BYOK explanation            → Lists all 9 AI providers
-  [4/6] 📊 Market data keys (optional) → Finnhub, Marketaux, FRED, etc.
-  [5/6] 🔐 Generating secrets          → Auto-generates all required keys
-  [6/6] 📦 Installing dependencies     → Then offers to start the app
-```
-
-When the wizard finishes, it offers to start the app immediately. Say yes, and you're running.
-
----
-
-### Option 2: Manual Setup
-
-<details>
-<summary><b>🖥️ Local Dev — Fastest, no Docker needed</b></summary>
-
-Best for: **trying the app, developing, contributing**
+Before opening a pull request:
 
 ```bash
-git clone https://github.com/HamaFx/HamaFX-Ai.git
-cd HamaFX-Ai
-pnpm install
-echo 'BYOK_ENABLED=1' >> .env.local
-pnpm dev:local
+pnpm lint
+pnpm typecheck
+pnpm turbo run test -- --run
+pnpm turbo run build
 ```
 
-Then open **http://localhost:3000**
+Please read [CONTRIBUTING.md](CONTRIBUTING.md) for architecture rules, database migration requirements, testing patterns, naming conventions, and the release workflow.
 
-What works:
-- ✅ Full web app, AI chat, charts, journal, alerts
-- ✅ All 33 AI tools, multi-agent deliberation
-- ✅ Hot reload — changes appear instantly
+Good first contribution areas:
 
-What doesn't work (needs Docker):
-- ❌ Vector search / RAG memory (pgvector not in PGlite)
-- ❌ Live market data stream (no worker process)
-- ❌ Langfuse observability UI
-
-All auth and encryption secrets are **auto-generated** on first boot — you don't need to create any.
-
-</details>
-
-<details>
-<summary><b>🐳 Docker — All features enabled</b></summary>
-
-Best for: **self-hosting, full features, production-like setup**
-
-```bash
-git clone https://github.com/HamaFx/HamaFX-Ai.git
-cd HamaFX-Ai
-./docker/init-secrets.sh          # generates random passwords & secrets
-docker compose up -d              # starts a secure single-user stack
-# Optional local Langfuse: docker compose --profile observability up -d
-```
-
-Then open **http://localhost:3000**
-
-| Service | Port | What it does |
-|---------|------|-------------|
-| **Web app** | 3000 | The main HamaFX-Ai application |
-| **Langfuse** | 3001 | AI observability dashboard (optional) |
-| **Postgres** | 5432 | Database with pgvector for vector search |
-| **Worker** | 8081 | Background jobs, live market data, crons |
-
-First build takes 3-5 minutes. Subsequent starts are much faster.
-
-</details>
+- Improve onboarding and setup messages.
+- Add tests for providers, tools, and edge cases.
+- Improve mobile accessibility and responsive behavior.
+- Add documentation and troubleshooting examples.
+- Improve the Simple-mode experience.
 
 ---
 
-### Which Mode Should I Choose?
+## 🗺️ Current direction
 
-| | Local Dev | Docker |
-|---|---|---|
-| **Best for** | Trying it out, developing | Self-hosting, full features |
-| **Needs Docker** | No | Yes |
-| **Startup time** | ~10 seconds | ~3-5 minutes (first build) |
-| **RAM usage** | ~500MB | ~2GB |
-| **Vector search (RAG)** | ❌ | ✅ |
-| **Live market data** | ❌ | ✅ |
-| **Langfuse observability** | ❌ | ✅ |
-| **Hot reload** | ✅ | ❌ |
+The open-source roadmap is focused on making self-hosting safer and easier:
 
-**New here?** Start with **Local Dev** (`pnpm setup` → choose option 1). You can always switch to Docker later.
+- ✅ BYOK-first single-user release boundary.
+- ✅ Beginner-oriented setup wizard with Simple and Full modes.
+- ✅ Docker health checks, local backups, and restore validation.
+- ✅ Typed AI tools, model routing, cost guardrails, and multi-agent analysis.
+- 🔄 More polished cross-platform installation and desktop packaging.
+- 🔄 Broader tenant-isolation coverage before shared mode is enabled.
+- 🔄 More setup documentation, screenshots, and community examples.
 
----
-
-### 🔑 What is BYOK? (Bring Your Own Key)
-
-HamaFX-Ai doesn't include AI keys. You bring your own — it's your key, your bill, your data.
-
-**How it works:**
-1. Get an API key from any provider below (some are free)
-2. Start the app and register an account
-3. The **onboarding wizard** walks you through adding your key
-4. Your key is **encrypted at rest** (AES-256-GCM) and never leaves your device
-
-**Supported AI providers:**
-
-| Provider | Cost | Key format | Get a key |
-|----------|------|------------|-----------|
-| **Google Gemini** | Free tier | `AIza…` | [Get key →](https://aistudio.google.com/apikey) |
-| **Groq** | Free tier | `gsk_…` | [Get key →](https://console.groq.com/keys) |
-| **DeepSeek** | Low cost | `sk-…` | [Get key →](https://platform.deepseek.com/api_keys) |
-| **Mistral** | Low cost | `…` | [Get key →](https://console.mistral.ai/api-keys) |
-| **OpenAI** | Medium cost | `sk-…` | [Get key →](https://platform.openai.com/api-keys) |
-| **Anthropic** | Medium cost | `sk-ant-…` | [Get key →](https://console.anthropic.com/settings/keys) |
-| **OpenRouter** | Medium cost | `sk-or-…` | [Get key →](https://openrouter.ai/keys) |
-| **xAI (Grok)** | Medium cost | `xai-…` | [Get key →](https://console.x.ai) |
-| **Google Vertex AI** | Medium cost | Service account | [Get key →](https://console.cloud.google.com/vertex-ai) |
-
-> [!TIP]
-> **Just want to try it?** Get a free Google Gemini key — it takes 30 seconds and costs nothing.
-
-You can add multiple providers and switch between them in **Settings → API Keys**.
+Hosted multi-user billing is a separate maintainer-operated product track and is not part of the public OSS runtime.
 
 ---
 
-### OSS release boundary
+## 📄 License
 
-This public release is a **single-user self-hosted preview**. It supports BYOK, encrypted local credentials, and owner-first registration. Shared PostgreSQL deployments, open registration, `MULTI_USER_ENABLED=1`, and `HAMAFX_ENABLE_RLS=1` are intentionally rejected until the complete tenant-isolation suite is finished. Do not use this OSS release as a shared hosted service.
+HamaFX-Ai is released under the [Apache License 2.0](LICENSE).
 
-### After Starting the App
+Third-party providers, market-data services, charting services, and AI models have their own terms, pricing, rate limits, and redistribution rules. Review those terms before using HamaFX-Ai commercially or redistributing data.
 
-The Docker quick start uses `BYOK_ENABLED=1`, `MULTI_USER_ENABLED=0`, `HAMAFX_ENABLE_RLS=0`, and `REGISTRATION_MODE=owner-first`. Create the single owner account, then add your AI provider key through onboarding or Settings → API Keys.
+<div align="center">
 
-① **Register** — Open http://localhost:3000/register and create an account
+**Built for better market research — not blind certainty.**
 
-② **Onboarding wizard** — Add your AI provider key (the wizard guides you through it)
+[⭐ Star the project](https://github.com/HamaFx/HamaFX-Ai) · [🐛 Report a bug](https://github.com/HamaFx/HamaFX-Ai/issues/new/choose)
 
-③ **Start chatting** — Ask about markets, analyze charts, set alerts, log trades
-
-That's it. You're running HamaFX-Ai.
-
----
-
-### Troubleshooting
-
-| Problem | Solution |
-|---------|----------|
-| `pnpm: command not found` | Install it: `npm install -g pnpm` |
-| `Node.js version too old` | Install v20+ from [nodejs.org](https://nodejs.org/) |
-| `No AI API keys configured` | Add a key via Settings → API Keys (or the onboarding wizard) |
-| `Port 3000 already in use` | Another app is using it. Stop it or change the port: `PORT=3001 pnpm dev:local` |
-| `Docker compose failed` | Make sure Docker is running: `docker info` |
-
----
-
-## 🏗️ Architecture
-
-```
-+---------------------------------------------------------------------------+
-|                              BROWSER (PWA)                                 |
-|                                                                           |
-|  +-------------------+  +-------------------+  +-----------------------+  |
-|  | Chat UI           |  | Chart Engine      |  | Dashboard / Settings  |  |
-|  | (useChat stream)  |  | (TradingView +    |  | (TanStack Query/SWR)  |  |
-|  | 39 tool UI parts  |  |  TradingView charts | | 29 pages, 10 widgets |  |
-|  +--------+----------+  +--------+----------+  +----------+------------+  |
-+-----------+----------------------+-----------------------+---------------+
-            |                      |                       |
-            v                      v                       v
-+---------------------------------------------------------------------------+
-|                        VERCEL — apps/web (Next.js 16)                      |
-|                                                                           |
-|  +------------------+  +------------------+  +---------------------------+|
-|  | Edge Middleware  |  | /api/chat        |  | /api/market/*             ||
-|  | (auth + CSRF)    |  | runChat()        |  | @hamafx/data              ||
-|  | JWT + request-id |  | streamText + 33  |  | BiQuote->Finnhub failover ||
-|  +------------------+  | tools            |  +---------------------------+|
-|                        +--------+---------+  +---------------------------+|
-|  +------------------+           |            | /api/billing/*            ||
-|  | /api/cron/* (12) |  +--------+---------+  | /api/telegram/webhook    ||
-|  | Bearer-gated     |  | /api/auth/*      |  | /api/bot/*                ||
-|  +------------------+  | NextAuth v5      |  +---------------------------+|
-+---------------------------------------------------------------------------+
-            |                                          |
-+---------------------------------------------------------------------------+
-|                    GCE VM — hamafx-cron (e2-medium)                        |
-|                                                                           |
-|  +-------------------+  +-------------------+  +-----------------------+  |
-|  | SignalR Consumer  |  | Candle Aggregator |  | systemd timers        |  |
-|  | (BiQuote ticks)   |  | (1m OHLC from     |  | (8 heavy jobs +       |  |
-|  | TickBuffer -> DB  |  |  tick stream)     |  |  4 light cron pokes)  |  |
-|  +-------------------+  +-------------------+  +-----------------------+  |
-|  +-------------------+  +-------------------+  +-----------------------+  |
-|  | Binance WS        |  |                     |  |                     |  |
-|  | (crypto ticks)    |  | (gold ticks)      |  |                     |  |
-|  +-------------------+  +-------------------+  +-----------------------+  |
-+---------------------------------------------------------------------------+
-```
-
-### Monorepo Layout
-
-```
-HamaFX-Ai/
-├── apps/
-│   ├── web/              # Next.js 16 PWA (29 pages, ~92 API routes)
-│   └── worker/           # Node.js daemon (SignalR, ticks, jobs)
-├── packages/
-│   ├── ai/               # 33 tools, routing, multi-agent, memory, persistence
-│   ├── data/             # 8 market data providers, failover, caching
-│   ├── db/               # 50 tables across 35 schema files, 42 migrations, Postgres + PGlite
-│   ├── indicators/       # RSI, MACD, ATR, Bollinger, SMC structure
-│   ├── shared/           # Zod schemas, env validation, AES-256-GCM encryption
-│   ├── config/           # ESLint, Prettier, TypeScript configs
-│   └── test-utils/       # Test factories, mocks, vitest helpers
-├── docs/                 # Procedural docs + auto-generated knowledge/ and obsidian/ vault
-├── infra/cron-vm/        # GCE VM setup + 22 systemd timers + backup scripts
-├── tools/
-│   ├── architecture-explorer/  # 16 source files — auto-generates interactive graphs + artifacts
-│   └── lighthouse/       # Lighthouse performance audit runner
-└── scripts/              # dev.ts, predeploy-migrate.mjs
-```
-
-**Dependency chain:** `config` → `shared` → `db` + `indicators` → `data` → `ai` → `web` + `worker`
-
----
-
-## 🤖 AI Agent & 33 Tools
-
-The agent core (`packages/ai/`) uses Vercel AI SDK v5 with domain-based model routing, plan-then-act reasoning, citation enforcement, and a daily budget guardrail.
-
-### Routing
-
-```
-Incoming Turn
-     |
-     +-- Classify Intent
-     |     +--> Fundamental  (macro, news, events)      --> strong model
-     |     +--> Technical    (indicators, structure)    --> fast model
-     |     +--> Summary      (brief chats, status)      --> fast model
-     |     +--> Vision       (chart screenshots)        --> vision model
-     |     +--> Simple       (generic fallback)          --> lite model
-     |
-     +-- Execute Plan ("Thinking" pill)
-           +--> Assemble Context -> Pull Memory/RAG -> Run Verification
-```
-
-### The 33 Tools
-
-<details>
-<summary><b>🔍 Expand the full 33 tools matrix</b></summary>
-
-| Domain | Tools | Description |
-|:---|:---|:---|
-| **📈 Live Data** | `get_price` · `get_candles` · `get_indicators` · `get_market_structure` · `get_session_levels` | Real-time prices, historical candles, indicator math, SMC structures, session ranges |
-| **🔬 Analysis** | `analyze_technical` · `analyze_fundamental` · `analyze_chart_image` · `annotate_chart` | Technical scans, macro evaluations, vision chart reads, visual annotations |
-| **🌐 Macro & Vol** | `get_news` · `get_calendar` · `get_correlation` · `get_intermarket` · `get_seasonality` · `get_cot` · `forecast_volatility` · `get_intermarket_resonance` | News, economic events, cross-correlations, seasonality, CoT reports, volatility forecasts |
-| **⚖️ Risk & Backtest** | `compute_risk` · `compute_position_health` · `verify_call` · `replay_setup` | Position sizing, trade health, compliance verification, historical replay |
-| **🧠 Memory & RAG** | `search_knowledge` · `summarize_thread` | pgvector embedding search, conversation compaction |
-| **✏️ Write Actions** | `set_alert` · `log_journal` · `get_journal_stats` · `share_snapshot` | Alerts, journal entries, performance stats, shareable snapshots |
-| **🏛️ Deliberation** | `convene_committee` · `get_system_diagnostics` · `run_system_action` | Multi-agent committee, system health, verified actions |
-| **📊 Portfolio & Sentiment** | `get_portfolio_snapshot` · `get_social_sentiment` | Portfolio state, retail/social sentiment |
-
-</details>
-
-> Full, always-updated tool listing available in the [AI knowledge artifact](docs/knowledge/ai.json).
-
----
-
-## 🧠 Multi-Agent Deliberation
-
-Five specialist agents analyze in parallel, then a **Decision Agent** fuses their opinions into a final response with a consensus grade.
-
-| Mode | Agents | Latency | Cost | Use Case |
-|:---|:---|:---|:---|:---|
-| **Auto** | AI picks | varies | varies | Default — auto-detects from question |
-| **Single** | 1 (no committee) | ~2s | 1× | Quick questions |
-| **Quick** | Technical → Decision | ~3s | 1.5× | "What's the price of gold?" |
-| **Standard** | Technical + Fundamental → Decision | ~5s | 2.5× | "Analyze XAUUSD" |
-| **Full** | Technical + Fundamental + Risk + Sentiment → Decision | ~8s | 4× | "Should I buy XAUUSD now?" |
-
-```
-User Message
-     |
-     v
-  Mode Router
-     |
-     v
-+------------------------------------------------------------------+
-|  PARALLEL EXECUTION (Promise.all)                                 |
-|                                                                  |
-|  +----------+  +-------------+  +--------+  +-----------+        |
-|  |Technical |  |Fundamental  |  | Risk   |  | Sentiment |        |
-|  | Agent    |  | Agent       |  | Agent  |  | Agent     |        |
-|  +----+-----+  +------+------+  +---+----+  +-----+-----+        |
-|       |               |             |              |             |
-|       +-------+-------+------+------+--------------+             |
-|               |                                             |
-|               v                                             |
-|        +----------+                                         |
-|        | Decision |                                         |
-|        | Agent    |  --> Fused response + consensus grade   |
-|        +----------+                                         |
-+------------------------------------------------------------------+
-```
-
-**Key behaviors:**
-- **Veto enforcement** — Risk agent's `hardVeto` blocks buy recommendations
-- **Per-agent model overrides** — assign different models to each agent in Settings
-- **Opinion persistence** — all opinions saved to `agent_opinions` table
-- **Error fallback** — if a specialist fails, Decision proceeds with available opinions
-- **Budget guardrails** — cost estimated upfront, reserved before pipeline starts
-
----
-
-## 📦 Tech Stack
-
-| Layer | Technology |
-|-------|-----------|
-| Framework | Next.js 16 (App Router) + React 19 |
-| Language | TypeScript 5.7 (strict, `exactOptionalPropertyTypes`) |
-| Styling | Tailwind CSS v4 + shadcn/ui (Radix) |
-| AI | Vercel AI SDK v5 + 9-provider BYOK registry |
-| Database | Postgres (Supabase) + pgvector · Drizzle ORM |
-| Local DB | PGlite (embedded Postgres via WASM) |
-| Charts | TradingView Pro widget |
-| Worker | Node.js daemon (esbuild bundled) |
-| Scheduler | node-cron (Docker) / systemd timers (production) |
-| Monorepo | Turborepo 2 + pnpm 9.15.4 |
-| Testing | Vitest (228 test files) + Playwright E2E |
-| Observability | Sentry · Langfuse (self-hosted) · healthchecks.io |
-| CI/CD | GitHub Actions (7 workflows) + Changesets |
-| Container | Docker (multi-stage, Trivy-scanned, GHCR) |
-
----
-
-## 📚 Documentation
-
-The full documentation set lives in [`docs/`](docs/). Every claim is verified against the actual codebase.
-
-| Resource | Read when |
-|----------|-----------|
-| [**🏗️ Architecture Explorer**](/api/admin/architecture-explorer) | You want an interactive graph explorer with 17+ architecture views, filters, and search — always up to date |
-| [**📖 AGENTS.md**](AGENTS.md) | You're an AI coding agent about to work on this repo — canonical source of truth for the project |
-| [**📚 Knowledge Artifacts**](docs/knowledge/) | You need machine-readable JSON summaries of all API routes, DB tables, AI tools, and flows |
-| [**🗄️ Obsidian Vault**](docs/obsidian/) | You want to explore the architecture as an interactive Obsidian graph — open folder as vault |
-| [**⚠️ Self-Hosting**](docs/11-self-hosting.md) | You're deploying with Docker or self-hosting |
-| [**🔐 Security**](docs/10-security.md) | You're touching auth, encryption, RLS, billing, or compliance |
-| [**🧪 Testing**](docs/09-testing.md) | You need to run or write tests |
-| [**🚀 First-Run Setup**](docs/13-first-run-setup.md) | You need step-by-step setup instructions |
-| [**📦 Deployment**](docs/08-deployment.md) | You're operating the separate hosted topology |
-
-> 🆕 Most structural documentation is now **auto-generated** by the [Architecture Explorer](tools/architecture-explorer/). Run `cd tools/architecture-explorer && npx tsx src/index.ts --root ..` to regenerate from the live codebase.
-
-**Community docs:** [CONTRIBUTING.md](CONTRIBUTING.md) · [SECURITY.md](SECURITY.md) · [SUPPORT.md](SUPPORT.md) · [CHANGELOG.md](CHANGELOG.md) · [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) · [OSS release checklist](docs/14-oss-release-checklist.md)
-
----
-
-## 🐳 Self-Hosting
-
-HamaFX-Ai runs from **one codebase** — no forks or branches needed. You just set environment variables to control the mode.
-
-### Deployment Modes
-
-| Mode | Database | Best for | How to start |
-|------|----------|----------|-------------|
-| **Local Dev** | PGlite (embedded) | Trying it out, developing | `pnpm dev:local` |
-| **Docker** | Postgres 16 + pgvector | Single-user self-hosting with full core features | `docker compose up -d` |
-| **Hosted service** | Supabase Postgres | Maintainer-operated service (separate track) | Vercel + GCE VM |
-
-### Minimum Setup for Self-Hosting
-
-If you're using the **interactive setup wizard** (`pnpm setup`), you don't need to worry about these — the wizard handles them automatically.
-
-If you're setting up manually, here's what you need:
-
-<details>
-<summary><b>📋 Minimum env vars for self-hosting</b></summary>
-
-```bash
-# ── Required (auto-generated by pnpm setup or docker/init-secrets.sh) ──
-AUTH_SECRET=<32-byte hex>          # node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
-ENCRYPTION_SECRET=<32-byte hex>    # node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
-CRON_SECRET=<16+ chars>            # node -e "console.log(require('crypto').randomBytes(16).toString('hex'))"
-
-# ── Required for BYOK mode ──
-BYOK_ENABLED=1                     # Enable Bring Your Own Key (users add their own AI keys)
-
-# ── Recommended ──
-MULTI_USER_ENABLED=0               # Required: shared mode is not enabled in this OSS release
-REGISTRATION_MODE=owner-first       # owner-first or disabled
-HAMAFX_ENABLE_RLS=0                 # Required: RLS mode is not enabled in this OSS release
-NEXTAUTH_URL=http://localhost:3000 # Your deployment URL
-
-# ── AI keys are NOT required ──
-# Users add their own AI provider keys via Settings → API Keys after registration.
-# See the BYOK section above for supported providers.
-
-# ── Market data (optional, unlocks live news & economic data) ──
-FINNHUB_API_KEY=...
-MARKETAUX_API_KEY=...
-FRED_API_KEY=...
-```
-
-</details>
-
-> [!NOTE]
-> **Server operators** who want to provide a server-wide AI fallback (so users don't need their own keys) can set `AI_GATEWAY_API_KEY`, `GOOGLE_GENERATIVE_AI_API_KEY`, or `GOOGLE_VERTEX_*` in the server environment. These act as fallbacks when a user hasn't added their own key. Most self-hosters should use BYOK mode instead.
-
-📖 **Full self-hosting guide:** [docs/11-self-hosting.md](docs/11-self-hosting.md)
-📖 **Full env var reference:** [docs/13-first-run-setup.md](docs/13-first-run-setup.md)
-📖 **Architecture explorer (interactive):** [`/api/admin/architecture-explorer`](/api/admin/architecture-explorer) (admin login required)
-
----
-
-## 🔧 CLI Commands
-
-<details>
-<summary><b>🛠️ Expand command reference</b></summary>
-
-```bash
-# Development
-pnpm dev:local                    # Local dev (PGlite, zero setup)
-pnpm dev                          # Dev with remote DB (turbo run dev)
-
-# Testing
-pnpm turbo run test -- --run      # All packages
-pnpm --filter @hamafx/web test    # Single package
-pnpm --filter @hamafx/web exec playwright test  # E2E
-
-# Quality
-pnpm typecheck                    # TypeScript check
-pnpm lint                         # ESLint
-pnpm format                       # Prettier write
-pnpm turbo run build              # Build all
-
-# Database
-pnpm --filter @hamafx/db migrate:gen     # Generate migration
-pnpm --filter @hamafx/db migrate:apply   # Apply migrations
-pnpm --filter @hamafx/db seed:plans      # Seed billing plans
-
-# AI Evals (manual, requires running app)
-pnpm --filter @hamafx/ai eval -- --base-url http://localhost:3000 \
-  --cookie "authjs.session-token=..." --cases
-
-# Docker
-docker compose up -d              # Start the secure single-user stack
-# Optional Langfuse: docker compose --profile observability up -d
-docker compose logs -f app        # Follow web logs
-docker compose down               # Stop all
-```
-
-</details>
-
----
-
-## Contributing
-
-Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for the full guide — prerequisites, coding conventions, testing, how to add tools/tables/routes/providers, and the release process.
-
-| Resource | Link |
-|----------|------|
-| Contributing Guide | [CONTRIBUTING.md](CONTRIBUTING.md) |
-| Code of Conduct | [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) |
-| Security Policy | [SECURITY.md](SECURITY.md) |
-| Support | [SUPPORT.md](SUPPORT.md) |
-| Changelog | [CHANGELOG.md](CHANGELOG.md) |
-| Bug Report | [Issue Template](.github/ISSUE_TEMPLATE/bug_report.yml) |
-| Feature Request | [Issue Template](.github/ISSUE_TEMPLATE/feature_request.yml) |
-
----
-
-## ⚖️ License
-
-Licensed under the [Apache License, Version 2.0](LICENSE).
-
-<p align="center">
-  <sub>Built for gold and forex traders. Single-user, BYOK, and self-hostable.</sub>
-</p>
+</div>

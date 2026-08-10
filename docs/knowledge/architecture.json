@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "generated_at": "2026-08-10T03:19:37.851Z",
+  "generated_at": "2026-08-10T03:37:22.462Z",
   "project": {
     "name": "HamaFX-Ai",
     "rootPath": ".",
@@ -32,7 +32,7 @@
     {
       "name": "@hamafx/web",
       "path": "packages/web",
-      "nodeCount": 653,
+      "nodeCount": 654,
       "dependsOn": [
         "env-loader/loadE2eEnv",
         "admin-error-block/AdminErrorBlock",
@@ -820,13 +820,14 @@
   ],
   "byok_providers": [
     "google",
+    "vertex",
     "anthropic",
     "openai",
     "groq",
-    "deepseek",
-    "xai",
+    "mistral",
     "openrouter",
-    "github",
-    "cerebras"
+    "xai",
+    "deepseek",
+    "iamhc"
   ]
 }

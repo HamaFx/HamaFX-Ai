@@ -2,9 +2,9 @@
 type: package
 package: "@hamafx/web"
 path: "packages/web"
-incoming: 556
+incoming: 557
 outgoing: 0
-connections: 556
+connections: 557
 risk: high
 layer: package
 tags: [type/package, hamafx-web, layer/package, risk/high]
@@ -23,18 +23,18 @@ Package: @hamafx/web
 
 | | Count |
 |---|---|
-| Incoming dependencies | 556 |
+| Incoming dependencies | 557 |
 | Outgoing dependencies | 0 |
-| Total connections | 556 |
+| Total connections | 557 |
 | Risk level | **HIGH** |
 | Layer | `package` |
 | Package tag | `#hamafx-web` |
 
 
 
-### 📥 Depended On By (531)
+### 📥 Depended On By (532)
 [[eslint.config-config]] · [[next-env.d]] · [[next.config-withSentryConfig]] · [[playwright.config-defineConfig]] · [[postcss.config-default]] · [[d3.v7.min]] · [[bundle-size-guard]] · [[generate-icons]] · [[generate-sw-TEMPLATE_FILE]] · [[migrate-runtime]] · [[set-build-id-resolveGitSha]] · [[setup-telegram-webhook]] · [[sw.template]] · [[wait-for-db]] · [[admin-audit-table-AdminAuditTable]] · [[admin-cron-table-AdminCronTable]] · [[admin-dev-tools-AdminDevTools]] · [[admin-diagnostic-traces-AdminDiagnosticTraces]] · [[admin-error-block-AdminErrorBlock]] · [[admin-feature-flags-AdminFeatureFlags]]
-> ... and 511 more
+> ... and 512 more
 
 
 

@@ -1,6 +1,6 @@
 # HamaFX-Ai Architecture Knowledge Base
 
-> **Auto-generated**: 2026-08-10T03:19:37.851Z
+> **Auto-generated**: 2026-08-10T03:37:22.462Z
 > **Schema version**: 1.0
 > **Purpose**: AI-agent-optimized architecture overview for rapid project understanding
 
@@ -22,7 +22,7 @@
 | Package | Path | Type | Purpose |
 |---------|------|------|---------|
 | **root** | `root` | package | Package: root (3 nodes) |
-| **@hamafx/web** | `packages/web` | package | Package: @hamafx/web (653 nodes) |
+| **@hamafx/web** | `packages/web` | package | Package: @hamafx/web (654 nodes) |
 | **@hamafx/worker** | `packages/worker` | package | Package: @hamafx/worker (58 nodes) |
 | **docs** | `docs` | package | Package: docs (1 nodes) |
 | **infra** | `infra` | package | Package: infra (1 nodes) |
@@ -40,7 +40,7 @@
 
 **Dependency chain**: `config → shared → db + indicators → data → ai → web + worker`
 
-**Total**: 16 packages, **1419** architecture nodes
+**Total**: 16 packages, **1420** architecture nodes
 
 ## OSS Runtime Boundary
 
@@ -112,7 +112,7 @@ User Message → Rate Limit → Thread Check → Budget Guard → History Load �
 ### Model Routing
 - **Domains**: fundamental, technical, summary, vision, generic
 - **Tiers**: fast (technical/sentiment), mid (fundamental/risk), strong (decision)
-- **BYOK**: 9 providers (google, anthropic, openai, groq, deepseek, xai, openrouter, github, cerebras)
+- **BYOK**: 10 providers (google, vertex, anthropic, openai, groq, mistral, openrouter, xai, deepseek, iamhc)
 
 ## API Surface
 
@@ -149,7 +149,7 @@ User Message → Rate Limit → Thread Check → Budget Guard → History Load �
 
 - **Circular Dependencies**: 6
 - **Architecture Hotspots**: 50
-- **Dead Code / Orphans**: 1159
+- **Dead Code / Orphans**: 1162
 - **Shared Utilities**: 40
 - **Average Coupling**: 0.22
 - **Max Dependency Chain**: 3 hops

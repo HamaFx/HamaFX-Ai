@@ -220,13 +220,14 @@
   ],
   "byok_providers": [
     "google",
+    "vertex",
     "anthropic",
     "openai",
     "groq",
-    "deepseek",
-    "xai",
+    "mistral",
     "openrouter",
-    "github",
-    "cerebras"
+    "xai",
+    "deepseek",
+    "iamhc"
   ]
 }
