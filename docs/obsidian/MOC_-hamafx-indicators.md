@@ -2,14 +2,14 @@
 type: moc
 package: "@hamafx/indicators"
 nodes: 39
-totalIncoming: 102
+totalIncoming: 101
 totalOutgoing: 159
 tags: [moc, hamafx-indicators]
 ---
 
 # 📦 @hamafx/indicators
 
-> **Map of Content** · 39 files · 102 incoming + 159 outgoing = 261 connections
+> **Map of Content** · 39 files · 101 incoming + 159 outgoing = 260 connections
 
 ## DataviewJS — All Files in This Package
 ```dataviewjs
@@ -66,5 +66,5 @@ dv.table(
 - [[vitest.config-defineConfig]] *(0↖ 1↗)*
 
 ### 📦 Package (1)
-- [[@hamafx-indicators]] *(53↖ 0↗)*
+- [[@hamafx-indicators]] *(52↖ 0↗)*
 

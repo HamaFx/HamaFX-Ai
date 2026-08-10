@@ -1,15 +1,15 @@
 ---
 type: moc
 package: "@hamafx/data"
-nodes: 64
-totalIncoming: 201
-totalOutgoing: 230
+nodes: 65
+totalIncoming: 202
+totalOutgoing: 235
 tags: [moc, hamafx-data]
 ---
 
 # 📦 @hamafx/data
 
-> **Map of Content** · 64 files · 201 incoming + 230 outgoing = 431 connections
+> **Map of Content** · 65 files · 202 incoming + 235 outgoing = 437 connections
 
 ## DataviewJS — All Files in This Package
 ```dataviewjs
@@ -25,7 +25,7 @@ dv.table(
 
 ## Files by Type
 
-### 📁 Module (63)
+### 📁 Module (64)
 - [[provider-adapters-bootstrapMarketDataProviders]] *(0↖ 12↗)*
 - [[price-adapter.test]] *(0↖ 9↗)*
 - [[rest-fetchTick]] *(1↖ 8↗)*
@@ -44,6 +44,7 @@ dv.table(
 - [[failover-pinned.test]] *(0↖ 5↗)*
 - [[failover.test]] *(0↖ 5↗)*
 - [[storage.test]] *(0↖ 5↗)*
+- [[throttle-postgres.test]] *(0↖ 5↗)*
 - [[calendar-FetchCalendarOptions]] *(1↖ 4↗)*
 - [[failover-ProviderAttempt]] *(6↖ 4↗)*
 - [[map-toBiquoteSymbol]] *(2↖ 4↗)*
@@ -54,7 +55,7 @@ dv.table(
 - [[news-adapter.test]] *(0↖ 4↗)*
 - [[keys-CacheResource]] *(0↖ 3↗)*
 - [[memory-MemoryCache]] *(4↖ 3↗)*
-- [[throttle-ThrottleConfig]] *(11↖ 3↗)*
+- [[throttle-ThrottleConfig]] *(12↖ 3↗)*
 - [[ttl-TtlPolicy]] *(0↖ 3↗)*
 - [[map-toBinanceInterval]] *(1↖ 3↗)*
 - [[filter-assertSupportedSymbol]] *(2↖ 3↗)*

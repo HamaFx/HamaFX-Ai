@@ -2,18 +2,33 @@
   "name": "@hamafx/test-utils",
   "version": "0.0.0",
   "type": "module",
-  "main": "./src/index.ts",
-  "types": "./src/index.ts",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": ["dist"],
   "exports": {
-    ".": "./src/index.ts",
-    "./factories/*": "./src/factories/*.ts",
-    "./mocks/*": "./src/mocks/*.ts",
-    "./helpers/*": "./src/helpers/*.ts"
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./factories/*": {
+      "types": "./dist/factories/*.d.ts",
+      "import": "./dist/factories/*.js"
+    },
+    "./mocks/*": {
+      "types": "./dist/mocks/*.d.ts",
+      "import": "./dist/mocks/*.js"
+    },
+    "./helpers/*": {
+      "types": "./dist/helpers/*.d.ts",
+      "import": "./dist/helpers/*.js"
+    }
   },
   "scripts": {
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
+    "build": "tsc -p tsconfig.build.json && node ../../scripts/rewrite-dist-imports.mjs dist",
+    "prepublishOnly": "pnpm build",
     "clean": "rm -rf node_modules .turbo"
   },
   "dependencies": {

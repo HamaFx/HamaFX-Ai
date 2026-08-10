@@ -13,6 +13,7 @@ import { signIn } from '@/auth';
 import { createScopedLoggerWithContext } from '@/lib/logger';
 import { recordAuthEvent } from '@/lib/auth-anomaly';
 import { generateToken, hashToken } from '@/lib/auth-tokens';
+import { getServerEnv } from '@/lib/env';
 
 const BCRYPT_COST = 12;
 
@@ -143,6 +144,10 @@ export async function registerAction(prevState: unknown, formData: FormData) {
 
   const { name, email, password } = parsed.data;
   const normalizedEmail = email.trim().toLowerCase();
+  const registrationMode = getServerEnv().REGISTRATION_MODE;
+  if (registrationMode === 'disabled') {
+    return { error: 'Registration is disabled by the instance owner.' };
+  }
 
   // INFRA-08: Rate limit registrations per IP — 5 per minute per IP.
   // This prevents automated account-creation spam.
@@ -166,12 +171,20 @@ export async function registerAction(prevState: unknown, formData: FormData) {
 
   // STAB-10: Wrap the users + userSettings insert in a single transaction
   // so a partial failure (e.g. userSettings FK violation) rolls back the user row.
-  await createUserWithSettings({
-    id: newUserId,
-    email: normalizedEmail,
-    name,
-    hashedPassword,
-  });
+  try {
+    await createUserWithSettings({
+      id: newUserId,
+      email: normalizedEmail,
+      name,
+      hashedPassword,
+      initialUserOnly: registrationMode === 'owner-first',
+    });
+  } catch (error) {
+    if (error instanceof Error && error.message === 'INITIAL_USER_ALREADY_EXISTS') {
+      return { error: 'Registration is closed. Ask the instance owner to invite you.' };
+    }
+    throw error;
+  }
 
   // HIGH-04: Generate email verification token
   try {

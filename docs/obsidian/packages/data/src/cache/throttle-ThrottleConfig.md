@@ -2,9 +2,9 @@
 type: module
 package: "@hamafx/data"
 path: "packages/data/src/cache/throttle.ts"
-incoming: 11
+incoming: 12
 outgoing: 3
-connections: 14
+connections: 15
 risk: low
 layer: core
 tags: [type/module, hamafx-data, layer/core]
@@ -23,9 +23,9 @@ Module: packages/data/src/cache/throttle.ts
 
 | | Count |
 |---|---|
-| Incoming dependencies | 11 |
+| Incoming dependencies | 12 |
 | Outgoing dependencies | 3 |
-| Total connections | 14 |
+| Total connections | 15 |
 | Risk level | **LOW** |
 | Layer | `core` |
 | Package tag | `#hamafx-data` |
@@ -35,8 +35,8 @@ Module: packages/data/src/cache/throttle.ts
 [[@hamafx-db]] · [[@hamafx-data]]
 
 
-### 📥 Depended On By (11)
-[[rest-fetchCandles]] · [[rest-fetchTick]] · [[rest-CftcRow]] · [[rest-fetchPrice]] · [[rest-FredReleaseDate]] · [[rest-DEFAULT_SEARCH]] · [[biquote-rest.test]] · [[calendar-adapter.test]] · [[news-adapter.test]] · [[price-adapter.test]] · [[throttle.test]]
+### 📥 Depended On By (12)
+[[rest-fetchCandles]] · [[rest-fetchTick]] · [[rest-CftcRow]] · [[rest-fetchPrice]] · [[rest-FredReleaseDate]] · [[rest-DEFAULT_SEARCH]] · [[biquote-rest.test]] · [[calendar-adapter.test]] · [[news-adapter.test]] · [[price-adapter.test]] · [[throttle-postgres.test]] · [[throttle.test]]
 
 
 

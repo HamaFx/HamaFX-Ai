@@ -3,8 +3,8 @@ type: module
 package: "@hamafx/ai"
 path: "packages/ai/src/tokens.ts"
 incoming: 3
-outgoing: 6
-connections: 9
+outgoing: 8
+connections: 11
 risk: low
 layer: core
 tags: [type/module, hamafx-ai, layer/core]
@@ -24,8 +24,8 @@ Module: packages/ai/src/tokens.ts
 | | Count |
 |---|---|
 | Incoming dependencies | 3 |
-| Outgoing dependencies | 6 |
-| Total connections | 9 |
+| Outgoing dependencies | 8 |
+| Total connections | 11 |
 | Risk level | **LOW** |
 | Layer | `core` |
 | Package tag | `#hamafx-ai` |

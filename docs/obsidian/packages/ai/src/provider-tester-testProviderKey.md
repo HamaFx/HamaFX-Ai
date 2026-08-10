@@ -3,8 +3,8 @@ type: module
 package: "@hamafx/ai"
 path: "packages/ai/src/provider-tester.ts"
 incoming: 0
-outgoing: 8
-connections: 8
+outgoing: 7
+connections: 7
 risk: low
 layer: core
 tags: [type/module, hamafx-ai, layer/core]
@@ -24,15 +24,15 @@ Module: packages/ai/src/provider-tester.ts
 | | Count |
 |---|---|
 | Incoming dependencies | 0 |
-| Outgoing dependencies | 8 |
-| Total connections | 8 |
+| Outgoing dependencies | 7 |
+| Total connections | 7 |
 | Risk level | **LOW** |
 | Layer | `core` |
 | Package tag | `#hamafx-ai` |
 
 
-### 📤 Depends On (7)
-[[@hamafx-shared]] · [[byok-providers]] · [[rate-limits-RateLimitData]] · [[llm-throttle-noteLlmRateLimit]] · [[model-circuit-breaker-recordModelSuccess]] · [[telemetry-telemetryConfig]] · [[@hamafx-ai]]
+### 📤 Depends On (6)
+[[@hamafx-shared]] · [[byok-providers]] · [[rate-limits-RateLimitData]] · [[llm-throttle-noteLlmRateLimit]] · [[telemetry-telemetryConfig]] · [[@hamafx-ai]]
 
 
 

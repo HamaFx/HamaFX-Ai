@@ -1,11 +1,7 @@
-<p align="center">
-  <img src="./docs/assets/dashboard_preview.jpg" alt="HamaFX-Ai Dashboard Preview" width="100%">
-</p>
-
 <h1 align="center">HamaFX-Ai</h1>
 
 <p align="center">
-  <strong>The Open-Source, Multi-Tenant AI Trading Copilot.</strong><br>
+  <strong>The Open-Source, Single-User BYOK AI Trading Copilot.</strong><br>
   <sub>Chat-driven · Mobile-first · Multi-Agent Deliberation · BYOK · Self-hostable</sub>
 </p>
 
@@ -59,7 +55,6 @@
   <a href="#-tech-stack">📦 Tech Stack</a> ·
   <a href="#-documentation">📚 Docs</a> ·
   <a href="#-self-hosting">🐳 Self-Hosting</a> ·
-  <a href="#-roadmap--known-gaps">🗺️ Roadmap</a> ·
   <a href="#-contributing">Contributing</a>
 </p>
 
@@ -72,7 +67,7 @@ HamaFX-Ai is an **autonomous AI trading companion that lives in your pocket**. C
 | | Feature | What it does |
 |---|---------|-------------|
 | 💬 | **Chat-First Workflow** | Every feature — charting, alerts, journal, risk — is controllable through conversation. Deep-linked system prompts start targeted analyses instantly. |
-| 📊 | **Hybrid Charting Engine** | Toggles on the fly between **TradingView Pro** widget and **Lightweight-charts** with SMC (Smart Money Concepts) overlay indicators. |
+| 📊 | **TradingView Charting** | Interactive TradingView charts with symbol and timeframe controls. |
 | 🧠 | **Plan-Then-Act Reasoning** | Analytical queries generate a visible execution plan ("Thinking" pill) before tools are called — so you see *why* the agent is doing what it's doing. |
 | 🏛️ | **Multi-Agent Committee** | 5 specialist agents (Technical, Fundamental, Risk, Sentiment, Decision) evaluate in parallel and fuse into a consensus grade (A/B/C/D/F). |
 | 🔐 | **Bring Your Own Key (BYOK)** | Zero vendor lock-in. Connect Gemini, Claude, OpenAI, Groq, DeepSeek, Mistral, OpenRouter, xAI, or Vertex AI keys — encrypted at rest with **AES-256-GCM**. |
@@ -167,8 +162,8 @@ Best for: **self-hosting, full features, production-like setup**
 git clone https://github.com/HamaFx/HamaFX-Ai.git
 cd HamaFX-Ai
 ./docker/init-secrets.sh          # generates random passwords & secrets
-echo 'BYOK_ENABLED=1' >> .env     # enable Bring Your Own Key
-docker compose up -d              # starts everything
+docker compose up -d              # starts a secure single-user stack
+# Optional local Langfuse: docker compose --profile observability up -d
 ```
 
 Then open **http://localhost:3000**
@@ -234,7 +229,13 @@ You can add multiple providers and switch between them in **Settings → API Key
 
 ---
 
+### OSS release boundary
+
+This public release is a **single-user self-hosted preview**. It supports BYOK, encrypted local credentials, and owner-first registration. Shared PostgreSQL deployments, open registration, `MULTI_USER_ENABLED=1`, and `HAMAFX_ENABLE_RLS=1` are intentionally rejected until the complete tenant-isolation suite is finished. Do not use this OSS release as a shared hosted service.
+
 ### After Starting the App
+
+The Docker quick start uses `BYOK_ENABLED=1`, `MULTI_USER_ENABLED=0`, `HAMAFX_ENABLE_RLS=0`, and `REGISTRATION_MODE=owner-first`. Create the single owner account, then add your AI provider key through onboarding or Settings → API Keys.
 
 ① **Register** — Open http://localhost:3000/register and create an account
 
@@ -267,7 +268,7 @@ That's it. You're running HamaFX-Ai.
 |  +-------------------+  +-------------------+  +-----------------------+  |
 |  | Chat UI           |  | Chart Engine      |  | Dashboard / Settings  |  |
 |  | (useChat stream)  |  | (TradingView +    |  | (TanStack Query/SWR)  |  |
-|  | 39 tool UI parts  |  |  lightweight-charts)| | 29 pages, 10 widgets |  |
+|  | 39 tool UI parts  |  |  TradingView charts | | 29 pages, 10 widgets |  |
 |  +--------+----------+  +--------+----------+  +----------+------------+  |
 +-----------+----------------------+-----------------------+---------------+
             |                      |                       |
@@ -427,7 +428,7 @@ User Message
 | AI | Vercel AI SDK v5 + 9-provider BYOK registry |
 | Database | Postgres (Supabase) + pgvector · Drizzle ORM |
 | Local DB | PGlite (embedded Postgres via WASM) |
-| Charts | TradingView lightweight-charts v5 + TradingView Pro widget |
+| Charts | TradingView Pro widget |
 | Worker | Node.js daemon (esbuild bundled) |
 | Scheduler | node-cron (Docker) / systemd timers (production) |
 | Monorepo | Turborepo 2 + pnpm 9.15.4 |
@@ -452,11 +453,11 @@ The full documentation set lives in [`docs/`](docs/). Every claim is verified ag
 | [**🔐 Security**](docs/10-security.md) | You're touching auth, encryption, RLS, billing, or compliance |
 | [**🧪 Testing**](docs/09-testing.md) | You need to run or write tests |
 | [**🚀 First-Run Setup**](docs/13-first-run-setup.md) | You need step-by-step setup instructions |
-| [**📦 Deployment**](docs/08-deployment.md) | You're deploying to production |
+| [**📦 Deployment**](docs/08-deployment.md) | You're operating the separate hosted topology |
 
 > 🆕 Most structural documentation is now **auto-generated** by the [Architecture Explorer](tools/architecture-explorer/). Run `cd tools/architecture-explorer && npx tsx src/index.ts --root ..` to regenerate from the live codebase.
 
-**Community docs:** [CONTRIBUTING.md](CONTRIBUTING.md) · [SECURITY.md](SECURITY.md) · [SUPPORT.md](SUPPORT.md) · [CHANGELOG.md](CHANGELOG.md) · [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)
+**Community docs:** [CONTRIBUTING.md](CONTRIBUTING.md) · [SECURITY.md](SECURITY.md) · [SUPPORT.md](SUPPORT.md) · [CHANGELOG.md](CHANGELOG.md) · [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) · [OSS release checklist](docs/14-oss-release-checklist.md)
 
 ---
 
@@ -469,8 +470,8 @@ HamaFX-Ai runs from **one codebase** — no forks or branches needed. You just s
 | Mode | Database | Best for | How to start |
 |------|----------|----------|-------------|
 | **Local Dev** | PGlite (embedded) | Trying it out, developing | `pnpm dev:local` |
-| **Docker** | Postgres 16 + pgvector | Self-hosting with all features | `docker compose up -d` |
-| **Production** | Supabase Postgres | Large-scale hosting | Vercel + GCE VM |
+| **Docker** | Postgres 16 + pgvector | Single-user self-hosting with full core features | `docker compose up -d` |
+| **Hosted service** | Supabase Postgres | Maintainer-operated service (separate track) | Vercel + GCE VM |
 
 ### Minimum Setup for Self-Hosting
 
@@ -491,7 +492,9 @@ CRON_SECRET=<16+ chars>            # node -e "console.log(require('crypto').rand
 BYOK_ENABLED=1                     # Enable Bring Your Own Key (users add their own AI keys)
 
 # ── Recommended ──
-MULTI_USER_ENABLED=1               # Enable multi-user registration
+MULTI_USER_ENABLED=0               # Required: shared mode is not enabled in this OSS release
+REGISTRATION_MODE=owner-first       # owner-first or disabled
+HAMAFX_ENABLE_RLS=0                 # Required: RLS mode is not enabled in this OSS release
 NEXTAUTH_URL=http://localhost:3000 # Your deployment URL
 
 # ── AI keys are NOT required ──
@@ -546,7 +549,8 @@ pnpm --filter @hamafx/ai eval -- --base-url http://localhost:3000 \
   --cookie "authjs.session-token=..." --cases
 
 # Docker
-docker compose up -d              # Start all services
+docker compose up -d              # Start the secure single-user stack
+# Optional Langfuse: docker compose --profile observability up -d
 docker compose logs -f app        # Follow web logs
 docker compose down               # Stop all
 ```
@@ -576,5 +580,5 @@ Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for the full g
 Licensed under the [Apache License, Version 2.0](LICENSE).
 
 <p align="center">
-  <sub>Built for gold and forex traders. Designed for autonomous coding agents. Self-hostable by anyone.</sub>
+  <sub>Built for gold and forex traders. Single-user, BYOK, and self-hostable.</sub>
 </p>

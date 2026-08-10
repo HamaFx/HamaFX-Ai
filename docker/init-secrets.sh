@@ -32,19 +32,37 @@ cat > "$ENV_FILE" <<EOF
 # ── Postgres ──────────────────────────────────────────────
 POSTGRES_PASSWORD=$(rand_hex 16)
 
+# ── Local Docker backups ─────────────────────────────────
+# Backups remain on the named backup-data volume by default. These are
+# operational settings, not secrets, but keeping them in .env makes the
+# retention policy visible and easy to override.
+BACKUP_INTERVAL_SECONDS=86400
+BACKUP_RETENTION_DAYS=7
+BACKUP_MAX_AGE_SECONDS=172800
+
 # ── Langfuse (LLM observability) ──────────────────────────
 LANGFUSE_NEXTAUTH_SECRET=$(rand_hex 32)
 LANGFUSE_SALT=$(rand_hex 16)
 
 # ── NextAuth (app authentication) ─────────────────────────
-NEXTAUTH_SECRET=$(rand_hex 32)
+AUTH_SECRET=$(rand_hex 32)
 NEXTAUTH_URL=http://localhost:3000
+
+# ── Cron authentication ────────────────────────────────────
+CRON_SECRET=$(rand_hex 16)
 
 # ── Encryption (BYOK key encryption at rest) ──────────────
 ENCRYPTION_SECRET=$(rand_hex 32)
+
+# ── Safe self-hosted defaults ──────────────────────────────
+BYOK_ENABLED=1
+MULTI_USER_ENABLED=0
+REGISTRATION_MODE=owner-first
+HAMAFX_ENABLE_RLS=0
 EOF
 
 chmod 600 "$ENV_FILE"
 echo "✓ Generated .env with random secrets."
 echo "  Review it:  cat .env"
 echo "  Now run:    docker compose up -d"
+echo "  Optional:   docker compose --profile observability up -d"

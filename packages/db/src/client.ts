@@ -96,6 +96,7 @@ let _replicaSql: ReturnType<typeof postgres> | null = null;
  * connection when no replica is configured (single-node deployments).
  */
 export function getDbRO(): DbClient {
+  assertTenantIsolationConfig();
   if (_replicaClient) return _replicaClient;
 
   const url = process.env.DATABASE_URL_REPLICA;
@@ -173,6 +174,7 @@ function resolveSslOptions(): false | { rejectUnauthorized: boolean; ca?: string
 }
 
 export function getDb(): DbClient {
+  assertTenantIsolationConfig();
   if (_client) return _client;
 
   // Accept DATABASE_URL or POSTGRES_URL (the Supabase Vercel integration
@@ -238,7 +240,24 @@ export async function closeDb(): Promise<void> {
  * Phase 3 §3.6 — gated behind HAMAFX_ENABLE_RLS env var so self-host
  * editions can skip RLS enforcement without code changes.
  */
-const rlsEnabled = process.env.HAMAFX_ENABLE_RLS === 'true' || process.env.HAMAFX_ENABLE_RLS === '1';
+function isRlsEnabled(): boolean {
+  return process.env.HAMAFX_ENABLE_RLS === 'true' || process.env.HAMAFX_ENABLE_RLS === '1';
+}
+
+function assertTenantIsolationConfig(): void {
+  const multiUserEnabled =
+    process.env.MULTI_USER_ENABLED === 'true' || process.env.MULTI_USER_ENABLED === '1';
+  if (multiUserEnabled && !isRlsEnabled()) {
+    throw new Error(
+      '[db] MULTI_USER_ENABLED requires HAMAFX_ENABLE_RLS=true; refusing to open a database connection without tenant isolation.',
+    );
+  }
+  if (isRlsEnabled()) {
+    throw new Error(
+      '[db] RLS/multi-user mode is disabled in this open-source release until every user-data query establishes tenant context. Keep HAMAFX_ENABLE_RLS=0.',
+    );
+  }
+}
 
 /**
  * Run work inside a transaction that sets the current tenant GUC for
@@ -257,7 +276,7 @@ export async function withTenantDb<T>(
   work: (db: DbClient) => Promise<T>,
 ): Promise<T> {
   return getDb().transaction(async (tx) => {
-    if (rlsEnabled) {
+    if (isRlsEnabled()) {
       await tx.execute(sql`SELECT set_config('app.current_tenant', ${tenantId}, true)`);
     }
     return work(tx as unknown as DbClient);
@@ -279,7 +298,7 @@ export async function withTenantDbRO<T>(
   tenantId: string,
   work: (db: DbClient) => Promise<T>,
 ): Promise<T> {
-  if (!rlsEnabled) {
+  if (!isRlsEnabled()) {
     // PF-15: Use read replica when available
     return work(getDbRO());
   }
@@ -413,6 +432,7 @@ let _adminSql: ReturnType<typeof postgres> | null = null;
  * @throws if neither ADMIN_DATABASE_URL nor DATABASE_URL/POSTGRES_URL is set.
  */
 export function getAdminDb(): DbClient {
+  assertTenantIsolationConfig();
   if (_adminClient) return _adminClient;
 
   const adminUrl = process.env.ADMIN_DATABASE_URL;

@@ -18,6 +18,7 @@ let updatedUsers: Array<{ id: string; data: Record<string, unknown> }> = [];
 
 function mockDb() {
   return {
+    execute: () => Promise.resolve(),
     select: () => ({
       from: () => ({
         where: () => ({
@@ -63,6 +64,10 @@ vi.mock('@hamafx/ai', () => ({
   getDb: () => mockDb(),
 }));
 
+vi.mock('@/lib/env', () => ({
+  getServerEnv: () => ({ REGISTRATION_MODE: process.env.REGISTRATION_MODE ?? 'owner-first' }),
+}));
+
 vi.mock('@hamafx/db', () => ({
   schema: {
     users: 'users',
@@ -104,6 +109,7 @@ function googleAccount(overrides?: Record<string, unknown>) {
 }
 
 beforeEach(() => {
+  delete process.env.REGISTRATION_MODE;
   mockSelectResult = [];
   insertedUsers = [];
   insertedSettings = [];
@@ -157,6 +163,34 @@ describe('provisionUserOnSignIn', () => {
 
     expect(result.allow).toBe(false);
     expect(result.reason).toMatch(/not verified/i);
+  });
+
+  it('blocks a new OAuth account when registration is disabled', async () => {
+    process.env.REGISTRATION_MODE = 'disabled';
+
+    const result = await provisionUserOnSignIn({
+      user: {},
+      account: googleAccount(),
+      profile: googleProfile(),
+    });
+
+    expect(result.allow).toBe(false);
+    expect(result.reason).toMatch(/registration is disabled/i);
+    expect(insertedUsers).toHaveLength(0);
+  });
+
+  it('allows an existing OAuth user to sign in when registration is disabled', async () => {
+    process.env.REGISTRATION_MODE = 'disabled';
+    mockSelectResult = [{ id: 'existing-user-uuid', tokenVersion: 1 }];
+
+    const result = await provisionUserOnSignIn({
+      user: {},
+      account: googleAccount(),
+      profile: googleProfile(),
+    });
+
+    expect(result.allow).toBe(true);
+    expect(result.userFields?.id).toBe('existing-user-uuid');
   });
 
   // ── New user creation ──

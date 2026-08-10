@@ -1,12 +1,14 @@
 # 08 — Deployment
 
-> **For local development:** see the [Quickstart section in README](../README.md#quickstart)
+> **For local development:** see the [Quickstart section in README](../README.md#quick-start)
 > — zero-config native (`pnpm dev:local`) or one-command Docker (`docker compose up`).
-> This document covers production cloud deployment only.
+> This document covers the hosted deployment topology and operator procedures; the public OSS release itself is single-user self-hosted.
+
+> **OSS boundary:** Shared PostgreSQL deployments, open registration, `MULTI_USER_ENABLED=1`, and `HAMAFX_ENABLE_RLS=1` are not supported by this release. The hosted multi-user topology described below is maintained separately from the OSS self-hosting path.
 
 ## Topology
 
-Two deployments, multi-user architecture, one push-to-main pipeline.
+Hosted web + worker deployments, one push-to-main pipeline.
 
 ```mermaid
 flowchart LR
@@ -109,7 +111,7 @@ Whatever apex you want — NextAuth handles authentication and protects all rout
 NEXT_PUBLIC_APP_URL=https://hama-fx-ai.vercel.app
 PRODUCTION_URL=https://hama-fx-ai.vercel.app                 # VM only — what the light crons curl
 
-# --- Auth (NextAuth Multi-tenant) ---
+# --- Auth (NextAuth) ---
 NEXTAUTH_URL=https://hama-fx-ai.vercel.app
 NEXTAUTH_SECRET=                 # run: openssl rand -base64 32
 CRON_SECRET=                     # set on Vercel + on VM; used for /api/cron/* bearer
@@ -120,7 +122,8 @@ GITHUB_CLIENT_SECRET=
 ENCRYPTION_SECRET=               # random 32-byte hex for data encryption
 
 # --- Feature Flags ---
-MULTI_USER_ENABLED=true
+MULTI_USER_ENABLED=false
+HAMAFX_ENABLE_RLS=false
 BYOK_ENABLED=true
 UNLIMITED_SYMBOLS=true
 PER_USER_BRIEFINGS=true

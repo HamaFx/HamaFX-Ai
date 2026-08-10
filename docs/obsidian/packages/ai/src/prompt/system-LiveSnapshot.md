@@ -2,9 +2,9 @@
 type: module
 package: "@hamafx/ai"
 path: "packages/ai/src/prompt/system.ts"
-incoming: 9
+incoming: 7
 outgoing: 5
-connections: 14
+connections: 12
 risk: low
 layer: core
 tags: [type/module, hamafx-ai, layer/core]
@@ -23,9 +23,9 @@ Module: packages/ai/src/prompt/system.ts
 
 | | Count |
 |---|---|
-| Incoming dependencies | 9 |
+| Incoming dependencies | 7 |
 | Outgoing dependencies | 5 |
-| Total connections | 14 |
+| Total connections | 12 |
 | Risk level | **LOW** |
 | Layer | `core` |
 | Package tag | `#hamafx-ai` |

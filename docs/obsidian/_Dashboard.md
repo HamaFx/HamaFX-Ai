@@ -14,16 +14,16 @@ cssclasses: [dashboard]
 
 | Metric | Value |
 |--------|-------|
-| Total Nodes | 1429 |
-| Total Edges | 4277 |
+| Total Nodes | 1419 |
+| Total Edges | 4188 |
 | Packages | 16 |
-| API Routes | 190 |
-| Database Tables | 50 |
+| API Routes | 192 |
+| Database Tables | 52 |
 | AI Tools | 32 |
-| Components | 112 |
+| Components | 105 |
 | Circular Dependencies | 6 |
 | Architecture Hotspots | 50 |
-| Dead / Orphan Files | 1136 |
+| Dead / Orphan Files | 1159 |
 
 ## 🔍 Live Queries
 
@@ -76,11 +76,11 @@ dv.table(
 
 | Dashboard | What It Shows |
 |-----------|--------------|
-| [[_API Routes]] | 190 API endpoints |
-| [[_Database Tables]] | 50 database tables |
+| [[_API Routes]] | 192 API endpoints |
+| [[_Database Tables]] | 52 database tables |
 | [[_AI Tools]] | 32 AI tools |
 | [[_Agents]] | AI agents & committee |
-| [[_Components]] | 112 React components |
+| [[_Components]] | 105 React components |
 | [[_Background Jobs]] | Worker jobs & timers |
 | [[_Hotspots]] | Top 50 architecture hotspots |
 | [[_Circular Dependencies]] | 6 circular dependency chains |

@@ -2,24 +2,43 @@
   "name": "@hamafx/db",
   "version": "0.0.0",
   "type": "module",
-  "main": "./src/index.ts",
-  "types": "./src/index.ts",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": ["dist", "drizzle"],
   "exports": {
-    ".": "./src/index.ts",
-    "./schema": "./src/schema/index.ts",
-    "./client": "./src/client.ts",
-    "./pglite": "./src/pglite-client.ts",
-    "./local-db": "./src/local-db.ts"
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./schema": {
+      "types": "./dist/schema/index.d.ts",
+      "import": "./dist/schema/index.js"
+    },
+    "./client": {
+      "types": "./dist/client.d.ts",
+      "import": "./dist/client.js"
+    },
+    "./pglite": {
+      "types": "./dist/pglite-client.d.ts",
+      "import": "./dist/pglite-client.js"
+    },
+    "./local-db": {
+      "types": "./dist/local-db.d.ts",
+      "import": "./dist/local-db.js"
+    }
   },
   "scripts": {
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
+    "build": "tsc -p tsconfig.build.json && node ../../scripts/rewrite-dist-imports.mjs dist",
+    "prepublishOnly": "pnpm build",
     "clean": "rm -rf node_modules .turbo dist",
     "migrate:gen": "drizzle-kit generate",
     "migrate:gen:custom": "drizzle-kit generate --custom",
     "migrate:apply": "node scripts/install-extensions.mjs && drizzle-kit migrate",
     "migrate:status": "node scripts/migrate-status.mjs",
+    "migrate:rotate-encryption": "node scripts/rotate-encryption-secret.mjs",
     "migrate:setup-extensions": "node scripts/install-extensions.mjs",
     "seed:plans": "tsx scripts/seed-plans.ts",
     "studio": "drizzle-kit studio"

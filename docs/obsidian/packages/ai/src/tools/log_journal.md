@@ -16,7 +16,7 @@ aliases: [log_journal]
 > **AI Tool** · `@hamafx/ai` · `packages/ai/src/tools/log-journal.ts`
 
 
-Record a trade entry in the journal. Returns the new entry id + a summary line. Status is 
+Record a trade entry in the journal. Returns the new entry id + a summary line. Status is
 
 
 ## 📊 Connections

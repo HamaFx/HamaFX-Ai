@@ -1,7 +1,7 @@
 {
   "name": "hamafx-ai",
   "version": "0.0.0",
-  "description": "The Open-Source, Multi-User AI Trading Platform",
+  "description": "The Open-Source, Single-User BYOK AI Trading Platform",
   "license": "Apache-2.0",
   "packageManager": "pnpm@9.15.4",
   "engines": {
@@ -26,7 +26,9 @@
     "test:shared": "pnpm --filter @hamafx/shared test",
     "clean": "turbo run clean && rm -rf node_modules",
     "test:empty-guard": "node scripts/check-test-files.mjs",
-    "check-console-errors": "node scripts/check-console-errors.mjs"
+    "check-console-errors": "node scripts/check-console-errors.mjs",
+    "build:packages": "pnpm --filter @hamafx/shared build && pnpm --filter @hamafx/indicators build && pnpm --filter @hamafx/db build && pnpm --filter @hamafx/data build && pnpm --filter @hamafx/ai build && pnpm --filter @hamafx/test-utils build",
+    "publish-packages": "pnpm build:packages && changeset publish"
   },
   "dependencies": {
     "ws": "^8.21.0"

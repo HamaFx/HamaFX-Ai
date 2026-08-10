@@ -16,7 +16,7 @@ aliases: [get_co_t]
 > **AI Tool** · `@hamafx/ai` · `packages/ai/src/tools/get-cot.ts`
 
 
-Last N weeks of CFTC Commitment-of-Traders rows for one symbol (default XAUUSD). Use to answer 
+Last N weeks of CFTC Commitment-of-Traders rows for one symbol (default XAUUSD). Use to answer
 
 
 ## 📊 Connections

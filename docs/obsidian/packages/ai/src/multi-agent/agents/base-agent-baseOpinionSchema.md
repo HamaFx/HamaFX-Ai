@@ -2,9 +2,9 @@
 type: module
 package: "@hamafx/ai"
 path: "packages/ai/src/multi-agent/agents/base-agent.ts"
-incoming: 7
+incoming: 8
 outgoing: 11
-connections: 18
+connections: 19
 risk: medium
 layer: core
 tags: [type/module, hamafx-ai, layer/core, risk/medium]
@@ -23,9 +23,9 @@ Module: packages/ai/src/multi-agent/agents/base-agent.ts
 
 | | Count |
 |---|---|
-| Incoming dependencies | 7 |
+| Incoming dependencies | 8 |
 | Outgoing dependencies | 11 |
-| Total connections | 18 |
+| Total connections | 19 |
 | Risk level | **MEDIUM** |
 | Layer | `core` |
 | Package tag | `#hamafx-ai` |

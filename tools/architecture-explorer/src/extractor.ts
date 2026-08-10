@@ -346,7 +346,7 @@ function deriveRoutePath(filePath: string): string {
 function extractToolDescription(content: string): string {
   // Try to find a JSDoc comment or description string near the tool registration
   const descMatch = content.match(/description:\s*['"]([^'"]{10,200})['"]/);
-  if (descMatch) return descMatch[1]!;
+  if (descMatch) return descMatch[1]!.trim();
 
   const jsDocMatch = content.match(/\/\*\*\s*\n?\s*\*\s*([^\n*]{10,200})/);
   if (jsDocMatch) return jsDocMatch[1]!.trim();

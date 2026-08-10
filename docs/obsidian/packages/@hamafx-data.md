@@ -33,7 +33,7 @@ Package: @hamafx/data
 
 
 ### 📥 Depended On By (98)
-[[GET--api-cron-calendar]] · [[GET--api-cron-cot]] · [[GET--api-cron-fred-actuals]] · [[GET--api-cron-news]] · [[GET--api-cron-snapshots]] · [[GET--api-cron-warm-cache]] · [[GET--api-market-stream]] · [[POST--api-market-structure]] · [[POST--api-settings-test-market-provider]] · [[api-RequestUser]] · [[market-CandleResultDTO]] · [[api.test]] · [[cot-runCoT]] · [[fred-actuals-runFredActuals]] · [[resonance-sync-runResonanceSync]] · [[snapshots-runSnapshots]] · [[cot-job.test]] · [[fred-actuals.test]] · [[snapshots-job.test]] · [[evaluator-parseIndicatorSpec]]
+[[GET--api-cron-calendar]] · [[GET--api-cron-cot]] · [[GET--api-cron-fred-actuals]] · [[GET--api-cron-news]] · [[GET--api-cron-snapshots]] · [[GET--api-cron-warm-cache]] · [[GET--api-market-stream]] · [[POST--api-settings-test-market-provider]] · [[api-RequestUser]] · [[market-CandleResultDTO]] · [[api.test]] · [[cot-runCoT]] · [[fred-actuals-runFredActuals]] · [[resonance-sync-runResonanceSync]] · [[snapshots-runSnapshots]] · [[cot-job.test]] · [[fred-actuals.test]] · [[snapshots-job.test]] · [[evaluator-parseIndicatorSpec]] · [[context-buildLiveSnapshot]]
 > ... and 78 more
 
 

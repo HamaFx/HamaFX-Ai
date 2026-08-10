@@ -1,15 +1,15 @@
 ---
 type: moc
 package: "@hamafx/ai"
-nodes: 273
-totalIncoming: 973
-totalOutgoing: 1306
+nodes: 274
+totalIncoming: 971
+totalOutgoing: 1304
 tags: [moc, hamafx-ai]
 ---
 
 # 📦 @hamafx/ai
 
-> **Map of Content** · 273 files · 973 incoming + 1306 outgoing = 2279 connections
+> **Map of Content** · 274 files · 971 incoming + 1304 outgoing = 2275 connections
 
 ## DataviewJS — All Files in This Package
 ```dataviewjs
@@ -25,8 +25,8 @@ dv.table(
 
 ## Files by Type
 
-### 📁 Module (236)
-- [[agent-runChat]] *(4↖ 39↗)*
+### 📁 Module (237)
+- [[agent-runChat]] *(4↖ 34↗)*
 - [[orchestrator-RunMultiAgentArgs]] *(0↖ 22↗)*
 - [[dispatcher-BotDispatcher]] *(2↖ 18↗)*
 - [[resolve-model-ResolveModelContext]] *(1↖ 14↗)*
@@ -36,7 +36,8 @@ dv.table(
 - [[decision]] *(2↖ 12↗)*
 - [[market]] *(0↖ 12↗)*
 - [[thread-summary-CompactResult]] *(1↖ 11↗)*
-- [[base-agent-baseOpinionSchema]] *(7↖ 11↗)*
+- [[base-agent-baseOpinionSchema]] *(8↖ 11↗)*
+- [[base-agent-contract.test]] *(0↖ 11↗)*
 - [[ai-data.integration.test]] *(0↖ 11↗)*
 - [[registry-BYOK_PROVIDERS]] *(0↖ 10↗)*
 - [[auto-title-runAutoTitleBackground]] *(1↖ 10↗)*
@@ -46,19 +47,18 @@ dv.table(
 - [[planner-PlannerEnv]] *(2↖ 10↗)*
 - [[webhook-TelegramUpdate]] *(0↖ 10↗)*
 - [[journal]] *(0↖ 10↗)*
-- [[base-agent-contract.test]] *(0↖ 10↗)*
 - [[memory-index-MemoryKind]] *(8↖ 9↗)*
 - [[model-override-OverrideResolution]] *(0↖ 9↗)*
-- [[model-resolution-toModelDomain]] *(4↖ 9↗)*
 - [[analysis]] *(0↖ 9↗)*
 - [[system]] *(0↖ 9↗)*
 - [[delivery-DeliveryResult]] *(2↖ 8↗)*
 - [[context-buildLiveSnapshot]] *(2↖ 8↗)*
 - [[model-embedding-EmbeddingModelResolution]] *(0↖ 8↗)*
+- [[model-resolution-toModelDomain]] *(3↖ 8↗)*
 - [[model-strategy-DomainRoutingContext]] *(0↖ 8↗)*
 - [[model-vision-VisionModelResolution]] *(0↖ 8↗)*
 - [[noise-state-DbNoiseState]] *(0↖ 8↗)*
-- [[provider-tester-testProviderKey]] *(0↖ 8↗)*
+- [[tokens-DB]] *(3↖ 8↗)*
 - [[idor-persistence.test]] *(0↖ 8↗)*
 - [[mutation-tools.test]] *(0↖ 8↗)*
 - [[analyze-analyzeCommand]] *(1↖ 7↗)*
@@ -69,6 +69,7 @@ dv.table(
 - [[db-getDb]] *(41↖ 7↗)*
 - [[model-helpers-PROVIDER_PRIORITY]] *(4↖ 7↗)*
 - [[types-AnalysisMode]] *(34↖ 7↗)*
+- [[provider-tester-testProviderKey]] *(0↖ 7↗)*
 - [[rag-RagRow]] *(2↖ 7↗)*
 - [[compute-DailySnapshot]] *(1↖ 7↗)*
 - [[title-GenerateTitleArgs]] *(2↖ 7↗)*
@@ -81,7 +82,6 @@ dv.table(
 - [[persistence-CreateJournalInput]] *(6↖ 6↗)*
 - [[agent-model-tierToDomain]] *(2↖ 6↗)*
 - [[risk-service-computePnL]] *(1↖ 6↗)*
-- [[tokens-DB]] *(3↖ 6↗)*
 - [[get-system-diagnostics.test]] *(0↖ 6↗)*
 - [[replay-setup.test]] *(0↖ 6↗)*
 - [[run-system-action.test]] *(0↖ 6↗)*
@@ -98,7 +98,7 @@ dv.table(
 - [[thread-persistence-DbThread]] *(1↖ 5↗)*
 - [[position-service-createPosition]] *(1↖ 5↗)*
 - [[risk-service.test]] *(0↖ 5↗)*
-- [[system-LiveSnapshot]] *(9↖ 5↗)*
+- [[system-LiveSnapshot]] *(7↖ 5↗)*
 - [[routing-RoutingDomain]] *(10↖ 5↗)*
 - [[social-sentiment-service-SentimentEnv]] *(1↖ 5↗)*
 - [[persistence-CreateSnapshotArgs]] *(1↖ 5↗)*
@@ -158,7 +158,7 @@ dv.table(
 - [[llm-throttle-noteLlmRateLimit]] *(3↖ 3↗)*
 - [[modes-selectAgents]] *(3↖ 3↗)*
 - [[stream-AgentProgressPart]] *(2↖ 3↗)*
-- [[persistence-PushSubscriptionRow]] *(3↖ 3↗)*
+- [[persistence-PushSubscriptionRow]] *(4↖ 3↗)*
 - [[send-VapidEnv]] *(1↖ 3↗)*
 - [[client-TelegramApiError]] *(2↖ 3↗)*
 - [[mutation-guard-assertMutationIntent]] *(4↖ 3↗)*
@@ -199,6 +199,7 @@ dv.table(
 - [[parse-indicator-spec.test]] *(0↖ 3↗)*
 - [[pem-normalize.test]] *(0↖ 3↗)*
 - [[provider-id-from-model.test]] *(0↖ 3↗)*
+- [[push-persistence.test]] *(0↖ 3↗)*
 - [[rate-limits.test]] *(0↖ 3↗)*
 - [[redact.test]] *(0↖ 3↗)*
 - [[routing.test]] *(0↖ 3↗)*
@@ -242,7 +243,7 @@ dv.table(
 - [[fallback-FallbackReason]] *(5↖ 1↗)*
 - [[index_tool-architecture-explorer|index]] *(0↖ 1↗)*
 - [[llm-client-GenerateTextOpts]] *(3↖ 1↗)*
-- [[model-circuit-breaker-recordModelSuccess]] *(2↖ 1↗)*
+- [[model-circuit-breaker-recordModelSuccess]] *(1↖ 1↗)*
 - [[model]] *(30↖ 1↗)*
 - [[index_tool-architecture-explorer|index]] *(0↖ 1↗)*
 - [[index_tool-architecture-explorer|index]] *(0↖ 1↗)*
@@ -256,7 +257,7 @@ dv.table(
 - [[telemetry-telemetryConfig]] *(12↖ 1↗)*
 - [[thread-state-ThreadState]] *(1↖ 1↗)*
 - [[token-estimate-TokenEstimateResult]] *(2↖ 1↗)*
-- [[index_tool-architecture-explorer|index]] *(8↖ 1↗)*
+- [[index_tool-architecture-explorer|index]] *(7↖ 1↗)*
 - [[concurrency-limitConcurrency]] *(1↖ 1↗)*
 - [[pem-normalizePemPrivateKey]] *(3↖ 1↗)*
 - [[regex-PRICE_TOKEN]] *(2↖ 1↗)*
@@ -264,7 +265,7 @@ dv.table(
 - [[vitest.config-defineConfig]] *(0↖ 1↗)*
 
 ### 🔧 AI Tool (32)
-- [[convene_committee]] *(1↖ 14↗)*
+- [[convene_committee]] *(1↖ 13↗)*
 - [[summarize_thread]] *(1↖ 9↗)*
 - [[analyze_chart_image]] *(1↖ 8↗)*
 - [[forecast_volatility]] *(1↖ 8↗)*
@@ -304,5 +305,5 @@ dv.table(
 - [[TechnicalAgent]] *(2↖ 5↗)*
 
 ### 📦 Package (1)
-- [[@hamafx-ai]] *(370↖ 0↗)*
+- [[@hamafx-ai]] *(371↖ 0↗)*
 

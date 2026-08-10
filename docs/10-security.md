@@ -1,6 +1,6 @@
 # 10 — Security, Auth & Secrets
 
-> Multi-tenant security posture, authentication flow, secrets management, and rotation procedures.
+> Single-user OSS security boundary, authentication flow, secrets management, and guarded rotation procedures. The schema contains tenant-oriented foundations, but shared runtime mode is disabled in this release.
 
 ---
 
@@ -29,7 +29,7 @@ Out of scope: DDoS, advanced persistent threats.
 | Database adapter | `@auth/drizzle-adapter` |
 | Credentials provider | Email + Password (bcrypt) |
 | Request boundary | Next.js proxy (NextAuth + CSRF) |
-| 2FA | TOTP via `otplib` (setup in settings, not yet enforced at login) |
+| 2FA | TOTP via `otplib` (enforced at login) |
 
 ### Setup
 
@@ -108,7 +108,7 @@ Double-submit cookie pattern:
 
 ## DB: Row-Level Security
 
-Because HamaFX-Ai is multi-tenant, all user-specific tables (`chat_threads`, `journal_entries`, `alerts`, `user_settings`, etc.) have a `userId` column.
+The schema contains tenant-oriented user-data columns such as `userId`, but this OSS release runs in single-user mode. Every user-data query must still retain explicit ownership scoping; shared PostgreSQL/RLS runtime mode is disabled until the complete tenant-isolation suite passes.
 
 We rely on strict query scoping rather than Postgres RLS. Every Drizzle query that reads or mutates user data MUST include a `.where(eq(table.userId, session.user.id))` clause. This prevents IDOR vulnerabilities.
 
@@ -177,13 +177,37 @@ Same-origin only. No third party should call our API. If you ever build a Telegr
 
 ### Encryption Secret (`ENCRYPTION_SECRET`)
 
-Used for BYOK keys and 2FA secrets (AES-256-GCM). If rotated, all previously encrypted data becomes unreadable unless migrated.
+Used for BYOK keys, Telegram bot tokens, and TOTP secrets (AES-256-GCM). If rotated without re-encryption, all previously encrypted data becomes unreadable. Application startup does **not** attempt automatic dual-key recovery.
 
-**Procedure:**
-1. Generate a new secret: `openssl rand -hex 32`
-2. Run a migration script that decrypts with the old secret and re-encrypts with the new secret.
-3. Update `ENCRYPTION_SECRET` in Vercel and on the VM (`/opt/hamafx/.env`).
-4. Restart all environments (Vercel redeploy + `systemctl restart hamafx-worker.service`).
+The repository includes a guarded maintenance utility that rotates all currently encrypted database fields in one transaction:
+
+```bash
+# Run during a maintenance window against a direct/session PostgreSQL URL.
+# Stop app/worker writers first, then run:
+OLD_ENCRYPTION_SECRET='<old 64-character hex secret>' \
+NEW_ENCRYPTION_SECRET='<new 64-character hex secret>' \
+ROTATE_ENCRYPTION_SECRET_CONFIRM=YES \
+ROTATE_ENCRYPTION_SECRET_MAINTENANCE=STOP_WRITERS \
+pnpm --filter @hamafx/db migrate:rotate-encryption
+```
+
+The utility:
+
+- Requires both exactly 32-byte hex keys, an explicit `YES` confirmation, and a `STOP_WRITERS` maintenance confirmation.
+- Pre-decrypts every non-empty BYOK, Telegram-token, and TOTP value before writing anything.
+- Aborts on the first malformed or unreadable value.
+- Writes all replacements in one database transaction.
+- Never logs plaintext secrets.
+
+**Operational procedure:**
+1. Take and verify a database backup before starting.
+2. Stop app/worker writers and run the utility with `DIRECT_URL` (or another direct/session URL), including `ROTATE_ENCRYPTION_SECRET_MAINTENANCE=STOP_WRITERS`.
+3. Confirm the command completes successfully; if it fails, do not change the active environment secret.
+4. Update `ENCRYPTION_SECRET` to the new value in every web/worker environment.
+5. Restart all environments and verify login, 2FA, BYOK provider tests, and Telegram delivery if enabled.
+6. Retain the old secret securely until the new-key data has been verified and a fresh backup exists; then destroy it according to your secret-retention policy.
+
+If the old secret is lost, encrypted values cannot be recovered by the application. Restore the original secret or restore a database backup made before rotation. Older installations may contain legacy plaintext Telegram tokens from before the application-layer encryption change; inventory and convert those values during a controlled maintenance window before using this rotation utility, which intentionally aborts on non-encrypted values.
 
 ### NextAuth Secret (`AUTH_SECRET` / `NEXTAUTH_SECRET`)
 

@@ -36,7 +36,7 @@ Module: packages/db/src/client.ts
 
 
 ### 📥 Depended On By (36)
-[[seed-plans]] · [[local-db-getLocalDb]] · [[provider-quota-DailyQuotaResult]] · [[admin-audit-recordAdminAudit]] · [[agent-opinions-AgentOpinionRow]] · [[alerts-AlertRow]] · [[analysis-jobs-AnalysisJobRow]] · [[auth-AuthUserRow]] · [[billing-extras-listActivePlans]] · [[candles-CandleRow]] · [[chat-telemetry-listToolTelemetry]] · [[cot-CotReportRow]] · [[cron-runs-CronRunRow]] · [[diagnostic-traces-DiagnosticTraceRow]] · [[feature-flags-FeatureFlagRow]] · [[ipn-events-findIpnEvent]] · [[journal-JournalRow]] · [[news-articles-NewsArticleRow]] · [[onboarding-ResetMode]] · [[portfolio-PositionRow]]
+[[seed-plans]] · [[local-db-getLocalDb]] · [[provider-quota-DailyQuotaResult]] · [[admin-audit-recordAdminAudit]] · [[agent-opinions-AgentOpinionRow]] · [[alerts-AlertRow]] · [[analysis-jobs-AnalysisJobRow]] · [[auth-AuthUserRow]] · [[billing-extras-listActivePlans]] · [[candles-CandleRow]] · [[chat-telemetry-listToolTelemetry]] · [[cot-CotReportRow]] · [[cron-runs-CronRunRow]] · [[diagnostic-traces-DiagnosticTraceRow]] · [[feature-flags-FeatureFlagRow]] · [[ipn-events-IpnClaim]] · [[journal-JournalRow]] · [[news-articles-NewsArticleRow]] · [[onboarding-ResetMode]] · [[portfolio-PositionRow]]
 > ... and 16 more
 
 

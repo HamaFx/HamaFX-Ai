@@ -26,6 +26,20 @@ if (!databaseUrl) {
   process.exit(1);
 }
 
+// The OSS release is single-user only. Do this preflight before opening a
+// connection or applying migrations so an unsupported deployment cannot
+// mutate its database and fail only after the migration chain completes.
+const multiUserEnabled = ['1', 'true'].includes((process.env.MULTI_USER_ENABLED ?? '').toLowerCase());
+const rlsEnabled = ['1', 'true'].includes((process.env.HAMAFX_ENABLE_RLS ?? '').toLowerCase());
+const registrationMode = process.env.REGISTRATION_MODE ?? 'owner-first';
+if (multiUserEnabled || rlsEnabled || registrationMode === 'open') {
+  console.error(
+    '[runtime-migrate] Multi-user/RLS and open-registration modes are disabled in this open-source release. ' +
+      'Set MULTI_USER_ENABLED=0, HAMAFX_ENABLE_RLS=0, and REGISTRATION_MODE=owner-first (or disabled) until every user-data query establishes tenant context.',
+  );
+  process.exit(1);
+}
+
 const redactUrl = (url) => url.replace(/:[^/@]+@/, ':***@');
 console.log(`[runtime-migrate] Applying migrations using ${redactUrl(databaseUrl)}`);
 
@@ -73,6 +87,27 @@ try {
     migrationsSchema: 'drizzle',
     migrationsTable: '__drizzle_migrations',
   });
+
+  // Migration 0038 creates RLS policies unconditionally because Drizzle
+  // migrations are deployment-wide. This release runs the complete schema
+  // in single-user mode, so remove RLS after every migration on any
+  // self-hosted Postgres target; otherwise direct user-scoped queries would
+  // see no rows without an app.current_tenant transaction setting.
+  const tenantTables = [
+    'agent_opinions', 'alerts', 'audit_logs', 'bot_links', 'briefings_emitted',
+    'chat_telemetry', 'chat_threads', 'chat_tool_telemetry', 'daily_ai_spend',
+    'decision_signal_feedback', 'decision_signal_outcomes', 'decision_signals',
+    'journal_entries', 'memory_embeddings', 'notification_noise_state',
+    'portfolio_positions', 'portfolio_settings', 'provider_tests',
+    'push_subscriptions', 'rate_limits', 'shared_snapshots', 'user_sessions',
+    'user_settings', 'user_symbols', 'chat_messages',
+  ];
+  for (const table of tenantTables) {
+    await sql.unsafe(`ALTER TABLE "${table}" NO FORCE ROW LEVEL SECURITY`);
+    await sql.unsafe(`ALTER TABLE "${table}" DISABLE ROW LEVEL SECURITY`);
+  }
+  console.log('[runtime-migrate] Single-user mode: tenant RLS disabled.');
+
   console.log('[runtime-migrate] Migrations completed successfully.');
 } catch (error) {
   console.error(

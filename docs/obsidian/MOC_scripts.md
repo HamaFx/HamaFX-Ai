@@ -1,15 +1,15 @@
 ---
 type: moc
 package: "scripts"
-nodes: 7
-totalIncoming: 6
-totalOutgoing: 6
+nodes: 8
+totalIncoming: 7
+totalOutgoing: 7
 tags: [moc, scripts]
 ---
 
 # 📦 scripts
 
-> **Map of Content** · 7 files · 6 incoming + 6 outgoing = 12 connections
+> **Map of Content** · 8 files · 7 incoming + 7 outgoing = 14 connections
 
 ## DataviewJS — All Files in This Package
 ```dataviewjs
@@ -25,14 +25,15 @@ dv.table(
 
 ## Files by Type
 
-### 📁 Module (6)
+### 📁 Module (7)
 - [[add-license]] *(0↖ 1↗)*
 - [[check-console-errors]] *(0↖ 1↗)*
 - [[check-test-files]] *(0↖ 1↗)*
 - [[dev]] *(0↖ 1↗)*
 - [[predeploy-migrate]] *(0↖ 1↗)*
+- [[rewrite-dist-imports]] *(0↖ 1↗)*
 - [[setup]] *(0↖ 1↗)*
 
 ### 📦 Package (1)
-- [[scripts]] *(6↖ 0↗)*
+- [[scripts]] *(7↖ 0↗)*
 

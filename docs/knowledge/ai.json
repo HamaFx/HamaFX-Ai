@@ -14,27 +14,27 @@
     },
     {
       "name": "analyze_technical",
-      "description": "Multi-timeframe technical readout (trend, bias, momentum, structure, levels) for a symbol. Use for any ",
+      "description": "Multi-timeframe technical readout (trend, bias, momentum, structure, levels) for a symbol. Use for any",
       "file": "packages/ai/src/tools/analyze-technical.ts"
     },
     {
       "name": "annotate_chart",
-      "description": "Copyright 2026 HamaFX",
+      "description": "Compute chart annotations (swings, BOS/CHoCH, FVG, order blocks, liquidity sweeps, previous-day high/low, Asian session range) for a symbol/timeframe. Use when the user asks to",
       "file": "packages/ai/src/tools/annotate-chart.ts"
     },
     {
       "name": "compute_position_health",
-      "description": "For each currently-open journal entry, compute live P/L in pips and R-multiples plus distance to stop and target. Use when the user asks ",
+      "description": "For each currently-open journal entry, compute live P/L in pips and R-multiples plus distance to stop and target. Use when the user asks",
       "file": "packages/ai/src/tools/compute-position-health.ts"
     },
     {
       "name": "compute_risk",
-      "description": "Compute position size, USD risk/reward, and pips-to-stop/target from a (symbol, side, entry, stop, target?, accountUsd, riskPct) tuple. Pure-function — no provider calls. Use when the user asks ",
+      "description": "Compute position size, USD risk/reward, and pips-to-stop/target from a (symbol, side, entry, stop, target?, accountUsd, riskPct) tuple. Pure-function — no provider calls. Use when the user asks",
       "file": "packages/ai/src/tools/compute-risk.ts"
     },
     {
       "name": "convene_committee",
-      "description": "Convene a Multi-Agent Trading Committee (Economist, Technician, Risk Manager) to evaluate a trade setup. Use whenever the user asks ",
+      "description": "Convene a Multi-Agent Trading Committee (Economist, Technician, Risk Manager) to evaluate a trade setup. Use whenever the user asks",
       "file": "packages/ai/src/tools/convene-committee.ts"
     },
     {
@@ -59,12 +59,12 @@
     },
     {
       "name": "get_co_t",
-      "description": "Last N weeks of CFTC Commitment-of-Traders rows for one symbol (default XAUUSD). Use to answer ",
+      "description": "Last N weeks of CFTC Commitment-of-Traders rows for one symbol (default XAUUSD). Use to answer",
       "file": "packages/ai/src/tools/get-cot.ts"
     },
     {
       "name": "get_indicators",
-      "description": "Compute indicators (sma, ema, rsi, macd, atr, bollinger, pivots) on a (symbol, timeframe) window. Returns the last 30 points of each series — enough for ",
+      "description": "Compute indicators (sma, ema, rsi, macd, atr, bollinger, pivots) on a (symbol, timeframe) window. Returns the last 30 points of each series — enough for",
       "file": "packages/ai/src/tools/get-indicators.ts"
     },
     {
@@ -104,7 +104,7 @@
     },
     {
       "name": "get_seasonality",
-      "description": "Per-month / per-weekday / per-hour return seasonality for a symbol. Returns median percent return, IQR, win rate, and sample count per bucket. Use for ",
+      "description": "Per-month / per-weekday / per-hour return seasonality for a symbol. Returns median percent return, IQR, win rate, and sample count per bucket. Use for",
       "file": "packages/ai/src/tools/get-seasonality.ts"
     },
     {
@@ -124,7 +124,7 @@
     },
     {
       "name": "log_journal",
-      "description": "Record a trade entry in the journal. Returns the new entry id + a summary line. Status is ",
+      "description": "Record a trade entry in the journal. Returns the new entry id + a summary line. Status is",
       "file": "packages/ai/src/tools/log-journal.ts"
     },
     {
@@ -154,7 +154,7 @@
     },
     {
       "name": "summarize_thread",
-      "description": "One-paragraph synopsis of the active chat thread plus three durable insights. Use when the user asks ",
+      "description": "One-paragraph synopsis of the active chat thread plus three durable insights. Use when the user asks",
       "file": "packages/ai/src/tools/summarize-thread.ts"
     },
     {

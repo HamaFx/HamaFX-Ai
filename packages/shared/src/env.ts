@@ -61,6 +61,8 @@ const DbEnv = z
     SUPABASE_URL: z.string().url().optional(),
     SUPABASE_SERVICE_ROLE_KEY: z.string().optional(),
     SUPABASE_SECRET_KEY: z.string().optional(),
+    /** Separate non-superuser connection for cross-tenant worker/cron jobs. */
+    ADMIN_DATABASE_URL: z.string().url().optional(),
   })
   .refine((v) => Boolean(v.DATABASE_URL || v.POSTGRES_URL), {
     message: 'Either DATABASE_URL or POSTGRES_URL must be set',
@@ -224,6 +226,13 @@ const RuntimeEnv = z.object({
   LANGFUSE_BASE_URL: z.string().url().optional(),
 
   // Feature Flags
+  /** Public account creation policy. owner-first allows only the initial owner. */
+  REGISTRATION_MODE: z.enum(['owner-first', 'open', 'disabled']).default('owner-first'),
+  /** RLS is required whenever multi-user mode is enabled. */
+  HAMAFX_ENABLE_RLS: z
+    .union([z.literal('0'), z.literal('1'), z.literal('true'), z.literal('false')])
+    .default('0')
+    .transform((v) => v === '1' || v === 'true'),
   MULTI_USER_ENABLED: z
     .union([z.literal('0'), z.literal('1'), z.literal('true'), z.literal('false')])
     .default('0')
@@ -270,7 +279,22 @@ export const ServerEnvSchema = z
         '+ Preview scopes, or in your local .env.local for `pnpm dev:local`.',
       path: ['AUTH_SECRET'],
     },
-  );
+  )
+  .refine((env) => !env.MULTI_USER_ENABLED || env.HAMAFX_ENABLE_RLS, {
+    message:
+      'MULTI_USER_ENABLED requires HAMAFX_ENABLE_RLS=true. Multi-user PostgreSQL deployments must fail closed instead of running without database tenant isolation.',
+    path: ['HAMAFX_ENABLE_RLS'],
+  })
+  .refine((env) => !env.MULTI_USER_ENABLED && !env.HAMAFX_ENABLE_RLS, {
+    message:
+      'Multi-user/RLS mode is disabled in this open-source release until every user-data query establishes tenant context. Keep MULTI_USER_ENABLED=0 and HAMAFX_ENABLE_RLS=0, and use owner-first registration.',
+    path: ['MULTI_USER_ENABLED'],
+  })
+  .refine((env) => env.REGISTRATION_MODE !== 'open' || (env.MULTI_USER_ENABLED && env.HAMAFX_ENABLE_RLS), {
+    message:
+      'REGISTRATION_MODE=open requires MULTI_USER_ENABLED=1 and HAMAFX_ENABLE_RLS=1; open registration is unsafe without tenant isolation.',
+    path: ['REGISTRATION_MODE'],
+  });
 
 export type ServerEnv = z.infer<typeof ServerEnvSchema>;
 /**

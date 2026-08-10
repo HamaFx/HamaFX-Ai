@@ -49,6 +49,7 @@ Module: packages/shared/src/errors.ts
 - `unauthorized`
 - `forbidden`
 - `rateLimited`
+- `conflict`
 - `notFound`
 - `providerUnavailable`
 - `budgetExceeded`

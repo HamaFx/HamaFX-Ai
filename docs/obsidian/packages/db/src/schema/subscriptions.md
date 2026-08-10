@@ -16,7 +16,7 @@ aliases: [subscriptions]
 > **DB Table** · `@hamafx/db` · `packages/db/src/schema/billing.ts`
 
 
-Database table: subscriptions (34 columns)
+Database table: subscriptions (37 columns)
 
 
 ## 📊 Connections

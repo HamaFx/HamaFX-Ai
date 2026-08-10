@@ -16,7 +16,7 @@ aliases: [get_indicators]
 > **AI Tool** · `@hamafx/ai` · `packages/ai/src/tools/get-indicators.ts`
 
 
-Compute indicators (sma, ema, rsi, macd, atr, bollinger, pivots) on a (symbol, timeframe) window. Returns the last 30 points of each series — enough for 
+Compute indicators (sma, ema, rsi, macd, atr, bollinger, pivots) on a (symbol, timeframe) window. Returns the last 30 points of each series — enough for
 
 
 ## 📊 Connections

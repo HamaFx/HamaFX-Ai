@@ -91,6 +91,8 @@ export interface CreateUserInput {
   email: string;
   name: string;
   hashedPassword: string;
+  /** Serialize owner-first registration and reject a second initial account. */
+  initialUserOnly?: boolean;
 }
 
 /**
@@ -102,6 +104,20 @@ export async function createUserWithSettings(
 ): Promise<void> {
   const db = getDb();
   await db.transaction(async (tx) => {
+    if (input.initialUserOnly) {
+      // Serialize the check and insert so two concurrent first-run requests
+      // cannot both become the owner of a fresh deployment.
+      await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext('hamafx:first-user-registration'))`);
+      const [existingUser] = await tx
+        .select({ id: schema.users.id })
+        .from(schema.users)
+        .where(isNull(schema.users.deletedAt))
+        .limit(1);
+      if (existingUser) {
+        throw new Error('INITIAL_USER_ALREADY_EXISTS');
+      }
+    }
+
     await tx.insert(schema.users).values({
       id: input.id,
       email: input.email,
@@ -118,7 +134,9 @@ export async function createUserWithSettings(
 }
 
 /**
- * Check if a user already exists by email (not deleted).
+ * Check if an email is already reserved by any user, including soft-deleted
+ * rows. The users.email database constraint is unique, so allowing a
+ * soft-deleted email through registration would fail later in the transaction.
  */
 export async function userExistsByEmail(email: string): Promise<boolean> {
   const db = getDb();

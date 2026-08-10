@@ -1,0 +1,33 @@
+name: Docker Backup Restore
+
+on:
+  pull_request:
+    paths:
+      - 'docker-compose.yml'
+      - 'docker/**'
+      - '.github/workflows/docker-backup.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'docker-compose.yml'
+      - 'docker/**'
+      - '.github/workflows/docker-backup.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: docker-backup-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backup-restore-smoke:
+    name: Docker backup/restore smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Generate disposable Compose secrets
+        run: ./docker/init-secrets.sh
+
+      - name: Run backup/restore smoke test
+        run: ./docker/backup-restore-smoke.sh

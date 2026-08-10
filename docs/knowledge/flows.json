@@ -177,7 +177,7 @@
         {
           "order": 1,
           "step": "Request enters",
-          "component": "Edge Middleware"
+          "component": "Request Proxy"
         },
         {
           "order": 2,
@@ -187,7 +187,7 @@
         {
           "order": 3,
           "step": "CSRF validation",
-          "component": "Middleware CSRF check"
+          "component": "Proxy CSRF check"
         },
         {
           "order": 4,

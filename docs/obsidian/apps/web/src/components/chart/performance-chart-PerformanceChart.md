@@ -3,8 +3,8 @@ type: component
 package: "@hamafx/web"
 path: "apps/web/src/components/chart/performance-chart.tsx"
 incoming: 0
-outgoing: 5
-connections: 5
+outgoing: 4
+connections: 4
 risk: low
 layer: ui
 tags: [type/component, hamafx-web, layer/ui]
@@ -24,15 +24,15 @@ React component: performance-chart
 | | Count |
 |---|---|
 | Incoming dependencies | 0 |
-| Outgoing dependencies | 5 |
-| Total connections | 5 |
+| Outgoing dependencies | 4 |
+| Total connections | 4 |
 | Risk level | **LOW** |
 | Layer | `ui` |
 | Package tag | `#hamafx-web` |
 
 
-### 📤 Depends On (4)
-[[@hamafx-shared]] · [[chart-Chart]] · [[performance-chart-data-EquityPoint]] · [[@hamafx-web]]
+### 📤 Depends On (3)
+[[@hamafx-shared]] · [[performance-chart-data-EquityPoint]] · [[@hamafx-web]]
 
 
 

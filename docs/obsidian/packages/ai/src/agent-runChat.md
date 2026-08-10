@@ -3,8 +3,8 @@ type: module
 package: "@hamafx/ai"
 path: "packages/ai/src/agent.ts"
 incoming: 4
-outgoing: 39
-connections: 43
+outgoing: 34
+connections: 38
 risk: high
 layer: core
 tags: [type/module, hamafx-ai, layer/core, risk/high]
@@ -24,16 +24,16 @@ Module: packages/ai/src/agent.ts
 | | Count |
 |---|---|
 | Incoming dependencies | 4 |
-| Outgoing dependencies | 39 |
-| Total connections | 43 |
+| Outgoing dependencies | 34 |
+| Total connections | 38 |
 | Risk level | **HIGH** |
 | Layer | `core` |
 | Package tag | `#hamafx-ai` |
 
 
-### 📤 Depends On (30)
-[[@hamafx-shared]] · [[telemetry-telemetryConfig]] · [[context-buildLiveSnapshot]] · [[system-LiveSnapshot]] · [[cost-DEFAULT_TURN_ESTIMATE_USD]] · [[fallback-FallbackReason]] · [[token-estimate-TokenEstimateResult]] · [[thread-summary-CompactResult]] · [[model]] · [[persistence]] · [[planner-PlannerEnv]] · [[message-text-sanitizeUserInput]] · [[routing-RoutingDomain]] · [[model-resolution-toModelDomain]] · [[tool-context-ToolEnv]] · [[index_tool-architecture-explorer|index]] · [[verification-CitationFinding]] · [[wait-until-waitUntil]] · [[@hamafx-db]] · [[by-domain-RoutingDomain]]
-> ... and 10 more
+### 📤 Depends On (29)
+[[@hamafx-shared]] · [[telemetry-telemetryConfig]] · [[context-buildLiveSnapshot]] · [[cost-DEFAULT_TURN_ESTIMATE_USD]] · [[fallback-FallbackReason]] · [[token-estimate-TokenEstimateResult]] · [[thread-summary-CompactResult]] · [[model]] · [[persistence]] · [[planner-PlannerEnv]] · [[system-LiveSnapshot]] · [[message-text-sanitizeUserInput]] · [[routing-RoutingDomain]] · [[tool-context-ToolEnv]] · [[verification-CitationFinding]] · [[wait-until-waitUntil]] · [[@hamafx-db]] · [[by-domain-RoutingDomain]] · [[types-RunChatArgs]] · [[rate-limits-RateLimitData]]
+> ... and 9 more
 
 
 ### 📥 Depended On By (4)

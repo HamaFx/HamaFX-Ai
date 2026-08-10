@@ -3,8 +3,8 @@ type: module
 package: "@hamafx/web"
 path: "apps/web/src/app/(app)/chart/[symbol]/_components/pro-chart-view.tsx"
 incoming: 1
-outgoing: 3
-connections: 4
+outgoing: 4
+connections: 5
 risk: low
 layer: core
 tags: [type/module, hamafx-web, layer/core]
@@ -24,8 +24,8 @@ Module: apps/web/src/app/(app)/chart/[symbol]/_components/pro-chart-view.tsx
 | | Count |
 |---|---|
 | Incoming dependencies | 1 |
-| Outgoing dependencies | 3 |
-| Total connections | 4 |
+| Outgoing dependencies | 4 |
+| Total connections | 5 |
 | Risk level | **LOW** |
 | Layer | `core` |
 | Package tag | `#hamafx-web` |

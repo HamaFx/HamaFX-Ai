@@ -2,9 +2,9 @@
 type: module
 package: "@hamafx/ai"
 path: "packages/ai/src/push/persistence.ts"
-incoming: 3
+incoming: 4
 outgoing: 3
-connections: 6
+connections: 7
 risk: low
 layer: core
 tags: [type/module, hamafx-ai, layer/core]
@@ -23,9 +23,9 @@ Module: packages/ai/src/push/persistence.ts
 
 | | Count |
 |---|---|
-| Incoming dependencies | 3 |
+| Incoming dependencies | 4 |
 | Outgoing dependencies | 3 |
-| Total connections | 6 |
+| Total connections | 7 |
 | Risk level | **LOW** |
 | Layer | `core` |
 | Package tag | `#hamafx-ai` |
@@ -35,13 +35,14 @@ Module: packages/ai/src/push/persistence.ts
 [[@hamafx-db]] · [[db-getDb]] · [[@hamafx-ai]]
 
 
-### 📥 Depended On By (2)
-[[delivery-DeliveryResult]] · [[send-VapidEnv]]
+### 📥 Depended On By (3)
+[[delivery-DeliveryResult]] · [[send-VapidEnv]] · [[push-persistence.test]]
 
 
 
 ## 📦 Exports
 - `PushSubscriptionRow`
+- `PushSubscriptionConflictError`
 - `SavePushSubscriptionArgs`
 - `listPushSubscriptions`
 - `savePushSubscription`

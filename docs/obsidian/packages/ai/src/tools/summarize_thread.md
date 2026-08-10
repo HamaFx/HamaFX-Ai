@@ -16,7 +16,7 @@ aliases: [summarize_thread]
 > **AI Tool** · `@hamafx/ai` · `packages/ai/src/tools/summarize-thread.ts`
 
 
-One-paragraph synopsis of the active chat thread plus three durable insights. Use when the user asks 
+One-paragraph synopsis of the active chat thread plus three durable insights. Use when the user asks
 
 
 ## 📊 Connections

@@ -1,6 +1,7 @@
 {
   "name": "@hamafx/worker",
   "version": "0.0.0",
+  "private": true,
   "type": "module",
   "main": "./dist/index.js",
   "scripts": {

@@ -10,17 +10,17 @@ tags: [dashboard, overview]
 
 | Package | Nodes | Incoming Deps | Outgoing Deps | Layers |
 |---------|-------|--------------|--------------|--------|
-| @hamafx/web | 669 | 1037 | 1544 | package, core, api, ui |
-| @hamafx/ai | 273 | 973 | 1306 | package, core, ai |
-| @hamafx/db | 157 | 435 | 252 | package, core, data |
-| @hamafx/shared | 84 | 820 | 250 | package, core |
-| @hamafx/data | 64 | 201 | 230 | package, core |
+| @hamafx/web | 653 | 970 | 1448 | package, core, api, ui |
+| @hamafx/ai | 274 | 971 | 1304 | package, core, ai |
+| @hamafx/db | 160 | 438 | 255 | package, core, data |
+| @hamafx/shared | 84 | 792 | 250 | package, core |
+| @hamafx/data | 65 | 202 | 235 | package, core |
 | @hamafx/worker | 58 | 200 | 278 | package, core |
-| @hamafx/indicators | 39 | 102 | 159 | package, core |
+| @hamafx/indicators | 39 | 101 | 159 | package, core |
 | loadtest | 31 | 144 | 143 | package, core |
-| @hamafx/test-utils | 19 | 278 | 36 | package, core |
+| @hamafx/test-utils | 19 | 282 | 36 | package, core |
 | tool:architecture-explorer | 17 | 66 | 66 | package, core |
-| scripts | 7 | 6 | 6 | package, core |
+| scripts | 8 | 7 | 7 | package, core |
 | @hamafx/config | 4 | 12 | 4 | package, core |
 | root | 3 | 2 | 2 | package, core |
 | tool:lighthouse | 2 | 1 | 1 | package, core |

@@ -2,9 +2,9 @@
 type: module
 package: "@hamafx/ai"
 path: "packages/ai/src/tools/index.ts"
-incoming: 8
+incoming: 7
 outgoing: 1
-connections: 9
+connections: 8
 risk: low
 layer: core
 tags: [type/module, hamafx-ai, layer/core]
@@ -23,9 +23,9 @@ Module: packages/ai/src/tools/index.ts
 
 | | Count |
 |---|---|
-| Incoming dependencies | 8 |
+| Incoming dependencies | 7 |
 | Outgoing dependencies | 1 |
-| Total connections | 9 |
+| Total connections | 8 |
 | Risk level | **LOW** |
 | Layer | `core` |
 | Package tag | `#hamafx-ai` |
@@ -35,8 +35,8 @@ Module: packages/ai/src/tools/index.ts
 [[@hamafx-ai]]
 
 
-### 📥 Depended On By (8)
-[[agent-runChat]] · [[catalogue-CatalogueEntry]] · [[FundamentalAgent]] · [[RiskAgent]] · [[SentimentAgent]] · [[TechnicalAgent]] · [[by-domain-RoutingDomain]] · [[tools.test]]
+### 📥 Depended On By (7)
+[[catalogue-CatalogueEntry]] · [[FundamentalAgent]] · [[RiskAgent]] · [[SentimentAgent]] · [[TechnicalAgent]] · [[by-domain-RoutingDomain]] · [[tools.test]]
 
 
 

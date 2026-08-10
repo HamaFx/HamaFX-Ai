@@ -7,9 +7,10 @@
 // The signIn callback becomes thin glue: validate inputs, delegate to
 // provisionUserOnSignIn, return its decision.
 
-import { and, eq, isNull } from 'drizzle-orm';
+import { and, eq, isNull, sql } from 'drizzle-orm';
 import { schema } from '@hamafx/db';
 import { getDb } from '@hamafx/ai';
+import { getServerEnv } from '@/lib/env';
 
 // ── Typed inputs ──────────────────────────────────────────────────────
 
@@ -67,6 +68,8 @@ export async function provisionUserOnSignIn(input: SignInInput): Promise<SignInD
   // the signIn callback is a no-op for them.
   if (account?.provider !== 'google') return { allow: true };
 
+  const registrationMode = getServerEnv().REGISTRATION_MODE;
+
   if (!profile?.email || profile.email_verified === false) {
     return { allow: false, reason: 'Google account email not verified' };
   }
@@ -83,28 +86,50 @@ export async function provisionUserOnSignIn(input: SignInInput): Promise<SignInD
 
   let userId = existing?.id;
 
+  // Registration-disabled means no new accounts. Existing users may still
+  // sign in and link their OAuth account.
+  if (!userId && registrationMode === 'disabled') {
+    return { allow: false, reason: 'Registration is disabled by the instance owner' };
+  }
+
   if (!userId) {
     // Create new OAuth user
     userId = crypto.randomUUID();
     const newUserId = userId; // narrow to string for the transaction closure
-    await db.transaction(async (tx) => {
-      const t = tx as unknown as typeof db;
-      await t.insert(schema.users).values({
-        id: newUserId,
-        email,
-        name: (profile.name ?? email) as string,
-        image:
-          (profile.picture as string) ??
-          `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(String(profile.name ?? email))}`,
-        emailVerified: new Date(),
-        hashedPassword: null,
+    try {
+      await db.transaction(async (tx) => {
+        const t = tx as unknown as typeof db;
+        if (registrationMode === 'owner-first') {
+          await t.execute(sql`SELECT pg_advisory_xact_lock(hashtext('hamafx:first-user-registration'))`);
+          const [existingUser] = await t
+            .select({ id: schema.users.id })
+            .from(schema.users)
+            .where(isNull(schema.users.deletedAt))
+            .limit(1);
+          if (existingUser) throw new Error('INITIAL_USER_ALREADY_EXISTS');
+        }
+        await t.insert(schema.users).values({
+          id: newUserId,
+          email,
+          name: (profile.name ?? email) as string,
+          image:
+            (profile.picture as string) ??
+            `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(String(profile.name ?? email))}`,
+          emailVerified: new Date(),
+          hashedPassword: null,
+        });
+        await t.insert(schema.userSettings).values({
+          userId: newUserId,
+          onboardingCompleted: false,
+          defaultSymbol: 'XAUUSD',
+        });
       });
-      await t.insert(schema.userSettings).values({
-        userId: newUserId,
-        onboardingCompleted: false,
-        defaultSymbol: 'XAUUSD',
-      });
-    });
+    } catch (error) {
+      if (error instanceof Error && error.message === 'INITIAL_USER_ALREADY_EXISTS') {
+        return { allow: false, reason: 'Registration is closed. Ask the instance owner to invite you.' };
+      }
+      throw error;
+    }
   } else {
     // Ensure emailVerified is set for linked accounts
     await db

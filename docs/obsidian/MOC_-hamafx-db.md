@@ -1,15 +1,15 @@
 ---
 type: moc
 package: "@hamafx/db"
-nodes: 157
-totalIncoming: 435
-totalOutgoing: 252
+nodes: 160
+totalIncoming: 438
+totalOutgoing: 255
 tags: [moc, hamafx-db]
 ---
 
 # 📦 @hamafx/db
 
-> **Map of Content** · 157 files · 435 incoming + 252 outgoing = 687 connections
+> **Map of Content** · 160 files · 438 incoming + 255 outgoing = 693 connections
 
 ## DataviewJS — All Files in This Package
 ```dataviewjs
@@ -25,7 +25,7 @@ dv.table(
 
 ## Files by Type
 
-### 📁 Module (106)
+### 📁 Module (107)
 - [[seed-plans]] *(0↖ 3↗)*
 - [[local-db-getLocalDb]] *(0↖ 3↗)*
 - [[admin-audit-recordAdminAudit]] *(0↖ 3↗)*
@@ -61,7 +61,7 @@ dv.table(
 - [[cron-runs-CronRunRow]] *(0↖ 2↗)*
 - [[diagnostic-traces-DiagnosticTraceRow]] *(0↖ 2↗)*
 - [[feature-flags-FeatureFlagRow]] *(0↖ 2↗)*
-- [[ipn-events-findIpnEvent]] *(0↖ 2↗)*
+- [[ipn-events-IpnClaim]] *(0↖ 2↗)*
 - [[journal-JournalRow]] *(0↖ 2↗)*
 - [[news-articles-NewsArticleRow]] *(0↖ 2↗)*
 - [[onboarding-ResetMode]] *(0↖ 2↗)*
@@ -83,7 +83,7 @@ dv.table(
 - [[admin-audit-adminAuditLogs]] *(1↖ 2↗)*
 - [[alerts-alerts]] *(1↖ 2↗)*
 - [[audit-auditLogs]] *(1↖ 2↗)*
-- [[billing-planInterval]] *(5↖ 2↗)*
+- [[billing-planInterval]] *(7↖ 2↗)*
 - [[bot-links-botLinks]] *(1↖ 2↗)*
 - [[chat-chatThreads]] *(5↖ 2↗)*
 - [[daily-ai-spend-dailyAiSpend]] *(1↖ 2↗)*
@@ -109,6 +109,7 @@ dv.table(
 - [[install-extensions]] *(0↖ 1↗)*
 - [[list-tables]] *(0↖ 1↗)*
 - [[migrate-status]] *(0↖ 1↗)*
+- [[rotate-encryption-secret]] *(0↖ 1↗)*
 - [[index_tool-architecture-explorer|index]] *(2↖ 1↗)*
 - [[index_tool-architecture-explorer|index]] *(0↖ 1↗)*
 - [[_extensions]] *(0↖ 1↗)*
@@ -133,7 +134,7 @@ dv.table(
 - [[with-user-scope-withUserScope]] *(1↖ 1↗)*
 - [[vitest.config-defineConfig]] *(0↖ 1↗)*
 
-### 🗄️ DB Table (50)
+### 🗄️ DB Table (52)
 - [[admin_audit_log]] *(0↖ 1↗)*
 - [[agent_opinions]] *(0↖ 1↗)*
 - [[alerts]] *(0↖ 1↗)*
@@ -152,6 +153,8 @@ dv.table(
 - [[subscriptions]] *(0↖ 1↗)*
 - [[payments]] *(0↖ 1↗)*
 - [[ipn_events]] *(0↖ 1↗)*
+- [[billing_webhook_dlq]] *(0↖ 1↗)*
+- [[billing_checkout_attempts]] *(0↖ 1↗)*
 - [[bot_links]] *(0↖ 1↗)*
 - [[briefings_emitted]] *(0↖ 1↗)*
 - [[economic_events]] *(0↖ 1↗)*
@@ -186,5 +189,5 @@ dv.table(
 - [[chat_tool_telemetry]] *(0↖ 1↗)*
 
 ### 📦 Package (1)
-- [[@hamafx-db]] *(307↖ 0↗)*
+- [[@hamafx-db]] *(308↖ 0↗)*
 

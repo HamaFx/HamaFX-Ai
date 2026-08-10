@@ -161,7 +161,7 @@
       "toNode": "n12",
       "fromSide": "right",
       "toSide": "left",
-      "label": "268 deps",
+      "label": "240 deps",
       "color": "5"
     },
     {
@@ -179,7 +179,7 @@
       "toNode": "n10",
       "fromSide": "right",
       "toSide": "left",
-      "label": "85 deps",
+      "label": "84 deps",
       "color": "5"
     },
     {
@@ -188,7 +188,7 @@
       "toNode": "n9",
       "fromSide": "right",
       "toSide": "left",
-      "label": "12 deps",
+      "label": "11 deps",
       "color": "3"
     },
     {
@@ -197,7 +197,7 @@
       "toNode": "n11",
       "fromSide": "right",
       "toSide": "left",
-      "label": "2 deps",
+      "label": "1 deps",
       "color": "1"
     },
     {
@@ -206,7 +206,7 @@
       "toNode": "n13",
       "fromSide": "right",
       "toSide": "left",
-      "label": "68 deps",
+      "label": "70 deps",
       "color": "5"
     },
     {
@@ -296,7 +296,7 @@
       "toNode": "n10",
       "fromSide": "right",
       "toSide": "left",
-      "label": "96 deps",
+      "label": "95 deps",
       "color": "5"
     },
     {
@@ -323,7 +323,7 @@
       "toNode": "n13",
       "fromSide": "right",
       "toSide": "left",
-      "label": "96 deps",
+      "label": "97 deps",
       "color": "5"
     },
     {
@@ -350,8 +350,8 @@
       "toNode": "n10",
       "fromSide": "right",
       "toSide": "left",
-      "label": "9 deps",
-      "color": "1"
+      "label": "11 deps",
+      "color": "3"
     },
     {
       "id": "@hamafx/data→@hamafx/test-utils",
@@ -359,7 +359,7 @@
       "toNode": "n13",
       "fromSide": "right",
       "toSide": "left",
-      "label": "19 deps",
+      "label": "20 deps",
       "color": "3"
     },
     {

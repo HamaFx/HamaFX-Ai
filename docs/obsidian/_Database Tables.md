@@ -1,11 +1,11 @@
 ---
 type: index
 category: "table"
-count: 50
+count: 52
 tags: [index, type/table]
 ---
 
-# 🗄️ DB Tables (50)
+# 🗄️ DB Tables (52)
 
 ## DataviewJS — Sorted by Most Connected
 ```dataviewjs
@@ -39,6 +39,8 @@ dv.table(
 - [[subscriptions]] · `@hamafx/db` · `packages/db/src/schema/billing.ts`  *(↖0 ↗1 = 1)*
 - [[payments]] · `@hamafx/db` · `packages/db/src/schema/billing.ts`  *(↖0 ↗1 = 1)*
 - [[ipn_events]] · `@hamafx/db` · `packages/db/src/schema/billing.ts`  *(↖0 ↗1 = 1)*
+- [[billing_webhook_dlq]] · `@hamafx/db` · `packages/db/src/schema/billing.ts`  *(↖0 ↗1 = 1)*
+- [[billing_checkout_attempts]] · `@hamafx/db` · `packages/db/src/schema/billing.ts`  *(↖0 ↗1 = 1)*
 - [[bot_links]] · `@hamafx/db` · `packages/db/src/schema/bot-links.ts`  *(↖0 ↗1 = 1)*
 - [[briefings_emitted]] · `@hamafx/db` · `packages/db/src/schema/briefings.ts`  *(↖0 ↗1 = 1)*
 - [[economic_events]] · `@hamafx/db` · `packages/db/src/schema/calendar.ts`  *(↖0 ↗1 = 1)*

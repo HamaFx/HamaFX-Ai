@@ -280,9 +280,55 @@ describe('parseServerEnv — defaults and transforms', () => {
     expect(env.BYOK_ENABLED).toBe(true);
   });
 
-  it('transforms MULTI_USER_ENABLED="1" to boolean true', () => {
-    const env = parseServerEnv({ ...MINIMAL_ENV, NODE_ENV: 'test', MULTI_USER_ENABLED: '1' });
-    expect(env.MULTI_USER_ENABLED).toBe(true);
+  it('rejects MULTI_USER_ENABLED="1" in the OSS release', () => {
+    expect(() =>
+      parseServerEnv({
+        ...MINIMAL_ENV,
+        NODE_ENV: 'test',
+        MULTI_USER_ENABLED: '1',
+        HAMAFX_ENABLE_RLS: '1',
+      }),
+    ).toThrow(/Multi-user\/RLS mode is disabled/i);
+  });
+
+  it('defaults registration to owner-first', () => {
+    const env = parseServerEnv({ ...MINIMAL_ENV, NODE_ENV: 'test' });
+    expect(env.REGISTRATION_MODE).toBe('owner-first');
+  });
+
+  it('rejects multi-user mode without RLS', () => {
+    expect(() => parseServerEnv({ ...MINIMAL_ENV, NODE_ENV: 'test', MULTI_USER_ENABLED: '1' })).toThrow(
+      /MULTI_USER_ENABLED requires HAMAFX_ENABLE_RLS/i,
+    );
+  });
+
+  it('rejects multi-user mode even when RLS is enabled in the OSS release', () => {
+    expect(() =>
+      parseServerEnv({
+        ...MINIMAL_ENV,
+        NODE_ENV: 'test',
+        MULTI_USER_ENABLED: '1',
+        HAMAFX_ENABLE_RLS: '1',
+      }),
+    ).toThrow(/Multi-user\/RLS mode is disabled/i);
+  });
+
+  it('rejects open registration without multi-user RLS', () => {
+    expect(() => parseServerEnv({ ...MINIMAL_ENV, NODE_ENV: 'test', REGISTRATION_MODE: 'open' })).toThrow(
+      /REGISTRATION_MODE=open requires/i,
+    );
+  });
+
+  it('rejects open registration in the OSS release', () => {
+    expect(() =>
+      parseServerEnv({
+        ...MINIMAL_ENV,
+        NODE_ENV: 'test',
+        REGISTRATION_MODE: 'open',
+        MULTI_USER_ENABLED: '1',
+        HAMAFX_ENABLE_RLS: '1',
+      }),
+    ).toThrow(/Multi-user\/RLS mode is disabled|REGISTRATION_MODE=open requires/i);
   });
 
   it('transforms UNLIMITED_SYMBOLS="false" to boolean false', () => {

@@ -16,7 +16,7 @@ aliases: [payments]
 > **DB Table** · `@hamafx/db` · `packages/db/src/schema/billing.ts`
 
 
-Database table: payments (23 columns)
+Database table: payments (47 columns)
 
 
 ## 📊 Connections

@@ -2,9 +2,9 @@
 type: module
 package: "@hamafx/db"
 path: "packages/db/src/schema/billing.ts"
-incoming: 5
+incoming: 7
 outgoing: 2
-connections: 7
+connections: 9
 risk: low
 layer: core
 tags: [type/module, hamafx-db, layer/core]
@@ -16,16 +16,16 @@ aliases: [billing/planInterval]
 > **Module** · `@hamafx/db` · `packages/db/src/schema/billing.ts`
 
 
-Database schema (4 tables)
+Database schema (6 tables)
 
 
 ## 📊 Connections
 
 | | Count |
 |---|---|
-| Incoming dependencies | 5 |
+| Incoming dependencies | 7 |
 | Outgoing dependencies | 2 |
-| Total connections | 7 |
+| Total connections | 9 |
 | Risk level | **LOW** |
 | Layer | `core` |
 | Package tag | `#hamafx-db` |
@@ -35,8 +35,8 @@ Database schema (4 tables)
 [[auth-users]] · [[@hamafx-db]]
 
 
-### 📥 Depended On By (5)
-[[plans]] · [[subscriptions]] · [[payments]] · [[ipn_events]] · [[seed-plans]]
+### 📥 Depended On By (7)
+[[plans]] · [[subscriptions]] · [[payments]] · [[ipn_events]] · [[billing_webhook_dlq]] · [[billing_checkout_attempts]] · [[seed-plans]]
 
 
 
@@ -48,14 +48,14 @@ Database schema (4 tables)
 - `subscriptions`
 - `payments`
 - `ipnEvents`
+- `billingWebhookDlq`
+- `billingCheckoutAttempts`
 - `PlanRow`
 - `PlanInsert`
 - `SubscriptionRow`
 - `SubscriptionInsert`
 - `PaymentRow`
 - `PaymentInsert`
-- `IpnEventRow`
-- `IpnEventInsert`
 
 
 ## 🔍 Explore

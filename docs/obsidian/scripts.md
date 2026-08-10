@@ -2,9 +2,9 @@
 type: package
 package: "scripts"
 path: "scripts"
-incoming: 6
+incoming: 7
 outgoing: 0
-connections: 6
+connections: 7
 risk: low
 layer: package
 tags: [type/package, scripts, layer/package]
@@ -23,17 +23,17 @@ Package: scripts
 
 | | Count |
 |---|---|
-| Incoming dependencies | 6 |
+| Incoming dependencies | 7 |
 | Outgoing dependencies | 0 |
-| Total connections | 6 |
+| Total connections | 7 |
 | Risk level | **LOW** |
 | Layer | `package` |
 | Package tag | `#scripts` |
 
 
 
-### 📥 Depended On By (6)
-[[add-license]] · [[check-console-errors]] · [[check-test-files]] · [[dev]] · [[predeploy-migrate]] · [[setup]]
+### 📥 Depended On By (7)
+[[add-license]] · [[check-console-errors]] · [[check-test-files]] · [[dev]] · [[predeploy-migrate]] · [[rewrite-dist-imports]] · [[setup]]
 
 
 

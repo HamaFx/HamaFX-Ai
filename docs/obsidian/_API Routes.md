@@ -1,11 +1,11 @@
 ---
 type: index
 category: "api_route"
-count: 190
+count: 192
 tags: [index, type/api_route]
 ---
 
-# 🔗 API Routes (190)
+# 🔗 API Routes (192)
 
 ## DataviewJS — Sorted by Most Connected
 ```dataviewjs
@@ -23,7 +23,6 @@ dv.table(
 
 - [[POST--api-chat]] · `@hamafx/web` · `apps/web/src/app/api/chat/route.ts`  *(↖1 ↗7 = 8)*
 - [[GET--api-market-stream]] · `@hamafx/web` · `apps/web/src/app/api/market/stream/route.ts`  *(↖1 ↗5 = 6)*
-- [[POST--api-market-structure]] · `@hamafx/web` · `apps/web/src/app/api/market/structure/route.ts`  *(↖1 ↗5 = 6)*
 - [[POST--api-settings-test-provider]] · `@hamafx/web` · `apps/web/src/app/api/settings/test-provider/route.ts`  *(↖1 ↗5 = 6)*
 - [[GET--api-cron-cot]] · `@hamafx/web` · `apps/web/src/app/api/cron/cot/route.ts`  *(↖1 ↗4 = 5)*
 - [[GET--api-cron-snapshots]] · `@hamafx/web` · `apps/web/src/app/api/cron/snapshots/route.ts`  *(↖1 ↗4 = 5)*
@@ -53,6 +52,7 @@ dv.table(
 - [[GET--api-settings-usage-by-agent]] · `@hamafx/web` · `apps/web/src/app/api/settings/usage-by-agent/route.ts`  *(↖1 ↗3 = 4)*
 - [[POST--api-upload]] · `@hamafx/web` · `apps/web/src/app/api/upload/route.ts`  *(↖1 ↗3 = 4)*
 - [[GET--api-admin-audit]] · `@hamafx/web` · `apps/web/src/app/api/admin/audit/route.ts`  *(↖1 ↗2 = 3)*
+- [[POST--api-admin-billing-dlq--id-replay]] · `@hamafx/web` · `apps/web/src/app/api/admin/billing/dlq/[id]/replay/route.ts`  *(↖1 ↗2 = 3)*
 - [[GET--api-admin-cron-history]] · `@hamafx/web` · `apps/web/src/app/api/admin/cron-history/route.ts`  *(↖1 ↗2 = 3)*
 - [[GET--api-admin-diagnostics-tool-telemetry]] · `@hamafx/web` · `apps/web/src/app/api/admin/diagnostics/tool-telemetry/route.ts`  *(↖1 ↗2 = 3)*
 - [[GET--api-admin-diagnostics-trace--id]] · `@hamafx/web` · `apps/web/src/app/api/admin/diagnostics/trace/[id]/route.ts`  *(↖1 ↗2 = 3)*
@@ -77,6 +77,7 @@ dv.table(
 - [[POST--api-chat-threads-bulk-delete]] · `@hamafx/web` · `apps/web/src/app/api/chat/threads/bulk-delete/route.ts`  *(↖1 ↗2 = 3)*
 - [[POST--api-chat-threads-fork]] · `@hamafx/web` · `apps/web/src/app/api/chat/threads/fork/route.ts`  *(↖1 ↗2 = 3)*
 - [[GET--api-cron-alerts]] · `@hamafx/web` · `apps/web/src/app/api/cron/alerts/route.ts`  *(↖1 ↗2 = 3)*
+- [[GET--api-cron-billing-dlq]] · `@hamafx/web` · `apps/web/src/app/api/cron/billing-dlq/route.ts`  *(↖1 ↗2 = 3)*
 - [[GET--api-cron-cleanup-telemetry]] · `@hamafx/web` · `apps/web/src/app/api/cron/cleanup-telemetry/route.ts`  *(↖1 ↗2 = 3)*
 - [[GET--api-cron-cleanup-tokens]] · `@hamafx/web` · `apps/web/src/app/api/cron/cleanup-tokens/route.ts`  *(↖1 ↗2 = 3)*
 - [[GET--api-cron-embedding-backfill]] · `@hamafx/web` · `apps/web/src/app/api/cron/embedding-backfill/route.ts`  *(↖1 ↗2 = 3)*
@@ -118,6 +119,7 @@ dv.table(
 - [[GET,PUT--api-settings-fallback-chain]] · `@hamafx/web` · `apps/web/src/app/api/settings/fallback-chain/route.ts`  *(↖1 ↗1 = 2)*
 - [[GET--api-admin-architecture-explorer]] · `@hamafx/web` · `apps/web/src/app/api/admin/architecture-explorer/route.ts`  *(↖0 ↗1 = 1)*
 - [[GET--api-admin-audit]] · `@hamafx/web` · `apps/web/src/app/api/admin/audit/route.ts`  *(↖0 ↗1 = 1)*
+- [[POST--api-admin-billing-dlq--id-replay]] · `@hamafx/web` · `apps/web/src/app/api/admin/billing/dlq/[id]/replay/route.ts`  *(↖0 ↗1 = 1)*
 - [[GET--api-admin-cron-history]] · `@hamafx/web` · `apps/web/src/app/api/admin/cron-history/route.ts`  *(↖0 ↗1 = 1)*
 - [[GET--api-admin-diagnostics-tool-telemetry]] · `@hamafx/web` · `apps/web/src/app/api/admin/diagnostics/tool-telemetry/route.ts`  *(↖0 ↗1 = 1)*
 - [[GET--api-admin-diagnostics-trace--id]] · `@hamafx/web` · `apps/web/src/app/api/admin/diagnostics/trace/[id]/route.ts`  *(↖0 ↗1 = 1)*
@@ -158,6 +160,7 @@ dv.table(
 - [[POST--api-chat-threads-fork]] · `@hamafx/web` · `apps/web/src/app/api/chat/threads/fork/route.ts`  *(↖0 ↗1 = 1)*
 - [[GET--api-chat-threads]] · `@hamafx/web` · `apps/web/src/app/api/chat/threads/route.ts`  *(↖0 ↗1 = 1)*
 - [[GET--api-cron-alerts]] · `@hamafx/web` · `apps/web/src/app/api/cron/alerts/route.ts`  *(↖0 ↗1 = 1)*
+- [[GET--api-cron-billing-dlq]] · `@hamafx/web` · `apps/web/src/app/api/cron/billing-dlq/route.ts`  *(↖0 ↗1 = 1)*
 - [[GET--api-cron-briefings]] · `@hamafx/web` · `apps/web/src/app/api/cron/briefings/route.ts`  *(↖0 ↗1 = 1)*
 - [[GET--api-cron-calendar]] · `@hamafx/web` · `apps/web/src/app/api/cron/calendar/route.ts`  *(↖0 ↗1 = 1)*
 - [[GET--api-cron-cleanup-telemetry]] · `@hamafx/web` · `apps/web/src/app/api/cron/cleanup-telemetry/route.ts`  *(↖0 ↗1 = 1)*
@@ -183,7 +186,6 @@ dv.table(
 - [[GET--api-market-price]] · `@hamafx/web` · `apps/web/src/app/api/market/price/route.ts`  *(↖0 ↗1 = 1)*
 - [[GET--api-market-search]] · `@hamafx/web` · `apps/web/src/app/api/market/search/route.ts`  *(↖0 ↗1 = 1)*
 - [[GET--api-market-stream]] · `@hamafx/web` · `apps/web/src/app/api/market/stream/route.ts`  *(↖0 ↗1 = 1)*
-- [[POST--api-market-structure]] · `@hamafx/web` · `apps/web/src/app/api/market/structure/route.ts`  *(↖0 ↗1 = 1)*
 - [[GET--api-me-keys]] · `@hamafx/web` · `apps/web/src/app/api/me/keys/route.ts`  *(↖0 ↗1 = 1)*
 - [[GET--api-news]] · `@hamafx/web` · `apps/web/src/app/api/news/route.ts`  *(↖0 ↗1 = 1)*
 - [[GET,PUT--api-notifications-noise-config]] · `@hamafx/web` · `apps/web/src/app/api/notifications/noise-config/route.ts`  *(↖0 ↗1 = 1)*

@@ -64,7 +64,12 @@ COPY --from=builder /app/apps/web/scripts/wait-for-db.mjs ./runtime-migrate/wait
 
 # Copy entrypoint
 COPY apps/web/docker-entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
+RUN chmod +x /entrypoint.sh \
+    && chown -R node:node /app /entrypoint.sh
+
+# Run the web server as an unprivileged user. The entrypoint only reads
+# migrations and starts Next.js, so it does not need root privileges.
+USER node
 
 ENV NODE_ENV=production
 ENV PORT=3000

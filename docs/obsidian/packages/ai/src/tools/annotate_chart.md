@@ -16,7 +16,7 @@ aliases: [annotate_chart]
 > **AI Tool** · `@hamafx/ai` · `packages/ai/src/tools/annotate-chart.ts`
 
 
-Copyright 2026 HamaFX
+Compute chart annotations (swings, BOS/CHoCH, FVG, order blocks, liquidity sweeps, previous-day high/low, Asian session range) for a symbol/timeframe. Use when the user asks to
 
 
 ## 📊 Connections

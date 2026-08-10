@@ -2,9 +2,9 @@
 type: module
 package: "@hamafx/ai"
 path: "packages/ai/src/model-circuit-breaker.ts"
-incoming: 2
+incoming: 1
 outgoing: 1
-connections: 3
+connections: 2
 risk: low
 layer: core
 tags: [type/module, hamafx-ai, layer/core]
@@ -23,9 +23,9 @@ Module: packages/ai/src/model-circuit-breaker.ts
 
 | | Count |
 |---|---|
-| Incoming dependencies | 2 |
+| Incoming dependencies | 1 |
 | Outgoing dependencies | 1 |
-| Total connections | 3 |
+| Total connections | 2 |
 | Risk level | **LOW** |
 | Layer | `core` |
 | Package tag | `#hamafx-ai` |
@@ -35,8 +35,8 @@ Module: packages/ai/src/model-circuit-breaker.ts
 [[@hamafx-ai]]
 
 
-### 📥 Depended On By (2)
-[[model-chat-ChatModelResolution]] · [[provider-tester-testProviderKey]]
+### 📥 Depended On By (1)
+[[model-chat-ChatModelResolution]]
 
 
 

@@ -197,7 +197,7 @@ function printBanner() {
     console.log(paint(logo[i], color));
   }
   line();
-  console.log(paint('  The open-source, multi-user AI trading platform', 'dim'));
+  console.log(paint('  The open-source, single-user BYOK AI trading platform', 'dim'));
   console.log(paint('  Apache 2.0 Licensed · Built with Next.js, Drizzle, pgvector', 'dim'));
   line();
 }

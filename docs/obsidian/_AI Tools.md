@@ -21,7 +21,7 @@ dv.table(
 
 ## Full List
 
-- [[convene_committee]] · `@hamafx/ai` · `packages/ai/src/tools/convene-committee.ts`  *(↖1 ↗14 = 15)*
+- [[convene_committee]] · `@hamafx/ai` · `packages/ai/src/tools/convene-committee.ts`  *(↖1 ↗13 = 14)*
 - [[summarize_thread]] · `@hamafx/ai` · `packages/ai/src/tools/summarize-thread.ts`  *(↖1 ↗9 = 10)*
 - [[analyze_chart_image]] · `@hamafx/ai` · `packages/ai/src/tools/analyze-chart-image.ts`  *(↖1 ↗8 = 9)*
 - [[forecast_volatility]] · `@hamafx/ai` · `packages/ai/src/tools/forecast-volatility.ts`  *(↖1 ↗8 = 9)*

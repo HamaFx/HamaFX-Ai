@@ -38,6 +38,9 @@ API Route: GET /api/billing/webhook
 - `runtime`
 - `dynamic`
 - `maxDuration`
+- `IpnPayloadSchema`
+- `IpnPayload`
+- `processVerifiedIpnPayload`
 - `POST`
 
 

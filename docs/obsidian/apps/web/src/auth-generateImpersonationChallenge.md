@@ -32,7 +32,7 @@ Module: apps/web/src/auth.ts
 
 
 ### 📤 Depends On (5)
-[[@hamafx-shared]] · [[auth.config-authConfig]] · [[@hamafx-db]] · [[@hamafx-ai]] · [[@hamafx-web]]
+[[@hamafx-shared]] · [[auth.config-assertProductionSecurity]] · [[@hamafx-db]] · [[@hamafx-ai]] · [[@hamafx-web]]
 
 
 ### 📥 Depended On By (1)

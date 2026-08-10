@@ -43,6 +43,10 @@ Module: packages/db/src/queries/billing-extras.ts
 - `getUserSubscription`
 - `getUserPayments`
 - `upsertSubscription`
+- `claimCheckoutAttempt`
+- `saveCheckoutInvoice`
+- `completeCheckoutAttempt`
+- `failCheckoutAttempt`
 - `createPayment`
 
 

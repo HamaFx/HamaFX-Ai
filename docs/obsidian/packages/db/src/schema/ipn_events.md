@@ -16,7 +16,7 @@ aliases: [ipn_events]
 > **DB Table** · `@hamafx/db` · `packages/db/src/schema/billing.ts`
 
 
-Database table: ipn_events (9 columns)
+Database table: ipn_events (34 columns)
 
 
 ## 📊 Connections

@@ -38,7 +38,7 @@ Please practice responsible disclosure. We commit to not taking legal action aga
 
 HamaFX-Ai uses NextAuth.js v5 with a Credentials provider (email + password, bcrypt). Sessions are JWT-based with a 30-day expiry. Account lockout activates after 5 failed login attempts (15-minute lockout).
 
-**Auth hardening completed** — see [docs/05-security-auth-compliance.md](docs/05-security-auth-compliance.md) for details.
+**Auth hardening completed** — see [docs/05-security-auth-compliance.md](docs/05-security-auth-compliance.md) for the current self-hosted security model.
 
 | Issue | Severity | Status |
 |-------|----------|--------|
@@ -62,13 +62,9 @@ User-provided AI provider keys (BYOK) are encrypted at rest using AES-256-GCM wi
 
 ### Row-Level Security (RLS)
 
-RLS policies exist (migrations 0035–0039) but enforcement is **off by default**. Set `HAMAFX_ENABLE_RLS=true` to enable. Self-hosted deployments using PGlite have no RLS (PGlite does not support it).
+Fresh self-hosted installs are single-user only (`MULTI_USER_ENABLED=0`, `HAMAFX_ENABLE_RLS=0`, `REGISTRATION_MODE=owner-first`). Multi-user/RLS mode is disabled in this OSS release. The environment parser, database client, and runtime migration entrypoint reject either flag before the application starts or mutates the database. This boundary remains in place until every user-data query establishes tenant context and the PostgreSQL isolation suite passes.
 
-If you are self-hosting with multiple users, you must:
-1. Use Postgres (not PGlite)
-2. Set `HAMAFX_ENABLE_RLS=true`
-3. Set `ADMIN_DATABASE_URL` to the `hamafx_admin` BYPASSRLS role connection string
-4. Apply all migrations through 0041
+Because the current query paths do not consistently establish tenant context, the single-user runtime migrator removes the unconditional RLS policies after applying the schema. Do not treat `userId` predicates alone as a substitute for database tenant isolation. When shared mode is eventually enabled, it must use PostgreSQL, a dedicated `ADMIN_DATABASE_URL` BYPASSRLS role for worker/cron operations, and the complete migration chain.
 
 ### Billing Webhook
 
@@ -101,6 +97,8 @@ connect-src 'self' wss: https:;
 
 ### Self-Hosted Deployment Security
 
+The Docker quick start binds web, database, and optional Langfuse ports to localhost and runs the web/worker containers as non-root users. If you expose the app publicly, you still need a reverse proxy with TLS, host firewall rules, and an operator-managed backup/restore plan.
+
 Self-hosters are responsible for:
 - Securing the underlying infrastructure (OS, network, firewall)
 - Using a reverse proxy (Nginx, Traefik, Caddy) with TLS/SSL
@@ -111,7 +109,7 @@ Self-hosters are responsible for:
 
 ### Data Provider Licensing
 
-HamaFX-Ai integrates with multiple market data providers (BiQuote, Finnhub, Marketaux, FRED, Binance, CFTC). **No provider terms of service are included in this repository.** If you redistribute market data to paying subscribers, you are responsible for verifying each provider's redistribution terms and obtaining appropriate licenses. See [docs/02-data-flows.md](docs/02-data-flows.md) §6 for the licensing status table.
+HamaFX-Ai integrates with multiple market data providers (BiQuote, Finnhub, Marketaux, FRED, Binance, CFTC). **No provider terms of service are included in this repository.** If you redistribute market data to paying subscribers, you are responsible for verifying each provider's redistribution terms and obtaining appropriate licenses. See [docs/02-data-flows.md](docs/02-data-flows.md) for the licensing responsibility guidance.
 
 ## Security Measures in CI/CD
 

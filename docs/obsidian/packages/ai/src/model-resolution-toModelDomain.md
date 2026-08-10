@@ -2,9 +2,9 @@
 type: module
 package: "@hamafx/ai"
 path: "packages/ai/src/model-resolution.ts"
-incoming: 4
-outgoing: 9
-connections: 13
+incoming: 3
+outgoing: 8
+connections: 11
 risk: low
 layer: core
 tags: [type/module, hamafx-ai, layer/core]
@@ -23,9 +23,9 @@ Module: packages/ai/src/model-resolution.ts
 
 | | Count |
 |---|---|
-| Incoming dependencies | 4 |
-| Outgoing dependencies | 9 |
-| Total connections | 13 |
+| Incoming dependencies | 3 |
+| Outgoing dependencies | 8 |
+| Total connections | 11 |
 | Risk level | **LOW** |
 | Layer | `core` |
 | Package tag | `#hamafx-ai` |
@@ -35,8 +35,8 @@ Module: packages/ai/src/model-resolution.ts
 [[model]] · [[routing-RoutingDomain]] · [[@hamafx-shared]] · [[byok-providers]] · [[@hamafx-ai]]
 
 
-### 📥 Depended On By (4)
-[[agent-runChat]] · [[resolve-model-ResolveModelContext]] · [[chat-retry-loop-AttemptContext]] · [[model-resolution.test]]
+### 📥 Depended On By (3)
+[[resolve-model-ResolveModelContext]] · [[chat-retry-loop-AttemptContext]] · [[model-resolution.test]]
 
 
 

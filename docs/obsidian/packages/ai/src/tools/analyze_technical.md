@@ -16,7 +16,7 @@ aliases: [analyze_technical]
 > **AI Tool** · `@hamafx/ai` · `packages/ai/src/tools/analyze-technical.ts`
 
 
-Multi-timeframe technical readout (trend, bias, momentum, structure, levels) for a symbol. Use for any 
+Multi-timeframe technical readout (trend, bias, momentum, structure, levels) for a symbol. Use for any
 
 
 ## 📊 Connections

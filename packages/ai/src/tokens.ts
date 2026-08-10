@@ -24,6 +24,7 @@
 import { token } from '@hamafx/shared';
 import type { LlmClient } from './llm-client';
 import type { DbClient } from '@hamafx/db';
+import type { Token } from '@hamafx/shared';
 
-export const DB = token<DbClient>('db');
-export const LLM_CLIENT = token<LlmClient>('llmClient');
+export const DB: Token<DbClient> = token<DbClient>('db');
+export const LLM_CLIENT: Token<LlmClient> = token<LlmClient>('llmClient');

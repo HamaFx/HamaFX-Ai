@@ -10,15 +10,15 @@ tags: [dashboard, timeline]
 
 ## Top Activity Hotspots
 
-- 📅 [[@hamafx-shared]] — **1033.2** connections · `@hamafx/shared`
-- 📅 [[@hamafx-web]] — **887** connections · `@hamafx/web`
-- 📅 [[@hamafx-ai]] — **580.6** connections · `@hamafx/ai`
-- 📅 [[@hamafx-db]] — **485.3** connections · `@hamafx/db`
-- 📅 [[vitest-installServerOnlyStub]] — **407.5** connections · `@hamafx/test-utils`
+- 📅 [[@hamafx-shared]] — **991** connections · `@hamafx/shared`
+- 📅 [[@hamafx-web]] — **861.4** connections · `@hamafx/web`
+- 📅 [[@hamafx-ai]] — **582.1** connections · `@hamafx/ai`
+- 📅 [[@hamafx-db]] — **486.8** connections · `@hamafx/db`
+- 📅 [[vitest-installServerOnlyStub]] — **413.6** connections · `@hamafx/test-utils`
 - 📅 [[@hamafx-data]] — **179.2** connections · `@hamafx/data`
 - 📅 [[registry-ToolPartState]] — **104** connections · `@hamafx/web`
 - 📅 [[@hamafx-worker]] — **103.1** connections · `@hamafx/worker`
-- 📅 [[@hamafx-indicators]] — **96.8** connections · `@hamafx/indicators`
+- 📅 [[@hamafx-indicators]] — **95.2** connections · `@hamafx/indicators`
 - 📅 [[db-getDb]] — **81.8** connections · `@hamafx/ai`
 - 📅 [[registry-ToolPlugin]] — **73.1** connections · `@hamafx/ai`
 - 📅 [[client-DbClient]] — **72.5** connections · `@hamafx/db`

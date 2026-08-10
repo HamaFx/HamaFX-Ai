@@ -1,11 +1,11 @@
 ---
 type: index
 category: "component"
-count: 112
+count: 105
 tags: [index, type/component]
 ---
 
-# 🧩 Components (112)
+# 🧩 Components (105)
 
 ## DataviewJS — Sorted by Most Connected
 ```dataviewjs
@@ -23,14 +23,8 @@ dv.table(
 
 - [[registry-ToolPartState]] · `@hamafx/web` · `apps/web/src/components/chat/parts/registry.tsx`  *(↖45 ↗35 = 80)*
 - [[wizard-OnboardingWizard]] · `@hamafx/web` · `apps/web/src/components/onboarding/wizard.tsx`  *(↖0 ↗13 = 13)*
-- [[chart-canvas-ChartCanvasHandle]] · `@hamafx/web` · `apps/web/src/components/chart/chart-canvas.tsx`  *(↖1 ↗11 = 12)*
 - [[message-Message]] · `@hamafx/web` · `apps/web/src/components/chat/message.tsx`  *(↖1 ↗10 = 11)*
 - [[chat-screen-ChatScreen]] · `@hamafx/web` · `apps/web/src/components/chat/chat-screen.tsx`  *(↖0 ↗9 = 9)*
-- [[chart-atr-ChartATRProps]] · `@hamafx/web` · `apps/web/src/components/chart/chart-atr.tsx`  *(↖1 ↗8 = 9)*
-- [[chart-macd-ChartMACDProps]] · `@hamafx/web` · `apps/web/src/components/chart/chart-macd.tsx`  *(↖1 ↗8 = 9)*
-- [[chart-rsi-ChartRSIProps]] · `@hamafx/web` · `apps/web/src/components/chart/chart-rsi.tsx`  *(↖1 ↗8 = 9)*
-- [[chart-Chart]] · `@hamafx/web` · `apps/web/src/components/chart/chart.tsx`  *(↖3 ↗8 = 11)*
-- [[performance-chart-PerformanceChart]] · `@hamafx/web` · `apps/web/src/components/chart/performance-chart.tsx`  *(↖0 ↗5 = 5)*
 - [[analyze-fundamental-AnalyzeFundamentalPart]] · `@hamafx/web` · `apps/web/src/components/chat/parts/analyze-fundamental.tsx`  *(↖1 ↗5 = 6)*
 - [[analyze-technical-AnalyzeTechnicalPart]] · `@hamafx/web` · `apps/web/src/components/chat/parts/analyze-technical.tsx`  *(↖1 ↗5 = 6)*
 - [[annotate-chart-AnnotateChartPart]] · `@hamafx/web` · `apps/web/src/components/chat/parts/annotate-chart.tsx`  *(↖1 ↗5 = 6)*
@@ -41,14 +35,13 @@ dv.table(
 - [[get-session-levels-GetSessionLevelsPart]] · `@hamafx/web` · `apps/web/src/components/chat/parts/get-session-levels.tsx`  *(↖1 ↗5 = 6)*
 - [[wizard-step-provider-WizardStepProvider]] · `@hamafx/web` · `apps/web/src/components/onboarding/_components/wizard-step-provider.tsx`  *(↖1 ↗5 = 6)*
 - [[wizard-step-review-WizardStepReview]] · `@hamafx/web` · `apps/web/src/components/onboarding/_components/wizard-step-review.tsx`  *(↖1 ↗5 = 6)*
-- [[overlay-toggle-useOverlayToggles]] · `@hamafx/web` · `apps/web/src/components/chart/overlay-toggle.tsx`  *(↖0 ↗4 = 4)*
+- [[performance-chart-PerformanceChart]] · `@hamafx/web` · `apps/web/src/components/chart/performance-chart.tsx`  *(↖0 ↗4 = 4)*
 - [[chat-top-bar-AnalysisMode]] · `@hamafx/web` · `apps/web/src/components/chat/chat-top-bar.tsx`  *(↖3 ↗4 = 7)*
 - [[analyze-chart-image-AnalyzeChartImagePart]] · `@hamafx/web` · `apps/web/src/components/chat/parts/analyze-chart-image.tsx`  *(↖1 ↗4 = 5)*
 - [[get-correlation-GetCorrelationPart]] · `@hamafx/web` · `apps/web/src/components/chat/parts/get-correlation.tsx`  *(↖1 ↗4 = 5)*
 - [[ticker-tape-TickerTape]] · `@hamafx/web` · `apps/web/src/components/layout/ticker-tape.tsx`  *(↖0 ↗4 = 4)*
 - [[article-card-ArticleCard]] · `@hamafx/web` · `apps/web/src/components/news/article-card.tsx`  *(↖0 ↗4 = 4)*
 - [[event-card-EventCard]] · `@hamafx/web` · `apps/web/src/components/calendar/event-card.tsx`  *(↖0 ↗3 = 3)*
-- [[chart-settings-drawer-ChartIndicators]] · `@hamafx/web` · `apps/web/src/components/chart/chart-settings-drawer.tsx`  *(↖0 ↗3 = 3)*
 - [[pin-to-chat-PinToChatProps]] · `@hamafx/web` · `apps/web/src/components/chart/pin-to-chat.tsx`  *(↖0 ↗3 = 3)*
 - [[regen-model-picker-RegenModelPicker]] · `@hamafx/web` · `apps/web/src/components/chat/_components/regen-model-picker.tsx`  *(↖1 ↗3 = 4)*
 - [[thread-switcher-ThreadSwitcher]] · `@hamafx/web` · `apps/web/src/components/chat/_components/thread-switcher.tsx`  *(↖1 ↗3 = 4)*

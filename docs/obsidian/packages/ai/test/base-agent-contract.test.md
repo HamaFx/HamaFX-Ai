@@ -3,8 +3,8 @@ type: module
 package: "@hamafx/ai"
 path: "packages/ai/test/base-agent-contract.test.ts"
 incoming: 0
-outgoing: 10
-connections: 10
+outgoing: 11
+connections: 11
 risk: low
 layer: core
 tags: [type/module, hamafx-ai, layer/core]
@@ -24,8 +24,8 @@ Module: packages/ai/test/base-agent-contract.test.ts
 | | Count |
 |---|---|
 | Incoming dependencies | 0 |
-| Outgoing dependencies | 10 |
-| Total connections | 10 |
+| Outgoing dependencies | 11 |
+| Total connections | 11 |
 | Risk level | **LOW** |
 | Layer | `core` |
 | Package tag | `#hamafx-ai` |

@@ -14,24 +14,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+> The upcoming public OSS release is a single-user, self-hosted BYOK preview. Shared multi-user/RLS mode and hosted billing are not part of this release.
+
 ### Added
-- **Documentation overhaul:** 8 new docs replacing the old 15-doc set:
-  - `docs/01-architecture.md` — system design, deployment modes, architecture diagrams
-  - `docs/02-data-flows.md` — all data/AI providers, failover, sequence diagrams, licensing
-  - `docs/03-backend-api.md` — 78 API routes, 46-table ER reference, 42 migrations
-  - `docs/04-frontend-ux.md` — 29 pages, chart engine, 39 chat tool UI parts, PWA
-  - `docs/05-security-auth-compliance.md` — auth flow, BYOK encryption, RLS, known bugs
-  - `docs/06-deployment-self-hosting.md` — production topology, CI/CD, testing, incident response
-  - `docs/07-agent-understanding.md` — AI agent guide, 32 tools, domain vocabulary, high-risk areas
-  - `docs/08-agent-setup-run.md` — setup guide, env vars, common failures, debugging
+- **Documentation overhaul:** current procedural docs for the single-user OSS release, replacing the old 15-doc set:
+  - `docs/01-architecture.md` — system design and deployment modes
+  - `docs/02-data-flows.md` — provider flows and licensing responsibilities
+  - `docs/03-backend-api.md` — API architecture and route-boundary rules
+  - `docs/04-frontend-ux.md` — frontend architecture and UX requirements
+  - `docs/05-security-auth-compliance.md` — auth, BYOK encryption, RLS, and self-hosting security
+  - `docs/06-deployment-self-hosting.md` — deployment entry point
+  - `docs/07-agent-understanding.md` — coding-agent guide
+  - `docs/08-agent-setup-run.md` — setup and troubleshooting
+  - `docs/14-oss-release-checklist.md` — public-release boundary and operator checklist
 - **Advanced community docs:** `CONTRIBUTING.md`, `SECURITY.md`, `SUPPORT.md`, `CODE_OF_CONDUCT.md`
-- 35 legacy docs archived to `docs/archive/` (preserved for history)
+- Legacy documentation references were removed from the public guide; the current procedural docs live in `docs/`.
 
 ### Changed
 - `AGENTS.md` deleted — replaced by `docs/07-agent-understanding.md` + `docs/08-agent-setup-run.md`
-- Old numbered docs (01–15) removed from `docs/` root — archived to `docs/archive/`
-- Old review/audit docs removed from `docs/review/` — archived to `docs/archive/review/`
-- `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, `SECURITY.md`, `DESIGN_SYSTEM_AND_UX_ROADMAP.md` removed from root — archived (new versions written)
+- Old numbered and review/audit docs were replaced by the current procedural documentation set.
+- Community security and contribution guides were refreshed for the OSS release.
 
 ### Security
 - Documented known auth bugs in `docs/05-security-auth-compliance.md` §4:
@@ -48,7 +50,7 @@ HamaFX-Ai is in pre-release development. The project has shipped through Phases 
 
 ### Shipped Features (cumulative)
 
-**Phase 0–1:** Project scaffolding, Turborepo monorepo, Next.js 15 PWA, PGlite local dev, Drizzle ORM schema, BiQuote REST provider, Finnhub fallback, basic chat with AI SDK.
+**Phase 0–1:** Project scaffolding, Turborepo monorepo, Next.js 16 PWA, PGlite local dev, Drizzle ORM schema, BiQuote REST provider, Finnhub fallback, basic chat with AI SDK.
 
 **Phase 2:** Alert system, trading journal, economic calendar (FRED), news feed (Marketaux), dashboard with widgets, chart engine (TradingView + lightweight-charts).
 
@@ -64,18 +66,15 @@ HamaFX-Ai is in pre-release development. The project has shipped through Phases 
 
 **UX Phases A–E:** Institutional terminal UI redesign, chat UX overhaul, 39 tool UI parts, settings redesign, onboarding flow, dashboard widgets.
 
-### Known Gaps (as of documentation overhaul)
+### Release boundary and remaining considerations
 
-| Gap | Severity | Status |
-|-----|----------|--------|
-| Auth: token version not checked in JWT callback | Critical | Unfixed |
-| Auth: `__system__` user in cron jobs | Critical | Unfixed |
-| Auth: deleted users retain valid sessions | High | Unfixed |
-| RLS enforcement off by default | Medium | By design — `HAMAFX_ENABLE_RLS=true` to enable |
-| Billing in sandbox mode | Medium | Production cutover prerequisites unchecked |
-| Data provider licensing unresolved | High | No terms files in repo — legal review needed |
-| AlphaVantage / Trading Economics env vars without provider implementations | Low | Stale references in `.env.example` |
-| `AUTH_FIX_PLAN.md` referenced but never created | Low | Auth bugs documented in `docs/05-security-auth-compliance.md` §4 |
+| Area | Current OSS status |
+|-----|--------------------|
+| Shared RLS/multi-user mode | Intentionally blocked until every user-data query establishes tenant context and the PostgreSQL isolation suite passes |
+| Hosted billing | Separate hosted-product track; not enabled as a self-hosted OSS service |
+| Data provider licensing | Each operator must review provider terms and obtain any required redistribution rights |
+| Disaster recovery | Docker backup/restore is smoke-tested; operators must still configure off-host copies and rehearse recovery |
+| Secret rotation | Guarded maintenance utility exists; operators must stop writers and retain recovery material |
 
 ---
 

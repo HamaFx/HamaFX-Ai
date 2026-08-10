@@ -13,7 +13,7 @@ The full documentation set lives in [`docs/`](docs/). Start here:
 | [docs/03-backend-api.md](docs/03-backend-api.md) | You're working on API routes or database schema |
 | [docs/04-frontend-ux.md](docs/04-frontend-ux.md) | You're working on the frontend |
 | [docs/05-security-auth-compliance.md](docs/05-security-auth-compliance.md) | You're touching auth, encryption, RLS, or billing |
-| [docs/06-deployment-self-hosting.md](docs/06-deployment-self-hosting.md) | You're deploying or self-hosting |
+| [docs/11-self-hosting.md](docs/11-self-hosting.md) | You're deploying or self-hosting |
 | [docs/07-agent-understanding.md](docs/07-agent-understanding.md) | You're an AI coding agent about to work on this repo |
 | [docs/08-agent-setup-run.md](docs/08-agent-setup-run.md) | You need to set up a local dev environment |
 
@@ -43,7 +43,7 @@ The full documentation set lives in [`docs/`](docs/). Start here:
 
 If you're self-hosting HamaFX-Ai:
 
-1. Read [docs/06-deployment-self-hosting.md](docs/06-deployment-self-hosting.md) for Docker Compose setup
+1. Read [docs/11-self-hosting.md](docs/11-self-hosting.md) for Docker Compose setup
 2. Read [docs/08-agent-setup-run.md](docs/08-agent-setup-run.md) for environment variable configuration
 3. Read [docs/05-security-auth-compliance.md](docs/05-security-auth-compliance.md) for security considerations when running your own instance
 

@@ -16,7 +16,7 @@ aliases: [get_seasonality]
 > **AI Tool** · `@hamafx/ai` · `packages/ai/src/tools/get-seasonality.ts`
 
 
-Per-month / per-weekday / per-hour return seasonality for a symbol. Returns median percent return, IQR, win rate, and sample count per bucket. Use for 
+Per-month / per-weekday / per-hour return seasonality for a symbol. Returns median percent return, IQR, win rate, and sample count per bucket. Use for
 
 
 ## 📊 Connections

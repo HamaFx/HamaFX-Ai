@@ -1,16 +1,16 @@
 {
   "schema_version": "1.0",
-  "generated_at": "2026-07-24T17:54:10.212Z",
+  "generated_at": "2026-08-10T03:19:37.851Z",
   "project": {
     "name": "HamaFX-Ai",
-    "rootPath": "/home/ubuntu/HamaFX-Ai",
-    "description": "Multi-tenant, chat-driven AI trading copilot for forex instruments (XAUUSD, EURUSD, GBPUSD)",
+    "rootPath": ".",
+    "description": "Single-user BYOK, chat-driven AI trading copilot for forex instruments (XAUUSD, EURUSD, GBPUSD)",
     "license": "Apache-2.0",
     "repository": "github.com/HamaFx/HamaFX-Ai",
     "techStack": {
       "runtime": "Node.js >= 20.11",
       "packageManager": "pnpm 9.15.4",
-      "framework": "Next.js 15 (App Router) + React 19",
+      "framework": "Next.js 16 (App Router) + React 19",
       "language": "TypeScript (strict)",
       "styling": "Tailwind CSS v4 + shadcn/ui (Radix)",
       "ai": "Vercel AI SDK v5",
@@ -32,7 +32,7 @@
     {
       "name": "@hamafx/web",
       "path": "packages/web",
-      "nodeCount": 669,
+      "nodeCount": 653,
       "dependsOn": [
         "env-loader/loadE2eEnv",
         "admin-error-block/AdminErrorBlock",
@@ -41,13 +41,8 @@
         "calendar-toolbar/ImportanceFilter",
         "calendar-view/CalendarView",
         "refresh-button/RefreshButton",
-        "chart-empty/ChartEmpty",
-        "chart-error/ChartError",
-        "chart-skeleton/ChartSkeleton",
-        "overlay-sheet/OverlaySheet",
         "tradingview-widget/TradingViewWidget",
         "pro-chart-view/ProChartView",
-        "chart-view/ChartView",
         "widget-types/WidgetType",
         "briefing-widget/BriefingWidget",
         "calendar-widget/CalendarWidget",
@@ -124,22 +119,8 @@
         "oauth-buttons/OAuthButtons",
         "password-field/PasswordField",
         "reset-password-form/ResetPasswordForm",
-        "auth.config/authConfig",
-        "chart-colors/SERIES_BULL_HEX",
-        "chart-types/ChartSettings",
-        "use-sub-pane-chart/SubPaneOptions",
-        "lc-adapter/LcModule",
-        "overlays/MarkerPrimitive",
-        "use-chart-theme/ChartTheme",
-        "chart/Chart",
-        "chart-atr/ChartATRProps",
-        "chart-canvas/ChartCanvasHandle",
-        "chart-macd/ChartMACDProps",
-        "chart-rsi/ChartRSIProps",
-        "overlay-constants/ALL_KINDS",
+        "auth.config/assertProductionSecurity",
         "performance-chart-data/EquityPoint",
-        "chart-themes/THEME_PRESETS",
-        "use-lightweight-charts/useLightweightCharts",
         "chat-top-bar/AnalysisMode",
         "composer/ComposerImage",
         "message-list/MessageList",
@@ -228,7 +209,6 @@
         "use-popup-menu/usePopupMenu",
         "use-prices/usePrices",
         "use-slash-commands/useSlashCommands",
-        "use-structure/UseStructureOptions",
         "use-tf/useTimeframe",
         "use-thread-title/useThreadTitle",
         "use-voice-input/UseVoiceInputArgs",
@@ -317,7 +297,7 @@
     {
       "name": "@hamafx/ai",
       "path": "packages/ai",
-      "nodeCount": 273,
+      "nodeCount": 274,
       "dependsOn": [
         "helpers/CAPS_FULL",
         "types/ModelDomain",
@@ -330,7 +310,6 @@
         "pem/normalizePemPrivateKey",
         "telemetry/telemetryConfig",
         "context/buildLiveSnapshot",
-        "system/LiveSnapshot",
         "cost/DEFAULT_TURN_ESTIMATE_USD",
         "fallback/FallbackReason",
         "token-estimate/TokenEstimateResult",
@@ -338,17 +317,17 @@
         "model",
         "persistence",
         "planner/PlannerEnv",
+        "system/LiveSnapshot",
         "message-text/sanitizeUserInput",
         "routing/RoutingDomain",
-        "model-resolution/toModelDomain",
         "tool-context/ToolEnv",
-        "index",
         "verification/CitationFinding",
         "wait-until/waitUntil",
         "by-domain/RoutingDomain",
         "types/RunChatArgs",
         "rate-limits/RateLimitData",
         "llm-throttle/noteLlmRateLimit",
+        "index",
         "resolve-model/ResolveModelContext",
         "helpers/countToolCalls",
         "auto-title/runAutoTitleBackground",
@@ -386,6 +365,7 @@
         "memory-index/MemoryKind",
         "persistence/getOrCreateBriefingsThread",
         "title/GenerateTitleArgs",
+        "model-resolution/toModelDomain",
         "byok-providers",
         "redact/redactSecrets",
         "trace-persistence/PersistedTrace",
@@ -477,7 +457,7 @@
     {
       "name": "@hamafx/data",
       "path": "packages/data",
-      "nodeCount": 64,
+      "nodeCount": 65,
       "dependsOn": [
         "errors/DataErrorCode",
         "index",
@@ -510,7 +490,7 @@
     {
       "name": "@hamafx/db",
       "path": "packages/db",
-      "nodeCount": 157,
+      "nodeCount": 160,
       "dependsOn": [
         "billing/planInterval",
         "client/DbClient",
@@ -630,7 +610,7 @@
     {
       "name": "scripts",
       "path": "scripts",
-      "nodeCount": 7,
+      "nodeCount": 8,
       "dependsOn": []
     },
     {
@@ -668,14 +648,14 @@
       "packages": [
         "@hamafx/web"
       ],
-      "responsibility": "Next.js 15 PWA, React 19 UI, TradingView charts, 96 API routes"
+      "responsibility": "Next.js 16 PWA, React 19 UI, TradingView charts, 96 API routes"
     },
     {
       "name": "API Gateway",
       "packages": [
         "@hamafx/web"
       ],
-      "responsibility": "NextAuth JWT, CSRF, rate limiting, middleware"
+      "responsibility": "NextAuth JWT, CSRF, rate limiting, request proxy"
     },
     {
       "name": "AI Agent",

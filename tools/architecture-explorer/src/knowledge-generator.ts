@@ -77,7 +77,7 @@ function generateArchitecture(model: ArchitectureModel, nodes: ReturnType<GraphM
   return {
     schema_version: '1.0',
     generated_at: model.generatedAt,
-    project: model.project,
+    project: { ...model.project, rootPath: '.' },
     dependency_chain: 'config → shared → db + indicators → data → ai → web + worker',
     package_count: pkgs.length,
     packages: pkgs,
@@ -326,12 +326,12 @@ function generateKnowledgeMarkdown(
 
 ## Project Overview
 
-**HamaFX-Ai** is an open-source (Apache-2.0), multi-tenant, chat-driven AI trading copilot for forex instruments: **XAUUSD** (primary), **EURUSD**, **GBPUSD**.
+**HamaFX-Ai** is an open-source (Apache-2.0), single-user BYOK, chat-driven AI trading copilot for forex instruments: **XAUUSD** (primary), **EURUSD**, **GBPUSD**.
 
 - **Stack**: Next.js 16 (App Router) + React 19 + TypeScript (strict)
 - **AI**: Vercel AI SDK v5, Google Vertex AI + 9-provider BYOK registry
 - **Database**: PostgreSQL (Supabase) + pgvector, Drizzle ORM (${tableNodes.length}+ tables)
-- **Auth**: NextAuth.js v5 (Credentials provider, JWT strategy)
+- **Auth**: NextAuth.js v5 (Credentials provider, JWT strategy; owner-first single-user OSS mode)
 - **Charts**: TradingView lightweight-charts v5
 - **Monorepo**: pnpm workspaces + Turborepo 2
 
@@ -344,6 +344,10 @@ ${model.packages.map(p => `| **${p.name}** | \`${p.path}\` | ${p.type} | ${p.des
 **Dependency chain**: \`config → shared → db + indicators → data → ai → web + worker\`
 
 **Total**: ${pkgCount} packages, **${nodeCount}** architecture nodes
+
+## OSS Runtime Boundary
+
+This public OSS release runs as a single-user self-hosted deployment with BYOK enabled by default. Shared PostgreSQL mode, open registration, \`MULTI_USER_ENABLED=1\`, and \`HAMAFX_ENABLE_RLS=1\` are rejected until the complete tenant-isolation suite passes. Hosted multi-user and billing infrastructure is maintained separately.
 
 ## Architecture Layers
 
@@ -411,6 +415,8 @@ ${analysis ? `
 ` : 'Analysis not available.'}
 
 ## External Integrations
+
+> Hosted billing and multi-user infrastructure are not enabled in the public single-user OSS runtime.
 
 | Provider | Type | Protocol | Role |
 |----------|------|----------|------|

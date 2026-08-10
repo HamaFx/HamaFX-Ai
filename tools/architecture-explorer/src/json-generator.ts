@@ -205,8 +205,8 @@ export function generateArchitectureJson(
     generatedAt: new Date().toISOString(),
     project: {
       name: 'HamaFX-Ai',
-      rootPath: rootDir,
-      description: 'Multi-tenant, chat-driven AI trading copilot for forex instruments (XAUUSD, EURUSD, GBPUSD)',
+      rootPath: '.',
+      description: 'Single-user BYOK, chat-driven AI trading copilot for forex instruments (XAUUSD, EURUSD, GBPUSD)',
       license: 'Apache-2.0',
       repository: 'github.com/HamaFx/HamaFX-Ai',
       techStack: {
@@ -257,8 +257,8 @@ export function generateArchitectureJson(
     generatedAt: new Date().toISOString(),
     project: {
       name: 'HamaFX-Ai',
-      rootPath: rootDir,
-      description: 'Multi-tenant, chat-driven AI trading copilot for forex instruments (XAUUSD, EURUSD, GBPUSD)',
+      rootPath: '.',
+      description: 'Single-user BYOK, chat-driven AI trading copilot for forex instruments (XAUUSD, EURUSD, GBPUSD)',
       license: 'Apache-2.0',
       repository: 'github.com/HamaFx/HamaFX-Ai',
       techStack: {

@@ -38,7 +38,6 @@ Module: apps/web/src/app/share/[id]/opengraph-image.tsx
 
 
 ## 📦 Exports
-- `runtime`
 - `alt`
 - `size`
 - `async`

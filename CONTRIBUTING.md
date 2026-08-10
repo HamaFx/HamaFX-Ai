@@ -1,6 +1,6 @@
 # Contributing to HamaFX-Ai
 
-> **First time here?** Read [docs/07-agent-understanding.md](docs/07-agent-understanding.md) for project architecture and [docs/08-agent-setup-run.md](docs/08-agent-setup-run.md) to get a local instance running.
+> **First time here?** Read [docs/07-agent-understanding.md](docs/07-agent-understanding.md) for project architecture, [docs/08-agent-setup-run.md](docs/08-agent-setup-run.md) to get a local instance running, and [docs/14-oss-release-checklist.md](docs/14-oss-release-checklist.md) for the public-release boundary.
 
 Thank you for considering a contribution to HamaFX-Ai. This document is the definitive guide for contributors — from first clone to merged PR.
 
@@ -51,6 +51,8 @@ pnpm dev:local
 # Open http://localhost:3000 and register
 # → The onboarding wizard will guide you through adding your first AI provider key
 ```
+
+Fresh self-hosted deployments are single-user only. Shared PostgreSQL mode is intentionally disabled in this OSS release; do not set `MULTI_USER_ENABLED=1` or `HAMAFX_ENABLE_RLS=1`.
 
 Auth secrets (`AUTH_SECRET`, `ENCRYPTION_SECRET`, `CRON_SECRET`) auto-generate to `.hamafx/dev-secrets.json` on first boot. See [docs/08-agent-setup-run.md](docs/08-agent-setup-run.md) for full setup details.
 
@@ -110,6 +112,7 @@ See [docs/01-architecture.md](docs/01-architecture.md) for the full architecture
 - Soft-delete via `deletedAt` timestamp column
 - pgvector for embeddings (`vector(1536)` in Postgres, `real[]` in PGlite)
 - **New tables must work in PGlite** — no RLS, no pgvector-specific features without fallback
+- **Shared deployments are blocked** — this OSS release rejects `MULTI_USER_ENABLED=1` and `HAMAFX_ENABLE_RLS=1` until every user-data query establishes tenant context.
 
 ### 4.4 Error Handling
 
@@ -129,6 +132,7 @@ See [docs/01-architecture.md](docs/01-architecture.md) for the full architecture
 
 - Every package has `src/index.ts` barrel export
 - Deep imports via `exports` field in `package.json` (e.g., `@hamafx/db/schema`, `@hamafx/db/client`)
+- Published `@hamafx/*` packages are ESM-only; TypeScript consumers should use `moduleResolution: "NodeNext"` (or `node16`) and import them from ESM-compatible code.
 - No circular dependencies — the dependency chain is strictly layered
 
 ---
@@ -267,7 +271,7 @@ E2E tests use Playwright with a real app instance:
 | `auth.spec.ts` | Login, register, logout |
 | `chat.spec.ts` | Chat flow, tool rendering |
 | `chat-ui.spec.ts` | Chat UI component testing |
-| `isolation.spec.ts` | Multi-tenant data isolation |
+| `isolation.spec.ts` | Ownership/isolation coverage (shared mode remains disabled in OSS) |
 | `multi-agent.spec.ts` | Committee deliberation |
 | `service-worker.spec.ts` | PWA service worker |
 | `settings.spec.ts` | Settings pages |
@@ -335,14 +339,14 @@ E2E tests require:
 
 ## 8. High-Risk Areas
 
-Read [docs/07-agent-understanding.md](docs/07-agent-understanding.md) §5 for the full list. Summary:
+Read [docs/07-agent-understanding.md](docs/07-agent-understanding.md) for the full list. Summary:
 
 | Area | Risk | Rule |
 |------|------|------|
-| Auth code | Session validation, user isolation | Do NOT regress to single-password gate. Multi-tenant is load-bearing. |
+| Auth code | Session validation, user isolation | Do NOT regress to single-password gate. The current OSS runtime is single-user; preserve ownership scoping and the explicit shared-mode safety gate. |
 | BYOK encryption | User API keys at rest | Never log decrypted keys. Use `redactSecrets()` in all diagnostic output. |
 | Live-money paths | Risk calculations affect trading | All risk math must be tested. Never round or simplify without instruction. |
-| RLS policies | Tenant isolation | Never disable RLS. New tables need RLS policies + `tenant_id`. |
+| RLS policies | Tenant isolation | Shared mode is blocked in this OSS release. New user-data tables still need RLS policies + `tenant_id`; the single-user runtime removes them because tenant context is not yet complete. |
 | Billing webhook | Real money | HMAC-SHA512 verification before any business logic. |
 | Request proxy | Node.js runtime | No direct DB calls; keep auth/security boundary logic small and request-scoped in `proxy.ts`. |
 
@@ -385,7 +389,7 @@ CI must pass before merge. E2E and AI evals run only on `main` and nightly (not 
 ## 11. Getting Help
 
 - **Architecture questions:** Read [docs/01-architecture.md](docs/01-architecture.md)
-- **Setup issues:** Read [docs/08-agent-setup-run.md](docs/08-agent-setup-run.md) §10 (Common Failures & Fixes)
+- **Setup issues:** Read [docs/08-agent-setup-run.md](docs/08-agent-setup-run.md) (Common Failures & Fixes)
 - **Security questions:** Read [docs/05-security-auth-compliance.md](docs/05-security-auth-compliance.md)
 - **Bugs:** [Open an issue](https://github.com/HamaFx/HamaFX-Ai/issues) using the bug report template
 - **Feature requests:** [Open an issue](https://github.com/HamaFx/HamaFX-Ai/issues) using the feature request template

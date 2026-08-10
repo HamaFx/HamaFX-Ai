@@ -2,9 +2,9 @@
 type: module
 package: "@hamafx/web"
 path: "apps/web/src/components/chart/chart-colors.ts"
-incoming: 5
+incoming: 0
 outgoing: 1
-connections: 6
+connections: 1
 risk: low
 layer: core
 tags: [type/module, hamafx-web, layer/core]
@@ -23,9 +23,9 @@ Module: apps/web/src/components/chart/chart-colors.ts
 
 | | Count |
 |---|---|
-| Incoming dependencies | 5 |
+| Incoming dependencies | 0 |
 | Outgoing dependencies | 1 |
-| Total connections | 6 |
+| Total connections | 1 |
 | Risk level | **LOW** |
 | Layer | `core` |
 | Package tag | `#hamafx-web` |
@@ -35,19 +35,11 @@ Module: apps/web/src/components/chart/chart-colors.ts
 [[@hamafx-web]]
 
 
-### 📥 Depended On By (5)
-[[chart-atr-ChartATRProps]] · [[chart-canvas-ChartCanvasHandle]] · [[chart-macd-ChartMACDProps]] · [[chart-rsi-ChartRSIProps]] · [[chart-themes-THEME_PRESETS]]
-
 
 
 ## 📦 Exports
 - `SERIES_BULL_HEX`
 - `SERIES_BEAR_HEX`
-- `SERIES_MACD_HEX`
-- `SERIES_SIGNAL_HEX`
-- `SERIES_ATR_HEX`
-- `SERIES_RSI_HEX`
-- `SERIES_RSI_REF_HEX`
 
 
 ## 🔍 Explore
