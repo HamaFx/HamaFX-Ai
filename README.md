@@ -52,10 +52,10 @@ Agent:  1. Reads current price and candles
 HamaFX-Ai is designed to be **self-hosted first**: you control the deployment, the database, the encryption secret, and which AI provider receives your prompts.
 
 <p align="center">
-  <img src="docs/assets/hamafx-login.png" alt="HamaFX-Ai login screen" width="100%">
+  <img src="docs/assets/hamafx-workspace.png" alt="HamaFX-Ai illustrative trading workspace showing chat analysis, XAUUSD context, chart structure, risk posture, and macro events" width="100%">
 </p>
 
-<p align="center"><sub>The current interface uses a dark, data-first trading-terminal design.</sub></p>
+<p align="center"><sub>Illustrative workspace preview · synthetic values · dark, data-first trading-terminal design</sub></p>
 
 ---
 
