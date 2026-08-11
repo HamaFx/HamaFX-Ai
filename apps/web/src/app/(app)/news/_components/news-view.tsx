@@ -199,14 +199,14 @@ export function NewsView({ initialArticles }: NewsViewProps) {
           aria-pressed={savedOnly}
           disabled={savedCount === 0}
           className={cn(
-            'inline-flex h-9 items-center gap-1.5 rounded-sm border px-3 text-xs font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-40',
+            'inline-flex min-h-11 items-center gap-1.5 rounded-sm border px-3 text-xs font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-40 focus-visible:ring-2 focus-visible:ring-fg focus-visible:outline-none',
             savedOnly
               ? 'bg-fg text-black border-border'
               : 'border-border bg-bg-elev-1/60 text-fg-muted hover:text-fg',
           )}
         >
-          {savedOnly ? <IconBookmark className="size-3.5" /> : <IconBookmark className="size-3.5" />}
-          Saved {savedCount > 0 ? `· ${savedCount}` : ''}
+          <IconBookmark aria-hidden="true" className="size-3.5" />
+          <span>Saved {savedCount > 0 ? `· ${savedCount}` : ''}</span>
         </button>
 
         <button
@@ -214,9 +214,9 @@ export function NewsView({ initialArticles }: NewsViewProps) {
           onClick={manualRefresh}
           disabled={pending}
           aria-label="Refresh now"
-          className="text-fg-muted hover:text-fg hover:bg-bg-elev-2 inline-flex h-9 items-center gap-1.5 rounded-sm px-3 text-xs font-medium transition-colors disabled:opacity-50"
+          className="text-fg-muted hover:text-fg hover:bg-bg-elev-2 inline-flex min-h-11 items-center gap-1.5 rounded-sm px-3 text-xs font-medium transition-colors disabled:opacity-50 focus-visible:ring-2 focus-visible:ring-fg focus-visible:outline-none"
         >
-          <IconRefresh className={cn('size-3.5', pending && 'animate-spin')} />
+          <IconRefresh aria-hidden="true" className={cn('size-3.5', pending && 'animate-spin')} />
           {pending ? 'Refreshing…' : `Updated ${formatRelative(lastRefreshed)}`}
         </button>
       </div>

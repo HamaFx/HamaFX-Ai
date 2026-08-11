@@ -82,7 +82,7 @@ export function NewsToolbar({
             type="button"
             aria-label="Clear search"
             onClick={() => onQuery('')}
-            className="text-fg-subtle hover:text-fg absolute right-2 top-1/2 inline-flex size-7 -translate-y-1/2 items-center justify-center rounded-sm transition-colors"
+            className="text-fg-subtle hover:text-fg absolute right-2 top-1/2 inline-flex size-8 -translate-y-1/2 items-center justify-center rounded-sm transition-colors focus-visible:ring-2 focus-visible:ring-fg focus-visible:outline-none"
           >
             <IconX className="size-4" />
           </button>
@@ -107,7 +107,7 @@ export function NewsToolbar({
               tabIndex={active ? 0 : -1}
               onClick={() => onSentiment(s.value)}
               className={cn(
-                'inline-flex h-9 shrink-0 items-center gap-1.5 rounded-sm border px-3 text-xs font-semibold transition-colors',
+                'inline-flex h-9 shrink-0 items-center gap-1.5 rounded-sm border px-3 text-xs font-semibold transition-colors focus-visible:ring-2 focus-visible:ring-fg focus-visible:outline-none',
                 active
                   ? 'bg-fg text-black border-border'
                   : 'border-border bg-bg-elev-1/60 text-fg-muted hover:text-fg',
@@ -143,8 +143,8 @@ export function NewsToolbar({
         </div>
       ) : null}
 
-      {/* Result count strip */}
-      <p className="text-fg-subtle text-body-sm tabular-nums">
+      {/* Result count strip — polite live region so filter changes are announced */}
+      <p aria-live="polite" className="text-fg-subtle text-body-sm tabular-nums">
         Showing <span className="text-fg-muted font-semibold">{visibleCount}</span> of {totalCount}
       </p>
     </div>
@@ -170,7 +170,7 @@ function SymbolChip({
       tabIndex={tabIndex ?? -1}
       onClick={onClick}
       className={cn(
-        'inline-flex h-9 shrink-0 items-center rounded-sm border px-3 text-body-sm font-semibold uppercase tabular-nums transition-colors',
+        'inline-flex h-9 shrink-0 items-center rounded-sm border px-3 text-body-sm font-semibold uppercase tabular-nums transition-colors focus-visible:ring-2 focus-visible:ring-fg focus-visible:outline-none',
         active
           ? 'bg-bg-elev-3 text-fg border-border'
           : 'border-border bg-bg-elev-1/60 text-fg-muted hover:text-fg',
