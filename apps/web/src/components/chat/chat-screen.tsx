@@ -458,7 +458,7 @@ function EmptyChatState({ pinnedSymbol, disabled, onSelect }: EmptyChatStateProp
     <div className="flex min-h-[60svh] flex-col items-center justify-center gap-6 px-4 py-10 text-center">
       {/* Brand logo — bird mark + wordmark */}
       <Image
-        src="/brand/kestrel-logo-white.png"
+        src="/brand/kestrel-logo.png"
         alt="Kestrel"
         width={144}
         height={96}

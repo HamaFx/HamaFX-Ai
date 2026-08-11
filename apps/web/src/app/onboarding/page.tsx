@@ -47,7 +47,7 @@ export default async function OnboardingPage() {
     <div className="flex flex-col gap-8">
       <div className="text-center">
         <Image
-          src="/brand/kestrel-logo-white.png"
+          src="/brand/kestrel-logo.png"
           alt="Kestrel"
           width={144}
           height={96}

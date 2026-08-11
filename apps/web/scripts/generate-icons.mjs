@@ -4,7 +4,7 @@
  * generate-icons.mjs
  *
  * Generates the Kestrel PWA icon set in `apps/web/public/icons/` from the
- * brand logo (`public/brand/kestrel-logo-white.png`) composited onto the
+ * brand logo (`public/brand/kestrel-logo.png`) composited as-is onto the
  * app background. Idempotent: by default it skips targets that already
  * exist on disk; pass `--force` to regenerate.
  *
@@ -17,9 +17,6 @@
  *
  * `sharp` is loaded dynamically so this script never crashes a `next build`
  * when the dep is not present yet — it just logs a hint and exits 0.
- *
- * Regenerating the white logo variant (after swapping `kestrel-logo.png`):
- *   node -e "const s=require('sharp');(async()=>{const{data,info}=await s('public/brand/kestrel-logo.png').ensureAlpha().raw().toBuffer({resolveWithObject:true});const out=Buffer.alloc(data.length);for(let i=0;i<data.length;i+=4){out[i]=255;out[i+1]=255;out[i+2]=255;out[i+3]=data[i+3];}await s(out,{raw:{width:info.width,height:info.height,channels:4}}).png({compressionLevel:9}).toFile('public/brand/kestrel-logo-white.png');})()"
  *
  * Usage:
  *   node scripts/generate-icons.mjs              # write missing files only
@@ -39,12 +36,10 @@ const ICONS_DIR = resolve(WEB_ROOT, 'public/icons');
 /** Brand background from the design system (matches manifest theme_color). */
 const BRAND_BG = '#0A0A0A';
 
-/** Source logo — bird mark + KESTREL wordmark in white (1536x1024).
- * The white monochrome variant is used because the original two-tone
- * (white + black) logo's dark strokes would vanish on the #0A0A0A icon
- * background. Recreate it from `kestrel-logo.png` with the one-liner in
- * the header comment if the source logo is ever swapped. */
-const LOGO_PATH = resolve(WEB_ROOT, 'public/brand/kestrel-logo-white.png');
+/** Source logo — uploaded kestrel bird mark (1536x1024), used as-is.
+ * The reversible two-tone design reads on the #0A0A0A icon background:
+ * white strokes show on dark, black strokes show on light. */
+const LOGO_PATH = resolve(WEB_ROOT, 'public/brand/kestrel-logo.png');
 
 /**
  * @typedef {Object} IconTarget

@@ -37,8 +37,9 @@ const COLORS = {
 };
 
 /** Brand logo embedded as a data URI so the SVG stays self-contained. */
-// White monochrome variant so the mark reads against the dark #0A0A0A canvas.
-const LOGO_DATA_URI = `data:image/png;base64,${readFileSync(resolve(WEB_ROOT, 'public/brand/kestrel-logo-white.png')).toString('base64')}`;
+// The uploaded logo is used as-is (reversible two-tone: white strokes
+// read on the dark #0A0A0A canvas, black strokes read on light).
+const LOGO_DATA_URI = `data:image/png;base64,${readFileSync(resolve(WEB_ROOT, 'public/brand/kestrel-logo.png')).toString('base64')}`;
 
 /** Raster logo in an SVG — sized to the 3:2 source aspect. */
 function logoImage(x, y, width, height) {

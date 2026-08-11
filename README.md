@@ -1,9 +1,6 @@
 <div align="center">
 
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/kestrel-logo-white.png">
-  <img src="docs/assets/kestrel-logo-black.png" alt="Kestrel — bird mark and wordmark" width="420" style="max-width: 100%">
-</picture>
+<img src="docs/assets/kestrel-logo.png" alt="Kestrel — kestrel bird mark" width="420" style="max-width: 100%">
 
 # Kestrel
 

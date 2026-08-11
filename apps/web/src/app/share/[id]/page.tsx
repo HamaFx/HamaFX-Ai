@@ -62,7 +62,7 @@ export default async function ShareSnapshotPage({ params, searchParams }: PagePr
     <div className="min-h-svh bg-bg-elev-1 text-fg flex flex-col">
       <header className="border-b border-border px-6 py-4 flex items-center gap-3">
         <Image
-          src="/brand/kestrel-logo-white.png"
+          src="/brand/kestrel-logo.png"
           alt="Kestrel"
           width={64}
           height={43}

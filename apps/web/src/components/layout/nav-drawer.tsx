@@ -149,7 +149,7 @@ export function NavDrawer({ userName, userEmail, userId: _userId, isAdmin }: { u
           {/* Brand */}
           <div className="flex items-center px-5 pt-6 pb-3">
             <Image
-              src="/brand/kestrel-logo-white.png"
+              src="/brand/kestrel-logo.png"
               alt="Kestrel"
               width={108}
               height={72}
