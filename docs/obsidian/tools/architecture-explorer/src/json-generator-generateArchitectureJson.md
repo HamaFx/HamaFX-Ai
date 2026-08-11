@@ -32,7 +32,7 @@ Module: tools/architecture-explorer/src/json-generator.ts
 
 
 ### 📤 Depends On (7)
-[[types-NodeType]] · [[graph-model-GraphModel]] · [[analysis-analyzeArchitecture]] · [[advanced-features-analyzeImpact]] · [[git-history-scanGitHistory]] · [[scanner-ScannedFile]] · [[tool-architecture-explorer]]
+[[types-NodeType]] · [[graph-model-GraphModel]] · [[analysis-analyzeArchitecture]] · [[advanced-features-ViewSummary]] · [[git-history-scanGitHistory]] · [[scanner-ScannedFile]] · [[tool-architecture-explorer]]
 
 
 ### 📥 Depended On By (1)

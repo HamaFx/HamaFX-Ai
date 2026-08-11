@@ -36,7 +36,7 @@ Module: tools/architecture-explorer/src/types.ts
 
 
 ### 📥 Depended On By (12)
-[[advanced-features-analyzeImpact]] · [[analysis-analyzeArchitecture]] · [[analyzer-Analyzer]] · [[extractor-extractFile]] · [[git-history-scanGitHistory]] · [[graph-model-GraphModel]] · [[html-generator-generateHtml]] · [[index_tool-architecture-explorer|index]] · [[json-generator-generateArchitectureJson]] · [[knowledge-generator-KnowledgeOutput]] · [[obsidian-generator-generateObsidianVault]] · [[scanner-ScannedFile]]
+[[advanced-features-ViewSummary]] · [[analysis-analyzeArchitecture]] · [[analyzer-Analyzer]] · [[extractor-extractFile]] · [[git-history-scanGitHistory]] · [[graph-model-GraphModel]] · [[html-generator-generateHtml]] · [[index_tool-architecture-explorer|index]] · [[json-generator-generateArchitectureJson]] · [[knowledge-generator-KnowledgeOutput]] · [[obsidian-generator-generateObsidianVault]] · [[scanner-ScannedFile]]
 
 
 

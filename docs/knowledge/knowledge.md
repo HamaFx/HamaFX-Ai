@@ -1,6 +1,6 @@
 # HamaFX-Ai Architecture Knowledge Base
 
-> **Auto-generated**: 2026-08-10T21:39:58.779Z
+> **Auto-generated**: 2026-08-11T20:13:42.450Z
 > **Schema version**: 1.0
 > **Purpose**: AI-agent-optimized architecture overview for rapid project understanding
 
@@ -22,7 +22,7 @@
 | Package | Path | Type | Purpose |
 |---------|------|------|---------|
 | **root** | `.` | package | Package: root (3 nodes) |
-| **@hamafx/web** | `apps/web` | package | Package: @hamafx/web (657 nodes) |
+| **@hamafx/web** | `apps/web` | package | Package: @hamafx/web (683 nodes) |
 | **@hamafx/worker** | `apps/worker` | package | Package: @hamafx/worker (58 nodes) |
 | **docs** | `docs` | package | Package: docs (1 nodes) |
 | **infra** | `infra` | package | Package: infra (1 nodes) |
@@ -34,13 +34,13 @@
 | **@hamafx/indicators** | `packages/indicators` | package | Package: @hamafx/indicators (39 nodes) |
 | **@hamafx/shared** | `packages/shared` | package | Package: @hamafx/shared (85 nodes) |
 | **@hamafx/test-utils** | `packages/test-utils` | package | Package: @hamafx/test-utils (19 nodes) |
-| **scripts** | `scripts` | package | Package: scripts (8 nodes) |
+| **scripts** | `scripts` | package | Package: scripts (25 nodes) |
 | **tool:architecture-explorer** | `tools/architecture-explorer` | package | Package: tool:architecture-explorer (18 nodes) |
 | **tool:lighthouse** | `.` | package | Package: tool:lighthouse (2 nodes) |
 
 **Dependency chain**: `config → shared → db + indicators → data → ai → web + worker`
 
-**Total**: 16 packages, **1427** architecture nodes
+**Total**: 16 packages, **1470** architecture nodes
 
 ## OSS Runtime Boundary
 
@@ -149,9 +149,9 @@ User Message → Rate Limit → Thread Check → Budget Guard → History Load �
 
 - **Circular Dependencies**: 6
 - **Architecture Hotspots**: 50
-- **Dead Code / Orphans**: 1168
+- **Dead Code / Orphans**: 1259
 - **Shared Utilities**: 40
-- **Average Coupling**: 0.22
+- **Average Coupling**: 0.19
 - **Max Dependency Chain**: 3 hops
 
 

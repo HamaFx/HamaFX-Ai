@@ -32,7 +32,7 @@ Module: apps/web/src/app/(app)/journal/_components/journal-view.tsx
 
 
 ### 📤 Depends On (11)
-[[@hamafx-shared]] · [[breakdown-table-BreakdownTable]] · [[drawdown-chart-DrawdownChart]] · [[r-distribution-RDistribution]] · [[streak-display-StreakDisplay]] · [[ai-review-panel-AiReviewPanel]] · [[entry-form-EntryForm]] · [[entry-list-ConfirmFn]] · [[import-trades-ImportTrades]] · [[stats-summary-StatsSummary]] · [[@hamafx-web]]
+[[@hamafx-shared]] · [[ai-review-panel-AiReviewPanel]] · [[breakdown-table-BreakdownTable]] · [[drawdown-chart-DrawdownChart]] · [[r-distribution-RDistribution]] · [[streak-display-StreakDisplay]] · [[entry-form-EntryForm]] · [[entry-list-ConfirmFn]] · [[import-trades-ImportTrades]] · [[stats-summary-StatsSummary]] · [[@hamafx-web]]
 
 
 ### 📥 Depended On By (1)

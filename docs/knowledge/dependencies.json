@@ -31,11 +31,11 @@
         "watchlist-widget/WatchlistWidget",
         "dashboard-canvas/DashboardCanvas",
         "entry-row/EntryRow",
+        "ai-review-panel/AiReviewPanel",
         "breakdown-table/BreakdownTable",
         "drawdown-chart/DrawdownChart",
         "r-distribution/RDistribution",
         "streak-display/StreakDisplay",
-        "ai-review-panel/AiReviewPanel",
         "entry-form/EntryForm",
         "entry-list/ConfirmFn",
         "import-trades/ImportTrades",
@@ -59,9 +59,9 @@
         "api-key-card/ApiKeyCard",
         "api-keys-landing-banner/ApiKeysLandingBannerProps",
         "bulk-test-button/BulkTestButton",
-        "save-bar/SaveBar",
-        "market-data-config/MarketDataConfig",
         "export-import-keys/ExportImportKeys",
+        "market-data-config/MarketDataConfig",
+        "save-bar/SaveBar",
         "appearance-card/AppearanceCard",
         "billing-plans/BillingPlans",
         "payment-history/PaymentHistory",
@@ -585,8 +585,12 @@
     },
     {
       "name": "scripts",
-      "depends_on": [],
-      "depended_by": []
+      "depends_on": [
+        "scripts"
+      ],
+      "depended_by": [
+        "scripts"
+      ]
     },
     {
       "name": "tool:architecture-explorer",
@@ -604,7 +608,7 @@
         "knowledge-generator/KnowledgeOutput",
         "obsidian-generator/generateObsidianVault",
         "analysis/analyzeArchitecture",
-        "advanced-features/analyzeImpact",
+        "advanced-features/ViewSummary",
         "git-history/scanGitHistory"
       ],
       "depended_by": []

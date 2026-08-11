@@ -2,9 +2,9 @@
 type: module
 package: "tool:architecture-explorer"
 path: "tools/architecture-explorer/src/extractor.ts"
-incoming: 1
+incoming: 2
 outgoing: 5
-connections: 6
+connections: 7
 risk: low
 layer: core
 tags: [type/module, tool:architecture-explorer, layer/core]
@@ -23,9 +23,9 @@ Module: tools/architecture-explorer/src/extractor.ts
 
 | | Count |
 |---|---|
-| Incoming dependencies | 1 |
+| Incoming dependencies | 2 |
 | Outgoing dependencies | 5 |
-| Total connections | 6 |
+| Total connections | 7 |
 | Risk level | **LOW** |
 | Layer | `core` |
 | Package tag | `#tool:architecture-explorer` |
@@ -35,8 +35,8 @@ Module: tools/architecture-explorer/src/extractor.ts
 [[types-NodeType]] · [[scanner-ScannedFile]] · [[tool-architecture-explorer]]
 
 
-### 📥 Depended On By (1)
-[[index_tool-architecture-explorer|index]]
+### 📥 Depended On By (2)
+[[index_tool-architecture-explorer|index]] · [[extractor.test-TOOL_NAMES]]
 
 
 

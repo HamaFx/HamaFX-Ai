@@ -2,9 +2,9 @@
 type: package
 package: "@hamafx/data"
 path: "packages/data"
-incoming: 107
+incoming: 99
 outgoing: 0
-connections: 107
+connections: 99
 risk: high
 layer: package
 tags: [type/package, hamafx-data, layer/package, risk/high]
@@ -23,18 +23,18 @@ Package: @hamafx/data
 
 | | Count |
 |---|---|
-| Incoming dependencies | 107 |
+| Incoming dependencies | 99 |
 | Outgoing dependencies | 0 |
-| Total connections | 107 |
+| Total connections | 99 |
 | Risk level | **HIGH** |
 | Layer | `package` |
 | Package tag | `#hamafx-data` |
 
 
 
-### 📥 Depended On By (105)
-[[GET--api-cron-calendar]] · [[GET--api-cron-cot]] · [[GET--api-cron-fred-actuals]] · [[GET--api-cron-news]] · [[GET--api-cron-snapshots]] · [[GET--api-cron-warm-cache]] · [[GET--api-market-stream]] · [[POST--api-settings-test-market-provider]] · [[api-RequestUser]] · [[market-CandleResultDTO]] · [[api.test]] · [[cot-runCoT]] · [[fred-actuals-runFredActuals]] · [[resonance-sync-runResonanceSync]] · [[snapshots-runSnapshots]] · [[cot-job.test]] · [[fred-actuals.test]] · [[snapshots-job.test]] · [[evaluator-parseIndicatorSpec]] · [[context-buildLiveSnapshot]]
-> ... and 85 more
+### 📥 Depended On By (97)
+[[api-RequestUser]] · [[market-CandleResultDTO]] · [[api.test]] · [[cot-runCoT]] · [[fred-actuals-runFredActuals]] · [[resonance-sync-runResonanceSync]] · [[snapshots-runSnapshots]] · [[cot-job.test]] · [[fred-actuals.test]] · [[snapshots-job.test]] · [[evaluator-parseIndicatorSpec]] · [[context-buildLiveSnapshot]] · [[context-BuildContextArgs]] · [[risk-service-computePnL]] · [[analyze_technical]] · [[annotate_chart]] · [[compute_position_health]] · [[forecast_volatility]] · [[get_candles]] · [[get_correlation]]
+> ... and 77 more
 
 
 

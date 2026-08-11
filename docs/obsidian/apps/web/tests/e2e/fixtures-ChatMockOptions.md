@@ -2,12 +2,12 @@
 type: module
 package: "@hamafx/web"
 path: "apps/web/tests/e2e/fixtures.ts"
-incoming: 11
+incoming: 15
 outgoing: 3
-connections: 14
-risk: low
+connections: 18
+risk: medium
 layer: core
-tags: [type/module, hamafx-web, layer/core]
+tags: [type/module, hamafx-web, layer/core, risk/medium]
 aliases: [fixtures/ChatMockOptions]
 ---
 
@@ -23,10 +23,10 @@ Module: apps/web/tests/e2e/fixtures.ts
 
 | | Count |
 |---|---|
-| Incoming dependencies | 11 |
+| Incoming dependencies | 15 |
 | Outgoing dependencies | 3 |
-| Total connections | 14 |
-| Risk level | **LOW** |
+| Total connections | 18 |
+| Risk level | **MEDIUM** |
 | Layer | `core` |
 | Package tag | `#hamafx-web` |
 
@@ -35,8 +35,8 @@ Module: apps/web/tests/e2e/fixtures.ts
 [[test-utils-ensureTestUser]] · [[@hamafx-web]]
 
 
-### 📥 Depended On By (10)
-[[accessibility.spec]] · [[chat-ui.spec]] · [[chat.spec]] · [[dashboard.spec]] · [[multi-agent.spec]] · [[nav-drawer.spec]] · [[navigation.spec]] · [[responsive.spec]] · [[settings.spec]] · [[theme-tokens.spec]]
+### 📥 Depended On By (14)
+[[accessibility.spec]] · [[chat-ui.spec]] · [[chat.spec]] · [[command-palette.spec]] · [[dashboard.spec]] · [[message-edit.spec]] · [[multi-agent.spec]] · [[nav-drawer.spec]] · [[navigation.spec]] · [[news-pwa.spec]] · [[responsive.spec]] · [[settings.spec]] · [[theme-tokens.spec]] · [[thread-switcher.spec]]
 
 
 

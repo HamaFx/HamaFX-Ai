@@ -1,15 +1,15 @@
 ---
 type: moc
 package: "@hamafx/web"
-nodes: 657
-totalIncoming: 975
-totalOutgoing: 1466
+nodes: 683
+totalIncoming: 1005
+totalOutgoing: 1388
 tags: [moc, hamafx-web]
 ---
 
 # 📦 @hamafx/web
 
-> **Map of Content** · 657 files · 975 incoming + 1466 outgoing = 2441 connections
+> **Map of Content** · 683 files · 1005 incoming + 1388 outgoing = 2393 connections
 
 ## DataviewJS — All Files in This Package
 ```dataviewjs
@@ -25,7 +25,7 @@ dv.table(
 
 ## Files by Type
 
-### 📁 Module (359)
+### 📁 Module (384)
 - [[dashboard-canvas-DashboardCanvas]] *(1↖ 14↗)*
 - [[journal-view-JournalView]] *(1↖ 12↗)*
 - [[page-async]] *(0↖ 11↗)*
@@ -61,7 +61,6 @@ dv.table(
 - [[page-async]] *(0↖ 4↗)*
 - [[pro-chart-view-ProChartView]] *(1↖ 4↗)*
 - [[tradingview-widget-TradingViewWidget]] *(1↖ 4↗)*
-- [[page-async]] *(0↖ 4↗)*
 - [[open-positions-widget-OpenPositionsWidget]] *(1↖ 4↗)*
 - [[watchlist-widget-WatchlistWidget]] *(1↖ 4↗)*
 - [[entry-form-EntryForm]] *(1↖ 4↗)*
@@ -82,13 +81,12 @@ dv.table(
 - [[provision-user-SignInInput]] *(0↖ 4↗)*
 - [[market-client-MarketApiError]] *(0↖ 4↗)*
 - [[admin-listFeaturesService]] *(0↖ 4↗)*
-- [[chat-ThreadDTO]] *(0↖ 4↗)*
 - [[portfolio-PortfolioUpdateSettingsSchema]] *(0↖ 4↗)*
 - [[nextauth-wiring.test]] *(0↖ 4↗)*
 - [[performance-chart-data.test]] *(0↖ 4↗)*
+- [[polish-flash-gauge.test]] *(0↖ 4↗)*
 - [[calendar-hero-CalendarHero]] *(0↖ 3↗)*
 - [[calendar-toolbar-ImportanceFilter]] *(1↖ 3↗)*
-- [[page-async]] *(0↖ 3↗)*
 - [[page-async]] *(0↖ 3↗)*
 - [[alerts-widget-AlertsWidget]] *(1↖ 3↗)*
 - [[calendar-widget-CalendarWidget]] *(1↖ 3↗)*
@@ -153,7 +151,7 @@ dv.table(
 - [[storage.test]] *(0↖ 3↗)*
 - [[thread-export.test]] *(0↖ 3↗)*
 - [[usage-alerts.test]] *(0↖ 3↗)*
-- [[fixtures-ChatMockOptions]] *(11↖ 3↗)*
+- [[fixtures-ChatMockOptions]] *(15↖ 3↗)*
 - [[eslint.config-config]] *(0↖ 2↗)*
 - [[playwright.config-defineConfig]] *(0↖ 2↗)*
 - [[admin-audit-table-AdminAuditTable]] *(0↖ 2↗)*
@@ -190,6 +188,7 @@ dv.table(
 - [[admin-check-checkIsAdmin]] *(0↖ 2↗)*
 - [[chat-transport-AgentProgress]] *(0↖ 2↗)*
 - [[alerts.schema-AlertCreateSchema]] *(1↖ 2↗)*
+- [[chat-ThreadDTO]] *(0↖ 2↗)*
 - [[toast-api-error-toastApiError]] *(0↖ 2↗)*
 - [[proxy-proxy]] *(0↖ 2↗)*
 - [[news-service-NewsFilters]] *(0↖ 2↗)*
@@ -197,12 +196,16 @@ dv.table(
 - [[admin-health.test]] *(0↖ 2↗)*
 - [[diagnostic-traces.test]] *(0↖ 2↗)*
 - [[features.test]] *(0↖ 2↗)*
+- [[flush.test]] *(0↖ 2↗)*
+- [[logs-stream.test]] *(0↖ 2↗)*
 - [[onboarding-inspect.test]] *(0↖ 2↗)*
 - [[onboarding-reset.test]] *(0↖ 2↗)*
 - [[test-alert-telegram.test]] *(0↖ 2↗)*
 - [[users-role.test]] *(0↖ 2↗)*
 - [[users.test]] *(0↖ 2↗)*
+- [[admin-diagnostic-traces.test]] *(0↖ 2↗)*
 - [[admin-error-block.test]] *(0↖ 2↗)*
+- [[admin-log-viewer.test]] *(0↖ 2↗)*
 - [[admin-page.test]] *(0↖ 2↗)*
 - [[admin-system-health.test]] *(0↖ 2↗)*
 - [[agent-deliberation.test]] *(0↖ 2↗)*
@@ -212,17 +215,26 @@ dv.table(
 - [[billing-contract.test]] *(0↖ 2↗)*
 - [[build-scripts.test]] *(0↖ 2↗)*
 - [[bundle-size-guard.test]] *(0↖ 2↗)*
+- [[card.test]] *(0↖ 2↗)*
+- [[chat-result-cards.test]] *(0↖ 2↗)*
 - [[chat-shared.test]] *(0↖ 2↗)*
 - [[chat-transport.test]] *(0↖ 2↗)*
+- [[clean-news-text.test]] *(0↖ 2↗)*
 - [[composer.test]] *(0↖ 2↗)*
+- [[cron-vm-policy.test]] *(0↖ 2↗)*
 - [[dev-secrets.test]] *(0↖ 2↗)*
 - [[docker-backup-policy.test]] *(0↖ 2↗)*
 - [[empty-state.test]] *(0↖ 2↗)*
 - [[format-number.test]] *(0↖ 2↗)*
+- [[frontend-route-contract.test]] *(0↖ 2↗)*
 - [[middleware-to-ai.integration.test]] *(0↖ 2↗)*
+- [[message-list-hydration.test]] *(0↖ 2↗)*
 - [[middleware-matcher-coverage.test]] *(0↖ 2↗)*
 - [[middleware.test]] *(0↖ 2↗)*
+- [[news-ui.test]] *(0↖ 2↗)*
 - [[p3-hardening-policy.test]] *(0↖ 2↗)*
+- [[phase4-6-ui.test]] *(0↖ 2↗)*
+- [[phase7-9-ui.test]] *(0↖ 2↗)*
 - [[provision-user.test]] *(0↖ 2↗)*
 - [[quick-prompts.test]] *(0↖ 2↗)*
 - [[route-alerts.test]] *(0↖ 2↗)*
@@ -230,9 +242,12 @@ dv.table(
 - [[route-journal.test]] *(0↖ 2↗)*
 - [[runtime-migrate-policy.test]] *(0↖ 2↗)*
 - [[service-worker.test]] *(0↖ 2↗)*
+- [[setup-env.test]] *(0↖ 2↗)*
+- [[setup-prompts.test]] *(0↖ 2↗)*
 - [[setup-wizard-policy.test]] *(0↖ 2↗)*
 - [[sparkline.test]] *(0↖ 2↗)*
 - [[stale-indicator.test]] *(0↖ 2↗)*
+- [[tidy-consistency.test]] *(0↖ 2↗)*
 - [[tool-card.test]] *(0↖ 2↗)*
 - [[use-popup-menu.test]] *(0↖ 2↗)*
 - [[accessibility.spec]] *(0↖ 2↗)*
@@ -241,23 +256,29 @@ dv.table(
 - [[auth.spec]] *(0↖ 2↗)*
 - [[chat-ui.spec]] *(0↖ 2↗)*
 - [[chat.spec]] *(0↖ 2↗)*
+- [[command-palette.spec]] *(0↖ 2↗)*
 - [[dashboard.spec]] *(0↖ 2↗)*
 - [[global-setup-globalSetup]] *(0↖ 2↗)*
 - [[isolation.spec]] *(0↖ 2↗)*
+- [[message-edit.spec]] *(0↖ 2↗)*
 - [[multi-agent.spec]] *(0↖ 2↗)*
 - [[nav-drawer.spec]] *(0↖ 2↗)*
 - [[navigation.spec]] *(0↖ 2↗)*
+- [[news-pwa.spec]] *(0↖ 2↗)*
 - [[onboarding-replay.spec]] *(0↖ 2↗)*
 - [[responsive.spec]] *(0↖ 2↗)*
 - [[settings.spec]] *(0↖ 2↗)*
 - [[test-utils-ensureTestUser]] *(6↖ 2↗)*
 - [[theme-tokens.spec]] *(0↖ 2↗)*
+- [[thread-switcher.spec]] *(0↖ 2↗)*
 - [[next-env.d]] *(0↖ 1↗)*
 - [[next.config-withSentryConfig]] *(0↖ 1↗)*
 - [[postcss.config-default]] *(0↖ 1↗)*
 - [[d3.v7.min]] *(0↖ 1↗)*
+- [[build]] *(0↖ 1↗)*
 - [[bundle-size-guard-matchesPattern]] *(0↖ 1↗)*
 - [[generate-icons]] *(0↖ 1↗)*
+- [[generate-pwa-screenshots]] *(0↖ 1↗)*
 - [[generate-sw-TEMPLATE_FILE]] *(0↖ 1↗)*
 - [[migrate-runtime]] *(0↖ 1↗)*
 - [[set-build-id-resolveGitSha]] *(0↖ 1↗)*
@@ -280,9 +301,11 @@ dv.table(
 - [[loading-StructureLoading]] *(0↖ 1↗)*
 - [[error-ChartError]] *(0↖ 1↗)*
 - [[loading-ThreadLoading]] *(0↖ 1↗)*
+- [[page-async]] *(0↖ 1↗)*
 - [[error-ChatError]] *(0↖ 1↗)*
 - [[layout-ChatLayout]] *(0↖ 1↗)*
 - [[loading-ChatLoading]] *(0↖ 1↗)*
+- [[page-async]] *(0↖ 1↗)*
 - [[widget-types-WidgetType]] *(1↖ 1↗)*
 - [[briefing-widget-BriefingWidget]] *(1↖ 1↗)*
 - [[loading-DashboardLoading]] *(0↖ 1↗)*
@@ -362,6 +385,7 @@ dv.table(
 - [[admin-rate-limit-AdminRateLimitResult]] *(0↖ 1↗)*
 - [[auth-anomaly-recordAuthEvent]] *(1↖ 1↗)*
 - [[auth-tokens-generateToken]] *(0↖ 1↗)*
+- [[clean-news-text-cleanNewsText]] *(0↖ 1↗)*
 - [[cn-cn]] *(1↖ 1↗)*
 - [[commands-CommandGroup]] *(0↖ 1↗)*
 - [[csrf-getCsrfToken]] *(2↖ 1↗)*
@@ -372,6 +396,7 @@ dv.table(
 - [[nowpayments-NowPaymentsInvoice]] *(0↖ 1↗)*
 - [[request-id-readOrCreateRequestId]] *(3↖ 1↗)*
 - [[admin-dtos-SliSnapshot]] *(4↖ 1↗)*
+- [[api-boundary-BYOK_PROVIDERS]] *(0↖ 1↗)*
 - [[session-TradingSession]] *(1↖ 1↗)*
 - [[signed-user-header-USER_ID_HEADER]] *(1↖ 1↗)*
 - [[storage-ChatImageUploadEnv]] *(1↖ 1↗)*
@@ -387,80 +412,24 @@ dv.table(
 - [[vitest.config-defineConfig]] *(0↖ 1↗)*
 
 ### 🔗 API Route (192)
-- [[POST--api-chat]] *(1↖ 7↗)*
-- [[GET--api-market-stream]] *(1↖ 5↗)*
-- [[POST--api-settings-test-provider]] *(1↖ 5↗)*
-- [[GET--api-admin-onboarding-inspect]] *(1↖ 4↗)*
-- [[GET--api-cron-cot]] *(1↖ 4↗)*
-- [[GET--api-cron-snapshots]] *(1↖ 4↗)*
-- [[GET--api-health]] *(1↖ 4↗)*
-- [[POST--api-push-subscribe]] *(1↖ 4↗)*
-- [[GET--api-sentiment]] *(1↖ 4↗)*
-- [[GET,PUT,DELETE--api-settings-chat-model]] *(1↖ 4↗)*
-- [[GET,PUT,DELETE--api-settings-embedding-model]] *(1↖ 4↗)*
-- [[GET,PUT,DELETE--api-settings-vision-model]] *(1↖ 4↗)*
-- [[GET--api-admin-onboarding-status]] *(1↖ 3↗)*
-- [[GET--api-auth-verify-email]] *(1↖ 3↗)*
-- [[GET--api-chat-threads--id-export]] *(1↖ 3↗)*
-- [[GET--api-cron-briefings]] *(1↖ 3↗)*
-- [[GET--api-cron-calendar]] *(1↖ 3↗)*
-- [[GET--api-cron-fred-actuals]] *(1↖ 3↗)*
-- [[GET--api-cron-news]] *(1↖ 3↗)*
-- [[GET--api-cron-warm-cache]] *(1↖ 3↗)*
-- [[GET--api-cron-weekly-review]] *(1↖ 3↗)*
-- [[POST--api-journal-import]] *(1↖ 3↗)*
-- [[POST--api-journal-review]] *(1↖ 3↗)*
-- [[GET--api-me-keys]] *(1↖ 3↗)*
-- [[GET--api-news]] *(1↖ 3↗)*
-- [[GET,PUT--api-notifications-noise-config]] *(1↖ 3↗)*
-- [[GET,PUT--api-notifications-route-config]] *(1↖ 3↗)*
-- [[GET,PATCH,DELETE--api-portfolio-positions--id]] *(1↖ 3↗)*
-- [[POST--api-push-unsubscribe]] *(1↖ 3↗)*
-- [[GET,POST,PATCH--api-settings-symbols]] *(1↖ 3↗)*
-- [[GET--api-settings-usage-by-agent]] *(1↖ 3↗)*
-- [[POST--api-upload]] *(1↖ 3↗)*
-- [[GET--api-admin-audit]] *(1↖ 2↗)*
-- [[POST--api-admin-billing-dlq--id-replay]] *(1↖ 2↗)*
-- [[GET--api-admin-cron-history]] *(1↖ 2↗)*
-- [[GET--api-admin-diagnostics-tool-telemetry]] *(1↖ 2↗)*
-- [[GET--api-admin-diagnostics-trace--id]] *(1↖ 2↗)*
-- [[GET--api-admin-diagnostics-traces]] *(1↖ 2↗)*
-- [[POST--api-admin-flush]] *(1↖ 2↗)*
-- [[GET--api-admin-health-slo]] *(1↖ 2↗)*
-- [[POST--api-admin-impersonate]] *(1↖ 2↗)*
-- [[GET--api-admin-logs-stream]] *(1↖ 2↗)*
-- [[POST--api-admin-onboarding-reset]] *(1↖ 2↗)*
-- [[POST--api-admin-test-alert-email]] *(1↖ 2↗)*
-- [[POST--api-admin-test-telegram]] *(1↖ 2↗)*
-- [[POST--api-billing-checkout]] *(1↖ 2↗)*
-- [[GET--api-billing-portal]] *(1↖ 2↗)*
-- [[POST--api-billing-webhook]] *(1↖ 2↗)*
-- [[POST--api-bot-link-code]] *(1↖ 2↗)*
-- [[GET--api-bot-status]] *(1↖ 2↗)*
-- [[POST--api-bot-unlink]] *(1↖ 2↗)*
-- [[GET--api-chat-analysis-jobs--jobId]] *(1↖ 2↗)*
-- [[GET--api-chat-threads--id-opinions]] *(1↖ 2↗)*
-- [[GET--api-chat-threads--id-summary]] *(1↖ 2↗)*
-- [[POST--api-chat-threads-bulk-delete]] *(1↖ 2↗)*
-- [[POST--api-chat-threads-fork]] *(1↖ 2↗)*
-- [[GET--api-cron-alerts]] *(1↖ 2↗)*
-- [[GET--api-cron-billing-dlq]] *(1↖ 2↗)*
-- [[GET--api-cron-cleanup-telemetry]] *(1↖ 2↗)*
-- [[GET--api-cron-cleanup-tokens]] *(1↖ 2↗)*
-- [[GET--api-cron-embedding-backfill]] *(1↖ 2↗)*
-- [[GET--api-dev-login]] *(1↖ 2↗)*
-- [[GET--api-health-db]] *(1↖ 2↗)*
-- [[GET--api-health-public]] *(1↖ 2↗)*
-- [[GET--api-market-price]] *(1↖ 2↗)*
-- [[POST--api-onboarding-save-progress]] *(1↖ 2↗)*
-- [[GET,POST--api-portfolio-positions]] *(1↖ 2↗)*
-- [[DELETE--api-settings-symbols--symbol]] *(1↖ 2↗)*
-- [[POST--api-settings-test-market-provider]] *(1↖ 2↗)*
-- [[GET--api-settings-usage-by-provider]] *(1↖ 2↗)*
-- [[GET,POST--api-telegram-webhook]] *(1↖ 2↗)*
 - [[GET--api-admin-architecture-explorer]] *(1↖ 1↗)*
+- [[GET--api-admin-audit]] *(1↖ 1↗)*
+- [[POST--api-admin-billing-dlq--id-replay]] *(1↖ 1↗)*
+- [[GET--api-admin-cron-history]] *(1↖ 1↗)*
+- [[GET--api-admin-diagnostics-tool-telemetry]] *(1↖ 1↗)*
+- [[GET--api-admin-diagnostics-trace--id]] *(1↖ 1↗)*
+- [[GET--api-admin-diagnostics-traces]] *(1↖ 1↗)*
 - [[GET,POST--api-admin-features]] *(1↖ 1↗)*
+- [[POST--api-admin-flush]] *(1↖ 1↗)*
+- [[GET--api-admin-health-slo]] *(1↖ 1↗)*
 - [[GET--api-admin-impersonate-probe]] *(1↖ 1↗)*
+- [[POST--api-admin-impersonate]] *(1↖ 1↗)*
+- [[GET--api-admin-logs-stream]] *(1↖ 1↗)*
+- [[GET--api-admin-onboarding-inspect]] *(1↖ 1↗)*
+- [[POST--api-admin-onboarding-reset]] *(1↖ 1↗)*
+- [[GET--api-admin-onboarding-status]] *(1↖ 1↗)*
+- [[POST--api-admin-test-alert-email]] *(1↖ 1↗)*
+- [[POST--api-admin-test-telegram]] *(1↖ 1↗)*
 - [[PATCH--api-admin-users--id-role]] *(1↖ 1↗)*
 - [[GET--api-admin-users]] *(1↖ 1↗)*
 - [[GET,PATCH,DELETE--api-alerts--id]] *(1↖ 1↗)*
@@ -468,21 +437,77 @@ dv.table(
 - [[GET--api-alerts-preview-digest]] *(1↖ 1↗)*
 - [[GET,POST--api-alerts]] *(1↖ 1↗)*
 - [[GET,POST--api-auth--nextauth-]] *(1↖ 1↗)*
+- [[GET--api-auth-verify-email]] *(1↖ 1↗)*
+- [[POST--api-billing-checkout]] *(1↖ 1↗)*
+- [[GET--api-billing-portal]] *(1↖ 1↗)*
+- [[POST--api-billing-webhook]] *(1↖ 1↗)*
+- [[POST--api-bot-link-code]] *(1↖ 1↗)*
+- [[GET--api-bot-status]] *(1↖ 1↗)*
+- [[POST--api-bot-unlink]] *(1↖ 1↗)*
 - [[GET--api-calendar]] *(1↖ 1↗)*
+- [[GET--api-chat-analysis-jobs--jobId]] *(1↖ 1↗)*
+- [[POST--api-chat]] *(1↖ 1↗)*
+- [[GET--api-chat-threads--id-export]] *(1↖ 1↗)*
+- [[GET--api-chat-threads--id-opinions]] *(1↖ 1↗)*
 - [[GET,DELETE,PATCH--api-chat-threads--id]] *(1↖ 1↗)*
+- [[GET--api-chat-threads--id-summary]] *(1↖ 1↗)*
+- [[POST--api-chat-threads-bulk-delete]] *(1↖ 1↗)*
+- [[POST--api-chat-threads-fork]] *(1↖ 1↗)*
 - [[GET,POST--api-chat-threads]] *(1↖ 1↗)*
+- [[GET--api-cron-alerts]] *(1↖ 1↗)*
+- [[GET--api-cron-billing-dlq]] *(1↖ 1↗)*
+- [[GET--api-cron-briefings]] *(1↖ 1↗)*
+- [[GET--api-cron-calendar]] *(1↖ 1↗)*
+- [[GET--api-cron-cleanup-telemetry]] *(1↖ 1↗)*
+- [[GET--api-cron-cleanup-tokens]] *(1↖ 1↗)*
 - [[GET--api-cron-cleanup-uploads]] *(1↖ 1↗)*
+- [[GET--api-cron-cot]] *(1↖ 1↗)*
+- [[GET--api-cron-embedding-backfill]] *(1↖ 1↗)*
+- [[GET--api-cron-fred-actuals]] *(1↖ 1↗)*
+- [[GET--api-cron-news]] *(1↖ 1↗)*
+- [[GET--api-cron-snapshots]] *(1↖ 1↗)*
+- [[GET--api-cron-warm-cache]] *(1↖ 1↗)*
+- [[GET--api-cron-weekly-review]] *(1↖ 1↗)*
+- [[GET--api-dev-login]] *(1↖ 1↗)*
+- [[GET--api-health-db]] *(1↖ 1↗)*
+- [[GET--api-health-public]] *(1↖ 1↗)*
+- [[GET--api-health]] *(1↖ 1↗)*
 - [[GET,PATCH,DELETE--api-journal--id]] *(1↖ 1↗)*
+- [[POST--api-journal-import]] *(1↖ 1↗)*
+- [[POST--api-journal-review]] *(1↖ 1↗)*
 - [[GET,POST--api-journal]] *(1↖ 1↗)*
 - [[GET--api-market-candles]] *(1↖ 1↗)*
 - [[POST--api-market-indicators]] *(1↖ 1↗)*
+- [[GET--api-market-price]] *(1↖ 1↗)*
 - [[GET--api-market-search]] *(1↖ 1↗)*
+- [[GET--api-market-stream]] *(1↖ 1↗)*
+- [[GET--api-me-keys]] *(1↖ 1↗)*
+- [[GET--api-news]] *(1↖ 1↗)*
+- [[GET,PUT--api-notifications-noise-config]] *(1↖ 1↗)*
+- [[GET,PUT--api-notifications-route-config]] *(1↖ 1↗)*
+- [[POST--api-onboarding-save-progress]] *(1↖ 1↗)*
+- [[GET,PATCH,DELETE--api-portfolio-positions--id]] *(1↖ 1↗)*
+- [[GET,POST--api-portfolio-positions]] *(1↖ 1↗)*
 - [[GET--api-portfolio-risk]] *(1↖ 1↗)*
 - [[GET,PUT--api-portfolio-settings]] *(1↖ 1↗)*
+- [[POST--api-push-subscribe]] *(1↖ 1↗)*
+- [[POST--api-push-unsubscribe]] *(1↖ 1↗)*
+- [[GET--api-sentiment]] *(1↖ 1↗)*
 - [[GET,PATCH--api-settings-analysis-mode]] *(1↖ 1↗)*
 - [[POST--api-settings-bulk-test]] *(1↖ 1↗)*
 - [[GET--api-settings-catalog]] *(1↖ 1↗)*
+- [[GET,PUT,DELETE--api-settings-chat-model]] *(1↖ 1↗)*
+- [[GET,PUT,DELETE--api-settings-embedding-model]] *(1↖ 1↗)*
 - [[GET,PUT--api-settings-fallback-chain]] *(1↖ 1↗)*
+- [[DELETE--api-settings-symbols--symbol]] *(1↖ 1↗)*
+- [[GET,POST,PATCH--api-settings-symbols]] *(1↖ 1↗)*
+- [[POST--api-settings-test-market-provider]] *(1↖ 1↗)*
+- [[POST--api-settings-test-provider]] *(1↖ 1↗)*
+- [[GET--api-settings-usage-by-agent]] *(1↖ 1↗)*
+- [[GET--api-settings-usage-by-provider]] *(1↖ 1↗)*
+- [[GET,PUT,DELETE--api-settings-vision-model]] *(1↖ 1↗)*
+- [[GET,POST--api-telegram-webhook]] *(1↖ 1↗)*
+- [[POST--api-upload]] *(1↖ 1↗)*
 - [[GET--api-admin-architecture-explorer]] *(0↖ 1↗)*
 - [[GET--api-admin-audit]] *(0↖ 1↗)*
 - [[POST--api-admin-billing-dlq--id-replay]] *(0↖ 1↗)*
@@ -580,7 +605,7 @@ dv.table(
 - [[GET,POST--api-telegram-webhook]] *(0↖ 1↗)*
 - [[POST--api-upload]] *(0↖ 1↗)*
 
-### 🧩 Component (105)
+### 🧩 Component (106)
 - [[registry-ToolPartState]] *(45↖ 35↗)*
 - [[wizard-OnboardingWizard]] *(0↖ 12↗)*
 - [[message-Message]] *(1↖ 10↗)*
@@ -671,6 +696,7 @@ dv.table(
 - [[animated-number-AnimatedNumber]] *(0↖ 1↗)*
 - [[badge-BadgeTone]] *(0↖ 1↗)*
 - [[button-ButtonProps]] *(1↖ 1↗)*
+- [[card-CardProps]] *(0↖ 1↗)*
 - [[drawer-Drawer]] *(0↖ 1↗)*
 - [[empty-state-EmptyState]] *(0↖ 1↗)*
 - [[field-Field]] *(0↖ 1↗)*
@@ -688,5 +714,5 @@ dv.table(
 - [[tooltip-Tooltip]] *(0↖ 1↗)*
 
 ### 📦 Package (1)
-- [[@hamafx-web]] *(560↖ 0↗)*
+- [[@hamafx-web]] *(586↖ 0↗)*
 

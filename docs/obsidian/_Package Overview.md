@@ -10,17 +10,17 @@ tags: [dashboard, overview]
 
 | Package | Nodes | Incoming Deps | Outgoing Deps | Layers |
 |---------|-------|--------------|--------------|--------|
-| @hamafx/web | 657 | 975 | 1466 | package, core, api, ui |
-| @hamafx/ai | 274 | 971 | 1304 | package, core, ai |
-| @hamafx/db | 161 | 442 | 261 | package, core, data |
-| @hamafx/shared | 85 | 803 | 253 | package, core |
-| @hamafx/data | 66 | 206 | 239 | package, core |
+| @hamafx/web | 683 | 1005 | 1388 | package, core, api, ui |
+| @hamafx/ai | 274 | 932 | 1304 | package, core, ai |
+| @hamafx/db | 161 | 397 | 261 | package, core, data |
+| @hamafx/shared | 85 | 770 | 253 | package, core |
+| @hamafx/data | 66 | 198 | 239 | package, core |
 | @hamafx/worker | 58 | 200 | 278 | package, core |
 | @hamafx/indicators | 39 | 101 | 159 | package, core |
 | loadtest | 31 | 144 | 143 | package, core |
-| @hamafx/test-utils | 19 | 289 | 36 | package, core |
-| tool:architecture-explorer | 18 | 65 | 65 | package, core |
-| scripts | 8 | 7 | 7 | package, core |
+| scripts | 25 | 65 | 65 | package, core |
+| @hamafx/test-utils | 19 | 306 | 36 | package, core |
+| tool:architecture-explorer | 18 | 68 | 68 | package, core |
 | @hamafx/config | 4 | 12 | 4 | package, core |
 | root | 3 | 2 | 2 | package, core |
 | tool:lighthouse | 2 | 1 | 1 | package, core |

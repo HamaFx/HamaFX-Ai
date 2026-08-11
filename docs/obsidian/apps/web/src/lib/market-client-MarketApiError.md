@@ -46,8 +46,6 @@ Module: apps/web/src/lib/market-client.ts
 - `fetchIndicators`
 - `ChartDataResponse`
 - `fetchChartData`
-- `FetchStructureOptions`
-- `fetchStructure`
 
 
 ## 🔍 Explore

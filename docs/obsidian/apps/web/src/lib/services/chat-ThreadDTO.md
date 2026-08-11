@@ -3,8 +3,8 @@ type: module
 package: "@hamafx/web"
 path: "apps/web/src/lib/services/chat.ts"
 incoming: 0
-outgoing: 4
-connections: 4
+outgoing: 2
+connections: 2
 risk: low
 layer: core
 tags: [type/module, hamafx-web, layer/core]
@@ -24,8 +24,8 @@ Module: apps/web/src/lib/services/chat.ts
 | | Count |
 |---|---|
 | Incoming dependencies | 0 |
-| Outgoing dependencies | 4 |
-| Total connections | 4 |
+| Outgoing dependencies | 2 |
+| Total connections | 2 |
 | Risk level | **LOW** |
 | Layer | `core` |
 | Package tag | `#hamafx-web` |

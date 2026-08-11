@@ -12,6 +12,8 @@ echo 'GOOGLE_GENERATIVE_AI_API_KEY=AIza...' >> .env.local
 pnpm dev:local                # http://localhost:3000
 ```
 
+Prefer the guided path? Run **`pnpm setup`** instead of the manual steps above — it checks your machine, explains every choice (Simple vs Full mode), writes the config for you, and can start the app when you're ready.
+
 That's it for native dev. The rest of this page explains what's actually happening and what the choices mean.
 
 ---
@@ -67,6 +69,31 @@ First-time users land on `/onboarding` after `/register`. The wizard has four st
 
 You can return to any step via Settings. The wizard never blocks — the chat works as long as you have *some* AI key set, either via wizard, Settings, or env.
 
+## The `pnpm setup` CLI Wizard
+
+The command-line installer (`scripts/setup/`) is the recommended first step for both local and Docker installs. It runs on Node.js only — no dependencies — so it works before `pnpm install`.
+
+The flow has seven steps:
+
+1. **Prerequisites** — Node 20+, pnpm/Corepack, Git, Docker detection with guidance.
+2. **Mode** — arrow-key picker: **Simple** (PGlite, no Docker) vs **Full** (Docker + pgvector + worker).
+3. **Existing install** — if `.env`/`node_modules` exist: Continue / Repair / Fresh start.
+4. **Market data** (optional) — checkbox multi-select for Finnhub, Marketaux, FRED, Alpha Vantage with masked key input.
+5. **Config** — generates secrets from a shared template, backs up existing files, shows a masked diff, and validates `docker compose config` in Full mode.
+6. **Install** — `pnpm install` (frozen lockfile, with fallback).
+7. **Launch** — starts the app, waits for `/api/health/public`, opens the browser, and prints a Getting Started guide.
+
+Useful flags:
+
+```bash
+pnpm setup --dry-run            # preview every change, write nothing
+pnpm setup --mode=simple --yes  # quiet, non-interactive
+pnpm setup --json               # machine-readable result on stdout
+pnpm setup --fresh              # regenerate config (backed up first)
+```
+
+Ctrl+C anywhere aborts cleanly with a friendly message (exit 130).
+
 ## Docker / Production Paths
 
 - **Docker compose** (`./docker/init-secrets.sh && docker compose up -d`):
@@ -109,3 +136,6 @@ You can mix and match providers — the routing layer in `packages/ai/src/model.
 | API keys UI | `apps/web/src/app/(app)/settings/api-keys/` |
 | Test connection route | `apps/web/src/app/api/settings/test-provider/route.ts` |
 | Encryption helpers | `packages/shared/src/encryption.ts` |
+| CLI setup wizard | `scripts/setup/` (entry: `scripts/setup/index.mjs`) |
+| Secrets template (single source of truth) | `scripts/setup/secret-template.json` |
+| Docker secrets bootstrap | `docker/init-secrets.sh` → `scripts/setup/lib/generate-env.mjs` |

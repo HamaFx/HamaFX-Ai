@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "generated_at": "2026-08-10T21:39:58.779Z",
+  "generated_at": "2026-08-11T20:13:42.450Z",
   "project": {
     "name": "HamaFX-Ai",
     "rootPath": ".",
@@ -32,7 +32,7 @@
     {
       "name": "@hamafx/web",
       "path": "apps/web",
-      "nodeCount": 657,
+      "nodeCount": 683,
       "dependsOn": [
         "env-loader/loadE2eEnv",
         "admin-error-block/AdminErrorBlock",
@@ -56,11 +56,11 @@
         "watchlist-widget/WatchlistWidget",
         "dashboard-canvas/DashboardCanvas",
         "entry-row/EntryRow",
+        "ai-review-panel/AiReviewPanel",
         "breakdown-table/BreakdownTable",
         "drawdown-chart/DrawdownChart",
         "r-distribution/RDistribution",
         "streak-display/StreakDisplay",
-        "ai-review-panel/AiReviewPanel",
         "entry-form/EntryForm",
         "entry-list/ConfirmFn",
         "import-trades/ImportTrades",
@@ -84,9 +84,9 @@
         "api-key-card/ApiKeyCard",
         "api-keys-landing-banner/ApiKeysLandingBannerProps",
         "bulk-test-button/BulkTestButton",
-        "save-bar/SaveBar",
-        "market-data-config/MarketDataConfig",
         "export-import-keys/ExportImportKeys",
+        "market-data-config/MarketDataConfig",
+        "save-bar/SaveBar",
         "appearance-card/AppearanceCard",
         "billing-plans/BillingPlans",
         "payment-history/PaymentHistory",
@@ -621,8 +621,10 @@
     {
       "name": "scripts",
       "path": "scripts",
-      "nodeCount": 8,
-      "dependsOn": []
+      "nodeCount": 25,
+      "dependsOn": [
+        "scripts"
+      ]
     },
     {
       "name": "tool:architecture-explorer",
@@ -642,7 +644,7 @@
         "knowledge-generator/KnowledgeOutput",
         "obsidian-generator/generateObsidianVault",
         "analysis/analyzeArchitecture",
-        "advanced-features/analyzeImpact",
+        "advanced-features/ViewSummary",
         "git-history/scanGitHistory"
       ]
     },

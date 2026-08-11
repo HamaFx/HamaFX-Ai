@@ -3,8 +3,8 @@ type: module
 package: "scripts"
 path: "scripts/setup.mjs"
 incoming: 0
-outgoing: 1
-connections: 1
+outgoing: 2
+connections: 2
 risk: low
 layer: core
 tags: [type/module, scripts, layer/core]
@@ -24,8 +24,8 @@ Module: scripts/setup.mjs
 | | Count |
 |---|---|
 | Incoming dependencies | 0 |
-| Outgoing dependencies | 1 |
-| Total connections | 1 |
+| Outgoing dependencies | 2 |
+| Total connections | 2 |
 | Risk level | **LOW** |
 | Layer | `core` |
 | Package tag | `#scripts` |

@@ -14,12 +14,13 @@ Files with the highest connectivity — changes here may cascade across the syst
 
 ## Top 30 Hotspots
 
-- 🔥 [[@hamafx-shared]] — score: **1006.1** *(in: 652, out: 0)*
-- 🔥 [[@hamafx-web]] — score: **867.4** *(in: 560, out: 0)*
-- 🔥 [[@hamafx-ai]] — score: **582.1** *(in: 371, out: 0)*
-- 🔥 [[@hamafx-db]] — score: **491.4** *(in: 311, out: 0)*
-- 🔥 [[vitest-installServerOnlyStub]] — score: **424.2** *(in: 266, out: 2)*
-- 🔥 [[@hamafx-data]] — score: **180.8** *(in: 107, out: 0)*
+- 🔥 [[@hamafx-shared]] — score: **956.3** *(in: 619, out: 0)*
+- 🔥 [[@hamafx-web]] — score: **906.6** *(in: 586, out: 0)*
+- 🔥 [[@hamafx-ai]] — score: **523.1** *(in: 332, out: 0)*
+- 🔥 [[vitest-installServerOnlyStub]] — score: **450** *(in: 283, out: 2)*
+- 🔥 [[@hamafx-db]] — score: **423.2** *(in: 266, out: 0)*
+- 🔥 [[@hamafx-data]] — score: **168.4** *(in: 99, out: 0)*
+- 🔥 [[scripts]] — score: **115.6** *(in: 65, out: 0)*
 - 🔥 [[registry-ToolPartState]] — score: **104** *(in: 45, out: 35)*
 - 🔥 [[@hamafx-worker]] — score: **103.1** *(in: 57, out: 0)*
 - 🔥 [[@hamafx-indicators]] — score: **95.2** *(in: 52, out: 0)*
@@ -43,7 +44,6 @@ Files with the highest connectivity — changes here may cascade across the syst
 - 🔥 [[consumer-NormalizedTick]] — score: **41.6** *(in: 17, out: 5)*
 - 🔥 [[@hamafx-test-utils]] — score: **39.7** *(in: 18, out: 0)*
 - 🔥 [[agent-runChat]] — score: **38.9** *(in: 4, out: 34)*
-- 🔥 [[actions-setupTwoFactorAction]] — score: **38.7** *(in: 17, out: 1)*
 
 ## DataviewJS — Live View
 ```dataviewjs

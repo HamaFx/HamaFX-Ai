@@ -1,11 +1,11 @@
 ---
 type: index
 category: "component"
-count: 105
+count: 106
 tags: [index, type/component]
 ---
 
-# 🧩 Components (105)
+# 🧩 Components (106)
 
 ## DataviewJS — Sorted by Most Connected
 ```dataviewjs
@@ -111,6 +111,7 @@ dv.table(
 - [[animated-number-AnimatedNumber]] · `@hamafx/web` · `apps/web/src/components/ui/animated-number.tsx`  *(↖0 ↗1 = 1)*
 - [[badge-BadgeTone]] · `@hamafx/web` · `apps/web/src/components/ui/badge.tsx`  *(↖0 ↗1 = 1)*
 - [[button-ButtonProps]] · `@hamafx/web` · `apps/web/src/components/ui/button.tsx`  *(↖1 ↗1 = 2)*
+- [[card-CardProps]] · `@hamafx/web` · `apps/web/src/components/ui/card.tsx`  *(↖0 ↗1 = 1)*
 - [[drawer-Drawer]] · `@hamafx/web` · `apps/web/src/components/ui/drawer.tsx`  *(↖0 ↗1 = 1)*
 - [[empty-state-EmptyState]] · `@hamafx/web` · `apps/web/src/components/ui/empty-state.tsx`  *(↖0 ↗1 = 1)*
 - [[field-Field]] · `@hamafx/web` · `apps/web/src/components/ui/field.tsx`  *(↖0 ↗1 = 1)*

@@ -2,14 +2,14 @@
 type: moc
 package: "@hamafx/shared"
 nodes: 85
-totalIncoming: 803
+totalIncoming: 770
 totalOutgoing: 253
 tags: [moc, hamafx-shared]
 ---
 
 # 📦 @hamafx/shared
 
-> **Map of Content** · 85 files · 803 incoming + 253 outgoing = 1056 connections
+> **Map of Content** · 85 files · 770 incoming + 253 outgoing = 1023 connections
 
 ## DataviewJS — All Files in This Package
 ```dataviewjs
@@ -112,5 +112,5 @@ dv.table(
 - [[vitest.config-defineConfig]] *(0↖ 1↗)*
 
 ### 📦 Package (1)
-- [[@hamafx-shared]] *(652↖ 0↗)*
+- [[@hamafx-shared]] *(619↖ 0↗)*
 

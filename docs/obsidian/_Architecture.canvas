@@ -161,7 +161,7 @@
       "toNode": "n12",
       "fromSide": "right",
       "toSide": "left",
-      "label": "247 deps",
+      "label": "214 deps",
       "color": "5"
     },
     {
@@ -170,7 +170,7 @@
       "toNode": "n7",
       "fromSide": "right",
       "toSide": "left",
-      "label": "71 deps",
+      "label": "32 deps",
       "color": "5"
     },
     {
@@ -179,7 +179,7 @@
       "toNode": "n10",
       "fromSide": "right",
       "toSide": "left",
-      "label": "86 deps",
+      "label": "41 deps",
       "color": "5"
     },
     {
@@ -188,8 +188,8 @@
       "toNode": "n9",
       "fromSide": "right",
       "toSide": "left",
-      "label": "11 deps",
-      "color": "3"
+      "label": "3 deps",
+      "color": "1"
     },
     {
       "id": "@hamafx/web→@hamafx/indicators",
@@ -206,7 +206,7 @@
       "toNode": "n13",
       "fromSide": "right",
       "toSide": "left",
-      "label": "74 deps",
+      "label": "91 deps",
       "color": "5"
     },
     {

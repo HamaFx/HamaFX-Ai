@@ -10,12 +10,13 @@ tags: [dashboard, timeline]
 
 ## Top Activity Hotspots
 
-- 📅 [[@hamafx-shared]] — **1006.1** connections · `@hamafx/shared`
-- 📅 [[@hamafx-web]] — **867.4** connections · `@hamafx/web`
-- 📅 [[@hamafx-ai]] — **582.1** connections · `@hamafx/ai`
-- 📅 [[@hamafx-db]] — **491.4** connections · `@hamafx/db`
-- 📅 [[vitest-installServerOnlyStub]] — **424.2** connections · `@hamafx/test-utils`
-- 📅 [[@hamafx-data]] — **180.8** connections · `@hamafx/data`
+- 📅 [[@hamafx-shared]] — **956.3** connections · `@hamafx/shared`
+- 📅 [[@hamafx-web]] — **906.6** connections · `@hamafx/web`
+- 📅 [[@hamafx-ai]] — **523.1** connections · `@hamafx/ai`
+- 📅 [[vitest-installServerOnlyStub]] — **450** connections · `@hamafx/test-utils`
+- 📅 [[@hamafx-db]] — **423.2** connections · `@hamafx/db`
+- 📅 [[@hamafx-data]] — **168.4** connections · `@hamafx/data`
+- 📅 [[scripts]] — **115.6** connections · `scripts`
 - 📅 [[registry-ToolPartState]] — **104** connections · `@hamafx/web`
 - 📅 [[@hamafx-worker]] — **103.1** connections · `@hamafx/worker`
 - 📅 [[@hamafx-indicators]] — **95.2** connections · `@hamafx/indicators`
@@ -29,7 +30,6 @@ tags: [dashboard, timeline]
 - 📅 [[symbols-SYMBOLS]] — **62.8** connections · `@hamafx/shared`
 - 📅 [[model-resolveModel]] — **60.5** connections · `@hamafx/ai`
 - 📅 [[auth-users]] — **60.5** connections · `@hamafx/db`
-- 📅 [[loadtest]] — **59.9** connections · `loadtest`
 
 ## DataviewJS — Files by Connection Count
 ```dataviewjs

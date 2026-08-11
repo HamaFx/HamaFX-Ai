@@ -33,7 +33,7 @@ Package: tool:architecture-explorer
 
 
 ### 📥 Depended On By (17)
-[[advanced-features-analyzeImpact]] · [[analysis-analyzeArchitecture]] · [[analyzer-Analyzer]] · [[extractor-extractFile]] · [[git-history-scanGitHistory]] · [[graph-model-GraphModel]] · [[html-generator-generateHtml]] · [[html-template-getHtmlTemplate]] · [[index_tool-architecture-explorer|index]] · [[json-generator-generateArchitectureJson]] · [[knowledge-generator-KnowledgeOutput]] · [[obsidian-generator-generateObsidianVault]] · [[scanner-ScannedFile]] · [[scripts-getScripts]] · [[styles-getStyles]] · [[types-NodeType]] · [[extractor.test-TOOL_NAMES]]
+[[advanced-features-ViewSummary]] · [[analysis-analyzeArchitecture]] · [[analyzer-Analyzer]] · [[extractor-extractFile]] · [[git-history-scanGitHistory]] · [[graph-model-GraphModel]] · [[html-generator-generateHtml]] · [[html-template-getHtmlTemplate]] · [[index_tool-architecture-explorer|index]] · [[json-generator-generateArchitectureJson]] · [[knowledge-generator-KnowledgeOutput]] · [[obsidian-generator-generateObsidianVault]] · [[scanner-ScannedFile]] · [[scripts-getScripts]] · [[styles-getStyles]] · [[types-NodeType]] · [[extractor.test-TOOL_NAMES]]
 
 
 

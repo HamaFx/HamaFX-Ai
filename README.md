@@ -116,11 +116,36 @@ The wizard will:
 
 - Check your computer and explain anything missing.
 - Wait for Docker Desktop if it is still starting.
+- Back up any existing config before touching it.
 - Generate secure local settings automatically.
 - Preserve existing environment settings.
 - Keep AI keys out of the terminal setup flow.
 - Start the app and wait for it to become healthy.
 - Open the app in your browser when possible.
+
+#### Setup wizard options
+
+The wizard accepts several flags for scripting and non-interactive use:
+
+| Flag                        | What it does                                                                        |
+| --------------------------- | ----------------------------------------------------------------------------------- |
+| `--mode=simple\|docker`     | Skip the mode question                                                              |
+| `--market=ID,ID`            | Configure market providers (`finnhub`, `marketaux`, `fred`, `alphavantage`)          |
+| `--fresh`                   | Regenerate config (the previous config is backed up first)                           |
+| `--skip-install`            | Do not install dependencies                                                         |
+| `--no-launch`               | Do not start the app afterwards                                                     |
+| `--yes`                     | Accept defaults; never prompt                                                       |
+| `--dry-run`                 | Print exactly what would change, write nothing                                      |
+| `--json`                    | Machine-readable result on stdout (for CI/scripts)                                  |
+| `--no-color`                | Plain output (equivalent to setting `NO_COLOR`)                                     |
+| `--help`, `-h`              | Show all options                                                                   |
+
+```bash
+pnpm setup                      # interactive (recommended)
+pnpm setup --dry-run            # preview before changing anything
+pnpm setup --mode=simple --yes  # quiet, non-interactive
+pnpm setup --json               # machine-readable result
+```
 
 ### 4. Create your owner account
 

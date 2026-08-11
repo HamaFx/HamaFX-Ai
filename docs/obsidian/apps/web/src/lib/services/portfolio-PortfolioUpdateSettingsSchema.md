@@ -51,6 +51,8 @@ Module: apps/web/src/lib/services/portfolio.ts
 - `getPortfolioSettingsService`
 - `savePortfolioSettingsService`
 - `getRiskReportService`
+- `CreatePositionInputSchema`
+- `ClosePositionInputSchema`
 
 
 ## 🔍 Explore

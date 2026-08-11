@@ -2,14 +2,14 @@
 type: moc
 package: "@hamafx/ai"
 nodes: 274
-totalIncoming: 971
+totalIncoming: 932
 totalOutgoing: 1304
 tags: [moc, hamafx-ai]
 ---
 
 # 📦 @hamafx/ai
 
-> **Map of Content** · 274 files · 971 incoming + 1304 outgoing = 2275 connections
+> **Map of Content** · 274 files · 932 incoming + 1304 outgoing = 2236 connections
 
 ## DataviewJS — All Files in This Package
 ```dataviewjs
@@ -305,5 +305,5 @@ dv.table(
 - [[TechnicalAgent]] *(2↖ 5↗)*
 
 ### 📦 Package (1)
-- [[@hamafx-ai]] *(371↖ 0↗)*
+- [[@hamafx-ai]] *(332↖ 0↗)*
 

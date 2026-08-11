@@ -2,7 +2,12 @@
   "$schema": "https://unpkg.com/knip@6/schema.json",
   "workspaces": {
     ".": {
-      "entry": ["scripts/*.{mjs,ts}", "tools/lighthouse/run.mjs"],
+      "entry": [
+        "scripts/*.{mjs,ts}",
+        "scripts/setup/index.mjs",
+        "scripts/setup/lib/generate-env.mjs",
+        "tools/lighthouse/run.mjs"
+      ],
       "project": ["scripts/**/*", "tools/lighthouse/**/*.mjs", "*.json", "*.mjs"]
     },
     "tools/architecture-explorer": {

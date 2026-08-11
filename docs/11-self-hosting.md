@@ -18,7 +18,15 @@
 pnpm setup
 ```
 
-Choose **Full mode**. It generates secure settings, preserves any existing `.env` values, and starts the Docker stack for you. After the browser opens, register the owner account and add your AI provider key inside the onboarding screen.
+Choose **Full mode**. It generates secure settings from the shared secret template, backs up any existing `.env` first (`.env.bak`), validates `docker compose config`, and offers to start the Docker stack for you. After the browser opens, register the owner account and add your AI provider key inside the onboarding screen.
+
+For a fully scripted install (CI, remote servers), skip the interactive questions:
+
+```bash
+pnpm setup --mode=docker --yes
+pnpm setup --dry-run             # preview every change, write nothing
+pnpm setup --json                # machine-readable result on stdout
+```
 
 ### Manual setup (advanced)
 

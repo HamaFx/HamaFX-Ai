@@ -43,7 +43,6 @@ Module: apps/web/src/components/ui/health-tone.ts
 ## 📦 Exports
 - `HealthTone`
 - `getHealthTone`
-- `formatHealthAge`
 
 
 ## 🔍 Explore

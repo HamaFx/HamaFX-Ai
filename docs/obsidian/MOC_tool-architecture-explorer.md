@@ -2,14 +2,14 @@
 type: moc
 package: "tool:architecture-explorer"
 nodes: 18
-totalIncoming: 65
-totalOutgoing: 65
+totalIncoming: 68
+totalOutgoing: 68
 tags: [moc, tool:architecture-explorer]
 ---
 
 # 📦 tool:architecture-explorer
 
-> **Map of Content** · 18 files · 65 incoming + 65 outgoing = 130 connections
+> **Map of Content** · 18 files · 68 incoming + 68 outgoing = 136 connections
 
 ## DataviewJS — All Files in This Package
 ```dataviewjs
@@ -30,19 +30,19 @@ dv.table(
 - [[json-generator-generateArchitectureJson]] *(1↖ 8↗)*
 - [[analyzer-Analyzer]] *(1↖ 7↗)*
 - [[html-generator-generateHtml]] *(1↖ 6↗)*
-- [[extractor-extractFile]] *(1↖ 5↗)*
+- [[extractor-extractFile]] *(2↖ 5↗)*
 - [[analysis-analyzeArchitecture]] *(1↖ 4↗)*
 - [[knowledge-generator-KnowledgeOutput]] *(1↖ 4↗)*
-- [[advanced-features-analyzeImpact]] *(1↖ 3↗)*
+- [[extractor.test-TOOL_NAMES]] *(0↖ 4↗)*
+- [[advanced-features-ViewSummary]] *(1↖ 3↗)*
 - [[git-history-scanGitHistory]] *(1↖ 3↗)*
 - [[graph-model-GraphModel]] *(5↖ 3↗)*
 - [[obsidian-generator-generateObsidianVault]] *(1↖ 3↗)*
-- [[scanner-ScannedFile]] *(5↖ 3↗)*
+- [[scanner-ScannedFile]] *(7↖ 3↗)*
 - [[html-template-getHtmlTemplate]] *(1↖ 1↗)*
 - [[scripts-getScripts]] *(1↖ 1↗)*
 - [[styles-getStyles]] *(1↖ 1↗)*
 - [[types-NodeType]] *(26↖ 1↗)*
-- [[extractor.test-TOOL_NAMES]] *(0↖ 1↗)*
 
 ### 📦 Package (1)
 - [[tool-architecture-explorer]] *(17↖ 0↗)*
