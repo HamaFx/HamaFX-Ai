@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@
 // provider spec files to avoid circular imports.
 
 import type { LanguageModel } from 'ai';
-import type { ProviderId } from '@hamafx/shared/byok';
+import type { ProviderId } from '@kestrel/shared/byok';
 
 /** The five "domains" the agent routes between (see packages/ai/src/routing.ts). */
 export type ModelDomain = 'fundamental' | 'technical' | 'summary' | 'vision' | 'embedding';

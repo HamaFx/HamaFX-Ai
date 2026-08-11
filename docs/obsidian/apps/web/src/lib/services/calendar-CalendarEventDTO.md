@@ -1,19 +1,19 @@
 ---
 type: module
-package: "@hamafx/web"
+package: "@kestrel/web"
 path: "apps/web/src/lib/services/calendar.ts"
 incoming: 0
 outgoing: 5
 connections: 5
 risk: low
 layer: core
-tags: [type/module, hamafx-web, layer/core]
+tags: [type/module, kestrel-web, layer/core]
 aliases: [calendar/CalendarEventDTO]
 ---
 
 # 📁 calendar/CalendarEventDTO
 
-> **Module** · `@hamafx/web` · `apps/web/src/lib/services/calendar.ts`
+> **Module** · `@kestrel/web` · `apps/web/src/lib/services/calendar.ts`
 
 
 Module: apps/web/src/lib/services/calendar.ts
@@ -28,11 +28,11 @@ Module: apps/web/src/lib/services/calendar.ts
 | Total connections | 5 |
 | Risk level | **LOW** |
 | Layer | `core` |
-| Package tag | `#hamafx-web` |
+| Package tag | `#kestrel-web` |
 
 
 ### 📤 Depends On (4)
-[[@hamafx-ai]] · [[@hamafx-shared]] · [[@hamafx-db]] · [[@hamafx-web]]
+[[@kestrel-ai]] · [[@kestrel-shared]] · [[@kestrel-db]] · [[@kestrel-web]]
 
 
 
@@ -48,4 +48,4 @@ Module: apps/web/src/lib/services/calendar.ts
 - **Local Graph:** Right-click this file → "Open local graph"
 - **Backlinks:** Open the right sidebar → "Backlinks"
 - Use `#type/module` to find all Modules
-- Use `#hamafx-web` to find all files in this package
+- Use `#kestrel-web` to find all files in this package

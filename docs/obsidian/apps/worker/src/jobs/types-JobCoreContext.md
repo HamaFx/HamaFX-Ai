@@ -1,19 +1,19 @@
 ---
 type: module
-package: "@hamafx/worker"
+package: "@kestrel/worker"
 path: "apps/worker/src/jobs/types.ts"
 incoming: 22
 outgoing: 7
 connections: 29
 risk: medium
 layer: core
-tags: [type/module, hamafx-worker, layer/core, risk/medium]
+tags: [type/module, kestrel-worker, layer/core, risk/medium]
 aliases: [types/JobCoreContext]
 ---
 
 # 📁 types/JobCoreContext
 
-> **Module** · `@hamafx/worker` · `apps/worker/src/jobs/types.ts`
+> **Module** · `@kestrel/worker` · `apps/worker/src/jobs/types.ts`
 
 
 Module: apps/worker/src/jobs/types.ts
@@ -28,11 +28,11 @@ Module: apps/worker/src/jobs/types.ts
 | Total connections | 29 |
 | Risk level | **MEDIUM** |
 | Layer | `core` |
-| Package tag | `#hamafx-worker` |
+| Package tag | `#kestrel-worker` |
 
 
 ### 📤 Depends On (4)
-[[log-Logger]] · [[tenant-router-TenantRouter]] · [[env-WorkerEnv]] · [[@hamafx-worker]]
+[[log-Logger]] · [[tenant-router-TenantRouter]] · [[env-WorkerEnv]] · [[@kestrel-worker]]
 
 
 ### 📥 Depended On By (11)
@@ -55,4 +55,4 @@ Module: apps/worker/src/jobs/types.ts
 - **Local Graph:** Right-click this file → "Open local graph"
 - **Backlinks:** Open the right sidebar → "Backlinks"
 - Use `#type/module` to find all Modules
-- Use `#hamafx-worker` to find all files in this package
+- Use `#kestrel-worker` to find all files in this package

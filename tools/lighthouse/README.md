@@ -1,6 +1,6 @@
 # Lighthouse runner
 
-Programmatic Lighthouse + chrome-launcher script that audits HamaFX-Ai's mobile UX against the Phase 1 thresholds.
+Programmatic Lighthouse + chrome-launcher script that audits Kestrel's mobile UX against the Phase 1 thresholds.
 
 > The runner script (`run.mjs`) lands in task 12.2. This README documents the conventions up front so the invocations and output layout are nailed down before any code change.
 
@@ -46,8 +46,8 @@ The runner attaches a single `Cookie` header (`hfx_auth=<value>`) via Lighthouse
 
 ```bash
 # Build and start the production server in one shell:
-pnpm --filter @hamafx/web build
-pnpm --filter @hamafx/web start  # serves on http://localhost:3000
+pnpm --filter @kestrel/web build
+pnpm --filter @kestrel/web start  # serves on http://localhost:3000
 
 # In a second shell, run the audit:
 node tools/lighthouse/run.mjs \

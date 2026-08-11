@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@
 // amount and whether the reservation has been released, preventing
 // double-count underflows.
 
-import { createCategorizedLogger } from '@hamafx/shared/logger';
+import { createCategorizedLogger } from '@kestrel/shared/logger';
 import {
   applyBudgetDelta,
   BudgetExceededError,

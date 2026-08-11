@@ -1,19 +1,19 @@
 ---
 type: module
-package: "@hamafx/ai"
+package: "@kestrel/ai"
 path: "packages/ai/src/tokens.ts"
 incoming: 3
 outgoing: 8
 connections: 11
 risk: low
 layer: core
-tags: [type/module, hamafx-ai, layer/core]
+tags: [type/module, kestrel-ai, layer/core]
 aliases: [tokens/DB]
 ---
 
 # 📁 tokens/DB
 
-> **Module** · `@hamafx/ai` · `packages/ai/src/tokens.ts`
+> **Module** · `@kestrel/ai` · `packages/ai/src/tokens.ts`
 
 
 Module: packages/ai/src/tokens.ts
@@ -28,11 +28,11 @@ Module: packages/ai/src/tokens.ts
 | Total connections | 11 |
 | Risk level | **LOW** |
 | Layer | `core` |
-| Package tag | `#hamafx-ai` |
+| Package tag | `#kestrel-ai` |
 
 
 ### 📤 Depends On (4)
-[[@hamafx-shared]] · [[llm-client-GenerateTextOpts]] · [[@hamafx-db]] · [[@hamafx-ai]]
+[[@kestrel-shared]] · [[llm-client-GenerateTextOpts]] · [[@kestrel-db]] · [[@kestrel-ai]]
 
 
 ### 📥 Depended On By (3)
@@ -50,4 +50,4 @@ Module: packages/ai/src/tokens.ts
 - **Local Graph:** Right-click this file → "Open local graph"
 - **Backlinks:** Open the right sidebar → "Backlinks"
 - Use `#type/module` to find all Modules
-- Use `#hamafx-ai` to find all files in this package
+- Use `#kestrel-ai` to find all files in this package

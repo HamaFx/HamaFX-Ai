@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@
 
 import { useEffect, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import type { Candle, IndicatorResult, Symbol, Timeframe } from '@hamafx/shared';
+import type { Candle, IndicatorResult, Symbol, Timeframe } from '@kestrel/shared';
 import { fetchCandles, fetchChartData, type IndicatorRequest } from '@/lib/market-client';
 import { refetchIntervalFor } from '@/lib/datetime';
 

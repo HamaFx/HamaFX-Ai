@@ -105,8 +105,8 @@ function getPackageName(filePath: string, rootDir: string): string {
   const rel = path.relative(rootDir, filePath);
   const parts = rel.split(path.sep);
 
-  if (parts[0] === 'apps' && parts[1]) return `@hamafx/${parts[1]}`;
-  if (parts[0] === 'packages' && parts[1]) return `@hamafx/${parts[1]}`;
+  if (parts[0] === 'apps' && parts[1]) return `@kestrel/${parts[1]}`;
+  if (parts[0] === 'packages' && parts[1]) return `@kestrel/${parts[1]}`;
   if (parts[0] === 'tools' && parts[1]) return `tool:${parts[1]}`;
   if (parts[0] === 'loadtest') return 'loadtest';
   if (parts[0] === 'infra') return 'infra';
@@ -118,7 +118,7 @@ function getPackageName(filePath: string, rootDir: string): string {
 
 function getPackagePath(pkg: string): string {
   if (pkg === 'root') return '.';
-  if (pkg.startsWith('@hamafx/')) return `packages/${pkg.slice('@hamafx/'.length)}`;
+  if (pkg.startsWith('@kestrel/')) return `packages/${pkg.slice('@kestrel/'.length)}`;
   if (pkg.startsWith('tool:')) return `tools/${pkg.slice('tool:'.length)}`;
   return pkg;
 }
@@ -126,7 +126,7 @@ function getPackagePath(pkg: string): string {
 /**
  * Resolve the path from the scanner's filesystem provenance. Package names
  * are intentionally not enough to distinguish an app from a library (for
- * example, both use the @hamafx/* namespace).
+ * example, both use the @kestrel/* namespace).
  */
 export function getScannedPackagePath(
   packagePaths: ReadonlyMap<string, string>,
@@ -189,7 +189,7 @@ export function scanProject(opts: ScanOptions): ScanResult {
         packageNames.add(pkg);
         // Preserve the actual workspace root rather than reconstructing it
         // from the package name. This keeps apps/* and packages/* distinct.
-        const packageJson = pkg.startsWith('@hamafx/') || pkg.startsWith('tool:')
+        const packageJson = pkg.startsWith('@kestrel/') || pkg.startsWith('tool:')
           ? findWorkspacePackageJson(path.dirname(fullPath), rootDir)
           : undefined;
         const packageRoot = packageJson

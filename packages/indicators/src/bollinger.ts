@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 
 // Bollinger Bands: middle = SMA(period), upper/lower = middle ± k * stdev(period).
 
-import type { Candle } from '@hamafx/shared';
+import type { Candle } from '@kestrel/shared';
 
 import { closes, padFront, stdev } from './util';
 

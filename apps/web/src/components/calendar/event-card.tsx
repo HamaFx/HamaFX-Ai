@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -39,7 +39,7 @@
 // kill the ring-1 chip pattern, surface-align with ArticleCard refactor
 // (commit 1992755) so news and calendar read as one design system.
 
-import type { EconomicEvent } from '@hamafx/shared';
+import type { EconomicEvent } from '@kestrel/shared';
 import {IconBell, IconBolt} from '@tabler/icons-react';
 import { Link } from 'next-view-transitions';
 import { useState } from 'react';

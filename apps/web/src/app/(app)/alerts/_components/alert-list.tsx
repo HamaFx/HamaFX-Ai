@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-import type { Alert } from '@hamafx/shared';
+import type { Alert } from '@kestrel/shared';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { IconActivity,  IconChartBar,  IconBell,  IconBellOff,  IconBellRinging,  IconMail,  IconPlus,  IconRefresh,  IconArrowRight,  IconTrash,  IconTrendingUp } from '@tabler/icons-react';
 import { useEffect, useRef, useState } from 'react';

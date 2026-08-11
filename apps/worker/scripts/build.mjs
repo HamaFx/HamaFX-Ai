@@ -1,6 +1,6 @@
 // Bundle the worker into self-contained ESM files. Workspace packages
-// (`@hamafx/shared`, `@hamafx/db`, `@hamafx/data`, `@hamafx/ai`,
-// `@hamafx/indicators`) export TypeScript source directly via
+// (`@kestrel/shared`, `@kestrel/db`, `@kestrel/data`, `@kestrel/ai`,
+// `@kestrel/indicators`) export TypeScript source directly via
 // `package.json#main = "./src/index.ts"`, which Node can't load
 // natively. Bundling into one file per entrypoint is the standard fix
 // — same pattern as deploying TypeScript Node services anywhere.
@@ -12,7 +12,7 @@
 //   - dist/index.js       — long-running worker (BiQuote SignalR + flush loop)
 //   - dist/runner/cli.js  — `node dist/runner/cli.js <job-name>`
 //
-// Run from the package root: `pnpm --filter @hamafx/worker build`.
+// Run from the package root: `pnpm --filter @kestrel/worker build`.
 
 import { build } from 'esbuild';
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
@@ -23,7 +23,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = resolve(__dirname, '..');
 
 // Read the worker's own package.json to figure out which deps stay
-// external (anything from `dependencies` other than @hamafx/* gets
+// external (anything from `dependencies` other than @kestrel/* gets
 // installed via pnpm at runtime).
 const pkg = JSON.parse(readFileSync(resolve(root, 'package.json'), 'utf8'));
 const deps = Object.keys(pkg.dependencies ?? {});
@@ -36,7 +36,7 @@ const deps = Object.keys(pkg.dependencies ?? {});
 // to avoid runtime resolution issues with pnpm's strict layout.
 const alwaysBundle = new Set(['ws']);
 const external = deps.filter(
-  (d) => !d.startsWith('@hamafx/') && !d.startsWith('@opentelemetry/') && !alwaysBundle.has(d),
+  (d) => !d.startsWith('@kestrel/') && !d.startsWith('@opentelemetry/') && !alwaysBundle.has(d),
 );
 
 // Plus Node built-ins that shouldn't be inlined.
@@ -50,7 +50,7 @@ external.push(
 
 // Stub out `server-only` — it's a build-time guard that throws at module
 // load time, which breaks the worker (Node.js backend with no bundler
-// stripping). The modules that import it (@hamafx/shared/src/encryption)
+// stripping). The modules that import it (@kestrel/shared/src/encryption)
 // are never called by the worker, but the import side-effect is evaluated
 // eagerly during ESM module graph loading.
 const serverOnlyPlugin = {

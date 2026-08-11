@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,8 +20,8 @@
 // `get_indicators` when they only need derived values — it's smaller in
 // the prompt and the model can't accidentally hallucinate over noisy bars.
 
-import { getCandles } from '@hamafx/data';
-import { SymbolSchema, TimeframeSchema, type GetCandlesOutput } from '@hamafx/shared';
+import { getCandles } from '@kestrel/data';
+import { SymbolSchema, TimeframeSchema, type GetCandlesOutput } from '@kestrel/shared';
 import { tool } from 'ai';
 import { z } from 'zod';
 
@@ -32,7 +32,7 @@ const InputSchema = z.object({
   count: z.number().int().min(10).max(500).default(120),
 });
 
-declare module '@hamafx/shared' {
+declare module '@kestrel/shared' {
   interface ToolIOMap {
     get_candles: { input: z.infer<typeof InputSchema> };
   }

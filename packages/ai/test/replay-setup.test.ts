@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,13 +21,13 @@
 
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import type { Candle } from '@hamafx/shared';
+import type { Candle } from '@kestrel/shared';
 
-vi.mock('@hamafx/data', () => ({
+vi.mock('@kestrel/data', () => ({
   getCandles: vi.fn(),
 }));
 
-import { getCandles } from '@hamafx/data';
+import { getCandles } from '@kestrel/data';
 
 import { replaySetupTool } from '../src/tools/replay-setup';
 

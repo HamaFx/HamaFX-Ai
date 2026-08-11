@@ -1,19 +1,19 @@
 ---
 type: module
-package: "@hamafx/data"
+package: "@kestrel/data"
 path: "packages/data/src/errors.ts"
 incoming: 22
 outgoing: 2
 connections: 24
 risk: medium
 layer: core
-tags: [type/module, hamafx-data, layer/core, risk/medium]
+tags: [type/module, kestrel-data, layer/core, risk/medium]
 aliases: [errors/DataErrorCode]
 ---
 
 # 📁 errors/DataErrorCode
 
-> **Module** · `@hamafx/data` · `packages/data/src/errors.ts`
+> **Module** · `@kestrel/data` · `packages/data/src/errors.ts`
 
 
 Module: packages/data/src/errors.ts
@@ -28,11 +28,11 @@ Module: packages/data/src/errors.ts
 | Total connections | 24 |
 | Risk level | **MEDIUM** |
 | Layer | `core` |
-| Package tag | `#hamafx-data` |
+| Package tag | `#kestrel-data` |
 
 
 ### 📤 Depends On (2)
-[[@hamafx-shared]] · [[@hamafx-data]]
+[[@kestrel-shared]] · [[@kestrel-data]]
 
 
 ### 📥 Depended On By (22)
@@ -53,4 +53,4 @@ Module: packages/data/src/errors.ts
 - **Local Graph:** Right-click this file → "Open local graph"
 - **Backlinks:** Open the right sidebar → "Backlinks"
 - Use `#type/module` to find all Modules
-- Use `#hamafx-data` to find all files in this package
+- Use `#kestrel-data` to find all files in this package

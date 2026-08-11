@@ -1,6 +1,6 @@
 ---
 type: component
-package: "@hamafx/web"
+package: "@kestrel/web"
 path: "apps/web/src/components/chart/chart-canvas.tsx"
 incoming: 1
 outgoing: 11
@@ -13,7 +13,7 @@ aliases: [chart-canvas/ChartCanvasHandle]
 
 # 🧩 chart-canvas/ChartCanvasHandle
 
-> **Component** · `@hamafx/web` · `apps/web/src/components/chart/chart-canvas.tsx`
+> **Component** · `@kestrel/web` · `apps/web/src/components/chart/chart-canvas.tsx`
 
 
 React component: chart-canvas
@@ -32,7 +32,7 @@ React component: chart-canvas
 
 
 ### 📤 Depends On (7)
-[[chart-colors-SERIES_BULL_HEX]] · [[@hamafx-shared]] · [[chart-types-ChartSettings]] · [[overlays-MarkerPrimitive]] · [[use-chart-theme-ChartTheme]] · [[lc-adapter-LcModule]] · [[@hamafx-web]]
+[[chart-colors-SERIES_BULL_HEX]] · [[@kestrel-shared]] · [[chart-types-ChartSettings]] · [[overlays-MarkerPrimitive]] · [[use-chart-theme-ChartTheme]] · [[lc-adapter-LcModule]] · [[@kestrel-web]]
 
 
 ### 📥 Depended On By (1)

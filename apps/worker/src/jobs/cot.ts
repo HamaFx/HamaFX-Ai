@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,9 +23,9 @@
 // (symbol, report_date) — the upsert path on cot_reports does the right
 // thing.
 
-import { upsertCoTReport } from '@hamafx/ai';
-import { cftc } from '@hamafx/data';
-import { SYMBOLS, type Symbol } from '@hamafx/shared';
+import { upsertCoTReport } from '@kestrel/ai';
+import { cftc } from '@kestrel/data';
+import { SYMBOLS, type Symbol } from '@kestrel/shared';
 
 const { fetchLatestRows, parseCftcInt, toCftcName } = cftc;
 

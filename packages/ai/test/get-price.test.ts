@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@ const exec = getPriceTool.execute as unknown as (
 
 const mockGetPrice = vi.fn();
 
-vi.mock('@hamafx/data', () => ({
+vi.mock('@kestrel/data', () => ({
   getPrice: (...args: unknown[]) => mockGetPrice(...args),
   ProviderError: class ProviderError extends Error {
     constructor(_code: string, _provider: string, message: string) {
@@ -67,7 +67,7 @@ describe('get_price — Phase 0.10', () => {
   });
 
   it('wraps ProviderError in a user-friendly message', async () => {
-    const { ProviderError } = await import('@hamafx/data');
+    const { ProviderError } = await import('@kestrel/data');
     mockGetPrice.mockRejectedValue(new ProviderError('PROVIDER_TIMEOUT', 'biquote', 'connection refused'));
 
     await expect(exec({ symbols: ['EURUSD'] })).rejects.toThrow(

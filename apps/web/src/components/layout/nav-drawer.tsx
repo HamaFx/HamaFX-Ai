@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,6 +30,7 @@
 //   - User identity display + nav item badges.
 
 import { IconBell,  IconBook,  IconCalendar,  IconSettings,  IconLayoutDashboard,  IconChartLine,  IconLogout,  IconMessageCircle,  IconNews,  IconShield } from '@tabler/icons-react';
+import Image from 'next/image';
 import { Link } from 'next-view-transitions';
 import { usePathname } from 'next/navigation';
 import { useEffect, useMemo } from 'react';
@@ -145,6 +146,17 @@ export function NavDrawer({ userName, userEmail, userId: _userId, isAdmin }: { u
             className="absolute right-2 top-1/2 h-12 w-1 -translate-y-1/2 rounded-sm bg-fg-subtle/30"
           />
 
+          {/* Brand */}
+          <div className="flex items-center px-5 pt-6 pb-3">
+            <Image
+              src="/brand/kestrel-logo-white.png"
+              alt="Kestrel"
+              width={108}
+              height={72}
+              className="shrink-0"
+            />
+          </div>
+
           {/* Identity strip */}
           <DrawerPrimitive.Title asChild>
             <div className="flex items-center gap-3 px-5 pt-6 pb-5">
@@ -153,7 +165,7 @@ export function NavDrawer({ userName, userEmail, userId: _userId, isAdmin }: { u
               </div>
               <div className="flex flex-col gap-0.5 min-w-0">
                 <span className="text-fg text-base font-bold tracking-tight truncate">
-                  {userName ?? 'HamaFX User'}
+                  {userName ?? 'Kestrel User'}
                 </span>
                 <span className="text-fg-subtle text-xs truncate">
                   {userEmail ?? 'Personal trading copilot'}

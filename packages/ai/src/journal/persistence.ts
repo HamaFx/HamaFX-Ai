@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,7 +25,7 @@
 // can recall journal context. The memory call is fire-and-forget — the
 // CRUD response never waits on it.
 
-import { schema } from '@hamafx/db';
+import { schema } from '@kestrel/db';
 import { getDb } from '../db';
 import {
   JournalEntrySchema,
@@ -37,9 +37,9 @@ import {
   type Symbol,
   type TradeOutcome,
   type TradeSide,
-} from '@hamafx/shared';
+} from '@kestrel/shared';
 import { and, asc, desc, eq, gte, lte } from 'drizzle-orm';
-import { createCategorizedLogger } from '@hamafx/shared/logger';
+import { createCategorizedLogger } from '@kestrel/shared/logger';
 
 import { rememberJournalEntry } from '../memory/memory-index';
 

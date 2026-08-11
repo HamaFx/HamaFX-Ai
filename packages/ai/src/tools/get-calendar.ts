@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,9 +19,9 @@
 // Queries the `economic_events` table populated by /api/cron/calendar.
 // Empty until Phase 1c — the tool handles that gracefully.
 
-import { schema } from '@hamafx/db';
+import { schema } from '@kestrel/db';
 import { getDb } from '../db';
-import type { GetCalendarOutput } from '@hamafx/shared';
+import type { GetCalendarOutput } from '@kestrel/shared';
 import { tool } from 'ai';
 import { and, asc, gte, inArray, lte, sql } from 'drizzle-orm';
 import { z } from 'zod';
@@ -42,7 +42,7 @@ const InputSchema = z.object({
   minImportance: ImportanceSchema.default('medium'),
 });
 
-declare module '@hamafx/shared' {
+declare module '@kestrel/shared' {
   interface ToolIOMap {
     get_calendar: { input: z.infer<typeof InputSchema> };
   }

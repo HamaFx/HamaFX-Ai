@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
  */
 
 // Plain BYOK types — no node:crypto, no `server-only` import. Re-exported
-// from `@hamafx/shared/encryption` for backwards compatibility with code
+// from `@kestrel/shared/encryption` for backwards compatibility with code
 // that already imports them from there.
 //
 // Keeping the types in their own file lets test files (which run in plain
@@ -86,7 +86,7 @@ export type ProviderPricingTier = 'free' | 'low' | 'medium' | 'high';
 
 /**
  * Client-safe subset of the runtime `ByokProviderSpec` from
- * `@hamafx/ai`. Stripped of `factory` (function — can't cross the
+ * `@kestrel/ai`. Stripped of `factory` (function — can't cross the
  * RSC server→client boundary) and `defaultModels` (server-only
  * defaults — only the agent needs them). The server component
  * projects the full spec into this shape before passing props.

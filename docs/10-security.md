@@ -188,7 +188,7 @@ OLD_ENCRYPTION_SECRET='<old 64-character hex secret>' \
 NEW_ENCRYPTION_SECRET='<new 64-character hex secret>' \
 ROTATE_ENCRYPTION_SECRET_CONFIRM=YES \
 ROTATE_ENCRYPTION_SECRET_MAINTENANCE=STOP_WRITERS \
-pnpm --filter @hamafx/db migrate:rotate-encryption
+pnpm --filter @kestrel/db migrate:rotate-encryption
 ```
 
 The utility:

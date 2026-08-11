@@ -1,19 +1,19 @@
 ---
 type: module
-package: "@hamafx/web"
+package: "@kestrel/web"
 path: "apps/web/src/lib/billing-gate.ts"
 incoming: 0
 outgoing: 3
 connections: 3
 risk: low
 layer: core
-tags: [type/module, hamafx-web, layer/core]
+tags: [type/module, kestrel-web, layer/core]
 aliases: [billing-gate/BillingGateResult]
 ---
 
 # 📁 billing-gate/BillingGateResult
 
-> **Module** · `@hamafx/web` · `apps/web/src/lib/billing-gate.ts`
+> **Module** · `@kestrel/web` · `apps/web/src/lib/billing-gate.ts`
 
 
 Module: apps/web/src/lib/billing-gate.ts
@@ -28,11 +28,11 @@ Module: apps/web/src/lib/billing-gate.ts
 | Total connections | 3 |
 | Risk level | **LOW** |
 | Layer | `core` |
-| Package tag | `#hamafx-web` |
+| Package tag | `#kestrel-web` |
 
 
 ### 📤 Depends On (3)
-[[@hamafx-db]] · [[@hamafx-shared]] · [[@hamafx-web]]
+[[@kestrel-db]] · [[@kestrel-shared]] · [[@kestrel-web]]
 
 
 
@@ -50,4 +50,4 @@ Module: apps/web/src/lib/billing-gate.ts
 - **Local Graph:** Right-click this file → "Open local graph"
 - **Backlinks:** Open the right sidebar → "Backlinks"
 - Use `#type/module` to find all Modules
-- Use `#hamafx-web` to find all files in this package
+- Use `#kestrel-web` to find all files in this package

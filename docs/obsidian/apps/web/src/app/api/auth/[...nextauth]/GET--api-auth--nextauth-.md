@@ -1,6 +1,6 @@
 ---
 type: api_route
-package: "@hamafx/web"
+package: "@kestrel/web"
 path: "apps/web/src/app/api/auth/[...nextauth]/route.ts"
 incoming: 0
 outgoing: 1
@@ -13,7 +13,7 @@ aliases: [GET /api/auth/:nextauth*]
 
 # 🔗 GET /api/auth/:nextauth*
 
-> **API Route** · `@hamafx/web` · `apps/web/src/app/api/auth/[...nextauth]/route.ts`
+> **API Route** · `@kestrel/web` · `apps/web/src/app/api/auth/[...nextauth]/route.ts`
 
 
 API Route: GET /api/auth/:nextauth*

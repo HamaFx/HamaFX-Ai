@@ -40,8 +40,8 @@ const BodySchema = z.object({
 }).default({});
 
 const RESEND_ENDPOINT = 'https://api.resend.com/emails';
-const SUBJECT = '[HamaFX-Ai] Test alert email';
-const TEXT_BODY = 'If you received this, the alerts pipeline is wired up correctly.\n\n— HamaFX-Ai';
+const SUBJECT = '[Kestrel] Test alert email';
+const TEXT_BODY = 'If you received this, the alerts pipeline is wired up correctly.\n\n— Kestrel';
 
 interface ResendCreateResponse {
   id?: string;

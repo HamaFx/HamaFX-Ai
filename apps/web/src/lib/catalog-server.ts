@@ -3,14 +3,14 @@
 import 'server-only';
 
 import { cache } from 'react';
-import { BYOK_PROVIDERS_LIST } from '@hamafx/ai';
-import { getProviderHealthForUser, getUserApiKeys } from '@hamafx/db';
-import { decryptByok } from '@hamafx/shared/encryption';
+import { BYOK_PROVIDERS_LIST } from '@kestrel/ai';
+import { getProviderHealthForUser, getUserApiKeys } from '@kestrel/db';
+import { decryptByok } from '@kestrel/shared/encryption';
 import {
   type CatalogResponse,
   type ModelDomain,
   type ProviderId,
-} from '@hamafx/shared';
+} from '@kestrel/shared';
 
 /**
  * Phase F — the catalog body that `/api/settings/catalog` returns.

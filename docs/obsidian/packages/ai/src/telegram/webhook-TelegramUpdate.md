@@ -1,19 +1,19 @@
 ---
 type: module
-package: "@hamafx/ai"
+package: "@kestrel/ai"
 path: "packages/ai/src/telegram/webhook.ts"
 incoming: 0
 outgoing: 10
 connections: 10
 risk: low
 layer: core
-tags: [type/module, hamafx-ai, layer/core]
+tags: [type/module, kestrel-ai, layer/core]
 aliases: [webhook/TelegramUpdate]
 ---
 
 # 📁 webhook/TelegramUpdate
 
-> **Module** · `@hamafx/ai` · `packages/ai/src/telegram/webhook.ts`
+> **Module** · `@kestrel/ai` · `packages/ai/src/telegram/webhook.ts`
 
 
 Module: packages/ai/src/telegram/webhook.ts
@@ -28,11 +28,11 @@ Module: packages/ai/src/telegram/webhook.ts
 | Total connections | 10 |
 | Risk level | **LOW** |
 | Layer | `core` |
-| Package tag | `#hamafx-ai` |
+| Package tag | `#kestrel-ai` |
 
 
 ### 📤 Depends On (9)
-[[@hamafx-shared]] · [[agent-runChat]] · [[@hamafx-db]] · [[db-getDb]] · [[index-BotDispatcher]] · [[client-TelegramApiError]] · [[idempotency-isDuplicateUpdate]] · [[rate-limiter-RateLimitResult]] · [[@hamafx-ai]]
+[[@kestrel-shared]] · [[agent-runChat]] · [[@kestrel-db]] · [[db-getDb]] · [[index-BotDispatcher]] · [[client-TelegramApiError]] · [[idempotency-isDuplicateUpdate]] · [[rate-limiter-RateLimitResult]] · [[@kestrel-ai]]
 
 
 
@@ -47,4 +47,4 @@ Module: packages/ai/src/telegram/webhook.ts
 - **Local Graph:** Right-click this file → "Open local graph"
 - **Backlinks:** Open the right sidebar → "Backlinks"
 - Use `#type/module` to find all Modules
-- Use `#hamafx-ai` to find all files in this package
+- Use `#kestrel-ai` to find all files in this package

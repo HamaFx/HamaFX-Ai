@@ -1,6 +1,6 @@
 ---
 type: module
-package: "@hamafx/web"
+package: "@kestrel/web"
 path: "apps/web/src/app/(app)/chart/[symbol]/_components/overlay-sheet.tsx"
 incoming: 1
 outgoing: 3
@@ -13,7 +13,7 @@ aliases: [overlay-sheet/OverlaySheet]
 
 # 📁 overlay-sheet/OverlaySheet
 
-> **Module** · `@hamafx/web` · `apps/web/src/app/(app)/chart/[symbol]/_components/overlay-sheet.tsx`
+> **Module** · `@kestrel/web` · `apps/web/src/app/(app)/chart/[symbol]/_components/overlay-sheet.tsx`
 
 
 Module: apps/web/src/app/(app)/chart/[symbol]/_components/overlay-sheet.tsx
@@ -32,7 +32,7 @@ Module: apps/web/src/app/(app)/chart/[symbol]/_components/overlay-sheet.tsx
 
 
 ### 📤 Depends On (2)
-[[@hamafx-shared]] · [[@hamafx-web]]
+[[@kestrel-shared]] · [[@kestrel-web]]
 
 
 ### 📥 Depended On By (1)

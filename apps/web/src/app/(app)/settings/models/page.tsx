@@ -5,7 +5,7 @@ import Link from 'next/link';
 
 import { auth } from '@/auth';
 import { buildCatalogForUser } from '@/lib/catalog-server';
-import { getUserWithSettings } from '@hamafx/db';
+import { getUserWithSettings } from '@kestrel/db';
 
 import {
   ChatModelPicker,
@@ -17,7 +17,7 @@ import { FallbackChainPicker } from './_components/fallback-chain-picker';
 export const revalidate = 60;
 
 export const metadata = {
-  title: 'Models | HamaFX',
+  title: 'Models | Kestrel',
   description: 'Pick the default chat, vision, and embedding models.',
 };
 

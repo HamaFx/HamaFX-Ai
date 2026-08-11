@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
-import { BUILTIN_SYMBOLS, DEFAULT_TIMEFRAME, isKnownSymbol } from '@hamafx/shared';
+import { BUILTIN_SYMBOLS, DEFAULT_TIMEFRAME, isKnownSymbol } from '@kestrel/shared';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 

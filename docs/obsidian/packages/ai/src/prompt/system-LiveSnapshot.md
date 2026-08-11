@@ -1,19 +1,19 @@
 ---
 type: module
-package: "@hamafx/ai"
+package: "@kestrel/ai"
 path: "packages/ai/src/prompt/system.ts"
 incoming: 7
 outgoing: 5
 connections: 12
 risk: low
 layer: core
-tags: [type/module, hamafx-ai, layer/core]
+tags: [type/module, kestrel-ai, layer/core]
 aliases: [system/LiveSnapshot]
 ---
 
 # 📁 system/LiveSnapshot
 
-> **Module** · `@hamafx/ai` · `packages/ai/src/prompt/system.ts`
+> **Module** · `@kestrel/ai` · `packages/ai/src/prompt/system.ts`
 
 
 Module: packages/ai/src/prompt/system.ts
@@ -28,11 +28,11 @@ Module: packages/ai/src/prompt/system.ts
 | Total connections | 12 |
 | Risk level | **LOW** |
 | Layer | `core` |
-| Package tag | `#hamafx-ai` |
+| Package tag | `#kestrel-ai` |
 
 
 ### 📤 Depends On (3)
-[[@hamafx-shared]] · [[@hamafx-db]] · [[@hamafx-ai]]
+[[@kestrel-shared]] · [[@kestrel-db]] · [[@kestrel-ai]]
 
 
 ### 📥 Depended On By (5)
@@ -52,4 +52,4 @@ Module: packages/ai/src/prompt/system.ts
 - **Local Graph:** Right-click this file → "Open local graph"
 - **Backlinks:** Open the right sidebar → "Backlinks"
 - Use `#type/module` to find all Modules
-- Use `#hamafx-ai` to find all files in this package
+- Use `#kestrel-ai` to find all files in this package

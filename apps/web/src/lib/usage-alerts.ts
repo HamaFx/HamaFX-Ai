@@ -1,11 +1,11 @@
 import 'server-only';
 
-import { getUserWithSettings, listAllUserSettings } from '@hamafx/db';
+import { getUserWithSettings, listAllUserSettings } from '@kestrel/db';
 import {
   getMonthlySpend,
   getProviderMonthlySpend,
   sendDirectNotification,
-} from '@hamafx/ai';
+} from '@kestrel/ai';
 
 interface UsageAlertResult {
   alertsSent: number;
@@ -70,8 +70,8 @@ export async function checkAllUsageAlerts(): Promise<UsageAlertResult> {
         if (!sentAlerts.has(key)) {
           sentAlerts.add(key);
           await sendDirectNotification(
-            '[HamaFX-Ai] Monthly Budget Alert: 100% Reached',
-            `Your monthly AI spend has reached 100% of your limit.\n\nSpent: $${monthlySpend.toFixed(2)} / $${limit.toFixed(2)}\n\n— HamaFX-Ai`,
+            '[Kestrel] Monthly Budget Alert: 100% Reached',
+            `Your monthly AI spend has reached 100% of your limit.\n\nSpent: $${monthlySpend.toFixed(2)} / $${limit.toFixed(2)}\n\n— Kestrel`,
             env,
             channels,
           );
@@ -82,8 +82,8 @@ export async function checkAllUsageAlerts(): Promise<UsageAlertResult> {
         if (!sentAlerts.has(key)) {
           sentAlerts.add(key);
           await sendDirectNotification(
-            '[HamaFX-Ai] Monthly Budget Alert: 80% Reached',
-            `Your monthly AI spend has reached 80% of your limit.\n\nSpent: $${monthlySpend.toFixed(2)} / $${limit.toFixed(2)}\n\n— HamaFX-Ai`,
+            '[Kestrel] Monthly Budget Alert: 80% Reached',
+            `Your monthly AI spend has reached 80% of your limit.\n\nSpent: $${monthlySpend.toFixed(2)} / $${limit.toFixed(2)}\n\n— Kestrel`,
             env,
             channels,
           );
@@ -94,8 +94,8 @@ export async function checkAllUsageAlerts(): Promise<UsageAlertResult> {
         if (!sentAlerts.has(key)) {
           sentAlerts.add(key);
           await sendDirectNotification(
-            '[HamaFX-Ai] Monthly Budget Alert: 50% Reached',
-            `Your monthly AI spend has reached 50% of your limit.\n\nSpent: $${monthlySpend.toFixed(2)} / $${limit.toFixed(2)}\n\n— HamaFX-Ai`,
+            '[Kestrel] Monthly Budget Alert: 50% Reached',
+            `Your monthly AI spend has reached 50% of your limit.\n\nSpent: $${monthlySpend.toFixed(2)} / $${limit.toFixed(2)}\n\n— Kestrel`,
             env,
             channels,
           );
@@ -114,8 +114,8 @@ export async function checkAllUsageAlerts(): Promise<UsageAlertResult> {
             if (!sentAlerts.has(key)) {
               sentAlerts.add(key);
               await sendDirectNotification(
-                `[HamaFX-Ai] Provider Threshold Alert: ${providerId}`,
-                `Your monthly spend for provider "${providerId}" has exceeded your configured threshold.\n\nSpent: $${providerSpend.toFixed(2)} / $${threshold.toFixed(2)}\n\n— HamaFX-Ai`,
+                `[Kestrel] Provider Threshold Alert: ${providerId}`,
+                `Your monthly spend for provider "${providerId}" has exceeded your configured threshold.\n\nSpent: $${providerSpend.toFixed(2)} / $${threshold.toFixed(2)}\n\n— Kestrel`,
                 env,
                 channels,
               );

@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,7 +25,7 @@ import {IconBell, IconMoon, IconClock, IconFilter, IconBolt, IconMail, IconDevic
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Switch } from '@/components/ui/switch';
 import { cn } from '@/lib/cn';
-import type { NoiseConfig, Severity } from '@hamafx/shared';
+import type { NoiseConfig, Severity } from '@kestrel/shared';
 import { apiFetch, apiMutate } from '@/lib/api-client';
 
 const SEVERITY_OPTIONS: { value: Severity; label: string }[] = [

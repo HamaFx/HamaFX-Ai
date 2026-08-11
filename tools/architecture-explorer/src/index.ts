@@ -4,7 +4,7 @@
 //
 // Usage: npx ts-node src/index.ts [--out <output.html>] [--root <project-root>]
 //
-// Scans the HamaFX-Ai monorepo, extracts architecture information,
+// Scans the Kestrel monorepo, extracts architecture information,
 // builds a graph model, and generates a self-contained HTML explorer.
 
 import * as fs from 'node:fs';
@@ -41,7 +41,7 @@ function parseArgs(): ScanOptions {
       case '--help':
       case '-h':
         console.log(`
-HamaFX-Ai Architecture Explorer
+Kestrel Architecture Explorer
 
 Usage: npx ts-node src/index.ts [options]
 
@@ -52,7 +52,7 @@ Options:
   --help, -h      Print this help
 
 Outputs a self-contained HTML file that renders an interactive
-architecture graph of the HamaFX-Ai monorepo.
+architecture graph of the Kestrel monorepo.
 `);
         process.exit(0);
         break;
@@ -65,7 +65,16 @@ architecture graph of the HamaFX-Ai monorepo.
 async function main(): Promise<void> {
   const opts = parseArgs();
 
-  console.log('🏗️  HamaFX-Ai Architecture Explorer');
+  console.log([
+    '██╗  ██╗███████╗███████╗████████╗██████╗ ███████╗██╗',
+    '██║ ██╔╝██╔════╝██╔════╝╚══██╔══╝██╔══██╗██╔════╝██║',
+    '█████╔╝ █████╗  ███████╗   ██║   ██████╔╝█████╗  ██║',
+    '██╔═██╗ ██╔══╝  ╚════██║   ██║   ██╔══██╗██╔══╝  ██║',
+    '██║  ██╗███████╗███████║   ██║   ██║  ██║███████╗███████╗',
+    '╚═╝  ╚═╝╚══════╝╚══════╝   ╚═╝   ╚═╝  ╚═╝╚══════╝╚══════╝',
+  ].join('\n'));
+  console.log('');
+  console.log('🏗️  Kestrel Architecture Explorer');
   console.log(`   Root: ${opts.rootDir}`);
   console.log('');
 

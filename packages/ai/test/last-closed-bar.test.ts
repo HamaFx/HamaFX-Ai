@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import type { Candle, Symbol, Timeframe } from '@hamafx/shared';
+import type { Candle, Symbol, Timeframe } from '@kestrel/shared';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { lastClosedBar } from '../src/alerts/evaluator';

@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,7 +27,7 @@ import {
   isQuietHours,
   InMemoryNoiseState,
 } from './noise-control';
-import { DEFAULT_NOISE_CONFIG } from '@hamafx/shared';
+import { DEFAULT_NOISE_CONFIG } from '@kestrel/shared';
 
 describe('hashContent', () => {
   it('produces a stable hash for the same content + route', () => {

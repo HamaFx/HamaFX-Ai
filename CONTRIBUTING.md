@@ -1,8 +1,8 @@
-# Contributing to HamaFX-Ai
+# Contributing to Kestrel
 
 > **First time here?** Read [docs/07-agent-understanding.md](docs/07-agent-understanding.md) for project architecture, [docs/08-agent-setup-run.md](docs/08-agent-setup-run.md) to get a local instance running, and [docs/14-oss-release-checklist.md](docs/14-oss-release-checklist.md) for the public-release boundary.
 
-Thank you for considering a contribution to HamaFX-Ai. This document is the definitive guide for contributors — from first clone to merged PR.
+Thank you for considering a contribution to Kestrel. This document is the definitive guide for contributors — from first clone to merged PR.
 
 ---
 
@@ -25,8 +25,8 @@ No database installation required for local dev — PGlite (embedded Postgres) b
 
 ```bash
 # Fork and clone
-git clone https://github.com/<your-username>/HamaFX-Ai.git
-cd HamaFX-Ai
+git clone https://github.com/<your-username>/Kestrel.git
+cd Kestrel
 
 # Run the setup wizard — checks prerequisites, explains BYOK, generates secrets
 pnpm setup
@@ -34,7 +34,7 @@ pnpm setup
 
 The wizard handles everything: prerequisite checks, mode selection (Local Dev vs Docker), BYOK explanation, optional market data key collection, secret generation, and startup.
 
-> **BYOK:** HamaFX-Ai uses Bring Your Own Key — no server-level AI keys are needed. After registering, add your AI provider key (Google Gemini, OpenAI, Anthropic, Groq, etc.) via the onboarding wizard or Settings → API Keys.
+> **BYOK:** Kestrel uses Bring Your Own Key — no server-level AI keys are needed. After registering, add your AI provider key (Google Gemini, OpenAI, Anthropic, Groq, etc.) via the onboarding wizard or Settings → API Keys.
 
 ### Manual Setup
 
@@ -60,7 +60,7 @@ Auth secrets (`AUTH_SECRET`, `ENCRYPTION_SECRET`, `CRON_SECRET`) auto-generate t
 
 ## 3. Monorepo Structure
 
-HamaFX-Ai is a Turborepo monorepo with a strict dependency chain:
+Kestrel is a Turborepo monorepo with a strict dependency chain:
 
 ```
 config → shared → db + indicators → data → ai → web + worker
@@ -68,15 +68,15 @@ config → shared → db + indicators → data → ai → web + worker
 
 | Package | Path | Responsibility |
 |---------|------|----------------|
-| `@hamafx/config` | `packages/config/` | Shared ESLint, Prettier, TypeScript configs |
-| `@hamafx/shared` | `packages/shared/` | Zod schemas, env validation, encryption, billing types |
-| `@hamafx/db` | `packages/db/` | Drizzle ORM schema (46 tables), Postgres/PGlite client, migrations |
-| `@hamafx/indicators` | `packages/indicators/` | Technical indicators (RSI, MACD, ATR, Bollinger, SMC) |
-| `@hamafx/data` | `packages/data/` | Market data providers (BiQuote, Finnhub, Marketaux, FRED, etc.) with failover |
-| `@hamafx/ai` | `packages/ai/` | AI agent core — 32 registered tools, model routing, multi-agent committee, memory, persistence |
-| `@hamafx/test-utils` | `packages/test-utils/` | Shared test factories, mocks, vitest helpers |
-| `@hamafx/web` | `apps/web/` | Next.js 16 PWA — 29 pages, 78 API routes, auth, chat, charts |
-| `@hamafx/worker` | `apps/worker/` | Node.js daemon — SignalR consumer, tick processing, scheduled jobs |
+| `@kestrel/config` | `packages/config/` | Shared ESLint, Prettier, TypeScript configs |
+| `@kestrel/shared` | `packages/shared/` | Zod schemas, env validation, encryption, billing types |
+| `@kestrel/db` | `packages/db/` | Drizzle ORM schema (46 tables), Postgres/PGlite client, migrations |
+| `@kestrel/indicators` | `packages/indicators/` | Technical indicators (RSI, MACD, ATR, Bollinger, SMC) |
+| `@kestrel/data` | `packages/data/` | Market data providers (BiQuote, Finnhub, Marketaux, FRED, etc.) with failover |
+| `@kestrel/ai` | `packages/ai/` | AI agent core — 32 registered tools, model routing, multi-agent committee, memory, persistence |
+| `@kestrel/test-utils` | `packages/test-utils/` | Shared test factories, mocks, vitest helpers |
+| `@kestrel/web` | `apps/web/` | Next.js 16 PWA — 29 pages, 78 API routes, auth, chat, charts |
+| `@kestrel/worker` | `apps/worker/` | Node.js daemon — SignalR consumer, tick processing, scheduled jobs |
 
 **Rule:** No package may import upstream of itself in the dependency chain. `shared` is the foundation — everything depends on it, it depends on nothing but `config`.
 
@@ -131,8 +131,8 @@ See [docs/01-architecture.md](docs/01-architecture.md) for the full architecture
 ### 4.6 Exports
 
 - Every package has `src/index.ts` barrel export
-- Deep imports via `exports` field in `package.json` (e.g., `@hamafx/db/schema`, `@hamafx/db/client`)
-- Published `@hamafx/*` packages are ESM-only; TypeScript consumers should use `moduleResolution: "NodeNext"` (or `node16`) and import them from ESM-compatible code.
+- Deep imports via `exports` field in `package.json` (e.g., `@kestrel/db/schema`, `@kestrel/db/client`)
+- Published `@kestrel/*` packages are ESM-only; TypeScript consumers should use `moduleResolution: "NodeNext"` (or `node16`) and import them from ESM-compatible code.
 - No circular dependencies — the dependency chain is strictly layered
 
 ---
@@ -197,7 +197,7 @@ pnpm turbo run test -- --run
 pnpm turbo run build
 
 # Bundle-size guard (run after build)
-pnpm --filter @hamafx/web bundle-size:check
+pnpm --filter @kestrel/web bundle-size:check
 # If the guard fails legitimately, update `apps/web/bundle-size-limits.json`
 # so limits sit ~10% above the largest observed chunk.
 ```
@@ -233,22 +233,22 @@ All four must pass. CI will run them again but catching locally saves time.
 pnpm turbo run test -- --run
 
 # Single package
-pnpm --filter @hamafx/ai test -- --run
-pnpm --filter @hamafx/web test -- --run
-pnpm --filter @hamafx/data test -- --run
-pnpm --filter @hamafx/worker test -- --run
-pnpm --filter @hamafx/db test -- --run
-pnpm --filter @hamafx/shared test -- --run
-pnpm --filter @hamafx/indicators test -- --run
+pnpm --filter @kestrel/ai test -- --run
+pnpm --filter @kestrel/web test -- --run
+pnpm --filter @kestrel/data test -- --run
+pnpm --filter @kestrel/worker test -- --run
+pnpm --filter @kestrel/db test -- --run
+pnpm --filter @kestrel/shared test -- --run
+pnpm --filter @kestrel/indicators test -- --run
 
 # With coverage
 pnpm turbo run test -- --coverage
 
 # E2E (requires running app)
-pnpm --filter @hamafx/web exec playwright test
+pnpm --filter @kestrel/web exec playwright test
 
 # Watch mode (dev only — never in CI)
-pnpm --filter @hamafx/indicators test
+pnpm --filter @kestrel/indicators test
 ```
 
 > **Always use `-- --run`** with vitest. Without it, vitest enters watch mode and hangs in CI.
@@ -256,7 +256,7 @@ pnpm --filter @hamafx/indicators test
 ### 6.3 Writing Tests
 
 - **Co-locate** test files next to the module: `get-candles.ts` → `get-candles.test.ts`
-- Use `@hamafx/test-utils` for shared factories (`users.ts`, `threads.ts`, `candles.ts`) and mocks (`db.ts`, `fetch.ts`, `llm.ts`)
+- Use `@kestrel/test-utils` for shared factories (`users.ts`, `threads.ts`, `candles.ts`) and mocks (`db.ts`, `fetch.ts`, `llm.ts`)
 - Every new tool must have a test in `packages/ai/test/`
 - Every new API route should have a test in `apps/web/test/`
 - Every new indicator must have a test in `packages/indicators/test/`
@@ -310,7 +310,7 @@ E2E tests require:
 1. **Define schema** in `packages/db/src/schema/<name>.ts` using `pgTable()`
 2. **Export** from `packages/db/src/schema/index.ts`
 3. **Add `user_id` and `tenant_id`** columns (if user-data table)
-4. **Generate migration:** `pnpm --filter @hamafx/db migrate:gen`
+4. **Generate migration:** `pnpm --filter @kestrel/db migrate:gen`
 5. **Test PGlite compatibility** — no RLS, no pgvector-specific features without fallback
 6. **Add RLS policy** if the table contains user data (migrations 0035–0039 pattern)
 7. **Write tests** in `packages/db/test/`

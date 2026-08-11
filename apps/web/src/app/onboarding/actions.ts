@@ -1,7 +1,7 @@
 'use server';
 
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,14 +20,14 @@ import 'server-only';
 
 import { z } from 'zod';
 import { auth } from '@/auth';
-import { schema } from '@hamafx/db';
-import { getDb } from '@hamafx/ai';
+import { schema } from '@kestrel/db';
+import { getDb } from '@kestrel/ai';
 import { and, eq } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
-import type { ByokPayload } from '@hamafx/shared/encryption';
-import { encryptByok, decryptByok } from '@hamafx/shared/encryption';
-import type { PROVIDER_IDS } from '@hamafx/shared/byok';
-import { DEFAULT_WATCHLIST_SYMBOLS, normalizeSymbol } from '@hamafx/shared';
+import type { ByokPayload } from '@kestrel/shared/encryption';
+import { encryptByok, decryptByok } from '@kestrel/shared/encryption';
+import type { PROVIDER_IDS } from '@kestrel/shared/byok';
+import { DEFAULT_WATCHLIST_SYMBOLS, normalizeSymbol } from '@kestrel/shared';
 import { createScopedLoggerWithContext } from '@/lib/logger';
 
 const symbolSchema = z.string().regex(/^[A-Z0-9/]{1,20}$/).transform(normalizeSymbol);

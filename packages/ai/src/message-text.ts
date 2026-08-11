@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
  */
 
 import type { UIMessage } from 'ai';
-import { createCategorizedLogger } from '@hamafx/shared/logger';
+import { createCategorizedLogger } from '@kestrel/shared/logger';
 
 const mlog = createCategorizedLogger('ai', { component: 'message-text' });
 

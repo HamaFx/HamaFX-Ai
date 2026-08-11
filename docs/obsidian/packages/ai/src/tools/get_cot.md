@@ -1,19 +1,19 @@
 ---
 type: tool
-package: "@hamafx/ai"
+package: "@kestrel/ai"
 path: "packages/ai/src/tools/get-cot.ts"
 incoming: 1
 outgoing: 4
 connections: 5
 risk: low
 layer: ai
-tags: [type/tool, hamafx-ai, layer/ai]
+tags: [type/tool, kestrel-ai, layer/ai]
 aliases: [get_cot]
 ---
 
 # 🔧 get_cot
 
-> **AI Tool** · `@hamafx/ai` · `packages/ai/src/tools/get-cot.ts`
+> **AI Tool** · `@kestrel/ai` · `packages/ai/src/tools/get-cot.ts`
 
 
 Last N weeks of CFTC Commitment-of-Traders rows for one symbol (default XAUUSD). Use to answer
@@ -28,11 +28,11 @@ Last N weeks of CFTC Commitment-of-Traders rows for one symbol (default XAUUSD).
 | Total connections | 5 |
 | Risk level | **LOW** |
 | Layer | `ai` |
-| Package tag | `#hamafx-ai` |
+| Package tag | `#kestrel-ai` |
 
 
 ### 📤 Depends On (4)
-[[@hamafx-shared]] · [[persistence-UpsertCoTReportArgs]] · [[@hamafx-ai]] · [[registry-ToolPlugin]]
+[[@kestrel-shared]] · [[persistence-UpsertCoTReportArgs]] · [[@kestrel-ai]] · [[registry-ToolPlugin]]
 
 
 ### 📥 Depended On By (1)
@@ -49,4 +49,4 @@ Last N weeks of CFTC Commitment-of-Traders rows for one symbol (default XAUUSD).
 - **Local Graph:** Right-click this file → "Open local graph"
 - **Backlinks:** Open the right sidebar → "Backlinks"
 - Use `#type/tool` to find all AI Tools
-- Use `#hamafx-ai` to find all files in this package
+- Use `#kestrel-ai` to find all files in this package

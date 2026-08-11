@@ -1,19 +1,19 @@
 ---
 type: component
-package: "@hamafx/web"
+package: "@kestrel/web"
 path: "apps/web/src/components/chat/parts/tool-card.tsx"
 incoming: 1
 outgoing: 1
 connections: 2
 risk: low
 layer: ui
-tags: [type/component, hamafx-web, layer/ui]
+tags: [type/component, kestrel-web, layer/ui]
 aliases: [tool-card/ToolCard]
 ---
 
 # 🧩 tool-card/ToolCard
 
-> **Component** · `@hamafx/web` · `apps/web/src/components/chat/parts/tool-card.tsx`
+> **Component** · `@kestrel/web` · `apps/web/src/components/chat/parts/tool-card.tsx`
 
 
 React component: tool-card
@@ -28,11 +28,11 @@ React component: tool-card
 | Total connections | 2 |
 | Risk level | **LOW** |
 | Layer | `ui` |
-| Package tag | `#hamafx-web` |
+| Package tag | `#kestrel-web` |
 
 
 ### 📤 Depends On (1)
-[[@hamafx-web]]
+[[@kestrel-web]]
 
 
 ### 📥 Depended On By (1)
@@ -49,4 +49,4 @@ React component: tool-card
 - **Local Graph:** Right-click this file → "Open local graph"
 - **Backlinks:** Open the right sidebar → "Backlinks"
 - Use `#type/component` to find all Components
-- Use `#hamafx-web` to find all files in this package
+- Use `#kestrel-web` to find all files in this package

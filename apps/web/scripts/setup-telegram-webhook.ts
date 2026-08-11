@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -40,7 +40,7 @@ const BOT_COMMANDS = [
   { command: 'track', description: 'AI track record stats' },
   { command: 'settings', description: 'View your settings' },
   { command: 'me', description: 'Your account info' },
-  { command: 'link', description: 'Link your HamaFX account' },
+  { command: 'link', description: 'Link your Kestrel account' },
 ];
 
 async function main() {

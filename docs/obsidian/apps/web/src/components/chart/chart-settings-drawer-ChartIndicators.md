@@ -1,6 +1,6 @@
 ---
 type: component
-package: "@hamafx/web"
+package: "@kestrel/web"
 path: "apps/web/src/components/chart/chart-settings-drawer.tsx"
 incoming: 0
 outgoing: 3
@@ -13,7 +13,7 @@ aliases: [chart-settings-drawer/ChartIndicators]
 
 # 🧩 chart-settings-drawer/ChartIndicators
 
-> **Component** · `@hamafx/web` · `apps/web/src/components/chart/chart-settings-drawer.tsx`
+> **Component** · `@kestrel/web` · `apps/web/src/components/chart/chart-settings-drawer.tsx`
 
 
 React component: chart-settings-drawer
@@ -32,7 +32,7 @@ React component: chart-settings-drawer
 
 
 ### 📤 Depends On (2)
-[[chart-Chart]] · [[@hamafx-web]]
+[[chart-Chart]] · [[@kestrel-web]]
 
 
 

@@ -13,7 +13,7 @@ import type {
   Symbol,
   Tick,
   Timeframe,
-} from '@hamafx/shared';
+} from '@kestrel/shared';
 import { apiFetch, ApiError } from './api-client';
 
 /** @deprecated Use the `ApiError` class from `./api-client` directly. */

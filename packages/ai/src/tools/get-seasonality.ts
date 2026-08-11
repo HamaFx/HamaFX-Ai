@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,19 +21,19 @@
 // (last ~90d). Buckets carry median, IQR, and win rate so the chat part
 // renders trader-grade numbers instead of "January is bullish".
 
-import { getCandles } from '@hamafx/data';
+import { getCandles } from '@kestrel/data';
 import {
   GetSeasonalityInputSchema,
   type GetSeasonalityOutput,
   type SeasonalityBucket,
   type SeasonalityGranularity,
-} from '@hamafx/shared';
+} from '@kestrel/shared';
 import { tool } from 'ai';
 import type { z } from 'zod';
 
 const InputSchema = GetSeasonalityInputSchema;
 
-declare module '@hamafx/shared' {
+declare module '@kestrel/shared' {
   interface ToolIOMap {
     get_seasonality: { input: z.infer<typeof InputSchema> };
   }

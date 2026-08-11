@@ -1,19 +1,19 @@
 ---
 type: module
-package: "@hamafx/web"
+package: "@kestrel/web"
 path: "apps/web/test/fuzzy-match.test.ts"
 incoming: 0
 outgoing: 3
 connections: 3
 risk: low
 layer: core
-tags: [type/module, hamafx-web, layer/core]
+tags: [type/module, kestrel-web, layer/core]
 aliases: [fuzzy-match.test]
 ---
 
 # 📁 fuzzy-match.test
 
-> **Module** · `@hamafx/web` · `apps/web/test/fuzzy-match.test.ts`
+> **Module** · `@kestrel/web` · `apps/web/test/fuzzy-match.test.ts`
 
 
 Module: apps/web/test/fuzzy-match.test.ts
@@ -28,11 +28,11 @@ Module: apps/web/test/fuzzy-match.test.ts
 | Total connections | 3 |
 | Risk level | **LOW** |
 | Layer | `core` |
-| Package tag | `#hamafx-web` |
+| Package tag | `#kestrel-web` |
 
 
 ### 📤 Depends On (3)
-[[vitest-installServerOnlyStub]] · [[fuzzy-match-FuzzyMatch]] · [[@hamafx-web]]
+[[vitest-installServerOnlyStub]] · [[fuzzy-match-FuzzyMatch]] · [[@kestrel-web]]
 
 
 
@@ -43,4 +43,4 @@ Module: apps/web/test/fuzzy-match.test.ts
 - **Local Graph:** Right-click this file → "Open local graph"
 - **Backlinks:** Open the right sidebar → "Backlinks"
 - Use `#type/module` to find all Modules
-- Use `#hamafx-web` to find all files in this package
+- Use `#kestrel-web` to find all files in this package

@@ -1,19 +1,19 @@
 ---
 type: module
-package: "@hamafx/web"
+package: "@kestrel/web"
 path: "apps/web/src/app/(app)/settings/agent/page.tsx"
 incoming: 0
 outgoing: 8
 connections: 8
 risk: low
 layer: core
-tags: [type/module, hamafx-web, layer/core]
+tags: [type/module, kestrel-web, layer/core]
 aliases: [page/async]
 ---
 
 # 📁 page/async
 
-> **Module** · `@hamafx/web` · `apps/web/src/app/(app)/settings/agent/page.tsx`
+> **Module** · `@kestrel/web` · `apps/web/src/app/(app)/settings/agent/page.tsx`
 
 
 Module: apps/web/src/app/(app)/settings/agent/page.tsx
@@ -28,11 +28,11 @@ Module: apps/web/src/app/(app)/settings/agent/page.tsx
 | Total connections | 8 |
 | Risk level | **LOW** |
 | Layer | `core` |
-| Package tag | `#hamafx-web` |
+| Package tag | `#kestrel-web` |
 
 
 ### 📤 Depends On (8)
-[[@hamafx-ai]] · [[@hamafx-db]] · [[@hamafx-shared]] · [[disabled-tools-form-DisabledToolsForm]] · [[analysis-mode-form-AnalysisModeForm]] · [[agent-model-override-form-AgentModelOverrideForm]] · [[ai-prefs-card-AIPrefs]] · [[@hamafx-web]]
+[[@kestrel-ai]] · [[@kestrel-db]] · [[@kestrel-shared]] · [[disabled-tools-form-DisabledToolsForm]] · [[analysis-mode-form-AnalysisModeForm]] · [[agent-model-override-form-AgentModelOverrideForm]] · [[ai-prefs-card-AIPrefs]] · [[@kestrel-web]]
 
 
 
@@ -48,4 +48,4 @@ Module: apps/web/src/app/(app)/settings/agent/page.tsx
 - **Local Graph:** Right-click this file → "Open local graph"
 - **Backlinks:** Open the right sidebar → "Backlinks"
 - Use `#type/module` to find all Modules
-- Use `#hamafx-web` to find all files in this package
+- Use `#kestrel-web` to find all files in this package

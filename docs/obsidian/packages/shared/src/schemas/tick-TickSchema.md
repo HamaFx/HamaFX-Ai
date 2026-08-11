@@ -1,19 +1,19 @@
 ---
 type: module
-package: "@hamafx/shared"
+package: "@kestrel/shared"
 path: "packages/shared/src/schemas/tick.ts"
 incoming: 1
 outgoing: 2
 connections: 3
 risk: low
 layer: core
-tags: [type/module, hamafx-shared, layer/core]
+tags: [type/module, kestrel-shared, layer/core]
 aliases: [tick/TickSchema]
 ---
 
 # 📁 tick/TickSchema
 
-> **Module** · `@hamafx/shared` · `packages/shared/src/schemas/tick.ts`
+> **Module** · `@kestrel/shared` · `packages/shared/src/schemas/tick.ts`
 
 
 Module: packages/shared/src/schemas/tick.ts
@@ -28,11 +28,11 @@ Module: packages/shared/src/schemas/tick.ts
 | Total connections | 3 |
 | Risk level | **LOW** |
 | Layer | `core` |
-| Package tag | `#hamafx-shared` |
+| Package tag | `#kestrel-shared` |
 
 
 ### 📤 Depends On (2)
-[[symbols-SYMBOLS]] · [[@hamafx-shared]]
+[[symbols-SYMBOLS]] · [[@kestrel-shared]]
 
 
 ### 📥 Depended On By (1)
@@ -50,4 +50,4 @@ Module: packages/shared/src/schemas/tick.ts
 - **Local Graph:** Right-click this file → "Open local graph"
 - **Backlinks:** Open the right sidebar → "Backlinks"
 - Use `#type/module` to find all Modules
-- Use `#hamafx-shared` to find all files in this package
+- Use `#kestrel-shared` to find all files in this package

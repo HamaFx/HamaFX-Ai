@@ -1,19 +1,19 @@
 ---
 type: module
-package: "@hamafx/db"
+package: "@kestrel/db"
 path: "packages/db/src/queries/onboarding.ts"
 incoming: 0
 outgoing: 3
 connections: 3
 risk: low
 layer: core
-tags: [type/module, hamafx-db, layer/core]
+tags: [type/module, kestrel-db, layer/core]
 aliases: [onboarding/ResetMode]
 ---
 
 # 📁 onboarding/ResetMode
 
-> **Module** · `@hamafx/db` · `packages/db/src/queries/onboarding.ts`
+> **Module** · `@kestrel/db` · `packages/db/src/queries/onboarding.ts`
 
 
 Module: packages/db/src/queries/onboarding.ts
@@ -28,11 +28,11 @@ Module: packages/db/src/queries/onboarding.ts
 | Total connections | 3 |
 | Risk level | **LOW** |
 | Layer | `core` |
-| Package tag | `#hamafx-db` |
+| Package tag | `#kestrel-db` |
 
 
 ### 📤 Depends On (3)
-[[@hamafx-shared]] · [[client-DbClient]] · [[@hamafx-db]]
+[[@kestrel-shared]] · [[client-DbClient]] · [[@kestrel-db]]
 
 
 
@@ -47,4 +47,4 @@ Module: packages/db/src/queries/onboarding.ts
 - **Local Graph:** Right-click this file → "Open local graph"
 - **Backlinks:** Open the right sidebar → "Backlinks"
 - Use `#type/module` to find all Modules
-- Use `#hamafx-db` to find all files in this package
+- Use `#kestrel-db` to find all files in this package

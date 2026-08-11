@@ -3,26 +3,26 @@
 // Integration test: Web → AI pipeline.
 //
 // Tests that the web API route layer correctly imports from, calls, and
-// handles responses from the @hamafx/ai package. The journal route is
+// handles responses from the @kestrel/ai package. The journal route is
 // chosen because it exercises read (GET) and write (POST) paths through
 // the full middleware → route handler → AI functions → response chain.
 //
 // Catches:
 //   - Middleware auth gating (401 without session)
-//   - Route handler → @hamafx/ai function call signatures
-//   - Error propagation from @hamafx/ai through errorResponse()
+//   - Route handler → @kestrel/ai function call signatures
+//   - Error propagation from @kestrel/ai through errorResponse()
 //   - Request body validation with Zod schemas
 //   - Response serialization (JSON shape, status codes)
 
 import { vi, describe, it, expect, beforeEach, afterEach, Mock } from 'vitest';
 
-// Mock @hamafx/ai journal functions
+// Mock @kestrel/ai journal functions
 const mockListEntries = vi.hoisted(() => vi.fn());
 const mockCreateEntry = vi.hoisted(() => vi.fn());
 const mockComputeStats = vi.hoisted(() => vi.fn());
 const mockAuthFn = vi.hoisted(() => vi.fn());
 
-vi.mock('@hamafx/ai', () => ({
+vi.mock('@kestrel/ai', () => ({
   listEntries: mockListEntries,
   createEntry: mockCreateEntry,
   computeStats: mockComputeStats,
@@ -114,7 +114,7 @@ describe('Web → AI integration (journal route)', () => {
   });
 
   describe('read path: GET → listEntries + computeStats', () => {
-    it('calls both @hamafx/ai functions with correct userId', async () => {
+    it('calls both @kestrel/ai functions with correct userId', async () => {
       const response = await GET(
         new Request('http://localhost/api/journal'),
         { params: Promise.resolve({}) },
@@ -131,7 +131,7 @@ describe('Web → AI integration (journal route)', () => {
       expect(mockComputeStats).toHaveBeenCalledWith(USER_ID);
     });
 
-    it('filters entries by symbol through the @hamafx/ai boundary', async () => {
+    it('filters entries by symbol through the @kestrel/ai boundary', async () => {
       await GET(
         new Request('http://localhost/api/journal?symbol=XAUUSD'),
         { params: Promise.resolve({}) },
@@ -141,7 +141,7 @@ describe('Web → AI integration (journal route)', () => {
   });
 
   describe('write path: POST → createEntry', () => {
-    it('creates an entry through the @hamafx/ai boundary', async () => {
+    it('creates an entry through the @kestrel/ai boundary', async () => {
       const response = await POST(
         new Request('http://localhost/api/journal', {
           method: 'POST',
@@ -169,7 +169,7 @@ describe('Web → AI integration (journal route)', () => {
     });
   });
 
-  describe('error propagation: @hamafx/ai → route handler', () => {
+  describe('error propagation: @kestrel/ai → route handler', () => {
     it('propagates service errors as 500 responses', async () => {
       mockListEntries.mockRejectedValue(new Error('Database connection refused'));
 

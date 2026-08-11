@@ -1,6 +1,6 @@
 ---
 type: module
-package: "@hamafx/data"
+package: "@kestrel/data"
 path: "packages/data/src/providers/marketaux/index.ts"
 incoming: 1
 outgoing: 1
@@ -13,7 +13,7 @@ aliases: [index]
 
 # 📁 index
 
-> **Module** · `@hamafx/data` · `packages/data/src/providers/marketaux/index.ts`
+> **Module** · `@kestrel/data` · `packages/data/src/providers/marketaux/index.ts`
 
 
 Module: packages/data/src/providers/marketaux/index.ts
@@ -32,7 +32,7 @@ Module: packages/data/src/providers/marketaux/index.ts
 
 
 ### 📤 Depends On (1)
-[[@hamafx-data]]
+[[@kestrel-data]]
 
 
 ### 📥 Depended On By (1)

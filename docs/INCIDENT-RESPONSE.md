@@ -1,4 +1,4 @@
-# HamaFX-Ai Incident Response Playbook
+# Kestrel Incident Response Playbook
 
 > **Phase 5.6 deliverable.** Extends `infra/cron-vm/RECOVERY.md` — do not
 > replace it. RECOVERY covers *infrastructure* restore (DB, journal, VM,
@@ -125,7 +125,7 @@ Status: Investigating
 
 We'll provide an update within {15/30} minutes or as soon as we have more information.
 
-— HamaFX-Ai Team
+— Kestrel Team
 ```
 
 ### Resolution Notification
@@ -141,7 +141,7 @@ Impact: {number of users/sessions affected}
 
 A full postmortem will be available at {link} within {timeframe}.
 
-— HamaFX-Ai Team
+— Kestrel Team
 ```
 
 ## 6. Postmortem Template

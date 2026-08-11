@@ -1,6 +1,6 @@
 ---
 type: module
-package: "@hamafx/ai"
+package: "@kestrel/ai"
 path: "packages/ai/src/persistence.ts"
 incoming: 14
 outgoing: 1
@@ -13,7 +13,7 @@ aliases: [persistence]
 
 # 📁 persistence
 
-> **Module** · `@hamafx/ai` · `packages/ai/src/persistence.ts`
+> **Module** · `@kestrel/ai` · `packages/ai/src/persistence.ts`
 
 
 Module: packages/ai/src/persistence.ts
@@ -32,7 +32,7 @@ Module: packages/ai/src/persistence.ts
 
 
 ### 📤 Depends On (1)
-[[@hamafx-ai]]
+[[@kestrel-ai]]
 
 
 ### 📥 Depended On By (12)

@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,20 +22,20 @@
 // session window's right edge is in the future. Boundaries match the
 // LIVE_SNAPSHOT classifier in `packages/ai/src/context.ts`.
 
-import { getCandles } from '@hamafx/data';
+import { getCandles } from '@kestrel/data';
 import {
   GetSessionLevelsInputSchema,
   type Candle,
   type GetSessionLevelsOutput,
   type SessionRange,
   type SessionTag,
-} from '@hamafx/shared';
+} from '@kestrel/shared';
 import { tool } from 'ai';
 import type { z } from 'zod';
 
 const InputSchema = GetSessionLevelsInputSchema;
 
-declare module '@hamafx/shared' {
+declare module '@kestrel/shared' {
   interface ToolIOMap {
     get_session_levels: { input: z.infer<typeof InputSchema> };
   }

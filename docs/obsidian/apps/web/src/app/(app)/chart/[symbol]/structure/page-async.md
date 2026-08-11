@@ -1,6 +1,6 @@
 ---
 type: module
-package: "@hamafx/web"
+package: "@kestrel/web"
 path: "apps/web/src/app/(app)/chart/[symbol]/structure/page.tsx"
 incoming: 0
 outgoing: 4
@@ -13,7 +13,7 @@ aliases: [page/async]
 
 # 📁 page/async
 
-> **Module** · `@hamafx/web` · `apps/web/src/app/(app)/chart/[symbol]/structure/page.tsx`
+> **Module** · `@kestrel/web` · `apps/web/src/app/(app)/chart/[symbol]/structure/page.tsx`
 
 
 Module: apps/web/src/app/(app)/chart/[symbol]/structure/page.tsx
@@ -32,7 +32,7 @@ Module: apps/web/src/app/(app)/chart/[symbol]/structure/page.tsx
 
 
 ### 📤 Depends On (4)
-[[@hamafx-shared]] · [[@hamafx-db]] · [[chart-view-ChartView]] · [[@hamafx-web]]
+[[@kestrel-shared]] · [[@kestrel-db]] · [[chart-view-ChartView]] · [[@kestrel-web]]
 
 
 

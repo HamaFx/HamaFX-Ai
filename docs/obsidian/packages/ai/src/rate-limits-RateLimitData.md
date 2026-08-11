@@ -1,19 +1,19 @@
 ---
 type: module
-package: "@hamafx/ai"
+package: "@kestrel/ai"
 path: "packages/ai/src/rate-limits.ts"
 incoming: 5
 outgoing: 1
 connections: 6
 risk: low
 layer: core
-tags: [type/module, hamafx-ai, layer/core]
+tags: [type/module, kestrel-ai, layer/core]
 aliases: [rate-limits/RateLimitData]
 ---
 
 # 📁 rate-limits/RateLimitData
 
-> **Module** · `@hamafx/ai` · `packages/ai/src/rate-limits.ts`
+> **Module** · `@kestrel/ai` · `packages/ai/src/rate-limits.ts`
 
 
 Module: packages/ai/src/rate-limits.ts
@@ -28,11 +28,11 @@ Module: packages/ai/src/rate-limits.ts
 | Total connections | 6 |
 | Risk level | **LOW** |
 | Layer | `core` |
-| Package tag | `#hamafx-ai` |
+| Package tag | `#kestrel-ai` |
 
 
 ### 📤 Depends On (1)
-[[@hamafx-ai]]
+[[@kestrel-ai]]
 
 
 ### 📥 Depended On By (4)
@@ -50,4 +50,4 @@ Module: packages/ai/src/rate-limits.ts
 - **Local Graph:** Right-click this file → "Open local graph"
 - **Backlinks:** Open the right sidebar → "Backlinks"
 - Use `#type/module` to find all Modules
-- Use `#hamafx-ai` to find all files in this package
+- Use `#kestrel-ai` to find all files in this package

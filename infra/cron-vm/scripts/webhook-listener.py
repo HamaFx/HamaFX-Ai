@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""GitHub webhook listener for HamaFX-Ai auto-deploy.
+"""GitHub webhook listener for Kestrel auto-deploy.
 
 Listens on port 9000. Receives push events from GitHub, validates the
 HMAC-SHA256 signature against WEBHOOK_SECRET, and runs docker-update.sh

@@ -1,6 +1,6 @@
 ---
 type: module
-package: "@hamafx/web"
+package: "@kestrel/web"
 path: "apps/web/src/app/(app)/settings/actions.ts"
 incoming: 17
 outgoing: 1
@@ -13,7 +13,7 @@ aliases: [actions]
 
 # 📁 actions
 
-> **Module** · `@hamafx/web` · `apps/web/src/app/(app)/settings/actions.ts`
+> **Module** · `@kestrel/web` · `apps/web/src/app/(app)/settings/actions.ts`
 
 
 Module: apps/web/src/app/(app)/settings/actions.ts
@@ -32,7 +32,7 @@ Module: apps/web/src/app/(app)/settings/actions.ts
 
 
 ### 📤 Depends On (1)
-[[@hamafx-web]]
+[[@kestrel-web]]
 
 
 ### 📥 Depended On By (16)

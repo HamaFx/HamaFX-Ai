@@ -1,19 +1,19 @@
 ---
 type: component
-package: "@hamafx/web"
+package: "@kestrel/web"
 path: "apps/web/src/components/news/article-card.tsx"
 incoming: 0
 outgoing: 4
 connections: 4
 risk: low
 layer: ui
-tags: [type/component, hamafx-web, layer/ui]
+tags: [type/component, kestrel-web, layer/ui]
 aliases: [article-card/ArticleCard]
 ---
 
 # 🧩 article-card/ArticleCard
 
-> **Component** · `@hamafx/web` · `apps/web/src/components/news/article-card.tsx`
+> **Component** · `@kestrel/web` · `apps/web/src/components/news/article-card.tsx`
 
 
 React component: article-card
@@ -28,11 +28,11 @@ React component: article-card
 | Total connections | 4 |
 | Risk level | **LOW** |
 | Layer | `ui` |
-| Package tag | `#hamafx-web` |
+| Package tag | `#kestrel-web` |
 
 
 ### 📤 Depends On (3)
-[[@hamafx-shared]] · [[use-bookmarks-useBookmarks]] · [[@hamafx-web]]
+[[@kestrel-shared]] · [[use-bookmarks-useBookmarks]] · [[@kestrel-web]]
 
 
 
@@ -46,4 +46,4 @@ React component: article-card
 - **Local Graph:** Right-click this file → "Open local graph"
 - **Backlinks:** Open the right sidebar → "Backlinks"
 - Use `#type/component` to find all Components
-- Use `#hamafx-web` to find all files in this package
+- Use `#kestrel-web` to find all files in this package

@@ -4,7 +4,7 @@
 // The page itself is a thin server wrapper: fetch + render the
 // SentimentSummary above the interactive <NewsView/> client component.
 
-import { listRecentArticles } from '@hamafx/ai';
+import { listRecentArticles } from '@kestrel/ai';
 import { IconNews } from '@tabler/icons-react';
 import type { Metadata } from 'next';
 
@@ -16,7 +16,7 @@ import { NewsView } from './_components/news-view';
 import { SentimentSummary } from './_components/sentiment-summary';
 import { BookmarksProvider } from '@/components/news/bookmarks-context';
 
-export const metadata: Metadata = { title: 'News | HamaFX' };
+export const metadata: Metadata = { title: 'News | Kestrel' };
 // ISR: revalidate every 5 minutes instead of forcing dynamic on every request.
 export const revalidate = 300;
 

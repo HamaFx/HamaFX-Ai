@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@
 // Finnhub ↔ internal mapping. Reference: https://finnhub.io/docs/api
 // FX is exposed via the OANDA forex feed: e.g. "OANDA:XAU_USD".
 
-import { getSymbolDefinition, isKnownSymbol, type Symbol, type Timeframe } from '@hamafx/shared';
+import { getSymbolDefinition, isKnownSymbol, type Symbol, type Timeframe } from '@kestrel/shared';
 
 const TO_FINNHUB_SYMBOL: Record<Symbol, string> = {
   XAUUSD: 'OANDA:XAU_USD',

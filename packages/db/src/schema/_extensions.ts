@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 
 // Required Postgres extensions. Drizzle does not auto-emit these — we run them
 // once via a hand-written migration in ./drizzle/0000_extensions.sql (created
-// the first time you run `pnpm --filter @hamafx/db migrate:gen`).
+// the first time you run `pnpm --filter @kestrel/db migrate:gen`).
 //
 // Required:
 //   - pgvector  (news embeddings)

@@ -6,7 +6,7 @@
 
 ```bash
 git clone https://github.com/HamaFx/HamaFX-Ai.git
-cd HamaFX-Ai
+cd Kestrel
 pnpm install
 echo 'GOOGLE_GENERATIVE_AI_API_KEY=AIza...' >> .env.local
 pnpm dev:local                # http://localhost:3000

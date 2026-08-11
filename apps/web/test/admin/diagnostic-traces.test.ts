@@ -15,7 +15,7 @@ const mockListDiagnosticTraces = vi.hoisted(() => vi.fn());
 const mockGetDiagnosticTrace = vi.hoisted(() => vi.fn());
 const mockRecordAdminAudit = vi.hoisted(() => vi.fn());
 
-vi.mock('@hamafx/db', () => ({
+vi.mock('@kestrel/db', () => ({
   listDiagnosticTraces: mockListDiagnosticTraces,
   getDiagnosticTrace: mockGetDiagnosticTrace,
   recordAdminAudit: mockRecordAdminAudit,

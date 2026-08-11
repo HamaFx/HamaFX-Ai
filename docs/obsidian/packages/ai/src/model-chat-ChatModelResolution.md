@@ -1,19 +1,19 @@
 ---
 type: module
-package: "@hamafx/ai"
+package: "@kestrel/ai"
 path: "packages/ai/src/model-chat.ts"
 incoming: 1
 outgoing: 12
 connections: 13
 risk: low
 layer: core
-tags: [type/module, hamafx-ai, layer/core]
+tags: [type/module, kestrel-ai, layer/core]
 aliases: [model-chat/ChatModelResolution]
 ---
 
 # 📁 model-chat/ChatModelResolution
 
-> **Module** · `@hamafx/ai` · `packages/ai/src/model-chat.ts`
+> **Module** · `@kestrel/ai` · `packages/ai/src/model-chat.ts`
 
 
 Module: packages/ai/src/model-chat.ts
@@ -28,11 +28,11 @@ Module: packages/ai/src/model-chat.ts
 | Total connections | 13 |
 | Risk level | **LOW** |
 | Layer | `core` |
-| Package tag | `#hamafx-ai` |
+| Package tag | `#kestrel-ai` |
 
 
 ### 📤 Depends On (7)
-[[@hamafx-db]] · [[@hamafx-shared]] · [[model-circuit-breaker-recordModelSuccess]] · [[byok-providers-BYOK_PROVIDERS]] · [[vertex-factory-ResolveModelEnv]] · [[model-helpers-PROVIDER_PRIORITY]] · [[@hamafx-ai]]
+[[@kestrel-db]] · [[@kestrel-shared]] · [[model-circuit-breaker-recordModelSuccess]] · [[byok-providers-BYOK_PROVIDERS]] · [[vertex-factory-ResolveModelEnv]] · [[model-helpers-PROVIDER_PRIORITY]] · [[@kestrel-ai]]
 
 
 ### 📥 Depended On By (1)
@@ -53,4 +53,4 @@ Module: packages/ai/src/model-chat.ts
 - **Local Graph:** Right-click this file → "Open local graph"
 - **Backlinks:** Open the right sidebar → "Backlinks"
 - Use `#type/module` to find all Modules
-- Use `#hamafx-ai` to find all files in this package
+- Use `#kestrel-ai` to find all files in this package

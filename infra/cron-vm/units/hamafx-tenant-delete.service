@@ -1,5 +1,5 @@
 [Unit]
-Description=HamaFX-Ai weekly per-tenant delete rehearsal (dry-run)
+Description=Kestrel weekly per-tenant delete rehearsal (dry-run)
 After=network-online.target
 Wants=network-online.target
 

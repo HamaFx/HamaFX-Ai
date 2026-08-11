@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,13 +23,13 @@
 // Noise config and route config are stored as JSONB in the existing
 // user_settings table (notificationPreferences field).
 
-import { schema } from '@hamafx/db';
+import { schema } from '@kestrel/db';
 import { getDb } from '../db';
 import { and, eq, lt } from 'drizzle-orm';
 
 import type { NoiseState } from './noise-control';
-import type { NoiseConfig, RouteConfig } from '@hamafx/shared';
-import { DEFAULT_NOISE_CONFIG, DEFAULT_ROUTE_CONFIG } from '@hamafx/shared';
+import type { NoiseConfig, RouteConfig } from '@kestrel/shared';
+import { DEFAULT_NOISE_CONFIG, DEFAULT_ROUTE_CONFIG } from '@kestrel/shared';
 
 // ---------------------------------------------------------------------------
 // DB-backed noise state

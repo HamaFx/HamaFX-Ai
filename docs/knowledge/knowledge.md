@@ -1,6 +1,6 @@
-# HamaFX-Ai Architecture Knowledge Base
+# Kestrel Architecture Knowledge Base
 
-> **Auto-generated**: 2026-08-11T20:13:42.450Z
+> **Auto-generated**: 2026-08-11T22:24:54.683Z
 > **Schema version**: 1.0
 > **Purpose**: AI-agent-optimized architecture overview for rapid project understanding
 
@@ -8,7 +8,7 @@
 
 ## Project Overview
 
-**HamaFX-Ai** is an open-source (Apache-2.0), single-user BYOK, chat-driven AI trading copilot for gold, forex, and supported crypto instruments: **XAUUSD** (primary), canonical forex pairs, and Binance crypto pairs.
+**Kestrel** is an open-source (Apache-2.0), single-user BYOK, chat-driven AI trading copilot for gold, forex, and supported crypto instruments: **XAUUSD** (primary), canonical forex pairs, and Binance crypto pairs.
 
 - **Stack**: Next.js 16 (App Router) + React 19 + TypeScript (strict)
 - **AI**: Vercel AI SDK v5, Google Vertex AI + the live BYOK provider registry
@@ -22,25 +22,25 @@
 | Package | Path | Type | Purpose |
 |---------|------|------|---------|
 | **root** | `.` | package | Package: root (3 nodes) |
-| **@hamafx/web** | `apps/web` | package | Package: @hamafx/web (683 nodes) |
-| **@hamafx/worker** | `apps/worker` | package | Package: @hamafx/worker (58 nodes) |
+| **@kestrel/web** | `apps/web` | package | Package: @kestrel/web (684 nodes) |
+| **@kestrel/worker** | `apps/worker` | package | Package: @kestrel/worker (58 nodes) |
 | **docs** | `docs` | package | Package: docs (1 nodes) |
 | **infra** | `infra` | package | Package: infra (1 nodes) |
 | **loadtest** | `loadtest` | package | Package: loadtest (31 nodes) |
-| **@hamafx/ai** | `packages/ai` | package | Package: @hamafx/ai (274 nodes) |
-| **@hamafx/config** | `packages/config` | package | Package: @hamafx/config (4 nodes) |
-| **@hamafx/data** | `packages/data` | package | Package: @hamafx/data (66 nodes) |
-| **@hamafx/db** | `packages/db` | package | Package: @hamafx/db (161 nodes) |
-| **@hamafx/indicators** | `packages/indicators` | package | Package: @hamafx/indicators (39 nodes) |
-| **@hamafx/shared** | `packages/shared` | package | Package: @hamafx/shared (85 nodes) |
-| **@hamafx/test-utils** | `packages/test-utils` | package | Package: @hamafx/test-utils (19 nodes) |
+| **@kestrel/ai** | `packages/ai` | package | Package: @kestrel/ai (274 nodes) |
+| **@kestrel/config** | `packages/config` | package | Package: @kestrel/config (4 nodes) |
+| **@kestrel/data** | `packages/data` | package | Package: @kestrel/data (66 nodes) |
+| **@kestrel/db** | `packages/db` | package | Package: @kestrel/db (161 nodes) |
+| **@kestrel/indicators** | `packages/indicators` | package | Package: @kestrel/indicators (39 nodes) |
+| **@kestrel/shared** | `packages/shared` | package | Package: @kestrel/shared (85 nodes) |
+| **@kestrel/test-utils** | `packages/test-utils` | package | Package: @kestrel/test-utils (19 nodes) |
 | **scripts** | `scripts` | package | Package: scripts (25 nodes) |
 | **tool:architecture-explorer** | `tools/architecture-explorer` | package | Package: tool:architecture-explorer (18 nodes) |
 | **tool:lighthouse** | `.` | package | Package: tool:lighthouse (2 nodes) |
 
 **Dependency chain**: `config → shared → db + indicators → data → ai → web + worker`
 
-**Total**: 16 packages, **1470** architecture nodes
+**Total**: 16 packages, **1471** architecture nodes
 
 ## OSS Runtime Boundary
 
@@ -48,12 +48,12 @@ This public OSS release runs as a single-user self-hosted deployment with BYOK e
 
 ## Architecture Layers
 
-1. **Presentation** (`@hamafx/web`) — Next.js 16 PWA, React 19, Tailwind CSS v4, shadcn/ui, TradingView charts
-2. **API Gateway** (`@hamafx/web` request proxy) — NextAuth JWT, CSRF, rate limiting, 192 API routes
-3. **AI Agent** (`@hamafx/ai`) — Chat routing, plan-then-act, 32 tools, 4 agents, memory, citations
-4. **Data** (`@hamafx/data`) — Provider failover, caching (SWR), throttling, BiQuote→Finnhub
-5. **Persistence** (`@hamafx/db`) — Drizzle ORM, 52+ tables, Postgres (Supabase) + PGlite
-6. **Worker** (`@hamafx/worker`) — SignalR consumer, TickBuffer, Candle1mAggregator, 7+ cron jobs
+1. **Presentation** (`@kestrel/web`) — Next.js 16 PWA, React 19, Tailwind CSS v4, shadcn/ui, TradingView charts
+2. **API Gateway** (`@kestrel/web` request proxy) — NextAuth JWT, CSRF, rate limiting, 192 API routes
+3. **AI Agent** (`@kestrel/ai`) — Chat routing, plan-then-act, 32 tools, 4 agents, memory, citations
+4. **Data** (`@kestrel/data`) — Provider failover, caching (SWR), throttling, BiQuote→Finnhub
+5. **Persistence** (`@kestrel/db`) — Drizzle ORM, 52+ tables, Postgres (Supabase) + PGlite
+6. **Worker** (`@kestrel/worker`) — SignalR consumer, TickBuffer, Candle1mAggregator, 7+ cron jobs
 7. **Infrastructure** — Vercel (web) + GCE VM (worker), Docker Compose, systemd timers
 
 ## Key Design Patterns
@@ -76,38 +76,38 @@ User Message → Rate Limit → Thread Check → Budget Guard → History Load �
 4 specialist agents (Technical, Fundamental, Risk, Sentiment) + 1 Decision synthesizer. Modes: quick (1 agent), standard (2), full (4, queued to worker via analysis_jobs table).
 
 ### 32 AI Tools
-- **analyze_chart_image** — Copyright 2026 HamaFX
+- **analyze_chart_image** — Copyright 2026 Kestrel
 - **analyze_fundamental** — Aggregate the upcoming high/medium-impact macro events for a symbol
 - **analyze_technical** — Multi-timeframe technical readout (trend, bias, momentum, structure, levels) for a symbol. Use for any
 - **annotate_chart** — Compute chart annotations (swings, BOS/CHoCH, FVG, order blocks, liquidity sweeps, previous-day high/low, Asian session range) for a symbol/timeframe. Use when the user asks to
 - **compute_position_health** — For each currently-open journal entry, compute live P/L in pips and R-multiples plus distance to stop and target. Use when the user asks
-- **compute_risk** — Copyright 2026 HamaFX
+- **compute_risk** — Copyright 2026 Kestrel
 - **convene_committee** — Convene a Multi-Agent Trading Committee (Economist, Technician, Risk Manager) to evaluate a trade setup. Use whenever the user asks
-- **forecast_volatility** — Copyright 2026 HamaFX
-- **get_calendar** — Copyright 2026 HamaFX
+- **forecast_volatility** — Copyright 2026 Kestrel
+- **get_calendar** — Copyright 2026 Kestrel
 - **get_candles** — Fetch OHLC candles for one symbol at one timeframe (e.g. XAUUSD 1h). Use to confirm a recent swing high/low or to feed a pattern read. For RSI/MACD/EMA/etc. prefer get_indicators.
 - **get_correlation** — Pearson correlation matrix over close-to-close returns for the legacy CFTC/intermarket trio XAUUSD/EURUSD/GBPUSD at the given timeframe + window, plus a USD-strength proxy (
 - **get_cot** — Last N weeks of CFTC Commitment-of-Traders rows for one symbol (default XAUUSD). Use to answer
 - **get_indicators** — Compute indicators (sma, ema, rsi, macd, atr, bollinger, pivots) on a (symbol, timeframe) window. Returns the last 30 points of each series — enough for
 - **get_intermarket_resonance** — Evaluate Gold (XAUUSD) or major currencies
 - **get_intermarket** — Cross-asset pulse for the legacy CFTC/intermarket trio: USD-strength proxy + 24h change, gold
-- **get_journal_stats** — Copyright 2026 HamaFX
-- **get_market_structure** — Copyright 2026 HamaFX
-- **get_news** — Copyright 2026 HamaFX
+- **get_journal_stats** — Copyright 2026 Kestrel
+- **get_market_structure** — Copyright 2026 Kestrel
+- **get_news** — Copyright 2026 Kestrel
 - **get_portfolio_snapshot** — Get a snapshot of the user\
-- **get_price** — Copyright 2026 HamaFX
+- **get_price** — Copyright 2026 Kestrel
 - **get_seasonality** — Per-month / per-weekday / per-hour return seasonality for a symbol. Returns median percent return, IQR, win rate, and sample count per bucket. Use for
 - **get_session_levels** — Compute today
-- **get_social_sentiment** — Copyright 2026 HamaFX
+- **get_social_sentiment** — Copyright 2026 Kestrel
 - **get_system_diagnostics** — Query the real-time operational health, connection latency, database record volumes, active synchronized files status, remaining daily budget, and verified environment variables in the Copilot system.
 - **log_journal** — Record a trade entry in the journal. Returns the new entry id + a summary line. Status is
-- **replay_setup** — Copyright 2026 HamaFX
+- **replay_setup** — Copyright 2026 Kestrel
 - **run_system_action** — Trigger the operator-only FRED resonance historical sync. This tool is only for explicit user requests to run the resonance backfill/sync and is unavailable for canned cache or migration theatrics.
-- **search_knowledge** — Copyright 2026 HamaFX
+- **search_knowledge** — Copyright 2026 Kestrel
 - **set_alert** — Create a one-shot price / indicator / candle-close alert. Fires when the rule first matches and then deactivates. The user can resend by editing the alert in /alerts.
-- **share_snapshot** — Copyright 2026 HamaFX
+- **share_snapshot** — Copyright 2026 Kestrel
 - **summarize_thread** — One-paragraph synopsis of the active chat thread plus three durable insights. Use when the user asks
-- **verify_call** — Copyright 2026 HamaFX
+- **verify_call** — Copyright 2026 Kestrel
 
 ### Model Routing
 - **Domains**: fundamental, technical, summary, vision, generic
@@ -149,7 +149,7 @@ User Message → Rate Limit → Thread Check → Budget Guard → History Load �
 
 - **Circular Dependencies**: 6
 - **Architecture Hotspots**: 50
-- **Dead Code / Orphans**: 1259
+- **Dead Code / Orphans**: 1262
 - **Shared Utilities**: 40
 - **Average Coupling**: 0.19
 - **Max Dependency Chain**: 3 hops

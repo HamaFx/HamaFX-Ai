@@ -1,19 +1,19 @@
 ---
 type: module
-package: "@hamafx/web"
+package: "@kestrel/web"
 path: "apps/web/src/lib/catalog-server.ts"
 incoming: 0
 outgoing: 5
 connections: 5
 risk: low
 layer: core
-tags: [type/module, hamafx-web, layer/core]
+tags: [type/module, kestrel-web, layer/core]
 aliases: [catalog-server/buildCatalogForUser]
 ---
 
 # 📁 catalog-server/buildCatalogForUser
 
-> **Module** · `@hamafx/web` · `apps/web/src/lib/catalog-server.ts`
+> **Module** · `@kestrel/web` · `apps/web/src/lib/catalog-server.ts`
 
 
 Module: apps/web/src/lib/catalog-server.ts
@@ -28,11 +28,11 @@ Module: apps/web/src/lib/catalog-server.ts
 | Total connections | 5 |
 | Risk level | **LOW** |
 | Layer | `core` |
-| Package tag | `#hamafx-web` |
+| Package tag | `#kestrel-web` |
 
 
 ### 📤 Depends On (4)
-[[@hamafx-ai]] · [[@hamafx-db]] · [[@hamafx-shared]] · [[@hamafx-web]]
+[[@kestrel-ai]] · [[@kestrel-db]] · [[@kestrel-shared]] · [[@kestrel-web]]
 
 
 
@@ -46,4 +46,4 @@ Module: apps/web/src/lib/catalog-server.ts
 - **Local Graph:** Right-click this file → "Open local graph"
 - **Backlinks:** Open the right sidebar → "Backlinks"
 - Use `#type/module` to find all Modules
-- Use `#hamafx-web` to find all files in this package
+- Use `#kestrel-web` to find all files in this package

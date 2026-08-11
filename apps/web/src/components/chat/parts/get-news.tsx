@@ -13,7 +13,7 @@
 // line instead of an empty list (which would look like a bug).
 
 import { IconAlertTriangle, IconClock, IconNews } from '@tabler/icons-react';
-import type { GetNewsOutput, NewsSentiment } from '@hamafx/shared';
+import type { GetNewsOutput, NewsSentiment } from '@kestrel/shared';
 import { Link } from 'next-view-transitions';
 
 import { cleanNewsText } from '@/lib/clean-news-text';

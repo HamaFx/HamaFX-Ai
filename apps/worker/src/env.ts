@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@
 // UUIDs the orchestration code already references. New env vars land in
 // later PRs as the consumer / aggregator / job runner come online.
 //
-// We deliberately *don't* re-use `parseServerEnv` from `@hamafx/shared`
+// We deliberately *don't* re-use `parseServerEnv` from `@kestrel/shared`
 // because the worker is a different runtime — it doesn't need APP_PASSWORD,
 // AUTH_COOKIE_SECRET, NEXT_PUBLIC_*, etc. Validating the smaller surface
 // keeps boot fast and the failure modes clear.
@@ -135,7 +135,7 @@ export function loadEnv(input: NodeJS.ProcessEnv = process.env): WorkerEnv {
   }
   if (!result.data.DATABASE_URL && !result.data.POSTGRES_URL) {
     // PGlite mode: embedded Postgres, no remote DB URL needed.
-    // The app uses getLocalDb() from @hamafx/db which falls back to PGlite.
+    // The app uses getLocalDb() from @kestrel/db which falls back to PGlite.
     // We allow this in development; production always has a URL.
     if (result.data.NODE_ENV === 'production') {
       throw new Error('Either DATABASE_URL or POSTGRES_URL must be set in production');

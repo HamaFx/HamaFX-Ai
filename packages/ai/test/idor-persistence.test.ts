@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -39,13 +39,13 @@ vi.hoisted(() => {
   process.env.CRON_SECRET='idor-t...-min';
 });
 
-import type * as DbModule from '@hamafx/db';
+import type * as DbModule from '@kestrel/db';
 
 // Replace `getDb()` with a function that returns the active PGlite
 // instance. The test sets up PGlite in `beforeAll`, then swaps the
 // `getDb` symbol on every persistence call to read from the same DB.
-vi.mock('@hamafx/db', async () => {
-  const actual = await vi.importActual<typeof DbModule>('@hamafx/db');
+vi.mock('@kestrel/db', async () => {
+  const actual = await vi.importActual<typeof DbModule>('@kestrel/db');
   let activeDb: unknown = null;
   return {
     ...actual,
@@ -68,9 +68,9 @@ vi.mock('@hamafx/db', async () => {
 
 import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 
-import { getLocalDb, ensureMigrations } from '@hamafx/db/local-db';
-import * as dbModule from '@hamafx/db';
-import { schema } from '@hamafx/db';
+import { getLocalDb, ensureMigrations } from '@kestrel/db/local-db';
+import * as dbModule from '@kestrel/db';
+import { schema } from '@kestrel/db';
 import {
   createThread,
   deleteThread,

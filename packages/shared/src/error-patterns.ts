@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -75,7 +75,7 @@ export const ERROR_PATTERNS: ErrorPattern[] = [
     pattern: /missing.*migrations/i,
     description: 'Database migrations are behind',
     suggestedFix:
-      'Run: pnpm --filter @hamafx/db exec drizzle-kit migrate. Check migration count in /api/health/db.',
+      'Run: pnpm --filter @kestrel/db exec drizzle-kit migrate. Check migration count in /api/health/db.',
     relatedFiles: ['packages/db/drizzle.config.ts', 'apps/web/src/app/api/health/db/route.ts'],
     retryable: false,
   },

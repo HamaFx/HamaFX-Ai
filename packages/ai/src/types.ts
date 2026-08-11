@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-// PF-11 — Shared types for the @hamafx/ai package.
+// PF-11 — Shared types for the @kestrel/ai package.
 //
 // Breaking the type-only cycle between agent.ts and tool-context.ts
 // (and any future cross-module references) by moving shared types
@@ -25,7 +25,7 @@
 // should live here.
 
 import type { UIMessage } from 'ai';
-import type { AiEnvKeys, ServerEnv } from '@hamafx/shared';
+import type { AiEnvKeys, ServerEnv } from '@kestrel/shared';
 
 /**
  * PF-11 — moved from agent.ts to break the type cycle.

@@ -1,19 +1,19 @@
 ---
 type: module
-package: "@hamafx/worker"
+package: "@kestrel/worker"
 path: "apps/worker/src/symbol-manager.ts"
 incoming: 2
 outgoing: 5
 connections: 7
 risk: low
 layer: core
-tags: [type/module, hamafx-worker, layer/core]
+tags: [type/module, kestrel-worker, layer/core]
 aliases: [symbol-manager/SymbolChangeEvent]
 ---
 
 # 📁 symbol-manager/SymbolChangeEvent
 
-> **Module** · `@hamafx/worker` · `apps/worker/src/symbol-manager.ts`
+> **Module** · `@kestrel/worker` · `apps/worker/src/symbol-manager.ts`
 
 
 Module: apps/worker/src/symbol-manager.ts
@@ -28,11 +28,11 @@ Module: apps/worker/src/symbol-manager.ts
 | Total connections | 7 |
 | Risk level | **LOW** |
 | Layer | `core` |
-| Package tag | `#hamafx-worker` |
+| Package tag | `#kestrel-worker` |
 
 
 ### 📤 Depends On (4)
-[[@hamafx-db]] · [[@hamafx-shared]] · [[log-Logger]] · [[@hamafx-worker]]
+[[@kestrel-db]] · [[@kestrel-shared]] · [[log-Logger]] · [[@kestrel-worker]]
 
 
 ### 📥 Depended On By (2)
@@ -51,4 +51,4 @@ Module: apps/worker/src/symbol-manager.ts
 - **Local Graph:** Right-click this file → "Open local graph"
 - **Backlinks:** Open the right sidebar → "Backlinks"
 - Use `#type/module` to find all Modules
-- Use `#hamafx-worker` to find all files in this package
+- Use `#kestrel-worker` to find all files in this package

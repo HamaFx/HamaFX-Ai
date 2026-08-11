@@ -1,6 +1,6 @@
 ---
 type: package
-package: "@hamafx/ai"
+package: "@kestrel/ai"
 path: "packages/ai"
 incoming: 332
 outgoing: 0
@@ -8,15 +8,15 @@ connections: 332
 risk: high
 layer: package
 tags: [type/package, hamafx-ai, layer/package, risk/high]
-aliases: [@hamafx/ai]
+aliases: [@kestrel/ai]
 ---
 
-# 📦 @hamafx/ai
+# 📦 @kestrel/ai
 
-> **Package** · `@hamafx/ai` · `packages/ai`
+> **Package** · `@kestrel/ai` · `packages/ai`
 
 
-Package: @hamafx/ai
+Package: @kestrel/ai
 
 
 ## 📊 Connections

@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,14 +16,14 @@
 
 // Pure-logic tests for journal stats math.
 
-import type { JournalEntry } from '@hamafx/shared';
+import type { JournalEntry } from '@kestrel/shared';
 import { describe, expect, it, vi } from 'vitest';
 
 // Phase D2 — journal/persistence.ts → memory/memory-index.ts →
-// embeddings.ts → resolveEmbeddingModel → @hamafx/shared/encryption
+// embeddings.ts → resolveEmbeddingModel → @kestrel/shared/encryption
 // which imports `server-only`. Mock the encryption module so this
 // pure-logic test doesn't drag in the server-only runtime check.
-vi.mock('@hamafx/shared/encryption', () => ({
+vi.mock('@kestrel/shared/encryption', () => ({
   decryptByok: () => null,
   encryptByok: () => '',
   configuredProviders: () => [],

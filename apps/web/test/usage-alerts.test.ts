@@ -8,14 +8,14 @@ const mockGetMonthlySpend = vi.hoisted(() => vi.fn());
 const mockGetProviderMonthlySpend = vi.hoisted(() => vi.fn());
 const mockSendNotification = vi.hoisted(() => vi.fn());
 
-vi.mock('@hamafx/db', () => ({
+vi.mock('@kestrel/db', () => ({
   getDb: vi.fn(),
   listAllUserSettings: mockListAllUserSettings,
   getUserWithSettings: mockGetUserWithSettings,
   schema: { userSettings: 'userSettings', users: 'users' },
 }));
 
-vi.mock('@hamafx/ai', () => ({
+vi.mock('@kestrel/ai', () => ({
   getMonthlySpend: mockGetMonthlySpend,
   getProviderMonthlySpend: mockGetProviderMonthlySpend,
   sendDirectNotification: mockSendNotification,

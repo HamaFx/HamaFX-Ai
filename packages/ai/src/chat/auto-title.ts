@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,9 +20,9 @@
 // stream because the response is already closed by the time we reach
 // this code.
 
-import { pickAiEnv } from '@hamafx/shared';
-import { logErrorContext } from '@hamafx/shared/logger';
-import type { UserSettingsRow } from '@hamafx/db/schema';
+import { pickAiEnv } from '@kestrel/shared';
+import { logErrorContext } from '@kestrel/shared/logger';
+import type { UserSettingsRow } from '@kestrel/db/schema';
 import type { RunChatArgs } from '../types';
 import { deriveTitleModel } from '../model';
 import { getThread, listMessages, recordTelemetry, updateThreadTitle } from '../persistence';

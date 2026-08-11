@@ -1,19 +1,19 @@
 ---
 type: module
-package: "@hamafx/worker"
+package: "@kestrel/worker"
 path: "apps/worker/src/persistence/candles-1m.ts"
 incoming: 2
 outgoing: 8
 connections: 10
 risk: low
 layer: core
-tags: [type/module, hamafx-worker, layer/core]
+tags: [type/module, kestrel-worker, layer/core]
 aliases: [candles-1m/FlushClosedCandleArgs]
 ---
 
 # 📁 candles-1m/FlushClosedCandleArgs
 
-> **Module** · `@hamafx/worker` · `apps/worker/src/persistence/candles-1m.ts`
+> **Module** · `@kestrel/worker` · `apps/worker/src/persistence/candles-1m.ts`
 
 
 Module: apps/worker/src/persistence/candles-1m.ts
@@ -28,11 +28,11 @@ Module: apps/worker/src/persistence/candles-1m.ts
 | Total connections | 10 |
 | Risk level | **LOW** |
 | Layer | `core` |
-| Package tag | `#hamafx-worker` |
+| Package tag | `#kestrel-worker` |
 
 
 ### 📤 Depends On (5)
-[[@hamafx-ai]] · [[@hamafx-db]] · [[candle-1m-ClosedCandle]] · [[log-Logger]] · [[@hamafx-worker]]
+[[@kestrel-ai]] · [[@kestrel-db]] · [[candle-1m-ClosedCandle]] · [[log-Logger]] · [[@kestrel-worker]]
 
 
 ### 📥 Depended On By (2)
@@ -50,4 +50,4 @@ Module: apps/worker/src/persistence/candles-1m.ts
 - **Local Graph:** Right-click this file → "Open local graph"
 - **Backlinks:** Open the right sidebar → "Backlinks"
 - Use `#type/module` to find all Modules
-- Use `#hamafx-worker` to find all files in this package
+- Use `#kestrel-worker` to find all files in this package

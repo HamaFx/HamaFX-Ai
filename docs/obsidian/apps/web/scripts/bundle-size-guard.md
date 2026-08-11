@@ -1,6 +1,6 @@
 ---
 type: module
-package: "@hamafx/web"
+package: "@kestrel/web"
 path: "apps/web/scripts/bundle-size-guard.mjs"
 incoming: 0
 outgoing: 1
@@ -13,7 +13,7 @@ aliases: [bundle-size-guard]
 
 # 📁 bundle-size-guard
 
-> **Module** · `@hamafx/web` · `apps/web/scripts/bundle-size-guard.mjs`
+> **Module** · `@kestrel/web` · `apps/web/scripts/bundle-size-guard.mjs`
 
 
 Module: apps/web/scripts/bundle-size-guard.mjs
@@ -32,7 +32,7 @@ Module: apps/web/scripts/bundle-size-guard.mjs
 
 
 ### 📤 Depends On (1)
-[[@hamafx-web]]
+[[@kestrel-web]]
 
 
 

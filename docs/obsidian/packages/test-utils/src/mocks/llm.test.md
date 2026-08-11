@@ -1,19 +1,19 @@
 ---
 type: module
-package: "@hamafx/test-utils"
+package: "@kestrel/test-utils"
 path: "packages/test-utils/src/mocks/llm.test.ts"
 incoming: 0
 outgoing: 3
 connections: 3
 risk: low
 layer: core
-tags: [type/module, hamafx-test-utils, layer/core]
+tags: [type/module, kestrel-test-utils, layer/core]
 aliases: [llm.test]
 ---
 
 # 📁 llm.test
 
-> **Module** · `@hamafx/test-utils` · `packages/test-utils/src/mocks/llm.test.ts`
+> **Module** · `@kestrel/test-utils` · `packages/test-utils/src/mocks/llm.test.ts`
 
 
 Module: packages/test-utils/src/mocks/llm.test.ts
@@ -28,11 +28,11 @@ Module: packages/test-utils/src/mocks/llm.test.ts
 | Total connections | 3 |
 | Risk level | **LOW** |
 | Layer | `core` |
-| Package tag | `#hamafx-test-utils` |
+| Package tag | `#kestrel-test-utils` |
 
 
 ### 📤 Depends On (3)
-[[vitest-installServerOnlyStub]] · [[llm-MockLlmResponse]] · [[@hamafx-test-utils]]
+[[vitest-installServerOnlyStub]] · [[llm-MockLlmResponse]] · [[@kestrel-test-utils]]
 
 
 
@@ -43,4 +43,4 @@ Module: packages/test-utils/src/mocks/llm.test.ts
 - **Local Graph:** Right-click this file → "Open local graph"
 - **Backlinks:** Open the right sidebar → "Backlinks"
 - Use `#type/module` to find all Modules
-- Use `#hamafx-test-utils` to find all files in this package
+- Use `#kestrel-test-utils` to find all files in this package

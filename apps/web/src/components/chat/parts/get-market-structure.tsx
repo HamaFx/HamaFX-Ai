@@ -17,7 +17,7 @@ import {
   type GetMarketStructureOutput,
   type StructureEvent,
   type SwingPoint,
-} from '@hamafx/shared';
+} from '@kestrel/shared';
 
 interface GetMarketStructurePartProps {
   /** Tool output, or `null` while streaming / before completion. */

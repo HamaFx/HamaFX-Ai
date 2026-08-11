@@ -1,11 +1,11 @@
-# AGENTS.md — HamaFX-Ai Development Guide
+# AGENTS.md — Kestrel Development Guide
 
 > **For AI coding agents (Claude Code, Codex, Cursor, Gemini CLI, etc.) working on this repository.**
 > Read this FIRST before making any changes. It is the canonical source of truth for the project.
 
 ## Project Identity
 
-**HamaFX-Ai** is an open-source, multi-tenant, chat-driven AI trading copilot for **gold, forex, and crypto**: **XAUUSD** (primary), a canonical forex catalog, and supported Binance crypto pairs. It runs as a Next.js 16 PWA with a persistent Node.js worker daemon. The AI agent uses Vercel AI SDK v5 with 32 registered tools, domain-based model routing, and multi-agent committee deliberation.
+**Kestrel** is an open-source, multi-tenant, chat-driven AI trading copilot for **gold, forex, and crypto**: **XAUUSD** (primary), a canonical forex catalog, and supported Binance crypto pairs. It runs as a Next.js 16 PWA with a persistent Node.js worker daemon. The AI agent uses Vercel AI SDK v5 with 32 registered tools, domain-based model routing, and multi-agent committee deliberation.
 
 - **License**: Apache-2.0
 - **Status**: In production on Vercel + GCE VM. Phases 0–9 shipped (incl. multi-tenant v2.0). UX Upgrade Plan Phases A/B/C/D/E shipped. Architecture Explorer deployed (Phase 8 complete).
@@ -54,21 +54,21 @@ docker compose up -d
 
 # Testing
 pnpm turbo run test -- --run    # all packages
-pnpm --filter @hamafx/web test  # single package
-pnpm --filter @hamafx/web exec playwright test  # E2E
+pnpm --filter @kestrel/web test  # single package
+pnpm --filter @kestrel/web exec playwright test  # E2E
 
 # Typecheck & Lint
 pnpm typecheck
 pnpm lint
 
 # Build
-pnpm --filter @hamafx/web build
+pnpm --filter @kestrel/web build
 
 ## Architecture Explorer Commands
 
 # Scan the project and generate ALL artifacts (HTML, JSON, Obsidian vault, knowledge)
 cd tools/architecture-explorer
-npx tsx src/index.ts --root /path/to/HamaFX-Ai
+npx tsx src/index.ts --root /path/to/Kestrel
 
 # Outputs (regenerated every run):
 #   docs/architecture-explorer.html     — Interactive graph explorer
@@ -80,8 +80,8 @@ npx tsx src/index.ts --root /path/to/HamaFX-Ai
 cd tools/architecture-explorer && npx tsc --noEmit
 
 ## Migrations
-pnpm --filter @hamafx/db migrate:gen     # generate from schema changes
-pnpm --filter @hamafx/db migrate:apply   # apply to DATABASE_URL
+pnpm --filter @kestrel/db migrate:gen     # generate from schema changes
+pnpm --filter @kestrel/db migrate:apply   # apply to DATABASE_URL
 # Vercel prod deploys run scripts/predeploy-migrate.mjs automatically.
 ```
 
@@ -91,7 +91,7 @@ pnpm --filter @hamafx/db migrate:apply   # apply to DATABASE_URL
 - **Never edit applied migration files.** Editing changes the SHA-256 hash, causing drizzle-kit to re-apply on the next deploy — typically failing on non-idempotent DDL. Create a NEW migration to fix issues.
 - **Always use a direct connection for migrations.** Use `DIRECT_URL` or `POSTGRES_URL_NON_POOLING` (port 5432), never the Supabase pooler (port 6543 / `DATABASE_URL`). PgBouncer in transaction mode silently drops DDL.
 - **All new migrations must be idempotent.** Use `IF NOT EXISTS` / `IF EXISTS` / `DO $$ ... IF NOT EXISTS ... $$` guards. A CI test verifies every migration can be applied twice against PGlite.
-- **Run `pnpm --filter @hamafx/db migrate:status` before deploying** to check for pending migrations.
+- **Run `pnpm --filter @kestrel/db migrate:status` before deploying** to check for pending migrations.
 - **The tracking table is `drizzle.__drizzle_migrations`** (not `public`). The config pins `migrationsSchema: 'drizzle'`.
 
 ## Vercel CLI & Environment Variables
@@ -131,13 +131,13 @@ vercel list hamafx-ai --scope mahamad-ahmads-projects
 ```
 
 # AI Evals (manual, not in CI)
-pnpm --filter @hamafx/ai eval -- --base-url http://localhost:3000 --cookie "authjs.session-token=..." --cases
+pnpm --filter @kestrel/ai eval -- --base-url http://localhost:3000 --cookie "authjs.session-token=..." --cases
 ```
 
 ## Monorepo Structure
 
 ```
-HamaFX-Ai/
+Kestrel/
 ├── apps/
 │   ├── web/              # Next.js 16 PWA (frontend + API routes)
 │   └── worker/           # Node.js daemon (SignalR consumer, tick processing, job runner)
@@ -177,7 +177,7 @@ Browser (PWA)
     │
     ├── /api/admin/architecture-explorer ──▶ Serves interactive architecture graph
     │                                          (admin-only, public/architecture-explorer.html)
-    ├── /api/market/* ──▶ @hamafx/data ──▶ providers (BiQuote→Finnhub failover)
+    ├── /api/market/* ──▶ @kestrel/data ──▶ providers (BiQuote→Finnhub failover)
     │
     └── Request proxy (190 lines): NextAuth JWT check, CSRF, CSP, request-id
 
@@ -196,7 +196,7 @@ Worker (GCE VM, Docker)
 The project has a self-contained architecture explorer at `tools/architecture-explorer/`. Run it to generate up-to-date documentation from the live codebase — NO manual docs to maintain.
 
 ```bash
-cd tools/architecture-explorer && npx tsx src/index.ts --root /path/to/HamaFX-Ai
+cd tools/architecture-explorer && npx tsx src/index.ts --root /path/to/Kestrel
 ```
 
 It generates **4 types of output** simultaneously:
@@ -235,7 +235,7 @@ Data layer uses `runWithFailover([{name, run()}])` with health-aware ordering. P
 
 ### 5. Zod at Boundaries
 
-Every data shape crossing package boundaries validates through `@hamafx/shared` schemas. Tool inputs → `InputSchema`, tool outputs → `ToolOutputMap`.
+Every data shape crossing package boundaries validates through `@kestrel/shared` schemas. Tool inputs → `InputSchema`, tool outputs → `ToolOutputMap`.
 
 ### 6. AsyncLocalStorage for Context
 
@@ -251,7 +251,7 @@ For fundamental/technical turns: cheap model generates JSON plan, persisted as s
 
 ### 9. DB-Access Convention (DIP-1)
 
-**Rule:** Inside `packages/ai`, resolve `db` / `llmClient` via the typed DI container tokens (`DB`, `LLM_CLIENT` from `./tokens`). Everywhere else (`apps/web`, `apps/worker`, other packages), import `getDb` directly from `@hamafx/db`.
+**Rule:** Inside `packages/ai`, resolve `db` / `llmClient` via the typed DI container tokens (`DB`, `LLM_CLIENT` from `./tokens`). Everywhere else (`apps/web`, `apps/worker`, other packages), import `getDb` directly from `@kestrel/db`.
 
 ```ts
 // packages/ai — use the container
@@ -260,11 +260,11 @@ const db = container.resolve(DB); // typed as DbClient
 const client = container.resolve(LLM_CLIENT); // typed as LlmClient
 
 // apps/web, apps/worker — direct imports
-import { getDb } from '@hamafx/db';
+import { getDb } from '@kestrel/db';
 const db = getDb();
 ```
 
-**Tokens are typed:** `DB` is `Token<DbClient>`, `LLM_CLIENT` is `Token<LlmClient>`. Use `token<T>(key)` from `@hamafx/shared` to create new ones. Never use string literals — `container.resolve<T>('db')` has no compile-time link between the string and `T`.
+**Tokens are typed:** `DB` is `Token<DbClient>`, `LLM_CLIENT` is `Token<LlmClient>`. Use `token<T>(key)` from `@kestrel/shared` to create new ones. Never use string literals — `container.resolve<T>('db')` has no compile-time link between the string and `T`.
 
 **Rationale:** The AI runtime benefits from injectable `db`/`llmClient` for testing long agent flows. Next.js server actions/route handlers are already the composition edge and read cleanly with direct `getDb()`. The split prevents the test-footgun where `container.register('db', …)` silently fails to intercept direct `getDb()` importers.
 
@@ -313,7 +313,7 @@ The proxy matcher excludes these paths from processing:
 
 ### Request Proxy Constraints
 - The proxy runs on Node.js by default: keep direct database work out of the request boundary
-- `@hamafx/db` is not imported by the proxy; keep the auth/security boundary lightweight
+- `@kestrel/db` is not imported by the proxy; keep the auth/security boundary lightweight
 - Auth env is split: `getAuthEnv()` (Edge-safe) vs `getServerEnv()` (full)
 
 ### PGlite vs Postgres
@@ -329,7 +329,7 @@ The proxy matcher excludes these paths from processing:
 ### Test Commands
 - Always use `-- --run` flag with vitest to avoid watch mode
 - `pnpm turbo run test -- --run` runs all packages
-- Individual: `pnpm --filter @hamafx/worker test -- --run`
+- Individual: `pnpm --filter @kestrel/worker test -- --run`
 
 ### CSP & Nonce System
 - The proxy sets a `'strict-dynamic'` CSP with a per-request nonce

@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
-import { ALL_SYMBOLS, CFTC_SUPPORTED_SYMBOLS, SymbolSchema } from '@hamafx/shared';
+import { ALL_SYMBOLS, CFTC_SUPPORTED_SYMBOLS, SymbolSchema } from '@kestrel/shared';
 
 const root = resolve(process.cwd(), '../..');
 const authSource = readFileSync(resolve(root, 'apps/web/src/auth.ts'), 'utf8');

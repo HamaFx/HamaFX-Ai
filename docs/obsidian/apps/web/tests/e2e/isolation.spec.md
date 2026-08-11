@@ -1,19 +1,19 @@
 ---
 type: module
-package: "@hamafx/web"
+package: "@kestrel/web"
 path: "apps/web/tests/e2e/isolation.spec.ts"
 incoming: 0
 outgoing: 2
 connections: 2
 risk: low
 layer: core
-tags: [type/module, hamafx-web, layer/core]
+tags: [type/module, kestrel-web, layer/core]
 aliases: [isolation.spec]
 ---
 
 # 📁 isolation.spec
 
-> **Module** · `@hamafx/web` · `apps/web/tests/e2e/isolation.spec.ts`
+> **Module** · `@kestrel/web` · `apps/web/tests/e2e/isolation.spec.ts`
 
 
 Module: apps/web/tests/e2e/isolation.spec.ts
@@ -28,11 +28,11 @@ Module: apps/web/tests/e2e/isolation.spec.ts
 | Total connections | 2 |
 | Risk level | **LOW** |
 | Layer | `core` |
-| Package tag | `#hamafx-web` |
+| Package tag | `#kestrel-web` |
 
 
 ### 📤 Depends On (2)
-[[test-utils-ensureTestUser]] · [[@hamafx-web]]
+[[test-utils-ensureTestUser]] · [[@kestrel-web]]
 
 
 
@@ -43,4 +43,4 @@ Module: apps/web/tests/e2e/isolation.spec.ts
 - **Local Graph:** Right-click this file → "Open local graph"
 - **Backlinks:** Open the right sidebar → "Backlinks"
 - Use `#type/module` to find all Modules
-- Use `#hamafx-web` to find all files in this package
+- Use `#kestrel-web` to find all files in this package

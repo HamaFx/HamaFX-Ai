@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,7 +37,7 @@
 //   - First-ever break (no prior trend): emitted as BOS in the break's
 //     direction; trend established from there.
 
-import type { Candle, StructureDirection, StructureEvent, SwingPoint } from '@hamafx/shared';
+import type { Candle, StructureDirection, StructureEvent, SwingPoint } from '@kestrel/shared';
 
 export interface DetectStructureOptions {
   /**

@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@
 import { createCipheriv, randomBytes } from 'node:crypto';
 
 import { encode } from '@auth/core/jwt';
-import { getDb, schema } from '@hamafx/db';
+import { getDb, schema } from '@kestrel/db';
 import type { Page } from '@playwright/test';
 import bcrypt from 'bcryptjs';
 import { sql } from 'drizzle-orm';
@@ -26,7 +26,7 @@ import { sql } from 'drizzle-orm';
  * Encrypt a dummy BYOK payload for the test user so the chat page
  * does not redirect to /settings/api-keys (Phase A item 4).
  *
- * Uses the same AES-256-GCM scheme as @hamafx/shared/encryption
+ * Uses the same AES-256-GCM scheme as @kestrel/shared/encryption
  * but avoids importing it (server-only guard would throw outside
  * of Next.js bundler context). The ENCRYPTION_SECRET env var must
  * be set (loaded by global-setup.ts from .env.local).
@@ -213,7 +213,7 @@ export async function ensureSystemUser() {
     .insert(schema.users)
     .values({
       id: '__system__',
-      email: '__system__@hamafx.ai',
+      email: '__system__@kestrel.ai',
       name: 'System (Legacy E2E)',
       hashedPassword: await bcrypt.hash('password123', 10),
       role: 'user',

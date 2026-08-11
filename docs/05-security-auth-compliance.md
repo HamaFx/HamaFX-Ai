@@ -1,6 +1,6 @@
 # Security, Authentication, and Compliance
 
-This document describes the security boundaries that operators must preserve when deploying the single-user BYOK OSS release of HamaFX-Ai.
+This document describes the security boundaries that operators must preserve when deploying the single-user BYOK OSS release of Kestrel.
 
 ## Secure self-hosted defaults
 

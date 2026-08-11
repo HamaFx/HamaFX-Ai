@@ -1,19 +1,19 @@
 ---
 type: module
-package: "@hamafx/worker"
+package: "@kestrel/worker"
 path: "apps/worker/src/persistence/live-ticks.ts"
 incoming: 2
 outgoing: 10
 connections: 12
 risk: low
 layer: core
-tags: [type/module, hamafx-worker, layer/core]
+tags: [type/module, kestrel-worker, layer/core]
 aliases: [live-ticks/LiveTicksWriterArgs]
 ---
 
 # 📁 live-ticks/LiveTicksWriterArgs
 
-> **Module** · `@hamafx/worker` · `apps/worker/src/persistence/live-ticks.ts`
+> **Module** · `@kestrel/worker` · `apps/worker/src/persistence/live-ticks.ts`
 
 
 Module: apps/worker/src/persistence/live-ticks.ts
@@ -28,11 +28,11 @@ Module: apps/worker/src/persistence/live-ticks.ts
 | Total connections | 12 |
 | Risk level | **LOW** |
 | Layer | `core` |
-| Package tag | `#hamafx-worker` |
+| Package tag | `#kestrel-worker` |
 
 
 ### 📤 Depends On (6)
-[[@hamafx-ai]] · [[@hamafx-db]] · [[log-Logger]] · [[consumer-NormalizedTick]] · [[tick-buffer-TickBuffer]] · [[@hamafx-worker]]
+[[@kestrel-ai]] · [[@kestrel-db]] · [[log-Logger]] · [[consumer-NormalizedTick]] · [[tick-buffer-TickBuffer]] · [[@kestrel-worker]]
 
 
 ### 📥 Depended On By (2)
@@ -50,4 +50,4 @@ Module: apps/worker/src/persistence/live-ticks.ts
 - **Local Graph:** Right-click this file → "Open local graph"
 - **Backlinks:** Open the right sidebar → "Backlinks"
 - Use `#type/module` to find all Modules
-- Use `#hamafx-worker` to find all files in this package
+- Use `#kestrel-worker` to find all files in this package

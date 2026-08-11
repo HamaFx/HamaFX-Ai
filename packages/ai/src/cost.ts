@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,13 +26,13 @@
 // Phase A: budget is now per-user. All functions accept `userId` and scope
 // queries to the user's row in `daily_ai_spend` (composite PK: user_id, day).
 
-import { schema, getUserWithSettings } from '@hamafx/db';
+import { schema, getUserWithSettings } from '@kestrel/db';
 import { getDb } from './db';
 import { sql, eq, gte, and } from 'drizzle-orm';
 import { sendDirectNotification } from './alerts/delivery';
 import { buildCatalogRateTable } from './byok-providers';
-import { KNOWN_BYOK_PROVIDERS } from '@hamafx/shared';
-import { createCategorizedLogger } from '@hamafx/shared/logger';
+import { KNOWN_BYOK_PROVIDERS } from '@kestrel/shared';
+import { createCategorizedLogger } from '@kestrel/shared/logger';
 
 interface ModelRate {
   /** USD per 1M input tokens. */
@@ -324,8 +324,8 @@ function triggerSpendAlert(
   config: { email?: boolean; telegram?: boolean },
 ) {
   return triggerAlert(userId, config, {
-    subject: `[HamaFX-Ai] Monthly Budget Alert: ${percentage} Reached`,
-    body: `Your monthly AI spend has reached ${percentage} of your limit.\n\nSpent: $${spent.toFixed(2)} / $${limit.toFixed(2)}\n\n— HamaFX-Ai`,
+    subject: `[Kestrel] Monthly Budget Alert: ${percentage} Reached`,
+    body: `Your monthly AI spend has reached ${percentage} of your limit.\n\nSpent: $${spent.toFixed(2)} / $${limit.toFixed(2)}\n\n— Kestrel`,
   });
 }
 
@@ -337,8 +337,8 @@ function triggerProviderAlert(
   config: { email?: boolean; telegram?: boolean },
 ) {
   return triggerAlert(userId, config, {
-    subject: `[HamaFX-Ai] Provider Threshold Alert: ${providerId}`,
-    body: `Your monthly spend for provider "${providerId}" has exceeded your configured threshold.\n\nSpent: $${spent.toFixed(2)} / $${limit.toFixed(2)}\n\n— HamaFX-Ai`,
+    subject: `[Kestrel] Provider Threshold Alert: ${providerId}`,
+    body: `Your monthly spend for provider "${providerId}" has exceeded your configured threshold.\n\nSpent: $${spent.toFixed(2)} / $${limit.toFixed(2)}\n\n— Kestrel`,
   });
 }
 

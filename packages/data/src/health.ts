@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,7 +36,7 @@
 // DB reads are guarded behind a short cache (10s) so the fast path (single
 // in-memory lookup) is preserved for the steady state.
 
-import { getDb, schema } from '@hamafx/db';
+import { getDb, schema } from '@kestrel/db';
 import { eq, sql } from 'drizzle-orm';
 
 const { providerHealth } = schema;

@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,7 +30,7 @@ import { organization, users } from './auth';
 
 /**
  * Alerts. The `rule` column holds the discriminated-union AlertRule schema
- * (see @hamafx/shared/schemas/alerts) as JSONB so we can evolve rule shapes
+ * (see @kestrel/shared/schemas/alerts) as JSONB so we can evolve rule shapes
  * without migrations.
  *
  * Phase C — UX_UPGRADE_PLAN.md item 17. Snooze support:

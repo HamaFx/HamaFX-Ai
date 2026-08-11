@@ -1,19 +1,19 @@
 ---
 type: module
-package: "@hamafx/ai"
+package: "@kestrel/ai"
 path: "packages/ai/src/eval/runner.ts"
 incoming: 1
 outgoing: 2
 connections: 3
 risk: low
 layer: core
-tags: [type/module, hamafx-ai, layer/core]
+tags: [type/module, kestrel-ai, layer/core]
 aliases: [runner/RunEvalsArgs]
 ---
 
 # 📁 runner/RunEvalsArgs
 
-> **Module** · `@hamafx/ai` · `packages/ai/src/eval/runner.ts`
+> **Module** · `@kestrel/ai` · `packages/ai/src/eval/runner.ts`
 
 
 Module: packages/ai/src/eval/runner.ts
@@ -28,11 +28,11 @@ Module: packages/ai/src/eval/runner.ts
 | Total connections | 3 |
 | Risk level | **LOW** |
 | Layer | `core` |
-| Package tag | `#hamafx-ai` |
+| Package tag | `#kestrel-ai` |
 
 
 ### 📤 Depends On (2)
-[[parse-stream-ParsedToolCall]] · [[@hamafx-ai]]
+[[parse-stream-ParsedToolCall]] · [[@kestrel-ai]]
 
 
 ### 📥 Depended On By (1)
@@ -54,4 +54,4 @@ Module: packages/ai/src/eval/runner.ts
 - **Local Graph:** Right-click this file → "Open local graph"
 - **Backlinks:** Open the right sidebar → "Backlinks"
 - Use `#type/module` to find all Modules
-- Use `#hamafx-ai` to find all files in this package
+- Use `#kestrel-ai` to find all files in this package

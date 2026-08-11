@@ -1,6 +1,6 @@
 // @vitest-environment node
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
  */
 
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { createHamaFxChatTransport } from '@/lib/chat-transport';
+import { createKestrelChatTransport } from '@/lib/chat-transport';
 
 function sseResponse(events: unknown[]): Response {
   const body = events.map((event) => `data: ${JSON.stringify(event)}\n\n`).join('');
@@ -42,13 +42,13 @@ async function readChunks(
   }
 }
 
-describe('createHamaFxChatTransport', () => {
+describe('createKestrelChatTransport', () => {
   afterEach(() => {
     vi.restoreAllMocks();
   });
 
   it('constructs a transport backed by the ai SDK DefaultChatTransport', () => {
-    const transport = createHamaFxChatTransport({ api: '/api/chat' });
+    const transport = createKestrelChatTransport({ api: '/api/chat' });
 
     expect(transport).toBeDefined();
     // The transport should expose the AI SDK chat surface. If the ai SDK
@@ -58,7 +58,7 @@ describe('createHamaFxChatTransport', () => {
   });
 
   it('propagates custom headers through the transport options', () => {
-    const transport = createHamaFxChatTransport({
+    const transport = createKestrelChatTransport({
       api: '/api/chat',
       headers: { 'x-custom': 'value' },
     });
@@ -77,7 +77,7 @@ describe('createHamaFxChatTransport', () => {
       ]),
     );
 
-    const transport = createHamaFxChatTransport({ api: '/api/chat', onAgentProgress: progress });
+    const transport = createKestrelChatTransport({ api: '/api/chat', onAgentProgress: progress });
     const stream = await transport.sendMessages({
       chatId: 'thread-1',
       messages: [],
@@ -97,7 +97,7 @@ describe('createHamaFxChatTransport', () => {
       sseResponse([{ type: 'text-end', id: 'server-message-id' }]),
     );
 
-    const transport = createHamaFxChatTransport({ api: '/api/chat' });
+    const transport = createKestrelChatTransport({ api: '/api/chat' });
     const stream = await transport.sendMessages({
       chatId: 'thread-1',
       messages: [],

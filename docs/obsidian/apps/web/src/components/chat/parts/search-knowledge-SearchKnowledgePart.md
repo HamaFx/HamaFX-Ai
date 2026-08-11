@@ -1,19 +1,19 @@
 ---
 type: component
-package: "@hamafx/web"
+package: "@kestrel/web"
 path: "apps/web/src/components/chat/parts/search-knowledge.tsx"
 incoming: 1
 outgoing: 3
 connections: 4
 risk: low
 layer: ui
-tags: [type/component, hamafx-web, layer/ui]
+tags: [type/component, kestrel-web, layer/ui]
 aliases: [search-knowledge/SearchKnowledgePart]
 ---
 
 # 🧩 search-knowledge/SearchKnowledgePart
 
-> **Component** · `@hamafx/web` · `apps/web/src/components/chat/parts/search-knowledge.tsx`
+> **Component** · `@kestrel/web` · `apps/web/src/components/chat/parts/search-knowledge.tsx`
 
 
 React component: search-knowledge
@@ -28,11 +28,11 @@ React component: search-knowledge
 | Total connections | 4 |
 | Risk level | **LOW** |
 | Layer | `ui` |
-| Package tag | `#hamafx-web` |
+| Package tag | `#kestrel-web` |
 
 
 ### 📤 Depends On (2)
-[[registry-ToolPartState]] · [[@hamafx-web]]
+[[registry-ToolPartState]] · [[@kestrel-web]]
 
 
 ### 📥 Depended On By (1)
@@ -49,4 +49,4 @@ React component: search-knowledge
 - **Local Graph:** Right-click this file → "Open local graph"
 - **Backlinks:** Open the right sidebar → "Backlinks"
 - Use `#type/component` to find all Components
-- Use `#hamafx-web` to find all files in this package
+- Use `#kestrel-web` to find all files in this package

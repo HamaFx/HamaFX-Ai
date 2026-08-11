@@ -1,5 +1,5 @@
 [Unit]
-Description=HamaFX-Ai weekly Docker image prune
+Description=Kestrel weekly Docker image prune
 Documentation=https://github.com/HamaFx/HamaFX-Ai
 
 [Timer]

@@ -1,19 +1,19 @@
 ---
 type: component
-package: "@hamafx/web"
+package: "@kestrel/web"
 path: "apps/web/src/components/layout/page-header.tsx"
 incoming: 0
 outgoing: 1
 connections: 1
 risk: low
 layer: ui
-tags: [type/component, hamafx-web, layer/ui]
+tags: [type/component, kestrel-web, layer/ui]
 aliases: [page-header/PageHeader]
 ---
 
 # 🧩 page-header/PageHeader
 
-> **Component** · `@hamafx/web` · `apps/web/src/components/layout/page-header.tsx`
+> **Component** · `@kestrel/web` · `apps/web/src/components/layout/page-header.tsx`
 
 
 React component: page-header
@@ -28,11 +28,11 @@ React component: page-header
 | Total connections | 1 |
 | Risk level | **LOW** |
 | Layer | `ui` |
-| Package tag | `#hamafx-web` |
+| Package tag | `#kestrel-web` |
 
 
 ### 📤 Depends On (1)
-[[@hamafx-web]]
+[[@kestrel-web]]
 
 
 
@@ -46,4 +46,4 @@ React component: page-header
 - **Local Graph:** Right-click this file → "Open local graph"
 - **Backlinks:** Open the right sidebar → "Backlinks"
 - Use `#type/component` to find all Components
-- Use `#hamafx-web` to find all files in this package
+- Use `#kestrel-web` to find all files in this package

@@ -7,5 +7,5 @@
   "access": "public",
   "baseBranch": "main",
   "updateInternalDependencies": "patch",
-  "ignore": ["@hamafx/web", "@hamafx/worker"]
+  "ignore": ["@kestrel/web", "@kestrel/worker"]
 }

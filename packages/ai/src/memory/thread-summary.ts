@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,9 +37,9 @@
 // a known set of messages changed. MD5 is ~2x faster than SHA-256.
 import { createHash } from 'node:crypto';
 
-import { schema } from '@hamafx/db';
+import { schema } from '@kestrel/db';
 import { getDb } from '../db';
-import type { ServerEnv } from '@hamafx/shared';
+import type { ServerEnv } from '@kestrel/shared';
 import { generateText } from 'ai';
 import { and, desc, eq } from 'drizzle-orm';
 

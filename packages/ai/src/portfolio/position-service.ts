@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@
 // CRUD for portfolio_positions and portfolio_settings tables.
 // Row ↔ domain object mapping follows the same pattern as decision-signals.
 
-import { schema } from '@hamafx/db';
+import { schema } from '@kestrel/db';
 import { getDb } from '../db';
 import { and, desc, eq } from 'drizzle-orm';
 
@@ -30,7 +30,7 @@ import type {
   PositionStatus,
   CreatePositionInput,
   ClosePositionInput,
-} from '@hamafx/shared';
+} from '@kestrel/shared';
 
 // ---------------------------------------------------------------------------
 // Position CRUD

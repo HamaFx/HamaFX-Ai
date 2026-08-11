@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,10 +16,10 @@
 
 // Multi-Agent Orchestration — opinion persistence.
 
-import { schema } from '@hamafx/db';
+import { schema } from '@kestrel/db';
 import { getDb } from '../db';
 import { and, asc, eq } from 'drizzle-orm';
-import type { AgentOpinionRow } from '@hamafx/db/schema';
+import type { AgentOpinionRow } from '@kestrel/db/schema';
 
 export interface SaveOpinionsArgs {
   userId: string;

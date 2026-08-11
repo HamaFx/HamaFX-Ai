@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,8 +20,8 @@
 // CTA is the size-lg primary button so it sits in the thumb zone of the
 // drawer.
 
-import { JournalEntrySchema, SYMBOLS, type Symbol, type TradeSide } from '@hamafx/shared';
-import type { JournalEntry } from '@hamafx/shared';
+import { JournalEntrySchema, SYMBOLS, type Symbol, type TradeSide } from '@kestrel/shared';
+import type { JournalEntry } from '@kestrel/shared';
 import { useQuery } from '@tanstack/react-query';
 import Image from 'next/image';
 import { useState, useMemo } from 'react';

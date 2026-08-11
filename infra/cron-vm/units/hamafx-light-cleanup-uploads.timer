@@ -1,5 +1,5 @@
 [Unit]
-Description=HamaFX-Ai — daily chat-image cleanup timer
+Description=Kestrel — daily chat-image cleanup timer
 
 [Timer]
 # Run once per day at 03:00 UTC (off-peak).

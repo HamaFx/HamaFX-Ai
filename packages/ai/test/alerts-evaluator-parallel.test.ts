@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,15 +19,15 @@
 // We mock `getPrice` / `getCandles` with controllable delays and assert
 // that wall-time scales as max(rule_latency) rather than sum(rule_latency).
 
-import type { Tick } from '@hamafx/shared';
+import type { Tick } from '@kestrel/shared';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-vi.mock('@hamafx/data', () => ({
+vi.mock('@kestrel/data', () => ({
   getPrice: vi.fn(),
   getCandles: vi.fn(),
 }));
 
-vi.mock('@hamafx/db', () => ({
+vi.mock('@kestrel/db', () => ({
   getDb: () => ({
     update: () => ({ set: () => ({ where: () => Promise.resolve([]) }) }),
     // Phase A: the evaluator now joins users + userSettings to pull per-user
@@ -73,7 +73,7 @@ vi.mock('../src/alerts/delivery', () => ({
   })),
 }));
 
-import { getCandles, getPrice } from '@hamafx/data';
+import { getCandles, getPrice } from '@kestrel/data';
 
 import { evaluateAlerts } from '../src/alerts/evaluator';
 import { listEvaluable } from '../src/alerts/persistence';

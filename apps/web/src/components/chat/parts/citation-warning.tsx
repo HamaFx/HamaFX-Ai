@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,7 +32,7 @@
 import {IconQuote, IconChevronDown, IconChevronRight, IconCheck, IconX} from '@tabler/icons-react';
 import { useId, useState } from 'react';
 
-import type { CitationWarningPart } from '@hamafx/shared';
+import type { CitationWarningPart } from '@kestrel/shared';
 
 import { Card } from '@/components/ui/card';
 

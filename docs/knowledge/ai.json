@@ -4,7 +4,7 @@
   "tools": [
     {
       "name": "analyze_chart_image",
-      "description": "Copyright 2026 HamaFX",
+      "description": "Copyright 2026 Kestrel",
       "file": "packages/ai/src/tools/analyze-chart-image.ts"
     },
     {
@@ -29,7 +29,7 @@
     },
     {
       "name": "compute_risk",
-      "description": "Copyright 2026 HamaFX",
+      "description": "Copyright 2026 Kestrel",
       "file": "packages/ai/src/tools/compute-risk.ts"
     },
     {
@@ -39,12 +39,12 @@
     },
     {
       "name": "forecast_volatility",
-      "description": "Copyright 2026 HamaFX",
+      "description": "Copyright 2026 Kestrel",
       "file": "packages/ai/src/tools/forecast-volatility.ts"
     },
     {
       "name": "get_calendar",
-      "description": "Copyright 2026 HamaFX",
+      "description": "Copyright 2026 Kestrel",
       "file": "packages/ai/src/tools/get-calendar.ts"
     },
     {
@@ -79,17 +79,17 @@
     },
     {
       "name": "get_journal_stats",
-      "description": "Copyright 2026 HamaFX",
+      "description": "Copyright 2026 Kestrel",
       "file": "packages/ai/src/tools/get-journal-stats.ts"
     },
     {
       "name": "get_market_structure",
-      "description": "Copyright 2026 HamaFX",
+      "description": "Copyright 2026 Kestrel",
       "file": "packages/ai/src/tools/get-market-structure.ts"
     },
     {
       "name": "get_news",
-      "description": "Copyright 2026 HamaFX",
+      "description": "Copyright 2026 Kestrel",
       "file": "packages/ai/src/tools/get-news.ts"
     },
     {
@@ -99,7 +99,7 @@
     },
     {
       "name": "get_price",
-      "description": "Copyright 2026 HamaFX",
+      "description": "Copyright 2026 Kestrel",
       "file": "packages/ai/src/tools/get-price.ts"
     },
     {
@@ -114,7 +114,7 @@
     },
     {
       "name": "get_social_sentiment",
-      "description": "Copyright 2026 HamaFX",
+      "description": "Copyright 2026 Kestrel",
       "file": "packages/ai/src/tools/get-social-sentiment.ts"
     },
     {
@@ -129,7 +129,7 @@
     },
     {
       "name": "replay_setup",
-      "description": "Copyright 2026 HamaFX",
+      "description": "Copyright 2026 Kestrel",
       "file": "packages/ai/src/tools/replay-setup.ts"
     },
     {
@@ -139,7 +139,7 @@
     },
     {
       "name": "search_knowledge",
-      "description": "Copyright 2026 HamaFX",
+      "description": "Copyright 2026 Kestrel",
       "file": "packages/ai/src/tools/search-knowledge.ts"
     },
     {
@@ -149,7 +149,7 @@
     },
     {
       "name": "share_snapshot",
-      "description": "Copyright 2026 HamaFX",
+      "description": "Copyright 2026 Kestrel",
       "file": "packages/ai/src/tools/share-snapshot.ts"
     },
     {
@@ -159,7 +159,7 @@
     },
     {
       "name": "verify_call",
-      "description": "Copyright 2026 HamaFX",
+      "description": "Copyright 2026 Kestrel",
       "file": "packages/ai/src/tools/verify-call.ts"
     }
   ],

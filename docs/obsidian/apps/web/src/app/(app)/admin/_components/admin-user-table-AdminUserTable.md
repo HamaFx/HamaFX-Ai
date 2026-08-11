@@ -1,19 +1,19 @@
 ---
 type: module
-package: "@hamafx/web"
+package: "@kestrel/web"
 path: "apps/web/src/app/(app)/admin/_components/admin-user-table.tsx"
 incoming: 0
 outgoing: 2
 connections: 2
 risk: low
 layer: core
-tags: [type/module, hamafx-web, layer/core]
+tags: [type/module, kestrel-web, layer/core]
 aliases: [admin-user-table/AdminUserTable]
 ---
 
 # 📁 admin-user-table/AdminUserTable
 
-> **Module** · `@hamafx/web` · `apps/web/src/app/(app)/admin/_components/admin-user-table.tsx`
+> **Module** · `@kestrel/web` · `apps/web/src/app/(app)/admin/_components/admin-user-table.tsx`
 
 
 Module: apps/web/src/app/(app)/admin/_components/admin-user-table.tsx
@@ -28,11 +28,11 @@ Module: apps/web/src/app/(app)/admin/_components/admin-user-table.tsx
 | Total connections | 2 |
 | Risk level | **LOW** |
 | Layer | `core` |
-| Package tag | `#hamafx-web` |
+| Package tag | `#kestrel-web` |
 
 
 ### 📤 Depends On (2)
-[[admin-error-block-AdminErrorBlock]] · [[@hamafx-web]]
+[[admin-error-block-AdminErrorBlock]] · [[@kestrel-web]]
 
 
 
@@ -46,4 +46,4 @@ Module: apps/web/src/app/(app)/admin/_components/admin-user-table.tsx
 - **Local Graph:** Right-click this file → "Open local graph"
 - **Backlinks:** Open the right sidebar → "Backlinks"
 - Use `#type/module` to find all Modules
-- Use `#hamafx-web` to find all files in this package
+- Use `#kestrel-web` to find all files in this package

@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@
 // NFP?" and to render an upcoming-events list. Forecast/actual lookup is a
 // follow-up that pulls from `/fred/series/observations` after release.
 
-import { EconomicEventSchema, type EconomicEvent } from '@hamafx/shared';
+import { EconomicEventSchema, type EconomicEvent } from '@kestrel/shared';
 
 import { ProviderError } from '../errors';
 import { fetchReleaseDates, FRED_RELEASES, fredMeta } from '../providers/fred';

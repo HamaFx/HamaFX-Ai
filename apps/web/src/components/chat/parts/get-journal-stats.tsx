@@ -5,7 +5,7 @@
 // Server component. Renders the global stats card + top-3 list per
 // breakdown. Empty stats render a quiet "no trades" card.
 
-import type { StatBreakdown } from '@hamafx/shared';
+import type { StatBreakdown } from '@kestrel/shared';
 import { Link } from 'next-view-transitions';
 
 import type { ToolPartProps } from './registry';

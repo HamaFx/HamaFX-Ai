@@ -14,7 +14,7 @@
         "createdAt"
       ],
       "schema_file": "packages/db/src/schema/admin-audit.ts",
-      "package": "@hamafx/db"
+      "package": "@kestrel/db"
     },
     {
       "name": "agent_opinions",
@@ -36,7 +36,7 @@
         "createdAt"
       ],
       "schema_file": "packages/db/src/schema/agent-opinions.ts",
-      "package": "@hamafx/db"
+      "package": "@kestrel/db"
     },
     {
       "name": "alerts",
@@ -54,7 +54,7 @@
         "createdAt"
       ],
       "schema_file": "packages/db/src/schema/alerts.ts",
-      "package": "@hamafx/db"
+      "package": "@kestrel/db"
     },
     {
       "name": "analysis_jobs",
@@ -82,7 +82,7 @@
         "columns"
       ],
       "schema_file": "packages/db/src/schema/analysis-jobs.ts",
-      "package": "@hamafx/db"
+      "package": "@kestrel/db"
     },
     {
       "name": "audit_logs",
@@ -95,7 +95,7 @@
         "createdAt"
       ],
       "schema_file": "packages/db/src/schema/audit.ts",
-      "package": "@hamafx/db"
+      "package": "@kestrel/db"
     },
     {
       "name": "user",
@@ -149,7 +149,7 @@
         "expires"
       ],
       "schema_file": "packages/db/src/schema/auth.ts",
-      "package": "@hamafx/db"
+      "package": "@kestrel/db"
     },
     {
       "name": "organization",
@@ -198,7 +198,7 @@
         "alertEmail"
       ],
       "schema_file": "packages/db/src/schema/auth.ts",
-      "package": "@hamafx/db"
+      "package": "@kestrel/db"
     },
     {
       "name": "organization_member",
@@ -243,7 +243,7 @@
         "aiApiKeys"
       ],
       "schema_file": "packages/db/src/schema/auth.ts",
-      "package": "@hamafx/db"
+      "package": "@kestrel/db"
     },
     {
       "name": "user_sessions",
@@ -287,7 +287,7 @@
         "visionModel"
       ],
       "schema_file": "packages/db/src/schema/auth.ts",
-      "package": "@hamafx/db"
+      "package": "@kestrel/db"
     },
     {
       "name": "account",
@@ -331,7 +331,7 @@
         "spendAlertsState"
       ],
       "schema_file": "packages/db/src/schema/auth.ts",
-      "package": "@hamafx/db"
+      "package": "@kestrel/db"
     },
     {
       "name": "session",
@@ -372,7 +372,7 @@
         "disabledTools"
       ],
       "schema_file": "packages/db/src/schema/auth.ts",
-      "package": "@hamafx/db"
+      "package": "@kestrel/db"
     },
     {
       "name": "verificationToken",
@@ -412,7 +412,7 @@
         "onboardingProgress"
       ],
       "schema_file": "packages/db/src/schema/auth.ts",
-      "package": "@hamafx/db"
+      "package": "@kestrel/db"
     },
     {
       "name": "user_settings",
@@ -451,7 +451,7 @@
         "agentModelOverrides"
       ],
       "schema_file": "packages/db/src/schema/auth.ts",
-      "package": "@hamafx/db"
+      "package": "@kestrel/db"
     },
     {
       "name": "user_symbols",
@@ -463,7 +463,7 @@
         "addedAt"
       ],
       "schema_file": "packages/db/src/schema/auth.ts",
-      "package": "@hamafx/db"
+      "package": "@kestrel/db"
     },
     {
       "name": "plans",
@@ -508,7 +508,7 @@
         "nowpaymentsPaymentId"
       ],
       "schema_file": "packages/db/src/schema/billing.ts",
-      "package": "@hamafx/db"
+      "package": "@kestrel/db"
     },
     {
       "name": "subscriptions",
@@ -552,7 +552,7 @@
         "id"
       ],
       "schema_file": "packages/db/src/schema/billing.ts",
-      "package": "@hamafx/db"
+      "package": "@kestrel/db"
     },
     {
       "name": "payments",
@@ -606,7 +606,7 @@
         "createdAt"
       ],
       "schema_file": "packages/db/src/schema/billing.ts",
-      "package": "@hamafx/db"
+      "package": "@kestrel/db"
     },
     {
       "name": "ipn_events",
@@ -647,7 +647,7 @@
         "updatedAt"
       ],
       "schema_file": "packages/db/src/schema/billing.ts",
-      "package": "@hamafx/db"
+      "package": "@kestrel/db"
     },
     {
       "name": "billing_webhook_dlq",
@@ -677,7 +677,7 @@
         "updatedAt"
       ],
       "schema_file": "packages/db/src/schema/billing.ts",
-      "package": "@hamafx/db"
+      "package": "@kestrel/db"
     },
     {
       "name": "billing_checkout_attempts",
@@ -696,7 +696,7 @@
         "updatedAt"
       ],
       "schema_file": "packages/db/src/schema/billing.ts",
-      "package": "@hamafx/db"
+      "package": "@kestrel/db"
     },
     {
       "name": "bot_links",
@@ -708,7 +708,7 @@
         "linkedAt"
       ],
       "schema_file": "packages/db/src/schema/bot-links.ts",
-      "package": "@hamafx/db"
+      "package": "@kestrel/db"
     },
     {
       "name": "briefings_emitted",
@@ -721,7 +721,7 @@
         "createdAt"
       ],
       "schema_file": "packages/db/src/schema/briefings.ts",
-      "package": "@hamafx/db"
+      "package": "@kestrel/db"
     },
     {
       "name": "economic_events",
@@ -742,7 +742,7 @@
         "createdAt"
       ],
       "schema_file": "packages/db/src/schema/calendar.ts",
-      "package": "@hamafx/db"
+      "package": "@kestrel/db"
     },
     {
       "name": "candles_1m",
@@ -760,7 +760,7 @@
         "createdAt"
       ],
       "schema_file": "packages/db/src/schema/candles-1m.ts",
-      "package": "@hamafx/db"
+      "package": "@kestrel/db"
     },
     {
       "name": "chat_threads",
@@ -785,7 +785,7 @@
         "createdAt"
       ],
       "schema_file": "packages/db/src/schema/chat.ts",
-      "package": "@hamafx/db"
+      "package": "@kestrel/db"
     },
     {
       "name": "chat_messages",
@@ -799,7 +799,7 @@
         "createdAt"
       ],
       "schema_file": "packages/db/src/schema/chat.ts",
-      "package": "@hamafx/db"
+      "package": "@kestrel/db"
     },
     {
       "name": "cot_reports",
@@ -821,7 +821,7 @@
         "createdAt"
       ],
       "schema_file": "packages/db/src/schema/cot.ts",
-      "package": "@hamafx/db"
+      "package": "@kestrel/db"
     },
     {
       "name": "cron_runs",
@@ -835,7 +835,7 @@
         "finishedAt"
       ],
       "schema_file": "packages/db/src/schema/cron-runs.ts",
-      "package": "@hamafx/db"
+      "package": "@kestrel/db"
     },
     {
       "name": "daily_ai_spend",
@@ -846,7 +846,7 @@
         "totalUsdCents"
       ],
       "schema_file": "packages/db/src/schema/daily-ai-spend.ts",
-      "package": "@hamafx/db"
+      "package": "@kestrel/db"
     },
     {
       "name": "diagnostic_traces",
@@ -865,7 +865,7 @@
         "createdAt"
       ],
       "schema_file": "packages/db/src/schema/diagnostic-traces.ts",
-      "package": "@hamafx/db"
+      "package": "@kestrel/db"
     },
     {
       "name": "feature_flags",
@@ -876,7 +876,7 @@
         "updatedBy"
       ],
       "schema_file": "packages/db/src/schema/feature-flags.ts",
-      "package": "@hamafx/db"
+      "package": "@kestrel/db"
     },
     {
       "name": "intermarket_resonance",
@@ -891,7 +891,7 @@
         "createdAt"
       ],
       "schema_file": "packages/db/src/schema/intermarket-resonance.ts",
-      "package": "@hamafx/db"
+      "package": "@kestrel/db"
     },
     {
       "name": "journal_entries",
@@ -919,7 +919,7 @@
         "updatedAt"
       ],
       "schema_file": "packages/db/src/schema/journal.ts",
-      "package": "@hamafx/db"
+      "package": "@kestrel/db"
     },
     {
       "name": "live_ticks",
@@ -934,7 +934,7 @@
         "updatedAt"
       ],
       "schema_file": "packages/db/src/schema/live-ticks.ts",
-      "package": "@hamafx/db"
+      "package": "@kestrel/db"
     },
     {
       "name": "memory_embeddings",
@@ -953,7 +953,7 @@
         "createdAt"
       ],
       "schema_file": "packages/db/src/schema/memory.ts",
-      "package": "@hamafx/db"
+      "package": "@kestrel/db"
     },
     {
       "name": "news_articles",
@@ -978,7 +978,7 @@
         "createdAt"
       ],
       "schema_file": "packages/db/src/schema/news.ts",
-      "package": "@hamafx/db"
+      "package": "@kestrel/db"
     },
     {
       "name": "news_embeddings",
@@ -990,7 +990,7 @@
         "createdAt"
       ],
       "schema_file": "packages/db/src/schema/news.ts",
-      "package": "@hamafx/db"
+      "package": "@kestrel/db"
     },
     {
       "name": "notification_noise_state",
@@ -1003,7 +1003,7 @@
         "expiresAt"
       ],
       "schema_file": "packages/db/src/schema/noise-control.ts",
-      "package": "@hamafx/db"
+      "package": "@kestrel/db"
     },
     {
       "name": "portfolio_positions",
@@ -1034,7 +1034,7 @@
         "updatedAt"
       ],
       "schema_file": "packages/db/src/schema/portfolio.ts",
-      "package": "@hamafx/db"
+      "package": "@kestrel/db"
     },
     {
       "name": "portfolio_settings",
@@ -1048,7 +1048,7 @@
         "updatedAt"
       ],
       "schema_file": "packages/db/src/schema/portfolio.ts",
-      "package": "@hamafx/db"
+      "package": "@kestrel/db"
     },
     {
       "name": "provider_daily_quota",
@@ -1058,7 +1058,7 @@
         "count"
       ],
       "schema_file": "packages/db/src/schema/provider-daily-quota.ts",
-      "package": "@hamafx/db"
+      "package": "@kestrel/db"
     },
     {
       "name": "provider_health",
@@ -1070,7 +1070,7 @@
         "updatedAt"
       ],
       "schema_file": "packages/db/src/schema/provider-health.ts",
-      "package": "@hamafx/db"
+      "package": "@kestrel/db"
     },
     {
       "name": "provider_tests",
@@ -1084,7 +1084,7 @@
         "rateLimit"
       ],
       "schema_file": "packages/db/src/schema/provider-tests.ts",
-      "package": "@hamafx/db"
+      "package": "@kestrel/db"
     },
     {
       "name": "push_subscriptions",
@@ -1099,7 +1099,7 @@
         "createdAt"
       ],
       "schema_file": "packages/db/src/schema/push.ts",
-      "package": "@hamafx/db"
+      "package": "@kestrel/db"
     },
     {
       "name": "rate_limits",
@@ -1111,7 +1111,7 @@
         "requestCount"
       ],
       "schema_file": "packages/db/src/schema/rate-limits.ts",
-      "package": "@hamafx/db"
+      "package": "@kestrel/db"
     },
     {
       "name": "shared_snapshots",
@@ -1128,7 +1128,7 @@
         "createdAt"
       ],
       "schema_file": "packages/db/src/schema/share.ts",
-      "package": "@hamafx/db"
+      "package": "@kestrel/db"
     },
     {
       "name": "snapshots",
@@ -1142,7 +1142,7 @@
         "createdAt"
       ],
       "schema_file": "packages/db/src/schema/snapshots.ts",
-      "package": "@hamafx/db"
+      "package": "@kestrel/db"
     },
     {
       "name": "symbol_catalog",
@@ -1164,7 +1164,7 @@
         "tenantId"
       ],
       "schema_file": "packages/db/src/schema/symbol-catalog.ts",
-      "package": "@hamafx/db"
+      "package": "@kestrel/db"
     },
     {
       "name": "telegram_updates",
@@ -1173,7 +1173,7 @@
         "processedAt"
       ],
       "schema_file": "packages/db/src/schema/telegram-updates.ts",
-      "package": "@hamafx/db"
+      "package": "@kestrel/db"
     },
     {
       "name": "chat_telemetry",
@@ -1193,7 +1193,7 @@
         "createdAt"
       ],
       "schema_file": "packages/db/src/schema/telemetry.ts",
-      "package": "@hamafx/db"
+      "package": "@kestrel/db"
     },
     {
       "name": "provider_throttle",
@@ -1204,7 +1204,7 @@
         "backoffUntil"
       ],
       "schema_file": "packages/db/src/schema/throttle.ts",
-      "package": "@hamafx/db"
+      "package": "@kestrel/db"
     },
     {
       "name": "chat_tool_telemetry",
@@ -1222,7 +1222,7 @@
         "createdAt"
       ],
       "schema_file": "packages/db/src/schema/tool-telemetry.ts",
-      "package": "@hamafx/db"
+      "package": "@kestrel/db"
     }
   ],
   "tables_by_schema_file": {
@@ -1239,7 +1239,7 @@
           "createdAt"
         ],
         "schema_file": "packages/db/src/schema/admin-audit.ts",
-        "package": "@hamafx/db"
+        "package": "@kestrel/db"
       }
     ],
     "packages/db/src/schema/agent-opinions.ts": [
@@ -1263,7 +1263,7 @@
           "createdAt"
         ],
         "schema_file": "packages/db/src/schema/agent-opinions.ts",
-        "package": "@hamafx/db"
+        "package": "@kestrel/db"
       }
     ],
     "packages/db/src/schema/alerts.ts": [
@@ -1283,7 +1283,7 @@
           "createdAt"
         ],
         "schema_file": "packages/db/src/schema/alerts.ts",
-        "package": "@hamafx/db"
+        "package": "@kestrel/db"
       }
     ],
     "packages/db/src/schema/analysis-jobs.ts": [
@@ -1313,7 +1313,7 @@
           "columns"
         ],
         "schema_file": "packages/db/src/schema/analysis-jobs.ts",
-        "package": "@hamafx/db"
+        "package": "@kestrel/db"
       }
     ],
     "packages/db/src/schema/audit.ts": [
@@ -1328,7 +1328,7 @@
           "createdAt"
         ],
         "schema_file": "packages/db/src/schema/audit.ts",
-        "package": "@hamafx/db"
+        "package": "@kestrel/db"
       }
     ],
     "packages/db/src/schema/auth.ts": [
@@ -1384,7 +1384,7 @@
           "expires"
         ],
         "schema_file": "packages/db/src/schema/auth.ts",
-        "package": "@hamafx/db"
+        "package": "@kestrel/db"
       },
       {
         "name": "organization",
@@ -1433,7 +1433,7 @@
           "alertEmail"
         ],
         "schema_file": "packages/db/src/schema/auth.ts",
-        "package": "@hamafx/db"
+        "package": "@kestrel/db"
       },
       {
         "name": "organization_member",
@@ -1478,7 +1478,7 @@
           "aiApiKeys"
         ],
         "schema_file": "packages/db/src/schema/auth.ts",
-        "package": "@hamafx/db"
+        "package": "@kestrel/db"
       },
       {
         "name": "user_sessions",
@@ -1522,7 +1522,7 @@
           "visionModel"
         ],
         "schema_file": "packages/db/src/schema/auth.ts",
-        "package": "@hamafx/db"
+        "package": "@kestrel/db"
       },
       {
         "name": "account",
@@ -1566,7 +1566,7 @@
           "spendAlertsState"
         ],
         "schema_file": "packages/db/src/schema/auth.ts",
-        "package": "@hamafx/db"
+        "package": "@kestrel/db"
       },
       {
         "name": "session",
@@ -1607,7 +1607,7 @@
           "disabledTools"
         ],
         "schema_file": "packages/db/src/schema/auth.ts",
-        "package": "@hamafx/db"
+        "package": "@kestrel/db"
       },
       {
         "name": "verificationToken",
@@ -1647,7 +1647,7 @@
           "onboardingProgress"
         ],
         "schema_file": "packages/db/src/schema/auth.ts",
-        "package": "@hamafx/db"
+        "package": "@kestrel/db"
       },
       {
         "name": "user_settings",
@@ -1686,7 +1686,7 @@
           "agentModelOverrides"
         ],
         "schema_file": "packages/db/src/schema/auth.ts",
-        "package": "@hamafx/db"
+        "package": "@kestrel/db"
       },
       {
         "name": "user_symbols",
@@ -1698,7 +1698,7 @@
           "addedAt"
         ],
         "schema_file": "packages/db/src/schema/auth.ts",
-        "package": "@hamafx/db"
+        "package": "@kestrel/db"
       }
     ],
     "packages/db/src/schema/billing.ts": [
@@ -1745,7 +1745,7 @@
           "nowpaymentsPaymentId"
         ],
         "schema_file": "packages/db/src/schema/billing.ts",
-        "package": "@hamafx/db"
+        "package": "@kestrel/db"
       },
       {
         "name": "subscriptions",
@@ -1789,7 +1789,7 @@
           "id"
         ],
         "schema_file": "packages/db/src/schema/billing.ts",
-        "package": "@hamafx/db"
+        "package": "@kestrel/db"
       },
       {
         "name": "payments",
@@ -1843,7 +1843,7 @@
           "createdAt"
         ],
         "schema_file": "packages/db/src/schema/billing.ts",
-        "package": "@hamafx/db"
+        "package": "@kestrel/db"
       },
       {
         "name": "ipn_events",
@@ -1884,7 +1884,7 @@
           "updatedAt"
         ],
         "schema_file": "packages/db/src/schema/billing.ts",
-        "package": "@hamafx/db"
+        "package": "@kestrel/db"
       },
       {
         "name": "billing_webhook_dlq",
@@ -1914,7 +1914,7 @@
           "updatedAt"
         ],
         "schema_file": "packages/db/src/schema/billing.ts",
-        "package": "@hamafx/db"
+        "package": "@kestrel/db"
       },
       {
         "name": "billing_checkout_attempts",
@@ -1933,7 +1933,7 @@
           "updatedAt"
         ],
         "schema_file": "packages/db/src/schema/billing.ts",
-        "package": "@hamafx/db"
+        "package": "@kestrel/db"
       }
     ],
     "packages/db/src/schema/bot-links.ts": [
@@ -1947,7 +1947,7 @@
           "linkedAt"
         ],
         "schema_file": "packages/db/src/schema/bot-links.ts",
-        "package": "@hamafx/db"
+        "package": "@kestrel/db"
       }
     ],
     "packages/db/src/schema/briefings.ts": [
@@ -1962,7 +1962,7 @@
           "createdAt"
         ],
         "schema_file": "packages/db/src/schema/briefings.ts",
-        "package": "@hamafx/db"
+        "package": "@kestrel/db"
       }
     ],
     "packages/db/src/schema/calendar.ts": [
@@ -1985,7 +1985,7 @@
           "createdAt"
         ],
         "schema_file": "packages/db/src/schema/calendar.ts",
-        "package": "@hamafx/db"
+        "package": "@kestrel/db"
       }
     ],
     "packages/db/src/schema/candles-1m.ts": [
@@ -2005,7 +2005,7 @@
           "createdAt"
         ],
         "schema_file": "packages/db/src/schema/candles-1m.ts",
-        "package": "@hamafx/db"
+        "package": "@kestrel/db"
       }
     ],
     "packages/db/src/schema/chat.ts": [
@@ -2032,7 +2032,7 @@
           "createdAt"
         ],
         "schema_file": "packages/db/src/schema/chat.ts",
-        "package": "@hamafx/db"
+        "package": "@kestrel/db"
       },
       {
         "name": "chat_messages",
@@ -2046,7 +2046,7 @@
           "createdAt"
         ],
         "schema_file": "packages/db/src/schema/chat.ts",
-        "package": "@hamafx/db"
+        "package": "@kestrel/db"
       }
     ],
     "packages/db/src/schema/cot.ts": [
@@ -2070,7 +2070,7 @@
           "createdAt"
         ],
         "schema_file": "packages/db/src/schema/cot.ts",
-        "package": "@hamafx/db"
+        "package": "@kestrel/db"
       }
     ],
     "packages/db/src/schema/cron-runs.ts": [
@@ -2086,7 +2086,7 @@
           "finishedAt"
         ],
         "schema_file": "packages/db/src/schema/cron-runs.ts",
-        "package": "@hamafx/db"
+        "package": "@kestrel/db"
       }
     ],
     "packages/db/src/schema/daily-ai-spend.ts": [
@@ -2099,7 +2099,7 @@
           "totalUsdCents"
         ],
         "schema_file": "packages/db/src/schema/daily-ai-spend.ts",
-        "package": "@hamafx/db"
+        "package": "@kestrel/db"
       }
     ],
     "packages/db/src/schema/diagnostic-traces.ts": [
@@ -2120,7 +2120,7 @@
           "createdAt"
         ],
         "schema_file": "packages/db/src/schema/diagnostic-traces.ts",
-        "package": "@hamafx/db"
+        "package": "@kestrel/db"
       }
     ],
     "packages/db/src/schema/feature-flags.ts": [
@@ -2133,7 +2133,7 @@
           "updatedBy"
         ],
         "schema_file": "packages/db/src/schema/feature-flags.ts",
-        "package": "@hamafx/db"
+        "package": "@kestrel/db"
       }
     ],
     "packages/db/src/schema/intermarket-resonance.ts": [
@@ -2150,7 +2150,7 @@
           "createdAt"
         ],
         "schema_file": "packages/db/src/schema/intermarket-resonance.ts",
-        "package": "@hamafx/db"
+        "package": "@kestrel/db"
       }
     ],
     "packages/db/src/schema/journal.ts": [
@@ -2180,7 +2180,7 @@
           "updatedAt"
         ],
         "schema_file": "packages/db/src/schema/journal.ts",
-        "package": "@hamafx/db"
+        "package": "@kestrel/db"
       }
     ],
     "packages/db/src/schema/live-ticks.ts": [
@@ -2197,7 +2197,7 @@
           "updatedAt"
         ],
         "schema_file": "packages/db/src/schema/live-ticks.ts",
-        "package": "@hamafx/db"
+        "package": "@kestrel/db"
       }
     ],
     "packages/db/src/schema/memory.ts": [
@@ -2218,7 +2218,7 @@
           "createdAt"
         ],
         "schema_file": "packages/db/src/schema/memory.ts",
-        "package": "@hamafx/db"
+        "package": "@kestrel/db"
       }
     ],
     "packages/db/src/schema/news.ts": [
@@ -2245,7 +2245,7 @@
           "createdAt"
         ],
         "schema_file": "packages/db/src/schema/news.ts",
-        "package": "@hamafx/db"
+        "package": "@kestrel/db"
       },
       {
         "name": "news_embeddings",
@@ -2257,7 +2257,7 @@
           "createdAt"
         ],
         "schema_file": "packages/db/src/schema/news.ts",
-        "package": "@hamafx/db"
+        "package": "@kestrel/db"
       }
     ],
     "packages/db/src/schema/noise-control.ts": [
@@ -2272,7 +2272,7 @@
           "expiresAt"
         ],
         "schema_file": "packages/db/src/schema/noise-control.ts",
-        "package": "@hamafx/db"
+        "package": "@kestrel/db"
       }
     ],
     "packages/db/src/schema/portfolio.ts": [
@@ -2305,7 +2305,7 @@
           "updatedAt"
         ],
         "schema_file": "packages/db/src/schema/portfolio.ts",
-        "package": "@hamafx/db"
+        "package": "@kestrel/db"
       },
       {
         "name": "portfolio_settings",
@@ -2319,7 +2319,7 @@
           "updatedAt"
         ],
         "schema_file": "packages/db/src/schema/portfolio.ts",
-        "package": "@hamafx/db"
+        "package": "@kestrel/db"
       }
     ],
     "packages/db/src/schema/provider-daily-quota.ts": [
@@ -2331,7 +2331,7 @@
           "count"
         ],
         "schema_file": "packages/db/src/schema/provider-daily-quota.ts",
-        "package": "@hamafx/db"
+        "package": "@kestrel/db"
       }
     ],
     "packages/db/src/schema/provider-health.ts": [
@@ -2345,7 +2345,7 @@
           "updatedAt"
         ],
         "schema_file": "packages/db/src/schema/provider-health.ts",
-        "package": "@hamafx/db"
+        "package": "@kestrel/db"
       }
     ],
     "packages/db/src/schema/provider-tests.ts": [
@@ -2361,7 +2361,7 @@
           "rateLimit"
         ],
         "schema_file": "packages/db/src/schema/provider-tests.ts",
-        "package": "@hamafx/db"
+        "package": "@kestrel/db"
       }
     ],
     "packages/db/src/schema/push.ts": [
@@ -2378,7 +2378,7 @@
           "createdAt"
         ],
         "schema_file": "packages/db/src/schema/push.ts",
-        "package": "@hamafx/db"
+        "package": "@kestrel/db"
       }
     ],
     "packages/db/src/schema/rate-limits.ts": [
@@ -2392,7 +2392,7 @@
           "requestCount"
         ],
         "schema_file": "packages/db/src/schema/rate-limits.ts",
-        "package": "@hamafx/db"
+        "package": "@kestrel/db"
       }
     ],
     "packages/db/src/schema/share.ts": [
@@ -2411,7 +2411,7 @@
           "createdAt"
         ],
         "schema_file": "packages/db/src/schema/share.ts",
-        "package": "@hamafx/db"
+        "package": "@kestrel/db"
       }
     ],
     "packages/db/src/schema/snapshots.ts": [
@@ -2427,7 +2427,7 @@
           "createdAt"
         ],
         "schema_file": "packages/db/src/schema/snapshots.ts",
-        "package": "@hamafx/db"
+        "package": "@kestrel/db"
       }
     ],
     "packages/db/src/schema/symbol-catalog.ts": [
@@ -2451,7 +2451,7 @@
           "tenantId"
         ],
         "schema_file": "packages/db/src/schema/symbol-catalog.ts",
-        "package": "@hamafx/db"
+        "package": "@kestrel/db"
       }
     ],
     "packages/db/src/schema/telegram-updates.ts": [
@@ -2462,7 +2462,7 @@
           "processedAt"
         ],
         "schema_file": "packages/db/src/schema/telegram-updates.ts",
-        "package": "@hamafx/db"
+        "package": "@kestrel/db"
       }
     ],
     "packages/db/src/schema/telemetry.ts": [
@@ -2484,7 +2484,7 @@
           "createdAt"
         ],
         "schema_file": "packages/db/src/schema/telemetry.ts",
-        "package": "@hamafx/db"
+        "package": "@kestrel/db"
       }
     ],
     "packages/db/src/schema/throttle.ts": [
@@ -2497,7 +2497,7 @@
           "backoffUntil"
         ],
         "schema_file": "packages/db/src/schema/throttle.ts",
-        "package": "@hamafx/db"
+        "package": "@kestrel/db"
       }
     ],
     "packages/db/src/schema/tool-telemetry.ts": [
@@ -2517,7 +2517,7 @@
           "createdAt"
         ],
         "schema_file": "packages/db/src/schema/tool-telemetry.ts",
-        "package": "@hamafx/db"
+        "package": "@kestrel/db"
       }
     ]
   }

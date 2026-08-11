@@ -1,6 +1,6 @@
 ---
 type: module
-package: "@hamafx/web"
+package: "@kestrel/web"
 path: "apps/web/src/app/(app)/chart/[symbol]/_components/chart-skeleton.tsx"
 incoming: 1
 outgoing: 1
@@ -13,7 +13,7 @@ aliases: [chart-skeleton/ChartSkeleton]
 
 # 📁 chart-skeleton/ChartSkeleton
 
-> **Module** · `@hamafx/web` · `apps/web/src/app/(app)/chart/[symbol]/_components/chart-skeleton.tsx`
+> **Module** · `@kestrel/web` · `apps/web/src/app/(app)/chart/[symbol]/_components/chart-skeleton.tsx`
 
 
 Module: apps/web/src/app/(app)/chart/[symbol]/_components/chart-skeleton.tsx
@@ -32,7 +32,7 @@ Module: apps/web/src/app/(app)/chart/[symbol]/_components/chart-skeleton.tsx
 
 
 ### 📤 Depends On (1)
-[[@hamafx-web]]
+[[@kestrel-web]]
 
 
 ### 📥 Depended On By (1)

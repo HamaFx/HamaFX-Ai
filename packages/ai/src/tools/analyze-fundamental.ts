@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,7 +25,7 @@
 // so the chat part can surface a single status line instead of a misleading
 // "everything is quiet".
 
-import { schema } from '@hamafx/db';
+import { schema } from '@kestrel/db';
 import { getDb } from '../db';
 import {
   AnalyzeFundamentalInputSchema,
@@ -37,7 +37,7 @@ import {
   type Symbol,
   type SymbolOrCurrencyTag,
   type ToolNewsItem,
-} from '@hamafx/shared';
+} from '@kestrel/shared';
 import { tool } from 'ai';
 import { and, desc, eq, gte, inArray, lte, or, sql } from 'drizzle-orm';
 import type { z } from 'zod';
@@ -46,7 +46,7 @@ import { maybeGetToolContext } from '../tool-context';
 
 const InputSchema = AnalyzeFundamentalInputSchema;
 
-declare module '@hamafx/shared' {
+declare module '@kestrel/shared' {
   interface ToolIOMap {
     analyze_fundamental: { input: z.infer<typeof InputSchema> };
   }

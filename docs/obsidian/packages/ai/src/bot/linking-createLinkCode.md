@@ -1,19 +1,19 @@
 ---
 type: module
-package: "@hamafx/ai"
+package: "@kestrel/ai"
 path: "packages/ai/src/bot/linking.ts"
 incoming: 4
 outgoing: 3
 connections: 7
 risk: low
 layer: core
-tags: [type/module, hamafx-ai, layer/core]
+tags: [type/module, kestrel-ai, layer/core]
 aliases: [linking/createLinkCode]
 ---
 
 # 📁 linking/createLinkCode
 
-> **Module** · `@hamafx/ai` · `packages/ai/src/bot/linking.ts`
+> **Module** · `@kestrel/ai` · `packages/ai/src/bot/linking.ts`
 
 
 Module: packages/ai/src/bot/linking.ts
@@ -28,11 +28,11 @@ Module: packages/ai/src/bot/linking.ts
 | Total connections | 7 |
 | Risk level | **LOW** |
 | Layer | `core` |
-| Package tag | `#hamafx-ai` |
+| Package tag | `#kestrel-ai` |
 
 
 ### 📤 Depends On (3)
-[[@hamafx-db]] · [[db-getDb]] · [[@hamafx-ai]]
+[[@kestrel-db]] · [[db-getDb]] · [[@kestrel-ai]]
 
 
 ### 📥 Depended On By (4)
@@ -53,4 +53,4 @@ Module: packages/ai/src/bot/linking.ts
 - **Local Graph:** Right-click this file → "Open local graph"
 - **Backlinks:** Open the right sidebar → "Backlinks"
 - Use `#type/module` to find all Modules
-- Use `#hamafx-ai` to find all files in this package
+- Use `#kestrel-ai` to find all files in this package

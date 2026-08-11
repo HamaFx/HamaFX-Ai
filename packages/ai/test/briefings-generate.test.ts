@@ -7,7 +7,7 @@ import {
   isoWeekKey,
   symbolFromCurrency,
 } from '../src/briefings/generate';
-import type { EconomicEvent } from '@hamafx/shared';
+import type { EconomicEvent } from '@kestrel/shared';
 
 function makeEvent(overrides: Partial<EconomicEvent> = {}): EconomicEvent {
   return {

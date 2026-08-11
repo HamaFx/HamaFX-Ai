@@ -2,9 +2,9 @@
 
 import { redirect } from 'next/navigation';
 import { auth } from '@/auth';
-import { getWatchlistWithCatalog } from '@hamafx/db';
+import { getWatchlistWithCatalog } from '@kestrel/db';
 import { and, eq } from 'drizzle-orm';
-import { getDb, schema } from '@hamafx/db';
+import { getDb, schema } from '@kestrel/db';
 import { SymbolsForm } from '../_components/symbols/symbols-form';
 
 export default async function SymbolsSettingsPage() {

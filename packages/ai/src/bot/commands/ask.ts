@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,9 +21,9 @@
 
 import type { BotCommand, BotResponse, BotContext } from '../types';
 import { runChat } from '../../agent';
-import type { ServerEnv } from '@hamafx/shared';
+import type { ServerEnv } from '@kestrel/shared';
 import type { UIMessage } from 'ai';
-import { withRateLimit } from '@hamafx/db';
+import { withRateLimit } from '@kestrel/db';
 import { createHash, randomUUID } from 'crypto';
 
 export const askCommand: BotCommand = {

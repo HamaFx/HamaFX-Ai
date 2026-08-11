@@ -1,19 +1,19 @@
 ---
 type: module
-package: "@hamafx/worker"
+package: "@kestrel/worker"
 path: "apps/worker/src/env.ts"
 incoming: 7
 outgoing: 1
 connections: 8
 risk: low
 layer: core
-tags: [type/module, hamafx-worker, layer/core]
+tags: [type/module, kestrel-worker, layer/core]
 aliases: [env/WorkerEnv]
 ---
 
 # 📁 env/WorkerEnv
 
-> **Module** · `@hamafx/worker` · `apps/worker/src/env.ts`
+> **Module** · `@kestrel/worker` · `apps/worker/src/env.ts`
 
 
 Module: apps/worker/src/env.ts
@@ -28,11 +28,11 @@ Module: apps/worker/src/env.ts
 | Total connections | 8 |
 | Risk level | **LOW** |
 | Layer | `core` |
-| Package tag | `#hamafx-worker` |
+| Package tag | `#kestrel-worker` |
 
 
 ### 📤 Depends On (1)
-[[@hamafx-worker]]
+[[@kestrel-worker]]
 
 
 ### 📥 Depended On By (5)
@@ -51,4 +51,4 @@ Module: apps/worker/src/env.ts
 - **Local Graph:** Right-click this file → "Open local graph"
 - **Backlinks:** Open the right sidebar → "Backlinks"
 - Use `#type/module` to find all Modules
-- Use `#hamafx-worker` to find all files in this package
+- Use `#kestrel-worker` to find all files in this package

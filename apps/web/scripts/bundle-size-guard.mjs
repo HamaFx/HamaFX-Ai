@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Copyright 2026 HamaFX
+// Copyright 2026 Kestrel
 //
 // Lightweight bundle-size guard for the web app.
 // Reads apps/web/bundle-size-limits.json, walks .next/static/chunks,
@@ -76,7 +76,7 @@ function collectJsFiles(dir) {
 
 function runGuard({ configPath = DEFAULT_CONFIG_PATH } = {}) {
   if (!fs.existsSync(CHUNKS_DIR)) {
-    console.error(`❌ Chunks directory not found: ${CHUNKS_DIR}\n   Run \`pnpm --filter @hamafx/web build\` first.`);
+    console.error(`❌ Chunks directory not found: ${CHUNKS_DIR}\n   Run \`pnpm --filter @kestrel/web build\` first.`);
     process.exit(1);
   }
 

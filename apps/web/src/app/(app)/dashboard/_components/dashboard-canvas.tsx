@@ -41,7 +41,7 @@ import type {
   JournalEntry,
   NewsArticle,
   Symbol,
-} from '@hamafx/shared';
+} from '@kestrel/shared';
 
 import { Button } from '@/components/ui/button';
 import { useConfirm } from '@/components/ui/confirm-drawer';

@@ -1,7 +1,7 @@
 import { IconCheck, IconChevronRight } from '@tabler/icons-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
-import type { SymbolCatalogRow } from '@hamafx/db';
+import type { SymbolCatalogRow } from '@kestrel/db';
 
 interface WizardStepSymbolsProps {
   symbolsCatalog: SymbolCatalogRow[];

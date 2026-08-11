@@ -1,6 +1,6 @@
 ---
 type: module
-package: "@hamafx/db"
+package: "@kestrel/db"
 path: "packages/db/src/index.ts"
 incoming: 2
 outgoing: 1
@@ -13,7 +13,7 @@ aliases: [index]
 
 # 📁 index
 
-> **Module** · `@hamafx/db` · `packages/db/src/index.ts`
+> **Module** · `@kestrel/db` · `packages/db/src/index.ts`
 
 
 Module: packages/db/src/index.ts
@@ -32,7 +32,7 @@ Module: packages/db/src/index.ts
 
 
 ### 📤 Depends On (1)
-[[@hamafx-db]]
+[[@kestrel-db]]
 
 
 ### 📥 Depended On By (2)

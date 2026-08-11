@@ -1,19 +1,19 @@
 ---
 type: moc
-package: "@hamafx/ai"
+package: "@kestrel/ai"
 nodes: 274
 totalIncoming: 932
 totalOutgoing: 1304
 tags: [moc, hamafx-ai]
 ---
 
-# 📦 @hamafx/ai
+# 📦 @kestrel/ai
 
 > **Map of Content** · 274 files · 932 incoming + 1304 outgoing = 2236 connections
 
 ## DataviewJS — All Files in This Package
 ```dataviewjs
-const pages = dv.pages().where(p => p.package === "@hamafx/ai" && p.type);
+const pages = dv.pages().where(p => p.package === "@kestrel/ai" && p.type);
 dv.table(
   ['File', 'Type', 'Incoming', 'Outgoing', 'Risk'],
   pages.sort(p => -(p.incoming + p.outgoing), 'desc').map(p => [
@@ -305,5 +305,5 @@ dv.table(
 - [[TechnicalAgent]] *(2↖ 5↗)*
 
 ### 📦 Package (1)
-- [[@hamafx-ai]] *(332↖ 0↗)*
+- [[@kestrel-ai]] *(332↖ 0↗)*
 

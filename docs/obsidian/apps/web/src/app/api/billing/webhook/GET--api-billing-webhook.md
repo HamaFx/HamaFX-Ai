@@ -1,6 +1,6 @@
 ---
 type: api_route
-package: "@hamafx/web"
+package: "@kestrel/web"
 path: "apps/web/src/app/api/billing/webhook/route.ts"
 incoming: 0
 outgoing: 1
@@ -13,7 +13,7 @@ aliases: [GET /api/billing/webhook]
 
 # 🔗 GET /api/billing/webhook
 
-> **API Route** · `@hamafx/web` · `apps/web/src/app/api/billing/webhook/route.ts`
+> **API Route** · `@kestrel/web` · `apps/web/src/app/api/billing/webhook/route.ts`
 
 
 API Route: GET /api/billing/webhook

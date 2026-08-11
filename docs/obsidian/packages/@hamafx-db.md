@@ -1,6 +1,6 @@
 ---
 type: package
-package: "@hamafx/db"
+package: "@kestrel/db"
 path: "packages/db"
 incoming: 266
 outgoing: 0
@@ -8,15 +8,15 @@ connections: 266
 risk: high
 layer: package
 tags: [type/package, hamafx-db, layer/package, risk/high]
-aliases: [@hamafx/db]
+aliases: [@kestrel/db]
 ---
 
-# 📦 @hamafx/db
+# 📦 @kestrel/db
 
-> **Package** · `@hamafx/db` · `packages/db`
+> **Package** · `@kestrel/db` · `packages/db`
 
 
-Package: @hamafx/db
+Package: @kestrel/db
 
 
 ## 📊 Connections

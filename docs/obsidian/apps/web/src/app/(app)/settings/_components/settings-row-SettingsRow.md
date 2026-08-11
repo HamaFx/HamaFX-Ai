@@ -1,19 +1,19 @@
 ---
 type: module
-package: "@hamafx/web"
+package: "@kestrel/web"
 path: "apps/web/src/app/(app)/settings/_components/settings-row.tsx"
 incoming: 7
 outgoing: 1
 connections: 8
 risk: low
 layer: core
-tags: [type/module, hamafx-web, layer/core]
+tags: [type/module, kestrel-web, layer/core]
 aliases: [settings-row/SettingsRow]
 ---
 
 # 📁 settings-row/SettingsRow
 
-> **Module** · `@hamafx/web` · `apps/web/src/app/(app)/settings/_components/settings-row.tsx`
+> **Module** · `@kestrel/web` · `apps/web/src/app/(app)/settings/_components/settings-row.tsx`
 
 
 Module: apps/web/src/app/(app)/settings/_components/settings-row.tsx
@@ -28,11 +28,11 @@ Module: apps/web/src/app/(app)/settings/_components/settings-row.tsx
 | Total connections | 8 |
 | Risk level | **LOW** |
 | Layer | `core` |
-| Package tag | `#hamafx-web` |
+| Package tag | `#kestrel-web` |
 
 
 ### 📤 Depends On (1)
-[[@hamafx-web]]
+[[@kestrel-web]]
 
 
 ### 📥 Depended On By (7)
@@ -49,4 +49,4 @@ Module: apps/web/src/app/(app)/settings/_components/settings-row.tsx
 - **Local Graph:** Right-click this file → "Open local graph"
 - **Backlinks:** Open the right sidebar → "Backlinks"
 - Use `#type/module` to find all Modules
-- Use `#hamafx-web` to find all files in this package
+- Use `#kestrel-web` to find all files in this package

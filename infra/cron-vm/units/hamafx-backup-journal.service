@@ -1,5 +1,5 @@
 [Unit]
-Description=HamaFX-Ai nightly journal_entries JSON export → B2 (opt-in)
+Description=Kestrel nightly journal_entries JSON export → B2 (opt-in)
 After=network-online.target
 Wants=network-online.target
 

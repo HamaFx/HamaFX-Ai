@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,8 +22,8 @@
 // landed by then. Idempotent: only patches rows where
 // `actuals_filled_at IS NULL`.
 
-import { listFredEventsMissingActual, parseFredEventId, patchEventActual } from '@hamafx/ai';
-import { fred } from '@hamafx/data';
+import { listFredEventsMissingActual, parseFredEventId, patchEventActual } from '@kestrel/ai';
+import { fred } from '@kestrel/data';
 
 const { fetchObservations, fredMeta } = fred;
 

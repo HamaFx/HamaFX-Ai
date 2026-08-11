@@ -10,26 +10,26 @@ tags: [dashboard, timeline]
 
 ## Top Activity Hotspots
 
-- 📅 [[@hamafx-shared]] — **956.3** connections · `@hamafx/shared`
-- 📅 [[@hamafx-web]] — **906.6** connections · `@hamafx/web`
-- 📅 [[@hamafx-ai]] — **523.1** connections · `@hamafx/ai`
-- 📅 [[vitest-installServerOnlyStub]] — **450** connections · `@hamafx/test-utils`
-- 📅 [[@hamafx-db]] — **423.2** connections · `@hamafx/db`
-- 📅 [[@hamafx-data]] — **168.4** connections · `@hamafx/data`
+- 📅 [[@kestrel-shared]] — **956.3** connections · `@kestrel/shared`
+- 📅 [[@kestrel-web]] — **908.1** connections · `@kestrel/web`
+- 📅 [[@kestrel-ai]] — **523.1** connections · `@kestrel/ai`
+- 📅 [[vitest-installServerOnlyStub]] — **451.5** connections · `@kestrel/test-utils`
+- 📅 [[@kestrel-db]] — **423.2** connections · `@kestrel/db`
+- 📅 [[@kestrel-data]] — **168.4** connections · `@kestrel/data`
 - 📅 [[scripts]] — **115.6** connections · `scripts`
-- 📅 [[registry-ToolPartState]] — **104** connections · `@hamafx/web`
-- 📅 [[@hamafx-worker]] — **103.1** connections · `@hamafx/worker`
-- 📅 [[@hamafx-indicators]] — **95.2** connections · `@hamafx/indicators`
-- 📅 [[db-getDb]] — **81.8** connections · `@hamafx/ai`
-- 📅 [[registry-ToolPlugin]] — **73.1** connections · `@hamafx/ai`
-- 📅 [[client-DbClient]] — **72.5** connections · `@hamafx/db`
-- 📅 [[log-Logger]] — **70.9** connections · `@hamafx/worker`
-- 📅 [[types-AnalysisMode]] — **70.7** connections · `@hamafx/ai`
-- 📅 [[tool-context-ToolEnv]] — **69.1** connections · `@hamafx/ai`
-- 📅 [[types-BotPlatform]] — **63.8** connections · `@hamafx/ai`
-- 📅 [[symbols-SYMBOLS]] — **62.8** connections · `@hamafx/shared`
-- 📅 [[model-resolveModel]] — **60.5** connections · `@hamafx/ai`
-- 📅 [[auth-users]] — **60.5** connections · `@hamafx/db`
+- 📅 [[registry-ToolPartState]] — **104** connections · `@kestrel/web`
+- 📅 [[@kestrel-worker]] — **103.1** connections · `@kestrel/worker`
+- 📅 [[@kestrel-indicators]] — **95.2** connections · `@kestrel/indicators`
+- 📅 [[db-getDb]] — **81.8** connections · `@kestrel/ai`
+- 📅 [[registry-ToolPlugin]] — **73.1** connections · `@kestrel/ai`
+- 📅 [[client-DbClient]] — **72.5** connections · `@kestrel/db`
+- 📅 [[log-Logger]] — **70.9** connections · `@kestrel/worker`
+- 📅 [[types-AnalysisMode]] — **70.7** connections · `@kestrel/ai`
+- 📅 [[tool-context-ToolEnv]] — **69.1** connections · `@kestrel/ai`
+- 📅 [[types-BotPlatform]] — **63.8** connections · `@kestrel/ai`
+- 📅 [[symbols-SYMBOLS]] — **62.8** connections · `@kestrel/shared`
+- 📅 [[model-resolveModel]] — **60.5** connections · `@kestrel/ai`
+- 📅 [[auth-users]] — **60.5** connections · `@kestrel/db`
 
 ## DataviewJS — Files by Connection Count
 ```dataviewjs

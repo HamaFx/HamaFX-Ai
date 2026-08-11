@@ -1,6 +1,6 @@
 ---
 type: module
-package: "@hamafx/web"
+package: "@kestrel/web"
 path: "apps/web/src/components/chart/overlay-constants.ts"
 incoming: 1
 outgoing: 3
@@ -13,7 +13,7 @@ aliases: [overlay-constants/ALL_KINDS]
 
 # 📁 overlay-constants/ALL_KINDS
 
-> **Module** · `@hamafx/web` · `apps/web/src/components/chart/overlay-constants.ts`
+> **Module** · `@kestrel/web` · `apps/web/src/components/chart/overlay-constants.ts`
 
 
 Module: apps/web/src/components/chart/overlay-constants.ts
@@ -32,7 +32,7 @@ Module: apps/web/src/components/chart/overlay-constants.ts
 
 
 ### 📤 Depends On (2)
-[[@hamafx-shared]] · [[@hamafx-web]]
+[[@kestrel-shared]] · [[@kestrel-web]]
 
 
 ### 📥 Depended On By (1)

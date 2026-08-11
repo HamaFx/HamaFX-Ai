@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@
 // independently so a single failure only drops one row and sets
 // `partial: true`.
 
-import { getPrice } from '@hamafx/data';
+import { getPrice } from '@kestrel/data';
 import {
   ComputePositionHealthInputSchema,
   pipSize,
@@ -29,7 +29,7 @@ import {
   type PositionHealthRow,
   type Symbol,
   type TradeSide,
-} from '@hamafx/shared';
+} from '@kestrel/shared';
 import { tool } from 'ai';
 import type { z } from 'zod';
 
@@ -38,7 +38,7 @@ import { getToolContext } from '../tool-context';
 
 const InputSchema = ComputePositionHealthInputSchema;
 
-declare module '@hamafx/shared' {
+declare module '@kestrel/shared' {
   interface ToolIOMap {
     compute_position_health: { input: z.infer<typeof InputSchema> };
   }

@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,10 +26,10 @@
 // are tolerated — the failing tf is dropped from the result and the
 // `partial` flag flips so the chat part can surface a warning.
 
-import { getCandles } from '@hamafx/data';
-import { computeIndicator } from '@hamafx/indicators';
-import { computeStructure } from '@hamafx/indicators';
-import { createCategorizedLogger } from '@hamafx/shared/logger';
+import { getCandles } from '@kestrel/data';
+import { computeIndicator } from '@kestrel/indicators';
+import { computeStructure } from '@kestrel/indicators';
+import { createCategorizedLogger } from '@kestrel/shared/logger';
 import {
   AnalyzeTechnicalInputSchema,
   priceDecimals,
@@ -40,13 +40,13 @@ import {
   type StructureResult,
   type Symbol,
   type Timeframe,
-} from '@hamafx/shared';
+} from '@kestrel/shared';
 import { tool } from 'ai';
 import type { z } from 'zod';
 
 const InputSchema = AnalyzeTechnicalInputSchema;
 
-declare module '@hamafx/shared' {
+declare module '@kestrel/shared' {
   interface ToolIOMap {
     analyze_technical: { input: z.infer<typeof InputSchema> };
   }
@@ -57,7 +57,7 @@ const tlog = createCategorizedLogger('ai', { component: 'analyze-technical' });
 /** Number of bars to scan for each per-tf computation. */
 const COUNT = 200;
 
-declare module '@hamafx/shared' {
+declare module '@kestrel/shared' {
   // (re-declared to keep the per-file `ToolIOMap` augmentation pattern)
 }
 

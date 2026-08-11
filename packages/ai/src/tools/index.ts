@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,13 +17,13 @@
 // PF-02 — Tool plugin registry barrel.
 // PF-13 — Tools are now registered via category sub-files (market, analysis, journal, system).
 // All tools register themselves via the singleton `toolRegistry`; the canonical
-// identifier list lives in `@hamafx/shared` as `TOOL_NAMES`.
+// identifier list lives in `@kestrel/shared` as `TOOL_NAMES`.
 //
 // Adding a new tool: implement it in a sibling file, add a register()
 // call to the appropriate category file, and add its import + entry there.
 // No other file needs to change.
 //
-// Keep names in sync with `@hamafx/shared` TOOL_NAMES.
+// Keep names in sync with `@kestrel/shared` TOOL_NAMES.
 //
 // Phase 3 hardening §2 — every tool flows through `withTelemetry()`
 // (applied automatically by the registry), so each invocation produces

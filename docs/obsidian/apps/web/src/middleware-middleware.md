@@ -1,6 +1,6 @@
 ---
 type: module
-package: "@hamafx/web"
+package: "@kestrel/web"
 path: "apps/web/src/middleware.ts"
 incoming: 0
 outgoing: 2
@@ -13,7 +13,7 @@ aliases: [middleware/middleware]
 
 # 📁 middleware/middleware
 
-> **Module** · `@hamafx/web` · `apps/web/src/middleware.ts`
+> **Module** · `@kestrel/web` · `apps/web/src/middleware.ts`
 
 
 Module: apps/web/src/middleware.ts
@@ -32,7 +32,7 @@ Module: apps/web/src/middleware.ts
 
 
 ### 📤 Depends On (2)
-[[auth.config-authConfig]] · [[@hamafx-web]]
+[[auth.config-authConfig]] · [[@kestrel-web]]
 
 
 

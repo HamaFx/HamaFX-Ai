@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -60,7 +60,7 @@ export function TopBar({ title, right }: TopBarProps) {
 
       <Link
         href="/chat"
-        aria-label="HamaFX-Ai home"
+        aria-label="Kestrel home"
         className="group flex flex-1 items-center gap-2 px-1 text-sm font-semibold tracking-tight text-fg transition-opacity hover:opacity-80"
       >
         <span
@@ -70,7 +70,7 @@ export function TopBar({ title, right }: TopBarProps) {
           <span className="text-xs font-bold">H</span>
         </span>
         <span className="text-fg">
-          {title ?? 'HamaFX'}
+          {title ?? 'Kestrel'}
           <span className="text-fg-subtle font-normal" aria-hidden>·Ai</span>
         </span>
       </Link>

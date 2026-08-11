@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@
 // Tiny candle fixture used across indicator tests. Values picked so each
 // indicator has a tractable hand-computable answer.
 
-import type { Candle } from '@hamafx/shared';
+import type { Candle } from '@kestrel/shared';
 
 export function makeCandles(
   closes: number[],

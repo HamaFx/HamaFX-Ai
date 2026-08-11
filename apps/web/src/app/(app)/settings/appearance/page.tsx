@@ -3,10 +3,10 @@
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { auth } from '@/auth';
-import { getUserWithSettings } from '@hamafx/db';
+import { getUserWithSettings } from '@kestrel/db';
 import { AppearanceCard } from '../_components/appearance/appearance-card';
 
-export const metadata: Metadata = { title: 'Appearance | Settings | HamaFX' };
+export const metadata: Metadata = { title: 'Appearance | Settings | Kestrel' };
 export const revalidate = 60;
 
 export default async function AppearancePage() {

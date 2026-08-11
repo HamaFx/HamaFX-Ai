@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@
 // Lets the model create a one-shot alert. Mirrors the AlertRule schema
 // directly so the tool input is the same shape the DB row stores.
 
-import { AlertChannelSchema, AlertRuleSchema, type SetAlertOutput } from '@hamafx/shared';
+import { AlertChannelSchema, AlertRuleSchema, type SetAlertOutput } from '@kestrel/shared';
 import { tool } from 'ai';
 import { z } from 'zod';
 
@@ -34,7 +34,7 @@ const InputSchema = z.object({
   note: z.string().max(280).nullable().default(null),
 });
 
-declare module '@hamafx/shared' {
+declare module '@kestrel/shared' {
   interface ToolIOMap {
     set_alert: { input: z.infer<typeof InputSchema> };
   }

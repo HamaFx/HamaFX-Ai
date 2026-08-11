@@ -1,5 +1,5 @@
 [Unit]
-Description=HamaFX-Ai disk space check (alert if >85% used)
+Description=Kestrel disk space check (alert if >85% used)
 After=network-online.target
 Wants=network-online.target
 

@@ -3,8 +3,8 @@
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { auth } from '@/auth';
-import { getUserWithSettings } from '@hamafx/db';
-import type { NoiseConfig } from '@hamafx/shared';
+import { getUserWithSettings } from '@kestrel/db';
+import type { NoiseConfig } from '@kestrel/shared';
 import { NoiseControlCard } from '../_components/notifications/noise-control-card';
 import { NotificationPrefsCard } from '../_components/notifications/notification-prefs-card';
 import { TestEmailButton } from '../_components/notifications/test-email-button';
@@ -14,9 +14,9 @@ import { RowDivider } from '../_components/row-divider';
 import { IconMail, IconBell } from '@tabler/icons-react';
 import { getServerEnv } from '@/lib/env';
 import { cn } from '@/lib/cn';
-import { listPushSubscriptions } from '@hamafx/ai';
+import { listPushSubscriptions } from '@kestrel/ai';
 
-export const metadata: Metadata = { title: 'Notifications | Settings | HamaFX' };
+export const metadata: Metadata = { title: 'Notifications | Settings | Kestrel' };
 export const revalidate = 60;
 
 export default async function NotificationsPage() {

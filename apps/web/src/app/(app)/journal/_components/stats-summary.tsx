@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@
 // Displays core metrics, a horizontal segmented trade distribution gauge,
 // and institutional stats (Profit Factor, Max Drawdown, Expectancy, and Extreme trade boundaries).
 
-import type { JournalEntry, JournalStats } from '@hamafx/shared';
+import type { JournalEntry, JournalStats } from '@kestrel/shared';
 import { IconActivity,  IconCalculator,  IconTarget,  IconTrendingUp,  IconAlertTriangle,  IconPercentage,  IconAward,  IconTrendingDown,  IconFlame,  IconClock,  IconCalendarEvent,  IconBook } from '@tabler/icons-react';
 import { useMemo } from 'react';
 

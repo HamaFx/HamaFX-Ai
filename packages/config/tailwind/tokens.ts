@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-// Shared design tokens for HamaFX-Ai.
+// Shared design tokens for Kestrel.
 // The actual Tailwind theme lives in CSS via `@theme` (Tailwind v4) — see
 // `apps/web/src/app/globals.css`. This file exposes the same token *values*
 // to TS code (e.g., chart series colors, dynamic styles) so we have one source

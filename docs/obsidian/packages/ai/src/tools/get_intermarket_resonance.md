@@ -1,19 +1,19 @@
 ---
 type: tool
-package: "@hamafx/ai"
+package: "@kestrel/ai"
 path: "packages/ai/src/tools/get-intermarket-resonance.ts"
 incoming: 2
 outgoing: 6
 connections: 8
 risk: low
 layer: ai
-tags: [type/tool, hamafx-ai, layer/ai]
+tags: [type/tool, kestrel-ai, layer/ai]
 aliases: [get_intermarket_resonance]
 ---
 
 # 🔧 get_intermarket_resonance
 
-> **AI Tool** · `@hamafx/ai` · `packages/ai/src/tools/get-intermarket-resonance.ts`
+> **AI Tool** · `@kestrel/ai` · `packages/ai/src/tools/get-intermarket-resonance.ts`
 
 
 Evaluate Gold (XAUUSD) or major currencies
@@ -28,11 +28,11 @@ Evaluate Gold (XAUUSD) or major currencies
 | Total connections | 8 |
 | Risk level | **LOW** |
 | Layer | `ai` |
-| Package tag | `#hamafx-ai` |
+| Package tag | `#kestrel-ai` |
 
 
 ### 📤 Depends On (6)
-[[@hamafx-shared]] · [[@hamafx-db]] · [[db-getDb]] · [[tool-context-ToolEnv]] · [[@hamafx-ai]] · [[registry-ToolPlugin]]
+[[@kestrel-shared]] · [[@kestrel-db]] · [[db-getDb]] · [[tool-context-ToolEnv]] · [[@kestrel-ai]] · [[registry-ToolPlugin]]
 
 
 ### 📥 Depended On By (2)
@@ -49,4 +49,4 @@ Evaluate Gold (XAUUSD) or major currencies
 - **Local Graph:** Right-click this file → "Open local graph"
 - **Backlinks:** Open the right sidebar → "Backlinks"
 - Use `#type/tool` to find all AI Tools
-- Use `#hamafx-ai` to find all files in this package
+- Use `#kestrel-ai` to find all files in this package

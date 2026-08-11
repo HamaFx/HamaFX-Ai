@@ -1,5 +1,5 @@
 #!/bin/sh
-# HamaFX-Ai local Docker backup worker.
+# Kestrel local Docker backup worker.
 #
 # Writes compressed custom-format PostgreSQL dumps to /backups. The directory
 # is a named Docker volume so backups survive container recreation.

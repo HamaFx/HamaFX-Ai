@@ -1,19 +1,19 @@
 ---
 type: module
-package: "@hamafx/shared"
+package: "@kestrel/shared"
 path: "packages/shared/src/vault.ts"
 incoming: 0
 outgoing: 3
 connections: 3
 risk: low
 layer: core
-tags: [type/module, hamafx-shared, layer/core]
+tags: [type/module, kestrel-shared, layer/core]
 aliases: [vault/loadSecretsFromVault]
 ---
 
 # 📁 vault/loadSecretsFromVault
 
-> **Module** · `@hamafx/shared` · `packages/shared/src/vault.ts`
+> **Module** · `@kestrel/shared` · `packages/shared/src/vault.ts`
 
 
 Module: packages/shared/src/vault.ts
@@ -28,11 +28,11 @@ Module: packages/shared/src/vault.ts
 | Total connections | 3 |
 | Risk level | **LOW** |
 | Layer | `core` |
-| Package tag | `#hamafx-shared` |
+| Package tag | `#kestrel-shared` |
 
 
 ### 📤 Depends On (2)
-[[logger-LOG_CATEGORIES]] · [[@hamafx-shared]]
+[[logger-LOG_CATEGORIES]] · [[@kestrel-shared]]
 
 
 
@@ -49,4 +49,4 @@ Module: packages/shared/src/vault.ts
 - **Local Graph:** Right-click this file → "Open local graph"
 - **Backlinks:** Open the right sidebar → "Backlinks"
 - Use `#type/module` to find all Modules
-- Use `#hamafx-shared` to find all files in this package
+- Use `#kestrel-shared` to find all files in this package

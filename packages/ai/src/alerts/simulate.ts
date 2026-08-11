@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -39,7 +39,7 @@
  * Tested in packages/ai/test/alert-simulate.test.ts.
  */
 
-import type { AlertRule } from '@hamafx/shared';
+import type { AlertRule } from '@kestrel/shared';
 
 export interface SimCandle {
   /** Candle open time, ms since epoch. */

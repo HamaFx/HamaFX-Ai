@@ -1,19 +1,19 @@
 ---
 type: module
-package: "@hamafx/web"
+package: "@kestrel/web"
 path: "apps/web/src/app/(app)/dashboard/page.tsx"
 incoming: 0
 outgoing: 3
 connections: 3
 risk: low
 layer: core
-tags: [type/module, hamafx-web, layer/core]
+tags: [type/module, kestrel-web, layer/core]
 aliases: [page/async]
 ---
 
 # 📁 page/async
 
-> **Module** · `@hamafx/web` · `apps/web/src/app/(app)/dashboard/page.tsx`
+> **Module** · `@kestrel/web` · `apps/web/src/app/(app)/dashboard/page.tsx`
 
 
 Module: apps/web/src/app/(app)/dashboard/page.tsx
@@ -28,11 +28,11 @@ Module: apps/web/src/app/(app)/dashboard/page.tsx
 | Total connections | 3 |
 | Risk level | **LOW** |
 | Layer | `core` |
-| Package tag | `#hamafx-web` |
+| Package tag | `#kestrel-web` |
 
 
 ### 📤 Depends On (3)
-[[@hamafx-ai]] · [[dashboard-canvas-DashboardCanvas]] · [[@hamafx-web]]
+[[@kestrel-ai]] · [[dashboard-canvas-DashboardCanvas]] · [[@kestrel-web]]
 
 
 
@@ -47,4 +47,4 @@ Module: apps/web/src/app/(app)/dashboard/page.tsx
 - **Local Graph:** Right-click this file → "Open local graph"
 - **Backlinks:** Open the right sidebar → "Backlinks"
 - Use `#type/module` to find all Modules
-- Use `#hamafx-web` to find all files in this package
+- Use `#kestrel-web` to find all files in this package

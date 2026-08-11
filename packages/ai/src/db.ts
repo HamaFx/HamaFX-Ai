@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,20 +16,20 @@
 
 // P2-3 — DI-backed getDb() wrapper.
 //
-// Replaces direct `import { getDb } from '@hamafx/db'` across the AI
+// Replaces direct `import { getDb } from '@kestrel/db'` across the AI
 // package. Delegates to the global container, which caches the singleton
 // Drizzle client. Tests override via `container.register('db', () => mockDb)`.
 //
 // This module is self-bootstrapping: on first import it registers the
-// real @hamafx/db getDb() as the 'db' factory. This avoids a circular
-// dependency through the AI barrel (services.ts → @hamafx/ai → db.ts).
+// real @kestrel/db getDb() as the 'db' factory. This avoids a circular
+// dependency through the AI barrel (services.ts → @kestrel/ai → db.ts).
 //
 // This is the DIP implementation: consumers depend on the container
-// abstraction, not on the @hamafx/db module-level singleton.
+// abstraction, not on the @kestrel/db module-level singleton.
 
-import { container } from '@hamafx/shared';
-import { getDb as getRawDb } from '@hamafx/db';
-import type { DbClient } from '@hamafx/db';
+import { container } from '@kestrel/shared';
+import { getDb as getRawDb } from '@kestrel/db';
+import type { DbClient } from '@kestrel/db';
 import { DB } from './tokens';
 
 // Self-bootstrap: register the real DB factory on first import.

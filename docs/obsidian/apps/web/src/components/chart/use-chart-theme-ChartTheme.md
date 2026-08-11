@@ -1,6 +1,6 @@
 ---
 type: module
-package: "@hamafx/web"
+package: "@kestrel/web"
 path: "apps/web/src/components/chart/use-chart-theme.ts"
 incoming: 2
 outgoing: 4
@@ -13,7 +13,7 @@ aliases: [use-chart-theme/ChartTheme]
 
 # 📁 use-chart-theme/ChartTheme
 
-> **Module** · `@hamafx/web` · `apps/web/src/components/chart/use-chart-theme.ts`
+> **Module** · `@kestrel/web` · `apps/web/src/components/chart/use-chart-theme.ts`
 
 
 Module: apps/web/src/components/chart/use-chart-theme.ts
@@ -32,7 +32,7 @@ Module: apps/web/src/components/chart/use-chart-theme.ts
 
 
 ### 📤 Depends On (3)
-[[chart-types-ChartSettings]] · [[chart-themes-THEME_PRESETS]] · [[@hamafx-web]]
+[[chart-types-ChartSettings]] · [[chart-themes-THEME_PRESETS]] · [[@kestrel-web]]
 
 
 ### 📥 Depended On By (2)

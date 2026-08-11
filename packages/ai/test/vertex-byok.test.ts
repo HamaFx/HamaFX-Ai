@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,11 +16,11 @@
 
 import { vi } from 'vitest';
 
-// model.ts pulls in @hamafx/shared/encryption which contains
+// model.ts pulls in @kestrel/shared/encryption which contains
 // `import 'server-only'` — that throws at import time, not at
 // runtime, so a plain test import fails. Mock the encryption module
 // with permissive stubs (we don't exercise the AES path here).
-vi.mock('@hamafx/shared/encryption', () => ({
+vi.mock('@kestrel/shared/encryption', () => ({
   decryptByok: (_payload: string | null | undefined) => null,
   encryptByok: (payload: unknown) => JSON.stringify(payload),
   configuredProviders: () => [] as string[],
@@ -62,17 +62,17 @@ import { testProviderKey } from '../src/model';
 function makeVertexJson(overrides: Record<string, string | undefined> = {}): string {
   const base: Record<string, string> = {
     type: 'service_account',
-    project_id: 'hamafx-test-project',
+    project_id: 'kestrel-test-project',
     private_key_id: 'abc123def456',
     private_key:
       '-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDSynthetic\n-----END PRIVATE KEY-----\n',
-    client_email: 'hamafx-test@hamafx-test-project.iam.gserviceaccount.com',
+    client_email: 'kestrel-test@kestrel-test-project.iam.gserviceaccount.com',
     client_id: '111111111111111111111',
     auth_uri: 'https://accounts.google.com/o/oauth2/auth',
     token_uri: 'https://oauth2.googleapis.com/token',
     auth_provider_x509_cert_url: 'https://www.googleapis.com/oauth2/v1/certs',
     client_x509_cert_url:
-      'https://www.googleapis.com/robot/v1/metadata/x509/hamafx-test',
+      'https://www.googleapis.com/robot/v1/metadata/x509/kestrel-test',
   };
   for (const [k, v] of Object.entries(overrides)) {
     if (v === undefined) {

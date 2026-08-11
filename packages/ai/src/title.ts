@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,13 +22,13 @@
 //
 // See .kiro/specs/phase-1-completion/design.md §1 for the full contract.
 
-import type { ServerEnv } from '@hamafx/shared';
+import type { ServerEnv } from '@kestrel/shared';
 import { generateText } from 'ai';
 
 import { resolveModel } from './model';
 import { maybeGetToolContext } from './tool-context';
 import { telemetryConfig } from './telemetry';
-import { createCategorizedLogger } from '@hamafx/shared/logger';
+import { createCategorizedLogger } from '@kestrel/shared/logger';
 
 export interface GenerateTitleArgs {
   threadId: string;

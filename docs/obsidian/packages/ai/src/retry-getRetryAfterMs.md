@@ -1,19 +1,19 @@
 ---
 type: module
-package: "@hamafx/ai"
+package: "@kestrel/ai"
 path: "packages/ai/src/retry.ts"
 incoming: 5
 outgoing: 2
 connections: 7
 risk: low
 layer: core
-tags: [type/module, hamafx-ai, layer/core]
+tags: [type/module, kestrel-ai, layer/core]
 aliases: [retry/getRetryAfterMs]
 ---
 
 # 📁 retry/getRetryAfterMs
 
-> **Module** · `@hamafx/ai` · `packages/ai/src/retry.ts`
+> **Module** · `@kestrel/ai` · `packages/ai/src/retry.ts`
 
 
 Module: packages/ai/src/retry.ts
@@ -28,11 +28,11 @@ Module: packages/ai/src/retry.ts
 | Total connections | 7 |
 | Risk level | **LOW** |
 | Layer | `core` |
-| Package tag | `#hamafx-ai` |
+| Package tag | `#kestrel-ai` |
 
 
 ### 📤 Depends On (2)
-[[fallback-FallbackReason]] · [[@hamafx-ai]]
+[[fallback-FallbackReason]] · [[@kestrel-ai]]
 
 
 ### 📥 Depended On By (4)
@@ -51,4 +51,4 @@ Module: packages/ai/src/retry.ts
 - **Local Graph:** Right-click this file → "Open local graph"
 - **Backlinks:** Open the right sidebar → "Backlinks"
 - Use `#type/module` to find all Modules
-- Use `#hamafx-ai` to find all files in this package
+- Use `#kestrel-ai` to find all files in this package

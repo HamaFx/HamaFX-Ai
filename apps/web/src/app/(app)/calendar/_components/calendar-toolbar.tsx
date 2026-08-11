@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@
 
 // Calendar toolbar — importance + currency filters + "show past" toggle.
 
-import type { EventCurrency, Importance } from '@hamafx/shared';
+import type { EventCurrency, Importance } from '@kestrel/shared';
 
 import { cn } from '@/lib/cn';
 import { handleRadioKeyDown } from '@/lib/datetime';

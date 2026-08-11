@@ -6,7 +6,7 @@
 // parsing, response formatting). Routes delegate to services, keeping
 // route handlers thin and testable without HTTP mocks.
 
-import { listRecentArticles } from '@hamafx/ai';
+import { listRecentArticles } from '@kestrel/ai';
 
 export interface NewsFilters {
   sentiment?: string;

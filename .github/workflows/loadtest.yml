@@ -49,7 +49,7 @@ jobs:
         run: npm run typecheck
 
       - name: Build the SUT
-        run: pnpm --filter @hamafx/web build
+        run: pnpm --filter @kestrel/web build
 
       - name: Build k6 test scripts
         working-directory: loadtest

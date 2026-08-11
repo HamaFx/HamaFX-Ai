@@ -39,6 +39,7 @@ Module: scripts/setup/steps/launch.mjs
 
 ## 📦 Exports
 - `title`
+- `hint`
 - `run`
 
 

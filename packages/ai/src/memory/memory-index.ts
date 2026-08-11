@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,10 +31,10 @@
 // All paths are guarded by the daily AI budget so a runaway agent loop
 // can't burn embedding spend in a side-effect.
 
-import { schema, withTenantDb } from '@hamafx/db';
+import { schema, withTenantDb } from '@kestrel/db';
 import { getDb } from '../db';
-import type { UserSettingsRow } from '@hamafx/db/schema';
-import type { ServerEnv, Symbol, ThreadInsight } from '@hamafx/shared';
+import type { UserSettingsRow } from '@kestrel/db/schema';
+import type { ServerEnv, Symbol, ThreadInsight } from '@kestrel/shared';
 import { desc, eq, gte, sql } from 'drizzle-orm';
 
 import { dailySpendUsd } from '../cost';

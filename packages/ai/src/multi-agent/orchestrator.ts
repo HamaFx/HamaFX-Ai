@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@ import { selectAgents, resolveMode } from './modes';
 import { saveAgentOpinions } from './persistence';
 import { appendUserMessage, appendAssistantMessage, recordTelemetry } from '../persistence';
 import { enforceCitations } from '../verification';
-import { logErrorContext, createCategorizedLogger } from '@hamafx/shared/logger';
+import { logErrorContext, createCategorizedLogger } from '@kestrel/shared/logger';
 import { TechnicalAgent } from './agents/technical-agent';
 import { FundamentalAgent } from './agents/fundamental-agent';
 import { RiskAgent } from './agents/risk-agent';
@@ -36,7 +36,7 @@ import type {
   SharedContext, MultiAgentResult, ProgressEvent, MultiAgentEnv,
 } from './types';
 import { MODE_COST_ESTIMATE } from './types';
-import type { UserSettingsRow } from '@hamafx/db/schema';
+import type { UserSettingsRow } from '@kestrel/db/schema';
 import type { UIMessage } from 'ai';
 
 const mlog = createCategorizedLogger('ai', { component: 'multi-agent' });

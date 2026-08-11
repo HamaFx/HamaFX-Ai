@@ -1,6 +1,6 @@
 ---
 type: module
-package: "@hamafx/web"
+package: "@kestrel/web"
 path: "apps/web/src/hooks/use-structure.ts"
 incoming: 1
 outgoing: 3
@@ -13,7 +13,7 @@ aliases: [use-structure/UseStructureOptions]
 
 # 📁 use-structure/UseStructureOptions
 
-> **Module** · `@hamafx/web` · `apps/web/src/hooks/use-structure.ts`
+> **Module** · `@kestrel/web` · `apps/web/src/hooks/use-structure.ts`
 
 
 Module: apps/web/src/hooks/use-structure.ts
@@ -32,7 +32,7 @@ Module: apps/web/src/hooks/use-structure.ts
 
 
 ### 📤 Depends On (2)
-[[@hamafx-shared]] · [[@hamafx-web]]
+[[@kestrel-shared]] · [[@kestrel-web]]
 
 
 ### 📥 Depended On By (1)

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { describe, expect, it } from 'vitest';
-import type { JournalEntry } from '@hamafx/shared';
+import type { JournalEntry } from '@kestrel/shared';
 import { buildEquityCurve } from '@/components/chart/performance-chart-data';
 
 function makeEntry(partial: Partial<JournalEntry>): JournalEntry {

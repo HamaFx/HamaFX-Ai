@@ -1,19 +1,19 @@
 ---
 type: module
-package: "@hamafx/ai"
+package: "@kestrel/ai"
 path: "packages/ai/src/telemetry.ts"
 incoming: 12
 outgoing: 1
 connections: 13
 risk: low
 layer: core
-tags: [type/module, hamafx-ai, layer/core]
+tags: [type/module, kestrel-ai, layer/core]
 aliases: [telemetry/telemetryConfig]
 ---
 
 # 📁 telemetry/telemetryConfig
 
-> **Module** · `@hamafx/ai` · `packages/ai/src/telemetry.ts`
+> **Module** · `@kestrel/ai` · `packages/ai/src/telemetry.ts`
 
 
 Module: packages/ai/src/telemetry.ts
@@ -28,11 +28,11 @@ Module: packages/ai/src/telemetry.ts
 | Total connections | 13 |
 | Risk level | **LOW** |
 | Layer | `core` |
-| Package tag | `#hamafx-ai` |
+| Package tag | `#kestrel-ai` |
 
 
 ### 📤 Depends On (1)
-[[@hamafx-ai]]
+[[@kestrel-ai]]
 
 
 ### 📥 Depended On By (12)
@@ -49,4 +49,4 @@ Module: packages/ai/src/telemetry.ts
 - **Local Graph:** Right-click this file → "Open local graph"
 - **Backlinks:** Open the right sidebar → "Backlinks"
 - Use `#type/module` to find all Modules
-- Use `#hamafx-ai` to find all files in this package
+- Use `#kestrel-ai` to find all files in this package

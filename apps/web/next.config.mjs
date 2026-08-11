@@ -20,12 +20,12 @@ const nextConfig = {
   },
 
   transpilePackages: [
-    '@hamafx/shared',
-    '@hamafx/db',
-    '@hamafx/data',
-    '@hamafx/indicators',
-    '@hamafx/ai',
-    '@hamafx/config',
+    '@kestrel/shared',
+    '@kestrel/db',
+    '@kestrel/data',
+    '@kestrel/indicators',
+    '@kestrel/ai',
+    '@kestrel/config',
   ],
 
   typescript: { ignoreBuildErrors: false },

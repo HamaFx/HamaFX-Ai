@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@ import { describe, expect, it, vi } from 'vitest';
 process.env['FRED_API_KEY'] = 'test-fred-key';
 process.env['GOOGLE_GENERATIVE_AI_API_KEY'] = 'test-ai-key';
 
-vi.mock('@hamafx/db', () => ({
+vi.mock('@kestrel/db', () => ({
   getDb: () => ({
     select: () => ({
       from: () => ({
@@ -62,7 +62,7 @@ vi.mock('@hamafx/db', () => ({
 
 import { getSystemDiagnosticsTool } from '../src/tools/get-system-diagnostics';
 import { withToolContext } from '../src/tool-context';
-import type { GetSystemDiagnosticsOutput } from '@hamafx/shared';
+import type { GetSystemDiagnosticsOutput } from '@kestrel/shared';
 
 describe('Diagnostics Tools', () => {
   it('correctly reports system diagnostics stats', async () => {

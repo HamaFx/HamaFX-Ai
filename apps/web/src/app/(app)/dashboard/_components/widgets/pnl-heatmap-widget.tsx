@@ -15,7 +15,7 @@
 
 import { useMemo, useState } from 'react';
 import {IconChevronLeft, IconChevronRight} from '@tabler/icons-react';
-import type { JournalEntry } from '@hamafx/shared';
+import type { JournalEntry } from '@kestrel/shared';
 
 import { Card } from '@/components/ui/card';
 import {

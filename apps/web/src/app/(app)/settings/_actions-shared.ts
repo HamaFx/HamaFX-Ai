@@ -4,7 +4,7 @@
 // Imported by each domain file to avoid circular dependencies and duplication.
 
 import bcrypt from 'bcryptjs';
-import { getUserPasswordHash } from '@hamafx/db';
+import { getUserPasswordHash } from '@kestrel/db';
 
 export const NAME_MIN = 1;
 export const NAME_MAX = 80;

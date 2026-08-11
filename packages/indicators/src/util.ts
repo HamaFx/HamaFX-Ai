@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@
 // Shared helpers for indicator implementations. All functions here are
 // pure: same inputs → same output, no side effects.
 
-import type { Candle } from '@hamafx/shared';
+import type { Candle } from '@kestrel/shared';
 
 /** Extract close prices from a candle window. */
 export function closes(candles: Candle[]): number[] {

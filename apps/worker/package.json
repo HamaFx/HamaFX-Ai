@@ -1,5 +1,5 @@
 {
-  "name": "@hamafx/worker",
+  "name": "@kestrel/worker",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -14,10 +14,10 @@
     "clean": "rm -rf node_modules .turbo dist"
   },
   "dependencies": {
-    "@hamafx/ai": "workspace:*",
-    "@hamafx/data": "workspace:*",
-    "@hamafx/db": "workspace:*",
-    "@hamafx/shared": "workspace:*",
+    "@kestrel/ai": "workspace:*",
+    "@kestrel/data": "workspace:*",
+    "@kestrel/db": "workspace:*",
+    "@kestrel/shared": "workspace:*",
     "@microsoft/signalr": "^8",
     "ai": "^5.0.0",
     "@opentelemetry/api": "^1.9.0",
@@ -29,7 +29,7 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
-    "@hamafx/config": "workspace:*",
+    "@kestrel/config": "workspace:*",
     "@types/node": "^20.14.10",
     "@types/ws": "^8.18.1",
     "esbuild": "^0.28.0",

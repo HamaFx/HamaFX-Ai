@@ -27,7 +27,7 @@ export default function globalSetup() {
   const dbUrl = process.env.DATABASE_URL || process.env.POSTGRES_URL;
   if (dbUrl) {
     try {
-      execSync('pnpm --filter @hamafx/db exec drizzle-kit migrate', {
+      execSync('pnpm --filter @kestrel/db exec drizzle-kit migrate', {
         cwd: resolve(__dirname, '../../../..'),
         stdio: 'pipe',
         timeout: 120_000,
@@ -36,7 +36,7 @@ export default function globalSetup() {
       console.log('[global-setup] Drizzle migrations applied');
     } catch (migrateErr) {
       // Non-fatal: log but don't fail — the user can run migrations
-      // manually with: pnpm --filter @hamafx/db migrate:apply
+      // manually with: pnpm --filter @kestrel/db migrate:apply
       // eslint-disable-next-line no-console
       console.warn(
         '[global-setup] drizzle-kit migrate failed. Run manually:',

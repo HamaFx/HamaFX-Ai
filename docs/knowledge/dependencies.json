@@ -7,7 +7,7 @@
       "depended_by": []
     },
     {
-      "name": "@hamafx/web",
+      "name": "@kestrel/web",
       "depends_on": [
         "env-loader/loadE2eEnv",
         "admin-error-block/AdminErrorBlock",
@@ -201,7 +201,7 @@
       "depended_by": []
     },
     {
-      "name": "@hamafx/worker",
+      "name": "@kestrel/worker",
       "depends_on": [
         "consumer/NormalizedTick",
         "log/Logger",
@@ -268,7 +268,7 @@
       "depended_by": []
     },
     {
-      "name": "@hamafx/ai",
+      "name": "@kestrel/ai",
       "depends_on": [
         "helpers/CAPS_FULL",
         "types/ModelDomain",
@@ -425,12 +425,12 @@
       "depended_by": []
     },
     {
-      "name": "@hamafx/config",
+      "name": "@kestrel/config",
       "depends_on": [],
       "depended_by": []
     },
     {
-      "name": "@hamafx/data",
+      "name": "@kestrel/data",
       "depends_on": [
         "errors/DataErrorCode",
         "index/fetchReleaseDates",
@@ -467,7 +467,7 @@
       "depended_by": []
     },
     {
-      "name": "@hamafx/db",
+      "name": "@kestrel/db",
       "depends_on": [
         "billing/planInterval",
         "client/DbClient",
@@ -484,7 +484,7 @@
       "depended_by": []
     },
     {
-      "name": "@hamafx/indicators",
+      "name": "@kestrel/indicators",
       "depends_on": [
         "util/closes",
         "atr/atr",
@@ -507,7 +507,7 @@
       "depended_by": []
     },
     {
-      "name": "@hamafx/shared",
+      "name": "@kestrel/shared",
       "depends_on": [
         "analyze-chart-image/AnalyzeChartImageInputSchema",
         "analyze-fundamental/AnalyzeFundamentalInputSchema",
@@ -572,7 +572,7 @@
       "depended_by": []
     },
     {
-      "name": "@hamafx/test-utils",
+      "name": "@kestrel/test-utils",
       "depends_on": [
         "vitest/installServerOnlyStub",
         "candles/MakeCandlesOpts",

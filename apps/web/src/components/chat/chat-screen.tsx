@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -43,7 +43,8 @@
 //     "drift" feeling.
 
 import { useChat } from '@ai-sdk/react';
-import type { Symbol } from '@hamafx/shared';
+import Image from 'next/image';
+import type { Symbol } from '@kestrel/shared';
 import type { UIMessage } from 'ai';
 import {IconArrowDown, IconArrowBackUp, IconX} from '@tabler/icons-react';
 import { useRouter } from 'next/navigation';
@@ -57,7 +58,7 @@ import { apiFetch, apiMutate } from '@/lib/api-client';
 import { useConfirm } from '@/components/ui/confirm-drawer';
 import { useAutoScroll } from '@/hooks/use-auto-scroll';
 import { useThreadTitle } from '@/hooks/use-thread-title';
-import { createHamaFxChatTransport, type AgentProgress } from '@/lib/chat-transport';
+import { createKestrelChatTransport, type AgentProgress } from '@/lib/chat-transport';
 
 import { ChatTopBar, type ThreadSummary, type AnalysisMode } from './chat-top-bar';
 import { Composer } from './composer';
@@ -118,7 +119,7 @@ export function ChatScreen({
 
   const transport = useMemo(
     () =>
-      createHamaFxChatTransport({
+      createKestrelChatTransport({
         api: '/api/chat',
         prepareSendMessagesRequest: ({ messages, id, body }) => {
           const override = modelOverrideRef.current;
@@ -455,17 +456,18 @@ interface EmptyChatStateProps {
 function EmptyChatState({ pinnedSymbol, disabled, onSelect }: EmptyChatStateProps) {
   return (
     <div className="flex min-h-[60svh] flex-col items-center justify-center gap-6 px-4 py-10 text-center">
-      {/* Brand logo mark — 48px, accent color */}
-      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" className="text-brand" aria-hidden="true">
-        <rect x="4" y="6" width="3" height="12" rx="1" fill="currentColor" />
-        <rect x="10" y="3" width="3" height="18" rx="1" fill="currentColor" opacity="0.6" />
-        <rect x="17" y="8" width="3" height="10" rx="1" fill="currentColor" />
-        <line x1="5.5" y1="2" x2="5.5" y2="22" stroke="currentColor" strokeWidth="0.5" />
-        <line x1="18.5" y1="4" x2="18.5" y2="20" stroke="currentColor" strokeWidth="0.5" />
-      </svg>
+      {/* Brand logo — bird mark + wordmark */}
+      <Image
+        src="/brand/kestrel-logo-white.png"
+        alt="Kestrel"
+        width={144}
+        height={96}
+        className="opacity-95"
+        priority
+      />
 
       <div className="flex flex-col gap-1">
-        <h2 className="text-fg text-lg font-semibold tracking-tight">HamaFX·Ai</h2>
+        <h2 className="text-fg text-lg font-semibold tracking-tight">Kestrel</h2>
         <p className="text-fg-muted text-sm">Start a conversation</p>
       </div>
 

@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@
 //   - `useState` would lose the timeframe on refresh.
 //   - `useSearchParams` is read-only; nuqs gives us setter + parse.
 //   - Other features (alerts list filters, news symbol filter) will reuse it.
-import { DEFAULT_TIMEFRAME, TIMEFRAMES, type Timeframe } from '@hamafx/shared';
+import { DEFAULT_TIMEFRAME, TIMEFRAMES, type Timeframe } from '@kestrel/shared';
 import { parseAsStringLiteral, useQueryState } from 'nuqs';
 
 const tfParser = parseAsStringLiteral(TIMEFRAMES).withDefault(DEFAULT_TIMEFRAME);

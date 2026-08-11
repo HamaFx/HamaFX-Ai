@@ -1,19 +1,19 @@
 ---
 type: module
-package: "@hamafx/ai"
+package: "@kestrel/ai"
 path: "packages/ai/src/multi-agent/orchestrator.ts"
 incoming: 0
 outgoing: 22
 connections: 22
 risk: medium
 layer: core
-tags: [type/module, hamafx-ai, layer/core, risk/medium]
+tags: [type/module, kestrel-ai, layer/core, risk/medium]
 aliases: [orchestrator/RunMultiAgentArgs]
 ---
 
 # 📁 orchestrator/RunMultiAgentArgs
 
-> **Module** · `@hamafx/ai` · `packages/ai/src/multi-agent/orchestrator.ts`
+> **Module** · `@kestrel/ai` · `packages/ai/src/multi-agent/orchestrator.ts`
 
 
 Module: packages/ai/src/multi-agent/orchestrator.ts
@@ -28,11 +28,11 @@ Module: packages/ai/src/multi-agent/orchestrator.ts
 | Total connections | 22 |
 | Risk level | **MEDIUM** |
 | Layer | `core` |
-| Package tag | `#hamafx-ai` |
+| Package tag | `#kestrel-ai` |
 
 
 ### 📤 Depends On (18)
-[[cost-DEFAULT_TURN_ESTIMATE_USD]] · [[model-resolveModel]] · [[context-BuildContextArgs]] · [[concurrency-limitConcurrency]] · [[modes-selectAgents]] · [[persistence-SaveOpinionsArgs]] · [[persistence-listThreads]] · [[verification-CitationFinding]] · [[@hamafx-shared]] · [[TechnicalAgent]] · [[FundamentalAgent]] · [[RiskAgent]] · [[SentimentAgent]] · [[decision]] · [[base-agent-baseOpinionSchema]] · [[types-AnalysisMode]] · [[@hamafx-db]] · [[@hamafx-ai]]
+[[cost-DEFAULT_TURN_ESTIMATE_USD]] · [[model-resolveModel]] · [[context-BuildContextArgs]] · [[concurrency-limitConcurrency]] · [[modes-selectAgents]] · [[persistence-SaveOpinionsArgs]] · [[persistence-listThreads]] · [[verification-CitationFinding]] · [[@kestrel-shared]] · [[TechnicalAgent]] · [[FundamentalAgent]] · [[RiskAgent]] · [[SentimentAgent]] · [[decision]] · [[base-agent-baseOpinionSchema]] · [[types-AnalysisMode]] · [[@kestrel-db]] · [[@kestrel-ai]]
 
 
 
@@ -47,4 +47,4 @@ Module: packages/ai/src/multi-agent/orchestrator.ts
 - **Local Graph:** Right-click this file → "Open local graph"
 - **Backlinks:** Open the right sidebar → "Backlinks"
 - Use `#type/module` to find all Modules
-- Use `#hamafx-ai` to find all files in this package
+- Use `#kestrel-ai` to find all files in this package

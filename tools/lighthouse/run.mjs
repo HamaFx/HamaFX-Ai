@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Mobile Lighthouse runner for HamaFX-Ai (task 12.2 / requirement 4).
+// Mobile Lighthouse runner for Kestrel (task 12.2 / requirement 4).
 //
 // Audits each route in LIGHTHOUSE_TARGETS twice with the mobile preset, keeps
 // the higher Performance score (industry-standard noise reduction), and writes

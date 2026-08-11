@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,8 +20,8 @@
 // Calls into `packages/data` so the cache + provider failover apply
 // transparently — the AI never talks to a provider directly.
 
-import { getPrice, ProviderError } from '@hamafx/data';
-import { ALL_SYMBOLS, SymbolSchema, type GetPriceOutput } from '@hamafx/shared';
+import { getPrice, ProviderError } from '@kestrel/data';
+import { ALL_SYMBOLS, SymbolSchema, type GetPriceOutput } from '@kestrel/shared';
 import { tool } from 'ai';
 import { z } from 'zod';
 
@@ -33,7 +33,7 @@ const InputSchema = z.object({
 // by tool name. Outputs are sourced centrally from `ToolOutputMap` in
 // `@shared/ai/tool-io` (driven by the per-tool zod schemas in
 // `@shared/schemas/tool-outputs/`), so we don't redeclare them here.
-declare module '@hamafx/shared' {
+declare module '@kestrel/shared' {
   interface ToolIOMap {
     get_price: { input: z.infer<typeof InputSchema> };
   }

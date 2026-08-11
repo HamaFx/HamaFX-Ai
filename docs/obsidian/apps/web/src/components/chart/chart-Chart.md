@@ -1,6 +1,6 @@
 ---
 type: component
-package: "@hamafx/web"
+package: "@kestrel/web"
 path: "apps/web/src/components/chart/chart.tsx"
 incoming: 3
 outgoing: 8
@@ -13,7 +13,7 @@ aliases: [chart/Chart]
 
 # 🧩 chart/Chart
 
-> **Component** · `@hamafx/web` · `apps/web/src/components/chart/chart.tsx`
+> **Component** · `@kestrel/web` · `apps/web/src/components/chart/chart.tsx`
 
 
 React component: chart
@@ -32,7 +32,7 @@ React component: chart
 
 
 ### 📤 Depends On (7)
-[[@hamafx-shared]] · [[chart-atr-ChartATRProps]] · [[chart-canvas-ChartCanvasHandle]] · [[chart-macd-ChartMACDProps]] · [[chart-rsi-ChartRSIProps]] · [[chart-types-ChartSettings]] · [[@hamafx-web]]
+[[@kestrel-shared]] · [[chart-atr-ChartATRProps]] · [[chart-canvas-ChartCanvasHandle]] · [[chart-macd-ChartMACDProps]] · [[chart-rsi-ChartRSIProps]] · [[chart-types-ChartSettings]] · [[@kestrel-web]]
 
 
 ### 📥 Depended On By (2)

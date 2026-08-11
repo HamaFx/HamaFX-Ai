@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -199,7 +199,7 @@ export async function loadSecretsFromVault(): Promise<void> {
  *
  * @example
  *   // apps/web/src/instrumentation.ts
- *   import { withVaultSecrets } from '@hamafx/shared/vault';
+ *   import { withVaultSecrets } from '@kestrel/shared/vault';
  *   export async function register() {
  *     await withVaultSecrets(async () => {
  *       // ... normal instrumentation

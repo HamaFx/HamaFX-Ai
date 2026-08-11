@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -130,15 +130,15 @@ export function note(io, title, lines, color = 'sky') {
 /** ASCII gradient banner for the top of the wizard. */
 export function printBanner(io) {
   const logo = [
-    '  _   _  _   _  ___  ___  ___  ___  ___ ',
-    ' | | | || \\\\ | || __|| _ \\\\/ __|| __|| _ \\\\',
-    ' | |_| ||  \\\\| || _| |   /\\\\__ \\\\| _| |   /',
-    '  \\\\___/ |_|\\\\_||___||_|_\\\\|___/|___||_|_\\\\',
-    '                                         ',
-    '         A I  ·  T R A D I N G  ·  P L A T F O R M',
+    '██╗  ██╗███████╗███████╗████████╗██████╗ ███████╗██╗',
+    '██║ ██╔╝██╔════╝██╔════╝╚══██╔══╝██╔══██╗██╔════╝██║',
+    '█████╔╝ █████╗  ███████╗   ██║   ██████╔╝█████╗  ██║',
+    '██╔═██╗ ██╔══╝  ╚════██║   ██║   ██╔══██╗██╔══╝  ██║',
+    '██║  ██╗███████╗███████║   ██║   ██║  ██║███████╗███████╗',
+    '╚═╝  ╚═╝╚══════╝╚══════╝   ╚═╝   ╚═╝  ╚═╝╚══════╝╚══════╝',
   ];
 
-  const gradientColors = ['cyan', 'sky', 'teal', 'lime', 'gold', 'coral'];
+  const gradientColors = ['cyan', 'sky', 'teal', 'gold', 'coral', 'sky'];
 
   io.line();
   for (let i = 0; i < logo.length; i++) {
@@ -146,7 +146,7 @@ export function printBanner(io) {
     io.line(paint(logo[i], color));
   }
   io.line();
-  io.line(paint('  The open-source, single-user BYOK AI trading platform', 'dim'));
+  io.line(paint('  Kestrel — your self-hosted AI trading copilot', 'dim'));
   io.line(paint('  Apache 2.0 Licensed · Built with Next.js, Drizzle, pgvector', 'dim'));
   io.line();
 }
@@ -230,7 +230,7 @@ export function beginPage(io, { pageMode, step, total, title }) {
   hideCursor(io);
   io.line();
   io.line(
-    `  ${paint('◆ HamaFX-Ai Setup', 'bold', 'cyan')}${paint('  ·  ', 'dim')}${paint(`Step ${step} of ${total}`, 'dim')}   ${progressBar(step / total)}`,
+    `  ${paint('◆ Kestrel Setup', 'bold', 'cyan')}${paint('  ·  ', 'dim')}${paint(`Step ${step} of ${total}`, 'dim')}   ${progressBar(step / total)}`,
   );
   io.line();
   io.line(`  ${paint(title, 'bold')}`);

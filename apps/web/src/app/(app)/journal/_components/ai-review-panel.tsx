@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@
 // Lives in the analytics tab and lets the user request a post-trade review
 // for any closed trade. The review is streamed from /api/journal/review.
 
-import type { JournalEntry } from '@hamafx/shared';
+import type { JournalEntry } from '@kestrel/shared';
 import {IconBolt, IconAlertCircle, IconRefresh} from '@tabler/icons-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';

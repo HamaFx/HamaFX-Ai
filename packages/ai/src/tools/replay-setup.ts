@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,21 +22,21 @@
 // touches stop/target, or after `maxBars` (forced exit at close). No
 // look-ahead.
 
-import { getCandles } from '@hamafx/data';
-import { atr, ema, rsi } from '@hamafx/indicators';
+import { getCandles } from '@kestrel/data';
+import { atr, ema, rsi } from '@kestrel/indicators';
 import {
   pipSize,
   ReplaySetupInputSchema,
   type Candle,
   type ReplaySetupOutput,
   type ReplayTrade,
-} from '@hamafx/shared';
+} from '@kestrel/shared';
 import { tool } from 'ai';
 import type { z } from 'zod';
 
 const InputSchema = ReplaySetupInputSchema;
 
-declare module '@hamafx/shared' {
+declare module '@kestrel/shared' {
   interface ToolIOMap {
     replay_setup: { input: z.infer<typeof InputSchema> };
   }

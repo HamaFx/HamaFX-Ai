@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -41,7 +41,7 @@ test.describe('Onboarding replay', () => {
 
     // Should redirect to onboarding and render the wizard
     await expect(page).toHaveURL(/.*\/onboarding.*/, { timeout: 30_000 });
-    await expect(page.getByText('Welcome to HamaFX-Ai')).toBeVisible();
+    await expect(page.getByText('Welcome to Kestrel')).toBeVisible();
 
     await context.close();
   });
@@ -67,7 +67,7 @@ test.describe('Onboarding replay', () => {
 
     // Should redirect to onboarding and render the wizard
     await expect(page).toHaveURL(/.*\/onboarding.*/, { timeout: 30_000 });
-    await expect(page.getByText('Welcome to HamaFX-Ai')).toBeVisible();
+    await expect(page.getByText('Welcome to Kestrel')).toBeVisible();
 
     await context.close();
   });

@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@
 // `<outDir>/<UTC-timestamp>.md`.
 //
 // Designed to run via `tsx packages/ai/src/eval/runner.ts ...`. Independent
-// of the rest of `@hamafx/ai` (no AI Gateway, DB, or zod imports) so it can
+// of the rest of `@kestrel/ai` (no AI Gateway, DB, or zod imports) so it can
 // boot without the full package.
 //
 // CLI:

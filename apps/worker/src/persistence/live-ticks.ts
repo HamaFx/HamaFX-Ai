@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,8 +23,8 @@
 // route will read in PR-8. Until PR-8 lands, this code path simply makes
 // the data available for inspection in the DB.
 
-import type { getDb } from '@hamafx/ai';
-import { liveTicks } from '@hamafx/db/schema';
+import type { getDb } from '@kestrel/ai';
+import { liveTicks } from '@kestrel/db/schema';
 import { sql } from 'drizzle-orm';
 
 import type { Logger } from '../log.js';

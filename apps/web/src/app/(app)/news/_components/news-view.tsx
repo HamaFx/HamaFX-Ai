@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,7 +30,7 @@
 // Each bucket renders as a sticky-headed section so scrolling preserves
 // the "where am I in the timeline" cue.
 
-import type { NewsArticle, SymbolOrCurrencyTag } from '@hamafx/shared';
+import type { NewsArticle, SymbolOrCurrencyTag } from '@kestrel/shared';
 import {IconBookmark, IconRefresh} from '@tabler/icons-react';
 import { useEffect, useMemo, useRef, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';

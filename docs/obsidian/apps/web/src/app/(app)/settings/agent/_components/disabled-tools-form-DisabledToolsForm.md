@@ -1,19 +1,19 @@
 ---
 type: module
-package: "@hamafx/web"
+package: "@kestrel/web"
 path: "apps/web/src/app/(app)/settings/agent/_components/disabled-tools-form.tsx"
 incoming: 1
 outgoing: 4
 connections: 5
 risk: low
 layer: core
-tags: [type/module, hamafx-web, layer/core]
+tags: [type/module, kestrel-web, layer/core]
 aliases: [disabled-tools-form/DisabledToolsForm]
 ---
 
 # 📁 disabled-tools-form/DisabledToolsForm
 
-> **Module** · `@hamafx/web` · `apps/web/src/app/(app)/settings/agent/_components/disabled-tools-form.tsx`
+> **Module** · `@kestrel/web` · `apps/web/src/app/(app)/settings/agent/_components/disabled-tools-form.tsx`
 
 
 Module: apps/web/src/app/(app)/settings/agent/_components/disabled-tools-form.tsx
@@ -28,11 +28,11 @@ Module: apps/web/src/app/(app)/settings/agent/_components/disabled-tools-form.ts
 | Total connections | 5 |
 | Risk level | **LOW** |
 | Layer | `core` |
-| Package tag | `#hamafx-web` |
+| Package tag | `#kestrel-web` |
 
 
 ### 📤 Depends On (3)
-[[actions-setupTwoFactorAction]] · [[@hamafx-shared]] · [[@hamafx-web]]
+[[actions-setupTwoFactorAction]] · [[@kestrel-shared]] · [[@kestrel-web]]
 
 
 ### 📥 Depended On By (1)
@@ -49,4 +49,4 @@ Module: apps/web/src/app/(app)/settings/agent/_components/disabled-tools-form.ts
 - **Local Graph:** Right-click this file → "Open local graph"
 - **Backlinks:** Open the right sidebar → "Backlinks"
 - Use `#type/module` to find all Modules
-- Use `#hamafx-web` to find all files in this package
+- Use `#kestrel-web` to find all files in this package

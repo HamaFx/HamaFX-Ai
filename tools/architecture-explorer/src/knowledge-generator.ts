@@ -49,14 +49,14 @@ function generateArchitecture(model: ArchitectureModel, nodes: ReturnType<GraphM
   }));
 
   const layers = [
-    { name: 'Presentation', packages: ['@hamafx/web'], responsibility: `Next.js 16 PWA, React 19 UI, TradingView charts, ${nodes.filter(n => n.type === 'api_route').length} API routes` },
-    { name: 'API Gateway', packages: ['@hamafx/web'], responsibility: 'NextAuth JWT, CSRF, rate limiting, request proxy' },
-    { name: 'AI Agent', packages: ['@hamafx/ai'], responsibility: 'Chat routing, registered tools, multi-agent committee, memory, citations' },
-    { name: 'Data', packages: ['@hamafx/data'], responsibility: 'Provider failover, caching (SWR), throttling, BiQuote→Finnhub' },
-    { name: 'Persistence', packages: ['@hamafx/db'], responsibility: `Drizzle ORM, ${nodes.filter(n => n.type === 'table').length} tables, Postgres + PGlite` },
-    { name: 'Indicators', packages: ['@hamafx/indicators'], responsibility: 'SMA, EMA, RSI, MACD, Bollinger, SMC concepts' },
-    { name: 'Worker', packages: ['@hamafx/worker'], responsibility: 'SignalR consumer, TickBuffer, Candle1mAggregator, 7+ cron jobs' },
-    { name: 'Shared', packages: ['@hamafx/shared'], responsibility: 'Zod schemas, types, env validation, encryption, logging, DI container' },
+    { name: 'Presentation', packages: ['@kestrel/web'], responsibility: `Next.js 16 PWA, React 19 UI, TradingView charts, ${nodes.filter(n => n.type === 'api_route').length} API routes` },
+    { name: 'API Gateway', packages: ['@kestrel/web'], responsibility: 'NextAuth JWT, CSRF, rate limiting, request proxy' },
+    { name: 'AI Agent', packages: ['@kestrel/ai'], responsibility: 'Chat routing, registered tools, multi-agent committee, memory, citations' },
+    { name: 'Data', packages: ['@kestrel/data'], responsibility: 'Provider failover, caching (SWR), throttling, BiQuote→Finnhub' },
+    { name: 'Persistence', packages: ['@kestrel/db'], responsibility: `Drizzle ORM, ${nodes.filter(n => n.type === 'table').length} tables, Postgres + PGlite` },
+    { name: 'Indicators', packages: ['@kestrel/indicators'], responsibility: 'SMA, EMA, RSI, MACD, Bollinger, SMC concepts' },
+    { name: 'Worker', packages: ['@kestrel/worker'], responsibility: 'SignalR consumer, TickBuffer, Candle1mAggregator, 7+ cron jobs' },
+    { name: 'Shared', packages: ['@kestrel/shared'], responsibility: 'Zod schemas, types, env validation, encryption, logging, DI container' },
     { name: 'Infrastructure', packages: ['infra', 'docker'], responsibility: 'Vercel (web), GCE VM (worker), Docker Compose, systemd' },
   ];
 
@@ -100,18 +100,18 @@ function generateArchitecture(model: ArchitectureModel, nodes: ReturnType<GraphM
 // ── features.json ──
 function generateFeatures() {
   const features = [
-    { name: 'AI Chat (Single-Agent)', package: '@hamafx/ai', modules: ['agent.ts', 'routing.ts', 'planner.ts', 'verification.ts', 'chat-retry-loop.ts'], description: 'Streaming chat with domain-based routing, plan-then-act, registered tools, 5-attempt retry' },
-    { name: 'Multi-Agent Committee', package: '@hamafx/ai', modules: ['multi-agent/orchestrator.ts', 'multi-agent/agents/'], description: '4 specialist agents + 1 decision agent with token-by-token fusion streaming' },
-    { name: 'Live Market Data', package: '@hamafx/data', modules: ['adapters/price.ts', 'adapters/candles.ts', 'failover.ts', 'cache/'], description: 'BiQuote SignalR → TickBuffer → live_ticks with Finnhub REST fallback' },
-    { name: 'Technical Indicators', package: '@hamafx/indicators', modules: ['moving-averages.ts', 'rsi.ts', 'macd.ts', 'bollinger.ts', 'smc/'], description: 'SMA, EMA, RSI, MACD, Bollinger Bands, SMC (FVG, order blocks, liquidity, swings, BOS/CHoCH)' },
-    { name: 'Alert Engine', package: '@hamafx/ai', modules: ['alerts/evaluator.ts', 'alerts/delivery.ts', 'alerts/persistence.ts'], description: 'Rule evaluation, delivery (email/push/telegram), snooze, simulation' },
-    { name: 'Trading Journal', package: '@hamafx/ai', modules: ['journal/persistence.ts', 'journal/review.ts'], description: 'Trade logging, R-multiple computation, AI-powered trade review' },
-    { name: 'Portfolio Management', package: '@hamafx/ai', modules: ['portfolio/'], description: 'Position tracking, PnL computation, risk reporting' },
-    { name: 'Background Jobs', package: '@hamafx/worker', modules: ['scheduler.ts', 'jobs/'], description: '7+ cron jobs: briefings, snapshots, COT, weekly review, embedding backfill, candle flush' },
-    { name: 'Push Notifications', package: '@hamafx/ai', modules: ['push/send.ts', 'push/persistence.ts'], description: 'Web Push API with VAPID, subscription management' },
-    { name: 'Bot Platform', package: '@hamafx/ai', modules: ['bot/', 'telegram/'], description: 'Telegram bot with commands, link codes, idempotency, rate limiting' },
-    { name: 'BYOK Provider Registry', package: '@hamafx/ai', modules: ['byok-providers.ts', '_providers/'], description: 'Bring-Your-Own-Key support for the live provider registry, fallback chain, and model catalog' },
-    { name: 'Social Sentiment', package: '@hamafx/ai', modules: ['sentiment/'], description: 'Social media sentiment integration for contrarian signals' },
+    { name: 'AI Chat (Single-Agent)', package: '@kestrel/ai', modules: ['agent.ts', 'routing.ts', 'planner.ts', 'verification.ts', 'chat-retry-loop.ts'], description: 'Streaming chat with domain-based routing, plan-then-act, registered tools, 5-attempt retry' },
+    { name: 'Multi-Agent Committee', package: '@kestrel/ai', modules: ['multi-agent/orchestrator.ts', 'multi-agent/agents/'], description: '4 specialist agents + 1 decision agent with token-by-token fusion streaming' },
+    { name: 'Live Market Data', package: '@kestrel/data', modules: ['adapters/price.ts', 'adapters/candles.ts', 'failover.ts', 'cache/'], description: 'BiQuote SignalR → TickBuffer → live_ticks with Finnhub REST fallback' },
+    { name: 'Technical Indicators', package: '@kestrel/indicators', modules: ['moving-averages.ts', 'rsi.ts', 'macd.ts', 'bollinger.ts', 'smc/'], description: 'SMA, EMA, RSI, MACD, Bollinger Bands, SMC (FVG, order blocks, liquidity, swings, BOS/CHoCH)' },
+    { name: 'Alert Engine', package: '@kestrel/ai', modules: ['alerts/evaluator.ts', 'alerts/delivery.ts', 'alerts/persistence.ts'], description: 'Rule evaluation, delivery (email/push/telegram), snooze, simulation' },
+    { name: 'Trading Journal', package: '@kestrel/ai', modules: ['journal/persistence.ts', 'journal/review.ts'], description: 'Trade logging, R-multiple computation, AI-powered trade review' },
+    { name: 'Portfolio Management', package: '@kestrel/ai', modules: ['portfolio/'], description: 'Position tracking, PnL computation, risk reporting' },
+    { name: 'Background Jobs', package: '@kestrel/worker', modules: ['scheduler.ts', 'jobs/'], description: '7+ cron jobs: briefings, snapshots, COT, weekly review, embedding backfill, candle flush' },
+    { name: 'Push Notifications', package: '@kestrel/ai', modules: ['push/send.ts', 'push/persistence.ts'], description: 'Web Push API with VAPID, subscription management' },
+    { name: 'Bot Platform', package: '@kestrel/ai', modules: ['bot/', 'telegram/'], description: 'Telegram bot with commands, link codes, idempotency, rate limiting' },
+    { name: 'BYOK Provider Registry', package: '@kestrel/ai', modules: ['byok-providers.ts', '_providers/'], description: 'Bring-Your-Own-Key support for the live provider registry, fallback chain, and model catalog' },
+    { name: 'Social Sentiment', package: '@kestrel/ai', modules: ['sentiment/'], description: 'Social media sentiment integration for contrarian signals' },
   ];
 
   return {
@@ -313,7 +313,7 @@ function generateKnowledgeMarkdown(
   const routeNodes = nodes.filter(n => n.type === 'api_route');
   const tableNodes = nodes.filter(n => n.type === 'table');
 
-  return `# HamaFX-Ai Architecture Knowledge Base
+  return `# Kestrel Architecture Knowledge Base
 
 > **Auto-generated**: ${model.generatedAt}
 > **Schema version**: 1.0
@@ -323,7 +323,7 @@ function generateKnowledgeMarkdown(
 
 ## Project Overview
 
-**HamaFX-Ai** is an open-source (Apache-2.0), single-user BYOK, chat-driven AI trading copilot for gold, forex, and supported crypto instruments: **XAUUSD** (primary), canonical forex pairs, and Binance crypto pairs.
+**Kestrel** is an open-source (Apache-2.0), single-user BYOK, chat-driven AI trading copilot for gold, forex, and supported crypto instruments: **XAUUSD** (primary), canonical forex pairs, and Binance crypto pairs.
 
 - **Stack**: Next.js 16 (App Router) + React 19 + TypeScript (strict)
 - **AI**: Vercel AI SDK v5, Google Vertex AI + the live BYOK provider registry
@@ -348,12 +348,12 @@ This public OSS release runs as a single-user self-hosted deployment with BYOK e
 
 ## Architecture Layers
 
-1. **Presentation** (\`@hamafx/web\`) — Next.js 16 PWA, React 19, Tailwind CSS v4, shadcn/ui, TradingView charts
-2. **API Gateway** (\`@hamafx/web\` request proxy) — NextAuth JWT, CSRF, rate limiting, ${routeNodes.length} API routes
-3. **AI Agent** (\`@hamafx/ai\`) — Chat routing, plan-then-act, ${toolNodes.length} tools, ${agentNodes.length} agents, memory, citations
-4. **Data** (\`@hamafx/data\`) — Provider failover, caching (SWR), throttling, BiQuote→Finnhub
-5. **Persistence** (\`@hamafx/db\`) — Drizzle ORM, ${tableNodes.length}+ tables, Postgres (Supabase) + PGlite
-6. **Worker** (\`@hamafx/worker\`) — SignalR consumer, TickBuffer, Candle1mAggregator, 7+ cron jobs
+1. **Presentation** (\`@kestrel/web\`) — Next.js 16 PWA, React 19, Tailwind CSS v4, shadcn/ui, TradingView charts
+2. **API Gateway** (\`@kestrel/web\` request proxy) — NextAuth JWT, CSRF, rate limiting, ${routeNodes.length} API routes
+3. **AI Agent** (\`@kestrel/ai\`) — Chat routing, plan-then-act, ${toolNodes.length} tools, ${agentNodes.length} agents, memory, citations
+4. **Data** (\`@kestrel/data\`) — Provider failover, caching (SWR), throttling, BiQuote→Finnhub
+5. **Persistence** (\`@kestrel/db\`) — Drizzle ORM, ${tableNodes.length}+ tables, Postgres (Supabase) + PGlite
+6. **Worker** (\`@kestrel/worker\`) — SignalR consumer, TickBuffer, Candle1mAggregator, 7+ cron jobs
 7. **Infrastructure** — Vercel (web) + GCE VM (worker), Docker Compose, systemd timers
 
 ## Key Design Patterns

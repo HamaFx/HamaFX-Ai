@@ -1,6 +1,6 @@
 ---
 type: module
-package: "@hamafx/web"
+package: "@kestrel/web"
 path: "apps/web/src/components/chart/chart-types.ts"
 incoming: 16
 outgoing: 5
@@ -13,7 +13,7 @@ aliases: [chart-types/ChartSettings]
 
 # 📁 chart-types/ChartSettings
 
-> **Module** · `@hamafx/web` · `apps/web/src/components/chart/chart-types.ts`
+> **Module** · `@kestrel/web` · `apps/web/src/components/chart/chart-types.ts`
 
 
 Module: apps/web/src/components/chart/chart-types.ts
@@ -32,7 +32,7 @@ Module: apps/web/src/components/chart/chart-types.ts
 
 
 ### 📤 Depends On (3)
-[[@hamafx-shared]] · [[overlays-MarkerPrimitive]] · [[@hamafx-web]]
+[[@kestrel-shared]] · [[overlays-MarkerPrimitive]] · [[@kestrel-web]]
 
 
 ### 📥 Depended On By (8)

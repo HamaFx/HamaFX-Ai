@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,13 +17,13 @@
  */
 
 // Symbol picker with typeahead search. Shows the user's watchlist first,
-// then all available symbols from @hamafx/shared. The search input filters
+// then all available symbols from @kestrel/shared. The search input filters
 // across ALL symbols so users can navigate to a symbol not in their watchlist.
 
 import { IconSearch } from '@tabler/icons-react';
 import { useMemo, useState } from 'react';
 
-import { BUILTIN_SYMBOLS, type Symbol } from '@hamafx/shared';
+import { BUILTIN_SYMBOLS, type Symbol } from '@kestrel/shared';
 
 import { useTimeframe } from '@/hooks/use-tf';
 import { cn } from '@/lib/cn';

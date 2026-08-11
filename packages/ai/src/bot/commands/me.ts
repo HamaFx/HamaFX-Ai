@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@
 // /me → displays account details, daily spend, and quick stats.
 
 import type { BotCommand, BotResponse, BotContext } from '../types';
-import { getUserWithSettings, countActiveAlerts } from '@hamafx/db';
+import { getUserWithSettings, countActiveAlerts } from '@kestrel/db';
 import { dailySpendUsd } from '../../cost';
 import { getBotLink } from '../linking';
 
@@ -49,7 +49,7 @@ export const meCommand: BotCommand = {
         `${costIcon} AI Spend: $${dailyCostUsd.toFixed(4)}`,
         `Active Alerts: ${alertsCount}`,
         '',
-        '🔗 hamafx.ai',
+        '🔗 kestrel.ai',
       ];
 
       return { text: lines.join('\n') };

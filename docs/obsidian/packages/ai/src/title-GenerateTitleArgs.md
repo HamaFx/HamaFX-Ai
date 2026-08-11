@@ -1,19 +1,19 @@
 ---
 type: module
-package: "@hamafx/ai"
+package: "@kestrel/ai"
 path: "packages/ai/src/title.ts"
 incoming: 2
 outgoing: 7
 connections: 9
 risk: low
 layer: core
-tags: [type/module, hamafx-ai, layer/core]
+tags: [type/module, kestrel-ai, layer/core]
 aliases: [title/GenerateTitleArgs]
 ---
 
 # 📁 title/GenerateTitleArgs
 
-> **Module** · `@hamafx/ai` · `packages/ai/src/title.ts`
+> **Module** · `@kestrel/ai` · `packages/ai/src/title.ts`
 
 
 Module: packages/ai/src/title.ts
@@ -28,11 +28,11 @@ Module: packages/ai/src/title.ts
 | Total connections | 9 |
 | Risk level | **LOW** |
 | Layer | `core` |
-| Package tag | `#hamafx-ai` |
+| Package tag | `#kestrel-ai` |
 
 
 ### 📤 Depends On (5)
-[[@hamafx-shared]] · [[model-resolveModel]] · [[tool-context-ToolEnv]] · [[telemetry-telemetryConfig]] · [[@hamafx-ai]]
+[[@kestrel-shared]] · [[model-resolveModel]] · [[tool-context-ToolEnv]] · [[telemetry-telemetryConfig]] · [[@kestrel-ai]]
 
 
 ### 📥 Depended On By (2)
@@ -52,4 +52,4 @@ Module: packages/ai/src/title.ts
 - **Local Graph:** Right-click this file → "Open local graph"
 - **Backlinks:** Open the right sidebar → "Backlinks"
 - Use `#type/module` to find all Modules
-- Use `#hamafx-ai` to find all files in this package
+- Use `#kestrel-ai` to find all files in this package

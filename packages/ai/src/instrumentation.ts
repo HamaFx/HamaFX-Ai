@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,7 +30,7 @@
 
 import { NodeSDK } from '@opentelemetry/sdk-node';
 import { LangfuseSpanProcessor } from '@langfuse/otel';
-import { createCategorizedLogger } from '@hamafx/shared/logger';
+import { createCategorizedLogger } from '@kestrel/shared/logger';
 
 const llog = createCategorizedLogger('system', { component: 'langfuse' });
 

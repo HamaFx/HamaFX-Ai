@@ -1,22 +1,22 @@
 ---
 type: tool
-package: "@hamafx/ai"
+package: "@kestrel/ai"
 path: "packages/ai/src/tools/get-news.ts"
 incoming: 2
 outgoing: 6
 connections: 8
 risk: low
 layer: ai
-tags: [type/tool, hamafx-ai, layer/ai]
+tags: [type/tool, kestrel-ai, layer/ai]
 aliases: [get_news]
 ---
 
 # 🔧 get_news
 
-> **AI Tool** · `@hamafx/ai` · `packages/ai/src/tools/get-news.ts`
+> **AI Tool** · `@kestrel/ai` · `packages/ai/src/tools/get-news.ts`
 
 
-Copyright 2026 HamaFX
+Copyright 2026 Kestrel
 
 
 ## 📊 Connections
@@ -28,11 +28,11 @@ Copyright 2026 HamaFX
 | Total connections | 8 |
 | Risk level | **LOW** |
 | Layer | `ai` |
-| Package tag | `#hamafx-ai` |
+| Package tag | `#kestrel-ai` |
 
 
 ### 📤 Depends On (6)
-[[@hamafx-db]] · [[db-getDb]] · [[@hamafx-shared]] · [[tool-context-ToolEnv]] · [[@hamafx-ai]] · [[registry-ToolPlugin]]
+[[@kestrel-db]] · [[db-getDb]] · [[@kestrel-shared]] · [[tool-context-ToolEnv]] · [[@kestrel-ai]] · [[registry-ToolPlugin]]
 
 
 ### 📥 Depended On By (2)
@@ -49,4 +49,4 @@ Copyright 2026 HamaFX
 - **Local Graph:** Right-click this file → "Open local graph"
 - **Backlinks:** Open the right sidebar → "Backlinks"
 - Use `#type/tool` to find all AI Tools
-- Use `#hamafx-ai` to find all files in this package
+- Use `#kestrel-ai` to find all files in this package

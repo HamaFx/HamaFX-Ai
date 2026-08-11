@@ -1,4 +1,4 @@
-import type { Candle, Tick } from '@hamafx/shared';
+import type { Candle, Tick } from '@kestrel/shared';
 
 export interface MakeCandlesOpts {
   highs?: number[];

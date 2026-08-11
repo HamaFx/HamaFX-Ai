@@ -23,10 +23,10 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/pnpm-lock.yaml ./
 COPY . .
 
-RUN pnpm turbo run build --filter=@hamafx/worker...
+RUN pnpm turbo run build --filter=@kestrel/worker...
 
 # Prune development dependencies
-RUN pnpm --filter=@hamafx/worker deploy --prod /prod/worker
+RUN pnpm --filter=@kestrel/worker deploy --prod /prod/worker
 
 # Copy built dist/ files into the deployed package
 RUN cp -r apps/worker/dist /prod/worker/dist

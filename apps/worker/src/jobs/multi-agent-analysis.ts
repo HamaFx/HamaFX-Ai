@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,17 +21,17 @@
 // pipeline, and updates the row with the result.
 //
 // This job runs on the worker VM inside the Docker container, using the
-// same @hamafx/ai import as the Vercel route handler. No new network
+// same @kestrel/ai import as the Vercel route handler. No new network
 // paths needed — communication is through the Postgres DB.
 
-import { schema } from '@hamafx/db';
-import { getDb } from '@hamafx/ai';
+import { schema } from '@kestrel/db';
+import { getDb } from '@kestrel/ai';
 import { eq, asc, lt, and } from 'drizzle-orm';
-import { pickAiEnv } from '@hamafx/shared';
-import { traceIdStorage } from '@hamafx/shared/logger';
+import { pickAiEnv } from '@kestrel/shared';
+import { traceIdStorage } from '@kestrel/shared/logger';
 import type { UIMessage } from 'ai';
 import type { JobContext, JobResult } from './types.js';
-import type { AnalysisMode } from '@hamafx/ai';
+import type { AnalysisMode } from '@kestrel/ai';
 
 /** How many pending jobs to process per polling interval. */
 const MAX_JOBS_PER_RUN = 3;
@@ -85,8 +85,8 @@ export async function runMultiAgentAnalysis(ctx: JobContext): Promise<JobResult>
     const processJob = async () => {
     try {
       // Dynamically import the multi-agent orchestrator — the worker
-      // bundle includes @hamafx/ai (used by initLangfuse).
-      const { runMultiAgentChat, extractUserMessageText, resolveMode } = await import('@hamafx/ai');
+      // bundle includes @kestrel/ai (used by initLangfuse).
+      const { runMultiAgentChat, extractUserMessageText, resolveMode } = await import('@kestrel/ai');
       const { userSettings: userSettingsTable } = schema;
 
       // Load user settings for context.

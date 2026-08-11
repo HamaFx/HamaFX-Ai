@@ -1,19 +1,19 @@
 ---
 type: module
-package: "@hamafx/ai"
+package: "@kestrel/ai"
 path: "packages/ai/src/llm-throttle.ts"
 incoming: 3
 outgoing: 3
 connections: 6
 risk: low
 layer: core
-tags: [type/module, hamafx-ai, layer/core]
+tags: [type/module, kestrel-ai, layer/core]
 aliases: [llm-throttle/noteLlmRateLimit]
 ---
 
 # 📁 llm-throttle/noteLlmRateLimit
 
-> **Module** · `@hamafx/ai` · `packages/ai/src/llm-throttle.ts`
+> **Module** · `@kestrel/ai` · `packages/ai/src/llm-throttle.ts`
 
 
 Module: packages/ai/src/llm-throttle.ts
@@ -28,11 +28,11 @@ Module: packages/ai/src/llm-throttle.ts
 | Total connections | 6 |
 | Risk level | **LOW** |
 | Layer | `core` |
-| Package tag | `#hamafx-ai` |
+| Package tag | `#kestrel-ai` |
 
 
 ### 📤 Depends On (2)
-[[rate-limits-RateLimitData]] · [[@hamafx-ai]]
+[[rate-limits-RateLimitData]] · [[@kestrel-ai]]
 
 
 ### 📥 Depended On By (3)
@@ -50,4 +50,4 @@ Module: packages/ai/src/llm-throttle.ts
 - **Local Graph:** Right-click this file → "Open local graph"
 - **Backlinks:** Open the right sidebar → "Backlinks"
 - Use `#type/module` to find all Modules
-- Use `#hamafx-ai` to find all files in this package
+- Use `#kestrel-ai` to find all files in this package

@@ -1,22 +1,22 @@
 ---
 type: tool
-package: "@hamafx/ai"
+package: "@kestrel/ai"
 path: "packages/ai/src/tools/get-price.ts"
 incoming: 3
 outgoing: 4
 connections: 7
 risk: low
 layer: ai
-tags: [type/tool, hamafx-ai, layer/ai]
+tags: [type/tool, kestrel-ai, layer/ai]
 aliases: [get_price]
 ---
 
 # 🔧 get_price
 
-> **AI Tool** · `@hamafx/ai` · `packages/ai/src/tools/get-price.ts`
+> **AI Tool** · `@kestrel/ai` · `packages/ai/src/tools/get-price.ts`
 
 
-Copyright 2026 HamaFX
+Copyright 2026 Kestrel
 
 
 ## 📊 Connections
@@ -28,11 +28,11 @@ Copyright 2026 HamaFX
 | Total connections | 7 |
 | Risk level | **LOW** |
 | Layer | `ai` |
-| Package tag | `#hamafx-ai` |
+| Package tag | `#kestrel-ai` |
 
 
 ### 📤 Depends On (4)
-[[@hamafx-data]] · [[@hamafx-shared]] · [[@hamafx-ai]] · [[registry-ToolPlugin]]
+[[@kestrel-data]] · [[@kestrel-shared]] · [[@kestrel-ai]] · [[registry-ToolPlugin]]
 
 
 ### 📥 Depended On By (3)
@@ -49,4 +49,4 @@ Copyright 2026 HamaFX
 - **Local Graph:** Right-click this file → "Open local graph"
 - **Backlinks:** Open the right sidebar → "Backlinks"
 - Use `#type/tool` to find all AI Tools
-- Use `#hamafx-ai` to find all files in this package
+- Use `#kestrel-ai` to find all files in this package

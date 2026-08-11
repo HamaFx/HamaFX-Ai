@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,8 +19,8 @@ import {
   GetSystemDiagnosticsInputSchema,
   GetSystemDiagnosticsOutputSchema,
   type GetSystemDiagnosticsOutput,
-} from '@hamafx/shared';
-import { schema } from '@hamafx/db';
+} from '@kestrel/shared';
+import { schema } from '@kestrel/db';
 import { getDb } from '../db';
 import { tool } from 'ai';
 import { desc, sql } from 'drizzle-orm';
@@ -30,7 +30,7 @@ import { getToolContext, maybeGetToolContext } from '../tool-context';
 
 const InputSchema = GetSystemDiagnosticsInputSchema;
 
-declare module '@hamafx/shared' {
+declare module '@kestrel/shared' {
   interface ToolIOMap {
     get_system_diagnostics: { input: z.infer<typeof InputSchema> };
   }

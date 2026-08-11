@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,18 +14,18 @@
  * limitations under the License.
  */
 
-// Tests for the embedding-backfill worker job. We mock @hamafx/ai's
+// Tests for the embedding-backfill worker job. We mock @kestrel/ai's
 // backfillEmbeddings + countPendingEmbeddings to avoid hitting the AI
 // Gateway / Postgres.
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-vi.mock('@hamafx/ai', () => ({
+vi.mock('@kestrel/ai', () => ({
   backfillEmbeddings: vi.fn(),
   countPendingEmbeddings: vi.fn(),
 }));
 
-import * as ai from '@hamafx/ai';
+import * as ai from '@kestrel/ai';
 
 import { runEmbeddingBackfill } from '../src/jobs/embedding-backfill';
 import { TenantRouter } from '../src/tenant-router';

@@ -27,8 +27,8 @@ import {
   generateSecret,
   AUTO_GENERATED_SECRETS,
   SECRET_MIN_BYTES,
-} from '@hamafx/shared/env-secrets';
-import { parseServerEnv, type ServerEnv } from '@hamafx/shared';
+} from '@kestrel/shared/env-secrets';
+import { parseServerEnv, type ServerEnv } from '@kestrel/shared';
 import { z } from 'zod';
 
 const AuthEnvSchema = z.object({

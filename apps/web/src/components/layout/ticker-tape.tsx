@@ -9,8 +9,8 @@
 'use client';
 
 import { useEffect, useReducer, useRef } from 'react';
-import type { Symbol, Tick } from '@hamafx/shared';
-import { priceDecimals } from '@hamafx/shared';
+import type { Symbol, Tick } from '@kestrel/shared';
+import { priceDecimals } from '@kestrel/shared';
 
 import { usePrices } from '@/hooks/use-prices';
 import { cn } from '@/lib/cn';

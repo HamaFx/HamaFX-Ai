@@ -13,7 +13,7 @@ import { SettingsSection } from './_components/settings-section';
 import { SystemStatusCard } from './_components/system-status-card';
 import { UsageGlance } from './_components/usage-glance';
 
-export const metadata: Metadata = { title: 'Settings | HamaFX' };
+export const metadata: Metadata = { title: 'Settings | Kestrel' };
 export const revalidate = 60;
 
 export default async function SettingsPage() {

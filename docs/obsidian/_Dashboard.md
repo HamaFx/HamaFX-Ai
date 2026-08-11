@@ -1,21 +1,21 @@
 ---
 type: dashboard
-title: "HamaFX-Ai — Architecture Dashboard"
-tags: [dashboard, hamafx]
+title: "Kestrel — Architecture Dashboard"
+tags: [dashboard, kestrel]
 cssclasses: [dashboard]
 ---
 
-# 🏗️ HamaFX-Ai Architecture Dashboard
+# 🏗️ Kestrel Architecture Dashboard
 
 > **Auto-generated** from the codebase. Open **Graph View** (Ctrl+G) to see all connections.
-> Tags are hierarchical: `#type/api_route`, `#hamafx/ai`, `#layer/data`, `#risk/high`.
+> Tags are hierarchical: `#type/api_route`, `#kestrel/ai`, `#layer/data`, `#risk/high`.
 
 ## 📊 System Snapshot
 
 | Metric | Value |
 |--------|-------|
-| Total Nodes | 1470 |
-| Total Edges | 4201 |
+| Total Nodes | 1471 |
+| Total Edges | 4203 |
 | Packages | 16 |
 | API Routes | 192 |
 | Database Tables | 52 |
@@ -23,7 +23,7 @@ cssclasses: [dashboard]
 | Components | 106 |
 | Circular Dependencies | 6 |
 | Architecture Hotspots | 50 |
-| Dead / Orphan Files | 1259 |
+| Dead / Orphan Files | 1262 |
 
 ## 🔍 Live Queries
 

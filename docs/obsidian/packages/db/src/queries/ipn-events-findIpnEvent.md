@@ -1,6 +1,6 @@
 ---
 type: module
-package: "@hamafx/db"
+package: "@kestrel/db"
 path: "packages/db/src/queries/ipn-events.ts"
 incoming: 0
 outgoing: 2
@@ -13,7 +13,7 @@ aliases: [ipn-events/findIpnEvent]
 
 # 📁 ipn-events/findIpnEvent
 
-> **Module** · `@hamafx/db` · `packages/db/src/queries/ipn-events.ts`
+> **Module** · `@kestrel/db` · `packages/db/src/queries/ipn-events.ts`
 
 
 Module: packages/db/src/queries/ipn-events.ts
@@ -32,7 +32,7 @@ Module: packages/db/src/queries/ipn-events.ts
 
 
 ### 📤 Depends On (2)
-[[client-DbClient]] · [[@hamafx-db]]
+[[client-DbClient]] · [[@kestrel-db]]
 
 
 

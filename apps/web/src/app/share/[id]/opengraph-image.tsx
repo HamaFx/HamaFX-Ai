@@ -1,6 +1,6 @@
 import { ImageResponse } from 'next/og';
 
-export const alt = 'HamaFX-Ai Analysis';
+export const alt = 'Kestrel Analysis';
 export const size = { width: 1200, height: 630 };
 
 export default async function OGImage({ params }: { params: Promise<{ id: string }> }) {
@@ -50,7 +50,7 @@ export default async function OGImage({ params }: { params: Promise<{ id: string
             }}
           >
             <span style={{ fontSize: 36, fontWeight: 700, color: '#F0F0F0', letterSpacing: '-0.02em' }}>
-              HamaFX·Ai
+              Kestrel
             </span>
             <span style={{ fontSize: 20, color: '#808080', marginTop: 4 }}>
               AI Trading Analysis

@@ -23,7 +23,7 @@ import { CSS } from '@dnd-kit/utilities';
 
 import { Button } from '@/components/ui/button';
 import { apiMutate } from '@/lib/api-client';
-import type { ProviderMeta } from '@hamafx/shared';
+import type { ProviderMeta } from '@kestrel/shared';
 
 
 interface FallbackChainPickerProps {

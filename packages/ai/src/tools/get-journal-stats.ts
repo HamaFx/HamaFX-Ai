@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,13 +20,13 @@
 // per-tag breakdowns via SQL group-bys. Empty filter sets return an
 // all-zero stats block + empty breakdown arrays — never throws.
 
-import { schema } from '@hamafx/db';
+import { schema } from '@kestrel/db';
 import { getDb } from '../db';
 import {
   GetJournalStatsInputSchema,
   type GetJournalStatsOutput,
   type StatBreakdown,
-} from '@hamafx/shared';
+} from '@kestrel/shared';
 import { tool } from 'ai';
 import { and, eq, gte, lte, sql, type SQL } from 'drizzle-orm';
 import type { z } from 'zod';
@@ -36,7 +36,7 @@ import { getToolContext, maybeGetToolContext } from '../tool-context';
 
 const InputSchema = GetJournalStatsInputSchema;
 
-declare module '@hamafx/shared' {
+declare module '@kestrel/shared' {
   interface ToolIOMap {
     get_journal_stats: { input: z.infer<typeof InputSchema> };
   }

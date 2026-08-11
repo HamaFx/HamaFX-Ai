@@ -1,19 +1,19 @@
 ---
 type: module
-package: "@hamafx/db"
+package: "@kestrel/db"
 path: "packages/db/src/schema/analysis-jobs.ts"
 incoming: 1
 outgoing: 3
 connections: 4
 risk: low
 layer: core
-tags: [type/module, hamafx-db, layer/core]
+tags: [type/module, kestrel-db, layer/core]
 aliases: [analysis-jobs/analysisJobs]
 ---
 
 # 📁 analysis-jobs/analysisJobs
 
-> **Module** · `@hamafx/db` · `packages/db/src/schema/analysis-jobs.ts`
+> **Module** · `@kestrel/db` · `packages/db/src/schema/analysis-jobs.ts`
 
 
 Database schema (1 tables)
@@ -28,11 +28,11 @@ Database schema (1 tables)
 | Total connections | 4 |
 | Risk level | **LOW** |
 | Layer | `core` |
-| Package tag | `#hamafx-db` |
+| Package tag | `#kestrel-db` |
 
 
 ### 📤 Depends On (3)
-[[auth-users]] · [[chat-chatThreads]] · [[@hamafx-db]]
+[[auth-users]] · [[chat-chatThreads]] · [[@kestrel-db]]
 
 
 ### 📥 Depended On By (1)
@@ -49,4 +49,4 @@ Database schema (1 tables)
 - **Local Graph:** Right-click this file → "Open local graph"
 - **Backlinks:** Open the right sidebar → "Backlinks"
 - Use `#type/module` to find all Modules
-- Use `#hamafx-db` to find all files in this package
+- Use `#kestrel-db` to find all files in this package

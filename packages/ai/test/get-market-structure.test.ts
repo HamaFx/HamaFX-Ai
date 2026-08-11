@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,11 +35,11 @@ const exec = getMarketStructureTool.execute as unknown as (
 const mockGetCandles = vi.fn();
 const mockComputeStructure = vi.fn();
 
-vi.mock('@hamafx/data', () => ({
+vi.mock('@kestrel/data', () => ({
   getCandles: (...args: unknown[]) => mockGetCandles(...args),
 }));
 
-vi.mock('@hamafx/indicators', () => ({
+vi.mock('@kestrel/indicators', () => ({
   computeStructure: (...args: unknown[]) => mockComputeStructure(...args),
 }));
 

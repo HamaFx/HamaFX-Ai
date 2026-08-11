@@ -48,7 +48,7 @@ export function AppearanceCard({ initialLocale }: { initialLocale?: string }) {
       <div className="mt-2">
         <SettingsRow
           label="Theme"
-          description="HamaFX is currently dark-only. A light theme may be offered in the future."
+          description="Kestrel is currently dark-only. A light theme may be offered in the future."
           action={
             <span className="inline-flex items-center rounded-sm border border-border bg-bg-elev-2 px-3 py-1.5 text-sm text-fg-subtle">
               Dark

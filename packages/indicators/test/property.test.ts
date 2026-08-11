@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@
 import * as fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
 
-import type { Candle } from '@hamafx/shared';
+import type { Candle } from '@kestrel/shared';
 
 import { atr } from '../src/atr';
 import { bollinger } from '../src/bollinger';

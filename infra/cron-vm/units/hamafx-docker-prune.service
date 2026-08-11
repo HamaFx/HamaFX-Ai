@@ -1,5 +1,5 @@
 [Unit]
-Description=HamaFX-Ai weekly Docker image prune (reclaim disk space)
+Description=Kestrel weekly Docker image prune (reclaim disk space)
 After=network-online.target
 Wants=network-online.target
 

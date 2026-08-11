@@ -6,7 +6,7 @@ import { PageHeader } from '@/components/layout/page-header';
 
 import { JournalView } from './_components/journal-view';
 
-export const metadata: Metadata = { title: 'Journal | HamaFX' };
+export const metadata: Metadata = { title: 'Journal | Kestrel' };
 
 export default function JournalPage() {
   return (

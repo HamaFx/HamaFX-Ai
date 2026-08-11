@@ -1,19 +1,19 @@
 ---
 type: module
-package: "@hamafx/web"
+package: "@kestrel/web"
 path: "apps/web/src/app/(app)/settings/_actions-shared.ts"
 incoming: 4
 outgoing: 2
 connections: 6
 risk: low
 layer: core
-tags: [type/module, hamafx-web, layer/core]
+tags: [type/module, kestrel-web, layer/core]
 aliases: [_actions-shared/NAME_MIN]
 ---
 
 # 📁 _actions-shared/NAME_MIN
 
-> **Module** · `@hamafx/web` · `apps/web/src/app/(app)/settings/_actions-shared.ts`
+> **Module** · `@kestrel/web` · `apps/web/src/app/(app)/settings/_actions-shared.ts`
 
 
 Module: apps/web/src/app/(app)/settings/_actions-shared.ts
@@ -28,11 +28,11 @@ Module: apps/web/src/app/(app)/settings/_actions-shared.ts
 | Total connections | 6 |
 | Risk level | **LOW** |
 | Layer | `core` |
-| Package tag | `#hamafx-web` |
+| Package tag | `#kestrel-web` |
 
 
 ### 📤 Depends On (2)
-[[@hamafx-db]] · [[@hamafx-web]]
+[[@kestrel-db]] · [[@kestrel-web]]
 
 
 ### 📥 Depended On By (4)
@@ -53,4 +53,4 @@ Module: apps/web/src/app/(app)/settings/_actions-shared.ts
 - **Local Graph:** Right-click this file → "Open local graph"
 - **Backlinks:** Open the right sidebar → "Backlinks"
 - Use `#type/module` to find all Modules
-- Use `#hamafx-web` to find all files in this package
+- Use `#kestrel-web` to find all files in this package

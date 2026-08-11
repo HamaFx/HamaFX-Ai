@@ -7,7 +7,7 @@
 
 import {
   type CorrelationCell,
-} from '@hamafx/shared';
+} from '@kestrel/shared';
 
 import type { ToolPartProps } from './registry';
 

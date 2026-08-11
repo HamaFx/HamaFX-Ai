@@ -1,19 +1,19 @@
 ---
 type: module
-package: "@hamafx/ai"
+package: "@kestrel/ai"
 path: "packages/ai/src/cost.ts"
 incoming: 17
 outgoing: 7
 connections: 24
 risk: medium
 layer: core
-tags: [type/module, hamafx-ai, layer/core, risk/medium]
+tags: [type/module, kestrel-ai, layer/core, risk/medium]
 aliases: [cost/DEFAULT_TURN_ESTIMATE_USD]
 ---
 
 # 📁 cost/DEFAULT_TURN_ESTIMATE_USD
 
-> **Module** · `@hamafx/ai` · `packages/ai/src/cost.ts`
+> **Module** · `@kestrel/ai` · `packages/ai/src/cost.ts`
 
 
 Module: packages/ai/src/cost.ts
@@ -28,11 +28,11 @@ Module: packages/ai/src/cost.ts
 | Total connections | 24 |
 | Risk level | **MEDIUM** |
 | Layer | `core` |
-| Package tag | `#hamafx-ai` |
+| Package tag | `#kestrel-ai` |
 
 
 ### 📤 Depends On (6)
-[[@hamafx-db]] · [[db-getDb]] · [[delivery-DeliveryResult]] · [[byok-providers-BYOK_PROVIDERS]] · [[@hamafx-shared]] · [[@hamafx-ai]]
+[[@kestrel-db]] · [[db-getDb]] · [[delivery-DeliveryResult]] · [[byok-providers-BYOK_PROVIDERS]] · [[@kestrel-shared]] · [[@kestrel-ai]]
 
 
 ### 📥 Depended On By (17)
@@ -61,4 +61,4 @@ Module: packages/ai/src/cost.ts
 - **Local Graph:** Right-click this file → "Open local graph"
 - **Backlinks:** Open the right sidebar → "Backlinks"
 - Use `#type/module` to find all Modules
-- Use `#hamafx-ai` to find all files in this package
+- Use `#kestrel-ai` to find all files in this package

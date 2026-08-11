@@ -1,6 +1,6 @@
 ---
 type: module
-package: "@hamafx/ai"
+package: "@kestrel/ai"
 path: "packages/ai/src/tools/journal.ts"
 incoming: 0
 outgoing: 10
@@ -13,7 +13,7 @@ aliases: [journal]
 
 # 📁 journal
 
-> **Module** · `@hamafx/ai` · `packages/ai/src/tools/journal.ts`
+> **Module** · `@kestrel/ai` · `packages/ai/src/tools/journal.ts`
 
 
 Module: packages/ai/src/tools/journal.ts
@@ -32,7 +32,7 @@ Module: packages/ai/src/tools/journal.ts
 
 
 ### 📤 Depends On (10)
-[[log_journal]] · [[get_journal_stats]] · [[get_news]] · [[get_calendar]] · [[set_alert]] · [[search_knowledge]] · [[share_snapshot]] · [[summarize_thread]] · [[registry-ToolPlugin]] · [[@hamafx-ai]]
+[[log_journal]] · [[get_journal_stats]] · [[get_news]] · [[get_calendar]] · [[set_alert]] · [[search_knowledge]] · [[share_snapshot]] · [[summarize_thread]] · [[registry-ToolPlugin]] · [[@kestrel-ai]]
 
 
 

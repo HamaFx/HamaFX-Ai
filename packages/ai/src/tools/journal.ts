@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 
 // PF-13 — Journal / management tool category.
 // Imported by tools/index.ts for self-registration and also exposed
-// as a sub-path export: @hamafx/ai/tools/journal
+// as a sub-path export: @kestrel/ai/tools/journal
 
 import { logJournalTool } from './log-journal';
 import { getJournalStatsTool } from './get-journal-stats';

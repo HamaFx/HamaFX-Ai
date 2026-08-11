@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,9 +17,9 @@
 // P1 — Thread persistence (SRP split from persistence.ts).
 // Thread CRUD + fork logic. Messages and telemetry live in their own modules.
 
-import { schema } from '@hamafx/db';
+import { schema } from '@kestrel/db';
 import { getDb } from '../db';
-import type { Symbol } from '@hamafx/shared';
+import type { Symbol } from '@kestrel/shared';
 import { and, asc, desc, eq, lt } from 'drizzle-orm';
 
 // ---------------------------------------------------------------------------

@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -111,7 +111,7 @@ export function TelegramLinkCard(): React.JSX.Element {
       }
       setLinkCode(data);
       toast.success('Link code generated', {
-        description: 'Send the code to the HamaFX bot on Telegram',
+        description: 'Send the code to the Kestrel bot on Telegram',
       });
       startPolling();
     } catch (err) {
@@ -196,13 +196,13 @@ export function TelegramLinkCard(): React.JSX.Element {
             <code className="rounded-sm bg-bg-elev-2 px-1 py-0.5 text-xs">/ask</code>, and more.
           </p>
           <a
-            href={`https://t.me/HamaFXBot`}
+            href={`https://t.me/KestrelBot`}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-1.5 text-xs text-fg hover:text-fg/80 font-semibold transition-colors"
           >
             <IconExternalLink className="size-3" />
-            Open HamaFX Bot on Telegram
+            Open Kestrel Bot on Telegram
           </a>
           <Button
             type="button"
@@ -223,17 +223,17 @@ export function TelegramLinkCard(): React.JSX.Element {
         /* Not linked state */
         <div className="space-y-3">
           <p className="text-sm text-fg-subtle">
-            Link your Telegram to control HamaFX from your phone with bot commands.
+            Link your Telegram to control Kestrel from your phone with bot commands.
           </p>
 
           <a
-            href={`https://t.me/HamaFXBot`}
+            href={`https://t.me/KestrelBot`}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-1.5 text-xs text-fg hover:text-fg/80 font-semibold transition-colors"
           >
             <IconExternalLink className="size-3" />
-            Open HamaFX Bot on Telegram
+            Open Kestrel Bot on Telegram
           </a>
 
           {!linkCode ? (
@@ -278,16 +278,16 @@ export function TelegramLinkCard(): React.JSX.Element {
                   <p className="text-xs text-fg-subtle">
                     Send{' '}
                     <code className="font-mono">/link {linkCode.code}</code>{' '}
-                    to the HamaFX bot on Telegram.
+                    to the Kestrel bot on Telegram.
                   </p>
                   <a
-                    href={`https://t.me/HamaFXBot`}
+                    href={`https://t.me/KestrelBot`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-1.5 text-xs text-fg hover:text-fg/80 font-semibold transition-colors"
                   >
                     <IconExternalLink className="size-3" />
-                    Open HamaFX Bot on Telegram
+                    Open Kestrel Bot on Telegram
                   </a>
                 </div>
 

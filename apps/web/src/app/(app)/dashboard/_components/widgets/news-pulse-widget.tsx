@@ -11,7 +11,7 @@
 
 import Link from 'next/link';
 import { IconNews } from '@tabler/icons-react';
-import type { NewsArticle } from '@hamafx/shared';
+import type { NewsArticle } from '@kestrel/shared';
 
 import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/cn';

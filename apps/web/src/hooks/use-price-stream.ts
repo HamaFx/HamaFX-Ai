@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import type { Symbol, Tick } from '@hamafx/shared';
+import type { Symbol, Tick } from '@kestrel/shared';
 
 interface PriceStreamState {
   ticks: Tick[];

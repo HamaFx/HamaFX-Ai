@@ -1,4 +1,4 @@
-# HamaFX-Ai — throwaway SUT for k6 load testing.
+# Kestrel — throwaway SUT for k6 load testing.
 #
 # THIS IS NOT FOR PRODUCTION USE.
 # - No persistent volumes (DB is ephemeral).

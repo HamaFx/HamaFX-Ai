@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-// Public barrel for @hamafx/db.
+// Public barrel for @kestrel/db.
 
 export * from './schema/index';
 // PF-15 — Export `getDbRO` so consumers can route read queries to

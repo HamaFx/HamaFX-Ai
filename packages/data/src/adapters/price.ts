@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,7 +34,7 @@
   //
   // Twelve Data removed — BiQuote primary covers forex/gold.
 
-import { SymbolSchema, type Symbol, type Tick } from '@hamafx/shared';
+import { SymbolSchema, type Symbol, type Tick } from '@kestrel/shared';
 
 import { cacheKey, cacheTag, getDefaultCache, PRICE_TTL } from '../cache';
 import { runWithFailover, type ProviderAttempt } from '../failover';

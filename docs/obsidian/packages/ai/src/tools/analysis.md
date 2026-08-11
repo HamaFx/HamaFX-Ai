@@ -1,6 +1,6 @@
 ---
 type: module
-package: "@hamafx/ai"
+package: "@kestrel/ai"
 path: "packages/ai/src/tools/analysis.ts"
 incoming: 0
 outgoing: 9
@@ -13,7 +13,7 @@ aliases: [analysis]
 
 # 📁 analysis
 
-> **Module** · `@hamafx/ai` · `packages/ai/src/tools/analysis.ts`
+> **Module** · `@kestrel/ai` · `packages/ai/src/tools/analysis.ts`
 
 
 Module: packages/ai/src/tools/analysis.ts
@@ -32,7 +32,7 @@ Module: packages/ai/src/tools/analysis.ts
 
 
 ### 📤 Depends On (9)
-[[analyze_technical]] · [[analyze_fundamental]] · [[analyze_chart_image]] · [[annotate_chart]] · [[forecast_volatility]] · [[compute_risk]] · [[compute_position_health]] · [[registry-ToolPlugin]] · [[@hamafx-ai]]
+[[analyze_technical]] · [[analyze_fundamental]] · [[analyze_chart_image]] · [[annotate_chart]] · [[forecast_volatility]] · [[compute_risk]] · [[compute_position_health]] · [[registry-ToolPlugin]] · [[@kestrel-ai]]
 
 
 

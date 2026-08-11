@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,7 +35,7 @@
 import {
   SearchKnowledgeInputSchema,
   type SearchKnowledgeOutput,
-} from '@hamafx/shared';
+} from '@kestrel/shared';
 import { tool } from 'ai';
 import { z } from 'zod';
 
@@ -68,7 +68,7 @@ const InputSchema = SearchKnowledgeInputSchema.extend({
   halflifeDays: z.number().min(0.5).max(365).optional(),
 });
 
-declare module '@hamafx/shared' {
+declare module '@kestrel/shared' {
   interface ToolIOMap {
     search_knowledge: { input: z.infer<typeof InputSchema> };
   }

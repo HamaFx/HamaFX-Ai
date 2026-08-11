@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,15 +22,15 @@
 // per-candle scalars) so they live in their own envelope alongside the
 // existing get_indicators tool.
 
-import { getCandles } from '@hamafx/data';
-import { computeStructure } from '@hamafx/indicators';
+import { getCandles } from '@kestrel/data';
+import { computeStructure } from '@kestrel/indicators';
 import {
   StructureKindSchema,
   SymbolSchema,
   TimeframeSchema,
   type GetMarketStructureOutput,
   type StructureResult,
-} from '@hamafx/shared';
+} from '@kestrel/shared';
 import { tool } from 'ai';
 import { z } from 'zod';
 
@@ -49,7 +49,7 @@ const InputSchema = z.object({
   lookback: z.number().int().min(2).max(10).default(3),
 });
 
-declare module '@hamafx/shared' {
+declare module '@kestrel/shared' {
   interface ToolIOMap {
     get_market_structure: { input: z.infer<typeof InputSchema> };
   }

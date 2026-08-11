@@ -1,5 +1,5 @@
 [Unit]
-Description=HamaFX-Ai Docker container health monitor + auto-restart
+Description=Kestrel Docker container health monitor + auto-restart
 After=docker.service
 Requires=docker.service
 

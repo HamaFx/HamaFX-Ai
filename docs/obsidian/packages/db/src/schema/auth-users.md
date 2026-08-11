@@ -1,19 +1,19 @@
 ---
 type: module
-package: "@hamafx/db"
+package: "@kestrel/db"
 path: "packages/db/src/schema/auth.ts"
 incoming: 30
 outgoing: 1
 connections: 31
 risk: high
 layer: core
-tags: [type/module, hamafx-db, layer/core, risk/high]
+tags: [type/module, kestrel-db, layer/core, risk/high]
 aliases: [auth/users]
 ---
 
 # 📁 auth/users
 
-> **Module** · `@hamafx/db` · `packages/db/src/schema/auth.ts`
+> **Module** · `@kestrel/db` · `packages/db/src/schema/auth.ts`
 
 
 Database schema (9 tables)
@@ -28,11 +28,11 @@ Database schema (9 tables)
 | Total connections | 31 |
 | Risk level | **HIGH** |
 | Layer | `core` |
-| Package tag | `#hamafx-db` |
+| Package tag | `#kestrel-db` |
 
 
 ### 📤 Depends On (1)
-[[@hamafx-db]]
+[[@kestrel-db]]
 
 
 ### 📥 Depended On By (30)
@@ -64,4 +64,4 @@ Database schema (9 tables)
 - **Local Graph:** Right-click this file → "Open local graph"
 - **Backlinks:** Open the right sidebar → "Backlinks"
 - Use `#type/module` to find all Modules
-- Use `#hamafx-db` to find all files in this package
+- Use `#kestrel-db` to find all files in this package

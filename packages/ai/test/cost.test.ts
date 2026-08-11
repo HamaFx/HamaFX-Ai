@@ -13,7 +13,7 @@ function thenableResolver(v: unknown) {
   });
 }
 
-vi.mock('@hamafx/db', () => ({
+vi.mock('@kestrel/db', () => ({
   getDb: () => ({
     select: () => ({
       from: () => ({

@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -43,16 +43,16 @@ const mockGetCandles = vi.fn();
 const mockComputeIndicator = vi.fn();
 const mockComputeStructure = vi.fn();
 
-vi.mock('@hamafx/data', () => ({
+vi.mock('@kestrel/data', () => ({
   getCandles: (...args: unknown[]) => mockGetCandles(...args),
 }));
 
-vi.mock('@hamafx/indicators', () => ({
+vi.mock('@kestrel/indicators', () => ({
   computeIndicator: (...args: unknown[]) => mockComputeIndicator(...args),
   computeStructure: (...args: unknown[]) => mockComputeStructure(...args),
 }));
 
-vi.mock('@hamafx/shared/logger', () => ({
+vi.mock('@kestrel/shared/logger', () => ({
   createCategorizedLogger: () => ({
     warn: vi.fn(),
     info: vi.fn(),

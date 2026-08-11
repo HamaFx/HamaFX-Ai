@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
-// /api/bot/unlink — Unlink Telegram from the user's HamaFX account.
+// /api/bot/unlink — Unlink Telegram from the user's Kestrel account.
 // POST /api/bot/unlink
 
 import { unlinkBot } from '@/lib/services/api-boundary';

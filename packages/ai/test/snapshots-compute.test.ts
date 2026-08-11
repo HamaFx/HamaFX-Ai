@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 // computeDailySnapshot imports indicator functions that need mocking
 // since we only want to test the pure orchestration logic.
 import { computeDailySnapshot, previousUtcMidnight } from '../src/snapshots/compute';
-import type { Candle } from '@hamafx/shared';
+import type { Candle } from '@kestrel/shared';
 
 function makeCandle(overrides: Partial<Candle> = {}): Candle {
   return {

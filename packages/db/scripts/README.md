@@ -12,8 +12,8 @@ Installs the required Postgres extensions (`pgcrypto`, `vector`) into the
 ```bash
 # Locally:
 source apps/web/.env.production
-pnpm --filter @hamafx/db migrate:setup-extensions
-pnpm --filter @hamafx/db migrate:apply
+pnpm --filter @kestrel/db migrate:setup-extensions
+pnpm --filter @kestrel/db migrate:apply
 ```
 
 Why a separate step? `CREATE EXTENSION` inside the same transaction as
@@ -36,7 +36,7 @@ It preflights every value and updates all fields in one transaction.
 ```bash
 OLD_ENCRYPTION_SECRET=... NEW_ENCRYPTION_SECRET=... \
 ROTATE_ENCRYPTION_SECRET_CONFIRM=YES \
-pnpm --filter @hamafx/db migrate:rotate-encryption
+pnpm --filter @kestrel/db migrate:rotate-encryption
 ```
 
 ## `list-tables.mjs`

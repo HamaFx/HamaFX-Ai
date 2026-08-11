@@ -3,7 +3,7 @@
 // PF-22 — Journal service layer.
 //
 // Separates business logic from HTTP handling. Route handlers (controllers)
-// call these service functions instead of importing @hamafx/ai directly.
+// call these service functions instead of importing @kestrel/ai directly.
 // The service layer handles:
 //   - Input validation (re-exports Zod schemas)
 //   - Authorization checks (scoped to userId)
@@ -21,9 +21,9 @@ import {
   getEntry,
   listEntries,
   updateEntry,
-} from '@hamafx/ai';
-import type { JournalEntry } from '@hamafx/shared';
-import { SymbolSchema, TradeOutcomeSchema, TradeSideSchema } from '@hamafx/shared';
+} from '@kestrel/ai';
+import type { JournalEntry } from '@kestrel/shared';
+import { SymbolSchema, TradeOutcomeSchema, TradeSideSchema } from '@kestrel/shared';
 import { z } from 'zod';
 
 // ── Schemas (shared between controller and tests) ──────────────────────────

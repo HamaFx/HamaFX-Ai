@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@
 // reversal signal. We only consider swings already confirmed at the time
 // of the sweep (per the swing's `lookback` confirmation lag).
 
-import type { Candle, LiquiditySweep, SwingPoint } from '@hamafx/shared';
+import type { Candle, LiquiditySweep, SwingPoint } from '@kestrel/shared';
 
 export interface DetectLiquiditySweepsOptions {
   /**

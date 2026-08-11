@@ -1,19 +1,19 @@
 ---
 type: module
-package: "@hamafx/web"
+package: "@kestrel/web"
 path: "apps/web/src/app/(app)/journal/page.tsx"
 incoming: 0
 outgoing: 2
 connections: 2
 risk: low
 layer: core
-tags: [type/module, hamafx-web, layer/core]
+tags: [type/module, kestrel-web, layer/core]
 aliases: [page/JournalPage]
 ---
 
 # 📁 page/JournalPage
 
-> **Module** · `@hamafx/web` · `apps/web/src/app/(app)/journal/page.tsx`
+> **Module** · `@kestrel/web` · `apps/web/src/app/(app)/journal/page.tsx`
 
 
 Module: apps/web/src/app/(app)/journal/page.tsx
@@ -28,11 +28,11 @@ Module: apps/web/src/app/(app)/journal/page.tsx
 | Total connections | 2 |
 | Risk level | **LOW** |
 | Layer | `core` |
-| Package tag | `#hamafx-web` |
+| Package tag | `#kestrel-web` |
 
 
 ### 📤 Depends On (2)
-[[journal-view-JournalView]] · [[@hamafx-web]]
+[[journal-view-JournalView]] · [[@kestrel-web]]
 
 
 
@@ -47,4 +47,4 @@ Module: apps/web/src/app/(app)/journal/page.tsx
 - **Local Graph:** Right-click this file → "Open local graph"
 - **Backlinks:** Open the right sidebar → "Backlinks"
 - Use `#type/module` to find all Modules
-- Use `#hamafx-web` to find all files in this package
+- Use `#kestrel-web` to find all files in this package

@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,10 +21,10 @@
 // Using token<T>('key') means resolve(token) infers T without a manual
 // generic parameter — a typo or wrong type is a compile error.
 
-import { token } from '@hamafx/shared';
+import { token } from '@kestrel/shared';
 import type { LlmClient } from './llm-client';
-import type { DbClient } from '@hamafx/db';
-import type { Token } from '@hamafx/shared';
+import type { DbClient } from '@kestrel/db';
+import type { Token } from '@kestrel/shared';
 
 export const DB: Token<DbClient> = token<DbClient>('db');
 export const LLM_CLIENT: Token<LlmClient> = token<LlmClient>('llmClient');

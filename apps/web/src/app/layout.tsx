@@ -18,11 +18,11 @@ const jetbrainsMono = JetBrains_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: 'HamaFX-Ai',
-    template: '%s · HamaFX-Ai',
+    default: 'Kestrel',
+    template: '%s · Kestrel',
   },
   description: 'AI trading copilot for forex & commodities.',
-  applicationName: 'HamaFX-Ai',
+  applicationName: 'Kestrel',
   formatDetection: {
     telephone: false,
     address: false,

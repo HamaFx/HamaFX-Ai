@@ -39,6 +39,7 @@ Module: scripts/setup/steps/install.mjs
 
 ## 📦 Exports
 - `title`
+- `hint`
 - `run`
 
 

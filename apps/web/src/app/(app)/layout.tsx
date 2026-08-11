@@ -3,7 +3,7 @@
 import { redirect } from 'next/navigation';
 import { cache, Suspense } from 'react';
 import { auth } from '@/auth';
-import { getUserWithSettings } from '@hamafx/db';
+import { getUserWithSettings } from '@kestrel/db';
 import { checkIsAdmin } from '@/lib/admin-check';
 
 const getOnboardingStatus = cache(async (userId: string) => {

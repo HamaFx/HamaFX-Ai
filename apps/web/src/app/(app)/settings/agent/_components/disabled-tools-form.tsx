@@ -6,7 +6,7 @@ import { IconPower } from '@tabler/icons-react';
 
 import { Button } from '@/components/ui/button';
 import { updateDisabledToolsAction } from '../../actions';
-import type { ToolName } from '@hamafx/shared';
+import type { ToolName } from '@kestrel/shared';
 
 interface DisabledToolsFormProps {
   allTools: ToolName[];

@@ -1,4 +1,4 @@
-# HamaFX-Ai Docker image
+# Kestrel Docker image
 # Multi-stage build: deps → build → runtime
 # Uses Next.js standalone output for minimal final image.
 
@@ -35,11 +35,11 @@ COPY . .
 # Explicitly neutralize local legacy-auth settings during image creation;
 # runtime authentication is still enforced by auth.config.ts/middleware.
 ENV NEXT_TELEMETRY_DISABLED=1
-RUN AUTH_MODE=normal pnpm turbo run build --filter=@hamafx/web...
+RUN AUTH_MODE=normal pnpm turbo run build --filter=@kestrel/web...
 
 # Prepare the small production dependency tree used by the runtime migrator.
 # Next.js standalone tracing does not see this separately-run .mjs script.
-RUN pnpm --filter=@hamafx/db deploy --prod /runtime/db
+RUN pnpm --filter=@kestrel/db deploy --prod /runtime/db
 
 # ── Runner ────────────────────────────────────────────────
 FROM base AS runner

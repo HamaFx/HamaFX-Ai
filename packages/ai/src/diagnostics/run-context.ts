@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,7 +31,7 @@
 import { AsyncLocalStorage } from 'node:async_hooks';
 import { randomUUID } from 'node:crypto';
 
-import { traceIdStorage } from '@hamafx/shared/logger';
+import { traceIdStorage } from '@kestrel/shared/logger';
 
 import { redactSecrets } from './redact';
 import { persistTrace, type PersistedTrace } from './trace-persistence';

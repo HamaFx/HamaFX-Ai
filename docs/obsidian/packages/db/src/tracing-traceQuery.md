@@ -1,19 +1,19 @@
 ---
 type: module
-package: "@hamafx/db"
+package: "@kestrel/db"
 path: "packages/db/src/tracing.ts"
 incoming: 1
 outgoing: 1
 connections: 2
 risk: low
 layer: core
-tags: [type/module, hamafx-db, layer/core]
+tags: [type/module, kestrel-db, layer/core]
 aliases: [tracing/traceQuery]
 ---
 
 # 📁 tracing/traceQuery
 
-> **Module** · `@hamafx/db` · `packages/db/src/tracing.ts`
+> **Module** · `@kestrel/db` · `packages/db/src/tracing.ts`
 
 
 Module: packages/db/src/tracing.ts
@@ -28,11 +28,11 @@ Module: packages/db/src/tracing.ts
 | Total connections | 2 |
 | Risk level | **LOW** |
 | Layer | `core` |
-| Package tag | `#hamafx-db` |
+| Package tag | `#kestrel-db` |
 
 
 ### 📤 Depends On (1)
-[[@hamafx-db]]
+[[@kestrel-db]]
 
 
 ### 📥 Depended On By (1)
@@ -50,4 +50,4 @@ Module: packages/db/src/tracing.ts
 - **Local Graph:** Right-click this file → "Open local graph"
 - **Backlinks:** Open the right sidebar → "Backlinks"
 - Use `#type/module` to find all Modules
-- Use `#hamafx-db` to find all files in this package
+- Use `#kestrel-db` to find all files in this package

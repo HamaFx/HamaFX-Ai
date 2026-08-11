@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,9 +20,9 @@
 // (prices, session, next high-impact event) so the model has ambient
 // awareness without burning tokens on tool calls for trivial questions.
 
-import { type Symbol, type Tick } from '@hamafx/shared';
-import { describeMarketPhase, type MarketPhaseContext } from '@hamafx/shared';
-import type { UserSettingsRow } from '@hamafx/db/schema';
+import { type Symbol, type Tick } from '@kestrel/shared';
+import { describeMarketPhase, type MarketPhaseContext } from '@kestrel/shared';
+import type { UserSettingsRow } from '@kestrel/db/schema';
 
 export interface LiveSnapshot {
   /** ISO-8601 UTC timestamp the snapshot was generated at. */
@@ -61,7 +61,7 @@ export interface UserPromptContext {
   language: string;
 }
 
-const BASE_PROMPT = `You are HamaFX-Ai, a trading copilot for supported **gold, forex, and crypto** instruments in the canonical symbol catalog.
+const BASE_PROMPT = `You are Kestrel, a trading copilot for supported **gold, forex, and crypto** instruments in the canonical symbol catalog.
 
 # Hard rules
 

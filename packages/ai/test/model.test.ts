@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 vi.mock('server-only', () => ({}));
 
 let byokPayload: Record<string, string> = {};
-vi.mock('@hamafx/shared/encryption', () => ({
+vi.mock('@kestrel/shared/encryption', () => ({
   PROVIDER_IDS: [
     'google',
     'vertex',
@@ -50,7 +50,7 @@ vi.mock('ai', () => ({
   generateText: (...args: unknown[]) => generateTextMock(...args),
 }));
 
-vi.mock('@hamafx/db', () => ({
+vi.mock('@kestrel/db', () => ({
   getDb: () => ({
     select: () => ({
       from: () => ({
@@ -88,7 +88,7 @@ const ENV = {
   AI_EMBEDDING_MODEL: '',
 } as const;
 
-const mod = await import('@hamafx/shared/encryption' as never);
+const mod = await import('@kestrel/shared/encryption' as never);
 const __setByok = (mod as { __setByok: (p: Record<string, string>) => void }).__setByok;
 
 beforeEach(() => {

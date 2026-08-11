@@ -1,6 +1,6 @@
 ---
 type: module
-package: "@hamafx/web"
+package: "@kestrel/web"
 path: "apps/web/test/hooks-use-structure.test.ts"
 incoming: 0
 outgoing: 3
@@ -13,7 +13,7 @@ aliases: [hooks-use-structure.test]
 
 # 📁 hooks-use-structure.test
 
-> **Module** · `@hamafx/web` · `apps/web/test/hooks-use-structure.test.ts`
+> **Module** · `@kestrel/web` · `apps/web/test/hooks-use-structure.test.ts`
 
 
 Module: apps/web/test/hooks-use-structure.test.ts
@@ -32,7 +32,7 @@ Module: apps/web/test/hooks-use-structure.test.ts
 
 
 ### 📤 Depends On (3)
-[[vitest-installServerOnlyStub]] · [[use-structure-UseStructureOptions]] · [[@hamafx-web]]
+[[vitest-installServerOnlyStub]] · [[use-structure-UseStructureOptions]] · [[@kestrel-web]]
 
 
 

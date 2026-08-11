@@ -4,7 +4,7 @@
 // Server component; renders the per-tool roll-up count alongside a
 // Right-arrow link so the settings list reads consistently.
 
-import { buildToolCatalogue } from '@hamafx/ai';
+import { buildToolCatalogue } from '@kestrel/ai';
 import {IconRobot, IconChevronRight} from '@tabler/icons-react';
 import { Link } from 'next-view-transitions';
 

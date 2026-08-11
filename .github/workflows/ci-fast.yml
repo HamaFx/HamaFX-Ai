@@ -42,12 +42,12 @@ jobs:
       # Phase 0.6: enforce JS chunk size budgets so severe bundle bloat is caught
       # before it reaches Vercel.
       - name: Bundle Size Guard
-        run: pnpm --filter @hamafx/web bundle-size:check
+        run: pnpm --filter @kestrel/web bundle-size:check
       # L1: Bundle analysis — run with ANALYZE=true to surface size regressions.
       # The @next/bundle-analyzer generates a report but doesn't fail the build.
       - name: Bundle Analysis
         if: github.event_name == 'pull_request'
-        run: ANALYZE=true pnpm --filter @hamafx/web build
+        run: ANALYZE=true pnpm --filter @kestrel/web build
         continue-on-error: true
 
   unit-tests:

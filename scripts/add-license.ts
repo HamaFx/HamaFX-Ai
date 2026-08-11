@@ -2,7 +2,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 const LICENSE_HEADER = `/**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -51,7 +51,7 @@ async function main() {
     const content = fs.readFileSync(fullPath, 'utf8');
 
     // Skip if it already has the copyright header
-    if (content.includes('Copyright 2026 HamaFX')) {
+    if (content.includes('Copyright 2026 Kestrel')) {
       continue;
     }
 

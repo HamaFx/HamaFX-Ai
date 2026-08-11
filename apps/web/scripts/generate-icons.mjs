@@ -3,11 +3,12 @@
 /**
  * generate-icons.mjs
  *
- * Generates the placeholder PWA icon set in `apps/web/public/icons/` from a
- * single inline SVG source. Idempotent: by default it skips targets that
- * already exist on disk; pass `--force` to regenerate.
+ * Generates the Kestrel PWA icon set in `apps/web/public/icons/` from the
+ * brand logo (`public/brand/kestrel-logo-white.png`) composited onto the
+ * app background. Idempotent: by default it skips targets that already
+ * exist on disk; pass `--force` to regenerate.
  *
- * Targets (matches design §6 / Requirement 5.7 + 5.8):
+ * Targets:
  *   - icon-192.png                 (192x192)
  *   - icon-512.png                 (512x512)
  *   - icon-maskable-512.png        (512x512 with safe zone)
@@ -16,6 +17,9 @@
  *
  * `sharp` is loaded dynamically so this script never crashes a `next build`
  * when the dep is not present yet — it just logs a hint and exits 0.
+ *
+ * Regenerating the white logo variant (after swapping `kestrel-logo.png`):
+ *   node -e "const s=require('sharp');(async()=>{const{data,info}=await s('public/brand/kestrel-logo.png').ensureAlpha().raw().toBuffer({resolveWithObject:true});const out=Buffer.alloc(data.length);for(let i=0;i<data.length;i+=4){out[i]=255;out[i+1]=255;out[i+2]=255;out[i+3]=data[i+3];}await s(out,{raw:{width:info.width,height:info.height,channels:4}}).png({compressionLevel:9}).toFile('public/brand/kestrel-logo-white.png');})()"
  *
  * Usage:
  *   node scripts/generate-icons.mjs              # write missing files only
@@ -32,9 +36,15 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const WEB_ROOT = resolve(__dirname, '..');
 const ICONS_DIR = resolve(WEB_ROOT, 'public/icons');
 
-/** Brand colors from the design system (placeholder, replaced in task 13.5). */
+/** Brand background from the design system (matches manifest theme_color). */
 const BRAND_BG = '#0A0A0A';
-const BRAND_FG = '#F56E0F';
+
+/** Source logo — bird mark + KESTREL wordmark in white (1536x1024).
+ * The white monochrome variant is used because the original two-tone
+ * (white + black) logo's dark strokes would vanish on the #0A0A0A icon
+ * background. Recreate it from `kestrel-logo.png` with the one-liner in
+ * the header comment if the source logo is ever swapped. */
+const LOGO_PATH = resolve(WEB_ROOT, 'public/brand/kestrel-logo-white.png');
 
 /**
  * @typedef {Object} IconTarget
@@ -54,27 +64,44 @@ const TARGETS = Object.freeze([
 ]);
 
 /**
- * Build an inline SVG for a given target. Maskable variant insets the glyph
- * to keep it inside the iOS/Android safe zone (inner 80% of the square).
+ * Composite the logo onto the brand background for a target.
+ * The logo is 3:2, so it is sized by width relative to the short side:
+ *   - icon / apple-touch: 78% (fills the square, leaves breathing room)
+ *   - maskable:           60% (inside the iOS/Android safe zone)
+ *   - splash:             30% (small mark on a flat background)
  *
  * @param {IconTarget} t
- * @returns {string} SVG markup
+ * @param {typeof import('sharp')} sharp
+ * @returns {Promise<Buffer>} PNG buffer
  */
-function buildSvg(t) {
+async function buildPng(t, sharp) {
   const { width, height, kind } = t;
-  const cx = width / 2;
-  const cy = height / 2;
-  // Glyph radius: 38% of the short side for icons, 30% for maskable (safe
-  // zone), and 12% for splash (small mark on a flat background).
   const short = Math.min(width, height);
-  const r =
-    kind === 'maskable' ? short * 0.3 : kind === 'splash' ? short * 0.12 : short * 0.38;
-  const fontSize = r * 1.2;
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
-  <rect width="100%" height="100%" fill="${BRAND_BG}"/>
-  <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${BRAND_FG}" stroke-width="${Math.max(2, r * 0.06)}"/>
-  <text x="${cx}" y="${cy}" fill="${BRAND_FG}" font-family="-apple-system, system-ui, sans-serif" font-size="${fontSize}" font-weight="700" text-anchor="middle" dominant-baseline="central">H</text>
-</svg>`;
+  const ratio = kind === 'maskable' ? 0.6 : kind === 'splash' ? 0.3 : 0.78;
+  const logoW = Math.round(short * ratio);
+  // Derive height from the live source dimensions so the aspect stays exact.
+  const meta = await sharp(LOGO_PATH).metadata();
+  const logoAspect = (meta.width ?? 1536) / (meta.height ?? 1024);
+  const logoH = Math.round(logoW / logoAspect);
+
+  const background = sharp({
+    create: {
+      width,
+      height,
+      channels: 4,
+      background: { r: 10, g: 10, b: 10, alpha: 1 },
+    },
+  });
+
+  const logo = await sharp(LOGO_PATH)
+    .resize(logoW, logoH, { fit: 'fill' })
+    .png()
+    .toBuffer();
+
+  return background
+    .composite([{ input: logo, left: Math.round((width - logoW) / 2), top: Math.round((height - logoH) / 2) }])
+    .png({ compressionLevel: 9 })
+    .toBuffer();
 }
 
 async function main() {
@@ -88,7 +115,7 @@ async function main() {
     // eslint-disable-next-line no-console
     console.warn(
       '[generate-icons] `sharp` is not installed. Run ' +
-        '`pnpm --filter @hamafx/web add -D sharp` then re-run this script. ' +
+        '`pnpm --filter @kestrel/web add -D sharp` then re-run this script. ' +
         'Skipping icon generation.',
     );
     return;
@@ -104,11 +131,7 @@ async function main() {
       skipped += 1;
       continue;
     }
-    const svg = buildSvg(t);
-    const png = await sharp(Buffer.from(svg))
-      .resize(t.width, t.height, { fit: 'cover' })
-      .png({ compressionLevel: 9 })
-      .toBuffer();
+    const png = await buildPng(t, sharp);
     writeFileSync(out, png);
     written += 1;
     // eslint-disable-next-line no-console

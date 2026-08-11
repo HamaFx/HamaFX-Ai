@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -134,7 +134,7 @@ export async function run(ctx) {
 
   io.line();
   io.line(
-    `  ${paint(isDocker ? 'Building & starting Docker stack...' : 'Starting HamaFX-Ai...', 'cyan')}`,
+    `  ${paint(isDocker ? 'Building & starting Docker stack...' : 'Starting Kestrel...', 'cyan')}`,
   );
   io.line(`  ${paint('Press Ctrl+C to stop', 'dim')}`);
   io.line();

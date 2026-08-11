@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@
 // imports between agent files and the orchestrator.
 
 import type { LiveSnapshot } from '../prompt/system';
-import type { UserSettingsRow } from '@hamafx/db/schema';
+import type { UserSettingsRow } from '@kestrel/db/schema';
 import type { UIMessage } from 'ai';
 
 // ── Analysis Modes ──────────────────────────────────────────────────────
@@ -83,7 +83,7 @@ export interface SharedContext {
  * Env slice needed by the multi-agent pipeline.
  * Mirrors the RunChatArgs env but typed separately for clarity.
  */
-import type { ServerEnv } from '@hamafx/shared';
+import type { ServerEnv } from '@kestrel/shared';
 
 export type MultiAgentEnv = Pick<
   ServerEnv,

@@ -1,19 +1,19 @@
 ---
 type: module
-package: "@hamafx/ai"
+package: "@kestrel/ai"
 path: "packages/ai/src/model.ts"
 incoming: 30
 outgoing: 1
 connections: 31
 risk: high
 layer: core
-tags: [type/module, hamafx-ai, layer/core, risk/high]
+tags: [type/module, kestrel-ai, layer/core, risk/high]
 aliases: [model/resolveModel]
 ---
 
 # 📁 model/resolveModel
 
-> **Module** · `@hamafx/ai` · `packages/ai/src/model.ts`
+> **Module** · `@kestrel/ai` · `packages/ai/src/model.ts`
 
 
 Module: packages/ai/src/model.ts
@@ -28,11 +28,11 @@ Module: packages/ai/src/model.ts
 | Total connections | 31 |
 | Risk level | **HIGH** |
 | Layer | `core` |
-| Package tag | `#hamafx-ai` |
+| Package tag | `#kestrel-ai` |
 
 
 ### 📤 Depends On (1)
-[[@hamafx-ai]]
+[[@kestrel-ai]]
 
 
 ### 📥 Depended On By (26)
@@ -64,4 +64,4 @@ Module: packages/ai/src/model.ts
 - **Local Graph:** Right-click this file → "Open local graph"
 - **Backlinks:** Open the right sidebar → "Backlinks"
 - Use `#type/module` to find all Modules
-- Use `#hamafx-ai` to find all files in this package
+- Use `#kestrel-ai` to find all files in this package

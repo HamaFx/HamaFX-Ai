@@ -1,6 +1,6 @@
 ---
 type: component
-package: "@hamafx/web"
+package: "@kestrel/web"
 path: "apps/web/src/components/chart/chart-rsi.tsx"
 incoming: 1
 outgoing: 8
@@ -13,7 +13,7 @@ aliases: [chart-rsi/ChartRSIProps]
 
 # 🧩 chart-rsi/ChartRSIProps
 
-> **Component** · `@hamafx/web` · `apps/web/src/components/chart/chart-rsi.tsx`
+> **Component** · `@kestrel/web` · `apps/web/src/components/chart/chart-rsi.tsx`
 
 
 React component: chart-rsi
@@ -32,7 +32,7 @@ React component: chart-rsi
 
 
 ### 📤 Depends On (6)
-[[@hamafx-shared]] · [[chart-colors-SERIES_BULL_HEX]] · [[chart-types-ChartSettings]] · [[use-sub-pane-chart-SubPaneOptions]] · [[lc-adapter-LcModule]] · [[@hamafx-web]]
+[[@kestrel-shared]] · [[chart-colors-SERIES_BULL_HEX]] · [[chart-types-ChartSettings]] · [[use-sub-pane-chart-SubPaneOptions]] · [[lc-adapter-LcModule]] · [[@kestrel-web]]
 
 
 ### 📥 Depended On By (1)

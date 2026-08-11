@@ -10,7 +10,7 @@ import {
   listEntries,
   listRecentArticles,
   listUpcomingEvents,
-} from '@hamafx/ai';
+} from '@kestrel/ai';
 
 import { auth } from '@/auth';
 import { DashboardCanvas } from './_components/dashboard-canvas';

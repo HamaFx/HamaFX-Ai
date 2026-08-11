@@ -1,6 +1,6 @@
 ---
 type: module
-package: "@hamafx/web"
+package: "@kestrel/web"
 path: "apps/web/src/components/chart/use-lightweight-charts.ts"
 incoming: 1
 outgoing: 1
@@ -13,7 +13,7 @@ aliases: [use-lightweight-charts/useLightweightCharts]
 
 # 📁 use-lightweight-charts/useLightweightCharts
 
-> **Module** · `@hamafx/web` · `apps/web/src/components/chart/use-lightweight-charts.ts`
+> **Module** · `@kestrel/web` · `apps/web/src/components/chart/use-lightweight-charts.ts`
 
 
 Module: apps/web/src/components/chart/use-lightweight-charts.ts
@@ -32,7 +32,7 @@ Module: apps/web/src/components/chart/use-lightweight-charts.ts
 
 
 ### 📤 Depends On (1)
-[[@hamafx-web]]
+[[@kestrel-web]]
 
 
 ### 📥 Depended On By (1)

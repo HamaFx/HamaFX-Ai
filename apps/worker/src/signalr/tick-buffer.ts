@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,7 +30,7 @@
 // testable and reusable from the candle aggregator (which wants the same
 // per-symbol coalescing semantics over a different drain cadence).
 
-import type { Symbol } from '@hamafx/shared';
+import type { Symbol } from '@kestrel/shared';
 
 import type { NormalizedTick } from './consumer.js';
 

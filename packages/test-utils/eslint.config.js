@@ -1,3 +1,3 @@
-import config from '@hamafx/config/eslint';
+import config from '@kestrel/config/eslint';
 
 export default config;

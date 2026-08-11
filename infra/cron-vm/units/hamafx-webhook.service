@@ -1,5 +1,5 @@
 [Unit]
-Description=HamaFX-Ai GitHub webhook listener
+Description=Kestrel GitHub webhook listener
 After=network-online.target
 Wants=network-online.target
 

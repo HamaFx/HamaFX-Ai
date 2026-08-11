@@ -6,7 +6,7 @@
 
 ## Overview
 
-207 test files, ~2,019 `it` blocks across all packages (including 16 E2E spec files). Vitest is the test runner for unit/integration tests; Playwright handles E2E testing. The `@hamafx/test-utils` package provides shared factories, mocks, and vitest helpers. Tests use the `--run` flag to avoid watch mode (otherwise timeouts in CI/automation).
+207 test files, ~2,019 `it` blocks across all packages (including 16 E2E spec files). Vitest is the test runner for unit/integration tests; Playwright handles E2E testing. The `@kestrel/test-utils` package provides shared factories, mocks, and vitest helpers. Tests use the `--run` flag to avoid watch mode (otherwise timeouts in CI/automation).
 
 ## Running Tests
 
@@ -15,19 +15,19 @@
 pnpm turbo run test -- --run
 
 # Single package
-pnpm --filter @hamafx/worker test -- --run
-pnpm --filter @hamafx/ai test -- --run
-pnpm --filter @hamafx/data test -- --run
-pnpm --filter @hamafx/web test -- --run
+pnpm --filter @kestrel/worker test -- --run
+pnpm --filter @kestrel/ai test -- --run
+pnpm --filter @kestrel/data test -- --run
+pnpm --filter @kestrel/web test -- --run
 
 # With coverage
-pnpm --filter @hamafx/web test -- --run --coverage
+pnpm --filter @kestrel/web test -- --run --coverage
 
 # Watch mode (dev only)
-pnpm --filter @hamafx/indicators test
+pnpm --filter @kestrel/indicators test
 
 # E2E (Playwright)
-pnpm --filter @hamafx/web exec playwright test
+pnpm --filter @kestrel/web exec playwright test
 ```
 
 ## Package Test Layout
@@ -96,7 +96,7 @@ expect(result.ticks[0].symbol).toBe('XAUUSD');
 Use `packages/db/src/test-utils.ts` to run database tests within an isolated transaction that rolls back after each test:
 
 ```typescript
-import { withIsolatedTx } from '@hamafx/db/test-utils';
+import { withIsolatedTx } from '@kestrel/db/test-utils';
 
 it('creates a user', async () => {
   await withIsolatedTx(async (tx) => {
@@ -188,7 +188,7 @@ it('rejects a candle with negative price', () => {
 Manual eval via CLI (not in CI):
 
 ```bash
-pnpm --filter @hamafx/ai eval -- \
+pnpm --filter @kestrel/ai eval -- \
   --base-url http://localhost:3000 \
   --cookie "authjs.session-token=..." \
   --cases \
@@ -212,7 +212,7 @@ pnpm --filter @hamafx/ai eval -- \
 ## E2E Testing (Playwright)
 
 ```bash
-pnpm --filter @hamafx/web exec playwright test
+pnpm --filter @kestrel/web exec playwright test
 ```
 
 E2E tests in `apps/web/tests/e2e/` (16 spec files):
@@ -333,7 +333,7 @@ The shared logger in `packages/shared/src/logger.ts` and diagnostic trace persis
 Example:
 
 ```typescript
-import { createCategorizedLogger, logErrorContext } from '@hamafx/shared';
+import { createCategorizedLogger, logErrorContext } from '@kestrel/shared';
 
 describe('createCategorizedLogger', () => {
   it('adds category to log lines', () => {
@@ -360,8 +360,8 @@ describe('logErrorContext', () => {
 6. **Prefer `withIsolatedTx` for DB tests** — wraps in a transaction that auto-rolls back.
 7. **Mark jsdom tests explicitly** — add `// @vitest-environment jsdom` at the top of the file.
 8. **Keep tests fast** — avoid network calls, real timers, and file I/O in unit tests.
-9. **Use shared factories** — `@hamafx/test-utils` provides `makeUser`, `makeCandles`, `makeThread`, etc.
-10. **Test factories and mocks** — `@hamafx/test-utils` has its own test suite ensuring factory correctness.
+9. **Use shared factories** — `@kestrel/test-utils` provides `makeUser`, `makeCandles`, `makeThread`, etc.
+10. **Test factories and mocks** — `@kestrel/test-utils` has its own test suite ensuring factory correctness.
 
 ## Snapshot Testing
 

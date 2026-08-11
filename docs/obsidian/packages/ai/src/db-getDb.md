@@ -1,19 +1,19 @@
 ---
 type: module
-package: "@hamafx/ai"
+package: "@kestrel/ai"
 path: "packages/ai/src/db.ts"
 incoming: 41
 outgoing: 7
 connections: 48
 risk: high
 layer: core
-tags: [type/module, hamafx-ai, layer/core, risk/high]
+tags: [type/module, kestrel-ai, layer/core, risk/high]
 aliases: [db/getDb]
 ---
 
 # 📁 db/getDb
 
-> **Module** · `@hamafx/ai` · `packages/ai/src/db.ts`
+> **Module** · `@kestrel/ai` · `packages/ai/src/db.ts`
 
 
 Module: packages/ai/src/db.ts
@@ -28,11 +28,11 @@ Module: packages/ai/src/db.ts
 | Total connections | 48 |
 | Risk level | **HIGH** |
 | Layer | `core` |
-| Package tag | `#hamafx-ai` |
+| Package tag | `#kestrel-ai` |
 
 
 ### 📤 Depends On (4)
-[[@hamafx-db]] · [[@hamafx-shared]] · [[tokens-DB]] · [[@hamafx-ai]]
+[[@kestrel-db]] · [[@kestrel-shared]] · [[tokens-DB]] · [[@kestrel-ai]]
 
 
 ### 📥 Depended On By (41)
@@ -50,4 +50,4 @@ Module: packages/ai/src/db.ts
 - **Local Graph:** Right-click this file → "Open local graph"
 - **Backlinks:** Open the right sidebar → "Backlinks"
 - Use `#type/module` to find all Modules
-- Use `#hamafx-ai` to find all files in this package
+- Use `#kestrel-ai` to find all files in this package

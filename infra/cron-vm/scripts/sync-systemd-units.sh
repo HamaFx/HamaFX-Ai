@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Install HamaFX systemd units after a repository self-update.
+# Install Kestrel systemd units after a repository self-update.
 #
 # This file is installed as /usr/local/sbin/hamafx-sync-systemd-units with
 # root ownership. It deliberately fetches the units from the fixed upstream

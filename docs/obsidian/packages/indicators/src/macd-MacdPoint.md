@@ -1,19 +1,19 @@
 ---
 type: module
-package: "@hamafx/indicators"
+package: "@kestrel/indicators"
 path: "packages/indicators/src/macd.ts"
 incoming: 3
 outgoing: 4
 connections: 7
 risk: low
 layer: core
-tags: [type/module, hamafx-indicators, layer/core]
+tags: [type/module, kestrel-indicators, layer/core]
 aliases: [macd/MacdPoint]
 ---
 
 # 📁 macd/MacdPoint
 
-> **Module** · `@hamafx/indicators` · `packages/indicators/src/macd.ts`
+> **Module** · `@kestrel/indicators` · `packages/indicators/src/macd.ts`
 
 
 Module: packages/indicators/src/macd.ts
@@ -28,11 +28,11 @@ Module: packages/indicators/src/macd.ts
 | Total connections | 7 |
 | Risk level | **LOW** |
 | Layer | `core` |
-| Package tag | `#hamafx-indicators` |
+| Package tag | `#kestrel-indicators` |
 
 
 ### 📤 Depends On (3)
-[[@hamafx-shared]] · [[moving-averages-sma]] · [[@hamafx-indicators]]
+[[@kestrel-shared]] · [[moving-averages-sma]] · [[@kestrel-indicators]]
 
 
 ### 📥 Depended On By (3)
@@ -50,4 +50,4 @@ Module: packages/indicators/src/macd.ts
 - **Local Graph:** Right-click this file → "Open local graph"
 - **Backlinks:** Open the right sidebar → "Backlinks"
 - Use `#type/module` to find all Modules
-- Use `#hamafx-indicators` to find all files in this package
+- Use `#kestrel-indicators` to find all files in this package

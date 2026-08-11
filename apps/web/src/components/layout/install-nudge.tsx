@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@
  *
  * Behaviour:
  *   - Chrome / Edge / Android: listens for `beforeinstallprompt`,
- *     stashes the event, renders a one-click "Install HamaFX-Ai"
+ *     stashes the event, renders a one-click "Install Kestrel"
  *     button. Tapping the button calls `event.prompt()` and waits
  *     for the user's choice.
  *   - iOS Safari: no native install prompt. We detect iOS without
@@ -138,7 +138,7 @@ export function InstallNudge() {
       <div className="border-border bg-bg-elev-2 text-fg-muted mx-3 mt-2 flex items-start gap-3 rounded-sm border p-3 text-caption">
         <IconShare className="text-fg-muted mt-0.5 size-4 shrink-0" aria-hidden="true" />
         <p aria-live="polite" className="flex-1 leading-snug">
-          Install HamaFX-Ai: tap <span className="text-fg font-medium">Share</span>{' '}
+          Install Kestrel: tap <span className="text-fg font-medium">Share</span>{' '}
           then <span className="text-fg font-medium">Add to Home Screen</span>.
         </p>
         <button
@@ -159,7 +159,7 @@ export function InstallNudge() {
       <div className="border-border bg-bg-elev-2 mx-3 mt-2 flex items-center gap-3 rounded-sm border p-3">
         <IconDownload className="text-fg-muted size-4 shrink-0" aria-hidden="true" />
         <p aria-live="polite" className="text-fg-muted flex-1 text-caption leading-snug">
-          Install HamaFX-Ai for one-tap access on your device.
+          Install Kestrel for one-tap access on your device.
         </p>
         <button
           type="button"

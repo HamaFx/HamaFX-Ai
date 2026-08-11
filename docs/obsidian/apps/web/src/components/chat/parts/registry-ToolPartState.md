@@ -1,19 +1,19 @@
 ---
 type: component
-package: "@hamafx/web"
+package: "@kestrel/web"
 path: "apps/web/src/components/chat/parts/registry.tsx"
 incoming: 45
 outgoing: 35
 connections: 80
 risk: high
 layer: ui
-tags: [type/component, hamafx-web, layer/ui, risk/high]
+tags: [type/component, kestrel-web, layer/ui, risk/high]
 aliases: [registry/ToolPartState]
 ---
 
 # 🧩 registry/ToolPartState
 
-> **Component** · `@hamafx/web` · `apps/web/src/components/chat/parts/registry.tsx`
+> **Component** · `@kestrel/web` · `apps/web/src/components/chat/parts/registry.tsx`
 
 
 React component: registry
@@ -28,11 +28,11 @@ React component: registry
 | Total connections | 80 |
 | Risk level | **HIGH** |
 | Layer | `ui` |
-| Package tag | `#hamafx-web` |
+| Package tag | `#kestrel-web` |
 
 
 ### 📤 Depends On (35)
-[[@hamafx-shared]] · [[analyze-chart-image-AnalyzeChartImagePart]] · [[analyze-fundamental-AnalyzeFundamentalPart]] · [[analyze-technical-AnalyzeTechnicalPart]] · [[annotate-chart-AnnotateChartPart]] · [[compute-position-health-ComputePositionHealthPart]] · [[compute-risk-ComputeRiskPart]] · [[convene-committee-ConveneCommitteePart]] · [[forecast-volatility-ForecastVolatilityPart]] · [[get-calendar-GetCalendarPart]] · [[get-candles-GetCandlesPart]] · [[get-correlation-GetCorrelationPart]] · [[get-cot-GetCoTPart]] · [[get-indicators-GetIndicatorsPart]] · [[get-intermarket-GetIntermarketPart]] · [[get-journal-stats-GetJournalStatsPart]] · [[get-market-structure-GetMarketStructurePart]] · [[get-news-GetNewsPart]] · [[get-price-GetPricePart]] · [[get-seasonality-GetSeasonalityPart]]
+[[@kestrel-shared]] · [[analyze-chart-image-AnalyzeChartImagePart]] · [[analyze-fundamental-AnalyzeFundamentalPart]] · [[analyze-technical-AnalyzeTechnicalPart]] · [[annotate-chart-AnnotateChartPart]] · [[compute-position-health-ComputePositionHealthPart]] · [[compute-risk-ComputeRiskPart]] · [[convene-committee-ConveneCommitteePart]] · [[forecast-volatility-ForecastVolatilityPart]] · [[get-calendar-GetCalendarPart]] · [[get-candles-GetCandlesPart]] · [[get-correlation-GetCorrelationPart]] · [[get-cot-GetCoTPart]] · [[get-indicators-GetIndicatorsPart]] · [[get-intermarket-GetIntermarketPart]] · [[get-journal-stats-GetJournalStatsPart]] · [[get-market-structure-GetMarketStructurePart]] · [[get-news-GetNewsPart]] · [[get-price-GetPricePart]] · [[get-seasonality-GetSeasonalityPart]]
 > ... and 15 more
 
 
@@ -55,4 +55,4 @@ React component: registry
 - **Local Graph:** Right-click this file → "Open local graph"
 - **Backlinks:** Open the right sidebar → "Backlinks"
 - Use `#type/component` to find all Components
-- Use `#hamafx-web` to find all files in this package
+- Use `#kestrel-web` to find all files in this package

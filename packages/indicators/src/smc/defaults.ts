@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
  */
 
 // Timeframe-aware defaults for SMC parameters.
-import type { Timeframe } from '@hamafx/shared';
+import type { Timeframe } from '@kestrel/shared';
 
 /**
  * Adaptive swing lookback: smaller k for fast timeframes (less noise),

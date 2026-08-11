@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,16 +22,16 @@
 // chain works with the network layer mocked.
 //
 // Catches:
-//   - Mismatched function signatures between @hamafx/ai and @hamafx/data
+//   - Mismatched function signatures between @kestrel/ai and @kestrel/data
 //   - Shared type compatibility regressions
 //   - Import resolution errors at package boundaries
 
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 
 // Import shared types to verify cross-package type compatibility
-import type { GetPriceOutput } from '@hamafx/shared';
-import type { GetCandlesOutput } from '@hamafx/shared';
-import { SymbolSchema, TimeframeSchema } from '@hamafx/shared';
+import type { GetPriceOutput } from '@kestrel/shared';
+import type { GetCandlesOutput } from '@kestrel/shared';
+import { SymbolSchema, TimeframeSchema } from '@kestrel/shared';
 
 // Import tools from the AI package — paths are relative to test/integration/
 // so we need ../../src/ to reach packages/ai/src/
@@ -46,7 +46,7 @@ const mockGetPrice = vi.fn();
 const mockGetCandles = vi.fn();
 const mockComputeStructure = vi.fn();
 
-vi.mock('@hamafx/data', () => ({
+vi.mock('@kestrel/data', () => ({
   getPrice: (...args: unknown[]) => mockGetPrice(...args),
   getCandles: (...args: unknown[]) => mockGetCandles(...args),
   ProviderError: class ProviderError extends Error {
@@ -56,12 +56,12 @@ vi.mock('@hamafx/data', () => ({
   },
 }));
 
-vi.mock('@hamafx/indicators', () => ({
+vi.mock('@kestrel/indicators', () => ({
   computeIndicator: vi.fn(),
   computeStructure: (...args: unknown[]) => mockComputeStructure(...args),
 }));
 
-vi.mock('@hamafx/shared/logger', () => ({
+vi.mock('@kestrel/shared/logger', () => ({
   createCategorizedLogger: () => ({
     warn: vi.fn(), info: vi.fn(), error: vi.fn(), debug: vi.fn(),
   }),
@@ -73,7 +73,7 @@ describe('AI → Data integration', () => {
     vi.clearAllMocks();
   });
 
-  describe('get_price → @hamafx/data', () => {
+  describe('get_price → @kestrel/data', () => {
     it('returns properly shaped output through the full tool chain', async () => {
       mockGetPrice.mockResolvedValue({
         bid: 1.0801, ask: 1.0803, mid: 1.0802, timestamp: Date.now(),
@@ -97,7 +97,7 @@ describe('AI → Data integration', () => {
     });
   });
 
-  describe('get_candles → @hamafx/data', () => {
+  describe('get_candles → @kestrel/data', () => {
     it('calls the data layer with correct symbol and timeframe', async () => {
       mockGetCandles.mockResolvedValue([]);
 

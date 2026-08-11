@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -42,7 +42,7 @@ export const helpCommand: BotCommand = {
       cmds.map((c) => `/${c.name} — ${c.description}`).join('\n');
 
     const text = [
-      '🤖 HamaFX Bot Commands',
+      '🤖 Kestrel Bot Commands',
       '',
       '📈 Market',
       formatCmds(marketCommands),
@@ -53,7 +53,7 @@ export const helpCommand: BotCommand = {
       '👤 Account',
       formatCmds(accountCommands),
       '',
-      '/link <code> — Link your HamaFX account',
+      '/link <code> — Link your Kestrel account',
       '/help — Show this help',
       '',
       '💡 You can also send any free-form message to chat with the AI.',

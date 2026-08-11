@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ import { fileURLToPath } from 'node:url';
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { ALL_SYMBOLS, getSymbolDefinition } from '@hamafx/shared';
+import { ALL_SYMBOLS, getSymbolDefinition } from '@kestrel/shared';
 import {
   closePGliteDb,
   getPGliteDb,

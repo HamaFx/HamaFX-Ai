@@ -5,7 +5,7 @@ const mockAuthFn = vi.hoisted(() => vi.fn());
 
 const mockWithRateLimit = vi.hoisted(() => vi.fn());
 
-vi.mock('@hamafx/db', () => ({
+vi.mock('@kestrel/db', () => ({
   getDb: vi.fn(() => ({ execute: mockDbExecute })),
   withRateLimit: mockWithRateLimit,
   schema: {},

@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX - Tests for RL-3 LLM rate-limit governor
+ * Copyright 2026 Kestrel - Tests for RL-3 LLM rate-limit governor
  */
 
 import { describe, expect, it, vi, afterEach, beforeEach } from 'vitest';

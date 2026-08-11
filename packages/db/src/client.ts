@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -53,7 +53,7 @@ function resolvePoolMax(): number {
 
   // Workers set `HAMAFX_RUNTIME=worker` in the systemd unit's
   // environment file so we can pick the right default without
-  // pulling Vercel-specific env vars into @hamafx/db.
+  // pulling Vercel-specific env vars into @kestrel/db.
   const isWorker = process.env.HAMAFX_RUNTIME === 'worker';
   const envOverride = isWorker ? process.env.WORKER_DB_POOL_MAX : process.env.DB_POOL_MAX;
   if (envOverride) {

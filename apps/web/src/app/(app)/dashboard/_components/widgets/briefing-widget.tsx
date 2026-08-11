@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@
 // Phase 1.7 — AI briefing widget.
 //
 // Surfaces the user's most recent briefing on the dashboard. The data
-// shape comes from `getLatestBriefing` in `@hamafx/ai` (a snapshot of
+// shape comes from `getLatestBriefing` in `@kestrel/ai` (a snapshot of
 // the dedicated `Briefings_Thread` assistant message) and is passed in
 // as a prop — the widget itself is presentational.
 //

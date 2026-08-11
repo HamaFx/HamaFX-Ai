@@ -19,7 +19,7 @@ import {
   pipSize as sharedPipSize,
   type GetCandlesOutput,
   type Symbol,
-} from '@hamafx/shared';
+} from '@kestrel/shared';
 
 import { SERIES_BULL_HEX, SERIES_BEAR_HEX } from '@/components/chart/chart-colors';
 import { cn } from '@/lib/cn';
@@ -217,7 +217,7 @@ function CandlesCardError({ message }: { message?: string }) {
 }
 
 /**
- * Local pip-size lookup. Mirrors `pipSize` from `@hamafx/shared` and exists
+ * Local pip-size lookup. Mirrors `pipSize` from `@kestrel/shared` and exists
  * here so the rendering logic is self-contained for the chat-part surface
  * (matches the design's "helper `pipSize(symbol)` inline" guideline). We
  * still cross-check against the shared helper at module load — if they ever
@@ -227,7 +227,7 @@ function pipSize(symbol: Symbol): number {
   return sharedPipSize(symbol);
 }
 
-// Compile-time guarantee that the local helper agrees with `@hamafx/shared`.
+// Compile-time guarantee that the local helper agrees with `@kestrel/shared`.
 // If a new symbol is added to `Symbol` and either function forgets to handle
 // it, TypeScript flags this assignment. It's free at runtime.
 const _pipSizeAgrees: typeof sharedPipSize = pipSize;

@@ -1,19 +1,19 @@
 ---
 type: module
-package: "@hamafx/web"
+package: "@kestrel/web"
 path: "apps/web/scripts/bundle-size-guard.mjs"
 incoming: 0
 outgoing: 1
 connections: 1
 risk: low
 layer: core
-tags: [type/module, hamafx-web, layer/core]
+tags: [type/module, kestrel-web, layer/core]
 aliases: [bundle-size-guard/matchesPattern]
 ---
 
 # 📁 bundle-size-guard/matchesPattern
 
-> **Module** · `@hamafx/web` · `apps/web/scripts/bundle-size-guard.mjs`
+> **Module** · `@kestrel/web` · `apps/web/scripts/bundle-size-guard.mjs`
 
 
 Module: apps/web/scripts/bundle-size-guard.mjs
@@ -28,11 +28,11 @@ Module: apps/web/scripts/bundle-size-guard.mjs
 | Total connections | 1 |
 | Risk level | **LOW** |
 | Layer | `core` |
-| Package tag | `#hamafx-web` |
+| Package tag | `#kestrel-web` |
 
 
 ### 📤 Depends On (1)
-[[@hamafx-web]]
+[[@kestrel-web]]
 
 
 
@@ -46,4 +46,4 @@ Module: apps/web/scripts/bundle-size-guard.mjs
 - **Local Graph:** Right-click this file → "Open local graph"
 - **Backlinks:** Open the right sidebar → "Backlinks"
 - Use `#type/module` to find all Modules
-- Use `#hamafx-web` to find all files in this package
+- Use `#kestrel-web` to find all files in this package

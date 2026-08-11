@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,7 +35,7 @@ import {
 import {
   AnalysisQueuedEventSchema,
   ChatStreamEventSchema,
-} from '@hamafx/shared';
+} from '@kestrel/shared';
 import { getCsrfToken } from '@/lib/csrf';
 
 /** Shape emitted by the server for agent deliberation progress. */
@@ -49,7 +49,7 @@ export interface AgentProgress {
   mode: string;
 }
 
-export interface HamaFxChatTransportOptions {
+export interface KestrelChatTransportOptions {
   api?: string;
   headers?: Record<string, string> | Headers;
   body?: object;
@@ -387,7 +387,7 @@ async function hamaFxFetch(
   return res;
 }
 
-export function createHamaFxChatTransport(options: HamaFxChatTransportOptions): DefaultChatTransport<UIMessage> {
+export function createKestrelChatTransport(options: KestrelChatTransportOptions): DefaultChatTransport<UIMessage> {
   const onProgress = options.onAgentProgress ?? (() => {});
   const transportOptions: HttpChatTransportInitOptions<UIMessage> = {
     ...(options.api !== undefined && { api: options.api }),

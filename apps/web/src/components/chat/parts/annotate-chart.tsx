@@ -5,7 +5,7 @@
 // Server component. Shows a one-line summary with counts per kind and a
 // deep link into /chart/<symbol> with the relevant overlays pre-toggled.
 
-import type { AnnotateChartKind } from '@hamafx/shared';
+import type { AnnotateChartKind } from '@kestrel/shared';
 import { Link } from 'next-view-transitions';
 
 import type { ToolPartProps } from './registry';

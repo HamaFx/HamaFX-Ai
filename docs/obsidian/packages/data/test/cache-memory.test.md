@@ -1,19 +1,19 @@
 ---
 type: module
-package: "@hamafx/data"
+package: "@kestrel/data"
 path: "packages/data/test/cache-memory.test.ts"
 incoming: 0
 outgoing: 3
 connections: 3
 risk: low
 layer: core
-tags: [type/module, hamafx-data, layer/core]
+tags: [type/module, kestrel-data, layer/core]
 aliases: [cache-memory.test]
 ---
 
 # 📁 cache-memory.test
 
-> **Module** · `@hamafx/data` · `packages/data/test/cache-memory.test.ts`
+> **Module** · `@kestrel/data` · `packages/data/test/cache-memory.test.ts`
 
 
 Module: packages/data/test/cache-memory.test.ts
@@ -28,11 +28,11 @@ Module: packages/data/test/cache-memory.test.ts
 | Total connections | 3 |
 | Risk level | **LOW** |
 | Layer | `core` |
-| Package tag | `#hamafx-data` |
+| Package tag | `#kestrel-data` |
 
 
 ### 📤 Depends On (3)
-[[vitest-installServerOnlyStub]] · [[memory-MemoryCache]] · [[@hamafx-data]]
+[[vitest-installServerOnlyStub]] · [[memory-MemoryCache]] · [[@kestrel-data]]
 
 
 
@@ -43,4 +43,4 @@ Module: packages/data/test/cache-memory.test.ts
 - **Local Graph:** Right-click this file → "Open local graph"
 - **Backlinks:** Open the right sidebar → "Backlinks"
 - Use `#type/module` to find all Modules
-- Use `#hamafx-data` to find all files in this package
+- Use `#kestrel-data` to find all files in this package

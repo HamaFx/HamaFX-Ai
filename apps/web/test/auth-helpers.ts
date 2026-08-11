@@ -28,7 +28,7 @@ export function mockLegacyMode() {
   return async () => ({
     user: {
       id: '__system__',
-      email: 'system@hamafx.local',
+      email: 'system@kestrel.local',
     },
     expires: new Date(Date.now() + 1000 * 60 * 60 * 24).toISOString(),
   });

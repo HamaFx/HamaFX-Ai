@@ -1,19 +1,19 @@
 ---
 type: table
-package: "@hamafx/db"
+package: "@kestrel/db"
 path: "packages/db/src/schema/provider-daily-quota.ts"
 incoming: 0
 outgoing: 1
 connections: 1
 risk: low
 layer: data
-tags: [type/table, hamafx-db, layer/data]
+tags: [type/table, kestrel-db, layer/data]
 aliases: [provider_daily_quota]
 ---
 
 # 🗄️ provider_daily_quota
 
-> **DB Table** · `@hamafx/db` · `packages/db/src/schema/provider-daily-quota.ts`
+> **DB Table** · `@kestrel/db` · `packages/db/src/schema/provider-daily-quota.ts`
 
 
 Database table: provider_daily_quota (3 columns)
@@ -28,7 +28,7 @@ Database table: provider_daily_quota (3 columns)
 | Total connections | 1 |
 | Risk level | **LOW** |
 | Layer | `data` |
-| Package tag | `#hamafx-db` |
+| Package tag | `#kestrel-db` |
 
 
 ### 📤 Depends On (1)
@@ -43,4 +43,4 @@ Database table: provider_daily_quota (3 columns)
 - **Local Graph:** Right-click this file → "Open local graph"
 - **Backlinks:** Open the right sidebar → "Backlinks"
 - Use `#type/table` to find all DB Tables
-- Use `#hamafx-db` to find all files in this package
+- Use `#kestrel-db` to find all files in this package

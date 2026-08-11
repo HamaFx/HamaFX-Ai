@@ -7,7 +7,7 @@ vi.mock('node-cron', () => ({
   },
 }));
 
-vi.mock('@hamafx/ai', () => ({
+vi.mock('@kestrel/ai', () => ({
   getDb: vi.fn(() => ({
     execute: vi.fn(),
   })),
@@ -62,7 +62,7 @@ describe('scheduler', () => {
 
   it('cleanupStaleCronRuns handles execution errors gracefully', async () => {
     // Force getDb to throw
-    const ai = await import('@hamafx/ai');
+    const ai = await import('@kestrel/ai');
     vi.mocked(ai.getDb).mockRejectedValueOnce(new Error('DB unavailable'));
 
     // Import and directly test cleanupStaleCronRuns

@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@
 // far. If the window for today has no bars at all (weekend), we fall back
 // to the most recent UTC day that does.
 
-import type { Candle } from '@hamafx/shared';
+import type { Candle } from '@kestrel/shared';
 
 const ASIAN_START_HOUR_UTC = 0;
 const ASIAN_END_HOUR_UTC = 7;

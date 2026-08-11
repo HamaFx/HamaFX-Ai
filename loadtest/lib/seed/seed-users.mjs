@@ -7,7 +7,7 @@
  *     node loadtest/lib/seed/seed-users.mjs
  *
  * What it does:
- *   1. Upserts N users `loadtest+000@hamafx.ai` … `loadtest+NNN@hamafx.ai`
+ *   1. Upserts N users `loadtest+000@kestrel.ai` … `loadtest+NNN@kestrel.ai`
  *      with a shared bcrypt password.
  *   2. Creates one chat thread per user (needed for /api/chat tests).
  *   3. Writes loadtest/lib/data/seeded-users.json manifest.
@@ -51,8 +51,8 @@ async function main() {
   }
 
   // ── Import workspace deps (dynamic, so they don't block the safety gates) ──
-  const { getDb } = await import('@hamafx/db');
-  const schema = await import('@hamafx/db/schema');
+  const { getDb } = await import('@kestrel/db');
+  const schema = await import('@kestrel/db/schema');
   // Dynamically import the eq helper
   const { eq } = await import('drizzle-orm');
 
@@ -63,7 +63,7 @@ async function main() {
   const hashedPassword = await bcrypt.hash(password, 12);
 
   for (let i = 0; i < userCount; i++) {
-    const email = `loadtest+${String(i).padStart(3, '0')}@hamafx.ai`;
+    const email = `loadtest+${String(i).padStart(3, '0')}@kestrel.ai`;
     const userId = randomUUID();
 
     // Upsert user

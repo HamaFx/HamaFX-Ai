@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-vi.mock('@hamafx/db', () => ({
+vi.mock('@kestrel/db', () => ({
   getDb: () => ({
     select: () => ({
       from: () => ({
@@ -51,7 +51,7 @@ vi.mock('@hamafx/db', () => ({
   },
 }));
 
-import { type GetIntermarketResonanceOutput } from '@hamafx/shared';
+import { type GetIntermarketResonanceOutput } from '@kestrel/shared';
 import { getIntermarketResonanceTool } from '../src/tools/get-intermarket-resonance';
 import { withToolContext } from '../src/tool-context';
 

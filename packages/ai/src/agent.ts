@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,8 +24,8 @@
 // top-to-bottom as: setup → reserveTurnBudget → build messages → route →
 // runChatWithFallback → budget.reconcile().
 
-import { getMessageText, pickAiEnv } from '@hamafx/shared';
-import { logErrorContext, createCategorizedLogger } from '@hamafx/shared/logger';
+import { getMessageText, pickAiEnv } from '@kestrel/shared';
+import { logErrorContext, createCategorizedLogger } from '@kestrel/shared/logger';
 import {
   convertToModelMessages,
   stepCountIs,
@@ -51,7 +51,7 @@ import {
   getVertexGoogleSearchTool,
   supportsPromptCaching,
 } from './model';
-import { decryptByok, type ProviderId } from '@hamafx/shared/encryption';
+import { decryptByok, type ProviderId } from '@kestrel/shared/encryption';
 import {
   appendAssistantMessage,
   appendUserMessage,
@@ -66,11 +66,11 @@ import { routeTurn, type RoutingDecision } from './routing';
 import { withToolContext, type ToolContext } from './tool-context';
 import { enforceCitations } from './verification';
 import { waitUntil } from './wait-until';
-import { schema, getUserWithSettings } from '@hamafx/db';
+import { schema, getUserWithSettings } from '@kestrel/db';
 // P2-3 — DI container for testability. Services are registered in
 // services.ts (auto-bootstrap on import). Tests can override via
 // container.register('db', () => mockDb).
-import { container } from '@hamafx/shared';
+import { container } from '@kestrel/shared';
 // P2-3 — auto-register services (db, llmClient) in the container.
 import './services';
 import { domainToolFilter, type RoutingDomain } from './tools/by-domain';

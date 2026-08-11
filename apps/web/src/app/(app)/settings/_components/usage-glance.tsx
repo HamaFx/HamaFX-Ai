@@ -4,7 +4,7 @@
 // gauge, with a deep-link to /settings/usage for the full breakdown.
 // Server component.
 
-import { computeUsage } from '@hamafx/ai';
+import { computeUsage } from '@kestrel/ai';
 import { IconChevronRight } from '@tabler/icons-react';
 import { Link } from 'next-view-transitions';
 

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
-import type { JournalEntry } from '@hamafx/shared';
+import type { JournalEntry } from '@kestrel/shared';
 import type { UTCTimestamp } from 'lightweight-charts';
 
 export interface EquityPoint {

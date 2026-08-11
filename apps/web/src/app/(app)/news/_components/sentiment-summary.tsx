@@ -9,7 +9,7 @@
 //
 // Server component — purely derived from the article list, no state.
 
-import type { NewsArticle } from '@hamafx/shared';
+import type { NewsArticle } from '@kestrel/shared';
 
 import { cn } from '@/lib/cn';
 

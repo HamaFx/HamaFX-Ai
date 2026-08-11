@@ -1,19 +1,19 @@
 ---
 type: module
-package: "@hamafx/web"
+package: "@kestrel/web"
 path: "apps/web/src/proxy.ts"
 incoming: 0
 outgoing: 2
 connections: 2
 risk: low
 layer: core
-tags: [type/module, hamafx-web, layer/core]
+tags: [type/module, kestrel-web, layer/core]
 aliases: [proxy/proxy]
 ---
 
 # 📁 proxy/proxy
 
-> **Module** · `@hamafx/web` · `apps/web/src/proxy.ts`
+> **Module** · `@kestrel/web` · `apps/web/src/proxy.ts`
 
 
 Module: apps/web/src/proxy.ts
@@ -28,11 +28,11 @@ Module: apps/web/src/proxy.ts
 | Total connections | 2 |
 | Risk level | **LOW** |
 | Layer | `core` |
-| Package tag | `#hamafx-web` |
+| Package tag | `#kestrel-web` |
 
 
 ### 📤 Depends On (2)
-[[auth.config-assertProductionSecurity]] · [[@hamafx-web]]
+[[auth.config-assertProductionSecurity]] · [[@kestrel-web]]
 
 
 
@@ -47,4 +47,4 @@ Module: apps/web/src/proxy.ts
 - **Local Graph:** Right-click this file → "Open local graph"
 - **Backlinks:** Open the right sidebar → "Backlinks"
 - Use `#type/module` to find all Modules
-- Use `#hamafx-web` to find all files in this package
+- Use `#kestrel-web` to find all files in this package

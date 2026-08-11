@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import { closeDb, getDb } from '@hamafx/db';
-import { providerThrottle } from '@hamafx/db/schema';
+import { closeDb, getDb } from '@kestrel/db';
+import { providerThrottle } from '@kestrel/db/schema';
 import { eq } from 'drizzle-orm';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 

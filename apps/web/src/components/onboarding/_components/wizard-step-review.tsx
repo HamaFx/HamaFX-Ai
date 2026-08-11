@@ -1,6 +1,6 @@
 import { IconBolt, IconRobot, IconUser } from '@tabler/icons-react';
 import { Button } from '@/components/ui/button';
-import type { ProviderMeta } from '@hamafx/shared';
+import type { ProviderMeta } from '@kestrel/shared';
 import type { TradingStyle } from './wizard-types';
 
 interface WizardStepReviewProps {
@@ -59,7 +59,7 @@ export function WizardStepReview({
         </summary>
         <div className="mt-3 flex flex-col gap-3">
           <p className="text-xs text-fg-subtle">
-            A preview of what HamaFX-Ai can do. After setup, you will be able to ask about any symbol.
+            A preview of what Kestrel can do. After setup, you will be able to ask about any symbol.
           </p>
           <div className="flex flex-col gap-2 bg-bg-elev-2 rounded-sm p-3">
             <div className="flex items-start gap-2">

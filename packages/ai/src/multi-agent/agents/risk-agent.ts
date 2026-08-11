@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@ import { z } from 'zod';
 import type { Tool } from 'ai';
 import { BaseAgent, baseOpinionSchema } from './base-agent';
 import { toolRegistry } from '../../tools';
-import { getMarketPhase } from '@hamafx/shared';
+import { getMarketPhase } from '@kestrel/shared';
 import type { AgentName, AgentBias, ModelTier } from '../types';
 
 const riskSchema = baseOpinionSchema.extend({
@@ -57,7 +57,7 @@ export class RiskAgent extends BaseAgent {
             phase.session +
             '). Moves are more reliable during this period.';
 
-    return `You are a Risk Screening Agent for HamaFX-Ai.
+    return `You are a Risk Screening Agent for Kestrel.
 
 Your SOLE focus is identifying RISKS and RED FLAGS:
 - Position sizing: is the implied risk/reward acceptable?

@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,14 +16,14 @@
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-vi.mock('@hamafx/ai', () => ({
+vi.mock('@kestrel/ai', () => ({
   upsertCoTReport: vi.fn(),
 }));
 
 // Phase 3 hardening §19 — `apps/worker/src/jobs/cot.ts` now imports
-// the CFTC helpers via `import { cftc } from '@hamafx/data'`. Match
+// the CFTC helpers via `import { cftc } from '@kestrel/data'`. Match
 // the new namespace shape so vitest's module resolver finds the mock.
-vi.mock('@hamafx/data', () => ({
+vi.mock('@kestrel/data', () => ({
   cftc: {
     fetchLatestRows: vi.fn(),
     parseCftcInt: (s: string | undefined) =>
@@ -32,8 +32,8 @@ vi.mock('@hamafx/data', () => ({
   },
 }));
 
-import * as ai from '@hamafx/ai';
-import { cftc } from '@hamafx/data';
+import * as ai from '@kestrel/ai';
+import { cftc } from '@kestrel/data';
 
 import { runCoT } from '../src/jobs/cot';
 import { TenantRouter } from '../src/tenant-router';

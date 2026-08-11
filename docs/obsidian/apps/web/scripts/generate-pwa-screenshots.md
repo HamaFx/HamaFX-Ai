@@ -1,19 +1,19 @@
 ---
 type: module
-package: "@hamafx/web"
+package: "@kestrel/web"
 path: "apps/web/scripts/generate-pwa-screenshots.mjs"
 incoming: 0
 outgoing: 1
 connections: 1
 risk: low
 layer: core
-tags: [type/module, hamafx-web, layer/core]
+tags: [type/module, kestrel-web, layer/core]
 aliases: [generate-pwa-screenshots]
 ---
 
 # 📁 generate-pwa-screenshots
 
-> **Module** · `@hamafx/web` · `apps/web/scripts/generate-pwa-screenshots.mjs`
+> **Module** · `@kestrel/web` · `apps/web/scripts/generate-pwa-screenshots.mjs`
 
 
 Module: apps/web/scripts/generate-pwa-screenshots.mjs
@@ -28,11 +28,11 @@ Module: apps/web/scripts/generate-pwa-screenshots.mjs
 | Total connections | 1 |
 | Risk level | **LOW** |
 | Layer | `core` |
-| Package tag | `#hamafx-web` |
+| Package tag | `#kestrel-web` |
 
 
 ### 📤 Depends On (1)
-[[@hamafx-web]]
+[[@kestrel-web]]
 
 
 
@@ -43,4 +43,4 @@ Module: apps/web/scripts/generate-pwa-screenshots.mjs
 - **Local Graph:** Right-click this file → "Open local graph"
 - **Backlinks:** Open the right sidebar → "Backlinks"
 - Use `#type/module` to find all Modules
-- Use `#hamafx-web` to find all files in this package
+- Use `#kestrel-web` to find all files in this package

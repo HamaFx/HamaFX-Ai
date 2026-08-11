@@ -1,19 +1,19 @@
 ---
 type: module
-package: "@hamafx/ai"
+package: "@kestrel/ai"
 path: "packages/ai/test/get-market-structure.test.ts"
 incoming: 0
 outgoing: 3
 connections: 3
 risk: low
 layer: core
-tags: [type/module, hamafx-ai, layer/core]
+tags: [type/module, kestrel-ai, layer/core]
 aliases: [get-market-structure.test]
 ---
 
 # 📁 get-market-structure.test
 
-> **Module** · `@hamafx/ai` · `packages/ai/test/get-market-structure.test.ts`
+> **Module** · `@kestrel/ai` · `packages/ai/test/get-market-structure.test.ts`
 
 
 Module: packages/ai/test/get-market-structure.test.ts
@@ -28,11 +28,11 @@ Module: packages/ai/test/get-market-structure.test.ts
 | Total connections | 3 |
 | Risk level | **LOW** |
 | Layer | `core` |
-| Package tag | `#hamafx-ai` |
+| Package tag | `#kestrel-ai` |
 
 
 ### 📤 Depends On (3)
-[[vitest-installServerOnlyStub]] · [[get_market_structure]] · [[@hamafx-ai]]
+[[vitest-installServerOnlyStub]] · [[get_market_structure]] · [[@kestrel-ai]]
 
 
 
@@ -43,4 +43,4 @@ Module: packages/ai/test/get-market-structure.test.ts
 - **Local Graph:** Right-click this file → "Open local graph"
 - **Backlinks:** Open the right sidebar → "Backlinks"
 - Use `#type/module` to find all Modules
-- Use `#hamafx-ai` to find all files in this package
+- Use `#kestrel-ai` to find all files in this package

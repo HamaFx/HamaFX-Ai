@@ -1,5 +1,5 @@
 [Unit]
-Description=HamaFX-Ai light cron — POST /api/cron/warm-cache on Vercel
+Description=Kestrel light cron — POST /api/cron/warm-cache on Vercel
 After=network-online.target
 Wants=network-online.target
 

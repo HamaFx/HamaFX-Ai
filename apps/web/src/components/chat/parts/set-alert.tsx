@@ -13,7 +13,7 @@
 'use client';
 
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,7 +28,7 @@
  * limitations under the License.
  */
 
-import type { SetAlertOutput } from '@hamafx/shared';
+import type { SetAlertOutput } from '@kestrel/shared';
 import { Link } from 'next-view-transitions';
 
 import { cn } from '@/lib/cn';

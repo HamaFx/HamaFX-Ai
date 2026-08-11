@@ -66,19 +66,19 @@ importers:
       '@dnd-kit/utilities':
         specifier: ^3.2.2
         version: 3.2.2(react@19.2.8)
-      '@hamafx/ai':
+      '@kestrel/ai':
         specifier: workspace:*
         version: link:../../packages/ai
-      '@hamafx/data':
+      '@kestrel/data':
         specifier: workspace:*
         version: link:../../packages/data
-      '@hamafx/db':
+      '@kestrel/db':
         specifier: workspace:*
         version: link:../../packages/db
-      '@hamafx/indicators':
+      '@kestrel/indicators':
         specifier: workspace:*
         version: link:../../packages/indicators
-      '@hamafx/shared':
+      '@kestrel/shared':
         specifier: workspace:*
         version: link:../../packages/shared
       '@sentry/nextjs':
@@ -163,7 +163,7 @@ importers:
         specifier: ^3.23.8
         version: 3.25.76
     devDependencies:
-      '@hamafx/config':
+      '@kestrel/config':
         specifier: workspace:*
         version: link:../../packages/config
       '@next/bundle-analyzer':
@@ -217,16 +217,16 @@ importers:
 
   apps/worker:
     dependencies:
-      '@hamafx/ai':
+      '@kestrel/ai':
         specifier: workspace:*
         version: link:../../packages/ai
-      '@hamafx/data':
+      '@kestrel/data':
         specifier: workspace:*
         version: link:../../packages/data
-      '@hamafx/db':
+      '@kestrel/db':
         specifier: workspace:*
         version: link:../../packages/db
-      '@hamafx/shared':
+      '@kestrel/shared':
         specifier: workspace:*
         version: link:../../packages/shared
       '@microsoft/signalr':
@@ -257,7 +257,7 @@ importers:
         specifier: ^3.23.8
         version: 3.25.76
     devDependencies:
-      '@hamafx/config':
+      '@kestrel/config':
         specifier: workspace:*
         version: link:../../packages/config
       '@types/node':
@@ -296,16 +296,16 @@ importers:
       '@ai-sdk/openai-compatible':
         specifier: ^1.0.39
         version: 1.0.39(zod@3.25.76)
-      '@hamafx/data':
+      '@kestrel/data':
         specifier: workspace:*
         version: link:../data
-      '@hamafx/db':
+      '@kestrel/db':
         specifier: workspace:*
         version: link:../db
-      '@hamafx/indicators':
+      '@kestrel/indicators':
         specifier: workspace:*
         version: link:../indicators
-      '@hamafx/shared':
+      '@kestrel/shared':
         specifier: workspace:*
         version: link:../shared
       '@langfuse/otel':
@@ -333,7 +333,7 @@ importers:
         specifier: ^3.23.8
         version: 3.25.76
     devDependencies:
-      '@hamafx/config':
+      '@kestrel/config':
         specifier: workspace:*
         version: link:../config
       '@types/node':
@@ -385,10 +385,10 @@ importers:
 
   packages/data:
     dependencies:
-      '@hamafx/db':
+      '@kestrel/db':
         specifier: workspace:*
         version: link:../db
-      '@hamafx/shared':
+      '@kestrel/shared':
         specifier: workspace:*
         version: link:../shared
       drizzle-orm:
@@ -401,7 +401,7 @@ importers:
         specifier: ^3.23.8
         version: 3.25.76
     devDependencies:
-      '@hamafx/config':
+      '@kestrel/config':
         specifier: workspace:*
         version: link:../config
       '@types/node':
@@ -422,7 +422,7 @@ importers:
       '@electric-sql/pglite':
         specifier: ^0.5.4
         version: 0.5.4
-      '@hamafx/shared':
+      '@kestrel/shared':
         specifier: workspace:*
         version: link:../shared
       drizzle-orm:
@@ -432,7 +432,7 @@ importers:
         specifier: ^3.4.5
         version: 3.4.9
     devDependencies:
-      '@hamafx/config':
+      '@kestrel/config':
         specifier: workspace:*
         version: link:../config
       '@types/node':
@@ -456,14 +456,14 @@ importers:
 
   packages/indicators:
     dependencies:
-      '@hamafx/shared':
+      '@kestrel/shared':
         specifier: workspace:*
         version: link:../shared
       zod:
         specifier: ^3.23.8
         version: 3.25.76
     devDependencies:
-      '@hamafx/config':
+      '@kestrel/config':
         specifier: workspace:*
         version: link:../config
       '@types/node':
@@ -494,7 +494,7 @@ importers:
         specifier: ^3.23.8
         version: 3.25.76
     devDependencies:
-      '@hamafx/config':
+      '@kestrel/config':
         specifier: workspace:*
         version: link:../config
       '@types/node':
@@ -515,11 +515,11 @@ importers:
       '@electric-sql/pglite':
         specifier: ^0.5.4
         version: 0.5.4
-      '@hamafx/shared':
+      '@kestrel/shared':
         specifier: workspace:*
         version: link:../shared
     devDependencies:
-      '@hamafx/config':
+      '@kestrel/config':
         specifier: workspace:*
         version: link:../config
       '@types/node':

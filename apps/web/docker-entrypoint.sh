@@ -2,7 +2,15 @@
 # Docker entrypoint — waits for Postgres, runs migrations, starts Next.js.
 set -e
 
-echo "== HamaFX-Ai =="
+printf '%s\n' \
+  '██╗  ██╗███████╗███████╗████████╗██████╗ ███████╗██╗' \
+  '██║ ██╔╝██╔════╝██╔════╝╚══██╔══╝██╔══██╗██╔════╝██║' \
+  '█████╔╝ █████╗  ███████╗   ██║   ██████╔╝█████╗  ██║' \
+  '██╔═██╗ ██╔══╝  ╚════██║   ██║   ██╔══██╗██╔══╝  ██║' \
+  '██║  ██╗███████╗███████║   ██║   ██║  ██║███████╗███████╗' \
+  '╚═╝  ╚═╝╚══════╝╚══════╝   ╚═╝   ╚═╝  ╚═╝╚══════╝╚══════╝' \
+  ''
+echo "Kestrel — AI trading copilot"
 
 # Prefer a direct/non-pooled URL for migrations. Production deployments must
 # provide DIRECT_URL or POSTGRES_URL_NON_POOLING. Local Docker Compose opts into
@@ -36,5 +44,5 @@ if [ -n "$MIGRATION_DATABASE_URL" ]; then
   echo "Migrations applied."
 fi
 
-echo "Starting HamaFX-Ai on port ${PORT:-3000}..."
+echo "Starting Kestrel on port ${PORT:-3000}..."
 exec node apps/web/server.js

@@ -1,19 +1,19 @@
 ---
 type: module
-package: "@hamafx/worker"
+package: "@kestrel/worker"
 path: "apps/worker/src/healthchecks.ts"
 incoming: 3
 outgoing: 1
 connections: 4
 risk: low
 layer: core
-tags: [type/module, hamafx-worker, layer/core]
+tags: [type/module, kestrel-worker, layer/core]
 aliases: [healthchecks/PingStatus]
 ---
 
 # 📁 healthchecks/PingStatus
 
-> **Module** · `@hamafx/worker` · `apps/worker/src/healthchecks.ts`
+> **Module** · `@kestrel/worker` · `apps/worker/src/healthchecks.ts`
 
 
 Module: apps/worker/src/healthchecks.ts
@@ -28,11 +28,11 @@ Module: apps/worker/src/healthchecks.ts
 | Total connections | 4 |
 | Risk level | **LOW** |
 | Layer | `core` |
-| Package tag | `#hamafx-worker` |
+| Package tag | `#kestrel-worker` |
 
 
 ### 📤 Depends On (1)
-[[@hamafx-worker]]
+[[@kestrel-worker]]
 
 
 ### 📥 Depended On By (3)
@@ -51,4 +51,4 @@ Module: apps/worker/src/healthchecks.ts
 - **Local Graph:** Right-click this file → "Open local graph"
 - **Backlinks:** Open the right sidebar → "Backlinks"
 - Use `#type/module` to find all Modules
-- Use `#hamafx-worker` to find all files in this package
+- Use `#kestrel-worker` to find all files in this package

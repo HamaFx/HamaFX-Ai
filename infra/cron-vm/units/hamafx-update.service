@@ -1,5 +1,5 @@
 [Unit]
-Description=HamaFX-Ai self-update (git pull + Docker build + container restart)
+Description=Kestrel self-update (git pull + Docker build + container restart)
 After=network-online.target docker.service
 Wants=network-online.target
 Requires=docker.service

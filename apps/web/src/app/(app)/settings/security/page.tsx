@@ -3,14 +3,14 @@
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { auth } from '@/auth';
-import { getDb, schema } from '@hamafx/db';
+import { getDb, schema } from '@kestrel/db';
 import { eq, and } from 'drizzle-orm';
 import { ChangePasswordCard } from '../_components/security/change-password-card';
 import { TwoFactorSetup } from '../_components/security/two-factor-setup';
 import { LinkedAccountsCard } from '../_components/security/linked-accounts-card';
 import { SessionsCard } from '../_components/security/sessions-card';
 
-export const metadata: Metadata = { title: 'Security | Settings | HamaFX' };
+export const metadata: Metadata = { title: 'Security | Settings | Kestrel' };
 export const revalidate = 60;
 
 export default async function SecurityPage() {

@@ -1,19 +1,19 @@
 ---
 type: module
-package: "@hamafx/ai"
+package: "@kestrel/ai"
 path: "packages/ai/src/context.ts"
 incoming: 2
 outgoing: 8
 connections: 10
 risk: low
 layer: core
-tags: [type/module, hamafx-ai, layer/core]
+tags: [type/module, kestrel-ai, layer/core]
 aliases: [context/buildLiveSnapshot]
 ---
 
 # 📁 context/buildLiveSnapshot
 
-> **Module** · `@hamafx/ai` · `packages/ai/src/context.ts`
+> **Module** · `@kestrel/ai` · `packages/ai/src/context.ts`
 
 
 Module: packages/ai/src/context.ts
@@ -28,11 +28,11 @@ Module: packages/ai/src/context.ts
 | Total connections | 10 |
 | Risk level | **LOW** |
 | Layer | `core` |
-| Package tag | `#hamafx-ai` |
+| Package tag | `#kestrel-ai` |
 
 
 ### 📤 Depends On (6)
-[[@hamafx-data]] · [[@hamafx-db]] · [[db-getDb]] · [[@hamafx-shared]] · [[system-LiveSnapshot]] · [[@hamafx-ai]]
+[[@kestrel-data]] · [[@kestrel-db]] · [[db-getDb]] · [[@kestrel-shared]] · [[system-LiveSnapshot]] · [[@kestrel-ai]]
 
 
 ### 📥 Depended On By (2)
@@ -49,4 +49,4 @@ Module: packages/ai/src/context.ts
 - **Local Graph:** Right-click this file → "Open local graph"
 - **Backlinks:** Open the right sidebar → "Backlinks"
 - Use `#type/module` to find all Modules
-- Use `#hamafx-ai` to find all files in this package
+- Use `#kestrel-ai` to find all files in this package

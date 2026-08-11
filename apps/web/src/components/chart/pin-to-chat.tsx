@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,7 +31,7 @@
  *      prompt exactly once (autoSubmittedRef in chat-screen.tsx).
  */
 
-import type { Symbol } from '@hamafx/shared';
+import type { Symbol } from '@kestrel/shared';
 import { IconMessageCircle } from '@tabler/icons-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';

@@ -1,19 +1,19 @@
 ---
 type: component
-package: "@hamafx/web"
+package: "@kestrel/web"
 path: "apps/web/src/components/chat/chat-screen.tsx"
 incoming: 0
 outgoing: 9
 connections: 9
 risk: low
 layer: ui
-tags: [type/component, hamafx-web, layer/ui]
+tags: [type/component, kestrel-web, layer/ui]
 aliases: [chat-screen/ChatScreen]
 ---
 
 # 🧩 chat-screen/ChatScreen
 
-> **Component** · `@hamafx/web` · `apps/web/src/components/chat/chat-screen.tsx`
+> **Component** · `@kestrel/web` · `apps/web/src/components/chat/chat-screen.tsx`
 
 
 React component: chat-screen
@@ -28,11 +28,11 @@ React component: chat-screen
 | Total connections | 9 |
 | Risk level | **LOW** |
 | Layer | `ui` |
-| Package tag | `#hamafx-web` |
+| Package tag | `#kestrel-web` |
 
 
 ### 📤 Depends On (8)
-[[@hamafx-shared]] · [[chat-top-bar-AnalysisMode]] · [[composer-ComposerImage]] · [[message-list-MessageList]] · [[quick-prompts-QuickPrompts]] · [[agent-deliberation-AgentDeliberation]] · [[thread-summary-header-ThreadSummaryHeader]] · [[@hamafx-web]]
+[[@kestrel-shared]] · [[chat-top-bar-AnalysisMode]] · [[composer-ComposerImage]] · [[message-list-MessageList]] · [[quick-prompts-QuickPrompts]] · [[agent-deliberation-AgentDeliberation]] · [[thread-summary-header-ThreadSummaryHeader]] · [[@kestrel-web]]
 
 
 
@@ -46,4 +46,4 @@ React component: chat-screen
 - **Local Graph:** Right-click this file → "Open local graph"
 - **Backlinks:** Open the right sidebar → "Backlinks"
 - Use `#type/component` to find all Components
-- Use `#hamafx-web` to find all files in this package
+- Use `#kestrel-web` to find all files in this package

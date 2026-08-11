@@ -1,5 +1,5 @@
 [Unit]
-Description=HamaFX-Ai light cron — delete chat-image blobs older than 7 days
+Description=Kestrel light cron — delete chat-image blobs older than 7 days
 After=network-online.target
 Wants=network-online.target
 

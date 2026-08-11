@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,7 +25,7 @@
 // route handler or server init). It is idempotent — repeated imports
 // won't duplicate registrations.
 
-import { container } from '@hamafx/shared';
+import { container } from '@kestrel/shared';
 import { VercelLlmClient } from './llm-client';
 import { LLM_CLIENT } from './tokens';
 

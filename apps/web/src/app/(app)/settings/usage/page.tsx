@@ -12,7 +12,7 @@ import {
   getMonthlySpend,
   providerIdFromModel,
   BYOK_PROVIDERS_LIST,
-} from '@hamafx/ai';
+} from '@kestrel/ai';
 import { redirect } from 'next/navigation';
 import { auth } from '@/auth';
 import type { Metadata } from 'next';
@@ -23,10 +23,10 @@ import { EmptyState } from '@/components/ui/empty-state';
 import { cn } from '@/lib/cn';
 import { getServerEnv } from '@/lib/env';
 import { formatRelative } from '@/lib/format';
-import { getUserWithSettings, listMtdAgentOpinions, listTelemetry as listDbTelemetry } from '@hamafx/db';
+import { getUserWithSettings, listMtdAgentOpinions, listTelemetry as listDbTelemetry } from '@kestrel/db';
 import { UsageLimitsForm } from './_components/usage-limits-form';
 
-export const metadata: Metadata = { title: 'Usage | HamaFX' };
+export const metadata: Metadata = { title: 'Usage | Kestrel' };
 export const revalidate = 60;
 
 export default async function UsagePage() {

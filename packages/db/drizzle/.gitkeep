@@ -1,5 +1,5 @@
 # Generated SQL migrations land here once you run:
-#   pnpm --filter @hamafx/db migrate:gen
+#   pnpm --filter @kestrel/db migrate:gen
 #
 # The first generated migration must be hand-edited to add at the top:
 #   CREATE EXTENSION IF NOT EXISTS vector;

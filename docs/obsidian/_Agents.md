@@ -21,7 +21,7 @@ dv.table(
 
 ## Full List
 
-- [[RiskAgent]] · `@hamafx/ai` · `packages/ai/src/multi-agent/agents/risk-agent.ts`  *(↖2 ↗6 = 8)*
-- [[FundamentalAgent]] · `@hamafx/ai` · `packages/ai/src/multi-agent/agents/fundamental-agent.ts`  *(↖2 ↗5 = 7)*
-- [[SentimentAgent]] · `@hamafx/ai` · `packages/ai/src/multi-agent/agents/sentiment-agent.ts`  *(↖2 ↗5 = 7)*
-- [[TechnicalAgent]] · `@hamafx/ai` · `packages/ai/src/multi-agent/agents/technical-agent.ts`  *(↖2 ↗5 = 7)*
+- [[RiskAgent]] · `@kestrel/ai` · `packages/ai/src/multi-agent/agents/risk-agent.ts`  *(↖2 ↗6 = 8)*
+- [[FundamentalAgent]] · `@kestrel/ai` · `packages/ai/src/multi-agent/agents/fundamental-agent.ts`  *(↖2 ↗5 = 7)*
+- [[SentimentAgent]] · `@kestrel/ai` · `packages/ai/src/multi-agent/agents/sentiment-agent.ts`  *(↖2 ↗5 = 7)*
+- [[TechnicalAgent]] · `@kestrel/ai` · `packages/ai/src/multi-agent/agents/technical-agent.ts`  *(↖2 ↗5 = 7)*

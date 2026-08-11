@@ -1,19 +1,19 @@
 ---
 type: module
-package: "@hamafx/data"
+package: "@kestrel/data"
 path: "packages/data/src/failover.ts"
 incoming: 6
 outgoing: 4
 connections: 10
 risk: low
 layer: core
-tags: [type/module, hamafx-data, layer/core]
+tags: [type/module, kestrel-data, layer/core]
 aliases: [failover/ProviderAttempt]
 ---
 
 # 📁 failover/ProviderAttempt
 
-> **Module** · `@hamafx/data` · `packages/data/src/failover.ts`
+> **Module** · `@kestrel/data` · `packages/data/src/failover.ts`
 
 
 Module: packages/data/src/failover.ts
@@ -28,11 +28,11 @@ Module: packages/data/src/failover.ts
 | Total connections | 10 |
 | Risk level | **LOW** |
 | Layer | `core` |
-| Package tag | `#hamafx-data` |
+| Package tag | `#kestrel-data` |
 
 
 ### 📤 Depends On (4)
-[[errors-DataErrorCode]] · [[health-recordSuccess]] · [[@hamafx-shared]] · [[@hamafx-data]]
+[[errors-DataErrorCode]] · [[health-recordSuccess]] · [[@kestrel-shared]] · [[@kestrel-data]]
 
 
 ### 📥 Depended On By (6)
@@ -50,4 +50,4 @@ Module: packages/data/src/failover.ts
 - **Local Graph:** Right-click this file → "Open local graph"
 - **Backlinks:** Open the right sidebar → "Backlinks"
 - Use `#type/module` to find all Modules
-- Use `#hamafx-data` to find all files in this package
+- Use `#kestrel-data` to find all files in this package

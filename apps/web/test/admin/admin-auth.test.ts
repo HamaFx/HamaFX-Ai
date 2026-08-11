@@ -52,7 +52,7 @@ function makeThenable(value: unknown): Record<string, unknown> {
   };
 }
 
-vi.mock('@hamafx/db', () => {
+vi.mock('@kestrel/db', () => {
   const fromResult = makeFromResult();
   return {
     getDb: () => ({

@@ -1,19 +1,19 @@
 ---
 type: module
-package: "@hamafx/web"
+package: "@kestrel/web"
 path: "apps/web/src/app/(app)/settings/api-keys/_components/api-key-card.tsx"
 incoming: 1
 outgoing: 5
 connections: 6
 risk: low
 layer: core
-tags: [type/module, hamafx-web, layer/core]
+tags: [type/module, kestrel-web, layer/core]
 aliases: [api-key-card/ApiKeyCard]
 ---
 
 # 📁 api-key-card/ApiKeyCard
 
-> **Module** · `@hamafx/web` · `apps/web/src/app/(app)/settings/api-keys/_components/api-key-card.tsx`
+> **Module** · `@kestrel/web` · `apps/web/src/app/(app)/settings/api-keys/_components/api-key-card.tsx`
 
 
 Module: apps/web/src/app/(app)/settings/api-keys/_components/api-key-card.tsx
@@ -28,11 +28,11 @@ Module: apps/web/src/app/(app)/settings/api-keys/_components/api-key-card.tsx
 | Total connections | 6 |
 | Risk level | **LOW** |
 | Layer | `core` |
-| Package tag | `#hamafx-web` |
+| Package tag | `#kestrel-web` |
 
 
 ### 📤 Depends On (4)
-[[@hamafx-shared]] · [[provider-logo-ProviderLogo]] · [[provider-setup-instructions-SETUP_INSTRUCTIONS]] · [[@hamafx-web]]
+[[@kestrel-shared]] · [[provider-logo-ProviderLogo]] · [[provider-setup-instructions-SETUP_INSTRUCTIONS]] · [[@kestrel-web]]
 
 
 ### 📥 Depended On By (1)
@@ -49,4 +49,4 @@ Module: apps/web/src/app/(app)/settings/api-keys/_components/api-key-card.tsx
 - **Local Graph:** Right-click this file → "Open local graph"
 - **Backlinks:** Open the right sidebar → "Backlinks"
 - Use `#type/module` to find all Modules
-- Use `#hamafx-web` to find all files in this package
+- Use `#kestrel-web` to find all files in this package

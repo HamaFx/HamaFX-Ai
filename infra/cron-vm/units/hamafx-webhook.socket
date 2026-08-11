@@ -1,5 +1,5 @@
 [Unit]
-Description=HamaFX-Ai webhook socket (port 9000)
+Description=Kestrel webhook socket (port 9000)
 
 [Socket]
 ListenStream=9000

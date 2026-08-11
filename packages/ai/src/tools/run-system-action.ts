@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,9 +18,9 @@ import {
   RunSystemActionInputSchema,
   type RunSystemActionOutput,
   forbidden,
-} from '@hamafx/shared';
-import { fred } from '@hamafx/data';
-import { schema } from '@hamafx/db';
+} from '@kestrel/shared';
+import { fred } from '@kestrel/data';
+import { schema } from '@kestrel/db';
 import { getDb } from '../db';
 import { tool } from 'ai';
 import { and, eq, gte, lte, sql } from 'drizzle-orm';
@@ -31,7 +31,7 @@ import { assertMutationIntent } from './mutation-guard';
 
 const InputSchema = RunSystemActionInputSchema;
 
-declare module '@hamafx/shared' {
+declare module '@kestrel/shared' {
   interface ToolIOMap {
     run_system_action: { input: z.infer<typeof InputSchema> };
   }

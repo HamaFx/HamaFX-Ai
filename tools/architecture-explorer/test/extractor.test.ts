@@ -18,7 +18,7 @@ function sourceFile(rootDir: string, relativePath: string, content: string): Sca
     relativePath,
     name: relativePath.split('/').pop()!,
     ext: '.ts',
-    pkg: '@hamafx/web',
+    pkg: '@kestrel/web',
     size: content.length,
   };
 }
@@ -57,7 +57,7 @@ test('normalizes getCoTTool to the canonical get_cot name', () => {
       relativePath: 'packages/ai/src/tools/get-cot.ts',
       name: 'get-cot.ts',
       ext: '.ts',
-      pkg: '@hamafx/ai',
+      pkg: '@kestrel/ai',
       size: 70,
     },
     rootDir,

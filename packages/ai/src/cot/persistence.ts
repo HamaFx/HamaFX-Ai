@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,9 +20,9 @@
 // `cftc:<symbol>:<YYYY-MM-DD>`, so the cron handler can re-run on the same
 // week without producing duplicate rows.
 
-import { schema } from '@hamafx/db';
+import { schema } from '@kestrel/db';
 import { getDb } from '../db';
-import type { CoTSample, Symbol } from '@hamafx/shared';
+import type { CoTSample, Symbol } from '@kestrel/shared';
 import { and, desc, eq } from 'drizzle-orm';
 
 export interface UpsertCoTReportArgs {

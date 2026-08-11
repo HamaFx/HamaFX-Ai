@@ -1,19 +1,19 @@
 ---
 type: moc
-package: "@hamafx/db"
+package: "@kestrel/db"
 nodes: 161
 totalIncoming: 397
 totalOutgoing: 261
 tags: [moc, hamafx-db]
 ---
 
-# 📦 @hamafx/db
+# 📦 @kestrel/db
 
 > **Map of Content** · 161 files · 397 incoming + 261 outgoing = 658 connections
 
 ## DataviewJS — All Files in This Package
 ```dataviewjs
-const pages = dv.pages().where(p => p.package === "@hamafx/db" && p.type);
+const pages = dv.pages().where(p => p.package === "@kestrel/db" && p.type);
 dv.table(
   ['File', 'Type', 'Incoming', 'Outgoing', 'Risk'],
   pages.sort(p => -(p.incoming + p.outgoing), 'desc').map(p => [
@@ -190,5 +190,5 @@ dv.table(
 - [[chat_tool_telemetry]] *(0↖ 1↗)*
 
 ### 📦 Package (1)
-- [[@hamafx-db]] *(266↖ 0↗)*
+- [[@kestrel-db]] *(266↖ 0↗)*
 

@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-import { DEFAULT_WATCHLIST_SYMBOLS, isKnownSymbol, type Symbol } from '@hamafx/shared';
+import { DEFAULT_WATCHLIST_SYMBOLS, isKnownSymbol, type Symbol } from '@kestrel/shared';
 import {IconClock, IconBolt, IconTrendingUp} from '@tabler/icons-react';
 import { useCallback, useEffect } from 'react';
 import { toast } from 'sonner';

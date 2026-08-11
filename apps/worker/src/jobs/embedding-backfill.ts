@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,10 +24,10 @@
 // time cap (systemd kills only on 10 min — see hamafx-job-embedding-backfill.timer
 // in PR-15).
 //
-// We import the existing `backfillEmbeddings` from @hamafx/ai unchanged —
+// We import the existing `backfillEmbeddings` from @kestrel/ai unchanged —
 // the implementation is correct; we only relocate where it runs.
 
-import { backfillEmbeddings, countPendingEmbeddings } from '@hamafx/ai';
+import { backfillEmbeddings, countPendingEmbeddings } from '@kestrel/ai';
 
 import type { JobContext, JobResult } from './types.js';
 

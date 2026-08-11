@@ -31,7 +31,7 @@ jobs:
           file: ./Dockerfile
           push: false
           load: true
-          tags: hamafx-web:scan
+          tags: kestrel-web:scan
 
       - name: Build Worker image (for scan)
         uses: docker/build-push-action@v5
@@ -40,13 +40,13 @@ jobs:
           file: ./Dockerfile.worker
           push: false
           load: true
-          tags: hamafx-worker:scan
+          tags: kestrel-worker:scan
 
       # INFRA-04: Vulnerability scan — fail on CRITICAL severity.
       - name: Scan Web image with Trivy
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: hamafx-web:scan
+          image-ref: kestrel-web:scan
           format: 'sarif'
           output: 'trivy-web.sarif'
           severity: 'CRITICAL,HIGH'
@@ -55,7 +55,7 @@ jobs:
       - name: Scan Worker image with Trivy
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: hamafx-worker:scan
+          image-ref: kestrel-worker:scan
           format: 'sarif'
           output: 'trivy-worker.sarif'
           severity: 'CRITICAL,HIGH'

@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,7 +33,7 @@ export class FundamentalAgent extends BaseAgent {
   readonly modelTier: ModelTier = 'mid';
 
   systemPrompt(): string {
-    return `You are a Fundamental Analysis Agent for HamaFX-Ai.
+    return `You are a Fundamental Analysis Agent for Kestrel.
 
 Your SOLE focus is macroeconomic and fundamental analysis:
 - Economic calendar: upcoming events, their impact, forecasts vs actuals

@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -40,7 +40,7 @@ test.describe('Authentication', () => {
     await page.goto('/');
 
     await expect(page).toHaveURL(/.*\/login/);
-    // The auth layout renders an <h1> with the product name ("HamaFX·Ai")
+    // The auth layout renders an <h1> with the product name ("Kestrel")
     // and the login form has a "Sign in" button. Assert both so the test
     // confirms we landed on the login page.
     await expect(page.getByRole('heading', { name: /hamafx/i })).toBeVisible();

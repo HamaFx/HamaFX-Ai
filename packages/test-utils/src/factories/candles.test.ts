@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { makeCandles, makeTicks } from './candles';
-import type { Candle, Tick } from '@hamafx/shared';
+import type { Candle, Tick } from '@kestrel/shared';
 
 describe('makeCandles', () => {
   it('creates candles with default options', () => {

@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@
 // name; each kind is opt-in so a "just give me the FVGs" call doesn't
 // burn cycles on order-block scanning.
 
-import type { Candle, StructureKind, StructureResult, Symbol, Timeframe } from '@hamafx/shared';
+import type { Candle, StructureKind, StructureResult, Symbol, Timeframe } from '@kestrel/shared';
 
 import { defaultSwingLookback } from './defaults';
 import { detectFvgs, type DetectFvgOptions } from './fvg';

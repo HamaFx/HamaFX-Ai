@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,10 +33,10 @@ import {
   type SummarizeThreadOutput,
   type Symbol,
   type ThreadInsight,
-} from '@hamafx/shared';
+} from '@kestrel/shared';
 import { generateText, tool } from 'ai';
 import type { z } from 'zod';
-import { createCategorizedLogger } from '@hamafx/shared/logger';
+import { createCategorizedLogger } from '@kestrel/shared/logger';
 
 import { rememberThreadSynopsis } from '../memory/memory-index';
 import { resolveModel, derivePlannerModel } from '../model';
@@ -46,7 +46,7 @@ import { telemetryConfig } from '../telemetry';
 
 const InputSchema = SummarizeThreadInputSchema;
 
-declare module '@hamafx/shared' {
+declare module '@kestrel/shared' {
   interface ToolIOMap {
     summarize_thread: { input: z.infer<typeof InputSchema> };
   }

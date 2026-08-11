@@ -1,19 +1,19 @@
 ---
 type: module
-package: "@hamafx/db"
+package: "@kestrel/db"
 path: "packages/db/test/index.test.ts"
 incoming: 0
 outgoing: 2
 connections: 2
 risk: low
 layer: core
-tags: [type/module, hamafx-db, layer/core]
+tags: [type/module, kestrel-db, layer/core]
 aliases: [index.test]
 ---
 
 # 📁 index.test
 
-> **Module** · `@hamafx/db` · `packages/db/test/index.test.ts`
+> **Module** · `@kestrel/db` · `packages/db/test/index.test.ts`
 
 
 Module: packages/db/test/index.test.ts
@@ -28,11 +28,11 @@ Module: packages/db/test/index.test.ts
 | Total connections | 2 |
 | Risk level | **LOW** |
 | Layer | `core` |
-| Package tag | `#hamafx-db` |
+| Package tag | `#kestrel-db` |
 
 
 ### 📤 Depends On (2)
-[[vitest-installServerOnlyStub]] · [[@hamafx-db]]
+[[vitest-installServerOnlyStub]] · [[@kestrel-db]]
 
 
 
@@ -43,4 +43,4 @@ Module: packages/db/test/index.test.ts
 - **Local Graph:** Right-click this file → "Open local graph"
 - **Backlinks:** Open the right sidebar → "Backlinks"
 - Use `#type/module` to find all Modules
-- Use `#hamafx-db` to find all files in this package
+- Use `#kestrel-db` to find all files in this package

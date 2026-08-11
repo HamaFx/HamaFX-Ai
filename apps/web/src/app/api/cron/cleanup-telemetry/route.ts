@@ -3,7 +3,7 @@
 // DB-1: GET /api/cron/cleanup-telemetry — purges stale operational rows.
 //
 // Targets: rate_limits, chat_telemetry, tool_telemetry, diagnostic_traces,
-// provider_daily_quota. Uses shared retention logic from @hamafx/db so
+// provider_daily_quota. Uses shared retention logic from @kestrel/db so
 // both the web cron route and the worker job call the same function.
 //
 // Schedule: daily via Vercel cron or the GCE VM systemd timer.

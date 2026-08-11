@@ -39,6 +39,7 @@ Module: scripts/setup/steps/prereqs.mjs
 
 ## 📦 Exports
 - `title`
+- `hint`
 - `run`
 
 

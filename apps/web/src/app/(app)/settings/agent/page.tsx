@@ -5,12 +5,12 @@
 // (count, failure count, p50/p95 latency). Server component — single
 // DB read on render.
 
-import { buildToolCatalogue, BYOK_PROVIDERS_LIST } from '@hamafx/ai';
-import { getUserWithSettings } from '@hamafx/db';
+import { buildToolCatalogue, BYOK_PROVIDERS_LIST } from '@kestrel/ai';
+import { getUserWithSettings } from '@kestrel/db';
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { auth } from '@/auth';
-import { TOOL_NAMES, type ToolName } from '@hamafx/shared';
+import { TOOL_NAMES, type ToolName } from '@kestrel/shared';
 import { IconSettings } from '@tabler/icons-react';
 
 import { DisabledToolsForm } from './_components/disabled-tools-form';
@@ -21,7 +21,7 @@ import { AIPrefsCard } from '../_components/agent/ai-prefs-card';
 export const revalidate = 60;
 
 export const metadata: Metadata = {
-  title: 'Agent | HamaFX',
+  title: 'Agent | Kestrel',
   description: 'Tool catalogue and recent invocation stats.',
 };
 

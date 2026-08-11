@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@
 // against the journal to show which migrations have been applied and
 // which are pending.
 //
-// Usage: pnpm --filter @hamafx/db migrate:status
+// Usage: pnpm --filter @kestrel/db migrate:status
 
 import { readFileSync, readdirSync, existsSync } from 'node:fs';
 import { join, dirname } from 'node:path';

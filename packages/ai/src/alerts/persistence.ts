@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@
 // and the AI `set_alert` tool. SQL stays here so all callers see the same
 // row → DTO mapping.
 
-import { schema } from '@hamafx/db';
+import { schema } from '@kestrel/db';
 import { getDb } from '../db';
 import {
   AlertChannelSchema,
@@ -26,9 +26,9 @@ import {
   type Alert,
   type AlertChannel,
   type AlertRule,
-} from '@hamafx/shared';
+} from '@kestrel/shared';
 import { and, asc, desc, eq, isNull } from 'drizzle-orm';
-import { createCategorizedLogger } from '@hamafx/shared/logger';
+import { createCategorizedLogger } from '@kestrel/shared/logger';
 
 const plog = createCategorizedLogger('ai', { component: 'alerts-persistence' });
 

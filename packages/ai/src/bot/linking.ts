@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 
 // F7 — Bot Platform: User Linking Service.
 //
-// Manages the mapping between a Telegram chat ID and a HamaFX user.
+// Manages the mapping between a Telegram chat ID and a Kestrel user.
 // Flow:
 //   1. User goes to /settings → "Link Telegram" → gets a 6-char code
 //   2. User sends /link <code> to the bot
@@ -26,7 +26,7 @@
 //
 // See DSA_FEATURE_EXPANSION_PLAN.md §F7.4 for the design.
 
-import { schema } from '@hamafx/db';
+import { schema } from '@kestrel/db';
 import { getDb } from '../db';
 import { eq, and } from 'drizzle-orm';
 import { randomBytes } from 'crypto';
@@ -83,7 +83,7 @@ export function createLinkCode(userId: string): { code: string; expiresAt: Date 
 }
 
 /**
- * Attempt to link a Telegram chat ID to a HamaFX user using a link code.
+ * Attempt to link a Telegram chat ID to a Kestrel user using a link code.
  * Called when the user sends /link <code> to the bot.
  *
  * Returns the userId if successful, null if the code is invalid/expired.
@@ -130,7 +130,7 @@ export async function resolveLinkCode(
 }
 
 /**
- * Resolve a Telegram chat ID to a HamaFX user ID.
+ * Resolve a Telegram chat ID to a Kestrel user ID.
  * Used by the webhook handler to determine if a message is from a linked user.
  *
  * Returns the userId if linked, null otherwise.

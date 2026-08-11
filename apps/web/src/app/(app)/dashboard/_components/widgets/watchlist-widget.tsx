@@ -16,8 +16,8 @@
 import Link from 'next/link';
 import { useEffect, useReducer, useRef, useState, type MutableRefObject } from 'react';
 import { IconEye, IconRefresh, IconAlertTriangle } from '@tabler/icons-react';
-import type { Symbol, Tick } from '@hamafx/shared';
-import { priceDecimals } from '@hamafx/shared';
+import type { Symbol, Tick } from '@kestrel/shared';
+import { priceDecimals } from '@kestrel/shared';
 
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';

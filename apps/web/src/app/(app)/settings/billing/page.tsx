@@ -7,12 +7,12 @@ import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 
 import { auth } from '@/auth';
-import { listActivePlans, getUserSubscription, getUserPayments } from '@hamafx/db';
+import { listActivePlans, getUserSubscription, getUserPayments } from '@kestrel/db';
 import { BillingPlans } from './_components/billing-plans';
 import { PaymentHistory } from './_components/payment-history';
 import { SubscriptionStatus } from './_components/subscription-status';
 
-export const metadata: Metadata = { title: 'Billing | Settings | HamaFX' };
+export const metadata: Metadata = { title: 'Billing | Settings | Kestrel' };
 export const revalidate = 0;
 
 export default async function BillingPage() {

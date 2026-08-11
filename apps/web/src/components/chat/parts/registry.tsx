@@ -53,7 +53,7 @@ import {
   GetSocialSentimentOutputSchema,
   type ToolName,
   type ToolOutput,
-} from '@hamafx/shared';
+} from '@kestrel/shared';
 import type { ComponentType, ReactElement } from 'react';
 import type { z } from 'zod';
 

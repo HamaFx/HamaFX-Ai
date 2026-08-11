@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
  */
 
 /**
- * HamaFX-Ai interactive setup wizard.
+ * Kestrel interactive setup wizard.
  *
  *   pnpm setup                     # full interactive flow
  *   pnpm setup --mode=docker       # skip mode question
@@ -114,7 +114,7 @@ export function parseFlags(argv) {
 }
 
 export function printHelp(io) {
-  io.line(paint('HamaFX-Ai setup wizard', 'bold', 'cyan'));
+  io.line(paint('Kestrel setup wizard', 'bold', 'cyan'));
   io.line();
   io.line('  Usage:  pnpm setup [options]');
   io.line('          node scripts/setup.mjs [options]');

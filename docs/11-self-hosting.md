@@ -32,7 +32,7 @@ pnpm setup --json                # machine-readable result on stdout
 
 ```bash
 git clone https://github.com/HamaFx/HamaFX-Ai.git
-cd HamaFX-Ai
+cd Kestrel
 cp .env.example .env
 ```
 
@@ -124,7 +124,7 @@ The same workflow is validated in CI by `.github/workflows/docker-backup.yml`, w
 ## 4. Updates
 
 ```bash
-cd HamaFX-Ai
+cd Kestrel
 git pull origin main
 docker compose up -d --build
 ```

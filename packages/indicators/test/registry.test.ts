@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { computeIndicator, parseIndicatorParams } from '../src/registry';
-import type { Candle } from '@hamafx/shared';
+import type { Candle } from '@kestrel/shared';
 
 function makeCandle(h: number, l: number, t: number): Candle {
   return {

@@ -1,5 +1,5 @@
 {
-  "name": "@hamafx/web",
+  "name": "@kestrel/web",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -22,11 +22,11 @@
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
-    "@hamafx/ai": "workspace:*",
-    "@hamafx/data": "workspace:*",
-    "@hamafx/db": "workspace:*",
-    "@hamafx/indicators": "workspace:*",
-    "@hamafx/shared": "workspace:*",
+    "@kestrel/ai": "workspace:*",
+    "@kestrel/data": "workspace:*",
+    "@kestrel/db": "workspace:*",
+    "@kestrel/indicators": "workspace:*",
+    "@kestrel/shared": "workspace:*",
     "@sentry/nextjs": "^10.69.0",
     "@tabler/icons-react": "^3.44.0",
     "@tanstack/react-query": "^5.62.7",
@@ -56,7 +56,7 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
-    "@hamafx/config": "workspace:*",
+    "@kestrel/config": "workspace:*",
     "@next/bundle-analyzer": "^16.3.0",
     "@playwright/test": "^1.62.1",
     "@tailwindcss/postcss": "^4.3.3",

@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -69,7 +69,7 @@ const _OutputSchema = z.object({
 
 export type GetPortfolioSnapshotOutput = z.infer<typeof _OutputSchema>;
 
-declare module '@hamafx/shared' {
+declare module '@kestrel/shared' {
   interface ToolIOMap {
     get_portfolio_snapshot: { input: z.infer<typeof InputSchema> };
   }

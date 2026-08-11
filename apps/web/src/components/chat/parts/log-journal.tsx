@@ -17,7 +17,7 @@
 //
 // Server component on purpose — no state, no events, no browser-only APIs.
 
-import type { LogJournalOutput } from '@hamafx/shared';
+import type { LogJournalOutput } from '@kestrel/shared';
 import { Link } from 'next-view-transitions';
 
 interface LogJournalPartProps {

@@ -1,19 +1,19 @@
 ---
 type: module
-package: "@hamafx/web"
+package: "@kestrel/web"
 path: "apps/web/src/app/(app)/settings/_components/telegram/test-telegram-button.tsx"
 incoming: 1
 outgoing: 1
 connections: 2
 risk: low
 layer: core
-tags: [type/module, hamafx-web, layer/core]
+tags: [type/module, kestrel-web, layer/core]
 aliases: [test-telegram-button/TestTelegramButton]
 ---
 
 # 📁 test-telegram-button/TestTelegramButton
 
-> **Module** · `@hamafx/web` · `apps/web/src/app/(app)/settings/_components/telegram/test-telegram-button.tsx`
+> **Module** · `@kestrel/web` · `apps/web/src/app/(app)/settings/_components/telegram/test-telegram-button.tsx`
 
 
 Module: apps/web/src/app/(app)/settings/_components/telegram/test-telegram-button.tsx
@@ -28,11 +28,11 @@ Module: apps/web/src/app/(app)/settings/_components/telegram/test-telegram-butto
 | Total connections | 2 |
 | Risk level | **LOW** |
 | Layer | `core` |
-| Package tag | `#hamafx-web` |
+| Package tag | `#kestrel-web` |
 
 
 ### 📤 Depends On (1)
-[[@hamafx-web]]
+[[@kestrel-web]]
 
 
 ### 📥 Depended On By (1)
@@ -49,4 +49,4 @@ Module: apps/web/src/app/(app)/settings/_components/telegram/test-telegram-butto
 - **Local Graph:** Right-click this file → "Open local graph"
 - **Backlinks:** Open the right sidebar → "Backlinks"
 - Use `#type/module` to find all Modules
-- Use `#hamafx-web` to find all files in this package
+- Use `#kestrel-web` to find all files in this package

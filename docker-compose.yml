@@ -1,4 +1,4 @@
-# HamaFX-Ai — one-command Docker deployment
+# Kestrel — one-command Docker deployment
 #
 # Quick start:
 #   ./docker/init-secrets.sh   # generates .env with random secrets

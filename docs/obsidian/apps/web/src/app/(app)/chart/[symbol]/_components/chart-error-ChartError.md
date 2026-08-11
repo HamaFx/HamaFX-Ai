@@ -1,6 +1,6 @@
 ---
 type: module
-package: "@hamafx/web"
+package: "@kestrel/web"
 path: "apps/web/src/app/(app)/chart/[symbol]/_components/chart-error.tsx"
 incoming: 1
 outgoing: 1
@@ -13,7 +13,7 @@ aliases: [chart-error/ChartError]
 
 # 📁 chart-error/ChartError
 
-> **Module** · `@hamafx/web` · `apps/web/src/app/(app)/chart/[symbol]/_components/chart-error.tsx`
+> **Module** · `@kestrel/web` · `apps/web/src/app/(app)/chart/[symbol]/_components/chart-error.tsx`
 
 
 Module: apps/web/src/app/(app)/chart/[symbol]/_components/chart-error.tsx
@@ -32,7 +32,7 @@ Module: apps/web/src/app/(app)/chart/[symbol]/_components/chart-error.tsx
 
 
 ### 📤 Depends On (1)
-[[@hamafx-web]]
+[[@kestrel-web]]
 
 
 ### 📥 Depended On By (1)

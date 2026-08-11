@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@
 // when offline / hidden. (Phase 7 task 7.7 — aligned comment with actual
 // POLL_MS value; docs/06-frontend.md updated to match.)
 import { useMemo } from 'react';
-import type { Symbol, Tick } from '@hamafx/shared';
+import type { Symbol, Tick } from '@kestrel/shared';
 import { useQuery } from '@tanstack/react-query';
 
 import { fetchPrices } from '@/lib/market-client';

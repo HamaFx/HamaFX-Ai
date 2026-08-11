@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,12 +24,12 @@
 // user), but the schema now requires user_id. Pass a constant system user ID
 // until Phase D implements per-user briefings.
 
-import { schema } from '@hamafx/db';
+import { schema } from '@kestrel/db';
 import { getDb } from '../db';
 import { and, desc, eq, gte as dgte, lte as dlte, isNotNull as disNotNull } from 'drizzle-orm';
 
 import type { DbThread } from '../persistence';
-import type { Symbol } from '@hamafx/shared';
+import type { Symbol } from '@kestrel/shared';
 
 
 

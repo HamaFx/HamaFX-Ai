@@ -1,19 +1,19 @@
 ---
 type: component
-package: "@hamafx/web"
+package: "@kestrel/web"
 path: "apps/web/src/components/chat/chat-top-bar.tsx"
 incoming: 3
 outgoing: 4
 connections: 7
 risk: low
 layer: ui
-tags: [type/component, hamafx-web, layer/ui]
+tags: [type/component, kestrel-web, layer/ui]
 aliases: [chat-top-bar/AnalysisMode]
 ---
 
 # 🧩 chat-top-bar/AnalysisMode
 
-> **Component** · `@hamafx/web` · `apps/web/src/components/chat/chat-top-bar.tsx`
+> **Component** · `@kestrel/web` · `apps/web/src/components/chat/chat-top-bar.tsx`
 
 
 React component: chat-top-bar
@@ -28,11 +28,11 @@ React component: chat-top-bar
 | Total connections | 7 |
 | Risk level | **LOW** |
 | Layer | `ui` |
-| Package tag | `#hamafx-web` |
+| Package tag | `#kestrel-web` |
 
 
 ### 📤 Depends On (3)
-[[@hamafx-shared]] · [[thread-switcher-ThreadSwitcher]] · [[@hamafx-web]]
+[[@kestrel-shared]] · [[thread-switcher-ThreadSwitcher]] · [[@kestrel-web]]
 
 
 ### 📥 Depended On By (2)
@@ -51,4 +51,4 @@ React component: chat-top-bar
 - **Local Graph:** Right-click this file → "Open local graph"
 - **Backlinks:** Open the right sidebar → "Backlinks"
 - Use `#type/component` to find all Components
-- Use `#hamafx-web` to find all files in this package
+- Use `#kestrel-web` to find all files in this package

@@ -8,7 +8,7 @@
       ],
       "path": "/api/admin/architecture-explorer",
       "handler": "apps/web/src/app/api/admin/architecture-explorer/route.ts",
-      "package": "@hamafx/web",
+      "package": "@kestrel/web",
       "exports": [
         "runtime",
         "dynamic",
@@ -21,7 +21,7 @@
       ],
       "path": "/api/admin/audit",
       "handler": "apps/web/src/app/api/admin/audit/route.ts",
-      "package": "@hamafx/web",
+      "package": "@kestrel/web",
       "exports": [
         "runtime",
         "dynamic",
@@ -34,7 +34,7 @@
       ],
       "path": "/api/admin/billing/dlq/:id/replay",
       "handler": "apps/web/src/app/api/admin/billing/dlq/[id]/replay/route.ts",
-      "package": "@hamafx/web",
+      "package": "@kestrel/web",
       "exports": [
         "runtime",
         "dynamic",
@@ -47,7 +47,7 @@
       ],
       "path": "/api/admin/cron-history",
       "handler": "apps/web/src/app/api/admin/cron-history/route.ts",
-      "package": "@hamafx/web",
+      "package": "@kestrel/web",
       "exports": [
         "runtime",
         "dynamic",
@@ -60,7 +60,7 @@
       ],
       "path": "/api/admin/diagnostics/tool-telemetry",
       "handler": "apps/web/src/app/api/admin/diagnostics/tool-telemetry/route.ts",
-      "package": "@hamafx/web",
+      "package": "@kestrel/web",
       "exports": [
         "runtime",
         "dynamic",
@@ -73,7 +73,7 @@
       ],
       "path": "/api/admin/diagnostics/trace/:id",
       "handler": "apps/web/src/app/api/admin/diagnostics/trace/[id]/route.ts",
-      "package": "@hamafx/web",
+      "package": "@kestrel/web",
       "exports": [
         "runtime",
         "dynamic",
@@ -86,7 +86,7 @@
       ],
       "path": "/api/admin/diagnostics/traces",
       "handler": "apps/web/src/app/api/admin/diagnostics/traces/route.ts",
-      "package": "@hamafx/web",
+      "package": "@kestrel/web",
       "exports": [
         "runtime",
         "dynamic",
@@ -100,7 +100,7 @@
       ],
       "path": "/api/admin/features",
       "handler": "apps/web/src/app/api/admin/features/route.ts",
-      "package": "@hamafx/web",
+      "package": "@kestrel/web",
       "exports": [
         "runtime",
         "dynamic",
@@ -114,7 +114,7 @@
       ],
       "path": "/api/admin/flush",
       "handler": "apps/web/src/app/api/admin/flush/route.ts",
-      "package": "@hamafx/web",
+      "package": "@kestrel/web",
       "exports": [
         "runtime",
         "dynamic",
@@ -127,7 +127,7 @@
       ],
       "path": "/api/admin/health-slo",
       "handler": "apps/web/src/app/api/admin/health-slo/route.ts",
-      "package": "@hamafx/web",
+      "package": "@kestrel/web",
       "exports": [
         "runtime",
         "dynamic",
@@ -140,7 +140,7 @@
       ],
       "path": "/api/admin/impersonate/probe",
       "handler": "apps/web/src/app/api/admin/impersonate/probe/route.ts",
-      "package": "@hamafx/web",
+      "package": "@kestrel/web",
       "exports": [
         "runtime",
         "dynamic",
@@ -153,7 +153,7 @@
       ],
       "path": "/api/admin/impersonate",
       "handler": "apps/web/src/app/api/admin/impersonate/route.ts",
-      "package": "@hamafx/web",
+      "package": "@kestrel/web",
       "exports": [
         "runtime",
         "dynamic",
@@ -166,7 +166,7 @@
       ],
       "path": "/api/admin/logs/stream",
       "handler": "apps/web/src/app/api/admin/logs/stream/route.ts",
-      "package": "@hamafx/web",
+      "package": "@kestrel/web",
       "exports": [
         "runtime",
         "dynamic",
@@ -179,7 +179,7 @@
       ],
       "path": "/api/admin/onboarding/inspect",
       "handler": "apps/web/src/app/api/admin/onboarding/inspect/route.ts",
-      "package": "@hamafx/web",
+      "package": "@kestrel/web",
       "exports": [
         "runtime",
         "dynamic",
@@ -192,7 +192,7 @@
       ],
       "path": "/api/admin/onboarding/reset",
       "handler": "apps/web/src/app/api/admin/onboarding/reset/route.ts",
-      "package": "@hamafx/web",
+      "package": "@kestrel/web",
       "exports": [
         "runtime",
         "dynamic",
@@ -205,7 +205,7 @@
       ],
       "path": "/api/admin/onboarding/status",
       "handler": "apps/web/src/app/api/admin/onboarding/status/route.ts",
-      "package": "@hamafx/web",
+      "package": "@kestrel/web",
       "exports": [
         "runtime",
         "dynamic",
@@ -218,7 +218,7 @@
       ],
       "path": "/api/admin/test-alert-email",
       "handler": "apps/web/src/app/api/admin/test-alert-email/route.ts",
-      "package": "@hamafx/web",
+      "package": "@kestrel/web",
       "exports": [
         "runtime",
         "dynamic",
@@ -231,7 +231,7 @@
       ],
       "path": "/api/admin/test-telegram",
       "handler": "apps/web/src/app/api/admin/test-telegram/route.ts",
-      "package": "@hamafx/web",
+      "package": "@kestrel/web",
       "exports": [
         "runtime",
         "dynamic",
@@ -244,7 +244,7 @@
       ],
       "path": "/api/admin/users/:id/role",
       "handler": "apps/web/src/app/api/admin/users/[id]/role/route.ts",
-      "package": "@hamafx/web",
+      "package": "@kestrel/web",
       "exports": [
         "runtime",
         "dynamic",
@@ -257,7 +257,7 @@
       ],
       "path": "/api/admin/users",
       "handler": "apps/web/src/app/api/admin/users/route.ts",
-      "package": "@hamafx/web",
+      "package": "@kestrel/web",
       "exports": [
         "runtime",
         "dynamic",
@@ -272,7 +272,7 @@
       ],
       "path": "/api/alerts/:id",
       "handler": "apps/web/src/app/api/alerts/[id]/route.ts",
-      "package": "@hamafx/web",
+      "package": "@kestrel/web",
       "exports": [
         "runtime",
         "dynamic",
@@ -287,7 +287,7 @@
       ],
       "path": "/api/alerts/preview",
       "handler": "apps/web/src/app/api/alerts/preview/route.ts",
-      "package": "@hamafx/web",
+      "package": "@kestrel/web",
       "exports": [
         "runtime",
         "dynamic",
@@ -300,7 +300,7 @@
       ],
       "path": "/api/alerts/preview-digest",
       "handler": "apps/web/src/app/api/alerts/preview-digest/route.ts",
-      "package": "@hamafx/web",
+      "package": "@kestrel/web",
       "exports": [
         "runtime",
         "dynamic",
@@ -314,7 +314,7 @@
       ],
       "path": "/api/alerts",
       "handler": "apps/web/src/app/api/alerts/route.ts",
-      "package": "@hamafx/web",
+      "package": "@kestrel/web",
       "exports": [
         "runtime",
         "dynamic",
@@ -329,7 +329,7 @@
       ],
       "path": "/api/auth/:nextauth*",
       "handler": "apps/web/src/app/api/auth/[...nextauth]/route.ts",
-      "package": "@hamafx/web",
+      "package": "@kestrel/web",
       "exports": [
         "GET",
         "POST"
@@ -341,7 +341,7 @@
       ],
       "path": "/api/auth/verify-email",
       "handler": "apps/web/src/app/api/auth/verify-email/route.ts",
-      "package": "@hamafx/web",
+      "package": "@kestrel/web",
       "exports": [
         "GET"
       ]
@@ -352,7 +352,7 @@
       ],
       "path": "/api/billing/checkout",
       "handler": "apps/web/src/app/api/billing/checkout/route.ts",
-      "package": "@hamafx/web",
+      "package": "@kestrel/web",
       "exports": [
         "runtime",
         "dynamic",
@@ -365,7 +365,7 @@
       ],
       "path": "/api/billing/portal",
       "handler": "apps/web/src/app/api/billing/portal/route.ts",
-      "package": "@hamafx/web",
+      "package": "@kestrel/web",
       "exports": [
         "runtime",
         "dynamic",
@@ -378,7 +378,7 @@
       ],
       "path": "/api/billing/webhook",
       "handler": "apps/web/src/app/api/billing/webhook/route.ts",
-      "package": "@hamafx/web",
+      "package": "@kestrel/web",
       "exports": [
         "runtime",
         "dynamic",
@@ -395,7 +395,7 @@
       ],
       "path": "/api/bot/link-code",
       "handler": "apps/web/src/app/api/bot/link-code/route.ts",
-      "package": "@hamafx/web",
+      "package": "@kestrel/web",
       "exports": [
         "runtime",
         "dynamic",
@@ -408,7 +408,7 @@
       ],
       "path": "/api/bot/status",
       "handler": "apps/web/src/app/api/bot/status/route.ts",
-      "package": "@hamafx/web",
+      "package": "@kestrel/web",
       "exports": [
         "runtime",
         "dynamic",
@@ -421,7 +421,7 @@
       ],
       "path": "/api/bot/unlink",
       "handler": "apps/web/src/app/api/bot/unlink/route.ts",
-      "package": "@hamafx/web",
+      "package": "@kestrel/web",
       "exports": [
         "runtime",
         "dynamic",
@@ -434,7 +434,7 @@
       ],
       "path": "/api/calendar",
       "handler": "apps/web/src/app/api/calendar/route.ts",
-      "package": "@hamafx/web",
+      "package": "@kestrel/web",
       "exports": [
         "runtime",
         "dynamic",
@@ -447,7 +447,7 @@
       ],
       "path": "/api/chat/analysis-jobs/:jobId",
       "handler": "apps/web/src/app/api/chat/analysis-jobs/[jobId]/route.ts",
-      "package": "@hamafx/web",
+      "package": "@kestrel/web",
       "exports": [
         "runtime",
         "dynamic",
@@ -460,7 +460,7 @@
       ],
       "path": "/api/chat",
       "handler": "apps/web/src/app/api/chat/route.ts",
-      "package": "@hamafx/web",
+      "package": "@kestrel/web",
       "exports": [
         "runtime",
         "dynamic",
@@ -474,7 +474,7 @@
       ],
       "path": "/api/chat/threads/:id/export",
       "handler": "apps/web/src/app/api/chat/threads/[id]/export/route.ts",
-      "package": "@hamafx/web",
+      "package": "@kestrel/web",
       "exports": [
         "runtime",
         "dynamic",
@@ -487,7 +487,7 @@
       ],
       "path": "/api/chat/threads/:id/opinions",
       "handler": "apps/web/src/app/api/chat/threads/[id]/opinions/route.ts",
-      "package": "@hamafx/web",
+      "package": "@kestrel/web",
       "exports": [
         "runtime",
         "dynamic",
@@ -502,7 +502,7 @@
       ],
       "path": "/api/chat/threads/:id",
       "handler": "apps/web/src/app/api/chat/threads/[id]/route.ts",
-      "package": "@hamafx/web",
+      "package": "@kestrel/web",
       "exports": [
         "runtime",
         "dynamic",
@@ -517,7 +517,7 @@
       ],
       "path": "/api/chat/threads/:id/summary",
       "handler": "apps/web/src/app/api/chat/threads/[id]/summary/route.ts",
-      "package": "@hamafx/web",
+      "package": "@kestrel/web",
       "exports": [
         "runtime",
         "dynamic",
@@ -530,7 +530,7 @@
       ],
       "path": "/api/chat/threads/bulk-delete",
       "handler": "apps/web/src/app/api/chat/threads/bulk-delete/route.ts",
-      "package": "@hamafx/web",
+      "package": "@kestrel/web",
       "exports": [
         "runtime",
         "dynamic",
@@ -543,7 +543,7 @@
       ],
       "path": "/api/chat/threads/fork",
       "handler": "apps/web/src/app/api/chat/threads/fork/route.ts",
-      "package": "@hamafx/web",
+      "package": "@kestrel/web",
       "exports": [
         "runtime",
         "dynamic",
@@ -557,7 +557,7 @@
       ],
       "path": "/api/chat/threads",
       "handler": "apps/web/src/app/api/chat/threads/route.ts",
-      "package": "@hamafx/web",
+      "package": "@kestrel/web",
       "exports": [
         "runtime",
         "dynamic",
@@ -571,7 +571,7 @@
       ],
       "path": "/api/cron/alerts",
       "handler": "apps/web/src/app/api/cron/alerts/route.ts",
-      "package": "@hamafx/web",
+      "package": "@kestrel/web",
       "exports": [
         "runtime",
         "dynamic",
@@ -585,7 +585,7 @@
       ],
       "path": "/api/cron/billing-dlq",
       "handler": "apps/web/src/app/api/cron/billing-dlq/route.ts",
-      "package": "@hamafx/web",
+      "package": "@kestrel/web",
       "exports": [
         "runtime",
         "dynamic",
@@ -598,7 +598,7 @@
       ],
       "path": "/api/cron/briefings",
       "handler": "apps/web/src/app/api/cron/briefings/route.ts",
-      "package": "@hamafx/web",
+      "package": "@kestrel/web",
       "exports": [
         "runtime",
         "dynamic",
@@ -611,7 +611,7 @@
       ],
       "path": "/api/cron/calendar",
       "handler": "apps/web/src/app/api/cron/calendar/route.ts",
-      "package": "@hamafx/web",
+      "package": "@kestrel/web",
       "exports": [
         "runtime",
         "dynamic",
@@ -625,7 +625,7 @@
       ],
       "path": "/api/cron/cleanup-telemetry",
       "handler": "apps/web/src/app/api/cron/cleanup-telemetry/route.ts",
-      "package": "@hamafx/web",
+      "package": "@kestrel/web",
       "exports": [
         "runtime",
         "dynamic",
@@ -638,7 +638,7 @@
       ],
       "path": "/api/cron/cleanup-tokens",
       "handler": "apps/web/src/app/api/cron/cleanup-tokens/route.ts",
-      "package": "@hamafx/web",
+      "package": "@kestrel/web",
       "exports": [
         "runtime",
         "dynamic",
@@ -651,7 +651,7 @@
       ],
       "path": "/api/cron/cleanup-uploads",
       "handler": "apps/web/src/app/api/cron/cleanup-uploads/route.ts",
-      "package": "@hamafx/web",
+      "package": "@kestrel/web",
       "exports": [
         "runtime",
         "dynamic",
@@ -665,7 +665,7 @@
       ],
       "path": "/api/cron/cot",
       "handler": "apps/web/src/app/api/cron/cot/route.ts",
-      "package": "@hamafx/web",
+      "package": "@kestrel/web",
       "exports": [
         "runtime",
         "dynamic",
@@ -678,7 +678,7 @@
       ],
       "path": "/api/cron/embedding-backfill",
       "handler": "apps/web/src/app/api/cron/embedding-backfill/route.ts",
-      "package": "@hamafx/web",
+      "package": "@kestrel/web",
       "exports": [
         "runtime",
         "dynamic",
@@ -692,7 +692,7 @@
       ],
       "path": "/api/cron/fred-actuals",
       "handler": "apps/web/src/app/api/cron/fred-actuals/route.ts",
-      "package": "@hamafx/web",
+      "package": "@kestrel/web",
       "exports": [
         "runtime",
         "dynamic",
@@ -705,7 +705,7 @@
       ],
       "path": "/api/cron/news",
       "handler": "apps/web/src/app/api/cron/news/route.ts",
-      "package": "@hamafx/web",
+      "package": "@kestrel/web",
       "exports": [
         "runtime",
         "dynamic",
@@ -719,7 +719,7 @@
       ],
       "path": "/api/cron/snapshots",
       "handler": "apps/web/src/app/api/cron/snapshots/route.ts",
-      "package": "@hamafx/web",
+      "package": "@kestrel/web",
       "exports": [
         "runtime",
         "dynamic",
@@ -732,7 +732,7 @@
       ],
       "path": "/api/cron/warm-cache",
       "handler": "apps/web/src/app/api/cron/warm-cache/route.ts",
-      "package": "@hamafx/web",
+      "package": "@kestrel/web",
       "exports": [
         "runtime",
         "dynamic",
@@ -746,7 +746,7 @@
       ],
       "path": "/api/cron/weekly-review",
       "handler": "apps/web/src/app/api/cron/weekly-review/route.ts",
-      "package": "@hamafx/web",
+      "package": "@kestrel/web",
       "exports": [
         "runtime",
         "dynamic",
@@ -759,7 +759,7 @@
       ],
       "path": "/api/dev/login",
       "handler": "apps/web/src/app/api/dev/login/route.ts",
-      "package": "@hamafx/web",
+      "package": "@kestrel/web",
       "exports": [
         "runtime",
         "dynamic",
@@ -772,7 +772,7 @@
       ],
       "path": "/api/health/db",
       "handler": "apps/web/src/app/api/health/db/route.ts",
-      "package": "@hamafx/web",
+      "package": "@kestrel/web",
       "exports": [
         "runtime",
         "dynamic",
@@ -785,7 +785,7 @@
       ],
       "path": "/api/health/public",
       "handler": "apps/web/src/app/api/health/public/route.ts",
-      "package": "@hamafx/web",
+      "package": "@kestrel/web",
       "exports": [
         "runtime",
         "dynamic",
@@ -798,7 +798,7 @@
       ],
       "path": "/api/health",
       "handler": "apps/web/src/app/api/health/route.ts",
-      "package": "@hamafx/web",
+      "package": "@kestrel/web",
       "exports": [
         "runtime",
         "dynamic",
@@ -813,7 +813,7 @@
       ],
       "path": "/api/journal/:id",
       "handler": "apps/web/src/app/api/journal/[id]/route.ts",
-      "package": "@hamafx/web",
+      "package": "@kestrel/web",
       "exports": [
         "runtime",
         "dynamic",
@@ -828,7 +828,7 @@
       ],
       "path": "/api/journal/import",
       "handler": "apps/web/src/app/api/journal/import/route.ts",
-      "package": "@hamafx/web",
+      "package": "@kestrel/web",
       "exports": [
         "runtime",
         "dynamic",
@@ -841,7 +841,7 @@
       ],
       "path": "/api/journal/review",
       "handler": "apps/web/src/app/api/journal/review/route.ts",
-      "package": "@hamafx/web",
+      "package": "@kestrel/web",
       "exports": [
         "runtime",
         "dynamic",
@@ -855,7 +855,7 @@
       ],
       "path": "/api/journal",
       "handler": "apps/web/src/app/api/journal/route.ts",
-      "package": "@hamafx/web",
+      "package": "@kestrel/web",
       "exports": [
         "runtime",
         "dynamic",
@@ -869,7 +869,7 @@
       ],
       "path": "/api/market/candles",
       "handler": "apps/web/src/app/api/market/candles/route.ts",
-      "package": "@hamafx/web",
+      "package": "@kestrel/web",
       "exports": [
         "runtime",
         "dynamic",
@@ -882,7 +882,7 @@
       ],
       "path": "/api/market/indicators",
       "handler": "apps/web/src/app/api/market/indicators/route.ts",
-      "package": "@hamafx/web",
+      "package": "@kestrel/web",
       "exports": [
         "runtime",
         "dynamic",
@@ -895,7 +895,7 @@
       ],
       "path": "/api/market/price",
       "handler": "apps/web/src/app/api/market/price/route.ts",
-      "package": "@hamafx/web",
+      "package": "@kestrel/web",
       "exports": [
         "runtime",
         "dynamic",
@@ -908,7 +908,7 @@
       ],
       "path": "/api/market/search",
       "handler": "apps/web/src/app/api/market/search/route.ts",
-      "package": "@hamafx/web",
+      "package": "@kestrel/web",
       "exports": [
         "runtime",
         "dynamic",
@@ -921,7 +921,7 @@
       ],
       "path": "/api/market/stream",
       "handler": "apps/web/src/app/api/market/stream/route.ts",
-      "package": "@hamafx/web",
+      "package": "@kestrel/web",
       "exports": [
         "runtime",
         "dynamic",
@@ -934,7 +934,7 @@
       ],
       "path": "/api/me/keys",
       "handler": "apps/web/src/app/api/me/keys/route.ts",
-      "package": "@hamafx/web",
+      "package": "@kestrel/web",
       "exports": [
         "runtime",
         "dynamic",
@@ -947,7 +947,7 @@
       ],
       "path": "/api/news",
       "handler": "apps/web/src/app/api/news/route.ts",
-      "package": "@hamafx/web",
+      "package": "@kestrel/web",
       "exports": [
         "runtime",
         "dynamic",
@@ -961,7 +961,7 @@
       ],
       "path": "/api/notifications/noise-config",
       "handler": "apps/web/src/app/api/notifications/noise-config/route.ts",
-      "package": "@hamafx/web",
+      "package": "@kestrel/web",
       "exports": [
         "runtime",
         "dynamic",
@@ -976,7 +976,7 @@
       ],
       "path": "/api/notifications/route-config",
       "handler": "apps/web/src/app/api/notifications/route-config/route.ts",
-      "package": "@hamafx/web",
+      "package": "@kestrel/web",
       "exports": [
         "runtime",
         "dynamic",
@@ -990,7 +990,7 @@
       ],
       "path": "/api/onboarding/save-progress",
       "handler": "apps/web/src/app/api/onboarding/save-progress/route.ts",
-      "package": "@hamafx/web",
+      "package": "@kestrel/web",
       "exports": [
         "runtime",
         "dynamic",
@@ -1005,7 +1005,7 @@
       ],
       "path": "/api/portfolio/positions/:id",
       "handler": "apps/web/src/app/api/portfolio/positions/[id]/route.ts",
-      "package": "@hamafx/web",
+      "package": "@kestrel/web",
       "exports": [
         "runtime",
         "dynamic",
@@ -1021,7 +1021,7 @@
       ],
       "path": "/api/portfolio/positions",
       "handler": "apps/web/src/app/api/portfolio/positions/route.ts",
-      "package": "@hamafx/web",
+      "package": "@kestrel/web",
       "exports": [
         "runtime",
         "dynamic",
@@ -1035,7 +1035,7 @@
       ],
       "path": "/api/portfolio/risk",
       "handler": "apps/web/src/app/api/portfolio/risk/route.ts",
-      "package": "@hamafx/web",
+      "package": "@kestrel/web",
       "exports": [
         "runtime",
         "dynamic",
@@ -1049,7 +1049,7 @@
       ],
       "path": "/api/portfolio/settings",
       "handler": "apps/web/src/app/api/portfolio/settings/route.ts",
-      "package": "@hamafx/web",
+      "package": "@kestrel/web",
       "exports": [
         "runtime",
         "dynamic",
@@ -1063,7 +1063,7 @@
       ],
       "path": "/api/push/subscribe",
       "handler": "apps/web/src/app/api/push/subscribe/route.ts",
-      "package": "@hamafx/web",
+      "package": "@kestrel/web",
       "exports": [
         "runtime",
         "dynamic",
@@ -1076,7 +1076,7 @@
       ],
       "path": "/api/push/unsubscribe",
       "handler": "apps/web/src/app/api/push/unsubscribe/route.ts",
-      "package": "@hamafx/web",
+      "package": "@kestrel/web",
       "exports": [
         "runtime",
         "dynamic",
@@ -1089,7 +1089,7 @@
       ],
       "path": "/api/sentiment",
       "handler": "apps/web/src/app/api/sentiment/route.ts",
-      "package": "@hamafx/web",
+      "package": "@kestrel/web",
       "exports": [
         "runtime",
         "dynamic",
@@ -1103,7 +1103,7 @@
       ],
       "path": "/api/settings/analysis-mode",
       "handler": "apps/web/src/app/api/settings/analysis-mode/route.ts",
-      "package": "@hamafx/web",
+      "package": "@kestrel/web",
       "exports": [
         "runtime",
         "dynamic",
@@ -1117,7 +1117,7 @@
       ],
       "path": "/api/settings/bulk-test",
       "handler": "apps/web/src/app/api/settings/bulk-test/route.ts",
-      "package": "@hamafx/web",
+      "package": "@kestrel/web",
       "exports": [
         "runtime",
         "dynamic",
@@ -1130,7 +1130,7 @@
       ],
       "path": "/api/settings/catalog",
       "handler": "apps/web/src/app/api/settings/catalog/route.ts",
-      "package": "@hamafx/web",
+      "package": "@kestrel/web",
       "exports": [
         "runtime",
         "dynamic",
@@ -1145,7 +1145,7 @@
       ],
       "path": "/api/settings/chat-model",
       "handler": "apps/web/src/app/api/settings/chat-model/route.ts",
-      "package": "@hamafx/web",
+      "package": "@kestrel/web",
       "exports": [
         "runtime",
         "dynamic",
@@ -1162,7 +1162,7 @@
       ],
       "path": "/api/settings/embedding-model",
       "handler": "apps/web/src/app/api/settings/embedding-model/route.ts",
-      "package": "@hamafx/web",
+      "package": "@kestrel/web",
       "exports": [
         "runtime",
         "dynamic",
@@ -1178,7 +1178,7 @@
       ],
       "path": "/api/settings/fallback-chain",
       "handler": "apps/web/src/app/api/settings/fallback-chain/route.ts",
-      "package": "@hamafx/web",
+      "package": "@kestrel/web",
       "exports": [
         "runtime",
         "dynamic",
@@ -1192,7 +1192,7 @@
       ],
       "path": "/api/settings/symbols/:symbol",
       "handler": "apps/web/src/app/api/settings/symbols/[symbol]/route.ts",
-      "package": "@hamafx/web",
+      "package": "@kestrel/web",
       "exports": [
         "runtime",
         "dynamic",
@@ -1207,7 +1207,7 @@
       ],
       "path": "/api/settings/symbols",
       "handler": "apps/web/src/app/api/settings/symbols/route.ts",
-      "package": "@hamafx/web",
+      "package": "@kestrel/web",
       "exports": [
         "runtime",
         "dynamic",
@@ -1222,7 +1222,7 @@
       ],
       "path": "/api/settings/test-market-provider",
       "handler": "apps/web/src/app/api/settings/test-market-provider/route.ts",
-      "package": "@hamafx/web",
+      "package": "@kestrel/web",
       "exports": [
         "runtime",
         "dynamic",
@@ -1235,7 +1235,7 @@
       ],
       "path": "/api/settings/test-provider",
       "handler": "apps/web/src/app/api/settings/test-provider/route.ts",
-      "package": "@hamafx/web",
+      "package": "@kestrel/web",
       "exports": [
         "runtime",
         "dynamic",
@@ -1248,7 +1248,7 @@
       ],
       "path": "/api/settings/usage-by-agent",
       "handler": "apps/web/src/app/api/settings/usage-by-agent/route.ts",
-      "package": "@hamafx/web",
+      "package": "@kestrel/web",
       "exports": [
         "runtime",
         "dynamic",
@@ -1261,7 +1261,7 @@
       ],
       "path": "/api/settings/usage-by-provider",
       "handler": "apps/web/src/app/api/settings/usage-by-provider/route.ts",
-      "package": "@hamafx/web",
+      "package": "@kestrel/web",
       "exports": [
         "runtime",
         "dynamic",
@@ -1276,7 +1276,7 @@
       ],
       "path": "/api/settings/vision-model",
       "handler": "apps/web/src/app/api/settings/vision-model/route.ts",
-      "package": "@hamafx/web",
+      "package": "@kestrel/web",
       "exports": [
         "runtime",
         "dynamic",
@@ -1292,7 +1292,7 @@
       ],
       "path": "/api/telegram/webhook",
       "handler": "apps/web/src/app/api/telegram/webhook/route.ts",
-      "package": "@hamafx/web",
+      "package": "@kestrel/web",
       "exports": [
         "runtime",
         "dynamic",
@@ -1306,7 +1306,7 @@
       ],
       "path": "/api/upload",
       "handler": "apps/web/src/app/api/upload/route.ts",
-      "package": "@hamafx/web",
+      "package": "@kestrel/web",
       "exports": [
         "runtime",
         "dynamic",
@@ -1322,7 +1322,7 @@
         ],
         "path": "/api/admin/architecture-explorer",
         "handler": "apps/web/src/app/api/admin/architecture-explorer/route.ts",
-        "package": "@hamafx/web",
+        "package": "@kestrel/web",
         "exports": [
           "runtime",
           "dynamic",
@@ -1335,7 +1335,7 @@
         ],
         "path": "/api/admin/audit",
         "handler": "apps/web/src/app/api/admin/audit/route.ts",
-        "package": "@hamafx/web",
+        "package": "@kestrel/web",
         "exports": [
           "runtime",
           "dynamic",
@@ -1348,7 +1348,7 @@
         ],
         "path": "/api/admin/billing/dlq/:id/replay",
         "handler": "apps/web/src/app/api/admin/billing/dlq/[id]/replay/route.ts",
-        "package": "@hamafx/web",
+        "package": "@kestrel/web",
         "exports": [
           "runtime",
           "dynamic",
@@ -1361,7 +1361,7 @@
         ],
         "path": "/api/admin/cron-history",
         "handler": "apps/web/src/app/api/admin/cron-history/route.ts",
-        "package": "@hamafx/web",
+        "package": "@kestrel/web",
         "exports": [
           "runtime",
           "dynamic",
@@ -1374,7 +1374,7 @@
         ],
         "path": "/api/admin/diagnostics/tool-telemetry",
         "handler": "apps/web/src/app/api/admin/diagnostics/tool-telemetry/route.ts",
-        "package": "@hamafx/web",
+        "package": "@kestrel/web",
         "exports": [
           "runtime",
           "dynamic",
@@ -1387,7 +1387,7 @@
         ],
         "path": "/api/admin/diagnostics/trace/:id",
         "handler": "apps/web/src/app/api/admin/diagnostics/trace/[id]/route.ts",
-        "package": "@hamafx/web",
+        "package": "@kestrel/web",
         "exports": [
           "runtime",
           "dynamic",
@@ -1400,7 +1400,7 @@
         ],
         "path": "/api/admin/diagnostics/traces",
         "handler": "apps/web/src/app/api/admin/diagnostics/traces/route.ts",
-        "package": "@hamafx/web",
+        "package": "@kestrel/web",
         "exports": [
           "runtime",
           "dynamic",
@@ -1414,7 +1414,7 @@
         ],
         "path": "/api/admin/features",
         "handler": "apps/web/src/app/api/admin/features/route.ts",
-        "package": "@hamafx/web",
+        "package": "@kestrel/web",
         "exports": [
           "runtime",
           "dynamic",
@@ -1428,7 +1428,7 @@
         ],
         "path": "/api/admin/flush",
         "handler": "apps/web/src/app/api/admin/flush/route.ts",
-        "package": "@hamafx/web",
+        "package": "@kestrel/web",
         "exports": [
           "runtime",
           "dynamic",
@@ -1441,7 +1441,7 @@
         ],
         "path": "/api/admin/health-slo",
         "handler": "apps/web/src/app/api/admin/health-slo/route.ts",
-        "package": "@hamafx/web",
+        "package": "@kestrel/web",
         "exports": [
           "runtime",
           "dynamic",
@@ -1454,7 +1454,7 @@
         ],
         "path": "/api/admin/impersonate/probe",
         "handler": "apps/web/src/app/api/admin/impersonate/probe/route.ts",
-        "package": "@hamafx/web",
+        "package": "@kestrel/web",
         "exports": [
           "runtime",
           "dynamic",
@@ -1467,7 +1467,7 @@
         ],
         "path": "/api/admin/impersonate",
         "handler": "apps/web/src/app/api/admin/impersonate/route.ts",
-        "package": "@hamafx/web",
+        "package": "@kestrel/web",
         "exports": [
           "runtime",
           "dynamic",
@@ -1480,7 +1480,7 @@
         ],
         "path": "/api/admin/logs/stream",
         "handler": "apps/web/src/app/api/admin/logs/stream/route.ts",
-        "package": "@hamafx/web",
+        "package": "@kestrel/web",
         "exports": [
           "runtime",
           "dynamic",
@@ -1493,7 +1493,7 @@
         ],
         "path": "/api/admin/onboarding/inspect",
         "handler": "apps/web/src/app/api/admin/onboarding/inspect/route.ts",
-        "package": "@hamafx/web",
+        "package": "@kestrel/web",
         "exports": [
           "runtime",
           "dynamic",
@@ -1506,7 +1506,7 @@
         ],
         "path": "/api/admin/onboarding/reset",
         "handler": "apps/web/src/app/api/admin/onboarding/reset/route.ts",
-        "package": "@hamafx/web",
+        "package": "@kestrel/web",
         "exports": [
           "runtime",
           "dynamic",
@@ -1519,7 +1519,7 @@
         ],
         "path": "/api/admin/onboarding/status",
         "handler": "apps/web/src/app/api/admin/onboarding/status/route.ts",
-        "package": "@hamafx/web",
+        "package": "@kestrel/web",
         "exports": [
           "runtime",
           "dynamic",
@@ -1532,7 +1532,7 @@
         ],
         "path": "/api/admin/test-alert-email",
         "handler": "apps/web/src/app/api/admin/test-alert-email/route.ts",
-        "package": "@hamafx/web",
+        "package": "@kestrel/web",
         "exports": [
           "runtime",
           "dynamic",
@@ -1545,7 +1545,7 @@
         ],
         "path": "/api/admin/test-telegram",
         "handler": "apps/web/src/app/api/admin/test-telegram/route.ts",
-        "package": "@hamafx/web",
+        "package": "@kestrel/web",
         "exports": [
           "runtime",
           "dynamic",
@@ -1558,7 +1558,7 @@
         ],
         "path": "/api/admin/users/:id/role",
         "handler": "apps/web/src/app/api/admin/users/[id]/role/route.ts",
-        "package": "@hamafx/web",
+        "package": "@kestrel/web",
         "exports": [
           "runtime",
           "dynamic",
@@ -1571,7 +1571,7 @@
         ],
         "path": "/api/admin/users",
         "handler": "apps/web/src/app/api/admin/users/route.ts",
-        "package": "@hamafx/web",
+        "package": "@kestrel/web",
         "exports": [
           "runtime",
           "dynamic",
@@ -1588,7 +1588,7 @@
         ],
         "path": "/api/alerts/:id",
         "handler": "apps/web/src/app/api/alerts/[id]/route.ts",
-        "package": "@hamafx/web",
+        "package": "@kestrel/web",
         "exports": [
           "runtime",
           "dynamic",
@@ -1603,7 +1603,7 @@
         ],
         "path": "/api/alerts/preview",
         "handler": "apps/web/src/app/api/alerts/preview/route.ts",
-        "package": "@hamafx/web",
+        "package": "@kestrel/web",
         "exports": [
           "runtime",
           "dynamic",
@@ -1616,7 +1616,7 @@
         ],
         "path": "/api/alerts/preview-digest",
         "handler": "apps/web/src/app/api/alerts/preview-digest/route.ts",
-        "package": "@hamafx/web",
+        "package": "@kestrel/web",
         "exports": [
           "runtime",
           "dynamic",
@@ -1630,7 +1630,7 @@
         ],
         "path": "/api/alerts",
         "handler": "apps/web/src/app/api/alerts/route.ts",
-        "package": "@hamafx/web",
+        "package": "@kestrel/web",
         "exports": [
           "runtime",
           "dynamic",
@@ -1647,7 +1647,7 @@
         ],
         "path": "/api/auth/:nextauth*",
         "handler": "apps/web/src/app/api/auth/[...nextauth]/route.ts",
-        "package": "@hamafx/web",
+        "package": "@kestrel/web",
         "exports": [
           "GET",
           "POST"
@@ -1659,7 +1659,7 @@
         ],
         "path": "/api/auth/verify-email",
         "handler": "apps/web/src/app/api/auth/verify-email/route.ts",
-        "package": "@hamafx/web",
+        "package": "@kestrel/web",
         "exports": [
           "GET"
         ]
@@ -1672,7 +1672,7 @@
         ],
         "path": "/api/billing/checkout",
         "handler": "apps/web/src/app/api/billing/checkout/route.ts",
-        "package": "@hamafx/web",
+        "package": "@kestrel/web",
         "exports": [
           "runtime",
           "dynamic",
@@ -1685,7 +1685,7 @@
         ],
         "path": "/api/billing/portal",
         "handler": "apps/web/src/app/api/billing/portal/route.ts",
-        "package": "@hamafx/web",
+        "package": "@kestrel/web",
         "exports": [
           "runtime",
           "dynamic",
@@ -1698,7 +1698,7 @@
         ],
         "path": "/api/billing/webhook",
         "handler": "apps/web/src/app/api/billing/webhook/route.ts",
-        "package": "@hamafx/web",
+        "package": "@kestrel/web",
         "exports": [
           "runtime",
           "dynamic",
@@ -1717,7 +1717,7 @@
         ],
         "path": "/api/bot/link-code",
         "handler": "apps/web/src/app/api/bot/link-code/route.ts",
-        "package": "@hamafx/web",
+        "package": "@kestrel/web",
         "exports": [
           "runtime",
           "dynamic",
@@ -1730,7 +1730,7 @@
         ],
         "path": "/api/bot/status",
         "handler": "apps/web/src/app/api/bot/status/route.ts",
-        "package": "@hamafx/web",
+        "package": "@kestrel/web",
         "exports": [
           "runtime",
           "dynamic",
@@ -1743,7 +1743,7 @@
         ],
         "path": "/api/bot/unlink",
         "handler": "apps/web/src/app/api/bot/unlink/route.ts",
-        "package": "@hamafx/web",
+        "package": "@kestrel/web",
         "exports": [
           "runtime",
           "dynamic",
@@ -1758,7 +1758,7 @@
         ],
         "path": "/api/calendar",
         "handler": "apps/web/src/app/api/calendar/route.ts",
-        "package": "@hamafx/web",
+        "package": "@kestrel/web",
         "exports": [
           "runtime",
           "dynamic",
@@ -1773,7 +1773,7 @@
         ],
         "path": "/api/chat/analysis-jobs/:jobId",
         "handler": "apps/web/src/app/api/chat/analysis-jobs/[jobId]/route.ts",
-        "package": "@hamafx/web",
+        "package": "@kestrel/web",
         "exports": [
           "runtime",
           "dynamic",
@@ -1786,7 +1786,7 @@
         ],
         "path": "/api/chat",
         "handler": "apps/web/src/app/api/chat/route.ts",
-        "package": "@hamafx/web",
+        "package": "@kestrel/web",
         "exports": [
           "runtime",
           "dynamic",
@@ -1800,7 +1800,7 @@
         ],
         "path": "/api/chat/threads/:id/export",
         "handler": "apps/web/src/app/api/chat/threads/[id]/export/route.ts",
-        "package": "@hamafx/web",
+        "package": "@kestrel/web",
         "exports": [
           "runtime",
           "dynamic",
@@ -1813,7 +1813,7 @@
         ],
         "path": "/api/chat/threads/:id/opinions",
         "handler": "apps/web/src/app/api/chat/threads/[id]/opinions/route.ts",
-        "package": "@hamafx/web",
+        "package": "@kestrel/web",
         "exports": [
           "runtime",
           "dynamic",
@@ -1828,7 +1828,7 @@
         ],
         "path": "/api/chat/threads/:id",
         "handler": "apps/web/src/app/api/chat/threads/[id]/route.ts",
-        "package": "@hamafx/web",
+        "package": "@kestrel/web",
         "exports": [
           "runtime",
           "dynamic",
@@ -1843,7 +1843,7 @@
         ],
         "path": "/api/chat/threads/:id/summary",
         "handler": "apps/web/src/app/api/chat/threads/[id]/summary/route.ts",
-        "package": "@hamafx/web",
+        "package": "@kestrel/web",
         "exports": [
           "runtime",
           "dynamic",
@@ -1856,7 +1856,7 @@
         ],
         "path": "/api/chat/threads/bulk-delete",
         "handler": "apps/web/src/app/api/chat/threads/bulk-delete/route.ts",
-        "package": "@hamafx/web",
+        "package": "@kestrel/web",
         "exports": [
           "runtime",
           "dynamic",
@@ -1869,7 +1869,7 @@
         ],
         "path": "/api/chat/threads/fork",
         "handler": "apps/web/src/app/api/chat/threads/fork/route.ts",
-        "package": "@hamafx/web",
+        "package": "@kestrel/web",
         "exports": [
           "runtime",
           "dynamic",
@@ -1883,7 +1883,7 @@
         ],
         "path": "/api/chat/threads",
         "handler": "apps/web/src/app/api/chat/threads/route.ts",
-        "package": "@hamafx/web",
+        "package": "@kestrel/web",
         "exports": [
           "runtime",
           "dynamic",
@@ -1899,7 +1899,7 @@
         ],
         "path": "/api/cron/alerts",
         "handler": "apps/web/src/app/api/cron/alerts/route.ts",
-        "package": "@hamafx/web",
+        "package": "@kestrel/web",
         "exports": [
           "runtime",
           "dynamic",
@@ -1913,7 +1913,7 @@
         ],
         "path": "/api/cron/billing-dlq",
         "handler": "apps/web/src/app/api/cron/billing-dlq/route.ts",
-        "package": "@hamafx/web",
+        "package": "@kestrel/web",
         "exports": [
           "runtime",
           "dynamic",
@@ -1926,7 +1926,7 @@
         ],
         "path": "/api/cron/briefings",
         "handler": "apps/web/src/app/api/cron/briefings/route.ts",
-        "package": "@hamafx/web",
+        "package": "@kestrel/web",
         "exports": [
           "runtime",
           "dynamic",
@@ -1939,7 +1939,7 @@
         ],
         "path": "/api/cron/calendar",
         "handler": "apps/web/src/app/api/cron/calendar/route.ts",
-        "package": "@hamafx/web",
+        "package": "@kestrel/web",
         "exports": [
           "runtime",
           "dynamic",
@@ -1953,7 +1953,7 @@
         ],
         "path": "/api/cron/cleanup-telemetry",
         "handler": "apps/web/src/app/api/cron/cleanup-telemetry/route.ts",
-        "package": "@hamafx/web",
+        "package": "@kestrel/web",
         "exports": [
           "runtime",
           "dynamic",
@@ -1966,7 +1966,7 @@
         ],
         "path": "/api/cron/cleanup-tokens",
         "handler": "apps/web/src/app/api/cron/cleanup-tokens/route.ts",
-        "package": "@hamafx/web",
+        "package": "@kestrel/web",
         "exports": [
           "runtime",
           "dynamic",
@@ -1979,7 +1979,7 @@
         ],
         "path": "/api/cron/cleanup-uploads",
         "handler": "apps/web/src/app/api/cron/cleanup-uploads/route.ts",
-        "package": "@hamafx/web",
+        "package": "@kestrel/web",
         "exports": [
           "runtime",
           "dynamic",
@@ -1993,7 +1993,7 @@
         ],
         "path": "/api/cron/cot",
         "handler": "apps/web/src/app/api/cron/cot/route.ts",
-        "package": "@hamafx/web",
+        "package": "@kestrel/web",
         "exports": [
           "runtime",
           "dynamic",
@@ -2006,7 +2006,7 @@
         ],
         "path": "/api/cron/embedding-backfill",
         "handler": "apps/web/src/app/api/cron/embedding-backfill/route.ts",
-        "package": "@hamafx/web",
+        "package": "@kestrel/web",
         "exports": [
           "runtime",
           "dynamic",
@@ -2020,7 +2020,7 @@
         ],
         "path": "/api/cron/fred-actuals",
         "handler": "apps/web/src/app/api/cron/fred-actuals/route.ts",
-        "package": "@hamafx/web",
+        "package": "@kestrel/web",
         "exports": [
           "runtime",
           "dynamic",
@@ -2033,7 +2033,7 @@
         ],
         "path": "/api/cron/news",
         "handler": "apps/web/src/app/api/cron/news/route.ts",
-        "package": "@hamafx/web",
+        "package": "@kestrel/web",
         "exports": [
           "runtime",
           "dynamic",
@@ -2047,7 +2047,7 @@
         ],
         "path": "/api/cron/snapshots",
         "handler": "apps/web/src/app/api/cron/snapshots/route.ts",
-        "package": "@hamafx/web",
+        "package": "@kestrel/web",
         "exports": [
           "runtime",
           "dynamic",
@@ -2060,7 +2060,7 @@
         ],
         "path": "/api/cron/warm-cache",
         "handler": "apps/web/src/app/api/cron/warm-cache/route.ts",
-        "package": "@hamafx/web",
+        "package": "@kestrel/web",
         "exports": [
           "runtime",
           "dynamic",
@@ -2074,7 +2074,7 @@
         ],
         "path": "/api/cron/weekly-review",
         "handler": "apps/web/src/app/api/cron/weekly-review/route.ts",
-        "package": "@hamafx/web",
+        "package": "@kestrel/web",
         "exports": [
           "runtime",
           "dynamic",
@@ -2089,7 +2089,7 @@
         ],
         "path": "/api/dev/login",
         "handler": "apps/web/src/app/api/dev/login/route.ts",
-        "package": "@hamafx/web",
+        "package": "@kestrel/web",
         "exports": [
           "runtime",
           "dynamic",
@@ -2104,7 +2104,7 @@
         ],
         "path": "/api/health/db",
         "handler": "apps/web/src/app/api/health/db/route.ts",
-        "package": "@hamafx/web",
+        "package": "@kestrel/web",
         "exports": [
           "runtime",
           "dynamic",
@@ -2117,7 +2117,7 @@
         ],
         "path": "/api/health/public",
         "handler": "apps/web/src/app/api/health/public/route.ts",
-        "package": "@hamafx/web",
+        "package": "@kestrel/web",
         "exports": [
           "runtime",
           "dynamic",
@@ -2130,7 +2130,7 @@
         ],
         "path": "/api/health",
         "handler": "apps/web/src/app/api/health/route.ts",
-        "package": "@hamafx/web",
+        "package": "@kestrel/web",
         "exports": [
           "runtime",
           "dynamic",
@@ -2147,7 +2147,7 @@
         ],
         "path": "/api/journal/:id",
         "handler": "apps/web/src/app/api/journal/[id]/route.ts",
-        "package": "@hamafx/web",
+        "package": "@kestrel/web",
         "exports": [
           "runtime",
           "dynamic",
@@ -2162,7 +2162,7 @@
         ],
         "path": "/api/journal/import",
         "handler": "apps/web/src/app/api/journal/import/route.ts",
-        "package": "@hamafx/web",
+        "package": "@kestrel/web",
         "exports": [
           "runtime",
           "dynamic",
@@ -2175,7 +2175,7 @@
         ],
         "path": "/api/journal/review",
         "handler": "apps/web/src/app/api/journal/review/route.ts",
-        "package": "@hamafx/web",
+        "package": "@kestrel/web",
         "exports": [
           "runtime",
           "dynamic",
@@ -2189,7 +2189,7 @@
         ],
         "path": "/api/journal",
         "handler": "apps/web/src/app/api/journal/route.ts",
-        "package": "@hamafx/web",
+        "package": "@kestrel/web",
         "exports": [
           "runtime",
           "dynamic",
@@ -2205,7 +2205,7 @@
         ],
         "path": "/api/market/candles",
         "handler": "apps/web/src/app/api/market/candles/route.ts",
-        "package": "@hamafx/web",
+        "package": "@kestrel/web",
         "exports": [
           "runtime",
           "dynamic",
@@ -2218,7 +2218,7 @@
         ],
         "path": "/api/market/indicators",
         "handler": "apps/web/src/app/api/market/indicators/route.ts",
-        "package": "@hamafx/web",
+        "package": "@kestrel/web",
         "exports": [
           "runtime",
           "dynamic",
@@ -2231,7 +2231,7 @@
         ],
         "path": "/api/market/price",
         "handler": "apps/web/src/app/api/market/price/route.ts",
-        "package": "@hamafx/web",
+        "package": "@kestrel/web",
         "exports": [
           "runtime",
           "dynamic",
@@ -2244,7 +2244,7 @@
         ],
         "path": "/api/market/search",
         "handler": "apps/web/src/app/api/market/search/route.ts",
-        "package": "@hamafx/web",
+        "package": "@kestrel/web",
         "exports": [
           "runtime",
           "dynamic",
@@ -2257,7 +2257,7 @@
         ],
         "path": "/api/market/stream",
         "handler": "apps/web/src/app/api/market/stream/route.ts",
-        "package": "@hamafx/web",
+        "package": "@kestrel/web",
         "exports": [
           "runtime",
           "dynamic",
@@ -2272,7 +2272,7 @@
         ],
         "path": "/api/me/keys",
         "handler": "apps/web/src/app/api/me/keys/route.ts",
-        "package": "@hamafx/web",
+        "package": "@kestrel/web",
         "exports": [
           "runtime",
           "dynamic",
@@ -2287,7 +2287,7 @@
         ],
         "path": "/api/news",
         "handler": "apps/web/src/app/api/news/route.ts",
-        "package": "@hamafx/web",
+        "package": "@kestrel/web",
         "exports": [
           "runtime",
           "dynamic",
@@ -2303,7 +2303,7 @@
         ],
         "path": "/api/notifications/noise-config",
         "handler": "apps/web/src/app/api/notifications/noise-config/route.ts",
-        "package": "@hamafx/web",
+        "package": "@kestrel/web",
         "exports": [
           "runtime",
           "dynamic",
@@ -2318,7 +2318,7 @@
         ],
         "path": "/api/notifications/route-config",
         "handler": "apps/web/src/app/api/notifications/route-config/route.ts",
-        "package": "@hamafx/web",
+        "package": "@kestrel/web",
         "exports": [
           "runtime",
           "dynamic",
@@ -2334,7 +2334,7 @@
         ],
         "path": "/api/onboarding/save-progress",
         "handler": "apps/web/src/app/api/onboarding/save-progress/route.ts",
-        "package": "@hamafx/web",
+        "package": "@kestrel/web",
         "exports": [
           "runtime",
           "dynamic",
@@ -2351,7 +2351,7 @@
         ],
         "path": "/api/portfolio/positions/:id",
         "handler": "apps/web/src/app/api/portfolio/positions/[id]/route.ts",
-        "package": "@hamafx/web",
+        "package": "@kestrel/web",
         "exports": [
           "runtime",
           "dynamic",
@@ -2367,7 +2367,7 @@
         ],
         "path": "/api/portfolio/positions",
         "handler": "apps/web/src/app/api/portfolio/positions/route.ts",
-        "package": "@hamafx/web",
+        "package": "@kestrel/web",
         "exports": [
           "runtime",
           "dynamic",
@@ -2381,7 +2381,7 @@
         ],
         "path": "/api/portfolio/risk",
         "handler": "apps/web/src/app/api/portfolio/risk/route.ts",
-        "package": "@hamafx/web",
+        "package": "@kestrel/web",
         "exports": [
           "runtime",
           "dynamic",
@@ -2395,7 +2395,7 @@
         ],
         "path": "/api/portfolio/settings",
         "handler": "apps/web/src/app/api/portfolio/settings/route.ts",
-        "package": "@hamafx/web",
+        "package": "@kestrel/web",
         "exports": [
           "runtime",
           "dynamic",
@@ -2411,7 +2411,7 @@
         ],
         "path": "/api/push/subscribe",
         "handler": "apps/web/src/app/api/push/subscribe/route.ts",
-        "package": "@hamafx/web",
+        "package": "@kestrel/web",
         "exports": [
           "runtime",
           "dynamic",
@@ -2424,7 +2424,7 @@
         ],
         "path": "/api/push/unsubscribe",
         "handler": "apps/web/src/app/api/push/unsubscribe/route.ts",
-        "package": "@hamafx/web",
+        "package": "@kestrel/web",
         "exports": [
           "runtime",
           "dynamic",
@@ -2439,7 +2439,7 @@
         ],
         "path": "/api/sentiment",
         "handler": "apps/web/src/app/api/sentiment/route.ts",
-        "package": "@hamafx/web",
+        "package": "@kestrel/web",
         "exports": [
           "runtime",
           "dynamic",
@@ -2455,7 +2455,7 @@
         ],
         "path": "/api/settings/analysis-mode",
         "handler": "apps/web/src/app/api/settings/analysis-mode/route.ts",
-        "package": "@hamafx/web",
+        "package": "@kestrel/web",
         "exports": [
           "runtime",
           "dynamic",
@@ -2469,7 +2469,7 @@
         ],
         "path": "/api/settings/bulk-test",
         "handler": "apps/web/src/app/api/settings/bulk-test/route.ts",
-        "package": "@hamafx/web",
+        "package": "@kestrel/web",
         "exports": [
           "runtime",
           "dynamic",
@@ -2482,7 +2482,7 @@
         ],
         "path": "/api/settings/catalog",
         "handler": "apps/web/src/app/api/settings/catalog/route.ts",
-        "package": "@hamafx/web",
+        "package": "@kestrel/web",
         "exports": [
           "runtime",
           "dynamic",
@@ -2497,7 +2497,7 @@
         ],
         "path": "/api/settings/chat-model",
         "handler": "apps/web/src/app/api/settings/chat-model/route.ts",
-        "package": "@hamafx/web",
+        "package": "@kestrel/web",
         "exports": [
           "runtime",
           "dynamic",
@@ -2514,7 +2514,7 @@
         ],
         "path": "/api/settings/embedding-model",
         "handler": "apps/web/src/app/api/settings/embedding-model/route.ts",
-        "package": "@hamafx/web",
+        "package": "@kestrel/web",
         "exports": [
           "runtime",
           "dynamic",
@@ -2530,7 +2530,7 @@
         ],
         "path": "/api/settings/fallback-chain",
         "handler": "apps/web/src/app/api/settings/fallback-chain/route.ts",
-        "package": "@hamafx/web",
+        "package": "@kestrel/web",
         "exports": [
           "runtime",
           "dynamic",
@@ -2544,7 +2544,7 @@
         ],
         "path": "/api/settings/symbols/:symbol",
         "handler": "apps/web/src/app/api/settings/symbols/[symbol]/route.ts",
-        "package": "@hamafx/web",
+        "package": "@kestrel/web",
         "exports": [
           "runtime",
           "dynamic",
@@ -2559,7 +2559,7 @@
         ],
         "path": "/api/settings/symbols",
         "handler": "apps/web/src/app/api/settings/symbols/route.ts",
-        "package": "@hamafx/web",
+        "package": "@kestrel/web",
         "exports": [
           "runtime",
           "dynamic",
@@ -2574,7 +2574,7 @@
         ],
         "path": "/api/settings/test-market-provider",
         "handler": "apps/web/src/app/api/settings/test-market-provider/route.ts",
-        "package": "@hamafx/web",
+        "package": "@kestrel/web",
         "exports": [
           "runtime",
           "dynamic",
@@ -2587,7 +2587,7 @@
         ],
         "path": "/api/settings/test-provider",
         "handler": "apps/web/src/app/api/settings/test-provider/route.ts",
-        "package": "@hamafx/web",
+        "package": "@kestrel/web",
         "exports": [
           "runtime",
           "dynamic",
@@ -2600,7 +2600,7 @@
         ],
         "path": "/api/settings/usage-by-agent",
         "handler": "apps/web/src/app/api/settings/usage-by-agent/route.ts",
-        "package": "@hamafx/web",
+        "package": "@kestrel/web",
         "exports": [
           "runtime",
           "dynamic",
@@ -2613,7 +2613,7 @@
         ],
         "path": "/api/settings/usage-by-provider",
         "handler": "apps/web/src/app/api/settings/usage-by-provider/route.ts",
-        "package": "@hamafx/web",
+        "package": "@kestrel/web",
         "exports": [
           "runtime",
           "dynamic",
@@ -2628,7 +2628,7 @@
         ],
         "path": "/api/settings/vision-model",
         "handler": "apps/web/src/app/api/settings/vision-model/route.ts",
-        "package": "@hamafx/web",
+        "package": "@kestrel/web",
         "exports": [
           "runtime",
           "dynamic",
@@ -2646,7 +2646,7 @@
         ],
         "path": "/api/telegram/webhook",
         "handler": "apps/web/src/app/api/telegram/webhook/route.ts",
-        "package": "@hamafx/web",
+        "package": "@kestrel/web",
         "exports": [
           "runtime",
           "dynamic",
@@ -2662,7 +2662,7 @@
         ],
         "path": "/api/upload",
         "handler": "apps/web/src/app/api/upload/route.ts",
-        "package": "@hamafx/web",
+        "package": "@kestrel/web",
         "exports": [
           "runtime",
           "dynamic",

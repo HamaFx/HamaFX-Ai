@@ -206,7 +206,7 @@ export function generateArchitectureJson(
     version: '1.0.0',
     generatedAt: new Date().toISOString(),
     project: {
-      name: 'HamaFX-Ai',
+      name: 'Kestrel',
       rootPath: '.',
       description: 'Single-user BYOK, chat-driven AI trading copilot for gold, forex, and supported crypto instruments (XAUUSD, canonical forex pairs, Binance crypto pairs)',
       license: 'Apache-2.0',
@@ -258,7 +258,7 @@ export function generateArchitectureJson(
     version: '1.0.0',
     generatedAt: new Date().toISOString(),
     project: {
-      name: 'HamaFX-Ai',
+      name: 'Kestrel',
       rootPath: '.',
       description: 'Single-user BYOK, chat-driven AI trading copilot for gold, forex, and supported crypto instruments (XAUUSD, canonical forex pairs, Binance crypto pairs)',
       license: 'Apache-2.0',

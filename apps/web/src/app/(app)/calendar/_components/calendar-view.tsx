@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@
 // /calendar interactive view. Owns filter state and groups events into
 // today / tomorrow / this-week / later-this-month / past sections.
 
-import type { EconomicEvent } from '@hamafx/shared';
+import type { EconomicEvent } from '@kestrel/shared';
 import {IconFilter, IconRefresh, IconCalendarX} from '@tabler/icons-react';
 import { useEffect, useMemo, useState, useTransition } from 'react';
 import { toast } from 'sonner';

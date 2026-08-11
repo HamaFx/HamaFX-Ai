@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,7 +32,7 @@ describe('parseCommand', () => {
   });
 
   it('handles command with @botname suffix', () => {
-    const result = parseCommand('/price@hamafxbot EURUSD');
+    const result = parseCommand('/price@kestrelbot EURUSD');
     expect(result.command).toBe('price');
     expect(result.args).toEqual(['EURUSD']);
   });
@@ -78,7 +78,7 @@ describe('BotDispatcher', () => {
 
     const response = await dispatcher.dispatch('/help', ctx);
     expect(response.text).toBeDefined();
-    expect(response.text).toContain('HamaFX Bot Commands');
+    expect(response.text).toContain('Kestrel Bot Commands');
   });
 
   it('returns help for unknown commands', async () => {
@@ -161,7 +161,7 @@ describe('BotDispatcher', () => {
     };
 
     const response = await dispatcher.dispatch('/link', ctx);
-    expect(response.text).toContain('Link Your HamaFX Account');
+    expect(response.text).toContain('Link Your Kestrel Account');
   });
 
   it('dispatches /ask with no args → usage message', async () => {

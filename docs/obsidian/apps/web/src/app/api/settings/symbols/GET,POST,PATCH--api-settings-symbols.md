@@ -1,19 +1,19 @@
 ---
 type: api_route
-package: "@hamafx/web"
+package: "@kestrel/web"
 path: "apps/web/src/app/api/settings/symbols/route.ts"
 incoming: 0
 outgoing: 1
 connections: 1
 risk: low
 layer: api
-tags: [type/api_route, hamafx-web, layer/api]
+tags: [type/api_route, kestrel-web, layer/api]
 aliases: [GET,POST,PATCH /api/settings/symbols]
 ---
 
 # 🔗 GET,POST,PATCH /api/settings/symbols
 
-> **API Route** · `@hamafx/web` · `apps/web/src/app/api/settings/symbols/route.ts`
+> **API Route** · `@kestrel/web` · `apps/web/src/app/api/settings/symbols/route.ts`
 
 
 API Route: GET,POST,PATCH /api/settings/symbols
@@ -28,7 +28,7 @@ API Route: GET,POST,PATCH /api/settings/symbols
 | Total connections | 1 |
 | Risk level | **LOW** |
 | Layer | `api` |
-| Package tag | `#hamafx-web` |
+| Package tag | `#kestrel-web` |
 
 
 
@@ -47,4 +47,4 @@ API Route: GET,POST,PATCH /api/settings/symbols
 - **Local Graph:** Right-click this file → "Open local graph"
 - **Backlinks:** Open the right sidebar → "Backlinks"
 - Use `#type/api_route` to find all API Routes
-- Use `#hamafx-web` to find all files in this package
+- Use `#kestrel-web` to find all files in this package

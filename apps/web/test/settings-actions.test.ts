@@ -3,9 +3,9 @@
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi, Mock } from 'vitest';
 import bcrypt from 'bcryptjs';
 
-// Transparent mock of @hamafx/shared/encryption.
-vi.mock('@hamafx/shared/encryption', async () => {
-  const byok = await import('@hamafx/shared/byok');
+// Transparent mock of @kestrel/shared/encryption.
+vi.mock('@kestrel/shared/encryption', async () => {
+  const byok = await import('@kestrel/shared/byok');
   return {
     PROVIDER_IDS: byok.PROVIDER_IDS,
     encryptByok: vi.fn((payload: unknown) => `enc:${JSON.stringify(payload)}`),
@@ -41,7 +41,7 @@ const schemaProxy = vi.hoisted(() => {
   });
 });
 
-vi.mock('@hamafx/db', () => ({
+vi.mock('@kestrel/db', () => ({
   getDb: mockGetDb,
   withRateLimit: mockWithRateLimit,
   updateUserDisplayName: mockUpdateUserDisplayName,
@@ -52,7 +52,7 @@ vi.mock('@hamafx/db', () => ({
 vi.mock('@sentry/nextjs', () => ({ captureException: vi.fn() }));
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }));
 
-vi.mock('@hamafx/ai', async (importOriginal) => {
+vi.mock('@kestrel/ai', async (importOriginal) => {
   const actual = await importOriginal() as Record<string, unknown>;
   return {
     ...actual,
@@ -61,17 +61,17 @@ vi.mock('@hamafx/ai', async (importOriginal) => {
   };
 });
 
-// Pre-register mock DB in the container BEFORE @hamafx/ai is imported.
-// importOriginal for @hamafx/ai runs db.ts which does container.register('db', ...),
-// but since @hamafx/db is mocked and getRawDb = mockGetDb, the container will
+// Pre-register mock DB in the container BEFORE @kestrel/ai is imported.
+// importOriginal for @kestrel/ai runs db.ts which does container.register('db', ...),
+// but since @kestrel/db is mocked and getRawDb = mockGetDb, the container will
 // resolve to mockGetDb correctly.
-import { container } from '@hamafx/shared';
+import { container } from '@kestrel/shared';
 container.register('db', () => mockGetDb());
 
 import { mockNextAuthSession } from './auth-helpers';
 
 import { auth } from '@/auth';
-import { getDb, updateUserDisplayName, getUserPasswordHash } from '@hamafx/db';
+import { getDb, updateUserDisplayName, getUserPasswordHash } from '@kestrel/db';
 import * as Sentry from '@sentry/nextjs';
 import { revalidatePath } from 'next/cache';
 import {
@@ -80,7 +80,7 @@ import {
   decryptByok,
   encryptWithPassword,
   decryptWithPassword,
-} from '@hamafx/shared/encryption';
+} from '@kestrel/shared/encryption';
 
 import {
   updateProfileAction,

@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@
 // Thin wrapper over the shared <Segmented> primitive so all segment-style
 // controls in the app stay consistent.
 
-import { TIMEFRAMES, type Timeframe } from '@hamafx/shared';
+import { TIMEFRAMES, type Timeframe } from '@kestrel/shared';
 
 import { Segmented } from '@/components/ui/segmented';
 

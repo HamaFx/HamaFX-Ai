@@ -50,7 +50,7 @@ export async function GET() {
     return new NextResponse('Not Found', { status: 404 });
   }
 
-  const email = 'dev@hamafx.ai';
+  const email = 'dev@kestrel.ai';
   const userId = 'test-user-id';
 
   try {

@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@ import { describe, expect, it } from 'vitest';
 
 // We re-export providerIdFromModel via index.ts; import the test
 // directly through the file path so we can run it without a DB
-// (the usage module also pulls in @hamafx/db, which is fine —
+// (the usage module also pulls in @kestrel/db, which is fine —
 // this test only exercises the pure helpers).
 import { providerIdFromModel } from '../src/usage';
 

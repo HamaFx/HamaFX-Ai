@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,7 +37,7 @@
 //
 // The card is memoized to avoid re-rendering untouched cards when bookmark updates.
 
-import type { NewsArticle } from '@hamafx/shared';
+import type { NewsArticle } from '@kestrel/shared';
 import {IconBookmark, IconExternalLink, IconBolt} from '@tabler/icons-react';
 import { m } from 'motion/react';
 import { memo } from 'react';

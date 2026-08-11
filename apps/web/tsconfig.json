@@ -1,5 +1,5 @@
 {
-  "extends": "@hamafx/config/typescript/nextjs",
+  "extends": "@kestrel/config/typescript/nextjs",
   "compilerOptions": {
     "exactOptionalPropertyTypes": false,
     "paths": {

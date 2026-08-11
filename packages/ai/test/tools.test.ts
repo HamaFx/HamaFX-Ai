@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 vi.mock('server-only', () => ({}));
 
-vi.mock('@hamafx/db', () => ({
+vi.mock('@kestrel/db', () => ({
   getDb: () => ({
     select: () => ({
       from: () => ({
@@ -31,7 +31,7 @@ vi.mock('@hamafx/db', () => ({
   },
 }));
 
-vi.mock('@hamafx/shared/encryption', () => ({
+vi.mock('@kestrel/shared/encryption', () => ({
   PROVIDER_IDS: [
     'google',
     'vertex',
@@ -49,7 +49,7 @@ vi.mock('@hamafx/shared/encryption', () => ({
   configuredProviders: () => [],
 }));
 
-vi.mock('@hamafx/data', () => ({
+vi.mock('@kestrel/data', () => ({
   getPrice: vi.fn(() => ({ bid: 1.08, ask: 1.0802, mid: 1.0801, timestamp: Date.now() })),
   ProviderError: class ProviderError extends Error {},
 }));

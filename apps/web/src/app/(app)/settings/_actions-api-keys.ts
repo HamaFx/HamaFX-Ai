@@ -1,7 +1,7 @@
 'use server';
 
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,13 +19,13 @@
 // API keys domain actions: BYOK key management, export/import, market data provider selection.
 
 import { auth } from '@/auth';
-import { schema, withRateLimit } from '@hamafx/db'
-import { getDb } from '@hamafx/ai';
+import { schema, withRateLimit } from '@kestrel/db'
+import { getDb } from '@kestrel/ai';
 import { eq, and } from 'drizzle-orm';
 import * as Sentry from '@sentry/nextjs';
 import { revalidatePath } from 'next/cache';
 import { verifySync } from 'otplib';
-import { testProviderKey } from '@hamafx/ai';
+import { testProviderKey } from '@kestrel/ai';
 import {
   PROVIDER_IDS,
   encryptByok,
@@ -34,7 +34,7 @@ import {
   encryptWithPassword,
   decryptWithPassword,
   type ByokPayload,
-} from '@hamafx/shared/encryption';
+} from '@kestrel/shared/encryption';
 import { type ActionResult, type SaveKeysResult, verifyAccountPassword } from './_actions-shared';
 
 /**

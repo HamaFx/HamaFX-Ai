@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,20 +16,20 @@
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-vi.mock('@hamafx/ai', () => ({
+vi.mock('@kestrel/ai', () => ({
   computeDailySnapshot: vi.fn(),
   previousUtcMidnight: () => new Date('2026-05-26T00:00:00Z'),
   upsertSnapshot: vi.fn(),
 }));
 
-vi.mock('@hamafx/data', () => ({
+vi.mock('@kestrel/data', () => ({
   getCandles: vi.fn(),
 }));
 
 // We don't need a real DB. Patch getDb() to return a fake client whose
 // .delete().where().returning() chain captures the cutoff and returns []
 // (so the prune step is observable but doesn't actually delete anything).
-vi.mock('@hamafx/db', () => ({
+vi.mock('@kestrel/db', () => ({
   getDb: () => ({
     delete: vi.fn(() => ({
       where: vi.fn(() => ({
@@ -43,12 +43,12 @@ vi.mock('@hamafx/db', () => ({
   schema: {},
 }));
 
-vi.mock('@hamafx/db/schema', () => ({
+vi.mock('@kestrel/db/schema', () => ({
   candles1m: { t: 't', symbol: 'symbol' },
 }));
 
-import * as ai from '@hamafx/ai';
-import * as data from '@hamafx/data';
+import * as ai from '@kestrel/ai';
+import * as data from '@kestrel/data';
 
 import { runSnapshots } from '../src/jobs/snapshots';
 import { TenantRouter } from '../src/tenant-router';

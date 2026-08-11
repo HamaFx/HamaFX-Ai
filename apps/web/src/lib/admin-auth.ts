@@ -7,8 +7,8 @@
 import { eq, sql } from 'drizzle-orm';
 
 import { auth } from '@/auth';
-import { schema } from '@hamafx/db';
-import { getDb } from '@hamafx/ai';
+import { schema } from '@kestrel/db';
+import { getDb } from '@kestrel/ai';
 
 import { createRequestLogger } from './logger';
 

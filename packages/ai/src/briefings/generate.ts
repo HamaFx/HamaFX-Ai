@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,7 +29,7 @@
 // Failures are logged and swallowed: the cron handler reports `processed`
 // vs total, never propagates a partial failure as a 500.
 
-import { schema } from '@hamafx/db';
+import { schema } from '@kestrel/db';
 import { getDb } from '../db';
 import {
   type BriefingMessagePart,
@@ -37,10 +37,10 @@ import {
   type EventCurrency,
   type Importance,
   type Symbol,
-} from '@hamafx/shared';
+} from '@kestrel/shared';
 import { generateText, type UIMessage } from 'ai';
 import { and, asc, eq } from 'drizzle-orm';
-import { createCategorizedLogger } from '@hamafx/shared/logger';
+import { createCategorizedLogger } from '@kestrel/shared/logger';
 
 import { dailySpendUsd } from '../cost';
 import { computeStats } from '../journal/persistence';
@@ -185,7 +185,7 @@ async function composeEventSummary(
     const { text } = await generateText({
       model: resolveModel(env.AI_DEFAULT_MODEL, env, userId),
       system:
-        'You are HamaFX-Ai writing a briefing for the single user. Be concise (max 6 short bullets). No greetings, no signoffs. Plain text, no markdown headings, no emoji.',
+        'You are Kestrel writing a briefing for the single user. Be concise (max 6 short bullets). No greetings, no signoffs. Plain text, no markdown headings, no emoji.',
       prompt,
       ...telemetryConfig(),
     });
@@ -361,7 +361,7 @@ async function composeWeeklyReviewSummary(
     const { text } = await generateText({
       model: resolveModel(env.AI_DEFAULT_MODEL, env, userId),
       system:
-        'You are HamaFX-Ai writing the user\'s weekly trading review. Be concise (max 5 short bullets). No greetings or signoffs. Plain text.',
+        'You are Kestrel writing the user\'s weekly trading review. Be concise (max 5 short bullets). No greetings or signoffs. Plain text.',
       prompt: `Stats:\n${det}\n\nWrite the review.`,
       ...telemetryConfig(),
     });

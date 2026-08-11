@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@
 // `type=currency`. We also detect XAU/gold via keywords because gold isn't
 // modelled as a currency entity by all sources.
 
-import type { CurrencyTag, Symbol, SymbolOrCurrencyTag } from '@hamafx/shared';
+import type { CurrencyTag, Symbol, SymbolOrCurrencyTag } from '@kestrel/shared';
 
 interface MarketauxEntity {
   symbol?: string | undefined;

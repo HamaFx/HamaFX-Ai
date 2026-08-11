@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,7 +26,7 @@
 // only ever one drawer in the DOM, which fixes the "menu sometimes
 // doesn't open" intermittent bug caused by stacked drawer instances.
 
-import type { Symbol } from '@hamafx/shared';
+import type { Symbol } from '@kestrel/shared';
 import {IconLoader2, IconMessages, IconDotsCircleHorizontal, IconPlus, IconBolt, IconTrash, IconCheck, IconFileDownload, IconCpu, IconChevronDown} from '@tabler/icons-react';
 import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';

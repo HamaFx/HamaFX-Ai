@@ -4,7 +4,7 @@
 // The page itself is a thin wrapper: fetch + render the
 // <CalendarHero/> at the top and the interactive <CalendarView/> below.
 
-import { listUpcomingEvents } from '@hamafx/ai';
+import { listUpcomingEvents } from '@kestrel/ai';
 import { IconCalendarEvent } from '@tabler/icons-react';
 import type { Metadata } from 'next';
 
@@ -17,7 +17,7 @@ const CalendarHero = nextDynamic(() => import('./_components/calendar-hero').the
 import { CalendarView } from './_components/calendar-view';
 import { RefreshButton } from '../news/_components/refresh-button';
 
-export const metadata: Metadata = { title: 'Calendar | HamaFX' };
+export const metadata: Metadata = { title: 'Calendar | Kestrel' };
 export const dynamic = 'force-dynamic';
 
 export default async function CalendarPage() {

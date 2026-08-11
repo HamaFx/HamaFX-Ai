@@ -1,19 +1,19 @@
 ---
 type: module
-package: "@hamafx/worker"
+package: "@kestrel/worker"
 path: "apps/worker/src/sentry.ts"
 incoming: 2
 outgoing: 3
 connections: 5
 risk: low
 layer: core
-tags: [type/module, hamafx-worker, layer/core]
+tags: [type/module, kestrel-worker, layer/core]
 aliases: [sentry/initSentry]
 ---
 
 # 📁 sentry/initSentry
 
-> **Module** · `@hamafx/worker` · `apps/worker/src/sentry.ts`
+> **Module** · `@kestrel/worker` · `apps/worker/src/sentry.ts`
 
 
 Module: apps/worker/src/sentry.ts
@@ -28,11 +28,11 @@ Module: apps/worker/src/sentry.ts
 | Total connections | 5 |
 | Risk level | **LOW** |
 | Layer | `core` |
-| Package tag | `#hamafx-worker` |
+| Package tag | `#kestrel-worker` |
 
 
 ### 📤 Depends On (2)
-[[env-WorkerEnv]] · [[@hamafx-worker]]
+[[env-WorkerEnv]] · [[@kestrel-worker]]
 
 
 ### 📥 Depended On By (2)
@@ -51,4 +51,4 @@ Module: apps/worker/src/sentry.ts
 - **Local Graph:** Right-click this file → "Open local graph"
 - **Backlinks:** Open the right sidebar → "Backlinks"
 - Use `#type/module` to find all Modules
-- Use `#hamafx-worker` to find all files in this package
+- Use `#kestrel-worker` to find all files in this package

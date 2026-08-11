@@ -1,19 +1,19 @@
 ---
 type: module
-package: "@hamafx/data"
+package: "@kestrel/data"
 path: "packages/data/src/adapters/candles.ts"
 incoming: 0
 outgoing: 6
 connections: 6
 risk: low
 layer: core
-tags: [type/module, hamafx-data, layer/core]
+tags: [type/module, kestrel-data, layer/core]
 aliases: [candles/GetCandlesOptions]
 ---
 
 # 📁 candles/GetCandlesOptions
 
-> **Module** · `@hamafx/data` · `packages/data/src/adapters/candles.ts`
+> **Module** · `@kestrel/data` · `packages/data/src/adapters/candles.ts`
 
 
 Module: packages/data/src/adapters/candles.ts
@@ -28,11 +28,11 @@ Module: packages/data/src/adapters/candles.ts
 | Total connections | 6 |
 | Risk level | **LOW** |
 | Layer | `core` |
-| Package tag | `#hamafx-data` |
+| Package tag | `#kestrel-data` |
 
 
 ### 📤 Depends On (6)
-[[@hamafx-shared]] · [[index-getDefaultCache]] · [[errors-DataErrorCode]] · [[failover-ProviderAttempt]] · [[provider-registry-ProviderFetchOptions]] · [[@hamafx-data]]
+[[@kestrel-shared]] · [[index-getDefaultCache]] · [[errors-DataErrorCode]] · [[failover-ProviderAttempt]] · [[provider-registry-ProviderFetchOptions]] · [[@kestrel-data]]
 
 
 
@@ -49,4 +49,4 @@ Module: packages/data/src/adapters/candles.ts
 - **Local Graph:** Right-click this file → "Open local graph"
 - **Backlinks:** Open the right sidebar → "Backlinks"
 - Use `#type/module` to find all Modules
-- Use `#hamafx-data` to find all files in this package
+- Use `#kestrel-data` to find all files in this package

@@ -1,6 +1,6 @@
 ---
 type: package
-package: "@hamafx/indicators"
+package: "@kestrel/indicators"
 path: "packages/indicators"
 incoming: 52
 outgoing: 0
@@ -8,15 +8,15 @@ connections: 52
 risk: high
 layer: package
 tags: [type/package, hamafx-indicators, layer/package, risk/high]
-aliases: [@hamafx/indicators]
+aliases: [@kestrel/indicators]
 ---
 
-# 📦 @hamafx/indicators
+# 📦 @kestrel/indicators
 
-> **Package** · `@hamafx/indicators` · `packages/indicators`
+> **Package** · `@kestrel/indicators` · `packages/indicators`
 
 
-Package: @hamafx/indicators
+Package: @kestrel/indicators
 
 
 ## 📊 Connections

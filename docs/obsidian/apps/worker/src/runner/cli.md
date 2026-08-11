@@ -1,19 +1,19 @@
 ---
 type: module
-package: "@hamafx/worker"
+package: "@kestrel/worker"
 path: "apps/worker/src/runner/cli.ts"
 incoming: 0
 outgoing: 8
 connections: 8
 risk: low
 layer: core
-tags: [type/module, hamafx-worker, layer/core]
+tags: [type/module, kestrel-worker, layer/core]
 aliases: [cli]
 ---
 
 # 📁 cli
 
-> **Module** · `@hamafx/worker` · `apps/worker/src/runner/cli.ts`
+> **Module** · `@kestrel/worker` · `apps/worker/src/runner/cli.ts`
 
 
 Module: apps/worker/src/runner/cli.ts
@@ -28,11 +28,11 @@ Module: apps/worker/src/runner/cli.ts
 | Total connections | 8 |
 | Risk level | **LOW** |
 | Layer | `core` |
-| Package tag | `#hamafx-worker` |
+| Package tag | `#kestrel-worker` |
 
 
 ### 📤 Depends On (8)
-[[env-WorkerEnv]] · [[healthchecks-PingStatus]] · [[index-JOBS]] · [[log-Logger]] · [[sentry-initSentry]] · [[@hamafx-db]] · [[tenant-router-TenantRouter]] · [[@hamafx-worker]]
+[[env-WorkerEnv]] · [[healthchecks-PingStatus]] · [[index-JOBS]] · [[log-Logger]] · [[sentry-initSentry]] · [[@kestrel-db]] · [[tenant-router-TenantRouter]] · [[@kestrel-worker]]
 
 
 
@@ -43,4 +43,4 @@ Module: apps/worker/src/runner/cli.ts
 - **Local Graph:** Right-click this file → "Open local graph"
 - **Backlinks:** Open the right sidebar → "Backlinks"
 - Use `#type/module` to find all Modules
-- Use `#hamafx-worker` to find all files in this package
+- Use `#kestrel-worker` to find all files in this package

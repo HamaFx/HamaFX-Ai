@@ -1,19 +1,19 @@
 ---
 type: tool
-package: "@hamafx/ai"
+package: "@kestrel/ai"
 path: "packages/ai/src/tools/get-seasonality.ts"
 incoming: 1
 outgoing: 4
 connections: 5
 risk: low
 layer: ai
-tags: [type/tool, hamafx-ai, layer/ai]
+tags: [type/tool, kestrel-ai, layer/ai]
 aliases: [get_seasonality]
 ---
 
 # 🔧 get_seasonality
 
-> **AI Tool** · `@hamafx/ai` · `packages/ai/src/tools/get-seasonality.ts`
+> **AI Tool** · `@kestrel/ai` · `packages/ai/src/tools/get-seasonality.ts`
 
 
 Per-month / per-weekday / per-hour return seasonality for a symbol. Returns median percent return, IQR, win rate, and sample count per bucket. Use for
@@ -28,11 +28,11 @@ Per-month / per-weekday / per-hour return seasonality for a symbol. Returns medi
 | Total connections | 5 |
 | Risk level | **LOW** |
 | Layer | `ai` |
-| Package tag | `#hamafx-ai` |
+| Package tag | `#kestrel-ai` |
 
 
 ### 📤 Depends On (4)
-[[@hamafx-data]] · [[@hamafx-shared]] · [[@hamafx-ai]] · [[registry-ToolPlugin]]
+[[@kestrel-data]] · [[@kestrel-shared]] · [[@kestrel-ai]] · [[registry-ToolPlugin]]
 
 
 ### 📥 Depended On By (1)
@@ -49,4 +49,4 @@ Per-month / per-weekday / per-hour return seasonality for a symbol. Returns medi
 - **Local Graph:** Right-click this file → "Open local graph"
 - **Backlinks:** Open the right sidebar → "Backlinks"
 - Use `#type/tool` to find all AI Tools
-- Use `#hamafx-ai` to find all files in this package
+- Use `#kestrel-ai` to find all files in this package

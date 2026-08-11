@@ -8,7 +8,7 @@
 // was dropped due to a fetch failure.
 
 import { IconActivity, IconAlertTriangle, IconChartCandle } from '@tabler/icons-react';
-import type { AnalyzeTechnicalOutput, PerTimeframeReading } from '@hamafx/shared';
+import type { AnalyzeTechnicalOutput, PerTimeframeReading } from '@kestrel/shared';
 import { Link } from 'next-view-transitions';
 
 import { Card } from '@/components/ui/card';

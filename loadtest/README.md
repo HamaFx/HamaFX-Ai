@@ -1,4 +1,4 @@
-# HamaFX-Ai k6 Load Testing
+# Kestrel k6 Load Testing
 
 > Backend HTTP load & performance testing using [Grafana k6](https://grafana.com/docs/k6/).
 >
@@ -58,8 +58,8 @@ Seed N test users, then k6 logs each in via the NextAuth credentials callback
 and distributes load across them.
 
 ```bash
-# 1. Seed users against the throwaway DB (run from repo root so @hamafx/db workspace links resolve)
-cd ~/HamaFX-Ai
+# 1. Seed users against the throwaway DB (run from repo root so @kestrel/db workspace links resolve)
+cd ~/Kestrel
 DATABASE_URL=postgres://hamafx:loadtest@localhost:5432/hamafx \
   K6_ALLOW_SEED=true K6_USER_COUNT=25 node loadtest/lib/seed/seed-users.mjs
 

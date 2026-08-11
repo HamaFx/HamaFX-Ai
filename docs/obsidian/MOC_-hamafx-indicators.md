@@ -1,19 +1,19 @@
 ---
 type: moc
-package: "@hamafx/indicators"
+package: "@kestrel/indicators"
 nodes: 39
 totalIncoming: 101
 totalOutgoing: 159
 tags: [moc, hamafx-indicators]
 ---
 
-# 📦 @hamafx/indicators
+# 📦 @kestrel/indicators
 
 > **Map of Content** · 39 files · 101 incoming + 159 outgoing = 260 connections
 
 ## DataviewJS — All Files in This Package
 ```dataviewjs
-const pages = dv.pages().where(p => p.package === "@hamafx/indicators" && p.type);
+const pages = dv.pages().where(p => p.package === "@kestrel/indicators" && p.type);
 dv.table(
   ['File', 'Type', 'Incoming', 'Outgoing', 'Risk'],
   pages.sort(p => -(p.incoming + p.outgoing), 'desc').map(p => [
@@ -66,5 +66,5 @@ dv.table(
 - [[vitest.config-defineConfig]] *(0↖ 1↗)*
 
 ### 📦 Package (1)
-- [[@hamafx-indicators]] *(52↖ 0↗)*
+- [[@kestrel-indicators]] *(52↖ 0↗)*
 

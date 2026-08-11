@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,9 +32,9 @@
 //     restarts and demoted the worker-fed pipeline below the REST
 //     fallback.
 
-import type { getDb } from '@hamafx/db';
-import { candles1m } from '@hamafx/db/schema';
-import type { Symbol } from '@hamafx/shared';
+import type { getDb } from '@kestrel/db';
+import { candles1m } from '@kestrel/db/schema';
+import type { Symbol } from '@kestrel/shared';
 import { asc, eq } from 'drizzle-orm';
 
 import { ProviderEmptyError } from '../../errors';
@@ -136,6 +136,6 @@ export async function fetchCandles1m(args: FetchCandles1mArgs): Promise<FetchCan
 }
 
 async function loadDb(): Promise<ReturnType<typeof getDb>> {
-  const mod = await import('@hamafx/db');
+  const mod = await import('@kestrel/db');
   return mod.getDb();
 }

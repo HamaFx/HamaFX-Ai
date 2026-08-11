@@ -11,13 +11,13 @@ const mockGetUserWithSettings = vi.hoisted(() => vi.fn());
 const mockListUserSymbols = vi.hoisted(() => vi.fn());
 const mockDecryptByok = vi.hoisted(() => vi.fn());
 
-vi.mock('@hamafx/db', () => ({
+vi.mock('@kestrel/db', () => ({
   getUserWithSettings: mockGetUserWithSettings,
   listUserSymbols: mockListUserSymbols,
   schema: { users: {}, userSettings: {} },
 }));
 
-vi.mock('@hamafx/shared/encryption', () => ({
+vi.mock('@kestrel/shared/encryption', () => ({
   decryptByok: mockDecryptByok,
 }));
 

@@ -27,7 +27,7 @@ vi.mock('../src/db', () => ({
   })),
 }));
 
-vi.mock('@hamafx/db', () => ({
+vi.mock('@kestrel/db', () => ({
   schema: {
     chatMessages: {},
   },

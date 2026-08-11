@@ -1,19 +1,19 @@
 ---
 type: module
-package: "@hamafx/data"
+package: "@kestrel/data"
 path: "packages/data/src/adapters/calendar.ts"
 incoming: 1
 outgoing: 4
 connections: 5
 risk: low
 layer: core
-tags: [type/module, hamafx-data, layer/core]
+tags: [type/module, kestrel-data, layer/core]
 aliases: [calendar/FetchCalendarOptions]
 ---
 
 # 📁 calendar/FetchCalendarOptions
 
-> **Module** · `@hamafx/data` · `packages/data/src/adapters/calendar.ts`
+> **Module** · `@kestrel/data` · `packages/data/src/adapters/calendar.ts`
 
 
 Module: packages/data/src/adapters/calendar.ts
@@ -28,11 +28,11 @@ Module: packages/data/src/adapters/calendar.ts
 | Total connections | 5 |
 | Risk level | **LOW** |
 | Layer | `core` |
-| Package tag | `#hamafx-data` |
+| Package tag | `#kestrel-data` |
 
 
 ### 📤 Depends On (4)
-[[@hamafx-shared]] · [[errors-DataErrorCode]] · [[index-fetchReleaseDates]] · [[@hamafx-data]]
+[[@kestrel-shared]] · [[errors-DataErrorCode]] · [[index-fetchReleaseDates]] · [[@kestrel-data]]
 
 
 ### 📥 Depended On By (1)
@@ -51,4 +51,4 @@ Module: packages/data/src/adapters/calendar.ts
 - **Local Graph:** Right-click this file → "Open local graph"
 - **Backlinks:** Open the right sidebar → "Backlinks"
 - Use `#type/module` to find all Modules
-- Use `#hamafx-data` to find all files in this package
+- Use `#kestrel-data` to find all files in this package

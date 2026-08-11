@@ -6,7 +6,7 @@
 // correlation with a regime-break flag when it inverts. Notes at the
 // bottom restate the deterministic interpretation in one line.
 
-import type { RiskRegime } from '@hamafx/shared';
+import type { RiskRegime } from '@kestrel/shared';
 
 import type { ToolPartProps } from './registry';
 

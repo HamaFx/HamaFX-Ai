@@ -1,19 +1,19 @@
 ---
 type: module
-package: "@hamafx/worker"
+package: "@kestrel/worker"
 path: "apps/worker/src/sd-notify.ts"
 incoming: 1
 outgoing: 1
 connections: 2
 risk: low
 layer: core
-tags: [type/module, hamafx-worker, layer/core]
+tags: [type/module, kestrel-worker, layer/core]
 aliases: [sd-notify/notifyWatchdog]
 ---
 
 # 📁 sd-notify/notifyWatchdog
 
-> **Module** · `@hamafx/worker` · `apps/worker/src/sd-notify.ts`
+> **Module** · `@kestrel/worker` · `apps/worker/src/sd-notify.ts`
 
 
 Module: apps/worker/src/sd-notify.ts
@@ -28,11 +28,11 @@ Module: apps/worker/src/sd-notify.ts
 | Total connections | 2 |
 | Risk level | **LOW** |
 | Layer | `core` |
-| Package tag | `#hamafx-worker` |
+| Package tag | `#kestrel-worker` |
 
 
 ### 📤 Depends On (1)
-[[@hamafx-worker]]
+[[@kestrel-worker]]
 
 
 ### 📥 Depended On By (1)
@@ -52,4 +52,4 @@ Module: apps/worker/src/sd-notify.ts
 - **Local Graph:** Right-click this file → "Open local graph"
 - **Backlinks:** Open the right sidebar → "Backlinks"
 - Use `#type/module` to find all Modules
-- Use `#hamafx-worker` to find all files in this package
+- Use `#kestrel-worker` to find all files in this package

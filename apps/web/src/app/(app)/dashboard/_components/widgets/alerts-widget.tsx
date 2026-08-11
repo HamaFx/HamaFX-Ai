@@ -10,7 +10,7 @@
 
 import Link from 'next/link';
 import { IconBell } from '@tabler/icons-react';
-import type { Alert } from '@hamafx/shared';
+import type { Alert } from '@kestrel/shared';
 
 import { Card } from '@/components/ui/card';
 import { EmptyState } from '@/components/ui/empty-state';

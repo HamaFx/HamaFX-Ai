@@ -2,7 +2,7 @@ import { IconCheck, IconChevronRight, IconEye, IconEyeOff, IconLoader2 } from '@
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ProviderInfoDot } from '@/components/ui/provider-info-dot';
-import type { ProviderMeta, ProviderPricingTier } from '@hamafx/shared';
+import type { ProviderMeta, ProviderPricingTier } from '@kestrel/shared';
 import type { TestState } from './wizard-types';
 
 interface WizardStepProviderProps {
@@ -48,7 +48,7 @@ export function WizardStepProvider({
       <div>
         <h2 className="text-xl font-semibold text-fg mb-1">Connect an AI Provider</h2>
         <p className="text-sm text-fg-subtle">
-          HamaFX-Ai is BYOK (Bring Your Own Key). Pick a provider below and paste
+          Kestrel is BYOK (Bring Your Own Key). Pick a provider below and paste
           your API key. You can add more or change providers later in Settings.
         </p>
       </div>

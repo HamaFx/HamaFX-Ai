@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,8 +19,8 @@
 //
 // Dependency: none (leaf module — no imports from other model-* files).
 
-import type { ByokPayload, ProviderId } from '@hamafx/shared/encryption';
-import { PROVIDER_IDS } from '@hamafx/shared/byok';
+import type { ByokPayload, ProviderId } from '@kestrel/shared/encryption';
+import { PROVIDER_IDS } from '@kestrel/shared/byok';
 import { BYOK_PROVIDERS } from './byok-providers';
 import type { ResolveModelEnv } from './vertex-factory';
 

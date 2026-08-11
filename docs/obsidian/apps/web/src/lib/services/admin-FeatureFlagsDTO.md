@@ -1,6 +1,6 @@
 ---
 type: module
-package: "@hamafx/web"
+package: "@kestrel/web"
 path: "apps/web/src/lib/services/admin.ts"
 incoming: 0
 outgoing: 2
@@ -13,7 +13,7 @@ aliases: [admin/FeatureFlagsDTO]
 
 # 📁 admin/FeatureFlagsDTO
 
-> **Module** · `@hamafx/web` · `apps/web/src/lib/services/admin.ts`
+> **Module** · `@kestrel/web` · `apps/web/src/lib/services/admin.ts`
 
 
 Module: apps/web/src/lib/services/admin.ts
@@ -32,7 +32,7 @@ Module: apps/web/src/lib/services/admin.ts
 
 
 ### 📤 Depends On (2)
-[[@hamafx-db]] · [[@hamafx-web]]
+[[@kestrel-db]] · [[@kestrel-web]]
 
 
 

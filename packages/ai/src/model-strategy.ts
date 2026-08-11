@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@
 //
 // Dependency: model-chat.ts (resolveChatModel, ChatModelResolution).
 
-import type { UserSettingsRow } from '@hamafx/db/schema';
+import type { UserSettingsRow } from '@kestrel/db/schema';
 import type { ResolveModelEnv } from './vertex-factory';
 import type { ModelDomain } from './byok-providers';
 import { resolveChatModel, type ChatModelResolution } from './model-chat';

@@ -1,6 +1,6 @@
 ---
 type: module
-package: "@hamafx/worker"
+package: "@kestrel/worker"
 path: "apps/worker/src/binance/index.ts"
 incoming: 1
 outgoing: 1
@@ -13,7 +13,7 @@ aliases: [index]
 
 # 📁 index
 
-> **Module** · `@hamafx/worker` · `apps/worker/src/binance/index.ts`
+> **Module** · `@kestrel/worker` · `apps/worker/src/binance/index.ts`
 
 
 Module: apps/worker/src/binance/index.ts
@@ -32,7 +32,7 @@ Module: apps/worker/src/binance/index.ts
 
 
 ### 📤 Depends On (1)
-[[@hamafx-worker]]
+[[@kestrel-worker]]
 
 
 ### 📥 Depended On By (1)

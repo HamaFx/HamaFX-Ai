@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 
 // PF-13 — Market data tool category.
 // Imported by tools/index.ts for self-registration and also exposed
-// as a sub-path export: @hamafx/ai/tools/market
+// as a sub-path export: @kestrel/ai/tools/market
 
 import { getPriceTool } from './get-price';
 import { getCandlesTool } from './get-candles';

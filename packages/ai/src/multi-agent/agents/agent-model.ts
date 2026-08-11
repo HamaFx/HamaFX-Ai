@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@
 
 import type { LanguageModel } from 'ai';
 import { resolveChatModel, resolveModelForProvider, TIER_TO_DOMAIN, type ModelDomain } from '../../model';
-import type { ProviderId } from '@hamafx/shared';
+import type { ProviderId } from '@kestrel/shared';
 import type { SharedContext, ModelTier, AgentName } from '../types';
 
 /**

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
-import { type GetSocialSentimentOutput } from '@hamafx/shared';
+import { type GetSocialSentimentOutput } from '@kestrel/shared';
 import {IconMessage, IconMessageCircle, IconChartBar, IconNews, IconAlertCircle, type Icon} from '@tabler/icons-react';
 
 interface GetSocialSentimentPartProps {

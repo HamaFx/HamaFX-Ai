@@ -1,5 +1,5 @@
 [Unit]
-Description=HamaFX-Ai weekly DB-restore rehearsal
+Description=Kestrel weekly DB-restore rehearsal
 After=network-online.target docker.service
 Wants=network-online.target
 Requires=docker.service

@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,7 +35,7 @@ import {
   type Candle,
   type Symbol,
   type Timeframe,
-} from '@hamafx/shared';
+} from '@kestrel/shared';
 
 import { cacheKey, cacheTag, candleTtl, getDefaultCache } from '../cache';
 import { ProviderError } from '../errors';

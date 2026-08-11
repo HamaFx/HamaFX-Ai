@@ -1,19 +1,19 @@
 ---
 type: agent
-package: "@hamafx/ai"
+package: "@kestrel/ai"
 path: "packages/ai/src/multi-agent/agents/sentiment-agent.ts"
 incoming: 2
 outgoing: 5
 connections: 7
 risk: low
 layer: ai
-tags: [type/agent, hamafx-ai, layer/ai]
+tags: [type/agent, kestrel-ai, layer/ai]
 aliases: [SentimentAgent]
 ---
 
 # 🤖 SentimentAgent
 
-> **Agent** · `@hamafx/ai` · `packages/ai/src/multi-agent/agents/sentiment-agent.ts`
+> **Agent** · `@kestrel/ai` · `packages/ai/src/multi-agent/agents/sentiment-agent.ts`
 
 
 Multi-agent specialist: SentimentAgent
@@ -28,11 +28,11 @@ Multi-agent specialist: SentimentAgent
 | Total connections | 7 |
 | Risk level | **LOW** |
 | Layer | `ai` |
-| Package tag | `#hamafx-ai` |
+| Package tag | `#kestrel-ai` |
 
 
 ### 📤 Depends On (4)
-[[base-agent-baseOpinionSchema]] · [[index-toolRegistry]] · [[types-AnalysisMode]] · [[@hamafx-ai]]
+[[base-agent-baseOpinionSchema]] · [[index-toolRegistry]] · [[types-AnalysisMode]] · [[@kestrel-ai]]
 
 
 ### 📥 Depended On By (2)
@@ -49,4 +49,4 @@ Multi-agent specialist: SentimentAgent
 - **Local Graph:** Right-click this file → "Open local graph"
 - **Backlinks:** Open the right sidebar → "Backlinks"
 - Use `#type/agent` to find all Agents
-- Use `#hamafx-ai` to find all files in this package
+- Use `#kestrel-ai` to find all files in this package

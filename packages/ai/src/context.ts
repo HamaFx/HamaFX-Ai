@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,12 +21,12 @@
 // All reads are best-effort — a price-feed failure must NOT block the chat.
 // Missing entries silently drop out of the snapshot.
 
-import { getPrice } from '@hamafx/data';
-import { schema, listUserSymbols } from '@hamafx/db';
+import { getPrice } from '@kestrel/data';
+import { schema, listUserSymbols } from '@kestrel/db';
 import { getDb } from './db';
-import { SYMBOLS, type Symbol, type Tick, getMarketPhase } from '@hamafx/shared';
+import { SYMBOLS, type Symbol, type Tick, getMarketPhase } from '@kestrel/shared';
 import { desc } from 'drizzle-orm';
-import { createCategorizedLogger } from '@hamafx/shared/logger';
+import { createCategorizedLogger } from '@kestrel/shared/logger';
 
 import type { LiveSnapshot } from './prompt/system';
 

@@ -1,6 +1,6 @@
 ---
 type: module
-package: "@hamafx/ai"
+package: "@kestrel/ai"
 path: "packages/ai/src/tools/market.ts"
 incoming: 0
 outgoing: 12
@@ -13,7 +13,7 @@ aliases: [market]
 
 # 📁 market
 
-> **Module** · `@hamafx/ai` · `packages/ai/src/tools/market.ts`
+> **Module** · `@kestrel/ai` · `packages/ai/src/tools/market.ts`
 
 
 Module: packages/ai/src/tools/market.ts
@@ -32,7 +32,7 @@ Module: packages/ai/src/tools/market.ts
 
 
 ### 📤 Depends On (12)
-[[get_price]] · [[get_candles]] · [[get_indicators]] · [[get_market_structure]] · [[get_correlation]] · [[get_cot]] · [[get_intermarket]] · [[get_intermarket_resonance]] · [[get_session_levels]] · [[get_seasonality]] · [[registry-ToolPlugin]] · [[@hamafx-ai]]
+[[get_price]] · [[get_candles]] · [[get_indicators]] · [[get_market_structure]] · [[get_correlation]] · [[get_cot]] · [[get_intermarket]] · [[get_intermarket_resonance]] · [[get_session_levels]] · [[get_seasonality]] · [[registry-ToolPlugin]] · [[@kestrel-ai]]
 
 
 

@@ -10,8 +10,8 @@
 //   - PF-10: compose() middleware chain
 
 import * as Sentry from '@sentry/nextjs';
-import { ProviderError, toAppError } from '@hamafx/data';
-import { AppError, type ErrorCode, validationError, formatErrorResponse } from '@hamafx/shared';
+import { ProviderError, toAppError } from '@kestrel/data';
+import { AppError, type ErrorCode, validationError, formatErrorResponse } from '@kestrel/shared';
 import { ZodError, type z } from 'zod';
 import { createHmac, timingSafeEqual } from 'node:crypto';
 

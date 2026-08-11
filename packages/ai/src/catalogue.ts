@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,8 +22,8 @@
 // the same window. Schema-driven: adding a tool to `tools/index.ts` makes
 // it appear here automatically; no hand-maintained list to drift.
 
-import { getToolStats } from '@hamafx/db';
-import { TOOL_NAMES, type ToolName } from '@hamafx/shared';
+import { getToolStats } from '@kestrel/db';
+import { TOOL_NAMES, type ToolName } from '@kestrel/shared';
 import { cache } from 'react';
 
 import { toolRegistry } from './tools';

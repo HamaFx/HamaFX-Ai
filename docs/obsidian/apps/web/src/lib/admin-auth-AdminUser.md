@@ -1,19 +1,19 @@
 ---
 type: module
-package: "@hamafx/web"
+package: "@kestrel/web"
 path: "apps/web/src/lib/admin-auth.ts"
 incoming: 1
 outgoing: 4
 connections: 5
 risk: low
 layer: core
-tags: [type/module, hamafx-web, layer/core]
+tags: [type/module, kestrel-web, layer/core]
 aliases: [admin-auth/AdminUser]
 ---
 
 # 📁 admin-auth/AdminUser
 
-> **Module** · `@hamafx/web` · `apps/web/src/lib/admin-auth.ts`
+> **Module** · `@kestrel/web` · `apps/web/src/lib/admin-auth.ts`
 
 
 Module: apps/web/src/lib/admin-auth.ts
@@ -28,11 +28,11 @@ Module: apps/web/src/lib/admin-auth.ts
 | Total connections | 5 |
 | Risk level | **LOW** |
 | Layer | `core` |
-| Package tag | `#hamafx-web` |
+| Package tag | `#kestrel-web` |
 
 
 ### 📤 Depends On (4)
-[[@hamafx-db]] · [[@hamafx-ai]] · [[logger-createRequestLogger]] · [[@hamafx-web]]
+[[@kestrel-db]] · [[@kestrel-ai]] · [[logger-createRequestLogger]] · [[@kestrel-web]]
 
 
 ### 📥 Depended On By (1)
@@ -52,4 +52,4 @@ Module: apps/web/src/lib/admin-auth.ts
 - **Local Graph:** Right-click this file → "Open local graph"
 - **Backlinks:** Open the right sidebar → "Backlinks"
 - Use `#type/module` to find all Modules
-- Use `#hamafx-web` to find all files in this package
+- Use `#kestrel-web` to find all files in this package

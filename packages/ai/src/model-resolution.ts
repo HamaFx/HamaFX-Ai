@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@
 
 import type { ModelDomain } from './model';
 import type { RoutingDomain } from './routing';
-import type { ByokPayload, ProviderId } from '@hamafx/shared/encryption';
+import type { ByokPayload, ProviderId } from '@kestrel/shared/encryption';
 import { BYOK_PROVIDERS } from './byok-providers';
 
 // ---------------------------------------------------------------------------

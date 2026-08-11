@@ -1,6 +1,17 @@
 <div align="center">
 
-# HamaFX-Ai
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/kestrel-logo-white.png">
+  <img src="docs/assets/kestrel-logo.png" alt="Kestrel — bird mark and wordmark" width="420" style="max-width: 100%">
+</picture>
+
+# Kestrel
+
+<pre>
+█▄█ █▀▀ █▀▀ ▀█▀ █▀█ █▀▀ █
+█▀▄ █▀▀ ▀▀█  █  █▀▄ █▀▀ █
+▀ ▀ ▀▀▀ ▀▀▀  ▀  ▀ ▀ ▀▀▀ ▀▀▀
+</pre>
 
 ### Your self-hosted AI copilot for gold, forex, and crypto research.
 
@@ -25,13 +36,13 @@ Chat with market data, technical structure, macro context, risk math, journals, 
 
 > **OSS release boundary:** The public release is currently a **single-user, self-hosted preview**. BYOK is enabled by default. Shared multi-user PostgreSQL, open registration, and runtime RLS mode are intentionally disabled until tenant isolation is complete. See [the security boundary](#-important-oss-boundary).
 
-> **Trading disclaimer:** HamaFX-Ai is a research and workflow tool, not financial advice, a broker, or an automated trading system. Market data can be delayed or wrong. Always verify information independently and trade at your own risk.
+> **Trading disclaimer:** Kestrel is a research and workflow tool, not financial advice, a broker, or an automated trading system. Market data can be delayed or wrong. Always verify information independently and trade at your own risk.
 
 ---
 
-## 🌌 What is HamaFX-Ai?
+## 🌌 What is Kestrel?
 
-HamaFX-Ai turns a chat window into a market-research workspace for:
+Kestrel turns a chat window into a market-research workspace for:
 
 - **Gold:** `XAUUSD`
 - **Forex:** EURUSD, GBPUSD, USDJPY, AUDUSD, USDCAD, NZDUSD, USDCHF, EURGBP, EURJPY, GBPJPY, AUDJPY
@@ -50,10 +61,10 @@ Agent:  1. Reads current price and candles
         5. Explains the result with citations and uncertainty
 ```
 
-HamaFX-Ai is designed to be **self-hosted first**: you control the deployment, the database, the encryption secret, and which AI provider receives your prompts.
+Kestrel is designed to be **self-hosted first**: you control the deployment, the database, the encryption secret, and which AI provider receives your prompts.
 
 <p align="center">
-  <img src="docs/assets/hamafx-workspace.png" alt="HamaFX-Ai illustrative trading workspace showing chat analysis, XAUUSD context, chart structure, risk posture, and macro events" width="100%">
+  <img src="docs/assets/hamafx-workspace.png" alt="Kestrel illustrative trading workspace showing chat analysis, XAUUSD context, chart structure, risk posture, and macro events" width="100%">
 </p>
 
 <p align="center"><sub>Illustrative workspace preview · synthetic values · dark, data-first trading-terminal design</sub></p>
@@ -96,7 +107,7 @@ You can clone it with Git or download the repository as a ZIP from GitHub.
 
 ```bash
 git clone https://github.com/HamaFx/HamaFX-Ai.git
-cd HamaFX-Ai
+cd Kestrel
 ```
 
 ### 3. Start the setup wizard
@@ -160,7 +171,7 @@ When the app opens:
 “What is the current XAUUSD price, and what technical context should I check next?”
 ```
 
-Your AI key is encrypted at rest using your instance's `ENCRYPTION_SECRET`. It is sent to the selected provider only when the app uses that provider; HamaFX-Ai does not provide a shared maintainer key in the OSS setup.
+Your AI key is encrypted at rest using your instance's `ENCRYPTION_SECRET`. It is sent to the selected provider only when the app uses that provider; Kestrel does not provide a shared maintainer key in the OSS setup.
 
 ### Manual commands
 
@@ -183,7 +194,7 @@ For detailed deployment, updates, backups, restore, reverse proxy, and troublesh
 
 ## 🔑 Bring Your Own Key (BYOK)
 
-HamaFX-Ai does not bundle AI access. You bring the provider account and pay the provider directly, where applicable.
+Kestrel does not bundle AI access. You bring the provider account and pay the provider directly, where applicable.
 
 ### Supported AI providers
 
@@ -204,10 +215,10 @@ HamaFX-Ai does not bundle AI access. You bring the provider account and pay the 
 
 ### What BYOK does — and does not — mean
 
-- **You control billing:** HamaFX-Ai does not pay for your model usage in self-hosted mode.
+- **You control billing:** Kestrel does not pay for your model usage in self-hosted mode.
 - **You control storage:** keys are encrypted in your database using your `ENCRYPTION_SECRET`.
 - **You control deployment:** run locally, on your own server, or with Docker.
-- **The server still handles requests:** a self-hosted HamaFX-Ai instance must access the key to call the selected provider. Protect the server, database, backups, and encryption secret accordingly.
+- **The server still handles requests:** a self-hosted Kestrel instance must access the key to call the selected provider. Protect the server, database, backups, and encryption secret accordingly.
 - **Never commit secrets:** keep `.env`, `.env.local`, `.hamafx/`, provider keys, database URLs, and service-account files out of Git.
 
 ---
@@ -317,7 +328,7 @@ Read the [security documentation](docs/10-security.md) and [OSS release checklis
 
 ## 🏗️ Architecture
 
-At a high level, HamaFX-Ai is a Next.js PWA plus a persistent worker, organized as a pnpm/Turborepo monorepo.
+At a high level, Kestrel is a Next.js PWA plus a persistent worker, organized as a pnpm/Turborepo monorepo.
 
 ```mermaid
 flowchart TB
@@ -413,13 +424,13 @@ pnpm lint
 pnpm typecheck
 pnpm turbo run test -- --run
 pnpm turbo run build
-pnpm --filter @hamafx/web bundle-size:check
+pnpm --filter @kestrel/web bundle-size:check
 ```
 
 ### End-to-end tests
 
 ```bash
-pnpm --filter @hamafx/web exec playwright test
+pnpm --filter @kestrel/web exec playwright test
 ```
 
 ### AI evaluation harness
@@ -427,7 +438,7 @@ pnpm --filter @hamafx/web exec playwright test
 The repository includes manual AI acceptance cases that verify expected and forbidden tool behavior:
 
 ```bash
-pnpm --filter @hamafx/ai eval -- \
+pnpm --filter @kestrel/ai eval -- \
   --base-url http://localhost:3000 \
   --cookie "authjs.session-token=..." \
   --cases
@@ -462,7 +473,7 @@ Contributions are welcome — whether that means fixing a bug, improving docs, a
 
 ```bash
 git clone https://github.com/HamaFx/HamaFX-Ai.git
-cd HamaFX-Ai
+cd Kestrel
 pnpm setup
 ```
 
@@ -505,9 +516,9 @@ Hosted multi-user billing is a separate maintainer-operated product track and is
 
 ## 📄 License
 
-HamaFX-Ai is released under the [Apache License 2.0](LICENSE).
+Kestrel is released under the [Apache License 2.0](LICENSE).
 
-Third-party providers, market-data services, charting services, and AI models have their own terms, pricing, rate limits, and redistribution rules. Review those terms before using HamaFX-Ai commercially or redistributing data.
+Third-party providers, market-data services, charting services, and AI models have their own terms, pricing, rate limits, and redistribution rules. Review those terms before using Kestrel commercially or redistributing data.
 
 <div align="center">
 

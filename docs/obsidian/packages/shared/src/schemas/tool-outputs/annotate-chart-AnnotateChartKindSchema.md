@@ -1,19 +1,19 @@
 ---
 type: module
-package: "@hamafx/shared"
+package: "@kestrel/shared"
 path: "packages/shared/src/schemas/tool-outputs/annotate-chart.ts"
 incoming: 4
 outgoing: 3
 connections: 7
 risk: low
 layer: core
-tags: [type/module, hamafx-shared, layer/core]
+tags: [type/module, kestrel-shared, layer/core]
 aliases: [annotate-chart/AnnotateChartKindSchema]
 ---
 
 # 📁 annotate-chart/AnnotateChartKindSchema
 
-> **Module** · `@hamafx/shared` · `packages/shared/src/schemas/tool-outputs/annotate-chart.ts`
+> **Module** · `@kestrel/shared` · `packages/shared/src/schemas/tool-outputs/annotate-chart.ts`
 
 
 Module: packages/shared/src/schemas/tool-outputs/annotate-chart.ts
@@ -28,11 +28,11 @@ Module: packages/shared/src/schemas/tool-outputs/annotate-chart.ts
 | Total connections | 7 |
 | Risk level | **LOW** |
 | Layer | `core` |
-| Package tag | `#hamafx-shared` |
+| Package tag | `#kestrel-shared` |
 
 
 ### 📤 Depends On (3)
-[[symbols-SYMBOLS]] · [[timeframes-TIMEFRAMES]] · [[@hamafx-shared]]
+[[symbols-SYMBOLS]] · [[timeframes-TIMEFRAMES]] · [[@kestrel-shared]]
 
 
 ### 📥 Depended On By (3)
@@ -58,4 +58,4 @@ Module: packages/shared/src/schemas/tool-outputs/annotate-chart.ts
 - **Local Graph:** Right-click this file → "Open local graph"
 - **Backlinks:** Open the right sidebar → "Backlinks"
 - Use `#type/module` to find all Modules
-- Use `#hamafx-shared` to find all files in this package
+- Use `#kestrel-shared` to find all files in this package

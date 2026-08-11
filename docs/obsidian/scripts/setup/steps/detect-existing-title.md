@@ -39,6 +39,7 @@ Module: scripts/setup/steps/detect-existing.mjs
 
 ## 📦 Exports
 - `title`
+- `hint`
 - `run`
 
 

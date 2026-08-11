@@ -19,13 +19,13 @@ import {
   countActiveAlerts,
   countJournalEntriesThisMonth,
   type SubscriptionWithPlan,
-} from '@hamafx/db';
+} from '@kestrel/db';
 import {
   hasFeature,
   FREE_PLAN_ALERT_LIMIT,
   FREE_PLAN_JOURNAL_MONTHLY_LIMIT,
   type FeatureKey,
-} from '@hamafx/shared';
+} from '@kestrel/shared';
 
 export interface BillingGateResult {
   allowed: boolean;

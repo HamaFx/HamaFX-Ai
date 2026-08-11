@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -41,7 +41,7 @@
 
 import { ProviderEmptyError, ProviderError } from './errors';
 import { getScore, recordFailure, recordSuccess } from './health';
-import { createCategorizedLogger } from '@hamafx/shared/logger';
+import { createCategorizedLogger } from '@kestrel/shared/logger';
 
 const flog = createCategorizedLogger('market_data', { component: 'failover' });
 

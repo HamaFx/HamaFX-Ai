@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,9 +21,9 @@
 // via the `briefings_emitted` PK on (`weekly_review:<isoWeek>`,
 // 'weekly_review'). Schedule: Sunday 18:00 UTC.
 
-import { emitWeeklyReview } from '@hamafx/ai';
+import { emitWeeklyReview } from '@kestrel/ai';
 
-import { getActiveUserIds } from '@hamafx/db';
+import { getActiveUserIds } from '@kestrel/db';
 
 import type { JobContext, JobResult } from './types.js';
 

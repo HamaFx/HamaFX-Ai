@@ -1,19 +1,19 @@
 ---
 type: module
-package: "@hamafx/web"
+package: "@kestrel/web"
 path: "apps/web/tests/e2e/env-loader.ts"
 incoming: 2
 outgoing: 1
 connections: 3
 risk: low
 layer: core
-tags: [type/module, hamafx-web, layer/core]
+tags: [type/module, kestrel-web, layer/core]
 aliases: [env-loader/loadE2eEnv]
 ---
 
 # 📁 env-loader/loadE2eEnv
 
-> **Module** · `@hamafx/web` · `apps/web/tests/e2e/env-loader.ts`
+> **Module** · `@kestrel/web` · `apps/web/tests/e2e/env-loader.ts`
 
 
 Module: apps/web/tests/e2e/env-loader.ts
@@ -28,11 +28,11 @@ Module: apps/web/tests/e2e/env-loader.ts
 | Total connections | 3 |
 | Risk level | **LOW** |
 | Layer | `core` |
-| Package tag | `#hamafx-web` |
+| Package tag | `#kestrel-web` |
 
 
 ### 📤 Depends On (1)
-[[@hamafx-web]]
+[[@kestrel-web]]
 
 
 ### 📥 Depended On By (2)
@@ -49,4 +49,4 @@ Module: apps/web/tests/e2e/env-loader.ts
 - **Local Graph:** Right-click this file → "Open local graph"
 - **Backlinks:** Open the right sidebar → "Backlinks"
 - Use `#type/module` to find all Modules
-- Use `#hamafx-web` to find all files in this package
+- Use `#kestrel-web` to find all files in this package

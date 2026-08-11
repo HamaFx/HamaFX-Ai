@@ -9,7 +9,7 @@ const mockGetEntry = vi.hoisted(() => vi.fn());
 const mockUpdateEntry = vi.hoisted(() => vi.fn());
 const mockDeleteEntry = vi.hoisted(() => vi.fn());
 
-vi.mock('@hamafx/ai', () => ({
+vi.mock('@kestrel/ai', () => ({
   listEntries: mockListEntries,
   createEntry: mockCreateEntry,
   computeStats: mockComputeStats,

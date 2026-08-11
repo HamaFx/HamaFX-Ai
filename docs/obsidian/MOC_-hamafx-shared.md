@@ -1,19 +1,19 @@
 ---
 type: moc
-package: "@hamafx/shared"
+package: "@kestrel/shared"
 nodes: 85
 totalIncoming: 770
 totalOutgoing: 253
 tags: [moc, hamafx-shared]
 ---
 
-# 📦 @hamafx/shared
+# 📦 @kestrel/shared
 
 > **Map of Content** · 85 files · 770 incoming + 253 outgoing = 1023 connections
 
 ## DataviewJS — All Files in This Package
 ```dataviewjs
-const pages = dv.pages().where(p => p.package === "@hamafx/shared" && p.type);
+const pages = dv.pages().where(p => p.package === "@kestrel/shared" && p.type);
 dv.table(
   ['File', 'Type', 'Incoming', 'Outgoing', 'Risk'],
   pages.sort(p => -(p.incoming + p.outgoing), 'desc').map(p => [
@@ -112,5 +112,5 @@ dv.table(
 - [[vitest.config-defineConfig]] *(0↖ 1↗)*
 
 ### 📦 Package (1)
-- [[@hamafx-shared]] *(619↖ 0↗)*
+- [[@kestrel-shared]] *(619↖ 0↗)*
 

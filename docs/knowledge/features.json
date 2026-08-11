@@ -4,7 +4,7 @@
   "features": [
     {
       "name": "AI Chat (Single-Agent)",
-      "package": "@hamafx/ai",
+      "package": "@kestrel/ai",
       "modules": [
         "agent.ts",
         "routing.ts",
@@ -16,7 +16,7 @@
     },
     {
       "name": "Multi-Agent Committee",
-      "package": "@hamafx/ai",
+      "package": "@kestrel/ai",
       "modules": [
         "multi-agent/orchestrator.ts",
         "multi-agent/agents/"
@@ -25,7 +25,7 @@
     },
     {
       "name": "Live Market Data",
-      "package": "@hamafx/data",
+      "package": "@kestrel/data",
       "modules": [
         "adapters/price.ts",
         "adapters/candles.ts",
@@ -36,7 +36,7 @@
     },
     {
       "name": "Technical Indicators",
-      "package": "@hamafx/indicators",
+      "package": "@kestrel/indicators",
       "modules": [
         "moving-averages.ts",
         "rsi.ts",
@@ -48,7 +48,7 @@
     },
     {
       "name": "Alert Engine",
-      "package": "@hamafx/ai",
+      "package": "@kestrel/ai",
       "modules": [
         "alerts/evaluator.ts",
         "alerts/delivery.ts",
@@ -58,7 +58,7 @@
     },
     {
       "name": "Trading Journal",
-      "package": "@hamafx/ai",
+      "package": "@kestrel/ai",
       "modules": [
         "journal/persistence.ts",
         "journal/review.ts"
@@ -67,7 +67,7 @@
     },
     {
       "name": "Portfolio Management",
-      "package": "@hamafx/ai",
+      "package": "@kestrel/ai",
       "modules": [
         "portfolio/"
       ],
@@ -75,7 +75,7 @@
     },
     {
       "name": "Background Jobs",
-      "package": "@hamafx/worker",
+      "package": "@kestrel/worker",
       "modules": [
         "scheduler.ts",
         "jobs/"
@@ -84,7 +84,7 @@
     },
     {
       "name": "Push Notifications",
-      "package": "@hamafx/ai",
+      "package": "@kestrel/ai",
       "modules": [
         "push/send.ts",
         "push/persistence.ts"
@@ -93,7 +93,7 @@
     },
     {
       "name": "Bot Platform",
-      "package": "@hamafx/ai",
+      "package": "@kestrel/ai",
       "modules": [
         "bot/",
         "telegram/"
@@ -102,7 +102,7 @@
     },
     {
       "name": "BYOK Provider Registry",
-      "package": "@hamafx/ai",
+      "package": "@kestrel/ai",
       "modules": [
         "byok-providers.ts",
         "_providers/"
@@ -111,7 +111,7 @@
     },
     {
       "name": "Social Sentiment",
-      "package": "@hamafx/ai",
+      "package": "@kestrel/ai",
       "modules": [
         "sentiment/"
       ],

@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,7 +27,7 @@
 // the test still passes (allowing new migrations to be added).
 //
 // To update the baseline after generating new migrations, run:
-//   pnpm --filter @hamafx/db test -- --run migration-hash-stability
+//   pnpm --filter @kestrel/db test -- --run migration-hash-stability
 // and commit the regenerated _hashes.json.
 
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';

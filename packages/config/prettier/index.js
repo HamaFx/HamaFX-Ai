@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-// Re-exported so packages can `import config from "@hamafx/config/prettier"`
+// Re-exported so packages can `import config from "@kestrel/config/prettier"`
 // when they want to override locally. Default config is the root .prettierrc.json.
 /** @type {import("prettier").Config} */
 export default {

@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@ const mocks = vi.hoisted(() => ({
   state: { currentUserRole: 'admin' as 'admin' | 'user' },
 }));
 
-vi.mock('@hamafx/db', () => {
+vi.mock('@kestrel/db', () => {
   const schema = {
     users: { id: 'user.id', role: 'user.role' },
     snapshots: { symbol: 'snapshots.symbol', kind: 'snapshots.kind', asOf: 'snapshots.as_of' },
@@ -63,7 +63,7 @@ vi.mock('@hamafx/db', () => {
   };
 });
 
-vi.mock('@hamafx/data', () => ({
+vi.mock('@kestrel/data', () => ({
   fred: {
     fetchResonanceInputs: mocks.fetchResonanceInputsMock,
   },
@@ -71,7 +71,7 @@ vi.mock('@hamafx/data', () => ({
 
 import { runSystemActionTool } from '../src/tools/run-system-action';
 import { withToolContext } from '../src/tool-context';
-import type { RunSystemActionOutput } from '@hamafx/shared';
+import type { RunSystemActionOutput } from '@kestrel/shared';
 
 function makeContext(latestUserMessageText: string) {
   return {

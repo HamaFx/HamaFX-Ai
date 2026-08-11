@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,14 +15,14 @@
  */
 
 import { EventEmitter } from 'node:events';
-import { listDistinctSymbols } from '@hamafx/db';
+import { listDistinctSymbols } from '@kestrel/db';
 import {
   DEFAULT_WATCHLIST_SYMBOLS,
   getSymbolDefinition,
   isKnownSymbol,
   symbolCategory,
   type SymbolCategory,
-} from '@hamafx/shared';
+} from '@kestrel/shared';
 import type { Logger } from './log.js';
 
 interface ActiveSymbol {

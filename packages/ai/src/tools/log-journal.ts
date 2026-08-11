@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@
 // feature; this tool exposes the manual side of it now so the user can ask
 // the agent to log something directly.
 
-import { SymbolSchema, TradeSideSchema, type LogJournalOutput } from '@hamafx/shared';
+import { SymbolSchema, TradeSideSchema, type LogJournalOutput } from '@kestrel/shared';
 import { tool } from 'ai';
 import { z } from 'zod';
 
@@ -42,7 +42,7 @@ const InputSchema = z.object({
   tags: z.array(z.string().max(40)).max(10).optional(),
 });
 
-declare module '@hamafx/shared' {
+declare module '@kestrel/shared' {
   interface ToolIOMap {
     log_journal: { input: z.infer<typeof InputSchema> };
   }

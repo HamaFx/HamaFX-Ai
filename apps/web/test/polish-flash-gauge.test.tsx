@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import type { NewsArticle, Tick } from '@hamafx/shared';
+import type { NewsArticle, Tick } from '@kestrel/shared';
 
 import { SentimentSummary } from '@/app/(app)/news/_components/sentiment-summary';
 import { WatchlistWidget } from '@/app/(app)/dashboard/_components/widgets/watchlist-widget';

@@ -3,9 +3,11 @@
 import { redirect } from 'next/navigation';
 import { and, eq } from 'drizzle-orm';
 
+import Image from 'next/image';
+
 import { auth } from '@/auth';
 import { buildCatalogForUser } from '@/lib/catalog-server';
-import { getDb, schema } from '@hamafx/db';
+import { getDb, schema } from '@kestrel/db';
 import { OnboardingWizard } from '@/components/onboarding/wizard';
 
 export default async function OnboardingPage() {
@@ -44,7 +46,15 @@ export default async function OnboardingPage() {
   return (
     <div className="flex flex-col gap-8">
       <div className="text-center">
-        <h1 className="text-fg text-2xl font-bold tracking-tight sm:text-3xl mb-2">Welcome to HamaFX-Ai</h1>
+        <Image
+          src="/brand/kestrel-logo-white.png"
+          alt="Kestrel"
+          width={144}
+          height={96}
+          className="mx-auto mb-4"
+          priority
+        />
+        <h1 className="text-fg text-2xl font-bold tracking-tight sm:text-3xl mb-2">Welcome to Kestrel</h1>
         <p className="text-fg-subtle">Let's configure your workspace.</p>
       </div>
       <OnboardingWizard

@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-// Public barrel for @hamafx/shared. Anything not exported here is private to
+// Public barrel for @kestrel/shared. Anything not exported here is private to
 // the package — never reach into deep paths from consumers.
 
 // Domain primitives
@@ -103,13 +103,13 @@ export * from './billing';
 // Errors & Logging
 export * from './errors';
 // Logger is server-only (uses node:async_hooks / node:stream). Import from
-// '@hamafx/shared/logger' directly in server/worker code; do NOT re-export
+// '@kestrel/shared/logger' directly in server/worker code; do NOT re-export
 // here to keep the client bundle free of Node built-ins.
 export { logStreamHub } from './log-stream';
 export * from './error-patterns';
 export * from './bug-report';
 // BYOK encryption is server-only (uses node:crypto) — import directly
-// from '@hamafx/shared/encryption' instead. Re-exporting it here would
+// from '@kestrel/shared/encryption' instead. Re-exporting it here would
 // pull node:crypto into any client component that imports the barrel.
 export {} from './encryption';
 
@@ -132,7 +132,7 @@ export {
 // Secret helpers (env-secrets.ts) intentionally NOT re-exported from the
 // barrel — importing them pulls node:crypto + `server-only` into the
 // client bundle. Consumers must import directly:
-//   import { generateSecret } from '@hamafx/shared/env-secrets';
+//   import { generateSecret } from '@kestrel/shared/env-secrets';
 //
 // P2-3 — Lightweight DI container.
 // Replaces module-level singletons with a central registry.
@@ -140,4 +140,4 @@ export { container, Container, token, type Token } from './container';
 
 // Phase 3 §3.9 — vault secrets loader also NOT re-exported from the barrel
 // (it pulls google-auth-library dynamically). Consumers must import directly:
-//   import { loadSecretsFromVault } from '@hamafx/shared/vault';
+//   import { loadSecretsFromVault } from '@kestrel/shared/vault';

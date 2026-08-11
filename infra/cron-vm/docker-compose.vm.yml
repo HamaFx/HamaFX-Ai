@@ -1,4 +1,4 @@
-# HamaFX-Ai VM Worker Docker Compose
+# Kestrel VM Worker Docker Compose
 # Deployed to /opt/hamafx/docker-compose.yml on the GCE VM.
 # Builds the worker image from the repo's Dockerfile.worker — no external registry needed.
 #

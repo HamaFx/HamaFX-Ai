@@ -17,7 +17,7 @@ import {
   listThreads as aiListThreads,
   updateThreadPinnedSymbol,
   type DbThread,
-} from '@hamafx/ai/persistence';
+} from '@kestrel/ai/persistence';
 
 // ── DTOs ─────────────────────────────────────────────────────────────────────
 

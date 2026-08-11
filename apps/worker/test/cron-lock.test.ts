@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,9 +18,9 @@
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-// Mock @hamafx/db to avoid a real DB connection in unit tests.
+// Mock @kestrel/db to avoid a real DB connection in unit tests.
 const mockExecute = vi.fn();
-vi.mock('@hamafx/db', () => ({
+vi.mock('@kestrel/db', () => ({
   getDb: vi.fn(() => ({ execute: mockExecute })),
   schema: {},
 }));

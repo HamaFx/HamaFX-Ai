@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -38,7 +38,7 @@ import {
   isKnownSymbol,
   SYMBOLS,
   type Symbol,
-} from '@hamafx/shared';
+} from '@kestrel/shared';
 
 import type { Logger } from '../log.js';
 import { DEFAULT_RECONNECT_DELAYS, jitteredDelay } from './reconnect.js';

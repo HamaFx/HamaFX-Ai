@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,25 +16,25 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-vi.mock('@hamafx/ai', () => ({
+vi.mock('@kestrel/ai', () => ({
   listFredEventsMissingActual: vi.fn(),
   parseFredEventId: vi.fn(),
   patchEventActual: vi.fn(),
 }));
 
 // Phase 3 hardening §19 — `apps/worker/src/jobs/fred-actuals.ts` now
-// imports the FRED helpers via `import { fred } from '@hamafx/data'`
-// instead of the deep `@hamafx/data/providers/fred` path. Match the
+// imports the FRED helpers via `import { fred } from '@kestrel/data'`
+// instead of the deep `@kestrel/data/providers/fred` path. Match the
 // new import shape so vitest's module resolver finds the mock.
-vi.mock('@hamafx/data', () => ({
+vi.mock('@kestrel/data', () => ({
   fred: {
     fetchObservations: vi.fn(),
     fredMeta: vi.fn(),
   },
 }));
 
-import * as ai from '@hamafx/ai';
-import { fred } from '@hamafx/data';
+import * as ai from '@kestrel/ai';
+import { fred } from '@kestrel/data';
 
 import { runFredActuals } from '../src/jobs/fred-actuals';
 import { TenantRouter } from '../src/tenant-router';

@@ -1,19 +1,19 @@
 ---
 type: module
-package: "@hamafx/worker"
+package: "@kestrel/worker"
 path: "apps/worker/src/aggregator/candle-1m.ts"
 incoming: 6
 outgoing: 5
 connections: 11
 risk: low
 layer: core
-tags: [type/module, hamafx-worker, layer/core]
+tags: [type/module, kestrel-worker, layer/core]
 aliases: [candle-1m/ClosedCandle]
 ---
 
 # 📁 candle-1m/ClosedCandle
 
-> **Module** · `@hamafx/worker` · `apps/worker/src/aggregator/candle-1m.ts`
+> **Module** · `@kestrel/worker` · `apps/worker/src/aggregator/candle-1m.ts`
 
 
 Module: apps/worker/src/aggregator/candle-1m.ts
@@ -28,11 +28,11 @@ Module: apps/worker/src/aggregator/candle-1m.ts
 | Total connections | 11 |
 | Risk level | **LOW** |
 | Layer | `core` |
-| Package tag | `#hamafx-worker` |
+| Package tag | `#kestrel-worker` |
 
 
 ### 📤 Depends On (3)
-[[@hamafx-shared]] · [[consumer-NormalizedTick]] · [[@hamafx-worker]]
+[[@kestrel-shared]] · [[consumer-NormalizedTick]] · [[@kestrel-worker]]
 
 
 ### 📥 Depended On By (4)
@@ -50,4 +50,4 @@ Module: apps/worker/src/aggregator/candle-1m.ts
 - **Local Graph:** Right-click this file → "Open local graph"
 - **Backlinks:** Open the right sidebar → "Backlinks"
 - Use `#type/module` to find all Modules
-- Use `#hamafx-worker` to find all files in this package
+- Use `#kestrel-worker` to find all files in this package

@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@ vi.mock('../src/db', () => ({
   getDb: mocks.getDb,
 }));
 
-vi.mock('@hamafx/db', () => ({
+vi.mock('@kestrel/db', () => ({
   schema: {
     pushSubscriptions: {
       endpoint: 'push.endpoint',

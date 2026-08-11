@@ -56,7 +56,7 @@ describe('beginPage', () => {
 
     expect(stdout.text).toContain('\x1b[2J\x1b[3J\x1b[H'); // screen + scrollback cleared
     expect(stdout.text).toContain('\x1b[?25l'); // cursor hidden
-    expect(stdout.text).toContain('◆ HamaFX-Ai Setup');
+    expect(stdout.text).toContain('◆ Kestrel Setup');
     expect(stdout.text).toContain('Step 2 of 7');
     expect(stdout.text).toContain('Choose your setup mode');
     expect(stdout.text).toContain('█'); // progress bar filled cells

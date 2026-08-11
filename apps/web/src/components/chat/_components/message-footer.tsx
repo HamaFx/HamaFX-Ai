@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,7 +29,7 @@ import {
   SourceDocumentPartSchema,
   SourceUrlPartSchema,
   UIMessageMetadataSchema,
-} from '@hamafx/shared';
+} from '@kestrel/shared';
 import {IconRobot, IconChevronDown, IconChevronRight, IconLink as LinkIcon} from '@tabler/icons-react';
 import { useState } from 'react';
 

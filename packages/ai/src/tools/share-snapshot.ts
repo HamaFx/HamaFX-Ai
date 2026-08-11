@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@
 // verify access without a session cookie. Bypassed by the password gate
 // in middleware; gated instead by the token signature + expiry.
 
-import { ShareSnapshotInputSchema, type ShareSnapshotOutput } from '@hamafx/shared';
+import { ShareSnapshotInputSchema, type ShareSnapshotOutput } from '@kestrel/shared';
 import { tool } from 'ai';
 import type { z } from 'zod';
 
@@ -34,7 +34,7 @@ import { assertMutationIntent } from './mutation-guard';
 
 const InputSchema = ShareSnapshotInputSchema;
 
-declare module '@hamafx/shared' {
+declare module '@kestrel/shared' {
   interface ToolIOMap {
     share_snapshot: { input: z.infer<typeof InputSchema> };
   }

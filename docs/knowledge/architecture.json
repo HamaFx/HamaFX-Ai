@@ -1,8 +1,8 @@
 {
   "schema_version": "1.0",
-  "generated_at": "2026-08-11T20:13:42.450Z",
+  "generated_at": "2026-08-11T22:24:54.683Z",
   "project": {
-    "name": "HamaFX-Ai",
+    "name": "Kestrel",
     "rootPath": ".",
     "description": "Single-user BYOK, chat-driven AI trading copilot for gold, forex, and supported crypto instruments (XAUUSD, canonical forex pairs, Binance crypto pairs)",
     "license": "Apache-2.0",
@@ -30,9 +30,9 @@
       "dependsOn": []
     },
     {
-      "name": "@hamafx/web",
+      "name": "@kestrel/web",
       "path": "apps/web",
-      "nodeCount": 683,
+      "nodeCount": 684,
       "dependsOn": [
         "env-loader/loadE2eEnv",
         "admin-error-block/AdminErrorBlock",
@@ -225,7 +225,7 @@
       ]
     },
     {
-      "name": "@hamafx/worker",
+      "name": "@kestrel/worker",
       "path": "apps/worker",
       "nodeCount": 58,
       "dependsOn": [
@@ -296,7 +296,7 @@
       ]
     },
     {
-      "name": "@hamafx/ai",
+      "name": "@kestrel/ai",
       "path": "packages/ai",
       "nodeCount": 274,
       "dependsOn": [
@@ -454,13 +454,13 @@
       ]
     },
     {
-      "name": "@hamafx/config",
+      "name": "@kestrel/config",
       "path": "packages/config",
       "nodeCount": 4,
       "dependsOn": []
     },
     {
-      "name": "@hamafx/data",
+      "name": "@kestrel/data",
       "path": "packages/data",
       "nodeCount": 66,
       "dependsOn": [
@@ -498,7 +498,7 @@
       ]
     },
     {
-      "name": "@hamafx/db",
+      "name": "@kestrel/db",
       "path": "packages/db",
       "nodeCount": 161,
       "dependsOn": [
@@ -516,7 +516,7 @@
       ]
     },
     {
-      "name": "@hamafx/indicators",
+      "name": "@kestrel/indicators",
       "path": "packages/indicators",
       "nodeCount": 39,
       "dependsOn": [
@@ -540,7 +540,7 @@
       ]
     },
     {
-      "name": "@hamafx/shared",
+      "name": "@kestrel/shared",
       "path": "packages/shared",
       "nodeCount": 85,
       "dependsOn": [
@@ -606,7 +606,7 @@
       ]
     },
     {
-      "name": "@hamafx/test-utils",
+      "name": "@kestrel/test-utils",
       "path": "packages/test-utils",
       "nodeCount": 19,
       "dependsOn": [
@@ -659,56 +659,56 @@
     {
       "name": "Presentation",
       "packages": [
-        "@hamafx/web"
+        "@kestrel/web"
       ],
       "responsibility": "Next.js 16 PWA, React 19 UI, TradingView charts, 192 API routes"
     },
     {
       "name": "API Gateway",
       "packages": [
-        "@hamafx/web"
+        "@kestrel/web"
       ],
       "responsibility": "NextAuth JWT, CSRF, rate limiting, request proxy"
     },
     {
       "name": "AI Agent",
       "packages": [
-        "@hamafx/ai"
+        "@kestrel/ai"
       ],
       "responsibility": "Chat routing, registered tools, multi-agent committee, memory, citations"
     },
     {
       "name": "Data",
       "packages": [
-        "@hamafx/data"
+        "@kestrel/data"
       ],
       "responsibility": "Provider failover, caching (SWR), throttling, BiQuote→Finnhub"
     },
     {
       "name": "Persistence",
       "packages": [
-        "@hamafx/db"
+        "@kestrel/db"
       ],
       "responsibility": "Drizzle ORM, 52 tables, Postgres + PGlite"
     },
     {
       "name": "Indicators",
       "packages": [
-        "@hamafx/indicators"
+        "@kestrel/indicators"
       ],
       "responsibility": "SMA, EMA, RSI, MACD, Bollinger, SMC concepts"
     },
     {
       "name": "Worker",
       "packages": [
-        "@hamafx/worker"
+        "@kestrel/worker"
       ],
       "responsibility": "SignalR consumer, TickBuffer, Candle1mAggregator, 7+ cron jobs"
     },
     {
       "name": "Shared",
       "packages": [
-        "@hamafx/shared"
+        "@kestrel/shared"
       ],
       "responsibility": "Zod schemas, types, env validation, encryption, logging, DI container"
     },

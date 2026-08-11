@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,7 +30,7 @@ import {
   type NewsArticle,
   type Symbol,
   type SymbolOrCurrencyTag,
-} from '@hamafx/shared';
+} from '@kestrel/shared';
 
 import { ProviderError } from '../errors';
 import { runWithFailover, type ProviderAttempt } from '../failover';

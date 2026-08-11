@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,7 +30,7 @@ import { ping, withHeartbeat } from '../healthchecks.js';
 import { JOBS, type JobName } from '../jobs/index.js';
 import { createLogger } from '../log.js';
 import { captureException, flushSentry, initSentry } from '../sentry.js';
-import { closeDb } from '@hamafx/db';
+import { closeDb } from '@kestrel/db';
 import { tenantRouter } from '../tenant-router.js';
 
 function isKnownJob(name: string): name is JobName {

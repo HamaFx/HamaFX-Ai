@@ -1,19 +1,19 @@
 ---
 type: module
-package: "@hamafx/indicators"
+package: "@kestrel/indicators"
 path: "packages/indicators/test/smc-fvg.test.ts"
 incoming: 0
 outgoing: 5
 connections: 5
 risk: low
 layer: core
-tags: [type/module, hamafx-indicators, layer/core]
+tags: [type/module, kestrel-indicators, layer/core]
 aliases: [smc-fvg.test]
 ---
 
 # 📁 smc-fvg.test
 
-> **Module** · `@hamafx/indicators` · `packages/indicators/test/smc-fvg.test.ts`
+> **Module** · `@kestrel/indicators` · `packages/indicators/test/smc-fvg.test.ts`
 
 
 Module: packages/indicators/test/smc-fvg.test.ts
@@ -28,11 +28,11 @@ Module: packages/indicators/test/smc-fvg.test.ts
 | Total connections | 5 |
 | Risk level | **LOW** |
 | Layer | `core` |
-| Package tag | `#hamafx-indicators` |
+| Package tag | `#kestrel-indicators` |
 
 
 ### 📤 Depends On (4)
-[[@hamafx-shared]] · [[vitest-installServerOnlyStub]] · [[fvg-DetectFvgOptions]] · [[@hamafx-indicators]]
+[[@kestrel-shared]] · [[vitest-installServerOnlyStub]] · [[fvg-DetectFvgOptions]] · [[@kestrel-indicators]]
 
 
 
@@ -43,4 +43,4 @@ Module: packages/indicators/test/smc-fvg.test.ts
 - **Local Graph:** Right-click this file → "Open local graph"
 - **Backlinks:** Open the right sidebar → "Backlinks"
 - Use `#type/module` to find all Modules
-- Use `#hamafx-indicators` to find all files in this package
+- Use `#kestrel-indicators` to find all files in this package

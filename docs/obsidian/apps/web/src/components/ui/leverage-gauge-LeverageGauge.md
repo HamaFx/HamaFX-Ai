@@ -1,19 +1,19 @@
 ---
 type: component
-package: "@hamafx/web"
+package: "@kestrel/web"
 path: "apps/web/src/components/ui/leverage-gauge.tsx"
 incoming: 0
 outgoing: 1
 connections: 1
 risk: low
 layer: ui
-tags: [type/component, hamafx-web, layer/ui]
+tags: [type/component, kestrel-web, layer/ui]
 aliases: [leverage-gauge/LeverageGauge]
 ---
 
 # 🧩 leverage-gauge/LeverageGauge
 
-> **Component** · `@hamafx/web` · `apps/web/src/components/ui/leverage-gauge.tsx`
+> **Component** · `@kestrel/web` · `apps/web/src/components/ui/leverage-gauge.tsx`
 
 
 React component: leverage-gauge
@@ -28,11 +28,11 @@ React component: leverage-gauge
 | Total connections | 1 |
 | Risk level | **LOW** |
 | Layer | `ui` |
-| Package tag | `#hamafx-web` |
+| Package tag | `#kestrel-web` |
 
 
 ### 📤 Depends On (1)
-[[@hamafx-web]]
+[[@kestrel-web]]
 
 
 
@@ -46,4 +46,4 @@ React component: leverage-gauge
 - **Local Graph:** Right-click this file → "Open local graph"
 - **Backlinks:** Open the right sidebar → "Backlinks"
 - Use `#type/component` to find all Components
-- Use `#hamafx-web` to find all files in this package
+- Use `#kestrel-web` to find all files in this package

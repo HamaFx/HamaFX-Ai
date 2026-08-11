@@ -7,8 +7,8 @@ import {
   getOpenPositionsWithPnL,
   getPortfolioRiskReport,
   getPortfolioSettings,
-} from '@hamafx/ai';
-import type { PortfolioSettings, PortfolioRiskReport, PositionWithPnL } from '@hamafx/shared';
+} from '@kestrel/ai';
+import type { PortfolioSettings, PortfolioRiskReport, PositionWithPnL } from '@kestrel/shared';
 import { redirect } from 'next/navigation';
 import { auth } from '@/auth';
 import type { Metadata } from 'next';
@@ -17,7 +17,7 @@ import {IconWallet, IconTrendingUp, IconAlertTriangle, IconShield} from '@tabler
 import { EmptyState } from '@/components/ui/empty-state';
 import { cn } from '@/lib/cn';
 
-export const metadata: Metadata = { title: 'Portfolio | HamaFX' };
+export const metadata: Metadata = { title: 'Portfolio | Kestrel' };
 export const dynamic = 'force-dynamic';
 
 export default async function PortfolioPage() {

@@ -236,7 +236,7 @@ export class Analyzer {
     }
 
     // Try package-level resolution
-    if (src.startsWith('@hamafx/')) {
+    if (src.startsWith('@kestrel/')) {
       const pkgId = this.pkgNodeIds.get(src);
       if (pkgId) return pkgId;
     }
@@ -304,7 +304,7 @@ function determineEdgeType(imp: ImportInfo, parsed: ParsedFile): EdgeType {
   if (src.includes('registry') || src.includes('toolRegistry')) return 'registers';
 
   // Depends on for external packages
-  if (!src.startsWith('.') && !src.startsWith('@hamafx')) return 'depends_on';
+  if (!src.startsWith('.') && !src.startsWith('@kestrel')) return 'depends_on';
 
   // Internal imports
   if (imp.isTypeOnly) return 'imports';

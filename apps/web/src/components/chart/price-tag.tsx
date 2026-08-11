@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@
 // updates feel alive instead of snapping. Delta gets a IconTrendingUp/Down
 // icon for at-a-glance direction.
 
-import { getSymbolDefinition, isKnownSymbol, priceDecimals, type Symbol } from '@hamafx/shared';
+import { getSymbolDefinition, isKnownSymbol, priceDecimals, type Symbol } from '@kestrel/shared';
 import {IconMinus, IconTrendingDown, IconTrendingUp} from '@tabler/icons-react';
 import { useCallback, useRef, useState } from 'react';
 

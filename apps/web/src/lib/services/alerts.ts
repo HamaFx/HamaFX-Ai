@@ -3,7 +3,7 @@
 // PF-22 — Alerts service layer.
 //
 // Separates business logic from HTTP handling. Route handlers (controllers)
-// call these service functions instead of importing @hamafx/ai directly.
+// call these service functions instead of importing @kestrel/ai directly.
 // The service layer handles:
 //   - Input validation (Zod schemas)
 //   - Authorization checks (scoped to userId)
@@ -22,10 +22,10 @@ import {
   simulateAlert,
   getNoiseConfig,
   type SimCandle,
-} from '@hamafx/ai';
-import type { Alert, AlertRule, NoiseConfig, Severity } from '@hamafx/shared';
-import { SEVERITY_RANK } from '@hamafx/shared';
-import { getRecentCandles, withRateLimit } from '@hamafx/db';
+} from '@kestrel/ai';
+import type { Alert, AlertRule, NoiseConfig, Severity } from '@kestrel/shared';
+import { SEVERITY_RANK } from '@kestrel/shared';
+import { getRecentCandles, withRateLimit } from '@kestrel/db';
 
 // ── Schemas (re-exported from the client-safe schema file) ───────────────────
 

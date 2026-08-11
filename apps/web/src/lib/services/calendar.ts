@@ -7,9 +7,9 @@
 // Pattern: Service (PF-22). Controllers remain thin: parse request →
 // call service → format Response.
 
-import { listUpcomingEvents } from '@hamafx/ai';
-import type { EconomicEvent } from '@hamafx/shared';
-import { withRateLimit } from '@hamafx/db';
+import { listUpcomingEvents } from '@kestrel/ai';
+import type { EconomicEvent } from '@kestrel/shared';
+import { withRateLimit } from '@kestrel/db';
 
 // ── DTOs ─────────────────────────────────────────────────────────────────────
 

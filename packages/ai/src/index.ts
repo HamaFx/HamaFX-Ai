@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-// Public barrel for @hamafx/ai. The route handler imports from here.
+// Public barrel for @kestrel/ai. The route handler imports from here.
 
 // P2-3 — Auto-bootstrap DI container services on first import.
-// Every consumer of @hamafx/ai gets db + llmClient registered.
+// Every consumer of @kestrel/ai gets db + llmClient registered.
 import './services';
 
 export { runChat } from './agent';
@@ -276,7 +276,7 @@ export { enforceCitations } from './verification';
 export { buildToolCatalogue, type CatalogueEntry } from './catalogue';
 
 // P2-3 — DI-backed getDb() wrapper.
-// Prefer this over importing getDb from @hamafx/db directly.
+// Prefer this over importing getDb from @kestrel/db directly.
 export { getDb } from './db';
 
 // Langfuse / OpenTelemetry instrumentation

@@ -1,19 +1,19 @@
 ---
 type: module
-package: "@hamafx/config"
+package: "@kestrel/config"
 path: "packages/config/prettier/index.js"
 incoming: 0
 outgoing: 2
 connections: 2
 risk: low
 layer: core
-tags: [type/module, hamafx-config, layer/core]
+tags: [type/module, kestrel-config, layer/core]
 aliases: [index/default]
 ---
 
 # 📁 index/default
 
-> **Module** · `@hamafx/config` · `packages/config/prettier/index.js`
+> **Module** · `@kestrel/config` · `packages/config/prettier/index.js`
 
 
 Module: packages/config/prettier/index.js
@@ -28,11 +28,11 @@ Module: packages/config/prettier/index.js
 | Total connections | 2 |
 | Risk level | **LOW** |
 | Layer | `core` |
-| Package tag | `#hamafx-config` |
+| Package tag | `#kestrel-config` |
 
 
 ### 📤 Depends On (1)
-[[@hamafx-config]]
+[[@kestrel-config]]
 
 
 
@@ -46,4 +46,4 @@ Module: packages/config/prettier/index.js
 - **Local Graph:** Right-click this file → "Open local graph"
 - **Backlinks:** Open the right sidebar → "Backlinks"
 - Use `#type/module` to find all Modules
-- Use `#hamafx-config` to find all files in this package
+- Use `#kestrel-config` to find all files in this package

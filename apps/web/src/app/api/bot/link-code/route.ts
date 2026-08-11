@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
-// /api/bot/link-code — Generate a link code for linking Telegram to HamaFX.
+// /api/bot/link-code — Generate a link code for linking Telegram to Kestrel.
 // POST /api/bot/link-code
 
 import { createLinkCode, getBotLink } from '@/lib/services/api-boundary';
@@ -28,7 +28,7 @@ export const POST = withAuth<void>(async (_req, { user }) => {
       code,
       expiresAt: expiresAt.toISOString(),
       instructions: [
-        '1. Open Telegram and find the HamaFX bot',
+        '1. Open Telegram and find the Kestrel bot',
         '2. Send: /link ' + code,
         '3. The code expires in 10 minutes',
       ].join('\n'),

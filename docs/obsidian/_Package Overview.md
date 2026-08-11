@@ -10,18 +10,18 @@ tags: [dashboard, overview]
 
 | Package | Nodes | Incoming Deps | Outgoing Deps | Layers |
 |---------|-------|--------------|--------------|--------|
-| @hamafx/web | 683 | 1005 | 1388 | package, core, api, ui |
-| @hamafx/ai | 274 | 932 | 1304 | package, core, ai |
-| @hamafx/db | 161 | 397 | 261 | package, core, data |
-| @hamafx/shared | 85 | 770 | 253 | package, core |
-| @hamafx/data | 66 | 198 | 239 | package, core |
-| @hamafx/worker | 58 | 200 | 278 | package, core |
-| @hamafx/indicators | 39 | 101 | 159 | package, core |
+| @kestrel/web | 684 | 1006 | 1390 | package, core, api, ui |
+| @kestrel/ai | 274 | 932 | 1304 | package, core, ai |
+| @kestrel/db | 161 | 397 | 261 | package, core, data |
+| @kestrel/shared | 85 | 770 | 253 | package, core |
+| @kestrel/data | 66 | 198 | 239 | package, core |
+| @kestrel/worker | 58 | 200 | 278 | package, core |
+| @kestrel/indicators | 39 | 101 | 159 | package, core |
 | loadtest | 31 | 144 | 143 | package, core |
 | scripts | 25 | 65 | 65 | package, core |
-| @hamafx/test-utils | 19 | 306 | 36 | package, core |
+| @kestrel/test-utils | 19 | 307 | 36 | package, core |
 | tool:architecture-explorer | 18 | 68 | 68 | package, core |
-| @hamafx/config | 4 | 12 | 4 | package, core |
+| @kestrel/config | 4 | 12 | 4 | package, core |
 | root | 3 | 2 | 2 | package, core |
 | tool:lighthouse | 2 | 1 | 1 | package, core |
 | docs | 1 | 0 | 0 | package |
@@ -29,15 +29,15 @@ tags: [dashboard, overview]
 
 ## Package MOCs
 
-- [[MOC_-hamafx-ai]]
-- [[MOC_-hamafx-config]]
-- [[MOC_-hamafx-data]]
-- [[MOC_-hamafx-db]]
-- [[MOC_-hamafx-indicators]]
-- [[MOC_-hamafx-shared]]
-- [[MOC_-hamafx-test-utils]]
-- [[MOC_-hamafx-web]]
-- [[MOC_-hamafx-worker]]
+- [[MOC_-kestrel-ai]]
+- [[MOC_-kestrel-config]]
+- [[MOC_-kestrel-data]]
+- [[MOC_-kestrel-db]]
+- [[MOC_-kestrel-indicators]]
+- [[MOC_-kestrel-shared]]
+- [[MOC_-kestrel-test-utils]]
+- [[MOC_-kestrel-web]]
+- [[MOC_-kestrel-worker]]
 - [[MOC_docs]]
 - [[MOC_infra]]
 - [[MOC_loadtest]]

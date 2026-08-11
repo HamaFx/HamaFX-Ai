@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@
 // Adding a release: pick its release_id from
 // https://fred.stlouisfed.org/releases — the table maps to our metadata.
 
-import type { Importance } from '@hamafx/shared';
+import type { Importance } from '@kestrel/shared';
 
 export interface FredReleaseMeta {
   /** Display title we show in the calendar UI. */

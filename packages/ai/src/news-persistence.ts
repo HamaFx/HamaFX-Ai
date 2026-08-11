@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@
 // route file) so the same logic is reusable from a future Fly.io worker
 // without duplicating SQL.
 
-import { schema } from '@hamafx/db';
+import { schema } from '@kestrel/db';
 import { getDb } from './db';
 import {
   type EconomicEvent,
@@ -27,7 +27,7 @@ import {
   type NewsArticle,
   type NewsSentiment,
   type SymbolOrCurrencyTag,
-} from '@hamafx/shared';
+} from '@kestrel/shared';
 import { and, asc, desc, eq, gte, ilike, isNull, lte, or, sql } from 'drizzle-orm';
 
 import { embedTexts } from './embeddings';

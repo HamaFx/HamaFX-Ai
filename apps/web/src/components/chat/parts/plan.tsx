@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,7 +32,7 @@ import {IconCpu, IconChevronRight, IconChevronDown, IconLoader2} from '@tabler/i
 import { AnimatePresence, m } from 'motion/react';
 import { useEffect, useId, useRef, useState } from 'react';
 
-import type { UserPlanPart } from '@hamafx/shared';
+import type { UserPlanPart } from '@kestrel/shared';
 
 import { cn } from '@/lib/cn';
 

@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
  */
 
 // Phase 4.3: Contract tests — verify that tool output schemas in
-// @hamafx/shared correctly validate the data produced by tool execute().
+// @kestrel/shared correctly validate the data produced by tool execute().
 // Every tool registered in packages/ai/src/tools/ has a corresponding
 // xxxOutputSchema in packages/shared/src/schemas/tool-outputs/. This file
 // imports each schema and asserts that valid outputs pass and invalid
@@ -56,7 +56,7 @@ import {
   ShareSnapshotOutputSchema,
   SummarizeThreadOutputSchema,
   VerifyCallOutputSchema,
-} from '@hamafx/shared';
+} from '@kestrel/shared';
 
 describe('GetPriceOutputSchema', () => {
   it('validates a standard response', () => {
@@ -476,7 +476,7 @@ describe('remaining output schemas', () => {
     {
       name: 'ShareSnapshotOutputSchema',
       schema: ShareSnapshotOutputSchema,
-      sample: { id: '550e8400-e29b-41d4-a716-446655440000', url: 'https://hamafx.io/snap/abc123', expiresAt: Date.now() + 86400000 },
+      sample: { id: '550e8400-e29b-41d4-a716-446655440000', url: 'https://kestrel.ai/snap/abc123', expiresAt: Date.now() + 86400000 },
     },
     {
       name: 'SearchKnowledgeOutputSchema',

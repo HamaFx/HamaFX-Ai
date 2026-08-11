@@ -1,19 +1,19 @@
 ---
 type: agent
-package: "@hamafx/ai"
+package: "@kestrel/ai"
 path: "packages/ai/src/multi-agent/agents/risk-agent.ts"
 incoming: 2
 outgoing: 6
 connections: 8
 risk: low
 layer: ai
-tags: [type/agent, hamafx-ai, layer/ai]
+tags: [type/agent, kestrel-ai, layer/ai]
 aliases: [RiskAgent]
 ---
 
 # 🤖 RiskAgent
 
-> **Agent** · `@hamafx/ai` · `packages/ai/src/multi-agent/agents/risk-agent.ts`
+> **Agent** · `@kestrel/ai` · `packages/ai/src/multi-agent/agents/risk-agent.ts`
 
 
 Multi-agent specialist: RiskAgent
@@ -28,11 +28,11 @@ Multi-agent specialist: RiskAgent
 | Total connections | 8 |
 | Risk level | **LOW** |
 | Layer | `ai` |
-| Package tag | `#hamafx-ai` |
+| Package tag | `#kestrel-ai` |
 
 
 ### 📤 Depends On (5)
-[[base-agent-baseOpinionSchema]] · [[index-toolRegistry]] · [[@hamafx-shared]] · [[types-AnalysisMode]] · [[@hamafx-ai]]
+[[base-agent-baseOpinionSchema]] · [[index-toolRegistry]] · [[@kestrel-shared]] · [[types-AnalysisMode]] · [[@kestrel-ai]]
 
 
 ### 📥 Depended On By (2)
@@ -49,4 +49,4 @@ Multi-agent specialist: RiskAgent
 - **Local Graph:** Right-click this file → "Open local graph"
 - **Backlinks:** Open the right sidebar → "Backlinks"
 - Use `#type/agent` to find all Agents
-- Use `#hamafx-ai` to find all files in this package
+- Use `#kestrel-ai` to find all files in this package

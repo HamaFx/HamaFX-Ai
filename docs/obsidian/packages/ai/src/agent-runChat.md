@@ -1,19 +1,19 @@
 ---
 type: module
-package: "@hamafx/ai"
+package: "@kestrel/ai"
 path: "packages/ai/src/agent.ts"
 incoming: 4
 outgoing: 34
 connections: 38
 risk: high
 layer: core
-tags: [type/module, hamafx-ai, layer/core, risk/high]
+tags: [type/module, kestrel-ai, layer/core, risk/high]
 aliases: [agent/runChat]
 ---
 
 # 📁 agent/runChat
 
-> **Module** · `@hamafx/ai` · `packages/ai/src/agent.ts`
+> **Module** · `@kestrel/ai` · `packages/ai/src/agent.ts`
 
 
 Module: packages/ai/src/agent.ts
@@ -28,11 +28,11 @@ Module: packages/ai/src/agent.ts
 | Total connections | 38 |
 | Risk level | **HIGH** |
 | Layer | `core` |
-| Package tag | `#hamafx-ai` |
+| Package tag | `#kestrel-ai` |
 
 
 ### 📤 Depends On (29)
-[[@hamafx-shared]] · [[telemetry-telemetryConfig]] · [[context-buildLiveSnapshot]] · [[cost-DEFAULT_TURN_ESTIMATE_USD]] · [[fallback-FallbackReason]] · [[token-estimate-TokenEstimateResult]] · [[thread-summary-CompactResult]] · [[model-resolveModel]] · [[persistence-listThreads]] · [[planner-PlannerEnv]] · [[system-LiveSnapshot]] · [[message-text-sanitizeUserInput]] · [[routing-RoutingDomain]] · [[tool-context-ToolEnv]] · [[verification-CitationFinding]] · [[wait-until-waitUntil]] · [[@hamafx-db]] · [[by-domain-RoutingDomain]] · [[types-RunChatArgs]] · [[rate-limits-RateLimitData]]
+[[@kestrel-shared]] · [[telemetry-telemetryConfig]] · [[context-buildLiveSnapshot]] · [[cost-DEFAULT_TURN_ESTIMATE_USD]] · [[fallback-FallbackReason]] · [[token-estimate-TokenEstimateResult]] · [[thread-summary-CompactResult]] · [[model-resolveModel]] · [[persistence-listThreads]] · [[planner-PlannerEnv]] · [[system-LiveSnapshot]] · [[message-text-sanitizeUserInput]] · [[routing-RoutingDomain]] · [[tool-context-ToolEnv]] · [[verification-CitationFinding]] · [[wait-until-waitUntil]] · [[@kestrel-db]] · [[by-domain-RoutingDomain]] · [[types-RunChatArgs]] · [[rate-limits-RateLimitData]]
 > ... and 9 more
 
 
@@ -50,4 +50,4 @@ Module: packages/ai/src/agent.ts
 - **Local Graph:** Right-click this file → "Open local graph"
 - **Backlinks:** Open the right sidebar → "Backlinks"
 - Use `#type/module` to find all Modules
-- Use `#hamafx-ai` to find all files in this package
+- Use `#kestrel-ai` to find all files in this package

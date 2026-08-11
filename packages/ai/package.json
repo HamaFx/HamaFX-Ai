@@ -1,5 +1,5 @@
 {
-  "name": "@hamafx/ai",
+  "name": "@kestrel/ai",
   "version": "0.0.0",
   "type": "module",
   "main": "./dist/index.js",
@@ -49,10 +49,10 @@
     "@ai-sdk/google": "^2.0.74",
     "@ai-sdk/google-vertex": "3.0.139",
     "@ai-sdk/openai-compatible": "^1.0.39",
-    "@hamafx/data": "workspace:*",
-    "@hamafx/db": "workspace:*",
-    "@hamafx/indicators": "workspace:*",
-    "@hamafx/shared": "workspace:*",
+    "@kestrel/data": "workspace:*",
+    "@kestrel/db": "workspace:*",
+    "@kestrel/indicators": "workspace:*",
+    "@kestrel/shared": "workspace:*",
     "@langfuse/otel": "^5.5.3",
     "@opentelemetry/api": "^1.9.0",
     "@opentelemetry/sdk-node": "^0.221.0",
@@ -63,7 +63,7 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
-    "@hamafx/config": "workspace:*",
+    "@kestrel/config": "workspace:*",
     "@types/node": "^20.14.10",
     "@types/react": "^19.0.0",
     "@types/web-push": "^3.6.4",

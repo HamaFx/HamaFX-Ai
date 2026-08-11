@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
  */
 
 // Tests for the upgraded Telegram bot system.
-// Run: pnpm --filter @hamafx/ai test -- --run telegram
+// Run: pnpm --filter @kestrel/ai test -- --run telegram
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { isDuplicateUpdate, markProcessed, _resetForTesting } from '../src/telegram/idempotency';

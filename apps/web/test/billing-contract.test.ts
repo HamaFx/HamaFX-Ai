@@ -43,7 +43,7 @@ vi.mock('@sentry/nextjs', () => ({
   captureMessage: mockCaptureMessage,
   metrics: { count: mockMetricsCount },
 }));
-vi.mock('@hamafx/db', () => ({
+vi.mock('@kestrel/db', () => ({
   schema: {},
   claimCheckoutAttempt: mockClaimCheckoutAttempt,
   completeCheckoutAttempt: mockCompleteCheckoutAttempt,

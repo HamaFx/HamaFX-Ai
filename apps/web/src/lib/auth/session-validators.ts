@@ -6,8 +6,8 @@
 // checks into one query to cut DB round-trips.
 
 import { eq } from 'drizzle-orm';
-import { logErrorContext } from '@hamafx/shared/logger';
-import { schema, type DbClient } from '@hamafx/db';
+import { logErrorContext } from '@kestrel/shared/logger';
+import { schema, type DbClient } from '@kestrel/db';
 
 const TV_CHECK_INTERVAL_SECONDS = 60;
 const LAST_ACTIVE_INTERVAL_SECONDS = 900;

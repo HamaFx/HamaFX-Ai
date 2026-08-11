@@ -8,7 +8,7 @@ const mockGetAlert = vi.hoisted(() => vi.fn());
 const mockUpdateAlert = vi.hoisted(() => vi.fn());
 const mockDeleteAlert = vi.hoisted(() => vi.fn());
 
-vi.mock('@hamafx/ai', () => ({
+vi.mock('@kestrel/ai', () => ({
   listAlerts: mockListAlerts,
   createAlert: mockCreateAlert,
   getAlert: mockGetAlert,
@@ -18,7 +18,7 @@ vi.mock('@hamafx/ai', () => ({
 
 const mockWithRateLimit = vi.hoisted(() => vi.fn());
 
-vi.mock('@hamafx/db', () => ({
+vi.mock('@kestrel/db', () => ({
   withRateLimit: mockWithRateLimit,
   schema: {},
 }));

@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,8 +28,8 @@
 // 1m→candles-1m) lives in each provider's `supports()` / `fetchCandles()`
 // so adapters just iterate the registry.
 
-import type { Symbol, Timeframe, Candle } from '@hamafx/shared';
-import { getSymbolDefinition } from '@hamafx/shared';
+import type { Symbol, Timeframe, Candle } from '@kestrel/shared';
+import { getSymbolDefinition } from '@kestrel/shared';
 import { ProviderError } from '../errors';
 import {
   marketDataProviders,

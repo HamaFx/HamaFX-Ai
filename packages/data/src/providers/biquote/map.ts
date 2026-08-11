@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,8 +25,8 @@
 //
 // Reference: https://biquote.io/docs
 
-import type { BiquoteTimeframe } from '@hamafx/shared';
-import { getSymbolDefinition, isKnownSymbol, type Symbol, type Timeframe } from '@hamafx/shared';
+import type { BiquoteTimeframe } from '@kestrel/shared';
+import { getSymbolDefinition, isKnownSymbol, type Symbol, type Timeframe } from '@kestrel/shared';
 
 /**
  * BiQuote uses our concatenated symbol codes verbatim (`XAUUSD`,

@@ -5,8 +5,8 @@ import type { MetadataRoute } from 'next';
 // Matches --color-bg = #0A0A0A from globals.css.
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'HamaFX-Ai',
-    short_name: 'HamaFX',
+    name: 'Kestrel',
+    short_name: 'Kestrel',
     description: 'AI trading copilot for forex & commodities',
     start_url: '/chat',
     display: 'standalone',

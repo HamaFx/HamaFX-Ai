@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@
 
 // Mini equity-curve chart with drawdown periods shaded below the running peak.
 
-import type { JournalEntry, JournalStats } from '@hamafx/shared';
+import type { JournalEntry, JournalStats } from '@kestrel/shared';
 import { useMemo } from 'react';
 
 import { cn } from '@/lib/cn';

@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,9 +21,9 @@
 // at `/share/[id]` verifies the token, looks up the row by id, and
 // renders title + body + (optional) overlay.
 
-import { schema } from '@hamafx/db';
+import { schema } from '@kestrel/db';
 import { getDb } from '../db';
-import type { AnnotateChartOutput, Symbol, Timeframe } from '@hamafx/shared';
+import type { AnnotateChartOutput, Symbol, Timeframe } from '@kestrel/shared';
 import { eq } from 'drizzle-orm';
 
 export interface CreateSnapshotArgs {

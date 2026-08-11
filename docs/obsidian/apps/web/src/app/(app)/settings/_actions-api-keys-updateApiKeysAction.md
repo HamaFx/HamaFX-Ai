@@ -1,19 +1,19 @@
 ---
 type: module
-package: "@hamafx/web"
+package: "@kestrel/web"
 path: "apps/web/src/app/(app)/settings/_actions-api-keys.ts"
 incoming: 0
 outgoing: 6
 connections: 6
 risk: low
 layer: core
-tags: [type/module, hamafx-web, layer/core]
+tags: [type/module, kestrel-web, layer/core]
 aliases: [_actions-api-keys/updateApiKeysAction]
 ---
 
 # 📁 _actions-api-keys/updateApiKeysAction
 
-> **Module** · `@hamafx/web` · `apps/web/src/app/(app)/settings/_actions-api-keys.ts`
+> **Module** · `@kestrel/web` · `apps/web/src/app/(app)/settings/_actions-api-keys.ts`
 
 
 Module: apps/web/src/app/(app)/settings/_actions-api-keys.ts
@@ -28,11 +28,11 @@ Module: apps/web/src/app/(app)/settings/_actions-api-keys.ts
 | Total connections | 6 |
 | Risk level | **LOW** |
 | Layer | `core` |
-| Package tag | `#hamafx-web` |
+| Package tag | `#kestrel-web` |
 
 
 ### 📤 Depends On (5)
-[[@hamafx-db]] · [[@hamafx-ai]] · [[@hamafx-shared]] · [[_actions-shared-NAME_MIN]] · [[@hamafx-web]]
+[[@kestrel-db]] · [[@kestrel-ai]] · [[@kestrel-shared]] · [[_actions-shared-NAME_MIN]] · [[@kestrel-web]]
 
 
 
@@ -49,4 +49,4 @@ Module: apps/web/src/app/(app)/settings/_actions-api-keys.ts
 - **Local Graph:** Right-click this file → "Open local graph"
 - **Backlinks:** Open the right sidebar → "Backlinks"
 - Use `#type/module` to find all Modules
-- Use `#hamafx-web` to find all files in this package
+- Use `#kestrel-web` to find all files in this package

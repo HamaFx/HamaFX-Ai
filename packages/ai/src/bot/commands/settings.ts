@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@
 
 import type { BotCommand, BotResponse, BotContext } from '../types';
 import { getBotLink } from '../linking';
-import { getUserWithSettings } from '@hamafx/db';
+import { getUserWithSettings } from '@kestrel/db';
 
 export const settingsCommand: BotCommand = {
   name: 'settings',
@@ -43,7 +43,7 @@ export const settingsCommand: BotCommand = {
         : 'Default (Gemini 2.5 Flash)';
 
       const lines = [
-        '⚙️ Your HamaFX Settings',
+        '⚙️ Your Kestrel Settings',
         '',
         `🔗 Telegram: ${link ? `Linked since ${linkedAt}` : 'Not linked'}`,
         `🤖 AI Models: ${modelInfo}`,
@@ -51,7 +51,7 @@ export const settingsCommand: BotCommand = {
         `🕐 Timezone: ${settings?.timezone ?? 'UTC'}`,
         '',
         'Manage full settings at:',
-        '🔗 hamafx.ai/settings',
+        '🔗 kestrel.ai/settings',
         '',
         'Available commands:',
         '  /settings — This menu',

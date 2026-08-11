@@ -1,19 +1,19 @@
 ---
 type: module
-package: "@hamafx/ai"
+package: "@kestrel/ai"
 path: "packages/ai/src/tool-context.ts"
 incoming: 33
 outgoing: 7
 connections: 40
 risk: high
 layer: core
-tags: [type/module, hamafx-ai, layer/core, risk/high]
+tags: [type/module, kestrel-ai, layer/core, risk/high]
 aliases: [tool-context/ToolEnv]
 ---
 
 # 📁 tool-context/ToolEnv
 
-> **Module** · `@hamafx/ai` · `packages/ai/src/tool-context.ts`
+> **Module** · `@kestrel/ai` · `packages/ai/src/tool-context.ts`
 
 
 Module: packages/ai/src/tool-context.ts
@@ -28,11 +28,11 @@ Module: packages/ai/src/tool-context.ts
 | Total connections | 40 |
 | Risk level | **HIGH** |
 | Layer | `core` |
-| Package tag | `#hamafx-ai` |
+| Package tag | `#kestrel-ai` |
 
 
 ### 📤 Depends On (3)
-[[@hamafx-shared]] · [[@hamafx-db]] · [[@hamafx-ai]]
+[[@kestrel-shared]] · [[@kestrel-db]] · [[@kestrel-ai]]
 
 
 ### 📥 Depended On By (33)
@@ -56,4 +56,4 @@ Module: packages/ai/src/tool-context.ts
 - **Local Graph:** Right-click this file → "Open local graph"
 - **Backlinks:** Open the right sidebar → "Backlinks"
 - Use `#type/module` to find all Modules
-- Use `#hamafx-ai` to find all files in this package
+- Use `#kestrel-ai` to find all files in this package

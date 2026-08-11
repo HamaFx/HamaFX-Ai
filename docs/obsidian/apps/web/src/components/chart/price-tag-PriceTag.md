@@ -1,19 +1,19 @@
 ---
 type: component
-package: "@hamafx/web"
+package: "@kestrel/web"
 path: "apps/web/src/components/chart/price-tag.tsx"
 incoming: 0
 outgoing: 2
 connections: 2
 risk: low
 layer: ui
-tags: [type/component, hamafx-web, layer/ui]
+tags: [type/component, kestrel-web, layer/ui]
 aliases: [price-tag/PriceTag]
 ---
 
 # 🧩 price-tag/PriceTag
 
-> **Component** · `@hamafx/web` · `apps/web/src/components/chart/price-tag.tsx`
+> **Component** · `@kestrel/web` · `apps/web/src/components/chart/price-tag.tsx`
 
 
 React component: price-tag
@@ -28,11 +28,11 @@ React component: price-tag
 | Total connections | 2 |
 | Risk level | **LOW** |
 | Layer | `ui` |
-| Package tag | `#hamafx-web` |
+| Package tag | `#kestrel-web` |
 
 
 ### 📤 Depends On (2)
-[[@hamafx-shared]] · [[@hamafx-web]]
+[[@kestrel-shared]] · [[@kestrel-web]]
 
 
 
@@ -46,4 +46,4 @@ React component: price-tag
 - **Local Graph:** Right-click this file → "Open local graph"
 - **Backlinks:** Open the right sidebar → "Backlinks"
 - Use `#type/component` to find all Components
-- Use `#hamafx-web` to find all files in this package
+- Use `#kestrel-web` to find all files in this package

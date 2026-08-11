@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,11 +25,11 @@
 // writes one row per minute per symbol; left unbounded the table grows
 // ~4 MB/month — we don't need it to. (Spec §4.3 retention.)
 
-import { computeDailySnapshot, previousUtcMidnight, upsertSnapshot } from '@hamafx/ai';
-import { getCandles } from '@hamafx/data';
-import { getDb } from '@hamafx/ai';
-import { candles1m } from '@hamafx/db/schema';
-import { SYMBOLS } from '@hamafx/shared';
+import { computeDailySnapshot, previousUtcMidnight, upsertSnapshot } from '@kestrel/ai';
+import { getCandles } from '@kestrel/data';
+import { getDb } from '@kestrel/ai';
+import { candles1m } from '@kestrel/db/schema';
+import { SYMBOLS } from '@kestrel/shared';
 import { lt, sql } from 'drizzle-orm';
 
 import type { JobContext, JobResult } from './types.js';

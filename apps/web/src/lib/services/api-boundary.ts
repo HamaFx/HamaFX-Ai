@@ -56,7 +56,7 @@ export {
   getBotLink,
   unlinkBot,
   listAgentOpinions,
-} from '@hamafx/ai';
+} from '@kestrel/ai';
 
 // These persistence functions use the supported AI persistence subpath so the
 // global package lint rule cannot accidentally reintroduce barrel coupling.
@@ -66,9 +66,9 @@ export {
   listThreads,
   listMessages,
   forkThread,
-} from '@hamafx/ai/persistence';
-export { runChat } from '@hamafx/ai/agent';
-export { BudgetExceededError } from '@hamafx/ai/cost';
+} from '@kestrel/ai/persistence';
+export { runChat } from '@kestrel/ai/agent';
+export { BudgetExceededError } from '@kestrel/ai/cost';
 
 // Database queries and infrastructure used by controllers that do not yet
 // have a dedicated domain service.
@@ -124,7 +124,7 @@ export {
   addUserSymbol,
   removeUserSymbol,
   schema,
-} from '@hamafx/db';
+} from '@kestrel/db';
 
 // Market-data adapters and provider-specific cron helpers.
 export {
@@ -135,9 +135,9 @@ export {
   fetchUpcomingEvents,
   ProviderError,
   marketDataProviders,
-} from '@hamafx/data';
-export { fetchObservations, fredMeta } from '@hamafx/data/providers/fred';
-export { fetchLatestRows, parseCftcInt, toCftcName } from '@hamafx/data/providers/cftc';
+} from '@kestrel/data';
+export { fetchObservations, fredMeta } from '@kestrel/data/providers/fred';
+export { fetchLatestRows, parseCftcInt, toCftcName } from '@kestrel/data/providers/cftc';
 
 // Shared domain values, schemas, errors, and server-only helpers.
 export {
@@ -158,12 +158,12 @@ export {
   ChatStreamEventSchema,
   logStreamHub,
   pickAiEnv,
-} from '@hamafx/shared';
-export { configuredProviders, decryptByok, PROVIDER_IDS } from '@hamafx/shared/encryption';
-export { REQUIRED_HEALTH_ENV_VARS } from '@hamafx/shared/env-secrets';
-export { traceIdStorage } from '@hamafx/shared/logger';
+} from '@kestrel/shared';
+export { configuredProviders, decryptByok, PROVIDER_IDS } from '@kestrel/shared/encryption';
+export { REQUIRED_HEALTH_ENV_VARS } from '@kestrel/shared/env-secrets';
+export { traceIdStorage } from '@kestrel/shared/logger';
 
 // Type-only facade exports used by a few server controllers.
-export type { TelegramUpdate } from '@hamafx/ai';
-export type { ProviderId, NoiseConfig, RouteConfig, Symbol } from '@hamafx/shared';
+export type { TelegramUpdate } from '@kestrel/ai';
+export type { ProviderId, NoiseConfig, RouteConfig, Symbol } from '@kestrel/shared';
 export type { UIMessage } from 'ai';

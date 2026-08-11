@@ -1,19 +1,19 @@
 ---
 type: component
-package: "@hamafx/web"
+package: "@kestrel/web"
 path: "apps/web/src/components/chart/pin-to-chat.tsx"
 incoming: 0
 outgoing: 3
 connections: 3
 risk: low
 layer: ui
-tags: [type/component, hamafx-web, layer/ui]
+tags: [type/component, kestrel-web, layer/ui]
 aliases: [pin-to-chat/PinToChatProps]
 ---
 
 # 🧩 pin-to-chat/PinToChatProps
 
-> **Component** · `@hamafx/web` · `apps/web/src/components/chart/pin-to-chat.tsx`
+> **Component** · `@kestrel/web` · `apps/web/src/components/chart/pin-to-chat.tsx`
 
 
 React component: pin-to-chat
@@ -28,11 +28,11 @@ React component: pin-to-chat
 | Total connections | 3 |
 | Risk level | **LOW** |
 | Layer | `ui` |
-| Package tag | `#hamafx-web` |
+| Package tag | `#kestrel-web` |
 
 
 ### 📤 Depends On (2)
-[[@hamafx-shared]] · [[@hamafx-web]]
+[[@kestrel-shared]] · [[@kestrel-web]]
 
 
 
@@ -47,4 +47,4 @@ React component: pin-to-chat
 - **Local Graph:** Right-click this file → "Open local graph"
 - **Backlinks:** Open the right sidebar → "Backlinks"
 - Use `#type/component` to find all Components
-- Use `#hamafx-web` to find all files in this package
+- Use `#kestrel-web` to find all files in this package

@@ -1,19 +1,19 @@
 ---
 type: moc
-package: "@hamafx/data"
+package: "@kestrel/data"
 nodes: 66
 totalIncoming: 198
 totalOutgoing: 239
 tags: [moc, hamafx-data]
 ---
 
-# 📦 @hamafx/data
+# 📦 @kestrel/data
 
 > **Map of Content** · 66 files · 198 incoming + 239 outgoing = 437 connections
 
 ## DataviewJS — All Files in This Package
 ```dataviewjs
-const pages = dv.pages().where(p => p.package === "@hamafx/data" && p.type);
+const pages = dv.pages().where(p => p.package === "@kestrel/data" && p.type);
 dv.table(
   ['File', 'Type', 'Incoming', 'Outgoing', 'Risk'],
   pages.sort(p => -(p.incoming + p.outgoing), 'desc').map(p => [
@@ -93,5 +93,5 @@ dv.table(
 - [[vitest.config-defineConfig]] *(0↖ 1↗)*
 
 ### 📦 Package (1)
-- [[@hamafx-data]] *(99↖ 0↗)*
+- [[@kestrel-data]] *(99↖ 0↗)*
 

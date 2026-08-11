@@ -1,7 +1,7 @@
 'use server';
 
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,13 +33,13 @@ import {
   revokeUserSession as dbRevokeUserSession,
   deleteUserSessions as dbDeleteUserSessions,
   incrementTokenVersion,
-} from '@hamafx/db';
+} from '@kestrel/db';
 import { randomBytes } from 'node:crypto';
 import * as Sentry from '@sentry/nextjs';
 import { revalidatePath } from 'next/cache';
 import { generateSecret, generateURI, verifySync } from 'otplib';
 import QRCode from 'qrcode';
-import { encryptSecret, decryptSecret } from '@hamafx/shared/encryption';
+import { encryptSecret, decryptSecret } from '@kestrel/shared/encryption';
 import { passwordSchema } from '@/lib/validation';
 import { type ActionResult, verifyAccountPassword } from './_actions-shared';
 
@@ -81,7 +81,7 @@ export async function setupTwoFactorAction(): Promise<ActionResult<{ secret: str
 
   try {
     const secret = generateSecret();
-    const service = 'HamaFX-Ai';
+    const service = 'Kestrel';
     const otpauth = generateURI({ secret, issuer: service, label: session.user.email ?? session.user.id });
     const qrDataUrl = await QRCode.toDataURL(otpauth);
 

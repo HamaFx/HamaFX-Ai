@@ -1,6 +1,6 @@
 ---
 type: module
-package: "@hamafx/shared"
+package: "@kestrel/shared"
 path: "packages/shared/src/index.ts"
 incoming: 8
 outgoing: 3
@@ -13,7 +13,7 @@ aliases: [index]
 
 # 📁 index
 
-> **Module** · `@hamafx/shared` · `packages/shared/src/index.ts`
+> **Module** · `@kestrel/shared` · `packages/shared/src/index.ts`
 
 
 Module: packages/shared/src/index.ts
@@ -32,7 +32,7 @@ Module: packages/shared/src/index.ts
 
 
 ### 📤 Depends On (1)
-[[@hamafx-shared]]
+[[@kestrel-shared]]
 
 
 ### 📥 Depended On By (6)

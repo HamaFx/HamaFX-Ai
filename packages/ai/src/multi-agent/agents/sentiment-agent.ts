@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,7 +34,7 @@ export class SentimentAgent extends BaseAgent {
   readonly modelTier: ModelTier = 'fast';
 
   systemPrompt(): string {
-    return `You are a Sentiment Analysis Agent for HamaFX-Ai.
+    return `You are a Sentiment Analysis Agent for Kestrel.
 
 Your SOLE focus is market sentiment and positioning:
 - News sentiment: is recent news flow bullish or bearish?

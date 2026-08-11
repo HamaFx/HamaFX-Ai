@@ -10,8 +10,8 @@
 
 import Link from 'next/link';
 import {IconActivity, IconArrowUpRight, IconArrowDownRight} from '@tabler/icons-react';
-import type { JournalEntry } from '@hamafx/shared';
-import { priceDecimals } from '@hamafx/shared';
+import type { JournalEntry } from '@kestrel/shared';
+import { priceDecimals } from '@kestrel/shared';
 
 import { Card } from '@/components/ui/card';
 import { EmptyState } from '@/components/ui/empty-state';

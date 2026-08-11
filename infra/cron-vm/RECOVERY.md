@@ -1,4 +1,4 @@
-# HamaFX-Ai Disaster Recovery Playbook
+# Kestrel Disaster Recovery Playbook
 
 > Read-only-first recovery procedures for the production worker VM.
 > The active VM is `hamafx-cron` in GCP project

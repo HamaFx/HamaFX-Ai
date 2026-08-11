@@ -1,6 +1,6 @@
 ---
 type: tool
-package: "@hamafx/ai"
+package: "@kestrel/ai"
 path: "packages/ai/src/tools/get-cot.ts"
 incoming: 1
 outgoing: 4
@@ -13,7 +13,7 @@ aliases: [get_co_t]
 
 # 🔧 get_co_t
 
-> **AI Tool** · `@hamafx/ai` · `packages/ai/src/tools/get-cot.ts`
+> **AI Tool** · `@kestrel/ai` · `packages/ai/src/tools/get-cot.ts`
 
 
 Last N weeks of CFTC Commitment-of-Traders rows for one symbol (default XAUUSD). Use to answer
@@ -32,7 +32,7 @@ Last N weeks of CFTC Commitment-of-Traders rows for one symbol (default XAUUSD).
 
 
 ### 📤 Depends On (4)
-[[@hamafx-shared]] · [[persistence-UpsertCoTReportArgs]] · [[@hamafx-ai]] · [[registry-ToolPlugin]]
+[[@kestrel-shared]] · [[persistence-UpsertCoTReportArgs]] · [[@kestrel-ai]] · [[registry-ToolPlugin]]
 
 
 ### 📥 Depended On By (1)

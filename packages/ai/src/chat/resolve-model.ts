@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,8 +21,8 @@
 
 import type { LanguageModel } from 'ai';
 import type { RunChatArgs } from '../types';
-import type { UserSettingsRow } from '@hamafx/db/schema';
-import type { ProviderId } from '@hamafx/shared/encryption';
+import type { UserSettingsRow } from '@kestrel/db/schema';
+import type { ProviderId } from '@kestrel/shared/encryption';
 import { checkBudgetAlertsAndThresholds } from '../cost';
 import {
   resolveChatModel,
@@ -31,8 +31,8 @@ import {
 } from '../model';
 import { toModelDomain } from '../model-resolution';
 import type { RoutingDecision } from '../routing';
-import { createCategorizedLogger } from '@hamafx/shared/logger';
-import { PROVIDER_IDS } from '@hamafx/shared/byok';
+import { createCategorizedLogger } from '@kestrel/shared/logger';
+import { PROVIDER_IDS } from '@kestrel/shared/byok';
 
 const alog = createCategorizedLogger('ai', { component: 'resolve-model' });
 

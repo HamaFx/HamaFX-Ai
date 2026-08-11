@@ -1,19 +1,19 @@
 ---
 type: module
-package: "@hamafx/web"
+package: "@kestrel/web"
 path: "apps/web/test/hooks-use-chart-data.test.ts"
 incoming: 0
 outgoing: 3
 connections: 3
 risk: low
 layer: core
-tags: [type/module, hamafx-web, layer/core]
+tags: [type/module, kestrel-web, layer/core]
 aliases: [hooks-use-chart-data.test]
 ---
 
 # 📁 hooks-use-chart-data.test
 
-> **Module** · `@hamafx/web` · `apps/web/test/hooks-use-chart-data.test.ts`
+> **Module** · `@kestrel/web` · `apps/web/test/hooks-use-chart-data.test.ts`
 
 
 Module: apps/web/test/hooks-use-chart-data.test.ts
@@ -28,11 +28,11 @@ Module: apps/web/test/hooks-use-chart-data.test.ts
 | Total connections | 3 |
 | Risk level | **LOW** |
 | Layer | `core` |
-| Package tag | `#hamafx-web` |
+| Package tag | `#kestrel-web` |
 
 
 ### 📤 Depends On (3)
-[[vitest-installServerOnlyStub]] · [[use-chart-data-UseChartDataOptions]] · [[@hamafx-web]]
+[[vitest-installServerOnlyStub]] · [[use-chart-data-UseChartDataOptions]] · [[@kestrel-web]]
 
 
 
@@ -43,4 +43,4 @@ Module: apps/web/test/hooks-use-chart-data.test.ts
 - **Local Graph:** Right-click this file → "Open local graph"
 - **Backlinks:** Open the right sidebar → "Backlinks"
 - Use `#type/module` to find all Modules
-- Use `#hamafx-web` to find all files in this package
+- Use `#kestrel-web` to find all files in this package

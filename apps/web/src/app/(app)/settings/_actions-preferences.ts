@@ -1,7 +1,7 @@
 'use server';
 
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,11 +20,11 @@
 
 import { auth } from '@/auth';
 import { eq, and, sql } from 'drizzle-orm';
-import { withRateLimit, schema, updateUserDisplayName } from '@hamafx/db'
-import { getDb } from '@hamafx/ai';
+import { withRateLimit, schema, updateUserDisplayName } from '@kestrel/db'
+import { getDb } from '@kestrel/ai';
 import * as Sentry from '@sentry/nextjs';
 import { revalidatePath } from 'next/cache';
-import { PROVIDER_IDS } from '@hamafx/shared/encryption';
+import { PROVIDER_IDS } from '@kestrel/shared/encryption';
 import { type ActionResult, NAME_MIN, NAME_MAX } from './_actions-shared';
 
 /**

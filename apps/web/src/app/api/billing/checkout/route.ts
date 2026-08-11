@@ -99,7 +99,7 @@ export const POST = withAuth<void>(async (req, { user }) => {
         price_currency: 'usd',
         pay_currency: plan.payCurrency ?? 'usdt',
         order_id: orderId,
-        order_description: `${plan.name} subscription — HamaFX-Ai`,
+        order_description: `${plan.name} subscription — Kestrel`,
         success_url: `${appUrl}/settings/billing?status=success`,
         cancelled_url: `${appUrl}/settings/billing?status=cancelled`,
       }));

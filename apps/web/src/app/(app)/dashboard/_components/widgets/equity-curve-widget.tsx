@@ -8,7 +8,7 @@
 // widget chrome. We trim the chart's own header so the surrounding
 // canvas label remains the primary visual anchor.
 
-import type { JournalEntry } from '@hamafx/shared';
+import type { JournalEntry } from '@kestrel/shared';
 
 import { IconChartLine } from '@tabler/icons-react';
 

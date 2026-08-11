@@ -53,7 +53,7 @@ export async function GET() {
   const result: Record<string, unknown> = { env };
 
   try {
-    const { getDb } = await import('@hamafx/db');
+    const { getDb } = await import('@kestrel/db');
     const db = getDb();
     result.getDb_success = true;
 
@@ -95,7 +95,7 @@ export async function GET() {
     try {
       const NextAuth = (await import('next-auth')).default;
       const { authConfig } = await import('@/auth.config');
-      const { getDb } = await import('@hamafx/db');
+      const { getDb } = await import('@kestrel/db');
       const { DrizzleAdapter } = await import('@auth/drizzle-adapter');
       const adapter = DrizzleAdapter(getDb());
       result.adapter_created = true;

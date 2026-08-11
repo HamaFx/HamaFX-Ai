@@ -1,19 +1,19 @@
 ---
 type: module
-package: "@hamafx/worker"
+package: "@kestrel/worker"
 path: "apps/worker/src/index.ts"
 incoming: 0
 outgoing: 18
 connections: 18
 risk: medium
 layer: core
-tags: [type/module, hamafx-worker, layer/core, risk/medium]
+tags: [type/module, kestrel-worker, layer/core, risk/medium]
 aliases: [index/onShutdown]
 ---
 
 # 📁 index/onShutdown
 
-> **Module** · `@hamafx/worker` · `apps/worker/src/index.ts`
+> **Module** · `@kestrel/worker` · `apps/worker/src/index.ts`
 
 
 Module: apps/worker/src/index.ts
@@ -28,11 +28,11 @@ Module: apps/worker/src/index.ts
 | Total connections | 18 |
 | Risk level | **MEDIUM** |
 | Layer | `core` |
-| Package tag | `#hamafx-worker` |
+| Package tag | `#kestrel-worker` |
 
 
 ### 📤 Depends On (17)
-[[@hamafx-db]] · [[@hamafx-ai]] · [[candle-1m-ClosedCandle]] · [[http-server-HealthServerDeps]] · [[env-WorkerEnv]] · [[healthchecks-PingStatus]] · [[log-Logger]] · [[candles-1m-FlushClosedCandleArgs]] · [[live-ticks-LiveTicksWriterArgs]] · [[sd-notify-notifyWatchdog]] · [[sentry-initSentry]] · [[index-BinanceStreamConsumer]] · [[consumer-NormalizedTick]] · [[tick-buffer-TickBuffer]] · [[symbol-manager-SymbolChangeEvent]] · [[scheduler-startScheduler]] · [[@hamafx-worker]]
+[[@kestrel-db]] · [[@kestrel-ai]] · [[candle-1m-ClosedCandle]] · [[http-server-HealthServerDeps]] · [[env-WorkerEnv]] · [[healthchecks-PingStatus]] · [[log-Logger]] · [[candles-1m-FlushClosedCandleArgs]] · [[live-ticks-LiveTicksWriterArgs]] · [[sd-notify-notifyWatchdog]] · [[sentry-initSentry]] · [[index-BinanceStreamConsumer]] · [[consumer-NormalizedTick]] · [[tick-buffer-TickBuffer]] · [[symbol-manager-SymbolChangeEvent]] · [[scheduler-startScheduler]] · [[@kestrel-worker]]
 
 
 
@@ -50,4 +50,4 @@ Module: apps/worker/src/index.ts
 - **Local Graph:** Right-click this file → "Open local graph"
 - **Backlinks:** Open the right sidebar → "Backlinks"
 - Use `#type/module` to find all Modules
-- Use `#hamafx-worker` to find all files in this package
+- Use `#kestrel-worker` to find all files in this package

@@ -8,10 +8,10 @@
 // provisionUserOnSignIn, return its decision.
 
 import { and, eq, isNull, sql } from 'drizzle-orm';
-import { schema } from '@hamafx/db';
-import { getDb } from '@hamafx/ai';
+import { schema } from '@kestrel/db';
+import { getDb } from '@kestrel/ai';
 import { getServerEnv } from '@/lib/env';
-import { DEFAULT_WATCHLIST_SYMBOLS } from '@hamafx/shared';
+import { DEFAULT_WATCHLIST_SYMBOLS } from '@kestrel/shared';
 
 // ── Typed inputs ──────────────────────────────────────────────────────
 

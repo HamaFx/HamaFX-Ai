@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -42,8 +42,17 @@ function cleanup() {
 process.on('SIGINT', cleanup);
 process.on('SIGTERM', cleanup);
 
+const KESTREL_BANNER = [
+  '██╗  ██╗███████╗███████╗████████╗██████╗ ███████╗██╗',
+  '██║ ██╔╝██╔════╝██╔════╝╚══██╔══╝██╔══██╗██╔════╝██║',
+  '█████╔╝ █████╗  ███████╗   ██║   ██████╔╝█████╗  ██║',
+  '██╔═██╗ ██╔══╝  ╚════██║   ██║   ██╔══██╗██╔══╝  ██║',
+  '██║  ██╗███████╗███████║   ██║   ██║  ██║███████╗███████╗',
+  '╚═╝  ╚═╝╚══════╝╚══════╝   ╚═╝   ╚═╝  ╚═╝╚══════╝╚══════╝',
+].join('\n');
+
 async function main() {
-  console.log('🚀 HamaFX-Ai local development mode\n');
+  console.log(`\n${KESTREL_BANNER}\n\n🚀 Kestrel local development mode\n`);
 
   // Check if we're using PGlite or remote Postgres
   const hasDbUrl = process.env.DATABASE_URL || process.env.POSTGRES_URL;
@@ -56,7 +65,7 @@ async function main() {
 
   // Start Next.js dev server
   console.log('▶  Starting Next.js on http://localhost:3000');
-  const nextDev = spawn('pnpm', ['--filter', '@hamafx/web', 'dev'], {
+  const nextDev = spawn('pnpm', ['--filter', '@kestrel/web', 'dev'], {
     stdio: 'inherit',
     env: {
       ...process.env,

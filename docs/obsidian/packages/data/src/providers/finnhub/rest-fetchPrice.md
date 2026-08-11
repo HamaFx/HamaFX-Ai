@@ -1,19 +1,19 @@
 ---
 type: module
-package: "@hamafx/data"
+package: "@kestrel/data"
 path: "packages/data/src/providers/finnhub/rest.ts"
 incoming: 1
 outgoing: 6
 connections: 7
 risk: low
 layer: core
-tags: [type/module, hamafx-data, layer/core]
+tags: [type/module, kestrel-data, layer/core]
 aliases: [rest/fetchPrice]
 ---
 
 # 📁 rest/fetchPrice
 
-> **Module** · `@hamafx/data` · `packages/data/src/providers/finnhub/rest.ts`
+> **Module** · `@kestrel/data` · `packages/data/src/providers/finnhub/rest.ts`
 
 
 Module: packages/data/src/providers/finnhub/rest.ts
@@ -28,11 +28,11 @@ Module: packages/data/src/providers/finnhub/rest.ts
 | Total connections | 7 |
 | Risk level | **LOW** |
 | Layer | `core` |
-| Package tag | `#hamafx-data` |
+| Package tag | `#kestrel-data` |
 
 
 ### 📤 Depends On (5)
-[[@hamafx-shared]] · [[throttle-ThrottleConfig]] · [[errors-DataErrorCode]] · [[map-toFinnhubSymbol]] · [[@hamafx-data]]
+[[@kestrel-shared]] · [[throttle-ThrottleConfig]] · [[errors-DataErrorCode]] · [[map-toFinnhubSymbol]] · [[@kestrel-data]]
 
 
 ### 📥 Depended On By (1)
@@ -56,4 +56,4 @@ Module: packages/data/src/providers/finnhub/rest.ts
 - **Local Graph:** Right-click this file → "Open local graph"
 - **Backlinks:** Open the right sidebar → "Backlinks"
 - Use `#type/module` to find all Modules
-- Use `#hamafx-data` to find all files in this package
+- Use `#kestrel-data` to find all files in this package

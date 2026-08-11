@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,7 +27,7 @@ import { tool } from 'ai';
 
 import { getSentimentService } from '../sentiment';
 import { getToolContext } from '../tool-context';
-import { SymbolSchema } from '@hamafx/shared';
+import { SymbolSchema } from '@kestrel/shared';
 
 const InputSchema = z.object({
   symbol: SymbolSchema.describe('The supported gold, forex, or crypto symbol to get sentiment for'),
@@ -55,7 +55,7 @@ const _OutputSchema = z.object({
 
 export type GetSocialSentimentOutput = z.infer<typeof _OutputSchema>;
 
-declare module '@hamafx/shared' {
+declare module '@kestrel/shared' {
   interface ToolIOMap {
     get_social_sentiment: { input: z.infer<typeof InputSchema> };
   }

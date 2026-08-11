@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,19 +22,19 @@
 // flags when the correlation has flipped sign (the pair is *typically*
 // strongly negative — the dollar up = gold down).
 
-import { getCandles } from '@hamafx/data';
+import { getCandles } from '@kestrel/data';
 import {
   GetIntermarketInputSchema,
   type GetIntermarketOutput,
   type RiskRegime,
   type Symbol,
-} from '@hamafx/shared';
+} from '@kestrel/shared';
 import { tool } from 'ai';
 import type { z } from 'zod';
 
 const InputSchema = GetIntermarketInputSchema;
 
-declare module '@hamafx/shared' {
+declare module '@kestrel/shared' {
   interface ToolIOMap {
     get_intermarket: { input: z.infer<typeof InputSchema> };
   }

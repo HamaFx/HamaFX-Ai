@@ -1,6 +1,6 @@
 ---
 type: api_route
-package: "@hamafx/web"
+package: "@kestrel/web"
 path: "apps/web/src/app/api/market/structure/route.ts"
 incoming: 0
 outgoing: 1
@@ -13,7 +13,7 @@ aliases: [POST /api/market/structure]
 
 # 🔗 POST /api/market/structure
 
-> **API Route** · `@hamafx/web` · `apps/web/src/app/api/market/structure/route.ts`
+> **API Route** · `@kestrel/web` · `apps/web/src/app/api/market/structure/route.ts`
 
 
 API Route: POST /api/market/structure

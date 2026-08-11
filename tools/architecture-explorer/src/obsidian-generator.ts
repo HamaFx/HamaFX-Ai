@@ -45,7 +45,7 @@ function uniqueNodeFilename(node: any): string {
   const base = sanitizeFilename(node.name);
   const commonNames = new Set(['index', 'route', 'page', 'layout', 'types', 'utils', 'config', 'schema', 'constants', 'helpers']);
   if (commonNames.has(base) && node.pkg) {
-    const pkgShort = node.pkg.replace(/@hamafx\//, '').replace(/[^a-zA-Z0-9_-]/g, '-');
+    const pkgShort = node.pkg.replace(/@kestrel\//, '').replace(/[^a-zA-Z0-9_-]/g, '-');
     return `${base}_${pkgShort}`;
   }
   return base;
@@ -281,15 +281,15 @@ dv.table(
 
   const md = `---
 type: dashboard
-title: "HamaFX-Ai — Architecture Dashboard"
-tags: [dashboard, hamafx]
+title: "Kestrel — Architecture Dashboard"
+tags: [dashboard, kestrel]
 cssclasses: [dashboard]
 ---
 
-# 🏗️ HamaFX-Ai Architecture Dashboard
+# 🏗️ Kestrel Architecture Dashboard
 
 > **Auto-generated** from the codebase. Open **Graph View** (Ctrl+G) to see all connections.
-> Tags are hierarchical: \`#type/api_route\`, \`#hamafx/ai\`, \`#layer/data\`, \`#risk/high\`.
+> Tags are hierarchical: \`#type/api_route\`, \`#kestrel/ai\`, \`#layer/data\`, \`#risk/high\`.
 
 ## 📊 System Snapshot
 
@@ -545,7 +545,7 @@ function generatePackageOverview(outputDir: string, model: ArchitectureModel, wi
 
   const mocLinks = [...pkgMap.keys()]
     .sort()
-    .map((pkg) => `- [[MOC_${sanitizeFilename(pkg.replace(/[@/]/g, '-').replace(/^hamafx-/, ''))}]]`)
+    .map((pkg) => `- [[MOC_${sanitizeFilename(pkg.replace(/[@/]/g, '-').replace(/^kestrel-/, ''))}]]`)
     .join('\n');
 
   const HEATMAP_JS = `\`\`\`dataviewjs
@@ -599,7 +599,7 @@ function generatePackageMocs(
 
   for (const [pkg, nodes] of pkgMap) {
     const pkgTag = makeTag(pkg);
-    const mocName = sanitizeFilename(pkg.replace(/[@/]/g, '-').replace(/^hamafx-/, ''));
+    const mocName = sanitizeFilename(pkg.replace(/[@/]/g, '-').replace(/^kestrel-/, ''));
     const totalInc = nodes.reduce((sum, n) => sum + (incCountMap.get(n.id) ?? 0), 0);
     const totalOut = nodes.reduce((sum, n) => sum + (outCountMap.get(n.id) ?? 0), 0);
 
@@ -802,7 +802,7 @@ ${node.metadata?.exports?.length ? `\n## 📦 Exports\n${(node.metadata.exports 
 
 // ── CSS Snippet ──
 
-const DEVELOPER_CSS = `/* HamaFX-Ai Developer Vault — Custom CSS Snippet
+const DEVELOPER_CSS = `/* Kestrel Developer Vault — Custom CSS Snippet
  * Enhances the Obsidian vault for code architecture browsing.
  *
  * To enable: Settings → Appearance → CSS snippets → toggle "developer" on

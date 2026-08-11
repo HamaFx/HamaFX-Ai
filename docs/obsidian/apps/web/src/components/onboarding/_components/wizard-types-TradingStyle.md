@@ -1,19 +1,19 @@
 ---
 type: module
-package: "@hamafx/web"
+package: "@kestrel/web"
 path: "apps/web/src/components/onboarding/_components/wizard-types.ts"
 incoming: 8
 outgoing: 1
 connections: 9
 risk: low
 layer: core
-tags: [type/module, hamafx-web, layer/core]
+tags: [type/module, kestrel-web, layer/core]
 aliases: [wizard-types/TradingStyle]
 ---
 
 # 📁 wizard-types/TradingStyle
 
-> **Module** · `@hamafx/web` · `apps/web/src/components/onboarding/_components/wizard-types.ts`
+> **Module** · `@kestrel/web` · `apps/web/src/components/onboarding/_components/wizard-types.ts`
 
 
 Module: apps/web/src/components/onboarding/_components/wizard-types.ts
@@ -28,11 +28,11 @@ Module: apps/web/src/components/onboarding/_components/wizard-types.ts
 | Total connections | 9 |
 | Risk level | **LOW** |
 | Layer | `core` |
-| Package tag | `#hamafx-web` |
+| Package tag | `#kestrel-web` |
 
 
 ### 📤 Depends On (1)
-[[@hamafx-web]]
+[[@kestrel-web]]
 
 
 ### 📥 Depended On By (4)
@@ -50,4 +50,4 @@ Module: apps/web/src/components/onboarding/_components/wizard-types.ts
 - **Local Graph:** Right-click this file → "Open local graph"
 - **Backlinks:** Open the right sidebar → "Backlinks"
 - Use `#type/module` to find all Modules
-- Use `#hamafx-web` to find all files in this package
+- Use `#kestrel-web` to find all files in this package

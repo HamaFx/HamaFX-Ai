@@ -1,6 +1,6 @@
 ---
 type: package
-package: "@hamafx/shared"
+package: "@kestrel/shared"
 path: "packages/shared"
 incoming: 619
 outgoing: 0
@@ -8,15 +8,15 @@ connections: 619
 risk: high
 layer: package
 tags: [type/package, hamafx-shared, layer/package, risk/high]
-aliases: [@hamafx/shared]
+aliases: [@kestrel/shared]
 ---
 
-# 📦 @hamafx/shared
+# 📦 @kestrel/shared
 
-> **Package** · `@hamafx/shared` · `packages/shared`
+> **Package** · `@kestrel/shared` · `packages/shared`
 
 
-Package: @hamafx/shared
+Package: @kestrel/shared
 
 
 ## 📊 Connections

@@ -8,17 +8,17 @@
 // Pattern: Service (PF-22). Controllers remain thin: parse request →
 // call service → format Response.
 
-import { getCandlesWithMeta, getPriceWithMeta, getCandles, getDefaultCache } from '@hamafx/data';
-import { computeIndicator } from '@hamafx/indicators';
+import { getCandlesWithMeta, getPriceWithMeta, getCandles, getDefaultCache } from '@kestrel/data';
+import { computeIndicator } from '@kestrel/indicators';
 import {
   BUILTIN_SYMBOLS,
   type IndicatorResult,
   type Tick,
-} from '@hamafx/shared';
-import { schema, withRateLimit, withTenantDbRO } from '@hamafx/db';
-import { decryptByok } from '@hamafx/shared/encryption';
+} from '@kestrel/shared';
+import { schema, withRateLimit, withTenantDbRO } from '@kestrel/db';
+import { decryptByok } from '@kestrel/shared/encryption';
 import { eq } from 'drizzle-orm';
-import type { Candle } from '@hamafx/shared';
+import type { Candle } from '@kestrel/shared';
 
 // ── DTOs ─────────────────────────────────────────────────────────────────────
 

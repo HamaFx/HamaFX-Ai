@@ -10,7 +10,7 @@
  * Output shape:
  *   # <title or "Untitled thread">
  *
- *   _Exported <ISO date> from HamaFX-Ai · <symbol?>_
+ *   _Exported <ISO date> from Kestrel · <symbol?>_
  *
  *   ## User · <ISO timestamp>
  *   <text>
@@ -139,7 +139,7 @@ export function renderThreadToMarkdown(
   const symbolSuffix = thread.pinnedSymbol ? ` · ${thread.pinnedSymbol}` : '';
   const header =
     `# ${title}\n\n` +
-    `_Exported ${exportedAt} from HamaFX-Ai${symbolSuffix}_\n` +
+    `_Exported ${exportedAt} from Kestrel${symbolSuffix}_\n` +
     `_Thread ${thread.id}_\n\n`;
 
   if (slice.length === 0) {

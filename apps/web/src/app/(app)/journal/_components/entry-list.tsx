@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@
 // Advanced trade list with real-time price tracking, dynamic PnL sliders,
 // and powerful tabs/filters (Active, Closed, All, symbols, sides, text searches).
 
-import type { JournalEntry, Symbol, TradeSide } from '@hamafx/shared';
+import type { JournalEntry, Symbol, TradeSide } from '@kestrel/shared';
 import {IconSearch, IconAdjustmentsHorizontal, IconCompass} from '@tabler/icons-react';
 import { useState, useMemo, useRef } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';

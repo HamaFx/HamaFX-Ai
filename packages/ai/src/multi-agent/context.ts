@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,13 +19,13 @@
 import { buildLiveSnapshot } from '../context';
 export { extractUserMessageText } from '../message-text';
 import { buildSystemPrompt } from '../prompt/system';
-import type { UserSettingsRow } from '@hamafx/db/schema';
+import type { UserSettingsRow } from '@kestrel/db/schema';
 import type { UIMessage } from 'ai';
 import type { SharedContext, MultiAgentEnv } from './types';
-import { getCandles } from '@hamafx/data';
+import { getCandles } from '@kestrel/data';
 // P0-2: multi-agent pre-fetch still uses getDb() directly since
 // ToolContext is not set up in the multi-agent pipeline yet.
-import { schema } from '@hamafx/db';
+import { schema } from '@kestrel/db';
 import { getDb as getDbDirect } from '../db';
 import { gte, lte, and } from 'drizzle-orm';
 

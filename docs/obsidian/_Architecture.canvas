@@ -12,7 +12,7 @@
     {
       "id": "n2",
       "type": "file",
-      "file": "apps/@hamafx-web.md",
+      "file": "apps/@kestrel-web.md",
       "x": 500,
       "y": 50,
       "width": 320,
@@ -21,7 +21,7 @@
     {
       "id": "n3",
       "type": "file",
-      "file": "apps/@hamafx-worker.md",
+      "file": "apps/@kestrel-worker.md",
       "x": 950,
       "y": 50,
       "width": 320,
@@ -57,7 +57,7 @@
     {
       "id": "n7",
       "type": "file",
-      "file": "packages/@hamafx-ai.md",
+      "file": "packages/@kestrel-ai.md",
       "x": 950,
       "y": 500,
       "width": 320,
@@ -66,7 +66,7 @@
     {
       "id": "n8",
       "type": "file",
-      "file": "packages/@hamafx-config.md",
+      "file": "packages/@kestrel-config.md",
       "x": 1400,
       "y": 500,
       "width": 320,
@@ -75,7 +75,7 @@
     {
       "id": "n9",
       "type": "file",
-      "file": "packages/@hamafx-data.md",
+      "file": "packages/@kestrel-data.md",
       "x": 50,
       "y": 950,
       "width": 320,
@@ -84,7 +84,7 @@
     {
       "id": "n10",
       "type": "file",
-      "file": "packages/@hamafx-db.md",
+      "file": "packages/@kestrel-db.md",
       "x": 500,
       "y": 950,
       "width": 320,
@@ -93,7 +93,7 @@
     {
       "id": "n11",
       "type": "file",
-      "file": "packages/@hamafx-indicators.md",
+      "file": "packages/@kestrel-indicators.md",
       "x": 950,
       "y": 950,
       "width": 320,
@@ -102,7 +102,7 @@
     {
       "id": "n12",
       "type": "file",
-      "file": "packages/@hamafx-shared.md",
+      "file": "packages/@kestrel-shared.md",
       "x": 1400,
       "y": 950,
       "width": 320,
@@ -111,7 +111,7 @@
     {
       "id": "n13",
       "type": "file",
-      "file": "packages/@hamafx-test-utils.md",
+      "file": "packages/@kestrel-test-utils.md",
       "x": 50,
       "y": 1400,
       "width": 320,
@@ -147,7 +147,7 @@
   ],
   "edges": [
     {
-      "id": "@hamafx/web→@hamafx/config",
+      "id": "@kestrel/web→@kestrel/config",
       "fromNode": "n2",
       "toNode": "n8",
       "fromSide": "right",
@@ -156,7 +156,7 @@
       "color": "1"
     },
     {
-      "id": "@hamafx/web→@hamafx/shared",
+      "id": "@kestrel/web→@kestrel/shared",
       "fromNode": "n2",
       "toNode": "n12",
       "fromSide": "right",
@@ -165,7 +165,7 @@
       "color": "5"
     },
     {
-      "id": "@hamafx/web→@hamafx/ai",
+      "id": "@kestrel/web→@kestrel/ai",
       "fromNode": "n2",
       "toNode": "n7",
       "fromSide": "right",
@@ -174,7 +174,7 @@
       "color": "5"
     },
     {
-      "id": "@hamafx/web→@hamafx/db",
+      "id": "@kestrel/web→@kestrel/db",
       "fromNode": "n2",
       "toNode": "n10",
       "fromSide": "right",
@@ -183,7 +183,7 @@
       "color": "5"
     },
     {
-      "id": "@hamafx/web→@hamafx/data",
+      "id": "@kestrel/web→@kestrel/data",
       "fromNode": "n2",
       "toNode": "n9",
       "fromSide": "right",
@@ -192,7 +192,7 @@
       "color": "1"
     },
     {
-      "id": "@hamafx/web→@hamafx/indicators",
+      "id": "@kestrel/web→@kestrel/indicators",
       "fromNode": "n2",
       "toNode": "n11",
       "fromSide": "right",
@@ -201,16 +201,16 @@
       "color": "1"
     },
     {
-      "id": "@hamafx/web→@hamafx/test-utils",
+      "id": "@kestrel/web→@kestrel/test-utils",
       "fromNode": "n2",
       "toNode": "n13",
       "fromSide": "right",
       "toSide": "left",
-      "label": "91 deps",
+      "label": "92 deps",
       "color": "5"
     },
     {
-      "id": "@hamafx/worker→@hamafx/config",
+      "id": "@kestrel/worker→@kestrel/config",
       "fromNode": "n3",
       "toNode": "n8",
       "fromSide": "right",
@@ -219,7 +219,7 @@
       "color": "1"
     },
     {
-      "id": "@hamafx/worker→@hamafx/shared",
+      "id": "@kestrel/worker→@kestrel/shared",
       "fromNode": "n3",
       "toNode": "n12",
       "fromSide": "right",
@@ -228,7 +228,7 @@
       "color": "3"
     },
     {
-      "id": "@hamafx/worker→@hamafx/ai",
+      "id": "@kestrel/worker→@kestrel/ai",
       "fromNode": "n3",
       "toNode": "n7",
       "fromSide": "right",
@@ -237,7 +237,7 @@
       "color": "5"
     },
     {
-      "id": "@hamafx/worker→loadtest",
+      "id": "@kestrel/worker→loadtest",
       "fromNode": "n3",
       "toNode": "n6",
       "fromSide": "right",
@@ -246,7 +246,7 @@
       "color": "1"
     },
     {
-      "id": "@hamafx/worker→@hamafx/db",
+      "id": "@kestrel/worker→@kestrel/db",
       "fromNode": "n3",
       "toNode": "n10",
       "fromSide": "right",
@@ -255,7 +255,7 @@
       "color": "3"
     },
     {
-      "id": "@hamafx/worker→@hamafx/data",
+      "id": "@kestrel/worker→@kestrel/data",
       "fromNode": "n3",
       "toNode": "n9",
       "fromSide": "right",
@@ -264,7 +264,7 @@
       "color": "1"
     },
     {
-      "id": "@hamafx/worker→@hamafx/test-utils",
+      "id": "@kestrel/worker→@kestrel/test-utils",
       "fromNode": "n3",
       "toNode": "n13",
       "fromSide": "right",
@@ -273,7 +273,7 @@
       "color": "3"
     },
     {
-      "id": "@hamafx/ai→@hamafx/config",
+      "id": "@kestrel/ai→@kestrel/config",
       "fromNode": "n7",
       "toNode": "n8",
       "fromSide": "right",
@@ -282,7 +282,7 @@
       "color": "1"
     },
     {
-      "id": "@hamafx/ai→@hamafx/shared",
+      "id": "@kestrel/ai→@kestrel/shared",
       "fromNode": "n7",
       "toNode": "n12",
       "fromSide": "right",
@@ -291,7 +291,7 @@
       "color": "5"
     },
     {
-      "id": "@hamafx/ai→@hamafx/db",
+      "id": "@kestrel/ai→@kestrel/db",
       "fromNode": "n7",
       "toNode": "n10",
       "fromSide": "right",
@@ -300,7 +300,7 @@
       "color": "5"
     },
     {
-      "id": "@hamafx/ai→@hamafx/data",
+      "id": "@kestrel/ai→@kestrel/data",
       "fromNode": "n7",
       "toNode": "n9",
       "fromSide": "right",
@@ -309,7 +309,7 @@
       "color": "5"
     },
     {
-      "id": "@hamafx/ai→@hamafx/indicators",
+      "id": "@kestrel/ai→@kestrel/indicators",
       "fromNode": "n7",
       "toNode": "n11",
       "fromSide": "right",
@@ -318,7 +318,7 @@
       "color": "3"
     },
     {
-      "id": "@hamafx/ai→@hamafx/test-utils",
+      "id": "@kestrel/ai→@kestrel/test-utils",
       "fromNode": "n7",
       "toNode": "n13",
       "fromSide": "right",
@@ -327,7 +327,7 @@
       "color": "5"
     },
     {
-      "id": "@hamafx/data→@hamafx/config",
+      "id": "@kestrel/data→@kestrel/config",
       "fromNode": "n9",
       "toNode": "n8",
       "fromSide": "right",
@@ -336,7 +336,7 @@
       "color": "1"
     },
     {
-      "id": "@hamafx/data→@hamafx/shared",
+      "id": "@kestrel/data→@kestrel/shared",
       "fromNode": "n9",
       "toNode": "n12",
       "fromSide": "right",
@@ -345,7 +345,7 @@
       "color": "5"
     },
     {
-      "id": "@hamafx/data→@hamafx/db",
+      "id": "@kestrel/data→@kestrel/db",
       "fromNode": "n9",
       "toNode": "n10",
       "fromSide": "right",
@@ -354,7 +354,7 @@
       "color": "3"
     },
     {
-      "id": "@hamafx/data→@hamafx/test-utils",
+      "id": "@kestrel/data→@kestrel/test-utils",
       "fromNode": "n9",
       "toNode": "n13",
       "fromSide": "right",
@@ -363,7 +363,7 @@
       "color": "5"
     },
     {
-      "id": "@hamafx/db→@hamafx/config",
+      "id": "@kestrel/db→@kestrel/config",
       "fromNode": "n10",
       "toNode": "n8",
       "fromSide": "right",
@@ -372,7 +372,7 @@
       "color": "1"
     },
     {
-      "id": "@hamafx/db→@hamafx/shared",
+      "id": "@kestrel/db→@kestrel/shared",
       "fromNode": "n10",
       "toNode": "n12",
       "fromSide": "right",
@@ -381,7 +381,7 @@
       "color": "1"
     },
     {
-      "id": "@hamafx/db→@hamafx/test-utils",
+      "id": "@kestrel/db→@kestrel/test-utils",
       "fromNode": "n10",
       "toNode": "n13",
       "fromSide": "right",
@@ -390,7 +390,7 @@
       "color": "3"
     },
     {
-      "id": "@hamafx/indicators→@hamafx/config",
+      "id": "@kestrel/indicators→@kestrel/config",
       "fromNode": "n11",
       "toNode": "n8",
       "fromSide": "right",
@@ -399,7 +399,7 @@
       "color": "1"
     },
     {
-      "id": "@hamafx/indicators→@hamafx/shared",
+      "id": "@kestrel/indicators→@kestrel/shared",
       "fromNode": "n11",
       "toNode": "n12",
       "fromSide": "right",
@@ -408,7 +408,7 @@
       "color": "5"
     },
     {
-      "id": "@hamafx/indicators→@hamafx/test-utils",
+      "id": "@kestrel/indicators→@kestrel/test-utils",
       "fromNode": "n11",
       "toNode": "n13",
       "fromSide": "right",
@@ -417,7 +417,7 @@
       "color": "3"
     },
     {
-      "id": "@hamafx/shared→@hamafx/config",
+      "id": "@kestrel/shared→@kestrel/config",
       "fromNode": "n12",
       "toNode": "n8",
       "fromSide": "right",
@@ -426,7 +426,7 @@
       "color": "1"
     },
     {
-      "id": "@hamafx/shared→@hamafx/test-utils",
+      "id": "@kestrel/shared→@kestrel/test-utils",
       "fromNode": "n12",
       "toNode": "n13",
       "fromSide": "right",
@@ -435,7 +435,7 @@
       "color": "3"
     },
     {
-      "id": "@hamafx/test-utils→@hamafx/config",
+      "id": "@kestrel/test-utils→@kestrel/config",
       "fromNode": "n13",
       "toNode": "n8",
       "fromSide": "right",
@@ -444,7 +444,7 @@
       "color": "1"
     },
     {
-      "id": "@hamafx/test-utils→@hamafx/shared",
+      "id": "@kestrel/test-utils→@kestrel/shared",
       "fromNode": "n13",
       "toNode": "n12",
       "fromSide": "right",

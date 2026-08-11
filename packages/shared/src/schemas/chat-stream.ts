@@ -17,7 +17,7 @@ export const MultiAgentMetaEventSchema = baseEvent.extend({
 });
 export const AgentProgressEventSchema = z.object({
   type: z.literal('data-agent-progress'),
-  // Intentionally id-less: the tracker lives in @hamafx/ai and does not
+  // Intentionally id-less: the tracker lives in @kestrel/ai and does not
   // know the message id. The transport synthesizes its own id for the
   // resulting AI SDK data stream.
   data: z.unknown(),

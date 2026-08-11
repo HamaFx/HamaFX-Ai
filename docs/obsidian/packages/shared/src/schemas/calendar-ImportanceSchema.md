@@ -1,19 +1,19 @@
 ---
 type: module
-package: "@hamafx/shared"
+package: "@kestrel/shared"
 path: "packages/shared/src/schemas/calendar.ts"
 incoming: 2
 outgoing: 1
 connections: 3
 risk: low
 layer: core
-tags: [type/module, hamafx-shared, layer/core]
+tags: [type/module, kestrel-shared, layer/core]
 aliases: [calendar/ImportanceSchema]
 ---
 
 # 📁 calendar/ImportanceSchema
 
-> **Module** · `@hamafx/shared` · `packages/shared/src/schemas/calendar.ts`
+> **Module** · `@kestrel/shared` · `packages/shared/src/schemas/calendar.ts`
 
 
 Module: packages/shared/src/schemas/calendar.ts
@@ -28,11 +28,11 @@ Module: packages/shared/src/schemas/calendar.ts
 | Total connections | 3 |
 | Risk level | **LOW** |
 | Layer | `core` |
-| Package tag | `#hamafx-shared` |
+| Package tag | `#kestrel-shared` |
 
 
 ### 📤 Depends On (1)
-[[@hamafx-shared]]
+[[@kestrel-shared]]
 
 
 ### 📥 Depended On By (2)
@@ -56,4 +56,4 @@ Module: packages/shared/src/schemas/calendar.ts
 - **Local Graph:** Right-click this file → "Open local graph"
 - **Backlinks:** Open the right sidebar → "Backlinks"
 - Use `#type/module` to find all Modules
-- Use `#hamafx-shared` to find all files in this package
+- Use `#kestrel-shared` to find all files in this package

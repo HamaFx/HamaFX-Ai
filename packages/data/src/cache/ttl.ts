@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@
 // Per-resource TTL policy. Mirrors the table in docs/04-data-layer.md.
 // Tweak here, not at call sites.
 
-import type { Timeframe } from '@hamafx/shared';
+import type { Timeframe } from '@kestrel/shared';
 
 export interface TtlPolicy {
   /** Soft TTL — cached value is served fresh for this long. */

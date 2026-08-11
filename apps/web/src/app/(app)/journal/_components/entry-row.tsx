@@ -1,7 +1,7 @@
 'use client';
 
-import type { JournalEntry } from '@hamafx/shared';
-import { pipSize, getSymbolDefinition } from '@hamafx/shared';
+import type { JournalEntry } from '@kestrel/shared';
+import { pipSize, getSymbolDefinition } from '@kestrel/shared';
 import { IconArrowUpRight, IconArrowDownRight, IconPlayerPlay, IconTrash } from '@tabler/icons-react';
 import Image from 'next/image';
 import { useState, useMemo } from 'react';

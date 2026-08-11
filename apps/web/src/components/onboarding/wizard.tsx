@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,8 +19,8 @@
 import { useEffect, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { DEFAULT_WATCHLIST_SYMBOLS, type ProviderMeta } from '@hamafx/shared';
-import type { SymbolCatalogRow } from '@hamafx/db';
+import { DEFAULT_WATCHLIST_SYMBOLS, type ProviderMeta } from '@kestrel/shared';
+import type { SymbolCatalogRow } from '@kestrel/db';
 import { completeOnboardingAction } from '@/app/onboarding/actions';
 import { apiMutate } from '@/lib/api-client';
 

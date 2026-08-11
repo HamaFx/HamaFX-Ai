@@ -1,19 +1,19 @@
 ---
 type: module
-package: "@hamafx/ai"
+package: "@kestrel/ai"
 path: "packages/ai/src/bot/commands/committee.ts"
 incoming: 1
 outgoing: 7
 connections: 8
 risk: low
 layer: core
-tags: [type/module, hamafx-ai, layer/core]
+tags: [type/module, kestrel-ai, layer/core]
 aliases: [committee/committeeCommand]
 ---
 
 # 📁 committee/committeeCommand
 
-> **Module** · `@hamafx/ai` · `packages/ai/src/bot/commands/committee.ts`
+> **Module** · `@kestrel/ai` · `packages/ai/src/bot/commands/committee.ts`
 
 
 Module: packages/ai/src/bot/commands/committee.ts
@@ -28,11 +28,11 @@ Module: packages/ai/src/bot/commands/committee.ts
 | Total connections | 8 |
 | Risk level | **LOW** |
 | Layer | `core` |
-| Package tag | `#hamafx-ai` |
+| Package tag | `#kestrel-ai` |
 
 
 ### 📤 Depends On (5)
-[[types-BotPlatform]] · [[agent-runChat]] · [[@hamafx-shared]] · [[rate-limiter-RateLimitResult]] · [[@hamafx-ai]]
+[[types-BotPlatform]] · [[agent-runChat]] · [[@kestrel-shared]] · [[rate-limiter-RateLimitResult]] · [[@kestrel-ai]]
 
 
 ### 📥 Depended On By (1)
@@ -49,4 +49,4 @@ Module: packages/ai/src/bot/commands/committee.ts
 - **Local Graph:** Right-click this file → "Open local graph"
 - **Backlinks:** Open the right sidebar → "Backlinks"
 - Use `#type/module` to find all Modules
-- Use `#hamafx-ai` to find all files in this package
+- Use `#kestrel-ai` to find all files in this package

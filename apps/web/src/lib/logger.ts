@@ -12,7 +12,7 @@
 //   log.info('chat started', { threadId });
 //   log.errorContext(err, 'agent failed', { threadId });
 
-import { createCategorizedLogger, type CategorizedLogger } from '@hamafx/shared/logger';
+import { createCategorizedLogger, type CategorizedLogger } from '@kestrel/shared/logger';
 
 import { REQUEST_ID_HEADER } from './request-id';
 import type { RequestUser } from './api';

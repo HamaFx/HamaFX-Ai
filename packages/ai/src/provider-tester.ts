@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@
 // without pulling in all of model.ts.
 
 import { generateText } from 'ai';
-import type { ProviderId } from '@hamafx/shared/encryption';
+import type { ProviderId } from '@kestrel/shared/encryption';
 import { BYOK_PROVIDERS } from './byok-providers';
 import { extractRateLimits } from './rate-limits';
 import { noteLlmRateLimit } from './llm-throttle';

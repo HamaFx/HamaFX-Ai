@@ -7,11 +7,11 @@
  * during builds and never captures a user's account, market feed, or chat.
  *
  * Usage:
- *   pnpm --filter @hamafx/web generate:screenshots
- *   pnpm --filter @hamafx/web generate:screenshots --force
+ *   pnpm --filter @kestrel/web generate:screenshots
+ *   pnpm --filter @kestrel/web generate:screenshots --force
  */
 
-import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -35,6 +35,15 @@ const COLORS = {
   info: '#3B82F6',
   warn: '#F59E0B',
 };
+
+/** Brand logo embedded as a data URI so the SVG stays self-contained. */
+// White monochrome variant so the mark reads against the dark #0A0A0A canvas.
+const LOGO_DATA_URI = `data:image/png;base64,${readFileSync(resolve(WEB_ROOT, 'public/brand/kestrel-logo-white.png')).toString('base64')}`;
+
+/** Raster logo in an SVG — sized to the 3:2 source aspect. */
+function logoImage(x, y, width, height) {
+  return `<image href="${LOGO_DATA_URI}" x="${x}" y="${y}" width="${width}" height="${height}" preserveAspectRatio="xMidYMid meet"/>`;
+}
 
 const esc = (value) =>
   String(value)
@@ -63,14 +72,13 @@ function shell(body) {
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${WIDTH}" height="${HEIGHT}" viewBox="0 0 ${WIDTH} ${HEIGHT}">
   <rect width="100%" height="100%" fill="${COLORS.bg}"/>
   ${rect(48, 54, 984, 76, COLORS.panel, 2, COLORS.border)}
-  ${rect(72, 75, 32, 32, COLORS.brand, 2)}
-  ${text(88, 98, 'H', 20, '#FFFFFF', 800, 'middle')}
-  ${text(124, 91, 'HamaFX', 22, COLORS.fg, 700)}
+  ${logoImage(72, 71, 44, 29)}
+  ${text(132, 91, 'Kestrel', 22, COLORS.fg, 700)}
   ${text(124, 112, 'AI TRADING COPILOT', 11, COLORS.subtle, 600)}
   ${text(972, 95, 'DEMO', 12, COLORS.brand, 700, 'end')}
   ${body}
   ${rect(48, 1810, 984, 2, COLORS.border, 0)}
-  ${text(72, 1855, 'HamaFX-Ai', 14, COLORS.subtle, 600)}
+  ${text(72, 1855, 'Kestrel', 14, COLORS.subtle, 600)}
   ${text(1008, 1855, 'DEMO PREVIEW', 12, COLORS.subtle, 600, 'end')}
 </svg>`;
 }
@@ -88,7 +96,7 @@ function chatSvg() {
   body.push(text(104, 516, 'Give me the bias, key levels, and risk context.', 17, COLORS.muted, 500));
 
   body.push(rect(178, 592, 830, 436, COLORS.elevated, 2, COLORS.border));
-  body.push(text(214, 632, 'HAMAFX AI', 11, COLORS.info, 700));
+  body.push(text(214, 632, 'KESTREL AI', 11, COLORS.info, 700));
   body.push(text(214, 683, 'XAUUSD  ·  TECHNICAL READ', 19, COLORS.fg, 700));
   body.push(text(214, 731, 'The structure is constructive while price holds', 17, COLORS.muted, 500));
   body.push(text(214, 761, 'above the highlighted demand area.', 17, COLORS.muted, 500));
@@ -116,7 +124,7 @@ function chatSvg() {
 
   body.push(rect(72, 1280, 936, 178, COLORS.panel, 2, COLORS.border));
   body.push(text(104, 1322, 'NEW MESSAGE', 11, COLORS.subtle, 700));
-  body.push(text(104, 1370, 'Ask HamaFX anything about your markets...', 18, COLORS.muted, 500));
+  body.push(text(104, 1370, 'Ask Kestrel anything about your markets...', 18, COLORS.muted, 500));
   body.push(rect(884, 1360, 80, 54, COLORS.brand, 2));
   body.push(text(924, 1396, '↑', 25, '#FFFFFF', 700, 'middle'));
   body.push(text(104, 1428, '⌘ K  Commands', 12, COLORS.subtle, 500));

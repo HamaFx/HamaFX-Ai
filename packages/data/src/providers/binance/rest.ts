@@ -1,6 +1,6 @@
-import type { Symbol, Timeframe } from '@hamafx/shared';
+import type { Symbol, Timeframe } from '@kestrel/shared';
 
-import { getSymbolDefinition } from '@hamafx/shared';
+import { getSymbolDefinition } from '@kestrel/shared';
 import { noteBackoff, tryReserve, type ThrottleConfig } from '../../cache/throttle';
 import { ProviderError } from '../../errors';
 

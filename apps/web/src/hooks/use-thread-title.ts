@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -61,7 +61,7 @@ export function useThreadTitle({
           setTitle(t.title);
           titleFetchedRef.current[threadId] = true;
           if (typeof document !== 'undefined') {
-            document.title = `${t.title} · HamaFX-Ai`;
+            document.title = `${t.title} · Kestrel`;
           }
         }
       } catch {

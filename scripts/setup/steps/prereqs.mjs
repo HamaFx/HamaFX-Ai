@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,7 +33,7 @@ export function run(ctx) {
 
   if (ctx.pageMode) {
     io.line(
-      `  ${paint('Welcome!', 'bold', 'cyan')} Let us get HamaFX-Ai running on your computer.`,
+      `  ${paint('Welcome!', 'bold', 'cyan')} Let us get Kestrel running on your computer.`,
     );
     io.line(`  ${paint("We'll check your environment, then configure and launch it.", 'dim')}`);
     io.line();

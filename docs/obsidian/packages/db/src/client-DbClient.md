@@ -1,19 +1,19 @@
 ---
 type: module
-package: "@hamafx/db"
+package: "@kestrel/db"
 path: "packages/db/src/client.ts"
 incoming: 37
 outgoing: 2
 connections: 39
 risk: high
 layer: core
-tags: [type/module, hamafx-db, layer/core, risk/high]
+tags: [type/module, kestrel-db, layer/core, risk/high]
 aliases: [client/DbClient]
 ---
 
 # 📁 client/DbClient
 
-> **Module** · `@hamafx/db` · `packages/db/src/client.ts`
+> **Module** · `@kestrel/db` · `packages/db/src/client.ts`
 
 
 Module: packages/db/src/client.ts
@@ -28,11 +28,11 @@ Module: packages/db/src/client.ts
 | Total connections | 39 |
 | Risk level | **HIGH** |
 | Layer | `core` |
-| Package tag | `#hamafx-db` |
+| Package tag | `#kestrel-db` |
 
 
 ### 📤 Depends On (2)
-[[index_tool-architecture-explorer|index]] · [[@hamafx-db]]
+[[index_tool-architecture-explorer|index]] · [[@kestrel-db]]
 
 
 ### 📥 Depended On By (36)
@@ -61,4 +61,4 @@ Module: packages/db/src/client.ts
 - **Local Graph:** Right-click this file → "Open local graph"
 - **Backlinks:** Open the right sidebar → "Backlinks"
 - Use `#type/module` to find all Modules
-- Use `#hamafx-db` to find all files in this package
+- Use `#kestrel-db` to find all files in this package

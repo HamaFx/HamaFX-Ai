@@ -1,6 +1,6 @@
 ---
 type: module
-package: "@hamafx/indicators"
+package: "@kestrel/indicators"
 path: "packages/indicators/src/index.ts"
 incoming: 0
 outgoing: 1
@@ -13,7 +13,7 @@ aliases: [index]
 
 # 📁 index
 
-> **Module** · `@hamafx/indicators` · `packages/indicators/src/index.ts`
+> **Module** · `@kestrel/indicators` · `packages/indicators/src/index.ts`
 
 
 Module: packages/indicators/src/index.ts
@@ -32,7 +32,7 @@ Module: packages/indicators/src/index.ts
 
 
 ### 📤 Depends On (1)
-[[@hamafx-indicators]]
+[[@kestrel-indicators]]
 
 
 

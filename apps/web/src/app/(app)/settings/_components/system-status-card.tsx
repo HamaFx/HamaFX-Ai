@@ -6,9 +6,9 @@
 // directly + counts push subscriptions.
 
 import { cache } from 'react';
-import { listPushSubscriptions } from '@hamafx/ai';
-import { getDb } from '@hamafx/db';
-import { getMarketPhase, describeMarketPhase } from '@hamafx/shared';
+import { listPushSubscriptions } from '@kestrel/ai';
+import { getDb } from '@kestrel/db';
+import { getMarketPhase, describeMarketPhase } from '@kestrel/shared';
 import {IconCircleCheck, IconAlertCircle} from '@tabler/icons-react';
 import { sql } from 'drizzle-orm';
 

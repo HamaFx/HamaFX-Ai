@@ -1,19 +1,19 @@
 ---
 type: module
-package: "@hamafx/ai"
+package: "@kestrel/ai"
 path: "packages/ai/src/tools/registry.ts"
 incoming: 37
 outgoing: 3
 connections: 40
 risk: high
 layer: core
-tags: [type/module, hamafx-ai, layer/core, risk/high]
+tags: [type/module, kestrel-ai, layer/core, risk/high]
 aliases: [registry/ToolPlugin]
 ---
 
 # 📁 registry/ToolPlugin
 
-> **Module** · `@hamafx/ai` · `packages/ai/src/tools/registry.ts`
+> **Module** · `@kestrel/ai` · `packages/ai/src/tools/registry.ts`
 
 
 Module: packages/ai/src/tools/registry.ts
@@ -28,11 +28,11 @@ Module: packages/ai/src/tools/registry.ts
 | Total connections | 40 |
 | Risk level | **HIGH** |
 | Layer | `core` |
-| Package tag | `#hamafx-ai` |
+| Package tag | `#kestrel-ai` |
 
 
 ### 📤 Depends On (2)
-[[with-telemetry-withTelemetry]] · [[@hamafx-ai]]
+[[with-telemetry-withTelemetry]] · [[@kestrel-ai]]
 
 
 ### 📥 Depended On By (36)
@@ -52,4 +52,4 @@ Module: packages/ai/src/tools/registry.ts
 - **Local Graph:** Right-click this file → "Open local graph"
 - **Backlinks:** Open the right sidebar → "Backlinks"
 - Use `#type/module` to find all Modules
-- Use `#hamafx-ai` to find all files in this package
+- Use `#kestrel-ai` to find all files in this package

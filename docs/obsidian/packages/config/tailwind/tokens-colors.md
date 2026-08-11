@@ -1,19 +1,19 @@
 ---
 type: module
-package: "@hamafx/config"
+package: "@kestrel/config"
 path: "packages/config/tailwind/tokens.ts"
 incoming: 0
 outgoing: 1
 connections: 1
 risk: low
 layer: core
-tags: [type/module, hamafx-config, layer/core]
+tags: [type/module, kestrel-config, layer/core]
 aliases: [tokens/colors]
 ---
 
 # 📁 tokens/colors
 
-> **Module** · `@hamafx/config` · `packages/config/tailwind/tokens.ts`
+> **Module** · `@kestrel/config` · `packages/config/tailwind/tokens.ts`
 
 
 Module: packages/config/tailwind/tokens.ts
@@ -28,11 +28,11 @@ Module: packages/config/tailwind/tokens.ts
 | Total connections | 1 |
 | Risk level | **LOW** |
 | Layer | `core` |
-| Package tag | `#hamafx-config` |
+| Package tag | `#kestrel-config` |
 
 
 ### 📤 Depends On (1)
-[[@hamafx-config]]
+[[@kestrel-config]]
 
 
 
@@ -49,4 +49,4 @@ Module: packages/config/tailwind/tokens.ts
 - **Local Graph:** Right-click this file → "Open local graph"
 - **Backlinks:** Open the right sidebar → "Backlinks"
 - Use `#type/module` to find all Modules
-- Use `#hamafx-config` to find all files in this package
+- Use `#kestrel-config` to find all files in this package

@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -44,7 +44,7 @@ import { withToolContext } from '../src/tool-context';
 import { logJournalTool } from '../src/tools/log-journal';
 import { setAlertTool } from '../src/tools/set-alert';
 import { shareSnapshotTool } from '../src/tools/share-snapshot';
-import type { LogJournalOutput, SetAlertOutput, ShareSnapshotOutput } from '@hamafx/shared';
+import type { LogJournalOutput, SetAlertOutput, ShareSnapshotOutput } from '@kestrel/shared';
 
 function makeContext(latestUserMessageText: string) {
   return {
@@ -77,7 +77,7 @@ describe('mutation tool intent guards', () => {
     mocks.signShareTokenMock.mockReturnValue('signed-token');
 
     process.env.AUTH_COOKIE_SECRET = 'a'.repeat(32);
-    process.env.NEXT_PUBLIC_APP_URL = 'https://app.hamafx.test';
+    process.env.NEXT_PUBLIC_APP_URL = 'https://app.kestrel.test';
   });
 
   it('allows set_alert only when the user explicitly asks for an alert', async () => {
@@ -205,7 +205,7 @@ describe('mutation tool intent guards', () => {
         ),
     )) as ShareSnapshotOutput;
 
-    expect(result.url).toBe('https://app.hamafx.test/share/550e8400-e29b-41d4-a716-446655440000?t=signed-token');
+    expect(result.url).toBe('https://app.kestrel.test/share/550e8400-e29b-41d4-a716-446655440000?t=signed-token');
     expect(mocks.createSnapshotMock).toHaveBeenCalledOnce();
     expect(mocks.signShareTokenMock).toHaveBeenCalledOnce();
   });
@@ -222,7 +222,7 @@ describe('U6 — prompt-injection resistance', () => {
     mocks.createAlertMock.mockResolvedValue({ id: 'alert_123' });
     mocks.createEntryMock.mockResolvedValue({ id: 'entry_123' });
     process.env.AUTH_COOKIE_SECRET = 'a'.repeat(32);
-    process.env.NEXT_PUBLIC_APP_URL = 'https://app.hamafx.test';
+    process.env.NEXT_PUBLIC_APP_URL = 'https://app.kestrel.test';
   });
 
   it('blocks set_alert when injected news content tries to trigger it', async () => {

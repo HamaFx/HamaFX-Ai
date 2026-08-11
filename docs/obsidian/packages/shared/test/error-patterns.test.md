@@ -1,19 +1,19 @@
 ---
 type: module
-package: "@hamafx/shared"
+package: "@kestrel/shared"
 path: "packages/shared/test/error-patterns.test.ts"
 incoming: 0
 outgoing: 4
 connections: 4
 risk: low
 layer: core
-tags: [type/module, hamafx-shared, layer/core]
+tags: [type/module, kestrel-shared, layer/core]
 aliases: [error-patterns.test]
 ---
 
 # 📁 error-patterns.test
 
-> **Module** · `@hamafx/shared` · `packages/shared/test/error-patterns.test.ts`
+> **Module** · `@kestrel/shared` · `packages/shared/test/error-patterns.test.ts`
 
 
 Module: packages/shared/test/error-patterns.test.ts
@@ -28,11 +28,11 @@ Module: packages/shared/test/error-patterns.test.ts
 | Total connections | 4 |
 | Risk level | **LOW** |
 | Layer | `core` |
-| Package tag | `#hamafx-shared` |
+| Package tag | `#kestrel-shared` |
 
 
 ### 📤 Depends On (3)
-[[vitest-installServerOnlyStub]] · [[index-isTextPart]] · [[@hamafx-shared]]
+[[vitest-installServerOnlyStub]] · [[index-isTextPart]] · [[@kestrel-shared]]
 
 
 
@@ -43,4 +43,4 @@ Module: packages/shared/test/error-patterns.test.ts
 - **Local Graph:** Right-click this file → "Open local graph"
 - **Backlinks:** Open the right sidebar → "Backlinks"
 - Use `#type/module` to find all Modules
-- Use `#hamafx-shared` to find all files in this package
+- Use `#kestrel-shared` to find all files in this package

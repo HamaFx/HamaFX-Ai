@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,8 +20,8 @@
 // single call. Mirrors the /api/market/indicators route handler so the
 // chart UI and the AI agent always see identical numbers.
 
-import { getCandles } from '@hamafx/data';
-import { computeIndicator } from '@hamafx/indicators';
+import { getCandles } from '@kestrel/data';
+import { computeIndicator } from '@kestrel/indicators';
 import {
   IndicatorKindSchema,
   IndicatorParamsSchema,
@@ -29,7 +29,7 @@ import {
   TimeframeSchema,
   type GetIndicatorsOutput,
   type IndicatorResult,
-} from '@hamafx/shared';
+} from '@kestrel/shared';
 import { tool } from 'ai';
 import { z } from 'zod';
 
@@ -43,7 +43,7 @@ const InputSchema = z.object({
     .max(6),
 });
 
-declare module '@hamafx/shared' {
+declare module '@kestrel/shared' {
   interface ToolIOMap {
     get_indicators: { input: z.infer<typeof InputSchema> };
   }

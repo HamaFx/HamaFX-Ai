@@ -6,7 +6,7 @@ import { PageHeader } from '@/components/layout/page-header';
 
 import { AlertList } from './_components/alert-list';
 
-export const metadata: Metadata = { title: 'Alerts | HamaFX' };
+export const metadata: Metadata = { title: 'Alerts | Kestrel' };
 
 export default function AlertsPage() {
   return (

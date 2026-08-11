@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,9 +20,9 @@
 // Until that cron runs the table is empty and this tool returns an empty
 // array — that's fine, the model handles it gracefully.
 
-import { schema } from '@hamafx/db';
+import { schema } from '@kestrel/db';
 import { getDb } from '../db';
-import { SymbolSchema, type GetNewsOutput, type ToolNewsItem } from '@hamafx/shared';
+import { SymbolSchema, type GetNewsOutput, type ToolNewsItem } from '@kestrel/shared';
 import { tool } from 'ai';
 import { and, desc, eq, gte, sql } from 'drizzle-orm';
 import { z } from 'zod';
@@ -39,7 +39,7 @@ const InputSchema = z.object({
   minSentiment: z.number().min(0).max(1).optional(),
 });
 
-declare module '@hamafx/shared' {
+declare module '@kestrel/shared' {
   interface ToolIOMap {
     get_news: { input: z.infer<typeof InputSchema> };
   }

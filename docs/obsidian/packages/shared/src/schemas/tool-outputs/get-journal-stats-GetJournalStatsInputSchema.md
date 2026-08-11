@@ -1,19 +1,19 @@
 ---
 type: module
-package: "@hamafx/shared"
+package: "@kestrel/shared"
 path: "packages/shared/src/schemas/tool-outputs/get-journal-stats.ts"
 incoming: 2
 outgoing: 3
 connections: 5
 risk: low
 layer: core
-tags: [type/module, hamafx-shared, layer/core]
+tags: [type/module, kestrel-shared, layer/core]
 aliases: [get-journal-stats/GetJournalStatsInputSchema]
 ---
 
 # 📁 get-journal-stats/GetJournalStatsInputSchema
 
-> **Module** · `@hamafx/shared` · `packages/shared/src/schemas/tool-outputs/get-journal-stats.ts`
+> **Module** · `@kestrel/shared` · `packages/shared/src/schemas/tool-outputs/get-journal-stats.ts`
 
 
 Module: packages/shared/src/schemas/tool-outputs/get-journal-stats.ts
@@ -28,11 +28,11 @@ Module: packages/shared/src/schemas/tool-outputs/get-journal-stats.ts
 | Total connections | 5 |
 | Risk level | **LOW** |
 | Layer | `core` |
-| Package tag | `#hamafx-shared` |
+| Package tag | `#kestrel-shared` |
 
 
 ### 📤 Depends On (3)
-[[symbols-SYMBOLS]] · [[journal-TradeSideSchema]] · [[@hamafx-shared]]
+[[symbols-SYMBOLS]] · [[journal-TradeSideSchema]] · [[@kestrel-shared]]
 
 
 ### 📥 Depended On By (1)
@@ -54,4 +54,4 @@ Module: packages/shared/src/schemas/tool-outputs/get-journal-stats.ts
 - **Local Graph:** Right-click this file → "Open local graph"
 - **Backlinks:** Open the right sidebar → "Backlinks"
 - Use `#type/module` to find all Modules
-- Use `#hamafx-shared` to find all files in this package
+- Use `#kestrel-shared` to find all files in this package

@@ -42,7 +42,7 @@ describe('renderThreadToMarkdown — header', () => {
 
   it('includes the export timestamp and pinned symbol in the header', () => {
     const md = renderThreadToMarkdown(THREAD, [], { exportedAt: NOW_ISO });
-    expect(md).toContain(`_Exported ${NOW_ISO} from HamaFX-Ai · XAUUSD_`);
+    expect(md).toContain(`_Exported ${NOW_ISO} from Kestrel · XAUUSD_`);
   });
 
   it('omits the symbol suffix when no symbol is pinned', () => {

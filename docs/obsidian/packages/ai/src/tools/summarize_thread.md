@@ -1,19 +1,19 @@
 ---
 type: tool
-package: "@hamafx/ai"
+package: "@kestrel/ai"
 path: "packages/ai/src/tools/summarize-thread.ts"
 incoming: 1
 outgoing: 9
 connections: 10
 risk: low
 layer: ai
-tags: [type/tool, hamafx-ai, layer/ai]
+tags: [type/tool, kestrel-ai, layer/ai]
 aliases: [summarize_thread]
 ---
 
 # 🔧 summarize_thread
 
-> **AI Tool** · `@hamafx/ai` · `packages/ai/src/tools/summarize-thread.ts`
+> **AI Tool** · `@kestrel/ai` · `packages/ai/src/tools/summarize-thread.ts`
 
 
 One-paragraph synopsis of the active chat thread plus three durable insights. Use when the user asks
@@ -28,11 +28,11 @@ One-paragraph synopsis of the active chat thread plus three durable insights. Us
 | Total connections | 10 |
 | Risk level | **LOW** |
 | Layer | `ai` |
-| Package tag | `#hamafx-ai` |
+| Package tag | `#kestrel-ai` |
 
 
 ### 📤 Depends On (8)
-[[@hamafx-shared]] · [[memory-index-MemoryKind]] · [[model-resolveModel]] · [[persistence-listThreads]] · [[tool-context-ToolEnv]] · [[telemetry-telemetryConfig]] · [[@hamafx-ai]] · [[registry-ToolPlugin]]
+[[@kestrel-shared]] · [[memory-index-MemoryKind]] · [[model-resolveModel]] · [[persistence-listThreads]] · [[tool-context-ToolEnv]] · [[telemetry-telemetryConfig]] · [[@kestrel-ai]] · [[registry-ToolPlugin]]
 
 
 ### 📥 Depended On By (1)
@@ -49,4 +49,4 @@ One-paragraph synopsis of the active chat thread plus three durable insights. Us
 - **Local Graph:** Right-click this file → "Open local graph"
 - **Backlinks:** Open the right sidebar → "Backlinks"
 - Use `#type/tool` to find all AI Tools
-- Use `#hamafx-ai` to find all files in this package
+- Use `#kestrel-ai` to find all files in this package

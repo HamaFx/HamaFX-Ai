@@ -1,6 +1,6 @@
 ---
 type: module
-package: "@hamafx/ai"
+package: "@kestrel/ai"
 path: "packages/ai/src/diagnostics/index.ts"
 incoming: 2
 outgoing: 2
@@ -13,7 +13,7 @@ aliases: [index]
 
 # 📁 index
 
-> **Module** · `@hamafx/ai` · `packages/ai/src/diagnostics/index.ts`
+> **Module** · `@kestrel/ai` · `packages/ai/src/diagnostics/index.ts`
 
 
 Module: packages/ai/src/diagnostics/index.ts
@@ -32,7 +32,7 @@ Module: packages/ai/src/diagnostics/index.ts
 
 
 ### 📤 Depends On (1)
-[[@hamafx-ai]]
+[[@kestrel-ai]]
 
 
 ### 📥 Depended On By (2)

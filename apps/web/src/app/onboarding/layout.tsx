@@ -4,7 +4,7 @@ import type { ReactNode } from 'react';
 import { Toaster } from '@/components/ui/toaster';
 
 export const metadata = {
-  title: 'Welcome - HamaFX-Ai',
+  title: 'Welcome - Kestrel',
 };
 
 export default function OnboardingLayout({ children }: { children: ReactNode }) {

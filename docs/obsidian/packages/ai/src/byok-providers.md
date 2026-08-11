@@ -1,6 +1,6 @@
 ---
 type: module
-package: "@hamafx/ai"
+package: "@kestrel/ai"
 path: "packages/ai/src/byok-providers.ts"
 incoming: 13
 outgoing: 1
@@ -13,7 +13,7 @@ aliases: [byok-providers]
 
 # 📁 byok-providers
 
-> **Module** · `@hamafx/ai` · `packages/ai/src/byok-providers.ts`
+> **Module** · `@kestrel/ai` · `packages/ai/src/byok-providers.ts`
 
 
 Module: packages/ai/src/byok-providers.ts
@@ -32,7 +32,7 @@ Module: packages/ai/src/byok-providers.ts
 
 
 ### 📤 Depends On (1)
-[[@hamafx-ai]]
+[[@kestrel-ai]]
 
 
 ### 📥 Depended On By (10)

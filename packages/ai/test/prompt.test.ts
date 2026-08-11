@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { buildSystemPrompt } from '../src/prompt/system';
-import { getMarketPhase, type MarketPhaseContext } from '@hamafx/shared';
+import { getMarketPhase, type MarketPhaseContext } from '@kestrel/shared';
 
 describe('buildSystemPrompt', () => {
   it('returns the base prompt when given no snapshot', () => {

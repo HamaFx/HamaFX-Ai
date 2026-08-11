@@ -1,6 +1,6 @@
 ---
 type: component
-package: "@hamafx/web"
+package: "@kestrel/web"
 path: "apps/web/src/components/chart/overlay-toggle.tsx"
 incoming: 0
 outgoing: 4
@@ -13,7 +13,7 @@ aliases: [overlay-toggle/useOverlayToggles]
 
 # 🧩 overlay-toggle/useOverlayToggles
 
-> **Component** · `@hamafx/web` · `apps/web/src/components/chart/overlay-toggle.tsx`
+> **Component** · `@kestrel/web` · `apps/web/src/components/chart/overlay-toggle.tsx`
 
 
 React component: overlay-toggle
@@ -32,7 +32,7 @@ React component: overlay-toggle
 
 
 ### 📤 Depends On (3)
-[[@hamafx-shared]] · [[overlay-constants-ALL_KINDS]] · [[@hamafx-web]]
+[[@kestrel-shared]] · [[overlay-constants-ALL_KINDS]] · [[@kestrel-web]]
 
 
 

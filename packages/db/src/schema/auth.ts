@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -196,7 +196,7 @@ export const userSettings = pgTable('user_settings', {
   /**
    * Telegram integration — per-user bot token.
    * Encrypted at rest with AES-256-GCM using ENCRYPTION_SECRET
-   * (same scheme as aiApiKeys). See @hamafx/shared/encryption.
+   * (same scheme as aiApiKeys). See @kestrel/shared/encryption.
    */
   telegramBotToken: text('telegram_bot_token'),
   /** Telegram chat ID for direct messages. */

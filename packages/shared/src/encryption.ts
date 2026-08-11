@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,14 +24,14 @@
 // SERVER-ONLY: This module imports `node:crypto` and must not be pulled
 // into a client component. The `server-only` import is a build-time guard
 // that throws if any client bundle tries to include it. The barrel
-// re-exports in @hamafx/shared will then fail loudly in the next build,
+// re-exports in @kestrel/shared will then fail loudly in the next build,
 // pointing the developer at whichever client import is the culprit.
 //
 // Design:
 //   - Plaintext shape: { [providerId]: apiKey } — see PROVIDER_IDS for the
 //     exhaustive list of supported keys. Adding a provider means adding
 //     one field here plus a matching entry in the BYOK registry in
-//     @hamafx/ai (packages/ai/src/byok-providers.ts).
+//     @kestrel/ai (packages/ai/src/byok-providers.ts).
 //   - Encrypted format: hex(iv) + "." + hex(ciphertext) + "." + hex(authTag)
 //   - Never log plaintext keys. Errors reference field names only.
 
@@ -48,7 +48,7 @@ const AUTH_TAG_LENGTH = 16; // 128 bits
 /**
  * Canonical list of BYOK provider ids. The encryption payload is keyed
  * by these strings. The runtime registry lives in
- * `@hamafx/ai/src/byok-providers.ts` — keep the two in sync.
+ * `@kestrel/ai/src/byok-providers.ts` — keep the two in sync.
  *
  * The types live in `./byok.ts` so test files can reference them
  * without pulling node:crypto / `server-only` into the test bundle.

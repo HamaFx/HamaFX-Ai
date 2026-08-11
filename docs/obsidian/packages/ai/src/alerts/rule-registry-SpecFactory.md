@@ -1,19 +1,19 @@
 ---
 type: module
-package: "@hamafx/ai"
+package: "@kestrel/ai"
 path: "packages/ai/src/alerts/rule-registry.ts"
 incoming: 3
 outgoing: 4
 connections: 7
 risk: low
 layer: core
-tags: [type/module, hamafx-ai, layer/core]
+tags: [type/module, kestrel-ai, layer/core]
 aliases: [rule-registry/SpecFactory]
 ---
 
 # 📁 rule-registry/SpecFactory
 
-> **Module** · `@hamafx/ai` · `packages/ai/src/alerts/rule-registry.ts`
+> **Module** · `@kestrel/ai` · `packages/ai/src/alerts/rule-registry.ts`
 
 
 Module: packages/ai/src/alerts/rule-registry.ts
@@ -28,11 +28,11 @@ Module: packages/ai/src/alerts/rule-registry.ts
 | Total connections | 7 |
 | Risk level | **LOW** |
 | Layer | `core` |
-| Package tag | `#hamafx-ai` |
+| Package tag | `#kestrel-ai` |
 
 
 ### 📤 Depends On (3)
-[[@hamafx-shared]] · [[spec-RuleReading]] · [[@hamafx-ai]]
+[[@kestrel-shared]] · [[spec-RuleReading]] · [[@kestrel-ai]]
 
 
 ### 📥 Depended On By (3)
@@ -53,4 +53,4 @@ Module: packages/ai/src/alerts/rule-registry.ts
 - **Local Graph:** Right-click this file → "Open local graph"
 - **Backlinks:** Open the right sidebar → "Backlinks"
 - Use `#type/module` to find all Modules
-- Use `#hamafx-ai` to find all files in this package
+- Use `#kestrel-ai` to find all files in this package

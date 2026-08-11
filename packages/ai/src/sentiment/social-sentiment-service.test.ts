@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { SocialSentimentService, resetSentimentService } from './social-sentiment-service';
-import { scoreToLabel, detectContrarianSignal } from '@hamafx/shared';
+import { scoreToLabel, detectContrarianSignal } from '@kestrel/shared';
 
 afterEach(() => {
   resetSentimentService();

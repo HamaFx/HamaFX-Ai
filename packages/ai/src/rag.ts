@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,9 +30,9 @@
 // hybrid path is opt-in via the new `memoryKinds` argument so existing
 // behaviour stays bit-stable when the agent doesn't ask for memory.
 
-import { schema } from '@hamafx/db';
+import { schema } from '@kestrel/db';
 import { getDb } from './db';
-import type { NewsSentiment, SearchKnowledgeItem, Symbol } from '@hamafx/shared';
+import type { NewsSentiment, SearchKnowledgeItem, Symbol } from '@kestrel/shared';
 import { sql } from 'drizzle-orm';
 
 import { embedTexts, vectorLiteral } from './embeddings';

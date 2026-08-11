@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,7 +30,7 @@ import {
   type RouteType,
   type Severity,
   severityRank,
-} from '@hamafx/shared';
+} from '@kestrel/shared';
 
 // ---------------------------------------------------------------------------
 // State abstraction — the caller provides a simple key-value store

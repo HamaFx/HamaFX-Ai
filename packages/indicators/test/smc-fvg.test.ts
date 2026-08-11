@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import type { Candle } from '@hamafx/shared';
+import type { Candle } from '@kestrel/shared';
 import { describe, expect, it } from 'vitest';
 
 import { detectFvgs } from '../src/smc/fvg';

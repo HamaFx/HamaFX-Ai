@@ -1,4 +1,4 @@
-import { tryGetSymbolDefinition, type Timeframe } from '@hamafx/shared';
+import { tryGetSymbolDefinition, type Timeframe } from '@kestrel/shared';
 
 const TO_BINANCE_INTERVAL: Record<Timeframe, string> = {
   '1m': '1m',

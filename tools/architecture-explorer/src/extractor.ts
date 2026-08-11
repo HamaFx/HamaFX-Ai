@@ -191,8 +191,8 @@ function extractImports(content: string, relPath: string): ImportInfo[] {
 }
 
 function normalizeImportPath(importPath: string, currentRelPath: string): string {
-  if (!importPath.startsWith('.') && !importPath.startsWith('@hamafx')) return importPath;
-  if (importPath.startsWith('@hamafx')) return importPath;
+  if (!importPath.startsWith('.') && !importPath.startsWith('@kestrel')) return importPath;
+  if (importPath.startsWith('@kestrel')) return importPath;
 
   const resolved = path.join(path.dirname(currentRelPath), importPath).replace(/\\/g, '/');
   return resolved.replace(/\.(ts|tsx|js|jsx|mjs|mts)$/, '').replace(/\/index$/, '');

@@ -10,7 +10,7 @@
 import '@testing-library/jest-dom/vitest';
 import { webcrypto } from 'node:crypto';
 
-// Set DB env vars for tests that import the real @hamafx/db module
+// Set DB env vars for tests that import the real @kestrel/db module
 // (e.g. settings-actions.test.ts uses importOriginal). Tests use mocked
 // DB clients so no actual connection is needed — the env var just needs
 // to exist so getDb()'s module-level guard doesn't throw.

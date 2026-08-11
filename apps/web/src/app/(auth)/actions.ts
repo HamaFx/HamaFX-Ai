@@ -7,8 +7,8 @@ import { AuthError } from 'next-auth';
 import { headers } from 'next/headers';
 import { z } from 'zod';
 
-import { schema, withRateLimit, userExistsByEmail, createUserWithSettings, createVerificationToken } from '@hamafx/db'
-import { getDb } from '@hamafx/ai';
+import { schema, withRateLimit, userExistsByEmail, createUserWithSettings, createVerificationToken } from '@kestrel/db'
+import { getDb } from '@kestrel/ai';
 import { signIn } from '@/auth';
 import { createScopedLoggerWithContext } from '@/lib/logger';
 import { recordAuthEvent } from '@/lib/auth-anomaly';
@@ -286,7 +286,7 @@ async function sendPasswordResetEmail(to: string, resetUrl: string) {
       body: JSON.stringify({
         from: fromEmail,
         to: [to],
-        subject: '[HamaFX-Ai] Reset your password',
+        subject: '[Kestrel] Reset your password',
         html: `<p>Click the link below to reset your password. This link expires in 1 hour.</p><p><a href="${resetUrl}">${resetUrl}</a></p>`,
       }),
     });
@@ -330,8 +330,8 @@ async function sendVerificationEmail(to: string, verifyUrl: string) {
       body: JSON.stringify({
         from: fromEmail,
         to: [to],
-        subject: '[HamaFX-Ai] Verify your email address',
-        html: `<p>Welcome to HamaFX-Ai! Click the link below to verify your email address. This link expires in 24 hours.</p><p><a href="${verifyUrl}">${verifyUrl}</a></p>`,
+        subject: '[Kestrel] Verify your email address',
+        html: `<p>Welcome to Kestrel! Click the link below to verify your email address. This link expires in 24 hours.</p><p><a href="${verifyUrl}">${verifyUrl}</a></p>`,
       }),
     });
     if (!res.ok) {

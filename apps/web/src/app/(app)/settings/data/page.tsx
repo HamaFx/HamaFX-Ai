@@ -3,12 +3,12 @@
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { auth } from '@/auth';
-import { getUserWithSettings, listUserSymbols } from '@hamafx/db';
-import { DEFAULT_WATCHLIST_SYMBOLS } from '@hamafx/shared';
+import { getUserWithSettings, listUserSymbols } from '@kestrel/db';
+import { DEFAULT_WATCHLIST_SYMBOLS } from '@kestrel/shared';
 import { DataCard } from '../_components/data/data-card';
 import { PreferencesCard } from '../_components/data/preferences-card';
 
-export const metadata: Metadata = { title: 'Data | Settings | HamaFX' };
+export const metadata: Metadata = { title: 'Data | Settings | Kestrel' };
 export const revalidate = 60;
 
 export default async function DataPage() {

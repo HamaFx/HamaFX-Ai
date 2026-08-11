@@ -1,19 +1,19 @@
 ---
 type: module
-package: "@hamafx/ai"
+package: "@kestrel/ai"
 path: "packages/ai/src/embeddings.ts"
 incoming: 4
 outgoing: 6
 connections: 10
 risk: low
 layer: core
-tags: [type/module, hamafx-ai, layer/core]
+tags: [type/module, kestrel-ai, layer/core]
 aliases: [embeddings/EmbedTextsArgs]
 ---
 
 # 📁 embeddings/EmbedTextsArgs
 
-> **Module** · `@hamafx/ai` · `packages/ai/src/embeddings.ts`
+> **Module** · `@kestrel/ai` · `packages/ai/src/embeddings.ts`
 
 
 Module: packages/ai/src/embeddings.ts
@@ -28,11 +28,11 @@ Module: packages/ai/src/embeddings.ts
 | Total connections | 10 |
 | Risk level | **LOW** |
 | Layer | `core` |
-| Package tag | `#hamafx-ai` |
+| Package tag | `#kestrel-ai` |
 
 
 ### 📤 Depends On (4)
-[[@hamafx-shared]] · [[@hamafx-db]] · [[model-resolveModel]] · [[@hamafx-ai]]
+[[@kestrel-shared]] · [[@kestrel-db]] · [[model-resolveModel]] · [[@kestrel-ai]]
 
 
 ### 📥 Depended On By (4)
@@ -52,4 +52,4 @@ Module: packages/ai/src/embeddings.ts
 - **Local Graph:** Right-click this file → "Open local graph"
 - **Backlinks:** Open the right sidebar → "Backlinks"
 - Use `#type/module` to find all Modules
-- Use `#hamafx-ai` to find all files in this package
+- Use `#kestrel-ai` to find all files in this package

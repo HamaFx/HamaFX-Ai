@@ -1,11 +1,11 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 
 // Mock all external dependencies for buildLiveSnapshot
-vi.mock('@hamafx/data', () => ({
+vi.mock('@kestrel/data', () => ({
   getPrice: vi.fn(),
 }));
 
-vi.mock('@hamafx/db', () => ({
+vi.mock('@kestrel/db', () => ({
   schema: {},
   listUserSymbols: vi.fn(),
 }));
@@ -22,7 +22,7 @@ vi.mock('../src/db', () => ({
   })),
 }));
 
-vi.mock('@hamafx/shared', () => ({
+vi.mock('@kestrel/shared', () => ({
   SYMBOLS: ['XAUUSD'],
   getMarketPhase: vi.fn(() => 'off'),
 }));
@@ -32,7 +32,7 @@ vi.mock('drizzle-orm', () => ({
   eq: vi.fn(),
 }));
 
-vi.mock('@hamafx/shared/logger', () => ({
+vi.mock('@kestrel/shared/logger', () => ({
   createCategorizedLogger: vi.fn(() => ({
     warn: vi.fn(),
     info: vi.fn(),

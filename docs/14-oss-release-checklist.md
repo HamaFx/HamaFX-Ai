@@ -33,7 +33,7 @@ This checklist intentionally does **not** revoke or rotate credentials.
 - [ ] `pnpm typecheck`
 - [ ] `pnpm turbo run test -- --run`
 - [ ] `pnpm turbo run build`
-- [ ] `pnpm --filter @hamafx/web bundle-size:check`
+- [ ] `pnpm --filter @kestrel/web bundle-size:check`
 - [ ] `./docker/backup-restore-smoke.sh` with Docker available
 - [ ] Verify a clean checkout can complete the documented local or Docker setup.
 

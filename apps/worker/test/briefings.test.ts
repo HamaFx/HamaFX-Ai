@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-vi.mock('@hamafx/ai', () => ({
+vi.mock('@kestrel/ai', () => ({
   emitPreEvent: vi.fn(),
   emitPostEvent: vi.fn(),
   findHighImpactEventsInWindow: vi.fn(),
@@ -24,7 +24,7 @@ vi.mock('@hamafx/ai', () => ({
 
 // One user — matches the per-user loop in the new multi-user source.
 // These tests count emits per (event × user), not per event alone.
-vi.mock('@hamafx/db', () => ({
+vi.mock('@kestrel/db', () => ({
   getDb: () => ({
     select: vi.fn(() => ({
       from: vi.fn(async () => [{ id: 'u1' }]),
@@ -34,7 +34,7 @@ vi.mock('@hamafx/db', () => ({
   getActiveUserIds: vi.fn(async () => ['u1']),
 }));
 
-import * as ai from '@hamafx/ai';
+import * as ai from '@kestrel/ai';
 
 import { runBriefings } from '../src/jobs/briefings';
 import { TenantRouter } from '../src/tenant-router';

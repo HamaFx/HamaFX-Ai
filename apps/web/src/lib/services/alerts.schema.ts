@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { z } from 'zod';
-import { AlertChannelSchema, AlertRuleSchema } from '@hamafx/shared';
+import { AlertChannelSchema, AlertRuleSchema } from '@kestrel/shared';
 
 /**
  * Client-safe alert schemas.

@@ -1,19 +1,19 @@
 ---
 type: tool
-package: "@hamafx/ai"
+package: "@kestrel/ai"
 path: "packages/ai/src/tools/set-alert.ts"
 incoming: 2
 outgoing: 7
 connections: 9
 risk: low
 layer: ai
-tags: [type/tool, hamafx-ai, layer/ai]
+tags: [type/tool, kestrel-ai, layer/ai]
 aliases: [set_alert]
 ---
 
 # 🔧 set_alert
 
-> **AI Tool** · `@hamafx/ai` · `packages/ai/src/tools/set-alert.ts`
+> **AI Tool** · `@kestrel/ai` · `packages/ai/src/tools/set-alert.ts`
 
 
 Create a one-shot price / indicator / candle-close alert. Fires when the rule first matches and then deactivates. The user can resend by editing the alert in /alerts.
@@ -28,11 +28,11 @@ Create a one-shot price / indicator / candle-close alert. Fires when the rule fi
 | Total connections | 9 |
 | Risk level | **LOW** |
 | Layer | `ai` |
-| Package tag | `#hamafx-ai` |
+| Package tag | `#kestrel-ai` |
 
 
 ### 📤 Depends On (7)
-[[@hamafx-shared]] · [[persistence-CreateAlertInput]] · [[tool-context-ToolEnv]] · [[mutation-guard-assertMutationIntent]] · [[rule-registry-SpecFactory]] · [[@hamafx-ai]] · [[registry-ToolPlugin]]
+[[@kestrel-shared]] · [[persistence-CreateAlertInput]] · [[tool-context-ToolEnv]] · [[mutation-guard-assertMutationIntent]] · [[rule-registry-SpecFactory]] · [[@kestrel-ai]] · [[registry-ToolPlugin]]
 
 
 ### 📥 Depended On By (2)
@@ -49,4 +49,4 @@ Create a one-shot price / indicator / candle-close alert. Fires when the rule fi
 - **Local Graph:** Right-click this file → "Open local graph"
 - **Backlinks:** Open the right sidebar → "Backlinks"
 - Use `#type/tool` to find all AI Tools
-- Use `#hamafx-ai` to find all files in this package
+- Use `#kestrel-ai` to find all files in this package

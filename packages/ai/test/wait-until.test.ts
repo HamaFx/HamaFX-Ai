@@ -4,7 +4,7 @@ vi.mock('server-only', () => ({}));
 
 // Mock the structured logger used by wait-until's shim fallback
 const mockWarn = vi.fn();
-vi.mock('@hamafx/shared/logger', () => ({
+vi.mock('@kestrel/shared/logger', () => ({
   createCategorizedLogger: () => ({ warn: mockWarn }),
 }));
 

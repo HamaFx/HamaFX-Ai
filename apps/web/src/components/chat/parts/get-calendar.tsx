@@ -12,7 +12,7 @@
 
 import Link from 'next/link';
 import { IconAlertTriangle, IconCalendarEvent } from '@tabler/icons-react';
-import type { GetCalendarOutput, ToolCalendarItem } from '@hamafx/shared';
+import type { GetCalendarOutput, ToolCalendarItem } from '@kestrel/shared';
 
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';

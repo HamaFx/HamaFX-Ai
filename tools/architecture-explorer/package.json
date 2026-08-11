@@ -2,7 +2,7 @@
   "name": "hamafx-architecture-explorer",
   "version": "1.0.0",
   "private": true,
-  "description": "Self-contained architecture explorer for HamaFX-Ai",
+  "description": "Self-contained architecture explorer for Kestrel",
   "type": "module",
   "scripts": {
     "scan": "tsx src/index.ts",

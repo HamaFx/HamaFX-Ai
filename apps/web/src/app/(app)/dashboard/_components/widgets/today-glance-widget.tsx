@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,7 +27,7 @@
 
 import {IconClock, IconCompass, IconAlertTriangle, IconBolt} from '@tabler/icons-react';
 import Link from 'next/link';
-import type { JournalEntry, EconomicEvent, Symbol } from '@hamafx/shared';
+import type { JournalEntry, EconomicEvent, Symbol } from '@kestrel/shared';
 
 import { useTime } from '@/components/providers/time-provider';
 import { formatCountdown } from '@/lib/datetime';

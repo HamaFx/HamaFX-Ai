@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,7 +32,7 @@ import {
   type IndicatorResult,
   type Symbol,
   type Timeframe,
-} from '@hamafx/shared';
+} from '@kestrel/shared';
 
 // Import the barrel that triggers all indicator self-registrations.
 import { indicatorRegistry } from './indicator-registry';

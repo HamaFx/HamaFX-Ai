@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,7 +33,7 @@ export class TechnicalAgent extends BaseAgent {
   readonly modelTier: ModelTier = 'fast';
 
   systemPrompt(): string {
-    return `You are a Technical Analysis Agent for HamaFX-Ai, an AI forex/XAUUSD trading copilot.
+    return `You are a Technical Analysis Agent for Kestrel, an AI forex/XAUUSD trading copilot.
 
 Your SOLE focus is technical analysis:
 - Price action: support/resistance, trend lines, chart patterns

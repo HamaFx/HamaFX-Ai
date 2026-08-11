@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,8 +22,8 @@
 // writes (e.g. to amortize Postgres round-trips during weekend gap
 // catch-up) we add a small buffer here.
 
-import type { getDb } from '@hamafx/ai';
-import { candles1m } from '@hamafx/db/schema';
+import type { getDb } from '@kestrel/ai';
+import { candles1m } from '@kestrel/db/schema';
 
 import type { ClosedCandle } from '../aggregator/candle-1m.js';
 import type { Logger } from '../log.js';

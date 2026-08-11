@@ -1,6 +1,6 @@
 ---
 type: module
-package: "@hamafx/web"
+package: "@kestrel/web"
 path: "apps/web/src/auth.config.ts"
 incoming: 2
 outgoing: 1
@@ -13,7 +13,7 @@ aliases: [auth.config/authConfig]
 
 # 📁 auth.config/authConfig
 
-> **Module** · `@hamafx/web` · `apps/web/src/auth.config.ts`
+> **Module** · `@kestrel/web` · `apps/web/src/auth.config.ts`
 
 
 Module: apps/web/src/auth.config.ts
@@ -32,7 +32,7 @@ Module: apps/web/src/auth.config.ts
 
 
 ### 📤 Depends On (1)
-[[@hamafx-web]]
+[[@kestrel-web]]
 
 
 ### 📥 Depended On By (2)

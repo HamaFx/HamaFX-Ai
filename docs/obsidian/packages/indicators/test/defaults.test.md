@@ -1,19 +1,19 @@
 ---
 type: module
-package: "@hamafx/indicators"
+package: "@kestrel/indicators"
 path: "packages/indicators/test/defaults.test.ts"
 incoming: 0
 outgoing: 3
 connections: 3
 risk: low
 layer: core
-tags: [type/module, hamafx-indicators, layer/core]
+tags: [type/module, kestrel-indicators, layer/core]
 aliases: [defaults.test]
 ---
 
 # 📁 defaults.test
 
-> **Module** · `@hamafx/indicators` · `packages/indicators/test/defaults.test.ts`
+> **Module** · `@kestrel/indicators` · `packages/indicators/test/defaults.test.ts`
 
 
 Module: packages/indicators/test/defaults.test.ts
@@ -28,11 +28,11 @@ Module: packages/indicators/test/defaults.test.ts
 | Total connections | 3 |
 | Risk level | **LOW** |
 | Layer | `core` |
-| Package tag | `#hamafx-indicators` |
+| Package tag | `#kestrel-indicators` |
 
 
 ### 📤 Depends On (3)
-[[vitest-installServerOnlyStub]] · [[defaults-defaultSwingLookback]] · [[@hamafx-indicators]]
+[[vitest-installServerOnlyStub]] · [[defaults-defaultSwingLookback]] · [[@kestrel-indicators]]
 
 
 
@@ -43,4 +43,4 @@ Module: packages/indicators/test/defaults.test.ts
 - **Local Graph:** Right-click this file → "Open local graph"
 - **Backlinks:** Open the right sidebar → "Backlinks"
 - Use `#type/module` to find all Modules
-- Use `#hamafx-indicators` to find all files in this package
+- Use `#kestrel-indicators` to find all files in this package

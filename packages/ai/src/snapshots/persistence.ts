@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,9 +22,9 @@
 // can't fire. For Phase 2's volume (3 symbols × 1 kind × 1/day) this is
 // fine — we never have duplicate rows in practice.
 
-import { schema } from '@hamafx/db';
+import { schema } from '@kestrel/db';
 import { getDb } from '../db';
-import type { Symbol } from '@hamafx/shared';
+import type { Symbol } from '@kestrel/shared';
 import { and, desc, eq } from 'drizzle-orm';
 
 export interface SnapshotRow<TData = Record<string, unknown>> {

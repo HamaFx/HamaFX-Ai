@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@
 // operational tables (rate_limits, chat_telemetry, tool_telemetry,
 // diagnostic_traces, provider_daily_quota).
 
-import { runRetentionCleanup } from '@hamafx/db';
+import { runRetentionCleanup } from '@kestrel/db';
 
 import type { JobContext, JobResult } from './types.js';
 

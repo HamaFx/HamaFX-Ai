@@ -10,7 +10,7 @@ import { TestTelegramButton } from '../_components/telegram/test-telegram-button
 
 export const dynamic = 'force-dynamic';
 
-export const metadata: Metadata = { title: 'Telegram | Settings | HamaFX' };
+export const metadata: Metadata = { title: 'Telegram | Settings | Kestrel' };
 
 export default async function TelegramSettingsPage() {
   const session = await auth();
@@ -19,7 +19,7 @@ export default async function TelegramSettingsPage() {
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-1">
         <h2 className="text-fg text-lg font-semibold tracking-tight">Telegram Bot</h2>
-        <p className="text-fg-subtle text-sm">Link your Telegram to control HamaFX with bot commands.</p>
+        <p className="text-fg-subtle text-sm">Link your Telegram to control Kestrel with bot commands.</p>
       </div>
 
       <section className="rounded-sm border border-border bg-bg-elev-1 p-6 space-y-4">

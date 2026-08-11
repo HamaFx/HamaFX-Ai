@@ -1,19 +1,19 @@
 ---
 type: module
-package: "@hamafx/web"
+package: "@kestrel/web"
 path: "apps/web/src/app/(app)/calendar/_components/calendar-hero.tsx"
 incoming: 0
 outgoing: 3
 connections: 3
 risk: low
 layer: core
-tags: [type/module, hamafx-web, layer/core]
+tags: [type/module, kestrel-web, layer/core]
 aliases: [calendar-hero/CalendarHero]
 ---
 
 # 📁 calendar-hero/CalendarHero
 
-> **Module** · `@hamafx/web` · `apps/web/src/app/(app)/calendar/_components/calendar-hero.tsx`
+> **Module** · `@kestrel/web` · `apps/web/src/app/(app)/calendar/_components/calendar-hero.tsx`
 
 
 Module: apps/web/src/app/(app)/calendar/_components/calendar-hero.tsx
@@ -28,11 +28,11 @@ Module: apps/web/src/app/(app)/calendar/_components/calendar-hero.tsx
 | Total connections | 3 |
 | Risk level | **LOW** |
 | Layer | `core` |
-| Package tag | `#hamafx-web` |
+| Package tag | `#kestrel-web` |
 
 
 ### 📤 Depends On (2)
-[[@hamafx-shared]] · [[@hamafx-web]]
+[[@kestrel-shared]] · [[@kestrel-web]]
 
 
 
@@ -46,4 +46,4 @@ Module: apps/web/src/app/(app)/calendar/_components/calendar-hero.tsx
 - **Local Graph:** Right-click this file → "Open local graph"
 - **Backlinks:** Open the right sidebar → "Backlinks"
 - Use `#type/module` to find all Modules
-- Use `#hamafx-web` to find all files in this package
+- Use `#kestrel-web` to find all files in this package

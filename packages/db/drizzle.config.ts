@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
  */
 
 // drizzle-kit reads this when generating / applying migrations.
-// Run from the package root: pnpm --filter @hamafx/db migrate:gen | migrate:apply
+// Run from the package root: pnpm --filter @kestrel/db migrate:gen | migrate:apply
 
 import { defineConfig } from 'drizzle-kit';
 

@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -10,11 +10,11 @@
 
 import { vi } from 'vitest';
 
-// Phase E tests mock @hamafx/shared/encryption with a permisssive
+// Phase E tests mock @kestrel/shared/encryption with a permisssive
 // stub. We replicate that here so we can inject BYOK payloads via
 // `__setByok` without round-tripping through AES-GCM.
 let byokPayload: Record<string, string> = {};
-vi.mock('@hamafx/shared/encryption', () => ({
+vi.mock('@kestrel/shared/encryption', () => ({
   PROVIDER_IDS: [
     'google',
     'vertex',
@@ -56,7 +56,7 @@ const ENV = {
 
 // Reach into the mock to set the BYOK payload for each test.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const mod = await import('@hamafx/shared/encryption' as any);
+const mod = await import('@kestrel/shared/encryption' as any);
 const __setByok = (mod as { __setByok: (p: Record<string, string>) => void }).__setByok;
 
 beforeEach(() => {

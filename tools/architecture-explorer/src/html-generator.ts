@@ -22,7 +22,7 @@ export function generateHtml(model: ArchitectureModel): string {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>HamaFX-Ai Architecture Explorer</title>
+<title>Kestrel Architecture Explorer</title>
 ${getStyles()}
 ${getHtmlTemplate()}
 <script src="/d3.v7.min.js"></script>

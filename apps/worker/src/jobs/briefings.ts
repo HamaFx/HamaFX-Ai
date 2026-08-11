@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,8 +28,8 @@
 // ranges so briefings aren't permanently missed during worker downtime.
 // The `wasEmitted` idempotency guard prevents duplicates.
 
-import { emitPostEvent, emitPreEvent, findHighImpactEventsInWindow } from '@hamafx/ai';
-import { getActiveUserIds } from '@hamafx/db';
+import { emitPostEvent, emitPreEvent, findHighImpactEventsInWindow } from '@kestrel/ai';
+import { getActiveUserIds } from '@kestrel/db';
 
 import type { JobContext, JobResult } from './types.js';
 

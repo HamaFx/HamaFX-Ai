@@ -1,19 +1,19 @@
 ---
 type: module
-package: "@hamafx/web"
+package: "@kestrel/web"
 path: "apps/web/src/lib/api.ts"
 incoming: 4
 outgoing: 7
 connections: 11
 risk: low
 layer: core
-tags: [type/module, hamafx-web, layer/core]
+tags: [type/module, kestrel-web, layer/core]
 aliases: [api/RequestUser]
 ---
 
 # 📁 api/RequestUser
 
-> **Module** · `@hamafx/web` · `apps/web/src/lib/api.ts`
+> **Module** · `@kestrel/web` · `apps/web/src/lib/api.ts`
 
 
 Module: apps/web/src/lib/api.ts
@@ -28,11 +28,11 @@ Module: apps/web/src/lib/api.ts
 | Total connections | 11 |
 | Risk level | **LOW** |
 | Layer | `core` |
-| Package tag | `#hamafx-web` |
+| Package tag | `#kestrel-web` |
 
 
 ### 📤 Depends On (7)
-[[@hamafx-data]] · [[@hamafx-shared]] · [[logger-createRequestLogger]] · [[auth-anomaly-recordAuthEvent]] · [[request-id-readOrCreateRequestId]] · [[signed-user-header-USER_ID_HEADER]] · [[@hamafx-web]]
+[[@kestrel-data]] · [[@kestrel-shared]] · [[logger-createRequestLogger]] · [[auth-anomaly-recordAuthEvent]] · [[request-id-readOrCreateRequestId]] · [[signed-user-header-USER_ID_HEADER]] · [[@kestrel-web]]
 
 
 ### 📥 Depended On By (3)
@@ -59,4 +59,4 @@ Module: apps/web/src/lib/api.ts
 - **Local Graph:** Right-click this file → "Open local graph"
 - **Backlinks:** Open the right sidebar → "Backlinks"
 - Use `#type/module` to find all Modules
-- Use `#hamafx-web` to find all files in this package
+- Use `#kestrel-web` to find all files in this package

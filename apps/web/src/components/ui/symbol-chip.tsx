@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,7 +30,7 @@
  * Phase A — UX_UPGRADE_PLAN.md item 1.
  */
 
-import type { Symbol } from '@hamafx/shared';
+import type { Symbol } from '@kestrel/shared';
 import { IconX } from '@tabler/icons-react';
 
 import { cn } from '@/lib/cn';

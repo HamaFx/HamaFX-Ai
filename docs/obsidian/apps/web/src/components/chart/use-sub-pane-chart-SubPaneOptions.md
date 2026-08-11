@@ -1,6 +1,6 @@
 ---
 type: module
-package: "@hamafx/web"
+package: "@kestrel/web"
 path: "apps/web/src/components/chart/use-sub-pane-chart.ts"
 incoming: 3
 outgoing: 8
@@ -13,7 +13,7 @@ aliases: [use-sub-pane-chart/SubPaneOptions]
 
 # 📁 use-sub-pane-chart/SubPaneOptions
 
-> **Module** · `@hamafx/web` · `apps/web/src/components/chart/use-sub-pane-chart.ts`
+> **Module** · `@kestrel/web` · `apps/web/src/components/chart/use-sub-pane-chart.ts`
 
 
 Module: apps/web/src/components/chart/use-sub-pane-chart.ts
@@ -32,7 +32,7 @@ Module: apps/web/src/components/chart/use-sub-pane-chart.ts
 
 
 ### 📤 Depends On (6)
-[[@hamafx-shared]] · [[chart-types-ChartSettings]] · [[use-chart-theme-ChartTheme]] · [[use-lightweight-charts-useLightweightCharts]] · [[lc-adapter-LcModule]] · [[@hamafx-web]]
+[[@kestrel-shared]] · [[chart-types-ChartSettings]] · [[use-chart-theme-ChartTheme]] · [[use-lightweight-charts-useLightweightCharts]] · [[lc-adapter-LcModule]] · [[@kestrel-web]]
 
 
 ### 📥 Depended On By (3)

@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -38,7 +38,7 @@
 // acquire the lock by updating the expired row instead of skipping.
 
 import { sql } from 'drizzle-orm';
-import { type getDb } from '@hamafx/ai';
+import { type getDb } from '@kestrel/ai';
 
 type DbClient = ReturnType<typeof getDb>;
 
@@ -128,4 +128,4 @@ function buildLock(db: DbClient, jobName: string, today: string): CronLock {
   };
 }
 
-// Expose schema for convenience (re-exported from @hamafx/db).
+// Expose schema for convenience (re-exported from @kestrel/db).

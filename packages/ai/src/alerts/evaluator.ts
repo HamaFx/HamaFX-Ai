@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,11 +30,11 @@
 // active until a channel returns 2xx so transient delivery errors retry on
 // the next cron tick.
 
-import { schema } from '@hamafx/db';
+import { schema } from '@kestrel/db';
 import { getDb } from '../db';
 import { eq, inArray } from 'drizzle-orm';
-import { getCandles, getPrice } from '@hamafx/data';
-import { computeIndicator } from '@hamafx/indicators';
+import { getCandles, getPrice } from '@kestrel/data';
+import { computeIndicator } from '@kestrel/indicators';
 import {
   type AlertRule,
   type Candle,
@@ -42,9 +42,9 @@ import {
   type Symbol,
   type Tick,
   type Timeframe,
-} from '@hamafx/shared';
-import { msPerTimeframe } from '@hamafx/shared';
-import { createCategorizedLogger } from '@hamafx/shared/logger';
+} from '@kestrel/shared';
+import { msPerTimeframe } from '@kestrel/shared';
+import { createCategorizedLogger } from '@kestrel/shared/logger';
 
 import { deliverAlert, type DeliveryResult } from './delivery';
 import { listEvaluable, setRulePreviousValue } from './persistence';

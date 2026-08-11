@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@
 
 import { AsyncLocalStorage } from 'node:async_hooks';
 
-import type { ServerEnv } from '@hamafx/shared';
+import type { ServerEnv } from '@kestrel/shared';
 
 /** The slice of env tools may need at runtime. */
 export type ToolEnv = Pick<
@@ -40,13 +40,13 @@ export type ToolEnv = Pick<
   | 'LOG_PROMPTS'
 >;
 
-import type { DbClient } from '@hamafx/db';
-import type { UserSettingsRow } from '@hamafx/db/schema';
+import type { DbClient } from '@kestrel/db';
+import type { UserSettingsRow } from '@kestrel/db/schema';
 
 /**
  * P0-2 — Database abstraction injected into tools via ToolContext.
- * Tools use this instead of importing `getDb()` from `@hamafx/db`.
- * The type is the Drizzle client (re-exported from @hamafx/db);
+ * Tools use this instead of importing `getDb()` from `@kestrel/db`.
+ * The type is the Drizzle client (re-exported from @kestrel/db);
  * in tests, a mock can be injected.
  */
 export type ToolDb = DbClient;
@@ -75,7 +75,7 @@ export interface ToolContext {
   userSettings: UserSettingsRow;
   /**
    * P0-2 — Database client injected by runChat(). Tools use this
-   * instead of importing `getDb()` from `@hamafx/db` directly.
+   * instead of importing `getDb()` from `@kestrel/db` directly.
    * DIP: tools depend on an injected abstraction, not a module-level
    * singleton. In tests, a mock can be injected via withToolContext().
    *

@@ -60,7 +60,7 @@ function mockDb() {
   };
 }
 
-vi.mock('@hamafx/ai', () => ({
+vi.mock('@kestrel/ai', () => ({
   getDb: () => mockDb(),
 }));
 
@@ -68,7 +68,7 @@ vi.mock('@/lib/env', () => ({
   getServerEnv: () => ({ REGISTRATION_MODE: process.env.REGISTRATION_MODE ?? 'owner-first' }),
 }));
 
-vi.mock('@hamafx/db', () => ({
+vi.mock('@kestrel/db', () => ({
   schema: {
     users: 'users',
     userSettings: 'userSettings',

@@ -18,7 +18,7 @@ import {
   schema,
   updateUserRole,
   upsertFeatureFlag,
-} from '@hamafx/db';
+} from '@kestrel/db';
 
 import type { FeatureFlagsDTO, UserListDTO } from './admin-dtos';
 

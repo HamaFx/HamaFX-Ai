@@ -13,7 +13,7 @@ Hosted web + worker deployments, one push-to-main pipeline.
 ```mermaid
 flowchart LR
     subgraph GH[GitHub]
-        REPO[HamaFx/HamaFX-Ai]
+        REPO[HamaFx/Kestrel]
     end
 
     REPO -->|push to main| VC[Vercel — apps/web]
@@ -240,8 +240,8 @@ installed but skipped safely; they do not report false success.
 ## Database migrations
 
 - Schema lives in `packages/db/src/schema/*.ts`.
-- `pnpm --filter @hamafx/db migrate:gen` creates SQL.
-- `pnpm --filter @hamafx/db migrate:apply` runs against `DATABASE_URL`.
+- `pnpm --filter @kestrel/db migrate:gen` creates SQL.
+- `pnpm --filter @kestrel/db migrate:apply` runs against `DATABASE_URL`.
 - **Migrations are now automatic on Vercel.** The `vercel.json`
   `buildCommand` runs `node scripts/predeploy-migrate.mjs` BEFORE
   `next build`. The script applies pending migrations against the
@@ -272,7 +272,7 @@ If something feels slow or expensive, look at Vercel function logs + `chat_telem
   sudo -u hamafx git -C /opt/hamafx/app fetch origin
   sudo -u hamafx git -C /opt/hamafx/app reset --hard <good-sha>
   sudo -u hamafx pnpm -C /opt/hamafx/app install --frozen-lockfile
-  sudo -u hamafx pnpm -C /opt/hamafx/app --filter @hamafx/worker build
+  sudo -u hamafx pnpm -C /opt/hamafx/app --filter @kestrel/worker build
   echo <good-sha> | sudo tee /opt/hamafx/.deployed-sha
   sudo docker compose -f /opt/hamafx/docker-compose.yml up -d --force-recreate worker
   ```

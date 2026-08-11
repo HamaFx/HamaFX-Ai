@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@
 // hands a promise to the platform so the work runs to completion (up to
 // `maxDuration`) even after the response is over.
 //
-// We don't take a hard dep on `@vercel/functions` because `@hamafx/ai`
+// We don't take a hard dep on `@vercel/functions` because `@kestrel/ai`
 // must remain consumable from the worker (which runs on a plain
 // Node/systemd box and has no Vercel runtime). Resolution is dynamic:
 // the first call resolves the binding once and caches it. Outside
@@ -31,7 +31,7 @@
 //
 // Phase 2 hardening §8.
 
-import { createCategorizedLogger } from '@hamafx/shared/logger';
+import { createCategorizedLogger } from '@kestrel/shared/logger';
 
 const wlog = createCategorizedLogger('ai', { component: 'wait-until' });
 
@@ -46,7 +46,7 @@ async function resolveWaitUntil(): Promise<WaitUntilFn> {
     resolved = true;
     try {
       // The webpackIgnore comment keeps this dynamic at bundle time so
-      // packages that depend on `@hamafx/ai` (the worker, scripts) don't
+      // packages that depend on `@kestrel/ai` (the worker, scripts) don't
       // need to install `@vercel/functions`.
       const specifier = '@vercel/functions';
       const mod = (await import(/* webpackIgnore: true */ specifier)) as {

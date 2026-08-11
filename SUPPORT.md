@@ -23,7 +23,7 @@ The full documentation set lives in [`docs/`](docs/). Start here:
 |------|-------|
 | Report a bug | [Open a bug report issue](https://github.com/HamaFx/HamaFX-Ai/issues/new?template=bug_report.yml) |
 | Request a feature | [Open a feature request issue](https://github.com/HamaFx/HamaFX-Ai/issues/new?template=feature_request.yml) |
-| Report a security vulnerability | Email **security@hamafx.com** — see [SECURITY.md](SECURITY.md) |
+| Report a security vulnerability | Email **security@kestrel.com** — see [SECURITY.md](SECURITY.md) |
 
 ### Questions and Discussion
 
@@ -41,7 +41,7 @@ The full documentation set lives in [`docs/`](docs/). Start here:
 
 ## Self-Hosting Support
 
-If you're self-hosting HamaFX-Ai:
+If you're self-hosting Kestrel:
 
 1. Read [docs/11-self-hosting.md](docs/11-self-hosting.md) for Docker Compose setup
 2. Read [docs/08-agent-setup-run.md](docs/08-agent-setup-run.md) for environment variable configuration

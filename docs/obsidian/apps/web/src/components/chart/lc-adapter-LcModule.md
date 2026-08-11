@@ -1,6 +1,6 @@
 ---
 type: module
-package: "@hamafx/web"
+package: "@kestrel/web"
 path: "apps/web/src/components/chart/lc-adapter.ts"
 incoming: 5
 outgoing: 1
@@ -13,7 +13,7 @@ aliases: [lc-adapter/LcModule]
 
 # 📁 lc-adapter/LcModule
 
-> **Module** · `@hamafx/web` · `apps/web/src/components/chart/lc-adapter.ts`
+> **Module** · `@kestrel/web` · `apps/web/src/components/chart/lc-adapter.ts`
 
 
 Module: apps/web/src/components/chart/lc-adapter.ts
@@ -32,7 +32,7 @@ Module: apps/web/src/components/chart/lc-adapter.ts
 
 
 ### 📤 Depends On (1)
-[[@hamafx-web]]
+[[@kestrel-web]]
 
 
 ### 📥 Depended On By (5)

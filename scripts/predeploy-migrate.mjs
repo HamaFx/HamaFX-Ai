@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -48,7 +48,7 @@
  *
  *   The "local runs migrations" branch is intentional: when running
  *   locally against the prod DB it acts like the manual one-liner
- *   `pnpm --filter @hamafx/db migrate:apply` from before, just with
+ *   `pnpm --filter @kestrel/db migrate:apply` from before, just with
  *   a friendlier wrapper.
  *
  * Env vars
@@ -57,7 +57,7 @@
  *   DATABASE_URL               legacy fallback
  *
  * Wired into vercel.json buildCommand:
- *   "buildCommand": "node scripts/predeploy-migrate.mjs && npx turbo run build --filter=@hamafx/web"
+ *   "buildCommand": "node scripts/predeploy-migrate.mjs && npx turbo run build --filter=@kestrel/web"
  */
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
@@ -208,7 +208,7 @@ try {
   // Pass the connection string via DIRECT_URL — drizzle-kit and the
   // extension preflight both prefer a direct/session connection. We use
   // execFileSync so the URL never appears in `ps` output.
-  execFileSync('pnpm', ['--filter', '@hamafx/db', 'migrate:apply'], {
+  execFileSync('pnpm', ['--filter', '@kestrel/db', 'migrate:apply'], {
     cwd: repoRoot,
     stdio: 'inherit',
     env: {

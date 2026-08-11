@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,14 +16,14 @@
 
 // Server-only secret-generation helpers. Split out from `./env.ts` so the
 // `node:crypto` import doesn't leak into client bundles when they import
-// `parseServerEnv` / `ServerEnv` types from `@hamafx/shared`.
+// `parseServerEnv` / `ServerEnv` types from `@kestrel/shared`.
 //
 // NOTE: we deliberately do NOT add `import 'server-only'` here. The
 // `server-only` package's check fires whenever any transitive import
 // reaches a client bundle (Next.js webpack flags it), and the biquote
 // tests + env tests import this module directly. The split-file design
 // is the actual guard: callers must opt into env-secrets via the
-// explicit `@hamafx/shared/env-secrets` path (not the barrel), and the
+// explicit `@kestrel/shared/env-secrets` path (not the barrel), and the
 // shared barrel does not re-export from here.
 
 import { randomBytes } from 'node:crypto';

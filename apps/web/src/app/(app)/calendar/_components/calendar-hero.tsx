@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@
 // strip shows the distribution of upcoming impacts so the user can
 // gauge how event-heavy the week is.
 
-import type { EconomicEvent } from '@hamafx/shared';
+import type { EconomicEvent } from '@kestrel/shared';
 import {IconClock, IconBolt} from '@tabler/icons-react';
 import { Link } from 'next-view-transitions';
 

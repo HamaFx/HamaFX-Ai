@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-// F7 — /link command: link a Telegram chat to a HamaFX user account.
+// F7 — /link command: link a Telegram chat to a Kestrel user account.
 // /link ABC123 → resolves the link code and stores the mapping.
 //
 // This command is special: it works even for unlinked users (that's its purpose).
@@ -26,16 +26,16 @@ import { resolveLinkCode } from '../linking';
 export const linkCommand: BotCommand = {
   name: 'link',
   aliases: [],
-  description: 'Link your HamaFX account: /link <code>',
+  description: 'Link your Kestrel account: /link <code>',
   handler: async (args: string[], ctx: BotContext): Promise<BotResponse> => {
     const code = args[0];
     if (!code) {
       return {
         text: [
-          '🔗 Link Your HamaFX Account',
+          '🔗 Link Your Kestrel Account',
           '',
-          'To link your Telegram to HamaFX:',
-          '1. Go to hamafx.ai/settings',
+          'To link your Telegram to Kestrel:',
+          '1. Go to kestrel.ai/settings',
           '2. Click "Link Telegram"',
           '3. Copy the 6-character code',
           '4. Send: /link <your-code>',
@@ -58,7 +58,7 @@ export const linkCommand: BotCommand = {
 
       if (!userId) {
         return {
-          text: '❌ Invalid or expired link code. Please generate a new code from hamafx.ai/settings and try again.',
+          text: '❌ Invalid or expired link code. Please generate a new code from kestrel.ai/settings and try again.',
         };
       }
 
@@ -66,7 +66,7 @@ export const linkCommand: BotCommand = {
         text: [
           '✅ Account Linked Successfully!',
           '',
-          'Your Telegram is now connected to your HamaFX account.',
+          'Your Telegram is now connected to your Kestrel account.',
           'You can now use all bot commands:',
           '',
           '/price XAUUSD — Get current price',

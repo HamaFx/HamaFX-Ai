@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,12 +25,12 @@
 // All math is deterministic — no clock reads, no env reads — so this is
 // the right place to property-test if we want to.
 
-import type { Candle } from '@hamafx/shared';
+import type { Candle } from '@kestrel/shared';
 
-import { computeAsianRange } from '@hamafx/indicators';
-import { computePdhPdl } from '@hamafx/indicators';
-import { atr } from '@hamafx/indicators';
-import { classicPivots } from '@hamafx/indicators';
+import { computeAsianRange } from '@kestrel/indicators';
+import { computePdhPdl } from '@kestrel/indicators';
+import { atr } from '@kestrel/indicators';
+import { classicPivots } from '@kestrel/indicators';
 
 export interface DailySnapshot {
   /** UTC ms of midnight starting the SUBJECT day. */

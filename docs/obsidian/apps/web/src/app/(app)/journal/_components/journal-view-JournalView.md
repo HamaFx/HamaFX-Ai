@@ -1,19 +1,19 @@
 ---
 type: module
-package: "@hamafx/web"
+package: "@kestrel/web"
 path: "apps/web/src/app/(app)/journal/_components/journal-view.tsx"
 incoming: 1
 outgoing: 12
 connections: 13
 risk: low
 layer: core
-tags: [type/module, hamafx-web, layer/core]
+tags: [type/module, kestrel-web, layer/core]
 aliases: [journal-view/JournalView]
 ---
 
 # 📁 journal-view/JournalView
 
-> **Module** · `@hamafx/web` · `apps/web/src/app/(app)/journal/_components/journal-view.tsx`
+> **Module** · `@kestrel/web` · `apps/web/src/app/(app)/journal/_components/journal-view.tsx`
 
 
 Module: apps/web/src/app/(app)/journal/_components/journal-view.tsx
@@ -28,11 +28,11 @@ Module: apps/web/src/app/(app)/journal/_components/journal-view.tsx
 | Total connections | 13 |
 | Risk level | **LOW** |
 | Layer | `core` |
-| Package tag | `#hamafx-web` |
+| Package tag | `#kestrel-web` |
 
 
 ### 📤 Depends On (11)
-[[@hamafx-shared]] · [[ai-review-panel-AiReviewPanel]] · [[breakdown-table-BreakdownTable]] · [[drawdown-chart-DrawdownChart]] · [[r-distribution-RDistribution]] · [[streak-display-StreakDisplay]] · [[entry-form-EntryForm]] · [[entry-list-ConfirmFn]] · [[import-trades-ImportTrades]] · [[stats-summary-StatsSummary]] · [[@hamafx-web]]
+[[@kestrel-shared]] · [[ai-review-panel-AiReviewPanel]] · [[breakdown-table-BreakdownTable]] · [[drawdown-chart-DrawdownChart]] · [[r-distribution-RDistribution]] · [[streak-display-StreakDisplay]] · [[entry-form-EntryForm]] · [[entry-list-ConfirmFn]] · [[import-trades-ImportTrades]] · [[stats-summary-StatsSummary]] · [[@kestrel-web]]
 
 
 ### 📥 Depended On By (1)
@@ -49,4 +49,4 @@ Module: apps/web/src/app/(app)/journal/_components/journal-view.tsx
 - **Local Graph:** Right-click this file → "Open local graph"
 - **Backlinks:** Open the right sidebar → "Backlinks"
 - Use `#type/module` to find all Modules
-- Use `#hamafx-web` to find all files in this package
+- Use `#kestrel-web` to find all files in this package

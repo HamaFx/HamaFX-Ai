@@ -3,17 +3,17 @@
 // PF-22 — Settings service layer.
 //
 // Separates business logic from HTTP handling. Route handlers (controllers)
-// call these service functions instead of importing from @hamafx/ai / @hamafx/db
+// call these service functions instead of importing from @kestrel/ai / @kestrel/db
 // directly.
 //
 // Pattern: Service (PF-22). Controllers remain thin: parse request →
 // call service → format Response.
 
-import { testProviderKey } from '@hamafx/ai';
-import { schema, getUserWithSettings, updateUserSettingsField, withRateLimit } from '@hamafx/db'
-import { getDb } from '@hamafx/ai';
-import { decryptByok, PROVIDER_IDS } from '@hamafx/shared/encryption';
-import type { ProviderId } from '@hamafx/shared/encryption';
+import { testProviderKey } from '@kestrel/ai';
+import { schema, getUserWithSettings, updateUserSettingsField, withRateLimit } from '@kestrel/db'
+import { getDb } from '@kestrel/ai';
+import { decryptByok, PROVIDER_IDS } from '@kestrel/shared/encryption';
+import type { ProviderId } from '@kestrel/shared/encryption';
 import { eq } from 'drizzle-orm';
 import { z } from 'zod';
 

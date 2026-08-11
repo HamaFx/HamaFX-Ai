@@ -1,7 +1,7 @@
 'use server';
 
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,14 +18,14 @@
 
 // Data actions: clear chat history, data export.
 
-import { deleteAllThreads } from '@hamafx/ai';
+import { deleteAllThreads } from '@kestrel/ai';
 import { auth } from '@/auth';
-import { schema, withRateLimit } from '@hamafx/db'
-import { getDb } from '@hamafx/ai';
+import { schema, withRateLimit } from '@kestrel/db'
+import { getDb } from '@kestrel/ai';
 import { eq, inArray } from 'drizzle-orm';
 import * as Sentry from '@sentry/nextjs';
 import { verifySync } from 'otplib';
-import { decryptSecret } from '@hamafx/shared/encryption';
+import { decryptSecret } from '@kestrel/shared/encryption';
 import { type ActionResult, verifyAccountPassword } from './_actions-shared';
 
 /**

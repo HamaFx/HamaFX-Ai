@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,9 +33,9 @@ import {
   type FallbackPartPayload,
 } from './fallback';
 import type { BudgetHandle } from './budget-reservation';
-import type { ProviderId } from '@hamafx/shared/encryption';
+import type { ProviderId } from '@kestrel/shared/encryption';
 import type { RoutingDecision } from './routing';
-import { createCategorizedLogger } from '@hamafx/shared/logger';
+import { createCategorizedLogger } from '@kestrel/shared/logger';
 
 const alog = createCategorizedLogger('ai', { component: 'retry-loop' });
 

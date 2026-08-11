@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@ import { Button } from '@/components/ui/button';
 import { SkeletonCard } from '@/components/ui/skeleton';
 import { apiFetch, apiMutate } from '@/lib/api-client';
 
-import type { ProviderMeta } from '@hamafx/shared';
+import type { ProviderMeta } from '@kestrel/shared';
 
 /**
  * Phase D2 — generic per-domain model picker. One component powers

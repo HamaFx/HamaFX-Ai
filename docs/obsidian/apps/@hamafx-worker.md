@@ -1,6 +1,6 @@
 ---
 type: package
-package: "@hamafx/worker"
+package: "@kestrel/worker"
 path: "apps/worker"
 incoming: 57
 outgoing: 0
@@ -8,15 +8,15 @@ connections: 57
 risk: high
 layer: package
 tags: [type/package, hamafx-worker, layer/package, risk/high]
-aliases: [@hamafx/worker]
+aliases: [@kestrel/worker]
 ---
 
-# 📦 @hamafx/worker
+# 📦 @kestrel/worker
 
-> **Package** · `@hamafx/worker` · `apps/worker`
+> **Package** · `@kestrel/worker` · `apps/worker`
 
 
-Package: @hamafx/worker
+Package: @kestrel/worker
 
 
 ## 📊 Connections

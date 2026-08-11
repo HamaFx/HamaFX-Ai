@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@
 //
 // Inputs continue to be declared via TS module augmentation in each
 // `packages/ai/src/tools/<name>.ts` file, since the input zod schemas live
-// next to the tool implementation (zod schemas in `@hamafx/shared` are
+// next to the tool implementation (zod schemas in `@kestrel/shared` are
 // reserved for cross-package data shapes).
 //
 // Adding a new tool: add the name to `tool-names.ts`, create a per-tool
@@ -110,7 +110,7 @@ import type { ToolName } from './tool-names';
 /**
  * Per-tool input map. Augmented by each tool file:
  *
- *   declare module '@hamafx/shared' {
+ *   declare module '@kestrel/shared' {
  *     interface ToolIOMap {
  *       get_price: { input: z.infer<typeof InputSchema> };
  *     }

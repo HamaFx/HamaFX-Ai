@@ -6,7 +6,7 @@
 // vision model — observed paragraph, labelled levels, and an optional
 // deep link to the normal TradingView chart for the detected symbol/timeframe.
 
-import { priceDecimals, type AnalyzeChartImageOutput } from '@hamafx/shared';
+import { priceDecimals, type AnalyzeChartImageOutput } from '@kestrel/shared';
 import { Link } from 'next-view-transitions';
 
 import type { ToolPartProps } from './registry';

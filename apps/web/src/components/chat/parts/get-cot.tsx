@@ -9,7 +9,7 @@
 
 'use client';
 
-import type { CoTSample } from '@hamafx/shared';
+import type { CoTSample } from '@kestrel/shared';
 import { m } from 'motion/react';
 
 import { cn } from '@/lib/cn';

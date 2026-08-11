@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,11 +33,11 @@
 
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 
-// model.ts pulls in @hamafx/shared/encryption, which itself imports
+// model.ts pulls in @kestrel/shared/encryption, which itself imports
 // 'server-only' (throws at import time outside a server runtime). We
 // stub the encryption module instead, mirroring the pattern in
 // override-model.test.ts.
-vi.mock('@hamafx/shared/encryption', () => ({
+vi.mock('@kestrel/shared/encryption', () => ({
   PROVIDER_IDS: [
     'google',
     'vertex',
@@ -60,10 +60,10 @@ vi.mock('ai', () => ({
   generateText: (...args: unknown[]) => generateTextMock(...args),
 }));
 
-// model.ts pulls in @hamafx/db (for telemetry + schema lookups).
+// model.ts pulls in @kestrel/db (for telemetry + schema lookups).
 // We stub the schema access so importing the module doesn't try
 // to connect to Postgres.
-vi.mock('@hamafx/db', () => ({
+vi.mock('@kestrel/db', () => ({
   getDb: () => ({
     select: () => ({
       from: () => ({

@@ -49,6 +49,10 @@ Module: scripts/setup/lib/ui.mjs
 - `printBanner`
 - `startSpinner`
 - `stepHeader`
+- `showCursor`
+- `beginPage`
+- `endPage`
+- `renderComparison`
 
 
 ## 🔍 Explore

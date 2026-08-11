@@ -1,19 +1,19 @@
 ---
 type: module
-package: "@hamafx/db"
+package: "@kestrel/db"
 path: "packages/db/src/schema/news.ts"
 incoming: 2
 outgoing: 1
 connections: 3
 risk: low
 layer: core
-tags: [type/module, hamafx-db, layer/core]
+tags: [type/module, kestrel-db, layer/core]
 aliases: [news/newsArticles]
 ---
 
 # 📁 news/newsArticles
 
-> **Module** · `@hamafx/db` · `packages/db/src/schema/news.ts`
+> **Module** · `@kestrel/db` · `packages/db/src/schema/news.ts`
 
 
 Database schema (2 tables)
@@ -28,11 +28,11 @@ Database schema (2 tables)
 | Total connections | 3 |
 | Risk level | **LOW** |
 | Layer | `core` |
-| Package tag | `#hamafx-db` |
+| Package tag | `#kestrel-db` |
 
 
 ### 📤 Depends On (1)
-[[@hamafx-db]]
+[[@kestrel-db]]
 
 
 ### 📥 Depended On By (2)
@@ -50,4 +50,4 @@ Database schema (2 tables)
 - **Local Graph:** Right-click this file → "Open local graph"
 - **Backlinks:** Open the right sidebar → "Backlinks"
 - Use `#type/module` to find all Modules
-- Use `#hamafx-db` to find all files in this package
+- Use `#kestrel-db` to find all files in this package

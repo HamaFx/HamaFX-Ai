@@ -10,7 +10,7 @@ vi.mock('@/lib/admin-auth', () => ({
 const mockListUsers = vi.hoisted(() => vi.fn());
 const mockCountUsers = vi.hoisted(() => vi.fn());
 
-vi.mock('@hamafx/db', () => ({
+vi.mock('@kestrel/db', () => ({
   getDb: () => ({
     select: vi.fn(),
   }),

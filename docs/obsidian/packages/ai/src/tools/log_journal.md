@@ -1,19 +1,19 @@
 ---
 type: tool
-package: "@hamafx/ai"
+package: "@kestrel/ai"
 path: "packages/ai/src/tools/log-journal.ts"
 incoming: 2
 outgoing: 6
 connections: 8
 risk: low
 layer: ai
-tags: [type/tool, hamafx-ai, layer/ai]
+tags: [type/tool, kestrel-ai, layer/ai]
 aliases: [log_journal]
 ---
 
 # 🔧 log_journal
 
-> **AI Tool** · `@hamafx/ai` · `packages/ai/src/tools/log-journal.ts`
+> **AI Tool** · `@kestrel/ai` · `packages/ai/src/tools/log-journal.ts`
 
 
 Record a trade entry in the journal. Returns the new entry id + a summary line. Status is
@@ -28,11 +28,11 @@ Record a trade entry in the journal. Returns the new entry id + a summary line. 
 | Total connections | 8 |
 | Risk level | **LOW** |
 | Layer | `ai` |
-| Package tag | `#hamafx-ai` |
+| Package tag | `#kestrel-ai` |
 
 
 ### 📤 Depends On (6)
-[[@hamafx-shared]] · [[persistence-CreateJournalInput]] · [[tool-context-ToolEnv]] · [[mutation-guard-assertMutationIntent]] · [[@hamafx-ai]] · [[registry-ToolPlugin]]
+[[@kestrel-shared]] · [[persistence-CreateJournalInput]] · [[tool-context-ToolEnv]] · [[mutation-guard-assertMutationIntent]] · [[@kestrel-ai]] · [[registry-ToolPlugin]]
 
 
 ### 📥 Depended On By (2)
@@ -49,4 +49,4 @@ Record a trade entry in the journal. Returns the new entry id + a summary line. 
 - **Local Graph:** Right-click this file → "Open local graph"
 - **Backlinks:** Open the right sidebar → "Backlinks"
 - Use `#type/tool` to find all AI Tools
-- Use `#hamafx-ai` to find all files in this package
+- Use `#kestrel-ai` to find all files in this package

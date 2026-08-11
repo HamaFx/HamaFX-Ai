@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -104,7 +104,7 @@ export const OPENROUTER = defineProvider({
     { modelId: 'openai/text-embedding-3-small', label: 'Embedding 3 small (via OpenRouter)', description: '1536-dim text embeddings.', tier: 'embedding', inputPerMTokUsd: 0.02, outputPerMTokUsd: null, contextTokens: 8_191, capabilities: {}, released: '2024-01' },
   ],
   factory: openaiCompatibleFactory('openrouter', 'https://openrouter.ai/api/v1', {
-    'HTTP-Referer': 'https://hamafx.ai',
-    'X-Title': 'HamaFX AI',
+    'HTTP-Referer': 'https://kestrel.ai',
+    'X-Title': 'Kestrel AI',
   }),
 });

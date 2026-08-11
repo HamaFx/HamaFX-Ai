@@ -3,7 +3,7 @@
 // PF-22 — Portfolio service layer.
 //
 // Separates business logic from HTTP handling. Route handlers (controllers)
-// call these service functions instead of importing @hamafx/ai directly.
+// call these service functions instead of importing @kestrel/ai directly.
 //
 // Pattern: Service (PF-22). Controllers remain thin: parse request →
 // call service → format Response.
@@ -18,7 +18,7 @@ import {
   listAllPositions as aiListAllPositions,
   savePortfolioSettings as aiSavePortfolioSettings,
   getOpenPositionsWithPnL,
-} from '@hamafx/ai';
+} from '@kestrel/ai';
 import type {
   ClosePositionInputSchema,
   CreatePositionInputSchema,
@@ -26,10 +26,10 @@ import type {
   PortfolioRiskReport,
   PortfolioSettings,
   PositionWithPnL,
-} from '@hamafx/shared';
+} from '@kestrel/shared';
 import { z } from 'zod';
 
-export { CreatePositionInputSchema, ClosePositionInputSchema, AppError } from '@hamafx/shared';
+export { CreatePositionInputSchema, ClosePositionInputSchema, AppError } from '@kestrel/shared';
 
 // ── Schemas ─────────────────────────────────────────────────────────────────
 

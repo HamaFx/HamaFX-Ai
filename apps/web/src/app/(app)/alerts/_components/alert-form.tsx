@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@
 // indicator pills are min-h 44, and the "Create alert" CTA is the size-md
 // (h-12) primary button so it lives in the thumb zone at the bottom of
 // the drawer.
-import { SYMBOLS, TIMEFRAMES, type Symbol, type Timeframe } from '@hamafx/shared';
+import { SYMBOLS, TIMEFRAMES, type Symbol, type Timeframe } from '@kestrel/shared';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { AlertCreateSchema } from '@/lib/services/alerts.schema';

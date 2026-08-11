@@ -1,19 +1,19 @@
 ---
 type: module
-package: "@hamafx/web"
+package: "@kestrel/web"
 path: "apps/web/eslint.config.js"
 incoming: 0
 outgoing: 2
 connections: 2
 risk: low
 layer: core
-tags: [type/module, hamafx-web, layer/core]
+tags: [type/module, kestrel-web, layer/core]
 aliases: [eslint.config/config]
 ---
 
 # 📁 eslint.config/config
 
-> **Module** · `@hamafx/web` · `apps/web/eslint.config.js`
+> **Module** · `@kestrel/web` · `apps/web/eslint.config.js`
 
 
 Module: apps/web/eslint.config.js
@@ -28,11 +28,11 @@ Module: apps/web/eslint.config.js
 | Total connections | 2 |
 | Risk level | **LOW** |
 | Layer | `core` |
-| Package tag | `#hamafx-web` |
+| Package tag | `#kestrel-web` |
 
 
 ### 📤 Depends On (2)
-[[@hamafx-config]] · [[@hamafx-web]]
+[[@kestrel-config]] · [[@kestrel-web]]
 
 
 
@@ -46,4 +46,4 @@ Module: apps/web/eslint.config.js
 - **Local Graph:** Right-click this file → "Open local graph"
 - **Backlinks:** Open the right sidebar → "Backlinks"
 - Use `#type/module` to find all Modules
-- Use `#hamafx-web` to find all files in this package
+- Use `#kestrel-web` to find all files in this package

@@ -1,19 +1,19 @@
 ---
 type: module
-package: "@hamafx/ai"
+package: "@kestrel/ai"
 path: "packages/ai/src/tools/journal.ts"
 incoming: 0
 outgoing: 10
 connections: 10
 risk: low
 layer: core
-tags: [type/module, hamafx-ai, layer/core]
+tags: [type/module, kestrel-ai, layer/core]
 aliases: [journal/toolRegistry]
 ---
 
 # 📁 journal/toolRegistry
 
-> **Module** · `@hamafx/ai` · `packages/ai/src/tools/journal.ts`
+> **Module** · `@kestrel/ai` · `packages/ai/src/tools/journal.ts`
 
 
 Module: packages/ai/src/tools/journal.ts
@@ -28,11 +28,11 @@ Module: packages/ai/src/tools/journal.ts
 | Total connections | 10 |
 | Risk level | **LOW** |
 | Layer | `core` |
-| Package tag | `#hamafx-ai` |
+| Package tag | `#kestrel-ai` |
 
 
 ### 📤 Depends On (10)
-[[log_journal]] · [[get_journal_stats]] · [[get_news]] · [[get_calendar]] · [[set_alert]] · [[search_knowledge]] · [[share_snapshot]] · [[summarize_thread]] · [[registry-ToolPlugin]] · [[@hamafx-ai]]
+[[log_journal]] · [[get_journal_stats]] · [[get_news]] · [[get_calendar]] · [[set_alert]] · [[search_knowledge]] · [[share_snapshot]] · [[summarize_thread]] · [[registry-ToolPlugin]] · [[@kestrel-ai]]
 
 
 
@@ -46,4 +46,4 @@ Module: packages/ai/src/tools/journal.ts
 - **Local Graph:** Right-click this file → "Open local graph"
 - **Backlinks:** Open the right sidebar → "Backlinks"
 - Use `#type/module` to find all Modules
-- Use `#hamafx-ai` to find all files in this package
+- Use `#kestrel-ai` to find all files in this package

@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,9 +18,9 @@
 // /status → shows system health, market phase, and user's open positions count.
 
 import type { BotCommand, BotResponse, BotContext } from '../types';
-import { listOpenPositions } from '@hamafx/db';
-import { countActiveAlerts } from '@hamafx/db';
-import { getMarketPhase, isForexWeekend } from '@hamafx/shared';
+import { listOpenPositions } from '@kestrel/db';
+import { countActiveAlerts } from '@kestrel/db';
+import { getMarketPhase, isForexWeekend } from '@kestrel/shared';
 
 export const statusCommand: BotCommand = {
   name: 'status',
@@ -36,7 +36,7 @@ export const statusCommand: BotCommand = {
       const weekend = isForexWeekend();
 
       const lines = [
-        '🟢 HamaFX System Status',
+        '🟢 Kestrel System Status',
         '',
         `Session: ${phase.session}`,
         `Liquidity: ${phase.liquidity}`,

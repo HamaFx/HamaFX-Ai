@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@
 // BYOK provider registry — imports all provider specs and builds the public API.
 // Individual provider definitions live in their own files under _providers/.
 
-import { PROVIDER_IDS, type ProviderId } from '@hamafx/shared/byok';
+import { PROVIDER_IDS, type ProviderId } from '@kestrel/shared/byok';
 
 import { GOOGLE } from './google';
 import { VERTEX } from './vertex';

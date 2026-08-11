@@ -1,5 +1,5 @@
 [Unit]
-Description=HamaFX-Ai billing webhook DLQ alert on Vercel
+Description=Kestrel billing webhook DLQ alert on Vercel
 After=network-online.target
 Wants=network-online.target
 

@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@
 // Onboarding query helpers — admin reset operations.
 
 import { eq } from 'drizzle-orm';
-import { DEFAULT_WATCHLIST_SYMBOLS } from '@hamafx/shared';
+import { DEFAULT_WATCHLIST_SYMBOLS } from '@kestrel/shared';
 import { getDb, schema } from '../client';
 
 export type ResetMode = 'full' | 'soft';

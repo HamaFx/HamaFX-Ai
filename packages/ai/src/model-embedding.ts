@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,12 +19,12 @@
 // Dependency: model-helpers.ts (parsePickedModelId, PROVIDER_PRIORITY,
 // envFallbackKeys).
 
-import type { UserSettingsRow } from '@hamafx/db/schema';
+import type { UserSettingsRow } from '@kestrel/db/schema';
 import {
   decryptByok,
   configuredProviders,
   type ByokPayload,
-} from '@hamafx/shared/encryption';
+} from '@kestrel/shared/encryption';
 import { BYOK_PROVIDERS } from './byok-providers';
 import type { ResolveModelEnv } from './vertex-factory';
 import {

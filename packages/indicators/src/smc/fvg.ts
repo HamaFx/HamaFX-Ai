@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,7 +25,7 @@
 // We also flag `mitigated` once a later bar's range overlaps the gap. This
 // helps the chart UI dim already-tested zones.
 
-import type { Candle, FvgZone } from '@hamafx/shared';
+import type { Candle, FvgZone } from '@kestrel/shared';
 
 export interface DetectFvgOptions {
   /**

@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@
 // @typescript-eslint/no-explicit-any` — the chart instance and area
 // series are now typed via the lightweight-charts v5 public APIs.
 
-import type { JournalEntry } from '@hamafx/shared';
+import type { JournalEntry } from '@kestrel/shared';
 import type { IChartApi, ISeriesApi } from 'lightweight-charts';
 import {IconTrendingUp, IconAward} from '@tabler/icons-react';
 import { useEffect, useMemo, useRef } from 'react';

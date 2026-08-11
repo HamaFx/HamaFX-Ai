@@ -12,9 +12,9 @@ We provide security updates for the `main` branch and the latest stable release.
 
 ## Reporting a Vulnerability
 
-If you discover a security vulnerability in HamaFX-Ai, **do not open a public issue**.
+If you discover a security vulnerability in Kestrel, **do not open a public issue**.
 
-Instead, email **security@hamafx.com** with:
+Instead, email **security@kestrel.com** with:
 
 1. A description of the vulnerability
 2. Steps to reproduce the issue
@@ -36,7 +36,7 @@ Please practice responsible disclosure. We commit to not taking legal action aga
 
 ### Authentication
 
-HamaFX-Ai uses NextAuth.js v5 with a Credentials provider (email + password, bcrypt). Sessions are JWT-based with a 30-day expiry. Account lockout activates after 5 failed login attempts (15-minute lockout).
+Kestrel uses NextAuth.js v5 with a Credentials provider (email + password, bcrypt). Sessions are JWT-based with a 30-day expiry. Account lockout activates after 5 failed login attempts (15-minute lockout).
 
 **Auth hardening completed** — see [docs/05-security-auth-compliance.md](docs/05-security-auth-compliance.md) for the current self-hosted security model.
 
@@ -109,7 +109,7 @@ Self-hosters are responsible for:
 
 ### Data Provider Licensing
 
-HamaFX-Ai integrates with multiple market data providers (BiQuote, Finnhub, Marketaux, FRED, Binance, CFTC). **No provider terms of service are included in this repository.** If you redistribute market data to paying subscribers, you are responsible for verifying each provider's redistribution terms and obtaining appropriate licenses. See [docs/02-data-flows.md](docs/02-data-flows.md) for the licensing responsibility guidance.
+Kestrel integrates with multiple market data providers (BiQuote, Finnhub, Marketaux, FRED, Binance, CFTC). **No provider terms of service are included in this repository.** If you redistribute market data to paying subscribers, you are responsible for verifying each provider's redistribution terms and obtaining appropriate licenses. See [docs/02-data-flows.md](docs/02-data-flows.md) for the licensing responsibility guidance.
 
 ## Security Measures in CI/CD
 

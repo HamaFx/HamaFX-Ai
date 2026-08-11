@@ -1,19 +1,19 @@
 ---
 type: module
-package: "@hamafx/web"
+package: "@kestrel/web"
 path: "apps/web/src/lib/services/market.ts"
 incoming: 0
 outgoing: 8
 connections: 8
 risk: low
 layer: core
-tags: [type/module, hamafx-web, layer/core]
+tags: [type/module, kestrel-web, layer/core]
 aliases: [market/CandleResultDTO]
 ---
 
 # 📁 market/CandleResultDTO
 
-> **Module** · `@hamafx/web` · `apps/web/src/lib/services/market.ts`
+> **Module** · `@kestrel/web` · `apps/web/src/lib/services/market.ts`
 
 
 Module: apps/web/src/lib/services/market.ts
@@ -28,11 +28,11 @@ Module: apps/web/src/lib/services/market.ts
 | Total connections | 8 |
 | Risk level | **LOW** |
 | Layer | `core` |
-| Package tag | `#hamafx-web` |
+| Package tag | `#kestrel-web` |
 
 
 ### 📤 Depends On (5)
-[[@hamafx-data]] · [[@hamafx-indicators]] · [[@hamafx-shared]] · [[@hamafx-db]] · [[@hamafx-web]]
+[[@kestrel-data]] · [[@kestrel-indicators]] · [[@kestrel-shared]] · [[@kestrel-db]] · [[@kestrel-web]]
 
 
 
@@ -55,4 +55,4 @@ Module: apps/web/src/lib/services/market.ts
 - **Local Graph:** Right-click this file → "Open local graph"
 - **Backlinks:** Open the right sidebar → "Backlinks"
 - Use `#type/module` to find all Modules
-- Use `#hamafx-web` to find all files in this package
+- Use `#kestrel-web` to find all files in this package

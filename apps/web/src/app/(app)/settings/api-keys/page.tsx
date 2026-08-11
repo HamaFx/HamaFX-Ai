@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
-import { BYOK_PROVIDERS_LIST, computeUsage, type ProviderBreakdown } from '@hamafx/ai';
-import { getDb, getUserWithSettings, schema } from '@hamafx/db';
-import { decryptByok, type ProviderId } from '@hamafx/shared/encryption';
+import { BYOK_PROVIDERS_LIST, computeUsage, type ProviderBreakdown } from '@kestrel/ai';
+import { getDb, getUserWithSettings, schema } from '@kestrel/db';
+import { decryptByok, type ProviderId } from '@kestrel/shared/encryption';
 import { eq } from 'drizzle-orm';
 import { redirect } from 'next/navigation';
 
@@ -121,7 +121,7 @@ export default async function ApiKeysSettingsPage({
       <div>
         <h2 className="text-fg text-lg font-semibold">API Keys</h2>
         <p className="text-fg-subtle text-sm">
-          HamaFX-Ai is BYOK. Provide your own keys for the AI models you want to use. Keys are
+          Kestrel is BYOK. Provide your own keys for the AI models you want to use. Keys are
           encrypted at rest with AES-256-GCM.
         </p>
       </div>

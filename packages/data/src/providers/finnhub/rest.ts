@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@
 // expose 4h, so we request 1h and synthesise 4h client-side (4-bar
 // aggregation: first open, last close, max high, min low, summed volume).
 
-import type { Symbol, Timeframe } from '@hamafx/shared';
+import type { Symbol, Timeframe } from '@kestrel/shared';
 import { z } from 'zod';
 
 import { noteBackoff, tryReserve, type ThrottleConfig } from '../../cache/throttle';

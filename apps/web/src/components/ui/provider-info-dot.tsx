@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,7 +37,7 @@ import { IconInfoCircle } from '@tabler/icons-react';
 import type { ReactElement } from 'react';
 
 import { Tooltip } from '@/components/ui/tooltip';
-import type { ProviderMeta } from '@hamafx/shared';
+import type { ProviderMeta } from '@kestrel/shared';
 
 /**
  * Pure text-builder for the tooltip. Exported for unit tests so

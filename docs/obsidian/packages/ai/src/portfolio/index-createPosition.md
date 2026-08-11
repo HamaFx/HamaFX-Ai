@@ -1,19 +1,19 @@
 ---
 type: module
-package: "@hamafx/ai"
+package: "@kestrel/ai"
 path: "packages/ai/src/portfolio/index.ts"
 incoming: 2
 outgoing: 1
 connections: 3
 risk: low
 layer: core
-tags: [type/module, hamafx-ai, layer/core]
+tags: [type/module, kestrel-ai, layer/core]
 aliases: [index/createPosition]
 ---
 
 # 📁 index/createPosition
 
-> **Module** · `@hamafx/ai` · `packages/ai/src/portfolio/index.ts`
+> **Module** · `@kestrel/ai` · `packages/ai/src/portfolio/index.ts`
 
 
 Module: packages/ai/src/portfolio/index.ts
@@ -28,11 +28,11 @@ Module: packages/ai/src/portfolio/index.ts
 | Total connections | 3 |
 | Risk level | **LOW** |
 | Layer | `core` |
-| Package tag | `#hamafx-ai` |
+| Package tag | `#kestrel-ai` |
 
 
 ### 📤 Depends On (1)
-[[@hamafx-ai]]
+[[@kestrel-ai]]
 
 
 ### 📥 Depended On By (2)
@@ -59,4 +59,4 @@ Module: packages/ai/src/portfolio/index.ts
 - **Local Graph:** Right-click this file → "Open local graph"
 - **Backlinks:** Open the right sidebar → "Backlinks"
 - Use `#type/module` to find all Modules
-- Use `#hamafx-ai` to find all files in this package
+- Use `#kestrel-ai` to find all files in this package

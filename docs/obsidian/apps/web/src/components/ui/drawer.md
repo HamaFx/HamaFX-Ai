@@ -1,6 +1,6 @@
 ---
 type: component
-package: "@hamafx/web"
+package: "@kestrel/web"
 path: "apps/web/src/components/ui/drawer.tsx"
 incoming: 0
 outgoing: 1
@@ -13,7 +13,7 @@ aliases: [drawer]
 
 # 🧩 drawer
 
-> **Component** · `@hamafx/web` · `apps/web/src/components/ui/drawer.tsx`
+> **Component** · `@kestrel/web` · `apps/web/src/components/ui/drawer.tsx`
 
 
 React component: drawer
@@ -32,7 +32,7 @@ React component: drawer
 
 
 ### 📤 Depends On (1)
-[[@hamafx-web]]
+[[@kestrel-web]]
 
 
 

@@ -2,8 +2,8 @@
 import { beforeAll, describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
 
-import { AppError, validationError } from '@hamafx/shared';
-import { ProviderError } from '@hamafx/data';
+import { AppError, validationError } from '@kestrel/shared';
+import { ProviderError } from '@kestrel/data';
 
 import { errorResponse, getUserFromRequest, parseJsonBody, parseSearchParams, withAuth } from '../src/lib/api';
 

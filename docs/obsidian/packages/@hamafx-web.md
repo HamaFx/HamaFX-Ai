@@ -1,6 +1,6 @@
 ---
 type: package
-package: "@hamafx/web"
+package: "@kestrel/web"
 path: "packages/web"
 incoming: 560
 outgoing: 0
@@ -8,15 +8,15 @@ connections: 560
 risk: high
 layer: package
 tags: [type/package, hamafx-web, layer/package, risk/high]
-aliases: [@hamafx/web]
+aliases: [@kestrel/web]
 ---
 
-# 📦 @hamafx/web
+# 📦 @kestrel/web
 
-> **Package** · `@hamafx/web` · `packages/web`
+> **Package** · `@kestrel/web` · `packages/web`
 
 
-Package: @hamafx/web
+Package: @kestrel/web
 
 
 ## 📊 Connections

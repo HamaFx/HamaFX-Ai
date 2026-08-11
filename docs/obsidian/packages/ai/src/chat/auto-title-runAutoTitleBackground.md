@@ -1,19 +1,19 @@
 ---
 type: module
-package: "@hamafx/ai"
+package: "@kestrel/ai"
 path: "packages/ai/src/chat/auto-title.ts"
 incoming: 1
 outgoing: 10
 connections: 11
 risk: low
 layer: core
-tags: [type/module, hamafx-ai, layer/core]
+tags: [type/module, kestrel-ai, layer/core]
 aliases: [auto-title/runAutoTitleBackground]
 ---
 
 # 📁 auto-title/runAutoTitleBackground
 
-> **Module** · `@hamafx/ai` · `packages/ai/src/chat/auto-title.ts`
+> **Module** · `@kestrel/ai` · `packages/ai/src/chat/auto-title.ts`
 
 
 Module: packages/ai/src/chat/auto-title.ts
@@ -28,11 +28,11 @@ Module: packages/ai/src/chat/auto-title.ts
 | Total connections | 11 |
 | Risk level | **LOW** |
 | Layer | `core` |
-| Package tag | `#hamafx-ai` |
+| Package tag | `#kestrel-ai` |
 
 
 ### 📤 Depends On (7)
-[[@hamafx-shared]] · [[@hamafx-db]] · [[types-RunChatArgs]] · [[model-resolveModel]] · [[persistence-listThreads]] · [[title-GenerateTitleArgs]] · [[@hamafx-ai]]
+[[@kestrel-shared]] · [[@kestrel-db]] · [[types-RunChatArgs]] · [[model-resolveModel]] · [[persistence-listThreads]] · [[title-GenerateTitleArgs]] · [[@kestrel-ai]]
 
 
 ### 📥 Depended On By (1)
@@ -49,4 +49,4 @@ Module: packages/ai/src/chat/auto-title.ts
 - **Local Graph:** Right-click this file → "Open local graph"
 - **Backlinks:** Open the right sidebar → "Backlinks"
 - Use `#type/module` to find all Modules
-- Use `#hamafx-ai` to find all files in this package
+- Use `#kestrel-ai` to find all files in this package

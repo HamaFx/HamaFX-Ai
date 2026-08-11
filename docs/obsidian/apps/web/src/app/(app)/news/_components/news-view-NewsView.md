@@ -1,19 +1,19 @@
 ---
 type: module
-package: "@hamafx/web"
+package: "@kestrel/web"
 path: "apps/web/src/app/(app)/news/_components/news-view.tsx"
 incoming: 1
 outgoing: 4
 connections: 5
 risk: low
 layer: core
-tags: [type/module, hamafx-web, layer/core]
+tags: [type/module, kestrel-web, layer/core]
 aliases: [news-view/NewsView]
 ---
 
 # 📁 news-view/NewsView
 
-> **Module** · `@hamafx/web` · `apps/web/src/app/(app)/news/_components/news-view.tsx`
+> **Module** · `@kestrel/web` · `apps/web/src/app/(app)/news/_components/news-view.tsx`
 
 
 Module: apps/web/src/app/(app)/news/_components/news-view.tsx
@@ -28,11 +28,11 @@ Module: apps/web/src/app/(app)/news/_components/news-view.tsx
 | Total connections | 5 |
 | Risk level | **LOW** |
 | Layer | `core` |
-| Package tag | `#hamafx-web` |
+| Package tag | `#kestrel-web` |
 
 
 ### 📤 Depends On (3)
-[[@hamafx-shared]] · [[news-toolbar-SentimentFilter]] · [[@hamafx-web]]
+[[@kestrel-shared]] · [[news-toolbar-SentimentFilter]] · [[@kestrel-web]]
 
 
 ### 📥 Depended On By (1)
@@ -49,4 +49,4 @@ Module: apps/web/src/app/(app)/news/_components/news-view.tsx
 - **Local Graph:** Right-click this file → "Open local graph"
 - **Backlinks:** Open the right sidebar → "Backlinks"
 - Use `#type/module` to find all Modules
-- Use `#hamafx-web` to find all files in this package
+- Use `#kestrel-web` to find all files in this package

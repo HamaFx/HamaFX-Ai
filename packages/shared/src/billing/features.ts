@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@
 // check if a given plan's features include a specific feature key.
 //
 // Usage:
-//   import { hasFeature, PLAN_FEATURES, type FeatureKey } from '@hamafx/shared/billing';
+//   import { hasFeature, PLAN_FEATURES, type FeatureKey } from '@kestrel/shared/billing';
 //
 //   if (!hasFeature(userPlanFeatures, 'ai_high_quota')) {
 //     return Response.json({ error: 'Upgrade to Pro for advanced AI' }, { status: 403 });

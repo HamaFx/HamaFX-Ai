@@ -1,19 +1,19 @@
 ---
 type: module
-package: "@hamafx/indicators"
+package: "@kestrel/indicators"
 path: "packages/indicators/src/smc/index.ts"
 incoming: 0
 outgoing: 9
 connections: 9
 risk: low
 layer: core
-tags: [type/module, hamafx-indicators, layer/core]
+tags: [type/module, kestrel-indicators, layer/core]
 aliases: [index/ComputeStructureArgs]
 ---
 
 # 📁 index/ComputeStructureArgs
 
-> **Module** · `@hamafx/indicators` · `packages/indicators/src/smc/index.ts`
+> **Module** · `@kestrel/indicators` · `packages/indicators/src/smc/index.ts`
 
 
 Module: packages/indicators/src/smc/index.ts
@@ -28,11 +28,11 @@ Module: packages/indicators/src/smc/index.ts
 | Total connections | 9 |
 | Risk level | **LOW** |
 | Layer | `core` |
-| Package tag | `#hamafx-indicators` |
+| Package tag | `#kestrel-indicators` |
 
 
 ### 📤 Depends On (8)
-[[@hamafx-shared]] · [[defaults-defaultSwingLookback]] · [[fvg-DetectFvgOptions]] · [[liquidity-DetectLiquiditySweepsOptions]] · [[order-blocks-DetectOrderBlocksOptions]] · [[structure-DetectStructureOptions]] · [[swings-FindSwingsOptions]] · [[@hamafx-indicators]]
+[[@kestrel-shared]] · [[defaults-defaultSwingLookback]] · [[fvg-DetectFvgOptions]] · [[liquidity-DetectLiquiditySweepsOptions]] · [[order-blocks-DetectOrderBlocksOptions]] · [[structure-DetectStructureOptions]] · [[swings-FindSwingsOptions]] · [[@kestrel-indicators]]
 
 
 
@@ -53,4 +53,4 @@ Module: packages/indicators/src/smc/index.ts
 - **Local Graph:** Right-click this file → "Open local graph"
 - **Backlinks:** Open the right sidebar → "Backlinks"
 - Use `#type/module` to find all Modules
-- Use `#hamafx-indicators` to find all files in this package
+- Use `#kestrel-indicators` to find all files in this package

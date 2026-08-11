@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@ import {
   defaultModelFor,
   getProvider,
 } from '../src/byok-providers';
-import { PROVIDER_IDS } from '@hamafx/shared/byok';
+import { PROVIDER_IDS } from '@kestrel/shared/byok';
 
 describe('BYOK_PROVIDERS', () => {
   it('contains every id from PROVIDER_IDS', () => {

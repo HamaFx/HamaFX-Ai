@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════════════════════════════════════
-// HamaFX-Ai Architecture Explorer — Phase 3
+// Kestrel Architecture Explorer — Phase 3
 // ═══════════════════════════════════════════════════════════════════════
 
 const DATA = JSON.parse(document.getElementById('arch-data').textContent);
@@ -672,7 +672,7 @@ function selectNode(ev, d) {
   node.classed('selected', n=>n.id===d.id);
   // Phase 8: Invoke plugin hooks
   try{
-    const plugins=window.__HAMAFX_PLUGINS__||{};
+    const plugins=window.__KESTREL_PLUGINS__||{};
     Object.values(plugins).forEach(p=>{if(p.onNodeClick)try{p.onNodeClick(d,ev)}catch(e){console.warn('Plugin hook error:',e)}});
   }catch(e){}
 }
@@ -1300,9 +1300,9 @@ function updatePlaybackFrame(){
 // ═══════════════════════════════════════════════════════════════════════
 
 // Plugin system: external code can register callbacks
-window.__HAMAFX_PLUGINS__={};
+window.__KESTREL_PLUGINS__={};
 window.registerPlugin=function(name,hooks){
-  window.__HAMAFX_PLUGINS__[name]=hooks;
+  window.__KESTREL_PLUGINS__[name]=hooks;
   console.log('🔌 Plugin registered: '+name+' (hooks: '+Object.keys(hooks).join(', ')+')');
 };
 

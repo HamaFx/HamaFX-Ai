@@ -1,19 +1,19 @@
 ---
 type: module
-package: "@hamafx/ai"
+package: "@kestrel/ai"
 path: "packages/ai/src/multi-agent/agents/base-agent.ts"
 incoming: 8
 outgoing: 11
 connections: 19
 risk: medium
 layer: core
-tags: [type/module, hamafx-ai, layer/core, risk/medium]
+tags: [type/module, kestrel-ai, layer/core, risk/medium]
 aliases: [base-agent/baseOpinionSchema]
 ---
 
 # 📁 base-agent/baseOpinionSchema
 
-> **Module** · `@hamafx/ai` · `packages/ai/src/multi-agent/agents/base-agent.ts`
+> **Module** · `@kestrel/ai` · `packages/ai/src/multi-agent/agents/base-agent.ts`
 
 
 Module: packages/ai/src/multi-agent/agents/base-agent.ts
@@ -28,11 +28,11 @@ Module: packages/ai/src/multi-agent/agents/base-agent.ts
 | Total connections | 19 |
 | Risk level | **MEDIUM** |
 | Layer | `core` |
-| Package tag | `#hamafx-ai` |
+| Package tag | `#kestrel-ai` |
 
 
 ### 📤 Depends On (9)
-[[model-resolveModel]] · [[cost-DEFAULT_TURN_ESTIMATE_USD]] · [[tool-context-ToolEnv]] · [[db-getDb]] · [[telemetry-telemetryConfig]] · [[types-AnalysisMode]] · [[context-BuildContextArgs]] · [[agent-model-tierToDomain]] · [[@hamafx-ai]]
+[[model-resolveModel]] · [[cost-DEFAULT_TURN_ESTIMATE_USD]] · [[tool-context-ToolEnv]] · [[db-getDb]] · [[telemetry-telemetryConfig]] · [[types-AnalysisMode]] · [[context-BuildContextArgs]] · [[agent-model-tierToDomain]] · [[@kestrel-ai]]
 
 
 ### 📥 Depended On By (6)
@@ -49,4 +49,4 @@ Module: packages/ai/src/multi-agent/agents/base-agent.ts
 - **Local Graph:** Right-click this file → "Open local graph"
 - **Backlinks:** Open the right sidebar → "Backlinks"
 - Use `#type/module` to find all Modules
-- Use `#hamafx-ai` to find all files in this package
+- Use `#kestrel-ai` to find all files in this package

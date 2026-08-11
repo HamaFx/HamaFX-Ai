@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,13 +36,13 @@
 
 import { createHash } from 'node:crypto';
 
-import { schema } from '@hamafx/db';
+import { schema } from '@kestrel/db';
 import { getDb } from '../db';
 import {
   AnalyzeChartImageInputSchema,
   AnalyzeChartImageOutputSchema,
   type AnalyzeChartImageOutput,
-} from '@hamafx/shared';
+} from '@kestrel/shared';
 import { generateText, tool, type ModelMessage } from 'ai';
 import { and, desc, eq } from 'drizzle-orm';
 import type { z } from 'zod';
@@ -53,7 +53,7 @@ import { telemetryConfig } from '../telemetry';
 
 const InputSchema = AnalyzeChartImageInputSchema;
 
-declare module '@hamafx/shared' {
+declare module '@kestrel/shared' {
   interface ToolIOMap {
     analyze_chart_image: { input: z.infer<typeof InputSchema> };
   }
@@ -71,7 +71,7 @@ interface ImagePartShape {
 // `setAnalyzeChartImageContext()` was removed.
 
 const SYSTEM_PROMPT =
-  'You are HamaFX-Ai analysing a chart screenshot. Return ONLY structured output matching the schema. Be terse — labels are short ("PDH", "weekly H", etc.); the observed paragraph is one to three sentences.';
+  'You are Kestrel analysing a chart screenshot. Return ONLY structured output matching the schema. Be terse — labels are short ("PDH", "weekly H", etc.); the observed paragraph is one to three sentences.';
 
 const NO_CONTEXT: AnalyzeChartImageOutput = {
   symbol: null,

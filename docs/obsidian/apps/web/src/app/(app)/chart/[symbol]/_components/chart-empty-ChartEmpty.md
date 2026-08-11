@@ -1,6 +1,6 @@
 ---
 type: module
-package: "@hamafx/web"
+package: "@kestrel/web"
 path: "apps/web/src/app/(app)/chart/[symbol]/_components/chart-empty.tsx"
 incoming: 1
 outgoing: 3
@@ -13,7 +13,7 @@ aliases: [chart-empty/ChartEmpty]
 
 # 📁 chart-empty/ChartEmpty
 
-> **Module** · `@hamafx/web` · `apps/web/src/app/(app)/chart/[symbol]/_components/chart-empty.tsx`
+> **Module** · `@kestrel/web` · `apps/web/src/app/(app)/chart/[symbol]/_components/chart-empty.tsx`
 
 
 Module: apps/web/src/app/(app)/chart/[symbol]/_components/chart-empty.tsx
@@ -32,7 +32,7 @@ Module: apps/web/src/app/(app)/chart/[symbol]/_components/chart-empty.tsx
 
 
 ### 📤 Depends On (2)
-[[@hamafx-shared]] · [[@hamafx-web]]
+[[@kestrel-shared]] · [[@kestrel-web]]
 
 
 ### 📥 Depended On By (1)

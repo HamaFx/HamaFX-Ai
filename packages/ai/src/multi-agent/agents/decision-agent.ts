@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,14 +29,14 @@ import { resolveAgentModel } from './agent-model';
 import { buildSharedSystemPrompt, extractUserMessageText } from '../context';
 import type { AgentName, AgentBias, ModelTier, AgentOpinion, SharedContext, MultiAgentEnv } from '../types';
 import { AGENT_TIMEOUTS } from '../types';
-import type { UserSettingsRow } from '@hamafx/db/schema';
+import type { UserSettingsRow } from '@kestrel/db/schema';
 
 export class DecisionAgent {
   readonly name: AgentName = 'decision';
   readonly modelTier: ModelTier = 'strong';
 
   systemPrompt(): string {
-    return `You are the Decision Agent for HamaFX-Ai, the final voice in a multi-agent deliberation.
+    return `You are the Decision Agent for Kestrel, the final voice in a multi-agent deliberation.
 
 You receive structured opinions from specialist agents:
 - Technical Agent: price action, indicators, structure

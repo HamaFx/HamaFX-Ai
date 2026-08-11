@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@
 // Pattern mirrors ToolRegistry (packages/ai/src/tools/registry.ts)
 // and IndicatorRegistry (packages/indicators/src/indicator-registry.ts).
 
-import type { AlertRule } from '@hamafx/shared';
+import type { AlertRule } from '@kestrel/shared';
 import { LevelSpec, CrossingSpec, type AlertSpec } from './spec';
 
 // --- Plugin definition --------------------------------------------------

@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@
 import { useEffect, useRef, useState } from 'react';
 import {IconCircleCheck, IconLoader2} from '@tabler/icons-react';
 
-import type { CatalogResponse } from '@hamafx/shared';
+import type { CatalogResponse } from '@kestrel/shared';
 import { apiFetch } from '@/lib/api-client';
 
 interface CacheData {

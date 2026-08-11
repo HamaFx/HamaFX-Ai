@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-// Public barrel for @hamafx/data. Routes / AI tools / hooks import from here.
+// Public barrel for @kestrel/data. Routes / AI tools / hooks import from here.
 // Adapter helpers (cache, failover) are also re-exported for advanced use.
 
 export { getPrice, getPriceWithMeta, type GetPriceOptions, type PriceResult } from './adapters/price';

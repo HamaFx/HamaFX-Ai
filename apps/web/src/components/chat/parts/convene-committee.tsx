@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
-import type { ConveneCommitteeOutput, CommitteeVerdict } from '@hamafx/shared';
+import type { ConveneCommitteeOutput, CommitteeVerdict } from '@kestrel/shared';
 import { IconAlertTriangle,  IconBriefcase,  IconCircleCheck,  IconChevronDown,  IconLink as LinkIcon,  IconTrendingUp,  IconUsers,  IconCircleX } from '@tabler/icons-react';
 import type { Icon } from '@tabler/icons-react';
 

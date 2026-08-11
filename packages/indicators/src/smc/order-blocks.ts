@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,7 +26,7 @@
 // an impulse) without the full ICT taxonomy. Phase 2 follow-ups can add
 // "breaker blocks", "mitigation blocks", etc.
 
-import type { Candle, OrderBlock } from '@hamafx/shared';
+import type { Candle, OrderBlock } from '@kestrel/shared';
 
 export interface DetectOrderBlocksOptions {
   /** How many consecutive impulse bars must follow the OB. Default 2. */

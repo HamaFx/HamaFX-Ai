@@ -7,7 +7,7 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/cn';
 import { apiMutate } from '@/lib/api-client';
-import { isKnownSymbol } from '@hamafx/shared';
+import { isKnownSymbol } from '@kestrel/shared';
 
 interface ParsedTrade {
   symbol: string;

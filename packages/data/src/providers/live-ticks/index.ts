@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,11 +29,11 @@
 //
 // This module sits in `packages/data/src/providers/live-ticks/` for
 // parity with the other providers; the actual schema lives in
-// `@hamafx/db` and the writer lives in `apps/worker`.
+// `@kestrel/db` and the writer lives in `apps/worker`.
 
-import type { getDb } from '@hamafx/db';
-import { liveTicks } from '@hamafx/db/schema';
-import type { Symbol } from '@hamafx/shared';
+import type { getDb } from '@kestrel/db';
+import { liveTicks } from '@kestrel/db/schema';
+import type { Symbol } from '@kestrel/shared';
 import { and, eq, gte } from 'drizzle-orm';
 
 import { ProviderEmptyError } from '../../errors';
@@ -65,7 +65,7 @@ function resolveMaxAgeMs(override?: number): number {
 
 export interface FetchLiveTickArgs {
   symbol: Symbol;
-  /** Inject the drizzle client. Defaults to `getDb()` from @hamafx/db. */
+  /** Inject the drizzle client. Defaults to `getDb()` from @kestrel/db. */
   db?: ReturnType<typeof getDb>;
   /** Override the staleness threshold (used by tests). */
   maxAgeMs?: number;
@@ -125,6 +125,6 @@ export async function fetchLiveTick(args: FetchLiveTickArgs): Promise<LiveTickRe
 
 /** Lazy-load `getDb` so this module stays import-cheap from the Edge runtime. */
 async function loadDb(): Promise<ReturnType<typeof getDb>> {
-  const mod = await import('@hamafx/db');
+  const mod = await import('@kestrel/db');
   return mod.getDb();
 }

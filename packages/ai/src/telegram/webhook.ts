@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,12 +24,12 @@
 //   - Timeouts: AI agent calls have a 30s timeout to prevent webhook hangs.
 //   - Error safety: user-facing errors are sanitized (no internal details leaked).
 
-import { pickAiEnv, type ServerEnv } from '@hamafx/shared';
-import { logErrorContext, createCategorizedLogger } from '@hamafx/shared/logger';
+import { pickAiEnv, type ServerEnv } from '@kestrel/shared';
+import { logErrorContext, createCategorizedLogger } from '@kestrel/shared/logger';
 import type { UIMessage } from 'ai';
 import { runChat } from '../agent';
 import * as crypto from 'crypto';
-import { schema } from '@hamafx/db';
+import { schema } from '@kestrel/db';
 import { getDb } from '../db';
 import { eq } from 'drizzle-orm';
 import { getBotDispatcher, resolveBotUser, type BotContext, type BotResponse } from '../bot';
@@ -103,7 +103,7 @@ function sanitizeError(err: unknown): string {
     if (err.message.includes('budget') || err.message.includes('spend')) return 'Daily AI budget limit reached. Please try again tomorrow.';
     if (err.message.includes('timeout') || err.message.includes('Timeout')) return 'The request timed out. Please try again.';
   }
-  return 'An unexpected error occurred. Please try again or use the web UI at hamafx.ai.';
+  return 'An unexpected error occurred. Please try again or use the web UI at kestrel.ai.';
 }
 
 /** Send a BotResponse back to Telegram using the resilient client. */
@@ -137,11 +137,11 @@ async function sendLinkPrompt(chatId: number, botToken: string): Promise<void> {
     botToken,
     chatId,
     [
-      '👋 Welcome to HamaFX Bot!',
+      '👋 Welcome to Kestrel Bot!',
       '',
-      'To use this bot, you need to link your HamaFX account:',
+      'To use this bot, you need to link your Kestrel account:',
       '',
-      '1. Go to hamafx.ai/settings',
+      '1. Go to kestrel.ai/settings',
       '2. Click "Link Telegram"',
       '3. Copy the 6-character code',
       '4. Send: /link <your-code>',

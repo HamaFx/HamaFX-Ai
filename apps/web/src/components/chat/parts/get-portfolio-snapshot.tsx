@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
-import { type GetPortfolioSnapshotOutput } from '@hamafx/shared';
+import { type GetPortfolioSnapshotOutput } from '@kestrel/shared';
 import {IconShield, IconTrendingUp, IconAlertTriangle} from '@tabler/icons-react';
 
 interface GetPortfolioSnapshotPartProps {

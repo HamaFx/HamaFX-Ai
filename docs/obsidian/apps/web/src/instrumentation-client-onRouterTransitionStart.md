@@ -1,19 +1,19 @@
 ---
 type: module
-package: "@hamafx/web"
+package: "@kestrel/web"
 path: "apps/web/src/instrumentation-client.ts"
 incoming: 0
 outgoing: 1
 connections: 1
 risk: low
 layer: core
-tags: [type/module, hamafx-web, layer/core]
+tags: [type/module, kestrel-web, layer/core]
 aliases: [instrumentation-client/onRouterTransitionStart]
 ---
 
 # 📁 instrumentation-client/onRouterTransitionStart
 
-> **Module** · `@hamafx/web` · `apps/web/src/instrumentation-client.ts`
+> **Module** · `@kestrel/web` · `apps/web/src/instrumentation-client.ts`
 
 
 Module: apps/web/src/instrumentation-client.ts
@@ -28,11 +28,11 @@ Module: apps/web/src/instrumentation-client.ts
 | Total connections | 1 |
 | Risk level | **LOW** |
 | Layer | `core` |
-| Package tag | `#hamafx-web` |
+| Package tag | `#kestrel-web` |
 
 
 ### 📤 Depends On (1)
-[[@hamafx-web]]
+[[@kestrel-web]]
 
 
 
@@ -46,4 +46,4 @@ Module: apps/web/src/instrumentation-client.ts
 - **Local Graph:** Right-click this file → "Open local graph"
 - **Backlinks:** Open the right sidebar → "Backlinks"
 - Use `#type/module` to find all Modules
-- Use `#hamafx-web` to find all files in this package
+- Use `#kestrel-web` to find all files in this package

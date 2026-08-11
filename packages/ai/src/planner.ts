@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,9 +32,9 @@
 // roundtrip auditable and lets us cache the plan on the message row
 // independently of the model's tool-loop output.
 
-import { schema } from '@hamafx/db';
+import { schema } from '@kestrel/db';
 import { getDb } from './db';
-import type { ServerEnv, UserPlanPart } from '@hamafx/shared';
+import type { ServerEnv, UserPlanPart } from '@kestrel/shared';
 import { generateText, type UIMessage } from 'ai';
 
 import { resolveModel } from './model';

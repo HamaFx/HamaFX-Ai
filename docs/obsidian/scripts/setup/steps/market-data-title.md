@@ -39,6 +39,7 @@ Module: scripts/setup/steps/market-data.mjs
 
 ## 📦 Exports
 - `title`
+- `hint`
 - `run`
 
 

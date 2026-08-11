@@ -1,4 +1,4 @@
-# HamaFX-Ai Cron VM
+# Kestrel Cron VM
 
 A GCE `e2-medium` instance that runs the Docker worker and fires lightweight cron endpoints on schedule via `curl`. It replaces GitHub Actions (which requires billing) and Vercel Cron (which caps at once/day on Hobby).
 

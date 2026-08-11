@@ -1,6 +1,6 @@
 ---
 type: component
-package: "@hamafx/web"
+package: "@kestrel/web"
 path: "apps/web/src/components/chart/chart-macd.tsx"
 incoming: 1
 outgoing: 8
@@ -13,7 +13,7 @@ aliases: [chart-macd/ChartMACDProps]
 
 # 🧩 chart-macd/ChartMACDProps
 
-> **Component** · `@hamafx/web` · `apps/web/src/components/chart/chart-macd.tsx`
+> **Component** · `@kestrel/web` · `apps/web/src/components/chart/chart-macd.tsx`
 
 
 React component: chart-macd
@@ -32,7 +32,7 @@ React component: chart-macd
 
 
 ### 📤 Depends On (6)
-[[@hamafx-shared]] · [[chart-colors-SERIES_BULL_HEX]] · [[chart-types-ChartSettings]] · [[use-sub-pane-chart-SubPaneOptions]] · [[lc-adapter-LcModule]] · [[@hamafx-web]]
+[[@kestrel-shared]] · [[chart-colors-SERIES_BULL_HEX]] · [[chart-types-ChartSettings]] · [[use-sub-pane-chart-SubPaneOptions]] · [[lc-adapter-LcModule]] · [[@kestrel-web]]
 
 
 ### 📥 Depended On By (1)

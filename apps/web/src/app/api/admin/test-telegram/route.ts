@@ -42,7 +42,7 @@ const BodySchema = z.object({
 
 const TELEGRAM_API = 'https://api.telegram.org';
 const TEXT_BODY =
-  '*\\[HamaFX\\-Ai\\] Test Telegram message*\n\nIf you received this, the alerts pipeline is wired up correctly\\.';
+  '*\\[Kestrel\\-Ai\\] Test Telegram message*\n\nIf you received this, the alerts pipeline is wired up correctly\\.';
 
 interface TelegramResponse {
   ok?: boolean;

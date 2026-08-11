@@ -12,7 +12,7 @@
 // Server component on purpose — no state, no events, no browser-only APIs.
 
 import { IconActivity, IconClock, IconDatabase } from '@tabler/icons-react';
-import { priceDecimals, type GetPriceOutput, type Symbol } from '@hamafx/shared';
+import { priceDecimals, type GetPriceOutput, type Symbol } from '@kestrel/shared';
 
 import { Card } from '@/components/ui/card';
 

@@ -1,19 +1,19 @@
 ---
 type: module
-package: "@hamafx/data"
+package: "@kestrel/data"
 path: "packages/data/src/health.ts"
 incoming: 6
 outgoing: 2
 connections: 8
 risk: low
 layer: core
-tags: [type/module, hamafx-data, layer/core]
+tags: [type/module, kestrel-data, layer/core]
 aliases: [health/recordSuccess]
 ---
 
 # 📁 health/recordSuccess
 
-> **Module** · `@hamafx/data` · `packages/data/src/health.ts`
+> **Module** · `@kestrel/data` · `packages/data/src/health.ts`
 
 
 Module: packages/data/src/health.ts
@@ -28,11 +28,11 @@ Module: packages/data/src/health.ts
 | Total connections | 8 |
 | Risk level | **LOW** |
 | Layer | `core` |
-| Package tag | `#hamafx-data` |
+| Package tag | `#kestrel-data` |
 
 
 ### 📤 Depends On (2)
-[[@hamafx-db]] · [[@hamafx-data]]
+[[@kestrel-db]] · [[@kestrel-data]]
 
 
 ### 📥 Depended On By (6)
@@ -54,4 +54,4 @@ Module: packages/data/src/health.ts
 - **Local Graph:** Right-click this file → "Open local graph"
 - **Backlinks:** Open the right sidebar → "Backlinks"
 - Use `#type/module` to find all Modules
-- Use `#hamafx-data` to find all files in this package
+- Use `#kestrel-data` to find all files in this package

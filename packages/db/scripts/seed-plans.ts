@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,13 +20,13 @@
 // enabling paid plans. See docs/BILLING-WEBHOOK-SAFETY-GATE.md.
 //
 // Run with:
-//   pnpm --filter @hamafx/db tsx scripts/seed-plans.ts
+//   pnpm --filter @kestrel/db tsx scripts/seed-plans.ts
 // or against a local PGlite / Postgres via:
 //   npx tsx packages/db/scripts/seed-plans.ts
 
 import { eq } from 'drizzle-orm';
 
-// This script is meant to be run from the @hamafx/db package.
+// This script is meant to be run from the @kestrel/db package.
 // Import the schema and client directly.
 import { plans } from '../src/schema/billing';
 import { getDb } from '../src/client';

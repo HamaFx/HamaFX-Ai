@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,7 +36,7 @@ test.describe('Chat UI — empty state', () => {
     await expect(page.locator('svg.text-brand')).toBeAttached();
 
     // Title should be present
-    await expect(page.getByText('HamaFX·Ai')).toBeVisible();
+    await expect(page.getByText('Kestrel')).toBeVisible();
 
     // Subtitle
     await expect(page.getByText('Start a conversation')).toBeVisible();

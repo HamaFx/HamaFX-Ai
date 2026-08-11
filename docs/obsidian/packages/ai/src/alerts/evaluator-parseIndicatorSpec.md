@@ -1,19 +1,19 @@
 ---
 type: module
-package: "@hamafx/ai"
+package: "@kestrel/ai"
 path: "packages/ai/src/alerts/evaluator.ts"
 incoming: 6
 outgoing: 12
 connections: 18
 risk: medium
 layer: core
-tags: [type/module, hamafx-ai, layer/core, risk/medium]
+tags: [type/module, kestrel-ai, layer/core, risk/medium]
 aliases: [evaluator/parseIndicatorSpec]
 ---
 
 # 📁 evaluator/parseIndicatorSpec
 
-> **Module** · `@hamafx/ai` · `packages/ai/src/alerts/evaluator.ts`
+> **Module** · `@kestrel/ai` · `packages/ai/src/alerts/evaluator.ts`
 
 
 Module: packages/ai/src/alerts/evaluator.ts
@@ -28,11 +28,11 @@ Module: packages/ai/src/alerts/evaluator.ts
 | Total connections | 18 |
 | Risk level | **MEDIUM** |
 | Layer | `core` |
-| Package tag | `#hamafx-ai` |
+| Package tag | `#kestrel-ai` |
 
 
 ### 📤 Depends On (10)
-[[@hamafx-db]] · [[db-getDb]] · [[@hamafx-data]] · [[@hamafx-indicators]] · [[@hamafx-shared]] · [[delivery-DeliveryResult]] · [[persistence-CreateAlertInput]] · [[spec-RuleReading]] · [[rule-registry-SpecFactory]] · [[@hamafx-ai]]
+[[@kestrel-db]] · [[db-getDb]] · [[@kestrel-data]] · [[@kestrel-indicators]] · [[@kestrel-shared]] · [[delivery-DeliveryResult]] · [[persistence-CreateAlertInput]] · [[spec-RuleReading]] · [[rule-registry-SpecFactory]] · [[@kestrel-ai]]
 
 
 ### 📥 Depended On By (6)
@@ -56,4 +56,4 @@ Module: packages/ai/src/alerts/evaluator.ts
 - **Local Graph:** Right-click this file → "Open local graph"
 - **Backlinks:** Open the right sidebar → "Backlinks"
 - Use `#type/module` to find all Modules
-- Use `#hamafx-ai` to find all files in this package
+- Use `#kestrel-ai` to find all files in this package

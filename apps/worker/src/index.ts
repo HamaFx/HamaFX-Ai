@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-// HamaFX-Ai worker entry point.
+// Kestrel worker entry point.
 //
 // Phase 8 PR-6: the worker now holds a persistent BiQuote SignalR
 // connection. Ticks flow into `TickBuffer`, which is drained once per
@@ -30,9 +30,9 @@
 //   4. start SignalR consumer + Binance WS consumer + the 1Hz flush loop.
 //   5. heartbeat to healthchecks.io every 30s while the consumer is alive.
 
-import { closeDb } from '@hamafx/db'
-import { getDb } from '@hamafx/ai';
-import { initLangfuse, shutdownLangfuse } from '@hamafx/ai';
+import { closeDb } from '@kestrel/db'
+import { getDb } from '@kestrel/ai';
+import { initLangfuse, shutdownLangfuse } from '@kestrel/ai';
 
 import { Candle1mAggregator, type ClosedCandle } from './aggregator/candle-1m.js';
 import { createHealthServer } from './http-server.js';
@@ -419,7 +419,7 @@ import { startScheduler } from './scheduler.js';
 export async function main(): Promise<void> {
   // Phase 3 §3.9 — load secrets from vault (GCP Secret Manager) before
   // loadEnv() runs. No-op when SECRETS_VAULT_PROVIDER is unset or 'none'.
-  const { loadSecretsFromVault } = await import('@hamafx/shared/vault');
+  const { loadSecretsFromVault } = await import('@kestrel/shared/vault');
   await loadSecretsFromVault();
 
   const env = loadEnv();
@@ -430,6 +430,17 @@ export async function main(): Promise<void> {
   // ── Langfuse LLM Observability ──────────────────────────────────────
   // Silently skipped when LANGFUSE_* env vars are not set.
   initLangfuse();
+
+  console.log(
+    [
+      '██╗  ██╗███████╗███████╗████████╗██████╗ ███████╗██╗',
+      '██║ ██╔╝██╔════╝██╔════╝╚══██╔══╝██╔══██╗██╔════╝██║',
+      '█████╔╝ █████╗  ███████╗   ██║   ██████╔╝█████╗  ██║',
+      '██╔═██╗ ██╔══╝  ╚════██║   ██║   ██╔══██╗██╔══╝  ██║',
+      '██║  ██╗███████╗███████║   ██║   ██║  ██║███████╗███████╗',
+      '╚═╝  ╚═╝╚══════╝╚══════╝   ╚═╝   ╚═╝  ╚═╝╚══════╝╚══════╝',
+    ].join('\n'),
+  );
 
   log.info('worker starting', {
     nodeVersion: process.version,

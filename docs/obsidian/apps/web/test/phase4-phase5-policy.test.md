@@ -1,19 +1,19 @@
 ---
 type: module
-package: "@hamafx/web"
+package: "@kestrel/web"
 path: "apps/web/test/phase4-phase5-policy.test.ts"
 incoming: 0
 outgoing: 3
 connections: 3
 risk: low
 layer: core
-tags: [type/module, hamafx-web, layer/core]
+tags: [type/module, kestrel-web, layer/core]
 aliases: [phase4-phase5-policy.test]
 ---
 
 # 📁 phase4-phase5-policy.test
 
-> **Module** · `@hamafx/web` · `apps/web/test/phase4-phase5-policy.test.ts`
+> **Module** · `@kestrel/web` · `apps/web/test/phase4-phase5-policy.test.ts`
 
 
 Module: apps/web/test/phase4-phase5-policy.test.ts
@@ -28,11 +28,11 @@ Module: apps/web/test/phase4-phase5-policy.test.ts
 | Total connections | 3 |
 | Risk level | **LOW** |
 | Layer | `core` |
-| Package tag | `#hamafx-web` |
+| Package tag | `#kestrel-web` |
 
 
 ### 📤 Depends On (3)
-[[vitest-installServerOnlyStub]] · [[@hamafx-shared]] · [[@hamafx-web]]
+[[vitest-installServerOnlyStub]] · [[@kestrel-shared]] · [[@kestrel-web]]
 
 
 
@@ -43,4 +43,4 @@ Module: apps/web/test/phase4-phase5-policy.test.ts
 - **Local Graph:** Right-click this file → "Open local graph"
 - **Backlinks:** Open the right sidebar → "Backlinks"
 - Use `#type/module` to find all Modules
-- Use `#hamafx-web` to find all files in this package
+- Use `#kestrel-web` to find all files in this package

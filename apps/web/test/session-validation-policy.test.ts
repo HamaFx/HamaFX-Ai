@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it, vi } from 'vitest';
 
-import type { DbClient } from '@hamafx/db';
+import type { DbClient } from '@kestrel/db';
 import { validateSession, type SessionToken } from '../src/lib/auth/session-validators';
 
 const authSource = readFileSync(resolve(process.cwd(), 'src/auth.ts'), 'utf8');

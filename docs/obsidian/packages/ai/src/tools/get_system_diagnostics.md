@@ -1,19 +1,19 @@
 ---
 type: tool
-package: "@hamafx/ai"
+package: "@kestrel/ai"
 path: "packages/ai/src/tools/get-system-diagnostics.ts"
 incoming: 2
 outgoing: 6
 connections: 8
 risk: low
 layer: ai
-tags: [type/tool, hamafx-ai, layer/ai]
+tags: [type/tool, kestrel-ai, layer/ai]
 aliases: [get_system_diagnostics]
 ---
 
 # 🔧 get_system_diagnostics
 
-> **AI Tool** · `@hamafx/ai` · `packages/ai/src/tools/get-system-diagnostics.ts`
+> **AI Tool** · `@kestrel/ai` · `packages/ai/src/tools/get-system-diagnostics.ts`
 
 
 Query the real-time operational health, connection latency, database record volumes, active synchronized files status, remaining daily budget, and verified environment variables in the Copilot system.
@@ -28,11 +28,11 @@ Query the real-time operational health, connection latency, database record volu
 | Total connections | 8 |
 | Risk level | **LOW** |
 | Layer | `ai` |
-| Package tag | `#hamafx-ai` |
+| Package tag | `#kestrel-ai` |
 
 
 ### 📤 Depends On (6)
-[[@hamafx-shared]] · [[@hamafx-db]] · [[db-getDb]] · [[tool-context-ToolEnv]] · [[@hamafx-ai]] · [[registry-ToolPlugin]]
+[[@kestrel-shared]] · [[@kestrel-db]] · [[db-getDb]] · [[tool-context-ToolEnv]] · [[@kestrel-ai]] · [[registry-ToolPlugin]]
 
 
 ### 📥 Depended On By (2)
@@ -49,4 +49,4 @@ Query the real-time operational health, connection latency, database record volu
 - **Local Graph:** Right-click this file → "Open local graph"
 - **Backlinks:** Open the right sidebar → "Backlinks"
 - Use `#type/tool` to find all AI Tools
-- Use `#hamafx-ai` to find all files in this package
+- Use `#kestrel-ai` to find all files in this package

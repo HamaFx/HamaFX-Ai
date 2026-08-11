@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@
 //   3. Coerces non-2xx + BiQuote's `{ message }` error envelopes into
 //      ProviderError.
 //   4. Returns wire-shape objects validated against the schemas in
-//      @hamafx/shared/schemas/biquote — DTO mapping happens in the adapter.
+//      @kestrel/shared/schemas/biquote — DTO mapping happens in the adapter.
 //
 // Endpoints:
 //   - GET /api/{symbol}                — latest tick
@@ -34,8 +34,8 @@ import {
   BiquoteTickSchema,
   type BiquoteOhlcBar,
   type BiquoteTick,
-} from '@hamafx/shared';
-import type { Symbol, Timeframe } from '@hamafx/shared';
+} from '@kestrel/shared';
+import type { Symbol, Timeframe } from '@kestrel/shared';
 import { z } from 'zod';
 
 import { noteBackoff, tryReserve, type ThrottleConfig } from '../../cache/throttle';

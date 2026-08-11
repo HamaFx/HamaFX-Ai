@@ -1,19 +1,19 @@
 ---
 type: module
-package: "@hamafx/data"
+package: "@kestrel/data"
 path: "packages/data/test/live-ticks-provider.test.ts"
 incoming: 0
 outgoing: 4
 connections: 4
 risk: low
 layer: core
-tags: [type/module, hamafx-data, layer/core]
+tags: [type/module, kestrel-data, layer/core]
 aliases: [live-ticks-provider.test]
 ---
 
 # 📁 live-ticks-provider.test
 
-> **Module** · `@hamafx/data` · `packages/data/test/live-ticks-provider.test.ts`
+> **Module** · `@kestrel/data` · `packages/data/test/live-ticks-provider.test.ts`
 
 
 Module: packages/data/test/live-ticks-provider.test.ts
@@ -28,11 +28,11 @@ Module: packages/data/test/live-ticks-provider.test.ts
 | Total connections | 4 |
 | Risk level | **LOW** |
 | Layer | `core` |
-| Package tag | `#hamafx-data` |
+| Package tag | `#kestrel-data` |
 
 
 ### 📤 Depends On (4)
-[[vitest-installServerOnlyStub]] · [[errors-DataErrorCode]] · [[index-FetchLiveTickArgs]] · [[@hamafx-data]]
+[[vitest-installServerOnlyStub]] · [[errors-DataErrorCode]] · [[index-FetchLiveTickArgs]] · [[@kestrel-data]]
 
 
 
@@ -43,4 +43,4 @@ Module: packages/data/test/live-ticks-provider.test.ts
 - **Local Graph:** Right-click this file → "Open local graph"
 - **Backlinks:** Open the right sidebar → "Backlinks"
 - Use `#type/module` to find all Modules
-- Use `#hamafx-data` to find all files in this package
+- Use `#kestrel-data` to find all files in this package

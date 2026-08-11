@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,9 +20,9 @@
 // journal stats so the model can compare this trade to the user's baseline.
 
 import { generateText } from 'ai';
-import type { JournalEntry, JournalStats, ServerEnv } from '@hamafx/shared';
-import type { UserSettingsRow } from '@hamafx/db/schema';
-import { createCategorizedLogger } from '@hamafx/shared/logger';
+import type { JournalEntry, JournalStats, ServerEnv } from '@kestrel/shared';
+import type { UserSettingsRow } from '@kestrel/db/schema';
+import { createCategorizedLogger } from '@kestrel/shared/logger';
 
 import { computeStats } from './persistence';
 import { resolveChatModel } from '../model';

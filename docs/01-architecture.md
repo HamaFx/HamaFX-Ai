@@ -1,6 +1,6 @@
 # Architecture
 
-HamaFX-Ai is a Next.js web application plus a persistent worker, organized as a pnpm/Turborepo monorepo.
+Kestrel is a Next.js web application plus a persistent worker, organized as a pnpm/Turborepo monorepo.
 
 ## Runtime topology
 

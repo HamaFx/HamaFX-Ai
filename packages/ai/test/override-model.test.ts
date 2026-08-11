@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,12 +16,12 @@
 
 import { vi } from 'vitest';
 
-// model.ts pulls in @hamafx/shared/encryption which contains
+// model.ts pulls in @kestrel/shared/encryption which contains
 // `import 'server-only'` — that throws at import time, not at
 // runtime, so a plain test import fails. We stub the encryption
 // module with a permissive mock that lets us inject keys via the
 // userSettings argument without round-tripping through AES-GCM.
-vi.mock('@hamafx/shared/encryption', () => ({
+vi.mock('@kestrel/shared/encryption', () => ({
   // Pass-through: pretend the key was already in plaintext so
   // resolveOverrideModel can read it. The real decryption path
   // is exercised separately in idor-persistence.test.ts.

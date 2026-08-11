@@ -1,19 +1,19 @@
 ---
 type: module
-package: "@hamafx/web"
+package: "@kestrel/web"
 path: "apps/web/src/lib/services/alerts.ts"
 incoming: 0
 outgoing: 7
 connections: 7
 risk: low
 layer: core
-tags: [type/module, hamafx-web, layer/core]
+tags: [type/module, kestrel-web, layer/core]
 aliases: [alerts/AlertDTO]
 ---
 
 # 📁 alerts/AlertDTO
 
-> **Module** · `@hamafx/web` · `apps/web/src/lib/services/alerts.ts`
+> **Module** · `@kestrel/web` · `apps/web/src/lib/services/alerts.ts`
 
 
 Module: apps/web/src/lib/services/alerts.ts
@@ -28,11 +28,11 @@ Module: apps/web/src/lib/services/alerts.ts
 | Total connections | 7 |
 | Risk level | **LOW** |
 | Layer | `core` |
-| Package tag | `#hamafx-web` |
+| Package tag | `#kestrel-web` |
 
 
 ### 📤 Depends On (5)
-[[@hamafx-ai]] · [[@hamafx-shared]] · [[@hamafx-db]] · [[alerts.schema-AlertCreateSchema]] · [[@hamafx-web]]
+[[@kestrel-ai]] · [[@kestrel-shared]] · [[@kestrel-db]] · [[alerts.schema-AlertCreateSchema]] · [[@kestrel-web]]
 
 
 
@@ -58,4 +58,4 @@ Module: apps/web/src/lib/services/alerts.ts
 - **Local Graph:** Right-click this file → "Open local graph"
 - **Backlinks:** Open the right sidebar → "Backlinks"
 - Use `#type/module` to find all Modules
-- Use `#hamafx-web` to find all files in this package
+- Use `#kestrel-web` to find all files in this package

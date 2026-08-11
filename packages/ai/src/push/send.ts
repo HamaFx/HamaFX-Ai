@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -72,7 +72,7 @@ export async function sendWebPush(
       {
         TTL: 60,
         vapidDetails: {
-          subject: env.VAPID_SUBJECT ?? 'mailto:owner@hamafx.local',
+          subject: env.VAPID_SUBJECT ?? 'mailto:owner@kestrel.local',
           publicKey: env.VAPID_PUBLIC_KEY,
           privateKey: env.VAPID_PRIVATE_KEY,
         },

@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@
 //
 // See DSA_FEATURE_EXPANSION_PLAN.md §F2 for the full design.
 
-import { getPrice } from '@hamafx/data';
+import { getPrice } from '@kestrel/data';
 import type {
   PortfolioPosition,
   PortfolioRiskReport,
@@ -30,8 +30,8 @@ import type {
   CorrelationRiskItem,
   PositionNearStop,
   RiskAlert,
-} from '@hamafx/shared';
-import { getContractSize } from '@hamafx/shared';
+} from '@kestrel/shared';
+import { getContractSize } from '@kestrel/shared';
 
 import { listOpenPositions, getPortfolioSettings } from './position-service';
 

@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@
 // PF-01 — Thread query helpers.
 //
 // Encapsulates common thread + message queries previously inlined
-// across @hamafx/ai consumers. Using these helpers instead of
+// across @kestrel/ai consumers. Using these helpers instead of
 // importing `schema` directly decouples callers from Drizzle ORM
 // internals and makes the query patterns consistent.
 

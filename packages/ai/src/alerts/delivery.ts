@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,8 +28,8 @@
 //   4. On non-2xx (or fetch error) → log the Resend status + truncated body
 //      and return without calling markFired so the next cron tick retries.
 
-import type { Alert } from '@hamafx/shared';
-import { logErrorContext, createCategorizedLogger } from '@hamafx/shared/logger';
+import type { Alert } from '@kestrel/shared';
+import { logErrorContext, createCategorizedLogger } from '@kestrel/shared/logger';
 
 import { describeRule, type EvaluatorEnv, type RuleReading } from './evaluator';
 import { markFiredForAlert } from './persistence';
@@ -89,7 +89,7 @@ async function deliverEmail({ alert, reading, env }: DeliverArgs): Promise<Deliv
     };
   }
 
-  const subject = `HamaFX-Ai · ${describeRule(alert.rule)}`;
+  const subject = `Kestrel · ${describeRule(alert.rule)}`;
   const body = renderEmailBody(alert, reading);
 
   let res: Response;
@@ -149,7 +149,7 @@ function renderEmailBody(alert: Alert, reading: RuleReading): string {
   if (alert.note) {
     lines.push('', 'Note:', alert.note);
   }
-  lines.push('', '— HamaFX-Ai');
+  lines.push('', '— Kestrel');
   return lines.join('\n');
 }
 
@@ -261,7 +261,7 @@ async function deliverWebPush({ alert, reading, env }: DeliverArgs): Promise<Del
   }
 
   const payload = JSON.stringify({
-    title: `HamaFX-Ai · ${describeRule(alert.rule)}`,
+    title: `Kestrel · ${describeRule(alert.rule)}`,
     body: renderEmailBody(alert, reading),
     url: '/alerts',
   });

@@ -1,19 +1,19 @@
 ---
 type: component
-package: "@hamafx/web"
+package: "@kestrel/web"
 path: "apps/web/src/components/onboarding/wizard.tsx"
 incoming: 0
 outgoing: 12
 connections: 12
 risk: low
 layer: ui
-tags: [type/component, hamafx-web, layer/ui]
+tags: [type/component, kestrel-web, layer/ui]
 aliases: [wizard/OnboardingWizard]
 ---
 
 # 🧩 wizard/OnboardingWizard
 
-> **Component** · `@hamafx/web` · `apps/web/src/components/onboarding/wizard.tsx`
+> **Component** · `@kestrel/web` · `apps/web/src/components/onboarding/wizard.tsx`
 
 
 React component: wizard
@@ -28,11 +28,11 @@ React component: wizard
 | Total connections | 12 |
 | Risk level | **LOW** |
 | Layer | `ui` |
-| Package tag | `#hamafx-web` |
+| Package tag | `#kestrel-web` |
 
 
 ### 📤 Depends On (10)
-[[@hamafx-shared]] · [[@hamafx-db]] · [[wizard-stepper-WizardStepper]] · [[wizard-step-profile-WizardStepProfile]] · [[wizard-step-style-WizardStepStyle]] · [[wizard-step-symbols-WizardStepSymbols]] · [[wizard-step-provider-WizardStepProvider]] · [[wizard-step-review-WizardStepReview]] · [[wizard-types-TradingStyle]] · [[@hamafx-web]]
+[[@kestrel-shared]] · [[@kestrel-db]] · [[wizard-stepper-WizardStepper]] · [[wizard-step-profile-WizardStepProfile]] · [[wizard-step-style-WizardStepStyle]] · [[wizard-step-symbols-WizardStepSymbols]] · [[wizard-step-provider-WizardStepProvider]] · [[wizard-step-review-WizardStepReview]] · [[wizard-types-TradingStyle]] · [[@kestrel-web]]
 
 
 
@@ -46,4 +46,4 @@ React component: wizard
 - **Local Graph:** Right-click this file → "Open local graph"
 - **Backlinks:** Open the right sidebar → "Backlinks"
 - Use `#type/component` to find all Components
-- Use `#hamafx-web` to find all files in this package
+- Use `#kestrel-web` to find all files in this package

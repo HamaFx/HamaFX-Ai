@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,10 +20,10 @@
 // modest in personal mode (low single digits of turns/day), so a 30-day
 // scan is well under 100 ms even cold.
 
-import { schema } from '@hamafx/db';
+import { schema } from '@kestrel/db';
 import { getDb } from './db';
 import { and, desc, eq, gte, lte, sql } from 'drizzle-orm';
-import { KNOWN_BYOK_PROVIDERS } from '@hamafx/shared';
+import { KNOWN_BYOK_PROVIDERS } from '@kestrel/shared';
 
 export interface TelemetryRow {
   id: string;

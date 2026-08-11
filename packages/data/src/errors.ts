@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@
 // they normalise to one of these so route handlers and AI tools have a
 // stable surface to react on.
 
-import { providerUnavailable } from '@hamafx/shared';
+import { providerUnavailable } from '@kestrel/shared';
 
 export type DataErrorCode =
   | 'PROVIDER_TIMEOUT'

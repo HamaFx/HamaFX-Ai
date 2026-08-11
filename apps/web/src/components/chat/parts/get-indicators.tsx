@@ -26,7 +26,7 @@ import {
   type GetIndicatorsOutput,
   type IndicatorResult,
   type Symbol,
-} from '@hamafx/shared';
+} from '@kestrel/shared';
 
 import { cn } from '@/lib/cn';
 

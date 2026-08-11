@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,20 +28,20 @@
 // `verify-warning` chat part which renders caveats next to the agent's
 // directional call rather than silencing it.
 
-import { getCandles, getPrice } from '@hamafx/data';
-import { computeStructure } from '@hamafx/indicators';
+import { getCandles, getPrice } from '@kestrel/data';
+import { computeStructure } from '@kestrel/indicators';
 import {
   VerifyCallInputSchema,
   type Symbol,
   type VerifyCallCaveat,
   type VerifyCallOutput,
-} from '@hamafx/shared';
+} from '@kestrel/shared';
 import { tool } from 'ai';
 import type { z } from 'zod';
 
 const InputSchema = VerifyCallInputSchema;
 
-declare module '@hamafx/shared' {
+declare module '@kestrel/shared' {
   interface ToolIOMap {
     verify_call: { input: z.infer<typeof InputSchema> };
   }

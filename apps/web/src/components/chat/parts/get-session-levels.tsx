@@ -6,7 +6,7 @@
 // Sessions still forming render with a soft "forming…" tag instead of a
 // closing print.
 
-import type { SessionRange, SessionTag } from '@hamafx/shared';
+import type { SessionRange, SessionTag } from '@kestrel/shared';
 
 import type { ToolPartProps } from './registry';
 

@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-// Shared ESLint flat config for HamaFX-Ai workspaces.
-// Apps and packages extend this by importing from "@hamafx/config/eslint".
+// Shared ESLint flat config for Kestrel workspaces.
+// Apps and packages extend this by importing from "@kestrel/config/eslint".
 import js from '@eslint/js';
 import reactHooks from 'eslint-plugin-react-hooks';
 import globals from 'globals';
@@ -66,10 +66,10 @@ export default [
           ],
           paths: [
             {
-              name: '@hamafx/ai',
+              name: '@kestrel/ai',
               importNames: ['runChat', 'createThread', 'listThreads', 'getThread', 'listMessages'],
               message:
-                'Prefer sub-path imports — use @hamafx/ai/agent, @hamafx/ai/persistence, etc.',
+                'Prefer sub-path imports — use @kestrel/ai/agent, @kestrel/ai/persistence, etc.',
             },
           ],
         },
@@ -89,26 +89,26 @@ export default [
         {
           paths: [
             {
-              name: '@hamafx/ai',
-              message: 'API routes must import from @/lib/services/* instead of @hamafx/ai directly. Import domain functions through the service layer.',
+              name: '@kestrel/ai',
+              message: 'API routes must import from @/lib/services/* instead of @kestrel/ai directly. Import domain functions through the service layer.',
             },
             {
-              name: '@hamafx/data',
-              message: 'API routes must import from @/lib/services/* instead of @hamafx/data directly. Import data functions through the service layer.',
+              name: '@kestrel/data',
+              message: 'API routes must import from @/lib/services/* instead of @kestrel/data directly. Import data functions through the service layer.',
             },
             {
-              name: '@hamafx/db',
-              message: 'API routes must import from @/lib/services/* instead of @hamafx/db directly. Import database functions through the service layer.',
+              name: '@kestrel/db',
+              message: 'API routes must import from @/lib/services/* instead of @kestrel/db directly. Import database functions through the service layer.',
             },
             {
-              name: '@hamafx/shared',
-              message: 'API routes must import from @/lib/services/* instead of @hamafx/shared directly. Import shared utilities through the service layer.',
+              name: '@kestrel/shared',
+              message: 'API routes must import from @/lib/services/* instead of @kestrel/shared directly. Import shared utilities through the service layer.',
             },
           ],
           patterns: [
             {
-              group: ['@hamafx/*'],
-              message: 'API routes must import from @/lib/services/* instead of @hamafx/* directly.',
+              group: ['@kestrel/*'],
+              message: 'API routes must import from @/lib/services/* instead of @kestrel/* directly.',
             },
           ],
         },

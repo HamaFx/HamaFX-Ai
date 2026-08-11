@@ -10,7 +10,7 @@
 
 import { useMemo } from 'react';
 import {IconActivity, IconCurrencyDollar, IconPercentage, IconTrendingUp} from '@tabler/icons-react';
-import type { JournalEntry } from '@hamafx/shared';
+import type { JournalEntry } from '@kestrel/shared';
 
 import { StatCard, type StatCardProps } from '@/components/ui/stat-card';
 

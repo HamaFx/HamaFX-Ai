@@ -7,8 +7,8 @@ export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
   title: {
-    template: '%s | HamaFX-Ai',
-    default: 'HamaFX-Ai',
+    template: '%s | Kestrel',
+    default: 'Kestrel',
   },
 };
 
@@ -33,8 +33,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
           />
           <div className="flex flex-col gap-2">
             <h1 className="text-fg text-2xl font-bold tracking-tight sm:text-3xl">
-              Hama<span className="text-fg">FX</span>
-              <span className="text-fg-subtle font-normal">·Ai</span>
+              Kestrel
             </h1>
             <p className="text-fg-muted text-base">Enterprise trading copilot</p>
           </div>

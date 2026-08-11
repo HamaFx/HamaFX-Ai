@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@
 // Wires the form (in a Drawer), list, stats summary, and performance curve together.
 // Implements an advanced, responsive two-column grid on desktop, showing the equity curve and list
 // on the left, and stats summary / analytics on the right.
-import type { JournalEntry, JournalStats } from '@hamafx/shared';
+import type { JournalEntry, JournalStats } from '@kestrel/shared';
 import { IconActivity, IconBook, IconPlus, IconRefresh, IconUpload } from '@tabler/icons-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';

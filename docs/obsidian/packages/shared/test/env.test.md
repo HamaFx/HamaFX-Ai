@@ -1,19 +1,19 @@
 ---
 type: module
-package: "@hamafx/shared"
+package: "@kestrel/shared"
 path: "packages/shared/test/env.test.ts"
 incoming: 0
 outgoing: 4
 connections: 4
 risk: low
 layer: core
-tags: [type/module, hamafx-shared, layer/core]
+tags: [type/module, kestrel-shared, layer/core]
 aliases: [env.test]
 ---
 
 # 📁 env.test
 
-> **Module** · `@hamafx/shared` · `packages/shared/test/env.test.ts`
+> **Module** · `@kestrel/shared` · `packages/shared/test/env.test.ts`
 
 
 Module: packages/shared/test/env.test.ts
@@ -28,11 +28,11 @@ Module: packages/shared/test/env.test.ts
 | Total connections | 4 |
 | Risk level | **LOW** |
 | Layer | `core` |
-| Package tag | `#hamafx-shared` |
+| Package tag | `#kestrel-shared` |
 
 
 ### 📤 Depends On (4)
-[[vitest-installServerOnlyStub]] · [[env-ServerEnvSchema]] · [[env-secrets-generateSecret]] · [[@hamafx-shared]]
+[[vitest-installServerOnlyStub]] · [[env-ServerEnvSchema]] · [[env-secrets-generateSecret]] · [[@kestrel-shared]]
 
 
 
@@ -43,4 +43,4 @@ Module: packages/shared/test/env.test.ts
 - **Local Graph:** Right-click this file → "Open local graph"
 - **Backlinks:** Open the right sidebar → "Backlinks"
 - Use `#type/module` to find all Modules
-- Use `#hamafx-shared` to find all files in this package
+- Use `#kestrel-shared` to find all files in this package

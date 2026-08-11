@@ -1,5 +1,5 @@
 /**
- * Copyright 2026 HamaFX
+ * Copyright 2026 Kestrel
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,7 +25,7 @@ import {
   type CoTSample,
   type GetCoTOutput,
   type Symbol,
-} from '@hamafx/shared';
+} from '@kestrel/shared';
 import { tool } from 'ai';
 import type { z } from 'zod';
 
@@ -33,7 +33,7 @@ import { countCoTRows, listCoTSamples } from '../cot/persistence';
 
 const InputSchema = GetCoTInputSchema;
 
-declare module '@hamafx/shared' {
+declare module '@kestrel/shared' {
   interface ToolIOMap {
     get_cot: { input: z.infer<typeof InputSchema> };
   }

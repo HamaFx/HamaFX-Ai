@@ -1,19 +1,19 @@
 ---
 type: module
-package: "@hamafx/web"
+package: "@kestrel/web"
 path: "apps/web/tests/e2e/fixtures.ts"
 incoming: 15
 outgoing: 3
 connections: 18
 risk: medium
 layer: core
-tags: [type/module, hamafx-web, layer/core, risk/medium]
+tags: [type/module, kestrel-web, layer/core, risk/medium]
 aliases: [fixtures/ChatMockOptions]
 ---
 
 # 📁 fixtures/ChatMockOptions
 
-> **Module** · `@hamafx/web` · `apps/web/tests/e2e/fixtures.ts`
+> **Module** · `@kestrel/web` · `apps/web/tests/e2e/fixtures.ts`
 
 
 Module: apps/web/tests/e2e/fixtures.ts
@@ -28,11 +28,11 @@ Module: apps/web/tests/e2e/fixtures.ts
 | Total connections | 18 |
 | Risk level | **MEDIUM** |
 | Layer | `core` |
-| Package tag | `#hamafx-web` |
+| Package tag | `#kestrel-web` |
 
 
 ### 📤 Depends On (2)
-[[test-utils-ensureTestUser]] · [[@hamafx-web]]
+[[test-utils-ensureTestUser]] · [[@kestrel-web]]
 
 
 ### 📥 Depended On By (14)
@@ -55,4 +55,4 @@ Module: apps/web/tests/e2e/fixtures.ts
 - **Local Graph:** Right-click this file → "Open local graph"
 - **Backlinks:** Open the right sidebar → "Backlinks"
 - Use `#type/module` to find all Modules
-- Use `#hamafx-web` to find all files in this package
+- Use `#kestrel-web` to find all files in this package

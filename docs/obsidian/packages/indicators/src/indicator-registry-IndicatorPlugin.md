@@ -1,19 +1,19 @@
 ---
 type: module
-package: "@hamafx/indicators"
+package: "@kestrel/indicators"
 path: "packages/indicators/src/indicator-registry.ts"
 incoming: 2
 outgoing: 10
 connections: 12
 risk: low
 layer: core
-tags: [type/module, hamafx-indicators, layer/core]
+tags: [type/module, kestrel-indicators, layer/core]
 aliases: [indicator-registry/IndicatorPlugin]
 ---
 
 # 📁 indicator-registry/IndicatorPlugin
 
-> **Module** · `@hamafx/indicators` · `packages/indicators/src/indicator-registry.ts`
+> **Module** · `@kestrel/indicators` · `packages/indicators/src/indicator-registry.ts`
 
 
 Module: packages/indicators/src/indicator-registry.ts
@@ -28,11 +28,11 @@ Module: packages/indicators/src/indicator-registry.ts
 | Total connections | 12 |
 | Risk level | **LOW** |
 | Layer | `core` |
-| Package tag | `#hamafx-indicators` |
+| Package tag | `#kestrel-indicators` |
 
 
 ### 📤 Depends On (8)
-[[@hamafx-shared]] · [[atr-atr]] · [[bollinger-BollingerPoint]] · [[macd-MacdPoint]] · [[moving-averages-sma]] · [[pivots-ClassicPivots]] · [[rsi-rsi]] · [[@hamafx-indicators]]
+[[@kestrel-shared]] · [[atr-atr]] · [[bollinger-BollingerPoint]] · [[macd-MacdPoint]] · [[moving-averages-sma]] · [[pivots-ClassicPivots]] · [[rsi-rsi]] · [[@kestrel-indicators]]
 
 
 ### 📥 Depended On By (1)
@@ -51,4 +51,4 @@ Module: packages/indicators/src/indicator-registry.ts
 - **Local Graph:** Right-click this file → "Open local graph"
 - **Backlinks:** Open the right sidebar → "Backlinks"
 - Use `#type/module` to find all Modules
-- Use `#hamafx-indicators` to find all files in this package
+- Use `#kestrel-indicators` to find all files in this package
