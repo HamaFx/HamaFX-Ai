@@ -6,5 +6,5 @@
 # Validate before installing: `visudo -c -f infra/cron-vm/sudoers.d/hamafx`.
 
 hamafx ALL=(root) NOPASSWD: /bin/systemctl restart docker
-hamafx ALL=(root) NOPASSWD: /bin/systemctl restart hamafx-worker.service
 hamafx ALL=(root) NOPASSWD: /bin/systemctl restart hamafx-worker
+hamafx ALL=(root) NOPASSWD: /usr/bin/bash /usr/local/sbin/hamafx-sync-systemd-units

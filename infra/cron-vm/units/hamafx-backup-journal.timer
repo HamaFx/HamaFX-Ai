@@ -1,5 +1,5 @@
 [Unit]
-Description=Nightly journal export to GCS at 03:05 UTC
+Description=Nightly journal export to B2 (opt-in) at 03:05 UTC
 
 [Timer]
 OnCalendar=*-*-* 03:05:00 UTC

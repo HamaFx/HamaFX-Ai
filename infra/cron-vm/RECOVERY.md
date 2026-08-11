@@ -1,309 +1,182 @@
 # HamaFX-Ai Disaster Recovery Playbook
 
-> Phase 8 PR-17 deliverable. Concrete commands for recovering each
-> failure mode from §6 of `docs/superpowers/specs/2026-05-27-phase-8-backend-reliability-design.md`.
+> Read-only-first recovery procedures for the production worker VM.
+> The active VM is `hamafx-cron` in GCP project
+> `gen-lang-client-0103421645`, zone `us-central1-a`.
 >
-> If you're reading this in the middle of an incident, jump to the
-> matching scenario, run the commands, and document anything you had to
-> change in the corresponding `infra/cron-vm/` doc afterwards.
+> Backblaze B2 setup is intentionally deferred. Until the operator creates the
+> account and configures the VM, backup and restore timers remain installed but
+> are skipped safely by `backup-storage-ready.sh`.
 
 ## Pre-flight
 
-All commands assume:
-
-- `gcloud` configured against project `hamafx-78845`.
-- `gsutil` available locally (`gcloud components install gsutil` or use
-  the apt-installed `google-cloud-cli`).
-- A working laptop / VM with `psql` + `pg_restore` (PostgreSQL 15 client
-  is enough; the dump format is forward-compatible).
-- The Supabase pooler URL in your shell as `DATABASE_URL`.
-
 ```bash
-export PROJECT_ID="hamafx-78845"
-export GCS_BUCKET="hamafx-backups-${PROJECT_ID}"
-export DATABASE_URL="postgres://...pooler.supabase.com:6543/postgres?pgbouncer=true&prepare=false"
+export PROJECT_ID="gen-lang-client-0103421645"
+export ZONE="us-central1-a"
+export VM="hamafx-cron"
+
+# The following become available only after B2 is configured:
+export B2_BUCKET="<configured-b2-bucket>"
 ```
 
-## Scenario 1 — Restore the database from yesterday's backup
+Never print or commit `/opt/hamafx/.env`. It contains database credentials,
+cron authentication, provider keys, and health-check IDs.
+
+## Scenario 1 — Restore a database backup into a temporary database
+
+After B2 is configured and a backup exists:
 
 ```bash
-# 1. List the most recent dumps.
-gsutil ls -l gs://${GCS_BUCKET}/db/ | sort -k2 | tail -10
+# 1. List recent dumps.
+rclone lsl "hamafx:${B2_BUCKET}/db" | sort -k2 | tail -10
 
-# 2. Pull the dump locally.
-LATEST=$(gsutil ls gs://${GCS_BUCKET}/db/ | sort | tail -1)
-gsutil cp "$LATEST" /tmp/latest.dump.gz
-gunzip /tmp/latest.dump.gz   # → /tmp/latest.dump
+# 2. Download one dump locally.
+LATEST=$(rclone lsf --files-only "hamafx:${B2_BUCKET}/db" | sort | tail -1)
+rclone copyto "hamafx:${B2_BUCKET}/db/${LATEST}" /tmp/latest.dump.gz
+gunzip -c /tmp/latest.dump.gz > /tmp/latest.dump
 
-# 3. Boot a throwaway local Postgres so you can sanity-check before
-#    pointing pg_restore at production.
+# 3. Start a throwaway PostgreSQL container.
 docker run --rm -d --name hamafx-restore \
   -e POSTGRES_USER=verify -e POSTGRES_PASSWORD=verify -e POSTGRES_DB=hamafx \
-  -p 55432:5432 postgres:15-alpine
-sleep 5
+  -p 55432:5432 pgvector/pgvector:pg16
+sleep 10
 
-# 4. Restore + spot-check.
-pg_restore --no-owner --no-privileges \
-  -h 127.0.0.1 -p 55432 -U verify -d hamafx \
-  /tmp/latest.dump
+# 4. Restore and inspect only the temporary database.
+PGPASSWORD=verify pg_restore --no-owner --no-privileges \
+  -h 127.0.0.1 -p 55432 -U verify -d hamafx /tmp/latest.dump
 PGPASSWORD=verify psql -h 127.0.0.1 -p 55432 -U verify -d hamafx \
   -c 'SELECT COUNT(*) FROM journal_entries;'
 PGPASSWORD=verify psql -h 127.0.0.1 -p 55432 -U verify -d hamafx \
   -c 'SELECT COUNT(*) FROM chat_threads;'
 
-# 5. Once you've confirmed counts look right, replace production. ONLY
-#    do this if you have an active incident and Supabase's own backups
-#    are unrecoverable. Coordinate with Supabase support first.
-pg_restore --no-owner --no-privileges --clean --if-exists \
-  --dbname="$DATABASE_URL" \
-  /tmp/latest.dump
-
-# 6. Tear the local container down.
+# 5. Remove temporary files/container.
 docker rm -f hamafx-restore
-rm /tmp/latest.dump
+rm -f /tmp/latest.dump /tmp/latest.dump.gz
 ```
 
-## Scenario 2 — Restore journal-only from the JSON export
+Do not restore over production unless there is an active incident, a verified
+backup, and explicit operator approval. Production restore commands are
+intentionally not automated here.
 
-If pg_dump's custom format is broken or you need a human-readable
-record of trades:
+## Scenario 2 — Restore journal data for inspection
 
 ```bash
-gsutil cp gs://${GCS_BUCKET}/journal/$(date -u +%Y-%m-%d).json /tmp/journal.json
-# Inspect:
-jq '. | length' /tmp/journal.json
+rclone copyto "hamafx:${B2_BUCKET}/journal/$(date -u +%Y-%m-%d).json" /tmp/journal.json
+jq 'length' /tmp/journal.json
 jq '.[0]' /tmp/journal.json
-
-# Re-import:
-psql "$DATABASE_URL" <<'SQL'
-CREATE TEMP TABLE staged_journal (j jsonb);
-\COPY staged_journal FROM '/tmp/journal.json'
-INSERT INTO journal_entries
-SELECT
-  (j->>'id')::uuid,
-  j->>'symbol',
-  j->>'side',
-  -- map remaining fields verbatim …
-FROM staged_journal
-ON CONFLICT (id) DO NOTHING;
-SQL
+rm -f /tmp/journal.json
 ```
 
-## Scenario 3 — Worker won't start
+## Scenario 3 — Worker will not start
 
 ```bash
-gcloud compute ssh hamafx-cron --zone=us-central1-a --project=$PROJECT_ID
-# Inside the VM:
-sudo journalctl -u hamafx-worker -n 100 --no-pager
-sudo systemctl status hamafx-worker
+gcloud compute ssh "$VM" --zone="$ZONE" --project="$PROJECT_ID"
+sudo docker ps -a
+sudo docker inspect hamafx-worker --format '{{.State.Status}} {{.State.Health.Status}}'
+sudo docker logs --tail 200 hamafx-worker
 cat /opt/hamafx/.deployed-sha
 ```
 
-If a bad commit is pinned, force a rebuild against a known-good SHA:
+The worker is a Docker container, not a `hamafx-worker.service` systemd unit.
+The Docker Compose file forces `WORKER_MODE=docker`, so heavy jobs run through
+the internal scheduler. Do not restore old heavy-job systemd timers; that could
+run jobs twice.
+
+The `hamafx-update.timer` normally pulls `origin/main`, rebuilds worker-
+relevant changes, waits for Docker health, and rolls back an unhealthy image.
+
+## Scenario 4 — Rebuild the worker from a known-good commit
+
+Only use this during an incident and after recording the current SHA:
 
 ```bash
-# Inside the VM, as `hamafx`:
-sudo -u hamafx -i
-cd /opt/hamafx/app
-git fetch origin
-git reset --hard <known-good-sha>
-pnpm install --frozen-lockfile
-pnpm --filter @hamafx/worker build
-echo <known-good-sha> > /opt/hamafx/.deployed-sha
-exit
-sudo systemctl restart hamafx-worker
+gcloud compute ssh "$VM" --zone="$ZONE" --project="$PROJECT_ID" \
+  --command="sudo -u hamafx git -C /opt/hamafx/app fetch origin"
+gcloud compute ssh "$VM" --zone="$ZONE" --project="$PROJECT_ID" \
+  --command="sudo -u hamafx git -C /opt/hamafx/app reset --hard <known-good-sha>"
+gcloud compute ssh "$VM" --zone="$ZONE" --project="$PROJECT_ID" \
+  --command="sudo bash /opt/hamafx/scripts/deploy-worker.sh"
 ```
 
-The 5-minute self-update timer will overwrite this on the next tick if
-`origin/main` differs — push the fix to `main` first, or temporarily
-mask the timer:
+Push the fix to GitHub before unmasking the self-update timer, otherwise the
+next update may replace the temporary pin.
+
+## Scenario 5 — Recover the VM itself
+
+If the VM is lost, create a replacement only after confirming the current
+instance and disk cannot be recovered. Reuse the actual project and zone:
 
 ```bash
-sudo systemctl mask hamafx-update.timer
-# Investigate / patch / merge to main.
-sudo systemctl unmask hamafx-update.timer
-```
-
-## Scenario 4 — Provision a fresh VM (start over)
-
-If the existing `hamafx-cron` instance is broken beyond repair:
-
-```bash
-# 1. Snapshot the existing disk for forensics (optional).
-gcloud compute disks snapshot hamafx-cron \
-  --zone=us-central1-a --project=$PROJECT_ID \
-  --snapshot-names="hamafx-cron-pre-recovery-$(date -u +%Y%m%d)"
-
-# 2. Create a new instance. Use the same name to keep DNS / scripts
-#    pointing at the right place.
-gcloud compute instances delete hamafx-cron \
-  --zone=us-central1-a --project=$PROJECT_ID --quiet
 gcloud compute instances create hamafx-cron \
-  --zone=us-central1-a --project=$PROJECT_ID \
+  --zone="$ZONE" --project="$PROJECT_ID" \
   --machine-type=e2-medium \
   --image-family=ubuntu-2404-lts-amd64 \
   --image-project=ubuntu-os-cloud \
-  --boot-disk-size=10GB \
+  --boot-disk-size=48GB \
   --boot-disk-type=pd-standard
-
-# 3. Re-bootstrap.
-gcloud compute scp -r infra/cron-vm hamafx-cron:/tmp/hamafx-cron \
-  --zone=us-central1-a --project=$PROJECT_ID
-gcloud compute ssh hamafx-cron --zone=us-central1-a --project=$PROJECT_ID \
-  --command="sudo bash /tmp/hamafx-cron/setup.sh"
-
-# 4. Restore /opt/hamafx/.env with all secrets (CRON_SECRET, DATABASE_URL,
-#    GCS_BACKUP_BUCKET, every HC_* UUID). If you stored it in GCP Secret
-#    Manager (see README.md → Backup security), retrieve it:
-#      gcloud secrets versions access latest --secret=hamafx-vm-env > /opt/hamafx/.env
-#      chmod 600 /opt/hamafx/.env
-#    Re-deploy worker code:
-gcloud compute ssh hamafx-cron --zone=us-central1-a --project=$PROJECT_ID \
-  --command="sudo -u hamafx git clone https://github.com/HamaFx/HamaFX-Ai.git /opt/hamafx/app \
-    && sudo -u hamafx pnpm -C /opt/hamafx/app install --frozen-lockfile \
-    && sudo -u hamafx pnpm -C /opt/hamafx/app --filter @hamafx/worker build \
-    && sudo systemctl restart hamafx-worker hamafx-update.timer"
 ```
 
-## Scenario 5 — Revoke the VM service-account key
+Then provision Docker, restore the operator-managed `/opt/hamafx/.env` with
+mode `600`, deploy the worker, and verify the public health path. Do not place
+that environment file in Secret Manager; manual recovery was selected.
 
-If a credential leaks:
+## Scenario 6 — Recover `/opt/hamafx/.env` manually
+
+The VM settings are intentionally not backed up to Secret Manager. Restore the
+file from the operator's secure manual record:
 
 ```bash
-SA="hamafx-cron@${PROJECT_ID}.iam.gserviceaccount.com"
-# List keys
-gcloud iam service-accounts keys list --iam-account=$SA --project=$PROJECT_ID
-# Disable + delete the leaked one
-gcloud iam service-accounts keys delete <KEY_ID> --iam-account=$SA --project=$PROJECT_ID
-# Issue a new key (saved to ~/hamafx-cron-key.json)
-gcloud iam service-accounts keys create ~/hamafx-cron-key.json \
-  --iam-account=$SA --project=$PROJECT_ID
+sudo install -o hamafx -g hamafx -m 600 \
+  /secure/operator-record/hamafx.env /opt/hamafx/.env
+sudo systemctl daemon-reload
+sudo docker compose -f /opt/hamafx/docker-compose.yml up -d --force-recreate worker
 ```
 
-If `BIQUOTE_BASE_URL` ever requires a key, `CRON_SECRET` is the
-analogue here — rotate it in Vercel envs first, then in
-`/opt/hamafx/.env` on the VM.
-
-## Scenario 6 — Recover `/opt/hamafx/.env` from GCP Secret Manager
-
-If the VM disk is lost or the env file is accidentally deleted, restore
-from the GCP Secret Manager backup (set up via `infra/cron-vm/scripts/backup-env.sh`):
+Verify only safe properties:
 
 ```bash
-# Retrieve the latest version of the env file backup
-gcloud secrets versions access latest --secret=hamafx-vm-env > /opt/hamafx/.env
-chmod 600 /opt/hamafx/.env
-chown hamafx:hamafx /opt/hamafx/.env
-
-# Verify critical values are present
-grep -q 'DATABASE_URL' /opt/hamafx/.env && echo "DATABASE_URL: OK"
-grep -q 'CRON_SECRET' /opt/hamafx/.env && echo "CRON_SECRET: OK"
-grep -q 'HC_SIGNALR_UUID' /opt/hamafx/.env && echo "HC_SIGNALR_UUID: OK"
-
-# Restart the worker to pick up new env
-sudo systemctl restart hamafx-worker
+sudo stat -c '%U %G %a %n' /opt/hamafx/.env
+sudo grep -E '^(PRODUCTION_URL|BACKUP_PROVIDER|B2_BUCKET)=' /opt/hamafx/.env \
+  | sed -E 's/=.*/=<configured-or-empty>/'
 ```
 
-**If the secret doesn't exist in Secret Manager**, reconstruct manually:
-- `DATABASE_URL` — from Supabase dashboard → Project Settings → Database → Connection pooling
-- `CRON_SECRET` — must match Vercel's `CRON_SECRET` env var; regenerate if needed:
-  ```bash
-  node -e "console.log(require('crypto').randomBytes(24).toString('hex'))"
-  ```
-  Then update BOTH Vercel env vars AND `/opt/hamafx/.env`.
-- `HC_*_UUID` values — from healthchecks.io dashboard; create new checks if UUIDs are lost
-- `GCS_BACKUP_BUCKET` — `hamafx-backups-hamafx-78845`
+## Scenario 7 — Configure B2 later
 
-## Scenario 7 — Rotate CRON_SECRET
-
-If CRON_SECRET is compromised or needs periodic rotation:
+After creating the B2 account and restricted application key:
 
 ```bash
-# 1. Generate a new secret
-NEW_SECRET=$(node -e "console.log(require('crypto').randomBytes(24).toString('hex'))")
-echo "New CRON_SECRET: $NEW_SECRET"
-
-# 2. Update Vercel FIRST (so the web layer accepts the new secret)
-#    Go to Vercel Dashboard → Project Settings → Environment Variables
-#    Update CRON_SECRET to the new value for Production environment.
-#    Or via CLI:
-#    vercel env add CRON_SECRET production --force
-#    Deploy to apply: vercel --prod
-
-# 3. Update the VM env file SECOND (after Vercel is accepting the new secret)
-gcloud compute ssh hamafx-cron --zone=us-central1-a --project=$PROJECT_ID \
-  --command="sudo sed -i 's/^CRON_SECRET=.*/CRON_SECRET=$NEW_SECRET/' /opt/hamafx/.env"
-
-# 4. No restart needed — the light cron services read env at each invocation.
-#    But restart the worker if it uses CRON_SECRET:
-gcloud compute ssh hamafx-cron --zone=us-central1-a --project=$PROJECT_ID \
-  --command="sudo systemctl restart hamafx-worker"
-
-# 5. Verify both sides work
-gcloud compute ssh hamafx-cron --zone=us-central1-a --project=$PROJECT_ID \
-  --command="sudo -u hamafx bash -c 'source /opt/hamafx/.env; curl -fsS -H \"Authorization: Bearer \$CRON_SECRET\" \$PRODUCTION_URL/api/health/public'"
+# Install rclone on the VM using the approved distribution package.
+# Then add these values to /opt/hamafx/.env, without printing them:
+BACKUP_PROVIDER=b2
+B2_BUCKET=<private-bucket-name>
+B2_KEY_ID=<restricted-application-key-id>
+B2_APPLICATION_KEY=<restricted-application-key>
 ```
 
-**IMPORTANT:** Always update Vercel before the VM. If you update the VM first,
-all cron pokes will fail with 401 until Vercel is also updated.
+Configure B2 lifecycle cleanup for seven days and old file versions. Run the
+backup scripts manually once, verify the uploaded objects, then allow the
+backup timers to run. The restore rehearsal should pass only after a real
+backup has been restored into a temporary database.
 
-## Scenario 8 — Back up `/opt/hamafx/.env` to GCP Secret Manager
+## Scenario 8 — Rotate CRON_SECRET
+
+Always update Vercel first, then the VM. Never print the value in logs:
 
 ```bash
-# One-time: create the secret in GCP Secret Manager
-gcloud secrets create hamafx-vm-env \
-  --replication-policy=automatic \
-  --project=$PROJECT_ID
-
-# Push the current env file
-gcloud compute ssh hamafx-cron --zone=us-central1-a --project=$PROJECT_ID \
-  --command="gcloud secrets versions add hamafx-vm-env \
-    --data-file=/opt/hamafx/.env \
-    --project=$PROJECT_ID"
-
-# Grant the VM's service account access to read AND write the secret
-SA=$(gcloud compute instances describe hamafx-cron \
-  --zone=us-central1-a --project=$PROJECT_ID \
-  --format='get(serviceAccounts[0].email)')
-# For reading (recovery / verification)
-gcloud secrets add-iam-policy-binding hamafx-vm-env \
-  --member="serviceAccount:$SA" \
-  --role=roles/secretmanager.secretAccessor \
-  --project=$PROJECT_ID
-# For writing (daily backup via backup-env.sh)
-gcloud secrets add-iam-policy-binding hamafx-vm-env \
-  --member="serviceAccount:$SA" \
-  --role=roles/secretmanager.secretVersionAdder \
-  --project=$PROJECT_ID
+# Update CRON_SECRET in Vercel Production, deploy, then update the VM file.
+gcloud compute ssh "$VM" --zone="$ZONE" --project="$PROJECT_ID" \
+  --command="sudo sed -i 's/^CRON_SECRET=.*/CRON_SECRET=<new-value>/' /opt/hamafx/.env"
 ```
 
-## Health-check ground truth
+Restart the worker only if its environment uses the rotated value. Verify the
+VM's authenticated cron calls through the systemd journal without exposing the
+Authorization header.
 
-A green dashboard at https://healthchecks.io/ with these checks recently
-firing means everything is fine:
+## Weekly safety checks
 
-| Check | Cadence | UUID env |
-|---|---|---|
-| SignalR worker (always-on) | 30 s heartbeat | `HC_SIGNALR_UUID` |
-| Self-update | every 5 min | `HC_UPDATE_UUID` |
-| Light news poll | every 5 min | `HC_LIGHT_NEWS_UUID` |
-| Light calendar poll | every 15 min | `HC_LIGHT_CALENDAR_UUID` |
-| Light alerts poll | every 5 min | `HC_LIGHT_ALERTS_UUID` |
-| Light warm-cache poll | every 2 min | `HC_LIGHT_WARM_CACHE_UUID` |
-| Light cleanup-uploads | daily 03:00 UTC | `HC_CLEANUP_UPLOADS_UUID` |
-| embedding-backfill | every 6 h | `HC_JOB_EMBEDDING_BACKFILL_UUID` |
-| briefings | every 5 min | `HC_JOB_BRIEFINGS_UUID` |
-| snapshots | daily 00:05 UTC | `HC_JOB_SNAPSHOTS_UUID` |
-| cot | weekly Fri 22:00 UTC | `HC_JOB_COT_UUID` |
-| fred-actuals | daily 01:30 UTC | `HC_JOB_FRED_ACTUALS_UUID` |
-| weekly-review | weekly Sun 18:00 UTC | `HC_JOB_WEEKLY_REVIEW_UUID` |
-| resonance-sync | daily 23:00 UTC | `HC_JOB_RESONANCE_SYNC_UUID` |
-| alerts | every 5 min | `HC_JOB_ALERTS_UUID` |
-| billing DLQ alert | every hour | `HC_BILLING_DLQ_UUID` |
-| cleanup-uploads | daily 03:00 UTC | `HC_CLEANUP_UPLOADS_UUID` |
-| db backup | daily 03:00 UTC | `HC_BACKUP_DB_UUID` |
-| journal backup | daily 03:05 UTC | `HC_BACKUP_JOURNAL_UUID` |
-| verify-restore | weekly Sun 04:00 UTC | `HC_VERIFY_RESTORE_UUID` |
-
-`gs://${GCS_BUCKET}/verify/last-success.txt` is also written each Sunday
-with the row counts from the most recent restore.
+- Tenant deletion rehearsal is dry-run only and refuses `__system__` safely.
+- Tenant export rehearsal remains skipped until B2 is configured.
+- Upload cleanup runs against Vercel and does not fail merely because its
+  optional health-check ID is empty.
+- Backup and restore timers remain skipped until B2 is configured.
+- Docker worker health and SignalR tick freshness are checked continuously.

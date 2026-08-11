@@ -1,5 +1,5 @@
 [Unit]
-Description=HamaFX-Ai nightly Postgres dump → GCS
+Description=HamaFX-Ai nightly Postgres dump → B2 (opt-in)
 After=network-online.target
 Wants=network-online.target
 
@@ -9,6 +9,8 @@ User=hamafx
 Group=hamafx
 WorkingDirectory=/opt/hamafx
 EnvironmentFile=/opt/hamafx/.env
+# Keep this timer installed but skipped until the B2 account is configured.
+ExecCondition=/opt/hamafx/scripts/backup-storage-ready.sh
 ExecStart=/opt/hamafx/scripts/backup-db.sh
 
 # A full dump of the existing schema is well under 1G; this leaves

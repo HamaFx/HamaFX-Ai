@@ -1,32 +1,15 @@
 #!/usr/bin/env bash
 # infra/cron-vm/scripts/verify-restore.sh — Weekly disaster-recovery rehearsal.
 #
-# Phase 8 PR-17. Runs Sunday 04:00 UTC via hamafx-verify-restore.timer.
-# PR-08: Also verifies GCS bucket configuration (versioning enabled,
-# retention policy active) to protect against accidental deletion.
-#
-# A backup you've never restored is a backup you don't have. This script:
-#   1. Pulls the latest db/*.dump.gz from GCS into a temp file.
-#   2. Boots a throwaway local Postgres container via Docker.
-#   3. Runs pg_restore against that DB.
-#   4. Asserts non-zero rows in critical tables (journal_entries, chat_threads).
-#   5. Tears the container down, deletes the temp file.
-#   6. Pings HC_VERIFY_RESTORE_UUID success/fail with row counts.
-#
-# Tested with pgvector/pgvector:pg15 in a docker container so the restore
-# rehearsal validates vector columns and HNSW indexes too. The VM needs Docker
-# installed (setup.sh grew an apt-get docker.io step in PR-17).
-#
-# Uses pgvector/pgvector:pg16 which bundles pgvector natively, matching the
-# production docker-compose.yml version. The script also asserts HNSW index
-# count > 0 to confirm vector columns and indexes survive the restore.
+# B2 setup is intentionally deferred. Once configured, this script downloads
+# the latest B2 database dump into a throwaway PostgreSQL container, restores
+# it, checks critical rows/indexes, and removes all temporary state.
 
 set -euo pipefail
 
-# shellcheck source=./_load-env.sh
-source "$(dirname "${BASH_SOURCE[0]}")/_load-env.sh" /opt/hamafx/.env
-
-: "${GCS_BACKUP_BUCKET:?GCS_BACKUP_BUCKET must be set}"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/_load-env.sh" /opt/hamafx/.env
+source "$SCRIPT_DIR/backup-storage.sh"
 
 HC_UUID="${HC_VERIFY_RESTORE_UUID:-}"
 TMP_DIR="$(mktemp -d -t hamafx-verify-XXXXXX)"
@@ -58,53 +41,19 @@ ping_hc() {
 
 log() { printf '%s [verify-restore] %s\n' "$(date -u +%FT%TZ)" "$*"; }
 
+backup_storage_require
 ping_hc start
-
-# ------------------------------------------------------------------ Verify bucket hardening (PR-08)
-# GCS bucket versioning and retention policy protect backups from accidental
-# or malicious deletion. If these are not configured, the verify-restore
-# still proceeds but flags a warning in the healthchecks.io ping body.
-log 'checking GCS bucket configuration'
-BUCKET_WARNINGS=''
-
-# Check versioning
-if gcloud storage buckets describe "gs://${GCS_BACKUP_BUCKET}" --format='value(versioning.enabled)' 2>/dev/null | grep -qx 'True'; then
-  log "GCS versioning: enabled ✓"
-else
-  BUCKET_WARNINGS="${BUCKET_WARNINGS}versioning_disabled "
-  log 'WARNING: GCS bucket versioning is NOT enabled — backups can be deleted without recourse'
-fi
-
-# Check retention policy (requires uniform bucket-level access)
-if gcloud storage buckets describe "gs://${GCS_BACKUP_BUCKET}" --format='value(retentionPolicy.retentionPeriod)' 2>/dev/null | grep -qE '^[1-9][0-9]*$'; then
-  log "GCS retention policy: active ✓"
-else
-  BUCKET_WARNINGS="${BUCKET_WARNINGS}no_retention_policy "
-  log 'WARNING: GCS bucket has no retention policy — backups can be deleted immediately'
-fi
-
-# Check that verify/last-success.txt from last week exists (chain of custody)
-if gcloud storage ls "gs://${GCS_BACKUP_BUCKET}/verify/last-success.txt" >/dev/null 2>&1; then
-  PREV_VERIFY="$(gcloud storage cat "gs://${GCS_BACKUP_BUCKET}/verify/last-success.txt" 2>/dev/null || echo 'unreadable')"
-  log "previous verify success: ${PREV_VERIFY:0:120}"
-else
-  BUCKET_WARNINGS="${BUCKET_WARNINGS}no_previous_verify_file "
-  log 'NOTE: no previous verify/last-success.txt (first run or file was deleted)'
-fi
-
-# ------------------------------------------------------------------ Pull latest
-LATEST="$(gcloud storage ls --format='value(name)' "gs://${GCS_BACKUP_BUCKET}/db/*.dump.gz" 2>/dev/null \
-  | tail -n1)"
+LATEST="$(backup_storage_latest_db)"
 if [[ -z "$LATEST" ]]; then
-  log 'no dumps in bucket'
-  ping_hc fail "no dumps in gs://${GCS_BACKUP_BUCKET}/db/"
+  log 'no database dumps in B2'
+  ping_hc fail 'no database dumps available in B2'
   exit 1
 fi
-log "latest dump: $LATEST"
-gcloud storage cp "$LATEST" "$DUMP_GZ" --quiet
+
+log "latest dump: B2 ${LATEST#hamafx:}"
+backup_storage_download_file "${LATEST#hamafx:*/}" "$DUMP_GZ"
 gunzip -c "$DUMP_GZ" > "$DUMP"
 
-# ------------------------------------------------------------------ Boot Postgres
 log 'starting throwaway postgres container'
 docker run --rm -d \
   --name "$CONTAINER" \
@@ -114,57 +63,38 @@ docker run --rm -d \
   -p "${LOCAL_PG_PORT}:5432" \
   pgvector/pgvector:pg16 >/dev/null
 
-# Wait for the container's Postgres to accept connections.
 for _ in $(seq 1 30); do
-  if docker exec "$CONTAINER" pg_isready -U verify >/dev/null 2>&1; then
-    break
-  fi
+  if docker exec "$CONTAINER" pg_isready -U verify >/dev/null 2>&1; then break; fi
   sleep 1
 done
-
-# Verify the container actually became ready before proceeding.
 if ! docker exec "$CONTAINER" pg_isready -U verify >/dev/null 2>&1; then
   log 'postgres container did not become ready in 30 seconds'
-  ping_hc fail "postgres container not ready"
+  ping_hc fail 'postgres container not ready'
   exit 1
 fi
 
-# Ensure pgvector + pgcrypto extensions exist before restore (the dump
-# expects them).
 docker exec "$CONTAINER" psql -U verify -d "$TARGET_DB" -c \
   'CREATE EXTENSION IF NOT EXISTS vector; CREATE EXTENSION IF NOT EXISTS pgcrypto;' \
   >/dev/null
 
-# ------------------------------------------------------------------ Restore + assert
 log 'running pg_restore'
 if ! PGPASSWORD=verify pg_restore \
   --no-owner --no-privileges \
   -h 127.0.0.1 -p "$LOCAL_PG_PORT" -U verify -d "$TARGET_DB" \
   "$DUMP"; then
   log 'pg_restore failed'
-  ping_hc fail "pg_restore failed for $LATEST"
+  ping_hc fail "pg_restore failed for ${LATEST#hamafx:*/}"
   exit 1
 fi
 
-JOURNAL_ROWS="$(PGPASSWORD=verify psql -h 127.0.0.1 -p "$LOCAL_PG_PORT" -U verify -d "$TARGET_DB" \
-  -A -t -c 'SELECT COUNT(*) FROM journal_entries;' 2>/dev/null || echo 0)"
-THREADS_ROWS="$(PGPASSWORD=verify psql -h 127.0.0.1 -p "$LOCAL_PG_PORT" -U verify -d "$TARGET_DB" \
-  -A -t -c 'SELECT COUNT(*) FROM chat_threads;' 2>/dev/null || echo 0)"
-HNSW_INDEX_COUNT="$(PGPASSWORD=verify psql -h 127.0.0.1 -p "$LOCAL_PG_PORT" -U verify -d "$TARGET_DB" \
-  -A -t -c "SELECT COUNT(*) FROM pg_indexes WHERE schemaname = 'public' AND indexdef ILIKE '%USING hnsw%';" 2>/dev/null || echo 0)"
+JOURNAL_ROWS="$(PGPASSWORD=verify psql -h 127.0.0.1 -p "$LOCAL_PG_PORT" -U verify -d "$TARGET_DB" -A -t -c 'SELECT COUNT(*) FROM journal_entries;' 2>/dev/null || echo 0)"
+THREADS_ROWS="$(PGPASSWORD=verify psql -h 127.0.0.1 -p "$LOCAL_PG_PORT" -U verify -d "$TARGET_DB" -A -t -c 'SELECT COUNT(*) FROM chat_threads;' 2>/dev/null || echo 0)"
+HNSW_INDEX_COUNT="$(PGPASSWORD=verify psql -h 127.0.0.1 -p "$LOCAL_PG_PORT" -U verify -d "$TARGET_DB" -A -t -c "SELECT COUNT(*) FROM pg_indexes WHERE schemaname = 'public' AND indexdef ILIKE '%USING hnsw%';" 2>/dev/null || echo 0)"
 
 log "journal_entries=$JOURNAL_ROWS chat_threads=$THREADS_ROWS hnsw_indexes=$HNSW_INDEX_COUNT"
-
 if [[ "$JOURNAL_ROWS" =~ ^[0-9]+$ ]] && [[ "$THREADS_ROWS" =~ ^[0-9]+$ ]] && [[ "$HNSW_INDEX_COUNT" =~ ^[0-9]+$ ]] && (( HNSW_INDEX_COUNT > 0 )); then
-  # PR-08: Include GCS bucket status in healthchecks ping body
-  BUCKET_STATUS="versioning=$(gcloud storage buckets describe "gs://${GCS_BACKUP_BUCKET}" --format='value(versioning.enabled)' 2>/dev/null || echo unknown)"
-  if [[ -n "$BUCKET_WARNINGS" ]]; then
-    BUCKET_STATUS="${BUCKET_STATUS} warnings=${BUCKET_WARNINGS% }"
-  fi
-  ping_hc success "journal=$JOURNAL_ROWS threads=$THREADS_ROWS hnsw=$HNSW_INDEX_COUNT dump=$LATEST ${BUCKET_STATUS}"
-  echo "$(date -u +%FT%TZ) journal=$JOURNAL_ROWS threads=$THREADS_ROWS hnsw=$HNSW_INDEX_COUNT dump=$LATEST" \
-    | gcloud storage cp - "gs://${GCS_BACKUP_BUCKET}/verify/last-success.txt" --quiet
+  ping_hc success "journal=$JOURNAL_ROWS threads=$THREADS_ROWS hnsw=$HNSW_INDEX_COUNT provider=b2 retention=7d"
 else
-  ping_hc fail "restore verification failed (rows or hnsw indexes missing)"
+  ping_hc fail 'restore verification failed (rows or hnsw indexes missing)'
   exit 1
 fi

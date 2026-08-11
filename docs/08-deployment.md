@@ -20,14 +20,14 @@ flowchart LR
     REPO -.5-min self-update.-> VM
 
     subgraph VM["GCE — hamafx-cron (e2-medium, us-central1-a)"]
-        Worker["hamafx-worker.service<br/>(BiQuote SignalR + heavy job runner)"]
-        Timers["systemd timers<br/>(jobs + light Vercel pokes)"]
+        Worker["hamafx-worker Docker container<br/>(BiQuote SignalR + internal scheduler)"]
+        Timers["systemd timers<br/>(light Vercel pokes + maintenance)"]
     end
 
     subgraph Managed
         SB[(Supabase Postgres<br/>+ pgvector)]
         GW[(Vercel AI Gateway)]
-        GCS[(GCS bucket — backups)]
+        B2[(Backblaze B2 — backups, deferred)]
         HC[(healthchecks.io)]
         Sentry[(Sentry)]
     end
@@ -37,17 +37,17 @@ flowchart LR
     VC --- Sentry
     VM --- SB
     VM --- GW
-    VM --- GCS
+    VM --- B2
     VM --- HC
     VM --- Sentry
     Timers -.HTTP.-> VC
 ```
 
-The web app is one Vercel deploy and the worker is one VM. Both pull from the same `main` branch. Vercel rebuilds on push; the VM's `hamafx-update.timer` pulls and rebuilds every 5 minutes.
+The web app is one Vercel deploy and the worker is one Docker container on one VM. Both pull from the same `main` branch. Vercel rebuilds on push; the VM's `hamafx-update.timer` pulls and rebuilds worker-relevant changes every 5 minutes.
 
 ## Vercel project
 
-- **Project**: `hama-fx-ai` (linked to the monorepo, `Root Directory = apps/web`).
+- **Project**: `hamafx-ai` (linked to the monorepo, `Root Directory = apps/web`).
 - **Build command**: handled by Turborepo: `turbo run build --filter=web...`.
 - **Install command**: `pnpm install --frozen-lockfile`.
 - **Output**: standard Next.js.
@@ -89,18 +89,19 @@ We do **not** ship a `crons` block in `vercel.json` — Vercel Hobby caps cron a
 
 ## VM project
 
-- **Instance**: `hamafx-cron` (`e2-medium`, `us-central1-a`, project `hamafx-78845`, Ubuntu 24.04 LTS, 10 GB pd-standard).
+- **Instance**: `hamafx-cron` (`e2-medium`, `us-central1-a`, project `gen-lang-client-0103421645`, Ubuntu 24.04 LTS).
 - **System user**: `hamafx` (system, `nologin`, owns `/opt/hamafx`).
-- **Always-on**: `hamafx-worker.service` — `Type=simple`, restarts on failure with backoff.
-- **Timers**: 14 oneshot units in `infra/cron-vm/units/`. See `infra/cron-vm/README.md` for the schedule table.
-- **Self-update**: `hamafx-update.timer` runs every 5 min — `git pull`, `pnpm install --frozen-lockfile`, `pnpm --filter @hamafx/worker build`, then `systemctl restart hamafx-worker.service` if the SHA changed. The hamafx user has a sudoers entry for that one restart only.
-- **Cost**: ~$8/mo (`e2-medium` standard, no sustained-use discount applied).
+- **Always-on**: Docker container `hamafx-worker`, with Docker health checks and restart-on-failure.
+- **Timers**: Light HTTP pokes, cleanup, maintenance, backup placeholders, updates, and Docker housekeeping in `infra/cron-vm/units/`.
+- **Worker jobs**: Heavy jobs run inside the Docker worker's internal scheduler. Separate heavy-job systemd timers were intentionally removed and must not be restored.
+- **Self-update**: `hamafx-update.timer` pulls `origin/main`, rebuilds only when worker-relevant files change, and rolls back if the new container fails health checks.
+- **Cost**: approximately $8–$17/mo depending on GCP billing discounts.
 
-Bootstrap is `infra/cron-vm/setup.sh` (drops every unit into `/etc/systemd/system/`, enables timers, masks the legacy `cron` daemon, installs sudoers, points logrotate at `/var/log/hamafx-cron.log`). One-off provisioning is `infra/cron-vm/_provision.sh`. Recovery is `infra/cron-vm/RECOVERY.md` — five concrete scenarios with paste-ready commands.
+Bootstrap is `infra/cron-vm/_provision-docker.sh` (installs Docker, copies the worker and maintenance units, enables timers, masks the legacy `cron` daemon, installs sudoers, and configures journald). Recovery is `infra/cron-vm/RECOVERY.md` — read-only-first scenarios with paste-ready commands.
 
 ## Domains
 
-Whatever apex you want — NextAuth handles authentication and protects all routes. Production currently lives at `hama-fx-ai.vercel.app`.
+Whatever apex you want — NextAuth handles authentication and protects all routes. Production currently lives at `hamafx-ai.vercel.app`.
 
 ## Environment variables
 
@@ -108,11 +109,11 @@ Whatever apex you want — NextAuth handles authentication and protects all rout
 
 ```
 # --- App ---
-NEXT_PUBLIC_APP_URL=https://hama-fx-ai.vercel.app
-PRODUCTION_URL=https://hama-fx-ai.vercel.app                 # VM only — what the light crons curl
+NEXT_PUBLIC_APP_URL=https://hamafx-ai.vercel.app
+PRODUCTION_URL=https://hamafx-ai.vercel.app                 # VM only — what the light crons curl
 
 # --- Auth (NextAuth) ---
-NEXTAUTH_URL=https://hama-fx-ai.vercel.app
+NEXTAUTH_URL=https://hamafx-ai.vercel.app
 NEXTAUTH_SECRET=                 # run: openssl rand -base64 32
 CRON_SECRET=                     # set on Vercel + on VM; used for /api/cron/* bearer
 GOOGLE_CLIENT_ID=
@@ -171,7 +172,11 @@ VAPID_SUBJECT=
 SENTRY_DSN=                                  # server-side; same value used as NEXT_PUBLIC_SENTRY_DSN
 
 # --- VM-only ---
-GCS_BACKUP_BUCKET=hamafx-backups-hamafx-78845
+BACKUP_PROVIDER=b2                         # B2 setup is deferred
+B2_BUCKET=                                   # private B2 bucket name
+B2_KEY_ID=                                   # restricted B2 application key ID
+B2_APPLICATION_KEY=                          # restricted B2 application key
+# Backups remain skipped safely until the B2 values above are configured.
 DEPLOYED_SHA=                                # written by update.sh after each pull
 HC_SIGNALR_UUID=
 HC_UPDATE_UUID=
@@ -208,7 +213,7 @@ node -e "console.log(require('crypto').randomBytes(24).toString('hex'))"
 
 ## CI
 
-`.github/workflows/ci.yml` runs `pnpm turbo run lint typecheck test` on every PR + push to main. **No deploy step**; Vercel handles that. The legacy `.github/workflows/cron-*.yml` files were retired in Phase 8 PR-21 — every cron is now a systemd timer on the VM.
+`.github/workflows/ci.yml` runs `pnpm turbo run lint typecheck test` on every PR + push to main. **No deploy step**; Vercel handles the web deploy and the VM's `hamafx-update.timer` handles the worker update. The legacy `.github/workflows/cron-*.yml` files were retired in Phase 8 PR-21. Host maintenance and lightweight Vercel pokes use systemd timers; heavy worker jobs use the Docker worker's internal scheduler.
 
 ## Supabase setup (one-time)
 
@@ -223,12 +228,14 @@ node -e "console.log(require('crypto').randomBytes(24).toString('hex'))"
 
 > Supabase Free tier pauses a project after 7 days of _no activity_. With the worker hitting the DB every second and the timers firing every few minutes, this never triggers. If you ever take a long break, manually unpause from the dashboard.
 
-## GCS setup (Phase 8)
+## Backups (B2 setup deferred)
 
-1. Create the backup bucket: `gs://hamafx-backups-${PROJECT_ID}` (us-central1, standard storage class).
-2. Set lifecycle policy: delete after 30 days for `db/`, 90 days for `journal/`, 7 days for `verify/`.
-3. Grant the VM's service account `roles/storage.objectAdmin` on the bucket.
-4. Set `GCS_BACKUP_BUCKET=hamafx-backups-${PROJECT_ID}` on the VM.
+The code is prepared for a private Backblaze B2 bucket with seven-day retention.
+Create the B2 account and restricted application key later, then install
+`rclone` on the VM and set `BACKUP_PROVIDER=b2`, `B2_BUCKET`, `B2_KEY_ID`, and
+`B2_APPLICATION_KEY` in `/opt/hamafx/.env`. Configure B2 lifecycle cleanup for
+seven days and old file versions. Until then, backup and restore timers are
+installed but skipped safely; they do not report false success.
 
 ## Database migrations
 
@@ -249,7 +256,7 @@ node -e "console.log(require('crypto').randomBytes(24).toString('hex'))"
 ## Logging & monitoring
 
 - **Web logs**: Vercel function logs.
-- **Worker logs**: `sudo journalctl -u hamafx-worker.service` (or any heavy/light unit). JSON-structured with a `commit` field tagging the deployed SHA.
+- **Worker logs**: `sudo docker logs hamafx-worker` plus `journalctl -u hamafx-update.service` and light/maintenance units. JSON-structured worker logs carry the deployed commit.
 - **Healthchecks.io**: every heartbeat / job emits a `start` + `success`/`fail` ping. A stale check pages immediately.
 - **Sentry**: server-side errors from both `apps/web` and `apps/worker` flow into the same project. The worker's heavy-job runner adds `{ job: <name> }` to every event.
 - **Cost telemetry**: `chat_telemetry` table → `/settings/usage` UI.
@@ -267,10 +274,10 @@ If something feels slow or expensive, look at Vercel function logs + `chat_telem
   sudo -u hamafx pnpm -C /opt/hamafx/app install --frozen-lockfile
   sudo -u hamafx pnpm -C /opt/hamafx/app --filter @hamafx/worker build
   echo <good-sha> | sudo tee /opt/hamafx/.deployed-sha
-  sudo systemctl restart hamafx-worker.service
+  sudo docker compose -f /opt/hamafx/docker-compose.yml up -d --force-recreate worker
   ```
   Then push the fix to `main` and unmask the timer.
-- **DB**: forward-only migrations. For emergencies, restore from the latest GCS backup per `infra/cron-vm/RECOVERY.md` § Scenario 1.
+- **DB**: forward-only migrations. For emergencies, restore from the latest B2 backup after it is configured, per `infra/cron-vm/RECOVERY.md` § Scenario 1.
 
 ## Cost ceiling (your own usage)
 
@@ -278,7 +285,7 @@ If something feels slow or expensive, look at Vercel function logs + `chat_telem
 | ------------------------ | ---------------- |
 | Vercel Hobby             | $0               |
 | GCE `e2-medium` VM       | ~$8              |
-| GCS backup storage       | $0–$1            |
+| Backblaze B2 backup storage (deferred)       | $0–$1            |
 | Supabase Free            | $0               |
 | Data providers           | $0 (BiQuote + Finnhub free tiers cover it) |
 | AI Gateway / models      | $3–$15 (your usage) |

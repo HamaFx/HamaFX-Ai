@@ -4,7 +4,7 @@
 # Sets up the VM with:
 #   1. Docker + docker-compose plugin
 #   2. git (to clone repo for Docker build context)
-#   3. GCP CLI (gsutil for backups)
+#   3. GCP CLI (for VM provisioning and firewall management)
 #   4. postgresql-client (pg_dump, psql for backups/tenant ops)
 #   5. curl (for light crons)
 #   6. /opt/hamafx/.env from staged file
@@ -59,8 +59,8 @@ log 'enabling Docker (starts on boot, survives reboots)'
 systemctl enable --now docker
 usermod -aG docker hamafx
 
-log 'installing google-cloud CLI (gsutil) for backups'
-if ! command -v gsutil >/dev/null 2>&1; then
+log 'installing Google Cloud CLI for VM provisioning'
+if ! command -v gcloud >/dev/null 2>&1; then
   echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" \
     > /etc/apt/sources.list.d/google-cloud-sdk.list
   curl -fsSL https://packages.cloud.google.com/apt/doc/apt-key.gpg \
@@ -70,10 +70,12 @@ if ! command -v gsutil >/dev/null 2>&1; then
 fi
 
 log 'ensuring GCP firewall rules (SSH only — port 8081 NOT exposed)'
-if ! gcloud compute firewall-rules describe hamafx-allow-ssh --project=hamafx-78845 2>/dev/null; then
+GCP_PROJECT_ID="${GCP_PROJECT_ID:-$(gcloud config get-value project 2>/dev/null)}"
+: "${GCP_PROJECT_ID:?Set GCP_PROJECT_ID before provisioning the VM}"
+if ! gcloud compute firewall-rules describe hamafx-allow-ssh --project="$GCP_PROJECT_ID" 2>/dev/null; then
   gcloud compute firewall-rules create hamafx-allow-ssh \
     --network default --allow tcp:22 --source-ranges 0.0.0.0/0 \
-    --project hamafx-78845 --quiet
+    --project "$GCP_PROJECT_ID" --quiet
 fi
 
 log 'cloning the repo into /opt/hamafx/app (Docker build context)'
@@ -107,13 +109,19 @@ install -m 644 -o hamafx -g hamafx \
 log 'copying scripts to /opt/hamafx/scripts/'
 install -d -m 755 -o hamafx -g hamafx "${INSTALL_DIR}/scripts"
 for script in docker-update.sh docker-autoheal.sh webhook-listener.py \
-  backup-db.sh backup-journal.sh verify-restore.sh \
+  backup-db.sh backup-journal.sh backup-storage.sh backup-storage-ready.sh verify-restore.sh \
   delete-tenant.sh export-tenant.sh _load-env.sh; do
   if [[ -f "${STAGE}/scripts/${script}" ]]; then
     install -m 755 -o hamafx -g hamafx "${STAGE}/scripts/${script}" "${INSTALL_DIR}/scripts/"
   fi
 done
 chmod +x "${INSTALL_DIR}/scripts/"*.sh 2>/dev/null || true
+
+# Keep the privileged unit synchronizer outside the hamafx-writable checkout.
+# docker-update.sh may call it through the narrow sudoers rule.
+if [[ -f "${STAGE}/scripts/sync-systemd-units.sh" ]]; then
+  install -m 755 -o root -g root "${STAGE}/scripts/sync-systemd-units.sh" /usr/local/sbin/hamafx-sync-systemd-units
+fi
 
 log 'tearing down legacy cron'
 systemctl stop cron 2>/dev/null || true
@@ -137,7 +145,7 @@ for unit in \
   hamafx-light-news hamafx-light-calendar hamafx-light-alerts \
   hamafx-light-warm-cache hamafx-light-cleanup-uploads \
   hamafx-backup-db hamafx-backup-journal hamafx-verify-restore \
-  hamafx-tenant-export hamafx-tenant-delete \
+  hamafx-tenant-export hamafx-tenant-delete hamafx-billing-dlq \
   hamafx-disk-check hamafx-docker-prune \
   hamafx-update hamafx-docker-autoheal hamafx-webhook; do
   for ext in service timer; do
@@ -154,7 +162,7 @@ for timer in \
   hamafx-light-cleanup-uploads.timer \
   hamafx-backup-db.timer hamafx-backup-journal.timer \
   hamafx-verify-restore.timer \
-  hamafx-tenant-export.timer hamafx-tenant-delete.timer \
+  hamafx-tenant-export.timer hamafx-tenant-delete.timer hamafx-billing-dlq.timer \
   hamafx-disk-check.timer hamafx-docker-prune.timer \
   hamafx-update.timer hamafx-docker-autoheal.timer; do
   systemctl enable --now "$timer" 2>/dev/null || true

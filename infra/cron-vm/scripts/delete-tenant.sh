@@ -61,12 +61,10 @@ log() { printf '%s [delete-tenant] %s\n' "$(date -u +%FT%TZ)" "$*"; }
 # Tenant-owned tables ordered by FK dependency (children first).
 # chat_messages depends on chat_threads, etc.
 TENANT_TABLES=(
-  "chat_messages"
   "chat_tool_telemetry"
   "chat_telemetry"
-  "decision_signal_outcomes"
-  "decision_signal_feedback"
-  "decision_signals"
+  "analysis_jobs"
+  "diagnostic_traces"
   "agent_opinions"
   "memory_embeddings"
   "alerts"
@@ -88,10 +86,18 @@ TENANT_TABLES=(
   "chat_threads"
 )
 
-# Safety: refuse to delete the __system__ user.
+# Safety rehearsal: verify DB connectivity, then refuse the protected system
+# identity. This proves the maintenance path can reach the database without
+# ever inspecting or deleting a real tenant.
 if [[ "$USER_ID" == "__system__" ]]; then
-  log "REFUSING to delete __system__ user — this is the system fallback account."
-  exit 1
+  if ! psql --dbname="$DB_URL" -A -t -c 'SELECT 1' >/dev/null 2>&1; then
+    log 'SAFETY CHECK FAILED — database connectivity check failed'
+    ping_hc fail 'safety-check: database connectivity failed'
+    exit 1
+  fi
+  log "SAFETY CHECK PASSED — refusing to delete __system__ user (protected system account)."
+  ping_hc success 'safety-check: database reachable and protected __system__ account was not deleted'
+  exit 0
 fi
 
 if [[ -z "$CONFIRM" ]]; then
@@ -102,25 +108,59 @@ fi
 log "processing tenant deletion for user_id=${USER_ID} (${CONFIRM:-dry-run})"
 
 TOTAL_ROWS=0
+
+# chat_messages is owned by chat_threads and has no user_id column. Count and,
+# when confirmed, remove it before deleting the owning threads (whose FK has
+# ON DELETE CASCADE as a second safety net).
+if ! MESSAGE_COUNT=$(psql --dbname="$DB_URL" -A -t -v user_id="$USER_ID" -c \
+  "SELECT COUNT(*) FROM chat_messages WHERE thread_id IN (SELECT id FROM chat_threads WHERE user_id = :'user_id');" 2>/dev/null); then
+  log 'ERROR: tenant deletion query failed for table chat_messages'
+  ping_hc fail 'tenant deletion query failed for table chat_messages'
+  exit 1
+fi
+MESSAGE_COUNT="${MESSAGE_COUNT// /}"
+if [[ "$MESSAGE_COUNT" =~ ^[0-9]+$ ]] && (( MESSAGE_COUNT > 0 )); then
+  log "  chat_messages: ${MESSAGE_COUNT} rows"
+  TOTAL_ROWS=$((TOTAL_ROWS + MESSAGE_COUNT))
+  if [[ -n "$CONFIRM" ]] && ! psql --dbname="$DB_URL" -v user_id="$USER_ID" -c \
+    "DELETE FROM chat_messages WHERE thread_id IN (SELECT id FROM chat_threads WHERE user_id = :'user_id');" >/dev/null 2>&1; then
+    log 'ERROR: tenant deletion failed for table chat_messages'
+    ping_hc fail 'tenant deletion failed for table chat_messages'
+    exit 1
+  fi
+fi
+
 for TABLE in "${TENANT_TABLES[@]}"; do
   # Count rows for this tenant using psql variables (parameterized to prevent SQL injection).
-  COUNT=$(psql --dbname="$DB_URL" -A -t -v user_id="$USER_ID" -c \
-    "SELECT COUNT(*) FROM ${TABLE} WHERE user_id = :'user_id';" 2>/dev/null || echo 0)
+  if ! COUNT=$(psql --dbname="$DB_URL" -A -t -v user_id="$USER_ID" -c \
+    "SELECT COUNT(*) FROM ${TABLE} WHERE user_id = :'user_id';" 2>/dev/null); then
+    log "ERROR: tenant deletion query failed for table ${TABLE}"
+    ping_hc fail "tenant deletion query failed for table ${TABLE}"
+    exit 1
+  fi
   COUNT="${COUNT// /}"
   if [[ "$COUNT" =~ ^[0-9]+$ ]] && (( COUNT > 0 )); then
     log "  ${TABLE}: ${COUNT} rows"
     TOTAL_ROWS=$((TOTAL_ROWS + COUNT))
     if [[ -n "$CONFIRM" ]]; then
-      psql --dbname="$DB_URL" -v user_id="$USER_ID" -c \
-        "DELETE FROM ${TABLE} WHERE user_id = :'user_id';" >/dev/null 2>&1 || true
+      if ! psql --dbname="$DB_URL" -v user_id="$USER_ID" -c \
+        "DELETE FROM ${TABLE} WHERE user_id = :'user_id';" >/dev/null 2>&1; then
+        log "ERROR: tenant deletion failed for table ${TABLE}"
+        ping_hc fail "tenant deletion failed for table ${TABLE}"
+        exit 1
+      fi
     fi
   fi
 done
 
 # Finally, soft-delete the user record itself (set deleted_at).
 if [[ -n "$CONFIRM" ]]; then
-  psql --dbname="$DB_URL" -v user_id="$USER_ID" -c \
-    "UPDATE \"user\" SET \"deletedAt\" = now() WHERE id = :'user_id';" >/dev/null 2>&1 || true
+  if ! psql --dbname="$DB_URL" -v user_id="$USER_ID" -c \
+    "UPDATE \"user\" SET \"deletedAt\" = now() WHERE id = :'user_id';" >/dev/null 2>&1; then
+    log 'ERROR: tenant user soft-delete failed'
+    ping_hc fail 'tenant user soft-delete failed'
+    exit 1
+  fi
   log "user ${USER_ID} soft-deleted (deletedAt = now())"
 fi
 

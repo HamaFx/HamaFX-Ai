@@ -1,5 +1,5 @@
 [Unit]
-Description=Nightly DB dump to GCS at 03:00 UTC
+Description=Nightly DB dump to B2 (opt-in) at 03:00 UTC
 
 [Timer]
 OnCalendar=*-*-* 03:00:00 UTC

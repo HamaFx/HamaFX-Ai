@@ -20,6 +20,7 @@ readonly COMPOSE_FILE="/opt/hamafx/docker-compose.yml"
 readonly LOCK_FILE="/opt/hamafx/.update.lock"
 readonly SHA_FILE="/opt/hamafx/.deployed-sha"
 readonly CONTAINER="hamafx-worker"
+readonly UNIT_SYNC_HELPER='/usr/local/sbin/hamafx-sync-systemd-units'
 
 # Load HC_UPDATE_UUID safely
 HC_UUID=''
@@ -41,6 +42,34 @@ ping_hc() {
 }
 
 log() { printf '%s [docker-update] %s\n' "$(date -u +%FT%TZ)" "$*"; }
+
+sync_host_files_for_commit() {
+  local commit="$1"
+  git reset --hard "$commit" >/dev/null
+
+  if echo "$CHANGED_FILES" | grep -qE '^infra/cron-vm/scripts/'; then
+    # Synchronize the complete host-script set and remove managed scripts
+    # deleted by the commit. Do not touch unrelated operator files.
+    local script
+    local -a managed_scripts=(
+      backup-db.sh backup-journal.sh backup-storage.sh backup-storage-ready.sh
+      verify-restore.sh delete-tenant.sh export-tenant.sh _load-env.sh
+      docker-autoheal.sh docker-update.sh webhook-listener.py
+    )
+    for script in "${managed_scripts[@]}"; do
+      if [[ -f "$APP_DIR/infra/cron-vm/scripts/$script" ]]; then
+        install -m 755 "$APP_DIR/infra/cron-vm/scripts/$script" "/opt/hamafx/scripts/$script"
+      else
+        rm -f "/opt/hamafx/scripts/$script"
+      fi
+    done
+  fi
+
+  if echo "$CHANGED_FILES" | grep -qE '^infra/cron-vm/units/'; then
+    sudo /usr/bin/bash "$UNIT_SYNC_HELPER"
+  fi
+
+}
 
 # Single-instance guard
 exec 9>"$LOCK_FILE"
@@ -102,15 +131,14 @@ for pattern in \
   fi
 done
 
-# Always git pull regardless.
-git reset --hard "$NEW_SHA" >/dev/null
-
-# Copy any updated infra scripts to /opt/hamafx/scripts (no rebuild needed).
-if echo "$CHANGED_FILES" | grep -qE '^infra/cron-vm/scripts/'; then
-  log 'copying updated infra scripts'
-  cp "$APP_DIR"/infra/cron-vm/scripts/*.sh /opt/hamafx/scripts/ 2>/dev/null || true
-  cp "$APP_DIR"/infra/cron-vm/scripts/*.py /opt/hamafx/scripts/ 2>/dev/null || true
-  chmod +x /opt/hamafx/scripts/*.sh /opt/hamafx/scripts/*.py 2>/dev/null || true
+# Always git pull regardless. Host synchronization is kept as a transaction:
+# if a unit/script sync fails, restore the previous checkout and host files.
+log 'applying host files'
+if ! sync_host_files_for_commit "$NEW_SHA"; then
+  log 'host synchronization failed — restoring previous commit'
+  sync_host_files_for_commit "$PREV_SHA" >/dev/null 2>&1 || true
+  ping_hc fail 'host synchronization failed'
+  exit 1
 fi
 
 if [[ "$NEEDS_REBUILD" -eq 0 ]]; then
@@ -127,7 +155,7 @@ docker tag hamafx-worker:local hamafx-worker:rollback 2>/dev/null || true
 log "building Docker image"
 if ! docker compose -f "$COMPOSE_FILE" build --quiet 2>&1; then
   log "docker compose build failed — rolling back"
-  git reset --hard "$PREV_SHA" >/dev/null
+  sync_host_files_for_commit "$PREV_SHA" >/dev/null 2>&1 || true
   ping_hc fail "build failed at $NEW_SHA"
   exit 1
 fi
@@ -151,7 +179,7 @@ HEALTH_STATUS=$(docker inspect --format='{{.State.Health.Status}}' "$CONTAINER" 
 if [[ "$HEALTH_STATUS" != "healthy" ]]; then
   log "health check failed (status: $HEALTH_STATUS) — rolling back"
   docker tag hamafx-worker:rollback hamafx-worker:local 2>/dev/null || true
-  git reset --hard "$PREV_SHA" >/dev/null
+  sync_host_files_for_commit "$PREV_SHA" >/dev/null 2>&1 || true
   docker compose -f "$COMPOSE_FILE" build --quiet 2>/dev/null || true
   docker compose -f "$COMPOSE_FILE" up -d --force-recreate --no-deps worker 2>/dev/null || true
   ping_hc fail "health check failed (status: $HEALTH_STATUS) at $NEW_SHA, rolled back to $PREV_SHA"

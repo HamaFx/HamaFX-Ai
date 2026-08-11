@@ -1,18 +1,18 @@
 # HamaFX-Ai Cron VM
 
-A lightweight GCE `e2-medium` instance that fires all cron endpoints on schedule via `curl`. Replaces GitHub Actions (which requires billing) and Vercel Cron (which caps at once/day on Hobby).
+A GCE `e2-medium` instance that runs the Docker worker and fires lightweight cron endpoints on schedule via `curl`. It replaces GitHub Actions (which requires billing) and Vercel Cron (which caps at once/day on Hobby).
 
 ## Instance details
 
 | Property | Value |
 |----------|-------|
 | Name | `hamafx-cron` |
-| Project | `hamafx-78845` |
+| Project | `gen-lang-client-0103421645` |
 | Zone | `us-central1-a` |
 | Machine type | `e2-medium` (2 vCPU, 4 GB RAM) |
 | OS | Ubuntu 24.04 LTS Minimal |
 | Disk | 10 GB pd-standard |
-| External IP | Static (reserved via `gcloud compute addresses`) — see [Static IP](#static-ip) below |
+| External IP | Currently ephemeral; reserve a static address only if stable allowlisting is needed |
 | Monthly cost | ~$15-17 (e2-medium in us-central1, sustained use discount) |
 
 ## Firewall
@@ -22,7 +22,7 @@ The VM uses GCP default firewall rules (deny all inbound except SSH):
 - **Port 8081:** NOT exposed externally — the health server binds to `127.0.0.1` only
 - **No other inbound ports** are needed
 
-Firewall rules are configured by `_provision.sh` during VM setup.
+Firewall rules are configured by `_provision-docker.sh` during VM setup.
 
 > **BiQuote Proxy:** The worker's health server includes a BiQuote REST proxy
 > at `/biquote/*`, but it is bound to `127.0.0.1` and only accessible from the
@@ -39,29 +39,30 @@ Firewall rules are configured by `_provision.sh` during VM setup.
 | `/api/cron/alerts` | Every 5 min | Alert evaluation + delivery |
 | `/api/cron/warm-cache` | Every 2 min | Pre-fetches the most-used market data so first chat / chart load is hot (Phase 7a) |
 | `/api/cron/billing-dlq` | Every hour | Alerts on stale authenticated billing webhook failures |
-| **(worker)** `briefings` | Every 5 min | Pre/post event briefings (Phase 8 PR-10) |
-| **(worker)** `snapshots` | 00:05 UTC daily | Daily HLOC/pivots/ATR + candles_1m prune (Phase 8 PR-11) |
-| **(worker)** `embedding-backfill` | Every 6 hours | News embedding computation (Phase 8 PR-9) |
-| **(worker)** `fred-actuals` | 01:30 UTC daily | FRED actuals backfill (Phase 8 PR-13) |
-| **(worker)** `weekly-review` | Sunday 18:00 UTC | Weekly journal review (Phase 8 PR-14) |
-| **(worker)** `cot` | Friday 22:00 UTC | CFTC CoT ingestion (Phase 8 PR-12) |
+| **(worker internal)** `briefings` | Every 5 min | Pre/post event briefings (Phase 8 PR-10) |
+| **(worker internal)** `snapshots` | 00:05 UTC daily | Daily HLOC/pivots/ATR + candles_1m prune (Phase 8 PR-11) |
+| **(worker internal)** `embedding-backfill` | Every 6 hours | News embedding computation (Phase 8 PR-9) |
+| **(worker internal)** `fred-actuals` | 01:30 UTC daily | FRED actuals backfill (Phase 8 PR-13) |
+| **(worker internal)** `weekly-review` | Sunday 18:00 UTC | Weekly journal review (Phase 8 PR-14) |
+| **(worker internal)** `cot` | Friday 22:00 UTC | CFTC CoT ingestion (Phase 8 PR-12) |
 
-Phase 8 PR-15 — the legacy `cron` daemon is replaced by **systemd
-timers**. All timers are driven from `infra/cron-vm/units/*`.The light crons (top five rows above) still poke Vercel via curl. The heavy jobs
-(rows tagged "(worker)") run as systemd `oneshot` services on the VM
-itself; their Vercel route counterparts remain as manual-fallback paths. The
-billing DLQ alert is also a VM-managed light cron because Vercel Hobby does
-not support hourly Vercel Cron schedules.
+Phase 8 PR-15 — the legacy `cron` daemon is replaced by **systemd timers**.
+The light crons (top five rows above) still poke Vercel via curl. The heavy
+jobs run inside the Docker worker's internal scheduler; their Vercel route
+counterparts remain as manual-fallback paths. Do not restore separate heavy-job
+systemd timers, because that would run jobs twice. The billing DLQ alert is
+also a VM-managed light cron because Vercel Hobby does not support hourly
+Vercel Cron schedules.
 
 ## Setup / Update
 
 ```bash
-# From the repo root — copies the entire cron-vm dir (units + setup.sh)
+# From the repo root — stage the Docker provisioner and cron-vm files
 gcloud compute scp -r infra/cron-vm hamafx-cron:/tmp/hamafx-cron \
-  --zone=us-central1-a --project=hamafx-78845
+  --zone=us-central1-a --project=gen-lang-client-0103421645
 gcloud compute ssh hamafx-cron \
-  --zone=us-central1-a --project=hamafx-78845 \
-  --command="sudo bash /tmp/hamafx-cron/setup.sh"
+  --zone=us-central1-a --project=gen-lang-client-0103421645 \
+  --command="sudo bash /tmp/hamafx-cron/_provision-docker.sh"
 ```
 
 ## Environment
@@ -69,19 +70,21 @@ gcloud compute ssh hamafx-cron \
 The VM reads `/opt/hamafx/.env` which must contain:
 
 ```bash
-PRODUCTION_URL=https://hama-fx-ai.vercel.app
+PRODUCTION_URL=https://hamafx-ai.vercel.app
 CRON_SECRET=<your-cron-secret>
 ```
 
 To update the secret:
 ```bash
-gcloud compute ssh hamafx-cron --zone=us-central1-a --project=hamafx-78845 --command="sudo tee /opt/hamafx/.env << EOF
-PRODUCTION_URL=https://hama-fx-ai.vercel.app
+gcloud compute ssh hamafx-cron --zone=us-central1-a --project=gen-lang-client-0103421645 --command="sudo tee /opt/hamafx/.env << EOF
+PRODUCTION_URL=https://hamafx-ai.vercel.app
 CRON_SECRET=<new-secret>
 EOF"
 ```
 
 ## Monitoring
+
+The Docker worker is the always-on process. Use `docker logs` and the worker health endpoint for it; use `journalctl` for host timers and maintenance services.
 
 ```bash
 # View recent journald output for any hamafx unit
@@ -94,7 +97,7 @@ gcloud compute ssh hamafx-cron --zone=us-central1-a \
 
 # Tail the always-on worker
 gcloud compute ssh hamafx-cron --zone=us-central1-a \
-  --command="sudo journalctl -u hamafx-worker -f"
+  --command="sudo docker logs -f --tail 200 hamafx-worker"
 ```
 
 The legacy `tail /var/log/hamafx-cron.log` still works for any pre-PR-15
@@ -106,46 +109,27 @@ crontab activity, but every Phase 8+ run goes to journald.
 - The `e2-small` and `e2-micro` tiers are too small once the worker holds a persistent BiQuote SignalR connection — `e2-micro` (1 GB) is one bad embedding batch from OOMKill.
 - The VM auto-updates via `unattended-upgrades` (Ubuntu default).
 
-## GCS backup bucket — one-time setup (Phase 8 PR-17)
+## Backup storage — Backblaze B2 setup is deferred
 
-Backups land in a single-region `us-central1` GCS bucket so intra-region
-egress from the VM stays free. 30-day retention for `db/`, 90-day for
-`journal/`, both lifecycle-managed.
+Backups are designed for a private Backblaze B2 bucket with seven-day retention.
+The account and credentials are intentionally configured later. Until then, the
+backup timers remain installed but are skipped safely by
+`backup-storage-ready.sh`; they must not report false backup success.
+
+When you are ready to connect B2, configure the VM with these values in
+`/opt/hamafx/.env` and install `rclone`:
 
 ```bash
-PROJECT_ID="hamafx-78845"
-BUCKET="hamafx-backups-${PROJECT_ID}"
-
-# Create the bucket. Single-region us-central1, uniform IAM, Standard class.
-gcloud storage buckets create "gs://${BUCKET}" \
-  --project="${PROJECT_ID}" \
-  --location=us-central1 \
-  --uniform-bucket-level-access \
-  --default-storage-class=STANDARD
-
-# Lifecycle policy.
-cat > /tmp/lifecycle.yaml <<EOF
-lifecycle:
-  rule:
-    - action: { type: Delete }
-      condition: { age: 30, matchesPrefix: ['db/'] }
-    - action: { type: Delete }
-      condition: { age: 90, matchesPrefix: ['journal/'] }
-EOF
-gcloud storage buckets update "gs://${BUCKET}" --lifecycle-file=/tmp/lifecycle.yaml
-
-# Grant the VM's default service account write-only access on this bucket.
-SA=$(gcloud compute instances describe hamafx-cron \
-  --zone=us-central1-a --project="${PROJECT_ID}" \
-  --format='get(serviceAccounts[0].email)')
-gcloud storage buckets add-iam-policy-binding "gs://${BUCKET}" \
-  --member="serviceAccount:${SA}" \
-  --role=roles/storage.objectAdmin
+BACKUP_PROVIDER=b2
+B2_BUCKET=<private-bucket-name>
+B2_KEY_ID=<restricted-application-key-id>
+B2_APPLICATION_KEY=<restricted-application-key>
 ```
 
-After running the above, write `GCS_BACKUP_BUCKET=hamafx-backups-${PROJECT_ID}`
-into `/opt/hamafx/.env`. The nightly `hamafx-backup-db.timer` and
-`hamafx-backup-journal.timer` need it to know where to push.
+Create a B2 lifecycle rule that keeps seven days and removes older files and
+old file versions. The backup scripts use dated paths under `db/`, `journal/`,
+and `tenant-exports/`. The B2 setup is deliberately not performed by the
+provisioner until the account exists.
 
 ## Disaster recovery
 
@@ -153,7 +137,7 @@ Concrete restore commands live in `infra/cron-vm/RECOVERY.md`.
 
 ## Static IP
 
-The VM should use a **static external IP** so that:
+If stable allowlisting is needed, the VM can use a **static external IP** so that:
 
 - Outbound API calls (Vercel cron endpoints, healthchecks.io) come from a
   stable address — useful for allowlisting on upstream firewalls.
@@ -163,54 +147,33 @@ The VM should use a **static external IP** so that:
 ```bash
 # Reserve a static IP (one-time)
 gcloud compute addresses create hamafx-cron-ip \
-  --region=us-central1 --project=hamafx-78845
+  --region=us-central1 --project=gen-lang-client-0103421645
 
 # Attach it to the VM (requires the VM to be stopped briefly)
-gcloud compute instances stop hamafx-cron --zone=us-central1-a --project=hamafx-78845
+gcloud compute instances stop hamafx-cron --zone=us-central1-a --project=gen-lang-client-0103421645
 gcloud compute instances describe hamafx-cron \
-  --zone=us-central1-a --project=hamafx-78845 \
+  --zone=us-central1-a --project=gen-lang-client-0103421645 \
   --format='get(networkInterfaces[0].accessConfigs[0].natIP)'
 gcloud compute instances add-access-config hamafx-cron \
-  --zone=us-central1-a --project=hamafx-78845 \
+  --zone=us-central1-a --project=gen-lang-client-0103421645 \
   --address=<RESERVED_IP> --network-tier=PREMIUM
-gcloud compute instances start hamafx-cron --zone=us-central1-a --project=hamafx-78845
+gcloud compute instances start hamafx-cron --zone=us-central1-a --project=gen-lang-client-0103421645
 ```
 
-Cost: ~$3-4/month for a static IP attached to a running instance (free
-while the instance is running, charged only when the IP is reserved but
-unattached).
+Cost and availability depend on the active GCP billing account. The current
+VM audit did not find a reserved static address, so do not assume the current
+IP is permanent.
 
-## Backup security
+## Backup security and recovery
 
-The nightly `pg_dump` and journal JSON exports land in a single GCS
-bucket (`gs://hamafx-backups-*`). To protect against accidental or
-malicious deletion if the VM is compromised:
-
-1. **Enable GCS bucket versioning** so deleted objects can be restored:
-   ```bash
-   gcloud storage buckets update gs://hamafx-backups-hamafx-78845 \
-     --versioning
-   ```
-
-2. **Add a retention lock** on the `db/` prefix so backups can't be
-   deleted before the 30-day retention window expires:
-   ```bash
-   # Requires the bucket to have retention policy enabled
-   gcloud storage buckets update gs://hamafx-backups-hamafx-78845 \
-     --retention-period=30d
-   ```
-
-3. **Back up `/opt/hamafx/.env`** off the VM. If the VM is lost, all
-   secrets (DATABASE_URL, CRON_SECRET, HC_* UUIDs, GCS bucket name)
-   must be manually restored. Store a copy in GCP Secret Manager or a
-   separate secure location:
-   ```bash
-   gcloud secrets create hamafx-vm-env --replication-policy=automatic
-   gcloud secrets versions add hamafx-vm-env --data-file=/opt/hamafx/.env
-   ```
+The nightly database and journal exports use a private B2 bucket once the
+operator configures it. Keep the bucket private, restrict the application key
+to that bucket, and configure lifecycle cleanup for seven days plus old file
+versions. VM recovery settings remain manual by choice; do not place the VM
+environment file in Secret Manager.
 
 ## Teardown
 
 ```bash
-gcloud compute instances delete hamafx-cron --zone=us-central1-a --project=hamafx-78845 --quiet
+gcloud compute instances delete hamafx-cron  --zone=us-central1-a --project=gen-lang-client-0103421645 --quiet
 ```

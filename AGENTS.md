@@ -17,6 +17,9 @@
 
 ## Quick Reference
 
+> Production operations note: the worker runs in Docker on the GCE VM with its internal scheduler. Host systemd timers are reserved for light Vercel pokes and maintenance. Backups are prepared for Backblaze B2 but intentionally remain skipped until the operator configures the account.
+
+
 | Question | Answer |
 |----------|--------|
 | Package manager | pnpm 9.15.4 |
@@ -178,12 +181,12 @@ Browser (PWA)
     │
     └── Request proxy (190 lines): NextAuth JWT check, CSRF, CSP, request-id
 
-Worker (GCE VM, systemd)
+Worker (GCE VM, Docker)
     │
     ├── SignalR consumer ──▶ TickBuffer ──▶ live_ticks (1Hz flush)
     ├── Candle1mAggregator ──▶ candles_1m (UPSERT on close)
-    ├── systemd timers ──▶ 7 heavy jobs (briefings, snapshots, cot, etc.)
-    └── Light HTTP pokers ──▶ Vercel /api/cron/* endpoints
+    ├── Docker internal scheduler ──▶ heavy jobs (briefings, snapshots, cot, etc.)
+    └── Host systemd timers ──▶ light Vercel /api/cron/* pokes + maintenance
 ```
 
 ## Key Patterns
@@ -301,7 +304,7 @@ The proxy matcher excludes these paths from processing:
 |---------|---------|
 | `kebab-case.ts` for modules | `get-candles.ts`, `memory-index.ts` |
 | `PascalCase` for React components | `ChatScreen.tsx`, `NavDrawer.tsx` |
-| `_prefix.ts` for private/internal | `_extensions.ts`, `_provision.sh` |
+| `_prefix.ts` for private/internal | `_extensions.ts`, `_provision-docker.sh` |
 | `.test.ts` for test files | `candle-1m.test.ts` |
 | `route.ts` for API route handlers | `api/chat/route.ts` |
 | `page.tsx` for Next.js pages | `(app)/chat/page.tsx` |

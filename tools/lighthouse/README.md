@@ -60,7 +60,7 @@ node tools/lighthouse/run.mjs \
 
 ```bash
 node tools/lighthouse/run.mjs \
-  --base-url https://hama-fx-ai.vercel.app \
+  --base-url https://hamafx-ai.vercel.app \
   --cookie "hfx_auth=<value>" \
   --out docs/lighthouse
 ```

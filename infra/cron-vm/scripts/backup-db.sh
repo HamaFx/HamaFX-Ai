@@ -1,26 +1,27 @@
 #!/usr/bin/env bash
-# infra/cron-vm/scripts/backup-db.sh — Nightly Postgres logical dump to GCS.
+# infra/cron-vm/scripts/backup-db.sh — Nightly Postgres logical dump to B2.
 #
-# Phase 8 PR-17. Runs at 03:00 UTC via hamafx-backup-db.timer.
+# B2 setup is intentionally deferred. The script fails clearly until the
+# operator configures BACKUP_PROVIDER=b2, B2_BUCKET, B2_KEY_ID,
+# B2_APPLICATION_KEY, and installs rclone.
 #
-# Output: gs://hamafx-backups-${PROJECT_ID}/db/YYYY-MM-DD.dump.gz
-# Format: pg_dump --format=custom (binary, idempotent restore via pg_restore).
-# Compression: gzip on stdin streaming — no /tmp staging, so a 1G dump
-# only needs disk for the active stream.
-# Retention: 30 days, enforced by the bucket lifecycle rule (PR-17 setup).
+# Output: B2 db/YYYY-MM-DD.dump.gz
+# Retention: seven days, enforced by the B2 lifecycle policy configured when
+# the account is connected. The dated object names also make retention
+# auditable and avoid accidental overwrites.
 
 set -euo pipefail
 
-# shellcheck source=./_load-env.sh
-source "$(dirname "${BASH_SOURCE[0]}")/_load-env.sh" /opt/hamafx/.env
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/_load-env.sh" /opt/hamafx/.env
+source "$SCRIPT_DIR/backup-storage.sh"
 
 DB_DUMP_URL="${DIRECT_URL:-${POSTGRES_URL_NON_POOLING:-${DATABASE_URL:-${POSTGRES_URL:-}}}}"
 : "${DB_DUMP_URL:?Set DIRECT_URL (preferred) or POSTGRES_URL_NON_POOLING / DATABASE_URL / POSTGRES_URL in /opt/hamafx/.env}"
-: "${GCS_BACKUP_BUCKET:?GCS_BACKUP_BUCKET must be set (e.g. hamafx-backups-hamafx-78845)}"
 
 HC_UUID="${HC_BACKUP_DB_UUID:-}"
 DATE_UTC="$(date -u +%Y-%m-%d)"
-TARGET="gs://${GCS_BACKUP_BUCKET}/db/${DATE_UTC}.dump.gz"
+TARGET="db/${DATE_UTC}.dump.gz"
 
 ping_hc() {
   local status="${1:-success}"
@@ -37,31 +38,24 @@ ping_hc() {
 
 log() { printf '%s [backup-db] %s\n' "$(date -u +%FT%TZ)" "$*"; }
 
-# Start ping is fire-and-forget so the dump can run concurrently.
 ping_hc start
-
 START=$(date +%s)
-# Warn if using a pooled connection — pg_dump through PgBouncer can produce
-# inconsistent dumps or fail. Set DIRECT_URL for reliable backups.
+
 if [[ "$DB_DUMP_URL" == *"pooler"* ]] || [[ "$DB_DUMP_URL" == *"pgbouncer"* ]]; then
   log "WARNING: Using pooled connection for pg_dump — set DIRECT_URL for reliable backups"
 fi
 
-log "dumping → $TARGET"
-
+log "dumping → B2 ${TARGET}"
 set -o pipefail
 if ! pg_dump --format=custom --no-owner --no-privileges --dbname="$DB_DUMP_URL" \
   | gzip --rsyncable \
-  | gcloud storage cp - "$TARGET" --quiet; then
-  log 'pg_dump | gzip | gcloud storage failed'
+  | backup_storage_upload_stream "$TARGET"; then
+  log 'pg_dump | gzip | B2 upload failed'
   ping_hc fail "pg_dump pipeline failed at $DATE_UTC"
   exit 1
 fi
 
 DURATION=$(( $(date +%s) - START ))
-
-# Confirm the object exists and report its size.
-SIZE_BYTES="$(gcloud storage objects describe "$TARGET" --format='value(size)' 2>/dev/null || echo 0)"
-
-log "done size=${SIZE_BYTES}B duration=${DURATION}s"
-ping_hc success "size=${SIZE_BYTES}B duration=${DURATION}s target=${TARGET}"
+SIZE_BYTES="$(backup_storage_size "$TARGET" 2>/dev/null || echo 0)"
+log "done provider=b2 target=${TARGET} size=${SIZE_BYTES:-0}B duration=${DURATION}s retention=7d"
+ping_hc success "size=${SIZE_BYTES:-0}B duration=${DURATION}s target=${TARGET} provider=b2 retention=7d"

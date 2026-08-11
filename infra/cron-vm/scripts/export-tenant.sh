@@ -2,7 +2,7 @@
 # infra/cron-vm/scripts/export-tenant.sh — Per-tenant data export.
 #
 # Phase 3 §3.7. Exports all data belonging to a specific tenant (user_id)
-# as a JSON file to GCS. Used for:
+# as a JSON file to B2. Used for:
 #   - GDPR data-portability requests
 #   - Per-tenant backup verification (rehearsed weekly)
 #   - Pre-deletion data extraction
@@ -10,15 +10,18 @@
 # Usage:
 #   export-tenant.sh <user_id>
 #
-# Output: gs://${GCS_BACKUP_BUCKET}/tenant-exports/<user_id>/<YYYY-MM-DD>.json
+# Output: B2 tenant-exports/<user_id>/<YYYY-MM-DD>.json
 #
 # The script exports all tenant-owned tables (tables with a user_id column)
 # as a single JSON object: { "userId": "...", "exportedAt": "...", "tables": { ... } }
+# The table list is intentionally explicit; global/system tables are excluded.
 
 set -euo pipefail
 
 # shellcheck source=./_load-env.sh
-source "$(dirname "${BASH_SOURCE[0]}")/_load-env.sh" /opt/hamafx/.env
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/_load-env.sh" /opt/hamafx/.env
+source "$SCRIPT_DIR/backup-storage.sh"
 
 USER_ID="${1:-}"
 if [[ -z "$USER_ID" ]]; then
@@ -34,11 +37,11 @@ fi
 
 DB_URL="${ADMIN_DATABASE_URL:-${DIRECT_URL:-${POSTGRES_URL_NON_POOLING:-${DATABASE_URL:-${POSTGRES_URL:-}}}}}"
 : "${DB_URL:?Set ADMIN_DATABASE_URL (preferred) or DIRECT_URL / POSTGRES_URL_NON_POOLING / DATABASE_URL / POSTGRES_URL in /opt/hamafx/.env}"
-: "${GCS_BACKUP_BUCKET:?GCS_BACKUP_BUCKET must be set}"
-
 HC_UUID="${HC_TENANT_EXPORT_UUID:-}"
 DATE_UTC="$(date -u +%Y-%m-%d)"
-TARGET="gs://${GCS_BACKUP_BUCKET}/tenant-exports/${USER_ID}/${DATE_UTC}.json"
+TARGET="tenant-exports/${USER_ID}/${DATE_UTC}.json"
+TMP_EXPORT="$(mktemp -t hamafx-tenant-export-XXXXXX.json)"
+trap 'rm -f "$TMP_EXPORT"' EXIT
 
 ping_hc() {
   local status="${1:-success}"
@@ -62,7 +65,6 @@ log "exporting tenant data for user_id=${USER_ID} → ${TARGET}"
 # Keep in sync with packages/db/src/schema/*.ts.
 TENANT_TABLES=(
   "chat_threads"
-  "chat_messages"
   "chat_telemetry"
   "chat_tool_telemetry"
   "alerts"
@@ -72,9 +74,6 @@ TENANT_TABLES=(
   "shared_snapshots"
   "user_symbols"
   "agent_opinions"
-  "decision_signals"
-  "decision_signal_outcomes"
-  "decision_signal_feedback"
   "portfolio_positions"
   "portfolio_settings"
   "notification_noise_state"
@@ -86,28 +85,40 @@ TENANT_TABLES=(
   "rate_limits"
   "audit_logs"
   "user_settings"
+  "analysis_jobs"
+  "diagnostic_traces"
 )
 
-# Build a JSON export using psql's JSON capabilities.
-# Each table is exported as a JSON array keyed by table name.
-SQL_HEADER="SELECT json_build_object('userId', :'user_id', 'exportedAt', now()::text, 'tables', jsonb_object_agg(table_name, rows)) FROM ("
+# Build a JSON export using psql's JSON capabilities. The user ID is passed
+# through psql's variable substitution and quoted as a SQL literal before it
+# enters the generated query. This avoids the invalid `:'user_id'` syntax that
+# previously appeared inside a dynamically assembled UNION query.
 SQL_BODY=""
 for i in "${!TENANT_TABLES[@]}"; do
   TABLE="${TENANT_TABLES[$i]}"
   if [[ $i -gt 0 ]]; then
     SQL_BODY+=" UNION ALL "
   fi
-  SQL_BODY+="SELECT '${TABLE}' AS table_name, COALESCE((SELECT jsonb_agg(to_jsonb(t)) FROM ${TABLE} t WHERE t.user_id = :'user_id'), '[]'::jsonb) AS rows"
+  SQL_BODY+="SELECT '${TABLE}'::text AS table_name, COALESCE((SELECT jsonb_agg(to_jsonb(t)) FROM ${TABLE} t WHERE t.user_id = :'user_id'::text), '[]'::jsonb) AS rows"
 done
-SQL_FOOTER=") sub;"
 
-FULL_SQL="${SQL_HEADER}${SQL_BODY}${SQL_FOOTER}"
+# chat_messages is related through chat_threads and intentionally has no
+# user_id column. Include it through the owning thread relationship.
+SQL_BODY+=" UNION ALL SELECT 'chat_messages'::text AS table_name, COALESCE((SELECT jsonb_agg(to_jsonb(t)) FROM chat_messages t JOIN chat_threads th ON th.id = t.thread_id WHERE th.user_id = :'user_id'::text), '[]'::jsonb) AS rows"
 
-if ! psql --dbname="$DB_URL" -A -t -v user_id="$USER_ID" -c "$FULL_SQL" | gcloud storage cp - "$TARGET" --quiet; then
-  log "export failed for user_id=${USER_ID}"
-  ping_hc fail "export failed for ${USER_ID}"
+FULL_SQL="SELECT jsonb_build_object('userId', :'user_id'::text, 'exportedAt', now()::text, 'tables', jsonb_object_agg(table_name, rows)) FROM (${SQL_BODY}) sub;"
+
+if ! psql --dbname="$DB_URL" -A -t -v user_id="$USER_ID" -c "$FULL_SQL" > "$TMP_EXPORT"; then
+  log "export query failed for user_id=${USER_ID}"
+  ping_hc fail "export query failed for ${USER_ID}"
   exit 1
 fi
 
-log "export complete → ${TARGET}"
-ping_hc success "exported ${USER_ID} to ${TARGET}"
+if ! backup_storage_upload_file "$TMP_EXPORT" "$TARGET"; then
+  log "export upload deferred or failed for user_id=${USER_ID}; configure B2 before enabling tenant export"
+  ping_hc fail "export upload unavailable: configure B2 before enabling tenant export"
+  exit 1
+fi
+
+log "export complete → B2 ${TARGET}"
+ping_hc success "exported ${USER_ID} to ${TARGET} provider=b2 retention=7d"

@@ -1,5 +1,5 @@
 [Unit]
-Description=HamaFX-Ai weekly per-tenant export rehearsal
+Description=HamaFX-Ai weekly per-tenant export rehearsal → B2 (opt-in)
 After=network-online.target
 Wants=network-online.target
 
@@ -9,6 +9,8 @@ User=hamafx
 Group=hamafx
 WorkingDirectory=/opt/hamafx
 EnvironmentFile=/opt/hamafx/.env
+# Keep the rehearsal installed but skipped until B2 is configured.
+ExecCondition=/opt/hamafx/scripts/backup-storage-ready.sh
 
 # Rehearsal: export the __system__ tenant (always exists, small dataset).
 # In production with real tenants, a separate cron or manual trigger should
