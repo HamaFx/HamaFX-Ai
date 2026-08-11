@@ -24,6 +24,8 @@ import { info, ok, paint, warn } from '../lib/ui.mjs';
 
 export const title = 'Generating secrets & writing config';
 
+export const hint = 'Changes are backed up automatically before anything is written';
+
 function showDiff(io, diff) {
   if (diff.length === 0) {
     info(io, 'No changes needed — existing config is already up to date.');

@@ -23,6 +23,8 @@ import { info } from '../lib/ui.mjs';
 
 export const title = 'Checking for an existing installation';
 
+export const hint = 'Existing files are never overwritten without a backup';
+
 const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../../..');
 
 /**
@@ -38,6 +40,7 @@ export async function run(ctx) {
 
   if (!envExists && !depsExist) {
     ctx.answers.existingAction = 'continue';
+    if (ctx.pageMode) info(io, 'No existing installation found — starting fresh.');
     return 'ok';
   }
 

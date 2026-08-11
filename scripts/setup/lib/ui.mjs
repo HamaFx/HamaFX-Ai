@@ -16,8 +16,9 @@
 
 /**
  * Terminal rendering helpers: ANSI colors, box drawing, step headers,
- * spinners, and the banner. All functions take an `io` object so they
- * can be exercised by tests without a real terminal.
+ * spinners, the banner, and full-screen step pages. All functions take
+ * an `io` object so they can be exercised by tests without a real
+ * terminal.
  */
 
 const C = {
@@ -177,4 +178,106 @@ export function stepHeader(io, { index, total, title }) {
   io.line();
   io.line(`  ${paint(`[${index}/${total}]`, 'dim')} ${paint(title, 'bold', 'cyan')}`);
   io.line(`  ${paint('─'.repeat(52), 'darkGray')}`);
+}
+
+/**
+ * Page-mode rendering: full-screen step pages.
+ *
+ * In page mode each step owns the whole screen: beginPage clears it and
+ * draws a fixed header (brand, step chip, progress bar, title), the
+ * step's content prints below, and endPage closes with a divider and a
+ * contextual hint. The cursor is hidden for the duration and restored
+ * at the end. Line mode (non-TTY, --json) keeps the classic scrolling
+ * transcript so piped output stays readable.
+ */
+
+const PAGE_CLEAR = '\x1b[2J\x1b[3J\x1b[H'; // clear screen + scrollback, home cursor
+const CURSOR_HIDE = '\x1b[?25l';
+const CURSOR_SHOW = '\x1b[?25h';
+
+/** Restore the terminal cursor (used on every exit path). */
+export function showCursor(io) {
+  io.write(CURSOR_SHOW);
+}
+
+function hideCursor(io) {
+  io.write(CURSOR_HIDE);
+}
+
+/** ANSI progress bar: filled █ cells followed by empty ░ cells. */
+function progressBar(fraction, cells = 12) {
+  const clamped = Math.max(0, Math.min(1, fraction));
+  const filled = Math.round(clamped * cells);
+  const bar = '█'.repeat(filled) + '░'.repeat(cells - filled);
+  return paint(bar, filled >= cells ? 'green' : 'cyan');
+}
+
+function pageWidth(io) {
+  return io.stdout?.columns ?? 80;
+}
+
+function pageRule(io) {
+  return '─'.repeat(Math.min(Math.max(pageWidth(io) - 4, 20), 64));
+}
+
+/**
+ * Begin a full-screen step page. Returns null when pageMode is off so
+ * callers can fall back to line-based output.
+ */
+export function beginPage(io, { pageMode, step, total, title }) {
+  if (!pageMode) return null;
+  io.write(PAGE_CLEAR);
+  hideCursor(io);
+  io.line();
+  io.line(
+    `  ${paint('◆ HamaFX-Ai Setup', 'bold', 'cyan')}${paint('  ·  ', 'dim')}${paint(`Step ${step} of ${total}`, 'dim')}   ${progressBar(step / total)}`,
+  );
+  io.line();
+  io.line(`  ${paint(title, 'bold')}`);
+  io.line(`  ${paint(pageRule(io), 'darkGray')}`);
+  io.line();
+}
+
+/** Close a step page with a divider, contextual hint, and cursor restore. */
+export function endPage(io, { hint = '' } = {}) {
+  io.line();
+  io.line(`  ${paint(pageRule(io), 'darkGray')}`);
+  if (hint) io.line(`  ${paint(hint, 'dim')}`);
+  io.line();
+  showCursor(io);
+}
+
+/**
+ * Render a two-column feature comparison as painted lines — used by the
+ * mode page. Each side is [icon, text] rows; over-long cells are
+ * truncated. Pure function so it is unit-testable.
+ */
+export function renderComparison({ leftTitle, rightTitle, left, right, width = 60 }) {
+  const gap = 4;
+  const half = Math.max(Math.floor((width - gap) / 2), 16);
+
+  const mark = (icon) =>
+    icon === '✓' ? paint('✓', 'green') : icon === '!' ? paint('!', 'yellow') : paint('✗', 'red');
+  const cell = (icon, text, w) => {
+    const raw = `${icon} ${text}`;
+    const fitted = raw.length > w ? `${raw.slice(0, w - 1)}…` : raw;
+    return `${mark(icon)}${paint(fitted.slice(icon.length))}`;
+  };
+  const fitTitle = (t, w) => (t.length > w ? `${t.slice(0, w - 1)}…` : t);
+  const padTo = (s, w) => `${s}${' '.repeat(Math.max(0, w - stripAnsi(s).length))}`;
+
+  const rows = Math.max(left.length, right.length);
+  const out = [];
+  out.push(
+    `${padTo(paint(fitTitle(leftTitle, half), 'bold', 'cyan'), half)}${' '.repeat(gap)}${paint(fitTitle(rightTitle, half), 'bold', 'teal')}`,
+  );
+  out.push(
+    `${paint('─'.repeat(half), 'darkGray')}${' '.repeat(gap)}${paint('─'.repeat(half), 'darkGray')}`,
+  );
+  for (let i = 0; i < rows; i++) {
+    const l = left[i] ? padTo(cell(left[i][0], left[i][1], half), half) : ' '.repeat(half);
+    const r = right[i] ? cell(right[i][0], right[i][1], half) : '';
+    out.push(`${l}${' '.repeat(gap)}${r}`);
+  }
+  return out;
 }

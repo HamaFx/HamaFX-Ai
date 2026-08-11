@@ -24,6 +24,8 @@ import { fail, info, ok, paint } from '../lib/ui.mjs';
 
 export const title = 'Installing dependencies';
 
+export const hint = 'Installing dependencies can take a few minutes on a fresh clone';
+
 export async function run(ctx) {
   const { io, flags } = ctx;
   const repoRoot = resolve(ctx.root ?? process.cwd());

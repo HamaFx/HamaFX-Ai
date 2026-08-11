@@ -26,8 +26,19 @@ import { fail, ok, paint } from '../lib/ui.mjs';
 
 export const title = 'Checking what is available on this computer';
 
+export const hint = 'Missing a tool? Install it, then re-run: pnpm setup';
+
 export function run(ctx) {
   const { io } = ctx;
+
+  if (ctx.pageMode) {
+    io.line(
+      `  ${paint('Welcome!', 'bold', 'cyan')} Let us get HamaFX-Ai running on your computer.`,
+    );
+    io.line(`  ${paint("We'll check your environment, then configure and launch it.", 'dim')}`);
+    io.line();
+  }
+
   const node = getNodeInfo();
   const pnpm = getPackageManager();
   const git = getGitInfo();

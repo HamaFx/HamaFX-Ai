@@ -23,6 +23,8 @@ import { box, fail, info, note, ok, paint, startSpinner, warn } from '../lib/ui.
 
 export const title = 'Ready to launch';
 
+export const hint = 'Setup is complete — the summary below shows how to get started';
+
 const APP_URL = 'http://localhost:3000';
 const HEALTH_URL = 'http://localhost:3000/api/health/public';
 
@@ -60,14 +62,38 @@ function printGettingStarted(io) {
   );
 }
 
+/** Compact summary used on the full-screen launch page. */
+function printCompactSummary(ctx) {
+  const { io, answers } = ctx;
+  const keys = Object.keys(answers.marketKeys ?? {});
+  const lines = [
+    `${paint('Mode:', 'bold')}         ${answers.mode === 'docker' ? 'Full mode (Docker)' : 'Simple mode'}`,
+    `${paint('Market data:', 'bold')}  ${
+      keys.length > 0
+        ? keys.map((k) => k.replace('_API_KEY', '')).join(', ')
+        : paint('none (optional)', 'dim')
+    }`,
+    `${paint('Config file:', 'bold')} ${answers.mode === 'docker' ? '.env' : '.env.local'}`,
+    `${paint('App URL:', 'bold')}     ${APP_URL}`,
+  ];
+  box(io, 'Setup complete', lines, { color: 'green', minWidth: 44 });
+}
+
 export async function run(ctx) {
   const { io, flags } = ctx;
   const repoRoot = resolve(ctx.root ?? process.cwd());
   const isDocker = ctx.answers.mode === 'docker';
 
-  printSummary(ctx);
-  printGettingStarted(io);
-  io.line();
+  if (ctx.pageMode) {
+    printCompactSummary(ctx);
+    io.line();
+    info(io, `Register at ${APP_URL}/register, then add your AI key in Settings → API Keys.`);
+    io.line();
+  } else {
+    printSummary(ctx);
+    printGettingStarted(io);
+    io.line();
+  }
 
   const startCommand = isDocker
     ? 'docker compose up -d --build'

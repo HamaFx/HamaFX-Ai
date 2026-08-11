@@ -170,6 +170,10 @@ function makeKeyReader(stdin) {
  * prompt decides how to abort instead of the process dying mid-render.
  */
 function withRawMode(io, fn) {
+  // A real raw-mode prompt is about to render — record it so the
+  // orchestrator can tell interactive steps (no page pause needed) from
+  // auto-advancing ones (which get a short read-time pause).
+  io.prompted = true;
   const wasRaw = io.stdin.isRaw ?? false;
   const cleanup = () => {
     const idx = rawCleanups.indexOf(cleanup);

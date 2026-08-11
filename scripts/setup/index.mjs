@@ -34,7 +34,17 @@ import { fileURLToPath } from 'node:url';
 
 import { createIO } from './lib/io.mjs';
 import { CancelError, restoreTerminal } from './lib/prompts.mjs';
-import { fail, paint, printBanner, setColorEnabled, stepHeader, warn } from './lib/ui.mjs';
+import {
+  beginPage,
+  endPage,
+  fail,
+  paint,
+  printBanner,
+  setColorEnabled,
+  showCursor,
+  stepHeader,
+  warn,
+} from './lib/ui.mjs';
 import * as configStep from './steps/config.mjs';
 import * as detectStep from './steps/detect-existing.mjs';
 import * as installStep from './steps/install.mjs';
@@ -46,16 +56,16 @@ import * as prereqsStep from './steps/prereqs.mjs';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = resolve(__dirname, '../..');
 
-// Plain { title, run } objects (not namespace references) so static
+// Plain { title, hint, run } objects (not namespace references) so static
 // analyzers can trace the exports of each step module.
 export const STEPS = [
-  { title: prereqsStep.title, run: prereqsStep.run },
-  { title: modeStep.title, run: modeStep.run },
-  { title: detectStep.title, run: detectStep.run },
-  { title: marketStep.title, run: marketStep.run },
-  { title: configStep.title, run: configStep.run },
-  { title: installStep.title, run: installStep.run },
-  { title: launchStep.title, run: launchStep.run },
+  { title: prereqsStep.title, hint: prereqsStep.hint, run: prereqsStep.run },
+  { title: modeStep.title, hint: modeStep.hint, run: modeStep.run },
+  { title: detectStep.title, hint: detectStep.hint, run: detectStep.run },
+  { title: marketStep.title, hint: marketStep.hint, run: marketStep.run },
+  { title: configStep.title, hint: configStep.hint, run: configStep.run },
+  { title: installStep.title, hint: installStep.hint, run: installStep.run },
+  { title: launchStep.title, hint: launchStep.hint, run: launchStep.run },
 ];
 
 /** Minimal flag parser — no dependency, exact semantics we need. */
@@ -154,10 +164,20 @@ export async function main(argv = process.argv.slice(2), { io: customIo, jsonStr
   const flags = parseFlags(argv);
   const jsonMode = flags.json;
   const io = customIo ?? createIO({ stdout: jsonMode ? process.stderr : process.stdout });
+  // Full-screen page mode only on a real TTY outside --json (which is
+  // stdout-pure). Everything else keeps the scrolling transcript.
+  const pageMode = !jsonMode && Boolean(io.stdout?.isTTY);
+  const restoreCursor = () => {
+    if (pageMode) showCursor(io);
+  };
   const writeJson = (obj) => {
     const target = jsonStream ?? process.stdout;
     target.write(`${JSON.stringify(obj, null, 2)}\n`);
   };
+  // Give non-interactive pages a beat on screen so the user can read
+  // them before the next page clears (interactive steps set io.prompted).
+  const sleep = (ms) => new Promise((resolvePromise) => setTimeout(resolvePromise, ms));
+  const PAGE_READ_MS = 650;
 
   if (flags.noColor) setColorEnabled(false);
   if (flags.help) {
@@ -188,6 +208,7 @@ export async function main(argv = process.argv.slice(2), { io: customIo, jsonStr
   // Graceful SIGINT outside prompts (e.g. during install/spinner).
   process.on('SIGINT', () => {
     restoreTerminal();
+    restoreCursor();
     if (jsonMode) {
       writeJson({ ok: false, cancelled: true });
     } else {
@@ -197,12 +218,13 @@ export async function main(argv = process.argv.slice(2), { io: customIo, jsonStr
     process.exit(130);
   });
 
-  if (!jsonMode) printBanner(io);
+  if (!jsonMode && !pageMode) printBanner(io);
 
   const ctx = {
     io,
     flags,
     root: REPO_ROOT,
+    pageMode,
     prereqs: null,
     answers: {
       mode: null,
@@ -216,13 +238,22 @@ export async function main(argv = process.argv.slice(2), { io: customIo, jsonStr
     let i = 0;
     while (i < STEPS.length) {
       const step = STEPS[i];
-      if (!jsonMode) stepHeader(io, { index: i + 1, total: STEPS.length, title: step.title });
+      if (!jsonMode) {
+        if (pageMode) {
+          beginPage(io, { pageMode, step: i + 1, total: STEPS.length, title: step.title });
+        } else {
+          stepHeader(io, { index: i + 1, total: STEPS.length, title: step.title });
+        }
+      }
+      io.prompted = false;
       const result = await step.run(ctx);
+      if (pageMode && result !== 'back') endPage(io, { hint: step.hint });
       if (result === 'back') {
         i = Math.max(0, i - 1);
         continue;
       }
       if (result === 'abort') {
+        restoreCursor();
         if (jsonMode) {
           writeJson({ ok: false, cancelled: true });
         } else {
@@ -232,11 +263,17 @@ export async function main(argv = process.argv.slice(2), { io: customIo, jsonStr
         return 130;
       }
       i++;
+      // Read-time pause after auto-advancing pages, so synchronous steps
+      // (prereqs, config, ...) stay visible before the next page clears.
+      if (pageMode && result === 'ok' && !io.prompted && i < STEPS.length) {
+        await sleep(PAGE_READ_MS);
+      }
     }
     if (jsonMode) writeJson(buildResult(ctx, flags));
     return 0;
   } catch (err) {
     if (err instanceof CancelError) {
+      restoreCursor();
       if (jsonMode) {
         writeJson({ ok: false, cancelled: true });
       } else {
@@ -245,6 +282,7 @@ export async function main(argv = process.argv.slice(2), { io: customIo, jsonStr
       }
       return 130;
     }
+    restoreCursor();
     if (jsonMode) {
       writeJson({ ok: false, error: err?.message ?? String(err) });
     } else {

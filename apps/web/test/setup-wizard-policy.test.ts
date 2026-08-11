@@ -51,6 +51,7 @@ describe('setup wizard structure', () => {
     for (const step of steps) {
       expect(typeof step.run, `${step.title ?? 'step'} exports run`).toBe('function');
       expect(typeof step.title, `${step.title ?? 'step'} exports title`).toBe('string');
+      expect(typeof step.hint, `${step.title ?? 'step'} exports hint`).toBe('string');
     }
   });
 

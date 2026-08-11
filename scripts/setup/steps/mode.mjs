@@ -16,9 +16,11 @@
 
 import { getDockerInfo, waitForDocker } from '../lib/prereqs.mjs';
 import { confirm, select } from '../lib/prompts.mjs';
-import { box, info, note, paint, startSpinner, warn } from '../lib/ui.mjs';
+import { box, info, note, paint, renderComparison, startSpinner, warn } from '../lib/ui.mjs';
 
 export const title = 'Choose your setup mode';
+
+export const hint = 'Simple = zero-Docker dev box · Full = complete self-hosted stack';
 
 const LOCAL_FEATURES = [
   ['✓', 'Embedded Postgres (PGlite)', 'No Docker needed'],
@@ -74,7 +76,14 @@ function printModeBoxes(io) {
   io.line();
 }
 
-function printByokNote(io) {
+function printByokNote(io, compact) {
+  if (compact) {
+    info(
+      io,
+      'BYOK: no server-level AI keys needed — add yours after registering (Settings → API Keys).',
+    );
+    return;
+  }
   note(
     io,
     'Bring Your Own Key (BYOK)',
@@ -90,9 +99,34 @@ function printByokNote(io) {
   );
 }
 
+/** Compact two-column comparison used on the full-screen mode page. */
+function printCompactComparison(io) {
+  const lines = renderComparison({
+    leftTitle: 'Simple — lightweight',
+    left: [
+      ['✓', 'PGlite embedded · no Docker'],
+      ['✓', 'Fast startup · hot reload'],
+      ['✓', 'Full web app + AI chat'],
+      ['✗', 'No vector search (RAG)'],
+      ['✗', 'No live market data'],
+    ],
+    rightTitle: 'Full — Docker stack',
+    right: [
+      ['✓', 'Postgres 16 + pgvector'],
+      ['✓', 'Worker · live market data'],
+      ['✓', 'Langfuse observability'],
+      ['!', 'First build ~3–5 min'],
+    ],
+    width: 60,
+  });
+  for (const line of lines) io.line(`  ${line}`);
+  io.line();
+}
+
 export async function run(ctx) {
   const { io, flags } = ctx;
-  printModeBoxes(io);
+  if (ctx.pageMode) printCompactComparison(io);
+  else printModeBoxes(io);
 
   const docker = ctx.prereqs?.docker ?? getDockerInfo();
   const auto = flags.yes || flags.json || !io.isTTY;
@@ -121,7 +155,7 @@ export async function run(ctx) {
         mode === 'docker' ? 'teal' : 'cyan',
       )} ${paint('(from --mode)', 'dim')}`,
     );
-    printByokNote(io);
+    printByokNote(io, ctx.pageMode);
     return 'ok';
   }
 
@@ -170,6 +204,6 @@ export async function run(ctx) {
   io.line(
     `  ${paint('→', 'green')} Selected: ${paint(mode === 'docker' ? 'Full mode (Docker)' : 'Simple mode', 'bold', mode === 'docker' ? 'teal' : 'cyan')}`,
   );
-  printByokNote(io);
+  printByokNote(io, ctx.pageMode);
   return 'ok';
 }

@@ -21,6 +21,8 @@ import { info, ok, paint, warn } from '../lib/ui.mjs';
 
 export const title = 'Market data providers (optional)';
 
+export const hint = 'Keys are optional — add them later in Settings or the .env file';
+
 /**
  * Keys are optional and stored at the env level (FINNHUB_API_KEY, …).
  * Selection is a checkbox multiselect; keys are typed with masking.
@@ -34,14 +36,19 @@ export async function run(ctx) {
   info(io, 'Market data keys are optional — the app works without them.');
   info(io, 'They unlock live news, economic calendars, and enriched data.');
 
-  for (let i = 0; i < MARKET_DATA_PROVIDERS.length; i++) {
-    const p = MARKET_DATA_PROVIDERS[i];
-    io.line(
-      `  ${paint(`${i + 1}.`, 'cyan')} ${paint(p.label, 'bold')} ${paint(`(${p.hint})`, 'dim')}`,
-    );
-    io.line(`     ${paint('Get key:', 'dim')} ${p.url}`);
+  // The full-screen page drops the numbered list — the multiselect below
+  // already shows every provider with its hint, so a second list is just
+  // redundant scrolling.
+  if (!ctx.pageMode) {
+    for (let i = 0; i < MARKET_DATA_PROVIDERS.length; i++) {
+      const p = MARKET_DATA_PROVIDERS[i];
+      io.line(
+        `  ${paint(`${i + 1}.`, 'cyan')} ${paint(p.label, 'bold')} ${paint(`(${p.hint})`, 'dim')}`,
+      );
+      io.line(`     ${paint('Get key:', 'dim')} ${p.url}`);
+    }
+    io.line();
   }
-  io.line();
 
   let selectedIds;
   if (flags.market) {
