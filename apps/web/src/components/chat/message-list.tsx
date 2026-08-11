@@ -47,7 +47,7 @@ interface MessageListProps {
   messages: UIMessage[];
   isStreaming?: boolean;
   showTypingIndicator?: boolean;
-  scrollContainerRef?: React.RefObject<HTMLDivElement | null>;
+  scrollElement?: HTMLDivElement | null;
   /** Index of the last assistant message — gets the regenerate affordance. */
   lastAssistantId?: string;
   onCopy?: (text: string) => void;
@@ -59,7 +59,7 @@ export const MessageList = memo(function MessageList({
   messages,
   isStreaming,
   showTypingIndicator,
-  scrollContainerRef,
+  scrollElement,
   lastAssistantId,
   onCopy,
   onRegenerate,
@@ -69,7 +69,7 @@ export const MessageList = memo(function MessageList({
 
   const rowVirtualizer = useVirtualizer({
     count,
-    getScrollElement: () => scrollContainerRef?.current ?? null,
+    getScrollElement: () => scrollElement ?? null,
     estimateSize: (index) => {
       const msg = messages[index];
       if (!msg) return 180;

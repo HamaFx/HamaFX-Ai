@@ -31,6 +31,7 @@ describe('useAutoScroll', () => {
     const { result } = renderHook(() =>
       useAutoScroll({
         scrollRef: ref,
+        scrollElement: div,
         dependency: [],
         resetKey: 'thread-1',
         isStreaming: false,
@@ -53,6 +54,7 @@ describe('useAutoScroll', () => {
     renderHook(() =>
       useAutoScroll({
         scrollRef: ref,
+        scrollElement: div,
         dependency: [],
         resetKey: 'thread-1',
         isStreaming: false,
@@ -68,6 +70,7 @@ describe('useAutoScroll', () => {
     const { result } = renderHook(() =>
       useAutoScroll({
         scrollRef: ref,
+        scrollElement: div,
         dependency: [],
         resetKey: 'thread-1',
         isStreaming: false,
@@ -82,6 +85,7 @@ describe('useAutoScroll', () => {
     const { result } = renderHook(() =>
       useAutoScroll({
         scrollRef: ref,
+        scrollElement: null,
         dependency: [],
         resetKey: 'thread-1',
         isStreaming: false,
@@ -98,6 +102,7 @@ describe('useAutoScroll', () => {
     renderHook(() =>
       useAutoScroll({
         scrollRef: ref,
+        scrollElement: div,
         dependency: [],
         resetKey: 'thread-1',
         isStreaming: false,
@@ -112,6 +117,7 @@ describe('useAutoScroll', () => {
     const { unmount } = renderHook(() =>
       useAutoScroll({
         scrollRef: ref,
+        scrollElement: div,
         dependency: [],
         resetKey: 'thread-1',
         isStreaming: false,

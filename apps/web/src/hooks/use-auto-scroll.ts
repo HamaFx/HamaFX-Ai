@@ -29,6 +29,8 @@ import { useEffect, useState, useCallback } from 'react';
 interface UseAutoScrollOptions {
   /** External ref to the scroll container element. */
   scrollRef: React.RefObject<HTMLDivElement | null>;
+  /** The mounted scroll element. State-backed so effects rerun after mount. */
+  scrollElement: HTMLDivElement | null;
   /** Value that triggers auto-scroll when it changes (e.g. messages array). */
   dependency: unknown;
   /** Unique key that resets scroll position (e.g. threadId). */
@@ -46,6 +48,7 @@ interface UseAutoScrollResult {
 
 export function useAutoScroll({
   scrollRef,
+  scrollElement,
   dependency,
   resetKey,
   isStreaming,
@@ -55,7 +58,7 @@ export function useAutoScroll({
 
   // Track scroll position to show/hide the "Scroll to Bottom" FAB.
   useEffect(() => {
-    const el = scrollRef.current;
+    const el = scrollElement ?? scrollRef.current;
     if (!el) return;
     const handleScroll = () => {
       const dist = el.scrollHeight - el.scrollTop - el.clientHeight;
@@ -64,20 +67,20 @@ export function useAutoScroll({
     el.addEventListener('scroll', handleScroll, { passive: true });
     handleScroll();
     return () => el.removeEventListener('scroll', handleScroll);
-  }, [scrollRef, threshold]);
+  }, [scrollElement, scrollRef, threshold]);
 
   // Initial scroll-to-bottom on reset. Instant, not smooth.
   useEffect(() => {
-    const el = scrollRef.current;
+    const el = scrollElement ?? scrollRef.current;
     if (!el) return;
     requestAnimationFrame(() => {
       el.scrollTop = el.scrollHeight;
     });
-  }, [resetKey, scrollRef]);
+  }, [resetKey, scrollElement, scrollRef]);
 
   // Auto-scroll on new content.
   useEffect(() => {
-    const el = scrollRef.current;
+    const el = scrollElement ?? scrollRef.current;
     if (!el) return;
     const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
     if (distanceFromBottom < threshold) {
@@ -89,13 +92,13 @@ export function useAutoScroll({
         }
       });
     }
-  }, [dependency, isStreaming, scrollRef, threshold]);
+  }, [dependency, isStreaming, scrollElement, scrollRef, threshold]);
 
   const scrollToBottom = useCallback(() => {
-    const el = scrollRef.current;
+    const el = scrollElement ?? scrollRef.current;
     if (!el) return;
     el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
-  }, [scrollRef]);
+  }, [scrollElement, scrollRef]);
 
   return { showScrollFab, scrollToBottom };
 }

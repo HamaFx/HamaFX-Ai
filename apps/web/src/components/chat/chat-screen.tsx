@@ -93,6 +93,7 @@ export function ChatScreen({
   const lastUserTextRef = useRef<string>('');
   const autoSubmittedRef = useRef<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [scrollElement, setScrollElement] = useState<HTMLDivElement | null>(null);
   const router = useRouter();
   const [analysisMode, setAnalysisMode] = useState<AnalysisMode>('auto');
 
@@ -195,8 +196,14 @@ export function ChatScreen({
   // H2: Auto-scroll via dedicated hook (isStreaming defined before use).
   const isStreaming = useMemo(() => status === 'submitted' || status === 'streaming', [status]);
 
+  const setScrollContainer = useCallback((element: HTMLDivElement | null) => {
+    scrollRef.current = element;
+    setScrollElement(element);
+  }, []);
+
   const { showScrollFab, scrollToBottom } = useAutoScroll({
     scrollRef,
+    scrollElement,
     dependency: messages,
     resetKey: threadId,
     isStreaming,
@@ -301,7 +308,7 @@ export function ChatScreen({
         onAnalysisModeChange={setAnalysisMode}
       />
 
-      <div ref={scrollRef} className="scrollbar-hide no-overscroll relative flex-1 overflow-y-auto">
+      <div ref={setScrollContainer} className="scrollbar-hide no-overscroll relative flex-1 overflow-y-auto">
         <div className="mx-auto max-w-2xl px-4 py-4">
           {summary ? (
             <div className="px-3 pt-2">
@@ -331,7 +338,7 @@ export function ChatScreen({
               messages={messages}
               isStreaming={isStreaming}
               showTypingIndicator={status === 'submitted'}
-              scrollContainerRef={scrollRef}
+              scrollElement={scrollElement}
               lastAssistantId={lastAssistantId}
               onCopy={handleCopy}
               onRegenerate={handleRegenerate}
