@@ -73,11 +73,11 @@ test.describe('Thread switcher', () => {
 
     // A nonsense query must produce the no-matches state.
     await search.fill('zzzz-no-such-thread');
-    await expect(page.getByText('No matches.')).toBeVisible();
+    await expect(page.getByText('No matches')).toBeVisible();
 
     // Clearing restores the rows (the New conversation entry is always present).
     await search.fill('');
-    await expect(page.getByText('No matches.')).not.toBeVisible();
+    await expect(page.getByText('No matches')).not.toBeVisible();
     await expect(page.getByText('New conversation')).toBeVisible();
   });
 

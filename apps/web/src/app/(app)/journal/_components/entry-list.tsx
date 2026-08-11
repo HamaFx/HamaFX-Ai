@@ -25,8 +25,10 @@ import { useState, useMemo, useRef } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 
 import { useConfirm } from '@/components/ui/confirm-drawer';
+import { EmptyState } from '@/components/ui/empty-state';
 import { usePrices } from '@/hooks/use-prices';
 import { cn } from '@/lib/cn';
+import { formatRelative } from '@/lib/format';
 import { EntryRow } from './entry-row';
 
 interface EntryListProps {
@@ -66,8 +68,8 @@ export function EntryList({ entries, onClosed, onDeleted }: EntryListProps) {
     const map = new Map<string, { openedAt: string; closedAt: string | null }>();
     entries.forEach((e) => {
       map.set(e.id, {
-        openedAt: relative(e.openedAt),
-        closedAt: e.closedAt ? relative(e.closedAt) : null,
+        openedAt: formatRelative(e.openedAt),
+        closedAt: e.closedAt ? formatRelative(e.closedAt) : null,
       });
     });
     return map;
@@ -269,17 +271,22 @@ export function EntryList({ entries, onClosed, onDeleted }: EntryListProps) {
 
       {/* Entries IconList */}
       {filteredEntries.length === 0 ? (
-        <div className="border border-border bg-bg-elev-1 rounded-sm p-8 text-center flex flex-col items-center justify-center gap-2">
-          <div className="size-10 rounded-sm bg-bg-elev-2 border border-border flex items-center justify-center text-fg-muted">
-            <IconCompass className="size-5" />
-          </div>
-          <p className="text-sm font-semibold text-fg">No entries found</p>
-          <p className="text-xs text-fg-subtle max-w-[280px]">
-            {search || symbolFilter !== 'ALL' || sideFilter !== 'ALL' || tagFilter !== 'ALL'
-              ? 'Try modifying your search query or filters.'
-              : 'Log your first trade to activate your portfolio analytics.'}
-          </p>
-        </div>
+        (() => {
+          const isFiltered =
+            search || symbolFilter !== 'ALL' || sideFilter !== 'ALL' || tagFilter !== 'ALL';
+          return (
+            <EmptyState
+              tone={isFiltered ? 'muted' : 'brand'}
+              icon={<IconCompass className="size-5" />}
+              title={isFiltered ? 'No entries match' : 'No entries yet'}
+              description={
+                isFiltered
+                  ? 'Try widening your search or clearing a filter to see more trades.'
+                  : 'Log your first trade to activate your portfolio analytics.'
+              }
+            />
+          );
+        })()
       ) : (
         <div
           ref={parentRef}
@@ -329,15 +336,4 @@ export function EntryList({ entries, onClosed, onDeleted }: EntryListProps) {
       {confirmEl}
     </div>
   );
-}
-
-function relative(ms: number): string {
-  const diff = Date.now() - ms;
-  const min = Math.round(diff / 60_000);
-  if (min < 1) return 'just now';
-  if (min < 60) return `${min}m ago`;
-  const hr = Math.round(min / 60);
-  if (hr < 24) return `${hr}h ago`;
-  const day = Math.round(hr / 24);
-  return `${day}d ago`;
 }

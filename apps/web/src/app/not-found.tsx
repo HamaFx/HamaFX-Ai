@@ -26,7 +26,7 @@ export default function NotFound() {
       </div>
       <Link
         href="/chat"
-        className="bg-fg text-black inline-flex h-9 items-center rounded-sm px-4 text-sm font-medium hover:opacity-90 transition-opacity"
+        className="bg-fg text-black inline-flex h-10 items-center rounded-sm px-4 text-sm font-medium hover:opacity-90 transition-opacity"
       >
         Go to chat
       </Link>

@@ -107,7 +107,7 @@ export function NewsToolbar({
               tabIndex={active ? 0 : -1}
               onClick={() => onSentiment(s.value)}
               className={cn(
-                'inline-flex h-9 shrink-0 items-center gap-1.5 rounded-sm border px-3 text-xs font-semibold transition-colors focus-visible:ring-2 focus-visible:ring-fg focus-visible:outline-none',
+                'inline-flex h-10 shrink-0 items-center gap-1.5 rounded-sm border px-3 text-xs font-semibold transition-colors focus-visible:ring-2 focus-visible:ring-fg focus-visible:outline-none',
                 active
                   ? 'bg-fg text-black border-border'
                   : 'border-border bg-bg-elev-1/60 text-fg-muted hover:text-fg',
@@ -170,7 +170,7 @@ function SymbolChip({
       tabIndex={tabIndex ?? -1}
       onClick={onClick}
       className={cn(
-        'inline-flex h-9 shrink-0 items-center rounded-sm border px-3 text-body-sm font-semibold uppercase tabular-nums transition-colors focus-visible:ring-2 focus-visible:ring-fg focus-visible:outline-none',
+        'inline-flex h-10 shrink-0 items-center rounded-sm border px-3 text-body-sm font-semibold uppercase tabular-nums transition-colors focus-visible:ring-2 focus-visible:ring-fg focus-visible:outline-none',
         active
           ? 'bg-bg-elev-3 text-fg border-border'
           : 'border-border bg-bg-elev-1/60 text-fg-muted hover:text-fg',

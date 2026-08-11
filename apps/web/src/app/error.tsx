@@ -57,7 +57,7 @@ export default function ErrorPage({ error, reset }: ErrorPageProps) {
         </Button>
         <Link
           href="/chat"
-          className="border border-border bg-bg-elev-1 text-fg hover:bg-bg-elev-2 inline-flex h-9 items-center justify-center rounded-sm px-4 text-sm font-medium transition-colors"
+          className="border border-border bg-bg-elev-1 text-fg hover:bg-bg-elev-2 inline-flex h-10 items-center justify-center rounded-sm px-4 text-sm font-medium transition-colors"
         >
           Go to chat
         </Link>

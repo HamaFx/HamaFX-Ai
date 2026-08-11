@@ -145,7 +145,7 @@ export function CalendarView({ initialEvents }: CalendarViewProps) {
           onClick={manualRefresh}
           disabled={pending}
           aria-label="Refresh now"
-          className="text-fg-muted hover:text-fg hover:bg-bg-elev-2 inline-flex h-9 items-center gap-1.5 rounded-sm px-3 text-xs font-medium transition-colors disabled:opacity-50"
+          className="text-fg-muted hover:text-fg hover:bg-bg-elev-2 inline-flex h-10 items-center gap-1.5 rounded-sm px-3 text-xs font-medium transition-colors disabled:opacity-50"
         >
           <IconRefresh className={cn('size-3.5', pending && 'animate-spin')} />
           {pending ? 'Refreshing…' : `Updated ${formatRelative(lastRefreshed)}`}

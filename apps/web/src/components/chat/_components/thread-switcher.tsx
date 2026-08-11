@@ -2,11 +2,12 @@
 
 import { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { IconSearch, IconPlus, IconLoader2, IconTrash, IconCheck } from '@tabler/icons-react';
+import { IconSearch, IconPlus, IconLoader2, IconTrash, IconCheck, IconMessages } from '@tabler/icons-react';
 import { toast } from 'sonner';
 
 import { useConfirm } from '@/components/ui/confirm-drawer';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from '@/components/ui/drawer';
+import { EmptyState } from '@/components/ui/empty-state';
 import { cn } from '@/lib/cn';
 import { apiMutate } from '@/lib/api-client';
 import { formatRelative } from '@/lib/format';
@@ -128,7 +129,7 @@ export function ThreadSwitcher({ open, onOpenChange, threadId, threads, onPickNe
                 type="button"
                 onClick={() => (selectMode ? exitSelectMode() : setSelectMode(true))}
                 aria-pressed={selectMode}
-                className="text-fg-muted hover:text-fg border-border/60 hover:bg-bg-elev-2 inline-flex h-9 items-center gap-1.5 rounded-sm border px-3 text-caption font-medium"
+                className="text-fg-muted hover:text-fg border-border/60 hover:bg-bg-elev-2 inline-flex h-10 items-center gap-1.5 rounded-sm border px-3 text-caption font-medium"
               >
                 {selectMode ? 'Cancel' : 'Select'}
               </button>
@@ -176,9 +177,25 @@ export function ThreadSwitcher({ open, onOpenChange, threadId, threads, onPickNe
         <div className="border-border border-t" />
         <ul className="scrollbar-hide flex max-h-[60svh] flex-col gap-1 overflow-y-auto px-2 pb-4 pt-2">
           {filtered.length === 0 ? (
-            <p className="text-fg-subtle px-3 py-4 text-center text-sm">
-              {query ? 'No matches.' : 'No other conversations.'}
-            </p>
+            <li className="px-1">
+              <EmptyState
+                bare
+                tone="muted"
+                icon={
+                  query ? (
+                    <IconSearch className="size-5" aria-hidden="true" />
+                  ) : (
+                    <IconMessages className="size-5" aria-hidden="true" />
+                  )
+                }
+                title={query ? 'No matches' : 'No other conversations'}
+                description={
+                  query
+                    ? 'Try a different search term.'
+                    : 'Start a new conversation to keep the ideas flowing.'
+                }
+              />
+            </li>
           ) : (
             filtered.map((t) => {
               const isActive = t.id === threadId;
@@ -251,7 +268,7 @@ export function ThreadSwitcher({ open, onOpenChange, threadId, threads, onPickNe
               <button
                 type="button"
                 onClick={exitSelectMode}
-                className="text-fg-muted hover:text-fg border-border/60 hover:bg-bg-elev-2 inline-flex h-9 items-center rounded-sm border px-3 text-caption font-medium"
+                className="text-fg-muted hover:text-fg border-border/60 hover:bg-bg-elev-2 inline-flex h-10 items-center rounded-sm border px-3 text-caption font-medium"
               >
                 Cancel
               </button>
@@ -260,7 +277,7 @@ export function ThreadSwitcher({ open, onOpenChange, threadId, threads, onPickNe
                 onClick={() => void bulkDelete()}
                 disabled={selectedIds.size === 0 || deleting}
                 aria-label={`Delete ${selectedIds.size} selected conversation${selectedIds.size === 1 ? '' : 's'}`}
-                className="text-danger border-danger/40 hover:bg-danger/15 inline-flex h-9 items-center gap-1.5 rounded-sm border px-3 text-caption font-semibold disabled:cursor-not-allowed disabled:opacity-50"
+                className="text-danger border-danger/40 hover:bg-danger/15 inline-flex h-10 items-center gap-1.5 rounded-sm border px-3 text-caption font-semibold disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {deleting ? (
                   <IconLoader2 className="size-3 animate-spin" aria-hidden="true" />

@@ -144,9 +144,29 @@ export function AlertList() {
           }
         />
       ) : filteredAlerts?.length === 0 ? (
-        <div role="status" className="py-12 text-center text-sm text-fg-muted">
-          No {filter} alerts found.
-        </div>
+        <EmptyState
+          tone="muted"
+          icon={
+            filter === 'past' ? (
+              <IconBellRinging className="size-7" strokeWidth={1.75} />
+            ) : (
+              <IconBellOff className="size-7" strokeWidth={1.75} />
+            )
+          }
+          title={`No ${filter} alerts`}
+          description={
+            filter === 'past'
+              ? 'No triggered or paused alerts in this view yet.'
+              : 'No currently active alerts — pause an alert to see it here.'
+          }
+          action={
+            filter !== 'all' ? (
+              <Button type="button" variant="secondary" size="sm" onClick={() => setFilter('all')}>
+                Show all alerts
+              </Button>
+            ) : undefined
+          }
+        />
       ) : (
         <ul className="flex flex-col gap-3">
           {filteredAlerts?.map((a) => (

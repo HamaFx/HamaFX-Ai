@@ -226,7 +226,7 @@ export function FallbackChainPicker({
             size="sm"
             onClick={handleAdd}
             disabled={!selectedToAdd || pending}
-            className="shrink-0 h-9"
+            className="shrink-0"
           >
             {pending ? (
               <IconLoader2 className="size-3.5 animate-spin" />

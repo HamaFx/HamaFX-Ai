@@ -64,37 +64,10 @@ export function SentimentSummary({ articles }: SentimentSummaryProps) {
         </span>
       </header>
 
-      {/* Stacked sentiment bar */}
-      <div className="bg-bg-elev-2 flex h-2 w-full overflow-hidden rounded-sm">
-        {counts.positive > 0 ? (
-          <span
-            className="bg-bull h-full"
-            style={{ width: `${pct(counts.positive)}%` }}
-            aria-hidden="true"
-          />
-        ) : null}
-        {counts.neutral > 0 ? (
-          <span
-            className="bg-fg-subtle h-full"
-            style={{ width: `${pct(counts.neutral)}%`, opacity: 0.6 }}
-            aria-hidden="true"
-          />
-        ) : null}
-        {counts.none > 0 ? (
-          <span
-            className="bg-bg-elev-3 h-full"
-            style={{ width: `${pct(counts.none)}%` }}
-            aria-hidden="true"
-          />
-        ) : null}
-        {counts.negative > 0 ? (
-          <span
-            className="bg-bear h-full"
-            style={{ width: `${pct(counts.negative)}%` }}
-            aria-hidden="true"
-          />
-        ) : null}
-      </div>
+      {/* Gauge — a dial from bearish (left) through neutral to bullish (right).
+          The needle position encodes the sentiment score in [-1, 1]; the
+          colored track underneath always shows the full distribution. */}
+      <SentimentGauge score={score} pct={pct} counts={counts} />
 
       {/* Counts row */}
       <ul
@@ -109,6 +82,87 @@ export function SentimentSummary({ articles }: SentimentSummaryProps) {
         ) : null}
       </ul>
     </section>
+  );
+}
+
+/**
+ * Semicircular gauge rendering the sentiment score as a needle over a
+ * segmented red→neutral→green track. Purely presentational — the
+ * accessible summary is the score text and the counts list below.
+ */
+function SentimentGauge({
+  score,
+  pct,
+  counts,
+}: {
+  score: number;
+  pct: (n: number) => number;
+  counts: { positive: number; negative: number; neutral: number; none: number };
+}) {
+  // Needle angle: score -1 → 180° (left), 0 → 90° (up-center), +1 → 0° (right).
+  const angleDeg = 90 - score * 90;
+  const angleRad = (angleDeg * Math.PI) / 180;
+  const cx = 120;
+  const cy = 64;
+  const r = 48;
+  const tipX = cx + r * Math.cos(angleRad);
+  const tipY = cy - r * Math.sin(angleRad);
+
+  // Segments along the 180° arc, left (bear) → right (bull).
+  const arc = (from: number, to: number, color: string, opacity = 1) => {
+    const start = { x: cx + r * Math.cos(((180 - from) * Math.PI) / 180), y: cy - r * Math.sin(((180 - from) * Math.PI) / 180) };
+    const end = { x: cx + r * Math.cos(((180 - to) * Math.PI) / 180), y: cy - r * Math.sin(((180 - to) * Math.PI) / 180) };
+    const largeArc = to - from > 180 ? 1 : 0;
+    return (
+      <path
+        d={`M ${start.x.toFixed(2)} ${start.y.toFixed(2)} A ${r} ${r} 0 ${largeArc} 0 ${end.x.toFixed(2)} ${end.y.toFixed(2)}`}
+        fill="none"
+        stroke={color}
+        strokeWidth="8"
+        strokeLinecap="round"
+        opacity={opacity}
+      />
+    );
+  };
+
+  const bearShare = pct(counts.negative);
+  const bullShare = pct(counts.positive);
+  const neutralShare = pct(counts.neutral);
+
+  // Split the 180° dial proportionally; fall back to 1/3 each when empty.
+  // Segment spans are derived from the bullish/neutral shares; the
+  // bearish share is the remainder (180 − bull − neutral).
+  const totalShare = bearShare + neutralShare + bullShare;
+  const neutralDeg = totalShare > 0 ? (neutralShare / totalShare) * 180 : 60;
+  const bullDeg = totalShare > 0 ? (bullShare / totalShare) * 180 : 60;
+
+  return (
+    <div className="flex justify-center" aria-hidden="true">
+      <svg
+        viewBox="0 0 240 76"
+        className="h-16 w-48 max-w-full"
+        focusable="false"
+      >
+        {/* Bullish segment (right) — score +1 needle lands here. */}
+        {arc(180, 180 - bullDeg, 'var(--color-bull)')}
+        {/* Neutral segment (middle) */}
+        {arc(180 - bullDeg, 180 - bullDeg - neutralDeg, 'var(--color-fg-subtle)', 0.6)}
+        {/* Bearish segment (left) — score −1 needle lands here. */}
+        {arc(180 - bullDeg - neutralDeg, 0, 'var(--color-bear)')}
+        {/* Needle */}
+        <line
+          x1={cx}
+          y1={cy}
+          x2={tipX}
+          y2={tipY}
+          stroke="currentColor"
+          strokeWidth="2.5"
+          strokeLinecap="round"
+          className="text-fg"
+        />
+        <circle cx={cx} cy={cy} r="3.5" fill="currentColor" className="text-fg" />
+      </svg>
+    </div>
   );
 }
 

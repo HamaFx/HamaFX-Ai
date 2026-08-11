@@ -122,7 +122,7 @@ export default async function UsagePage() {
           action={
             <Link
               href="/chat"
-              className="bg-fg text-black inline-flex h-9 items-center rounded-sm px-3 text-sm font-medium hover:opacity-90"
+              className="bg-fg text-black inline-flex h-10 items-center rounded-sm px-3 text-sm font-medium hover:opacity-90"
             >
               Start chatting
             </Link>

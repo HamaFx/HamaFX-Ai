@@ -14,7 +14,7 @@
 // pulse, not a chart.
 
 import Link from 'next/link';
-import { useEffect, useReducer, useRef, type MutableRefObject } from 'react';
+import { useEffect, useReducer, useRef, useState, type MutableRefObject } from 'react';
 import { IconEye, IconRefresh, IconAlertTriangle } from '@tabler/icons-react';
 import type { Symbol, Tick } from '@hamafx/shared';
 import { priceDecimals } from '@hamafx/shared';
@@ -130,6 +130,10 @@ export function WatchlistWidget({
   );
 }
 
+const FLASH_MS = 600;
+
+type FlashTone = 'bull' | 'bear' | null;
+
 function WatchRow({
   tick,
   tickVersion,
@@ -146,11 +150,31 @@ function WatchRow({
   const first = buf[0] ?? tick.mid;
   const last = tick.mid;
   const isBull = last >= first;
+
+  // Live-tick flash: brief green/red tint behind the price when it moves.
+  const [flash, setFlash] = useState<FlashTone>(null);
+  const prevMidRef = useRef<number | null>(null);
+  useEffect(() => {
+    const prev = prevMidRef.current;
+    prevMidRef.current = last;
+    if (prev === null || prev === last) return;
+    setFlash(last > prev ? 'bull' : 'bear');
+    const timer = setTimeout(() => setFlash(null), FLASH_MS);
+    return () => clearTimeout(timer);
+  }, [last]);
+
   return (
     <li className="border-divider flex items-center justify-between gap-3 border-b py-2 last:border-0">
       <div className="flex min-w-0 flex-col font-mono">
         <span className="text-fg text-body-sm font-bold tracking-tight">{tick.symbol}</span>
-        <span className="text-fg-subtle text-caption tabular-nums">
+        <span
+          className={cn(
+            'inline-flex w-fit items-center rounded-sm px-1 -mx-1 text-caption tabular-nums transition-colors duration-500',
+            flash === 'bull' && 'bg-bull/15 text-bull',
+            flash === 'bear' && 'bg-bear/15 text-bear',
+            flash === null && 'text-fg-subtle',
+          )}
+        >
           {last.toFixed(decimals)}
         </span>
       </div>

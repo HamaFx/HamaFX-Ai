@@ -45,24 +45,3 @@ export function getHealthTone(
   if (ageMs < 7 * 24 * HOUR) return 'yellow';
   return 'grey';
 }
-
-/**
- * Format a health snapshot's testedAt as a short "5m ago" / "2h ago"
- * label. Returns an empty string for unparseable timestamps so the
- * caller can decide whether to render anything.
- */
-export function formatHealthAge(
-  iso: string,
-  now: number = Date.now(),
-): string {
-  const t = new Date(iso).getTime();
-  if (!Number.isFinite(t)) return '';
-  const diffMs = now - t;
-  if (diffMs < 60_000) return 'just now';
-  const m = Math.floor(diffMs / 60_000);
-  if (m < 60) return `${m}m ago`;
-  const h = Math.floor(m / 60);
-  if (h < 24) return `${h}h ago`;
-  const d = Math.floor(h / 24);
-  return `${d}d ago`;
-}
